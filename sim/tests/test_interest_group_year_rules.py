@@ -236,10 +236,11 @@ class HurtSectors(unittest.TestCase):
         view.needs = fake_needs(
             commodities_sold_by_acting_party=["iron"], main_material_of=lambda commodity: commodity,
             material_trade_quote=lambda material: quote, market_state=lambda commodity: state,
-            market_supply=lambda trade: 2.0e6, local_market_share=0.8, mass_rate_text=lambda amount, **options: "%s a year" % amount)
+            market_supply=lambda trade: 2.0e6, mass_rate_text=lambda amount, **options: "%s a year" % amount)
         view.labour_market = types.SimpleNamespace(unscarce_annual=lambda trade: 100.0)
         view.hours_per_person_year = 2000.0
         view.pay_per_person_year = lambda trade: 100.0
+        view.trade_of_role = lambda role: "labourer"
         return view
 
     def test_what_the_founder_displaced_is_a_loss_at_the_price_and_a_base_of_all_sales(self):

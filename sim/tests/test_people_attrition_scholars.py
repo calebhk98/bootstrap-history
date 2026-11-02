@@ -46,16 +46,16 @@ check("a whole number is not refused for being fractional",
 
 def wall_of(trade, institutional=0.0, literacy=1.0, exist=1e9, absent=()):
     stand_in = SimpleNamespace(
-        LITERATE_TRADES=frozenset({"scholar", "scribe"}), LITERATE_CAPACITY_FLOOR=1.5, POP_SCALE_FLOOR_SHARE=0.5,
-        POP_SCALE_VARIABLE_SHARE=0.5, SCHOLAR_MARKET_SHARE=0.35, local_market_share=lambda: 1.0,
+        LITERATE_TRADES=frozenset({"scholar", "scribe"}), LITERATE_CAPACITY_FLOOR=1.5,
+        _people_of_trade_in_reach=lambda trade: 35.0,
         literacy_factor=lambda trade: literacy, staff_capacity=lambda: (institutional, 0.0, 0.0),
         people_who_exist=lambda trade: exist,
-        _world=SimpleNamespace(cfg={"hired_hours_cap_base": 20_000.0}, pop_scale=1.0, HOURS_PER_PERSON_YEAR=2000.0,
+        _world=SimpleNamespace(pop_scale=1.0, HOURS_PER_PERSON_YEAR=2000.0,
                                trades_absent=set(absent)))
     return CapacityMixin.literate_capacity(stand_in, trade)
 
 
-reach = 20_000.0 * 1.0 * (0.5 + 0.5) * 0.35 / 2000.0
+reach = 35.0
 check("the market-reach ceiling for a fresh household is the floor plus its reach scaled by literacy",
       abs(wall_of("scholar") - (1.5 + reach)) < 1e-9, wall_of("scholar"))
 check("a trade that does not read has no literacy wall", wall_of("smith") == float("inf"))

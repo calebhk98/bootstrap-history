@@ -19,7 +19,7 @@ class _StubLabour(CapacityMixin):
                  existing=None, absent=(), done=(), operating=(), room_sources=()):
         projects = types.SimpleNamespace(done=set(done), operating=set(operating))
         self._world = types.SimpleNamespace(
-            cfg={"hired_hours_cap_base": 1000000.0}, pop_scale=1.0, HOURS_PER_PERSON_YEAR=2000.0,
+            pop_scale=1.0, HOURS_PER_PERSON_YEAR=2000.0,
             trades_absent=set(absent), projects=projects,
             ROOM_SOURCES=list(room_sources), nodes={node_id: {} for node_id, _ in room_sources},
             is_venture=lambda node_id: True, is_visible=lambda node_id: True,
@@ -28,8 +28,8 @@ class _StubLabour(CapacityMixin):
         self.literacy, self.institutional, self.supervision = literacy, institutional, supervision
         self.headcount_now, self.room_places, self.existing = headcount_now, room_places, existing
 
-    def local_market_share(self):
-        return 1.0
+    def _people_of_trade_in_reach(self, trade):
+        return 10.0
 
     def literacy_factor(self, trade):
         return self.literacy

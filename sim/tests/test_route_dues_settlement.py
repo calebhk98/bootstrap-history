@@ -47,7 +47,8 @@ class PayRouteDuesCommand(unittest.TestCase):
 
     def freight(self, owners):
         return module_harness.build(Freight, views={
-            **land_views.of({}, ("carriage_facts",)), "wage": lambda trade: WAGE, "tile_owner": owners,
+            **land_views.of({}, ("carriage_facts",)), "trade_registry": lambda: {"labourer": {"fallback": True}, "sailor": {"role": "sailor"}, "merchant": {"role": "merchant"}},
+            "wage": lambda trade: WAGE, "tile_owner": owners,
             "holder_treasury": lambda holder: "government:" + holder})
 
     def test_the_payer_pays_each_holder_its_dues_into_the_holders_treasury(self):

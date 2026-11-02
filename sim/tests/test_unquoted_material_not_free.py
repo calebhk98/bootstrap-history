@@ -17,7 +17,7 @@ from sim.tests.world_stand_in import fake_needs
 
 from .agents_fake_world import FakeWorld
 
-IRON = budget.EQUIPMENT_MATERIAL
+IRON = "iron_bar_kg"
 GRAIN = "staple_kg"
 IRON_PRICE = 10.0
 GRAIN_PRICE = 4.0
@@ -47,6 +47,9 @@ class Market(FakeWorld):
 
 	def government(self):
 		return self.state
+
+	def equipment_material(self):
+		return IRON
 
 	def equipment_kg_per_soldier(self):
 		return 20.0

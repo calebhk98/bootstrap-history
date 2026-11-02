@@ -85,6 +85,15 @@ class FakeWorld:
 		self.hands: Dict[str, float] = {}
 		self.unsold: Dict[str, List[str]] = {}
 
+	ROLE_TRADES = {"unskilled": "labourer", "soldier": "soldier", "clerk": "scribe", "builder": "mason", "sailor": "sailor",
+	               "merchant": "merchant"}
+
+	def trade_of_role(self, role: str) -> str:
+		return self.ROLE_TRADES[role]
+
+	def equipment_material(self) -> str:
+		return "iron_bar_kg"
+
 	def state_hands(self) -> Any:
 		return None
 

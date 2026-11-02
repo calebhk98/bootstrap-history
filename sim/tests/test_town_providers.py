@@ -12,8 +12,6 @@ from sim.assembly.api import NeedsAccess
 from sim.engine import mod_code
 from sim.engine.data import load_civ
 from sim.geography.api import tiles_held
-from sim.labour.labour_capacity import CapacityMixin
-from sim.labour.labour_population import PopulationMixin
 from sim.labour.labour_settlement import SettlementMixin
 from sim.tests import harness  # noqa: F401  (isolates the home directory)
 from sim.workforce.provided import last_answer
@@ -22,11 +20,7 @@ NATION = 20.0e6
 
 
 class Town(SettlementMixin):
-    """The settlement mixin with the constants of the labour classes that surround it in a game."""
-
-    TOWN_POPULATION_REFERENCE = PopulationMixin.TOWN_POPULATION_REFERENCE
-    POP_SCALE_FLOOR_SHARE = CapacityMixin.POP_SCALE_FLOOR_SHARE
-    POP_SCALE_VARIABLE_SHARE = CapacityMixin.POP_SCALE_VARIABLE_SHARE
+    """The settlement mixin over a stand-in world."""
 
     def __init__(self):
         homes = tuple(tiles_held(load_civ("rome_100ad")))
@@ -46,10 +40,9 @@ class TownProviderTests(unittest.TestCase):
 
     def test_no_provider_leaves_the_nominal_town(self):
         tile = self.labour.base_tile()
-        nominal = self.labour._nominal_town_population()
         tile_people = self.labour.settlement_tiles()[tile]
-        self.assertEqual(self.labour.home_town_population_estimate(),
-                         min(nominal, tile_people * self.labour.TOWN_MAX_SHARE_OF_TILE))
+        self.assertAlmostEqual(self.labour.home_town_population_estimate(),
+                               tile_people * self.labour.TOWN_MAX_SHARE_OF_TILE)
         self.assertGreater(self.labour.home_town_population_estimate(), 0.0)
 
     def test_provider_sets_the_town_and_none_declines(self):

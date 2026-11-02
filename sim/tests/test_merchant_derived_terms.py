@@ -57,7 +57,8 @@ def _economy(grain_price=1.0):
     """The freight module over a price table, a flat wage, the market rate and the real map."""
     prices = {"wheat_kg": grain_price, "wood_kg": 0.5, "coal_kg": 0.4, "iron_bar_kg": 8.0, "ox": 4000.0, "mule": 3000.0}
     return module_harness.build(Freight, views={
-        "material_prices": lambda: prices, "material_price": lambda tag: prices.get(tag), "wage": lambda trade: 2.0,
+        "material_prices": lambda: prices, "material_price": lambda tag: prices.get(tag), "trade_registry": lambda: {"labourer": {"fallback": True}, "sailor": {"role": "sailor"}, "merchant": {"role": "merchant"}},
+            "wage": lambda trade: 2.0,
         "market_rate": lambda: 0.05, **land_views.of({}, FREIGHT_LAND_VIEWS)})
 
 

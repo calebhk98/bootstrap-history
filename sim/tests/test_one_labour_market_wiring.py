@@ -50,7 +50,7 @@ class WorldReadsTheOneMarketTests(unittest.TestCase):
         market = types.SimpleNamespace(
             quote=lambda trade, hours=0.0: RATES[trade],
             quote_annual=lambda trade, people=0.0: RATES[trade] * HOURS_PER_YEAR)
-        needs = fake_needs(labour_market=market, hours_per_person_year=HOURS_PER_YEAR,
+        needs = fake_needs(labour_market=market, trade_registry=lambda: {"labourer": {"fallback": True}}, hours_per_person_year=HOURS_PER_YEAR,
                            concern_staff=lambda node_id: {"artisan": 2.0, "scribe": 1.0})
         return ActorWorld(types.SimpleNamespace(needs=needs)), market
 

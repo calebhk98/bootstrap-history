@@ -17,17 +17,14 @@ from sim.labour.labour_capacity import CapacityMixin
 class _Society(CapacityMixin):
     LITERATE_TRADES = ("scribe", "scholar")
     LITERATE_CAPACITY_FLOOR = 1.5
-    POP_SCALE_FLOOR_SHARE = 0.5
-    POP_SCALE_VARIABLE_SHARE = 0.5
-    SCHOLAR_MARKET_SHARE = 0.4
 
     def __init__(self, literacy, institutional=0.0, existing=1e9):
         self._world = types.SimpleNamespace(
-            cfg={"hired_hours_cap_base": 1000.0}, pop_scale=1.0, HOURS_PER_PERSON_YEAR=10.0, trades_absent=())
+            pop_scale=1.0, HOURS_PER_PERSON_YEAR=10.0, trades_absent=())
         self.literacy, self.institutional, self.existing = literacy, institutional, existing
 
-    def local_market_share(self):
-        return 1.0
+    def _people_of_trade_in_reach(self, trade):
+        return 40.0
 
     def literacy_factor(self, trade):
         return self.literacy
@@ -48,8 +45,7 @@ class LiterateCapacity(unittest.TestCase):
         self.assertEqual(self.capacity(_Society(0.5), "smith"), float("inf"))
 
     def test_the_ceiling_is_a_floor_of_findable_people_plus_a_literacy_scaled_pool(self):
-        pool = 1000.0 * 1.0 * (0.5 + 0.5) * 0.4 / 10.0
-        self.assertAlmostEqual(self.capacity(_Society(0.5)), 1.5 + pool * 0.5)
+        self.assertAlmostEqual(self.capacity(_Society(0.5)), 1.5 + 40.0 * 0.5)
 
     def test_more_literacy_widens_the_pool_but_never_removes_the_floor(self):
         low, high = self.capacity(_Society(0.0)), self.capacity(_Society(1.0))

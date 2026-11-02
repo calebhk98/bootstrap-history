@@ -32,7 +32,8 @@ class _Carriers(Freight):
 
 def freight_game(rate=0.1, implementation=_Carriers):
     return module_harness.build(implementation, views={
-        "wage": lambda trade: SEA_WAGE if trade == "sailor" else LAND_WAGE, "market_rate": lambda: rate,
+        "trade_registry": lambda: {"labourer": {"fallback": True}, "sailor": {"role": "sailor"}, "merchant": {"role": "merchant"}},
+            "wage": lambda trade: SEA_WAGE if trade == "sailor" else LAND_WAGE, "market_rate": lambda: rate,
         "carriage_facts": lambda: {"walking_modes": ["drove"], "loss_per_day": {}, "dues_hours_per_tonne": {}},
         "modes_carrying": lambda cargo: ["cart", "sail"], "material_price": lambda material: 0.5})
 

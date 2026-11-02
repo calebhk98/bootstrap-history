@@ -19,6 +19,12 @@ class StubWorld:
         self.people = people
         self.iron_on_sale = iron_on_sale
 
+    def trade_of_role(self, role):
+        return {"unskilled": "labourer", "builder": "mason", "soldier": "soldier", "clerk": "scribe"}[role]
+
+    def equipment_material(self):
+        return "iron_bar_kg"
+
     def equipment_kg_per_soldier(self):
         return 20.0
 
@@ -101,6 +107,9 @@ class ArmyWanted(unittest.TestCase):
 class StubPeople:
     def __init__(self, working_age, soldiers):
         self.working_age, self.soldiers = working_age, soldiers
+
+    def trade_of_role(self, role):
+        return "labourer"
 
     def national_people(self, trade):
         return self.working_age
