@@ -35,7 +35,7 @@ def defaults() -> Dict[str, Any]:
 		"standing_job_pay": lambda trade: 0.0,
 		"effect_sum": lambda channel, start=0.0: start, "effect_values": lambda channel: [], "mechanic": {},
 		"standing": {"reputation": 0.0}, "forest_hectares": 0.0, "mine_operating_cost": 0.0,
-		"money_per_labour_hour": 1.0, "labour_market": SimpleNamespace(quote=lambda trade: 1.0, quote_annual=lambda trade: 1.0), "wage_bill": 0.0,
+		"money_per_labour_hour": 1.0, "labour_market": SimpleNamespace(quote=lambda trade: 1.0, quote_annual=lambda trade: 1.0), "wage_bill": 0.0, "wages_charged_last_year": 0.0,
 		"household_bill_per_person": 0.0, "household_dependant_people": 0.0, "held_trade": lambda: None,
 		"revenue_capacity": 0.0, "revenue_estimate": 0.0, "upkeep": 0.0, "operating": set(),
 		"held_goods": lambda: [], "goods_stock": {}, "material_commodity": lambda material: material, "sale_quote": lambda material, tonnes: (None, 0.0, 0.0),

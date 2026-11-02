@@ -38,25 +38,19 @@ class WageBillTests(unittest.TestCase):
 
 
 class FounderWageTests(unittest.TestCase):
-    """What the founder's own hours earn (Complaint 640): the trade's hourly rate and a capped bonus for reputation."""
+    """What the founder's own hours earn (Complaint 640): the trade's one hourly rate."""
 
-    def pay(self, hours=500.0, reputation=0.0):
-        return wage_for_hours_of(2000.0, 2000.0, hours, reputation, 0.5, 200.0)
+    def pay(self, hours=500.0):
+        return wage_for_hours_of(2000.0, 2000.0, hours)
 
     def test_hours_pay_the_hourly_rate_of_the_yearly_wage(self):
         self.assertAlmostEqual(self.pay(), 500.0)
 
-    def test_reputation_raises_the_rate_in_proportion_to_the_scale(self):
-        self.assertAlmostEqual(self.pay(reputation=50.0), 500.0 * 1.25)
-
-    def test_the_bonus_is_capped_however_famous_he_is(self):
-        self.assertAlmostEqual(self.pay(reputation=1.0e6), 500.0 * 1.5)
-
     def test_twice_the_hours_pay_twice_as_much(self):
-        self.assertAlmostEqual(self.pay(hours=1000.0, reputation=50.0), 2.0 * self.pay(hours=500.0, reputation=50.0))
+        self.assertAlmostEqual(self.pay(hours=1000.0), 2.0 * self.pay(hours=500.0))
 
     def test_no_hours_earn_nothing(self):
-        self.assertEqual(self.pay(hours=0.0, reputation=50.0), 0.0)
+        self.assertEqual(self.pay(hours=0.0), 0.0)
 
 
 if __name__ == "__main__":

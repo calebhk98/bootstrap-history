@@ -15,9 +15,6 @@ class StandInMarket:
     def cost_factors(self, trade):
         return {"food": 1.1, "housing": 1.2, "tools": 1.3, "skill_and_difficulty": 1.4}
 
-    def in_current_money(self, amount):
-        return amount
-
     def unscarce_annual(self, trade):
         return 80.0
 
@@ -38,8 +35,7 @@ class LabourCommandTests(unittest.TestCase):
         self.assertEqual(foundation["base_for_skill_and_difficulty"], 70.0)
         self.assertEqual({key: foundation[key] for key in ("food", "housing", "tools", "skill_and_difficulty")},
                          {"food": 1.1, "housing": 1.2, "tools": 1.3, "skill_and_difficulty": 1.4})
-        self.assertEqual(foundation["demographic_scarcity"], 1.5)
-        self.assertEqual(foundation["society_price_level"], 2.0)
+        self.assertNotIn("demographic_scarcity", foundation)
 
 
 if __name__ == "__main__":
