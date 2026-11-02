@@ -202,8 +202,6 @@ class CapacityMixin:
         cap = self.LITERATE_CAPACITY_FLOOR + self._people_of_trade_in_reach(trade) * self.literacy_factor(trade)
         if trade == trade_data.scholar_trade():
             cap += self.staff_capacity()[0]
-        if trade not in self._world.trades_absent:
-            cap = min(cap, self.people_who_exist(trade))
         return cap
 
     def _literate_wall_refusal(self, trade, cap, have):

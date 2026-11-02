@@ -18,9 +18,6 @@ GENERIC_STAFF_TRADES = ("artisan", "scholar", "labourer", "farmer", "slave")
 # Trades whose people are drawn from the unskilled pool while they serve (an army under arms).
 DRAWN_FROM_UNSKILLED_POOL = frozenset({"soldier"})
 
-# Trades that need letters but not reading as their practice, so literacy does not cap them.
-LETTERED_BUT_NOT_LITERATE = frozenset({"merchant"})
-
 # The trade whose hours the farm-labour logic owns (its recipe hours are kept out of the non-farm
 # split). It is a trade of its own, distinct from the unskilled fallback; workforce_spinup.py has no registry to ask.
 FARM_TRADE = "farmer"

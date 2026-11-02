@@ -65,8 +65,8 @@ class PeopleInReachTests(unittest.TestCase):
         self.assertGreater(labour._people_of_trade_in_reach("smith"), 0.0)
         self.assertEqual(labour._trade_density_source("smith"), "NO_DEMAND_TRADE_SHARE")
 
-    def test_a_lettered_trade_rests_on_literacy_and_an_absent_one_has_no_density_source(self):
-        self.assertEqual(_StubLabour({}, literate=("scholar",))._trade_density_source("scholar"), "SCHOLAR_ENGAGEMENT_FRACTION")
+    def test_a_lettered_trade_and_an_absent_one_have_no_density_source(self):
+        self.assertIsNone(_StubLabour({}, literate=("scholar",))._trade_density_source("scholar"))
         self.assertIsNone(_StubLabour({}, absent=("moddedtrade",))._trade_density_source("moddedtrade"))
 
 

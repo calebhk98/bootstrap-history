@@ -8,11 +8,10 @@ What leaning on a trade does to its price lives in labour_market_api.py.
 trade_available and found_trade_school decide whether a trade can be had here
 AT ALL; market_supply, reachable_trade_population and national_trade_population
 give the depth of that market, this household's reach into it, and the whole
-country's rough total. A trade's people are the labour core's people of it
-(in the tiles reached, or in the country); SCHOLAR_ENGAGEMENT_FRACTION,
-SCRIBE_ENGAGEMENT_FRACTION and MERCHANT_DENSITY size the trades literacy
-bounds, which the core does not seed, and NO_DEMAND_TRADE_SHARE covers a trade
-the core holds nobody of.
+country's total. A trade's people are the labour core's people of it (in the
+tiles reached, or in the country); NO_DEMAND_TRADE_SHARE covers a trade the core
+holds nobody of. The hands a hire can draw on (`hands_available`) are the core's
+people of the trade in reach and last year's idle hours.
 population_report and home_town_population_estimate are what the 'population'
 command shows, built from the numbers above.
 effective_scholars and scholar_hands_available answer "how many scholars
@@ -22,7 +21,7 @@ answers for craft hours.
 """
 from sim.constants import declare, REGISTRY
 
-from . import legacy_trade_defaults, trade_data, trade_supply_rules
+from . import trade_data, trade_supply_rules
 from .hands import contracted_hours_of, hands_available
 from sim.ledger.api import PayEdge
 
@@ -116,18 +115,10 @@ class PopulationMixin:
         return self.reach_population_estimate() * self._working_fraction() * self.NO_DEMAND_TRADE_SHARE
 
     def _trade_density_source(self, trade):
-        """Name of the declared constant this trade's population estimate rests on,
-        None when it is the labour core's count or unavailable. Used by population_report
-        and _density_is_placeholder to look up metadata.
-        """
-        if not self.trade_available(trade) or trade in self._world.trades_absent:
+        """Name of the declared constant this trade's people in reach rest on, None when it is the labour core's count or
+        unavailable. Used by population_report and _density_is_placeholder to look up metadata."""
+        if not self.trade_available(trade) or trade in self._world.trades_absent or trade in self.LITERATE_TRADES:
             return None
-        if trade == trade_data.scholar_trade():
-            return "SCHOLAR_ENGAGEMENT_FRACTION"
-        if trade_data.literate_trades(trade_data.registry_of(self._world), (trade,)):
-            return "SCRIBE_ENGAGEMENT_FRACTION"
-        if trade in legacy_trade_defaults.LETTERED_BUT_NOT_LITERATE:
-            return "MERCHANT_DENSITY"
         if not (self.core_people_by_trade() or {}).get(trade):
             return "NO_DEMAND_TRADE_SHARE"
         return None
@@ -152,43 +143,6 @@ class PopulationMixin:
         confidence="D", retire="Complaints/964: people by trade are the labour core's; this floor stands in only where the core holds nobody of a trade or has not opened",
         why="Share of the working people who practise a trade the labour core holds nobody of (or "
             "before the core opens): a few people always do. An order-of-magnitude placeholder.")
-    # scholar and scribe are bound by literacy, not by town population (see
-    # literacy_factor, literate_capacity) - their NATIONAL estimate uses the
-    # same idea applied to the literate pool instead of the town: what
-    # fraction of the people who can read at all make their living reading
-    # and writing for others, rather than simply being a literate landowner,
-    # priest or advocate. Neither fraction is a count anyone published; both
-    # are deliberately small because the trades themselves are (Rome's own
-    # literate_capacity("scholar") tops out at 5.9 reachable before any
-    # institution trains more). merchant is excluded from LITERATE_TRADES on
-    # purpose (see that set's own comment - "an agent working on commission is
-    # not, in this period, chiefly a reader") so it gets a plain urban density
-    # instead, also with no specific count found.
-    SCHOLAR_ENGAGEMENT_FRACTION = declare(
-        "SCHOLAR_ENGAGEMENT_FRACTION", 0.002, kind="temporary_heuristic",
-        unit="fraction of (literacy_elite x population)", source=None,
-        confidence="D", retire="Complaints/964: literate trades the economy never seeds",
-        why="What fraction of the literate, propertied population makes "
-            "its living as a scholar for hire, rather than simply being a "
-            "literate landowner, priest or advocate. No published count "
-            "exists for this; deliberately small, consistent with "
-            "literate_capacity('scholar') topping out at 5.9 reachable "
-            "for Rome before any institution trains more.")
-    SCRIBE_ENGAGEMENT_FRACTION = declare(
-        "SCRIBE_ENGAGEMENT_FRACTION", 0.05, kind="temporary_heuristic",
-        unit="fraction of (literacy_general x population)", source=None,
-        confidence="D", retire="Complaints/964: literate trades the economy never seeds",
-        why="As SCHOLAR_ENGAGEMENT_FRACTION, for scribes drawn from the "
-            "wider general-literacy pool rather than the propertied elite.")
-    MERCHANT_DENSITY = declare(
-        "MERCHANT_DENSITY", 0.004, kind="temporary_heuristic",
-        unit="fraction of urban population", source=None, confidence="D", retire="Complaints/964: literate trades the economy never seeds",
-        why="Merchant density, treated like an ordinary craft density "
-            "(a share of work) rather than a literacy-bound one, because "
-            "merchant is deliberately excluded from LITERATE_TRADES (an "
-            "agent working on commission is not, in this period, chiefly "
-            "a reader). No specific count found; an order-of-magnitude "
-            "placeholder.")
 
     TAUGHT_TRADE_SUPPLY_MULTIPLIER = declare(
         "TAUGHT_TRADE_SUPPLY_MULTIPLIER", 1.5, kind="temporary_heuristic",
@@ -251,10 +205,23 @@ class PopulationMixin:
         return (self.employed(trade) * self.TAUGHT_TRADE_SUPPLY_MULTIPLIER
                 + (workforce.trade_schools or {}).get(trade, 0.0))
 
+    def hands_available(self, trade):
+        """People of a trade a hire can draw on: the labour core's people of it in the tiles reached, or last year's idle
+        hours of it if those are more; the whole working age for the unskilled pool, the people taught for a trade only
+        you teach, the literacy ceiling for a literate trade."""
+        if trade in self._world.trades_absent:
+            return self._taught_trade_people(trade)
+        if trade_data.drawn_from_unskilled_pool(trade):
+            return self._world.population.working_age
+        if trade in self.LITERATE_TRADES:
+            return self.literate_capacity(trade)
+        idle, _offered = self._world.economy.agent_idle_hours_by_trade().get(trade, (0.0, 0.0))
+        return max(self._people_of_trade_in_reach(trade), idle / self._world.HOURS_PER_PERSON_YEAR)
+
     def people_who_exist(self, trade):
-        """People in this trade who exist in the country, counting your own
-        staff even if a collapse has left the estimate below them."""
-        return trade_supply_rules.people_who_exist(self.national_trade_population(trade), self.employed(trade))
+        """Hands a hire of this trade can draw on (`hands_available`), counting your own staff even if a collapse has left
+        the figure below them."""
+        return trade_supply_rules.people_who_exist(self.hands_available(trade), self.employed(trade))
 
     def available_trades(self):
         """Every trade this society has that the labour market can supply."""
@@ -295,34 +262,16 @@ class PopulationMixin:
                 % ("; ".join(short), working_age))
 
     def national_trade_population(self, trade):
-        """A rough ESTIMATE of how many people ply this trade across the whole
-        country - not this household's reach. Where the labour core holds people of the trade it is their
-        count (one source of people by trade); the literate trades the core never seeds are sized from literacy,
-        and a trade the core holds nobody of (or before it opens) takes the declared floor share of the urban
-        working people. 0.0 for a trade this society does not
-        have (trade_available says so). Nobody has published an occupational
-        census of the ancient world, so every figure is an estimate and the
-        'population' command says so.
-        """
+        """How many people ply this trade across the whole country, not this household's reach: the labour core's count
+        of it (nobody where the core holds nobody of it or has not opened); the working age for the unskilled pool, the
+        people taught for a trade only you teach. 0.0 for a trade this society does not have (trade_available says so)."""
         if not self.trade_available(trade):
             return 0.0
-        pop = self._world.population.total
-        urban = pop * self._world.urban_fraction()
-        working = self._world.population.working_age
         if trade_data.drawn_from_unskilled_pool(trade):
-            return working   # any of the working age may be called up
-        if trade == trade_data.scholar_trade():
-            return pop * float(self._world.literacy("literacy_elite")) * self.SCHOLAR_ENGAGEMENT_FRACTION
-        if trade_data.literate_trades(trade_data.registry_of(self._world), (trade,)):
-            return pop * float(self._world.literacy("literacy_general")) * self.SCRIBE_ENGAGEMENT_FRACTION
-        if trade in legacy_trade_defaults.LETTERED_BUT_NOT_LITERATE:
-            return urban * self.MERCHANT_DENSITY
+            return self._world.population.working_age   # any of the working age may be called up
         if trade in self._world.trades_absent:
             return self._taught_trade_people(trade)
-        in_core = (self.core_people_by_trade() or {}).get(trade, 0.0)
-        if in_core > 0.0:
-            return in_core
-        return urban * self._working_fraction() * self.NO_DEMAND_TRADE_SHARE
+        return (self.core_people_by_trade() or {}).get(trade, 0.0)
 
     def population_report(self):
         """Everything the 'population' command (protocol.py) shows, worked
