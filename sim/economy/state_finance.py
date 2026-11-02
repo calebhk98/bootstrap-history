@@ -55,7 +55,7 @@ def finance_deficit(policy, record, view, setup, deficit: float, revenue: float)
             # the multiple limits what the state pays over the market rate; the premium its own leverage
             # earns lenders is on top of it, else a market rate near zero would price the state out
             premium = credit.risk_premium(owed + amount, collateral, 0.0)
-            record.credit.loan_requests.append(LoanRequest(
+            record.credit.ask_for_loan(LoanRequest(
                 state, money, amount, rate * STATE_BORROWING_RATE_CEILING_MULTIPLE + premium, STATE_LOAN_YEARS,
                 collateral, "state deficit"))
             expected += amount

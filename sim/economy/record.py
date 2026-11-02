@@ -5,8 +5,9 @@ holds last year's market outcomes; and eight owned sub-records hold one domain e
 labour, carriage, tax and unfree labour (`credit_record.py`, `capital_markets_record.py`, `land_record.py`, `goods_record.py`,
 `labour_record.py`, `carriage_record.py`, `tax_record.py`, `unfree_record.py`). Nothing else survives a year.
 """
+import dataclasses
 from dataclasses import dataclass, field
-from typing import Any, Dict, Tuple
+from typing import Any, ClassVar, Dict, Tuple
 
 from .accounts import Book
 from .capital_markets_record import CapitalMarketsRecord
@@ -51,6 +52,8 @@ class EconomyRecord(OwnedRecord):
 
     AGENT_KEYED = ("cohorts", "producers", "merchants")
     SAVED_SORTED = ("cohorts", "producers", "merchants")
+    TABLE_OWNERS: ClassVar[Dict[str, Tuple[str, ...]]] = {
+        "cohorts": ("households_cohort",), "producers": ("producer_table",), "merchants": ("merchants", "merchants_dispatch")}   # modules that write each agent table
     TRANSIENT = ("settling",)   # true only inside the hidden spin-up, which finishes before any save
     ENCODERS = {
         "merchants": lambda merchants: {key: _merchant_record(value) for key, value in sorted(merchants.items())},
@@ -64,6 +67,27 @@ class EconomyRecord(OwnedRecord):
         "merchants": lambda value: {key: _merchant_from(each) for key, each in value.items()},
         "state_budget": lambda value: StateBudget(**value),
     }
+
+    @classmethod
+    def owners_by_part(cls) -> Dict[str, Tuple[str, ...]]:
+        """{part name: the sim/economy modules allowed to write it}, for every owned part, the memory, the budget and the agent tables
+        (tools/check_record_owners.py)."""
+        owners = dict(cls.TABLE_OWNERS)
+        for each in dataclasses.fields(cls):
+            if hasattr(each.type, "OWNERS"):
+                owners[each.name] = each.type.OWNERS
+        return owners
+
+    @classmethod
+    def part_class_names(cls) -> Dict[str, str]:
+        """{class name: part name} for the classes whose instances are a whole part or a row of an agent table."""
+        names = {}
+        for each in dataclasses.fields(cls):
+            if hasattr(each.type, "OWNERS"):
+                names[each.type.__name__] = each.name
+            elif each.name in cls.TABLE_OWNERS:
+                names[each.type.__args__[1].__name__] = each.name
+        return names
 
     def rename_agent(self, old: AgentId, new: AgentId) -> None:
         """`old` becomes `new` in the book and in every store of the record and its parts keyed by an agent id; what each

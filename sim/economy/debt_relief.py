@@ -7,6 +7,7 @@ arrears of tenants on the tile are forgiven too. The state's choice reaches the 
 """
 from typing import Dict, Iterable
 
+from . import titles
 from .types import TileId
 
 
@@ -27,9 +28,7 @@ def forgive(record, tiles: Iterable[TileId]) -> Dict[str, float]:
         record.credit.add_loss(loan.lender, loan.principal + loan.arrears)
     record.credit.loans = kept
     for tile in relieved:
-        for row in record.land.tenancies.get(tile, ()):
-            written_off["rent_arrears"] += row["arrears"]
-            row["arrears"] = 0.0
+        written_off["rent_arrears"] += titles.forgive_rent_arrears(record.land, tile)
     return written_off
 
 

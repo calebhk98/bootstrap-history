@@ -6,6 +6,7 @@ from typing import Dict, Mapping, Sequence, Tuple
 
 from . import household_grinding, households_work, labour_state, titles_worked
 from .households_basket import need_prices
+from . import households_cohort
 from .households_cohort import Cohort
 from .market_memory import market_key
 from .offered_price import offered_price
@@ -166,12 +167,12 @@ def decide(setup, record, view, offers: Sequence[LabourOffer], outside_option_by
     return the own hours of each cohort, which it keeps back from the market."""
     if setup.household_work and lacks_history(record, offers):
         for (trade, area), share in sorted(expected_shares(setup, record, offers).items()):
-            record.labour.sold_share_expected.setdefault(market_key(trade, area), share)
+            record.labour.expect_sold_share(market_key(trade, area), share)
     own: Dict[AgentId, float] = {}
     for cohort_id, (per_person, own[cohort_id], milled) in plans(setup, record, view, offers, outside_option_by_tile).items():
         cohort = record.cohorts[cohort_id]
         if per_person != cohort.hired_work_per_person or milled != tuple(cohort.milled_grains):
-            record.cohorts[cohort_id] = dataclasses.replace(cohort, hired_work_per_person=per_person, milled_grains=milled)
+            households_cohort.change_cohort(record.cohorts, cohort_id, hired_work_per_person=per_person, milled_grains=milled)
     return own
 
 

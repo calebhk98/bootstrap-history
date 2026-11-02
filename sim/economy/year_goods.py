@@ -11,7 +11,7 @@ from typing import Dict, List, Tuple
 
 from . import (currency, mint_price, land_bid_year, carriage_fleet_book, carriage_wear, households, market_curves, market_quote, merchants, producers, seller_cash, seller_offers, settlement,
                state_budget, state_store, taxes, tool_wear, unsold_search)
-from . import goods_respend, goods_respend_year
+from . import goods_respend, goods_respend_year, households_cohort
 from .household_work_year import basket_key, cohort_basket
 from .market_memory import market_key
 from .offered_price import offered_price
@@ -63,8 +63,8 @@ def cohort_orders(setup, record, view, ledger: YearLedger, order_book: OrderBook
                                          basket, setup.specs, priced,
                                          smooth_rise=not record.settling, shared_store=store_by_tile)
         orders = less_what_it_grew(orders, cohort, basket, ledger.grown_units.get(cohort.agent_id))
-        record.cohorts[cohort.agent_id] = dataclasses.replace(
-            cohort, planned_spending=sum(bid.budget for bid in tool_bids) + sum(bid.budget for bid in orders.bids))
+        households_cohort.change_cohort(
+            record.cohorts, cohort.agent_id, planned_spending=sum(bid.budget for bid in tool_bids) + sum(bid.budget for bid in orders.bids))
         if own_options:
             savings = sum(offer.amount for offer in orders.funds_offers)     # only what it would otherwise lend
             orders = land_bid_year.with_land_bids(orders, land_bid_year.land_bids(
@@ -238,14 +238,14 @@ def _remember_markets(setup, record, left_markets) -> None:
     traded = set()
     for key, good, signal, quote_kind, price, delivered in updates:
         if quote_kind is not None:
-            memory.quote_kinds[key] = quote_kind
+            memory.set_quote_kind(key, quote_kind)
         if signal is not None and signal > 0.0:
             floor = setup.opening_prices.get(good, signal) * PRICE_MEMORY_FLOOR_SHARE
-            memory.prices[key] = max(signal, floor)
+            memory.set_price(key, max(signal, floor))
             memory.note_usual_price(key)
         memory.note_cleared(key, price, delivered)
         if delivered > 0.0:
-            memory.quote_kinds.pop(key, None)
+            memory.drop_quote_kind(key)
             traded.add(key)
     memory.note_trading(traded)
 

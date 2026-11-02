@@ -31,7 +31,7 @@ def _collect(record, money: str, year: int, bondage_years: float) -> Dict[str, f
     first payment falls due a year after it borrowed). Books the defaults: a lender's loss, a defaulter's
     record, a merchant's staked capital after what it repaid or was freed of. Returns the interest each
     lender received, which is its income; returned principal is not income."""
-    due = [loan for loan in record.credit.loans if loan.issued_year < year and not banks.is_deposit(record, loan)]
+    due = [loan for loan in record.credit.loans if loan.issued_year < year and not banks.is_deposit(record.capital_markets, loan)]
     if not due:
         return bank_service.service_deposits(record, money, year)
     cash = {loan.borrower: record.book.balance(loan.borrower, money) for loan in due}
@@ -49,7 +49,7 @@ def _collect(record, money: str, year: int, bondage_years: float) -> Dict[str, f
         record.credit.add_loss(agent, lost)
     bondage.enter(record, taken, bondage_years)
     record.credit.remembered_defaults = credit_claims.remember_defaults(record.credit.remembered_defaults, defaults)
-    record.credit.loans = [loan for loan in record.credit.loans if loan.issued_year >= year or banks.is_deposit(record, loan)] + serviced
+    record.credit.loans = [loan for loan in record.credit.loans if loan.issued_year >= year or banks.is_deposit(record.capital_markets, loan)] + serviced
     for depositor, interest in bank_service.service_deposits(record, money, year).items():
         received[depositor] = received.get(depositor, 0.0) + interest
     return received

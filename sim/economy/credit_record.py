@@ -6,8 +6,9 @@ from typing import Dict, List
 from sim.contracts import Contracts
 from sim.rekey import rekey
 
+from . import credit_claims
 from .record_parts import OwnedRecord
-from .types import AgentId, Loan, LoanRequest
+from .types import AgentId, Loan, LoanRequest, TileId
 
 
 def _contracts_from(records) -> Contracts:
@@ -37,6 +38,8 @@ class CreditRecord(OwnedRecord):
     DECODERS = {"contracts": _contracts_from,
                 "loan_requests": lambda value: [LoanRequest(**each) for each in value]}
 
+    OWNERS = ("credit_record", "lending", "banks", "bank_service", "bank_runs", "loss_memory", "debt_relief")
+
     @property
     def loans(self) -> List[Loan]:
         """The term loans, in the order they were struck."""
@@ -51,6 +54,81 @@ class CreditRecord(OwnedRecord):
         self.contracts.rename(old, new)
         super().rename_agent(old, new)
         self.loan_requests = rekey(self.loan_requests, old, new)
+
+    def replace_loans(self, loans: List[Loan]) -> None:
+        """The term loans are `loans` from now on."""
+        self.contracts.term_loans = loans
+
+    def add_loan(self, loan: Loan) -> None:
+        self.contracts.term_loans.append(loan)
+
+    def add_loans(self, loans: List[Loan]) -> None:
+        self.contracts.term_loans.extend(loans)
+
+    def ask_for_loan(self, request: LoanRequest) -> None:
+        """A request that waits for the next lending."""
+        self.loan_requests.append(request)
+
+    def ask_for_loans(self, requests: List[LoanRequest]) -> None:
+        self.loan_requests.extend(requests)
+
+    def plan_expansion(self, borrower: AgentId, runs: float) -> None:
+        """The capacity `borrower`'s loan request would build; kept until the loan is struck."""
+        self.expansion_runs[borrower] = runs
+
+    def trim_expansion(self, borrower: AgentId, room: float) -> None:
+        """The capacity planned for `borrower` falls to at most `room`; none left drops the plan."""
+        if room > 0.0:
+            self.expansion_runs[borrower] = min(self.expansion_runs.get(borrower, 0.0), room)
+        else:
+            self.expansion_runs.pop(borrower, None)
+
+    def plan_rebuild(self, borrower: AgentId, runs: float) -> None:
+        """The plant that wore out last year and `borrower` rebuilds."""
+        self.worn_runs[borrower] = runs
+
+    def forget_producer(self, borrower: AgentId) -> None:
+        """Nothing is planned for `borrower` any more."""
+        self.worn_runs.pop(borrower, None)
+        self.expansion_runs.pop(borrower, None)
+
+    def clear_expansion(self) -> None:
+        self.expansion_runs = {}
+
+    def take_requests(self) -> List[LoanRequest]:
+        """The requests waiting, which are then cleared from the record."""
+        requests, self.loan_requests = self.loan_requests, []
+        return requests
+
+    def take_rebuilds(self) -> Dict[AgentId, float]:
+        """The plant to rebuild, which is then cleared from the record."""
+        worn, self.worn_runs = self.worn_runs, {}
+        return worn
+
+    def open_lending(self, funds_offered: float) -> None:
+        """A lending begins: savings on offer, and nothing lent or granted yet."""
+        self.funds_offered = funds_offered
+        self.lent_by_borrower = {}
+        self.credit_granted = {}
+
+    def grant_lines(self, granted: Dict[AgentId, float], asked: List[AgentId]) -> None:
+        """What the clearing granted each credit line asked for; a line granted nothing is there with none."""
+        self.credit_granted = granted
+        for borrower in asked:
+            granted.setdefault(borrower, 0.0)
+
+    def note_lent(self, loan: Loan) -> None:
+        self.lent_by_borrower[loan.borrower] = self.lent_by_borrower.get(loan.borrower, 0.0) + loan.principal
+
+    def shrink_collateral(self, tile: TileId, keep: float) -> None:
+        """Loans pledged on `tile` are secured by `keep` of the share they were, as the tile's land grows."""
+        for loan in self.contracts.term_loans:
+            if loan.collateral_tile == tile:
+                loan.collateral_share *= keep
+
+    def remember(self, defaults) -> None:
+        """This year's defaults join what borrowers are remembered for; older ones fade."""
+        self.remembered_defaults = credit_claims.remember_defaults(self.remembered_defaults, defaults)
 
     def add_loss(self, lender: AgentId, amount: float) -> None:
         """`lender` has lost `amount` more to default."""

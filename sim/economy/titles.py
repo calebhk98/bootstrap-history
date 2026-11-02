@@ -37,14 +37,14 @@ def holding(record, tile: TileId, holder: AgentId) -> float:
     return shares(record, tile).get(holder, 0.0)
 
 
-def pledged(record, holder: AgentId, tile: TileId) -> float:
+def pledged(credit, holder: AgentId, tile: TileId) -> float:
     """The share of its title on `tile` the holder has pledged to loans still owed."""
-    return sum(loan.collateral_share for loan in record.credit.loans
+    return sum(loan.collateral_share for loan in credit.loans
                if loan.borrower == holder and loan.collateral_tile == tile)
 
 
 def free_share(record, holder: AgentId, tile: TileId) -> float:
-    return max(0.0, holding(record, tile, holder) - pledged(record, holder, tile))
+    return max(0.0, holding(record, tile, holder) - pledged(record.credit, holder, tile))
 
 
 def _held(record, tile: TileId) -> Dict[AgentId, float]:
@@ -53,6 +53,15 @@ def _held(record, tile: TileId) -> Dict[AgentId, float]:
     if not record.land.titles.get(tile):
         record.land.titles[tile] = shares(record, tile)
     return record.land.titles[tile]
+
+
+def forgive_rent_arrears(land, tile: TileId) -> float:
+    """Cancel the rent arrears of the tile's tenancies. Returns what was written off."""
+    forgiven = 0.0
+    for row in land.tenancies.get(tile, ()):
+        forgiven += row["arrears"]
+        row["arrears"] = 0.0
+    return forgiven
 
 
 def _add_tenancy(record, tile: TileId, tenant: AgentId, lessor: AgentId, share: float) -> None:

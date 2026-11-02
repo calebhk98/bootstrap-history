@@ -10,6 +10,7 @@ inputs leaves no room for it: the prices of the recipes that take land rise unti
 import math
 from typing import Dict, Iterable, Mapping, Set, Tuple
 
+from . import producer_table
 from . import land_market, opening_income, opening_runs, ownership, unit_cost
 from .replaced import replaced
 from .types import AgentId, GoodId, Recipe
@@ -112,7 +113,7 @@ def settle(setup, record, view, plot_hectares_by_tile: Mapping[str, float]) -> D
         before = opening_income.working_share(recipe, setup.opening_prices, setup.opening_wages, producer.yield_factor)
         after = opening_income.working_share(recipe, setup.opening_prices, setup.opening_wages, producer.yield_factor,
                                              producer.land_rent_per_run)
-        record.producers[producer_id] = replaced(producer, capacity_runs=producer.capacity_runs * before / after)
+        producer_table.put_producer(record.producers, replaced(producer, capacity_runs=producer.capacity_runs * before / after))
     owners = {tile: ownership.owner_cohort(record, tile) for tile in result.rent_per_hectare_by_tile}
     paid = ownership.spread(record, land_market.rent_postings(result, demands, owners, setup.currency_id))
     received: Dict[AgentId, float] = {}

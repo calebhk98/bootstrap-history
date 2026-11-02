@@ -4,7 +4,7 @@ Prices, wages and rates are last year's outcomes; holdings are now. An agent pla
 sees nothing of this year's clearing, which is where the economy's lags come from.
 """
 from dataclasses import dataclass, field
-from typing import Dict, Optional
+from typing import ClassVar, Dict, Optional, Tuple
 
 from sim.constants import declare
 
@@ -46,6 +46,7 @@ def market_key(first: str, area: AreaId) -> str:
 @dataclass
 class MarketMemory:
     """Last year's outcomes, saved with the game."""
+    OWNERS: ClassVar[Tuple[str, ...]] = ("market_memory",)   # the sim/economy modules allowed to write this (tools/check_record_owners.py)
     year: int = 0
     prices: Dict[str, float] = field(default_factory=dict)              # market_key(good, area)
     wages: Dict[str, float] = field(default_factory=dict)               # market_key(trade, area)
@@ -63,6 +64,35 @@ class MarketMemory:
     years_without_offers: Dict[str, int] = field(default_factory=dict)   # market_key(good, area); absent: offers last year
     cleared_prices: Dict[str, float] = field(default_factory=dict)      # market_key(good, area); absent: nothing traded last year
     quote_kinds: Dict[str, str] = field(default_factory=dict)           # market_key(good, area); what `prices` holds when nothing traded
+
+    def advance_year(self) -> None:
+        self.year += 1
+
+    def reset_year(self) -> None:
+        self.year = 0
+
+    def set_rate(self, money: CurrencyId, rate: float) -> None:
+        self.rates[money] = rate
+
+    def set_price(self, key: str, price: float) -> None:
+        self.prices[key] = price
+
+    def set_quote_kind(self, key: str, kind: str) -> None:
+        self.quote_kinds[key] = kind
+
+    def drop_quote_kind(self, key: str) -> None:
+        self.quote_kinds.pop(key, None)
+
+    def set_area_currencies(self, currency_of_area: Dict[AreaId, CurrencyId]) -> None:
+        self.currency_of_area = currency_of_area
+
+    def set_last_year_prices(self, prices: Dict[str, float]) -> None:
+        self.last_year_prices = dict(prices)
+
+    def rebase_price_levels(self, money: CurrencyId) -> None:
+        """The price level of `money` is one, both the basket's and the chained one."""
+        self.basket_price_levels[money] = 1.0
+        self.price_levels[money] = 1.0
 
     def price_kind(self, key: str) -> Optional[str]:
         """What the price remembered for a market is: PRICE_TRADED when it traded last year, else the quote's

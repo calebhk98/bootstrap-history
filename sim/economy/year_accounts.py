@@ -171,11 +171,11 @@ def _plant_wear(setup, record, ledger) -> Dict[str, float]:
     return dict(sorted(wear.items()))
 
 
-def basket_cost_per_head(record, prices: Mapping[str, float], people: float) -> float:
+def basket_cost_per_head(goods, prices: Mapping[str, float], people: float) -> float:
     """What the opening's basket (national quantities) costs per person at `prices`."""
     if people <= 0.0:
         return 0.0
-    return math.fsum(quantity * prices.get(good, 0.0) for good, quantity in record.goods.opening_basket.items()) / people
+    return math.fsum(quantity * prices.get(good, 0.0) for good, quantity in goods.opening_basket.items()) / people
 
 
 def _need_units(need, goods: Mapping[str, float], specs) -> float:
@@ -184,7 +184,7 @@ def _need_units(need, goods: Mapping[str, float], specs) -> float:
 
 
 def _cohorts(setup, record, ledger, prices) -> List[CohortAccount]:
-    cost = basket_cost_per_head(record, prices, math.fsum(setup.opening_population_by_tile.values()))
+    cost = basket_cost_per_head(record.goods, prices, math.fsum(setup.opening_population_by_tile.values()))
     rows = []
     for cohort_id, cohort in sorted(record.cohorts.items()):
         need = next((spec for spec in setup.basket_for(cohort.tile).needs if spec.need_id == setup.hunger_need), None)
@@ -216,7 +216,7 @@ def _tiles(cohorts: List[CohortAccount]) -> List[TileAccount]:
 
 def _real_wages(setup, record, prices, wages) -> Dict[str, RealWage]:
     people = math.fsum(setup.opening_population_by_tile.values())
-    now = basket_cost_per_head(record, prices, people)
-    then = basket_cost_per_head(record, record.goods.index_base_prices or setup.opening_prices, people)
+    now = basket_cost_per_head(record.goods, prices, people)
+    then = basket_cost_per_head(record.goods, record.goods.index_base_prices or setup.opening_prices, people)
     return {trade: RealWage(trade, wage, setup.opening_wages.get(trade, 0.0), now, then, setup.working_hours_per_year)
             for trade, wage in sorted(wages.items())}

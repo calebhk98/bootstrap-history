@@ -94,8 +94,8 @@ def write_off(record, borrower: str, ratio: float) -> float:
         defaults.append(Default(loan.loan_id, loan.lender, loan.borrower, loan.currency, lost))
         if written.principal > finance.ARREARS_EPSILON or written.arrears > finance.ARREARS_EPSILON:
             kept.append(written)
-    record.credit.loans = kept
+    record.credit.replace_loans(kept)
     for lender, lost in credit_claims.losses_by_lender(defaults).items():
         record.credit.add_loss(lender, lost)
-    record.credit.remembered_defaults = credit_claims.remember_defaults(record.credit.remembered_defaults, defaults)
+    record.credit.remember(defaults)
     return sum(default.loss for default in defaults)

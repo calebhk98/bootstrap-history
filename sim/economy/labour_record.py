@@ -19,6 +19,7 @@ class LabourRecord(OwnedRecord):
     opening_sold_hours_per_worker: float = 0.0   # hours a working person was seeded to sell a year (zero: a whole working year)
     opening_sold_hours_by_area: Dict[str, float] = field(default_factory=dict)   # labour area -> hours a working person there was seeded to sell a year (empty: the one figure above)
 
+    OWNERS = ("labour_record", "year_labour")
     AGENT_KEYED = ("hours_hired_by_employer",)
     ENCODERS = {"workforce": market_state_to_plain}
     DECODERS = {"workforce": market_state_from_plain}
@@ -27,3 +28,24 @@ class LabourRecord(OwnedRecord):
         """Hours the core's last clearing hired in the labour market `market_key` (trade, area), all employers."""
         trade, area = market_key.split(KEY_SEPARATOR, 1)
         return math.fsum(self.workforce.hired_hours.get(area, {}).get(trade, {}).values())
+
+    def set_hours_hired_by_employer(self, hours: Dict[AgentId, Dict[TradeId, float]]) -> None:
+        """The paid hours the last clearing hired for each employer, by trade."""
+        self.hours_hired_by_employer = hours
+
+    def expect_sold_share(self, market_key: str, share: float) -> None:
+        """The share of offered hours households expect to sell in the market, where none is expected yet."""
+        self.sold_share_expected.setdefault(market_key, share)
+
+    def seed_sold_hours(self, per_worker: float, by_area: Dict[str, float]) -> None:
+        """The hours a working person was seeded to sell a year, in all and by labour area."""
+        self.opening_sold_hours_per_worker = per_worker
+        self.opening_sold_hours_by_area = by_area
+
+    def seed_workforce(self, workforce: MarketState) -> None:
+        """The labour core's opening state."""
+        self.workforce = workforce
+
+    def seed_hired_hours(self, hired_hours) -> None:
+        """The hours the opening contracts hold hired in the labour core."""
+        self.workforce.hired_hours = hired_hours

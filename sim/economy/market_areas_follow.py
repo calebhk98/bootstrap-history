@@ -11,6 +11,7 @@ from typing import Dict, Mapping, Tuple
 
 from .market_areas import AreaMap
 from .market_memory import KEY_SEPARATOR, market_key
+from . import merchants
 from .merchants import Merchant
 from .record import EconomyRecord
 
@@ -54,12 +55,12 @@ def _moved_expectations(expected: Mapping[Tuple[str, str], float],
 
 
 def _merchant_follows(merchant: Merchant, follows: Mapping[str, Mapping[str, str]], new: AreaMap) -> None:
-    merchant.expected_prices = _moved_expectations(merchant.expected_prices, follows)
-    merchant.expected_volumes = _moved_expectations(merchant.expected_volumes, follows)
-    merchant.price_history = _moved_expectations(merchant.price_history, follows)
-    merchant.routes = {route: tuple((destination, new.area_of(route[0], destination) if route[0] in follows else area, weight)
-                                    for destination, area, weight in legs)
-                       for route, legs in merchant.routes.items()}
+    merchants.remap_to_areas(
+        merchant, _moved_expectations(merchant.expected_prices, follows), _moved_expectations(merchant.expected_volumes, follows),
+        _moved_expectations(merchant.price_history, follows),
+        {route: tuple((destination, new.area_of(route[0], destination) if route[0] in follows else area, weight)
+                      for destination, area, weight in legs)
+         for route, legs in merchant.routes.items()})
 
 
 def follow(record: EconomyRecord, old: AreaMap, new: AreaMap) -> None:
@@ -78,6 +79,6 @@ def follow(record: EconomyRecord, old: AreaMap, new: AreaMap) -> None:
         for new_id, old_id in new_to_old.items():
             if old_id in memory.currency_of_area:
                 currency_of_area[new_id] = memory.currency_of_area[old_id]
-    memory.currency_of_area = currency_of_area
+    memory.set_area_currencies(currency_of_area)
     for merchant in record.merchants.values():
         _merchant_follows(merchant, follows, new)

@@ -13,5 +13,6 @@ class UnfreeRecord(OwnedRecord):
     bonded_held: Dict[TileId, Dict[TradeId, Dict[AgentId, float]]] = field(default_factory=dict)   # tile -> trade -> employer -> bought bonded people it holds (bondage_hours.py)
     fugitives: Dict[str, Dict[str, Any]] = field(default_factory=dict)   # labour area people fled from -> people still away, arrears owed per head, the area they went to (flight_year.py)
 
+    OWNERS = ("unfree_record", "bondage", "bondage_hours")
     AGENT_KEYED = ("bondage", "bonded_held")
     SAVED_SORTED = ("bondage", "fugitives")

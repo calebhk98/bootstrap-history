@@ -5,6 +5,7 @@ from typing import Dict, List, Tuple
 
 from sim.contracts import TERM_LOAN
 
+from . import producer_table
 from . import credit_claims, ownership
 from .accounts import ROUNDING_SHARE
 from .credit import Default
@@ -32,13 +33,11 @@ def exit_producer(record, producer_id: str, payout: List[Transfer]) -> List[Tran
                 for loan in owed if unpaid[loan.loan_id] > 0.0]
     for lender, lost in credit_claims.losses_by_lender(defaults).items():
         record.credit.add_loss(lender, lost)
-    record.credit.remembered_defaults = credit_claims.remember_defaults(record.credit.remembered_defaults, defaults)
+    record.credit.remember(defaults)
     record.credit.contracts.default(producer_id, TERM_LOAN)
-    record.credit.worn_runs.pop(producer_id, None)
-    record.credit.expansion_runs.pop(producer_id, None)
-    record.capital_markets.shares.pop(producer_id, None)
-    record.capital_markets.last_dividends.pop(producer_id, None)
-    del record.producers[producer_id]
+    record.credit.forget_producer(producer_id)
+    record.capital_markets.forget_producer(producer_id)
+    producer_table.remove_producer(record.producers, producer_id)
     return paid
 
 

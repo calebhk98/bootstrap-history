@@ -119,7 +119,7 @@ def staff(setup, record, view, labour_bids) -> None:
         mint_labour.staff(setup, record, view, labour_bids, capacity_fine_kilograms(setup, record),
                           committed_cash=budget.wage_budget)
         funded = record.book.balance(agent, setup.currency_id) - before
-        budget.goods_budget -= mint_staffing.goods_budget_cut(balance, budget.wage_budget, budget.goods_budget, funded)
+        budget.cut_goods_budget(mint_staffing.goods_budget_cut(balance, budget.wage_budget, budget.goods_budget, funded))
 
 
 def mint_orders(setup, record, area_map, order_book, hours_hired=None) -> Dict[str, float]:

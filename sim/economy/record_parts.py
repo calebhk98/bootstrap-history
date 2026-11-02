@@ -27,6 +27,7 @@ def seat_sorted(store: Dict[Any, Any]) -> None:
 
 class OwnedRecord:
     """A dataclass of the economy's state with one owner. Subclasses set the class-level tables below."""
+    OWNERS: ClassVar[Tuple[str, ...]] = ()           # the sim/economy modules allowed to write this part (tools/check_record_owners.py)
     AGENT_KEYED: ClassVar[Tuple[str, ...]] = ()      # fields holding a store keyed by an agent id (renamed with the agent)
     SAVED_SORTED: ClassVar[Tuple[str, ...]] = ()     # keyed stores the save writes in key order, and so a load reads back in it
     TRANSIENT: ClassVar[Tuple[str, ...]] = ()        # fields not saved: they hold only within-year state, empty between years

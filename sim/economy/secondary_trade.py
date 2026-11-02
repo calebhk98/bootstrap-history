@@ -45,7 +45,7 @@ def participants(record) -> set:
 
 def tradable(record, loan: Loan) -> bool:
     """A claim a lender may sell: not a deposit with a bank, not a household's own debt (it pledges land or binds it)."""
-    return (not banks.is_deposit(record, loan) and loan.borrower not in record.cohorts and not loan.collateral_tile
+    return (not banks.is_deposit(record.capital_markets, loan) and loan.borrower not in record.cohorts and not loan.collateral_tile
             and loan.principal > EPSILON)
 
 
@@ -186,7 +186,7 @@ def _move_loan(record, loan: Loan, trade: Trade) -> None:
     loan.arrears_interest -= bought.arrears_interest
     loan.collateral_value -= bought.collateral_value
     loan.collateral_share -= bought.collateral_share
-    record.credit.loans.append(bought)
+    record.credit.add_loan(bought)
 
 
 def run(setup, record, offers: Sequence[FundsOffer], short: Mapping[AgentId, Shortfall], market_rate: float,

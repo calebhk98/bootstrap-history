@@ -10,5 +10,10 @@ class TaxRecord(OwnedRecord):
     tax_history: Dict[str, Dict[str, float]] = field(default_factory=dict)   # form -> last year's base and the state's own take (tax_farming.py)
     tax_farms: Dict[str, Dict[str, Any]] = field(default_factory=dict)   # form -> this year's farmer and price; empty between years
 
+    OWNERS = ("tax_record", "tax_farming")
     SAVED_SORTED = ("tax_history",)
     TRANSIENT = ("tax_farms",)   # set and cleared inside the year
+
+    def lapse_farms(self) -> None:
+        """The year's leases end with its collection."""
+        self.tax_farms = {}
