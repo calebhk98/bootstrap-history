@@ -205,7 +205,7 @@ class GoodsMarket(GoodsPricing, GoodsOffers):
 
     def _with_buyers(self, material, quote):
         """The quote with the tonnes the economy's buyers took and still wanted last year of the good the material is
-        traded as, None where the economy does not trade it or a partner supplies it."""
+        traded as, None where the economy does not trade it."""
         good = self._economy_good(material)
         record = None if good is None else self._sim.economy.agent_good_market_record(good)
         return {**quote, "buyers_take_tonnes_per_year": None if record is None else record["sold"] + record["unmet"]}

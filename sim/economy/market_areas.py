@@ -95,6 +95,7 @@ class AreaMap:
         self._bucket_of_good: Dict[GoodId, str] = {}
         self._area_of_tile: Dict[str, Dict[TileId, AreaId]] = {}
         self._areas_of_good: Dict[GoodId, Tuple[MarketArea, ...]] = {}
+        self._area_tile_sets: Dict[GoodId, Dict[AreaId, set]] = {}   # each good's areas with their tiles (country_figures)
         unit = carriage_unit(tile_ids, carriage)
         for spec, price in goods:
             label, representative = bucket_of(value_per_tonne(spec, price), bucket_width_ln, unit)

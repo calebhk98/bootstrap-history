@@ -479,3 +479,106 @@ def rename_agent(economy, old, new):
     """`old` becomes `new` throughout the economy's records: money, goods, debts and claims, titles and shares are
     added to what `new` already holds; no posting is made, so no total moves."""
     economy.record.rename_agent(old, new)
+
+
+# ---- What the markets port asks of the economy's setup (sim/markets/port*.py) ----
+# Plain facts of the economy's setup, answered here so the port holds no `economy.setup.<field>`.
+
+def coin_per_unit(economy):
+    """Money (the game's coin) worth one economy unit."""
+    return economy.setup.coin_per_unit
+
+
+def currency_id(economy):
+    return economy.setup.currency_id
+
+
+def backing_good(economy):
+    """The good that backs the money, or None for fiat money."""
+    return economy.setup.currency.backing_good
+
+
+def home_country(economy):
+    return economy.setup.civ_id
+
+
+def partner_countries(economy):
+    """Every country with tiles in this economy (the home country among them)."""
+    return economy.setup.countries()
+
+
+def country_of_tile(economy, tile):
+    return economy.setup.country_of(tile)
+
+
+def economy_tiles(economy):
+    return economy.setup.tiles
+
+
+def capital_tile(economy):
+    return economy.setup.capital_tile
+
+
+def port_tile(economy):
+    return economy.setup.port_tile
+
+
+def tile_in_economy(economy, tile):
+    """`tile` when the economy has it, else its capital tile."""
+    return tile if tile in economy.setup.tiles else economy.setup.capital_tile
+
+
+def recipes_of(economy):
+    """{recipe id: recipe} the economy runs."""
+    return economy.setup.recipes
+
+
+def good_specs(economy):
+    """{good: spec} of the goods the economy knows."""
+    return economy.setup.specs
+
+
+def recipe_allowed_at(economy, recipe_id, tile):
+    return economy.setup.recipe_allowed(recipe_id, tile)
+
+
+def opening_prices_of(economy):
+    return economy.setup.opening_prices
+
+
+def unskilled_trade(economy):
+    return economy.setup.unskilled_trade
+
+
+def working_hours_per_year(economy):
+    return economy.setup.working_hours_per_year
+
+
+def working_share(economy):
+    return economy.setup.working_share
+
+
+def import_duty_share(economy):
+    return economy.setup.import_duty_share
+
+
+def trade_premium_of(economy, trade):
+    """What a trade's training adds to the unskilled wage, as a share of it."""
+    return trade_premium(economy.setup, trade)
+
+
+def hunger_goods(economy):
+    """The goods the hunger need's basket buys, or () when the basket has no such need."""
+    setup = economy.setup
+    need = next((spec for spec in setup.basket.needs if spec.need_id == setup.hunger_need), None)
+    return () if need is None else tuple(good for good, _effect in need.goods)
+
+
+def health_figures(economy, outcomes, staple, metals):
+    """The health figures (sim/economy/diagnostics.py) over the yearly outcomes kept."""
+    return diagnostics.summary(outcomes, economy.setup, staple, metals)
+
+
+def crop_site_inputs(economy):
+    """(yield factor by recipe and tile, land a run takes by recipe) for the producers that crop land."""
+    return economy.setup.yield_factor_by_recipe_tile, economy.setup.land_per_run

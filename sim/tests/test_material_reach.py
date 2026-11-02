@@ -1,4 +1,4 @@
-"""How a material reaches the founder (sim/materials/supply.py): imports count as market supply, and a good with
+"""How a material reaches the founder (sim/materials/supply.py): a good with
 no supply says why. The module over small fixtures."""
 
 QUICK_TOPIC = True
@@ -12,8 +12,7 @@ HOME = "home"
 
 def _Market(seller, left, priced=True):
     """What the module reads of the market: the tonnes a partner brings (none when the home society or no one sells)."""
-    return {"partner_import_tonnes": lambda material: 0.0 if seller in (None, HOME) else left,
-            "can_be_bought": lambda material: priced}
+    return {"can_be_bought": lambda material: priced}
 
 
 def _Founder(market, stock=0.0, own=0.0, market_tonnes=0.0, makers=(), done=(), visible=None):
@@ -22,28 +21,14 @@ def _Founder(market, stock=0.0, own=0.0, market_tonnes=0.0, makers=(), done=(), 
         projects_record=materials_stand_in.projects(done=done), goods_stock=lambda commodity: stock,
         mine_capacity={"alum_kg": own},
         visibility=lambda node_id, memo=None: visible is None or node_id in visible, **market)
-    module.market_tonnes = lambda commodity: market_tonnes + module.import_tonnes(commodity)
+    module.market_tonnes = lambda commodity: market_tonnes
     return module
 
 
 HOME_SELLER = HOME
 
 
-class ImportTests(unittest.TestCase):
-    def test_a_partners_tonnes_are_what_comes(self):
-        self.assertEqual(_Founder(_Market("partner", 12.0)).import_tonnes("alum_kg"), 12.0)
-
-    def test_the_home_society_as_seller_brings_no_import(self):
-        self.assertEqual(_Founder(_Market(HOME_SELLER, 12.0)).import_tonnes("alum_kg"), 0.0)
-
-    def test_no_seller_brings_no_import(self):
-        self.assertEqual(_Founder(_Market(None, None)).import_tonnes("alum_kg"), 0.0)
-
-
 class RouteTests(unittest.TestCase):
-    def test_a_partner_that_sells_it_makes_it_imported(self):
-        self.assertEqual(_Founder(_Market("partner", 3.0)).material_supply_route("alum_kg")["route"], "imported")
-
     def test_deposits_or_producers_make_it_market(self):
         route = _Founder(_Market(HOME_SELLER, None), market_tonnes=2.0).material_supply_route("alum_kg")["route"]
         self.assertEqual(route, "market")

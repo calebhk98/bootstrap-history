@@ -35,8 +35,8 @@ def settle_seats(sim, economy, offered_by_seat, inputs_by_seat, edge_id):
     """After the clearing: ({seat: {material: [offered, sold, proceeds in coin]}}, {seat: coin its account held}).
     Each seat that offered output has its ledger credited the money the clearing paid it, gross, less what its concerns'
     inputs cost (`inputs_by_seat`, in coin); every seat's unsold goods and money go back over `edge_id`."""
-    coin = economy.setup.coin_per_unit
-    book, currency = economy_api.economy_book(economy), economy.setup.currency_id
+    coin = economy_api.coin_per_unit(economy)
+    book, currency = economy_api.economy_book(economy), economy_api.currency_id(economy)
     proceeds = {seat_id: max(0.0, book.balance(seat_id, currency)) for seat_id in sorted(sim.state.seats)}
     sold = record_year(economy, offered_by_seat, proceeds, coin)
     takings = {seat_id: economy_api.settle_agent_takings(economy, seat_id, edge_id) * coin

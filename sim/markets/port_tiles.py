@@ -14,8 +14,7 @@ class TilePricesMixin:
 
     def _tile_in_economy(self, tile):
         """The tile asked about, or the capital when the economy does not hold it."""
-        setup = self.economy().setup
-        return tile if tile in setup.tiles else setup.capital_tile
+        return economy_api.tile_in_economy(self.economy(), tile)
 
     def prices_at(self, tile):
         """{good: money per unit} on the tile in coin; the same dict while the year's answers stand."""
@@ -25,7 +24,7 @@ class TilePricesMixin:
         if held is None or held[0] is not answers:
             held = self._tile_prices = (answers, {})
         if tile not in held[1]:
-            coin = self._economy.setup.coin_per_unit
+            coin = economy_api.coin_per_unit(self._economy)
             prices, _stale = economy_api.prices_at(self._economy, tile)
             held[1][tile] = {good: price * coin for good, price in prices.items()}
         return held[1][tile]

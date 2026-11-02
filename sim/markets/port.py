@@ -204,7 +204,7 @@ class EconomyPort:
         if agent is None:
             return None
         economy = agent.economy()
-        recipes = economy.setup.recipes
+        recipes = economy_api.recipes_of(economy)
         rows = []
         for producer in economy_api.all_producers(economy):
             recipe = recipes.get(producer.recipe_id)
