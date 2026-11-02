@@ -1,15 +1,14 @@
-"""Who is hired by whom: the one book of the founder's staff, and the views of every employer's staff
-against the people the labour core holds.
+"""The one book of the founder's staff: who is hired, who is posted for, who arrives, and the reservations
+of every employer against the people the labour core holds.
 
-The founder's household keeps its staff as a trade-to-head-count map (the workforce module's `employees`); only this
-mixin reads or writes it from labour, and code outside labour asks `sim.labour`. Firms and states keep
-their own staff in the agent registry; `reserved_people` adds both so one trade's reservations read from
-one place. Complaint 556.
-"""
+The founder's household keeps its staff as a trade-to-head-count map (the workforce module's `employees`); only
+this part reads or writes it from labour. Firms and states keep their own staff in the agent registry;
+`reserved_people` adds both so one trade's reservations read from one place. Complaint 556."""
 
 
-class StaffBookMixin:
-    """Methods of Labour: the founder's staff (what the labour core hired for the household) and the reservations."""
+class StaffBook:
+    def __init__(self, world):
+        self._world = world
 
     def employed(self, trade):
         """People of one trade on the founder's books."""
@@ -82,3 +81,21 @@ class StaffBookMixin:
     def core_people_by_tile_and_trade(self):
         """The labour core's working people by tile, then trade; None while the economy opens."""
         return self._world.economy.agent_people_by_tile_and_trade()
+
+    def headcount(self):
+        workforce = self._world.workforce
+        return self.employed_total() + workforce.slaves + workforce.freedmen
+
+    def trade_headcount_pending(self, trade):
+        """People already on the books in this trade, plus people already
+        being taught into it who are not ready yet - what a fresh hire or a
+        fresh training run would be added ON TOP OF."""
+        workforce = self._world.workforce
+        pending = sum(row[3] for row in workforce.training
+                      if len(row) > 2 and row[2] == trade)
+        return max(self.employed(trade), self._world.workforce.staff_wanted.get(trade, 0.0)) + pending
+
+    def staff_posted(self):
+        """People wanted in the labour core for the household beyond those it hired at the last clearing."""
+        workforce = self._world.workforce
+        return sum(max(0.0, wanted - workforce.employees.get(name, 0.0)) for name, wanted in workforce.staff_wanted.items())

@@ -1,8 +1,7 @@
 """The society's labour need by trade and the farming technique it holds.
 
-Labour mixin. Farm work is hours the economy's farm producers hire in the labour core plus households' own-plot
-hours; nothing here allocates workers to the farm or moves people between trades (sim/labour/market/DESIGN.md).
-"""
+Farm work is hours the economy's farm producers hire in the labour core plus households' own-plot
+hours; nothing here allocates workers to the farm or moves people between trades (sim/labour/market/DESIGN.md)."""
 import sim.geography.api as geography
 from sim.world import farming_technique
 from sim.labour import labour_market
@@ -10,13 +9,15 @@ from sim.labour import trade_data
 from sim.labour import workforce_carriage
 from sim.labour import workforce_spinup
 
+
 FARM_TRADE = workforce_spinup.FARM_TRADE
 
 
-class LabourAllocationMixin:
-    """Labour methods that read the society's need for each trade."""
-
-    _need_shares_cache = None          # (techniques reached, shares) of the last answer; set by _non_farm_need_shares
+class Allocation:
+    def __init__(self, world, schedule):
+        self._world = world
+        self.schedule = schedule
+        self._need_shares_cache = None          # (techniques reached, shares) of the last answer; set by _non_farm_need_shares
 
     def _non_farm_need_shares(self):
         """Each non-farm trade's share of need from household demand through
@@ -42,9 +43,9 @@ class LabourAllocationMixin:
 
     def unskilled_trade(self):
         """The registry's flagged fallback trade: the one anyone can take up at once."""
-        return trade_data.fallback_trade_of(self._world, self.wage_schedule().training_years)
+        return trade_data.fallback_trade_of(self._world, self.schedule.wage_schedule().training_years)
 
-    def _farming_technique(self):
+    def farming_technique(self):
         """This society's farming technique from the technologies it holds,
         each weighted by how far it has spread."""
         projects = self._world.projects

@@ -1,10 +1,7 @@
 """Staffing controls an actor can set: concerns to keep staffed, and a reserve of spare hands.
 
-Methods of Labour, a mixin only so they live in a file of their own. Written
-against the household actor's employees, so a firm or state can use them.
-Both run in the yearly staff step, ahead of the closure rule, and hire through
-`hire` so its cash, room and literacy limits apply unchanged.
-"""
+Both run in the yearly staff step, ahead of the closure rule, and hire through `hire` so its cash, room and
+literacy limits apply unchanged."""
 import math
 
 from . import trade_data
@@ -20,7 +17,39 @@ def housing_places_to_buy(count, room, cost_per_place, hiring_outlay, spending_p
     return places
 
 
-class StaffControlsMixin:
+class StaffControls:
+    def __init__(self, world, book, capacity, hiring, market):
+        self._world = world
+        self.book = book
+        self.capacity = capacity
+        self.hiring = hiring
+        self.market = market
+
+    def hire_to_cover(self, trade, short, label, partial=False):
+        """Hire `short` whole people of `trade` for a stated policy; the count taken on.
+
+        `partial` takes as many as the household has room for instead of
+        refusing the lot. The wall, the cash and the literacy limit are
+        `hire`'s own, so a refusal simply hires nobody."""
+        if short <= 0:
+            return 0
+        if partial:
+            short = min(short, max(0, int(self.capacity.household_room() + 1e-9)))
+            if short <= 0:
+                return 0
+        hired, _why = self.hiring.hire(trade, short)
+        found = int(round(short))
+        if not hired:
+            return 0
+        self._world.send(RecordEvent.of("policy_hire", "%s: you hire %d %s%s to keep your concerns supervised"
+            % (label, found, trade, "" if found == 1 else "s"), policy=label, trade=trade, count=found))
+        return found
+
+    def replace_lost_foremen(self):
+        """auto_replace_foreman: hire the specialists open concerns need and lack."""
+        for trade, used in sorted(self._world.venture_foremen_used().items()):
+            short = math.ceil(used - self.book.employed(trade) - 0.01)
+            self.hire_to_cover(trade, short, "auto_replace_foreman")
 
     def keep_flagged_concerns_staffed(self):
         """Hire what the flagged concerns need and the household lacks (the projects module works out how many).
@@ -49,12 +78,12 @@ class StaffControlsMixin:
 
     def _house_for_reserve(self, trade, count):
         """Buy worker housing for `count` more people if room is short and cash covers both."""
-        self.buy_room_for(count, count * self.labour_market.quote_annual(trade), "reserve_staff")
+        self.buy_room_for(count, count * self.market.quote_annual(trade), "reserve_staff")
 
     def buy_room_for(self, count, hiring_outlay, label):
         """Buy worker housing for `count` more people when room is short and the purchase budget covers
         the housing and the `hiring_outlay` together. The price and the budget are those of `buy housing`."""
-        places = housing_places_to_buy(count, self.household_room(), self._world.housing_price_per_place(),
+        places = housing_places_to_buy(count, self.capacity.household_room(), self._world.housing_price_per_place(),
                                        hiring_outlay, self._world.spending_power("buy"))
         if places <= 0:
             return False
@@ -65,9 +94,9 @@ class StaffControlsMixin:
 
     def hire_buying_room(self, trade, count, label="auto_hire"):
         """`hire`, and when it is refused only for want of room, buy the room (see buy_room_for) and hire again."""
-        hired, reply = self.hire(trade, count)
+        hired, reply = self.hiring.hire(trade, count)
         if hired or getattr(reply, "cause", None) != "household_room":
             return hired, reply
-        if not self.buy_room_for(float(count), count * self.labour_market.quote_annual(trade), label):
+        if not self.buy_room_for(float(count), count * self.market.quote_annual(trade), label):
             return hired, reply
-        return self.hire(trade, count)
+        return self.hiring.hire(trade, count)
