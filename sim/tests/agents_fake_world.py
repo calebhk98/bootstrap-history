@@ -239,7 +239,7 @@ class FakeWorld:
 				for trade, hours in (self.nodes[node_id].get("lab") or {}).items()}
 
 	def hourly_pay(self, trade: str) -> Optional[float]:
-		return float(self.labour_market.quote(trade, 0.0))
+		return float(self.labour_market.quote(trade))
 
 	def plant_costs(self, node_id: str) -> Optional[Tuple[float, float]]:
 		return self.upkeep(node_id), self.concern_wage_bill(node_id)

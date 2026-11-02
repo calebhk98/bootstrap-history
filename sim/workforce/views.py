@@ -93,10 +93,9 @@ class Views:
 	def trade_available(self, trade):
 		return self.labour.trade_available(trade)
 
-	def labour_quote(self, trade, hours=0.0):
-		"""Money one hour of a trade costs when `hours` a year more of it are bought at once (the price rises with the hours);
-		with none, what an hour costs now."""
-		return self.labour.market.quote(trade, hours)
+	def labour_quote(self, trade):
+		"""Money one hour of a trade costs now: the one wage of the trade."""
+		return self.labour.market.quote(trade)
 
 	def wage(self, trade):
 		"""Money one hour of a trade is worth on the wage schedule (the labour market's quote is `labour_quote`)."""
@@ -125,12 +124,21 @@ class Views:
 		baseline death rate); empty with no provider."""
 		return self.labour.town_mortality_premium_by_tile()
 
+	def cleared_wage_change(self):
+		"""How far the unskilled hour's cleared wage moved between the last two clearings, as a share; None before there are two."""
+		world = self.world
+		if not world.cleared_wage or not world.cleared_wage_before:
+			return None
+		return world.cleared_wage / world.cleared_wage_before - 1.0
+
 	def wage_index_terms(self):
-		"""What the wage index is measured against: the base year's index and how much scarcer labour raises its own price."""
+		"""What the opening's wage level is measured against: the base year's index and how much scarcer labour raises its own price."""
 		return {"base": self.needs.opening_wage_index(), "elasticity": WAGE_SCARCITY_ELASTICITY}
 
 	def wage_index(self):
-		"""Labour is dearer the further the nation's people sit below what its unshocked trend would hold."""
+		"""The opening's wage level before the economy opens, and the shock log's measure of scarcity (hazards, reporting): labour is
+		dearer the further the nation's people sit below what its unshocked trend would hold. Once the economy opens the
+		cleared wage is the wage; no screen or score reads this index for pay."""
 		terms = self.wage_index_terms()
 		unshocked_trend = max(POP_SCALE_FLOOR, float(self.needs.civilisation().get("population", DEFAULT_POPULATION_100AD))
 		                      / DEFAULT_POPULATION_100AD)

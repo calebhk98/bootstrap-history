@@ -22,7 +22,7 @@ READS_BY_OWNER = {
     "core": ("civilisation", "year", "cast"),
     "land": ("home_tiles_held", "borders_among", "built_ways", "held_techniques"),
     "disease": ("disease_burden", "endemic_death_rates", "epidemic_deaths_by_tile"),
-    "workforce": ("farming_technique", "town_mortality_premium_by_tile", "wage_index", "wage_index_terms"),
+    "workforce": ("farming_technique", "town_mortality_premium_by_tile", "cleared_wage_change"),
     "defence_stores": ("relief_kcal_per_day",),
     "hazards": ("country_strata",),
 }

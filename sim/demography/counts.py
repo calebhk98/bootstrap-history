@@ -121,14 +121,13 @@ class Counts:
         self._refresh_indexes(command.year)
 
     def _refresh_indexes(self, year):
-        """Say why the wage bill moved, if it moved enough to be worth saying: a shock's effects are visible at once, not a
-        step later."""
-        terms = self.needs.wage_index_terms()
-        premium, shortfall = rules.wage_cascade(self.needs.wage_index(), terms["base"], terms["elasticity"])
+        """Say why the wage bill moved, if it moved enough to be worth saying: the change in the wage the labour market
+        cleared at between its last two clearings, so a shock's effect on pay is visible once the market has seen it."""
+        change = self.needs.cleared_wage_change()
+        if change is None:
+            return
+        premium = change * PERCENT_SCALE
         if rules.wage_cascade_due(premium, year, self.world.said_wage_cascade):
             self.world.said_wage_cascade = year
-            self.needs.send(RecordEvent.in_year(year, "wage_cascade", "population still %d%% below trend: wages "
-                "(and anything billed in them) are running "
-                "%d%% above normal for here, and will ease "
-                "as the population does"
-                % (round(shortfall * PERCENT_SCALE), round(premium)), population_below_trend_percent=round(shortfall * PERCENT_SCALE), wage_premium_percent=round(premium)))
+            self.needs.send(RecordEvent.in_year(year, "wage_cascade", "wages (and anything billed in them) rose "
+                "%d%% at the last clearing of the labour market" % round(premium), wage_premium_percent=round(premium)))

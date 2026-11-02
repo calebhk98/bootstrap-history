@@ -82,7 +82,7 @@ class Seller(WagesMixin):
     """The part of Labour that sells the founder's own hours."""
 
     def __init__(self, committed=0.0, pool=2000.0):
-        household = Game(wage_hours_this_year=0.0, wages_earned=0.0, wage_income_this_year=0.0, reputation=0.0)
+        household = Game(wage_hours_this_year=0.0, wages_earned=0.0, hours_offered_for_wages={}, reputation=0.0)
         self.household = household
         self.received = []
         self.logged = []
@@ -111,24 +111,25 @@ class Seller(WagesMixin):
 
 class SellingHours(unittest.TestCase):
 
-    def test_selling_hours_pays_the_trades_wage_and_counts_the_hours_against_the_year(self):
+    def test_selling_hours_offers_them_at_the_trades_wage_and_counts_the_hours_against_the_year(self):
         seller = Seller()
         pay, warning = seller.work_for_wages("scribe", 500)
         self.assertEqual(pay, 1500.0)
-        self.assertEqual(seller.received, [1500.0])
+        self.assertEqual(seller.received, [])
+        self.assertEqual(seller.household.hours_offered_for_wages, {"scribe": 500.0})
         self.assertEqual(seller.household.wage_hours_this_year, 500.0)
         self.assertEqual(seller.director_hours_committed(), 500.0)
         self.assertEqual(seller.logged, [("scribe", 500.0, 1500.0)])
 
     def test_a_quote_names_the_pay_and_posts_nothing_logs_nothing_and_commits_no_hours(self):
-        # Complaint 850: a quote must not credit the purse from the employers' edge
+        # a quote must not offer hours
         seller = Seller()
         pay, _warning = seller.work_for_wages("scribe", 500, commit=False)
         self.assertEqual(pay, 1500.0)
         self.assertEqual(seller.received, [])
         self.assertEqual(seller.logged, [])
         self.assertEqual((seller.household.wage_hours_this_year, seller.household.wages_earned,
-                          seller.household.wage_income_this_year), (0.0, 0.0, 0.0))
+                          seller.household.hours_offered_for_wages), (0.0, 0.0, {}))
 
     def test_a_quote_reads_the_revenue_as_the_sale_would_leave_it(self):
         seller = Seller()

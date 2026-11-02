@@ -83,14 +83,9 @@ class StaffYear:
             # a concern; a household of nothing but specialists cannot keep
             # its own doors open.
             #
-            # PEOPLE ARE WHOLE: the smoothing above is a continuous approach
-            # to a continuous target, by design, so writing that target
-            # straight into `employees` would hand a fractional person
-            # every single year, forever, never quite arriving.
-            # _stochastic_round spends the fractional remainder as this
-            # year's chance of the next whole hire, so the long-run average
-            # this formula was tuned against is unchanged and every actual
-            # year's headcount is an integer (see its own docstring).
+            # A hire is a whole number of people asked for the places, but a
+            # staff is the hours the labour core hired over the working year,
+            # so a headcount on the books may be fractional.
             # THROUGH hire(), NOT AROUND IT: a direct write to the pools
             # here instead would mean every rule hire() enforces - the
             # advance, the household room, the literacy wall, the price

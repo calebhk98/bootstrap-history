@@ -155,7 +155,7 @@ RECORDS = {
 
 # views and commands the labour model once answered, by the method of the stand-in `labour` object that does
 LABOUR_METHOD_OF_VIEW = {
-    "wage_bill": "wage_bill", "headcount": "headcount", "effective_scholars": "effective_scholars", "staff_advice": "staff_advice",
+    "wage_bill": "wage_bill", "wages_charged_last_year": "wage_bill", "headcount": "headcount", "effective_scholars": "effective_scholars", "staff_advice": "staff_advice",
     "base_tile": "base_tile", "farm_share_of_hours": "farm_share_of_hours", "settlement_tiles": "settlement_tiles",
     "household_room": "household_room", "supervision_room": "supervision_room", "supervision_room_from": "supervision_room_from",
     "room_advice": "room_advice", "wage_work_this_year": "wage_work_this_year", "sole_supervisors": "sole_supervisors",

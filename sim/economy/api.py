@@ -31,8 +31,9 @@ from . import plant_builds
 from .tool_wear import with_tool_wear
 from .record import EconomyRecord
 from .setup import EconomySetup, TradeSpec, goods_specs, recipe_tile_key
+from .setup import labour_area
 from .types import (EDGE_CARGO, EDGE_CONSUMPTION, EDGE_EXCHANGE, EDGE_EXTERNAL, EDGE_LEGACY, EDGE_MINT, EDGE_PRODUCTION, EDGE_WEAR, Bid,
-                    GoodsMove, LabourBid, Offer, SiteLimit, Transfer, external_edge)
+                    GoodsMove, LabourBid, LabourOffer, Offer, SiteLimit, Transfer, external_edge)
 from .year_accounts import YearAccounts
 from . import baseline_checks, settling, spin_up_sensitivity
 from .unit_cost import variable_cost_per_run
@@ -51,7 +52,7 @@ __all__ = [
     "price_response", "prices_at", "offered_units", "watch_tiles",
     "shown_prices", "Producer", "expected_output_prices", "live_input_prices", "live_wages", "AgentOrders",
     "YearInputs", "recipe_tile_key", "recipes_from_production_data", "plant_builds", "with_tool_wear", "EconomyRecord", "EconomySetup", "TradeSpec", "SiteLimit",
-    "goods_specs", "EDGE_EXTERNAL", "EDGE_LEGACY", "EDGE_CARGO", "EDGE_CONSUMPTION", "EDGE_PRODUCTION", "EDGE_EXCHANGE", "external_edge", "Bid", "GoodsMove", "Offer", "Transfer",
+    "goods_specs", "EDGE_EXTERNAL", "EDGE_LEGACY", "EDGE_CARGO", "EDGE_CONSUMPTION", "EDGE_PRODUCTION", "EDGE_EXCHANGE", "external_edge", "Bid", "GoodsMove", "LabourBid", "LabourOffer", "Offer", "Transfer",
     "variable_cost_per_run", "rebase_basket_price_level", "trade_premium", "title_wealth",
     "traded_volumes", "country_traded_volumes", "country_opening_basket", "market_record", "opening_quantities", "opening_prices_in_hours", "wages_by_trade_weighted", "interest_rate", "producers_of",
     "external_trade_net", "external_trade_volume", "account_balance", "account_holdings",
@@ -162,6 +163,11 @@ def idle_hours_by_trade(economy, country=None):
 def hours_hired_by_employer(economy, employer):
     """{trade: hours} the last labour clearing hired for `employer` (paid hours, bonded included); empty before one."""
     return dict(economy.record.labour.hours_hired_by_employer.get(employer, {}))
+
+
+def add_workers(economy, tile, trade, people):
+    """`people` more workers of `trade` in the labour core, on `tile`'s labour area: they are hired at the clearing like anyone."""
+    economy.record.labour.add_workers(labour_area(tile), trade, people)
 
 
 def labour_market_rows(economy):

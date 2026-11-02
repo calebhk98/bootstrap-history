@@ -19,7 +19,7 @@ _wk = _ask(_game_b, cmd="work", trade="scribe", hours=500)
 _ask(_game_b, cmd="start", id="units_standards")
 _mn = _ask(_game_b, cmd="money")
 check("work reports the wage and no separate practice cost",
-      _wk["earned"] > 0 and "it_cost_your_own_practice" not in _wk and "so_you_are_up" not in _wk, _wk)
+      _wk["expected_pay"] > 0 and "it_cost_your_own_practice" not in _wk and "so_you_are_up" not in _wk, _wk)
 _st2 = _ask(_game_b, cmd="state")
 check("`money` and `state` print the same net after the work in hand",
       _mn["net_after_project_spend"] == _st2["net_after_project_spend"],

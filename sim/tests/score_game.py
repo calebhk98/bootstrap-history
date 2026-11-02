@@ -49,7 +49,7 @@ class ScoreGame(FactViews):
         self.labour = SimpleNamespace(
             headcount=lambda: self.headcount,
             base_annual_wage=lambda trade: self.wage,
-            market=SimpleNamespace(in_current_money=lambda amount: amount))
+            market=SimpleNamespace(quote_annual=lambda trade: self.wage))
 
     @property
     def staff(self):

@@ -23,7 +23,8 @@ class Bondage(BondageMixin):
     def __init__(self, cash=1000.0, room=100.0, employees=None):
         self.cash, self.room, self.paid, self.sent = cash, room, [], []
         self.staff = employees or {}
-        self.household = types.SimpleNamespace(slaves=0, freedmen=0, manumitted_total=0, artisans=0.0, scholars=0.0, training=[], granted_staff=None,
+        self.newcomers = []
+        self.household = types.SimpleNamespace(slaves=0, freedmen=0, manumitted_total=0, artisans=0.0, scholars=0.0, training=[],
                                                reputation=0.0, market_pressure=0.0)
         self.refusals = []
         self._world = types.SimpleNamespace(
@@ -46,6 +47,11 @@ class Bondage(BondageMixin):
 
     def employed(self, trade):
         return self.employed_by_trade().get(trade, 0.0)
+
+    def add_newcomers(self, trade, people):
+        if people > 0.0:
+            self.staff[trade] = self.staff.get(trade, 0.0) + people
+            self.newcomers.append((trade, people))
 
     def is_craft_trade(self, trade):
         return trade != "scholar"
@@ -128,18 +134,17 @@ class GrantsSurviveTheYearsResync(unittest.TestCase):
             game._resync_pools()
         return game.household
 
-    def test_a_grant_is_recorded_and_added_to_the_pools_at_once(self):
+    def test_a_grant_is_new_people_of_their_trades_for_the_labour_core(self):
         game = Bondage()
-        game._grant_staff(scholars=4)
-        self.assertEqual(game.household.granted_staff, {"scholars": 4, "artisans": 0.0})
-        self.assertEqual(game.household.scholars, 4)
+        game._grant_staff(scholars=4, artisans=1)
+        self.assertEqual(game.newcomers, [("scholar", 4), ("artisan", 1)])
 
-    def test_the_yearly_resync_adds_the_grant_back_instead_of_discarding_it(self):
+    def test_the_yearly_resync_counts_the_granted_people_on_the_books(self):
         game = Bondage()
         game._grant_staff(scholars=4)
         self.assertEqual(self.resynced(game).scholars, 4)
 
-    def test_the_pools_are_the_people_on_the_books_plus_the_grant(self):
+    def test_the_pools_are_the_people_on_the_books_including_the_grant(self):
         game = Bondage(employees={"scholar": 2.0, "smith": 3.0})
         game._grant_staff(scholars=4, artisans=1)
         household = self.resynced(game)

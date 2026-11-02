@@ -61,8 +61,8 @@ def copy_plan(actor: Any, chain: List[str], world: Any) -> Dict[str, Any]:
 			hours[trade] = hours.get(trade, 0.0) + amount * COPY_EFFORT_SHARE
 		pioneer_cost += world.copy_cost(step)
 		years = max(years, float(copy_years(node)))
-	base_labour = sum(amount * world.labour_market.quote(trade, 0.0, actor) for trade, amount in hours.items())
-	premium = sum(amount * world.labour_market.quote(trade, 0.0, actor) * HIRING_PREMIUM
+	base_labour = sum(amount * world.labour_market.quote(trade) for trade, amount in hours.items())
+	premium = sum(amount * world.labour_market.quote(trade) * HIRING_PREMIUM
 				  for trade, amount in hours.items() if actor.workforce.get(trade, 0.0) <= 0)
 	other_money = max(0.0, pioneer_cost * COPY_EFFORT_SHARE - base_labour)
 	return {

@@ -41,15 +41,16 @@ def _cmd_work(sim, nodes, cmd, ended):
     if err and pay <= 0:
         return {"ok": False, "error": err}
     out = {"ok": True, "trade": cmd.get("trade"), "hours": cmd.get("hours"),
-           "earned": round(pay, 1), "capital": round(sim.view("acting_balance")(), 1),
+           "expected_pay": round(pay, 1), "capital": round(sim.view("acting_balance")(), 1),
            "your_hours_left_this_year": round(
                max(0.0, sim.view("hours_available")["director_pool"] - sim.view("hours_available")["director_committed"]), 1),
-           "lands_at_next_step": "Capital above already includes the wage. Hours sold here are hours your "
-                                 "standing job does not sell, so its pay at the year's end is lower by "
-                                 "the wage of the trade it sells."}
+           "lands_at_next_step": "The hours are offered in the labour market with everyone's and paid at the year's "
+                                 "clearing, at the trade's one wage, for as many as employers hire. Hours "
+                                 "offered here are hours your standing job does not sell, so its pay at the "
+                                 "year's end is lower by the wage of the trade it sells."}
     if _preview:
         out.update({"preview": True, "nothing_changed": True,
-                    "how_to_confirm": "Repeat the same work without 'preview' to sell the hours."})
+                    "how_to_confirm": "Repeat the same work without 'preview' to offer the hours."})
     if err:
         out["but"] = err
     return out
@@ -181,8 +182,6 @@ def _cmd_labour(sim, nodes, cmd, ended):
             entry["wage_foundation"] = {
                 "base_for_skill_and_difficulty": round(sim.view("base_annual_wage")[trade], 2),
                 **{factor_key: round(value, 3) for factor_key, value in sim.view("labour_market")().cost_factors(trade).items()},
-                "demographic_scarcity": round(sim.view("wage_index")(), 3),
-                "society_price_level": round(sim.view("price_index")(), 3),
             }
         # SAME EXPLANATION AS THE FULL LIST'S, for whoever asks about
         # one trade without ever asking for all of them - see
@@ -210,7 +209,7 @@ def _cmd_labour(sim, nodes, cmd, ended):
                                    "read, and this ceiling rises with it")
         if long:
             entry.update({"kind": trade_family(trade),
-                      "wage_per_hour": round(sim.view("labour_market")().in_current_money(sim.view("wage")[trade]), 3),
+                      "wage_per_hour": round(sim.view("wage")[trade], 3),
                       "hours_the_labour_market_offers": round(sim.view("market_supply")[trade], 0),
                       "places_posted_for_you": round(sim.view("staff_wanted")().get(trade, 0.0), 2),
                       # AND THE SECOND CHANNEL: there are two distinct

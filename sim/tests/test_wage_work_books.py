@@ -16,7 +16,7 @@ from sim.workforce.api import WorkForWages
 
 
 def household(**fields):
-    books = dict(wage_hours_this_year=0.0, wage_income_this_year=0.0, wages_earned=0.0, wage_work_last_year=None, log=[], capital=100.0)
+    books = dict(wage_hours_this_year=0.0, wages_earned=0.0, wage_work_last_year=None, log=[], capital=100.0)
     books.update(fields)
     return types.SimpleNamespace(**books)
 
@@ -36,8 +36,6 @@ class Books(WageLedgerMixin):
     def work_for_wages(self, trade, hours):
         self.held.capital += 30.0
         self.held.wage_hours_this_year += hours
-        self.held.wage_income_this_year += 30.0
-        self.held.wages_earned += 30.0
         self.held.log.append((100, "sold"))
         return 30.0, None
 
@@ -46,9 +44,9 @@ class ThisYearsWageWork(unittest.TestCase):
     def test_no_hours_sold_gives_an_empty_summary(self):
         self.assertEqual(Books().wage_work_this_year(), {})
 
-    def test_the_summary_is_the_hours_sold_and_the_wage_income_and_nothing_displaced(self):
-        summary = Books(household(wage_hours_this_year=1500.0, wage_income_this_year=312.46)).wage_work_this_year()
-        self.assertEqual(summary, {"hours": 1500.0, "wage_income": 312.5})
+    def test_the_summary_is_the_hours_offered(self):
+        summary = Books(household(wage_hours_this_year=1500.0)).wage_work_this_year()
+        self.assertEqual(summary, {"hours": 1500.0})
 
     def test_a_sale_is_logged_as_wage_work_sold_with_its_trade_hours_and_pay(self):
         books = Books()
@@ -60,10 +58,10 @@ class ThisYearsWageWork(unittest.TestCase):
 
 class ClosingTheYear(unittest.TestCase):
     def test_this_years_books_become_last_years_with_the_year_and_are_cleared(self):
-        books = Books(household(wage_hours_this_year=1000.0, wage_income_this_year=200.0), year=101)
+        books = Books(household(wage_hours_this_year=1000.0), year=101)
         books.close_wage_year()
-        self.assertEqual(books.held.wage_work_last_year, {"hours": 1000.0, "wage_income": 200.0, "year": 101})
-        self.assertEqual((books.held.wage_hours_this_year, books.held.wage_income_this_year), (0.0, 0.0))
+        self.assertEqual(books.held.wage_work_last_year, {"hours": 1000.0, "wage_income": 0.0, "year": 101})
+        self.assertEqual(books.held.wage_hours_this_year, 0.0)
 
     def test_a_year_with_no_wage_work_leaves_no_summary(self):
         books = Books(household(wage_work_last_year={"hours": 5.0}))
@@ -88,13 +86,13 @@ class WorkCommand(unittest.TestCase):
     def test_a_preview_states_the_wage_and_says_nothing_changed(self):
         reply = _cmd_work(self.game(), {}, {"cmd": "work", "trade": "scholar", "hours": 1500, "preview": True}, None)
         self.assertTrue(reply["preview"] and reply["nothing_changed"])
-        self.assertEqual(reply["earned"], 312.5)
+        self.assertEqual(reply["expected_pay"], 312.5)
 
     def test_the_work_reports_the_same_wage_the_preview_did(self):
         game = self.game()
         preview = _cmd_work(game, {}, {"cmd": "work", "trade": "scholar", "hours": 1500, "preview": True}, None)
         done = _cmd_work(game, {}, {"cmd": "work", "trade": "scholar", "hours": 1500}, None)
-        self.assertEqual(done["earned"], preview["earned"])
+        self.assertEqual(done["expected_pay"], preview["expected_pay"])
         self.assertNotIn("preview", done)
 
     def test_a_refused_sale_is_not_ok_and_earns_nothing(self):

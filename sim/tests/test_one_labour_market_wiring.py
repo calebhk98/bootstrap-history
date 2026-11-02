@@ -39,7 +39,7 @@ class HireQuoteTests(unittest.TestCase):
     def test_the_wage_quoted_does_not_depend_on_how_many_are_taken_on_or_how_hard_the_trade_is_leaned_on(self):
         market, _labour = real_market()
         calm, _labour = real_market()
-        self.assertEqual(market.quote_annual(TRADE, 3.0), market.quote_annual(TRADE))
+        self.assertEqual(market.quote_annual(TRADE), market.quote_annual(TRADE))
         self.assertEqual(market.quote_annual(TRADE), calm.quote_annual(TRADE))
 
 

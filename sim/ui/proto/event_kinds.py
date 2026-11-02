@@ -110,6 +110,7 @@ EVENT_KINDS = {
     "training_finished": _entry(),
     "venture_opened": _entry(),
     "wage_work_sold": _entry(),
+    "wage_work_paid": _entry(),
     "withdrew_from_public_life": _entry(),
     "work_closed_gate_lapsed": _entry(),
     "work_opened": _entry(),

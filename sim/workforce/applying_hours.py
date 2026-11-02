@@ -56,11 +56,10 @@ class ApplyingHours:
 
     def lose_crew(self, command):
         employees = self.seat.employees
-        dice = self.needs.game_random()
         lost = []
         for trade, share in command.crew:
             have = employees.get(trade, 0.0)
-            kept = rules.surviving_people(dice, have, 1.0 - share)
+            kept = rules.surviving_people(have, 1.0 - share)
             if kept > 0:
                 employees[trade] = kept
             else:

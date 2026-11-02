@@ -29,7 +29,7 @@ def dependants(freedmen=0, slaves=0):
 def seat(freedmen=0, slaves=0, capital=0.0, tax_share=0.0, wages=0.0):
     """The finance module over the bill and the people the economy reports for this household."""
     return finance_host.build(
-        acting_balance=capital, civilisation={"starting_tax_share": tax_share}, wage_bill=wages, household_bill_per_person=BILL,
+        acting_balance=capital, civilisation={"starting_tax_share": tax_share}, wage_bill=wages, wages_charged_last_year=wages, household_bill_per_person=BILL,
         household_dependant_people=dependants(freedmen, slaves), revenue_estimate=0.0, upkeep=0.0)
 
 

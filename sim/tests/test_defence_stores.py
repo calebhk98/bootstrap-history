@@ -231,18 +231,17 @@ class _Survivors:
         workforce.survive_staff(survival_share)
 
 
-class PeopleStayWhole(unittest.TestCase):
+class StaffScalesByTheShare(unittest.TestCase):
 
-    def test_a_shock_leaves_whole_people_and_never_more_than_before(self):
+    def test_a_shock_scales_every_count_by_the_share_and_keeps_fractions(self):
         for seed in range(6):
-            for survival_share in (0.9, 0.5, 0.1, 0.0):
+            for survival_share in (0.9, 0.5, 0.1):
                 host = _Survivors(seed)
                 host.apply_staff_survival(survival_share)
                 household = host.state.household
-                counts = [household.scholars, household.artisans] + list(household.employees.values())
-                self.assertEqual(counts, [float(round(count)) for count in counts], (seed, survival_share, counts))
-                self.assertLessEqual(household.scholars, 7.0)
-                self.assertLessEqual(household.artisans, 9.0)
+                self.assertAlmostEqual(household.scholars, 7.0 * survival_share)
+                self.assertAlmostEqual(household.artisans, 9.0 * survival_share)
+                self.assertAlmostEqual(household.employees["smith"], 5.0 * survival_share)
 
     def test_a_trade_that_loses_everyone_leaves_the_books(self):
         host = _Survivors(1)

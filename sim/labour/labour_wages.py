@@ -4,8 +4,9 @@ These are methods of Labour; they are a mixin only so that they can live in
 a file of their own (see labour.py's own docstring for the split).
 
 work_for_wages and wage_bill are the two directions of the same trade: a
-founder selling their own hours at the going rate, and a household paying
-its standing staff that same rate every year. Both ask the labour market (labour_market_api.py), which
+founder offering their own hours at the going rate, and a household paying
+its standing staff that same rate every year. Both are settled by the year's
+clearing (sim/markets/port_staff.py) at the one wage of the trade. Both ask the labour market (labour_market_api.py), which
 starts from wage_per_hour (the economy's wage for the trade, or before it opens the opening
 schedule's subsistence floor and training premium) and applies wage_cost_factors - the food,
 housing and trade-tool multipliers (trade_data.tool_basket, HOUSING_PRESSURE_*,
@@ -23,7 +24,6 @@ from .staff_moves import (FOUNDER_DEAD, HOURS_NOT_POSITIVE, HOURS_SHORT, NO_SUCH
                           wage_work_blocker)
 from .staff_pay_rules import wage_bill_of, wage_for_hours_of
 from sim.constants import declare
-from sim.ledger.api import ReceiveFromEdge
 
 
 class WagesMixin(WageLedgerMixin):
@@ -35,31 +35,15 @@ class WagesMixin(WageLedgerMixin):
     _wage_schedule_cache = None   # the opening's wage schedule, built on first use
 
 
-    WAGE_REPUTATION_BONUS_CAP = declare(
-        "WAGE_REPUTATION_BONUS_CAP", 0.5, kind="temporary_heuristic",
-        unit="fraction of the trade rate", source=None, confidence="D",
-        why="A well-known founder can earn up to half again the ordinary "
-            "trade rate for their own hours of wage labour, capped so "
-            "reputation cannot make wage labour arbitrarily lucrative. "
-            "Tuned game balance, not a measured wage premium for fame.")
-    WAGE_REPUTATION_SCALE = declare(
-        "WAGE_REPUTATION_SCALE", 200.0, kind="temporary_heuristic",
-        unit="reputation points per 100% of the bonus", source=None,
-        confidence="D",
-        why="How much reputation it takes to reach WAGE_REPUTATION_BONUS_"
-            "CAP's own ceiling. Tuned to REPUTATION_EASE_SCALE's own order "
-            "of magnitude (economy.py), not derived from anything.")
-
     @property
     def labour_market(self):
         """The one labour market every employer asks (labour_market_api.py)."""
         return LabourMarket(self)
 
     def wage_for_hours(self, trade, hours):
-        """What `hours` of the founder's own work in `trade` pay now. The one answer work_for_wages
-        pays and every quote of that pay (the stall banner, the year's wage-work rule) reads."""
-        return wage_for_hours_of(self.labour_market.quote_annual(trade), self._world.HOURS_PER_PERSON_YEAR, hours,
-                                 self._world.reputation(), self.WAGE_REPUTATION_BONUS_CAP, self.WAGE_REPUTATION_SCALE)
+        """What `hours` of the founder's own work pay now at the trade's market wage, the one wage every employer pays. The
+        figure work_for_wages expects and every quote of that pay (the stall banner, the year's wage-work rule) reads."""
+        return wage_for_hours_of(self.labour_market.quote_annual(trade), self._world.HOURS_PER_PERSON_YEAR, hours)
 
     def best_wage_trade(self):
         """The trade open to the founder that pays most an hour, or None when none is open."""
@@ -74,13 +58,13 @@ class WagesMixin(WageLedgerMixin):
         no capital and a useful pair of hands should be able to earn
         a wage, and at the start it is one of the few things he can do.
 
-        It is paid at the ordinary rate for that trade, which is the same table
-        the game charges you when you hire someone, so there is no arbitrage in
-        either direction. The cost is your own hours, which are the one resource
-        nothing else can buy: hours sold here are hours the standing job
-        (labour_job.py) does not sell and your own projects cannot have.
+        The hours are offered in the labour core with the households' own (sim/markets/port_staff.py) and paid
+        what the year's clearing hires of them, at the one market wage of the trade, the same the game charges you when
+        you hire someone, so there is no arbitrage in either direction. The pay returned is the quote, not money in
+        hand. The cost is your own hours, which are the one resource nothing else can buy: hours offered here are
+        hours the standing job (labour_job.py) does not sell and your own projects cannot have.
 
-        With `commit` False it is a quote: the pay and the note as the sale would leave them, with no posting, log line
+        With `commit` False it is a quote: the pay and the note as the sale would leave them, with no offer, log line
         or book kept (the hours count against the year only while the note is worked out).
         """
         blocker = wage_work_blocker(
@@ -119,9 +103,8 @@ class WagesMixin(WageLedgerMixin):
         pay = self.wage_for_hours(trade, hours)
         revenue_before = self._world.revenue()
         if commit:
-            self._world.send(ReceiveFromEdge(self._world.EDGE_EMPLOYERS, pay, "wages for your own work"))
-            workforce.wage_income_this_year = workforce.wage_income_this_year + pay
-            workforce.wages_earned = (workforce.wages_earned or 0.0) + pay
+            offered = workforce.hours_offered_for_wages
+            offered[trade] = offered.get(trade, 0.0) + hours
         hours_before = workforce.wage_hours_this_year
         workforce.wage_hours_this_year = hours_before + hours
         try:

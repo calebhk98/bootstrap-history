@@ -4,7 +4,7 @@ An employer (the founder's household, a firm, the state, an interest group)
 holds no wage arithmetic. It asks this market what an hour of a trade costs,
 hires through the labour core (sim/markets/port_staff.py). The wage is the economy's
 wage for the trade (labour_wages.py reads it; before the economy opens, the opening schedule with
-the cost-of-living factors and the price and wage indices).
+the cost-of-living factors and the price and wage indices, which only the opening needs).
 """
 from sim.constants import declare
 
@@ -38,21 +38,6 @@ class LabourMarket:
         """What an hour pays against the opening schedule, at this economy's output per hour."""
         return self._world.real_output_per_head() ** self._labour.LABOUR_PAY_SHARE_OF_OUTPUT_GAIN
 
-    def wage_index(self):
-        """The scarcity-driven index every wage in this society is scaled by."""
-        return self._world.wage_index
-
-    def wage_index_change(self, index_before):
-        """How far the wage index has moved from a reading taken earlier."""
-        return self._world.wage_index - index_before
-
-    def household_wage_ratio(self):
-        """What an hour of the unskilled numeraire pays now against the opening, before the price level and
-        the cost of living (the solver's prices carry those): the scarcity of hands against the working
-        population, times the share of output gain pay passes on."""
-        world = self._world
-        return world.wage_index / world.wage_index_base * self.pay_scale()
-
     def town_housing_room(self):
         """People the home town can house beyond those already there: the spare share of its
         dwellings plus the worker housing built in it."""
@@ -73,8 +58,8 @@ class LabourMarket:
                               self._labour.HOUSING_PRESSURE_MAX_MARKUP)
 
     def _annual(self, trade):
-        """The economy's wage for the trade over a year; before the economy opens, the opening schedule's with the
-        cost-of-living factors."""
+        """The economy's wage for the trade over a year. Only before the economy opens, the opening schedule's with the
+        cost-of-living factors, the price index and the wage index (the opening's wage level: nothing else reads it)."""
         world = self._world
         wage = world.economy.agent_wage_per_hour(trade)
         if wage is not None:
@@ -83,10 +68,9 @@ class LabourMarket:
         factors = self._labour.wage_cost_factors(trade)
         return annual_wage(base, factors["weighted"], world.price_index, world.wage_index, 1.0, self.pay_scale())
 
-    def quote_annual(self, trade, people=0.0):
+    def quote_annual(self, trade):
         """Money one person-year of a trade costs now: the economy's wage for the trade, the same for every employer and
-        every number taken on (`people` is accepted for callers that name it; a hire is a standing bid in the labour core,
-        sim/markets/port_staff.py)."""
+        every number taken on (a hire is a standing bid in the labour core, sim/markets/port_staff.py)."""
         return self._annual(trade)
 
     def quote_annual_in(self, trade, country):
@@ -100,17 +84,10 @@ class LabourMarket:
         """One person-year of a trade at its wage, before any pay premium (a screen's 'wage table' figure)."""
         return self._annual(trade)
 
-    def quote(self, trade, hours=0.0, employer=None, pay_premium=0.0):
-        """Money one hour of a trade costs now, once `hours` a year more are taken on: the one wage of the trade (`employer`
-        and `pay_premium` are accepted for callers that name them and change nothing)."""
-        world = self._world
-        return self.quote_annual(trade, hours / world.HOURS_PER_PERSON_YEAR) / world.HOURS_PER_PERSON_YEAR
+    def quote(self, trade):
+        """Money one hour of a trade costs now: the one wage of the trade."""
+        return self._annual(trade) / self._world.HOURS_PER_PERSON_YEAR
 
     def commission_cost(self, trade, hours):
         """What a one-off job of `hours` costs: the hour the market quotes."""
         return hours * self.quote(trade)
-
-    def in_current_money(self, schedule_amount):
-        """An amount at the opening schedule's prices, in today's money."""
-        world = self._world
-        return schedule_amount * world.wage_index * world.price_index

@@ -6,7 +6,7 @@ from sim.tests.ui_stand_in import FactViews
 STAFF_FIELDS = ("employees", "scholars", "artisans", "directors_extra", "slaves", "freedmen", "manumitted_total",
                 "reserve_craftsmen", "reserve_scholars")
 HOURS = {"allocations": "hour_allocations", "work_trade": "work_trade", "wage_hours": "wage_hours_this_year",
-         "wage_income": "wage_income_this_year", "teaching_hours": "teaching_hours_this_year",
+         "wages_offered_for": "hours_offered_for_wages", "teaching_hours": "teaching_hours_this_year",
          "relocation_hours": "relocation_hours_this_year", "supervision_hours": "supervision_hours_this_year",
          "contract_hours": "contract_hours", "commissioned": "commissioned", "last_year": "hours_this_year",
          "wage_work_last_year": "wage_work_last_year", "trade_hours_used": "trade_hours_used",

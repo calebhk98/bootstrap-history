@@ -7839,12 +7839,10 @@
      "trade": "smith",
      "wage_foundation": {
       "base_for_skill_and_difficulty": 1046.21,
-      "demographic_scarcity": 1.0,
       "food": 1.0,
       "housing": 1.0,
       "local_trade_scarcity": 1.0,
       "skill_and_difficulty": 1.0,
-      "society_price_level": 1.0,
       "tools": 1.0,
       "weighted": 1.0
      },

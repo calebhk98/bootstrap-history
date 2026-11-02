@@ -112,7 +112,7 @@ class CreditLine:
 		needs = self.needs
 		price_index = needs.price_index()   # at this society's prices: bread costs what bread costs where you are
 		rev = needs.revenue_estimate() if revenue is None else revenue
-		wages = needs.wage_bill()
+		wages = needs.wages_charged_last_year()
 		capital = needs.acting_balance() if capital is None else capital
 		base = needs.household_bill_per_person()    # the founder's own needs
 		household = self.dependants_cost()

@@ -45,17 +45,36 @@ class NoteTradeSpread(Command):
 
 
 @dataclass(frozen=True)
+class ClearingSettled(Command):
+	"""The year's clearing charged the acting seat `wages_charged` for its staff and one-year orders and paid it `wage_work_pay`
+	for the hours of its own it offered in the labour market (both in money); the offers are spent."""
+	wages_charged: float
+	wage_work_pay: float
+
+
+@dataclass(frozen=True)
+class NewcomersPlaced(Command):
+	"""The acting seat's newly trained and granted people were put into the labour core; the list of them is spent."""
+
+
+@dataclass(frozen=True)
+class NoteClearedWage(Command):
+	"""The year's clearing set the unskilled hour's wage at `wage` (None: no market cleared one); the last reading becomes the one before."""
+	wage: Optional[float]
+
+
+@dataclass(frozen=True)
 class GrantStaff(Command):
-	"""An institution hands the acting seat people outright, on completion: recorded as a grant, so the yearly resync of
-	the pools from the payroll keeps them."""
+	"""An institution hands the acting seat people outright, on completion: they join the seat's staff and the labour core,
+	and are hired at the clearing like anyone."""
 	scholars: float = 0.0
 	artisans: float = 0.0
 
 
 @dataclass(frozen=True)
 class LoseStaff(Command):
-	"""A shock takes people from the acting seat: each person on its books survives with probability `survival_share`, rolled
-	one by one so headcounts stay whole (a trade left with nobody is dropped; draws from the game's dice), its pool of deputy
+	"""A shock takes people from the acting seat: the people on its books are scaled by `survival_share`, fractions kept
+	(a trade left with nobody is dropped), its pool of deputy
 	directors is multiplied by `deputies_share`, and its log says which trades fell and that `cause` is why. Answers
 	{"people_before": ..., "people_after": ...}, the scholars, artisans and hired people on the books either side."""
 	cause: str

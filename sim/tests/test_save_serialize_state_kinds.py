@@ -74,13 +74,13 @@ check("serialize_state: outside `verbatim` a dict is copied", serialize_state({"
 household = HouseholdState(saving_target=3.0)
 cash_seat = LedgerSeat(cash_flow={"wages": -12.5}, cash_mark=None, cash_periods=[{"year": 99, "net": 3.0}], total_spend=7.0)
 workforce = WorkforceSeat(wages_earned=None, trades_created={"mason", "baker"}, trade_introduced_year={"mason": 95}, employees={"mason": 2.0},
-                          training=[["mason", 2]], granted_staff=None, unused_hours_reported={"order:1": [40.0, "no_hands"]})
+                          training=[["mason", 2]], unused_hours_reported={"order:1": [40.0, "no_hands"]})
 blob = serialize_state(household)
 cash_blob = serialize_state(cash_seat)
 staff_blob = serialize_state(workforce)
 check("serialize_state: a dataclass is a dict of its fields in declaration order", list(blob) == saved_field_names(HouseholdState), list(blob)[:5])
 check("serialize_state: None-means-never fields stay None, and a zero stays zero",
-      staff_blob["wages_earned"] is None and cash_blob["cash_mark"] is None and staff_blob["granted_staff"] is None
+      staff_blob["wages_earned"] is None and cash_blob["cash_mark"] is None
       , None)
 _debt = serialize_state(FinanceSeat(interest_paid=None))
 check("serialize_state: a finance seat keeps its None-means-never field None and its negative default as it is",

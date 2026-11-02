@@ -1,4 +1,6 @@
 """The commands the workforce module applies."""
+from sim.reporting.api import RecordEvent
+
 from . import rules
 from .state import ONCE_COMMISSION
 
@@ -18,6 +20,32 @@ class Applying:
 		else:
 			employees.pop(command.trade, None)
 		self.labour.resync_pools()
+
+	def wage_work_paid(self, command):
+		"""What the clearing charged the seat for its places is the wages it paid, and what it paid for the hours the seat
+		offered of its own is its earnings: last year's wage-work summary (the year closed before the clearing) takes it;
+		the offers are spent."""
+		seat = self.seat
+		offered = sum(seat.hours_offered_for_wages.values())
+		seat.hours_offered_for_wages = {}
+		seat.wages_paid = command.wages_charged
+		pay = command.wage_work_pay
+		seat.wages_earned = (seat.wages_earned or 0.0) + pay
+		if pay > 0.0:
+			last = dict(seat.wage_work_last_year or {"hours": round(offered, 1), "wage_income": 0.0})
+			last["wage_income"] = round(last.get("wage_income", 0.0) + pay, 1)
+			seat.wage_work_last_year = last
+			self.needs.send(RecordEvent.of("wage_work_paid", "wage work: the labour market paid %s for the hours of your own you offered"
+			                               % self.needs.money_text(pay, grouped=True, short=True), pay=pay))
+
+	def newcomers_placed(self, command):
+		"""The seat's newly trained and granted people are in the labour core now."""
+		self.seat.newcomers = {}
+
+	def note_cleared_wage(self, command):
+		"""The unskilled hour's wage the clearing set: the last reading becomes the one before."""
+		self.world.cleared_wage_before = self.world.cleared_wage
+		self.world.cleared_wage = command.wage
 
 	def hours_arrived(self, command):
 		"""The clearing filled the seat's one-year order of a purpose; the order is spent."""
@@ -50,14 +78,13 @@ class Applying:
 		return {"people_before": people_before, "people_after": seat.scholars + seat.artisans + sum(seat.employees.values())}
 
 	def survive_staff(self, survival_share):
-		"""Each scholar, artisan and hired person survives with the share, rolled one by one; a trade left with nobody is dropped."""
+		"""Scholars, artisans and each trade's hired people are scaled by the share, fractions kept; a trade left with nobody is dropped."""
 		seat = self.seat
-		dice = self.needs.game_random()
 		survive = rules.surviving_people
-		seat.scholars = survive(dice, seat.scholars, survival_share)
-		seat.artisans = survive(dice, seat.artisans, survival_share)
+		seat.scholars = survive(seat.scholars, survival_share)
+		seat.artisans = survive(seat.artisans, survival_share)
 		for trade in sorted(seat.employees):
-			survivors = survive(dice, seat.employees[trade], survival_share)
+			survivors = survive(seat.employees[trade], survival_share)
 			if survivors > 0:
 				seat.employees[trade] = survivors
 			else:

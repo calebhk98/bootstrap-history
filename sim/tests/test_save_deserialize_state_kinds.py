@@ -61,7 +61,7 @@ check("deserialize_state: a seat's sets are sets, its dicts typed, its lists kep
       and household.cash_periods == [{"year": 99, "net": 3.0}] and workforce.unused_hours_reported == {"order:1": [40.0, "no_hands"]}, None)
 _reporting = deserialize_state({"log": [[100, "built a mill"]]}, ReportingSeat)
 check("deserialize_state: a list of pairs annotated as tuples comes back as tuples", _reporting.log == [(100, "built a mill")] and type(_reporting.log[0]) is tuple, _reporting.log)
-check("deserialize_state: a field the save lacks takes its default", workforce.trades_endemic == set() and workforce.granted_staff is None and workforce.work_trade is None, None)
+check("deserialize_state: a field the save lacks takes its default", workforce.trades_endemic == set() and workforce.work_trade is None, None)
 check("deserialize_state: an unknown key and an `_on_change` key are not set", not hasattr(workforce, "not_a_field") and not hasattr(workforce, "_on_change_hook"))
 
 # ---- the retry counts, nested records and sets of the projects

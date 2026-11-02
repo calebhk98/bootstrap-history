@@ -193,7 +193,7 @@ class ActorWorld(BudgetView, SiteView, RevenueView, GroupView, PatronageView, St
 
 	def hourly_pay(self, trade: str) -> Optional[float]:
 		"""What an hour of a trade pays at the going wage of the home labour market."""
-		return float(self.labour_market.quote(trade, 0.0))
+		return float(self.labour_market.quote(trade))
 
 	def plant_costs(self, node_id: str) -> Optional[Tuple[float, float]]:
 		"""(upkeep, wage bill) of a plant of the concern at its founding size at home."""

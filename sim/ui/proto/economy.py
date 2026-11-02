@@ -745,7 +745,7 @@ def _agent_economy(sim, cmd=None):
         "ok": True,
         "price_index": round(sim.view("price_index")(), 4),
         "wage_index": round(sim.view("wage_index")(), 4),
-        "cost_of_living_a_year": round(sim.view("living_cost")() - sim.view("wage_bill")(), 1),
+        "cost_of_living_a_year": round(sim.view("living_cost")() - sim.view("wages_charged_last_year")(), 1),
         "literacy": {"general": round(float(sim.view("literacy")("literacy_general")), 3),
                      "elite": round(float(sim.view("literacy")("literacy_elite")), 3)},
         "household_places_used_of_all": "%.1f of %.1f" % (
@@ -776,8 +776,7 @@ def _agent_economy(sim, cmd=None):
             {"trade": trade, "a_year_of_one": round(sim.view("labour_market")().quote_annual(trade), 0),
              "wage_foundation": {
                  "base_for_skill_and_difficulty": round(sim.view("base_annual_wage")[trade], 2),
-                 **{factor_key: round(value, 3) for factor_key, value in sim.view("labour_market")().cost_factors(trade).items()},
-                 "demographic_scarcity": round(sim.view("wage_index")(), 3)}}
+                 **{factor_key: round(value, 3) for factor_key, value in sim.view("labour_market")().cost_factors(trade).items()}}}
             for trade in sorted(WAGES) if sim.view("trade_available")[trade]]
     return out
 

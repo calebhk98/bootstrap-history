@@ -197,6 +197,8 @@ class Economy:
         land_bid_year.take_up_own(setup, record, self._own_plot_options())
         everyone = labour_offers(setup, record, view, outside_option, inputs.labour_levy_hours_per_worker,
                                  inputs.population_by_tile)
+        for orders in inputs.engine_orders.values():
+            everyone.extend(orders.labour_offers)    # a seat's own hours, sold at the market's wage
         context = labour_context(setup, record, view, self.carriage, inputs, self._own_plot_options(), outside_option)
         context = dataclasses.replace(context, outlay_room=outlay_room.by_employer(
             plans, setup.state_agent, record.state_budget, lambda employer: record.book.balance(employer, money)))

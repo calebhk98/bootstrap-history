@@ -11,10 +11,9 @@ price curve buy_slaves prices against, the same saturating idea labour_
 population.py applies to ordinary hiring. _grant_staff and _resync_pools
 are the bookkeeping underneath both verbs and underneath every institution
 that hands a household trained people outright (a school's own
-professors, a patron's freedmen): _grant_staff records what an institution
-granted so _resync_pools - which runs unconditionally every step() and
-rebuilds self.household.scholars/artisans from the trades actually on the
-books - does not overwrite the grant out of existence.
+professors, a patron's freedmen): _grant_staff puts them on the books and
+into the labour core, and _resync_pools rebuilds self.household.scholars/
+artisans from the trades actually on the books.
 """
 from sim.constants import declare
 from sim.polity.api import GainReputation
@@ -33,26 +32,14 @@ class BondageMixin:
     def _grant_staff(self, scholars=0.0, artisans=0.0):
         """An institution hands you people outright, on completion - the
         school's own professors, the freedmen a patron staffs your workshop
-        with. They are not on the payroll you can fire (their keep is already
-        inside the institution's own upkeep), so they do not belong in
-        `self.household.employees`; they have to survive `_resync_pools()` some other
-        way, which is what this records.
-
-        `_resync_pools()` runs unconditionally every single step() and
-        rebuilds self.household.scholars / self.household.artisans from
-        `self.household.employees` alone, so anything `_complete()` grants
-        outright has to be recorded here rather than added straight to
-        those two fields: an addition that bypasses this record is silently
-        overwritten and discarded the next time `_resync_pools()` runs.
+        with. They are people of the scholar and craft trades like any
+        others: they go on the staff book, where `_resync_pools()` counts
+        them, and into the labour core, where the seat's places hire them at
+        the year's clearing at the market wage.
         """
-        workforce = self._world.workforce
-        granted = workforce.granted_staff
-        if granted is None:
-            granted = workforce.granted_staff = {"scholars": 0.0, "artisans": 0.0}
-        granted["scholars"] = granted.get("scholars", 0.0) + scholars
-        granted["artisans"] = granted.get("artisans", 0.0) + artisans
-        workforce.scholars += scholars
-        workforce.artisans += artisans
+        self.add_newcomers(trade_data.scholar_trade(), scholars)
+        self.add_newcomers(trade_data.generic_craft_trade(), artisans)
+        self._resync_pools()
 
     FREEDMAN_ARTISAN_PRODUCTIVITY = declare(
         "FREEDMAN_ARTISAN_PRODUCTIVITY", 1.0, kind="temporary_heuristic",
@@ -98,16 +85,12 @@ class BondageMixin:
         you need a chemist");
         nothing about a chemist makes them a scholar either.
 
-        PLUS WHAT AN INSTITUTION GRANTED OUTRIGHT. See _grant_staff: those
-        people are real and already paid for out of the institution's own
-        upkeep, and this is the one place that ever told self.household.scholars and
-        self.household.artisans what they are, so it is the one place that has to add
-        the grant back rather than let it be overwritten out of existence.
+        WHAT AN INSTITUTION GRANTED OUTRIGHT is on the books as staff of
+        its trade (see _grant_staff), so it is counted with the rest.
         """
         workforce = self._world.workforce
         craft = sum(count for trade, count in self.employed_by_trade().items() if self.is_craft_trade(trade))
         schol = self.employed(trade_data.scholar_trade())
-        granted = workforce.granted_staff or {}
         # PEOPLE STILL LEARNING ARE NOT YET CRAFTSMEN. This function
         # recomputes self.household.artisans from scratch on every call, so
         # anyone still in the training queue must be excluded from the count
@@ -129,9 +112,8 @@ class BondageMixin:
         else:
             free_share = 0.0
         workforce.artisans = (craft + owned * free_share * self.FREEDMAN_ARTISAN_PRODUCTIVITY
-                         + owned * (1.0 - free_share) * self.TRAINED_SLAVE_ARTISAN_PRODUCTIVITY
-                         + granted.get("artisans", 0.0))
-        workforce.scholars = schol + granted.get("scholars", 0.0)
+                         + owned * (1.0 - free_share) * self.TRAINED_SLAVE_ARTISAN_PRODUCTIVITY)
+        workforce.scholars = schol
 
     TRAINING_YEARS = declare(
         "TRAINING_YEARS", 3.0, kind="temporary_heuristic",
