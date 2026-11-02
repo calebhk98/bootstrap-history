@@ -32,7 +32,7 @@ class SalesOfAJointRecipeTests(unittest.TestCase):
         ledger = YearLedger()
         ledger.sold[("farm1", "grain")] = 50.0 * 900.0       # half the grain, the straw unsold
         farm = producers.Producer("farm1", "owner", "farm", "tile", capacity_runs=100.0, expected_sales=100.0)
-        runs = year_close.runs_sold(farm, FARM, ledger, Book(), lambda good, tile: "area", {},
+        runs = year_close.runs_sold(farm, FARM, ledger, Book(), lambda good, tile: "area",
                                     {"grain": 1.0, "straw": 0.001})
         self.assertAlmostEqual(runs, 50.0 * 900.0 / (900.0 + 1.5), places=6)
 
@@ -40,7 +40,7 @@ class SalesOfAJointRecipeTests(unittest.TestCase):
         ledger = YearLedger()
         ledger.sold[("farm1", "grain")] = 30.0 * 900.0
         farm = producers.Producer("farm1", "owner", "farm", "tile", capacity_runs=100.0, expected_sales=100.0)
-        self.assertAlmostEqual(year_close.runs_sold(farm, FARM, ledger, Book(), lambda good, tile: "area", {}, {}), 30.0)
+        self.assertAlmostEqual(year_close.runs_sold(farm, FARM, ledger, Book(), lambda good, tile: "area", {}), 30.0)
 
     def test_the_paying_output_is_the_one_with_most_value_not_most_weight(self):
         self.assertEqual(producers.paying_output(FARM, {"grain": 1.0, "straw": 0.001}), "grain")
