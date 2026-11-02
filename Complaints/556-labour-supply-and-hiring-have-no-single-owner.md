@@ -20,9 +20,10 @@ one employer cannot also be given to another (551 is one case: own-plot hours an
 - `seat.employees` is still written directly by `sim/workforce/` (`staff_year.py`, `applying_hours.py`, `commands_applied.py`); the
   reads go through `sim/labour/staff_book.py` (`Labour.employed`, `employed_by_trade`, `set_employed`, `add_employed`).
   `sim/tests/test_labour_single_owner.py` walls the labour modules' writes.
-- The hire check still reads the estimate `national_trade_population` (`sim/labour/labour_population.py`) for the
-  town cap rather than the core's people by tile; the estimate is the core's headcount for any trade the core holds, and the
-  placeholder `NO_DEMAND_TRADE_SHARE` stands in elsewhere (`retire` names Complaint 964). `python3 sim/constants.py --burndown` lists it.
+- The hire check reads `hands_available` (`sim/labour/labour_population.py`): the core's people of the trade in the
+  tiles reached, or last year's idle hours of it nationwide where those are more; `NO_DEMAND_TRADE_SHARE` stands in for a
+  trade the core holds nobody of (`retire` names Complaint 964; `python3 sim/constants.py --burndown` lists it). The idle
+  hours are not by tile, so a hire can count hands that are idle elsewhere.
 - A seeded trade nobody bids for is bounded to nothing at each trim (`trade_seed.bound_by_hirers`), but the opening's own seed is
   not bounded by the carriage crews it will hire (`trade_seed.seed_hours`).
 - Run a real Rome game and read the headcounts the seeding gave (carter, porter, sailor, merchant); the merchant count in the core
