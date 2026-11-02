@@ -16,7 +16,7 @@ from .farm_territory_refresh import refresh_farm_territory
 from sim.world import land
 
 
-from sim.land.api import rules as land_rules
+from sim.land.api import OpenGeography, rules as land_rules
 from sim.knowledge.api import LearnTechnique, StartDoneYearRecord, declared_starting_techs
 from . import change_hooks, node_rederive, seat_registry
 from .year_run import run_year
@@ -162,7 +162,7 @@ class Sim:
         # existence somewhere does not mean an unlimited quantity of it is
         # available.
         # --- GEOGRAPHY: where things are, FOR THE CIVILIZATION IN PLAY (computed once; see sim/geography/)
-        self.view("legacy_geography")().open(self.view("geography_data")())
+        self.send(OpenGeography(self.view("geography_data")()))
         # Whatever this civilization already has is free and already done, and it
         # is GRANTED, not earned: it must never count in done_earned as though
         # the founder had built it, and it must never be "forgotten" in a

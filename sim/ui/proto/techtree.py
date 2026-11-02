@@ -937,7 +937,7 @@ def _explain_cost(sim, nodes, node_id, node):
                  "base_total": round(node["_labour_cost"] + node["cap"]
                                      + bill["cost_of_missing"], 1),
                  "civ_domain_factor": round(sim.view("civ_cost_factor")(node_id), 3),
-                 "material_distance_factor": round(sim.view("legacy_geography")().material_cost_factor(node_id), 3),
+                 "material_distance_factor": round(sim.view("material_cost_factor")(node_id), 3),
                  "opposition_factor": round(sim.view("opposition_factor")(node_id), 3),
                  "rebuild_factor": round(sim.view("rebuild_work_factor")(node_id), 3),   # the share left to do of a lost node
                  # THE FACTOR ACTUALLY MULTIPLIED IN, not a decoy:

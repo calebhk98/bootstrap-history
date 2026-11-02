@@ -1,6 +1,6 @@
 """Commands to the owner of who holds each tile, the ways and works built, and the colonies."""
 from dataclasses import dataclass
-from typing import Optional
+from typing import Any, Optional
 
 from sim.assembly.api import Command
 
@@ -13,6 +13,12 @@ class TransferTile(Command):
 	to_actor: Optional[str]
 	cause: str
 	control: Optional[str] = None
+
+
+@dataclass(frozen=True)
+class OpenGeography(Command):
+	"""Open the map's geography on the scenario's geography data, once, when a game starts. Answers nothing."""
+	geography_data: Any
 
 
 @dataclass(frozen=True)
