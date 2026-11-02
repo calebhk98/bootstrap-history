@@ -49,6 +49,3 @@ class ScheduleDocument(unittest.TestCase):
     def test_the_documents_money_conversion_is_the_schedules_money_per_labour_hour(self):
         schedule = WageSchedule({"labourer": 0.0, "smith": 5.0}, 2.5, 1.0, 0.10)
         self.assertEqual(schedule.document()["money_per_labour_hour"], 2.5)
-
-
-class PressureLivesInTheState(unittest.TestCase):
