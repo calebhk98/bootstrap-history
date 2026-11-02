@@ -1,10 +1,6 @@
 """What the actors employ and how many concerns they run: the figures the labour and goods markets read."""
 from typing import Any, List, Set, Tuple
 
-from sim.agents.api import SOLDIER_TRADE
-
-from . import rules
-
 
 class Staff:
 	"""Mixed into `Actors`."""
@@ -20,17 +16,9 @@ class Staff:
 		return self.cast().home_staff_fte(trade)  # type: ignore[attr-defined,no-any-return]
 
 	def actor_staff_nationwide(self, trade: str) -> float:
-		"""People of this trade that firms and governments hold nationwide. Staff in the founder's
-		reachable pool is the slice the actors drew from it; the government's army is its whole
-		force, so that one trade reads the army in place of the government's slice."""
-		if not self.world.records:
-			return 0.0
-		beyond = 0.0
-		if trade == SOLDIER_TRADE:
-			record = self.world.records.get("government:" + str(self.needs.civilisation().get("id")))
-			if record is not None:
-				beyond = record.army - record.workforce.get(trade, 0.0)
-		return rules.nationwide_staff(self.actor_staff_fte(trade), beyond)
+		"""People of this trade that firms and governments hold: the labour core's hires for them (soldiers
+		among them; conscripts are the levy, hours out of the households' offers, not staff)."""
+		return self.actor_staff_fte(trade)
 
 	def actor_staff_total(self) -> float:
 		"""People of every trade that firms and governments employ."""

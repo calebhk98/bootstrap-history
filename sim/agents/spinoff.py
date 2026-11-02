@@ -59,7 +59,7 @@ def release_leaver(parent: Any, node_id: str, world: Any, index: int) -> None:
 	if parent.kind == "household":
 		world.release_seat_staff(parent.actor_id, trade, 1.0)
 	else:
-		left = parent.workforce[trade] - 1.0
+		left = parent.workforce[trade] - 1.0   # the person leaves the hires; the places it posts are the parent's own
 		if left > 1e-9:
 			parent.workforce[trade] = left
 		else:

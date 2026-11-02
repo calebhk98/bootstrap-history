@@ -103,10 +103,9 @@ def work_year(actor: Any, node_id: str, work: Dict[str, Any], world: Any, produc
 	else:
 		affordable = 1.0
 	done = want * affordable
-	ledger.transfer(actor, world.edge(EDGE_WORKERS), done * (work["money"] + work["labour_cost"]), "copying")
-	for trade, amount in work["hours"].items():
-		actor.workforce[trade] = actor.workforce.get(trade, 0.0) + (
-			amount * done / world.hours_per_person_year)
+	ledger.transfer(actor, world.edge(EDGE_WORKERS), done * work["money"], "copying")
+	for trade, amount in work["hours"].items():   # the copy's labour is hired in the labour market, paid there
+		actor.staff_wanted[trade] = actor.staff_wanted.get(trade, 0.0) + amount * done / world.hours_per_person_year
 	if affordable < 1.0:
 		work["stalled"] += 1.0
 	work["progress"] += done

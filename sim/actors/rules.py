@@ -13,12 +13,6 @@ def founder_share_of_sellers(sellers: float, other_actors_concerns: float) -> fl
 	return min(1.0, max(0.0, 1.0 - other_actors_concerns / sellers))
 
 
-def nationwide_staff(home_staff: float, army_outside_pool: float) -> float:
-	"""People of a trade that firms and governments hold nationwide: the slice they drew from the founder's reachable pool
-	plus what the government's army holds beyond that slice (zero for any trade but the soldiers')."""
-	return max(0.0, home_staff + army_outside_pool)
-
-
 def conquest_contacts(places_by_country: Dict[Optional[str], List[Any]], previous: Optional[str], tile: str) -> List[str]:
 	"""The places a conquest gives contact with: the tile and wherever the previous owner's actors are.
 	`places_by_country` is {country: actor places}."""
