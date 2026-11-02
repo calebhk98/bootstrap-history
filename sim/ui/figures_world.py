@@ -16,9 +16,9 @@ def _notice_causes(sim, year):
     return sim.view("causes_since")(NOTICE, year)
 
 
-@figure("wages", "wage level against the starting one", unit="index", digits=4, since=_wage_causes)
+@figure("wages", "wage of an hour of unskilled work", unit="money per hour", digits=4, since=_wage_causes)
 def _wages(sim):
-    return {"value": sim.view("wage_index")(),
+    return {"value": sim.view("money_per_labour_hour")(),
             "drivers": {"population_scale": sim.view("pop_scale")(), "price_index": sim.view("price_index")()}}
 
 

@@ -31,7 +31,7 @@ READS_BY_OWNER = {
 	"defence_stores": ("counter_supply_gap",),
 	"resources": ("mine_capacity",),
 	"polity": ("military_leverage", "standing"),
-	"workforce": ("wage_index", "money_per_labour_hour"),
+	"workforce": ("money_per_labour_hour",),
 	"ledger": ("acting_balance",),
 	"reporting": ("money_real", "event_log", "real_output_hours"),
 	"prices": ("price_index",),

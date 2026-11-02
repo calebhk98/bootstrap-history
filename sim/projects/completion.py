@@ -128,8 +128,8 @@ class Completion:
 		needs.send(GainReputation(self.reputation_gain_of(node)))
 		needs.send(AddScandal(alarm))
 		needs.send(AddGovernance(needs.state_interest(node)))
-		# The staff an institution grants are recorded as a grant, NOT added to the payroll: the year resyncs the pools
-		# from the employees, so a bare addition would be overwritten the next time it runs.
+		# The staff an institution grants go on the staff book and are hired at the year's clearing at the market wage, so
+		# the wage bill pays them; the institution's upkeep (`institution_upkeep`) charges only its non-crew share.
 		#
 		# ONLY WITHOUT auto_hire: with it on - the optimizer's default, off for a player - the staff capacity already
 		# counts this same institution and the year's smoothing grows the pools toward that ceiling on its own; granting

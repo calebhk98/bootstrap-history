@@ -32,7 +32,7 @@ MODULE_SPECS = (ModuleSpec(
              (NoteWageShock, "note_wage_shock"), (NoteConcernChange, "note_concern_change"), (CloseCausePeriod, "close_cause_period")),
     reads=("year", "acting_balance", "agent_prices", "agent_opening_basket", "agent_volume_baseline",
            "agent_traded_volumes", "household_prices", "money_per_labour_hour", "population_total",
-           "opening_population", "home_coin_metal", "wage_materials", "wage_index", "state_reach", "headcount", "standing",
+           "opening_population", "home_coin_metal", "wage_materials", "state_reach", "headcount", "standing",
            "visible_scale"),
     phases=(PhaseHook("trim_audit", "trim_audit"), PhaseHook("wage_market_ratios", "record_wage_market_ratios")),
 ),)

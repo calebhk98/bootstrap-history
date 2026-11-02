@@ -4,10 +4,8 @@ QUICK_TOPIC = True
 import unittest
 from types import SimpleNamespace
 
-from sim.demography.api import DEFAULT_POPULATION_100AD, POP_SCALE_FLOOR
 from sim.tests import module_harness
 from sim.workforce import rules
-from sim.workforce.constants import WAGE_SCARCITY_ELASTICITY
 from sim.workforce.module import Workforce
 from sim.workforce.api import WorkforceSeat
 
@@ -32,31 +30,6 @@ class WageMaterials(unittest.TestCase):
 
     def test_no_trades_leave_the_staple_alone(self):
         self.assertEqual(rules.wage_materials_of("wheat_kg", {}), ["wheat_kg"])
-
-
-class WageIndex(unittest.TestCase):
-    def index(self, pop_scale, population=DEFAULT_POPULATION_100AD, base=1.0):
-        return module_harness.build(Workforce, views={
-            "opening_wage_index": base, "civilisation": {"population": population}, "pop_scale": pop_scale}).wage_index()
-
-    def test_a_nation_at_its_unshocked_trend_pays_the_base_index(self):
-        self.assertEqual(self.index(1.0), 1.0)
-        self.assertEqual(self.index(1.0, base=1.5), 1.5)
-
-    def test_a_nation_below_its_trend_pays_more_in_proportion_to_the_shortfall(self):
-        self.assertAlmostEqual(self.index(0.5), 1.0 + WAGE_SCARCITY_ELASTICITY * 0.5)
-
-    def test_a_nation_above_its_trend_pays_the_base_index(self):
-        self.assertEqual(self.index(1.4), 1.0)
-
-    def test_the_trend_is_the_civilisations_people_against_the_default_and_never_below_the_floor(self):
-        self.assertEqual(self.index(2.0, population=2 * DEFAULT_POPULATION_100AD), 1.0)
-        self.assertAlmostEqual(self.index(1.0, population=2 * DEFAULT_POPULATION_100AD), 1.0 + WAGE_SCARCITY_ELASTICITY * 0.5)
-        self.assertEqual(self.index(POP_SCALE_FLOOR, population=0.0), 1.0)
-
-    def test_the_terms_name_the_base_index_and_the_elasticity(self):
-        terms = module_harness.build(Workforce, views={"opening_wage_index": 1.2}).wage_index_terms()
-        self.assertEqual(terms, {"base": 1.2, "elasticity": WAGE_SCARCITY_ELASTICITY})
 
 
 class StaffViews(unittest.TestCase):

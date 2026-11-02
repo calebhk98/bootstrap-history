@@ -1,8 +1,7 @@
 """Demography's rules as plain functions of plain values: who the nation's people are by age, what they ate, a mass-mortality
-cut across the cohorts, the wage premium a shortfall of people makes, the record of a year."""
+cut across the cohorts, the record of a year."""
 import math
 
-from sim.unit_conversions import PERCENT_SCALE
 from sim.world.demography import (CHILD_CALORIE_EQUIVALENT, ELDERLY_CALORIE_EQUIVALENT,
                                   SUBSISTENCE_CALORIES_PER_ADULT_EQUIVALENT_DAY)
 
@@ -62,14 +61,6 @@ def eaten_over_need_by_tile(accounts):
 def food_kcal_per_day(eaten_over_need, adult_equivalent_population):
     """The calories a day that feed `adult_equivalent_population` exactly at `eaten_over_need` of its need."""
     return eaten_over_need * adult_equivalent_population * SUBSISTENCE_CALORIES_PER_ADULT_EQUIVALENT_DAY
-
-
-def wage_cascade(wage_index, wage_index_base, elasticity):
-    """(wage premium in percent, share of the people short of trend) behind a wage index above its base. The shortfall is
-    recovered from the premium so the note and the index cannot drift apart."""
-    premium = (wage_index / wage_index_base - 1.0) * PERCENT_SCALE
-    shortfall = (premium / PERCENT_SCALE) / elasticity if elasticity else 0.0
-    return premium, shortfall
 
 
 def wage_cascade_due(premium_percent, year, year_last_said):

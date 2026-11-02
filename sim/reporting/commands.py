@@ -71,9 +71,9 @@ class ErodeMoney(Command):
 
 @dataclass(frozen=True)
 class NoteWageShock(Command):
-    """The acting seat's cause book records that a shock named `cause` moved the wage index by `change`."""
+    """The acting seat's cause book records that a shock named `cause` is in the period; the wage change the period
+    closes on is shared among the shocks named in it (the labour market clears the shock's effect later)."""
     cause: str
-    change: float
 
 
 @dataclass(frozen=True)

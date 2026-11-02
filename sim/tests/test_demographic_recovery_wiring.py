@@ -28,7 +28,7 @@ class Stepped(Demography):
 
 
 def built():
-    views = {"wage_index": 1.0, "wage_index_terms": {"base": 1.0, "elasticity": 0.5}}
+    views = {}
     world = DemographyWorld(pop_children=300.0, pop_working_age=600.0, pop_elderly=100.0)
     module = module_harness.build(Stepped, views=views, world=world)
     module.fed = []

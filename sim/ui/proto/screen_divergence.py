@@ -64,7 +64,7 @@ def tile_count(sim):
 
 
 def _current(sim):
-    return {"population": float(sim.view("population")().total), "wage_index": float(sim.view("wage_index")()),
+    return {"population": float(sim.view("population")().total), "wage_per_hour": float(sim.view("money_per_labour_hour")()),
             "literacy_general": float(sim.view("literacy")("literacy_general")),
             "literacy_elite": float(sim.view("literacy")("literacy_elite")),
             "territory_tiles": float(tile_count(sim))}
@@ -116,7 +116,7 @@ def divergence_report(sim):
         "spread_into_the_society": spread,
         "population": {"start": round(float(sim.view("civilisation")().get("population", 0.0))),
                        "now": round(sim.view("population")().total)},
-        "wage_index": _pair(started("wage_index"), sim.view("wage_index")()),
+        "wage_per_hour": _pair(sim.view("opening_money_per_labour_hour")(), sim.view("money_per_labour_hour")()),
         "price_index": _pair(started("price_index"), sim.view("price_index")()),
         "literacy_general": _pair(started("literacy_general"),
                                   sim.view("literacy")("literacy_general")),

@@ -86,16 +86,16 @@ EXTENSIONS.kinds["observer"] = Observer
 bare = profile_from_civilisation({"id": "alpha"})
 check("a civilisation with almost nothing in it still gives a profile",
 	  bare.country == "alpha" and bare.name == "alpha" and bare.population == 0.0 and bare.location is None
-	  and bare.starting_techs == set() and bare.wage_index == 1.0 and bare.strata == [], bare)
+	  and bare.starting_techs == set() and bare.strata == [], bare)
 HOME = {"id": "alpha", "name": "Alpha", "population": 1_000_000, "urban_fraction": 0.1,
-		"starting_tax_share": 0.1, "wage_index": 1.0, "price_index": 1.0, "literacy_general": 0.2, "literacy_elite": 0.9,
+		"starting_tax_share": 0.1, "price_index": 1.0, "literacy_general": 0.2, "literacy_elite": 0.9,
 		"home_tiles": ["algeria_01"], "starting_techs": ["plough", "wheel"], "standing_army": 5000,
 		"values": {"w_military": 0.9},
 		"cast": {"strata": [{"name": "farmers", "share": 0.9}], "treasury": 50.0, "mood": "calm",
 				 "actors": [{"actor_id": "observer:1", "kind": "observer", "controller": "llm", "money": 20.0,
 							 "knowledge": ["wheel"]}]}}
 BETA = {"id": "beta", "name": "Beta", "population": 500_000, "starting_tax_share": 0.2,
-		"wage_index": 0.5, "home_tiles": ["algeria_02"], "starting_techs": ["loom"],
+		"home_tiles": ["algeria_02"], "starting_techs": ["loom"],
 		"state_revenue": [{"form": "poll_tax", "basis": "adult_labour_years", "rate": 0.2}], "cast": {"treasury": 10.0, "countries": [
 			{"id": "gamma", "name": "Gamma", "population": 100_000, "starting_techs": ["raft"], "home_tiles": ["algeria_03"]}]}}
 DELTA = {"id": "delta", "population": 200_000}
