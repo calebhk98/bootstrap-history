@@ -13,9 +13,9 @@ class FactViews:
 			self._starting_wages = build_schedule(self.needs.trade_records(), wage_provider.reference_civilisation()).wages_per_hour()
 		return self._starting_wages
 
-	def wage_schedule_for(self, civ, tightness_factors=None):
+	def wage_schedule_for(self, civ):
 		"""The wage schedule a civilisation opens on, built from the trade registry and the price solver."""
-		return build_schedule(self.needs.trade_records(), civ, tightness_factors=tightness_factors)
+		return build_schedule(self.needs.trade_records(), civ)
 
 	def wage_bill(self):
 		"""What the seat's standing staff costs every year, by trade."""

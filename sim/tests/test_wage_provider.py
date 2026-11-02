@@ -22,42 +22,27 @@ from sim.labour import wages
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
-def _schedule(training_years, floor=1.0, tightness=None):
-    return wages.WageSchedule(training_years, floor, 1.0, 0.10, tightness_factors=tightness)
+def _schedule(training_years, floor=1.0):
+    return wages.WageSchedule(training_years, floor, 1.0, 0.10)
 
 
-class TightnessTests(unittest.TestCase):
+class SubsistenceFloorTests(unittest.TestCase):
 
-    def test_need_above_hours_raises_a_trades_tightness_and_slack_lowers_it(self):
-        schedule = _schedule({"short": 3.0, "slack": 3.0, "level": 3.0})
-        schedule.tightness_factors.update({"short": 1.0, "slack": 1.0, "level": 1.0})
-        schedule.step({"short": 200.0, "slack": 50.0, "level": 100.0},
-                      {"short": 100.0, "slack": 100.0, "level": 100.0})
-        self.assertGreater(schedule.tightness_factors["short"], 1.0)
-        self.assertLess(schedule.tightness_factors["slack"], 1.0)
-        self.assertEqual(schedule.tightness_factors["level"], 1.0)
+    def test_nothing_pays_below_the_subsistence_floor(self):
+        schedule = _schedule({"idle": 0.0})
+        self.assertEqual(schedule.wage_per_hour("idle"), schedule.floor_per_hour)
 
-    def test_a_trade_with_no_hours_asked_or_offered_is_left_alone(self):
+    def test_priced_at_answers_another_money_value_and_leaves_the_schedule_alone(self):
         schedule = _schedule({"smith": 5.0})
-        schedule.step({},
-                      {})
-        self.assertEqual(schedule.tightness_factors["smith"], 1.0)
-
-    def test_slack_lowers_a_skilled_wage_but_not_below_the_subsistence_floor(self):
-        untightened = _schedule({"idle": 6.0})
-        slack = _schedule({"idle": 6.0}, tightness={"idle": 0.9})
-        idle_for_ages = _schedule({"idle": 6.0}, tightness={"idle": 1e-6})
-        self.assertLess(slack.wage_per_hour("idle"), untightened.wage_per_hour("idle"))
-        self.assertEqual(idle_for_ages.wage_per_hour("idle"), idle_for_ages.floor_per_hour)
-
-    def test_a_tight_trade_pays_more_than_an_untightened_one(self):
-        self.assertGreater(_schedule({"smith": 5.0}, tightness={"smith": 1.2}).wage_per_hour("smith"),
-                           _schedule({"smith": 5.0}).wage_per_hour("smith"))
+        before = schedule.wage_per_hour("smith")
+        priced = schedule.priced_at(3.0)
+        self.assertAlmostEqual(priced.wage_per_hour("smith"), 3.0 * before)
+        self.assertEqual(schedule.wage_per_hour("smith"), before)
 
 
 class TrainingPremiumTests(unittest.TestCase):
 
-    def test_longer_training_earns_more_at_equal_tightness(self):
+    def test_longer_training_earns_more_at_equal_money(self):
         schedule = _schedule({"untrained": 0.0, "short": 2.0, "long": 8.0})
         self.assertEqual(schedule.wage_per_hour("untrained"), schedule.floor_per_hour)
         self.assertGreater(schedule.wage_per_hour("short"), schedule.wage_per_hour("untrained"))

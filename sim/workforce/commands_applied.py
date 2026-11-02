@@ -53,6 +53,3 @@ class Applying:
 
 	def apply_land_clearing(self, command):
 		self.labour.apply_land_clearing()
-
-	def update_wages(self, command):
-		self.labour.update_wages()

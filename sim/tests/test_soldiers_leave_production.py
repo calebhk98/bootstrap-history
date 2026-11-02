@@ -1,5 +1,5 @@
 """Complaint 314: people under arms leave the society's labour allocation, so the hours it can put into farm work and
-trades fall by their hours, the unskilled fallback trade is needed for their hours and its wage moves by tightness. The
+trades fall by their hours, the unskilled fallback trade gets the hours left. The
 rules are called on a stub game over the real allocation mixin and on the allocation functions; the nationwide count that
 includes the army is test_army_in_nationwide_staff."""
 
@@ -10,7 +10,7 @@ from types import SimpleNamespace
 
 from .harness import check
 
-from sim.labour import labour_allocation, wages
+from sim.labour import labour_allocation
 from sim.labour.legacy_trade_defaults import DRAWN_FROM_UNSKILLED_POOL
 
 HOURS = labour_allocation.HOURS_PER_FARM_WORKER_YEAR
@@ -50,17 +50,6 @@ check("an army larger than the working age leaves no hours, not negative ones",
 unarmed, armed = Allocation(1000.0, {}), Allocation(1000.0, {SOLDIER: 200.0})
 check("the society's hours fall by the soldiers' hours",
       abs(unarmed._society_hours_available() - armed._society_hours_available() - 200.0 * HOURS) < 1e-6)
-
-# ---- the fallback trade is needed for what they leave undone ----------------------------------------------------
-check("the soldiers' hours are demand on the unskilled fallback trade, on top of the allocation's need",
-      abs(armed._hours_needed_for_wages()[FALLBACK] - unarmed._hours_needed_for_wages().get(FALLBACK, 0.0) - 200.0 * HOURS) < 1e-6,
-      (armed._hours_needed_for_wages(), unarmed._hours_needed_for_wages()))
-check("a trade other than the fallback is needed for no more with the army out",
-      armed._hours_needed_for_wages()["smith"] == unarmed._hours_needed_for_wages()["smith"])
-held_hours = 800.0 * HOURS
-loose = wages.adjusted_tightness_factor(1.0, 600.0 * HOURS, held_hours)
-tight = wages.adjusted_tightness_factor(1.0, 600.0 * HOURS + 200.0 * HOURS, held_hours)
-check("with the army out of production the fallback trade's tightness factor ends higher", tight > loose, (tight, loose))
 
 # ---- the fallback trade gets the hours left after the farm and the specialists ------------------------------------
 total, farm_hours = 1000.0 * HOURS, 400.0 * HOURS

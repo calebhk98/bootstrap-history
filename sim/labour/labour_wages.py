@@ -6,8 +6,8 @@ a file of their own (see labour.py's own docstring for the split).
 work_for_wages and wage_bill are the two directions of the same trade: a
 founder selling their own hours at the going rate, and a household paying
 its standing staff that same rate every year. Both ask the labour market (labour_market_api.py), which
-starts from the labour-market schedule (wage_per_hour: subsistence floor,
-training premium, tightness) and applies wage_cost_factors - the food,
+starts from wage_per_hour (the economy's wage for the trade, or before it opens the opening
+schedule's subsistence floor and training premium) and applies wage_cost_factors - the food,
 housing and trade-tool multipliers (trade_data.tool_basket, HOUSING_PRESSURE_*,
 WAGE_SHARE_*) that follow live market prices. Nothing here decides WHO can be hired or how many -
 that is labour_population.py's market depth and labour_capacity.py's
@@ -32,7 +32,7 @@ class WagesMixin(WageLedgerMixin):
     pricing is kept apart from who can be hired at all.
     """
 
-    _wage_schedule_cache = None   # the opening's wage schedule, rebuilt when the tightness factors change; set by _opening_wage_schedule
+    _wage_schedule_cache = None   # the opening's wage schedule, built on first use
 
 
     WAGE_REPUTATION_BONUS_CAP = declare(
@@ -53,10 +53,7 @@ class WagesMixin(WageLedgerMixin):
     @property
     def labour_market(self):
         """The one labour market every employer asks (labour_market_api.py)."""
-        market = self.__dict__.get("_labour_market")
-        if market is None:
-            market = self.__dict__["_labour_market"] = LabourMarket(self)
-        return market
+        return LabourMarket(self)
 
     def wage_for_hours(self, trade, hours):
         """What `hours` of the founder's own work in `trade` pay now. The one answer work_for_wages
@@ -165,11 +162,8 @@ class WagesMixin(WageLedgerMixin):
         expensive to keep, so a large staff of the people you actually need is a
         real commitment rather than a number that drifts upward on its own.
 
-        Recently having leaned hard on a trade's local supply (labour market price_factor)
-        shows up here too, not only in the fee `hire` charged to bring someone
-        on: a town that just watched you take on half its smiths pays every
-        smith more for a few years, yours included, until the pressure decays
-        or the supply of smiths genuinely grows.
+        The rate is the market's wage for the trade, the same for every employer; leaning on a trade's local
+        supply shows only in the fee `hire` charged to bring someone on.
         """
         return wage_bill_of(self.employed_by_trade(), self.staff_pay)
 
@@ -255,25 +249,19 @@ class WagesMixin(WageLedgerMixin):
                                             self.WAGE_SHARE_SKILL_AND_DIFFICULTY, food, housing, tools)}
 
     def _opening_wage_schedule(self):
-        """The wage schedule at the opening's price level; its tightness factors live in the economy
-        state, so a save carries them."""
-        factors = self._world.society.wage_tightness_factors
-        cached = self._wage_schedule_cache
-        if cached is None or cached.tightness_factors is not factors:
-            cached = self._wage_schedule_cache = self._world.build_wage_schedule(
-                self._world.civ, tightness_factors=factors)
-            cached.opening_money_per_labour_hour = cached.money_per_labour_hour
-        return cached
+        """The civilisation's opening wage schedule, built once."""
+        if self._wage_schedule_cache is None:
+            self._wage_schedule_cache = self._world.build_wage_schedule(self._world.civ)
+        return self._wage_schedule_cache
 
     def wage_schedule(self):
-        """This household's labour-market wage schedule, in money at the present price level. An hour of
-        the unskilled trade is worth what the economy pays it; before the economy has opened it is worth
-        the opening's figure."""
-        schedule = self._opening_wage_schedule()
+        """The opening schedule priced at the present level: an hour of the unskilled trade is worth what the
+        economy pays it, or before the economy has opened the opening's figure times the price level.
+        Reading builds a priced copy and changes nothing."""
+        opening = self._opening_wage_schedule()
         paid = self._world.economy_unskilled_wage()
-        schedule.money_per_labour_hour = (paid if paid is not None
-                                          else schedule.opening_money_per_labour_hour * self._world.home_price_level())
-        return schedule
+        return opening.priced_at(paid if paid is not None
+                                 else opening.money_per_labour_hour * self._world.home_price_level())
 
     def money_per_labour_hour(self):
         """Money one hour of the unskilled numeraire trade is worth here."""
@@ -284,8 +272,7 @@ class WagesMixin(WageLedgerMixin):
         unit="exponent on output_per_head (1 = pay rises as fast as output per hour)",
         source=None, confidence="D",
         why="How far pay per hour follows output per hour, for every employer alike (founder, "
-            "firms, state, households). Zero: the schedule's own clearing (tightness, which moves "
-            "trades against each other but has no aggregate demand for hands) is the only wage "
+            "firms, state, households). Zero: the economy's labour markets are the only wage "
             "mover. One is a labour market that pays an hour what it makes. Measured on Rome "
             "seeds 1-3: at one or one half the founder's early research and hiring grow dearer "
             "with the generic economy index and none of the three takes off in 100 years; at "
@@ -294,20 +281,10 @@ class WagesMixin(WageLedgerMixin):
             "diffused technology (Complaint 101).")
 
     def wage_per_hour(self, trade):
-        """The opening schedule's money for one hour of this trade, before price level, cost
-        factors and scarcity. Employers do not read it; they ask the labour market."""
-        return self.wage_schedule().wage_per_hour(trade)
+        """Money one hour of this trade is paid: what the economy's labour markets pay it, or before the
+        economy has opened the opening schedule's (training premium times the money value of an unskilled hour)."""
+        paid = None if self._world.economy_unskilled_wage() is None else self._world.economy.agent_wage_per_hour(trade)
+        return paid if paid is not None else self.wage_schedule().wage_per_hour(trade)
 
     def base_annual_wage(self, trade):
-        return self.wage_schedule().annual_wage(trade)
-
-    def wage_document(self):
-        """The wage vector in the shape the price solver reads."""
-        return self.wage_schedule().document()
-
-    def update_wages(self):
-        """One year of wage adjustment toward the trades that are short."""
-        hours = self._world.society.society_labour_hours
-        if not hours:
-            return
-        self.wage_schedule().step(self._hours_needed_for_wages(), hours)
+        return self.wage_per_hour(trade) * self._world.HOURS_PER_PERSON_YEAR

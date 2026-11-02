@@ -325,8 +325,8 @@ class WorkforceWorld:
     def trade_family(self, trade):
         return self._needs.trade_family[trade]
 
-    def build_wage_schedule(self, civ, tightness_factors=None):
-        return self._owner.wage_schedule_for(civ, tightness_factors)
+    def build_wage_schedule(self, civ):
+        return self._owner.wage_schedule_for(civ)
 
     def techniques_available_to(self, production, reached_nodes):
         return solve_prices_core.techniques_available_to(production, reached_nodes)

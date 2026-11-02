@@ -8,7 +8,6 @@ STAFF = "staff"     # version channel: the seat's people (employees, scholars, a
 @dataclass
 class WorkforceSociety:
     society_labour_hours: Dict[str, float] = field(default_factory=dict)   # trade -> hours the society's workers of it give in a year
-    wage_tightness_factors: Dict[str, float] = field(default_factory=dict)  # trade -> how far its wage has been pushed by scarcity
 
 
 @dataclass

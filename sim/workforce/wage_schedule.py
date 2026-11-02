@@ -1,6 +1,6 @@
 """The civilisation's opening wage schedule, built from the trade registry, the civilisation and the price solver."""
 import warnings
-from typing import Any, Dict, Mapping, Optional
+from typing import Any, Mapping, Optional
 
 from sim.default_civilisation import REPOSITORY_ROOT
 from sim.content import api as content
@@ -15,7 +15,6 @@ def _food_per_kg(staple: str) -> float:
 
 
 def build_schedule(registry: Mapping[str, Any], civ: Mapping[str, Any],
-                   tightness_factors: Optional[Dict[str, float]] = None,
                    production_entries: Optional[Mapping[str, Any]] = None
                    ) -> wages.WageSchedule:
     """The civilisation's opening wage schedule.
@@ -56,4 +55,4 @@ def build_schedule(registry: Mapping[str, Any], civ: Mapping[str, Any],
         hours_per_kg[staple], wage_provider.people_fed_per_worker())
     return wages.WageSchedule(
         wage_provider.training_years_by_trade(registry), 1.0 / coin_hours, subsistence_hours,
-        civ["starting_interest_rate"], tightness_factors=tightness_factors)
+        civ["starting_interest_rate"])

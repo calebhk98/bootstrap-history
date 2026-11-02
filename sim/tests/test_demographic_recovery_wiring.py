@@ -15,7 +15,7 @@ from sim.demography.module import Demography
 from sim.demography.state import DemographySeat, DemographyWorld
 from sim.land.api import AdvanceColonies
 from sim.tests import module_harness
-from sim.workforce.api import AllocateFarmWorkforce, ApplyLandClearing, UpdateWages
+from sim.workforce.api import AllocateFarmWorkforce, ApplyLandClearing
 from sim.world import agriculture, farm_year as farm_year_model, farming_technique
 
 POPULATION = 500000.0
@@ -112,7 +112,7 @@ class DemographicRecovery(unittest.TestCase):
         module = built()
         self._run(module, year=107)
         sent = module_harness.sent(module)
-        self.assertEqual([type(command) for command in sent], [AllocateFarmWorkforce, ApplyLandClearing, UpdateWages, AdvanceColonies])
+        self.assertEqual([type(command) for command in sent], [AllocateFarmWorkforce, ApplyLandClearing, AdvanceColonies])
         self.assertEqual(sent[-1], AdvanceColonies(107))
 
     def test_the_years_flows_are_recorded_and_only_the_latest_are_kept(self):

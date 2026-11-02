@@ -10,7 +10,7 @@ responds asymmetrically to it would manufacture a one-directional decline with n
 good year's surplus against a bad one. The farm workforce is sized every year for this year's adult-equivalent people, the
 same weighting the farm land was first sized with and the cohort model feeds on."""
 from sim.land.api import AdvanceColonies
-from sim.workforce.api import AllocateFarmWorkforce, ApplyLandClearing, UpdateWages
+from sim.workforce.api import AllocateFarmWorkforce, ApplyLandClearing
 from sim.world import farm_year as farm_year_model
 
 from . import rules
@@ -35,7 +35,6 @@ class Recovery:
         seat.farm_last_shortfall_kg = farm_year.food_shortfall_kg
         seat.farm_last_harvest_kg = farm_year.gross_harvest_kg
         seat.farm_last_marginal_product = farm_year.marginal_product_last_hour_kg_per_hour
-        self.needs.send(UpdateWages())
         # each region eats what its households ate in the economy's last year (the farm model's harvest only before an
         # economy year has closed), steps on its own, and the nation is their sum (regions.py)
         regions = self._regions()
