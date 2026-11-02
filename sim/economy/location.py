@@ -156,7 +156,7 @@ def entry_siting(setup, record, view, area_map, carriage) -> Siting:
     crews_of = entry_practice.crews_of_recipe(record.producers)
     for producer in sites.in_id_order(record.producers):
         key = (producer.recipe_id, producer.tile)
-        capacity[key] = capacity.get(key, 0.0) + producer.capacity_runs + record.expansion_runs.get(producer.agent_id, 0.0)
+        capacity[key] = capacity.get(key, 0.0) + producer.capacity_runs + record.credit.expansion_runs.get(producer.agent_id, 0.0)
         recipe = setup.recipes[producer.recipe_id]
         working = producer.capacity_runs if producer.last_runs < 0.0 else producer.last_runs
         committed[producer.tile] = committed.get(producer.tile, 0.0) + working * math.fsum(

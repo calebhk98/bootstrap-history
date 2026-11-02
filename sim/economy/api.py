@@ -139,7 +139,7 @@ def land_rent_per_hectare(economy, country=None):
     (the home country's when the economy holds several; zero where none was)."""
     scope = country_figures.home_when_shared(economy, country)
     tiles = country_figures.country_tiles(economy, scope)
-    rents = [rent for tile, rent in economy.record.land_rent.items() if rent > 0.0 and tile in tiles]
+    rents = [rent for tile, rent in economy.record.land.land_rent.items() if rent > 0.0 and tile in tiles]
     return sum(rents) / len(rents) if rents else 0.0
 
 
@@ -147,7 +147,7 @@ def land_rent_at_tile(economy, tile, country=None):
     """Rent per hectare-year the land market let land at on one tile last year; the mean over the tiles of `country`
     (the home country's when none is named) where land was let where none was let on this tile (zero where none was let
     anywhere)."""
-    rent = economy.record.land_rent.get(tile, 0.0)
+    rent = economy.record.land.land_rent.get(tile, 0.0)
     return rent if rent > 0.0 else land_rent_per_hectare(economy, country)
 
 
@@ -213,12 +213,12 @@ def credit_room(economy, borrower_id):
     lenders put out less what the other borrowers took. None before lenders have met (no savings were
     offered yet)."""
     record = economy.record
-    if record.funds_offered <= 0.0:
+    if record.credit.funds_offered <= 0.0:
         return None
-    if borrower_id in record.credit_granted:
-        return record.credit_granted[borrower_id]
-    others = sum(lent for borrower, lent in record.lent_by_borrower.items() if borrower != borrower_id)
-    return capital_market.headroom(capital_market.lendable_capacity(record.funds_offered), others)
+    if borrower_id in record.credit.credit_granted:
+        return record.credit.credit_granted[borrower_id]
+    others = sum(lent for borrower, lent in record.credit.lent_by_borrower.items() if borrower != borrower_id)
+    return capital_market.headroom(capital_market.lendable_capacity(record.credit.funds_offered), others)
 
 
 def all_producers(economy):
@@ -228,7 +228,7 @@ def all_producers(economy):
 
 def carried_last_year(economy):
     """Tonnes the merchants carried last year, origin tile -> destination tile, as a sorted copy."""
-    return {key: dict(row) for key, row in sorted(economy.record.carried.items())}
+    return {key: dict(row) for key, row in sorted(economy.record.carriage.carried.items())}
 
 
 def producers_of(economy, country=None):
@@ -359,7 +359,7 @@ def export_record(economy, skip_currencies=()):
 
 def economy_contracts(economy):
     """The contract registry: the economy's term loans and, once the actors' purses adopt it, their facilities."""
-    return economy.record.contracts
+    return economy.record.credit.contracts
 
 
 def economy_book(economy):
@@ -450,7 +450,7 @@ def fugitive_share_by_tile(economy):
     from .setup import area_tile
     workforce = economy.record.workforce
     shares = {}
-    for area, row in sorted(economy.record.fugitives.items()):
+    for area, row in sorted(economy.record.unfree.fugitives.items()):
         present = sum(sum(bands) for bands in workforce.workers.get(area, {}).values())
         if row["people"] > 0.0:
             shares[area_tile(area)] = row["people"] / (present + row["people"])

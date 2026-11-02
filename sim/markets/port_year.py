@@ -633,7 +633,7 @@ class AgentEconomy(TilePricesMixin):
         the economy has run a year."""
         if self._economy is not None and self._built_from is self.stored:
             return economy_api.carried_last_year(self._economy)
-        return (self.stored.get("record") or {}).get("carried") or {}
+        return ((self.stored.get("record") or {}).get("carriage") or {}).get("carried") or {}
 
     # ---- what the seams read ------------------------------------------------------------------
     def answers(self, country=None):

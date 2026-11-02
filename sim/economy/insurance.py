@@ -69,7 +69,7 @@ def wants_cover(cash: float, insured_value: float, rate: Optional[float], state:
 def found(record, founder: AgentId, capital: float, year: int, money: str, mutual: bool = False) -> Optional[Insurer]:
     """A company, with `capital` of the founder's cash in its purse (none if the founder holds less); or a mutual,
     which holds no capital and is formed by its members."""
-    state = record.capital
+    state = record.capital_markets.capital
     insurer_id = "insurer:%d" % len(state.insurers)
     if mutual:
         insurer = Insurer(insurer_id, founder, year, mutual=True)
@@ -105,7 +105,7 @@ def policies_of(state: CapitalState, insurer_id: str, hazard_id: Optional[str] =
 def collect_premiums(record, money: str, market_rate: float) -> Dict[AgentId, float]:
     """Each holder of a company's policy pays the premium for the year, from its cash (a holder who cannot pay is
     dropped). What each paid."""
-    state = record.capital
+    state = record.capital_markets.capital
     paid: Dict[AgentId, float] = {}
     kept: List[Policy] = []
     for policy in state.policies:
@@ -132,7 +132,7 @@ def settle(record, money: str, hazard_id: str, loss_share: float, year: int) -> 
     purse and a mutual from its members' cash; one that cannot pays in proportion and, if a company, fails. What each
     claimant received. The year joins the hazard's record afterwards (`observe`), so this year's loss is not in the
     premium that bought the cover."""
-    state = record.capital
+    state = record.capital_markets.capital
     received: Dict[AgentId, float] = {}
     if loss_share > EPSILON:
         for insurer_id in sorted(state.insurers):
@@ -157,7 +157,7 @@ def _pay_company(record, insurer: Insurer, claims: Dict[AgentId, float], money: 
     record.book.transfer_many(payments)
     if share < 1.0 - EPSILON:
         insurer.failed_year = year
-        record.capital.policies = [policy for policy in record.capital.policies if policy.insurer != insurer.agent_id]
+        record.capital_markets.capital.policies = [policy for policy in record.capital_markets.capital.policies if policy.insurer != insurer.agent_id]
     return {payment.payee: payment.amount for payment in payments}
 
 
@@ -167,7 +167,7 @@ def _pay_mutual(record, insurer: Insurer, claims: Dict[AgentId, float], money: s
     total = sum(claims.values())
     if total <= EPSILON:
         return {}
-    insured = {policy.holder: policy.insured_value for policy in policies_of(record.capital, insurer.agent_id)}
+    insured = {policy.holder: policy.insured_value for policy in policies_of(record.capital_markets.capital, insurer.agent_id)}
     insured_total = sum(insured.values())
     calls = {member: min(max(0.0, record.book.balance(member, money)), total * value / insured_total)
              for member, value in sorted(insured.items())}

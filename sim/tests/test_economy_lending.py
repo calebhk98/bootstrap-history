@@ -143,20 +143,20 @@ class MerchantBorrowingTests(unittest.TestCase):
 class ServiceTimingTests(unittest.TestCase):
     def test_a_loan_made_this_year_is_not_due_until_next_year(self):
         record = record_with({"b": 1000.0, "l": 0.0})
-        record.loans = [dataclasses.replace(loan("loan:new", "l", "b", 100.0), issued_year=5),
+        record.credit.loans = [dataclasses.replace(loan("loan:new", "l", "b", 100.0), issued_year=5),
                         dataclasses.replace(loan("loan:old", "l", "b", 100.0), issued_year=4)]
         received = lending.service(record, MONEY, 5)
         self.assertAlmostEqual(received["l"], 100.0 * 0.1)         # the old loan only, and its interest only
-        new = next(item for item in record.loans if item.loan_id == "loan:new")
+        new = next(item for item in record.credit.loans if item.loan_id == "loan:new")
         self.assertEqual((new.principal, new.years_left), (100.0, 4.0))
 
     def test_a_default_frees_a_merchant_so_the_write_off_shows_as_profit(self):
         record = record_with({"m": 0.0, "l": 0.0})
         record.merchants["m"] = merchant("m")
         record.merchants["m"].capital_base = 500.0
-        record.loans = [dataclasses.replace(loan("loan:1", "l", "m", 200.0, 0.1, 2.0, arrears=95.0), issued_year=1)]
+        record.credit.loans = [dataclasses.replace(loan("loan:1", "l", "m", 200.0, 0.1, 2.0, arrears=95.0), issued_year=1)]
         lending.service(record, MONEY, 3)
-        self.assertEqual(record.loans, [])
+        self.assertEqual(record.credit.loans, [])
         self.assertAlmostEqual(record.merchants["m"].capital_base, 300.0)    # the debt in its stake is gone
 
 
@@ -169,37 +169,37 @@ class DefaultCascadeTests(unittest.TestCase):
         lender = "household:t:0"
         record = record_with({lender: 100.0, "producer": 1000.0 if producer_pays else 0.0, "bank": 5000.0})
         record.cohorts[lender] = cohort(people=10.0, last_year_income=2000.0)
-        record.loans = [loan("loan:a", lender, "producer", 1000.0), loan("loan:b", "bank", lender, 400.0)]
+        record.credit.loans = [loan("loan:a", lender, "producer", 1000.0), loan("loan:b", "bank", lender, 400.0)]
         for year in range(1, years + 1):
             if producer_pays:
                 record.book.transfer(Transfer("edge:legacy", "producer", MONEY, 400.0, "sales"))
             for agent, received in lending.service(record, MONEY, year).items():
-                record.property_income[agent] = received      # what the year loop adds after the close
+                record.capital_markets.property_income[agent] = received      # what the year loop adds after the close
         return record, lender
 
     def test_the_default_is_the_lenders_loss_and_the_borrowers_record(self):
         record, lender = self.run_world(producer_pays=False, years=5)
-        self.assertGreater(record.credit_losses.get(lender, 0.0), 0.0)
-        self.assertIn("producer", record.remembered_defaults)
+        self.assertGreater(record.credit.credit_losses.get(lender, 0.0), 0.0)
+        self.assertIn("producer", record.credit.remembered_defaults)
         self.assertTrue(record.book.check_conservation(1e-9).ok)
 
     def test_the_lender_has_less_cash_and_income_after_a_default(self):
         paid, lender = self.run_world(producer_pays=True)
         unpaid, _lender = self.run_world(producer_pays=False)
         self.assertLess(unpaid.book.balance(lender, MONEY), paid.book.balance(lender, MONEY))
-        self.assertLess(unpaid.property_income.get(lender, 0.0), paid.property_income.get(lender, 0.0))
+        self.assertLess(unpaid.capital_markets.property_income.get(lender, 0.0), paid.capital_markets.property_income.get(lender, 0.0))
 
     def test_the_lender_spends_less_and_lends_less(self):
         paid, lender = self.run_world(producer_pays=True)
         unpaid, _lender = self.run_world(producer_pays=False)
 
         def orders(record):
-            view = CreditView(MarketMemory(), record.book, _Areas(), MONEY, loans=lambda: record.loans)
+            view = CreditView(MarketMemory(), record.book, _Areas(), MONEY, loans=lambda: record.credit.loans)
             view.price = view.offered_price = View().price      # a buyer reads the offered price
             view.area_of = View().area_of
             view.stock = View().stock
             return households.goods_orders(record.cohorts[lender], view, record.book.balance(lender, MONEY),
-                                           record.property_income.get(lender, 0.0), BASKET, SPECS)
+                                           record.capital_markets.property_income.get(lender, 0.0), BASKET, SPECS)
         spend_paid, spend_unpaid = orders(paid), orders(unpaid)
         self.assertLess(sum(bid.budget for bid in spend_unpaid.bids), sum(bid.budget for bid in spend_paid.bids))
         offered = lambda result: sum(offer.amount for offer in result.funds_offers)
@@ -208,9 +208,9 @@ class DefaultCascadeTests(unittest.TestCase):
     def test_the_lenders_own_creditor_feels_it(self):
         paid, _lender = self.run_world(producer_pays=True, years=3)
         unpaid, _lender = self.run_world(producer_pays=False, years=3)
-        self.assertEqual(paid.credit_losses.get("bank", 0.0), 0.0)
-        self.assertGreater(unpaid.credit_losses.get("bank", 0.0), 0.0)
-        self.assertGreater(unpaid.credit_losses.get("household:t:0", 0.0), 0.0)
+        self.assertEqual(paid.credit.credit_losses.get("bank", 0.0), 0.0)
+        self.assertGreater(unpaid.credit.credit_losses.get("bank", 0.0), 0.0)
+        self.assertGreater(unpaid.credit.credit_losses.get("household:t:0", 0.0), 0.0)
 
 
 class _Areas:

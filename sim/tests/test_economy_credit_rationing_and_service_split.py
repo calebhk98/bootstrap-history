@@ -44,7 +44,7 @@ class ServiceSplitTests(unittest.TestCase):
 
     def test_only_interest_is_the_lenders_income(self):
         record = record_with({"b": 1000.0, "l": 0.0})
-        record.loans = [self.one_loan()]
+        record.credit.loans = [self.one_loan()]
         income = lending.service(record, MONEY, 2)
         self.assertAlmostEqual(income["l"], 10.0)
 

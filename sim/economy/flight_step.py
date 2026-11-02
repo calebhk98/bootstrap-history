@@ -41,11 +41,11 @@ def settle(setup, record, inputs, report, before, context, carriage) -> Dict[str
     cohorts_follow_workers(record, report.migrated, before)
     subsistence = context.subsistence_per_worker_year
     taxed = flight_routes.taxed_share_by_area(inputs.taxed_share_by_tile)
-    if setup.flight is None or (not taxed and not record.fugitives):
+    if setup.flight is None or (not taxed and not record.unfree.fugitives):
         return {}
     income = mean_year_income(record.workforce, setup.working_hours_per_year)
     shares = flight_year.fleeing_shares(report.migrated, before, flight_year.tax_attributable_fractions(context.routes, taxed, income, subsistence))
-    flight_year.note_fugitives(record.fugitives, shares, before, report.migrated, taxed, subsistence)
+    flight_year.note_fugitives(record.unfree.fugitives, shares, before, report.migrated, taxed, subsistence)
     flight_year.tenants_flee(record, shares)
 
     def moving_cost(refuge: str, home: str) -> float:
@@ -54,7 +54,7 @@ def settle(setup, record, inputs, report, before, context, carriage) -> Dict[str
 
     after_market = people_before(setup, record)
     came = flight_year.return_fugitives(
-        record.workforce, record.fugitives, taxed, subsistence, income,
+        record.workforce, record.unfree.fugitives, taxed, subsistence, income,
         inputs.amnesty_share, inputs.immunity_years, moving_cost, setup.flight.arrears_owed_by_fugitive, setup.flight.share_after_immunity)
     after_return = people_before(setup, record)
     cohorts_follow_workers(record, {area: after_return.get(area, 0.0) - people for area, people in after_market.items()}, after_market)

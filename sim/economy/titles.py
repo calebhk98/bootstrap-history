@@ -1,10 +1,10 @@
 """Land titles: who holds the right to a tile's land rent, and who works land under a holder.
 
-`record.titles` maps tile -> holder -> share of the tile's land (shares sum to at most one; the rest is
+`record.land.titles` maps tile -> holder -> share of the tile's land (shares sum to at most one; the rest is
 held by nobody, abandoned). A holder is any actor: a cohort, a firm, a state. The opening seeds each tile's
 titles from its cohorts' ownership shares, so rent flows as before until a title moves. A title moves by
 foreclosure: a loan pledges a share, and on default the share passes to the lender while the borrower's
-family stays on it as a tenant (`record.tenancies`: tile -> rows of tenant, lessor, share, rent arrears).
+family stays on it as a tenant (`record.land.tenancies`: tile -> rows of tenant, lessor, share, rent arrears).
 Reads fall back on ownership shares for a record that has no titles yet.
 """
 from typing import Dict, List, Mapping, Optional
@@ -17,17 +17,17 @@ EPSILON = 1e-9
 
 def seed(record) -> None:
     """Each tile's titles start as its cohorts' ownership shares."""
-    record.titles = {}
+    record.land.titles = {}
     for cohort in sorted(record.cohorts.values(), key=lambda cohort: cohort.agent_id):
-        record.titles.setdefault(cohort.tile, {})[cohort.agent_id] = cohort.ownership_share
-    for tile, held in record.titles.items():
+        record.land.titles.setdefault(cohort.tile, {})[cohort.agent_id] = cohort.ownership_share
+    for tile, held in record.land.titles.items():
         total = sum(held.values())
-        record.titles[tile] = {holder: share / total for holder, share in held.items()} if total > 0.0 else {}
+        record.land.titles[tile] = {holder: share / total for holder, share in held.items()} if total > 0.0 else {}
 
 
 def shares(record, tile: TileId) -> Dict[AgentId, float]:
     """Holder -> share of the tile's land (below one in total when part of it is abandoned)."""
-    held = record.titles.get(tile)
+    held = record.land.titles.get(tile)
     if held:
         return dict(held)
     return {cohort.agent_id: cohort.ownership_share for cohort in record.cohorts.values() if cohort.tile == tile}
@@ -39,7 +39,7 @@ def holding(record, tile: TileId, holder: AgentId) -> float:
 
 def pledged(record, holder: AgentId, tile: TileId) -> float:
     """The share of its title on `tile` the holder has pledged to loans still owed."""
-    return sum(loan.collateral_share for loan in record.loans
+    return sum(loan.collateral_share for loan in record.credit.loans
                if loan.borrower == holder and loan.collateral_tile == tile)
 
 
@@ -48,15 +48,15 @@ def free_share(record, holder: AgentId, tile: TileId) -> float:
 
 
 def _held(record, tile: TileId) -> Dict[AgentId, float]:
-    if not record.titles:
-        record.titles = {}
-    if not record.titles.get(tile):
-        record.titles[tile] = shares(record, tile)
-    return record.titles[tile]
+    if not record.land.titles:
+        record.land.titles = {}
+    if not record.land.titles.get(tile):
+        record.land.titles[tile] = shares(record, tile)
+    return record.land.titles[tile]
 
 
 def _add_tenancy(record, tile: TileId, tenant: AgentId, lessor: AgentId, share: float) -> None:
-    rows: List[dict] = record.tenancies.setdefault(tile, [])
+    rows: List[dict] = record.land.tenancies.setdefault(tile, [])
     for row in rows:
         if row["tenant"] == tenant and row["lessor"] == lessor:
             row["share"] += share
@@ -65,7 +65,7 @@ def _add_tenancy(record, tile: TileId, tenant: AgentId, lessor: AgentId, share: 
 
 
 def let_out_share(record, tile: TileId, lessor: AgentId) -> float:
-    return sum(row["share"] for row in record.tenancies.get(tile, ()) if row["lessor"] == lessor)
+    return sum(row["share"] for row in record.land.tenancies.get(tile, ()) if row["lessor"] == lessor)
 
 
 def lease(record, tile: TileId, tenant: AgentId, lessor: AgentId, share: float) -> float:
@@ -111,13 +111,13 @@ def pass_title(record, tile: TileId, giver: AgentId, receiver: AgentId, share: f
     if held[giver] <= EPSILON:
         del held[giver]
     held[receiver] = held.get(receiver, 0.0) + moved
-    rows = record.tenancies.get(tile, [])
+    rows = record.land.tenancies.get(tile, [])
     for row in rows:
         if row["tenant"] == receiver and row["lessor"] == giver:
             row["share"] -= min(row["share"], moved)
-    record.tenancies[tile] = [row for row in rows if row["share"] > EPSILON] if rows else rows
-    if not record.tenancies.get(tile):
-        record.tenancies.pop(tile, None)
+    record.land.tenancies[tile] = [row for row in rows if row["share"] > EPSILON] if rows else rows
+    if not record.land.tenancies.get(tile):
+        record.land.tenancies.pop(tile, None)
     return moved
 
 
@@ -132,7 +132,7 @@ def release(record, tile: TileId, lessor: AgentId, share: float) -> None:
 
 
 def tenant_share(record, tile: TileId, tenant: AgentId) -> float:
-    return sum(row["share"] for row in record.tenancies.get(tile, ()) if row["tenant"] == tenant)
+    return sum(row["share"] for row in record.land.tenancies.get(tile, ()) if row["tenant"] == tenant)
 
 
 def top_holder_share(record, tile: TileId) -> float:
@@ -154,12 +154,12 @@ def settle_tenancies(record, currency: CurrencyId, arable_by_tile: Mapping[TileI
     go. `ask_by_tile` is the rent per hectare a landlord can ask of tenants (land_tenancy.rent_ask), which cuts the
     posted rent where the tenants' outside option is better. Returns the payments."""
     payments: List[Transfer] = []
-    if not record.tenancies:
+    if not record.land.tenancies:
         return payments
     cash: Dict[AgentId, float] = {}
-    counts = titles_management.tenancies_by_lessor(record.tenancies)
-    for tile, rows in sorted(record.tenancies.items()):
-        posted = record.land_rent.get(tile, 0.0)
+    counts = titles_management.tenancies_by_lessor(record.land.tenancies)
+    for tile, rows in sorted(record.land.tenancies.items()):
+        posted = record.land.land_rent.get(tile, 0.0)
         rent = (posted if ask_by_tile is None or tile not in ask_by_tile else min(posted, ask_by_tile[tile])) * arable_by_tile.get(tile, 0.0)
         stewards = min((cohort for cohort in record.cohorts.values() if cohort.tile == tile),
                        key=lambda cohort: (cohort.income_class, cohort.agent_id), default=None)
@@ -189,6 +189,6 @@ def settle_tenancies(record, currency: CurrencyId, arable_by_tile: Mapping[TileI
                 release(record, tile, lessor, row["share"])
             else:
                 kept.append(row)
-        record.tenancies[tile] = kept
-    record.tenancies = {tile: rows for tile, rows in record.tenancies.items() if rows}
+        record.land.tenancies[tile] = kept
+    record.land.tenancies = {tile: rows for tile, rows in record.land.tenancies.items() if rows}
     return payments

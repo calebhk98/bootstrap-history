@@ -85,13 +85,13 @@ def apply_site_limits(record, setup) -> None:
         capacity = min(producer.capacity_runs, limit.capacity_runs_per_year) if limit else 0.0
         record.producers[producer_id] = dataclasses.replace(
             producer, capacity_runs=capacity, yield_factor=limit.yield_factor if limit else producer.yield_factor)
-        coming = record.expansion_runs.get(producer_id, 0.0)
+        coming = record.credit.expansion_runs.get(producer_id, 0.0)
         if coming > 0.0:
             room = max(0.0, (limit.capacity_runs_per_year if limit else 0.0) - capacity)
             if room > 0.0:
-                record.expansion_runs[producer_id] = min(coming, room)
+                record.credit.expansion_runs[producer_id] = min(coming, room)
             else:
-                del record.expansion_runs[producer_id]
+                del record.credit.expansion_runs[producer_id]
 
 
 def in_id_order(producers):

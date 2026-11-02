@@ -1,6 +1,6 @@
 """The year's secondary trading in the economy's record: holders of shares and of loans sell to savers.
 
-What is traded: a holder's part of a producer's equity (`record.shares`), and a loan or bond a lender holds (a
+What is traded: a holder's part of a producer's equity (`record.capital_markets.shares`), and a loan or bond a lender holds (a
 contract of the shared registry; a sale is a change of lender, the buyer paying the price). A household's own debts,
 which pledge its title or bind it, and a bank's deposits are not traded. A bond in this record is a
 loan the lender may sell: any contract that is not a household's own debt or a deposit is a claim a lender can sell
@@ -40,7 +40,7 @@ class Shortfall:
 
 def participants(record) -> set:
     """Who holds and buys claims: the households, and the funds they hold units in."""
-    return set(record.cohorts) | set(record.capital.funds)
+    return set(record.cohorts) | set(record.capital_markets.capital.funds)
 
 
 def tradable(record, loan: Loan) -> bool:
@@ -84,7 +84,7 @@ def _own_rate(offers: Mapping[AgentId, FundsOffer], agent: AgentId, market_rate:
 def _loan_items(record, forced: Mapping[AgentId, Shortfall]) -> List[Loan]:
     """The loans a household lender or a lender short of cash may sell."""
     holders = participants(record)
-    return sorted((loan for loan in record.loans if tradable(record, loan) and (loan.lender in holders or loan.lender in forced)),
+    return sorted((loan for loan in record.credit.loans if tradable(record, loan) and (loan.lender in holders or loan.lender in forced)),
                   key=lambda loan: loan.loan_id)
 
 
@@ -97,20 +97,20 @@ def asks_and_bids(setup, record, offers: Sequence[FundsOffer], short: Mapping[Ag
     holders = participants(record)
     offered = {offer.lender: offer for offer in offers if offer.currency == money and offer.lender in holders
                and offer.amount > EPSILON}
-    debts = credit_claims.principal_by_borrower(record.loans)
-    arrears = credit_claims.arrears_history(record.loans, record.remembered_defaults)
+    debts = credit_claims.principal_by_borrower(record.credit.loans)
+    arrears = credit_claims.arrears_history(record.credit.loans, record.credit.remembered_defaults)
     needed = {holder: shortfall.amount for holder, shortfall in short.items()}
     asks: List[Ask] = []
     bids: List[Bid] = []
     allowed = None if sellers is None else set(sellers)
     if SHARE_TRADING in institutions:
-        for producer_id in sorted(record.shares):
+        for producer_id in sorted(record.capital_markets.shares):
             if producer_id not in record.producers:
                 continue
             premium = issuer_premium(record, producer_id, debts, arrears,
                                      share_value(record, producer_id, market_rate, rate_floor))
             item = SHARE_ITEM + producer_id
-            for holder, part in sorted(record.shares[producer_id].items()):
+            for holder, part in sorted(record.capital_markets.shares[producer_id].items()):
                 if holder in holders and part > EPSILON and (allowed is None or holder in allowed):
                     asks.extend(_asks(item, holder, part, _own_rate(offered, holder, market_rate) + premium, needed, short.get(holder),
                                       premium, lambda rate: share_value(record, producer_id, rate, rate_floor), allowed is not None))
@@ -151,7 +151,7 @@ def apply(record, trades: Sequence[Trade], money: str) -> Dict[AgentId, float]:
     """Book the trades: buyers pay sellers, and the shares or loans change hands. Returns the money each buyer spent."""
     spent: Dict[AgentId, float] = {}
     payments = []
-    loans_by_id = {loan.loan_id: loan for loan in record.loans}
+    loans_by_id = {loan.loan_id: loan for loan in record.credit.loans}
     for trade in trades:
         payments.append(Transfer(trade.buyer, trade.seller, money, trade.quantity * trade.price, SALE_PURPOSE))
         spent[trade.buyer] = spent.get(trade.buyer, 0.0) + trade.quantity * trade.price
@@ -164,7 +164,7 @@ def apply(record, trades: Sequence[Trade], money: str) -> Dict[AgentId, float]:
 
 
 def _move_share(record, trade: Trade) -> None:
-    held = record.shares[trade.item[len(SHARE_ITEM):]]
+    held = record.capital_markets.shares[trade.item[len(SHARE_ITEM):]]
     held[trade.seller] = held.get(trade.seller, 0.0) - trade.quantity
     if held[trade.seller] <= EPSILON:
         del held[trade.seller]
@@ -186,7 +186,7 @@ def _move_loan(record, loan: Loan, trade: Trade) -> None:
     loan.arrears_interest -= bought.arrears_interest
     loan.collateral_value -= bought.collateral_value
     loan.collateral_share -= bought.collateral_share
-    record.loans.append(bought)
+    record.credit.loans.append(bought)
 
 
 def run(setup, record, offers: Sequence[FundsOffer], short: Mapping[AgentId, Shortfall], market_rate: float,

@@ -50,7 +50,7 @@ class RulesTests(unittest.TestCase):
 
 class ApplyTests(unittest.TestCase):
     def _record(self, producers):
-        return SimpleNamespace(producers={producer.agent_id: producer for producer in producers}, expansion_runs={})
+        return SimpleNamespace(producers={producer.agent_id: producer for producer in producers}, credit=SimpleNamespace(expansion_runs={}))
 
     def test_capacity_is_capped_and_yield_follows_the_limit(self):
         setup = fixture.small_setup(recipes={"dig": _bound()}, site_limits=(SiteLimit("dig", "hills", 5.0, 0.5),))
@@ -63,9 +63,9 @@ class ApplyTests(unittest.TestCase):
     def test_planned_plant_growth_is_cut_to_the_headroom(self):
         setup = fixture.small_setup(recipes={"dig": _bound()}, site_limits=(SiteLimit("dig", "hills", 5.0),))
         record = self._record([Producer("p1", "o", "dig", "hills", 4.0)])
-        record.expansion_runs["p1"] = 3.0
+        record.credit.expansion_runs["p1"] = 3.0
         sites.apply_site_limits(record, setup)
-        self.assertEqual(record.expansion_runs["p1"], 1.0)
+        self.assertEqual(record.credit.expansion_runs["p1"], 1.0)
 
     def test_extraction_by_tile_reports_runs_worked_by_site_bound_recipes(self):
         setup = fixture.small_setup(recipes={"dig": _bound(), "farm": _free()})

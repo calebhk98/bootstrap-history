@@ -28,8 +28,7 @@ def record_with(cash):
     book = Book()
     for agent, amount in sorted(cash.items()):
         book.transfer(Transfer(EDGE_MINT, agent, MONEY, amount, "opening"))
-    return types.SimpleNamespace(book=book, loans=[], banks={}, loss_rates={}, credit_losses={}, remembered_defaults={},
-                                 cohorts={agent: types.SimpleNamespace(tile="town") for agent in cash if agent != BORROWER})
+    return types.SimpleNamespace(book=book, cohorts={agent: types.SimpleNamespace(tile="town") for agent in cash if agent != BORROWER}, credit=types.SimpleNamespace(loans=[], loss_rates={}, credit_losses={}, remembered_defaults={}), capital_markets=types.SimpleNamespace(banks={}))
 
 
 def household_cash():
@@ -39,7 +38,7 @@ def household_cash():
 def standing_bank(record):
     """The founder's bank with its capital in its purse and nothing lent."""
     bank = banks.Bank(BANK, FOUNDER, 0, paid_in=CAPITAL)
-    record.banks[BANK] = bank
+    record.capital_markets.banks[BANK] = bank
     record.book.transfer(Transfer(FOUNDER, BANK, MONEY, CAPITAL, "bank capital"))
     return bank
 
@@ -53,11 +52,11 @@ def bank_that_has_lent(amount=820.0):
     record = record_with(household_cash())
     bank = standing_bank(record)
     for depositor in DEPOSITORS:
-        record.loans.append(deposit(depositor, PLEDGED))
+        record.credit.loans.append(deposit(depositor, PLEDGED))
         record.book.transfer(Transfer(depositor, BANK, MONEY, PLEDGED, "deposit"))
     loan = Loan("loan:0:0", BANK, BORROWER, MONEY, amount, rate=0.05, years_left=5.0, issued_year=0)
     record.book.transfer(Transfer(BANK, BORROWER, MONEY, amount, "loan"))
-    record.loans.append(loan)
+    record.credit.loans.append(loan)
     return record, bank, loan
 
 
@@ -118,8 +117,8 @@ class DepositsAndLending(unittest.TestCase):
 
     def test_a_deposit_is_the_depositors_claim_and_the_banks_debt(self):
         record, _bank, _loan = bank_that_has_lent()
-        claims = credit_claims.claims_by_lender(record.loans, MONEY)
-        debts = credit_claims.debts_by_borrower(record.loans, MONEY)
+        claims = credit_claims.claims_by_lender(record.credit.loans, MONEY)
+        debts = credit_claims.debts_by_borrower(record.credit.loans, MONEY)
         for depositor in DEPOSITORS:
             self.assertAlmostEqual(claims[depositor], 450.0)
         self.assertAlmostEqual(debts[BANK], 900.0)
@@ -128,7 +127,7 @@ class DepositsAndLending(unittest.TestCase):
         record = record_with(household_cash())
         offers = pledges()
         remaining, pledged = banks.intermediate(SETUP, record, offers, 0, ())
-        self.assertEqual(record.banks, {})
+        self.assertEqual(record.capital_markets.banks, {})
         self.assertEqual(remaining, offers)
         self.assertEqual(pledged, {})
 
@@ -137,8 +136,8 @@ class DepositsAndLending(unittest.TestCase):
         cash[DEPOSITORS[1]] = 5000.0
         record = record_with(cash)
         banks.intermediate(SETUP, record, pledges(), 0, INSTITUTIONS)
-        self.assertEqual([bank.founder for bank in record.banks.values()], [DEPOSITORS[1]])
-        self.assertAlmostEqual(balance(record, next(iter(record.banks))), banks.BANK_FOUNDING_SHARE_OF_CASH * 5000.0)
+        self.assertEqual([bank.founder for bank in record.capital_markets.banks.values()], [DEPOSITORS[1]])
+        self.assertAlmostEqual(balance(record, next(iter(record.capital_markets.banks))), banks.BANK_FOUNDING_SHARE_OF_CASH * 5000.0)
 
     def test_the_bank_pays_its_depositors_their_rate_out_of_what_it_holds(self):
         record, _bank, _loan = bank_that_has_lent()
@@ -150,7 +149,7 @@ class DepositsAndLending(unittest.TestCase):
 
     def test_cash_the_loans_repaid_beyond_the_reserve_goes_back_to_the_depositors(self):
         record, bank, loan = bank_that_has_lent()
-        record.loans.remove(loan)                    # the borrower repaid in full
+        record.credit.loans.remove(loan)                    # the borrower repaid in full
         record.book.transfer(Transfer(BORROWER, BANK, MONEY, 820.0, "repaid"))
         bank_service.service_deposits(record, MONEY, 1)
         self.assertLess(banks.owed_to_depositors(record, BANK), 900.0)
@@ -167,7 +166,7 @@ class Failure(unittest.TestCase):
 
     def test_a_default_beyond_the_capital_fails_the_bank(self):
         record, bank, loan = bank_that_has_lent()
-        record.loans.remove(loan)                    # the borrower defaulted on the whole loan
+        record.credit.loans.remove(loan)                    # the borrower defaulted on the whole loan
         self.assertLess(banks.capital_of(record, BANK, MONEY), 0.0)
         self.assertEqual(banks.run_on_insolvent(record, MONEY, 1), [BANK])
         self.assertEqual(bank.failed_year, 1)
@@ -175,7 +174,7 @@ class Failure(unittest.TestCase):
 
     def test_a_failed_banks_depositors_share_what_it_holds_and_bear_the_loss(self):
         record, bank, loan = bank_that_has_lent()
-        record.loans.remove(loan)
+        record.credit.loans.remove(loan)
         banks.run_on_insolvent(record, MONEY, 1)
         supply, cash = record.book.money_supply(MONEY), balance(record, BANK)
         before = {depositor: balance(record, depositor) for depositor in DEPOSITORS}
@@ -184,8 +183,8 @@ class Failure(unittest.TestCase):
         self.assertAlmostEqual(sum(paid.values()), cash)                     # all it held went to them, in proportion
         self.assertAlmostEqual(paid[DEPOSITORS[0]], paid[DEPOSITORS[1]])
         for depositor in DEPOSITORS:
-            self.assertGreater(record.credit_losses.get(depositor, 0.0), 0.0)
-            self.assertAlmostEqual(credit_claims.claims_by_lender(record.loans, MONEY).get(depositor, 0.0), 0.0)
+            self.assertGreater(record.credit.credit_losses.get(depositor, 0.0), 0.0)
+            self.assertAlmostEqual(credit_claims.claims_by_lender(record.credit.loans, MONEY).get(depositor, 0.0), 0.0)
         self.assertAlmostEqual(record.book.money_supply(MONEY), supply)
 
     def test_the_founder_loses_the_capital_before_the_depositors_lose_anything(self):
@@ -193,7 +192,7 @@ class Failure(unittest.TestCase):
         loan.principal -= 100.0                           # a default of exactly the capital: the deposits are still covered
         self.assertAlmostEqual(banks.capital_of(record, BANK, MONEY), 0.0)
         self.assertEqual(banks.run_on_insolvent(record, MONEY, 1), [])
-        self.assertEqual(record.credit_losses.get(DEPOSITORS[0], 0.0), 0.0)
+        self.assertEqual(record.credit.credit_losses.get(DEPOSITORS[0], 0.0), 0.0)
 
     def test_a_failed_bank_takes_no_more_deposits_and_offers_nothing(self):
         record, bank, _loan = bank_that_has_lent()
@@ -212,7 +211,7 @@ class Dividends(unittest.TestCase):
         record = record_with(household_cash())
         bank = standing_bank(record)
         record.book.transfer(Transfer(BANK, BORROWER, MONEY, 50.0, "loan"))
-        record.loans.append(new_loan(50.0))
+        record.credit.loans.append(new_loan(50.0))
         return record, bank
 
     def serviced(self, record):

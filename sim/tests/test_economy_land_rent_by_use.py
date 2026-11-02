@@ -80,7 +80,7 @@ class SettleYearByUseTests(unittest.TestCase):
         self.assertGreater(mine_rent, 0.0)
         self.assertGreater(grain_rent, 0.0)
         self.assertAlmostEqual(mine_rent / grain_rent, 1000.0 / 100.0)       # ore 10 a run at 100, grain 100 a run at 1
-        self.assertLess(grain_rent, record.land_rent["t"] * 1.0)
+        self.assertLess(grain_rent, record.land.land_rent["t"] * 1.0)
 
     def test_a_grain_producer_wanting_runs_pays_its_own_rate_on_what_it_is_granted(self):
         setup, record, view = self.build()
@@ -89,7 +89,7 @@ class SettleYearByUseTests(unittest.TestCase):
         grain_rate = record.producers["producer:t"].land_rent_per_run
         mine_rate = record.producers["producer:mine"].land_rent_per_run
         self.assertGreater(mine_rate, grain_rate)
-        self.assertAlmostEqual(sum(each.amount for each in paid), record.land_rent["t"] * 100.0)
+        self.assertAlmostEqual(sum(each.amount for each in paid), record.land.land_rent["t"] * 100.0)
 
 
 if __name__ == "__main__":

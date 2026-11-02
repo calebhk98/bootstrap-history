@@ -42,12 +42,9 @@ class Purse:
 class FundFixture(unittest.TestCase):
     def setUp(self):
         self.setup = types.SimpleNamespace(currency_id=MONEY, opening_rate=0.05)
-        self.record = types.SimpleNamespace(
-            book=Purse({SAVER: 1000.0, OTHER: 1000.0}), capital=CapitalState(), shares={}, loans=[],
-            remembered_defaults={}, last_dividends={PRODUCER: 20.0}, cohorts={},
-            producers={PRODUCER: Producer(PRODUCER, MANAGER, "grow", "town", 4.0)})
+        self.record = types.SimpleNamespace(book=Purse({SAVER: 1000.0, OTHER: 1000.0}), cohorts={}, producers={PRODUCER: Producer(PRODUCER, MANAGER, "grow", "town", 4.0)}, capital_markets=types.SimpleNamespace(capital=CapitalState(), shares={}, last_dividends={PRODUCER: 20.0}), credit=types.SimpleNamespace(loans=[], remembered_defaults={}))
         self.fund = Fund(FUND, MANAGER, 0)
-        self.record.capital.funds[FUND] = self.fund
+        self.record.capital_markets.capital.funds[FUND] = self.fund
         self.money = MONEY
         self.manager, self.saver, self.other = MANAGER, SAVER, OTHER
         self.producer_id = PRODUCER
@@ -60,7 +57,7 @@ class FundFixture(unittest.TestCase):
         return funds.unit_price(self.setup, self.record, self.fund, rate)
 
     def put_shares_in_fund(self, part=0.2):
-        self.record.shares[self.producer_id] = {self.fund.agent_id: part}
+        self.record.capital_markets.shares[self.producer_id] = {self.fund.agent_id: part}
 
     def subscribed(self, amount=100.0, holder=SAVER):
         """The fund as it stands after `holder` paid in `amount` at the first unit's price."""
@@ -113,7 +110,7 @@ class Units(FundFixture):
 
     def test_a_fund_holding_loans_marks_them_at_the_rate_a_saver_would_ask(self):
         self.subscribed(10.0)
-        self.record.loans.append(Loan("loan:0:1", self.fund.agent_id, self.producer_id, self.money, 100.0, rate=0.05,
+        self.record.credit.loans.append(Loan("loan:0:1", self.fund.agent_id, self.producer_id, self.money, 100.0, rate=0.05,
                                       years_left=4.0, issued_year=0, collateral_value=100000.0))
         low, high = self.price(0.03), self.price(0.12)
         self.assertGreater(low, high)
@@ -196,14 +193,14 @@ class WhatTheFundEarnsAndBuys(FundFixture):
 
     def test_the_expected_income_is_its_part_of_the_last_dividend_and_the_interest_on_its_loans(self):
         self.put_shares_in_fund(0.25)
-        self.record.loans.append(Loan("loan:0:1", self.fund.agent_id, self.producer_id, self.money, 100.0, rate=0.07,
+        self.record.credit.loans.append(Loan("loan:0:1", self.fund.agent_id, self.producer_id, self.money, 100.0, rate=0.07,
                                       years_left=4.0, issued_year=0))
         self.assertAlmostEqual(funds.expected_income(self.record, self.fund), 0.25 * 20.0 + 7.0)
 
     def test_the_yield_is_the_expected_income_over_the_worth(self):
         self.subscribed(100.0)
-        self.record.last_dividends[self.producer_id] = 0.0
-        self.record.loans.append(Loan("loan:0:1", self.fund.agent_id, self.producer_id, self.money, 100.0, rate=0.07,
+        self.record.capital_markets.last_dividends[self.producer_id] = 0.0
+        self.record.credit.loans.append(Loan("loan:0:1", self.fund.agent_id, self.producer_id, self.money, 100.0, rate=0.07,
                                       years_left=4.0, issued_year=0, collateral_value=100000.0))
         worth = funds.net_assets(self.setup, self.record, self.fund, MARKET_RATE)
         self.assertAlmostEqual(funds.yield_of(self.setup, self.record, self.fund, MARKET_RATE), 7.0 / worth)

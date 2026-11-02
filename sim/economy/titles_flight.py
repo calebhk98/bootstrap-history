@@ -12,9 +12,9 @@ def tenant_flees(record, tenant: str, fleeing_share: float) -> Dict[str, float]:
     released: Dict[str, float] = {}
     if fleeing_share <= 0.0:
         return released
-    for tile in sorted(record.tenancies):
+    for tile in sorted(record.land.tenancies):
         kept: List[dict] = []
-        for row in record.tenancies[tile]:
+        for row in record.land.tenancies[tile]:
             if row["tenant"] == tenant:
                 left = row["share"] * fleeing_share
                 release(record, tile, row["lessor"], left)
@@ -22,6 +22,6 @@ def tenant_flees(record, tenant: str, fleeing_share: float) -> Dict[str, float]:
                 row["share"] -= left
             if row["share"] > EPSILON:
                 kept.append(row)
-        record.tenancies[tile] = kept
-    record.tenancies = {tile: rows for tile, rows in record.tenancies.items() if rows}
+        record.land.tenancies[tile] = kept
+    record.land.tenancies = {tile: rows for tile, rows in record.land.tenancies.items() if rows}
     return released

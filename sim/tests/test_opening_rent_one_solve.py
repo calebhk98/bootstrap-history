@@ -39,7 +39,7 @@ def figures(setup, record):
     return {"price": dict(record.memory.prices),
             "capacity": {agent_id: producer.capacity_runs for agent_id, producer in record.producers.items()},
             "purse": {agent_id: record.book.balance(agent_id, money) for agent_id in record.cohorts},
-            "rent": dict(record.land_rent)}
+            "rent": dict(record.land.land_rent)}
 
 
 def worst_relative_gap(reference, other):

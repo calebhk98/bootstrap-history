@@ -23,7 +23,7 @@ CASH = 1000.0
 class InsuranceFixture(unittest.TestCase):
     def setUp(self):
         self.record = EconomyRecord(book=Book(), memory=MarketMemory(), currency=CurrencySpec(MONEY, "fiat", None, 0.0, None))
-        self.state = self.record.capital
+        self.state = self.record.capital_markets.capital
         self.money = MONEY
         self.founder, self.holder, self.other = AGENTS
         for agent in AGENTS:
@@ -223,8 +223,8 @@ class Saved(InsuranceFixture):
         insurance.insure(self.state, insurer.agent_id, self.holder, HARVEST, 100.0)
         self.state.exposure[self.holder] = {HARVEST: 100.0}
         loaded = EconomyRecord.from_record(self.record.to_record())
-        self.assertEqual(loaded.capital.to_plain(), self.state.to_plain())
-        self.assertEqual(loaded.capital.policies[0].holder, self.holder)
+        self.assertEqual(loaded.capital_markets.capital.to_plain(), self.state.to_plain())
+        self.assertEqual(loaded.capital_markets.capital.policies[0].holder, self.holder)
 
 
 if __name__ == "__main__":

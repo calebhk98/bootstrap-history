@@ -67,7 +67,7 @@ def _held_value(setup, record, view, offer: Offer) -> float:
     rate = view.interest_rate(view.currency_of(offer.area))
     if spec is not None and not spec.portable:
         # ground never queues behind the stock: every hectare yields its rent while held
-        return titles_value.hectare_value(record.land_rent.get(offer.tile, 0.0),
+        return titles_value.hectare_value(record.land.land_rent.get(offer.tile, 0.0),
                                           titles_value.capitalising_rate(rate, setup.opening_rate))
     return inventory.queued_holding_value(offer.reservation_price, offer.quantity,
                                           producer.expected_sales * producer.yield_factor * recipe.outputs.get(offer.good, 0.0), rate,

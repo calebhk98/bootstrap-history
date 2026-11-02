@@ -1,6 +1,6 @@
 """A fund: a pool of shares and loans that households hold units in.
 
-A fund is an agent with a purse and holdings of the same kinds as a household's (shares in `record.shares`, loans it
+A fund is an agent with a purse and holdings of the same kinds as a household's (shares in `record.capital_markets.shares`, loans it
 lends), so it buys and sells in the secondary market like a saver and lends the cash it holds. Its holdings are
 marked at what a saver would pay for them (the worth at the market rate plus each issuer's premium, secondary_trade.py),
 so a unit is worth the fund's cash and marked holdings over the units outstanding. A household subscribes the savings
@@ -27,12 +27,12 @@ POOLED_FUNDS = "pooled_funds"        # the institution a society must hold for i
 
 
 def standing(record) -> List[Fund]:
-    return [fund for _id, fund in sorted(record.capital.funds.items()) if fund.closed_year < 0]
+    return [fund for _id, fund in sorted(record.capital_markets.capital.funds.items()) if fund.closed_year < 0]
 
 
 def found(record, manager: AgentId, year: int) -> Fund:
     """A new fund run by `manager`, with no money in it and no units."""
-    funds = record.capital.funds
+    funds = record.capital_markets.capital.funds
     fund = Fund("fund:%d" % len(funds), manager, year)
     funds[fund.agent_id] = fund
     return fund
@@ -45,16 +45,16 @@ def units_outstanding(fund: Fund) -> float:
 def marked_holdings(setup, record, fund_id: AgentId, market_rate: float) -> float:
     """What the fund's shares and loans would fetch from a saver at the market rate and each issuer's premium."""
     rate_floor = shares.rate_floor_of(setup)
-    debts = credit_claims.principal_by_borrower(record.loans)
-    arrears = credit_claims.arrears_history(record.loans, record.remembered_defaults)
+    debts = credit_claims.principal_by_borrower(record.credit.loans)
+    arrears = credit_claims.arrears_history(record.credit.loans, record.credit.remembered_defaults)
     total = 0.0
-    for producer_id, held in sorted(record.shares.items()):
+    for producer_id, held in sorted(record.capital_markets.shares.items()):
         part = held.get(fund_id, 0.0)
         if part > EPSILON and producer_id in record.producers:
             premium = secondary_trade.issuer_premium(record, producer_id, debts, arrears,
                                                      secondary_trade.share_value(record, producer_id, market_rate, rate_floor))
             total += part * secondary_trade.share_value(record, producer_id, market_rate + premium, rate_floor)
-    for loan in record.loans:
+    for loan in record.credit.loans:
         if loan.lender == fund_id:
             premium = secondary_trade.issuer_premium(record, loan.borrower, debts, arrears, loan.collateral_value)
             total += secondary_trade.loan_value(loan, market_rate + premium)
@@ -126,9 +126,9 @@ def redeem_for_cash(setup, record, fund: Fund, holder: AgentId, need: float, off
 
 def expected_income(record, fund: Fund) -> float:
     """What the fund's holdings are expected to pay in a year: its part of each producer's last dividend and the interest on its loans."""
-    dividends = sum(held.get(fund.agent_id, 0.0) * record.last_dividends.get(producer_id, 0.0)
-                    for producer_id, held in record.shares.items() if producer_id in record.producers)
-    return dividends + sum(loan.principal * loan.rate for loan in record.loans if loan.lender == fund.agent_id)
+    dividends = sum(held.get(fund.agent_id, 0.0) * record.capital_markets.last_dividends.get(producer_id, 0.0)
+                    for producer_id, held in record.capital_markets.shares.items() if producer_id in record.producers)
+    return dividends + sum(loan.principal * loan.rate for loan in record.credit.loans if loan.lender == fund.agent_id)
 
 
 def yield_of(setup, record, fund: Fund, market_rate: float) -> Optional[float]:
@@ -149,4 +149,4 @@ def offer_of(setup, record, fund: Fund, market_rate: float) -> Optional[FundsOff
 
 def owned_by(record, holder: AgentId) -> Dict[str, float]:
     """The units a holder has in each fund."""
-    return {fund_id: fund.units[holder] for fund_id, fund in sorted(record.capital.funds.items()) if holder in fund.units}
+    return {fund_id: fund.units[holder] for fund_id, fund in sorted(record.capital_markets.capital.funds.items()) if holder in fund.units}

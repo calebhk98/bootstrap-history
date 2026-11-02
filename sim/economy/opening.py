@@ -22,6 +22,7 @@ from .merchants import Merchant
 from .producers import Producer
 from .producers_close import working_capital_target
 from .replaced import replaced
+from .carriage_record import CarriageRecord
 from .record import EconomyRecord
 from .setup import EconomySetup, labour_area, recipe_tile_key
 from .tile_costs import CarriageTable
@@ -142,7 +143,7 @@ def _open(setup: EconomySetup, replacement: float, plans=None) -> Tuple[EconomyR
     area_map = setup.area_map(carriage)
     memory = _opening_memory(setup, area_map, priced_goods)
     record = EconomyRecord(book=Book(), memory=memory, currency=setup.currency,
-                           ways={key: dict(built) for key, built in setup.improvements.items()})
+                           carriage=CarriageRecord(ways={key: dict(built) for key, built in setup.improvements.items()}))
     view = YearView(memory, record.book, area_map, setup.currency_id, labour_area)
     _open_cohorts(setup, record)
     if plans is not None:
@@ -157,10 +158,10 @@ def _open(setup: EconomySetup, replacement: float, plans=None) -> Tuple[EconomyR
     sites.apply_site_limits(record, setup)
     opening_runs.fit_to_supply(setup, record)
     rent = opening_rent.settle(setup, record, view, own.hectares_by_tile(record.cohorts))
-    figure = record.property_income
-    record.property_income = opening_rent.property_income_with_rent(figure, rent)
+    figure = record.capital_markets.property_income
+    record.capital_markets.property_income = opening_rent.property_income_with_rent(figure, rent)
     incomes = opening_rent.income_after_rent({agent_id: cohort.last_year_income for agent_id, cohort in record.cohorts.items()},
-                                             figure, record.property_income)
+                                             figure, record.capital_markets.property_income)
     record.cohorts.update({agent_id: replaced(record.cohorts[agent_id], last_year_income=income)
                            for agent_id, income in incomes.items()})
     record.index_base_prices = dict(priced_goods)
@@ -278,7 +279,7 @@ def _settle_income(setup, record, view, priced_goods, replacement, own) -> None:
     share["labour"] = labour_share
     demand_at(per_head)     # leaves the plots at the settled income's share of hours hired
     record.cohorts.update(opening_income.with_income(record.cohorts, per_head, labour_share))
-    record.property_income = opening_income.property_income_of(record.cohorts, per_head, labour_share)
+    record.capital_markets.property_income = opening_income.property_income_of(record.cohorts, per_head, labour_share)
 
 
 def _opening_bids(setup, record, view, memory=None, stationary_durables=True, own=None):
@@ -548,6 +549,6 @@ def _strike_opening_cash(setup, record, view, extra_spending) -> None:
         purse = opening_resting.resting_household_purse(cohort.last_year_income, owned.get(cohort.agent_id, 0.0),
                                                        extra_spending=extra_spending.get(cohort.agent_id, 0.0))
         transfers.append(Transfer(EDGE_MINT, cohort.agent_id, money, opening_resting.purse_with_property_income(
-            purse, record.property_income.get(cohort.agent_id, 0.0)), "opening coin"))
+            purse, record.capital_markets.property_income.get(cohort.agent_id, 0.0)), "opening coin"))
         record.cohorts[cohort.agent_id] = replaced(cohort, share_wealth=owned.get(cohort.agent_id, 0.0))
     record.book.transfer_many([transfer for transfer in transfers if transfer.amount > 0.0])

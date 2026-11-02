@@ -90,7 +90,7 @@ class EachCountrysOwnFigures(unittest.TestCase):
 class AnswersOfACountry(unittest.TestCase):
     def test_a_countrys_answers_give_its_trade_book_in_coin(self):
         economy = two_country_economy()
-        economy.record.carried_goods = {"grain": {"north_farms": {"farms": [2.0, 10.0, 14.0]}},
+        economy.record.carriage.carried_goods = {"grain": {"north_farms": {"farms": [2.0, 10.0, 14.0]}},
                                         "ore": {"farms": {"north_farms": [1.0, 6.0, 9.0]}}}
         answers = CountryAnswers(economy, NORTH, off_map_trade=NO_OFF_MAP_TRADE)
         book = answers.trade_book()
@@ -118,13 +118,13 @@ class AnswersOfACountry(unittest.TestCase):
 
     def test_a_countrys_site_rent_is_its_own_land_markets_not_the_home_mean(self):
         economy = two_country_economy()
-        economy.record.land_rent = {"hills": 50.0}     # the home country lets land; the north none
+        economy.record.land.land_rent = {"hills": 50.0}     # the home country lets land; the north none
         answers = CountryAnswers(economy, NORTH, off_map_trade=NO_OFF_MAP_TRADE)
         self.assertIsNone(answers.land_rent_at(None))   # nothing let in the country: none, never the home mean
         self.assertIsNone(answers.land_rent_at("north_farms"))
-        economy.record.land_rent.update({"north_farms": 2.0, "north_port": 4.0})
+        economy.record.land.land_rent.update({"north_farms": 2.0, "north_port": 4.0})
         self.assertAlmostEqual(answers.land_rent_at("north_farms"), 2.0 * COIN_PER_UNIT)
-        economy.record.land_rent["north_port"] = 0.0
+        economy.record.land.land_rent["north_port"] = 0.0
         self.assertAlmostEqual(answers.land_rent_at("north_port"), 2.0 * COIN_PER_UNIT)   # none let there: the country's mean
         self.assertAlmostEqual(answers.land_rent_at("hills"), 2.0 * COIN_PER_UNIT)        # a home tile is not the country's
 

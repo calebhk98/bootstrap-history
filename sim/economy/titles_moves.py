@@ -14,7 +14,7 @@ Move = Tuple[TileId, AgentId, AgentId, float]
 def holdings(record, tiles: Iterable[TileId]) -> Tuple[Dict[TileId, Dict[AgentId, float]], Dict[TileId, list]]:
     """(holder -> share, tenancy rows) of each of the tiles, for the state to plan its moves from."""
     held = {tile: titles.shares(record, tile) for tile in sorted(set(tiles))}
-    tenancies = {tile: [dict(row) for row in record.tenancies.get(tile, ())] for tile in held}
+    tenancies = {tile: [dict(row) for row in record.land.tenancies.get(tile, ())] for tile in held}
     return held, tenancies
 
 

@@ -52,15 +52,15 @@ class Bank:
 
 
 def is_deposit(record, loan: Loan) -> bool:
-    return loan.borrower in record.banks
+    return loan.borrower in record.capital_markets.banks
 
 
 def standing(record) -> List[Bank]:
-    return [bank for _id, bank in sorted(record.banks.items()) if bank.failed_year < 0]
+    return [bank for _id, bank in sorted(record.capital_markets.banks.items()) if bank.failed_year < 0]
 
 
 def deposits_of(record, bank_id: AgentId) -> List[Loan]:
-    return [loan for loan in record.loans if loan.borrower == bank_id]
+    return [loan for loan in record.credit.loans if loan.borrower == bank_id]
 
 
 def owed_to_depositors(record, bank_id: AgentId) -> float:
@@ -69,7 +69,7 @@ def owed_to_depositors(record, bank_id: AgentId) -> float:
 
 def assets_of(record, bank_id: AgentId, money: str) -> float:
     """What the bank holds in cash and is owed on its loans, as the loans' lenders value them."""
-    claims = credit_claims.claims_by_lender((loan for loan in record.loans if loan.lender == bank_id), money)
+    claims = credit_claims.claims_by_lender((loan for loan in record.credit.loans if loan.lender == bank_id), money)
     return record.book.balance(bank_id, money) + claims.get(bank_id, 0.0)
 
 
@@ -79,15 +79,15 @@ def capital_of(record, bank_id: AgentId, money: str) -> float:
 
 
 def loans_out(record, bank_id: AgentId) -> float:
-    return sum(loan.principal for loan in record.loans if loan.lender == bank_id and not is_deposit(record, loan))
+    return sum(loan.principal for loan in record.credit.loans if loan.lender == bank_id and not is_deposit(record, loan))
 
 
 def risk_headroom(record, bank_id: AgentId, money: str) -> float:
     """The value at risk the bank may still take on (bank_credit_risk.var_headroom): its equity, what it holds and is
     owed less what it owes depositors, times ALFA, less the value at risk of the loans it has out."""
-    own_loans = [loan for loan in record.loans if loan.lender == bank_id and not is_deposit(record, loan)]
+    own_loans = [loan for loan in record.credit.loans if loan.lender == bank_id and not is_deposit(record, loan)]
     at_risk = bank_credit_risk.value_at_risk(
-        bank_credit_risk.exposures(own_loans, credit_claims.principal_by_borrower(record.loans)))
+        bank_credit_risk.exposures(own_loans, credit_claims.principal_by_borrower(record.credit.loans)))
     return bank_credit_risk.var_headroom(capital_of(record, bank_id, money), at_risk)
 
 
@@ -97,12 +97,12 @@ def found(record, founder: AgentId, capital: float, year: int, money: str,
     capital = min(capital, record.book.balance(founder, money))
     if capital <= 0.0:
         return None
-    bank_id = "bank:%d" % len(record.banks)
+    bank_id = "bank:%d" % len(record.capital_markets.banks)
     bank = Bank(bank_id, founder, year, paid_in=capital)
     if reserve_share is not None:
         bank.reserve_share = reserve_share
     record.book.transfer(Transfer(founder, bank_id, money, capital, "bank capital"))
-    record.banks[bank_id] = bank
+    record.capital_markets.banks[bank_id] = bank
     return bank
 
 
@@ -150,7 +150,7 @@ def free_cash(record, bank: Bank, money: str) -> float:
 def spread_of(record, bank: Bank, money: str) -> float:
     """What the bank adds to its depositors' rate: its loss record and how thin its capital is behind its loans."""
     loans = loans_out(record, bank.agent_id)
-    return bank_spread.spread(record.loss_rates.get(bank.agent_id, 0.0), loans,
+    return bank_spread.spread(record.credit.loss_rates.get(bank.agent_id, 0.0), loans,
                               capital_of(record, bank.agent_id, money), BANK_CAPITAL_SHARE_OF_LOANS)
 
 
@@ -201,11 +201,11 @@ def draw_deposits(record, loans: Sequence[Loan], pledged: Dict[AgentId, List[Fun
     are disbursed."""
     lent: Dict[AgentId, float] = {}
     for loan in loans:
-        if loan.lender in record.banks:
+        if loan.lender in record.capital_markets.banks:
             lent[loan.lender] = lent.get(loan.lender, 0.0) + loan.principal
     placed: List[Transfer] = []
     for bank_id, total in sorted(lent.items()):
-        bank = record.banks[bank_id]
+        bank = record.capital_markets.banks[bank_id]
         offers = [offer for offer in pledged.get(bank_id, ()) if offer.amount > 0.0]
         pledged_total = sum(offer.amount for offer in offers)
         needed = (total - free_cash(record, bank, money)) / (1.0 - bank.reserve_share)
@@ -215,6 +215,6 @@ def draw_deposits(record, loans: Sequence[Loan], pledged: Dict[AgentId, List[Fun
         for offer in offers:
             amount = offer.amount * share
             placed.append(Transfer(offer.lender, bank_id, money, amount, DEPOSIT_PURPOSE))
-            record.loans.append(Loan("deposit:%d:%s:%s" % (year, bank_id, offer.lender), offer.lender, bank_id, money,
+            record.credit.loans.append(Loan("deposit:%d:%s:%s" % (year, bank_id, offer.lender), offer.lender, bank_id, money,
                                      amount, rate=offer.minimum_rate, years_left=DEPOSIT_TERM_YEARS, issued_year=year))
     record.book.transfer_many(placed)

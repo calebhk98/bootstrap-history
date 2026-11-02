@@ -18,16 +18,16 @@ def forgive(record, tiles: Iterable[TileId]) -> Dict[str, float]:
     if not relieved:
         return written_off
     kept = []
-    for loan in record.loans:
+    for loan in record.credit.loans:
         if loan.borrower not in borrowers:
             kept.append(loan)
             continue
         written_off["principal"] += loan.principal
         written_off["arrears"] += loan.arrears
-        record.credit_losses[loan.lender] = record.credit_losses.get(loan.lender, 0.0) + loan.principal + loan.arrears
-    record.loans = kept
+        record.credit.add_loss(loan.lender, loan.principal + loan.arrears)
+    record.credit.loans = kept
     for tile in relieved:
-        for row in record.tenancies.get(tile, ()):
+        for row in record.land.tenancies.get(tile, ()):
             written_off["rent_arrears"] += row["arrears"]
             row["arrears"] = 0.0
     return written_off
@@ -36,4 +36,4 @@ def forgive(record, tiles: Iterable[TileId]) -> Dict[str, float]:
 def indebted_tiles(record) -> list:
     """Tiles where a household cohort owes a term loan, sorted: the tiles a state could relieve."""
     tile_of = {cohort.agent_id: cohort.tile for cohort in record.cohorts.values()}
-    return sorted({tile_of[loan.borrower] for loan in record.loans if loan.borrower in tile_of})
+    return sorted({tile_of[loan.borrower] for loan in record.credit.loans if loan.borrower in tile_of})

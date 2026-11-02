@@ -258,9 +258,7 @@ class LandTests(unittest.TestCase):
         self.assertAlmostEqual(sum(move.share for move in land_moves.reform_moves({"lord": 0.8}, rows, 0.5)), 0.1)
 
     def test_the_applied_moves_change_the_titles_by_the_economys_own_rule(self):
-        record = SimpleNamespace(titles={"t": {"lord": 0.8, "t1": 0.1}},
-                                 tenancies={"t": [{"tenant": "t1", "lessor": "lord", "share": 0.3, "arrears": 0.0}]},
-                                 cohorts={})
+        record = SimpleNamespace(cohorts={}, land=SimpleNamespace(titles={"t": {"lord": 0.8, "t1": 0.1}}, tenancies={"t": [{"tenant": "t1", "lessor": "lord", "share": 0.3, "arrears": 0.0}]}))
         held, rows = titles_moves.holdings(record, ["t"])
         plan = land_moves.planned(held, rows, "state", confiscate=0.5, cap=None)
         moved = titles_moves.apply(record, [("t", move.giver, move.receiver, move.share) for move in plan["t"]])
@@ -272,7 +270,7 @@ class LandTests(unittest.TestCase):
     def test_reform_after_confiscation_works_on_what_is_left(self):
         rows = [{"tenant": "t1", "lessor": "lord", "share": 0.4}]
         plan = land_moves.planned({"t": {"lord": 0.8}}, {"t": rows}, "state", confiscate=0.0, cap=0.5)
-        record = SimpleNamespace(titles={"t": {"lord": 0.8}}, tenancies={"t": [dict(rows[0], arrears=0.0)]}, cohorts={})
+        record = SimpleNamespace(cohorts={}, land=SimpleNamespace(titles={"t": {"lord": 0.8}}, tenancies={"t": [dict(rows[0], arrears=0.0)]}))
         titles_moves.apply(record, [("t", move.giver, move.receiver, move.share) for move in plan["t"]])
         held = titles.shares(record, "t")
         self.assertAlmostEqual(held["lord"], 0.5)

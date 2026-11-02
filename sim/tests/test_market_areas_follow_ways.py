@@ -89,7 +89,7 @@ class FollowTests(unittest.TestCase):
 class SetImprovementsTests(unittest.TestCase):
     def economy(self, improvements):
         rebuilt = []
-        return types.SimpleNamespace(improvements=improvements, record=types.SimpleNamespace(ways={}),
+        return types.SimpleNamespace(improvements=improvements, record=types.SimpleNamespace(carriage=types.SimpleNamespace(ways={})),
                                      _rebuild_carriage=lambda: rebuilt.append(True) or True, rebuilt=rebuilt)
 
     def test_unchanged_ways_leave_the_areas_alone(self):
@@ -102,8 +102,8 @@ class SetImprovementsTests(unittest.TestCase):
         economy = self.economy({})
         change = Economy.set_improvements
         self.assertTrue(change(economy, {"a|b": {"road": True}}))
-        self.assertEqual(economy.record.ways, {"a|b": {"road": True}})
-        self.assertEqual(economy.record.ways, {"a|b": {"road": True}})
+        self.assertEqual(economy.record.carriage.ways, {"a|b": {"road": True}})
+        self.assertEqual(economy.record.carriage.ways, {"a|b": {"road": True}})
         self.assertEqual(economy.rebuilt, [True])
 
 

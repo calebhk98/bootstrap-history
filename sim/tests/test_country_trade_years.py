@@ -24,7 +24,7 @@ country_trade_years.note(book, "north", 100 + country_trade_years.YEARS_KEPT, 1.
 check("only the last few years are kept", "100" not in book["north"] and "101" in book["north"], sorted(book["north"]))
 
 economy = two_country_economy()
-economy.record.carried_goods = {"grain": {"north_farms": {"farms": [2.0, 10.0, 14.0]}}, "ore": {"farms": {"north_farms": [1.0, 6.0, 9.0]}}}
+economy.record.carriage.carried_goods = {"grain": {"north_farms": {"farms": [2.0, 10.0, 14.0]}}, "ore": {"farms": {"north_farms": [1.0, 6.0, 9.0]}}}
 carried = carried_book.trade_value(country_figures.trade_book(economy, NORTH), "in") * economy.setup.coin_per_unit
 away = {"in": 11.0, "out": 3.0}
 answers = CountryAnswers(economy, NORTH, off_map_trade=away.get)

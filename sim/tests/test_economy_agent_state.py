@@ -43,8 +43,7 @@ def economy_of(order, regime="fiat", cash=0.0, revenue=REVENUE, **policy_changes
     policy = StatePolicy(financing_order=order, **policy_changes)
     setup = types.SimpleNamespace(currency_id=COIN, state_agent=STATE, state_policy=policy, trades={}, unskilled_trade="labourer",
                                   opening_wages={"labourer": 1.0}, working_hours_per_year=2000.0)
-    record = types.SimpleNamespace(loans=[], loan_requests=[], currency=currency(regime), book=StubBook(cash), cohorts={},
-                                   state_budget=state_budget.StateBudget(revenue=revenue))
+    record = types.SimpleNamespace(currency=currency(regime), book=StubBook(cash), cohorts={}, state_budget=state_budget.StateBudget(revenue=revenue), credit=types.SimpleNamespace(loans=[], loan_requests=[]))
     view = types.SimpleNamespace(interest_rate=lambda money: 0.05, chained_price_level=lambda money: 1.0, wage=lambda trade, area: None)
     return setup, record, view
 
@@ -62,7 +61,7 @@ class FinancingOrderTests(unittest.TestCase):
         self.assertAlmostEqual(supplied["borrow"], headroom)
         self.assertAlmostEqual(supplied["issue"], 500.0)
         self.assertAlmostEqual(expected, headroom)
-        self.assertEqual(record.loan_requests[0].borrower, STATE)
+        self.assertEqual(record.credit.loan_requests[0].borrower, STATE)
 
     def test_a_deficit_inside_the_headroom_is_only_borrowed(self):
         _record, (_in_hand, _expected, supplied) = finance(100.0, ("borrow", "issue"))
@@ -73,7 +72,7 @@ class FinancingOrderTests(unittest.TestCase):
         self.assertEqual(list(supplied), ["issue"])
         self.assertAlmostEqual(in_hand, 2000.0)
         self.assertEqual(expected, 0.0)
-        self.assertEqual(record.loan_requests, [])
+        self.assertEqual(record.credit.loan_requests, [])
 
     def test_a_state_with_no_revenue_cannot_borrow_and_falls_back_to_the_next_method(self):
         _record, (_in_hand, _expected, supplied) = finance(300.0, ("borrow", "issue"), revenue=0.0)

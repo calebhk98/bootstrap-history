@@ -1,7 +1,7 @@
 """Depositors withdraw from a bank whose loss record threatens their deposit; an illiquid bank sells its loans or fails.
 
 As the year opens each depositor weighs its deposit against what the bank is expected to lose. The bank's own loss
-record (`record.loss_rates`, the share of what it has lent that it loses a year) times what it has lent is the loss it
+record (`record.credit.loss_rates`, the share of what it has lent that it loses a year) times what it has lent is the loss it
 expects; its capital absorbs that first, and what is left falls on the depositors, as a share of what the bank owes.
 A depositor stays while the interest it asked as a lender covers that share, and withdraws its deposit when it does
 not: those who ask least run first.
@@ -29,7 +29,7 @@ def expected_loss_share(record, bank: banks.Bank, money: str) -> float:
     owed = banks.owed_to_depositors(record, bank.agent_id)
     if owed <= EPSILON:
         return 0.0
-    expected = record.loss_rates.get(bank.agent_id, 0.0) * banks.loans_out(record, bank.agent_id)
+    expected = record.credit.loss_rates.get(bank.agent_id, 0.0) * banks.loans_out(record, bank.agent_id)
     uncovered = max(0.0, expected - max(0.0, banks.capital_of(record, bank.agent_id, money)))
     return min(1.0, uncovered / owed)
 
@@ -48,7 +48,7 @@ def _pay(record, bank_id: AgentId, deposits: Sequence[Loan], part: float, money:
     record.book.transfer_many(payments)
     for deposit in deposits:
         deposit.principal -= deposit.principal * part
-    record.loans = [loan for loan in record.loans if loan.principal > EPSILON or loan.arrears > EPSILON or loan.borrower != bank_id]
+    record.credit.loans = [loan for loan in record.credit.loans if loan.principal > EPSILON or loan.arrears > EPSILON or loan.borrower != bank_id]
     return sum(payment.amount for payment in payments)
 
 
