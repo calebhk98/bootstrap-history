@@ -65,15 +65,6 @@ def _round(groups: List[Searchers], vacancies: Dict[str, float], offers: Dict[st
     return reach, {count: _taken_by(1.0, ranked[:count], offered, offers) for count in hours_reaching}
 
 
-def apply_round(groups: List[Searchers], vacancies: Dict[str, float], offers: Dict[str, float]) -> List[Dict[str, float]]:
-    """Hours each group of searchers is taken on for by each employer in one round. A group applies to
-    `APPLICATIONS_PER_ROUND` of the employers with vacancies whose offer is at or above its ask, chosen evenly; an
-    employer offers as many hours as it has vacancies, evenly among its applicants; a group takes the highest offer."""
-    reach, units = _round(groups, vacancies, offers)
-    return [{employer: group.hours * share for employer, share in units[count].items()}
-            for group, count in zip(groups, reach)]
-
-
 def _taken_by(hours: float, firms: List[str], offered: Dict[str, float], offers: Dict[str, float]) -> Dict[str, float]:
     """Hours of a group that applies to `APPLICATIONS_PER_ROUND` of `firms` at random and takes the best offer it gets.
     The chance firm j is the best is: it is chosen, makes an offer, and each better-paying firm also chosen made none;

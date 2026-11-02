@@ -35,12 +35,6 @@ def worth_in(inputs: YearInputs, index: Dict, area: str, trade: str, trade_wage:
     return bonded_worth.worth_of_hours(wage, inputs.hours_per_worker_year, inputs.career_years, inputs.discount_rate)
 
 
-def untrained_worth_in(inputs: YearInputs, area: str) -> float:
-    """Present value of an untrained person's hours: the area's wage floor over a career."""
-    return bonded_worth.worth_of_hours(_floor_per_hour(inputs, area), inputs.hours_per_worker_year,
-                                       inputs.career_years, inputs.discount_rate)
-
-
 def buy(state: MarketState, inputs: YearInputs, index: Dict, area: str, trade: str, wanted: float,
         pool: Dict[str, Dict[str, float]], report: YearReport, unassigned: Dict[str, float],
         memo: Optional[Dict] = None) -> float:

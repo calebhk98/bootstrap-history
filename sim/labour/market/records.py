@@ -30,14 +30,12 @@ class Bid:
     """An employer's demand for hours of one trade in one area.
 
     `maximum_wage` is the most an hour is worth to the employer: above it the employer hires nothing.
-    `pay_premium` is the share over the market wage the employer chooses to pay; an employer paying more
-    is filled first, takes hours from lower payers, and raises what the trade is known to pay there."""
+    Employers with a higher maximum are filled first and draw hours from lower ones."""
     employer: str
     trade: TradeId
     area: AreaId
     hours: float
     maximum_wage: float
-    pay_premium: float = 0.0
 
 
 @dataclasses.dataclass(frozen=True)
@@ -58,6 +56,10 @@ class Route:
     destination: AreaId
     moving_cost: float
     expected_penalty: float = 0.0    # what a leaver expects to pay if the state recaptures him (money; the caller's rule)
+
+
+def no_hours(wage: float) -> float:
+    return 0.0
 
 
 @dataclasses.dataclass
@@ -81,7 +83,18 @@ class YearInputs:
     outlay_room: Dict[str, float] = dataclasses.field(default_factory=dict)   # money each employer's plan assigns to no line: with the wage line of its vacancies, all it may spend on bonded people (bonded_room.py)
     taxed_share: Dict[AreaId, float] = dataclasses.field(default_factory=dict)   # share of a worker's income the state takes from those who stay in the area, liability included
     fetch_wage: Optional[Callable] = None   # the kernel that prices fetched hands (fetch_wage.py); None: the reference, for a caller outside a game's assembly
-    hours_share_at: Dict[Tuple[TradeId, AreaId], Callable[[float], float]] = dataclasses.field(default_factory=dict)   # (trade, area) -> share of the workers' hours they sell at a wage an hour (rising); absent: all of them, at any wage
+    hours_sold_at: Optional[Dict[Tuple[TradeId, AreaId], Callable[[float], float]]] = None   # (trade, area) -> hours the households there sell at a wage an hour (rising): the hours their offers hold. None: every worker sells a whole year at any wage; a market missing from a given schedule sells nothing
+
+    def sold_schedule(self, trade: TradeId, area: AreaId) -> Optional[Callable[[float], float]]:
+        """The hours sold at a wage in one market; None where no schedule is given (the workers' whole year is sold)."""
+        if self.hours_sold_at is None:
+            return None
+        return self.hours_sold_at.get((trade, area), no_hours)
+
+    def hours_sold(self, trade: TradeId, area: AreaId, workers_hours: float, wage: float) -> float:
+        """Hours sold in a market at a wage, given the hours its workers have in all."""
+        schedule = self.sold_schedule(trade, area)
+        return workers_hours if schedule is None else schedule(wage)
 
 
 @dataclasses.dataclass
@@ -102,8 +115,8 @@ class MarketState:
 
 @dataclasses.dataclass
 class Clearing:
-    """One (trade, area) market's year. `paid_by_employer` is the wage an hour each employer paid
-    (the market wage times one plus its premium); `average_wage` is hours-weighted over everyone hired."""
+    """One (trade, area) market's year. `average_wage` is the one wage an hour every employer pays: hours-weighted over
+    everyone hired (held hours at their contracts, new hires at the offers the rounds reached)."""
     trade: TradeId
     area: AreaId
     wage: float
@@ -111,7 +124,6 @@ class Clearing:
     hours_wanted: float
     hours_hired: float
     hired_by_employer: Dict[str, float]
-    paid_by_employer: Dict[str, float]
     average_wage: float
     new_hire_wage: Optional[float] = None   # the wage hours hired new this year cleared at, before any premium (`wage` is the mean over all hours held, contracts included); none: the wage
     target_wage: Optional[float] = None   # where the wage is heading: toward the price where offered meets wanted hours, scaled by the imbalance; none: the wage

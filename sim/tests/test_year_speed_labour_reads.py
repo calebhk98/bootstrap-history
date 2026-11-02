@@ -57,19 +57,19 @@ class ThePlotScheduleIsThePlainCall(unittest.TestCase):
                 self.assertEqual(schedule(wage), households_hours_offered.plot_hours_kept(per_worker, wage, marginal, usable) * workers)
 
 
-class TheGroupedSharesAreTheMarketsShares(unittest.TestCase):
+class TheGroupedSchedulesAreTheMarketsSchedules(unittest.TestCase):
 
-    def test_shares_for_every_market_equal_share_at_each(self):
+    def test_schedules_for_every_market_equal_hours_at_each(self):
         rng = random.Random(9)
         offers = [LabourOffer("w%d" % rng.randrange(5), rng.choice(["a", "b"]), rng.choice(["vale", "hill", "dale"]),
                               rng.choice([0.0, rng.uniform(10, 900)]), 0.1) for _ in range(30)]
         held = HourSupply(offers=offers, plan_hours={}, work_hours={}, plot_hours_at={})
-        shares = held.shares()
-        self.assertEqual(sorted(shares), sorted({(offer.trade, offer.area) for offer in offers}))
-        for market, share in shares.items():
-            plain = held.share_at(*market)
+        schedules = held.schedules()
+        self.assertEqual(sorted(schedules), sorted({(offer.trade, offer.area) for offer in offers}))
+        for market, schedule in schedules.items():
+            plain = held.hours_at(*market)
             for wage in (0.0, 0.3, 1.0, 9.0):
-                self.assertEqual(share(wage), plain(wage))
+                self.assertEqual(schedule(wage), plain(wage))
 
 
 class ImportCostsKeepTheirValues(unittest.TestCase):
@@ -90,11 +90,11 @@ class ImportCostsKeepTheirValues(unittest.TestCase):
             state = MarketState(workers={area: {"digger": [rng.uniform(0, 40), rng.uniform(0, 40)]} for area in areas})
             state.wages = {area: {"digger": rng.uniform(0.5, 3.0)} for area in areas if rng.random() < 0.9}
             bids = [Bid("e%d" % i, "digger", rng.choice(areas), rng.uniform(100, 6000), rng.uniform(1, 8)) for i in range(7)]
-            shares = {("digger", area): (lambda wage, base=rng.uniform(0.3, 1.0): min(1.0, base * (0.5 + wage / 6.0)))
-                      for area in areas if rng.random() < 0.6}
+            sold = {("digger", area): (lambda wage, base=rng.uniform(0.3, 1.0): 80.0 * min(1.0, base * (0.5 + wage / 6.0)))
+                    for area in areas if rng.random() < 0.6}
             inputs = YearInputs(trades={}, bids=bids, subsistence_per_worker_year={area: 100.0 for area in areas},
                                 hours_per_worker_year=100.0, discount_rate=0.03, career_years=30.0, routes=routes,
-                                hours_share_at=shares)
+                                hours_sold_at=sold)
             fast, plain = ImportCosts(state, inputs), self.Plain(state, inputs)
             for area in areas:
                 self.assertEqual(fast.wage(area, "digger"), plain.wage(area, "digger"))
@@ -109,7 +109,7 @@ class BondedPurchaseReadsKeepTheirValues(unittest.TestCase):
                         2.0) for _ in range(20)]
             hired = {"e%d" % i: rng.uniform(0, 300) for i in range(6) if rng.random() < 0.5}
             clearing = Clearing(trade="x", area="p", wage=1.0, hours_offered=0.0, hours_wanted=0.0, hours_hired=0.0,
-                                hired_by_employer=hired, paid_by_employer={}, average_wage=1.0, target_wage=rng.uniform(0, 2))
+                                hired_by_employer=hired, average_wage=1.0, target_wage=rng.uniform(0, 2))
             room = {"e%d" % i: rng.uniform(-5, 50) for i in range(6) if rng.random() < 0.5}
             hours = {}
             for bid in bids:
@@ -132,7 +132,7 @@ class BondedPurchaseReadsKeepTheirValues(unittest.TestCase):
                             bonded_for_sale={area: {"fitter": 30.0} for area in ("p", "q", "r")},
                             ask_floor_per_worker_year={area: 100.0 for area in ("p", "q", "r")}, outlay_room={"forge": 1.0e9})
         index = {(area, "fitter"): Clearing(trade="fitter", area=area, wage=1.0, hours_offered=0.0, hours_wanted=50000.0,
-                                            hours_hired=0.0, hired_by_employer={}, paid_by_employer={}, average_wage=1.0,
+                                            hours_hired=0.0, hired_by_employer={}, average_wage=1.0,
                                             target_wage=3.0) for area in ("p", "q", "r")}
 
         def run(shared):

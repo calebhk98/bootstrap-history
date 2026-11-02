@@ -54,13 +54,11 @@ class ImportCosts:
 
     def hours_at(self, area: str, trade: str, wage: float) -> float:
         """The hours the trade's workers in an area sell at a wage: the hours they keep for plots and household work are not
-        for hire, so where the area has a schedule (`hours_share_at`) only its share of their hours counts."""
+        for hire, so where the year gives a schedule (`hours_sold_at`) only what it sells counts."""
         key = (area, trade, wage)
         sold = self._sold.get(key)
         if sold is None:
-            everyone = self.everyone(area, trade)
-            share = self.inputs.hours_share_at.get((trade, area))
-            sold = self._sold[key] = everyone if share is None else everyone * share(wage)
+            sold = self._sold[key] = self.inputs.hours_sold(trade, area, self.everyone(area, trade), wage)
         return sold
 
     def everyone(self, area: str, trade: str) -> float:

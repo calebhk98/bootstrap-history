@@ -18,10 +18,10 @@ CAREER = 30.0
 WHOLE_BAND = [1.0, 1.0, 1.0, 1.0, 1.0]
 
 
-def inputs(bids, routes=None, hours_share_at=None):
+def inputs(bids, routes=None, hours_sold_at=None):
     return YearInputs(trades=SPECS, bids=bids, subsistence_per_worker_year={"vale": 100.0, "hill": 100.0},
                       hours_per_worker_year=HOURS, discount_rate=DISCOUNT, career_years=CAREER,
-                      routes=routes or {}, hours_share_at=hours_share_at or {})
+                      routes=routes or {}, hours_sold_at=hours_sold_at)
 
 
 def state(healers, hill_healers=0.0):
@@ -111,7 +111,7 @@ class OwnWorkersOfferMoreHoursAtTheScarcityWage(unittest.TestCase):
         def share(wage):
             return min(1.0, 0.5 * wage / 2.0)
         held = state(healers=10.0)
-        year_inputs = inputs([hungry()], hours_share_at={("healer", "vale"): share})
+        year_inputs = inputs([hungry()], hours_sold_at={("healer", "vale"): lambda wage: 10.0 * HOURS * share(wage)})
         cap = long_run_cap(held, year_inputs)
         result = settle(held, year_inputs)
         self.assertGreater(result.wage, cap)
@@ -134,20 +134,24 @@ class HoursWorkersKeepBackAreNotHandsInHand(unittest.TestCase):
         held = state(healers=10.0, hill_healers=5000.0)
         bids, routes = [hungry(hours=HOURS * 5.0)], {"vale": [Route("hill", 20.0)]}
         self.assertIsNone(ImportCosts(held, inputs(bids, routes)).wage("vale", "healer"))
-        withheld = inputs(bids, routes, {("healer", "vale"): self.withholding})
+        withheld = inputs(bids, routes, {("healer", "vale"): lambda wage: 10.0 * HOURS * self.withholding(wage),
+                                         ("healer", "hill"): lambda wage: 5000.0 * HOURS})
         self.assertIsNotNone(ImportCosts(held, withheld).wage("vale", "healer"))
 
     def test_hands_to_fetch_are_those_the_other_area_sells_not_all_it_has(self):
         held = state(healers=1.0, hill_healers=5000.0)
         bids, routes = [hungry(hours=HOURS * 300.0)], {"vale": [Route("hill", 20.0)]}
         every_hour = ImportCosts(held, inputs(bids, routes)).wage("vale", "healer")
-        partial = ImportCosts(held, inputs(bids, routes, {("healer", "hill"): self.gradually})).wage("vale", "healer")
+        partial = ImportCosts(held, inputs(bids, routes, {("healer", "vale"): lambda wage: HOURS,
+                                                          ("healer", "hill"): lambda wage: 5000.0 * HOURS * self.gradually(wage)})
+                              ).wage("vale", "healer")
         self.assertGreater(partial, every_hour)
 
     def test_the_cap_is_where_hours_sold_here_and_fetched_first_fill_the_bids(self):
         held = state(healers=1.0, hill_healers=5000.0)
         year_inputs = inputs([hungry(hours=HOURS * 300.0)], {"vale": [Route("hill", 20.0)]},
-                             {("healer", "hill"): self.gradually})
+                             {("healer", "vale"): lambda wage: HOURS,
+                              ("healer", "hill"): lambda wage: 5000.0 * HOURS * self.gradually(wage)})
         costs = ImportCosts(held, year_inputs)
         cap = costs.wage("vale", "healer")
         filled = costs.hours_at("vale", "healer", cap) + costs._fetched("vale", "healer", ["hill"], cap)
@@ -162,7 +166,8 @@ class HoursWorkersKeepBackAreNotHandsInHand(unittest.TestCase):
                                  subsistence_per_worker_year={"vale": 100.0, "hill": 100.0},
                                  hours_per_worker_year=HOURS, discount_rate=DISCOUNT, career_years=CAREER,
                                  routes={"vale": [Route("hill", 20.0)]},
-                                 hours_share_at={("digger", "vale"): self.withholding, ("digger", "hill"): lambda wage: 1.0})
+                                 hours_sold_at={("digger", "vale"): lambda wage: 500.0 * HOURS * self.withholding(wage),
+                                                ("digger", "hill"): lambda wage: 5000.0 * HOURS})
         fetch = ImportCosts(held, year_inputs).wage("vale", "digger")
         result = [each for each in clearing.clear_all(held, year_inputs) if each.area == "vale"][0]
         self.assertIsNotNone(fetch)
@@ -174,17 +179,17 @@ class TheFetchCostAsksEachScheduleOncePerWage(unittest.TestCase):
     """An hours schedule is a sum over an area's cohorts, so the search for a fetch cost asks it no more than it must."""
 
     @staticmethod
-    def counted(asked):
-        def share(wage):
+    def counted(asked, workers):
+        def hours(wage):
             asked.append(wage)
-            return min(1.0, wage / 100.0)
-        return share
+            return workers * HOURS * min(1.0, wage / 100.0)
+        return hours
 
     def test_a_wage_is_asked_of_an_areas_schedule_only_once(self):
         asked = []
         held = state(healers=1.0, hill_healers=5000.0)
         year_inputs = inputs([hungry(hours=HOURS * 300.0)], {"vale": [Route("hill", 20.0)]},
-                             {("healer", "hill"): self.counted(asked)})
+                             {("healer", "hill"): self.counted(asked, 5000.0)})
         costs = ImportCosts(held, year_inputs)
         costs.wage("vale", "healer")
         self.assertTrue(asked)
@@ -194,7 +199,7 @@ class TheFetchCostAsksEachScheduleOncePerWage(unittest.TestCase):
         asked = []
         held = state(healers=1.0, hill_healers=5.0)
         year_inputs = inputs([hungry(hours=HOURS * 3000.0)], {"vale": [Route("hill", 20.0)]},
-                             {("healer", "hill"): self.counted(asked)})
+                             {("healer", "hill"): self.counted(asked, 5.0)})
         self.assertIsNone(ImportCosts(held, year_inputs).wage("vale", "healer"))
         self.assertEqual(asked, [])
 

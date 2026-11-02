@@ -1,12 +1,11 @@
-"""The hours households sell (Complaints 473, 608, 675).
+"""The hours households sell, as a schedule against the wage (Complaints 473, 608, 675).
 
-Follows Eurace@Unibi Labour/Household_Employee_Functions.c: a household has no hours decision (an employed one is
-paid its job's whole wage, Household_receive_wage; an unemployed one searches for a job, Household_UNEMPLOYED_read_job_
-vacancies_and_send_applications). Here a household's year of hours goes first to its own-plot plan and the household
-work it does itself (both fixed for the year), then to its plot as far as an hour there beats the wage
-(`households_hours_offered.plot_hours_kept`); every other hour is offered to the market, with no leisure split. The
-labour core clears each market against this schedule (`hours_share_at`), then the hours each offer sold, and the hours
-kept for each use, are read at the wage the market cleared at. Plain functions of built inputs.
+A household's year of hours goes first to its own-plot plan and the household work it does itself (both fixed for the
+year), then to its plot as far as an hour there beats the wage (`households_hours_offered.plot_hours_kept`); every
+other hour is offered to the market, with no leisure split. Eurace@Unibi households have no hours decision at all
+(Labour/Household_Employee_Functions.c); the plot choice is this model's own. The labour core clears each market
+against the hours its offers hold (`YearInputs.hours_sold_at`); after it, the hours each offer sold and the hours kept
+for each use are read at the wage the market cleared at. Plain functions of built inputs.
 """
 import dataclasses
 from typing import Callable, Dict, List, Mapping, Sequence, Tuple
@@ -63,24 +62,23 @@ class HourSupply:
             return hours - hours_kept_at_home(whole, plan, plot(wage) if plot else 0.0, work) * share
         return sold
 
-    def share_at(self, trade: str, area: str) -> Callable[[float], float]:
-        """The share of a market's hours sold at a wage, over the offers in it."""
-        return self._share_over([offer for offer in self.offers if offer.trade == trade and offer.area == area])
+    def hours_at(self, trade: str, area: str) -> Callable[[float], float]:
+        """The hours sold at a wage in one market: the sum over its offers."""
+        return self._hours_over([offer for offer in self.offers if offer.trade == trade and offer.area == area])
 
-    def _share_over(self, in_market: Sequence[LabourOffer]) -> Callable[[float], float]:
-        mine = [offer for offer in in_market if offer.hours > 0.0]
-        total = sum(offer.hours for offer in mine)
-        schedules = [self.sold_hours_schedule(offer) for offer in mine]
+    def _hours_over(self, in_market: Sequence[LabourOffer]) -> Callable[[float], float]:
+        schedules = [self.sold_hours_schedule(offer) for offer in in_market if offer.hours > 0.0]
 
-        def share(wage: float) -> float:
-            return sum([schedule(wage) for schedule in schedules]) / total if total > 0.0 else 0.0
-        return share
+        def hours(wage: float) -> float:
+            return sum([schedule(wage) for schedule in schedules])
+        return hours
 
-    def shares(self) -> Dict[Tuple[str, str], Callable[[float], float]]:
+    def schedules(self) -> Dict[Tuple[str, str], Callable[[float], float]]:
+        """`hours_at` for every market that has an offer; a market without one sells nothing."""
         by_market: Dict[Tuple[str, str], List[LabourOffer]] = {}
         for offer in self.offers:
-            by_market.setdefault((offer.trade, offer.area), []).append(offer)      # in offer order, as share_at reads them
-        return {market: self._share_over(by_market[market]) for market in sorted(by_market)}
+            by_market.setdefault((offer.trade, offer.area), []).append(offer)
+        return {market: self._hours_over(by_market[market]) for market in sorted(by_market)}
 
     def settle(self, wage_by_market: Mapping[Tuple[str, str], float]) -> List[LabourOffer]:
         """The offers as sold at the wages the markets cleared at (the faced wage where one did not), and the hours

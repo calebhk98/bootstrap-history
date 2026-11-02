@@ -14,7 +14,7 @@ WORTH = 10.0       # an employer's maximum wage, far above the reservation
 
 
 def bid(hours):
-    return Bid("employer", "digger", "vale", hours, WORTH, 0.0)
+    return Bid("employer", "digger", "vale", hours, WORTH)
 
 
 def next_wage(last, wanted):

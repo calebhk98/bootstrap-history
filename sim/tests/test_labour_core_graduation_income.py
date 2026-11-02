@@ -22,7 +22,7 @@ def _inputs():
 def _clearing(wanted_hours, offered_hours=HOURS, wage=1.0):
     return {(AREA, "carver"): Clearing(
         trade="carver", area=AREA, wage=wage, hours_offered=offered_hours, hours_wanted=wanted_hours,
-        hours_hired=min(offered_hours, wanted_hours), hired_by_employer={}, paid_by_employer={},
+        hours_hired=min(offered_hours, wanted_hours), hired_by_employer={},
         average_wage=wage, target_wage=wage)}
 
 

@@ -1,4 +1,4 @@
-"""Layoffs and vacancies of one employer, one function each (Complaint 608; Eurace Firm_set_labour_market_actions)."""
+"""Layoffs of one employer (Complaint 608; Eurace Firm_set_labour_market_actions)."""
 
 QUICK_TOPIC = True
 
@@ -17,18 +17,12 @@ class Retain(unittest.TestCase):
         self.assertEqual(kept, {"mill": 100.0})
 
 
-class LaidOffAndVacant(unittest.TestCase):
+class LaidOff(unittest.TestCase):
     def test_hours_held_beyond_those_needed_are_laid_off(self):
         self.assertEqual(layoffs.hours_to_lay_off(held=100.0, needed=60.0), 40.0)
 
     def test_nothing_is_laid_off_when_the_hours_needed_are_more(self):
         self.assertEqual(layoffs.hours_to_lay_off(held=100.0, needed=150.0), 0.0)
-
-    def test_hours_needed_beyond_those_held_are_vacant(self):
-        self.assertEqual(layoffs.hours_vacant(held=100.0, needed=150.0), 50.0)
-
-    def test_no_hours_are_vacant_when_the_hours_held_are_more(self):
-        self.assertEqual(layoffs.hours_vacant(held=100.0, needed=60.0), 0.0)
 
 
 if __name__ == "__main__":

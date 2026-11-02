@@ -20,9 +20,9 @@ REGISTRY = {
 HOURS = 2000.0
 
 
-def bid(employer, trade, area, workers, maximum_wage=5.0, premium=0.0):
+def bid(employer, trade, area, workers, maximum_wage=5.0):
     return records.Bid(employer=employer, trade=trade, area=area, hours=workers * HOURS,
-                       maximum_wage=maximum_wage, pay_premium=premium)
+                       maximum_wage=maximum_wage)
 
 
 def inputs(bids, areas=("vale",), entrants=0.0, attrition=0.0, routes=None, schools=()):
@@ -106,11 +106,11 @@ class AptitudeTests(unittest.TestCase):
         self.assertGreater(healers[-1], healers[0])
 
 
-class PayOverTheMarketTests(unittest.TestCase):
-    def test_the_employer_paying_more_is_staffed_first(self):
+class HigherMaximumTests(unittest.TestCase):
+    def test_the_employer_valuing_hours_more_is_staffed_first(self):
         state = records.MarketState(workers={"vale": town(digger=500, carver=60)})
         year_inputs = inputs([bid("farm", "digger", "vale", 500), bid("mean", "carver", "vale", 60),
-                              bid("generous", "carver", "vale", 60, maximum_wage=10.0, premium=0.3)])
+                              bid("generous", "carver", "vale", 60, maximum_wage=10.0)])
         state, report = run(state, year_inputs, 3)
         hired = report.clearing("carver", "vale").hired_by_employer
         self.assertGreater(hired.get("generous", 0.0), hired.get("mean", 0.0))

@@ -13,7 +13,7 @@ BANDS = aptitude.band_count()
 
 def clearing(area, trade, wanted_people, hired_people=0.0):
     return Clearing(trade=trade, area=area, wage=1.0, hours_offered=0.0, hours_wanted=(wanted_people + hired_people) * HOURS,
-                    hours_hired=hired_people * HOURS, hired_by_employer={"buyer": hired_people * HOURS}, paid_by_employer={}, average_wage=1.0)
+                    hours_hired=hired_people * HOURS, hired_by_employer={"buyer": hired_people * HOURS}, average_wage=1.0)
 
 
 def inputs(routes=None, allowed=frozenset(), for_sale=None):

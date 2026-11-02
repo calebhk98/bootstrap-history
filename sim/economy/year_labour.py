@@ -1,22 +1,19 @@
 """The year's labour market: producers and other employers bid for hours, cohorts' workers offer them, and
-the labour core (`sim.labour.api`) sets each (trade, labour area) wage, moves people between trades and
-tiles, trains and replaces them. The economy settles the wages it reports, at once.
-
-The training premium of a trade is not written here: it is the wage at which enough able people choose
-the trade (sim/labour/market/DESIGN.md).
+the labour core (`sim.labour.api`) sets each (trade, labour area) wage, hires, moves people between trades and
+tiles, trains and replaces them. The economy then pays every hour hired in a market the one wage the core reports
+for it (`Clearing.average_wage`), and the workers who offered them share the receipts by hours sold.
 """
 import dataclasses
-from typing import Dict, List, Mapping, Sequence, Tuple
+from typing import Dict, List, Sequence, Tuple
 
-from sim.labour.api import CAREER_YEARS, people_in, run_labour_year
+from sim.labour.api import CAREER_YEARS, people_in, run_labour_year, wages
 
-from . import hours_hired_by_others, households, households_work, labour, settlement
+from . import households, households_work, settlement
 from .households_cohort import VALUE_OF_LIFE_YEARS_OF_INCOME
 from .households_orders import HOUSEHOLD_TIME_PREFERENCE
 from .labour_ask_floor import mean_floor_per_hour
 from .labour_bids import sloped_bids
-from . import workforce_version
-from .labour_state import core_trades, give_back, hold_back, mirror_wages, people_by_trade
+from .labour_state import core_trades, mirror_wages, people_by_trade
 from .market_memory import market_key
 from .setup import labour_area
 from .types import Fill, LabourBid, LabourOffer, LabourResult
@@ -69,30 +66,19 @@ def labour_offers(setup, record, view, subsistence_by_tile, levy_hours_per_worke
 
 
 def trade_premium(setup, trade) -> float:
-    """What a trade's training years add to the pay a worker asks, as a share: the years of income
-    given up to learn it, repaid over a working life (labour.training_premium) at the family's own
-    time preference, since the family pays for training by going without, not by borrowing. Quotes
-    of a wage for a trade nobody has bid for yet use it; the clearing does not."""
+    """What a trade's training years add to the pay a worker asks, as a share over the unskilled wage: the core's
+    training premium (a multiple, labour/market/premium.py) less one, at the family's own time preference, since the
+    family pays for training by going without, not by borrowing. Quotes of a wage for a trade nobody has bid for yet
+    use it; the clearing reads the same multiple at the same rate (`labour_context`)."""
     spec = setup.trades.get(trade)
     if spec is None or spec.training_years <= 0.0:
         return 0.0
-    return labour.training_premium(spec.training_years, HOUSEHOLD_TIME_PREFERENCE, CAREER_YEARS)
-
-
-def held_share_by_area(everyone: Sequence[LabourOffer], offered: Sequence[LabourOffer]) -> Dict[str, float]:
-    """The share of each area's offered hours households kept back (offers cut by withhold_hours)."""
-    total: Dict[str, float] = {}
-    cut: Dict[str, float] = {}
-    for offer in everyone:
-        total[offer.area] = total.get(offer.area, 0.0) + offer.hours
-    for offer in offered:
-        cut[offer.area] = cut.get(offer.area, 0.0) + offer.hours
-    return {area: max(0.0, 1.0 - cut.get(area, 0.0) / hours) for area, hours in total.items() if hours > 0.0}
+    return wages.training_premium(spec.training_years, HOUSEHOLD_TIME_PREFERENCE, CAREER_YEARS) - 1.0
 
 
 def _result(clearing, currency: str, offers: Sequence[LabourOffer]) -> LabourResult:
     """A core clearing as the economy settles it: employers buy the hours hired, the workers whose
-    hours were offered sell them in proportion to what each offered."""
+    hours were offered sell them in proportion to what each offered, all at the market's one wage."""
     wage = clearing.average_wage
     fills = [Fill(employer, clearing.trade, clearing.area, "", hours, wage, "buy")
              for employer, hours in sorted(clearing.hired_by_employer.items()) if hours > 0.0]
@@ -106,43 +92,36 @@ def _result(clearing, currency: str, offers: Sequence[LabourOffer]) -> LabourRes
 
 
 def clear_labour(setup, record, bids: Sequence[LabourBid], offers: Sequence[LabourOffer], ledger: YearLedger,
-                 context, held_share: Mapping[str, float] = None, supply=None):
-    """Run the core's year on the record's workforce: wages, hires, training, entry, switching and
-    migration; returns the core's report. Then settle each market's wages. `context` is the core's inputs without trades and bids
-    (labour_inputs.labour_context). `held_share` is the share of each area's workers whose hours
-    households keep for their own plots: the market does not see them this year. With `supply` (labour_supply.HourSupply)
-    the hours sold rise with the wage and each market clears against that schedule; `offers` are then every hour a
-    household has, and the offers settled are those sold at the wage the market cleared at (`supply.sold`)."""
+                 context, supply=None):
+    """Run the core's year on the record's workforce: wages, hires, training, entry, switching and migration;
+    returns the core's report. Then settle each market. `context` is the core's inputs without trades and bids
+    (labour_inputs.labour_context). With `supply` (labour_supply.HourSupply) the hours each market sells are the hours
+    its offers hold, rising with the wage, and the offers settled are those sold at the wage the market cleared at
+    (`supply.sold`); without it the core sells every worker's whole year and `offers` are the sellers."""
     core_bids = sloped_bids(bids)
     ledger.wage_floor_per_hour = mean_floor_per_hour(
         context.ask_floor_per_worker_year,
         {area: people_in(record.workforce, area) for area in context.ask_floor_per_worker_year},
         context.hours_per_worker_year)
     inputs = dataclasses.replace(context, trades=core_trades(setup, {bid.trade for bid in core_bids}),
-                                 bids=core_bids, hours_share_at=supply.shares() if supply is not None else {})
-    seen, held = hold_back(record.workforce, held_share or {})
-    record.workforce, report = run_labour_year(seen, inputs, owned=True)
-    workforce_version.bump(record.workforce)   # the core's year wrote it
-    give_back(record.workforce, held)
+                                 bids=core_bids, hours_sold_at=supply.schedules() if supply is not None else None)
+    record.workforce, report = run_labour_year(record.workforce, inputs, owned=True)
     by_market: Dict[Tuple[str, str], List[LabourOffer]] = {}
     if supply is not None:
         offers = supply.settle({(clearing.trade, clearing.area): clearing.entry_wage for clearing in report.clearings})
     for offer in offers:
         by_market.setdefault((offer.trade, offer.area), []).append(offer)
     record.hours_hired = {}
-    record.hours_hired_by_others = {}
     record.hours_idle = {}
     for clearing in sorted(report.clearings, key=lambda each: (each.trade, each.area)):
+        key = market_key(clearing.trade, clearing.area)
         result = _result(clearing, setup.currency_id, by_market.get((clearing.trade, clearing.area), ()))
         done = settlement.settle_labour(record.book, result)
         ledger.note_postings(done.postings, "wages")
         ledger.note_labour(result, done.postings)
-        record.hours_hired[market_key(clearing.trade, clearing.area)] = clearing.hours_hired
-        record.hours_hired_by_others[market_key(clearing.trade, clearing.area)] = hours_hired_by_others.beyond_producers(
-            clearing.hired_by_employer, record.producers)
-        record.hours_idle[market_key(clearing.trade, clearing.area)] = clearing.idle_hours
+        record.hours_hired[key] = clearing.hours_hired
+        record.hours_idle[key] = clearing.idle_hours
         if clearing.hours_hired + clearing.idle_hours > 0.0:
-            key = market_key(clearing.trade, clearing.area)
             record.sold_share_expected[key] = households_work.smoothed_sold_share(
                 record.sold_share_expected.get(key, 1.0), households_work.sold_share(clearing.hours_hired, clearing.idle_hours))
     mirror_wages(record.memory.wages, record.workforce)
