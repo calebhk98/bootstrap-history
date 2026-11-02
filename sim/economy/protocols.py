@@ -134,3 +134,5 @@ class YearInputs:
     credit_asks: Tuple[LoanRequest, ...] = ()               # credit lines the engine's seats ask for: they join the year's clearing and are granted a room (credit_lines.py)
     standing_bids: Tuple[Bid, ...] = ()                     # demand settled outside the book (the founder's draws): entry reads it as bids, nothing clears
     state_capacity: float = 1.0                             # share of what the state assesses its officials collect this year (0..1); follows the officials (taxes.assess)
+    working_people_by_tile: Mapping[TileId, float] = field(default_factory=dict)   # demography's working-age people on each tile; a tile it names sets its cohorts' working people (the working-age share follows demography)
+    working_hours_per_year: Optional[float] = None          # hours one person gives this year (the workforce view: lit works lengthen the day); None keeps the setup's

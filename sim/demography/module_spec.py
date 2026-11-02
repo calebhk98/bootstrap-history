@@ -12,7 +12,7 @@ from sim.hazards.api import RecordWorldEvent
 from sim.land.api import AdvanceColonies
 from sim.reporting.api import RecordEvent
 
-from .commands import (AddCaptives, ChangeFarmland, CutPopulation, KillPeople, NotePopulationChange, OpenPopulation,
+from .commands import (AddCaptives, ChangeFarmland, CutPopulation, KillPeople, MovePeople, NotePopulationChange, OpenPopulation,
                        RecordFoodEaten, RefreshDemographicIndexes, SendSettlers, SetClearedFarmland,
                        StepPopulation, TakeFromGranary)
 from .module import Demography
@@ -56,7 +56,7 @@ MODULE_SPECS = (ModuleSpec(
     ),
     applies=((AddCaptives, "add_captives"), (CutPopulation, "cut_population"), (KillPeople, "kill_people"),
              (RefreshDemographicIndexes, "refresh_demographic_indexes"), (OpenPopulation, "open_population"),
-             (StepPopulation, "step_population"), (RecordFoodEaten, "record_food_eaten"), (SendSettlers, "send_settlers"),
+             (StepPopulation, "step_population"), (RecordFoodEaten, "record_food_eaten"), (MovePeople, "move_people"), (SendSettlers, "send_settlers"),
              (NotePopulationChange, "note_population_change"), (ChangeFarmland, "change_farmland"),
              (SetClearedFarmland, "set_cleared_farmland"),
              (TakeFromGranary, "take_from_granary")),

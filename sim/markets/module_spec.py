@@ -5,7 +5,7 @@ goods categories, household demand and the market ceiling's attribution. The mod
 agent economy (they read the game through the views declared here, port_world.py), and every view it publishes is uncached: they
 write the flows and the record in place."""
 from sim.assembly.api import KEYED, QUOTE, ModuleSpec, PhaseHook, RepriceTree, ViewSpec
-from sim.demography.api import RecordFoodEaten
+from sim.demography.api import MovePeople, RecordFoodEaten
 from sim.diffusion.api import NoteFirstRuns
 from sim.foreign_trade.api import ResetActorTradeTallies, SettleFlow, SettleTraderCargo
 from sim.land.api import FinishWays
@@ -28,7 +28,7 @@ READS_BY_OWNER = {
 	"seats": ("seat_list",),
 	"assembly": ("registered_seats",),
 	"stores": ("store_book",),
-	"demography": ("population", "default_population"),
+	"demography": ("population", "default_population", "regional_people_by_band"),
 	"actors": ("country_literacy_figure",),
 	"knowledge": ("tree_nodes", "techniques_held", "techniques_granted"),
 	"ventures": ("operating",),
@@ -104,6 +104,6 @@ MODULE_SPECS = (ModuleSpec(
 	phases=(PhaseHook("market", "step_market"),),
 	kernels=KERNELS,
 	reads=tuple(name for names in READS_BY_OWNER.values() for name in names),
-	sends=(RecordFoodEaten, ResetActorTradeTallies, CloseRealOutput, FinishWays, RepriceOpeningMoney, RepriceTree, RescaleHouseholdMoney, PayEdge, ReceiveFromEdge, ChangeStock, PayExchange, ReceiveFromExchange,
+	sends=(MovePeople, RecordFoodEaten, ResetActorTradeTallies, CloseRealOutput, FinishWays, RepriceOpeningMoney, RepriceTree, RescaleHouseholdMoney, PayEdge, ReceiveFromEdge, ChangeStock, PayExchange, ReceiveFromExchange,
 	       SettleFlow, SettleTraderCargo, FellTimber, RegrowTimber, DrawDeposit, NoteFirstRuns, StaffArrived, HoursArrived),
 ),)

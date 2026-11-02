@@ -59,6 +59,14 @@ class RecordFoodEaten(Command):
 
 
 @dataclass(frozen=True)
+class MovePeople(Command):
+    """The labour market's wage-driven moves of the year just played: the net working-age people it sent to (positive) or
+    took from (negative) each tile. Demography keeps the request and applies it in its next yearly step, with its own
+    food-driven moves, so people are moved once and the economy follows demography's count."""
+    net_by_tile: Dict[str, float]
+
+
+@dataclass(frozen=True)
 class SendSettlers(Command):
     """`people` of working age leave the home people for a colony."""
     people: float
