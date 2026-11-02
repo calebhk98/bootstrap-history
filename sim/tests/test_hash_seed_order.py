@@ -58,11 +58,11 @@ SPIN_UP_YEARS = "6,0"
 SPIN_UP_SCRIPT = """
 import hashlib, json, sys, tempfile
 sys.path.insert(0, %r)
-from sim.tests.harness import sim
+from sim.tests.harness import economy_port, sim
 from sim.markets import port_year
 port_year.SPIN_UP_CACHE_DIRECTORY = tempfile.mkdtemp()
 game = sim()
-record = game.view("legacy_economy")().agent.stored["record"]
+record = economy_port(game).agent.stored["record"]
 print(hashlib.sha256(json.dumps(record, sort_keys=True, default=str).encode()).hexdigest())
 """ % ROOT
 

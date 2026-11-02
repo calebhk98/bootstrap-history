@@ -26,8 +26,7 @@ from . import commands
 from .module import Actors
 
 READS_BY_OWNER = {
-	"markets": ("unit_mass_kg", "goods_categories", "goods_category_factor", "goods_category_factor_with_entrants",
-	            "goods_category_price_ratio", "goods_category_state", "nodes_in_category", "market_state", "commodities_sold_by_acting_party",
+	"markets": ("unit_mass_kg", "goods_categories", "nodes_in_category", "market_state", "commodities_sold_by_acting_party",
 	            "economy_output_value", "coin_stock_value", "main_material_of", "material_trade_quote", "material_purchase_cost",
 	            "household_prices", "household_basket", "agent_trades_good", "agent_price_response", "agent_country", "agent_cohort_incomes",
 	            "agent_cohort_land_rents", "agent_need_floor_costs", "agent_land_rent_at", "agent_land_rent_paid_by_tile",

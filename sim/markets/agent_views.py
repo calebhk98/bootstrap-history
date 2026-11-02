@@ -139,3 +139,44 @@ class AgentViews:
 
 	def agent_economy_opened(self):
 		return self.economy.agent.opened()
+
+	# ---- the economy's own life: its opening, its record, its last year, for the engine's year and the tools ----
+
+	def open_agent_economy(self):
+		"""Open the agent economy (with its hidden spin-up) if it is not open, and count the game's money at its wage."""
+		self.economy.open_agent()
+
+	def flush_agent_record(self):
+		"""Bring the saved copy of the agent economy up to date; the game's save asks first."""
+		self.economy.flush_record()
+
+	def agent_spin_up_result(self):
+		"""How the opening's hidden first stage ended: {"settled", "years", "gap"}; empty while it opens or when none ran."""
+		return self.economy.spin_up_result()
+
+	def agent_health(self, metals=(), staple=None):
+		"""The agent economy's health figures over the years this game has played (port_health.py)."""
+		return self.economy.health(metals, staple)
+
+	def agent_last_outcome(self):
+		"""The agent economy's outcome for the last year it ran (its accounts, wages and prices)."""
+		return self.economy.agent.outcomes[-1]
+
+	def agent_economy_setup(self):
+		"""The setup the running agent economy was opened with."""
+		return self.economy.agent.economy().setup
+
+	def agent_stale_goods(self):
+		"""The goods whose markets did not clear lately: their shown price is what they would cost to make, not a trade."""
+		return self.economy.agent.stale_goods()
+
+	def agent_traded_staple(self):
+		"""The staple good households buy most of whose market cleared lately; None when none did."""
+		from .port_trace import traded_staple
+		return traded_staple(self.economy.agent, self.agent_stale_goods())
+
+	def agent_opening_setup(self):
+		"""The setup of the opening this game saved."""
+		from .port_setup import build_setup
+		world = self.economy.world
+		return build_setup(world, world.agent_record()["opening"])

@@ -106,9 +106,6 @@ class PortWorld(MapReads, ForeignReads):
 	def _market_flows(self):
 		return self._owner.legacy_market_flows()
 
-	def _market_entry(self, commodity):
-		return self._owner.market_entry(commodity)
-
 	def market_state(self, material):
 		return self._owner.market_state(material)
 

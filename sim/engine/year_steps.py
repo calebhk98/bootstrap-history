@@ -10,7 +10,6 @@ from sim.finance.api import (ChargeInterest, EnforceCreditLimit, JudgeInsolvency
                              WarnNearLimit)
 from sim.hazards.api import RecoverOutput
 from sim.ledger.api import PayEdge, PayWages, ReceiveFromEdge
-from sim.markets.api import OpenMarketBook
 from sim.polity.api import CloseStandingYear, RenewStanding
 from sim.projects.api import (AdvanceProjects, AutoOpenVentures, CloseLapsedDependents, CloseSpendYear, CloseUnstaffedVentures, NoteVentureYear,
                               ReopenRestaffedVentures)
@@ -43,7 +42,6 @@ def begin_world_year(sim):
 	"""What the society notes before the year starts."""
 	node_rederive.refresh_derived_nodes(sim)
 	refresh_farm_territory(sim)
-	sim.send(OpenMarketBook())   # every book entry opens at the year's start, so a read before the first step cannot open one at another state
 
 
 def money_seat(sim):

@@ -15,7 +15,7 @@ class OpeningSeedsAreCostsTests(unittest.TestCase):
         from sim.markets import port_costs, port_setup
         from sim.labour.api import wage_provider
         cls.game = harness.unopened_sim()
-        cls.opening = port_setup.opening_values(cls.game.view("legacy_economy")().world)
+        cls.opening = port_setup.opening_values(harness.economy_port(cls.game).world)
         cls.costs = port_costs
         cls.wage_provider = wage_provider
 
@@ -25,7 +25,7 @@ class OpeningSeedsAreCostsTests(unittest.TestCase):
         game, prices = self.game, self.opening["prices"]
         production = default_production_entries()
         techniques = frozenset(game.granted) | frozenset(game.view("techniques_in_use")())
-        wage_of = self.costs.wage_function(game.view("legacy_economy")().world, production)
+        wage_of = self.costs.wage_function(harness.economy_port(game).world, production)
         rent_of = long_run_costs.opening_rent_of(techniques, wage_of, game.civ, production)
         made = making_cost.cost_of_making(good, techniques, prices.get, wage_of, self.opening["rate"], rent_of,
                                           production=production, civilization=game.civ)
@@ -53,7 +53,7 @@ class OpeningSeedsAreCostsTests(unittest.TestCase):
         known = dict(self.opening["prices"])
         staple = self.wage_provider.staple_material(self.game.civ)
         gone = known.pop(staple)
-        found = port_late.late_goods_costs(self.game.view("legacy_economy")().world, known, [staple], frozenset(self.game.granted),
+        found = port_late.late_goods_costs(harness.economy_port(self.game).world, known, [staple], frozenset(self.game.granted),
                                                    default_production_entries())
         self.assertAlmostEqual(found[staple] / gone, 1.0, delta=0.25)
 

@@ -70,27 +70,11 @@ class PriceMovesWithScarcityTests(unittest.TestCase):
         self.assertGreater(bought.price_ratio, base.price_ratio)
 
 
-class FounderSalesDisplaceSocietyTests(unittest.TestCase):
+class FounderSalesLowerThePriceTests(unittest.TestCase):
     def test_sales_reach_supply_and_lower_the_price(self):
         without = market.clear_market(conditions())
         with_sales = market.clear_market(conditions(founder_sales_tonnes=10.0))
         self.assertLess(with_sales.price_ratio, without.price_ratio)
-
-    def test_society_producers_lose_sales_to_founder(self):
-        # Above the floor a lower price draws in some extra demand, so the
-        # displacement is partial but positive.
-        displaced = market.society_sales_displaced_by_founder(
-            conditions(society_capacity_tonnes=100.0, founder_sales_tonnes=10.0))
-        self.assertGreater(displaced, 0.0)
-        self.assertLessEqual(displaced, 10.0)
-
-    def test_displacement_is_one_for_one_when_price_is_at_the_floor(self):
-        displaced = market.society_sales_displaced_by_founder(
-            conditions(society_capacity_tonnes=1000.0, founder_sales_tonnes=10.0))
-        self.assertAlmostEqual(displaced, 10.0, places=6)
-
-    def test_no_sales_displace_nothing(self):
-        self.assertEqual(market.society_sales_displaced_by_founder(conditions()), 0.0)
 
 
 class CapacityFollowsPriceTests(unittest.TestCase):

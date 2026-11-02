@@ -241,15 +241,6 @@ def _clear_at_one_price(conditions: MarketConditions) -> MarketOutcome:
         held_over_tonnes=max(0.0, held_over))
 
 
-def society_sales_displaced_by_founder(conditions: MarketConditions) -> float:
-    """Tonnes the society's producers sell less because the founder sells."""
-    if conditions.founder_sales_tonnes <= 0.0:
-        return 0.0
-    without = MarketConditions(**{**conditions.__dict__, "founder_sales_tonnes": 0.0})
-    return max(0.0, clear_market(without).society_sales_tonnes
-               - clear_market(conditions).society_sales_tonnes)
-
-
 def adjusted_capacity(capacity_tonnes: float, price_ratio: float) -> float:
     """Next year's society capacity: it grows while the price is above the
     long-run cost, shrinks below, by a bounded step."""

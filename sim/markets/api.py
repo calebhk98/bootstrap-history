@@ -3,7 +3,7 @@
 WALL = "two-way"  # nothing here imports sim/engine/
 
 from .commands import (BuyMaterial, FoundBankFromOutside, ForgetActorOrders, MarkMoneyPricedAtEconomy, NoteActorPurchase, NoteActorSale,
-                       MoveGoods, NoteDraw, NotePurchase, OpenMarketBook, RenameMarketSeat, RepriceOpeningMoney, ResetDraws,
+                       MoveGoods, NoteDraw, NotePurchase, RenameMarketSeat, RepriceOpeningMoney, ResetDraws,
                        SellMaterial)
 from .constants import MEAN_INCOME_HOURS_PER_CAPITA
 from .rules import HOME_SELLER
@@ -23,7 +23,7 @@ def build_setup(world, opening=None, production=None):
 
 def opening_setup(game):
 	"""The setup of the opening `game` saved."""
-	return build_setup(game.view("legacy_economy")().world, game.view("legacy_economy")().world.agent_record()["opening"])
+	return game.view("agent_opening_setup")()
 
 
 def unit_mass_kg(material):
@@ -46,8 +46,3 @@ def sensitivity_table(game, years, skip, variants=None):
 def coin_wear_per_year():
 	from .port_trace import coin_wear_per_year as wear
 	return wear()
-
-
-def traded_staple(agent, stale):
-	from .port_trace import traded_staple as staple
-	return staple(agent, stale)

@@ -208,7 +208,7 @@ def build_unopened(factory):
     with mock.patch.object(EconomyPort, "open_agent", lambda self: None), \
             mock.patch.object(content_views, "foreign_economy_records", supported_records):
         game = factory()
-    game.view("legacy_economy")()._opening = True
+    economy_port(game)._opening = True
     game.assembly.modules["foreign_trade"].needs.foreign_economy_records = lambda: supported_records(game.view("mods_directory")())   # the partners of the books only
     return game
 
@@ -266,10 +266,15 @@ def ready_for_entry(game, money=None):
     return game
 
 
+def economy_port(game):
+    """The markets module's port over the agent economy, for tests that reach into it."""
+    return game.assembly.modules["markets"].economy
+
+
 def noted_sale_tonnes(game, material, seller=None):
     """Tonnes of `material` the actors (or just `seller`) have noted for the year's market: a sale enters the agent
     economy's book as an order when the year clears, so until then this is where it stands."""
-    return sum(sale["tonnes"] for sale in game.view("legacy_economy")().agent.stored.get("sales", [])
+    return sum(sale["tonnes"] for sale in economy_port(game).agent.stored.get("sales", [])
                if sale["material"] == material and (seller is None or sale["seller"] == seller))
 
 

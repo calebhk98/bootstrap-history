@@ -2,8 +2,7 @@
 climb of that price over the order.
 
 The price is the one the agent economy shows on the acting tile (`EconomyPort.agent_prices_at`); a good it has no
-market for costs what a held technique makes it for (the cost table), and a good only a partner makes costs the
-partner's landed price. Carriage is the haul from where the material comes from, on top of the price where it is
+market for has no price, and a good only a partner makes costs the partner's landed price. Carriage is the haul from where the material comes from, on top of the price where it is
 sold. The climb is the economy's own price response (`api.price_response`): its last book cleared again with the
 order as one more bid, or the sale as one more offer. A buyer's own earlier purchases this year count as part of
 the order, since the economy has not yet seen them. Nothing here reads a ratio of the market to the cost table.
@@ -16,7 +15,7 @@ from sim.world.material_units import tonnes_per_unit
 # Points along an order at which the economy's response is read; the order's mean climb is their mean.
 PRICE_SLICES = 8
 
-# a price the economy does not set: the cost table's, while it opens or where it has no market for the good, and a partner's
+# a price the economy does not set: the cost table's while it opens, and a partner's
 KIND_MAKING_COST_TABLE = "making_cost_table"
 KIND_PARTNER_LANDED = "partner_landed_price"
 
@@ -32,15 +31,14 @@ class GoodsPricing:
 
     def price_at_tile_per_tonne(self, material):
         """Money per tonne to buy a material from the cheapest seller in reach before carriage: the economy's price
-        on the acting tile, else what a technique makes it for, else a partner's landed price; None when no one in
-        reach sells it."""
+        on the acting tile, else a partner's landed price; None when no one in reach sells it."""
         per_unit = self.unit_price(material)
         return None if per_unit is None else per_unit / tonnes_per_unit(material)
 
     def price_kind(self, material):
         """What the price of a material is: "traded", a quote named by what it is (best_unfilled_bid,
-        lowest_unfilled_ask, cost_covering, opening_estimate), an estimate, the cost table's making cost where the
-        economy has no market for it, or a partner's landed price."""
+        lowest_unfilled_ask, cost_covering, opening_estimate), an estimate, the cost table's making cost while the
+        economy opens, or a partner's landed price."""
         if self.offered_by(material) not in (None, HOME_SELLER):
             return KIND_PARTNER_LANDED
         good = self._economy_good(material)

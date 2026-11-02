@@ -58,7 +58,7 @@ def play_for_accounts(args):
     outcomes = []
     for _year in range(args.years):
         game.step()
-        outcomes.append(game.view("legacy_economy")().agent.outcomes[-1])
+        outcomes.append(game.view("agent_last_outcome")())
     return [outcome.accounts for outcome in outcomes]
 
 

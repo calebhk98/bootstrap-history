@@ -194,7 +194,7 @@ class Sim:
         # a game about to load a save leaves it: the save holds the seats and the economy's record
         self._economy_deferred = bool(defer_economy)
         if not defer_economy:
-            self.view("legacy_economy")().open_agent()
+            self.view("open_agent_economy")()
             self.send(GrantOpeningHerds())
             self._done_changed()
             joined = self.send(JoinCastSeats())

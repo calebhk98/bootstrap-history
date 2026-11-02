@@ -63,11 +63,6 @@ class MoveGoods(Command):
 
 
 @dataclass(frozen=True)
-class OpenMarketBook(Command):
-	"""Every commodity the price table names gets its book entry, at the society's present output."""
-
-
-@dataclass(frozen=True)
 class RenameMarketSeat(Command):
 	"""A seat moved to another id: its place in the year's flows, the agent economy's books and the goods market's seat
 	parties follows."""
