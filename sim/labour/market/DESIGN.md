@@ -17,30 +17,32 @@ area × trade: `[years_left, people per band, completion_bonus]`. Market wages a
      `reservation_wage = subsistence_per_worker_year / hours_per_worker_year * (1 + fatality_risk_per_year * value_of_life_years_of_income)`.
    - Employers bid hours up to a `maximum_wage`. The wage the search rounds start from rises a share of the way toward the
      clearing point each year and falls to it at once (Eurace's `WAGE_OFFER` only rises, Firm_update_wage_offer; the
-     workers' ask falls by `asks.py`). Held hours keep the wage they were hired at: that is this model's rule. Eurace
-     instead raises existing employees' wages each month by productivity progress times union strength
-     (Statistical_Office/Firm_Statistics_Functions.c).
+     workers' ask falls by `asks.py`). There is one wage per trade and area: retained hours are paid it like new hires, so no
+     employer holds a contract of its own. (Eurace instead raises existing employees' wages each month by productivity
+     progress times union strength, Statistical_Office/Firm_Statistics_Functions.c; this model has no such step.)
    - An employer starts at the market wage, capped at its maximum, and raises its offer each search round
      while its vacancies stay open (below). Hours go to the employers with the highest maximum first.
-   - Workers who stay with an employer keep their hours and their contracted wage (`contracted_wage`, kept per employer
-     in `MarketState.contract_wages`): a surplus of workers does not reprice them, and a raised market wage does not lay
-     them off while the employer's maximum still covers the contract. The trade's reported wage (`Clearing.wage`,
-     `MarketState.wages`) is the hours-weighted mean of contracts and new hires; `Clearing.new_hire_wage` is the new hires' own: the
-     hours-weighted mean of the offers actually paid (`clear_one`, from the hours `hire_through_rounds` returns). New hires come from the year's search rounds
+   - Workers who stay with an employer keep their hours (`MarketState.hired_hours`) unless the employer wants fewer, but not their
+     wage. The trade's wage (`Clearing.wage`, `average_wage`, `new_hire_wage`, `MarketState.wages`) is one figure: the
+     hours-weighted mean of the offers actually paid to the hours taken on (`clear_one`, from the hours `hire_through_rounds`
+     returns), or the wage the rounds start from when none were taken on. Every hour hired is paid it, and the hours households sell are
+     counted at it. New hires come from the year's search rounds
      (`applications.py`, Eurace's protocol): each round every employer dismisses a random share of its workers and reposts
      the vacancies; searchers (the unretained, and the dismissed asking the wage they were paid) apply to a bounded number
      of employers whose offer is at or above their ask; an employer takes on as many hours as it has vacancies; a searcher
      takes the highest offer; searchers who found nothing cut their ask; an employer whose vacancies stay open raises its offer. Recruitment friction is the bounded
      applications and the dismissals, not a fitted rate.
-     Every employer pays the market's one hours-weighted wage; an employer with a higher maximum is filled first and draws hours from lower ones.
-2. **Attrition.** A share of workers and trainees leave work each year (deaths, retirement; demography's number).
+     An employer with a higher maximum is filled first and draws hours from lower ones.
+2. **Attrition.** A share of workers and trainees leave work each year (`YearInputs.attrition_share`; the agent economy hands in none, for the same reason).
 3. **Training** (`training.py`). Trainee cohorts age a year. At zero years left they graduate.
    - Each band's chance of finishing is `aptitude.completion_chance(band ability + cohort bonus, difficulty)`.
    - Those who do not finish join the fallback trade.
-   - Yearly intake to a trade in an area is capped by its teachers:
-     `incumbent workers * apprentices_per_master / training_years + school seats`.
+   - Places to learn at once in a trade in an area are its teachers' (`training.enrol`): `incumbent workers *
+     apprentices_per_master + school seats`, less the trainees already enrolled; there is no division by the training years.
+     Those who apply beyond the places are refused.
    - A trade with no incumbents and no school cannot reproduce.
-4. **Entrants** (`entrants.py`). The coming-of-age cohort chooses a trade, band by band, by logit over:
+4. **Entrants** (`entrants.py`). The coming-of-age cohort (the caller's `YearInputs.entrants`; the agent economy hands in none, as demography's
+   people per tile are the one count and the economy rescales the core's people to them) chooses a trade, band by band, by logit over:
    `completion_chance * present_value(income_at_graduation) + (1 - completion_chance) * present_value(fallback income) + taste_scale * log(jobs in the trade)`.
    - The cohort chooses in rounds (`expectations.DECISION_ROUNDS_PER_YEAR`); each round sees the places
      the earlier ones took. Choices made all at once overshoot a shortage, the trade gluts a
