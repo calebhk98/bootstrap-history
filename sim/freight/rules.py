@@ -1,7 +1,7 @@
 """The freight module's rules as plain functions of plain values: what a leg costs once the carrier's food rides on it,
-how one-sided the flows are, who is owed the dues of a haul, and the markup a haul adds to a book price."""
+how one-sided the flows are, what the dues of a haul cost, and the markup a haul adds to a book price."""
 import dataclasses
-from typing import Any, Dict, Iterable, List, Mapping, Optional, Tuple
+from typing import Dict, Iterable, Mapping, Optional
 
 from sim.geography.api import cargo_cost, freight_cost, provisions, sea_freight
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
@@ -31,19 +31,6 @@ def handling_money_per_tonne(dues_hours: Mapping[str, float], wage: float, port_
     costs = dues_money_per_tonne(dues_hours, wage)
     costs[port_mode] = costs.get(port_mode, 0.0) + port_handling_hours * wage
     return costs
-
-
-def dues_payments(owed: Mapping[Any, float], limit: Optional[float]) -> List[Tuple[Any, float]]:
-    """[(holder, money)] the payer pays, holders in sorted order, scaled down so the total never exceeds `limit`;
-    a holder owed nothing is left out."""
-    total = sum(owed.values())
-    scale = 1.0 if limit is None or total <= limit else max(0.0, limit) / total
-    payments = []
-    for holder in sorted(owed):
-        amount = owed[holder] * scale
-        if amount > 0.0:
-            payments.append((holder, amount))
-    return payments
 
 
 def foreign_flow_imbalance(book_entries: Iterable[Mapping[str, float]]) -> float:

@@ -70,6 +70,7 @@ class EconomySetup:
     carriage_rates_balanced: Dict[str, float] = field(default_factory=dict)   # likewise with the opposite flow filling every return; none: same
     carriage_crew: Dict[str, Tuple[str, float]] = field(default_factory=dict)   # mode id (land, river, sea) -> (crew trade, crew hours per tonne-km), geography's; none: carriage hires no hours
     carriage_handling: Dict[str, float] = field(default_factory=dict)   # mode id -> hours of handling a tonne each time a haul changes to the mode, for the modes whose handling the rates price
+    route_dues: Dict[str, float] = field(default_factory=dict)   # mode id -> money per tonne of tolls or port dues each time a haul changes to the mode; included in handling_rates and paid to the holder of the tile (route_dues.py), not worked as crew hours
     carriage_handling_trade: Dict[str, str] = field(default_factory=dict)   # mode id -> the trade that works those handling hours (geography's `handling_trade`); a mode with none is handled by the unskilled trade
     carriage_carriers: Dict[str, Tuple[float, Tuple[Tuple[str, float], ...]]] = field(default_factory=dict)   # mode id -> (tonne-km a team moves a day, ((carrier good, units worn per tonne-km),)): what a tonne-km wears (carriage_wear); none: carriage wears nothing
     need_share_by_trade: Dict[str, float] = field(default_factory=dict)   # trade -> its share of the society's non-farm labour need (recipes and carriage), seeds the trades no producer's runs staff

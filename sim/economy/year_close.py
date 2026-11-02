@@ -8,7 +8,7 @@ from sim.unit_conversions import KILOGRAMS_PER_TONNE
 
 from .staffed_runs import staffed_runs
 from .expected_sales import demand_seen, market_capacities
-from . import (practice, firm_finance, firm_year, carried_book, carriage_fleet_book, tax_farming, merchants_transit, carriage_hours, carriage_wear, currency, expansion_price, households, inventory, merchants, metal_stock, ownership, producer_exit, shares,
+from . import (practice, firm_finance, firm_year, carried_book, carriage_fleet_book, tax_farming, merchants_transit, carriage_hours, carriage_wear, route_dues, currency, expansion_price, households, inventory, merchants, metal_stock, ownership, producer_exit, shares,
                producers, producers_close, state_budget, tariffs, taxes)
 from .household_work_year import basket_key, cohort_basket
 from .households_cohort import renewed
@@ -44,6 +44,7 @@ def dispatch_merchants(setup, record, carriage, ledger: YearLedger, area_map) ->
     carried_goods: dict = {}
     carrier_goods = carriage_wear.carrier_goods(setup)
     prices = carriage_wear.last_prices(setup, record) if carrier_goods else {}
+    dues = route_dues.owed_per_tonne(setup, carriage)
     wear = carriage_wear.Wear(setup, carriage, record.carriage.area_imbalance) if carriage_wear.wears(setup) else None
     for merchant in sorted(record.merchants.values(), key=lambda each: each.agent_id):
         record.book.move_many(merchants_transit.advance(merchant, setup.specs))    # hauls on the road for years reach the tile or spoil
@@ -84,9 +85,10 @@ def dispatch_merchants(setup, record, carriage, ledger: YearLedger, area_map) ->
                                           prices, wear, source, destination)),
                                   margin_kept=wear is not None,
                                   fleet=carriage_fleet_book.limit_for(wear, own_capacity[merchant.agent_id], hired.get(merchant.agent_id, {}))
-                                  if lives else None)
-        record.book.post(done.transfers, done.moves)
+                                  if lives else None, dues=dues)
+        record.book.post(done.transfers + done.dues, done.moves)
         ledger.note_postings(done.transfers, "wages")
+        ledger.note_postings(done.dues)
         if crew is not None:
             merchant.carriage_hours_wanted = done.crew_hours_wanted
             merchant.carriage_money_wanted = done.crew_money_wanted
