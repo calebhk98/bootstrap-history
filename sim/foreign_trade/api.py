@@ -6,4 +6,4 @@ from .commands import (ResetActorTradeTallies, CloseMarketsTo, NoteActorHomeTrad
                        SettleFlow, SettleTraderCargo)
 from .constants import OPENING_CARRIERS_PER_ROUTE
 from .state import ForeignTradeWorld
-from . import country_trade_years, rules
+from . import rules

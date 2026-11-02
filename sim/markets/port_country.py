@@ -4,7 +4,7 @@ The wage, the output, the cost of living and the prices are read from the countr
 economy (sim/economy/country_figures.py); a figure it has no record of is None and the caller keeps its
 labelled estimate."""
 import math
-from typing import Callable, Dict, Optional
+from typing import Dict, Optional
 
 from sim.world.material_units import tonnes_per_unit
 from sim.economy.api import (carried_book, cohort_land_rents, country_figures, land_rent_at_tile, coin_per_unit, trade_premium_of,
@@ -14,12 +14,9 @@ from sim.economy.api import (carried_book, cohort_land_rents, country_figures, l
 class CountryAnswers:
     """The questions foreign governments, strata and firms ask about their country, answered from its tiles."""
 
-    def __init__(self, economy, country: str, off_map_trade: Callable[[str], float]) -> None:
-        """`off_map_trade(direction)` is the money's worth ("in" or "out") the country's tiles traded last year with
-        partners off the map (country_trade_years.py)."""
+    def __init__(self, economy, country: str) -> None:
         self._economy = economy
         self._country = country
-        self._off_map_trade = off_map_trade
         self._coin = coin_per_unit(economy)
         self._hours = working_hours_per_year(economy)
         self._wages = {trade: wage * self._coin
@@ -83,8 +80,8 @@ class CountryAnswers:
 
     def trade_value(self, direction: str) -> float:
         """Money's worth of the goods imported ("in") or exported ("out") last year: what the merchants carried across the
-        border, and what crossed the external edge (trade with partners off the map)."""
-        return carried_book.trade_value(self.trade_book(), direction) + self._off_map_trade(direction)
+        border."""
+        return carried_book.trade_value(self.trade_book(), direction)
 
     def people_of_trade(self, trade: str) -> float:
         """Working people of a trade in the labour markets of the country's tiles (nobody for a trade none practise)."""

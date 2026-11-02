@@ -13,7 +13,6 @@ from sim.markets.port_country import CountryAnswers
 from sim.tests import economy_fixture as fixture
 from sim.tests.country_stand_in import COIN_PER_UNIT, HOME, HOME_TILES, NORTH, NORTH_TILES, two_country_economy
 
-NO_OFF_MAP_TRADE = lambda direction: 0.0   # nothing crossed the external edge
 
 
 class TheSetup(unittest.TestCase):
@@ -92,25 +91,25 @@ class AnswersOfACountry(unittest.TestCase):
         economy = two_country_economy()
         economy.record.carriage.carried_goods = {"grain": {"north_farms": {"farms": [2.0, 10.0, 14.0]}},
                                         "ore": {"farms": {"north_farms": [1.0, 6.0, 9.0]}}}
-        answers = CountryAnswers(economy, NORTH, off_map_trade=NO_OFF_MAP_TRADE)
+        answers = CountryAnswers(economy, NORTH)
         book = answers.trade_book()
         self.assertAlmostEqual(book["grain"]["out_value"], 10.0 * COIN_PER_UNIT)    # left north at the price there
         self.assertAlmostEqual(book["ore"]["in_value"], 9.0 * COIN_PER_UNIT)       # landed in north at the price there
         self.assertEqual(book["ore"]["in_tonnes"], 1.0)
         self.assertAlmostEqual(answers.trade_value("in"), 9.0 * COIN_PER_UNIT)
         self.assertAlmostEqual(answers.trade_value("out"), 10.0 * COIN_PER_UNIT)
-        self.assertAlmostEqual(CountryAnswers(economy, HOME, off_map_trade=NO_OFF_MAP_TRADE).trade_value("in"), 14.0 * COIN_PER_UNIT)
+        self.assertAlmostEqual(CountryAnswers(economy, HOME).trade_value("in"), 14.0 * COIN_PER_UNIT)
 
     def test_a_countrys_answers_count_its_people_by_trade(self):
         economy = two_country_economy()
-        north = CountryAnswers(economy, NORTH, off_map_trade=NO_OFF_MAP_TRADE)
+        north = CountryAnswers(economy, NORTH)
         self.assertEqual(north.people_of_trade("labourer"), 30.0)
         self.assertEqual(north.people_of_trade("miner"), 0.0)
         self.assertEqual(north.people_of_trade("no such trade"), 0.0)
 
     def test_land_rent_is_received_by_the_countrys_own_cohorts(self):
         economy = two_country_economy()
-        north = CountryAnswers(economy, NORTH, off_map_trade=NO_OFF_MAP_TRADE)
+        north = CountryAnswers(economy, NORTH)
         curve = north.land_rent_curve()
         self.assertEqual(sum(people for people, _rent in curve), 50.0)
         self.assertEqual(sum(rent for _people, rent in curve), 5.0 * 2.0 * COIN_PER_UNIT)   # the runs the north's farm worked times its rent
@@ -119,7 +118,7 @@ class AnswersOfACountry(unittest.TestCase):
     def test_a_countrys_site_rent_is_its_own_land_markets_not_the_home_mean(self):
         economy = two_country_economy()
         economy.record.land.land_rent = {"hills": 50.0}     # the home country lets land; the north none
-        answers = CountryAnswers(economy, NORTH, off_map_trade=NO_OFF_MAP_TRADE)
+        answers = CountryAnswers(economy, NORTH)
         self.assertIsNone(answers.land_rent_at(None))   # nothing let in the country: none, never the home mean
         self.assertIsNone(answers.land_rent_at("north_farms"))
         economy.record.land.land_rent.update({"north_farms": 2.0, "north_port": 4.0})

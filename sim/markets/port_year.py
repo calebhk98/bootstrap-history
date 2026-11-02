@@ -18,7 +18,6 @@ from sim.economy.api import (EDGE_LEGACY, AgentOrders, Economy, GoodsMove, Offer
                              YearInputs, expected_output_prices, live_input_prices, live_wages,
                              variable_cost_per_run)
 
-from sim.foreign_trade.api import country_trade_years
 from . import port_bondage, port_levy, port_actors, port_cargo, port_cropland, port_flight, port_institutions, port_land, port_late, port_seats, port_sites, port_staff
 from sim.materials.api import ProducerCapacityCache
 from .port_key import spin_up_key
@@ -644,9 +643,7 @@ class AgentEconomy(TilePricesMixin):
         if country == economy_api.home_country(economy) or country not in economy_api.economy_countries(economy):
             return None
         from .port_country import CountryAnswers
-        year = self._sim.year
-        book = self.stored.get("country_trade_by_year", {})
-        answers = CountryAnswers(economy, country, lambda direction: country_trade_years.value(book, country, year - 1, direction))
+        answers = CountryAnswers(economy, country)
         return answers if answers.has_labour_market() else None
 
     def land_rent_per_hectare(self):
