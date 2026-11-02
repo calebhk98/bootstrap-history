@@ -1,7 +1,7 @@
 """The seats module's spec (sim/assembly).
 
 Every view is uncached: the registry, a founder's death and the held sets are written outside the module's commands
-(docs/architecture/catalogue/seats.md lists each writer). The registry is the assembly's: the module adds and moves seats by the
+(grep the registry's fields for each writer). The registry is the assembly's: the module adds and moves seats by the
 assembly's commands `AddSeat` and `MoveSeat`."""
 from sim.assembly.api import FIRST, KEYED, QUOTE, AddSeat, ExtensionPoint, ModuleSpec, MoveSeat, PhaseHook, ViewSpec
 from sim.diffusion.api import RekeyDisclosures

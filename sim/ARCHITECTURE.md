@@ -2,9 +2,8 @@
 
 Read this first to find where code lives and what is safe to change. It describes the engine as it is; it
 carries no numbers, because they go stale. Anything that would be a number names the command that measures it
-(section 7). The design and its reasons are `docs/architecture/MODULE_REGISTRY_PLAN.md`; per-module detail
-(views, commands, state, callers) is in `docs/architecture/catalogue/`, which was written during the move and
-lags the code, so re-measure before acting on it.
+(section 7). The design and its reasons are `docs/architecture/MODULE_REGISTRY_PLAN.md`; a module's views, commands and
+state are in its `module_spec.py` and `state.py`.
 
 ## 1. The shape
 

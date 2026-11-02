@@ -189,8 +189,7 @@ actors (21), hazards, workforce (20 each), projects (19).
   engine's seat facades. The ledger moves a seat's account in the actors' book and keeps its cash book (`LedgerSeat`); finance runs the
   founder's borrowing rule (`SeatBorrower`); ventures reviews its business as `FounderReview`; the actors build a seat's party from the
   owners' views and commands (`SeatPorts`) and apply the commands that address the exchange to a seat (`ApplyForPatent`, `MakeOffer`,
-  `AnswerOffer`, `GrantLicence`, `SellSeatConcern`). Design and what stays: `docs/architecture/catalogue/ledger.md` ("The seat's
-  purse"); Complaints 930 (two ways of posting a seat's money) and 931 (the party writes through two records). Measured after
+  `AnswerOffer`, `GrantLicence`, `SellSeatConcern`). Design and what stays: Complaints 930 (two ways of posting a seat's money) and 931 (the party writes through two records). Measured after
   (`python3 tools/measure/module_graph.py`): 15 modules depend on the bridge (17 before), 20 reads answered by it (31), 15 reads of
   `legacy_*` views (20); direct capital/money writes outside owners 0 (6).
 - [x] The shared answers are the `sharing` module's (`sim/sharing/`): it publishes `shared_answer` (workforce), `shared_answers` (actors) and
