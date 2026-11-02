@@ -45,7 +45,7 @@ def spin_up_trace(game, years):
         previous_prices = dict(outcome.prices)
         row["chained_price_level"] = chained
         row.update(economy_api.money_year_figures(economy, outcome))
-        row.update(money_by_holder_columns(economy.record.book, economy.setup.currency_id))
+        row.update(money_by_holder_columns(economy_api.economy_book(economy), economy_api.currency_id(economy)))
         rows.append(row)
     return rows
 
@@ -73,8 +73,6 @@ def traded_staple(agent, stale):
     """The good of the hunger need with the largest opening basket quantity among those whose markets cleared
     lately (a good nobody trades shows what it would cost to make, not a price); None when none did."""
     economy = agent.economy()
-    setup = economy.setup
-    need = next((spec for spec in setup.basket.needs if spec.need_id == setup.hunger_need), None)
     opening = economy_api.opening_quantities(economy)
-    goods = [good for good, _effect in need.goods if good not in stale] if need is not None else []
+    goods = [good for good in economy_api.hunger_goods(economy) if good not in stale]
     return max(goods, key=lambda good: opening.get(good, 0.0), default=None)
