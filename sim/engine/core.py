@@ -125,7 +125,6 @@ class Sim:
         self.send(RecordOpeningFarm())
         # the weather cells and their correlation are fixed for the life of a run: built now, from the territory as it opens
         self.view("farm_weather_cells")()
-        # the granary starts empty (an initial condition) and carries over between years (demography's farm year)
         self.send(SetYear(self.cfg["start_year"]))
         config = self.cfg
         # The opening purse is at this society's prices: the kits are stated in labourer-years, and revenue and living costs convert

@@ -19,9 +19,6 @@ def check_simulation_invariants(state):
     for key, value in (state.seats[state.acting_seat].modules["ledger"]._material_stock_ledger or {}).items():
         assert math.isfinite(value) and value >= -1e-9, \
             "negative or non-finite physical stockpile %s=%r" % (key, value)
-    granary_kg = state.seats[state.acting_seat].modules["demography"].farm_stock_kg
-    assert math.isfinite(granary_kg) and granary_kg >= -1e-9, \
-        "negative or non-finite physical stockpile grain=%r" % granary_kg
     for key, value in (getattr(economy, "commodity_prices", None) or {}).items():
         assert math.isfinite(value) and value >= 0.0, \
             "negative or non-finite commodity price %s=%r" % (key, value)

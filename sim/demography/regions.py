@@ -7,7 +7,7 @@ of the regions.
 
 The economy books food eaten per cohort (`sim/economy/year_accounts.py`). The nation's people-weighted eaten over need is kept
 when the economy's year closes, and the next year's step turns it into the calories a day it is fed. While no economy year
-has closed (a game just opened, or a game whose economy never ran) nothing is recorded and the farm year supplies the food."""
+has closed (a game just opened, or a game whose economy never ran) the opening's basket feeds each region its full need."""
 from typing import Dict
 
 from sim.actors.api import RecordMigrantContact
@@ -58,12 +58,11 @@ class Regions:
         self.world.food_eaten_over_need = command.national
         self.world.regional_eaten_over_need = dict(command.by_tile)
 
-    def _regional_kcal_per_day(self, regions, farm_kcal_per_day):
+    def _regional_kcal_per_day(self, regions):
         """{region: calories a day it is fed}: its own households' eaten over need where the economy has booked it, else
-        its land's share of the farm model's harvest; open works' relief is shared by need."""
+        the opening's full ration; open works' relief is shared by need."""
         return regional_population.kcal_per_day_by_region(
-            regions, self.world.regional_eaten_over_need, farm_kcal_per_day, self.needs.relief_kcal_per_day(),
-            settlement.population_shares(self.needs.home_tiles_held()))
+            regions, self.world.regional_eaten_over_need, self.needs.relief_kcal_per_day())
 
     def externality_deaths(self, deaths_by_band, year):
         """`deaths_by_band` plus what the game's externality providers add to the year's deaths."""
