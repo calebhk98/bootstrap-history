@@ -10,9 +10,12 @@ from .harness import *  # noqa: F401,F403
 from sim.tests.workforce_host import workforce_over
 
 
+NEVER_ROUNDS_UP = SimpleNamespace(random=lambda: 0.999)   # a draw above any fraction: a target is rounded down
+
+
 def world(held, found, accepts=True):
-    """A household holding `held` artisans whose market finds only `found` of any number asked; labour rounds a target as is."""
-    household = SimpleNamespace(capital=1000.0, employees={"artisan": held}, automation_audit=[])
+    """A household holding `held` artisans whose market finds only `found` of any number asked; a target is rounded down."""
+    household = SimpleNamespace(capital=1000.0, employees={"artisan": held}, staff_wanted={}, automation_audit=[])
 
     def hire_buying_room(trade, count):
         if not accepts:
@@ -24,10 +27,10 @@ def world(held, found, accepts=True):
     def fire(trade, count):
         household.employees[trade] -= count
 
-    labour = SimpleNamespace(stochastic_round=lambda target: int(target), hire_buying_room=hire_buying_room, fire=fire,
-                             supervision_room=lambda: 3.0)
+    labour = SimpleNamespace(controls=SimpleNamespace(hire_buying_room=hire_buying_room), hiring=SimpleNamespace(fire=fire),
+                             capacity=SimpleNamespace(supervision_room=lambda: 3.0))
     host = SimpleNamespace(workforce=household, view=workforce_stand_in.view_of(household), state=SimpleNamespace(household=household, scenario=SimpleNamespace(year=100)), labour=labour)
-    host.module = workforce_over(host)
+    host.module = workforce_over(host, game_random=lambda: NEVER_ROUNDS_UP)
     return host
 
 

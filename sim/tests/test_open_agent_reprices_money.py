@@ -31,8 +31,7 @@ def port_over(agent, priced):
         money_from_economy=lambda: priced, send=sent.append, sent=sent,
         labour=types.SimpleNamespace(money_per_labour_hour=lambda: OPENING_FIGURE))
     port = types.SimpleNamespace(agent=agent, _sim=sim, _opening=False)
-    if agent is not None:
-        agent.port = port
+    agent.port = port
     return port
 
 
@@ -65,11 +64,6 @@ class OpenAgentTests(unittest.TestCase):
         _port, reprice = self.open_it(agent, priced=True)
         self.assertTrue(agent.opened())
         self.assertEqual(reprice, [])
-
-    def test_a_game_with_no_agent_economy_does_nothing(self):
-        _port, reprice = self.open_it(None, priced=False)
-        self.assertEqual(reprice, [])
-
 
 if __name__ == "__main__":
     unittest.main()

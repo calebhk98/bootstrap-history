@@ -38,6 +38,7 @@ def stand_in_game():
     game.labour = StandInLabour(game)
     game.staff = {"employees": game.employees}
     game.pay_book = {"paid_in_clearing": 0.0}
+    game.staff_wanted = {}
     orders = {"HireStaff": "hire", "FireStaff": "fire"}
     game.send = lambda command: (getattr(game.labour, orders[type(command).__name__])(command.trade, command.count)
                                  if type(command).__name__ in orders
@@ -64,7 +65,7 @@ class PlayerLogTests(unittest.TestCase):
 
     def test_a_refused_hire_writes_nothing(self):
         game = stand_in_game()
-        game.labour.hiring.hire = lambda trade, quantity: (False, "no one to be had")
+        game.labour.hire = lambda trade, quantity: (False, "no one to be had")
         reply = _cmd_hire(game, {}, {"cmd": "hire", "trade": "smith", "n": 2}, None)
         self.assertFalse(reply["ok"])
         self.assertEqual(game.log, [])

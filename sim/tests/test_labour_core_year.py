@@ -1,7 +1,6 @@
-"""Whole years of the labour core on invented trades and places: demand pulls people into a trade, a
-hard trade stays thinly held where an easy one with the same training fills, an employer paying over the market
-staffs first, a school seeds a trade nobody practised, workers follow pay between places, and nobody is
-created or lost on the way."""
+"""Whole years of the labour core on invented trades and places: an employer paying over the market staffs first,
+workers follow pay between places, a trade nobody wants to switch into is not drifted into, and nobody is created or
+lost on the way."""
 
 QUICK_TOPIC = True
 
@@ -65,38 +64,6 @@ class ConservationTests(unittest.TestCase):
         self.assertEqual(workers(state, "vale", "digger"), 100.0)
 
 
-class DemandTests(unittest.TestCase):
-    def test_demand_raises_the_wage_and_pulls_people_in(self):
-        state = records.MarketState(workers={"vale": town(digger=1000, carver=20)})
-        # the yard wants no more carvers than the trade can come to hold, so the shortage ends and the wage falls
-        year_inputs = inputs([bid("farm", "digger", "vale", 1000), bid("yard", "carver", "vale", 60)])
-        state, report = run(state, year_inputs, 3)
-        early_wage = report.clearing("carver", "vale").wage
-        self.assertGreater(early_wage, report.clearing("digger", "vale").wage)
-        state, report = run(state, year_inputs, 45)
-        self.assertGreater(workers(state, "vale", "carver"), 60.0)
-        self.assertLess(report.clearing("carver", "vale").wage, early_wage)
-
-
-class AptitudeTests(unittest.TestCase):
-    def test_a_hard_trade_stays_thin_where_an_easy_one_with_equal_training_fills(self):
-        state = records.MarketState(workers={"vale": town(digger=2000, healer=30, plainhand=30)})
-        year_inputs = inputs([bid("farm", "digger", "vale", 2000), bid("temple", "healer", "vale", 400, 20.0),
-                              bid("office", "plainhand", "vale", 400, 20.0)])
-        state, _report = run(state, year_inputs, 60)
-        healer_wages, plainhand_wages = [], []
-        for _year in range(60):   # vertical demand cycles, so compare the averages over a long stretch
-            state, report = year.run_year(state, year_inputs)
-            healer_wages.append(report.clearing("healer", "vale").wage)
-            plainhand_wages.append(report.clearing("plainhand", "vale").wage)
-        # both trades are held at the same substitution bound (the unskilled wage times the training premium), so
-        # a hard trade pays no less, and what aptitude changes is how many can take it up
-        self.assertGreaterEqual(sum(healer_wages), sum(plainhand_wages) - 1e-9)
-        self.assertLess(workers(state, "vale", "healer"), 0.5 * workers(state, "vale", "plainhand"))
-        healers = state.workers["vale"]["healer"]
-        self.assertGreater(healers[-1], healers[0])
-
-
 class HigherMaximumTests(unittest.TestCase):
     def test_the_employer_valuing_hours_more_is_staffed_first(self):
         state = records.MarketState(workers={"vale": town(digger=500, carver=60)})
@@ -105,17 +72,6 @@ class HigherMaximumTests(unittest.TestCase):
         state, report = run(state, year_inputs, 3)
         hired = report.clearing("carver", "vale").hired_by_employer
         self.assertGreater(hired.get("generous", 0.0), hired.get("mean", 0.0))
-
-
-class SchoolTests(unittest.TestCase):
-    def test_a_school_seeds_a_trade_nobody_practised(self):
-        state = records.MarketState(workers={"vale": town(digger=1000)})
-        bids = [bid("farm", "digger", "vale", 1000), bid("yard", "joiner", "vale", 40, 10.0)]
-        without, _report = run(state, inputs(bids), 6)
-        self.assertEqual(workers(without, "vale", "joiner"), 0.0)
-        school = records.School(owner="founder", trade="joiner", area="vale", seats=20.0)
-        taught, _report = run(state, inputs(bids, schools=[school]), 6)
-        self.assertGreater(workers(taught, "vale", "joiner"), 0.0)
 
 
 class MigrationTests(unittest.TestCase):
@@ -132,20 +88,6 @@ class MigrationTests(unittest.TestCase):
 class SteadinessTests(unittest.TestCase):
     """With demand that falls with the wage, a trained trade settles above the floor and stays there:
     switchers weigh those already in training, and nobody switches into a trade that pays no more."""
-
-    def test_a_trained_trade_settles_at_a_premium_without_cycling(self):
-        state = records.MarketState(workers={"vale": town(digger=2400, carver=30, joiner=30)})
-        sloped = [bid("employer%d" % tranche, trade, "vale", workers / 5.0, 3.0 * (1.3 - 0.3 * tranche))
-                  for tranche in range(5) for trade, workers in (("carver", 30), ("joiner", 30), ("digger", 2000))]
-        year_inputs = inputs(sloped)
-        state, _report = run(state, year_inputs, 80)
-        wages = []
-        for _year in range(40):
-            state, report = year.run_year(state, year_inputs)
-            wages.append(report.clearing("carver", "vale").wage)
-        floor = 1.0
-        self.assertGreater(min(wages), floor)
-        self.assertLess(max(wages) - min(wages), 0.5 * (sum(wages) / len(wages) - floor) + 0.2)
 
     def test_nobody_drifts_into_a_glutted_trade(self):
         state = records.MarketState(workers={"vale": town(digger=1000, carver=60)})

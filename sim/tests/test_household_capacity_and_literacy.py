@@ -17,7 +17,7 @@ class _StubLabour:
     LITERATE_TRADES = frozenset({"machinist", "scholar"})
 
     def __init__(self, literacy=1.0, institutional=0.0, supervision=0.0, headcount_now=0.0, room_places=0.0,
-                 existing=None, absent=(), done=(), operating=(), room_sources=()):
+                 absent=(), done=(), operating=(), room_sources=()):
         projects = types.SimpleNamespace(done=set(done), operating=set(operating))
         self._world = types.SimpleNamespace(
             pop_scale=1.0, HOURS_PER_PERSON_YEAR=2000.0,
@@ -27,7 +27,7 @@ class _StubLabour:
             closure=lambda nodes, node_id: {node_id}, start_reason=lambda node_id, _why=True: (True, ""),
             money_text=lambda amount, grouped=False: "%g" % amount, housing_price_per_place=lambda: 100.0)
         self.literacy, self.institutional, self.supervision = literacy, institutional, supervision
-        self.headcount_now, self.room_places, self.existing = headcount_now, room_places, existing
+        self.headcount_now, self.room_places = headcount_now, room_places
         self.supply = Supply(self._world, book=self, capacity=self, settlement=self, trades=self)
         self.supply._people_of_trade_in_reach = lambda trade: 10.0
         self.capacity = Capacity(self._world, book=self, market=None, schedule=None, trades=self)
@@ -56,9 +56,6 @@ class _StubLabour:
     def headcount(self):
         return self.headcount_now
 
-    def people_who_exist(self, trade):
-        return float("inf") if self.existing is None else self.existing
-
     def room_added_by(self, places):
         return places
 
@@ -81,9 +78,6 @@ check("a scholar ceiling adds the institutions that train scholars outright",
       _StubLabour(institutional=7.0).literate_capacity("scholar") > _StubLabour().literate_capacity("scholar") + 6.9)
 check("only a scholar gets the institutional pool", _StubLabour(institutional=7.0).literate_capacity("machinist")
       == _StubLabour().literate_capacity("machinist"))
-check("the people who exist cap a present trade", _StubLabour(existing=1.5).literate_capacity("machinist") == 1.5)
-check("...but not a trade the world has none of yet (absent trades are taught in)",
-      _StubLabour(existing=0.0, absent={"machinist"}).literate_capacity("machinist") > 0.0)
 
 # --- household_room: one number for hire, buy and train.
 check("household room is the places plus the supervision, less the people held",

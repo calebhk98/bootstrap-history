@@ -7,6 +7,7 @@ import dataclasses
 import types
 import unittest
 
+from sim.economy.carriage_record import CarriageRecord
 from sim.geography import api as geography
 from sim.geography import droving, flow_ledger, freight_cost, routes_graph
 
@@ -197,7 +198,7 @@ class EconomyFlows(unittest.TestCase):
         from sim.economy.economy import Economy
         rebuilt = []
         economy = types.SimpleNamespace(
-            record=types.SimpleNamespace(carriage=types.SimpleNamespace(carried={"town": {"farms": 5.0}, "farms": {"town": 5.0}}, area_imbalance=1.0)),
+            record=types.SimpleNamespace(carriage=CarriageRecord(carried={"town": {"farms": 5.0}, "farms": {"town": 5.0}}, area_imbalance=1.0)),
             _rebuild_carriage=lambda: rebuilt.append(True) or True)
         self.assertTrue(Economy.follow_flows(economy))
         self.assertEqual((economy.record.carriage.area_imbalance, rebuilt), (0.0, [True]))
@@ -206,7 +207,7 @@ class EconomyFlows(unittest.TestCase):
         from sim.economy.economy import Economy
         rebuilt = []
         economy = types.SimpleNamespace(
-            record=types.SimpleNamespace(carriage=types.SimpleNamespace(carried={"town": {"farms": 5.0}}, area_imbalance=1.0)),
+            record=types.SimpleNamespace(carriage=CarriageRecord(carried={"town": {"farms": 5.0}}, area_imbalance=1.0)),
             _rebuild_carriage=lambda: rebuilt.append(True) or True)
         self.assertFalse(Economy.follow_flows(economy))
         self.assertEqual(rebuilt, [])

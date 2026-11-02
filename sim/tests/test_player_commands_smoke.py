@@ -53,7 +53,6 @@ class QuoteAndSchoolTest(unittest.TestCase):
         _typed(game, "quote farm 20")
         self.assertEqual(game.capital, capital)
         game.state.seats[game.state.acting_seat].modules["workforce"].trades_created.add("chemist")
-        game.labour.market.press("chemist", 100)
         for line in ("buy school chemist 1", "buy trade school chemist 1", "buy trade_school chemist 1"):
             reply = _typed(game, line)
             self.assertTrue(reply.get("ok"), (line, reply))

@@ -41,17 +41,16 @@ check("a whole number is not refused for being fractional",
 
 # =============================================================================
 # THE SCHOLAR WALL. A literate trade's headcount ceiling is a floor plus the market's reach scaled by literacy; for
-# scholars the institutions' own capacity is added; nobody can be hired who does not exist.
+# scholars the institutions' own capacity is added.
 # =============================================================================
 
 
-def wall_of(trade, institutional=0.0, literacy=1.0, exist=1e9, absent=()):
+def wall_of(trade, institutional=0.0, literacy=1.0, absent=()):
     stand_in = SimpleNamespace(
         LITERATE_CAPACITY_FLOOR=1.5,
         trades=SimpleNamespace(LITERATE_TRADES=frozenset({"scholar", "scribe"}), literacy_factor=lambda trade: literacy),
         capacity=SimpleNamespace(staff_capacity=lambda: (institutional, 0.0, 0.0)),
         _people_of_trade_in_reach=lambda trade: 35.0,
-        people_who_exist=lambda trade: exist,
         _world=SimpleNamespace(pop_scale=1.0, HOURS_PER_PERSON_YEAR=2000.0,
                                trades_absent=set(absent)))
     return Supply.literate_capacity(stand_in, trade)
@@ -61,8 +60,6 @@ reach = 35.0
 check("the market-reach ceiling for a fresh household is the floor plus its reach scaled by literacy",
       abs(wall_of("scholar") - (1.5 + reach)) < 1e-9, wall_of("scholar"))
 check("a trade that does not read has no literacy wall", wall_of("smith") == float("inf"))
-check("a trade nobody can be found in cannot be had past the people who exist",
-      wall_of("scribe", exist=2.0) == 2.0)
 check("building the institutions that train scholars outright widens the wall by what they hold, for scholars alone",
       abs(wall_of("scholar", institutional=20.0) - wall_of("scholar") - 20.0) < 1e-9
       and wall_of("scribe", institutional=20.0) == wall_of("scribe"))

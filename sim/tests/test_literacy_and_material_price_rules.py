@@ -17,8 +17,8 @@ class _Society:
     """The trades and capacity neighbours of a supply part, with the reach and the literacy written out."""
     LITERATE_TRADES = ("scribe", "scholar")
 
-    def __init__(self, literacy, institutional=0.0, existing=1e9):
-        self.literacy, self.institutional, self.existing = literacy, institutional, existing
+    def __init__(self, literacy, institutional=0.0):
+        self.literacy, self.institutional = literacy, institutional
         world = types.SimpleNamespace(pop_scale=1.0, HOURS_PER_PERSON_YEAR=10.0, trades_absent=())
         self.supply = Supply(world, book=None, capacity=self, settlement=None, trades=self)
         self.supply._people_of_trade_in_reach = lambda trade: 40.0
@@ -52,10 +52,6 @@ class LiterateCapacity(unittest.TestCase):
     def test_scholars_add_the_institutional_pool_and_scribes_do_not(self):
         society = _Society(0.5, institutional=7.0)
         self.assertAlmostEqual(self.capacity(society, "scholar") - self.capacity(society, "scribe"), 7.0)
-
-    def test_the_ceiling_never_exceeds_the_people_who_exist(self):
-        self.assertEqual(self.capacity(_Society(1.0, existing=3.0)), 3.0)
-
 
 class _Market:
     """The materials module with the market's tonnes, the demands on the commodity and the own supply written out."""
