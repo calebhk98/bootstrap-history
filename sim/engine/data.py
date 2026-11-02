@@ -105,7 +105,6 @@ class SimulationDefaults(TypedDict):
     founder_arrival_age: int
     founder_hours_per_year: int
     director_hours_per_year: int
-    hired_hours_cap_base: int
     revenue_ramp_years: int
     suspicion_danger: float
     eminence_danger: float
@@ -613,16 +612,6 @@ DEFAULTS: SimulationDefaults = dict(
     # pay. A modern 40-hour week over 52 weeks with no holiday at all is 2,080.
     founder_hours_per_year=2000,
     director_hours_per_year=1800,
-    # THIS BASELINE APPLIES ONLY TO SCARCE OR LITERACY-BOUND TRADES (see
-    # labour.py's market_supply), not to every trade alike: common, urban
-    # trades read a realistically-sized town's worth of their own
-    # (labour.py's TOWN_POPULATION_REFERENCE and TRADE_DENSITY, cited
-    # there), never a fraction of this single number. A fixed fraction of
-    # one number shared by smith, scholar and millwright alike would make
-    # hiring five blacksmiths read as a claim about the Roman Empire's
-    # entire smithing capacity, which is absurd for a trade a real town
-    # supports in real depth.
-    hired_hours_cap_base=25000,
     revenue_ramp_years=3,
     suspicion_danger=25.0,
     eminence_danger=26.0,

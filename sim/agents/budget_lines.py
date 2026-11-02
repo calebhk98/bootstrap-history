@@ -16,7 +16,7 @@ from .tuning_spending import (COAST_KM_PER_SHIP, COURT_RETAINERS_PER_OFFICIAL,
 
 def paid(world: Any, name: str, kind: str, people: Dict[str, float]) -> Line:
 	"""A line made only of people kept in trades, never more of a trade than the state can take."""
-	people = {trade: min(count, MAX_STATE_SHARE_OF_TRADE * world.national_people(trade)) if trade != "labourer" else count
+	people = {trade: min(count, MAX_STATE_SHARE_OF_TRADE * world.national_people(trade)) if trade != world.trade_of_role("unskilled") else count
 			  for trade, count in people.items()}
 	people = {trade: count for trade, count in people.items() if count > 0.0}
 	return Line(name, kind, people, sum(count * world.pay_per_person_year(trade) for trade, count in people.items()))
@@ -24,19 +24,19 @@ def paid(world: Any, name: str, kind: str, people: Dict[str, float]) -> Line:
 
 def roads_line(world: Any) -> List[Line]:
 	person_years = world.territory().road_km * ROAD_UPKEEP_PERSON_YEARS_PER_KM
-	return [paid(world, "roads", "requisition", {"labourer": person_years})] if person_years > 0.0 else []
+	return [paid(world, "roads", "requisition", {world.trade_of_role("unskilled"): person_years})] if person_years > 0.0 else []
 
 
 def public_buildings_line(world: Any) -> List[Line]:
 	stock_m2 = world.urban_population() * PUBLIC_FLOOR_AREA_PER_URBAN_PERSON_M2
 	masons = stock_m2 * MASONRY_PERSON_YEARS_PER_M2 / PUBLIC_BUILDING_LIFE_YEARS
-	return [paid(world, "public_buildings", "requisition", {"mason": masons})] if masons > 0.0 else []
+	return [paid(world, "public_buildings", "requisition", {world.trade_of_role("builder"): masons})] if masons > 0.0 else []
 
 
 def court_line(world: Any, officials: float) -> List[Line]:
 	if officials <= 0.0:
 		return []
-	return [paid(world, "court", "office", {"labourer": officials * COURT_RETAINERS_PER_OFFICIAL})]
+	return [paid(world, "court", "office", {world.trade_of_role("unskilled"): officials * COURT_RETAINERS_PER_OFFICIAL})]
 
 
 def dole_line(world: Any) -> List[Line]:

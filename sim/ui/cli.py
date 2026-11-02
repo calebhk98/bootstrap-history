@@ -393,7 +393,7 @@ def _dead_end_lines(nodes, production):
     tree_materials = {material for node in nodes.values() for material in (node.get("mat") or {})}
     return validate_dead_ends.report_lines(production, load_needs(ROOT, MODDIR)["goods"], lives,
                                            {trade: trade_fields(record) for trade, record in load_trade_registry(ROOT, production).items()},
-                                           validate_dead_ends.state_goods(), tree_materials)
+                                           (), tree_materials)
 
 
 def cmd_validate(args):

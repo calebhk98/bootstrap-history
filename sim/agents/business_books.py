@@ -4,7 +4,7 @@ from typing import Any, Optional, Tuple
 from . import adoption, firm_entry, ledger
 from .business import Business
 from .business_crew import staff
-from .edges import EDGE_CUSTOMERS, EDGE_LANDOWNERS, EDGE_SUPPLIERS, EDGE_WORKERS
+from .edges import EDGE_CUSTOMERS, EDGE_LANDOWNERS, EDGE_SUPPLIERS
 
 
 def takings_of_size(takings_of_one_unit: float, size: float, market_factor: float) -> float:
@@ -28,7 +28,7 @@ def operate(business: Business, owner: Any, entry_key: str, world: Any, rivals: 
 	takings = found * books.takings
 	business.note_takings(entry_key, takings)
 	upkeep = books.upkeep
-	wages = found * books.wages   # the margin's estimate: the crew is paid by the labour core's clearing, not here
+	wages = found * books.wages   # at the economy's wage for each trade (the core's clearing pays the crew, not here)
 	if not world.sells_on_book(entry_key):   # what sells in the book is paid when the year's market clears
 		ledger.transfer(world.edge(EDGE_CUSTOMERS), owner, takings, "takings")
 	ledger.transfer(owner, world.edge(EDGE_SUPPLIERS), upkeep, "upkeep")
@@ -39,19 +39,21 @@ def operate(business: Business, owner: Any, entry_key: str, world: Any, rivals: 
 
 
 def carry(business: Business, owner: Any, entry_key: str, world: Any) -> float:
-	"""Pay what running a plant costs whatever it sells: rent on the land it occupies and a manager's hours
-	(the same costs an entrant weighs, firm_entry.carrying_cost). Returns the sum paid."""
+	"""Pay the rent on the land a plant occupies whatever it sells, and post its managers' places to the labour market
+	(hired and paid by the clearing like any crew; the same costs an entrant weighs, firm_entry.carrying_cost).
+	Returns the rent paid plus the managers' estimated pay."""
 	size = business.size_of(entry_key)
 	rent = world.site_rent(entry_key, size, owner.location())
-	management = firm_entry.management_cost(world, entry_key, size)
-	if rent is None or management is None:   # the plant's country keeps no record of a figure: it pays nothing it cannot read
+	places = firm_entry.management_places(world, entry_key, size)
+	if rent is None or places is None:   # the plant's country keeps no record of a figure: it pays nothing it cannot read
 		return 0.0
 	ledger.transfer(owner, world.edge(EDGE_LANDOWNERS), rent, "site rent")
-	if owner.record.country is None:
-		world.pay_wages(owner, management, "management")
-	else:
-		ledger.transfer(owner, world.edge(EDGE_WORKERS), management, "management")
-	return rent + management
+	trade, people = places
+	if trade is None:
+		return rent
+	posted = owner.record.staff_wanted
+	posted[trade] = posted.get(trade, 0.0) + people
+	return rent + people * world.hours_per_person_year * world.hourly_pay(trade)
 
 
 def yearly_costs(world: Any, entry_key: str) -> Optional[Tuple[float, float]]:

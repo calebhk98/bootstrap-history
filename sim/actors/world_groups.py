@@ -22,7 +22,7 @@ class GroupView:
 	registry: Any
 
 	def _annual_labourer_wage(self) -> float:
-		return max(1e-9, self.pay_per_person_year("labourer"))
+		return max(1e-9, self.pay_per_person_year(self.trade_of_role("unskilled")))
 
 	def _commodity_quote(self, commodity: str) -> Any:
 		"""The quote for the first priced material the commodity is made of (its main product)."""

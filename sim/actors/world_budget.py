@@ -2,6 +2,7 @@
 from typing import Any, List, Optional, Tuple
 
 from sim.agents.api import Hands, army_goal, demand_answer, sack_pressure, taxpayer_income
+from sim.labour import api as labour_api
 from sim.labour.api import wage_provider
 from sim.world import demand
 from sim.geography.api import territory
@@ -45,7 +46,7 @@ class BudgetView:
 
 	def national_people(self, trade: str) -> float:
 		"""People of a trade in the whole country; the working age for unskilled labour."""
-		return self.needs.working_age() if trade == "labourer" else self.needs.trade_population[trade]
+		return self.needs.working_age() if trade == self.trade_of_role("unskilled") else self.needs.trade_population[trade]
 
 	def trade_exists(self, trade: str) -> bool:
 		return self.needs.trade_available[trade]
@@ -91,6 +92,12 @@ class BudgetView:
 
 	def equipment_kg_at_adoption(self, adoption: float) -> float:
 		return self.needs.military_equipment_burden(adoption)
+
+	def trade_of_role(self, role: str) -> str:
+		return labour_api.trade_of_role(self.needs.trade_registry(), role)
+
+	def equipment_material(self) -> str:
+		return str(labour_api.role_field(self.needs.trade_registry(), "soldier", "equipment_material"))
 
 	def staple_material(self) -> str:
 		"""The material the civilisation's people live on, from its data."""

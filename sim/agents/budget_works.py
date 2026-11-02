@@ -15,8 +15,6 @@ from .tuning_spending import (CAMPAIGN_SHARE_OF_ARMY_PER_UNIT_THREAT, CUSTOMS_BA
 							  MASONRY_PERSON_YEARS_PER_M2, POLL_TAX_BASE_PER_COLLECTOR_WAGE_YEAR,
 							  PROPERTY_TAX_BASE_PER_COLLECTOR_WAGE_YEAR, PUBLIC_BUILDING_LIFE_YEARS, SOLDIER_GRAIN_KG_PER_DAY)
 
-SOLDIER_TRADE = "soldier"
-COLLECTOR_TRADE = "scribe"
 
 # How much of a form's base one collector-year handles, by what the form falls on (in wage-years of base);
 # a basis not listed is assessed like property.
@@ -35,21 +33,21 @@ def works_upkeep_lines(world: Any) -> List[Line]:
 	for work in state_works.WORKS:
 		person_years = stock[work.name] * MASONRY_PERSON_YEARS_PER_M2 / PUBLIC_BUILDING_LIFE_YEARS
 		if person_years > 0.0:
-			lines.append(budget_lines.paid(world, work.name, "requisition", {work.trade: person_years}))
+			lines.append(budget_lines.paid(world, work.name, "requisition", {world.trade_of_role(work.role): person_years}))
 	return [line for line in lines if line.money > 0.0]
 
 
 def collection_line(world: Any) -> List[Line]:
 	"""Collectors for the forms the state raises: each form's base, counted in years of an unskilled wage, over
 	what a collector handles of that kind of base in a year."""
-	wage = world.pay_per_person_year("labourer")
+	wage = world.pay_per_person_year(world.trade_of_role("unskilled"))
 	if wage <= 0.0:
 		return []
 	collectors = 0.0
 	for assessed in world.revenue_assessments():
 		handled = BASE_PER_COLLECTOR_WAGE_YEAR.get(assessed.basis, PROPERTY_TAX_BASE_PER_COLLECTOR_WAGE_YEAR)
 		collectors += assessed.base / wage / handled
-	line = budget_lines.paid(world, "tax_collection", "office", {COLLECTOR_TRADE: collectors})
+	line = budget_lines.paid(world, "tax_collection", "office", {world.trade_of_role("clerk"): collectors})
 	return [line] if line.money > 0.0 else []
 
 
@@ -79,4 +77,4 @@ def donative_line(world: Any, soldiers: float) -> List[Line]:
 	if not world.government().record.accession_due or soldiers <= 0.0:
 		return []
 	return [Line("donative", "requisition",
-				 transfer=soldiers * world.pay_per_person_year(SOLDIER_TRADE) * DONATIVE_SHARE_OF_ANNUAL_PAY)]
+				 transfer=soldiers * world.pay_per_person_year(world.trade_of_role("soldier")) * DONATIVE_SHARE_OF_ANNUAL_PAY)]

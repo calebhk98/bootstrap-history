@@ -569,6 +569,10 @@ class TrainingMixin:
         smith on the payroll. This buys a specific piece of work from
         somebody else's shop at a premium over their wage, with no
         standing obligation either way.
+
+        The fee is a price for a finished job from another shop (wage times a premium that covers its overhead), paid to
+        the market edge: not wages. TEMPORARY HEURISTIC, retire: Complaint 964 (a job becomes a labour bid of the
+        seat for the year through sim/markets/port_staff.py).
         """
         trade = str(trade or "").strip().lower()
         fee, refusal = self.commission_check(trade, hours)

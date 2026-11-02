@@ -28,8 +28,10 @@ class Yearly:
             place, entry["outputs"][material], float(entry.get("land_hectare_years") or 0.0))
 
     def pay_growth_labour(self, material, units):
-        """Hire the labour of raising `units` more and pay it; the share of the growth the purse could pay for
-        (1 when all of it)."""
+        """Buy `units` more of raised stock from the goods market at the labour cost of raising it (the economy's wage for
+        each trade), paid to the market edge: a purchase of stock, not a payroll. TEMPORARY HEURISTIC, retire: Complaint 964
+        (raising stock becomes a labour bid of the holder through sim/markets/port_staff.py). Answers the share of the growth
+        the purse could pay for (1 when all of it)."""
         hours_by_trade = rules.growth_labour(stock_entry(material), material, units)
         cost = sum(hours * self.needs.labour_quote(trade) for trade, hours in hours_by_trade.items())
         if cost <= 0.0:

@@ -1,5 +1,5 @@
 {
-  "_doc": "Canonical trade identity, availability and training time. training_years is the years of apprenticeship or schooling before a person is productive in the trade (an estimate of the skill, not a wage); a trade that states none takes its family's median. Wages are not stored here: sim/labour/wages.py derives them. fatality_risk_per_year is the yearly chance a worker of the trade dies at work, with fatality_source and fatality_confidence; the economy raises the wage asked for a trade by it. literate marks a trade whose practice is reading and writing, so literacy caps how many there are; taught_from is the trade a new one is taught from by default; tool_basket lists the materials a self-equipped worker replaces to stay in the trade; staff_resource names the generic staffing resource a trade fills. These four are labelled heuristics (confidence D) of the engine's labour model, moved here from code.",
+  "_doc": "Canonical trade identity, availability and training time. training_years is the years of apprenticeship or schooling before a person is productive in the trade (an estimate of the skill, not a wage); a trade that states none takes its family's median. Wages are not stored here: sim/labour/wages.py derives them. fatality_risk_per_year is the yearly chance a worker of the trade dies at work, with fatality_source and fatality_confidence; the economy raises the wage asked for a trade by it. literate marks a trade whose practice is reading and writing, so literacy caps how many there are; taught_from is the trade a new one is taught from by default; tool_basket lists the materials a self-equipped worker replaces to stay in the trade; staff_resource names the generic staffing resource a trade fills. role names the part a trade plays in a state's books or a freight reckoning (soldier: the army; builder: public works; clerk: collectors and officials; merchant: traders; sailor: sea crews; the unskilled role is the fallback trade); equipment_material is the material one soldier wears out. These four are labelled heuristics (confidence D) of the engine's labour model, moved here from code.",
   "trades": {
     "artisan": {
       "family": "craft",
@@ -233,6 +233,7 @@
     },
     "mason": {
       "family": "craft",
+      "role": "builder",
       "note": "Abundant and good wherever there is a serious stone-building tradition; scarcer and dearer where building is mostly wood.",
       "training_years": 5,
       "tool_basket": [
@@ -252,6 +253,7 @@
     },
     "merchant": {
       "family": "scholar",
+      "role": "merchant",
       "note": "Agent and factor, paid on commission in practice.",
       "training_years": 4,
       "fatality_risk_per_year": 0.0,
@@ -339,6 +341,7 @@
     },
     "sailor": {
       "family": "labour",
+      "role": "sailor",
       "note": "Cheap and abundant.",
       "training_years": 2,
       "fatality_risk_per_year": 0.02,
@@ -356,6 +359,7 @@
     },
     "scribe": {
       "family": "scholar",
+      "role": "clerk",
       "training_years": 5,
       "literate": true,
       "tool_basket": [
@@ -463,6 +467,8 @@
     },
     "soldier": {
       "family": "labour",
+      "role": "soldier",
+      "equipment_material": "iron_bar_kg",
       "note": "A man under arms, drawn from the working age; the state's army is booked in this trade. Basic training is months, not years (Vegetius, De re militari 1.13 gives four months).",
       "training_years": 1,
       "fatality_risk_per_year": 0.02,

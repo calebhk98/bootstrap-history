@@ -11,9 +11,7 @@ from three different institutions: literacy bounds who a literate trade
 ever draw from; STAFF_CAPACITY_SOURCES/staff_capacity is what schools,
 patrons and heavy industry train and can afford to keep, once running;
 SUPERVISION_ROOM/supervision_room is the founder's own headroom to direct
-and house people beyond what any institution trained outright. hired_cap
-and _staff_advice (how much an institution widens the LOCAL hiring pool,
-and what to tell a player who has hit one of these walls) sit with them for
+and house people beyond what any institution trained outright. _staff_advice (what to tell a player who has hit one of these walls) sit with them for
 the same reason. household_room, headcount and director_hours_committed
 are the small shared totals `hire`, `train` and `buy_slaves` (labour_
 training.py, labour_bondage.py) all check against, so they live where the
@@ -181,41 +179,6 @@ class CapacityMixin:
         # are deliberately small.
         return max(0.0, min(self.LITERACY_FACTOR_CAP, float(lit) / ref))
 
-    # "A CIVILIZATION OF 1.5 MILLION CANNOT FIELD WHAT ONE OF 65 MILLION CAN"
-    # (hired_cap's own comment) - the same floor-plus-variable-share curve
-    # reused everywhere in this file that a labour-market size has to shrink
-    # with pop_scale (literate_capacity, hired_cap, market_supply,
-    # home_town_population_estimate) rather than four independent numbers
-    # that could drift apart.
-    POP_SCALE_FLOOR_SHARE = declare(
-        "POP_SCALE_FLOOR_SHARE", 0.25, kind="temporary_heuristic",
-        unit="fraction of the reference labour market",
-        source=None, confidence="D",
-        why="Even the smallest civilisation this game starts (pop_scale "
-            "near zero) is assumed to keep a quarter of Rome's own "
-            "reference town's labour-market depth - a floor so a small "
-            "society is diminished, not annihilated. Tuned, not measured: "
-            "a real figure would come from how town size actually relates "
-            "to specialist-trade depth, which this engine does not model.")
-    POP_SCALE_VARIABLE_SHARE = declare(
-        "POP_SCALE_VARIABLE_SHARE", 0.75, kind="temporary_heuristic",
-        unit="fraction of the reference labour market, scaled by pop_scale",
-        source=None, confidence="D",
-        why="The remaining three quarters of market depth that DOES scale "
-            "with pop_scale, so a full-size (pop_scale=1.0) civilisation "
-            "sees the whole reference figure and a shrunken one sees "
-            "proportionately less of it. Paired with POP_SCALE_FLOOR_SHARE, "
-            "which the two are tuned to sum to 1.0 with.")
-    SCHOLAR_MARKET_SHARE = declare(
-        "SCHOLAR_MARKET_SHARE", 0.35, kind="temporary_heuristic",
-        unit="fraction of hired_hours_cap_base", source=None, confidence="D",
-        why="What share of the abstracted labour-market pool a scholar-"
-            "family trade can draw on before literacy narrows it further - "
-            "literate men are a small fraction of anywhere. Tuned to make "
-            "the pre-literacy scholar ceiling feel like a real but tight "
-            "wall; a real figure needs an occupational census this project "
-            "does not have (see TRADE_DENSITY's own comment on the same "
-            "gap for other trades).")
     LITERATE_CAPACITY_FLOOR = declare(
         "LITERATE_CAPACITY_FLOOR", 1.5, kind="temporary_heuristic",
         unit="people", source=None, confidence="D",
@@ -230,83 +193,14 @@ class CapacityMixin:
             "own docstring on why max() broke the mechanism for Norse).")
 
     def literate_capacity(self, trade):
-        """The most people this society's literacy will EVER let you have in
-        this trade, hired and taught combined - a headcount ceiling, not an
-        hours one.
-
-        `hire`'s own affordability and supervision checks say nothing about
-        whether anyone who can read is available at any price; this is the
-        actual wall. Read as people rather than hours, it is the same
-        abstracted labour-market scale market_supply() already uses for the
-        share a scholar-family trade gets (25,000 hours at full population
-        scale, of which a lettered trade gets 35% before literacy narrows it
-        further) - not a second population model that has to be kept in step
-        with the first, but that one.
-
-        FOR `scholar` ONLY, THIS IS NOT THE WHOLE WALL. A player who typed
-        `hire scholar 12` was refused at 5.9, "ever, at any price" - and
-        auto_hire, forty years later with the same civilisation, held 146.4
-        scholars, because step() smoothed self.household.scholars toward
-        staff_capacity()'s institutional ceiling directly and never once
-        called hire() or read this function. Fixing the bypass (see step(),
-        core.py) without fixing the number it now has to respect would have
-        made the game worse, not better: the goal itself, and two nodes on
-        the only road to it, want 25 trained scholars, and the market-share
-        formula above tops out at 6.36 even after every literacy technology
-        in the tree - printing, paper, a school, three academies - because
-        Rome's literacy_elite starts at 0.900 and the field is capped at
-        1.0. An eight per cent gain is what "a society that reads more can
-        staff more" is worth if reading is the only lever, and it is not:
-        the actual reason a household of one can eventually field two dozen
-        literate men is that a school, an academy or an imperial patron
-        hands them over ALREADY TRAINED, on the institution's own payroll -
-        which is exactly what staff_capacity()'s `sc` already computes, and
-        what auto_hire's own math already relies on. So the wall a person
-        at a keyboard is held to is the same market-share pool PLUS
-        the same institutional pool auto_hire is already trusted to grow
-        toward: a city of a million cannot produce twenty-five idle
-        scholars for one household to hire off the street, but it can
-        certainly produce them once that household has built the school
-        that trains them and the network that pays for a second and a
-        third. Early game, with no such institution running, this adds
-        nothing and the ceiling is exactly what it always was.
-        """
+        """The most people this society's literacy lets you have in a literate trade, hired and taught combined: the
+        labour core's people of the trade in the tiles reached (the declared floor share of the working people where the
+        core holds nobody of it) scaled by literacy, plus the small floor, plus (scholar) the people institutions train
+        outright. A headcount ceiling, not an hours one; infinite for a trade that is not literate."""
         if trade not in self.LITERATE_TRADES:
             return float("inf")
-        base = (self._world.cfg["hired_hours_cap_base"] * self.local_market_share()
-                * (self.POP_SCALE_FLOOR_SHARE
-                   + self.POP_SCALE_VARIABLE_SHARE * min(1.0, self._world.pop_scale)))
-        people = base * self.SCHOLAR_MARKET_SHARE / self._world.HOURS_PER_PERSON_YEAR
-        # A FLOOR OF TWO, because the unfloored number said something false.
-        # Norse elite literacy is a sixth of Rome's, which took this ceiling to
-        # 0.2 people: not "scarce" but "there is no such person in Scandinavia,
-        # at any price, ever". That is wrong about the period. Viking-age
-        # Scandinavia had runic literacy, rune-carvers who cut inscriptions for
-        # hire, merchants who kept reckonings, and from the tenth century
-        # priests who read Latin. What it did not have was a POOL - a body of
-        # lettered men large enough to staff an institution.
-        #
-        # So literacy bounds the SCALE of what you can build and not whether a
-        # single literate person can be found.
-        #
-        # ADDED, not a maximum. My first attempt floored this with max(), which
-        # fixed the falsehood and broke the mechanism: the floor was larger than
-        # anything Norse literacy could reach, so teaching the society to read
-        # changed the ceiling not at all, for the one civilisation the mechanism
-        # exists to matter for. A floor that swallows the signal is worse than
-        # no floor. The rune-carver and the priest are always findable; the POOL
-        # on top of them is what literacy buys, and it is what teaching moves.
-        cap = self.LITERATE_CAPACITY_FLOOR + people * self.literacy_factor(trade)
+        cap = self.LITERATE_CAPACITY_FLOOR + self._people_of_trade_in_reach(trade) * self.literacy_factor(trade)
         if trade == trade_data.scholar_trade():
-            # THE SAME POOL auto_hire ALREADY TRUSTED. staff_capacity()'s `sc`
-            # is schools, academies, patrons and the industrial cascade that
-            # trains scholars outright and carries their keep on the
-            # institution's own upkeep (see _grant_staff) - it is not a second,
-            # looser estimate of the same thing, it is the number step() was
-            # already smoothing self.household.scholars toward before this function's
-            # cap ever got in the way. Zero with no such institution running,
-            # which is why a fresh household still sees exactly the
-            # market-share figure above and no more.
             cap += self.staff_capacity()[0]
         if trade not in self._world.trades_absent:
             cap = min(cap, self.people_who_exist(trade))
@@ -327,10 +221,8 @@ class CapacityMixin:
         one of the Rome scholar case. Rome's literacy_elite starts at
         0.900 against a field capped at 1.0, so literacy itself can never
         move this ceiling by more than about eight per cent, while the
-        actual quantity doing the work is hired_hours_cap_base - this
-        household's own reach into the labour market - and, for scholar,
-        the institutional pool literate_capacity() now folds in (see its
-        docstring). Both matter; only one is literacy, and saying only
+        quantity doing the work is the labour core's people of the
+        trade in reach and, for scholar, the institutional pool literate_capacity() folds in. Both matter; only one is literacy, and saying only
         "literacy" when the market-reach term is doing most of the work
         misleads a player into pulling the wrong lever.
         """
@@ -745,50 +637,6 @@ class CapacityMixin:
                                         else self._world.effect_value(key, spec)),
                              "what_it_is": spec["words"]})
         return rows
-
-    # THE SAME COEFFICIENTS market_supply() USES for identical formulas below
-    # - one declared name per figure rather than the literal written twice,
-    # so hired_cap()'s ceiling and market_supply()'s ceiling for the same
-    # institution can never silently drift apart.
-    HIRING_MULTIPLIER_EXPONENT = declare(
-        "HIRING_MULTIPLIER_EXPONENT", 0.5, kind="temporary_heuristic",
-        unit="dimensionless exponent on institution_units", source=None,
-        confidence="D",
-        why="SQRT rather than linear scaling of an institution's hiring-"
-            "pool multiplier with how many units of it are founded - "
-            "diminishing returns on what a place trains, matching "
-            "institution_unit_cost's own diminishing-cost curve. Chosen "
-            "because unbounded compounding of several such multipliers "
-            "together multiplied hired_cap by roughly two orders of "
-            "magnitude in a traced Rome run (see this function's own "
-            "comment); the exponent itself is tuned to tame that, not "
-            "measured.")
-    SCHOOL_FOUNDED_HIRING_COEFFICIENT = declare(
-        "SCHOOL_FOUNDED_HIRING_COEFFICIENT", 1.0, kind="temporary_heuristic",
-        unit="dimensionless", source=None, confidence="D",
-        why="How much a school widens the local hiring pool, at one unit: "
-            "cap *= 1 + this * units**HIRING_MULTIPLIER_EXPONENT. Tuned "
-            "game balance.")
-
-    def hired_cap(self):
-        # a civilization of 1.5 million cannot staff what one of 65 million can
-        cap = (self._world.cfg["hired_hours_cap_base"] * self.local_market_share()
-               * (self.POP_SCALE_FLOOR_SHARE
-                  + self.POP_SCALE_VARIABLE_SHARE * min(1.0, self._world.pop_scale)))
-        # 1.0 + (mult - 1.0) * sqrt(units): exactly the old `cap *= mult` at
-        # units 1.0 (a run that never expands sees the identical multiplier),
-        # and SQRT rather than linear beyond that - because these multipliers
-        # already compound with one another (a school, an academy and a
-        # freedman staff open together and their factors multiply), and at a
-        # linear rate a household that grows several such institutions to
-        # many units apiece on the back of literacy growth alone would see
-        # hired_cap multiplied to an absurd degree from these terms alone.
-        # Diminishing returns belong on what a place trains, same as they
-        # already do on what it costs to found (institution_unit_cost) - a
-        # second school teaches nearly as many more people as the first
-        # did; a ninth does not teach nine times as many as one did.
-        cap = self._world.effect_factor("hiring_factor", cap, self.HIRING_MULTIPLIER_EXPONENT)
-        return cap
 
     # ---- how a SOCIETY reacts to a TECHNOLOGY -------------------------------
     STATE_WEIGHT_INFRASTRUCTURE = declare(

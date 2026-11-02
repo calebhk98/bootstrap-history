@@ -19,8 +19,6 @@ from .tuning_country import ARMY_SHARE_OF_POPULATION
 # the keys of a civilisation's data a country's state reads
 HAZARDS_KEY = "hazards"
 STANDING_ARMY_KEY = "standing_army"
-# the trade whose people are everyone able to work (the budget and revenue rules ask for it by this name)
-UNSKILLED_TRADE = "labourer"
 
 
 class CountryStateView(CollectionView):
@@ -121,7 +119,7 @@ class CountryStateView(CollectionView):
 		working person its labour markets hold (the working age, as at home). Refuses (NoCountryEconomy) where the
 		economy has no part for the country or its labour markets hold nobody; never the profile's working age."""
 		economy = self._own_economy()
-		if trade == UNSKILLED_TRADE:
+		if trade == self.trade_of_role("unskilled"):
 			return float(self._answer("working people", economy.working_people()))
 		return float(economy.people_of_trade(trade))
 

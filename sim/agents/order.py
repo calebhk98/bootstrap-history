@@ -17,9 +17,9 @@ GUARDS_LINE = "guards"
 INSPECTORS_LINE = "inspectors"
 FORESTERS_LINE = "foresters"
 STAFF_LINES = (GUARDS_LINE, INSPECTORS_LINE, FORESTERS_LINE)   # the standing lines of the state's order staff
-GUARD_TRADE = "labourer"
-INSPECTOR_TRADE = "scribe"
-FORESTER_TRADE = "labourer"
+GUARD_ROLE = "unskilled"   # trade roles (data/world/trades.json) the order staff are booked in
+INSPECTOR_ROLE = "clerk"
+FORESTER_ROLE = "unskilled"
 
 
 def staff_kept(people: float, days_per_person: float, working_days: float) -> float:
@@ -52,14 +52,14 @@ def staff_line(world: Any, name: str, trade: str, kept: float) -> List[Line]:
 
 
 def guards_line(world: Any) -> List[Line]:
-	return staff_line(world, GUARDS_LINE, GUARD_TRADE, guards_kept(world.population_total(), working_days_of(world)))
+	return staff_line(world, GUARDS_LINE, world.trade_of_role(GUARD_ROLE), guards_kept(world.population_total(), working_days_of(world)))
 
 
 def inspectors_line(world: Any) -> List[Line]:
-	return staff_line(world, INSPECTORS_LINE, INSPECTOR_TRADE,
+	return staff_line(world, INSPECTORS_LINE, world.trade_of_role(INSPECTOR_ROLE),
 					  inspectors_kept(world.population_total(), working_days_of(world)))
 
 
 def foresters_line(world: Any) -> List[Line]:
-	return staff_line(world, FORESTERS_LINE, FORESTER_TRADE,
+	return staff_line(world, FORESTERS_LINE, world.trade_of_role(FORESTER_ROLE),
 					  foresters_kept(world.population_total(), working_days_of(world)))

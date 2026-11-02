@@ -3,7 +3,6 @@ mechanic), at the country's own pay, reach, size and real output per head. `Coun
 from typing import Any
 
 from . import patronage
-from .country_state import UNSKILLED_TRADE
 
 
 class CountryPatronageView:
@@ -26,6 +25,6 @@ class CountryPatronageView:
 		if not clients:
 			return 0.0
 		people = self.population_total()  # type: ignore[attr-defined]
-		hour_money = self._answer("unskilled pay", self._own_economy().pay_per_person_year(UNSKILLED_TRADE)) / self._shared.hours_per_person_year
+		hour_money = self._answer("unskilled pay", self._own_economy().pay_per_person_year(self._shared.trade_of_role("unskilled"))) / self._shared.hours_per_person_year
 		per_head = self._answer("real output per head", self._shared.country_output_per_head(self.profile.country, self.profile.population, people))
 		return patronage.ask_of_country(self._shared.state_funding_terms(people), hour_money, per_head, self.state_reach(), clients)  # type: ignore[attr-defined,no-any-return]

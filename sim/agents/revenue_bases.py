@@ -33,8 +33,8 @@ def harvest(world: Any, tiles: Optional[FrozenSet[str]] = None, material: Option
 def adult_labour_years(world: Any) -> Base:
 	"""The working age less the soldiers under arms (who owe no poll tax), each worth a year of unskilled
 	labour at the going wage."""
-	people = max(0.0, world.national_people("labourer") - world.soldiers_under_arms())
-	return Base(people * world.pay_per_person_year("labourer"))
+	people = max(0.0, world.national_people(world.trade_of_role("unskilled")) - world.soldiers_under_arms())
+	return Base(people * world.pay_per_person_year(world.trade_of_role("unskilled")))
 
 
 def imports_value(world: Any) -> Base:
