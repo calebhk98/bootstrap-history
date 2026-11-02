@@ -58,7 +58,7 @@ def _collect(record, money: str, year: int, bondage_years: float) -> Dict[str, f
 def expected_inflation_of(record) -> float:
     """The inflation lenders expect, as the people-weighted mean of the cohorts' own expectations; none before
     any cohort has people. The real-rate bound on the credit market adds it to the bound."""
-    cohorts = getattr(record, "cohorts", {})
+    cohorts = record.cohorts
     people = sum(max(0.0, cohort.people) for cohort in cohorts.values())
     if people <= 0.0:
         return 0.0

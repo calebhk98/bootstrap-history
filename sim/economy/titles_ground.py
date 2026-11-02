@@ -14,7 +14,7 @@ def arable_hectares(record, tile_id: TileId, tile) -> float:
     """The tile's cropland and the ground cleared on it. 0 for a tile the economy does not know."""
     if tile is None:
         return 0.0
-    return tile.cropland_hectares + getattr(record, "cleared_hectares", {}).get(tile_id, 0.0)
+    return tile.cropland_hectares + record.cleared_hectares.get(tile_id, 0.0)
 
 
 def add_ground(record, tile_id: TileId, receiver: AgentId, hectares: float, arable_before: float) -> float:
@@ -27,7 +27,7 @@ def add_ground(record, tile_id: TileId, receiver: AgentId, hectares: float, arab
     for holder in list(held):
         held[holder] *= keep
     held[receiver] = held.get(receiver, 0.0) + hectares / (arable_before + hectares)
-    for row in getattr(record, "tenancies", {}).get(tile_id, ()):
+    for row in record.tenancies.get(tile_id, ()):
         row["share"] *= keep
     for loan in record.loans:
         if loan.collateral_tile == tile_id:
