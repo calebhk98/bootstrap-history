@@ -435,6 +435,10 @@ class AgentEconomyReads:
     def agent_people_by_tile_and_trade(self):
         return self._needs.agent_people_by_tile_and_trade()
 
+    def agent_idle_hours_by_trade(self):
+        """{trade: (hours offered and not hired last year, hours offered)} nationwide."""
+        return self._needs.agent_idle_hours_by_trade()
+
     def agent_wage_per_hour(self, trade):
         return self._needs.agent_wage[trade]
 
