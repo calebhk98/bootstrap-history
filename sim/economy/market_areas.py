@@ -95,7 +95,7 @@ class AreaMap:
         self._bucket_of_good: Dict[GoodId, str] = {}
         self._area_of_tile: Dict[str, Dict[TileId, AreaId]] = {}
         self._areas_of_good: Dict[GoodId, Tuple[MarketArea, ...]] = {}
-        self._area_tile_sets: Dict[GoodId, Dict[AreaId, set]] = {}   # each good's areas with their tiles (country_figures)
+        self._area_tile_sets: Dict[GoodId, Dict[AreaId, set]] = {}   # each good's areas with their tiles (tile_sets)
         unit = carriage_unit(tile_ids, carriage)
         for spec, price in goods:
             label, representative = bucket_of(value_per_tonne(spec, price), bucket_width_ln, unit)
@@ -111,6 +111,13 @@ class AreaMap:
 
     def bucket_count(self) -> int:
         return len(self._partitions)
+
+    def tile_sets(self, good: GoodId) -> Dict[AreaId, set]:
+        """Each market area of the good with its tiles as a set (none for a good with no market here)."""
+        if good not in self._area_tile_sets:
+            self._area_tile_sets[good] = ({area.area_id: set(area.tiles) for area in self.areas(good)}
+                                          if good in self.goods() else {})
+        return self._area_tile_sets[good]
 
     def areas(self, good: GoodId) -> Tuple[MarketArea, ...]:
         cached = self._areas_of_good.get(good)

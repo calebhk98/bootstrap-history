@@ -502,7 +502,7 @@ def home_country(economy):
     return economy.setup.civ_id
 
 
-def partner_countries(economy):
+def economy_countries(economy):
     """Every country with tiles in this economy (the home country among them)."""
     return economy.setup.countries()
 

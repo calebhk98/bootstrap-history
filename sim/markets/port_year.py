@@ -136,7 +136,7 @@ class AgentEconomy(TilePricesMixin):
         """The first year a good clears any quantity in a country's markets is the quantity later years are
         measured against there."""
         baseline = self.stored.setdefault("volume_baseline", {})
-        for country in economy_api.partner_countries(self._economy):
+        for country in economy_api.economy_countries(self._economy):
             noted = baseline.setdefault(country, {})
             for good, volume in economy_api.country_traded_volumes(self._economy, country).items():
                 if volume > 0.0 and good not in noted:
@@ -543,7 +543,7 @@ class AgentEconomy(TilePricesMixin):
         of the economy, those of its own markets; any other country is answered as the home country."""
         if country is not None and country != self._sim.civ.get("id"):
             home = self.answers()
-            if country not in economy_api.partner_countries(self._economy):
+            if country not in economy_api.economy_countries(self._economy):
                 return home
             if country not in self._country_answers:
                 coin = economy_api.coin_per_unit(self._economy)
@@ -641,7 +641,7 @@ class AgentEconomy(TilePricesMixin):
         """What the economy answers for a partner country in it (`CountryAnswers`), or None when the country is
         not in this economy or its labour markets have no wage yet."""
         economy = self.economy()
-        if country == economy_api.home_country(economy) or country not in economy_api.partner_countries(economy):
+        if country == economy_api.home_country(economy) or country not in economy_api.economy_countries(economy):
             return None
         from .port_country import CountryAnswers
         year = self._sim.year
