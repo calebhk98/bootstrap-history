@@ -46,7 +46,7 @@ saved = record.to_record()
 check("to_record: keyed stores are written sorted by id, however they were made",
       list(saved["titles"]) == ["t1", "t9"] and list(saved["shares"]) == ["p_a", "p_b"]
       and list(saved["shares"]["p_b"]) == ["h_a", "h_z"] and list(saved["cleared_hectares"]) == ["t2", "t5"], saved["titles"])
-check("to_record: a tile's holders are kept in the order held (the outer store alone is sorted)", list(saved["titles"]["t9"]) == ["h_b", "h_a"], saved["titles"])
+check("to_record: a tile's holders are written in id order too", list(saved["titles"]["t9"]) == ["h_a", "h_b"], saved["titles"])
 check("to_record: tenancies keep each tile's rows in order", saved["tenancies"]["t9"] == [{"tenant": "x", "lessor": "y", "share": 0.2, "arrears": 0.0}] and saved["tenancies"]["t1"] == [])
 check("to_record: the state's budget with its financing and its flags",
       saved["state_budget"]["revenue"] == 12.0 and saved["state_budget"]["deficit"] == 3.0 and saved["state_budget"]["financed"] == {"coin": 3.0}

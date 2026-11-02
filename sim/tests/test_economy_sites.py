@@ -53,27 +53,18 @@ class ApplyTests(unittest.TestCase):
         return SimpleNamespace(producers={producer.agent_id: producer for producer in producers}, expansion_runs={})
 
     def test_capacity_is_capped_and_yield_follows_the_limit(self):
-        setup = fixture.small_setup(recipes={"dig": _bound()})
+        setup = fixture.small_setup(recipes={"dig": _bound()}, site_limits=(SiteLimit("dig", "hills", 5.0, 0.5),))
         record = self._record([Producer("p1", "o", "dig", "hills", 9.0), Producer("p2", "o", "dig", "town", 4.0)])
-        sites.apply_site_limits(record, setup, (SiteLimit("dig", "hills", 5.0, 0.5),))
+        sites.apply_site_limits(record, setup)
         self.assertEqual(record.producers["p1"].capacity_runs, 5.0)
         self.assertEqual(record.producers["p1"].yield_factor, 0.5)
         self.assertEqual(record.producers["p2"].capacity_runs, 0.0)
 
-    def test_empty_limits_keep_the_last_declared(self):
-        setup = fixture.small_setup(recipes={"dig": _bound()}, site_limits=(SiteLimit("dig", "hills", 5.0),))
-        record = self._record([Producer("p1", "o", "dig", "hills", 9.0)])
-        sites.apply_site_limits(record, setup, ())
-        self.assertEqual(record.producers["p1"].capacity_runs, 5.0)
-        sites.apply_site_limits(record, setup, (SiteLimit("dig", "hills", 2.0),))
-        self.assertEqual(record.producers["p1"].capacity_runs, 2.0)
-        self.assertEqual(setup.site_limits, (SiteLimit("dig", "hills", 2.0),))
-
     def test_planned_plant_growth_is_cut_to_the_headroom(self):
-        setup = fixture.small_setup(recipes={"dig": _bound()})
+        setup = fixture.small_setup(recipes={"dig": _bound()}, site_limits=(SiteLimit("dig", "hills", 5.0),))
         record = self._record([Producer("p1", "o", "dig", "hills", 4.0)])
         record.expansion_runs["p1"] = 3.0
-        sites.apply_site_limits(record, setup, (SiteLimit("dig", "hills", 5.0),))
+        sites.apply_site_limits(record, setup)
         self.assertEqual(record.expansion_runs["p1"], 1.0)
 
     def test_extraction_by_tile_reports_runs_worked_by_site_bound_recipes(self):

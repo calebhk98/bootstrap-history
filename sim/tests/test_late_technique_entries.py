@@ -81,15 +81,13 @@ class AdmitTechniquesWiring(unittest.TestCase):
         society = stand_in_society()
         society.techniques_granted = lambda: frozenset({"a"})
         society.techniques_in_use = lambda: in_use
-        return types.SimpleNamespace(_sim=society, _techniques_admitted=admitted, stored={"opening": opening()},
-                                     _record_stale=False)
+        return types.SimpleNamespace(_sim=society, _techniques_admitted=admitted, stored={"opening": opening()})
 
     def test_held_nodes_unchanged_since_the_last_look_leave_the_opening_alone(self):
         port = self.port(frozenset({"a", "b"}), {"b"})
         with mock.patch.object(port_year.price_solver, "default_production_entries", lambda: PRODUCTION):
             AgentEconomy.admit_techniques(port)
         self.assertEqual(port.stored["opening"], opening())
-        self.assertFalse(port._record_stale)
 
     def test_held_nodes_that_allow_no_new_entry_are_remembered_and_change_nothing(self):
         port = self.port(frozenset(), {"b"})
@@ -97,7 +95,6 @@ class AdmitTechniquesWiring(unittest.TestCase):
             AgentEconomy.admit_techniques(port)
         self.assertEqual(port._techniques_admitted, frozenset({"a", "b"}))
         self.assertEqual(port.stored["opening"], opening())
-        self.assertFalse(port._record_stale)
 
 
 if __name__ == "__main__":

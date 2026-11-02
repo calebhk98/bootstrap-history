@@ -27,7 +27,7 @@ def climate_allows(recipe: Recipe, tile_spec) -> bool:
     """Whether the tile's climate is one the recipe can be worked in (data names the climates; a recipe
     naming none, or a tile whose climate is not known, is allowed)."""
     classes = recipe.climate_classes
-    climate = getattr(tile_spec, "climate_class", "") if tile_spec is not None else ""
+    climate = tile_spec.climate_class if tile_spec is not None else ""
     return not classes or not climate or climate in classes
 
 
@@ -73,11 +73,9 @@ def yield_at(recipe: Recipe, tile: TileId, by_recipe: Mapping[str, Mapping[TileI
     return default if limit is None else limit.yield_factor
 
 
-def apply_site_limits(record, setup, limits: Sequence[SiteLimit] = ()) -> None:
-    """Hold sited producers to their limits: capacity capped (nil off a site), plant still to come cut to
-    the room left, yield following the limit. Non-empty `limits` replace the setup's; empty keeps the last."""
-    if limits:
-        setup.site_limits = tuple(limits)
+def apply_site_limits(record, setup) -> None:
+    """Hold sited producers to the setup's limits: capacity capped (nil off a site), plant still to come cut to
+    the room left, yield following the limit."""
     by_recipe = limits_by_recipe(setup.site_limits)
     for producer_id, producer in sorted(record.producers.items()):
         recipe = setup.recipes.get(producer.recipe_id)
