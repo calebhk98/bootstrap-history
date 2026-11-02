@@ -1,6 +1,6 @@
 """What each seat's concerns sold in the year's clearing, kept so the next forecast counts only what buyers took.
 
-Part of the port (it imports `sim.economy.api`). A seat's output is offered in the clearing (port_year);
+Part of the port (it imports `sim.economy.api`). A seat's output is offered in the clearing (port_seat_concerns);
 after it the seat's account holds the money the units that sold fetched and the units that did not. The per-material
 result is stored with the economy (`stored["seat_sales"]`, in coin) and read back as an outlook.
 """

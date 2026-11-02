@@ -3,7 +3,8 @@
 `GoodsMarket` and `EconomyPort` ask this object where they used to ask the engine's `Sim`. Every member is a view of another
 owner (or a send of its command), or one of the markets module's own methods; the raw state objects (the saved state's
 sections, the seats' registry) are `legacy_*` views, debts that go when that state moves. Members about the foreign
-partners and the freight, coin and resources owners are in port_world_foreign.py."""
+partners and the freight, coin and resources owners are in port_world_foreign.py (`foreign`), those about the map in
+port_world_map.py (`map`)."""
 from types import SimpleNamespace
 
 from sim.diffusion.api import NoteFirstRuns
@@ -68,7 +69,7 @@ class LabourReads:
 		return self._needs.settlement_tiles()
 
 
-class PortWorld(MapReads, ForeignReads):
+class PortWorld:
 
 	FREIGHT_FEED_PRICE_MATERIAL = FREIGHT_FEED_PRICE_MATERIAL
 
@@ -77,6 +78,8 @@ class PortWorld(MapReads, ForeignReads):
 		self._owner = owner          # the markets module: its own views are asked of it directly
 		self.state = StateReads(needs, owner)
 		self.labour = LabourReads(needs)
+		self.map = MapReads(needs)               # the land module's map views
+		self.foreign = ForeignReads(needs)       # partners, freight, the partners' coin and the deposits
 
 	def send(self, command):
 		return self._needs.send(command)

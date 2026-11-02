@@ -81,8 +81,7 @@ class AgentViews:
 
 	def agent_fugitive_share_by_tile(self):
 		"""{tile: share of its people away having fled the state's take}; empty before the agent economy exists."""
-		agent = self.economy.agent
-		return {} if agent is None else agent.fugitive_share_by_tile()
+		return self.economy.parts.households.fugitive_share_by_tile()
 
 	def agent_opening_basket(self):
 		"""(units a year households bought at the opening, their opening prices in labour hours), or None while it opens."""
@@ -163,8 +162,9 @@ class AgentViews:
 		return self.economy.health(metals, staple)
 
 	def agent_last_outcome(self):
-		"""The agent economy's outcome for the last year it ran (its accounts, wages and prices)."""
-		return self.economy.agent.outcomes[-1]
+		"""The agent economy's outcome for the last year this process ran (its accounts, wages and prices); None on a game
+		loaded and not yet stepped, since the outcome is not saved (the health figures are: agent_health)."""
+		return self.economy.parts.year.last_outcome
 
 	def agent_economy_setup(self):
 		"""The setup the running agent economy was opened with."""
@@ -172,7 +172,7 @@ class AgentViews:
 
 	def agent_stale_goods(self):
 		"""The goods whose markets did not clear lately: their shown price is what they would cost to make, not a trade."""
-		return self.economy.agent.stale_goods()
+		return self.economy.parts.prices.stale_goods()
 
 	def agent_traded_staple(self):
 		"""The staple good households buy most of whose market cleared lately; None when none did."""

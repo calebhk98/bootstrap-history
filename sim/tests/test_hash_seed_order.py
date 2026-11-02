@@ -59,8 +59,8 @@ SPIN_UP_SCRIPT = """
 import hashlib, json, sys, tempfile
 sys.path.insert(0, %r)
 from sim.tests.harness import economy_port, sim
-from sim.markets import port_year
-port_year.SPIN_UP_CACHE_DIRECTORY = tempfile.mkdtemp()
+from sim.markets import spin_up_run
+spin_up_run.SPIN_UP_CACHE_DIRECTORY = tempfile.mkdtemp()
 game = sim()
 record = economy_port(game).agent.stored["record"]
 print(hashlib.sha256(json.dumps(record, sort_keys=True, default=str).encode()).hexdigest())

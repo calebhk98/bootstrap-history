@@ -26,7 +26,7 @@ class Applying:
 		economy_api.move_goods(self.economy.agent.economy(), [move])
 
 	def rename_market_seat(self, command):
-		self.economy.agent.rename_agent(command.from_id, command.to_id)
+		self.economy.parts.rename_agent(command.from_id, command.to_id)
 
 	def mark_money_priced_at_economy(self, command):
 		self.world.money_from_economy = True

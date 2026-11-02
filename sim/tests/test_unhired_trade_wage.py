@@ -9,8 +9,7 @@ from unittest import mock
 
 from sim.economy import api
 from sim.economy.setup import TradeSpec
-from sim.markets import port_year
-from sim.markets.port_year import AgentEconomy
+from sim.markets.reads_prices import PriceReads
 from sim.tests.labour_record_stand_in import labour_record
 
 SCRIBE, LABOURER, TOWN = "scribe", "labourer", "town"
@@ -31,9 +30,8 @@ def economy_with_unhired_scribe():
 
 
 def agent_economy_over(economy, wages):
-    """An `AgentEconomy` whose year's answers are `wages` (by trade, in coin) over the economy."""
-    agent = AgentEconomy.__new__(AgentEconomy)
-    agent._economy = economy
+    """`PriceReads` whose year's answers are `wages` (by trade, in coin) over the economy."""
+    agent = PriceReads(types.SimpleNamespace(economy=lambda: economy), None)
     agent.answers = lambda country=None: ({}, wages, 0.05)
     return agent
 
@@ -57,13 +55,12 @@ class UnhiredTradeWageTests(unittest.TestCase):
 class CreditRoomUnitsTests(unittest.TestCase):
     def test_credit_room_is_in_coin_not_economy_units(self):
         economy = types.SimpleNamespace(setup=types.SimpleNamespace(coin_per_unit=COIN_PER_UNIT))
-        agent = AgentEconomy.__new__(AgentEconomy)
-        agent._economy = economy
+        agent = PriceReads(types.SimpleNamespace(economy=lambda: economy), None)
         agent.answers = lambda country=None: ({}, {}, 0.05)
-        with mock.patch.object(port_year.economy_api, "credit_room", return_value=150.0) as room:
+        with mock.patch.object(api, "credit_room", return_value=150.0) as room:
             self.assertAlmostEqual(agent.credit_room("borrower:a"), 150.0 * COIN_PER_UNIT)
         room.assert_called_once_with(economy, "borrower:a")
-        with mock.patch.object(port_year.economy_api, "credit_room", return_value=None):
+        with mock.patch.object(api, "credit_room", return_value=None):
             self.assertIsNone(agent.credit_room("borrower:a"))
 
 

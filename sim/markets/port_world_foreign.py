@@ -4,6 +4,10 @@ from sim.resources.api import DrawDeposit
 
 
 class ForeignReads:
+	"""One member per view of the foreign trade, freight, coin and resources owners the port asks. `PortWorld.foreign` holds it."""
+
+	def __init__(self, needs):
+		self._needs = needs
 
 	def partners_in_agent_economy(self):
 		return self._needs.partners_in_agent_economy()
@@ -11,7 +15,7 @@ class ForeignReads:
 	def partner_civ(self, civilization_id):
 		return self._needs.partner[civilization_id]["civ"]
 
-	def _foreign_economy_facts(self, civilization_id):
+	def foreign_economy_facts(self, civilization_id):
 		return self._needs.partner_facts[civilization_id]
 
 	def partner_price_per_unit(self, partner, material):
@@ -31,7 +35,7 @@ class ForeignReads:
 	def _foreign_route(self, civilization, imbalance=None, cargo="goods"):
 		return self._needs.foreign_route(civilization, imbalance, cargo)
 
-	def _freight_mode_costs(self, imbalance=1.0, modes=None, cargo=None):
+	def freight_mode_costs(self, imbalance=1.0, modes=None, cargo=None):
 		return self._needs.freight_mode_costs(imbalance, modes, cargo)
 
 	def material_carriage_per_tonne(self, material, price_per_tonne):

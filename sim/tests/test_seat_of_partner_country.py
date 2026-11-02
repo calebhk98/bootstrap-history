@@ -10,8 +10,9 @@ from unittest import mock
 from .harness import check
 
 from sim.actors.module import Actors
-from sim.markets import port_year
-from sim.markets.port_year import AgentEconomy
+from sim.markets import reads_prices
+from sim.markets.reads_prices import PriceReads
+from sim.markets.year_figures import YearFigures
 from sim.seats.module import Seats
 from sim.seats.state import SeatsSeat
 from . import module_harness
@@ -39,17 +40,11 @@ class FakeSim:
 
 
 def seat_economy():
-    """An `AgentEconomy` over a stand-in economy whose figures `answers` reads through the economy's readers."""
-    agent = AgentEconomy.__new__(AgentEconomy)
-    agent._sim = FakeSim()
-    agent._economy = SimpleNamespace(setup=SimpleNamespace(coin_per_unit=COIN_PER_UNIT, countries=lambda: [HOME, NORTH],
-                                                           unskilled_trade=LABOURER, civ_id=HOME))
-    agent._answers = None
-    agent._country_answers = {}
-    agent._stale = set()
-    agent._built_from = STORED
-    agent.economy = lambda: agent._economy
-    return agent
+    """`PriceReads` over a stand-in economy whose figures `answers` reads through the economy's readers."""
+    economy = SimpleNamespace(setup=SimpleNamespace(coin_per_unit=COIN_PER_UNIT, countries=lambda: [HOME, NORTH],
+                                                    unskilled_trade=LABOURER, civ_id=HOME))
+    core = SimpleNamespace(figures=YearFigures(), economy=lambda: economy, current=lambda: True, stored=STORED)
+    return PriceReads(core, FakeSim())
 
 
 def answers_over_readers(call):
@@ -57,7 +52,7 @@ def answers_over_readers(call):
     readers = {"wages_by_trade_weighted": lambda economy, country=None: WAGES[country],
                "shown_prices_of": lambda economy, country=None: (PRICES[country], set()),
                "interest_rate": lambda economy: 0.05}
-    with mock.patch.multiple(port_year.economy_api, **readers):
+    with mock.patch.multiple(reads_prices.economy_api, **readers):
         return call(seat_economy())
 
 

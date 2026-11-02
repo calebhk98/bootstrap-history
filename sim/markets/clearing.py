@@ -48,8 +48,7 @@ class Clearing:
 		"""Close the year: the agent economy's year runs, then the actors' trade tallies reset."""
 		self.needs.send(FinishWays())
 		economy = self.economy
-		economy.run_agent_year()
-		outcome = economy.agent.outcomes[-1]
+		outcome = economy.run_agent_year()
 		accounts = outcome.accounts
 		if accounts is None:
 			self.needs.send(RecordFoodEaten(None, {}))

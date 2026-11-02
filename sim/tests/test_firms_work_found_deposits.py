@@ -24,6 +24,7 @@ class Host:
         self.rows, self.drawn = rows, []
         self.deposit_catalogue = land_views.of({}, ("deposit_catalogue",))["deposit_catalogue"]
         self.state = types.SimpleNamespace(economy=types.SimpleNamespace())
+        self.map = self.foreign = self   # the port reads the catalogue from `map` and the deposits from `foreign`
 
     def found_deposits(self, resource_id):
         return list(self.rows) if resource_id == "iron" else []

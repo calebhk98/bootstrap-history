@@ -122,7 +122,7 @@ class ConcernInputs(unittest.TestCase):
 class PortListing(unittest.TestCase):
 
     def test_the_port_lists_each_good_with_the_tiles_and_recipes_that_make_it(self):
-        from sim.markets.port_year import AgentEconomy
+        from sim.markets.reads_producers import ProducerReads
         from sim.economy.producers import Producer
         from sim.economy.types import Recipe
         recipes = {"dig": Recipe("dig", {"ore": 1000.0}, {}, {"miner": 40.0}),
@@ -132,7 +132,7 @@ class PortListing(unittest.TestCase):
         economy = types.SimpleNamespace(
             record=types.SimpleNamespace(producers=producers),
             setup=types.SimpleNamespace(recipes=recipes, countries=lambda: ["home"]))
-        listing = AgentEconomy.producers_by_good(types.SimpleNamespace(economy=lambda: economy))
+        listing = ProducerReads(types.SimpleNamespace(economy=lambda: economy)).by_good()
         self.assertEqual(listing, {"ore": [("hills", "dig")], "metal": [("town", "smelt")], "slag": [("town", "smelt")]})
 
 

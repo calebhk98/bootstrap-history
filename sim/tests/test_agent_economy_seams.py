@@ -1,5 +1,5 @@
 """AgentEconomy.economy takes the opening's record from the disk cache (so from an entry shipped with the checkout)
-before spinning up, and AgentEconomy.answers states the economy's prices and wages in coin. Both run on a stand-in
+before spinning up, and PriceReads.answers states the economy's prices and wages in coin. Both run on a stand-in
 game and a stand-in economy API; the cache rules are test_shipped_openings."""
 QUICK_TOPIC = True
 
@@ -10,8 +10,9 @@ import unittest
 from unittest import mock
 
 from sim.engine import shipped_openings
-from sim.markets import port_year
-from sim.markets.port_year import AgentEconomy
+from sim.markets import agent_economy, reads_prices, spin_up_run
+from sim.markets.agent_economy import AgentEconomy
+from sim.markets.reads_prices import PriceReads
 
 CACHE_KEY = "opening-key"
 
@@ -32,20 +33,20 @@ class OpeningRecordTests(unittest.TestCase):
         self.addCleanup(self.cache.cleanup)
         self.game, self.adopted = _stand_in_game()
         self.agent = AgentEconomy(self.game)
-        self.agent._save = lambda: None
+        self.agent.save = lambda: None
         self.agent.sync_ways = lambda: None
         self.spun_up = []
-        self.agent._spun_up = lambda setup: self.spun_up.append(setup) or {"spun": True}
         for patcher in (
                 mock.patch.object(shipped_openings, "SHIPPED_OPENINGS_DIRECTORY", self.shipped.name),
-                mock.patch.object(port_year, "SPIN_UP_CACHE_DIRECTORY", os.path.join(self.cache.name, "agent_economy")),
-                mock.patch.object(port_year, "opening_values", lambda game: {"values": 1}),
-                mock.patch.object(port_year, "priced_at_the_margin", lambda game, values: values),
-                mock.patch.object(port_year, "build_setup", lambda game, opening: ("setup", opening)),
-                mock.patch.object(port_year, "_spin_up_cache_key", lambda setup: CACHE_KEY),
-                mock.patch.object(port_year.economy_api, "economy_from_record", lambda setup, record: ("economy", record)),
-                mock.patch.object(port_year.economy_api, "economy_book", lambda economy: "book"),
-                mock.patch.object(port_year.economy_api, "economy_contracts", lambda economy: "contracts")):
+                mock.patch.object(spin_up_run, "SPIN_UP_CACHE_DIRECTORY", os.path.join(self.cache.name, "agent_economy")),
+                mock.patch.object(agent_economy, "opening_values", lambda game: {"values": 1}),
+                mock.patch.object(agent_economy, "priced_at_the_margin", lambda game, values: values),
+                mock.patch.object(agent_economy, "build_setup", lambda game, opening: ("setup", opening)),
+                mock.patch.object(spin_up_run, "spin_up_cache_key", lambda setup: CACHE_KEY),
+                mock.patch.object(spin_up_run, "spun_up", lambda setup: self.spun_up.append(setup) or {"spun": True}),
+                mock.patch.object(agent_economy.economy_api, "economy_from_record", lambda setup, record: ("economy", record)),
+                mock.patch.object(agent_economy.economy_api, "economy_book", lambda economy: "book"),
+                mock.patch.object(agent_economy.economy_api, "economy_contracts", lambda economy: "contracts")):
             patcher.start()
             self.addCleanup(patcher.stop)
 
@@ -75,12 +76,13 @@ class AnswersTests(unittest.TestCase):
 
     def setUp(self):
         self.game, _adopted = _stand_in_game()
-        self.agent = AgentEconomy(self.game)
-        self.agent._economy = types.SimpleNamespace(setup=types.SimpleNamespace(
+        self.core = AgentEconomy(self.game)
+        self.core._economy = types.SimpleNamespace(setup=types.SimpleNamespace(
             coin_per_unit=self.COIN, countries=lambda: ["home", "abroad"]))
-        self.agent.economy = lambda: self.agent._economy
-        self.agent._built_from = self.agent.stored
-        api = port_year.economy_api
+        self.core.economy = lambda: self.core._economy
+        self.core._built_from = self.core.stored
+        self.agent = PriceReads(self.core, self.game)
+        api = reads_prices.economy_api
         for patcher in (
                 mock.patch.object(api, "wages_by_trade_weighted", lambda economy, country=None: {"smith": 2.0, "weaver": 0.5}),
                 mock.patch.object(api, "shown_prices_of", lambda economy, country=None: ({"iron": 3.0}, {"salt"})),
@@ -101,7 +103,7 @@ class AnswersTests(unittest.TestCase):
     def test_answers_are_built_once_until_the_stored_economy_is_replaced(self):
         first = self.agent.answers()
         self.assertIs(self.agent.answers(), first)
-        self.agent._built_from = None
+        self.core._built_from = None
         self.assertIsNot(self.agent.answers(), first)
 
 

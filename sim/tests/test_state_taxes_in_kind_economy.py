@@ -10,13 +10,13 @@ from .harness import check
 
 from sim.actors.world_revenue import RevenueView
 from sim.tests.world_stand_in import fake_needs
-from sim.markets.port_year import AgentEconomy
+from sim.markets.reads_producers import ProducerReads
 
 GOOD = "cloth_kg"
 UNITS_BY_TILE = {"a": {GOOD: 4000.0, "wheat_kg": 9000.0}, "b": {GOOD: 1000.0}, "far": {GOOD: 7000.0}}
 
 port = SimpleNamespace(economy=lambda: SimpleNamespace(record=SimpleNamespace(goods=SimpleNamespace(output_by_tile=UNITS_BY_TILE))))
-tonnes_by_tile = AgentEconomy.output_tonnes_by_tile(port)
+tonnes_by_tile = ProducerReads(port).output_tonnes_by_tile()
 check("the economy's units of a kilogram good are reported in tonnes, a thousand units to the tonne",
       abs(tonnes_by_tile["a"][GOOD] - 4.0) < 1e-12 and abs(tonnes_by_tile["b"][GOOD] - 1.0) < 1e-12, tonnes_by_tile)
 check("every tile and good is kept", set(tonnes_by_tile) == set(UNITS_BY_TILE) and "wheat_kg" in tonnes_by_tile["a"], tonnes_by_tile)

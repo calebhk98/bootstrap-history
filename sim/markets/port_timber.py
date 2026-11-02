@@ -27,7 +27,7 @@ def timber_recipes(outputs_by_recipe):
 
 def haul_hours_per_tonne_km(sim):
     """Crew hours to carry a tonne a kilometre over level ground, by the cheapest land mode that carries goods."""
-    rates = sim.mode_crews(sorted(sim.modes_carrying("goods")))
+    rates = sim.map.mode_crews(sorted(sim.map.modes_carrying("goods")))
     land = [rate["crew_hours_per_tonne_km"] for rate in rates.values()
             if "land" in rate["edge_classes"] and not rate.get("needs_improvement")]
     return min(land) if land else 0.0
@@ -42,7 +42,7 @@ def limits(sim, outputs_by_recipe, tile_ids):
     hours_per_tonne_km = haul_hours_per_tonne_km(sim)
     found = []
     for tile in sorted(tile_ids):
-        timber = sim.timber_on_tile(felled, tile)
+        timber = sim.map.timber_on_tile(felled, tile)
         standing_kg = timber["standing_tonnes"] * KILOGRAMS_PER_TONNE
         if standing_kg <= 0.0:
             continue

@@ -2,8 +2,30 @@
 
 Part of the port. The staple is the good the hunger need's basket buys most of; metals default to the
 good that backs the currency, and a caller may name others.
+
+The figures are read from `health_rows`, one row per year played, kept in the agent economy's stored record (so a saved
+game carries its years) and cut to the last OUTCOMES_KEPT. A row holds the fields of the year's outcome the diagnostics read.
 """
+from types import SimpleNamespace
+
 from sim.economy.api import backing_good, health_figures, hunger_goods, opening_quantities
+
+OUTCOMES_KEPT = 100   # yearly rows held for the health figures
+
+
+def health_row(outcome):
+    """What the health figures read of one year's outcome, as plain JSON values."""
+    return {"prices": dict(outcome.prices), "wages": dict(outcome.wages),
+            "hired_hours": outcome.hired_hours, "idle_hours": outcome.idle_hours,
+            "wage_floor_per_hour": outcome.wage_floor_per_hour,
+            "hunger_by_tile": dict(outcome.hunger_by_tile)}
+
+
+def note_year(stored, outcome):
+    """Add the year's row to the stored record, keeping the last OUTCOMES_KEPT."""
+    rows = stored.setdefault("health_rows", [])
+    rows.append(health_row(outcome))
+    del rows[:-OUTCOMES_KEPT]
 
 
 def staple_good(agent):
@@ -17,11 +39,12 @@ def staple_good(agent):
 
 
 def health_report(agent, metals=(), staple=None):
-    """{"years", "staple", "metals", "figures"} over the yearly outcomes kept since this game began."""
+    """{"years", "staple", "metals", "figures"} over the yearly rows kept since this game began."""
     economy = agent.economy()
     if not metals and backing_good(economy):
         metals = (backing_good(economy),)
     staple = staple or staple_good(agent)
-    outcomes = list(agent.outcomes)
+    rows = list(agent.stored.get("health_rows", []))
+    outcomes = [SimpleNamespace(**row) for row in rows]
     figures = health_figures(economy, outcomes, staple, metals) if outcomes and staple else {}
     return {"years": len(outcomes), "staple": staple, "metals": list(metals), "figures": figures}
