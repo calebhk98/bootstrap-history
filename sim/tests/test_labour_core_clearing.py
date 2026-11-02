@@ -51,7 +51,9 @@ class WageMovement(unittest.TestCase):
 
     def test_no_bids_hires_nothing_and_the_quote_drifts_down_to_the_ask(self):
         state = make_state(wage=2.5)
-        results = [run(state, []) for _ in range(3)]
+        inputs = make_inputs([])
+        inputs.ask_floor_per_worker_year["vale"] = 0.0     # a stated floor of nothing lets the ask fall
+        results = [clearing.clear_one(state, inputs, "digger", "vale", []) for _ in range(3)]
         wages = [result.wage for result in results]
         self.assertEqual([result.hours_hired for result in results], [0.0, 0.0, 0.0])
         self.assertTrue(2.5 > wages[0] > wages[1] > wages[2] > 0.0)
@@ -119,6 +121,23 @@ class ManyTranchesTests(unittest.TestCase):
             for result in clearing.clear_all(state, year_inputs):
                 self.assertIsInstance(result.hours_hired, float)
                 self.assertLessEqual(result.hours_hired, result.hours_offered + 1e-6)
+
+
+class AskFloorTests(unittest.TestCase):
+    def test_with_no_stated_floor_hours_are_not_sold_under_the_reservation_wage(self):
+        # 1000 hours offered; employers want 700 above the reservation (one per hour) and 300 only at a wage under it
+        state = make_state(wage=1.0)
+        bids = [bid("a", 700.0, maximum=3.0), bid("b", 300.0, maximum=0.3)]
+        inputs = make_inputs(bids)
+        for _year in range(30):
+            result = clearing.clear_one(state, inputs, "digger", "vale", bids)
+            self.assertGreaterEqual(result.wage, 1.0 - 1e-9)
+
+    def test_an_ask_floor_is_the_stated_one_where_given_and_the_reservation_otherwise(self):
+        inputs = make_inputs([])
+        self.assertAlmostEqual(clearing.ask_floor(inputs, "vale", 1.0), 1.0)
+        inputs.ask_floor_per_worker_year["vale"] = 40.0
+        self.assertAlmostEqual(clearing.ask_floor(inputs, "vale", 1.0), 0.4)
 
 
 if __name__ == "__main__":
