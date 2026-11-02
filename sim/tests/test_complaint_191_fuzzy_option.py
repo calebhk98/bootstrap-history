@@ -58,10 +58,10 @@ def turn_on(answer):
 
 
 sim, turned, said = turn_on("y")
-check("answering y turns the option on", sim.view("legacy_fuzzy_estimates")() is True and turned is True, None)
+check("answering y turns the option on", sim.view("fuzzy_estimates")() is True and turned is True, None)
 for answer in ("n", None):
     sim, turned, said = turn_on(answer)
-    check("an answer of %r leaves it off" % (answer,), sim.view("legacy_fuzzy_estimates")() is False and turned is False, None)
+    check("an answer of %r leaves it off" % (answer,), sim.view("fuzzy_estimates")() is False and turned is False, None)
 
 # ---- the setter
 class Game:
@@ -73,9 +73,9 @@ class Game:
 game = Game()
 ui_port.set_fuzzy_estimates(game, True)
 salt = game.view("fuzzy_salt")()
-check("turning it on stores it and draws a salt", game.view("legacy_fuzzy_estimates")() is True and salt > 0, salt)
+check("turning it on stores it and draws a salt", game.view("fuzzy_estimates")() is True and salt > 0, salt)
 ui_port.set_fuzzy_estimates(game, True)
 check("turning it on again keeps the salt, so the figures drawn stay the same", game.view("fuzzy_salt")() == salt, None)
 game = Game()
 ui_port.set_fuzzy_estimates(game, False)
-check("turning it off draws no salt", game.view("legacy_fuzzy_estimates")() is False and game.view("fuzzy_salt")() == 0, None)
+check("turning it off draws no salt", game.view("fuzzy_estimates")() is False and game.view("fuzzy_salt")() == 0, None)

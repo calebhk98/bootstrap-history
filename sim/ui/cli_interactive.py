@@ -707,7 +707,7 @@ def _ingame_options(sim, session):
               % (sim.view("civilisation")().get("name", sim.view("civilisation")().get("id", "?")), sim.view("game_config")()["start_year"]))
         print("   fog of war   : %-3s                          (fixed for this game)"
               % ("on" if sim.view("fog_of_war")() else "off"))
-        print("   fuzzy estimates : %-3s" % ("on" if sim.view("legacy_fuzzy_estimates")() else "off"))
+        print("   fuzzy estimates : %-3s" % ("on" if sim.view("fuzzy_estimates")() else "off"))
         print("   mortality    : %s"
               % ("on - the founder ages, and can die of it" if mortal_on
                  else "off - the founder does not age"))
@@ -731,7 +731,7 @@ def _ingame_options(sim, session):
         if session:
             print("   3) move this save to a different file")
         print("   f) turn fuzzy estimates on from now on%s"
-              % ("  (already on)" if sim.view("legacy_fuzzy_estimates")() else ""))
+              % ("  (already on)" if sim.view("fuzzy_estimates")() else ""))
         print("   u) display units (%s)"
               % cli_units_options.summary_line(settings.load_config()))
         print("   b) back to the game")
@@ -810,7 +810,7 @@ def _ingame_options(sim, session):
             cli_units_options.edit_display_units(
                 settings.load_config(), sim.view("civilisation")().get("id"), input)
 
-        elif word in ("f", "fuzzy") and not sim.view("legacy_fuzzy_estimates")():
+        elif word in ("f", "fuzzy") and not sim.view("fuzzy_estimates")():
             # One-way like mortality, unlike fog: turning it on only hides
             # detail from now on, but turning it off would reveal exact
             # figures the player was told to treat as uncertain.

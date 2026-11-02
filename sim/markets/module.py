@@ -46,7 +46,7 @@ class Markets(Clearing, Categories, HouseholdNeeds, Absorption, GoodsViews, Agen
 			remembered = self._caches[key] = {}
 		return remembered
 
-	def legacy_agent_economy(self):
+	def agent_economy_store(self):
 		"""The agent economy's record, where the traders' cargo legs are kept; the port and the foreign trade module write it in place."""
 		return self.world.agent_economy
 

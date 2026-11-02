@@ -77,7 +77,7 @@ _VIEWS = (
 	("producers_stamp", None), ("producer_capacities", None), ("goods_carried_last_year", None),
 	("country_trade_book", KEYED), ("country_opening_basket", KEYED), ("country_volume_baseline", KEYED), ("country_traded_volumes", KEYED),
 	("fleet_goods", QUOTE), ("economy_output_value", None), ("coin_stock_value", None),
-	("market_absorption_by_category", QUOTE), ("legacy_market_flows", None), ("legacy_agent_economy", None),
+	("market_absorption_by_category", QUOTE), ("legacy_market_flows", None), ("agent_economy_store", None),
 	("money_from_economy", None), ("unit_mass_kg", QUOTE), ("border_duty_per_tonne", QUOTE),
 	("household_demand_units", QUOTE), ("household_basket", None), ("home_household_tonnes", QUOTE), ("partner_household_demand", KEYED),
 	("materials_serving", KEYED), ("material_substitutes", KEYED), ("material_serves_a_need", KEYED),

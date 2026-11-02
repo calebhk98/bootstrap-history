@@ -127,7 +127,7 @@ METHOD_OF_COMMAND = {
 ATTRIBUTE_OF_VIEW = {
     "acting_balance": "capital", "techniques_held": "done", "techniques_granted": "granted", "active_projects": "active",
     "fog_of_war": "fog", "tree_nodes": "nodes", "game_config": "cfg", "civilisation": "civ",
-    "legacy_fuzzy_estimates": "fuzzy_estimates", "techniques_revealed": "revealed", "techniques_forgotten": "forgotten",
+    "fuzzy_estimates": "fuzzy_estimates", "techniques_revealed": "revealed", "techniques_forgotten": "forgotten",
     "horizon_end_year": "end_year", "acting_seat": "acting_seat",
 }
 SEAT_VIEWS = frozenset({"registered_seats", "seat_list", "seat_country", "seat_kind", "seat_holder", "ended_seats"})

@@ -160,7 +160,8 @@ Left, each confirmed in code by the reviewer and checked by the orchestrator:
   calculations disagree (the sellers' ask band charges no interest). Missing prices still read as zero in carriage
   wear, the carriage fleet book, taxes in kind and one opening line. Two firm-equity definitions (with and without stock).
   `INVESTMENT_INERTIA` is 2 from a Eurace unit test where Eurace's shipped state uses 10.
-- **Structure.** Functions still take the whole record and reach across its parts; `tools/done_check.sh` prints counts
+- **Structure.** `bash tools/done_check.sh` now fails on one check: the land module's `legacy_geography` view, read by
+  string in `sim/engine/core.py` and `sim/ui/proto/techtree.py`, hands out the live geography object. Functions still take the whole record and reach across its parts; `tools/done_check.sh` prints counts
   but never fails; no tool checks the package walls (three imports past an `api.py`); `YearInputs.working_age_share`,
   `api.wages_by_trade`, `market_floor_ratio` and `port_world._price_tables` are dead; pyflakes lists many unused imports.
 - **Documentation.** `ONE_PRICE_OWNER_PLAN.md`, `STATE_OWNERSHIP_MAP.md`, `ECONOMY_AGENTS.md`, `PACKAGE_WALLS.md`,
