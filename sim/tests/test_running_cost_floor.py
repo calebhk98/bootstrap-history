@@ -8,7 +8,7 @@ import unittest
 
 from sim.prices import entry_cost, solve_prices
 from sim.markets import rules as market_rules
-from sim.world import market as static_market
+from sim.markets.clearing import UNSPLIT_FLOOR_RATIO
 from sim.tests import prices_stand_in
 from sim.tests.test_capital_charge import WAGES, works_entry
 
@@ -69,7 +69,7 @@ class StubGame:
         return self.prices.commodity_floor_ratio(commodity)
 
     def _floor_ratio(self, commodity):
-        return market_rules.floor_ratio(self.commodity_floor_ratio(commodity), static_market.UNSPLIT_FLOOR_RATIO)
+        return market_rules.floor_ratio(self.commodity_floor_ratio(commodity), UNSPLIT_FLOOR_RATIO)
 
 
 class OffersAndFloorTests(unittest.TestCase):

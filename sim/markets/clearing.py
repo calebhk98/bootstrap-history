@@ -8,12 +8,13 @@ enter as a net: output the founder uses himself never reaches the market, so onl
 sells does. What a firm or the state buys or sells is the same kind of entry.
 """
 from sim.demography.api import RecordFoodEaten, rules as demography_rules
-from sim.foreign_trade.api import ClosePartnerBooks
+from sim.foreign_trade.api import ResetActorTradeTallies
 from sim.land.api import FinishWays
 from sim.reporting.api import CloseRealOutput
-from sim.world import market
 
 from . import rules
+
+UNSPLIT_FLOOR_RATIO = 1.0   # a producer whose cost has no running part to idle on sells at no less than its cost
 
 
 class Clearing:
@@ -41,7 +42,7 @@ class Clearing:
 	def market_floor_ratio(self, commodity):
 		"""The lowest price over the incumbents' cost their producers sell at: a built plant sells at least at what running
 		it costs, the running share of that cost; without a split, at its full cost (the trading partners' books read it)."""
-		return rules.floor_ratio(self.needs.commodity_floor_ratio[commodity], market.UNSPLIT_FLOOR_RATIO)
+		return rules.floor_ratio(self.needs.commodity_floor_ratio[commodity], UNSPLIT_FLOOR_RATIO)
 
 	# ---- what callers read ----
 
@@ -66,7 +67,7 @@ class Clearing:
 	# ---- the turn of the year ----
 
 	def step_market(self, seats=None):
-		"""Close the year: the agent economy's year runs, then the partners' books close on what crossed."""
+		"""Close the year: the agent economy's year runs, then the actors' trade tallies reset."""
 		self.needs.send(FinishWays())
 		economy = self.economy
 		economy.run_agent_year()
@@ -77,5 +78,5 @@ class Clearing:
 		else:
 			self.needs.send(RecordFoodEaten(demography_rules.national_eaten_over_need(accounts),
 			                                demography_rules.eaten_over_need_by_tile(accounts)))
-		self.needs.send(ClosePartnerBooks())
+		self.needs.send(ResetActorTradeTallies())
 		self.needs.send(CloseRealOutput())

@@ -74,5 +74,5 @@ class SettleTraderCargo(Command):
 
 
 @dataclass(frozen=True)
-class ClosePartnerBooks(Command):
-	"""The year ends in the partners' markets: each partner's book clears on the year's actor cargo, and the tallies reset."""
+class ResetActorTradeTallies(Command):
+	"""The year ends: the actors' cargo tallies reset."""

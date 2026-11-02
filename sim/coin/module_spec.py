@@ -15,7 +15,7 @@ READS_BY_OWNER = {
     "knowledge": ("civilisation",),
     "workforce": ("money_per_labour_hour", "opening_money_per_labour_hour", "headcount"),
     "markets": ("opening_population", "goods_quote"),
-    "foreign_trade": ("foreign_economies", "foreign_coin_home_units", "foreign_coin_partner_units", "partner_coin_standard",
+    "foreign_trade": ("foreign_coin_home_units", "foreign_coin_partner_units", "partner_coin_standard",
                       "partner_opening_facts", "partner_route_cost"),
     "reporting": ("coin_value_ratio",),
     "ledger": ("acting_balance", "held_goods", "cast"),

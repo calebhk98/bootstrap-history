@@ -111,6 +111,10 @@ class AgentViews:
 		"""Last year's goods carried between the economy's tiles, {origin: {destination: tonnes}}."""
 		return self.economy.agent.carried_last_year()
 
+	def country_trade_book(self, country):
+		"""{good: tonnes and value each way} of what crossed the country's border last year; empty while the economy opens."""
+		return self.economy.agent_trade_book(country)
+
 	def country_opening_basket(self, country):
 		return self.economy.agent_opening_basket(country)
 

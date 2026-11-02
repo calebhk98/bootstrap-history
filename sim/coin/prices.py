@@ -17,7 +17,7 @@ RATIOS = "ratios"
 class Prices:
     """The phase `coin_revaluation` and the stock and price-level views (needs: civilisation, opening_population,
     opening_money_per_labour_hour, foreign_coin_home_units, foreign_coin_partner_units, partner_coin_standard,
-    partner_opening_facts, foreign_economies, coin_value_ratio)."""
+    partner_opening_facts, coin_value_ratio)."""
 
     def home_coin_metal(self):
         return self.needs.civilisation()["coin_standard"]["material"]
@@ -30,13 +30,11 @@ class Prices:
         return self.world.metal_ratios.get(material, 1.0)
 
     def revalue_coin_metals(self, seats):
-        """Record the market ratio of the home coin metal and of each partner's."""
-        metals = {self.home_coin_metal()}
-        metals.update(self.partner_coin_metal(partner) for partner in self.needs.foreign_economies())
+        """Record the market ratio of the home coin metal."""
         ratios = self.world.metal_ratios
-        for metal in sorted(metals):
-            ratios[metal] = coin_metal.revalued_ratio(
-                ratios.get(metal, 1.0), self.needs.coin_value_ratio[metal], REVALUATION_YEARLY_SHARE, REVALUATION_YEARLY_CAP)
+        metal = self.home_coin_metal()
+        ratios[metal] = coin_metal.revalued_ratio(
+            ratios.get(metal, 1.0), self.needs.coin_value_ratio[metal], REVALUATION_YEARLY_SHARE, REVALUATION_YEARLY_CAP)
         self.bump(RATIOS)
 
     def opening_units(self, wage_per_year):

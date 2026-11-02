@@ -26,7 +26,7 @@ class AgentCoinage:
             "agent_prices": lambda: self.agent, "home_coin_metal": "silver_kg", "wage_materials": ["wheat_kg"]})
         self.coin = module_harness.build(Coin, world=CoinWorld(), views={
             "civilisation": self.civ, "opening_population": 1000.0, "opening_money_per_labour_hour": 0.5,
-            "foreign_coin_home_units": 0.0, "foreign_economies": [],
+            "foreign_coin_home_units": 0.0,
             "coin_value_ratio": self.reporting.coin_value_ratio})
 
     def record_wage_market_ratios(self):

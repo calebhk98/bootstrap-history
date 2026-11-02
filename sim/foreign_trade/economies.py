@@ -27,22 +27,6 @@ class Economies:
     def partners_in_agent_economy(self) -> List[str]:
         return self.partners()
 
-    def foreign_economies(self) -> List[str]:
-        """Partners outside the agent economy: none, every partner is in it. Readers of this view are dead code."""
-        return []
-
-    def partner_market_book(self, civilization_id: str) -> Dict[str, Dict[str, float]]:
-        return {}
-
-    def partner_book_entry(self, civilization_id: str, commodity: str) -> Optional[Dict[str, float]]:
-        return None
-
-    def foreign_supply_tonnes(self, civilization_id: str, material: str) -> float:
-        return 0.0
-
-    def partner_price_response(self, partner: str, material: str, tonnes: float, landing: bool) -> float:
-        return 1.0
-
     def partner_civ(self, civilization_id: str) -> Dict[str, Any]:
         """The civilisation `civilization_id` as its file gives it (mods applied, checked), loaded once and kept for the
         game. Read-only: a caller that changes a record takes its own copy."""
