@@ -63,6 +63,12 @@ class EconomyPort:
         agent = self._answering_agent()
         return None if agent is None else agent.price_kind(good)
 
+    def agent_trade_book(self, country):
+        """What crossed the country's border last year, by good ({good: {"in_tonnes", "in_value", "out_tonnes",
+        "out_value"}}); empty while the economy opens."""
+        agent = self._answering_agent()
+        return {} if agent is None else economy_api.country_figures.trade_book(agent.economy(), country)
+
     def agent_offered_tonnes(self, material, tile=None):
         """Tonnes the sellers of a material in the tile's market area held at the last clearing; None while the
         economy opens or when the area has no book for it."""

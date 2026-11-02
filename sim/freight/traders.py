@@ -17,7 +17,7 @@ from .constants import SEA_MODE
 
 
 class Traders:
-    """Needs: foreign_economies, labour_quote, hours_per_person_year, trade_population, working_age, households_loanable_funds, market_rate,
+    """Needs: partners, labour_quote, hours_per_person_year, trade_population, working_age, households_loanable_funds, market_rate,
     route_lift_years_per_tonne, route_capital_per_lift_tonne, lift_capacity_tonnes, opening_carriers_per_route,
     carriage_facts, plus what Models needs."""
 
@@ -55,7 +55,7 @@ class Traders:
         carriers = self.route_carriers(civilization_id, route)
         if math.isinf(carriers):
             return carriers
-        merchants = self.needs.trade_population["merchant"] / max(1, len(self.needs.foreign_economies()))
+        merchants = self.needs.trade_population["merchant"] / max(1, len(self.needs.partners()))
         return merchant_house.houses_on_route(
             carriers, self.carriers_per_house(civilization_id, route), merchants)
 

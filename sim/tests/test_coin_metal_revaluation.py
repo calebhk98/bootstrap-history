@@ -18,7 +18,7 @@ def coinage(measured=None):
     measured = measured or {}
     return module_harness.build(Coin, world=CoinWorld(), views={
         "civilisation": {"coin_standard": {"material": "silver_kg"}}, "opening_population": 1000.0,
-        "opening_money_per_labour_hour": 0.5, "foreign_coin_home_units": 0.0, "foreign_economies": ["x"],
+        "opening_money_per_labour_hour": 0.5, "foreign_coin_home_units": 0.0,
         "foreign_coin_partner_units": {"x": 0.0}, "partner_coin_standard": {"x": {"material": "gold_kg"}},
         "partner_opening_facts": {"x": {"population": 1000.0, "money_per_labour_hour": 0.5}},
         "coin_value_ratio": lambda metal: measured.get(metal, 1.0)})
@@ -47,13 +47,13 @@ class RevaluationTests(unittest.TestCase):
         game.world.metal_ratios["gold_kg"] = 0.25
         self.assertAlmostEqual(game.partner_price_level("x"), flat * 4.0)
 
-    def test_revaluing_stores_the_market_ratio_of_each_coin_metal(self):
+    def test_revaluing_stores_the_market_ratio_of_the_home_coin_metal(self):
         game = coinage({"silver_kg": 0.8, "gold_kg": 1.5})
         for _year in range(60):
             game.revalue_coin_metals(["seat"])    # damped: it closes on the measured value over the years
         ratios = game.world.metal_ratios
         self.assertAlmostEqual(ratios["silver_kg"], 0.8, places=4)
-        self.assertAlmostEqual(ratios["gold_kg"], 1.5, places=4)
+        self.assertNotIn("gold_kg", ratios)
 
 
 class WageStub(WagesMixin):
