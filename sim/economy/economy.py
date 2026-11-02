@@ -10,6 +10,7 @@ from typing import Any, Dict, Mapping, Optional, Tuple
 
 from sim.world import capital_market
 
+from .rates import charged_rate
 from . import producer_table
 from . import outlay_room, taxes, bondage, bondage_hours, bonded_purchase, banks, carriage_hours, credit, credit_idle_rate, credit_lines, debt_relief, credit_claims, currency, equity, land_market, lending, merchants_credit, producers, shares, sites, state_budget, tax_farming, titles_inheritance, titles_moves, titles_plots, unit_cost
 from .credit_view import CreditView
@@ -180,7 +181,7 @@ class Economy:
         money = setup.currency_id
         debt_relief.forgive(record, inputs.debt_relief_tiles)
         titles_moves.apply(record, inputs.title_moves)
-        tax_farming.run_auctions(setup, record, inputs.farmed_forms, record.memory.rates.get(setup.currency_id, 0.0))
+        tax_farming.run_auctions(setup, record, inputs.farmed_forms, record.memory.rates[setup.currency_id])
         lending.lend_working_capital(setup, record, view)
         plans = {producer_id: producers.plan(producer, setup.recipes[producer.recipe_id], view,
                                              record.book.balance(producer_id, money))
@@ -452,7 +453,7 @@ class Economy:
         what wore out last year, no dearer than the price at which the plant still earns the live rate."""
         record, setup = self.record, self.setup
         money = setup.currency_id
-        rate = max(view.interest_rate(money), 1e-9)
+        rate = max(charged_rate(view.interest_rate(money)), 1e-9)
         rebuilt: Dict[str, float] = {}
         worn = record.credit.take_rebuilds()
         for producer_id, runs in sorted(worn.items()):
@@ -528,7 +529,7 @@ class Economy:
                 record.goods.add_output(producer.tile, good, quantity)
         prices = national_prices(record)
         return YearOutcome(year=record.memory.year, basket_price_level=level, prices=prices,
-                           wages=mean_wages, rate=record.memory.rates.get(money, 0.0),
+                           wages=mean_wages, rate=record.memory.rates[money],
                            money_supply=record.book.money_supply(money), hunger_by_tile=hunger,
                            output=dict(sorted(output.items())), idle_hours=idle, vacant_hours=vacant, hired_hours=hired,
                            wage_floor_per_hour=ledger.wage_floor_per_hour, extraction=extraction,

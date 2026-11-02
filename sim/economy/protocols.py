@@ -62,7 +62,7 @@ class MarketView(Protocol):
     def wage(self, trade: TradeId, area: AreaId) -> Optional[float]:
         """Last year's wage per hour."""
 
-    def interest_rate(self, currency: CurrencyId) -> float:
+    def interest_rate(self, currency: CurrencyId) -> Optional[float]:
         """Last year's base lending rate."""
 
     def area_of(self, good: GoodId, tile: TileId) -> AreaId:

@@ -1,7 +1,7 @@
 """The year's labour market: producers and other employers bid for hours, cohorts' workers offer them, and
 the labour core (`sim.labour.api`) sets each (trade, labour area) wage, hires, moves people between trades and
 tiles, trains and replaces them. The economy then pays every hour hired in a market the one wage the core reports
-for it (`Clearing.average_wage`), and the workers who offered them share the receipts by hours sold.
+for it (`Clearing.wage`), and the workers who offered them share the receipts by hours sold.
 """
 import dataclasses
 from typing import Dict, List, Sequence, Tuple
@@ -82,7 +82,7 @@ def trade_premium(setup, trade) -> float:
 def _result(clearing, currency: str, offers: Sequence[LabourOffer]) -> LabourResult:
     """A core clearing as the economy settles it: employers buy the hours hired, the workers whose
     hours were offered sell them in proportion to what each offered, all at the market's one wage."""
-    wage = clearing.average_wage
+    wage = clearing.wage
     fills = [Fill(employer, clearing.trade, clearing.area, "", hours, wage, "buy")
              for employer, hours in sorted(clearing.hired_by_employer.items()) if hours > 0.0]
     offered = sum(offer.hours for offer in offers)
@@ -111,7 +111,7 @@ def clear_labour(setup, record, bids: Sequence[LabourBid], offers: Sequence[Labo
     record.labour.workforce, report = run_labour_year(record.labour.workforce, inputs, owned=True)
     by_market: Dict[Tuple[str, str], List[LabourOffer]] = {}
     if supply is not None:
-        offers = supply.settle({(clearing.trade, clearing.area): clearing.entry_wage for clearing in report.clearings})
+        offers = supply.settle({(clearing.trade, clearing.area): clearing.wage for clearing in report.clearings})
     for offer in offers:
         by_market.setdefault((offer.trade, offer.area), []).append(offer)
     record.labour.hours_idle = {}
