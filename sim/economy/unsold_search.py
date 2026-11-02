@@ -70,7 +70,7 @@ def _held_value(setup, record, view, offer: Offer) -> float:
         return titles_value.hectare_value(record.land_rent.get(offer.tile, 0.0),
                                           titles_value.capitalising_rate(rate, setup.opening_rate))
     return inventory.queued_holding_value(offer.reservation_price, offer.quantity,
-                                          producer.expected_sales * recipe.outputs.get(offer.good, 0.0), rate,
+                                          producer.expected_sales * producer.yield_factor * recipe.outputs.get(offer.good, 0.0), rate,
                                           spec.spoilage_per_year if spec is not None else 0.0)
 
 
