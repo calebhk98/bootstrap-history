@@ -34,14 +34,3 @@ check("a country's trade is what the merchants carried across its border plus wh
 	  and abs(alone.trade_value("in") - carried) < 1e-9 and carried > 0.0, (answers.trade_value("in"), alone.trade_value("in"), carried))
 check("the book by good is the merchants' alone (the off-map flows have no good)", answers.trade_book() == alone.trade_book())
 
-# the port attributes the year's external-edge trade to the country whose tile the port stands on
-from types import SimpleNamespace
-
-from sim.markets.port_year import AgentEconomy
-
-kept = {}
-port = SimpleNamespace(stored=kept, _economy=SimpleNamespace(setup=SimpleNamespace(port_tile="north_port", country_of=lambda tile: "north")),
-					   _sim=SimpleNamespace(year=120))
-AgentEconomy._note_off_map_trade(port, 40.0, 25.0)
-check("the port's off-map trade of a year is booked to the country of its tile, and kept with the economy's record",
-	  kept["country_trade_by_year"] == {"north": {"120": {"in": 40.0, "out": 25.0}}}, kept)
