@@ -15,13 +15,34 @@ from sim.world.need_basket import PricedNeed, subsistence_cost_per_person
 from sim.world.shared_constants import LABOUR_OUTPUT_ELASTICITY
 
 from .households_basket import need_prices
+from . import titles_plots
 from .households_own import Option
 
 
+def _grown(priced: Sequence[PricedNeed], options: Mapping[str, Sequence[Option]], fertility: float,
+           people_per_worker: float, hectares_per_hour: Mapping[str, float]) -> list:
+    """(price, hectares, hectares per need unit, reference hours per hectare) of each need the plot grows for a worker's household."""
+    grown = []
+    for need in priced:
+        rows = options.get(need.spec.need_id)
+        if not rows or rows[0][0] <= 0.0:
+            continue
+        per_hour = hectares_per_hour.get(rows[0][1], 0.0)
+        if per_hour <= 0.0:
+            continue
+        per_unit = per_hour * rows[0][0]
+        grown.append((need.price_index, need.spec.subsistence_per_person * people_per_worker * per_unit, per_unit,
+                      1.0 / (fertility * per_hour)))
+    return grown
+
+
 def plot_value_per_worker_year(priced: Sequence[PricedNeed], options: Mapping[str, Sequence[Option]],
-                               fertility: float, hours_per_worker_year: float, people_per_worker: float) -> float:
+                               fertility: float, hours_per_worker_year: float, people_per_worker: float,
+                               hectares_per_hour: Optional[Mapping[str, float]] = None,
+                               hectares_held: Optional[float] = None) -> float:
     """Money a worker's family gets a year from its plot, at the prices of the needs it grows: the floors of
-    the needs the plot can grow, limited by the hours one worker's year can put into it."""
+    the needs the plot can grow, limited by the hours one worker's year can put into it and, when `hectares_held`
+    is given, by the land the worker has (the share of the plot's land held)."""
     if fertility <= 0.0 or hours_per_worker_year <= 0.0:
         return 0.0
     value_per_person = hours_per_person = 0.0
@@ -33,7 +54,12 @@ def plot_value_per_worker_year(priced: Sequence[PricedNeed], options: Mapping[st
         hours_per_person += need.spec.subsistence_per_person * rows[0][0] / fertility
     if hours_per_person <= 0.0:
         return 0.0
-    return min(value_per_person * people_per_worker, value_per_person / hours_per_person * hours_per_worker_year)
+    value = min(value_per_person * people_per_worker, value_per_person / hours_per_person * hours_per_worker_year)
+    if hectares_held is not None and hectares_per_hour is not None:
+        plot = math.fsum(row[1] for row in _grown(priced, options, fertility, people_per_worker, hectares_per_hour))
+        if plot > 0.0:
+            value *= min(1.0, max(0.0, hectares_held) / plot)
+    return value
 
 
 def plot_return_per_hour(priced: Sequence[PricedNeed], options: Mapping[str, Sequence[Option]],
@@ -50,17 +76,7 @@ def plot_return_per_hour(priced: Sequence[PricedNeed], options: Mapping[str, Seq
     the need's price. Needs weigh by the land they take."""
     if fertility <= 0.0 or hours_per_worker_year <= 0.0:
         return 0.0
-    grown = []        # (price, hectares, hectares per need unit, reference hours per hectare)
-    for need in priced:
-        rows = options.get(need.spec.need_id)
-        if not rows or rows[0][0] <= 0.0:
-            continue
-        per_hour = hectares_per_hour.get(rows[0][1], 0.0)
-        if per_hour <= 0.0:
-            continue
-        per_unit = per_hour * rows[0][0]
-        hectares = need.spec.subsistence_per_person * people_per_worker * per_unit
-        grown.append((need.price_index, hectares, per_unit, 1.0 / (fertility * per_hour)))
+    grown = _grown(priced, options, fertility, people_per_worker, hectares_per_hour)
     plot = math.fsum(row[1] for row in grown)
     if plot <= 0.0:
         return 0.0
@@ -77,23 +93,27 @@ def plot_return_per_hour(priced: Sequence[PricedNeed], options: Mapping[str, Seq
 
 
 def survival_cost_per_worker_year(priced: Sequence[PricedNeed], options: Mapping[str, Sequence[Option]],
-                                  fertility: float, hours_per_worker_year: float, people_per_worker: float) -> float:
+                                  fertility: float, hours_per_worker_year: float, people_per_worker: float,
+                                  hectares_per_hour: Optional[Mapping[str, float]] = None,
+                                  hectares_held: Optional[float] = None) -> float:
     """Money a worker must earn a year to keep his household fed and clothed: its floors for every need at
     these prices, less what the plot gives when his year goes into it; never below nothing."""
     household_cost = subsistence_cost_per_person(priced) * people_per_worker
-    plot = plot_value_per_worker_year(priced, options, fertility, hours_per_worker_year, people_per_worker)
+    plot = plot_value_per_worker_year(priced, options, fertility, hours_per_worker_year, people_per_worker,
+                                      hectares_per_hour, hectares_held)
     return max(0.0, household_cost - plot)
 
 
 def wage_floor_per_worker_year(priced: Sequence[PricedNeed], options: Mapping[str, Sequence[Option]],
                                fertility: float, hours_per_worker_year: float, people_per_worker: float,
-                               hectares_per_hour: Mapping[str, float]) -> float:
+                               hectares_per_hour: Mapping[str, float], hectares_held: Optional[float] = None) -> float:
     """The least a worker sells his year for: the greater of what the hours would add on the plot
-    (plot_return_per_hour) and what his household needs to stay fed beyond what the plot gives."""
+    (plot_return_per_hour) and what his household needs to stay fed beyond what the plot gives, both on the land
+    he holds (`hectares_held`, per worker; None: the whole plot)."""
     opportunity = plot_return_per_hour(priced, options, fertility, hours_per_worker_year, people_per_worker,
-                                       hectares_per_hour) * max(0.0, hours_per_worker_year)
+                                       hectares_per_hour, hectares_held) * max(0.0, hours_per_worker_year)
     return max(opportunity, survival_cost_per_worker_year(priced, options, fertility, hours_per_worker_year,
-                                                          people_per_worker))
+                                                          people_per_worker, hectares_per_hour, hectares_held))
 
 
 def hectares_per_hour_by_recipe(recipes, land_per_run: Mapping[str, float]) -> Dict[str, float]:
@@ -107,17 +127,24 @@ def hectares_per_hour_by_recipe(recipes, land_per_run: Mapping[str, float]) -> D
 
 
 def ask_floor_by_tile(setup, record, view, options: Mapping[str, Sequence[Option]]) -> Dict[str, float]:
-    """Per tile, the wage floor of one worker (wage_floor_per_worker_year)."""
+    """Per tile, the wage floor of one worker (wage_floor_per_worker_year): each cohort's, on the land it holds
+    (titles_plots.hectares_held, as the hours schedule reads it), averaged by working people."""
     floors: Dict[str, float] = {}
     hectares_per_hour = hectares_per_hour_by_recipe(setup.recipes, setup.land_per_run)
+    held = titles_plots.hectares_held(setup, record)
     for tile in sorted({cohort.tile for cohort in record.cohorts.values()}):
-        people = sum(cohort.people for cohort in record.cohorts.values() if cohort.tile == tile)
-        working = sum(cohort.working_people for cohort in record.cohorts.values() if cohort.tile == tile)
+        cohorts = [cohort for cohort in record.cohorts.values() if cohort.tile == tile and cohort.working_people > 0.0]
         tile_data = setup.tiles.get(tile)
+        fertility = tile_data.fertility if tile_data else 0.0
         priced = need_prices(setup.basket_for(tile), view, tile)
-        floors[tile] = wage_floor_per_worker_year(
-            priced, options, tile_data.fertility if tile_data else 0.0, setup.working_hours_per_year,
-            people / working if working > 0.0 else 1.0, hectares_per_hour)
+        working = sum(cohort.working_people for cohort in cohorts)
+        if working <= 0.0:
+            floors[tile] = wage_floor_per_worker_year(priced, options, fertility, setup.working_hours_per_year, 1.0,
+                                                      hectares_per_hour, 0.0)
+            continue
+        floors[tile] = sum(cohort.working_people * wage_floor_per_worker_year(
+            priced, options, fertility, setup.working_hours_per_year, cohort.people / cohort.working_people,
+            hectares_per_hour, held.get(cohort.agent_id, 0.0) / cohort.working_people) for cohort in cohorts) / working
     return floors
 
 

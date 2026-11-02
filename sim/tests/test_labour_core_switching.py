@@ -25,7 +25,7 @@ def _specs():
 def _clearings(wages):
     return {(AREA, trade): Clearing(
         trade=trade, area=AREA, wage=wage, hours_offered=HOURS, hours_wanted=HOURS, hours_hired=HOURS,
-        hired_by_employer={}, paid_by_employer={}, average_wage=wage) for trade, wage in wages.items()}
+        hired_by_employer={}, average_wage=wage) for trade, wage in wages.items()}
 
 
 def _inputs(specs):
@@ -81,7 +81,7 @@ class SwitchingTests(unittest.TestCase):
         idle_clearings = _clearings(wages)
         idle_clearings[(AREA, "digger")] = Clearing(
             trade="digger", area=AREA, wage=0.5, hours_offered=HOURS, hours_wanted=0.0, hours_hired=0.0,
-            hired_by_employer={}, paid_by_employer={}, average_wage=0.5)
+            hired_by_employer={}, average_wage=0.5)
         state = _state({"digger": 1000.0})
         report = YearReport()
         switching.switch_trades(state, _inputs(_specs()), idle_clearings, report)
@@ -133,7 +133,7 @@ class PipelineTests(unittest.TestCase):
         clearings = _clearings({"digger": 0.5, "cutter": 0.5, "healer": 0.5})
         clearings[(AREA, "carver")] = Clearing(
             trade="carver", area=AREA, wage=2.0, hours_offered=100.0 * HOURS, hours_wanted=300.0 * HOURS,
-            hours_hired=100.0 * HOURS, hired_by_employer={}, paid_by_employer={}, average_wage=2.0)
+            hours_hired=100.0 * HOURS, hired_by_employer={}, average_wage=2.0)
         report = YearReport()
         switching.switch_trades(state, _inputs(_specs()), clearings, report)
         return report.switched.get(AREA, {}).get("carver", 0.0)
@@ -151,7 +151,7 @@ class FrictionalVacancyTests(unittest.TestCase):
         clearings = _clearings({"digger": 0.5, "cutter": 0.5, "healer": 0.5})
         clearings[(AREA, "carver")] = Clearing(
             trade="carver", area=AREA, wage=1.0, hours_offered=400.0 * HOURS, hours_wanted=200.0 * HOURS,
-            hours_hired=hired * HOURS, hired_by_employer={}, paid_by_employer={}, average_wage=1.0)
+            hours_hired=hired * HOURS, hired_by_employer={}, average_wage=1.0)
         report = YearReport()
         switching.switch_trades(state, _inputs(_specs()), clearings, report)
         return report.switched.get(AREA, {}).get("carver", 0.0)

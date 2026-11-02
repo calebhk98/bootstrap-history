@@ -10,7 +10,7 @@ from typing import Dict, Mapping, Tuple
 
 from sim.labour.api import bound_by_hirers, fallback_trade
 
-from . import carriage_hours, opening_placement, producers, state_budget, workforce_version
+from . import carriage_hours, hours_hired_by_others, opening_placement, producers, state_budget
 from .labour_state import core_trades, plot_trade, producers_hours_needed, seeded_hours
 from .market_memory import market_key
 
@@ -24,7 +24,8 @@ def expected_hours(setup, record, view) -> Dict[Tuple[str, str], float]:
         plan = producers.plan(producer, recipe, view, record.book.balance(producer_id, setup.currency_id))
         for bid in plan.labour_bids:
             wanted[(bid.area, bid.trade)] = wanted.get((bid.area, bid.trade), 0.0) + bid.hours
-    return add_others_hired(wanted, record.workforce.workers, record.hours_hired_by_others)
+    return add_others_hired(wanted, record.workforce.workers,
+                            hours_hired_by_others.by_market(record.workforce.hired_hours, record.producers))
 
 
 def add_others_hired(wanted: Mapping[Tuple[str, str], float], workers: Mapping[str, Mapping[str, object]],
@@ -88,7 +89,6 @@ def trim_people(state, wanted: Dict[Tuple[str, str], float], fallback: str, work
     """Cut workers, then trainees (who would graduate into the trade and refill it), until each trade holds
     no more people than its wanted hours need. `working_hours_per_year` is the hours a person sells, one figure or one per
     area (`default_hours` for an area it does not name)."""
-    workforce_version.bump(state)
     for area, by_trade in state.workers.items():
         for trade, bands in by_trade.items():
             people = sum(bands)
@@ -117,7 +117,6 @@ def send_idle_to_plots(state, wanted: Dict[Tuple[str, str], float], fallback: st
                        working_hours_per_year, default_hours: float = 0.0) -> None:
     """The fallback trade keeps the people its wanted hours need; the rest, whom no employer wants, work their own
     plots as `idle_trade`."""
-    workforce_version.bump(state)
     if not idle_trade or idle_trade == fallback:
         return
     for area, by_trade in state.workers.items():

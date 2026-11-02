@@ -1,4 +1,4 @@
-"""Labour-core clearing over plain records: wages, premiums, recruitment friction, poaching."""
+"""Labour-core clearing over plain records: wages, recruitment friction, poaching."""
 
 QUICK_TOPIC = True
 
@@ -26,8 +26,8 @@ def make_state(people=10.0, wage=None):
     return state
 
 
-def bid(employer, hours, maximum=3.0, premium=0.0, trade="digger"):
-    return Bid(employer, trade, "vale", hours, maximum, premium)
+def bid(employer, hours, maximum=3.0, trade="digger"):
+    return Bid(employer, trade, "vale", hours, maximum)
 
 
 def run(state, bids):
@@ -58,19 +58,18 @@ class WageMovement(unittest.TestCase):
         self.assertEqual(state.wages["vale"]["digger"], wages[-1])
 
 
-class PremiumAndFriction(unittest.TestCase):
-    def test_premium_payer_fills_first_and_pays_more(self):
-        result = run(make_state(wage=1.0), [bid("plain", 800.0), bid("rich", 800.0, premium=0.5)])
+class RankAndFriction(unittest.TestCase):
+    def test_the_higher_maximum_fills_first(self):
+        result = run(make_state(wage=1.0), [bid("plain", 800.0), bid("rich", 800.0, maximum=4.5)])
         self.assertGreater(result.hired_by_employer["rich"], result.hired_by_employer["plain"])
-        self.assertGreater(result.paid_by_employer["rich"], result.paid_by_employer["plain"])
 
     def test_large_new_bid_fills_within_the_year_by_rounds_of_applications(self):
         # Eurace applications and acceptances (applications.py): a slack market fills a whole vacancy in the year's rounds
         first = run(make_state(people=10.0, wage=1.0), [bid("big", 1000.0)]).hired_by_employer["big"]
         self.assertAlmostEqual(first, 1000.0, places=3)
 
-    def test_premium_wins_more_of_scarce_hours_than_a_rival_wanting_as_many(self):
-        result = run(make_state(people=10.0, wage=1.0), [bid("plain", 800.0), bid("paying", 800.0, premium=0.5)])
+    def test_the_higher_maximum_wins_more_of_scarce_hours_than_a_rival_wanting_as_many(self):
+        result = run(make_state(people=10.0, wage=1.0), [bid("plain", 800.0), bid("paying", 800.0, maximum=4.5)])
         self.assertGreater(result.hired_by_employer["paying"], result.hired_by_employer["plain"])
 
 
@@ -78,7 +77,7 @@ class Poaching(unittest.TestCase):
     def test_hours_move_from_low_payer_to_high_payer(self):
         state = make_state(people=10.0, wage=1.0)
         state.hired_hours = {"vale": {"digger": {"low": 1000.0}}}
-        result = run(state, [bid("low", 1000.0), bid("high", 500.0, premium=0.5)])
+        result = run(state, [bid("low", 1000.0), bid("high", 500.0, maximum=4.5)])
         self.assertGreater(result.hired_by_employer.get("high", 0.0), 0.0)
         self.assertLess(result.hired_by_employer["low"], 1000.0)
 
@@ -87,7 +86,7 @@ class Conservation(unittest.TestCase):
     def test_never_hires_more_than_offered_or_wanted(self):
         state = make_state(people=5.0, wage=1.0)
         state.hired_hours = {"vale": {"digger": {"a": 300.0, "b": 400.0}}}
-        bids = [bid("a", 600.0), bid("b", 600.0, premium=0.2), bid("c", 600.0, premium=0.4)]
+        bids = [bid("a", 600.0), bid("b", 600.0, maximum=3.6), bid("c", 600.0, maximum=4.2)]
         for _ in range(3):
             result = run(state, bids)
             self.assertLessEqual(result.hours_hired, result.hours_offered + 1e-9)
@@ -96,7 +95,7 @@ class Conservation(unittest.TestCase):
                 self.assertLessEqual(hours, 600.0 + 1e-9)
 
     def test_deterministic(self):
-        bids = [bid("a", 700.0), bid("b", 700.0, premium=0.3), bid("c", 700.0)]
+        bids = [bid("a", 700.0), bid("b", 700.0, maximum=3.9), bid("c", 700.0)]
         first_state, second_state = make_state(wage=1.0), copy.deepcopy(make_state(wage=1.0))
         self.assertEqual(run(first_state, bids), run(second_state, bids))
 

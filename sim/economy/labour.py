@@ -1,4 +1,4 @@
-"""What a worker asks and what a training costs, and the order-book helpers other markets share.
+"""What a worker asks, and the order-book helpers other markets share.
 
 The labour market itself is the labour core's (`sim.labour.api`; sim/economy/year_labour.py hands it the
 year). `clearing_point` and `allocate_in_order` clear the credit market; `sticky_move` is the move of a
@@ -115,20 +115,3 @@ def reservation_wage(subsistence_cost_per_year: float, working_hours_per_year: f
     outside_option = subsistence_cost_per_year / working_hours_per_year
     danger = max(0.0, fatality_risk_per_year) ** DANGER_PREMIUM_EXPONENT * value_of_life_years_of_income
     return outside_option * (1.0 + danger)
-
-
-def training_premium(training_years: float, interest_rate: float, working_years: float) -> float:
-    """Extra yearly pay, as a multiple of untrained yearly income, that repays the years spent training.
-
-    Each training year forgoes one year's income; the forgone income grows at the interest rate to the
-    start of work and is repaid as a level annuity over the working years.
-    """
-    if working_years <= 0:
-        raise ValueError("working_years must be positive")
-    if training_years <= 0:
-        return 0.0
-    if abs(interest_rate) < 1e-12:
-        return training_years / working_years
-    forgone = ((1.0 + interest_rate) ** training_years - 1.0) / interest_rate
-    annuity_factor = (1.0 - (1.0 + interest_rate) ** -working_years) / interest_rate
-    return forgone / annuity_factor

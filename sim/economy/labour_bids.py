@@ -34,6 +34,6 @@ def sloped_bids(bids: Iterable) -> List[Bid]:
         for factor in wage_factors:
             tranche = new(Bid)
             tranche.__dict__.update(employer=bid.employer, trade=bid.trade, area=bid.area, hours=hours,
-                                    maximum_wage=bid.maximum_wage * factor, pay_premium=0.0)
+                                    maximum_wage=bid.maximum_wage * factor)
             tranches.append(tranche)
     return tranches

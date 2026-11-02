@@ -1,5 +1,6 @@
 """`labour_state.mirror_wages`: the wage the labour core settled for each trade in each area is what everyone who reads a
-wage is quoted, under the economy's market keys; a trade with no settled wage is not quoted one. Hand-built state; no game."""
+wage is quoted, under the economy's market keys, rebuilt whole each year; a trade with no settled wage is not quoted one.
+Hand-built state; no game."""
 QUICK_TOPIC = True
 
 import unittest
@@ -29,6 +30,11 @@ class MirrorWagesTests(unittest.TestCase):
         memory = {market_key("smith", "town"): 2.0}
         labour_state.mirror_wages(memory, state_with_wages({"town": {"smith": 3.0}}))
         self.assertEqual(memory[market_key("smith", "town")], 3.0)
+
+    def test_a_quote_the_core_holds_no_wage_for_is_dropped(self):
+        memory = {market_key("smith", "town"): 2.0, market_key("miller", "town"): 1.0}
+        labour_state.mirror_wages(memory, state_with_wages({"town": {"smith": 3.0}}))
+        self.assertEqual(memory, {market_key("smith", "town"): 3.0})
 
 
 if __name__ == "__main__":

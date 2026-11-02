@@ -4,11 +4,11 @@ An area is a tile's labour area key (`labour_area`). Everything the core needs t
 comes from the setup's trade registry; the unskilled trade is the work anyone can take up at once.
 """
 import math
-from typing import Dict, Iterable, Mapping, Tuple
+from typing import Dict, Iterable, Mapping
 
 from sim.labour.api import MarketState, TradeSpec, opening_labour_market, seed_hours, trade_specs
 
-from . import mint, mint_labour, opening_placement, practice, workforce_version
+from . import mint, mint_labour, opening_placement, practice
 from .market_memory import market_key
 from .setup import area_tile, labour_area
 
@@ -111,38 +111,13 @@ def scale_people(state: MarketState, area: str, factor: float) -> None:
     for cohorts in state.trainees.get(area, {}).values():
         for cohort in cohorts:
             cohort[1] = [count * factor for count in cohort[1]]
-    workforce_version.bump(state)
 
 
 def mirror_wages(wages: Dict[str, float], state: MarketState) -> None:
-    """The market wages the core settled, under the economy's market keys, for whoever reads a wage."""
+    """Rebuild whole the market wages the core settled, under the economy's market keys, for whoever reads a wage: a
+    market the core holds no wage for is not quoted one."""
+    wages.clear()
     for area, by_trade in state.wages.items():
         for trade, wage in by_trade.items():
             if wage > 0.0:
                 wages[market_key(trade, area)] = wage
-
-
-def hold_back(state: MarketState, share_by_area: Mapping[str, float]) -> Tuple[MarketState, Dict[str, Dict[str, list]]]:
-    """The state the market sees when households keep hours back for their own plots: each area's
-    workers cut by the share held (the same share of every trade and band), and the people held. The
-    given state is cut in place and handed back; the caller replaces it with the year's result."""
-    seen = state
-    held: Dict[str, Dict[str, list]] = {}
-    for area, share in share_by_area.items():
-        if share <= 0.0:
-            continue
-        for trade, bands in seen.workers.get(area, {}).items():
-            held.setdefault(area, {})[trade] = [count * share for count in bands]
-            bands[:] = [count * (1.0 - share) for count in bands]
-    workforce_version.bump(seen)
-    return seen, held
-
-
-def give_back(state: MarketState, held: Mapping[str, Mapping[str, list]]) -> None:
-    """The held people rejoin their trades after the year's moves."""
-    for area, by_trade in held.items():
-        workers = state.workers.setdefault(area, {})
-        for trade, bands in by_trade.items():
-            now = workers.setdefault(trade, [0.0] * len(bands))
-            now[:] = [count + back for count, back in zip(now, bands)]
-    workforce_version.bump(state)

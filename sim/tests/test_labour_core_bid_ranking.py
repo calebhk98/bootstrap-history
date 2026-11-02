@@ -5,7 +5,6 @@ QUICK_TOPIC = True
 
 import unittest
 
-from sim.labour.market import clearing
 from sim.tests.test_labour_core_clearing import bid, make_state, run
 
 
@@ -25,15 +24,10 @@ class HigherMaximumBidWins(unittest.TestCase):
         result = run(held_market(), [bid("farm", 2000.0, maximum=300.0), bid("merchant", 50.0, maximum=3.0)])
         self.assertEqual(result.hired_by_employer.get("merchant", 0.0), 0.0)
 
-    def test_the_wage_paid_still_follows_the_clearing_rule_not_the_maximum(self):
+    def test_the_wage_still_follows_the_clearing_rule_not_the_maximum(self):
         bids = [bid("farm", 2000.0, maximum=3.0), bid("merchant", 50.0, maximum=300.0)]
         result = run(held_market(), bids)
-        self.assertLessEqual(result.paid_by_employer["merchant"], result.wage * (1.0 + 1e-9))
         self.assertLess(result.wage, 300.0)
-
-    def test_standing_orders_by_maximum_then_premium(self):
-        self.assertGreater(clearing.standing(5.0, 0.0), clearing.standing(3.0, 0.5))
-        self.assertGreater(clearing.standing(3.0, 0.5), clearing.standing(3.0, 0.0))
 
 
 if __name__ == "__main__":

@@ -28,7 +28,7 @@ def _clearings(wages):
     for trade, wage in wages.items():
         result[(AREA, trade)] = Clearing(
             trade=trade, area=AREA, wage=wage, hours_offered=HOURS, hours_wanted=HOURS, hours_hired=HOURS,
-            hired_by_employer={}, paid_by_employer={}, average_wage=wage)
+            hired_by_employer={}, average_wage=wage)
     return result
 
 
@@ -123,7 +123,7 @@ class GluttedTradeTests(unittest.TestCase):
         clearings = _clearings({"digger": 0.5, "healer": 0.5})
         clearings[(AREA, "carver")] = Clearing(
             trade="carver", area=AREA, wage=wage, hours_offered=HOURS, hours_wanted=wanted_hours,
-            hours_hired=min(HOURS, wanted_hours), hired_by_employer={}, paid_by_employer={},
+            hours_hired=min(HOURS, wanted_hours), hired_by_employer={},
             average_wage=wage, target_wage=target_wage)
         report = YearReport()
         entrants.place_entrants(MarketState(), _inputs(_specs()), clearings, report)
