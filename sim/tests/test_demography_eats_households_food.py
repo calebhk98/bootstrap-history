@@ -42,16 +42,15 @@ class BookingTheFigure(unittest.TestCase):
 
 
 class ReadingTheFigure(unittest.TestCase):
-    def test_each_region_is_fed_from_its_booked_figure_with_the_harvest_as_the_fallback(self):
-        module = module_harness.build(Demography, views={"relief_kcal_per_day": 7.0, "home_tiles_held": ["town", "farms"]},
+    def test_each_region_is_fed_from_its_booked_figure(self):
+        module = module_harness.build(Demography, views={"relief_kcal_per_day": 7.0},
                                       world=DemographyWorld(regional_eaten_over_need={"town": 0.6}))
         recorded = []
         with mock.patch.object(regions.regional_population, "kcal_per_day_by_region",
-                               lambda *arguments: recorded.append(arguments) or {"town": 1.0}), \
-                mock.patch.object(regions.settlement, "population_shares", lambda tiles: {tile: 0.5 for tile in tiles}):
-            fed = module._regional_kcal_per_day({"town": "region"}, 4000.0)
+                               lambda *arguments: recorded.append(arguments) or {"town": 1.0}):
+            fed = module._regional_kcal_per_day({"town": "region"})
         self.assertEqual(fed, {"town": 1.0})
-        self.assertEqual(recorded, [({"town": "region"}, {"town": 0.6}, 4000.0, 7.0, {"town": 0.5, "farms": 0.5})])
+        self.assertEqual(recorded, [({"town": "region"}, {"town": 0.6}, 7.0)])
 
 
 if __name__ == "__main__":

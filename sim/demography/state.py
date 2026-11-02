@@ -26,12 +26,7 @@ class DemographyWorld:
 
 @dataclass
 class DemographySeat:
-    """A seat's farm: the land it holds, its granary and what the last farm year left (farm.py)."""
+    """A seat's farm: the land it holds, its granary and the area cleared (farm.py)."""
     farm_hectares: Optional[float] = None
     farm_stock_kg: float = 0.0
     farm_cleared_hectares: Optional[float] = None
-    farm_last_shortfall_kg: Optional[float] = None
-    # gross harvest of the last year the farm closed, in kilograms of grain (0 before the first)
-    farm_last_harvest_kg: float = 0.0
-    farm_last_marginal_product: Optional[float] = None
-    farm_hours_needed: Optional[float] = None

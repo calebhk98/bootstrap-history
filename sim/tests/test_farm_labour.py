@@ -71,7 +71,7 @@ class FarmLabourFollowedByTheModelTests(unittest.TestCase):
         self.assertAlmostEqual(self.recipes["wheat_hoe_kg"]["labour_hours"]["farmer"],
                                farm_labour.wheat_hoe_hours_per_hectare(data, day))
 
-    def test_the_farm_year_model_reads_the_same_hours_and_reaping_rate(self):
+    def test_the_agriculture_model_reads_the_same_hours_and_reaping_rate(self):
         self.assertEqual(farm_labour.REFERENCE_LABOUR_HOURS_PER_HECTARE, farm_labour.WHEAT_HOURS_PER_HECTARE)
         self.assertEqual(agriculture.REFERENCE_LABOUR_HOURS_PER_HECTARE, farm_labour.WHEAT_HOURS_PER_HECTARE)
         self.assertEqual(agriculture.HECTARES_REAPED_PER_WORKER_DAY, farm_labour.WHEAT_REAPED_HECTARES_PER_PERSON_DAY)

@@ -46,8 +46,7 @@ class OpenPopulation(Command):
 
 @dataclass(frozen=True)
 class StepPopulation(Command):
-    """The yearly step of `year`: the farm year (the farm workforce, the harvest, the granary), then each region's people fed
-    and stepped, the colonies, and the wage note. Answers None."""
+    """The yearly step of `year`: each region's people fed what their households ate and stepped, the colonies, and the wage note. Answers None."""
     year: int
 
 
@@ -81,12 +80,6 @@ class ChangeFarmland(Command):
 class SetClearedFarmland(Command):
     """The acting seat records `hectares` as the area its farm has cleared."""
     hectares: float
-
-
-@dataclass(frozen=True)
-class SetFarmHoursNeeded(Command):
-    """The acting seat records `hours` as the labour hours its farm needs in a year."""
-    hours: float
 
 
 @dataclass(frozen=True)

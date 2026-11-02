@@ -8,7 +8,7 @@ from types import SimpleNamespace
 from sim.actors.api import ScaleStrata
 from sim.demography import rules
 from sim.demography.api import (ChangeFarmland, CutPopulation, DEFAULT_POPULATION_100AD, KillPeople, NotePopulationChange,
-                                OpenPopulation, POP_SCALE_FLOOR, SendSettlers, SetClearedFarmland, SetFarmHoursNeeded,
+                                OpenPopulation, POP_SCALE_FLOOR, SendSettlers, SetClearedFarmland,
                                 TakeFromGranary)
 from sim.demography.module import Demography
 from sim.demography.state import DemographySeat, DemographyWorld
@@ -109,8 +109,7 @@ class TheRecord(unittest.TestCase):
 class TheFarmHolding(unittest.TestCase):
     def test_a_new_seat_holds_no_farm_and_an_empty_granary(self):
         self.assertEqual(built().farm_holdings(), {
-            "hectares": None, "stock_kg": 0.0, "cleared_hectares": None, "last_shortfall_kg": None, "last_harvest_kg": 0.0,
-            "last_marginal_product": None, "hours_needed": None})
+            "hectares": None, "stock_kg": 0.0, "cleared_hectares": None})
 
     def test_the_land_changes_by_what_is_bought_and_sold_and_the_answer_is_what_is_held(self):
         module = built()
@@ -118,11 +117,10 @@ class TheFarmHolding(unittest.TestCase):
         self.assertEqual(module.change_farmland(ChangeFarmland(-2.0)), 3.0)
         self.assertEqual(module.farm_holdings()["hectares"], 3.0)
 
-    def test_the_farm_workforce_records_the_cleared_area_and_the_hours_it_needs(self):
+    def test_the_farm_workforce_records_the_cleared_area(self):
         module = built()
         module.set_cleared_farmland(SetClearedFarmland(120.0))
-        module.set_farm_hours_needed(SetFarmHoursNeeded(5.0e5))
-        self.assertEqual((module.farm_holdings()["cleared_hectares"], module.farm_holdings()["hours_needed"]), (120.0, 5.0e5))
+        self.assertEqual(module.farm_holdings()["cleared_hectares"], 120.0)
 
     def test_thieves_take_grain_from_the_granary_never_below_nothing(self):
         module = built(seat=DemographySeat(farm_stock_kg=1000.0))
