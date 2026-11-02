@@ -36,7 +36,7 @@ def firm_net_worth(producer, recipe, cash: float, debt: float, view) -> float:
 def producer_worths(setup, record, view) -> Dict[AgentId, float]:
     """The net worth of each producer a household owns and that has plant."""
     money = setup.currency_id
-    debts = credit_claims.debts_by_borrower(record.loans, money)
+    debts = credit_claims.debts_by_borrower(record.credit.loans, money)
     worths: Dict[AgentId, float] = {}
     for producer_id, producer in sorted(record.producers.items()):
         if record.cohorts.get(producer.owner) is None or producer.capacity_runs <= 0.0:
@@ -52,11 +52,11 @@ def holdings(setup, record, view) -> Dict[AgentId, float]:
     cohorts_of_tile: Dict[str, list] = {}
     for cohort in sorted(record.cohorts.values(), key=lambda each: each.agent_id):
         cohorts_of_tile.setdefault(cohort.tile, []).append(cohort)
-    factor = record.capital.share_price_factor
+    factor = record.capital_markets.capital.share_price_factor
     held: Dict[AgentId, float] = {}
     for producer_id, worth in producer_worths(setup, record, view).items():
         owner = record.cohorts[record.producers[producer_id].owner]
-        outside = record.shares.get(producer_id)
+        outside = record.capital_markets.shares.get(producer_id)
         if outside:                      # what holders of its shares own is theirs, not the owner tile's
             for holder, part in outside.items():
                 held[holder] = held.get(holder, 0.0) + part * worth * factor

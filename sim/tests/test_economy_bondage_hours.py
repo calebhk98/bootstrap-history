@@ -78,7 +78,7 @@ class PlacementTests(unittest.TestCase):
 
 class ServiceTests(unittest.TestCase):
     def record(self, debt=1000.0):
-        record = types.SimpleNamespace(bondage=bonds(debt), credit_losses={CREDITOR: debt}, book=Book())
+        record = types.SimpleNamespace(book=Book(), unfree=types.SimpleNamespace(bondage=bonds(debt)), credit=types.SimpleNamespace(credit_losses={CREDITOR: debt}))
         record.book.transfer(Transfer("edge:legacy", BONDED, "coin", 10000.0, "opening"))
         return record
 
@@ -86,19 +86,19 @@ class ServiceTests(unittest.TestCase):
         record = self.record()
         payments = bondage.service(record, "coin", {BONDED: 0.0}, worked_value={BONDED: 400.0}, cash_share={BONDED: 0.0})
         self.assertEqual(payments, [])
-        self.assertAlmostEqual(record.bondage[BONDED]["debt"], 600.0)
-        self.assertAlmostEqual(record.credit_losses[CREDITOR], 600.0)
+        self.assertAlmostEqual(record.unfree.bondage[BONDED]["debt"], 600.0)
+        self.assertAlmostEqual(record.credit.credit_losses[CREDITOR], 600.0)
 
     def test_cash_is_taken_only_on_the_hours_that_stayed_in_the_market(self):
         record = self.record()
         payments = bondage.service(record, "coin", {BONDED: 100.0}, worked_value={BONDED: 400.0}, cash_share={BONDED: 0.5})
         self.assertAlmostEqual(sum(payment.amount for payment in payments), 50.0)
-        self.assertAlmostEqual(record.bondage[BONDED]["debt"], 1000.0 - 400.0 - 50.0)
+        self.assertAlmostEqual(record.unfree.bondage[BONDED]["debt"], 1000.0 - 400.0 - 50.0)
 
     def test_hours_that_work_off_the_whole_debt_end_the_bond(self):
         record = self.record(debt=300.0)
         bondage.service(record, "coin", {BONDED: 0.0}, worked_value={BONDED: 900.0}, cash_share={BONDED: 0.0})
-        self.assertEqual(record.bondage, {})
+        self.assertEqual(record.unfree.bondage, {})
 
 
 if __name__ == "__main__":

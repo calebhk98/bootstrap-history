@@ -66,7 +66,7 @@ def margin_entry_plans(setup, record, view, area_map, bids_by_market: Mapping[Tu
         for good in setup.recipes[recipe_id].outputs:
             makers.setdefault(good, []).append(recipe_id)
     skip = set(planned)
-    capacity_terms = capacity_terms_by_good(record.producers, setup.recipes, record.expansion_runs)
+    capacity_terms = capacity_terms_by_good(record.producers, setup.recipes, record.credit.expansion_runs)
     plans = []
     for (good, area_id), bids in sorted(bids_by_market.items()):
         if good not in makers or good not in area_map.goods():

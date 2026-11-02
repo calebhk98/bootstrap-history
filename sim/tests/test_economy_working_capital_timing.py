@@ -24,9 +24,7 @@ def record(requests, balances):
     """Two households whose cash targets are 200 each, holding `balances`; the book answers balances and records transfers."""
     book = types.SimpleNamespace(balance=lambda agent, money: balances[agent], transfer_many=mock.Mock())
     cohorts = {name: types.SimpleNamespace(cash_target=200.0, expected_inflation=0.0) for name in sorted(balances)}
-    return types.SimpleNamespace(
-        loan_requests=list(requests), loans=[], book=book, cohorts=cohorts, merchants={}, loss_rates={},
-        remembered_defaults={}, memory=types.SimpleNamespace(rates={MONEY: 0.05}))
+    return types.SimpleNamespace(book=book, cohorts=cohorts, merchants={}, memory=types.SimpleNamespace(rates={MONEY: 0.05}), credit=types.SimpleNamespace(loan_requests=list(requests), loans=[], loss_rates={}, remembered_defaults={}))
 
 
 def lend(the_record, loans=()):
@@ -49,7 +47,7 @@ class LendWorkingCapitalTests(unittest.TestCase):
         the_record = record([request(producers_close.WORKING_CAPITAL_PURPOSE), plant], {"a": 500.0, "b": 100.0})
         clear, _merchants = lend(the_record)
         self.assertEqual([each.purpose for each in clear.call_args.args[0]], [producers_close.WORKING_CAPITAL_PURPOSE])
-        self.assertEqual(the_record.loan_requests, [plant])
+        self.assertEqual(the_record.credit.loan_requests, [plant])
 
     def test_the_loan_is_dated_to_the_last_close_so_its_payment_falls_due_at_the_end_of_this_year(self):
         clear, _merchants = lend(record([request(producers_close.WORKING_CAPITAL_PURPOSE)], {"a": 500.0, "b": 100.0}))
@@ -64,7 +62,7 @@ class LendWorkingCapitalTests(unittest.TestCase):
         loan = types.SimpleNamespace(borrower="firm", principal=ASKED)
         the_record = record([request(producers_close.WORKING_CAPITAL_PURPOSE)], {"a": 500.0, "b": 100.0})
         _clear, merchants = lend(the_record, [loan])
-        self.assertEqual(the_record.loans, [loan])
+        self.assertEqual(the_record.credit.loans, [loan])
         the_record.book.transfer_many.assert_called_once_with(["paid:firm"])
         merchants.stake.assert_called_once_with({}, {"firm": ASKED})
 
@@ -73,13 +71,13 @@ class LendWorkingCapitalTests(unittest.TestCase):
         the_record = record([plant], {"a": 500.0, "b": 100.0})
         clear, _merchants = lend(the_record)
         clear.assert_not_called()
-        self.assertEqual(the_record.loan_requests, [plant])
+        self.assertEqual(the_record.credit.loan_requests, [plant])
 
     def test_with_no_household_cash_above_target_the_requests_are_asked_of_nobody(self):
         the_record = record([request(producers_close.WORKING_CAPITAL_PURPOSE)], {"a": 100.0, "b": 100.0})
         clear, _merchants = lend(the_record)
         clear.assert_not_called()
-        self.assertEqual(the_record.loan_requests, [])
+        self.assertEqual(the_record.credit.loan_requests, [])
 
 
 if __name__ == "__main__":

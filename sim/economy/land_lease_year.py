@@ -45,8 +45,8 @@ def asks(setup, record, view, options: Mapping[str, List[Option]]) -> Dict[str, 
     """The rent per hectare landlords ask of tenants on each tile: the posted rent cut to what the tenants can bear
     over their outside option (land_tenancy.rent_ask)."""
     margins = _margins(setup, record, view, options)
-    outside = _outside_options(setup, margins, record.land_rent)
-    return {tile: land_tenancy.rent_ask(record.land_rent.get(tile, 0.0), margin, outside[tile])
+    outside = _outside_options(setup, margins, record.land.land_rent)
+    return {tile: land_tenancy.rent_ask(record.land.land_rent.get(tile, 0.0), margin, outside[tile])
             for tile, (margin, _recipe) in margins.items()}
 
 
@@ -68,7 +68,7 @@ def lease_in_market(setup, record, view, options: Mapping[str, List[Option]]) ->
     margins = _margins(setup, record, view, options)
     if not margins:
         return []
-    outside = _outside_options(setup, margins, record.land_rent)
+    outside = _outside_options(setup, margins, record.land.land_rent)
 
     def tools_of(cohort, recipe):
         goods = set(recipe.tool_wear) | {step.good for steps in recipe.tool_fallbacks.values() for step in steps if step.good}
@@ -99,8 +99,8 @@ def lease_in_market(setup, record, view, options: Mapping[str, List[Option]]) ->
                            - titles.let_out_share(record, tile_id, holder) * arable_by_tile[tile_id])
             if lettable > 0.0:
                 lots.append(land_tenancy.Lot(holder, tile_id, lettable))
-    asked = {tile: land_tenancy.rent_ask(record.land_rent.get(tile, 0.0), margins[tile][0], outside[tile]) for tile in margins}
-    leases = land_tenancy.match(offers, lots, record.land_rent, asked)
+    asked = {tile: land_tenancy.rent_ask(record.land.land_rent.get(tile, 0.0), margins[tile][0], outside[tile]) for tile in margins}
+    leases = land_tenancy.match(offers, lots, record.land.land_rent, asked)
     made = []
     for lease in leases:
         if titles.lease(record, lease.tile, lease.tenant, lease.lessor, lease.hectares / arable_by_tile[lease.tile]) > 0.0:

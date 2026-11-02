@@ -21,7 +21,7 @@ def _record_made_in(order):
     record = EconomyRecord(book=Book(), memory=MarketMemory(), currency=CurrencySpec("coin", "fiat", None, 0.0, None))
     for producer_id in order:
         record.producers[producer_id] = Producer(producer_id, "o", "r", "t", VALUES[producer_id])
-        record.shares[producer_id] = {"h_b": 1.0, "h_a": 2.0}
+        record.capital_markets.shares[producer_id] = {"h_b": 1.0, "h_a": 2.0}
     return record
 
 
@@ -32,7 +32,7 @@ class CollectionOrderTest(unittest.TestCase):
             record = _record_made_in(order)
             record.sort_in_saved_order()
             self.assertEqual(list(record.producers), sorted(IDS))
-            self.assertEqual(list(record.shares["p_a"]), ["h_a", "h_b"])
+            self.assertEqual(list(record.capital_markets.shares["p_a"]), ["h_a", "h_b"])
             self.assertEqual(list(EconomyRecord.from_record(record.to_record()).producers), list(record.producers))
             total_by_order.append(sum(VALUES[producer_id] for producer_id in record.producers))
         self.assertEqual(total_by_order[0], total_by_order[1])

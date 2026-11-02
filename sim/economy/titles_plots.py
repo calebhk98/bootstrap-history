@@ -21,5 +21,5 @@ def hectares_held(setup, record) -> Dict[str, float]:
         arable = titles_ground.arable_hectares(record, tile_id, tile)
         asked = {cohort.agent_id: titles_worked.worked_share(record, tile_id, cohort.agent_id) * arable
                  for cohort in record.cohorts.values() if cohort.tile == tile_id}
-        held.update(allocate_on_tile(asked, arable, record.land_ceded.get(tile_id, 0.0)))
+        held.update(allocate_on_tile(asked, arable, record.land.land_ceded.get(tile_id, 0.0)))
     return held

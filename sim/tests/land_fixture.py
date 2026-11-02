@@ -35,7 +35,7 @@ def village(households: int = 10, lender_is_a_household: bool = False):
         record.cohorts[cohort.agent_id] = dataclasses.replace(cohort, ownership_share=1.0 / households,
                                                               last_year_income=NORMAL_INCOME)
     titles.seed(record)
-    record.land_rent = {TILE: RENT_PER_HECTARE}
+    record.land.land_rent = {TILE: RENT_PER_HECTARE}
     lender = household_ids(record)[-1] if lender_is_a_household else LENDER
     record.book.transfer(Transfer("edge:legacy", lender, MONEY, 1e9, "opening"))
     return setup, record
@@ -48,7 +48,7 @@ def household_ids(record):
 def borrow_and_spend(setup, record, year: int, lender: str = LENDER) -> None:
     """Every household asks for what its cash does not cover of its floor, pledging its free plot; the credit market
     clears all the requests at once (loan ids are per clearing); each then spends its floor."""
-    debts = credit_claims.debts_by_borrower(record.loans, MONEY)
+    debts = credit_claims.debts_by_borrower(record.credit.loans, MONEY)
     requests = []
     for household in household_ids(record):
         cohort = record.cohorts[household]
@@ -58,10 +58,10 @@ def borrow_and_spend(setup, record, year: int, lender: str = LENDER) -> None:
             requests.append(lending._pledging_title(setup, record, cohort, asked, RATE))
     if requests:
         loans, _rate, _unmet = credit.clear(requests, [FundsOffer(lender, MONEY, 1e8, RATE)], MONEY, RATE, debts,
-                                            credit_claims.arrears_history(record.loans, record.remembered_defaults),
+                                            credit_claims.arrears_history(record.credit.loans, record.credit.remembered_defaults),
                                             year=year)
         record.book.transfer_many(credit.disbursements(loans))
-        record.loans.extend(loans)
+        record.credit.loans.extend(loans)
     for household in household_ids(record):
         record.book.transfer(Transfer(household, "edge:market", MONEY,
                                       min(FLOOR_COST, record.book.balance(household, MONEY)), "spending"))

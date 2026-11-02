@@ -36,9 +36,9 @@ def enter(record, defaults: Iterable, term_years: float) -> List[str]:
             continue
         if titles.holding(record, cohort.tile, cohort.agent_id) > titles.EPSILON:
             continue                                       # still holds land: not yet destitute
-        bond = record.bondage.get(cohort.agent_id)
+        bond = record.unfree.bondage.get(cohort.agent_id)
         if bond is None:
-            record.bondage[cohort.agent_id] = {"creditor": default.lender, "debt": default.loss, "years_left": term_years}
+            record.unfree.bondage[cohort.agent_id] = {"creditor": default.lender, "debt": default.loss, "years_left": term_years}
             entered.append(cohort.agent_id)
         else:
             bond["debt"] += default.loss
@@ -52,24 +52,24 @@ def service(record, currency: CurrencyId, wages: Mapping[str, float], worked_val
     bonded cohort pays its creditor `cash_share` (the owed share when none is given) of its wages, no more than the
     debt left or the cash it holds. Returns the payments (the caller books them)."""
     payments: List[Transfer] = []
-    for cohort_id, bond in sorted(record.bondage.items()):
+    for cohort_id, bond in sorted(record.unfree.bondage.items()):
         worked = min(bond["debt"], max(0.0, (worked_value or {}).get(cohort_id, 0.0)))
         if worked > 0.0:
             bond["debt"] -= worked
-            record.credit_losses[bond["creditor"]] = max(0.0, record.credit_losses.get(bond["creditor"], 0.0) - worked)
+            record.credit.recover_loss(bond["creditor"], worked)
         share = BONDED_HOURS_OWED_SHARE if cash_share is None else cash_share.get(cohort_id, BONDED_HOURS_OWED_SHARE)
         owed = min(bond["debt"], share * wages.get(cohort_id, 0.0))
         paid = min(owed, max(0.0, record.book.balance(cohort_id, currency)))
         if paid > 0.0:
             payments.append(Transfer(cohort_id, bond["creditor"], currency, paid, "bonded_labour"))
             bond["debt"] -= paid
-            record.credit_losses[bond["creditor"]] = max(0.0, record.credit_losses.get(bond["creditor"], 0.0) - paid)
+            record.credit.recover_loss(bond["creditor"], paid)
         bond["years_left"] -= 1.0
-    record.bondage = {cohort_id: bond for cohort_id, bond in record.bondage.items()
+    record.unfree.bondage = {cohort_id: bond for cohort_id, bond in record.unfree.bondage.items()
                       if bond["debt"] > titles.EPSILON and bond["years_left"] > 0.0}
     return payments
 
 
 def bonded(record) -> Dict[str, str]:
     """Cohort -> its creditor, for every household in bondage."""
-    return {cohort_id: bond["creditor"] for cohort_id, bond in sorted(record.bondage.items())}
+    return {cohort_id: bond["creditor"] for cohort_id, bond in sorted(record.unfree.bondage.items())}

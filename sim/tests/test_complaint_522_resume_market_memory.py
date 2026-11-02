@@ -32,8 +32,7 @@ class Setup:
 class ResumeTests(unittest.TestCase):
     def test_the_resume_partitions_for_the_emptiness_the_record_saved_not_the_one_its_ledger_implies(self):
         setup = Setup()
-        record = types.SimpleNamespace(ways={"road": {"road": True}}, area_imbalance=0.75,
-                                       carried={"town": {"farms": 10.0}, "farms": {"town": 10.0}})
+        record = types.SimpleNamespace(carriage=types.SimpleNamespace(ways={"road": {"road": True}}, area_imbalance=0.75, carried={"town": {"farms": 10.0}, "farms": {"town": 10.0}}))
         economy = types.SimpleNamespace()
         Economy.__init__(economy, setup, record)
         self.assertEqual(setup.carriage_asked, [({"road": {"road": True}}, 0.75)])
@@ -45,13 +44,13 @@ class ResumeTests(unittest.TestCase):
 class FollowFlows(unittest.TestCase):
     def economy(self, saved_imbalance, carried):
         rebuilt = []
-        return types.SimpleNamespace(record=types.SimpleNamespace(area_imbalance=saved_imbalance, carried=carried),
+        return types.SimpleNamespace(record=types.SimpleNamespace(carriage=types.SimpleNamespace(area_imbalance=saved_imbalance, carried=carried)),
                                      _rebuild_carriage=lambda: rebuilt.append(True) or True, rebuilt=rebuilt)
 
     def test_opposite_flows_change_the_emptiness_and_the_areas_are_partitioned_again(self):
         economy = self.economy(1.0, {"town": {"farms": 10.0}, "farms": {"town": 10.0}})
         self.assertTrue(Economy.follow_flows(economy))
-        self.assertLess(economy.record.area_imbalance, 1.0)
+        self.assertLess(economy.record.carriage.area_imbalance, 1.0)
         self.assertEqual(economy.rebuilt, [True])
 
     def test_flows_that_leave_the_emptiness_where_it_was_leave_the_areas_alone(self):

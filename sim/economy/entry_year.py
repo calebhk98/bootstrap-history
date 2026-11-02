@@ -41,7 +41,7 @@ def open_entrants(setup, record, view, area_map, unmet_by_market: Dict[Tuple[str
     by_limits = sites.limits_by_recipe(setup.site_limits)
     siting = location.entry_siting(setup, record, view, area_map, carriage or _carriage(setup))
     traded = _traded_volume(record, view, area_map)
-    plans = entry_plans(setup.recipes, view, unmet, record.land_rent, setup.land_per_run, traded, siting,
+    plans = entry_plans(setup.recipes, view, unmet, record.land.land_rent, setup.land_per_run, traded, siting,
                         unfilled_at_cost(setup, record, view, area_map, bids_by_market, traded),
                         lambda recipe_id, tile: site_rent_per_run(setup, record, view, recipe_id, tile),
                         entry_practice.crews_of_recipe(record.producers))
@@ -67,7 +67,7 @@ def open_entrants(setup, record, view, area_map, unmet_by_market: Dict[Tuple[str
                                                                               if each.recipe_id == plan.recipe_id]),
                                 yield_factor=sites.yield_at(recipe, plan.tile, by_limits,
                                                             setup.yield_factor_by_recipe_tile.get(key, 1.0)))
-        elif record.expansion_runs.get(producer_id, 0.0) > 0.0:     # a working-capital loan builds no plant
+        elif record.credit.expansion_runs.get(producer_id, 0.0) > 0.0:     # a working-capital loan builds no plant
             continue                                    # plant it already asked for is still to come
         if not builds_plant:
             producer = replaced(producer, capacity_runs=producer.capacity_runs + plan.runs,
@@ -83,9 +83,9 @@ def open_entrants(setup, record, view, area_map, unmet_by_market: Dict[Tuple[str
             per_run = unit_cost.plant_value_per_run(recipe, inputs, wages)
             loan = entrant_loan(per_run * plan.runs, stake) if per_run > 0.0 and math.isfinite(per_run) else 0.0
             if loan > 0.0:
-                record.loan_requests.append(LoanRequest(producer_id, money, loan, credit.earnable_rate(plan.yearly_return),
+                record.credit.loan_requests.append(LoanRequest(producer_id, money, loan, credit.earnable_rate(plan.yearly_return),
                                                         recipe.plant_life_years, loan, "enter"))
-                record.expansion_runs[producer_id] = loan / per_run
+                record.credit.expansion_runs[producer_id] = loan / per_run
     return started
 
 
@@ -131,8 +131,8 @@ def close_idle_producers(setup, record) -> int:
     """Close producers with nothing left to do (entry.producers_to_close): their cash and any goods they
     still hold go to their owner."""
     money = setup.currency_id
-    debtors = {loan.borrower for loan in record.loans}
-    closing = producers_to_close(record.producers, set(record.expansion_runs), debtors)
+    debtors = {loan.borrower for loan in record.credit.loans}
+    closing = producers_to_close(record.producers, set(record.credit.expansion_runs), debtors)
     for producer_id in closing:
         owner = record.producers[producer_id].owner
         cash = record.book.balance(producer_id, money)
@@ -153,7 +153,7 @@ def _spare_output(setup, record, view) -> Dict[Tuple[str, str], float]:
     for producer in sites.in_id_order(record.producers):
         recipe = setup.recipes[producer.recipe_id]
         # capacity waiting on a plant loan counts too, so one gap does not bring a newcomer every year
-        idle = idle_runs(producer.capacity_runs, producer.last_runs, record.expansion_runs.get(producer.agent_id, 0.0),
+        idle = idle_runs(producer.capacity_runs, producer.last_runs, record.credit.expansion_runs.get(producer.agent_id, 0.0),
                          producer.land_run_cap)
         if idle <= 0.0:
             continue

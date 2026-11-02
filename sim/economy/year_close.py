@@ -44,7 +44,7 @@ def dispatch_merchants(setup, record, carriage, ledger: YearLedger, area_map) ->
     carried_goods: dict = {}
     carrier_goods = carriage_wear.carrier_goods(setup)
     prices = carriage_wear.last_prices(setup, record) if carrier_goods else {}
-    wear = carriage_wear.Wear(setup, carriage, record.area_imbalance) if carriage_wear.wears(setup) else None
+    wear = carriage_wear.Wear(setup, carriage, record.carriage.area_imbalance) if carriage_wear.wears(setup) else None
     for merchant in sorted(record.merchants.values(), key=lambda each: each.agent_id):
         record.book.move_many(merchants_transit.advance(merchant, setup.specs))    # hauls on the road for years reach the tile or spoil
     lives = carriage_fleet_book.fleet_lives(setup) if wear is not None else {}
@@ -108,8 +108,8 @@ def dispatch_merchants(setup, record, carriage, ledger: YearLedger, area_map) ->
             carried_book.note_carried(carried_goods, move.good, move.tile, move.receiver_tile, move.quantity, tonnes,
                                       _price_on(record, area_map, move.good, move.tile),
                                       _price_on(record, area_map, move.good, move.receiver_tile))
-    record.carried = carried
-    record.carried_goods = carried_goods
+    record.carriage.carried = carried
+    record.carriage.carried_goods = carried_goods
 
 
 def _price_on(record, area_map, good, tile):
@@ -153,7 +153,7 @@ def money_taxes(setup, record, view, ledger: YearLedger) -> None:
     if duty:
         record.book.transfer_many(duty)
         received += math.fsum(transfer.amount for transfer in duty)
-    farmed = dict(record.tax_farms)
+    farmed = dict(record.taxes.tax_farms)
     received += math.fsum(farm["price"] for farm in farmed.values())      # the farmers paid up front
     if forms:
         facts = tax_facts(setup, record, view, ledger)
@@ -171,7 +171,7 @@ def money_taxes(setup, record, view, ledger: YearLedger) -> None:
         ledger.note_postings(transfers)
         received += math.fsum(transfer.amount for transfer in transfers)
         tax_farming.remember_year(record, assessments, tuple(farmed), setup.state_capacity)
-    record.tax_farms = {}
+    record.taxes.tax_farms = {}
     state_budget.close_year(setup, record, ledger, received)
 
 
@@ -201,7 +201,7 @@ def close_agents(setup, record, view, ledger: YearLedger, area_map, carriage) ->
     service_lives = {good: spec.service_life_years for good, spec in setup.specs.items()}
     cohorts_by_tile: Dict = {}           # the tiles' cohorts, unchanged until the households close below
     loans_of: Dict[str, list] = {}
-    for loan in record.loans:
+    for loan in record.credit.loans:
         loans_of.setdefault(loan.borrower, []).append(loan)
     crews_of_recipe: Dict[str, list] = {}
     for each in record.producers.values():
@@ -243,12 +243,12 @@ def close_agents(setup, record, view, ledger: YearLedger, area_map, carriage) ->
         if worn > 0.0:
             ledger.plant_worn[producer_id] = worn
         if closed.replacement_runs > 0.0 and revenue > costs:
-            record.worn_runs[producer_id] = closed.replacement_runs     # covering its costs, it rebuilds the wear its plan needs
+            record.credit.worn_runs[producer_id] = closed.replacement_runs     # covering its costs, it rebuilds the wear its plan needs
         for transfer in paid:
             property_income[transfer.payee] = property_income.get(transfer.payee, 0.0) + transfer.amount
         if closed.loan_request is not None:
-            record.loan_requests.append(closed.loan_request)
-            record.expansion_runs[producer_id] = closed.expansion_runs
+            record.credit.loan_requests.append(closed.loan_request)
+            record.credit.expansion_runs[producer_id] = closed.expansion_runs
         record.producers[producer_id] = _with_practice(
             _with_sales(closed.producer, recipe, ledger, record.book, area_map.area_of, prices_here, market_capacity), producer.last_runs,
             {trade: practice.pool_units(crews_of_recipe[producer.recipe_id], trade) for trade in producer.crew_runs})
@@ -266,20 +266,20 @@ def close_agents(setup, record, view, ledger: YearLedger, area_map, carriage) ->
         for transfer in paid:
             property_income[transfer.payee] = property_income.get(transfer.payee, 0.0) + transfer.amount
     if carriage_hours.hires(setup):    # after the owners took their profit: the cash left is what next year's carriers can be paid from
-        record.loan_requests.extend(carriage_hours.wage_loans(setup, record, ledger.crew_hours_bought,
+        record.credit.loan_requests.extend(carriage_hours.wage_loans(setup, record, ledger.crew_hours_bought,
                                                            {(result.trade, result.area): result.hours_hired + result.idle_hours
                                                             for result in ledger.labour_results}))
     for cohort_id, cohort in sorted(record.cohorts.items()):
         received = dict(ledger.received.get(cohort_id, {}))
         for good, quantity in ledger.grown.get(cohort_id, {}).items():
             received[good] = received.get(good, 0.0) + quantity
-        income = ledger.wages_in.get(cohort_id, 0.0) + record.property_income.get(cohort_id, 0.0)
+        income = ledger.wages_in.get(cohort_id, 0.0) + record.capital_markets.property_income.get(cohort_id, 0.0)
         spent = ledger.money_out.get(cohort_id, 0.0)
         closed, moves = households.close_year(cohort, received, view, setup.specs, cohort_basket(setup, record, cohort, buying=False),
                                                    income, spent)
         record.book.move_many(held_only(moves, record.book))
         record.cohorts[cohort_id] = closed
-    record.property_income = property_income
+    record.capital_markets.property_income = property_income
 
 
 def _news_lag_of(carriage, home, anchors):

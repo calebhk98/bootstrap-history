@@ -21,7 +21,7 @@ POLL = TaxForm("poll", "adult_labour_years", 0.05)
 
 def bidding_record(base=1000.0, state_take=40.0, cash=None):
     record = EconomyRecord(book=Book(), memory=MarketMemory(), currency=CurrencySpec(MONEY, "fiat", None, 0.0, None))
-    record.tax_history = {"poll": {"base": base, "state_take": state_take}}
+    record.taxes.tax_history = {"poll": {"base": base, "state_take": state_take}}
     for agent, amount in (cash or {"rich": 500.0, "poor": 5.0}).items():
         record.book.transfer(Transfer("edge:legacy", agent, MONEY, amount, "opening"))
     return record
@@ -41,7 +41,7 @@ class BidTests(unittest.TestCase):
 
     def test_nobody_bids_without_a_year_of_history(self):
         record = bidding_record()
-        record.tax_history = {}
+        record.taxes.tax_history = {}
         self.assertEqual(tax_farming.bids(record, POLL, 0.1, STATE, MONEY), [])
 
     def test_the_best_bid_wins_and_pays_the_state_at_once(self):
@@ -70,14 +70,14 @@ class RememberYearTests(unittest.TestCase):
         return types.SimpleNamespace(form=form, base_value=base, collected_value=collected)
 
     def test_a_year_of_tax_leaves_the_forms_base_and_the_states_take_in_the_record(self):
-        record = types.SimpleNamespace(tax_history={})
+        record = types.SimpleNamespace(taxes=types.SimpleNamespace(tax_history={}))
         tax_farming.remember_year(record, [self.assessment("poll", 1000.0, 40.0)], (), 0.5)
-        self.assertEqual(record.tax_history, {"poll": {"base": 1000.0, "state_take": 40.0}})
+        self.assertEqual(record.taxes.tax_history, {"poll": {"base": 1000.0, "state_take": 40.0}})
 
     def test_a_farmed_forms_take_is_scaled_from_the_farmers_reach_back_to_the_states(self):
-        record = types.SimpleNamespace(tax_history={})
+        record = types.SimpleNamespace(taxes=types.SimpleNamespace(tax_history={}))
         tax_farming.remember_year(record, [self.assessment("poll", 1000.0, 90.0)], ("poll",), 0.5, reach=0.9)
-        self.assertAlmostEqual(record.tax_history["poll"]["state_take"], 90.0 * 0.5 / 0.9)
+        self.assertAlmostEqual(record.taxes.tax_history["poll"]["state_take"], 90.0 * 0.5 / 0.9)
 
 
 class StateChoiceTests(unittest.TestCase):

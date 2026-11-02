@@ -57,8 +57,7 @@ def setup():
 
 def record(titles=None, tenancies=None, cohorts=()):
     expected = {market_key(trade, labour_area("t1")): 1.0 for trade in ("smith", "labourer", "servant")}
-    return types.SimpleNamespace(titles=titles or {}, tenancies=tenancies or {}, sold_share_expected=expected,
-                                 cohorts={each.agent_id: each for each in cohorts})
+    return types.SimpleNamespace(sold_share_expected=expected, cohorts={each.agent_id: each for each in cohorts}, land=types.SimpleNamespace(titles=titles or {}, tenancies=tenancies or {}))
 
 
 class SplitTests(unittest.TestCase):

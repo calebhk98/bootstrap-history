@@ -96,7 +96,7 @@ def write_off(record, borrower: str, ratio: float) -> float:
         return 0.0
     kept: List = []
     defaults: List[Default] = []
-    for loan in record.loans:
+    for loan in record.credit.loans:
         if loan.borrower != borrower:
             kept.append(loan)       # the list keeps its order
             continue
@@ -104,8 +104,8 @@ def write_off(record, borrower: str, ratio: float) -> float:
         defaults.append(Default(loan.loan_id, loan.lender, loan.borrower, loan.currency, lost))
         if written.principal > finance.ARREARS_EPSILON or written.arrears > finance.ARREARS_EPSILON:
             kept.append(written)
-    record.loans = kept
+    record.credit.loans = kept
     for lender, lost in credit_claims.losses_by_lender(defaults).items():
-        record.credit_losses[lender] = record.credit_losses.get(lender, 0.0) + lost
-    record.remembered_defaults = credit_claims.remember_defaults(record.remembered_defaults, defaults)
+        record.credit.add_loss(lender, lost)
+    record.credit.remembered_defaults = credit_claims.remember_defaults(record.credit.remembered_defaults, defaults)
     return sum(default.loss for default in defaults)

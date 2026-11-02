@@ -19,7 +19,7 @@ def village(held=None):
     cohorts = {"household:%d" % index: types.SimpleNamespace(agent_id="household:%d" % index, tile=TILE, ownership_share=0.1)
                for index in range(HOUSEHOLDS)}
     held = {holder: cohort.ownership_share for holder, cohort in cohorts.items()} if held is None else held
-    return types.SimpleNamespace(cohorts=cohorts, titles={TILE: dict(held)}, tenancies={}, loans=[])
+    return types.SimpleNamespace(cohorts=cohorts, land=types.SimpleNamespace(titles={TILE: dict(held)}, tenancies={}), credit=types.SimpleNamespace(loans=[]))
 
 
 def gini_of(held):

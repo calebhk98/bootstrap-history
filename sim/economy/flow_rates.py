@@ -15,5 +15,5 @@ FLOW_IMBALANCE_STEP = declare(
 def flow_imbalance(record) -> float:
     """The share of carriers' return trips that find no opposite flow, last year's, in steps; 1 with no
     ledger (carriers return empty)."""
-    raw = flow_ledger.overall_imbalance(record.carried)
+    raw = flow_ledger.overall_imbalance(record.carriage.carried)
     return min(1.0, round(raw / FLOW_IMBALANCE_STEP) * FLOW_IMBALANCE_STEP)

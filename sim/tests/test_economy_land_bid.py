@@ -87,7 +87,7 @@ class TitleTests(unittest.TestCase):
         added = land_bid.take_up(record, BUYER, TILE, 25.0, HECTARES_ON_TILE)
         self.assertAlmostEqual(added, 25.0)
         self.assertAlmostEqual(sum(titles.shares(record, TILE).values()), 1.0)
-        self.assertAlmostEqual(record.cleared_hectares[TILE], 25.0)
+        self.assertAlmostEqual(record.land.cleared_hectares[TILE], 25.0)
         self.assertAlmostEqual(titles.holding(record, TILE, SELLER) * (HECTARES_ON_TILE + 25.0), seller_hectares)
 
     def test_nobody_else_gives_up_a_hectare(self):
@@ -100,17 +100,17 @@ class TitleTests(unittest.TestCase):
 
     def test_tenancies_and_pledges_keep_their_hectares(self):
         record = self.world()
-        record.tenancies = {TILE: [{"tenant": BUYER, "lessor": SELLER, "share": 0.2, "arrears": 0.0}]}
-        record.loans = [types.SimpleNamespace(borrower=SELLER, collateral_tile=TILE, collateral_share=0.1)]
+        record.land.tenancies = {TILE: [{"tenant": BUYER, "lessor": SELLER, "share": 0.2, "arrears": 0.0}]}
+        record.credit.loans = [types.SimpleNamespace(borrower=SELLER, collateral_tile=TILE, collateral_share=0.1)]
         land_bid.take_up(record, BUYER, TILE, 100.0, HECTARES_ON_TILE)
-        self.assertAlmostEqual(record.tenancies[TILE][0]["share"] * 2.0 * HECTARES_ON_TILE, 0.2 * HECTARES_ON_TILE)
-        self.assertAlmostEqual(record.loans[0].collateral_share * 2.0 * HECTARES_ON_TILE, 0.1 * HECTARES_ON_TILE)
+        self.assertAlmostEqual(record.land.tenancies[TILE][0]["share"] * 2.0 * HECTARES_ON_TILE, 0.2 * HECTARES_ON_TILE)
+        self.assertAlmostEqual(record.credit.loans[0].collateral_share * 2.0 * HECTARES_ON_TILE, 0.1 * HECTARES_ON_TILE)
 
     def test_no_ground_or_no_arable_land_adds_nothing(self):
         record = self.world()
         self.assertEqual(land_bid.take_up(record, BUYER, TILE, 0.0, HECTARES_ON_TILE), 0.0)
         self.assertEqual(land_bid.take_up(record, BUYER, TILE, 5.0, 0.0), 0.0)
-        self.assertEqual(record.cleared_hectares, {})
+        self.assertEqual(record.land.cleared_hectares, {})
 
     def test_the_tiles_arable_land_counts_what_was_cleared(self):
         record = self.world()
@@ -123,7 +123,7 @@ class TitleTests(unittest.TestCase):
         record = self.world()
         land_bid.take_up(record, BUYER, TILE, 25.0, HECTARES_ON_TILE)
         loaded = EconomyRecord.from_record(record.to_record())
-        self.assertEqual(loaded.cleared_hectares, record.cleared_hectares)
+        self.assertEqual(loaded.land.cleared_hectares, record.land.cleared_hectares)
 
     def test_an_owner_keeps_of_its_own_stock_what_its_plots_need_beyond_its_land(self):
         self.assertAlmostEqual(land_bid.own_use(stock=50.0, hectares_needed=30.0, hectares_held=12.0), 18.0)
@@ -160,12 +160,12 @@ class YearWiringTests(unittest.TestCase):
         record.book.move_many([GoodsMove("edge:production", BUYER, GROUND, TILE, 5.0, "bought")])
         titled = land_bid_year.take_up_bought(setup, record)
         self.assertAlmostEqual(titled[BUYER], 5.0)
-        self.assertAlmostEqual(record.cleared_hectares[TILE], 5.0)
+        self.assertAlmostEqual(record.land.cleared_hectares[TILE], 5.0)
         self.assertEqual(record.book.stock(BUYER, GROUND, TILE), 0.0)
 
     def test_a_seller_with_no_land_of_its_own_still_sells_ground_it_cleared(self):
         setup, record = self.world()
-        record.titles[TILE] = {BUYER: 1.0}
+        record.land.titles[TILE] = {BUYER: 1.0}
         record.book.move_many([GoodsMove("edge:production", BUYER, GROUND, TILE, 10.0, "bought")])
         land_bid_year.take_up_bought(setup, record)
         self.assertEqual(record.book.stock(BUYER, GROUND, TILE), 0.0)
@@ -179,7 +179,7 @@ class YearWiringTests(unittest.TestCase):
         owner = record.cohorts[SELLER]
         options = {"food": [(1.0, "farm", CROP, 1.0)]}
         record.book.move_many([GoodsMove("edge:production", "p", GROUND, TILE, stock, "cleared")])
-        record.titles[TILE] = {SELLER: people_floor_hectares / HECTARES_ON_TILE}
+        record.land.titles[TILE] = {SELLER: people_floor_hectares / HECTARES_ON_TILE}
         return setup, record, options, owner
 
     def test_the_clearers_owner_farms_what_its_floors_need_of_its_own_stock_before_it_is_sold(self):

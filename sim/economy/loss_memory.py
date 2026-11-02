@@ -1,7 +1,7 @@
 """What a lender expects to lose: a rate per year of exposure that ages, kept apart from the lifetime loss stock.
 
-`record.credit_losses` only grows (the money audit and the accounts read it as a stock). The ask reads
-`record.loss_rates` instead: each year a lender's losses over its exposure that year (what it lost plus what it is
+`record.credit.credit_losses` only grows (the money audit and the accounts read it as a stock). The ask reads
+`record.credit.loss_rates` instead: each year a lender's losses over its exposure that year (what it lost plus what it is
 still owed) are blended into the rate it carried, so a loss long ago fades and a lender losing every year keeps a
 high rate. Works on an agent id, so a household, a bank or a state lends by the same rule.
 """
@@ -21,9 +21,9 @@ LOSS_RATE_SMOOTHING_SHARE = declare(
 def age(record, money: str, share: float = None) -> None:
     """Close the year for every lender: blend this year's loss rate into its remembered rate."""
     share = LOSS_RATE_SMOOTHING_SHARE if share is None else share
-    lost = {agent: max(0.0, total - record.losses_seen.get(agent, 0.0)) for agent, total in record.credit_losses.items()}
-    record.loss_rates = blend(record.loss_rates, lost, claims_by_lender(record.loans, money), share)
-    record.losses_seen = dict(record.credit_losses)
+    lost = {agent: max(0.0, total - record.credit.losses_seen.get(agent, 0.0)) for agent, total in record.credit.credit_losses.items()}
+    record.credit.loss_rates = blend(record.credit.loss_rates, lost, claims_by_lender(record.credit.loans, money), share)
+    record.credit.losses_seen = dict(record.credit.credit_losses)
 
 
 def blend(remembered: Mapping[str, float], lost: Mapping[str, float], claims: Mapping[str, float],

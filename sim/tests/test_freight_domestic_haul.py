@@ -198,16 +198,16 @@ class EconomyFlows(unittest.TestCase):
         from sim.economy.economy import Economy
         rebuilt = []
         economy = types.SimpleNamespace(
-            record=types.SimpleNamespace(carried={"town": {"farms": 5.0}, "farms": {"town": 5.0}}, area_imbalance=1.0),
+            record=types.SimpleNamespace(carriage=types.SimpleNamespace(carried={"town": {"farms": 5.0}, "farms": {"town": 5.0}}, area_imbalance=1.0)),
             _rebuild_carriage=lambda: rebuilt.append(True) or True)
         self.assertTrue(Economy.follow_flows(economy))
-        self.assertEqual((economy.record.area_imbalance, rebuilt), (0.0, [True]))
+        self.assertEqual((economy.record.carriage.area_imbalance, rebuilt), (0.0, [True]))
 
     def test_an_unchanged_imbalance_rebuilds_nothing(self):
         from sim.economy.economy import Economy
         rebuilt = []
         economy = types.SimpleNamespace(
-            record=types.SimpleNamespace(carried={"town": {"farms": 5.0}}, area_imbalance=1.0),
+            record=types.SimpleNamespace(carriage=types.SimpleNamespace(carried={"town": {"farms": 5.0}}, area_imbalance=1.0)),
             _rebuild_carriage=lambda: rebuilt.append(True) or True)
         self.assertFalse(Economy.follow_flows(economy))
         self.assertEqual(rebuilt, [])

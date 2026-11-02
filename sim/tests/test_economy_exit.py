@@ -126,10 +126,7 @@ class StubBook:
 def exiting(cash, loans, goods=None):
     """A record holding one producer (owned by "owner") with `cash` and `goods`, owing `loans`; ownership.spread is the identity."""
     defaulted = []
-    record = types.SimpleNamespace(
-        book=StubBook(cash, goods or {}), producers={"producer": types.SimpleNamespace(owner="owner")}, loans=loans,
-        credit_losses={}, remembered_defaults={}, worn_runs={}, expansion_runs={}, shares={}, last_dividends={},
-        contracts=types.SimpleNamespace(default=lambda borrower, kind: defaulted.append((borrower, kind))))
+    record = types.SimpleNamespace(book=StubBook(cash, goods or {}), producers={"producer": types.SimpleNamespace(owner="owner")}, credit=types.SimpleNamespace(loans=loans, credit_losses={}, remembered_defaults={}, worn_runs={}, expansion_runs={}, contracts=types.SimpleNamespace(default=lambda borrower, kind: defaulted.append((borrower, kind)))), capital_markets=types.SimpleNamespace(shares={}, last_dividends={}))
     return record, defaulted
 
 
@@ -151,8 +148,8 @@ class ExitBooksTests(unittest.TestCase):
                          [("owner", 7.0)])
         self.assertNotIn("producer", record.producers)
         self.assertEqual(defaulted, [("producer", TERM_LOAN)])
-        self.assertAlmostEqual(record.credit_losses["lender"], 110.0 - 40.0)
-        self.assertAlmostEqual(record.remembered_defaults["producer"], 110.0 - 40.0)
+        self.assertAlmostEqual(record.credit.credit_losses["lender"], 110.0 - 40.0)
+        self.assertAlmostEqual(record.credit.remembered_defaults["producer"], 110.0 - 40.0)
 
     def test_lenders_are_repaid_before_the_owner(self):
         loan = Loan("loan-1", "lender", "producer", "coin", 50.0, 0.05, 5.0, 0.0)
@@ -160,7 +157,7 @@ class ExitBooksTests(unittest.TestCase):
         spread = exit_with(record, [Transfer("producer", "owner", "coin", 100.0, "dividend")])
         self.assertEqual([(each.payee, each.amount) for each in record.book.transfers[:1]], [("lender", 50.0)])
         self.assertEqual([(each.payee, each.amount) for each in spread], [("owner", 50.0)])
-        self.assertEqual(record.credit_losses, {})
+        self.assertEqual(record.credit.credit_losses, {})
 
 
 if __name__ == "__main__":

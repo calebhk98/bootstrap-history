@@ -7,6 +7,7 @@ import unittest
 from sim.economy import durable_stock, inventory, opening
 from sim.economy.accounts import Book
 from sim.economy.market_memory import MarketMemory
+from sim.economy.land_record import LandRecord
 from sim.economy.record import EconomyRecord
 from sim.economy.households_orders import _durable_ratio
 from sim.economy.types import GoodSpec
@@ -20,7 +21,7 @@ class DurableStationaryTests(unittest.TestCase):
         setup = small_setup(basket=BASKET, specs=SPECS)
         record = EconomyRecord(Book(), MarketMemory(), setup.currency,
                                cohorts={household.agent_id: household},
-                               titles={household.tile: {household.agent_id: 1.0}})
+                               land=LandRecord(titles={household.tile: {household.agent_id: 1.0}}))
         view = View()
         view.stock = record.book.stock
         before = list(opening._opening_bids(setup, record, view))

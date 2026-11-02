@@ -58,8 +58,7 @@ def market(price=1e3, usual=1e3, makers=True):
     """(setup, record, view, area_map) for a trinket market of one area and one tile, at `price`; with `makers` one carver works there."""
     setup = types.SimpleNamespace(recipes={CARVE: CARVE_RECIPE})
     producers = {"carver": Producer("carver", "owner", CARVE, TILE, INCUMBENT_RUNS)} if makers else {}
-    record = types.SimpleNamespace(producers=producers, expansion_runs={}, margin_years={},
-                                   memory=types.SimpleNamespace(usual_prices={KEY: usual}))
+    record = types.SimpleNamespace(producers=producers, margin_years={}, memory=types.SimpleNamespace(usual_prices={KEY: usual}), credit=types.SimpleNamespace(expansion_runs={}))
     area = types.SimpleNamespace(area_id=AREA, anchor_tile=TILE, tiles=(TILE,))
     area_map = types.SimpleNamespace(goods=lambda: [TRINKET], areas=lambda good: [area])
     return setup, record, types.SimpleNamespace(price=lambda good, area_id: price), area_map

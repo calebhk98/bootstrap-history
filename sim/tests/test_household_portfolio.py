@@ -93,10 +93,10 @@ class ApplyMatchesTests(unittest.TestCase):
     def test_a_seller_hands_its_matched_part_to_the_buyer_for_the_matched_value(self):
         book = Book()
         book.transfer(Transfer("edge:mint", "buyer", "coin", 100.0, "opening"))
-        record = SimpleNamespace(book=book, shares={"farm": {"seller": 0.5}})
+        record = SimpleNamespace(book=book, capital_markets=SimpleNamespace(shares={"farm": {"seller": 0.5}}))
         portfolio_year.apply_matches(record, "coin", {"seller": -40.0, "buyer": 40.0}, {"seller": 200.0})
-        self.assertAlmostEqual(record.shares["farm"]["seller"], 0.4)
-        self.assertAlmostEqual(record.shares["farm"]["buyer"], 0.1)
+        self.assertAlmostEqual(record.capital_markets.shares["farm"]["seller"], 0.4)
+        self.assertAlmostEqual(record.capital_markets.shares["farm"]["buyer"], 0.1)
         self.assertAlmostEqual(book.balance("seller", "coin"), 40.0)
         self.assertAlmostEqual(book.balance("buyer", "coin"), 60.0)
 

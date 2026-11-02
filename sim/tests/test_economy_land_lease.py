@@ -21,8 +21,7 @@ def economy_with(hectares):
     book = Book()
     producer = Producer("producer:t", cohort_id("t", 2), "wheat", "t", 100.0, expected_prices={"grain": 1.0})
     book.transfer(Transfer(EDGE_MINT, "producer:t", "coin", 1e9, "opening"))
-    record = SimpleNamespace(producers={"producer:t": producer}, book=book,
-                             cohorts={each.agent_id: each for each in cohorts}, land_rent={})
+    record = SimpleNamespace(producers={"producer:t": producer}, book=book, cohorts={each.agent_id: each for each in cohorts}, land=SimpleNamespace(land_rent={}))
     setup = SimpleNamespace(tiles=tiles, recipes={"wheat": WHEAT}, land_per_run={"wheat": 1.0}, currency_id="coin")
     return setup, record
 
@@ -38,7 +37,7 @@ def cleared_rent(setup, record, runs):
 
 def settle(setup, record, runs):
     land_market.settle_year(setup, record, view(), {"producer:t": runs})
-    return record.land_rent["t"]
+    return record.land.land_rent["t"]
 
 
 class LeaseTests(unittest.TestCase):
@@ -60,7 +59,7 @@ class LeaseTests(unittest.TestCase):
         setup, record = economy_with(100.0)
         high = settle(setup, record, 300.0)
         land_market.settle_year(setup, record, view(), {})
-        self.assertAlmostEqual(record.land_rent["t"], high * (1.0 - land_market.LAND_RENT_ADJUSTMENT_SHARE))
+        self.assertAlmostEqual(record.land.land_rent["t"], high * (1.0 - land_market.LAND_RENT_ADJUSTMENT_SHARE))
 
     def test_alternating_demand_swings_rent_less_than_it_swings_what_land_clears_at(self):
         setup, record = economy_with(100.0)
@@ -74,7 +73,7 @@ class LeaseTests(unittest.TestCase):
         settle(setup, record, 300.0)
         before = record.book.balance("producer:t", "coin")
         paid = land_market.settle_year(setup, record, view(), {"producer:t": 5.0})
-        self.assertAlmostEqual(record.producers["producer:t"].land_rent_per_run, record.land_rent["t"])
+        self.assertAlmostEqual(record.producers["producer:t"].land_rent_per_run, record.land.land_rent["t"])
         self.assertAlmostEqual(sum(each.amount for each in paid), before - record.book.balance("producer:t", "coin"))
         self.assertGreater(sum(each.amount for each in paid), 0.0)
 

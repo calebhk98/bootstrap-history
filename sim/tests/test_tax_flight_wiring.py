@@ -75,13 +75,10 @@ class Leavers(unittest.TestCase):
 		self.assertEqual(shares, {"x": 0.05})
 
 	def test_tenants_of_a_fleeing_area_leave_the_land_and_the_title_goes_back_to_no_holder(self):
-		record = SimpleNamespace(
-			cohorts={"serf": SimpleNamespace(agent_id="serf", tile="a"), "other": SimpleNamespace(agent_id="other", tile="b")},
-			titles={"t1": {"lord": 0.5}},
-			tenancies={"t1": [{"tenant": "serf", "lessor": "lord", "share": 0.5, "arrears": 0.0}]})
+		record = SimpleNamespace(cohorts={"serf": SimpleNamespace(agent_id="serf", tile="a"), "other": SimpleNamespace(agent_id="other", tile="b")}, land=SimpleNamespace(titles={"t1": {"lord": 0.5}}, tenancies={"t1": [{"tenant": "serf", "lessor": "lord", "share": 0.5, "arrears": 0.0}]}))
 		released = flight_year.tenants_flee(record, {"work@a": 1.0})
 		self.assertEqual(released, {"t1": 0.5})
-		self.assertEqual(record.titles["t1"], {})
+		self.assertEqual(record.land.titles["t1"], {})
 
 	def test_each_year_away_adds_the_take_to_what_a_fugitive_owes(self):
 		fugitives = {}

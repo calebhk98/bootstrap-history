@@ -72,7 +72,7 @@ def market(makers=False, price=None):
     """(setup, record, view, area_map) for a metal market of one area and one tile; `makers` puts a smelter there."""
     setup = types.SimpleNamespace(recipes={MAKE: MAKE_RECIPE})
     producers = {"smelter": Producer("smelter", "owner", MAKE, ANCHOR, 3.0)} if makers else {}
-    record = types.SimpleNamespace(producers=producers, expansion_runs={})
+    record = types.SimpleNamespace(producers=producers, credit=types.SimpleNamespace(expansion_runs={}))
     area = types.SimpleNamespace(area_id="area", anchor_tile=ANCHOR, tiles=(ANCHOR,))
     area_map = types.SimpleNamespace(goods=lambda: [GOOD], areas=lambda good: [area])
     return setup, record, types.SimpleNamespace(price=lambda good, area_id: price), area_map

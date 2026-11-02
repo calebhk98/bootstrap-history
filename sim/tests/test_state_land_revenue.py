@@ -66,9 +66,9 @@ def producer(tile, recipe, runs, rent_per_run=0.0):
 
 # ---- rent paid on land let, per tile, from the economy's records ---------------------------------
 setup = SimpleNamespace(land_per_run={"farm": 2.0, "mine": 0.0})
-record = SimpleNamespace(land_rent={"a": 10.0, "b": 4.0, "c": 7.0}, producers={
+record = SimpleNamespace(producers={
 	"p1": producer("a", "farm", 5.0, 20.0), "p2": producer("a", "farm", 1.0, 20.0), "p3": producer("b", "farm", -1.0, 8.0),
-	"p4": producer("c", "mine", 9.0, 14.0)})
+	"p4": producer("c", "mine", 9.0, 14.0)}, land=SimpleNamespace(land_rent={"a": 10.0, "b": 4.0, "c": 7.0}))
 paid = land_rents.rent_paid_by_tile(setup, record)
 check("rent paid on a tile is what its producers pay a run times the runs they worked last year",
       paid == {"a": 10.0 * 2.0 * 6.0}, paid)
@@ -111,9 +111,8 @@ check("a form can name the owners it falls on", revenue.assess(world)[0].money =
 cohort_a = SimpleNamespace(agent_id="household:a:0", tile="a", ownership_share=1.0)
 cohort_b = SimpleNamespace(agent_id="household:a:1", tile="a", ownership_share=3.0)
 cohort_c = SimpleNamespace(agent_id="household:b:0", tile="b", ownership_share=1.0)
-rent_record = SimpleNamespace(land_rent={"a": 10.0, "b": 5.0}, producers={
-	"p1": producer("a", "farm", 2.0, 10.0), "p2": producer("b", "farm", 1.0, 5.0)},
-	cohorts={cohort.agent_id: cohort for cohort in (cohort_a, cohort_b, cohort_c)})
+rent_record = SimpleNamespace(producers={
+	"p1": producer("a", "farm", 2.0, 10.0), "p2": producer("b", "farm", 1.0, 5.0)}, cohorts={cohort.agent_id: cohort for cohort in (cohort_a, cohort_b, cohort_c)}, land=SimpleNamespace(land_rent={"a": 10.0, "b": 5.0}))
 received = land_rents.rent_received_by_cohort(SimpleNamespace(land_per_run={"farm": 1.0}), rent_record)
 check("the rent paid on a tile is shared among its cohorts by what each owns",
       received == {"household:a:0": 5.0, "household:a:1": 15.0, "household:b:0": 5.0}, received)

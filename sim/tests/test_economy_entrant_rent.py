@@ -51,11 +51,11 @@ class EntrantRentRuleTests(unittest.TestCase):
         recipe = fixture.recipes()[fixture.FARM]
         setup = types.SimpleNamespace(recipes={fixture.FARM: recipe}, land_per_run={fixture.FARM: LAND_PER_RUN})
         grain_value = recipe.outputs[fixture.GRAIN] * 0.1 / LAND_PER_RUN
-        record = types.SimpleNamespace(land_rent={fixture.FARMS: 50.0}, land_mean_value={fixture.FARMS: grain_value})
+        record = types.SimpleNamespace(land=types.SimpleNamespace(land_rent={fixture.FARMS: 50.0}, land_mean_value={fixture.FARMS: grain_value}))
         with mock.patch.object(entrant_rent, "expected_output_prices", lambda producer, _recipe, _view: {fixture.GRAIN: 0.1}):
             self.assertAlmostEqual(entrant_rent.site_rent_per_run(setup, record, None, fixture.FARM, fixture.FARMS),
                                    50.0 * LAND_PER_RUN)
-            record.land_mean_value = {fixture.FARMS: 4.0 * grain_value}
+            record.land.land_mean_value = {fixture.FARMS: 4.0 * grain_value}
             self.assertAlmostEqual(entrant_rent.site_rent_per_run(setup, record, None, fixture.FARM, fixture.FARMS),
                                    50.0 * LAND_PER_RUN / 4.0)
 

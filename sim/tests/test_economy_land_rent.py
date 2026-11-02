@@ -72,8 +72,8 @@ class EntryRentTests(unittest.TestCase):
 class RecordTests(unittest.TestCase):
     def test_last_years_rent_round_trips_through_the_save(self):
         source = EconomyRecord(book=Book(), memory=MarketMemory(), currency=CurrencySpec("coin", "fiat", None, 0.0, None))
-        source.land_rent = {"t": 1.5}
-        self.assertEqual(EconomyRecord.from_record(source.to_record()).land_rent, {"t": 1.5})
+        source.land.land_rent = {"t": 1.5}
+        self.assertEqual(EconomyRecord.from_record(source.to_record()).land.land_rent, {"t": 1.5})
 
 
 if __name__ == "__main__":

@@ -230,11 +230,11 @@ def post_rents(setup, record, view, wanted_runs: Mapping[AgentId, float],
     demands = demands_of(setup, record, view, wanted_runs)
     arable = {tile_id: titles_ground.arable_hectares(record, tile_id, tile) for tile_id, tile in setup.tiles.items()}
     cleared = clear_land(arable, demands, own_plot_hectares, own_value_by_tile)
-    result = replaced(cleared, rent_per_hectare_by_tile=posted_rents(record.land_rent,
+    result = replaced(cleared, rent_per_hectare_by_tile=posted_rents(record.land.land_rent,
                                                                               cleared.rent_per_hectare_by_tile))
-    record.land_rent = dict(result.rent_per_hectare_by_tile)
-    record.land_mean_value = dict(result.mean_value_by_tile)
-    record.land_ceded = dict(result.ceded_by_tile)
+    record.land.land_rent = dict(result.rent_per_hectare_by_tile)
+    record.land.land_mean_value = dict(result.mean_value_by_tile)
+    record.land.land_ceded = dict(result.ceded_by_tile)
     demands_by_agent = {demand.agent_id: demand for demand in demands}
     for producer_id, producer in list(record.producers.items()):
         land_per_run = setup.land_per_run.get(producer.recipe_id, 0.0)

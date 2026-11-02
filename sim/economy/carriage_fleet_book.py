@@ -134,7 +134,7 @@ def endow(setup, record, carriage, prices: Mapping[GoodId, float], final_by_tile
     value = math.fsum(quantity * prices.get(good, 0.0) for good, quantity in totals.items())
     if tonnes <= 0.0:
         return
-    moves = opening_fleet(setup, record, carriage_wear.Wear(setup, carriage, record.area_imbalance), value / tonnes)
+    moves = opening_fleet(setup, record, carriage_wear.Wear(setup, carriage, record.carriage.area_imbalance), value / tonnes)
     if moves:
         record.book.move_many(moves)
 

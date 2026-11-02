@@ -201,4 +201,4 @@ def trade_book(economy, country: Optional[str]) -> Dict[str, Dict[str, float]]:
     economy's unit; carried_book.trade_book). Empty for None, which has no border."""
     if country is None:
         return {}
-    return carried_book.trade_book(economy.record.carried_goods, economy.setup.country_of, country)
+    return carried_book.trade_book(economy.record.carriage.carried_goods, economy.setup.country_of, country)

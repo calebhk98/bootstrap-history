@@ -21,8 +21,7 @@ def economy_of():
     """An Economy with only the pieces the plant methods read."""
     self = object.__new__(Economy)
     self.setup = pytypes.SimpleNamespace(recipes={"recipe": RECIPE}, currency_id="coin")
-    self.record = pytypes.SimpleNamespace(book=Book(), producers={"mill": producers.Producer("mill", "owner", "recipe", "t1", 1.0)},
-                                          cohorts={}, workforce=MarketState(), worn_runs={"mill": 1.0})
+    self.record = pytypes.SimpleNamespace(book=Book(), producers={"mill": producers.Producer("mill", "owner", "recipe", "t1", 1.0)}, cohorts={}, workforce=MarketState(), credit=pytypes.SimpleNamespace(worn_runs={"mill": 1.0}))
     self.area_map = pytypes.SimpleNamespace(goods=lambda: ("iron", "wood"))
     return self
 

@@ -42,9 +42,7 @@ def world(people=10.0, working=10.0):
     setup = types.SimpleNamespace(tiles={TILE: tile}, recipes={"grow_grain": GRAIN_RECIPE}, land_per_run=LAND,
                                   servant_trade="servant", working_hours_per_year=2000.0,
                                   basket_for=lambda tile_id: BASKET)
-    record = types.SimpleNamespace(cohorts={POOR: Cohort(POOR, TILE, 0, people, working, 0.0)},
-                                   titles={TILE: {LANDLORD: 1.0}}, tenancies={}, loans=[], land_rent={TILE: 24.0},
-                                   cleared_hectares={})
+    record = types.SimpleNamespace(cohorts={POOR: Cohort(POOR, TILE, 0, people, working, 0.0)}, land=types.SimpleNamespace(titles={TILE: {LANDLORD: 1.0}}, tenancies={}, land_rent={TILE: 24.0}, cleared_hectares={}), credit=types.SimpleNamespace(loans=[]))
     return setup, record, own_production_options(setup.recipes, LAND, BASKET)
 
 
@@ -54,7 +52,7 @@ class AskTests(unittest.TestCase):
         slack = land_lease_year.asks(setup, record, View(0.2, tools=100.0), options)[TILE]
         scarce = land_lease_year.asks(setup, record, View(5.0, tools=100.0), options)[TILE]
         self.assertGreater(slack, scarce)
-        self.assertLessEqual(slack, record.land_rent[TILE])
+        self.assertLessEqual(slack, record.land.land_rent[TILE])
 
     def test_a_wage_that_eats_the_crop_leaves_no_rent_to_ask(self):
         setup, record, options = world()
@@ -80,7 +78,7 @@ class LeaseInTheMarketTests(unittest.TestCase):
     def test_no_lease_when_the_wage_leaves_no_margin_over_the_outside_option(self):
         setup, record, options = world()
         self.assertEqual(land_lease_year.lease_in_market(setup, record, View(15.0), options), [])
-        self.assertEqual(record.tenancies, {})
+        self.assertEqual(record.land.tenancies, {})
 
     def test_a_cohort_with_too_few_hands_leases_only_what_its_hours_work(self):
         setup, record, options = world(people=100.0, working=0.01)      # 20 hours: five four-hour runs of two hectares
@@ -97,7 +95,7 @@ class LeaseInTheMarketTests(unittest.TestCase):
     def test_a_holder_that_works_its_own_floors_lets_only_the_rest(self):
         setup, record, options = world()
         record.cohorts["household:t:1"] = Cohort("household:t:1", TILE, 1, 10.0, 10.0, 0.5)
-        record.titles[TILE] = {"household:t:1": 1.0}
+        record.land.titles[TILE] = {"household:t:1": 1.0}
         leases = land_lease_year.lease_in_market(setup, record, View(0.2, tools=100.0), options)
         self.assertEqual([lease.lessor for lease in leases], ["household:t:1"])
         self.assertAlmostEqual(titles_worked.worked_share(record, TILE, "household:t:1") * 100.0, 98.0)

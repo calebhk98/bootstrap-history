@@ -122,7 +122,7 @@ class CreditRoomTests(unittest.TestCase):
     def met(self, **changes):
         record = dict(funds_offered=self.FUNDS, credit_granted={}, lent_by_borrower={"borrower:a": 100.0})
         record.update(changes)
-        return types.SimpleNamespace(record=types.SimpleNamespace(**record))
+        return types.SimpleNamespace(record=types.SimpleNamespace(credit=types.SimpleNamespace(**record)))
 
     def test_there_is_no_room_figure_before_lenders_have_met(self):
         self.assertIsNone(economy_api.credit_room(self.met(funds_offered=0.0), "borrower:a"))

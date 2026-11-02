@@ -50,7 +50,7 @@ def cohort_orders(setup, record, view, ledger: YearLedger, order_book: OrderBook
         priced = priced_by_tile.get(key)
         if priced is None:
             priced = priced_by_tile[key] = households.need_prices(basket, view, cohort.tile)
-        income = ledger.wages_in.get(cohort.agent_id, 0.0) + record.property_income.get(cohort.agent_id, 0.0)
+        income = ledger.wages_in.get(cohort.agent_id, 0.0) + record.capital_markets.property_income.get(cohort.agent_id, 0.0)
         cash = record.book.balance(cohort.agent_id, money)
         tool_bids = tool_wear.tool_bids(
             cohort.agent_id, cohort.tile, lambda good: view.area_of(good, cohort.tile), lambda good: offered_price(view, good, view.area_of(good, cohort.tile)),

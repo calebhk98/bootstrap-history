@@ -57,8 +57,7 @@ def setup():
 
 def record_and_offers(wage):
     worker = Cohort(agent_id="c", tile="t1", income_class=0, people=100.0, working_people=50.0, ownership_share=0.0)
-    record = types.SimpleNamespace(titles={"t1": {"c": 1.0}}, tenancies={}, cohorts={"c": worker},
-                                    sold_share_expected={market_key("labourer", labour_area("t1")): 1.0})
+    record = types.SimpleNamespace(cohorts={"c": worker}, sold_share_expected={market_key("labourer", labour_area("t1")): 1.0}, land=types.SimpleNamespace(titles={"t1": {"c": 1.0}}, tenancies={}))
     return record, [LabourOffer("c", "labourer", labour_area("t1"), 500.0, wage)]
 
 

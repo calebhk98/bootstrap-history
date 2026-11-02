@@ -53,7 +53,7 @@ def actor_bids(setup, record, view, buyer: str, tile_id: str, margin_per_hectare
         area = view.area_of(good, tile_id)
         rate = view.interest_rate(view.currency_of(area))
         bid = land_bid.hectare_bid(buyer, good, area, tile_id,
-                                   land_bid.earning_per_hectare(margin_per_hectare, record.land_rent.get(tile_id, 0.0)),
+                                   land_bid.earning_per_hectare(margin_per_hectare, record.land.land_rent.get(tile_id, 0.0)),
                                    view.price(good, area), titles_value.capitalising_rate(rate, setup.opening_rate),
                                    land_bid.workable_hectares(spare_hours, hours_per_hectare), cash)
         if bid is not None:

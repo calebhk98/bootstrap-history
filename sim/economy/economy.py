@@ -85,7 +85,7 @@ class Economy:
         if opening:
             record, area_map, carriage = open_economy(setup)
         else:
-            carriage = setup.carriage_table(record.ways, record.area_imbalance)
+            carriage = setup.carriage_table(record.carriage.ways, record.carriage.area_imbalance)
             area_map = setup.area_map(carriage)
         self.record = record
         self.area_map = area_map
@@ -101,15 +101,15 @@ class Economy:
     def set_improvements(self, improvements: Mapping[str, Mapping[str, Any]]) -> bool:
         """Rebuild the carriage table over these built ways, partition the market areas again over it and
         carry the markets' memory to the new areas; False when they are the ways it already has."""
-        if dict(improvements) == self.record.ways:
+        if dict(improvements) == self.record.carriage.ways:
             return False
-        self.record.ways = {key: dict(way) for key, way in improvements.items()}
+        self.record.carriage.ways = {key: dict(way) for key, way in improvements.items()}
         return self._rebuild_carriage()
 
     def _rebuild_carriage(self) -> bool:
         """Carriage over the current ways and return trips, the market areas partitioned again over it, the
         markets' memory carried to the new areas."""
-        self.carriage = self.setup.carriage_table(self.record.ways, self.record.area_imbalance)
+        self.carriage = self.setup.carriage_table(self.record.carriage.ways, self.record.carriage.area_imbalance)
         area_map = self.setup.area_map(self.carriage)
         follow(self.record, self.area_map, area_map)
         self.area_map = area_map
@@ -123,15 +123,15 @@ class Economy:
         """Price the carriage by last year's flows: where the opposite flow fills more of the carriers'
         return trips, a tonne costs less. False when the (stepped) emptiness of the returns is unchanged."""
         imbalance = flow_imbalance(self.record)
-        if imbalance == self.record.area_imbalance:
+        if imbalance == self.record.carriage.area_imbalance:
             return False
-        self.record.area_imbalance = imbalance
+        self.record.carriage.area_imbalance = imbalance
         return self._rebuild_carriage()
 
     def view(self) -> YearView:
         return CreditView(self.record.memory, self.record.book, self.area_map, self.setup.currency_id, labour_area,
-                          loans=lambda: self.record.loans, equity=self._equity_read,
-                          loss_rates=lambda: self.record.loss_rates)
+                          loans=lambda: self.record.credit.loans, equity=self._equity_read,
+                          loss_rates=lambda: self.record.credit.loss_rates)
 
     def _equity_read(self, view) -> Dict[str, float]:
         return equity.holdings(self.setup, self.record, view)
@@ -192,11 +192,11 @@ class Economy:
         context = dataclasses.replace(context, outlay_room=outlay_room.by_employer(
             plans, setup.state_agent, record.state_budget, lambda employer: record.book.balance(employer, money)))
         held_placed = bondage_hours.place_held(
-            record.bonded_held, lambda area, trade: people_by_trade(record.workforce, area).get(trade, 0.0), everyone, labour_bids,
+            record.unfree.bonded_held, lambda area, trade: people_by_trade(record.workforce, area).get(trade, 0.0), everyone, labour_bids,
             setup.working_hours_per_year, context.ask_floor_per_worker_year, labour_area)
         record.book.transfer_many([Transfer(employer, cohort, money, amount, "keep of bonded") for employer, cohort, amount
                                    in bondage_hours.payable_keep(held_placed.keep, lambda employer: record.book.balance(employer, money))])
-        placed = bondage_hours.place(record.bondage, held_placed.offers, held_placed.bids,
+        placed = bondage_hours.place(record.unfree.bondage, held_placed.offers, held_placed.bids,
                                      bondage_hours.works_of_producers(record), bondage.BONDED_HOURS_OWED_SHARE)
         everyone, labour_bids = placed.offers, placed.bids
         supply = self._hour_supply(everyone, view, outside_option)
@@ -207,7 +207,7 @@ class Economy:
         offers, kept = supply.sold, supply.kept
         ledger.bonded_bought, ledger.bonded_paid, ledger.bonded_lots, bought_held = bonded_purchase.settle(
             record.book, money, labour_report.bonded_lots)
-        bondage_hours.hold(record.bonded_held, bought_held)
+        bondage_hours.hold(record.unfree.bonded_held, bought_held)
         bondage_hours.deliver(ledger.hours_hired, placed)
         bondage_hours.deliver_held(ledger.hours_hired, held_placed)
         capital_year.insure(setup, record, view, inputs.harvest_factor, view.year, inputs.institutions)     # cover is bought and the weather settles it
@@ -253,8 +253,8 @@ class Economy:
         money_taxes(setup, record, view, ledger)
         self._build_plant(plant_runs)
         close_view = CreditView(record.memory, record.book, self.area_map, money, labour_area,
-                                loans=lambda: record.loans, equity=self._equity_read,
-                                loss_rates=lambda: record.loss_rates)
+                                loans=lambda: record.credit.loans, equity=self._equity_read,
+                                loss_rates=lambda: record.credit.loss_rates)
         close_agents(setup, record, close_view, ledger, self.area_map, self.carriage)
         open_entrants(setup, record, close_view, self.area_map, ledger.unmet_demand, self.carriage,
                       with_standing_bids(ledger.bids_by_market, inputs.standing_bids))
@@ -262,9 +262,9 @@ class Economy:
         extraction = sites.extraction_by_tile(record, setup)
         close_idle_producers(setup, record)
         for lender, received in interest.items():
-            record.property_income[lender] = record.property_income.get(lender, 0.0) + received
+            record.capital_markets.property_income[lender] = record.capital_markets.property_income.get(lender, 0.0) + received
         for payment in rent:
-            record.property_income[payment.payee] = record.property_income.get(payment.payee, 0.0) + payment.amount
+            record.capital_markets.property_income[payment.payee] = record.capital_markets.property_income.get(payment.payee, 0.0) + payment.amount
         wear_and_spoilage(setup, record, inputs.durable_users)
         level = remember_basket_price_level(setup, record)
         record.memory.year += 1
@@ -367,40 +367,40 @@ class Economy:
         record, setup = self.record, self.setup
         money = setup.currency_id
         priced_by_tile: Dict[str, list] = {}
-        requests, record.loan_requests = record.loan_requests, []
+        requests, record.credit.loan_requests = record.credit.loan_requests, []
         requests = (requests + list(credit_asks) + lending.household_requests(setup, record, view, ledger, priced_by_tile)
                     + lending.merchant_requests(setup, record, view, self.area_map, self.carriage))
-        record.funds_offered = sum(offer.amount for offer in funds if offer.currency == money)
-        record.lent_by_borrower = {}
-        record.credit_granted = {}
+        record.credit.funds_offered = sum(offer.amount for offer in funds if offer.currency == money)
+        record.credit.lent_by_borrower = {}
+        record.credit.credit_granted = {}
         if not requests:
-            record.expansion_runs = {}      # a working-capital loan struck ahead of the year left no plant to wait for
+            record.credit.expansion_runs = {}      # a working-capital loan struck ahead of the year left no plant to wait for
             if funds:       # savings on offer and nobody borrowing
                 record.memory.rates[money] = credit_idle_rate.rate_with_no_borrowers(record.memory.rates.get(money), funds)
             return {}
-        debt = credit_claims.principal_by_borrower(record.loans)
-        offered = credit_lines.hold_reserve(funds, record.banks)     # the reserve is held out of every lender's offer
+        debt = credit_claims.principal_by_borrower(record.credit.loans)
+        offered = credit_lines.hold_reserve(funds, record.capital_markets.banks)     # the reserve is held out of every lender's offer
         clearing = credit.clear_with_cause(requests, offered, money, record.memory.rates.get(money), debt,
-                                           credit_claims.arrears_history(record.loans, record.remembered_defaults),
+                                           credit_claims.arrears_history(record.credit.loans, record.credit.remembered_defaults),
                                            year=view.year,
                                            rate_ceiling=capital_market.RATE_CEILING_SHARE * setup.opening_rate,
                                            expected_inflation=lending.expected_inflation_of(record))
         loans, unmet = clearing.loans, clearing.unmet
         every_loan = loans
-        loans, record.credit_granted = credit_lines.split_lines(loans, [ask.borrower for ask in credit_asks])
+        loans, record.credit.credit_granted = credit_lines.split_lines(loans, [ask.borrower for ask in credit_asks])
         for ask in credit_asks:
-            record.credit_granted.setdefault(ask.borrower, 0.0)
+            record.credit.credit_granted.setdefault(ask.borrower, 0.0)
         banks.draw_deposits(record, loans, pledged or {}, view.year, money)       # a bank takes its depositors' funds for the loans it makes
         record.book.transfer_many(credit.disbursements(loans))
-        record.loans.extend(loans)
+        record.credit.loans.extend(loans)
         for loan in every_loan:
-            record.lent_by_borrower[loan.borrower] = record.lent_by_borrower.get(loan.borrower, 0.0) + loan.principal
+            record.credit.lent_by_borrower[loan.borrower] = record.credit.lent_by_borrower.get(loan.borrower, 0.0) + loan.principal
         if clearing.cause is None and clearing.rate is not None:
             record.memory.rates[money] = clearing.rate      # a year in which nothing cleared leaves the last cleared rate
         rate = record.memory.rates[money]       # the opening sets one
         # a plant request lenders left unmet is offered to the savers as shares (the money they raise is plant like a loan's)
         raised = shares.raise_equity(record, money, unmet, funds, every_loan, rate, shares.rate_floor_of(setup),
-                                    record.capital.share_buy_orders)
+                                    record.capital_markets.capital.share_buy_orders)
         merchants_credit.stake(record.merchants, {loan.borrower: loan.principal for loan in loans})
         lending.bid_household_loans(setup, record, view, ledger, loans, order_book, priced_by_tile)
         asked = {request.borrower: request.amount for request in requests}
@@ -413,14 +413,14 @@ class Economy:
         plant_runs: Dict[str, float] = {}
         for borrower, principal in [(loan.borrower, loan.principal) for loan in loans] + sorted(raised.items()):
             producer = record.producers.get(borrower)
-            runs = record.expansion_runs.get(borrower, 0.0)
+            runs = record.credit.expansion_runs.get(borrower, 0.0)
             if producer is None or runs <= 0.0 or not asked.get(borrower):
                 continue
             funded_runs = runs * min(1.0, principal / asked[borrower])
             plant_runs[borrower] = plant_runs.get(borrower, 0.0) + funded_runs
             # no dearer than the price at which the new plant would earn just the loan's rate
             self._bid_for_plant(producer, funded_runs, principal, worth.get(borrower, 1.0), view, order_book)
-        record.expansion_runs = {}
+        record.credit.expansion_runs = {}
         return plant_runs
 
     def _rebuild_worn_plant(self, view, order_book) -> Dict[str, float]:
@@ -430,7 +430,7 @@ class Economy:
         money = setup.currency_id
         rate = max(view.interest_rate(money), 1e-9)
         rebuilt: Dict[str, float] = {}
-        worn, record.worn_runs = record.worn_runs, {}
+        worn, record.credit.worn_runs = record.credit.worn_runs, {}
         for producer_id, runs in sorted(worn.items()):
             producer = record.producers.get(producer_id)
             if producer is None or runs <= 0.0:

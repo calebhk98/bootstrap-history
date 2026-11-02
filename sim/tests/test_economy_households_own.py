@@ -120,9 +120,8 @@ class LandHeldTests(unittest.TestCase):
         self.assertEqual(titles_worked.allocate_hectares({"a": 5.0}, 20.0), {"a": 5.0})
 
     def test_worked_share_is_title_less_let_out_plus_tenancy(self):
-        record = types.SimpleNamespace(cohorts={}, titles={"t": {"lord": 0.6, "other": 0.4}},
-                                       tenancies={"t": [{"tenant": "serf", "lessor": "lord", "share": 0.25,
-                                                         "arrears": 0.0}]})
+        record = types.SimpleNamespace(cohorts={}, land=types.SimpleNamespace(titles={"t": {"lord": 0.6, "other": 0.4}}, tenancies={"t": [{"tenant": "serf", "lessor": "lord", "share": 0.25,
+                                                         "arrears": 0.0}]}))
         self.assertAlmostEqual(titles_worked.worked_share(record, "t", "lord"), 0.35)
         self.assertAlmostEqual(titles_worked.worked_share(record, "t", "serf"), 0.25)
         self.assertEqual(titles_worked.worked_share(record, "t", "stranger"), 0.0)

@@ -71,7 +71,7 @@ class RoomTests(unittest.TestCase):
     def economy(self, **record):
         fields = dict(funds_offered=100.0, lent_by_borrower={}, credit_granted={})
         fields.update(record)
-        return types.SimpleNamespace(record=types.SimpleNamespace(**fields))
+        return types.SimpleNamespace(record=types.SimpleNamespace(credit=types.SimpleNamespace(**fields)))
 
     def test_the_lines_grants_are_not_booked_as_loans(self):
         offers = credit_lines.hold_reserve([FundsOffer("saver", "coin", 100.0, 0.0)])

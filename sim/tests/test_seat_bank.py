@@ -62,7 +62,7 @@ class TheBank(unittest.TestCase):
 
 class TheEconomysBank(unittest.TestCase):
     def setUp(self):
-        self.record = SimpleNamespace(book=Book(), banks={})
+        self.record = SimpleNamespace(book=Book(), capital_markets=SimpleNamespace(banks={}))
         self.economy = SimpleNamespace(record=self.record, setup=SimpleNamespace(currency_id="coin", coin_per_unit=2.0))
         self.money = "coin"
         self.record.book.transfer(Transfer(EDGE_MINT, "holder", self.money, 7000.0, "opening"))
@@ -73,7 +73,7 @@ class TheEconomysBank(unittest.TestCase):
         stand_in = SimpleNamespace(economy=SimpleNamespace(agent=SimpleNamespace(opened=lambda: True, economy=lambda: self.economy)),
                                    clock=SimpleNamespace(acting_seat="seat:player"), needs=SimpleNamespace(year=lambda: 3))
         bank_id = Applying.found_bank_from_outside(stand_in, FoundBankFromOutside(500.0 * coin))
-        bank = self.record.banks[bank_id]
+        bank = self.record.capital_markets.banks[bank_id]
         self.assertEqual(bank.founder, "seat:player")
         self.assertAlmostEqual(bank.paid_in, 500.0)
         self.assertAlmostEqual(self.record.book.balance(bank.agent_id, self.money), 500.0)
@@ -85,7 +85,7 @@ class TheEconomysBank(unittest.TestCase):
 
     def test_no_capital_founds_no_bank(self):
         self.assertIsNone(economy_api.found_bank_from_outside(self.economy, "seat:player", 0.0, 0, economy_api.EDGE_EXCHANGE))
-        self.assertEqual(self.record.banks, {})
+        self.assertEqual(self.record.capital_markets.banks, {})
 
 
 class TheCommand(unittest.TestCase):

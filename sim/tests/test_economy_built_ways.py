@@ -65,14 +65,14 @@ class SetupAndEconomyTests(unittest.TestCase):
 
     def test_the_live_economy_rebuilds_its_carriage_table_when_a_way_is_finished(self):
         rebuilt = []
-        stand_in = types.SimpleNamespace(improvements={}, record=types.SimpleNamespace(ways={}),
+        stand_in = types.SimpleNamespace(improvements={}, record=types.SimpleNamespace(carriage=types.SimpleNamespace(ways={})),
                                          _rebuild_carriage=lambda: rebuilt.append(True) or True)
         self.assertTrue(Economy.set_improvements(stand_in, self.edge))
-        self.assertEqual((stand_in.improvements, stand_in.record.ways, rebuilt), (self.edge, self.edge, [True]))
+        self.assertEqual((stand_in.improvements, stand_in.record.carriage.ways, rebuilt), (self.edge, self.edge, [True]))
 
     def test_the_same_ways_again_change_nothing(self):
         rebuilt = []
-        stand_in = types.SimpleNamespace(improvements=dict(self.edge), record=types.SimpleNamespace(ways={}),
+        stand_in = types.SimpleNamespace(improvements=dict(self.edge), record=types.SimpleNamespace(carriage=types.SimpleNamespace(ways={})),
                                          _rebuild_carriage=lambda: rebuilt.append(True) or True)
         self.assertFalse(Economy.set_improvements(stand_in, self.edge))
         self.assertEqual(rebuilt, [])
@@ -80,7 +80,7 @@ class SetupAndEconomyTests(unittest.TestCase):
     def test_the_rebuilt_carriage_table_is_the_setups_over_the_current_ways(self):
         asked = []
         stand_in = types.SimpleNamespace(
-            improvements=self.edge, record=types.SimpleNamespace(area_imbalance=1.5), area_map="old",
+            improvements=self.edge, record=types.SimpleNamespace(carriage=types.SimpleNamespace(area_imbalance=1.5)), area_map="old",
             setup=types.SimpleNamespace(carriage_table=lambda ways, imbalance: asked.append((ways, imbalance)) or "table",
                                         area_map=lambda carriage: ("areas", carriage)))
         with mock.patch.object(economy_module, "follow"):

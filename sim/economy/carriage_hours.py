@@ -78,7 +78,7 @@ class Crew:
 
 def crew_for(setup, record, carriage) -> Optional[Crew]:
     """The year's crew over `carriage`, or None when the setup's modes name no crew hours."""
-    return Crew(setup, carriage, record.area_imbalance) if hires(setup) else None
+    return Crew(setup, carriage, record.carriage.area_imbalance) if hires(setup) else None
 
 
 def wage_scale(setup, record, carriage) -> float:
@@ -88,10 +88,10 @@ def wage_scale(setup, record, carriage) -> float:
     year's labour market cleared it. The routes are last year's carried flows, so the mix of modes is the one
     used. The rest of a fee (feed, carts, animals) keeps its price. 1 where the wages are the one priced, or
     nothing is known of either; never below 0."""
-    carried = getattr(record, "carried", None)
+    carried = record.carriage.carried
     if not carried or setup.carriage_wage <= 0.0 or not hires(setup):
         return 1.0
-    crew = Crew(setup, carriage, record.area_imbalance)
+    crew = Crew(setup, carriage, record.carriage.area_imbalance)
     wages = record.memory.wages
     money = 0.0
     labour_change = 0.0

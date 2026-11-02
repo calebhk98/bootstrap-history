@@ -52,17 +52,17 @@ class CarriedBookTests(unittest.TestCase):
         carried_book.note_carried(carried_goods, "salt", "a1", "b1", 4.0, 1.0, 2.0, 6.0)
         carried_book.note_carried(carried_goods, "grain", "b1", "a2", 5.0, 1.5, 4.0, 3.0)
         record = EconomyRecord(book=Book(), memory=MarketMemory(), currency=CurrencySpec("coin", "fiat", None, 0.0, None))
-        record.carried_goods = carried_goods
-        record.carried = {"a1": {"b1": 3.0}, "b1": {"a2": 1.5}}
-        for origin, row in record.carried.items():
+        record.carriage.carried_goods = carried_goods
+        record.carriage.carried = {"a1": {"b1": 3.0}, "b1": {"a2": 1.5}}
+        for origin, row in record.carriage.carried.items():
             for destination, tonnes in row.items():
-                by_good = sum(by_origin.get(origin, {}).get(destination, [0.0])[0] for by_origin in record.carried_goods.values())
+                by_good = sum(by_origin.get(origin, {}).get(destination, [0.0])[0] for by_origin in record.carriage.carried_goods.values())
                 self.assertAlmostEqual(by_good, tonnes, places=9)
         again = EconomyRecord.from_record(record.to_record())
-        self.assertEqual(again.carried_goods, record.carried_goods)
+        self.assertEqual(again.carriage.carried_goods, record.carriage.carried_goods)
 
     def test_no_country_means_no_border(self):
-        economy = types.SimpleNamespace(record=types.SimpleNamespace(carried_goods={"grain": {"a1": {"b1": [2.0, 30.0, 50.0]}}}),
+        economy = types.SimpleNamespace(record=types.SimpleNamespace(carriage=types.SimpleNamespace(carried_goods={"grain": {"a1": {"b1": [2.0, 30.0, 50.0]}}})),
                                         setup=types.SimpleNamespace(country_of=COUNTRY_OF))
         self.assertEqual(country_figures.trade_book(economy, None), {})
         self.assertEqual(country_figures.trade_book(economy, "nowhere"), {})
