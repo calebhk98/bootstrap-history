@@ -6,8 +6,6 @@ from typing import Any, Dict, Optional
 @dataclass
 class MarketsWorld:
 	agent_economy: Dict[str, Any] = field(default_factory=dict)   # the agent economy's record: its opening, its year's record and the traders' cargo legs
-	# commodity -> society capacity, stock and last price ratio (clearing.py)
-	market_book: Dict[str, Dict[str, float]] = field(default_factory=dict)
 	# the year's purchases and sales by commodity and party, and the seat's draws (the goods market writes them)
 	market_flows: Optional[Dict[str, Any]] = None
 	# whether the money an hour of work is worth is the agent economy's unskilled wage (set when the economy first opens and

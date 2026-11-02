@@ -29,8 +29,7 @@ FOUNDER = "seat:founder"
 
 def markets_over(game):
     """The markets module over the goods market `game` holds."""
-    markets = module_harness.build(Markets, views={"material_commodity": lambda material: material,
-                                                       "concern_offers": lambda commodity: game.founder_concern_offers(commodity)})
+    markets = module_harness.build(Markets, views={"material_commodity": lambda material: material})
     markets.goods_market = game.goods_market
     return markets
 

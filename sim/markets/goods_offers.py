@@ -65,15 +65,12 @@ class GoodsOffers(GoodsImports):
                 + (route.cost_per_tonne + self._sim._agent_cost_per_tonne(civilization_id, route))
                 * tonnes_per_unit(material))
 
-    def _home_prices(self, at_cost=False):
+    def _home_prices(self):
         """{material: money per unit} the home society's sellers ask at the acting tile: the economy's price, for the
         goods it has a market for; a good it has none for is absent, not priced at its cost. While the economy opens the
-        cost table answers (the opening is built from it). The same object while neither has changed. `at_cost` gives the
-        cost table itself, for the readers that want what making a good costs."""
+        cost table answers (the opening is built from it). The same object while neither has changed."""
         sim = self._sim
         table = sim._material_prices()
-        if at_cost:
-            return table
         paid = sim.economy.agent_prices_at()
         if paid is None:
             return table
@@ -92,18 +89,16 @@ class GoodsOffers(GoodsImports):
         key = self._sim._priced_key(material, prices)
         return None if key is None else prices[key]
 
-    def _worked_out_offers(self, at_cost=False):
-        """(household prices, seller of each material) as of the key they were worked out for; with `at_cost`
-        the home sellers' prices are what a technique makes the goods for (the cost table)."""
+    def _worked_out_offers(self):
+        """(household prices, seller of each material) as of the key they were worked out for."""
         sim = self._sim
-        prices = self._home_prices(at_cost)
+        prices = self._home_prices()
         partners = tuple(sim.foreign_economies())
         key = (partners, len(sim.techniques_held()), sim.year,
                round(sim.market_rate(), RATE_DECIMALS),
                tuple(self.partner_price_level(partner) for partner in partners),
                trade_duty.signature(sim, partners))
-        cache_name = "goods_offers_cost" if at_cost else "goods_offers"
-        cache = sim.remembered(cache_name)
+        cache = sim.remembered("goods_offers")
         if cache is not None and cache[0] is prices and cache[1] == key:
             return cache[2], cache[3]
         routes = {partner: self._route_from(partner) for partner in partners}
@@ -119,7 +114,7 @@ class GoodsOffers(GoodsImports):
                       and sim.foreign_supply_tonnes(partner, material) > 0.0]
             if offers and min(offers)[0] < household.get(material, math.inf):
                 household[material], sellers[material] = min(offers)[0], min(offers)[1]
-        sim.remember(cache_name, (prices, key, household, sellers))
+        sim.remember("goods_offers", (prices, key, household, sellers))
         return household, sellers
 
     def _home_basis(self, material):
@@ -132,11 +127,6 @@ class GoodsOffers(GoodsImports):
         for partner in partners:
             made |= self._sim._foreign_economy_facts(partner)["solved_materials"]
         return made
-
-    def household_cost_prices(self):
-        """`household_prices` with the home sellers' prices at what a technique makes the goods for, not what
-        the economy shows: the prices the household demand model and the opening basket are measured at."""
-        return self._worked_out_offers(at_cost=True)[0]
 
     def household_prices(self):
         """{material: money per unit} households are asked to pay: the economy's price on the acting tile where the

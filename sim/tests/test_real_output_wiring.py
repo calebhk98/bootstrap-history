@@ -19,7 +19,7 @@ OPENED = ({"grain": 100.0, "cloth": 20.0, "salt": 0.0, "pearl": 3.0}, {"grain": 
 def a_game(opened=OPENED, baseline=None, volumes=None, people=1.0, opening_people=1.0):
     """The reporting module over a world of its own, reading plain values for the economy's facts."""
     views = {"agent_opening_basket": lambda: opened, "agent_volume_baseline": lambda: baseline,
-             "agent_traded_volumes": lambda: volumes, "new_goods_units": {}, "household_prices": {},
+             "agent_traded_volumes": lambda: volumes, "household_prices": {},
              "money_per_labour_hour": 1.0, "population_total": people, "opening_population": opening_people}
     return module_harness.build(Reporting, views=views, world=ReportingWorld())
 

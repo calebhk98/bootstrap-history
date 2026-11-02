@@ -36,7 +36,6 @@ METHOD_OF_VIEW_MORE = {
     "concern_goods_have_market": "concern_goods_have_market",
     "concern_learning_ratio": "concern_learning_ratio",
     "concern_market": "ledger_concern_rows",
-    "concern_offers": "founder_concern_offers",
     "concern_revenue": "concern_revenue",
     "concern_runs_without_founder": "concern_runs_without_founder",
     "concern_sale_basis": "concern_sale_basis",

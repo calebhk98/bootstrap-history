@@ -6,6 +6,9 @@ from .constants import MEAN_INCOME_HOURS_PER_CAPITA
 
 class HouseholdNeeds:
 
+	def opening_population(self):
+		return float(self.needs.civilisation().get("population", self.needs.default_population()))
+
 	def _household_model(self):
 		return household_needs.household_model(self.needs.installed_mod_ids(), self.needs.household_need_data)
 

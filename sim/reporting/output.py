@@ -19,7 +19,7 @@ economy trades it, it counts at the price it was first offered at, in the units 
 
 TEMPORARY HEURISTIC (CLAUDE.md 4.4): a new good counts at its introduction price, standing for a chained basket
 (re-based each year, quantity index linked), which would also credit what it saves.
-Needs: agent_opening_basket, agent_volume_baseline, agent_traded_volumes, new_goods_units, household_prices,
+Needs: agent_opening_basket, agent_volume_baseline, agent_traded_volumes, household_prices,
 money_per_labour_hour, population_total, opening_population."""
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -55,9 +55,14 @@ class Output:
         """[(material, units a year sold now, opening price in labour hours)] for every good in the opening basket the
         economy has traded. `measure` is `traded_measure()`, which a caller shares between its reads within one moment."""
         traded, scale = self.traded_measure() if measure is None else measure
+        volumes = self.needs.agent_traded_volumes() or {}
         return output_rules.output_lines(
-            self.base_basket(), traded, scale, self.world.introduction_prices,
-            self.needs.new_goods_units(), self.needs.agent_traded_volumes() or {})
+            self.base_basket(), traded, scale, self.world.introduction_prices, self.new_goods(volumes), volumes)
+
+    def new_goods(self, volumes: Any) -> List[str]:
+        """The goods the economy trades that the opening basket did not hold, in sorted order."""
+        held = self.base_basket()["prices"]
+        return [good for good in sorted(volumes) if good not in held and volumes[good] > 0.0]
 
     def real_output_hours(self, measure: Any = None) -> float:
         """Quantities sold this year at the opening prices, in labour hours."""
@@ -80,8 +85,9 @@ class Output:
         """Measure the year's real output per head once the market has closed."""
         per_hour = self.needs.money_per_labour_hour()
         prices = self.needs.household_prices()
-        for material in self.needs.new_goods_units():
-            self.world.introduction_prices.setdefault(material, prices[material] / per_hour)
+        for material in self.new_goods(self.needs.agent_traded_volumes() or {}):
+            if prices.get(material, 0.0) > 0.0:
+                self.world.introduction_prices.setdefault(material, prices[material] / per_hour)
         measure = self.traded_measure()
         opening = self.opening_output_hours(measure)
         people = float(self.needs.population_total()) / self.needs.opening_population()

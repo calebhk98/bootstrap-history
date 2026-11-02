@@ -12,10 +12,6 @@ economy's price on the acting tile (the long-run cost where it has no market for
 charged. retire: ONE_PRICE_OWNER_PLAN.md stage 5."""
 from typing import Any, Dict, Optional, Tuple
 
-from sim.world.material_units import tonnes_per_unit
-from sim.world.producer_market import Offer
-
-from . import prices as price_solver
 from . import rules
 from .entry_cost import CostBook
 from .making_cost import LAND_MATERIAL
@@ -98,34 +94,3 @@ class CostBooks:
                     shares.append(share)
             ratios[key] = rules.mean_share(shares)
         return ratios[key]
-
-    def concern_cost_ratio(self, node_id: str, material: str) -> float:
-        """The running cost ratio of the cheapest entry a concern on this node holds that makes `material`: a concern that
-        exists has sunk its plant, so it offers at what running it costs."""
-        production = price_solver.default_production_entries()
-        held = self.needs.techniques_in_use()
-        ratios = [self.entry_cost_ratio(key, material, running=True)
-                  for key in rules.entry_keys_held_for(node_id, production, held)
-                  if material in (production[key].get("outputs") or {})]
-        return rules.cheapest_ratio(ratios)
-
-    def concern_offers(self, commodity: str) -> Tuple[Offer, ...]:
-        """What the founder's own running concerns put on the market in `commodity`, each at its cost; remembered while
-        what is built and run is unchanged, per year (the ramp-up moves with it)."""
-        return self.done_memo("founder_offers", (commodity, self.needs.year()), lambda: self._concern_offers(commodity))
-
-    def _concern_offers(self, commodity: str) -> Tuple[Offer, ...]:
-        granted = self.needs.techniques_granted()
-        offers = []
-        for node_id in sorted(self.needs.operating()):
-            if node_id in granted or not self.needs.is_venture[node_id]:
-                continue
-            baskets = self.needs.concern_baskets_now[node_id]
-            if baskets is None:
-                continue
-            ramp = self.needs.venture_ramp[node_id]
-            for material, units in sorted(baskets.outputs.items()):
-                if units > 0.0 and self.needs.material_pool[material][0] == commodity:
-                    offers.append(Offer(units * tonnes_per_unit(material) * ramp,
-                                        self.concern_cost_ratio(node_id, material)))
-        return tuple(offers)

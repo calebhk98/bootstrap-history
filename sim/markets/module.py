@@ -12,7 +12,6 @@ from .agent_views import AgentViews
 from .category_views import Categories
 from .clearing import Clearing
 from .commands_applied import Applying
-from .demand import Demand
 from .household_views import HouseholdNeeds
 from .goods_market import GoodsMarket
 from .goods_views import GoodsViews
@@ -20,7 +19,7 @@ from .port import EconomyPort
 from .port_world import PortWorld
 
 
-class Markets(Clearing, Categories, Demand, HouseholdNeeds, Absorption, GoodsViews, AgentViews, Applying, Module):
+class Markets(Clearing, Categories, HouseholdNeeds, Absorption, GoodsViews, AgentViews, Applying, Module):
 
 	def setup(self):
 		self._caches = {}                  # (seat id, name) -> a remembered figure; never saved
