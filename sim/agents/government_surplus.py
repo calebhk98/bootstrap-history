@@ -43,14 +43,15 @@ class SurplusMixin:
 		excess -= self.relieve_strata(excess, world)
 		excess -= self.restock_granary(excess, world)  # type: ignore[attr-defined]
 		for work, gap in state_works.gaps(world):
-			wage = world.pay_per_person_year(work.trade)
+			trade = world.trade_of_role(work.role)
+			wage = world.pay_per_person_year(trade)
 			if excess <= 0.0 or wage <= 0.0:
 				continue
-			share_cap = MAX_STATE_SHARE_OF_TRADE * world.national_people(work.trade)
+			share_cap = MAX_STATE_SHARE_OF_TRADE * world.national_people(trade)
 			people = min(gap * MASONRY_PERSON_YEARS_PER_M2, excess / wage, share_cap)
 			if people <= 0.0:
 				continue
-			built = budget.Line("building " + work.name, "requisition", {work.trade: people}, people * wage)
+			built = budget.Line("building " + work.name, "requisition", {trade: people}, people * wage)
 			ledger.transfer(self, world.edge(EDGE_BUILDERS), built.money, built.name)
 			state_works.held(world)[work.name] += people / MASONRY_PERSON_YEARS_PER_M2
 			self.employ_standing([built], 1.0, world)  # type: ignore[attr-defined]
