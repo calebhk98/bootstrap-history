@@ -152,7 +152,7 @@ def _open(setup: EconomySetup, replacement: float, plans=None) -> Tuple[EconomyR
     _settle_income(setup, record, view, priced_goods, replacement, own)
     _seed_durable_stocks(setup, record, view)
     final_by_tile = _final_demand(setup, record, view, replacement, own=own)
-    record.opening_own_grown = own.grown_totals()
+    record.goods.opening_own_grown = own.grown_totals()
     for country in setup.countries():
         _open_country_producers(setup, record, area_map, carriage, priced_goods, final_by_tile, country)
     sites.apply_site_limits(record, setup)
@@ -164,30 +164,30 @@ def _open(setup: EconomySetup, replacement: float, plans=None) -> Tuple[EconomyR
                                              figure, record.capital_markets.property_income)
     record.cohorts.update({agent_id: replaced(record.cohorts[agent_id], last_year_income=income)
                            for agent_id, income in incomes.items()})
-    record.index_base_prices = dict(priced_goods)
+    record.goods.index_base_prices = dict(priced_goods)
     _stock_producers_with_inputs(setup, record)
     _open_merchants(setup, record, priced_goods, final_by_tile)
     carriage_fleet_book.endow(setup, record, carriage, priced_goods, final_by_tile)
     _strike_opening_cash(setup, record, view, own.extra)
-    record.opening_sold_hours_per_worker = opening_own.sold_hours_per_worker(
+    record.labour.opening_sold_hours_per_worker = opening_own.sold_hours_per_worker(
         own.sold_total(), math.fsum(cohort.working_people for cohort in record.cohorts.values()), setup.working_hours_per_year)
-    record.opening_sold_hours_by_area = opening_placement.sold_hours_per_worker_by_area(
+    record.labour.opening_sold_hours_by_area = opening_placement.sold_hours_per_worker_by_area(
         own.sold, {agent_id: (labour_area(cohort.tile), cohort.working_people) for agent_id, cohort in record.cohorts.items()},
-        record.opening_sold_hours_per_worker)
-    record.workforce = labour_state.opening_workforce(      # the mint's capacity follows the money struck
-        setup, record, record.opening_sold_hours_by_area)
-    record.workforce.hired_hours, record.workforce.contract_wages = opening_resting.resting_labour_contracts(
+        record.labour.opening_sold_hours_per_worker)
+    record.labour.workforce = labour_state.opening_workforce(      # the mint's capacity follows the money struck
+        setup, record, record.labour.opening_sold_hours_by_area)
+    record.labour.workforce.hired_hours, record.labour.workforce.contract_wages = opening_resting.resting_labour_contracts(
         opening_placement.capped_contracts(labour_state.producers_hours_by_employer(setup, record),
-                                           {area: labour_state.people_by_trade(record.workforce, area) for area in record.workforce.workers},
-                                           record.opening_sold_hours_by_area, record.opening_sold_hours_per_worker),
+                                           {area: labour_state.people_by_trade(record.labour.workforce, area) for area in record.labour.workforce.workers},
+                                           record.labour.opening_sold_hours_by_area, record.labour.opening_sold_hours_per_worker),
         setup.opening_wages)
     mint.seed_opening_metal(setup, record)
     opening_stores.seed_opening_stores(setup, record, _store_goods(setup, view, area_map, priced_goods))
-    record.opening_demand = opening_runs.national_totals(final_by_tile)
-    record.opening_demand_by_country = {
+    record.goods.opening_demand = opening_runs.national_totals(final_by_tile)
+    record.goods.opening_demand_by_country = {
         country: opening_runs.national_totals({tile: final_by_tile[tile] for tile in setup.tiles_of(country) if tile in final_by_tile})
         for country in setup.countries()}
-    record.opening_basket = opening_basket.supplied_part(setup, record, record.opening_demand)
+    record.goods.opening_basket = opening_basket.supplied_part(setup, record, record.goods.opening_demand)
     return record, area_map, carriage
 
 

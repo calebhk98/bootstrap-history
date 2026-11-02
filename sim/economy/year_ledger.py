@@ -44,6 +44,7 @@ class YearLedger:
     bonded_paid: float = 0.0               # money paid for them
     bonded_lots: list = field(default_factory=list)   # the lots as paid (bonded_purchase.settle)
     wage_floor_per_hour: float = 0.0       # what a worker's household costs less its plot, per hour, over the areas
+    state_capacity: float = 1.0            # the year's share of its assessments the state's officials collect (`YearInputs.state_capacity`)
 
     def note_postings(self, postings: Iterable[object], purpose_kind: str = "") -> None:
         for posting in postings:

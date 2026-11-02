@@ -98,7 +98,7 @@ def _traded_volume(record, view, area_map):
     goods = set(area_map.goods())
 
     def traded(good, tile):
-        return record.volumes.get(market_key(good, view.area_of(good, tile)), 0.0) if good in goods else None
+        return record.goods.volumes.get(market_key(good, view.area_of(good, tile)), 0.0) if good in goods else None
     return traded
 
 

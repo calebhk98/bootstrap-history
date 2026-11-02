@@ -54,7 +54,7 @@ def labour_context(setup, record, view, carriage, inputs, own_plot_options=None,
         ask_floor_per_worker_year={labour_area(tile): value for tile, value in plot.items()},
         hours_per_worker_year=setup.working_hours_per_year,
         discount_rate=HOUSEHOLD_TIME_PREFERENCE, career_years=CAREER_YEARS,
-        entrants={area: people_in(record.workforce, area) * inputs.entrant_share for area in areas},
+        entrants={area: people_in(record.labour.workforce, area) * inputs.entrant_share for area in areas},
         attrition_share={area: inputs.attrition_share for area in areas},
         routes=flight_routes.with_recapture_penalty(
             routes_by_area(setup, carriage), taxed, inputs.state_reach_by_tile, subsistence,

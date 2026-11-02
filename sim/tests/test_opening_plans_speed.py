@@ -52,7 +52,7 @@ def cycling_choice(real_household_plans):
 def summary(solved):
     record = solved[0]
     return ({name: (cohort.hired_work_per_person, tuple(cohort.milled_grains)) for name, cohort in record.cohorts.items()},
-            dict(record.opening_demand), dict(record.memory.prices),
+            dict(record.goods.opening_demand), dict(record.memory.prices),
             {key: dataclasses.asdict(producer) for key, producer in record.producers.items()})
 
 

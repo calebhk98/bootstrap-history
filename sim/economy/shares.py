@@ -21,14 +21,14 @@ SHARE_DIVIDEND_PURPOSE = "dividend on shares"    # paid to the holder itself; no
 EPSILON = 1e-9
 
 
-def outside_share(record, producer_id: AgentId) -> float:
+def outside_share(capital_markets, producer_id: AgentId) -> float:
     """The part of the producer's equity held by buyers of its shares."""
-    return sum((record.capital_markets.shares.get(producer_id) or {}).values())
+    return sum((capital_markets.shares.get(producer_id) or {}).values())
 
 
-def note_dividend(record, producer_id: AgentId, payout: Sequence[Transfer]) -> None:
+def note_dividend(capital_markets, producer_id: AgentId, payout: Sequence[Transfer]) -> None:
     """Remember the dividend a producer paid at its year's close; the expectation the next buyer prices on."""
-    record.capital_markets.last_dividends[producer_id] = sum(transfer.amount for transfer in payout if transfer.purpose == "dividend")
+    capital_markets.last_dividends[producer_id] = sum(transfer.amount for transfer in payout if transfer.purpose == "dividend")
 
 
 def split_dividend(record, payment: Transfer) -> List[Transfer]:
@@ -47,9 +47,9 @@ def split_dividend(record, payment: Transfer) -> List[Transfer]:
     return paid
 
 
-def whole_value(record, producer_id: AgentId, rate: float, rate_floor: float) -> float:
+def whole_value(capital_markets, producer_id: AgentId, rate: float, rate_floor: float) -> float:
     """What the producer's whole equity is worth: the present value of the dividend it paid last."""
-    return share_market.equity_value(record.capital_markets.last_dividends.get(producer_id, 0.0), rate, rate_floor)
+    return share_market.equity_value(capital_markets.last_dividends.get(producer_id, 0.0), rate, rate_floor)
 
 
 def prune(record) -> None:
@@ -78,7 +78,7 @@ def issues_for(record, requests: Sequence[LoanRequest], market_rate: float) -> L
             continue
         expected = record.capital_markets.last_dividends.get(request.borrower, 0.0) + request.amount * request.maximum_rate
         issues.append(ShareIssue(request.borrower, request.amount, expected,
-                                 max(0.0, 1.0 - outside_share(record, request.borrower)), premium))
+                                 max(0.0, 1.0 - outside_share(record.capital_markets, request.borrower)), premium))
     return issues
 
 
@@ -142,5 +142,5 @@ def rate_floor_of(setup) -> float:
 def held_value(record, holder: AgentId, rate: float, rate_floor: float) -> float:
     """What a holder's shares are worth at the market: its part of each producer's equity at the present value of
     that producer's dividends."""
-    return sum(held[holder] * whole_value(record, producer_id, rate, rate_floor)
+    return sum(held[holder] * whole_value(record.capital_markets, producer_id, rate, rate_floor)
                for producer_id, held in record.capital_markets.shares.items() if holder in held and producer_id in record.producers)

@@ -91,7 +91,7 @@ def market_record(economy, good):
     buyers asked for at the asks they faced beyond what was delivered), all after the year's second round of buying."""
     record = economy.record
     totals = {"sold": 0.0, "unsold": 0.0, "unmet": 0.0}
-    for name, figures in (("sold", record.volumes), ("unsold", record.unsold), ("unmet", record.unmet)):
+    for name, figures in (("sold", record.goods.volumes), ("unsold", record.goods.unsold), ("unmet", record.goods.unmet)):
         for key, quantity in figures.items():
             if key.split(_KEY_SEPARATOR, 1)[0] == good:
                 totals[name] += quantity
@@ -100,7 +100,7 @@ def market_record(economy, good):
 
 def opening_quantities(economy):
     """Quantity of each good in the opening basket."""
-    return dict(economy.record.opening_basket)
+    return dict(economy.record.goods.opening_basket)
 
 
 def opening_prices_in_hours(economy):
@@ -116,14 +116,14 @@ def people_by_trade(economy, country=None):
     several and none is named; every area when it holds one), as the labour core's state holds them."""
     scope = country_figures.home_when_shared(economy, country)
     if scope is None:
-        return labour_state.people_by_trade_everywhere(economy.record.workforce)
+        return labour_state.people_by_trade_everywhere(economy.record.labour.workforce)
     return country_figures.people_by_trade(economy, scope)
 
 
 def people_by_tile_and_trade(economy):
     """Working people of the labour core by tile and trade, over every labour area (trainees are not counted)."""
-    return {labour_state.area_tile(area): labour_state.people_by_trade(economy.record.workforce, area)
-            for area in sorted(economy.record.workforce.workers)}
+    return {labour_state.area_tile(area): labour_state.people_by_trade(economy.record.labour.workforce, area)
+            for area in sorted(economy.record.labour.workforce.workers)}
 
 
 def wages_by_trade(economy):
@@ -153,7 +153,7 @@ def land_rent_at_tile(economy, tile, country=None):
 
 def output_by_tile(economy):
     """What the producers made last year, tile -> good -> units, as a sorted copy."""
-    return {tile: dict(sorted(row.items())) for tile, row in sorted(economy.record.output_by_tile.items())}
+    return {tile: dict(sorted(row.items())) for tile, row in sorted(economy.record.goods.output_by_tile.items())}
 
 
 def land_rent_paid_by_tile(economy):
@@ -169,7 +169,7 @@ def idle_hours_by_trade(economy, country=None):
 
 def hours_hired_by_employer(economy, employer):
     """{trade: hours} the last labour clearing hired for `employer` (paid hours, bonded included); empty before one."""
-    return dict(economy.record.hours_hired_by_employer.get(employer, {}))
+    return dict(economy.record.labour.hours_hired_by_employer.get(employer, {}))
 
 
 def labour_market_rows(economy):
@@ -179,13 +179,13 @@ def labour_market_rows(economy):
     record = economy.record
     plot = labour_state.plot_trade(economy.setup)
     rows = []
-    for key in sorted(record.hours_idle):
+    for key in sorted(record.labour.hours_idle):
         trade, area = key.split(_KEY_SEPARATOR, 1)
         if trade == plot:
             continue
-        people = math.fsum(record.workforce.workers.get(area, {}).get(trade, ()))
-        hired = record.hours_hired.get(key, 0.0)
-        rows.append((people, hired + record.hours_idle[key], hired))
+        people = math.fsum(record.labour.workforce.workers.get(area, {}).get(trade, ()))
+        hired = record.labour.hours_hired_in(key)
+        rows.append((people, hired + record.labour.hours_idle[key], hired))
     return rows
 
 
@@ -302,7 +302,7 @@ def price_response(economy, good, landed_units, taken_units, tile=None):
     if tile is not None:
         return tile_prices.price_response_at(economy, good, tile, landed_units, taken_units)
     area = market_curves.port_area(economy.area_map, economy.setup.port_tile, good)
-    curve = economy.record.curves.get(market_key(good, area)) if area is not None else None
+    curve = economy.record.goods.curves.get(market_key(good, area)) if area is not None else None
     if curve is None:
         return None
     memory = economy.record.memory
@@ -448,7 +448,7 @@ def title_holdings(economy, tiles):
 def fugitive_share_by_tile(economy):
     """{tile: share of the people who belonged to it that are away, having fled the state's take} (flight_year.py)."""
     from .setup import area_tile
-    workforce = economy.record.workforce
+    workforce = economy.record.labour.workforce
     shares = {}
     for area, row in sorted(economy.record.unfree.fugitives.items()):
         present = sum(sum(bands) for bands in workforce.workers.get(area, {}).values())

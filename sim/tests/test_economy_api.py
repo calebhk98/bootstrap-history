@@ -21,10 +21,14 @@ class StubBook:
         return ("holdings", agent)
 
 
+GOODS_FIELDS = ("opening_basket", "volumes", "unsold", "unmet")
+
+
 def stand_in(**record_fields):
     setup = types.SimpleNamespace(currency_id="coin", civ_id="home", unskilled_trade="labourer",
                                   countries=lambda: ("home",))
-    return types.SimpleNamespace(setup=setup, record=types.SimpleNamespace(book=StubBook(), **record_fields))
+    return types.SimpleNamespace(setup=setup, record=types.SimpleNamespace(book=StubBook(), goods=types.SimpleNamespace(**{name: value for name, value in record_fields.items() if name in GOODS_FIELDS}),
+                                                                  **{name: value for name, value in record_fields.items() if name not in GOODS_FIELDS}))
 
 
 class EconomyApiTests(unittest.TestCase):

@@ -33,7 +33,7 @@ class HouseholdPlans:
 def hands_left_by_tile(setup, record) -> Dict[TileId, float]:
     """Hours a year each tile's workers sell beyond what its producers hire for the runs they expect to sell."""
     hired = labour_state.producers_hours_needed(setup, record)
-    sold = record.opening_sold_hours_per_worker or setup.working_hours_per_year
+    sold = record.labour.opening_sold_hours_per_worker or setup.working_hours_per_year
     return {tile: max(0.0, people * setup.working_share * sold
                       - math.fsum(hired.get(labour_area(tile), {}).values()))
             for tile, people in setup.opening_population_by_tile.items()}

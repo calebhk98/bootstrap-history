@@ -86,18 +86,20 @@ class FollowCarriesTheMemory(unittest.TestCase):
         new = Partition({"grain": {"new:x": "town"}})
         memory = MarketMemory(prices={market_key("grain", "old:a"): 3.0, market_key("grain", "old:b"): 5.0},
                               currency_of_area={"old:a": "coin", "old:b": "coin"})
-        record = types.SimpleNamespace(memory=memory, merchants={}, volumes={market_key("grain", "old:a"): 7.0},
-                                       unsold={}, unmet={}, margin_years={}, curves={})
+        record = types.SimpleNamespace(memory=memory, merchants={},
+                                       goods=types.SimpleNamespace(volumes={market_key("grain", "old:a"): 7.0},
+                                                                   unsold={}, unmet={}, margin_years={}, curves={}))
         follow(record, old, new)
         self.assertEqual(memory.prices, {market_key("grain", "new:x"): 3.0})
-        self.assertEqual(record.volumes, {market_key("grain", "new:x"): 7.0})
+        self.assertEqual(record.goods.volumes, {market_key("grain", "new:x"): 7.0})
         self.assertEqual(memory.currency_of_area, {"new:x": "coin"})
 
     def test_a_market_that_is_not_a_goods_stays_where_it_is(self):
         old = Partition({"grain": {"old:a": "town"}})
         new = Partition({"grain": {"new:x": "town"}})
         memory = MarketMemory(prices={market_key("labourer", "old:a"): 1.0})
-        record = types.SimpleNamespace(memory=memory, merchants={}, volumes={}, unsold={}, unmet={}, margin_years={}, curves={})
+        record = types.SimpleNamespace(memory=memory, merchants={},
+                                       goods=types.SimpleNamespace(volumes={}, unsold={}, unmet={}, margin_years={}, curves={}))
         follow(record, old, new)
         self.assertEqual(memory.prices, {market_key("labourer", "old:a"): 1.0})
 

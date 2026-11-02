@@ -209,7 +209,7 @@ class OpeningDurablesTests(unittest.TestCase):
         from sim.tests import economy_fixture as fixture
         setup = fixture.small_setup(specs=fixture.specs({fixture.GRAIN: service_life}))
         record, _areas, _carriage = opening.open_economy(setup)
-        return record.opening_basket.get(fixture.GRAIN, 0.0), record
+        return record.goods.opening_basket.get(fixture.GRAIN, 0.0), record
 
     def test_a_durable_opens_at_its_replacement_flow_not_a_whole_life_s_stock(self):
         used_up, _record = self._opening_demand(0.0)

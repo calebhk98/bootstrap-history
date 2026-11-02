@@ -337,15 +337,16 @@ check("a line that states no sums is written as it is", rendered("plain", lambda
 from sim.economy.api import country_figures
 from sim.economy.setup import labour_area
 from sim.economy.market_memory import market_key
+from sim.tests.labour_record_stand_in import labour_record
 
 economy = SimpleNamespace(setup=SimpleNamespace(tiles=["t1", "t2"]),
-                          record=SimpleNamespace(hours_idle={market_key("weaver", labour_area("t1")): 30.0, market_key("weaver", labour_area("t2")): 10.0},
-                                                 hours_hired={market_key("weaver", labour_area("t1")): 70.0, market_key("weaver", labour_area("t2")): 90.0}))
+                          record=SimpleNamespace(labour=labour_record({market_key("weaver", labour_area("t1")): 70.0, market_key("weaver", labour_area("t2")): 90.0},
+                                                               {market_key("weaver", labour_area("t1")): 30.0, market_key("weaver", labour_area("t2")): 10.0})))
 idle = country_figures.idle_hours_by_trade(economy, None)
 check("the idle hours of a trade are summed over its markets, with the hours offered", idle == {"weaver": (40.0, 200.0)}, idle)
 
-from sim.economy.record import EconomyRecord
-check("the record keeps the idle hours through a save", "hours_idle" in EconomyRecord.__dataclass_fields__)
+from sim.economy.labour_record import LabourRecord
+check("the record keeps the idle hours through a save", "hours_idle" in LabourRecord.__dataclass_fields__)
 
 # ---- a civilisation's data founds its church and academy ---------------------------------------------------------------------------------
 import glob

@@ -65,7 +65,7 @@ class ClearingTests(unittest.TestCase):
 class ReaderTests(unittest.TestCase):
     def record(self, prices, quotes, weights):
         memory = MarketMemory(prices=prices, quote_kinds=quotes, volume_weights=weights)
-        return types.SimpleNamespace(memory=memory, volumes={})
+        return types.SimpleNamespace(memory=memory, goods=types.SimpleNamespace(volumes={}))
 
     def test_the_price_index_follows_the_areas_that_traded(self):
         record = self.record({"grain|a": 2.0, "grain|b": 90.0}, {"grain|b": QUOTE_LOWEST_UNFILLED_ASK},

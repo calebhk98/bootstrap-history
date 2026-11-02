@@ -6,12 +6,12 @@ holds last year's market outcomes. Nothing else survives a year.
 from dataclasses import dataclass, field
 from typing import Any, Dict, Tuple
 
-from sim.labour.api import MarketState, market_state_from_plain, market_state_to_plain
-
 from .accounts import Book
 from .capital_markets_record import CapitalMarketsRecord
 from .carriage_record import CarriageRecord
 from .credit_record import CreditRecord
+from .goods_record import GoodsRecord
+from .labour_record import LabourRecord
 from .land_record import LandRecord
 from .households_cohort import Cohort
 from .market_memory import KEY_SEPARATOR, MarketMemory
@@ -22,7 +22,7 @@ from .record_parts import OwnedRecord
 from .record_plain import plain
 from .state_budget import StateBudget
 from .tax_record import TaxRecord
-from .types import AgentId, CurrencySpec, TileId, TradeId
+from .types import AgentId, CurrencySpec
 from .unfree_record import UnfreeRecord
 
 
@@ -41,34 +41,17 @@ class EconomyRecord(OwnedRecord):
     unfree: UnfreeRecord = field(default_factory=UnfreeRecord)                      # unfree_record.py
     taxes: TaxRecord = field(default_factory=TaxRecord)                             # tax_record.py
     carriage: CarriageRecord = field(default_factory=CarriageRecord)                # carriage_record.py
-    workforce: MarketState = field(default_factory=MarketState)          # the labour core's state: people by labour area, trade and ability band
-    volumes: Dict[str, float] = field(default_factory=dict)              # market_key -> units delivered last year in all rounds; a market with no orders is absent
-    unsold: Dict[str, float] = field(default_factory=dict)               # market_key -> units offered beyond what was delivered last year
-    unmet: Dict[str, float] = field(default_factory=dict)                # market_key -> units buyers asked for at the asks they faced beyond what was delivered last year
-    opening_basket: Dict[str, float] = field(default_factory=dict)       # good -> quantity at the opening, as far as the opening supplies it
-    opening_demand: Dict[str, float] = field(default_factory=dict)       # good -> quantity households were seeded to want, supplied or not
-    opening_own_grown: Dict[str, float] = field(default_factory=dict)    # good -> quantity households were seeded to grow on their own plots
-    opening_sold_hours_per_worker: float = 0.0   # hours a working person was seeded to sell a year (zero: a whole working year)
-    opening_sold_hours_by_area: Dict[str, float] = field(default_factory=dict)   # labour area -> hours a working person there was seeded to sell a year (empty: the one figure above)
-    opening_demand_by_country: Dict[str, Dict[str, float]] = field(default_factory=dict)  # country -> good -> quantity its households were seeded to want
-    index_base_prices: Dict[str, float] = field(default_factory=dict)    # the price level's base; opening if empty
+    labour: LabourRecord = field(default_factory=LabourRecord)                      # labour_record.py
+    goods: GoodsRecord = field(default_factory=GoodsRecord)                         # goods_record.py
     state_budget: StateBudget = field(default_factory=StateBudget)       # the state's revenue and this year's plan
-    margin_years: Dict[str, int] = field(default_factory=dict)           # market_key -> years in a row the expected price stood above the entry price
-    hours_hired: Dict[str, float] = field(default_factory=dict)          # labour market_key -> hours hired last year
-    hours_hired_by_employer: Dict[AgentId, Dict[TradeId, float]] = field(default_factory=dict)   # employer -> trade -> hours the last clearing hired for it
-    hours_idle: Dict[str, float] = field(default_factory=dict)           # labour market_key -> hours offered and not hired last year
-    sold_share_expected: Dict[str, float] = field(default_factory=dict)  # labour market_key -> share of offered hours households expect to sell, smoothed over the years (household_work_year.py)
-    curves: Dict[str, Any] = field(default_factory=dict)                 # market_key -> the book of the last clearing at the port (market_curves.py)
     settling: bool = False                                               # in the hidden spin-up: households' spending rises as far as their wealth allows
     spin_up_result: Dict[str, Any] = field(default_factory=dict)         # how the hidden first stage ended: settled, years run, last gap (empty: no spin-up ran)
-    output_by_tile: Dict[TileId, Dict[str, float]] = field(default_factory=dict)   # tile -> good -> units the home producers made last year
 
-    AGENT_KEYED = ("cohorts", "producers", "merchants", "hours_hired_by_employer")
+    AGENT_KEYED = ("cohorts", "producers", "merchants")
     SAVED_SORTED = ("cohorts", "producers", "merchants")
     TRANSIENT = ("settling",)   # true only inside the hidden spin-up, which finishes before any save
     ENCODERS = {
         "merchants": lambda merchants: {key: _merchant_record(value) for key, value in sorted(merchants.items())},
-        "workforce": market_state_to_plain,
     }
     DECODERS = {
         "book": Book.from_record,
@@ -77,7 +60,6 @@ class EconomyRecord(OwnedRecord):
         "cohorts": lambda value: {key: Cohort(**each) for key, each in value.items()},
         "producers": lambda value: {key: Producer(**each) for key, each in value.items()},
         "merchants": lambda value: {key: _merchant_from(each) for key, each in value.items()},
-        "workforce": market_state_from_plain,
         "state_budget": lambda value: StateBudget(**value),
     }
 

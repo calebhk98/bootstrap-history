@@ -101,14 +101,14 @@ def expected_shares(setup, record, offers: Sequence[LabourOffer]) -> Dict[Tuple[
 
 def lacks_history(record, offers: Sequence[LabourOffer]) -> bool:
     """Whether some offer is in a labour market no year has yet shown the households."""
-    history = getattr(record, "sold_share_expected", {})
+    history = record.labour.sold_share_expected
     return any(market_key(offer.trade, offer.area) not in history for offer in offers)
 
 
 def sold_share_at(record, trade, area, expected: float = 1.0) -> float:
     """Share of the hours offered in a labour market that households expect to sell: the share smoothed over the
-    years (`record.sold_share_expected`), else, with no year behind it, `expected` (the opening's sizing)."""
-    return getattr(record, "sold_share_expected", {}).get(market_key(trade, area), expected)
+    years (`record.labour.sold_share_expected`), else, with no year behind it, `expected` (the opening's sizing)."""
+    return record.labour.sold_share_expected.get(market_key(trade, area), expected)
 
 
 def work_terms(setup, record, view, cohort: Cohort, offers: Sequence[LabourOffer],
@@ -162,11 +162,11 @@ def plans(setup, record, view, offers: Sequence[LabourOffer], outside_option_by_
 def decide(setup, record, view, offers: Sequence[LabourOffer], outside_option_by_tile: Mapping[str, float]
            ) -> Dict[AgentId, float]:
     """Settle the year's split for every cohort: a market no year has shown yet starts from the share its producers
-    hire (kept in `record.sold_share_expected`); store the hired hours a person's share (the cohort's floor) and
+    hire (kept in `record.labour.sold_share_expected`); store the hired hours a person's share (the cohort's floor) and
     return the own hours of each cohort, which it keeps back from the market."""
     if setup.household_work and lacks_history(record, offers):
         for (trade, area), share in sorted(expected_shares(setup, record, offers).items()):
-            record.sold_share_expected.setdefault(market_key(trade, area), share)
+            record.labour.sold_share_expected.setdefault(market_key(trade, area), share)
     own: Dict[AgentId, float] = {}
     for cohort_id, (per_person, own[cohort_id], milled) in plans(setup, record, view, offers, outside_option_by_tile).items():
         cohort = record.cohorts[cohort_id]

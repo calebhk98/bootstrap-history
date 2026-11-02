@@ -71,11 +71,11 @@ def run_auctions(setup, record, form_names: Sequence[str], interest_rate: float)
     return dict(record.taxes.tax_farms)
 
 
-def remember_year(record, assessments, farmed_names: Sequence[str], state_capacity: float,
+def remember_year(taxes, assessments, farmed_names: Sequence[str], state_capacity: float,
                   reach: float = TAX_FARMER_REACH) -> None:
     """Keep each form's base and what the state would have collected at its own reach, for next year's bids
     and reserve. A farmed form's take is scaled from the farmer's reach back to the state's."""
     for assessment in assessments:
         farmed = assessment.form in farmed_names
         state_take = assessment.collected_value * (state_capacity / reach if farmed and reach > 0.0 else 1.0)
-        record.taxes.tax_history[assessment.form] = {"base": assessment.base_value, "state_take": state_take}
+        taxes.tax_history[assessment.form] = {"base": assessment.base_value, "state_take": state_take}

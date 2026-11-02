@@ -18,7 +18,7 @@ def setup_with(recipes, opening):
 
 
 def record_with(memory, basket, base=None):
-    return types.SimpleNamespace(memory=memory, volumes={}, opening_basket=basket, index_base_prices=base or {})
+    return types.SimpleNamespace(memory=memory, goods=types.SimpleNamespace(volumes={}, opening_basket=basket, index_base_prices=base or {}))
 
 
 class TradeAgeTests(unittest.TestCase):

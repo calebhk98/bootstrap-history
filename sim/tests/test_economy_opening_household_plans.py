@@ -57,7 +57,7 @@ def setup():
 
 def record_and_offers(wage):
     worker = Cohort(agent_id="c", tile="t1", income_class=0, people=100.0, working_people=50.0, ownership_share=0.0)
-    record = types.SimpleNamespace(cohorts={"c": worker}, sold_share_expected={market_key("labourer", labour_area("t1")): 1.0}, land=types.SimpleNamespace(titles={"t1": {"c": 1.0}}, tenancies={}))
+    record = types.SimpleNamespace(cohorts={"c": worker}, labour=types.SimpleNamespace(sold_share_expected={market_key("labourer", labour_area("t1")): 1.0}), land=types.SimpleNamespace(titles={"t1": {"c": 1.0}}, tenancies={}))
     return record, [LabourOffer("c", "labourer", labour_area("t1"), 500.0, wage)]
 
 
@@ -191,7 +191,7 @@ class SolvedOpeningTests(unittest.TestCase):
                 setup = household_work_setup(flour_price)
                 record, area_map, _carriage = opening.open_economy(setup)
                 bought = bought_by_households(setup, record, area_map)
-                self.assertAlmostEqual(record.opening_demand.get(GRAIN, 0.0), bought[GRAIN], delta=1e-6 * max(1.0, bought[GRAIN]))
+                self.assertAlmostEqual(record.goods.opening_demand.get(GRAIN, 0.0), bought[GRAIN], delta=1e-6 * max(1.0, bought[GRAIN]))
                 self.assertEqual(bought[GRAIN] == 0.0, buys_milled)
                 if buys_milled:
                     self.assertGreater(bought[FLOUR], 0.0)
@@ -210,10 +210,10 @@ class SolvedOpeningTests(unittest.TestCase):
         record, _area_map, _carriage = opening.open_economy(setup)
         hired = hired_hours(record)
         self.assertGreater(hired, 0.0)
-        self.assertAlmostEqual(record.opening_demand[SERVICE], hired, delta=1e-6 * hired)
+        self.assertAlmostEqual(record.goods.opening_demand[SERVICE], hired, delta=1e-6 * hired)
         servants = sum(by_trade.get(SERVANT, 0.0) for by_trade in labour_state.producers_hours_needed(setup, record).values())
         self.assertAlmostEqual(servants, hired, delta=1e-6 * hired)
-        people = sum(labour_state.people_by_trade(record.workforce, labour_area(tile)).get(SERVANT, 0.0) for tile in setup.tiles)
+        people = sum(labour_state.people_by_trade(record.labour.workforce, labour_area(tile)).get(SERVANT, 0.0) for tile in setup.tiles)
         self.assertGreaterEqual(people * setup.working_hours_per_year, hired * (1.0 - 1e-9))
 
     def test_where_hands_are_short_the_service_price_rises_but_no_producer_is_dropped(self):

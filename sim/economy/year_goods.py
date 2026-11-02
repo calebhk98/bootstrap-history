@@ -195,7 +195,7 @@ def clear_goods(setup, record, view, area_map, order_book: OrderBook, plans, led
                 bids, result, goods_respend.offers_left(offers, goods_respend_year.sold_by_seller(result)),
                 record.memory.prices.get(key), delivered)
             if area in kept:
-                record.curves[key] = market_curves.summarize(bids, offers)
+                record.goods.curves[key] = market_curves.summarize(bids, offers)
             old = record.memory.prices.get(key)
             quiet_years = note_bids(record.memory, key, bids, offers)
             dry_years = note_offers(record.memory, key, bids, offers)
@@ -236,19 +236,19 @@ def clear_goods(setup, record, view, area_map, order_book: OrderBook, plans, led
 def _record_year_markets(record, ledger: YearLedger, left_markets) -> None:
     """The year's volumes, unsold and unmet of every market, after all rounds; a market with no orders this year has
     none, and its usual volume moves toward zero."""
-    record.volumes.clear()
-    record.unsold.clear()
-    record.unmet.clear()
+    record.goods.volumes.clear()
+    record.goods.unsold.clear()
+    record.goods.unmet.clear()
     for (good, area), market in sorted(left_markets.items()):
         key = market_key(good, area)
         unmet = unmet_quantity(market.bids, market.result, market.delivered)
-        record.volumes[key] = market.delivered
-        record.unsold[key] = max(0.0, market.result.offered_at_price - market.delivered)
-        record.unmet[key] = unmet
+        record.goods.volumes[key] = market.delivered
+        record.goods.unsold[key] = max(0.0, market.result.offered_at_price - market.delivered)
+        record.goods.unmet[key] = unmet
         if unmet > 0.0:
             ledger.unmet_demand[(good, area)] = unmet
         record.memory.note_volume(key, market.delivered)
-    for key in sorted(set(record.memory.volume_weights) - set(record.volumes)):
+    for key in sorted(set(record.memory.volume_weights) - set(record.goods.volumes)):
         record.memory.note_volume(key, 0.0)
 
 
@@ -310,5 +310,5 @@ def _tax_in_kind(setup, record, producer, recipe, forms, ledger) -> None:
             for good in recipe.outputs}
     facts = YearFacts(currency=setup.currency_id, output=output, producer_tile={producer.agent_id: producer.tile},
                       held_goods=held)
-    _transfers, moves, _assessments = taxes.assess(forms, facts, setup.state_agent, {}, setup.state_capacity, setup.hiding)
+    _transfers, moves, _assessments = taxes.assess(forms, facts, setup.state_agent, {}, ledger.state_capacity, setup.hiding)
     record.book.move_many(moves)

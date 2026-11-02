@@ -65,7 +65,7 @@ def small_setup(**changes) -> EconomySetup:
         handling_rates={"sail": 2.0 * wages[LABOURER]},
         specs=specs(), recipes=recipes(), basket=basket(),
         trades={trade: TradeSpec(trade) for trade in wages},
-        tax_forms=(), state_capacity=0.5, working_hours_per_year=2000.0, working_share=0.5,
+        tax_forms=(), working_hours_per_year=2000.0, working_share=0.5,
         gini=0.4, opening_population_by_tile={TOWN: 4000.0, FARMS: 3000.0, HILLS: 1000.0},
         opening_prices=prices, opening_wages=wages, opening_rate=0.06,
         capital_tile=TOWN, port_tile=TOWN)
@@ -84,7 +84,7 @@ def stationary_setup(slack_share: float = 0.0, **changes) -> EconomySetup:
     Every hour the plot and household work leave is offered (no leisure), so hours beyond the hours hired show as idle hours."""
     stated = small_setup(land_per_run={FARM: PLOT_LAND_PER_RUN})
     economy = Economy(stated)
-    flows = opening_stationary.solve({TOWN: economy.record.opening_demand}, stated.recipes, stated.opening_prices,
+    flows = opening_stationary.solve({TOWN: economy.record.goods.opening_demand}, stated.recipes, stated.opening_prices,
                                      stated.opening_wages, stated.opening_rate)
     workers = sum(stated.opening_population_by_tile.values()) * stated.working_share
     view = economy.view()

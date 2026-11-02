@@ -6,11 +6,12 @@ import types
 import unittest
 
 from sim.economy import api
+from sim.tests.labour_record_stand_in import labour_record
 
 
 def stand_in(wages, hired, idle):
     setup = types.SimpleNamespace(unskilled_trade="labourer", countries=lambda: ("home",), civ_id="home", tiles={"a": None, "b": None})
-    record = types.SimpleNamespace(memory=types.SimpleNamespace(wages=wages), hours_hired=hired, hours_idle=idle)
+    record = types.SimpleNamespace(memory=types.SimpleNamespace(wages=wages), labour=labour_record(hired, idle))
     return types.SimpleNamespace(setup=setup, record=record)
 
 

@@ -176,7 +176,7 @@ class AgentEconomy(TilePricesMixin):
     # ---- the year -----------------------------------------------------------------------------
     def run_year(self):
         economy = self.economy()
-        economy.change_setup(state_capacity=self._sim.state_reach(), **port_cropland.follow_farm_sites(self._sim, economy.setup))
+        economy.change_setup(**port_cropland.follow_farm_sites(self._sim, economy.setup))
         self.sync_ways()
         self.admit_techniques()
         orders = self._seat_orders()
@@ -397,6 +397,7 @@ class AgentEconomy(TilePricesMixin):
                           working_age_share=population.working_age / total if total > 0.0 else 0.0,
                           entrant_share=entrant_share, attrition_share=attrition_share,
                           yield_factor_by_producer=yields, engine_orders=engine_orders, harvest_factor=weather,
+                          state_capacity=sim.state_reach(),
                           import_accounts=border_accounts[0], export_accounts=border_accounts[1],
                           labour_levy_hours_per_worker=port_levy.levy_hours_per_worker(sim),
                           debt_relief_tiles=port_land.debt_relief_tiles(sim, economy),

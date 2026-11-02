@@ -58,7 +58,7 @@ def labour_offers(setup, record, view, subsistence_by_tile, levy_hours_per_worke
         share = cohort.working_people / tile_working if tile_working > 0.0 else 0.0
         area = labour_area(cohort.tile)
         if area not in people_by_area:
-            people_by_area[area] = people_by_trade(record.workforce, area)
+            people_by_area[area] = people_by_trade(record.labour.workforce, area)
         workers = {trade: count * share for trade, count in people_by_area[area].items()}
         offers.extend(households.labour_offers(cohort, workers, view, subsistence_by_tile.get(cohort.tile, 0.0),
                                                hours_left, danger))
@@ -101,28 +101,26 @@ def clear_labour(setup, record, bids: Sequence[LabourBid], offers: Sequence[Labo
     core_bids = sloped_bids(bids)
     ledger.wage_floor_per_hour = mean_floor_per_hour(
         context.ask_floor_per_worker_year,
-        {area: people_in(record.workforce, area) for area in context.ask_floor_per_worker_year},
+        {area: people_in(record.labour.workforce, area) for area in context.ask_floor_per_worker_year},
         context.hours_per_worker_year)
     inputs = dataclasses.replace(context, trades=core_trades(setup, {bid.trade for bid in core_bids}),
                                  bids=core_bids, hours_sold_at=supply.schedules() if supply is not None else None)
-    record.workforce, report = run_labour_year(record.workforce, inputs, owned=True)
+    record.labour.workforce, report = run_labour_year(record.labour.workforce, inputs, owned=True)
     by_market: Dict[Tuple[str, str], List[LabourOffer]] = {}
     if supply is not None:
         offers = supply.settle({(clearing.trade, clearing.area): clearing.entry_wage for clearing in report.clearings})
     for offer in offers:
         by_market.setdefault((offer.trade, offer.area), []).append(offer)
-    record.hours_hired = {}
-    record.hours_idle = {}
+    record.labour.hours_idle = {}
     for clearing in sorted(report.clearings, key=lambda each: (each.trade, each.area)):
         key = market_key(clearing.trade, clearing.area)
         result = _result(clearing, setup.currency_id, by_market.get((clearing.trade, clearing.area), ()))
         done = settlement.settle_labour(record.book, result)
         ledger.note_postings(done.postings, "wages")
         ledger.note_labour(result, done.postings)
-        record.hours_hired[key] = clearing.hours_hired
-        record.hours_idle[key] = clearing.idle_hours
+        record.labour.hours_idle[key] = clearing.idle_hours
         if clearing.hours_hired + clearing.idle_hours > 0.0:
-            record.sold_share_expected[key] = households_work.smoothed_sold_share(
-                record.sold_share_expected.get(key, 1.0), households_work.sold_share(clearing.hours_hired, clearing.idle_hours))
-    mirror_wages(record.memory.wages, record.workforce)
+            record.labour.sold_share_expected[key] = households_work.smoothed_sold_share(
+                record.labour.sold_share_expected.get(key, 1.0), households_work.sold_share(clearing.hours_hired, clearing.idle_hours))
+    mirror_wages(record.memory.wages, record.labour.workforce)
     return report

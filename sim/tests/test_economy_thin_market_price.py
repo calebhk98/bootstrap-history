@@ -20,8 +20,8 @@ def alloy_game(traded_in_area_a, wanted=100000.0):
     memory = MarketMemory(prices=prices, wages={"labour|a": 0.5}, rates={"coin": 0.0})
     memory.volume_weights = {"alloy|a": traded_in_area_a, "metal|a": 500.0}
     memory.note_trading({"alloy|a", "metal|a"})
-    record = types.SimpleNamespace(memory=memory, volumes={}, opening_basket={"alloy": wanted},
-                                   index_base_prices={})
+    record = types.SimpleNamespace(memory=memory, goods=types.SimpleNamespace(volumes={}, opening_basket={"alloy": wanted},
+                                                                   index_base_prices={}))
     recipe = Recipe("melt", {"alloy": 1.0}, {"metal": 2.0}, {"labour": 4.0})
     setup = types.SimpleNamespace(recipes={"melt": recipe}, opening_prices={}, currency_id="coin",
                                   unskilled_trade="labour")
@@ -35,8 +35,8 @@ def alloy_of_untraded_metal_game():
     memory = MarketMemory(prices=prices, wages={"labour|a": 0.5}, rates={"coin": 0.0})
     memory.volume_weights = {"alloy|a": 2.0}
     memory.note_trading({"alloy|a"})
-    record = types.SimpleNamespace(memory=memory, volumes={}, opening_basket={"alloy": 100000.0},
-                                   index_base_prices={})
+    record = types.SimpleNamespace(memory=memory, goods=types.SimpleNamespace(volumes={}, opening_basket={"alloy": 100000.0},
+                                                                   index_base_prices={}))
     recipes = {"melt": Recipe("melt", {"alloy": 1.0}, {"metal": 2.0}, {"labour": 4.0}),
                "smelt": Recipe("smelt", {"metal": 1.0}, {}, {"labour": 2.0})}
     setup = types.SimpleNamespace(recipes=recipes, opening_prices={}, currency_id="coin", unskilled_trade="labour")
@@ -57,7 +57,7 @@ class ThinMarketTests(unittest.TestCase):
 
     def test_a_market_that_usually_trades_a_lot_but_traded_a_sliver_this_year_shows_near_its_making_cost(self):
         setup, record = alloy_game(traded_in_area_a=800.0)
-        record.volumes = {"alloy|a": 2.0, "metal|a": 500.0}
+        record.goods.volumes = {"alloy|a": 2.0, "metal|a": 500.0}
         shown, _stale = shown_prices(setup, record)
         self.assertLess(shown["alloy"], 2.0 * MAKING_COST)
 
@@ -72,7 +72,7 @@ class ThinMarketTests(unittest.TestCase):
 
     def test_a_good_outside_the_opening_basket_keeps_its_market_price(self):
         setup, record = alloy_game(traded_in_area_a=2.0)
-        record.opening_basket = {}
+        record.goods.opening_basket = {}
         self.assertAlmostEqual(shown_prices(setup, record)[0]["alloy"], 900.0)
 
 

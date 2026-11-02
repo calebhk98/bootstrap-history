@@ -33,7 +33,7 @@ def dispatch_merchants(setup, record, carriage, ledger: YearLedger, area_map) ->
     whose owner draws it as profit. Where the setup names no carriers the whole fee still goes to the poorest
     households of the tile the goods leave (Complaints/552)."""
     money = setup.currency_id
-    crew = carriage_hours.crew_for(setup, record, carriage)
+    crew = carriage_hours.crew_for(setup, record.carriage, carriage)
     index = carriage_hours.hired_index(ledger) if crew is not None else {}
     carriers = {}
     for cohort in record.cohorts.values():
@@ -158,7 +158,7 @@ def money_taxes(setup, record, view, ledger: YearLedger) -> None:
     if forms:
         facts = tax_facts(setup, record, view, ledger)
         owed_to_state = [form for form in forms if form.name not in farmed]
-        transfers, _moves, assessments = taxes.assess(owed_to_state, facts, setup.state_agent, {}, setup.state_capacity,
+        transfers, _moves, assessments = taxes.assess(owed_to_state, facts, setup.state_agent, {}, ledger.state_capacity,
                                                        setup.hiding)
         for form in forms:
             if form.name in farmed:
@@ -170,7 +170,7 @@ def money_taxes(setup, record, view, ledger: YearLedger) -> None:
         record.book.transfer_many(transfers)
         ledger.note_postings(transfers)
         received += math.fsum(transfer.amount for transfer in transfers)
-        tax_farming.remember_year(record, assessments, tuple(farmed), setup.state_capacity)
+        tax_farming.remember_year(record.taxes, assessments, tuple(farmed), ledger.state_capacity)
     record.taxes.tax_farms = {}
     state_budget.close_year(setup, record, ledger, received)
 
@@ -212,7 +212,7 @@ def close_agents(setup, record, view, ledger: YearLedger, area_map, carriage) ->
         recipe = setup.recipes[producer.recipe_id]
         if producer.idle_years > 0:      # bankrupt: idle, no dividend (Eurace@Unibi, Firm_bankruptcy_idle_counter)
             record.producers[producer_id] = replaced(producer, idle_years=producer.idle_years - 1)
-            shares.note_dividend(record, producer_id, ())
+            shares.note_dividend(record.capital_markets, producer_id, ())
             continue
         revenue = ledger.sales_in.get(producer_id, 0.0)
         costs = ledger.running_costs(producer_id)
@@ -229,7 +229,7 @@ def close_agents(setup, record, view, ledger: YearLedger, area_map, carriage) ->
         if not closed.exited:       # the dividend, the financing check and bankruptcy follow Eurace@Unibi (firm_year.py)
             closed, _paid, year = firm_year.settle_year(setup, record, view, producer, closed, recipe, revenue, costs,
                                                         loans_of.get(producer_id, []))
-        shares.note_dividend(record, producer_id, closed.transfers)
+        shares.note_dividend(record.capital_markets, producer_id, closed.transfers)
         if year is not None and year.write_off_ratio > 0.0:
             firm_year.write_off(record, producer_id, year.write_off_ratio)
         if closed.exited:
@@ -379,12 +379,12 @@ def remember_basket_price_level(setup, record) -> float:
     stay those of the opening; which goods are priced follows trade."""
     recent = recently_traded_goods(record.memory)
     prices = {good: price for good, price in national_prices(record).items() if good in recent}
-    base = record.index_base_prices or setup.opening_prices
-    level = currency.basket_price_level(prices, base, record.opening_basket)
+    base = record.goods.index_base_prices or setup.opening_prices
+    level = currency.basket_price_level(prices, base, record.goods.opening_basket)
     # the median's weights are what the goods traded for last year; the opening basket's value stands in until they trade
-    spending = traded_spending_weights(record.memory.volume_weights or record.volumes,
-                                       record.memory.last_year_prices or prices, set(record.opening_basket)) \
-        or {good: quantity * base.get(good, 0.0) for good, quantity in record.opening_basket.items()}
+    spending = traded_spending_weights(record.memory.volume_weights or record.goods.volumes,
+                                       record.memory.last_year_prices or prices, set(record.goods.opening_basket)) \
+        or {good: quantity * base.get(good, 0.0) for good, quantity in record.goods.opening_basket.items()}
     record.memory.note_basket_price_level(
         setup.currency_id, level, currency.price_inflation(prices, record.memory.last_year_prices, spending))
     record.memory.last_year_prices = dict(prices)
@@ -396,7 +396,7 @@ def rebase_basket_price_level(setup, record) -> None:
     compare against becomes one, so the rebase is not read as a jump in prices. Expected inflation is a yearly
     rate, the same in any base, so it is carried over unchanged."""
     money = setup.currency_id
-    record.index_base_prices = national_prices(record)
+    record.goods.index_base_prices = national_prices(record)
     record.memory.basket_price_levels[money] = 1.0
     record.memory.price_levels[money] = 1.0
     record.cohorts = {agent: renewed(cohort, last_basket_price_level=1.0)

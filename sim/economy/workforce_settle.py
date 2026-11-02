@@ -24,8 +24,8 @@ def expected_hours(setup, record, view) -> Dict[Tuple[str, str], float]:
         plan = producers.plan(producer, recipe, view, record.book.balance(producer_id, setup.currency_id))
         for bid in plan.labour_bids:
             wanted[(bid.area, bid.trade)] = wanted.get((bid.area, bid.trade), 0.0) + bid.hours
-    return add_others_hired(wanted, record.workforce.workers,
-                            hours_hired_by_others.by_market(record.workforce.hired_hours, record.producers))
+    return add_others_hired(wanted, record.labour.workforce.workers,
+                            hours_hired_by_others.by_market(record.labour.workforce.hired_hours, record.producers))
 
 
 def add_others_hired(wanted: Mapping[Tuple[str, str], float], workers: Mapping[str, Mapping[str, object]],
@@ -45,9 +45,9 @@ def trim_to_expected_hours(setup, record, view) -> None:
     wanted = hours_kept(seeded_hours(setup, producers_hours_needed(setup, record)),
                         expected_hours(setup, record, view), state_hours(setup, record, view),
                         carriage_plan_hours(setup, record))
-    hours_per_worker = record.opening_sold_hours_by_area or record.opening_sold_hours_per_worker or setup.working_hours_per_year     # as the opening staffed them
-    trim_people(record.workforce, wanted, fallback, hours_per_worker, setup.working_hours_per_year)
-    send_idle_to_plots(record.workforce, wanted, fallback, plot_trade(setup), hours_per_worker, setup.working_hours_per_year)
+    hours_per_worker = record.labour.opening_sold_hours_by_area or record.labour.opening_sold_hours_per_worker or setup.working_hours_per_year     # as the opening staffed them
+    trim_people(record.labour.workforce, wanted, fallback, hours_per_worker, setup.working_hours_per_year)
+    send_idle_to_plots(record.labour.workforce, wanted, fallback, plot_trade(setup), hours_per_worker, setup.working_hours_per_year)
 
 
 def state_hours(setup, record, view) -> Dict[Tuple[str, str], float]:

@@ -1,6 +1,6 @@
 """What one civilisation's economy is built from: the facts it keeps from year to year.
 
-A setup is never edited in place. A change (a tax rate, a site limit, the state's reach, a recipe a technique allows,
+A setup is frozen: it is never edited in place. A change (a tax rate, a site limit, a recipe a technique allows,
 the tiles' yields) makes a new setup with `dataclasses.replace`, assigned in one place, `Economy.change_setup`.
 
 The markets module's port (sim/markets/port*.py) or a tool fills an `EconomySetup` from data and the engine's
@@ -40,7 +40,7 @@ class TradeSpec:
     family: str = ""                  # trades that share skill: retraining within one is quicker
 
 
-@dataclass
+@dataclass(frozen=True)
 class EconomySetup:
     civ_id: str
     currency: CurrencySpec
@@ -53,7 +53,6 @@ class EconomySetup:
     basket: Any                                    # households.Basket
     trades: Dict[TradeId, TradeSpec]
     tax_forms: Tuple[Any, ...]                     # taxes.TaxForm
-    state_capacity: float
     working_hours_per_year: float
     working_share: float
     gini: float

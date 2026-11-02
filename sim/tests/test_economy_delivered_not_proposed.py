@@ -70,7 +70,8 @@ class DeliveredVolumeTests(unittest.TestCase):
         offers = [Offer("seller", "timber", "area", "t", 10.0, 1.0)]
         setup = types.SimpleNamespace(recipes={}, tax_forms=[], currency_id="coin", port_tile="t", capital_tile="t",
                                       opening_prices={}, state_agent="state")
-        record = types.SimpleNamespace(producers={}, cohorts={}, book=book, currency=CurrencySpec("coin", "fiat", None, 0.0, None), memory=MarketMemory(), curves={}, volumes={}, unsold={}, unmet={})
+        record = types.SimpleNamespace(producers={}, cohorts={}, book=book, currency=CurrencySpec("coin", "fiat", None, 0.0, None), memory=MarketMemory(),
+                                       goods=types.SimpleNamespace(curves={}, volumes={}, unsold={}, unmet={}))
         area_map = types.SimpleNamespace(area_of=lambda good, tile: "area", goods=lambda: {"timber"})
         ledger = YearLedger()
         with mock.patch.object(year_goods.seller_offers, "strategic_offers", lambda s, r, v, b, o, p, costs=None: list(o)), \
@@ -79,7 +80,7 @@ class DeliveredVolumeTests(unittest.TestCase):
         delivered = 10.0 - book.stock("seller", "timber", "t")
         self.assertGreater(ledger.unpaid.get("buyer", 0.0), 0.0)        # the buyer could not pay in full
         self.assertLess(delivered, ledger.clearings[0].quantity)
-        self.assertAlmostEqual(record.volumes["timber|area"], delivered)
+        self.assertAlmostEqual(record.goods.volumes["timber|area"], delivered)
         self.assertAlmostEqual(record.memory.volume_weights["timber|area"], delivered)
 
 

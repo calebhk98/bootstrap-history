@@ -76,9 +76,9 @@ class Crew:
         return found
 
 
-def crew_for(setup, record, carriage) -> Optional[Crew]:
+def crew_for(setup, carriage_record, carriage) -> Optional[Crew]:
     """The year's crew over `carriage`, or None when the setup's modes name no crew hours."""
-    return Crew(setup, carriage, record.carriage.area_imbalance) if hires(setup) else None
+    return Crew(setup, carriage, carriage_record.area_imbalance) if hires(setup) else None
 
 
 def wage_scale(setup, record, carriage) -> float:

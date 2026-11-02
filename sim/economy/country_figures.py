@@ -50,17 +50,17 @@ def idle_hours_by_trade(economy, country: Optional[str]) -> Dict[str, tuple]:
     tiles = country_tiles(economy, country)
     idle: Dict[str, float] = {}
     hired: Dict[str, float] = {}
-    for key, hours in economy.record.hours_idle.items():
+    for key, hours in economy.record.labour.hours_idle.items():
         if _labour_key_in(key, tiles):
             trade = key.split(KEY_SEPARATOR, 1)[0]
             idle[trade] = idle.get(trade, 0.0) + hours
-            hired[trade] = hired.get(trade, 0.0) + economy.record.hours_hired.get(key, 0.0)
+            hired[trade] = hired.get(trade, 0.0) + economy.record.labour.hours_hired_in(key)
     return {trade: (idle[trade], idle[trade] + hired[trade]) for trade in sorted(idle)}
 
 
 def people_by_trade(economy, country: Optional[str]) -> Dict[str, float]:
     """Working people by trade in the country's labour markets."""
-    workers = economy.record.workforce.workers
+    workers = economy.record.labour.workforce.workers
     totals: Dict[str, float] = {}
     for tile in sorted(country_tiles(economy, country)):
         # each trade is added tile by tile in tile order; the order trades are met in within a tile does not matter
@@ -96,7 +96,7 @@ def traded_volumes(economy, country: Optional[str]) -> Dict[str, float]:
     tiles = country_tiles(economy, country)
     totals: Dict[str, float] = {}
     areas_of: Dict[str, Dict[str, Set[TileId]]] = {}
-    for key, volume in economy.record.volumes.items():
+    for key, volume in economy.record.goods.volumes.items():
         good, area = key.split(KEY_SEPARATOR, 1)
         if country is not None:
             by_area = areas_of.get(good)
@@ -113,11 +113,11 @@ def opening_basket(economy, country: Optional[str]) -> Dict[str, float]:
     out in proportion to the demand each country's households were seeded with (the whole basket for None)."""
     record = economy.record
     if country is None:
-        return dict(record.opening_basket)
-    wanted = record.opening_demand_by_country.get(country, {})
+        return dict(record.goods.opening_basket)
+    wanted = record.goods.opening_demand_by_country.get(country, {})
     basket = {}
-    for good, supplied in record.opening_basket.items():
-        total = record.opening_demand.get(good, 0.0)
+    for good, supplied in record.goods.opening_basket.items():
+        total = record.goods.opening_demand.get(good, 0.0)
         if total > 0.0 and wanted.get(good, 0.0) > 0.0:
             basket[good] = supplied * wanted[good] / total
     return basket
