@@ -19,20 +19,14 @@ class LoweredAsk(unittest.TestCase):
 class HireThroughRounds(unittest.TestCase):
     def test_dismissed_hours_are_taken_on_again_at_the_new_offer(self):
         hired, kept = {"mill": 100.0}, {"mill": 100.0}
-        applications.hire_through_rounds(hired, kept, {"mill": 100.0}, {"mill": 5.0}, {"mill": 4.0},
+        applications.hire_through_rounds(hired, kept, {"mill": 100.0}, {"mill": 5.0},
                                          pool=50.0, ask=3.0, floor=1.0)
         self.assertGreater(hired["mill"], 99.0)
         self.assertLess(kept["mill"], 100.0)
 
-    def test_dismissed_hours_whose_old_wage_is_over_the_offer_take_the_offer_rather_than_stay_idle(self):
-        hired, kept = {"mill": 100.0}, {"mill": 100.0}
-        applications.hire_through_rounds(hired, kept, {"mill": 100.0}, {"mill": 5.0}, {"mill": 9.0},
-                                         pool=0.0, ask=3.0, floor=1.0)
-        self.assertGreater(hired["mill"], 99.0)
-
     def test_dismissed_hours_return_once_their_cut_ask_reaches_the_offer(self):
         hired, kept = {"mill": 100.0}, {"mill": 100.0}
-        applications.hire_through_rounds(hired, kept, {"mill": 100.0}, {"mill": 5.0}, {"mill": 5.2},
+        applications.hire_through_rounds(hired, kept, {"mill": 100.0}, {"mill": 5.0},
                                          pool=0.0, ask=3.0, floor=1.0)
         self.assertGreater(hired["mill"], 100.0 * 0.95 ** 12 + 5.0)
 
@@ -71,13 +65,13 @@ class OfferRaise(unittest.TestCase):
 class HireWithRaisingOffers(unittest.TestCase):
     def test_the_offer_paid_never_passes_the_maximum(self):
         offers = {"mill": 5.0}
-        applications.hire_through_rounds({"mill": 100.0}, {"mill": 100.0}, {"mill": 200.0}, offers, {"mill": 5.5},
+        applications.hire_through_rounds({"mill": 100.0}, {"mill": 100.0}, {"mill": 200.0}, offers,
                                          pool=50.0, ask=3.0, floor=1.0, ceilings={"mill": 5.2})
         self.assertLessEqual(offers["mill"], 5.2 + 1e-9)
 
     def test_the_offer_reported_is_the_mean_paid_to_the_hours_taken_on(self):
         offers = {"mill": 5.0}
-        taken = applications.hire_through_rounds({"mill": 0.0}, {"mill": 0.0}, {"mill": 1000.0}, offers, {"mill": 0.0},
+        taken = applications.hire_through_rounds({"mill": 0.0}, {"mill": 0.0}, {"mill": 1000.0}, offers,
                                                  pool=10.0, ask=3.0, floor=1.0, ceilings={"mill": 9.0})
         self.assertGreater(taken["mill"], 0.0)
         self.assertGreater(offers["mill"], 5.0)
@@ -85,7 +79,7 @@ class HireWithRaisingOffers(unittest.TestCase):
 
     def test_without_ceilings_the_offer_stays(self):
         offers = {"mill": 5.0}
-        applications.hire_through_rounds({"mill": 0.0}, {"mill": 0.0}, {"mill": 1000.0}, offers, {"mill": 0.0},
+        applications.hire_through_rounds({"mill": 0.0}, {"mill": 0.0}, {"mill": 1000.0}, offers,
                                          pool=10.0, ask=3.0, floor=1.0)
         self.assertEqual(offers["mill"], 5.0)
 

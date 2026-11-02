@@ -103,20 +103,19 @@ class MarketState:
 
     `workers[area][trade]` is people per ability band. `trainees[area][trade]` is a list of
     [years_left, people per band] for those still learning. `wages[area][trade]` is the market wage: the
-    hours-weighted mean of what hours already held (at their contracts) and hours newly hired were paid."""
+    wage every hour hired was paid: the mean of the offers paid to the hours taken on."""
     workers: Dict[AreaId, Dict[TradeId, BandCounts]] = dataclasses.field(default_factory=dict)
     trainees: Dict[AreaId, Dict[TradeId, List[list]]] = dataclasses.field(default_factory=dict)
     wages: Dict[AreaId, Dict[TradeId, float]] = dataclasses.field(default_factory=dict)
     hired_hours: Dict[AreaId, Dict[TradeId, Dict[str, float]]] = dataclasses.field(default_factory=dict)
     entry_wages: Dict[AreaId, Dict[TradeId, float]] = dataclasses.field(default_factory=dict)   # the wage new hires cleared at last year: what the next year's offer moves from (`wages` is the mean over all hours held)
-    contract_wages: Dict[AreaId, Dict[TradeId, Dict[str, float]]] = dataclasses.field(default_factory=dict)   # per employer, the mean wage an hour it holds is paid (clearing.contracted_wage)
     asks: Dict[AreaId, Dict[TradeId, float]] = dataclasses.field(default_factory=dict)   # ask over the reservation wage (asks.py)
 
 
 @dataclasses.dataclass
 class Clearing:
     """One (trade, area) market's year. `average_wage` is the one wage an hour every employer pays: hours-weighted over
-    everyone hired (held hours at their contracts, new hires at the offers the rounds reached)."""
+    everyone hired, held hours and new alike."""
     trade: TradeId
     area: AreaId
     wage: float
@@ -125,7 +124,7 @@ class Clearing:
     hours_hired: float
     hired_by_employer: Dict[str, float]
     average_wage: float
-    new_hire_wage: Optional[float] = None   # the wage hours hired new this year cleared at, before any premium (`wage` is the mean over all hours held, contracts included); none: the wage
+    new_hire_wage: Optional[float] = None   # the wage hours hired new this year cleared at, before any premium (the same as `wage`); none: the wage
     target_wage: Optional[float] = None   # where the wage is heading: toward the price where offered meets wanted hours, scaled by the imbalance; none: the wage
     hours_held: Optional[float] = None    # every hour the trade's workers here had at the clearing, sold or kept; none: not recorded
     demand: Tuple[Tuple[float, float], ...] = ()   # (maximum wage, hours) of each bid, the schedule the heading wage slides along as hands arrive

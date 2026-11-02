@@ -13,7 +13,6 @@ from sim.agents.api import COIN_RESTRIKE_SHARE_PER_YEAR, PURSE_CURRENCY
 from sim.ledger.api import PayExchange, ReceiveFromExchange
 from sim.economy import api as economy_api
 from sim.rekey import rekey
-from sim.world.demography_turnover import working_age_turnover
 from sim.economy.api import (EDGE_LEGACY, AgentOrders, Economy, GoodsMove, Offer, Producer,
                              YearInputs, expected_output_prices, live_input_prices, live_wages,
                              variable_cost_per_run)
@@ -396,10 +395,8 @@ class AgentEconomy(TilePricesMixin):
         harmed = sim.externality_yield_factors(sim.year)
         yields = port_sites.crop_yields(economy, weather, sim.farm_weather_by_tile(sim.year))
         yields = port_sites.harmed_yields(yields, harmed, economy_api.producers_of(economy))
-        entrant_share, attrition_share = working_age_turnover(population)
         return YearInputs(year=sim.year, population_by_tile=sim.labour.settlement_tiles(),
                           working_age_share=population.working_age / total if total > 0.0 else 0.0,
-                          entrant_share=entrant_share, attrition_share=attrition_share,
                           yield_factor_by_producer=yields, engine_orders=engine_orders, harvest_factor=weather,
                           state_capacity=sim.state_reach(),
                           import_accounts=border_accounts[0], export_accounts=border_accounts[1],

@@ -83,11 +83,11 @@ class LabourMarket:
         factors = self._labour.wage_cost_factors(trade)
         return annual_wage(base, factors["weighted"], world.price_index, world.wage_index, 1.0, self.pay_scale())
 
-    def quote_annual(self, trade, people=0.0, employer=None, pay_premium=0.0):
-        """Money one person-year of a trade costs `employer` now: the economy's wage for the trade, the same for
-        every employer and every number taken on (`people` and `employer` are accepted for callers that name them;
-        a hire is a standing bid in the labour core, sim/markets/port_staff.py)."""
-        return self._annual(trade) * (1.0 + pay_premium)
+    def quote_annual(self, trade, people=0.0):
+        """Money one person-year of a trade costs now: the economy's wage for the trade, the same for every employer and
+        every number taken on (`people` is accepted for callers that name it; a hire is a standing bid in the labour core,
+        sim/markets/port_staff.py)."""
+        return self._annual(trade)
 
     def quote_annual_in(self, trade, country):
         """Money one person-year of a trade costs in another country's labour markets, from the wages those
@@ -101,11 +101,10 @@ class LabourMarket:
         return self._annual(trade)
 
     def quote(self, trade, hours=0.0, employer=None, pay_premium=0.0):
-        """Money one hour of a trade costs `employer` now, once `hours` a year more are taken on;
-        `pay_premium` is the fraction the employer pays over the market."""
+        """Money one hour of a trade costs now, once `hours` a year more are taken on: the one wage of the trade (`employer`
+        and `pay_premium` are accepted for callers that name them and change nothing)."""
         world = self._world
-        people = hours / world.HOURS_PER_PERSON_YEAR
-        return self.quote_annual(trade, people, employer, pay_premium) / world.HOURS_PER_PERSON_YEAR
+        return self.quote_annual(trade, hours / world.HOURS_PER_PERSON_YEAR) / world.HOURS_PER_PERSON_YEAR
 
     def commission_cost(self, trade, hours, premium):
         """What a one-off job of `hours` costs: the hour the market quotes, times a shop's `premium`."""

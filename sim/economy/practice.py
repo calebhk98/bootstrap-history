@@ -32,7 +32,7 @@ SKILL_GAP_CLOSED_PER_YEAR = declare(
     why="Eurace@Unibi Household_update_specific_skills (Labour/Household_Employee_Functions.c) closes the gap monthly by "
         "1 - 0.5^(1/(20 + 0.25 (general_skill - 1) (4 - 20))), a half-life of 20 months at general skill 1 to 4 at "
         "skill 5 (formula switch skill_update_acc_to_formula = 1 and individual_learning = 0 in the shipped state "
-        "run-trans/0_after_2k_transient.xml). Over twelve months the five levels close 0.340, 0.405, 0.500, 0.646 and "
+        "its/0_after_2k_transient.xml). Over twelve months the five levels close 0.340, 0.405, 0.500, 0.646 and "
         "0.875; weighted by the state's 148, 455, 676, 241 and 80 workers at each level the mean is 0.4991. The "
         "skill level mix of this simulation's workers is not modelled, so the state's mix stands in.")
 

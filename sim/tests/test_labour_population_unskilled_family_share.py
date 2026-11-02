@@ -32,10 +32,6 @@ class _Labour(PopulationMixin):
         return self._core
 
 
-def _urban_working():
-    return TOTAL * URBAN_FRACTION * (WORKING / TOTAL)
-
-
 class CoreHeadcountTests(unittest.TestCase):
 
     def test_where_the_core_holds_people_their_count_is_used_and_the_two_trades_differ(self):
@@ -43,9 +39,9 @@ class CoreHeadcountTests(unittest.TestCase):
         self.assertEqual(labour.national_trade_population("porter"), 120.0)
         self.assertEqual(labour.national_trade_population("carter"), 30.0)
 
-    def test_a_trade_the_core_holds_nobody_of_gets_the_floor(self):
+    def test_a_trade_the_core_holds_nobody_of_has_nobody_in_the_country(self):
         labour = _Labour({})
-        self.assertAlmostEqual(labour.national_trade_population("sailor"), _urban_working() * labour.NO_DEMAND_TRADE_SHARE)
+        self.assertEqual(labour.national_trade_population("sailor"), 0.0)
 
     def test_the_floor_is_a_labelled_temporary_heuristic_that_names_964(self):
         self.assertEqual(REGISTRY["NO_DEMAND_TRADE_SHARE"]["kind"], "temporary_heuristic")

@@ -1,6 +1,7 @@
 """Hiring by applications and acceptances, round after round, with random separations (Complaint 473, 608).
 
-Follows the matching protocol of Eurace@Unibi (NOTICE.md), Labour/ in the Eurace source. Each round, a firm with
+Follows the matching protocol of Eurace@Unibi (NOTICE.md), Labour/ in the Eurace source, but leaves out its skill-specific
+offers and its ranking of applicants by skill: hours of a trade are alike. Each round, a firm with
 vacancies posts them with its offer (Firm_send_vacancies, Labour/Firm_Employer_Functions.c); every searching
 household applies to a bounded number of the posters whose offer is at or above its reservation wage, chosen at random,
 the household's own list being cut at random (Household_UNEMPLOYED_read_job_vacancies_and_send_applications,
@@ -24,7 +25,7 @@ APPLICATIONS_PER_ROUND = declare(
     "APPLICATIONS_PER_ROUND", 3, kind="temporary_heuristic", unit="applications a searching household sends in a round",
     source=None, confidence="D",
     retire="Complaints/608: a wage method driven by the market\'s own state replaces this fixed fraction",
-    why="Eurace's APPLICATIONS_PER_DAY, 3 in the shipped state run-trans/0_after_2k_transient.xml; Household_UNEMPLOYED_"
+    why="Eurace's APPLICATIONS_PER_DAY, 3 in the shipped state its/0_after_2k_transient.xml; Household_UNEMPLOYED_"
         "read_job_vacancies_and_send_applications in Labour/Household_Employee_Functions.c. Not fitted.")
 
 SEPARATION_SHARE_PER_ROUND = declare(
@@ -33,7 +34,7 @@ SEPARATION_SHARE_PER_ROUND = declare(
     retire="Complaints/608: a wage method driven by the market\'s own state replaces this fixed fraction",
     why="Eurace's random dismissals (Firm_send_random_redundancies, Labour/Firm_Employer_Functions.c): a share drawn "
         "evenly from LOWER_BOUND_FIRING to UPPER_BOUND_FIRING percent, 0 to 10 in the shipped state "
-        "run-trans/0_after_2k_transient.xml, so 5 percent on average; the C rounds the count of workers up, which "
+        "its/0_after_2k_transient.xml, so 5 percent on average; the C rounds the count of workers up, which "
         "hours do not. Not fitted.")
 
 
@@ -116,12 +117,12 @@ def raised_offer(offer: float, ceiling: float, wanted: float, hired: float) -> f
 
 
 def hire_through_rounds(hired: Dict[str, float], kept: Dict[str, float], wanted: Dict[str, float],
-                        offers: Dict[str, float], contracts: Dict[str, float], pool: float, ask: float,
+                        offers: Dict[str, float], pool: float, ask: float,
                         floor: float, ceilings: Optional[Dict[str, float]] = None) -> Dict[str, float]:
     """Run the year's `SEARCH_ROUNDS_PER_YEAR` rounds over `hired` and `kept` (hours per employer, changed in place).
     `pool` hours ask `ask`; hours an employer dismisses, `SEPARATION_SHARE_PER_ROUND` of what it holds each round, ask
     the wage they were paid (a hired worker's reservation is reset to the wage, Household_receive_wage in
-    Labour/Household_Employee_Functions.c): `contracts` for the hours it kept, `offers` for those it took on this year.
+    Labour/Household_Employee_Functions.c): the employer's current offer, held hours and new alike.
     With `ceilings` an employer whose vacancies stay open raises its offer after each round (`raised_offer`); `offers`
     ends as the mean offer each employer paid the hours it took on (its last offer where it took none). Returns the
     hours taken on per employer."""
@@ -133,8 +134,7 @@ def hire_through_rounds(hired: Dict[str, float], kept: Dict[str, float], wanted:
             held = hired[employer]
             if held <= 0.0:
                 continue
-            pay = (kept[employer] * contracts[employer] + (held - kept[employer]) * offers.get(employer, 0.0)) / held
-            groups.append(Searchers(held * SEPARATION_SHARE_PER_ROUND, pay))
+            groups.append(Searchers(held * SEPARATION_SHARE_PER_ROUND, offers.get(employer, 0.0)))
             hired[employer] = held * (1.0 - SEPARATION_SHARE_PER_ROUND)
             kept[employer] *= 1.0 - SEPARATION_SHARE_PER_ROUND
         vacancies = {employer: max(0.0, wanted[employer] - hired[employer]) for employer in wanted}

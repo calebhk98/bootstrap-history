@@ -176,7 +176,7 @@ def _open(setup: EconomySetup, replacement: float, plans=None) -> Tuple[EconomyR
         record.labour.opening_sold_hours_per_worker)
     record.labour.workforce = labour_state.opening_workforce(      # the mint's capacity follows the money struck
         setup, record, record.labour.opening_sold_hours_by_area)
-    record.labour.workforce.hired_hours, record.labour.workforce.contract_wages = opening_resting.resting_labour_contracts(
+    record.labour.workforce.hired_hours = opening_resting.resting_hours_held(
         opening_placement.capped_contracts(labour_state.producers_hours_by_employer(setup, record),
                                            {area: labour_state.people_by_trade(record.labour.workforce, area) for area in record.labour.workforce.workers},
                                            record.labour.opening_sold_hours_by_area, record.labour.opening_sold_hours_per_worker),
