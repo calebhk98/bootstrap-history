@@ -53,7 +53,7 @@ def defaults(seed: int) -> Dict[str, Any]:
 		"techniques_held": set(), "techniques_granted": set(), "tree": lambda node_id: None, "tree_nodes": {},
 		"running": lambda node_id: False, "revenue_estimate": 0.0, "concern_revenue": lambda node_id: 0.0, "operating": set(),
 		"standing_floor": 0.0, "rep_factor": 1.0, "techniques_version": 0, "operating_version": 0,
-		"headcount": 0.0, "base_annual_wage": lambda trade: 1.0, "labour_state_weights": {}, "money_per_labour_hour": 1.0,
+		"headcount": 0.0, "base_annual_wage": lambda trade: 1.0, "unskilled_trade": "labourer", "labour_state_weights": {}, "money_per_labour_hour": 1.0,
 		"seat_list": {"joined": ["founder"], "playing": ["founder"]}, "seat_country": lambda seat_id: None, "founder": {"alive": True, "policy": {}},
 		"population_total": 1.0e6, "pop_scale": 1.0, "material_pool": lambda material: (material,),
 		"material_substitutes": lambda material: frozenset(), "real_output_per_head": 1.0, "output_factor": 1.0,

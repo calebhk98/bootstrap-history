@@ -238,10 +238,11 @@ reaches the labour package by one chain: `labour_wage_schedule.wage_schedule` re
 is `agent_unskilled_wage`, which is `PriceReads.unskilled_wage_per_hour`. That figure and every other trade's wage come
 from one rule (`sim/economy/trade_wages.py`), for the home country and a partner alike: the wage the trade's labour market
 paid; else the opening wage of the trade times `opening_wage_level`; else the unskilled wage of the same scope times one
-plus the trade's training premium. A trade id the setup does not know is an error. Before the economy has opened there is
+plus the trade's training premium; and where the scope has no unskilled wage either, the opening unskilled wage times
+`opening_wage_level` times one plus the premium (`priced_trade_wage` in `sim/economy/trade_wages.py`). A trade id the
+setup does not know is an error. Before the economy has opened there is
 no wage to read, so the opening is counted at the opening figure (`money_per_labour_hour` times the home price level); the
-economy's
-opening (`open_agent` in `sim/markets/port.py` sends `RepriceOpeningMoney`; `sim/engine/opening_money.py` does the
+economy's opening (`open_agent` in `sim/markets/port.py` sends `RepriceOpeningMoney`; `sim/engine/opening_money.py` does the
 repricing) then reprices everything counted at that figure, the
 founder's and every seat's purse and the tree's money fields, by the ratio of the two, and sets
 the markets module's `money_from_economy` flag. From then on living costs, node money, the constants stated in labour hours

@@ -8,8 +8,11 @@ from typing import Callable, Dict, Mapping, Optional, Tuple
 
 from sim.world import plant_figures
 
-# Trades that are generic labour: a foreman is never drawn from them.
-GENERIC_TRADES = ("artisan", "labourer", "slave")
+
+def generic_trades(figures: "CrewFigures") -> frozenset:
+	"""Trades that are generic labour (the generic craft trade, the unskilled trade, the bonded): a foreman is never drawn from them."""
+	from sim.labour.api import bonded_pseudo_trade, generic_craft_trade   # imported where used: the labour package reads actors too
+	return frozenset((generic_craft_trade(), figures.unskilled_trade(), bonded_pseudo_trade()))
 
 
 @dataclass(frozen=True)
@@ -80,11 +83,13 @@ def crew_by_trade(figures: CrewFigures) -> Dict[str, float]:
 def foreman(figures: CrewFigures) -> Tuple[Optional[str], float]:
 	"""(skilled trade, FTE) that supervises the plant, or (None, 0): the largest skilled share of its build crew.
 	A plant built by generic artisans alone, or a capability institution, has none."""
+	from sim.labour.api import generic_craft_trade   # imported where used: the labour package reads actors too
 	if (figures.is_capability_institution or figures.revenue <= 0
-			or figures.build_hours_by_trade.get("artisan", 0) <= 0):
+			or figures.build_hours_by_trade.get(generic_craft_trade(), 0) <= 0):
 		return None, 0.0
+	generic = generic_trades(figures)
 	skilled = [(hours, trade) for trade, hours in figures.build_hours_by_trade.items()
-			   if trade not in GENERIC_TRADES and hours > 0]
+			   if trade not in generic and hours > 0]
 	if not skilled:
 		return None, 0.0
 	_hours, trade = max(skilled, key=lambda row: (row[0], row[1]))

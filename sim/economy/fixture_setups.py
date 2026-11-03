@@ -68,7 +68,7 @@ def small_setup(**changes) -> EconomySetup:
         tax_forms=(), working_hours_per_year=2000.0, working_share=0.5,
         gini=0.4, opening_population_by_tile={TOWN: 4000.0, FARMS: 3000.0, HILLS: 1000.0},
         opening_prices=prices, opening_wages=wages, opening_rate=0.06,
-        capital_tile=TOWN, port_tile=TOWN)
+        capital_tile=TOWN, port_tile=TOWN, unskilled_trade=LABOURER)
     return dataclasses.replace(setup, **changes) if changes else setup
 
 
