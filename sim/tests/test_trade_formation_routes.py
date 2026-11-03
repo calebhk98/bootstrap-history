@@ -5,14 +5,14 @@ QUICK_TOPIC = True
 from .harness import *  # noqa: F401,F403
 from sim.labour import trade_formation as formation
 from sim.labour.market import aptitude, formation as core_formation
-from sim.labour.market.records import Bid, Clearing, MarketState, Route, YearInputs, YearReport
+from sim.labour.market.records import EmployerHoursBid, LabourClearing, MarketState, Route, YearInputs, YearReport
 
 HOURS = 2000.0
 BANDS = aptitude.band_count()
 
 
 def clearing(area, trade, wanted_people, hired_people=0.0):
-    return Clearing(trade=trade, area=area, wage=1.0, hours_offered=0.0, hours_wanted=(wanted_people + hired_people) * HOURS,
+    return LabourClearing(trade=trade, area=area, wage=1.0, hours_offered=0.0, hours_wanted=(wanted_people + hired_people) * HOURS,
                     hours_hired=hired_people * HOURS, hired_by_employer={"buyer": hired_people * HOURS})
 
 
@@ -28,7 +28,7 @@ def people(state, area, trade):
 
 def run(state, year_inputs, clearings):
     """One employer, with room in its plan for any purchase, bids for the hours of every clearing."""
-    year_inputs.bids = [Bid("buyer", each.trade, each.area, each.hours_wanted, 1.0) for each in clearings]
+    year_inputs.bids = [EmployerHoursBid("buyer", each.trade, each.area, each.hours_wanted, 1.0) for each in clearings]
     year_inputs.outlay_room = {"buyer": 1.0e15}
     report = YearReport()
     core_formation.form_trades(state, year_inputs, clearings, report)

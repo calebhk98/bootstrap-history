@@ -2,7 +2,7 @@
 from sim.constants import declare
 
 
-class WageSchedule:
+class WageScheduleReader:
     def __init__(self, world):
         self._world = world
         self._wage_schedule_cache = None   # the opening's wage schedule, built on first use

@@ -71,7 +71,7 @@ class LeasingInTheMarketTests(unittest.TestCase):
     def test_a_landless_cohort_leases_from_a_holder_with_no_hands_at_the_ask(self):
         _setup, record = self.landless_world()
         held = titles.holding(record, TILE, LANDLORD) * HECTARES
-        leases = land_tenancy.match([land_tenancy.Offer(PEASANT, TILE, 10.0, 4.0)],
+        leases = land_tenancy.match([land_tenancy.TenancyRequest(PEASANT, TILE, 10.0, 4.0)],
                                     [land_tenancy.Lot(LANDLORD, TILE, held)], {TILE: RENT_PER_HECTARE}, {TILE: 1.5})
         self.assertEqual([(lease.tenant, lease.lessor, lease.hectares, lease.rent_per_hectare) for lease in leases],
                          [(PEASANT, LANDLORD, 10.0, 1.5)])
@@ -97,12 +97,12 @@ class LeasingInTheMarketTests(unittest.TestCase):
                                0.1 * HECTARES * RENT_PER_HECTARE)
 
     def test_no_lease_when_the_tenant_cannot_bear_the_ask(self):
-        leases = land_tenancy.match([land_tenancy.Offer(PEASANT, TILE, 10.0, 0.5)],
+        leases = land_tenancy.match([land_tenancy.TenancyRequest(PEASANT, TILE, 10.0, 0.5)],
                                     [land_tenancy.Lot(LANDLORD, TILE, 50.0)], {TILE: 2.0}, {TILE: 1.5})
         self.assertEqual(leases, [])
 
     def test_the_tenant_that_bears_most_is_served_first_when_land_is_short(self):
-        leases = land_tenancy.match([land_tenancy.Offer("a", TILE, 8.0, 2.0), land_tenancy.Offer("b", TILE, 8.0, 3.0)],
+        leases = land_tenancy.match([land_tenancy.TenancyRequest("a", TILE, 8.0, 2.0), land_tenancy.TenancyRequest("b", TILE, 8.0, 3.0)],
                                     [land_tenancy.Lot(LANDLORD, TILE, 10.0)], {TILE: 1.0}, {TILE: 1.0})
         self.assertEqual([(lease.tenant, lease.hectares) for lease in leases], [("b", 8.0), ("a", 2.0)])
 

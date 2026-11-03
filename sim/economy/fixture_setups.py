@@ -7,7 +7,7 @@ from sim.economy import household_hours_year, opening_stationary, year_labour
 from sim.economy.economy import Economy
 from sim.world.need_demand import NEED_SUBSTITUTION_ELASTICITY
 from sim.economy.households_basket import Basket, NeedSpec
-from sim.economy.setup import EconomySetup, TradeSpec
+from sim.economy.setup import EconomySetup, SetupTrade
 from sim.economy.tile_costs import world_map_of
 from sim.economy.types import CurrencySpec, GoodSpec, Recipe, TileSpec
 
@@ -64,7 +64,7 @@ def small_setup(**changes) -> EconomySetup:
         carriage_rates={"cart": 0.002, "pack": 0.004, "sail": 0.0005},
         handling_rates={"sail": 2.0 * wages[LABOURER]},
         specs=specs(), recipes=recipes(), basket=basket(),
-        trades={trade: TradeSpec(trade) for trade in wages},
+        trades={trade: SetupTrade(trade) for trade in wages},
         tax_forms=(), working_hours_per_year=2000.0, working_share=0.5,
         gini=0.4, opening_population_by_tile={TOWN: 4000.0, FARMS: 3000.0, HILLS: 1000.0},
         opening_prices=prices, opening_wages=wages, opening_rate=0.06,

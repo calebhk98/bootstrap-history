@@ -6,7 +6,7 @@ import collections
 
 from sim.agents.api import PURSE_CURRENCY
 from sim.economy import api as economy_api
-from sim.economy.api import YearInputs
+from sim.economy.api import EconomyYearInputs
 from sim.prices.api import solve_cache
 
 from . import port_sites
@@ -41,7 +41,7 @@ def spin_up(economy):
     basket = economy_api.opening_quantities(economy)
     prices = economy_api.opening_prices_of(economy)
     watched = sorted(basket, key=lambda good: -basket[good] * prices.get(good, 0.0))[:SPIN_UP_WATCHED_GOODS]
-    inputs = YearInputs(year=0, population_by_tile={},
+    inputs = EconomyYearInputs(year=0, population_by_tile={},
                         yield_factor_by_producer=port_sites.crop_yields(economy), engine_orders={})
     first_stage = settle(economy, inputs, watched)
     economy_api.trim_workforce_to_expected_hours(economy)

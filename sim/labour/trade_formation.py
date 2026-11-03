@@ -155,7 +155,7 @@ def nearest_sources(new_trade: str, shares: Mapping[str, TaskShares],
 
 
 @dataclass
-class Route:
+class FormationRoute:
     kind: str                  # "migration", "conversion" or "bonded"
     source: str                # an area, a trade, or the bonded market
     people: float
@@ -167,7 +167,7 @@ class Route:
 class FormationPlan:
     trade: str
     wanted: float
-    routes: List[Route] = field(default_factory=list)
+    routes: List[FormationRoute] = field(default_factory=list)
 
     @property
     def people(self) -> float:
@@ -194,7 +194,7 @@ def first_people_plan(trade: str, wanted: float, *, shares: Mapping[str, TaskSha
     plan = FormationPlan(trade, wanted)
     remaining = wanted
     for area, take in migration_takes(wanted, migrant_spare):
-        plan.routes.append(Route("migration", area, take, (migration_years or {}).get(area, 0.0)))
+        plan.routes.append(FormationRoute("migration", area, take, (migration_years or {}).get(area, 0.0)))
         remaining -= take
     if remaining > 0.0 and teacher_present:
         for uncovered, source in nearest_sources(trade, shares, sorted(source_spare)):
@@ -202,12 +202,12 @@ def first_people_plan(trade: str, wanted: float, *, shares: Mapping[str, TaskSha
             if take <= 0.0:
                 continue
             years = training_years(full_years.get(trade, 0.0), uncovered)
-            plan.routes.append(Route("conversion", source, take, years,
+            plan.routes.append(FormationRoute("conversion", source, take, years,
                                      take * teacher_hours_per_person(years, hours_per_worker_year)))
             remaining -= take
             if remaining <= 0.0:
                 break
     if remaining > 0.0 and bonded_available > 0.0:
         take = min(remaining, bonded_available)
-        plan.routes.append(Route("bonded", "bonded market", take))
+        plan.routes.append(FormationRoute("bonded", "bonded market", take))
     return plan

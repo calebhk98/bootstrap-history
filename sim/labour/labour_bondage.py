@@ -7,6 +7,7 @@ from sim.constants import declare
 from sim.polity.api import GainReputation
 from .buy_cap import over_room_refusal
 from sim.ledger.api import PayEdge
+from sim.refusal import Refusal
 
 
 class Bondage:
@@ -110,10 +111,7 @@ class Bondage:
         # large purchase unless you actually wait between them.
         depth = max(self.SLAVE_MARKET_DEPTH_FLOOR,
                     self.SLAVE_MARKET_DEPTH_SCALE * self._world.people.pop_scale ** self.SLAVE_MARKET_DEPTH_POP_EXPONENT)
-        # Integrate the rising price ACROSS the purchase instead of applying
-        # one end-price surcharge to the whole block, so grouping does not
-        # change the per-head cost: the nth head costs what the nth head
-        # costs however you group the purchase into calls.
+        # The rising price is integrated across the purchase, so the nth head costs the same however the purchase is grouped.
         already = self._world.workforce.market_pressure
         people_count = float(n_people)
         exponent = self.SLAVE_PRICE_CONGESTION_EXPONENT
@@ -147,10 +145,7 @@ class Bondage:
         """
         if n_people <= 0:
             return 0
-        # THE SAME ROOM `hire` ENFORCES: a person you own needs feeding,
-        # housing and oversight exactly as much as a person you pay, more
-        # so, so buy_slaves must respect the same household capacity cap as
-        # hire rather than bypassing it under a different verb.
+        # The household room cap `hire` enforces: a person you own needs feeding, housing and oversight too.
         room = self.capacity.household_room()
         refusal = over_room_refusal(n_people, room, lambda: self.advice.staff_advice("artisans"))
         if refusal:
@@ -162,7 +157,10 @@ class Bondage:
         if not self._world.finance.can_pay(price):
             self._world.commands.note_buy_refusal(self._world.finance.refusal_text("%d slaves" % n_people, price))
             return 0
-        self._world.send(PayEdge(self._world.EDGE_SLAVE_TRADERS, price, "slaves bought"))
+        paid = self._world.send(PayEdge(self._world.EDGE_SLAVE_TRADERS, price, "slaves bought"))
+        if isinstance(paid, Refusal):
+            self._world.commands.note_buy_refusal(paid)
+            return 0
         workforce.slaves += n_people
         workforce.market_pressure = workforce.market_pressure + n_people
         # Untrained on arrival. They become productive through the workforce's training queue.
@@ -215,16 +213,8 @@ class Bondage:
         workforce.slaves -= n_people
         workforce.freedmen += n_people
         workforce.manumitted_total += n_people
-        # The SAME person, working properly: 0.55 to 1.0, not another whole
-        # worker.
-        #
-        # But only for people who are actually TRAINED: freeing an untrained
-        # person upgrades what they will be worth WHEN they mature, it does
-        # not skip the maturing, so the uplift below must not be paid on a
-        # share of n_people that is still sitting in the training queue.
-        # The training queue also carries taught-trade rows (which have a
-        # trade name in them and no artisan capacity), so read column 0 by
-        # index rather than unpacking a row whose width is not fixed.
+        # The uplift is paid only on people already trained: those still in the training queue mature into it later.
+        # Queue rows vary in width (taught-trade rows carry a trade name), so column 0 is read by index.
         in_training = sum(row[0] for row in workforce.training)
         untrained = min(n_people, int(in_training / self.pools.WORKER_EQUIVALENT_UNTRAINED + 0.5))
         trained_freed = max(0, n_people - untrained)

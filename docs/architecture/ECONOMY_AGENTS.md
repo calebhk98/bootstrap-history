@@ -185,7 +185,7 @@ partner's edge. The partner's side settles in that partner's coin ledger and the
 The trader's purse is an account in the same book (see "Actors' money and debt in the book"); the cargo account is funded
 and emptied over `edge:cargo`, and the trader's booked result is trued up to what the book gave.
 A landing cargo's sales and a taking cargo's purchases cross the border, so the state's customs assess them: the
-economy is told which accounts are such (`YearInputs.import_accounts`, `export_accounts`), its ledger counts their
+economy is told which accounts are such (`EconomyYearInputs.import_accounts`, `export_accounts`), its ledger counts their
 sales and purchases as imports and exports, and the customs bases tax the cargo account out of its takings. A cargo
 bought for abroad with nothing left in its account owes no export duty (the duty is taken from what the account holds).
 

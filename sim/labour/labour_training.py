@@ -30,7 +30,9 @@ class Training:
         workforce = self._world.workforce
         if seats <= 0 or cost > self._world.finance.balance:
             return False, "cannot afford that trade school"
-        self._world.send(PayEdge(self._world.EDGE_WORKERS, cost, "trade schools"))
+        paid = self._world.send(PayEdge(self._world.EDGE_WORKERS, cost, "trade schools"))
+        if isinstance(paid, Refusal):
+            return False, paid
         schools = workforce.trade_schools
         if schools is None:
             schools = workforce.trade_schools = {}
@@ -171,7 +173,9 @@ class Training:
         count, frm, hours, fee, years = plan["count"], plan["from"], plan["hours"], plan["fee"], plan["years"]
         workforce = self._world.workforce
         current_year = self._world.game.year
-        self._world.send(PayEdge(self._world.EDGE_WORKERS, fee, "training fees"))
+        paid = self._world.send(PayEdge(self._world.EDGE_WORKERS, fee, "training fees"))
+        if isinstance(paid, Refusal):
+            return False, paid
         workforce.teaching_hours_this_year = (workforce.teaching_hours_this_year or 0.0) + hours
         workforce.trades_created.add(trade)
         rows = trade_first_hands.cohort_rows(

@@ -3,7 +3,7 @@
 Every term loan whose borrower is a cohort of the tile is cancelled and the lender books the loss (principal
 and arrears) as it would a default, except that no title is taken: the borrowers keep their land. Rent
 arrears of tenants on the tile are forgiven too. The state's choice reaches the economy as the tiles in
-`YearInputs.debt_relief_tiles`.
+`EconomyYearInputs.debt_relief_tiles`.
 """
 from typing import Dict, Iterable
 

@@ -7,7 +7,7 @@ on average, the first tranches a little more and the last a little less.
 from typing import Iterable, List
 
 from sim.constants import declare
-from sim.labour.api import Bid
+from sim.labour.api import EmployerHoursBid
 
 BID_TRANCHES = declare(
     "BID_TRANCHES", 4, kind="temporary_heuristic", unit="tranches of hours per bid", source=None, confidence="D",
@@ -21,7 +21,7 @@ BID_VALUE_SPREAD = declare(
         "marginal value as an employer's output rises; not measured.")
 
 
-def sloped_bids(bids: Iterable) -> List[Bid]:
+def sloped_bids(bids: Iterable) -> List[EmployerHoursBid]:
     """Each economy bid as tranches whose maximum wages average the bid's own."""
     tranches = []
     count = int(BID_TRANCHES)
@@ -31,5 +31,5 @@ def sloped_bids(bids: Iterable) -> List[Bid]:
             continue
         hours = bid.hours / BID_TRANCHES
         for factor in wage_factors:
-            tranches.append(Bid(bid.employer, bid.trade, bid.area, hours, bid.maximum_wage * factor))
+            tranches.append(EmployerHoursBid(bid.employer, bid.trade, bid.area, hours, bid.maximum_wage * factor))
     return tranches

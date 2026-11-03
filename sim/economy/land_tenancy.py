@@ -17,7 +17,7 @@ from .types import AgentId, GoodId, Recipe, TileId
 
 
 @dataclass(frozen=True)
-class Offer:
+class TenancyRequest:
     """A tenancy wanted: hectares a tenant has hands to work on `tile` and the most it pays per hectare."""
     tenant: AgentId
     tile: TileId
@@ -89,7 +89,7 @@ def hectares_workable(recipe: Recipe, land_per_run: float, held_tools: Mapping[G
     return low * land_per_run
 
 
-def match(offers: Sequence[Offer], lots: Sequence[Lot], posted_rent_by_tile: Mapping[TileId, float],
+def match(offers: Sequence[TenancyRequest], lots: Sequence[Lot], posted_rent_by_tile: Mapping[TileId, float],
           ask_by_tile: Mapping[TileId, float]) -> List[Lease]:
     """Offers meet lots tile by tile: the tenant that bears the highest rent is served first from the largest-first
     lots, at the tile's ask (the posted rent, cut by tenants' outside option), none where the tenant's ceiling is below

@@ -15,7 +15,7 @@ from typing import Dict, List, Optional, Tuple
 from sim.constants import declare
 
 from .expectations import expected_income, index_clearings, logit_shares
-from .records import Clearing, MarketState, Route, YearInputs, YearReport
+from .records import LabourClearing, MarketState, Route, YearInputs, YearReport
 
 MIGRATION_TASTE_SCALE = declare(
     "MIGRATION_TASTE_SCALE", 0.5, kind="temporary_heuristic", unit="log real income",
@@ -69,7 +69,7 @@ def move_shares(real_origin: float, options: List[Tuple[Optional[float], float]]
     return [shares.get(str(position), 0.0) * MIGRATION_CONSIDERATION_SHARE_PER_YEAR for position in range(len(options))]
 
 
-def migrate(state: MarketState, inputs: YearInputs, clearings: Dict[Tuple[str, str], Clearing],
+def migrate(state: MarketState, inputs: YearInputs, clearings: Dict[Tuple[str, str], LabourClearing],
             report: YearReport) -> None:
     """Move workers along the routes; record the net change per area in `report.migrated`."""
     index = clearings if isinstance(clearings, dict) else index_clearings(clearings)

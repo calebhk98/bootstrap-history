@@ -88,23 +88,12 @@ class LabourMarket:
             "to re-derive. See WAGE_SHARE_FOOD for the rest of the split.")
 
     def cost_factors(self, trade):
-        """Endogenous food, housing and trade-tool multipliers for a wage.
+        """Food, housing and trade-tool multipliers for a wage, and their weighted blend.
 
-        The labour-market schedule is the neutral benchmark; these factors
-        scale it by how far live food, housing and tool prices have moved: the staple's and the tools'
-        market ratio (price over the incumbents' cost) at the last year's close, the tools' also by the demand pressure.
-        At neutral prices the weighted factor is 1.0 to within about a part
-        in a million.
-
-        It is not EXACTLY 1.0, and the difference is the model working. The
-        tools term reads real market factors, and a society does not start
-        with an empty market: Rome's 223 inherited technologies already burn
-        charcoal, so charcoal opens the game carrying 5.0 t/yr of demand and
-        prices a hair above neutral. The smith's wage carries that hair. This
-        docstring claimed "exactly" for a long time, and the one check that
-        would have caught it happened to sit behind a stray sys.exit in
-        another test module and had never run.
-        """
+        The labour-market schedule is the neutral benchmark; each factor scales it by how far live prices have moved:
+        the staple's and the tools' market ratio (price over the incumbents' cost) at the last year's close, the
+        tools' also by the demand pressure. The weighted factor is 1.0 only while prices sit at neutral; a society
+        that starts with inherited demand for a tool's inputs already carries a small departure."""
         food = self._world.finance.last_market_price_ratio(wage_provider.staple_material(self._world.scenario.civ))
         housing = self.town_housing_factor()
         basket = trade_data.tool_basket(trade_data.registry_of(self._world), trade)
@@ -159,10 +148,6 @@ class LabourMarket:
         the economy or its markets have no wage. The home country is `quote_annual`."""
         answers = self._world.economy.agent_country(country)
         return None if answers is None else answers.pay_per_person_year(trade)
-
-    def unscarce_annual(self, trade):
-        """One person-year of a trade at its wage, before any pay premium (a screen's 'wage table' figure)."""
-        return self._annual(trade)
 
     def quote(self, trade):
         """Money one hour of a trade costs now: the one wage of the trade."""

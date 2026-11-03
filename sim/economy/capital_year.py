@@ -11,7 +11,7 @@ from sim.constants import declare
 from . import bank_runs, funds as fund_pools, insurance, lending, portfolio_year, secondary_trade
 from .funds import POOLED_FUNDS
 from .insurance import HARVEST, INSURANCE_UNDERWRITING, RISK_POOLING
-from .secondary_trade import Shortfall
+from .secondary_trade import CashShortfall
 from .types import AgentId, FundsOffer
 from .rates import own_rate
 
@@ -34,10 +34,10 @@ def holds_units(capital_markets) -> bool:
     return any(fund.units for fund in capital_markets.capital.funds.values())
 
 
-def shortfalls(setup, record, view, ledger) -> Dict[AgentId, Shortfall]:
+def shortfalls(setup, record, view, ledger) -> Dict[AgentId, CashShortfall]:
     """What each household short of cash for its floors would borrow, and the most it would pay to."""
     requests = lending.household_requests(setup, record, view, ledger, {})
-    return {request.borrower: Shortfall(request.amount, request.maximum_rate)
+    return {request.borrower: CashShortfall(request.amount, request.maximum_rate)
             for request in requests if request.borrower in record.cohorts}
 
 
@@ -52,7 +52,7 @@ def before_lending(setup, record, view, ledger, funds: Sequence[FundsOffer], yea
     pooling = POOLED_FUNDS in institutions
     if pooling and not fund_pools.standing(record) and record.cohorts:
         fund_pools.found(record, max(sorted(record.cohorts), key=lambda cohort_id: record.book.balance(cohort_id, money)), year)
-    short: Dict[AgentId, Shortfall] = {}
+    short: Dict[AgentId, CashShortfall] = {}
     if (pooling and holds_units(record.capital_markets)) or (trading and holds_a_claim(record)):
         short = shortfalls(setup, record, view, ledger)
     if pooling and short:
@@ -78,7 +78,7 @@ def _redeem_units(setup, record, funds, short, rate, institutions):
                 before = record.book.balance(holder, money)
                 funds = fund_pools.redeem_for_cash(setup, record, fund, holder, remaining[holder].amount, funds, rate, institutions)
                 got = record.book.balance(holder, money) - before
-                remaining[holder] = Shortfall(max(0.0, remaining[holder].amount - got), shortfall.borrowing_rate)
+                remaining[holder] = CashShortfall(max(0.0, remaining[holder].amount - got), shortfall.borrowing_rate)
     return funds, {holder: shortfall for holder, shortfall in remaining.items() if shortfall.amount > 0.0}
 
 

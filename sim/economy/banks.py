@@ -11,7 +11,7 @@ and defaulted by the one rule (credit.py). The bank pays its depositors out of w
 what it owes, which happens only once its capital is gone. Its depositors then ask for their money back; what it
 cannot pay is arrears, which the one default rule writes off, so the depositors bear the loss.
 
-A society founds banks only once it holds the institution (`YearInputs.institutions` names `DEPOSIT_BANKING`); a
+A society founds banks only once it holds the institution (`EconomyYearInputs.institutions` names `DEPOSIT_BANKING`); a
 household with the means founds one when none stands. Any agent may found one with `found`.
 """
 from dataclasses import dataclass

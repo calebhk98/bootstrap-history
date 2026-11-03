@@ -74,7 +74,7 @@ def lease_in_market(setup, record, view, options: Mapping[str, List[Option]]) ->
         goods = set(recipe.tool_wear) | {step.good for steps in recipe.tool_fallbacks.values() for step in steps if step.good}
         return {good: view.stock(cohort.agent_id, good, cohort.tile) for good in goods}
 
-    offers: List[land_tenancy.Offer] = []
+    offers: List[land_tenancy.TenancyRequest] = []
     lots: List[land_tenancy.Lot] = []
     arable_by_tile: Dict[str, float] = {}
     capacity: Dict[Tuple[str, str], float] = {}
@@ -89,7 +89,7 @@ def lease_in_market(setup, record, view, options: Mapping[str, List[Option]]) ->
         capacity[(cohort.tile, cohort.agent_id)] = min(needed, workable)
         wanted = land_tenancy.wanted_hectares(min(needed, workable), worked)
         if wanted > 0.0 and margin - outside[cohort.tile] > 0.0:
-            offers.append(land_tenancy.Offer(cohort.agent_id, cohort.tile, wanted, margin - outside[cohort.tile]))
+            offers.append(land_tenancy.TenancyRequest(cohort.agent_id, cohort.tile, wanted, margin - outside[cohort.tile]))
     for tile_id in sorted(arable_by_tile):
         for holder, share in sorted(titles.shares(record, tile_id).items()):
             lettable = land_tenancy.lettable_hectares(share * arable_by_tile[tile_id],

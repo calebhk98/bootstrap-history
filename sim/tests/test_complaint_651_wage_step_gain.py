@@ -6,7 +6,7 @@ QUICK_TOPIC = True
 import unittest
 
 from sim.labour.market import clearing
-from sim.labour.market.records import Bid
+from sim.labour.market.records import EmployerHoursBid
 
 RESERVATION = 1.0
 OFFERED = 1000.0
@@ -14,7 +14,7 @@ WORTH = 10.0       # an employer's maximum wage, far above the reservation
 
 
 def bid(hours):
-    return Bid("employer", "digger", "vale", hours, WORTH)
+    return EmployerHoursBid("employer", "digger", "vale", hours, WORTH)
 
 
 def next_wage(last, wanted):

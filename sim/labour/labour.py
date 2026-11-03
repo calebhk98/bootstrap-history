@@ -44,7 +44,7 @@ from .labour_staff_ledger import StaffLedger
 from .labour_supply import Supply
 from .labour_trades import Trades
 from .labour_training import Training
-from .labour_wage_schedule import WageSchedule
+from .labour_wage_schedule import WageScheduleReader
 from .labour_wages import Wages
 from .staff_book import StaffBook
 
@@ -56,7 +56,7 @@ class Labour:
         self.book = StaffBook(world)
         self.hours = FounderHours(world)
         self.trades = Trades(world)
-        self.schedule = WageSchedule(world)
+        self.schedule = WageScheduleReader(world)
         self.settlement = Settlement(world)
         self.market = LabourMarket(world, self.schedule, self.settlement, self.book)
         self.pools = StaffPools(world, self.book, self.trades)

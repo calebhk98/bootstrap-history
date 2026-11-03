@@ -5,7 +5,7 @@
 never stops at the tolerance, so a drift that the normal stage would cut short shows.
 """
 from sim.economy import api as economy_api
-from sim.economy.api import YearInputs
+from sim.economy.api import EconomyYearInputs
 
 from . import port_sites
 from .port_trace_chained import next_chained_index
@@ -29,7 +29,7 @@ def spin_up_trace(game, years):
     setup = game.view("agent_opening_setup")()
     economy = economy_api.blank_economy(setup)
     economy_api.begin_spin_up(economy)
-    inputs = YearInputs(year=0, population_by_tile={},
+    inputs = EconomyYearInputs(year=0, population_by_tile={},
                         yield_factor_by_producer=port_sites.crop_yields(economy), engine_orders={})
     rows = []
     chained, previous_prices = 1.0, None

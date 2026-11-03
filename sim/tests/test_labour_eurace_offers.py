@@ -6,7 +6,7 @@ QUICK_TOPIC = True
 import unittest
 
 from sim.labour.market import asks, clearing
-from sim.labour.market.records import Bid, MarketState
+from sim.labour.market.records import EmployerHoursBid, MarketState
 
 RESERVATION = 1.0
 OFFERED = 1000.0
@@ -31,7 +31,7 @@ class ReservationCut(unittest.TestCase):
 
 class WageIterations(unittest.TestCase):
     def test_scarce_hours_walk_the_wage_up_to_the_clearing_point_without_passing_it(self):
-        bids = [Bid("farm", "digger", "vale", 2000.0, 6.0)]
+        bids = [EmployerHoursBid("farm", "digger", "vale", 2000.0, 6.0)]
         target = clearing.clearing_target(RESERVATION, OFFERED, bids)
         wage, path = 2.0, []
         for _year in range(6):
@@ -41,7 +41,7 @@ class WageIterations(unittest.TestCase):
         self.assertLessEqual(max(path), target + 1e-9)
 
     def test_idle_hands_walk_the_wage_down_but_not_below_the_reservation(self):
-        bids = [Bid("farm", "digger", "vale", 100.0, 6.0)]
+        bids = [EmployerHoursBid("farm", "digger", "vale", 100.0, 6.0)]
         wage = 5.0
         for _year in range(30):
             wage = clearing.market_wage(wage, RESERVATION, OFFERED, bids)

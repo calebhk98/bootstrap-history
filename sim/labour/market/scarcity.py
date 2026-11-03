@@ -4,10 +4,10 @@ trained hands from elsewhere (Complaint 678)."""
 import math
 from typing import Optional, Sequence
 
-from .records import Bid
+from .records import EmployerHoursBid
 
 
-def bid_weighted_worth(bids: Sequence[Bid], reservation: float) -> float:
+def bid_weighted_worth(bids: Sequence[EmployerHoursBid], reservation: float) -> float:
     """The hours-weighted mean maximum wage of the bids that can pay the reservation wage: what the hours employers
     want are worth to them on the whole, so one stray bid with few hours does not set the wage. Never under the
     reservation wage."""
@@ -18,7 +18,7 @@ def bid_weighted_worth(bids: Sequence[Bid], reservation: float) -> float:
     return max(reservation, math.fsum(worth * hours for worth, hours in live) / total)
 
 
-def short_run_ceiling(long_run: float, reservation: float, training_years: float, bids: Sequence[Bid],
+def short_run_ceiling(long_run: float, reservation: float, training_years: float, bids: Sequence[EmployerHoursBid],
                       imported: Optional[float], fetched_share: float = 1.0) -> float:
     """The most this year's wage can be. A trade needing no training has its hands move in at once, so its
     ceiling is the long-run cost. Otherwise the bid-weighted worth of the hours wanted, and where trained hands

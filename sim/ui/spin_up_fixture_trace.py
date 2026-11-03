@@ -32,7 +32,7 @@ def fixture_trace(which, years):
     economy = economy_api.blank_economy(setup)
     rows = []
     for year in range(years):
-        inputs = economy_api.YearInputs(year=0, population_by_tile={},
+        inputs = economy_api.EconomyYearInputs(year=0, population_by_tile={},
                                         yield_factor_by_producer={}, engine_orders={})
         outcome = economy.step(inputs)
         rows.append(fixture_row(economy, outcome, year, economy_api.labour_market_rows(economy)))

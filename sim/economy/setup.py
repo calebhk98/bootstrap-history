@@ -33,7 +33,7 @@ def area_tile(area: str) -> TileId:
 
 
 @dataclass(frozen=True)
-class TradeSpec:
+class SetupTrade:
     trade_id: TradeId
     training_years: float = 0.0
     fatality_risk_per_year: float = 0.0
@@ -51,7 +51,7 @@ class EconomySetup:
     specs: Dict[GoodId, GoodSpec]
     recipes: Dict[str, Recipe]
     basket: Any                                    # households.Basket
-    trades: Dict[TradeId, TradeSpec]
+    trades: Dict[TradeId, SetupTrade]
     tax_forms: Tuple[Any, ...]                     # taxes.TaxForm
     working_hours_per_year: float
     working_share: float

@@ -13,7 +13,7 @@ from sim.reporting.api import CloseRealOutput
 from . import port_goods_orders
 
 
-class Clearing(Part):
+class MarketClearing(Part):
 
 	# ---- the year's flows ----
 

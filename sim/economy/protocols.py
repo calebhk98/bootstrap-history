@@ -111,16 +111,8 @@ class MarketView(Protocol):
         (`credit_view.equity_of` then reads zero)."""
 
 
-class Clearing(Protocol):
-    """goods_market.clear and labour.clear share this shape."""
-
-    def __call__(self, bids: Sequence, offers: Sequence, key: str, area: AreaId,
-                 currency: CurrencyId, last_price: Optional[float]) -> object:
-        """Clear one market for one year; deterministic in the order of its inputs."""
-
-
 @dataclass(frozen=True)
-class YearInputs:
+class EconomyYearInputs:
     """What the engine hands the economy each year, through the port. Physical facts only."""
     year: int
     population_by_tile: Mapping[TileId, float]

@@ -28,7 +28,7 @@ from .labour_inputs import labour_context
 from sim.labour.api import people_in
 from .labour_state import scale_people
 from .opening import open_economy
-from .protocols import YearInputs
+from .protocols import EconomyYearInputs
 from .record import EconomyRecord
 from .setup import EconomySetup, area_tile, labour_area
 from .types import Bid, EDGE_CONSUMPTION, GoodsMove, Transfer
@@ -152,11 +152,11 @@ class Economy:
         record.book.transfer_many(currency.issue(record.currency, struck, "recoinage"))
         record.currency = currency.debase_by_cut(record.currency, supply, cut_share, restrike_share)
 
-    def step(self, inputs: YearInputs) -> YearOutcome:
+    def step(self, inputs: EconomyYearInputs) -> YearOutcome:
         with collection_paused():
             return self._run_year(inputs)
 
-    def _run_year(self, inputs: YearInputs) -> YearOutcome:
+    def _run_year(self, inputs: EconomyYearInputs) -> YearOutcome:
         changes: Dict[str, Any] = {}
         if inputs.tax_rates:
             changes["tax_forms"] = taxes.with_rates(self.setup.tax_forms, inputs.tax_rates)
@@ -282,7 +282,7 @@ class Economy:
         return self._outcome(ledger, level, extraction, stocks_at_start)
 
     # ---- the year's pieces ------------------------------------------------------------------
-    def _follow_population(self, inputs: YearInputs) -> None:
+    def _follow_population(self, inputs: EconomyYearInputs) -> None:
         """Demography's people and working-age people per tile are the one count: each tile's cohorts are rescaled to its
         people, and their working people to its working-age people (the working-age share follows demography); then the
         labour core's workers and trainees on each tile to the working people the cohorts hold. The core adds no entrants or leavers
@@ -320,7 +320,7 @@ class Economy:
             if held > 0.0 and held != people:
                 scale_people(record.labour.workforce, area, people / held)
 
-    def _follow_yields(self, inputs: YearInputs) -> None:
+    def _follow_yields(self, inputs: EconomyYearInputs) -> None:
         for producer_id, factor in inputs.yield_factor_by_producer.items():
             producer = self.record.producers.get(producer_id)
             if producer is not None and producer.yield_factor != factor:

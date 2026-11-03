@@ -24,7 +24,7 @@ def mean_year_income(workforce, hours_per_worker_year: float) -> Dict[str, float
 def settle(setup, record, inputs, report, before, context, carriage) -> Dict[str, float]:
     """After the year's labour market: tenants of areas people left leave their land, the leavers join the fugitives, and
     fugitives for whom home now beats the refuge come back. Returns the people who came home by area. `inputs` carries the
-    state's take, its amnesty and its immunity (`YearInputs`); `context` is the year's labour inputs (subsistence, routes)."""
+    state's take, its amnesty and its immunity (`EconomyYearInputs`); `context` is the year's labour inputs (subsistence, routes)."""
     subsistence = context.subsistence_per_worker_year
     taxed = flight_routes.taxed_share_by_area(inputs.taxed_share_by_tile)
     if setup.flight is None or (not taxed and not record.unfree.fugitives):

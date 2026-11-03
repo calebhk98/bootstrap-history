@@ -1,6 +1,6 @@
 """Tax farming: a state lets the right to collect a money form of revenue for a year to the best bidder.
 
-The state names the forms to farm (`YearInputs.farmed_forms`, its choice through its decision policy). Any
+The state names the forms to farm (`EconomyYearInputs.farmed_forms`, its choice through its decision policy). Any
 actor holding cash may bid: it expects the form's base of last year taxed at its own reach, discounted at the
 market rate for waiting a year, and offers no more than it holds. The highest bid at or above what the state
 expects to collect itself, discounted the same way, wins. The farmer pays the state its price at once, then

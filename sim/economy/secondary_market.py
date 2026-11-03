@@ -29,7 +29,7 @@ class Ask:
 
 
 @dataclass(frozen=True)
-class Bid:
+class SecurityBid:
     buyer: AgentId
     item: str
     funds: float             # the most money it will spend on this claim
@@ -60,11 +60,11 @@ def _supply(asks: Sequence[Ask], price: float) -> float:
     return sum(ask.quantity for ask in asks if ask.reserve <= price)
 
 
-def _demand(bids: Sequence[Bid], price: float) -> float:
+def _demand(bids: Sequence[SecurityBid], price: float) -> float:
     return sum(bid.funds / price for bid in bids if bid.limit >= price)
 
 
-def clearing_price(asks: Sequence[Ask], bids: Sequence[Bid]) -> Optional[float]:
+def clearing_price(asks: Sequence[Ask], bids: Sequence[SecurityBid]) -> Optional[float]:
     """The lowest price at which the units offered cover the units the bids pay for; None when no bid reaches an ask."""
     asks = [ask for ask in asks if ask.quantity > 0.0]
     bids = [bid for bid in bids if bid.funds > 0.0 and bid.limit > 0.0]
@@ -85,7 +85,7 @@ def clearing_price(asks: Sequence[Ask], bids: Sequence[Bid]) -> Optional[float]:
     return high if _supply(asks, high) > 0.0 else None
 
 
-def clear_item(asks: Sequence[Ask], bids: Sequence[Bid]) -> List[Trade]:
+def clear_item(asks: Sequence[Ask], bids: Sequence[SecurityBid]) -> List[Trade]:
     """The trades in one claim at its clearing price. A holder does not bid on its own claim."""
     sellers = {ask.seller for ask in asks if ask.quantity > 0.0}
     bids = [bid for bid in bids if bid.buyer not in sellers]
@@ -111,7 +111,7 @@ def clear_item(asks: Sequence[Ask], bids: Sequence[Bid]) -> List[Trade]:
     return trades
 
 
-def clear(asks: Sequence[Ask], bids: Sequence[Bid]) -> List[Trade]:
+def clear(asks: Sequence[Ask], bids: Sequence[SecurityBid]) -> List[Trade]:
     """Every claim's trades: claims in id order, each buyer's funds falling by what it spent on the ones before. A
     buyer's bids are caps on one purse: it has the most any of them names to spend over all."""
     funds: Dict[AgentId, float] = {}
@@ -123,7 +123,7 @@ def clear(asks: Sequence[Ask], bids: Sequence[Bid]) -> List[Trade]:
         for bid in sorted((each for each in bids if each.item == item), key=lambda each: each.buyer):
             money = min(bid.funds, funds.get(bid.buyer, 0.0))
             if money > 0.0:
-                item_bids.append(Bid(bid.buyer, item, money, bid.limit))
+                item_bids.append(SecurityBid(bid.buyer, item, money, bid.limit))
         done = clear_item([ask for ask in asks if ask.item == item], item_bids)
         for trade in done:
             funds[trade.buyer] = funds.get(trade.buyer, 0.0) - trade.quantity * trade.price

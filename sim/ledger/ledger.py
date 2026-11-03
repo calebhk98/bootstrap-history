@@ -7,6 +7,7 @@ from typing import Any, Optional
 
 from sim.agents.api import EDGE_EXCHANGE, GOVERNMENT_PREFIX, edges, ledger
 from sim.assembly.api import Module
+from sim.book import InsufficientFunds
 from sim.refusal import Refusal
 
 from . import cash_book, rules
@@ -27,9 +28,13 @@ class Ledger(Module):
 		seat_id = self.clock.acting_seat if seat_id is None else seat_id
 		return SeatAccount(self.seat_of(seat_id), self.needs.cast_state().purses, seat_id)
 
-	def pay_edge(self, command: Any) -> None:
-		ledger.transfer(self.account(), self.edge(command.edge), command.amount, command.purpose)
+	def pay_edge(self, command: Any) -> Optional[Refusal]:
+		try:
+			ledger.transfer(self.account(), self.edge(command.edge), command.amount, command.purpose)
+		except InsufficientFunds as error:
+			return Refusal("cannot_pay", str(error))
 		self.bump_seat(MONEY)
+		return None
 
 	def pay_edge_from(self, command: Any) -> None:
 		actor = self.needs.cast().actors[command.actor]

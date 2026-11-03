@@ -8,7 +8,7 @@ from sim.assembly.api import Command
 @dataclass(frozen=True)
 class PayEdge(Command):
 	"""The acting seat's household pays a named edge (a counterparty the simulation does not model as an actor).
-	Never refused for lack of money: a household may go negative, and the credit limit is applied later."""
+	A household draws on its facility when short; refused with the cause `cannot_pay` when the facility cannot cover it."""
 	edge: str
 	amount: float
 	purpose: Any                  # a label, or {label: share of the amount}

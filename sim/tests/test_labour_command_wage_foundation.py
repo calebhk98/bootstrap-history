@@ -15,9 +15,6 @@ class StandInMarket:
     def cost_factors(self, trade):
         return {"food": 1.1, "housing": 1.2, "tools": 1.3, "skill_and_difficulty": 1.4}
 
-    def unscarce_annual(self, trade):
-        return 80.0
-
 
 def stand_in_labour_views():
     """The workforce views the `labour <trade>` command reads, answered with fixed figures."""

@@ -20,7 +20,7 @@ from typing import Dict, List, Mapping, Optional, Sequence, Tuple
 from sim.world import capital_market
 
 from . import banks, credit, credit_claims, secondary_market, shares
-from .secondary_market import Ask, Bid, Trade
+from .secondary_market import Ask, SecurityBid, Trade
 from .types import AgentId, FundsOffer, Loan, Transfer
 
 SHARE_TRADING = "share_trading"       # the institution a society must hold for its holders to sell shares on
@@ -32,7 +32,7 @@ EPSILON = 1e-9
 
 
 @dataclasses.dataclass(frozen=True)
-class Shortfall:
+class CashShortfall:
     """What a household short of cash needs, and the most it would pay to borrow it."""
     amount: float
     borrowing_rate: float
@@ -81,16 +81,16 @@ def _own_rate(offers: Mapping[AgentId, FundsOffer], agent: AgentId, market_rate:
     return offer.minimum_rate if offer is not None else market_rate
 
 
-def _loan_items(record, forced: Mapping[AgentId, Shortfall]) -> List[Loan]:
+def _loan_items(record, forced: Mapping[AgentId, CashShortfall]) -> List[Loan]:
     """The loans a household lender or a lender short of cash may sell."""
     holders = participants(record)
     return sorted((loan for loan in record.credit.loans if tradable(record, loan) and (loan.lender in holders or loan.lender in forced)),
                   key=lambda loan: loan.loan_id)
 
 
-def asks_and_bids(setup, record, offers: Sequence[FundsOffer], short: Mapping[AgentId, Shortfall], market_rate: float,
+def asks_and_bids(setup, record, offers: Sequence[FundsOffer], short: Mapping[AgentId, CashShortfall], market_rate: float,
                   rate_floor: float, institutions: Sequence[str], sellers: Optional[Sequence[AgentId]] = None,
-                  ) -> Tuple[List[Ask], List[Bid]]:
+                  ) -> Tuple[List[Ask], List[SecurityBid]]:
     """Every holder's asks and every saver's bids for the claims its society lets it trade. `short` names the holders
     (households, or any lender such as a bank) that need cash; with `sellers` only those holders ask."""
     money = setup.currency_id
@@ -101,7 +101,7 @@ def asks_and_bids(setup, record, offers: Sequence[FundsOffer], short: Mapping[Ag
     arrears = credit_claims.arrears_history(record.credit.loans, record.credit.remembered_defaults)
     needed = {holder: shortfall.amount for holder, shortfall in short.items()}
     asks: List[Ask] = []
-    bids: List[Bid] = []
+    bids: List[SecurityBid] = []
     allowed = None if sellers is None else set(sellers)
     if SHARE_TRADING in institutions:
         for producer_id in sorted(record.capital_markets.shares):
@@ -114,7 +114,7 @@ def asks_and_bids(setup, record, offers: Sequence[FundsOffer], short: Mapping[Ag
                 if holder in holders and part > EPSILON and (allowed is None or holder in allowed):
                     asks.extend(_asks(item, holder, part, _own_rate(offered, holder, market_rate) + premium, needed, short.get(holder),
                                       premium, lambda rate: share_value(record, producer_id, rate, rate_floor), allowed is not None))
-            bids.extend(Bid(buyer, item, offer.amount, share_value(record, producer_id, offer.minimum_rate + premium, rate_floor))
+            bids.extend(SecurityBid(buyer, item, offer.amount, share_value(record, producer_id, offer.minimum_rate + premium, rate_floor))
                         for buyer, offer in sorted(offered.items()))
     if BOND_MARKET in institutions:
         for loan in _loan_items(record, short):
@@ -124,13 +124,13 @@ def asks_and_bids(setup, record, offers: Sequence[FundsOffer], short: Mapping[Ag
             if allowed is None or loan.lender in allowed:
                 asks.extend(_asks(item, loan.lender, loan.principal, _own_rate(offered, loan.lender, market_rate) + premium, needed,
                                   short.get(loan.lender), premium, per_unit, allowed is not None))
-            bids.extend(Bid(buyer, item, offer.amount, per_unit(offer.minimum_rate + premium))
+            bids.extend(SecurityBid(buyer, item, offer.amount, per_unit(offer.minimum_rate + premium))
                         for buyer, offer in sorted(offered.items()))
     return asks, bids
 
 
 def _asks(item: str, holder: AgentId, quantity: float, own_rate: float, needed: Dict[AgentId, float],
-          shortfall: Optional[Shortfall], premium: float, value_at, forced_only: bool = False) -> List[Ask]:
+          shortfall: Optional[CashShortfall], premium: float, value_at, forced_only: bool = False) -> List[Ask]:
     """The holder's asks for one claim: all of it at what it is worth at the holder's own rate; where the holder is
     short of cash, the part that raises what it still needs at the lower worth at the rate it would pay to borrow
     (`needed` falls by what this claim is asked to raise, so the next claim raises only the rest). A holder that sells
@@ -177,7 +177,7 @@ def _move_loan(record, loan: Loan, trade: Trade) -> None:
     record.credit.transfer_loan(loan, trade.buyer, part)
 
 
-def run(setup, record, offers: Sequence[FundsOffer], short: Mapping[AgentId, Shortfall], market_rate: float,
+def run(setup, record, offers: Sequence[FundsOffer], short: Mapping[AgentId, CashShortfall], market_rate: float,
         institutions: Sequence[str], sellers: Optional[Sequence[AgentId]] = None) -> Tuple[List[FundsOffer], List[Trade]]:
     """The year's secondary trading. Returns the offers with what each buyer spent taken off, and the trades. With
     `sellers`, only those holders sell (a bank that must raise cash)."""

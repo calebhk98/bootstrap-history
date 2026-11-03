@@ -26,7 +26,7 @@ class TradeSpec:
 
 
 @dataclasses.dataclass(frozen=True)
-class Bid:
+class EmployerHoursBid:
     """An employer's demand for hours of one trade in one area.
 
     `maximum_wage` is the most an hour is worth to the employer: above it the employer hires nothing.
@@ -66,7 +66,7 @@ def no_hours(wage: float) -> float:
 class YearInputs:
     """What the world hands the core for one year. Anything missing for an area is taken as zero."""
     trades: Dict[TradeId, TradeSpec]
-    bids: Sequence[Bid]
+    bids: Sequence[EmployerHoursBid]
     subsistence_per_worker_year: Dict[AreaId, float]    # outside option: a worker and dependants at their floors
     hours_per_worker_year: float
     discount_rate: float
@@ -110,7 +110,7 @@ class MarketState:
 
 
 @dataclasses.dataclass
-class Clearing:
+class LabourClearing:
     """One (trade, area) market's year. `wage` is the one wage an hour every employer pays, held hours and new alike:
     what the hours taken on were paid, before any premium."""
     trade: TradeId
@@ -145,14 +145,14 @@ class Clearing:
 @dataclasses.dataclass
 class YearReport:
     """What happened in the year, for screens, tests and the callers that pay wages."""
-    clearings: List[Clearing] = dataclasses.field(default_factory=list)
+    clearings: List[LabourClearing] = dataclasses.field(default_factory=list)
     switched: Dict[AreaId, Dict[TradeId, float]] = dataclasses.field(default_factory=dict)   # net, by trade
     migrated: Dict[AreaId, float] = dataclasses.field(default_factory=dict)                  # net, by area
     graduated: Dict[AreaId, Dict[TradeId, float]] = dataclasses.field(default_factory=dict)
     formed: Dict[AreaId, Dict[TradeId, Dict[str, float]]] = dataclasses.field(default_factory=dict)   # first hands of an empty trade by route (formation.py)
     bonded_lots: list = dataclasses.field(default_factory=list)   # BondedLot rows: bonded people bought, from where, at what ask and carriage (bonded_worth.py)
 
-    def clearing(self, trade: TradeId, area: AreaId) -> Optional[Clearing]:
+    def clearing(self, trade: TradeId, area: AreaId) -> Optional[LabourClearing]:
         for each in self.clearings:
             if each.trade == trade and each.area == area:
                 return each

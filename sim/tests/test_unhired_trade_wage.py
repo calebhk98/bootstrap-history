@@ -8,7 +8,7 @@ import unittest
 from unittest import mock
 
 from sim.economy import api
-from sim.economy.setup import TradeSpec
+from sim.economy.setup import SetupTrade
 from sim.markets.reads_prices import PriceReads
 from sim.tests.labour_record_stand_in import labour_record
 
@@ -21,7 +21,7 @@ def economy_with_unhired_scribe():
     """A one-country economy whose labourers were hired last year and whose scribes were not (a seed wage stands)."""
     setup = types.SimpleNamespace(
         unskilled_trade=LABOURER, tiles=[TOWN], countries=lambda: ["home"], coin_per_unit=COIN_PER_UNIT,
-        trades={LABOURER: TradeSpec(LABOURER), SCRIBE: TradeSpec(SCRIBE, training_years=6.0)})
+        trades={LABOURER: SetupTrade(LABOURER), SCRIBE: SetupTrade(SCRIBE, training_years=6.0)})
     record = types.SimpleNamespace(
         memory=types.SimpleNamespace(wages={"%s|work@%s" % (LABOURER, TOWN): 1.2, "%s|work@%s" % (SCRIBE, TOWN): STALE_SEED_WAGE}),
         labour=labour_record({"%s|work@%s" % (LABOURER, TOWN): 900.0},

@@ -14,7 +14,7 @@ from .agent_views_outcome import AgentOutcomeViews
 from .agent_views_prices import AgentPriceViews
 from .agent_views_volumes import AgentVolumeViews
 from .category_views import Categories
-from .clearing import Clearing
+from .clearing import MarketClearing
 from .commands_applied import Applying
 from .goods_views import GoodsViews
 from .household_views import HouseholdNeeds
@@ -25,7 +25,7 @@ class Markets(Module):
 
 	PARTS = {
 		"market_objects": MarketObjects,
-		"clearing": Clearing,
+		"clearing": MarketClearing,
 		"categories": Categories,
 		"household_needs": HouseholdNeeds,
 		"absorption": Absorption,

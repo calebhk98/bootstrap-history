@@ -1,7 +1,7 @@
 """Limits a site imposes on a recipe, handed in from outside; the economy models no deposit.
 
 Geography owns deposits. It declares, per (recipe, tile), how many runs a year the site allows and at
-what yield (`SiteLimit`), at the opening in the setup and each year in `YearInputs`; the economy keeps
+what yield (`SiteLimit`), at the opening in the setup and each year in `EconomyYearInputs`; the economy keeps
 producers inside those limits and reports what it worked (`extraction_by_tile`) so geography can deplete.
 A site-bound recipe with any declared limit runs only on tiles that have one.
 """

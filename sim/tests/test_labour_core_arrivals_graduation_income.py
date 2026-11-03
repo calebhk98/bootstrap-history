@@ -6,7 +6,7 @@ QUICK_TOPIC = True
 import unittest
 
 from sim.labour.market import aptitude, expectations, trades
-from sim.labour.market.records import Clearing, MarketState, YearInputs
+from sim.labour.market.records import LabourClearing, MarketState, YearInputs
 
 AREA = "plain"
 HOURS = 1000.0
@@ -21,7 +21,7 @@ def _inputs():
 
 def _clearing():
     """One digger sold his hours at the dearest of four bids of one worker's hours each."""
-    return {(AREA, "digger"): Clearing(
+    return {(AREA, "digger"): LabourClearing(
         trade="digger", area=AREA, wage=40.0, hours_offered=HOURS, hours_wanted=4 * HOURS, hours_hired=HOURS,
         hired_by_employer={}, target_wage=40.0, hours_held=HOURS,
         demand=((40.0, HOURS), (30.0, HOURS), (20.0, HOURS), (10.0, HOURS)))}

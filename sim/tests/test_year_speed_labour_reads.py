@@ -12,7 +12,7 @@ from sim.economy.types import LabourOffer
 from sim.labour.market import bonded_room, formation_bonded
 from sim.labour.market.bonded_worth import carriage_from, cheapest_carriage
 from sim.labour.market.import_cost import ImportCosts
-from sim.labour.market.records import Bid, Clearing, MarketState, Route, YearInputs, YearReport
+from sim.labour.market.records import EmployerHoursBid, LabourClearing, MarketState, Route, YearInputs, YearReport
 
 
 def plain_sold(held, offer, wage):
@@ -89,7 +89,7 @@ class ImportCostsKeepTheirValues(unittest.TestCase):
                       for area in areas}
             state = MarketState(workers={area: {"digger": [rng.uniform(0, 40), rng.uniform(0, 40)]} for area in areas})
             state.wages = {area: {"digger": rng.uniform(0.5, 3.0)} for area in areas if rng.random() < 0.9}
-            bids = [Bid("e%d" % i, "digger", rng.choice(areas), rng.uniform(100, 6000), rng.uniform(1, 8)) for i in range(7)]
+            bids = [EmployerHoursBid("e%d" % i, "digger", rng.choice(areas), rng.uniform(100, 6000), rng.uniform(1, 8)) for i in range(7)]
             sold = {("digger", area): (lambda wage, base=rng.uniform(0.3, 1.0): 80.0 * min(1.0, base * (0.5 + wage / 6.0)))
                     for area in areas if rng.random() < 0.6}
             inputs = YearInputs(trades={}, bids=bids, subsistence_per_worker_year={area: 100.0 for area in areas},
@@ -105,10 +105,10 @@ class BondedPurchaseReadsKeepTheirValues(unittest.TestCase):
     def test_buyers_read_from_the_grouped_bids_are_those_read_from_all_of_them(self):
         rng = random.Random(3)
         for _round in range(40):
-            bids = [Bid("e%d" % rng.randrange(6), rng.choice(["x", "y"]), rng.choice(["p", "q"]), rng.choice([0.0, rng.uniform(1, 500)]),
+            bids = [EmployerHoursBid("e%d" % rng.randrange(6), rng.choice(["x", "y"]), rng.choice(["p", "q"]), rng.choice([0.0, rng.uniform(1, 500)]),
                         2.0) for _ in range(20)]
             hired = {"e%d" % i: rng.uniform(0, 300) for i in range(6) if rng.random() < 0.5}
-            clearing = Clearing(trade="x", area="p", wage=1.0, hours_offered=0.0, hours_wanted=0.0, hours_hired=0.0,
+            clearing = LabourClearing(trade="x", area="p", wage=1.0, hours_offered=0.0, hours_wanted=0.0, hours_hired=0.0,
                                 hired_by_employer=hired, target_wage=rng.uniform(0, 2))
             room = {"e%d" % i: rng.uniform(-5, 50) for i in range(6) if rng.random() < 0.5}
             hours = {}
@@ -126,12 +126,12 @@ class BondedPurchaseReadsKeepTheirValues(unittest.TestCase):
 
     def test_purchases_sharing_a_memo_equal_purchases_each_with_their_own(self):
         routes = {"p": [Route("q", 40.0)], "q": [Route("r", 25.0), Route("p", 40.0)], "r": [Route("p", 90.0)]}
-        bids = [Bid("forge", "fitter", area, 50000.0, 3.0) for area in ("p", "q", "r")]
+        bids = [EmployerHoursBid("forge", "fitter", area, 50000.0, 3.0) for area in ("p", "q", "r")]
         inputs = YearInputs(trades={}, bids=bids, subsistence_per_worker_year={}, hours_per_worker_year=2000.0,
                             discount_rate=0.05, career_years=40.0, routes=routes, bondage_allowed=frozenset({"p", "q", "r"}),
                             bonded_for_sale={area: {"fitter": 30.0} for area in ("p", "q", "r")},
                             ask_floor_per_worker_year={area: 100.0 for area in ("p", "q", "r")}, outlay_room={"forge": 1.0e9})
-        index = {(area, "fitter"): Clearing(trade="fitter", area=area, wage=1.0, hours_offered=0.0, hours_wanted=50000.0,
+        index = {(area, "fitter"): LabourClearing(trade="fitter", area=area, wage=1.0, hours_offered=0.0, hours_wanted=50000.0,
                                             hours_hired=0.0, hired_by_employer={},
                                             target_wage=3.0) for area in ("p", "q", "r")}
 

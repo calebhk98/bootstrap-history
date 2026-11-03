@@ -9,7 +9,7 @@ from sim.agents import government_levers_tax
 from sim.agents.api import Government
 from sim.agents.records import ActorRecord
 from sim.economy import flight_routes, flight_year
-from sim.economy.protocols import YearInputs
+from sim.economy.protocols import EconomyYearInputs
 from sim.labour.api import MarketState, Route
 
 QUICK_TOPIC = True
@@ -66,7 +66,7 @@ class PenaltyOnTheRoutes(unittest.TestCase):
 		self.assertEqual(none_taken, self.ROUTES)
 
 	def test_the_inputs_carry_no_take_unless_the_engine_fills_it(self):
-		inputs = YearInputs(1, {}, 0.5, {}, {})
+		inputs = EconomyYearInputs(1, {}, 0.5, {}, {})
 		self.assertEqual((dict(inputs.taxed_share_by_tile), inputs.amnesty_share, inputs.immunity_years), ({}, 0.0, 0.0))
 
 

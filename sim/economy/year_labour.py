@@ -1,7 +1,7 @@
 """The year's labour market: producers and other employers bid for hours, cohorts' workers offer them, and
 the labour core (`sim.labour.api`) sets each (trade, labour area) wage, hires, moves people between trades and
 tiles, trains and replaces them. The economy then pays every hour hired in a market the one wage the core reports
-for it (`Clearing.wage`), and the workers who offered them share the receipts by hours sold.
+for it (`LabourClearing.wage`), and the workers who offered them share the receipts by hours sold.
 """
 import dataclasses
 from typing import Dict, List, Sequence, Tuple

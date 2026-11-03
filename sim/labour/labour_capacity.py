@@ -72,10 +72,10 @@ class Capacity:
         the start: what hiring costs the market now, so an affordability
         budget turns into a headcount in the money it is paid in."""
         market = self.market
-        wages = [market.unscarce_annual(trade) for trade in sorted(self._world.trades.wages)
+        wages = [market.quote_annual(trade) for trade in sorted(self._world.trades.wages)
                  if trade not in self._world.trades.trades_absent]
         blended = blended_annual_wage(wages)
-        return blended if blended is not None else market.unscarce_annual(
+        return blended if blended is not None else market.quote_annual(
             trade_data.fallback_trade_of(self._world, self.schedule.wage_schedule().training_years))
 
     STAFF_EXTRA_HEADROOM_WEIGHT = declare(

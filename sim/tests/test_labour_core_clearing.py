@@ -6,7 +6,7 @@ import copy
 import unittest
 
 from sim.labour.market import aptitude, clearing, trades
-from sim.labour.market.records import Bid, MarketState, YearInputs
+from sim.labour.market.records import EmployerHoursBid, MarketState, YearInputs
 
 SPECS = trades.trade_specs({"digger": {"family": "earth", "training_years": 0},
                             "healer": {"family": "care", "training_years": 5}})
@@ -27,7 +27,7 @@ def make_state(people=10.0, wage=None):
 
 
 def bid(employer, hours, maximum=3.0, trade="digger"):
-    return Bid(employer, trade, "vale", hours, maximum)
+    return EmployerHoursBid(employer, trade, "vale", hours, maximum)
 
 
 def run(state, bids):
@@ -113,7 +113,7 @@ class ManyTranchesTests(unittest.TestCase):
         specs = trades.trade_specs({"digger": {"family": "toil", "training_years": 0},
                                     "carver": {"family": "craft", "training_years": 3}})
         state = MarketState(workers={"vale": {"carver": aptitude.split_evenly(31.0)}})
-        bids = [Bid("employer%d" % index, "carver", "vale", 6.0 * 2000.0 / 1.0, 3.0 * (1.3 - 0.15 * index))
+        bids = [EmployerHoursBid("employer%d" % index, "carver", "vale", 6.0 * 2000.0 / 1.0, 3.0 * (1.3 - 0.15 * index))
                 for index in range(5)]
         year_inputs = YearInputs(trades=specs, bids=bids, subsistence_per_worker_year={"vale": 1600.0},
                                          hours_per_worker_year=2000.0, discount_rate=0.05, career_years=30.0)

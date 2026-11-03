@@ -6,7 +6,7 @@ QUICK_TOPIC = True
 import types
 import unittest
 
-from sim.labour.labour_wage_schedule import WageSchedule as ScheduleReader
+from sim.labour.labour_wage_schedule import WageScheduleReader
 from sim.labour.wages import WageSchedule
 
 DOCUMENT = {"wage_rates_denarii_per_hour": {"labourer": {"rate": 2.0}, "smith": {"rate": 5.0}}, "money_per_labour_hour": 2.0}
@@ -27,7 +27,7 @@ class Wages:
         world = types.SimpleNamespace(
             trades=types.SimpleNamespace(HOURS_PER_PERSON_YEAR=2000.0),
             economy=types.SimpleNamespace(unskilled_wage=lambda: unskilled, agent_wage_per_hour=lambda trade: paid))
-        self.schedule = ScheduleReader(world)
+        self.schedule = WageScheduleReader(world)
         self.schedule.wage_schedule = StubSchedule
 
     def wage_per_hour(self, trade):

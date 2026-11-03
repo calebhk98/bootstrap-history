@@ -95,7 +95,7 @@ NO_BORROWER_AT_ASK = "no_borrower_at_ask"      # no request can pay what the che
 
 
 @dataclass(frozen=True)
-class Clearing:
+class LoanClearing:
     loans: List[Loan]
     rate: Optional[float]                # the base rate the loans were struck at; where nothing cleared, the rate held
                                          # from the last clearing (None when there was none), never a bid or an ask
@@ -118,7 +118,7 @@ def clear(requests: Sequence[LoanRequest], offers: Sequence[FundsOffer], currenc
 def clear_with_cause(requests: Sequence[LoanRequest], offers: Sequence[FundsOffer], currency: CurrencyId,
                      last_rate: Optional[float], existing_debt_by_borrower: Mapping[AgentId, float],
                      arrears_by_borrower: Optional[Mapping[AgentId, float]] = None, year: int = 0,
-                     rate_ceiling: Optional[float] = None, expected_inflation: float = 0.0) -> Clearing:
+                     rate_ceiling: Optional[float] = None, expected_inflation: float = 0.0) -> LoanClearing:
     """Match funds with requests. Returns the new loans, the base rate, the requests left unmet and a cause.
 
     A request left unmet is returned with `amount` reduced to what it did not get. Each loan carries the
@@ -134,7 +134,7 @@ def clear_with_cause(requests: Sequence[LoanRequest], offers: Sequence[FundsOffe
                       key=lambda r: (r.borrower, r.purpose, r.amount, r.maximum_rate))
     offers = [offer for offer in offers if offer.currency == currency and offer.amount > 0]
     if not offers:
-        return Clearing([], last_rate, list(requests), NO_OFFERS)      # borrowers' bids alone are not a price
+        return LoanClearing([], last_rate, list(requests), NO_OFFERS)      # borrowers' bids alone are not a price
     asked_amount = {}
     limited: Dict[AgentId, str] = {}
     lowest_offered = min(offer.minimum_rate for offer in offers)
@@ -166,7 +166,7 @@ def clear_with_cause(requests: Sequence[LoanRequest], offers: Sequence[FundsOffe
                                           [(ceiling, request.amount) for ceiling, request, can in zip(ceilings, requests, able)
                                            if can])
     if not any(able):       # lenders alone are not a price either
-        return Clearing([], last_rate, list(requests), NO_BORROWER_AT_ASK)
+        return LoanClearing([], last_rate, list(requests), NO_BORROWER_AT_ASK)
     base_rate = sticky_move(last_rate, target, RATE_ADJUSTMENT_SHARE_PER_YEAR)
     if lowest_ask is not None and base_rate < lowest_ask <= max(ceilings, default=-math.inf):
         # a sticky rate below every lender's ask would lend nothing while a borrower would pay it
@@ -184,7 +184,7 @@ def clear_with_cause(requests: Sequence[LoanRequest], offers: Sequence[FundsOffe
         if lowest_ask is not None and lowest_ask > nominal_ceiling:
             # no lender accepts the bound: hold the rate, lend nothing, say why
             held = last_rate if last_rate is not None else lowest_ask
-            return Clearing([], max(0.0, held), list(requests), NO_OFFER_AT_RATE)
+            return LoanClearing([], max(0.0, held), list(requests), NO_OFFER_AT_RATE)
         base_rate = nominal_ceiling
     base_rate = max(0.0, base_rate)
     lending =[offer for offer in offers if offer.minimum_rate <= base_rate]
@@ -237,7 +237,7 @@ def clear_with_cause(requests: Sequence[LoanRequest], offers: Sequence[FundsOffe
         left = asked_amount.get((request.borrower, request.purpose, request.amount), request.amount) - granted.get(index, 0.0)
         if left > 1e-9:
             unmet.append(replaced(request, amount=left))
-    return Clearing(loans, base_rate, unmet, limited=limited)
+    return LoanClearing(loans, base_rate, unmet, limited=limited)
 
 
 def disbursements(loans: Sequence[Loan]) -> List[Transfer]:

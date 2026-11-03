@@ -11,7 +11,7 @@ from types import SimpleNamespace
 from sim.economy import credit, credit_claims, secondary_trade
 from sim.economy.credit_record import CreditRecord
 from sim.book import Book
-from sim.economy.secondary_trade import BOND_MARKET, SHARE_TRADING, Shortfall
+from sim.economy.secondary_trade import BOND_MARKET, SHARE_TRADING, CashShortfall
 from sim.economy.types import FundsOffer, Loan, Transfer
 
 MARKET_RATE = 0.05
@@ -73,7 +73,7 @@ class Shares(TradeFixture):
         self.assertGreater(cheap, dear)
 
     def test_a_holder_short_of_cash_sells_for_less_than_it_values_the_share(self):
-        shortfall = {self.holder: Shortfall(amount=20.0, borrowing_rate=0.25)}
+        shortfall = {self.holder: CashShortfall(amount=20.0, borrowing_rate=0.25)}
         asks, _bids = secondary_trade.asks_and_bids(self.setup, self.record, self.offers(), shortfall, MARKET_RATE, 0.0, BOTH)
         asks = sorted(asks, key=lambda ask: ask.reserve)
         ordinary = secondary_trade.share_value(self.record, self.producer_id, MARKET_RATE, 0.0)
@@ -81,7 +81,7 @@ class Shares(TradeFixture):
         self.assertAlmostEqual(asks[0].quantity * asks[0].reserve, 20.0)
 
     def test_a_short_holder_gets_the_cash_it_needs_when_a_saver_will_pay(self):
-        shortfall = {self.holder: Shortfall(amount=30.0, borrowing_rate=0.25)}
+        shortfall = {self.holder: CashShortfall(amount=30.0, borrowing_rate=0.25)}
         before = self.balance(self.holder)
         _offers, trades = self.run_trade(short=shortfall)
         self.assertTrue(trades)
@@ -157,7 +157,7 @@ class Loans(TradeFixture):
 
     def test_a_lender_short_of_cash_sells_below_the_face_to_savers_who_ask_more_than_the_coupon(self):
         self.make_loan(rate=0.05)
-        shortfall = {self.holder: Shortfall(amount=50.0, borrowing_rate=0.2)}
+        shortfall = {self.holder: CashShortfall(amount=50.0, borrowing_rate=0.2)}
         _offers, trades = self.run_trade(offers=self.offers(amount=1000.0, rate=0.07), short=shortfall)
         self.assertTrue(trades)
         self.assertLess(trades[0].price, 1.0)

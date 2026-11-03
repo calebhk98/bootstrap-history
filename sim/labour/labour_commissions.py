@@ -3,6 +3,7 @@ project blocked only on hands."""
 from .labour_refusals import cash_in_hand_refusal, economy_lacks, economy_lacks_refusal
 from .request_rules import commission_request_refusal
 from .staff_moves import commission_spare_hours
+from sim.reporting.api import RecordEvent
 from sim.workforce.api import ONCE_COMMISSION, PostHoursOnce
 
 
@@ -29,24 +30,17 @@ class Commissions:
         workshop is a sensible thing to do; buying labour speculatively is not,
         and this must never become a way to spend a run's savings on nothing.
         """
-        # ON CREDIT IF NEED BE. This required money in hand, which is exactly
-        # what a household in the hole does not have - and buying a season of
-        # somebody's hands is a one-off, not a standing wage, so it is the
-        # right instrument for a poor household and the wrong one to forbid
-        # them. A Rome run ended at year 800 with 270 technologies, no
-        # craftsmen at all and no way to get any: it could not hire (no
-        # surplus), could not commission (no cash), so attrition took the last
-        # of its staff and it never opened another concern. commission() does
-        # its own affordability check against cash AND credit, which is the
-        # check that should govern here too.
+        # commission() checks cash and credit itself; this only needs something to spend.
         if self._world.finance.spending_power("buy") <= 0:
             return None
         need = self._world.scenario.goal_closure
         if need is None:
-            try:
-                need = self._world.scenario.closure(self._world.scenario.goal)
-            except Exception:
-                need = set()
+            goal = self._world.scenario.goal
+            need = self._world.scenario.closure(goal)
+            if not need:
+                self._world.send(RecordEvent.of("auto_commission_skipped", "No hands are bought for the goal: %s is not in the technology tree." % goal,
+                                                cause="goal_not_in_tree", goal=goal))
+                return None
             self._world.commands.remember_goal_closure(need)
         seen = 0
         done_nodes, active_nodes = self._world.projects.done, self._world.projects.active

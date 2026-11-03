@@ -4,6 +4,7 @@ import math
 from sim.constants import declare
 from sim.polity.api import ScaleFamiliarity, ScaleProtection
 from sim.ledger.api import NoteSpend, PayEdge
+from sim.refusal import Refusal
 from sim.workforce.api import ONCE_COMMISSION
 
 
@@ -25,7 +26,7 @@ class Relocation:
             "carries in a place they have just arrived in.")
 
     def _relocation_wage_bill_per_year(self):
-        return sum(count * self.market.unscarce_annual(trade)
+        return sum(count * self.market.quote_annual(trade)
                    for trade, count in self.book.employed_by_trade().items())
 
     def relocation_quote(self, tile):
@@ -61,7 +62,9 @@ class Relocation:
                            "wages while your household travels; you have %s."
                            % (tile, math.ceil(days), self._world.game.money_text(money, grouped=True),
                               self._world.game.money_text(balance, grouped=True)))
-        self._world.send(PayEdge(self._world.EDGE_WORKERS, money, "relocation"))
+        paid = self._world.send(PayEdge(self._world.EDGE_WORKERS, money, "relocation"))
+        if isinstance(paid, Refusal):
+            return False, paid
         self._world.send(NoteSpend(money))
         workforce.relocation_hours_this_year = (
             (workforce.relocation_hours_this_year or 0.0) + hours)

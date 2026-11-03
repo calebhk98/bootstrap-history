@@ -6,5 +6,5 @@ from sim.actors.api import government_flight_values
 
 
 def flight_values(sim, economy):
-    """{field of YearInputs: value} for the state's take by tile, its reach, amnesty and immunity; empty without a government."""
+    """{field of EconomyYearInputs: value} for the state's take by tile, its reach, amnesty and immunity; empty without a government."""
     return government_flight_values(sim.state.actor_world(), economy_api.fugitive_share_by_tile(economy))

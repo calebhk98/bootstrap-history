@@ -8,7 +8,7 @@ import unittest
 
 from sim.labour.market import clearing, expectations, scarcity, trades
 from sim.labour.market.import_cost import ImportCosts
-from sim.labour.market.records import Bid, MarketState, Route, YearInputs
+from sim.labour.market.records import EmployerHoursBid, MarketState, Route, YearInputs
 
 SPECS = trades.trade_specs({"digger": {"family": "earth", "training_years": 0},
                             "healer": {"family": "care", "training_years": 5}})
@@ -35,7 +35,7 @@ def state(healers, hill_healers=0.0):
 
 
 def hungry(maximum=500.0, hours=5000.0):
-    return Bid("clinic", "healer", "vale", hours, maximum)
+    return EmployerHoursBid("clinic", "healer", "vale", hours, maximum)
 
 
 def settle(held, year_inputs, years=40):
@@ -62,7 +62,7 @@ class TodaysWageClearsAgainstBids(unittest.TestCase):
         self.assertLessEqual(result.wage, 3.0 + 1e-9)
 
     def test_one_stray_bid_with_few_hours_does_not_set_the_wage(self):
-        stray = Bid("fool", "healer", "vale", 1.0, 1e6)
+        stray = EmployerHoursBid("fool", "healer", "vale", 1.0, 1e6)
         result = settle(state(healers=1.0), inputs([hungry(maximum=5.0), stray]))
         self.assertLess(result.wage, 5.1)
 
@@ -71,7 +71,7 @@ class TodaysWageClearsAgainstBids(unittest.TestCase):
                                     "reaper": {"family": "earth", "training_years": 0}})
         held = MarketState(workers={"vale": {"digger": [50.0, 0.0, 0.0, 0.0, 0.0], "reaper": [1.0, 0.0, 0.0, 0.0, 0.0]}})
         held.wages = {"vale": {"digger": 1.0, "reaper": 1.0}}
-        bids = [Bid("farm", "reaper", "vale", 5000.0, 50.0), Bid("pit", "digger", "vale", 99999.0, 1.0)]
+        bids = [EmployerHoursBid("farm", "reaper", "vale", 5000.0, 50.0), EmployerHoursBid("pit", "digger", "vale", 99999.0, 1.0)]
         year_inputs = YearInputs(trades=specs, bids=bids, subsistence_per_worker_year={"vale": 100.0},
                                  hours_per_worker_year=HOURS, discount_rate=DISCOUNT, career_years=CAREER)
         for _year in range(40):
@@ -162,7 +162,7 @@ class HoursWorkersKeepBackAreNotHandsInHand(unittest.TestCase):
         held = MarketState(workers={"vale": {"digger": [500.0, 0.0, 0.0, 0.0, 0.0]},
                                     "hill": {"digger": [5000.0, 0.0, 0.0, 0.0, 0.0]}})
         held.wages = {"vale": {"digger": 1.0}, "hill": {"digger": 1.0}}
-        year_inputs = YearInputs(trades=specs, bids=[Bid("works", "digger", "vale", HOURS * 400.0, 900.0)],
+        year_inputs = YearInputs(trades=specs, bids=[EmployerHoursBid("works", "digger", "vale", HOURS * 400.0, 900.0)],
                                  subsistence_per_worker_year={"vale": 100.0, "hill": 100.0},
                                  hours_per_worker_year=HOURS, discount_rate=DISCOUNT, career_years=CAREER,
                                  routes={"vale": [Route("hill", 20.0)]},
@@ -228,7 +228,7 @@ class EntrantsExpectTheLongRunCap(unittest.TestCase):
 class CeilingFunction(unittest.TestCase):
 
     def test_the_worth_is_hours_weighted_and_not_under_the_reservation(self):
-        bids = [Bid("a", "healer", "vale", 90.0, 4.0), Bid("b", "healer", "vale", 10.0, 14.0), Bid("c", "healer", "vale", 5.0, 0.5)]
+        bids = [EmployerHoursBid("a", "healer", "vale", 90.0, 4.0), EmployerHoursBid("b", "healer", "vale", 10.0, 14.0), EmployerHoursBid("c", "healer", "vale", 5.0, 0.5)]
         self.assertAlmostEqual(scarcity.bid_weighted_worth(bids, 1.0), (90 * 4.0 + 10 * 14.0) / 100.0)
         self.assertEqual(scarcity.bid_weighted_worth([], 1.0), 1.0)
 

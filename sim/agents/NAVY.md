@@ -17,7 +17,7 @@ behavior. The market port holds delivered assets in the buyer's asset
 account; save/load carries those inventories through the economy book.
 Only actual market fills become assets. Unfilled bids return their budget.
 
-The economy wears asset accounts supplied in `YearInputs.durable_users`,
+The economy wears asset accounts supplied in `EconomyYearInputs.durable_users`,
 using its ordinary durable-wear mechanism. Next year's replacement bid
 accounts for the surviving stock. Wear is recorded in the year's physical
 accounts. Replacement stands for repair and refit consumption until the

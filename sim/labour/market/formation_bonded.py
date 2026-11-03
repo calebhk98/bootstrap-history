@@ -5,7 +5,7 @@ from typing import Dict, Optional
 import dataclasses
 
 from . import aptitude, bonded_room, bonded_worth
-from .records import Clearing, MarketState, YearInputs, YearReport
+from .records import LabourClearing, MarketState, YearInputs, YearReport
 
 
 def _practised_wage(index: Dict, area: str, trade: str) -> Optional[float]:
@@ -51,7 +51,7 @@ def buy(state: MarketState, inputs: YearInputs, index: Dict, area: str, trade: s
         memo = {}
     if wanted <= 0.0 or area not in inputs.bondage_allowed:
         return 0.0
-    clearing: Optional[Clearing] = index.get((area, trade))
+    clearing: Optional[LabourClearing] = index.get((area, trade))
     bid = worth_in(inputs, index, area, trade, clearing.heading_wage if clearing is not None else None)
     if bid is None:
         return 0.0

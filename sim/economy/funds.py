@@ -16,7 +16,7 @@ from typing import Dict, List, Optional, Sequence
 
 from . import credit_claims, secondary_trade, shares
 from .capital_state import Fund
-from .secondary_trade import Shortfall
+from .secondary_trade import CashShortfall
 from .types import AgentId, FundsOffer, Transfer
 
 EPSILON = 1e-9
@@ -118,7 +118,7 @@ def redeem_for_cash(setup, record, fund: Fund, holder: AgentId, need: float, off
     wanted = min(need, fund.units.get(holder, 0.0) * price)
     short = wanted - record.book.balance(fund.agent_id, money)
     if short > EPSILON:
-        offers, _trades = secondary_trade.run(setup, record, offers, {fund.agent_id: Shortfall(short, market_rate)},
+        offers, _trades = secondary_trade.run(setup, record, offers, {fund.agent_id: CashShortfall(short, market_rate)},
                                               market_rate, institutions, sellers=[fund.agent_id])
     redeem(setup, record, fund, holder, wanted, market_rate)
     return list(offers)

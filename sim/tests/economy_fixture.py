@@ -15,14 +15,14 @@ from sim.economy.economy import Economy
 from sim.economy.fixture_setups import (
     FARM, FARMS, FOOD, GRAIN, HILLS, LABOURER, METAL, MINE, MINER, ORE, ORNAMENT, PLOT_LAND_PER_RUN, SMELT, SMITH,
     TOWN, basket, recipes, small_setup, specs, stationary_setup, tiles)
-from sim.economy.protocols import YearInputs
+from sim.economy.protocols import EconomyYearInputs
 from sim.economy.setup import EconomySetup
 from sim.economy.tile_costs import world_map_of
 from sim.economy.types import TileSpec
 
-def quiet_year(setup: EconomySetup, **changes) -> YearInputs:
+def quiet_year(setup: EconomySetup, **changes) -> EconomyYearInputs:
     """A year with the opening's people and no engine orders."""
-    inputs = YearInputs(year=0, population_by_tile={},
+    inputs = EconomyYearInputs(year=0, population_by_tile={},
                         yield_factor_by_producer={}, engine_orders={}, state_capacity=0.5)
     return dataclasses.replace(inputs, **changes) if changes else inputs
 

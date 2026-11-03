@@ -16,7 +16,7 @@ founder loses the capital the bank no longer holds.
 from typing import List, Sequence
 
 from . import banks, secondary_trade
-from .secondary_trade import BOND_MARKET, Shortfall
+from .secondary_trade import BOND_MARKET, CashShortfall
 from .types import AgentId, FundsOffer, Loan, Transfer
 
 EPSILON = 1e-9
@@ -59,7 +59,7 @@ def sell_for_cash(setup, record, bank: banks.Bank, need: float, offers: Sequence
         return list(offers)
     # cash costs the bank what its depositors who run would need to stay: their interest and the loss they expect
     asking_rate = banks.ask_of(record, bank, money) + expected_loss_share(record, bank, money)
-    remaining, _trades = secondary_trade.run(setup, record, offers, {bank.agent_id: Shortfall(need, asking_rate)},
+    remaining, _trades = secondary_trade.run(setup, record, offers, {bank.agent_id: CashShortfall(need, asking_rate)},
                                              market_rate, institutions, sellers=[bank.agent_id])
     return remaining
 

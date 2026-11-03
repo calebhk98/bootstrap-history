@@ -12,7 +12,7 @@ from unittest import mock
 from sim.economy import funds, shares
 from sim.economy.capital_state import CapitalState, Fund
 from sim.economy.producers import Producer
-from sim.economy.secondary_trade import BOND_MARKET, SHARE_TRADING, Shortfall
+from sim.economy.secondary_trade import BOND_MARKET, SHARE_TRADING, CashShortfall
 from sim.economy.types import FundsOffer, Loan, Transfer
 
 MARKET_RATE = 0.05
@@ -165,7 +165,7 @@ class Redeeming(FundFixture):
         wanted = min(50.0, 100.0 * self.price())
         with mock.patch.object(funds.secondary_trade, "run", market):
             funds.redeem_for_cash(self.setup, self.record, self.fund, self.saver, 50.0, offers, MARKET_RATE, BOTH)
-        self.assertEqual(calls, [(offers, {self.fund.agent_id: Shortfall(wanted, MARKET_RATE)}, MARKET_RATE, BOTH,
+        self.assertEqual(calls, [(offers, {self.fund.agent_id: CashShortfall(wanted, MARKET_RATE)}, MARKET_RATE, BOTH,
                                   [self.fund.agent_id])])
 
     def test_a_fund_with_the_cash_does_not_go_to_the_market(self):

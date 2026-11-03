@@ -53,9 +53,7 @@ class Wages:
             self._world.standing.founder_alive, trade in self._world.trades.wages,
             lambda: self.trades.trade_available(trade), hours,
             lambda: self.hours.director_pool() - self.hours.director_hours_committed())
-        # A TRADE NOBODY HERE PRACTISES IS A TRADE NOBODY HERE WILL PAY YOU FOR: the gate is trade_available(), the
-        # same test `hire` uses. The founder really does know chemistry; what he lacks is a customer, until the
-        # trade has been taught and trade_available() turns true.
+        # The trade gate is trade_available(), the test `hire` uses: work needs a customer, so a trade nobody here practises is refused.
         if blocker == FOUNDER_DEAD:
             return 0.0, Refusal("founder_dead", "there is nobody left to do the work: these are YOUR "
                                 "hours, and the founder is dead. What you built goes "
@@ -73,16 +71,12 @@ class Wages:
         hours = float(hours)
         if blocker == HOURS_NOT_POSITIVE:
             return 0.0, Refusal("hours_not_positive", "hours must be greater than zero")
-        # EVERY HOUR ALREADY SPOKEN FOR, not just the ones sold for wages: teaching counts as well as wage work.
+        # Hours already committed to teaching count against the pool as well as hours sold for wages.
         if blocker == HOURS_SHORT:
             left = self.hours.director_pool() - self.hours.director_hours_committed()
             return 0.0, Refusal("hours_short", "you have %.0f of your own hours left this year, not %.0f"
                                 % (max(0.0, left), hours), hours_left=max(0.0, left))
-        # Your own labour is worth the trade rate: the SAME rate the game
-        # charges you to employ somebody in that trade, which is the point.
-        # It has to be derived from the labour market quote, not a separate hourly
-        # column, or the two disagree and the docstring's "no arbitrage in
-        # either direction" claim becomes false.
+        # Your own hour is worth the labour-market quote for the trade, the rate it costs to employ someone in it.
         workforce = self._world.workforce
         pay = self.wage_for_hours(trade, hours)
         revenue_before = self._world.finance.revenue()

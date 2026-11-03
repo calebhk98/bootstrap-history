@@ -10,7 +10,7 @@ from typing import Dict, Mapping, Optional, Tuple
 from sim.constants import declare
 
 from .clearing import reservation_wage, target_for_demand
-from .records import Clearing, MarketState, YearInputs
+from .records import LabourClearing, MarketState, YearInputs
 
 DECISION_ROUNDS_PER_YEAR = declare(
     "DECISION_ROUNDS_PER_YEAR", 4, kind="temporary_heuristic", unit="rounds of choices per year",
@@ -20,10 +20,10 @@ DECISION_ROUNDS_PER_YEAR = declare(
         "overshoot, the trade gluts a training-length later and wages cycle. The number of rounds is "
         "not fitted.")
 
-ClearingIndex = Mapping[Tuple[str, str], Clearing]   # (area, trade) -> this year's clearing
+ClearingIndex = Mapping[Tuple[str, str], LabourClearing]   # (area, trade) -> this year's clearing
 
 
-def index_clearings(clearings) -> Dict[Tuple[str, str], Clearing]:
+def index_clearings(clearings) -> Dict[Tuple[str, str], LabourClearing]:
     return {(each.area, each.trade): each for each in clearings}
 
 
@@ -31,7 +31,7 @@ def expected_income(state: MarketState, inputs: YearInputs, clearings: ClearingI
                     area: str, trade: str) -> float:
     """Money a year one worker of `trade` in `area` can expect."""
     floor = inputs.subsistence_per_worker_year.get(area, 0.0)
-    clearing: Optional[Clearing] = clearings.get((area, trade))
+    clearing: Optional[LabourClearing] = clearings.get((area, trade))
     if clearing is None or clearing.hours_hired <= 0.0:
         if clearing is not None and clearing.vacant_hours > 0.0:
             # employers want hours nobody here offers: the first to arrive is hired at the market wage
@@ -52,7 +52,7 @@ def expected_income(state: MarketState, inputs: YearInputs, clearings: ClearingI
     return share * earned + (1.0 - share) * floor
 
 
-def idle_share_of(clearing: Optional[Clearing]) -> float:
+def idle_share_of(clearing: Optional[LabourClearing]) -> float:
     """The share of a trade's hands that sold no hours this year: all of them where no market was held."""
     if clearing is None or clearing.hours_offered <= 0.0:
         return 1.0
@@ -99,7 +99,7 @@ def graduates_coming(state: MarketState, area: str, trade: str, completion_by_ba
     return total
 
 
-def hours_arrived_since(state: MarketState, inputs: YearInputs, clearing: Clearing, area: str, trade: str) -> float:
+def hours_arrived_since(state: MarketState, inputs: YearInputs, clearing: LabourClearing, area: str, trade: str) -> float:
     """Hours offered by workers who joined a trade here since its clearing (entrants, switchers and migrants of a trade
     needing no training join at once), at the share of its hands that offered hours then. Zero for a trade with
     training: its newcomers are the trainees `graduates_coming` counts."""
@@ -121,7 +121,7 @@ def income_at_graduation(state: MarketState, inputs: YearInputs, clearings: Clea
     already training will not fill (net of those leaving meanwhile): a full workshop of apprentices
     tells the next entrant the shortage will be gone. Without this, entrants answer today's wage, the
     trade gluts a training-length later, and wages cycle from floor to ceiling."""
-    clearing: Optional[Clearing] = clearings.get((area, trade))
+    clearing: Optional[LabourClearing] = clearings.get((area, trade))
     floor = inputs.subsistence_per_worker_year.get(area, 0.0)
     if clearing is None or clearing.hours_wanted <= 0.0:
         return floor

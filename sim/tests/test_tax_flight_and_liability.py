@@ -9,7 +9,7 @@ from sim.agents.api import Government
 from sim.agents.records import ActorRecord
 from sim.economy.titles_flight import tenant_flees
 from sim.labour.market.migration import migrate, move_shares
-from sim.labour.market.records import Clearing, MarketState, Route, YearInputs, YearReport
+from sim.labour.market.records import LabourClearing, MarketState, Route, YearInputs, YearReport
 from sim.refusal import Refusal
 
 QUICK_TOPIC = True
@@ -19,7 +19,7 @@ BANDS = 5
 
 def clearing(area, wage):
 	hours = 1000.0
-	return Clearing(trade="digger", area=area, wage=wage, hours_offered=hours, hours_wanted=hours, hours_hired=hours,
+	return LabourClearing(trade="digger", area=area, wage=wage, hours_offered=hours, hours_wanted=hours, hours_hired=hours,
 					hired_by_employer={})
 
 
