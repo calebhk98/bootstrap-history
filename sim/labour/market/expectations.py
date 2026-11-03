@@ -10,6 +10,7 @@ from typing import Dict, Mapping, Optional, Tuple
 from sim.constants import declare
 
 from .clearing import reservation_wage, target_for_demand
+from .premium import annuity_factor
 from .records import LabourClearing, MarketState, YearInputs
 
 DECISION_ROUNDS_PER_YEAR = declare(
@@ -57,15 +58,6 @@ def idle_share_of(clearing: Optional[LabourClearing]) -> float:
     if clearing is None or clearing.hours_offered <= 0.0:
         return 1.0
     return min(1.0, max(0.0, 1.0 - clearing.hours_hired / clearing.hours_offered))
-
-
-def annuity_factor(discount_rate: float, years: float) -> float:
-    """Present value of one unit a year for `years`, discounted continuously."""
-    if years <= 0.0:
-        return 0.0
-    if discount_rate <= 0.0:
-        return years
-    return (1.0 - math.exp(-discount_rate * years)) / discount_rate
 
 
 def present_value(income_per_year: float, discount_rate: float, start_after_years: float,

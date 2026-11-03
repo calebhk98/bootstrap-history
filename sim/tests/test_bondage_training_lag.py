@@ -12,6 +12,7 @@ from sim.labour.labour_bondage import Bondage as BondagePart
 from sim.labour.labour_pools import StaffPools
 from sim.ledger.api import PayEdge
 from sim.polity.api import GainReputation
+from sim.refusal import Refusal
 
 YEAR = 100
 PRICE = 250.0
@@ -77,8 +78,8 @@ class Bondage:
     def slave_quote(self, people):
         return PRICE
 
-    def staff_advice(self, kind):
-        return "advice"
+    def room_advice(self):
+        return Refusal("room_advice", "advice", remedies=[])
 
 
 class BuySlaves(unittest.TestCase):

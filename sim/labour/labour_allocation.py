@@ -4,13 +4,12 @@ Farm work is hours the economy's farm producers hire in the labour core plus hou
 hours; nothing here allocates workers to the farm or moves people between trades (sim/labour/market/DESIGN.md)."""
 import sim.geography.api as geography
 from sim.world import farming_technique
-from sim.labour import labour_market
+from sim.world.demand import production_data
 from sim.labour import trade_data
 from sim.labour import workforce_carriage
 from sim.labour import workforce_spinup
 
 
-FARM_TRADE = workforce_spinup.FARM_TRADE
 
 
 class Allocation:
@@ -29,15 +28,16 @@ class Allocation:
         cached = self._need_shares_cache
         if cached is None or cached[0] != key:
             shares = workforce_spinup.need_shares_by_trade(
-                labour_market.production_data(), reached, self._world.trades.techniques_available_to,
+                production_data(), reached, self._world.trades.techniques_available_to,
                 workforce_carriage.carriage_for(reached, list(held)), civ)
             cached = self._need_shares_cache = (key, shares)
         if cached[1]:
             return cached[1]
         hours = self._world.society.society_labour_hours
-        rest = sum(value for trade, value in hours.items() if trade != FARM_TRADE)
+        farm = trade_data.farm_trade()
+        rest = sum(value for trade, value in hours.items() if trade != farm)
         return {trade: value / rest for trade, value in hours.items()
-                if trade != FARM_TRADE and rest > 0.0}
+                if trade != farm and rest > 0.0}
 
     def need_shares(self):
         """Each non-farm trade's share of the society's labour need, from the recipes and the carriage."""
@@ -69,7 +69,8 @@ class Allocation:
     def farm_share_of_hours(self):
         """Farming's share of the society's booked hours; before any are booked, of the people the labour core holds."""
         hours = self._world.society.society_labour_hours
+        farm = trade_data.farm_trade()
         if hours and sum(hours.values()) > 0.0:
-            return hours.get(FARM_TRADE, 0.0) / sum(hours.values())
+            return hours.get(farm, 0.0) / sum(hours.values())
         people = self._world.economy.agent_people_by_trade()
-        return people.get(FARM_TRADE, 0.0) / max(1e-9, sum(people.values())) if people else 0.0
+        return people.get(farm, 0.0) / max(1e-9, sum(people.values())) if people else 0.0

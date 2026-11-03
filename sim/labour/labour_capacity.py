@@ -14,40 +14,11 @@ class Capacity:
         self.schedule = schedule
         self.trades = trades
 
-    # WHO TRAINS PEOPLE, AND HOW MANY OF THEM.
-    #
-    # (node, scholars, artisans, directors, scales_with_units, must_be_running)
-    #
-    # The first nine are institutions the founder establishes: a school, a
-    # licensed collegium, a patron, an endowment, a network of academies, and
-    # the books that let people teach themselves. The rest are the late game's
-    # own engine - each heavy industrial work trains the workforce that makes
-    # the next one possible.
-    #
-    # scales_with_units: a second school trains a second school's worth of
-    # scholars, so these are linear in institution_units (1.0 for a run that
-    # never founds more than the original unit; the diminishing return lives
-    # in what each further unit COSTS, see institution_unit_cost). The fixed
-    # ones are singular by nature - there is one imperial patron.
-    #
-    # must_be_running: capacity that depends on a going concern disappears
-    # when the concern does. bessemer_openhearth is the exception: a society
-    # that has learned to make steel this way does not forget the men it
-    # trained if one works closes.
-    # Scholars/artisans/directors each institution trains outright, once
-    # running - the raw figures behind STAFF_CAPACITY_SOURCES below, pulled
-    # into named declarations so the table's own numbers carry provenance.
-    # None of these is derived from anything physical (a real school's
-    # actual graduation rate, a real patron's actual household); each is a
-    # design-balance figure sized so the tree's own pacing (a school by
-    # year N, an academy network by year M) feels achievable, which is
-    # exactly the shape CLAUDE.md 3.4 calls a labelled heuristic rather
-    # than a violation - nothing here stands in for a historical OUTCOME
-    # (a wage, a price, an army size), only for an untouched mechanism
-    # (how fast an institution actually trains people).
-
-    # STAFF_CAPACITY_SOURCES: [(node, scholars, artisans, directors, scales_with_units, must_be_running)]
-    # from each node's `staff_capacity`, as the mechanics module's `staff_capacity_sources` view gives them.
+    # STAFF_CAPACITY_SOURCES: [(node, scholars, artisans, directors, scales_with_units, must_be_running)] from each
+    # node's `staff_capacity`, as the mechanics module's `staff_capacity_sources` view gives them: the scholars,
+    # artisans and directors each institution trains outright. scales_with_units makes capacity linear in
+    # institution_units; must_be_running drops it when the going concern stops. The figures are design-balance
+    # numbers, not derived from a real school's graduation rate.
 
     STAFF_CAPITAL_INCOME_RATE = declare(
         "STAFF_CAPITAL_INCOME_RATE", 0.06, kind="temporary_heuristic",
@@ -135,60 +106,18 @@ class Capacity:
         supervise, and you cannot supervise more than your directors can reach.
         Funding matters: an institute whose income has collapsed sheds people.
         """
-        # There is no floor here any more. Rome does have excellent craftsmen for
-        # hire and they are reachable through market_supply() and `hire`, which
-        # is a thing you do rather than a staff of four you are handed on
-        # arrival and never asked for.
+        # No floor: skilled people to hire come through market_supply() and `hire`, not as a staff handed over.
+        # The institutional load is read from STAFF_CAPACITY_SOURCES (linear in institution_units where a source
+        # scales), the one list the planner reads too.
         base_sc, base_ar = 0.0, 0.0
-        # A SECOND SCHOOL TRAINS A SECOND SCHOOL'S WORTH OF SCHOLARS. Linear in
-        # institution_units, which is 1.0 for a run that never founds more than
-        # the original single unit - exactly the constants below, unchanged -
-        # and the actual capacity a further unit buys otherwise. The COST of
-        # each further unit is where the diminishing return lives (see
-        # the production module's institution_unit_cost view); this is simply how big the
-        # place you paid for actually is.
-        # STAFF_CAPACITY_SOURCES is the whole list, in one place, because the
-        # planner needs to read it too. A plan built from the tech tree alone
-        # cannot see any of this: nothing in the goal's prerequisite closure
-        # mentions a school, so a purely structural plan can walk into
-        # quantum_solidstate_theory's demand for eight trained scholars
-        # against a society that tops out at 5.9 of them and sit there
-        # until the horizon runs out, unless the planner can read the same
-        # table this function reads rather than an if-chain only this
-        # function could see.
         scholars, artisans, directors = self._institutional_load(with_directors=True)
-        # you cannot keep staff you cannot pay
-        # a famous school attracts students and patrons it did not have to pay for
-        # WAGES ARE A REAL CHARGE (see wage_bill), so this ceiling must be
-        # more than "what you could pay for": it must leave room WITHOUT
-        # eating the surplus needed to build anything, or hiring to the
-        # edge of affordability could let payroll consume the entire
-        # surplus, leaving nothing to spend on the work itself. A
-        # programme whose payroll is its whole income is not a programme.
-        #
-        # SPARE MUST SUBTRACT living_cost() TOO, not just revenue() minus
-        # upkeep() (the upkeep of BUILT WORKS alone): living_cost also
-        # covers rent, appearances, tax and (via wage_bill) the staff
-        # already carried. Subtracting living_cost here is what "what you
-        # can pay for" has to mean if it is to mean anything: money already
-        # going to rent and to people already employed is not there to
-        # hire more people with.
+        # The ceiling leaves room without eating the surplus needed to build anything: spare income is net of
+        # living_cost (rent, appearances, tax, the wage bill of the staff already carried) as well as upkeep.
         afford, pop = self._staffing_affordability()
-        # EXTRA is supervision_room(), the headroom auto_hire adds on top of
-        # this institutional ceiling (see step(), section 1). It must be
-        # folded into the SAME denominator this ceiling is scaled against,
-        # not added with no affordability check of its own: sc/ar are BOTH
-        # ZERO before a workshop or a school is built, so an unconditional
-        # extra would let the headroom hiring go through at full strength
-        # regardless of income. Folding it in is what makes "grow the staff
-        # toward what you can house and pay" true of the headroom hiring
-        # and not just the institutional kind.
+        # `extra` is supervision_room(), the headroom auto_hire adds beyond the institutional ceiling; it is folded
+        # into the same affordability denominator so the headroom hiring is also limited by income.
         extra = self.supervision_room()
-        # NO FLOOR: a household with no surplus at all must be able to hire
-        # nobody. A floor such as max(0.10, ...) would still hire a tenth
-        # of the headroom regardless of affordability, undoing the whole
-        # calculation above - "grow the staff toward what you can house and
-        # pay" has to be able to mean nobody.
+        # no floor on the scale: a household with no surplus hires nobody
         scale = self._staff_scale_for(afford, scholars + artisans, extra)
         self._world.commands.set_staff_scale(scale)     # step() applies this to `extra` too
         return (base_sc + scholars * scale * pop, base_ar + artisans * scale * pop,
@@ -204,15 +133,8 @@ class Capacity:
             scholars += _sc * units
             artisans += _ar * units
             directors += _di * units
-        # LITERACY BOUNDS THE SCHOLAR CEILING. A school, an academy or an
-        # imperial patron can only produce as many scholars as this society
-        # has literate, propertied people to draw them from (literacy_factor
-        # reads literacy_elite for "scholar"; see FINDINGS_ROUND2 section Q).
-        # Below Rome's own literacy_elite (0.9, the number every one of the
-        # figures above was already tuned against) this narrows the pool;
-        # printing, schools and libraries raise literacy_elite
-        # (apply_tech_effects in sim/diffusion/tech_effects.py) and widen it again as a run goes
-        # on, which is the entire point of building them.
+        # literacy bounds the scholar ceiling: only as many scholars as the society has literate, propertied people
+        # to draw them from; printing, schools and libraries raise it again (apply_tech_effects).
         scholars *= self.trades.literacy_factor(trade_data.scholar_trade())
         if with_directors:
             return scholars, artisans, directors
@@ -225,12 +147,7 @@ class Capacity:
                     + max(0.0, self._world.finance.balance) * self.STAFF_CAPITAL_INCOME_RATE)
         budget = spare * self.STAFF_BUDGET_SHARE_OF_SPARE
         afford = budget / self.staff_wage_reference()
-        # A civilization of 1.5 million simply cannot field the trained people a
-        # civilization of 65 million can, however rich you are. This is the single
-        # biggest structural difference between playing Rome and playing Norway.
-        # A 4.5 million person society CAN eventually staff a semiconductor
-        # programme, it just has to grow into it: making that impossible
-        # would be a modelling error, not a finding.
+        # a small society cannot field the trained people a large one can, however rich; it can grow into them
         pop = (self.STAFF_POP_SCALE_FLOOR
                + self.STAFF_POP_SCALE_VARIABLE * min(1.0, self._world.people.pop_scale ** self.STAFF_POP_SCALE_EXPONENT))
         return afford, pop
@@ -341,10 +258,8 @@ class Capacity:
     def household_room(self):
         """How many more people this household can feed, house and oversee.
 
-        One number, used by `hire` and by `buy` alike: using different
-        ones - or, worse, none at all for one of the two - would let a
-        player be told one capacity through one verb and exceed it
-        through the other.
+        One number, used by `hire`, `train`, `buy` and the staff controls alike: it is net of the people already
+        posted in the labour core and not yet arrived, so no verb spends the same room twice.
         """
         return (self.staff_capacity()[1] + self.supervision_room()
-                - self.book.headcount())
+                - self.book.headcount() - self.book.staff_posted())

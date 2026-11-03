@@ -20,6 +20,7 @@ from typing import Dict, List, Mapping, Tuple
 from sim.constants import declare
 
 from . import aptitude, expectations, training
+from .premium import annuity_factor
 from .records import MarketState, YearInputs, YearReport
 from .trades import fallback_trade
 
@@ -126,7 +127,7 @@ def _odds(inputs, state, area, source, destinations, own, later_income, vacancie
     lost = []
     for trade in targets:
         years = inputs.trades[trade].training_years * (1.0 if young else _training_share(inputs, source, trade))
-        lost.append(own * expectations.annuity_factor(rate, years))
+        lost.append(own * annuity_factor(rate, years))
         gain.append(expectations.present_value(later_income[trade] - own, rate, years, remaining))
     stay_score = 0.0
     if young and stay_income is not None:

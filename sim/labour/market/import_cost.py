@@ -7,6 +7,7 @@ import math
 from typing import Dict, List, Optional, Sequence, Tuple
 
 from .fetch_wage import fetch_wage
+from .premium import annuity_factor
 from .records import MarketState, YearInputs
 
 
@@ -18,8 +19,7 @@ class ImportCosts:
         self.state, self.inputs = state, inputs
         self.wages = {area: dict(by_trade) for area, by_trade in state.wages.items()}
         rate, years = inputs.discount_rate, inputs.career_years
-        discounted_years = years if rate <= 0.0 else (1.0 - math.exp(-rate * years)) / rate
-        self.career_hours = max(discounted_years * inputs.hours_per_worker_year, 1e-12)
+        self.career_hours = max(annuity_factor(rate, years) * inputs.hours_per_worker_year, 1e-12)
         self._reach: Dict[str, List[Tuple[float, str]]] = {}
         self._all: Dict[Tuple[str, str], float] = {}
         self._sold: Dict[Tuple[str, str, float], float] = {}      # hours_at answers: the year's workers do not change while markets clear
@@ -125,8 +125,11 @@ class ImportCosts:
             if not costs:
                 return None
             bound = max(costs)
+        cost_of: Dict[str, float] = {}
+        for cost, other in self._offer_costs(area, trade):
+            cost_of.setdefault(other, cost)
         fetched = sum(max(0.0, self.hours_at(other, trade, bound) - self.wanted.get((other, trade), 0.0)) for other in sources
-                      if self._cost_to(area, trade, other) <= bound)
+                      if cost_of.get(other, math.inf) <= bound)
         return bound, min(shortage, fetched) / wanted
 
     def _offer_costs(self, area: str, trade: str) -> List[Tuple[float, str]]:
@@ -139,6 +142,3 @@ class ImportCosts:
             outside = self.inputs.subsistence_per_worker_year.get(other, 0.0) / max(self.inputs.hours_per_worker_year, 1e-12)
             found.append((max(wage, outside) + moving_cost / self.career_hours, other))
         return found
-
-    def _cost_to(self, area: str, trade: str, source: str) -> float:
-        return next((cost for cost, other in self._offer_costs(area, trade) if other == source), math.inf)

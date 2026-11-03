@@ -89,7 +89,7 @@ class StaffBook:
         fresh training run would be added ON TOP OF."""
         workforce = self._world.workforce
         pending = sum(row[3] for row in workforce.training
-                      if len(row) > 2 and row[2] == trade)
+                      if len(row) > 3 and row[2] == trade)
         return max(self.employed(trade), self._world.workforce.staff_wanted.get(trade, 0.0)) + pending
 
     def staff_posted(self):

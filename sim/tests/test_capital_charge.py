@@ -16,7 +16,7 @@ from . import prices_stand_in
 from sim.engine import data
 from sim.production import node_revenue
 from sim.world import capital_market, plant_figures
-from sim.labour.labour_market import production_data
+from sim.world.demand import production_data
 
 # Entries that state a plant and gate a node, whose inputs at solved prices cost more than what they
 # make: a technique dearer than the one that sets the price, so it adds nothing a staff could be paid from.

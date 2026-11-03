@@ -7,7 +7,7 @@ from unittest import mock
 
 from sim.engine import data
 from sim.production import node_output, node_payback_diagnostic, node_revenue, node_revenue_market
-from sim.labour.labour_market import production_data
+from sim.world.demand import production_data
 from sim.world import plant_figures
 from sim.world.plant_baskets import Baskets
 

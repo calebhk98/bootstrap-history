@@ -13,9 +13,6 @@ from sim.default_civilisation import CIVILISATION_DIRECTORY, default_civilisatio
 from sim.world import demography
 from sim.labour import wages
 
-# The staple of a civilisation that names none.
-DEFAULT_STAPLE_MATERIAL = "wheat_kg"
-
 REFERENCE_POPULATION = 10000.0
 
 
@@ -30,10 +27,10 @@ def reference_civilisation() -> Dict[str, Any]:
 
 
 def staple_material(civ: Mapping[str, Any]) -> str:
-    """The grain the civilisation's subsistence basket is priced in: its `staple`, else the default."""
-    staple = civ.get("staple", DEFAULT_STAPLE_MATERIAL)
+    """The grain the civilisation's subsistence basket is priced in: its `staple`. A civilisation without one is an error."""
+    staple = civ.get("staple")
     if not isinstance(staple, str) or not staple:
-        raise ValueError("civilization %r staple must be a material id" % civ.get("id", "?"))
+        raise ValueError("civilization %r must name its `staple` as a material id" % civ.get("id", "?"))
     return staple
 
 

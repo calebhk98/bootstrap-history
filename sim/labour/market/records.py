@@ -100,7 +100,7 @@ class MarketState:
     """What the core carries from one year to the next.
 
     `workers[area][trade]` is people per ability band. `trainees[area][trade]` is a list of
-    [years_left, people per band] for those still learning. `wages[area][trade]` is the market wage: the
+    [years_left, people per band, completion bonus] for those still learning. `wages[area][trade]` is the market wage: the
     wage every hour hired was paid: the mean of the offers paid to the hours taken on."""
     workers: Dict[AreaId, Dict[TradeId, BandCounts]] = dataclasses.field(default_factory=dict)
     trainees: Dict[AreaId, Dict[TradeId, List[list]]] = dataclasses.field(default_factory=dict)

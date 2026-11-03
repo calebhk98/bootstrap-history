@@ -10,13 +10,9 @@ A trade's task description is derived from the hours recipes book to it: each re
 spread over the recipe's input materials (a recipe with no inputs books them to the thing it extracts). Distance
 between trades is the angle between their task shares (Gathmann and Schonberg).
 """
-import functools
-from dataclasses import dataclass, field
-from typing import AbstractSet, Any, Dict, FrozenSet, List, Mapping, Optional, Sequence, Tuple
+from typing import AbstractSet, Any, Callable, Dict, FrozenSet, List, Mapping, Sequence, Tuple
 
 from sim.constants import declare
-
-from .market.formation import migration_takes, spare_people
 
 TaskShares = Dict[str, float]
 
@@ -59,11 +55,23 @@ def task_shares_by_trade(recipes: Mapping[str, Mapping[str, Any]]) -> Dict[str, 
     return shares
 
 
-@functools.lru_cache(maxsize=1)
-def shipped_task_shares() -> Dict[str, TaskShares]:
-    """Task shares of every trade, derived from the production data the game loads."""
-    from .labour_market import production_data
-    return task_shares_by_trade(production_data())
+_derived: Dict[Callable, Tuple[Mapping[str, Any], Any]] = {}
+
+
+def _derived_from(builder: Callable, production: Mapping[str, Any]) -> Any:
+    """`builder(production)`, kept for the last production graph it was built from. The cache is keyed on the graph
+    object itself, so a different mod set (a different graph) is rebuilt, never served stale."""
+    held = _derived.get(builder)
+    if held is not None and held[0] is production:
+        return held[1]
+    result = builder(production)
+    _derived[builder] = (production, result)
+    return result
+
+
+def task_shares_for(production: Mapping[str, Any]) -> Dict[str, TaskShares]:
+    """Task shares of every trade in `production`, the production graph the game loads."""
+    return _derived_from(task_shares_by_trade, production)
 
 
 SOCIETY = "society"          # the teacher of a trade whose techniques the society already knows
@@ -85,10 +93,9 @@ def gating_nodes_by_trade(recipes: Mapping[str, Mapping[str, Any]]) -> Dict[str,
     return {trade: frozenset(gates) for trade, gates in nodes.items()}
 
 
-@functools.lru_cache(maxsize=1)
-def shipped_gating_nodes() -> Dict[str, FrozenSet[str]]:
-    from .labour_market import production_data
-    return gating_nodes_by_trade(production_data())
+def gating_nodes_for(production: Mapping[str, Any]) -> Dict[str, FrozenSet[str]]:
+    """`gating_nodes_by_trade` of the production graph the game loads."""
+    return _derived_from(gating_nodes_by_trade, production)
 
 
 def teachers_of(trade: str, gating: Mapping[str, AbstractSet[str]], knowledge_by_actor: Mapping[str, AbstractSet[str]],
@@ -106,12 +113,6 @@ def teachers_of(trade: str, gating: Mapping[str, AbstractSet[str]], knowledge_by
     elif not teachers and needed & set(demonstrated):
         teachers.append("demonstrated")
     return teachers
-
-
-def teacher_present(trade: str, gating: Mapping[str, AbstractSet[str]], knowledge_by_actor: Mapping[str, AbstractSet[str]],
-                    baseline: AbstractSet[str] = frozenset(), demonstrated: AbstractSet[str] = frozenset()) -> bool:
-    """Whether any actor holds the knowledge to teach `trade` (see `teachers_of`)."""
-    return bool(teachers_of(trade, gating, knowledge_by_actor, baseline, demonstrated))
 
 
 def uncovered_share(new_trade: Mapping[str, float], source: Mapping[str, float]) -> float:
@@ -141,62 +142,3 @@ def nearest_sources(new_trade: str, shares: Mapping[str, TaskShares],
     described = shares.get(new_trade, {})
     return sorted((uncovered_share(described, shares.get(source, {})), source)
                   for source in candidates if source != new_trade)
-
-
-@dataclass
-class FormationRoute:
-    kind: str                  # "migration", "conversion" or "bonded"
-    source: str                # an area, a trade, or the bonded market
-    people: float
-    years: float = 0.0         # time until they work in the new trade
-    teacher_hours: float = 0.0
-
-
-@dataclass
-class FormationPlan:
-    trade: str
-    wanted: float
-    routes: List[FormationRoute] = field(default_factory=list)
-
-    @property
-    def people(self) -> float:
-        return sum(route.people for route in self.routes)
-
-    @property
-    def empty(self) -> bool:
-        return self.people <= 0.0
-
-
-def first_people_plan(trade: str, wanted: float, *, shares: Mapping[str, TaskShares],
-                      full_years: Mapping[str, float], hours_per_worker_year: float,
-                      migrant_spare: Mapping[str, float], source_spare: Mapping[str, float],
-                      teacher_present: bool, bonded_available: float = 0.0,
-                      migration_years: Optional[Mapping[str, float]] = None) -> FormationPlan:
-    """Where `wanted` people of `trade` come from, cheapest route first.
-
-    `migrant_spare`: spare hands of this trade by origin area (see `spare_people`); they arrive already
-    skilled, so no teacher is needed, and `migration_years` (default none) is the move's time.
-    `source_spare`: spare people by other trade, nearest by task distance first; each converts at a time set by the
-    uncovered share, and only if `teacher_present` (an actor holding the knowledge exists).
-    `bonded_available`: bonded people of the trade the civilisation lets the actor buy (zero where its data forbids it).
-    A trade reached by none of these has an empty plan."""
-    plan = FormationPlan(trade, wanted)
-    remaining = wanted
-    for area, take in migration_takes(wanted, migrant_spare):
-        plan.routes.append(FormationRoute("migration", area, take, (migration_years or {}).get(area, 0.0)))
-        remaining -= take
-    if remaining > 0.0 and teacher_present:
-        for uncovered, source in nearest_sources(trade, shares, sorted(source_spare)):
-            take = min(remaining, max(0.0, source_spare[source]))
-            if take <= 0.0:
-                continue
-            years = training_years(full_years.get(trade, 0.0), uncovered)
-            plan.routes.append(FormationRoute("conversion", source, take, years,
-                                     take * teacher_hours_per_person(years, hours_per_worker_year)))
-            remaining -= take
-            if remaining <= 0.0:
-                break
-    if remaining > 0.0 and bonded_available > 0.0:
-        take = min(remaining, bonded_available)
-        plan.routes.append(FormationRoute("bonded", "bonded market", take))
-    return plan

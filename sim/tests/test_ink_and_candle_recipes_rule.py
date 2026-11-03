@@ -3,14 +3,14 @@ QUICK_TOPIC = True
 
 import unittest
 
-from sim.labour import labour_market
+from sim.world.demand import production_data
 
 GOODS = ("ink_kg", "written_page", "light_tallow_candle")
 
 
 class RecipesMakeTheGoods(unittest.TestCase):
     def test_some_recipe_outputs_each_good_with_a_positive_yield_and_a_cost_in_labour_or_inputs(self):
-        recipes = labour_market.production_data()
+        recipes = production_data()
         for good in GOODS:
             with self.subTest(good=good):
                 makers = [entry for entry in recipes.values()

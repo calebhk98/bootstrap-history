@@ -4,7 +4,8 @@ over the working-age population, which the food rules' own tests cover.)"""
 import types
 import unittest
 
-from sim.labour.labour_allocation import FARM_TRADE, Allocation
+from sim.labour.labour_allocation import Allocation
+from sim.labour.trade_data import farm_trade
 
 QUICK_TOPIC = True
 
@@ -16,14 +17,14 @@ def labour_with(hours):
 
 class FarmShareOfHoursTests(unittest.TestCase):
     def test_the_farm_share_is_farming_hours_over_all_hours_booked(self):
-        share = Allocation.farm_share_of_hours(labour_with({FARM_TRADE: 300.0, "smith": 100.0, "weaver": 100.0}))
+        share = Allocation.farm_share_of_hours(labour_with({farm_trade(): 300.0, "smith": 100.0, "weaver": 100.0}))
         self.assertAlmostEqual(share, 0.6)
 
     def test_a_society_that_books_only_farming_is_all_farm(self):
-        self.assertEqual(Allocation.farm_share_of_hours(labour_with({FARM_TRADE: 5.0})), 1.0)
+        self.assertEqual(Allocation.farm_share_of_hours(labour_with({farm_trade(): 5.0})), 1.0)
 
     def test_a_society_that_books_no_farming_has_no_farm_share(self):
-        self.assertEqual(Allocation.farm_share_of_hours(labour_with({FARM_TRADE: 0.0, "smith": 4.0})), 0.0)
+        self.assertEqual(Allocation.farm_share_of_hours(labour_with({farm_trade(): 0.0, "smith": 4.0})), 0.0)
 
 
 if __name__ == "__main__":

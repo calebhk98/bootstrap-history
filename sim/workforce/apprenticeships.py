@@ -33,7 +33,7 @@ class Apprenticeships(Part):
 						# there about why adding to the artisans directly was
 						# thrown away at the next call.
 						self.needs.send(RecordEvent.of("bought_people_trained", "%g of the people you bought finish "
-						                               "learning the work" % round(cap / 0.55, 1)))
+						                               "learning the work" % round(cap / self.parts.core.labour.pools.WORKER_EQUIVALENT_UNTRAINED, 1)))
 				else:
 					still.append(row)
 			# BEFORE the resync, not after: _resync_pools counts who is still

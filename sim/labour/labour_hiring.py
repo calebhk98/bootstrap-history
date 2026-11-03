@@ -59,9 +59,9 @@ class Hiring:
                 return None, None, literate_wall_refusal(trade, cap, have)
         outlay = count * self.market.quote_annual(trade)
         if outlay > self._world.finance.spending_power("buy"):
-            return None, None, Refusal("cash_short", cash_in_hand_refusal(self._world, 
-                "offering %g %s%s a year's wages" % (count, trade, "" if count == 1 else "s"), outlay).message)
-        room = self.capacity.household_room() - self.book.staff_posted()
+            return None, None, cash_in_hand_refusal(self._world,
+                "offering %g %s%s a year's wages" % (count, trade, "" if count == 1 else "s"), outlay)
+        room = self.capacity.household_room()
         if count > room:
             return None, None, hire_room_refusal(room, count, self.advice.room_advice())
         return count, outlay, None

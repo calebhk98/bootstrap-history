@@ -18,15 +18,6 @@ class Settlement:
             "market town. Keeps the town inside the tile's headcount, and so "
             "inside the nation's; the share itself is tuned, not measured.")
 
-    HIRE_TRAVEL_DAYS = declare(
-        "HIRE_TRAVEL_DAYS", 1.0, kind="temporary_heuristic",
-        unit="days of travel", source=None, confidence="D",
-        why="How far a hire will travel to work for you (and goods to reach "
-            "you), in days over the routes the actor's technologies open "
-            "(geography's reach). Sets how many tiles' towns the labour "
-            "market reaches; a day on foot or by cart stays inside the "
-            "base's own tile, faster ways of travelling reach neighbours.")
-
     def held_tiles(self):
         """The tiles this nation holds."""
         return tuple(self._world.people.home_tiles_held())
@@ -79,16 +70,6 @@ class Settlement:
     def held_technologies(self):
         """Technologies this actor's people can travel with: the civilisation's own and those built."""
         return frozenset(self._world.knowledge.held_and_running())
-
-    def reachable_tiles(self, days_budget=None):
-        """{tile: days} a hire can travel to the base from within `days_budget` (default
-        HIRE_TRAVEL_DAYS), over the routes the held technologies open (geography's reach)."""
-        days_budget = self.HIRE_TRAVEL_DAYS if days_budget is None else days_budget
-        held = self.held_technologies()
-        base = self.base_tile()
-        if base is None:
-            return {}
-        return geography.reach([base], geography.usable_modes([held]), days_budget, self._world.scenario.built_ways(), held_nodes=held)
 
     def travel_days_to_tile(self, tile):
         """Days the household needs to reach `tile` by the fastest route over the modes its people hold

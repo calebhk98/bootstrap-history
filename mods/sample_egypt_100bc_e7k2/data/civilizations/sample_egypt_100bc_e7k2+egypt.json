@@ -16,6 +16,7 @@
   },
   "currency": "Ptolemaic silver tetradrachm",
   "currency_words": {"long": "tetradrachms", "short": "tetradr"},
+  "staple": "wheat_kg",
   "coin_standard": {
     "regime": "struck_coin",
     "material": "silver_kg",

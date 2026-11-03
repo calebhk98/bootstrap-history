@@ -23,6 +23,7 @@ QUICK_TOPIC = True
 import unittest
 
 from sim.labour import labour_market
+from sim.world.demand import production_data
 
 
 def _entry(outputs, labour_hours=None, capital=None):
@@ -97,49 +98,6 @@ class LabourHoursCoefficientsTests(unittest.TestCase):
                 "broken", production)
 
 
-class LabourHoursRequiredByTradeTests(unittest.TestCase):
-
-    def setUp(self):
-        self.production = {
-            "wheat_kg": _entry({"wheat_kg": 577.5}, {"labourer": 150.0}),
-            "iron_bar_kg": _entry({"iron_bar_kg": 1000.0},
-                                  {"furnaceman": 80.0, "smith": 120.0}),
-        }
-
-    def test_aggregates_across_recipes_that_share_a_trade(self):
-        production = {
-            "a": _entry({"a_kg": 1.0}, {"labourer": 2.0}),
-            "b": _entry({"b_kg": 1.0}, {"labourer": 3.0}),
-        }
-        hours_by_trade, _ = labour_market.labour_hours_required_by_trade(
-            {"a": 10.0, "b": 10.0}, production)
-        self.assertAlmostEqual(hours_by_trade["labourer"], 20.0 + 30.0)
-
-    def test_breakdown_names_which_recipe_contributed_how_much(self):
-        hours_by_trade, contributors = labour_market.labour_hours_required_by_trade(
-            {"wheat_kg": 577.5, "iron_bar_kg": 1000.0}, self.production)
-        self.assertAlmostEqual(hours_by_trade["labourer"], 150.0)
-        self.assertAlmostEqual(hours_by_trade["smith"], 120.0)
-        self.assertAlmostEqual(contributors["smith"]["iron_bar_kg"], 120.0)
-
-    def test_a_recipe_not_in_production_is_silently_skipped(self):
-        hours_by_trade, _ = labour_market.labour_hours_required_by_trade(
-            {"no_such_recipe": 1000.0}, self.production)
-        self.assertEqual(hours_by_trade, {})
-
-    def test_a_zero_output_level_contributes_nothing(self):
-        hours_by_trade, _ = labour_market.labour_hours_required_by_trade(
-            {"wheat_kg": 0.0}, self.production)
-        self.assertEqual(hours_by_trade, {})
-
-    def test_output_level_scales_linearly(self):
-        hours_at_1x, _ = labour_market.labour_hours_required_by_trade(
-            {"wheat_kg": 577.5}, self.production)
-        hours_at_3x, _ = labour_market.labour_hours_required_by_trade(
-            {"wheat_kg": 3 * 577.5}, self.production)
-        self.assertAlmostEqual(hours_at_3x["labourer"], 3 * hours_at_1x["labourer"])
-
-
 class RealProductionDataSmokeTests(unittest.TestCase):
     """A light touch of the real data/production/*.json files - enough to
     prove the loader and the aggregation work against the genuine schema,
@@ -148,7 +106,7 @@ class RealProductionDataSmokeTests(unittest.TestCase):
     data/production/_SCHEMA.md and CLAUDE.md section 4)."""
 
     def test_wheat_kg_is_present_and_booked_to_the_farmer(self):
-        production = labour_market.production_data()
+        production = production_data()
         self.assertIn("wheat_kg", production)
         coefficients = labour_market.labour_hours_coefficients_per_unit_output(
             "wheat_kg", production)
@@ -156,18 +114,11 @@ class RealProductionDataSmokeTests(unittest.TestCase):
         self.assertGreater(coefficients["farmer"], 0.0)
 
     def test_iron_bar_kg_needs_both_furnaceman_and_smith(self):
-        production = labour_market.production_data()
+        production = production_data()
         coefficients = labour_market.labour_hours_coefficients_per_unit_output(
             "iron_bar_kg", production)
         self.assertIn("furnaceman", coefficients)
         self.assertIn("smith", coefficients)
-
-    def test_labour_hours_required_by_trade_runs_over_real_data(self):
-        production = labour_market.production_data()
-        hours_by_trade, _ = labour_market.labour_hours_required_by_trade(
-            {"wheat_kg": 1_000_000.0, "iron_bar_kg": 10_000.0}, production)
-        self.assertGreater(hours_by_trade.get("farmer", 0.0), 0.0)
-        self.assertGreater(hours_by_trade.get("smith", 0.0), 0.0)
 
 
 if __name__ == "__main__":

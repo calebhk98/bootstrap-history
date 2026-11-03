@@ -41,66 +41,11 @@ class Hands:
                                contracted_hours_of(self.commissioned_hours(), counts_trade),
                                person_year_hours(self._world))
 
-    # ---- a technology can make the SAME worker do more, without replacing
-    # them ------------------------------------------------------------------
-    # THE SECOND QUESTION: everything market_supply() and the labour market pressure
-    # model is about how many HOURS a trade can supply and what hiring more
-    # of them costs; neither asks an hour, once bought, to be worth more
-    # than any other hour of the same trade. A flying shuttle does not hire
-    # a second weaver or replace the first one - the tree's own note on
-    # tex_flying_shuttle says so ("one weaver now handles wide looms...
-    # triples weaving speed"). This is what represents that: a real
-    # technology effect the hiring/hours mechanism alone cannot capture.
-    #
-    # WIRED TO NODES THAT ARE ALREADY IN THE TREE, each cited from its own
-    # note, not invented for this. Deliberately conservative and deliberately
-    # narrow: only nodes whose own note describes making an existing trade's
-    # hour do more work, not nodes that reduce how many people are needed
-    # (that is automation, and the tree already has a separate, correctly
-    # different mechanism for it - see tex_power_loom in commodities.py,
-    # which raises national cloth OUTPUT, not weaver PRODUCTIVITY, and is
-    # deliberately left out of this table). The bonus for each node is a
-    # fraction of what its own note claims, because these numbers compound
-    # with one another and with everything else in the economy, and a
-    # technology tree with forty of these stacked at face value would make
-    # the whole game about which order you build them in rather than what
-    # they cost.
-    #
-    # (node, trade, bonus). Sourced, node by node:
-    #   tex_treadle_loom    "speeds weaving noticeably" - the weakest claim in
-    #                       the chain (the note itself says the weaver still
-    #                       works the shuttle by hand), so the smallest bonus.
-    #   tex_flying_shuttle  "triples weaving speed" - but weaving is a slice
-    #                       of what the `artisan` trade covers in this model
-    #                       (there is no dedicated weaver trade), so the
-    #                       tripling is scaled down hard rather than applied
-    #                       to the whole trade.
-    #   tex_spinning_wheel  "roughly tripling output per spinner" - same
-    #                       dilution reasoning as the shuttle.
-    #   met_trip_hammer     "much faster than hand hammering... foundation of
-    #                       heavy forge work" - smith.
-    #   met_water_ore_stamp "crush ore... far faster than hand crushing" -
-    #                       miner, who does the crushing this replaces.
-    #   met_three_high_mill "doubles throughput" of a rolling mill - smith.
-    #   met_converter_furnace "speed and low labour cost per ton is the
-    #                       payoff" - furnaceman.
-    #   bellows_water_blown "the single highest-leverage mechanical change
-    #                       available... continuous high-volume blast" - a
-    #                       non-automating speed-up; furnaceman.
-    #   mfg_rake_clearance  "saves 30 percent power and doubles tool life" -
-    #                       machinist.
-    #   mfg_hss_development "cuts three times faster than Mushet steel" - the
-    #                       most direct per-hour claim of the set; machinist.
-    #   prc_capstan_turret_lathe "unskilled operator can repeat production" -
-    #                       still an operator, still a machinist, just a much
-    #                       faster one per hour; machinist.
-    # LABOUR_PRODUCTIVITY_SOURCES: [(node, trade, bonus)] from each node's `labour_productivity`, as the mechanics module's view gives them.
-    # NEVER MORE THAN HALF AGAIN, however many of the above a run has built.
-    # Every other saturating multiplier in this file (labour market price_factor,
-    # literacy_factor) is capped for the same reason: an uncapped sum of
-    # small, individually-defensible bonuses is still an uncapped sum, and
-    # this compounds with hired_cap, market_supply's own institutional
-    # multipliers, and the project pacing built on top of both.
+    # ---- a technology can make the SAME worker do more, without replacing them.
+    # market_supply counts hours; this makes an hour of a trade worth more once bought (a flying shuttle does not
+    # hire a second weaver). LABOUR_PRODUCTIVITY_SOURCES: [(node, trade, bonus)] from each node's `labour_productivity`,
+    # as the mechanics module's view gives them; each bonus is a fraction of what the node's own note claims, and
+    # the total is capped because small bonuses compound with the rest of the economy.
     LABOUR_PRODUCTIVITY_CAP = declare(
         "LABOUR_PRODUCTIVITY_CAP", 1.5, kind="temporary_heuristic",
         unit="dimensionless multiplier", source=None, confidence="D",
@@ -136,32 +81,10 @@ class Hands:
         return productivity
 
     def hours_you_can_call_on(self, trade):
-        """Hours of this trade a project can actually draw on this year.
-
-        COMMISSIONED HOURS ARE PART OF THE CEILING, NOT ON TOP OF IT: a
-        commission buys a job from somebody else's shop, but it is the same
-        scribes drawing on the same local pool market_supply already
-        bounds, not a second pool stacked on top of it. What it really buys
-        is certainty: hours reserved for your work rather than competed
-        for.
-        """
-        # TWO CHANNELS, AND BOTH HAVE TO BE SAID. Hiring draws on the people
-        # who live here, and that pool is what market_supply bounds. A
-        # commission is a job placed with somebody else's shop, and a shop
-        # subcontracts: it is a second channel, dearer per hour, bounded in
-        # turn by what the local trade can spare (see commission()).
-        # Collapsing the two into one indistinguishable pool would make
-        # commissioning pointless, since it would just be spending money to
-        # buy the same hours market_supply already counts. Two channels,
-        # each bounded, each named wherever the number is printed.
-        #
-        # PRODUCTIVITY MULTIPLIES THE RESULT, NOT market_supply ITSELF. This
-        # is what turns "the same crew gets more done" into "the market can
-        # supply more people" if it were applied upstream instead - the wall
-        # a project's labour draw actually runs into is how much WORK gets
-        # out of the hours it can call on, which is this number, not how
-        # many people the town could in principle hire (market_supply, still
-        # unchanged, still governs hiring capacity and labour market price_factor).
+        """Hours of this trade a project can actually draw on this year: the hours hiring can reach (market_supply)
+        plus the hours already commissioned, times what technology makes an hour worth. Commissioning is a second
+        channel through a subcontracting shop, bounded on its own by the trade's spare hours (commission_spare_hours),
+        so the two are added; it also buys certainty, hours reserved for your work rather than competed for."""
         return ((self.supply.market_supply(trade) + self._world.workforce.contract_hours.get(trade, 0.0))
                 * self.labour_productivity(trade))
 

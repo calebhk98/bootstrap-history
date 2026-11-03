@@ -11,36 +11,10 @@ class Advice:
         self.capacity = capacity
         self.hands = hands
 
-    # What each of these adds to the CEILING on people, taken from
-    # staff_capacity below so the advice and the arithmetic cannot drift apart.
-    # THESE ARE THE SAME NUMBERS AS STAFF_CAPACITY_SOURCES's own artisan (`ar`)
-    # column below, for every node the two tables share, kept as INT here
-    # (whole household places, for "%d" advice text) rather than the float
-    # STAFF_CAPACITY_SOURCES needs for its own unit-scaled arithmetic - two
-    # declared names per figure rather than one, so a rename or a cast can
-    # never silently turn a place count into a fraction of one.
-    # ROOM_SOURCES: [(node id, places)] from each node's `room_places`, as the mechanics module's view gives them.
-    # fin_trial_balance, fin_company_town and fin_chain_store - the
-    # organisation entries added alongside STAFF_CAPACITY_SOURCES above - are
-    # deliberately NOT in ROOM_SOURCES, even though every one of them raises
-    # the same ceiling every other entry here does. room_advice's own
-    # "nearest first" sort (below) ranks by CLOSURE SIZE, a proxy that holds
-    # for the furnace-and-patronage tree above because a shallow node there
-    # is also a cheap one. It does not hold for the finance branch: the whole
-    # point of fin_chain_store's own note ("requires sophisticated management
-    # and accounting") is that it is a late, expensive, 30,000-denarii
-    # institution sitting only two prerequisites deep (fin_market ->
-    # fin_department_store), so ranking it by closure size alone told a
-    # founder with four hundred denarii in year 100 that the NEAREST way to
-    # more room was a chain of department stores - a measured, not a
-    # theoretical, failure of this heuristic once a second branch of the
-    # tree with a different shape is let into it. The institutions
-    # themselves are real (STAFF_CAPACITY_SOURCES, supervision_room); this
-    # one piece of advice text is not worth teaching the sort to weigh cost
-    # as well as depth for three nodes, so they are simply left unnamed here
-    # - a player who builds them (for their own revenue, or for the
-    # household room staff_capacity() already credits them with) still gets
-    # the room; this function just never tells them to go build one.
+    # ROOM_SOURCES: [(node id, places)] from each node's `room_places`, as the mechanics module's view gives them,
+    # so the advice and staff_capacity cannot drift apart. The finance-branch institutions are left out on purpose:
+    # room_advice ranks by closure size, which does not track cost for them, so the advice never names one (a player
+    # who builds one still gets its room).
 
     def _places_text(self, places):
         """The places a node adds at the current income, as a short number."""

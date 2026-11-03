@@ -8,7 +8,7 @@ from .harness import *  # noqa: F401,F403
 from sim.economy import bondage_hours
 from sim.economy.types import LabourBid, LabourOffer
 from sim.labour.market import bonded_worth
-from sim.labour.market.expectations import annuity_factor
+from sim.labour.market.premium import annuity_factor
 from sim.labour.market.records import Route
 
 RATE, CAREER, HOURS = 0.05, 30.0, 2000.0

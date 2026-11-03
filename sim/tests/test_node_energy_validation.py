@@ -6,7 +6,7 @@ from sim.prices import energy_prices
 
 from sim.engine import data
 from sim.production import node_output
-from sim.labour.labour_market import production_data
+from sim.world.demand import production_data
 
 
 class GradedEnergy(unittest.TestCase):

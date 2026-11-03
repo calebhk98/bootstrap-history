@@ -22,7 +22,7 @@ from .trade_seed import bound_by_hirers, seed_hours
 from .market.year import run_year as run_labour_year
 from .market.fetch_wage import fetch_wage
 from .market.fetch_wage_samples import samples as fetch_wage_samples
-from .labour_market import production_data
+from sim.world.demand import production_data
 from .food_gathering import cap_share, capped_kcal, hours_cap_kcal
 from .wage_provider import people_fed_per_worker
 from .wages import CAREER_YEARS

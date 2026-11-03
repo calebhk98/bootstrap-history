@@ -28,9 +28,7 @@ from typing import Any, Callable, Dict, Iterable, Mapping, Optional
 
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 from sim.world import demand, need_demand
-from sim.labour import labour_market, legacy_trade_defaults, workforce_carriage
-
-FARM_TRADE = legacy_trade_defaults.FARM_TRADE
+from sim.labour import labour_market, trade_data, workforce_carriage
 
 _REPOSITORY_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -42,7 +40,7 @@ def _dominant_output(entry: Mapping[str, Any]) -> Optional[str]:
     outputs = entry.get("outputs") or {}
     if not outputs:
         return None
-    return labour_market.dominant_output_key(entry)
+    return demand.dominant_output_key(entry)
 
 
 # Recipe fields that draw an energy carrier; the carrier is the material of the same name that the
@@ -170,7 +168,7 @@ def need_shares_by_trade(production: Mapping[str, Any], reached_nodes: Iterable[
     for material, weight in budget.items():
         add_budget(material, weight)
 
-    total_by_trade.pop(FARM_TRADE, None)
+    total_by_trade.pop(trade_data.farm_trade(), None)
     total = sum(total_by_trade.values())
     if total <= 0.0:
         return {}
