@@ -22,7 +22,6 @@ from .trade_seed import bound_by_hirers, seed_hours
 from .market.year import run_year as run_labour_year
 from .market.fetch_wage import fetch_wage
 from .market.fetch_wage_samples import samples as fetch_wage_samples
-from sim.world.demand import production_data
 from .food_gathering import cap_share, capped_kcal, hours_cap_kcal
 from .wage_provider import people_fed_per_worker
 from .wages import CAREER_YEARS
@@ -30,6 +29,7 @@ from .trade_data import (bonded_pseudo_trade, craft_family, farm_trade, generic_
                          staff_resource_trade, trade_of_role, tool_draw, tool_hours_factors, tool_order)
 from .occupational_shares import occupational_report, shares_by_group, hours_by_trade, hours_by_trade_of_all_employers, people_by_trade_of_all_employers, format_report as format_occupational_report, groups_data as occupation_groups
 from .staff_targets import scholar_target
+from .school_seats import schools_of_actor
 from .staff_moves import stochastic_round
 from .labour_state_weights import STATE_WEIGHTS
 from .people_added import add_people
@@ -39,12 +39,12 @@ __all__ = [
     "learning_curve", "SOURCE_TASK_FLOOR_FRACTION",
     "fetch_wage", "fetch_wage_samples",
     "occupational_report", "shares_by_group", "hours_by_trade", "hours_by_trade_of_all_employers", "people_by_trade_of_all_employers", "format_occupational_report", "occupation_groups",
-    "wage_provider", "wages", "scholar_target", "stochastic_round", "STATE_WEIGHTS", "add_people", "Labour", "production_data",
+    "wage_provider", "wages", "scholar_target", "stochastic_round", "STATE_WEIGHTS", "add_people", "Labour",
     "people_fed_per_worker", "CAREER_YEARS", "tool_draw", "tool_hours_factors", "tool_order",
     "add_tenure", "fade_tenure", "outflow_shares", "tenure_by_trade", "tenure_held", "hours_cap_kcal", "capped_kcal", "cap_share",
     # the labour-market core (sim/labour/market/DESIGN.md): plain records in, plain records out
     "run_labour_year", "reservation_wage_per_hour", "migration_shares", "migrant_pairs", "totals_of_pairs", "opening_labour_market", "seed_hours", "bound_by_hirers", "trade_specs", "fallback_trade", "role_field", "trade_of_role", "generic_craft_trade", "bonded_pseudo_trade", "scholar_trade", "craft_family", "farm_trade", "generic_staff_trades", "staff_resource_trade", "people_in",
-    "EmployerHoursBid", "LabourClearing", "MarketState", "Route", "School", "TradeSpec", "YearInputs", "YearReport",
+    "schools_of_actor", "EmployerHoursBid", "LabourClearing", "MarketState", "Route", "School", "TradeSpec", "YearInputs", "YearReport",
     "market_state_to_plain", "market_state_from_plain",
 ]
 

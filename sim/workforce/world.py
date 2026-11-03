@@ -85,10 +85,6 @@ class AgentEconomyReads:
     def __init__(self, needs):
         self._needs = needs
 
-    def unskilled_wage(self):
-        """Money one hour of the unskilled trade is paid in the agent economy; None until the game's money is priced at it."""
-        return self._needs.agent_unskilled_wage()
-
     def agent_people_by_trade(self):
         return self._needs.agent_people_by_trade()
 

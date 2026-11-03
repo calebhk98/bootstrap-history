@@ -8,6 +8,7 @@ from typing import Dict, List, Mapping
 _PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
                      "data", "world", "occupation_groups.json")
 _cache: Dict[str, dict] = {}
+UNLISTED = "unlisted"   # the report's row for trades no group lists (a mod's trade): no band, so any hours in it read as outside
 
 
 def groups_data() -> dict:
@@ -66,12 +67,14 @@ def people_by_trade_of_all_employers(labour):
 
 
 def shares_by_group(hours_by_trade: Mapping[str, float]) -> Dict[str, float]:
-    """Each group's share of all hours; a trade in no group raises, so the data cannot silently lag the registry."""
+    """Each group's share of all hours; hours of a trade in no group are the `UNLISTED` row (present only when there are
+    some), which the report shows as outside, so the data cannot silently lag the registry."""
     groups = groups_data()["groups"]
     group_for = group_of_trade(groups)
     totals = {group_id: 0.0 for group_id in groups}
     for trade, hours in hours_by_trade.items():
-        totals[group_for[trade]] += hours
+        group_id = group_for.get(trade, UNLISTED)
+        totals[group_id] = totals.get(group_id, 0.0) + hours
     everything = sum(totals.values())
     return {group_id: (total / everything if everything else 0.0) for group_id, total in totals.items()}
 
@@ -79,9 +82,11 @@ def shares_by_group(hours_by_trade: Mapping[str, float]) -> Dict[str, float]:
 def occupational_report(hours_by_trade: Mapping[str, float]) -> List[dict]:
     """One row per group: share, band, and whether the share is inside it."""
     shares = shares_by_group(hours_by_trade)
+    bands = {group_id: group["band"] for group_id, group in groups_data()["groups"].items()}
+    if UNLISTED in shares:
+        bands[UNLISTED] = (0.0, 0.0)
     rows = []
-    for group_id, group in groups_data()["groups"].items():
-        low, high = group["band"]
+    for group_id, (low, high) in bands.items():
         rows.append({"group": group_id, "share": shares[group_id], "low": low, "high": high,
                      "inside": low <= shares[group_id] <= high})
     return rows

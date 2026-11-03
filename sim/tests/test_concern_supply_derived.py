@@ -6,7 +6,7 @@ QUICK_TOPIC = True
 from .harness import check
 
 from sim.agents import supply
-from sim.labour.api import production_data
+from sim.world.demand import production_data
 
 # a node that declares nothing, and one that declares a total
 bare = {"id": "bare"}

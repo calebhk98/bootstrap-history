@@ -1,6 +1,6 @@
 """What the module answers about held stock: how much, what a node lacks, and how an opening is credited."""
 from sim.assembly.api import Part
-from sim.labour.api import production_data
+from sim.world.demand import production_data
 from sim.ledger.api import ChangeStock
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 

@@ -35,6 +35,10 @@ class TrainRequest(unittest.TestCase):
         self.assertEqual(cause_of(ask(count=0)[0][1]), "count_not_positive")
         self.assertEqual(cause_of(ask(count=-3)[0][1]), "count_not_positive")
 
+    def test_a_source_that_is_not_text_is_refused_not_a_crash(self):
+        for source in (5, ["smith"], {"trade": "smith"}, 1.5):
+            self.assertEqual(cause_of(ask(source=source)[0][1]), "source_trade_not_text")
+
     def test_people_are_whole_so_a_fraction_is_refused_and_a_whole_float_is_not(self):
         self.assertEqual(cause_of(ask(count=2.5)[0][1]), "count_not_whole")
         self.assertIsNone(ask(count=3.0)[0][1])

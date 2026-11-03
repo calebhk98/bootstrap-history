@@ -685,7 +685,7 @@ def _labour_workforce_block(out):
     if not workforce:
         return []
     lines = ["", "WORKFORCE RISK: about %s people leave or die a year; %s in training; reserve %s"
-             % (_fmt_num(workforce["expected_losses_per_year"]), workforce["in_training"],
+             % (_fmt_num(workforce["expected_losses_per_year"]), _fmt_num(workforce["in_training"]),
                 "%s craftsmen, %s scholars" % (workforce["reserve"]["craftsmen"], workforce["reserve"]["scholars"])
                 if workforce.get("reserve") else "off ('reserve craftsmen <n>' with 'policy reserve_staff on')")]
     for row in workforce.get("depends_on_one_person") or []:

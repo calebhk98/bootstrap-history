@@ -80,7 +80,7 @@ pools = SimpleNamespace(
     book=SimpleNamespace(employed_by_trade=lambda: {"scribe": 3.0, "scholar": 2.0, "smith": 4.0},
                          employed=lambda trade: {"scribe": 3.0, "scholar": 2.0}.get(trade, 0.0)),
     trades=SimpleNamespace(is_craft_trade=lambda trade: trade == "smith"),
-    WORKER_EQUIVALENT_UNTRAINED=1.0, FREEDMAN_ARTISAN_PRODUCTIVITY=1.0, TRAINED_SLAVE_ARTISAN_PRODUCTIVITY=1.0)
+    FREEDMAN_ARTISAN_PRODUCTIVITY=1.0, TRAINED_SLAVE_ARTISAN_PRODUCTIVITY=1.0)
 StaffPools.resync_pools(pools)
 household = pools._world.workforce
 check("hiring scribes does not inflate the trained-scholar headcount; only scholars on the books count",

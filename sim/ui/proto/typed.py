@@ -4,6 +4,7 @@ import json
 
 from . import available_args, command_registry
 from sim.engine.ui_port import units
+from sim.workforce.api import REPLACE_ONLY
 from sim.refusal import Refusal
 from .buy_targets import canonical_target
 from .nodes import NODE_IDS, NODE_IDS_LOWER
@@ -832,8 +833,8 @@ def _parse_policy(command, rest, words, nums, want_json):
         return None, ("to change one, say which and whether, e.g. "
                       "'policy auto_hire off'. Bare 'policy' lists them.")
     val = rest[1].lower()
-    if val == "replace" and rest[0].lower() == "auto_hire":
-        return {"cmd": "policy", "set": {"auto_hire": "replace"}}, None
+    if val == REPLACE_ONLY and rest[0].lower() == "auto_hire":
+        return {"cmd": "policy", "set": {"auto_hire": REPLACE_ONLY}}, None
     if val in ("on", "true", "yes", "y", "1"):
         flag = True
     elif val in ("off", "false", "no", "n", "0"):

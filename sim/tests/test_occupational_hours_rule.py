@@ -93,5 +93,18 @@ class NamedCraftsBillTheirTrade(unittest.TestCase):
                     self.assertTrue(trades and trades != {POOL}, "%s bills only %s" % (material, trades))
 
 
+class TradeNoGroupLists(unittest.TestCase):
+    def test_a_mod_trade_is_an_outside_row_and_not_a_crash(self):
+        from sim.labour.api import occupational_report
+        rows = {row["group"]: row for row in occupational_report({"farmer": 75.0, "mod_only_trade": 25.0})}
+        self.assertAlmostEqual(rows["agriculture"]["share"], 0.75)
+        self.assertAlmostEqual(rows["unlisted"]["share"], 0.25)
+        self.assertFalse(rows["unlisted"]["inside"])
+
+    def test_no_unlisted_row_when_every_trade_is_listed(self):
+        from sim.labour.api import occupational_report
+        self.assertNotIn("unlisted", {row["group"] for row in occupational_report({"farmer": 75.0})})
+
+
 if __name__ == "__main__":
     unittest.main()

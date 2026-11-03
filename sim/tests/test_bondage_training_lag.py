@@ -37,7 +37,6 @@ class Bondage:
         self.pools = StaffPools(self._world, book=self, trades=self)
         self.bondage = BondagePart(self._world, advice=self, capacity=self, pools=self.pools, schedule=None)
         self.bondage.slave_quote = self.slave_quote
-        self.WORKER_EQUIVALENT_UNTRAINED = StaffPools.WORKER_EQUIVALENT_UNTRAINED
         self.TRAINING_YEARS = BondagePart.TRAINING_YEARS
 
     def buy_slaves(self, people):

@@ -114,7 +114,6 @@ class Capacity:
         # No floor: skilled people to hire come through market_supply() and `hire`, not as a staff handed over.
         # The institutional load is read from STAFF_CAPACITY_SOURCES (linear in institution_units where a source
         # scales), the one list the planner reads too.
-        base_sc, base_ar = 0.0, 0.0
         scholars, artisans, directors = self._institutional_load(with_directors=True)
         # The ceiling leaves room without eating the surplus needed to build anything: spare income is net of
         # living_cost (rent, appearances, tax, the wage bill of the staff already carried) as well as upkeep.
@@ -124,7 +123,7 @@ class Capacity:
         extra = self.supervision_room()
         # no floor on the scale: a household with no surplus hires nobody
         scale = self._staff_scale_for(afford, scholars + artisans, extra)
-        return (base_sc + scholars * scale * pop, base_ar + artisans * scale * pop,
+        return (scholars * scale * pop, artisans * scale * pop,
                 directors * min(1.0, scale * self.DIRECTOR_SCALE_HEADROOM) * pop, scale)
 
     def _institutional_load(self, with_directors=False):

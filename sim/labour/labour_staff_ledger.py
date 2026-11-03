@@ -101,5 +101,5 @@ class StaffLedger:
             "expected_losses_per_year": round(self.book.employed_total() * demography.BASELINE_ANNUAL_MORTALITY_RATE_WORKING_AGE, 2),
             "reserve": ({"craftsmen": workforce.reserve_craftsmen, "scholars": workforce.reserve_scholars}
                         if policy.get("reserve_staff", False) else None),
-            "in_training": len(workforce.training),
+            "in_training": sum(row.people for row in workforce.training),
         }

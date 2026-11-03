@@ -3,7 +3,7 @@ import functools
 import json
 import os
 
-from sim.labour.api import production_data
+from sim.world.demand import production_data
 
 LIVING_STOCK_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
                                  "data", "world", "living_stock.json")
