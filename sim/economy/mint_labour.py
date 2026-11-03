@@ -72,9 +72,8 @@ def staff(setup, record, view, labour_bids: List[LabourBid], capacity_fine_kilog
     value = mint_staffing.hour_value(currency.mint_parity(spec), math.fsum(per_trade.values()))
     for trade, per_kilogram in sorted(per_trade.items()):
         wage = trade_wages.wage_in_view(setup, view, trade, area)
-        if wage is not None:     # no wage rule applies: no bid
-            bids.append(LabourBid(agent, trade, area, capacity_fine_kilograms * per_kilogram,
-                                  max(wage * STATE_WAGE_CEILING_MULTIPLE, value)))
+        bids.append(LabourBid(agent, trade, area, capacity_fine_kilograms * per_kilogram,
+                              max(wage * STATE_WAGE_CEILING_MULTIPLE, value)))
     wage_bill = math.fsum(bid.hours * bid.maximum_wage for bid in bids)
     funded = min(wage_bill, max(0.0, record.book.balance(setup.state_agent, setup.currency_id) - committed_cash))
     if funded > 0.0:

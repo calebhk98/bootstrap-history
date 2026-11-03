@@ -1,7 +1,7 @@
 """What it is worth to a firm to run a concern at a larger size: the view behind its expansion."""
 from typing import Any
 
-from sim.agents.api import MANAGEMENT_SPAN_EXPONENT, NoCountryEconomy, imitation
+from sim.agents.api import MANAGEMENT_SPAN_EXPONENT, imitation
 
 
 class Capacity:
@@ -36,6 +36,4 @@ class Capacity:
 	def plant_cost(self, node_id: str, actor: Any, step: float) -> float:
 		"""Money for `step` founding sizes more of a concern's plant, for an actor that already knows how."""
 		plan = imitation.copy_plan(actor, [node_id], self.world)
-		if plan is None:
-			raise NoCountryEconomy(self.world.registry.state.home_country or "", "pay for the plant's trades")
 		return float(plan["total"]) * step

@@ -36,9 +36,9 @@ def format_accounts(accounts, quiet_below=0.0):
             cohort.eaten_over_need, cohort.real_income_per_head))
     lines.append("  real wage against the opening's basket")
     for wage in accounts.real_wages.values():
-        lines.append("    %-20s wage %9.4g  opening wage %9.4g  index %8.4g  baskets per working year %8.4g" % (
-            wage.trade, wage.wage_per_hour, wage.wage_per_hour_opening, wage.real_wage_index,
-            wage.baskets_per_working_year))
+        opening = "-" if wage.wage_per_hour_opening is None else "%9.4g" % wage.wage_per_hour_opening     # a trade the opening paid no wage
+        lines.append("    %-20s wage %9.4g  opening wage %9s  index %8.4g  baskets per working year %8.4g" % (
+            wage.trade, wage.wage_per_hour, opening, wage.real_wage_index, wage.baskets_per_working_year))
     return "\n".join(lines)
 
 

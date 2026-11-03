@@ -77,15 +77,6 @@ def assembled_cost(variable: float, carriage_per_tonne: float, yield_factor: flo
     return (variable + carriage + input_haul) / yield_factor
 
 
-def site_cost(variable: Optional[float], carriage_per_tonne: float, yield_factor: float, tonnes: float,
-              input_haul: float) -> float:
-    """`assembled_cost` of a candidate tile; infinite where the recipe yields nothing or a trade has no wage to cost it
-    at (`variable` is None), so no run is sited there."""
-    if yield_factor <= 0.0 or variable is None:
-        return math.inf
-    return assembled_cost(variable, carriage_per_tonne, yield_factor, tonnes, input_haul)
-
-
 def spare_hours(workforce: Mapping[str, float], working_hours_per_worker: float, committed_hours: float) -> float:
     """Hours the tile's workers could give beyond what its producers already use."""
     return max(0.0, math.fsum(workforce.values()) * working_hours_per_worker - committed_hours)
@@ -193,7 +184,8 @@ def entry_siting(setup, record, view, area_map, carriage) -> Siting:
                     entry_practice.first_year_recipe(recipe, crews_of(recipe_id)))
             variable, factor, input_haul, staffable, headroom = fixed_part
             headroom = headroom_with_land(headroom, setup.land_per_run.get(recipe_id, 0.0) > 0.0, tile in short_of_land)
-            cost = site_cost(variable, carriage.cost_per_tonne(tile, demand.anchor_tile), factor, tonnes, input_haul)
+            cost = math.inf if factor <= 0.0 else assembled_cost(
+                variable, carriage.cost_per_tonne(tile, demand.anchor_tile), factor, tonnes, input_haul)
             candidates.append(Candidate(tile, cost, staffable, headroom))
         picked = choose(candidates, runs, demand.anchor_tile)
         return None if picked is None else (picked[0].tile, picked[1])
@@ -210,10 +202,9 @@ def _tile_part(setup, record, view, carriage, recipe, by_recipe, supplies, capac
     variable = None
     if factor > 0.0:
         wages = {trade: trade_wages.wage_in_view(setup, view, trade, labour_area(tile)) for trade in recipe.labour_hours}
-        if None not in wages.values():     # a trade with no wage under the rule cannot be costed: no run is sited here
-            variable = unit_cost.variable_cost_per_run(
-                recipe, live_input_prices(probe, recipe, view), wages,
-                site_rent_per_run(setup, record, view, recipe.recipe_id, tile, factor))
+        variable = unit_cost.variable_cost_per_run(
+            recipe, live_input_prices(probe, recipe, view), wages,
+            site_rent_per_run(setup, record, view, recipe.recipe_id, tile, factor))
     input_haul = location_inputs.input_haul_cost(recipe, setup.specs, carriage, supplies, tile)
     spare = spare_hours(labour_state.people_by_trade(record.labour.workforce, labour_area(tile)), setup.working_hours_per_year,
                         committed.get(tile, 0.0))

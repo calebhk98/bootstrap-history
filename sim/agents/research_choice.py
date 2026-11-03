@@ -45,13 +45,10 @@ def options(actor: Any, world: Any, room: int = RESEARCH_PROGRAMMES_AT_ONCE, bud
 	for worth, node_id in candidates[:ATTENTION_SPAN]:
 		if len(offers) >= PRICED_PER_REVIEW:   # pricing a plan is dear: look at the best few only
 			break
-		floor = research.labour_floor(actor, node_id, world)
-		if floor is None or worth * research.chance(node_id, world) <= floor:
-			continue        # a trade it needs has no wage, or its labour alone outruns what it is worth, whatever else it costs
-		costs = research.plan(actor, node_id, world)
-		if costs is None:
-			continue
-		offer = Option(subject=node_id, worth=worth, cost=costs["total"], chance=research.chance(node_id, world))
+		if worth * research.chance(node_id, world) <= research.labour_floor(actor, node_id, world):
+			continue        # its labour alone outruns what it is worth, whatever else it costs
+		offer = Option(subject=node_id, worth=worth, cost=research.plan(actor, node_id, world)["total"],
+					   chance=research.chance(node_id, world))
 		offers.append(offer)
 		viable += 1 if offer.net > 0.0 and offer.cost <= budget else 0
 		if viable >= room:       # the best that pay are priced; the rest are not worth the evaluation

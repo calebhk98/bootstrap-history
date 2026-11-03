@@ -2,7 +2,7 @@
 import math
 from typing import Any, Dict, List, Optional, Set, Tuple
 
-from sim.agents.api import NoCountryEconomy, business_books, business_plant_books, supply
+from sim.agents.api import business_books, business_plant_books, supply
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 from sim.world import plant_figures
 
@@ -24,15 +24,11 @@ class Concerns:
 
 	def concern_wage_bill(self, node_id: str, capacity: float = 1.0) -> float:
 		"""Yearly wages of the people running this concern needs, at the going wage, for a firm
-		running it at `capacity` times its founding size; refuses (NoCountryEconomy) where a trade of the crew has no wage."""
+		running it at `capacity` times its founding size."""
 		labour = self.world.labour
-		staff = self.concern_staff(node_id)
-		quotes = {trade: labour.labour_market.quote(trade) for trade in staff}
-		unpaid = sorted(trade for trade, quote in quotes.items() if quote is None)
-		if unpaid:
-			raise NoCountryEconomy(self.world.registry.state.home_country or "", "pay for " + ", ".join(unpaid))
 		return self.world.capacity.span_factor(capacity) * sum(
-			people * labour.hours_per_person_year * quotes[trade] for trade, people in staff.items())
+			people * labour.hours_per_person_year * labour.labour_market.quote(trade)
+			for trade, people in self.concern_staff(node_id).items())
 
 	def plant_costs(self, node_id: str) -> Optional[Tuple[float, float]]:
 		"""(upkeep, wage bill) of a plant of the concern at its founding size at home."""

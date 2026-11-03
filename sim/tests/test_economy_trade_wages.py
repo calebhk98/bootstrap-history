@@ -1,5 +1,6 @@
 """The one wage rule for a trade (sim/economy/trade_wages.py): the market's paid wage, else the opening wage at the price level,
-else the unskilled wage plus the training premium."""
+else the unskilled wage plus the training premium, else the opening unskilled wage in today's money plus the premium. The home
+country always has a wage; a partner country has none when its markets paid neither the trade nor the unskilled one."""
 
 QUICK_TOPIC = True
 
@@ -11,7 +12,7 @@ from sim.economy.market_memory import MarketMemory, market_key
 
 
 def setup(opening=None, training_years=0.0):
-    return types.SimpleNamespace(opening_wages=opening or {}, unskilled_trade="labourer", currency_id="coin",
+    return types.SimpleNamespace(opening_wages={"labourer": 1.0, **(opening or {})}, unskilled_trade="labourer", currency_id="coin",
                                  trades={"smith": types.SimpleNamespace(training_years=training_years)})
 
 
@@ -33,8 +34,16 @@ class PricedTradeWage(unittest.TestCase):
     def test_a_scope_with_no_opening_wages_prices_on_the_unskilled_wage_alone(self):
         self.assertEqual(trade_wages.priced_trade_wage(setup({"smith": 9.0}), "smith", None, 1.5, None), 1.5)
 
-    def test_no_rule_applying_is_none(self):
-        self.assertIsNone(trade_wages.priced_trade_wage(setup(), "smith", None, None, 2.0))
+    def test_the_home_scope_with_no_unskilled_wage_prices_on_the_opening_unskilled_wage_in_todays_money(self):
+        self.assertEqual(trade_wages.priced_trade_wage(setup(), "smith", None, None, 2.0), 2.0)
+        wage = trade_wages.priced_trade_wage(setup(training_years=5.0), "smith", None, None, 2.0)
+        self.assertGreater(wage, 2.0)
+
+    def test_the_home_scope_is_never_none(self):
+        self.assertIsNotNone(trade_wages.priced_trade_wage(setup(), "smith", None, None, 1.0))
+
+    def test_a_partner_scope_with_no_paid_and_no_unskilled_wage_is_none(self):
+        self.assertIsNone(trade_wages.priced_trade_wage(setup({"smith": 9.0}), "smith", None, None, None))
 
 
 class WageInArea(unittest.TestCase):
@@ -43,9 +52,10 @@ class WageInArea(unittest.TestCase):
         self.assertEqual(trade_wages.wage_in_area(setup({"smith": 2.0}), memory, "smith", "north"), 6.0)
         self.assertEqual(trade_wages.wage_in_area(setup(), memory, "smith", "north"), 1.0)
 
-    def test_no_wage_anywhere_is_none(self):
+    def test_no_wage_recorded_anywhere_still_prices_on_the_opening_wages(self):
         memory = types.SimpleNamespace(wages={}, opening_wage_level=lambda money: 1.0)
-        self.assertIsNone(trade_wages.wage_in_area(setup(), memory, "smith", "north"))
+        self.assertEqual(trade_wages.wage_in_area(setup(), memory, "smith", "north"), 1.0)
+        self.assertEqual(trade_wages.wage_in_area(setup({"smith": 4.0}), memory, "smith", "north"), 4.0)
 
 
 class RebaseKeepsOpeningWagesInTodaysMoney(unittest.TestCase):

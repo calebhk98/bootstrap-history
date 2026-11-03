@@ -61,13 +61,12 @@ class Models(Part):
         return train["fuel_material"] if train else FREIGHT_FEED_PRICE_MATERIAL
 
     def sea_crew(self):
-        """Hands a merchant hull sails with; None while the feed or the timber has no price or the sailor's trade has no wage."""
+        """Hands a merchant hull sails with; None while the feed or the timber has no price."""
         grain_price = self.needs.material_price[FREIGHT_FEED_PRICE_MATERIAL]
         wood_price = self.needs.material_price[FREIGHT_VEHICLE_MATERIAL]
-        sea_wage = self.needs.wage[self.trade_of_role("sailor")]
-        if grain_price is None or wood_price is None or sea_wage is None:
+        if grain_price is None or wood_price is None:
             return None
-        return rules.sea_crew_hands(sea_wage, grain_price, wood_price)
+        return rules.sea_crew_hands(self.needs.wage[self.trade_of_role("sailor")], grain_price, wood_price)
 
     def carrier_models(self):
         """{mode: (physical inputs, carrier prices, working days a year, hull loss per 1000 km)}: the carrier unit
@@ -136,12 +135,9 @@ class Models(Part):
     def freight_mode_costs(self, imbalance=1.0, modes=None, cargo=None):
         """{mode: home money per tonne-km}: feed and crew, the carrier's capital at the market rate, hull losses, and
         the return leg (`imbalance` 0 when flows balance, 1 when the carrier comes back empty). The same function
-        prices foreign legs and domestic hauls. A mode whose feed or carrier has no price, or whose crew's trade has no wage, is
-        absent."""
+        prices foreign legs and domestic hauls. A mode whose feed or carrier has no price is absent."""
         land_wage = self.needs.wage[self.trade_of_role("unskilled")]
         sea_wage = self.needs.wage[self.trade_of_role("sailor")]
-        if land_wage is None:       # dues and port handling are paid at the carrier's wage: no mode can be priced
-            return {}
         rate = self.needs.market_rate()
         walking = frozenset(self.needs.carriage_facts()["walking_modes"])
         carrying = frozenset(self.needs.modes_carrying(cargo)) if cargo else frozenset()
@@ -156,15 +152,11 @@ class Models(Part):
                     inputs, feed_price(mode), sea_wage if mode == SEA_MODE else land_wage, prices, rate, working_days,
                     imbalance, loss, cargo_walks=mode in walking)
                 for mode, (inputs, prices, working_days, loss) in self.carrier_models().items()
-                if (modes is None or mode in modes) and (cargo is None or mode in carrying) and feed_price(mode) is not None
-                and (mode != SEA_MODE or sea_wage is not None)}
+                if (modes is None or mode in modes) and (cargo is None or mode in carrying) and feed_price(mode) is not None}
 
     def freight_handling_costs(self):
         """{mode: home money per tonne} charged once per leg of that mode: port handling at sea, and the tolls or port
-        dues the geography states for each mode (paid at the carrier's wage); empty while the carrier's trade has no wage, when
-        `freight_mode_costs` prices no mode either."""
+        dues the geography states for each mode (paid at the carrier's wage)."""
         wage = self.needs.wage[self.trade_of_role("unskilled")]
-        if wage is None:
-            return {}
         return rules.handling_money_per_tonne(self.needs.carriage_facts()["dues_hours_per_tonne"], wage, SEA_MODE,
                                               sea_freight.PORT_HANDLING_HOURS_PER_TONNE)

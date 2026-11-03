@@ -3,10 +3,10 @@
 An employer (the founder's household, a firm, the state, an interest group)
 holds no wage arithmetic. It asks this market what an hour of a trade costs,
 hires through the labour core (sim/markets/port_staff.py). The wage is the economy's
-wage for the trade (labour_wages.py reads it; before the economy opens, the opening schedule with
-the cost-of-living factors and the price and wage indices, which only the opening needs).
+wage for the trade, always a number (labour_wages.py reads it; the home country's rule gives every trade a wage, sim/economy/trade_wages.py);
+until the game's money is priced at the economy, the opening schedule with the cost-of-living factors and
+the price and wage indices, which only the opening needs.
 """
-from typing import Optional
 import math
 
 from sim.constants import declare
@@ -131,31 +131,26 @@ class LabourMarket:
                               self.HOUSING_PRESSURE_START_OCCUPANCY, self.HOUSING_PRESSURE_BAND,
                               self.HOUSING_PRESSURE_MAX_MARKUP)
 
-    def _annual(self, trade) -> Optional[float]:
-        """The economy's wage for the trade over a year; None once the economy is open and its rule gives the trade no wage.
-        Only before the economy opens, the opening schedule's with the cost-of-living factors, the price index and the
-        wage index."""
+    def _annual(self, trade) -> float:
+        """The economy's wage for the trade over a year; until the game's money is priced at the economy, the opening
+        schedule's with the cost-of-living factors, the price index and the wage index."""
         world = self._world
         wage = world.economy.agent_wage_at(trade, self.settlement.base_tile())
         if wage is not None:
             return wage * person_year_hours(world)
-        if world.economy.agent_working_hours() is not None:
-            return None
         base = self.schedule.base_annual_wage(trade)
         factors = self.cost_factors(trade)
         return annual_wage(base, factors["weighted"], world.finance.price_index, world.trades.wage_index, 1.0, self.pay_scale())
 
-    def quote_annual(self, trade) -> Optional[float]:
+    def quote_annual(self, trade) -> float:
         """Money one person-year of a trade costs now: the economy's wage for the trade, the same for every employer and
         every number taken on (a hire is a standing bid in the labour core, sim/markets/port_staff.py)."""
         return self._annual(trade)
 
-    def quote(self, trade) -> Optional[float]:
+    def quote(self, trade) -> float:
         """Money one hour of a trade costs now: the one wage of the trade."""
-        annual = self._annual(trade)
-        return None if annual is None else annual / person_year_hours(self._world)
+        return self._annual(trade) / person_year_hours(self._world)
 
-    def commission_cost(self, trade, hours) -> Optional[float]:
+    def commission_cost(self, trade, hours) -> float:
         """What a one-off job of `hours` costs: the hour the market quotes."""
-        quote = self.quote(trade)
-        return None if quote is None else hours * quote
+        return hours * self.quote(trade)

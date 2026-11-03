@@ -5,7 +5,6 @@ owner (or a send of its command), or one of the markets module's own methods; th
 sections, the seats' registry) are `legacy_*` views, debts that go when that state moves. Members about the foreign
 partners and the freight, coin and resources owners are in port_world_foreign.py (`foreign`), those about the map in
 port_world_map.py (`map`)."""
-from typing import Optional
 from types import SimpleNamespace
 
 from sim.freight.api import FREIGHT_FEED_PRICE_MATERIAL
@@ -68,7 +67,7 @@ class LabourReads:
 	def money_per_labour_hour(self):
 		return self._needs.money_per_labour_hour()
 
-	def wage_per_hour(self, trade) -> Optional[float]:
+	def wage_per_hour(self, trade):
 		return self._needs.wage[trade]
 
 	def farming_technique(self):

@@ -7,7 +7,6 @@ from sim.ui import figures_headline  # noqa: F401  (registers the headline figur
 from sim.engine.ui_port import CloseCashPeriod, CloseCausePeriod, plain_number
 from sim.ui.figures import figure_snapshot
 
-from sim.ui.market_report import year_of_one_fields
 from .wage_figures import wage_origin
 from .state import _agent_state
 from .event_kinds import is_notable
@@ -334,7 +333,7 @@ def _mine_rows_for_material(sim, material, workings, want):
             "rated_capacity_t_per_yr": round(working["capacity"], 2),
             "actual_output_t_per_yr": round(actual, 2),
             "material_demand_t_per_yr": round(want, 2),
-            "costs_you_a_year": None if report["operating_cost"] is None else round(report["operating_cost"], 1),
+            "costs_you_a_year": round(report["operating_cost"], 1),
             "utilization": ("%d%%" % round(100.0 * util))
                            if actual > 0 else "-",
             # WHETHER IT IS ACTUALLY SUPPLYING ANYTHING, as a plain flag,
@@ -775,7 +774,7 @@ def _agent_economy(sim, cmd=None):
         # THE SAME FORMULA `labour`'s own row() uses for "a_year_of_one", not
         # a second version of a wage this file already prints elsewhere.
         out["wages_by_trade"] = [
-            {"trade": trade, **year_of_one_fields(sim, trade),
+            {"trade": trade, "a_year_of_one": round(sim.view("labour_market")().quote_annual(trade), 0),
              **wage_origin(sim, trade)}
             for trade in sorted(WAGES) if sim.view("trade_available")[trade]]
     return out

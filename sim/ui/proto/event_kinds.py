@@ -41,6 +41,7 @@ EVENT_KINDS = {
     "actor_places_not_posted": _entry(ECONOMIC, failure=True),
     "wage_work_not_offered": _entry(MINOR, failure=True),
     "newcomers_not_placed": _entry(MINOR, failure=True),
+    "staff_trades_not_posted": _entry(MINOR, failure=True),
     "unpaid_charge": _entry(ECONOMIC, failure=True, notable=True),
     "creditors_took": _entry(ECONOMIC),
     "treasury_watching": _entry(ECONOMIC),

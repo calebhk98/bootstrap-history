@@ -103,8 +103,7 @@ def wage_scale(setup, record, carriage) -> float:
             money += tonnes * cost
             for trade, hours in crew.hours_by_trade(source, destination).items():
                 wage = trade_wages.wage_in_area(setup, record.memory, trade, labour_area(source))
-                if wage is not None:
-                    labour_change += tonnes * hours * (wage - setup.carriage_wage)
+                labour_change += tonnes * hours * (wage - setup.carriage_wage)
     return max(0.0, 1.0 + labour_change / money) if money > 0.0 else 1.0     # a fee never pays the shipper
 
 
@@ -144,9 +143,8 @@ def bids(setup, record) -> List[LabourBid]:
     return found
 
 
-def crew_wage(setup, memory, key: str) -> Optional[float]:
-    """The wage an hour of the crew `key` is priced at (`trade_wages.wage_in_area` of the tile's labour area); None when
-    none exists."""
+def crew_wage(setup, memory, key: str) -> float:
+    """The wage an hour of the crew `key` is priced at (`trade_wages.wage_in_area` of the tile's labour area)."""
     trade, tile = _split(key)
     return trade_wages.wage_in_area(setup, memory, trade, labour_area(tile))
 
@@ -205,8 +203,6 @@ def wage_loans(setup, record, hired_last_year=None, supply_last_year=None) -> Li
             else:
                 share = min(1.0, available / wanted_in_market[market]) if wanted_in_market[market] > 0.0 else 0.0
             wage = trade_wages.wage_in_area(setup, record.memory, trade, areas[key])
-            if wage is None:     # no wage rule prices this crew: it is left out of bill and worth alike
-                continue
             bill += wanted * share * wage
             worth += merchant.carriage_money_wanted.get(key, 0.0) * share
         short = bill - max(0.0, record.book.balance(merchant.agent_id, money))

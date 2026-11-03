@@ -50,9 +50,10 @@ def work_account(seat_id):
 
 
 def employer_bids(economy, employer_id, wanted, tile, affordable_coin):
-    """(bids, economy units to fund them with) for one employer's places: each trade's hours at the economy's wage (the unpriced-trade wage, sim/economy/trade_wages.py, before the market has one), the bid's maximum wage being the ceiling over that wage. When the places at the wage cost more
-    than `affordable_coin` the hours are scaled down together to what it buys; the account is funded with the ceiling bill of
-    those hours or all the employer can afford, whichever is less."""
+    """(bids, economy units to fund them with) for one employer's places: each trade's hours at the economy's wage (the home rule always gives one, sim/economy/trade_wages.py), the bid's maximum wage
+    being the ceiling over that wage. A trade the economy has no market for is not bid for (`trades_lacking` names it). When the places
+    at the wage cost more than `affordable_coin` the hours are scaled down together to what it buys; the account is funded with the
+    ceiling bill of those hours or all the employer can afford, whichever is less."""
     view, trades = economy.view(), economy_api.economy_trades(economy)
     account = staff_account(employer_id)
     asked = []
@@ -60,9 +61,7 @@ def employer_bids(economy, employer_id, wanted, tile, affordable_coin):
         if people <= 0.0 or trade not in trades:
             continue
         area = view.area_of(trade, tile)
-        wage = economy_api.trade_wage_at(economy, trade, tile)
-        if has_wage(wage):
-            asked.append((trade, area, people * economy_api.working_hours_per_year(economy), wage))
+        asked.append((trade, area, people * economy_api.working_hours_per_year(economy), economy_api.trade_wage_at(economy, trade, tile)))
     affordable_units = max(0.0, affordable_coin) / economy_api.coin_per_unit(economy)
     bill = math.fsum(hours * wage for _trade, _area, hours, wage in asked)
     share = min(1.0, affordable_units / bill) if bill > 0.0 else 0.0
@@ -70,18 +69,17 @@ def employer_bids(economy, employer_id, wanted, tile, affordable_coin):
     return bids, min(affordable_units, math.fsum(bid.hours * bid.maximum_wage for bid in bids))
 
 
-def has_wage(wage):
-    """Whether a trade has a wage a bid can be funded at: one under the rule, and above zero."""
-    return wage is not None and wage > 0.0
-
-
-def unposted_cause(economy, wanted, tile):
-    """Why places that made no bid were not posted: "no_wage_exists" when a trade asked for has no wage under the rule (so nothing can
-    be priced), else "no_affordable_bid" (the employer could not pay for any hour)."""
+def trades_lacking(economy, wanted):
+    """{trade: people} of the places asked of a trade the economy has no market for: no bid carries them."""
     trades = economy_api.economy_trades(economy)
-    unpriced = any(people > 0.0 and trade in trades and not has_wage(economy_api.trade_wage_at(economy, trade, tile))
-                   for trade, people in wanted.items())
-    return "no_wage_exists" if unpriced else "no_affordable_bid"
+    return {trade: float(people) for trade, people in sorted(wanted.items()) if people > 0.0 and trade not in trades}
+
+
+def unposted_cause(economy, wanted):
+    """Why places that made no bid were not posted: "trade_not_in_economy" when every trade asked for is one the economy has no
+    market for, else "no_affordable_bid" (the employer could not pay for any hour)."""
+    asked = {trade for trade, people in wanted.items() if people > 0.0}
+    return "trade_not_in_economy" if asked and asked == set(trades_lacking(economy, wanted)) else "no_affordable_bid"
 
 
 def seat_places(sim, economy):
@@ -120,6 +118,13 @@ def note_refusals(sim, refusal, dropped):
         sim.send(RecordEvent.of("wage_work_not_offered", "The labour market has no such trade, so these hours of your own work were "
                                 "not offered: %s." % ", ".join("%s %.0f" % (trade, hours) for trade, hours in sorted(dropped.items())),
                                 hours_by_trade={trade: float(hours) for trade, hours in dropped.items()}))
+
+
+def note_trades_lacking(sim, lacking):
+    """The acting seat's log names the places no bid carried because the economy has no market for their trade."""
+    if lacking:
+        sim.send(RecordEvent.of("staff_trades_not_posted", "The labour market has no such trade, so these places were not posted: %s." % ", ".join(
+            "%s %.1f" % (trade, people) for trade, people in lacking.items()), cause="trade_not_in_economy", people_by_trade=lacking))
 
 
 def place_newcomers(sim, economy, tile):
@@ -190,6 +195,8 @@ def post(sim, economy, seat_ids, tile_of):
             tile = tile_of(sim.labour.base_tile())
             place_newcomers(sim, economy, tile)
             trades, funded, offered, unposted = [], 0.0, False, None
+            wanted = seat_places(sim, economy)
+            note_trades_lacking(sim, trades_lacking(economy, wanted))
             bids, units = seat_staff_bids(sim, economy, seat_id, tile)
             refusal = None
             if bids:
@@ -204,7 +211,7 @@ def post(sim, economy, seat_ids, tile_of):
                     orders[staff_account(seat_id)] = AgentOrders(labour_bids=tuple(bids))
                     trades, funded = sorted({bid.trade for bid in bids}), units
             elif wanted_places_exist(sim):
-                unposted = unposted_cause(economy, seat_places(sim, economy), tile)
+                unposted = unposted_cause(economy, wanted)
             offers, dropped = work_offers(economy, seat_id, sim.labour.wage_work_offered(), tile)
             note_refusals(sim, refusal, dropped)
             if offers:
@@ -252,7 +259,8 @@ def settle(sim, economy, posted):
 
 
 def note_actor_unposted(sim, actor_id, cause):
-    """A seat's places that posted nothing are logged in its own log with the cause; a firm or state has no log to carry it."""
+    """A seat's places that posted nothing are logged in its own log with the cause. A firm or state has no log; its own record
+    already shows the gap, `staff_wanted` naming the places and `workforce` holding no one for them."""
     if actor_id in sim.state.seats:
         sim.send(RecordEvent(
             "actor_places_not_posted", "Your places were not posted to the labour market (%s), so they hire no one this year." % cause.replace("_", " "),
@@ -268,7 +276,7 @@ def post_actors(sim, economy, tile_of_actor):
             continue
         bids, units = employer_bids(economy, actor_id, actor.record.staff_wanted, tile_of_actor(actor_id), max(0.0, actor.money))
         if not bids:
-            note_actor_unposted(sim, actor_id, unposted_cause(economy, actor.record.staff_wanted, tile_of_actor(actor_id)))
+            note_actor_unposted(sim, actor_id, unposted_cause(economy, actor.record.staff_wanted))
             continue
         paid = sim.send(PayExchange(actor_id, units * economy_api.coin_per_unit(economy), "wages offered in the labour market"))
         if isinstance(paid, Refusal):

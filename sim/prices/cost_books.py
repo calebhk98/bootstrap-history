@@ -14,7 +14,7 @@ from typing import Any, Dict, Optional, Tuple
 
 from sim.assembly.api import Part
 
-from .entry_cost import CostBook, NoWage
+from .entry_cost import CostBook
 from .making_cost import LAND_MATERIAL
 
 RATE_DECIMALS = 4
@@ -39,13 +39,10 @@ class CostBooks(Part):
             price = prices.get(material)
             return price if price is not None and price > 0.0 else None
 
-        def wage_of(trade: str) -> float:      # raises NoWage where the trade has none
+        def wage_of(trade: str) -> float:
             if trade not in wages:
                 wage = self.needs.agent_wage[trade]
-                quoted = wage if wage else self.needs.labour_quote(trade)
-                if quoted is None:
-                    raise NoWage(trade)
-                wages[trade] = quoted
+                wages[trade] = wage if wage else self.needs.labour_quote(trade)
             return wages[trade]
 
         def rent_of(key: str) -> float:

@@ -73,6 +73,14 @@ def partner_openings(sim):
 LITERACY_FIELDS = ("literacy_general", "literacy_elite")
 
 
+def opening_wages(sim, trades, level=1.0):
+    """{trade: wage per hour in opening-year money}: the labour market's quote now for each trade, divided by `level` (today's
+    money per opening-year money, `economy_api.opening_wage_level`; one at the opening), since the economy scales these by that
+    level again. A quote not above zero is left out."""
+    quotes = {trade: sim.economy.labour.quote(trade) for trade in sorted(trades)}
+    return {trade: quote / level for trade, quote in quotes.items() if quote > 0.0}
+
+
 def opening_values(sim):
     """What the setup takes from the engine at the opening: kept in the save so a resumed game rebuilds
     the same markets, producers and price base however the engine's own tables have moved since."""
@@ -105,7 +113,7 @@ def opening_values(sim):
         "recipes": allowed,
         "mint_recipe": mint_recipe,
         "prices": prices,
-        "wages": {trade: sim.economy.labour.quote(trade) for trade in labour_trades if trade in trades_data},
+        "wages": opening_wages(sim, [trade for trade in labour_trades if trade in trades_data]),
         "unskilled_trade": unskilled,
         "need_shares": sim.labour.need_shares(),
         "rate": float(opening_market_rate()),

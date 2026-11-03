@@ -42,11 +42,11 @@ class AllowedEntries(unittest.TestCase):
 class OpeningWithTechniques(unittest.TestCase):
     def test_nothing_new_allowed_adds_nothing(self):
         self.assertIsNone(port_late.opening_with_techniques(
-            stand_in_society(), opening(), frozenset(), PRODUCTION))
+            stand_in_society(), opening(), frozenset(), PRODUCTION, 1.0))
 
     def test_a_held_node_adds_its_recipe_its_trade_wage_and_the_price_of_the_good_it_makes(self):
         grown = port_late.opening_with_techniques(
-            stand_in_society(), opening(), frozenset({"kiln_node"}), PRODUCTION)
+            stand_in_society(), opening(), frozenset({"kiln_node"}), PRODUCTION, 1.0)
         self.assertEqual(grown["recipes"], ["cement_kg", "mortar_kg"])
         self.assertEqual(grown["wages"]["kilnman"], 5.0)
         self.assertIn("cement_kg", grown["prices"])
@@ -57,8 +57,13 @@ class OpeningWithTechniques(unittest.TestCase):
         base = opening()
         base["prices"]["cement_kg"] = 9.0
         grown = port_late.opening_with_techniques(
-            stand_in_society(), base, frozenset({"kiln_node"}), PRODUCTION)
+            stand_in_society(), base, frozenset({"kiln_node"}), PRODUCTION, 1.0)
         self.assertEqual(grown["prices"]["cement_kg"], 9.0)
+
+    def test_a_new_trades_wage_is_stored_in_opening_year_money(self):
+        grown = port_late.opening_with_techniques(
+            stand_in_society(), opening(), frozenset({"kiln_node"}), PRODUCTION, 2.0)
+        self.assertEqual(grown["wages"], {"labourer": 2.0, "kilnman": 2.5})
 
     def test_the_new_good_costs_its_inputs_and_crew_at_live_input_prices_per_unit(self):
         cost = port_late.late_goods_costs(
@@ -81,7 +86,9 @@ class AdmitTechniquesWiring(unittest.TestCase):
     def port(self, admitted, in_use):
         society = stand_in_society()
         society.production = types.SimpleNamespace(techniques_granted=lambda: frozenset({"a"}), techniques_in_use=lambda: in_use)
-        return types.SimpleNamespace(_world=society, figures=YearFigures(),
+        economy = types.SimpleNamespace(record=types.SimpleNamespace(memory=types.SimpleNamespace(opening_wage_level=lambda money: 1.0)),
+                                        setup=types.SimpleNamespace(currency_id="coin"))
+        return types.SimpleNamespace(_world=society, _economy=economy, figures=YearFigures(),
                                      stored={"opening": opening(), "techniques_admitted": admitted})
 
     def test_held_nodes_unchanged_since_the_last_look_leave_the_opening_alone(self):

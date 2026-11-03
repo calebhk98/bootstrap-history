@@ -175,11 +175,8 @@ class Insolvency(Part):
 		needs = self.needs
 		seat = self.seat
 		if seat.bondage_years_left > 0:
-			labourer_wage = needs.labour_market().quote("labourer")
-			if labourer_wage is None:      # the hours owed cannot be valued: the term and the debt stand this year
-				return
 			repayment = rules.bondage_repayment(needs.game_config()["founder_hours_per_year"], BONDAGE_LABOUR_SHARE,
-			                                    BONDAGE_WAGE_MARKUP, labourer_wage)
+			                                    BONDAGE_WAGE_MARKUP, needs.labour_market().quote("labourer"))
 			seat.bondage_years_left, seat.bondage_debt, served = rules.serve_bondage_year(
 				seat.bondage_years_left, seat.bondage_debt, repayment)
 			if served:

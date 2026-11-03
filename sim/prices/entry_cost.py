@@ -10,12 +10,8 @@ from . import making_cost
 from . import prices as price_solver
 
 
-class NoWage(Exception):
-    """A trade of an entry has no wage under the economy's rule: what the entry costs to run is unknown."""
-
-
 class CostBook:
-    """One set of prices, wages, rate and rent that entries are costed against; a `wage_of` that raises `NoWage` makes the cost None."""
+    """One set of prices, wages, rate and rent that entries are costed against."""
 
     def __init__(self, input_price_of: Callable[[str], Optional[float]], wage_of: Callable[[str], float],
                  rate: float, rent_of: Optional[Callable[[str], float]] = None,
@@ -29,13 +25,10 @@ class CostBook:
         self.civilization = civilization
 
     def _cost(self, good: str, techniques, include_plant: bool) -> Optional[making_cost.MakingCost]:
-        try:
-            return making_cost.cost_of_making(
-                good, techniques, self.input_price_of, self.wage_of, self.rate, rent_of=self.rent_of,
-                reference_price_of=self.input_price_of,   # a joint run is split by its outputs' worth at these prices
-                include_plant=include_plant, production=self.production, civilization=self.civilization)
-        except NoWage:
-            return None
+        return making_cost.cost_of_making(
+            good, techniques, self.input_price_of, self.wage_of, self.rate, rent_of=self.rent_of,
+            reference_price_of=self.input_price_of,   # a joint run is split by its outputs' worth at these prices
+            include_plant=include_plant, production=self.production, civilization=self.civilization)
 
     def unit_cost(self, entry_key: str, material: str, include_plant: bool = True) -> Optional[float]:
         """Money one unit of `material` costs when made by this entry with every input bought at the book's

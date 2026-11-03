@@ -9,7 +9,7 @@ ROUNDING_RESIDUE_FLOOR = 0.049
 
 def assemble_ledger(concern_rows, workshop_total, wage_total, state_funding_total, revenue):
     """Rows of `{label: yearly money}` that sum to `revenue` at one decimal. The largest concerns are listed, the rest
-    summed into one row, then the workshop's output, the founder's wages (None when the held trade has no wage) and state funding (None when there is none); what the market will not
+    summed into one row, then the workshop's output, the founder's wages and state funding (None when there is none); what the market will not
     absorb takes the whole gap, and a gap too small to show is pushed into the largest row so the rounded rows still
     add up."""
     ranked = sorted(concern_rows.items(), key=lambda entry: -entry[1])
@@ -19,7 +19,7 @@ def assemble_ledger(concern_rows, workshop_total, wage_total, state_funding_tota
         out["_and_%d_smaller_concerns" % len(ranked[LEDGER_ROWS_SHOWN:])] = round(rest, 1)
     if workshop_total > SMALL_ROW_FLOOR:
         out["_what_your_own_workshop_sells"] = round(workshop_total, 1)
-    if wage_total is not None and wage_total > SMALL_ROW_FLOOR:
+    if wage_total > SMALL_ROW_FLOOR:
         out["_wages_for_your_own_work"] = round(wage_total, 1)
     if state_funding_total is not None:
         out["_state_funding"] = round(state_funding_total, 1)

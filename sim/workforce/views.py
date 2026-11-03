@@ -1,5 +1,4 @@
 """The views the workforce module publishes."""
-from typing import Optional
 from sim.assembly.api import Part
 from sim.labour.api import STATE_WEIGHTS, wage_provider
 from sim.unit_conversions import HOURS_PER_PERSON_YEAR
@@ -94,15 +93,15 @@ class Views(Part):
 	def trade_available(self, trade):
 		return self.parts.core.labour.trades.trade_available(trade)
 
-	def labour_quote(self, trade) -> Optional[float]:
+	def labour_quote(self, trade):
 		"""Money one hour of a trade costs now: the one wage of the trade."""
 		return self.parts.core.labour.market.quote(trade)
 
-	def wage(self, trade) -> Optional[float]:
+	def wage(self, trade):
 		"""Money one hour of a trade is worth on the wage schedule (the labour market's quote is `labour_quote`)."""
 		return self.parts.core.labour.schedule.wage_per_hour(trade)
 
-	def base_annual_wage(self, trade) -> Optional[float]:
+	def base_annual_wage(self, trade):
 		"""A year's wage of a trade on the opening schedule."""
 		return self.parts.core.labour.schedule.base_annual_wage(trade)
 

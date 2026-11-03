@@ -3,7 +3,6 @@ owing interest that outruns its margin."""
 from typing import Any
 
 from . import business_books, household_wealth, ledger
-from .no_country_economy import NoCountryEconomy
 
 
 def earns_less_than_plant_would_lend_for(firm: Any, world: Any) -> bool:
@@ -14,10 +13,7 @@ def earns_less_than_plant_would_lend_for(firm: Any, world: Any) -> bool:
 	for node_id in firm.concerns:
 		if business_books.ramp(firm.business, node_id, world) < 1.0:
 			return False  # still ramping up: the industry's depth sets how long that takes
-		try:
-			plant += world.capacity.plant_cost(node_id, firm, firm.holdings.capacity_of(node_id))
-		except NoCountryEconomy:
-			return False  # a trade of the plant has no wage: what it costs to build is unknown, so the firm is not judged by it
+		plant += world.capacity.plant_cost(node_id, firm, firm.holdings.capacity_of(node_id))
 	return firm.record.last_margin <= plant * world.credit.market_rate()
 
 

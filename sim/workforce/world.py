@@ -98,8 +98,6 @@ class AgentEconomyReads:
     def agent_wage_at(self, trade, tile):
         """Money one hour of the trade costs a bid on `tile` (the wage of the tile's labour area, else the unpriced-trade
         wage); None until the game's money is priced at the economy."""
-        if self._needs.agent_unskilled_wage() is None:
-            return None
         return self._needs.agent_wage_at(trade, tile)
 
     def agent_hours_offered_at(self, trade, tile):
@@ -111,9 +109,7 @@ class AgentEconomyReads:
         return self._needs.agent_working_hours()
 
     def agent_trades(self):
-        """The trades the agent economy holds; None until it opens."""
-        if self._needs.agent_unskilled_wage() is None:
-            return None
+        """The trades the agent economy holds; None until the game's money is priced at it."""
         return self._needs.agent_trades()
 
     def agent_country(self, country):

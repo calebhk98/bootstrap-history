@@ -30,8 +30,7 @@ class CashRemedies(Part):
 				found.append(remedy_rules.mothball_remedy(node_id, needs.venture_real_upkeep(node_id), money_text))
 		workings = needs.mine_workings()
 		for material in sorted(needs.mine_capacity()):
-			costs = (needs.mine_working_cost(working) for working in workings if working.get("material") == material)
-			saving = sum(cost for cost in costs if cost is not None)     # a working nothing prices saves nothing that can be stated
+			saving = sum(needs.mine_working_cost(working) for working in workings if working.get("material") == material)
 			found.append(remedy_rules.mine_closing_remedy(material, saving, money_text))
 		for trade, people in sorted(needs.staff()["employees"].items()):
 			found.append(remedy_rules.firing_remedy(trade, people, needs.labour_market().quote_annual(trade), money_text))

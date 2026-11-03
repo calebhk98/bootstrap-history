@@ -585,26 +585,29 @@ def import_duty_share(economy):
     return economy.setup.import_duty_share
 
 
+def opening_wage_level(economy):
+    """Today's money per opening-year money for the wages the setup opened with (`MarketMemory.opening_wage_level`)."""
+    return economy.record.memory.opening_wage_level(economy.setup.currency_id)
+
+
 def priced_trade_wage(economy, trade, paid, unskilled, country=None):
-    """The wage per hour of a trade by the one rule (`trade_wages`): what its market `paid` (None if nothing), else the
-    opening wage in today's money, else `unskilled` (the caller's scope of unskilled wage) plus the trade's
-    premium; None when none exists. Wages are in the economy's units. The opening set wages for the home country only:
-    a partner `country` has none of its own, so an unpaid trade of its is priced on its unskilled wage alone."""
-    level = economy.record.memory.opening_wage_level(economy.setup.currency_id)
+    """The wage per hour of a trade by the one rule (`trade_wages`), in the economy's units. The home country (and no
+    named country) always has one. A partner `country` has no opening wages: an unpaid trade of its is priced on its
+    `unskilled` wage alone, and the result is None when that is None too."""
+    level = opening_wage_level(economy)
     if country is not None and country != home_country(economy):
         level = None
     return trade_wages.priced_trade_wage(economy.setup, trade, paid, unskilled, level)
 
 
 def unpaid_trade_wage(economy, trade):
-    """The wage per hour of a trade no market has paid, by the one rule on the country-weighted unskilled wage; None
-    when none exists."""
+    """The home wage per hour of a trade no market has paid, by the one rule on the country-weighted unskilled wage."""
     return priced_trade_wage(economy, trade, None, wages_by_trade_weighted(economy).get(economy.setup.unskilled_trade))
 
 
 def trade_wage_at(economy, trade, tile):
     """The wage per hour a bid for `trade` on `tile` is funded at: the area's last wage, else the unpaid-trade wage on
-    the area's unskilled wage (`trade_wages.wage_in_area`); None when none exists."""
+    the area's unskilled wage (`trade_wages.wage_in_area`)."""
     view = economy.view()
     return trade_wages.wage_in_area(economy.setup, economy.record.memory, trade, view.area_of(trade, tile))
 

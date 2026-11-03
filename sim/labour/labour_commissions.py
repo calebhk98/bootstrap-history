@@ -62,18 +62,15 @@ class Commissions:
             hours = short * person_year_hours(self._world)
             # The cheapest craft trade this society actually has that can
             # spare the time: a workshop needs hands, not a particular guild.
-            best, best_wage = None, None
+            best = None
             for trade in sorted(self._world.trades.wages):
                 if not self.trades.is_craft_trade(trade) or not self.trades.trade_available(trade):
                     continue
                 spare = commission_spare_hours(self.supply.market_supply(trade), self.hands.hours_reserved(trade))
                 if spare < hours:
                     continue
-                wage = self.schedule.wage_per_hour(trade)
-                if wage is None:
-                    continue
-                if best_wage is None or wage < best_wage:
-                    best, best_wage = trade, wage
+                if best is None or self.schedule.wage_per_hour(trade) < self.schedule.wage_per_hour(best):
+                    best = trade
             if best is None:
                 continue
             did_commission, _why = self.commission(best, hours)

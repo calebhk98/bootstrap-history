@@ -34,7 +34,6 @@ from .headcount import Hands
 from .stratum_year import FOOD_NEED, true_up_keep
 from .cast import GOVERNMENT_PREFIX, cast_from_civilisations, profile_from_civilisation, seed_cast
 from .country_view import CountryWorld
-from .no_country_economy import NoCountryEconomy
 from .player import Player
 from .stratum import Stratum, stratum_id
 from .literacy import CountryLiteracy
@@ -58,6 +57,6 @@ __all__ = ["Hands", "PURSE_CURRENCY", "EDGE_EXCHANGE", "EDGE_OUTSIDE", "EDGE_SAV
            "SAVING_SHARE_OF_SURPLUS", "CONCESSION_PREFIX", "Sector", "sector_key",
            "MANAGEMENT_SPAN_EXPONENT", "TRADE_TONNES_FOR_UNIT_CONTACT", "CONQUEST_CONTACT_VOLUME", "MIGRANT_CONTACT_VOLUME_PER_PERSON", "adoption", "awareness", "stock_keeping", "OBSERVATION_RANGE_KM", "PLAYER_VISIBLE_EXPOSURE", "PROOF_YEARS", "SECRET_EXPOSURE",
            "THREAT_ARMY_RESPONSE", "army_goal", "sack_pressure", "FOOD_NEED", "cast_from_civilisations", "profile_from_civilisation", "seed_cast",
-           "CountryWorld", "NoCountryEconomy", "CountryLiteracy", "Player", "Stratum", "stratum_id", "seed_strata", "true_up_keep", "bondage_tiles", "bonded_for_sale", "buy_bonded", "add_captives", "captives_from_losses", "captives_from_conquest",
+           "CountryWorld", "CountryLiteracy", "Player", "Stratum", "stratum_id", "seed_strata", "true_up_keep", "bondage_tiles", "bonded_for_sale", "buy_bonded", "add_captives", "captives_from_losses", "captives_from_conquest",
            "strata_definitions", "strata_spawner", "CommandRejected", "narrowed", "exchange", "Trader",
            "trader_entry", "DeclaredKind", "declared_kind_classes"]

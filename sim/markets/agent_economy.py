@@ -81,7 +81,8 @@ class AgentEconomy:
             return
         self.stored["techniques_admitted"] = held
         production = price_solver.default_production_entries()
-        grown = port_late.opening_with_techniques(self._world, self.stored["opening"], frozenset(held), production)
+        grown = port_late.opening_with_techniques(self._world, self.stored["opening"], frozenset(held), production,
+                                                  economy_api.opening_wage_level(self._economy))
         if grown is None:
             return
         self.stored["opening"] = grown

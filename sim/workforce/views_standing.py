@@ -1,5 +1,4 @@
 """The views of what the acting seat's own hours earn and what the market asks for a year of a trade."""
-from typing import Optional
 from sim.assembly.api import Part
 
 
@@ -9,7 +8,7 @@ class StandingViews(Part):
 		"""A cheap fingerprint of what moves a trade's market wage within a year, for a figure cached over `standing_job_pay`."""
 		return self.parts.core.labour.wages.wage_signature()
 
-	def market_annual_wage(self, trade) -> Optional[float]:
+	def market_annual_wage(self, trade):
 		"""Money one person-year of a trade costs on the home labour market now."""
 		return self.parts.core.labour.market.quote_annual(trade)
 

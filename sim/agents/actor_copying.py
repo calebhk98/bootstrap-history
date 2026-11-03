@@ -34,8 +34,6 @@ class ActorCopying:
 			if not chain:
 				continue
 			plan = imitation.copy_plan(self.actor, chain, world)
-			if plan is None:      # a trade the copy needs has no wage: it cannot be priced, so it is not offered
-				continue
 			options.append(Option(subject=node_id, worth=worth, cost=plan["total"],
 								  chance=imitation.copy_chance(chain, world),
 								  detail={"chain": chain, "plan": plan}))

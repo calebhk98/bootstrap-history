@@ -137,9 +137,9 @@ class Prelude(Part):
 			_tr_upkeep = self.needs.upkeep()
 			_spare_tr = _tr_rev - _tr_upkeep - self.needs.living_cost(_tr_rev, _tr_upkeep)
 			for trade_id, _score in sorted(want.items(), key=lambda kv: (-kv[1], kv[0]))[:1]:
-				_wage = self.parts.core.labour.market.quote_annual(trade_id)
+				_wages = 2.0 * self.parts.core.labour.market.quote_annual(trade_id)
 				_budget = teaching_budget(_score, _spare_tr, self.needs.acting_balance())
-				if _wage is None or 2.0 * _wage > _budget:
+				if _wages > _budget:
 					continue
 				_first = trade_id not in workforce.trades_created
 				taught, _msg = self.parts.core.labour.training.train(trade_id, 2)

@@ -1,7 +1,7 @@
 """What actors ask of the home labour market: what a trade pays, who is free to hire, how many practise it."""
 from typing import Any, Optional
 
-from sim.agents.api import NoCountryEconomy, payroll
+from sim.agents.api import payroll
 from sim.labour import api as labour_api
 
 
@@ -25,18 +25,11 @@ class ActorLabourReads:
 		return self.needs.hours_per_person_year()
 
 	def pay_per_person_year(self, trade: str) -> float:
-		"""What a person-year of a trade pays at the going wage of the home labour market; refuses (NoCountryEconomy, as a country
-		whose markets pay nothing for it does) where the economy's rule gives the trade no wage."""
-		pay = self.labour_market.quote_annual(trade)
-		if pay is None:
-			raise NoCountryEconomy(self.world.registry.state.home_country or "", "pay for " + trade)
-		return pay
+		return self.labour_market.quote_annual(trade)
 
-	def hourly_pay(self, trade: str) -> Optional[float]:
-		"""What an hour of a trade pays at the going wage of the home labour market; None where the economy's rule gives the trade
-		no wage."""
-		quote = self.labour_market.quote(trade)
-		return None if quote is None else float(quote)
+	def hourly_pay(self, trade: str) -> float:
+		"""What an hour of a trade pays at the going wage of the home labour market."""
+		return float(self.labour_market.quote(trade))
 
 	def pay_wages(self, payer: Any, amount: float, purpose: Any) -> None:
 		"""Wages the home country's people are paid: they reach the strata's purses."""

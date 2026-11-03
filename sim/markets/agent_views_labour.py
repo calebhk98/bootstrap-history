@@ -13,9 +13,12 @@ class AgentLabourViews(AgentViewPart):
 		return None if parts is None else parts.prices.wage_per_hour(trade, self._economy().world.scenario.acting_country())
 
 	def agent_wage_at(self, trade, tile):
-		"""The wage per hour in coin a bid for the trade on `tile` is funded at (sim/economy/trade_wages.py), or None while the agent economy opens."""
+		"""The wage per hour in coin a bid for the trade on `tile` is funded at (sim/economy/trade_wages.py), or None until the game's
+		money is priced at the economy (the first ask opens it). The economy's rule always gives a wage for the home country."""
 		parts = self._answering()
-		return None if parts is None else parts.prices.wage_per_hour_at(trade, tile)
+		if parts is None or not self._economy().world.money_from_economy():
+			return None
+		return parts.prices.wage_per_hour_at(trade, tile)
 
 	def agent_hours_offered_at(self, trade, tile):
 		"""Hours of the trade the households of `tile`'s labour area offered at the last clearing; None while the economy opens or before one."""
@@ -53,7 +56,9 @@ class AgentLabourViews(AgentViewPart):
 		return {} if parts is None else parts.households.idle_hours_by_trade()
 
 	def agent_trades(self):
-		"""The trades the running agent economy's labour core has markets for."""
+		"""The trades the running agent economy's labour core has markets for; None until the game's money is priced at it."""
+		if not self._economy().world.money_from_economy():
+			return None
 		return economy_api.economy_trades(self.parts.market_objects.economy.agent.economy())
 
 	def agent_cohort_incomes(self):

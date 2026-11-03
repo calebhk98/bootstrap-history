@@ -26,8 +26,8 @@ class Relocation:
             "carries in a place they have just arrived in.")
 
     def _relocation_wage_bill_per_year(self):
-        return sum(count * wage for trade, count in self.book.employed_by_trade().items()
-                   for wage in [self.market.quote_annual(trade)] if wage is not None)
+        return sum(count * self.market.quote_annual(trade)
+                   for trade, count in self.book.employed_by_trade().items())
 
     def relocation_quote(self, tile):
         """(days, hours lost, money) to move the base to `tile`; None when no route joins it to the base."""

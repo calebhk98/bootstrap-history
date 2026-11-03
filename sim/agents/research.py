@@ -6,11 +6,11 @@ node to its own knowledge, or fails. A node some actor knows then spreads to the
 Pure functions over an actor and a world view; the actor keeps the project in `works`.
 """
 import math
-from typing import Any, Dict, Iterable, List, Optional
+from typing import Any, Dict, Iterable, List
 
 from sim.refusal import Refusal
 
-from . import awareness, hours_cost, imitation, research_gate
+from . import awareness, imitation, research_gate
 from .player_commands import CommandRejected
 from .tuning import HIRING_PREMIUM, RESEARCH_REVIEW_YEARS
 
@@ -19,26 +19,23 @@ def missing_prerequisites(actor: Any, node_id: str, world: Any) -> List[str]:
 	return [pre for pre in world.setting.nodes[node_id].get("pre") or () if not actor.knows(pre, world)]
 
 
-def plan(actor: Any, node_id: str, world: Any) -> Optional[Dict[str, Any]]:
-	"""Hours, money and calendar for pioneering one node at full effort; None when a trade it needs has no wage."""
+def plan(actor: Any, node_id: str, world: Any) -> Dict[str, Any]:
+	"""Hours, money and calendar for pioneering one node at full effort."""
 	node = world.setting.nodes[node_id]
 	hours = dict(node.get("lab") or {})
-	paid = hours_cost.priced_hours(hours, world)
-	if paid is None:
-		return None
-	base_labour = sum(paid.values())
-	premium = sum(paid[trade] * HIRING_PREMIUM for trade in hours if actor.workforce.get(trade, 0.0) <= 0)
+	base_labour = sum(amount * world.labour.labour_market.quote(trade) for trade, amount in hours.items())
+	premium = sum(amount * world.labour.labour_market.quote(trade) * HIRING_PREMIUM
+				  for trade, amount in hours.items() if actor.workforce.get(trade, 0.0) <= 0)
 	other_money = max(0.0, world.research.research_cost(node_id, RESEARCH_REVIEW_YEARS) - base_labour)
 	return {"hours": hours, "money": other_money + premium, "labour_cost": base_labour,
 			"total": other_money + premium + base_labour,
 			"years": max(1, int(math.ceil(float(node.get("yrs") or 0.0))))}
 
 
-def labour_floor(actor: Any, node_id: str, world: Any) -> Optional[float]:
-	"""The least the node can cost: its labour hours at the going quote (cheap; the full plan prices the rest); None when a
-	trade it needs has no wage."""
-	paid = hours_cost.priced_hours(world.setting.nodes[node_id].get("lab") or {}, world)
-	return None if paid is None else sum(paid.values())
+def labour_floor(actor: Any, node_id: str, world: Any) -> float:
+	"""The least the node can cost: its labour hours at the going quote (cheap; the full plan prices the rest)."""
+	return sum(amount * world.labour.labour_market.quote(trade)
+			   for trade, amount in (world.setting.nodes[node_id].get("lab") or {}).items())
 
 
 def chance(node_id: str, world: Any) -> float:
@@ -53,8 +50,6 @@ def begin(actor: Any, node_id: str, world: Any) -> str:
 	if found:
 		raise CommandRejected(found[0])
 	costs = plan(actor, node_id, world)
-	if costs is None:
-		raise CommandRejected(Refusal("no_wage_exists", "a trade this research needs has no wage under the economy's rule, so its cost cannot be stated"))
 	if actor.research_price(costs, node_id, world) > actor.copy_budget(world):
 		raise CommandRejected(Refusal("cannot_afford", "cannot afford the research", total=costs["total"]))
 	return actor.commit_research(node_id, costs, world)
