@@ -28,7 +28,7 @@ class ConcernPriceTables(unittest.TestCase):
         def solve(held, **_arguments):
             solves.append(frozenset(held))
             return {"grain_kg": 2.0, "dust_kg": 0.0}
-        answers = [module._concern_prices_in_hours(held) for held in held_sets]
+        answers = [module.concern_prices_in_hours(held) for held in held_sets]
         return solves, answers
 
     def test_concerns_asking_about_the_same_techniques_share_one_solve(self):
@@ -175,21 +175,21 @@ class PatentHolders(unittest.TestCase):
     def test_holders_are_found_from_an_index_that_changes_only_with_a_patent(self):
         registry = self.registry()
         self.assertEqual(registry.patent_holders("loom"), [])
-        index = registry.__dict__["_patent_index"]
+        index = registry.patent_index.by_node
         for _question in range(20):
             registry.patent_holders("loom")
-        self.assertIs(registry.__dict__["_patent_index"], index)
+        self.assertIs(registry.patent_index.by_node, index)
         registry.actors["firm:001"].record.patents["loom"] = {"granted": 1, "expires": 9, "licensees": []}
         self.assertEqual([actor.actor_id for actor in registry.patent_holders("loom")], ["firm:001"])
-        self.assertIsNot(registry.__dict__["_patent_index"], index)
+        self.assertIsNot(registry.patent_index.by_node, index)
 
     def test_an_actor_that_holds_nothing_leaves_the_index_alone(self):
         registry = self.registry()
         registry.patent_holders("loom")
-        index = registry.__dict__["_patent_index"]
+        index = registry.patent_index.by_node
         registry.add("firm:009", ActorRecord(kind="firm", business=Business.running(["node_0"]), workforce={}))
         registry.patent_holders("loom")
-        self.assertIs(registry.__dict__["_patent_index"], index)
+        self.assertIs(registry.patent_index.by_node, index)
 
     def test_the_lowest_id_among_live_holders_gets_the_entry(self):
         registry = self.registry()

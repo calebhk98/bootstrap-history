@@ -23,7 +23,7 @@ class Contest(Part):
 		"""The strength works add to a defender on this tile. No works the model reads yet add any."""
 		return 0.0
 
-	def _garrison(self, defender: str, tile: str, armies: Dict[str, Army]) -> Army:
+	def garrison(self, defender: str, tile: str, armies: Dict[str, Army]) -> Army:
 		"""The soldiers of the defending state not in an army, shared over its tiles by their people, as a force
 		on the tile with the state's equipment and no food of its own: it eats the tile's stores."""
 		owned = self.needs.tiles_owned_by[defender]
@@ -32,12 +32,12 @@ class Contest(Part):
 		equipment = float(self.needs.country_world[defender].army.equipment_kg_per_soldier()) if self.needs.has_state[defender] else 0.0
 		return Army("garrison", defender, tile, free, equipment)
 
-	def _contest(self, army: Army, armies: Dict[str, Army], defender: str, days_left: float, modes: List[str],
+	def contest(self, army: Army, armies: Dict[str, Army], defender: str, days_left: float, modes: List[str],
 	             pay_years: float, lost: Dict[str, float], reference: float) -> None:
 		tile = army.tile
 		field = sorted((other for other in armies.values() if other.owner == defender and other.tile == tile
 		                and other.soldiers >= 1.0), key=lambda other: other.army_id)
-		garrison = self._garrison(defender, tile, armies)
+		garrison = self.garrison(defender, tile, armies)
 		side = field + ([garrison] if garrison.soldiers >= 1.0 else [])
 		year = int(self.needs.year())
 		rng = self.needs.country_world[army.owner].setting.rng_for("battle", tile, army.army_id, year)
@@ -52,9 +52,9 @@ class Contest(Part):
 			per_day, source = self.parts.campaign_year.campaign_column(army, modes)
 			attacker_before = army.soldiers
 			turn = campaign_contest.siege_turn(army, combined, site, per_day, reference, rng.random(), turn_days, pay_years)
-			self.parts.campaign_year._draw_down(tile, site.drawn_kcal - drawn_before)
+			self.parts.campaign_year.draw_down(tile, site.drawn_kcal - drawn_before)
 			if source is not None and turn["carriage_taken_kg"] > 0.0:
-				self.parts.campaign_year._draw_down(source, campaign_supply.kcal_of(turn["carriage_taken_kg"]))
+				self.parts.campaign_year.draw_down(source, campaign_supply.kcal_of(turn["carriage_taken_kg"]))
 			campaign_contest.share_out(side, before, combined)
 			lost[army.owner] = lost.get(army.owner, 0.0) + attacker_before - army.soldiers
 			lost[defender] = lost.get(defender, 0.0) + before - sum(member.soldiers for member in side)
@@ -106,7 +106,7 @@ class Contest(Part):
 		if campaign_year_rules.rout(army, owned_home):
 			armies.pop(army.army_id, None)
 
-	def _consolidate_conquests(self) -> None:
+	def consolidate_conquests(self) -> None:
 		"""A tile taken by an army rises in control the longer its owner holds it with an army on it."""
 		held_since = self.world.held_since
 		controls = self.needs.store[CONTROL_STORE]

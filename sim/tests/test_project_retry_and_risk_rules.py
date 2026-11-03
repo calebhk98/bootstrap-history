@@ -30,7 +30,7 @@ def calendar_world(risk=0.3, experience=None):
     module = stub.projects
     module.calendar_floor = lambda node_id: FLOOR
     module.payment_schedule_years = lambda node_id: 0.0
-    stub._retry_calendar_retain = module._retry_calendar_retain
+    stub.retry_calendar_retain = module.retry_calendar_retain
     stub.effective_risk = lambda node_id, precaution=None: module.effective_risk(node_id, precaution=False)
     return stub
 
@@ -53,7 +53,7 @@ class ExpectedCalendarYears(unittest.TestCase):
         stub = calendar_world()
         manual_total, survive, attempt = 0.0, 1.0, 0
         while survive > 1e-15:
-            years = FLOOR if attempt == 0 else FLOOR * (1.0 - stub._retry_calendar_retain("loom", attempt))
+            years = FLOOR if attempt == 0 else FLOOR * (1.0 - stub.retry_calendar_retain("loom", attempt))
             manual_total += survive * years
             stub.projects.seat.failed_attempts["loom"] = attempt
             with stub.after_failed_attempts("loom", attempt):

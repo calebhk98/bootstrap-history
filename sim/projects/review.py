@@ -28,7 +28,7 @@ class SeatReview:
 		                                                / max(0.01, sum(world.concerns.concern_staff(node_id).values()))))
 
 	def reopens_staffed_plant(self, entry_key):
-		did_open, _message = self._module.parts.auto_open._open_venture(entry_key)
+		did_open, _message = self._module.parts.auto_open.open_venture(entry_key)
 		return did_open
 
 	def sheds_losses(self):

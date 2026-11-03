@@ -84,6 +84,15 @@ class ProgressPhase(Part):
 		project_state["materials_short"] = [
 			{"material": shortfall["material"], "short_tonnes": round(shortfall["tonnes"], 3), "cause": shortfall["cause"]}
 			for shortfall in shortfalls]
+		project_state["years_held_for_materials"] = project_state.get("years_held_for_materials", 0) + 1
+		# a hold for want of a price or of money lifts by itself only when that changes: say why every year, and how to end it
+		needs.send(RecordEvent.of(
+			"project_held_for_materials",
+			"%s is held for materials: %s. 'stop %s' cancels it and keeps what was paid."
+			% (node_id, "; ".join("%s short %.3g t (%s)" % (short["material"], short["short_tonnes"], short["cause"])
+			                      for short in project_state["materials_short"]), node_id),
+			project=node_id, shortfalls=list(project_state["materials_short"]),
+			years_held=project_state["years_held_for_materials"]))
 		return self._hold_for_materials(project_state, "materials_short")
 
 	@staticmethod
@@ -334,7 +343,7 @@ class ProgressPhase(Part):
 		if project_state["ph_left"] <= 0 and project_state["yrs"] >= floor:
 			self.parts.cost_tail.settle_cost_tail(node_id, project_state)
 		if project_state["ph_left"] <= 0 and project_state["yrs"] >= floor and project_state["cost_left"] <= 0.5:
-			self.parts.completion._complete(node_id)
+			self.parts.completion.complete(node_id)
 			if _afford_context is not None:
 				_afford_context["revenue"] = needs.revenue_estimate()
 				_afford_context["upkeep"] = needs.upkeep()

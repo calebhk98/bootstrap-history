@@ -33,7 +33,7 @@ class Learning(Part):
 		if baskets is None:
 			return 1.0
 		held = self.parts.techniques.techniques_in_use()
-		prices = self.needs.done_memo("concern_prices_held", held, lambda: self.parts.volume._concern_prices_in_hours(held))
+		prices = self.needs.done_memo("concern_prices_held", held, lambda: self.parts.volume.concern_prices_in_hours(held))
 		founding = self.parts.depth.founding_worker_years(node_id)
 		multiplier = learning_multiplier(self.parts.depth.industry_experience(node_id), founding, mastery_worker_years(founding))
 		purchases = {material: quantity * prices.get(material, 0.0) for material, quantity in baskets.purchases.items()}

@@ -6,12 +6,12 @@ SHORT_TOLERANCE = 1e-6   # share of an order's tonnes that may stay unbought bef
 
 
 def record_orders(record: Dict[str, Any], entries: Sequence[Mapping[str, Any]]) -> None:
-    """Put the orders a start posted on the project's record: those posted (waited for) and those the market refused (shown)."""
-    posted = [dict(entry) for entry in entries if not entry.get("refused")]
+    """Put the orders a start made on the project's record: those posted are waited for, those the market refused stay on
+    order as unposted entries (ordered again at the next clearing, the cause shown) and are listed in `materials_refused`."""
+    if entries:
+        set_on_order(record, kept_after_reorder(entries))
     refused = [{"material": entry["material"], "cause": entry["refused"], "text": entry.get("refused_text", "")}
                for entry in entries if entry.get("refused")]
-    if posted:
-        set_on_order(record, posted)
     if refused:
         record["materials_refused"] = refused
 
@@ -24,17 +24,19 @@ def set_on_order(record: Dict[str, Any], posted: Sequence[Mapping[str, Any]]) ->
 
 def clear_orders(record: Dict[str, Any]) -> None:
     """The project waits for nothing: it was filled."""
-    for field in ("materials_on_order", "awaiting_materials", "materials_short", "materials_refused", "held_cause"):
+    for field in ("materials_on_order", "awaiting_materials", "materials_short", "materials_refused", "held_cause", "years_held_for_materials"):
         record.pop(field, None)
 
 
 def reconcile(on_order: Sequence[Mapping[str, Any]], results: Sequence[Mapping[str, Any]]) -> Tuple[float, List[Dict[str, Any]]]:
     """(money the bill rises by, the shortfalls) once the clearing has run: the bill fell by the quote of each order, so it rises
     by the quote less what the order's tonnes actually cost the project. A shortfall is {"material", "stock_key", "tonnes",
-    "cause"}: the tonnes the order left unbought and why (the refusal's cause, or "unfilled")."""
-    add_back, shortfalls = 0.0, []
+    "cause"}: the tonnes the order left unbought and why (the refusal's cause, or "unfilled"). Each posted order takes the
+    result that is its own: the first not yet taken for its material and tonnes, so two orders for one material are not both
+    credited with all of it."""
+    add_back, shortfalls, taken = 0.0, [], set()
     for entry in on_order:
-        mine = [] if entry.get("unposted") else [result for result in results if result["material"] == entry["material"]]
+        mine = [] if entry.get("unposted") else _own_results(entry, results, taken)
         bought = sum(result.get("bought_tonnes", 0.0) for result in mine)
         paid = sum(result.get("paid", 0.0) for result in mine)
         add_back += entry["quoted"] - paid
@@ -43,6 +45,19 @@ def reconcile(on_order: Sequence[Mapping[str, Any]], results: Sequence[Mapping[s
             cause = next((result["refused"]["cause"] for result in mine if result.get("refused")), entry.get("cause") or "unfilled")
             shortfalls.append({"material": entry["material"], "stock_key": entry["stock_key"], "tonnes": short, "cause": cause})
     return add_back, shortfalls
+
+
+def _own_results(entry: Mapping[str, Any], results: Sequence[Mapping[str, Any]], taken: set) -> List[Mapping[str, Any]]:
+    """The one result of `entry`'s order among those of its material not yet `taken` (its tonnes first, else the next of the
+    material), marked taken; none when the clearing handled no such order."""
+    open_results = [position for position, result in enumerate(results)
+                    if result["material"] == entry["material"] and position not in taken]
+    same_size = [position for position in open_results if abs(results[position].get("tonnes", 0.0) - entry["tonnes"]) <= 1e-9]
+    chosen = (same_size or open_results or [None])[0]
+    if chosen is None:
+        return []
+    taken.add(chosen)
+    return [results[chosen]]
 
 
 def kept_after_reorder(entries: Sequence[Mapping[str, Any]]) -> List[Dict[str, Any]]:

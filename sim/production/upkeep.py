@@ -17,10 +17,10 @@ class Upkeep(Part):
 
 	def upkeep_by_concern(self):
 		"""{node id: yearly running cost} for each concern or practice that is paid for; `upkeep` is its sum."""
-		practice_set = self.parts.revenue._practice_set()
+		practice_set = self.parts.revenue.practice_set()
 		operating = self.needs.operating()
 		return {node_id: self.needs.venture_real_upkeep(node_id, None)
-		        for node_id in self.parts.revenue._revenue_upkeep_candidates()
+		        for node_id in self.parts.revenue.revenue_upkeep_candidates()
 		        if node_id in operating or node_id in practice_set}
 
 	def institution_upkeep(self, node_id, units=None, fully_staffed=False):

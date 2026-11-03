@@ -22,7 +22,7 @@ class Held(Part):
         needs = self.needs
         key = (needs.techniques_version(), needs.operating_version(), self.built_ways_stamp())
         nodes = needs.tree_nodes()
-        cache = self.parts.ownership._caches.setdefault("held_and_running", {})
+        cache = self.parts.ownership.caches.setdefault("held_and_running", {})
         cached = cache.get(include_starting)
         if cached is not None and cached[0] == key and cached[2] is nodes:
             return cached[1]

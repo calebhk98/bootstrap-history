@@ -60,7 +60,7 @@ class Cast(Part):
 			if country == command.to_actor and command.tile not in profile.home_tiles:
 				profile.home_tiles.append(command.tile)
 				profile.home_tiles.sort()
-		registry.__dict__.pop("_tile_owners", None)
+		registry.forget_tile_owners()
 
 	def cast_state(self) -> Any:
 		"""The cast's saved records, for readers that look at them without making the registry."""

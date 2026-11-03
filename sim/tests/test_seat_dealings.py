@@ -66,7 +66,7 @@ class Game:
     def build(self, world):
         host = self.host
         self.seats = module_harness.build(Seats, seat=self.slot, views={"year": 100})
-        self.seats._slots = lambda: {FIRST_SEAT_ID: self.slot}
+        self.seats.slots = lambda: {FIRST_SEAT_ID: self.slot}
         answers = {command: host.send for command in (CreditSeat, DebitSeat, NoteSeatCash, RestorePurse)}
         answers[ReceiveTechniques] = lambda command: self.receive(command.node_ids, command.granted)
         answers[SetDealing] = lambda command: self.seats.set_dealing(command)

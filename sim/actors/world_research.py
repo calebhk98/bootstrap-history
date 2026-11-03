@@ -56,7 +56,7 @@ class Research:
 	def research_cost(self, node_id: str, max_age_years: int) -> float:
 		"""What the node costs to pioneer, worked out afresh only when the last figure is `max_age_years` old
 		(the cost walks the founder's materials and labour, so every actor's yearly look would repeat it)."""
-		kept = self.world.registry._research_costs
+		kept = self.world.registry.research_costs
 		stamped = kept.get(node_id)
 		year = self.world.setting.year
 		if stamped is None or year - stamped[0] >= max_age_years:

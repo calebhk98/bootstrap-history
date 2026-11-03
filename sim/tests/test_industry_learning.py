@@ -160,7 +160,7 @@ class WholeRatio(unittest.TestCase):
         stub = production_host.build()
         stub.concern_baskets_now = lambda node_id: baskets
         stub.techniques_in_use = lambda: frozenset()
-        stub._concern_prices_in_hours = lambda held: {"metal": 20.0, "ore": 5.0}
+        stub.concern_prices_in_hours = lambda held: {"metal": 20.0, "ore": 5.0}
         stub.founding_worker_years = lambda node_id: 2.0
         stub.industry_experience = lambda node_id: experience
         stub.industry_tenure_by_trade = lambda node_id: tenure

@@ -20,7 +20,7 @@ from sim.tests.ui_stand_in import Game
 
 def HeldTrade(held):
     module = production_host.build(tree_nodes={node_id: {"sch": scholars} for node_id, scholars in held.items()})
-    module._practice_set = lambda: set(held)
+    module.practice_set = lambda: set(held)
     return module
 
 

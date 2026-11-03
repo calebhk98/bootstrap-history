@@ -25,7 +25,7 @@ class CampaignYear(Part):
 		return campaign_contest.Site(tile, facts["food_kcal_per_year"], self.world.drawn.get(tile, 0.0),
 		                             facts["working_age_endemic_loss"], facts["ruggedness"])
 
-	def _draw_down(self, tile: str, kcal: float) -> None:
+	def draw_down(self, tile: str, kcal: float) -> None:
 		drawn = self.world.drawn
 		drawn[tile] = drawn.get(tile, 0.0) + kcal
 
@@ -52,9 +52,9 @@ class CampaignYear(Part):
 		per_day, source = self.campaign_column(army, modes)
 		before = site.drawn_kcal
 		result = campaign_contest.camp(army, days, site, per_day, pay_years)
-		self._draw_down(army.tile, site.drawn_kcal - before)
+		self.draw_down(army.tile, site.drawn_kcal - before)
 		if source is not None and result["taken_carriage_kg"] > 0.0:
-			self._draw_down(source, campaign_supply.kcal_of(result["taken_carriage_kg"]))
+			self.draw_down(source, campaign_supply.kcal_of(result["taken_carriage_kg"]))
 		campaign_year_rules.book_losses(army, result, lost)
 
 	def _pay_years(self, army: Army) -> float:
@@ -64,7 +64,7 @@ class CampaignYear(Part):
 		army.pay_owed = owed
 		return army_raising.pay_owed_years(owed, army.soldiers, float(world.labour.pay_per_person_year("soldier")))
 
-	def _reference_equipment(self, owner: str) -> float:
+	def reference_equipment(self, owner: str) -> float:
 		"""The equipment burden of the reference soldier, whose quality is 1: the plain iron kit of the logistics model."""
 		return military_logistics.annual_iron_and_ammunition_burden_kg_per_soldier()
 
@@ -88,7 +88,7 @@ class CampaignYear(Part):
 		for owner, killed in sorted(lost.items()):
 			self.parts.armies.strike_from_force(owner, killed)
 		self._keep_within_force(sorted({army.owner for army in survivors.values()}))
-		self.parts.contest._consolidate_conquests()
+		self.parts.contest.consolidate_conquests()
 
 	def _keep_within_force(self, owners: List[str]) -> None:
 		forces = {owner: self.parts.armies.owner_force(owner) for owner in owners}
@@ -112,7 +112,7 @@ class CampaignYear(Part):
 
 	def _campaign_army(self, army: Army, armies: Dict[str, Army], lost: Dict[str, float], references: Dict) -> None:
 		owner = army.owner
-		reference = references.setdefault(owner, self._reference_equipment(owner))
+		reference = references.setdefault(owner, self.reference_equipment(owner))
 		modes = self.campaign_modes(owner)
 		pay_years = self._pay_years(army)
 		days_left = campaign_supply.CAMPAIGN_SEASON_DAYS
@@ -134,7 +134,7 @@ class CampaignYear(Part):
 					army.target, army.progress_days = None, 0.0
 		occupier = self.needs.tile_owner[army.tile]
 		if occupier is not None and occupier != owner and army.soldiers >= 1.0:
-			self.parts.contest._contest(army, armies, occupier, days_left, modes, pay_years, lost, reference)
+			self.parts.contest.contest(army, armies, occupier, days_left, modes, pay_years, lost, reference)
 		elif occupier != owner and days_left > 0.0 and army.soldiers >= 1.0:
 			self._camp(army, days_left, modes, pay_years, lost)   # in the wild it lives off the land
 		elif moved and army.soldiers >= 1.0:

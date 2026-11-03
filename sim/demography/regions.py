@@ -28,16 +28,22 @@ class Regions(Part):
         self._last_demographic_step = None     # the nation's flows of the last yearly step, until the next
         self._last_regional_step = None        # the same by region
 
-    def _regions(self) -> Dict[str, Population]:
+    def step_year(self, year):
+        """Feed each region what its households ate, step them, and keep the nation's flows."""
+        regions = self.regions_kept_to_nation()
+        kcal_by_region = self._regional_kcal_per_day(regions)
+        self._last_demographic_step = self._step_regions(regions, kcal_by_region, year)
+
+    def regions_kept_to_nation(self) -> Dict[str, Population]:
         """The regions, kept to the nation: the tiles held, summing to the nation's people."""
         shares = settlement.population_shares(self.needs.home_tiles_held())
         regions = regional_population.to_populations(self.world.regions)
-        regional_population.keep_to_nation(regions, self.parts.counts._bands(), list(shares), shares)
+        regional_population.keep_to_nation(regions, self.parts.counts.bands(), list(shares), shares)
         return regions
 
     def people_by_tile(self):
         """{tile: people} once the regions cover the tiles held, else None (the caller spreads the nation by share)."""
-        return settlement.people_by_tile(self.world.regions, self.parts.counts._bands().total, self.needs.home_tiles_held())
+        return settlement.people_by_tile(self.world.regions, self.parts.counts.bands().total, self.needs.home_tiles_held())
 
     def regional_people_by_band(self):
         """{tile: (children, working_age, elderly)} the regions the module tracks (empty until they are first kept), as a copy."""
@@ -91,11 +97,11 @@ class Regions(Part):
         deaths = self.externality_deaths(self.needs.send(RunEpidemicYear(food, year)), year)
         self.needs.send(HitSeatsWithEpidemic(deaths, year))
         burden, endemic_death_rates = self.needs.disease_burden(), self.needs.endemic_death_rates()
-        ratio = self.parts.counts._bands().nutrition_ratio(food)
+        ratio = self.parts.counts.bands().nutrition_ratio(food)
         flows = regional_population.step_regions(
             regions, kcal_by_region, burden, deaths, endemic_death_rates, leaving, arriving,
             self.needs.town_mortality_premium_by_tile(), epidemic_deaths_by_tile=self.needs.epidemic_deaths_by_tile() or None)
-        self.parts.counts._store(*(sum(getattr(region, band) for region in regions.values()) for band in regional_population.BANDS))
+        self.parts.counts.store_bands(*(sum(getattr(region, band) for region in regions.values()) for band in regional_population.BANDS))
         self.world.regions = regional_population.to_stored(regions)
         self._last_regional_step = flows
         return regional_population.national_flows(flows, ratio)

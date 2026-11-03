@@ -1,7 +1,7 @@
 """What a state does with money it holds beyond the need.
 
 The reserve it keeps against risk (a few years of the standing need) is supply on the loanable-funds market,
-so the state is a saver and is paid its share of the interest borrowers pay (`economy_interest_pool.py`). What a surplus
+so the state is a saver and is paid its share of the interest borrowers pay (sim/finance/capital_market.py). What a surplus
 leaves beyond that reserve first relieves the hunger its country's bodies of people report (paid to them, by
 `ledger.transfer`), then raises the works it wants and lacks: masons and others hired at the going wage, which is demand on the
 labour market like every other line the state keeps up. Nothing is paid to nobody, and what no work wants stays in the reserve.

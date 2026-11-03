@@ -23,7 +23,7 @@ SOCIAL_CATEGORIES = ("social", "institution", "foundation", "capability", "mater
 
 class StartChecks(Part):
 	def setup(self) -> None:
-		self._own_checks = {check.cause: self._own_check(check.cause) for check in self.module.START_CHECKS if not check.source}
+		self.own_checks = {check.cause: self._own_check(check.cause) for check in self.module.START_CHECKS if not check.source}
 
 	def _own_check(self, cause: str) -> Any:
 		"""The method that runs the check `cause`: this part's, else the running gates' part's."""
@@ -35,7 +35,7 @@ class StartChecks(Part):
 	def run_check(self, check: StartCheck, node_id: str, node: Dict[str, Any], ignore_trade: bool, memo: Any, why: bool) -> Verdict:
 		if check.source:
 			return getattr(self.needs, check.source)(node_id, node, ignore_trade, memo, why)
-		return self._own_checks[check.cause](node_id, node, ignore_trade, memo, why)
+		return self.own_checks[check.cause](node_id, node, ignore_trade, memo, why)
 
 	def start_check(self, node_id: str, ignore_trade: bool = False, memo: Any = None, why: bool = True) -> Tuple[bool, Any]:
 		"""(True, None) when the project may begin now, else (False, the reason). `ignore_trade` skips only the "does
@@ -120,7 +120,7 @@ class StartChecks(Part):
 		return start_rules.unheld_stock_verdict(self.needs.stock_status[node_id]["missing"], why)
 
 	def _check_substitution(self, node_id, node, ignore_trade, memo, why) -> Verdict:
-		_quality, ok, gap = self._substitution_result(node_id)
+		_quality, ok, gap = self.substitution_result(node_id)
 		if not ok:
 			if not why:
 				return False, None
@@ -266,14 +266,14 @@ class StartChecks(Part):
 			        % (in_world, ", ".join(seen) if seen else "something you have not heard of yet"))
 		return "get %s first: 'start %s'" % (in_world, node_id)
 
-	def _owed_on_work_in_hand(self) -> float:
+	def owed_on_work_in_hand(self) -> float:
 		active = self.seat.active
 		return sum(active[active_id].get("cost_left") or 0.0 for active_id in sorted(active))
 
 	def _cash_covers_start(self, node_id: str) -> bool:
 		"""True when cash in hand pays for this start on top of what work in hand still owes."""
 		return funding.cash_covers_start(self.needs.project_cost(node_id), self.seat.paid_towards.get(node_id, 0.0),
-		                                 self._owed_on_work_in_hand(), self.needs.acting_balance())
+		                                 self.owed_on_work_in_hand(), self.needs.acting_balance())
 
 	def money_refusal(self, node_id: str, extra_owed: float = 0.0):
 		"""Why the bill is past cash plus credit (materials due now included), or None. `extra_owed` is money
@@ -286,7 +286,7 @@ class StartChecks(Part):
 		# money already sunk into this node comes off the bill
 		price -= funding.paid_credit(price, self.seat.paid_towards.get(node_id, 0.0))
 		owed, ceiling, shortfall = start_money.start_shortfall(
-			price, self._owed_on_work_in_hand(), extra_owed, needs.acting_balance(), needs.credit_limit())
+			price, self.owed_on_work_in_hand(), extra_owed, needs.acting_balance(), needs.credit_limit())
 		if shortfall > 0.0:
 			money = needs.money_text
 			return Refusal("cash_short",
@@ -300,9 +300,9 @@ class StartChecks(Part):
 		return None
 
 	def _substitution_quality(self, node_id: str) -> Tuple[float, bool]:
-		return self._substitution_result(node_id)[:2]
+		return self.substitution_result(node_id)[:2]
 
-	def _substitution_result(self, node_id: str) -> Tuple[float, bool, Any]:
+	def substitution_result(self, node_id: str) -> Tuple[float, bool, Any]:
 		"""Resolve `req_any` groups: for each, the best option actually held. A steam engine does not REQUIRE coal and
 		steel; it requires a fuel and a pressure vessel. Wood in a bronze boiler works, badly: the quality factor says
 		how badly. Returns (quality, ok, the gap of the first group with no option, or None)."""

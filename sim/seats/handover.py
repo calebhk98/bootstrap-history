@@ -19,7 +19,7 @@ class Handover(Part):
         """Pass `from_id`'s seat to `to_id`: the seat's fields, its account with the debts and claims, and whatever else is
         keyed by its id; it leaves the year. Answers a Refusal that changed nothing, or what moved (the registry's account)."""
         from_id, to_id = command.from_id, command.to_id
-        seats = self.parts.run._slots()
+        seats = self.parts.run.slots()
         holds = []
         if to_id in seats:
             slot = self.seat_of(to_id)

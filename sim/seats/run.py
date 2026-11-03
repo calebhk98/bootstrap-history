@@ -16,23 +16,23 @@ from .state import COUNTRY_SEAT, SeatsSeat
 
 class Run(Part):
 
-    def _slots(self) -> Dict[str, SeatsSeat]:
+    def slots(self) -> Dict[str, SeatsSeat]:
         """This module's state for every seat, in joining order."""
         return {seat_id: self.seat_of(seat_id) for seat_id in self.needs.registered_seats()}
 
     def seat_list(self) -> Dict[str, List[str]]:
         """{joined: every seat's id, households: the seats that play through a household, playing: those whose run has not
         ended}, in joining order."""
-        slots = self._slots()
+        slots = self.slots()
         return {"joined": list(slots), "households": lists.household_seats(slots), "playing": lists.seats_playing(slots)}
 
     def ended_seats(self) -> List[str]:
         """Ids of the seats whose run has ended."""
-        return lists.seats_ended(self._slots())
+        return lists.seats_ended(self.slots())
 
     def run_over(self) -> bool:
         """Whether no seat has anything more to play."""
-        return lists.run_is_over(self._slots())
+        return lists.run_is_over(self.slots())
 
     def acting_seat(self) -> Optional[str]:
         """The id of the seat acting now."""
@@ -41,7 +41,7 @@ class Run(Part):
     def acting_country(self) -> Optional[str]:
         """The partner country the acting seat belongs to, or None for the game's own country: the markets, wages and
         prices the seat deals in are that country's own."""
-        return country.partner_country_of_seat(self._slots(), self.clock.acting_seat,
+        return country.partner_country_of_seat(self.slots(), self.clock.acting_seat,
                                                self.needs.civilisation().get("id"))
 
     def seat_country(self, seat_id: str) -> Optional[str]:
@@ -62,7 +62,7 @@ class Run(Part):
     def played_countries(self) -> List[str]:
         """The countries a country seat plays, sorted."""
         home = self._home()
-        return sorted({seat.country or home for seat in self._slots().values() if seat.kind == COUNTRY_SEAT})
+        return sorted({seat.country or home for seat in self.slots().values() if seat.kind == COUNTRY_SEAT})
 
     def governed_countries(self) -> List[str]:
         """The countries that have a government a country seat can hold, the game's own first."""

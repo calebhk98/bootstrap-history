@@ -16,7 +16,7 @@ _PRICES_IN_HOURS: List[Any] = [None, {}]
 
 class Volume(Part):
 
-	def _concern_prices_in_hours(self, held):
+	def concern_prices_in_hours(self, held):
 		"""Labour-hour prices under the techniques `held`; remembered while the civilisation is unchanged, so
 		every concern asking about the same techniques shares one answer."""
 		civilisation = self.needs.civilisation()
@@ -41,7 +41,7 @@ class Volume(Part):
 
 		def work_out():
 			granted = frozenset(needs.techniques_granted())
-			prices = needs.done_memo("concern_opening_prices", granted, lambda: self._concern_prices_in_hours(granted))
+			prices = needs.done_memo("concern_opening_prices", granted, lambda: self.concern_prices_in_hours(granted))
 			return volume_rules.ratios(node, price_solver.default_production_entries(), (granted, prices), (held, prices))
 		return needs.done_memo("concern_ratios", (node_id, held), work_out)
 
