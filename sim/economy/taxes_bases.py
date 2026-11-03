@@ -2,7 +2,7 @@
 
 A basis is a function (form, facts, prices) -> {payer: Base}; the registry maps each basis name a civilisation's
 data uses to its function. Adding a basis is one function and one registry line; no civilisation, form or
-good id appears here. The names match the bases the engine's `sim/engine/actors/revenue_bases.py` reads.
+good id appears here. The names match the bases `sim/agents/revenue_bases.py` reads.
 """
 from dataclasses import dataclass, field
 from typing import Callable, Dict, Mapping, Optional, Tuple

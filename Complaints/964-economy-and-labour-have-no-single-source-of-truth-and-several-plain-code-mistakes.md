@@ -103,7 +103,7 @@ names, not attribute reach-through.
 
 - `STATE_OF_THE_PROJECT.md` and `ECONOMY_AGENTS.md` name `sim/engine/economy_port*.py` (now `sim/markets/port*.py`);
   `STATE_OF_THE_PROJECT.md` describes the opening rate as unmerged and reasons from a deleted savings wish;
-  `ENDOGENOUS_COSTS_AND_DOMAINS.md` names `sim/engine/solve_prices.py`.
+  `ENDOGENOUS_COSTS_AND_DOMAINS.md` names `sim/prices/solve_prices.py`.
 - `ECONOMY_MODEL_SURVEY.md`'s Lengnick and Eurace wage rules match neither model's code; the engine's tightness rule
   (`sim/labour/wages.py`, "in the manner of Lengnick and EURACE") rests on it.
 - Code citing Eurace's `Firm_hire_workers` (does not exist) and "a wage fixed at hire" (Eurace indexes existing

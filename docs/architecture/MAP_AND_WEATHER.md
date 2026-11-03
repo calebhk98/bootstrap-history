@@ -610,8 +610,8 @@ confirmed by reading `cli_agent.py`: `sim = Sim(...)` at the top of
 open pipe amortise this cost over the whole session. But the test harness's
 own session-resuming pattern, and CLAUDE.md §3.5's description ("with
 `--session` every single command is a save followed by a load"), both show
-a session being reopened by a FRESH subprocess - confirmed in
-`sim/tests/test_five_things_winner.py`, two separate `subprocess.run([...,
+a session being reopened by a FRESH subprocess - confirmed by a
+test that ran two separate `subprocess.run([...,
 "--session", _sess_session])` calls sharing one save file, each one a new
 process, a new `Sim()`, a new factorisation. Whether the weather setup cost
 is paid once per game or once per exchange depends entirely on whether
