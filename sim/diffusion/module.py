@@ -14,25 +14,23 @@ from .techniques import Techniques
 from .trades import TradeAbsorption
 
 
-class Diffusion(Techniques, Disclosure, Foreign, Relief, Spread, TechEffects, TradeAbsorption, Literacy, Module):
+class Diffusion(Module):
 
-    def setup(self) -> None:
-        self._diffusible: Optional[Dict[str, Tuple[str, ...]]] = None   # category -> node ids, built on first ask
-        self._foreign_only_memo: Dict[str, bool] = {}
-        self._noted: Optional[tuple] = None      # (techniques in use, year) last stamped
-        self._spread: Optional[tuple] = None     # the last answer of techniques_spread and what it was computed from
-
-    def tree_node(self, node_id: str) -> Dict[str, Any]:
-        """The tree's record of `node_id`; KeyError for an id the tree lacks."""
-        node = self.needs.tree[node_id]
-        if node is None:
-            raise KeyError(node_id)
-        return node
+    PARTS = {
+        "techniques": Techniques,
+        "disclosure": Disclosure,
+        "foreign": Foreign,
+        "relief": Relief,
+        "spread": Spread,
+        "tech_effects": TechEffects,
+        "trade_absorption": TradeAbsorption,
+        "literacy": Literacy,
+    }
 
     def advance_society(self, command: Any) -> None:
         """Once a year, on the society's own slow clock rather than a project's."""
-        self.advance_literacy(command.year)
-        self.advance_trade_absorption(command.year)
+        self.parts.literacy.advance_literacy(command.year)
+        self.parts.trade_absorption.advance_trade_absorption(command.year)
 
     def staff_hire_advice(self, kind: str, count: Optional[int] = None) -> str:
         """The first answer to "I have no staff": hire somebody."""

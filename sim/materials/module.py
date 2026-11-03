@@ -12,15 +12,16 @@ from .supply import Supply
 from .throttle import Throttle
 
 
-class Materials(Supply, Demand, Electricity, Throttle, ProjectBill, Availability, Module):
-    def setup(self) -> None:
-        self._readings: Dict[Any, Any] = {}        # seat id -> what is remembered for that seat (demand tables, last reading)
-        self._annual_keys: Optional[Tuple] = None   # (active projects, done version) the last annual demand was worked out for
-        self._standing: Optional[Tuple] = None      # (done version, done set, what the finished installations keep drawing)
-        self._done_memo: Optional[Tuple] = None     # (stamp, done set, answers) while the techniques held are unchanged
-        self._running_tables: Optional[Tuple] = None   # (projects, stamp, tree, tables) while what is built and run is unchanged
-        self._coppice: Optional[Tuple] = None       # (tiles held, mean stem wood increment of them)
-        self._load_ids: Any = None                  # nodes that need generated electricity; the tree does not change in a run
+class Materials(Module):
+
+    PARTS = {
+        "supply": Supply,
+        "demand": Demand,
+        "electricity": Electricity,
+        "throttle": Throttle,
+        "project_bill": ProjectBill,
+        "availability": Availability,
+    }
 
     # ---- views that read the seat's saved reading ----
 
@@ -38,10 +39,10 @@ class Materials(Supply, Demand, Electricity, Throttle, ProjectBill, Availability
 
     def material_commodity(self, material: str) -> str:
         """The commodity key a material is held under in the tonnes ledger."""
-        return self.material_pool(material)[0]
+        return self.parts.supply.material_pool(material)[0]
 
     def national_output(self, commodity: str) -> Tuple[float, float]:
         """(tonnes a year the whole society produces of a commodity, the population that figure is stated for)."""
         default = self.needs.default_population()
         reference = default if commodity in self.needs.empire_output() else float(self.needs.civilisation().get("population") or default)
-        return self.national_output_tonnes(commodity), reference
+        return self.parts.supply.national_output_tonnes(commodity), reference

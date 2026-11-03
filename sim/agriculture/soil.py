@@ -4,6 +4,7 @@ The per-tile loop is geography's (soil_nitrogen_factors, soil_nitrogen_after_yea
 crop and draught herd. `world.soil_nitrogen` is the saved {tile: share of the native pool left}; a tile with no entry is
 native. Each year the cropped hectares' harvest, the rotation's legumes and the manure spread draw the pool down or build
 it, and the tile's yield factor reads it back through `soil_nitrogen_factors`."""
+from sim.assembly.api import Part
 from sim.living_stock.api import stock_rates
 from sim.world import agriculture, agriculture_tile
 
@@ -11,7 +12,7 @@ from . import rules
 from .constants import DRAUGHT_HERD, DRAUGHT_HERD_SPECIES_ROW
 
 
-class Soil:
+class Soil(Part):
 
     def _rotation_cropped_share(self):
         return 1.0 - self.needs.farming_technique().rotation.fallow_share_of_holding

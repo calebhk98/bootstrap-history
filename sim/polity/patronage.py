@@ -3,20 +3,21 @@
 Needs: running_mechanics, real_output_per_head, state_reach, pop_scale, rep_factor, money_per_labour_hour, civilisation,
 seat_list, seat_country, act_as, government_figures, acting_seat."""
 from sim.agents.api import patronage
+from sim.assembly.api import Part
 from sim.seats.api import patron_grant_share
 
 from . import constants
 
 
-class Patronage:
+class Patronage(Part):
 
 	def patron_funding_ask(self):
 		"""What a patron state would give the founder in a year if its treasury could spare it."""
 		needs = self.needs
 		if not needs.running_mechanics("state_funding"):
 			return 0.0
-		return patronage.ask(self.priced(constants.STATE_FUNDING_BASE_LABOUR_HOURS), needs.real_output_per_head(),
-		                     self.state_reach(), needs.pop_scale(), constants.STATE_FUNDING_POP_SCALE_EXPONENT, self.seat.gov,
+		return patronage.ask(self.parts.eminence.priced(constants.STATE_FUNDING_BASE_LABOUR_HOURS), needs.real_output_per_head(),
+		                     self.parts.reach.state_reach(), needs.pop_scale(), constants.STATE_FUNDING_POP_SCALE_EXPONENT, self.seat.gov,
 		                     constants.STATE_FUNDING_GOV_QUALITY_SCALE, needs.rep_factor())
 
 	def state_funding_terms(self):

@@ -8,6 +8,7 @@ response and falls as houses are added to the route. A house owns the carriers i
 labour market."""
 import math
 
+from sim.assembly.api import Part
 from sim.geography.api import cargo_cost, sea_freight
 from sim.unit_conversions import CIVIL_DAYS_PER_YEAR
 from sim.world import merchant_house, merchant_terms, trader_response
@@ -16,7 +17,7 @@ from . import rules
 from .constants import SEA_MODE
 
 
-class Traders:
+class Traders(Part):
     """Needs: partners, labour_quote, hours_per_person_year, trade_population, working_age, households_loanable_funds, market_rate,
     route_lift_years_per_tonne, route_capital_per_lift_tonne, lift_capacity_tonnes, opening_carriers_per_route,
     carriage_facts, plus what Models needs."""
@@ -36,7 +37,7 @@ class Traders:
 
     def route_cargo_tonnes(self, route):
         """Tonnes one sailing of the route's smallest carrier brings."""
-        models = self.carrier_models()
+        models = self.parts.models.carrier_models()
         return min((models[leg.mode][0].cargo_tonnes for leg in route.legs), default=0.0)
 
     def carriers_per_house(self, civilization_id, route):
@@ -55,7 +56,7 @@ class Traders:
         carriers = self.route_carriers(civilization_id, route)
         if math.isinf(carriers):
             return carriers
-        merchants = self.needs.trade_population[self.trade_of_role("merchant")] / max(1, len(self.needs.partners()))
+        merchants = self.needs.trade_population[self.parts.models.trade_of_role("merchant")] / max(1, len(self.needs.partners()))
         return merchant_house.houses_on_route(
             carriers, self.carriers_per_house(civilization_id, route), merchants)
 
@@ -63,11 +64,11 @@ class Traders:
         """Money the home merchant class holds of its own: its share of the funds households save, by its wage bill
         against the working population's."""
         return merchant_house.class_own_capital(
-            self.needs.households_loanable_funds(), self.needs.trade_population[self.trade_of_role("merchant")],
-            self.needs.labour_quote(self.trade_of_role("merchant")), self.needs.working_age(), self.needs.labour_quote(self.trade_of_role("unskilled")))
+            self.needs.households_loanable_funds(), self.needs.trade_population[self.parts.models.trade_of_role("merchant")],
+            self.needs.labour_quote(self.parts.models.trade_of_role("merchant")), self.needs.working_age(), self.needs.labour_quote(self.parts.models.trade_of_role("unskilled")))
 
     def capital_per_merchant(self):
-        merchants = self.needs.trade_population[self.trade_of_role("merchant")]
+        merchants = self.needs.trade_population[self.parts.models.trade_of_role("merchant")]
         return self.merchant_own_capital() / merchants if merchants > 0.0 else 0.0
 
     def trader_cycle_years(self, route, civilization_id=None, destination_demand_tonnes=None):
@@ -93,7 +94,7 @@ class Traders:
         """Money for the agents kept at the two ends per tonne a carrier lifts, at the labour market's wage for a
         merchant, a house's agents shared among its carriers."""
         return merchant_terms.agent_cost_per_tonne(
-            self.needs.route_lift_years_per_tonne(route), self.needs.hours_per_person_year(), self.needs.labour_quote(self.trade_of_role("merchant")),
+            self.needs.route_lift_years_per_tonne(route), self.needs.hours_per_person_year(), self.needs.labour_quote(self.parts.models.trade_of_role("merchant")),
             merchant_house.agents_per_carrier(self.carriers_per_house(civilization_id, route)))
 
     def cargo_lost_share(self, route, material=None, civilization_id=None, destination_demand_tonnes=None):
@@ -112,7 +113,7 @@ class Traders:
         if route is None:
             return 0.0
         daily = self.needs.carriage_facts()["loss_per_day"]
-        return rules.cargo_loss_share(route, daily, sea_freight.hull_loss_per_thousand_km(self.sea_crew()))
+        return rules.cargo_loss_share(route, daily, sea_freight.hull_loss_per_thousand_km(self.parts.models.sea_crew()))
 
     def trader_cost_share(self, route, material=None, civilization_id=None, price_flexibility=None,
                           destination_demand_tonnes=None):

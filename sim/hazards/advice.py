@@ -4,13 +4,15 @@ takes, and one line per hazard on whether what stands between now and then is en
 Needs: tree_nodes, techniques_held, critical_path, visible_to_player, start_check, project_cost, civilisation, year."""
 from typing import Any, Dict, List, Optional
 
+from sim.assembly.api import Part
+
 from . import constants, rules
 from .hedge_steps import hedge_wants, startable_first
 from .hedge_timing import lead_time_range, remaining_floor_years
 from .window import hazards_not_yet_past
 
 
-class Advice:
+class Advice(Part):
 
 	def calendar_floor_remaining(self, goal: str) -> Optional[float]:
 		"""Minimum calendar years before `goal` is finished, even if every prerequisite still open were started today: the
@@ -26,15 +28,15 @@ class Advice:
 		node ids to go and build: it names the kind of answer, in the same words a person in the year 100 would use. With
 		the `hazard` itself, each defence is also listed with what it takes off that hazard's own figure."""
 		beyond_national = kind == "staff_loss"
-		multiplier, why = self.hazard_relief(kind, beyond_national=beyond_national)
+		multiplier, why = self.parts.relief.hazard_relief(kind, beyond_national=beyond_national)
 		out = {"you_currently_take": round(multiplier, 3), "because_of": why}
 		if hazard is not None and kind in hazard:
 			base = hazard[kind]
 			if kind == "staff_loss":
-				base = self.staff_loss_exposure(base)["before_defences"]
+				base = self.parts.relief.staff_loss_exposure(base)["before_defences"]
 			elif kind == "output_factor":
 				base = 1.0 - base
-			out["mitigations"] = self.mitigation_table(kind, base, beyond_national)
+			out["mitigations"] = self.parts.relief.mitigation_table(kind, base, beyond_national)
 		if multiplier > 0.75:
 			out["what_would_help"] = constants.ADVICE_WORDS.get(kind, "")
 			# things you could begin today, which you can already see; never the hedge itself, so no tree by the back door
@@ -45,7 +47,7 @@ class Advice:
 			# years (a patron) and hedges that take decades (three dispersed academies)
 			nodes, held = self.needs.tree_nodes(), self.needs.techniques_held()
 			lead_time = lead_time_range(
-				floor_years for node, _share, _label in self.hazard_counters().get(kind, ())
+				floor_years for node, _share, _label in self.parts.relief.hazard_counters().get(kind, ())
 				if not node.startswith("_") and node in nodes and node not in held
 				for floor_years in [self.calendar_floor_remaining(node)]
 				if floor_years is not None)
@@ -57,7 +59,7 @@ class Advice:
 		"""The hedges against `kind` that you can actually see, and what each one is waiting for. Deliberately narrow: the
 		counters themselves and their direct prerequisites, and only those fog would let you see anyway. If nothing near
 		is visible, the words on their own are the honest answer and this says nothing."""
-		want, leads_to, counters = hedge_wants(self.hazard_counters().get(kind, ()), self.needs.tree_nodes(), self.needs.techniques_held())
+		want, leads_to, counters = hedge_wants(self.parts.relief.hazard_counters().get(kind, ()), self.needs.tree_nodes(), self.needs.techniques_held())
 		seen, out = set(), []
 		for _distance, node_id in sorted(want):
 			if node_id in seen:
@@ -89,7 +91,7 @@ class Advice:
 		rows = []
 		year = self.needs.year()
 		for hazard, year_start, _year_end, in_progress in hazards_not_yet_past(self.needs.civilisation(), year):
-			if self.effective_hazard(hazard)[0] is None:
+			if self.parts.causes.effective_hazard(hazard)[0] is None:
 				continue                  # its stated causes do not hold as things stand
 			years_until = 0 if in_progress else (year_start - year)
 			name = hazard.get("name", "hazard")
@@ -100,7 +102,7 @@ class Advice:
 			# as its slowest hedge, not the average
 			worst_multiplier, quick_hedge, strong_hedge = 0.0, None, None
 			for hazard_kind in kinds:
-				multiplier, _why = self.hazard_relief(hazard_kind)
+				multiplier, _why = self.parts.relief.hazard_relief(hazard_kind)
 				if multiplier <= worst_multiplier:
 					continue
 				worst_multiplier = multiplier

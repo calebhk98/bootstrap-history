@@ -7,10 +7,12 @@ foreign flow and the agent economy's stand-in external orders leave that directi
 (needs: partner_price_level, market_rate)"""
 from typing import Any, Optional, Tuple
 
+from sim.assembly.api import Part
+
 from . import rules
 
 
-class ActorTrade:
+class ActorTrade(Part):
 
     def apply_note_actor_trade(self, command: Any) -> None:
         rules.note_actor_trade(self.world.actor_trade, command.partner, command.material, command.tonnes,
@@ -35,7 +37,7 @@ class ActorTrade:
     def partner_price_per_unit(self, partner: str, material: str) -> Optional[float]:
         """A partner's price of a material in home money: its solved cost at its coin's price level; None when the partner
         prices nothing of it."""
-        price = self.partner_facts(partner)["prices_in_home_money"].get(material)
+        price = self.parts.economies.partner_facts(partner)["prices_in_home_money"].get(material)
         return price * self.needs.partner_price_level[partner] if price else None
 
     def apply_reset_actor_trade_tallies(self, command: Any) -> None:

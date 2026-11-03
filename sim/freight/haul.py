@@ -5,6 +5,7 @@ The return trip follows last year's domestic flow ledger (the goods the economy'
 share of capacity the opposite flow fills is not charged. With no ledger yet, the carrier is taken to return empty."""
 import json
 
+from sim.assembly.api import Part
 from sim.geography.api import cargo_cost, flow_ledger, freight_cost
 from sim.living_stock.api import stock_rates
 
@@ -13,9 +14,13 @@ from .constants import DOMESTIC_CART_MODE, LIVING_STOCK_CARGO, MATERIAL_ROUTES_K
 from .route import Leg, Route, cargo_class_of, domestic_cargo_cost_share, domestic_haul_mode, unjoined_haul_cost
 
 
-class Haul:
+class Haul(Part):
     """Needs: carriage_facts, built_ways, held_techniques, goods_carried_last_year, material_source_tiles,
     route_km_to, market_rate, material_price, plus what Models and Routes need."""
+
+    def __init__(self, module):
+        super().__init__(module)
+        self._haul_routes = {}           # hauled material's route by everything it was priced from
 
     def cargo_class(self, material):
         """"living_stock" for stock the living-stock data says walks (animals), else "goods" (seed, cuttings, eggs)."""
@@ -42,12 +47,12 @@ class Haul:
         imbalance, cargo = self.domestic_flow_imbalance(), self.cargo_class(material)
         improvements = self.needs.built_ways()
         key = (tuple(sources), imbalance, cargo, self.needs.held_techniques(False),
-               tuple(sorted(self.freight_mode_costs(imbalance).items())), json.dumps(improvements, sort_keys=True))
+               tuple(sorted(self.parts.models.freight_mode_costs(imbalance).items())), json.dumps(improvements, sort_keys=True))
         kept = self._haul_routes
         if key not in kept:
             if len(kept) > MATERIAL_ROUTES_KEPT:
                 kept.clear()
-            kept[key] = (self.haul_route(sources, imbalance, cargo, improvements=improvements)
+            kept[key] = (self.parts.routes.haul_route(sources, imbalance, cargo, improvements=improvements)
                          or self.unjoined_haul(material, imbalance))
         return kept[key]
 
@@ -65,10 +70,10 @@ class Haul:
         if distance_km is None:
             return None
         mode = self.domestic_haul_mode(self.cargo_class(material))
-        dues = self.freight_handling_costs().get(mode, 0.0)
-        cost = unjoined_haul_cost(self.freight_mode_costs(imbalance, (mode,))[mode], distance_km, dues)
-        days = freight_cost.days_on_leg(distance_km, self.carrier_models()[mode][0])
-        return self.with_carried_provisions(Route((Leg("source", "home", mode, distance_km, cost, days),)))
+        dues = self.parts.models.freight_handling_costs().get(mode, 0.0)
+        cost = unjoined_haul_cost(self.parts.models.freight_mode_costs(imbalance, (mode,))[mode], distance_km, dues)
+        days = freight_cost.days_on_leg(distance_km, self.parts.models.carrier_models()[mode][0])
+        return self.parts.routes.with_carried_provisions(Route((Leg("source", "home", mode, distance_km, cost, days),)))
 
     def domestic_cargo_cost_share(self, material, route):
         """The cargo's own cost over a domestic haul (a `Route`) as a share of its price: interest at the market rate

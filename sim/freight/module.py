@@ -9,8 +9,11 @@ from .routes import Routes
 from .traders import Traders
 
 
-class Freight(Traders, Haul, Routes, Models, Module):
-    def setup(self):
-        self._models_cache = None        # (price table, key, models) while the table, the sea crew's wage and the map hold
-        self._haul_routes = {}           # hauled material's route by everything it was priced from
-        self._carriage_cache = {}        # the year's route cost between two tiles
+class Freight(Module):
+
+    PARTS = {
+        "traders": Traders,
+        "haul": Haul,
+        "routes": Routes,
+        "models": Models,
+    }

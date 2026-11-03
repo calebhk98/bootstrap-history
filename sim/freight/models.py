@@ -5,6 +5,7 @@ Mode costs come from the physical models (`sim/geography/transport.py` for cart,
 with the empty return where flows are one-sided (`sim/geography/freight_cost.py`)."""
 import functools
 
+from sim.assembly.api import Part
 from sim.geography.api import freight_cost, sea_freight
 from sim.labour import api as labour_api
 from sim.geography.api import transport as freight_physics
@@ -37,8 +38,12 @@ def _land_freight_inputs(team_size):
         freight_physics.OX, team_size, freight_physics.CART, freight_physics.DIRT_TRACK)
 
 
-class Models:
+class Models(Part):
     """Needs: mode_carrier, carriage_facts, modes_carrying, wage, material_price, material_prices, market_rate."""
+
+    def __init__(self, module):
+        super().__init__(module)
+        self._models_cache = None        # (price table, key, models) while the table, the sea crew's wage and the map hold
 
     def trade_of_role(self, role):
         """The trade that plays `role` (unskilled: the drivers; sailor: sea crews; merchant), from the trade data."""

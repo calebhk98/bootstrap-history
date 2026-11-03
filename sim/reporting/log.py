@@ -1,13 +1,15 @@
 """The seat's log and the automation audit trail: what is recorded, and what a reader may ask for."""
 from typing import Any, Dict, List
 
+from sim.assembly.api import Part
+
 from . import rules
 
 LOG = "log"
 AUDIT = "audit"
 
 
-class Logging:
+class Logging(Part):
     """Needs: year, acting_balance."""
 
     def slot_of(self, seat_id: Any) -> Any:

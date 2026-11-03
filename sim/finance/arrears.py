@@ -5,6 +5,7 @@ ReviewVentures, RecordEvent)."""
 from typing import Any
 
 from sim.agents.api import SeatBorrower, business_review
+from sim.assembly.api import Part
 from sim.ledger.api import NoteSeatCash
 from sim.reporting.api import RecordEvent
 from sim.world import capital_market
@@ -14,7 +15,7 @@ from .constants import DEBT_RATE_REPUTATION_DISCOUNT_CAP, DEBT_RATE_REPUTATION_S
 from sim.projects.api import ReviewVentures
 
 
-class Arrears:
+class Arrears(Part):
 
 	def debt_interest_rate(self) -> float:
 		"""What arrears cost the seat a year. It starts from the civilisation's loanable-funds market rate (its own starting rate
@@ -26,9 +27,9 @@ class Arrears:
 		used = 0.0
 		capital = needs.acting_balance()
 		if capital < 0:
-			limit = self.credit_limit()
+			limit = self.parts.credit_line.credit_limit()
 			used = -capital / limit if limit > 0 else 1.0
-		return capital_market.borrower_rate(self.market_rate(), discount, used)
+		return capital_market.borrower_rate(self.parts.capital_market.market_rate(), discount, used)
 
 	def settle_interest(self) -> Any:
 		"""The year's interest on the acting seat's debt by the one rule every borrower follows: (the interest owed, the part paid)."""
@@ -37,7 +38,7 @@ class Arrears:
 		borrower = SeatBorrower(
 			seat_id, needs.cast_state().purses, self.seat, balance=needs.acting_balance,
 			note_outlay=lambda purpose, amount: needs.send(NoteSeatCash(seat_id, -1.0, amount, purpose)),
-			ceiling=self.credit_limit, rate=self.debt_interest_rate, defaults=lambda: self.default_on_debt(needs.year()))
+			ceiling=self.parts.credit_line.credit_limit, rate=self.debt_interest_rate, defaults=lambda: self.parts.insolvency.default_on_debt(needs.year()))
 		return borrower.settle_interest(needs.actor_world())
 
 	def charge_interest(self, year: int) -> float:
@@ -62,7 +63,7 @@ class Arrears:
 		ambush. Everything that could still save a household (stop a project, close a loss-maker, let somebody go) has to be on
 		offer while there is time to act on it."""
 		needs = self.needs
-		limit = self.credit_limit()
+		limit = self.parts.credit_line.credit_limit()
 		seat = self.seat
 		capital = needs.acting_balance()
 		warn, seat.said_near_limit, used = near_limit(capital, limit, seat.said_near_limit)

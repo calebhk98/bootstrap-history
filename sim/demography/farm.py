@@ -1,9 +1,10 @@
+from sim.assembly.api import Part
 """The acting seat's farm holding: the land it holds and the area cleared. Agriculture buys and sells the land, the farm
 workforce sets the cleared area, and thieves take grain, each by a command. Food eaten, harvest and grain stock are the
 agent economy's."""
 
 
-class Farm:
+class Farm(Part):
 
     def farm_holdings(self):
         """The acting seat's farm: hectares held (None before a farm), the granary in kilograms and the area cleared (None

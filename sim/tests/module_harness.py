@@ -38,13 +38,28 @@ def build(implementation: type, views: Optional[Dict[str, Any]] = None, answers:
           world: Any = None, seat: Any = None, module_id: str = "under_test") -> Any:
 	"""`implementation` set up as the assembly would, reading `views`; `answers` maps a command class to the reply
 	(or a function of the command) the owner would give. A view given as None is an optional view that is absent."""
-	module = implementation()
+	module = _calling_its_parts(implementation)()
 	module.module_id = module_id
 	module.clock = Clock()
-	module.needs = _FakeNeeds(views or {}, answers or {})
+	module.kernels = {}
 	module.world, module.seat = world, seat
+	module.build_parts()
+	module.wire(_FakeNeeds(views or {}, answers or {}))
+	module.setup_parts()
 	module.setup()
 	return module
+
+
+def _calling_its_parts(implementation: type) -> type:
+	"""The class with every method of its parts callable on the module, so a test calls the behaviour it names on the module it built."""
+	def forwarder(part_name: str, method: str) -> Any:
+		return lambda self, *arguments, **keywords: getattr(getattr(self.parts, part_name), method)(*arguments, **keywords)
+	added: Dict[str, Any] = {}
+	for part_name, part_class in implementation.PARTS.items():
+		for method, value in vars(part_class).items():
+			if callable(value) and not method.startswith("__") and not hasattr(implementation, method) and method not in added:
+				added[method] = forwarder(part_name, method)
+	return type(implementation.__name__, (implementation,), added) if added else implementation
 
 
 def sent(module: Any) -> List[Any]:

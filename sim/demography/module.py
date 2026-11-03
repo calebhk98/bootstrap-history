@@ -13,9 +13,12 @@ from .regions import Regions
 from .urban import Urban
 
 
-class Demography(Counts, Regions, Urban, Recovery, Farm, Module):
+class Demography(Module):
 
-    def setup(self):
-        self._urban_ceilings_cache = {}        # (the year's inputs) -> {tile: people its town can feed}; never saved
-        self._last_demographic_step = None     # the nation's flows of the last yearly step, until the next
-        self._last_regional_step = None        # the same by region
+    PARTS = {
+        "counts": Counts,
+        "regions": Regions,
+        "urban": Urban,
+        "recovery": Recovery,
+        "farm": Farm,
+    }

@@ -6,10 +6,15 @@ Needs: cast, cast_recorded, state_treasury, money_text, material_pool, material_
 standing."""
 from sim.agents.api import Sector, supply
 
+from sim.assembly.api import Part
 from sim.projects.api import constants as projects_constants
 
 
-class Groups:
+class Groups(Part):
+
+	def __init__(self, module):
+		super().__init__(module)
+		self._banned_materials_cache = {}
 
 	def _group_records(self):
 		if not self.needs.cast_recorded():
@@ -88,7 +93,7 @@ class Groups:
 		banned = registry.prohibitions()
 		by_technique = self._technique_bans()
 		nodes = self.needs.tree_nodes()
-		if (not banned and not by_technique) or self.state_interest(nodes[node_id]) > 0.0:
+		if (not banned and not by_technique) or self.parts.notice.state_interest(nodes[node_id]) > 0.0:
 			return None
 		reached = Sector.reached_by(node_id, nodes, supply.materials_made_by, lambda material: self.needs.material_pool[material][0],
 		                            lambda material: self.needs.material_substitutes[material])

@@ -13,11 +13,20 @@ Money is the labour hour times what an hour is worth, which follows the one coin
 not, moves with money against goods."""
 from typing import Dict, Optional, Tuple
 
+from sim.assembly.api import Part
+
 from . import engine_seam, rules
 from . import prices as price_solver
 
 
-class Tables:
+class Tables(Part):
+
+    def __init__(self, module):
+        super().__init__(module)
+        self._reading_market_rate = False                    # set while the market rate is asked for: it may need these prices
+        self._price_tables_cache: Optional[Tuple] = None     # (granted, in use, tables, granted count, (farmed, rate))
+        self._incumbent_table_cache: Optional[Tuple] = None  # ((granted, farmed, rate), hours, basis)
+        self._material_prices_cache: Optional[Tuple] = None  # (hours table, money per hour, prices)
 
     def banded_market_rate(self) -> float:
         """The live market rate, banded: the rate the solver charges plants and stock. Asking the market for its rate may
@@ -75,7 +84,7 @@ class Tables:
         from the calculator-backed table; None if it cannot be priced at all. A cost: what a buyer pays is the goods
         market's price."""
         prices = self.material_prices()
-        key = rules.priced_key(tag, prices, self.commodity_record(tag))
+        key = rules.priced_key(tag, prices, self.parts.memos.commodity_record(tag))
         return None if key is None else prices[key]
 
     def material_price_basis(self, material: str) -> Optional[str]:

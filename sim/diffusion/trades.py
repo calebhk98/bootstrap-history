@@ -5,6 +5,7 @@ produces its own people in that trade, bounded by the same literate capacity tha
 hand. With no schooling this never fires: a founder who builds no school keeps the trade as a personal secret.
 
 Needs: trade_spread, staff, literacy_capacity, schooling flow (its own)."""
+from sim.assembly.api import Part
 from sim.reporting.api import RecordEvent
 from sim.workforce.api import NoteTradeSpread, SetEmployed
 
@@ -12,7 +13,7 @@ from . import constants
 from .trade_absorption import BECOME_ENDEMIC, GROW, RECORD_INTRODUCTION, absorption_step, absorption_years, headcount_toward_ceiling
 
 
-class TradeAbsorption:
+class TradeAbsorption(Part):
 
     def trade_absorption_years(self, flow: float) -> float:
         return absorption_years(flow, constants.TRADE_ABSORPTION_MIN_YEARS, constants.TRADE_ABSORPTION_BASE_YEARS)
@@ -23,7 +24,7 @@ class TradeAbsorption:
             if trade not in spread["created"]:
                 continue          # never taught here; nothing to naturalise
             introduced = spread["introduced_year"].get(trade)
-            flow = self.schooling_flow()
+            flow = self.parts.literacy.schooling_flow()
             step = absorption_step(introduced, trade in spread["endemic"], flow, year, self.trade_absorption_years)
             if step == RECORD_INTRODUCTION:
                 # first year the trade is seen as taught; recorded now, not back-dated

@@ -1,8 +1,10 @@
 """The disease burden the technologies a nation holds leave, and the endemic death rates of the land it holds."""
+from sim.assembly.api import Part
+
 from .burden_rules import burden_from_holdings
 
 
-class Burden:
+class Burden(Part):
 
     def disease_burden_weights(self):
         """{node id: its population weight} for the technologies that make up the disease burden, in tree order."""

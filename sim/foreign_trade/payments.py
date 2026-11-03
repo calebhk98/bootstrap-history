@@ -9,13 +9,15 @@ yards can build, and its capital is paid for through the freight rate (`sim/frei
 (needs: home_coin_stock, coin_carriage_units, partner_coin_opening, home_unit_price, carrier_models, year)"""
 from typing import Any, Dict, Optional, Tuple
 
+from sim.assembly.api import Part
+
 from . import rules
 from .constants import OPENING_CARRIERS_PER_ROUTE
 
 BOOKS = "books"   # version channel: the partners' books, ledgers and tallies
 
 
-class Payments:
+class Payments(Part):
 
     def ledger_of(self, civilization_id: str, create: bool = False) -> Dict[str, float]:
         """The partner's ledger; an empty one when nothing has been recorded and `create` is false."""
@@ -42,7 +44,7 @@ class Payments:
 
     def money_per_partner_coin(self, civilization_id: str) -> Optional[float]:
         """Home money one unit of the partner's coin is worth, from its metal at the home price; None when the metal has none."""
-        standard = self.partner_civ(civilization_id)["coin_standard"]
+        standard = self.parts.economies.partner_civ(civilization_id)["coin_standard"]
         metal_price = self.needs.home_unit_price[standard["material"]]
         return standard["kg_per_unit"] * metal_price if metal_price else None
 

@@ -19,7 +19,18 @@ from .insolvency import Insolvency
 from .purchases import Purchases
 
 
-class Finance(CapitalMarket, CreditLine, Arrears, Insolvency, DebtService, Purchases, CashRemedies, Bank, Module):
+class Finance(Module):
+
+	PARTS = {
+		"capital_market": CapitalMarket,
+		"credit_line": CreditLine,
+		"arrears": Arrears,
+		"insolvency": Insolvency,
+		"debt_service": DebtService,
+		"purchases": Purchases,
+		"cash_remedies": CashRemedies,
+		"bank": Bank,
+	}
 
 	# ---- the seat's debt state ----
 
@@ -35,20 +46,20 @@ class Finance(CapitalMarket, CreditLine, Arrears, Insolvency, DebtService, Purch
 	# ---- the commands ----
 
 	def apply_default_on_debt(self, command: Any) -> None:
-		self.default_on_debt(command.year)
+		self.parts.insolvency.default_on_debt(command.year)
 
 	def apply_charge_interest(self, command: Any) -> float:
-		return self.charge_interest(command.year)
+		return self.parts.arrears.charge_interest(command.year)
 
 	def apply_shed_loss_makers(self, command: Any) -> None:
-		self.shed_loss_makers(command.year)
+		self.parts.arrears.shed_loss_makers(command.year)
 
 	def apply_warn_near_limit(self, command: Any) -> None:
-		self.warn_near_the_limit(command.year)
+		self.parts.arrears.warn_near_the_limit(command.year)
 
 	def apply_enforce_credit_limit(self, command: Any) -> None:
-		self.enforce_credit_limit(command.year)
+		self.parts.insolvency.enforce_credit_limit(command.year)
 
 	def step_credit_limit(self, seat_id: str) -> None:
 		"""The `credit_limit` phase: past the limit the seat simply stops."""
-		self.enforce_credit_limit(self.needs.year())
+		self.parts.insolvency.enforce_credit_limit(self.needs.year())

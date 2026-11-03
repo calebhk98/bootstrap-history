@@ -7,25 +7,30 @@ what each region's town can feed; afterwards a region's townspeople are that sha
 town can feed. `urban_fraction` is the one reading of the national share; no other code reads the civilisation's figure."""
 from typing import Dict
 
+from sim.assembly.api import Part
 from sim.geography.api import parameter_value, route_costs, settlement, usable_modes
 from sim.world import agriculture, urban_share
 
 
-class Urban:
+class Urban(Part):
+
+    def __init__(self, module):
+        super().__init__(module)
+        self._urban_ceilings_cache = {}        # (the year's inputs) -> {tile: people its town can feed}; never saved
 
     def people_for_urban_share(self) -> Dict[str, float]:
-        tracked = self.people_by_tile()
+        tracked = self.parts.regions.people_by_tile()
         if tracked is not None:
             return tracked
         homes = self.needs.home_tiles_held()
-        return {tile: self._bands().total * settlement.population_share(homes, tile)
+        return {tile: self.parts.counts._bands().total * settlement.population_share(homes, tile)
                 for tile in settlement.tile_ids(homes)}
 
     def urban_ceilings(self) -> Dict[str, float]:
         """{tile: people its town can feed}: the farms' surplus there plus what is carried in, kept for the year."""
         held = frozenset(self.needs.held_techniques(True))
         improvements = self.needs.built_ways()
-        key = (self.needs.year(), self._bands().total, tuple(self.needs.home_tiles_held()), held, len(improvements),
+        key = (self.needs.year(), self.parts.counts._bands().total, tuple(self.needs.home_tiles_held()), held, len(improvements),
                sum(map(sum, self.world.regions.values())))
         if key not in self._urban_ceilings_cache:
             self._urban_ceilings_cache.clear()
@@ -36,7 +41,7 @@ class Urban:
         technique = self.needs.farming_technique()
         hectares_per_worker = agriculture.hectares_cropped_per_farm_worker(technique.crop, technique.toolkit)
         need = parameter_value("food_kcal_per_person_year")
-        bands = self._bands()
+        bands = self.parts.counts._bands()
         working_share = bands.working_age / bands.total if bands.total > 0.0 else 0.0
         grain_kcal_per_tonne = settlement.reference_kcal_per_tonne()
         surplus, tonne_hours = {}, {}
@@ -73,7 +78,7 @@ class Urban:
 
     def urban_fraction(self) -> float:
         """Share of the nation's people living in town, from its regions."""
-        total = self._bands().total
+        total = self.parts.counts._bands().total
         if total <= 0.0:
             return 0.0
         return min(1.0, sum(self.urban_people_by_tile().values()) / total)

@@ -5,6 +5,7 @@ standing, price_index, money_per_labour_hour, acting_balance, money_text."""
 from typing import List
 
 from sim.agents.api import edges
+from sim.assembly.api import Part
 from sim.coin.api import PlunderHousehold
 from sim.ledger.api import PayEdge
 from sim.polity.api import RaiseScandal, ScaleProtection
@@ -15,7 +16,7 @@ from .capital_loss import capital_lost
 from .patron_death import patron_dies
 
 
-class RandomEvents:
+class RandomEvents(Part):
 
 	def step_random_events(self, seats: List[str]) -> None:
 		"""The phase `random_events`: each seat still in play meets its own patron's death, fire and banditry, on its own dice."""

@@ -3,17 +3,25 @@ brings, and what that does to the price. All of it in tonnes a year."""
 import collections
 from typing import Any, Dict, List, Optional, Set, Tuple
 
+from sim.assembly.api import Part
+
 from . import capacity, rules
 from .constants import (FIREWOOD_PER_CHARCOAL_MASS_RATIO, GENERIC_MARKET_SHARE_LEDGER_FALLBACK, MARKET_SHARE,
                         MATERIAL_CHECKS, MATERIAL_PRICE_DEMAND_SHARE_CAP, MATERIAL_PRICE_PRESSURE_SCALE)
 
 
-class Supply:
+class Supply(Part):
     """Needs: civilisation, tiles_listed_by, forest_increment, commodity_record, commodity_country_output, material_commodity_map,
     material_prices, mine_works_materials, empire_output, pop_scale, mineral_scale, found_deposits, agent_producer_capacity,
     price_epoch, producers_stamp, running_stamp, effect_best, mechanic, running, forest_hectares,
     nitre_beds, mine_capacity, mine_depletion, can_be_bought, goods_stock,
     held_goods, goods_quote, tree_nodes, visibility, material_freight_factor."""
+
+    def __init__(self, module):
+        super().__init__(module)
+        self._done_memo: Optional[Tuple] = None     # (stamp, done set, answers) while the techniques held are unchanged
+        self._running_tables: Optional[Tuple] = None   # (projects, stamp, tree, tables) while what is built and run is unchanged
+        self._coppice: Optional[Tuple] = None       # (tiles held, mean stem wood increment of them)
 
     # ---- the catalogue of what a material is ----
 
@@ -166,13 +174,13 @@ class Supply:
         """What buying more of this commodity costs beyond the flat catalogue price: how hard the seat's demand leans on the
         market's standing offer, less what its own supply covers, times what the freight from the nearest source adds."""
         market = self.market_tonnes(commodity)
-        demands = [(need, self.own_material_supply(tag)) for tag, need in self.demand_by_commodity().get(commodity, ())]
+        demands = [(need, self.own_material_supply(tag)) for tag, need in self.parts.demand.demand_by_commodity().get(commodity, ())]
         worst = rules.scarcity_factor(demands, market, MATERIAL_PRICE_DEMAND_SHARE_CAP, MATERIAL_PRICE_PRESSURE_SCALE)
         return worst * self.needs.material_freight_factor[commodity]
 
     def material_market_summary(self) -> Optional[str]:
         """The line on every raw material carrying a price premium because the seat's own demand leans on the market, or None."""
-        demand = self.cached_demand()
+        demand = self.parts.demand.cached_demand()
         if not demand:
             return None
         rows, seen = [], set()
@@ -192,7 +200,7 @@ class Supply:
         """Tonnes a year of `material` demand that neither the seat's own workings nor the market cover: the one shortfall
         figure the capacity rows and the remedy text both use."""
         if by_tag is None:
-            by_tag = self.demand_by_supply_tag(self.annual_material_demand())
+            by_tag = self.demand_by_supply_tag(self.parts.demand.annual_material_demand())
         need, own = rules.demand_and_own_supply(by_tag, self.own_material_supply).get(material, (0.0, 0.0))
         if need <= 0.0:
             return 0.0
@@ -231,7 +239,7 @@ class Supply:
 
     def materials_report(self) -> List[Dict[str, Any]]:
         """Stocks, annual flows, demand and current trade values of every tracked commodity."""
-        demand = self.demand_by_commodity()
+        demand = self.parts.demand.demand_by_commodity()
         materials = set(self.needs.held_goods()) | {pair[0] for pair in MATERIAL_CHECKS.values()}
         materials |= {commodity for commodity in self.needs.mine_capacity()}
         rows = []

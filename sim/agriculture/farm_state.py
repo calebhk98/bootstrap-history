@@ -2,11 +2,12 @@
 
 The state is the module's world state (`state.py`); the farm workforce sends the commands as it clears ground and picks the
 year's technique, and the territory commands come from the held tiles (`farm_territory`)."""
+from sim.assembly.api import Part
 from sim.demography.api import rules as demography_rules
 from sim.world import agriculture as farm_rules
 
 
-class FarmState:
+class FarmState(Part):
 
     def farm_land(self):
         """The cleared ground the farm works: hectares and yield quality."""

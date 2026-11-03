@@ -21,12 +21,22 @@ from .transfers import Transfers
 from .year import Year
 
 
-class Polity(Reach, Notice, Protection, StandingFloor, Eminence, Pressure, Demands, Groups, Transfers, Patronage, Year, Appliers, Module):
+class Polity(Module):
 
-	def setup(self) -> None:
-		self._state_reach_memo = None     # (the key it was worked out for, the share): never saved
-		self._staff_reach_memo = {}       # line name -> the same
-		self._banned_materials_cache = {}
+	PARTS = {
+		"reach": Reach,
+		"notice": Notice,
+		"protection": Protection,
+		"standing_floor": StandingFloor,
+		"eminence": Eminence,
+		"pressure": Pressure,
+		"demands": Demands,
+		"groups": Groups,
+		"transfers": Transfers,
+		"patronage": Patronage,
+		"year": Year,
+		"appliers": Appliers,
+	}
 
 	def value_weights(self):
 		"""The society's value weights, by name."""
