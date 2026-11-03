@@ -255,6 +255,12 @@ class Receipt:
     arrears: float = 0.0
 
 
+def installment_of(loan: Loan) -> float:
+    """The principal a loan returns at the year's end: an even share over the years left, all of it in the last year. The one
+    rule firms, banks and the yearly service all read."""
+    return loan.principal if loan.years_left <= 1.0 else loan.principal / loan.years_left
+
+
 def service(loans: Sequence[Loan], cash_by_borrower: Mapping[AgentId, float], year: int,
             ) -> Tuple[List[Transfer], List[Loan], List[Default]]:
     """`service_split` without the split of what each lender received."""
@@ -278,7 +284,7 @@ def service_split(loans: Sequence[Loan], cash_by_borrower: Mapping[AgentId, floa
     defaults: List[Default] = []
     receipts: Dict[AgentId, Receipt] = {}
     for loan in sorted(loans, key=lambda l: l.loan_id):
-        installment = loan.principal if loan.years_left <= 1.0 else loan.principal / loan.years_left
+        installment = installment_of(loan)
         interest = loan.principal * loan.rate
         arrears_interest = min(loan.arrears, loan.arrears_interest)
         arrears_principal = loan.arrears - arrears_interest

@@ -12,7 +12,7 @@ import unittest
 
 from sim.agents import relations
 from sim.agents.trader_routes import route_terms
-from sim.economy.tariffs import duty_transfers
+from sim.economy.tariffs import carried_duty_transfers, duty_transfers
 from sim.economy.types import EDGE_EXTERNAL
 from sim.markets import trade_duty
 from sim.actors.world_trade import Trade
@@ -49,6 +49,29 @@ class TheStateCollects(unittest.TestCase):
 
     def test_a_good_with_no_tariff_carries_no_duty(self):
         self.assertEqual(duty_transfers({}, {("merchant", "wheat_kg"): 40.0}, "state:rome", "denarius"), [])
+
+
+class TheStateCollectsOnCarriedGoods(unittest.TestCase):
+    CARRIED = {("merchant:a", "north"): 100.0, ("merchant:b", "north"): 40.0, ("merchant:a", "east"): 10.0, ("merchant:c", "south"): 50.0}
+    TARIFFS = {"north": 0.25, "east": 1.0}
+
+    def duty(self, balances):
+        return carried_duty_transfers(self.CARRIED, self.TARIFFS, lambda payer: balances.get(payer, 0.0), "state:rome", "denarius")
+
+    def test_a_carrier_pays_the_tariff_toward_the_source_on_the_value_it_carried_from_there_to_the_state(self):
+        balances = {"merchant:a": 1000.0, "merchant:b": 1000.0, "merchant:c": 1000.0}
+        self.assertEqual([(each.payer, each.payee, each.amount) for each in self.duty(balances)],
+                         [("merchant:a", "state:rome", 25.0 + 10.0), ("merchant:b", "state:rome", 10.0)])    # south has no tariff
+
+    def test_a_carrier_pays_no_more_than_it_holds(self):
+        [transfer] = self.duty({"merchant:a": 12.0})
+        self.assertEqual((transfer.payer, transfer.amount), ("merchant:a", 12.0))
+
+    def test_a_carrier_that_holds_nothing_pays_nothing(self):
+        self.assertEqual(self.duty({}), [])
+
+    def test_the_state_does_not_pay_itself(self):
+        self.assertEqual(carried_duty_transfers({("state:rome", "north"): 100.0}, self.TARIFFS, lambda payer: 50.0, "state:rome", "denarius"), [])
 
 
 class LedgerTalliesTheBorder(unittest.TestCase):

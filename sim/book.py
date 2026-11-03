@@ -113,7 +113,6 @@ class Book:
         self._holders: Dict[GoodId, set] = {}                 # agents that have ever held the good
         self._gross_money: Dict[CurrencyId, float] = {}       # all postings ever, for conservation
         self._gross_goods: Dict[GoodId, float] = {}
-        self._money_by_purpose: Dict[CurrencyId, Dict[str, float]] = {}   # this year
         self._goods_by_purpose: Dict[GoodId, Dict[str, float]] = {}
         self._edge_money_volume: Dict[AgentId, Dict[CurrencyId, float]] = {}
         self._edge_money_net: Dict[AgentId, Dict[CurrencyId, float]] = {}
@@ -275,11 +274,6 @@ class Book:
         amount, currency, payer, payee = transfer.amount, transfer.currency, transfer.payer, transfer.payee
         gross = self._gross_money
         gross[currency] = gross.get(currency, 0.0) + amount
-        by_purpose = self._money_by_purpose.get(currency)
-        if by_purpose is None:
-            by_purpose = self._money_by_purpose[currency] = {}
-        purpose = transfer.purpose
-        by_purpose[purpose] = by_purpose.get(purpose, 0.0) + amount
         if payer.startswith(EDGE_PREFIX):
             self._record_edge_money(payer, currency, amount, amount)
         if payee.startswith(EDGE_PREFIX):
@@ -376,10 +370,6 @@ class Book:
 
     # ---- flows this year -----------------------------------------------------------------------
 
-    def money_flow(self, currency: CurrencyId) -> Dict[str, float]:
-        """Gross money booked this year, by purpose."""
-        return dict(sorted(self._money_by_purpose.get(currency, {}).items()))
-
     def goods_flow(self, good: GoodId) -> Dict[str, float]:
         return dict(sorted(self._goods_by_purpose.get(good, {}).items()))
 
@@ -415,7 +405,6 @@ class Book:
     def start_year(self) -> None:
         """Reset the yearly flow records and note the supply; holdings carry."""
         self._supply_at_start = {currency: self.money_supply(currency) for currency in self.currencies()}
-        self._money_by_purpose = {}
         self._goods_by_purpose = {}
         self._edge_money_volume = {}
         self._edge_money_net = {}
@@ -453,15 +442,11 @@ class Book:
         def by_currency(mapping: dict) -> dict:
             return {currency: value for currency, value in sorted(mapping.items()) if keep(currency)}
 
-        def purposes(mapping: dict) -> dict:
-            return {currency: dict(sorted(inner.items())) for currency, inner in sorted(mapping.items()) if keep(currency)}
-
         return {
             "money": by_agent(self._money),
             "goods": {agent: _sorted_nested(by_good) for agent, by_good in sorted(self._goods.items())} if with_goods else {},
             "gross_money": by_currency(self._gross_money),
             "gross_goods": dict(sorted(self._gross_goods.items())) if with_goods else {},
-            "money_by_purpose": purposes(self._money_by_purpose),
             "goods_by_purpose": _sorted_nested(self._goods_by_purpose) if with_goods else {},
             "edge_money_volume": by_agent(self._edge_money_volume),
             "edge_money_net": by_agent(self._edge_money_net),
@@ -487,8 +472,7 @@ class Book:
                              (self._supply_at_start, other._supply_at_start)):
             for key, value in theirs.items():
                 mine[key] = mine.get(key, 0.0) + value
-        for mine, theirs in ((self._money_by_purpose, other._money_by_purpose),
-                             (self._goods_by_purpose, other._goods_by_purpose),
+        for mine, theirs in ((self._goods_by_purpose, other._goods_by_purpose),
                              (self._edge_money_volume, other._edge_money_volume),
                              (self._edge_money_net, other._edge_money_net),
                              (self._edge_goods_volume, other._edge_goods_volume),
@@ -505,7 +489,6 @@ class Book:
                 book._holders.setdefault(good, set()).add(agent)
         book._gross_money = dict(record["gross_money"])
         book._gross_goods = dict(record["gross_goods"])
-        book._money_by_purpose = _sorted_nested(record["money_by_purpose"])
         book._goods_by_purpose = _sorted_nested(record["goods_by_purpose"])
         book._edge_money_volume = _sorted_nested(record["edge_money_volume"])
         book._edge_money_net = _sorted_nested(record["edge_money_net"])

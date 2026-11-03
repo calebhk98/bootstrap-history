@@ -144,15 +144,13 @@ class ReadTests(unittest.TestCase):
 
 
 class FlowTests(unittest.TestCase):
-    def test_flows_by_purpose_and_edge_reset_each_year_while_holdings_carry(self):
+    def test_edge_flows_reset_each_year_while_holdings_carry(self):
         book = funded(alice=100.0)
         book.transfer(Transfer("alice", "bob", "coin", 40.0, "rent"))
         book.transfer(Transfer("alice", EDGE_MINT, "coin", 10.0, "melt"))
-        self.assertEqual(book.money_flow("coin"), {"melt": 10.0, "opening": 100.0, "rent": 40.0})
         self.assertEqual(book.edge_volume(EDGE_MINT, "coin"), 110.0)
         self.assertEqual(book.edge_net(EDGE_MINT, "coin"), 90.0)
         book.start_year()
-        self.assertEqual(book.money_flow("coin"), {})
         self.assertEqual(book.edge_volume(EDGE_MINT, "coin"), 0.0)
         self.assertEqual(book.balance("bob", "coin"), 40.0)
 

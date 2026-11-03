@@ -39,6 +39,7 @@ class YearLedger:
     unpaid: Dict[AgentId, float] = field(default_factory=dict)
     imports_paid: Dict[Tuple[AgentId, GoodId], float] = field(default_factory=dict)       # money paid to foreign partners
     border_imports_paid: Dict[Tuple[AgentId, GoodId], float] = field(default_factory=dict)   # of that, paid straight to a foreign edge (tariffs ride on it)
+    carried_in: Dict[Tuple[AgentId, str], float] = field(default_factory=dict)   # (carrier, source country): value at the source of what it carried into the home country (the tariff rides on it)
     exports_received: Dict[Tuple[AgentId, GoodId], float] = field(default_factory=dict)   # money received from them
     plant_spend: Dict[AgentId, float] = field(default_factory=dict)    # paid for plant goods, a build not a running cost
     plant_worn: Dict[AgentId, float] = field(default_factory=dict)     # runs of capacity that wore out this year

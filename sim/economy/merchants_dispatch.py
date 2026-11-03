@@ -93,9 +93,14 @@ def dispatch_merchants(setup, record, carriage, ledger: YearLedger, area_map) ->
         for move in done.moves:
             tonnes = move.quantity * setup.specs[move.good].unit_mass_kg / KILOGRAMS_PER_TONNE
             flow_ledger.record_flow(carried, move.tile, move.receiver_tile, tonnes)
+            price_at_origin = _price_on(record, area_map, move.good, move.tile)
+            price_at_destination = _price_on(record, area_map, move.good, move.receiver_tile)
             carried_book.note_carried(carried_goods, move.good, move.tile, move.receiver_tile, move.quantity, tonnes,
-                                      _price_on(record, area_map, move.good, move.tile),
-                                      _price_on(record, area_map, move.good, move.receiver_tile))
+                                      price_at_origin, price_at_destination)
+            source = setup.country_of(move.tile)
+            if source != setup.civ_id and setup.country_of(move.receiver_tile) == setup.civ_id:
+                carried_book.note_crossing(ledger.carried_in, merchant.agent_id, source, move.quantity,
+                                           price_at_origin, price_at_destination)
     record.carriage.set_carried(carried, carried_goods)
 
 

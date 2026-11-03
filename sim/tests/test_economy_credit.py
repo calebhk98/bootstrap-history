@@ -111,6 +111,10 @@ class ClearingTests(unittest.TestCase):
 
 
 class ServiceTests(unittest.TestCase):
+    def test_the_installment_is_an_even_share_of_the_principal_over_the_years_left_and_all_of_it_in_the_last_year(self):
+        self.assertAlmostEqual(credit.installment_of(loan("loan:1", "l", "b", 100.0, 0.1, 4.0)), 25.0)
+        self.assertAlmostEqual(credit.installment_of(loan("loan:1", "l", "b", 100.0, 0.1, 0.5)), 100.0)
+
     def test_a_borrower_with_cash_pays_interest_and_an_installment(self):
         transfers, updated, defaults = credit.service([loan("loan:1", "l", "b", 100.0, 0.1, 4.0)],
                                                       {"b": 1000.0}, 1)

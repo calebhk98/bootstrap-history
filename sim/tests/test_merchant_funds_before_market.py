@@ -24,8 +24,16 @@ class FundsBeforeTheLendersMeet(unittest.TestCase):
         self.assertEqual(world_with((True, {"coin_per_unit": 2.0, "lenders": []})).households_loanable_funds(), 0.0)
 
     def test_after_the_meeting_what_the_economys_lenders_offered_is_read_in_coin(self):
-        listing = {"coin_per_unit": 2.0, "lenders": [("cohort:a", 3.0, 3.0, 0.05), ("bank:b", 4.0, 1.0, 0.06)]}
+        listing = {"coin_per_unit": 2.0, "lenders": [("cohort:a", 3.0, 3.0, 3.0, 0.05), ("bank:b", 4.0, 1.0, 1.0, 0.06)]}
         self.assertEqual(world_with((True, listing)).households_loanable_funds(), 14.0)
+
+    def test_the_full_offer_is_read_not_the_capacity_the_years_loans_have_left(self):
+        listing = {"coin_per_unit": 2.0, "lenders": [("cohort:a", 10.0, 2.0, 10.0, 0.05)]}
+        self.assertEqual(world_with((True, listing)).households_loanable_funds(), 20.0)
+
+    def test_what_is_lent_is_the_offer_less_what_the_account_still_holds_of_it(self):
+        listing = {"coin_per_unit": 2.0, "lenders": [("cohort:a", 10.0, 2.0, 6.0, 0.05)]}
+        self.assertEqual(world_with((True, listing)).economy_lending(), (20.0, 8.0))
 
 
 if __name__ == "__main__":

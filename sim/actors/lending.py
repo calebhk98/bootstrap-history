@@ -29,8 +29,8 @@ class Lending(Part):
 		world = self.parts.cast.actor_world()
 		actor = world.registry.actors.get(account)
 		ceiling = None if actor is None else actor.rate_on_loan(world, amount)
-		lenders = [row for row in listing["lenders"] if ceiling is None or row[3] <= ceiling]
-		return listing["currency"], listing["coin_per_unit"], lenders
+		lenders = [row for row in listing["lenders"] if ceiling is None or row[4] <= ceiling]
+		return listing["currency"], listing["coin_per_unit"], [(row[0], row[2], row[3], row[4]) for row in lenders]
 
 	def lender_offers_made(self) -> Dict[str, float]:
 		"""The funds each lender account offers this year, by account, in the order the pool keeps them."""

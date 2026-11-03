@@ -13,7 +13,7 @@ from sim.tests.harness import check
 
 COIN = CurrencySpec("coin", "fiat", None, 0.0, None)
 BOOK = {"money": {"p1": {"coin": 5.0}}, "goods": {"p1": {"iron": {"t1": 4.0}}, "p0": {"iron": {"t2": 1.0}, "bread": {"t1": 2.0}}},
-        "gross_money": {"coin": 5.0}, "gross_goods": {"iron": 5.0}, "money_by_purpose": {}, "goods_by_purpose": {}, "edge_money_volume": {},
+        "gross_money": {"coin": 5.0}, "gross_goods": {"iron": 5.0}, "goods_by_purpose": {}, "edge_money_volume": {},
         "edge_money_net": {}, "edge_goods_volume": {}, "edge_goods_net": {}, "supply_at_start": {"coin": 5.0}}
 
 

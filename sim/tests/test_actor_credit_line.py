@@ -88,7 +88,7 @@ class EconomyAnswers(unittest.TestCase):
 
     def test_the_lenders_are_listed_cheapest_ask_first_with_kind_capacity_and_balance(self):
         listing = api.lender_listing(self.met())
-        self.assertEqual([(each.lender, each.kind, round(each.offered, 9), each.balance, each.ask) for each in listing["lenders"]],
+        self.assertEqual([(each.lender, each.kind, round(each.capacity, 9), each.balance, each.ask) for each in listing["lenders"]],
                          [("saver", "cohort", round(capital_market.lendable_capacity(100.0), 9), 90.0, 0.05),
                           ("fund", "fund", round(capital_market.lendable_capacity(30.0), 9), 10.0, 0.06),
                           ("bank", "bank", 50.0, 70.0, 0.07)])   # a bank has held its reserve already

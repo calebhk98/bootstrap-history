@@ -62,8 +62,9 @@ def marked_holdings(setup, record, fund_id: AgentId, market_rate: float) -> floa
 
 
 def net_assets(setup, record, fund: Fund, market_rate: float) -> float:
-    """The fund's cash and its holdings at their marked worth."""
-    return record.book.balance(fund.agent_id, setup.currency_id) + marked_holdings(setup, record, fund.agent_id, market_rate)
+    """The fund's cash, what the actors' pool owes it and its holdings at their marked worth."""
+    return (record.book.balance(fund.agent_id, setup.currency_id) + record.credit.contracts.deposit_value(fund.agent_id)
+            + marked_holdings(setup, record, fund.agent_id, market_rate))
 
 
 def unit_price(setup, record, fund: Fund, market_rate: float) -> Optional[float]:
@@ -125,10 +126,12 @@ def redeem_for_cash(setup, record, fund: Fund, holder: AgentId, need: float, off
 
 
 def expected_income(record, fund: Fund) -> float:
-    """What the fund's holdings are expected to pay in a year: its part of each producer's last dividend and the interest on its loans."""
+    """What the fund's holdings are expected to pay in a year: its part of each producer's last dividend, the interest on its
+    loans and the interest the actors' pool paid it at the last close."""
     dividends = sum(held.get(fund.agent_id, 0.0) * record.capital_markets.last_dividends.get(producer_id, 0.0)
                     for producer_id, held in record.capital_markets.shares.items() if producer_id in record.producers)
-    return dividends + sum(loan.principal * loan.rate for loan in record.credit.loans if loan.lender == fund.agent_id)
+    interest = sum(loan.principal * loan.rate for loan in record.credit.loans if loan.lender == fund.agent_id)
+    return dividends + interest + record.capital_markets.last_pool_income.get(fund.agent_id, 0.0)
 
 
 def yield_of(setup, record, fund: Fund, market_rate: float) -> Optional[float]:

@@ -35,7 +35,10 @@ class YearRun:
                                                                       economy_api.crop_site_inputs(economy)[0]),
                              working_hours_per_year=float(world.scenario.HOURS_PER_PERSON_YEAR),
                              import_duty_share=port_duty.import_duty_shares(
-                                 legs, lambda country: trade_duty.import_terms(world, country)[0]))
+                                 legs, lambda country: trade_duty.import_terms(world, country)[0]),
+                             carried_tariff=port_duty.carried_tariffs(
+                                 economy_api.economy_countries(economy), economy_api.home_country(economy),
+                                 lambda country: trade_duty.import_terms(world, country)[0]))
         agent.sync_ways()
         agent.admit_techniques()
         orders, offered, seat_inputs = self._seats.orders()

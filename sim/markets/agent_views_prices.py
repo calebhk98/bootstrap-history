@@ -44,7 +44,7 @@ class AgentPriceViews(AgentViewPart):
 
 	def agent_lender_listing(self):
 		"""(True, the lenders of the last lending) when the agent economy answers; (False, None) while it opens. The listing is
-		{"currency", "coin_per_unit", "lenders": [(lender, offered, balance, ask)]} cheapest ask first, in the economy's units."""
+		{"currency", "coin_per_unit", "lenders": [(lender, offer, capacity, balance, ask)]} cheapest ask first, in the economy's units."""
 		parts = self._answering()
 		return (False, None) if parts is None else (True, parts.prices.lender_listing())
 
