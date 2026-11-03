@@ -66,23 +66,24 @@ def open_economy(setup: EconomySetup) -> Tuple[EconomyRecord, AreaMap, CarriageT
     return _with_covering_prices(setup)
 
 
-def _solve_opening(setup: EconomySetup):
+def _solve_opening(setup: EconomySetup, start: opening_income.OpeningStart):
     """(the opening, the service price by tile its households found) solved to a fixed point with its households' first-year choices. A first solve leaves a money stock,
     whose yearly loss of its metal is the demand (the mint's) the later solves size the producers of the backing good
     to, along with everyone else's. Each solve is read by the households (what they hire, which grains they buy
     milled, at its prices and wages) and solved again with those plans in final demand, until they stop changing
     (opening_plans.py): the producers of what the households then buy are sized to it, and labour to the household
-    work they hire, as far as the hands left by the other producers go (past that the service price rises)."""
-    first = _open(setup, 0.0)
+    work they hire, as far as the hands left by the other producers go (past that the service price rises). Each opening
+    starts its income and hired share from what the one before found (`start`)."""
+    first = _open(setup, 0.0, start=start)
     replacement = opening_metal.yearly_replacement(setup, first[0])
-    cache: Dict[str, Tuple[EconomyRecord, AreaMap, CarriageTable]] = {}
+    cache: Dict[str, Tuple[EconomyRecord, AreaMap, CarriageTable]] = {
+        "bare": first if replacement <= 0.0 else _open(setup, replacement, start=start)}
+    first = None        # no longer needed when the money loses metal: the solve holds the bare opening, not both
 
     def open_with(plans):
         if plans is None:
-            if "bare" not in cache:
-                cache["bare"] = first if replacement <= 0.0 else _open(setup, replacement)
             return cache["bare"]
-        return _open(setup, replacement, plans)
+        return _open(setup, replacement, plans, start)
 
     def choose(opened):
         if "room" not in cache:
@@ -103,7 +104,8 @@ def _with_covering_prices(setup):
     left until they stop moving (opening_rent.py); a setup whose recipes pay no rent is solved once. Only the first
     pass is the full solve (`_solve_opening`): the households' plans it settled (who hires, which grains are bought
     milled) are kept for the later passes, which open the economy at the covered prices with those plans (`_reopen`)."""
-    settled, floors = _solve_opening(setup)
+    start = opening_income.OpeningStart()
+    settled, floors = _solve_opening(setup, start)
     plans = opening_plans.HouseholdPlans(
         {agent_id: (cohort.hired_work_per_person, 0.0, cohort.milled_grains) for agent_id, cohort in settled[0].cohorts.items()},
         floors)
@@ -118,17 +120,18 @@ def _with_covering_prices(setup):
                for good, price in covered.items()):
             break
         current = dataclasses.replace(setup, opening_prices=covered)
-        settled = _reopen(current, plans)
+        record = None
+        settled = None      # the opening at the old prices is not read again: not held while the next one is built
+        settled = _reopen(current, plans, start)
     return settled
 
 
-def _reopen(setup, plans):
+def _reopen(setup, plans, start):
     """The opening at `setup`'s prices with the households holding `plans` (no new settling of them): the metal the
     money loses is sized from a first opening at these prices, as in `_solve_opening`, and the service price the plans found
     is posted again."""
-    first = _open(setup, 0.0)
-    replacement = opening_metal.yearly_replacement(setup, first[0])
-    settled = _open(setup, replacement, plans)
+    replacement = opening_metal.yearly_replacement(setup, _open(setup, 0.0, start=start)[0])
+    settled = _open(setup, replacement, plans, start)
     opening_plans.post_service_prices(settled[0].memory, settled[1], setup, plans.service_price_by_tile)
     return settled
 
@@ -141,7 +144,7 @@ def _servant_hours_per_hired_hour(setup: EconomySetup) -> float:
                 for recipe in setup.recipes.values() for made in [recipe.outputs.get(good, 0.0)] if made > 0.0] or [0.0])
 
 
-def _open(setup: EconomySetup, replacement: float, plans=None) -> Tuple[EconomyRecord, AreaMap, CarriageTable]:
+def _open(setup: EconomySetup, replacement: float, plans=None, start=None) -> Tuple[EconomyRecord, AreaMap, CarriageTable]:
     carriage = setup.carriage_table()
     priced_goods = {good: price for good, price in setup.opening_prices.items()
                     if good in setup.specs and price > 0.0}
@@ -154,7 +157,10 @@ def _open(setup: EconomySetup, replacement: float, plans=None) -> Tuple[EconomyR
     if plans is not None:
         households_cohort.put_cohorts(record.cohorts, opening_plans.with_plans(record.cohorts, plans))
     own = opening_own.OwnPlots(setup, record)
-    _settle_income(setup, record, view, priced_goods, replacement, own)
+    start = opening_income.OpeningStart() if start is None else start
+    own.share_hired = start.share_hired or 0.0
+    _settle_income(setup, record, view, priced_goods, replacement, own, start)
+    start.share_hired = own.share_hired
     _seed_durable_stocks(setup, record, view)
     final_by_tile = _final_demand(setup, record, view, replacement, own=own)
     record.goods.seed_opening_own_grown(own.grown_totals())
@@ -246,12 +252,13 @@ def _open_cohorts(setup, record) -> None:
     titles.seed(record)
 
 
-def _settle_income(setup, record, view, priced_goods, replacement, own) -> None:
+def _settle_income(setup, record, view, priced_goods, replacement, own, start) -> None:
     """Households' opening income is the value of the final demand it pays for, not the full-employment ceiling
     (opening_income.py): the producers sized to that demand then pay out the income the households received.
     Workers are paid alike out of the labour share of it; owners receive the rest by what they own. The demand is what
     households buy after their own plots (opening_own.py), whose hours depend on the runs that demand takes: at each
-    income the share of hours producers hire is settled first (the least one its own demand agrees with)."""
+    income the share of hours producers hire is settled first, from the share the last income left (a nearby income's share
+    is nearly its own). `start` carries the last income found and share hired into the next opening."""
     people = math.fsum(cohort.people for cohort in record.cohorts.values())
     recipes = setup.recipes
     ceilings = opening_runs.run_ceilings(recipes, sites.limits_by_recipe(setup.site_limits))
@@ -264,7 +271,6 @@ def _settle_income(setup, record, view, priced_goods, replacement, own) -> None:
 
     def demand_at(per_head):
         households_cohort.put_cohorts(record.cohorts, opening_income.with_income(record.cohorts, per_head, share["labour"]))
-        own.share_hired = 0.0       # the least share of hours hired that the demand it implies agrees with (it rises as plots grow less)
         for _pass in range(OWN_PLOT_PASSES):
             own.in_kind = 0.0
             final = _final_demand(setup, record, view, replacement, memory, own)
@@ -277,10 +283,13 @@ def _settle_income(setup, record, view, priced_goods, replacement, own) -> None:
         share["labour"] = opening_income.labour_share_of(runs, recipes, setup.opening_wages, value + own.in_kind)
         return producible + own.in_kind, share["labour"]     # what they grow is spending in kind: not saved, not bought
 
-    settled = opening_income.settled_income_per_head(_full_employment_income_per_head(setup), people, demand_at)
+    ceiling = _full_employment_income_per_head(setup)
+    settled = opening_income.settled_income_per_head(ceiling, people, demand_at, start.income_per_head)
     if isinstance(settled, Refusal):
         raise OpeningIncomeRefused(settled)
     per_head, labour_share = settled
+    if per_head < ceiling:      # a ceiling income says nothing about where the next root lies
+        start.income_per_head = per_head
     share["labour"] = labour_share
     demand_at(per_head)     # leaves the plots at the settled income's share of hours hired
     households_cohort.put_cohorts(record.cohorts, opening_income.with_income(record.cohorts, per_head, labour_share))

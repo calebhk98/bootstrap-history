@@ -69,13 +69,13 @@ def surplus_households():
     it can afford, a new drink) or about something that does not depend on how well off it is (where producers sit)
     states that it wants one."""
     with mock.patch.object(opening_income, "settled_income_per_head",
-                           lambda ceiling, _people, _demand_at: (ceiling, 0.0)):
+                           lambda ceiling, _people, _demand_at, _start=None: (ceiling, 0.0)):
         yield
 
 
 def households_with_a_surplus(test_case):
     """`surplus_households` for the length of `test_case`."""
     patch = mock.patch.object(opening_income, "settled_income_per_head",
-                              lambda ceiling, _people, _demand_at: (ceiling, 0.0))
+                              lambda ceiling, _people, _demand_at, _start=None: (ceiling, 0.0))
     patch.start()
     test_case.addCleanup(patch.stop)
