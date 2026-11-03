@@ -21,6 +21,7 @@ class Ledger:
         self.employees = dict(employees)
         self.log = []
         self._world = SimpleNamespace(
+            trades=SimpleNamespace(trade_registry={"labourer": {"fallback": True}}),
             state=SimpleNamespace(household=SimpleNamespace(log=self.log), scenario=SimpleNamespace(year=100)),
             ventures=SimpleNamespace(concerns_to_close_for_staffing=lambda: list(stops),
                                     stopped_yearly_value=lambda node_ids: 10.0 * len(node_ids)))

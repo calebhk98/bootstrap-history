@@ -13,13 +13,10 @@ def hire_stance(hire_mode, has_room):
     return REPLACE_STANCE if hire_mode == REPLACE_ONLY else GROW_STANCE
 
 
-GENERIC_STAFF = ("artisan", "scholar")
-
-
-def replacement_wanted(trade_id, have, taught, drawn_on, target_headcount):
+def replacement_wanted(trade_id, have, taught, drawn_on, target_headcount, generic_staff):
     """The headcount a specialist trade is topped back up to, or None when it is not. Only a trade something draws on
     (a project in hand or an open concern) is replaced, so idle specialists are not paid for decades; of those only a trade
-    the household taught is raised to `target_headcount`, and the generic bucket trades are left to the staff target."""
-    if trade_id in GENERIC_STAFF or trade_id not in drawn_on:
+    the household taught is raised to `target_headcount`, and the `generic_staff` trades are left to the staff target."""
+    if trade_id in generic_staff or trade_id not in drawn_on:
         return None
     return max(have, target_headcount if taught else 0.0)

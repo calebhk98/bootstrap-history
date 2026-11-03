@@ -12,9 +12,6 @@ SCHOLAR_TRADE = "scholar"
 GENERIC_CRAFT_TRADE = "artisan"
 BONDED_PSEUDO_TRADE = "slave"
 
-# Staff the ledger reports as interchangeable hands rather than specialists.
-GENERIC_STAFF_TRADES = ("artisan", "scholar", "labourer", "farmer", "slave")
-
 # Trades whose people are drawn from the unskilled pool while they serve (an army under arms).
 DRAWN_FROM_UNSKILLED_POOL = frozenset({"soldier"})
 

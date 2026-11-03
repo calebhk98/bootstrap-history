@@ -47,7 +47,7 @@ def founded_registry(people):
     profile.population = people
     state.countries[civ["id"]] = profile
     registry = ActorRegistry(state)
-    seed_strata(registry, CostedWorld(people, 1.0))
+    seed_strata(registry, CostedWorld(people, 1.0).trade_of_role)
     return registry
 
 

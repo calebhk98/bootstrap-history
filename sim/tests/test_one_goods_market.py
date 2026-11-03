@@ -8,7 +8,7 @@ from .harness import *  # noqa: F401,F403
 
 from sim.tests import market_stand_in
 from sim.markets.goods_market import GoodsMarket
-from sim.markets.goods_imports import HOME_SELLER
+from sim.prices.rules import HOME_SELLER
 from sim.prices import rules as price_rules
 from sim.content import api as content
 from sim.engine.data import ROOT

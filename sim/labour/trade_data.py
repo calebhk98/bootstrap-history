@@ -101,8 +101,23 @@ def bonded_pseudo_trade() -> str:
     return legacy_trade_defaults.BONDED_PSEUDO_TRADE
 
 
-def is_generic_staff(trade: str) -> bool:
-    return trade in legacy_trade_defaults.GENERIC_STAFF_TRADES
+def farm_trade() -> str:
+    return legacy_trade_defaults.FARM_TRADE
+
+
+def craft_family() -> str:
+    return legacy_trade_defaults.CRAFT_FAMILY
+
+
+def generic_staff_trades(unskilled_trade: str) -> FrozenSet[str]:
+    """Trades whose people are interchangeable hands rather than specialists: scholars, generic craftsmen, farm
+    hands, the bonded and the unskilled fallback trade (the caller reads it from the registry). A foreman is never
+    drawn from them and they are not topped up trade by trade."""
+    return frozenset((scholar_trade(), generic_craft_trade(), farm_trade(), bonded_pseudo_trade(), unskilled_trade))
+
+
+def is_generic_staff(trade: str, unskilled_trade: str) -> bool:
+    return trade in generic_staff_trades(unskilled_trade)
 
 
 def drawn_from_unskilled_pool(trade: str) -> bool:

@@ -2,9 +2,7 @@
 import math
 from typing import Callable, Dict, List, Mapping, Optional, Set, Tuple
 
-from .market_memory import RECENT_TRADE_YEARS
-
-KEY_SEPARATOR = "|"
+from .market_memory import KEY_SEPARATOR, RECENT_TRADE_YEARS
 
 
 def usual_volumes(record) -> Mapping[str, float]:

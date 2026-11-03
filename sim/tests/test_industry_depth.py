@@ -144,7 +144,7 @@ class IndustryDepth(unittest.TestCase):
 
     def test_the_seeded_stock_is_the_steady_state_of_its_own_upkeep(self):
         opening = world(seeded=False, granted={"loom"}, opening={"loom": 7.0})
-        del opening.module.concern_worker_years_this_year
+        del opening.module.parts.depth.concern_worker_years_this_year
         opening.state.actors = None
         before = opening.industry_experience("loom")
         opening.module.accrue_industry_experience()

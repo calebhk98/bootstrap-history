@@ -9,6 +9,7 @@ from types import SimpleNamespace
 
 from .harness import check
 
+from sim.labour.api import generic_staff_trades
 from sim.engine.seat_defaults import default_policy
 from sim.workforce.staff_replacement import replacement_wanted
 from sim.labour.labour_staff_controls import StaffControls
@@ -16,6 +17,8 @@ from sim.labour.labour_staff_ledger import StaffLedger
 from sim.tests import event_stand_in
 
 TARGET = 3.0
+GENERIC = generic_staff_trades("labourer")
+REGISTRY = {"labourer": {"fallback": True}}
 
 
 class Ledger:
@@ -30,6 +33,7 @@ class Ledger:
         household = SimpleNamespace(trades_created=set(taught), log=self.log)
         projects = SimpleNamespace(active=active or {}, operating=set(foremen))
         self._world = SimpleNamespace(
+            trades=SimpleNamespace(trade_registry=REGISTRY),
             workforce=household, projects=projects, state=SimpleNamespace(household=household, scenario=SimpleNamespace(year=100)),
             scenario=SimpleNamespace(nodes={node_id: {"name": node_id.title(), "lab": {}} for node_id in set(foremen) | set(active or {})}),
             ventures=SimpleNamespace(venture_foremen_used=lambda: {trade: 1.0 for trade in foremen.values()},
@@ -70,16 +74,16 @@ class Ledger:
 
 
 # ---- 171: auto_hire tops up only a taught trade something draws on ----------------------------------------------------
-check("a taught trade nothing draws on is not topped up", replacement_wanted("machinist", 0.0, True, {}, TARGET) is None)
+check("a taught trade nothing draws on is not topped up", replacement_wanted("machinist", 0.0, True, {}, TARGET, GENERIC) is None)
 check("a taught trade an open concern draws on is raised to the target",
-      replacement_wanted("glassblower", 0.0, True, {"glassblower": ["open concern"]}, TARGET) == TARGET)
+      replacement_wanted("glassblower", 0.0, True, {"glassblower": ["open concern"]}, TARGET, GENERIC) == TARGET)
 check("a trade that is drawn on but was not taught is kept as it is, never grown",
-      replacement_wanted("smith", 2.0, False, {"smith": ["project p"]}, TARGET) == 2.0)
+      replacement_wanted("smith", 2.0, False, {"smith": ["project p"]}, TARGET, GENERIC) == 2.0)
 check("a taught trade already above the target is not cut back",
-      replacement_wanted("smith", 5.0, True, {"smith": ["project p"]}, TARGET) == 5.0)
+      replacement_wanted("smith", 5.0, True, {"smith": ["project p"]}, TARGET, GENERIC) == 5.0)
 check("the generic craftsmen and scholars are left to the staff target",
-      replacement_wanted("artisan", 0.0, True, {"artisan": ["project p"]}, TARGET) is None
-      and replacement_wanted("scholar", 0.0, True, {"scholar": ["project p"]}, TARGET) is None)
+      replacement_wanted("artisan", 0.0, True, {"artisan": ["project p"]}, TARGET, GENERIC) is None
+      and replacement_wanted("scholar", 0.0, True, {"scholar": ["project p"]}, TARGET, GENERIC) is None)
 
 # ---- 171: idle specialists are surfaced with their wage bill ----------------------------------------------------------
 idle = Ledger({"machinist": 2.0, "glassblower": 2.0, "artisan": 9.0, "potter": 0.3, "weaver": 1.0}, foremen={"mirror": "glassblower"},

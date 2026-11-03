@@ -1,9 +1,9 @@
-"""The ceiling the state and its mints bid labour up to, a multiple of the going wage; a leaf both import."""
+"""The most any bidder for labour offers per hour, a multiple of the trade's wage last year: the state, its mints and a
+seat's standing bid all read this one figure (a leaf both the economy and the markets port import)."""
 from sim.constants import declare
 
-STATE_WAGE_CEILING_MULTIPLE = declare(
-    "STATE_WAGE_CEILING_MULTIPLE", 1.5, kind="temporary_heuristic",
-    unit="multiple of last year's wage the state will bid",
-    source=None, confidence="D",
-    why="How far above last year's wage the state is willing to go to fill its posts; the labour market "
-        "moves the wage only part of the way anyway.")
+WAGE_CEILING_MULTIPLE = declare(
+    "WAGE_CEILING_MULTIPLE", 1.5, kind="temporary_heuristic", unit="multiple of last year's wage", source=None, confidence="D",
+    retire="Complaints/964: the seat states its own maximum wage",
+    why="The most a bidder's standing bid offers per hour, as a multiple of the trade's wage last year, so a wage that rose in "
+        "the year does not leave the places empty; the clearing pays the market wage, not the ceiling.")

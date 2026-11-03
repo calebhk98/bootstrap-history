@@ -11,7 +11,7 @@ from sim.constants import declare
 
 from . import currency, mint_staffing, trade_wages
 from .setup import labour_area
-from .state_wage_ceiling import STATE_WAGE_CEILING_MULTIPLE
+from .state_wage_ceiling import WAGE_CEILING_MULTIPLE
 from .types import LabourBid, Transfer
 
 MINT_ALLOY_AND_FUEL_NOT_BOUGHT = declare(
@@ -73,7 +73,7 @@ def staff(setup, record, view, labour_bids: List[LabourBid], capacity_fine_kilog
     for trade, per_kilogram in sorted(per_trade.items()):
         wage = trade_wages.wage_in_view(setup, view, trade, area)
         bids.append(LabourBid(agent, trade, area, capacity_fine_kilograms * per_kilogram,
-                              max(wage * STATE_WAGE_CEILING_MULTIPLE, value)))
+                              max(wage * WAGE_CEILING_MULTIPLE, value)))
     wage_bill = math.fsum(bid.hours * bid.maximum_wage for bid in bids)
     funded = min(wage_bill, max(0.0, record.book.balance(setup.state_agent, setup.currency_id) - committed_cash))
     if funded > 0.0:

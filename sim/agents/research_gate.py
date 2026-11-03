@@ -6,14 +6,13 @@ exactly when the same facts would open it to the other.
 """
 from typing import Any, Callable, Dict, List, Optional
 
+from sim.labour.api import craft_family
 from sim.refusal import Refusal
 
 from . import awareness
 from .no_country_economy import NoCountryEconomy
 
 SCHOLAR_FAMILY = "scholar"
-SCHOLAR_TRADE = "scholar"
-CRAFT_FAMILY = "craft"
 
 
 def unmet_prerequisites(node: Dict[str, Any], knows: Callable[[str], bool]) -> List[str]:
@@ -77,7 +76,7 @@ def refusals(actor: Any, node_id: str, world: Any) -> List[Refusal]:
 		found.append(Refusal("no_substitute", "nothing that would serve: any of %s"
 							 % ", ".join(sorted(group.get("options") or ())), options=sorted(group.get("options") or ())))
 	for family, needed, cause in ((SCHOLAR_FAMILY, node.get("sch") or 0, "scholar_staff"),
-								  (CRAFT_FAMILY, node.get("art") or 0, "craft_staff")):
+								  (craft_family(), node.get("art") or 0, "craft_staff")):
 		if needed <= 0:
 			continue
 		try:

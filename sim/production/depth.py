@@ -16,7 +16,7 @@ Needs: the views of READS_BY_OWNER in module_spec.py."""
 from contextlib import contextmanager
 
 from sim.assembly.api import Part
-from sim.labour.api import add_tenure, fade_tenure, outflow_shares, tenure_by_trade, tenure_held
+from sim.labour.api import generic_craft_trade, scholar_trade, add_tenure, fade_tenure, outflow_shares, tenure_by_trade, tenure_held
 from sim.prices.api import prices as price_solver
 from sim.world.demography_turnover import working_age_turnover
 
@@ -47,7 +47,7 @@ class Depth(Part):
 		"""People of each trade one founding-size concern ties up for a year (founder-staffed)."""
 		scholars, craftsmen = self.needs.venture_hands_founder_staffed[node_id]
 		foreman_trade, foreman_fte = self.needs.venture_foreman[node_id]
-		staff = {"scholar": scholars, "artisan": craftsmen}
+		staff = {scholar_trade(): scholars, generic_craft_trade(): craftsmen}
 		if foreman_trade:
 			staff[foreman_trade] = staff.get(foreman_trade, 0.0) + foreman_fte
 		return {trade: people for trade, people in staff.items() if people > 0.0}
@@ -57,7 +57,7 @@ class Depth(Part):
 		node = self.needs.tree_nodes()[node_id]
 		hours = {trade: hours for trade, hours in (node.get("lab") or {}).items() if hours > 0.0}
 		if not hours and node.get("ph", 0.0) > 0.0:
-			hours = {"artisan": node["ph"]}
+			hours = {generic_craft_trade(): node["ph"]}
 		hours_per_year = self.needs.hours_per_person_year()
 		return {trade: each / hours_per_year for trade, each in hours.items()}
 

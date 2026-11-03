@@ -10,7 +10,7 @@ from sim.constants import declare
 from . import currency, households_basket, state_finance, trade_wages
 from .home_scope import home_cohorts
 from .setup import labour_area
-from .state_wage_ceiling import STATE_WAGE_CEILING_MULTIPLE
+from .state_wage_ceiling import WAGE_CEILING_MULTIPLE
 from .types import Bid, EDGE_CONSUMPTION, GoodsMove, LabourBid
 
 STATE_MAX_SHARE_OF_TILE_HOURS = declare(
@@ -19,7 +19,6 @@ STATE_MAX_SHARE_OF_TILE_HOURS = declare(
     source=None, confidence="D",
     why="Stands in for the size of the state's establishment (how many soldiers and officials it can "
         "house, drill and supervise), which the engine does not yet supply.")
-
 
 
 @dataclass
@@ -109,7 +108,7 @@ def wage_labour_bids(setup, record, view, wage_budget: float) -> List[LabourBid]
         for tile, people in sorted(working.items()):
             area = labour_area(tile)
             wage = trade_wages.wage_in_view(setup, view, trade, area)
-            ceiling = wage * STATE_WAGE_CEILING_MULTIPLE
+            ceiling = wage * WAGE_CEILING_MULTIPLE
             hours = min(wage_budget / len(trades) * people / total_working / ceiling,
                         people * setup.working_hours_per_year * STATE_MAX_SHARE_OF_TILE_HOURS)
             if hours > 0.0:

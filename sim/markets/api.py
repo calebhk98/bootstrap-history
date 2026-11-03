@@ -6,7 +6,7 @@ from .commands import (BuyMaterial, CancelMaterialOrders, FoundBankFromOutside, 
                        MoveGoods, NoteDraw, RenameMarketSeat, RepriceOpeningMoney, ResetDraws,
                        SellMaterial)
 from .constants import MEAN_INCOME_HOURS_PER_CAPITA
-from .rules import HOME_SELLER
+from sim.prices.rules import HOME_SELLER
 from .rules import tonnes_sold
 from .spin_up import (SPIN_UP_MAXIMUM_YEARS, SPIN_UP_MEASURED_YEARS, SPIN_UP_TOLERANCE, SPIN_UP_TRIMMED_YEARS, SPIN_UP_YEARS_ENV,
                       spin_up_years)

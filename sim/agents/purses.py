@@ -14,7 +14,7 @@ whatever the pool lacks and are paid back from what it holds beyond its lending.
 """
 from typing import Any, Callable, Dict, List, Optional
 
-from sim.book import ROUNDING_SHARE, Book, InsufficientFunds, Transfer, is_edge
+from sim.book import EDGE_EXCHANGE, ROUNDING_SHARE, Book, InsufficientFunds, Transfer, is_edge
 from sim.contracts import DEPOSIT, FACILITY, Contracts
 from sim.rekey import rekey
 
@@ -23,7 +23,6 @@ from .named_lenders import NamedLenders
 
 COIN = "engine_coin"                          # the currency of the actors' money in the shared book (the engine counts in this coin)
 EDGE_SAVERS = "edge:savers"                   # the household savers who lend to actors
-EDGE_EXCHANGE = "edge:exchange"                # the actors' coin turned into the economy's unit and back
 EDGE_OUTSIDE = "edge:outside the book"        # the other side of a posting whose payer or payee keeps no account here
 FACILITY_DRAW = "facility draw"
 FACILITY_REPAYMENT = "facility repayment"

@@ -32,7 +32,7 @@ class Society:
 
 
 def literacy_of(country=None, field="literacy_general"):
-    return country_rules.country_literacy(Society().actors, country).get(field)
+    return country_rules.country_literacy(Society().actors, country, str).get(field)
 
 
 check("the home country's literacy is read from the home strata, whether named or not", abs(literacy_of() - 0.18) < 1e-12
