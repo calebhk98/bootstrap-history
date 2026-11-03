@@ -6,7 +6,7 @@ share of capacity the opposite flow fills is not charged. With no ledger yet, th
 import json
 
 from sim.assembly.api import Part
-from sim.geography.api import cargo_cost, flow_ledger, freight_cost
+from sim.geography.api import flow_ledger, freight_cost
 from sim.living_stock.api import stock_rates
 
 from . import rules
@@ -16,7 +16,7 @@ from .route import Leg, Route, cargo_class_of, domestic_cargo_cost_share, domest
 
 class Haul(Part):
     """Needs: carriage_facts, built_ways, held_techniques, goods_carried_last_year, material_source_tiles,
-    route_km_to, market_rate, material_price, plus what Models and Routes need."""
+    route_km_to, market_rate, material_price, spoilage_rates, plus what Models and Routes need."""
 
     def __init__(self, module):
         super().__init__(module)
@@ -83,7 +83,7 @@ class Haul(Part):
         while it travels, and what is lost to spoilage in that time (and, for a herd on the road, the daily loss each
         leg's mode states). No merchant margin (domestic carriers' margins are not modelled)."""
         return domestic_cargo_cost_share(
-            cargo_cost.spoilage_rates().get(material, 0.0), self.needs.carriage_facts()["loss_per_day"], route,
+            self.needs.spoilage_rates().get(material, 0.0), self.needs.carriage_facts()["loss_per_day"], route,
             self.needs.market_rate())
 
     def material_freight_factor(self, material):

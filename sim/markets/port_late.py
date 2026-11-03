@@ -7,7 +7,7 @@ economy is then given what it lacks from a setup built from them (`AgentEconomy.
 same setup a resumed game builds from its saved opening.
 """
 from .port_setup import allowed_entries, opening_wages
-from sim.prices.api import making_cost
+from sim.prices.api import making_cost, solve_prices_core
 cost_of_making = making_cost.cost_of_making
 
 
@@ -31,17 +31,27 @@ def late_goods_costs(sim, prices, goods, held_nodes, production, wage_level=1.0)
         opening = prices.get(material)      # opening-year money: scaled to today's
         return opening * wage_level if opening and opening > 0.0 else None
 
+    registry = sim.state.trade_registry
+
     def wage_of(trade):
+        """The labour market's quote of a trade the game knows; None for one it does not, so a recipe needing it has no cost."""
+        if trade not in registry:
+            return None
         if trade not in wages:
             wages[trade] = sim.economy.labour.quote(trade)
         return wages[trade]
+
+    def rent_of(key):
+        """Coin a hectare-year of land costs where the land market let any; None before it has, which leaves a good that
+        occupies land without a cost."""
+        return sim.economy.agent_land_rent_per_hectare() if key == solve_prices_core.LAND_MATERIAL else None
 
     rate = float(sim.finance.market_rate())
     found = {}
     for good in goods:
         if good in prices:
             continue
-        made = cost_of_making(good, held_nodes, input_price_of, wage_of, rate, production=production,
+        made = cost_of_making(good, held_nodes, input_price_of, wage_of, rate, rent_of=rent_of, production=production,
                               civilization=sim.scenario.civ)
         if made is not None and made.unit_cost > 0.0:
             found[good] = made.unit_cost / wage_level

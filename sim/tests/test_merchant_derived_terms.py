@@ -58,7 +58,7 @@ def _economy(grain_price=1.0, staple="wheat_kg", other_prices=None):
     prices = {staple: grain_price, **(other_prices or {}), "wood_kg": 0.5, "coal_kg": 0.4, "iron_bar_kg": 8.0, "ox": 4000.0, "mule": 3000.0}
     return module_harness.build(Freight, views={
         "material_prices": lambda: prices, "material_price": lambda tag: prices.get(tag), "trade_registry": lambda: {"labourer": {"fallback": True}, "sailor": {"role": "sailor"}, "merchant": {"role": "merchant"}},
-            "wage": lambda trade: 2.0,
+            "labour_quote": lambda trade: 2.0,
         "market_rate": lambda: 0.05, "civilisation": lambda: {"id": "t", "staple": staple},
         **land_views.of({}, FREIGHT_LAND_VIEWS)})
 

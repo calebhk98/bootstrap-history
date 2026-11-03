@@ -1,7 +1,7 @@
 """Keeps the economy's cropland and tile yields on the farm model's: the held tiles' crop sites as the society's
 rotation and the soil nitrogen stock now make them (`Sim.farm_sites`), not as they were when the setup was built.
 """
-from sim.economy.api import tile_costs
+from sim.economy.api import recipe_tile_key, tile_costs
 
 
 def follow_farm_sites(sim, held_tiles, yield_factor_by_recipe_tile) -> dict:
@@ -19,5 +19,7 @@ def follow_farm_sites(sim, held_tiles, yield_factor_by_recipe_tile) -> dict:
             changed[tile_id] = followed.fertility
     if not changed:
         return {}
-    factors = {key: changed.get(key.rpartition("@")[2], factor) for key, factor in yield_factor_by_recipe_tile.items()}
+    ends = {recipe_tile_key("", tile): fertility for tile, fertility in changed.items()}     # a key ends with its tile's suffix
+    factors = {key: next((fertility for suffix, fertility in ends.items() if key.endswith(suffix)), factor)
+               for key, factor in yield_factor_by_recipe_tile.items()}
     return {"tiles": tiles, "yield_factor_by_recipe_tile": factors}

@@ -20,6 +20,8 @@ PRICE_SLICES = declare(
     why="The climb of the price over an order is the mean of the economy's response at this many evenly spaced points; "
         "more points follow a steep book more closely and cost a response read each.")
 
+SLICE_MIDDLE = 0.5      # each slice of an order is read at its middle (the midpoint rule), not at its edge
+
 # a price the economy does not set: the cost table's while it opens
 KIND_MAKING_COST_TABLE = "making_cost_table"
 
@@ -76,9 +78,9 @@ class GoodsPricing:
         slices = PRICE_SLICES if tonnes > 0.0 else 1
         total = 0.0
         for index in range(slices):
-            along = taken_before + (tonnes * (index + 0.5) / slices if tonnes > 0.0 else 0.0)
+            along = taken_before + (tonnes * (index + SLICE_MIDDLE) / slices if tonnes > 0.0 else 0.0)
             if not selling and offered is not None:
-                along = min(along, offered * (1.0 - 0.5 / slices))    # the last tonne the sellers hold is the dearest
+                along = min(along, offered * (1.0 - SLICE_MIDDLE / slices))    # the last tonne the sellers hold is the dearest
             if along <= 0.0:
                 total += 1.0
                 continue

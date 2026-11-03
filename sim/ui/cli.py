@@ -321,9 +321,8 @@ def _dead_end_lines(nodes, production):
     """Complaints/533: produced goods nothing consumes (findings, not errors)."""
     from sim.engine import validate_dead_ends
     from sim.content.api import load_needs
-    from sim.content.api import load_trade_registry, trade_fields
-    from sim.json_files import read_json
-    lives = read_json(os.path.join(ROOT, "data", "world", "service_lives.json")).get("years", {})
+    from sim.content.api import load_trade_registry, service_life_years, trade_fields
+    lives = service_life_years(MODDIR)
     tree_materials = {material for node in nodes.values() for material in (node.get("mat") or {})}
     return validate_dead_ends.report_lines(production, load_needs(ROOT, MODDIR)["goods"], lives,
                                            {trade: trade_fields(record) for trade, record in load_trade_registry(ROOT, production).items()},

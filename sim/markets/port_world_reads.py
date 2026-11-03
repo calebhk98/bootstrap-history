@@ -24,10 +24,6 @@ class ScenarioReads:
 		return self._needs.game_config()
 
 	@property
-	def nodes(self):
-		return self._needs.tree_nodes()
-
-	@property
 	def price_index(self):
 		return self._needs.price_index()
 
@@ -71,6 +67,14 @@ class MaterialReads:
 	def priced_key(self, tag, prices):
 		return price_rules.priced_key(tag, prices, self._needs.commodity_record[tag])
 
+	def spoilage_rates(self):
+		"""{good: continuous decay rate a year} of the goods that spoil, with the installed mods applied."""
+		return self._needs.spoilage_rates()
+
+	def service_life_years(self):
+		"""{good: years a stock of it serves} of the goods that wear out, with the installed mods applied."""
+		return self._needs.service_life_years()
+
 	def commodity_map(self):
 		return self._needs.material_commodity_map()
 
@@ -81,14 +85,8 @@ class MaterialReads:
 	def market_tonnes(self, commodity):
 		return self._needs.material_market_tonnes[commodity]
 
-	def commodity_materials(self, commodity):
-		return self._needs.commodity_materials[commodity]
-
 	def stock_t(self, commodity):
 		return self._needs.goods_stock[commodity]
-
-	def not_traded(self):
-		return self._needs.not_traded_materials()
 
 	def serves_a_need(self, material):
 		return self._needs.material_serves_a_need[material]
@@ -108,9 +106,6 @@ class PortFinanceReads:
 
 	def market_rate(self):
 		return self._needs.market_rate()
-
-	def credit_room(self, actor_id):
-		return self._needs.credit_room(actor_id)
 
 	def credit_line_sought(self):
 		return self._needs.credit_line_sought(None, None, None)
@@ -137,9 +132,6 @@ class ProductionReads:
 	def __init__(self, needs):
 		self._needs = needs
 
-	def techniques_held(self):
-		return self._needs.techniques_held()
-
 	def operating(self):
 		return self._needs.operating()
 
@@ -163,15 +155,6 @@ class ProductionReads:
 
 	def concern_book_inputs_cost(self, node_id):
 		return self._needs.concern_book_inputs_cost[node_id]
-
-	def concern_takings(self, node_id, ramp):
-		return self._needs.concern_takings(node_id, ramp)
-
-	def node_output_market_factor(self, node):
-		return self._needs.node_output_market_factor(node)
-
-	def project_cost(self, node_id):
-		return self._needs.project_cost(node_id)
 
 	def nodes_with_mechanic(self, name):
 		return tuple(self._needs.mechanic[name])

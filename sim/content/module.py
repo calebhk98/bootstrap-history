@@ -74,3 +74,9 @@ class Content(Module):
 
 	def not_traded_materials(self) -> FrozenSet[str]:
 		return views.not_traded_materials(self.directory)
+
+	def spoilage_rates(self) -> Dict[str, float]:
+		return views.spoilage_rates(self.directory)
+
+	def service_life_years(self) -> Dict[str, float]:
+		return views.service_life_years(self.directory)

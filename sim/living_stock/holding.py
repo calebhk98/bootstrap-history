@@ -2,24 +2,31 @@
 from sim.assembly.api import Part
 from sim.labour.api import production_data
 from sim.ledger.api import ChangeStock
-from sim.world.material_units import tonnes_per_unit
+from sim.unit_conversions import KILOGRAMS_PER_TONNE
 
 from . import rules
-from .data import kilograms_per_unit, stock_rates
+from .data import stock_rates
 
 HERDS = "herds"
 
 
 class Holding(Part):
-    """Views over the held stock and the commands that change it (needs: goods_stock, material_commodity, tree,
+    """Views over the held stock and the commands that change it (needs: goods_stock, unit_mass_kg, material_commodity, tree,
     civilisation, stock_land, endemic_stock_loss, producer_capacities)."""
+
+    def kilograms_per_unit(self, material):
+        """Kilograms in one unit of a stock material: the economy's mass for it (the markets `unit_mass_kg` view)."""
+        return self.needs.unit_mass_kg(material)
+
+    def tonnes_per_unit(self, material):
+        return self.kilograms_per_unit(material) / KILOGRAMS_PER_TONNE
 
     def commodity_of(self, material):
         return self.needs.material_commodity[material]
 
     def held(self, material):
         """Units of `material` held now."""
-        return rules.held_units(self.needs.goods_stock[self.commodity_of(material)], tonnes_per_unit(material))
+        return rules.held_units(self.needs.goods_stock[self.commodity_of(material)], self.tonnes_per_unit(material))
 
     def held_tonnes_of(self, material):
         return self.needs.goods_stock[self.commodity_of(material)]
@@ -35,12 +42,12 @@ class Holding(Part):
         node = self.needs.tree[node_id]
         holds = node.get("holds")
         gates = rules.stock_gates(holds, self.needs.civilisation().get("needs_first"), node_id, self.held)
-        return {"missing": rules.missing_stock(holds, self.held_tonnes_of, tonnes_per_unit),
+        return {"missing": rules.missing_stock(holds, self.held_tonnes_of, self.tonnes_per_unit),
                 "gates": gates, "needed_by": rules.needed_by(gates)}
 
     def stock_holds_met(self, holds):
         """Whether every {material: units} in `holds` is held."""
-        return not rules.missing_stock(holds, self.held_tonnes_of, tonnes_per_unit)
+        return not rules.missing_stock(holds, self.held_tonnes_of, self.tonnes_per_unit)
 
     def society_herds(self):
         return self.world.society_herds
@@ -52,7 +59,7 @@ class Holding(Part):
         self.change(command.material, command.units)
 
     def change(self, material, units):
-        self.needs.send(ChangeStock(self.commodity_of(material), float(units) * tonnes_per_unit(material)))
+        self.needs.send(ChangeStock(self.commodity_of(material), float(units) * self.tonnes_per_unit(material)))
 
     def grant_opening_stock(self, command=None):
         """Credit what the civilisation held at its date."""
@@ -72,7 +79,7 @@ class Holding(Part):
     def grant_opening_herds(self, command=None):
         """Credit the opening herds to the ledger, scaled down together if the held tiles' pasture cannot carry them."""
         herds = rules.opening_herds(self.opening_herd_units(), self.needs.stock_land()["pasture_kg"],
-                                    kilograms_per_unit, self.endemic_keeping)
+                                    self.kilograms_per_unit, self.endemic_keeping)
         for material, units in herds.items():
             self.change(material, units)
             self.world.society_herds[material] = units

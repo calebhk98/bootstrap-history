@@ -4,11 +4,8 @@ from .agent_view_part import AgentViewPart
 
 class AgentLandViews(AgentViewPart):
 
-	def agent_land_rent(self):
-		"""Mean rent per hectare-year of the agent economy's land market, in coin; None while it opens."""
-		return self.agent_land_rent_per_hectare()
-
 	def agent_land_rent_per_hectare(self):
+		"""Mean rent per hectare-year of the agent economy's land market, in coin; None while it opens."""
 		parts = self._answering()
 		return None if parts is None else parts.households.land_rent_per_hectare()
 

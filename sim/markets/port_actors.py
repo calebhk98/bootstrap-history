@@ -90,10 +90,11 @@ def fleet_goods(production: dict, candidates: Sequence[str], life_of: Callable[[
 
 
 def sale_orders(economy, sales: Sequence[dict], tonnes_per_unit: Callable[[str], Optional[float]],
-                tile_of: Callable[[str], str], reservation_of: Callable[[str, str, str, str], float]):
+                tile_of: Callable[[str], str], reservation_of: Callable[[str, str, str, str], Optional[float]]):
     """(goods moves, {account: AgentOrders}) that put the year's sales in the book. A seller's reservation for a
     material is the tonnes-weighted mean of what its concerns cost it to make a unit (`reservation_of(seller, node,
-    material, tile)`); goods that came from no concern are offered at whatever the market pays."""
+    material, tile)`, None for a concern whose cost is not known, which is left out of the mean); goods that came from no
+    concern, or from none with a known cost, are offered with no floor, at whatever the market pays."""
     moves, offers = [], {}
     for sale in sorted(sales, key=lambda each: (each["seller"], each["material"])):
         good = sale["material"]
@@ -104,9 +105,10 @@ def sale_orders(economy, sales: Sequence[dict], tonnes_per_unit: Callable[[str],
         seller = sale["seller"]
         tile = tile_of(seller)
         concerns = [(node, tonnes) for node, tonnes in sale["concerns"] if tonnes > 0.0]
-        weight = sum(tonnes for _node, tonnes in concerns)
-        reservation = (sum(reservation_of(seller, node, good, tile) * tonnes for node, tonnes in concerns) / weight
-                       if weight > 0.0 else 0.0)
+        costed = [(cost, tonnes) for cost, tonnes in ((reservation_of(seller, node, good, tile), tonnes) for node, tonnes in concerns)
+                  if cost is not None]
+        weight = sum(tonnes for _cost, tonnes in costed)
+        reservation = sum(cost * tonnes for cost, tonnes in costed) / weight if weight > 0.0 else 0.0   # no cost known: no floor
         account = sale_account(seller)
         moves.append(GoodsMove(EDGE_LEGACY, account, good, tile, units, "actor output"))
         offers.setdefault(account, []).append(
@@ -157,11 +159,11 @@ def keep_paid_purchases(orders: Dict[str, AgentOrders], funding: Sequence[Tuple[
     return {account: AgentOrders(bids=bids) for account, bids in kept_bids.items()}, kept, refused
 
 
-def standing_bids(economy, flows: dict, tile: str, tonnes_per_unit: Callable[[str], Optional[float]],
+def standing_bids(economy, seat_id: str, drawn: Dict[str, float], tile: str, tonnes_per_unit: Callable[[str], Optional[float]],
                   materials_in: Callable[[str], Sequence[str]]) -> Tuple[Bid, ...]:
-    """What the founder's running works drew from the market this year as fixed-quantity bids at the economy's price, for
-    firm entry to read. They are not cleared: the works have already used the goods."""
-    wanted: Dict[str, float] = dict(sorted((flows.get("drawn") or {}).items()))
+    """What a seat's running works drew from the market this year (`drawn`: {commodity: tonnes}), as fixed-quantity bids at the
+    economy's price on the seat's tile, for firm entry to read. They are not cleared: the works have already used the goods."""
+    wanted: Dict[str, float] = dict(sorted(drawn.items()))
     view, found = economy.view(), []
     for commodity, tonnes in sorted(wanted.items()):
         good = good_for(economy, commodity, materials_in)
@@ -170,7 +172,7 @@ def standing_bids(economy, flows: dict, tile: str, tonnes_per_unit: Callable[[st
         area = economy.area_map.area_of(good, tile) if units > 0.0 else None
         price = standing_price(view.price(good, area), economy_api.opening_price_in_current_money(economy, good)) if units > 0.0 else None
         if price is not None:
-            found.append(Bid("standing:founder", good, area, tile, units, 0.0, price, 0.0, units * price))
+            found.append(Bid("standing:" + seat_id, good, area, tile, units, 0.0, price, 0.0, units * price))
     return tuple(found)
 
 

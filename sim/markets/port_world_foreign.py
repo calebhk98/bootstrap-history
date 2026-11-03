@@ -15,12 +15,6 @@ class ForeignReads:
 	def foreign_economy_facts(self, civilization_id):
 		return self._needs.partner_facts[civilization_id]
 
-	def partner_price_per_unit(self, partner, material):
-		return self._needs.partner_price_per_unit(partner, material)
-
-	def actors_carry(self, material, to_partner, partner=None):
-		return self._needs.actors_carry(material, to_partner, partner)
-
 	def cargo_legs(self):
 		return self._needs.cargo_legs()
 

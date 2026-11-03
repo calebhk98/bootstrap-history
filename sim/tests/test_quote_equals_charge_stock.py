@@ -13,6 +13,7 @@ from sim.ledger.api import ChangeStock, PayEdge
 from sim.living_stock.api import BuyStock, SmuggleStock
 from sim.living_stock.module import LivingStock
 from sim.polity.api import RaiseScandal
+from sim.markets.unit_mass import unit_mass_kg
 from sim.refusal import Refusal
 from sim.tests import module_harness
 from sim.ui.proto import stock_purchases
@@ -28,7 +29,7 @@ def terms(**more):
 
 def stock_module(can_pay=True, has_government=False):
     return module_harness.build(LivingStock, views={
-        "can_pay": lambda cost: can_pay, "material_commodity": lambda material: material, "year": 100,
+        "can_pay": lambda cost: can_pay, "unit_mass_kg": unit_mass_kg, "material_commodity": lambda material: material, "year": 100,
         "acting_balance": 500.0, "partner": lambda partner: {"has_government": has_government, "civ": {}, "stock_taken": {}}})
 
 

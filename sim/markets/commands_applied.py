@@ -1,8 +1,10 @@
 """The commands the markets module applies."""
 from sim.assembly.api import RepriceTree
+from sim.book import BookError, InsufficientGoods
 from sim.assembly.api import Part
 from sim.economy import api as economy_api
 from sim.ledger.api import RescaleHouseholdMoney
+from sim.refusal import Refusal
 
 
 class Applying(Part):
@@ -24,18 +26,21 @@ class Applying(Part):
 
 	def move_goods(self, command):
 		move = economy_api.GoodsMove(command.giver, command.receiver, command.good, command.tile, command.quantity, command.purpose)
-		economy_api.move_goods(self.parts.market_objects.economy.agent.economy(), [move])
+		try:
+			economy_api.move_goods(self.parts.market_objects.economy.agent.economy(), [move])
+		except BookError as error:
+			cause = "insufficient_goods" if isinstance(error, InsufficientGoods) else "negative_amount"
+			return Refusal(cause, str(error), giver=command.giver, receiver=command.receiver, good=command.good,
+			               tile=command.tile, quantity=command.quantity)
+		return None
 
 	def rename_market_seat(self, command):
 		self.parts.market_objects.economy.parts.rename_agent(command.from_id, command.to_id)
 
-	def mark_money_priced_at_economy(self, command):
-		self.world.money_from_economy = True
-
 	def reprice_opening_money(self, command):
 		"""From now the money an hour of work is worth is the economy's unskilled wage. `command.before` is the figure the
 		game's money was counted at; every seat's purse and the tree's money fields move by the ratio of the two."""
-		self.mark_money_priced_at_economy(command)
+		self.world.money_from_economy = True
 		ratio = self.needs.money_per_labour_hour() / command.before
 		for seat_id in self.needs.registered_seats():
 			with self.act_as(seat_id):

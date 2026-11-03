@@ -84,7 +84,7 @@ class Shipyard(Market):
 
 # ---- the home market port: no quote is no price, not a free one -----------------------------------------------
 def port_with(quote):
-	return types.SimpleNamespace(needs=fake_needs(material_purchase_cost=lambda material, tonnes: quote))
+	return types.SimpleNamespace(needs=fake_needs(purchase_quote=lambda material, tonnes: quote))
 
 
 check("the home port prices a quoted material at the quote", Quotes(port_with((42.0, "home"))).material_cost(IRON, 3.0) == 42.0)

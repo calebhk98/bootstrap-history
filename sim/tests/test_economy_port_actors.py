@@ -68,6 +68,19 @@ class SaleOrdersTests(unittest.TestCase):
         self.assertEqual((offer.good, offer.area, offer.tile, offer.quantity, offer.reservation_price),
                          (GRAIN, "area:farms", FARMS, 4.0, 2.0))
 
+    def test_a_concern_with_no_known_cost_is_left_out_of_the_weighted_reservation(self):
+        sales = [{"seller": "firm:a", "material": GRAIN, "tonnes": 8.0, "concerns": [["n1", 6.0], ["n2", 2.0]]}]
+        costs = {"n1": None, "n2": 5.0}
+        _moves, orders = actors_port.sale_orders(stand_in_economy(), sales, per_unit, tile_of,
+                                                 lambda seller, node, material, tile: costs[node])
+        self.assertEqual(orders[actors_port.sale_account("firm:a")].offers[0].reservation_price, 5.0)
+
+    def test_a_sale_none_of_whose_concerns_has_a_known_cost_is_offered_with_no_floor(self):
+        sales = [{"seller": "firm:a", "material": GRAIN, "tonnes": 8.0, "concerns": [["n1", 6.0]]}]
+        _moves, orders = actors_port.sale_orders(stand_in_economy(), sales, per_unit, tile_of,
+                                                 lambda seller, node, material, tile: None)
+        self.assertEqual(orders[actors_port.sale_account("firm:a")].offers[0].reservation_price, 0.0)
+
     def test_a_good_the_economy_does_not_trade_is_not_offered(self):
         sales = [{"seller": "firm:a", "material": "unknown_kg", "tonnes": 10.0, "concerns": []}]
         self.assertEqual(actors_port.sale_orders(stand_in_economy(), sales, per_unit, tile_of,

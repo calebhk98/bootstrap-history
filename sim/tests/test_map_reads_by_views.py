@@ -39,7 +39,7 @@ class FreightReadsTests(unittest.TestCase):
     def test_handling_is_charged_from_the_dues_hours_the_land_module_states(self):
         module = module_harness.build(Freight, views={
             "trade_registry": lambda: {"labourer": {"fallback": True}, "sailor": {"role": "sailor"}, "merchant": {"role": "merchant"}},
-            "wage": lambda trade: 2.0, "carriage_facts": lambda: {
+            "labour_quote": lambda trade: 2.0, "carriage_facts": lambda: {
                 "walking_modes": [], "loss_per_day": {}, "dues_hours_per_tonne": {"cart": 3.0}}})
         self.assertEqual(module.freight_handling_costs()["cart"], 6.0)
 

@@ -14,7 +14,7 @@ from sim.world import demand, need_basket
 from sim.geography.api import dues_hours_per_tonne, sea_freight, settlement
 from sim.labour import api as labour_api
 
-from . import port_closure, port_crop_prices, port_data, port_sites
+from . import port_closure, port_crop_prices, port_sites
 from .port_stores import opening_store_values
 from sim.freight.api import SEA_MODE
 
@@ -192,7 +192,7 @@ def build_setup(sim, opening=None, production=None):
     every_recipe = sorted(set(opening["recipes"]).union(*(opened["recipes"] for opened in partners.values())))
     recipes = recipes_from_production_data(production, every_recipe)
     trades_data = sim.state.trade_registry
-    life_years = port_data.service_life_years()
+    life_years = sim.materials.service_life_years()
     recipes = tool_wear_recipes(recipes, trades_data, life_years, float(sim.scenario.HOURS_PER_PERSON_YEAR))
     mint_recipe = (recipes_from_production_data(production, [opening["mint_recipe"]])[opening["mint_recipe"]]
                    if opening.get("mint_recipe") else None)
@@ -203,7 +203,8 @@ def build_setup(sim, opening=None, production=None):
         goods.update(recipe.outputs, recipe.inputs, recipe.plant_goods)
     for need in basket.needs:
         goods.update(good for good, _effect in need.goods)
-    specs = goods_specs({good: "" for good in goods}, port_data.spoilage_rates(), life_years)
+    specs = goods_specs({good: "" for good in goods},
+                        {good: {"rate": rate} for good, rate in sim.materials.spoilage_rates().items()}, life_years)
     prices = {good: price for good, price in opening["prices"].items() if good in specs and price > 0.0}
     prices = port_closure.makeable_prices(prices, production, recipes)
     recipes = {recipe_id: plant_builds.with_plant_from(recipe, prices) for recipe_id, recipe in recipes.items()}

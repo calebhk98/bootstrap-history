@@ -236,7 +236,7 @@ class HurtSectors(unittest.TestCase):
     def view(self, state, quote, pressured=None, factor=1.0):
         needs = fake_needs(
             commodities_sold_by_acting_party=["iron"], main_material_of=lambda commodity: commodity,
-            material_trade_quote=lambda material: quote, market_state=lambda commodity: state,
+            goods_quote=lambda material: quote, market_state=lambda commodity: state,
             market_supply=lambda trade: 2.0e6, mass_rate_text=lambda amount, **options: "%s a year" % amount)
         return Groups(types.SimpleNamespace(
             needs=needs, labour=types.SimpleNamespace(pay_per_person_year=lambda trade: 100.0, trade_of_role=lambda role: "labourer")))

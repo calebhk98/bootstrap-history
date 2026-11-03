@@ -6,12 +6,6 @@ from .agent_view_part import AgentViewPart
 
 class AgentLabourViews(AgentViewPart):
 
-	def agent_wage(self, trade):
-		"""The country figure: the trade's hours-weighted wage over the acting seat's country's labour markets, or None while
-		the agent economy opens. A seat's own bid is funded at `agent_wage_at`."""
-		parts = self._answering()
-		return None if parts is None else parts.prices.wage_per_hour(trade, self._economy().world.scenario.acting_country())
-
 	def agent_wage_at(self, trade, tile):
 		"""The wage per hour in coin a bid for the trade on `tile` is funded at (sim/economy/trade_wages.py), or None until the game's
 		money is priced at the economy (the first ask opens it). The one wage rule always gives a wage, for any country."""

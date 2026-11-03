@@ -7,12 +7,12 @@ from sim.assembly.api import Command
 
 @dataclass(frozen=True)
 class ResetDraws(Command):
-    """Start a fresh count of what running works draw from the market's standing offer this year."""
+    """Start a fresh count of what the acting seat's running works draw from the market's standing offer this year."""
 
 
 @dataclass(frozen=True)
 class NoteDraw(Command):
-    """Running works used `tonnes` of a commodity the seat neither held nor made; nothing for tonnes that are not positive."""
+    """The acting seat's running works used `tonnes` of a commodity it neither held nor made; nothing for tonnes that are not positive."""
     commodity: str
     tonnes: float
 
@@ -60,11 +60,6 @@ class RenameMarketSeat(Command):
 	parties follows."""
 	from_id: str
 	to_id: str
-
-
-@dataclass(frozen=True)
-class MarkMoneyPricedAtEconomy(Command):
-	"""The game's money is now counted at the agent economy's unskilled wage."""
 
 
 @dataclass(frozen=True)

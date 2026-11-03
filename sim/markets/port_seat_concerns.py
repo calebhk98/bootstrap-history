@@ -5,6 +5,7 @@ Complaint 382) and offered at what the concern costs to make it at the economy's
 to the seat's ledger after the clearing (port_seats.py). What a seat offered and what its inputs cost live from `orders` to
 `settle` within one year's run and are passed between them, not kept."""
 import math
+from typing import Optional
 
 from sim.economy import api as economy_api
 from sim.economy.api import (EDGE_LEGACY, AgentOrders, GoodsMove, Offer, Producer, expected_output_prices,
@@ -49,14 +50,15 @@ class SeatConcerns:
                 offered[material] = offered.get(material, 0.0) + quantity
                 moves.append(GoodsMove(EDGE_LEGACY, seat_id, material, tile, quantity, "concern output"))
                 cost = self.reservation(node_id, material, tile, view, seat_id)
-                offers.append(Offer(seat_id, material, area_map.area_of(material, tile), tile, quantity, cost))
+                offers.append(Offer(seat_id, material, area_map.area_of(material, tile), tile, quantity,
+                                    0.0 if cost is None else cost))     # no cost known: no floor
         economy_api.move_goods(economy, moves)
         return {seat_id: AgentOrders(offers=tuple(offers))} if offers else {}
 
-    def reservation(self, node_id, material, tile, view, agent_id) -> float:
+    def reservation(self, node_id, material, tile, view, agent_id) -> Optional[float]:
         """The least the seller takes for a unit of a concern's output: the unit's share, by value, of
         the variable cost of the cheapest technique the concern holds that the economy knows, at the
-        economy's live prices and wages. With no such technique it sells at what the market pays."""
+        economy's live prices and wages. None with no such technique: no cost is known."""
         recipes = economy_api.recipes_of(self._agent.economy())
         keys = price_rules.entry_keys_held_for(node_id, price_solver.default_production_entries(), self._world.production.techniques_spread())
         best = None
@@ -74,7 +76,7 @@ class SeatConcerns:
             if revenue > 0.0 and math.isfinite(cost) and prices.get(material):
                 per_unit = cost * prices[material] / revenue
                 best = per_unit if best is None else min(best, per_unit)
-        return best if best is not None else 0.0
+        return best
 
     def settle(self, offered, inputs):
         """What each seat's goods fetched goes to its ledger, less what its concerns' inputs cost; what did not sell goes

@@ -6,7 +6,7 @@ from .harness import *  # noqa: F401,F403
 
 from sim.foreign_trade.module import ForeignTrade
 from sim.tests import module_harness
-from sim.world.material_units import tonnes_per_unit
+from sim.markets.unit_mass import tonnes_per_unit
 
 QUICK_TOPIC = True
 

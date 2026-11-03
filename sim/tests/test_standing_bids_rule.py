@@ -21,10 +21,10 @@ class StandingBidTests(unittest.TestCase):
             view=lambda: SimpleNamespace(price=lambda good, area: 0.5),
             setup=SimpleNamespace(opening_prices={GADGET: 400.0}, currency_id="coin"),
             record=SimpleNamespace(memory=SimpleNamespace(opening_wage_level=lambda currency: 1.0)))   # opening-year money is today's
-        flows = {"drawn": {GADGET: 1.0}}
-        bids = port_actors.standing_bids(economy, flows, "tile", lambda good: 0.5,
-                                                 lambda commodity: [commodity])
+        bids = port_actors.standing_bids(economy, "founder", {GADGET: 1.0}, "tile", lambda good: 0.5,
+                                         lambda commodity: [commodity])
         self.assertEqual(len(bids), 1)
+        self.assertEqual(bids[0].buyer, "standing:founder")
         self.assertAlmostEqual(bids[0].floor_quantity, 1.0 / 0.5)
         self.assertEqual(bids[0].good, GADGET)
         self.assertGreater(bids[0].budget, 0.0)

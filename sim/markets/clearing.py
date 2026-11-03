@@ -18,8 +18,8 @@ class MarketClearing(Part):
 	# ---- the year's flows ----
 
 	def market_flows(self):
-		"""{"year", "drawn": {commodity: tonnes}}: what the founder's running works drew from the market this year, written by
-		the goods market; it starts again from nothing when the year turns. The live record."""
+		"""{"year", "drawn": {seat id: {commodity: tonnes}}}: what each seat's running works drew from the market this year,
+		written by the goods market; it starts again from nothing when the year turns. The live record."""
 		world = self.world
 		year = self.needs.year()
 		if not world.market_flows or world.market_flows.get("year") != year:

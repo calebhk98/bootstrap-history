@@ -6,7 +6,6 @@ from typing import Any, Callable, List, Optional, Tuple
 
 from sim.agents.api import research_gate
 from sim.assembly.api import Part
-from sim.world.material_units import tonnes_per_unit
 
 
 class Availability(Part):
@@ -22,7 +21,7 @@ class Availability(Part):
         needs = self.parts.project_bill.project_material_needs(node_id)
         held = held_tonnes or (lambda material: self.needs.goods_stock[self.parts.supply.material_pool(material)[0]])
         return research_gate.materials_short_of_stock(
-            {material: needs[material] * tonnes_per_unit(material) for material in needs},
+            {material: needs[material] * self.parts.project_bill.tonnes_per_unit(material) for material in needs},
             lambda material: can_be_bought[material], held)
 
     def start_gate_material_seller(self, node_id: str, node: Any, ignore_trade: bool, memo: Any, why: bool

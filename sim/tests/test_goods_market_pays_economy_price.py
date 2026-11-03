@@ -106,7 +106,6 @@ class TilePriceTests(unittest.TestCase):
         _game, market = stub_game()
         self.assertIsNone(market.quote("cobalt_kg"))
         self.assertIsNone(market.pricing.purchase_cost("cobalt_kg", 1.0))
-        self.assertIsNone(market.price("cobalt_kg"))
         self.assertFalse(market.offers.can_be_bought("cobalt_kg"))
 
 

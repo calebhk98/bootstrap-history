@@ -26,7 +26,7 @@ MODULE_SPECS = (ModuleSpec(
     ),
     applies=((ChangeHeld, "change_held"), (GrantOpeningStock, "grant_opening_stock"),
              (GrantOpeningHerds, "grant_opening_herds"), (BuyStock, "buy_stock"), (SmuggleStock, "smuggle_stock")),
-    reads=("goods_stock", "acting_balance", "material_commodity", "tree", "civilisation", "year", "stock_land",
+    reads=("goods_stock", "unit_mass_kg", "acting_balance", "material_commodity", "tree", "civilisation", "year", "stock_land",
            "endemic_stock_loss", "nursery_room_units", "producer_capacities", "hours_hired_once", "can_pay", "partners",
            "partner", "partner_refusal", "partner_gate", "partner_landed_price", "partner_carry",
            "partner_catch_chance"),

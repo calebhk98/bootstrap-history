@@ -47,7 +47,7 @@ class YearInputsBuilder:
                                               for buyer in sorted(sim.scenario.actors.actors)),
                           bondage_tiles=port_bondage.bondage_tiles(sim, economy),
                           bonded_for_sale=port_bondage.bonded_for_sale(sim, economy),
-                          standing_bids=self.founder_standing_bids(), credit_asks=self.credit_asks(),
+                          standing_bids=self.seats_standing_bids(), credit_asks=self.credit_asks(),
                           site_limits=tuple(port_sites.site_limits(sim, recipe_outputs(economy), economy_api.economy_tiles(economy))))
 
     def credit_asks(self):
@@ -65,11 +65,17 @@ class YearInputsBuilder:
                 asks.append(economy_api.credit_line_request(seat_id, currency, line, rate))
         return tuple(asks)
 
-    def founder_standing_bids(self):
-        """The founder's running works' draws on materials, as bids for firm entry to read (port_actors.standing_bids)."""
-        sim = self._world
-        tiles = sorted(self._seats.seat_tiles())
-        if not tiles:
-            return ()
-        return port_actors.standing_bids(self._agent.economy(), sim.market_flows(), tiles[0], tonnes_per_unit,
-                                         sim.economy.materials_in)
+    def seats_standing_bids(self):
+        """Each playing seat's running works' draws on materials, as bids on that seat's tile for firm entry to read
+        (port_actors.standing_bids)."""
+        sim, economy = self._world, self._agent.economy()
+        drawn = sim.market_flows()["drawn"]
+        bids = []
+        for seat_id in sorted(sim.state.seats_playing()):
+            if not drawn.get(seat_id):
+                continue
+            with sim.scenario.act_as(seat_id):
+                tile = self._agent.tile_in_economy(sim.labour.base_tile())
+            bids.extend(port_actors.standing_bids(economy, seat_id, drawn[seat_id], tile, tonnes_per_unit,
+                                                  sim.economy.materials_in))
+        return tuple(bids)

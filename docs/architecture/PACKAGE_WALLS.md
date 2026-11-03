@@ -35,7 +35,7 @@ prints the module dependency totals, including reads still answered by the engin
 
 | Package | Import door | Who hands it the game |
 |---|---|---|
-| `sim/economy/` | `sim/economy/api.py`, imported by the `markets` module (`sim/markets/port*.py`) and `sim/engine/economy_port_effects.py` | the `markets` module builds the agent economy and the goods market; they read the game through `PortWorld` (`sim/markets/port_world.py`) |
+| `sim/economy/` | `sim/economy/api.py`, imported by the `markets` module (its port files `sim/markets/port*.py`, its goods market and views) and `sim/engine/economy_port_effects.py`; the opening market rate and the household time preference constant are also read by `actors`, `finance` and `workforce` | the `markets` module builds the agent economy and the goods market; they read the game through `PortWorld` (`sim/markets/port_world.py`) |
 | `sim/labour/` | `sim/labour/api.py` | the `workforce` module (`sim/workforce/module.py`) holds the `Labour` this package implements; `WorkforceWorld` (`sim/workforce/world.py`) answers what labour reads of the game from the module's declared views |
 | `sim/geography/` | `sim/geography/api.py` | the `land` module (`sim/land/`) holds the `Geography` and answers its reads (`sim/land/map_views.py`) |
 | `sim/agents/` | `sim/agents/api.py` | the `actors` module (`sim/actors/`) is the actors' world (`sim/actors/world*.py`, `sim/agents/protocols.py` lists what actors ask of it) |

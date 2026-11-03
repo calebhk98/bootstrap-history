@@ -12,7 +12,6 @@ class HouseholdNeeds(Part):
 		super().__init__(module)
 		self._needs_served_by_mods = {}    # installed mod ids -> material -> the needs it serves; data, frozen for the game
 		self._climate_baskets = {}         # civilisation id -> (its household basket with the tiles' climate floors, the model); frozen for the game
-		self._partner_demand = {}          # civilisation id -> tonnes a year its households buy; data, frozen for the game
 
 	def opening_population(self):
 		return float(self.needs.civilisation().get("population", self.needs.default_population()))
@@ -58,20 +57,6 @@ class HouseholdNeeds(Part):
 		population = self.opening_population()
 		units = household_needs.demand_by_material(base, prices_in_hours, population, MEAN_INCOME_HOURS_PER_CAPITA)
 		return household_needs.budget_scaled_final_tonnes(units, prices_in_hours, population, final)
-
-	def partner_household_demand(self, civilization_id):
-		"""{material: tonnes a year} a civilisation's households buy at its own solved prices (remembered for the game)."""
-		answer = self._partner_demand.get(civilization_id)
-		if answer is None:
-			own = self.needs.partner_own_economy[civilization_id]
-			per_hour = own["money_per_labour_hour"]
-			prices_in_hours = {material: price / per_hour for material, price in own["prices_in_own_coin"].items() if price > 0.0}
-			population = float(self.needs.civilisation_record[civilization_id].get("population") or 0.0)
-			base, final = self._household_model()
-			units = household_needs.demand_by_material(base, prices_in_hours, population, MEAN_INCOME_HOURS_PER_CAPITA)
-			answer = self._partner_demand[civilization_id] = household_needs.budget_scaled_final_tonnes(
-				units, prices_in_hours, population, final)
-		return answer
 
 	def _household_need_floors_per_person(self):
 		"""What one person's floor of each need costs a year on the seat's tile: the economy's prices and the tile's climate

@@ -34,7 +34,7 @@ from sim.workforce.module import Workforce
 from sim.foreign_trade.api import CloseMarketsTo, RecordStockTaken
 from sim.foreign_trade.module import ForeignTrade
 from sim.agents.api import GOVERNMENT_PREFIX
-from sim.world.material_units import tonnes_per_unit
+from sim.markets.unit_mass import tonnes_per_unit, unit_mass_kg
 from sim.geography import stock_land
 from sim.geography.api import Geography, open_map, tiles_held
 
@@ -127,7 +127,7 @@ class Game:
             "trader_agent_cost": lambda civilization_id, route: 5.0,
             "cargo_lost_share": lambda route, material=None, civilization_id=None, demand=None: 0.1})
         views = {
-            "goods_stock": lambda key: self.ledger.get(key, 0.0), "material_commodity": lambda material: material,
+            "goods_stock": lambda key: self.ledger.get(key, 0.0), "unit_mass_kg": unit_mass_kg, "material_commodity": lambda material: material,
             "stock_land": self.land.stock_land, "year": 100, "acting_balance": lambda: self.purse.capital,
             "endemic_stock_loss": self.land.endemic_stock_loss,
             "nursery_room_units": self.land.nursery_room_units,

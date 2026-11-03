@@ -8,7 +8,7 @@ names a civilisation, a technology that is not in the data file, or a flat indus
 import json
 import os
 
-from sim.mod_api import demography, tonnes_per_unit
+from sim.mod_api import demography
 
 DATA_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "pollution", "emissions.json")
 SECONDS_PER_YEAR = 365.25 * 24 * 3600
@@ -27,10 +27,6 @@ def table():
     return _TABLE[0]
 
 
-def _kilograms_per_unit(material):
-    return tonnes_per_unit(material) * 1000.0
-
-
 def emissions_by_tile(access):
     """({tile: {species: kg}}, {tile: {source id: {species: kg}}}) from the producers' last full year, empty before
     the economy has run."""
@@ -46,7 +42,7 @@ def emissions_by_tile(access):
             quantity = flows.get(source["material"], 0.0)
             if quantity <= 0.0:
                 continue
-            kilograms = runs * quantity * _kilograms_per_unit(source["material"])
+            kilograms = runs * quantity * access.view("unit_mass_kg")(source["material"])
             for species, spec in source["species"].items():
                 released = kilograms * spec["kg_per_kg"]
                 tile_species = by_tile.setdefault(producer["tile"], {})
@@ -154,7 +150,7 @@ def record_pollution(access, write):
 
 
 def register(api):
-    api.reads("agent_producer_runs", "techniques_held", "settlement_tiles", "land_area_of", "population", "year")
+    api.reads("agent_producer_runs", "unit_mass_kg", "techniques_held", "settlement_tiles", "land_area_of", "population", "year")
     api.externality(externalities)
     # Each year's picture is kept in tile stores, so `map layer <store>` shows where the air is foul and the harvest harmed.
     api.store("particulate_micrograms_per_cubic_metre", keyed_by="tile", default=None, unit="micrograms per cubic metre")

@@ -2,6 +2,8 @@
 port. Money is counted in coin here, the engine's unit; quantities in tonnes."""
 from sim.economy import api as economy_api
 
+from .port_country import trade_book_in_coin
+
 
 class HouseholdReads:
 
@@ -30,8 +32,9 @@ class HouseholdReads:
         return CountryAnswers(economy, country)
 
     def trade_book(self, country):
-        """What crossed the country's border last year, by good ({good: {"in_tonnes", "in_value", "out_tonnes", "out_value"}})."""
-        return economy_api.country_figures.trade_book(self._agent.economy(), country)
+        """What crossed the country's border last year, by good ({good: {"in_tonnes", "in_value", "out_tonnes", "out_value"}}),
+        the values in coin like every other money figure here."""
+        return trade_book_in_coin(self._agent.economy(), country)
 
     def land_rent_per_hectare(self):
         """Mean rent per hectare-year the land market let land at last year, in coin."""

@@ -19,7 +19,7 @@ class Quotes:
 
 	def material_cost(self, material: str, tonnes: float) -> Optional[float]:
 		"""Money to buy this many tonnes of a material at the price the market quotes; None when nothing sells it."""
-		quote = self.needs.material_purchase_cost(material, tonnes)
+		quote = self.needs.purchase_quote(material, tonnes)
 		return None if quote is None else quote[0]
 
 	def material_price(self, material: str) -> Optional[float]:

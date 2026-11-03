@@ -5,7 +5,7 @@ QUICK_TOPIC = True
 import unittest
 
 from sim.markets import household_needs
-from sim.world.material_units import tonnes_per_unit
+from sim.markets.unit_mass import tonnes_per_unit
 
 
 class BudgetScaledFinalTonnesTest(unittest.TestCase):

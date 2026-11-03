@@ -18,7 +18,7 @@ READS_BY_OWNER = {
     "mechanics": ("mechanic", "effect_best", "running_stamp", "running"),
     "ledger": ("goods_stock", "held_goods", "goods_stock_opening"),
     "markets": ("goods_quote", "can_be_bought", "purchase_quote", "agent_producer_capacity",
-                "material_freight_factor"),
+                "material_freight_factor", "unit_mass_kg"),
     "prices": ("material_prices", "material_commodity_map", "commodity_record", "commodity_country_output", "done_memo"),
     "resources": ("empire_output", "mine_capacity", "mine_depletion", "forest_hectares", "nitre_beds", "found_deposits", "mine_works_materials",
                   "shortage_remedy_plan"),

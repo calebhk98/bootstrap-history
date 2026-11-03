@@ -37,11 +37,6 @@ def export_terms(world, partner):
     return terms(world, partner, home_country(world))
 
 
-def signature(world, partners):
-    """The terms both ways with each partner: part of the key a cached price table is valid for."""
-    return tuple((import_terms(world, partner), export_terms(world, partner)) for partner in partners)
-
-
 def duty_per_tonne(world, source, destination, price_per_tonne):
     """Money the destination country's state charges on a tonne bought at `price_per_tonne` in `source`;
     infinite when it embargoes the crossing. Places are countries (the home one by its id)."""
