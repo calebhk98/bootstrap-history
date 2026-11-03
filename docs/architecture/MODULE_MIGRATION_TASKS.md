@@ -97,7 +97,7 @@ The slow suite (`python3 -m sim.tests --slow`) is green at `b0b3a8d0`. Full equi
   - Removing a module removes its fields.
   - The orchestrator applies the hub-file wiring.
   - Acceptance: a toy module's state survives a save round trip, and it appears and disappears in the save fields as the module is added and removed.
-- [x] **1.4** (`sim/tests/module_harness.py`; the rules are in `MODULE_MIGRATION_GUIDE.md`) `make_views(**plain_dicts)` and a recording `FakeCommands`.
+- [x] **1.4** (`sim/tests/module_harness.py`; the rules are in `MODULE_MIGRATION_GUIDE.md`) `build(implementation, views=..., answers=...)` sets a module up over plain values standing in for its views, `part(...)` does the same for one part, and `sent(module)` returns the commands it sent, in order (the recording is `_FakeNeeds.send`).
 - [x] **1.5** Catalogue drafts, one per Complaint 508 owner (the drafts are no longer in the tree; each module's `module_spec.py` is the catalogue now):
   - Group cross-mixin reads by what the consumer wants to know.
   - Map writes onto the command vocabulary.

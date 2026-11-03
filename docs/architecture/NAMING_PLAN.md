@@ -55,8 +55,8 @@ choose per site; no tool can choose between `node_id`, `material_id` and `prices
 
 ## Part B - data schema fields
 
-The short tech-tree fields (`lab`, `mat`, `cap`, `rev`, `up`, `ph`, `sch`, `art`, `sus`, `gov`, `conf`, `pre`, `yrs`,
-`kb`; `req_any` is already a full word) are authored in `data/branches/` and merged by `sim/content/tree_merge.py`, so a
+The short tech-tree fields (`lab`, `mat`, `ph`, `sch`, `art`, `sus`, `gov`, `conf`, `pre`, `yrs`,
+`kb`; `req_any` is already a full word, and `rev_hours` and `up_hours` already carry their unit; the branch files have no `cap` field) are authored in `data/branches/` and merged by `sim/content/tree_merge.py`, so a
 rename touches both the branch files and every code read of the key. Measure the read sites with
 `grep -rn '"<field>"' sim --include=*.py`.
 
