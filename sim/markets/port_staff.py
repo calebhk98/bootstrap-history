@@ -23,6 +23,7 @@ from sim.economy import api as economy_api
 from sim.economy.api import EDGE_EXCHANGE, AgentOrders, LabourBid, LabourOffer, Transfer
 from sim.refusal import Refusal
 from sim.ledger.api import PayEdge, PayExchange, ReceiveFromEdge, ReceiveFromExchange
+from sim.reporting.api import RecordEvent
 from sim.workforce.api import ONCE_STOCK, ClearingSettled, HoursArrived, NewcomersPlaced, NoteClearedWage, StaffArrived
 
 STAFF_PREFIX = "staff:"
@@ -69,11 +70,25 @@ def employer_bids(economy, employer_id, wanted, tile, affordable_coin):
 
 
 def work_offers(economy, seat_id, offered, tile):
-    """The hours of a trade a seat offers of its own, as offers for its work account at no reservation wage (it sells at the market's);
-    an hour of a trade the economy lacks is not offered."""
+    """(offers, hours not offered by trade): the hours of a trade a seat offers of its own, as offers for its work account at no
+    reservation wage (it sells at the market's); an hour of a trade the economy lacks is not offered, and is returned."""
     view, setup = economy.view(), economy.setup
-    return tuple(LabourOffer(work_account(seat_id), trade, view.area_of(trade, tile), hours, 0.0)
-                 for trade, hours in sorted(offered.items()) if hours > 0.0 and trade in setup.trades)
+    offers = tuple(LabourOffer(work_account(seat_id), trade, view.area_of(trade, tile), hours, 0.0)
+                   for trade, hours in sorted(offered.items()) if hours > 0.0 and trade in setup.trades)
+    dropped = {trade: hours for trade, hours in sorted(offered.items()) if hours > 0.0 and trade not in setup.trades}
+    return offers, dropped
+
+
+def note_refusals(sim, refusal, dropped):
+    """The acting seat's log says why its places or its own hours did not reach the clearing: the refused payment of its wages
+    (its places hire no one this year) and the trades the economy lacks (their hours are not offered)."""
+    if refusal is not None:
+        sim.send(RecordEvent.of("staff_wages_unfunded", "The wages for your places could not be paid into the labour market (%s), so "
+                                "they hire no one this year." % refusal, cause=refusal.cause))
+    if dropped:
+        sim.send(RecordEvent.of("wage_work_not_offered", "The labour market has no such trade, so these hours of your own work were "
+                                "not offered: %s." % ", ".join("%s %.0f" % (trade, hours) for trade, hours in sorted(dropped.items())),
+                                hours_by_trade={trade: float(hours) for trade, hours in dropped.items()}))
 
 
 def place_newcomers(sim, economy, tile):
@@ -121,7 +136,8 @@ def split_hired(hired, standing, once, working_hours):
 
 def post(sim, economy, seat_ids, tile_of):
     """({account: AgentOrders}, {seat id: Posted}) for the year; each posting seat's money goes into its staff account. Every seat is
-    a key: one whose places were not posted (no places, or no affordable bid) has no trades."""
+    a key: one whose places were not posted (no places, no affordable bid, or a wage payment refused, which its log states) has no trades
+    and so no staff this year."""
     orders, posted = {}, {}
     setup = economy.setup
     for seat_id in seat_ids:
@@ -132,11 +148,17 @@ def post(sim, economy, seat_ids, tile_of):
             trades, funded, offered = [], 0.0, False
             wanted = places_with_once(sim.labour.staff_posting(), sim.labour.once_posting(), setup.working_hours_per_year)
             bids, units = employer_bids(economy, seat_id, wanted, tile, sim.spending_power("buy")) if wanted else ([], 0.0)
-            if bids and not isinstance(sim.send(PayEdge(edges.EDGE_WORKERS, units * setup.coin_per_unit, "wages offered in the labour market")), Refusal):
-                economy_api.post_transfers(economy, [Transfer(EDGE_EXCHANGE, staff_account(seat_id), setup.currency_id, units, "wages offered")])
-                orders[staff_account(seat_id)] = AgentOrders(labour_bids=tuple(bids))
-                trades, funded = sorted({bid.trade for bid in bids}), units
-            offers = work_offers(economy, seat_id, sim.labour.wage_work_offered(), tile)
+            refusal = None
+            if bids:
+                paid = sim.send(PayEdge(edges.EDGE_WORKERS, units * setup.coin_per_unit, "wages offered in the labour market"))
+                if isinstance(paid, Refusal):
+                    refusal = paid
+                else:
+                    economy_api.post_transfers(economy, [Transfer(EDGE_EXCHANGE, staff_account(seat_id), setup.currency_id, units, "wages offered")])
+                    orders[staff_account(seat_id)] = AgentOrders(labour_bids=tuple(bids))
+                    trades, funded = sorted({bid.trade for bid in bids}), units
+            offers, dropped = work_offers(economy, seat_id, sim.labour.wage_work_offered(), tile)
+            note_refusals(sim, refusal, dropped)
             if offers:
                 orders[work_account(seat_id)] = AgentOrders(labour_offers=offers)
                 offered = True

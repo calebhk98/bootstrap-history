@@ -49,6 +49,9 @@ class Applying(Part):
 	def sell_material(self, command):
 		return self.parts.market_objects.goods_market.post_order("sell", command.material, command.tonnes, command.limit_per_tonne)
 
+	def cancel_material_orders(self, command):
+		return self.parts.market_objects.goods_market.cancel_orders(command.side, command.material)
+
 	def found_bank_from_outside(self, command):
 		agent = self.parts.market_objects.economy.agent
 		if not agent.opened():

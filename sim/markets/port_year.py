@@ -28,7 +28,9 @@ class YearRun:
     def run_year(self):
         world, agent = self._world, self._agent
         economy = agent.economy()
-        economy.change_setup(**port_cropland.follow_farm_sites(world, economy.setup))
+        # the year's working day is set before any hours are posted, so posting and settling convert people and hours alike
+        economy.change_setup(**port_cropland.follow_farm_sites(world, economy.setup),
+                             working_hours_per_year=float(world.HOURS_PER_PERSON_YEAR))
         agent.sync_ways()
         agent.admit_techniques()
         orders, offered, seat_inputs = self._seats.orders()

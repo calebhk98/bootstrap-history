@@ -70,7 +70,9 @@ class SeatConcerns:
                 continue
             probe = Producer(agent_id, agent_id, key, tile, 1.0)
             prices = expected_output_prices(probe, recipe, view) or {}
-            revenue = sum(recipe.outputs[good] * prices.get(good, 0.0) for good in recipe.outputs)
+            if any(prices.get(good) is None for good in recipe.outputs):
+                continue    # the cost cannot be shared by value among outputs when one has no price
+            revenue = sum(recipe.outputs[good] * prices[good] for good in recipe.outputs)
             cost = variable_cost_per_run(recipe, live_input_prices(probe, recipe, view),
                                          live_wages(probe, recipe, view))
             if revenue > 0.0 and math.isfinite(cost) and prices.get(material):
