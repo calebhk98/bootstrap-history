@@ -36,7 +36,7 @@ class UnskilledHour(unittest.TestCase):
         opening = types.SimpleNamespace(training_years={"digger": 0.0, "smith": 4.0}, money_per_labour_hour=1.0,
                                         priced_at=lambda paid: ("priced", paid))
         world = types.SimpleNamespace(
-            trades=types.SimpleNamespace(trade_registry={}, trade_family=lambda trade: "x",
+            trades=types.SimpleNamespace(trade_registry={"digger": {"family": "earth", "training_years": 0.0}, "smith": {"family": "metal", "training_years": 4.0}}, trade_family=lambda trade: "x",
                                          build_wage_schedule=lambda civ: opening),
             scenario=types.SimpleNamespace(civ=None),
             economy=types.SimpleNamespace(agent_wage_at=lambda trade, tile: asked.append((trade, tile)) or 3.5),
