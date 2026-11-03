@@ -16,7 +16,6 @@ class LabourRecord(OwnedRecord):
     hours_idle: Dict[str, float] = field(default_factory=dict)           # labour market_key -> hours offered and not hired last year (hours hired are the core's `workforce.hired_hours`, see `hours_hired_in`)
     hours_hired_by_employer: Dict[AgentId, Dict[TradeId, float]] = field(default_factory=dict)   # employer -> trade -> paid hours the last clearing hired for it
     sold_share_expected: Dict[str, float] = field(default_factory=dict)  # labour market_key -> share of offered hours households expect to sell, smoothed over the years (household_work_year.py)
-    newcomers_by_area: Dict[str, float] = field(default_factory=dict)    # labour area -> people placed in the core since the year's population last followed demography (they are in no cohort's count)
     opening_sold_hours_per_worker: float = 0.0   # hours a working person was seeded to sell a year (zero: a whole working year)
     opening_sold_hours_by_area: Dict[str, float] = field(default_factory=dict)   # labour area -> hours a working person there was seeded to sell a year (empty: the one figure above)
 
@@ -44,14 +43,11 @@ class LabourRecord(OwnedRecord):
         self.opening_sold_hours_by_area = by_area
 
     def add_workers(self, area: str, trade: TradeId, people: float) -> None:
-        """People who joined the economy from outside the clearing (a seat's apprentices, staff an institution granted)."""
+        """People placed in `trade` from outside the clearing (a seat's apprentices, staff an institution granted). They
+        live in the area already, so demography counts them: they leave the area's other trades, each in proportion to
+        its workers, and the area's headcount is unchanged."""
+        take_from_other_trades(self.workforce.workers.get(area, {}), trade, people)
         add_people(self.workforce, area, trade, people)
-        self.newcomers_by_area[area] = self.newcomers_by_area.get(area, 0.0) + people
-
-    def take_newcomers(self) -> Dict[str, float]:
-        """The people placed in each labour area since the last call; the count starts again."""
-        placed, self.newcomers_by_area = self.newcomers_by_area, {}
-        return placed
 
     def seed_workforce(self, workforce: MarketState) -> None:
         """The labour core's opening state."""
@@ -60,3 +56,17 @@ class LabourRecord(OwnedRecord):
     def seed_hired_hours(self, hired_hours) -> None:
         """The hours the opening contracts hold hired in the labour core."""
         self.workforce.hired_hours = hired_hours
+
+
+def take_from_other_trades(workers_by_trade: Dict[TradeId, list], trade: TradeId, people: float) -> float:
+    """Take `people` from the trades other than `trade`, each in proportion to its workers and each band in proportion
+    to the trade's bands; at most everyone they hold. Returns the people taken."""
+    others = {other: bands for other, bands in sorted(workers_by_trade.items()) if other != trade}
+    held = math.fsum(sum(bands) for bands in others.values())
+    if held <= 0.0 or people <= 0.0:
+        return 0.0
+    share = min(1.0, people / held)
+    for bands in others.values():
+        for index, band in enumerate(bands):
+            bands[index] = band * (1.0 - share)
+    return held * share

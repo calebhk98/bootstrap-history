@@ -255,9 +255,10 @@ def runs_sold(producer, recipe, ledger: YearLedger, book, area_of, prices, marke
         seen[good] = demand_seen(ledger.sold.get((producer.agent_id, good), 0.0), book.stock(producer.agent_id, good, producer.tile),
                                  made[good] * producer.capacity_runs, (market_capacity or {}).get(market, 0.0),
                                  ledger.unmet_demand.get(market, 0.0))
-    value_of_run = math.fsum(made[good] * prices.get(good, 0.0) for good in made)
+    priced = [good for good in made if prices.get(good) is not None]    # an output with no price carries no weight
+    value_of_run = math.fsum(made[good] * prices[good] for good in priced)
     if value_of_run > 0.0:
-        return math.fsum(seen[good] * prices.get(good, 0.0) for good in made) / value_of_run
+        return math.fsum(seen[good] * prices[good] for good in priced) / value_of_run
     return max(seen[good] / made[good] for good in made)
 
 

@@ -287,8 +287,7 @@ class Economy:
     def _follow_population(self, inputs: YearInputs) -> None:
         """Demography's people and working-age people per tile are the one count: each tile's cohorts are rescaled to its
         people, and their working people to its working-age people (the working-age share follows demography); then the
-        labour core's workers and trainees on each tile to the working people the cohorts hold plus the newcomers placed
-        since the last year (apprentices, granted staff), whom no cohort counts yet. The core adds no entrants or leavers
+        labour core's workers and trainees on each tile to the working people the cohorts hold. The core adds no entrants or leavers
         of its own."""
         if not inputs.population_by_tile:
             return
@@ -317,11 +316,9 @@ class Economy:
         working: Dict[str, float] = {}
         for cohort in record.cohorts.values():
             working[cohort.tile] = working.get(cohort.tile, 0.0) + cohort.working_people
-        newcomers = record.labour.take_newcomers()
         for tile, people in sorted(working.items()):
             area = labour_area(tile)
             held = people_in(record.labour.workforce, area)
-            people += newcomers.get(area, 0.0)      # people placed this year are in no cohort's count and are not scaled away
             if held > 0.0 and held != people:
                 scale_people(record.labour.workforce, area, people / held)
 
