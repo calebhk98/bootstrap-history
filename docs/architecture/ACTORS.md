@@ -9,17 +9,34 @@ Who can own money, staff, know-how and works, and decide. Code:
     Actor                     shared surface: money, workforce, knowledge,
     |                         concerns, works, decision_policy; imitation
     |                         (options, consider, work a year, learn)
-    +-- Household             the founder's; storage delegates to the live
-    |                         simulation state; idles (decisions arrive as
-    |                         commands)
     +-- RecordedActor         storage is one persistent ActorRecord
-        +-- Government       a country's state
-        +-- Firm             an independent business
+        +-- Government       a country's state; its concerns are plain parts
+        +-- Firm             an independent business; an expansion part
+        +-- Player, Stratum, InterestGroup, Trader, DeclaredKind,
+            Church, Academy  the other shipped kinds (`sim/agents/shipped.py`)
+
+    HouseholdParty            not an Actor: a seat (the founder's or another
+                              player's) seen as a party to an exchange; it
+                              holds no state, and maps the names an exchange
+                              asks for onto the modules that own the seat's
+                              purse, staff, know-how and plants
+                              (`household_party.py`)
 
 `Actor` leaves storage and valuation to subclasses: `money`, `workforce`,
-`knowledge`, `concerns`, `works` and `imitation_worth`. New actor kinds are
-added by subclassing and registering in `ACTOR_CLASSES`
-(`actors/registry.py`); nothing else enumerates kinds.
+`knowledge`, `concerns`, `works` and `imitation_worth`. Kinds are not listed
+in one table: the actors module owns the `actor_kinds` extension point
+(`sim/actors/module_spec.py`), the game's own kinds come from `shipped_kinds`
+in `sim/agents/shipped.py`, a mod can add `DeclaredKind` declarations, and
+`ActorRegistry` builds an actor from its record's `kind` through the combined
+`ActorExtensions` (`sim/agents/extensions.py`). A record whose kind is not
+provided is refused.
+
+A `Government` holds its concerns as plain part objects (corvee, credit
+record, fiscal, coinage, enterprises, granary, markets, stores, surplus),
+each addressed as `government.<part>.<method>`; a `Firm` holds an `Expansion`
+part. See the class docstrings in `sim/agents/government.py` and
+`sim/agents/firm.py`. Households inside a stratum, each with its own wealth,
+are in `sim/agents/household_wealth.py`.
 
 ## Policy
 
@@ -37,7 +54,7 @@ Every decision is a `Decision` (kind, options, budget) handed to the actor's
 
 An invention has gains per dimension: the node's declared `gains` mapping if
 it has one (a mod can add it to any node), otherwise one unit per trait it
-carries (`actors/values.py`). An actor turns gains into worth with its own
+carries (`sim/agents/values.py`). An actor turns gains into worth with its own
 weights:
 
 - Government: the civilisation's trait weights (`state_trait_weights`, the
@@ -52,7 +69,7 @@ with a location.
 
 ## Cost and difficulty of copying
 
-`actors/imitation.py`. The copy covers the unknown prerequisite chain that
+`sim/agents/imitation.py`. The copy covers the unknown prerequisite chain that
 the founder has demonstrated (knowledge distance is real work, and a chain
 with an undemonstrated gap cannot be copied). Hours per trade, money and
 calendar years derive from the node's labour and cost, scaled by a copying
@@ -73,28 +90,28 @@ every other operator, and closes after consecutive losing years.
 
 ## Government
 
-Created per civilisation by `advance_actors`. It receives a share of the
+Created per civilisation by the actors module's `advance_actors` command (`sim/actors/year.py`). It receives a share of the
 revenue derived from the working population's labour value, the civilisation's
 tax share and state capacity, plus whatever the state takes from the founder,
 and spends it on copies its policy chooses.
 
 ## Money between actors
 
-`actors/ledger.py`. Every change of an actor's purse goes through `credit` and
+`sim/agents/ledger.py`. Every change of an actor's purse goes through `credit` and
 `debit` with a purpose; `transfer(payer, payee, amount, purpose)` is the one
 way a loss becomes a gain. A recorded actor keeps `income` and `outlays` by
 purpose, so its purse equals its opening money plus income less outlays. The
-founder's household pays the state through `Sim.pay_state`, and the government
+founder's household pays the state through `pay_state` (`sim/polity/transfers.py`), and the government
 of the founder's civilisation receives requisition, the pressed office,
 military supply and confiscation. Each
 purpose's share of a run's income and outlays is in the actor ledger.
 
 ## State and persistence
 
-`SimulationState.actors` holds an `ActorsState` of `ActorRecord`s, saved and
+The actors module's world slot holds an `ActorsState` of `ActorRecord`s (`SimulationState.actors` reads it), saved and
 loaded by the automatic dataclass mechanism. Actor objects are rebuilt from
 records whenever the state object is replaced. Provisional numbers live in
-`actors/tuning.py` and are declared heuristics
+`sim/agents/tuning.py` and are declared heuristics
 (`python3 sim/constants.py --burndown`).
 
 ## Not yet built
