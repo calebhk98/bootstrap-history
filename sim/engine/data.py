@@ -430,7 +430,7 @@ def descendants(nodes: Nodes) -> Tuple[Dict[str, int], Dict[str, int]]:
     # that happens to have the same number of keys", which in a suite that
     # builds small synthetic node dicts by the hundred is not narrow at all.
     #
-    # This exact hazard, in the sibling cache in economy.py, is what made the
+    # This exact hazard, in a sibling cache in the old economy code, is what made the
     # simulation non-deterministic - see
     # Complaints/closed/27-nondeterministic-simulation.md. Holding `nodes` itself in
     # the entry keeps that dict alive for as long as the entry can be compared
@@ -497,7 +497,7 @@ def is_downstream(nodes: Nodes, node_id: str, target: str) -> bool:
 # build, the same as `junction_transistor` always was; a THRESHOLD-shaped
 # goal (raise literacy past some level, cut epidemic mortality by some
 # fraction) is a checkpoint node carrying a `win_condition` field instead of
-# a normal cost - see projects.py's start_reason (which refuses to let
+# a normal cost - see start_check in sim/projects/start_checks.py (which refuses to let
 # anyone "start" one by hand) and core.py's per-year check (which completes
 # it itself the moment the live measurement crosses the target). Either way
 # `closure()`, `critical_path()`, `topo_order()` and `Sim.run()` take one

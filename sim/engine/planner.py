@@ -210,7 +210,7 @@ def pick_side_branches(nodes, need, sim, limit):
     competing with the spine for scarce trades centuries into a run, because
     that is the earliest any of them can possibly fire. Sorting candidates
     by `_closure_depth` (the size of the candidate's own unmet-prerequisite
-    closure - the same measure `_room_advice` in labour.py already sorts
+    closure - the same measure `room_advice` in sim/labour/room_advice.py already sorts
     "nearest first" by) instead of, or even only as a tiebreak after
     filtering out the deepest candidates from, the net/cost ranking looked
     like a strict improvement and is not one: tried head to head against

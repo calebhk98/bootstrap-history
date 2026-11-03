@@ -531,7 +531,7 @@ def _cmd_mothball(sim, nodes, cmd, ended):
     if not mothballed:
         return {"ok": False, "error": msg}
     # mothball_work does not log either - a deliberate shutdown reads no
-    # differently from one the creditors forced on you (see economy.py's
+    # differently from one the creditors forced on you (see the finance module's
     # own, separate log lines for THAT case) unless the player's own
     # choice gets a line of its own too.
     sim.send(RecordEvent.of("work_mothballed", "mothballed: %s (%s)"

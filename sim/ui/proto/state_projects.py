@@ -194,7 +194,7 @@ def _agent_state_spend_and_net(sim):
         # THE STANDING FIGURE HAS TO READ THE STANDING REVENUE: this counts
         # "the STANDING flows only" per the comment on shut_concerns above -
         # the household's ordinary-year position, not this particular
-        # year's - so it must read revenue_capacity() (economy.py), not
+        # year's - so it must read revenue_capacity() (sim/production/revenue.py), not
         # plain revenue(), which dips for a year whenever `work` sells
         # founder-hours. revenue_capacity() exists for exactly this - it
         # is what credit_limit() already reads, with the identical

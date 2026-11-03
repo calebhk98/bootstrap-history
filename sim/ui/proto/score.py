@@ -163,7 +163,7 @@ def _score_components(sim, nodes, reveal_tree_total):
                         "normalized": lit_norm}
 
     # WORKFORCE (15%) - headcount(), the same aggregate final_report already
-    # reports as "people" (employees plus slaves plus freedmen; labour.py).
+    # reports as "people" (employees plus slaves plus freedmen; the workforce module).
     # Population has no mechanical ceiling this engine states outright the
     # way literacy does, so this is the one honest anchor available: a
     # log scale (a second thousand employees is not as meaningful as the

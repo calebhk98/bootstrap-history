@@ -14,8 +14,7 @@ project's failure risk, the 3.5% yearly attrition roll, the 25% manumission
 roll, the fractional-headcount rounding in `stochastic_round`). See
 `DetRNG` in `sim/ui/cli.py` - shared from there because `--deterministic` on
 `run`/`compare`/`play`/`agent` needs the exact same rng, for the exact same
-reason. Nothing in `core.py`, `projects.py`, `labour.py`, `society.py` or
-`economy.py` is edited to get this - the same rules run, against a
+reason. No engine or module code is edited to get this - the same rules run, against a
 different sequence of "how did that roll come out".
 
 THE FIRST QUESTION - DOES THE CURRENT PLAN EVEN GET THERE WITH THE DICE
@@ -25,7 +24,7 @@ abundant (tens of millions of denarii, hundreds of scholars and artisans).
 It stalls on a small, fixed set of NAMED CRAFT TRADES the tree calls
 `TRADES_ABSENT` - chemist, electrician, engineer, machinist, optician -
 which do not exist in this civilisation at all until you personally teach
-them (`labour.py:trade_available`), and which grow ONLY through
+them (`trade_available` in sim/labour/labour_trades.py), and which grow ONLY through
 `step()`'s once-a-year, two-people-at-a-time auto-teach (core.py, "4a2"),
 gated further by a 25-year per-trade cooldown. Once a trade's headcount is
 above zero, `market_supply(t) <= 0.0` - the sole trigger auto-teach uses to
@@ -33,7 +32,7 @@ decide a trade is worth training more of - is simply never true again unless
 every last person of that trade dies out, so in a deathless, failure-free
 world a trade that got taught once, early, for two people, STAYS at two
 people for the rest of the run, however many projects are starved for it.
-That is not a bug this module can fix (core.py/labour.py are not this
+That is not a bug this module can fix (the engine and the labour package are not this
 module's to edit); it is a fact about how the given rules grow named-trade
 labour, and the only lever a strategy ORDER has over it is which nodes get
 to spend that frozen, tiny pool of hours, and in what sequence.

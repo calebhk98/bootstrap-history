@@ -14,8 +14,8 @@ Two different things share this file, and the difference matters:
      single command, so anything written here is not preserved there. It
      gets a small sidecar of its own instead.
 
-Nothing in this module is imported by, or imports, protocol.py/core.py/
-projects.py/labour.py/society.py/economy.py: it is filesystem bookkeeping
+Nothing in this module is imported by, or imports, protocol.py or any
+engine module or game rule module: it is filesystem bookkeeping
 around the engine, not the engine. (protocol.py does carry a couple of
 module-level variables this module's VALUES end up in - DISPLAY_WIDTH,
 DEFAULT_AVAILABLE_LIMIT - but cli.py is what copies them there; this module

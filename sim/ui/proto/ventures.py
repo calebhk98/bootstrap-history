@@ -2,7 +2,7 @@
 
 # WHY keeping a concern open can want "2.13 craftsmen" - and it is not a
 # body count either, for a different reason than _staff_fraction_note's.
-# venture_hands() (projects.py) is a continuous SHARE of a scholar's or
+# venture_hands() (sim/ventures/crew.py) is a continuous SHARE of a scholar's or
 # craftsman's YEAR that running the concern claims, scaled by how much it
 # takes in - it is not even trying to count people, the way scholars/
 # artisans above at least approximately are. Without this note, 'open'

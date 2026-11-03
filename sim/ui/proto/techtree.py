@@ -283,7 +283,7 @@ def _full_entry(sim, nodes, node_id, fog):
     # those have their own reply-budget to keep inside, and this number is
     # worth a few extra bytes on the one
     # row you asked to actually look at, not on every row of a six-wide
-    # sampler. See expected_calendar_years' own docstring (projects.py): it
+    # sampler. See expected_calendar_years' own docstring (sim/projects/risk.py): it
     # is >= the floor above, strictly more once risk is above zero, and it
     # is why a 45%-risk, 4-year-floor node is not a 4-year project.
     if node.get("risk"):
@@ -1049,7 +1049,7 @@ def _explain_timing_and_risk(sim, nodes, node_id, node):
         # node is not a 4-year project: the bare geometric series 1/(1-p) is
         # 1.82 attempts, and even that understates it once learning from failures
         # (the industry depth, RETRY_CALENDAR_CAP/DECAY - see
-        # expected_calendar_years' own docstring in projects.py) starts
+        # expected_calendar_years' own docstring in sim/projects/risk.py) starts
         # moving both the odds and the wait on every attempt after the
         # first. This must be computed through the SAME retry rule
         # _complete actually applies, not a second, looser approximation of
@@ -1176,7 +1176,7 @@ def _explain_staffing(sim, nodes, node_id, node):
     `open` actually checks.
     """
     # THE SUPERVISION FIGURE, from the SAME function open_venture() enforces
-    # (see venture_hands, projects.py) - not a second estimate of it. Only
+    # (see venture_hands, sim/ventures/crew.py) - not a second estimate of it. Only
     # meaningful for something that could ever be a going concern; knowledge
     # alone (is_venture false) has nothing to keep an eye on.
     _is_venture = sim.view("is_venture")[node_id]
