@@ -12,6 +12,8 @@ class CountryPeople(SharedPart):
 	"""The country's people, from its profile and its own part of the economy."""
 
 	part = "people"
+	# home: a person's subsistence is a physical figure; the economy and strata lookups are the shared people's
+	home_members = frozenset(("country_economy", "observed_stratum", "subsistence_kg_per_person_year"))
 
 	def population_total(self) -> float:
 		return people_counted(self.world.profile)

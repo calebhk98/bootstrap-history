@@ -32,7 +32,7 @@ from .records import CountryProfile
 
 
 class CountryWorld:
-	"""What an actor of `profile`'s country sees. `shared` is the shared world, `holder` the registry (or its saved state)."""
+	"""What an actor of `profile`'s country sees. `shared` is the shared world, `holder` the registry."""
 
 	def __init__(self, shared: Any, profile: CountryProfile, holder: Any) -> None:
 		self.shared = shared

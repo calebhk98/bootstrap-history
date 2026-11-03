@@ -43,17 +43,17 @@ class _Seat(business_review.Reviewable):
     def __init__(self, business, margins, debt):
         self.business, self.margins, self.debt, self.taken = business, margins, debt, []
 
-    def creditors_press(self, world):
+    def creditors_press(self):
         return self.debt > 0.0
 
-    def standing_margin(self, entry_key, world):
+    def standing_margin(self, entry_key):
         return self.margins[entry_key]
 
-    def receive_seizure(self, entry_key, proceeds, world):
+    def receive_seizure(self, entry_key, proceeds):
         self.taken.append(entry_key)
         self.debt -= 100.0
 
-    def shut(self, entry_key, reason, world):
+    def shut(self, entry_key, reason):
         self.business.lifecycle.mothball(entry_key, 1, reason)
 
 
@@ -62,13 +62,13 @@ class SeizureTakesWhatLosesMoney(unittest.TestCase):
     def test_a_plant_that_pays_is_left_however_hard_the_creditors_press(self):
         business = Business.running(["paying"])
         seat = _Seat(business, {"paying": 5.0}, debt=1000.0)
-        closed = business.reviews.review(seat, None, (business_review.CREDITOR_SEIZURE,))
+        closed = business.reviews.review(seat, (business_review.CREDITOR_SEIZURE,))
         self.assertEqual((closed, seat.taken, business.reading.state_of("paying")), ([], [], "operating"))
 
     def test_a_plant_that_loses_is_taken_while_the_creditors_press_and_the_one_that_pays_stays(self):
         business = Business.running(["losing", "paying"])
         seat = _Seat(business, {"losing": -5.0, "paying": 5.0}, debt=50.0)
-        closed = business.reviews.review(seat, None, (business_review.CREDITOR_SEIZURE,))
+        closed = business.reviews.review(seat, (business_review.CREDITOR_SEIZURE,))
         self.assertEqual([(closure.entry_key, closure.reason) for closure in closed],
                          [("losing", business_review.CREDITOR_SEIZURE)])
         self.assertEqual(business.reading.state_of("paying"), "operating")

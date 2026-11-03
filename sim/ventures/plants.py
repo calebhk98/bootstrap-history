@@ -1,5 +1,4 @@
 """The ventures module's views of the seat's business, the commands that change it and what a seat's plants report."""
-from sim.agents.api import FounderReview
 from sim.assembly.api import Part
 from sim.production.api import RefreshOperatingCaches
 
@@ -96,10 +95,10 @@ class Plants(Part):
 		return self.seat.business.lifecycle.forget_reason(command.node_id, command.reason)
 
 	def apply_review_concerns(self, command):
-		return self.seat.business.reviews.review(FounderReview(), self.needs.actor_world(), command.rules)
+		return self.seat.business.reviews.review(self.needs.actor_world().seats.founder_review(), command.rules)
 
 	def apply_review_reopening(self, command):
-		return self.seat.business.reviews.review_reopening(FounderReview(), self.needs.actor_world())
+		return self.seat.business.reviews.review_reopening(self.needs.actor_world().seats.founder_review())
 
 	def apply_note_concern_year(self, command):
 		self.seat.business.tally.note_year(command.node_id, command.margin)

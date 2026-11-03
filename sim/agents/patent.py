@@ -83,7 +83,7 @@ def hand_over(source: Any, target: Any, side: Dict[str, Any]) -> None:
 
 def note_licence(licensor: Any, licensee: Any, node_id: str) -> None:
 	"""A licence from the holder lets the licensee practise the patented invention."""
-	entry = getattr(getattr(licensor, "record", None), "patents", {}).get(node_id)
+	entry = licensor.record.patents.get(node_id)
 	if entry is not None and licensee.actor_id not in entry["licensees"]:
 		entry["licensees"].append(licensee.actor_id)
 

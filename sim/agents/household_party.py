@@ -62,11 +62,11 @@ class SeatRecord(ActorRecord):
 		self._store("patents", value)
 
 	@property
-	def holdings(self) -> Any:
+	def shares_held(self) -> Any:
 		return self._dealing("shares_held") if self.ports is not None else {}
 
-	@holdings.setter
-	def holdings(self, value: Any) -> None:
+	@shares_held.setter
+	def shares_held(self, value: Any) -> None:
 		self._store("shares_held", value)
 
 	@property
@@ -95,7 +95,8 @@ class SeatRecord(ActorRecord):
 
 
 class HouseholdHoldings:
-	"""The seat's plants as the exchange reads them (`party.holdings`), through the seat's ports."""
+	"""The seat's plants as the exchange reads them (`party.holdings`), through the seat's ports. Only the members the exchange needs are here; `staffed_share` is firm-only (a
+	seat's crew is the founder's staff, not a plant's), and its callers are firm code."""
 
 	def __init__(self, ports: SeatPorts, margins: Dict[str, float]) -> None:
 		self.ports = ports

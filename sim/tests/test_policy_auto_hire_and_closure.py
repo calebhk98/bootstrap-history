@@ -35,23 +35,23 @@ class _Owner(business_review.Reviewable):
         self.spared, self.margins, self.cuts, self.presses = set(spared), margins or {}, cuts, presses
         self.shut_plants, self.seized = [], []
 
-    def cuts_losses_now(self, world):
+    def cuts_losses_now(self):
         return self.cuts and bool([key for key in self.business.operating() if self.margins.get(key, 0.0) < 0.0])
 
-    def spares_plant(self, entry_key, world):
+    def spares_plant(self, entry_key):
         return entry_key in self.spared
 
-    def standing_margin(self, entry_key, world):
+    def standing_margin(self, entry_key):
         return self.margins.get(entry_key, 0.0)
 
-    def creditors_press(self, world):
+    def creditors_press(self):
         return self.presses and bool([key for key in self.business.operating() if self.margins.get(key, 0.0) < 0.0])
 
-    def shut(self, entry_key, reason, world):
+    def shut(self, entry_key, reason):
         self.shut_plants.append((entry_key, reason))
         self.business.lifecycle.mothball(entry_key, 100, reason)
 
-    def receive_seizure(self, entry_key, proceeds, world):
+    def receive_seizure(self, entry_key, proceeds):
         self.seized.append(entry_key)
 
 
@@ -63,7 +63,7 @@ class BusinessReviewSparesAndLeavesAlone(unittest.TestCase):
         for entry_key in shut:
             business.lifecycle.mothball(entry_key, 99, "by_choice")
         owner = _Owner(business, spared=spared, margins={"shop": -5.0, "school": -1.0, "theory": -9.0})
-        closed = business.reviews.review(owner, None, rules)
+        closed = business.reviews.review(owner, rules)
         return business, owner, closed
 
     def test_a_loss_making_plant_that_is_not_spared_is_shut_and_a_spared_one_is_kept(self):

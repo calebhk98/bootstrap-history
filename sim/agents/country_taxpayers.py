@@ -9,6 +9,8 @@ class CountryTaxpayers(SharedPart):
 	"""The country's taxpayers, its capacity and its tax share."""
 
 	part = "taxpayers"
+	# home: who is taxable and how visible their scale is are the shared world's
+	home_members = frozenset(("seat_taxpayers", "visible_scale_of"))
 
 	def state_reach(self) -> float:
 		"""What the country's paid officials collect of what is due, over its roads (collection_world.py)."""

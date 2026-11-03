@@ -104,7 +104,7 @@ check("a firm closing in debt pays its backer nothing, in either direction",
 # the creditors take the business, not what the firm has learned
 world, registry, firm, backer = closing_with(0.0, 100.0)
 firm.learn(["shop"], world)
-taken = firm.business.reviews.seize_all(firm.review, world) if firm.business.plants else []
+taken = firm.business.reviews.seize_all(firm.review) if firm.business.plants else []
 check("seizing a firm's business takes every plant, for the creditors' reason",
 	[(closure.entry_key, closure.reason) for closure in taken] == [("shop", "creditor_seizure")] and not firm.business.plants, taken)
 check("what the firm learned stays with it", firm.knows("shop", world), firm.knowledge)

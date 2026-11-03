@@ -59,7 +59,7 @@ heir = state.seats["heir"]
 bind_seat(state, "heir")
 check("bind_seat: the root aliases are the heir's own objects",
       state.acting_seat == "heir" and state.acting_record.household is heir.household
-      and state.acting_record.founder is heir.founder and state.acting_record.holdings is heir.holdings and state.acting_record.seat_progress is heir.seat_progress
+      and state.acting_record.founder is heir.founder and state.acting_record.shares_held is heir.holdings and state.acting_record.seat_progress is heir.seat_progress
       and state.seats["heir"].modules["workforce"].scholars == 2.0 and state.acting_record.founder._founder_death_year == 30, None)
 
 # ---- the purse
@@ -108,7 +108,7 @@ heirs = state.seats["heir"].modules["seats"]
 party = HouseholdParty("heir", types.SimpleNamespace(dealing=lambda field: getattr(heirs, field), store_dealing=lambda field, value: None))
 check("HouseholdParty: the acting seat's actor is the heir, with the heir's patents and shares",
       party.actor_id == "heir" and party.record.patents == {"loom": {"granted": 1, "expires": 20, "licensees": ["third"]}}
-      and party.record.holdings == {"guild": 3.0}, party.actor_id)
+      and party.record.shares_held == {"guild": 3.0}, party.actor_id)
 
 # ---- the save of that state
 blob = saved(post_handover_state())
