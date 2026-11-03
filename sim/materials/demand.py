@@ -6,7 +6,7 @@ from typing import Any, Dict, List, Optional, Tuple
 from sim.assembly.api import Part
 
 from . import rules
-from .readings import Readings
+from .seat_readings import SeatReadings
 
 
 class Demand(Part):
@@ -19,12 +19,12 @@ class Demand(Part):
         self._standing: Optional[Tuple] = None      # (done version, done set, what the finished installations keep drawing)
 
     @property
-    def readings(self) -> Readings:
+    def readings(self) -> SeatReadings:
         """What is remembered for the acting seat."""
         seat_id = self.clock.acting_seat
         readings = self._readings.get(seat_id)
         if readings is None:
-            readings = self._readings[seat_id] = Readings()
+            readings = self._readings[seat_id] = SeatReadings()
         return readings
 
     def chosen_fuel(self, node_id: str) -> str:
