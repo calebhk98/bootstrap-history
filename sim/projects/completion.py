@@ -49,10 +49,7 @@ class Completion(Part):
 		goal = self.needs.goal()["node"]
 		cache = self._goal_closures
 		if goal not in cache:
-			try:
-				cache[goal] = set(self.needs.tree_closure(goal))
-			except Exception:
-				cache[goal] = set()
+			cache[goal] = set(self.needs.tree_closure(goal))
 		return cache[goal]
 
 	def failure_severity(self, node_id, lost, means):
@@ -72,14 +69,11 @@ class Completion(Part):
 		condition = nodes[goal].get("win_condition")
 		done = needs.techniques_held()
 		if condition and goal not in done:
-			try:
-				metric = condition.get("metric") or "goal measure"
-				fraction = metric in goal_rules.FRACTION_METRICS
-				measures[metric.replace("_", " ")] = (needs.win_condition_value(condition), fraction)
-				for label, ceiling in goal_rules.GOAL_DETERMINANTS.get(metric, ()):
-					measures[label] = (float(needs.literacy_ceiling[ceiling]), True)
-			except (ValueError, AttributeError):
-				pass
+			metric = condition.get("metric") or "goal measure"
+			fraction = metric in goal_rules.FRACTION_METRICS
+			measures[metric.replace("_", " ")] = (needs.win_condition_value(condition), fraction)
+			for label, ceiling in goal_rules.GOAL_DETERMINANTS.get(metric, ()):
+				measures[label] = (float(needs.literacy_ceiling[ceiling]), True)
 		return goal_rules.snapshot(measures, len(road & done), len(road))
 
 	def goal_effect_lines(self, node_id, before):

@@ -13,7 +13,7 @@ from typing import Any, Callable, Dict, List
 from sim.refusal import Refusal, cause_of
 
 from . import joint_stock, ledger, patent
-from .player_commands import CommandRejected
+from .player_commands import CommandRejected, number_of
 from .tuning_exchange import OFFER_LIFETIME_YEARS
 
 SIDE_KEYS = ("money", "stores", "knowledge", "concern", "patent", "licence", "shares", "royalty")
@@ -27,7 +27,7 @@ def clean_side(side: Any) -> Dict[str, Any]:
 	if unknown:
 		raise CommandRejected("unknown things in an offer: " + ", ".join(map(str, unknown)))
 	clean: Dict[str, Any] = {}
-	amount = float(side.get("money") or 0.0)
+	amount = number_of(side.get("money") or 0.0, "money")
 	if not math.isfinite(amount) or amount < 0:
 		raise CommandRejected("money must be a positive amount")
 	if amount > 0:
@@ -35,7 +35,7 @@ def clean_side(side: Any) -> Dict[str, Any]:
 	stores = side.get("stores") or {}
 	if not isinstance(stores, dict):
 		raise CommandRejected("stores are {material: tonnes}")
-	kept = {str(material): float(tonnes) for material, tonnes in stores.items()}
+	kept = {str(material): number_of(tonnes, "tonnes") for material, tonnes in stores.items()}
 	if any(not math.isfinite(tonnes) or tonnes < 0 for tonnes in kept.values()):
 		raise CommandRejected("tonnes must be positive")
 	kept = {material: tonnes for material, tonnes in kept.items() if tonnes > 0}
@@ -59,7 +59,7 @@ def clean_side(side: Any) -> Dict[str, Any]:
 	royalty = side.get("royalty") or {}
 	if not isinstance(royalty, dict):
 		raise CommandRejected("royalty is {node id: share of takings}")
-	rates = {str(node): float(rate) for node, rate in royalty.items()}
+	rates = {str(node): number_of(rate, "a royalty rate") for node, rate in royalty.items()}
 	if any(node not in clean.get("licence", ()) for node in rates):
 		raise CommandRejected("a royalty goes with a licence for the same node")
 	if any(not math.isfinite(rate) or not 0.0 <= rate < 1.0 for rate in rates.values()):

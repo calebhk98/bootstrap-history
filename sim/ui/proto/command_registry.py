@@ -140,12 +140,8 @@ _TABLES = weakref.WeakKeyDictionary()   # a game's declared commands -> its tabl
 
 def table_of(sim):
     """The commands of the game `sim`: the shipped ones and its mods', after the mods' patches (the interface module's
-    view). A host with no interface module answers with the shipped table."""
-    try:
-        declared = sim.view("interface_declared")
-    except (AttributeError, KeyError):
-        return SHIPPED
-    declared = declared()
+    view)."""
+    declared = sim.view("interface_declared")()
     table = _TABLES.get(declared)
     if table is None:
         table = _TABLES[declared] = CommandTable(declared.commands, declared.policies)
