@@ -76,7 +76,7 @@ class Trades:
             "that has read PAST Rome's own reference literacy. Bounded so "
             "a civilisation is never treated as though it could staff an "
             "unbounded number of literate trades just because a handful of "
-            "technologies nudged literacy above 0.9; the figure 4.0 is "
+            "technologies nudged literacy above the reference; the figure is "
             "tuned headroom, not a measured ceiling on how literate a "
             "pre-modern society can get.")
 

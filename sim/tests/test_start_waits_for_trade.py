@@ -7,6 +7,7 @@ from .harness import check
 
 from sim.projects.start_rules import STALL_YEARS_BEFORE_ABANDONMENT
 from sim.tests import projects_host
+from sim.workforce.api import TrainingRow
 
 YEAR = 100
 
@@ -14,7 +15,7 @@ YEAR = 100
 def stub_game(supply, training):
     """The projects module over a labour market with these hands by trade and a household with these trainees: (label, year
     they join, trade, how many)."""
-    rows = [list(row) for row in training]
+    rows = [TrainingRow(trade, count, year) for _label, year, trade, count in training]
     return projects_host.build(
         market_supply=lambda trade: supply.get(trade, 0.0), training_queue=lambda: rows, year=YEAR,
         tree={"project": {"lab": {"machinist": 50.0, "smith": 20.0, "idle_trade": 0.0}}})

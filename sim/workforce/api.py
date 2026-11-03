@@ -10,7 +10,7 @@ from .commands_people import (BuySlaves, CommissionHours, FireStaff, FoundTradeS
 from .commands_hours import (AllocateHours, BleedStaff, CancelWork, DisperseDependants, DrawTradeHours, LoseCrew, OrderWork, ReleaseHours,
                              ResetTradeHours, SetReserve, SpendDirectorHours, WatchStaff)
 from .commands_bondage import AutoBuyPeople, AutoManumit, ChargeLivingCost, FadeMarketPressure, NoteBuyRefusal
-from .state import ONCE_COMMISSION, ONCE_STOCK, WorkforceSeat
+from .state import ONCE_COMMISSION, ONCE_STOCK, TrainingRow, WorkforceSeat
 from . import rules
 from .wage_schedule import build_schedule
 from .staff_loss_waves import wave_exposure

@@ -29,7 +29,7 @@ class Allocation:
         if cached is None or cached[0] != key:
             shares = workforce_spinup.need_shares_by_trade(
                 production_data(), reached, self._world.trades.techniques_available_to,
-                workforce_carriage.carriage_for(reached, list(held)), civ)
+                workforce_carriage.carriage_for(reached, list(held)), civ, needs=self._world.trades.household_need_data)
             cached = self._need_shares_cache = (key, shares)
         if cached[1]:
             return cached[1]

@@ -116,10 +116,6 @@ def generic_staff_trades(unskilled_trade: str) -> FrozenSet[str]:
     return frozenset((scholar_trade(), generic_craft_trade(), farm_trade(), bonded_pseudo_trade(), unskilled_trade))
 
 
-def is_generic_staff(trade: str, unskilled_trade: str) -> bool:
-    return trade in generic_staff_trades(unskilled_trade)
-
-
 def drawn_from_unskilled_pool(trade: str) -> bool:
     return trade in legacy_trade_defaults.DRAWN_FROM_UNSKILLED_POOL
 

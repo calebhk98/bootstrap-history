@@ -83,14 +83,22 @@ class StaffBook:
         workforce = self._world.workforce
         return self.employed_total() + workforce.slaves + workforce.freedmen
 
+    def employed_or_posted(self, trade):
+        """People of a trade on the books, or the places posted for it when those are more (a hire adds to the larger)."""
+        return max(self.employed(trade), self._world.workforce.staff_wanted.get(trade, 0.0))
+
     def trade_headcount_pending(self, trade):
         """People already on the books in this trade, plus people already
         being taught into it who are not ready yet - what a fresh hire or a
         fresh training run would be added ON TOP OF."""
         workforce = self._world.workforce
-        pending = sum(row[3] for row in workforce.training
-                      if len(row) > 3 and row[2] == trade)
-        return max(self.employed(trade), self._world.workforce.staff_wanted.get(trade, 0.0)) + pending
+        pending = sum(row.people for row in workforce.training if row.trade == trade)
+        return self.employed_or_posted(trade) + pending
+
+    def in_training_total(self):
+        """People being taught a trade who are not on the books yet (people bought and still learning are already counted
+        as slaves)."""
+        return sum(row.people for row in self._world.workforce.training if row.trade)
 
     def staff_posted(self):
         """People wanted in the labour core for the household beyond those it hired at the last clearing."""

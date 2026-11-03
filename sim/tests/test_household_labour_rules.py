@@ -12,7 +12,7 @@ from sim.workforce.reteach_rules import PROJECT_IN_HAND_SCORE, past_cooldown, te
 from sim.labour.labour_hands import Hands
 from sim.labour.labour_wages import Wages
 from sim.refusal import cause_of
-from sim.workforce.state import WorkforceSeat
+from sim.workforce.state import TrainingRow, WorkforceSeat
 from sim.ui.proto.dispatch_labour import _cmd_hire
 from sim.tests import production_host
 from sim.tests.workforce_host import workforce_over
@@ -218,19 +218,19 @@ class Apprentices:
 class ApprenticesJoin(unittest.TestCase):
 
     def test_a_cohort_promised_for_a_year_is_on_the_books_in_that_year(self):
-        game = Apprentices([[0.0, 102, "machinist", 2.0], [0.0, 103, "machinist", 1.0]])
+        game = Apprentices([TrainingRow("machinist", 2.0, 102), TrainingRow("machinist", 1.0, 103)])
         game.module.step_apprenticeships()
         self.assertEqual(game.joined, [("machinist", 2.0)])
-        self.assertEqual(game.state.household.training, [[0.0, 103, "machinist", 1.0]])
+        self.assertEqual(game.state.household.training, [TrainingRow("machinist", 1.0, 103)])
 
     def test_a_joining_is_logged_with_its_kind(self):
-        game = Apprentices([[0.0, 101, "machinist", 2.0]])
+        game = Apprentices([TrainingRow("machinist", 2.0, 101)])
         game.module.step_apprenticeships()
         (_year, line), = game.state.household.log
         self.assertEqual(cause_of(line), "training_finished")
 
     def test_nobody_joins_before_their_year(self):
-        game = Apprentices([[0.0, 105, "machinist", 2.0]])
+        game = Apprentices([TrainingRow("machinist", 2.0, 105)])
         game.module.step_apprenticeships()
         self.assertEqual(game.joined, [])
 

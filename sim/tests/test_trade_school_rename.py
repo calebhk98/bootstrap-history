@@ -57,7 +57,7 @@ def labour_world(capital, trade_known=True, schools=None):
     paid = []
     world = Game(
         trades=Game(wages={"chemist": 1.0} if trade_known else {}, trades_absent=set()), workforce=household,
-        view=workforce_stand_in.view_of(household), finance=Game(balance=capital, trade_school_price_per_seat=lambda: SEAT_PRICE),
+        view=workforce_stand_in.view_of(household), finance=Game(balance=capital, spending_power=lambda purpose: capital, trade_school_price_per_seat=lambda: SEAT_PRICE),
         EDGE_WORKERS="edge:workers",
         send=lambda command: paid.append((command.edge, command.amount, command.purpose)))
     training = Training(world, advice=None, book=None, capacity=None, hours=None, market=None, supply=None, trades=Trades(world))

@@ -8,6 +8,14 @@ STAFF = "staff"     # version channel: the seat's people (employees, scholars, a
 
 
 @dataclass
+class TrainingRow:
+    """One intake still learning: `people` of `trade` ready at `ready_year`; trade None is people the seat bought."""
+    trade: Optional[str]
+    people: float
+    ready_year: float
+
+
+@dataclass
 class WorkforceSociety:
     society_labour_hours: Dict[str, float] = field(default_factory=dict)   # trade -> hours the society's workers of it give in a year
     # the unskilled hour's cleared wage at the last two clearings (the port notes it after each); the wage event reads the change
@@ -31,7 +39,7 @@ class WorkforceSeat:
     reserve_craftsmen: int = 0
     reserve_scholars: int = 0
     # the apprentices in training, one row per intake (sim/labour/labour_training.py)
-    training: List[List[Any]] = field(default_factory=list)
+    training: List[TrainingRow] = field(default_factory=list)
     trade_schools: Optional[int] = None
     worker_housing_places: Optional[int] = None
     # the standing bid in the labour core: people wanted by trade (the places `hire` posts); `employees` is what the core hired last clearing

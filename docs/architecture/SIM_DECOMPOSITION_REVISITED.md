@@ -575,7 +575,7 @@ package function reads no `self` at all and the mixin keeps only the glue that f
   `geography`). Proof: identical sha256 over forty simulated years of `grant_opening_herds`, `endemic_keeping` and the
   held stock (two herd sizes alternating, one far beyond the pasture, the wild stock cut part-way) on base and branch.
 - `RegionalPeopleMixin` (`sim/engine/regional_people.py`): the migration rule between regions moved to
-  `sim/labour/regional_migration.py` (`sim.labour.api.moves_between_regions`); the calories each region is fed moved to
+  `sim/labour/regional_migration.py` (`sim.labour.api.migrant_pairs`); the calories each region is fed moved to
   `sim/world/regional_population.py` (`kcal_per_day_by_region`); the people by tile, the tiles' population shares and the
   borders moved to `sim/geography/settlement.py` (`people_by_tile`, `population_shares`, `borders_among`, the last
   through `Geography.borders_among`). The year's epidemic inputs are now one call,

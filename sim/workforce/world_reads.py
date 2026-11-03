@@ -246,6 +246,11 @@ class TradeReads:
         return self._needs.trades_absent()
 
     @property
+    def household_need_data(self):
+        """{"needs", "goods"} of the base game with the installed mods applied."""
+        return self._needs.household_need_data()
+
+    @property
     def trade_notes(self):
         return self._needs.trade_notes()
 

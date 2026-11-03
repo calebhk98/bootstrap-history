@@ -29,18 +29,18 @@ check("first hands scale with the trade's full apprenticeship", hands.first_hand
 # cohort rows: an early slice of person-equivalents and the rest at the end
 years = formation.training_years(FULL, UNCOVERED)
 rows = hands.cohort_rows(YEAR, "fitter", COUNT, years, FULL, UNCOVERED)
-check("a cohort is two rows of the same trade", len(rows) == 2 and all(row[2] == "fitter" for row in rows), rows)
-check("the rows add up to the whole cohort", abs(sum(row[3] for row in rows) - COUNT) < 1e-9, rows)
-check("the early row is the covered share of the cohort", abs(rows[0][3] - COUNT * 0.25) < 1e-9, rows)
-check("the early row is ready before the end row", rows[0][1] < rows[1][1] and abs(rows[1][1] - (YEAR + years)) < 1e-9, rows)
+check("a cohort is two rows of the same trade", len(rows) == 2 and all(row.trade == "fitter" for row in rows), rows)
+check("the rows add up to the whole cohort", abs(sum(row.people for row in rows) - COUNT) < 1e-9, rows)
+check("the early row is the covered share of the cohort", abs(rows[0].people - COUNT * 0.25) < 1e-9, rows)
+check("the early row is ready before the end row", rows[0].ready_year < rows[1].ready_year and abs(rows[1].ready_year - (YEAR + years)) < 1e-9, rows)
 
 # a nearer source gives more at first hands
 near = hands.cohort_rows(YEAR, "fitter", COUNT, formation.training_years(FULL, 0.25), FULL, 0.25)
-check("a nearer source gives more early hands", near[0][3] > rows[0][3])
+check("a nearer source gives more early hands", near[0].people > rows[0].people)
 
 # a source that covers nothing gives no early hands: one row at the end
 none = hands.cohort_rows(YEAR, "fitter", COUNT, formation.training_years(FULL, 1.0), FULL, 1.0)
-check("a source covering no task gives only the final row", len(none) == 1 and abs(none[0][3] - COUNT) < 1e-9, none)
+check("a source covering no task gives only the final row", len(none) == 1 and abs(none[0].people - COUNT) < 1e-9, none)
 
 # the early slice is on the payroll from its date, so the keep paid up front stops short of it
 prepaid = hands.prepaid_keep_years(years, FULL, UNCOVERED)

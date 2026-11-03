@@ -303,11 +303,9 @@ def _cmd_labour(sim, nodes, cmd, ended):
             # household. It knows exactly what they are, so this
             # substitutes a description instead.
             "in_training": [
-                {"trade": (training_record[2] if len(training_record) > 2
-                           else "people you bought, learning the work"),
-                 "people": (training_record[3] if len(training_record) > 3
-                            else round(training_record[0] / 0.55, 2)),
-                 "ready_year": training_record[1]}
+                {"trade": training_record.trade or "people you bought, learning the work",
+                 "people": round(training_record.people, 2),
+                 "ready_year": training_record.ready_year}
                 for training_record in sim.view("training_queue")()],
             "one_trade_in_full": '{"cmd":"labour","trade":"smith"}',
             "how_to_grow_staff": {"scholars": sim.view("staff_advice")("scholars"),

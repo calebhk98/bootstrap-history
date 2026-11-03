@@ -1,5 +1,6 @@
 """The rules behind hiring, teaching, dismissing and commissioning, on values given: the literacy wall, who is let go
 and which apprenticeships stop, the hours a trade can spare and what stops a founder selling his own."""
+import dataclasses
 import math
 
 WALL_TOLERANCE = 1e-6
@@ -37,8 +38,8 @@ def whole_people_under_wall(ceiling, have):
 
 
 def apprentices_of(training, trade):
-    """People of a trade being taught, from records `[progress, ready year, trade, people]`."""
-    return sum(record[3] for record in training if len(record) > 3 and record[2] == trade)
+    """People of a trade being taught, from training rows."""
+    return sum(row.people for row in training if row.trade == trade)
 
 
 def dismiss(employed, training, trade, count):
@@ -57,15 +58,15 @@ def dismiss(employed, training, trade, count):
     stopped, still = 0.0, training
     if count > 0 and apprentices_of(training, trade) > 0:
         still = []
-        for record in training:
-            record = list(record)
-            if len(record) > 3 and record[2] == trade and count > 0:
-                take = min(count, record[3])
-                record[3] -= take
+        for row in training:
+            row = dataclasses.replace(row)
+            if row.trade == trade and count > 0:
+                take = min(count, row.people)
+                row.people -= take
                 count -= take
                 stopped += take
-            if len(record) <= 3 or record[3] > 1e-9:
-                still.append(record)
+            if row.trade is None or row.people > 1e-9:
+                still.append(row)
     return gone, remaining, stopped, still, count
 
 

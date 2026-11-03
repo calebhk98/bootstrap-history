@@ -126,10 +126,10 @@ class Supply:
         supply(): that is the real wall hire() and train() enforce for
         them (see _literate_wall_refusal - "this household's reach into
         the labour market for %ss will not stretch past %.1f"), floored
-        at 1.5 so a literate person always exists somewhere, which market_
+        (LITERATE_CAPACITY_FLOOR) so a literate person always exists somewhere, which market_
         supply's own formula is not floored to. Showing the smaller,
         unfloored market_supply figure here would make Norse scribes read
-        as "0.2 within your reach" when the game will in fact let a
+        as a fraction of a person within your reach when the game will in fact let a
         player hire one - exactly the kind of false "nobody's there"
         reading literate_capacity's own floor exists to prevent.
         """

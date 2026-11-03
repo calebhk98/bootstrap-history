@@ -17,7 +17,7 @@ from sim.polity.state import PolitySeat
 from sim.production.api import ProductionSeat
 from sim.projects.state import ProjectsSeat
 from sim.ventures.state import VenturesSeat
-from sim.workforce.api import WorkforceSeat
+from sim.workforce.api import TrainingRow, WorkforceSeat
 from sim.engine.state import ActiveProjectState, EconomyState, HoldingsState, SimulationState, deserialize_state
 from sim.foreign_trade.api import ForeignTradeWorld
 from sim.refusal import Refusal, cause_of
@@ -42,7 +42,7 @@ check("deserialize_state: a scalar is coerced to the class named", deserialize_s
 household = deserialize_state({"cash_flow": {"wages": -12.5}, "cash_mark": None, "cash_periods": [{"year": 99, "net": 3.0}], "total_spend": 7,
                                "_on_change_hook": 1, "not_a_field": 9}, LedgerSeat)
 workforce = deserialize_state({"wages_paid": None, "trades_created": {"__set__": ["baker", "mason"]}, "trade_introduced_year": {"mason": 95},
-                               "employees": {"mason": 2}, "training": [["mason", 2]],
+                               "employees": {"mason": 2}, "training": [{"trade": "mason", "people": 2.0, "ready_year": 103}],
                                "unused_hours_reported": {"order:1": [40.0, "no_hands"]}, "_on_change_hook": 1, "not_a_field": 9}, WorkforceSeat)
 check("deserialize_state: a seat's cash book, None-means-never fields and zeros are as saved",
       household.total_spend == 7.0 and workforce.wages_paid is None
@@ -57,7 +57,7 @@ check("deserialize_state: a polity seat's None-means-never fields and zeros are 
 check("deserialize_state: a seat's sets are sets, its dicts typed, its lists kept",
       workforce.trades_created == {"baker", "mason"} and type(workforce.trades_created) is set
       and workforce.trade_introduced_year == {"mason": 95} and workforce.employees == {"mason": 2.0}
-      and workforce.training == [["mason", 2]] and household.cash_flow == {"wages": -12.5}
+      and workforce.training == [TrainingRow("mason", 2.0, 103)] and household.cash_flow == {"wages": -12.5}
       and household.cash_periods == [{"year": 99, "net": 3.0}] and workforce.unused_hours_reported == {"order:1": [40.0, "no_hands"]}, None)
 _reporting = deserialize_state({"log": [[100, "built a mill"]]}, ReportingSeat)
 check("deserialize_state: a list of pairs annotated as tuples comes back as tuples", _reporting.log == [(100, "built a mill")] and type(_reporting.log[0]) is tuple, _reporting.log)

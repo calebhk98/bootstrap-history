@@ -4,7 +4,7 @@ from sim.refusal import Refusal
 from .labour_wage_schedule import person_year_hours
 from . import trade_data, trade_first_hands, trade_formation
 from .labour_refusals import cash_in_hand_refusal, literate_wall_refusal
-from .request_rules import teaching_fee, teaching_hours_refusal, train_request_refusal
+from .request_rules import source_trade_unusable, teaching_fee, teaching_hours_refusal, train_request_refusal
 from .room_advice import hire_room_refusal
 from .staff_moves import crosses_literacy_wall
 from sim.ledger.api import PayEdge
@@ -30,7 +30,7 @@ class Training:
         seats = float(seats)
         cost = seats * self._world.finance.trade_school_price_per_seat()
         workforce = self._world.workforce
-        if seats <= 0 or cost > self._world.finance.balance:
+        if seats <= 0 or cost > self._world.finance.spending_power("buy"):
             return False, "cannot afford that trade school"
         paid = self._world.send(PayEdge(self._world.EDGE_WORKERS, cost, "trade schools"))
         if isinstance(paid, Refusal):
@@ -88,7 +88,8 @@ class Training:
         # verb put it there.
         frm, refusal = train_request_refusal(
             trade in self._world.trades.wages, trade, count, lambda: frm or self.source_trade_for(trade),
-            lambda source: source in self._world.trades.trades_absent and source not in self._world.workforce.trades_created)
+            lambda source: source_trade_unusable(source, self._world.trades.wages, self._world.trades.trades_absent,
+                                                 self._world.workforce.trades_created))
         if refusal:
             return None, refusal
         count = float(round(count))
@@ -180,6 +181,6 @@ class Training:
                       "screen); before that they cannot do a day of the work. It took "
                       "%s of your own hours (%s left this year) and %s "
                       "to keep them while they learn"
-                      % (count, trade, "s" if count != 1 else "", trade_first_hands.year_joined(rows[-1][1]), frm,
+                      % (count, trade, "s" if count != 1 else "", trade_first_hands.year_joined(rows[-1].ready_year), frm,
                          self._world.game.plain_number(hours), self._world.game.plain_number(_left),
                          self._world.game.money_text(fee, grouped=True)))

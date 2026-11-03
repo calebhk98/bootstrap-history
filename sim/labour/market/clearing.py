@@ -44,10 +44,14 @@ def reservation_wage_per_hour(subsistence_per_year: float, hours_per_year: float
     return subsistence_per_year / hours_per_year * (1.0 + max(0.0, risk) * value_of_life_years)
 
 
-def reservation_wage(inputs: YearInputs, area: str, risk: float) -> float:
-    """What an hour must pay: the outside option per hour plus the priced risk of the trade."""
-    return reservation_wage_per_hour(inputs.subsistence_per_worker_year.get(area, 0.0),
-                                     max(inputs.hours_per_worker_year, 1e-12), risk, inputs.value_of_life_years_of_income)
+def reservation_wage(inputs: YearInputs, area: str, risk: float) -> Optional[float]:
+    """What an hour must pay: the outside option per hour plus the priced risk of the trade; None where the area has
+    no stated outside option."""
+    subsistence = inputs.subsistence_per_worker_year.get(area)
+    if subsistence is None:
+        return None
+    return reservation_wage_per_hour(subsistence, max(inputs.hours_per_worker_year, 1e-12), risk,
+                                     inputs.value_of_life_years_of_income)
 
 
 def ask_floor(inputs: YearInputs, area: str, base_reservation: float) -> float:
@@ -58,26 +62,31 @@ def ask_floor(inputs: YearInputs, area: str, base_reservation: float) -> float:
     return base_reservation if stated is None else stated / max(inputs.hours_per_worker_year, 1e-12)
 
 
-def unskilled_option(state: MarketState, inputs: YearInputs, area: str, trade: str) -> float:
-    """What a skilled worker can always earn instead: the unskilled wage the area paid last year, taken
-    straight up with no retraining, so no trade quotes below it."""
+def unskilled_option(start_wages: Dict[str, Dict[str, float]], inputs: YearInputs, area: str, trade: str) -> Optional[float]:
+    """What a skilled worker can always earn instead: the unskilled wage the area paid at the start of the year (not
+    the live one, which the year's clearings rewrite in the order they run), taken straight up with no retraining,
+    so no trade quotes below it. None for the unskilled trade itself and where the area paid none."""
     fallback = fallback_trade(inputs.trades)
     if trade == fallback:
-        return 0.0
-    return state.wages.get(area, {}).get(fallback) or 0.0
+        return None
+    return start_wages.get(area, {}).get(fallback)
 
 
-def trained_substitute_wage(state: MarketState, inputs: YearInputs, area: str, trade: str) -> float:
+def trained_substitute_wage(start_wages: Dict[str, Dict[str, float]], inputs: YearInputs, area: str, trade: str) -> Optional[float]:
     """The most an hour of a trade can command where hands are few: what it takes to train a substitute. A
     person who trains goes the trade's training years unpaid, so the trade pays the unskilled wage times the
     training premium (premium.training_premium: the multiple that leaves a trainee indifferent) and the risk
     of the work priced as in the reservation wage. A trade needing no training is capped at the unskilled
-    wage itself (hands move in at once). Unlimited only for the unskilled trade itself."""
+    wage itself (hands move in at once). Unlimited only for the unskilled trade itself. The unskilled wage is the start
+    of the year's; None where the area has neither it nor an outside option to stand in."""
     spec = inputs.trades[trade]
     fallback = fallback_trade(inputs.trades)
     if trade == fallback:
         return math.inf
-    unskilled = max(state.wages.get(area, {}).get(fallback) or 0.0, reservation_wage(inputs, area, 0.0))
+    known = [wage for wage in (start_wages.get(area, {}).get(fallback), reservation_wage(inputs, area, 0.0)) if wage is not None]
+    if not known:
+        return None
+    unskilled = max(known)
     premium = training_premium(spec.training_years, inputs.discount_rate, inputs.career_years)
     return unskilled * premium * (1.0 + spec.fatality_risk_per_year * inputs.value_of_life_years_of_income)
 
@@ -248,17 +257,23 @@ def offer_ceilings(bids: Sequence[EmployerHoursBid], wage: float, paid: Dict[str
 
 
 def clear_one(state: MarketState, inputs: YearInputs, trade: str, area: str, bids: Sequence[EmployerHoursBid],
-              import_costs: Optional[ImportCosts] = None) -> LabourClearing:
+              import_costs: Optional[ImportCosts] = None) -> Optional[LabourClearing]:
+    """The market of a trade in an area for the year; None where the area has no stated outside option to hold one on."""
+    import_costs = import_costs or ImportCosts(state, inputs)
     spec = inputs.trades[trade]
     workers = sum(state.workers.get(area, {}).get(trade, []))
     full = workers * inputs.hours_per_worker_year
     sold_at = inputs.sold_schedule(trade, area)
     base_reservation = reservation_wage(inputs, area, spec.fatality_risk_per_year)
+    if base_reservation is None:
+        return None
     lowest = ask_floor(inputs, area, base_reservation)
-    reservation = max(base_reservation * asks.scale_of(state, area, trade), lowest, unskilled_option(state, inputs, area, trade))
+    option = unskilled_option(import_costs.wages, inputs, area, trade)
+    reservation = max(base_reservation * asks.scale_of(state, area, trade), lowest, 0.0 if option is None else option)
     last = state.wages.get(area, {}).get(trade)
-    long_run = max(trained_substitute_wage(state, inputs, area, trade), reservation)
-    supply = (import_costs or ImportCosts(state, inputs)).supply(area, trade) if bids else None
+    substitute = trained_substitute_wage(import_costs.wages, inputs, area, trade)
+    long_run = reservation if substitute is None else max(substitute, reservation)
+    supply = import_costs.supply(area, trade) if bids else None
     imported, fetched_share = supply if supply is not None else (None, 0.0)
     # this year's wage may pass the long-run cost (trainees take years to arrive); what entrants expect stays at it
     ceiling = short_run_ceiling(long_run, reservation, spec.training_years, bids, imported, fetched_share)
@@ -315,5 +330,6 @@ def clear_all(state: MarketState, inputs: YearInputs) -> List[LabourClearing]:
         markets.update((trade, area) for trade, bands in by_trade.items()
                        if sum(bands) > 0.0 and trade in inputs.trades)
     import_costs = ImportCosts(state, inputs)
-    return [clear_one(state, inputs, trade, area, bids_by_market.get((trade, area), []), import_costs)
-            for trade, area in sorted(markets)]
+    held = (clear_one(state, inputs, trade, area, bids_by_market.get((trade, area), []), import_costs)
+            for trade, area in sorted(markets))
+    return [clearing for clearing in held if clearing is not None]

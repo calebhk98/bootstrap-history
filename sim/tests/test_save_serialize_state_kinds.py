@@ -22,7 +22,7 @@ from sim.projects.state import ProjectsSeat
 from sim.ventures.state import VenturesSeat
 from sim.agents.api import Business
 from sim.agents.api import Plant
-from sim.workforce.api import WorkforceSeat
+from sim.workforce.api import TrainingRow, WorkforceSeat
 from sim.engine.state import (ActiveProjectState, EconomyState, FounderState, HoldingsState, HouseholdState,
                               SimulationState, serialize_state, verbatim)
 from sim.engine.state_seat import SeatState
@@ -72,7 +72,7 @@ check("serialize_state: outside `verbatim` a dict is copied", serialize_state({"
 household = HouseholdState(saving_target=3.0)
 cash_seat = LedgerSeat(cash_flow={"wages": -12.5}, cash_mark=None, cash_periods=[{"year": 99, "net": 3.0}], total_spend=7.0)
 workforce = WorkforceSeat(wages_paid=None, trades_created={"mason", "baker"}, trade_introduced_year={"mason": 95}, employees={"mason": 2.0},
-                          training=[["mason", 2]], unused_hours_reported={"order:1": [40.0, "no_hands"]})
+                          training=[TrainingRow("mason", 2.0, 103)], unused_hours_reported={"order:1": [40.0, "no_hands"]})
 blob = serialize_state(household)
 cash_blob = serialize_state(cash_seat)
 staff_blob = serialize_state(workforce)
@@ -88,7 +88,7 @@ check("serialize_state: a polity seat keeps its None-means-never fields None and
       standing["last_withdrawal"] is None and standing["scandal_last_year"] == 0.0 and standing["said_scandal"] == 0, None)
 check("serialize_state: a dataclass's sets, dicts, lists and tuples inside",
       staff_blob["trades_created"] == {"__set__": ["baker", "mason"]} and staff_blob["trade_introduced_year"] == {"mason": 95}
-      and staff_blob["employees"] == {"mason": 2.0} and staff_blob["training"] == [["mason", 2]]
+      and staff_blob["employees"] == {"mason": 2.0} and staff_blob["training"] == [{"trade": "mason", "people": 2.0, "ready_year": 103}]
       and cash_blob["cash_flow"] == {"wages": -12.5} and cash_blob["cash_periods"] == [{"year": 99, "net": 3.0}]
       and blob["saving_target"] == 3.0 and staff_blob["unused_hours_reported"] == {"order:1": [40.0, "no_hands"]}, None)
 check("serialize_state: a log is a list of pairs", serialize_state(ReportingSeat(log=[(100, "built a mill")]))["log"] == [[100, "built a mill"]])

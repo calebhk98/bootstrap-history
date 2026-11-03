@@ -44,11 +44,11 @@ class Hiring:
                                        % (trade, self._world.trades.trade_notes.get(trade, ""), trade))
         if trade not in self._world.trades.trades_absent:
             exist = self.supply.people_who_exist(trade)
-            on_books = self.book.employed(trade)
+            on_books = self.book.employed_or_posted(trade)
             rivals = self._world.actors.actor_staff_fte(trade)
             if trade_supply_rules.hire_leaves_nobody(on_books, rivals, count, exist):
                 return None, None, Refusal("nobody_left", "only about %.1f %ss exist in this country and you "
-                                           "already employ %.1f%s: there is nobody left to hire."
+                                           "already employ or have posted %.1f%s: there is nobody left to hire."
                                            % (exist, trade, on_books,
                                               " (firms and the state employ %.1f more)" % rivals if rivals > 0 else ""))
         # literacy is a wall, not a cost: money cannot buy people who do not exist
@@ -75,7 +75,7 @@ class Hiring:
         if refusal:
             return False, refusal
         workforce = self._world.workforce
-        workforce.staff_wanted[trade] = max(workforce.staff_wanted.get(trade, 0.0), self.book.employed(trade)) + count
+        workforce.staff_wanted[trade] = self.book.employed_or_posted(trade) + count
         self.pools.resync_pools()
         return True, ("%g %s%s wanted: the labour market fills the places at the year's clearing, at its wage. You now "
                       "have %.1f and %.1f places posted."
