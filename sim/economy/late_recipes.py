@@ -8,6 +8,7 @@ Producers for the new recipes enter through the ordinary entry rules.
 Standalone: the setup, record and area map of this package.
 """
 from .market_memory import market_key
+from .setup import opening_price_today
 
 
 def admit_recipes(economy, source) -> bool:
@@ -43,5 +44,5 @@ def _open_markets(economy, goods) -> None:
     for good in goods:
         for area in economy.area_map.areas(good):
             key = market_key(good, area.area_id)
-            memory.set_price(key, economy.setup.opening_prices[good])
+            memory.set_price(key, opening_price_today(economy.setup, memory, good))
             memory.note_usual_price(key)

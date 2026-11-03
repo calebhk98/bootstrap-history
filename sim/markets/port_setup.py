@@ -59,9 +59,10 @@ def mint_recipe_id(civ, production, held_nodes):
     return entry_id if isinstance(entry, dict) and entry.get("actor") == "mint" and _runnable(entry, held_nodes) else None
 
 
-def unskilled_trade(trades_data):
-    """The trade anyone can take up at once, which the labour package names from the trade registry."""
-    return labour_api.fallback_trade(labour_api.trade_specs(trades_data))
+def unskilled_trade(registry):
+    """The trade anyone can take up at once, which the labour package names from the trade registry (the one the
+    labour side reads: the base trades with the mods applied)."""
+    return labour_api.trade_of_role(registry, "unskilled")
 
 
 def partner_openings(sim):
@@ -79,8 +80,9 @@ def opening_wages(sim, trades, level=1.0):
     level again. The unskilled trade's quote must be above zero (the one wage rule prices every other trade on it,
     sim/economy/trade_wages.py): a civilisation without one is refused. Another trade whose quote is not above zero is
     left out, so that rule prices it on the unskilled wage."""
-    quotes = {trade: sim.economy.labour.quote(trade) for trade in sorted(trades)}
-    unskilled = unskilled_trade(_load("world", "trades.json").get("trades", {}))
+    registry = sim.state.trade_registry
+    quotes = {trade: sim.economy.labour.quote(trade) for trade in sorted(trades) if trade in registry}
+    unskilled = unskilled_trade(registry)
     if unskilled in quotes and not quotes[unskilled] > 0.0:
         raise ValueError(f"civilisation {sim.scenario.civ['id']!r}: the unskilled trade {unskilled!r} has the labour market "
                          f"quote {quotes[unskilled]!r}, not above zero, so no trade can be priced")
@@ -94,10 +96,10 @@ def opening_values(sim):
     tile_ids = sim.map.tiles_held_by(civ)
     people = float(sim.scenario.population.total)
     production = demand.production_data()
-    trades_data = _load("world", "trades.json").get("trades", {})
+    registry = sim.state.trade_registry
     allowed = allowed_entries(production, set(sim.production.techniques_granted()))
     mint_recipe = mint_recipe_id(civ, production, set(sim.production.techniques_granted()))
-    unskilled = unskilled_trade(trades_data)
+    unskilled = unskilled_trade(registry)
     partners = partner_openings(sim)
     partner_prices = {}
     for opened in partners.values():
@@ -119,8 +121,9 @@ def opening_values(sim):
         "recipes": allowed,
         "mint_recipe": mint_recipe,
         "prices": prices,
-        "wages": opening_wages(sim, [trade for trade in labour_trades if trade in trades_data]),
+        "wages": opening_wages(sim, labour_trades),
         "unskilled_trade": unskilled,
+        "servant_trade": labour_api.trade_of_role(registry, "household_work"),
         "need_shares": sim.labour.need_shares(),
         "rate": float(opening_market_rate()),
         "carriage": dict(modes),
@@ -211,7 +214,7 @@ def build_setup(sim, opening=None, production=None):
     production = production or demand.production_data()
     every_recipe = sorted(set(opening["recipes"]).union(*(opened["recipes"] for opened in partners.values())))
     recipes = recipes_from_production_data(production, every_recipe)
-    trades_data = _load("world", "trades.json").get("trades", {})
+    trades_data = sim.state.trade_registry
     life_years = {good: float(entry["years"]) for good, entry in _load("world", "service_lives.json").get("years", {}).items()}
     recipes = tool_wear_recipes(recipes, trades_data, life_years, float(sim.scenario.HOURS_PER_PERSON_YEAR))
     mint_recipe = (recipes_from_production_data(production, [opening["mint_recipe"]])[opening["mint_recipe"]]
@@ -230,7 +233,7 @@ def build_setup(sim, opening=None, production=None):
     prices = {good: price for good, price in opening["prices"].items() if good in specs and price > 0.0}
     prices = port_closure.makeable_prices(prices, production, recipes)
     recipes = {recipe_id: plant_builds.with_plant_from(recipe, prices) for recipe_id, recipe in recipes.items()}
-    trades = {trade: SetupTrade(trade, float(spec.get("training_years", 0.0)),
+    trades = {trade: SetupTrade(trade, float(spec.get("training_years") or 0.0),
                                float(spec.get("fatality_risk_per_year", 0.0)), str(spec.get("family", "")))
               for trade, spec in sorted(trades_data.items())}
     wages = dict(opening["wages"])
@@ -264,7 +267,7 @@ def build_setup(sim, opening=None, production=None):
         working_hours_per_year=float(sim.scenario.HOURS_PER_PERSON_YEAR), working_share=float(opening["working_share"]),
         gini=demand.GINI_COEFFICIENT_PREINDUSTRIAL_AGRARIAN, opening_population_by_tile=population_by_tile,
         need_share_by_trade={trade: float(share) for trade, share in (opening.get("need_shares") or {}).items()},
-        unskilled_trade=opening["unskilled_trade"], debt_bondage_years=sim.finance.debt_bondage_term_years(), opening_prices=prices, opening_wages=wages, opening_rate=float(opening["rate"]),
+        unskilled_trade=opening["unskilled_trade"], servant_trade=opening["servant_trade"], debt_bondage_years=sim.finance.debt_bondage_term_years(), opening_prices=prices, opening_wages=wages, opening_rate=float(opening["rate"]),
         capital_tile=by_people[0], port_tile=(coastal or by_people)[0],
         land_per_run={recipe_id: float(production[recipe_id].get("land_hectare_years") or 0.0)
                       for recipe_id in recipes if production[recipe_id].get("land_hectare_years")},

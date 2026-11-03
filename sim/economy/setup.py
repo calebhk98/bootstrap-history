@@ -83,7 +83,7 @@ class EconomySetup:
     household_work: Dict[str, Any] = field(default_factory=dict)      # hours of household work by task (data/world/household_work.json); empty: none is modelled
     ready_to_eat: frozenset = frozenset()                             # goods a household with no hearth can eat as bought
     milled_as: Dict[str, str] = field(default_factory=dict)           # per grain, the good it is milled into (needs.json); a household weighs grinding it against buying that
-    servant_trade: str = "domestic_servant"                           # the trade whose wage is the price of an hour of household work
+    servant_trade: Optional[TradeId] = None                           # the trade whose wage is the price of an hour of household work (the registry's household_work role); the port sets it
     state_policy: StatePolicy = field(default_factory=StatePolicy)   # how the state budgets and finances a deficit
     site_limits: Tuple[SiteLimit, ...] = ()     # where site-bound recipes can run, and how much (sites.py)
     mint_recipe: Optional[Recipe] = None   # how the mint strikes coin: the production entry the coin standard names
@@ -158,6 +158,13 @@ class EconomySetup:
     @property
     def currency_id(self) -> str:
         return self.currency.currency_id
+
+
+def opening_price_today(setup: "EconomySetup", memory: Any, good: GoodId) -> Optional[float]:
+    """The setup's opening price of a good in today's money (opening-year money times the memory's wage level); None when
+    the setup holds none."""
+    price = setup.opening_prices.get(good)
+    return None if price is None else price * memory.opening_wage_level(setup.currency_id)
 
 
 def recipe_tile_key(recipe_id: str, tile: TileId) -> str:

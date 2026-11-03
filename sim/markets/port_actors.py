@@ -137,7 +137,7 @@ def standing_bids(economy, flows: dict, tile: str, tonnes_per_unit: Callable[[st
         good = good_for(economy, commodity, materials_in)
         units = tonnes / tonnes_per_unit(good) if good is not None and tonnes > 0.0 else 0.0
         area = economy.area_map.area_of(good, tile) if units > 0.0 else None
-        price = standing_price(view.price(good, area), economy_api.opening_prices_of(economy).get(good)) if units > 0.0 else None
+        price = standing_price(view.price(good, area), economy_api.opening_price_in_current_money(economy, good)) if units > 0.0 else None
         if price is not None:
             found.append(Bid("standing:founder", good, area, tile, units, 0.0, price, 0.0, units * price))
     return tuple(found)

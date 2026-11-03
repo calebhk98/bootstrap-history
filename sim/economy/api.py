@@ -31,7 +31,7 @@ from . import plant_builds, trade_wages
 from .tool_wear import with_tool_wear
 from .record import EconomyRecord
 from .setup import EconomySetup, SetupTrade, goods_specs, recipe_tile_key
-from .setup import labour_area
+from .setup import labour_area, opening_price_today
 from .types import (EDGE_CARGO, EDGE_CONSUMPTION, EDGE_EXCHANGE, EDGE_EXTERNAL, EDGE_LEGACY, EDGE_MINT, EDGE_PRODUCTION, EDGE_WEAR, Bid,
                     GoodsMove, LabourBid, LabourOffer, Offer, SiteLimit, Transfer, external_edge)
 from .year_accounts import YearAccounts
@@ -54,7 +54,7 @@ __all__ = [
     "EconomyYearInputs", "recipe_tile_key", "recipes_from_production_data", "plant_builds", "with_tool_wear", "EconomyRecord", "EconomySetup", "SetupTrade", "SiteLimit",
     "goods_specs", "EDGE_EXTERNAL", "EDGE_LEGACY", "EDGE_CARGO", "EDGE_CONSUMPTION", "EDGE_PRODUCTION", "EDGE_EXCHANGE", "external_edge", "Bid", "GoodsMove", "LabourBid", "LabourOffer", "Offer", "Transfer",
     "variable_cost_per_run", "rebase_basket_price_level", "trade_premium", "title_wealth",
-    "traded_volumes", "country_traded_volumes", "country_opening_basket", "market_record", "opening_quantities", "opening_prices_in_hours", "wages_by_trade_weighted", "interest_rate", "producers_of",
+    "traded_volumes", "country_traded_volumes", "country_opening_basket", "market_record", "opening_quantities", "opening_prices_in_hours", "opening_price_in_current_money", "wages_by_trade_weighted", "interest_rate", "producers_of",
     "external_trade_net", "external_trade_volume", "account_balance", "account_holdings",
     "credit_room", "credit_line_request", "economy_from_record", "blank_economy", "export_record", "economy_book", "economy_contracts", "finish_spin_up", "note_spin_up_result", "spin_up_state", "money_year_figures","shown_prices_of","shown_price_kinds_of",
     "settle_agent_takings", "route_dues_account", "tile_holders", "indebted_tiles", "fugitive_share_by_tile", "title_holdings", "money_revenue_forms", "admit_recipes", "move_goods", "post_transfers", "cohort_incomes", "cohort_land_rents", "land_rent_per_hectare",
@@ -562,6 +562,11 @@ def recipe_allowed_at(economy, recipe_id, tile):
 
 def opening_prices_of(economy):
     return economy.setup.opening_prices
+
+
+def opening_price_in_current_money(economy, good):
+    """The opening price of a good in today's money; None when the setup holds none."""
+    return opening_price_today(economy.setup, economy.record.memory, good)
 
 
 def unskilled_trade(economy):

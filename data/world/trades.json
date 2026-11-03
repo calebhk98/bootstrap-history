@@ -477,6 +477,7 @@
     },
     "domestic_servant": {
       "family": "labour",
+      "role": "household_work",
       "note": "Does a household's work for pay: cooking, carrying water and fuel, cleaning, grinding, minding children; in an eating house or tavern, cooking and serving meals. The work every household otherwise does with its own hours (Complaint 645). Asks no craft.",
       "training_years": 0,
       "fatality_risk_per_year": 0.0,
