@@ -12,6 +12,7 @@ from sim.assembly.api import Module
 
 from .allocation_notes import AllocationNotes
 from .auto_open import AutoOpen
+from .blocker_rules import START_CHECKS
 from .blocker_views import BlockerViews
 from .closures import Closures
 from .completion import Completion
@@ -39,6 +40,8 @@ from .applied import Applied
 
 
 class Projects(Module):
+
+	START_CHECKS = START_CHECKS   # the start test, in order; a mod's layer over the module replaces it
 
 	PARTS = {
 		"applied": Applied,

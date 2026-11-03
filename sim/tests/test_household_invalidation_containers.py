@@ -10,7 +10,8 @@ from sim.engine.state import SimulationState, HouseholdState
 from sim.knowledge.api import NoteTechniquesChanged
 from sim.engine.state_seat import SeatState
 from sim.projects.api import WatchActive
-from sim.projects.projects import ACTIVE_CHANGES, Projects
+from sim.projects.channels import ACTIVE_CHANGES
+from sim.projects.projects import Projects
 from sim.projects.state import ProjectsSeat
 from sim.ventures.api import NoteOperatingChanged, WatchBusiness
 from sim.ventures.channels import OPERATING_CHANGES

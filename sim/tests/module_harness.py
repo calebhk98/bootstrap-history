@@ -5,6 +5,7 @@
 
 A table view is given as its value (or a function of no arguments), a keyed view as a dict (or a function of the
 key), a quote as a function of its arguments. The module's own views are its own methods, as in a game."""
+import types
 from types import SimpleNamespace
 from typing import Any, Dict, List, Optional
 
@@ -48,10 +49,28 @@ def build(implementation: type, views: Optional[Dict[str, Any]] = None, answers:
 	module.kernels = {}
 	module.world, module.seat = world, seat
 	module.build_parts()
+	_install_overrides(module)
 	module.wire(_FakeNeeds(views or {}, answers or {}))
 	module.setup_parts()
 	module.setup()
 	return module
+
+
+def _install_overrides(module: Any) -> None:
+	"""A test subclass of a module class may redefine a method its parts hold; the part's callers must meet the redefinition, with the
+	module as `self`, so the part takes it as its own."""
+	for klass in type(module).__mro__:
+		if "PARTS" in vars(klass):
+			break
+		if "_is_harness_class" in vars(klass):
+			continue
+		for name, value in vars(klass).items():
+			if name.startswith("__") or not callable(value):
+				continue
+			for part in vars(module.parts).values():
+				if hasattr(type(part), name):
+					setattr(part, name, types.MethodType(value, module))
+					break
 
 
 def _calling_its_parts(implementation: type) -> type:
@@ -61,7 +80,11 @@ def _calling_its_parts(implementation: type) -> type:
 	added: Dict[str, Any] = {}
 	for part_name, part_class in implementation.PARTS.items():
 		for method, value in vars(part_class).items():
-			if callable(value) and not method.startswith("__") and not hasattr(implementation, method) and method not in added:
+			if method.startswith("__") or hasattr(implementation, method) or method in added:
+				continue
+			if isinstance(value, property):
+				added[method] = property(lambda self, part_name=part_name, method=method: getattr(getattr(self.parts, part_name), method))
+			elif callable(value):
 				added[method] = forwarder(part_name, method)
 
 	def set_on_the_part(self, name: str, value: Any) -> None:
@@ -73,6 +96,7 @@ def _calling_its_parts(implementation: type) -> type:
 					return
 		object.__setattr__(self, name, value)
 	added["__setattr__"] = set_on_the_part
+	added["_is_harness_class"] = True
 	return type(implementation.__name__, (implementation,), added)
 
 

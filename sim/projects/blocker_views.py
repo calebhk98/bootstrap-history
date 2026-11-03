@@ -15,7 +15,7 @@ class BlockerViews(Part):
 		if node is None:
 			return [{"kind": "unavailable", "cause": "no_such_node", "ids": [], "text": "no such node"}]
 		return blocker_rules.collect_blockers(
-			self.parts.start_checks.START_CHECKS + (blocker_rules.EXTENSION_CHECK,),
+			self.module.START_CHECKS + (blocker_rules.EXTENSION_CHECK,),
 			lambda check: self.parts.start_checks.run_check(check, node_id, node, False, None, True),
 			lambda check, text: self._classify(check, node_id, node, text),
 			lambda: self.parts.start_checks.money_refusal(node_id, extra_owed))

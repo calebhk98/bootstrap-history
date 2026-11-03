@@ -12,7 +12,7 @@ from sim.assembly.api import Part
 from sim.refusal import Refusal
 
 from . import constants, funding, start_money, start_rules
-from .blocker_rules import START_CHECKS, StartCheck
+from .blocker_rules import StartCheck
 from .staff_gate import craftsmen_gate_text, scholar_gate_text
 from .training_words import training_advice_text
 
@@ -22,10 +22,8 @@ SOCIAL_CATEGORIES = ("social", "institution", "foundation", "capability", "mater
 
 
 class StartChecks(Part):
-	START_CHECKS = START_CHECKS
-
 	def setup(self) -> None:
-		self._own_checks = {check.cause: self._own_check(check.cause) for check in self.START_CHECKS if not check.source}
+		self._own_checks = {check.cause: self._own_check(check.cause) for check in self.module.START_CHECKS if not check.source}
 
 	def _own_check(self, cause: str) -> Any:
 		"""The method that runs the check `cause`: this part's, else the running gates' part's."""
@@ -47,7 +45,7 @@ class StartChecks(Part):
 		if node is None:
 			return False, ("no such node" if why else None)
 		run_check = self.run_check
-		for check in self.START_CHECKS:
+		for check in self.module.START_CHECKS:
 			verdict = run_check(check, node_id, node, ignore_trade, memo, why)
 			if verdict is not None:
 				return verdict
