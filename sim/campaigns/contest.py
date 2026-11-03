@@ -3,6 +3,7 @@ rule; a tile won is held at the level the control data names and rises with the 
 from typing import Dict, List
 
 from sim.actors.api import RecordConquestContact
+from sim.assembly.api import Part
 from sim.geography.api import settlement, tile_owners
 from sim.hazards.api import RecordWorldEvent
 from sim.land.api import TransferTile
@@ -14,7 +15,7 @@ RETREAT_NOTE = "withdrew"
 CONTROL_STORE = "control"
 
 
-class Contest:
+class Contest(Part):
 	"""Reads: year, tile_owner, tiles_owned_by, tile_facts, country_world, store; sends TransferTile,
 	RecordConquestContact, RecordWorldEvent, WriteStore."""
 
@@ -27,7 +28,7 @@ class Contest:
 		on the tile with the state's equipment and no food of its own: it eats the tile's stores."""
 		owned = self.needs.tiles_owned_by[defender]
 		share = settlement.population_share(owned, tile) if tile in owned else 0.0
-		free = campaign_year_rules.garrison_strength(self.free_soldiers(defender), share)
+		free = campaign_year_rules.garrison_strength(self.parts.armies.free_soldiers(defender), share)
 		equipment = float(self.needs.country_world[defender].army.equipment_kg_per_soldier()) if self.needs.has_state[defender] else 0.0
 		return Army("garrison", defender, tile, free, equipment)
 
@@ -40,7 +41,7 @@ class Contest:
 		side = field + ([garrison] if garrison.soldiers >= 1.0 else [])
 		year = int(self.needs.year())
 		rng = self.needs.country_world[army.owner].setting.rng_for("battle", tile, army.army_id, year)
-		site = self.campaign_site(tile)
+		site = self.parts.campaign_year.campaign_site(tile)
 		site.fortification = self.tile_fortification(tile)
 		result = "defenders_gone" if not side else "continues"
 		while side and days_left > 0.0:
@@ -48,12 +49,12 @@ class Contest:
 			combined = campaign_contest.combine(side)
 			turn_days = min(campaign_contest.SIEGE_TURN_DAYS, days_left)
 			drawn_before = site.drawn_kcal
-			per_day, source = self.campaign_column(army, modes)
+			per_day, source = self.parts.campaign_year.campaign_column(army, modes)
 			attacker_before = army.soldiers
 			turn = campaign_contest.siege_turn(army, combined, site, per_day, reference, rng.random(), turn_days, pay_years)
-			self._draw_down(tile, site.drawn_kcal - drawn_before)
+			self.parts.campaign_year._draw_down(tile, site.drawn_kcal - drawn_before)
 			if source is not None and turn["carriage_taken_kg"] > 0.0:
-				self._draw_down(source, campaign_supply.kcal_of(turn["carriage_taken_kg"]))
+				self.parts.campaign_year._draw_down(source, campaign_supply.kcal_of(turn["carriage_taken_kg"]))
 			campaign_contest.share_out(side, before, combined)
 			lost[army.owner] = lost.get(army.owner, 0.0) + attacker_before - army.soldiers
 			lost[defender] = lost.get(defender, 0.0) + before - sum(member.soldiers for member in side)
@@ -66,9 +67,9 @@ class Contest:
 					facts=dict(attacker_won=outcome.attacker_won, attacker_win_probability=outcome.attacker_win_probability,
 					           attacker_lost=outcome.attacker_lost, defender_lost=outcome.defender_lost)))
 				if outcome.attacker_won:   # captives of the defeated join the winner's bonded (648)
-					self.take_captives_from_battle(army.owner, defender, outcome.defender_lost, tile)
+					self.parts.captives.take_captives_from_battle(army.owner, defender, outcome.defender_lost, tile)
 				else:
-					self.take_captives_from_battle(defender, army.owner, outcome.attacker_lost, tile)
+					self.parts.captives.take_captives_from_battle(defender, army.owner, outcome.attacker_lost, tile)
 			if result != "continues":
 				break
 		action = campaign_year_rules.contest_action(result)
@@ -88,7 +89,7 @@ class Contest:
 		"""The army holds a tile whose defenders are gone: it passes to the army's owner at the level newly taken ground
 		is held at, and the tile's people and taxes follow through the owner map."""
 		tile = army.tile
-		self.take_captives_from_conquest(army.owner, defender, tile)   # before the tile changes hands (648)
+		self.parts.captives.take_captives_from_conquest(army.owner, defender, tile)   # before the tile changes hands (648)
 		previous = self.needs.send(TransferTile(tile, army.owner, "conquest", tile_owners.conquest_level(0.0)))
 		self.world.held_since[tile] = campaign_year_rules.conquest_entry(int(self.needs.year()), army.owner, previous)
 		army.log.append({"kind": "conquest", "tile": tile, "from": previous})

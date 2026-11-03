@@ -10,6 +10,12 @@ from .soil import Soil
 from .weather import Weather
 
 
-class Agriculture(Weather, Food, Soil, Farm, FarmState, Module):
-    def setup(self):
-        self.setup_weather()
+class Agriculture(Module):
+
+    PARTS = {
+        "weather": Weather,
+        "food": Food,
+        "soil": Soil,
+        "farm": Farm,
+        "farm_state": FarmState,
+    }

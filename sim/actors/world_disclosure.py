@@ -48,13 +48,13 @@ class Disclosure:
 	def patent_entry(self, node_id: str) -> Any:
 		"""The live patent on an invention as {"holder", "expires", "licensees"}, or None."""
 		needs = self.needs
-		holders = self.world.registry.patent_holders(node_id) + [self.world.module.seat_party(seat_id) for seat_id in needs.seats_holding_patent(node_id)]
+		holders = self.world.registry.patent_holders(node_id) + [self.world.seat_book.seat_party(seat_id) for seat_id in needs.seats_holding_patent(node_id)]
 		return licence.live_patent(holders, node_id, self.world.setting.year)
 
 	def _holder_of(self, holder_id: str) -> Any:
 		"""The actor with this id: one in the registry, else a seat."""
-		module = self.world.module
-		return self.world.registry.get(holder_id) or (module.seat_party(holder_id) if holder_id in self.needs.seat_list()["joined"] else None)
+		seat_book = self.world.seat_book
+		return self.world.registry.get(holder_id) or (seat_book.seat_party(holder_id) if holder_id in self.needs.seat_list()["joined"] else None)
 
 	def collect_royalty(self, firm: Any, node_id: str, takings: float) -> float:
 		"""The royalty a licensed firm's takings owe each seat that licensed it the invention, never more than its

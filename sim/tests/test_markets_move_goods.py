@@ -7,6 +7,7 @@ from types import SimpleNamespace
 
 from sim.markets.api import MoveGoods
 from sim.markets.commands_applied import Applying
+from sim.tests import module_harness
 
 
 class RecordingBook:
@@ -20,8 +21,9 @@ class RecordingBook:
 class MoveGoodsTests(unittest.TestCase):
 	def test_the_book_is_given_the_commands_move(self):
 		book = RecordingBook()
-		module = SimpleNamespace(economy=SimpleNamespace(agent=SimpleNamespace(economy=lambda: SimpleNamespace(record=SimpleNamespace(book=book)))))
-		Applying.move_goods(module, MoveGoods("edge:production", "account", "grain", "tile_a", 5.0, "mod x: a gift"))
+		economy = SimpleNamespace(agent=SimpleNamespace(economy=lambda: SimpleNamespace(record=SimpleNamespace(book=book))))
+		applying = module_harness.part(Applying, siblings={"market_objects": SimpleNamespace(economy=economy)})
+		applying.move_goods(MoveGoods("edge:production", "account", "grain", "tile_a", 5.0, "mod x: a gift"))
 		(move,) = book.moves
 		self.assertEqual((move.giver, move.receiver, move.good, move.tile, move.quantity, move.purpose),
 		                 ("edge:production", "account", "grain", "tile_a", 5.0, "mod x: a gift"))

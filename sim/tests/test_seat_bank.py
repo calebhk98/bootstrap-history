@@ -71,9 +71,10 @@ class TheEconomysBank(unittest.TestCase):
 
     def test_the_capital_comes_in_from_outside_and_is_the_banks_own_and_the_seat_is_its_founder(self):
         coin = self.economy.setup.coin_per_unit
-        stand_in = SimpleNamespace(economy=SimpleNamespace(agent=SimpleNamespace(opened=lambda: True, economy=lambda: self.economy)),
-                                   clock=SimpleNamespace(acting_seat="seat:player"), needs=SimpleNamespace(year=lambda: 3))
-        bank_id = Applying.found_bank_from_outside(stand_in, FoundBankFromOutside(500.0 * coin))
+        economy = SimpleNamespace(agent=SimpleNamespace(opened=lambda: True, economy=lambda: self.economy))
+        applying = module_harness.part(Applying, siblings={"market_objects": SimpleNamespace(economy=economy)}, views={"year": lambda: 3})
+        applying.clock.acting_seat = "seat:player"
+        bank_id = applying.found_bank_from_outside(FoundBankFromOutside(500.0 * coin))
         bank = self.record.capital_markets.banks[bank_id]
         self.assertEqual(bank.founder, "seat:player")
         self.assertAlmostEqual(bank.paid_in, 500.0)
@@ -81,8 +82,9 @@ class TheEconomysBank(unittest.TestCase):
         self.assertAlmostEqual(self.record.book.money_supply(self.money) - self.supply, 500.0)
 
     def test_an_economy_not_yet_open_founds_no_bank(self):
-        stand_in = SimpleNamespace(economy=SimpleNamespace(agent=SimpleNamespace(opened=lambda: False)))
-        self.assertIsNone(Applying.found_bank_from_outside(stand_in, FoundBankFromOutside(100.0)))
+        economy = SimpleNamespace(agent=SimpleNamespace(opened=lambda: False))
+        applying = module_harness.part(Applying, siblings={"market_objects": SimpleNamespace(economy=economy)})
+        self.assertIsNone(applying.found_bank_from_outside(FoundBankFromOutside(100.0)))
 
     def test_no_capital_founds_no_bank(self):
         self.assertIsNone(economy_api.found_bank_from_outside(self.economy, "seat:player", 0.0, 0, economy_api.EDGE_EXCHANGE))

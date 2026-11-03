@@ -1,14 +1,16 @@
 """The goods market's views: quotes, the year's book and the goods categories."""
+from sim.assembly.api import Part
+
 from . import categories, trade_duty
 
 
-class GoodsViews:
+class GoodsViews(Part):
 
 	# ---- quotes ----
 
 	def goods_quote(self, material):
 		"""The market's buy and sell terms for a tonne of a material, or None when it has no price."""
-		return self.goods_market.quote(material)
+		return self.parts.market_objects.goods_market.quote(material)
 
 	def goods_categories(self):
 		"""The goods categories: concerns in one share a market."""
@@ -16,62 +18,62 @@ class GoodsViews:
 
 	def sale_limits(self, material):
 		"""(tonnes the acting seat holds, tonnes the market takes now) of a material."""
-		return self.goods_market.sale_limits(material)
+		return self.parts.market_objects.goods_market.sale_limits(material)
 
 	def material_trade_quote(self, material):
-		return self.economy.trade_quote(material)
+		return self.parts.market_objects.economy.trade_quote(material)
 
 	def material_purchase_cost(self, material, tonnes):
 		"""(money, mean money per tonne) to buy `tonnes`; None when the material has no price."""
-		return self.economy.purchase_cost(material, tonnes)
+		return self.parts.market_objects.economy.purchase_cost(material, tonnes)
 
 	def purchase_quote(self, material, tonnes, already=0.0):
 		"""(money, mean money per tonne) to buy `tonnes` of a material now, the price rising as the order is filled; None when
 		it has no price."""
-		return self.goods_market.quote_buy(material, tonnes, already)
+		return self.parts.market_objects.goods_market.quote_buy(material, tonnes, already)
 
 	def sale_quote(self, material, tonnes):
 		"""(stock key, tonnes the market takes now, money for them) if the acting seat sold `tonnes` of a material; the figure
 		a sale pays. (None, 0.0, 0.0) when the market has no price or takes none."""
-		return self.goods_market.quote_sell(material, tonnes)
+		return self.parts.market_objects.goods_market.quote_sell(material, tonnes)
 
 	def can_be_bought(self, material):
 		"""Whether anyone in reach sells the material at a price."""
-		return self.goods_market.can_be_bought(material)
+		return self.parts.market_objects.goods_market.can_be_bought(material)
 
 	def material_seller(self, material):
 		"""Who sells a material to the home society: the home society's own id, a trading partner, or None when no one does."""
-		return self.goods_market.offered_by(material)
+		return self.parts.market_objects.goods_market.offered_by(material)
 
 	def home_unit_price(self, material):
 		"""Money per unit the home society's sellers ask for a material (or a curated commodity, by the material it is priced as);
 		None when no home seller offers it."""
-		return self.goods_market.home_unit_price(material)
+		return self.parts.market_objects.goods_market.home_unit_price(material)
 
 	def household_prices(self):
 		"""{material: what a household pays per unit now}."""
-		return self.goods_market.household_prices()
+		return self.parts.market_objects.goods_market.household_prices()
 
 	def commodities_sold_by_acting_party(self):
-		return self.goods_market.commodities_sold_by(self.goods_market.acting_party_id)
+		return self.parts.market_objects.goods_market.commodities_sold_by(self.parts.market_objects.goods_market.acting_party_id)
 
 	def seat_goods_orders(self):
 		"""The acting seat's goods orders waiting for the year's clearing: [{"side", "material", "stock_key", "tonnes",
 		"limit_per_tonne", "carriage_per_tonne", "cost_factor", "project"}]."""
-		return self.goods_market.seat_orders()
+		return self.parts.market_objects.goods_market.seat_orders()
 
 	def seat_goods_traded(self):
 		"""What the last clearing bought and sold for the acting seat: {"bought": {stock key: tonnes}, "sold": {stock key: tonnes},
 		"orders": [one result per order, with its project and, when the order was not posted, its refusal's cause]}."""
-		return self.goods_market.seat_trades()
+		return self.parts.market_objects.goods_market.seat_trades()
 
 	def others_trade_stamp(self):
 		"""What every seat but the acting one has ordered to buy and sell this year, comparable for equality, for caches whose
 		answers read the posted price."""
-		return self.goods_market.others_stamp()
+		return self.parts.market_objects.goods_market.others_stamp()
 
 	def main_material_of(self, commodity):
-		return self.economy.main_material_of(commodity)
+		return self.parts.market_objects.economy.main_material_of(commodity)
 
 	# ---- facts the economy and the border settle ----
 
@@ -82,4 +84,4 @@ class GoodsViews:
 
 	def border_duty_per_tonne(self, source, destination, price_per_tonne):
 		"""Money the destination country's state charges on a tonne bought at `price_per_tonne` in `source`; infinite on an embargo."""
-		return trade_duty.duty_per_tonne(self.reads, source, destination, price_per_tonne)
+		return trade_duty.duty_per_tonne(self.parts.market_objects.reads, source, destination, price_per_tonne)

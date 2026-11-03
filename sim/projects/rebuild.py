@@ -1,12 +1,13 @@
 """What a forgotten technology still has going for it when it is rebuilt (the shares are in rebuild_rules.py)."""
+from sim.assembly.api import Part
 from sim.knowledge.api import CORPUS_HEDGE_LOSS_CHANCE_NONE
 
 from . import rebuild_rules
 from .constants import REBUILD_RETAINED_CEILING
 
 
-class Rebuild:
-	def _setup_rebuild(self) -> None:
+class Rebuild(Part):
+	def setup(self) -> None:
 		self._dependents_cache = None             # (the tree it was built from, the index): rebuilt when the tree is replaced
 
 	def _dependents_index(self):

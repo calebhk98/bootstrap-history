@@ -7,6 +7,7 @@ Needs: corpus_hedge, game_random, acting_balance, active_projects, money_text, c
 tree_nodes, on_road_to_goal, losable_node_ids."""
 from typing import Any, Dict, List
 
+from sim.assembly.api import Part
 from sim.coin.api import PlunderHousehold
 from sim.knowledge.api import ForgetTechnique
 from sim.projects.api import ResetProjectProgress
@@ -18,13 +19,13 @@ from . import constants, rules
 from .toll import sack_toll
 
 
-class Sack:
+class Sack(Part):
 
 	def sack_chance(self, hazard: Dict[str, Any], year: int) -> None:
 		"""The sack_chance branch of the year's shocks: an attack may come to nothing, or a site be sacked."""
 		dice = self.needs.game_random()
 		if "sack_chance" in hazard:
-			relief, why, lapsed = self.hazard_relief_detail("sack_chance")
+			relief, why, lapsed = self.parts.relief.hazard_relief_detail("sack_chance")
 			probability = hazard["sack_chance"] * relief
 			if why and dice.random() < hazard["sack_chance"] - probability:
 				self.needs.send(RecordEvent.of("hazard_attack_averted", "%s: an attack comes to nothing (%s)"

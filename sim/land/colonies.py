@@ -10,6 +10,7 @@ home. A colony whose people die out is lost.
 from typing import Any, Dict, List, Optional, Tuple
 
 from sim.agents.api import edges
+from sim.assembly.api import Part
 from sim.demography.api import SendSettlers
 from sim.geography.api import settlement, tile_owners
 from sim.ledger.api import PayEdge
@@ -27,11 +28,9 @@ HOLDING_HECTARES_PER_WORKER = (ANNUAL_LABOUR_HOURS_PER_FARM_WORKER / REFERENCE_L
                                / (1.0 - FALLOW_SHARE_OF_HOLDING))
 
 
-class Colonies:
+class Colonies(Part):
     """Mixed into `Land`."""
 
-    needs: Any
-    seat: Any
 
     def settlement_spec(self, by_sea: bool = False) -> Optional[Tuple[str, Dict[str, Any]]]:
         """(node id, spec) of the best known `settlement` work that can make this voyage, or None: the one that
@@ -42,7 +41,7 @@ class Colonies:
 
     def settlement_candidates(self, by_sea: bool = False) -> List[str]:
         """Tiles a colony could be founded on now, best land first."""
-        return settlement.candidate_tiles(self.home_tiles_held(), self.claimed_tiles(), by_sea)
+        return settlement.candidate_tiles(self.parts.ownership.home_tiles_held(), self.parts.ownership.claimed_tiles(), by_sea)
 
     def settlement_outfit_cost(self, spec: Dict[str, Any], tile_id: Optional[str] = None) -> float:
         """What outfitting the settlers costs: a year's work for each at the society's wage, and more of them
@@ -60,7 +59,7 @@ class Colonies:
         node_id, spec = chosen if chosen else (None, None)
         settlers = float(spec["settlers"]) if spec else 0.0
         cost = self.settlement_outfit_cost(spec, tile_id) if spec else 0.0
-        cause = rules.founding_refusal(self.tile_owner(tile_id) is not None, by_land, by_sea, chosen is not None,
+        cause = rules.founding_refusal(self.parts.ownership.tile_owner(tile_id) is not None, by_land, by_sea, chosen is not None,
                                        needs.working_age(), settlers, cost, needs.spending_power("buy"))
         if cause == "tile_held":
             return Refusal(cause, "that tile is already held")
@@ -75,7 +74,7 @@ class Colonies:
                 needs.plain_number(settlers), needs.money_text(cost, grouped=True)))
         needs.send(PayEdge(edges.EDGE_BUILDERS, cost, "outfitting a settlement"))
         needs.send(SendSettlers(settlers))
-        self.hand_over(tile_id, self.clock.acting_seat, tile_owners.settlement_level(), "colony founded")
+        self.parts.ownership.hand_over(tile_id, self.clock.acting_seat, tile_owners.settlement_level(), "colony founded")
         self.seat.colonies.append({
             "tile": tile_id, "founded_year": needs.year(), "by": node_id,
             "children": 0.0, "working_age": settlers, "elderly": 0.0})
@@ -106,7 +105,7 @@ class Colonies:
                         colony, lambda hands: settlement.worked_kcal_per_day(tile, hands * HOLDING_HECTARES_PER_WORKER),
                         demography.Population, burden):
                     colonies.remove(colony)
-                    self.hand_over(colony["tile"], None, None, "colony died out")
+                    self.parts.ownership.hand_over(colony["tile"], None, None, "colony died out")
                     if seat_id == self.clock.acting_seat:
                         needs = self.needs
                         needs.send(RecordEvent.in_year(command.year, "colony_died_out",

@@ -1,7 +1,8 @@
 """The views of the acting seat's people, hours and pay books. Tables hold the live containers: read them, never write to them."""
+from sim.assembly.api import Part
 
 
-class ViewsState:
+class ViewsState(Part):
 
     def staff(self):
         """The acting seat's people: hired hands by trade, its scholars, artisans, deputy directors, slaves and freedmen, and the
@@ -38,7 +39,7 @@ class ViewsState:
     def pay_book(self):
         """The acting seat's pay books: wages its own work earned and the living cost paid."""
         seat = self.seat
-        return {"paid_in_clearing": self.wages_charged_last_year(), "earned": seat.wages_earned, "paid": seat.wages_paid, "living_cost_paid": seat.living_cost_paid}
+        return {"paid_in_clearing": self.parts.fact_views.wages_charged_last_year(), "earned": seat.wages_earned, "paid": seat.wages_paid, "living_cost_paid": seat.living_cost_paid}
 
     def trade_schools(self):
         """{trade: training seats the acting seat has founded}."""

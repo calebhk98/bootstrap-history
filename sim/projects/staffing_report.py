@@ -1,7 +1,8 @@
 """What the staffing rule did this year, in one place the player can read."""
+from sim.assembly.api import Part
 
 
-class StaffingReport:
+class StaffingReport(Part):
 	STAFFING_REMEDIES = (
 		"To hold staff: 'keep <id> staffed' hires for that concern each year; "
 		"'reserve craftsmen <n>' and 'reserve scholars <n>' with 'policy "
@@ -28,7 +29,7 @@ class StaffingReport:
 	def staffing_shut_count(self):
 		"""Concerns shut for want of staff right now."""
 		return sum(1 for node_id in self.needs.closure_records()
-		           if self.staff_closure_age(node_id) is not None)
+		           if self.parts.closures.staff_closure_age(node_id) is not None)
 
 	@staticmethod
 	def staffing_shortfall_words(shortfalls):

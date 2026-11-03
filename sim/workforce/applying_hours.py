@@ -1,11 +1,12 @@
 """The commands that change the acting seat's hours, pay books and people, applied by the workforce module."""
 from sim.agents.api import edges
+from sim.assembly.api import Part
 from sim.ledger.api import PayEdge
 
 from . import rules
 
 
-class ApplyingHours:
+class ApplyingHours(Part):
 
     def allocate_hours(self, command):
         self.seat.hour_allocations[command.target] = float(command.hours)

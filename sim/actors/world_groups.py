@@ -85,7 +85,7 @@ class Groups:
 		operating = set(needs.operating())
 		for category in sorted(hours):
 			founder_concerns = len(operating.intersection(needs.nodes_in_category[category]))
-			actors_concerns = self.world.module.actor_concerns_in(category)
+			actors_concerns = self.world.staff.actor_concerns_in(category)
 			ratio = self._category_price_ratio(category) if founder_concerns + actors_concerns else None
 			if ratio is None or ratio >= 1.0:
 				continue

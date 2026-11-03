@@ -4,6 +4,7 @@ Needs: tech_effects, coverage, disease_burden, disease_burden_held, disease_burd
 from typing import Any, Dict, List, Tuple
 
 from sim.actors.api import TeachLiteracy
+from sim.assembly.api import Part
 from sim.polity.api import ShiftValueWeight
 from sim.refusal import Refusal
 from sim.reporting.api import RecordEvent
@@ -13,7 +14,7 @@ from . import literacy_rules, rules
 LITERACY_FIELDS = ("literacy_elite", "literacy_general")
 
 
-class TechEffects:
+class TechEffects(Part):
 
     def apply_tech_effects(self, command: Any) -> None:
         """Building something changes what this society is like: printing raises literacy, the scientific method
@@ -25,7 +26,7 @@ class TechEffects:
         changed: List[str] = []
         changed_fields: List[str] = []
         changes: Dict[str, Tuple[float, float]] = {}
-        literacy_before = ({field: self.literacy(field) for field in LITERACY_FIELDS}
+        literacy_before = ({field: self.parts.literacy.literacy(field) for field in LITERACY_FIELDS}
                            if any(field in effects for field in LITERACY_FIELDS) else {})
         for field, delta in effects.items():
             if field.startswith("_") or not isinstance(delta, (int, float)):
@@ -56,13 +57,13 @@ class TechEffects:
         for field in LITERACY_FIELDS:
             delta = effects.get(field)
             if isinstance(delta, (int, float)):
-                ceiling = self.literacy_ceiling(field)
-                before = self.literacy(field)
+                ceiling = self.parts.literacy.literacy_ceiling(field)
+                before = self.parts.literacy.literacy(field)
                 target = literacy_rules.literacy_after_effect(before, delta, ceiling)
-                learners_ceiling = self.literacy_ceiling("common") if field == "literacy_general" else ceiling
+                learners_ceiling = self.parts.literacy.literacy_ceiling("common") if field == "literacy_general" else ceiling
                 self.needs.send(TeachLiteracy(field, target, learners_ceiling))
         for field, before in literacy_before.items():
-            after = self.literacy(field)
+            after = self.parts.literacy.literacy(field)
             if before != after or field in effects:
                 changes[field] = (before, after)
                 changed_fields.append(field)

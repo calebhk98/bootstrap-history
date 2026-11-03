@@ -16,7 +16,7 @@ HAZARDS = [{"sack_chance": 0.1, "years": [200, 260]}, {"years": [0, 999]}]
 
 def world_in(year, hazards=HAZARDS):
     needs = fake_needs(civilisation={"standing_army": OPENING, "hazards": hazards}, year=year)
-    return ActorWorld(types.SimpleNamespace(needs=needs))
+    return ActorWorld(needs)
 
 
 class ArmyWantedTests(unittest.TestCase):

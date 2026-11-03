@@ -1,5 +1,7 @@
 """The commodity catalogue and the memos for answers that hold while what is built, run and produced does not change."""
-from typing import Any, Callable, Dict, Hashable, Optional
+from typing import Any, Callable, Dict, Hashable, Optional, Tuple
+
+from sim.assembly.api import Part
 
 from . import commodities, rules
 
@@ -15,7 +17,12 @@ def shared_ledger() -> Any:
     return _LEDGER["ledger"]
 
 
-class Memos:
+class Memos(Part):
+
+    def __init__(self, module):
+        super().__init__(module)
+        self._done_store: Optional[Tuple] = None             # (stamp, done set, answers)
+        self._producers_store: Optional[Tuple] = None        # (stamp, answers)
 
     def commodity_record(self, commodity: str) -> Dict[str, Any]:
         """The curated commodity's record (its material keys, its price ceiling factor), or an empty one."""

@@ -37,7 +37,7 @@ def make_world(taught=12.0, founder_staff=2.0, actor_staff=3.0):
     needs = fake_needs(trade_available=labour.trade_available, people_who_exist=labour.people_who_exist,
                        taught_trade_people=labour.taught_trade_people, trades_absent=TRADES_ABSENT,
                        staff_on_all_books=lambda trade: {TAUGHT: founder_staff, "smith": 5.0}.get(trade, 0.0))
-    world = ActorWorld(types.SimpleNamespace(needs=needs, cast=lambda: actors))
+    world = ActorWorld(needs, types.SimpleNamespace(cast=lambda: actors))
     world.fixture = labour   # the facts the stand-in game answers, kept to change them
     return world
 

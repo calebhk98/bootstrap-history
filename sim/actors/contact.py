@@ -2,19 +2,17 @@
 from typing import Any, Dict, List, Optional
 
 from sim.agents.api import CONQUEST_CONTACT_VOLUME, MIGRANT_CONTACT_VOLUME_PER_PERSON, awareness
+from sim.assembly.api import Part
 from sim.refusal import Refusal
 
 from . import rules
 
 
-class Contact:
-	"""Mixed into `Actors`."""
-
-	needs: Any
+class Contact(Part):
 
 	def record_conquest_contact(self, command: Any) -> None:
 		"""The winner's actors become aware of what the overrun country's people know."""
-		registry = self.cast()  # type: ignore[attr-defined]
+		registry = self.parts.cast.cast()
 		places_by_country: Dict[Optional[str], List[Any]] = {}
 		receivers = []
 		for actor_id in sorted(registry.actors):
@@ -31,7 +29,7 @@ class Contact:
 		arriving = rules.migrants_arriving(command.pairs, MIGRANT_CONTACT_VOLUME_PER_PERSON)
 		if not arriving:
 			return
-		registry = self.cast()  # type: ignore[attr-defined]
+		registry = self.parts.cast.cast()
 		for actor_id in sorted(registry.actors):
 			actor = registry.actors[actor_id]
 			for origin, volume in sorted(arriving.get(actor.location(), {}).items()):
@@ -44,7 +42,7 @@ class Contact:
 
 	def move_stratum_people(self, command: Any) -> Any:
 		"""People pass from one stratum to another, never more than the source holds."""
-		registry = self.cast()  # type: ignore[attr-defined]
+		registry = self.parts.cast.cast()
 		source, target = registry.actors.get(command.from_stratum), registry.actors.get(command.to_stratum)
 		for actor_id, actor in ((command.from_stratum, source), (command.to_stratum, target)):
 			if actor is None or actor.record.kind != "stratum":
@@ -61,27 +59,27 @@ class Contact:
 
 	def _strata_of(self, country: str) -> List[Any]:
 		home = self.needs.civilisation()["id"]
-		return [actor for actor in self.cast().of_kind("stratum") if (actor.record.country or home) == country]  # type: ignore[attr-defined]
+		return [actor for actor in self.parts.cast.cast().of_kind("stratum") if (actor.record.country or home) == country]
 
 	def draw_down_actor_store(self, command: Any) -> None:
 		"""The actor's stock of the material falls by the tonnes, never below zero."""
-		stores = self.cast().actors[command.actor].record.stores  # type: ignore[attr-defined]
+		stores = self.parts.cast.cast().actors[command.actor].record.stores
 		stores[command.good] = max(0.0, stores[command.good] - command.tonnes)
 
 	def hold_edge_goods(self, command: Any) -> None:
 		"""The edge takes the goods into the stock it keeps beside its money."""
-		self.cast_state().edge(command.edge).receive_goods(command.good, command.tonnes)  # type: ignore[attr-defined]
+		self.parts.cast.cast_state().edge(command.edge).receive_goods(command.good, command.tonnes)
 
 	def add_actor(self, command: Any) -> Any:
 		"""A new actor joins the cast."""
-		registry = self.cast()  # type: ignore[attr-defined]
+		registry = self.parts.cast.cast()
 		if command.actor_id in registry.actors:
 			return Refusal("actor_exists", "the cast already holds %s" % command.actor_id)
 		return registry.add(command.actor_id, command.record)
 
 	def note_trader_margin(self, command: Any) -> Optional[Refusal]:
 		"""The trader's last margin follows what its cargo made against what it was booked at."""
-		trader = self.cast().actors.get(command.trader)  # type: ignore[attr-defined]
+		trader = self.parts.cast.cast().actors.get(command.trader)
 		if trader is None:
 			return Refusal("no_such_actor", "the cast holds no trader %s" % command.trader)
 		trader.record.last_margin += command.amount

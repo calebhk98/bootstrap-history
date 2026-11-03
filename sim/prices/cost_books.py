@@ -12,6 +12,8 @@ economy's price on the acting tile (the long-run cost where it has no market for
 charged. retire: ONE_PRICE_OWNER_PLAN.md stage 5."""
 from typing import Any, Dict, Optional, Tuple
 
+from sim.assembly.api import Part
+
 from . import rules
 from .entry_cost import CostBook
 from .making_cost import LAND_MATERIAL
@@ -19,7 +21,11 @@ from .making_cost import LAND_MATERIAL
 RATE_DECIMALS = 4
 
 
-class CostBooks:
+class CostBooks(Part):
+
+    def __init__(self, module):
+        super().__init__(module)
+        self._cost_book_cache: Optional[Tuple] = None        # (stamp, cost book, {ratios})
 
     def economy_cost_book(self) -> CostBook:
         """A `CostBook` at the economy's prices, wages, lending rate and land rent as they stand. Ore carries no rent here:

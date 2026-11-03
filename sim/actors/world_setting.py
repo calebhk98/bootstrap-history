@@ -34,14 +34,14 @@ class Setting:
 
 	def edge(self, name: str) -> Any:
 		"""The named edge a posting names when its other side is not an actor."""
-		return self.world.module.edge(name)
+		return self.world.cast.edge(name)
 
 	def state_weights(self) -> Dict[str, float]:
 		return once(self._memo, "weights", self.needs.state_trait_weights)
 
 	def government(self) -> Any:
 		"""The government actor of the founder's civilisation."""
-		return self.world.module.state_treasury()
+		return self.world.cast.state_treasury()
 
 	def distance_km(self, place_a: Any, place_b: Any) -> float:
 		"""Great-circle kilometres between two places; 0 when either is not on the map. None is where the founder operates from."""

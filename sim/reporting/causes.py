@@ -2,11 +2,12 @@
 from typing import Any, Dict, List, Optional
 
 from sim.agents.api import demand_answer
+from sim.assembly.api import Part
 
 from . import cause_rules
 
 
-class Causes:
+class Causes(Part):
     """Needs: year, money_per_labour_hour, state_reach, headcount, acting_balance, standing, visible_scale."""
 
     def note_concern_change(self, command: Any) -> None:

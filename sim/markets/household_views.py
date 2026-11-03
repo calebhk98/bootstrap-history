@@ -1,10 +1,18 @@
 """The household need model as the module's views: the units households want, the basket the actors' budgets read, and the
 tonnes a year the home and the partner economies' households buy (rules in household_needs.py)."""
+from sim.assembly.api import Part
+
 from . import household_needs, need_substitutes
 from .constants import MEAN_INCOME_HOURS_PER_CAPITA
 
 
-class HouseholdNeeds:
+class HouseholdNeeds(Part):
+
+	def __init__(self, module):
+		super().__init__(module)
+		self._needs_served_by_mods = {}    # installed mod ids -> material -> the needs it serves; data, frozen for the game
+		self._climate_baskets = {}         # civilisation id -> (its household basket with the tiles' climate floors, the model); frozen for the game
+		self._partner_demand = {}          # civilisation id -> tonnes a year its households buy; data, frozen for the game
 
 	def opening_population(self):
 		return float(self.needs.civilisation().get("population", self.needs.default_population()))
@@ -75,7 +83,7 @@ class HouseholdNeeds:
 	def household_need_floors_per_person(self):
 		"""What one person's floor of each need costs a year on the seat's tile: the economy's prices and the tile's climate
 		floors (the need basket). While the economy opens, the same basket on the goods market."""
-		floors = self.economy.agent_need_floor_costs_at()
+		floors = self.parts.market_objects.economy.agent_need_floor_costs_at()
 		if floors:
 			return dict(floors)
 		return self.needs.actor_world().people.need_floor_costs_per_person_year()

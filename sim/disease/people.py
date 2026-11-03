@@ -1,10 +1,11 @@
 """What the disease step reads about the nation's people and the traffic between its tiles, from views."""
+from sim.assembly.api import Part
 from sim.geography.api import settlement
 
 from . import nation, nation_tuning as tuning, metapopulation as spread, rules
 
 
-class People:
+class People(Part):
 
     def people_by_band(self):
         return dict(self.needs.people_by_band())

@@ -2,13 +2,10 @@
 from typing import Any, Dict, Optional
 
 from sim.agents.api import EDGE_SAVERS, payroll
+from sim.assembly.api import Part
 
 
-class Lending:
-	"""Mixed into `Actors`."""
-
-	needs: Any
-	world: Any
+class Lending(Part):
 
 	def lender_offers_made(self) -> Dict[str, float]:
 		"""The funds each lender account offers this year, by account, in the order the pool keeps them."""
@@ -40,10 +37,10 @@ class Lending:
 				party.note_income("interest_on_lending", amount)
 		savers = received.get(EDGE_SAVERS, 0.0)
 		if savers > 0.0:
-			payroll.pay_savers(self.cast(), self.edge(EDGE_SAVERS), savers)
+			payroll.pay_savers(self.parts.cast.cast(), self.parts.cast.edge(EDGE_SAVERS), savers)
 
 	def _lender_party(self, account: str) -> Any:
 		"""The actor behind a lender's account, or None for an edge."""
 		if account in self.needs.seat_list()["joined"]:
-			return self.seat_party(account)   # type: ignore[attr-defined]
-		return self.cast().actors.get(account)
+			return self.parts.seat_parties.seat_party(account) 
+		return self.parts.cast.cast().actors.get(account)

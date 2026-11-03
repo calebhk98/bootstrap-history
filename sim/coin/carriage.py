@@ -9,12 +9,13 @@ The module answers the ledger's `transfer_surcharge` point with `carriage_surcha
 from typing import Any, Optional, Tuple
 
 from sim.agents.api import edges
+from sim.assembly.api import Part
 
 from . import rules
 from .constants import CARRIAGE_CAUSE
 
 
-class Carriage:
+class Carriage(Part):
     """The surcharge on a transfer (needs: home_country, tile_known, tile_haul_cost, civilisation)."""
 
     def place_of(self, party) -> Optional[str]:
@@ -37,7 +38,7 @@ class Carriage:
         origin, destination = self.place_of(payer), self.place_of(payee)
         if origin is None or destination is None or origin == destination:
             return None
-        carriage = rules.carriage_money(amount, self.coin_kg_per_unit(), self.needs.tile_haul_cost(origin, destination))
+        carriage = rules.carriage_money(amount, self.parts.keeping.coin_kg_per_unit(), self.needs.tile_haul_cost(origin, destination))
         if carriage > 0.0:
             return edges.EDGE_FREIGHT, carriage, CARRIAGE_CAUSE
         return None

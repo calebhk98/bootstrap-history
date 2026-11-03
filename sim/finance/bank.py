@@ -3,6 +3,7 @@
 Needs: techniques_held, acting_balance, actor_world, mechanic, agent_economy_opened."""
 from typing import Any, Dict
 
+from sim.assembly.api import Part
 from sim.markets.api import FoundBankFromOutside
 from sim.ledger.api import WithdrawHouseholdMoney
 from sim.refusal import Refusal
@@ -10,7 +11,7 @@ from sim.refusal import Refusal
 from . import bank_rules
 
 
-class Bank:
+class Bank(Part):
 
 	def found_bank(self, command: Any) -> Dict[str, Any]:
 		"""The acting seat puts `command.capital` of its money into a new bank."""

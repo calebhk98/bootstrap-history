@@ -6,12 +6,13 @@ times that, over the people who can use it (all of the nation's, or the share `e
 children), is the share covered. A rollout is more units of the same work (they are the places it is repeated
 in) until the share asked for is reached or the nation can fill no more.
 """
+from sim.assembly.api import Part
 from sim.refusal import Refusal
 
 from . import coverage_rules
 
 
-class Coverage:
+class Coverage(Part):
 	def coverage_nodes(self):
 		"""Ids of the works that declare `coverage`."""
 		return tuple(self.needs.mechanic["coverage"])
@@ -63,7 +64,7 @@ class Coverage:
 		if to_open is None:
 			return False, Refusal("already_covered", "%s already covers %d%% of the people" % (
 				needs.tree_nodes()[node_id]["name"], round(100 * self.coverage_share(node_id))))
-		ok, text = self.open_venture(node_id, units=to_open)
+		ok, text = self.parts.opening.open_venture(node_id, units=to_open)
 		if not ok:
 			return False, text
 		return True, "%s. It now covers %d%% of the people." % (text.rstrip("."), round(100 * self.coverage_share(node_id)))

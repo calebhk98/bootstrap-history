@@ -4,8 +4,8 @@ Actors never touch the game directly. They ask this view, which answers from the
 keeps them free of the engine and lets a test or a second scenario supply another one.
 
 `ActorWorld` holds no rule and no answer of its own: it is the set of parts that make up the view, one per concern, each
-owning its own state and built here with the world it reads (`world.module`, `world.needs`, `world.registry`) and
-reaching its siblings through it. Callers address the part: `world.<part>.<method>()`. The parts a world has are the
+owning its own state and built here with the world it reads (`world.needs` and the actors module's `cast`, `seat_book` and
+`staff` parts, `world.registry`) and reaching its siblings through it. Callers address the part: `world.<part>.<method>()`. The parts a world has are the
 members of `sim/agents/protocols.py` `World`; a country's world (sim/agents/country_view.py) has the same parts.
 
     setting       the year, the tree, the civilisation, edges, random streams, the home government        (world_setting.py)
@@ -58,11 +58,14 @@ from .world_trade import Trade
 
 
 class ActorWorld:
-	"""The parts of the view of one simulation's actors. `module` is the actors module that hands this world out."""
+	"""The parts of the view of one simulation's actors. `needs` is what the actors module reads; `cast`, `seat_book` and
+	`staff` are the actors module's parts that keep the registry, the seats' parties and the staff of the actors."""
 
-	def __init__(self, module: Any) -> None:
-		self.module = module
-		self.needs = module.needs
+	def __init__(self, needs: Any, cast: Any = None, seat_book: Any = None, staff: Any = None) -> None:
+		self.needs = needs
+		self.cast = cast
+		self.seat_book = seat_book
+		self.staff = staff
 		self.setting = Setting(self)
 		self.knowledge = Knowledge(self)
 		self.disclosure = Disclosure(self)
@@ -89,4 +92,4 @@ class ActorWorld:
 	@property
 	def registry(self) -> Any:
 		"""The cast of actors the module keeps."""
-		return self.module.cast()
+		return self.cast.cast()

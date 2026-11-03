@@ -1,11 +1,12 @@
 """Telling the player their standing `allocate` orders fell short, once per change."""
 import re
 
+from sim.assembly.api import Part
 from sim.refusal import cause_of
 from sim.reporting.api import RecordEvent
 
 
-class AllocationNotes:
+class AllocationNotes(Part):
 	def unused_hours_is_news(self, key, signature):
 		"""True the first time this order falls short this way, False while it repeats."""
 		reported = self.needs.hour_commitments()["unused_reported"]

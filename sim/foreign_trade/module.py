@@ -13,8 +13,13 @@ from .payments import Payments
 from .quotes import Quotes
 
 
-class ForeignTrade(Cargo, ActorTrade, Quotes, Payments, Governments, Economies, Module):
-    def setup(self):
-        self._partner_civs = {}          # the civilisation files loaded so far (never saved)
-        self._facts_cache = {}           # acting seat -> partner -> (prices, facts, techniques known, coin price)
-        self._materials_cache = {}       # acting seat -> (household prices, commodity -> material keys)
+class ForeignTrade(Module):
+
+    PARTS = {
+        "cargo": Cargo,
+        "actor_trade": ActorTrade,
+        "quotes": Quotes,
+        "payments": Payments,
+        "governments": Governments,
+        "economies": Economies,
+    }

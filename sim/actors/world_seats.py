@@ -33,7 +33,7 @@ class Seats:
 
 	def seat_parties(self) -> Any:
 		"""Every seat as an actor, by seat id: the founder and other players hold patents and shares."""
-		return self.world.module.seat_parties()
+		return self.world.seat_book.seat_parties()
 
 	def founder_review(self) -> Any:
 		"""The seat's answers to a business review (sim/agents/business_review.py)."""

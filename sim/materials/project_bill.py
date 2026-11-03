@@ -6,6 +6,7 @@ orders for it at the start; the tonnes arrive in stock at the year's clearing, a
 import collections
 from typing import Any, Dict, Optional, Tuple
 
+from sim.assembly.api import Part
 from sim.markets.api import BuyMaterial
 from sim.refusal import Refusal
 from sim.projects.api import constants as project_constants
@@ -14,14 +15,14 @@ from sim.world.material_units import tonnes_per_unit
 from . import rules
 
 
-class ProjectBill:
+class ProjectBill(Part):
     """Needs: tree_nodes, active_projects, goods_stock, purchase_quote, shared_bill, opposition_factor,
     material_cost_factor, can_pay, purchase_refusal, project_cost, project_cost_now, cost_money_factor, civ_cost_factor,
     rebuild_work_factor, failure_reset_share. Sends BuyMaterial."""
 
     def project_material_needs(self, node_id: str) -> collections.Counter:
         """{material key: units} the project physically consumes, with the fuel substitution the throttle applies."""
-        return rules.project_needs(self.needs.tree_nodes()[node_id], self.uses_coke(node_id))
+        return rules.project_needs(self.needs.tree_nodes()[node_id], self.parts.demand.uses_coke(node_id))
 
     def project_material_bill(self, node_id: str) -> Dict[str, Any]:
         """Per material: needed, held (stock and own output over the build), missing, and the market cost of the missing
@@ -31,16 +32,16 @@ class ProjectBill:
     def compute_material_bill(self, node_id: str) -> Dict[str, Any]:
         needs = self.needs
         span = rules.build_span(needs.tree_nodes()[node_id])
-        return rules.material_bill(self.project_material_needs(node_id), span, tonnes_per_unit, self.material_pool,
+        return rules.material_bill(self.project_material_needs(node_id), span, tonnes_per_unit, self.parts.supply.material_pool,
                                    lambda commodity: needs.goods_stock[commodity],
                                    lambda tag: self.unclaimed_own_supply(tag, node_id), needs.purchase_quote,
-                                   self.market_tonnes, self.own_material_supply)
+                                   self.parts.supply.market_tonnes, self.parts.supply.own_material_supply)
 
     def unclaimed_own_supply(self, tag: str, node_id: str) -> float:
         """Yearly own output of a supply pool that no other running project has claimed."""
         claimed = sum(record.get("own_output_claim", {}).get(tag, 0.0)
                       for other, record in self.needs.active_projects().items() if other != node_id)
-        return rules.unclaimed(self.own_material_supply(tag), claimed)
+        return rules.unclaimed(self.parts.supply.own_material_supply(tag), claimed)
 
     def project_own_output_claim(self, node_id: str) -> Dict[str, float]:
         """{tag: tonnes a year} of the seat's own output this project draws, so the next project to start counts only what
@@ -49,7 +50,7 @@ class ProjectBill:
         claim: collections.Counter = collections.Counter()
         for row in self.project_material_bill(node_id)["rows"]:
             if row["held_from_own_output_tonnes"] > 0:
-                claim[self.material_pool(row["material"])[1]] += row["held_from_own_output_tonnes"] / span
+                claim[self.parts.supply.material_pool(row["material"])[1]] += row["held_from_own_output_tonnes"] / span
         return dict(claim)
 
     def project_material_parts(self, node_id: str) -> Tuple[float, float]:
@@ -101,7 +102,7 @@ class ProjectBill:
         ordered, entries = 0.0, []
         for material, tonnes, per_tonne in wanted:
             posted = self.needs.send(BuyMaterial(material, tonnes, per_tonne, node_id, factor, True))
-            stock_key = self.material_pool(material)[0]
+            stock_key = self.parts.supply.material_pool(material)[0]
             if isinstance(posted, Refusal):
                 entries.append({"material": material, "stock_key": stock_key, "tonnes": tonnes, "quoted": 0.0,
                                 "refused": posted.cause, "refused_text": str(posted)})
@@ -120,7 +121,7 @@ class ProjectBill:
         for material, tonnes in command.shortfalls:
             quoted = needs.purchase_quote(material, tonnes)
             if quoted is None:
-                entries.append({"material": material, "stock_key": self.material_pool(material)[0], "tonnes": tonnes, "quoted": 0.0,
+                entries.append({"material": material, "stock_key": self.parts.supply.material_pool(material)[0], "tonnes": tonnes, "quoted": 0.0,
                                 "refused": "no_price", "refused_text": "%s has no price here, so it cannot be ordered." % material})
             else:
                 wanted.append((material, tonnes, quoted[1]))

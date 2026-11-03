@@ -50,7 +50,7 @@ class WorldReadsTheOneMarketTests(unittest.TestCase):
             quote_annual=lambda trade, people=0.0: RATES[trade] * HOURS_PER_YEAR)
         needs = fake_needs(labour_market=market, trade_registry=lambda: {"labourer": {"fallback": True}}, hours_per_person_year=HOURS_PER_YEAR,
                            concern_staff=lambda node_id: {"artisan": 2.0, "scribe": 1.0})
-        return ActorWorld(types.SimpleNamespace(needs=needs)), market
+        return ActorWorld(needs), market
 
     def test_the_world_hands_every_actor_the_one_market(self):
         world, market = self.world()

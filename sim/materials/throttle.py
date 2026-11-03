@@ -7,6 +7,7 @@ year's own output banks once however often it is read. `throttle_quote` answers 
 import collections
 from typing import Any, List, NamedTuple, Optional, Tuple
 
+from sim.assembly.api import Part
 from sim.ledger.api import BankStock
 from sim.markets.api import NoteDraw, ResetDraws
 from sim.reporting.api import RecordEvent
@@ -26,17 +27,17 @@ class Inputs(NamedTuple):
     signature: Tuple
 
 
-class Throttle:
+class Throttle(Part):
     """Needs: year, held_goods, goods_stock_opening, mine_capacity, forest_hectares, nitre_beds, active_project_ids,
     tree_nodes, shortage_remedy_plan. Sends BankStock, ResetDraws, NoteDraw, RecordEvent."""
 
     def throttle_inputs(self, demand: Any) -> Inputs:
         needs = self.needs
-        industrial, lab = rules.throttle_demand_split(demand, self.material_pool)
+        industrial, lab = rules.throttle_demand_split(demand, self.parts.supply.material_pool)
         stock = needs.held_goods()
         opening = needs.goods_stock_opening()
-        electricity_need = self.electricity_demand_kw()
-        electricity_have = self.generation_capacity_kw()
+        electricity_need = self.parts.electricity.electricity_demand_kw()
+        electricity_have = self.parts.electricity.generation_capacity_kw()
         signature = (needs.year(), tuple(sorted(industrial.items())), tuple(sorted(lab.items())),
                      tuple(sorted(needs.mine_capacity().items())), needs.forest_hectares(),
                      needs.nitre_beds()["square_metres"], tuple(sorted(stock.items())), electricity_need, electricity_have,
@@ -44,15 +45,15 @@ class Throttle:
         return Inputs(industrial, lab, opening, electricity_need, electricity_have, signature)
 
     def read_throttle(self, inputs: Inputs) -> rules.ThrottleReading:
-        return rules.throttle_reading(inputs.industrial, inputs.lab, self.own_production_tags(), inputs.electricity_need,
-                                      inputs.electricity_have, inputs.opening, self.own_material_supply, self.market_tonnes,
+        return rules.throttle_reading(inputs.industrial, inputs.lab, self.parts.supply.own_production_tags(), inputs.electricity_need,
+                                      inputs.electricity_have, inputs.opening, self.parts.supply.own_material_supply, self.parts.supply.market_tonnes,
                                       RESOURCE_THROTTLE_FLOOR)
 
     def portfolio_quote(self) -> Tuple[float, Optional[str]]:
         """(the pace, the pool that binds it) as the books stand, nothing changed. A reading the last take already made
         with nothing changed since is replayed."""
-        readings = self.readings
-        inputs = self.throttle_inputs(self.annual_material_demand())
+        readings = self.parts.demand.readings
+        inputs = self.throttle_inputs(self.parts.demand.annual_material_demand())
         if inputs.signature == readings.throttle_sig:
             return readings.throttle_cache
         reading = self.read_throttle(inputs)
@@ -64,11 +65,11 @@ class Throttle:
         if pace >= 0.999 or not binding:
             return 1.0
         if binding == "electricity":
-            pools = {"electricity"} if node_id in self.electricity_load_node_ids() else set()
+            pools = {"electricity"} if node_id in self.parts.electricity.electricity_load_node_ids() else set()
         else:
             node = self.needs.tree_nodes().get(node_id) or {}
-            pools = rules.input_pools(node.get("mat") or {}, self.chosen_fuel(node_id) == "coke",
-                                      lambda material: self.material_pool(material)[0], LAB_SCALE_SUFFIX)
+            pools = rules.input_pools(node.get("mat") or {}, self.parts.demand.chosen_fuel(node_id) == "coke",
+                                      lambda material: self.parts.supply.material_pool(material)[0], LAB_SCALE_SUFFIX)
         return rules.shared_throttle(pace, binding, pools)
 
     def throttle_quote(self, node_id: Optional[str] = None) -> Tuple[float, Optional[str]]:
@@ -81,8 +82,8 @@ class Throttle:
 
     def apply_throttle(self, command: Any) -> float:
         """Take the year's reading: bank what it leaves, note the market's draw and count the shortage."""
-        readings = self.readings
-        demand = readings.held = self.annual_material_demand()
+        readings = self.parts.demand.readings
+        demand = readings.held = self.parts.demand.annual_material_demand()
         inputs = self.throttle_inputs(demand)
         if inputs.signature == readings.throttle_sig:
             self.seat.throttle, self.seat.binding = readings.throttle_cache
@@ -126,7 +127,7 @@ class Throttle:
         condition = self.seat.shortage_condition
         if not condition:
             return []
-        return rules.condition_row(condition, self.needs.year(), self.material_shortfall(condition["material"]))
+        return rules.condition_row(condition, self.needs.year(), self.parts.supply.material_shortfall(condition["material"]))
 
     def step_shortage_notes(self, seat_id: Any = None) -> None:
         """Tell the player what a standing material shortage costs: the full message only when it is new or has moved
@@ -146,16 +147,16 @@ class Throttle:
 
     def seat_bound(self) -> None:
         """The acting seat's remembered demand tables go."""
-        readings = self.readings
+        readings = self.parts.demand.readings
         readings.annual = readings.held = readings.by_tag = None
 
     def restore_readings(self, command: Any) -> None:
         held = self.seat.material_demand_at_last_throttle
-        readings = self.readings
+        readings = self.parts.demand.readings
         readings.annual = readings.by_tag = None
         readings.held = None if held is None else collections.Counter(held)
 
     def capture_readings(self, command: Any) -> None:
-        held = self.readings.held
+        held = self.parts.demand.readings.held
         self.seat.material_demand_at_last_throttle = None if held is None else dict(held)
 

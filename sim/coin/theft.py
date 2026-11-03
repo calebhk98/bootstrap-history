@@ -7,6 +7,7 @@ banditry are larger thefts priced by the same exposure (`plunder_household`)."""
 from typing import Optional
 
 from sim.agents.api import edges, joint_stock
+from sim.assembly.api import Part
 from sim.labour.api import wage_provider
 from sim.actors.api import DrawDownActorStore, HoldEdgeGoods
 from sim.demography.api import TakeFromGranary
@@ -17,7 +18,7 @@ from . import theft_exposure
 from .constants import COIN_GUARD_HOURS_PER_TONNE_YEAR, GUARDED_KINDS, THEFT_CAUSE
 
 
-class Theft:
+class Theft(Part):
     """The exposure views and the theft commands (needs: civilisation, acting_balance, lent_share, held_goods, goods_quote,
     farm_holdings, farm_land_price, forest_holding, headcount, eminence, standing, visible_scale, order_reach,
     cast, actor_world; sends PayEdge, PayEdgeFrom, DrawDownStock, DrawDownActorStore, TakeFromGranary, HoldEdgeGoods)."""

@@ -3,6 +3,7 @@
 project_hour_pace and active_hours_still_wanted say how many of the founder's own hours a project asks for; the hired-trade
 drawdown (lab_max_span, trade_draw_plan, trade_demand_vs_supply, lab_year_draw) says how much of each trade's time it
 draws, and the plan is the one the portfolio screens read before the allocation runs."""
+from sim.assembly.api import Part
 from sim.workforce.api import DrawTradeHours
 
 from . import progress_rules
@@ -10,7 +11,7 @@ from .constants import LAB_CREW_RATE_MULT, LAB_MAX_SPAN_FLOOR_YEARS, LAB_MAX_SPA
 from .trade_demand import trade_demand_table
 
 
-class ProgressHours:
+class ProgressHours(Part):
 	def project_hour_pace(self, node_id):
 		"""How many of YOUR OWN hours active project `node_id` would draw this year if nothing else competed for the
 		pool - the year's own uncapped want, read here rather than re-derived, so anything reporting on it before the

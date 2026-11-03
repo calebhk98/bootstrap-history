@@ -9,6 +9,7 @@ counter_supply_gap, civ_diffusion, diffusible_ids, diffusion_relief, military_le
 civilisation, year."""
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
+from sim.assembly.api import Part
 from sim.diffusion.api import constants as diffusion_constants
 
 from . import constants, rules
@@ -17,7 +18,11 @@ from .window import hazards_not_yet_past
 OWN_MINE_FLOORS = {"_own_gold": ("gold", 0.0005), "_own_silver": ("silver", 0.01)}   # pseudo-source -> (metal, tonnes a year)
 
 
-class Relief:
+class Relief(Part):
+
+	def __init__(self, module):
+		super().__init__(module)
+		self._counters_cache = None      # (the mechanics rows it was built from, the counters)
 
 	def hazard_counters(self) -> Dict[str, list]:
 		"""{kind: [(node or pseudo-source, share, label)]}: what each kind of harm is countered by. The mechanics module

@@ -5,6 +5,7 @@ is the same however the game reached it. The salt is drawn once from the game's 
 (`weather_seed`), and kept in the save."""
 import random
 
+from sim.assembly.api import Part
 from sim.world import agriculture, weather_pooling
 from sim.world.shared_constants import GROWING_SEASON_WEATHER_DECORRELATION_LENGTH_KM
 
@@ -12,9 +13,9 @@ from . import rules
 from .constants import FARM_WEATHER_POOLED_CELL_CAP
 
 
-class Weather:
+class Weather(Part):
 
-    def setup_weather(self):
+    def setup(self):
         self._cells = None             # built at the first read (never saved): the held land does not change
         self._cholesky = None
         self._tile_share = None

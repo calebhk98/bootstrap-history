@@ -2,10 +2,12 @@
 the `start` refusal read, so a readout cannot disagree with the gate (blocker_rules.py)."""
 from typing import Any, Dict, List, Optional
 
+from sim.assembly.api import Part
+
 from . import blocker_rules
 
 
-class BlockerViews:
+class BlockerViews(Part):
 	def start_blockers(self, node_id: str, extra_owed: float = 0.0) -> List[Dict[str, Any]]:
 		"""Every reason the project cannot begin now, in gate order; [] when it can. Changes no state. `extra_owed` is
 		money already committed by starts not yet applied (a preview's earlier picks)."""
@@ -13,10 +15,10 @@ class BlockerViews:
 		if node is None:
 			return [{"kind": "unavailable", "cause": "no_such_node", "ids": [], "text": "no such node"}]
 		return blocker_rules.collect_blockers(
-			self.START_CHECKS + (blocker_rules.EXTENSION_CHECK,),
-			lambda check: self.run_check(check, node_id, node, False, None, True),
+			self.module.START_CHECKS + (blocker_rules.EXTENSION_CHECK,),
+			lambda check: self.parts.start_checks.run_check(check, node_id, node, False, None, True),
 			lambda check, text: self._classify(check, node_id, node, text),
-			lambda: self.money_refusal(node_id, extra_owed))
+			lambda: self.parts.start_checks.money_refusal(node_id, extra_owed))
 
 	def start_refusal(self, node_id: str, extra_owed: float = 0.0) -> Optional[str]:
 		"""Why the project cannot begin now, or None. The first entry of `start_blockers`, so the refusal and every
@@ -42,7 +44,7 @@ class BlockerViews:
 	def _classify(self, check: blocker_rules.StartCheck, node_id: str, node: Dict[str, Any], text: Any) -> List[Dict[str, Any]]:
 		if check.cause == "missing_prereqs":
 			return self._missing_prereq_entries(node_id, node, text)
-		gap = self._substitution_result(node_id)[2] if check.cause == "substitution" else None
+		gap = self.parts.start_checks._substitution_result(node_id)[2] if check.cause == "substitution" else None
 		ids = blocker_rules.supply_blocker_ids(check.cause, gap, self._visible)
 		shut_text = None
 		if self.needs.is_venture[node_id] and not self.needs.running[node_id]:

@@ -4,12 +4,14 @@ While the economy opens there are no prices to set against each other, and every
 Needs: agent_prices, home_coin_metal, wage_materials."""
 from typing import Any, Optional, Set, Tuple
 
+from sim.assembly.api import Part
+
 from . import price_rules
 
 INDICATORS = "indicators"
 
 
-class PriceRatios:
+class PriceRatios(Part):
 
     def agent_basket(self, excluded: Set[str]) -> Optional[Tuple[Any, Any, float]]:
         """(prices now, baseline prices, the geometric mean of the basket's price change excluding the named

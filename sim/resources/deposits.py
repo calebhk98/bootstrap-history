@@ -11,6 +11,7 @@ named on it already rate, so a working's output is bounded by its deposit and a 
 from typing import Any, Dict, List, Optional, Tuple
 
 from sim.agents.api import edges
+from sim.assembly.api import Part
 from sim.ledger.api import PayEdge
 from sim.refusal import Refusal
 from sim.world import deposits as deposit_model
@@ -27,10 +28,15 @@ NO_DEPOSIT_TEXT = ("you know of no deposit of %s with room on the tiles you hold
                    "('prospect <tile> %s <person_days>')")
 
 
-class Deposits:
+class Deposits(Part):
     """Needs: deposit_catalogue, deposits_listed, deposits_worked_before, deposit_working_rate, prospect_finds, tile_endowment,
     tiles_listed_by, civilisation, year, start_year, labour_quote, weather_seed, purchase_budget, can_pay,
     afford_means, money_text, mass_text, mine_trade. Sends PayEdge."""
+
+    def __init__(self, module):
+        super().__init__(module)
+        self._modelled_sizes = {}        # resource id -> {deposit id: tonnes} from the older output model
+        self._deposit_cache = {}         # deposit rows until the year, the tiles or the deposits found change
 
     def mine_resource_id(self, material: str) -> Optional[str]:
         """The catalogue resource a mine of `material` raises (the material's short name or its `_kg` key), or None for a
@@ -150,7 +156,7 @@ class Deposits:
         if person_days <= 0:
             return Refusal("no_effort", "say how many person-days to spend prospecting.")
         hours = person_days * PROSPECT_HOURS_PER_PERSON_DAY
-        cost = hours * self.needs.labour_quote(self.mine_trade())
+        cost = hours * self.needs.labour_quote(self.parts.mine_costs.mine_trade())
         if not self.needs.can_pay(cost):
             return Refusal("cannot_afford", "prospecting %.0f person-days costs about %s; %s." % (
                 person_days, self.needs.money_text(cost, True), self.needs.afford_means()), cost=cost)

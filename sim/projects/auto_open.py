@@ -2,6 +2,7 @@
 household's capability depends on even at a loss it can carry.
 
 Default ON for the optimizer and OFF for a player, like every other automation in this game."""
+from sim.assembly.api import Part
 from sim.finance.api import deep_in_arrears, opens_in_deep_arrears, payback_years
 from sim.reporting.api import RecordEvent
 from sim.ventures.api import OpenVenture
@@ -12,7 +13,7 @@ from .constants import (AUTO_EXPAND_MIN_OCCUPANCY, AUTO_EXPAND_MIN_ROOM_UNITS, A
                         STARTER_FOUNDING_MIN_UNITS)
 
 
-class AutoOpen:
+class AutoOpen(Part):
 	def auto_open_ventures(self):
 		"""Open what plainly pays for itself, best margin first, within the staff and the money available. Default ON for
 		the optimizer and OFF for a player, like every other automation in this game."""
@@ -50,7 +51,7 @@ class AutoOpen:
 		operating = needs.operating()
 		return sorted((node_id for node_id in sorted(needs.techniques_held())
 		               if needs.is_venture[node_id] and node_id not in operating
-		               and not self.exclusion_reason(node_id)
+		               and not self.parts.exclusions.exclusion_reason(node_id)
 		               and nodes[node_id]["rev"] > nodes[node_id]["up"]),
 		              key=lambda k: -((nodes[k]["rev"] - nodes[k]["up"]) / max(1.0, needs.venture_capex[k])))
 
@@ -87,7 +88,7 @@ class AutoOpen:
 			(node_id for node_id in sorted(needs.techniques_held())
 			 if node_id in capability
 			 and node_id not in operating and needs.is_venture[node_id]
-			 and not self.exclusion_reason(node_id)
+			 and not self.parts.exclusions.exclusion_reason(node_id)
 			 and nodes[node_id]["rev"] <= nodes[node_id]["up"]),
 			key=lambda k: (nodes[k]["up"] - nodes[k]["rev"], needs.venture_capex[k], k))
 

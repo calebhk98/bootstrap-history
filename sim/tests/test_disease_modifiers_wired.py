@@ -8,7 +8,7 @@ import unittest
 from unittest import mock
 
 from sim.disease import api as disease
-from sim.disease.module import Disease
+from sim.disease.contact import Contact
 from sim.tests.disease_stand_in import StandInSim, mexica_with_source
 
 YEARS = 3
@@ -21,7 +21,7 @@ def deaths_with(seed, care_sensitivity):
     sim = StandInSim(mexica_with_source(["sail"]), seed)
     first_year = sim.year
     with mock.patch.object(disease.nation_tuning, "DISEASE_CARE_COLLAPSE_SENSITIVITY", care_sensitivity), mock.patch.object(
-            Disease, "introductions", lambda module, records, year: ["smallpox"] if year == first_year else []):
+            Contact, "introductions", lambda module, records, year: ["smallpox"] if year == first_year else []):
         rows = sim.run(YEARS)
     return sum(deaths for _year, _people, deaths in rows)
 
@@ -53,7 +53,7 @@ class ImmunityCarriesBetweenYearsTest(unittest.TestCase):
         sim = StandInSim(mexica_with_source(["sail"]), 1)
         first_year = sim.year
         arrivals = (first_year, first_year + SECOND_ARRIVAL_AFTER_YEARS)
-        with mock.patch.object(Disease, "introductions",
+        with mock.patch.object(Contact, "introductions",
                                lambda module, records, year: ["smallpox"] if year in arrivals else []):
             rows = sim.run(SECOND_ARRIVAL_AFTER_YEARS + YEARS)
         deaths = [row[2] for row in rows]

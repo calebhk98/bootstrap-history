@@ -7,7 +7,7 @@ QUICK_TOPIC = True
 import unittest
 
 from sim.disease import api as disease
-from sim.disease.module import Disease
+from sim.disease.contact import Contact
 from sim.geography import api as geography
 from sim.tests.disease_stand_in import StandInSim, civilisation
 
@@ -54,15 +54,15 @@ class ArrivalTest(unittest.TestCase):
         for tile in entered["smallpox"]:
             self.assertGreater(sum(people[tile].values()), 0.0)
         sim.disease_year(sim.food, sim.year)
-        introduced_by = Disease.introductions
+        introduced_by = Contact.introductions
         try:
-            Disease.introductions = lambda self, records, year: ["smallpox"] if not records else []
+            Contact.introductions = lambda self, records, year: ["smallpox"] if not records else []
             deaths = {}
             for _ in range(3):
                 deaths = sim.disease_year(sim.food, sim.year)
                 sim.year += 1
         finally:
-            Disease.introductions = introduced_by
+            Contact.introductions = introduced_by
         by_tile = sim.module.epidemic_deaths_by_tile()
         self.assertEqual(set(by_tile) <= set(people), True)
         self.assertAlmostEqual(sum(sum(bands.values()) for bands in by_tile.values()), sum(deaths.values()))
@@ -85,12 +85,12 @@ class ForecastTest(unittest.TestCase):
 
     def test_with_a_pathogen_under_way_the_forecast_expects_deaths_from_it_and_the_next_year_draws_near_it(self):
         sim = StandInSim(civilisation("rome_100ad"), 1)
-        introduced_by = Disease.introductions
+        introduced_by = Contact.introductions
         try:
-            Disease.introductions = lambda self, records, year: ["smallpox"] if not records else []
+            Contact.introductions = lambda self, records, year: ["smallpox"] if not records else []
             sim.disease_year(sim.food, sim.year)
         finally:
-            Disease.introductions = introduced_by
+            Contact.introductions = introduced_by
         sim.year += 1
         forecast = sim.module.epidemic_forecast()
         self.assertEqual([row["pathogen"] for row in forecast["by_pathogen"]], ["smallpox"])

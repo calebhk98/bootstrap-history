@@ -11,5 +11,10 @@ from .trading import Trading
 from .yearly import Yearly
 
 
-class LivingStock(Holding, Yearly, Trading, Module):
-    pass
+class LivingStock(Module):
+
+    PARTS = {
+        "holding": Holding,
+        "yearly": Yearly,
+        "trading": Trading,
+    }

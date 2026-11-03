@@ -7,10 +7,17 @@ state's reach is the share of what is due that the officials it pays collect ove
 No civilisation file states either.
 
 Needs: effect_sum, actor_world, year, techniques_version, operating_version, population_total."""
+from sim.assembly.api import Part
+
 from . import constants, rules
 
 
-class Reach:
+class Reach(Part):
+
+	def __init__(self, module):
+		super().__init__(module)
+		self._state_reach_memo = None     # (the key it was worked out for, the share): never saved
+		self._staff_reach_memo = {}       # line name -> the same
 
 	def state_legitimacy(self):
 		"""The share of its reach that the people's consent leaves the state, between the floor and the ceiling."""

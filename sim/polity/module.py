@@ -17,34 +17,25 @@ from .pressure import Pressure
 from .protection import Protection
 from .reach import Reach
 from .standing_floor import StandingFloor
+from .standing_views import StandingViews
 from .transfers import Transfers
 from .year import Year
 
 
-class Polity(Reach, Notice, Protection, StandingFloor, Eminence, Pressure, Demands, Groups, Transfers, Patronage, Year, Appliers, Module):
+class Polity(Module):
 
-	def setup(self) -> None:
-		self._state_reach_memo = None     # (the key it was worked out for, the share): never saved
-		self._staff_reach_memo = {}       # line name -> the same
-		self._banned_materials_cache = {}
-
-	def value_weights(self):
-		"""The society's value weights, by name."""
-		return self.world.value_weights
-
-	# ---- the views of one seat's figures ----
-
-	def standing(self):
-		"""The acting seat's figures with its society and state."""
-		seat = self.seat
-		return {"protection": seat.protection, "scandal": seat.scandal, "bribes_year_to_date": seat.bribes_ytd,
-		        "reputation": seat.reputation, "scandal_last_year": seat.scandal_last_year, "eminence": seat.eminence,
-		        "familiarity": seat.familiarity, "demand_stance": seat.demand_stance, "service_offer": seat.service_offer,
-		        "concealed": seat.concealed, "defiance": seat.defiance, "last_withdrawal": seat.last_withdrawal,
-		        "governance": seat.gov}
-
-	def eminence(self):
-		return self.seat.eminence
-
-	def value_weight(self, key):
-		return self.world.value_weights[key]
+	PARTS = {
+		"standing_views": StandingViews,
+		"reach": Reach,
+		"notice": Notice,
+		"protection": Protection,
+		"standing_floor": StandingFloor,
+		"eminence": Eminence,
+		"pressure": Pressure,
+		"demands": Demands,
+		"groups": Groups,
+		"transfers": Transfers,
+		"patronage": Patronage,
+		"year": Year,
+		"appliers": Appliers,
+	}

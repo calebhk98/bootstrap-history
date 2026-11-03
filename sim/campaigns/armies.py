@@ -6,6 +6,7 @@ a country raises armies for that country."""
 from typing import Any, Dict, List, Optional
 
 from sim.agents.api import army_raising
+from sim.assembly.api import Part
 from sim.geography.api import settlement
 from sim.polity.api import StrikeFromForce
 from sim.refusal import Refusal
@@ -18,7 +19,7 @@ from .commands import DisbandArmy, OrderArmy, RaiseArmy, RecallArmy
 ARMIES = "armies"
 
 
-class Armies:
+class Armies(Part):
 	"""Reads: tile_owner, tiles_owned_by, tile_facts, has_state, country_world, year. Sends StrikeFromForce."""
 
 	def army_records(self) -> Dict[str, Dict[str, Any]]:

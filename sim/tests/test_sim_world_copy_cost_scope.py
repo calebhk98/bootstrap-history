@@ -30,7 +30,7 @@ class _Game:
 def SimWorld(game):
     """The actors' world over the engine's own shared-answers scope (the bridge's view) and the game's project cost."""
     needs = fake_needs(shared_answers=lambda table: game.sharing.shared_answers(table), project_cost=game.economy.project_cost)
-    return ActorWorld(types.SimpleNamespace(needs=needs))
+    return ActorWorld(needs)
 
 
 class CopyCostScopeTests(unittest.TestCase):

@@ -1,11 +1,13 @@
 """What it costs to keep a concern or institution open this year: `upkeep` and its parts, an institution's upkeep scaled by how full
 its places are, and the people one unit is built to support.
 Needs: the views of READS_BY_OWNER in module_spec.py."""
+from sim.assembly.api import Part
+
 from . import node_upkeep, rules
 from .constants import INSTITUTION_PLACES_FALLBACK_UPKEEP_LABOUR_HOURS_PER_HEAD
 
 
-class Upkeep:
+class Upkeep(Part):
 
 	def upkeep(self):
 		# You do not pay to maintain what you do not own, but you do bear the small standing cost of the practice you actually
@@ -15,10 +17,10 @@ class Upkeep:
 
 	def upkeep_by_concern(self):
 		"""{node id: yearly running cost} for each concern or practice that is paid for; `upkeep` is its sum."""
-		practice_set = self._practice_set()
+		practice_set = self.parts.revenue._practice_set()
 		operating = self.needs.operating()
 		return {node_id: self.needs.venture_real_upkeep(node_id, None)
-		        for node_id in self._revenue_upkeep_candidates()
+		        for node_id in self.parts.revenue._revenue_upkeep_candidates()
 		        if node_id in operating or node_id in practice_set}
 
 	def institution_upkeep(self, node_id, units=None, fully_staffed=False):
@@ -35,7 +37,7 @@ class Upkeep:
 		"""
 		capability, scalable, _benefit = self.needs.capability_sets()
 		node = self.needs.tree_nodes()[node_id]
-		_units = (self.institution_units(node_id) if node_id in self.needs.operating() else 1.0) \
+		_units = (self.parts.capability.institution_units(node_id) if node_id in self.needs.operating() else 1.0) \
 			if node_id in scalable else 1.0
 		if units is not None and node_id in scalable:
 			_units = float(units)
@@ -54,4 +56,4 @@ class Upkeep:
 		institution multiply by `institution_units`. Read off the same table staff_capacity() and supervision_room() use; anything
 		absent is sized by its own upkeep at about a wage a head."""
 		return rules.institution_places(self.needs.mechanic["institution_places"].get(node_id), self.needs.tree_nodes()[node_id]["up"],
-		                                self.priced(INSTITUTION_PLACES_FALLBACK_UPKEEP_LABOUR_HOURS_PER_HEAD))
+		                                self.parts.concern_market.priced(INSTITUTION_PLACES_FALLBACK_UPKEEP_LABOUR_HOURS_PER_HEAD))

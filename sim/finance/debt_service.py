@@ -5,12 +5,14 @@ Needs: revenue_capacity, upkeep, mine_operating_cost, acting_balance, held_trade
 hours_for_sale, best_wage_trade, work_for_wages_dry_run, standing_job_pay."""
 from typing import Any, Dict, Optional
 
+from sim.assembly.api import Part
+
 from . import rules
 from .constants import DEBT_SERVICE_SHARE_OF_SURPLUS
 from .credit_freeze import STALL_MINIMUM_INSOLVENT_YEARS, is_stalled, loss_makers, standing_net
 
 
-class DebtService:
+class DebtService(Part):
 
 	def recurring_net_before_interest(self) -> float:
 		"""Standing revenue less every standing cost, for an ordinary next year: wages count in full, so a hiring advance paid this
@@ -25,21 +27,21 @@ class DebtService:
 		dependants (its savings are not spent on them); one in arrears also pays the creditors their share of it
 		(DEBT_SERVICE_SHARE_OF_SURPLUS). Either way it lives within its income, as a society household of the same income does."""
 		return rules.dependants_beyond_means_of(
-			self.needs.acting_balance(), self.dependants_cost(), living, revenue, upkeep, mine_cost,
-			self.debt_interest_rate(), DEBT_SERVICE_SHARE_OF_SURPLUS)
+			self.needs.acting_balance(), self.parts.credit_line.dependants_cost(), living, revenue, upkeep, mine_cost,
+			self.parts.arrears.debt_interest_rate(), DEBT_SERVICE_SHARE_OF_SURPLUS)
 
 	def recurring_living_cost(self, revenue: float, upkeep: float) -> float:
 		"""The living cost of an ordinary next year: what is paid once the dependants the income cannot carry are shed."""
-		living = self.living_cost(revenue=revenue, upkeep=upkeep)
+		living = self.parts.credit_line.living_cost(revenue=revenue, upkeep=upkeep)
 		return living - self.dependants_beyond_means(living, revenue, upkeep, self.needs.mine_operating_cost())
 
 	def recurring_net(self) -> float:
 		"""Recurring net after the interest the arrears cost now."""
-		return rules.net_after_interest(self.recurring_net_before_interest(), self.needs.acting_balance(), self.debt_interest_rate())
+		return rules.net_after_interest(self.recurring_net_before_interest(), self.needs.acting_balance(), self.parts.arrears.debt_interest_rate())
 
 	def interest_on_arrears(self) -> float:
 		"""This year's interest on the household's debt at the rate it pays."""
-		return rules.interest_on_arrears(self.needs.acting_balance(), self.debt_interest_rate())
+		return rules.interest_on_arrears(self.needs.acting_balance(), self.parts.arrears.debt_interest_rate())
 
 	def debt_service_share_of_surplus(self) -> float:
 		"""How much of the yearly surplus may go on arrears interest before a debt is called unsustainable."""
@@ -48,7 +50,7 @@ class DebtService:
 	def sustainable_debt(self) -> float:
 		"""The largest debt whose yearly interest stays within the allowed share of the recurring surplus (zero when there is no
 		surplus)."""
-		rate = self.debt_interest_rate()
+		rate = self.parts.arrears.debt_interest_rate()
 		surplus = self.recurring_net_before_interest()
 		if rate <= 0:
 			return 0.0
@@ -57,7 +59,7 @@ class DebtService:
 	def debt_service_forecast(self, draw: float) -> Dict[str, Any]:
 		"""Interest on a debt of `draw`, against the surplus, beside the formal ceiling."""
 		surplus = self.recurring_net_before_interest()
-		interest = draw * self.debt_interest_rate()
+		interest = draw * self.parts.arrears.debt_interest_rate()
 		return {
 			"interest_per_year_at_that_draw": round(interest, 1),
 			"recurring_surplus_before_interest": round(surplus, 1),
@@ -82,10 +84,10 @@ class DebtService:
 		if capital >= 0 or insolvent_years < STALL_MINIMUM_INSOLVENT_YEARS:
 			return None
 		# interest on the arrears counts; the standing revenue matches the ledger
-		interest = max(0.0, -capital) * self.debt_interest_rate()
+		interest = max(0.0, -capital) * self.parts.arrears.debt_interest_rate()
 		standing_revenue = needs.revenue_capacity()
 		standing_upkeep = needs.upkeep()
-		standing_living = self.living_cost(revenue=standing_revenue, upkeep=standing_upkeep)
+		standing_living = self.parts.credit_line.living_cost(revenue=standing_revenue, upkeep=standing_upkeep)
 		net = standing_net(standing_revenue, standing_upkeep, standing_living, needs.mine_operating_cost(), interest)
 		if not is_stalled(capital, insolvent_years, net):
 			return None

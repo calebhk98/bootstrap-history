@@ -4,6 +4,7 @@ there are people again, and warning first.
 close_unstaffed_ventures() shuts what nobody is left to supervise, reopen_restaffed_ventures() brings back what can be
 supervised again, staffing_closure_warnings() tells a player what is about to shut before it does."""
 from sim.agents.api import business_review
+from sim.assembly.api import Part
 from sim.reporting.api import RecordEvent
 from sim.ventures.api import NoteConcernYear, ReviewConcerns, ReviewReopening
 
@@ -12,7 +13,7 @@ from .staffing_events import unstaffed_closure_line
 from .staffing_warning_rows import staffing_warning_rows
 
 
-class Staffing:
+class Staffing(Part):
 	def close_unstaffed_ventures(self, year):
 		"""Shut just enough of what nobody is left to watch, lowest net value first.
 
@@ -20,17 +21,17 @@ class Staffing:
 		the years after the first. A shop whose keeper you dismissed is a shop that stops trading, and the alternative -
 		which is what the game did - is a fortune of concerns running themselves for ever on an empty payroll."""
 		needs = self.needs
-		planned = self.concerns_to_close_for_staffing()
-		shortfalls = self._staffing_shortfalls(self.staffing_held_totals()) if planned else {}
+		planned = self.parts.staffing_shortfall.concerns_to_close_for_staffing()
+		shortfalls = self.parts.staffing_shortfall._staffing_shortfalls(self.parts.staffing_shortfall.staffing_held_totals()) if planned else {}
 		concern_rows = needs.concern_market()
 		earnings_stopped = round(sum(concern_rows.get(node_id, 0.0) for node_id in planned), 1)
 		closed = [closure.entry_key for closure in self.review_ventures((business_review.STAFF_SHORT,), year)]
 		if closed:
-			self.record_staffing_closures(len(closed), shortfalls)
+			self.parts.staffing_report.record_staffing_closures(len(closed), shortfalls)
 			# plain line: unstaffed_closure_line builds the LogLine and its kind
 			needs.send(RecordEvent.from_line(unstaffed_closure_line(
-				closed, shortfalls, self.staffing_shortfall_words(shortfalls), self.staffing_shut_count(),
-				self.STAFFING_REMEDIES, earnings_stopped), seat=None, year=year))
+				closed, shortfalls, self.parts.staffing_report.staffing_shortfall_words(shortfalls), self.parts.staffing_report.staffing_shut_count(),
+				self.parts.staffing_report.STAFFING_REMEDIES, earnings_stopped), seat=None, year=year))
 		return closed
 
 	def review_ventures(self, rules=business_review.ALL_RULES, year=None):
@@ -58,10 +59,10 @@ class Staffing:
 		nodes = needs.tree_nodes()
 		needed_scholars, needed_craftsmen = 0.0, 0.0
 		for node_id in sorted(needs.closure_records()):
-			if (self.staff_closure_age(node_id) is None or node_id not in needs.techniques_held()
+			if (self.parts.closures.staff_closure_age(node_id) is None or node_id not in needs.techniques_held()
 					or node_id not in nodes):
 				continue
-			held = self._staffing_draw_of(node_id, needs.reopen_units[node_id])
+			held = self.parts.staffing_shortfall._staffing_draw_of(node_id, needs.reopen_units[node_id])
 			needed_scholars += held.get("scholars", 0.0)
 			needed_craftsmen += held.get("craftsmen", 0.0)
 		free_scholars, free_craftsmen = needs.venture_staff_free()
@@ -81,8 +82,8 @@ class Staffing:
 		needs = self.needs
 		reopened = needs.send(ReviewReopening())
 		if reopened:
-			self.record_staffing_reopenings(len(reopened))
-			still_shut = self.staffing_shut_count()
+			self.parts.staffing_report.record_staffing_reopenings(len(reopened))
+			still_shut = self.parts.staffing_report.staffing_shut_count()
 			needs.send(RecordEvent.in_year(year, "concerns_reopened", "you have the people again: %s reopen%s on "
 			           "their own, now that somebody is free to "
 			           "watch %s; %d still shut for want of staff"

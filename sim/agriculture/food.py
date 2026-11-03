@@ -4,13 +4,14 @@
 bring in at most what the trade's return allows; that much is taken from the held tiles' game, and the stock regrows.
 Fishers bound fishing the same way in `food_potential`. Nothing here names a trade or a food source: both come from
 the trade registry. The per-tile sums are geography's, read as views; this keeps the labour bound."""
+from sim.assembly.api import Part
 from sim.labour.api import cap_share, capped_kcal, hours_cap_kcal
 from sim.world import agriculture_tile, land
 
 WILD_STOCK = "wild_stock"   # the version channel of the wild stock
 
 
-class Food:
+class Food(Part):
 
     def _gathering_caps(self):
         """{food source id: kcal} the society's gatherers' hours allow this year."""
@@ -20,7 +21,7 @@ class Food:
         """{tile: geography's crop site} over the held tiles under the society's rotation."""
         technique = self.needs.farming_technique()
         share = 1.0 - technique.rotation.fallow_share_of_holding
-        return self.needs.crop_sites(share, self.soil_nitrogen_factors(), technique.toolkit.tillage_capacity)
+        return self.needs.crop_sites(share, self.parts.soil.soil_nitrogen_factors(), technique.toolkit.tillage_capacity)
 
     def farm_territory(self):
         """The farm's ladder, ceiling and cleared ground's quality from the held tiles as they now are."""
@@ -30,7 +31,7 @@ class Food:
         """{source id: kcal a year} over the held tiles: the land's sustainable yield, game thinned by past hunting, each
         gathered source held to what the hours of its gatherers can bring in."""
         crop_technique = agriculture_tile.crop_technique(self.needs.farming_technique())
-        totals = self.needs.food_kcal_by_source(self.world.wild_stock, crop_technique, self.soil_nitrogen_factors())
+        totals = self.needs.food_kcal_by_source(self.world.wild_stock, crop_technique, self.parts.soil.soil_nitrogen_factors())
         return capped_kcal(totals, self._gathering_caps())
 
     def wild_stock(self):

@@ -3,11 +3,18 @@ partner's own society makes and charges at its own opening techniques."""
 import json
 from typing import Any, Dict, FrozenSet, Mapping
 
+from sim.assembly.api import Part
+
 from . import prices as price_solver
 from . import rules
 
 
-class CalculatedViews:
+class CalculatedViews(Part):
+
+    def __init__(self, module):
+        super().__init__(module)
+        self._schedule_by_content: Dict[str, Any] = {}       # opening wage schedule of a civilisation record, by its content
+        self._partner_economies: Dict[str, Any] = {}         # what each partner makes and charges at its own opening
 
     def opening_schedule(self, civilisation: Mapping[str, Any]) -> Any:
         """The opening wage schedule of a civilisation record, remembered by the record's whole content so a variant is

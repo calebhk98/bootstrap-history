@@ -23,12 +23,14 @@ Needs: agent_opening_basket, agent_volume_baseline, agent_traded_volumes, househ
 money_per_labour_hour, population_total, opening_population."""
 from typing import Any, Dict, List, Optional, Tuple
 
+from sim.assembly.api import Part
+
 from . import output_rules
 
 INDICATORS = "indicators"
 
 
-class Output:
+class Output(Part):
     _basket: Optional[Tuple[Any, Dict[str, Dict[str, float]]]] = None   # (world it was read for, the basket); never saved
 
     def base_basket(self) -> Dict[str, Dict[str, float]]:

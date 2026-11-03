@@ -5,6 +5,7 @@ through `GeographyInputs`, which asks the views the module declared. Each view b
 geography handle."""
 from typing import Any, Dict, List, Optional
 
+from sim.assembly.api import Part
 from sim.geography.api import (Geography, endemic_people_loss, food_potential, layer_value, load_geography, open_map, reach,
                                route, tiles_held, usable_modes)
 
@@ -45,12 +46,14 @@ class GeographyInputs:
             return None
 
 
-class MapViews:
+class MapViews(Part):
     """Mixed into `Land`."""
 
-    needs: Any
-    _map_cache: Optional[Any] = None
-    _geography_cache: Optional[Geography] = None
+    def __init__(self, module):
+        super().__init__(module)
+        self._tile_facts = {}   # tile -> what it gives an army; static, never saved
+        self._map_cache = None
+        self._geography_cache = None
 
     @property
     def world_map(self) -> Any:

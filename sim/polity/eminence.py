@@ -6,10 +6,12 @@ outright, because the usual outcome is a bad year, a confiscation or a lost patr
 
 Needs: danger_lines, mechanic, running, standing_floor, acting_balance, effect_factor,
 year, money_per_labour_hour."""
+from sim.assembly.api import Part
+
 from . import constants, eminence_rules
 
 
-class Eminence:
+class Eminence(Part):
 
 	def priced(self, hours):
 		"""A count of labour hours as money in this civilisation's coin."""
