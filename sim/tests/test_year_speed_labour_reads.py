@@ -10,7 +10,7 @@ import unittest
 from sim.economy import household_hours_year, households_hours_offered
 from sim.economy.labour_supply import HourSupply
 from sim.economy.types import LabourOffer
-from sim.labour.market import bonded_room, formation_bonded
+from sim.labour.market import bonded_room, formation_bonded, trades
 from sim.labour.market.carriage import carriage_from
 from sim.labour.market.import_cost import ImportCosts
 from sim.labour.market.records import EmployerHoursBid, LabourClearing, MarketState, Route, YearInputs, YearReport
@@ -93,7 +93,7 @@ class ImportCostsKeepTheirValues(unittest.TestCase):
             bids = [EmployerHoursBid("e%d" % i, "digger", rng.choice(areas), rng.uniform(100, 6000), rng.uniform(1, 8)) for i in range(7)]
             sold = {("digger", area): (lambda wage, base=rng.uniform(0.3, 1.0): 80.0 * min(1.0, base * (0.5 + wage / 6.0)))
                     for area in areas if rng.random() < 0.6}
-            inputs = YearInputs(trades={}, bids=bids, subsistence_per_worker_year={area: 100.0 for area in areas},
+            inputs = YearInputs(trades=trades.trade_specs({"digger": {"family": "earth", "training_years": 0}}), bids=bids, subsistence_per_worker_year={area: 100.0 for area in areas},
                                 hours_per_worker_year=100.0, discount_rate=0.03, career_years=30.0, routes=routes,
                                 hours_sold_at=sold)
             fast, plain = ImportCosts(state, inputs), self.Plain(state, inputs)

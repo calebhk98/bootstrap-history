@@ -11,7 +11,7 @@ WALL = "two-way"  # nothing here reaches sim/engine/; the workforce module hands
 
 from . import learning_curve, wage_provider, wages
 from .trade_formation import SOURCE_TASK_FLOOR_FRACTION
-from .market.clearing import reservation_wage_per_hour
+from .market.reservation import reservation_wage_per_hour
 from .market.opening import opening_state as opening_labour_market
 from .market.migration import move_shares as migration_shares
 from .regional_migration import migrant_pairs, totals_of_pairs
