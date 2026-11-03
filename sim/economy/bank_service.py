@@ -29,7 +29,7 @@ def service_deposits(record, money: str, year: int) -> Dict[AgentId, float]:
             record.credit.loans = untouched + kept
             for lender, lost in credit_claims.losses_by_lender(defaults).items():
                 record.credit.add_loss(lender, lost)
-            record.credit.remembered_defaults = credit_claims.remember_defaults(record.credit.remembered_defaults, defaults)
+            record.credit.remember(defaults)
             if defaults and bank.failed_year < 0:
                 banks.fail(record, bank, year, money)
         if bank.failed_year < 0:
