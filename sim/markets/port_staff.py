@@ -21,7 +21,7 @@ from sim.actors import api as actors_api
 from sim.agents.api import edges
 from sim.constants import declare
 from sim.economy import api as economy_api
-from sim.economy.api import EDGE_EXCHANGE, AgentOrders, LabourBid, LabourOffer, Transfer
+from sim.economy.api import EDGE_EXCHANGE, WAGE_CEILING_MULTIPLE, AgentOrders, LabourBid, LabourOffer, Transfer
 from sim.refusal import Refusal
 from sim.ledger.api import PayEdge, PayExchange, ReceiveFromEdge, ReceiveFromExchange
 from sim.reporting.api import RecordEvent
@@ -33,12 +33,6 @@ WORK_PREFIX = "work:"
 # what a seat put into the year's clearing: the trades it bid for, the economy units its staff account was funded with, whether it
 # offered hours of its own and the cause when it had places that no bid carried (None otherwise)
 Posted = namedtuple("Posted", "trades funded_units offered unposted_cause")
-
-STAFF_WAGE_CEILING_MULTIPLE = declare(
-    "STAFF_WAGE_CEILING_MULTIPLE", 1.5, kind="temporary_heuristic", unit="multiple of last year's wage", source=None, confidence="D",
-    retire="Complaints/964: the seat states its own maximum wage",
-    why="The most a seat's standing bid offers per hour, as a multiple of the trade's wage last year, so a wage that rose in the "
-        "year does not leave the places empty; the clearing pays the market wage, not the ceiling.")
 
 
 def staff_account(seat_id):
@@ -65,7 +59,7 @@ def employer_bids(economy, employer_id, wanted, tile, affordable_coin):
     affordable_units = max(0.0, affordable_coin) / economy_api.coin_per_unit(economy)
     bill = math.fsum(hours * wage for _trade, _area, hours, wage in asked)
     share = min(1.0, affordable_units / bill) if bill > 0.0 else 0.0
-    bids = [LabourBid(account, trade, area, hours * share, wage * STAFF_WAGE_CEILING_MULTIPLE) for trade, area, hours, wage in asked] if share > 0.0 else []
+    bids = [LabourBid(account, trade, area, hours * share, wage * WAGE_CEILING_MULTIPLE) for trade, area, hours, wage in asked] if share > 0.0 else []
     return bids, min(affordable_units, math.fsum(bid.hours * bid.maximum_wage for bid in bids))
 
 

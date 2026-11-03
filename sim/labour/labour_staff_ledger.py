@@ -42,9 +42,13 @@ class StaffLedger:
         self.log_staff_lost(cause, {trade: before[trade] - now.get(trade, 0.0) for trade in sorted(before)
                                     if before[trade] - now.get(trade, 0.0) > 0.005})
 
+    def _generic_staff(self):
+        return trade_data.generic_staff_trades(trade_data.trade_of_role(trade_data.registry_of(self._world), "unskilled"))
+
     def trades_drawn_on(self):
         """Specialist trades some active project or open concern needs, with why."""
         drawn = {}
+        generic = self._generic_staff()
         projects = self._world.projects
         for node_id in sorted(projects.active):
             node = self._world.scenario.nodes.get(node_id)
@@ -55,7 +59,7 @@ class StaffLedger:
             if lab_left is None:
                 lab_left = node.get("lab") or {}
             for trade, hours in lab_left.items():
-                if not trade_data.is_generic_staff(trade) and hours > 0:
+                if trade not in generic and hours > 0:
                     drawn.setdefault(trade, []).append("project " + node_id)
         for trade in sorted(self._world.ventures.venture_foremen_used()):
             drawn.setdefault(trade, []).append("open concern")
@@ -65,9 +69,10 @@ class StaffLedger:
         """Specialists on the payroll that no active project or open concern
         draws on, with what they cost a year."""
         drawn = self.trades_drawn_on()
+        generic = self._generic_staff()
         rows = []
         for trade, count in sorted(self.book.employed_by_trade().items()):
-            if trade_data.is_generic_staff(trade) or trade in drawn or count < 0.5:
+            if trade in generic or trade in drawn or count < 0.5:
                 continue
             rows.append({"trade": trade, "count": round(count, 1),
                          "wage_bill_per_year": round(count * self.market.quote_annual(trade), 1),

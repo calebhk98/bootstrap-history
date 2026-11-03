@@ -26,7 +26,8 @@ from .labour_market import production_data
 from .food_gathering import cap_share, capped_kcal, hours_cap_kcal
 from .wage_provider import people_fed_per_worker
 from .wages import CAREER_YEARS
-from .trade_data import bonded_pseudo_trade, generic_craft_trade, role_field, trade_of_role, tool_draw, tool_hours_factors, tool_order
+from .trade_data import (bonded_pseudo_trade, craft_family, farm_trade, generic_craft_trade, generic_staff_trades, is_generic_staff, role_field, scholar_trade,
+                         staff_resource_trade, trade_of_role, tool_draw, tool_hours_factors, tool_order)
 from .occupational_shares import occupational_report, shares_by_group, hours_by_trade, hours_by_trade_of_all_employers, people_by_trade_of_all_employers, format_report as format_occupational_report, groups_data as occupation_groups
 from .staff_targets import scholar_target
 from .staff_moves import stochastic_round
@@ -42,7 +43,7 @@ __all__ = [
     "people_fed_per_worker", "CAREER_YEARS", "tool_draw", "tool_hours_factors", "tool_order",
     "add_tenure", "fade_tenure", "outflow_shares", "tenure_by_trade", "tenure_held", "hours_cap_kcal", "capped_kcal", "cap_share",
     # the labour-market core (sim/labour/market/DESIGN.md): plain records in, plain records out
-    "run_labour_year", "migration_shares", "moves_between_regions", "migrant_pairs", "totals_of_pairs", "clear_labour_markets", "opening_labour_market", "seed_hours", "bound_by_hirers", "trade_specs", "fallback_trade", "role_field", "trade_of_role", "generic_craft_trade", "bonded_pseudo_trade", "people_in",
+    "run_labour_year", "migration_shares", "moves_between_regions", "migrant_pairs", "totals_of_pairs", "clear_labour_markets", "opening_labour_market", "seed_hours", "bound_by_hirers", "trade_specs", "fallback_trade", "role_field", "trade_of_role", "generic_craft_trade", "bonded_pseudo_trade", "scholar_trade", "craft_family", "farm_trade", "generic_staff_trades", "is_generic_staff", "staff_resource_trade", "people_in",
     "EmployerHoursBid", "LabourClearing", "MarketState", "Route", "School", "TradeSpec", "YearInputs", "YearReport",
     "market_state_to_plain", "market_state_from_plain", "copy_market_state",
 ]

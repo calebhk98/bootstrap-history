@@ -2,13 +2,9 @@
 
 import math
 
+from sim.labour.api import staff_resource_trade
+
 _MOST_LISTED = 5
-
-
-def _hire_as(registry, resource):
-    """The trade to hire for a staffing resource: the first by id whose registry entry fills it, else the resource itself."""
-    filling = sorted(trade for trade, fields in registry.items() if fields.get("staff_resource") == resource)
-    return filling[0] if filling else resource
 
 
 def shut_for_want_of_staff(sim, nodes):
@@ -24,7 +20,7 @@ def shut_for_want_of_staff(sim, nodes):
         missing = sim.view("staffing_missing_to_open")(node_id, held_totals)
         if not missing:
             continue
-        fixes = ["hire %s %d" % (_hire_as(registry, resource), max(1, math.ceil(amount - 0.005)))
+        fixes = ["hire %s %d" % (staff_resource_trade(registry, resource), max(1, math.ceil(amount - 0.005)))
                  for resource, amount in missing.items()]
         rows.append({"id": node_id, "name": nodes[node_id]["name"],
                      "would_earn_a_year": round(nodes[node_id]["rev"] - nodes[node_id]["up"]),

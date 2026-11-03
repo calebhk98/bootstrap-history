@@ -22,6 +22,7 @@ TileId = str
 # Accounts that are the edge of the model: money and goods enter or leave through one of these, so every
 # other agent's holdings change only by a transfer with a counterparty.
 EDGE_PREFIX = "edge:"
+EDGE_EXCHANGE = "edge:exchange"   # the actors' coin turned into the economy's unit and back
 
 
 def is_edge(agent_id: AgentId) -> bool:

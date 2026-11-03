@@ -31,7 +31,7 @@ def registry_of(*profiles):
         state.countries[each.country] = each
     state.home_country = profiles[0].country
     registry = ActorRegistry(state)
-    seed_strata(registry, CostedWorld())
+    seed_strata(registry, CostedWorld().trade_of_role)
     return registry
 
 

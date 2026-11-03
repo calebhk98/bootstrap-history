@@ -10,7 +10,7 @@ from dataclasses import dataclass, field
 from typing import Mapping, Optional, Tuple
 
 from sim.contracts import Contract
-from sim.book import (EDGE_PREFIX, AgentId, CurrencyId, GoodId, GoodsMove, TileId, Transfer,  # noqa: F401
+from sim.book import (EDGE_EXCHANGE, EDGE_PREFIX, AgentId, CurrencyId, GoodId, GoodsMove, TileId, Transfer,  # noqa: F401
                       is_edge)
 
 HECTARES_PER_SQUARE_KILOMETRE = 100.0   # unit conversion from a tile's area in km2 to hectares
@@ -30,7 +30,6 @@ EDGE_SPOILAGE = "edge:spoilage"          # goods lost while held
 EDGE_DEFAULT = "edge:default"            # debt written off
 EDGE_LEGACY = "edge:legacy"              # engine postings that do not yet name a counterparty
 EDGE_CARGO = "edge:cargo"                # money between a trader's purse and its cargo account
-EDGE_EXCHANGE = "edge:exchange"          # the actors' coin turned into the economy's unit and back (agents/purses.py names the other side)
 
 
 def is_external_edge(account: AgentId) -> bool:

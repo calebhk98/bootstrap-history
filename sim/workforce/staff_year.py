@@ -2,7 +2,7 @@
 
 It runs as the `staff` phase of each seat's year."""
 from sim.assembly.api import Part
-from sim.labour.api import scholar_target
+from sim.labour.api import bonded_pseudo_trade, generic_craft_trade, generic_staff_trades, scholar_target, scholar_trade
 from sim.reporting.api import RecordAutomation, RecordAutomationSkip, RecordEvent
 from sim.world import demography
 
@@ -40,14 +40,14 @@ class StaffYear(Part):
             # Supervision-room headroom is scaled by the same affordability figure staff_capacity() used.
             extra = self.parts.core.labour.capacity.supervision_room() * self.parts.core.staff_scale()
             # The scholar target is capped at the literacy wall hire() and train() enforce.
-            target_sc = scholar_target(sc_cap, extra, AUTO_HIRE_SCHOLAR_EXTRA_SHARE, self.parts.core.labour.supply.literate_capacity("scholar"))
+            target_sc = scholar_target(sc_cap, extra, AUTO_HIRE_SCHOLAR_EXTRA_SHARE, self.parts.core.labour.supply.literate_capacity(scholar_trade()))
             desired_sc = approach(workforce.scholars, target_sc, AUTO_HIRE_SCHOLAR_APPROACH_RATE)
             target_ar = ar_cap + extra
             desired_ar = approach(workforce.artisans, target_ar, AUTO_HIRE_ARTISAN_APPROACH_RATE)
             # Staff taken on automatically are generic craftsmen and scribes.
             craft = craft_headcount(desired_ar, workforce.freedmen, workforce.slaves, AUTO_HIRE_SLAVE_CRAFT_CREDIT)
             specials = sum(value for trade_id, value in workforce.employees.items()
-                           if trade_id not in ("artisan", "scholar") and self.needs.trade_family[trade_id] == "craft")
+                           if trade_id not in (generic_craft_trade(), scholar_trade()) and self.needs.trade_family[trade_id] == "craft")
             # The generic artisan bucket is what is left after every taught trade took its share, and artisans supervise
             # a concern, so specialists must not squeeze it to nothing. A headcount may be fractional (hours over the year).
             # Growth goes through hire() so a refusal there (cash, room, literacy, price pressure) binds the optimizer as
@@ -63,19 +63,20 @@ class StaffYear(Part):
             if _closed_unscaled >= 1.0 and _closed_sc + _closed_ar < 1.0:
                 self.needs.send(RecordAutomationSkip("auto_hire", "hire for shut concerns", "concerns shut for want of staff need %.1f more people, but the income that pays staff covers "
                     "%.0f%% of them" % (_closed_unscaled, 100.0 * self.parts.core.staff_scale())))
-            _grow_to("artisan", artisan_goal(craft, specials, workforce.employees.get("artisan", 0.0), _closed_ar),
+            _grow_to(generic_craft_trade(), artisan_goal(craft, specials, workforce.employees.get(generic_craft_trade(), 0.0), _closed_ar),
                      closure_need=_closed_ar)
             if desired_sc > 0 or _closed_sc > 0:
-                _grow_to("scholar", scholar_goal(desired_sc, workforce.scholars, _closed_sc),
+                _grow_to(scholar_trade(), scholar_goal(desired_sc, workforce.scholars, _closed_sc),
                          closure_need=_closed_sc)
             # Replace people trade by trade, from the trades taught as well as the keys left in `employees` (a trade
             # drops out of `employees` once its last person is lost), and only for a trade a project or open concern
             # draws on (see idle_specialists).
             _drawn_on = self.parts.core.labour.ledger.trades_drawn_on()
+            _generic = generic_staff_trades(self.parts.core.labour.allocation.unskilled_trade())
             for trade_id in sorted(set(workforce.employees) | set(workforce.trades_created)):
                 have = workforce.employees.get(trade_id, 0.0)
                 want = replacement_wanted(trade_id, have, trade_id in workforce.trades_created, _drawn_on,
-                                          TRADE_REPLACEMENT_TARGET_HEADCOUNT)
+                                          TRADE_REPLACEMENT_TARGET_HEADCOUNT, _generic)
                 if want is None:
                     continue
                 if want - have > 0.02:

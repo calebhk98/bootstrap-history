@@ -3,6 +3,7 @@ from typing import Any, List, Optional
 
 from sim.agents.api import OBSERVATION_RANGE_KM, TRADE_TONNES_FOR_UNIT_CONTACT, research_gate
 from sim.geography.api import flow_ledger
+from sim.labour import api as labour_api
 
 from sim.seats import api as seats_api
 
@@ -22,9 +23,9 @@ class Research:
 		"""The trades whose people count as hands of a family (scholars; or the craft trades), the same for every country."""
 		needs = self.needs
 		if family == research_gate.SCHOLAR_FAMILY:
-			return [research_gate.SCHOLAR_TRADE]
+			return [labour_api.scholar_trade()]
 		return [trade for trade in needs.available_trades()
-				if trade != research_gate.SCHOLAR_TRADE and needs.is_craft_trade[trade]]
+				if trade != labour_api.scholar_trade() and needs.is_craft_trade[trade]]
 
 	def research_hands(self, actor: Any, family: str) -> float:
 		"""People of the family on the actor's staff, plus the free people it could take on."""

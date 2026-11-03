@@ -2,6 +2,7 @@
 `node_revenue._apply_output`). Each rule is called on a hand-made node and entry; no tree is loaded and no game is built."""
 import unittest
 
+from sim.labour.api import generic_craft_trade, scholar_trade
 from sim.production import node_revenue, node_upkeep
 from sim.unit_conversions import HOURS_PER_PERSON_YEAR
 from sim.tests.test_plant_figures import GOODS, WAGES, baskets, entry
@@ -76,7 +77,7 @@ class ProgrammeUpkeepTests(unittest.TestCase):
 
     def test_named_staff_places_are_paid_a_year_each(self):
         node = {"sch": 2.0, "art": 1.0}
-        wages = {node_upkeep.SCHOLAR_STAFF_TRADE: 3.0, node_upkeep.CRAFT_STAFF_TRADE: 2.0}
+        wages = {scholar_trade(): 3.0, generic_craft_trade(): 2.0}
         hours = node_upkeep.staff_places_hours_cost(node, wages, 1.0)
         self.assertAlmostEqual(hours, 8.0 * HOURS_PER_PERSON_YEAR)
 

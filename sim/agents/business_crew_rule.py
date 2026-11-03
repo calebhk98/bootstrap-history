@@ -10,9 +10,9 @@ from sim.world import plant_figures
 
 
 def generic_trades(figures: "CrewFigures") -> frozenset:
-	"""Trades that are generic labour (the generic craft trade, the unskilled trade, the bonded): a foreman is never drawn from them."""
-	from sim.labour.api import bonded_pseudo_trade, generic_craft_trade   # imported where used: the labour package reads actors too
-	return frozenset((generic_craft_trade(), figures.unskilled_trade(), bonded_pseudo_trade()))
+	"""Trades that are generic labour (the labour package's one rule): a foreman is never drawn from them."""
+	from sim.labour.api import generic_staff_trades   # imported where used: the labour package reads actors too
+	return generic_staff_trades(figures.unskilled_trade())
 
 
 @dataclass(frozen=True)
@@ -27,7 +27,7 @@ class CrewFigures:
 	supervision_share: float
 	hands_per_revenue: Callable[[], float]   # asked only when the plant's revenue sets its crew
 	foreman_share: float
-	unskilled_trade: Callable[[], str]   # asked only when a plant states no hours
+	unskilled_trade: Callable[[], str]   # asked when a plant states no hours and when the generic trades are named
 	is_capability_institution: bool = False
 	stated_people: Optional[float] = None
 	revenue_basis: Optional[str] = None
@@ -99,8 +99,9 @@ def foreman(figures: CrewFigures) -> Tuple[Optional[str], float]:
 def staff_by_trade(figures: CrewFigures, scholars: float) -> Dict[str, float]:
 	"""{trade: people} one plant needs of the shared pool: its crew, the scholars it ties up, its foreman and its
 	garrison. `scholars` is `hands(...)[0]`."""
+	from sim.labour.api import scholar_trade   # imported where used: the labour package reads actors too
 	staff = dict(crew_by_trade(figures))
-	staff["scholar"] = scholars
+	staff[scholar_trade()] = scholars
 	foreman_trade, foreman_fte = foreman(figures)
 	if foreman_trade:
 		staff[foreman_trade] = staff.get(foreman_trade, 0.0) + foreman_fte

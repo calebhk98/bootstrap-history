@@ -9,6 +9,7 @@ the held-skill and candidate-set caches that `revenue` and `upkeep` share.
 The caches are the module's own per seat (`memos`); the engine's household hooks drop them by sending the commands in commands.py.
 Needs: the views of READS_BY_OWNER in module_spec.py."""
 from sim.assembly.api import Part
+from sim.labour.api import generic_craft_trade, scholar_trade
 from sim.world import plant_figures
 
 from . import rules
@@ -141,7 +142,7 @@ class Revenue(Part):
 		annual_wage = needs.market_annual_wage
 		wage = workshop_craft_wages(
 			staff["employees"], lambda trade: needs.trade_family[trade] == "craft", lambda trade: annual_wage[trade],
-			staff["freedmen"] + staff["slaves"] * SLAVE_LABOUR_PRODUCTIVITY_SHARE, annual_wage["artisan"])
+			staff["freedmen"] + staff["slaves"] * SLAVE_LABOUR_PRODUCTIVITY_SHARE, annual_wage[generic_craft_trade()])
 		mark = WORKSHOP_WAGE_MARKUP_BASE
 		mark = needs.effect_sum("workshop_markup", mark)
 		# Knowing how to do a thing earns nothing on its own; it makes the workshop you staff and pay for more productive,
@@ -205,7 +206,7 @@ class Revenue(Part):
 		if not held:
 			return None
 		nodes = self.needs.tree_nodes()
-		return "scholar" if any(nodes[node_id]["sch"] > 0 for node_id in held) else "artisan"
+		return scholar_trade() if any(nodes[node_id]["sch"] > 0 for node_id in held) else generic_craft_trade()
 
 	def founder_wage_income(self, counting_offers=True):
 		"""Yearly pay of the founder's standing job: the hours not spoken for, sold in the held trade at

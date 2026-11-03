@@ -6,7 +6,7 @@ table); the partner countries sell through the agent economy's own markets. A go
 unavailable: it has no price, cannot be bought, and anything that needs it cannot start until a seller
 appears.
 """
-from .goods_imports import HOME_SELLER
+from sim.prices.rules import HOME_SELLER
 
 
 class GoodsOffers:

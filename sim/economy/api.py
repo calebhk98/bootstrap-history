@@ -32,6 +32,7 @@ from .tool_wear import with_tool_wear
 from .record import EconomyRecord
 from .setup import EconomySetup, SetupTrade, goods_specs, recipe_tile_key
 from .setup import labour_area, opening_price_today
+from .state_wage_ceiling import WAGE_CEILING_MULTIPLE
 from .types import (EDGE_CARGO, EDGE_CONSUMPTION, EDGE_EXCHANGE, EDGE_EXTERNAL, EDGE_LEGACY, EDGE_MINT, EDGE_PRODUCTION, EDGE_WEAR, Bid,
                     GoodsMove, LabourBid, LabourOffer, Offer, SiteLimit, Transfer, external_edge)
 from .year_accounts import YearAccounts
@@ -53,7 +54,7 @@ __all__ = [
     "price_response", "prices_at", "offered_units", "watch_tiles",
     "shown_prices", "Producer", "expected_output_prices", "live_input_prices", "live_wages", "AgentOrders",
     "EconomyYearInputs", "recipe_tile_key", "recipes_from_production_data", "plant_builds", "with_tool_wear", "EconomyRecord", "EconomySetup", "SetupTrade", "SiteLimit",
-    "goods_specs", "EDGE_EXTERNAL", "EDGE_LEGACY", "EDGE_CARGO", "EDGE_CONSUMPTION", "EDGE_PRODUCTION", "EDGE_EXCHANGE", "external_edge", "Bid", "GoodsMove", "LabourBid", "LabourOffer", "Offer", "Transfer",
+    "goods_specs", "EDGE_EXTERNAL", "EDGE_LEGACY", "EDGE_CARGO", "EDGE_CONSUMPTION", "EDGE_PRODUCTION", "EDGE_EXCHANGE", "WAGE_CEILING_MULTIPLE", "external_edge", "Bid", "GoodsMove", "LabourBid", "LabourOffer", "Offer", "Transfer",
     "variable_cost_per_run", "rebase_basket_price_level", "trade_premium", "premium_for_training_years", "HOUSEHOLD_TIME_PREFERENCE", "title_wealth",
     "traded_volumes", "country_traded_volumes", "country_opening_basket", "market_record", "opening_quantities", "opening_prices_in_hours", "opening_price_in_current_money", "wages_by_trade_weighted", "interest_rate", "producers_of",
     "external_trade_net", "external_trade_volume", "account_balance", "account_holdings",
@@ -63,7 +64,7 @@ __all__ = [
     "person_equivalent_unemployment", "labour_market_rows",
 ]
 
-_KEY_SEPARATOR = "|"
+from .market_memory import KEY_SEPARATOR as _KEY_SEPARATOR
 
 
 def found_bank_from_outside(economy, founder, capital_units, year, edge):
