@@ -81,14 +81,19 @@ def buy_bonded(registry: Any, buyer: Any, tile: str, trade: str, people: float, 
 			taken = min(people - bought, actor.record.members)
 			if taken <= 0.0:
 				continue
+			cost_per_person = ask_per_person + carriage_per_person
+			if cost_per_person > 0.0:   # the buyer takes no more people than it can pay for
+				taken = min(taken, ledger.payable(buyer, taken * cost_per_person) / cost_per_person)
+				if taken <= 0.0:
+					continue
 			owner = registry.actors.get(stratum_id(country_key, str(actor.record.plan.get("owner") or "")))
 			if owner is None or owner is actor:
 				continue
 			carriers = registry.actors.get(stratum_id(country_key, "merchants")) or owner
 			actor.record.members -= taken
-			ledger.transfer(buyer, owner, taken * ask_per_person, "purchase of bonded")
+			ledger.pay_up_to(buyer, owner, taken * ask_per_person, "purchase of bonded")
 			if carriage_per_person > 0.0:
-				ledger.transfer(buyer, carriers, taken * carriage_per_person, "carriage of bonded")
+				ledger.pay_up_to(buyer, carriers, taken * carriage_per_person, "carriage of bonded")
 			bought += taken
 	return bought
 

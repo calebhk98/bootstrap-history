@@ -19,9 +19,9 @@ def settle_year(actor: Any, world: Any) -> Dict[str, float]:
 		settled = demand_answer.settle_concealment(stance, max(0.0, actor.money), world.taxpayers.state_reach(),
 												   actor.stance.standing(), draw)
 		if settled["cost"] > 0.0:
-			ledger.transfer(actor, world.setting.edge(EDGE_OFFICIALS), settled["cost"], "concealing wealth")
+			ledger.pay_up_to(actor, world.setting.edge(EDGE_OFFICIALS), settled["cost"], "concealing wealth")
 		if settled["seized"] > 0.0:
-			ledger.transfer(actor, world.setting.government(), settled["seized"], "wealth found hidden")
+			ledger.pay_up_to(actor, world.setting.government(), settled["seized"], "wealth found hidden")
 		actor.stance.set_concealed_wealth(settled["concealed"])
 	if actor.stance.defiance() > 0.0:
 		actor.stance.set_defiance(demand_answer.defiance_fading(actor.stance.defiance()))

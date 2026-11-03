@@ -49,7 +49,8 @@ class Expansion:
 				rate = max(rate, firm.borrowing_rate(world))
 			if gain <= cost * rate:
 				continue
-			ledger.transfer(firm, world.setting.edge(EDGE_BUILDERS), cost, "expansion")
+			if not ledger.pay_in_full(firm, world.setting.edge(EDGE_BUILDERS), cost, "expansion"):   # the lenders turned it down after all
+				continue
 			firm.business.tally.set_size(node_id, capacity + step)
 			if firm.on_capacity_change is not None:
 				firm.on_capacity_change(firm.actor_id)

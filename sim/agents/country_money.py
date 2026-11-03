@@ -50,7 +50,7 @@ class CountryMarket(SharedPart):
 		"""What its state buys is paid for at once."""
 		buyer = self.world.holder.actors.get(buyer_id)
 		if buyer is not None and budget > 0.0:
-			ledger.transfer(buyer, self.world.setting.edge(EDGE_STATE_SPENDING), budget, "purchase")
+			ledger.pay_up_to(buyer, self.world.setting.edge(EDGE_STATE_SPENDING), budget, "purchase")   # the state buys with what it can pay
 
 	def market_sale(self, seller_id: str, material: str, tonnes: float, from_concerns: Any = None) -> None:
 		"""What a country's state sells is paid for at the price the market quotes."""

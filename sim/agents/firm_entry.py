@@ -83,8 +83,9 @@ def personal_capital(stratum: Any) -> float:
 
 def fund_from(founder: Any, firm: Any, amount: float) -> None:
 	"""A household of the founding stratum puts `amount` into the firm; the firm remembers which and how much."""
+	amount = ledger.payable(founder, amount)   # a founder puts up no more than it can pay
 	rank = household_wealth.commit(founder, amount)
-	ledger.transfer(founder, firm, amount, "founding stake")
+	ledger.pay_up_to(founder, firm, amount, "founding stake")
 	firm.record.plan["backer"] = founder.actor_id
 	firm.record.plan["founder_household"] = rank
 	firm.record.plan["stake"] = amount

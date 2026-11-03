@@ -53,11 +53,12 @@ class Borrower:
 		room = world.credit.credit_headroom(self.identity())  # type: ignore[attr-defined]
 		return carried if room is None else min(carried, room)
 
-	def draw_limit(self, world: Any, amount: float) -> float:
-		"""The most of a draw of `amount` the actor is lent on top of what it owes: within its ceiling (what its earning can
-		carry, and what lenders still hold), and cut by the economy's one rule for every borrower (`credit_cap.fundable_amount`
+	def rule_limit(self, world: Any, amount: float) -> float:
+		"""The most of a draw of `amount` the economy's rule lends the actor on top of what it owes: within its ceiling (what its
+		earning can carry, and what lenders still hold), and cut by the one rule for every borrower (`credit_cap.fundable_amount`
 		at the economy's risk premium and its lowest lender ask, the ceiling being the security shown). Nothing with no ceiling.
-		The whole of what the ceiling allows where the credit market has not yet met."""
+		The whole of what the ceiling allows where the credit market has not yet met; `draw_limit` then adds what the lenders can
+		supply."""
 		debt = self.debt()
 		ceiling = self.credit_ceiling(world)
 		wanted = max(0.0, min(amount, ceiling - debt))
@@ -65,6 +66,12 @@ class Borrower:
 			return 0.0
 		fundable = world.credit.fundable_amount(wanted, debt, ceiling, self.arrears_book.interest_arrears)
 		return wanted if fundable is None else fundable
+
+	def draw_limit(self, world: Any, amount: float) -> float:
+		"""The most of a draw of `amount` the actor is lent now: the rule's limit (`rule_limit`) and what the pool holds and the
+		economy's lenders can supply for a draw that size, which is the very gate the draw itself passes (`Purses.drawable`), so
+		a draw this approves is not refused."""
+		return self.purses.drawable(self.account_id, amount)  # type: ignore[attr-defined]
 
 	def spare_credit(self, world: Any) -> float:
 		"""What the actor may still borrow: its ceiling less what it owes, as far as lenders lend it."""
@@ -126,10 +133,9 @@ class Borrower:
 		bonds = self.purses.bonds  # type: ignore[attr-defined]
 		floating = max(0.0, debt - bonds.debt(self.account_id))  # type: ignore[attr-defined]
 		owed = (floating * self.borrowing_rate(world) if floating > 0.0 else 0.0) + bonds.coupons_due(self.account_id)  # type: ignore[attr-defined]
-		paid, unpaid = borrowing_arrears.settle_year(owed, self.spare_credit(world))
-		if paid > 0.0:
-			world.credit.pay_interest(self, paid, "interest")
-		record.interest_arrears += unpaid
+		asked, unpaid = borrowing_arrears.settle_year(owed, self.spare_credit(world))
+		paid = world.credit.pay_interest(self, asked, "interest") if asked > 0.0 else 0.0   # what the lenders really took
+		record.interest_arrears += unpaid + (asked - paid)
 		# A debt over its ceiling owes the excess as principal due (a margin call); unpaid, it is arrears at any rate.
 		margin_call = max(0.0, debt - self.credit_ceiling(world))
 		in_arrears = record.interest_arrears > DEBT_FLOOR or margin_call > DEBT_FLOOR

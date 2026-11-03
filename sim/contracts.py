@@ -56,9 +56,11 @@ class Contracts:
 
     # ---- reads ------------------------------------------------------------------------------
     def all(self) -> Iterable[Contract]:
-        for held in self.facilities.values():
-            yield from held.values()
-        yield from self.deposits.values()
+        for _borrower, held in sorted(self.facilities.items()):
+            for _lender, contract in sorted(held.items()):
+                yield contract
+        for _depositor, contract in sorted(self.deposits.items()):
+            yield contract
         yield from self.term_loans
 
     def debt(self, borrower: str, currency: Optional[str] = None) -> float:
@@ -66,7 +68,7 @@ class Contracts:
         total = 0.0
         held = self.facilities.get(borrower)
         if held:
-            total += sum(contract.principal + contract.arrears for contract in held.values()
+            total += sum(contract.principal + contract.arrears for _lender, contract in sorted(held.items())
                          if currency is None or contract.currency == currency)
         return total + self._term_debt(currency).get(borrower, 0.0)
 

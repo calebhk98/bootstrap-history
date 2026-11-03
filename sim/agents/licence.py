@@ -30,14 +30,15 @@ def terms_problem(licensee: Any, fee: float, royalty: float, node_id: Any = None
 
 def grant(licensor: Any, licensee: Any, node_id: str, fee: float, world: Any) -> bool:
 	"""The licensee pays `fee` to the licensor and can make `node_id` at once. False, and nothing
-	moves, when there is nothing the licensee still lacks or when someone else holds the patent."""
+	moves, when there is nothing the licensee still lacks, when someone else holds the patent or when it cannot pay the fee."""
 	entry = world.disclosure.patent_entry(node_id)
 	if entry is not None and entry["holder"] != licensor.actor_id:
 		return False
 	chain = imitation.missing_chain(node_id, world, licensee)
 	if not chain:
 		return False
-	ledger.transfer(licensee, licensor, fee, "licence")
+	if not ledger.pay_in_full(licensee, licensor, fee, "licence"):
+		return False
 	licensee.accept_licence(node_id, chain, world)
 	patent.note_licence(licensor, licensee, node_id)
 	return True
