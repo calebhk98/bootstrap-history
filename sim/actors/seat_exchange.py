@@ -96,7 +96,7 @@ class SeatExchange(Part):
             return party if actor_id == party.actor_id else cast.get(actor_id)
 
         buyers = [actor for actor in cast.of_kind("firm") + cast.of_kind("player")
-                  if getattr(actor.record, "exited_year", None) is None]
+                  if actor.record.exited_year is None]
         return party, buyers, find_actor, world
 
     def concern_sale_terms(self, node_id: str) -> Dict[str, Any]:
