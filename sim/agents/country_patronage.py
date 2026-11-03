@@ -8,6 +8,8 @@ class CountryPatronage(SharedPart):
 	"""The patronage reading of `CountryWorld`."""
 
 	part = "patronage"
+	# home: patron relations and state funding terms are the shared world's
+	home_members = frozenset(("country_output_per_head", "patron_clients", "state_funding_terms"))
 
 	def patron_ask(self) -> float:
 		"""What the country's state is asked for in direct funding: nothing while no seat of the country runs the mechanic;

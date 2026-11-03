@@ -13,8 +13,10 @@ def joint_labour_ceilings(hours_per_run: Mapping[str, float], last_wages: Mappin
     that does not pay cuts every trade by the same share. One trade gets the whole surplus per hour. A trade
     with no wage seen claims like the priced trades' average hour (their bill over their hours), so it shares
     the surplus by its hours at that wage and is never left at nothing; with no wage seen for any trade the
-    trades share the surplus by hours."""
+    trades share the surplus by hours. A run with no hours has no ceilings."""
     total_hours = sum(hours_per_run.values())
+    if total_hours <= 0.0:      # a run that hires no hours has no trade to bid
+        return {}
     priced = {trade: hours for trade, hours in hours_per_run.items() if trade in last_wages}
     priced_bill = sum(hours * last_wages[trade] for trade, hours in priced.items())
     room = max(0.0, surplus)

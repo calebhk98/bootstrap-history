@@ -29,8 +29,9 @@ def resting_household_purse(mean_income: float, share_wealth: float, claims: flo
     (WEALTH_INCOME_RATIO_TARGET months of income): the purse brings cash up to the target wealth beyond the income,
     never below zero. The extra spending is the yearly share of the account held: the purse is that much larger
     (and never less than the extra itself, which the cap at cash needs). A post-warm-up Eurace state holds wealth at
-    the target (median 16.7 monthly incomes, of which the payment account is about 9) against the manual's initial 25
-    (payment account 10 to 15)."""
+    the target (median 16.7 monthly incomes, of which the payment account is about 9); the manual's initial household
+    has a payment account of 15 and wealth of 25 in currency, with mean income 1.5 (wealth over income 16.67, the
+    payment account 10 months)."""
     extra_spending = max(0.0, extra_spending)
     if share_wealth <= 0.0 and extra_spending <= 0.0:
         return 0.0

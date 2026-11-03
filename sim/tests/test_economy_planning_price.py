@@ -5,6 +5,7 @@ QUICK_TOPIC = True
 
 import unittest
 
+from sim.tests.economy_view_defaults import ViewDefaults
 from sim.economy import ask_adjust, planning_price, producers
 from sim.economy.market_memory import PRICE_SMOOTHED_TRADE
 from sim.economy.types import QUOTE_BEST_UNFILLED_BID, QUOTE_COST_COVERING, QUOTE_LOWEST_UNFILLED_ASK, Recipe
@@ -15,7 +16,7 @@ UNIT_COST = (300.0 * FLOUR_PRICE + 40.0 * COOK_WAGE) / 1000.0
 INPUT_SHARE = 300.0 * FLOUR_PRICE / (300.0 * FLOUR_PRICE + 40.0 * COOK_WAGE)
 
 
-class View:
+class View(ViewDefaults):
     year = 3
 
     def __init__(self, price, kind):

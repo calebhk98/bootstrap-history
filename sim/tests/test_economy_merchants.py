@@ -5,6 +5,7 @@ QUICK_TOPIC = True
 
 import unittest
 
+from sim.tests.economy_view_defaults import ViewDefaults
 from sim.economy import goods_market, merchants, settlement
 from sim.economy.accounts import Book
 from sim.economy.market_areas import AreaMap
@@ -23,7 +24,7 @@ SPECS = {
 }
 
 
-class View:
+class View(ViewDefaults):
     year = 1
 
     def __init__(self, prices):

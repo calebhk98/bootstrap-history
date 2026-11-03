@@ -23,6 +23,13 @@ OPENING_EXPECTED_INFLATION = declare(
     why="At the opening nobody has seen prices move, so the expectation agents start from is no "
         "change; adaptive expectations then follow what the price level does.")
 
+RECENT_TRADE_YEARS = declare(
+    "RECENT_TRADE_YEARS", 2, kind="temporary_heuristic",
+    unit="years since a market last cleared", source=None, confidence="D",
+    why="A good's price counts as a market price, and counts in the price index, only while one of its "
+        "markets cleared within this many years. A thin market trades in alternate years, so one year "
+        "would drop it too eagerly; how long a gap makes a price stale has no measured basis.")
+
 VOLUME_WEIGHT_SPEED = declare(
     "VOLUME_WEIGHT_SPEED", 0.3, kind="temporary_heuristic",
     unit="share of the gap to this year's volume closed in a year", source=None, confidence="D",
@@ -77,9 +84,6 @@ class MarketMemory:
     def set_price(self, key: str, price: float) -> None:
         self.prices[key] = price
 
-    def set_wage(self, key: str, wage: float) -> None:
-        self.wages[key] = wage
-
     def count_year_without_bids(self, key: str) -> int:
         """A market with offers had nobody bidding this year; returns the years it had gone before."""
         before = self.years_without_bids.get(key, 0)
@@ -120,7 +124,7 @@ class MarketMemory:
     def price_kind(self, key: str) -> Optional[str]:
         """What the price remembered for a market is: PRICE_SMOOTHED_TRADE when it traded last year, else the quote's
         kind, else the opening estimate no clearing has replaced; None when the market has no price."""
-        if key in self.cleared_prices:
+        if self.traded_within(key, 0):
             return PRICE_SMOOTHED_TRADE
         if key not in self.prices:
             return None
@@ -131,7 +135,9 @@ class MarketMemory:
     def offered_price(self, key: str) -> Optional[float]:
         """What a buyer can see to buy at: a price the market traded at, an ask still posted, or the opening's own
         estimate before any clearing; None for a bid ceiling, a cost quote or a price remembered from an old trade
-        (nothing is on offer at those)."""
+        (nothing is on offer at those). Eurace's consumers see the mall's current prices and the quality of the goods
+        (the logit weighs both; Cons_Goods/Household_Consumer_Functions.c), nothing remembered (Complaint 642); this
+        model has the price only."""
         if self.price_kind(key) in (PRICE_SMOOTHED_TRADE, QUOTE_LOWEST_UNFILLED_ASK, QUOTE_OPENING_ESTIMATE):
             return self.prices.get(key)
         return None
@@ -164,6 +170,12 @@ class MarketMemory:
 
     def years_since_trade(self, key: str) -> Optional[int]:
         return self.trade_age.get(key)
+
+    def traded_within(self, key: str, years: int) -> bool:
+        """The one meaning of "traded": the market cleared at most `years` years ago (0: last year). A market that
+        never cleared, whatever estimate or quote its price is, has not traded."""
+        age = self.trade_age.get(key)
+        return age is not None and age <= years
 
     def note_trading(self, traded_keys) -> None:
         """A year ends: the markets that cleared are current, the rest are a year older. A market that

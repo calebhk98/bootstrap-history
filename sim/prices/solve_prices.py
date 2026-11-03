@@ -498,7 +498,7 @@ shaft's angular speed, both already physical facts this file or
 `data/world/resources.json` states), and give whichever recipe needs a
 torque floor its own `torque_needed_nm`. Nothing else changes:
 `capability_required_grades`, `capability_price_for_requirement` and
-`_meets_capability_floor` all key off `CAPABILITY_CAP_FIELDS` rather than
+`meets_capability_floor` all key off `CAPABILITY_CAP_FIELDS` rather than
 naming `thermal_mj` or `temperature_reached_c` anywhere in their own
 bodies, so a torque-needing forge press and a temperature-needing kiln
 would be graded side by side, on two independent dimensions of the SAME
@@ -740,13 +740,13 @@ from sim.prices.solve_prices_core import (                  # noqa: E402
     NUMERAIRE_TRADE,
     THERMAL_MJ_MINIMUM_USABLE_TEMPERATURE_C,
     _build_material_dependency_graph,
-    _capability_graded_price,
+    capability_graded_price,
     _component_is_productive,
     _dependency_materials,
     _entries_relevant_to_component,
     _grow_resolvable_by_topological_pass,
     _has_external_anchor,
-    _meets_capability_floor,
+    meets_capability_floor,
     _pending_entries,
     _strongly_connected_components,
     build_producers_index,

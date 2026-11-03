@@ -6,6 +6,7 @@ QUICK_TOPIC = True
 
 import unittest
 
+from sim.tests.economy_view_defaults import ViewDefaults
 from sim.economy import merchants
 from sim.economy.merchants import Merchant
 from sim.economy.types import GoodSpec, MarketArea
@@ -39,7 +40,7 @@ class StubAreaMap:
         return "area%d" % TILES.index(tile)
 
 
-class NoView:
+class NoView(ViewDefaults):
     year = 1
 
     def price(self, good, area):

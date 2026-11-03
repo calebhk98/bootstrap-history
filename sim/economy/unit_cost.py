@@ -6,7 +6,7 @@ not run. The plant is charged per run through the capital recovery factor at the
 the yearly share that repays the plant's value over its life.
 """
 import math
-from typing import Mapping
+from typing import Mapping, Optional
 
 from sim.world import capital_market
 
@@ -69,14 +69,15 @@ def expected_margin(recipe: Recipe, expected_output_prices: Prices, input_prices
 
 
 def return_on_capital(recipe: Recipe, expected_output_prices: Prices, input_prices: Prices,
-                      wages: Wages, rent: float = 0.0) -> float:
+                      wages: Wages, rent: float = 0.0) -> Optional[float]:
     """Yearly operating surplus (revenue less variable cost) per run, over the capital a run of yearly
     capacity employs: its plant plus a year's variable cost paid before the sales come in. Compare
-    with the live interest rate; zero if nothing is employed or it cannot be priced."""
+    with the live interest rate; None if nothing is employed or it cannot be priced (a caller treats that
+    as no return, not as a return of zero)."""
     variable = variable_cost_per_run(recipe, input_prices, wages, rent)
     employed = plant_value_per_run(recipe, input_prices, wages) + variable
     if not math.isfinite(employed) or employed <= 0.0:
-        return 0.0
+        return None
     return (revenue_per_run(recipe, expected_output_prices) - variable) / employed
 
 

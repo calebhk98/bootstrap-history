@@ -6,6 +6,7 @@ QUICK_TOPIC = True
 import types
 import unittest
 
+from sim.tests.economy_view_defaults import ViewDefaults
 from sim.economy import land_lease_year, titles, titles_worked
 from sim.economy.households_cohort import Cohort
 from sim.economy.households_own import own_production_options
@@ -20,7 +21,7 @@ LAND = {"grow_grain": 2.0}
 BASKET = types.SimpleNamespace(needs=[types.SimpleNamespace(need_id="food", subsistence_per_person=1.0, goods=(("grain", 1.0),))])
 
 
-class View:
+class View(ViewDefaults):
     def __init__(self, wage, tools=0.0):
         self.wage_per_hour, self.tools = wage, tools
 

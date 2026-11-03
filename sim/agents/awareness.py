@@ -23,7 +23,7 @@ def knows_it_exists(actor: Any, node_id: str, world: Any) -> bool:
 	"""Whether the actor may take the node up. A node no one has shown anywhere is open to pioneering, and an
 	actor that keeps no awareness (a seat) or takes no part in knowledge spreading sees everything."""
 	aware = getattr(actor, "aware", None)
-	if aware is None or not getattr(actor, "researches", False) or node_id in aware or actor.knows(node_id, world):
+	if aware is None or not actor.researches or node_id in aware or actor.knows(node_id, world):
 		return True
 	return node_id not in world.knowledge.demonstrated()
 

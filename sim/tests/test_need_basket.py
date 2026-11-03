@@ -3,6 +3,7 @@
 QUICK_TOPIC = True
 import unittest
 
+from sim.tests.economy_view_defaults import ViewDefaults
 from sim.economy import households_basket
 from sim.world import need_basket
 
@@ -20,7 +21,7 @@ NEED_DATA = {
 PRICES = {"grain": 2.0, "twin_grain": 2.0, "beads": 5.0}
 
 
-class View:
+class View(ViewDefaults):
     year = 1
 
     def price(self, good, area):

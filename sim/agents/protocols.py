@@ -126,7 +126,7 @@ class SeatsPart(Protocol):
 		...
 
 	def founder_review(self) -> Any:
-		"""The founder's seat as the owner of a reviewed business (what `FounderReview` asks)."""
+		"""The founder's seat as the owner of a reviewed business (the hooks of `Reviewable`, answered by the seat)."""
 		...
 
 
@@ -310,6 +310,10 @@ class CollectionPart(Protocol):
 	def collectible_share(self, tiles: Optional[Iterable[str]] = None) -> float:
 		"""The share of what is due on `tiles` (all the state holds when none) that its officials reach, from their
 		number, their literacy and the road from the seat (collection.py)."""
+		...
+
+	def corruption_share(self, tiles: Optional[Iterable[str]] = None) -> float:
+		"""The share of what officials collect on `tiles` (all the state holds when none) that they keep."""
 		...
 
 

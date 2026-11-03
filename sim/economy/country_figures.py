@@ -5,7 +5,7 @@ tiles, the markets its tiles trade in, the producers working on its tiles. Nothi
 by a ratio. Money is in the economy's unit (the port converts to coin). A figure the country's tiles have
 no record of is None, so a caller can fall back to a labelled estimate."""
 import math
-from typing import Dict, Optional, Set
+from typing import Dict, List, Optional, Set, Tuple
 
 from . import carried_book, households
 from .market_memory import KEY_SEPARATOR, YearView
@@ -54,7 +54,7 @@ def idle_hours_by_trade(economy, country: Optional[str]) -> Dict[str, tuple]:
         if _labour_key_in(key, tiles):
             trade = key.split(KEY_SEPARATOR, 1)[0]
             idle[trade] = idle.get(trade, 0.0) + hours
-            hired[trade] = hired.get(trade, 0.0) + economy.record.labour.hours_hired_in(key)
+            hired[trade] = hired.get(trade, 0.0) + economy.record.labour.hours_cleared_in(key)
     return {trade: (idle[trade], idle[trade] + hired[trade]) for trade in sorted(idle)}
 
 
@@ -158,12 +158,19 @@ def need_floor_costs_per_person_year(economy, country: Optional[str]) -> Dict[st
 
 
 def output_value(economy, country: Optional[str]) -> Optional[float]:
-    """What the country's producers make in a year at the country's prices: runs worked last year (capacity
-    before they have worked) times a run's outputs. None while no producer works on its tiles."""
+    """`output_value_and_unpriced` without the unpriced goods."""
+    return output_value_and_unpriced(economy, country)[0]
+
+
+def output_value_and_unpriced(economy, country: Optional[str]) -> Tuple[Optional[float], List[str]]:
+    """(what the country's producers make in a year at the country's prices, the goods they make that have no price
+    there, sorted). Runs worked last year (capacity before they have worked) times a run's outputs; an output with no
+    price is left out of the value and named in the list. The value is None while no producer works on its tiles."""
     tiles = country_tiles(economy, country)
     own_prices = prices(economy, country)
     total = 0.0
     seen = False
+    unpriced = set()
     for producer in economy.record.producers.values():
         if producer.tile not in tiles:
             continue
@@ -172,9 +179,10 @@ def output_value(economy, country: Optional[str]) -> Optional[float]:
             continue
         seen = True
         runs = producer.capacity_runs if producer.last_runs < 0.0 else producer.last_runs
-        total += runs * producer.yield_factor * math.fsum(quantity * own_prices.get(good, 0.0)
-                                                          for good, quantity in recipe.outputs.items())
-    return total if seen else None
+        unpriced.update(good for good in recipe.outputs if good not in own_prices)
+        total += runs * producer.yield_factor * math.fsum(quantity * own_prices[good]
+                                                          for good, quantity in recipe.outputs.items() if good in own_prices)
+    return (total if seen else None), sorted(unpriced)
 
 
 def currency(economy):

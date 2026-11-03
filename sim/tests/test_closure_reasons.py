@@ -71,21 +71,21 @@ class ReopeningAnswersOnlyStaffingClosures(unittest.TestCase):
 	class Owner:
 		"""An owner that can staff whatever it is asked about."""
 
-		def reopening_order(self, entry_keys, _world):
+		def reopening_order(self, entry_keys):
 			return sorted(entry_keys)
 
-		def reopens_staffed_plant(self, _entry_key, _world):
+		def reopens_staffed_plant(self, _entry_key):
 			return True
 
 	def test_a_work_shut_for_want_of_staff_is_reopened(self):
 		business = a_business_running("mill")
 		business.lifecycle.mothball("mill", 40, STAFF)
-		self.assertEqual(business_review.reopen(business, self.Owner(), None), ["mill"])
+		self.assertEqual(business_review.reopen(business, self.Owner()), ["mill"])
 
 	def test_a_work_the_player_shut_on_purpose_is_never_reopened_on_its_own(self):
 		business = a_business_running("mill")
 		business.lifecycle.mothball("mill", 40, MANUAL)
-		self.assertEqual(business_review.reopen(business, self.Owner(), None), [])
+		self.assertEqual(business_review.reopen(business, self.Owner()), [])
 
 
 class StaffingClosureDiscount(unittest.TestCase):

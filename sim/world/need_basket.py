@@ -73,7 +73,7 @@ def goods_attributes(need_data: Mapping[str, Any],
     for entry in production.values():
         if not entry.get("outputs") or not entry.get("satisfies"):
             continue
-        material = demand._dominant_output_key(entry)
+        material = demand.dominant_output_key(entry)
         record = merged.setdefault(material, {"satisfies": {}})
         record["satisfies"].update(entry.get("satisfies") or {})
         record.setdefault("quality", {}).update(entry.get("quality") or {})

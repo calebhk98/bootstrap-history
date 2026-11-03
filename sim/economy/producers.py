@@ -36,7 +36,10 @@ EXPECTATION_ADJUSTMENT_SHARE = declare(
     unit="share of last year's surprise folded into the expected price", source=None, confidence="D",
     why="A producer expects next year's price from its own past, moving part of the way to what it "
         "last saw; a share of one is the naive cobweb. Real producers use forward prices, stocks and "
-        "reports that the economy does not model. The share is a placeholder for that information.")
+        "reports that the economy does not model. The share is a placeholder for that information. This is the one "
+        "smoothing in time of the planning price: the memory price it reads (`year_goods.remembered_price`) moves in "
+        "proportion to the trade's share of the market's usual volume, which is a guard against a sliver of trade and "
+        "equals the clearing price when the market trades its usual volume.")
 REGRESSIVE_EXPECTATION_WEIGHT = declare(
     "REGRESSIVE_EXPECTATION_WEIGHT", 0.3, kind="temporary_heuristic",
     unit="share of the gap to the break-even price closed in a producer's expectation each year",
@@ -110,10 +113,12 @@ class Plan:
 
 
 def expected_price(producer: Producer, good: GoodId, view: MarketView) -> Optional[float]:
-    """The producer's own expectation, else last year's clearing price, else None."""
+    """The producer's own expectation, else the price on offer in its market (a price the market traded at or an ask
+    still posted: never a bid ceiling or a cost quote, which say what buyers want or what a run costs and not what
+    the good will fetch), else None."""
     if good in producer.expected_prices:
         return producer.expected_prices[good]
-    return view.price(good, view.area_of(good, producer.tile))
+    return view.offered_price(good, view.area_of(good, producer.tile))
 
 
 def expected_output_prices(producer: Producer, recipe: Recipe, view: MarketView) -> Dict[GoodId, float]:
@@ -150,29 +155,17 @@ def live_input_prices(producer: Producer, recipe: Recipe, view: MarketView) -> D
 def live_input_prices_at(tile: TileId, recipe: Recipe, view: MarketView) -> Dict[GoodId, float]:
     """`live_input_prices` for a recipe worked on a tile, with no producer there yet."""
     goods = _priced_names(recipe)[0]
-    present_prices_at = getattr(view, "present_prices_at", None)
-    if present_prices_at is not None:
-        return present_prices_at(goods, tile)
-    prices = {}
-    for good in goods:
-        price = view.price(good, view.area_of(good, tile))
-        if price is not None:
-            prices[good] = price
-    return prices
+    return view.present_prices_at(goods, tile)
 
 
 def paid_input_prices(producer: Producer, recipe: Recipe, view: MarketView,
                       live: Dict[GoodId, float]) -> Dict[GoodId, float]:
     """`live` with each input the run uses up raised to the price it cleared at last year in the producer's
     market, where that is higher than the remembered price: a thin trade moves the remembered price only
-    slightly, and a buyer bidding from it is outbid every year. A view that does not report clearing prices
-    leaves `live` as it is."""
-    cleared_price = getattr(view, "cleared_price", None)
-    if cleared_price is None:
-        return live
+    slightly, and a buyer bidding from it is outbid every year."""
     paid = dict(live)
     for good in recipe.inputs:
-        cleared = cleared_price(good, view.area_of(good, producer.tile))
+        cleared = view.cleared_price(good, view.area_of(good, producer.tile))
         if cleared is not None and cleared > paid.get(good, math.inf):
             paid[good] = cleared
     return paid
@@ -203,15 +196,7 @@ def live_wages(producer: Producer, recipe: Recipe, view: MarketView) -> Dict[str
 def live_wages_at(tile: TileId, recipe: Recipe, view: MarketView) -> Dict[str, float]:
     """`live_wages` for a recipe worked on a tile, with no producer there yet."""
     trades = _priced_names(recipe)[1]
-    present_prices_at = getattr(view, "present_prices_at", None)
-    if present_prices_at is not None:
-        return present_prices_at(trades, tile, True)
-    wages = {}
-    for trade in trades:
-        wage = view.wage(trade, view.area_of(trade, tile))
-        if wage is not None:
-            wages[trade] = wage
-    return wages
+    return view.present_prices_at(trades, tile, True)
 
 
 def next_expectations(producer: Producer, recipe: Recipe, view: MarketView,
@@ -436,7 +421,8 @@ def runs_for_stock(producer: Producer, recipe: Recipe, view: MarketView, run_cos
     STOCK_CLEARING_YEARS; a surplus is worked off the same way and a shortfall refilled. This differs from the production
     quantity of Eurace@Unibi (Cons_Goods/Firm_Producer_Functions.c, Firm_calc_production_quantity), an (s,S) rule: zero
     above a critical stock, the critical stock set from market share times the forecast plus a variance buffer, then
-    smoothed. Here the gap is spread over STOCK_CLEARING_YEARS and a surplus is worked off, not stopped at. The price only decides whether
+    smoothed (that smoothing is inactive in the shipped Eurace parameters, whose lambda is 1.0, and is not applied
+    here). Here the gap is spread over STOCK_CLEARING_YEARS and a surplus is worked off, not stopped at. The price only decides whether
     runs pay at all (`plan`). Unlimited while it has no record of sales. With the run's cost and the outputs'
     prices, outputs that are piling up do not count while what a run makes of the others, at those prices, covers
     the cost: a joint recipe runs for the output that pays, and plans from the gaps of those others. With the prices

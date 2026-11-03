@@ -25,6 +25,8 @@ class CountryQuotes(SharedPart):
 	"""The prices the country's own markets quote."""
 
 	part = "quotes"
+	# home: which commodity and staple a material is, is a fact of the material
+	home_members = frozenset(("commodity_of", "staple_material"))
 
 	def material_cost(self, material: str, tonnes: float) -> Optional[float]:
 		"""Money to buy this many tonnes of a material at the price the country's own markets quote; None when
@@ -41,6 +43,8 @@ class CountryMarket(SharedPart):
 	"""A country has no goods market of its own in the book: what its state buys and sells is paid for at once."""
 
 	part = "market"
+	# home: market keys and what sells on the book are the shared market's
+	home_members = frozenset(("market_forget", "market_key", "sells_on_book"))
 
 	def market_purchase(self, buyer_id: str, commodity: str, tonnes: float, budget: float = 0.0) -> None:
 		"""What its state buys is paid for at once."""
@@ -59,6 +63,8 @@ class CountryCredit(SharedPart):
 	"""The country's credit."""
 
 	part = "credit"
+	# home: the founder's own credit and debts are the home seat's; rate and lending figures are the shared market's until a country keeps its own
+	home_members = frozenset(("credit_headroom", "debt_service_share_of_surplus", "founder_credit_limit", "founder_debt_rate", "founder_defaults", "household_saving", "market_rate", "nodes_with_mechanic", "pay_interest", "starting_rate", "state_lending"))
 
 	def state_may_borrow(self, state: Any) -> bool:
 		"""Whether the state holds a technology declaring the `state_credit` mechanic, in its own knowledge or its country's."""

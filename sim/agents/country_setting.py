@@ -22,6 +22,8 @@ class CountrySetting(SharedPart):
 	"""The country's id, its own government and its values over the shared weights."""
 
 	part = "setting"
+	# home: the calendar, the map's distances and edges and the nodes are one world's
+	home_members = frozenset(("distance_km", "edge", "nodes", "rng_for", "year"))
 
 	@property
 	def civ_id(self) -> str:
@@ -48,6 +50,8 @@ class CountryKnowledge(SharedPart):
 	"""What the country's starting techniques give it, and how much of the founder's work reaches it."""
 
 	part = "knowledge"
+	# home: what is known and demonstrated is one body of knowledge; the founder's inventions are the home seat's
+	home_members = frozenset(("demonstrated", "founder_inventions", "is_public", "knowledge_half_life_years", "knowledge_visibility"))
 
 	def __init__(self, world: Any) -> None:
 		super().__init__(world)

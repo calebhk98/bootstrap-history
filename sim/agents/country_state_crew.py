@@ -15,6 +15,8 @@ class CountryResearch(SharedPart):
 	"""The research reading of `CountryWorld`."""
 
 	part = "research"
+	# home: research cost and contact are properties of the technique and the shared map
+	home_members = frozenset(("contact_volume", "purchasable_substitute_discount", "research_cost", "research_trades", "unsold_materials"))
 
 	def research_hands(self, actor: Any, family: str) -> float:
 		"""People of a trade family the actor can put on research: its staff and the people its own country's labour markets

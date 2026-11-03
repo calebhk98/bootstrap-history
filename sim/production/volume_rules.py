@@ -19,6 +19,7 @@ every line is run whatever the wage, in both baskets alike (the loaded figure ap
 from typing import Any, Dict, FrozenSet, List, Optional, Tuple
 
 from sim.prices.api import energy_prices
+from sim.world import plant_figures
 from . import node_output
 
 # (production table, {outputs: entries}); the table is kept so a hit is confirmed with `is`
@@ -49,10 +50,13 @@ def entries_held_for(node_id: str, production: Dict[str, Any], held: FrozenSet[s
     return entries
 
 
-def _net_value(baskets: node_output.Baskets, goods: Dict[str, float]) -> float:
-    sold = sum(quantity * goods.get(material, 0.0) for material, quantity in baskets.outputs.items())
+def _net_value(baskets: node_output.Baskets, goods: Dict[str, float]) -> Optional[float]:
+    """Net sales of the baskets at `goods`; None when any good in them has no price."""
+    sold = plant_figures.priced_total(baskets.outputs, goods)
+    bought = plant_figures.priced_total(baskets.purchases, goods)
+    if sold is None or bought is None:
+        return None
     sold += sum(basket["value"] for basket in baskets.energy_sold.values())
-    bought = sum(quantity * goods.get(material, 0.0) for material, quantity in baskets.purchases.items())
     bought += sum(basket["value"] for basket in baskets.energy_bought.values())
     return sold - bought
 
@@ -72,9 +76,12 @@ def ratios(node: Dict[str, Any], production: Dict[str, Any], opening: Tuple[Froz
     if before is None or after is None:
         return 1.0, 1.0, None
     prices = opening[1]
-    quantity_before = sum(made * prices.get(material, 0.0) for material, made in before.outputs.items())
-    quantity_after = sum(made * prices.get(material, 0.0) for material, made in after.outputs.items())
-    volume = quantity_after / quantity_before if quantity_before > 0.0 else 1.0
+    quantity_before = plant_figures.priced_total(before.outputs, prices)
+    quantity_after = plant_figures.priced_total(after.outputs, prices)
     value_before = _net_value(before, prices)
-    value = max(0.0, _net_value(after, now[1])) / value_before if value_before > 0.0 else 1.0
+    value_after = _net_value(after, now[1])
+    if None in (quantity_before, quantity_after, value_before, value_after):
+        return 1.0, 1.0, after      # a good with no price: no change can be stated
+    volume = quantity_after / quantity_before if quantity_before > 0.0 else 1.0
+    value = max(0.0, value_after) / value_before if value_before > 0.0 else 1.0
     return volume, value, after

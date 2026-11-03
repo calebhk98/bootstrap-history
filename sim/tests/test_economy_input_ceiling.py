@@ -4,13 +4,14 @@ QUICK_TOPIC = True
 
 import unittest
 
+from sim.tests.economy_view_defaults import ViewDefaults
 from sim.economy import producers
 from sim.economy.types import Recipe
 
 FARM = Recipe("farm", {"grain": 10.0}, {"seed": 2.0}, {"hand": 5.0})
 
 
-class View:
+class View(ViewDefaults):
     year = 3
 
     def __init__(self, prices, wages):

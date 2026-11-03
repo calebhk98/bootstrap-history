@@ -115,11 +115,13 @@ with the rent a caller supplied. It defaults to `None`, which resolves to
 `solve_prices.DEFAULT_LAND_CIVILIZATION` (the default civilisation) - the same
 default the CLI uses when `--civ` is omitted.
 """
+import contextlib
+import functools
 import json
 import math
 import os
 import sys
-from typing import Any, Dict, FrozenSet, Iterable, Mapping, Optional, Set, Tuple
+from typing import Any, Callable, Dict, FrozenSet, Iterable, Iterator, List, Mapping, Optional, Set, Tuple
 
 # TYPE ALIASES.
 #
@@ -462,6 +464,32 @@ def solved_prices(held_technology_ids: Iterable[str],
         admitted_entry_keys, interest_rate, civilization, farmed_hectares, rent_hours_per_kg_by_material)
 
 
+# one list per open `recording_solves` block
+_solve_recordings: List[List[Tuple[tuple, Dict[str, Any]]]] = []
+
+
+def _noting_calls(function: Callable) -> Callable:
+    """`function`, noting each call's arguments in every open `recording_solves` block."""
+    @functools.wraps(function)
+    def noting(*arguments, **keywords):
+        for calls in _solve_recordings:
+            calls.append((arguments, keywords))
+        return function(*arguments, **keywords)
+    return noting
+
+
+@contextlib.contextmanager
+def recording_solves() -> Iterator[List[Tuple[tuple, Dict[str, Any]]]]:
+    """Within the block, the (arguments, keywords) of every `solved_prices_at_wages` call, in order."""
+    calls: List[Tuple[tuple, Dict[str, Any]]] = []
+    _solve_recordings.append(calls)
+    try:
+        yield calls
+    finally:
+        _solve_recordings.remove(calls)
+
+
+@_noting_calls
 def solved_prices_at_wages(held_technology_ids: Iterable[str],
                            document_ratios: Dict[str, float],
                            production_entries: Optional[ProductionEntries] = None,

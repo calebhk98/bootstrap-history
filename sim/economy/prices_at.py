@@ -33,7 +33,7 @@ def prices_at(economy, tile: str) -> Tuple[Dict[str, float], Set[str]]:
     for good, price in shown.items():
         area = None if good in stale else _area_on(economy, good, tile)
         key = None if area is None else market_key(good, area)
-        local = memory.prices.get(key) if key is not None and memory.trade_age.get(key, math.inf) <= RECENT_TRADE_YEARS else None
+        local = memory.prices.get(key) if key is not None and memory.traded_within(key, RECENT_TRADE_YEARS) else None
         national = nationwide.get(good)
         prices[good] = price * local / national if local and national and local > 0.0 and national > 0.0 else price
     return prices, stale

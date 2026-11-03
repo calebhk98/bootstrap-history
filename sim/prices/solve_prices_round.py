@@ -28,7 +28,7 @@ class RecipePlan:
         self.single_output = next(iter(outputs)) if len(outputs) == 1 else None
         self.single_quantity = outputs[self.single_output] if len(outputs) == 1 else None
         self.batch_output_quantity = max(outputs.values()) if outputs else 1.0
-        self.labour_cost_hours = core._labour_cost_hours(entry.get("labour_hours") or {}, wage_by_trade)
+        self.labour_cost_hours = core.batch_labour_cost_hours(entry.get("labour_hours") or {}, wage_by_trade)
         self.rent_hours = core._extraction_rent_cost_hours(outputs, rent_by_kg)
         self.land_hectare_years = entry.get("land_hectare_years") or 0.0
         # per capital good, its builds in preference order: (materials, labour cost, yearly share), and its output
@@ -44,7 +44,7 @@ class RecipePlan:
             if entry.get(energy_key) or 0.0)
         self.holding_years = float(entry.get("holding_years") or 0.0)
         self.output_meets_floor = {
-            material: core._meets_capability_floor(material, entry, floor_by_carrier) for material in outputs}
+            material: core.meets_capability_floor(material, entry, floor_by_carrier) for material in outputs}
 
 
 def plan_cost(plan, prices, wage_by_trade, band_price_by_carrier, interest_rate, disposal_costs,
@@ -85,7 +85,7 @@ def plan_cost(plan, prices, wage_by_trade, band_price_by_carrier, interest_rate,
 
     energy_cost_hours = 0.0
     for energy_key, energy_quantity_per_batch in plan.energy:
-        energy_price = core._capability_graded_price(
+        energy_price = core.capability_graded_price(
             energy_key, plan.entry, prices, band_price_by_carrier)
         if energy_price is None:
             return None
@@ -98,7 +98,7 @@ def plan_cost(plan, prices, wage_by_trade, band_price_by_carrier, interest_rate,
 
     if plan.single_output is not None:
         return total_process_cost_hours, {plan.single_output: total_process_cost_hours / plan.single_quantity}
-    output_prices = core._allocate_output_prices(
+    output_prices = core.allocate_output_prices(
         plan.outputs, prices, total_process_cost_hours, reference_price_by_material, interest_rate,
         disposal_costs)
     return total_process_cost_hours, output_prices

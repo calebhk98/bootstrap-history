@@ -117,10 +117,11 @@ def restake_owners(setup, record, view) -> None:
         if shortfall <= 0.0:
             continue
         recipe = setup.recipes[producer.recipe_id]
-        pays = unit_cost.return_on_capital(recipe, expected_output_prices(producer, recipe, view) or {},
-                                           live_input_prices(producer, recipe, view),
-                                           live_wages(producer, recipe, view),
-                                           producer.land_rent_per_run) > rate
+        earning = unit_cost.return_on_capital(recipe, expected_output_prices(producer, recipe, view) or {},
+                                              live_input_prices(producer, recipe, view),
+                                              live_wages(producer, recipe, view),
+                                              producer.land_rent_per_run)
+        pays = earning is not None and earning > rate
         if producer.owner not in budget:
             budget[producer.owner] = ENTRANT_OWNER_STAKE_SHARE * max(0.0, record.book.balance(producer.owner, money))
         amount = min(restake(shortfall, record.book.balance(producer.owner, money), pays), budget[producer.owner])

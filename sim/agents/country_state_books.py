@@ -11,6 +11,8 @@ class CountryEnterprises(SharedPart):
 	"""The plant-books reading of `CountryWorld`."""
 
 	part = "enterprises"
+	# home: books of a technique's takings and inputs are read at the shared world's prices
+	home_members = frozenset(("book_takings", "book_takings_at_full_ramp", "book_upkeep", "concern_inputs", "concerns_making", "in_goods_category", "market_factor_at", "materials_made_by"))
 
 	def plant_books(self, node_id: str, opened_year: int, rivals: float, size: float) -> Optional[PlantBooks]:
 		"""Takings, upkeep and wages of a plant at `size` founding sizes at the country's own prices, wages and cost scale (the

@@ -13,20 +13,13 @@ from typing import Dict, Set, Tuple
 from sim.constants import declare
 
 from . import unit_cost
-from .market_memory import KEY_SEPARATOR, PRICE_REMEMBERED, PRICE_SMOOTHED_TRADE, MarketMemory
+from .market_memory import KEY_SEPARATOR, PRICE_REMEMBERED, PRICE_SMOOTHED_TRADE, RECENT_TRADE_YEARS, MarketMemory
 from .national_prices import national_prices, national_wages, usual_volumes
 from .recipes import input_depth_order
 
 KIND_MAKING_COST_ESTIMATE = "making_cost_estimate"   # what the cheapest recipe costs at today's prices; nothing traded lately
 KIND_THIN_TRADE_BLEND = "thin_trade_blend"           # a market price blended toward making cost; the market trades a sliver
 KIND_REMEMBERED = PRICE_REMEMBERED                 # the last price shown, nothing makes the good and nothing traded lately
-
-RECENT_TRADE_YEARS = declare(
-    "RECENT_TRADE_YEARS", 2, kind="temporary_heuristic",
-    unit="years since a market last cleared", source=None, confidence="D",
-    why="A good's price counts as a market price, and counts in the price index, only while one of its "
-        "markets cleared within this many years. A thin market trades in alternate years, so one year "
-        "would drop it too eagerly; how long a gap makes a price stale has no measured basis.")
 
 THIN_MARKET_SHARE_OF_OPENING_DEMAND = declare(
     "THIN_MARKET_SHARE_OF_OPENING_DEMAND", 0.1, kind="temporary_heuristic",
@@ -38,11 +31,7 @@ THIN_MARKET_SHARE_OF_OPENING_DEMAND = declare(
 
 def recently_traded_goods(memory: MarketMemory) -> Set[str]:
     """Goods with a market that cleared within RECENT_TRADE_YEARS."""
-    recent = set()
-    for key, age in memory.trade_age.items():
-        if age <= RECENT_TRADE_YEARS:
-            recent.add(key.split(KEY_SEPARATOR, 1)[0])
-    return recent
+    return {key.split(KEY_SEPARATOR, 1)[0] for key in memory.trade_age if memory.traded_within(key, RECENT_TRADE_YEARS)}
 
 
 def notional_prices(setup, record, market=None) -> Dict[str, float]:

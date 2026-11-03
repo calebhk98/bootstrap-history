@@ -1,6 +1,7 @@
 """A stub market view and cohort for the store-of-value tests, on the fixture's goods with a durable metal."""
 import dataclasses
 
+from sim.tests.economy_view_defaults import ViewDefaults
 from sim.economy import households
 from sim.tests import economy_fixture as fixture
 
@@ -9,7 +10,7 @@ BASKET = fixture.basket()
 TILE = fixture.TOWN
 
 
-class View:
+class View(ViewDefaults):
     year = 1
 
     def __init__(self, prices=None, stocks=None, inflation=0.0):

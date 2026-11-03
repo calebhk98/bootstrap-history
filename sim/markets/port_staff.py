@@ -211,7 +211,7 @@ def settle(sim, economy, posted):
                                         cause=seat_posted.unposted_cause, once_purposes=sorted(purpose for purpose, orders in once.items() if orders)))
         if seat_posted.trades:
             account = staff_account(seat_id)
-            hired = economy_api.hours_hired_by_employer(economy, account)
+            hired = economy_api.hours_paid_by_employer(economy, account)
             unspent = economy_api.settle_agent_takings(economy, account, EDGE_EXCHANGE)
             charged = max(0.0, seat_posted.funded_units - unspent) * economy_api.coin_per_unit(economy)
             with sim.scenario.act_as(seat_id):
@@ -256,7 +256,7 @@ def settle_actors(sim, economy, posted):
     staff = {}
     for actor_id in posted:
         account = staff_account(actor_id)
-        hired = economy_api.hours_hired_by_employer(economy, account)
+        hired = economy_api.hours_paid_by_employer(economy, account)
         unspent = economy_api.settle_agent_takings(economy, account, EDGE_EXCHANGE)
         if unspent > 0.0:
             sim.send(ReceiveFromExchange(actor_id, unspent * economy_api.coin_per_unit(economy), "wage offers unspent"))

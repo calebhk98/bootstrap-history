@@ -7,6 +7,7 @@ import dataclasses
 import time
 import unittest
 
+from sim.tests.economy_view_defaults import ViewDefaults
 from sim.economy import households, opening_resting
 from sim.economy.types import EDGE_CONSUMPTION, GoodSpec
 
@@ -33,7 +34,7 @@ SPECS = {
 BASKET = households.make_basket(NEED_DATA, {})
 
 
-class View:
+class View(ViewDefaults):
     year = 1
 
     def __init__(self, prices=None, stocks=None):

@@ -258,3 +258,37 @@ reader (`PortWorld`) was called with `view` and `draw_deposit`, which it lacks, 
 - **Documentation.** Docstrings name deleted files and removed mixins; `ACTORS.md`, `MOD_HOOKS_PLAN.md`,
   `MODULE_MIGRATION_TASKS.md`, `mods/README.md` and `sim/labour/market/DESIGN.md` describe code that is gone; many
   older complaints cite paths that no longer exist.
+
+## Audit pass 5 (commit 439135d)
+
+Six reviewers ran the audit prompt again; the orchestrator opened a citation from each. Of audit pass 4's list, the
+hubs are split into topic readers and parts (`sim/workforce/world_reads.py`, `sim/markets/port_world_reads.py`,
+`sim/agents/actor_*.py`, `business_parts.py`, `registry_*.py`), the private part reaches and `__dict__` caches are gone,
+the assembly refuses a name clash and a dead layer method, and new checks gate `done_check` (`tools/check_parts.py`,
+`tools/check_attribute_calls.py`, `tools/check_class_bases.py` over all of `sim`). New this pass, and being fixed:
+
+- **Crash** (correctness reviewer): the workforce `trade_registry` view read a field the module's state does not have
+  (`sim/workforce/views.py`); fixed. No check looked at `self.world`/`self.seat` in a part.
+- **Checks** (architecture, goods, labour reviewers): `check_attribute_calls` missed local aliases, protocol-typed
+  actor worlds and `SharedPart` forwarders; `check_parts` missed `self._parts`; fixed, and the widened check found a
+  protocol that lacked a method a caller uses (`sim/agents/authority.py`).
+- **Goods** (goods reviewer): entry and expansion compare demand from the first round's bids with volumes of every
+  round; plant takings treated an unpriced input as free and an unpriced output as an error, and several production and
+  world figures read a missing price as zero (fixed); three definitions of "traded"; a producer's first expectation
+  and the state's reservation take a bare quote without the band guard; `getattr` on view fields that always exist.
+- **Labour** (labour reviewer): the UI explains the wage with factors that stop entering it once the economy opens;
+  two stores both called hours hired, one before payment and without bonded hours; wages written by two writers;
+  the working year written twice a year; the young of an underpaid trade cannot fall back to unskilled work; a refused
+  staff payment zeroes the whole staff; `wage_signature` ignores the clearing.
+- **Projects** (correctness reviewer): a project's material result is matched by material and tonnes, not by the
+  order, so the player's own buy can be credited to a project; cancelling goods orders also cancels a project's.
+- **Actors** (architecture reviewer): Business parts read Business's private index (fixed); `FounderReview` was a
+  forwarder class (deleted); `holdings` meant both shares held and concerns run (the record's is now `shares_held`);
+  a country part silently answered with the home country's figure for any protocol member it did not define (each part
+  now lists its home-country members, and a member neither defined nor listed fails at class creation).
+- **Citations** (external reviewer): the index-price clamp is daily in Eurace, not monthly; the manual's initial
+  household is misread in `opening_resting.py` and a research report; "Peters 2020" is a 2022 paper with a different
+  price rule; Eurace's own rule tally has two failures the report omits.
+- **Documentation** (docs reviewer): `MULTI_ACTOR_STATE_PLAN.md` section 4 names classes and data switches that do
+  not exist; plan stage and complaint status disagree on mods; about fifty comments name `core.py`, `economy.py` or
+  `society.py` for logic that lives elsewhere.

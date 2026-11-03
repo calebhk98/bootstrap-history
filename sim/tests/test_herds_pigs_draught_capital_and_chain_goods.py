@@ -90,13 +90,13 @@ class HerdIsCapitalTests(unittest.TestCase):
         for key, stock in HERD_RECIPES.items():
             entry = production[key]
             price = 3.0
-            per_unit = core._capital_cost_hours_per_unit(entry["capital"], {stock: price}, {}, 0.0)
+            per_unit = core.capital_cost_hours_per_unit(entry["capital"], {stock: price}, {}, 0.0)
             batch = per_unit * max(entry["outputs"].values())
             self.assertAlmostEqual(batch, entry["herd_stock"][stock] * price * stock_rows[stock]["annual_loss"], places=2, msg=key)
 
     def test_a_herd_that_cannot_be_priced_has_no_capital_cost(self):
         entry = load_production_catalog(ROOT)["lard_kg"]
-        self.assertIsNone(core._capital_cost_hours_per_unit(entry["capital"], {}, {}, 0.0))
+        self.assertIsNone(core.capital_cost_hours_per_unit(entry["capital"], {}, {}, 0.0))
 
 
 class JointCostSplitTests(unittest.TestCase):
