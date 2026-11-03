@@ -165,7 +165,7 @@ def orders(merchant: Merchant, view: MarketView, carriage: CarriageTable, area_m
     held_index = held_by_good(held_stock)
     remaining = max(0.0, cash) * (1.0 - BUDGET_SAFETY_SHARE)     # a hair kept back: borrowed cash is all spent
     # with nothing to spend only the stock already held can use a route
-    candidates = _candidate_routes(merchant, view, carriage, area_map, held_stock, specs, interest_rate,
+    candidates = candidate_routes(merchant, view, carriage, area_map, held_stock, specs, interest_rate,
                                    None if remaining > 0.0 else held_index)
     held_sorted: Dict[GoodId, list] = {}
     # stock already held where a route out pays is carried along every paying route, by what each destination takes
@@ -222,7 +222,7 @@ def _holding_offers(merchant, view, area_map, held_stock, specs, interest_rate) 
     return offers
 
 
-def _candidate_routes(merchant, view, carriage, area_map, held_stock, specs, interest_rate, only_held=None):
+def candidate_routes(merchant, view, carriage, area_map, held_stock, specs, interest_rate, only_held=None):
     """Rows (rank, good, source, destination, price here, outlay per unit, most it pays), one per
     profitable (good, source area) at its best destination, best net gap per unit of outlay first.
     With `only_held` (`held_by_good` of stock) the rows of the goods held, from the source areas holding
@@ -289,7 +289,7 @@ def _areas_holding(area_map, good, held) -> set:
 
 
 def _good_routes(good, spec, areas, prices, carriage, interest_rate, source_ids=None) -> list:
-    """The unsorted rows of `_candidate_routes` for one good, given its price in each area: one for every
+    """The unsorted rows of `candidate_routes` for one good, given its price in each area: one for every
     (source, destination) whose haul pays; with `source_ids` only the rows of those source areas."""
     rows = []
     years_between = merchants_transit.years_between

@@ -89,7 +89,7 @@ def stationary_setup(slack_share: float = 0.0, **changes) -> EconomySetup:
     workers = sum(stated.opening_population_by_tile.values()) * stated.working_share
     view = economy.view()
     offers = year_labour.labour_offers(stated, economy.record, view, year_labour.outside_option_by_tile(stated, economy.record, view))
-    kept = household_hours_year.decide(stated, economy.record, view, offers, economy._own_plot_options(),
+    kept = household_hours_year.decide(stated, economy.record, view, offers, economy.own_plot_options(),
                                        economy._hectares_held())
     hours = opening_stationary.hours_that_clear_at(flows.hours_by_trade[LABOURER], workers, slack_share,
                                                    sum(kept.values()) / workers)

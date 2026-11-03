@@ -143,7 +143,7 @@ class UnsoldStockSearchTests(unittest.TestCase):
         """How many market crossings one search makes for sellers asking `asks` under `view`."""
         offers = [offer("a", 100.0, ask) for ask in asks]
         setup, record = game("a")
-        counted, original = [0], goods_market._crossing
+        counted, original = [0], goods_market.crossing
 
         def counting(*arguments, **keywords):
             counted[0] += 1
@@ -151,11 +151,11 @@ class UnsoldStockSearchTests(unittest.TestCase):
                 raise RuntimeError("search did not converge")
             return original(*arguments, **keywords)
 
-        goods_market._crossing = counting
+        goods_market.crossing = counting
         try:
             unsold_search.clear_with_search(setup, record, view, bids, offers, offers, GOOD, AREA, "coin", 100.0)
         finally:
-            goods_market._crossing = original
+            goods_market.crossing = original
         return counted[0]
 
     def test_the_search_is_bounded_by_its_precision_when_a_unit_costs_nothing_to_make(self):
