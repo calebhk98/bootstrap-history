@@ -8,7 +8,8 @@ economy is then given what it lacks from a setup built from them (`AgentEconomy.
 same setup a resumed game builds from its saved opening.
 """
 from .port_setup import allowed_entries
-from sim.prices.api import making_cost, solve_prices_core
+from sim.prices.api import making_cost
+from sim.world.land import LAND_MATERIAL
 cost_of_making = making_cost.cost_of_making
 
 
@@ -45,7 +46,7 @@ def late_goods_costs(sim, prices, goods, held_nodes, production, wage_level=1.0)
     def rent_of(key):
         """Coin a hectare-year of land costs where the land market let any; None before it has, which leaves a good that
         occupies land without a cost."""
-        return sim.economy.agent_land_rent_per_hectare() if key == solve_prices_core.LAND_MATERIAL else None
+        return sim.economy.agent_land_rent_per_hectare() if key == LAND_MATERIAL else None
 
     rate = float(sim.finance.market_rate())
     found = {}
