@@ -10,6 +10,7 @@ fully covered trade needs has passed, and the rest at the end of the full conver
 import math
 from typing import List
 
+from sim.workforce.api import TrainingRow
 from .trade_formation import SOURCE_TASK_FLOOR_FRACTION
 
 
@@ -37,16 +38,16 @@ def prepaid_keep_years(conversion_years: float, full_apprenticeship_years: float
 
 
 def cohort_rows(current_year: float, trade: str, count: float, conversion_years: float,
-                full_apprenticeship_years: float, uncovered: float, teacher_proficiency: float = 1.0) -> List[list]:
-    """Training records `[progress, ready year, trade, people]` for a cohort: an early slice of person-equivalents
+                full_apprenticeship_years: float, uncovered: float, teacher_proficiency: float = 1.0) -> List[TrainingRow]:
+    """Training rows for a cohort: an early slice of person-equivalents
     ready at first hands (no larger a share than the teacher's own proficiency allows), then the rest at the end. One record when no task is covered or first hands would come
     no sooner than the end."""
     first = first_hands_years(full_apprenticeship_years)
     early = count * capped_by_teacher(starting_proficiency(uncovered), teacher_proficiency)
     if early <= 0.0 or first >= conversion_years:
-        return [[0.0, current_year + conversion_years, trade, float(count)]]
-    return [[0.0, current_year + first, trade, early],
-            [0.0, current_year + conversion_years, trade, float(count) - early]]
+        return [TrainingRow(trade, float(count), current_year + conversion_years)]
+    return [TrainingRow(trade, early, current_year + first),
+            TrainingRow(trade, float(count) - early, current_year + conversion_years)]
 
 
 def year_joined(ready_year: float) -> int:

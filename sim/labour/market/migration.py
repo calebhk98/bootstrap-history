@@ -38,13 +38,13 @@ MIGRATION_CONSIDERATION_SHARE_PER_YEAR = declare(
 STAY = "stay"
 
 
-def _real_income(state, inputs, clearings, area: str, trade: str, cache: Dict[Tuple[str, str], float]) -> float:
-    """Expected income after the state's take, over the area's subsistence; zero when the area has no subsistence figure."""
+def _real_income(state, inputs, clearings, area: str, trade: str, cache: Dict[Tuple[str, str], Optional[float]]) -> Optional[float]:
+    """Expected income after the state's take, over the area's subsistence; None when the area has no subsistence figure."""
     key = (area, trade)
     if key not in cache:
-        floor = inputs.subsistence_per_worker_year.get(area, 0.0)
+        floor = inputs.subsistence_per_worker_year.get(area)
         kept = 1.0 - min(1.0, max(0.0, inputs.taxed_share.get(area, 0.0)))
-        cache[key] = kept * expected_income(state, inputs, clearings, area, trade) / floor if floor > 0.0 else 0.0
+        cache[key] = kept * expected_income(state, inputs, clearings, area, trade) / floor if floor else None
     return cache[key]
 
 
@@ -73,20 +73,20 @@ def migrate(state: MarketState, inputs: YearInputs, clearings: Dict[Tuple[str, s
             report: YearReport) -> None:
     """Move workers along the routes; record the net change per area in `report.migrated`."""
     index = clearings if isinstance(clearings, dict) else index_clearings(clearings)
-    cache: Dict[Tuple[str, str], float] = {}
+    cache: Dict[Tuple[str, str], Optional[float]] = {}
     flows: List[Tuple[str, str, str, List[float]]] = []   # (origin, destination, trade, people per band)
 
     for origin in sorted(inputs.routes):
-        floor = inputs.subsistence_per_worker_year.get(origin, 0.0)
+        floor = inputs.subsistence_per_worker_year.get(origin)
         routes = _sorted_routes(inputs.routes[origin])
-        if floor <= 0.0 or not routes:
+        if not floor or floor <= 0.0 or not routes:
             continue
         for trade in sorted(state.workers.get(origin, {})):
             bands = state.workers[origin][trade]
             if sum(bands) <= 0.0:
                 continue
             real_origin = _real_income(state, inputs, index, origin, trade, cache)
-            if real_origin <= 0.0:
+            if real_origin is None or real_origin <= 0.0:
                 continue
             options = [(None, 0.0) if route.destination == origin else
                        (_real_income(state, inputs, index, route.destination, trade, cache),

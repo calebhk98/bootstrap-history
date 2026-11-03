@@ -1,6 +1,6 @@
 """Complaint 640: people bought arrive untrained: `buy_slaves` queues them in the household's training rows for the training lag
-and adds no artisan capacity that day, and `manumit` raises the capacity of trained people only (the untrained rise when they
-mature). Each method is called on a stand-in `self` carrying a household written out here."""
+and adds no artisan capacity that day, and `manumit` moves people from slaves to freedmen without touching the queue (the pools recount at the freedman
+productivity once the people are trained). Each method is called on a stand-in `self` carrying a household written out here."""
 QUICK_TOPIC = True
 
 import types
@@ -13,6 +13,7 @@ from sim.labour.labour_pools import StaffPools
 from sim.ledger.api import PayEdge
 from sim.polity.api import GainReputation
 from sim.refusal import Refusal
+from sim.workforce.api import TrainingRow
 
 YEAR = 100
 PRICE = 250.0
@@ -38,7 +39,6 @@ class Bondage:
         self.bondage.slave_quote = self.slave_quote
         self.WORKER_EQUIVALENT_UNTRAINED = StaffPools.WORKER_EQUIVALENT_UNTRAINED
         self.TRAINING_YEARS = BondagePart.TRAINING_YEARS
-        self.MANUMISSION_ARTISAN_UPLIFT = BondagePart.MANUMISSION_ARTISAN_UPLIFT
 
     def buy_slaves(self, people):
         return self.bondage.buy_slaves(people)
@@ -86,7 +86,7 @@ class BuySlaves(unittest.TestCase):
     def test_the_people_bought_queue_for_the_training_lag_at_the_untrained_worth(self):
         game = Bondage()
         self.assertEqual(game.buy_slaves(12), 12)
-        self.assertEqual(game.household.training, [[12 * game.WORKER_EQUIVALENT_UNTRAINED, YEAR + game.TRAINING_YEARS]])
+        self.assertEqual(game.household.training, [TrainingRow(None, 12.0, YEAR + game.TRAINING_YEARS)])
 
     def test_the_people_bought_add_no_artisan_capacity_the_day_they_arrive(self):
         game = Bondage()
@@ -119,23 +119,29 @@ class Manumit(unittest.TestCase):
         game = Bondage()
         game.household.slaves = count
         if not trained:
-            game.household.training = [[count * game.WORKER_EQUIVALENT_UNTRAINED, YEAR + 3.0]]
+            game.household.training = [TrainingRow(None, float(count), YEAR + 3.0)]
         return game, game.manumit(count)
 
-    def test_freeing_trained_people_raises_their_capacity_by_the_uplift_not_another_worker(self):
+    def test_freeing_trained_people_raises_their_capacity_from_the_slave_to_the_freedman_productivity(self):
         game, freed = self.freed(trained=True)
+        game.pools.resync_pools()
         self.assertEqual(freed, 4)
-        self.assertAlmostEqual(game.household.artisans, 4 * game.MANUMISSION_ARTISAN_UPLIFT)
+        self.assertAlmostEqual(game.household.artisans, 4 * game.pools.FREEDMAN_ARTISAN_PRODUCTIVITY)
 
     def test_freed_people_move_from_slaves_to_freedmen(self):
         game, _freed = self.freed()
         self.assertEqual((game.household.slaves, game.household.freedmen, game.household.manumitted_total), (0, 4, 4))
 
-    def test_freeing_people_still_in_training_adds_no_capacity_now_and_raises_what_they_will_be_worth(self):
+    def test_freeing_people_still_in_training_leaves_the_queue_alone_and_adds_no_capacity_now(self):
         game, _freed = self.freed(trained=False)
         self.assertEqual(game.household.artisans, 0.0)
-        worth = game.WORKER_EQUIVALENT_UNTRAINED + game.MANUMISSION_ARTISAN_UPLIFT
-        self.assertAlmostEqual(game.household.training[0][0], 4 * worth)
+        self.assertEqual(game.household.training, [TrainingRow(None, 4.0, YEAR + 3.0)])
+
+    def test_freed_people_still_learning_count_at_the_freedman_productivity_once_trained(self):
+        game, _freed = self.freed(trained=False)
+        game.household.training = []
+        game.pools.resync_pools()
+        self.assertAlmostEqual(game.household.artisans, 4 * game.pools.FREEDMAN_ARTISAN_PRODUCTIVITY)
 
     def test_freeing_people_gains_reputation_that_stops_at_the_ceiling(self):
         game, _freed = self.freed()
@@ -172,7 +178,7 @@ class GrantsSurviveTheYearsResync(unittest.TestCase):
     def test_people_bought_and_still_learning_are_not_counted_as_artisans(self):
         game = Bondage()
         game.household.slaves = 12
-        game.household.training = [[12 * game.WORKER_EQUIVALENT_UNTRAINED, YEAR + 3.0]]
+        game.household.training = [TrainingRow(None, 12.0, YEAR + 3.0)]
         self.assertAlmostEqual(self.resynced(game).artisans, 0.0)
 
     def test_people_bought_and_trained_count_at_the_slave_productivity(self):

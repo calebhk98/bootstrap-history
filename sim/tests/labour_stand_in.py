@@ -33,7 +33,7 @@ def stand_in_world(civ_id="rome_100ad", total=None):
                                techniques_available_to=solve_prices_core.techniques_available_to,
                                trade_registry={trade_id: {"family": trade.family, "training_years": trade.training_years, **trade.extra}
                                                for trade_id, trade in data.TRADE_REGISTRY.items()}),
-        actors=SimpleNamespace(actor_staff_fte=lambda trade: 0.0), commands=SimpleNamespace(set_staff_scale=lambda scale: None),
+        actors=SimpleNamespace(actor_staff_fte=lambda trade: 0.0), commands=SimpleNamespace(),
         economy=SimpleNamespace(unskilled_wage=lambda: None, agent_trades=lambda: None, agent_people_by_trade=lambda: None, agent_people_by_tile_and_trade=lambda: None, agent_hours_offered_at=lambda trade, tile: None, agent_working_hours=lambda: None, agent_wage_at=lambda trade, tile: None))
 
 

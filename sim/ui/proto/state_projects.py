@@ -207,12 +207,8 @@ def _agent_state_spend_and_net(sim):
 
 
 def training_in_hand(sim):
-    """The people being taught, as `state` lists them and `stuck` names them. Rows are
-    [capacity, ready_year] for people bought and trained, and [0, ready_year, trade, count]
-    for a trade being taught, so read by index."""
-    return [{"artisan_capacity": round(row[0], 2), "ready_year": row[1],
-             "trade": (row[2] if len(row) > 2 else None),
-             "people": (row[3] if len(row) > 3 else None)}
+    """The people being taught, as `state` lists them and `stuck` names them; trade None is people bought."""
+    return [{"ready_year": row.ready_year, "trade": row.trade, "people": row.people}
             for row in sim.view("training_queue")()]
 
 
@@ -222,10 +218,6 @@ def _agent_state_training_and_hours(sim, active, full):
     loud warning when hours are about to go to waste.
     """
     return {
-        # Rows are [capacity, ready_year] for people bought and trained, and
-        # [0, ready_year, trade, count] for a trade being taught, so read by
-        # index. Unpacking two names off a four-wide row killed `state` outright
-        # the moment anybody used `train`.
         "training_pending": training_in_hand(sim),
         # LESS WHAT YOU HAVE ALREADY SOLD: the pool is the pool, but what is
         # FREE is the pool less the hours already spent on wage work, or

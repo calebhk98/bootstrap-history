@@ -51,7 +51,7 @@ class TradeSchoolTests(unittest.TestCase):
         stand_in = types.SimpleNamespace(
             trades=types.SimpleNamespace(trade_available=lambda trade: True),
             _world=workforce_stand_in.World(trades=types.SimpleNamespace(wages={"chemist": 1.0}),
-                                         finance_facts={"trade_school_price_per_seat": lambda: 50.0},
+                                         finance_facts={"trade_school_price_per_seat": lambda: 50.0, "spending_power": lambda purpose: 1000.0},
                                          workforce=held, EDGE_WORKERS="workers",
                                          send=lambda command: paid.append(command.amount)))
         self.assertEqual(Training.found_trade_school(stand_in, "chemist", 2), (True, None))

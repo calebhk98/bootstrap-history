@@ -104,11 +104,7 @@ class StaffPools:
         craft = sum(count for trade, count in self.book.employed_by_trade().items() if self.trades.is_craft_trade(trade))
         schol = self.book.employed(trade_data.scholar_trade())
         # Anyone still in the training queue is excluded from the count; once a row matures its capacity is part of `owned`.
-        # buy_slaves stores WORKER_EQUIVALENT_UNTRAINED of a worker per person
-        # bought, so that is the divisor that recovers the headcount still
-        # learning.
-        learning = sum(row[0] for row in workforce.training
-                       if len(row) <= 2) / self.WORKER_EQUIVALENT_UNTRAINED
+        learning = sum(row.people for row in workforce.training if row.trade is None)
         owned = max(0.0, workforce.freedmen + workforce.slaves - learning)
         # Split what is left in the same proportion as what is held.
         held = workforce.freedmen + workforce.slaves

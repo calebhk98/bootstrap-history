@@ -16,6 +16,7 @@ from sim.world import need_demand
 QUICK_TOPIC = True
 
 _ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+_NEEDS = need_demand.load_needs(_ROOT)
 _PRODUCTION = load_production_catalog(_ROOT)
 
 
@@ -32,7 +33,7 @@ def _shares(reached, production=None, carriage=None, civ_id=None):
     civ = _json("data", "civilizations", civ_id + ".json") if civ_id else {}
     return workforce_spinup.need_shares_by_trade(
         production or _PRODUCTION, set(reached), techniques_available_to,
-        carriage if carriage is not None else workforce_carriage.carriage_for(reached), civ)
+        carriage if carriage is not None else workforce_carriage.carriage_for(reached), civ, needs=_NEEDS)
 
 
 def _recipe(output, labour, inputs=None):
@@ -45,8 +46,7 @@ def _zz_carriage(span=None):
 
 
 def _synthetic_shares(production, needs, carriage=None):
-    with mock.patch.object(workforce_spinup, "_needs", return_value=needs):
-        return workforce_spinup.need_shares_by_trade(production, set(), techniques_available_to, carriage)
+    return workforce_spinup.need_shares_by_trade(production, set(), techniques_available_to, carriage, needs=needs)
 
 
 class LandCarriersTests(unittest.TestCase):
@@ -189,7 +189,7 @@ class TradesWithoutANamedNeedTests(unittest.TestCase):
         reached = _starting_techs("rome_100ad")
         civ = dict(_json("data", "civilizations", "rome_100ad.json"), literacy_general=0.0)
         lettered = workforce_spinup.need_shares_by_trade(
-            _PRODUCTION, set(reached), techniques_available_to, workforce_carriage.carriage_for(reached), civ)
+            _PRODUCTION, set(reached), techniques_available_to, workforce_carriage.carriage_for(reached), civ, needs=_NEEDS)
         self.assertEqual(lettered.get("scribe", 0.0), 0.0)
 
     def test_coin_replacement_is_demand_for_the_engravers_the_minting_recipe_charges(self):

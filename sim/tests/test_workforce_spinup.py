@@ -16,6 +16,7 @@ from sim.labour import workforce_carriage, workforce_spinup
 from sim.world import need_demand
 
 _ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+_NEEDS = need_demand.load_needs(_ROOT)
 _CIV_PATHS = sorted(glob.glob(os.path.join(_ROOT, "data", "civilizations", "*.json")))
 _PRODUCTION = load_production_catalog(_ROOT)
 
@@ -46,7 +47,7 @@ def _trades_of_available_recipes(production, reached):
 def _shares(production, reached, civ=None):
     return workforce_spinup.need_shares_by_trade(
         production, set(reached), techniques_available_to,
-        workforce_carriage.carriage_for(reached), civ)
+        workforce_carriage.carriage_for(reached), civ, needs=_NEEDS)
 
 
 class NeedSharesTests(unittest.TestCase):

@@ -9,19 +9,11 @@ class Core(Part):
 
 	def __init__(self, module):
 		super().__init__(module)
-		self._staff_scales = {}      # seat id -> the share of the institutional staff ceiling its income can pay; worked out each staff step, never saved
 		self._buy_refusals = {}      # seat id -> why its last purchase of people was refused, for the screen that asked; never saved
 
 	def setup(self):
 		self.reads = WorkforceWorld(self.needs, self.module, self.parts)   # what labour reads of the game
 		self.labour = Labour(self.reads)
-
-	def staff_scale(self):
-		"""The affordability scale `staff_capacity` last worked out for the acting seat (all of the ceiling before the first)."""
-		return self._staff_scales.get(self.clock.acting_seat, 1.0)
-
-	def set_staff_scale(self, scale):
-		self._staff_scales[self.clock.acting_seat] = scale
 
 	def last_buy_refusal(self):
 		return self._buy_refusals.get(self.clock.acting_seat)

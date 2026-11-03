@@ -29,9 +29,11 @@ def index_clearings(clearings) -> Dict[Tuple[str, str], LabourClearing]:
 
 
 def expected_income(state: MarketState, inputs: YearInputs, clearings: ClearingIndex,
-                    area: str, trade: str) -> float:
-    """Money a year one worker of `trade` in `area` can expect."""
-    floor = inputs.subsistence_per_worker_year.get(area, 0.0)
+                    area: str, trade: str) -> Optional[float]:
+    """Money a year one worker of `trade` in `area` can expect; None where the area has no stated subsistence."""
+    floor = inputs.subsistence_per_worker_year.get(area)
+    if floor is None:
+        return None
     clearing: Optional[LabourClearing] = clearings.get((area, trade))
     if clearing is None or clearing.hours_hired <= 0.0:
         if clearing is not None and clearing.vacant_hours > 0.0:
@@ -106,15 +108,18 @@ def hours_arrived_since(state: MarketState, inputs: YearInputs, clearing: Labour
 
 
 def income_at_graduation(state: MarketState, inputs: YearInputs, clearings: ClearingIndex, area: str,
-                         trade: str, completion_by_band) -> float:
-    """What a trade is expected to pay once someone starting its training now has finished.
+                         trade: str, completion_by_band) -> Optional[float]:
+    """What a trade is expected to pay once someone starting its training now has finished; None where the area has no
+    stated subsistence.
 
     Today's premium over the outside option is kept only for the part of today's shortage the people
     already training will not fill (net of those leaving meanwhile): a full workshop of apprentices
     tells the next entrant the shortage will be gone. Without this, entrants answer today's wage, the
     trade gluts a training-length later, and wages cycle from floor to ceiling."""
     clearing: Optional[LabourClearing] = clearings.get((area, trade))
-    floor = inputs.subsistence_per_worker_year.get(area, 0.0)
+    floor = inputs.subsistence_per_worker_year.get(area)
+    if floor is None:
+        return None
     if clearing is None or clearing.hours_wanted <= 0.0:
         return floor
     # a wage lags its market (it closes part of the gap a year): weigh where it is heading, and count

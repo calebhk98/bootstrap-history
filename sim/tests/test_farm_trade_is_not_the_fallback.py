@@ -12,7 +12,9 @@ from sim.content.catalog import load_production_catalog
 from sim.prices.solve_prices_core import techniques_available_to
 from sim.labour import workforce_carriage
 
+from sim.world import need_demand
 _ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+_NEEDS = need_demand.load_needs(_ROOT)
 
 
 def _registry():
@@ -30,7 +32,7 @@ def _rome_shares():
     reached = set(civ["starting_techs"])
     return workforce_spinup.need_shares_by_trade(
         load_production_catalog(_ROOT), reached, techniques_available_to,
-        workforce_carriage.carriage_for(reached), civ)
+        workforce_carriage.carriage_for(reached), civ, needs=_NEEDS)
 
 
 class FarmTradeIsNotTheFallbackTests(unittest.TestCase):

@@ -139,6 +139,7 @@ class ImportCosts:
             wage = self.wages.get(other, {}).get(trade)
             if wage is None:
                 continue
-            outside = self.inputs.subsistence_per_worker_year.get(other, 0.0) / max(self.inputs.hours_per_worker_year, 1e-12)
-            found.append((max(wage, outside) + moving_cost / self.career_hours, other))
+            subsistence = self.inputs.subsistence_per_worker_year.get(other)
+            floor = wage if subsistence is None else max(wage, subsistence / max(self.inputs.hours_per_worker_year, 1e-12))
+            found.append((floor + moving_cost / self.career_hours, other))
         return found

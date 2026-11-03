@@ -25,6 +25,11 @@ def train_request_refusal(trade_known, trade, count, find_source, source_absent)
     return source, None
 
 
+def source_trade_unusable(source, known_trades, absent_trades, created_trades):
+    """Whether a trade named as the teacher cannot teach: no such trade, or none of it here (and none taught into being)."""
+    return source not in known_trades or (source in absent_trades and source not in created_trades)
+
+
 def teaching_hours_refusal(hours, uncommitted_pool, count, trade):
     """A refusal when teaching takes more of the founder's own hours than he has uncommitted this year."""
     if hours > uncommitted_pool:

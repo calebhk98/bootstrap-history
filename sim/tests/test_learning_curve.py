@@ -46,9 +46,9 @@ check("a first attempt's proficiency needs one unit", curve.cumulative_for_profi
 UNCOVERED = 0.25
 rows_free = hands.cohort_rows(100, "fitter", 4.0, 3.0, 8.0, UNCOVERED)
 rows_capped = hands.cohort_rows(100, "fitter", 4.0, 3.0, 8.0, UNCOVERED, teacher_proficiency=0.3)
-check("a teacher who is fully proficient does not cap the start", abs(rows_free[0][3] - 4.0 * 0.75) < 1e-9, rows_free)
-check("a less proficient teacher caps the early slice", abs(rows_capped[0][3] - 4.0 * 0.3) < 1e-9, rows_capped)
+check("a teacher who is fully proficient does not cap the start", abs(rows_free[0].people - 4.0 * 0.75) < 1e-9, rows_free)
+check("a less proficient teacher caps the early slice", abs(rows_capped[0].people - 4.0 * 0.3) < 1e-9, rows_capped)
 check("a teacher who holds the knowledge but has never practised starts a cohort at the floor",
       abs(hands.cohort_rows(100, "fitter", 4.0, 3.0, 8.0, UNCOVERED,
-                            teacher_proficiency=curve.proficiency(0.0, FLOOR, RATE))[0][3] - 4.0 * FLOOR) < 1e-9)
-check("the capped cohort still adds up to the whole cohort", abs(sum(row[3] for row in rows_capped) - 4.0) < 1e-9, rows_capped)
+                            teacher_proficiency=curve.proficiency(0.0, FLOOR, RATE))[0].people - 4.0 * FLOOR) < 1e-9)
+check("the capped cohort still adds up to the whole cohort", abs(sum(row.people for row in rows_capped) - 4.0) < 1e-9, rows_capped)

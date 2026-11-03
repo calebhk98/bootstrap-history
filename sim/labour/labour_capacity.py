@@ -83,8 +83,8 @@ class Capacity:
         unit="dimensionless exponent on pop_scale", source=None,
         confidence="D",
         why="How sub-linearly the population-scaled share of staffing "
-            "capacity grows with pop_scale - a civilisation of 4.5 million "
-            "can eventually staff what one of 65 million can, just more "
+            "capacity grows with pop_scale - a small civilisation "
+            "can eventually staff what a large one can, just more "
             "slowly, rather than never. The sub-linear SHAPE is the real "
             "claim (bigger societies are not proportionately easier to "
             "staff from); the exact exponent is tuned, not fitted.")
@@ -100,7 +100,12 @@ class Capacity:
             "priority order.")
 
     def staff_capacity(self):
-        """How many trained people the institution can support.
+        """(scholars, artisans, directors) the institution can support; see `staff_ceiling`."""
+        return self.staff_ceiling()[:3]
+
+    def staff_ceiling(self):
+        """(scholars, artisans, directors, scale): how many trained people the institution can support, and the share
+        of its institutional ceiling the income can pay (the scale the supervision headroom takes too).
 
         Ceilings, not rates. You cannot teach faster than you can feed, house and
         supervise, and you cannot supervise more than your directors can reach.
@@ -119,9 +124,8 @@ class Capacity:
         extra = self.supervision_room()
         # no floor on the scale: a household with no surplus hires nobody
         scale = self._staff_scale_for(afford, scholars + artisans, extra)
-        self._world.commands.set_staff_scale(scale)     # step() applies this to `extra` too
         return (base_sc + scholars * scale * pop, base_ar + artisans * scale * pop,
-                directors * min(1.0, scale * self.DIRECTOR_SCALE_HEADROOM) * pop)
+                directors * min(1.0, scale * self.DIRECTOR_SCALE_HEADROOM) * pop, scale)
 
     def _institutional_load(self, with_directors=False):
         """Scholars and artisans (and directors) the running institutions train outright, before affordability."""
@@ -208,18 +212,6 @@ class Capacity:
                 + self.SUPERVISION_ROOM_PER_DIRECTOR_EXTRA * workforce.directors_extra
                 + max(0.0, workforce.worker_housing_places or 0.0))
         room = self._world.knowledge.effect_sum("supervision_room", room)
-        # A SECOND TOWN, NOT A SECOND SCHOOLROOM. workshop_first, school_founded
-        # and academy_network above are each a single PLACE a founder can stand
-        # in; fin_chain_store is the tree's own word for the thing that is not
-        # - "operates identical stores in multiple cities... requires
-        # sophisticated management and accounting" - so it belongs in the same
-        # unconditional headroom as the other three places, not only in the
-        # income-gated institutional ceiling (STAFF_CAPACITY_SOURCES) a branch
-        # network also feeds. Smaller than that ceiling's own 30-per-unit
-        # figure, the same way school_founded's 10 here is smaller than its
-        # own 12 there: most of what a branch is worth is still bounded by
-        # whether the household can pay its clerks, not by whether a director
-        # could in principle watch them.
         return room
 
     def supervision_room_from(self):
@@ -229,9 +221,9 @@ class Capacity:
         itself does and its total is asserted equal to it, because a
         breakdown that can disagree with the figure it explains is worse than
         no breakdown. The reason it exists is that a starting grant was
-        invisible: Rome begins with fin_societas and so oversees ten people
-        in year one where every other civilisation oversees six, and nothing
-        anywhere told a Roman player why, or told a Norse player what they
+        invisible: a civilisation that begins with a technology granting room
+        oversees more people in year one than the others, and nothing
+        anywhere told its player why, or told another player what they
         were missing. A civilisation's starting technologies are the whole
         point of having five civilisations, and an advantage nobody can see
         is an advantage the player cannot reason about.
@@ -259,7 +251,8 @@ class Capacity:
         """How many more people this household can feed, house and oversee.
 
         One number, used by `hire`, `train`, `buy` and the staff controls alike: it is net of the people already
-        posted in the labour core and not yet arrived, so no verb spends the same room twice.
+        posted in the labour core and not yet arrived, and of the people being taught a trade, so no verb spends the same
+        room twice.
         """
         return (self.staff_capacity()[1] + self.supervision_room()
-                - self.book.headcount() - self.book.staff_posted())
+                - self.book.headcount() - self.book.staff_posted() - self.book.in_training_total())

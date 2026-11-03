@@ -17,7 +17,7 @@ class _StubLabour:
     LITERATE_TRADES = frozenset({"machinist", "scholar"})
 
     def __init__(self, literacy=1.0, institutional=0.0, supervision=0.0, headcount_now=0.0, room_places=0.0,
-                 posted=0.0, absent=(), done=(), operating=(), room_sources=()):
+                 posted=0.0, taught=0.0, absent=(), done=(), operating=(), room_sources=()):
         projects = types.SimpleNamespace(done=set(done), operating=set(operating))
         nodes = {node_id: {} for node_id, _ in room_sources}
         self._world = types.SimpleNamespace(
@@ -29,7 +29,7 @@ class _StubLabour:
                                             is_visible=lambda node_id: True, start_reason=lambda node_id, _why=True: (True, "")),
             finance=types.SimpleNamespace(housing_price_per_place=lambda: 100.0))
         self.literacy, self.institutional, self.supervision = literacy, institutional, supervision
-        self.headcount_now, self.room_places, self.posted = headcount_now, room_places, posted
+        self.headcount_now, self.room_places, self.posted, self.taught = headcount_now, room_places, posted, taught
         self.supply = Supply(self._world, book=self, capacity=self, settlement=self, trades=self)
         self.supply._people_of_trade_in_reach = lambda trade: 10.0
         self.capacity = Capacity(self._world, book=self, market=None, schedule=None, trades=self)
@@ -60,6 +60,9 @@ class _StubLabour:
 
     def staff_posted(self):
         return self.posted
+
+    def in_training_total(self):
+        return self.taught
 
     def room_added_by(self, places):
         return places
@@ -92,6 +95,9 @@ check("...and goes negative when more are held than there is room for",
 
 check("...and the people already posted in the labour core take their room too, so no verb spends it twice",
       _StubLabour(room_places=8.0, supervision=4.0, headcount_now=5.0, posted=3.0).household_room() == 4.0)
+
+check("...and so do the people being taught a trade, who are not on the books yet (Complaint 964, sweep 2 N2)",
+      _StubLabour(room_places=8.0, supervision=4.0, headcount_now=5.0, taught=5.0).household_room() == 2.0)
 
 # --- advice: what raises the room, with a shut source offered back as the cheap fix.
 _sources = [("school_founded", 5), ("workshop_first", 3)]

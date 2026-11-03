@@ -77,8 +77,8 @@ def switch_trades(state: MarketState, inputs: YearInputs, clearings: Mapping, re
     rounds = int(expectations.DECISION_ROUNDS_PER_YEAR)
     chances = {trade: aptitude.completion_by_band(inputs.trades[trade].difficulty) for trade in destinations}
     for area in sorted(state.workers):
-        subsistence = inputs.subsistence_per_worker_year.get(area, 0.0)
-        if subsistence <= 0.0:
+        subsistence = inputs.subsistence_per_worker_year.get(area)
+        if subsistence is None or subsistence <= 0.0:
             continue
         sources = [trade for trade in sorted(state.workers[area])
                    if trade in inputs.trades and aptitude.band_total(state.workers[area][trade]) > 0.0]

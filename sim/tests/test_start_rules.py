@@ -5,6 +5,7 @@ QUICK_TOPIC = True
 import unittest
 
 from sim.projects.api import phase_rules, record_rules, start_rules
+from sim.workforce.api import TrainingRow
 
 
 def arrears(insolvent_years=3, capital=-100.0, surplus=0.0, cost=500.0, revenue=100.0, grace=3):
@@ -101,7 +102,7 @@ class BountyPossible(unittest.TestCase):
 
 
 class TradeWait(unittest.TestCase):
-    ROWS = [("x", 105, "smith", 2), ("x", 103, "smith", 0), ("x", 120, "engineer", 1)]
+    ROWS = [TrainingRow("smith", 2, 105), TrainingRow("smith", 0, 103), TrainingRow("engineer", 1, 120)]
 
     def test_hands_that_exist_now_wait_nothing(self):
         self.assertEqual(start_rules.trade_wait_years(2.0, 100, self.ROWS, "smith"), 0.0)

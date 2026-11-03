@@ -22,7 +22,3 @@ class WorldCommands:
     def note_buy_refusal(self, refusal):
         """Keep why the acting seat's purchase of people was refused, for the screen that asked."""
         self._parts.core.note_buy_refusal(NoteBuyRefusal(refusal))
-
-    def set_staff_scale(self, scale):
-        """Keep the share of the institutional staff ceiling the acting seat's income can pay."""
-        self._parts.core.set_staff_scale(scale)

@@ -21,7 +21,7 @@ class StaffYear(Part):
         workforce = self.seat
         # Staff grows only with auto_hire on (the optimizer's default, off for a player); with it off the staff changes
         # only by hire, fire, train, buy and manumit.
-        sc_cap, ar_cap, di_cap = self.parts.core.labour.capacity.staff_capacity()
+        sc_cap, ar_cap, di_cap, staff_scale = self.parts.core.labour.capacity.staff_ceiling()
         attrition_rate = demography.BASELINE_ANNUAL_MORTALITY_RATE_WORKING_AGE
         # Rehire a specialist foreman an open concern just lost, before the
         # staffing rule closes the concern.
@@ -37,8 +37,8 @@ class StaffYear(Part):
         _hire_mode = self.needs.founder()["policy"].get("auto_hire", not self.needs.automation()["manual"])
         _hire_stance = hire_stance(_hire_mode, _hire_room)
         if _hire_stance == GROW_STANCE:
-            # Supervision-room headroom is scaled by the same affordability figure staff_capacity() used.
-            extra = self.parts.core.labour.capacity.supervision_room() * self.parts.core.staff_scale()
+            # Supervision-room headroom is scaled by the same affordability scale as the ceilings.
+            extra = self.parts.core.labour.capacity.supervision_room() * staff_scale
             # The scholar target is capped at the literacy wall hire() and train() enforce.
             target_sc = scholar_target(sc_cap, extra, AUTO_HIRE_SCHOLAR_EXTRA_SHARE, self.parts.core.labour.supply.literate_capacity(scholar_trade()))
             desired_sc = approach(workforce.scholars, target_sc, AUTO_HIRE_SCHOLAR_APPROACH_RATE)
@@ -58,11 +58,11 @@ class StaffYear(Part):
             # applies the cash, room and literacy rules, and a refusal is recorded as a skip with its reason.
             _closed_sc, _closed_ar = self.needs.staffing_closed_hand_shortfall()
             _closed_unscaled = _closed_sc + _closed_ar
-            _closed_sc *= self.parts.core.staff_scale()
-            _closed_ar *= self.parts.core.staff_scale()
+            _closed_sc *= staff_scale
+            _closed_ar *= staff_scale
             if _closed_unscaled >= 1.0 and _closed_sc + _closed_ar < 1.0:
                 self.needs.send(RecordAutomationSkip("auto_hire", "hire for shut concerns", "concerns shut for want of staff need %.1f more people, but the income that pays staff covers "
-                    "%.0f%% of them" % (_closed_unscaled, 100.0 * self.parts.core.staff_scale())))
+                    "%.0f%% of them" % (_closed_unscaled, 100.0 * staff_scale)))
             _grow_to(generic_craft_trade(), artisan_goal(craft, specials, workforce.employees.get(generic_craft_trade(), 0.0), _closed_ar),
                      closure_need=_closed_ar)
             if desired_sc > 0 or _closed_sc > 0:

@@ -21,7 +21,7 @@ from .module import Workforce
 
 READS_BY_OWNER = {
     "scenario": ("year", "automation", "civilisation", "game_config", "plain_number", "money_text", "game_random"),
-    "content": ("trades_absent", "trade_notes", "trade_records", "trade_family"),
+    "content": ("trades_absent", "trade_notes", "trade_records", "trade_family", "household_need_data"),
     "ventures": ("operating", "venture_foreman", "venture_foremen_used", "venture_staff_free", "coverage", "coverage_share"),
     "seats": ("founder", "acting_country", "seat_list", "goal", "goal_closure"),
     "ledger": ("acting_balance",),

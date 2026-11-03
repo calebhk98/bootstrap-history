@@ -7,7 +7,7 @@ from .harness import check
 from sim.agents import adoption, awareness, stock_keeping
 from sim.agents.api import ActorRecord, Firm, MIGRANT_CONTACT_VOLUME_PER_PERSON
 from sim.actors.api import rules
-from sim.labour.api import migrant_pairs, moves_between_regions, totals_of_pairs
+from sim.labour.api import migrant_pairs, totals_of_pairs
 from sim.world.demography import Population
 
 check("a plant with no adoption record runs at full weight", adoption.plant_weight({}, "tech") == 1.0)
@@ -38,9 +38,9 @@ regions = {"a": Population(children=500.0, working_age=1000.0, elderly=100.0),
 fed = {"a": 1.0, "b": 3.0}
 borders = {"a": ["b"], "b": ["a"]}
 pairs = migrant_pairs(regions, fed, borders, lambda origin, destination: 10.0)
-leaving, arriving = moves_between_regions(regions, fed, borders, lambda origin, destination: 10.0)
+leaving, arriving = totals_of_pairs(pairs)
 check("migration pairs name who moved from where to where", any(origin == "a" and destination == "b" for origin, destination, _ in pairs))
-check("the regional totals are the sums of the pairs", totals_of_pairs(pairs) == (leaving, arriving))
+check("the regional totals are the sums of the pairs", leaving == {"a": sum(moved for origin, _, moved in pairs if origin == "a"), "b": sum(moved for origin, _, moved in pairs if origin == "b")} and sum(arriving.values()) == sum(leaving.values()))
 
 stores = {"grain": 1.0}
 stock_keeping.add_delivery(stores, {"grain": 2.0, "iron": 0.5, "salt": 0.0})

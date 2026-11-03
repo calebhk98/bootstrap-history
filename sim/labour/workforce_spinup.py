@@ -23,18 +23,11 @@ Farm labour is not decided here; the engine pins it from the farm-labour
 logic in sim.world.agriculture and this module splits the remaining hours.
 """
 import collections
-import os
 from typing import Any, Callable, Dict, Iterable, Mapping, Optional
 
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 from sim.world import demand, need_demand
 from sim.labour import labour_market, trade_data, workforce_carriage
-
-_REPOSITORY_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-def _needs() -> Dict[str, Any]:
-    return need_demand.load_needs(_REPOSITORY_ROOT)
-
 
 def _dominant_output(entry: Mapping[str, Any]) -> Optional[str]:
     outputs = entry.get("outputs") or {}
@@ -92,13 +85,14 @@ def _solve_levels(final_demand: Mapping[str, float], producers: Mapping[str, lis
 def need_shares_by_trade(production: Mapping[str, Any], reached_nodes: Iterable[str],
                          techniques_available_to: Callable,
                          carriage: Optional[workforce_carriage.Carriage] = None,
-                         civ_values: Optional[Mapping[str, Any]] = None) -> Dict[str, float]:
+                         civ_values: Optional[Mapping[str, Any]] = None, *, needs: Mapping[str, Any]) -> Dict[str, float]:
     """Share of non-farm labour each trade is needed for, from the goods
     households consume and the available recipes that make them. Trades with
     no available recipe, or whose goods nothing demands, are absent. `techniques_available_to(production, reached)` is the engine's
     filter, returning (available, unreached, unclassified). `carriage` (workforce_carriage) says what a
     tonne costs to carry; every tonne a recipe in a good's chain makes is carried as far as its value pays
-    for, so the carriers take their share of the good's labour."""
+    for, so the carriers take their share of the good's labour. `needs` is the game's household need data (the
+    content module's `household_need_data`, mods applied)."""
     carriage = carriage or workforce_carriage.Carriage()
     available, _unreached, _unclassified = techniques_available_to(
         production, set(reached_nodes))
@@ -147,7 +141,6 @@ def need_shares_by_trade(production: Mapping[str, Any], reached_nodes: Iterable[
 
     # Household demand: each need's budget goes to the available goods that satisfy it, split by what
     # a unit of need costs in labour. An end good no need names has no budget of its own.
-    needs = _needs()
     demanded_goods = need_demand.budget_weights_by_good(needs, available, set(producers), civ_values=civ_values)
     labour_value = {material: sum(trade_hours_per_unit(material).values()) for material in demanded_goods}
     budget = need_demand.budget_weights_by_good(needs, available, set(producers), labour_value, civ_values)

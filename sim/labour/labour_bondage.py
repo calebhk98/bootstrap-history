@@ -8,6 +8,7 @@ from sim.polity.api import GainReputation
 from .room_advice import hire_room_refusal
 from sim.ledger.api import PayEdge
 from sim.refusal import Refusal
+from sim.workforce.api import TrainingRow
 
 
 class Bondage:
@@ -127,12 +128,9 @@ class Bondage:
         on the numbers as well as on every other ground: a freedman is paid, is
         literate, stays, and transmits what he knows.
 
-        Three invariants this function and manumit() must keep together:
-
-        A person's capability rises exactly once. buy_slaves adds 0.55
-        artisans per person; manumission does not clone anybody, it makes
-        the same person work properly, a rise from 0.55 to 1.0 - so
-        manumit() adds 0.45, not another 0.55.
+        A person's capability rises exactly once. A person bought is counted at the slave productivity once trained;
+        manumission does not clone anybody, it moves the same person to the freedman productivity, and resync_pools
+        recounts the difference from the books.
 
         Price rises with the size of the purchase against the local
         market's depth (see slave_quote), so no purchase clears at flat
@@ -140,8 +138,7 @@ class Bondage:
 
         People arrive untrained and become useful only over a training
         lag, so buying and freeing someone is never faster or cheaper than
-        honestly training them free through freedman_staff (900 founder
-        hours, two years) would be.
+        honestly training them free through freedman_staff would be.
         """
         if n_people <= 0:
             return 0
@@ -164,19 +161,8 @@ class Bondage:
         workforce.slaves += n_people
         workforce.market_pressure = workforce.market_pressure + n_people
         # Untrained on arrival. They become productive through the workforce's training queue.
-        workforce.training.append([n_people * self.pools.WORKER_EQUIVALENT_UNTRAINED, self._world.game.year + self.TRAINING_YEARS])
+        workforce.training.append(TrainingRow(None, float(n_people), self._world.game.year + self.TRAINING_YEARS))
         return n_people
-
-    MANUMISSION_ARTISAN_UPLIFT = declare(
-        "MANUMISSION_ARTISAN_UPLIFT", 0.45, kind="temporary_heuristic",
-        unit="fraction of a full worker's artisan capacity", source=None,
-        confidence="D",
-        why="What manumission adds to an already-TRAINED person's artisan "
-            "value: the same person working properly rather than under "
-            "coercion, a rise from WORKER_EQUIVALENT_UNTRAINED (0.55) to a "
-            "full worker (1.0), so it adds the difference, 0.45 - not "
-            "another whole worker. See buy_slaves' own docstring for the "
-            "double-counting bug this figure fixed.")
 
     MANUMISSION_REPUTATION_GAIN_PER_PERSON = declare(
         "MANUMISSION_REPUTATION_GAIN_PER_PERSON", 0.4, kind="temporary_heuristic",
@@ -213,16 +199,8 @@ class Bondage:
         workforce.slaves -= n_people
         workforce.freedmen += n_people
         workforce.manumitted_total += n_people
-        # The uplift is paid only on people already trained: those still in the training queue mature into it later.
-        # Queue rows vary in width (taught-trade rows carry a trade name), so column 0 is read by index.
-        in_training = sum(row[0] for row in workforce.training)
-        untrained = min(n_people, int(in_training / self.pools.WORKER_EQUIVALENT_UNTRAINED + 0.5))
-        trained_freed = max(0, n_people - untrained)
-        workforce.artisans += trained_freed * self.MANUMISSION_ARTISAN_UPLIFT
-        if untrained:
-            share = untrained / max(1.0, in_training / self.pools.WORKER_EQUIVALENT_UNTRAINED)
-            for row in workforce.training:
-                row[0] *= 1.0 + self.MANUMISSION_ARTISAN_UPLIFT / self.pools.WORKER_EQUIVALENT_UNTRAINED * min(1.0, share)
+        # A freed person's worth is the freedman's productivity in place of the slave's: the pools recount from the books.
+        self.pools.resync_pools()
         # Manumission is publicly admired, and admiration saturates: the
         # first freedmen you make are a statement, the four hundredth is a
         # payroll. The gain is capped so a high-volume series of small
