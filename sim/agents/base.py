@@ -25,6 +25,7 @@ from .policy import Policy, ValuePolicy
 class Actor(Borrower):
 	kind = "actor"
 	keeps_purchases = False   # whether what the actor buys at the market joins its stores
+	lends_from_purse = False   # whether the credit market offers the actor's purse to borrowers (a mod's institution sets it)
 	researches = False   # whether the actor does research and takes part in knowledge spreading (`research.py`)
 	purses: Any = None   # the book of purses the actor keeps its account in, when it keeps one
 

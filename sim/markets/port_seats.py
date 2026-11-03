@@ -43,8 +43,11 @@ def settle_seats(sim, economy, offered_by_seat, inputs_by_seat, edge_id):
                for seat_id in sorted(sim.state.seats)}
     for seat_id in sorted(offered_by_seat):
         with sim.scenario.act_as(seat_id):
-            sim.send(ReceiveFromEdge(edges.EDGE_CUSTOMERS, takings.get(seat_id, 0.0), "concern sales"))
-            pay_edge_or_log(sim.send, edges.EDGE_SUPPLIERS, inputs_by_seat.get(seat_id, 0.0), "inputs of concerns sold in the book")
+            sale = takings.get(seat_id, 0.0)
+            sim.send(ReceiveFromEdge(edges.EDGE_CUSTOMERS, sale, "concern sales"))
+            unpaid = pay_edge_or_log(sim.send, edges.EDGE_SUPPLIERS, inputs_by_seat.get(seat_id, 0.0), "inputs of concerns sold in the book")
+            if unpaid is not None and sale > 0.0:   # the inputs stay unpaid, so the sale is not booked either
+                pay_edge_or_log(sim.send, edges.EDGE_CUSTOMERS, sale, "concern sales reversed, inputs unpaid")
     return sold, takings
 
 

@@ -40,14 +40,13 @@ def side_worth(side: Dict[str, Any], taker: Any, holder: Any, world: Any, find_a
 		if price is None:
 			return None
 		worth += tonnes * price
-	valuer = getattr(taker, "imitation_worth", None)
-	if valuer is not None:
-		worth += sum(valuer(node_id, world) for node_id in side.get("knowledge", ()) if not taker.knows(node_id, world))
+	valuer = taker.imitation_worth
+	worth += sum(valuer(node_id, world) for node_id in side.get("knowledge", ()) if not taker.knows(node_id, world))
 	if side.get("concern"):
 		worth += concern_worth(holder, side["concern"])
 	for node_id in set(side.get("patent", ())) | set(side.get("licence", ())):
 		kept = 1.0 - float(side.get("royalty", {}).get(node_id, 0.0))
-		worth += kept * max(valuer(node_id, world) if valuer is not None else 0.0, concern_worth(holder, node_id))
+		worth += kept * max(valuer(node_id, world), concern_worth(holder, node_id))
 	if side.get("shares") and find_actor is not None:
 		worth += joint_stock.shares_worth(side["shares"], find_actor)
 	return worth

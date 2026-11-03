@@ -93,7 +93,7 @@ class ActorRegistry:
 	def purse_lenders(self) -> List[RecordedActor]:
 		"""Actors in play whose class sets `lends_from_purse`, in id order: the credit market offers their purses to borrowers."""
 		return [self.actors[actor_id] for actor_id in sorted(self.actors)
-				if getattr(self.actors[actor_id], "lends_from_purse", False) and self.actors[actor_id].record.exited_year is None]
+				if self.actors[actor_id].lends_from_purse and self.actors[actor_id].record.exited_year is None]
 
 	def patent_holders(self, node_id: str) -> List[RecordedActor]:
 		"""The actors whose patents name the node (see patent_index.py); each may have let it expire."""

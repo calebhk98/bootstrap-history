@@ -47,19 +47,19 @@ class Theft(Part):
         taken, never more than the purse."""
         shares = theft_exposure.theft_shares_by_kind(exposure.values, strength, guard_hours_per_tonne_year,
                                                      visible_scale, state_reach, protection)
-        for lot in exposure.lots:
-            tonnes = min(lot.tonnes, lot.tonnes * shares.get("goods", 0.0))
-            if tonnes > 0.0:
-                self.take_goods(lot, tonnes)
         wanted = sum(max(0.0, value) * shares[kind] for kind, value in exposure.values.items()
                      if kind not in ("goods", "land"))
         taken = min(wanted, exposure.purse)
         if taken > 0.0:
             if holder is None:
-                if self.needs.send(PayEdge(edges.EDGE_THIEVES, taken, cause)):   # the purse cannot be taken from: no theft happened
+                if self.needs.send(PayEdge(edges.EDGE_THIEVES, taken, cause)):   # the purse cannot be taken from: no theft happened, no goods go
                     return 0.0
             else:
                 self.needs.send(PayEdgeFrom(holder, edges.EDGE_THIEVES, taken, cause))
+        for lot in exposure.lots:
+            tonnes = min(lot.tonnes, lot.tonnes * shares.get("goods", 0.0))
+            if tonnes > 0.0:
+                self.take_goods(lot, tonnes)
         return taken
 
     def take_goods(self, lot, tonnes):

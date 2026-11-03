@@ -18,7 +18,7 @@ class CostTail(Part):
 			return 0.0
 		if tail > COST_TAIL_SETTLE_SHARE * self.needs.project_cost(node_id):
 			return 0.0
-		if not pay_edge_or_log(self.needs.send, edges.EDGE_SUPPLIERS, tail, "project payments"):
+		if pay_edge_or_log(self.needs.send, edges.EDGE_SUPPLIERS, tail, "project payments") is not None:
 			return 0.0   # the sliver stays owed
 		self.needs.send(NoteSpend(tail))
 		project_state["spent"] += tail

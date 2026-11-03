@@ -36,10 +36,7 @@ class Research:
 
 	def unsold_materials(self, actor: Any, node_id: str) -> List[str]:
 		"""Materials no one in reach sells, against what the actor itself holds (nothing, unless it says)."""
-		holding = getattr(actor, "held_tonnes", None)
-		if holding is None:
-			return self.needs.materials_without_a_seller(node_id, lambda material: 0.0)
-		return self.needs.materials_without_a_seller(node_id, holding)
+		return self.needs.materials_without_a_seller(node_id, actor.held_tonnes)
 
 	def contact_volume(self, place_a: Optional[str], place_b: Optional[str]) -> float:
 		"""News passing between two places in a year: neighbours see each other's work (the range an onlooker

@@ -6,6 +6,6 @@ from sim.world.material_units import tonnes_per_unit
 def keep_deliveries(known, delivered):
     """Goods each buyer that keeps its purchases bought at the market join its stores, in tonnes."""
     for buyer in sorted(delivered):
-        if getattr(known[buyer], "keeps_purchases", False):
+        if known[buyer].keeps_purchases:
             stock_keeping.add_delivery(known[buyer].record.stores, {
                 good: units * tonnes_per_unit(good) for good, units in delivered[buyer].items()})

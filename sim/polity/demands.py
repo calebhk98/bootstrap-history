@@ -24,8 +24,9 @@ class Demands(Part):
 		stance = seat.demand_stance
 		draw = self.needs.game_random().random() if stance not in PAYS_IN_FULL else 1.0
 		answer = demand_answer.settle_demand(stance, amount, self.parts.reach.state_reach(), seat.protection, draw, seat.service_offer)
-		if answer["service"] > 0.0 and not pay_edge_or_log(self.needs.send, edges.EDGE_STATE_SPENDING, answer["service"], "service to the state"):
-			answer = dict(answer, service=0.0)   # the service offered was not rendered
+		if answer["service"] > 0.0 and pay_edge_or_log(self.needs.send, edges.EDGE_STATE_SPENDING, answer["service"], "service to the state") is not None:
+			# the service was not rendered, so the offer fails and the state's whole demand stands
+			answer = demand_answer.settle_demand(demand_answer.COMPLY, amount, self.parts.reach.state_reach(), seat.protection, 1.0)
 		if answer["refused"]:
 			seat.defiance = demand_answer.defiance_after_refusal(seat.defiance)
 			seat.scandal += demand_answer.blame_for_refusal(True)
@@ -71,7 +72,7 @@ class Demands(Part):
 			draw = self.needs.game_random().random()
 			settled = demand_answer.settle_concealment(seat.demand_stance, max(0.0, self.needs.acting_balance()), self.parts.reach.state_reach(),
 			                                           seat.protection, draw)
-			if settled["cost"] > 0.0 and not pay_edge_or_log(self.needs.send, edges.EDGE_OFFICIALS, settled["cost"], "concealing wealth"):
+			if settled["cost"] > 0.0 and pay_edge_or_log(self.needs.send, edges.EDGE_OFFICIALS, settled["cost"], "concealing wealth") is not None:
 				settled = dict(settled, cost=0.0, concealed=0.0)   # no one is paid to keep it hidden: nothing stays hidden
 			if settled["seized"] > 0.0:
 				self.needs.send(TakeFromHouseholdPurse(self.needs.state_treasury().actor_id, settled["seized"], "wealth found hidden"))

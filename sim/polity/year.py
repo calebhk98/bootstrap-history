@@ -67,7 +67,7 @@ class Year(Part):
 		if (seat.scandal > constants.AUTO_BRIBE_SCANDAL_THRESHOLD and capital > self.parts.eminence.priced(constants.AUTO_BRIBE_CAPITAL_THRESHOLD_LABOUR_HOURS)
 				and needs.founder()["policy"].get("auto_bribe", not needs.automation()["manual"])):
 			spend = min(capital * constants.AUTO_BRIBE_CAPITAL_SHARE, seat.scandal * self.parts.eminence.priced(constants.AUTO_BRIBE_COST_LABOUR_HOURS_PER_SCANDAL_POINT))
-			if not pay_edge_or_log(needs.send, edges.EDGE_OFFICIALS, spend, "bribes"):   # unpaid, no one is bought
+			if pay_edge_or_log(needs.send, edges.EDGE_OFFICIALS, spend, "bribes") is not None:   # unpaid, no one is bought
 				spend = 0.0
 		if spend > 0.0:
 			seat.bribes_ytd = constants.BRIBES_YTD_DECAY * seat.bribes_ytd + spend

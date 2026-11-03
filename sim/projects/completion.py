@@ -185,7 +185,7 @@ class Completion(Part):
 		# What the purse and the credit line left cannot bear is not forgiven: it is added to what the project still
 		# costs, paid through the gated instalments.
 		_borne = needs.bearable_part_of(_lost)
-		if not pay_edge_or_log(needs.send, edges.EDGE_DESTROYED, _borne, "failure losses"):
+		if pay_edge_or_log(needs.send, edges.EDGE_DESTROYED, _borne, "failure losses") is not None:
 			_borne = 0.0   # what could not be paid is added to what the project still costs
 		if not claimed:
 			for _loss_line in self.lose_what_was_risked(node_id):

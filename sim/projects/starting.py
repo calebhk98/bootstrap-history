@@ -144,7 +144,7 @@ class Starting(Part):
 		price = needs.bounty_price(command.node_id)
 		if price > needs.acting_balance():
 			return False
-		if not pay_edge_or_log(needs.send, edges.EDGE_WORKERS, price, "bounties posted"):
+		if pay_edge_or_log(needs.send, edges.EDGE_WORKERS, price, "bounties posted") is not None:
 			return False
 		needs.send(NoteSpend(price))
 		self.seat.bounties_paid += 1
@@ -172,8 +172,9 @@ class Starting(Part):
 			return False, self._bribe_refusal_text(refusal, amount, capital)
 		plan = bribe_rules.plan(amount, standing["scandal"], standing["bribes_year_to_date"], income, weight,
 		                        constants.BRIBE_MEMORY_DECAY, constants.BRIBE_PROTECTION_CAP, constants.BRIBE_INCOME_SHARE, per_point)
-		if not pay_edge_or_log(needs.send, edges.EDGE_OFFICIALS, plan.paid, "bribes"):
-			return False, "the payment was refused; nothing was spent or changed"
+		refused = pay_edge_or_log(needs.send, edges.EDGE_OFFICIALS, plan.paid, "bribes")
+		if refused is not None:
+			return False, refused
 		needs.send(RecordBribe(plan.scandal, plan.bribes_year_to_date))
 		return True, self._bribe_text(standing, needs.standing(), plan)
 

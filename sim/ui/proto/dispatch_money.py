@@ -107,7 +107,9 @@ def _buy_farm(sim, cmd, quantity):
 
 def _buy_housing(sim, cmd, quantity):
     got = sim.send(ui_port.BuildHousing(quantity))
-    if isinstance(got, Refusal) or got <= 0:
+    if isinstance(got, Refusal):
+        return {"ok": False, "error": str(got), "cause": got.cause}
+    if got <= 0:
         return {"ok": False, "error": "cannot afford that worker housing"}
     return {"ok": True, "built_worker_housing_places": got,
             "worker_housing_places": round(sim.view("worker_housing_places")(), 1),

@@ -203,8 +203,7 @@ def settle(sim, economy, posted):
                   "project": order.get("project"), "order_id": order.get("order_id"), "refused": None}
         with sim.scenario.act_as(seat_id):
             refusals = []
-            if tonnes > 0.0:
-                sim.send(ChangeStock(key, tonnes))
+            stocked = tonnes
             if order["side"] == "buy":
                 spent = max(0.0, entry["budget"] * coin - max(0.0, money - entry["extra"] * coin))
                 carriage = order.get("carriage_per_tonne", 0.0) * tonnes
@@ -214,15 +213,21 @@ def settle(sim, economy, posted):
                     refusals.append(sim.send(ReceiveFromEdge(edges.EDGE_MARKET, money - charged, "materials order unspent")))
                 if carriage_paid > 0.0:   # the haul goes to the carriers, not to the sellers' edge
                     refusals.append(sim.send(ReceiveFromEdge(edges.EDGE_MARKET, carriage_paid, "carriage on materials ordered")))
-                    refusals.append(sim.send(PayEdge(edges.EDGE_FREIGHT, carriage_paid, "carriage on materials ordered")))
-                trade["bought"][key] = trade["bought"].get(key, 0.0) + tonnes
-                result.update(bought_tonnes=tonnes, paid=spent + charged)
+                    freight = sim.send(PayEdge(edges.EDGE_FREIGHT, carriage_paid, "carriage on materials ordered"))
+                    if freight is not None:   # the haul is not paid for: the money goes back and the tonnes do not arrive
+                        refusals.append(freight)
+                        refusals.append(sim.send(PayEdge(edges.EDGE_MARKET, carriage_paid, "carriage on materials ordered, refused")))
+                        stocked = 0.0
+                trade["bought"][key] = trade["bought"].get(key, 0.0) + stocked
+                result.update(bought_tonnes=stocked, paid=spent + charged - (carriage_paid if stocked == 0.0 else 0.0))
             else:
                 if money > 0.0:
                     refusals.append(sim.send(ReceiveFromEdge(edges.EDGE_MARKET, money, "materials sold")))
                 sold = max(0.0, entry["offered"] - tonnes)
                 trade["sold"][key] = trade["sold"].get(key, 0.0) + sold
                 result.update(sold_tonnes=sold, proceeds=money)
+            if stocked > 0.0:
+                sim.send(ChangeStock(key, stocked))
             refused_posting = next((reply for reply in refusals if isinstance(reply, Refusal)), None)
             if refused_posting is not None:
                 result["refused"] = {"cause": "settlement_refused", "text": str(refused_posting)}
