@@ -132,7 +132,7 @@ check("the government's lever sets the rate of a declared form", [form["rate"] f
 
 # ---- the revenue by form is recorded, for the audit -------------------------------------------------
 state = Government("government:home", ActorRecord(kind="government"))
-state.receive_revenue(world)
+state.stores.receive_revenue(world)
 check("the revenue by form is recorded in money's worth, for the audit",
       all(abs(state.record.revenue_by_form[form] - money) < 1e-6 * money for form, money in expected.items()), state.record.revenue_by_form)
 check("a form paid in kind is booked as goods, not as coin taxation",

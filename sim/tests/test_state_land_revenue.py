@@ -96,7 +96,7 @@ rich, middling = owner("rich", 1000.0), owner("middling", 5.0)
 world = LandWorld({"a": 120.0, "b": 80.0}, [(rich, 150.0), (middling, 50.0)])
 world.forms = [dict(LAND_RENT, rate=0.1)]
 before = world.state.money + rich.money + middling.money
-world.state.receive_revenue(world)
+world.state.stores.receive_revenue(world)
 check("the state received a share of each owner's rent", abs(world.state.money - (15.0 + 5.0)) < 1e-9, world.state.money)
 check("owners lost what the state gained", abs(rich.money - 985.0) < 1e-9 and abs(middling.money) < 1e-9,
       (rich.money, middling.money))

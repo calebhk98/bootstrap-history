@@ -12,6 +12,7 @@ from unittest import mock
 
 from sim.agents import budget, government_levers, revenue, state_works
 from sim.agents.api import ExportPolicy, Government
+from sim.agents.government_granary import Granary
 from sim.agents.records import ActorRecord
 from sim.agents.tuning_spending import RESERVE_CEILING_YEARS_OF_NEED
 from sim.refusal import Refusal
@@ -168,7 +169,7 @@ class LeverRules(unittest.TestCase):
         government_levers.set_lever(record, lever("monopoly", "salt_kg", True), context())
         self.assertEqual(record.state_monopolies, {"salt_kg"})
         government = Government("government:home", record, ExportPolicy())
-        self.assertEqual(government.exports_allowed(["salt_kg", GRAIN]), [GRAIN])
+        self.assertEqual(government.markets.exports_allowed(["salt_kg", GRAIN]), [GRAIN])
         government_levers.set_lever(record, lever("monopoly", "salt_kg", False), context())
         self.assertEqual(record.state_monopolies, set())
 
@@ -200,10 +201,10 @@ class LeverRules(unittest.TestCase):
         years = RESERVE_CEILING_YEARS_OF_NEED + 3.0
         world = LeverWorld(money=years * need)
         government_levers.set_lever(world.state.record, lever("reserve", None, years + 1.0), context())
-        with mock.patch.object(Government, "restock_granary", return_value=0.0), \
+        with mock.patch.object(Granary, "restock_granary", return_value=0.0), \
                 mock.patch.object(state_works, "gaps", return_value=[(state_works.WORKS[-1], 10.0)]), \
                 mock.patch.object(state_works, "held", return_value={"capital_buildings": 0.0}):
-            world.state.build_works([budget.Line("army", "requisition", {}, need)], world)
+            world.state.surplus.build_works([budget.Line("army", "requisition", {}, need)], world)
         self.assertEqual(world.state.record.outlays, {})
         self.assertEqual(government_levers.reserve_years(world.state.record, 0.0), years + 1.0)
 

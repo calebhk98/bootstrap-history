@@ -27,7 +27,7 @@ class EmployStanding(unittest.TestCase):
 class SeekShortfall(unittest.TestCase):
     def stand_in(self, sought):
         record = SimpleNamespace(levy_base=None, levy_requisition_rate=None, levy_office_rate=None)
-        return SimpleNamespace(record=record, levy_sought=lambda: sought)
+        return SimpleNamespace(record=record, fiscal=SimpleNamespace(levy_sought=lambda: sought))
 
     def world(self, payers):
         return flat_namespace(visible_taxpayers=lambda: payers, notice_over=lambda scale: scale)

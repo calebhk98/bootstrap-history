@@ -127,7 +127,7 @@ class PartnerRefusal(unittest.TestCase):
         self.assertEqual(cause_of(self.refusal(self.stand_in([], gate=gate))), "partner_not_reached")
 
     def test_markets_shut_to_the_buyer_refuse_with_the_reopening_year(self):
-        government = Game(markets_closed_until=lambda party, year: 130, decision_policy=None,
+        government = Game(markets=Game(markets_closed_until=lambda party, year: 130), decision_policy=None,
                                            record=Game(state_monopolies=set()))
         self.assertEqual(cause_of(self.refusal(self.stand_in([], government))), "partner_market_shut")
 

@@ -129,12 +129,12 @@ check("a corvee per household falls on the households, not the persons",
 
 # ---- receiving it: hours owed are booked, no coin is made ---------------------------------------------------------
 world = CorveeWorld([WORKS_DUE])
-world.state.receive_revenue(world)
+world.state.stores.receive_revenue(world)
 check("receiving a corvee books the hours owed to the works, and credits no money",
 	  abs(world.state.record.corvee_due["works"] - hours) < 1e-9 and world.state.money == 0.0,
 	  (world.state.record.corvee_due, world.state.money))
 commuted = CorveeWorld([dict(WORKS_DUE, commute=0.4)])
-commuted.state.receive_revenue(commuted)
+commuted.state.stores.receive_revenue(commuted)
 check("a commuted share is cash, the rest stays labour",
 	  abs(commuted.state.record.corvee_due["works"] - 0.6 * hours) < 1e-9
 	  and abs(commuted.state.money - 0.4 * assessed.money) < 1e-9, (commuted.state.record.corvee_due, commuted.state.money))
@@ -154,7 +154,7 @@ world = CorveeWorld([WORKS_DUE], threat=0.05, urban=1000.0, spectacle=1.0)
 state_works.held(world)
 stock_before = state_works.held(world)["capital_buildings"]
 world.state.record.corvee_spare_years = 3.0
-world.state.build_works_by_corvee(world)
+world.state.corvee.build_works_by_corvee(world)
 raised = state_works.held(world)["capital_buildings"] - stock_before
 check("spare corvee labour raises the works the state lacks, at the masonry a person-year builds",
 	  abs(raised - 3.0 / MASONRY_PERSON_YEARS_PER_M2) < 1e-9, raised)

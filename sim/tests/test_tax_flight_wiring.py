@@ -225,14 +225,14 @@ class FlightOptionsInTheMenu(unittest.TestCase):
 
 	def test_the_levers_a_choice_covered_money_with_are_set_the_way_a_player_sets_them(self):
 		state, world = self.state_and_world(0.3)
-		pulled = state.pull_tax_response_levers({fiscal_response.LIABILITY: 5.0, fiscal_response.AMNESTY: 5.0}, world)
+		pulled = state.fiscal.pull_tax_response_levers({fiscal_response.LIABILITY: 5.0, fiscal_response.AMNESTY: 5.0}, world)
 		self.assertEqual(pulled, {fiscal_response.LIABILITY: liability.COLLECTIVE, fiscal_response.AMNESTY: 1.0})
 		self.assertEqual(government_levers_tax.liability_rule(state.record), liability.COLLECTIVE)
 		self.assertEqual(government_levers_tax.amnesty_share(state.record), 1.0)
 
 	def test_a_choice_that_covered_nothing_with_them_sets_none(self):
 		state, world = self.state_and_world(0.3)
-		self.assertEqual(state.pull_tax_response_levers({fiscal_response.RATE: 5.0}, world), {})
+		self.assertEqual(state.fiscal.pull_tax_response_levers({fiscal_response.RATE: 5.0}, world), {})
 
 
 if __name__ == "__main__":

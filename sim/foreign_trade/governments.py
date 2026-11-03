@@ -18,4 +18,4 @@ class Governments(Part):
     def apply_close_markets_to(self, command: Any) -> None:
         government = self.parts.economies.partner_government(command.partner)
         if government is not None:
-            government.close_markets_to(command.party, command.until)
+            government.markets.close_markets_to(command.party, command.until)

@@ -107,7 +107,7 @@ check("the arsenal's goods go to the stores up to what the army lines draw",
 	  abs(state.record.stores["weapons_kg"] - 0.4) < 1e-9, state.record.stores)
 check("...and only the rest is sold", len(world.sales) == 1 and abs(world.sales[0][2] - 0.6) < 1e-9, world.sales)
 line = budget.Line("army", "requisition", {}, 0.0, {"weapons_kg": 0.5}, 1.5)
-drawn = state.draw_stores([line], world)[0]
+drawn = state.stores.draw_stores([line], world)[0]
 check("the army line then draws on the stores before buying",
 	  abs(drawn.materials["weapons_kg"] - 0.1) < 1e-9 and state.record.stores["weapons_kg"] < 1e-9, drawn.materials)
 

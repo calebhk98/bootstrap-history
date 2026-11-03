@@ -13,8 +13,11 @@ from .edges import EDGE_BUILDERS
 from .tuning_spending import MASONRY_PERSON_YEARS_PER_M2, MAX_STATE_SHARE_OF_TRADE, RESERVE_CEILING_YEARS_OF_NEED
 
 
-class SurplusMixin:
-	"""Mixed into `Government`."""
+class Surplus:
+	"""A state's use of money beyond its need, on the government that owns the purse."""
+
+	def __init__(self, government: Any) -> None:
+		self.government = government
 
 	def relieve_strata(self, excess: float, world: Any) -> float:
 		"""Pay the bodies of people in its country the cost of the floors of the needs they report going without,
@@ -31,7 +34,7 @@ class SurplusMixin:
 			return 0.0
 		covered = min(1.0, excess / total)
 		for stratum, need in needs:
-			ledger.transfer(self, stratum, need * covered, "relief")
+			ledger.transfer(self.government, stratum, need * covered, "relief")
 			stratum.record.allowance += need * covered
 		return total * covered
 
@@ -39,9 +42,9 @@ class SurplusMixin:
 		"""Reserve beyond what it holds against risk relieves its people's reported need, restocks the granary
 		when grain is cheap, then raises the works it wants and lacks (`state_works.py`), as many as what is left
 		pays at the going wage and the trades allow. What no work wants stays in the reserve."""
-		excess = self.money - government_levers.reserve_years(self.record, RESERVE_CEILING_YEARS_OF_NEED) * sum(line.money for line in lines)  # type: ignore[attr-defined]
+		excess = self.government.money - government_levers.reserve_years(self.government.record, RESERVE_CEILING_YEARS_OF_NEED) * sum(line.money for line in lines)
 		excess -= self.relieve_strata(excess, world)
-		excess -= self.restock_granary(excess, world)  # type: ignore[attr-defined]
+		excess -= self.government.granary.restock_granary(excess, world)
 		for work, gap in state_works.gaps(world):
 			trade = world.labour.trade_of_role(work.role)
 			wage = world.labour.pay_per_person_year(trade)
@@ -52,7 +55,7 @@ class SurplusMixin:
 			if people <= 0.0:
 				continue
 			built = budget.Line("building " + work.name, "requisition", {trade: people}, people * wage)
-			ledger.transfer(self, world.setting.edge(EDGE_BUILDERS), built.money, built.name)
+			ledger.transfer(self.government, world.setting.edge(EDGE_BUILDERS), built.money, built.name)
 			state_works.held(world)[work.name] += people / MASONRY_PERSON_YEARS_PER_M2
-			self.employ_standing([built], 1.0, world)  # type: ignore[attr-defined]
+			self.government.employ_standing([built], 1.0, world)
 			excess -= built.money

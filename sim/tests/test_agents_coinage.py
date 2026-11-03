@@ -6,7 +6,7 @@ from .harness import check
 
 from sim.agents.api import ActorRecord
 from sim.agents.government import Government
-from sim.agents.government_coinage import CoinageMixin, debasement_decision
+from sim.agents.government_coinage import Coinage, debasement_decision
 from sim.agents.tuning_coinage import COIN_RESTRIKE_SHARE_PER_YEAR, DEBASEMENT_SHARE_CEILING
 
 from .agents_fake_world import FakeWorld
@@ -16,7 +16,7 @@ class State(Government):
 	"""The government, which carries the coinage policy."""
 
 
-check("the government carries the coinage policy", issubclass(Government, CoinageMixin))
+check("the government carries the coinage part", isinstance(State("government:home", ActorRecord(kind="government")).coinage, Coinage))
 
 
 class CoinWorld(FakeWorld):
@@ -55,10 +55,10 @@ check("no coin in use gives nothing to strike again",
 
 state = state_short_by(5.0)
 world = CoinWorld()
-state.decide_debasement(world)
+state.coinage.decide_debasement(world)
 check("the decision is recorded on the government's record", state.record.coin_cut_share == small)
 check("the coin keeps the rest of its metal", abs(state.record.coin_metal_kept - (1.0 - small)) < 1e-12)
 state.record.unfunded = {}
-state.decide_debasement(world)
+state.coinage.decide_debasement(world)
 check("a year with no shortfall records no cut and the lighter coin stays lighter",
       state.record.coin_cut_share == 0.0 and abs(state.record.coin_metal_kept - (1.0 - small)) < 1e-12)

@@ -97,7 +97,7 @@ state_works.held(world)
 treasury = world.state
 treasury.money = 1.0e9
 before = treasury.money
-treasury.build_works([], world)
+treasury.surplus.build_works([], world)
 check("a surplus raised the monuments the state lacked", state_works.held(world)["capital_buildings"] > 0.0, state_works.held(world))
 paid = before - treasury.money
 check("it paid the builders and posted places for masons", treasury.staff_wanted.get("mason", 0.0) > 0.0 and paid > 0.0, treasury.staff_wanted)
@@ -107,17 +107,17 @@ check("no outlay is an unnamed one", set(treasury.record.outlays) <= {"building 
 sated = WorksWorld()
 state_works.held(sated)
 sated.state.money = 1.0e9
-sated.state.build_works([], sated)
+sated.state.surplus.build_works([], sated)
 check("a state that wants nothing more keeps its surplus rather than spending it on unnamed works",
       sated.state.money == 1.0e9 and not sated.state.record.outlays, sated.state.record.outlays)
 
 # ---- the granary: a reserve in the stores, spoilage, bought cheap, released dear ----------------------
 world = WorksWorld()
 treasury = world.state
-target = treasury.granary_target(world)
+target = treasury.granary.granary_target(world)
 check("the reserve is a target in years of the towns' food", target > 0.0, target)
 treasury.record.stores[GRAIN] = target * 3.0
-sold = treasury.keep_granary(world)
+sold = treasury.granary.keep_granary(world)
 check("grain above the target is sold into the market", sold > 0.0 and world.sales[-1][1] == GRAIN, world.sales)
 check("what is kept is the target less spoilage",
       abs(treasury.record.stores[GRAIN] - target * 3.0 * (1.0 - GRANARY_LOSS_SHARE_PER_YEAR) + sold) < 1e-6,
@@ -126,18 +126,18 @@ world = WorksWorld()
 treasury = world.state
 treasury.record.stores[GRAIN] = target
 world.prices[GRAIN] = 2.0
-treasury.keep_granary(world)
+treasury.granary.keep_granary(world)
 world.prices[GRAIN] = 1.0
 treasury.record.stores[GRAIN] = 0.1 * target
-spent = treasury.restock_granary(1.0e9, world)
+spent = treasury.granary.restock_granary(1.0e9, world)
 check("below the target it buys when the price is below normal", spent > 0.0 and world.purchases, (spent, world.purchases))
 check("and holds what it bought", treasury.record.stores[GRAIN] > 0.1 * target, treasury.record.stores)
 world.prices[GRAIN] = 5.0
-spent = treasury.restock_granary(1.0e9, world)
+spent = treasury.granary.restock_granary(1.0e9, world)
 check("it does not buy when grain is dear", spent == 0.0, spent)
 before_sales = len(world.sales)
 treasury.record.stores[GRAIN] = target
-treasury.keep_granary(world)
+treasury.granary.keep_granary(world)
 check("it releases grain when the market is dear", len(world.sales) > before_sales, world.sales)
 
 # ---- tax collection: collectors in proportion to what each form raises ----------------------------------

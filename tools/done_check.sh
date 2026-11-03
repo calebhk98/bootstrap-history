@@ -15,6 +15,13 @@ markets_mixin_count="$(grep -rhE --include=*.py '^class [A-Za-z0-9_]*Mixin\b' si
 echo "mixin classes in sim/labour: $labour_mixin_count"
 echo "mixin classes in sim/markets: $markets_mixin_count"
 
+# classes in labour, markets, agents, actors and economy that are a ...Mixin or inherit behaviour from more than one base (the allowed
+# bases and the classes still waiting for their split are in tools/check_class_bases.py)
+class_base_output="$(python3 tools/check_class_bases.py 2>&1)"
+class_base_status=$?
+echo "classes composed by inheritance (tools/check_class_bases.py): $(printf '%s\n' "$class_base_output" | grep -vc '^pending ')"
+printf '%s\n' "$class_base_output" | grep . | tail -8 | sed 's/^/  /'
+
 coupling_output="$(python3 tools/measure/coupling.py)"
 echo "inheritance left on Sim, cross-class references: $(printf '%s\n' "$coupling_output" | head -1)"
 
@@ -95,6 +102,7 @@ printf '%s\n' "$port_reach" | grep . | sed 's/^/  /'
 failed_checks=()
 [ "$mixin_count" -gt 0 ] && failed_checks+=("mixin classes in MRO")
 [ "$labour_mixin_count" -gt 0 ] && failed_checks+=("mixin classes in sim/labour")
+[ "$class_base_status" -ne 0 ] && failed_checks+=("classes composed by inheritance (tools/check_class_bases.py)")
 { [ "$module_read_count" -gt 0 ] || [ "$module_read_status" -ne 0 ]; } && failed_checks+=("module reads and sends not declared in their spec")
 { [ -n "$ui_view_output" ] || [ "$ui_view_status" -ne 0 ]; } && failed_checks+=("UI views and commands (tools/check_ui_views.py)")
 [ "$money_count" -gt 0 ] && failed_checks+=("direct capital/money writes outside owners")

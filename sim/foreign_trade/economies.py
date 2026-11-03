@@ -79,7 +79,7 @@ class Economies(Part):
             government = SimpleNamespace(record=SimpleNamespace(
                 state_monopolies=set(civilization.get("state_monopolies") or ())), decision_policy=None)
         else:
-            reopens = government.markets_closed_until(self.needs.acting_seat(), self.needs.year())
+            reopens = government.markets.markets_closed_until(self.needs.acting_seat(), self.needs.year())
             if reopens:
                 return Refusal("partner_market_shut", "%s has shut its markets to you until %d" % (name, reopens))
         if material not in exports_allowed(government, [material]):

@@ -310,7 +310,7 @@ check("...and the partner has that much less to sell",
       abs(thief.module.partner_holding(PARTNER, EGGS) - (load_civ(PARTNER)["opening_stock"][EGGS] - 0.1)) < 1e-9,
       thief.module.partner_holding(PARTNER, EGGS))
 check("...with no scandal and its markets still open", thief.scandal == 0.0
-      and thief.partner_government(PARTNER).markets_closed_until("founder", 100) == 0)
+      and thief.partner_government(PARTNER).markets.markets_closed_until("founder", 100) == 0)
 
 # caught
 caught = Game()
@@ -320,7 +320,7 @@ outcome = caught.smuggle(terms)
 check("a smuggler caught is left with nothing", outcome["caught"] and caught.held(EGGS) == 0.0, outcome)
 check("...still pays the carrying", caught.purse.paid == [("stock smuggled", terms["cost"])], caught.purse.paid)
 check("...has the partner's state shut its markets to him for years",
-      caught.partner_government(PARTNER).markets_closed_until("founder", 100) == outcome["closed_until"]
+      caught.partner_government(PARTNER).markets.markets_closed_until("founder", 100) == outcome["closed_until"]
       and outcome["closed_until"] > 100, outcome)
 check("...so the partner refuses him, naming the year",
       cause_of(caught.partner_refusal(PARTNER, TEA)) == "partner_market_shut", caught.partner_refusal(PARTNER, TEA))

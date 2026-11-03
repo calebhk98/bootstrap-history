@@ -9,6 +9,7 @@ from unittest import mock
 
 from sim.agents import ledger, state_works
 from sim.agents.api import Government, Stratum, stratum_id
+from sim.agents.government_granary import Granary
 from sim.agents.edges import EDGE_BUILDERS
 from sim.agents.purses import Purses
 from sim.agents.records import ActorRecord
@@ -52,10 +53,10 @@ def standing_need_lines(total):
 
 def surplus_spent(world, gaps):
     """Run the state's surplus spending with the granary and the works wanted fixed by the test."""
-    with mock.patch.object(Government, "restock_granary", return_value=0.0), \
+    with mock.patch.object(Granary, "restock_granary", return_value=0.0), \
             mock.patch.object(state_works, "gaps", return_value=gaps), \
             mock.patch.object(state_works, "held", return_value={"capital_buildings": 0.0}):
-        world.state.build_works(standing_need_lines(100.0), world)
+        world.state.surplus.build_works(standing_need_lines(100.0), world)
 
 
 class SurplusSpending(unittest.TestCase):
