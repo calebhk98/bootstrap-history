@@ -237,7 +237,7 @@ What an hour of work is worth in the game's coin is one figure: the agent econom
 reaches the labour package by one chain: `labour_wage_schedule.wage_schedule` reads `world.economy.unskilled_wage`, which
 is `agent_unskilled_wage`, which is `PriceReads.unskilled_wage_per_hour`. That figure and every other trade's wage come
 from one rule (`sim/economy/trade_wages.py`), for the home country and a partner alike: the wage the trade's labour market
-paid; else the opening wage of the trade times `opening_wage_level`; else the unskilled wage of the same scope times one
+paid (the labour core's area wage, which every trade has in every area each year, hired or not; a country's figure for a trade is the mean of its areas' wages weighted by hours hired, else by the people working the trade there, else plain); else, only for a trade the core holds no wage for (before the first clearing), the opening wage of the trade times `opening_wage_level`; else the unskilled wage of the same scope times one
 plus the trade's training premium; and where the scope has no unskilled wage either, the opening unskilled wage times
 `opening_wage_level` times one plus the premium (`priced_trade_wage` in `sim/economy/trade_wages.py`). A trade id the
 setup does not know is an error. Before the economy has opened there is

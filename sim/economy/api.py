@@ -198,16 +198,10 @@ def hours_offered_in_area_of(economy, trade, tile):
 
 
 def wages_by_trade_weighted(economy, country=None):
-    """Last year's wage per hour of each trade: the remembered wage of each of its labour markets weighted
-    by the hours hired there last year. A trade that hired no hours is left out (its remembered wages are
-    opening seeds, not clearings), except the unskilled trade, whose wage prices the rest. Of `country`'s
-    markets (the home country's when the economy holds several)."""
-    scope = country_figures.home_when_shared(economy, country)
-    wages = country_figures.wages_per_hour(economy, scope)
-    idle_and_offered = country_figures.idle_hours_by_trade(economy, scope)
-    unskilled = economy.setup.unskilled_trade
-    return {trade: wage for trade, wage in wages.items()
-            if trade == unskilled or idle_and_offered.get(trade, (0.0, 0.0))[1] > idle_and_offered.get(trade, (0.0, 0.0))[0]}
+    """The wage per hour of each trade the labour core holds a wage for, over `country`'s labour areas (the home
+    country's when the economy holds several): `country_figures.wages_per_hour`, hours-hired weights, else people.
+    A trade nobody hired is in it at the core's wage, not at an opening wage."""
+    return country_figures.wages_per_hour(economy, country_figures.home_when_shared(economy, country))
 
 
 def interest_rate(economy):
@@ -605,7 +599,8 @@ def priced_trade_wage(economy, trade, paid, unskilled):
 
 def country_trade_wage(economy, trade, country=None):
     """The wage per hour of a trade in a country (the home country's when none is named) by the one rule, on the
-    hours-weighted wages its labour markets paid last year."""
+    wages its labour areas hold (`wages_by_trade_weighted`); the opening wage stands in only for a trade the core
+    holds no wage for in any of them."""
     wages = wages_by_trade_weighted(economy, country)
     return priced_trade_wage(economy, trade, wages.get(trade), wages.get(economy.setup.unskilled_trade))
 

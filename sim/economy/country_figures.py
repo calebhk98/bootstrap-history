@@ -10,7 +10,7 @@ from typing import Dict, List, Optional, Set, Tuple
 from . import carried_book, households
 from .home_scope import has_partners
 from .market_memory import KEY_SEPARATOR, YearView
-from .national_prices import national_prices, national_wages
+from .national_prices import national_prices
 from .setup import LABOUR_AREA_PREFIX, labour_area
 from .types import TileId
 
@@ -40,9 +40,29 @@ def _labour_key_in(key: str, tiles: Set[TileId]) -> bool:
 
 
 def wages_per_hour(economy, country: Optional[str]) -> Dict[str, float]:
-    """Last year's wage per hour of each trade in the country's labour markets (`national_prices.national_wages`)."""
+    """The wage per hour of each trade over the country's labour areas, from the wages the labour core holds (the
+    remembered wages mirror them, `labour_state.mirror_wages`; the core gives every trade a wage in every area each
+    year). A trade is weighted by the hours hired in each area last year; where it hired nowhere in the country, by
+    the people working it in each area (the wage is what those workers would accept, so the people it would reach
+    count, not hours nobody bought); where it has no people either, the plain mean of the area wages."""
+    record = economy.record
     tiles = country_tiles(economy, country)
-    return dict(sorted(national_wages(economy.record, lambda key: _labour_key_in(key, tiles)).items()))
+    rows: Dict[str, List[Tuple[float, float, float]]] = {}
+    for key, wage in sorted(record.memory.wages.items()):
+        if _labour_key_in(key, tiles):
+            trade, area = key.split(KEY_SEPARATOR, 1)
+            people = math.fsum(record.labour.workforce.workers.get(area, {}).get(trade, ()))
+            rows.setdefault(trade, []).append((wage, record.labour.hours_cleared_in(key), people))
+    wages = {}
+    for trade, entries in rows.items():
+        for weight_index in (1, 2):
+            total = math.fsum(entry[weight_index] for entry in entries)
+            if total > 0.0:
+                wages[trade] = math.fsum(entry[0] * entry[weight_index] for entry in entries) / total
+                break
+        else:
+            wages[trade] = math.fsum(entry[0] for entry in entries) / len(entries)
+    return dict(sorted(wages.items()))
 
 
 def idle_hours_by_trade(economy, country: Optional[str]) -> Dict[str, tuple]:

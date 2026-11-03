@@ -1,6 +1,8 @@
 """The one rule for the wage per hour a trade is priced at, wherever a bid, a quote or a crew needs it:
 the wage its labour market paid (the memory holds only wages above zero, `labour_state.mirror_wages`, so a wage that
-is there is positive), else the wage the economy opened with for the trade scaled to today's money
+is there is positive; the core gives every trade a wage in every labour area each year, hired or not, falling toward
+what the trade's workers would accept and never below their unskilled option), else, only for a trade the core holds no
+wage for (before the economy's first clearing), the wage the economy opened with for the trade scaled to today's money
 (`MarketMemory.opening_wage_level`: an opening-year nominal wage is out of date after inflation and after the
 spin-up's rebase), else the unskilled wage of the same scope plus the trade's training premium, else the opening
 unskilled wage in today's money plus the premium.
@@ -10,7 +12,10 @@ The rule answers for every scope, home or partner: the opening unskilled wage ex
 for it), so after the economy opens no trade is without a wage. A trade id the setup does not know is refused.
 
 The unskilled wage is of the scope the caller asks about: one labour area (`wage_in_area`, `wage_in_view`) or the
-country's hours-weighted figure (sim/economy/api.py `country_trade_wage`).
+country's figure (sim/economy/api.py `country_trade_wage`): the mean of the core's area wages over the country's areas,
+weighted by hours hired there last year, else (a trade nobody hired in the country) by the people working it in each area,
+else plainly. A never-hired trade therefore has the same wage nationally as in `wage_in_area`; the opening wage never
+overrides a wage the core holds.
 
 Households differ on purpose: a household is a seller, and what it faces in a market with no recorded wage is its own
 reservation wage (`faced_wage`), the least it will work for, not the wage an employer would be billed. A tax or land

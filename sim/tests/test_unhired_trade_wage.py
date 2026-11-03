@@ -1,4 +1,5 @@
-"""A trade no producer hires is priced from the unskilled wage and its training premium, not from stale seeds;
+"""A trade the core holds a wage for is priced at it though nobody hired it; one the core holds no wage for is priced from the
+unskilled wage and its training premium;
 the credit room the money screen shows is in coin. Each function is called on a stand-in economy built here."""
 
 QUICK_TOPIC = True
@@ -13,43 +14,44 @@ from sim.markets.reads_prices import PriceReads
 from sim.tests.labour_record_stand_in import labour_record
 
 SCRIBE, LABOURER, TOWN = "scribe", "labourer", "town"
-STALE_SEED_WAGE = 500.0
+OPENING_WAGE = 500.0
 COIN_PER_UNIT = 2.0
 
 
-def economy_with_unhired_scribe():
-    """A one-country economy whose labourers were hired last year and whose scribes were not (a seed wage stands)."""
+def economy_with_unhired_scribe(scribe_wage=None):
+    """A one-country economy whose labourers were hired last year and whose scribes were not; `scribe_wage` is the core's
+    wage for the scribes (None: the core holds none)."""
     setup = types.SimpleNamespace(
-        unskilled_trade=LABOURER, tiles=[TOWN], countries=lambda: ["home"], coin_per_unit=COIN_PER_UNIT,
+        unskilled_trade=LABOURER, tiles=[TOWN], currency_id="coin", opening_wages={LABOURER: 1.0}, countries=lambda: ["home"], coin_per_unit=COIN_PER_UNIT,
         trades={LABOURER: SetupTrade(LABOURER), SCRIBE: SetupTrade(SCRIBE, training_years=6.0)})
+    wages = {"%s|work@%s" % (LABOURER, TOWN): 1.2}
+    if scribe_wage is not None:
+        wages["%s|work@%s" % (SCRIBE, TOWN)] = scribe_wage
     record = types.SimpleNamespace(
-        memory=types.SimpleNamespace(wages={"%s|work@%s" % (LABOURER, TOWN): 1.2, "%s|work@%s" % (SCRIBE, TOWN): STALE_SEED_WAGE}),
+        memory=types.SimpleNamespace(wages=wages, opening_wage_level=lambda currency: 1.0),
         labour=labour_record({"%s|work@%s" % (LABOURER, TOWN): 900.0},
                              {"%s|work@%s" % (LABOURER, TOWN): 100.0, "%s|work@%s" % (SCRIBE, TOWN): 50.0}))
     return types.SimpleNamespace(setup=setup, record=record)
 
 
-def agent_economy_over(economy, wages):
-    """`PriceReads` whose year's answers are `wages` (by trade, in coin) over the economy."""
-    agent = PriceReads(types.SimpleNamespace(economy=lambda: economy), None)
-    agent.answers = lambda country=None: ({}, wages, 0.05)
-    return agent
-
-
 class UnhiredTradeWageTests(unittest.TestCase):
-    def test_weighted_wages_leave_out_a_trade_nobody_hired(self):
-        wages = api.wages_by_trade_weighted(economy_with_unhired_scribe())
-        self.assertNotIn(SCRIBE, wages)
+    def test_weighted_wages_hold_a_trade_nobody_hired_at_the_core_wage(self):
+        wages = api.wages_by_trade_weighted(economy_with_unhired_scribe(scribe_wage=1.7))
+        self.assertEqual(wages[SCRIBE], 1.7)
         self.assertIn(LABOURER, wages)
+
+    def test_weighted_wages_leave_out_a_trade_the_core_holds_no_wage_for(self):
+        self.assertNotIn(SCRIBE, api.wages_by_trade_weighted(economy_with_unhired_scribe()))
 
     def test_unhired_trade_is_priced_from_unskilled_wage_and_premium(self):
         economy = economy_with_unhired_scribe()
-        unskilled = 2.4
-        agent = agent_economy_over(economy, {LABOURER: unskilled})
+        unskilled = 1.2
+        agent = PriceReads(types.SimpleNamespace(economy=lambda: economy), None)
+        agent.answers = lambda country=None: ({}, {}, 0.05)
         premium = api.trade_premium(economy.setup, SCRIBE)
         self.assertGreater(premium, 0.0)
-        self.assertAlmostEqual(agent.wage_per_hour(SCRIBE), unskilled * (1.0 + premium))
-        self.assertLess(agent.wage_per_hour(SCRIBE), STALE_SEED_WAGE * COIN_PER_UNIT)
+        self.assertAlmostEqual(agent.wage_per_hour(SCRIBE), unskilled * (1.0 + premium) * COIN_PER_UNIT)
+        self.assertLess(agent.wage_per_hour(SCRIBE), OPENING_WAGE * COIN_PER_UNIT)
 
 
 class CreditRoomUnitsTests(unittest.TestCase):

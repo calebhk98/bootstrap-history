@@ -40,10 +40,10 @@ class WeightedWageTests(unittest.TestCase):
         economy = economy_of({first: 10.0, second: 40.0}, {first: 300.0, second: 100.0}, {first: 0.0, second: 0.0})
         self.assertAlmostEqual(api.wages_by_trade_weighted(economy)[TRADE], (10.0 * 300.0 + 40.0 * 100.0) / 400.0)
 
-    def test_a_trade_that_hired_nothing_is_left_out(self):
+    def test_a_trade_that_hired_nothing_keeps_its_area_wage(self):
         only = market(TRADE, "tile_a")
         economy = economy_of({only: 10.0}, {}, {only: 50.0})
-        self.assertNotIn(TRADE, api.wages_by_trade_weighted(economy))
+        self.assertAlmostEqual(api.wages_by_trade_weighted(economy)[TRADE], 10.0)
 
     def test_the_unskilled_trade_is_kept_even_when_it_hired_nothing(self):
         only = market(UNSKILLED, "tile_a")

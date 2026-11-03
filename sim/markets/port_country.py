@@ -21,7 +21,7 @@ class CountryAnswers:
         self._hours = working_hours_per_year(economy)
 
     def pay_per_person_year(self, trade: str) -> float:
-        """What a person-year of a trade pays in the country's labour markets; a trade nobody hired is priced by the
+        """What a person-year of a trade pays in the country's labour markets; a trade nobody hired is at the core's area wages, and one with none by the
         one rule (sim/economy/trade_wages.py) on the country's unskilled wage."""
         return country_trade_wage(self._economy, trade, self._country) * self._coin * self._hours
 
