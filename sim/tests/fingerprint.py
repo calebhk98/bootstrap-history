@@ -47,7 +47,7 @@ BASELINE_FIELDS = (
     "employees", "trades_created", "policy", "businesses",
     "forgotten", "last_taught", "paid_towards",
     "contract_hours", "hour_allocations", "work_trade",
-    "commissioned", "wages_paid", "bondage_years_left", "bondage_debt",
+    "wages_paid", "bondage_years_left", "bondage_debt",
     "money_real", "credit_frozen_until", "interest_paid",
     "wage_hours_this_year", "teaching_hours_this_year", "trade_hours_used",
     "total_spend", "director_hours_spent_founder", "bounties_paid",

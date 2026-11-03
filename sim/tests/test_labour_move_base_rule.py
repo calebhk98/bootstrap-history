@@ -22,7 +22,7 @@ class _World(types.SimpleNamespace):
 class _Mover:
     def __init__(self, capital=1000.0, quote=(10.0, 80.0, 50.0)):
         self.household = types.SimpleNamespace(capital=capital, total_spend=0.0, relocation_hours_this_year=0.0,
-                                               commissioned={"smith": 400.0}, contract_hours={"smith": 400.0},
+                                               contract_hours={"smith": 400.0},
                                                hours_wanted_once={ONCE_COMMISSION: {"smith": 400.0}}, base_tile=HOME)
         self.paid, self.pressure_cleared, self.pools_resynced, self.sent = [], 0, 0, []
         self.quote = quote
@@ -76,7 +76,7 @@ class MoveBaseRefusalsTest(unittest.TestCase):
 
     def test_a_household_that_cannot_pay_the_wages_does_not_move(self):
         mover = self._refused(TOWN, capital=10.0)
-        self.assertEqual(mover.household.commissioned, {"smith": 400.0})
+        self.assertEqual(mover.household.contract_hours, {"smith": 400.0})
 
 
 class MoveBaseEffectsTest(unittest.TestCase):
@@ -87,7 +87,7 @@ class MoveBaseEffectsTest(unittest.TestCase):
         household = mover.household
         self.assertEqual(mover.paid, [("workers", 50.0, "relocation")])
         self.assertEqual(household.relocation_hours_this_year, 80.0)
-        self.assertEqual((household.commissioned, household.contract_hours, household.hours_wanted_once), ({}, {}, {}))
+        self.assertEqual((household.contract_hours, household.hours_wanted_once), ({}, {}))
         self.assertEqual(mover.sent, [NoteSpend(50.0), ScaleFamiliarity(Relocation.RELOCATION_STANDING_RETAINED),
                                       ScaleProtection(Relocation.RELOCATION_STANDING_RETAINED)])
         self.assertEqual(household.base_tile, TOWN)

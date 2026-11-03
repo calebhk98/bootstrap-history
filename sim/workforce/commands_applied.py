@@ -55,7 +55,6 @@ class Applying(Part):
 		if command.purpose == ONCE_COMMISSION:
 			for trade, hours in hired.items():
 				seat.contract_hours[trade] = seat.contract_hours.get(trade, 0.0) + hours
-				seat.commissioned[trade] = seat.commissioned.get(trade, 0.0) + hours
 
 	def post_hours_once(self, command):
 		orders = self.seat.hours_wanted_once.setdefault(command.purpose, {})

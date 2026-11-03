@@ -178,7 +178,6 @@ RELOCATIONS = [
     ("/seats/*/modules/workforce/trade_introduced_year", "/seats/*/household/trade_introduced_year"),
     ("/seats/*/modules/workforce/last_taught", "/seats/*/household/last_taught"),
     ("/seats/*/modules/workforce/contract_hours", "/seats/*/household/contract_hours"),
-    ("/seats/*/modules/workforce/commissioned", "/seats/*/household/commissioned"),
     ("/seats/*/modules/workforce/teaching_hours_this_year", "/seats/*/household/teaching_hours_this_year"),
     ("/seats/*/modules/workforce/relocation_hours_this_year", "/seats/*/household/relocation_hours_this_year"),
     ("/seats/*/modules/workforce/supervision_hours_this_year", "/seats/*/household/supervision_hours_this_year"),

@@ -59,7 +59,6 @@ class WorkforceSeat:
     last_taught: Dict[str, int] = field(default_factory=dict)
     # ---- hours ----
     contract_hours: Dict[str, float] = field(default_factory=dict)
-    commissioned: Dict[str, float] = field(default_factory=dict)
     teaching_hours_this_year: float = 0.0
     relocation_hours_this_year: float = 0.0
     supervision_hours_this_year: float = 0.0
