@@ -6,6 +6,7 @@ hires through the labour core (sim/markets/port_staff.py). The wage is the econo
 wage for the trade (labour_wages.py reads it; before the economy opens, the opening schedule with
 the cost-of-living factors and the price and wage indices, which only the opening needs).
 """
+from typing import Optional
 import math
 
 from sim.constants import declare
@@ -130,7 +131,7 @@ class LabourMarket:
                               self.HOUSING_PRESSURE_START_OCCUPANCY, self.HOUSING_PRESSURE_BAND,
                               self.HOUSING_PRESSURE_MAX_MARKUP)
 
-    def _annual(self, trade):
+    def _annual(self, trade) -> Optional[float]:
         """The economy's wage for the trade over a year; None once the economy is open and its rule gives the trade no wage.
         Only before the economy opens, the opening schedule's with the cost-of-living factors, the price index and the
         wage index."""
@@ -144,17 +145,17 @@ class LabourMarket:
         factors = self.cost_factors(trade)
         return annual_wage(base, factors["weighted"], world.finance.price_index, world.trades.wage_index, 1.0, self.pay_scale())
 
-    def quote_annual(self, trade):
+    def quote_annual(self, trade) -> Optional[float]:
         """Money one person-year of a trade costs now: the economy's wage for the trade, the same for every employer and
         every number taken on (a hire is a standing bid in the labour core, sim/markets/port_staff.py)."""
         return self._annual(trade)
 
-    def quote(self, trade):
+    def quote(self, trade) -> Optional[float]:
         """Money one hour of a trade costs now: the one wage of the trade."""
         annual = self._annual(trade)
         return None if annual is None else annual / person_year_hours(self._world)
 
-    def commission_cost(self, trade, hours):
+    def commission_cost(self, trade, hours) -> Optional[float]:
         """What a one-off job of `hours` costs: the hour the market quotes."""
         quote = self.quote(trade)
         return None if quote is None else hours * quote

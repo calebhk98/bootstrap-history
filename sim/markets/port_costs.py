@@ -15,8 +15,8 @@ def wage_function(sim, production):
     ratios = price_solver.solver_wage_ratios(production, {})
 
     def wage_of(trade):
-        quote = sim.economy.labour.quote(trade) if trade in sim.state.trade_registry else 0.0
-        return quote if quote > 0.0 else unskilled * ratios.get(trade, 1.0)
+        quote = sim.economy.labour.quote(trade) if trade in sim.state.trade_registry else None
+        return quote if quote is not None and quote > 0.0 else unskilled * ratios.get(trade, 1.0)
     return wage_of
 
 

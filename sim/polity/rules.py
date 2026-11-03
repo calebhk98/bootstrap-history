@@ -1,7 +1,7 @@
 """Polity's rules as plain functions of plain values: how alarming a technology is, what protects a household, how visible it
 is to the state, how consent bounds the state's reach, and how a year moves reputation, familiarity, scandal and bribes."""
 import math
-from typing import Dict, Iterable, Mapping, Sequence
+from typing import Dict, Iterable, Mapping, Optional, Sequence
 
 from . import constants
 
@@ -63,11 +63,13 @@ def protection_total(works_protection: float, pressed_office: bool, reputation: 
 
 
 def visible_scale(headcount: float, wealth: float, eminence: float, defiance_surcharge: float, eminence_danger: float,
-                  wage_of_labourer: float) -> float:
+                  wage_of_labourer: Optional[float]) -> float:
 	"""0..1: what an observer can count of a taxpayer's staff, its wealth and (for a person) its prominence, and a surcharge
-	for having defied the state."""
+	for having defied the state. Wealth is counted in a labourer's wages; with no such wage an observer cannot size a fortune,
+	and the wealth term is left out."""
 	head_share = min(1.0, math.sqrt(max(0.0, headcount) / constants.HOUSEHOLD_HEADCOUNT_SATURATES_AT))
-	wealth_share = min(1.0, max(0.0, wealth) / (constants.HOUSEHOLD_WEALTH_SATURATES_AT * wage_of_labourer))
+	wealth_share = (0.0 if wage_of_labourer is None
+	                else min(1.0, max(0.0, wealth) / (constants.HOUSEHOLD_WEALTH_SATURATES_AT * wage_of_labourer)))
 	eminence_share = min(1.0, max(0.0, eminence) / eminence_danger)
 	return min(1.0, constants.HOUSEHOLD_SCALE_HEADCOUNT_WEIGHT * head_share + constants.HOUSEHOLD_SCALE_WEALTH_WEIGHT * wealth_share
 	           + constants.HOUSEHOLD_SCALE_EMINENCE_WEIGHT * eminence_share + defiance_surcharge)

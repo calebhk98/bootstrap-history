@@ -11,6 +11,10 @@ from sim.prices.api import making_cost
 cost_of_making = making_cost.cost_of_making
 
 
+class _NoWage(Exception):
+    """A trade of a recipe has no wage under the economy's rule, so the cost of making the good is unknown."""
+
+
 def techniques_held(sim):
     """The nodes whose entries the economy's producers may run: those the society started with or was
     granted, and those some producer in it runs now (any seat's, any firm's concerns)."""
@@ -30,6 +34,8 @@ def late_goods_costs(sim, prices, goods, held_nodes, production):
     def wage_of(trade):
         if trade not in wages:
             wages[trade] = sim.economy.labour.quote(trade)
+        if wages[trade] is None:
+            raise _NoWage(trade)
         return wages[trade]
 
     rate = float(sim.finance.market_rate())
@@ -37,8 +43,11 @@ def late_goods_costs(sim, prices, goods, held_nodes, production):
     for good in goods:
         if good in prices:
             continue
-        made = cost_of_making(good, held_nodes, input_price_of, wage_of, rate, production=production,
-                              civilization=sim.scenario.civ)
+        try:
+            made = cost_of_making(good, held_nodes, input_price_of, wage_of, rate, production=production,
+                                  civilization=sim.scenario.civ)
+        except _NoWage:     # a good whose making needs a trade with no wage has no cost to seed a price from
+            continue
         if made is not None and made.unit_cost > 0.0:
             found[good] = made.unit_cost
     return found
@@ -62,7 +71,7 @@ def opening_with_techniques(sim, opening, held_nodes, production):
     wages = dict(opening["wages"])
     for trade in sorted(trades - set(wages)):
         wage = sim.economy.labour.quote(trade)
-        if wage > 0.0:
+        if wage is not None and wage > 0.0:
             wages[trade] = wage
     grown = dict(opening)
     grown["recipes"] = sorted(known.union(added))

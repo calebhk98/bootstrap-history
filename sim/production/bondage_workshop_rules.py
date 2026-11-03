@@ -3,9 +3,11 @@
 
 def workshop_craft_wages(employees, is_craft, annual_quote, unfree_equivalent, artisan_quote):
     """The yearly wages the workshop's craft staff would draw at the market: each craft trade at its own quote, and
-    the freedmen and enslaved (counted as `unfree_equivalent` full workers) at the artisan quote."""
-    wages = sum(count * annual_quote(trade) for trade, count in employees.items() if is_craft(trade))
-    return wages + unfree_equivalent * artisan_quote
+    the freedmen and enslaved (counted as `unfree_equivalent` full workers) at the artisan quote. A trade with no quote (None)
+    adds nothing to the sum: its staff's wages cannot be stated."""
+    quotes = {trade: annual_quote(trade) for trade in employees if is_craft(trade)}
+    wages = sum(count * quotes[trade] for trade, count in employees.items() if quotes.get(trade) is not None)
+    return wages if artisan_quote is None else wages + unfree_equivalent * artisan_quote
 
 
 def workshop_output_value(craft_wages, markup, capability_factor):

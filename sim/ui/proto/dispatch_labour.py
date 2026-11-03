@@ -16,6 +16,7 @@ from .command_registry import command
 from .hire_reply import hire_reply
 from sim.engine.ui_port import TRADES_ABSENT, TRADE_NOTES, WAGES, trade_family
 from .state_waiting import _staff_fraction_note
+from sim.ui.market_report import year_of_one_fields
 from .wage_figures import wage_origin
 from .util import _num, _qty
 from .quote_spending import COMMISSION_NOTE
@@ -176,7 +177,7 @@ def _cmd_labour(sim, nodes, cmd, ended):
         # trade's local supply bids it up, and the premium has to appear
         # here, not only in the bill.
         entry = {"trade": trade,
-             "a_year_of_one": round(sim.view("labour_market")().quote_annual(trade), 0),
+             **year_of_one_fields(sim, trade),
              "you_employ": round(sim.view("staff")()["employees"].get(trade, 0.0), 2)}
         if long:
             entry.update(wage_origin(sim, trade))
@@ -206,7 +207,7 @@ def _cmd_labour(sim, nodes, cmd, ended):
                                    "read, and this ceiling rises with it")
         if long:
             entry.update({"kind": trade_family(trade),
-                      "wage_per_hour": round(sim.view("wage")[trade], 3),
+                      "wage_per_hour": None if sim.view("wage")[trade] is None else round(sim.view("wage")[trade], 3),
                       "hours_the_labour_market_offers": round(sim.view("market_supply")[trade], 0),
                       "places_posted_for_you": round(sim.view("staff_wanted")().get(trade, 0.0), 2),
                       # AND THE SECOND CHANNEL: there are two distinct
@@ -410,7 +411,7 @@ def _cmd_train(sim, nodes, cmd, ended):
         return {"ok": False, "error": msg}
     out = {"ok": True, "training": msg, "capital": round(sim.view("acting_balance")(), 1),
            "paid_now": round(capital_before - sim.view("acting_balance")(), 1),
-           "wage_bill_added_per_year": round(wage_bill_added, 1),
+           "wage_bill_added_per_year": None if wage_bill_added is None else round(wage_bill_added, 1),
            "your_hours_left_this_year": round(
                max(0.0, sim.view("hours_available")["director_pool"] - sim.view("hours_available")["director_committed"]), 1)}
     # TRAIN AND HIRE ARE TWO SEPARATE STEPS, and this message is the one

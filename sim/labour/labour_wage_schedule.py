@@ -1,4 +1,5 @@
 """The opening wage schedule priced at the present level, and the wage of an hour of a trade read from it."""
+from typing import Optional
 from sim.constants import declare
 
 
@@ -46,7 +47,7 @@ class WageScheduleReader:
             "hands against the working population, or by output per hour that comes from "
             "diffused technology (Complaint 101).")
 
-    def wage_per_hour(self, trade):
+    def wage_per_hour(self, trade) -> Optional[float]:
         """Money one hour of this trade is paid: the economy's wage under its one rule once the economy has opened (None
         when that rule gives the trade none), and before it opens the opening schedule's (training premium times the
         money value of an unskilled hour)."""
@@ -54,7 +55,7 @@ class WageScheduleReader:
             return self._world.economy.agent_wage_at(trade, self._settlement.base_tile())
         return self.wage_schedule().wage_per_hour(trade)
 
-    def base_annual_wage(self, trade):
+    def base_annual_wage(self, trade) -> Optional[float]:
         """A year of the trade at `wage_per_hour`; None when that is."""
         wage = self.wage_per_hour(trade)
         return None if wage is None else wage * person_year_hours(self._world)

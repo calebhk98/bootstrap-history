@@ -2,6 +2,7 @@
 from typing import Any
 
 from . import equity_need, firm_entry, ledger
+from .no_country_economy import NoCountryEconomy
 from .edges import EDGE_BUILDERS
 from .tuning import EXPANSION_RATE
 
@@ -34,9 +35,12 @@ class Expansion:
 				continue
 			step = capacity * EXPANSION_RATE
 			rivals = firm.rivals_of(node_id, firm.actor_id) if firm.rivals_of else 0.0
-			gain = world.capacity.expansion_gain(node_id, firm.holdings.opened_year_of(node_id, world.setting.year), capacity, step, rivals)
-			gain -= self._added_carry(node_id, capacity, step, world)
-			cost = world.capacity.plant_cost(node_id, firm, step)
+			try:
+				gain = world.capacity.expansion_gain(node_id, firm.holdings.opened_year_of(node_id, world.setting.year), capacity, step, rivals)
+				gain -= self._added_carry(node_id, capacity, step, world)
+				cost = world.capacity.plant_cost(node_id, firm, step)
+			except NoCountryEconomy:      # a trade of the concern has no wage: the growth cannot be priced, so the firm does not grow it
+				continue
 			if gain <= 0.0:
 				continue
 			shortfall = max(0.0, cost - max(0.0, firm.money))

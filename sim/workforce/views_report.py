@@ -1,4 +1,5 @@
 """The views the workforce module publishes for what the screens tell the player about its people: room, hours, quotes and reports."""
+from typing import Optional
 from sim.assembly.api import Part
 from sim.labour.api import hours_by_trade_of_all_employers, people_by_trade_of_all_employers
 
@@ -116,7 +117,7 @@ class ReportViews(Part):
 	def train_check(self, trade, count, source=None):
 		return self.parts.core.labour.training.train_check(trade, count, source)
 
-	def trainee_wage_bill(self, trade, count):
+	def trainee_wage_bill(self, trade, count) -> Optional[float]:
 		return self.parts.core.labour.training.trainee_wage_bill(trade, count)
 
 	def work_for_wages_dry_run(self, trade, hours):

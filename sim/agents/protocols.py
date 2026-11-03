@@ -336,6 +336,8 @@ class LabourPart(Protocol):
 		...
 
 	def pay_per_person_year(self, trade: str) -> float:
+		"""What a person-year of a trade pays in the asking actor's country; refuses (NoCountryEconomy) where its labour markets
+		pay nothing for it."""
 		...
 
 	def pay_wages(self, payer: Any, amount: float, purpose: Any) -> None:
@@ -524,14 +526,16 @@ class CapacityPart(Protocol):
 		...
 
 	def running_cost(self, node_id: str, capacity: float) -> float:
-		"""Yearly upkeep and wages of a concern run at `capacity` times its founding size."""
+		"""Yearly upkeep and wages of a concern run at `capacity` times its founding size; refuses (NoCountryEconomy) as
+		`concern_wage_bill` does."""
 		...
 
 	def expansion_gain(self, node_id: str, opened_year: int, capacity: float, step: float, rivals: float) -> float:
 		...
 
 	def plant_cost(self, node_id: str, actor: Any, step: float) -> float:
-		"""Money for `step` founding sizes more of a concern's plant, for an actor that already knows how."""
+		"""Money for `step` founding sizes more of a concern's plant, for an actor that already knows how; refuses
+		(NoCountryEconomy) where a trade of the plant has no wage."""
 		...
 
 
@@ -556,6 +560,7 @@ class ConcernsPart(Protocol):
 		...
 
 	def concern_wage_bill(self, node_id: str, capacity: float = 1.0) -> float:
+		"""Yearly wages of a concern's crew at the going wage; refuses (NoCountryEconomy) where a trade of it has no wage."""
 		...
 
 	def plant_costs(self, node_id: str) -> Optional[Tuple[float, float]]:

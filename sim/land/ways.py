@@ -44,11 +44,13 @@ class Ways(Part):
     def way_quote(self, tile_a: str, tile_b: str, way: str) -> Optional[Dict[str, Any]]:
         """What building `way` ("road", "rail", "canal", "bridge", or "port" on one tile) between two bordering tiles costs now:
         {money, labour_hours, materials, km, node, years, engineered, trade, crew, crew_hours}, or None when it cannot be built
-        there or a material has no price."""
+        there, a material has no price or the trade has no wage."""
         needs = geography.build_requirements(tile_a, tile_b, way, self.parts.map_views.world_map)
         if needs is None:
             return None
         hourly_rate = self.needs.labour_market().quote(needs["trade"])
+        if hourly_rate is None:
+            return None
         bills = []
         for material, tonnes in needs["materials"].items():
             priced = self.needs.purchase_quote(material, tonnes)
@@ -68,6 +70,10 @@ class Ways(Part):
         if geography.is_cut_way(way, self.parts.map_views.world_map):
             return Refusal("no_isthmus", "no isthmus is known %s: a %s needs a neck of land between two seas "
                            "that the map says can be cut." % (place, way), way=way)
+        requirements = geography.build_requirements(tile_a, tile_b, way, self.parts.map_views.world_map)
+        if requirements is not None and self.needs.labour_market().quote(requirements["trade"]) is None:
+            return Refusal("no_wage_exists", "no wage exists for %s under the economy's rule, so a %s %s cannot be costed."
+                           % (requirements["trade"], way, place), way=way)
         return Refusal("cannot_build", "a %s cannot be built %s." % (way, place), way=way)
 
     def build_way(self, command: BuildWay) -> Tuple[bool, Any]:

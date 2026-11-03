@@ -65,12 +65,14 @@ class MineCosts(Part):
 
     def capex_opex(self, material: str) -> Tuple[Optional[float], Optional[float]]:
         """(capital per t/yr to sink, running cost per t/yr) for standing production of `material`, from the deposits'
-        physical works at the miner's wage. (None, None) for a name nothing prices."""
+        physical works at the miner's wage. (None, None) for a name nothing prices or while the miner's trade has no wage."""
         if material not in self.works_materials():
             price = self.needs.material_price[material]
             if price is None or price <= 0:
                 return None, None
         wage = self.needs.wage[self.mine_trade()]
+        if wage is None:
+            return None, None
         build_hours, running_hours = self.labour_hours_per_tonne(material)
         return build_hours * wage, running_hours * wage
 
@@ -78,9 +80,10 @@ class MineCosts(Part):
         capex, _opex = self.capex_opex(material)
         return capex
 
-    def mine_opex(self, material: str) -> float:
+    def mine_opex(self, material: str) -> Optional[float]:
+        """Running cost per tonne a year of standing capacity; None when nothing prices it."""
         _capex, opex = self.capex_opex(material)
-        return 0.0 if opex is None else opex
+        return opex
 
     def mineable(self, material: str) -> bool:
         """Can standing production capacity be sunk in this material at all: any name something prices."""
@@ -89,16 +92,19 @@ class MineCosts(Part):
     def mine_catalog_hint(self) -> str:
         return rules.catalog_hint(self.works_materials())
 
-    def operating_cost_of(self, working: Dict[str, Any]) -> float:
-        """What this working costs to run this year, whether or not its output is used."""
-        return (working["capacity"] * self.mine_opex(working["material"]) * self.needs.price_index()
-                * self.parts.workings.cost_scale_of(working))
+    def operating_cost_of(self, working: Dict[str, Any]) -> Optional[float]:
+        """What this working costs to run this year, whether or not its output is used; None while nothing prices it."""
+        opex = self.mine_opex(working["material"])
+        if opex is None:
+            return None
+        return working["capacity"] * opex * self.needs.price_index() * self.parts.workings.cost_scale_of(working)
 
     def mine_operating_cost(self) -> float:
-        """The workings' running costs together, charged every year they stand."""
-        return sum(self.operating_cost_of(working) for working in self.seat.mines)
+        """The workings' running costs together, charged every year they stand; a working nothing prices is left out."""
+        costs = (self.operating_cost_of(working) for working in self.seat.mines)
+        return sum(cost for cost in costs if cost is not None)
 
-    def operating_cost_new(self, material: str, tonnes: float) -> float:
+    def operating_cost_new(self, material: str, tonnes: float) -> Optional[float]:
         """What a freshly commissioned working of `tonnes` will be charged a year."""
         return self.operating_cost_of({"material": material, "capacity": tonnes, "intensity_yrs": 0.0})
 

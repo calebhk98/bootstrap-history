@@ -6,7 +6,7 @@ money and calendar time like any project, and it can fail.
 import math
 from typing import Any, Dict, List, Optional
 
-from . import ledger
+from . import hours_cost, ledger
 from .edges import EDGE_WORKERS
 from .tuning import COPY_EFFORT_SHARE, COPY_RISK_SHARE, COPY_TIME_SHARE, HIRING_PREMIUM
 from .tuning_player import PLAYER_VISIBLE_EXPOSURE
@@ -50,8 +50,8 @@ def copy_years(node: Dict[str, Any]) -> int:
 	return max(1, int(math.ceil(float(node.get("yrs") or 0.0) * COPY_TIME_SHARE)))
 
 
-def copy_plan(actor: Any, chain: List[str], world: Any) -> Dict[str, Any]:
-	"""Hours, money and calendar for copying every step of `chain`."""
+def copy_plan(actor: Any, chain: List[str], world: Any) -> Optional[Dict[str, Any]]:
+	"""Hours, money and calendar for copying every step of `chain`; None when a trade it needs has no wage."""
 	hours: Dict[str, float] = {}
 	pioneer_cost = 0.0
 	years = 0.0
@@ -61,9 +61,11 @@ def copy_plan(actor: Any, chain: List[str], world: Any) -> Dict[str, Any]:
 			hours[trade] = hours.get(trade, 0.0) + amount * COPY_EFFORT_SHARE
 		pioneer_cost += world.concerns.copy_cost(step)
 		years = max(years, float(copy_years(node)))
-	base_labour = sum(amount * world.labour.labour_market.quote(trade) for trade, amount in hours.items())
-	premium = sum(amount * world.labour.labour_market.quote(trade) * HIRING_PREMIUM
-				  for trade, amount in hours.items() if actor.workforce.get(trade, 0.0) <= 0)
+	paid = hours_cost.priced_hours(hours, world)
+	if paid is None:
+		return None
+	base_labour = sum(paid.values())
+	premium = sum(paid[trade] * HIRING_PREMIUM for trade in hours if actor.workforce.get(trade, 0.0) <= 0)
 	other_money = max(0.0, pioneer_cost * COPY_EFFORT_SHARE - base_labour)
 	return {
 		"hours": hours,

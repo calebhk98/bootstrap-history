@@ -7,6 +7,8 @@ reading None, never the home figure; the plant then stands idle that year.
 """
 from typing import Any, Callable, Mapping, NamedTuple, Optional, Tuple
 
+from .no_country_economy import NoCountryEconomy
+
 
 class PlantBooks(NamedTuple):
 	"""Yearly money of one plant at its size: takings before the crew found, upkeep without the crew's pay, the full wage bill."""
@@ -15,15 +17,22 @@ class PlantBooks(NamedTuple):
 	wages: float
 
 
-def home_books(world: Any, entry_key: str, opened_year: int, rivals: float, size: float) -> PlantBooks:
-	"""The books of a plant in the home economy."""
-	return PlantBooks(world.concerns.concern_takings(entry_key, opened_year, rivals, size), world.concerns.upkeep(entry_key, size),
-					  world.concerns.concern_wage_bill(entry_key, size))
+def home_books(world: Any, entry_key: str, opened_year: int, rivals: float, size: float) -> Optional[PlantBooks]:
+	"""The books of a plant in the home economy; None when a trade of its crew has no wage there."""
+	try:
+		wages = world.concerns.concern_wage_bill(entry_key, size)
+	except NoCountryEconomy:
+		return None
+	return PlantBooks(world.concerns.concern_takings(entry_key, opened_year, rivals, size), world.concerns.upkeep(entry_key, size), wages)
 
 
-def home_costs(world: Any, entry_key: str) -> Tuple[float, float]:
-	"""(upkeep, wage bill) of a plant of the concern at its founding size in the home economy."""
-	return world.concerns.upkeep(entry_key), world.concerns.concern_wage_bill(entry_key)
+def home_costs(world: Any, entry_key: str) -> Optional[Tuple[float, float]]:
+	"""(upkeep, wage bill) of a plant of the concern at its founding size in the home economy; None when a trade of its crew has
+	no wage there."""
+	try:
+		return world.concerns.upkeep(entry_key), world.concerns.concern_wage_bill(entry_key)
+	except NoCountryEconomy:
+		return None
 
 
 def wage_bill_at(staff: Mapping[str, float], size: float, span_factor: float,

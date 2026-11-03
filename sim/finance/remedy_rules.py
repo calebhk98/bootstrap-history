@@ -28,9 +28,10 @@ def mine_closing_remedy(material: str, saving: float, money_text: Callable[..., 
 	return saving, "close %s (stops %s a year of mine costs)" % (material, money_text(saving, grouped=True))
 
 
-def firing_remedy(trade: str, people: float, wage: float, money_text: Callable[..., str]) -> Remedy:
-	"""Letting go the staff of a trade, which stops `wage` a year for each person; None when nobody is hired."""
-	if people <= 0 or wage <= SMALLEST_SAVING:
+def firing_remedy(trade: str, people: float, wage: Optional[float], money_text: Callable[..., str]) -> Remedy:
+	"""Letting go the staff of a trade, which stops `wage` a year for each person; None when nobody is hired or the trade has
+	no wage (the saving cannot be stated)."""
+	if people <= 0 or wage is None or wage <= SMALLEST_SAVING:
 		return None
 	return wage, "fire %s (stops %s a year per person)" % (trade, money_text(wage, grouped=True))
 

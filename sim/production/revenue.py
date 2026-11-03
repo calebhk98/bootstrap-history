@@ -125,7 +125,9 @@ class Revenue(Part):
 		# quickly, so its income buys the next one. A saturating curve caps that without ever making a venture worthless.
 		# What your own workshop sells: a payroll without credited output is pure cost, and it needs somewhere to work.
 		total_revenue += self.workshop_output()
-		total_revenue += self.founder_wage_income(counting_offers)
+		wage_income = self.founder_wage_income(counting_offers)
+		if wage_income is not None:     # no wage for the held trade: the founder's hours sell for nothing that can be stated
+			total_revenue += wage_income
 		gross = total_revenue
 		ceiling = self.parts.concern_market.priced(REVENUE_CEILING_LABOUR_HOURS_PER_POP_SCALE) * needs.pop_scale() \
 			* needs.real_output_per_head() * needs.price_index()
@@ -210,7 +212,7 @@ class Revenue(Part):
 	def founder_wage_income(self, counting_offers=True):
 		"""Yearly pay of the founder's standing job: the hours not spoken for, sold in the held trade at
 		that trade's market wage (`standing_job_pay`, sim/labour/labour_wages.py). One person's hours sell once however many skills the
-		founder holds, and a dead founder sells none."""
+		founder holds, and a dead founder sells none. None when the held trade has no wage."""
 		pay = self.needs.standing_job_pay if counting_offers else self.needs.capacity_job_pay
 		return pay[self.held_trade()]
 
@@ -222,9 +224,10 @@ class Revenue(Part):
 		"""
 		needs = self.needs
 		funding = needs.state_funding()
+		founder_wage = self.founder_wage_income()
 		return assemble_ledger(
 			self.ledger_concern_rows(), self.workshop_output() * needs.output_factor(),
-			self.founder_wage_income() * needs.output_factor(),
+			None if founder_wage is None else founder_wage * needs.output_factor(),
 			funding * needs.output_factor() if funding > 0.5 else None, self.revenue())
 
 	# A granted node whose category is flagged practisable is a skill the founder holds and works with their own hands; the held

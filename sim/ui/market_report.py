@@ -47,9 +47,18 @@ def material_rows(sim, offset, limit, only=None):
     return {"total": len(materials), "offset": offset, "limit": limit, "rows": rows}
 
 
+def year_of_one_fields(sim, trade):
+    """{a_year_of_one: money, rounded} for a trade; where the economy's rule gives the trade no wage, a_year_of_one is None
+    and `no_wage_exists` is True."""
+    annual = sim.view("labour_market")().quote_annual(trade)
+    if annual is None:
+        return {"a_year_of_one": None, "no_wage_exists": True}
+    return {"a_year_of_one": round(annual, 0)}
+
+
 def wage_rows(sim):
     """A year of one person of every trade, as `labour <trade>` reports it."""
-    return [{"trade": trade, "a_year_of_one": round(sim.view("labour_market")().quote_annual(trade), 0),
+    return [{"trade": trade, **year_of_one_fields(sim, trade),
              "available_here": bool(sim.view("trade_available")[trade]),
              "you_employ": round(sim.view("staff")()["employees"].get(trade, 0.0), 2)}
             for trade in sorted(WAGES)]

@@ -192,16 +192,20 @@ def _score_components(sim, nodes, reveal_tree_total):
     # calibration save's 4.41 million worker-years, rounded to a clean
     # figure (50 million), not that save's own number.
     ECONOMY_ANCHOR_WORKER_YEARS = 50_000_000.0
-    reference_wage = max(1e-6, sim.view("labour_market")().quote_annual("artisan"))
-    worker_years = max(0.0, sim.view("acting_balance")()) / reference_wage
-    econ_norm = min(1.0, math.log1p(worker_years)
-                    / math.log1p(ECONOMY_ANCHOR_WORKER_YEARS))
-    out["economy"] = {"counts": ("your money in years of an ordinary worker's wage here, "
-                                 "on a log scale"),
-                       "raw": round(sim.view("acting_balance")(), 1),
-                       "raw_detail": {"worker_years_equivalent":
-                                      round(worker_years, 1)},
-                       "normalized": econ_norm}
+    artisan_wage = sim.view("labour_market")().quote_annual("artisan")
+    economy_counts = "your money in years of an ordinary worker's wage here, on a log scale"
+    if artisan_wage is None:
+        out["economy"] = {"counts": economy_counts, "raw": round(sim.view("acting_balance")(), 1), "normalized": None,
+                          "withheld": "no wage exists for an artisan under the economy's rule, so money cannot be counted in worker-years"}
+    else:
+        worker_years = max(0.0, sim.view("acting_balance")()) / max(1e-6, artisan_wage)
+        econ_norm = min(1.0, math.log1p(worker_years)
+                        / math.log1p(ECONOMY_ANCHOR_WORKER_YEARS))
+        out["economy"] = {"counts": economy_counts,
+                          "raw": round(sim.view("acting_balance")(), 1),
+                          "raw_detail": {"worker_years_equivalent":
+                                         round(worker_years, 1)},
+                          "normalized": econ_norm}
 
     # INSTITUTIONS (10%) - every capability-institution node (the first set of the `capability_sets` view, sim/mechanics/rules.py:
     # the fixed roster every running()/auto-open rule in the engine already

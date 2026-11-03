@@ -103,7 +103,7 @@ class DebtService(Part):
 				if isinstance(quote_note, Refusal):
 					would_earn = None      # a refused quote carries no pay
 				standing = needs.standing_job_pay[needs.held_trade()]
-				if would_earn is not None and would_earn > standing:
+				if would_earn is not None and standing is not None and would_earn > standing:     # no standing pay: nothing to compare against
 					ways.append("work as a %s: %.0f of your own hours are left "
 					            "this year and would bring in about %s%s. "
 					            "Nobody has to lend you anything for that"

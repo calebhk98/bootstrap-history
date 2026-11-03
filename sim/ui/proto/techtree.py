@@ -33,6 +33,11 @@ SUBJECTS = {
 }
 
 
+def _rounded_or_none(value, digits):
+    """`round(value, digits)`; None where the figure does not exist (a trade with no wage)."""
+    return None if value is None else round(value, digits)
+
+
 def _subject_of(node):
     """A readable heading for a node, from its knowledge module.
 
@@ -1022,7 +1027,7 @@ def _explain_revenue(sim, nodes, node_id, node):
         # trade it gives you, shared by every skill you hold), not a figure of its own.
         "but_it_pays_YOU": (
             # the ledger's own row, which carries the market ceiling's share, so the two screens agree
-            sim.view("revenue_sources")().get("_wages_for_your_own_work", round(sim.view("founder_wage_income")(), 1))
+            sim.view("revenue_sources")().get("_wages_for_your_own_work", _rounded_or_none(sim.view("founder_wage_income")(), 1))
             if node_id in ui_port.practice_set(sim) else None),
         "because": ("this is a skill you hold, not a concern: it earns through your own hours, sold as a %s "
                     "at that trade's going wage, once for all the skills you hold, and hours you spend "

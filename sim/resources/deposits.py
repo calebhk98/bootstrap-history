@@ -156,7 +156,12 @@ class Deposits(Part):
         if person_days <= 0:
             return Refusal("no_effort", "say how many person-days to spend prospecting.")
         hours = person_days * PROSPECT_HOURS_PER_PERSON_DAY
-        cost = hours * self.needs.labour_quote(self.parts.mine_costs.mine_trade())
+        miner_trade = self.parts.mine_costs.mine_trade()
+        hourly_wage = self.needs.labour_quote(miner_trade)
+        if hourly_wage is None:
+            return Refusal("no_wage_exists", "no wage exists for %s under the economy's rule, so prospecting cannot be costed." % miner_trade,
+                           trade=miner_trade)
+        cost = hours * hourly_wage
         if not self.needs.can_pay(cost):
             return Refusal("cannot_afford", "prospecting %.0f person-days costs about %s; %s." % (
                 person_days, self.needs.money_text(cost, True), self.needs.afford_means()), cost=cost)

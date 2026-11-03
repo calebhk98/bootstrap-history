@@ -1,4 +1,5 @@
 """Teaching trades into existence: trade schools, the years and hours a trade takes to teach, and `train`."""
+from typing import Optional
 import math
 
 from sim.refusal import Refusal
@@ -157,7 +158,7 @@ class Training:
         named = [teacher for teacher in teachers if teacher in by_actor]
         return named[0] if named else None
 
-    def trainee_wage_bill(self, trade, count):
+    def trainee_wage_bill(self, trade, count) -> Optional[float]:
         """Yearly wage the people taught will add once they join the staff; None when the trade has no wage."""
         wage = self.market.quote_annual(trade)
         return None if wage is None else count * wage

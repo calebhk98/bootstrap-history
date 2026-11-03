@@ -103,11 +103,12 @@ def _quote_train(sim, nodes, cmd):
     plan, refusal = sim.view("train_check")(trade, count, cmd.get("from"))
     if refusal:
         return {"ok": False, "error": refusal}
+    wage_bill = sim.view("trainee_wage_bill")(trade, plan["count"])
     return {"ok": True, "what": "train", "trade": trade, "people": plan["count"],
             "paid_now": round(plan["fee"], 1),
             "your_hours": round(plan["hours"], 1),
-            "wage_bill_added_per_year": round(
-                sim.view("trainee_wage_bill")(trade, plan["count"]), 1),
+            "wage_bill_added_per_year": None if wage_bill is None else round(wage_bill, 1),
+            **({"no_wage_exists": True} if wage_bill is None else {}),
             "you_have": round(sim.view("acting_balance")(), 1),
             "note": "Teaching pays their keep now and takes your own hours. "
                     "When they finish they join the payroll automatically and "
