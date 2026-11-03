@@ -61,11 +61,17 @@ class Borrower:
 		supply."""
 		debt = self.debt()
 		ceiling = self.credit_ceiling(world)
-		wanted = max(0.0, min(amount, ceiling - debt))
+		price = self.cash_per_face()
+		wanted = max(0.0, min(amount / price, ceiling - debt))   # the debt and the ceiling are at face
 		if wanted <= 0.0:
 			return 0.0
 		fundable = world.credit.fundable_amount(wanted, debt, ceiling, self.arrears_book.interest_arrears)
-		return wanted if fundable is None else fundable
+		return (wanted if fundable is None else fundable) * price
+
+	def cash_per_face(self) -> float:
+		"""The cash a unit of new debt raises: the price per face of a bond when the actor sells bonds, else one."""
+		bonds = self.purses.bonds  # type: ignore[attr-defined]
+		return bonds.price_per_face(self.account_id) if bonds.issues(self.account_id) else 1.0  # type: ignore[attr-defined]
 
 	def draw_limit(self, world: Any, amount: float) -> float:
 		"""The most of a draw of `amount` the actor is lent now: the rule's limit (`rule_limit`) and what the pool holds and the

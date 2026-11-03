@@ -74,13 +74,23 @@ class CreditRecord(OwnedRecord):
     def add_loans(self, loans: List[Loan]) -> None:
         self.contracts.term_loans.extend(loans)
 
+    def _parcel_id(self, loan: Loan, buyer: AgentId) -> str:
+        """An id no contract holds yet for the part of `loan` that `buyer` takes: two parcels one buyer takes never share one."""
+        taken = {each.loan_id for each in self.contracts.term_loans}
+        base = "%s|%s" % (loan.loan_id, buyer)
+        candidate, number = base, 1
+        while candidate in taken:
+            number += 1
+            candidate = "%s#%d" % (base, number)
+        return candidate
+
     def transfer_loan(self, loan: Loan, buyer: AgentId, part: float) -> None:
         """`buyer` takes `part` (a share, at most one) of the loan's principal with the same share of its arrears and
         collateral: the whole loan changes lender, a part is split off as a contract of the buyer's own."""
         if part >= 1.0 - TRANSFER_TOLERANCE:
             loan.lender = buyer
             return
-        bought = dataclasses.replace(loan, contract_id="%s|%s" % (loan.loan_id, buyer), lender=buyer,
+        bought = dataclasses.replace(loan, contract_id=self._parcel_id(loan, buyer), lender=buyer,
                                      principal=loan.principal * part, arrears=loan.arrears * part,
                                      arrears_interest=loan.arrears_interest * part,
                                      collateral_value=loan.collateral_value * part,
