@@ -65,7 +65,7 @@ class MemoryAndHouseholdsTests(unittest.TestCase):
         view = types.SimpleNamespace(
             currency_of=lambda area: "coin", area_of=lambda good, tile: "area", basket_price_level=lambda money: 5.0,
             observed_inflation=lambda money: 0.02, interest_rate=lambda money: 0.06,
-            price=lambda good, area: 1.0, stock=lambda *_arguments: 0.0)
+            price=lambda good, area: 1.0, offered_price=lambda good, area: 1.0, equity=lambda agent: 0.0, claims=lambda agent, money: 0.0, stock=lambda *_arguments: 0.0)
         cohort = Cohort("household:t:0", "t", 0, 100.0, 50.0, 0.5)
         after, _moves = close_year(cohort, {"grain": 25000.0}, view, {}, basket, income_received=100.0, spent=100.0)
         self.assertAlmostEqual(after.expected_inflation, currency.update_expected_inflation(0.0, 0.02))

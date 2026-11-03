@@ -6,7 +6,7 @@ import types
 import unittest
 
 from sim.agents import policy_land
-from sim.agents.policy import CallbackPolicy
+from sim.agents.policy import CallbackPolicy, ValuePolicy
 from sim.economy import tax_farming
 from sim.economy.accounts import Book
 from sim.economy.market_memory import MarketMemory
@@ -82,7 +82,7 @@ class RememberYearTests(unittest.TestCase):
 
 class StateChoiceTests(unittest.TestCase):
     class State:
-        decision_policy = None
+        decision_policy = ValuePolicy()
 
     def test_a_state_with_the_default_policy_farms_nothing(self):
         self.assertEqual(policy_land.farmed_forms(self.State(), ["poll"]), [])

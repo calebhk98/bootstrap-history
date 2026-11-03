@@ -35,9 +35,9 @@ check("selling every free hour leaves nothing to spend on projects",
 def standing_job(sold):
     labour = SimpleNamespace(
         _world=SimpleNamespace(standing=SimpleNamespace(founder_alive=True)),
-        hours=SimpleNamespace(director_pool=lambda: 2000.0, director_hours_committed=lambda: sold),
+        hours=SimpleNamespace(director_pool=lambda: 2000.0, director_hours_committed=lambda counting_offers=True: sold),
         wage_for_hours=lambda trade, hours: hours * 0.5)
-    labour.hours_for_sale = lambda: Wages.hours_for_sale(labour)
+    labour.hours_for_sale = lambda counting_offers=True: Wages.hours_for_sale(labour, counting_offers)
     return Wages.standing_job_pay(labour, "labourer")
 
 

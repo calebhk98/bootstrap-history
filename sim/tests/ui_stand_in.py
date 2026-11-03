@@ -13,6 +13,12 @@ from types import SimpleNamespace
 from .seat_views_stand_in import seat_views
 
 
+def shipped_declared():
+    """The commands and figures of a game over the repository's mods (`interface_declared`), made once."""
+    from .interface_fixture import shipped_declared as declared
+    return declared()
+
+
 class _Answer:
     def __init__(self, value):
         self.value = value
@@ -243,6 +249,8 @@ class FactViews:
         if hasattr(self, name):
             held = getattr(self, name)
             return _Answer(held)
+        if name == "interface_declared":
+            return _Answer(shipped_declared)
         raise KeyError("the stand-in game was given no view %r (nor an attribute of that name)" % name)
 
     def send(self, command):

@@ -23,7 +23,7 @@ class ActorWiringTests(unittest.TestCase):
         sales = []
         actor = types.SimpleNamespace(
             actor_id="firm:iron1", concerns={"blast_furnace": object()},
-            output_by_concern=lambda material, world: [("blast_furnace", 7.0)] if material == "pig_iron_kg" else [])
+            output=types.SimpleNamespace(output_by_concern=lambda material, world: [("blast_furnace", 7.0)] if material == "pig_iron_kg" else []))
         world = types.SimpleNamespace(enterprises=types.SimpleNamespace(materials_made_by=lambda node_id: ["pig_iron_kg"]),
                                       market=types.SimpleNamespace(market_sale=lambda *arguments: sales.append(arguments)))
         Actor.sell_output(actor, world)

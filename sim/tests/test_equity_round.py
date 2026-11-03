@@ -50,10 +50,10 @@ stratum = registry.actors["stratum:home:merchants"]
 before = total_money(registry.actors.values())
 raised = equity_round.raise_equity(registry, world, firm)
 check("the firm raises money", raised > 0.0 and abs(firm.money - raised) < 1e-6, (raised, firm.money))
-check("the stratum holds the shares it paid for", 0.0 < stratum.record.holdings.get("firm:1", 0.0) <= 1.0, stratum.record.holdings)
-check("the firm's issued equity matches what the stratum holds", abs(firm.record.issued - stratum.record.holdings["firm:1"]) < 1e-9)
+check("the stratum holds the shares it paid for", 0.0 < stratum.record.shares_held.get("firm:1", 0.0) <= 1.0, stratum.record.shares_held)
+check("the firm's issued equity matches what the stratum holds", abs(firm.record.issued - stratum.record.shares_held["firm:1"]) < 1e-9)
 check("the price is the investor's own valuation of that share, discounted a year", abs(
-	raised - stratum.record.holdings["firm:1"] * equity_round.whole_equity_worth(firm, world)) < 1e-6)
+	raised - stratum.record.shares_held["firm:1"] * equity_round.whole_equity_worth(firm, world)) < 1e-6)
 check("money is conserved", abs(total_money(registry.actors.values()) - before) < 1e-6)
 check("the need is spent", equity_need.NEED_KEY not in firm.record.plan)
 check("the household that invested has the money committed", sum(stratum.record.plan.get("committed", {}).values()) > 0.0)

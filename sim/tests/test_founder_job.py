@@ -28,10 +28,10 @@ def labour(wages=None, alive=True, wage_hours=0.0, teaching=0.0, relocation=0.0,
         standing=SimpleNamespace(founder_alive=alive, bondage_years_left=0), workforce=household)
     hours_part = SimpleNamespace(_world=world, BONDAGE_HOURS_SHARE=0.25)
     hours_part.director_pool = lambda: FounderHours.director_pool(hours_part)
-    hours_part.director_hours_committed = lambda: FounderHours.director_hours_committed(hours_part)
+    hours_part.director_hours_committed = lambda counting_offers=True: FounderHours.director_hours_committed(hours_part, counting_offers)
     stub = SimpleNamespace(_world=world, hours=hours_part)
     stub.wage_for_hours = lambda trade, hours: hours * wages[trade]
-    stub.hours_for_sale = lambda: Wages.hours_for_sale(stub)
+    stub.hours_for_sale = lambda counting_offers=True: Wages.hours_for_sale(stub, counting_offers)
     return stub
 
 

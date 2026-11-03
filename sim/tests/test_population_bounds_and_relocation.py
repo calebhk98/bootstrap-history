@@ -68,18 +68,30 @@ class InvariantCheckerTests(unittest.TestCase):
             check_labour_market_invariants(self._game(staff=700.0, working_age=600.0))
 
 
+CORE_SHARE_OF_WORKING_AGE_PER_TRADE = 0.01      # of the working people, how many the opened labour core holds of each trade here
+
+
+def labour_with_core(world):
+    """Labour over a world whose labour core has opened: it holds a share of the working people in the base area in each trade."""
+    labour = Labour(world)
+    working = world.people.population.working_age
+    people = {trade: CORE_SHARE_OF_WORKING_AGE_PER_TRADE * working for trade in world.trades.wages}
+    world.economy.agent_people_by_tile_and_trade = lambda: {labour.settlement.base_tile(): people}
+    return labour
+
+
 class TooSmallToStaffTests(unittest.TestCase):
     """A project that needs more people than exist cannot be staffed; the same project in a full nation is not refused for people."""
 
     def test_tiny_nation_cannot_staff_a_factory(self):
-        shortfall = Labour(stand_in_world(total=200)).supply.project_staffing_shortfall(NODES["fin_factory"])
+        shortfall = labour_with_core(stand_in_world(total=200)).supply.project_staffing_shortfall(NODES["fin_factory"])
         self.assertIsNotNone(shortfall)
         # presentation: the refusal says people do not exist in the country
         self.assertIn("exist", shortfall)
         self.assertIn("country", shortfall)
 
     def test_the_same_project_is_not_refused_for_people_in_a_full_nation(self):
-        self.assertIsNone(Labour(stand_in_world()).supply.project_staffing_shortfall(NODES["fin_factory"]))
+        self.assertIsNone(labour_with_core(stand_in_world()).supply.project_staffing_shortfall(NODES["fin_factory"]))
 
 
 class MoveCommandParses(unittest.TestCase):

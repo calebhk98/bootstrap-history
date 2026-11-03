@@ -14,6 +14,7 @@ from sim.agents.api import edges
 from sim.finance.commands import NoteLenderPosting
 from sim.finance.constants import (DEBT_BONDAGE_DEFAULT_TERM_YEARS, INSOLVENCY_ARTISAN_FLOOR, INSOLVENCY_YEARS_BEFORE_BLEED)
 from sim.finance.state import FinanceSeat
+from sim.labour import trade_data
 from sim.agents.api import Purses
 from sim.ledger.api import NoteHolderBooking, NoteSeatCash, SettleWithEdge
 from sim.reporting.api import RecordEvent
@@ -95,7 +96,9 @@ class SettleInterest(unittest.TestCase):
 
 class JudgeInsolvency(unittest.TestCase):
     def module(self, capital, revenue, years=0, artisans=10.0, scholars=5.0):
-        household = SimpleNamespace(capital=capital, artisans=artisans, scholars=scholars, slaves=0, freedmen=0)
+        # the staff are people on the books by trade; the craft and scholar pools are counted from them
+        household = SimpleNamespace(capital=capital, artisans=artisans, scholars=scholars, slaves=0, freedmen=0, training=[], staff_wanted={},
+                                    employees={trade_data.generic_craft_trade(): artisans, trade_data.scholar_trade(): scholars})
         module = finance_host.build(seat=FinanceSeat(insolvent_years=years), household=household, revenue_estimate=revenue)
         module.recurring_living_cost = lambda revenue, upkeep: 0.0
         return module, household
@@ -172,7 +175,7 @@ class LendersMeeting(unittest.TestCase):
 
     def test_a_firm_and_a_purse_lender_offer_what_they_hold_in_purse_and_deposit(self):
         firm, abbey = SimpleNamespace(actor_id="firm:1"), SimpleNamespace(actor_id="abbey")
-        module = finance_host.build(cast=SimpleNamespace(actors={}, active_firms=lambda: [firm], purse_lenders=lambda: [abbey]),
+        module = finance_host.build(cast=SimpleNamespace(actors={}, concerns=SimpleNamespace(active_firms=lambda: [firm]), purse_lenders=lambda: [abbey]),
                                     cash_and_deposit={"firm:1": 40.0, "abbey": 9.5}.get,
                                     state_treasury=SimpleNamespace(actor_id="state"))
         offers = module.lender_offers({"households": 6.0, "state": 2.0})

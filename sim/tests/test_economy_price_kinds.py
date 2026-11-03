@@ -52,7 +52,7 @@ def shown_game():
     """Grain traded last year; metal did not, and its remembered price is a quote."""
     memory = memory_with({"grain|a": 3.0, "metal|a": 50.0}, cleared=["grain|a"],
                          quotes={"metal|a": QUOTE_BEST_UNFILLED_BID})
-    memory.trade_age = {"grain|a": 1, "metal|a": 99}
+    memory.trade_age = {"grain|a": 0, "metal|a": 99}
     record = types.SimpleNamespace(memory=memory, labour=LabourRecord(), goods=types.SimpleNamespace(volumes={}, opening_basket={}, index_base_prices={}))
     recipes = {"smelt": Recipe("smelt", {"metal": 1.0}, {}, {"labour": 2.0})}
     setup = types.SimpleNamespace(recipes=recipes, opening_prices={}, currency_id="coin", unskilled_trade="labour")

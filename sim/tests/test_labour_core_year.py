@@ -22,7 +22,7 @@ HOURS = 2000.0
 
 
 def bid(employer, trade, area, workers, maximum_wage=5.0):
-    return records.Bid(employer=employer, trade=trade, area=area, hours=workers * HOURS,
+    return records.EmployerHoursBid(employer=employer, trade=trade, area=area, hours=workers * HOURS,
                        maximum_wage=maximum_wage)
 
 

@@ -49,7 +49,8 @@ def workforce_command(household, command):
     # the household's flat counts become a workforce seat (craft and scholar people on the staff book) and its counts are read back
     seat = WorkforceSeat(slaves=household.slaves, freedmen=household.freedmen, artisans=household.artisans, scholars=household.scholars,
                          employees={trade: float(count) for trade, count in ((generic_craft_trade(), household.artisans), (scholar_trade(), household.scholars)) if count})
-    module = module_harness.build(Workforce, seat=seat, views={"trade_family": lambda trade: legacy_trade_defaults.CRAFT_FAMILY})
+    families = {"trade_family": lambda trade: "scholar" if trade == scholar_trade() else legacy_trade_defaults.CRAFT_FAMILY}
+    module = module_harness.build(Workforce, seat=seat, views=families)
     answer = getattr(module, handlers[type(command)])(command)
     for key in ("slaves", "freedmen", "artisans", "scholars"):
         setattr(household, key, getattr(seat, key))
