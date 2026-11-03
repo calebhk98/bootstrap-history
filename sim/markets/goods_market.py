@@ -12,6 +12,7 @@ orders and an actor's reach the same clearing, which sets the price. The asking 
 that move a bill as it is filled. Who offers what is in goods_offers.py.
 """
 from sim.refusal import Refusal
+from sim.rekey import rekey
 
 from . import port_goods_orders
 from .goods_offers import GoodsOffers
@@ -51,6 +52,10 @@ class GoodsMarket:
         if tonnes > 0:
             drawn = self._sim.market_flows()["drawn"].setdefault(self.acting_party_id, {})
             drawn[commodity] = drawn.get(commodity, 0.0) + tonnes
+
+    def rename_draws(self, old, new):
+        """A seat handed over: its draws this year are kept under the new id."""
+        rekey(self._sim.market_flows()["drawn"], old, new)
 
     # ---- reads ------------------------------------------------------------------------
 

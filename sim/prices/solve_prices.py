@@ -1,5 +1,10 @@
 """Solve for the price of every material from physical structure, not a book.
 
+THIS MODULE HOLDS NO CODE: it is the design write-up of the price solver. The functions it names live in
+`solve_prices_core.py` (the solve, the recipe costing and the capability grading), `solve_prices_round.py` (one round's
+plans), `rent_standin.py` (the rent stand-ins) and `disposal_cost.py` (the cost of getting rid of a waste); the engine's
+one call into them is `prices.py`. Where the text below says "this script", it means those modules together.
+
 READ-ONLY. This module computes prices; `sim/prices/prices.py` is the engine's
 one call into it, and every price in play comes from there.
 
@@ -606,13 +611,9 @@ it - the solver picks the technique a rational producer would pick at current
 prices, and because prices move as the solve iterates, technique choice
 iterates alongside it exactly as the design doc's Part 2.1 says it must.
 
-JOINT BYPRODUCTS WITH NO REFERENCE PRICE ARE NOT REALLY PRICED, AND THIS
-SCRIPT SAYS SO. An output the caller gave no reference price for and no
-sole-output route makes (platinum, germanium, indium, coal tar) is split by mass:
-one process and two goods is one equation short. `minor_joint_byproducts_split_by_mass`
-finds them by checking, on the converged recipe for each material, whether it is a
-joint recipe where this material holds under half the batch's value and was split
-by mass. Flagged materials print with a `(*)`: a real lower bound on cost, not a
+JOINT BYPRODUCTS WITH NO REFERENCE PRICE ARE NOT REALLY PRICED. An output the caller gave no reference price for and
+no sole-output route makes (platinum, germanium, indium, coal tar) is split by mass: one process and two goods is one
+equation short (`joint_allocation.outputs_split_by_mass` names them). That price is a real lower bound on cost, not a
 real relative price.
 
 CYCLES ARE EXPECTED BY THE ITERATION, AND NOW ACCEPTED BY THE PASS IN FRONT

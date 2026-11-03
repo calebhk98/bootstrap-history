@@ -36,6 +36,7 @@ class Applying(Part):
 
 	def rename_market_seat(self, command):
 		self.parts.market_objects.economy.parts.rename_agent(command.from_id, command.to_id)
+		self.parts.market_objects.goods_market.rename_draws(command.from_id, command.to_id)
 
 	def reprice_opening_money(self, command):
 		"""From now the money an hour of work is worth is the economy's unskilled wage. `command.before` is the figure the

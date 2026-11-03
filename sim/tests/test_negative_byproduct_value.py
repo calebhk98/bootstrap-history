@@ -260,5 +260,28 @@ class WasteConsumerTests(unittest.TestCase):
         self.assertAlmostEqual(total, 5.0 + 30.0)
 
 
+class DumpDistanceReachesTheCostingTests(unittest.TestCase):
+    """The state's minimum dump distance counts wherever one recipe is costed, not only in the solve's own rounds."""
+
+    def test_a_waste_input_is_credited_the_dearer_disposal_it_saves_when_the_dump_is_farther(self):
+        entry = {"outputs": {"cement_kg": 1.0}, "inputs": {"slag_kg": 10.0}, "labour_hours": {"labourer": 5.0}}
+        prices = dict(SERVICE_PRICES, slag_kg=-1000.0)
+
+        def total(distance):
+            return solve_prices_core.recipe_cost_and_allocation(
+                "cement", entry, prices, {"labourer": 1.0}, interest_rate=0.05,
+                dump_minimum_distance_kilometres=distance)[0]
+        self.assertLess(total(100.0), total(0.0))
+
+    def test_a_joint_waste_is_dearer_to_get_rid_of_when_the_dump_is_farther(self):
+        entry = {"outputs": {"tar_kg": 1000.0, "charcoal_kg": 2500.0}, "inputs": {}, "labour_hours": {"labourer": 100.0}}
+
+        def tar_price(distance):
+            return solve_prices_core.recipe_cost_and_allocation(
+                "kiln", entry, dict(SERVICE_PRICES), {"labourer": 1.0}, reference_price_by_material={"tar_kg": -1.0},
+                interest_rate=0.05, dump_minimum_distance_kilometres=distance)[1]["tar_kg"]
+        self.assertLess(tar_price(100.0), tar_price(0.0))
+
+
 if __name__ == "__main__":
     unittest.main()

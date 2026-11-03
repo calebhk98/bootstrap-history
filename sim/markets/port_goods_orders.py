@@ -227,7 +227,7 @@ def settle(sim, economy, posted):
                 trade["sold"][key] = trade["sold"].get(key, 0.0) + sold
                 result.update(sold_tonnes=sold, proceeds=money)
             if stocked > 0.0:
-                sim.send(ChangeStock(key, stocked))
+                refusals.append(sim.send(ChangeStock(key, stocked)))
             refused_posting = next((reply for reply in refusals if isinstance(reply, Refusal)), None)
             if refused_posting is not None:
                 result["refused"] = {"cause": "settlement_refused", "text": str(refused_posting)}

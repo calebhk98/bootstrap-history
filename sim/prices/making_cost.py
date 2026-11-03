@@ -110,7 +110,7 @@ def _catalogue(production: Mapping[str, Any], techniques: Techniques) -> _Catalo
     if entries is None:
         entries, _unreached, _unclassified = core.techniques_available_to(production, gates)
     required = core.capability_required_grades(entries)
-    built = _Catalogue(entries, core.build_producers_index(entries), core.capability_floor_by_carrier(entries),
+    built = _Catalogue(entries, core.build_producers_index(entries), core.capability_floor_by_carrier(),
                        required, solve_prices_round.band_suppliers(required, entries))
     _CATALOGUES[key] = (production, built)
     return built
@@ -145,12 +145,12 @@ def cost_of_making(good: str,
     dump_distance = price_engine.waste_dump_minimum_distance(civilization)
     try:
         bands = solve_prices_round.band_prices(
-            catalogue.required_grades, catalogue.suppliers, prices, wages, rents, rate)
+            catalogue.required_grades, catalogue.suppliers, prices, wages, rents, rate, dump_distance)
     except KeyError:     # a supplier of a graded carrier needs a trade with no wage: no grade of it has a price
         bands = {carrier: {} for carrier in catalogue.required_grades}
 
     def bill(recipe_id: str) -> Optional[Dict[str, Any]]:
-        return _bill(recipe_id, catalogue.available[recipe_id], prices, wages, rents, rate, bands, include_plant)
+        return _bill(recipe_id, catalogue.available[recipe_id], prices, wages, rents, rate, bands, include_plant, dump_distance)
 
     best = None
     for recipe_id in catalogue.producers_of.get(good, ()):
@@ -169,7 +169,7 @@ def cost_of_making(good: str,
         disposal_costs = (disposal_cost.disposal_cost_by_material(outputs, prices, rate, dump_distance)
                           if len(outputs) > 1 else None)
         unit_cost = core.allocate_output_prices(
-            outputs, prices, costed["total"], references, rate, disposal_costs)[good]
+            outputs, prices, costed["total"], references, rate, disposal_costs, dump_distance)[good]
         if best is None or unit_cost < best[0]:
             best = (unit_cost, recipe_id, costed)
     if best is None:
@@ -203,20 +203,20 @@ def _references(outputs: Mapping[str, float], reference_price_of, catalogue: _Ca
 
 
 def _bill(recipe_id: str, entry: Mapping[str, Any], prices: _Prices, wages: _Wages, rents, rate: float,
-          bands, include_plant: bool) -> Optional[Dict[str, Any]]:
+          bands, include_plant: bool, dump_distance: float) -> Optional[Dict[str, Any]]:
     """The cost of one batch of a recipe by source, or None when an input has no price."""
     try:
-        return _bill_priced(entry, prices, wages, rents, rate, bands, include_plant)
+        return _bill_priced(entry, prices, wages, rents, rate, bands, include_plant, dump_distance)
     except KeyError:     # a trade of the recipe or its plant has no wage
         return None
 
 
 def _bill_priced(entry: Mapping[str, Any], prices: _Prices, wages: _Wages, rents, rate: float, bands,
-                 include_plant: bool) -> Optional[Dict[str, Any]]:
+                 include_plant: bool, dump_distance: float) -> Optional[Dict[str, Any]]:
     inputs = entry.get("inputs") or {}
     waste_costs = None
     if any(prices.get(material, 0.0) < 0.0 for material in inputs):
-        waste_costs = disposal_cost.disposal_cost_by_material(inputs, prices, rate)
+        waste_costs = disposal_cost.disposal_cost_by_material(inputs, prices, rate, dump_distance)
     material_cost = core.batch_material_cost_hours(inputs, prices, waste_costs)
     land_cost = core.batch_land_cost_hours(entry, prices)
     capital_cost = core.capital_cost_hours_per_unit(

@@ -25,6 +25,12 @@ def takeable_money(wanted, exposed_purse, coin_held):
     return max(0.0, min(wanted, exposed_purse, coin_held))
 
 
+def guard_hours_by_kind(paid_share):
+    """The guarding each guarded kind of holding has, by the tonne and year: the full keeping cost's guards, counted for the
+    share of the keeping cost the holder's purse could pay."""
+    return {kind: COIN_GUARD_HOURS_PER_TONNE_YEAR * paid_share for kind in GUARDED_KINDS}
+
+
 class Theft(Part):
     """The exposure views and the theft commands (needs: civilisation, acting_balance, lent_share, held_goods, goods_quote,
     farm_holdings, farm_land_price, forest_holding, headcount, eminence, standing, visible_scale, order_reach,
@@ -79,8 +85,8 @@ class Theft(Part):
 
     def charge_actors_theft(self, command):
         """Every home-country actor in business (a state, a firm) loses its expected theft of what it keeps. Guarding is
-        the keeping cost `ChargeKeeping` charges in full; the state's order is the share of its people its employed
-        guards watch."""
+        the keeping cost `ChargeKeeping` charges, counted for the share of it the actor paid; the state's order is the
+        share of its people its employed guards watch."""
         registry, world = self.needs.cast(), self.needs.actor_world()
         lent_share = self.needs.lent_share()   # theft moves coin out of purses, never into a loan: one reading serves every actor
         for actor_id, actor in sorted(registry.actors.items()):  # id order, as a loaded game wraps them
@@ -96,15 +102,15 @@ class Theft(Part):
                 continue
             scale = self.needs.visible_scale(sum(actor.workforce.values()), actor.money, actor.stance.prominence())
             self.steal_from(actor_id, exposure, theft_exposure.THEFT_SHARE_PER_YEAR_AT_FULL_EXPOSURE,
-                            {kind: COIN_GUARD_HOURS_PER_TONNE_YEAR for kind in GUARDED_KINDS}, scale,
+                            guard_hours_by_kind(self.parts.keeping.keeping_paid_share.get(actor_id, 1.0)), scale,
                             self.needs.order_reach(), 0.0, coin_held=actor.purses.purse(actor_id))
 
     def charge_household_theft(self, command):
         """The household loses its expected theft; its guarding counts for the share of the keeping cost its purse could
         pay."""
         paid_share = command.keeping_paid / command.keeping_owed if command.keeping_owed > 0.0 else 0.0
-        guard = {kind: COIN_GUARD_HOURS_PER_TONNE_YEAR * paid_share for kind in GUARDED_KINDS}
-        return self.steal_from(None, self.household_exposure(), theft_exposure.THEFT_SHARE_PER_YEAR_AT_FULL_EXPOSURE, guard,
+        return self.steal_from(None, self.household_exposure(), theft_exposure.THEFT_SHARE_PER_YEAR_AT_FULL_EXPOSURE,
+                               guard_hours_by_kind(paid_share),
                                self.household_visible_scale(), self.needs.order_reach(), self.needs.standing()["protection"])
 
     def plunder_household(self, command):
@@ -114,6 +120,6 @@ class Theft(Part):
             capacity, protection = self.needs.order_reach(), self.needs.standing()["protection"]
         else:
             capacity, protection = 0.0, 0.0
-        guard = {kind: COIN_GUARD_HOURS_PER_TONNE_YEAR for kind in GUARDED_KINDS}
-        return self.steal_from(None, self.household_exposure(), command.strength, guard, self.household_visible_scale(),
+        return self.steal_from(None, self.household_exposure(), command.strength, guard_hours_by_kind(1.0),
+                               self.household_visible_scale(),
                                capacity, protection, command.cause)

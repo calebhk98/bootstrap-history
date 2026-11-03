@@ -138,6 +138,9 @@ def baskets_by_tile(basket, need_data, climates, tile_ids):
     return {tile: need_basket.climate_basket(basket, climate) for tile, climate in zip(tile_ids, climates)}
 
 
+OPENING_MONEY_FIELDS = ("prices", "wages", "carriage", "carriage_balanced")   # the opening values that are money, each {name: figure}
+
+
 def coin_per_unit(opening):
     """The economy counts money in opening unskilled labour hours: one unit is what an hour of it paid
     at the opening, in coin. So the economy is the same whatever the coin, and the port converts."""
@@ -149,10 +152,8 @@ def in_units(opening):
     is cached under these, so games that differ only in their coin share one."""
     unit = coin_per_unit(opening)
     counted = dict(opening)
-    counted["prices"] = {good: _counted(price / unit) for good, price in opening["prices"].items()}
-    counted["wages"] = {trade: _counted(wage / unit) for trade, wage in opening["wages"].items()}
-    counted["carriage"] = {mode: _counted(rate / unit) for mode, rate in opening["carriage"].items()}
-    counted["carriage_balanced"] = {mode: _counted(rate / unit) for mode, rate in opening["carriage_balanced"].items()}
+    for field in OPENING_MONEY_FIELDS:
+        counted[field] = {key: _counted(value / unit) for key, value in opening[field].items()}
     return counted
 
 

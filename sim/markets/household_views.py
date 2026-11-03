@@ -55,7 +55,8 @@ class HouseholdNeeds(Part):
 		"""{material: tonnes a year} the home households buy at these prices (labour hours a unit), scaled to the opening's people."""
 		base, final = self._household_model()
 		population = self.opening_population()
-		units = household_needs.demand_by_material(base, prices_in_hours, population, MEAN_INCOME_HOURS_PER_CAPITA)
+		units = household_needs.demand_by_material(base, prices_in_hours, population, MEAN_INCOME_HOURS_PER_CAPITA,
+		                                           self._civilisation_basket(base))
 		return household_needs.budget_scaled_final_tonnes(units, prices_in_hours, population, final)
 
 	def _household_need_floors_per_person(self):

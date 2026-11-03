@@ -17,7 +17,7 @@ from sim.demography.api import TakeFromGranary
 from sim.coin.exposure import Exposure, GoodsLot, split_purse
 from sim.coin.module import Coin
 from sim.ledger.api import STORE_ACTOR, STORE_GRANARY, STORE_STOCK, DrawDownStock, PayEdge, PayEdgeFrom
-from sim.coin.theft import takeable_money
+from sim.coin.theft import guard_hours_by_kind, takeable_money
 from sim.refusal import Refusal
 from sim.tests import module_harness
 
@@ -162,6 +162,14 @@ class WhatAnActorKeeps(unittest.TestCase):
         module.charge_actors_theft(ChargeActorsTheft())
         self.assertEqual(len(reads), 1)
         self.assertEqual([command.actor for command in module_harness.sent(module)], ["a", "b", "c"])
+
+
+class GuardCredit(unittest.TestCase):
+    def test_guarding_counts_for_the_share_of_the_keeping_cost_paid(self):
+        full, half, none = guard_hours_by_kind(1.0), guard_hours_by_kind(0.5), guard_hours_by_kind(0.0)
+        for kind in full:
+            self.assertAlmostEqual(half[kind], 0.5 * full[kind])
+            self.assertEqual(none[kind], 0.0)
 
 
 def household_module(farm_hectares=10.0, order_reach=0.0):

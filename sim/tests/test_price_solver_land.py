@@ -24,7 +24,7 @@ Land-limited materials state land_hectare_years and the solver charges rent for 
 import unittest
 
 from sim.prices import solve_prices_core, rent_standin, engine_seam
-from sim.tests.price_solver_helpers import engine_solve_converges, solver_context
+from sim.tests.price_solver_helpers import engine_solve_converges, minor_joint_byproducts_split_by_mass, solver_context
 
 
 class LandRentReferencePriceStaysZeroRentTests(unittest.TestCase):
@@ -206,7 +206,7 @@ class WiringDoesNotBreakTheSolveTests(unittest.TestCase):
         # stripped out - and compares every resolvable material's price.
         #
         # EXCEPT for minor joint byproducts split by mass (see JOINT BYPRODUCTS WITH NO REFERENCE PRICE in
-        # the solve_prices module docstring and `minor_joint_byproducts_split_by_mass`) - germanium_g and
+        # the solve_prices module docstring and the tests' `minor_joint_byproducts_split_by_mass`) - germanium_g and
         # indium_g today, both mass-split artifacts of zinc_electrolytic_kg's allocation rather than
         # independently derived prices. Their number is free to move, including downward, when the REST
         # of the economy shifts around them even though their own recipe is untouched - that is what
@@ -232,7 +232,7 @@ class WiringDoesNotBreakTheSolveTests(unittest.TestCase):
         prices_with_land, _iters, _residual, chosen_with_land = solve_prices_core.solve(
             production_entries, producers_of, resolvable_with_land, wage_by_trade,
             rent_hours_per_kg_by_material=rent)
-        by_mass_with_land = solve_prices_core.minor_joint_byproducts_split_by_mass(
+        by_mass_with_land = minor_joint_byproducts_split_by_mass(
             production_entries, chosen_with_land, prices_with_land, wage_by_trade,
             rent_hours_per_kg_by_material=rent)
 
@@ -247,7 +247,7 @@ class WiringDoesNotBreakTheSolveTests(unittest.TestCase):
         prices_without_land, _iters2, _residual2, chosen_without_land = solve_prices_core.solve(
             stripped_entries, producers_of_stripped, resolvable_without_land,
             wage_by_trade, rent_hours_per_kg_by_material=rent_stripped)
-        by_mass_without_land = solve_prices_core.minor_joint_byproducts_split_by_mass(
+        by_mass_without_land = minor_joint_byproducts_split_by_mass(
             stripped_entries, chosen_without_land, prices_without_land, wage_by_trade,
             rent_hours_per_kg_by_material=rent_stripped)
 

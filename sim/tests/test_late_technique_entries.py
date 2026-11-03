@@ -32,7 +32,7 @@ def stand_in_society(live_prices=None, land_rent=LAND_RENT):
     economy = types.SimpleNamespace(agent_prices=lambda: live_prices, agent_land_rent_per_hectare=lambda: land_rent,
                                     labour=types.SimpleNamespace(quote=lambda trade: WAGES.get(trade, 0.0)))
     registry = {"labourer": {"fallback": True}, "kilnman": {}}      # the trades the labour side knows; the unskilled one is the fallback
-    return types.SimpleNamespace(economy=economy, scenario=types.SimpleNamespace(civ={"id": "testland"}), finance=types.SimpleNamespace(market_rate=lambda: 0.0),
+    return types.SimpleNamespace(economy=economy, scenario=types.SimpleNamespace(held_civ={"id": "testland"}), finance=types.SimpleNamespace(market_rate=lambda: 0.0),
                                  state=types.SimpleNamespace(trade_registry=registry))
 
 

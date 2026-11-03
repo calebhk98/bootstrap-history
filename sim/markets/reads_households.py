@@ -2,7 +2,7 @@
 port. Money is counted in coin here, the engine's unit; quantities in tonnes."""
 from sim.economy import api as economy_api
 
-from .port_country import trade_book_in_coin
+from .port_country import CountryAnswers, trade_book_in_coin
 
 
 class HouseholdReads:
@@ -28,7 +28,6 @@ class HouseholdReads:
         economy = self._agent.economy()
         if country == economy_api.home_country(economy) or country not in economy_api.economy_countries(economy):
             return None
-        from .port_country import CountryAnswers
         return CountryAnswers(economy, country)
 
     def trade_book(self, country):
@@ -37,14 +36,16 @@ class HouseholdReads:
         return trade_book_in_coin(self._agent.economy(), country)
 
     def land_rent_per_hectare(self):
-        """Mean rent per hectare-year the land market let land at last year, in coin."""
+        """Mean rent per hectare-year the land market let land at last year, in coin; None where none was let."""
         economy = self._agent.economy()
-        return economy_api.land_rent_per_hectare(economy) * economy_api.coin_per_unit(economy)
+        rent = economy_api.land_rent_per_hectare(economy)
+        return None if rent is None else rent * economy_api.coin_per_unit(economy)
 
     def land_rent_at_tile(self, tile):
-        """Rent per hectare-year on one tile in coin (the mean where none was let there)."""
+        """Rent per hectare-year on one tile in coin (the mean where none was let there); None where none was let anywhere."""
         economy = self._agent.economy()
-        return economy_api.land_rent_at_tile(economy, tile) * economy_api.coin_per_unit(economy)
+        rent = economy_api.land_rent_at_tile(economy, tile)
+        return None if rent is None else rent * economy_api.coin_per_unit(economy)
 
     def land_rent_paid_by_tile(self):
         """Rent producers paid on each tile where land was let last year, in coin."""
