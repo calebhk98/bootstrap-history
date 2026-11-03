@@ -9,11 +9,12 @@ from sim.demography.api import StepPopulation
 from sim.finance.api import (ChargeInterest, EnforceCreditLimit, JudgeInsolvency, ServeBondageYear, ShedLossMakers,
                              WarnNearLimit)
 from sim.hazards.api import RecoverOutput
-from sim.ledger.api import PayWages, ReceiveFromEdge, pay_edge_or_log
+from sim.ledger.api import UNPAID_CHARGE_KIND, PayWages, ReceiveFromEdge, pay_edge_or_log
 from sim.polity.api import CloseStandingYear, RenewStanding
 from sim.projects.api import (AdvanceProjects, AutoOpenVentures, CloseLapsedDependents, CloseSpendYear, CloseUnstaffedVentures, NoteVentureYear,
                               ReopenRestaffedVentures)
-from sim.reporting.api import RecordAutomation
+from sim.refusal import Refusal, cause_of
+from sim.reporting.api import RecordAutomation, RecordEvent
 from sim.resources.api import AutoMothballMines, NoteMineCostPaid
 from sim.workforce.api import (AutoBuyPeople, AutoManumit, ChargeLivingCost, CloseHoursYear, FadeMarketPressure,
                                TakeWageFallback)
@@ -44,6 +45,17 @@ def begin_world_year(sim):
 	refresh_farm_territory(sim)
 
 
+def pay_wages_or_log(send, amount, purpose):
+	"""Send the acting seat's wage payment: None when paid. A refusal is logged as an `unpaid_charge` event and comes back, so
+	the caller does not count the wages as paid."""
+	refusal = send(PayWages(amount, purpose))
+	if not isinstance(refusal, Refusal):
+		return None
+	send(RecordEvent.of(UNPAID_CHARGE_KIND, "could not pay %s: %s" % (purpose, refusal),
+	                    edge=edges.EDGE_WORKERS, amount=amount, purpose=str(purpose), cause=cause_of(refusal)))
+	return refusal
+
+
 def money_seat(sim):
 	"""The acting seat's takings, costs, credit and insolvency."""
 	view, send = sim.view, sim.send
@@ -57,7 +69,7 @@ def money_seat(sim):
 	send(ReceiveFromEdge(edges.EDGE_CUSTOMERS, view("estimated_revenue")(), "venture revenue"))
 	# a charge the seat cannot pay is logged with its cause (the credit steps below judge the seat); unguarded coin is not guarded
 	pay_edge_or_log(send, edges.EDGE_SUPPLIERS, upkeep, "running costs of concerns")
-	send(PayWages(living_cost, "living costs"))
+	pay_wages_or_log(send, living_cost, "living costs")
 	if pay_edge_or_log(send, edges.EDGE_SUPPLIERS, mine_cost, "mine running costs") is None:
 		send(NoteMineCostPaid(mine_cost))
 	keeping_paid = keeping if pay_edge_or_log(send, edges.EDGE_COIN_GUARDS, keeping, "keeping coin under guard") is None else 0.0

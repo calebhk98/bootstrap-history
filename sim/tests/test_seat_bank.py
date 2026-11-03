@@ -15,6 +15,7 @@ from sim.finance import bank_rules as seat_bank
 from sim.finance.commands import FoundBank
 from sim.ledger.api import WithdrawHouseholdMoney
 from sim.markets.api import FoundBankFromOutside
+from sim.refusal import Refusal
 from sim.markets.commands_applied import Applying
 from sim.tests import finance_host, module_harness
 from sim.ui.proto import command_registry
@@ -48,17 +49,18 @@ class TheBank(unittest.TestCase):
         answer = module.found_bank(FoundBank(1000.0))
         self.assertTrue(answer["ok"])
         self.assertEqual(answer["bank"], "bank:1")
-        self.assertEqual(module_harness.sent(module), [FoundBankFromOutside(1000.0), WithdrawHouseholdMoney(1000.0)])
+        self.assertEqual(module_harness.sent(module), [WithdrawHouseholdMoney(1000.0), FoundBankFromOutside(1000.0)])
 
-    def test_a_capital_the_economy_turns_down_is_refused_and_the_money_stays(self):
+    def test_a_withdrawal_the_household_refuses_founds_no_bank(self):
         module = finance_host.build(year=3, techniques_held=lambda: {"a_bank_node"}, acting_balance=5000.0,
                                     actor_world=flat_namespace(baseline_knowledge=lambda: set()),
                                     mechanic={seat_bank.BANKING_MECHANIC: {"a_bank_node": {}}},
-                                    agent_economy_opened=True, answers={FoundBankFromOutside: None})
+                                    agent_economy_opened=True,
+                                    answers={WithdrawHouseholdMoney: Refusal("insufficient_funds", "The household holds less.")})
         answer = module.found_bank(FoundBank(1000.0))
         self.assertFalse(answer["ok"])
-        self.assertEqual(answer["cause"], "capital_not_positive")
-        self.assertEqual(module_harness.sent(module), [FoundBankFromOutside(1000.0)])
+        self.assertEqual(answer["cause"], "insufficient_funds")
+        self.assertEqual(module_harness.sent(module), [WithdrawHouseholdMoney(1000.0)])
 
 
 class TheEconomysBank(unittest.TestCase):

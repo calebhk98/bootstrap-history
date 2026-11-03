@@ -8,7 +8,7 @@ from typing import ClassVar, Dict, Optional, Tuple
 
 from sim.constants import declare
 
-from .accounts import Book
+from sim.book import Book
 from .currency import update_expected_inflation
 from .types import QUOTE_LOWEST_UNFILLED_ASK, QUOTE_OPENING_ESTIMATE, AgentId, AreaId, CurrencyId, GoodId, TileId, TradeId
 

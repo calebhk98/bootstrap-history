@@ -19,7 +19,7 @@ from .home_scope import has_partners
 from . import households_cohort
 from . import recipes as recipes_module
 from . import carriage_fleet_book, durable_stock, equity, goods_market, opening_basket, opening_bid_memory, opening_income, opening_metal, opening_own, opening_placement, opening_plans, opening_rent, opening_resting, opening_runs, households, households_store, labour_state, location, location_inputs, mint, opening_stores, ownership, sites, titles
-from .accounts import Book
+from sim.book import Book
 from .market_areas import AreaMap
 from .market_memory import MarketMemory, YearView, market_key
 from . import merchants

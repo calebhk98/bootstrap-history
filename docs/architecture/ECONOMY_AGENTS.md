@@ -226,12 +226,13 @@ the actors. The decision for who may owe what, and to whom:
   is shared among the deposits at the yearly settlement and an economy lender is paid it in units into its own account,
   and gets its deposit back, the same way, from what the pool holds beyond its lending. The only exception is a
   bookkeeping reset (`Purses.set_net`), which stands the account outside the book behind the debt it writes.
-- A draw beyond what the borrower may be lent (`Purses.limit`, set by the actors module to the borrower's `draw_limit`)
-  or beyond what the lenders can supply is refused: `Purses._draw` raises `InsufficientFunds`, nothing moves, and the
+- A draw beyond what the borrower may be lent (`Purses.limit`, set by the actors module to the borrower's `rule_limit`,
+  the economy's rule alone) or beyond what the lenders can supply is refused (`Borrower.draw_limit` is the rule's limit
+  cut to what the pool and the lenders supply, the very gate `Purses.drawable` applies): `Purses._draw` raises `InsufficientFunds`, nothing moves, and the
   ledger turns it into a `cannot_pay` refusal. A cover is all or nothing. The actor does with less (a staff bid, a
   purchase, a line of spending) or logs an `unpaid_charge`. A bond that falls due and cannot be paid stays on the book as
   debt and falls due again.
-- The market rate and what an actor may draw are the economy's own: `Borrower.draw_limit` asks the credit market's
+- The market rate and what an actor may draw are the economy's own: `Borrower.rule_limit` asks the credit market's
   `fundable_amount` (the rule the clearing applies to every request, priced by the economy's risk premium and floored by
   the lowest lender ask), and the rate on a draw is the market rate plus that premium, for the seat's arrears and the
   credit lines alike. Interest the pool receives waits in it until the yearly settlement; `state_lending` is the claims the

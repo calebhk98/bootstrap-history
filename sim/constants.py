@@ -362,7 +362,6 @@ def _import_declaring_modules():
                    "sim.economy.flow_rates",
                    "sim.geography.droving",
                    "sim.economy.currency",
-                   "sim.economy.foreign",
                    "sim.economy.goods_market",
                    "sim.economy.households_cohort",
                    "sim.economy.households_orders",

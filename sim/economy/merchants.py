@@ -32,7 +32,7 @@ from typing import Callable, Dict, List, Mapping, Optional, Sequence, Tuple
 from sim.constants import declare
 
 from . import carriage_fleet, inventory, route_dues, merchants_legs, merchants_nearest, merchants_route_memo, merchants_transit
-from .accounts import DeliveredMove
+from sim.book import DeliveredMove
 from .households_orders import BUDGET_SAFETY_SHARE
 from .market_areas import AreaMap
 from .merchants_shares import RouteShares, room_left

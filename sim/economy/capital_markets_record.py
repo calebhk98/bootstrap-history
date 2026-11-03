@@ -26,13 +26,13 @@ class CapitalMarketsRecord(OwnedRecord):
                 "capital": CapitalState.from_plain}
 
     def set_property_income(self, income: Dict[AgentId, float]) -> None:
-        """What households received as dividends, interest and rent is `income`, and the interest the actors' pool paid since
-        the last close with it."""
-        merged = dict(income)
-        for agent, amount in self.pool_income.items():
-            merged[agent] = merged.get(agent, 0.0) + amount
-        self.pool_income = {}
-        self.property_income = merged
+        """What households received as dividends, interest and rent."""
+        self.property_income = dict(income)
+
+    def take_pool_income(self) -> Dict[AgentId, float]:
+        """The interest the actors' pool paid lenders since the last close; the close counts it in the year's income, once."""
+        taken, self.pool_income = self.pool_income, {}
+        return taken
 
     def note_pool_income(self, agent: AgentId, amount: float) -> None:
         """The actors' pool paid `agent` (a lender of the economy) `amount` of interest; it joins the year's property income."""

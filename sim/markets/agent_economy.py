@@ -62,8 +62,10 @@ class AgentEconomy:
                 self.stored["opening"] = opening
                 self.save()
             self._built_from = self.stored
-            self._world.state.actors.purses.adopt_book(economy_api.economy_book(self._economy),
-                                                       economy_api.economy_contracts(self._economy))
+            purses = self._world.state.actors.purses
+            purses.adopt_book(economy_api.economy_book(self._economy), economy_api.economy_contracts(self._economy))
+            economy = self._economy
+            purses.unit_observer = lambda lender, units, label: economy_api.note_pool_posting(economy, lender, units)
             self.sync_ways()
         return self._economy
 

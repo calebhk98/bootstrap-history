@@ -19,7 +19,6 @@ from .producers import (EXPECTATION_ADJUSTMENT_SHARE, OUTPUT_CHANGE_SHARE_PER_YE
                         live_wages, next_expectations, runs_for_stock, share_working, within_a_years_change)
 from .protocols import MarketView
 from .types import GoodId, LoanRequest, Recipe, Transfer
-from .producers_working_capital import WORKING_CAPITAL_PURPOSE
 from .replaced import replaced
 
 LOSS_YEARS_BEFORE_EXIT = declare(

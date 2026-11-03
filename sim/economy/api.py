@@ -20,7 +20,6 @@ from .credit_lines import line_request as credit_line_request, actor_fundable as
 from .credit import risk_premium
 from .currency import currency_from_coin_standard
 from .economy import Economy
-from .foreign import external_orders
 from .market_memory import market_key
 from .opening_rate import against_history, opening_market_rate, solved_opening_rate
 from .metal_stock import COIN_WEAR_PER_YEAR
@@ -28,7 +27,7 @@ from .notional import shown_prices, shown_prices_with_kinds
 from .producers import Producer, expected_output_prices, live_input_prices, live_wages
 from .protocols import AgentOrders, EconomyYearInputs
 from .recipes import recipes_from_production_data
-from . import plant_builds, trade_wages
+from . import plant_builds, pool_deposits, trade_wages
 from .tool_wear import with_tool_wear
 from .record import EconomyRecord
 from .setup import EconomySetup, SetupTrade, goods_specs, recipe_tile_key
@@ -51,7 +50,7 @@ from sim.world import capital_market
 __all__ = [
     "FIXTURE_STAPLE", "FIXTURE_UNSKILLED_TRADE", "fixture_small_setup", "fixture_stationary_setup",
     "YearAccounts", "baseline_checks", "settling", "spin_up_sensitivity",
-    "carriage_wear", "crop_sites", "unit_cost", "diagnostics", "household_grinding", "households", "households_work", "need_roles", "taxes", "tile_costs", "currency_from_coin_standard", "Economy", "external_orders",
+    "carriage_wear", "crop_sites", "unit_cost", "diagnostics", "household_grinding", "households", "households_work", "need_roles", "taxes", "tile_costs", "currency_from_coin_standard", "Economy",
     "price_response", "prices_at", "offered_units", "watch_tiles",
     "shown_prices", "Producer", "expected_output_prices", "live_input_prices", "live_wages", "AgentOrders",
     "EconomyYearInputs", "recipe_tile_key", "recipes_from_production_data", "plant_builds", "with_tool_wear", "EconomyRecord", "EconomySetup", "SetupTrade", "SiteLimit",
@@ -63,7 +62,7 @@ __all__ = [
     "settle_agent_takings", "route_dues_account", "tile_holders", "indebted_tiles", "fugitive_share_by_tile", "title_holdings", "money_revenue_forms", "admit_recipes", "move_goods", "post_transfers", "cohort_incomes", "cohort_land_rents", "land_rent_per_hectare",
     "land_rent_paid_by_tile", "land_rent_at_tile", "DEPOSIT_BANKING", "POOLED_FUNDS", "INSURANCE_UNDERWRITING", "RISK_POOLING", "BOND_MARKET", "SHARE_TRADING", "country_figures", "carried_book", "idle_hours_by_trade", "output_by_tile",
     "person_equivalent_unemployment", "labour_market_rows",
-    "actor_fundable_amount", "risk_premium", "lender_listing",
+    "actor_fundable_amount", "risk_premium", "lender_listing", "note_pool_posting",
 ]
 
 from .market_memory import KEY_SEPARATOR as _KEY_SEPARATOR
@@ -647,3 +646,8 @@ def lender_listing(economy):
     currency = economy.setup.currency_id
     return {"currency": currency, "coin_per_unit": economy.setup.coin_per_unit,
             "lenders": _lender_standings(economy.record, currency)}
+
+
+def note_pool_posting(economy, lender, units):
+    """The actors' pool paid `lender` interest (positive) or took a default's loss from its deposit (negative), in the economy's unit."""
+    pool_deposits.note_pool_posting(economy.record, lender, units)

@@ -8,7 +8,7 @@ import unittest
 
 from sim.book import Book, Transfer
 from sim.contracts import Contracts
-from sim.economy import banks, credit_lines, pool_deposits
+from sim.economy import api as economy_api, banks, credit_lines, pool_deposits
 from sim.economy.capital_markets_record import CapitalMarketsRecord
 from sim.economy.credit_record import CreditRecord
 from sim.economy.credit_view import CreditView
@@ -72,19 +72,29 @@ class PoolDeposits(unittest.TestCase):
         self.assertAlmostEqual(view.claims("cohort:a", "coin"), 50.0)
         self.assertEqual(view.claims("cohort:b", "coin"), 0.0)
 
-    def test_interest_the_pool_paid_is_property_income_at_the_next_close_and_only_once(self):
+    def test_interest_the_pool_paid_is_taken_once_for_the_close(self):
         record = record_with({}, {})
         pool_deposits.note_pool_posting(record, "cohort:a", 5.0)
-        record.capital_markets.set_property_income({"cohort:a": 20.0, "cohort:b": 1.0})
-        self.assertEqual(record.capital_markets.property_income, {"cohort:a": 25.0, "cohort:b": 1.0})
-        record.capital_markets.set_property_income({})
-        self.assertEqual(record.capital_markets.property_income, {})
+        pool_deposits.note_pool_posting(record, "cohort:a", 2.0)
+        self.assertEqual(record.capital_markets.take_pool_income(), {"cohort:a": 7.0})
+        self.assertEqual(record.capital_markets.take_pool_income(), {})
+
+    def test_the_property_income_set_is_what_the_close_gives(self):
+        record = record_with({}, {})
+        record.capital_markets.set_property_income({"cohort:a": 25.0})
+        self.assertEqual(record.capital_markets.property_income, {"cohort:a": 25.0})
 
     def test_a_loss_of_the_deposit_in_a_default_is_the_lenders_credit_loss(self):
         record = record_with({}, {})
         pool_deposits.note_pool_posting(record, "cohort:a", -7.0)
         self.assertEqual(record.credit.credit_losses, {"cohort:a": 7.0})
         self.assertEqual(record.capital_markets.pool_income, {})
+
+    def test_the_api_door_books_a_pool_posting_on_the_economys_record(self):
+        record = record_with({}, {})
+        economy_api.note_pool_posting(types.SimpleNamespace(record=record), "cohort:a", -3.0)
+        economy_api.note_pool_posting(types.SimpleNamespace(record=record), "cohort:a", 4.0)
+        self.assertEqual((record.credit.credit_losses, record.capital_markets.pool_income), ({"cohort:a": 3.0}, {"cohort:a": 4.0}))
 
 
 if __name__ == "__main__":

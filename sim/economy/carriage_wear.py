@@ -14,7 +14,7 @@ Standalone: the economy records and the carriage table.
 import math
 from typing import Dict, List, Mapping, Optional, Sequence, Tuple
 
-from .accounts import DeliveredMove
+from sim.book import DeliveredMove
 from .market_memory import KEY_SEPARATOR as MARKET_KEY_SEPARATOR
 from .merchants import Merchant
 from .setup import opening_price_today
