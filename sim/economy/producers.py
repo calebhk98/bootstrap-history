@@ -283,7 +283,6 @@ def plan(producer: Producer, recipe: Recipe, view: MarketView, cash: float) -> P
     labour_cost = unit_cost.labour_cost_per_run(recipe, wages)
     rent = producer.land_rent_per_run
     variable = input_cost + labour_cost + rent
-    margin = revenue - variable
     if producer.capacity_runs <= 0.0 or revenue <= 0.0 or not math.isfinite(variable):
         return Plan(0.0)
     # cash pays what the market asks now (as the cash target is struck); the lagging expectation only chooses runs
@@ -309,7 +308,7 @@ def plan(producer: Producer, recipe: Recipe, view: MarketView, cash: float) -> P
     live_variable = unit_cost.input_cost_per_run(recipe, {**inputs, **market_inputs}) + labour_cost + rent
     bids = _input_bids(producer, recipe, view, runs, market_inputs, max(cash, 0.0) - runs * labour_cost,
                        revenue / ratio - live_variable, live_variable, wages)
-    return Plan(runs, tuple(labour_bids), tuple(bids), margin, wanted, runs * labour_cost)
+    return Plan(runs, tuple(labour_bids), tuple(bids), wanted, runs * labour_cost)
 
 
 def within_a_years_change(producer: Producer, runs: float) -> float:
