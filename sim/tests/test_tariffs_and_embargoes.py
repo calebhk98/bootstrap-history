@@ -67,6 +67,7 @@ class _Sim:
 
     def __init__(self, prices):
         self.stores, self.civ = _stores(), {"id": "rome"}
+        self.scenario = SimpleNamespace(civ=self.civ)
         self.prices = prices
 
     def border_terms(self, destination, source):

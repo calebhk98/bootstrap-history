@@ -78,7 +78,7 @@ class EconomyPort:
     def agent_prices(self):
         """The agent economy's prices by good in coin, or None to use the engine's."""
         parts = self.answering()
-        return None if parts is None else parts.prices.answers(self._sim.acting_country())[0]
+        return None if parts is None else parts.prices.answers(self._sim.scenario.acting_country())[0]
 
     def agent_need_floor_costs_at(self, tile=None):
         """What a person's floor of each need costs a year on a tile (the acting one by default), in coin; None

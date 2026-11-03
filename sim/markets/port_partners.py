@@ -24,7 +24,7 @@ def partner_opening(sim, partner_id):
     """What the setup takes from one partner at the opening: its tiles (those the home country does not
     hold), the people on each, the recipes its techniques allow and its goods priced where the home has none."""
     civ = sim.civilisation_record(partner_id)
-    home_tiles = set(sim.map.tiles_held_by(sim.civ))
+    home_tiles = set(sim.map.tiles_held_by(sim.scenario.civ))
     tile_ids = [tile for tile in sim.map.tiles_held_by(civ) if tile not in home_tiles]
     people, farthest, source = _people_by_tile(sim, civ, tile_ids)
     production = demand.production_data()

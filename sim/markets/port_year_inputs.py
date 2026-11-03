@@ -23,14 +23,14 @@ class YearInputsBuilder:
 
     def build(self, engine_orders, border_accounts=((), ())) -> YearInputs:
         sim = self._world
-        weather = sim.farm.pooled_weather_multiplier(sim.year, harmed=False)   # harm is applied per producer below
+        weather = sim.farm.pooled_weather_multiplier(sim.scenario.year, harmed=False)   # harm is applied per producer below
         economy = self._agent.economy()
-        harmed = sim.farm.externality_yield_factors(sim.year)
-        yields = port_sites.crop_yields(economy, weather, sim.farm.weather_by_tile(sim.year))
+        harmed = sim.farm.externality_yield_factors(sim.scenario.year)
+        yields = port_sites.crop_yields(economy, weather, sim.farm.weather_by_tile(sim.scenario.year))
         yields = port_sites.harmed_yields(yields, harmed, economy_api.producers_of(economy))
         people = sim.labour.settlement_tiles()
         bands = sim.state.regional_people_by_band()    # demography's (children, working age, elderly) by tile
-        return YearInputs(year=sim.year, population_by_tile=people,
+        return YearInputs(year=sim.scenario.year, population_by_tile=people,
                           working_people_by_tile={tile: bands[tile][1] for tile in people if tile in bands},
                           yield_factor_by_producer=yields, engine_orders=engine_orders, harvest_factor=weather,
                           state_capacity=sim.finance.state_reach(),
@@ -44,7 +44,7 @@ class YearInputsBuilder:
                           **port_flight.flight_values(sim, economy),
                           institutions=port_institutions.held(sim),
                           durable_users=tuple(port_actors.held_account(buyer)
-                                              for buyer in sorted(sim.actors.actors)),
+                                              for buyer in sorted(sim.scenario.actors.actors)),
                           bondage_tiles=port_bondage.bondage_tiles(sim, economy),
                           bonded_for_sale=port_bondage.bonded_for_sale(sim, economy),
                           standing_bids=self.founder_standing_bids(), credit_asks=self.credit_asks(),
@@ -58,9 +58,9 @@ class YearInputsBuilder:
         rate = sim.finance.market_rate()
         asks = []
         for seat_id in sorted(sim.state.playing_seats() or sim.state.seats):
-            with sim.act_as(seat_id):
+            with sim.scenario.act_as(seat_id):
                 base, _floor, serviceable = sim.finance.credit_line_sought()
-                line = max(0.0, min(base, serviceable)) * sim.price_index / coin
+                line = max(0.0, min(base, serviceable)) * sim.scenario.price_index / coin
             if line > 0.0:
                 asks.append(economy_api.credit_line_request(seat_id, currency, line, rate))
         return tuple(asks)

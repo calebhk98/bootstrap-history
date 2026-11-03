@@ -160,7 +160,7 @@ def idle_hours_by_trade(economy, country=None):
     return country_figures.idle_hours_by_trade(economy, country_figures.home_when_shared(economy, country))
 
 
-def hours_hired_by_employer(economy, employer):
+def hours_paid_by_employer(economy, employer):
     """{trade: hours} the last labour clearing hired for `employer` (paid hours, bonded included); empty before one."""
     return dict(economy.record.labour.hours_paid_by_employer.get(employer, {}))
 

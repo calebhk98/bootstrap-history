@@ -30,7 +30,7 @@ class SeatConcerns:
         world = self._world
         orders, offered, inputs = {}, {}, {}
         for seat_id in self.seats_playing():
-            with world.act_as(seat_id):
+            with world.scenario.act_as(seat_id):
                 orders.update(self._acting_orders(seat_id, offered, inputs))
         return orders, offered, inputs
 
@@ -100,6 +100,6 @@ class SeatConcerns:
         world = self._world
         tiles = set()
         for seat_id in world.state.playing_seats() or world.state.seats:
-            with world.act_as(seat_id):
+            with world.scenario.act_as(seat_id):
                 tiles.add(self._agent.tile_in_economy(world.labour.base_tile()))
         return tiles

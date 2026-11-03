@@ -11,7 +11,8 @@ and geography) are reserved with it and charged on the tonnes that arrive. After
 to the seat's stock, the carriage (paid to the carriers' edge) and factor (paid with the purchase) on them are charged, and the rest of the money is refunded; the sale account's
 unsold goods go back to the seat's stock and its money is the sale's proceeds. What each seat bought and sold is kept as
 `stored["seat_trades"]`, the figure the next year reads, with `"orders"`: one result per order, including an order whose payment
-was refused or whose goods the seat no longer held (with the refusal's cause), so none vanishes silently.
+was refused, whose goods the seat no longer held or whose money could not be booked at the settlement (with the refusal's cause),
+so none vanishes silently.
 """
 from sim.agents.api import edges
 from sim.economy import api as economy_api
@@ -38,18 +39,26 @@ def sale_account(seat_id, index):
 def add_order(stored, seat_id, order):
     """The seat's order, {"side": "buy"|"sell", "material", "good", "stock_key", "tonnes", "limit_per_tonne", "carriage_per_tonne",
     "cost_factor", "project"}, waits for the year's clearing. A buy's limit is the market price per tonne at most; carriage and
-    the cost factor are charged on the tonnes that arrive."""
+    the cost factor are charged on the tonnes that arrive. The order gets a unique "order_id", carried into its result so the
+    one who placed it finds it again; that id is returned."""
+    order["order_id"] = stored["next_order_id"] = stored.get("next_order_id", 0) + 1
     stored.setdefault("seat_orders", {}).setdefault(seat_id, []).append(order)
+    return order["order_id"]
 
 
 def cancel_orders(stored, seat_id, side, material):
-    """Withdraw the seat's waiting orders to `side` a material; (count, tonnes) withdrawn. Nothing was paid or moved before the year."""
-    kept, cancelled = [], []
+    """Withdraw the seat's own waiting orders to `side` a material: (count, tonnes withdrawn, projects whose orders were kept).
+    A project's order is not withdrawn (the project waits for its result; stopping the project ends it). Nothing was paid or
+    moved before the year."""
+    kept, cancelled, projects = [], [], set()
     for order in stored.get("seat_orders", {}).get(seat_id, ()):
-        (cancelled if order["side"] == side and order["material"] == material else kept).append(order)
+        matches = order["side"] == side and order["material"] == material
+        if matches and order.get("project"):
+            projects.add(order["project"])
+        (cancelled if matches and not order.get("project") else kept).append(order)
     if cancelled:
         stored["seat_orders"][seat_id] = kept
-    return len(cancelled), sum(order["tonnes"] for order in cancelled)
+    return len(cancelled), sum(order["tonnes"] for order in cancelled), sorted(projects)
 
 
 def posted_orders(stored, seat_id=None):
@@ -92,7 +101,7 @@ def committed_money(orders):
 def staff_funding_coin(sim, economy, seat_id, tile_of):
     """Money the port will draw from the seat for its staff places this year, ahead of any goods order: the figure `post` draws
     (port_staff.seat_staff_bids). It can still move before then, as the wages it reads change at the clearing."""
-    with sim.act_as(seat_id):
+    with sim.scenario.act_as(seat_id):
         _bids, units = port_staff.seat_staff_bids(sim, economy, seat_id, tile_of(sim.labour.base_tile()))
     return units * economy_api.coin_per_unit(economy)
 
@@ -102,7 +111,7 @@ def staff_funding_coin(sim, economy, seat_id, tile_of):
 def refused(order, cause, text):
     """The result of an order that was not posted, with the cause the seat sees."""
     return {"side": order["side"], "material": order["material"], "stock_key": order["stock_key"], "tonnes": order["tonnes"],
-            "project": order.get("project"), "refused": {"cause": cause, "text": str(text)}}
+            "project": order.get("project"), "order_id": order.get("order_id"), "refused": {"cause": cause, "text": str(text)}}
 
 
 def post(sim, economy, orders_by_seat, tile_of):
@@ -112,7 +121,7 @@ def post(sim, economy, orders_by_seat, tile_of):
     traded = economy.area_map.goods()
     bids, offers, moves, transfers, posted = {}, {}, [], [], {}
     for seat_id, orders in sorted(orders_by_seat.items()):
-        with sim.act_as(seat_id):
+        with sim.scenario.act_as(seat_id):
             tile = tile_of(sim.labour.base_tile())
             entries = posted.setdefault(seat_id, [])
             for index, order in enumerate(orders):
@@ -191,8 +200,9 @@ def settle(sim, economy, posted):
         order = entry["order"]
         key = order["stock_key"]
         result = {"side": order["side"], "material": order["material"], "stock_key": key, "tonnes": order["tonnes"],
-                  "project": order.get("project"), "refused": None}
-        with sim.act_as(seat_id):
+                  "project": order.get("project"), "order_id": order.get("order_id"), "refused": None}
+        with sim.scenario.act_as(seat_id):
+            refusals = []
             if tonnes > 0.0:
                 sim.send(ChangeStock(key, tonnes))
             if order["side"] == "buy":
@@ -201,18 +211,21 @@ def settle(sim, economy, posted):
                 charged = min(money, (spent + carriage) * (order.get("cost_factor", 1.0) - 1.0) + carriage)
                 carriage_paid = min(charged, carriage)
                 if money - charged > 0.0:
-                    sim.send(ReceiveFromEdge(edges.EDGE_MARKET, money - charged, "materials order unspent"))
+                    refusals.append(sim.send(ReceiveFromEdge(edges.EDGE_MARKET, money - charged, "materials order unspent")))
                 if carriage_paid > 0.0:   # the haul goes to the carriers, not to the sellers' edge
-                    sim.send(ReceiveFromEdge(edges.EDGE_MARKET, carriage_paid, "carriage on materials ordered"))
-                    sim.send(PayEdge(edges.EDGE_FREIGHT, carriage_paid, "carriage on materials ordered"))
+                    refusals.append(sim.send(ReceiveFromEdge(edges.EDGE_MARKET, carriage_paid, "carriage on materials ordered")))
+                    refusals.append(sim.send(PayEdge(edges.EDGE_FREIGHT, carriage_paid, "carriage on materials ordered")))
                 trade["bought"][key] = trade["bought"].get(key, 0.0) + tonnes
                 result.update(bought_tonnes=tonnes, paid=spent + charged)
             else:
                 if money > 0.0:
-                    sim.send(ReceiveFromEdge(edges.EDGE_MARKET, money, "materials sold"))
+                    refusals.append(sim.send(ReceiveFromEdge(edges.EDGE_MARKET, money, "materials sold")))
                 sold = max(0.0, entry["offered"] - tonnes)
                 trade["sold"][key] = trade["sold"].get(key, 0.0) + sold
                 result.update(sold_tonnes=sold, proceeds=money)
+            refused_posting = next((reply for reply in refusals if isinstance(reply, Refusal)), None)
+            if refused_posting is not None:
+                result["refused"] = {"cause": "settlement_refused", "text": str(refused_posting)}
         trade["orders"].append(result)
     for trade in trades.values():
         trade["bought"] = {key: amount for key, amount in trade["bought"].items() if amount > 0.0}

@@ -12,7 +12,7 @@ from sim.freight.api import FREIGHT_FEED_PRICE_MATERIAL
 from . import trade_duty
 from .port_world_foreign import ForeignReads
 from .port_world_map import MapReads
-from .port_world_reads import FarmReads, MaterialReads, FinanceReads, ProductionReads
+from .port_world_reads import FarmReads, MaterialReads, PortFinanceReads, ProductionReads, ScenarioReads
 
 
 class StateReads:
@@ -107,12 +107,13 @@ class PortWorld:
 		self._needs = needs
 		self._owner = owner          # the markets module: its clock, kernels and saved state
 		self._parts = parts          # its parts: the objects, the clearing
+		self.scenario = ScenarioReads(needs)     # the year, the civilisation, the tree, the price level and the seats
 		self.state = StateReads(needs, owner)
 		self.labour = LabourReads(needs)
 		self.map = MapReads(needs)               # the land module's map views
 		self.foreign = ForeignReads(needs)       # partners, freight, the partners' coin and the deposits
 		self.materials = MaterialReads(needs)    # price tables and commodity groupings
-		self.finance = FinanceReads(needs)       # the state's money, credit, coin and purse
+		self.finance = PortFinanceReads(needs)   # the state's money, credit, coin and purse
 		self.production = ProductionReads(needs)  # techniques, the concerns' books, projects
 		self.farm = FarmReads(needs)             # farm sites, weather, ownership, timber
 
@@ -153,15 +154,7 @@ class PortWorld:
 	def remember(self, name, value):
 		self._parts.market_objects.set_seat_cache(name, value)
 
-	# ---- the scenario ----
-
-	@property
-	def year(self):
-		return self._needs.year()
-
-	@property
-	def civ(self):
-		return self._needs.civilisation()
+	# ---- the civilisation and the borders ----
 
 	def civilisation_record(self, civilization_id):
 		"""A civilisation as its file gives it (mods applied, checked)."""
@@ -170,39 +163,3 @@ class PortWorld:
 	def border_terms(self, destination, source):
 		"""(tariff share, embargoed) `destination`'s state holds toward goods crossing from `source`."""
 		return trade_duty.terms_in_book(self._needs.store_book(), destination, source)
-
-	@property
-	def cfg(self):
-		return self._needs.game_config()
-
-	@property
-	def nodes(self):
-		return self._needs.tree_nodes()
-
-	@property
-	def price_index(self):
-		return self._needs.price_index()
-
-	@property
-	def output_factor(self):
-		return self._needs.output_factor()
-
-	@property
-	def population(self):
-		return self._needs.population()
-
-	@property
-	def HOURS_PER_PERSON_YEAR(self):
-		return self._needs.hours_per_person_year()
-
-	@property
-	def actors(self):
-		return self._needs.cast()
-
-	# ---- the seats ----
-
-	def act_as(self, seat_id):
-		return self._needs.act_as(seat_id)
-
-	def acting_country(self):
-		return self._needs.acting_country()

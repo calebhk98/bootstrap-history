@@ -6,8 +6,8 @@ import unittest
 from sim.projects import materials_wait
 
 
-def order(material, tonnes, quoted):
-    return {"material": material, "stock_key": "stock_" + material, "tonnes": tonnes, "quoted": quoted}
+def order(material, tonnes, quoted, order_id=None):
+    return {"material": material, "stock_key": "stock_" + material, "tonnes": tonnes, "quoted": quoted, "order_id": order_id}
 
 
 def refused(material, tonnes, cause):
@@ -32,10 +32,16 @@ class MaterialsWait(unittest.TestCase):
         self.assertEqual([(short["material"], short["tonnes"], short["cause"]) for short in shortfalls], [("iron", 2.0, "no_price")])
 
     def test_two_orders_for_one_material_are_each_settled_by_their_own_result(self):
-        on_order = [order("iron", 1.0, 10.0), order("iron", 3.0, 30.0)]
-        results = [{"material": "iron", "tonnes": 1.0, "bought_tonnes": 1.0, "paid": 10.0},
-                   {"material": "iron", "tonnes": 3.0, "bought_tonnes": 1.0, "paid": 10.0}]
+        on_order = [order("iron", 1.0, 10.0, 7), order("iron", 3.0, 30.0, 9)]
+        results = [{"material": "iron", "order_id": 7, "tonnes": 1.0, "bought_tonnes": 1.0, "paid": 10.0},
+                   {"material": "iron", "order_id": 9, "tonnes": 3.0, "bought_tonnes": 1.0, "paid": 10.0}]
         add_back, shortfalls = materials_wait.reconcile(on_order, results)
+        self.assertEqual(add_back, 20.0)
+        self.assertEqual([short["tonnes"] for short in shortfalls], [2.0])
+
+    def test_a_result_with_another_order_id_is_not_credited(self):
+        add_back, shortfalls = materials_wait.reconcile(
+            [order("iron", 2.0, 20.0, 4)], [{"material": "iron", "order_id": 5, "tonnes": 2.0, "bought_tonnes": 2.0, "paid": 25.0}])
         self.assertEqual(add_back, 20.0)
         self.assertEqual([short["tonnes"] for short in shortfalls], [2.0])
 

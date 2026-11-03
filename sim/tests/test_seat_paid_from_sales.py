@@ -21,6 +21,7 @@ class StandInSim:
     def __init__(self, seats):
         self.state = types.SimpleNamespace(seats=seats)
         self.acting, self.postings = None, []
+        self.scenario = types.SimpleNamespace(act_as=self.act_as)
 
     @contextlib.contextmanager
     def act_as(self, seat_id):

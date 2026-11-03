@@ -31,8 +31,8 @@ def opening_costs(sim, production=None):
     production = cost_entries() if production is None else production
     techniques = sim.production.techniques_granted() | frozenset(sim.production.techniques_in_use())
     wage_of = wage_function(sim, production)
-    rent_of = long_run_costs.opening_rent_of(techniques, wage_of, sim.civ, production)
-    costs = long_run_costs.long_run_costs(techniques, wage_of, float(sim.finance.market_rate()), rent_of, sim.civ,
+    rent_of = long_run_costs.opening_rent_of(techniques, wage_of, sim.scenario.civ, production)
+    costs = long_run_costs.long_run_costs(techniques, wage_of, float(sim.finance.market_rate()), rent_of, sim.scenario.civ,
                                           production)
     # A household good only a technique not yet held makes has no supplier at the opening, so it is seeded no
     # price that would draw demand to it; a founder's research or a partner's price brings it in.

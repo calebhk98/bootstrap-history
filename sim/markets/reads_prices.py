@@ -5,6 +5,8 @@ kept in the agent's `YearFigures` until the economy's state changes."""
 from sim.economy import api as economy_api
 from sim.world.material_units import tonnes_per_unit
 
+from .trade_wage import unpriced_trade_wage
+
 
 class PriceReads:
 
@@ -19,7 +21,7 @@ class PriceReads:
         of the economy, those of its own markets; any other country is answered as the home country."""
         agent = self._agent
         figures = agent.figures
-        if country is not None and country != self._world.civ.get("id"):
+        if country is not None and country != self._world.scenario.civ.get("id"):
             home = self.answers()
             economy = agent.economy()
             if country not in economy_api.economy_countries(economy):
@@ -42,7 +44,7 @@ class PriceReads:
         return figures.answers
 
     def price_kind(self, good):
-        """What the shown price of a good is (economy_api.shown_price_kinds_of): traded, a quote named by what it
+        """What the shown price of a good is (economy_api.shown_price_kinds_of): smoothed_trade, a quote named by what it
         is, or an estimate; None for a good the economy shows no price for. Built once a year."""
         answers = self.answers()
         figures = self._agent.figures
@@ -89,16 +91,14 @@ class PriceReads:
         return wages.get(economy_api.unskilled_trade(self._agent.economy()))
 
     def wage_per_hour(self, trade, country=None):
-        """The trade's wage in its labour markets; a trade no producer hires (soldiers, scribes) is paid
-        what its training adds to the unskilled wage, so every wage stands on the same market."""
+        """The trade's wage in its labour markets; a trade no market has priced (soldiers, scribes) has the wage the staff
+        bids use for it (trade_wage.py), so every wage stands on the same rule."""
         wages = self.answers(country)[1]
         if trade in wages:
             return wages[trade]
         economy = self._agent.economy()
-        unskilled = wages.get(economy_api.unskilled_trade(economy))
-        if unskilled is None:
-            return None
-        return unskilled * (1.0 + economy_api.trade_premium_of(economy, trade))
+        unpriced = unpriced_trade_wage(economy, trade)
+        return None if unpriced is None else unpriced * economy_api.coin_per_unit(economy)
 
     def credit_room(self, borrower_id):
         """What the credit market will still advance one borrower, in coin; None before lenders have met."""

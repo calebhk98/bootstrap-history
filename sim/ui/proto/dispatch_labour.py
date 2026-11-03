@@ -16,6 +16,7 @@ from .command_registry import command
 from .hire_reply import hire_reply
 from sim.engine.ui_port import TRADES_ABSENT, TRADE_NOTES, WAGES, trade_family
 from .state_waiting import _staff_fraction_note
+from .wage_figures import wage_origin
 from .util import _num, _qty
 from .quote_spending import COMMISSION_NOTE
 from sim.reporting.api import RecordEvent
@@ -179,10 +180,7 @@ def _cmd_labour(sim, nodes, cmd, ended):
              "a_year_of_one": round(sim.view("labour_market")().quote_annual(trade), 0),
              "you_employ": round(sim.view("staff")()["employees"].get(trade, 0.0), 2)}
         if long:
-            entry["wage_foundation"] = {
-                "base_for_skill_and_difficulty": round(sim.view("base_annual_wage")[trade], 2),
-                **{factor_key: round(value, 3) for factor_key, value in sim.view("labour_market")().cost_factors(trade).items()},
-            }
+            entry.update(wage_origin(sim, trade))
         # SAME EXPLANATION AS THE FULL LIST'S, for whoever asks about
         # one trade without ever asking for all of them - see
         # _staff_fraction_note. Checked on this one trade alone, not

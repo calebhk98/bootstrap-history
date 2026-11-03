@@ -1,8 +1,57 @@
 """The port's reads of prices and materials, money, production and the farm, each from the view its owner publishes.
 
-`PortWorld.materials`, `.finance`, `.production` and `.farm` hold them, as `.state`, `.labour`, `.map` and `.foreign` hold theirs."""
+`PortWorld.scenario`, `.materials`, `.finance`, `.production` and `.farm` hold them, as `.state`, `.labour`, `.map` and `.foreign` hold theirs."""
 from sim.diffusion.api import NoteFirstRuns
 from sim.prices.api import rules as price_rules
+
+
+class ScenarioReads:
+	"""The scenario and the seats: the year, the civilisation, the configuration, the tree, the price level, the people and who acts."""
+
+	def __init__(self, needs):
+		self._needs = needs
+
+	@property
+	def year(self):
+		return self._needs.year()
+
+	@property
+	def civ(self):
+		return self._needs.civilisation()
+
+	@property
+	def cfg(self):
+		return self._needs.game_config()
+
+	@property
+	def nodes(self):
+		return self._needs.tree_nodes()
+
+	@property
+	def price_index(self):
+		return self._needs.price_index()
+
+	@property
+	def output_factor(self):
+		return self._needs.output_factor()
+
+	@property
+	def population(self):
+		return self._needs.population()
+
+	@property
+	def HOURS_PER_PERSON_YEAR(self):
+		return self._needs.hours_per_person_year()
+
+	@property
+	def actors(self):
+		return self._needs.cast()
+
+	def act_as(self, seat_id):
+		return self._needs.act_as(seat_id)
+
+	def acting_country(self):
+		return self._needs.acting_country()
 
 
 class MaterialReads:
@@ -44,7 +93,7 @@ class MaterialReads:
 		return self._needs.material_serves_a_need[material]
 
 
-class FinanceReads:
+class PortFinanceReads:
 	"""The state's money, the credit market, the coin and the purse."""
 
 	def __init__(self, needs):

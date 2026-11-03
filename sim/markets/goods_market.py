@@ -168,13 +168,17 @@ class GoodsMarket:
     # ---- orders -----------------------------------------------------------------------
 
     def cancel_orders(self, side, material):
-        """Withdraw the asking seat's posted orders to `side` a material, which nothing has settled yet: {"cancelled": count,
-        "tonnes": total}, or a refusal with a cause when it has none."""
+        """Withdraw the asking seat's own posted orders to `side` a material, which nothing has settled yet: {"cancelled": count,
+        "tonnes": total, "kept_for_projects": [project]}, or a refusal with a cause when it has none. An order a project placed
+        is kept (cause `belongs_to_project`): the project waits for its result, so stop the project instead."""
         material = str(material or "").strip().lower()
-        count, tonnes = port_goods_orders.cancel_orders(self._stored, self.acting_party_id, side, material)
+        count, tonnes, projects = port_goods_orders.cancel_orders(self._stored, self.acting_party_id, side, material)
+        if not count and projects:
+            return Refusal("belongs_to_project", "the order to %s %s belongs to %s; stop the project to end it." % (side, material, ", ".join(projects)),
+                           material=material, side=side, projects=projects)
         if not count:
             return Refusal("no_such_order", "no order to %s %s is posted." % (side, material), material=material, side=side)
-        return {"cancelled": count, "tonnes": tonnes, "side": side, "material": material}
+        return {"cancelled": count, "tonnes": tonnes, "side": side, "material": material, "kept_for_projects": projects}
 
     def post_order(self, side, material, tonnes, limit_per_tonne=None, project=None, cost_factor=1.0, limit_includes_carriage=False):
         """Post the asking seat's order for the year's clearing: "buy" `tonnes` paying the market no more than `limit_per_tonne`,
@@ -222,8 +226,8 @@ class GoodsMarket:
                 return Refusal("cannot_pay", "the money for that order, at that limit and with carriage, is not in hand once the "
                                "seat's other orders and its staff are counted.", material=material, asked_tonnes=tonnes,
                                limit_per_tonne=limit, needs_money=committed)
-        port_goods_orders.add_order(self._stored, self.acting_party_id, order)
-        return {"posted": True, "side": side, "material": quote["material"], "tonnes": tonnes, "limit_per_tonne": limit,
+        order_id = port_goods_orders.add_order(self._stored, self.acting_party_id, order)
+        return {"posted": True, "order_id": order_id, "side": side, "material": quote["material"], "tonnes": tonnes, "limit_per_tonne": limit,
                 "carriage_per_tonne": carriage, "cost_factor": order["cost_factor"], "committed_money": committed,
                 "quote_per_tonne": (quote["buy_per_tonne"] - carriage if buying else quote["sell_per_tonne"]),
                 "quote_carriage_per_tonne": carriage}

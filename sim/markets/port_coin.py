@@ -35,7 +35,7 @@ def priced_at_the_margin(sim, opening):
         return dict(opening, coin_worth_scale=1.0)
     marginal, price = found
     scale = price / marginal
-    metal = sim.civ["coin_standard"].get("material")
+    metal = sim.scenario.civ["coin_standard"].get("material")
     scaled = dict(opening)
     scaled["prices"] = {good: (value if good == metal else value * scale) for good, value in opening["prices"].items()}
     scaled["wages"] = {trade: value * scale for trade, value in opening["wages"].items()}

@@ -94,7 +94,7 @@ class AgentEconomy:
 
     def actor_tile(self, actor_id):
         """The tile an actor buys and sells on: where it is, else the capital."""
-        actor = self._world.actors.actors.get(actor_id)
+        actor = self._world.scenario.actors.actors.get(actor_id)
         place = actor.location() if actor is not None else None
         economy = self.economy()
         return place if place in economy_api.economy_tiles(economy) else economy_api.capital_tile(economy)
