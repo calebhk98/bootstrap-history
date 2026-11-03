@@ -284,8 +284,15 @@ class ActorRegistry:
 			self._tile_owners = taxpayer_income.tile_owners(self.state.countries)
 		return self._tile_owners.get(tile)
 
-	def forget_tile_owners(self) -> None:
-		"""Drop the remembered tile -> country map; the next question rebuilds it from the profiles."""
+	def move_tile_between_countries(self, tile: str, previous: Optional[str], gained_by: Optional[str]) -> None:
+		"""Move `tile` between the profiles of the country that lost it and the one that gained it. The only writer of a
+		profile's tiles, so it is the one place the remembered tile -> country map is dropped."""
+		for country, profile in (self.state.countries or {}).items():
+			if country == previous and tile in profile.home_tiles:
+				profile.home_tiles.remove(tile)
+			if country == gained_by and tile not in profile.home_tiles:
+				profile.home_tiles.append(tile)
+				profile.home_tiles.sort()
 		self._tile_owners = None
 
 	def government_of(self, country: Optional[str]) -> Optional[Government]:
