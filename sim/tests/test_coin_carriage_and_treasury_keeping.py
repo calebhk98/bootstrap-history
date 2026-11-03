@@ -116,6 +116,22 @@ class KeepingByAnyActor(unittest.TestCase):
         self.assertEqual(paid["firm"], paid["state"])
         self.assertEqual(KEEPING_CAUSE, EDGE_COIN_GUARDS)
 
+    def test_a_foreign_actors_coin_is_weighed_by_its_own_countrys_standard(self):
+        record = types.SimpleNamespace(country="partner", exited_year=None, money=1.0e8, stratum=None)
+        foreign = types.SimpleNamespace(money=1.0e8, record=record)
+        pay = types.SimpleNamespace(trade_of_role=lambda role: "guard", pay_per_person_year=lambda trade: 100.0)
+        registry = types.SimpleNamespace(
+            actors={"foreigner": foreign}, state=types.SimpleNamespace(home_country="home"),
+            countries=types.SimpleNamespace(world_for=lambda actor, world: types.SimpleNamespace(labour=pay)))
+        partner_kg_per_unit = 0.5 * KG_PER_UNIT
+        module = module_harness.build(Coin, views={
+            "civilisation": HOME_COIN, "money_per_labour_hour": MONEY_PER_HOUR, "cast": registry,
+            "actor_world": flat_namespace(labour=pay), "partner_coin_standard": {"partner": {"kg_per_unit": partner_kg_per_unit}}})
+        module.charge_keeping(ChargeKeeping())
+        (charge,) = module_harness.sent(module)
+        expected = coin_metal.keeping_cost_per_year(1.0e8, partner_kg_per_unit, COIN_GUARD_HOURS_PER_TONNE_YEAR, MONEY_PER_HOUR)
+        self.assertAlmostEqual(charge.amount, expected)
+
     def test_a_refused_keeping_charge_is_skipped_and_logged_with_its_cause(self):
         registry = types.SimpleNamespace(actors={"state": self.actor(1.0e8)}, state=types.SimpleNamespace(home_country="home"))
         module = module_harness.build(

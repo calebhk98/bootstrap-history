@@ -1,12 +1,8 @@
 """When a lost trade is taught again: which trades are gone, which are past their cooldown, and what the household
 can spend on teaching one."""
 
-# a trade a project in hand waits on is scored at least this much by the teaching pass
-PROJECT_IN_HAND_SCORE = 500
-# the share of capital a trade a project in hand waits on may be paid from, beyond the year's spare income
-CAPITAL_SHARE_FOR_PROJECT_IN_HAND = 0.10
-# the share of the year's spare income a trade nothing yet waits on may be paid from
-SPARE_SHARE_FOR_SPECULATIVE_TRADE = 0.5
+from .constants import (CAPITAL_SHARE_FOR_PROJECT_IN_HAND, PROJECT_IN_HAND_SCORE,
+                        SPARE_SHARE_FOR_SPECULATIVE_TRADE)
 
 
 def trade_is_gone(available, market_supply, headcount_pending):

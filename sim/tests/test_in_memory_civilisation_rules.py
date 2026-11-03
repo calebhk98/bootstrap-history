@@ -22,7 +22,7 @@ def priced_module(civ):
 
 class PricedByItsOwnFields(unittest.TestCase):
 
-    def test_the_solver_is_given_the_civilisation_dict_itself_even_when_a_file_shares_its_id(self):
+    def test_the_solver_is_given_the_civilisation_record_itself_even_when_a_file_shares_its_id(self):
         civ = {"id": "rome_100ad", "starting_interest_rate": 0.31}
         seen = []
 
@@ -32,7 +32,7 @@ class PricedByItsOwnFields(unittest.TestCase):
 
         with mock.patch.object(price_engine, "goods_in_hours", table):
             prices = priced_module(civ).material_prices()
-        self.assertIs(seen[0], civ)
+        self.assertEqual(seen[0], {**civ, "home_tiles": []})     # the record's content, with the tiles held now
         self.assertEqual(prices, {"grain": 6.0})
 
 

@@ -1,6 +1,7 @@
 """The coin module's rules as plain functions of plain values: keeping, carriage and the revaluation of a coin metal."""
 from typing import Any, Dict, Iterable, Mapping, Optional
 
+from sim.unit_conversions import KILOGRAMS_PER_TONNE
 from sim.world import coin_metal
 
 from .constants import CREDIT_PURPOSES, KEEPING_BASIS
@@ -38,7 +39,7 @@ def keeping_due(keeping_owed: float, capital: float, credit_limit: float, revenu
 
 def carriage_money(amount: float, kg_per_unit: float, money_per_tonne: float) -> float:
     """Carriage on `amount` of coin: its mass times the haul's price per tonne, never more than is moved."""
-    tonnes = max(0.0, amount) * kg_per_unit / 1000.0
+    tonnes = max(0.0, amount) * kg_per_unit / KILOGRAMS_PER_TONNE
     return min(max(0.0, amount), tonnes * max(0.0, money_per_tonne))
 
 

@@ -157,3 +157,27 @@ MARKET_PRESSURE_ANNUAL_FADE = declare(
         "MARKET_PRESSURE_DECAY's proportional fade, so a small "
         "residual pressure reaches exactly zero rather than decaying "
         "forever. Tuned, not measured.")
+
+PROJECT_IN_HAND_SCORE = declare(
+    "PROJECT_IN_HAND_SCORE", 500, kind="temporary_heuristic", unit="ranking score (dimensionless)",
+    source=None, confidence="D",
+    why="The least score the teaching pass gives a trade a project in hand waits on, so it outranks every trade "
+        "nothing yet waits on. An ordering device, not a measured quantity.")
+CAPITAL_SHARE_FOR_PROJECT_IN_HAND = declare(
+    "CAPITAL_SHARE_FOR_PROJECT_IN_HAND", 0.10, kind="temporary_heuristic", unit="dimensionless (share of capital)",
+    source=None, confidence="D",
+    why="The share of capital a trade a project in hand waits on may be paid from, beyond the year's spare income. Tuned.")
+SPARE_SHARE_FOR_SPECULATIVE_TRADE = declare(
+    "SPARE_SHARE_FOR_SPECULATIVE_TRADE", 0.5, kind="temporary_heuristic", unit="dimensionless (share of spare income)",
+    source=None, confidence="D",
+    why="The share of the year's spare income a trade nothing yet waits on may be paid from. Tuned.")
+TEACHING_PASS_HEADCOUNT = declare(
+    "TEACHING_PASS_HEADCOUNT", 2, kind="temporary_heuristic", unit="people taught per pass",
+    source=None, confidence="D",
+    why="People taught a lost trade in one automatic pass, and the years of their keep the household must afford "
+        "first (one year each). Small enough to restore a trade, not a workforce.")
+ARTISAN_FLOOR_SHARE_OF_CRAFT = declare(
+    "ARTISAN_FLOOR_SHARE_OF_CRAFT", 0.25, kind="temporary_heuristic", unit="dimensionless (share of the craft headcount)",
+    source=None, confidence="D",
+    why="The share of the craft headcount that stays generic artisans however many taught specialists cover it, so "
+        "specialists cannot squeeze the generic artisans away. Tuned.")

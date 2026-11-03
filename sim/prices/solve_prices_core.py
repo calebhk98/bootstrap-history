@@ -22,6 +22,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 REPO_ROOT = os.path.dirname(os.path.dirname(HERE))
 if REPO_ROOT not in sys.path:
     sys.path.insert(0, REPO_ROOT)
+from sim.labour.api import trade_of_role
 from sim.prices import engine_seam
 from sim.world import capital_builds
 from sim.prices import disposal_cost  # noqa: E402
@@ -49,11 +50,15 @@ LAND_MATERIAL = "hectare_land"
 _NUMERAIRE_BY_CATALOGUE = {}
 
 
+def forget_numeraires() -> None:
+    """Drop the numeraire trades remembered per catalogue (a test's synthetic catalogues come and go)."""
+    _NUMERAIRE_BY_CATALOGUE.clear()
+
+
 def numeraire_trade(production_entries=None, registry=None):
     """The trade whose hour is the unit every wage is stated in: the trade registry's unskilled one, the same trade
     the economy's labour markets fall back to (`sim.labour.api.trade_of_role`). `registry` is a live one (trade id
     to its fields); without it the registry is read for `production_entries` (the committed catalogue's when none)."""
-    from sim.labour.api import trade_of_role
     if registry is None:
         entries = engine_seam.load_production()[0] if production_entries is None else production_entries
         cached = _NUMERAIRE_BY_CATALOGUE.get(id(entries))

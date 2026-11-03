@@ -4,8 +4,8 @@ from sim.assembly.api import Part
 from sim.refusal import Refusal
 from sim.reporting.api import RecordEvent
 
-from .constants import RETEACH_EVERY
-from .reteach_rules import PROJECT_IN_HAND_SCORE, past_cooldown, teaching_budget, trade_is_gone
+from .constants import PROJECT_IN_HAND_SCORE, RETEACH_EVERY, TEACHING_PASS_HEADCOUNT
+from .reteach_rules import past_cooldown, teaching_budget, trade_is_gone
 from .rules import work_order_shortfall
 
 
@@ -137,12 +137,12 @@ class Prelude(Part):
 			_tr_upkeep = self.needs.upkeep()
 			_spare_tr = _tr_rev - _tr_upkeep - self.needs.living_cost(_tr_rev, _tr_upkeep)
 			for trade_id, _score in sorted(want.items(), key=lambda kv: (-kv[1], kv[0]))[:1]:
-				_wages = 2.0 * self.parts.core.labour.market.quote_annual(trade_id)
+				_wages = TEACHING_PASS_HEADCOUNT * self.parts.core.labour.market.quote_annual(trade_id)
 				_budget = teaching_budget(_score, _spare_tr, self.needs.acting_balance())
 				if _wages > _budget:
 					continue
 				_first = trade_id not in workforce.trades_created
-				taught, _msg = self.parts.core.labour.training.train(trade_id, 2)
+				taught, _msg = self.parts.core.labour.training.train(trade_id, TEACHING_PASS_HEADCOUNT)
 				# THE COOLDOWN IS ON TEACHING, NOT ON TRYING. Recording the
 				# attempt meant a refusal - no room in the household, no hours
 				# left, nobody to teach from - burned the trade's whole

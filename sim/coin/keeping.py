@@ -26,8 +26,11 @@ class Keeping(Part):
 
     def coin_keeping_cost(self, money):
         """Yearly cost of keeping `money` as coin of the home standard under guard."""
+        return self._keeping_cost_at(money, self.coin_kg_per_unit())
+
+    def _keeping_cost_at(self, money, kg_per_unit):
         return coin_metal.keeping_cost_per_year(
-            money, self.coin_kg_per_unit(), COIN_GUARD_HOURS_PER_TONNE_YEAR, self.needs.money_per_labour_hour())
+            money, kg_per_unit, COIN_GUARD_HOURS_PER_TONNE_YEAR, self.needs.money_per_labour_hour())
 
     def coin_hoard(self):
         """The money held as physical coin: its metal, mass and the yearly cost of keeping it."""
@@ -65,8 +68,10 @@ class Keeping(Part):
                 continue
             country = record.country
             at_home = country in (None, registry.state.home_country)
-            cost = self.coin_keeping_cost(actor.money)
-            if not at_home:
+            if at_home:
+                cost = self.coin_keeping_cost(actor.money)
+            else:       # its coin is its own country's, a different mass of metal to the unit
+                cost = self._keeping_cost_at(actor.money, self.needs.partner_coin_standard[country]["kg_per_unit"])
                 cost *= registry.countries.world_for(actor, world).labour.pay_per_person_year(keeping_trade) / home_pay
             if cost > 0.0:
                 guards = edges.EDGE_COIN_GUARDS if at_home else "%s:%s" % (edges.EDGE_COIN_GUARDS, country)

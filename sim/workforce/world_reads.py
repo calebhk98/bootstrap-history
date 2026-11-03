@@ -1,6 +1,5 @@
 """What the labour package reads of the game, grouped by the module that owns the view: one reader class per group, each a plain
 class holding the module's `needs`. `WorkforceWorld` (world.py) holds one of each."""
-from sim.demography.api import rules as demography_rules
 from sim.prices.api import solve_prices_core
 
 from .provided import last_answer, overhead_hours
@@ -207,9 +206,6 @@ class PeopleReads:
     def urban_fraction(self):
         return self._needs.urban_fraction()
 
-    def adult_equivalent_population(self, population):
-        return demography_rules.adult_equivalents(population)
-
     def home_tiles_held(self):
         return self._needs.home_tiles_held()
 
@@ -239,7 +235,8 @@ class TradeReads:
 
     @property
     def wages(self):
-        return self._parts.fact_views.starting_wages()
+        """The ids of the trades this game has (read for membership and listing, never for a wage)."""
+        return frozenset(self._needs.trade_records())
 
     @property
     def trades_absent(self):

@@ -5,6 +5,7 @@ from typing import Any, Mapping, Optional
 from sim.default_civilisation import REPOSITORY_ROOT
 from sim.content import api as content
 from sim.economy.api import HOUSEHOLD_TIME_PREFERENCE
+from sim.prices.api import prices as price_solver
 from sim.labour.api import CAREER_YEARS, wage_provider, wages
 from sim.world import demand
 
@@ -12,7 +13,11 @@ from sim.world import demand
 def _food_per_kg(staple: str) -> float:
     """Food value of a kilogram of the staple in the subsistence quantity's unit (kg wheat equivalent)."""
     goods = content.load_needs(REPOSITORY_ROOT)["goods"]
-    return float(((goods.get(staple) or {}).get("satisfies") or {}).get("food", 1.0))
+    food = ((goods.get(staple) or {}).get("satisfies") or {}).get("food")
+    if food is None:
+        raise ValueError("the staple %r states no food value in the household needs data, so the subsistence basket "
+                         "cannot be counted in it" % staple)
+    return float(food)
 
 
 def build_schedule(registry: Mapping[str, Any], civ: Mapping[str, Any],
@@ -31,7 +36,6 @@ def build_schedule(registry: Mapping[str, Any], civ: Mapping[str, Any],
     coin: one unit is `kg_per_unit` of the coin material, worth its solved
     labour hours, so a labour hour is the reciprocal of that in money.
     """
-    from sim.prices.api import prices as price_solver
     standard = wage_provider.coin_standard(civ)
     civilisation_id = civ.get("id")
     opening = wages.WageSchedule(

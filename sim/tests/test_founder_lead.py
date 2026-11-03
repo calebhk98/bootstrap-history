@@ -44,13 +44,13 @@ class Rederivation(unittest.TestCase):
         fake = types.SimpleNamespace(
             state=types.SimpleNamespace(projects=projects, economy=types.SimpleNamespace()), nodes={}, start_civ={"id": "x"}, _derived_gate_set=frozenset(),
             labour=types.SimpleNamespace(money_per_labour_hour=lambda: 1.0),
-            view=lambda name: (lambda: frozenset({"fire"})),
+            view=lambda name: (lambda *arguments: frozenset({"fire"})),
             _done_changed=lambda: None, _operating_changed=lambda: None)
-        schedule = types.SimpleNamespace(wages_per_hour=lambda: {}, money_per_labour_hour=1.0)
+        schedule = types.SimpleNamespace(wages_per_hour=lambda: {}, money_per_labour_hour=1.0, priced_at=lambda figure: schedule)
         with mock.patch.object(node_revenue, "for_civilisation",
-                               lambda nodes, civ, schedule, held_techs=None: seen.append(set(held_techs)) or {}), \
+                               lambda nodes, civ, schedule, held_techs=None, unskilled_trade=None: seen.append(set(held_techs)) or {}), \
                 mock.patch.object(node_rederive, "held_gate_set", lambda held: frozenset(held)), \
-                mock.patch.object(node_rederive, "build_schedule", lambda *arguments: schedule), \
+                mock.patch.object(node_rederive.opening_money, "opening_schedule", lambda sim: schedule), \
                 mock.patch.object(node_rederive.money_units, "price_nodes", lambda *arguments: None):
             node_rederive.refresh_derived_nodes(fake)
         self.assertEqual(seen, [{"fire"}])

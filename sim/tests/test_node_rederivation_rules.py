@@ -35,6 +35,9 @@ class _Schedule:
     def wages_per_hour(self):
         return {"labourer": 1.0}
 
+    def priced_at(self, money_per_labour_hour):
+        return self
+
 
 def _derive(civ, nodes, held=None):
     return node_revenue.for_civilisation(nodes, civ, _Schedule(), held_techs=held)
@@ -79,14 +82,14 @@ with mock.patch.dict(node_revenue._DERIVED_FOR_CIVILISATION, clear=True), \
 def _game(derived_gates, held):
     log = []
     game = SimpleNamespace(
-        _derived_gate_set=derived_gates, view=lambda name: (lambda: held), start_civ={"id": "testland"}, nodes={"old": {}},
+        _derived_gate_set=derived_gates, view=lambda name: (lambda *arguments: held), start_civ={"id": "testland"}, nodes={"old": {}},
         state=SimpleNamespace(economy=SimpleNamespace(nodes_money_per_labour_hour=None)),
         _done_changed=lambda: log.append("done"), _operating_changed=lambda: log.append("operating"), log=log)
     return game
 
 
 schedule = _Schedule()
-with mock.patch.object(node_rederive, "build_schedule", return_value=schedule), \
+with mock.patch.object(node_rederive.opening_money, "opening_schedule", return_value=schedule), \
         mock.patch.object(node_rederive.node_revenue, "for_civilisation", return_value={"n": {}}) as derive, \
         mock.patch.object(node_rederive.money_units, "price_nodes") as price, \
         mock.patch.object(node_rederive.opening_money, "priced_nodes", return_value={"new": {}}), \
