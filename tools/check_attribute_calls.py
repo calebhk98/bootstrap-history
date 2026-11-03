@@ -221,6 +221,11 @@ class Checker:
 			imported = [entry for entry in candidates if entry[0] in (source + ".py", source + "/__init__.py")]
 			if len(imported) == 1:
 				return imported
+			# a package door (`api`, `__init__`) re-exports: take the one candidate inside that package
+			package = source.rsplit("/", 1)[0] + "/" if source.endswith("/api") else source + "/"
+			inside = [entry for entry in candidates if entry[0].startswith(package)]
+			if len(inside) == 1:
+				return inside
 		return []
 
 	def without_self(self, function):
