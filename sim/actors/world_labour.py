@@ -5,7 +5,7 @@ from sim.agents.api import payroll
 from sim.labour import api as labour_api
 
 
-class Labour:
+class ActorLabourReads:
 	"""The one labour market every employer asks, and the people of each trade. `world` is the root that hands out the parts."""
 
 	def __init__(self, world: Any) -> None:
