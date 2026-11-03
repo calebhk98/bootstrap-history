@@ -85,14 +85,6 @@ class ActorRegistry:
 								   if self.actors[actor_id].kind == kind]
 		return list(self._by_kind[kind])
 
-	def government_of(self, country: Optional[str]) -> Any:
-		"""Forwarder for sim/markets (not yet moved to `countries`)."""
-		return self.countries.government_of(country)
-
-	def ensure_government(self, civ_id: str, name: str = "") -> Any:
-		"""Forwarder for sim/markets (not yet moved to `countries`)."""
-		return self.countries.ensure_government(civ_id, name)
-
 	def sorted_ids(self) -> List[str]:
 		if self.ordered_ids is None:
 			self.ordered_ids = sorted(self.actors)
