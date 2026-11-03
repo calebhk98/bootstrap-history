@@ -41,7 +41,7 @@ class CapitalMarket(Part):
 		answered, premium = self.needs.agent_risk_premium(debt_after, collateral_value, arrears)
 		return premium if answered else None
 
-	def market_funds(self, world: Any) -> Dict[str, float]:
+	def market_funds(self) -> Dict[str, float]:
 		"""Funds the actors offer, by source: the state's lendable reserve (each firm's offer is its own cash, `lender_offers`)."""
 		government = self.needs.state_treasury()
 		spare = rules.state_spare_reserve(government.money, sum(government.record.need.values()), government.cannot_meet_own_need())
@@ -88,7 +88,7 @@ class CapitalMarket(Part):
 	def refresh_lender_offers(self, command: Any = None) -> None:
 		"""The year's meeting of lenders: the pool pays the interest it holds, then who offers what is fixed."""
 		self.settle_lender_interest()
-		offers = self.lender_offers(self.market_funds(self.needs.actor_world()))
+		offers = self.lender_offers(self.market_funds())
 		self.needs.send(SetLenderOffers(tuple(offers.items())))
 
 	def settle_lender_interest(self) -> None:

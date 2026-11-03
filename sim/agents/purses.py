@@ -78,11 +78,6 @@ class Purses:
     def has_account(self, account: str) -> bool:
         return self.book.knows(account)
 
-    @property
-    def claims(self) -> Dict[str, Dict[str, float]]:
-        """borrower -> lender -> principal the lender has out to it on a facility (a read of the registry)."""
-        return {borrower: self.contracts.facility_of(borrower) for borrower in sorted(self.contracts.facilities)}
-
     def debt(self, account: str) -> float:
         """What the account owes, on every kind of contract and at face on its bonds, in the actors' coin."""
         return self.contracts.debt(account, COIN) + self.bonds.debt(account)

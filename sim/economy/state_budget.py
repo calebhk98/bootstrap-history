@@ -35,11 +35,11 @@ class StateBudget:
     need_wanted: Dict[str, float] = field(default_factory=dict)   # goods the lines bid for, so the rest bought is store
     expected_inflation: float = 0.0      # what the treasury expects of prices, as households do
     last_price_level: float = 0.0        # the chained price level (across rebases) when it last updated that expectation
+    real_programme: bool = False         # a stated real spending target: its goods are bought as quantities, not as a sum
 
     def cut_goods_budget(self, amount: float) -> None:
         """The goods line falls by `amount`."""
         self.goods_budget -= amount
-    real_programme: bool = False         # a stated real spending target: its goods are bought as quantities, not as a sum
 
 
 def plan_year(setup, record, view, labour_bids: List[LabourBid]) -> None:

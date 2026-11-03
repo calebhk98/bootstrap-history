@@ -54,6 +54,9 @@ class NoPurses:
 	def drawable(self, account_id, amount):
 		return amount   # the lenders hold all the household asks
 
+	def payable(self, account_id, amount):
+		return amount   # the lenders hold all the household asks
+
 	def purse(self, account_id):
 		return 0.0
 

@@ -19,5 +19,15 @@ class TopUp(unittest.TestCase):
         self.assertAlmostEqual(contracts.deposit_value("cohort:a"), 5.0)
 
 
+class Rename(unittest.TestCase):
+    def test_two_deposits_joined_by_a_rename_keep_the_value_of_both(self):
+        contracts = Contracts()
+        contracts.deposit("cohort:a", "pool", "coin", 10.0, unit_value=0.5)
+        contracts.deposit("cohort:b", "pool", "coin", 10.0, unit_value=1.0)
+        contracts.rename("cohort:a", "cohort:b")
+        self.assertAlmostEqual(contracts.deposit_of("cohort:b"), 20.0)
+        self.assertAlmostEqual(contracts.deposit_value("cohort:b"), 15.0)
+
+
 if __name__ == "__main__":
     unittest.main()

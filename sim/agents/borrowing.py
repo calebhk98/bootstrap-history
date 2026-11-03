@@ -6,7 +6,7 @@ against it (the economy's risk premium) and lend while that price stays under wh
 lender asks, within what lenders still hold after everyone else's loans. What it pays is the market rate plus that
 premium, less a discount for its standing.
 """
-from typing import Any, Tuple
+from typing import Any, Optional, Tuple
 
 from sim.constants import declare
 from sim.world import capital_market
@@ -18,13 +18,21 @@ from .purses import DEBT_FLOOR
 STANDING_DISCOUNT_CAP = declare(
 	"STANDING_DISCOUNT_CAP", 0.03, kind="temporary_heuristic",
 	unit="fraction off the annual rate (maximum)", source=None, confidence="D",
-	why="The most a fully trusted borrower's standing can cheapen its credit; the same ceiling the "
-		"founder's reputation has. Stands in for lenders' knowledge of a borrower.")
+	retire="Complaints/106: lenders price a borrower from the record they hold of it, not a capped discount",
+	why="The most a fully trusted borrower's standing, or the founder's reputation, can cheapen its credit: the one "
+		"ceiling every borrower's rate uses (`rate_with_discount`). Stands in for lenders' knowledge of a borrower.")
 TRACK_RECORD_YEARS = declare(
 	"TRACK_RECORD_YEARS", 10.0, kind="temporary_heuristic",
 	unit="years", source=None, confidence="D",
+	retire="Complaints/106: lenders price a borrower from the record they hold of it, not a capped discount",
 	why="Years of existence after which lenders trust a firm's record in full; its standing grows "
 		"linearly until then. Stands in for lenders learning a borrower's reliability.")
+
+
+def rate_with_discount(market_rate: float, premium: Optional[float], discount: float) -> float:
+	"""The rate on a loan: the market rate plus the economy's risk premium (none: no premium) less the borrower's discount for
+	its standing, the premium never taken under nothing."""
+	return market_rate + max(0.0, (0.0 if premium is None else premium) - max(0.0, discount))
 
 
 class Borrower:
@@ -61,11 +69,17 @@ class Borrower:
 		supply."""
 		debt = self.debt()
 		ceiling = self.credit_ceiling(world)
-		wanted = max(0.0, min(amount, ceiling - debt))
+		price = self.cash_per_face()
+		wanted = max(0.0, min(amount / price, ceiling - debt))   # the debt and the ceiling are at face
 		if wanted <= 0.0:
 			return 0.0
 		fundable = world.credit.fundable_amount(wanted, debt, ceiling, self.arrears_book.interest_arrears)
-		return wanted if fundable is None else fundable
+		return (wanted if fundable is None else fundable) * price
+
+	def cash_per_face(self) -> float:
+		"""The cash a unit of new debt raises: the price per face of a bond when the actor sells bonds, else one."""
+		bonds = self.purses.bonds  # type: ignore[attr-defined]
+		return bonds.price_per_face(self.account_id) if bonds.issues(self.account_id) else 1.0  # type: ignore[attr-defined]
 
 	def draw_limit(self, world: Any, amount: float) -> float:
 		"""The most of a draw of `amount` the actor is lent now: the rule's limit (`rule_limit`) and what the pool holds and the
@@ -79,11 +93,14 @@ class Borrower:
 		return self.draw_limit(world, max(0.0, self.credit_ceiling(world) - self.debt()))
 
 	def payable_now(self, world: Any, amount: float) -> float:
-		"""The most of `amount` the actor can pay now: its purse, the deposit it can take back, and what it is lent beyond them
-		(`draw_limit`)."""
+		"""The most of `amount` the actor can pay now: what the purses say it can (`Purses.payable`: its purse, the deposit it can
+		take back and what the lenders still hold, counted once), and no more than its purse and deposit plus what the economy's
+		rule (`rule_limit`) lends it beyond them."""
 		purses = self.purses  # type: ignore[attr-defined]
 		held = max(0.0, purses.purse(self.account_id)) + purses.takeable(self.account_id)
-		return amount if held >= amount else held + self.draw_limit(world, amount - held)
+		if held >= amount:
+			return amount
+		return min(purses.payable(self.account_id, amount), held + self.rule_limit(world, amount - held))
 
 	# Whether the actor pays for copies on credit; a firm does, a state and a household keep to their purse.
 	borrows_for_copies = False
@@ -98,7 +115,7 @@ class Borrower:
 		debt then owed, less the discount for its standing (never under the market rate)."""
 		market_rate = world.credit.market_rate()
 		premium = world.credit.risk_premium(self.debt() + amount, self.credit_ceiling(world), self.arrears_book.interest_arrears)
-		return market_rate + max(0.0, (0.0 if premium is None else premium) - self.standing_discount(world))
+		return rate_with_discount(market_rate, premium, self.standing_discount(world))
 
 	def may_issue_bonds(self, world: Any) -> bool:
 		"""Whether the actor's society holds a technology declaring the `bond_market` mechanic, in the actor's own
