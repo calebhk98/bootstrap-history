@@ -9,7 +9,7 @@ import os
 
 from sim.engine.ui_port import settings, settings_table
 from . import cli_units_options
-from .cli import _apply_display_prefs, _wrap
+from .cli_common import _apply_display_prefs, _wrap
 
 
 def _ask_yes_no(prompt, current):

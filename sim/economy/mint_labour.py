@@ -11,7 +11,7 @@ from sim.constants import declare
 
 from . import currency, mint_staffing, trade_wages
 from .setup import labour_area
-from .state_budget import STATE_WAGE_CEILING_MULTIPLE
+from .state_wage_ceiling import STATE_WAGE_CEILING_MULTIPLE
 from .types import LabourBid, Transfer
 
 MINT_ALLOY_AND_FUEL_NOT_BOUGHT = declare(

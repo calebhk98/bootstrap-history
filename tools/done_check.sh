@@ -123,6 +123,12 @@ getattr_status=$?
 echo "literal getattr/hasattr/setattr probes not on the optional list and not on a class that defines the name (tools/check_getattr_names.py): $(printf '%s\n' "$getattr_output" | grep -c .)"
 printf '%s\n' "$getattr_output" | grep . | tail -5 | sed 's/^/  /'
 
+# every module imports alone in a fresh interpreter (an import cycle shows only when the module is imported first)
+import_output="$(python3 tools/check_imports_alone.py 2>&1)"
+import_status=$?
+echo "modules that fail to import alone (tools/check_imports_alone.py): $(printf '%s\n' "$import_output" | grep -c .)"
+printf '%s\n' "$import_output" | grep . | tail -5 | sed 's/^/  /'
+
 # Checks that fail the run when above zero; the other counts above are a backlog and stay informational.
 failed_checks=()
 [ "$mixin_count" -gt 0 ] && failed_checks+=("mixin classes in MRO")
@@ -139,6 +145,7 @@ failed_checks=()
 [ "$constructor_status" -ne 0 ] && failed_checks+=("constructor calls (tools/check_constructor_calls.py)")
 [ "$class_name_status" -ne 0 ] && failed_checks+=("class names (tools/check_class_names.py)")
 [ "$getattr_status" -ne 0 ] && failed_checks+=("literal getattr probes (tools/check_getattr_names.py)")
+[ "$import_status" -ne 0 ] && failed_checks+=("modules importing alone (tools/check_imports_alone.py)")
 
 if [ "${#failed_checks[@]}" -eq 0 ]; then
   echo "failing checks: none"

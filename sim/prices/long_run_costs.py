@@ -22,13 +22,13 @@ class LongRunCost:
     provenance: str
 
 
-def _trades(production: Mapping[str, Any]) -> Iterable[str]:
+def _trades(production: Mapping[str, Any], numeraire_trade: str) -> Iterable[str]:
     trades = set()
     for entry in production.values():
         trades.update((entry.get("labour_hours") or {}))
         for plant in entry.get("capital") or ():
             trades.update((plant.get("build_labour_hours") or {}))
-    trades.add(solve_prices.NUMERAIRE_TRADE)
+    trades.add(numeraire_trade)
     return sorted(trades)
 
 
@@ -46,8 +46,9 @@ def long_run_costs(techniques: Iterable[str],
     population nor its income.
     """
     production = production if production is not None else price_engine.default_production_entries()
-    numeraire = wage_of(solve_prices.NUMERAIRE_TRADE)
-    ratios = {trade: wage_of(trade) / numeraire for trade in _trades(production)}
+    numeraire_trade = solve_prices.numeraire_trade(production)
+    numeraire = wage_of(numeraire_trade)
+    ratios = {trade: wage_of(trade) / numeraire for trade in _trades(production, numeraire_trade)}
     rent_hours = {}
     if rent_of is not None:
         for key in sorted({material for entry in production.values() for material in entry.get("outputs") or ()}
@@ -69,9 +70,10 @@ def opening_rent_of(techniques: Iterable[str], wage_of: Callable[[str], float],
     quantity demanded; until the economy's own rent replaces them (ONE_PRICE_OWNER_PLAN.md stage 5) the opening
     fixes it from physical figures and no price."""
     production = production if production is not None else price_engine.default_production_entries()
-    numeraire = wage_of(solve_prices.NUMERAIRE_TRADE)
+    numeraire_trade = solve_prices.numeraire_trade(production)
+    numeraire = wage_of(numeraire_trade)
     ratios = price_engine.solver_wage_ratios(
-        production, {trade: wage_of(trade) / numeraire for trade in _trades(production)})
+        production, {trade: wage_of(trade) / numeraire for trade in _trades(production, numeraire_trade)})
     available, _unreached, _unclassified = solve_prices.techniques_available_to(production, frozenset(techniques))
     hours = rent_standin.stand_in_rent(
         available, ratios, civilization_id=None if civilization is None else civilization["id"],

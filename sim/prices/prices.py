@@ -8,7 +8,7 @@ book; a material nothing can make has no price.
 
 THE WAGE ARGUMENT (`prices_json` below) is a wage document in the
 shape the solver reads, built by `sim.labour.wages.WageSchedule.document()`, so the solver and
-payroll read one wage vector. Its labourer rate is the money value of one
+payroll read one wage vector. Its unskilled-trade rate is the money value of one
 labour hour.
 
 THE INTERFACE. One function matters to a caller:
@@ -80,7 +80,7 @@ object (a test building synthetic data, mainly) can never collide with a
 real one that happens to reuse the same gate-node ids.
 
 LABOUR-HOURS TO DENARII. `sim/prices/solve_prices.py` prices everything in
-labour-hours - one hour of `labourer`, its numeraire, equals 1.0 - because a
+labour-hours - one hour of the unskilled trade, its numeraire (`solve_prices.numeraire_trade`), equals 1.0 - because a
 recipe graph can produce relative amounts of unskilled effort. Money enters
 only here, at the edge: the wage document carries `money_per_labour_hour`,
 which `sim.workforce.wage_schedule.build_schedule` derives from the

@@ -43,7 +43,24 @@ from sim.algorithm_parameters import (           # noqa: E402  (see sys.path abo
     INITIAL_PRICE_GUESS_HOURS, GROWTH_BOUND_HOURS)
 
 
-NUMERAIRE_TRADE = "labourer"
+_DEFAULT_NUMERAIRE_TRADE = []
+
+
+def numeraire_trade(production_entries=None):
+    """The trade whose hour is the unit every wage is stated in: the trade registry's unskilled one, the same trade
+    the economy's labour markets fall back to (`sim.labour.api.trade_of_role`). Without `production_entries`, the
+    committed catalogue's registry, read once per process."""
+    from sim.labour.api import trade_of_role
+    from sim.prices import engine_seam
+    if production_entries is None and _DEFAULT_NUMERAIRE_TRADE:
+        return _DEFAULT_NUMERAIRE_TRADE[0]
+    entries = engine_seam.load_production()[0] if production_entries is None else production_entries
+    registry = engine_seam.load_trade_registry(REPO_ROOT, entries, nodes=engine_seam.load_mod_tree_nodes(REPO_ROOT))
+    unskilled = trade_of_role({trade_id: {"family": trade.family, "training_years": trade.training_years, **trade.extra}
+                               for trade_id, trade in registry.items()}, "unskilled")
+    if production_entries is None:
+        _DEFAULT_NUMERAIRE_TRADE.append(unskilled)
+    return unskilled
 
 # The three energy carriers (see ENERGY in this module's docstring). Named
 # once here rather than spelled out at each of the three call sites that
@@ -290,18 +307,18 @@ def meets_capability_floor(material, entry, floor_by_carrier):
 # for why algorithmic and computational parameters get their own file.
 
 
-def wage_ratios_by_trade(prices_json):
+def wage_ratios_by_trade(prices_json, unskilled_trade=None):
     """{trade: hours of unskilled labour one hour of this trade is worth}.
 
     The wage document is money per hour per trade, with no notion of
     unskilled labour as a unit. Dividing every rate
-    by the unskilled (`labourer`) rate turns it into what the design doc
-    calls the numeraire: `wage_of("labourer")` is 1.0 by construction, and
-    every other trade is stated as how many labourer-hours it is worth,
+    by the unskilled trade's rate (`unskilled_trade`, default `numeraire_trade()`) turns it into what the design doc
+    calls the numeraire: the unskilled wage is 1.0 by construction, and
+    every other trade is stated as how many unskilled hours it is worth,
     which is a ratio the denarii happen to cancel out of.
     """
     wage_table = prices_json["wage_rates_denarii_per_hour"]
-    unskilled_rate = wage_table[NUMERAIRE_TRADE]["rate"]
+    unskilled_rate = wage_table[unskilled_trade or numeraire_trade()]["rate"]
     return {trade: entry["rate"] / unskilled_rate
             for trade, entry in wage_table.items()
             if not trade.startswith("_")}

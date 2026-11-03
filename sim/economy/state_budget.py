@@ -10,6 +10,7 @@ from sim.constants import declare
 from . import currency, households_basket, state_finance, trade_wages
 from .home_scope import home_cohorts
 from .setup import labour_area
+from .state_wage_ceiling import STATE_WAGE_CEILING_MULTIPLE
 from .types import Bid, EDGE_CONSUMPTION, GoodsMove, LabourBid
 
 STATE_MAX_SHARE_OF_TILE_HOURS = declare(
@@ -18,12 +19,7 @@ STATE_MAX_SHARE_OF_TILE_HOURS = declare(
     source=None, confidence="D",
     why="Stands in for the size of the state's establishment (how many soldiers and officials it can "
         "house, drill and supervise), which the engine does not yet supply.")
-STATE_WAGE_CEILING_MULTIPLE = declare(
-    "STATE_WAGE_CEILING_MULTIPLE", 1.5, kind="temporary_heuristic",
-    unit="multiple of last year's wage the state will bid",
-    source=None, confidence="D",
-    why="How far above last year's wage the state is willing to go to fill its posts; the labour market "
-        "moves the wage only part of the way anyway.")
+
 
 
 @dataclass

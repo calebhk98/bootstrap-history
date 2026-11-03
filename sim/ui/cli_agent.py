@@ -22,9 +22,9 @@ from sim.ui.proto import step_progress
 # Session helpers: shared with cli_interactive.py's cmd_play for the same
 # reason (a --session file resumes the civilisation/goal it was started
 # with), so they live in cli.py rather than in either front end alone.
-from .cli import (DetRNG, _civ_for_session, _goal_for_session,
-                  _is_claimed_slot, _pick_session_filename, load_strategy)
+from .cli_common import _civ_for_session, _goal_for_session, _is_claimed_slot, _pick_session_filename
 from sim.engine import ui_port
+from sim.engine.ui_port import DetRNG, load_strategy
 
 
 # ----------------------------------------------------------------------------

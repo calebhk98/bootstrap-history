@@ -18,8 +18,25 @@ bid that reads a wage for a cohort prices a trade by the rule above like any oth
 answers (`NoCountryEconomy` is raised only for a country with no economy part)."""
 from typing import Optional
 
+from sim.labour.api import CAREER_YEARS, wages
+
+from .households_orders import HOUSEHOLD_TIME_PREFERENCE
 from .market_memory import market_key
-from .year_labour import trade_premium
+
+
+def premium_for_training_years(training_years: float) -> float:
+    """What training years add to the pay a worker asks, as a share over the unskilled wage: the core's training
+    premium (a multiple, labour/market/premium.py) less one, at the family's own time preference, since the family
+    pays for training by going without, not by borrowing. The clearing reads the same multiple at the same rate
+    (`labour_context`)."""
+    if training_years <= 0.0:
+        return 0.0
+    return wages.training_premium(training_years, HOUSEHOLD_TIME_PREFERENCE, CAREER_YEARS) - 1.0
+
+
+def trade_premium(setup, trade) -> float:
+    """`premium_for_training_years` for a trade of the setup (a trade the setup has no spec for is a KeyError)."""
+    return premium_for_training_years(setup.trades[trade].training_years)
 
 
 def priced_trade_wage(setup, trade: str, paid: Optional[float], unskilled: Optional[float],
