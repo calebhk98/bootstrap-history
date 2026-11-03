@@ -1,6 +1,6 @@
 # Mod hooks plan: land tiles, commands and new actor kinds
 
-Status: commands, policies, actor kinds and mod code (stages 2 to 4) are built, as described in `mods/README.md`; Complaint 118 is closed: a mod's map overlay (tiles, layers and catalogue rows such as deposits) already reaches the engine's merged map. What remains is the readers of section 1.1 that still open the base map on their own (`map_source.load_map()` and bare `load_geography()`; `grep -rlnE "load_map\(\)|load_geography\(\)" sim --include=*.py | grep -v tests` lists them).
+Status: commands, policies, actor kinds and mod code (stages 2 to 4) are built, as described in `mods/README.md`; Complaint 118 is closed: a mod's map overlay (tiles, layers and catalogue rows such as deposits) already reaches the engine's merged map. What remains is the readers of section 1.1 that open the base map themselves or fall back to it when no map is passed (`map_source.load_map()` and bare `load_geography()`; `grep -rlnE "load_map\(\)|load_geography\(\)" sim --include=*.py | grep -v tests` lists them).
 
 Complaint 118 left three things a mod cannot do: add land tiles, add commands, add actor kinds.
 This document says how each is discovered today, where a mod would hook in, what blocks it, the

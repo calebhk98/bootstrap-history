@@ -313,6 +313,7 @@ Left:
   holder was found.
 - `purses.cover` draws on the facility before `book.transfer` can refuse, so a refused payment can leave a draw behind.
 - The cold opening of a full civilisation solves its opening twice (once to price the coin metal at the margin). The
-  income root find now starts from the last root and stops at a relative tolerance of 1e-3, and the own-plot share starts
-  from its last value; measured on Rome with `rome_counts.py` (scratch), each open settles in a third of the demand
-  evaluations once the solve has settled.
+  income root find now starts from the last root and stops at a relative tolerance of 1e-3, and the share of hours
+  producers hire starts from its last value (`sim/economy/opening_income.py`, `opening_own.py`). On Rome the spin-up
+  years after the opening now take most of a cold build, and the spin-up does not settle (`python3 sim/simulator.py
+  openings --civs rome_100ad` refuses to ship on `spin_up_settled`).
