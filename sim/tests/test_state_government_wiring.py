@@ -8,13 +8,19 @@ from types import SimpleNamespace
 import unittest
 from unittest import mock
 
-from sim.book import InsufficientFunds
+from sim.agents.api import ActorRecord, ActorsState
+from sim.agents.edges import EDGE_SUPPLIERS, Edge
+from sim.agents.firm import Firm
+from sim.agents.purses import COIN, EDGE_OUTSIDE
+from sim.book import Transfer
 
 from sim.agents import government
 from sim.agents.budget import LEVY_RATE_CEILING
 from sim.agents.budget_line import Line
 from sim.agents.edges import EDGE_STATE_SPENDING
 from sim.agents.government import Government
+
+from .pool_lenders import lend_through
 
 
 class EmployStanding(unittest.TestCase):
@@ -54,25 +60,31 @@ class SeekShortfall(unittest.TestCase):
 
 
 class SpendWhatItCan(unittest.TestCase):
-    def spend(self, money, refuse_above):
-        paid = []
-
-        def transfer(payer, edge, amount, purpose):
-            if amount > refuse_above:
-                raise InsufficientFunds("lenders hold no such sum")
-            paid.append(amount)
-        with mock.patch.object(government.ledger, "transfer", transfer):
-            government._spend_what_it_can(SimpleNamespace(money=money), "edge", 100.0, "roads")
-        return paid
+    def spend(self, money, offered_units=0.0, deposit_lent_out=False):
+        state = ActorsState()
+        spender = Firm("firm:payer", ActorRecord(kind="firm"))
+        spender.attach(state.purses)
+        spender.money = money
+        if deposit_lent_out:   # its money is a deposit the pool has lent on to another borrower and no lender refills
+            state.purses.book.transfer(Transfer(EDGE_OUTSIDE, "firm:payer", COIN, 30.0, "seed"))
+            state.purses.set_offers({"firm:payer": 30.0})
+            state.purses.transfer("firm:other", "firm:third", 30.0, "test")
+        if offered_units:
+            lend_through(state.purses, {"cohort:a": (offered_units, 0.05)}, coin_per_unit=1.0)
+        government._spend_what_it_can(spender, Edge(EDGE_SUPPLIERS, state.purses), 100.0, "roads")
+        return spender.money
 
     def test_a_payment_the_lenders_refuse_is_cut_to_the_purse(self):
-        self.assertEqual(self.spend(40.0, 50.0), [40.0])
+        self.assertEqual(self.spend(40.0), 0.0)
 
     def test_a_state_with_nothing_in_its_purse_spends_nothing(self):
-        self.assertEqual(self.spend(-30.0, 50.0), [])
+        self.assertEqual(self.spend(0.0), 0.0)
 
     def test_a_payment_the_lenders_allow_is_made_in_full(self):
-        self.assertEqual(self.spend(0.0, 1000.0), [100.0])
+        self.assertAlmostEqual(self.spend(0.0, offered_units=500.0), -100.0)
+
+    def test_a_deposit_the_pool_cannot_return_does_not_make_the_spending_raise(self):
+        self.assertEqual(self.spend(0.0, deposit_lent_out=True), 30.0)
 
 
 class SpendOnLines(unittest.TestCase):
