@@ -168,8 +168,16 @@ def opening_price_today(setup: "EconomySetup", memory: Any, good: GoodId) -> Opt
     return None if price is None else price * memory.opening_wage_level(setup.currency_id)
 
 
+RECIPE_TILE_SEPARATOR = "@"
+
+
 def recipe_tile_key(recipe_id: str, tile: TileId) -> str:
-    return recipe_id + "@" + tile
+    return recipe_id + RECIPE_TILE_SEPARATOR + tile
+
+
+def recipe_of_tile_key(key: str) -> str:
+    """The recipe id of a `recipe_tile_key`."""
+    return key.partition(RECIPE_TILE_SEPARATOR)[0]
 
 
 def goods_specs(goods: Mapping[GoodId, str], spoilage_rates: Mapping[GoodId, float],

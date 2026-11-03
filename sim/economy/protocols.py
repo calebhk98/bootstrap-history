@@ -50,7 +50,7 @@ class MarketView(Protocol):
 
     def price(self, good: GoodId, area: AreaId) -> Optional[float]:
         """The planning price: last year's traded price or, where nothing traded, the market's quote (see
-        MarketView.quote_kind in market_memory.py); None if the market never posted anything."""
+        `price_kind`); None if the market never posted anything."""
 
     def cleared_price(self, good: GoodId, area: AreaId) -> Optional[float]:
         """The price the market cleared at last year, as paid, not as remembered (the remembered price moves
@@ -94,16 +94,8 @@ class MarketView(Protocol):
     def basket_price_level(self, currency: CurrencyId) -> float:
         """Last year's price level against the opening year (1.0 at the opening)."""
 
-    def chained_price_level(self, currency: CurrencyId) -> float:
-        """The level real figures (anchor wages, spending targets) are turned nominal with: the opening's 1.0 chained by
-        each year's observed inflation, the weighted median of the goods' price changes. Unlike `basket_price_level`
-        (a reported statistic) a few thin goods whose asks run away do not move it."""
-
     def opening_wage_level(self, currency: CurrencyId) -> float:
         """Today's money per opening-year money for the wages the setup opened with (see `MarketMemory.opening_wage_level`)."""
-
-    def expected_inflation(self, currency: CurrencyId) -> float:
-        """Adaptive expectation of next year's rise in the price level, as a share."""
 
     def observed_inflation(self, currency: CurrencyId) -> Optional[float]:
         """Last year's rise in prices, the weighted median of the goods' changes; None before there is one."""

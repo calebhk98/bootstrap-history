@@ -72,18 +72,18 @@ def table(teams: Mapping[str, Mapping], uses: Mapping[GoodId, Mapping], lives: M
 
 
 class Wear:
-    """The carrier units and team-days a tonne wears on any haul of a carriage table, at the return-trip
+    """The carrier units a tonne wears on any haul of a carriage table, at the return-trip
     emptiness `imbalance` leaves (the carriers' empty legs home wear them too)."""
 
     def __init__(self, setup, carriage, imbalance: float):
         self.setup, self.carriage, self.imbalance = setup, carriage, imbalance
-        self._rows: Dict[Tuple[TileId, TileId], Tuple[Dict[GoodId, float], Dict[str, float]]] = {}
+        self._rows: Dict[Tuple[TileId, TileId], Dict[GoodId, float]] = {}
 
-    def _worn(self, source: TileId, destination: TileId):
+    def units_per_tonne(self, source: TileId, destination: TileId) -> Dict[GoodId, float]:
+        """{carrier good: units worn} carrying one tonne from `source` to `destination`."""
         found = self._rows.get((source, destination))
         if found is None:
             units: Dict[GoodId, float] = {}
-            days: Dict[str, float] = {}
             haul = self.carriage.haul(source, destination)
             geography_days = dict(haul.team_days_by_mode)
             tonne_km_by_mode = dict(haul.km_by_mode)
@@ -93,19 +93,10 @@ class Wear:
                     continue
                 # the days are geography's, at each leg's pace; the carriers' empty legs home work them too
                 worked = geography_days.get(mode, tonne_km_by_mode[mode] / per_day) * (1.0 + self.imbalance)
-                days[mode] = days.get(mode, 0.0) + worked
                 for good, per_tonne_km in rows:
                     units[good] = units.get(good, 0.0) + worked * per_tonne_km * per_day
-            found = self._rows[(source, destination)] = (units, days)
+            found = self._rows[(source, destination)] = units
         return found
-
-    def units_per_tonne(self, source: TileId, destination: TileId) -> Dict[GoodId, float]:
-        """{carrier good: units worn} carrying one tonne from `source` to `destination`."""
-        return self._worn(source, destination)[0]
-
-    def team_days_per_tonne(self, source: TileId, destination: TileId) -> Dict[str, float]:
-        """{mode: team-days worked} carrying one tonne from `source` to `destination`."""
-        return self._worn(source, destination)[1]
 
 
 def wears(setup) -> bool:
@@ -113,17 +104,14 @@ def wears(setup) -> bool:
     return bool(setup.carriage_carriers)
 
 
-def exposure(wear: Wear, moves: Sequence[DeliveredMove], specs) -> Tuple[Dict[GoodId, float], Dict[str, float]]:
-    """({carrier good: units worn}, {mode: team-days}) by the shipments `moves` carried."""
+def exposure(wear: Wear, moves: Sequence[DeliveredMove], specs) -> Dict[GoodId, float]:
+    """{carrier good: units worn} by the shipments `moves` carried."""
     units: Dict[GoodId, float] = {}
-    days: Dict[str, float] = {}
     for move in moves:
         tonnes = move.quantity * specs[move.good].unit_mass_kg / KILOGRAMS_PER_TONNE
         for good, per_tonne in wear.units_per_tonne(move.tile, move.receiver_tile).items():
             units[good] = units.get(good, 0.0) + tonnes * per_tonne
-        for mode, per_tonne in wear.team_days_per_tonne(move.tile, move.receiver_tile).items():
-            days[mode] = days.get(mode, 0.0) + tonnes * per_tonne
-    return units, days
+    return units
 
 
 def carrier_goods(setup) -> List[GoodId]:

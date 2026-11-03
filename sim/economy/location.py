@@ -16,7 +16,7 @@ from . import crop_sites, entry_practice, labour_state, location_inputs, practic
 from .location_land import headroom_with_land, land_short_tiles
 from .market_areas import MarketArea
 from .producers import Producer, live_input_prices
-from .setup import labour_area
+from .setup import labour_area, recipe_tile_key
 from .types import GoodSpec, Recipe, TileId
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 
@@ -129,7 +129,7 @@ def _placed_tiles(setup, recipe: Recipe) -> frozenset:
     first year's plan applies), over every tile it can run on, not one area's (crop_sites.sites)."""
     every = sites.suited_tiles(recipe, setup.tiles, sorted(setup.tiles), setup.recipe_allowed)
     return frozenset(crop_sites.sites(
-        {tile: setup.yield_factor_by_recipe_tile.get(recipe.recipe_id + "@" + tile, 1.0) for tile in every},
+        {tile: setup.yield_factor_by_recipe_tile.get(recipe_tile_key(recipe.recipe_id, tile), 1.0) for tile in every},
         recipe, setup.opening_prices, setup.opening_wages))
 
 
@@ -206,7 +206,7 @@ def _tile_part(setup, record, view, carriage, recipe, by_recipe, supplies, capac
     The runs its idle hands can staff are at `first_year`'s hours (the recipe at its newcomer's first-year practice; the booked recipe without)."""
     probe = Producer("probe", "probe", recipe.recipe_id, tile, 1.0)
     factor = sites.yield_at(recipe, tile, by_recipe, setup.yield_factor_by_recipe_tile.get(
-        recipe.recipe_id + "@" + tile, 1.0))
+        recipe_tile_key(recipe.recipe_id, tile), 1.0))
     variable = None
     if factor > 0.0:
         wages = {trade: trade_wages.wage_in_view(setup, view, trade, labour_area(tile)) for trade in recipe.labour_hours}

@@ -7,7 +7,7 @@ its anchor's old market's values.
 
 Reads only the area map and the market memory.
 """
-from typing import Dict, Mapping, Tuple
+from typing import Any, Dict, Mapping, Tuple
 
 from .market_areas import AreaMap
 from .market_memory import KEY_SEPARATOR, market_key
@@ -41,13 +41,15 @@ def _moved(markets: Mapping[str, object], follows: Mapping[str, Mapping[str, str
     return kept
 
 
-def _moved_expectations(expected: Mapping[Tuple[str, str], float],
-                        follows: Mapping[str, Mapping[str, str]]) -> Dict[Tuple[str, str], float]:
+def _moved_expectations(expected: Mapping[Tuple[str, str], Any],
+                        follows: Mapping[str, Mapping[str, str]]) -> Dict[Tuple[str, str], Any]:
+    """`expected` re-keyed by the new areas; a list value (a price history, appended to in place) is copied per key."""
     moved = {pair: value for pair, value in expected.items() if pair[0] not in follows}
     for good, new_to_old in follows.items():
         for new_id, old_id in new_to_old.items():
             if (good, old_id) in expected:
-                moved[(good, new_id)] = expected[(good, old_id)]
+                value = expected[(good, old_id)]
+                moved[(good, new_id)] = list(value) if isinstance(value, list) else value
     return moved
 
 

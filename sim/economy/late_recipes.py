@@ -8,7 +8,7 @@ Producers for the new recipes enter through the ordinary entry rules.
 Standalone: the setup, record and area map of this package.
 """
 from .market_memory import market_key
-from .setup import opening_price_today
+from .setup import opening_price_today, recipe_of_tile_key
 
 
 def admit_recipes(economy, source) -> bool:
@@ -26,7 +26,7 @@ def admit_recipes(economy, source) -> bool:
                                                if recipe_id in source.land_per_run}},
         yield_factor_by_recipe_tile={**setup.yield_factor_by_recipe_tile,
                                      **{key: factor for key, factor in source.yield_factor_by_recipe_tile.items()
-                                        if key.partition("@")[0] in added}},
+                                        if recipe_of_tile_key(key) in added}},
         specs={**setup.specs, **{good: spec for good, spec in source.specs.items() if good not in setup.specs}},
         opening_wages={**setup.opening_wages, **{trade: wage for trade, wage in source.opening_wages.items()
                                                  if trade not in setup.opening_wages}},
