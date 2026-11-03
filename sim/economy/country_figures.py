@@ -54,7 +54,7 @@ def idle_hours_by_trade(economy, country: Optional[str]) -> Dict[str, tuple]:
         if _labour_key_in(key, tiles):
             trade = key.split(KEY_SEPARATOR, 1)[0]
             idle[trade] = idle.get(trade, 0.0) + hours
-            hired[trade] = hired.get(trade, 0.0) + economy.record.labour.hours_hired_in(key)
+            hired[trade] = hired.get(trade, 0.0) + economy.record.labour.hours_cleared_in(key)
     return {trade: (idle[trade], idle[trade] + hired[trade]) for trade in sorted(idle)}
 
 

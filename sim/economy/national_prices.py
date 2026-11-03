@@ -54,7 +54,7 @@ def national_wages(record, keep: Optional[Callable[[str], bool]] = None) -> Dict
     rows: Dict[str, List[Tuple[float, float]]] = {}
     for key, wage in sorted(record.memory.wages.items()):
         if keep is None or keep(key):
-            rows.setdefault(key.split(KEY_SEPARATOR, 1)[0], []).append((wage, record.labour.hours_hired_in(key)))
+            rows.setdefault(key.split(KEY_SEPARATOR, 1)[0], []).append((wage, record.labour.hours_cleared_in(key)))
     wages = {}
     for trade, pairs in rows.items():
         hours = math.fsum(weight for _wage, weight in pairs)

@@ -162,7 +162,7 @@ def idle_hours_by_trade(economy, country=None):
 
 def hours_hired_by_employer(economy, employer):
     """{trade: hours} the last labour clearing hired for `employer` (paid hours, bonded included); empty before one."""
-    return dict(economy.record.labour.hours_hired_by_employer.get(employer, {}))
+    return dict(economy.record.labour.hours_paid_by_employer.get(employer, {}))
 
 
 def add_workers(economy, tile, trade, people):
@@ -182,7 +182,7 @@ def labour_market_rows(economy):
         if trade == plot:
             continue
         people = math.fsum(record.labour.workforce.workers.get(area, {}).get(trade, ()))
-        hired = record.labour.hours_hired_in(key)
+        hired = record.labour.hours_cleared_in(key)
         rows.append((people, hired + record.labour.hours_idle[key], hired))
     return rows
 

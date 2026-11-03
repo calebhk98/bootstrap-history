@@ -84,9 +84,6 @@ class MarketMemory:
     def set_price(self, key: str, price: float) -> None:
         self.prices[key] = price
 
-    def set_wage(self, key: str, wage: float) -> None:
-        self.wages[key] = wage
-
     def count_year_without_bids(self, key: str) -> int:
         """A market with offers had nobody bidding this year; returns the years it had gone before."""
         before = self.years_without_bids.get(key, 0)
@@ -138,7 +135,9 @@ class MarketMemory:
     def offered_price(self, key: str) -> Optional[float]:
         """What a buyer can see to buy at: a price the market traded at, an ask still posted, or the opening's own
         estimate before any clearing; None for a bid ceiling, a cost quote or a price remembered from an old trade
-        (nothing is on offer at those)."""
+        (nothing is on offer at those). Eurace's consumers see the mall's current prices and the quality of the goods
+        (the logit weighs both; Cons_Goods/Household_Consumer_Functions.c), nothing remembered (Complaint 642); this
+        model has the price only."""
         if self.price_kind(key) in (PRICE_SMOOTHED_TRADE, QUOTE_LOWEST_UNFILLED_ASK, QUOTE_OPENING_ESTIMATE):
             return self.prices.get(key)
         return None

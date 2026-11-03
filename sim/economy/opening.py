@@ -11,6 +11,7 @@ import math
 from typing import Dict, List, Tuple
 
 from sim.constants import declare
+from sim.labour.api import MarketState
 from sim.refusal import Refusal
 
 from . import producer_table
@@ -227,9 +228,8 @@ def _opening_memory(setup, area_map, priced_goods) -> MarketMemory:
         for area in area_map.areas(good):
             memory.set_price(market_key(good, area.area_id), price)
             memory.note_usual_price(market_key(good, area.area_id))
-    for trade, wage in setup.opening_wages.items():
-        for tile in setup.tiles:
-            memory.set_wage(market_key(trade, labour_area(tile)), wage)
+    seeds = MarketState(wages={labour_area(tile): dict(setup.opening_wages) for tile in setup.tiles})
+    labour_state.mirror_wages(memory.wages, seeds)       # the mirror is the one writer of the remembered wages
     return memory
 
 

@@ -108,13 +108,16 @@ def _odds(inputs, state, area, source, destinations, own, later_income, vacancie
     """The odds of each band of `source` workers moving to each worthwhile destination: (targets, per
     band the share of each target), or None for a band that stays. `own` is the income given up. The young weigh a
     whole career and weigh every trade paying more than `own` after training, even one worth less than staying
-    once the training is paid for (module docstring). The young may stay in `source`, scored at `stay_income` (what it
+    once the training is paid for (module docstring), and the unskilled trade too where their own pays less than it. The young may stay in `source`, scored at `stay_income` (what it
     pays now) over the career against `own`; an established worker's stay scores nothing, being the income given up."""
     rate = inputs.discount_rate
     remaining = inputs.career_years if young else inputs.career_years * REMAINING_CAREER_SHARE
     if young:   # a vacancy that pays no more than the unskilled option is not an opening (it is in `later_income`)
         margin = PLAN_REUSE_TOLERANCE * subsistence
-        targets = [trade for trade in destinations if trade != source and later_income[trade] > own + margin]
+        fallback = fallback_trade(inputs.trades)
+        leaves_for_unskilled = stay_income is not None and stay_income < own and fallback != source   # their trade pays less than unskilled work
+        targets = [trade for trade in destinations if trade != source
+                   and (later_income[trade] > own + margin or (leaves_for_unskilled and trade == fallback))]
     else:
         targets = [trade for trade in destinations if trade != source and (later_income[trade] > own or trade in vacancies)]
     if not targets:

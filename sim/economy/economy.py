@@ -160,8 +160,6 @@ class Economy:
         changes: Dict[str, Any] = {}
         if inputs.tax_rates:
             changes["tax_forms"] = taxes.with_rates(self.setup.tax_forms, inputs.tax_rates)
-        if inputs.working_hours_per_year:   # the year's working day; every reader of the setup's hours sees it
-            changes["working_hours_per_year"] = float(inputs.working_hours_per_year)
         if inputs.site_limits:   # empty keeps the last declared
             changes["site_limits"] = tuple(inputs.site_limits)
         if changes:
@@ -222,7 +220,7 @@ class Economy:
         bondage_hours.hold(record.unfree.bonded_held, bought_held)
         bondage_hours.deliver(ledger.hours_hired, placed)
         bondage_hours.deliver_held(ledger.hours_hired, held_placed)
-        record.labour.set_hours_hired_by_employer({agent: dict(trades) for agent, trades in sorted(ledger.hours_hired.items())})   # what seats' staff books read
+        record.labour.set_hours_paid_by_employer({agent: dict(trades) for agent, trades in sorted(ledger.hours_hired.items())})   # what seats' staff books read
         capital_year.insure(setup, record, view, inputs.harvest_factor, view.year, inputs.institutions)     # cover is bought and the weather settles it
         self._grow_own(offers, ledger, inputs.harvest_factor, kept)
         capital_year.note_exposure(setup, record, view, self.area_map, ledger, inputs.harvest_factor, inputs.institutions)
