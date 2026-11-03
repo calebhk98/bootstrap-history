@@ -72,9 +72,9 @@ def trade_premium(setup, trade) -> float:
     """What a trade's training years add to the pay a worker asks, as a share over the unskilled wage: the core's
     training premium (a multiple, labour/market/premium.py) less one, at the family's own time preference, since the
     family pays for training by going without, not by borrowing. Quotes of a wage for a trade nobody has bid for yet
-    use it; the clearing reads the same multiple at the same rate (`labour_context`)."""
-    spec = setup.trades.get(trade)
-    if spec is None or spec.training_years <= 0.0:
+    use it (a trade the setup has no spec for is a KeyError); the clearing reads the same multiple at the same rate (`labour_context`)."""
+    spec = setup.trades[trade]
+    if spec.training_years <= 0.0:
         return 0.0
     return wages.training_premium(spec.training_years, HOUSEHOLD_TIME_PREFERENCE, CAREER_YEARS) - 1.0
 

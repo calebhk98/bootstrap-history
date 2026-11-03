@@ -590,19 +590,17 @@ def opening_wage_level(economy):
     return economy.record.memory.opening_wage_level(economy.setup.currency_id)
 
 
-def priced_trade_wage(economy, trade, paid, unskilled, country=None):
-    """The wage per hour of a trade by the one rule (`trade_wages`), in the economy's units. The home country (and no
-    named country) always has one. A partner `country` has no opening wages: an unpaid trade of its is priced on its
-    `unskilled` wage alone, and the result is None when that is None too."""
-    level = opening_wage_level(economy)
-    if country is not None and country != home_country(economy):
-        level = None
-    return trade_wages.priced_trade_wage(economy.setup, trade, paid, unskilled, level)
+def priced_trade_wage(economy, trade, paid, unskilled):
+    """The wage per hour of a trade by the one rule (`trade_wages`), in the economy's units, for any scope: the caller
+    names what that scope paid for the trade and for the unskilled trade (None where nothing)."""
+    return trade_wages.priced_trade_wage(economy.setup, trade, paid, unskilled, opening_wage_level(economy))
 
 
-def unpaid_trade_wage(economy, trade):
-    """The home wage per hour of a trade no market has paid, by the one rule on the country-weighted unskilled wage."""
-    return priced_trade_wage(economy, trade, None, wages_by_trade_weighted(economy).get(economy.setup.unskilled_trade))
+def country_trade_wage(economy, trade, country=None):
+    """The wage per hour of a trade in a country (the home country's when none is named) by the one rule, on the
+    hours-weighted wages its labour markets paid last year."""
+    wages = wages_by_trade_weighted(economy, country)
+    return priced_trade_wage(economy, trade, wages.get(trade), wages.get(economy.setup.unskilled_trade))
 
 
 def trade_wage_at(economy, trade, tile):

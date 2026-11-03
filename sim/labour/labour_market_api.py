@@ -151,6 +151,10 @@ class LabourMarket:
         """Money one hour of a trade costs now: the one wage of the trade."""
         return self._annual(trade) / person_year_hours(self._world)
 
+    def quote_unskilled(self) -> float:
+        """Money one hour of the unskilled trade (the one anyone can take up at once) costs now."""
+        return self.quote(trade_data.fallback_trade_of(self._world, self.schedule.wage_schedule().training_years))
+
     def commission_cost(self, trade, hours) -> float:
         """What a one-off job of `hours` costs: the hour the market quotes."""
         return hours * self.quote(trade)

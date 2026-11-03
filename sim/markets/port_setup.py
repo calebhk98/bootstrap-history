@@ -76,8 +76,14 @@ LITERACY_FIELDS = ("literacy_general", "literacy_elite")
 def opening_wages(sim, trades, level=1.0):
     """{trade: wage per hour in opening-year money}: the labour market's quote now for each trade, divided by `level` (today's
     money per opening-year money, `economy_api.opening_wage_level`; one at the opening), since the economy scales these by that
-    level again. A quote not above zero is left out."""
+    level again. The unskilled trade's quote must be above zero (the one wage rule prices every other trade on it,
+    sim/economy/trade_wages.py): a civilisation without one is refused. Another trade whose quote is not above zero is
+    left out, so that rule prices it on the unskilled wage."""
     quotes = {trade: sim.economy.labour.quote(trade) for trade in sorted(trades)}
+    unskilled = unskilled_trade(_load("world", "trades.json").get("trades", {}))
+    if unskilled in quotes and not quotes[unskilled] > 0.0:
+        raise ValueError(f"civilisation {sim.scenario.civ['id']!r}: the unskilled trade {unskilled!r} has the labour market "
+                         f"quote {quotes[unskilled]!r}, not above zero, so no trade can be priced")
     return {trade: quote / level for trade, quote in quotes.items() if quote > 0.0}
 
 

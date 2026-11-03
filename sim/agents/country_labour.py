@@ -17,14 +17,11 @@ class CountryLabour(SharedPart):
 
 	def pay_per_person_year(self, trade: str) -> float:
 		"""What a person-year of a trade pays in this country's own labour markets."""
-		own = self.world.own
-		return own.answer("pay", own.get().pay_per_person_year(trade))
+		return self.world.own.get().pay_per_person_year(trade)
 
-	def hourly_pay(self, trade: str) -> Optional[float]:
-		"""What an hour of a trade pays in the country's labour markets; None when they pay nothing for it."""
-		economy = self.world.own.get_or_none()
-		pay = None if economy is None else economy.pay_per_person_year(trade)
-		return None if pay is None else pay / self.shared.hours_per_person_year
+	def hourly_pay(self, trade: str) -> float:
+		"""What an hour of a trade pays in this country's own labour markets."""
+		return self.pay_per_person_year(trade) / self.shared.hours_per_person_year
 
 	def national_people(self, trade: str) -> float:
 		"""People of a trade in the country: those its labour markets hold in the trade; for unskilled labour, every

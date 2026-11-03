@@ -16,19 +16,14 @@ def mint_bought(fills: Iterable[Fill]) -> float:
 
 
 def _taken_by_mint(result: ClearingResult) -> List[Tuple[str, str, float, float]]:
-    """(seller, tile, quantity, ask) for each non-edge seller the mint bought from. A result that says who bought from
-    whom gives it exactly; any other has the mint's purchase shared among the sellers by what they sold, each at its fill price."""
+    """(seller, tile, quantity, ask) for each non-edge seller the mint bought from, as the result's pairing says. A year's
+    goods result that traded carries one; one that did not trade has nothing taken."""
     pairing = result.pairing
-    if pairing is not None:
-        return [(pairing.sellers[seller][0], pairing.sellers[seller][1], quantity, pairing.asks[seller])
-                for buyer, seller, quantity in zip(pairing.buyer_index, pairing.seller_index, pairing.quantity)
-                if pairing.buyers[buyer][0] == EDGE_MINT and not is_edge(pairing.sellers[seller][0])]
-    bought = mint_bought(result.fills)
-    sells = [fill for fill in result.fills if fill.side == "sell" and fill.quantity > 0.0 and not is_edge(fill.agent)]
-    total = sum(fill.quantity for fill in sells)
-    if bought <= 0.0 or total <= 0.0:
+    if pairing is None:
         return []
-    return [(fill.agent, fill.tile, bought * fill.quantity / total, fill.price) for fill in sells]
+    return [(pairing.sellers[seller][0], pairing.sellers[seller][1], quantity, pairing.asks[seller])
+            for buyer, seller, quantity in zip(pairing.buyer_index, pairing.seller_index, pairing.quantity)
+            if pairing.buyers[buyer][0] == EDGE_MINT and not is_edge(pairing.sellers[seller][0])]
 
 
 def _settled_takes(result: ClearingResult, settled: Optional[Dict[Tuple[str, str], float]]) -> List[Tuple[str, float, float]]:

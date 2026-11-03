@@ -40,7 +40,7 @@ class Groups:
 
 	def _annual_labourer_wage(self) -> float:
 		labour = self.world.labour
-		return max(1e-9, labour.pay_per_person_year(labour.trade_of_role("unskilled")))
+		return labour.pay_per_person_year(labour.trade_of_role("unskilled"))
 
 	def displaced_producers(self) -> List[Sector]:
 		"""Producers of each commodity the founder sold into the market this year: what the

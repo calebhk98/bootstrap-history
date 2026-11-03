@@ -5,27 +5,22 @@ from . import household_wealth, ledger
 from .tuning import ENTRY_EQUITY_SHARE, ENTRANT_EXPECTATION_ADJUSTMENT_SHARE, MANAGEMENT_SPAN_OF_CONTROL, TACIT_SHARE_OF_COPYING
 
 
-def management_places(world: Any, node_id: str, capacity: float = 1.0) -> Optional[Tuple[Optional[str], float]]:
+def management_places(world: Any, node_id: str, capacity: float = 1.0) -> Tuple[Optional[str], float]:
 	"""(trade, people) of the managers a concern run at `capacity` times its founding size needs: its staff over the
 	span of control, in the best paid trade among its staff at the pay of the actor's own country; (None, 0) for a
-	concern with no staff; None when that country pays nothing for a trade of the staff."""
+	concern with no staff."""
 	staff = world.concerns.concern_staff(node_id)
 	people = sum(staff.values()) * capacity
 	if people <= 0.0:
 		return None, 0.0
 	pay = {trade: world.labour.hourly_pay(trade) for trade in sorted(staff)}
-	if any(wage is None for wage in pay.values()):
-		return None
 	return max(pay, key=lambda trade: pay[trade]), people / MANAGEMENT_SPAN_OF_CONTROL
 
 
-def management_cost(world: Any, node_id: str, capacity: float = 1.0) -> Optional[float]:
+def management_cost(world: Any, node_id: str, capacity: float = 1.0) -> float:
 	"""The yearly pay of the manager places (`management_places`): their hours at the best paid staff trade's pay; the
-	figure an entrant weighs, while a running plant bids for the places in the labour market; None as there."""
-	places = management_places(world, node_id, capacity)
-	if places is None:
-		return None
-	trade, people = places
+	figure an entrant weighs, while a running plant bids for the places in the labour market."""
+	trade, people = management_places(world, node_id, capacity)
 	return 0.0 if trade is None else people * world.labour.hours_per_person_year * world.labour.hourly_pay(trade)
 
 
@@ -43,10 +38,9 @@ def carrying_cost(world: Any, node_id: str, capacity: float = 1.0, tile: Optiona
 	hours the merchants' terms charge per tonne a carrier lifts (merchant_terms.agent_cost_per_tonne);
 	a sale in the firm's own market needs no carrier, so a firm carries nothing more for it, and where
 	goods cross places the traders who carry them bear it. None when the actor's country keeps no record of
-	the rent or the pay."""
+	the rent."""
 	rent = world.site.site_rent(node_id, capacity, tile)
-	management = management_cost(world, node_id, capacity)
-	return None if rent is None or management is None else rent + management
+	return None if rent is None else rent + management_cost(world, node_id, capacity)
 
 
 def expected_takings(registry: Any, world: Any, node_id: str) -> float:

@@ -86,15 +86,14 @@ class PriceReads:
 
     def unskilled_wage_per_hour(self):
         """The home labour markets' wage for an hour of the trade anyone can take up, in coin."""
-        wages = self.answers()[1]
-        return wages.get(economy_api.unskilled_trade(self._agent.economy()))
+        economy = self._agent.economy()
+        return self.wage_per_hour(economy_api.unskilled_trade(economy))
 
     def wage_per_hour_at(self, trade, tile):
         """The wage per hour, in coin, a bid for the trade on `tile` is funded at (sim/economy/trade_wages.py): the wage of the tile's own
-        labour area, else the unpriced-trade wage; None when neither exists."""
+        labour area, else the unpriced-trade wage."""
         economy = self._agent.economy()
-        wage = economy_api.trade_wage_at(economy, trade, self._agent.tile_in_economy(tile))
-        return None if wage is None else wage * economy_api.coin_per_unit(economy)
+        return economy_api.trade_wage_at(economy, trade, self._agent.tile_in_economy(tile)) * economy_api.coin_per_unit(economy)
 
     def hours_offered_at(self, trade, tile):
         """Hours of the trade the households of `tile`'s labour area offered at the last clearing; None before one."""
@@ -102,14 +101,11 @@ class PriceReads:
         return economy_api.hours_offered_in_area_of(economy, trade, self._agent.tile_in_economy(tile))
 
     def wage_per_hour(self, trade, country=None):
-        """The country figure: the trade's hours-weighted wage over the country's labour markets; a trade no market has priced (soldiers, scribes) has the wage the staff
-        bids use for it (sim/economy/trade_wages.py), so every wage stands on the same rule."""
-        wages = self.answers(country)[1]
-        if trade in wages:
-            return wages[trade]
+        """The country figure, in coin: the trade's hours-weighted wage over the country's labour markets; a trade no market has priced (soldiers, scribes) has the wage the staff
+        bids use for it, so every wage stands on the same rule (sim/economy/trade_wages.py), home or partner."""
         economy = self._agent.economy()
-        unpriced = economy_api.unpaid_trade_wage(economy, trade)
-        return None if unpriced is None else unpriced * economy_api.coin_per_unit(economy)
+        scope = country if country in economy_api.economy_countries(economy) else None   # any other country is answered as the home country
+        return economy_api.country_trade_wage(economy, trade, scope) * economy_api.coin_per_unit(economy)
 
     def credit_room(self, borrower_id):
         """What the credit market will still advance one borrower, in coin; None before lenders have met."""

@@ -8,7 +8,7 @@ from typing import Dict, Optional
 
 from sim.world.material_units import tonnes_per_unit
 from sim.economy.api import (carried_book, cohort_land_rents, country_figures, land_rent_at_tile, coin_per_unit,
-                             priced_trade_wage, unskilled_trade, working_hours_per_year)
+                             country_trade_wage, working_hours_per_year)
 
 
 class CountryAnswers:
@@ -24,15 +24,10 @@ class CountryAnswers:
     def has_labour_market(self) -> bool:
         return bool(self._wages)
 
-    def pay_per_person_year(self, trade: str) -> Optional[float]:
+    def pay_per_person_year(self, trade: str) -> float:
         """What a person-year of a trade pays in the country's labour markets; a trade nobody hired is priced by the
-        one rule (sim/economy/trade_wages.py) on the country's unskilled wage. None while the country's markets
-        have no wage."""
-        if not self._wages:
-            return None
-        wage = priced_trade_wage(self._economy, trade, self._wages.get(trade), self._wages.get(unskilled_trade(self._economy)),
-                                  self._country)
-        return None if wage is None else wage * self._coin * self._hours
+        one rule (sim/economy/trade_wages.py) on the country's unskilled wage."""
+        return country_trade_wage(self._economy, trade, self._country) * self._coin * self._hours
 
     def society_output(self) -> Optional[float]:
         output = country_figures.output_value(self._economy, self._country)

@@ -87,12 +87,19 @@ def wage_scale(setup, record, carriage) -> float:
     emptiness of the returns leaves, at that wage) follows the wage of the area the goods left instead, as last
     year's labour market cleared it. The routes are last year's carried flows, so the mix of modes is the one
     used. The multiplier is the change in the labour part over the whole fee, so the table's fee as a whole moves
-    by the labour change, spread over all its parts; route dues are paid apart from it, unscaled. 1 where the wages are the one priced, or
-    nothing is known of either (a crew no wage rule prices is left out); never below 0."""
+    by the labour change, spread over all its parts; route dues are paid apart from it, unscaled. Carriers are priced in the area they
+    are hired in (`hiring_area`: the first merchant, by id, that wanted carriage from the tile gives it its home where nobody lives).
+    1 where the wages are the one priced or nothing is carried; never below 0."""
     carried = record.carriage.carried
     if not carried or setup.carriage_wage <= 0.0 or not hires(setup):
         return 1.0
     crew = Crew(setup, carriage, record.carriage.area_imbalance)
+    populated = {cohort.tile for cohort in record.cohorts.values()}
+    hired_in: Dict[str, str] = {}
+    for merchant in sorted(record.merchants.values(), key=lambda each: each.agent_id):
+        for key in sorted(merchant.carriage_hours_wanted or {}):
+            tile = _split(key)[1]
+            hired_in.setdefault(tile, hiring_area(record, merchant, tile, populated))
     money = 0.0
     labour_change = 0.0
     for source, row in sorted(carried.items()):
@@ -102,7 +109,7 @@ def wage_scale(setup, record, carriage) -> float:
                 continue
             money += tonnes * cost
             for trade, hours in crew.hours_by_trade(source, destination).items():
-                wage = trade_wages.wage_in_area(setup, record.memory, trade, labour_area(source))
+                wage = trade_wages.wage_in_area(setup, record.memory, trade, hired_in.get(source) or labour_area(source))
                 labour_change += tonnes * hours * (wage - setup.carriage_wage)
     return max(0.0, 1.0 + labour_change / money) if money > 0.0 else 1.0     # a fee never pays the shipper
 
@@ -143,10 +150,10 @@ def bids(setup, record) -> List[LabourBid]:
     return found
 
 
-def crew_wage(setup, memory, key: str) -> float:
-    """The wage an hour of the crew `key` is priced at (`trade_wages.wage_in_area` of the tile's labour area)."""
+def crew_wage(setup, record, merchant: Merchant, key: str, populated) -> float:
+    """The wage an hour of the crew `key` is priced at (`trade_wages.wage_in_area` of the area the merchant hires it in)."""
     trade, tile = _split(key)
-    return trade_wages.wage_in_area(setup, memory, trade, labour_area(tile))
+    return trade_wages.wage_in_area(setup, record.memory, trade, hiring_area(record, merchant, tile, populated))
 
 
 def engaged(record, merchant: Merchant, index) -> Tuple[Dict[str, float], Dict[str, Optional[float]]]:

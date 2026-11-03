@@ -331,14 +331,12 @@ class LabourPart(Protocol):
 	def hours_per_person_year(self) -> float:
 		...
 
-	def hourly_pay(self, trade: str) -> Optional[float]:
-		"""What an hour of a trade pays in the asking actor's country; never None at home, None for a partner country whose labour
-		markets pay nothing for it."""
+	def hourly_pay(self, trade: str) -> float:
+		"""What an hour of a trade pays in the asking actor's country (the one rule, sim/economy/trade_wages.py)."""
 		...
 
 	def pay_per_person_year(self, trade: str) -> float:
-		"""What a person-year of a trade pays in the asking actor's country. The home country's rule always gives a wage; a
-		partner country raises NoCountryEconomy where its labour markets pay nothing for it."""
+		"""What a person-year of a trade pays in the asking actor's country (the one rule, sim/economy/trade_wages.py)."""
 		...
 
 	def pay_wages(self, payer: Any, amount: float, purpose: Any) -> None:

@@ -192,7 +192,7 @@ def _score_components(sim, nodes, reveal_tree_total):
     # calibration save's 4.41 million worker-years, rounded to a clean
     # figure (50 million), not that save's own number.
     ECONOMY_ANCHOR_WORKER_YEARS = 50_000_000.0
-    reference_wage = max(1e-6, sim.view("labour_market")().quote_annual("artisan"))
+    reference_wage = sim.view("labour_market")().quote_annual("artisan")
     worker_years = max(0.0, sim.view("acting_balance")()) / reference_wage
     econ_norm = min(1.0, math.log1p(worker_years)
                     / math.log1p(ECONOMY_ANCHOR_WORKER_YEARS))

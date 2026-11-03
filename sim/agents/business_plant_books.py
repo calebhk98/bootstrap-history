@@ -27,21 +27,15 @@ def home_costs(world: Any, entry_key: str) -> Tuple[float, float]:
 
 
 def wage_bill_at(staff: Mapping[str, float], size: float, span_factor: float,
-				 pay_per_person_year: Callable[[str], Optional[float]]) -> Optional[float]:
+				 pay_per_person_year: Callable[[str], float]) -> float:
 	"""Yearly wages of a plant run at `size` founding sizes, each trade's people paid what a person-year of it pays in the
-	country (`span_factor` is the management-span lift of that size); None when any trade has no pay there."""
-	total = 0.0
-	for trade, people in sorted(staff.items()):
-		pay = pay_per_person_year(trade)
-		if pay is None:
-			return None
-		total += people * pay
-	return span_factor * total
+	country (`span_factor` is the management-span lift of that size)."""
+	return span_factor * sum(people * pay_per_person_year(trade) for trade, people in sorted(staff.items()))
 
 
 def books_at_country_prices(book_takings: float, book_upkeep: float, staff: Mapping[str, float], size: float,
 							span_factor: float, cost_scale: float, market_factor: float,
-							pay_per_person_year: Callable[[str], Optional[float]], shares_goods_market: bool,
+							pay_per_person_year: Callable[[str], float], shares_goods_market: bool,
 							rivals: float, output_factor: float) -> Optional[PlantBooks]:
 	"""A plant's books at a country's own figures. `book_takings` and `book_upkeep` are the tree's figures for one founding
 	size in book coin (before any cost scale); `market_factor` is the country's market over long-run prices for what the
@@ -49,12 +43,9 @@ def books_at_country_prices(book_takings: float, book_upkeep: float, staff: Mapp
 	output the country's own hazards and wars leave (country_hazards.py).
 
 	Takings are the book figure at the country's cost scale and market factor, shared among the operators of a concern with
-	no market model. A concern in a goods category shares the home society's demand, which has no country record: None, as
-	is a crew with a trade the country's labour markets pay nothing for."""
+	no market model. A concern in a goods category shares the home society's demand, which has no country record: None."""
 	if shares_goods_market:
 		return None
 	wages = wage_bill_at(staff, size, span_factor, pay_per_person_year)
-	if wages is None:
-		return None
 	takings = book_takings * cost_scale * size * market_factor * output_factor / (size + rivals)
 	return PlantBooks(takings, book_upkeep * cost_scale * size, wages)

@@ -23,12 +23,9 @@ def gross_at_country_prices(book_takings_at_full_ramp: float, cost_scale: float,
 
 
 def costs_at_country_prices(book_upkeep: float, staff: Mapping[str, float], cost_scale: float, span_factor: float,
-							pay_per_person_year: Callable[[str], Optional[float]]) -> Optional[Tuple[float, float]]:
-	"""(upkeep, wage bill) of a plant at its founding size in the country; None when a trade of the crew has no pay there."""
-	wages = wage_bill_at(staff, 1.0, span_factor, pay_per_person_year)
-	if wages is None:
-		return None
-	return book_upkeep * cost_scale, wages
+							pay_per_person_year: Callable[[str], float]) -> Tuple[float, float]:
+	"""(upkeep, wage bill) of a plant at its founding size in the country."""
+	return book_upkeep * cost_scale, wage_bill_at(staff, 1.0, span_factor, pay_per_person_year)
 
 
 class CountrySite(SharedPart):

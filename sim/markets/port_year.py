@@ -43,7 +43,7 @@ class YearRun:
         self.strike_state_coin(economy)
         sales, purchases = self._trade.post_orders(orders)
         staff_orders, staff_posted = port_staff.post(world, economy, sorted(world.state.playing_seats() or world.state.seats),
-                                                     agent.tile_in_economy)
+                                                     agent.tile_in_economy, agent.stored.setdefault("trades_lacking_logged", {}))
         orders.update(staff_orders)
         actor_staff_orders, actor_staff_posted = port_staff.post_actors(world, economy, agent.actor_tile)
         orders.update(actor_staff_orders)

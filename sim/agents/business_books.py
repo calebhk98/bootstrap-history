@@ -42,14 +42,13 @@ def carry(business: Business, owner: Any, entry_key: str, world: Any) -> Optiona
 	"""Pay the rent on the land a plant occupies whatever it sells, and post its managers' places to the labour market
 	(hired and paid by the clearing like any crew; the same costs an entrant weighs, firm_entry.carrying_cost).
 	Returns the rent paid plus the managers' estimated pay; None when the plant's country gives no reading of the rent
-	or of the management (nothing is paid or posted, and the caller decides what a margin without it means)."""
+	(nothing is paid or posted, and the caller decides what a margin without it means)."""
 	size = business.reading.size_of(entry_key)
 	rent = world.site.site_rent(entry_key, size, owner.location())
-	places = firm_entry.management_places(world, entry_key, size)
-	if rent is None or places is None:   # the plant's country keeps no record of a figure: it pays nothing it cannot read
+	if rent is None:   # the plant's country keeps no record of the rent: it pays nothing it cannot read
 		return None
+	trade, people = firm_entry.management_places(world, entry_key, size)
 	ledger.transfer(owner, world.setting.edge(EDGE_LANDOWNERS), rent, "site rent")
-	trade, people = places
 	if trade is None:
 		return rent
 	posted = owner.record.staff_wanted

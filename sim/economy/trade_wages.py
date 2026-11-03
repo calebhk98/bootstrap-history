@@ -5,12 +5,12 @@ is there is positive), else the wage the economy opened with for the trade scale
 spin-up's rebase), else the unskilled wage of the same scope plus the trade's training premium, else the opening
 unskilled wage in today's money plus the premium.
 
-The home country's rule always answers: the opening unskilled wage exists and is positive by construction
-(sim/markets/port_setup.py adds the unskilled trade to the labour trades). Only a partner country, which the opening set
-no wages for (`opening_wage_level` None), has no wage when its markets paid neither the trade nor the unskilled one.
+The rule answers for every scope, home or partner: the opening unskilled wage exists and is positive by construction
+(sim/markets/port_setup.py adds the unskilled trade to the labour trades and refuses an opening with no positive quote
+for it), so after the economy opens no trade is without a wage. A trade id the setup does not know is refused.
 
 The unskilled wage is of the scope the caller asks about: one labour area (`wage_in_area`, `wage_in_view`) or the
-country's hours-weighted figure (sim/economy/api.py `unpaid_trade_wage`).
+country's hours-weighted figure (sim/economy/api.py `country_trade_wage`).
 
 Households differ on purpose: a household is a seller, and what it faces in a market with no recorded wage is its own
 reservation wage (`faced_wage`), the least it will work for, not the wage an employer would be billed. A tax or land
@@ -22,14 +22,14 @@ from .year_labour import trade_premium
 
 
 def priced_trade_wage(setup, trade: str, paid: Optional[float], unskilled: Optional[float],
-                      opening_wage_level: Optional[float]) -> Optional[float]:
+                      opening_wage_level: float) -> float:
     """The wage per hour of `trade` given what its market paid (None if nothing), the unskilled wage of the same
-    scope (None if none) and the level the opening wages are scaled by (`MarketMemory.opening_wage_level`; None for a
-    scope the opening set no wages for, a partner country's). None only for such a scope with no unskilled wage."""
+    scope (None if none) and the level the opening wages are scaled by (`MarketMemory.opening_wage_level`). Raises
+    KeyError for a trade the setup has no spec for."""
+    if trade not in setup.trades:
+        raise KeyError(f"unknown trade {trade!r}: the setup's trades are {sorted(setup.trades)}")
     if paid is not None:
         return paid
-    if opening_wage_level is None:
-        return None if unskilled is None else unskilled * (1.0 + trade_premium(setup, trade))
     opening = setup.opening_wages.get(trade)
     if opening is not None:
         return opening * opening_wage_level

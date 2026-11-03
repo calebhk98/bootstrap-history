@@ -50,7 +50,7 @@ def work_account(seat_id):
 
 
 def employer_bids(economy, employer_id, wanted, tile, affordable_coin):
-    """(bids, economy units to fund them with) for one employer's places: each trade's hours at the economy's wage (the home rule always gives one, sim/economy/trade_wages.py), the bid's maximum wage
+    """(bids, economy units to fund them with) for one employer's places: each trade's hours at the economy's wage (the one rule, sim/economy/trade_wages.py), the bid's maximum wage
     being the ceiling over that wage. A trade the economy has no market for is not bid for (`trades_lacking` names it). When the places
     at the wage cost more than `affordable_coin` the hours are scaled down together to what it buys; the account is funded with the
     ceiling bill of those hours or all the employer can afford, whichever is less."""
@@ -120,8 +120,11 @@ def note_refusals(sim, refusal, dropped):
                                 hours_by_trade={trade: float(hours) for trade, hours in dropped.items()}))
 
 
-def note_trades_lacking(sim, lacking):
-    """The acting seat's log names the places no bid carried because the economy has no market for their trade."""
+def note_trades_lacking(sim, lacking, logged):
+    """The acting seat's log names the places no bid carried because the economy has no market for their trade, once for
+    each trade (`logged` is the seat's list of trades already named, kept in the save)."""
+    lacking = {trade: people for trade, people in lacking.items() if trade not in logged}
+    logged.extend(lacking)
     if lacking:
         sim.send(RecordEvent.of("staff_trades_not_posted", "The labour market has no such trade, so these places were not posted: %s." % ", ".join(
             "%s %.1f" % (trade, people) for trade, people in lacking.items()), cause="trade_not_in_economy", people_by_trade=lacking))
@@ -182,12 +185,13 @@ def wanted_places_exist(sim):
     return bool(sim.labour.staff_posting()) or any(hours > 0.0 for orders in sim.labour.once_posting().values() for hours in orders.values())
 
 
-def post(sim, economy, seat_ids, tile_of):
+def post(sim, economy, seat_ids, tile_of, trades_logged):
     """({account: AgentOrders}, {seat id: Posted}) for the year; each posting seat's money goes into its staff account. Every seat is
     a key: one whose places were not posted for want of an affordable bid has no trades and so no staff this year. A wage payment
     the seat's purse refuses is tried once more with what the seat can spend after the refusal; if that is refused too, nothing is
     posted for the seat, which its log states. A refusal never creates free labour: the core rehires the seat's people elsewhere
-    when the seat has no bids, so the seat's staff follow what the core hired (none) and its commission orders stay queued."""
+    when the seat has no bids, so the seat's staff follow what the core hired (none) and its commission orders stay queued.
+    `trades_logged` is {seat id: trades its log has named as missing from the economy}, so each is named once."""
     orders, posted = {}, {}
     for seat_id in seat_ids:
         posted[seat_id] = Posted((), 0.0, False, None)
@@ -196,7 +200,7 @@ def post(sim, economy, seat_ids, tile_of):
             place_newcomers(sim, economy, tile)
             trades, funded, offered, unposted = [], 0.0, False, None
             wanted = seat_places(sim, economy)
-            note_trades_lacking(sim, trades_lacking(economy, wanted))
+            note_trades_lacking(sim, trades_lacking(economy, wanted), trades_logged.setdefault(seat_id, []))
             bids, units = seat_staff_bids(sim, economy, seat_id, tile)
             refusal = None
             if bids:

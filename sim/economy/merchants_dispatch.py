@@ -41,6 +41,7 @@ def dispatch_merchants(setup, record, carriage, ledger: YearLedger, area_map) ->
         needed = {merchant.agent_id: carriage_fleet_book.wear_needed(
             merchant, _held_stock(record.book, merchant.agent_id), setup.specs, wear, lives) for merchant in record.merchants.values()}
         hired, lent = carriage_fleet_book.share_idle(own_capacity, needed)
+    populated = {cohort.tile for cohort in record.cohorts.values()}
     for merchant in sorted(record.merchants.values(), key=lambda each: each.agent_id):
         fills = ledger.buy_fills.get(merchant.agent_id, [])
         if not fills:
@@ -60,7 +61,8 @@ def dispatch_merchants(setup, record, carriage, ledger: YearLedger, area_map) ->
             hours_hired, wages = ((carriage_hours.engaged(record, merchant, index)) if carriage_hours.planned(merchant)
                                   else (None, {}))
             hire = merchants.CrewHire(crew.hours_per_tonne, hours_hired, wages,
-                                    lambda key: carriage_hours.crew_wage(setup, record.memory, key), area_map.area_of)
+                                    lambda key, each=merchant: carriage_hours.crew_wage(setup, record, each, key, populated),
+                                    area_map.area_of)
         done = merchants.dispatch(merchant, fills, carriage, setup.specs, money,
                                   record.book.balance(merchant.agent_id, money), _held_stock(record.book, merchant.agent_id),
                                   carrier_of=carriers.get, crew=hire,
