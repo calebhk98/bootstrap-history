@@ -235,8 +235,7 @@ the actors. The decision for who may owe what, and to whom:
 - The market rate and what an actor may draw are the economy's own: `Borrower.rule_limit` asks the credit market's
   `fundable_amount` (the rule the clearing applies to every request, priced by the economy's risk premium and floored by
   the lowest lender ask), and the rate on a draw is the market rate plus that premium, for the seat's arrears and the
-  credit lines alike. Interest the pool receives waits in it until the yearly settlement; `state_lending` is the claims the
-  state holds. A lender's own cash book is told of each loan and repayment so its purse still equals its books.
+  credit lines alike. Interest the pool receives waits in it until the yearly settlement. A lender's own cash book is told of each loan and repayment so its purse still equals its books.
 
 ## One money per labour hour (`Complaints/closed/115`)
 

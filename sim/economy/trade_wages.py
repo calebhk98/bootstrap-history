@@ -2,10 +2,10 @@
 1. the wage the labour core recorded for the trade in the scope (the memory holds only wages above zero,
    `labour_state.mirror_wages`, so one that is there is positive; the core clears a (trade, area) only when it has workers
    or bids, so a trade nobody works or hires in an area has no recorded wage there);
-2. else, only for a trade the memory holds no wage for in any area (before the economy's first clearing, or a trade admitted
-   after it), the wage the economy opened with for the trade scaled to today's money (`MarketMemory.opening_wage_level`: an
+2. else, only for a trade the memory holds no wage for in any area (before the economy's first clearing, or a trade the opening gave
+   a wage that the memory holds nowhere), the wage the economy opened with for the trade scaled to today's money (`MarketMemory.opening_wage_level`: an
    opening-year nominal wage is out of date after inflation and after the spin-up's rebase);
-3. else, for a trade the memory holds a wage for elsewhere, the scope's unskilled wage plus the trade's training premium,
+3. else, for a trade the memory holds a wage for elsewhere or the opening gave none (one only a late entry uses), the scope's unskilled wage plus the trade's training premium,
    or, where the scope has no unskilled wage, the opening unskilled wage in today's money plus the premium.
 A trade that is hired somewhere and not here is therefore priced from here, on this area's unskilled wage, never on a frozen
 opening wage.

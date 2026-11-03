@@ -12,6 +12,7 @@ from . import route_dues, carried_book, carriage_wear, national_prices, crop_sit
 from .bank_founding import found_from_outside
 from .diagnostics import person_equivalent_unemployment
 from .fixture_setups import GRAIN as FIXTURE_STAPLE, LABOURER as FIXTURE_UNSKILLED_TRADE, small_setup as fixture_small_setup, stationary_setup as fixture_stationary_setup
+from . import banks
 from .banks import DEPOSIT_BANKING
 from .funds import POOLED_FUNDS
 from .insurance import INSURANCE_UNDERWRITING, RISK_POOLING
@@ -58,7 +59,7 @@ __all__ = [
     "variable_cost_per_run", "rebase_basket_price_level", "trade_premium", "premium_for_training_years", "HOUSEHOLD_TIME_PREFERENCE", "title_wealth",
     "traded_volumes", "country_traded_volumes", "country_opening_basket", "market_record", "opening_quantities", "opening_prices_in_hours", "opening_price_in_current_money", "wages_by_trade_weighted", "interest_rate", "producers_of",
     "account_balance", "account_holdings",
-    "credit_room", "credit_line_request", "economy_from_record", "blank_economy", "export_record", "economy_book", "economy_contracts", "finish_spin_up", "note_spin_up_result", "spin_up_state", "money_year_figures","shown_prices_of","shown_price_kinds_of",
+    "credit_room", "credit_line_request", "economy_from_record", "blank_economy", "export_record", "economy_book", "bank_dividends_to", "economy_contracts", "finish_spin_up", "note_spin_up_result", "spin_up_state", "money_year_figures","shown_prices_of","shown_price_kinds_of",
     "settle_agent_takings", "route_dues_account", "tile_holders", "indebted_tiles", "fugitive_share_by_tile", "title_holdings", "money_revenue_forms", "admit_recipes", "move_goods", "post_transfers", "cohort_incomes", "cohort_land_rents", "land_rent_per_hectare",
     "land_rent_paid_by_tile", "land_rent_at_tile", "DEPOSIT_BANKING", "POOLED_FUNDS", "INSURANCE_UNDERWRITING", "RISK_POOLING", "BOND_MARKET", "SHARE_TRADING", "country_figures", "carried_book", "idle_hours_by_trade", "output_by_tile",
     "person_equivalent_unemployment", "labour_market_rows",
@@ -362,6 +363,12 @@ def economy_contracts(economy):
 def economy_book(economy):
     """The double-entry book the economy's agents keep their money and goods in."""
     return economy.record.book
+
+
+def bank_dividends_to(economy, owner_id):
+    """What the banks `owner_id` founded paid it as a dividend at the last year end, when it keeps its money outside the
+    economy's households (a seat); zero for a household's dividend, which its tile's cohorts hold."""
+    return banks.dividends_paid_to(economy.record, owner_id)
 
 
 def begin_spin_up(economy):

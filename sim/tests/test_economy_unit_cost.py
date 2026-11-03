@@ -21,6 +21,13 @@ class UnitCostTests(unittest.TestCase):
     def test_a_missing_price_makes_the_run_unaffordable(self):
         self.assertTrue(math.isinf(unit_cost.variable_cost_per_run(SMELT, {}, WAGES)))
 
+    def test_a_trade_with_no_opening_wage_makes_the_run_unpriceable_and_the_opening_ranking_leaves_it_out(self):
+        from sim.economy import opening_runs
+        late = Recipe("late", {"gear": 1.0}, {"ore": 1.0}, {"clockmaker": 2.0}, {}, {}, 10.0)
+        wages_without_it = {"smith": 3.0}
+        self.assertTrue(math.isinf(unit_cost.labour_cost_per_run(late, wages_without_it)))
+        self.assertEqual(opening_runs.unit_costs({"late": late}, {"ore": 1.0, "gear": 5.0}, wages_without_it, 0.05), {})
+
     def test_capital_charge_uses_the_recovery_factor_at_the_live_rate(self):
         value = 100.0 * 2.0 + 10.0 * 4.0
         factor = 0.05 / (1.0 - 1.05 ** -20.0)
