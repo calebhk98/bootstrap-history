@@ -86,6 +86,7 @@ MODULE_SPECS = (ModuleSpec(
 		ViewSpec("concerns_of_active_firms", "concerns_of_active_firms", **_LIVE),
 		ViewSpec("firm_concern_holdings", "firm_concern_holdings", **_LIVE),
 		ViewSpec("actor_staff", "actor_staff_fte", kind=KEYED, **_LIVE),
+		ViewSpec("actor_staff_nationwide", "actor_staff_nationwide", kind=KEYED, **_LIVE),
 		ViewSpec("actor_staff_total", "actor_staff_total", **_LIVE),
 		ViewSpec("country_strata", "country_strata", kind=KEYED, **_LIVE),
 		ViewSpec("has_state", "has_state", kind=KEYED, **_LIVE),
