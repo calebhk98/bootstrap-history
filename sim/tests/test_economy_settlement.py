@@ -6,18 +6,19 @@ import random
 import unittest
 
 from sim.economy.accounts import Book, InsufficientFunds
-from sim.economy.settlement import CANNOT_DELIVER, CANNOT_PAY, book_legacy, settle_goods, settle_labour
+from sim.economy.settlement import book_legacy, settle_goods, settle_labour
+from sim.economy.settlement_limits import CANNOT_DELIVER, CANNOT_PAY
 from sim.economy.types import (EDGE_LEGACY, EDGE_MINT, EDGE_PRODUCTION, ClearingResult, Fill, GoodsMove, LabourResult,
-                               Transfer)
+                               Pairing, Transfer)
 
 
 def fill(agent, side, quantity, price, tile="t1", good="grain"):
     return Fill(agent, good, "area", tile, quantity, price, side)
 
 
-def result(fills, price=2.0, good="grain"):
+def result(fills, price=2.0, good="grain", pairing=None):
     return ClearingResult(good, "area", "coin", price, sum(f.quantity for f in fills if f.side == "buy"),
-                          0.0, 0.0, 0.0, tuple(fills))
+                          0.0, 0.0, tuple(fills), pairing=pairing)
 
 
 def world(purses, stocks):
@@ -123,6 +124,43 @@ class GoodsSettlementTests(unittest.TestCase):
         self.assertAlmostEqual(book.balance("buyer", "coin"), 10.0)
         self.assertAlmostEqual(book.balance("seller", "coin"), 90.0)
         self.assertAlmostEqual(book.stock("buyer", "grain", "t2"), 10.0)
+
+    def test_each_buyer_pays_the_asks_of_the_sellers_it_was_paired_with(self):
+        # both buyers are paired half and half with an ask of 2 and an ask of 8, so each pays 25 whatever the sort order
+        book = world({"h1": 1000.0, "h2": 1000.0}, {("cheap", "t1"): 5.0, ("dear", "t1"): 5.0})
+        pairing = Pairing((("h1", "t1"), ("h2", "t1")), (("cheap", "t1"), ("dear", "t1")), (2.0, 8.0),
+                          (0, 0, 1, 1), (0, 1, 0, 1), (2.5, 2.5, 2.5, 2.5))
+        fills = [fill("h1", "buy", 5.0, 5.0), fill("h2", "buy", 5.0, 5.0), fill("cheap", "sell", 5.0, 2.0),
+                 fill("dear", "sell", 5.0, 8.0)]
+        outcome = settle_goods(book, result(fills, price=5.0, pairing=pairing))
+        self.assertTrue(outcome.complete)
+        self.assertAlmostEqual(book.balance("h1", "coin"), 975.0)
+        self.assertAlmostEqual(book.balance("h2", "coin"), 975.0)
+        self.assertAlmostEqual(book.balance("cheap", "coin"), 10.0)
+        self.assertAlmostEqual(book.balance("dear", "coin"), 40.0)
+
+    def test_a_buyer_with_a_ceiling_never_pays_above_it(self):
+        # h2 (ceiling 3) is paired only with the ask of 2
+        book = world({"h1": 1000.0, "h2": 1000.0}, {("cheap", "t1"): 5.0, ("dear", "t1"): 5.0})
+        pairing = Pairing((("h1", "t1"), ("h2", "t1")), (("cheap", "t1"), ("dear", "t1")), (2.0, 8.0),
+                          (0, 0, 1), (0, 1, 0), (2.5, 2.5, 2.5))
+        fills = [fill("h1", "buy", 5.0, 5.0), fill("h2", "buy", 2.5, 2.0), fill("cheap", "sell", 5.0, 2.0),
+                 fill("dear", "sell", 2.5, 8.0)]
+        settle_goods(book, result(fills, price=4.0, pairing=pairing))
+        self.assertAlmostEqual(book.balance("h2", "coin"), 995.0)
+        self.assertAlmostEqual(book.stock("h2", "grain", "t1"), 2.5)
+        self.assertAlmostEqual(book.balance("h1", "coin"), 975.0)
+
+    def test_a_buyer_short_of_money_pays_in_proportion_across_its_pairs(self):
+        book = world({"h1": 25.0}, {("cheap", "t1"): 5.0, ("dear", "t1"): 5.0})
+        pairing = Pairing((("h1", "t1"),), (("cheap", "t1"), ("dear", "t1")), (2.0, 8.0), (0, 0), (0, 1), (5.0, 5.0))
+        fills = [fill("h1", "buy", 10.0, 5.0), fill("cheap", "sell", 5.0, 2.0), fill("dear", "sell", 5.0, 8.0)]
+        outcome = settle_goods(book, result(fills, price=5.0, pairing=pairing))
+        self.assertFalse(outcome.complete)
+        self.assertAlmostEqual(book.balance("h1", "coin"), 0.0)
+        self.assertAlmostEqual(book.balance("cheap", "coin") + book.balance("dear", "coin"), 25.0)
+        self.assertAlmostEqual(book.balance("cheap", "coin"), 5.0)
+        self.assertAlmostEqual(book.balance("dear", "coin"), 20.0)
 
     def test_an_empty_result_settles_nothing(self):
         self.assertEqual(settle_goods(world({}, {}), result([])).postings, [])

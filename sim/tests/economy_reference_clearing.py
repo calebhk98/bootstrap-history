@@ -2,7 +2,7 @@
 bisection in log price, as first written. Tests compare `clear` against it."""
 import math
 from itertools import groupby
-from typing import Dict, List, Optional, Sequence, Tuple
+from typing import List, Optional, Sequence, Tuple
 
 from sim.economy.types import AreaId, Bid, ClearingResult, CurrencyId, Fill, GoodId, Offer
 
@@ -45,8 +45,7 @@ def _demand_function(bids: Sequence[Bid]):
 
 
 def _empty(good, area, currency, price, bids, supply_at_price=0.0) -> ClearingResult:
-    unmet = math.fsum(max(0.0, bid.floor_quantity) for bid in bids)
-    return ClearingResult(good, area, currency, price, 0.0, 0.0, supply_at_price, unmet, ())
+    return ClearingResult(good, area, currency, price, 0.0, 0.0, supply_at_price, ())
 
 
 def _solve_price(levels: List[Tuple[float, float]], demand) -> float:
@@ -134,9 +133,7 @@ def clear(bids: Sequence[Bid], offers: Sequence[Offer], good: GoodId, area: Area
                   for bid, quantity in buyer_fills if quantity > 0.0)
     fills += tuple(Fill(offer.seller, good, area, offer.tile, quantity, price, "sell")
                    for offer, quantity in seller_fills if quantity > 0.0)
-    got: Dict[int, float] = {id(bid): quantity for bid, quantity in buyer_fills}
-    unmet = math.fsum(max(0.0, bid.floor_quantity - got.get(id(bid), 0.0)) for bid in bids)
-    return ClearingResult(good, area, currency, price, traded, wanted, supply, unmet, fills)
+    return ClearingResult(good, area, currency, price, traded, wanted, supply, fills)
 
 
 def _ration_buyers(bids: Sequence[Bid], price: float, available: float) -> List[Tuple[Bid, float]]:

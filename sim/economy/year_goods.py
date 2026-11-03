@@ -181,19 +181,20 @@ def clear_goods(setup, record, view, area_map, order_book: OrderBook, plans, led
             offers, result = unsold_search.clear_with_search(setup, record, view, bids, offers, chosen, good, area,
                                                              setup.currency_id, record.memory.prices.get(key),
                                                              unit_costs)
-            delivered = 0.0
+            delivered, bought = 0.0, {}
             if result.quantity > 0.0:
                 done_settlement = settlement.settle_goods(record.book, result)
+                bought = done_settlement.bought_by_buyer()
                 delivered = sum(move.quantity for move in done_settlement.postings if isinstance(move, GoodsMove))
                 ledger.note_postings(done_settlement.postings, "sales")
-                ledger.note_plant_purchases(done_settlement.postings, result.price, plant_goods)
+                ledger.note_plant_purchases(done_settlement.postings, good, plant_goods)
                 for shortfall in done_settlement.shortfalls:
                     ledger.unpaid[shortfall.agent] = ledger.unpaid.get(shortfall.agent, 0.0) + shortfall.unpaid_amount
             ledger.note_clearing(result, delivered)
             idle_years = note_bids(record.memory, key, bids, offers) + note_offers(record.memory, key, bids, offers)
             left_markets[(good, area)] = goods_respend_year.LeftMarket(
                 bids, result, goods_respend.offers_left(offers, goods_respend_year.sold_by_seller(result)),
-                record.memory.prices.get(key), delivered, wanted_in_round(bids, offers, result), idle_years)
+                record.memory.prices.get(key), delivered, wanted_in_round(bids, offers, result), idle_years, bought)
             if area in kept:
                 record.goods.curves[key] = market_curves.summarize(bids, offers)
     goods_respend_year.respend(setup, record, view, ledger, left_markets,
@@ -282,8 +283,7 @@ def _received_price(setup, record, good, results) -> Optional[float]:
         return None
     if not currency.has_mint(spec) or good != spec.backing_good:
         return math.fsum(result.quantity * result.price for result in traded) / quantity
-    return math.fsum(result.quantity * mint_price.received_price(result.price, mint_price.mint_bought(result.fills),
-                                                                 currency.mint_price(spec), result.fills)
+    return math.fsum(result.quantity * mint_price.received_price(currency.mint_price(spec), result)
                      for result in traded) / quantity
 
 

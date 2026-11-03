@@ -1,35 +1,50 @@
 """Complaint 473: the mint buys bullion at the mint price (parity less the charge) from whoever sells it, not at the sellers'
-own asks. `mint_price.top_ups` is called with the quantity the mint bought, the price the market settled it at, the mint
-price and the sellers' fills; it returns what the mint adds for each seller so the mint's purchase costs the mint price."""
+own asks. `mint_price.top_ups` is called with the mint price and a clearing; it returns what the mint adds for each seller
+it bought from, so that its purchase costs the mint price."""
 
 QUICK_TOPIC = True
 
 from .harness import check
 
 from sim.economy.mint_price import melting_pays, received_price, top_ups
-from sim.economy.types import Fill
+from sim.economy.types import ClearingResult, Fill, Pairing
 
-sells = [Fill("mine_a", "metal", "town", "t1", 600.0, 80.0, "sell"), Fill("mine_b", "metal", "town", "t2", 200.0, 90.0, "sell")]
 
-added = top_ups(100.0, 80.0, 95.0, sells)
-check("the mint adds the gap between its price and the settled price on what it bought, shared by sales",
-      abs(sum(added.values()) - 100.0 * 15.0) < 1e-9, added)
-check("sellers share the top-up in proportion to what they sold",
-      abs(added["mine_a"] - 3.0 * added["mine_b"]) < 1e-9, added)
+def clearing(sells, mint_takes, price=80.0, paired=True):
+    """A clearing of `sells` (agent, tile, quantity, ask) in which the mint took `mint_takes` (quantity per seller)."""
+    fills = [Fill(agent, "metal", "town", tile, quantity, ask, "sell") for agent, tile, quantity, ask in sells]
+    bought = sum(mint_takes)
+    fills.append(Fill("edge:mint", "metal", "town", "t0", bought, price, "buy"))
+    pairing = Pairing((("edge:mint", "t0"),), tuple((agent, tile) for agent, tile, _quantity, _ask in sells),
+                      tuple(ask for _agent, _tile, _quantity, ask in sells), (0,) * len(sells), tuple(range(len(sells))),
+                      tuple(mint_takes)) if paired else None
+    return ClearingResult("metal", "town", "coin", price, bought, bought, 800.0, tuple(fills), pairing=pairing)
 
-check("a settled price above the mint price adds nothing", top_ups(100.0, 96.0, 95.0, sells) == {})
-check("nothing bought adds nothing", top_ups(0.0, 80.0, 95.0, sells) == {})
-check("no sellers add nothing", top_ups(100.0, 80.0, 95.0, []) == {})
+
+SELLS = [("mine_a", "t1", 600.0, 80.0), ("mine_b", "t2", 200.0, 90.0)]
+paired = clearing(SELLS, [60.0, 40.0])
+
+added = top_ups(95.0, paired)
+check("each seller is topped up from its own ask to the mint price on what the mint took from it",
+      added == {"mine_a": 60.0 * 15.0, "mine_b": 40.0 * 5.0}, added)
+check("a seller that asked the mint price or more is not topped up",
+      top_ups(85.0, paired) == {"mine_a": 60.0 * 5.0}, top_ups(85.0, paired))
+check("nothing bought adds nothing", top_ups(95.0, clearing(SELLS, [0.0, 0.0])) == {})
+check("no sellers add nothing", top_ups(95.0, clearing([], [])) == {})
 check("the book's own edges are not paid a top-up",
-      top_ups(10.0, 80.0, 95.0, [Fill("edge:mint", "metal", "town", "t1", 5.0, 100.0, "sell")] + sells[:1]).keys() == {"mine_a"})
+      top_ups(95.0, clearing([("edge:mint", "t1", 5.0, 100.0)] + SELLS[:1], [5.0, 10.0])).keys() == {"mine_a"})
+check("a clearing with no pairing shares the mint's purchase by what each seller sold",
+      abs(sum(top_ups(95.0, clearing(SELLS, [60.0, 40.0], paired=False)).values())
+          - 100.0 * (600.0 * 15.0 + 200.0 * 5.0) / 800.0) < 1e-9,
+      top_ups(95.0, clearing(SELLS, [60.0, 40.0], paired=False)))
 
 check("the mint holds its coin metal while bullion is cheaper than coin", not melting_pays(88.0, 100.0))
 check("the mint sells coin metal once bullion fetches at least parity", melting_pays(100.0, 100.0))
 check("the mint holds its coin metal with no price remembered", not melting_pays(None, 100.0))
 
 # what a seller of the metal is paid per unit, top-up included: the price makers plan with
-check("the price received per unit sold is the settled price plus the top-up spread over the sellers' sales",
-      abs(received_price(80.0, 100.0, 95.0, sells) - (80.0 + 100.0 * 15.0 / 800.0)) < 1e-9, received_price(80.0, 100.0, 95.0, sells))
-check("with nothing bought the received price is the settled price", received_price(80.0, 0.0, 95.0, sells) == 80.0)
-check("a settled price above the mint price is the received price", received_price(96.0, 100.0, 95.0, sells) == 96.0)
-check("with no sellers the received price is the settled price", received_price(80.0, 100.0, 95.0, []) == 80.0)
+check("the price received per unit sold is the market price plus the top-ups spread over the sellers' sales",
+      abs(received_price(95.0, paired) - (80.0 + (60.0 * 15.0 + 40.0 * 5.0) / 800.0)) < 1e-9, received_price(95.0, paired))
+check("with nothing bought the received price is the market price", received_price(95.0, clearing(SELLS, [0.0, 0.0])) == 80.0)
+check("a market price above the mint price is the received price", received_price(70.0, paired) == 80.0)
+check("with no sellers the received price is the market price", received_price(95.0, clearing([], [])) == 80.0)

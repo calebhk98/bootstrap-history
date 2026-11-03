@@ -24,6 +24,8 @@ from itertools import groupby
 from operator import attrgetter, itemgetter
 from typing import List, Optional, Sequence, Tuple
 
+import numpy
+
 from sim.constants import declare
 
 from .accounts import ROUNDING_SHARE
@@ -33,7 +35,7 @@ from .goods_market_logit import allocate
 from .goods_market_ration import ration
 from .goods_market_solve import solve_price
 from . import market_quote
-from .types import AreaId, Bid, ClearingResult, CurrencyId, Fill, GoodId, Offer
+from .types import AreaId, Bid, ClearingResult, CurrencyId, Fill, GoodId, Offer, Pairing, is_edge
 
 MINIMUM_PRICE_SHARE_OF_REFERENCE = declare(
     "MINIMUM_PRICE_SHARE_OF_REFERENCE", 1e-3, kind="temporary_heuristic",
@@ -71,8 +73,7 @@ def _quantity(floor, flexible, reference, elasticity, budget, price):
 
 
 def _empty(good, area, currency, price: Optional[float], bids, supply_at_price=0.0, offers=()) -> ClearingResult:
-    unmet = math.fsum(max(0.0, bid.floor_quantity) for bid in bids)
-    return ClearingResult(good, area, currency, price, 0.0, 0.0, supply_at_price, unmet, (),
+    return ClearingResult(good, area, currency, price, 0.0, 0.0, supply_at_price, (),
                           market_quote.no_trade_quote(bids, offers))
 
 
@@ -153,8 +154,7 @@ def clear_at_one_price(bids: Sequence[Bid], offers: Sequence[Offer], good: GoodI
     fills, wash = without_edge_self_trades(fills)
     traded -= wash
     wanted -= wash      # the washed quantity was neither wanted by a real buyer nor left unmet
-    unmet = math.fsum([max(0.0, bid.floor_quantity - quantity) for bid, quantity in zip(bids, served)])
-    return ClearingResult(good, area, currency, price, traded, wanted, supply, unmet, tuple(fills))
+    return ClearingResult(good, area, currency, price, traded, wanted, supply, tuple(fills))
 
 
 def clear(bids: Sequence[Bid], offers: Sequence[Offer], good: GoodId, area: AreaId,
@@ -172,9 +172,7 @@ def clear(bids: Sequence[Bid], offers: Sequence[Offer], good: GoodId, area: Area
         return _empty(good, area, currency, _held_price(buyers, asks), bids, supply, offers)
     allocation = allocate(bids, ordered, asks, buyers.schedule)
     fills: List[Fill] = []
-    unmet = 0.0
     for bid, quantity, cost in zip(bids, allocation.quantity, allocation.cost):
-        unmet += max(0.0, bid.floor_quantity - quantity)
         if quantity > 0.0:
             fills.extend(buyer_fills([bid], [quantity], good, area, cost / quantity))
     fills.extend(make_fill(offer.seller, good, area, offer.tile, amount, ask, "sell")
@@ -185,7 +183,22 @@ def clear(bids: Sequence[Bid], offers: Sequence[Offer], good: GoodId, area: Area
     if not traded > 0.0:
         return _empty(good, area, currency, _held_price(buyers, asks), bids, supply, offers)
     mean = math.fsum(fill.quantity * fill.price for fill in sales) / traded
-    return ClearingResult(good, area, currency, mean, traded, allocation.requested - wash, supply, unmet, tuple(fills))
+    return ClearingResult(good, area, currency, mean, traded, allocation.requested - wash, supply, tuple(fills),
+                          pairing=_pairing(bids, ordered, asks, allocation.flow))
+
+
+def _pairing(bids: Sequence[Bid], ordered: Sequence[Offer], asks: Sequence[float], flow) -> Pairing:
+    """Who bought from whom, from the allocation's offer-by-bid quantities; a book edge's purchase of its own offer is no
+    trade and is left out."""
+    sellers = tuple((offer.seller, offer.tile) for offer in ordered)
+    buyers = tuple((bid.buyer, bid.tile) for bid in bids)
+    seller_index, buyer_index = numpy.nonzero(flow > 0.0)
+    quantity = flow[seller_index, buyer_index].tolist()
+    seller_index, buyer_index = seller_index.tolist(), buyer_index.tolist()
+    kept = [pair for pair in range(len(quantity))
+            if not (is_edge(sellers[seller_index[pair]][0]) and sellers[seller_index[pair]][0] == buyers[buyer_index[pair]][0])]
+    return Pairing(buyers, sellers, tuple(asks), tuple(buyer_index[pair] for pair in kept),
+                   tuple(seller_index[pair] for pair in kept), tuple(quantity[pair] for pair in kept))
 
 
 def _asks(buyers: Buyers, ordered: Sequence[Offer]) -> List[float]:

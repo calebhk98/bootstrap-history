@@ -91,12 +91,10 @@ class ClearingTests(unittest.TestCase):
         got = dict((fill.agent, fill.quantity) for fill in result.fills if fill.side == "buy")
         self.assertAlmostEqual(got["rich"] + got["poor"], 10.0, places=6)
         self.assertAlmostEqual(got["rich"] / got["poor"], 4.0, places=4)
-        self.assertGreater(result.unmet_floor, 5.9)
 
-    def test_unaffordable_floor_is_unmet(self):
+    def test_unaffordable_floor_is_not_bought(self):
         result = run([bid("poor", floor=10.0, budget=2.0)], [offer("s", 100.0, 1.0)])
         self.assertAlmostEqual(result.quantity, 2.0)
-        self.assertAlmostEqual(result.unmet_floor, 8.0)
 
     def test_negative_reservation_sells_what_demand_takes_at_a_small_positive_price(self):
         result = run([bid(flexible=3.0, elasticity=1.0)], [offer("waste", 10000.0, -2.0)])
@@ -105,11 +103,10 @@ class ClearingTests(unittest.TestCase):
         self.assertGreater(result.quantity, 0.0)
         self.assertLess(result.quantity, result.offered_at_price)
 
-    def test_no_offers_leaves_price_and_all_floors_unmet(self):
+    def test_no_offers_leaves_the_last_price(self):
         result = run([bid(floor=4.0), bid("b2", floor=1.0)], [], last_price=2.5)
         self.assertEqual(result.fills, ())
         self.assertEqual(result.price, 2.5)
-        self.assertAlmostEqual(result.unmet_floor, 5.0)
         self.assertIsNone(run([bid(floor=1.0)], [], None).price)
 
     def test_no_bids_keeps_last_price_if_a_seller_would_sell_at_it(self):
@@ -129,7 +126,7 @@ class ClearingTests(unittest.TestCase):
         famine = run(buyers, [offer("farm", 60.0, 1.0)])
         self.assertGreater(famine.price, 2.0 * normal.price)
         self.assertLessEqual(famine.price, 4000.0 / 60.0 + 1e-6)
-        self.assertGreater(famine.unmet_floor, normal.unmet_floor)
+        self.assertLess(famine.quantity, normal.quantity)
 
     def test_budget_limited_price_is_finite(self):
         result = run([bid(floor=1000.0, budget=100.0)], [offer("s", 5.0, 1.0)])
@@ -193,7 +190,7 @@ class MatchesReferenceTests(unittest.TestCase):
     def compare(self, bids, offers, last_price, label):
         fast = run(bids, offers, last_price)
         slow = reference.clear(bids, offers, "grain", "area", "coin", last_price)
-        for name in ("price", "quantity", "demand_at_price", "offered_at_price", "unmet_floor"):
+        for name in ("price", "quantity", "demand_at_price", "offered_at_price"):
             self.assert_close(getattr(fast, name), getattr(slow, name), "%s %s" % (label, name))
         for side in ("buy", "sell"):
             fast_by, slow_by = by_agent(fast, side), by_agent(slow, side)

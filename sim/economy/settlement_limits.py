@@ -46,10 +46,9 @@ def pair_fills(buys: Sequence[Fill], sells: Sequence[Fill]) -> Pairs:
     return buyer_indices, seller_indices, amounts
 
 
-def limit_by_stock(held: Dict[Tuple[AgentId, str], float], sells: Sequence[Fill], seller_indices: List[int],
+def limit_by_stock(held: Dict[Tuple[AgentId, str], float], keys: List[Tuple[AgentId, str]],
                    amounts: List[float], unsettled: Dict[Tuple[AgentId, str], float]) -> None:
-    """Scale each seller's pairs down to what it holds on its tile (`held`, by agent and tile)."""
-    keys = [(sells[index].agent, sells[index].tile) for index in seller_indices]
+    """Scale each seller's pairs (`keys`: the seller's agent and tile per pair) down to what it holds on its tile (`held`)."""
     scales = _scales(keys, amounts, held, [1.0] * len(amounts), lambda key: key[0])
     for key in sorted(scales):
         wanted, scale = scales[key]
