@@ -91,16 +91,18 @@ class ModEffects:
     # ---- goods ------------------------------------------------------------------------------------------
 
     def add_goods(self, sim: Any, account_id: str, good: str, tile: str, quantity: float, cause: str,
-                  edge: str = economy_api.EDGE_PRODUCTION) -> None:
-        """Goods come into the world at a tile, into an account of the economy's book, from a named edge."""
+                  edge: str = economy_api.EDGE_PRODUCTION) -> Any:
+        """Goods come into the world at a tile, into an account of the economy's book, from a named edge; answers
+        None or the refusal."""
         move = MoveGoods(self.edge_name(edge), account_id, good, tile, self._amount(quantity), self._goods_purpose(cause))
-        sim.send(move)
+        return sim.send(move)
 
     def remove_goods(self, sim: Any, account_id: str, good: str, tile: str, quantity: float, cause: str,
-                     edge: str = economy_api.EDGE_CONSUMPTION) -> None:
-        """Goods leave the world from an account at a tile, to a named edge; more than the account holds is refused."""
+                     edge: str = economy_api.EDGE_CONSUMPTION) -> Any:
+        """Goods leave the world from an account at a tile, to a named edge; more than the account holds is refused
+        (the refusal is the answer)."""
         move = MoveGoods(account_id, self.edge_name(edge), good, tile, self._amount(quantity), self._goods_purpose(cause))
-        sim.send(move)
+        return sim.send(move)
 
     # ---- people -----------------------------------------------------------------------------------------
 

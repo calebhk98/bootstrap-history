@@ -1,7 +1,7 @@
 """The `market` screen's numbers: material prices and wages.
 
 Everything here is read from figures the engine already computes
-(material_trade_quote, annual_wage); nothing is new economics.
+(goods_quote, the labour market's quote_annual); nothing is new economics.
 """
 
 import difflib
