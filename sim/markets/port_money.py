@@ -8,7 +8,7 @@ def output_value(world):
 
 def coin_stock_value(world):
     """Money's worth of the metal in the coin this society holds, from its coin standard, at the metal's price (the same one
-    cargo and the partners' coin are counted at)."""
+    cargo and the partners' coin are counted at); None while the metal has no price."""
     coin = world.civ["coin_standard"]
     price = world.goods_market.offers.home_unit_price(coin["material"])
-    return world.finance.coin_stock_units() * coin["kg_per_unit"] * (price or 0.0)
+    return None if price is None else world.finance.coin_stock_units() * coin["kg_per_unit"] * price
