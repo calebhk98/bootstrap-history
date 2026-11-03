@@ -8,7 +8,7 @@ no worker has been shown counted twice.
 - The agent economy keeps workers by area, trade and ability in `record.workforce`.
 - `sim/labour/labour_market_api.py` quotes the economy's wage and hires through the labour core (the hiring-pressure
   record and the army's own draw this item once described are deleted; the state's call-up of hours for works and army is `sim/markets/port_levy.py`).
-- Recruitment reads town supply estimates (`labour_population.py`), the household's employees and
+- Recruitment reads town supply estimates (`sim/labour/labour_supply.py`), the household's employees and
   actors' staffing.
 
 National workforce, local recruitment, standing employment and annual hours are different facts, and
@@ -20,7 +20,7 @@ one employer cannot also be given to another (551 is one case: own-plot hours an
 - `seat.employees` is still written directly by `sim/workforce/` (`staff_year.py`, `applying_hours.py`, `commands_applied.py`); the
   reads go through `sim/labour/staff_book.py` (`Labour.employed`, `employed_by_trade`, `set_employed`, `add_employed`).
   `sim/tests/test_labour_single_owner.py` walls the labour modules' writes.
-- The hire check reads `hands_available` (`sim/labour/labour_population.py`): the core's people of the trade in the
+- The hire check reads `hands_available` (`sim/labour/labour_supply.py`; `hands_available` in `sim/labour/hands.py` is a different rule: staff, the founder and contracted hours): the core's people of the trade in the
   tiles reached, or last year's idle hours of it nationwide where those are more; `NO_DEMAND_TRADE_SHARE` stands in for a
   trade the core holds nobody of (`retire` names Complaint 964; `python3 sim/constants.py --burndown` lists it). The idle
   hours are not by tile, so a hire can count hands that are idle elsewhere.

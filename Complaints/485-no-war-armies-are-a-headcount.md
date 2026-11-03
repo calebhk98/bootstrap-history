@@ -5,10 +5,10 @@
 ## Built
 
 - An army is a located body of soldiers owned by an actor, with equipment, food, animals, pay owed and an order
-  (`sim/world/army_record.py`, records in `state.economy.campaigns`, `sim/engine/campaign_actors.py`). It is a slice
+  (`sim/world/army_record.py`, records in the campaigns module's state, `sim/campaigns/state.py` and `sim/campaigns/armies.py`). It is a slice
   of the soldiers the state keeps (`record.army`); its dead are struck from that force and a state that shrinks
   stands its armies down by the same share.
-- The year has a `campaigns` phase (`sim/engine/year_phases.py`, `sim/engine/campaign_year.py`). An army marches the
+- The year has a `campaigns` phase (`sim/engine/year_phases.py`, `sim/campaigns/campaign_year.py`). An army marches the
   route graph's fastest route to its target (days by mode), eats from the land it crosses
   (`campaign_supply.tile_stock_kg`, a share of the tile's food potential, drawn down within the year), from a pack-animal
   column bringing grain from the owner's tiles within reach (`carriage_kg_per_day`, the animal's own fodder out and
@@ -27,7 +27,7 @@
 - Commands `army` (raise, march, recall, disband) and `armies` for a country seat (`sim/ui/proto/dispatch_armies.py`,
   `sim/PROTOCOL.md`). A state no seat plays raises and orders armies to threatened tiles and never attacks
   (`sim/agents/army_raising.py`).
-- Tests: `sim/tests/test_campaign_rules.py` (rules on built inputs), `sim/tests/test_campaign_scenario.py` (a two-country
+- Tests: `sim/tests/test_campaign_rules.py` (rules on built inputs), `sim/tests/test_campaigns_year_smoke.py` (a two-country
   game). Sources opened: Engels, Alexander the Great and the Logistics of the Macedonian Army (ch. 1 and Appendix 1:
   ration, pack load, how far animals can carry food; the epub text has no page numbers); Roth, The Logistics of the Roman
   Army at War (ch. 1 p. 66, ch. 4 p. 222: grain ration, mule fodder and load). Haldon was not opened. Every other figure

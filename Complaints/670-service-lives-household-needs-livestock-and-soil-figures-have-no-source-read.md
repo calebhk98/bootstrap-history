@@ -38,7 +38,7 @@ Split from 646 (figures recalled rather than read; closed). Each entry below is 
 5. Dwelling floor area per person and the stock of pottery per household from ethnoarchaeology (Deal and Straight 2017 are
    paywalled; a library copy is needed).
 
-**Test.** `sim/tests/test_recalled_figures_sourced.py` holds what was sourced; `sim/tests/test_constants_retirement.py` keeps
+**Test.** `sim/tests/test_recalled_figures_sourced.py` holds what was sourced; `python3 sim/constants.py --burndown` lists
 the `retire` fields.
 
 **Pass 6 (source-recipes-and-service-lives).** Sourced and opened:

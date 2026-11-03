@@ -2,8 +2,8 @@
 
 **Status:** open
 
-- Fog is a per-seat set of revealed technology ids (`sim/engine/fog.py`, `seat_sight.py`). A seat hears of
-  another seat's techniques when distance-scaled visibility passes a threshold (`sim/engine/visibility.py`,
+- Fog is a per-seat set of revealed technology ids (`sim/knowledge/module.py`, `sim/seats/sight.py`). A seat hears of
+  another seat's techniques when distance-scaled visibility passes a threshold (`sim/seats/visibility.py`,
   `view_share.py`).
 - There is no record of what an actor believes about another (army size, wealth, techniques) with a
   value, a confidence and the date learned; no news that travels at route speed; no battle reports that

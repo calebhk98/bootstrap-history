@@ -17,9 +17,9 @@ Private producers in the agent economy are capacity-limited by plant, inputs and
   they need each year.
 - **Mines yield nothing to the treasury.** Monopolies are now plants with takings (see Status); no base in
   `sim/agents/revenue_bases.py` charges a mine royalty (`grep -n "royalt" sim/agents/revenue_bases.py` is empty), and mine
-  workings are the founder's (`household.mines`; `sim/engine/mine_deposits.py`).
+  workings are the founder's (`household.mines`; `sim/resources/deposits.py`).
 - **Recovery technology is a flat multiplier.** Cyanidation is an `output_multiplier` on the gold commodity
-  (`data/world/commodities.json`, node `mt2_cyanidation`, read by `sim/engine/commodities.py`) rather than a recovery fraction applied to a deposit's grade
+  (`data/world/commodities.json`, node `mt2_cyanidation`, read by `sim/prices/commodities.py`) rather than a recovery fraction applied to a deposit's grade
   (`sim/world/deposits.py`, `ore_dressing.py`).
 - **Alternative recipes have no performance or failure.** `data/production/_SCHEMA.md` says margin, risk
   and failed batches are not modelled, so a weaker or riskier engine cannot be a worse good.

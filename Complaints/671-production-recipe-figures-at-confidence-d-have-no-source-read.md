@@ -29,7 +29,7 @@ cart's structural payload (only the team's pull limits it), river current and to
 `routes_rates.rate`), `CART_SERVICE_LIFE_KM` (temporary heuristic) and `BARGE_SELF_MASS_KG` (grade D). Opened: Scheidel,
 "ORBISprices" (2013 working paper) pp. 6-7: the Edict's land and river rates take no account of river velocity, so the Edict
 cannot validate a current-dependent river rate. Not opened: Raepsaet on Roman carts, the Edict's freight chapters, river towing
-studies. The money ratio across modes is validated by `sim/tests/test_freight_money_ratio.py`.
+studies. The money ratio across modes is validated by `sim/tests/test_freight_mode_cost_ratio.py`.
 
 **Pass 7 (source-recipes-and-service-lives).** Sourced and opened:
 
