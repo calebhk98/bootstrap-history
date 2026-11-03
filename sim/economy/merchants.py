@@ -469,7 +469,8 @@ def dispatch(merchant: Merchant, fills: Sequence[Fill], carriage: CarriageTable,
             gain = max(0.0, spread - max(0.0, per_unit - crew_pay)) if math.isfinite(spread) else 0.0
         for key, hours in priced_rows:      # shared by the route's priced hours
             wanted[key] = wanted.get(key, 0.0) + quantity * hours
-            worth[key] = worth.get(key, 0.0) + quantity * gain * hours / priced_hours
+            if priced_hours > 0.0:
+                worth[key] = worth.get(key, 0.0) + quantity * gain * hours / priced_hours
         shipments.append([good, tile, route, quantity, capacity, outlay_unit, crew_rows, dues_unit,
                           payout_unit])
     cut: Dict[str, float] = {}       # the share of a crew key's hours that was hired, where it falls short

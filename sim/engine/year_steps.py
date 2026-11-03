@@ -53,7 +53,7 @@ def money_seat(sim):
 	mine_cost = view("mine_operating_cost")()
 	revenue, upkeep = view("revenue_estimate")(), view("upkeep")()
 	keeping_owed, keeping = view("coin_keeping_due")(revenue, upkeep, living_cost, mine_cost)
-	# the concerns the clearing pays are credited when it clears (sim/markets/port_year.py `_settle_seats`)
+	# the concerns the clearing pays are credited when it clears (sim/markets/port_seats.py `settle_seats`)
 	send(ReceiveFromEdge(edges.EDGE_CUSTOMERS, view("estimated_revenue")(), "venture revenue"))
 	# a charge the seat cannot pay is logged with its cause (the credit steps below judge the seat); unguarded coin is not guarded
 	pay_edge_or_log(send, edges.EDGE_SUPPLIERS, upkeep, "running costs of concerns")

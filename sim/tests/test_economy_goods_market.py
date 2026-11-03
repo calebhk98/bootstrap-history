@@ -6,8 +6,10 @@ import math
 import random
 import unittest
 
-from sim.economy.goods_market import _ration_buyers, clear_at_one_price as clear, quantity_at
-from sim.economy.types import Bid, Offer
+import numpy
+
+from sim.economy.goods_market import _pairing, _ration_buyers, _without_washed, clear_at_one_price as clear, quantity_at
+from sim.economy.types import Bid, Fill, Offer
 from sim.tests import economy_reference_clearing as reference
 
 
@@ -25,6 +27,26 @@ def run(bids, offers, last_price=None):
 
 def total(result, side):
     return math.fsum(fill.quantity for fill in result.fills if fill.side == side)
+
+
+class MintResaleWashTests(unittest.TestCase):
+    def test_the_wash_is_the_edge_s_pairs_with_itself_and_the_fills_lose_just_that(self):
+        class _Seat:
+            def __init__(self, name, tile):
+                self.buyer = self.seller = name
+                self.tile = tile
+        bids = [_Seat("edge:mint", "t0"), _Seat("house", "t1")]
+        offers = [_Seat("edge:mint", "t0"), _Seat("mine", "t2")]
+        flow = numpy.array([[1.0, 2.0],      # the mint's offer: 1 to itself, 2 to the house
+                            [3.0, 0.0]])     # the mine's offer: 3 to the mint
+        pairing, washed = _pairing(bids, offers, [5.0, 4.0], flow)
+        self.assertEqual(washed, {"edge:mint": 1.0})
+        self.assertEqual(sum(pairing.quantity), 5.0)
+        fills = [Fill("edge:mint", "metal", "a", "t0", 4.0, 5.0, "buy"), Fill("house", "metal", "a", "t1", 2.0, 5.0, "buy"),
+                 Fill("edge:mint", "metal", "a", "t0", 3.0, 5.0, "sell"), Fill("mine", "metal", "a", "t2", 3.0, 4.0, "sell")]
+        kept = _without_washed(fills, washed)
+        self.assertEqual(sum(fill.quantity for fill in kept if fill.side == "sell"), 5.0)
+        self.assertEqual(sum(fill.quantity for fill in kept if fill.side == "buy"), 5.0)
 
 
 class QuantityAtTests(unittest.TestCase):

@@ -1,7 +1,7 @@
 """Which of the acting seat's concerns sell in the agent economy's book, and what they put in and take out of it.
 
 A concern whose goods the economy trades is paid what the year's clearing pays for the units buyers took
-(sim/markets/port_year.py `_settle_seats`), like a firm's plant; the engine's estimate (`revenue`) covers only the rest.
+(sim/markets/port_seats.py `settle_seats`), like a firm's plant; the engine's estimate (`revenue`) covers only the rest.
 The offer and the inputs bought are one rule here, read by the clearing, the estimate and the forecast alike.
 Needs: the views of READS_BY_OWNER in module_spec.py."""
 from sim.assembly.api import Part

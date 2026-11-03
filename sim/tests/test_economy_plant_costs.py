@@ -37,6 +37,13 @@ class PlantCostTests(unittest.TestCase):
         ledger.note_plant_purchases(postings, "grain", {"mill": {"ironwork"}})
         self.assertEqual(ledger.running_costs("mill"), 20.0)
 
+    def test_a_seller_paying_to_dump_a_negative_priced_good_is_not_plant_spend(self):
+        ledger = YearLedger()
+        postings = [Transfer("smelter", "mill", "coin", 8.0, "sale of ironwork"),
+                    GoodsMove("smelter", "mill", "ironwork", "t1", 4.0, "sale of ironwork")]
+        ledger.note_plant_purchases(postings, "ironwork", {"smelter": {"ironwork"}})
+        self.assertEqual(ledger.plant_spend, {})
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -22,7 +22,7 @@ import math
 from functools import cached_property
 from itertools import groupby
 from operator import attrgetter, itemgetter
-from typing import List, Optional, Sequence, Tuple
+from typing import Dict, List, Optional, Sequence, Tuple
 
 import numpy
 
@@ -177,28 +177,49 @@ def clear(bids: Sequence[Bid], offers: Sequence[Offer], good: GoodId, area: Area
             fills.extend(buyer_fills([bid], [quantity], good, area, cost / quantity))
     fills.extend(make_fill(offer.seller, good, area, offer.tile, amount, ask, "sell")
                  for offer, amount, ask in zip(ordered, allocation.sold, asks) if amount > 0.0)
-    fills, wash = without_edge_self_trades(fills)
+    pairing, washed = _pairing(bids, ordered, asks, allocation.flow)
+    fills = _without_washed(fills, washed)
+    wash = math.fsum(washed.values())
     sales = [fill for fill in fills if fill.side == "sell"]
     traded = math.fsum(fill.quantity for fill in sales)
     if not traded > 0.0:
         return _empty(good, area, currency, _held_price(buyers, asks), bids, supply, offers)
     mean = math.fsum(fill.quantity * fill.price for fill in sales) / traded
     return ClearingResult(good, area, currency, mean, traded, allocation.requested - wash, supply, tuple(fills),
-                          pairing=_pairing(bids, ordered, asks, allocation.flow))
+                          pairing=pairing)
 
 
-def _pairing(bids: Sequence[Bid], ordered: Sequence[Offer], asks: Sequence[float], flow) -> Pairing:
+def _pairing(bids: Sequence[Bid], ordered: Sequence[Offer], asks: Sequence[float], flow) -> Tuple[Pairing, Dict[str, float]]:
     """Who bought from whom, from the allocation's offer-by-bid quantities; a book edge's purchase of its own offer is no
-    trade and is left out."""
+    trade and is left out of the pairing and returned as the quantity washed per edge."""
     sellers = tuple((offer.seller, offer.tile) for offer in ordered)
     buyers = tuple((bid.buyer, bid.tile) for bid in bids)
     seller_index, buyer_index = numpy.nonzero(flow > 0.0)
     quantity = flow[seller_index, buyer_index].tolist()
     seller_index, buyer_index = seller_index.tolist(), buyer_index.tolist()
-    kept = [pair for pair in range(len(quantity))
-            if not (is_edge(sellers[seller_index[pair]][0]) and sellers[seller_index[pair]][0] == buyers[buyer_index[pair]][0])]
-    return Pairing(buyers, sellers, tuple(asks), tuple(buyer_index[pair] for pair in kept),
-                   tuple(seller_index[pair] for pair in kept), tuple(quantity[pair] for pair in kept))
+    kept, washed = [], {}
+    for pair in range(len(quantity)):
+        seller = sellers[seller_index[pair]][0]
+        if is_edge(seller) and seller == buyers[buyer_index[pair]][0]:
+            washed[seller] = washed.get(seller, 0.0) + quantity[pair]
+        else:
+            kept.append(pair)
+    return (Pairing(buyers, sellers, tuple(asks), tuple(buyer_index[pair] for pair in kept),
+                    tuple(seller_index[pair] for pair in kept), tuple(quantity[pair] for pair in kept)), washed)
+
+
+def _without_washed(fills: List[Fill], washed: Dict[str, float]) -> List[Fill]:
+    """The fills less each edge's washed quantity on both its buy and its sell side, so they agree with the pairing."""
+    left = {(agent, side): quantity for agent, quantity in washed.items() for side in ("buy", "sell")}
+    result = []
+    for fill in fills:
+        take = min(fill.quantity, left.get((fill.agent, fill.side), 0.0))
+        if take > 0.0:
+            left[(fill.agent, fill.side)] -= take
+        if fill.quantity - take > 0.0:
+            result.append(fill if take == 0.0 else make_fill(fill.agent, fill.good, fill.area, fill.tile,
+                                                             fill.quantity - take, fill.price, fill.side))
+    return result
 
 
 def _asks(buyers: Buyers, ordered: Sequence[Offer]) -> List[float]:

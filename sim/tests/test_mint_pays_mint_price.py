@@ -48,3 +48,9 @@ check("the price received per unit sold is the market price plus the top-ups spr
 check("with nothing bought the received price is the market price", received_price(95.0, clearing(SELLS, [0.0, 0.0])) == 80.0)
 check("a market price above the mint price is the received price", received_price(70.0, paired) == 80.0)
 check("with no sellers the received price is the market price", received_price(95.0, clearing([], [])) == 80.0)
+
+# the mint tops up only what the settlement delivered to it
+short = top_ups(95.0, paired, {("mine_a", "t1"): 20.0, ("mine_b", "t2"): 40.0})
+check("a seller short of stock is topped up only on the units it delivered",
+      short == {"mine_a": 20.0 * 15.0, "mine_b": 40.0 * 5.0}, short)
+check("a seller that delivered nothing is not topped up", top_ups(95.0, paired, {}) == {})

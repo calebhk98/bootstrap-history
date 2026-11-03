@@ -5,6 +5,8 @@ and a cohort still rationed goes on until nothing more is bought. Money no offer
 import math
 from typing import Dict, List, Tuple
 
+from sim.constants import declare
+
 from . import goods_market, market_quote, settlement
 from .entry import wanted_in_round
 from .goods_market import quantity_at
@@ -12,6 +14,14 @@ from .goods_respend import bids_adding_demand, need_of_good, offers_left, ration
 from .types import Bid, GoodsMove
 
 Market = Tuple[str, str]
+
+APPORTIONED_WANTED_SHARE = declare(
+    "RESPEND_APPORTIONED_WANTED_SHARE", 1.0, kind="temporary_heuristic",
+    unit="share of the round's wanted counted for the bids that add demand",
+    source=None, confidence="D",
+    why="A respend round's clearing gives the demand of all its bids together; the part that is new demand is taken "
+        "pro rata to the adding bids' demand at one price, not computed bid by bid at the asks each faced.",
+    retire="Complaint 964 exact wanted quantity per bid")
 
 
 class LeftMarket:
@@ -147,7 +157,7 @@ def _wanted_adding(adding, bids, offers, result) -> float:
     total = math.fsum(quantity_at(bid, price) for bid in bids)
     if total <= 0.0:
         return 0.0
-    return wanted * math.fsum(quantity_at(bid, price) for bid in adding) / total
+    return APPORTIONED_WANTED_SHARE * wanted * math.fsum(quantity_at(bid, price) for bid in adding) / total
 
 
 def _settle(record, ledger, result) -> Tuple[float, Dict[str, Tuple[float, float]]]:

@@ -39,18 +39,34 @@ def share_out(payer: Any, payees: List[Any], weights: List[float], amount: float
 	give_back = ledger.cover(payer, payees, amount)
 	moved = 0.0
 	paid: List[Any] = []
-	for index, payee in enumerate(payees):
-		part = amount - moved if index == len(payees) - 1 else amount * weights[index] / total
+	charges: List[tuple] = []
+	with ledger.recording_charges(charges):
+		for index, payee in enumerate(payees):
+			part = amount - moved if index == len(payees) - 1 else amount * weights[index] / total
+			try:
+				ledger.transfer(payer, payee, part, purpose)
+			except InsufficientFunds:
+				_undo(payer, paid, charges, purpose, give_back)
+				raise
+			if part > DEBT_FLOOR:   # a part below the floor moves nothing, and the last payee takes it up
+				moved += part
+				paid.append((payee, part))
+
+
+def _undo(payer: Any, paid: List[Any], charges: List[tuple], purpose: Any, give_back: Any) -> None:
+	"""Take back what a failed share_out moved: each payment and each charge the transfer hook made for it, every one
+	attempted even if one is refused, then the draw made for the payments; the first refusal is raised afterwards."""
+	refusal = None
+	takes = [(payee, payer, part, purpose) for payee, part in reversed(paid)]
+	takes += [(charge_payee, charge_payer, charged, cause) for charge_payer, charge_payee, charged, cause in reversed(charges)]
+	for taker, giver, part, cause in takes:
 		try:
-			ledger.transfer(payer, payee, part, purpose)
-		except InsufficientFunds:
-			for earlier, earlier_part in reversed(paid):   # what already left the purse comes back by direct postings, then the draw made for these payments
-				ledger.reverse(earlier, payer, earlier_part, purpose)
-			give_back()
-			raise
-		if part > DEBT_FLOOR:   # a part below the floor moves nothing, and the last payee takes it up
-			moved += part
-			paid.append((payee, part))
+			ledger.reverse(taker, giver, part, cause)
+		except InsufficientFunds as error:
+			refusal = refusal or error
+	give_back()
+	if refusal is not None:
+		raise refusal
 
 
 def pay_savers(registry: Any, payer: Any, amount: float) -> None:

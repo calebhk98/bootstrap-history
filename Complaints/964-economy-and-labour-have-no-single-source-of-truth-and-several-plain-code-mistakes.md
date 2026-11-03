@@ -317,3 +317,4 @@ Left:
   producers hire starts from its last value (`sim/economy/opening_income.py`, `opening_own.py`). On Rome the spin-up
   years after the opening now take most of a cold build, and the spin-up does not settle (`python3 sim/simulator.py
   openings --civs rome_100ad` refuses to ship on `spin_up_settled`).
+- `RESPEND_APPORTIONED_WANTED_SHARE` (`sim/economy/goods_respend_year.py`) retires when `_wanted_adding` takes each adding bid's own wanted quantity (its demand at the ask it faced in the round) instead of a pro rata share at one price.

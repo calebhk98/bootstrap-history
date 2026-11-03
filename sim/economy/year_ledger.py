@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 from typing import Dict, Iterable, List, Optional, Tuple
 
 from .clearing_totals import MarketKey, market_totals
-from .types import AgentId, ClearingResult, Fill, GoodId, GoodsMove, LabourResult, Transfer, is_external_edge
+from .types import AgentId, ClearingResult, Fill, GoodId, GoodsMove, LabourResult, Transfer, EDGE_MINT, is_external_edge
 
 SALE_PREFIX = "sale of "    # settlement's purpose for a goods sale
 
@@ -33,6 +33,8 @@ class YearLedger:
     clearings: List[ClearingResult] = field(default_factory=list)
     delivered_by_market: Dict[Tuple[GoodId, str], float] = field(default_factory=dict)   # (good, area): goods settlement moved
     totals_cache: Optional[Tuple[Dict[MarketKey, float], Dict[MarketKey, Optional[float]]]] = field(default=None, repr=False, compare=False)
+    mint_takes: List[Tuple[ClearingResult, Dict[Tuple[AgentId, str], float]]] = field(default_factory=list)   # clearing, units delivered to the mint by (seller, tile)
+    pending_mint_takes: Dict[Tuple[AgentId, str], float] = field(default_factory=dict, repr=False)
     labour_results: List[LabourResult] = field(default_factory=list)
     unpaid: Dict[AgentId, float] = field(default_factory=dict)
     imports_paid: Dict[Tuple[AgentId, GoodId], float] = field(default_factory=dict)       # money paid to foreign partners
@@ -66,6 +68,9 @@ class YearLedger:
                 goods[posting.good] = goods.get(posting.good, 0.0) + posting.quantity
                 key = (posting.giver, posting.good)
                 self.sold[key] = self.sold.get(key, 0.0) + posting.quantity
+                if posting.receiver == EDGE_MINT:
+                    taken = (posting.giver, posting.tile)
+                    self.pending_mint_takes[taken] = self.pending_mint_takes.get(taken, 0.0) + posting.quantity
 
     def note_rent(self, postings: Iterable[Transfer]) -> None:
         """Rent paid out: a cost of the payer's year, though it is not paid in a market (it takes nothing from
@@ -74,9 +79,12 @@ class YearLedger:
             self.money_out[posting.payer] = self.money_out.get(posting.payer, 0.0) + posting.amount
 
     def note_plant_purchases(self, postings: Iterable[object], good: GoodId, plant_goods: Dict[AgentId, Iterable[GoodId]]) -> None:
-        """Money producers paid, in the clearing of `good`, for goods their own plant is built from: what they paid the sellers."""
+        """Money producers paid, in the clearing of `good`, for goods their own plant is built from: what they paid the sellers. A seller paid
+        nothing but paying to be rid of a negative-priced good is not a buyer, so only receivers of the goods count."""
+        postings = list(postings)
+        buyers = {posting.receiver for posting in postings if isinstance(posting, GoodsMove)}
         for posting in postings:
-            if isinstance(posting, Transfer) and good in plant_goods.get(posting.payer, ()):
+            if isinstance(posting, Transfer) and posting.payer in buyers and good in plant_goods.get(posting.payer, ()):
                 self.plant_spend[posting.payer] = self.plant_spend.get(posting.payer, 0.0) + posting.amount
 
     def running_costs(self, agent: AgentId) -> float:
@@ -104,12 +112,21 @@ class YearLedger:
     def note_clearing(self, result: ClearingResult, delivered: float) -> None:
         """Keep a clearing and the goods its settlement delivered (less than it matched when a buyer could not pay)."""
         self.clearings.append(result)
+        self.mint_takes.append((result, self.pending_mint_takes))
+        self.pending_mint_takes = {}
         self.totals_cache = None
         market = (result.good, result.area)
         self.delivered_by_market[market] = self.delivered_by_market.get(market, 0.0) + delivered
         for fill in result.fills:
             if fill.side == "buy":
                 self.buy_fills.setdefault(fill.agent, []).append(fill)
+
+    def settled_to_mint(self, result: ClearingResult) -> Optional[Dict[Tuple[AgentId, str], float]]:
+        """Units the settlement of this clearing delivered to the mint, by (seller, tile); None for a clearing not noted."""
+        for noted, takes in self.mint_takes:
+            if noted is result:
+                return takes
+        return None
 
     def market_totals(self):
         """`clearing_totals.market_totals` of the year's clearings, worked out once until another clearing is noted."""

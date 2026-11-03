@@ -13,6 +13,20 @@ Purpose = Union[str, Mapping[str, float]]
 # Called after each transfer as hook(payer, payee, amount, purpose) while an engine listens (`listening`), so it can
 # charge what moving the coin cost. It is switched off while it runs, so its own postings are not charged again.
 AFTER_TRANSFER: List[Optional[Callable[[Any, Any, float, Purpose], None]]] = [None]
+_IN_HOOK = [False]
+# The transfers the hook made, collected while `recording_charges` is active, so a caller can take them back.
+CHARGES: List[Optional[List[tuple]]] = [None]
+
+
+@contextlib.contextmanager
+def recording_charges(into: List[tuple]) -> Iterator[None]:
+	"""Collect (payer, payee, amount, purpose) of each transfer the hook makes inside the block."""
+	before = CHARGES[0]
+	CHARGES[0] = into
+	try:
+		yield
+	finally:
+		CHARGES[0] = before
 
 
 @contextlib.contextmanager
@@ -44,13 +58,17 @@ def transfer(payer: Any, payee: Any, amount: float, purpose: Purpose) -> None:
 	else:
 		payer.payments.debit(amount, purpose)
 		payee.payments.credit(amount, purpose)
+	if _IN_HOOK[0] and CHARGES[0] is not None:
+		CHARGES[0].append((payer, payee, amount, purpose))
 	hook = AFTER_TRANSFER[0]
 	if hook is not None:
 		AFTER_TRANSFER[0] = None
+		_IN_HOOK[0] = True
 		try:
 			hook(payer, payee, amount, purpose)
 		finally:
 			AFTER_TRANSFER[0] = hook
+			_IN_HOOK[0] = False
 
 
 def reverse(payee: Any, payer: Any, amount: float, purpose: Purpose) -> None:

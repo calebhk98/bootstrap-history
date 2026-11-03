@@ -38,7 +38,7 @@ class StateBudget:
     held_back: float = 0.0               # cash the plan keeps off its lines: the reserve and the unplanned cash
     need_wanted: Dict[str, float] = field(default_factory=dict)   # goods the lines bid for, so the rest bought is store
     expected_inflation: float = 0.0      # what the treasury expects of prices, as households do
-    last_price_level: float = 0.0        # the basket price level when it last updated that expectation
+    last_price_level: float = 0.0        # the chained price level (across rebases) when it last updated that expectation
 
     def cut_goods_budget(self, amount: float) -> None:
         """The goods line falls by `amount`."""
@@ -177,7 +177,8 @@ def close_year(setup, record, ledger, tax_received: float) -> None:
             moves.append(GoodsMove(state, EDGE_CONSUMPTION, good, tile, used, "state purchases used"))
     record.book.move_many(moves)
     record.state_budget.revenue = tax_received + ledger.sales_in.get(state, 0.0)
-    level = record.memory.price_levels.get(setup.currency_id)
+    memory = record.memory   # the level that survives a rebase: opening-year money per money now
+    level = memory.opening_wage_level(setup.currency_id) if memory.price_levels.get(setup.currency_id) else None
     budget = record.state_budget
     if level and budget.last_price_level > 0.0:
         budget.expected_inflation = currency.update_expected_inflation(budget.expected_inflation,

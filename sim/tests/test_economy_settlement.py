@@ -6,7 +6,7 @@ import random
 import unittest
 
 from sim.economy.accounts import Book, InsufficientFunds
-from sim.economy.settlement import book_legacy, settle_goods, settle_labour
+from sim.economy.settlement import Settlement, book_legacy, settle_goods, settle_labour
 from sim.economy.settlement_limits import CANNOT_DELIVER, CANNOT_PAY
 from sim.economy.types import (EDGE_LEGACY, EDGE_MINT, EDGE_PRODUCTION, ClearingResult, Fill, GoodsMove, LabourResult,
                                Pairing, Transfer)
@@ -174,6 +174,18 @@ class GoodsSettlementTests(unittest.TestCase):
         self.assertGreaterEqual(book.balance("buyer", "coin"), 0.0)
         self.assertAlmostEqual(book.stock("buyer", "grain", "t1"), 3.0)
         self.assertTrue(outcome.complete)
+
+
+class BoughtByBuyerTests(unittest.TestCase):
+    def test_money_a_buyer_receives_as_a_seller_is_not_netted_out_of_what_it_paid(self):
+        settlement = Settlement(postings=[GoodsMove("farm", "house", "grain", "t1", 2.0, "sale of grain")],
+                                buyer_money={"house": 6.0})
+        self.assertEqual(settlement.bought_by_buyer(), {"house": (2.0, 6.0)})
+
+    def test_money_paid_to_take_a_negative_priced_good_nets_against_the_buyer_s_payments(self):
+        settlement = Settlement(postings=[GoodsMove("farm", "house", "waste", "t1", 2.0, "sale of waste")],
+                                buyer_money={"house": -1.5})
+        self.assertEqual(settlement.bought_by_buyer(), {"house": (2.0, -1.5)})
 
 
 class LabourSettlementTests(unittest.TestCase):

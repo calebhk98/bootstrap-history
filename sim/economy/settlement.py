@@ -1,7 +1,7 @@
 """Turn a market's clearing result into postings on the book.
 
 A clearing that records who bought from whom (`ClearingResult.pairing`) is settled pair by pair, each at its seller's
-ask; any other result has its aggregate fills walked in order of (agent, tile) and matched greedily. When a payer cannot
+ask; a labour result has its aggregate fills walked in order of (agent, tile) and matched greedily. When a payer cannot
 cover what it owes, or a seller no longer holds what it sold, the affected pairs settle for the part that can be met: the
 undelivered quantity stays with the seller and the unpaid money stays with the payer, and the gap is returned as a
 `Shortfall`. A negative price (a waste someone is paid to take) reverses who pays.
@@ -27,22 +27,23 @@ class Shortfall:
 class Settlement:
     postings: List[object] = field(default_factory=list)       # the Transfers and GoodsMoves applied
     shortfalls: List[Shortfall] = field(default_factory=list)
+    buyer_money: Dict[AgentId, float] = field(default_factory=dict)   # buyer -> money it paid (negative: paid to take)
 
     @property
     def complete(self) -> bool:
         return not self.shortfalls
 
     def bought_by_buyer(self) -> Dict[AgentId, Tuple[float, float]]:
-        """Of a goods settlement, buyer -> (units it received, money it paid net of any it was paid to take)."""
+        """Of a goods settlement, buyer -> (units it received, money it paid net of any it was paid to take). Only the buyer
+        side of each sale counts: money a buyer receives as a seller in the same market is not netted out."""
         bought: Dict[AgentId, Tuple[float, float]] = {}
         for posting in self.postings:
-            if isinstance(posting, Transfer):
-                for agent, sign in ((posting.payer, 1.0), (posting.payee, -1.0)):
-                    units, money = bought.get(agent, (0.0, 0.0))
-                    bought[agent] = (units, money + sign * posting.amount)
-            else:
+            if not isinstance(posting, Transfer):
                 units, money = bought.get(posting.receiver, (0.0, 0.0))
                 bought[posting.receiver] = (units + posting.quantity, money)
+        for agent, paid in self.buyer_money.items():
+            units, _money = bought.get(agent, (0.0, 0.0))
+            bought[agent] = (units, paid)
         return bought
 
 
@@ -91,6 +92,7 @@ def _settle(book: Book, fills: Sequence[Fill], currency: CurrencyId, item: str,
     remaining_cash = {payer: book.balance(payer, currency) for payer in set(payers)}
     unpaid = limit_by_purse(remaining_cash, payers, amounts, unit_prices, unsettled)
     transfers, moves = [], []
+    buyer_money: Dict[AgentId, float] = {}
     edge_payers = {payer for payer in remaining_cash if is_edge(payer)}
     edge_sellers = {key for key in remaining_stock if is_edge(key[0])}
     for buyer_key, seller_key, amount, payer, payee, unit_price in zip(buyer_keys, seller_keys, amounts, payers, payees,
@@ -108,15 +110,17 @@ def _settle(book: Book, fills: Sequence[Fill], currency: CurrencyId, item: str,
             remaining_cash[payer] -= money
         if money > 0.0:
             transfers.append(Transfer(payer, payee, currency, money, purpose))
+            buyer_money[buyer_key[0]] = buyer_money.get(buyer_key[0], 0.0) + (money if payer == buyer_key[0] else -money)
     book.post(transfers, moves)
     settlement.postings = transfers + moves
+    settlement.buyer_money = buyer_money
     settlement.shortfalls.extend(_shortfalls(item, unsettled, unpaid))
     return settlement
 
 
 def _paired_by_walking(fills: Sequence[Fill]) -> Pairing:
-    """Buyers and sellers walked in order of (agent, tile) and matched until one side runs out; a seller's ask is its
-    fill price."""
+    """Labour only: goods results always carry a pairing. Buyers and sellers walked in order of (agent, tile) and matched
+    until one side runs out; a seller's ask is its fill price."""
     order = attrgetter("agent", "tile")
     buys = sorted((fill for fill in fills if fill.side == "buy" and fill.quantity > 0.0), key=order)
     sells = sorted((fill for fill in fills if fill.side == "sell" and fill.quantity > 0.0), key=order)
