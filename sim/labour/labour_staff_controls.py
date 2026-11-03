@@ -79,7 +79,9 @@ class StaffControls:
 
     def _house_for_reserve(self, trade, count):
         """Buy worker housing for `count` more people if room is short and cash covers both."""
-        self.buy_room_for(count, count * self.market.quote_annual(trade), "reserve_staff")
+        wage = self.market.quote_annual(trade)
+        if wage is not None:
+            self.buy_room_for(count, count * wage, "reserve_staff")
 
     def buy_room_for(self, count, hiring_outlay, label):
         """Buy worker housing for `count` more people when room is short and the purchase budget covers
@@ -99,6 +101,7 @@ class StaffControls:
         hired, reply = self.hiring.hire(trade, count)
         if hired or cause_of(reply) != "household_room":
             return hired, reply
-        if not self.buy_room_for(float(count), count * self.market.quote_annual(trade), label):
+        wage = self.market.quote_annual(trade)
+        if wage is None or not self.buy_room_for(float(count), count * wage, label):
             return hired, reply
         return self.hiring.hire(trade, count)

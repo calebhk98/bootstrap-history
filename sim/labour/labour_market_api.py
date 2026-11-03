@@ -131,12 +131,15 @@ class LabourMarket:
                               self.HOUSING_PRESSURE_MAX_MARKUP)
 
     def _annual(self, trade):
-        """The economy's wage for the trade over a year. Only before the economy opens, the opening schedule's with the
-        cost-of-living factors, the price index and the wage index."""
+        """The economy's wage for the trade over a year; None once the economy is open and its rule gives the trade no wage.
+        Only before the economy opens, the opening schedule's with the cost-of-living factors, the price index and the
+        wage index."""
         world = self._world
         wage = world.economy.agent_wage_at(trade, self.settlement.base_tile())
         if wage is not None:
             return wage * person_year_hours(world)
+        if world.economy.agent_working_hours() is not None:
+            return None
         base = self.schedule.base_annual_wage(trade)
         factors = self.cost_factors(trade)
         return annual_wage(base, factors["weighted"], world.finance.price_index, world.trades.wage_index, 1.0, self.pay_scale())
@@ -148,8 +151,10 @@ class LabourMarket:
 
     def quote(self, trade):
         """Money one hour of a trade costs now: the one wage of the trade."""
-        return self._annual(trade) / person_year_hours(self._world)
+        annual = self._annual(trade)
+        return None if annual is None else annual / person_year_hours(self._world)
 
     def commission_cost(self, trade, hours):
         """What a one-off job of `hours` costs: the hour the market quotes."""
-        return hours * self.quote(trade)
+        quote = self.quote(trade)
+        return None if quote is None else hours * quote

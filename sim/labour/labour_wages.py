@@ -26,12 +26,14 @@ class Wages:
     def wage_for_hours(self, trade, hours):
         """What `hours` of the founder's own work pay now at the trade's market wage, the one wage every employer pays. The
         figure work_for_wages expects and every quote of that pay (the stall banner, the year's wage-work rule) reads."""
-        return wage_for_hours_of(self.market.quote_annual(trade), person_year_hours(self._world), hours)
+        annual = self.market.quote_annual(trade)
+        return None if annual is None else wage_for_hours_of(annual, person_year_hours(self._world), hours)
 
     def best_wage_trade(self):
         """The trade open to the founder that pays most an hour, or None when none is open."""
         trades = [trade for trade in self._world.trades.wages if self.trades.trade_available(trade)]
-        return max(trades, key=lambda trade: self.wage_for_hours(trade, 1.0), default=None)
+        paid = [trade for trade in trades if self.wage_for_hours(trade, 1.0) is not None]
+        return max(paid, key=lambda trade: self.wage_for_hours(trade, 1.0), default=None)
 
     def work_for_wages(self, trade, hours, commit=True):
         """Do a job. For money. Like everybody else.
@@ -80,6 +82,8 @@ class Wages:
         # Your own hour is worth the labour-market quote for the trade, the rate it costs to employ someone in it.
         workforce = self._world.workforce
         pay = self.wage_for_hours(trade, hours)
+        if pay is None:
+            return 0.0, Refusal("no_wage_exists", "no wage exists for %s under the economy's rule, so its hours cannot be sold" % trade)
         revenue_before = self._world.finance.revenue()
         offered = workforce.hours_offered_for_wages
         offered_before = offered.get(trade)

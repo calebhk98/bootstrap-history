@@ -24,8 +24,9 @@ class WageFallback(Part):
 			# ONLY IF IT PAYS BETTER THAN THE STANDING JOB IT TAKES THE HOURS FROM: a founder who already
 			# sells these hours in a trade does not move them to a worse-paid one.
 			held_trade = self.needs.held_trade()
-			standing_pay = (self.parts.core.labour.wages.wage_for_hours(held_trade, hours) if held_trade else 0.0)
-			if self.parts.core.labour.wages.wage_for_hours(trade, hours) > standing_pay:
+			standing_pay = (self.parts.core.labour.wages.wage_for_hours(held_trade, hours) if held_trade else None)
+			offered_pay = self.parts.core.labour.wages.wage_for_hours(trade, hours) if trade else None
+			if offered_pay is not None and (standing_pay is None or offered_pay > standing_pay):     # a trade with no wage is not offered
 				_, answer = self.parts.core.labour.wages.work_for_wages(trade, hours)
 				# Kept in step with `remaining` so hours_this_year does not count hours sold for wages here as
 				# still unused. A refusal has a cause; any other answer is a warning on a sale that happened.

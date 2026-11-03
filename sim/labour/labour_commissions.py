@@ -69,7 +69,10 @@ class Commissions:
                 spare = commission_spare_hours(self.supply.market_supply(trade), self.hands.hours_reserved(trade))
                 if spare < hours:
                     continue
-                if best is None or self.schedule.wage_per_hour(trade) < self.schedule.wage_per_hour(best):
+                wage = self.schedule.wage_per_hour(trade)
+                if wage is None:
+                    continue
+                if best is None or wage < self.schedule.wage_per_hour(best):
                     best = trade
             if best is None:
                 continue

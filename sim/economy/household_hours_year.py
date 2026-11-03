@@ -3,7 +3,7 @@
 hours kept are added to those the own-plot plan and the household work already keep back (`labour_supply.HourSupply`)."""
 from typing import Callable, Dict, Mapping, Sequence
 
-from . import households_hours_offered
+from . import households_hours_offered, trade_wages
 from .households_basket import need_prices
 from .households_own import Option, own_production
 from .labour_ask_floor import hectares_per_hour_by_recipe, plot_return_per_hour
@@ -15,7 +15,7 @@ SPARE_HOURS = 1e18        # more hours than any plot takes, to ask how many it c
 def wage_faced_per_hour(view, offers: Sequence[LabourOffer]) -> float:
     """The wage per hour a cohort's offers face: last year's clearing wage in each market, else the reservation wage,
     averaged over the hours offered (the same reading household work takes, household_work_year.cohort_split)."""
-    rows = [(offer.hours, view.wage(offer.trade, offer.area) or offer.reservation_wage) for offer in offers if offer.hours > 0.0]
+    rows = [(offer.hours, trade_wages.faced_wage(view.wage(offer.trade, offer.area), offer.reservation_wage)) for offer in offers if offer.hours > 0.0]
     total = sum(hours for hours, _wage in rows)
     return sum(hours * wage for hours, wage in rows) / total if total > 0.0 else 0.0
 

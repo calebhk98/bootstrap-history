@@ -30,7 +30,8 @@ class CountryAnswers:
         have no wage."""
         if not self._wages:
             return None
-        wage = priced_trade_wage(self._economy, trade, self._wages.get(trade), self._wages.get(unskilled_trade(self._economy)))
+        wage = priced_trade_wage(self._economy, trade, self._wages.get(trade), self._wages.get(unskilled_trade(self._economy)),
+                                  self._country)
         return None if wage is None else wage * self._coin * self._hours
 
     def society_output(self) -> Optional[float]:

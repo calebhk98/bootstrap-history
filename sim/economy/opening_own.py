@@ -122,7 +122,7 @@ class OwnPlots:
             schedule = household_hours_year.cohort_plot_schedule(
                 setup, cohort, cohort.working_people * setup.working_hours_per_year, priced, self.options, held,
                 self.hectares_per_hour)
-            wage = setup.opening_wages.get(setup.unskilled_trade, 0.0)
+            wage = setup.opening_wages[setup.unskilled_trade]     # the unskilled opening wage is there and positive (sim/markets/port_setup.py)
             self.kept_at_home[cohort.agent_id] = (plan, schedule(wage) if schedule is not None else 0.0)
         plan, plot = self.kept_at_home[cohort.agent_id]
         return sold_hours(cohort.working_people * setup.working_hours_per_year, plan, plot, own_work)

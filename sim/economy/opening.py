@@ -234,13 +234,14 @@ def _opening_memory(setup, area_map, priced_goods) -> MarketMemory:
         for area in area_map.areas(good):
             memory.set_price(market_key(good, area.area_id), price)
             memory.note_usual_price(market_key(good, area.area_id))
+    # the seeds equal the opening wages at level one, the figure trade_wages gives an unhired trade in the first year; the first close rebuilds the memory's wages from clearings
     seeds = MarketState(wages={labour_area(tile): dict(setup.opening_wages) for tile in setup.tiles})
     labour_state.mirror_wages(memory.wages, seeds)       # the mirror is the one writer of the remembered wages
     return memory
 
 
 def _full_employment_income_per_head(setup) -> float:
-    return setup.opening_wages.get(setup.unskilled_trade, 0.0) * setup.working_hours_per_year * setup.working_share
+    return setup.opening_wages[setup.unskilled_trade] * setup.working_hours_per_year * setup.working_share
 
 
 def _open_cohorts(setup, record) -> None:

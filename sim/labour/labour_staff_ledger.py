@@ -70,7 +70,7 @@ class StaffLedger:
             if trade_data.is_generic_staff(trade) or trade in drawn or count < 0.5:
                 continue
             rows.append({"trade": trade, "count": round(count, 1),
-                         "wage_bill_per_year": round(count * self.market.quote_annual(trade), 1),
+                         "wage_bill_per_year": None if self.market.quote_annual(trade) is None else round(count * self.market.quote_annual(trade), 1),
                          "taught_by_you": trade in self._world.workforce.trades_created})
         return rows
 

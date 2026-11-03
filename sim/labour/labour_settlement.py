@@ -90,15 +90,6 @@ class Settlement:
             return {}
         return geography.reach([base], geography.usable_modes([held]), days_budget, self._world.scenario.built_ways(), held_nodes=held)
 
-    def reach_population_estimate(self, days_budget=None):
-        """People in the home territory's towns within a hire's travel budget of the base,
-        the base's own town always included."""
-        homes = self.held_tiles()
-        base = self.base_tile()
-        within = self.reachable_tiles(days_budget)
-        return sum(self._town_population_at(tile) for tile in settlement.tile_ids(homes)
-                   if tile == base or tile in within)
-
     def travel_days_to_tile(self, tile):
         """Days the household needs to reach `tile` by the fastest route over the modes its people hold
         (geography's route over the ways built, weighted by time); None when no route joins the tiles."""

@@ -61,7 +61,7 @@ def employer_bids(economy, employer_id, wanted, tile, affordable_coin):
             continue
         area = view.area_of(trade, tile)
         wage = economy_api.trade_wage_at(economy, trade, tile)
-        if wage and wage > 0.0:
+        if has_wage(wage):
             asked.append((trade, area, people * economy_api.working_hours_per_year(economy), wage))
     affordable_units = max(0.0, affordable_coin) / economy_api.coin_per_unit(economy)
     bill = math.fsum(hours * wage for _trade, _area, hours, wage in asked)
@@ -70,11 +70,16 @@ def employer_bids(economy, employer_id, wanted, tile, affordable_coin):
     return bids, min(affordable_units, math.fsum(bid.hours * bid.maximum_wage for bid in bids))
 
 
+def has_wage(wage):
+    """Whether a trade has a wage a bid can be funded at: one under the rule, and above zero."""
+    return wage is not None and wage > 0.0
+
+
 def unposted_cause(economy, wanted, tile):
     """Why places that made no bid were not posted: "no_wage_exists" when a trade asked for has no wage under the rule (so nothing can
     be priced), else "no_affordable_bid" (the employer could not pay for any hour)."""
     trades = economy_api.economy_trades(economy)
-    unpriced = any(people > 0.0 and trade in trades and economy_api.trade_wage_at(economy, trade, tile) is None
+    unpriced = any(people > 0.0 and trade in trades and not has_wage(economy_api.trade_wage_at(economy, trade, tile))
                    for trade, people in wanted.items())
     return "no_wage_exists" if unpriced else "no_affordable_bid"
 

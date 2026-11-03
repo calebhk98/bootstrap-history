@@ -136,7 +136,10 @@ class Training:
         uncovered = self.uncovered_from(trade, frm)
         # the early slice is paid as staff from its own date, so the source's wages are kept up front only for the rest
         kept_years = trade_first_hands.prepaid_keep_years(years, self._full_years(trade), uncovered)
-        fee = teaching_fee(count, self.market.quote_annual(frm), kept_years, teacher, teaching_hours,
+        source_wage = self.market.quote_annual(frm)
+        if source_wage is None:
+            return None, Refusal("no_wage_exists", "no wage exists for %s under the economy's rule, so the keep of its people while they learn cannot be priced." % frm)
+        fee = teaching_fee(count, source_wage, kept_years, teacher, teaching_hours,
                            person_year_hours(self._world))      # the source's wages while they learn
         if fee > self._world.finance.spending_power("buy"):
             return None, cash_in_hand_refusal(self._world, 
@@ -155,8 +158,9 @@ class Training:
         return named[0] if named else None
 
     def trainee_wage_bill(self, trade, count):
-        """Yearly wage the people taught will add once they join the staff."""
-        return count * self.market.quote_annual(trade)
+        """Yearly wage the people taught will add once they join the staff; None when the trade has no wage."""
+        wage = self.market.quote_annual(trade)
+        return None if wage is None else count * wage
 
     def train(self, trade, count, frm=None):
         """Teach a trade that does not exist here into existence.

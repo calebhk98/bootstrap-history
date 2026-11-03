@@ -23,7 +23,7 @@ from .flow_rates import flow_imbalance
 from .entry_year import close_idle_producers, open_entrants, restake_owners
 from . import capital_year, household_hours_year, household_work_year, land_bid_year, land_lease_year
 from .households_own import (hours_for_own_plan, own_production, own_production_options, plot_hectares)
-from . import flight_step, households_cohort
+from . import flight_step, households_cohort, trade_wages
 from .labour_inputs import labour_context
 from sim.labour.api import people_in
 from .labour_state import scale_people
@@ -348,7 +348,7 @@ class Economy:
         plan, work = self._fixed_home_hours(everyone, view, outside_option)
         plot = household_hours_year.plot_schedules(self.setup, self.record, view, everyone, self.own_plot_options(),
                                                    self._hectares_held())
-        faced = {(offer.trade, offer.area): view.wage(offer.trade, offer.area) or offer.reservation_wage for offer in everyone}
+        faced = {(offer.trade, offer.area): trade_wages.faced_wage(view.wage(offer.trade, offer.area), offer.reservation_wage) for offer in everyone}
         return HourSupply(everyone, plan, work, plot, faced)
 
     def _hectares_held(self) -> Dict[str, float]:

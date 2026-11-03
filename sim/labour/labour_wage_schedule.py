@@ -47,10 +47,14 @@ class WageScheduleReader:
             "diffused technology (Complaint 101).")
 
     def wage_per_hour(self, trade):
-        """Money one hour of this trade is paid: what the economy's labour markets pay it, or before the
-        economy has opened the opening schedule's (training premium times the money value of an unskilled hour)."""
-        paid = self._world.economy.agent_wage_at(trade, self._settlement.base_tile())
-        return paid if paid is not None else self.wage_schedule().wage_per_hour(trade)
+        """Money one hour of this trade is paid: the economy's wage under its one rule once the economy has opened (None
+        when that rule gives the trade none), and before it opens the opening schedule's (training premium times the
+        money value of an unskilled hour)."""
+        if self._world.economy.agent_working_hours() is not None:
+            return self._world.economy.agent_wage_at(trade, self._settlement.base_tile())
+        return self.wage_schedule().wage_per_hour(trade)
 
     def base_annual_wage(self, trade):
-        return self.wage_per_hour(trade) * person_year_hours(self._world)
+        """A year of the trade at `wage_per_hour`; None when that is."""
+        wage = self.wage_per_hour(trade)
+        return None if wage is None else wage * person_year_hours(self._world)
