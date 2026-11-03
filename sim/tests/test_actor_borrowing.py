@@ -6,6 +6,7 @@ QUICK_TOPIC = True
 import unittest
 
 from sim.agents.api import ActorRecord, ActorsState
+from sim.agents.borrowing import rate_with_discount
 from sim.agents.firm import Firm
 from sim.world import capital_market
 
@@ -30,6 +31,15 @@ class RateFunctions(unittest.TestCase):
     def test_the_debt_an_earning_can_carry_falls_as_the_rate_rises(self):
         self.assertGreater(capital_market.serviceable_debt(100.0, 0.05, 0.5), capital_market.serviceable_debt(100.0, 0.10, 0.5))
         self.assertEqual(capital_market.serviceable_debt(100.0, 0.0, 0.5), 0.0)
+
+
+class RateWithDiscount(unittest.TestCase):
+    def test_the_discount_comes_off_the_premium_only(self):
+        self.assertAlmostEqual(rate_with_discount(0.10, 0.04, 0.01), 0.13)
+        self.assertAlmostEqual(rate_with_discount(0.10, 0.04, 0.09), 0.10)
+
+    def test_no_premium_answered_is_no_premium(self):
+        self.assertAlmostEqual(rate_with_discount(0.10, None, 0.01), 0.10)
 
 
 class ActorsBorrowByOneMethod(unittest.TestCase):

@@ -6,7 +6,7 @@ against it (the economy's risk premium) and lend while that price stays under wh
 lender asks, within what lenders still hold after everyone else's loans. What it pays is the market rate plus that
 premium, less a discount for its standing.
 """
-from typing import Any, Tuple
+from typing import Any, Optional, Tuple
 
 from sim.constants import declare
 from sim.world import capital_market
@@ -18,13 +18,21 @@ from .purses import DEBT_FLOOR
 STANDING_DISCOUNT_CAP = declare(
 	"STANDING_DISCOUNT_CAP", 0.03, kind="temporary_heuristic",
 	unit="fraction off the annual rate (maximum)", source=None, confidence="D",
-	why="The most a fully trusted borrower's standing can cheapen its credit; the same ceiling the "
-		"founder's reputation has. Stands in for lenders' knowledge of a borrower.")
+	retire="Complaints/106: lenders price a borrower from the record they hold of it, not a capped discount",
+	why="The most a fully trusted borrower's standing, or the founder's reputation, can cheapen its credit: the one "
+		"ceiling every borrower's rate uses (`rate_with_discount`). Stands in for lenders' knowledge of a borrower.")
 TRACK_RECORD_YEARS = declare(
 	"TRACK_RECORD_YEARS", 10.0, kind="temporary_heuristic",
 	unit="years", source=None, confidence="D",
+	retire="Complaints/106: lenders price a borrower from the record they hold of it, not a capped discount",
 	why="Years of existence after which lenders trust a firm's record in full; its standing grows "
 		"linearly until then. Stands in for lenders learning a borrower's reliability.")
+
+
+def rate_with_discount(market_rate: float, premium: Optional[float], discount: float) -> float:
+	"""The rate on a loan: the market rate plus the economy's risk premium (none: no premium) less the borrower's discount for
+	its standing, the premium never taken under nothing."""
+	return market_rate + max(0.0, (0.0 if premium is None else premium) - max(0.0, discount))
 
 
 class Borrower:
@@ -102,7 +110,7 @@ class Borrower:
 		debt then owed, less the discount for its standing (never under the market rate)."""
 		market_rate = world.credit.market_rate()
 		premium = world.credit.risk_premium(self.debt() + amount, self.credit_ceiling(world), self.arrears_book.interest_arrears)
-		return market_rate + max(0.0, (0.0 if premium is None else premium) - self.standing_discount(world))
+		return rate_with_discount(market_rate, premium, self.standing_discount(world))
 
 	def may_issue_bonds(self, world: Any) -> bool:
 		"""Whether the actor's society holds a technology declaring the `bond_market` mechanic, in the actor's own

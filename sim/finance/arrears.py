@@ -4,13 +4,13 @@ Needs: effect_values, standing, acting_balance, cast_state, actor_world, civilis
 ReviewVentures, RecordEvent)."""
 from typing import Any
 
-from sim.agents.api import SeatBorrower, business_review
+from sim.agents.api import STANDING_DISCOUNT_CAP, SeatBorrower, business_review, rate_with_discount
 from sim.assembly.api import Part
 from sim.ledger.api import NoteSeatCash
 from sim.reporting.api import RecordEvent
 
 from .affordability import near_limit
-from .constants import DEBT_RATE_REPUTATION_DISCOUNT_CAP, DEBT_RATE_REPUTATION_SCALE
+from .constants import DEBT_RATE_REPUTATION_SCALE
 from sim.projects.api import ReviewVentures
 
 
@@ -31,12 +31,11 @@ class Arrears(Part):
 		"""The market rate plus the economy's risk premium on `debt` against the credit limit, less the seat's standing discount."""
 		needs = self.needs
 		discount = sum(discount for _node_id, discount in needs.effect_values("debt_rate_discount"))
-		discount += min(DEBT_RATE_REPUTATION_DISCOUNT_CAP, max(0.0, needs.standing()["reputation"]) / DEBT_RATE_REPUTATION_SCALE)
-		premium = 0.0
+		discount += min(STANDING_DISCOUNT_CAP, max(0.0, needs.standing()["reputation"]) / DEBT_RATE_REPUTATION_SCALE)
+		premium = None
 		if debt > 0.0:
-			answered = self.parts.capital_market.risk_premium(debt, self.parts.credit_line.credit_limit(), self.seat.interest_arrears)
-			premium = 0.0 if answered is None else answered
-		return self.parts.capital_market.market_rate() + max(0.0, premium - max(0.0, discount))
+			premium = self.parts.capital_market.risk_premium(debt, self.parts.credit_line.credit_limit(), self.seat.interest_arrears)
+		return rate_with_discount(self.parts.capital_market.market_rate(), premium, discount)
 
 	def settle_interest(self) -> Any:
 		"""The year's interest on the acting seat's debt by the one rule every borrower follows: (the interest owed, the part paid)."""
