@@ -718,7 +718,7 @@ Not designed here — only bounded. A shim would need to:
 1. Accept both old and new field names when loading `data/tech_tree.json`
    and each of the 41 `data/branches/*.json` files (or run the rename once,
    as a one-off migration, and require regeneration —
-   `sim/engine/tree_merge.py` already exists as the choke point all 41 files pass
+   `sim/content/tree_merge.py` already exists as the choke point all 41 files pass
    through).
 2. Update every one of the ~13 files in the read-site table above that does
    `n["<short field>"]` or `n.get("<short field>", ...)`, on the order of

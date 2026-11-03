@@ -179,7 +179,7 @@ and easy to lose track of mid-edit; the same rename split across two
 Two more independent, dated observations from documents already in this
 tree confirm this is routine rather than a one-off: `docs/architecture/
 WIRING_MILESTONE_4.md` was written "while four other agents edited
-`sim/world/deposits.py`, `sim/engine/solve_prices.py`, a rename-proving script
+`sim/world/deposits.py`, `sim/prices/solve_prices.py`, a rename-proving script
 and `sim/engine/economy.py` concurrently in the same checkout," to the point
 that its author had to read every cited file's content from a fixed anchor
 commit rather than the live working tree, specifically because the working

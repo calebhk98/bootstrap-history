@@ -26,7 +26,7 @@ Today the map is already a merged set of folders, and a tile add already works. 
 patches them (`override`) or deletes them (`remove`); `layers/*.json` patches per-tile values; any
 other subfolder is a catalogue (regions, climate classes, route modes, resources, deposits). The
 engine opens the map once with every installed mod in load order
-(`sim/engine/geography_port.py`, `GeographyPortMixin.world_map`), and `load_geography(world_map)`
+(the content module's `map_overlays` view, `sim/content/module.py`, feeds the land module's `OpenGeography`), and `load_geography(world_map)`
 (`sim/geography/loading.py`) turns it into the older `land_tiles` dict.
 
 A probe overlay with one new tile (not committed; run with `python3 -I` on a scratch folder) showed:
@@ -296,7 +296,7 @@ counts are measured.
 | Rank | Place | What is enumerated | Why it matters | Fix direction |
 |---|---|---|---|---|
 | 1 | Done: per-category traits (`never_abandoned`, `practisable`) and the ordered `diffusion_traits` live in `data/world/category_traits.json`, read through `sim/knowledge/category_traits.py`; a mod overlays its own `data/category_traits.json`; `validate` reports a node category with no entry | Technology categories and trait names | Was: every new branch domain needed an engine edit | The literal trait name `medical` is still read by `sim/engine/hazard_relief.py` |
-| 2 | `sim/engine/mods.py` `_node_defaults`; `sim/engine/tree_merge.py` `DEFAULTS` and the second list near line 50 | Node field defaults, written in more than one place | A new node field is a multi-place edit; a mod and the base can disagree | One defaults table in data, read by both loaders |
+| 2 | `sim/content/mods.py` `_node_defaults`; `sim/content/tree_merge.py` `DEFAULTS` and the second list near line 50 | Node field defaults, written in more than one place | A new node field is a multi-place edit; a mod and the base can disagree | One defaults table in data, read by both loaders |
 | 3 | `sim/labour/legacy_trade_defaults.py` `GENERIC_STAFF_TRADES`; literal trade ids in engine code (see counts) | Trade names such as the labourer, artisan, scholar | Trades are data (`data/world/trades.json`), the engine names a few | A `role` attribute on a trade record (`general_labour`, `skilled`, `learned`) read by the engine |
 | 4 | Base-map-only readers (section 1.4) | Which map is open | Blocks land tiles | Section 2.1 |
 | 5 | `sim/engine/data.py` `STARTING_KITS`, `WIN_CONDITION_LABELS` | Starting kits and win metric labels | A new scenario or goal type edits Python | Move to `data/world/starting_kits.json` and the metric catalogue, mod-mergeable |
@@ -388,7 +388,7 @@ routes; `map-data-licence-audit` touches `data/world/geography/`) and the counte
   registers a command and a kind; a changed file needs consent again; names must carry the
   prefix; a handler's state lives in `mod_state` and survives save and load.
 - Files: new `sim/engine/mod_code.py` (consent file, hash, import), `sim/simulator.py` (a
-  `mod-allow` and a `validate` report), manifest keys in `sim/engine/mods.py`, `sim/engine/mods_ids.py`
+  `mod-allow` and a `validate` report), manifest keys in `sim/content/mods.py`, `sim/engine/mods_ids.py`
   (`code`, `permissions`), `sim/ui/proto/mod_commands.py` (decorator).
 - Docs: `mods/README.md` security paragraph, `mods/TASKS.md`.
 

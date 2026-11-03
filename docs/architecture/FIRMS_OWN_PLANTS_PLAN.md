@@ -241,7 +241,7 @@ still name the world-view methods, which stage 3c replaces. Proof: `test_busines
 
 **Stage 2: the plant kernel in `sim/world/`.** Move `node_output` baskets, `node_upkeep` plant wear, `plant_crew` and the
 capital arithmetic into `sim/world/plant_figures.py`, taking prices and wages as arguments. `node_revenue` becomes a caller,
-so node figures are unchanged. Owns: `sim/world/plant_figures.py`, `sim/engine/node_output.py`, `node_upkeep.py`,
+so node figures are unchanged. Owns: `sim/world/plant_figures.py`, `sim/production/node_output.py`, `node_upkeep.py`,
 `node_capital.py`, `plant_crew.py`, `energy_prices.py` (move only). Parallel with stage 1 (different directories). Proof:
 fingerprint unchanged; new `test_plant_figures.py` (relationships: crew hours scale with output; output is the smaller of
 plant capacity and crew hours; upkeep rises with plant capital and falls to consumables alone with none; takings are linear
