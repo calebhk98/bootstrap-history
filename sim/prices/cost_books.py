@@ -73,9 +73,9 @@ class CostBooks(Part):
                 return chosen
         return None
 
-    def entry_cost_ratio(self, entry_key: str, material: str, running: bool = False) -> float:
+    def entry_cost_ratio(self, entry_key: str, material: str, running: bool = False) -> Optional[float]:
         """A unit of `material` made by this entry over the same made by the incumbents' entry, both at the economy's
-        prices; one where either cannot be costed. `running` leaves the entry's plant repayment out (a producer whose plant
+        prices; None where either cannot be costed. `running` leaves the entry's plant repayment out (a producer whose plant
         is built), the incumbents' cost staying the full one."""
         _stamp, book, ratios = self.cost_book()
         key = (entry_key, material, running)

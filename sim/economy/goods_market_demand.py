@@ -88,7 +88,10 @@ class DemandSchedule:
         return self._ceilings
 
     def total_at(self, price: float) -> float:
-        """Total quantity wanted at a positive price."""
+        """Total quantity wanted at a price; at zero or below, every buyer with a budget takes its floor plus its
+        flexible part, the same limit `quantity_at` returns, since a budget cap cannot bind on a free good."""
+        if price <= 0.0:
+            return math.fsum(self._free_each())
         total = self._totals.get(price)
         if total is None:
             total = self._totals[price] = self._capped_total_at(price) if self.price_capped else self._total_at(price)
@@ -138,12 +141,17 @@ class DemandSchedule:
         return math.fsum(wanted)
 
     def each_at(self, price: float) -> List[float]:
-        """Each bid's quantity at a positive price, in the order of the bids."""
+        """Each bid's quantity at a price, in the order of the bids; at zero or below see `total_at`."""
+        if price <= 0.0:
+            return self._free_each()
         factors = self._flexible_factors(price)
         if self.price_capped:
             return [0.0 if price > maximum else min(floor + flexible * factors[group], budget / price)
                     for (floor, flexible, budget, group), maximum in zip(self.rows, self.maximums)]
         return [min(floor + flexible * factors[group], budget / price) for floor, flexible, budget, group in self.rows]
+
+    def _free_each(self) -> List[float]:
+        return [floor + flexible for floor, flexible, _budget, _group in self.rows]    # a bid without a budget has none
 
     def maximum_array(self) -> "numpy.ndarray":
         """Each bid's maximum price, in the order of the bids."""
@@ -162,13 +170,14 @@ class DemandSchedule:
         return arrays
 
     def matrix_at(self, prices: "numpy.ndarray") -> "numpy.ndarray":
-        """`each_at` for many positive prices at once: row per price, column per bid, the same values to rounding."""
+        """`each_at` for many prices at once: row per price, column per bid, the same values to rounding."""
         floors, flexibles, budgets, groups, terms, maximums = self._columns()
         column = prices[:, None]
         with numpy.errstate(all="ignore"):
             factors = (column / terms[:, 0][None, :]) ** terms[:, 1][None, :]
             wanted = floors[None, :] + numpy.where(flexibles > 0.0, flexibles[None, :] * factors[:, groups], 0.0)
             wanted = numpy.minimum(wanted, budgets[None, :] / column)
+            wanted = numpy.where(column <= 0.0, (floors + flexibles)[None, :], wanted)    # a free good: see `total_at`
         if self.price_capped:
             wanted[column > maximums[None, :]] = 0.0
         return wanted

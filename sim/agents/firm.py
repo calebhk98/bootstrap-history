@@ -56,8 +56,9 @@ class Firm(RecordedActor):
 	def operate(self, world: Any, interest: float = 0.0) -> None:
 		for node_id in sorted(self.concerns):
 			rivals = self.rivals_of(node_id, self.actor_id) if self.rivals_of else 0.0
-			margin = (business_books.operate(self.business, self, node_id, world, rivals)
-					  - business_books.carry(self.business, self, node_id, world))
+			operated = business_books.operate(self.business, self, node_id, world, rivals)
+			carried = business_books.carry(self.business, self, node_id, world)
+			margin = operated - (0.0 if carried is None else carried)    # no reading: nothing was paid
 			self.record.last_margin = margin
 			self.business.tally.note_year(node_id, margin)
 		self.record.loss_years = self.business.reading.longest_loss_run()

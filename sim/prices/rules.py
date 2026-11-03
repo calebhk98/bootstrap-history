@@ -83,9 +83,9 @@ def entry_keys_held_for(node_id: str, production: Mapping[str, Any], held: Itera
     return keys
 
 
-def cost_ratio(own: Optional[float], reference: Optional[float]) -> float:
-    """A unit made by an entry over the same made by the reference entry; one where either cannot be costed."""
-    return own / reference if own is not None and reference else 1.0
+def cost_ratio(own: Optional[float], reference: Optional[float]) -> Optional[float]:
+    """A unit made by an entry over the same made by the reference entry; None where either cannot be costed."""
+    return own / reference if own is not None and reference else None
 
 
 def goods_in_coin(goods: Mapping[str, float], document_money_per_hour: float, money_per_hour: float) -> Dict[str, float]:

@@ -50,6 +50,9 @@ def build_schedule(registry: Mapping[str, Any], civ: Mapping[str, Any],
                 % (civilisation_id, role, material))
     hours_per_kg = solved.prices_in_labour_hours
     coin_hours = standard["kg_per_unit"] * hours_per_kg[standard["material"]]
+    if not coin_hours > 0.0:
+        raise ValueError("civilization %r: its coin %s costs no labour hours, so a labour hour has no price in coin"
+                         % (civilisation_id, standard["material"]))
     subsistence_hours = wages.subsistence_wage_per_hour(
         demand.FOOD_SUBSISTENCE_QUANTITY_KG_PER_CAPITA_PER_YEAR / _food_per_kg(staple),
         hours_per_kg[staple], wage_provider.people_fed_per_worker())
