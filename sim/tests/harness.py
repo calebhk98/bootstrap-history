@@ -216,7 +216,7 @@ def found_deposits_of(game, material):
     """Give the game the deposits of `material` that thorough prospecting of its held tiles would find, without
     paying for the search, so a test can open a mine (a mine names a deposit it has found)."""
     resources = game.assembly.modules["resources"]
-    resource_id = resources.mine_resource_id(material)
+    resource_id = resources.parts.deposits.mine_resource_id(material)
     if resource_id is None:
         return []
     seed = "tests"
