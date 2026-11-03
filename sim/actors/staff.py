@@ -7,16 +7,11 @@ from sim.assembly.api import Part
 class Staff(Part):
 
 	def actor_staff_fte(self, trade: str) -> float:
-		"""People of this trade that firms and governments employ: they come out of the
-		same reachable pool the founder hires from."""
+		"""People of this trade that the home country's firms and governments employ (soldiers among them; conscripts are the
+		levy, hours out of the households' offers, not staff): they come out of the same reachable pool the founder hires from."""
 		if not self.world.records:
 			return 0.0
 		return self.parts.cast.cast().staff.home_staff_fte(trade)  # type: ignore[attr-defined,no-any-return]
-
-	def actor_staff_nationwide(self, trade: str) -> float:
-		"""People of this trade that firms and governments hold: the labour core's hires for them (soldiers
-		among them; conscripts are the levy, hours out of the households' offers, not staff)."""
-		return self.actor_staff_fte(trade)
 
 	def actor_staff_total(self) -> float:
 		"""People of every trade that firms and governments employ."""

@@ -6,7 +6,6 @@ METHOD_OF_VIEW_MORE = {
     "active_hours_still_wanted": "active_hours_still_wanted",
     "actor_home_trade": "actor_home_trade",
     "actor_staff": "actor_staff_fte",
-    "actor_staff_nationwide": "actor_staff_nationwide",
     "actor_staff_total": "actor_staff_total",
     "actors_carry": "actors_carry",
     "alarm_of": "alarm_of",
