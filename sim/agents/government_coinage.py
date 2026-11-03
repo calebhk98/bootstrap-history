@@ -23,7 +23,10 @@ def debasement_decision(government: Any, world: Any, shortfall: Any = None) -> f
 		return 0.0
 	if shortfall is None:   # unless the state's fiscal response sized it, the whole unfunded need
 		shortfall = sum(government.record.unfunded.values())
-	struck_again = world.revenue.coin_stock_value() * COIN_RESTRIKE_SHARE_PER_YEAR
+	stock_value = world.revenue.coin_stock_value()
+	if stock_value is None:   # a coin metal with no price has no worth to restrike: no debasement
+		return 0.0
+	struck_again = stock_value * COIN_RESTRIKE_SHARE_PER_YEAR
 	if shortfall <= 0.0 or struck_again <= 0.0:
 		return 0.0
 	return min(DEBASEMENT_SHARE_CEILING, shortfall / struck_again)

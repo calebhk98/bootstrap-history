@@ -46,7 +46,8 @@ def menu(government: Any, world: Any, lines: Sequence[Any], gap: float) -> Decis
 	carry = {"interest": rate, "unpaid_pay": need / pay_need if pay_need > 0.0 else 0.0}
 	if pay_need > 0.0:
 		options.append(_option(ARREARS, min(gap, pay_need), dict(carry)))
-	struck_again = world.revenue.coin_stock_value() * COIN_RESTRIKE_SHARE_PER_YEAR if world.revenue.coin_regime() == STRUCK_COIN else 0.0
+	stock_value = world.revenue.coin_stock_value() if world.revenue.coin_regime() == STRUCK_COIN else None
+	struck_again = 0.0 if stock_value is None else stock_value * COIN_RESTRIKE_SHARE_PER_YEAR   # no priced metal: no debasing
 	if struck_again > 0.0:
 		options.append(_option(DEBASE, struck_again * DEBASEMENT_SHARE_CEILING, dict(carry, coin_cut=need / struck_again)))
 	visible = sum(world.taxpayers.notice_over(scale) * income for scale, income in world.taxpayers.visible_taxpayers())

@@ -270,7 +270,7 @@ class RevenuePart(Protocol):
 		"""Money's worth of goods imported ("in") or exported ("out") in the last completed year."""
 		...
 
-	def coin_stock_value(self) -> float:
+	def coin_stock_value(self) -> Optional[float]:
 		"""Money's worth of the coin this society holds, from its coin standard."""
 		...
 

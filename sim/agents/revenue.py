@@ -79,6 +79,8 @@ def assess(world: Any) -> List[Assessment]:
 			base = measure(world, tiles, material)
 		else:
 			base = measure(world) if tiles is None else measure(world, tiles)
+		if base is None:   # a base the world cannot measure this year (an unpriced coin metal) is not assessed
+			continue
 		rate = float(declared["rate"])
 		if material and material != base.material:
 			raise ValueError("form %r is paid in %r but its basis %r yields %r"
