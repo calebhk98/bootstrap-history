@@ -85,9 +85,11 @@ def returning_share(real_income_away: float, real_income_home: float, arrears_ow
 
 def real_income_by_area(year_income_by_area: Mapping[str, float], taxed_by_area: Mapping[str, float],
                         subsistence_by_area: Mapping[str, float]) -> Dict[str, float]:
-    """Year's income over subsistence after the state's take; an area with no income or no subsistence is left out."""
+    """Year's income over subsistence after the state's take; an area with no income, no subsistence or nothing left after
+    the take is left out (its log cannot be weighed)."""
     return {area: (1.0 - min(1.0, taxed_by_area.get(area, 0.0))) * income / subsistence_by_area[area]
-            for area, income in year_income_by_area.items() if income > 0.0 and subsistence_by_area.get(area, 0.0) > 0.0}
+            for area, income in year_income_by_area.items()
+            if income > 0.0 and subsistence_by_area.get(area, 0.0) > 0.0 and taxed_by_area.get(area, 0.0) < 1.0}
 
 
 def move_back(workforce, refuge: str, home: str, count: float) -> float:

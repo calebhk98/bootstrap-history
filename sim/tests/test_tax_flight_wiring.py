@@ -113,6 +113,9 @@ class WhatTheTakeAccountsFor(unittest.TestCase):
 	def test_an_area_the_state_takes_nothing_from_has_no_flight_to_account_for(self):
 		self.assertEqual(self.fraction(0.0), 0.0)
 
+	def test_a_take_of_the_whole_income_leaves_no_income_to_weigh_and_does_not_raise(self):
+		self.assertEqual(self.fraction(1.0), 0.0)
+
 
 class ReturnOfFugitives(unittest.TestCase):
 	def share(self, home=1.0, away=1.0, arrears=0.0):

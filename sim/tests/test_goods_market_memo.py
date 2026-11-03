@@ -4,11 +4,32 @@ found) so that many nearby books against them cost less; remembering gives the a
 QUICK_TOPIC = True
 
 import math
+import random
 import unittest
-from dataclasses import replace
 
 from sim.economy import goods_market
-from sim.tests.test_seller_pricing_probe import SELLER, random_market
+from sim.economy.types import Bid, Offer
+
+GOOD, AREA = "cloth", "area"
+SELLER = "producer:own"
+
+
+def random_market(seed):
+    """Buyers with floors, tiers and ceilings, several rivals (some sharing a reservation), and the seller's offer."""
+    generator = random.Random(seed)
+    bids = [Bid("household:%d" % index, GOOD, AREA, "tile%d" % (index % 3),
+                generator.choice([0.0, generator.uniform(0.0, 5.0)]), generator.uniform(0.0, 50.0),
+                generator.uniform(0.5, 2.0), generator.choice([0.5, 1.0, 1.5]), generator.uniform(0.0, 80.0),
+                generator.choice([0, 0, 1]), generator.choice([math.inf, generator.uniform(0.8, 3.0)]))
+            for index in range(generator.randint(0, 40))]
+    asks = [generator.uniform(0.2, 2.5) for _ in range(4)]
+    rivals = [Offer("producer:%d" % index, GOOD, AREA, "tile%d" % (index % 3),
+                    generator.choice([0.0, generator.uniform(0.1, 40.0)]), generator.choice(asks + [-0.5]))
+              for index in range(generator.randint(0, 8))]
+    rivals.append(Offer(SELLER, GOOD, AREA, "tile9", generator.uniform(0.0, 5.0), generator.choice(asks)))
+    offer = Offer(SELLER, GOOD, AREA, "tile0", generator.uniform(0.1, 60.0), generator.choice(asks))
+    last_price = generator.choice([None, generator.uniform(0.3, 2.0)])
+    return bids, rivals, offer, last_price
 
 
 class BuyersMemory(unittest.TestCase):
@@ -21,14 +42,3 @@ class BuyersMemory(unittest.TestCase):
                     wants = [goods_market.quantity_at(bid, price) for bid in buyers.bids]
                     expected = math.fsum(goods_market.ration(buyers.bids, wants, min(math.fsum(wants), supply)))
                     self.assertEqual(buyers.traded_at(price, supply), expected, (seed, price, supply))
-
-    def test_books_cleared_one_after_another_match_books_cleared_on_fresh_buyers(self):
-        for seed in range(100):
-            bids, rivals, offer, last_price = random_market(seed)
-            shared = goods_market.Buyers(bids, last_price)
-            ordered = goods_market.in_clearing_order(rivals)
-            for reservation in (0.4, 1.0, 1.7, 1.0001, 0.4, 3.0, 1.7):
-                offers = goods_market.with_offer(ordered, replace(offer, reservation_price=reservation))
-                fresh = goods_market.Buyers(bids, last_price)
-                self.assertEqual(goods_market.price_and_sold(shared, offers, SELLER),
-                                 goods_market.price_and_sold(fresh, offers, SELLER), (seed, reservation))

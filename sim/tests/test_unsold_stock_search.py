@@ -9,7 +9,7 @@ import types
 import unittest
 
 from sim.tests.economy_view_defaults import ViewDefaults
-from sim.economy import goods_market, seller_offers, unsold_search
+from sim.economy import demand_search, goods_market, seller_offers, unsold_search
 from sim.economy.producers import Producer
 from sim.economy.types import Bid, Offer, Recipe
 
@@ -168,7 +168,7 @@ class UnsoldStockSearchTests(unittest.TestCase):
                 return 0.0
 
         # the bracket is [0, ask] and halves each trial: about log2(1 / precision) trials plus the fixed few
-        bound = math.ceil(math.log2(1.0 / unsold_search.SEARCH_PRECISION)) + 6
+        bound = math.ceil(math.log2(1.0 / demand_search.SEARCH_PRECISION)) + 6
         self.assertLessEqual(self.crossings_for(Free(), [], [150.0]), bound)
 
     def test_the_search_is_bounded_when_the_floor_is_far_below_the_ask(self):
@@ -181,7 +181,7 @@ class UnsoldStockSearchTests(unittest.TestCase):
 
         # the log of the ratio of ask to floor halves each trial, so the count grows with its log, not the ratio
         ratio = math.log(150.0 / 4e-274)
-        bound = math.ceil(math.log2(ratio / unsold_search.SEARCH_PRECISION)) + 6
+        bound = math.ceil(math.log2(ratio / demand_search.SEARCH_PRECISION)) + 6
         self.assertLessEqual(self.crossings_for(Nearly(), [], [150.0]), bound)
 
 

@@ -117,7 +117,7 @@ def opening_split(setup, recipe: Recipe, area: MarketArea, runs: float) -> Dict[
                    if tile in placed)
     if not suited:
         return {}
-    if recipe.site_bound and not by_recipe.get(recipe.recipe_id):
+    if sites.UNSITED_EXTRACTION_ANYWHERE and recipe.site_bound and not by_recipe.get(recipe.recipe_id):
         if area.anchor_tile in suited:
             return {area.anchor_tile: runs}
         return split_runs(runs, {tile: population.get(tile, 0.0) for tile in suited}, {})

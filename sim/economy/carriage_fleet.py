@@ -23,11 +23,6 @@ class FleetLimit:
     capacity: Mapping[GoodId, float]
 
 
-def capacity_of(held: Mapping[GoodId, float], lives: Mapping[GoodId, float]) -> Dict[GoodId, float]:
-    """Units of wear a year the units `held` of each fleet good can bear: what they lose to age in a year."""
-    return {good: units / lives[good] for good, units in held.items() if lives.get(good, 0.0) > 0.0}
-
-
 def tonnes_within(spare: Mapping[GoodId, float], per_tonne: Mapping[GoodId, float]) -> float:
     """The tonnes a haul wearing `per_tonne` units of each carrier good a tonne can carry on the `spare` wear."""
     limits = [max(0.0, spare[good]) / units for good, units in per_tonne.items() if good in spare and units > 0.0]

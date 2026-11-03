@@ -56,7 +56,7 @@ MONTHS = 12      # the year's months over which Firm_set_price spreads expected 
 def grid_prices(current: float) -> List[float]:
     """The prices tried: the current price times GRID_START, GRID_START + GRID_STEP, ... below GRID_END (Eurace@Unibi,
     Firm_set_market_research_data_pricing: the count of steps is the integer part of the span over the step)."""
-    count = int((GRID_END - GRID_START) / GRID_STEP)
+    count = math.floor((GRID_END - GRID_START) / GRID_STEP + 1e-9)     # the tolerance keeps a span that is a whole number of steps from losing one to float error
     return [current * (GRID_START + step * GRID_STEP) for step in range(count)]
 
 

@@ -51,11 +51,6 @@ def gap_at_entry_price(bids: Sequence[Bid], entry_price: float, price_now: float
     return max(0.0, demand_at(bids, entry_price, price_now if price_now > 0.0 else entry_price) - capacity)
 
 
-def added_output(gap: float, capacity: float) -> float:
-    """What newcomers add in a year: a share of the gap, no more than the pace incumbents grow at."""
-    return min(MARGIN_ENTRY_SHARE_OF_GAP * gap, MARGIN_ENTRY_GROWTH_SHARE * capacity)
-
-
 def margin_entry_plans(setup, record, view, area_map, bids_by_market: Mapping[Tuple[GoodId, AreaId], Sequence[Bid]],
                        planned: Sequence[Tuple[GoodId, AreaId]] = (), siting=None) -> List[EntryPlan]:
     """Newcomers for each market with makers whose expected price has stood above its entry price for

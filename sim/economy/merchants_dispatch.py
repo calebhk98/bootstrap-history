@@ -28,7 +28,7 @@ def dispatch_merchants(setup, record, carriage, ledger: YearLedger, area_map) ->
     carried_goods: dict = {}
     carrier_goods = carriage_wear.carrier_goods(setup)
     prices = carriage_wear.last_prices(setup, record.memory) if carrier_goods else {}
-    dues = route_dues.owed_per_tonne(setup, carriage)
+    dues = route_dues.owed_per_tonne(setup, carriage, record.memory.opening_wage_level(money))
     wear = carriage_wear.Wear(setup, carriage, record.carriage.area_imbalance) if carriage_wear.wears(setup) else None
     for merchant in sorted(record.merchants.values(), key=lambda each: each.agent_id):
         record.book.move_many(merchants_transit.advance(merchant, setup.specs))    # hauls on the road for years reach the tile or spoil

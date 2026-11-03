@@ -73,12 +73,29 @@ def return_on_capital(recipe: Recipe, expected_output_prices: Prices, input_pric
     """Yearly operating surplus (revenue less variable cost) per run, over the capital a run of yearly
     capacity employs: its plant plus a year's variable cost paid before the sales come in. Compare
     with the live interest rate; None if nothing is employed or it cannot be priced (a caller treats that
-    as no return, not as a return of zero)."""
+    as no return, not as a return of zero). It is gross of the plant's wear: the ceiling a loan for the plant can
+    be priced at (`credit.earnable_rate`) and the yield the plant's worth is discounted from
+    (`economy.plant_worth_ratio`, which counts the life). Whether to build is `return_after_recovery` against the rate."""
     variable = variable_cost_per_run(recipe, input_prices, wages, rent)
     employed = plant_value_per_run(recipe, input_prices, wages) + variable
     if not math.isfinite(employed) or employed <= 0.0:
         return None
     return (revenue_per_run(recipe, expected_output_prices) - variable) / employed
+
+
+def return_after_recovery(recipe: Recipe, expected_output_prices: Prices, input_prices: Prices,
+                          wages: Wages, interest_rate: float, rent: float = 0.0) -> Optional[float]:
+    """`return_on_capital` after the plant's wear: the surplus less the part of the capital charge that repays the plant
+    itself (the charge less the interest on it), over the same capital employed. It exceeds `interest_rate` exactly when
+    the run's margin (`expected_margin`) covers interest on its working capital, so a newcomer or an expansion is judged
+    by the charge that `close_year` later makes. None where `return_on_capital` is."""
+    gross = return_on_capital(recipe, expected_output_prices, input_prices, wages, rent)
+    if gross is None:
+        return None
+    plant = plant_value_per_run(recipe, input_prices, wages)
+    employed = plant + variable_cost_per_run(recipe, input_prices, wages, rent)
+    wear = capital_charge_per_run(recipe, input_prices, wages, interest_rate) - interest_rate * plant
+    return gross - wear / employed
 
 
 def full_cost_per_unit(recipe: Recipe, good: GoodId, output_prices: Prices, input_prices: Prices, wages: Wages,

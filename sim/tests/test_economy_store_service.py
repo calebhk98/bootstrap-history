@@ -42,6 +42,11 @@ class StoreServiceTests(unittest.TestCase):
         served = carrying_return(spec("plate"), PLATE_PRICE, None, service_value=12.0)
         self.assertAlmostEqual(served - plain, 12.0 / PLATE_PRICE)
 
+    def test_storage_by_the_kilogram_costs_more_money_after_inflation_and_the_return_falls(self):
+        before = carrying_return(spec("plate"), PLATE_PRICE, None, money_level=1.0)
+        after = carrying_return(spec("plate"), PLATE_PRICE, None, money_level=3.0)
+        self.assertLess(after, before)
+
     def test_the_dearer_good_gains_less_service_per_unit_of_value(self):
         # both serve the need alike per kilogram, and the need is priced at the cheaper good's price
         need = display_need(300.0, [("cheap", 300.0, 1.0), ("dear", 3000.0, 1.0)])

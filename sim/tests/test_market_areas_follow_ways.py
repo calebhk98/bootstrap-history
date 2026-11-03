@@ -61,6 +61,12 @@ class FollowTests(unittest.TestCase):
         self.assertEqual(record.memory.prices, {market_key(GOOD, "a:one"): 2.0})
         self.assertEqual(record.memory.usual_prices, {market_key(GOOD, "a:one"): 2.0})
 
+    def test_the_kind_of_a_remembered_quote_moves_with_its_price(self):
+        record = record_remembering({"a:town": 1.0, "a:farms": 2.0, "a:hills": 3.0})
+        record.memory.quote_kinds = {market_key(GOOD, "a:farms"): "asking", market_key(GOOD, "a:town"): "bid"}
+        follow(record, SPLIT, JOINED)
+        self.assertEqual(record.memory.quote_kinds, {market_key(GOOD, "a:one"): "asking"})
+
     def test_every_remembered_market_names_an_area_that_exists(self):
         record = record_remembering({"a:town": 1.0, "a:farms": 2.0, "a:hills": 3.0})
         record.memory.prices[market_key("labourer", "wage_area")] = 9.0

@@ -39,6 +39,10 @@ class GridTests(unittest.TestCase):
         self.assertAlmostEqual(min(grid), 10.0 * price_setting.GRID_START)
         self.assertLess(max(grid), 10.0 * price_setting.GRID_END)
 
+    def test_the_last_price_tried_is_the_largest_step_below_the_end(self):
+        grid = price_setting.grid_prices(10.0)
+        self.assertAlmostEqual(max(grid), 10.0 * (price_setting.GRID_END - price_setting.GRID_STEP))
+
 
 class BestPriceTests(unittest.TestCase):
     def test_equal_competitors_give_cost_plus_the_logit_markup(self):

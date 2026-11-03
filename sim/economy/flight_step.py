@@ -11,7 +11,7 @@ from .setup import area_tile
 
 
 def people_before(setup, labour) -> Dict[str, float]:
-    """People in each labour area before the year's market moves them; empty when the state takes nothing to flee from."""
+    """People now in each labour area that has workers."""
     return {area: people_in(labour.workforce, area) for area in labour.workforce.workers}
 
 

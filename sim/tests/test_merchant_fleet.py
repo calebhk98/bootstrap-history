@@ -5,7 +5,7 @@ QUICK_TOPIC = True
 import types
 import unittest
 
-from sim.economy import carriage_fleet, carriage_fleet_book, carriage_wear, inventory, merchants
+from sim.economy import carriage_fleet_book, carriage_wear, inventory, merchants, merchants_legs
 from sim.economy.accounts import Book
 from sim.economy.carriage_fleet import FleetLimit
 from sim.economy.types import EDGE_PRODUCTION, Fill, GoodsMove, GoodSpec
@@ -41,8 +41,8 @@ class DispatchIsBoundByTheFleet(unittest.TestCase):
         self.assertAlmostEqual(done.moves[0].quantity, 0.4 / WEAR_PER_TONNE)     # tonnes the hired wear bears
 
     def test_capacity_follows_the_carriers_held(self):
-        small = ship(fleet_of(carriage_fleet.capacity_of({CART: 3.0}, {CART: CART_LIFE})), held=100.0)
-        large = ship(fleet_of(carriage_fleet.capacity_of({CART: 6.0}, {CART: CART_LIFE})), held=100.0)
+        small = ship(fleet_of({CART: 3.0 / CART_LIFE}), held=100.0)
+        large = ship(fleet_of({CART: 6.0 / CART_LIFE}), held=100.0)
         self.assertAlmostEqual(small.moves[0].quantity, 3.0 / CART_LIFE / WEAR_PER_TONNE)
         self.assertAlmostEqual(large.moves[0].quantity, 2.0 * small.moves[0].quantity)
 
@@ -59,6 +59,21 @@ class DispatchIsBoundByTheFleet(unittest.TestCase):
     def test_a_carrier_good_that_is_not_held_does_not_limit(self):
         limit = FleetLimit(lambda _source, _destination: {"feed": 5.0}, {CART: 0.0})
         self.assertAlmostEqual(ship(limit).moves[0].quantity, 10.0)
+
+
+class WearFollowsWhatIsCarried(unittest.TestCase):
+    def test_wear_a_route_could_not_use_for_want_of_crew_is_left_to_the_next_route(self):
+        carriage, _area_map, _area_a, _area_b = world()
+        specs = {"brick": GoodSpec("brick", 1000.0, 0.0, 0.0, "material"), "feather": GoodSpec("feather", 1.0, 0.0, 0.0, "material")}
+        who = merchant()
+        who.routes = {(good, "a"): merchants_legs.from_weights({("b", "area"): 1.0}) for good in specs}
+        held = {("brick", "a"): 10.0, ("feather", "a"): 400.0}
+        crew = merchants.CrewHire(lambda _source, _destination: (("hand@a", 1.0),), {"hand@a": 5.0}, {}, lambda _key: 1.0,
+                                  lambda _good, tile: "area_" + tile)      # half the hours the bricks need were hired
+        done = merchants.dispatch(who, (), carriage, specs, "coin", 1e6, held, crew=crew, fleet=fleet_of({CART: 1.0}))
+        carried = {move.good: move.quantity for move in done.moves}
+        self.assertAlmostEqual(carried["brick"], 5.0)
+        self.assertGreater(carried["feather"], 0.0)      # the five bricks left behind wore no carts
 
 
 class FleetInTheBook(unittest.TestCase):

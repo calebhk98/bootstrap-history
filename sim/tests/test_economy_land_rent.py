@@ -58,7 +58,7 @@ class EntryRentTests(unittest.TestCase):
     def plans(self, rent_by_tile):
         view = View(prices={"salt": 1.0, "firewood": 0.1, "pan": 2.0}, wages={"hand": 0.2})
         unmet = {("salt", "area"): entry.UnmetDemand("salt", "area", "anchor", 100.0)}
-        return entry.entry_plans({"boil_salt": self.SALT}, view, unmet, rent_by_tile, {"boil_salt": 1.0})
+        return entry.entry_plans({"boil_salt": self.SALT}, view, unmet, rent_of=lambda recipe_id, tile: rent_by_tile.get(tile, 0.0))
 
     def test_entry_slows_where_land_is_dear(self):
         self.assertEqual(len(self.plans({})), 1)

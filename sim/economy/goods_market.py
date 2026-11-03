@@ -8,7 +8,8 @@ price index, merchants, the market's memory). Buyers are served by priority tier
 
 `clear_at_one_price` is the other rule, a uniform-price call market (supply a step function at reservations, demand the
 sum of the buyers' schedules, lowest reservations sell first): it answers "at what price would these buyers take
-exactly this supply", which the callers probing hypothetical supply (market_curves.py, expansion_price.py) ask.
+exactly this supply", which the callers probing hypothetical supply (market_curves.py) ask; expansion_price.py reads its crossing
+(`crossing`).
 
 Choices:
   * Prices are positive. An ask at or below zero (a waste product) is treated as the lowest price the market
@@ -122,15 +123,6 @@ class Buyers:
 def in_clearing_order(offers: Sequence[Offer]) -> List[Offer]:
     """The offers a market clears, cheapest reservation first."""
     return sorted((offer for offer in offers if offer.quantity > 0.0), key=_OFFER_ORDER)
-
-
-def with_offer(ordered: List[Offer], offer: Offer) -> List[Offer]:
-    """`ordered` (in clearing order) with one more offer put in its place, as `in_clearing_order` would."""
-    if offer.quantity <= 0.0:
-        return ordered
-    result = list(ordered)
-    bisect.insort(result, offer, key=_OFFER_ORDER)
-    return result
 
 
 def clear_at_one_price(bids: Sequence[Bid], offers: Sequence[Offer], good: GoodId, area: AreaId,
@@ -271,28 +263,6 @@ def requested_by_buyers(buyers: Buyers, offers: Sequence[Offer]) -> float:
     return allocate(buyers.bids, ordered, asks, buyers.schedule).requested
 
 
-def price_and_sold(buyers: Buyers, ordered: List[Offer], seller: str) -> Tuple[Optional[float], float]:
-    """The clearing price (None when the market has none) and what a seller that is not a book edge sells, as `clear` gives
-    them, without building fills; called only by tests. `ordered` is in clearing order (`in_clearing_order`, `with_offer`)."""
-    price, eligible, supply, _wants = crossing(buyers, ordered, with_wants=False)
-    if eligible is None:
-        return price, 0.0
-    # `_fill_sellers` for this seller's offers alone
-    remaining, sold = buyers.traded_at(price, supply), []
-    for _reservation, group in groupby(eligible, key=_FIRST):
-        offers = [offer for _, offer in group]
-        total = math.fsum(offer.quantity for offer in offers)
-        own = [offer.quantity for offer in offers if offer.seller == seller]
-        if remaining >= total:
-            sold.extend(own)
-            remaining -= total
-        else:
-            share = remaining / total if total > 0.0 else 0.0
-            sold.extend(quantity * share for quantity in own)
-            remaining = 0.0
-    return price, math.fsum(quantity for quantity in sold if quantity > 0.0)
-
-
 def crossing(buyers: Buyers, offers: List[Offer], with_wants: bool = True):
     """(price, offers eligible at it, supply, each buyer's want at it) where `offers` (in clearing order) meet
     the buyers; the eligible offers and wants are None when nothing trades, and supply is then what would
@@ -356,12 +326,6 @@ def _supply_at(levels, price: float) -> float:
     """Cumulative supply of the last level at or below `price` (levels ascend by reservation)."""
     count = bisect.bisect_right(levels, price, key=_FIRST)
     return levels[count - 1][1] if count else 0.0
-
-
-def _ration_buyers(bids: Sequence[Bid], price: float, available: float) -> List[Tuple[Bid, float]]:
-    """Each buyer's served quantity at a price with `available` to share, in the order of `bids`."""
-    served = ration(bids, [quantity_at(bid, price) for bid in bids], available)
-    return list(zip(bids, served))
 
 
 def _fill_sellers(eligible: List[Tuple[float, Offer]], traded: float) -> List[Tuple[Offer, float]]:

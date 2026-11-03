@@ -117,6 +117,21 @@ class AreaWageTests(unittest.TestCase):
         self.assertGreater(scale(2.0, 1.0), 1.0)
         self.assertLess(scale(0.5, 1.0), 1.0)
 
+    def test_after_inflation_the_table_is_priced_in_todays_money_and_a_wage_that_kept_pace_changes_only_its_unit(self):
+        setup = fixture.small_setup(carriage_rates={"cart": CART_RATE}, carriage_crew={"cart": (fixture.LABOURER, CART_HOURS)},
+                                    carriage_wage=1.0)
+        carried = {fixture.TOWN: {fixture.FARMS: 5.0}}
+
+        def scale(wage, level):
+            wages = {market_key(fixture.LABOURER, labour_area(tile)): wage for tile in (fixture.TOWN, fixture.FARMS)}
+            record = type("Record", (), {"memory": type("Memory", (), {"wages": wages, "price_levels": {}, "opening_wage_level": lambda self, money: level})(),
+                                         "cohorts": {}, "merchants": {},
+                                         "carriage": type("Carriage", (), {"carried": carried, "area_imbalance": 1.0})()})()
+            return carriage_hours.wage_scale(setup, record, setup.carriage_table())
+        self.assertAlmostEqual(scale(2.0, 2.0), 2.0)
+        self.assertGreater(scale(3.0, 2.0), 2.0)
+        self.assertLess(scale(1.0, 2.0), 2.0)
+
     def test_hours_hired_in_a_shared_market_are_shared_by_the_hours_wanted(self):
         who = Merchant("m1", "town", "owner", 1.0)
         who.carriage_hours_wanted = {market_key(fixture.LABOURER, "hills"): 30.0, market_key(fixture.LABOURER, "farms"): 10.0}

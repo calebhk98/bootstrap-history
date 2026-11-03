@@ -8,7 +8,7 @@ import types
 import unittest
 from unittest import mock
 
-from sim.economy import producers, producers_close, year_goods
+from sim.economy import producers, producers_close, producers_working_capital, year_goods
 from sim.economy.accounts import Book
 from sim.economy.market_memory import MarketMemory
 from sim.economy.types import EDGE_MINT, Bid, Fill, GoodsMove, LabourResult, Offer, Transfer
@@ -90,7 +90,7 @@ class WorkingCapitalLoanTests(unittest.TestCase):
         result = producers_close.close_year(producer, FARM, 100.0, 70.0, farm_view(2.0, cash=14.0), worked_runs=10.0)
         request = result.loan_request
         self.assertIsNotNone(request)
-        self.assertEqual(request.purpose, producers_close.WORKING_CAPITAL_PURPOSE)
+        self.assertEqual(request.purpose, producers_working_capital.WORKING_CAPITAL_PURPOSE)
         self.assertEqual(request.years, 1.0)
         self.assertGreater(request.amount, 0.0)
         self.assertGreater(request.maximum_rate, 0.0)

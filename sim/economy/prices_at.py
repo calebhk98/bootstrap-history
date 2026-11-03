@@ -10,8 +10,8 @@ import math
 from typing import Dict, Optional, Set, Tuple
 
 from . import country_figures, market_curves
-from .market_memory import market_key
-from .notional import RECENT_TRADE_YEARS, shown_prices
+from .market_memory import RECENT_TRADE_YEARS, market_key
+from .notional import shown_prices
 
 
 def _area_on(economy, good: str, tile: str) -> Optional[str]:

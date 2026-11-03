@@ -15,8 +15,8 @@ from .types import Bid, GoodsMove
 
 Market = Tuple[str, str]
 
-APPORTIONED_WANTED_SHARE = declare(
-    "RESPEND_APPORTIONED_WANTED_SHARE", 1.0, kind="temporary_heuristic",
+RESPEND_APPORTIONED_WANTED_SHARE = declare(
+    "RESPEND_RESPEND_APPORTIONED_WANTED_SHARE", 1.0, kind="temporary_heuristic",
     unit="share of the round's wanted counted for the bids that add demand",
     source=None, confidence="D",
     why="A respend round's clearing gives the demand of all its bids together; the part that is new demand is taken "
@@ -157,7 +157,7 @@ def _wanted_adding(adding, bids, offers, result) -> float:
     total = math.fsum(quantity_at(bid, price) for bid in bids)
     if total <= 0.0:
         return 0.0
-    return APPORTIONED_WANTED_SHARE * wanted * math.fsum(quantity_at(bid, price) for bid in adding) / total
+    return RESPEND_APPORTIONED_WANTED_SHARE * wanted * math.fsum(quantity_at(bid, price) for bid in adding) / total
 
 
 def _settle(record, ledger, result) -> Tuple[float, Dict[str, Tuple[float, float]]]:

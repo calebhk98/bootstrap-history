@@ -35,12 +35,6 @@ class StreakTests(unittest.TestCase):
 
 
 class SizeTests(unittest.TestCase):
-    def test_newcomers_add_a_share_of_the_gap_no_faster_than_incumbents_grow(self):
-        added = entry_margin.added_output(gap=1000.0, capacity=100.0)
-        self.assertAlmostEqual(added, entry_margin.MARGIN_ENTRY_GROWTH_SHARE * 100.0)
-        small = entry_margin.added_output(gap=10.0, capacity=100.0)
-        self.assertAlmostEqual(small, entry_margin.MARGIN_ENTRY_SHARE_OF_GAP * 10.0)
-
     def test_there_is_no_gap_when_makers_already_cover_what_buyers_take_at_the_entry_price(self):
         self.assertEqual(entry_margin.gap_at_entry_price([bid(10.0, 20.0)], 1.0, 2.0, capacity=50.0), 0.0)
         self.assertAlmostEqual(entry_margin.gap_at_entry_price([bid(10.0, 20.0)], 1.0, 2.0, capacity=4.0), 6.0)
