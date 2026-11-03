@@ -5,6 +5,7 @@ QUICK_TOPIC = True
 
 import unittest
 
+from sim.tests.economy_view_defaults import ViewDefaults
 from sim.economy import households_own, producers
 from sim.economy.tool_wear import tool_bids, with_tool_wear
 from sim.economy.types import GoodSpec, Recipe
@@ -31,7 +32,7 @@ def worn_recipe(base):
                              REGISTRY, LIVES, HOURS_PER_YEAR)["farm"]
 
 
-class View:
+class View(ViewDefaults):
     year = 3
 
     def price(self, good, area):

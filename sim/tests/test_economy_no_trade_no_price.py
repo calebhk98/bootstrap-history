@@ -64,7 +64,8 @@ class ClearingTests(unittest.TestCase):
 
 class ReaderTests(unittest.TestCase):
     def record(self, prices, quotes, weights):
-        memory = MarketMemory(prices=prices, quote_kinds=quotes, volume_weights=weights)
+        memory = MarketMemory(prices=prices, quote_kinds=quotes, volume_weights=weights,
+                              trade_age={key: 0 for key in prices if key not in quotes})
         return types.SimpleNamespace(memory=memory, goods=types.SimpleNamespace(volumes={}))
 
     def test_the_price_index_follows_the_areas_that_traded(self):

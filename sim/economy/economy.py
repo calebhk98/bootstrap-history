@@ -468,7 +468,7 @@ class Economy:
             earning = unit_cost.return_on_capital(recipe, producers.expected_output_prices(producer, recipe, view),
                                                   inputs, wages)
             cash = record.book.balance(producer_id, money)
-            if not earning > rate or cash <= 0.0:
+            if earning is None or not earning > rate or cash <= 0.0:
                 continue
             self._bid_for_plant(producer, runs, cash, plant_worth_ratio(earning, rate, recipe.plant_life_years),
                                 view, order_book)

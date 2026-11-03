@@ -4,13 +4,14 @@ QUICK_TOPIC = True
 
 import unittest
 
+from sim.tests.economy_view_defaults import ViewDefaults
 from sim.economy import producers
 from sim.economy.types import Recipe
 
 SMELT = Recipe("smelt", {"metal": 10.0}, {"ore": 4.0}, {"smith": 1.0})
 
 
-class View:
+class View(ViewDefaults):
     year = 3
 
     def __init__(self, prices, wages=None):

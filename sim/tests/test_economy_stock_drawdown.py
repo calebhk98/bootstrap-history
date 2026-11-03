@@ -7,6 +7,7 @@ QUICK_TOPIC = True
 import math
 import unittest
 
+from sim.tests.economy_view_defaults import ViewDefaults
 from sim.economy import inventory, producers
 from sim.economy.types import Recipe
 
@@ -15,7 +16,7 @@ EXPECTED_SALES = 5.0        # runs a year
 TARGET_RUNS = inventory.target_stock(EXPECTED_SALES)
 
 
-class View:
+class View(ViewDefaults):
     year = 3
 
     def __init__(self, stock_runs):

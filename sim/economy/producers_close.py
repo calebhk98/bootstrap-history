@@ -219,12 +219,13 @@ def _expansion(producer, recipe, view, currency, rate, runs, inputs, wages, pric
         return None, 0.0
     prices = expected_output_prices(producer, recipe, view) or {}
     if price_share_after is not None:
-        if unit_cost.return_on_capital(recipe, prices, inputs, wages) <= rate:
+        before = unit_cost.return_on_capital(recipe, prices, inputs, wages)
+        if before is None or before <= rate:
             return None, 0.0        # the price can only fall with the addition, so the return cannot beat the rate
         prices = {good: price * price_share_after(good, runs * recipe.outputs[good] * producer.yield_factor)
                   for good, price in prices.items()}
     yearly_return = unit_cost.return_on_capital(recipe, prices, inputs, wages)
-    if yearly_return <= rate:
+    if yearly_return is None or yearly_return <= rate:
         return None, 0.0
     amount = runs * value
     return LoanRequest(producer.agent_id, currency, amount, credit.earnable_rate(yearly_return), recipe.plant_life_years,

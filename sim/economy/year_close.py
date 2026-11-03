@@ -286,7 +286,7 @@ def remember_basket_price_level(setup, record) -> float:
     # the median's weights are what the goods traded for last year; the opening basket's value stands in until they trade
     spending = traded_spending_weights(usual_volumes(record),
                                        record.memory.last_year_prices or prices, set(record.goods.opening_basket)) \
-        or {good: quantity * base.get(good, 0.0) for good, quantity in record.goods.opening_basket.items()}
+        or {good: quantity * base[good] for good, quantity in record.goods.opening_basket.items() if good in base}
     record.memory.note_basket_price_level(
         setup.currency_id, level, currency.price_inflation(prices, record.memory.last_year_prices, spending))
     record.memory.set_last_year_prices(prices)

@@ -6,6 +6,7 @@ QUICK_TOPIC = True
 import types
 import unittest
 
+from sim.tests.economy_view_defaults import ViewDefaults
 from sim.economy import household_work_year, households_work
 from sim.economy.households_basket import make_basket
 from sim.economy.households_cohort import Cohort
@@ -28,7 +29,7 @@ NEED_DATA = {"needs": {"food": {"surplus_budget_share": 0.5, "subsistence_per_ca
                        "wood_kg": {"satisfies": {"warmth": 15.0}}}}
 
 
-class View:
+class View(ViewDefaults):
     def __init__(self, wages, prices=None):
         self.wages = wages
         self.prices = prices or {}

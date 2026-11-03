@@ -6,6 +6,7 @@ QUICK_TOPIC = True
 import types
 import unittest
 
+from sim.tests.economy_view_defaults import ViewDefaults
 from sim.economy import household_grinding, household_work_year, households, households_work
 from sim.economy.households_basket import make_basket
 from sim.economy.households_cohort import Cohort
@@ -26,7 +27,7 @@ WATER_AND_FUEL_HOURS = 0.5 * 0.25 * 100   # per person: 12.5
 GRINDING_HOURS = 2.0 * 0.25 * 100         # per person at the food floor: 50, so 5 hours per need unit of a floor of 10
 
 
-class View:
+class View(ViewDefaults):
     def __init__(self, wages, prices):
         self.wages, self.prices = wages, prices
 

@@ -9,7 +9,6 @@ from .households_basket import need_prices
 from . import households_cohort
 from .households_cohort import Cohort
 from .market_memory import market_key
-from .offered_price import offered_price
 from .setup import labour_area
 from .types import AgentId, LabourOffer
 
@@ -75,7 +74,7 @@ def service_price_per_hour(setup, view, tile, wage_price: float) -> float:
         if need.need_id != WORK_NEED:
             continue
         for good, effect in need.goods:
-            posted = offered_price(view, good, area(good, tile))
+            posted = view.offered_price(good, area(good, tile))
             if posted is not None and posted > 0.0 and effect > 0.0:
                 prices.append(posted / effect)
     return min(prices) if prices else wage_price

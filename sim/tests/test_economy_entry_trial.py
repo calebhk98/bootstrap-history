@@ -75,7 +75,9 @@ def market(makers=False, price=None):
     record = types.SimpleNamespace(producers=producers, credit=types.SimpleNamespace(expansion_runs={}))
     area = types.SimpleNamespace(area_id="area", anchor_tile=ANCHOR, tiles=(ANCHOR,))
     area_map = types.SimpleNamespace(goods=lambda: [GOOD], areas=lambda good: [area])
-    return setup, record, types.SimpleNamespace(price=lambda good, area_id: price), area_map
+    return setup, record, types.SimpleNamespace(price=lambda good, area_id: price, offered_price=lambda good, area_id: price,
+                                              present_prices_at=lambda names, tile, wages=False: {}, price_kind=lambda good, area_id: None,
+                                              cleared_price=lambda good, area_id: None), area_map
 
 
 def trial_plans(bids, makers=False, siting=None, cost=80.0):

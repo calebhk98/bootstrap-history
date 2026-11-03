@@ -2,6 +2,8 @@
 import math
 from typing import Callable, Dict, List, Mapping, Optional, Set, Tuple
 
+from .market_memory import RECENT_TRADE_YEARS
+
 KEY_SEPARATOR = "|"
 
 
@@ -15,12 +17,12 @@ def _markets_by_good(record, keep: Optional[Callable[[str, str], bool]]) -> Dict
     """Each good's priced markets in key order as (key, price, a traded price, weight): the weight is what the
     market usually trades (this year's volume before any is remembered). `keep(good, area)` drops a market."""
     weights = usual_volumes(record)
-    quoted = record.memory.quote_kinds
+    memory = record.memory
     by_good: Dict[str, List[Tuple[str, float, bool, float]]] = {}
-    for key, price in sorted(record.memory.prices.items()):
+    for key, price in sorted(memory.prices.items()):
         good, area = key.split(KEY_SEPARATOR, 1)
         if keep is None or keep(good, area):
-            by_good.setdefault(good, []).append((key, price, key not in quoted, weights.get(key, 0.0)))
+            by_good.setdefault(good, []).append((key, price, memory.traded_within(key, RECENT_TRADE_YEARS), weights.get(key, 0.0)))
     return by_good
 
 
