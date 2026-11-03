@@ -229,6 +229,18 @@ class Quote:
 
 
 @dataclass(frozen=True)
+class Pairing:
+    """The trades of a clearing buyer by seller: a pair is a quantity one buyer bought from one seller at that seller's
+    ask. `buyers` and `sellers` are (agent, tile) per bid and per offer; the pair lists are parallel."""
+    buyers: Tuple[Tuple[AgentId, TileId], ...]
+    sellers: Tuple[Tuple[AgentId, TileId], ...]
+    asks: Tuple[float, ...]              # per seller
+    buyer_index: Tuple[int, ...]         # per pair
+    seller_index: Tuple[int, ...]        # per pair
+    quantity: Tuple[float, ...]          # per pair
+
+
+@dataclass(frozen=True)
 class ClearingResult:
     good: GoodId
     area: AreaId
@@ -237,9 +249,9 @@ class ClearingResult:
     quantity: float
     demand_at_price: float
     offered_at_price: float
-    unmet_floor: float               # floor quantity buyers could not get or pay for
     fills: Tuple[Fill, ...]
     quote: Optional[Quote] = None    # set when nothing traded
+    pairing: Optional["Pairing"] = None    # who bought from whom at which ask; None where only fills say (one-price clearings)
 
     @property
     def traded_price(self) -> Optional[float]:

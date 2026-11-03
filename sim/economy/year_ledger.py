@@ -73,11 +73,11 @@ class YearLedger:
         for posting in postings:
             self.money_out[posting.payer] = self.money_out.get(posting.payer, 0.0) + posting.amount
 
-    def note_plant_purchases(self, moves: Iterable[object], price: float, plant_goods: Dict[AgentId, Iterable[GoodId]]) -> None:
-        """Money producers paid this clearing for goods their own plant is built from."""
-        for move in moves:
-            if isinstance(move, GoodsMove) and move.good in plant_goods.get(move.receiver, ()):
-                self.plant_spend[move.receiver] = self.plant_spend.get(move.receiver, 0.0) + move.quantity * price
+    def note_plant_purchases(self, postings: Iterable[object], good: GoodId, plant_goods: Dict[AgentId, Iterable[GoodId]]) -> None:
+        """Money producers paid, in the clearing of `good`, for goods their own plant is built from: what they paid the sellers."""
+        for posting in postings:
+            if isinstance(posting, Transfer) and good in plant_goods.get(posting.payer, ()):
+                self.plant_spend[posting.payer] = self.plant_spend.get(posting.payer, 0.0) + posting.amount
 
     def running_costs(self, agent: AgentId) -> float:
         """Money the agent paid out this year other than for building plant."""

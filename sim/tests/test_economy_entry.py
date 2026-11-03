@@ -65,18 +65,18 @@ class EntryTests(unittest.TestCase):
 class UnmetQuantityTests(unittest.TestCase):
     def test_a_market_that_traded_nothing_is_asked_for_at_the_lowest_ask_on_offer(self):
         bids = [Bid("b", "salt", "area", "tile", 5.0, 10.0, 1.0, 1.0, 1e9, 0, maximum_price=0.5)]
-        empty = ClearingResult("salt", "area", "coin", 9.0, 0.0, 0.0, 0.0, 5.0, ())
+        empty = ClearingResult("salt", "area", "coin", 9.0, 0.0, 0.0, 0.0, ())
         self.assertAlmostEqual(entry.wanted_in_round(bids, [Offer("s", "salt", "area", "tile", 3.0, 1.0)], empty), 0.0)
         bids = [Bid("b", "salt", "area", "tile", 5.0, 10.0, 1.0, 1.0, 1e9, 0)]
         self.assertAlmostEqual(entry.wanted_in_round(bids, [Offer("s", "salt", "area", "tile", 3.0, 1.0)], empty), 15.0)
 
     def test_a_market_with_buyers_and_no_sellers_is_asked_for_at_the_highest_ceiling(self):
         bids = [Bid("b", "salt", "area", "tile", 5.0, 10.0, 1.0, 1.0, 1e9, 0, maximum_price=2.0)]
-        empty = ClearingResult("salt", "area", "coin", 1.0, 0.0, 0.0, 0.0, 5.0, ())
+        empty = ClearingResult("salt", "area", "coin", 1.0, 0.0, 0.0, 0.0, ())
         self.assertAlmostEqual(entry.wanted_in_round(bids, [], empty), 10.0)
 
     def test_a_round_that_traded_is_asked_for_at_the_asks_it_faced(self):
-        traded = ClearingResult("salt", "area", "coin", 1.0, 12.0, 15.0, 12.0, 0.0, ())
+        traded = ClearingResult("salt", "area", "coin", 1.0, 12.0, 15.0, 12.0, ())
         self.assertAlmostEqual(entry.wanted_in_round([], [], traded), 15.0)
 
     def test_unmet_is_what_was_asked_for_less_what_was_delivered(self):

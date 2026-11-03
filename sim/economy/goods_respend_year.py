@@ -20,11 +20,12 @@ class LeftMarket:
     rounds), the bids that add demand in each round (`bids_adding_demand`) and the clearings of every round. What is unsold is what the last round to
     clear it left on offer."""
 
-    def __init__(self, bids, result, offers, last_price, delivered, wanted, idle_years=0):
+    def __init__(self, bids, result, offers, last_price, delivered, wanted, idle_years=0, bought=None):
         self.delivered = delivered     # goods moved in all rounds so far
         self.wanted = wanted           # what buyers asked for in all rounds so far
         self.idle_years = idle_years   # years the market lacked bids or offers, before this year
         self.results = [result]
+        self.bought = bought or {}     # buyer -> (units received, money paid) in the first round's settlement
         self.bids = bids
         self.all_bids = list(bids)     # the first round's bids and the later rounds' that add demand
         self.last_offered = result.offered_at_price     # on offer at the last round's price
@@ -47,23 +48,13 @@ def sold_by_seller(result) -> Dict[tuple, float]:
     return sold
 
 
-def _taken(result) -> Dict[str, Tuple[float, float]]:
-    """buyer -> (units bought, money spent) in a cleared market."""
-    taken: Dict[str, Tuple[float, float]] = {}
-    for fill in result.fills:
-        if fill.side == "buy":
-            units, money = taken.get(fill.agent, (0.0, 0.0))
-            taken[fill.agent] = (units + fill.quantity, money + fill.quantity * fill.price)
-    return taken
-
-
-def rationed_in(bids, result, households, fallback_price, need_by_buyer) -> Dict[str, Dict[str, float]]:
-    """buyer -> need id -> money left unspent by the households' bids in one cleared market."""
+def rationed_in(bids, taken, households, fallback_price, need_by_buyer) -> Dict[str, Dict[str, float]]:
+    """buyer -> need id -> money left unspent by the households' bids in one cleared market, where `taken` is buyer ->
+    (units received, money paid) as its settlement moved them (`Settlement.bought_by_buyer`)."""
     by_buyer: Dict[str, List[Bid]] = {}
     for bid in bids:
         if bid.buyer in households:
             by_buyer.setdefault(bid.buyer, []).append(bid)
-    taken = _taken(result)
     rationed: Dict[str, Dict[str, float]] = {}
     for buyer, own in by_buyer.items():
         need_id = need_by_buyer(buyer).get(own[0].good)
@@ -93,7 +84,7 @@ def respend(setup, record, view, ledger, markets: Dict[Market, LeftMarket], bask
     for key, market in sorted(markets.items()):
         if not market.bids:
             continue
-        for buyer, by_need in rationed_in(market.bids, market.result, households, market.result.price,
+        for buyer, by_need in rationed_in(market.bids, market.bought, households, market.result.price,
                                           need_by_buyer).items():
             for need_id, amount in by_need.items():
                 rationed.setdefault(buyer, {})[need_id] = rationed.get(buyer, {}).get(need_id, 0.0) + amount
@@ -127,14 +118,14 @@ def respend(setup, record, view, ledger, markets: Dict[Market, LeftMarket], bask
             market.wanted += _wanted_adding(adding, bids, market.offers, result)
             market.results.append(result)
             market.all_bids.extend(adding)
-            moved = _settle(record, ledger, result)
+            moved, bought = _settle(record, ledger, result)
             market.delivered += moved
             market.last_offered = result.offered_at_price
             market.last_delivered = moved
             market.offers = offers_left(market.offers, sold_by_seller(result))
             spent_any = spent_any or result.quantity > 0.0
             fallback = market_quote.lowest_unfilled_ask(market.offers)
-            for buyer, by_need in rationed_in(bids, result, households, fallback, need_by_buyer).items():
+            for buyer, by_need in rationed_in(bids, bought, households, fallback, need_by_buyer).items():
                 for need_id, amount in by_need.items():
                     rationed.setdefault(buyer, {})[need_id] = rationed.get(buyer, {}).get(need_id, 0.0) + amount
         if not spent_any or not rationed:
@@ -159,14 +150,15 @@ def _wanted_adding(adding, bids, offers, result) -> float:
     return wanted * math.fsum(quantity_at(bid, price) for bid in adding) / total
 
 
-def _settle(record, ledger, result) -> float:
-    """Settle a round's result and return the goods it delivered."""
-    delivered = 0.0
+def _settle(record, ledger, result) -> Tuple[float, Dict[str, Tuple[float, float]]]:
+    """Settle a round's result and return the goods it delivered and what each buyer received and paid."""
+    delivered, bought = 0.0, {}
     if result.quantity > 0.0:
         done = settlement.settle_goods(record.book, result)
+        bought = done.bought_by_buyer()
         delivered = sum(move.quantity for move in done.postings if isinstance(move, GoodsMove))
         ledger.note_postings(done.postings, "sales")
         for shortfall in done.shortfalls:
             ledger.unpaid[shortfall.agent] = ledger.unpaid.get(shortfall.agent, 0.0) + shortfall.unpaid_amount
     ledger.note_clearing(result, delivered)
-    return delivered
+    return delivered, bought
