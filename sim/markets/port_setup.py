@@ -281,8 +281,7 @@ def build_setup(sim, opening=None, production=None):
         kernels=dict(sim.bound_kernels()),
         site_limits=tuple(SiteLimit(*limit) for limit in opening["site_limits"]),
         opening_store_output={good: tuple(tuple(working) for working in entry["workings"])
-                              for good, entry in sorted(opening["stores"].items()) if entry["workings"]},
-        opening_store_gaps={good: entry["gap"] for good, entry in sorted(opening["stores"].items()) if entry["gap"]})
+                              for good, entry in sorted(opening["stores"].items()) if entry["workings"]})
 
 
 def tool_wear_recipes(recipes, trades_data, life_years, hours_per_worker_year):

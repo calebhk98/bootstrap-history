@@ -138,11 +138,3 @@ class OwnPlots:
             tile = cohorts[agent_id].tile
             total[tile] = total.get(tile, 0.0) + self.hectares[agent_id]
         return total
-
-    def grown_totals(self) -> Dict[GoodId, float]:
-        """Goods the cohorts grow in all, at the last ask."""
-        total: Dict[GoodId, float] = {}
-        for grown in self.grown.values():
-            for good, quantity in grown.items():
-                total[good] = total.get(good, 0.0) + quantity
-        return dict(sorted(total.items()))
