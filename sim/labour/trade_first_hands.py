@@ -19,12 +19,6 @@ def starting_proficiency(uncovered: float) -> float:
     return 1.0 - max(0.0, min(1.0, uncovered))
 
 
-def capped_by_teacher(proficiency: float, teacher_proficiency: float) -> float:
-    """A cohort starts no more proficient than its teacher is (learning_curve.proficiency of the teacher's own cumulative
-    output of the trade; a teacher who holds the knowledge but has never practised starts at the floor)."""
-    return min(max(0.0, proficiency), max(0.0, min(1.0, teacher_proficiency)))
-
-
 def first_hands_years(full_apprenticeship_years: float) -> float:
     """Years until a converted person can do the covered tasks: the floor share of a full apprenticeship, the
     part (tools, pace, judgement) even a trade the source fully covers still needs."""
@@ -38,12 +32,11 @@ def prepaid_keep_years(conversion_years: float, full_apprenticeship_years: float
 
 
 def cohort_rows(current_year: float, trade: str, count: float, conversion_years: float,
-                full_apprenticeship_years: float, uncovered: float, teacher_proficiency: float = 1.0) -> List[TrainingRow]:
-    """Training rows for a cohort: an early slice of person-equivalents
-    ready at first hands (no larger a share than the teacher's own proficiency allows), then the rest at the end. One record when no task is covered or first hands would come
-    no sooner than the end."""
+                full_apprenticeship_years: float, uncovered: float) -> List[TrainingRow]:
+    """Training rows for a cohort: an early slice of person-equivalents ready at first hands, then the rest at the end.
+    One record when no task is covered or first hands would come no sooner than the end."""
     first = first_hands_years(full_apprenticeship_years)
-    early = count * capped_by_teacher(starting_proficiency(uncovered), teacher_proficiency)
+    early = count * starting_proficiency(uncovered)
     if early <= 0.0 or first >= conversion_years:
         return [TrainingRow(trade, float(count), current_year + conversion_years)]
     return [TrainingRow(trade, early, current_year + first),

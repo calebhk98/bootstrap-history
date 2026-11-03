@@ -8,8 +8,7 @@ bid is high and the carriage is paid by the price: a person is bought wherever a
 cheapest first. Nothing here names a trade, an area or an owner.
 """
 import dataclasses
-import heapq
-from typing import Dict, List, Mapping, Optional, Sequence, Tuple
+from typing import Dict, List, Mapping, Optional, Tuple
 
 from .premium import annuity_factor, training_premium
 
@@ -41,43 +40,6 @@ def trained_wage_per_hour(trade_wage: Optional[float], floor_per_hour: float, tr
     floor wage plus what its training years add (training_premium); with no practice, that premium wage."""
     premium_wage = max(0.0, floor_per_hour) * training_premium(training_years, discount_rate, career_years)
     return max(premium_wage, trade_wage) if trade_wage is not None and trade_wage > 0.0 else premium_wage
-
-
-def cheapest_carriage(routes: Mapping[str, Sequence], origin: str, destination: str) -> Optional[float]:
-    """The least that moving a person costs along the routes (`Route`-like rows with `destination` and
-    `moving_cost`); 0 for no move; None when no way leads there."""
-    if origin == destination:
-        return 0.0
-    best: Dict[str, float] = {origin: 0.0}
-    queue: List[Tuple[float, str]] = [(0.0, origin)]
-    while queue:
-        cost, area = heapq.heappop(queue)
-        if area == destination:
-            return cost
-        if cost > best.get(area, float("inf")):
-            continue
-        for route in routes.get(area, ()):
-            step = cost + max(0.0, route.moving_cost)
-            if step < best.get(route.destination, float("inf")):
-                best[route.destination] = step
-                heapq.heappush(queue, (step, route.destination))
-    return None
-
-
-def carriage_from(routes: Mapping[str, Sequence], origin: str) -> Dict[str, float]:
-    """`cheapest_carriage` from one origin to every area a way leads to, in one search."""
-    best: Dict[str, float] = {origin: 0.0}
-    queue: List[Tuple[float, str]] = [(0.0, origin)]
-    while queue:
-        cost, area = heapq.heappop(queue)
-        if cost > best.get(area, float("inf")):
-            continue
-        for route in routes.get(area, ()):
-            step = cost + max(0.0, route.moving_cost)
-            if step < best.get(route.destination, float("inf")):
-                best[route.destination] = step
-                heapq.heappush(queue, (step, route.destination))
-    return best
 
 
 def buy_lots(destination: str, trade: str, wanted: float, bid_worth: float,

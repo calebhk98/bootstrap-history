@@ -34,6 +34,7 @@ class StaffPools:
         for trade in sorted(workforce.employees):
             self.book.set_employed(trade, workforce_rules.surviving_people(workforce.employees[trade], survival_share))
         workforce.slaves = int(round(workforce_rules.surviving_people(workforce.slaves, survival_share)))
+        self._scale_bought_rows(survival_share)
         workforce.freedmen = int(round(workforce_rules.surviving_people(workforce.freedmen, survival_share)))
         self.resync_pools()
 
@@ -73,6 +74,13 @@ class StaffPools:
             if self.trades.is_craft_trade(trade):
                 self.book.set_employed(trade, workforce.employees[trade] * ratio)
         workforce.slaves = int(round(workforce.slaves * ratio))
+        self._scale_bought_rows(ratio)
+
+    def _scale_bought_rows(self, ratio):
+        """The people bought and still learning are slaves too: their rows fall with the slaves, so the recount subtracts only learners that remain."""
+        for row in self._world.workforce.training:
+            if row.trade is None:
+                row.people = workforce_rules.surviving_people(row.people, ratio)
 
     FREEDMAN_ARTISAN_PRODUCTIVITY = declare(
         "FREEDMAN_ARTISAN_PRODUCTIVITY", 1.0, kind="temporary_heuristic",
@@ -115,14 +123,3 @@ class StaffPools:
         workforce.artisans = (craft + owned * free_share * self.FREEDMAN_ARTISAN_PRODUCTIVITY
                          + owned * (1.0 - free_share) * self.TRAINED_SLAVE_ARTISAN_PRODUCTIVITY)
         workforce.scholars = schol
-
-    WORKER_EQUIVALENT_UNTRAINED = declare(
-        "WORKER_EQUIVALENT_UNTRAINED", 0.55, kind="temporary_heuristic",
-        unit="fraction of a full worker's artisan capacity", source=None,
-        confidence="D",
-        why="What fraction of a full worker a person newly bought is "
-            "assumed to represent, entered into the training queue and "
-            "matured over TRAINING_YEARS. Not a measured productivity "
-            "ratio; picked so the training lag is real (see buy_slaves' "
-            "own docstring on the exploit this closed) without being all "
-            "or nothing.")

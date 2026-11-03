@@ -222,7 +222,7 @@ class _Survivors:
 
     def __init__(self, seed):
         self.state = SimpleNamespace(household=SimpleNamespace(
-            slaves=0, freedmen=0, staff_wanted={}, employees={"carpenter": 3.0, "smith": 5.0}))
+            slaves=0, freedmen=0, training=[], staff_wanted={}, employees={"carpenter": 3.0, "smith": 5.0}))
 
     def apply_staff_survival(self, survival_share):
         workforce_stand_in.lose_share(self.state.household, survival_share)

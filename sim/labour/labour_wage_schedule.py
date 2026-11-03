@@ -1,6 +1,8 @@
 """The opening wage schedule priced at the present level, and the wage of an hour of a trade read from it."""
 from sim.constants import declare
 
+from . import trade_data
+
 
 def person_year_hours(world):
     """The hours a person-year counts: the running economy's working year once it is open, else the scenario's."""
@@ -19,10 +21,11 @@ class WageScheduleReader:
 
     def wage_schedule(self):
         """The opening schedule priced at the present level: an hour of the unskilled trade is worth what the
-        economy pays it, or before the economy has opened the opening's figure times the price level.
-        Reading builds a priced copy and changes nothing."""
+        economy pays it at the base tile (the wage `quote_unskilled` and `wage_per_hour` read), or before the economy has
+        opened the opening's figure times the price level. Reading builds a priced copy and changes nothing."""
         opening = self.opening_wage_schedule()
-        paid = self._world.economy.unskilled_wage()
+        unskilled = trade_data.fallback_trade_of(self._world, opening.training_years)
+        paid = self._world.economy.agent_wage_at(unskilled, self._settlement.base_tile())
         return opening.priced_at(paid if paid is not None
                                  else opening.money_per_labour_hour * self._world.finance.home_price_level())
 

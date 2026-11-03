@@ -2,10 +2,10 @@
 more hours than its own workers offer. Wages pulled up by bids no one in the area can fill stop at what
 the trade's workers in the cheapest area to fetch them from earn plus the move spread over a career;
 beyond that they come, not stay. Only the hours workers sell at a wage count, here and there."""
-import heapq
 import math
 from typing import Dict, List, Optional, Sequence, Tuple
 
+from .carriage import carriage_from
 from .fetch_wage import fetch_wage
 from .premium import annuity_factor
 from .records import MarketState, YearInputs
@@ -35,20 +35,7 @@ class ImportCosts:
         """(cheapest moving cost over the routes, area) for every other area reachable from `area`, nearest
         first. The route out of an area is taken to cost the same coming back."""
         if area not in self._reach:
-            best = {area: 0.0}
-            queue = [(0.0, area)]
-            while queue:
-                cost, here = heapq.heappop(queue)
-                if cost > best.get(here, math.inf):
-                    continue
-                for route in self.inputs.routes.get(here, ()):
-                    step = route.moving_cost
-                    if not step >= 0.0:
-                        step = 0.0      # a route never pays you to move; a negative or unknown cost would loop the search
-                    total = cost + step
-                    if total < best.get(route.destination, math.inf):
-                        best[route.destination] = total
-                        heapq.heappush(queue, (total, route.destination))
+            best = carriage_from(self.inputs.routes, area)
             self._reach[area] = sorted((cost, other) for other, cost in best.items() if other != area)
         return self._reach[area]
 

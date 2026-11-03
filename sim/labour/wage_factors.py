@@ -20,6 +20,7 @@ def housing_factor(workers, room, start_occupancy, band, max_markup):
     return 1.0 + max_markup * max(0.0, min(1.0, pressure))
 
 
-def annual_wage(base, weighted, price_index, wage_index, scarcity, pay_scale):
-    """Money one person-year of a trade costs, from the opening schedule's base and every factor on it."""
-    return base * weighted * price_index * wage_index * scarcity * pay_scale
+def annual_wage(base, weighted, wage_index, scarcity, pay_scale):
+    """Money one person-year of a trade costs, from the opening schedule's base and every factor on it. The base is a wage in
+    today's money; the civilisation's `price_index` (capital goods and land against the labour hour) is not a wage factor."""
+    return base * weighted * wage_index * scarcity * pay_scale

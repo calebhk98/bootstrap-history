@@ -5,6 +5,7 @@ from typing import Dict, Optional
 import dataclasses
 
 from . import aptitude, bonded_room, bonded_worth
+from .carriage import carriage_from
 from .records import LabourClearing, MarketState, YearInputs, YearReport
 
 
@@ -63,7 +64,7 @@ def buy(state: MarketState, inputs: YearInputs, index: Dict, area: str, trade: s
             ask[origin] = price
             moves = memo.setdefault("carriage", {})
             if origin not in moves:
-                moves[origin] = bonded_worth.carriage_from(inputs.routes, origin)
+                moves[origin] = carriage_from(inputs.routes, origin)
             carriage[origin] = moves[origin].get(area)
     if "bid_hours" not in memo:
         memo["bid_hours"] = bonded_room.hours_by_market(inputs.bids)

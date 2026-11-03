@@ -12,7 +12,7 @@ from sim.tests.labour_stand_in import stand_in_world
 def _labour(paid, price_level=1.0):
     world = stand_in_world()
     world.trades.build_wage_schedule = data.schedule_of_civilisation
-    world.economy.unskilled_wage = lambda: paid
+    world.economy.agent_wage_at = lambda trade, tile: paid
     world.finance.home_price_level = lambda: price_level
     return Labour(world)
 

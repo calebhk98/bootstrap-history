@@ -2,7 +2,7 @@
 from typing import Any, Optional
 
 from sim.agents.api import supply
-from sim.labour.api import production_data
+from sim.world.demand import production_data
 from sim.constants import declare
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 

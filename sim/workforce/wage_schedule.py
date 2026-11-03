@@ -1,4 +1,5 @@
 """The civilisation's opening wage schedule, built from the trade registry, the civilisation and the price solver."""
+import copy
 import warnings
 from typing import Any, Mapping, Optional
 
@@ -6,7 +7,7 @@ from sim.default_civilisation import REPOSITORY_ROOT
 from sim.content import api as content
 from sim.economy.api import HOUSEHOLD_TIME_PREFERENCE
 from sim.prices.api import prices as price_solver
-from sim.labour.api import CAREER_YEARS, wage_provider, wages
+from sim.labour.api import CAREER_YEARS, trade_of_role, wage_provider, wages
 from sim.world import demand
 
 
@@ -46,7 +47,7 @@ def build_schedule(registry: Mapping[str, Any], civ: Mapping[str, Any],
         solved = price_solver.solved_prices(
             civ["starting_techs"], opening.ratio_document(),
             production_entries=production_entries, civilization_id=civilisation_id,
-            civilization=civ)
+            civilization=civ, unskilled_trade=trade_of_role(registry, "unskilled"))
     staple = wage_provider.staple_material(civ)
     for role, material in (("staple", staple), ("coin", standard["material"])):
         if material not in solved.resolvable_materials:
@@ -64,3 +65,21 @@ def build_schedule(registry: Mapping[str, Any], civ: Mapping[str, Any],
     return wages.WageSchedule(
         wage_provider.training_years_by_trade(registry), 1.0 / coin_hours, subsistence_hours,
         HOUSEHOLD_TIME_PREFERENCE, CAREER_YEARS)
+
+
+class OpeningSchedules:
+    """The opening schedules built so far, one per distinct civilisation record: a record that differs in any field (a variant
+    keeping its id) is built afresh. The one memo behind every opening-schedule read."""
+
+    def __init__(self):
+        self._held = {}   # civilisation id -> [(record as built, its schedule)]
+
+    def schedule_for(self, civ, build):
+        """The schedule of `civ`, from `build()` on the first ask for a record equal to it."""
+        held = self._held.setdefault(civ.get("id"), [])
+        for record, schedule in held:
+            if record == civ:
+                return schedule
+        schedule = build()
+        held.append((copy.deepcopy(civ), schedule))
+        return schedule

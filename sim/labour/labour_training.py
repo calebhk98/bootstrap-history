@@ -28,9 +28,11 @@ class Training:
             return False, ("the trade must exist before a school can reproduce "
                            "it; teach or discover %s first" % trade)
         seats = float(seats)
+        if seats <= 0:
+            return False, "a school needs at least one seat"
         cost = seats * self._world.finance.trade_school_price_per_seat()
         workforce = self._world.workforce
-        if seats <= 0 or cost > self._world.finance.spending_power("buy"):
+        if cost > self._world.finance.spending_power("buy"):
             return False, "cannot afford that trade school"
         paid = self._world.send(PayEdge(self._world.EDGE_WORKERS, cost, "trade schools"))
         if isinstance(paid, Refusal):

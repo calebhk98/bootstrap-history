@@ -4,13 +4,14 @@ called beside a copy of the plain one on random built inputs; no game."""
 QUICK_TOPIC = True
 
 import random
+import types
 import unittest
 
 from sim.economy import household_hours_year, households_hours_offered
 from sim.economy.labour_supply import HourSupply
 from sim.economy.types import LabourOffer
 from sim.labour.market import bonded_room, formation_bonded
-from sim.labour.market.bonded_worth import carriage_from, cheapest_carriage
+from sim.labour.market.carriage import carriage_from
 from sim.labour.market.import_cost import ImportCosts
 from sim.labour.market.records import EmployerHoursBid, LabourClearing, MarketState, Route, YearInputs, YearReport
 
@@ -145,18 +146,19 @@ class BondedPurchaseReadsKeepTheirValues(unittest.TestCase):
 
         self.assertTrue(run(True)[0])
         self.assertEqual(run(True), run(False))
-        self.assertEqual(cheapest_carriage(routes, "p", "r"), 65.0)
+        self.assertEqual(carriage_from(routes, "p")["r"], 65.0)
 
-    def test_one_search_from_an_origin_gives_the_carriage_to_every_destination(self):
+    def test_the_import_cap_reaches_the_areas_the_carriage_search_does_at_the_same_cost(self):
         rng = random.Random(21)
         for _round in range(30):
             areas = ["a%d" % i for i in range(9)]
             routes = {area: [Route(other, rng.choice([0.0, rng.uniform(-5, 80)])) for other in areas if rng.random() < 0.3]
                       for area in areas if rng.random() < 0.9}
+            costs = ImportCosts.__new__(ImportCosts)
+            costs.inputs, costs._reach = types.SimpleNamespace(routes=routes), {}
             for origin in areas:
                 tree = carriage_from(routes, origin)
-                for destination in areas:
-                    self.assertEqual(tree.get(destination), cheapest_carriage(routes, origin, destination))
+                self.assertEqual(costs.reach(origin), sorted((cost, other) for other, cost in tree.items() if other != origin))
 
 
 if __name__ == "__main__":

@@ -140,7 +140,7 @@ class LabourMarket:
             return wage * person_year_hours(world)
         base = self.schedule.base_annual_wage(trade)
         factors = self.cost_factors(trade)
-        return annual_wage(base, factors["weighted"], world.finance.price_index, world.trades.wage_index, 1.0, self.pay_scale())
+        return annual_wage(base, factors["weighted"], world.trades.wage_index, 1.0, self.pay_scale())
 
     def quote_annual(self, trade) -> float:
         """Money one person-year of a trade costs now: the economy's wage for the trade, the same for every employer and

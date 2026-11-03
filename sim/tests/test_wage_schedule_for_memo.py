@@ -32,6 +32,20 @@ class WageScheduleMemoTests(unittest.TestCase):
             variant = part.wage_schedule_for({"id": "rome", "population": 2})
         self.assertIsNot(first, variant)
 
+    def test_two_variants_alternating_are_each_built_once(self):
+        from sim.workforce.wage_schedule import OpeningSchedules
+        memo, built = OpeningSchedules(), []
+
+        def build():
+            built.append(1)
+            return object()
+        rome, variant = {"id": "rome", "population": 1}, {"id": "rome", "population": 2}
+        first = memo.schedule_for(rome, build)
+        other = memo.schedule_for(variant, build)
+        self.assertIs(memo.schedule_for(dict(rome), build), first)
+        self.assertIs(memo.schedule_for(dict(variant), build), other)
+        self.assertEqual(len(built), 2)
+
 
 if __name__ == "__main__":
     unittest.main()

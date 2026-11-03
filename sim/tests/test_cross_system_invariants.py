@@ -58,7 +58,7 @@ class EventLossInvariants(unittest.TestCase):
 
     def test_staff_survival_never_adds_people(self):
         for share in (0.0, 0.3, 0.9, 1.0):
-            household = SimpleNamespace(slaves=0, freedmen=0, staff_wanted={}, employees={"smith": 25.0, "miller": 3.0})
+            household = SimpleNamespace(slaves=0, freedmen=0, training=[], staff_wanted={}, employees={"smith": 25.0, "miller": 3.0})
             before = sum(household.employees.values())
             workforce_stand_in.lose_share(household, share)
             after = sum(household.employees.values())
@@ -67,7 +67,7 @@ class EventLossInvariants(unittest.TestCase):
 
     def test_a_survival_share_of_one_keeps_everyone_and_zero_keeps_no_one(self):
         for share, kept in ((1.0, 28.0), (0.0, 0.0)):
-            household = SimpleNamespace(slaves=0, freedmen=0, staff_wanted={}, employees={"smith": 25.0, "miller": 3.0})
+            household = SimpleNamespace(slaves=0, freedmen=0, training=[], staff_wanted={}, employees={"smith": 25.0, "miller": 3.0})
             workforce_stand_in.lose_share(household, share)
             self.assertEqual(sum(household.employees.values()), kept)
 

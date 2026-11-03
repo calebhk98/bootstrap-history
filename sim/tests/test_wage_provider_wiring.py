@@ -26,7 +26,7 @@ class Wages:
     def __init__(self, paid=None, unskilled=None):
         world = types.SimpleNamespace(
             trades=types.SimpleNamespace(HOURS_PER_PERSON_YEAR=2000.0),
-            economy=types.SimpleNamespace(unskilled_wage=lambda: unskilled, agent_wage_at=lambda trade, tile: paid,
+            economy=types.SimpleNamespace(agent_wage_at=lambda trade, tile: paid,
                                           agent_working_hours=lambda: None))
         self.schedule = WageScheduleReader(world, types.SimpleNamespace(base_tile=lambda: "home"))
         self.schedule.wage_schedule = StubSchedule

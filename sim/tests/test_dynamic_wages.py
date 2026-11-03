@@ -45,7 +45,7 @@ check("the market ratio of a tool scales its factor",
 
 # --- the annual figure is the base through every factor
 check("the annual wage is the base times every factor on it",
-      abs(annual_wage(1000.0, 1.1, 1.2, 1.3, 1.4, 1.5) - 1000.0 * 1.1 * 1.2 * 1.3 * 1.4 * 1.5) < 1e-9)
+      abs(annual_wage(1000.0, 1.1, 1.3, 1.4, 1.5) - 1000.0 * 1.1 * 1.3 * 1.4 * 1.5) < 1e-9)
 # the training premium is priced at the households' own time preference (the wage rule), so a trade's wage over the unskilled trade's
 # is that premium, not a multiple chosen beforehand
 premium = training_premium(CHEMIST_TRAINING_YEARS, HOUSEHOLD_TIME_PREFERENCE)

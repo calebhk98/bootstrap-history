@@ -14,7 +14,7 @@ from sim.polity.api import AddGovernance, AddScandal, CarryOutTransfers, GainRep
 from sim.production.api import LearnFromFailure
 from sim.reporting.api import RecordEvent
 from sim.seats.api import RecordGoalReached
-from sim.workforce.api import GrantStaff, LoseCrew, ReleaseHours
+from sim.workforce.api import GrantStaff, LoseCrew, ReleaseHours, completion_grants_staff
 
 from . import failure_text, goal_rules
 from .completion_rules import road_line, severity_of_loss, staff_shortfall
@@ -130,8 +130,7 @@ class Completion(Part):
 		# counts this same institution and the year's smoothing grows the pools toward that ceiling on its own; granting
 		# it a second time here as well would double-count every one of these three institutions against a tree
 		# calibrated to open up much more slowly.
-		hire_mode = needs.automatic_policy("auto_hire")
-		if not hire_mode or hire_mode == "replace":
+		if completion_grants_staff(needs.automatic_policy("auto_hire")):
 			grant = needs.mechanic["staff_grant"].get(node_id)
 			if grant:
 				needs.send(GrantStaff(**grant))

@@ -20,10 +20,9 @@ class Hands:
 
     def scholar_hands_available(self):
         """Scholars you can actually put on a project this year: your staff, yourself, and a scholar for every year of
-        scholar hours you have bought, delivered or still on order (the one rule `_hands_with_commissioned` states)."""
-        scholar_family = self._world.trades.trade_family(trade_data.scholar_trade())
-        return self._hands_with_commissioned(self._world.workforce.scholars,
-                                             lambda trade: self._world.trades.trade_family(trade) == scholar_family)
+        scholar-trade hours (only the scholar trade counts, as in the pools' recount) you have bought, delivered or still on order (the one rule `_hands_with_commissioned` states)."""
+        scholar = trade_data.scholar_trade()
+        return self._hands_with_commissioned(self._world.workforce.scholars, lambda trade: trade == scholar)
 
     def wage_fallback_trade(self):
         """The trade a founder with no work sells his hours in: the scholar trade once he has a scholar's hands to spare, else

@@ -25,6 +25,7 @@ from .quantity_units import read_quantity
 from .start_refusal import refusal_fields
 from .staffing_ceiling import trades_beyond_ceiling
 from sim.engine.ui_port import money_text, plain_number
+from sim.workforce.api import REPLACE_ONLY
 from sim.ui.memory import load_state, save_state
 from .util import _flag
 from .start_bill import bill_parts
@@ -762,7 +763,7 @@ def _cmd_policy(sim, nodes, cmd, ended):
             if key not in sim.view("founder")()["policy"]:
                 return {"ok": False, "error": "no such policy: %s. They are: %s"
                         % (key, ", ".join(sorted(sim.view("founder")()["policy"])))}
-            sim.view("founder")()["policy"][key] = "replace" if key == "auto_hire" and str(val).lower() == "replace" else _flag(val)
+            sim.view("founder")()["policy"][key] = REPLACE_ONLY if key == "auto_hire" and str(val).lower() == REPLACE_ONLY else _flag(val)
             changed[key] = sim.view("founder")()["policy"][key]
     # WHICH OF THESE CAN ACTUALLY ACT TODAY: negative capital silently
     # disables both hiring and opening even while the switches read ON,
