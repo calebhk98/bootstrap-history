@@ -90,12 +90,16 @@ def route_with_provisions(route: Route, models: Mapping[str, tuple], handling: M
     return Route(tuple(legs))
 
 
-def cargo_loss_share(route: Optional[Route], daily_loss_by_mode: Mapping[str, float], hull_loss_per_thousand_km: float) -> float:
-    """Share of cargo lost on the route: the hull loss rate over its sea legs, and the daily loss of a herd over its
-    legs on the road."""
+def cargo_loss_share(route: Optional[Route], daily_loss_by_mode: Mapping[str, float],
+                     hull_loss_per_thousand_km: Optional[float]) -> float:
+    """Share of cargo lost on the route: the hull loss rate over its sea legs (None when the hull has no price, which
+    a route with sea legs must not meet), and the daily loss of a herd over its legs on the road."""
     if route is None:
         return 0.0
     sailed_km = sum(leg.distance_km for leg in route.legs if leg.mode == SEA_MODE)
+    if sailed_km > 0.0 and hull_loss_per_thousand_km is None:
+        raise ValueError("a route sails but the hull has no price to lose")
+    hull_loss_per_thousand_km = hull_loss_per_thousand_km or 0.0
     on_the_road = [cargo_cost.daily_loss_share(daily_loss_by_mode[leg.mode], leg.travel_days)
                    for leg in route.legs if leg.mode in daily_loss_by_mode]
     at_sea = cargo_cost.sea_loss_share(hull_loss_per_thousand_km, sailed_km)

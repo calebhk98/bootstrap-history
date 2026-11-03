@@ -53,13 +53,16 @@ def _add_lot(exposure: Exposure, lot: GoodsLot) -> None:
         exposure.values["goods"] = exposure.values.get("goods", 0.0) + lot.tonnes * lot.price_per_tonne
 
 
-def actor_exposure(actor_id: str, money: float, stores: Mapping[str, float], price_of_tonne: Callable[[str], float],
+def actor_exposure(actor_id: str, money: float, stores: Mapping[str, float], price_of_tonne: Callable[[str], Optional[float]],
                    shares_worth: Callable[[], float], lent_share: float) -> Exposure:
-    """What a firm or a state keeps: its purse, the stores it holds, and the shares it owns in others."""
+    """What a firm or a state keeps: its purse, the stores it holds (a store with no quote is not counted: nothing
+    is known to take), and the shares it owns in others."""
     exposure = Exposure()
     _add_purse(exposure, money, lent_share)
     for material in sorted(stores):
-        _add_lot(exposure, GoodsLot(material, stores[material], price_of_tonne(material), STORE_ACTOR, actor_id))
+        price = price_of_tonne(material)
+        if price is not None:
+            _add_lot(exposure, GoodsLot(material, stores[material], price, STORE_ACTOR, actor_id))
     worth = shares_worth()
     if worth > 0.0:
         exposure.values["shares"] = worth

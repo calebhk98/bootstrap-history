@@ -34,9 +34,9 @@ class CountryQuotes(SharedPart):
 		price = self.world.own.get().price_per_tonne(material)
 		return None if price is None else price * tonnes
 
-	def material_price(self, material: str) -> float:
-		"""Money for one tonne of a material at the country's own quote (nothing when it is not on sale)."""
-		return self.material_cost(material, 1.0) or 0.0
+	def material_price(self, material: str) -> Optional[float]:
+		"""Money for one tonne of a material at the country's own quote; None when it is not on sale."""
+		return self.material_cost(material, 1.0)
 
 
 class CountryMarket(SharedPart):
@@ -55,8 +55,9 @@ class CountryMarket(SharedPart):
 	def market_sale(self, seller_id: str, material: str, tonnes: float, from_concerns: Any = None) -> None:
 		"""What a country's state sells is paid for at the price the market quotes."""
 		seller = self.world.holder.actors.get(seller_id)
-		if seller is not None and tonnes > 0.0:
-			ledger.transfer(self.world.setting.edge(EDGE_STATE_SPENDING), seller, self.world.quotes.material_cost(material, tonnes) or 0.0, "sale")
+		proceeds = self.world.quotes.material_cost(material, tonnes)
+		if seller is not None and tonnes > 0.0 and proceeds is not None:   # a good with no quote does not sell
+			ledger.transfer(self.world.setting.edge(EDGE_STATE_SPENDING), seller, proceeds, "sale")
 
 
 class CountryCredit(SharedPart):

@@ -65,13 +65,16 @@ class Haul(Part):
     def unjoined_haul(self, material, imbalance):
         """Where no way joins the source to the tiles held, the haul as one leg of the cargo's mode over the
         great-circle distance geography states, priced by the same leg pricing as a found route (None when geography
-        places no source)."""
+        places no source or the mode's feed or carrier has no price)."""
         distance_km = self.material_distance_km(material)
         if distance_km is None:
             return None
         mode = self.domestic_haul_mode(self.cargo_class(material))
         dues = self.parts.models.freight_handling_costs().get(mode, 0.0)
-        cost = unjoined_haul_cost(self.parts.models.freight_mode_costs(imbalance, (mode,))[mode], distance_km, dues)
+        rate = self.parts.models.freight_mode_costs(imbalance, (mode,)).get(mode)
+        if rate is None:
+            return None
+        cost = unjoined_haul_cost(rate, distance_km, dues)
         days = freight_cost.days_on_leg(distance_km, self.parts.models.carrier_models()[mode][0])
         return self.parts.routes.with_carried_provisions(Route((Leg("source", "home", mode, distance_km, cost, days),)))
 

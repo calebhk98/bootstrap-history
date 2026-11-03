@@ -1,5 +1,5 @@
 """Player commands for exchange, and the yearly answer of AI actors to the offers they hold."""
-from typing import Any, Callable, Dict, List
+from typing import Any, Callable, Dict, List, Optional
 
 from . import enforcement, exchange, joint_stock, patent, spinoff  # noqa: F401  (patent and spinoff register commands and spawners)
 from .player_commands import CommandRejected
@@ -32,10 +32,14 @@ def concern_worth(holder: Any, node_id: str) -> float:
 	return max(0.0, margin) * VALUE_HORIZON_YEARS
 
 
-def side_worth(side: Dict[str, Any], taker: Any, holder: Any, world: Any, find_actor: Any = None) -> float:
-	"""What `taker` counts the things in `side` (held by `holder`) as worth."""
+def side_worth(side: Dict[str, Any], taker: Any, holder: Any, world: Any, find_actor: Any = None) -> Optional[float]:
+	"""What `taker` counts the things in `side` (held by `holder`) as worth; None when a store in it has no quote."""
 	worth = side.get("money", 0.0)
-	worth += sum(tonnes * world.quotes.material_price(material) for material, tonnes in side.get("stores", {}).items())
+	for material, tonnes in side.get("stores", {}).items():
+		price = world.quotes.material_price(material)
+		if price is None:
+			return None
+		worth += tonnes * price
 	valuer = getattr(taker, "imitation_worth", None)
 	if valuer is not None:
 		worth += sum(valuer(node_id, world) for node_id in side.get("knowledge", ()) if not taker.knows(node_id, world))
@@ -62,7 +66,10 @@ def answer_offers(actor: Any, find_actor: Callable[[str], Any], world: Any) -> L
 			continue
 		received = side_worth(offered["give"], actor, giver, world, find_actor)
 		costs = {key: value for key, value in offered["take"].items() if key != "knowledge"}
-		if received > side_worth(costs, giver, actor, world, find_actor):
+		cost = side_worth(costs, giver, actor, world, find_actor)
+		if received is None or cost is None:   # a store with no quote cannot be weighed: the offer stays open
+			continue
+		if received > cost:
 			try:
 				exchange.accept(actor, offered["id"], find_actor, world)
 			except CommandRejected:

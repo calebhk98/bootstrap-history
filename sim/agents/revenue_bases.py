@@ -17,17 +17,19 @@ class Base:
 	payers: Tuple[Tuple[Any, float], ...] = ()  # (actor, income) where the base is held by actors the state taxes
 
 
-def harvest(world: Any, tiles: Optional[FrozenSet[str]] = None, material: Optional[str] = None) -> Base:
+def harvest(world: Any, tiles: Optional[FrozenSet[str]] = None, material: Optional[str] = None) -> Optional[Base]:
 	"""What the land yielded of the good a form is paid in. Grain is the farm's harvest (on named tiles, their
 	share of it: TEMPORARY HEURISTIC (CLAUDE.md 4.4), spread over the state's tiles by arable hectares, as no
 	harvest is recorded by tile, retire: Complaint 622); any other good is what the country's producers made of
-	it last year, tile by tile."""
+	it last year, tile by tile. None when the good has no price, so the form is not assessed."""
 	staple = world.quotes.staple_material()   # the grain the harvest is counted in: the civilisation's staple
 	if material is not None and material != staple:
 		tonnes = world.revenue.output_tonnes(material, tiles)
-		return Base(tonnes * world.quotes.material_price(material), tonnes, material)
+		price = world.quotes.material_price(material)
+		return None if price is None else Base(tonnes * price, tonnes, material)
 	tonnes = world.revenue.harvest_tonnes() * (1.0 if tiles is None else world.revenue.arable_share(tiles))
-	return Base(tonnes * world.quotes.material_price(staple), tonnes, staple)
+	price = world.quotes.material_price(staple)
+	return None if price is None else Base(tonnes * price, tonnes, staple)
 
 
 def adult_labour_years(world: Any) -> Base:
