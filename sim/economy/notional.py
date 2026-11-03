@@ -12,7 +12,7 @@ from typing import Dict, Set, Tuple
 
 from sim.constants import declare
 
-from . import unit_cost
+from . import trade_wages, unit_cost
 from .market_memory import KEY_SEPARATOR, PRICE_REMEMBERED, PRICE_SMOOTHED_TRADE, RECENT_TRADE_YEARS, MarketMemory
 from .national_prices import national_prices, national_wages, usual_volumes
 from .recipes import input_depth_order
@@ -42,7 +42,7 @@ def _estimated_prices(setup, record, market, thin: bool) -> Dict[str, float]:
     memory = record.memory
     recent = recently_traded_goods(memory)
     traded = _traded_volumes(record) if thin else {}
-    wages = national_wages(record)
+    wages = costing_wages(setup, record)
     rate = memory.rates[setup.currency_id]
     live = dict(market)
     estimated: Dict[str, float] = {}
@@ -74,11 +74,22 @@ def _traded_volumes(record) -> Dict[str, float]:
     return traded
 
 
+def costing_wages(setup, record) -> Dict[str, float]:
+    """The wage per hour of every trade of the setup for costing a recipe: the national wage where the memory holds one,
+    else the one wage rule (`trade_wages.priced_trade_wage`; the memory holds none for the trade in any area, so its
+    opening wage at today's level), so a recipe is never unpriceable for a trade the labour core has not cleared."""
+    memory = record.memory
+    wages = national_wages(record)
+    level = memory.opening_wage_level(setup.currency_id)
+    return {trade: wages[trade] if trade in wages else trade_wages.priced_trade_wage(
+        setup, trade, None, wages.get(setup.unskilled_trade), level, memory.holds_wage_for(trade)) for trade in sorted(setup.trades)}
+
+
 def making_costs(setup, record) -> Dict[str, float]:
     """What each good costs to make by its cheapest recipe at the live prices and wages, traded or not."""
     memory = record.memory
     live = national_prices(record)
-    wages = national_wages(record)
+    wages = costing_wages(setup, record)
     rate = memory.rates[setup.currency_id]
     costs: Dict[str, float] = {}
     for good in input_depth_order(setup.recipes):

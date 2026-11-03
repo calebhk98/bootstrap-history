@@ -194,7 +194,7 @@ class DefaultCascadeTests(unittest.TestCase):
         unpaid, _lender = self.run_world(producer_pays=False)
 
         def orders(record):
-            view = CreditView(MarketMemory(), record.book, _Areas(), MONEY, loans=lambda: record.credit.loans)
+            view = CreditView(MarketMemory(), record.book, _Areas(), MONEY, None, loans=lambda: record.credit.loans)
             view.price = view.offered_price = View().price      # a buyer reads the offered price
             view.area_of = View().area_of
             view.stock = View().stock

@@ -96,7 +96,7 @@ class DispatchTests(unittest.TestCase):
     def test_stock_at_the_source_is_split_over_the_legs_by_weight(self):
         who = merchant_expecting((1.0, 3.0, 3.5), {})
         who.routes = {("salt", "t0"): (("t1", "area1", 3.0), ("t2", "area2", 1.0))}
-        result = merchants.dispatch(who, (), LineCarriage(), {"salt": SALT}, "gold", 1000.0, {("salt", "t0"): 8.0})
+        result = merchants.dispatch(who, LineCarriage(), {"salt": SALT}, "gold", 1000.0, {("salt", "t0"): 8.0})
         self.assertEqual({move.receiver_tile: move.quantity for move in result.moves}, {"t1": 6.0, "t2": 2.0})
 
 

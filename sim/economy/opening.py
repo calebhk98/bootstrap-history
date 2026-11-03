@@ -153,7 +153,7 @@ def _open(setup: EconomySetup, replacement: float, plans=None, start=None) -> Tu
     memory = _opening_memory(setup, area_map, priced_goods)
     record = EconomyRecord(book=Book(), memory=memory, currency=setup.currency,
                            carriage=CarriageRecord(ways={key: dict(built) for key, built in setup.improvements.items()}))
-    view = YearView(memory, record.book, area_map, setup.currency_id, labour_area)
+    view = YearView(memory, record.book, area_map, setup.currency_id, setup, labour_area)
     _open_cohorts(setup, record)
     if plans is not None:
         households_cohort.put_cohorts(record.cohorts, opening_plans.with_plans(record.cohorts, plans))

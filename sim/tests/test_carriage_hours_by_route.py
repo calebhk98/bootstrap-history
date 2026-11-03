@@ -96,7 +96,7 @@ class AreaWageTests(unittest.TestCase):
         crew = merchants.CrewHire(lambda source, _destination: (((key_a if source == "a" else key_b), 0.5),),
                                   {key_a: 100.0, key_b: 100.0}, {key_a: 0.4, key_b: 0.9},
                                   lambda _key: 1.0, lambda _good, tile: "area_" + tile)
-        result = merchants.dispatch(who, (), carriage, SPECS, "coin", 100.0, {("salt", "a"): 10.0}, crew=crew)
+        result = merchants.dispatch(who, carriage, SPECS, "coin", 100.0, {("salt", "a"): 10.0}, crew=crew)
         self.assertAlmostEqual(result.transfers[0].amount, 10.0 - 10.0 * 0.5 * 0.4)       # ten units, half an hour each, 0.4 an hour
 
     def test_the_wage_scale_follows_the_area_the_flow_leaves_and_not_a_wage_elsewhere(self):

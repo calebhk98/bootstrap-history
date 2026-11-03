@@ -14,16 +14,12 @@ class StatedUnitMass(unittest.TestCase):
 
     def test_stated_masses_beat_the_inferred_ones(self):
         production = demand.production_data()
-        self.assertEqual(good_mass.unit_mass_and_source("stone_blocks", production),
-                         (140.0, good_mass.SOURCE_STATED))
-        self.assertEqual(good_mass.unit_mass_and_source("brick_1000", production),
-                         (2500.0, good_mass.SOURCE_STATED))
-        mass, source = good_mass.unit_mass_and_source("parchment_sheet", production)
-        self.assertLess(mass, 0.1)
-        self.assertEqual(source, good_mass.SOURCE_STATED)
+        self.assertEqual(good_mass.unit_mass("stone_blocks", production), 140.0)
+        self.assertEqual(good_mass.unit_mass("brick_1000", production), 2500.0)
+        self.assertLess(good_mass.unit_mass("parchment_sheet", production), 0.1)
 
     def test_a_good_without_a_stated_mass_is_inferred_as_before(self):
-        self.assertEqual(good_mass.unit_mass_and_source("wheat_kg", {})[1], good_mass.SOURCE_MASS_UNIT)
+        self.assertEqual(good_mass.unit_mass("wheat_kg", {}), 1.0)
 
     def test_the_validator_rejects_a_bad_or_misplaced_mass(self):
         entry = copy.deepcopy(demand.production_data()["stone_blocks"])

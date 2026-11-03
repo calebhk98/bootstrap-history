@@ -55,7 +55,8 @@ def shown_game():
     memory.trade_age = {"grain|a": 0, "metal|a": 99}
     record = types.SimpleNamespace(memory=memory, labour=LabourRecord(), goods=types.SimpleNamespace(volumes={}, opening_basket={}, index_base_prices={}))
     recipes = {"smelt": Recipe("smelt", {"metal": 1.0}, {}, {"labour": 2.0})}
-    setup = types.SimpleNamespace(recipes=recipes, opening_prices={}, currency_id="coin", unskilled_trade="labour")
+    setup = types.SimpleNamespace(recipes=recipes, opening_prices={}, currency_id="coin", unskilled_trade="labour",
+                              opening_wages={"labour": 1.0}, trades={"labour": types.SimpleNamespace(training_years=0.0)})
     return setup, record
 
 

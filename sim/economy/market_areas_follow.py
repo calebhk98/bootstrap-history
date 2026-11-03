@@ -5,7 +5,7 @@ remembers is keyed by area id, so each new area takes the memory of the old area
 tile, good by good. A market whose area no longer exists is dropped; a market that is new starts with
 its anchor's old market's values.
 
-Standalone: the area map and market memory of this package.
+Reads only the area map and the market memory.
 """
 from typing import Dict, Mapping, Tuple
 

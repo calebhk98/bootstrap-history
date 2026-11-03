@@ -151,7 +151,7 @@ class _Areas:
 class ViewTests(unittest.TestCase):
     def test_the_view_reads_a_lenders_loss_rate_from_its_record(self):
         loans = [Loan("l", "saver", "borrower", "coin", 900.0, rate=0.05, years_left=3.0, issued_year=0)]
-        view = CreditView(MarketMemory(), None, _Areas(), "coin", loans=lambda: loans, loss_rates=lambda: {"saver": 0.1})
+        view = CreditView(MarketMemory(), None, _Areas(), "coin", None, loans=lambda: loans, loss_rates=lambda: {"saver": 0.1})
         self.assertAlmostEqual(view.loss_rate("saver", "coin"), 0.1)
 
 

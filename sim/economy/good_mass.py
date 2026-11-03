@@ -9,7 +9,7 @@ names its source so an audit can count how much of the freight base is still a g
 Standalone: `sim.constants`, `sim.unit_conversions`, `sim.world`.
 """
 import math
-from typing import Any, Mapping, Optional, Tuple
+from typing import Any, Mapping, Optional
 
 from sim.constants import declare
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
@@ -42,14 +42,6 @@ UNKNOWN_UNIT_MASS_KG = declare(
     confidence="D",
     why="The good's unit is not a mass, no animal weight, bulk density or consumed mass says what a "
         "unit weighs; one kilogram keeps it carriable until the data states a mass.")
-
-SOURCE_MASS_UNIT = "mass unit"
-SOURCE_STATED = "stated in production data"
-SOURCE_ANIMAL = "animal live weight"
-SOURCE_IMMOBILE = "immobile unit"
-SOURCE_VOLUME = "volume at bulk density"
-SOURCE_RECIPE = "mass of consumed inputs"
-SOURCE_DEFAULT = "default"
 
 
 def _living_masses() -> Mapping[str, float]:
@@ -85,23 +77,23 @@ def _stated_dimension(good: str, production: Optional[Mapping[str, Any]]) -> Opt
     return entry.get("unit_dimension") if isinstance(entry, Mapping) else None
 
 
-def unit_mass_and_source(good: str, production: Optional[Mapping[str, Any]] = None) -> Tuple[float, str]:
-    """(kg of one unit, where the figure came from); `production` defaults to the shared data."""
+def unit_mass(good: str, production: Optional[Mapping[str, Any]] = None) -> float:
+    """kg of one unit; `production` defaults to the shared data."""
     mass = _mass_unit_kg(good)
     if mass is not None:
-        return mass, SOURCE_MASS_UNIT
+        return mass
     stated = _stated_unit_mass_kg(good, production)
     if stated is not None:
-        return stated, SOURCE_STATED
+        return stated
     living = _living_masses()
     if good in living:
-        return living[good], SOURCE_ANIMAL
+        return living[good]
     if (_stated_dimension(good, production) in good_dimension.IMMOBILE_DIMENSIONS
             or good.endswith(IMMOBILE_UNIT_SUFFIXES) or good.startswith(IMMOBILE_UNIT_PREFIXES)):
-        return IMMOBILE_MASS_KG, SOURCE_IMMOBILE
+        return IMMOBILE_MASS_KG
     if good.endswith(VOLUME_UNIT_SUFFIX):
-        return BULK_DENSITY_KG_PER_M3, SOURCE_VOLUME
+        return BULK_DENSITY_KG_PER_M3
     consumed = _consumed_mass_kg(good, production if production is not None else demand.production_data())
     if consumed is not None:
-        return consumed, SOURCE_RECIPE
-    return UNKNOWN_UNIT_MASS_KG, SOURCE_DEFAULT
+        return consumed
+    return UNKNOWN_UNIT_MASS_KG

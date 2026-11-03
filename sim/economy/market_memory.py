@@ -184,9 +184,6 @@ class MarketMemory:
         usual = self.usual_prices.get(key)
         self.usual_prices[key] = price if usual is None else usual + USUAL_PRICE_SPEED * (price - usual)
 
-    def years_since_trade(self, key: str) -> Optional[int]:
-        return self.trade_age.get(key)
-
     def traded_within(self, key: str, years: int) -> bool:
         """The one meaning of "traded": the market cleared at most `years` years ago (0: last year). A market that
         never cleared, whatever estimate or quote its price is, has not traded."""
@@ -224,9 +221,10 @@ class MarketMemory:
 class YearView:
     """`protocols.MarketView` over the memory, the book and the area map, for one year's planning."""
 
-    def __init__(self, memory: MarketMemory, book: Book, area_map, currency: CurrencyId,
+    def __init__(self, memory: MarketMemory, book: Book, area_map, currency: CurrencyId, setup,
                  labour_area_of=None) -> None:
         self.year = memory.year + 1
+        self.setup = setup     # the trades and opening wages the wage rule (`trade_wages`) prices a trade from
         self._memory = memory
         self._book = book
         self._area_map = area_map
@@ -234,7 +232,7 @@ class YearView:
         self._labour_area_of = labour_area_of
         self._goods = set(area_map.goods())
         self._keys_of_good: Dict[str, tuple] = {}
-        self._keys_of_names: Dict[tuple, tuple] = {}     # (id of a names tuple, wages) -> (names, tile -> market keys)
+        self._keys_of_names: Dict[int, tuple] = {}     # id of a names tuple -> (names, tile -> market keys)
         self._area_by_tile: Dict[str, Dict[TileId, AreaId]] = {}    # name -> tile -> its area; the area map does not change
 
     def prices_across(self, good: GoodId, areas) -> list:
@@ -257,19 +255,18 @@ class YearView:
         where nothing is on offer. A buyer reads this, never `price`."""
         return self._memory.offered_price(good + KEY_SEPARATOR + area)
 
-    def present_prices_at(self, names: tuple, tile: TileId, wages: bool = False) -> Dict[str, float]:
-        """`price` (or `wage` when `wages`) of each of `names` (goods or trades, one tuple kept by the caller) in its
-        area on `tile`, those with a figure only, in order: the keys are built once per names tuple and tile."""
-        kept = self._keys_of_names.get((id(names), wages))
+    def present_prices_at(self, names: tuple, tile: TileId) -> Dict[str, float]:
+        """`price` of each of `names` (goods, one tuple kept by the caller) in its area on `tile`, those with a
+        price only, in order: the keys are built once per names tuple and tile."""
+        kept = self._keys_of_names.get(id(names))
         if kept is None or kept[0] is not names:
-            kept = self._keys_of_names[(id(names), wages)] = (names, {})
+            kept = self._keys_of_names[id(names)] = (names, {})
         keys = kept[1].get(tile)
         if keys is None:
             keys = kept[1][tile] = tuple(name + KEY_SEPARATOR + self.area_of(name, tile) for name in names)
-        table = self._memory.wages if wages else self._memory.prices
         found = {}
         for name, key in zip(names, keys):
-            figure = table.get(key)
+            figure = self._memory.prices.get(key)
             if figure is not None:
                 found[name] = figure
         return found

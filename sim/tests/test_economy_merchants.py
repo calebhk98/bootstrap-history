@@ -11,7 +11,7 @@ from sim.book import Book
 from sim.economy.market_areas import AreaMap
 from sim.economy.merchants import Merchant
 from sim.tests.test_economy_tile_costs import unit_cost_table
-from sim.economy.types import EDGE_MINT, EDGE_PRODUCTION, Bid, Fill, GoodsMove, GoodSpec, Offer, TileSpec, Transfer
+from sim.economy.types import EDGE_MINT, EDGE_PRODUCTION, Bid, GoodsMove, GoodSpec, Offer, TileSpec, Transfer
 
 TILES = ("a", "b")
 TILE_SPECS = {"a": TileSpec("a", 40.0, 10.0, 1000.0, False, ("b",), 0.3, 1.0),
@@ -125,8 +125,7 @@ class DispatchAndCloseTests(unittest.TestCase):
         carriage, area_map, area_a, _b = world()
         who = merchant()
         plan(who, 2.0, 5.0)
-        fills = (Fill("m1", "salt", area_a["salt"], "a", 10.0, 2.0, "buy"),)
-        result = merchants.dispatch(who, fills, carriage, SPECS, "coin", 100.0, {("salt", "a"): 10.0})
+        result = merchants.dispatch(who, carriage, SPECS, "coin", 100.0, {("salt", "a"): 10.0})
         self.assertEqual((result.moves[0].tile, result.moves[0].receiver_tile, result.moves[0].quantity), ("a", "b", 10.0))
         self.assertAlmostEqual(result.transfers[0].amount, 10.0 * CARRIAGE_PER_UNIT)
         self.assertEqual(result.transfers[0].payee, merchants.EDGE_CARRIAGE)
@@ -135,8 +134,7 @@ class DispatchAndCloseTests(unittest.TestCase):
         carriage, _m, area_a, _b = world()
         who = merchant()
         plan(who, 2.0, 5.0)
-        fills = (Fill("m1", "salt", area_a["salt"], "a", 10.0, 2.0, "buy"),)
-        result = merchants.dispatch(who, fills, carriage, SPECS, "coin", 100.0, {("salt", "a"): 10.0},
+        result = merchants.dispatch(who, carriage, SPECS, "coin", 100.0, {("salt", "a"): 10.0},
                                     carrier_of={"a": "carters of a"}.get)
         self.assertEqual(result.transfers[0].payee, "carters of a")
 
@@ -146,7 +144,7 @@ class DispatchAndCloseTests(unittest.TestCase):
         orders = plan(who, 2.0, 5.0, cash=0.0, held={("salt", "a"): 10.0})
         self.assertEqual([offer.tile for offer in orders.offers], [])
         carriage, _m, _a, _b = world()
-        result = merchants.dispatch(who, (), carriage, SPECS, "coin", 100.0, {("salt", "a"): 10.0})
+        result = merchants.dispatch(who, carriage, SPECS, "coin", 100.0, {("salt", "a"): 10.0})
         self.assertEqual((result.moves[0].tile, result.moves[0].receiver_tile, result.moves[0].quantity), ("a", "b", 10.0))
 
     def test_stock_best_sold_where_it_is_is_offered_there(self):
@@ -157,8 +155,7 @@ class DispatchAndCloseTests(unittest.TestCase):
         carriage, _m, area_a, _b = world()
         who = merchant()
         plan(who, 2.0, 5.0)
-        fills = (Fill("m1", "salt", area_a["salt"], "a", 10.0, 2.0, "buy"),)
-        result = merchants.dispatch(who, fills, carriage, SPECS, "coin", 4.0, {("salt", "a"): 10.0})
+        result = merchants.dispatch(who, carriage, SPECS, "coin", 4.0, {("salt", "a"): 10.0})
         self.assertAlmostEqual(result.moves[0].quantity, 4.0)
         self.assertEqual([(good, tile) for good, tile, _quantity in result.stranded], [("salt", "a")])
         self.assertAlmostEqual(result.stranded[0][2], 6.0)
@@ -239,7 +236,7 @@ def run_loop(count, years, capital=500.0):
         shipped = 0.0
         for who in crowd:
             held = {("salt", "a"): book.stock(who.agent_id, "salt", "a")}
-            outcome = merchants.dispatch(who, fills, carriage, SPECS, "coin", book.balance(who.agent_id, "coin"), held)
+            outcome = merchants.dispatch(who, carriage, SPECS, "coin", book.balance(who.agent_id, "coin"), held)
             book.post(outcome.transfers, outcome.moves)
             shipped += sum(move.quantity for move in outcome.moves)
         last = prices

@@ -94,8 +94,6 @@ class Buyers:
         scale = _price_scale(self.bids, last_price)
         self.minimum_price = None if scale is None else MINIMUM_PRICE_SHARE_OF_REFERENCE * scale   # None: no unit to tie a token price to
         self.last_price = last_price
-        self._wants: dict = {}     # price -> (each buyer's want, their total)
-        self._traded: dict = {}    # (price, quantity available) -> what the buyers are served in all
 
     def at_least_minimum(self, price: float) -> float:
         """`price`, raised to the minimum price when there is one."""
@@ -105,19 +103,6 @@ class Buyers:
     def schedule(self) -> DemandSchedule:
         """The bids' demand schedule, built when a market with offers first reads it."""
         return DemandSchedule(self.bids)
-
-    def traded_at(self, price: float, supply: float) -> float:
-        """The total the buyers are served at a price when `supply` is on offer there."""
-        wants = self._wants.get(price)
-        if wants is None:
-            each = self.schedule.each_at(price)
-            wants = self._wants[price] = (each, math.fsum(each))
-        available = min(wants[1], supply)
-        key = (price, available)
-        traded = self._traded.get(key)
-        if traded is None:
-            traded = self._traded[key] = math.fsum(ration(self.bids, wants[0], available))
-        return traded
 
 
 def in_clearing_order(offers: Sequence[Offer]) -> List[Offer]:

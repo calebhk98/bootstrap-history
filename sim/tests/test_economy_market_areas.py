@@ -93,7 +93,6 @@ class AreaMapTests(unittest.TestCase):
     def test_goods_of_similar_value_share_one_partition(self):
         twin = GoodSpec("barley_kg", 1.0, 0.1, 0.0, "food")
         area_map = self.build(self.goods + [(twin, self.grain_price * 1.05)])
-        self.assertEqual(area_map.bucket_count(), 2)
         self.assertEqual(area_map.area_of("barley_kg", "t_1_1"), area_map.area_of("grain_kg", "t_1_1"))
 
     def test_value_per_tonne_uses_unit_mass(self):

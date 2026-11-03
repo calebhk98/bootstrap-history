@@ -26,7 +26,8 @@ def alloy_game(traded_in_area_a, wanted=100000.0):
                                                                    index_base_prices={}))
     recipe = Recipe("melt", {"alloy": 1.0}, {"metal": 2.0}, {"labour": 4.0})
     setup = types.SimpleNamespace(recipes={"melt": recipe}, opening_prices={}, currency_id="coin",
-                                  unskilled_trade="labour")
+                                  unskilled_trade="labour", opening_wages={"labour": 1.0},
+                                  trades={"labour": types.SimpleNamespace(training_years=0.0)})
     return setup, record
 
 
@@ -41,7 +42,8 @@ def alloy_of_untraded_metal_game():
                                                                    index_base_prices={}))
     recipes = {"melt": Recipe("melt", {"alloy": 1.0}, {"metal": 2.0}, {"labour": 4.0}),
                "smelt": Recipe("smelt", {"metal": 1.0}, {}, {"labour": 2.0})}
-    setup = types.SimpleNamespace(recipes=recipes, opening_prices={}, currency_id="coin", unskilled_trade="labour")
+    setup = types.SimpleNamespace(recipes=recipes, opening_prices={}, currency_id="coin", unskilled_trade="labour",
+                                  opening_wages={"labour": 1.0}, trades={"labour": types.SimpleNamespace(training_years=0.0)})
     return setup, record
 
 

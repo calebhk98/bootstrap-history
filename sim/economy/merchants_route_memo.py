@@ -2,8 +2,8 @@
 
 A good's routes depend on the carriage table, the good's areas and spec, the price in each area, the
 interest rate and the storage cost, and on nothing else. Merchants holding the same expectations, and the lending and ordering
-passes at an unchanged rate, therefore ask the same question. The memo lives beside the carriage table
-(dropped with it) and never reaches a saved record. A hit needs every input equal, so it returns exactly
+passes at an unchanged rate, therefore ask the same question. The memo is a module-level weak map keyed by
+the carriage table (dropped with it) and never reaches a saved record. A hit needs every input equal, so it returns exactly
 what the search would.
 """
 import weakref

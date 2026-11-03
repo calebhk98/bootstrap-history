@@ -15,7 +15,8 @@ from sim.economy.year_close import remember_basket_price_level
 
 
 def setup_with(recipes, opening):
-    return types.SimpleNamespace(recipes=recipes, opening_prices=opening, currency_id="coin", unskilled_trade="labour")
+    return types.SimpleNamespace(recipes=recipes, opening_prices=opening, currency_id="coin", unskilled_trade="labour", opening_wages={"labour": 0.5},
+                                 trades={"labour": types.SimpleNamespace(training_years=0.0)})
 
 
 def record_with(memory, basket, base=None):
@@ -25,13 +26,13 @@ def record_with(memory, basket, base=None):
 class TradeAgeTests(unittest.TestCase):
     def test_a_market_that_never_cleared_has_no_age_and_a_cleared_one_ages_each_idle_year(self):
         memory = MarketMemory(prices={"tin|a": 1.0, "salt|a": 1.0})
-        self.assertIsNone(memory.years_since_trade("tin|a"))
+        self.assertIsNone(memory.trade_age.get("tin|a"))
         memory.note_trading({"tin|a"})
-        self.assertEqual(memory.years_since_trade("tin|a"), 0)
+        self.assertEqual(memory.trade_age.get("tin|a"), 0)
         memory.note_trading(set())
         memory.note_trading(set())
-        self.assertEqual(memory.years_since_trade("tin|a"), 2)
-        self.assertIsNone(memory.years_since_trade("salt|a"))
+        self.assertEqual(memory.trade_age.get("tin|a"), 2)
+        self.assertIsNone(memory.trade_age.get("salt|a"))
 
     def test_the_age_is_saved_with_the_memory(self):
         memory = MarketMemory(prices={"tin|a": 1.0})

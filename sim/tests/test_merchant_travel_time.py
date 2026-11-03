@@ -14,7 +14,7 @@ from sim.economy.merchants import Merchant
 from sim.economy.record import EconomyRecord
 from sim.economy.market_memory import MarketMemory
 from sim.economy.types import CurrencySpec
-from sim.economy.types import EDGE_PRODUCTION, EDGE_SPOILAGE, Fill, GoodsMove, GoodSpec
+from sim.economy.types import EDGE_PRODUCTION, EDGE_SPOILAGE, GoodsMove, GoodSpec
 from sim.tests.test_economy_merchants import SPECS, View
 from sim.tests.test_economy_tile_costs import star_tiles, unit_cost_table
 
@@ -37,7 +37,7 @@ def shipper(km, good="salt", quantity=10.0):
     who.routes = {(good, "a"): (("b", area_b, 1.0),)}
     book = Book()
     book.move(GoodsMove(EDGE_PRODUCTION, "m1", good, "a", quantity, "stock"))
-    done = merchants.dispatch(who, (Fill("m1", good, area_a, "a", quantity, 2.0, "buy"),), carriage, SPECS, "coin",
+    done = merchants.dispatch(who, carriage, SPECS, "coin",
                               1000.0, {(good, "a"): quantity})
     book.post((), done.moves)
     return who, book, done

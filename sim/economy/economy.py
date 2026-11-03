@@ -132,8 +132,8 @@ class Economy:
         return self._rebuild_carriage()
 
     def view(self) -> YearView:
-        return CreditView(self.record.memory, self.record.book, self.area_map, self.setup.currency_id, labour_area,
-                          loans=lambda: self.record.credit.loans, equity=self._equity_read,
+        return CreditView(self.record.memory, self.record.book, self.area_map, self.setup.currency_id, self.setup,
+                          labour_area, loans=lambda: self.record.credit.loans, equity=self._equity_read,
                           loss_rates=lambda: self.record.credit.loss_rates,
                           pooled=self.record.credit.contracts.deposit_value)
 
@@ -266,8 +266,8 @@ class Economy:
         dispatch_merchants(setup, record, self.carriage, ledger, self.area_map)
         money_taxes(setup, record, view, ledger)
         self._build_plant(plant_runs)
-        close_view = CreditView(record.memory, record.book, self.area_map, money, labour_area,
-                                loans=lambda: record.credit.loans, equity=self._equity_read,
+        close_view = CreditView(record.memory, record.book, self.area_map, money, setup,
+                                labour_area, loans=lambda: record.credit.loans, equity=self._equity_read,
                                 loss_rates=lambda: record.credit.loss_rates,
                                 pooled=record.credit.contracts.deposit_value)
         received = dict(interest)

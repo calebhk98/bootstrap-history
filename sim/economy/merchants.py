@@ -38,7 +38,7 @@ from .market_areas import AreaMap
 from .merchants_shares import RouteShares, room_left
 from .protocols import AgentOrders, MarketView
 from .tile_costs import CarriageTable
-from .types import AgentId, AreaId, Bid, CurrencyId, Fill, GoodId, GoodSpec, Offer, TileId, Transfer
+from .types import AgentId, AreaId, Bid, CurrencyId, GoodId, GoodSpec, Offer, TileId, Transfer
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 
 PURSE_ROUNDING_MARGIN = 1e-12             # share of the purse kept back so float sums of fees never overdraw it
@@ -383,7 +383,7 @@ def shared_room(merchant, good, source, destination, held_stock, own: RouteShare
                      own, group, held)
 
 
-def dispatch(merchant: Merchant, fills: Sequence[Fill], carriage: CarriageTable,
+def dispatch(merchant: Merchant, carriage: CarriageTable,
              specs: Mapping[GoodId, GoodSpec], currency: CurrencyId, cash: float,
              held_stock: Mapping[Tuple[GoodId, TileId], float],
              carrier_of: Callable[[TileId], Optional[AgentId]] = lambda _tile: EDGE_CARRIAGE,
@@ -394,7 +394,7 @@ def dispatch(merchant: Merchant, fills: Sequence[Fill], carriage: CarriageTable,
              dues: Optional[Callable[[TileId, TileId], Mapping[str, float]]] = None) -> Dispatch:
     """Carry what the merchant holds on each route's source tile (this year's purchases and older stock)
     to the route's destination, paying carriage from `cash` to `carrier_of(source tile)` (the edge when
-    it names nobody). `fills` are not needed: what settled is what is held.
+    it names nobody).
     With `crew`, a shipment's crew hours (the hours its haul needs of each trade at the tile, `hours_per_tonne`)
     must have been hired: a route is cut by the share hired of its scarcest crew hours, and the fee is paid
     less the crew's wages, which the labour market has already paid; with `carrier_money(source, destination)`

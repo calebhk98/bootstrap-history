@@ -109,9 +109,6 @@ class AreaMap:
     def goods(self) -> Tuple[GoodId, ...]:
         return tuple(sorted(self._bucket_of_good))
 
-    def bucket_count(self) -> int:
-        return len(self._partitions)
-
     def tile_sets(self, good: GoodId) -> Dict[AreaId, set]:
         """Each market area of the good with its tiles as a set (none for a good with no market here)."""
         if good not in self._area_tile_sets:

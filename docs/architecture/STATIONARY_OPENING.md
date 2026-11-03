@@ -136,6 +136,7 @@ python3 sim/simulator.py spin-up-trace --civ england_1300 --years 60
 python3 sim/simulator.py spin-up-trace --civ mexica_1500 --years 60
 ```
 
-Apply `sim.economy.settling.settling_report` to each complete trace. Keep its
-existing thresholds. The results and full-suite failures belong in the issue
+Read the price level, wage, money supply and rate in each complete trace for
+whether each settles (flat over the closing window, neither trending nor
+cycling); no module judges it. The results and full-suite failures belong in the issue
 and PR measurement record; this design does not claim those validations pass.

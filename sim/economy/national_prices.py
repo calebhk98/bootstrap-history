@@ -48,8 +48,9 @@ def port_share(record, good: str, key: str) -> float:
 
 def national_wages(record, keep: Optional[Callable[[str], bool]] = None) -> Dict[str, float]:
     """Each trade's wage per hour over its labour markets (those `keep` accepts by market key), from the wages the
-    labour core holds (mirrored by `labour_state.mirror_wages`; the core gives every trade a wage in every area each
-    year). Weighted by the hours hired in each market last year; for a trade that hired nowhere, by the people
+    labour core holds (mirrored by `labour_state.mirror_wages`, which records only a (trade, area) the core cleared: a trade
+    nobody works or hires anywhere has no entry, and a reader that prices a recipe adds it by the one wage rule,
+    `notional.costing_wages`; this is the figure reported as the year's wages). Weighted by the hours hired in each market last year; for a trade that hired nowhere, by the people
     working it there (the wage is what those workers would accept); with no people either, the plain mean."""
     rows: Dict[str, List[Tuple[float, float, float]]] = {}
     for key, wage in sorted(record.memory.wages.items()):

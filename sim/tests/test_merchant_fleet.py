@@ -8,7 +8,7 @@ import unittest
 from sim.economy import carriage_fleet_book, carriage_wear, inventory, merchants, merchants_legs
 from sim.book import Book
 from sim.economy.carriage_fleet import FleetLimit
-from sim.economy.types import EDGE_PRODUCTION, Fill, GoodsMove, GoodSpec
+from sim.economy.types import EDGE_PRODUCTION, GoodsMove, GoodSpec
 from sim.tests.test_economy_merchants import SPECS, merchant, plan, world
 
 CART = "cart"
@@ -24,8 +24,7 @@ def ship(limit, held=10.0):
     carriage, _area_map, area_a, _area_b = world()
     who = merchant()
     plan(who, 2.0, 5.0)
-    fills = (Fill("m1", "salt", area_a["salt"], "a", held, 2.0, "buy"),)
-    return merchants.dispatch(who, fills, carriage, SPECS, "coin", 1000.0, {("salt", "a"): held}, fleet=limit)
+    return merchants.dispatch(who, carriage, SPECS, "coin", 1000.0, {("salt", "a"): held}, fleet=limit)
 
 
 class DispatchIsBoundByTheFleet(unittest.TestCase):
@@ -70,7 +69,7 @@ class WearFollowsWhatIsCarried(unittest.TestCase):
         held = {("brick", "a"): 10.0, ("feather", "a"): 400.0}
         crew = merchants.CrewHire(lambda _source, _destination: (("hand@a", 1.0),), {"hand@a": 5.0}, {}, lambda _key: 1.0,
                                   lambda _good, tile: "area_" + tile)      # half the hours the bricks need were hired
-        done = merchants.dispatch(who, (), carriage, specs, "coin", 1e6, held, crew=crew, fleet=fleet_of({CART: 1.0}))
+        done = merchants.dispatch(who, carriage, specs, "coin", 1e6, held, crew=crew, fleet=fleet_of({CART: 1.0}))
         carried = {move.good: move.quantity for move in done.moves}
         self.assertAlmostEqual(carried["brick"], 5.0)
         self.assertGreater(carried["feather"], 0.0)      # the five bricks left behind wore no carts

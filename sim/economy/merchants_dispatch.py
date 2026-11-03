@@ -63,7 +63,7 @@ def dispatch_merchants(setup, record, carriage, ledger: YearLedger, area_map) ->
             hire = merchants.CrewHire(crew.hours_per_tonne, hours_hired, wages,
                                     lambda key, each=merchant: carriage_hours.crew_wage(setup, record, each, key, populated),
                                     area_map.area_of)
-        done = merchants.dispatch(merchant, fills, carriage, setup.specs, money,
+        done = merchants.dispatch(merchant, carriage, setup.specs, money,
                                   record.book.balance(merchant.agent_id, money), held_stock(record.book, merchant.agent_id),
                                   carrier_of=carriers.get, crew=hire,
                                   carrier_money=None if wear is None else (

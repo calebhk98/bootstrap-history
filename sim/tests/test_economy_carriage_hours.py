@@ -8,7 +8,6 @@ import unittest
 from sim.economy import carriage_hours, merchants
 from sim.economy.merchants import CrewHire, Merchant
 from sim.economy.market_memory import market_key
-from sim.economy.types import Fill
 from sim.tests import economy_fixture as fixture
 from sim.tests.test_economy_merchants import SPECS, merchant, plan, world
 
@@ -106,8 +105,7 @@ class ShortfallTests(unittest.TestCase):
         carriage, _m, area_a, _b = world()
         who = merchant()
         plan(who, 2.0, 5.0)
-        fills = (Fill("m1", "salt", area_a["salt"], "a", 10.0, 2.0, "buy"),)
-        return merchants.dispatch(who, fills, carriage, SPECS, "coin", 100.0, {("salt", "a"): 10.0},
+        return merchants.dispatch(who, carriage, SPECS, "coin", 100.0, {("salt", "a"): 10.0},
                                   crew=hire(hired_hours))
 
     def test_carriers_enough_for_every_unit_carry_all_of_it_and_the_fee_less_their_wages_is_left_to_pay(self):
@@ -128,7 +126,7 @@ class ShortfallTests(unittest.TestCase):
         carriage, _m, _a, _b = world(("salt", "fish"))
         who = merchant()
         who.routes = {("salt", "a"): (("b", "x", 1.0),), ("fish", "a"): (("b", "x", 1.0),)}
-        result = merchants.dispatch(who, (), carriage, SPECS, "coin", 100.0,
+        result = merchants.dispatch(who, carriage, SPECS, "coin", 100.0,
                                     {("salt", "a"): 10.0, ("fish", "a"): 4.0},
                                     crew=hire(3.5))
         carried = {move.good: move.quantity for move in result.moves}
@@ -150,7 +148,7 @@ class CrewWorthTests(unittest.TestCase):
         plan(who, price_at_source, price_at_destination)
         who.routes = {("salt", "a"): (("b", area_b["salt"], 1.0),)}
         crew = hire(100.0, market_wage=market_wage, area_of=lambda _good, tile: area_a["salt"] if tile == "a" else "elsewhere")
-        return merchants.dispatch(who, (), carriage, SPECS, "coin", 100.0, {("salt", "a"): 10.0}, crew=crew)
+        return merchants.dispatch(who, carriage, SPECS, "coin", 100.0, {("salt", "a"): 10.0}, crew=crew)
 
     def test_a_wide_spread_is_worth_the_gain_over_the_hours(self):
         key = market_key(fixture.LABOURER, "a")
