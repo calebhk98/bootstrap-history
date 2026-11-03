@@ -4,6 +4,8 @@ Research only. No code or data changed. Source tags: **read** (page or PDF opene
 
 ## 1. What exists now
 
+*Present-day note: `Sim.mining_tech`, `MINING_TECH_YIELD_CEILING`, `MINING_TECH_COST_FLOOR`, `sim/engine/economy_mining.py` and `data/production/mining_methods.json` do not exist. The successor is the `mine_works` node mechanic folded by `combine` in `sim/world/mine_technique.py` and read by `sim/world/mine_works.py` and `sim/world/deposits.py`; the first bullet below describes the old mechanic.*
+
 - `mining_tech` is a node mechanic `{yield, cost, materials?}` (`data/branches/MECHANICS.md`). `Sim.mining_tech(material)` multiplies the entries of every running node, then clamps with `MINING_TECH_YIELD_CEILING` and `MINING_TECH_COST_FLOOR` (both `temporary_heuristic`, confidence D, `sim/engine/economy_mining.py`).
 - Nodes carrying it today: `met_mine_pumping` (yield and cost multipliers), `met_black_powder_blasting`, `met_dynamite_blasting`, `pwr_rotary_drilling`, `railway`, `steam_atmospheric`, `blast_furnace`, `mat_bulk_steel`. The multipliers are unsourced.
 - Nodes the task names that do not exist in `data/branches/` as nodes: Archimedean screw, water-wheel battery, drainage adit, ruina montium or hushing, fire-setting, ventilation furnace. A grep of `data/branches/*.json` for screw, adit, hush, ruina and fire-set finds only unrelated notes. `met_safety_lamps_ventilation` and `met_winding_engine` exist without `mining_tech`. Ancient techniques are today "free" (fire-setting is hard-wired into `sim/world/mine_fire_setting.py`, hand lifting into `deposits._lift_hours_per_tonne_metre`).
