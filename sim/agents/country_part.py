@@ -86,8 +86,7 @@ class OwnEconomy:
 
 	def get(self) -> Any:
 		"""The economy's answers for this country; raises NoCountryEconomy when it has none."""
-		lookup = getattr(getattr(self.shared_world, "people", None), "country_economy", None)
-		own = lookup(self.profile.country) if callable(lookup) else None
+		own = self.shared_world.people.country_economy(self.profile.country)
 		if own is None:
 			raise NoCountryEconomy(self.profile.country)
 		return own

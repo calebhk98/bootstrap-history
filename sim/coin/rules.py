@@ -49,10 +49,11 @@ def is_credit(purpose: Any) -> bool:
 
 
 def abroad(parties: Iterable[Any], home_country: Optional[str]) -> bool:
-    """Whether any party stands in another country than home (a party with no record or no country is at home)."""
+    """Whether any party stands in another country than home (a party with no record or no country is at home).
+    A party with a record is an actor or a seat, whose record always has a country."""
     for party in parties:
         record = getattr(party, "record", None)
-        if record is not None and getattr(record, "country", None) not in (None, home_country):
+        if record is not None and record.country not in (None, home_country):
             return True
     return False
 

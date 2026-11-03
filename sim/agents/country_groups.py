@@ -43,14 +43,13 @@ class CountryGroups(SharedPart):
 		foundations = self._country_actors(FOUNDATION_KINDS)
 		state = world.setting.government()
 		falling = (Sector.of_strata(strata, world) + Sector.of_firms(firms, world) + Sector.of_foundations(foundations)
-				   + (Sector.of_servants(state, world) if hasattr(state, "record") else []))
+				   + Sector.of_servants(state, world))
 		for sector in falling:
 			sector.blame_share = 0.0
 		Sector.remember_welfare(strata, world)
 		Sector.remember_margins(firms)
 		Sector.remember_foundations(foundations)
-		if hasattr(state, "record"):
-			Sector.remember_servants(state, world)
+		Sector.remember_servants(state, world)
 		self._sectors = {sector_key(sector.kind, sector.subject): sector for sector in falling}
 		return self._sectors
 
@@ -70,13 +69,12 @@ class CountryGroups(SharedPart):
 
 	def state_in_deficit(self) -> bool:
 		"""Whether the country's state could pay all it set out to last year."""
-		record = getattr(self.world.setting.government(), "record", None)
-		return record is not None and sum(record.unfunded.values()) > 1e-9
+		return sum(self.world.setting.government().record.unfunded.values()) > 1e-9
 
 	def concession_paid(self, line_name: str) -> float:
 		"""What the country's state paid last year on a named line of its budget."""
-		record = getattr(self.world.setting.government(), "record", None)
-		return 0.0 if record is None else max(0.0, record.need.get(line_name, 0.0) - record.unfunded.get(line_name, 0.0))
+		record = self.world.setting.government().record
+		return max(0.0, record.need.get(line_name, 0.0) - record.unfunded.get(line_name, 0.0))
 
 	def say(self, text: Any) -> None:
 		"""A country's groups report to its own state; the founder's log does not carry them."""

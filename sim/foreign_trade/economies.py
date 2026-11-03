@@ -10,7 +10,7 @@ cast, foreign_route, route_freight_per_tonne)"""
 from types import SimpleNamespace
 from typing import Any, Dict, List, Optional
 
-from sim.agents.api import GOVERNMENT_PREFIX, exports_allowed
+from sim.agents.api import GOVERNMENT_PREFIX, ExportPolicy, exports_allowed
 from sim.assembly.api import Part
 from sim.refusal import Refusal
 
@@ -77,7 +77,7 @@ class Economies(Part):
         government = self.partner_government(civilization_id)
         if government is None:
             government = SimpleNamespace(record=SimpleNamespace(
-                state_monopolies=set(civilization.get("state_monopolies") or ())), decision_policy=None)
+                state_monopolies=set(civilization.get("state_monopolies") or ())), decision_policy=ExportPolicy())
         else:
             reopens = government.markets.markets_closed_until(self.needs.acting_seat(), self.needs.year())
             if reopens:

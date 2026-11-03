@@ -55,10 +55,10 @@ def holds_that_would_be_lost(seat) -> List[str]:
 	if seat.modules["projects"].active or len(seat.modules["ventures"].business.reading.entry_keys()):
 		found.append("works")
 	staff = seat.modules.get("workforce") or WorkforceSeat()
-	if any(getattr(staff, name, 0) for name in STAFF_FIELDS) or staff.employees:
+	if any(getattr(staff, name) for name in STAFF_FIELDS) or staff.employees:
 		found.append("staff")
 	finance = seat.modules.get("finance") or FinanceSeat()
-	if any(getattr(finance, name, 0) for name in OWED_FIELDS):
+	if any(getattr(finance, name) for name in OWED_FIELDS):
 		found.append("arrears or bondage")
 	if (holdings_in_use(seat.holdings) or stock_in_use(seat.modules.get("ledger") or LedgerSeat())
 			or module_state_in_use(seat.modules.get("resources") or ResourcesSeat())

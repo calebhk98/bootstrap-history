@@ -102,8 +102,7 @@ def advance_actor(actor: Any, world: Any) -> List[str]:
 	if not candidates:
 		return events
 	government = world.setting.government()
-	record = getattr(government, "record", None)
-	levers: Dict[str, Any] = {} if record is None else record.levers
+	levers: Dict[str, Any] = government.record.levers
 	subsidies, mandates = levers.get(TRIAL_SUBSIDY) or {}, levers.get(TECH_MANDATE) or {}
 	for node_id in candidates:
 		gap = observed_gap(actor, node_id, world)

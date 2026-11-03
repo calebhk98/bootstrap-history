@@ -95,7 +95,7 @@ def exports_allowed(actor: Any, materials: Iterable[str]) -> List[str]:
 	a good back keeps it from leaving."""
 	decision = Decision(EXPORT_DECISION, [Option(subject=material, worth=1.0, cost=0.0)
 										  for material in sorted(set(materials))], float("inf"))
-	policy = getattr(actor, "decision_policy", None) or ExportPolicy()
+	policy = actor.decision_policy
 	return sorted(option.subject for option in policy.choose(actor, decision))
 
 
