@@ -131,7 +131,7 @@ def post(sim, economy, seat_ids, tile_of):
             place_newcomers(sim, economy, tile)
             trades, funded, offered = [], 0.0, False
             wanted = places_with_once(sim.labour.staff_posting(), sim.labour.once_posting(), setup.working_hours_per_year)
-            bids, units = employer_bids(economy, seat_id, wanted, tile, sim.view("spending_power")("buy")) if wanted else ([], 0.0)
+            bids, units = employer_bids(economy, seat_id, wanted, tile, sim.spending_power("buy")) if wanted else ([], 0.0)
             if bids and not isinstance(sim.send(PayEdge(edges.EDGE_WORKERS, units * setup.coin_per_unit, "wages offered in the labour market")), Refusal):
                 economy_api.post_transfers(economy, [Transfer(EDGE_EXCHANGE, staff_account(seat_id), setup.currency_id, units, "wages offered")])
                 orders[staff_account(seat_id)] = AgentOrders(labour_bids=tuple(bids))

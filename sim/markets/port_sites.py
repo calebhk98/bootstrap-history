@@ -65,7 +65,7 @@ def deplete(sim, extraction, outputs_by_recipe):
                           key=lambda row: (-row["remaining_tonnes"], row["id"])):
             take = min(ore_tonnes / ore_tonnes_per_tonne(row), row["remaining_tonnes"])
             if take > 0.0:
-                sim.draw_deposit(row["id"], take)
+                sim.foreign.draw_deposit(row["id"], take)
                 ore_tonnes -= take * ore_tonnes_per_tonne(row)
             if ore_tonnes <= 1e-12:
                 break

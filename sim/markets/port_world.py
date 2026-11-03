@@ -262,6 +262,12 @@ class PortWorld:
 	def can_pay(self, money):
 		return self._needs.can_pay(money)
 
+	def spending_power(self, kind="buy"):
+		return self._needs.spending_power(kind)
+
+	def regional_people_by_band(self):
+		return self._needs.regional_people_by_band()
+
 	# ---- production and projects ----
 
 	def techniques_held(self):

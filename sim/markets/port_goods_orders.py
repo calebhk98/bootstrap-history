@@ -87,7 +87,7 @@ def staff_funding_coin(sim, economy, seat_id, tile_of):
         if not wanted:
             return 0.0
         _bids, units = port_staff.employer_bids(economy, seat_id, wanted, tile_of(sim.labour.base_tile()),
-                                                sim.view("spending_power")("buy"))
+                                                sim.spending_power("buy"))
     return units * economy_api.coin_per_unit(economy)
 
 

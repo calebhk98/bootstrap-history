@@ -47,7 +47,7 @@ READS_BY_OWNER = {
 	                    "employed_by_trade"),
 	"port: money and prices": ("market_rate", "credit_room", "credit_line_sought", "debt_bondage_term_years", "home_coin_stock",
 	                           "material_price", "material_commodity_map", "material_market_tonnes", "goods_stock",
-	                           "commodity_materials", "not_traded_materials", "can_pay", "project_cost",
+	                           "commodity_materials", "not_traded_materials", "can_pay", "spending_power", "project_cost",
 	                           "real_output_hours", "held_techniques", "techniques_spread", "mechanic"),
 	"port: foreign trade and freight": ("partner", "partner_facts", "partners_in_agent_economy", "civilisation_record",
 	                                    "partner_price_per_unit", "actors_carry",
