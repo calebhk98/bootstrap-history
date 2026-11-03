@@ -28,7 +28,7 @@ def Shortfall(keep_staffed=()):
     """The projects module with what choosing closures reads."""
     module = projects_host.build(tree=NODES, seat=ProjectsSeat(keep_staffed=set(keep_staffed)))
     module._staffing_draws = lambda: {"mill": {"craftsmen": 3.0}, "forge": {"craftsmen": 2.0}}
-    module.staffing_shortfalls = lambda totals: {}
+    module.reading = module.staffing_shortfalls = lambda totals: {}
     return module
 
 
@@ -40,7 +40,7 @@ check("the closures are the rule's pick", picked == ["forge"])
 check("the rule is given the running concerns' draws and their revenue less running cost",
       draws == {"mill": {"craftsmen": 3.0}, "forge": {"craftsmen": 2.0}} and net_value == {"mill": 600.0, "forge": 50.0}, (draws, net_value))
 check("the concerns flagged to stay staffed and the game's own shortfall reading are handed in",
-      flagged == {"forge"} and shortfalls_of == game.staffing_shortfalls, (flagged, shortfalls_of))
+      flagged == {"forge"} and shortfalls_of is game.reading, (flagged, shortfalls_of))
 
 
 def Closer(planned, closures):

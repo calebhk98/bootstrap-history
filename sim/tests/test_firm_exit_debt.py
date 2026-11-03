@@ -31,6 +31,7 @@ def indebted_firm(debt, revenue):
 	registry = ActorRegistry(ActorsState(home_country="home"))
 	firm = registry.add("firm:1", ActorRecord(kind="firm", founded_year=0, business=Business.running(["shop"], opened_year=0)))
 	firm.money = -debt
+	firm.record.workforce["labourer"] = 100.0 / world.hours_per_person_year   # the crew the labour core hired at the last clearing
 	return world, registry, firm
 
 
@@ -39,6 +40,7 @@ def years_until_closed(world, firm, limit=3 * EXIT_LOSS_YEARS + 10):
 		if firm.record.exited_year is not None:
 			break
 		world.setting.year += 1
+		firm.record.staff_wanted.clear()   # the labour core's clearing takes last year's places
 		firm.act(world)
 	return firm
 
