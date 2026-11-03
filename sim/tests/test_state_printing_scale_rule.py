@@ -6,7 +6,7 @@ import unittest
 from types import SimpleNamespace
 
 from sim.economy import state_budget
-from sim.economy.accounts import Book
+from sim.book import Book
 from sim.economy.state_policy import StatePolicy
 from sim.economy.types import CurrencySpec, EDGE_MINT, Transfer
 

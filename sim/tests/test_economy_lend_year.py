@@ -7,7 +7,7 @@ import unittest
 from unittest import mock
 
 from sim.economy import economy as economy_module
-from sim.economy.accounts import Book
+from sim.book import Book
 from sim.economy.capital_markets_record import CapitalMarketsRecord
 from sim.economy.credit_record import CreditRecord
 from sim.economy.market_memory import MarketMemory

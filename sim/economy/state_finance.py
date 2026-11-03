@@ -5,7 +5,7 @@ from typing import Dict, Tuple
 
 from sim.constants import declare
 
-from . import credit, currency
+from . import credit, credit_claims, currency
 from .types import LoanRequest
 from .rates import own_rate
 
@@ -55,7 +55,8 @@ def finance_deficit(policy, record, view, setup, deficit: float, revenue: float)
             collateral = revenue * STATE_COLLATERAL_YEARS_OF_REVENUE
             # the multiple limits what the state pays over the market rate; the premium its own leverage
             # earns lenders is on top of it, else a market rate near zero would price the state out
-            premium = credit.risk_premium(owed + amount, collateral, 0.0)
+            arrears = credit_claims.arrears_history(record.credit.loans, record.credit.remembered_defaults).get(state, 0.0)
+            premium = credit.risk_premium(owed + amount, collateral, arrears)
             record.credit.ask_for_loan(LoanRequest(
                 state, money, amount, rate * STATE_BORROWING_RATE_CEILING_MULTIPLE + premium, STATE_LOAN_YEARS,
                 collateral, "state deficit"))

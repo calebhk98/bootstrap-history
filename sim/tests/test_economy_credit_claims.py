@@ -6,10 +6,17 @@ QUICK_TOPIC = True
 import unittest
 
 from sim.economy import credit, credit_claims, households
-from sim.economy.accounts import Book
+from sim.book import Book
 from sim.economy.types import Loan, Transfer
 
 from sim.tests.test_economy_households import BASKET, SPECS, View, cohort
+
+
+def wealth(book, loans, agent, currency):
+    """Money in the book plus claims less debts, as a test of conservation reads it."""
+    claims = credit_claims.claims_by_lender((each for each in loans if each.lender == agent), currency).get(agent, 0.0)
+    debts = credit_claims.debts_by_borrower((each for each in loans if each.borrower == agent), currency).get(agent, 0.0)
+    return book.balance(agent, currency) + claims - debts
 
 
 def loan(loan_id, lender, borrower, principal, rate=0.1, years_left=4.0, arrears=0.0):
@@ -33,10 +40,10 @@ class ClaimTests(unittest.TestCase):
         book.transfer(Transfer("edge:legacy", "b", "coin", 50.0, "opening"))
         loans = [loan("a", "l", "b", 100.0)]
         book.transfer_many(credit.disbursements(loans))
-        wealth_before = credit_claims.wealth(book, [], "l", "coin") + credit_claims.wealth(book, [], "b", "coin")
-        wealth_after = credit_claims.wealth(book, loans, "l", "coin") + credit_claims.wealth(book, loans, "b", "coin")
-        self.assertAlmostEqual(credit_claims.wealth(book, loans, "l", "coin"), 300.0)    # 200 cash and a claim of 100
-        self.assertAlmostEqual(credit_claims.wealth(book, loans, "b", "coin"), 50.0)     # 150 cash and a debt of 100
+        wealth_before = wealth(book, [], "l", "coin") + wealth(book, [], "b", "coin")
+        wealth_after = wealth(book, loans, "l", "coin") + wealth(book, loans, "b", "coin")
+        self.assertAlmostEqual(wealth(book, loans, "l", "coin"), 300.0)    # 200 cash and a claim of 100
+        self.assertAlmostEqual(wealth(book, loans, "b", "coin"), 50.0)     # 150 cash and a debt of 100
         self.assertAlmostEqual(wealth_before, wealth_after)
         self.assertTrue(book.check_conservation(1e-9).ok)
 
@@ -45,9 +52,9 @@ class ClaimTests(unittest.TestCase):
         book.transfer(Transfer("edge:legacy", "l", "coin", 100.0, "opening"))
         book.transfer(Transfer("edge:legacy", "b", "coin", 0.0, "opening"))
         loans = [loan("a", "l", "b", 100.0, 0.1, 2.0, arrears=45.0)]
-        before = (credit_claims.wealth(book, loans, "l", "coin"), credit_claims.wealth(book, loans, "b", "coin"))
+        before = (wealth(book, loans, "l", "coin"), wealth(book, loans, "b", "coin"))
         _transfers, remaining, defaults = credit.service(loans, {"b": 0.0}, 1)
-        after = (credit_claims.wealth(book, remaining, "l", "coin"), credit_claims.wealth(book, remaining, "b", "coin"))
+        after = (wealth(book, remaining, "l", "coin"), wealth(book, remaining, "b", "coin"))
         self.assertLess(after[0], before[0])
         self.assertGreater(after[1], before[1])
         self.assertEqual(credit_claims.losses_by_lender(defaults).keys(), {"l"})

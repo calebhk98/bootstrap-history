@@ -5,7 +5,7 @@ QUICK_TOPIC = True
 import unittest
 
 from sim.economy import entry, producers, unit_cost
-from sim.economy.accounts import Book
+from sim.book import Book
 from sim.economy.market_memory import MarketMemory
 from sim.economy.record import EconomyRecord
 from sim.economy.types import CurrencySpec, Recipe

@@ -7,7 +7,7 @@ import unittest
 
 from sim.agents.records import ActorsState
 from sim.agents.registry import ActorRegistry
-from sim.economy.accounts import Book
+from sim.book import Book
 from sim.economy.market_memory import MarketMemory
 from sim.economy.producers import Producer
 from sim.economy.record import EconomyRecord

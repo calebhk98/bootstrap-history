@@ -7,7 +7,7 @@ import types
 import unittest
 
 from sim.economy import bank_credit_risk, credit, credit_claims, households, households_credit, lending, merchants_credit
-from sim.economy.accounts import Book
+from sim.book import Book
 from sim.economy.credit_view import CreditView
 from sim.economy.households_basket import need_prices
 from sim.economy.market_memory import MarketMemory

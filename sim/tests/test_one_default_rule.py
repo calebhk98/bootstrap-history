@@ -51,6 +51,9 @@ class NoBonds:
 class NoPurses:
 	bonds = NoBonds()
 
+	def drawable(self, account_id, amount):
+		return amount   # the lenders hold all the household asks
+
 
 def founder_borrower(money, world):
 	"""The founder's household reduced to what the shared rule reads: a purse, an arrears book, and a world that answers the

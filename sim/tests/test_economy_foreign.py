@@ -6,7 +6,7 @@ QUICK_TOPIC = True
 import unittest
 
 from sim.economy import foreign, goods_market, settlement
-from sim.economy.accounts import Book
+from sim.book import Book
 from sim.economy.types import EDGE_EXTERNAL, EDGE_MINT, EDGE_PRODUCTION, Bid, GoodsMove, Offer, Transfer
 
 

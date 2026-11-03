@@ -7,7 +7,7 @@ import types
 import unittest
 
 from sim.economy import carried_book, country_figures
-from sim.economy.accounts import Book
+from sim.book import Book
 from sim.economy.market_memory import MarketMemory
 from sim.economy.types import CurrencySpec
 from sim.economy.record import EconomyRecord

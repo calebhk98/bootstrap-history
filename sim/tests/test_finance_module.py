@@ -60,11 +60,18 @@ class ChargeInterest(unittest.TestCase):
 class SettleInterest(unittest.TestCase):
     """The year's interest on the acting seat's debt, by the one rule every borrower follows, over a real book."""
 
+    @staticmethod
+    def pay_interest(payer, owed, purpose):
+        """The credit part's payment: the interest the pool took, entered as the payer's outlay."""
+        paid = sum(payer.purses.pay_interest(payer.account_id, owed).values())
+        payer.payments.note_outlay(purpose, paid)
+        return paid
+
     def module(self, debt, ceiling=1000.0, rate=0.1):
         purses = Purses()
         lend_from_savers(purses, 1e6)
         purses.set_net("founder", -debt, "opening")
-        world = flat_namespace(pay_interest=lambda payer, owed, purpose: payer.payments.note_outlay(purpose, sum(payer.purses.pay_interest(payer.account_id, owed).values())))
+        world = flat_namespace(pay_interest=self.pay_interest)
         module = finance_host.build(seat=FinanceSeat(), cast_state=SimpleNamespace(purses=purses), actor_world=world,
                                     acting_balance=lambda: purses.net("founder"))
         module.credit_limit = lambda *arguments: ceiling

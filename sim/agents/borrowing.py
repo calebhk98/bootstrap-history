@@ -71,7 +71,8 @@ class Borrower:
 		"""The most of a draw of `amount` the actor is lent now: the rule's limit (`rule_limit`) and what the pool holds and the
 		economy's lenders can supply for a draw that size, which is the very gate the draw itself passes (`Purses.drawable`), so
 		a draw this approves is not refused."""
-		return self.purses.drawable(self.account_id, amount)  # type: ignore[attr-defined]
+		allowed = self.rule_limit(world, amount)
+		return self.purses.drawable(self.account_id, allowed) if allowed > 0.0 else 0.0  # type: ignore[attr-defined]
 
 	def spare_credit(self, world: Any) -> float:
 		"""What the actor may still borrow: its ceiling less what it owes, as far as lenders lend it."""

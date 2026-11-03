@@ -4,7 +4,7 @@ QUICK_TOPIC = True
 
 from .harness import *  # noqa: F401,F403
 from sim.economy import bonded_purchase, outlay_room
-from sim.economy.accounts import Book
+from sim.book import Book
 from sim.economy.producers import Plan
 from sim.economy.state_budget import StateBudget
 from sim.economy.types import Bid, EDGE_MINT, Transfer

@@ -9,7 +9,7 @@ import unittest
 from types import SimpleNamespace
 
 from sim.economy import api as economy_api
-from sim.economy.accounts import Book
+from sim.book import Book
 from sim.economy.types import EDGE_MINT, Transfer
 from sim.finance import bank_rules as seat_bank
 from sim.finance.commands import FoundBank

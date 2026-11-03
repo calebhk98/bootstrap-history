@@ -5,7 +5,7 @@ QUICK_TOPIC = True
 import types
 import unittest
 
-from sim.economy.accounts import Book
+from sim.book import Book
 from sim.labour.api import MarketState, YearInputs as CoreInputs
 from sim.labour.market.aptitude import split_evenly
 from sim.economy.market_memory import MarketMemory

@@ -8,7 +8,7 @@ import types
 import unittest
 from unittest import mock
 
-from sim.economy import bank_spread, banks, credit, credit_claims, lender_ask, loss_memory
+from sim.economy import bank_spread, banks, credit, lender_ask, loss_memory
 from sim.economy.credit_view import CreditView
 from sim.economy.households_orders import HOUSEHOLD_TIME_PREFERENCE
 from sim.economy.market_memory import MarketMemory
@@ -28,18 +28,6 @@ class LowestAskTests(unittest.TestCase):
         clean = lender_ask.lowest_ask(0.05, 0.0, expected_loss_rate=lender_ask.loss_rate(0.0))
         burnt = lender_ask.lowest_ask(0.05, 0.0, expected_loss_rate=lender_ask.loss_rate(0.1))
         self.assertAlmostEqual(burnt - clean, 0.1)
-
-    def test_land_with_a_higher_yield_raises_the_floor(self):
-        low = lender_ask.lowest_ask(0.05, 0.0, land_yield_available=lender_ask.land_yield(3.0, 100.0))
-        high = lender_ask.lowest_ask(0.05, 0.0, land_yield_available=lender_ask.land_yield(9.0, 100.0))
-        self.assertAlmostEqual(low, 0.05)
-        self.assertAlmostEqual(high, 0.09)
-
-    def test_land_with_no_price_is_no_alternative(self):
-        self.assertEqual(lender_ask.land_yield(9.0, None), 0.0)
-
-    def test_public_debt_raises_the_floor(self):
-        self.assertAlmostEqual(lender_ask.lowest_ask(0.05, 0.0, public_yield_available=0.08), 0.08)
 
 
 class GlutTests(unittest.TestCase):

@@ -42,14 +42,10 @@ class CapitalMarket(Part):
 		return premium if answered else None
 
 	def market_funds(self, world: Any) -> Dict[str, float]:
-		"""Funds lenders hold, by source."""
+		"""Funds the actors offer, by source: the state's lendable reserve (each firm's offer is its own cash, `lender_offers`)."""
 		government = self.needs.state_treasury()
-		firms = sum(max(0.0, firm.money) for firm in self.needs.cast().concerns.active_firms())
 		spare = rules.state_spare_reserve(government.money, sum(government.record.need.values()), government.cannot_meet_own_need())
-		return {
-			"firms": firms,
-			"state": rules.lendable_share_of_reserve(spare),
-		}
+		return {"state": rules.lendable_share_of_reserve(spare)}
 
 	def state_lending(self) -> Tuple[float, float]:
 		"""(what the state has out on loan, the yearly rate lenders earn): the claims the state holds in the actors' book, and

@@ -9,7 +9,7 @@ import types as pytypes
 import unittest
 
 from sim.economy import currency, mint, mint_labour
-from sim.economy.accounts import Book
+from sim.book import Book
 from sim.tests.test_economy_mint import BullionAtParity
 from sim.economy.recipes import recipe_from_entry
 from sim.economy.types import EDGE_ISSUE, Transfer

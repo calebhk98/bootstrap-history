@@ -70,6 +70,14 @@ class ActorsBorrowByOneMethod(unittest.TestCase):
         self.assertAlmostEqual(debtor.money, -1.0e5 - owed)
         self.assertGreater(self.world.interest_paid, 0.0)
 
+    def test_interest_the_lenders_refuse_is_reported_unpaid_and_carried_as_arrears_once(self):
+        debtor = firm(self.state, "e", money=-1.0e5)
+        self.world.pay_interest = lambda payer, owed, purpose="interest": 0.0   # the lenders took none of it
+        owed, paid = debtor.settle_interest(self.world)
+        self.assertGreater(owed, 0.0)
+        self.assertEqual(paid, 0.0)
+        self.assertAlmostEqual(debtor.record.interest_arrears, owed)
+
     def test_a_firm_with_no_debt_pays_nothing(self):
         self.assertEqual(firm(self.state, "f", money=500.0).pay_interest(self.world), 0.0)
 

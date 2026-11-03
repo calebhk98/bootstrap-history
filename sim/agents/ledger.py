@@ -3,7 +3,8 @@
 `credit` and `debit` live on `Actor`; an actor with a persistent record keeps
 income and outlays by purpose, so its purse always equals its opening money
 plus income less outlays. `transfer` is the one way a payer's loss becomes a
-payee's gain, so money between actors is neither created nor destroyed.
+payee's gain, so money between actors is neither created nor destroyed. A payer short of what it pays raises
+`InsufficientFunds` with nothing moved; a caller that can do with less asks `payable` or pays by `pay_up_to`.
 """
 import contextlib
 from typing import Any, Callable, Iterator, List, Mapping, Optional, Union
@@ -46,8 +47,9 @@ def transfer(payer: Any, payee: Any, amount: float, purpose: Purpose) -> None:
 	"""Move `amount` from `payer` to `payee`.
 
 	`purpose` is a label, or a mapping of label to share of the amount when one
-	payment covers several things; the amount moved is authoritative. A
-	household's purse may go negative, as it always could.
+	payment covers several things; the amount moved is authoritative. A payer in
+	the one book draws what its purse lacks on its facility within its limit; beyond
+	that, or beyond what the economy's lenders hold, the payment raises `InsufficientFunds`.
 	"""
 	if amount == 0:
 		return

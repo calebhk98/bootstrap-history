@@ -8,7 +8,7 @@ import unittest
 from sim.agents import policy_land
 from sim.agents.policy import CallbackPolicy, ValuePolicy
 from sim.economy import tax_farming
-from sim.economy.accounts import Book
+from sim.book import Book
 from sim.economy.market_memory import MarketMemory
 from sim.economy.record import EconomyRecord
 from sim.economy.taxes import TaxForm

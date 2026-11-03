@@ -5,7 +5,7 @@ QUICK_TOPIC = True
 import unittest
 
 from sim.economy import durable_stock, inventory, opening
-from sim.economy.accounts import Book
+from sim.book import Book
 from sim.economy.market_memory import MarketMemory
 from sim.economy.land_record import LandRecord
 from sim.economy.record import EconomyRecord

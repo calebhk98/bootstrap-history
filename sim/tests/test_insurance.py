@@ -8,7 +8,7 @@ QUICK_TOPIC = True
 import unittest
 
 from sim.economy import insurance
-from sim.economy.accounts import Book
+from sim.book import Book
 from sim.economy.insurance import HARVEST
 from sim.economy.market_memory import MarketMemory
 from sim.economy.record import EconomyRecord

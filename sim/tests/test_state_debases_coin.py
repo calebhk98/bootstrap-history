@@ -9,7 +9,7 @@ from types import SimpleNamespace
 
 from sim.agents.api import COIN_RESTRIKE_SHARE_PER_YEAR
 from sim.economy import currency
-from sim.economy.accounts import Book
+from sim.book import Book
 from sim.economy.economy import Economy
 from sim.economy.types import EDGE_MINT, Transfer
 from sim.markets.port_year import YearRun

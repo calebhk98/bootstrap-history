@@ -37,7 +37,7 @@ class StubCredit:
     """The credit record's two lists and the owner method that asks for a loan."""
 
     def __init__(self):
-        self.loans, self.loan_requests = [], []
+        self.loans, self.loan_requests, self.remembered_defaults = [], [], {}
 
     def ask_for_loan(self, request):
         self.loan_requests.append(request)

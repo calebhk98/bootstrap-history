@@ -19,8 +19,10 @@ class Lending(Part):
 		return self.parts.cast.actor_world().credit.limit(account, amount)
 
 	def lenders_for_draw(self, account: str, amount: float) -> Optional[Tuple[str, float, List[Tuple[str, float, float, float]]]]:
-		"""(the economy's unit, coin per unit, [(lender, offered, balance, ask)] cheapest first) of the lenders whose ask is no
-		more than the rate the account would pay on `amount`; None before lenders have met or while the economy opens."""
+		"""(the economy's unit, coin per unit, [(lender, capacity, balance, ask)] cheapest first) of the lenders whose ask is no
+		more than the rate the account would pay on a draw of `amount`; None before lenders have met or while the economy opens.
+		An account no registry actor stands behind (the pool refilling for a depositor's take-back, a seat's household, whose
+		line the clearing already priced) meets every lender: the lenders' own capacity still bounds the draw."""
 		answered, listing = self.needs.agent_lender_listing()
 		if not answered or not listing["lenders"]:
 			return None

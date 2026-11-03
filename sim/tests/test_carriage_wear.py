@@ -11,7 +11,7 @@ import types
 import unittest
 
 from sim.economy import carriage_fleet_book, carriage_wear
-from sim.economy.accounts import Book, DeliveredMove
+from sim.book import Book, DeliveredMove
 from sim.economy.merchants import Merchant
 from sim.economy.types import EDGE_PRODUCTION, GoodsMove, GoodSpec, Recipe
 from sim.geography.api import carriage_rates

@@ -49,6 +49,8 @@ class Purses:
         self.offers: Dict[str, float] = {}
         # the economy's lenders that have deposited in the pool, and the unit and coin per unit their money crosses at
         self.unit_lenders: Set[str] = set()
+        # coin each economy lender has put in the pool since the last settlement (what its listed offer no longer covers)
+        self.placed: Dict[str, float] = {}
         self.unit: Optional[str] = None
         self.coin_per_unit: float = 1.0
         # never saved, set by the actors module: what an account may be lent of a draw (limit), and the economy's lenders
@@ -257,6 +259,7 @@ class Purses:
                 self.contracts.withdraw(lender, back, DEBT_FLOOR)
             if self.deposit(lender) <= DEBT_FLOOR:
                 self.unit_lenders.discard(lender)
+        self.placed = {}
         return paid
 
     def _pay_depositor(self, depositor: str, coin: float, purpose: str) -> None:
@@ -361,18 +364,20 @@ class Purses:
             coin = units * per_unit
             self.book.transfer(Transfer(lender, EDGE_EXCHANGE, unit, units, DEPOSIT_PLACED))
             self.book.transfer(Transfer(EDGE_EXCHANGE, POOL, COIN, coin, DEPOSIT_PLACED))
-            self.contracts.deposit(lender, POOL, COIN, coin)
+            self.contracts.deposit(lender, POOL, COIN, coin, unit_value=1.0 / per_unit)
             self.unit_lenders.add(lender)
+            self.placed[lender] = self.placed.get(lender, 0.0) + coin
 
     def _lender_capacities(self, account: str, draw: float) -> Optional[Tuple[str, float, List[Tuple[str, float]]]]:
         """(unit, coin per unit, [(lender, units it can still put in the pool)]) cheapest ask first, for a draw of `draw` by the
-        account: each lender gives at most what it offered beyond what it already has in the pool and what its account holds.
+        account: each lender gives at most what it offered beyond what it has put in the pool since the last settlement (the
+        deposits of earlier years were out of its account when it made the offer) and what its account holds.
         None before lenders have met. The one reading of the lenders the gate (`drawable`) and the plan (`_lender_plan`) share."""
         offer = None if self.lenders_for is None else self.lenders_for(account, draw)
         if offer is None:
             return None
         unit, per_unit, lenders = offer
-        return unit, per_unit, [(lender, max(0.0, min(offered - self.deposit(lender) / per_unit, balance)))
+        return unit, per_unit, [(lender, max(0.0, min(offered - self.placed.get(lender, 0.0) / per_unit, balance)))
                                 for lender, offered, balance, _ask in lenders]
 
     def _lender_plan(self, lacking: float, borrower: Optional[str], draw: float) -> Optional[Tuple[str, float, List[Tuple[str, float]]]]:
@@ -485,6 +490,7 @@ class Purses:
         if old in self.unit_lenders:
             self.unit_lenders.discard(old)
             self.unit_lenders.add(new)
+        rekey(self.placed, old, new)
         for held in (self.bonds.terms, self.bonds.held, self.named_lenders.borrowers, self.named_lenders.held,
                      self.named_lenders.written_down, self.offers):
             rekey(held, old, new)
@@ -494,7 +500,7 @@ class Purses:
         return {"book": self.book.to_record(only=(COIN,)),
                 "facilities": self.contracts.to_records(facilities=True),
                 "offers": dict(sorted(self.offers.items())), "interest_pending": self.interest_pending,
-                "unit_lenders": sorted(self.unit_lenders), "unit": self.unit, "coin_per_unit": self.coin_per_unit,
+                "unit_lenders": sorted(self.unit_lenders), "placed": dict(sorted(self.placed.items())), "unit": self.unit, "coin_per_unit": self.coin_per_unit,
                 "named_lenders": self.named_lenders.to_canon_dict(), "bonds": self.bonds.to_canon_dict()}
 
     @classmethod
@@ -504,6 +510,7 @@ class Purses:
         purses.offers = dict(record.get("offers") or {})
         purses.interest_pending = float(record.get("interest_pending", 0.0))
         purses.unit_lenders = set(record.get("unit_lenders") or ())
+        purses.placed = dict(record.get("placed") or {})
         purses.unit = record.get("unit")
         purses.coin_per_unit = float(record.get("coin_per_unit", 1.0))
         purses.named_lenders = NamedLenders.from_record(record.get("named_lenders") or {})

@@ -8,7 +8,7 @@ import unittest
 from unittest import mock
 
 from sim.economy import economy, producers, unit_cost
-from sim.economy.accounts import Book
+from sim.book import Book
 from sim.economy.economy import Economy
 from sim.economy.households_cohort import Cohort
 from sim.economy.labour_record import LabourRecord

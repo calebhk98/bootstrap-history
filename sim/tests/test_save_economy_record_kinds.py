@@ -4,7 +4,7 @@ order, tenancies and shares. (The record is stored whole under `state.economy.ag
 QUICK_TOPIC = True
 
 from sim.contracts import TERM_LOAN, Contract
-from sim.economy.accounts import Book
+from sim.book import Book
 from sim.economy.market_memory import MarketMemory
 from sim.economy.record import EconomyRecord
 from sim.economy.state_budget import StateBudget

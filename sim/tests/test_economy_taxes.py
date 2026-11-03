@@ -6,7 +6,7 @@ import json
 import os
 import unittest
 
-from sim.economy.accounts import Book
+from sim.book import Book
 from sim.economy.taxes import TaxForm, YearFacts, assess, forms_from_civ_data
 from sim.economy.types import EDGE_MINT, EDGE_PRODUCTION, GoodsMove, Transfer
 

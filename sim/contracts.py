@@ -37,6 +37,7 @@ class Contract:
     kind: str = TERM_LOAN
     collateral_tile: str = ""         # the tile whose land title the loan pledges (empty: none)
     collateral_share: float = 0.0     # the share of that tile's land pledged
+    unit_value: float = 1.0           # a deposit placed across the exchange: what one coin of its principal is worth in the lender's own unit
 
     @property
     def loan_id(self) -> str:
@@ -128,16 +129,22 @@ class Contracts:
                 del held[lender]
 
     # ---- deposits ---------------------------------------------------------------------------
-    def deposit(self, depositor: str, pool: str, currency: str, amount: float) -> None:
+    def deposit(self, depositor: str, pool: str, currency: str, amount: float, unit_value: float = 1.0) -> None:
         contract = self.deposits.get(depositor)
         if contract is None:
-            self.deposits[depositor] = Contract("deposit:%s" % depositor, depositor, pool, currency, amount, kind=DEPOSIT)
+            self.deposits[depositor] = Contract("deposit:%s" % depositor, depositor, pool, currency, amount, kind=DEPOSIT, unit_value=unit_value)
         else:
             contract.principal += amount
+            contract.unit_value = unit_value
 
     def deposit_of(self, depositor: str) -> float:
         contract = self.deposits.get(depositor)
         return contract.principal if contract is not None else 0.0
+
+    def deposit_value(self, depositor: str) -> float:
+        """What the pool owes the depositor, in the depositor's own unit (an economy lender's asset)."""
+        contract = self.deposits.get(depositor)
+        return contract.principal * contract.unit_value if contract is not None else 0.0
 
     def total_deposits(self) -> float:
         return sum(contract.principal for contract in self.deposits.values())
@@ -199,7 +206,7 @@ class Contracts:
     def adopt(self, other: "Contracts") -> None:
         """Take over the facilities and deposits held by `other` (a purses' own registry before it joins the economy's)."""
         for depositor, contract in other.deposits.items():
-            self.deposit(depositor, contract.borrower, contract.currency, contract.principal)
+            self.deposit(depositor, contract.borrower, contract.currency, contract.principal, contract.unit_value)
         for borrower, held in other.facilities.items():
             mine = self.facilities.setdefault(borrower, {})
             for lender, contract in held.items():

@@ -9,7 +9,7 @@ import unittest
 from unittest import mock
 
 from sim.economy import producers, producers_close, year_goods
-from sim.economy.accounts import Book
+from sim.book import Book
 from sim.economy.market_memory import MarketMemory
 from sim.economy.types import EDGE_MINT, Bid, Fill, GoodsMove, LabourResult, Offer, Transfer
 from sim.economy.year_ledger import YearLedger
