@@ -187,23 +187,19 @@ WHY_FAILURE_LOSS_FRACTION = declare(
     unit="fraction of cost and hours lost on a failed attempt", source=None,
     confidence="C",
     why="What `why` tells a player a failed attempt at a risky node would "
-        "cost them, in money and in hours - duplicating the 0.4 that "
-        "engine/projects.py actually charges when a project fails "
-        "(ph_left set to node['ph']*0.4, and the money loss computed as "
-        "node['_total_cost']*0.4*cost_money_factor() - see that file's own "
-        "'40, NOT 60' comment). Declared here, at the same value, because "
-        "this file does not import projects.py's ProjectsMixin and so has "
-        "no name to import instead; if that 0.4 is ever retuned there this "
-        "line will go stale silently until someone notices the two numbers "
-        "disagree.")
+        "cost them, in money and in hours - duplicating the share "
+        "sim/projects/constants.py FAILURE_RESET_SHARE charges when a "
+        "project fails. Declared here, at the same value, because this "
+        "file does not import that constant; if it is ever retuned there "
+        "this line will go stale silently until someone notices the two "
+        "numbers disagree.")
 WHY_BOUNTY_PRICE_MULTIPLE = declare(
     "WHY_BOUNTY_PRICE_MULTIPLE", 2.5, kind="temporary_heuristic",
     unit="multiple of build cost", source=None, confidence="C",
     why="The 'about how much a public bounty would cost' estimate `why` "
-        "prints, duplicating the 2.5x engine/projects.py's post_bounty() "
-        "actually charges (see that function's own comment on a playtester "
-        "who found `why` and `bounty` quoting different figures for the "
-        "same node before this line existed at all). This estimate omits "
+        "prints, duplicating the multiple sim/materials/project_bill.py "
+        "bounty_price() actually charges (BOUNTY_PRICE_MULTIPLIER in "
+        "sim/projects/constants.py). This estimate omits "
         "civ_cost_factor() and material_cost_factor(), which the real "
         "charge applies and this preview does not, so it is already an "
         "approximation even before considering the two multipliers might "
@@ -228,17 +224,10 @@ WHY_OPPOSITION_SUSPICION_PER_UNIT = declare(
     unit="suspicion points per unit of state opposition (-gov)", source=None,
     confidence="D",
     why="The '+X extra suspicion' a `why` screen quotes for an opposed node. "
-        "FLAGGED: engine/projects.py's own post_bounty() comment says "
-        "publicity 'used to also add to a suspicion scalar that nothing "
-        "ever read' before scandal/eminence replaced it - which suggests "
-        "the mechanic this line describes may no longer exist in the engine "
-        "at all, and this could be describing a consequence that does not "
-        "happen. Left at its source value rather than silently removed or "
-        "changed - a literal migration must not also fix what it says, the "
-        "same discipline _founder_lifetime_hours()'s own comment explains "
-        "for a case that WAS worth fixing (Complaints/37); worth an actual "
-        "read of whether 'sus' still does anything before the next hand "
-        "touches this line.")
+        "FLAGGED: public bounties now raise scandal and eminence, "
+        "and no projects-module code reads a suspicion scalar, so this "
+        "may describe a consequence that does not happen. Left at its "
+        "source value pending a read of whether 'sus' still does anything.")
 
 
 def cmd_why(args):

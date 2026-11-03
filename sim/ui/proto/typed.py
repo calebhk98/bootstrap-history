@@ -543,7 +543,7 @@ def _parse_open_or_named_tech(command, rest, words, nums, want_json):
     if command == "open" and nums:
         # A TRAILING NUMBER IS UNITS, NOT PART OF THE NAME. 'open
         # school_founded 2' founds a second school - see
-        # ProjectsMixin._expand_institution. No id is only digits, so a
+        # _expand_institution (sim/ventures/opening.py). No id is only digits, so a
         # number anywhere in the line is unambiguously this, not a stray word
         # of a multi-word name.
         want = " ".join(words)

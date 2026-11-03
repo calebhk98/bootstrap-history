@@ -1,8 +1,7 @@
 """The mechanics module's spec (sim/assembly).
 
-Its reads are views of owners that have not moved yet, published by the engine bridge (sim/engine/bridge_mechanics.py)
-under the name the owner will publish. Every view is uncached: the tree is replaced by the engine (a re-derivation of
-the nodes) and what is running is written outside any command."""
+Its reads are views published by the owner modules named in READS_BY_OWNER. The views marked `_LIVE` are uncached: the
+tree is replaced by the engine (a re-derivation of the nodes) and what is running is written outside any command."""
 from sim.assembly.api import KEYED, QUOTE, ModuleSpec, ViewSpec
 
 from .module import Mechanics

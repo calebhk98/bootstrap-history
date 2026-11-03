@@ -110,7 +110,7 @@ def _waiting_on(sim, nodes, node_id, progress, bill):
     node = nodes[node_id]
     frac = min(1.0, 1.0 / max(1.0, node["yrs"]))
     # WHAT IS LEFT OF EACH TRADE'S TOTAL, not the flat annual figure: see
-    # ProjectsMixin.lab_year_draw (projects.py), hired-labour hours are a
+    # lab_year_draw (sim/projects/progress_hours.py), hired-labour hours are a
     # total drawn down over the project's life, so near the end of a trade's
     # own balance the true ask is smaller than its nominal pace, and saying
     # "short" against the bigger, already-paid-down figure would name a

@@ -6,12 +6,12 @@ THE OWNER'S OWN DIAGNOSIS, TAKEN LITERALLY. `planner.py` computes one
 structural ordering by critical-path method and stops; this module is what
 "solve the deterministic problem first" actually looks like. `run
 --no-events` already turns off dated shocks, but a project's own risk of
-FAILING outright is a separate roll in `projects.py:_complete`
+FAILING outright is a separate roll in `_complete` in sim/projects/completion.py
 (`self.rng.random() < n["risk"]`) that fires whether or not events are on -
 so a fully dice-free trial needs a seeded rng whose `random()` always returns
 1.0, never below any probability threshold anywhere in the engine (a
 project's failure risk, the 3.5% yearly attrition roll, the 25% manumission
-roll, the fractional-headcount rounding in `_stochastic_round`). See
+roll, the fractional-headcount rounding in `stochastic_round`). See
 `DetRNG` in `sim/ui/cli.py` - shared from there because `--deterministic` on
 `run`/`compare`/`play`/`agent` needs the exact same rng, for the exact same
 reason. Nothing in `core.py`, `projects.py`, `labour.py`, `society.py` or
@@ -212,10 +212,9 @@ def stuck_active(sim, need):
 
 def diagnose_capital_trap(sim, need, min_closure_frac=0.9):
     """Is this dice-free household caught in the insolvency cycle
-    `engine/projects.py` (`enforce_credit_limit`/`auto_open_ventures`) itself
-    documents as a known risk - "half the credit line is the line: below it
-    you can still open your way out, above it you are digging" - rather than
-    genuinely progressing?
+    (credit limit enforced by `enforce_credit_limit` in sim/finance/insolvency.py,
+    ventures opened by `auto_open_ventures` in sim/projects/auto_open.py)
+    rather than genuinely progressing?
 
     MEASURED, AGAINST THE 434 AD FIXTURE, NOT GUESSED. Rome's planned order,
     run dice-free to year 434, sits at capital -4,789, zero scholars, zero

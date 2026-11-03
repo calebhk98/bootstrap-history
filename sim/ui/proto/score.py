@@ -143,8 +143,8 @@ def _score_components(sim, nodes, reveal_tree_total):
                          "from you; this resolves once the run ends")}
 
     # LITERACY (15%) - general and elite literacy against the CEILING each
-    # already has in this engine (SocietyMixin.literacy_ceiling_general/
-    # _elite, society.py): the cap comes from the farm share of hours and
+    # already has in this engine (literacy_ceiling in
+    # sim/diffusion/literacy.py): the cap comes from the farm share of hours and
     # the share unable to read, so "literacy" here means how much of what
     # is reachable has been reached. Weighted equally between the two
     # populations the engine tracks separately.
@@ -203,7 +203,7 @@ def _score_components(sim, nodes, reveal_tree_total):
                                       round(worker_years, 1)},
                        "normalized": econ_norm}
 
-    # INSTITUTIONS (10%) - every CAPABILITY_INSTITUTIONS node (projects.py:
+    # INSTITUTIONS (10%) - every capability-institution node (the first set of the `capability_sets` view, sim/mechanics/rules.py:
     # the fixed roster every running()/auto-open rule in the engine already
     # checks against), scored by institution_units()/institution_unit_ceiling()
     # for the five that scale (workshop, school, academy, collegium,
@@ -219,13 +219,13 @@ def _score_components(sim, nodes, reveal_tree_total):
     # a real, already-saved field read against a real threshold, none of
     # them invented for this screen:
     #   - corpus_preserved: 1 - forgotten / (done + forgotten). `forgotten`
-    #     (society.py's _shocks, set nowhere else) is every technology a
+    #     (the `techniques_forgotten` view) is every technology a
     #     sacking actually destroyed; this is the share of everything ever
     #     completed that still stands.
     #   - solvent_share: 1 - insolvent_years / years elapsed. insolvent_years
-    #     is a running count economy.py already keeps.
+    #     is a running count in the `debt_status` view (sim/finance/applied.py).
     #   - staffing_share: 1 - (distinct years close_unstaffed_ventures fired)
-    #     / years elapsed. shut_for_staff (projects.py) is {node: year};
+    #     / years elapsed. shut_for_staff (sim/projects/applied.py) is {node: year};
     #     distinct years, not count of concerns, because closing four
     #     concerns in one bad year is one bad year, not four.
     #   - scandal_margin: 1 - scandal / suspicion_danger, the exact ratio
@@ -264,7 +264,7 @@ def _score_components(sim, nodes, reveal_tree_total):
     # signal (how close you sit to being confiscated or denounced for being
     # too visible - see `prominence`/eminence_report), the opposite of a
     # score you want to maximise, where reputation (0..100 by construction;
-    # projects.py clamps it at 100) is this engine's own plain measure of
+    # the projects module clamps it at 100) is this engine's own plain measure of
     # standing.
     rep = max(0.0, min(100.0, sim.view("standing")()["reputation"]))
     out["standing"] = {"counts": "your reputation, 0 to 100 (not eminence, which is a danger)",
@@ -282,7 +282,7 @@ def _score_achievements(sim, nodes):
     """Won-run achievements, each a plain condition on a field the engine
     already saves across sittings (SAVE_FIELDS, this file) - so each one is
     true of the WHOLE run, not just whatever is in memory right now. None of
-    these reads failed_attempts: that counter is real (projects.py) but is
+    these reads failed_attempts: that counter is real (sim/projects/state.py) but is
     NOT in SAVE_FIELDS, so it silently resets to empty every time a session
     is resumed from disk - the normal way this game is played (cli.py
     autosaves after every command). An achievement built on it would read

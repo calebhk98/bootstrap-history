@@ -100,7 +100,7 @@ def _cmd_start(sim, nodes, cmd, ended):
     # it left once your own OTHER active work is already drawing on it
     # - "the first workshop/lab sat at 60% until I stopped adding new
     # work for a year", from a player who could not see this coming
-    # until it had already happened. trade_demand_vs_supply (projects.py)
+    # until it had already happened. trade_demand_vs_supply (sim/projects/progress_hours.py)
     # is the CURRENT portfolio's own demand, before this project is
     # added; trade_draw_plan(node_id, None) is this project's own full want,
     # since it has not started and so owes the whole thing. Same two
@@ -137,7 +137,7 @@ def _cmd_start(sim, nodes, cmd, ended):
            # SAID AT THE MOMENT OF COMMITMENT, not only on `why` beforehand
            # or `available` in passing - this is the screen the player is
            # actually looking at when the risk becomes theirs. See
-           # expected_calendar_years (projects.py): the true expected
+           # expected_calendar_years (sim/projects/risk.py): the true expected
            # total, retries included, computed through the same retry
            # rule _complete applies on every failure, not a plain
            # geometric series on the bare risk field.
@@ -541,7 +541,7 @@ def _cmd_mothball(sim, nodes, cmd, ended):
     # institutions for the capital back and lost two multi-year
     # stretches to it silently - the upkeep saving was the only thing
     # this reply ever mentioned. `mothball` takes effect before this
-    # runs, so `s.CAPABILITY_INSTITUTIONS` already tells the truth about
+    # runs, so the `capability_sets` view already tells the truth about
     # what just stopped.
     if _mb_id in sim.view("capability_sets")()[0]:
         out["but"] = (
@@ -590,7 +590,7 @@ def _cmd_open(sim, nodes, cmd, ended):
                          % (node_id, (". did you mean: " + ", ".join(near))
                             if near else "")}
     # UNITS: HOW A PLAYER FOUNDS A SECOND SCHOOL. See
-    # ProjectsMixin.open_venture / _expand_institution (projects.py). A
+    # open_venture / _expand_institution (sim/ventures/opening.py). A
     # call with no "units" field behaves exactly as it always has.
     _units = cmd.get("units")
     if _units is not None and not isinstance(_units, (int, float)):

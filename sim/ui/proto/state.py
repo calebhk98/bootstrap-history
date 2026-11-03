@@ -46,8 +46,8 @@ def _agent_state_standing(sim):
     """Reputation, scandal, eminence and the other soft-power gauges,
     literacy and its ceilings, and how far what you built has diffused.
     """
-    # WHAT YOU BUILT HAS CHANGED THE COUNTRY - see SocietyMixin.
-    # world_diffusion_report (society.py). Computed once here, gated to
+    # WHAT YOU BUILT HAS CHANGED THE COUNTRY - see diffusion_report
+    # (sim/diffusion/spread.py). Computed once here, gated to
     # None while dormant, so a fresh game's `state full` reply (already the
     # reply most often bumping the "state full stays readable" byte budget)
     # pays nothing for a mechanism that has not fired yet - same pattern as
@@ -68,7 +68,7 @@ def _agent_state_standing(sim):
         # the figure alone, or a founder watching literacy_general climb
         # with no sense of where it stops cannot tell a slow success from
         # a mechanism that has already maxed out. See
-        # SocietyMixin.literacy_ceiling_general/_elite (society.py).
+        # literacy_ceiling (sim/diffusion/literacy.py).
         "literacy": {
             "general": round(float(sim.view("literacy")("literacy_general")), 3),
             "general_ceiling_now": round(sim.view("literacy_ceiling")["literacy_general"], 3),
@@ -78,14 +78,14 @@ def _agent_state_standing(sim):
             "farm_share_of_working_hours": round(sim.view("farm_share_of_hours")(), 3),
         },
         # HOW MUCH OF WHAT YOU RUN HAS LEAKED TO COMPETITORS. See
-        # SocietyMixin.diffusion_share/diffusion_index (society.py) for what
+        # diffusion_share/diffusion_index (sim/diffusion/spread.py) for what
         # moves this; it is not yet spent anywhere in this engine's own
         # pricing, only reported, because that spending is another agent's
         # seam to wire in (see that function's own docstring).
         "diffusion_index": round(sim.view("diffusion_index")["venture"], 3),
         # THE COUNTRY, NOT ONLY YOUR OWN MARKET SHARE. Present only once
         # something the founder built has actually begun to spread - see
-        # world_diffusion_report's own docstring for the None gate.
+        # diffusion_report's own docstring for the None gate.
         **({"world_diffusion": _wd} if _wd else {}),
     }
 
@@ -142,7 +142,7 @@ def _agent_state_progress(sim, active):
         "staff_are_fractional_because": _staff_fraction_note(sim),
         "trades_you_created": sorted(sim.view("trade_spread")()["created"]),
         # WHICH OF THOSE THE SOCIETY NOW SUPPLIES ON ITS OWN. See
-        # SocietyMixin.advance_society (society.py): once a taught trade has
+        # advance_society (sim/diffusion/society.py): once a taught trade has
         # been established long enough, with schools actually running, it
         # stops being only the founder's secret.
         "trades_society_now_has_on_its_own": sorted(sim.view("trade_spread")()["endemic"]),
@@ -173,8 +173,8 @@ def _agent_state_risk_and_pressure(sim, full=True):
         # court's jealousy of a great man; this is the treasury's own
         # interest in a large enterprise - requisition, a pressed office, a
         # demand for military supply, and confiscation as a tail risk at
-        # the top of the same scale. See SocietyMixin.state_pressure_report
-        # (society.py).
+        # the top of the same scale. See state_pressure_report
+        # (sim/polity/notice.py).
         "state_attention": sim.view("state_pressure_report")(),
         "credit_limit": round(sim.view("credit_limit")(), 1),
         "debt_interest_rate": round(sim.view("debt_interest_rate")(), 4),

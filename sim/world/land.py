@@ -291,9 +291,7 @@ same civilization under a hypothetical redrawing of `regions` that splits
 or merges some of its territory's labels without moving a single tile from
 one civilization to another) holding the same set of tiles get the same
 territory, the same margin, and the same price.
-`sim/world/land_tile_partition_invariance_test.py` (alongside this module
-because `sim/tests/` is owned by other agents in the shared checkout - see
-that file's own docstring) asserts exactly this property.
+`sim/tests/test_land_tile_partition_invariance.py` asserts exactly this property.
 
 `load_region_lands` (region-keyed) is a derived view: each region's area, arable
 land and fertility are sums over the tiles it groups, and no region record
@@ -327,8 +325,8 @@ WHAT THIS MODULE DELIBERATELY DOES NOT DO.
     market, the same simplification `sim/world/deposits.py` already makes
     for a whole empire's ore demand against its whole territory's
     deposits. Real grain was expensive to move in bulk before rail, which
-    this project already represents elsewhere (freight distance in
-    `sim/engine/economy.py`) but not here.
+    this project already represents elsewhere (freight cost in
+    `sim/geography/freight_cost.py`) but not here.
   - No depletion, no capital (irrigation works, drainage, forest
     clearance) that would raise a parcel's own fertility over time. Land
     does not run out the way an ore body does - that is this module's

@@ -18,35 +18,12 @@ early-modern warfare was actually bounded by, which is why campaigns hugged
 rivers and coasts and sieges starved besiegers as often as the besieged.
 
 BUILT STANDALONE; NOW WIRED IN. The engine's army records (sim/campaigns/armies.py) feed the ration, the pack
-animal's load and fodder and the equipment burden to the campaign rules in this package; the paragraph below describes
-the first, single crossing and is otherwise still true of this file's imports.
-
-BUILT STANDALONE; FIRST CROSSING. Nothing here imports
-from sim/engine/, sim/world/agriculture.py or sim/geography/transport.py, and
-that remains true - this module still has no engine dependency in this
-direction, for the reason below. But sim/engine/society.py now imports
-THIS module (military_equipment_burden_kg_per_soldier_per_year(), which
-calls annual_iron_and_ammunition_burden_kg_per_soldier() below), the one
-crossing chosen out of the candidates the task that wired this in laid out
-- see society.py's own comment at that call site for which two candidates
-were rejected and why (in short: the engine has no army size, location or
-campaign to hang a supply-range or campaign-feasibility check on, so
-neither of those two ran through "normal rules" without inventing the very
-state CLAUDE.md SS3.1 says not to invent; the cost of fielding and feeding
-a soldier is the one figure this module produces from nothing but its own
-declared constants). Editing this module can therefore now change what
-society.py reports - see that function's own docstring before changing
-IRON_KG_PER_EQUIPPED_SOLDIER, ANNUAL_EQUIPMENT_REPLACEMENT_FRACTION or
-either Firearm's numbers.
-
-STILL STANDALONE FROM sim/world/agriculture.py AND sim/geography/transport.py,
-FOR THE SAME REASON AS BEFORE. Other agents are editing sim/engine/core.py,
-sim/engine/economy.py, sim/world/agriculture.py, sim/geography/transport.py
-and sim/constants.py concurrently with this crossing's
-construction; a module that does not import those paths cannot be broken
-by their edits or break their tests, whichever lands first. society.py
-importing this module is a one-way dependency this module does not return
-- nothing above imports sim.engine of any kind. Where this module needs a
+animal's load and fodder and the equipment burden to the campaign rules in this package. Nothing here imports
+from sim/engine/, sim/world/agriculture.py or sim/geography/transport.py. The polity module's
+military_equipment_burden_kg_per_soldier_per_year (sim/polity/notice.py) calls
+annual_iron_and_ammunition_burden_kg_per_soldier() below, so editing this module can change what that
+figure reports; see that function's docstring before changing IRON_KG_PER_EQUIPPED_SOLDIER,
+ANNUAL_EQUIPMENT_REPLACEMENT_FRACTION or either Firearm's numbers. Where this module needs a
 number agriculture.py already owns (the
 energy content of grain, a human's baseline caloric need), it redeclares
 that number under its own name rather than importing it - the same choice
@@ -784,10 +761,9 @@ def annual_iron_and_ammunition_burden_kg_per_soldier(
     `engagements_per_year` engagements a year.
 
     WHY THIS EXISTS, AND WHY IT TAKES A TEMPO AS A PARAMETER RATHER THAN
-    DECLARING ONE. sim/engine/society.py is the first caller outside this
-    module's own tests, wiring this module in per the task that asked for
-    it (see sim/engine/society.py's own MILITARY_EQUIPMENT_ERA_CAMPAIGN_
-    TEMPO_ENGAGEMENTS_PER_YEAR for what it passes and why). This function
+    DECLARING ONE. sim/polity/notice.py calls this through the
+    equipment burden (see MILITARY_EQUIPMENT_ERA_CAMPAIGN_TEMPO_ENGAGEMENTS_PER_YEAR
+    in sim/polity/constants.py for what it passes). This function
     exists so that caller does not have to reach past this module's public
     functions to combine IRON_KG_PER_EQUIPPED_SOLDIER-derived upkeep with
     ammunition_mass_kg_per_soldier_per_engagement() by hand. It does NOT

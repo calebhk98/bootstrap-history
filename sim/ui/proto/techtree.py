@@ -275,7 +275,7 @@ def _full_entry(sim, nodes, node_id, fog):
         # See strip_self_play_advice: a node's own note is data written by a
         # designer ranking it against the rest of the tree, not something the
         # founder in the story could know, and that stays cut whether or not
-        # fog is on - see the block comment in fog.py.
+        # fog is on - see strip_self_play_advice in sim/knowledge/fog_words.py.
         entry["note"] = strip_self_play_advice(node["note"])
     # THE HONEST TOTAL, not the risk and the floor left for the player to
     # multiply by hand - and only HERE, on the full per-node entry, not on
@@ -887,7 +887,7 @@ def _explain_identity(sim, nodes, node_id, node):
     """
     return {
         "id": node_id, "name": node["name"], "cat": node["cat"], "confidence": node["conf"],
-        # See strip_self_play_advice (fog.py): drops any sentence that ranks
+        # See strip_self_play_advice (sim/knowledge/fog_words.py): drops any sentence that ranks
         # this node against the game or the tree itself - "the pivot of the
         # entire game", "THE highest expected-value node in the tree" - and
         # keeps everything else the note says. Applied here, not only under
@@ -1215,7 +1215,7 @@ def _explain_classification(sim, nodes, node_id, node):
         # engine said it the same way for all three. Most of what you build is
         # a plain prerequisite: done once, it counts for ever, whatever you do
         # with it afterward (see missing_prerequisites below, which reads
-        # `done`, never `running`). A CAPABILITY_INSTITUTIONS node is not that:
+        # `done`, never `running`). A capability-institution node (see `capability_sets`) is not that:
         # a school's scholars, a workshop's household places, a patron's
         # credit, and a patron's willingness to have his name behind
         # something the state is wary of, ALL stop the moment you close the

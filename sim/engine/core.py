@@ -145,14 +145,6 @@ class Sim:
         #
         for name, value in default_policy(manual, self.mods_dir).items():
             self.send(SetPolicy(name, value))
-        # World-level "last time I said X" trackers; household ones live on HouseholdState.
-        # THE FOLLOWING EIGHT FIELDS ARE BIOGRAPHICAL TO ONE MORTAL PERSON, not
-        # to a household in general, and stay on `Sim` for exactly that reason
-        # - see household.py's module docstring for the full argument. Moving
-        # them would mean deciding, right now, with no second example to
-        # design against, what death, personal hours or a patron mean for a
-        # firm or a government; that is a real design question and this
-        # extraction does not answer it by default.
         # founder remaining lifespan, elite male already aged 35
         life = self.view("founder_life_terms")()
         self.send(SetFounderLife(1e9 if life["immortal"]
