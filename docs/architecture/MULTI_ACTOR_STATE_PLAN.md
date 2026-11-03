@@ -6,7 +6,7 @@ Note: names below are as they were when the plan was written, except section 4, 
 **Covers:** Complaint 382 step 3 (per-actor household, project and knowledge state, so a second player can exist), Complaint 382 step 4 and Complaint 407 (partner countries as economies with their own labour market and output).
 **Comes after:** 382 step 1 (every money posting names a counterparty), 382 step 2 (households as cohort actors) and 428 (the labour core sets the agent economy's wages). Those are in flight; this plan says where it must wait for each.
 
-Every count below was produced by the command beside it, on the date in the table heading. Re-run before acting; counts drift.
+Sections 1 to 3 are the design as written on 2026-10-06; they name state classes and helpers that no longer exist (`ProjectsState`, `GovernanceState`, `SeatParty`, `FounderParty`, `SimWorld`, `_relative`, `_home_profile`, the root `state.household`, `state.projects` and `state.founder` aliases). Section 4 says what was built and where it lives. The counts in section 1 are a dated record and are not reproduced by the commands beside them today.
 
 ---
 
@@ -23,7 +23,7 @@ Four facts decide the design:
 
 `SIM_STATE_INVENTORY.md` was measured before the typed state existed. Its field names are right and its category column (HOUSEHOLD, WORLD, SCENARIO, INTERNAL) is still the classification used here, but its "first set" and "file count" columns describe `Sim` attributes that are now state fields. The fields to move are listed from the dataclasses below, not from that table.
 
-### Measurements (2026-10-06, branch `structural-dedupe-and-owner-decisions`, test files excluded unless stated)
+### Measurements (a dated record of 2026-10-06, branch `structural-dedupe-and-owner-decisions`, test files excluded unless stated; the commands run today give other counts)
 
 | What | Command | Count |
 |---|---|---|
@@ -44,7 +44,7 @@ Four facts decide the design:
 | Warn-once `_said_*` fields read through the household or scenario | `grep -rn "state\.scenario\._said\|state\.household\._said" sim --include=*.py \| grep -v tests \| wc -l` | 21 |
 | Lines in test files naming `household` | `grep -rn household sim/tests \| wc -l` | 1185 |
 
-Fields per state class: `python3 -c "import dataclasses; from sim.engine import state as s; [print(c.__name__, len(dataclasses.fields(c))) for c in s.ALL_STATE_CLASSES]"` (household 69, projects 21, economy 38, governance 2, founder 9, scenario 15, population 5, actors 5 on the date above).
+Fields per state class: `python3 -c "import dataclasses; from sim.engine import state as s; [print(c.__name__, len(dataclasses.fields(c))) for c in s.ALL_STATE_CLASSES]"` (the counts on the date above are not kept).
 
 ---
 
@@ -86,10 +86,10 @@ The authoritative lists are the dataclasses in `sim/engine/state.py` and `sim/en
 | State class | Goes onto the seat | Stays world or scenario |
 |---|---|---|
 | `HouseholdState` | all of it: purse, cash book, cause book, staff pools, `employees`, trades taught, contract hours, standing (`reputation`, `scandal`, `eminence`, `familiarity`, `protection`), slaves and freedmen, bondage, credit freeze, saving target, log, `base_tile`, hour allocations, training queue, `labour_pressure_records`, and the `_said_*` markers | nothing, with one exception below |
-| `ProjectsState` | all of it: `active`, `done`, `done_year`, `operating`, `failed_attempts`, `mothballed`, `bountied`, `granted` (a copy made at seat creation from the seat's country), `revealed`, `disclosures`, `keep_staffed`, `excluded`, `closures`, staffing tallies | nothing |
+| `ProjectsState` (gone: its fields live in the seat's `SeatProgressState` and the module slots of `SeatState`) | all of it: `active`, `done`, `done_year`, `operating`, `failed_attempts`, `mothballed`, `bountied`, `granted` (a copy made at seat creation from the seat's country), `revealed`, `disclosures`, `keep_staffed`, `excluded`, `closures`, staffing tallies | nothing |
 | `FounderState` | all of it: `founder_alive`, `life_left`, `dead_reason`, `policy`, living cost, director hours | nothing |
 | `EconomyState` | the owner-held part: `mines`, `mine_pending`, `mine_ready`, `mine_cost_paid`, `mine_tranches`, `shortages`, `throttle`, `binding`, `shortage_condition`, `forest_ha`, `nitre_bed_m2`, `market_pressure`, `_material_stock_ledger`, `_material_stock_opening`, the `farm_*` fields, `material_demand_at_last_throttle`, `_dashboard_history` | `agent_economy`, `output_factor`, `output_per_head`, `introduction_prices`, `money_real`, `market_book`, `market_flows`, `foreign_market_book`, `foreign_actor_trade`, `home_actor_trade`, `foreign_ledger`, `foreign_trade_by_year`, `capacity_pool`, `society_labour_hours` |
-| `GovernanceState` | `inst_units`, `gov` | none |
+| `GovernanceState` (gone) | `inst_units`, `gov` | none |
 | `ScenarioState` | `goal_year`, `goal_years`, the `_said_*` markers about one seat's own state (`_said_scandal`, `_said_parallelism`, `_said_command_index`, `_said_explanations`), `score_last_seen`, `dashboard_history_years` | `year`, `weather_salt`, and the markers about the whole society (`_said_debasement`, `_said_output`, `_said_wage_cascade`, `_literacy_said`, `_said_condition`) |
 | `PopulationState` | none | all of it |
 | root fields | `_goal` (the seat's chosen win node) | `_civ`, `_civ_live`, `_weights`, `_fog` (the switch for the whole game), `_fuzzy_*`, `_immortal`, `_rng`, `_seed`, `interface` |
@@ -157,7 +157,7 @@ Food and housing costs likewise come from the country's own price solve (`foreig
 
 ### 3.4 CountryWorld after the change
 
-`CountryWorld` stops rescaling. For these four questions it forwards to the country's economy through the world's economy object (a `country_economy(country_id)` member on the engine adapter `SimWorld`, because `sim/agents/` may not import `sim/economy/`), and what it answers for a country with no economy yet is the old heuristic, still labelled. When no country needs the heuristic, `_relative`, `_home_profile` and the `TEMPORARY HEURISTIC` docstring are deleted.
+`CountryWorld` stops rescaling. For these four questions it forwards to the country's economy through the world's economy object (a `country_economy(country_id)` member on the shared world, `sim/actors/world_people.py`, because `sim/agents/` may not import `sim/economy/`), and what it answers for a country with no economy yet is the old heuristic, still labelled. The fallback and its helpers are gone: a country with no part of the economy raises `NoCountryEconomy` (`sim/agents/no_country_economy.py`).
 
 ### 3.5 Players from other countries
 
@@ -167,20 +167,21 @@ A seat whose `country` is not the home one needs the engine's own country-depend
 
 ## 4. Stages
 
-All nine stages are built. Each line says where the result lives; re-find any name with `grep -rn <name> sim`. The
+Stages A to I are built, but not all as the sections above describe them; each line below says what exists. Each line says where the result lives; re-find any name with `grep -rn <name> sim`. The
 whole-game runs (`python3 -m sim.tests --slow` and the fingerprint) are the orchestrator's to run before a merge.
 
 - **A, a seat record and the alias.** `SeatState` (`sim/engine/state_seat.py`), `act_as` and `add_seat`
-  (`sim/engine/seat_registry.py`). `state.household`, `.projects` and `.founder` alias the acting seat and are not
-  saved; a save holds `seats` and `acting_seat`.
+  (`sim/engine/seat_registry.py`). There are no root `household`, `projects` or `founder` fields: they are build-only arguments of `SimulationState`
+  (`sim/engine/state.py`) that make the first seat, and the acting seat's record is `state.acting_record`. A save
+  holds `seats` and `acting_seat`. There is no `ProjectsState`.
 - **B, world and seat holdings.** `HoldingsState` and `SeatProgressState` (`sim/engine/state_holdings.py`) are seat
-  parts; `GovernanceState` moved whole onto the seat. `EconomyState` keeps only world fields and `ScenarioState` only the
+  parts; there is no `GovernanceState`. `EconomyState` keeps only world fields and `ScenarioState` only the
   calendar, weather salt and society-wide notes.
-- **C, one party identity.** The asking party is `state.acting_seat`; `SeatParty` runs every act as its seat, the posted
+- **C, one party identity.** The asking party is `state.acting_seat`; `HouseholdParty` (`sim/agents/household_party.py`; there is no `SeatParty` or `FounderParty`) runs every act as its seat, the posted
   price leaves out only the asking seat's flows, and lenders and borrowers are per seat.
 - **D, a second seat and the year steps every seat.** `sim/engine/year_run.py` orders the year: world phases once under
   the first seat still in play, seat phases for each seat in join order inside `act_as`; `sim/seats/run.py` ends a seat's
-  run alone. A seat is built from data (`seat_from_template`, `Sim.join_seat`, the civilisation's `cast.seats`). Known
+  run alone. A seat is built from data (`seat_from_template`, `join_seat` in `sim/seats/run.py`, the civilisation's `cast.seats`). Known
   limits: the society's farm workforce is sized under the first seat in play; interest groups' blame and the state's
   petitions land on the seat acting when they fire; seats share one random stream, so an idle second seat changes later
   dice for the first.
@@ -189,17 +190,17 @@ whole-game runs (`python3 -m sim.tests --slow` and the fingerprint) are the orch
 - **F, fog, knowledge, disclosure between seats.** Fog and `revealed` are each seat's own. A seat hears of another's work
   only when enough of it shows at its distance (`sim/seats/sight.py`, `sim/seats/sight_rules.py`; a secret never shows
   enough). The society's diffusion counts every seat's work. Licences go to firms, the state and other seats.
-- **G, partner countries enter the agent economy.** Behind the data switch `agent_economy` in
+- **G, partner countries enter the agent economy.** Behind the `enabled` flag of each economy in
   `data/world/foreign_economies.json`; tiles carry a country and each country's producers are placed by the economy's own
   opening.
 - **H, a labour quote per area.** `LabourMarket.quote_annual_in`; `CountryWorld` answers pay, output and cost of living
-  from the country's own part of the economy (`sim/economy/country_figures.py`) and keeps the scaling only as the labelled
-  fallback for a country not in the economy.
+  from the country's own part of the economy (`sim/economy/country_figures.py`) and raises `NoCountryEconomy` for a country not in the
+  economy; there is no scaling fallback.
 - **I, a seat from another country.** The acting seat's country sets the wage, the prices and the state it deals with
-  (`Sim.acting_country`, `state_treasury`). The engine's own price level, state capacity and geographic home still read
+  (`acting_country` in `sim/seats/run.py`, `state_treasury`). The engine's own price level, state capacity and geographic home still read
   the game's country, so a partner seat's costs that come from them are the home's.
 - **Seat dealings (Complaint 103).** A seat holds patents, shares held and its own issued equity in `HoldingsState`;
-  `Sim.seat_party(seat_id)` is the actor an exchange deals with. The commands `patent`, `offer`, `offers`, `accept`,
+  `seat_party(seat_id)` (`sim/actors/seat_parties.py`) is the actor an exchange deals with. The commands `patent`, `offer`, `offers`, `accept`,
   `decline` and `shares` address the acting seat through `sim/seats/dealings.py` and
   `sim/ui/proto/dispatch_dealings.py`.
 
