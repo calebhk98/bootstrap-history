@@ -24,7 +24,6 @@ from .households_basket import (Basket, PricedNeed, need_prices, need_units, pri
 from .households_cohort import Cohort
 from .protocols import AgentOrders, MarketView
 from .types import Bid, FundsOffer, GoodId, GoodSpec
-from .rates import charged_rate
 
 FLOOR_BUDGET_PRICE_MARGIN = declare(
     "FLOOR_BUDGET_PRICE_MARGIN", 0.25, kind="temporary_heuristic",
@@ -217,13 +216,14 @@ def goods_orders(cohort: Cohort, view: MarketView, cash: float, income_this_year
     funds = ()
     savings = cash - budget_total - target
     offers = ()
-    if weights:
+    area_rate = view.interest_rate(area_currency)
+    if weights and area_rate is not None:      # a store is judged against the rate: with none there is no store plan
         # stock kept in use serves the needs and is not savings, so the store sees only the rest
         stock_flow_by_good = {good: max(flow_by_good.get(good, 0.0) * scale, smoothed_flow.get(good, 0.0))
                               for good in sorted(set(flow_by_good) | set(smoothed_flow))}
         in_use = durable_stock.in_use_stock(stock_flow_by_good, specs, 1.0, households_store.STORE_REBALANCE_BAND)
         held = {good: max(0.0, quantity - in_use.get(good, 0.0)) for good, quantity in held.items()}
-        real_rate = charged_rate(view.interest_rate(area_currency)) - cohort.expected_inflation
+        real_rate = area_rate - cohort.expected_inflation
         above_buffer = cash + claims + store_value - target
         store_bids, store_spend = households_store.store_bids(
             cohort, view, specs, basket, weights, store_prices, held, above_buffer, real_rate,

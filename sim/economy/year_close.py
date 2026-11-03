@@ -20,7 +20,7 @@ from .types import is_edge
 from .year_goods import _held_stock
 from .year_ledger import YearLedger
 from .replaced import replaced
-from .rates import charged_rate
+from .rates import own_rate
 
 
 def foreign_agents(setup, record) -> set:
@@ -157,7 +157,7 @@ def close_agents(setup, record, view, ledger: YearLedger, area_map, carriage) ->
     prices, volumes = learned_prices(ledger.clearings, record.memory)
     anchors = {(good, area.area_id): area.anchor_tile for good in area_map.goods() for area in area_map.areas(good)}
     ordered = (sorted(prices.items()), sorted(volumes.items()))
-    interest_rate = charged_rate(view.interest_rate(money))
+    interest_rate = own_rate(view, money)
     for merchant in sorted(record.merchants.values(), key=lambda each: each.agent_id):
         transfers = merchants.close_year(merchant, prices, volumes, record.book.balance(merchant.agent_id, money),
                                          _held_stock(record.book, merchant.agent_id), area_map.area_of, money,

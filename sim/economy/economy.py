@@ -10,7 +10,7 @@ from typing import Any, Dict, Mapping, Optional, Tuple
 
 from sim.world import capital_market
 
-from .rates import charged_rate
+from .rates import own_rate
 from . import producer_table
 from . import outlay_room, taxes, bondage, bondage_hours, bonded_purchase, banks, carriage_hours, credit, credit_idle_rate, credit_lines, debt_relief, credit_claims, currency, equity, land_market, lending, merchants_credit, producers, shares, sites, state_budget, tax_farming, titles_inheritance, titles_moves, titles_plots, unit_cost
 from .credit_view import CreditView
@@ -455,7 +455,7 @@ class Economy:
         what wore out last year, no dearer than the price at which the plant still earns the live rate."""
         record, setup = self.record, self.setup
         money = setup.currency_id
-        rate = max(charged_rate(view.interest_rate(money)), 1e-9)
+        rate = max(own_rate(view, money), 1e-9)
         rebuilt: Dict[str, float] = {}
         worn = record.credit.take_rebuilds()
         for producer_id, runs in sorted(worn.items()):

@@ -30,7 +30,6 @@ from .types import (AgentId, Bid, EDGE_CONSUMPTION, EDGE_PRODUCTION, GoodId, Goo
                     Offer, Recipe, TileId)
 from .replaced import replaced
 from .staffed_runs import change_anchor
-from .rates import charged_rate
 
 EXPECTATION_ADJUSTMENT_SHARE = declare(
     "EXPECTATION_ADJUSTMENT_SHARE", 0.5, kind="temporary_heuristic",
@@ -274,7 +273,9 @@ def _break_even_scale(producer, recipe, view, prices, live_inputs=None, wages=No
                             recipe, prices)
     wages = live_wages(producer, recipe, view) if wages is None else wages
     revenue = unit_cost.revenue_per_run(recipe, prices) * producer.yield_factor
-    rate = charged_rate(view.interest_rate(view.currency_of(view.area_of(min(recipe.outputs), producer.tile))))
+    rate = view.interest_rate(view.currency_of(view.area_of(min(recipe.outputs), producer.tile)))
+    if rate is None:
+        return None, 0.0
     cost = unit_cost.variable_cost_per_run(recipe, inputs, wages, producer.land_rent_per_run) + unit_cost.capital_charge_per_run(
         recipe, inputs, wages, rate)
     if not (revenue > 0.0 and math.isfinite(cost) and cost > 0.0):

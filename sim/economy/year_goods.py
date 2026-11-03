@@ -26,7 +26,7 @@ from .types import Bid, GoodsMove, Offer
 from .clearing_totals import market_totals
 from .entry import unmet_quantity, wanted_in_round
 from .year_ledger import YearLedger
-from .rates import charged_rate
+from .rates import own_rate
 
 OrderBook = Dict[Tuple[str, str], Tuple[List[Bid], List[Offer]]]
 # A good sold only at a token price would otherwise be remembered at a thousandth of last year's price
@@ -102,7 +102,7 @@ def less_what_it_grew(orders: AgentOrders, cohort, basket, grown_units) -> Agent
 
 def merchant_orders(setup, record, view, area_map, carriage, order_book: OrderBook) -> None:
     money = setup.currency_id
-    rate = charged_rate(view.interest_rate(money))
+    rate = own_rate(view, money)
     shares = merchants.RouteShares()
     ordered = sorted(record.merchants.values(), key=lambda each: each.agent_id)
     carrier_bids, carrier_budget = (carriage_fleet_book.bids(setup, record, view, area_map,
@@ -124,7 +124,7 @@ def state_orders(setup, record, view, area_map, order_book: OrderBook, keep) -> 
     for bid in bids:
         order_book.setdefault((bid.good, bid.area), ([], []))[0].append(bid)
     add_orders(order_book, AgentOrders(offers=tuple(store_offers)))
-    rate = charged_rate(view.interest_rate(setup.currency_id))
+    rate = own_rate(view, setup.currency_id)
     from .inventory import holding_reservation
     offers = []
     for (good, tile), quantity in sorted(_held_stock(record.book, setup.state_agent).items()):
@@ -320,7 +320,7 @@ def _produce_and_offer(setup, record, view, producer_id, plan, in_kind, order_bo
     cash = book.balance(producer_id, money)
     shortfall = seller_cash.shortfall_to_raise(producer.cash_target, cash, ledger.running_costs(producer_id))
     keep = {good: recipe.inputs.get(good, 0.0) * producer.capacity_runs for good in recipe.outputs}
-    offers = producers.offers(producer, recipe, view, stock, shortfall, charged_rate(view.interest_rate(money)), setup.specs, keep)
+    offers = producers.offers(producer, recipe, view, stock, shortfall, own_rate(view, money), setup.specs, keep)
     add_orders(order_book, AgentOrders(offers=tuple(offers)))
 
 

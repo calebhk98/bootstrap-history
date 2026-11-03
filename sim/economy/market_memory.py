@@ -14,7 +14,7 @@ from .types import QUOTE_LOWEST_UNFILLED_ASK, QUOTE_OPENING_ESTIMATE, AgentId, A
 
 KEY_SEPARATOR = "|"
 PRICE_LEVEL_FLOOR_RATIO = 1e-9   # a year in which the median price fell to nothing still leaves a positive level to chain from
-PRICE_TRADED = "traded"     # the kind of a price a market cleared at; any other kind is a quote or an estimate
+PRICE_SMOOTHED_TRADE = "smoothed_trade"     # the kind of the price remembered for a market that traded: the old price moved toward the clearing price; any other kind is a quote or an estimate
 PRICE_REMEMBERED = "remembered_price"   # a price from a trade of some earlier year that nothing since has replaced or quoted
 
 OPENING_EXPECTED_INFLATION = declare(
@@ -118,10 +118,10 @@ class MarketMemory:
         self.price_levels[money] = 1.0
 
     def price_kind(self, key: str) -> Optional[str]:
-        """What the price remembered for a market is: PRICE_TRADED when it traded last year, else the quote's
+        """What the price remembered for a market is: PRICE_SMOOTHED_TRADE when it traded last year, else the quote's
         kind, else the opening estimate no clearing has replaced; None when the market has no price."""
         if key in self.cleared_prices:
-            return PRICE_TRADED
+            return PRICE_SMOOTHED_TRADE
         if key not in self.prices:
             return None
         if key in self.quote_kinds:
@@ -132,7 +132,7 @@ class MarketMemory:
         """What a buyer can see to buy at: a price the market traded at, an ask still posted, or the opening's own
         estimate before any clearing; None for a bid ceiling, a cost quote or a price remembered from an old trade
         (nothing is on offer at those)."""
-        if self.price_kind(key) in (PRICE_TRADED, QUOTE_LOWEST_UNFILLED_ASK, QUOTE_OPENING_ESTIMATE):
+        if self.price_kind(key) in (PRICE_SMOOTHED_TRADE, QUOTE_LOWEST_UNFILLED_ASK, QUOTE_OPENING_ESTIMATE):
             return self.prices.get(key)
         return None
 
@@ -143,7 +143,7 @@ class MarketMemory:
         for key in sorted(self.prices):
             good = key.split(KEY_SEPARATOR, 1)[0]
             kind = self.price_kind(key)
-            if kinds.get(good) != PRICE_TRADED and (kind == PRICE_TRADED or good not in kinds):
+            if kinds.get(good) != PRICE_SMOOTHED_TRADE and (kind == PRICE_SMOOTHED_TRADE or good not in kinds):
                 kinds[good] = kind
         return kinds
 
@@ -252,7 +252,7 @@ class YearView:
         return self._memory.quote_kinds.get(good + KEY_SEPARATOR + area)
 
     def price_kind(self, good: GoodId, area: AreaId) -> Optional[str]:
-        """PRICE_TRADED, or the kind of quote or estimate `price` is; None when the market has no price."""
+        """PRICE_SMOOTHED_TRADE, or the kind of quote or estimate `price` is; None when the market has no price."""
         return self._memory.price_kind(good + KEY_SEPARATOR + area)
 
     def cleared_price(self, good: GoodId, area: AreaId) -> Optional[float]:
@@ -267,8 +267,8 @@ class YearView:
         return self._memory.wages.get(trade + KEY_SEPARATOR + area)
 
     def interest_rate(self, currency: CurrencyId) -> Optional[float]:
-        """Last year's base lending rate; None for a currency the memory holds no rate for (what a plan then
-        charges is the caller's choice: `rates.charged_rate`)."""
+        """Last year's base lending rate; None for a currency the memory holds no rate for (a plan that needs
+        a rate is then not made; the economy's own currency always has one: `rates.own_rate`)."""
         return self._memory.rates.get(currency)
 
     def area_of(self, good_or_trade: str, tile: TileId) -> AreaId:

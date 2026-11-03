@@ -418,7 +418,7 @@ def shown_prices_of(economy, country=None):
 
 
 def shown_price_kinds_of(economy, country=None):
-    """What each shown price is, by good: PRICE_TRADED, a quote kind (QUOTE_*) or an estimate (`notional.KIND_*`).
+    """What each shown price is, by good: PRICE_SMOOTHED_TRADE, a quote kind (QUOTE_*) or an estimate (`notional.KIND_*`).
     Same scope as `shown_prices_of`."""
     scope = country_figures.home_when_shared(economy, country)
     market = None if scope is None else country_figures.prices(economy, scope)
