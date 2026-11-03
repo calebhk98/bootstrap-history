@@ -24,7 +24,7 @@ class Tables(Part):
     def __init__(self, module):
         super().__init__(module)
         self._reading_market_rate = False                    # set while the market rate is asked for: it may need these prices
-        self._price_tables_cache: Optional[Tuple] = None     # (granted, in use, tables, granted count, (farmed, rate))
+        self._price_tables_cache: Optional[Tuple] = None     # (granted, in use, tables, (farmed, rate)), compared by value
         self._incumbent_table_cache: Optional[Tuple] = None  # ((granted, farmed, rate), hours, basis)
         self._material_prices_cache: Optional[Tuple] = None  # (hours table, money per hour, prices)
 
@@ -43,15 +43,14 @@ class Tables(Part):
     def price_tables(self) -> Tuple[Dict[str, float], Dict[str, str]]:
         """(labour-hour price of each good, provenance of each), for the incumbents' techniques plus the baseline for
         goods only a producer's own technique reaches."""
-        granted_now = self.needs.techniques_granted()
-        in_use = self.needs.techniques_in_use()
+        granted_now = frozenset(self.needs.techniques_granted())
+        in_use = frozenset(self.needs.techniques_in_use())
         farmed = price_solver.band_farmed_hectares(self.needs.farm_land_hectares())
         rate = self.banded_market_rate()
         cached = self._price_tables_cache
-        if (cached is not None and cached[0] is granted_now and cached[1] is in_use
-                and cached[3] == len(granted_now) and cached[4] == (farmed, rate)):
+        if cached is not None and cached[:2] == (granted_now, in_use) and cached[3] == (farmed, rate):
             return cached[2]
-        granted = frozenset(granted_now)
+        granted = granted_now
         civ = self.needs.civilisation()
         civilisation = dict(civilization_id=civ.get("id"), civilization=civ, farmed_hectares=farmed, interest_rate=rate)
         incumbent = self._incumbent_table_cache
@@ -64,7 +63,7 @@ class Tables(Part):
             tables = rules.merge_by_reach(hours, basis, run_hours, run_basis)
         else:
             tables = (dict(hours), dict(basis))
-        self._price_tables_cache = (granted_now, in_use, tables, len(granted_now), (farmed, rate))
+        self._price_tables_cache = (granted_now, in_use, tables, (farmed, rate))
         return tables
 
     def material_prices(self) -> Dict[str, float]:

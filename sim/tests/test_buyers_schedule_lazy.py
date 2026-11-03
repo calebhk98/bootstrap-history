@@ -6,6 +6,8 @@ QUICK_TOPIC = True
 import random
 import unittest
 
+import numpy
+
 from sim.economy import goods_market
 from sim.economy.goods_market_demand import DemandSchedule
 from sim.economy.types import Bid, Offer
@@ -43,6 +45,16 @@ class LazyScheduleTests(unittest.TestCase):
             offers = [Offer("seller", GOOD, AREA, "tile", 7.0, 1.0)]
             self.assertEqual(goods_market.clear(bids, offers, GOOD, AREA, "coin", 1.0, buyers),
                              goods_market.clear(bids, offers, GOOD, AREA, "coin", 1.0))
+
+
+class FreeGoodTests(unittest.TestCase):
+    def test_a_free_good_is_wanted_up_to_floor_plus_flexible_part_and_a_buyer_without_budget_wants_none(self):
+        schedule = DemandSchedule([Bid("a", GOOD, AREA, "tile", 4.0, 3.0, 1.0, 1.0, 50.0),
+                                   Bid("b", GOOD, AREA, "tile", 2.0, 2.0, 1.0, 1.0, 0.0)])
+        for price in (0.0, -1.0):
+            self.assertEqual(schedule.total_at(price), 7.0)
+            self.assertEqual(schedule.each_at(price), [7.0, 0.0])
+        self.assertEqual(schedule.matrix_at(numpy.array([0.0])).tolist(), [[7.0, 0.0]])
 
 
 if __name__ == "__main__":

@@ -57,6 +57,15 @@ class GoodsSettlementTests(unittest.TestCase):
         self.assertAlmostEqual(book.stock("b2", "grain", "t4"), 3.0)
         self.assertAlmostEqual(book.stock("s2", "grain", "t3"), 0.0)
 
+    def test_each_seller_is_paid_its_own_price_and_the_buyer_pays_the_sum(self):
+        book = world({"buyer": 100.0}, {("cheap", "t1"): 5.0, ("dear", "t1"): 5.0})
+        fills = [fill("buyer", "buy", 10.0, 5.0, "t2"), fill("cheap", "sell", 5.0, 2.0), fill("dear", "sell", 5.0, 8.0)]
+        settle_goods(book, result(fills, price=5.0))
+        self.assertAlmostEqual(book.balance("cheap", "coin"), 10.0)
+        self.assertAlmostEqual(book.balance("dear", "coin"), 40.0)
+        self.assertAlmostEqual(book.balance("buyer", "coin"), 50.0)
+        self.assertLess(abs(book.total("coin")), 1e-9)
+
     def test_buyers_and_sellers_are_matched_in_order(self):
         book = world({"b1": 100.0, "b2": 100.0}, {("s1", "t1"): 6.0, ("s2", "t1"): 4.0})
         fills = [fill("b2", "buy", 5.0, 1.0), fill("b1", "buy", 5.0, 1.0),

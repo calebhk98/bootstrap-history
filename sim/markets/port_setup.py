@@ -222,7 +222,7 @@ def build_setup(sim, opening=None, production=None):
     wages = dict(opening["wages"])
     by_people = sorted(tile_ids, key=lambda tile: (-population_by_tile[tile], tile))   # the home country's tiles
     coastal = [tile for tile in by_people if tiles[tile].coastal]
-    port_handling = sea_freight.PORT_HANDLING_HOURS_PER_TONNE * wages.get(opening["unskilled_trade"], 0.0)
+    port_handling = sea_freight.PORT_HANDLING_HOURS_PER_TONNE * wages[opening["unskilled_trade"]]
     dues = {mode: hours * float(opening["carriage_wage"]) for mode, hours in dues_hours_per_tonne(world_map).items()
             if hours > 0.0}      # tolls and port dues: unskilled hours at the opening wage, paid to the tile's holder (economy/route_dues.py)
     return EconomySetup(

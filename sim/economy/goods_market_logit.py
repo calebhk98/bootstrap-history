@@ -48,7 +48,10 @@ def _weights(asks: numpy.ndarray, stocked: numpy.ndarray, ceilings: numpy.ndarra
     weights = numpy.zeros(len(asks))
     if stocked.any():
         cheapest = asks[numpy.argmax(stocked)]
-        weights[stocked] = numpy.exp(-LOGIT_INTENSITY * numpy.log(asks[stocked] / cheapest))
+        if cheapest > 0.0:
+            weights[stocked] = numpy.exp(-LOGIT_INTENSITY * numpy.log(asks[stocked] / cheapest))
+        else:
+            weights[stocked] = (asks[stocked] <= cheapest).astype(float)    # free goods go first; there is no ratio to a free ask
     running = numpy.concatenate(([0.0], numpy.cumsum(weights)))
     sums = running[numpy.searchsorted(asks, ceilings, side="right")]
     return weights, numpy.where(sums > 0.0, sums, 1.0)

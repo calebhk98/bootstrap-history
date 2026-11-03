@@ -42,7 +42,8 @@ def kept_areas(area_map, port_tile: str, tiles, good: str) -> set:
 
 def summarize(bids: Sequence[Bid], offers: Sequence[Offer]) -> Dict[str, List[List[float]]]:
     """The market's own book as plain rows: bids [floor, flexible, reference, elasticity, budget, ceiling]
-    and offers [reservation, quantity]."""
+    and offers [reservation, quantity]. Built from the year's first round (the full supply and the households' whole
+    budgets), not the respend rounds that follow: a hypothetical cargo is weighed against the market as it opened."""
     merged: Dict[Tuple[float, float, Optional[float]], List[float]] = {}
     for bid in bids:
         if bid.buyer == EDGE_EXTERNAL or bid.budget <= 0.0:

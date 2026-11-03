@@ -5,9 +5,10 @@ Prices are per tonne in home money (the foreign side is its solved price convert
 What households at a
 place buy for themselves in a year is the depth a trader sizes its cargo to.
 """
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 from sim.foreign_trade.api import NoteActorHomeTrade, NoteActorTrade, NoteCargoLeg
+from sim.refusal import Refusal
 from sim.world.material_units import tonnes_per_unit
 
 from .world_memo import once
@@ -84,18 +85,23 @@ class Trade:
 	def price_at(self, material: str, place: str) -> Optional[float]:
 		return self._prices_per_tonne(place).get(material)
 
-	def freight_between(self, source: str, destination: str, material: str, tonnes: float) -> float:
-		"""The tariff on a cargo between two places; nothing within one place."""
+	def freight_between(self, source: str, destination: str, material: str, tonnes: float) -> Optional[float]:
+		"""The tariff on a cargo between two places; nothing within one place; None when the source has no price to
+		charge it on."""
 		if source == destination:
 			return 0.0
 		return self.duty_between(source, destination, material, tonnes)
 
-	def duty_between(self, source: str, destination: str, material: str, tonnes: float) -> float:
+	def duty_between(self, source: str, destination: str, material: str, tonnes: float) -> Optional[float]:
 		"""The tariff the destination country's state charges on a cargo from the source country (a share of its value
-		at the source); infinite when that state embargoes the source. Part of what the route costs a trader."""
+		at the source); infinite when that state embargoes the source; None when the source has no price for the good.
+		Part of what the route costs a trader."""
 		if tonnes <= 0.0 or source == destination:
 			return 0.0
-		return float(self.needs.border_duty_per_tonne(source, destination, self.price_at(material, source) or 0.0)) * tonnes
+		source_price = self.price_at(material, source)
+		if source_price is None:
+			return None
+		return float(self.needs.border_duty_per_tonne(source, destination, source_price)) * tonnes
 
 	def market_depth(self, material: str, place: str) -> float:
 		"""Tonnes a year buyers at a place take."""
@@ -119,16 +125,22 @@ class Trade:
 	def delivered_this_year(self, material: str, destination: str) -> float:
 		return self._delivered().get((material, destination), 0.0)
 
-	def ship(self, trader_id: str, material: str, tonnes: float, source: str, destination: str) -> Tuple[float, float]:
+	def ship(self, trader_id: str, material: str, tonnes: float, source: str,
+			 destination: str) -> Union[Tuple[float, float], Refusal]:
 		"""Buy at the source and sell at the destination; (money paid, money received), the quotes the trader is
-		booked at. The cargo is noted as a leg and settled once the year's market has cleared (sim/foreign_trade/cargo.py): its
-		home side is orders in the book; a partner's side is tallied for its market book to close on (sim/foreign_trade/actor_trade.py)."""
+		booked at; a refusal (cause `unpriced_end`) and no shipment when either end has no price. The cargo is noted
+		as a leg and settled once the year's market has cleared (sim/foreign_trade/cargo.py): its home side is orders in the book; a partner's side is tallied for its market book to close on (sim/foreign_trade/actor_trade.py)."""
 		if tonnes <= 0.0:
 			return 0.0, 0.0
 		if self.duty_between(source, destination, material, tonnes) == float("inf"):
 			return 0.0, 0.0   # the destination's state embargoes the source: nothing crosses
-		paid = (self.price_at(material, source) or 0.0) * tonnes
-		received = (self.price_at(material, destination) or 0.0) * tonnes
+		source_price, destination_price = self.price_at(material, source), self.price_at(material, destination)
+		if source_price is None or destination_price is None:
+			return Refusal("unpriced_end", "%s has no price at %s." % (
+				material, source if source_price is None else destination), material=material,
+				place=source if source_price is None else destination)
+		paid = source_price * tonnes
+		received = destination_price * tonnes
 		home = self._home_place()
 		needs = self.needs
 		if source == home:
