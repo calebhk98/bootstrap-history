@@ -71,5 +71,7 @@ test topics.
 ## Before you report
 
 - `python3 -m pyflakes` on every file you changed, `bash tools/done_check.sh`, `python3 sim/simulator.py validate`.
-- Run the quick test topics that import the files you changed (`python3 -m sim.tests --list`, then `--only`).
+- Run the quick test tier (`python3 -m sim.tests`); it is fast and catches the callers and stand-ins far from your
+  files that a few targeted topics miss. Compare against `origin/main`: a topic that passes there and fails on your
+  branch is yours.
 - Diff your branch and check every claim in your report is in it.
