@@ -10,4 +10,4 @@ def levy_hours_per_worker(sim) -> float:
 	if government is None or not by_tile:
 		return 0.0
 	workers = sum(sum(by_tile.get(tile, {}).values()) for tile in sim.labour.settlement_tiles())
-	return max(0.0, government.corvee_hours_taken() / workers) if workers > 0.0 else 0.0
+	return max(0.0, government.corvee.corvee_hours_taken() / workers) if workers > 0.0 else 0.0

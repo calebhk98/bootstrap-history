@@ -14,16 +14,17 @@ from typing import Any, Dict, List, Tuple
 
 from . import arrears, budget, demand_answer, headcount, ledger, state_enterprises, state_works
 from .base import Actor, RecordedActor
-from .government_coinage import CoinageMixin
-from .government_enterprises import EnterpriseMixin
-from .government_corvee import CorveeMixin
-from .government_credit import CreditRecordMixin
-from .government_fiscal import FiscalMixin
-from .government_granary import GranaryMixin
-from .government_markets import MarketsMixin
-from .government_stores import StoresMixin
+from .government_coinage import Coinage
+from .government_corvee import Corvee
+from .government_credit import CreditRecord
+from .government_enterprises import Enterprises
+from .government_fiscal import Fiscal
+from .government_granary import Granary
+from .government_markets import Markets
+from .government_stores import Stores
+from .government_surplus import Surplus
+from .purses import Purses
 from .edges import EDGE_PATRONAGE, EDGE_STATE_SPENDING
-from .government_surplus import SurplusMixin
 from .no_country_economy import NoCountryEconomy
 from . import ruler
 from .tuning import GOVERNMENT_WORTH_SHARE_PER_GAIN
@@ -31,8 +32,57 @@ from .tuning_spending import PUBLIC_BUILDING_LIFE_YEARS
 from .values import invention_gains, weighted_gain
 
 
-class Government(CorveeMixin, CreditRecordMixin, FiscalMixin, CoinageMixin, EnterpriseMixin, GranaryMixin, MarketsMixin, StoresMixin, SurplusMixin, RecordedActor):
+class Government(RecordedActor):
+	"""A country's state. Its concerns are parts, each addressed as `government.<part>.<method>`:
+
+	    corvee         labour dues: conscripts, works staffed and raised by corvee        (government_corvee.py)
+	    credit_record  named lenders, the default record and the bond terms               (government_credit.py)
+	    fiscal         how a shortfall is met: debasement, taxes in kind, rates, levers    (government_fiscal.py)
+	    coinage        the decision to strike lighter coin                                (government_coinage.py)
+	    enterprises    its own plants                                                      (government_enterprises.py)
+	    granary        the grain reserve                                                   (government_granary.py)
+	    markets        what it sells abroad and the markets it has closed                  (government_markets.py)
+	    stores         revenue taken and the goods it holds                                (government_stores.py)
+	    surplus        relief and works raised from money beyond the need                  (government_surplus.py)
+
+	The record and the purse are the government's; the parts read and change them through it and reach their siblings
+	through it. The methods here are the ones an `Actor` base class or a policy calls by name (`attach`, `default`,
+	`credit_ceiling`, `rate_on_loan`, `borrowing_rate`, `sell_output`) and the year's order."""
+
 	kind = "government"
+
+	def __init__(self, *args: Any, **kwargs: Any) -> None:
+		super().__init__(*args, **kwargs)
+		self.corvee = Corvee(self)
+		self.credit_record = CreditRecord(self)
+		self.fiscal = Fiscal(self)
+		self.coinage = Coinage(self)
+		self.enterprises = Enterprises(self)
+		self.granary = Granary(self)
+		self.markets = Markets(self)
+		self.stores = Stores(self)
+		self.surplus = Surplus(self)
+
+	def attach(self, purses: Purses) -> None:
+		super().attach(purses)
+		purses.named_lenders.name(self.account_id)
+
+	def sell_output(self, world: Any) -> None:
+		"""The state sells its plants' goods (`Actor.sell_output`, which the registry calls for every actor)."""
+		self.enterprises.sell_output(world)
+
+	def default(self, world: Any) -> None:
+		"""The lenders' claims are written down; the loss goes on the state's record and its next borrowing costs more."""
+		owed = self.debt()
+		super().default(world)
+		self.record.remembered_default_loss += owed
+		self.record.defaults += 1
+
+	def rate_on_loan(self, world: Any, amount: float) -> float:
+		return super().rate_on_loan(world, amount) + self.credit_record.default_premium(self.debt() + amount)
+
+	def borrowing_rate(self, world: Any) -> float:
+		return super().borrowing_rate(world) + self.credit_record.default_premium(self.debt())
 
 	@property
 	def researches(self) -> bool:  # type: ignore[override]
@@ -116,27 +166,27 @@ class Government(CorveeMixin, CreditRecordMixin, FiscalMixin, CoinageMixin, Ente
 		"""Take the year's revenue, pay the arrears it owes, then what the purse covers of the standing need, and book the rest
 		as unfunded. The goods it bought are this year's demand on the market."""
 		self.pay_interest(world)
-		self.receive_revenue(world)
+		self.stores.receive_revenue(world)
 		arrears.settle(self, world)
-		conscripts = self.conscript_years(world)
+		conscripts = self.corvee.conscript_years(world)
 		wanted = max(budget.army_wanted(world), conscripts)
 		soldiers = self.record.army if self.record.army > 0.0 else wanted
 		others = headcount.people_in(budget.standing_lines(world, 0.0))
 		soldiers, wanted = headcount.checked_army(world, self.record, wanted, soldiers, others)
 		conscripts = min(conscripts, soldiers)
-		self.serve_conscripts(conscripts, world)
+		self.corvee.serve_conscripts(conscripts, world)
 		standing = budget.standing_lines(world, soldiers, conscripts) + budget.concession_lines(world.groups.group_claims())
-		standing = self.staff_works_by_corvee(standing, world)
+		standing = self.corvee.staff_works_by_corvee(standing, world)
 		self.record.material_need = state_enterprises.needs_of(standing)
-		lines = self.draw_stores(standing, world)
-		self.keep_granary(world)
-		share = self.meet_shortfall(lines, world)
+		lines = self.stores.draw_stores(standing, world)
+		self.granary.keep_granary(world)
+		share = self.fiscal.meet_shortfall(lines, world)
 		army_supplied = min([share] + [budget.supplied_share(line) for line in lines if line.name == "army"])
 		self.record.army = budget.army_next_year(soldiers, wanted, army_supplied)
 		self.record.unmet_goods = budget.unmet_goods(lines)
 		self.record.need = {line.name: line.money for line in lines}
 		self.record.unfunded = budget.unfunded_by_line(lines, share)
-		arrears.owe(self.record, lines, share, self.deferred_fraction(lines, share))
+		arrears.owe(self.record, lines, share, self.fiscal.deferred_fraction(lines, share))
 		state_works.wear(state_works.held(world), share, PUBLIC_BUILDING_LIFE_YEARS)
 		if any(line.name == "donative" for line in lines):
 			self.record.accession_due = False
@@ -180,7 +230,7 @@ class Government(CorveeMixin, CreditRecordMixin, FiscalMixin, CoinageMixin, Ente
 		self.record.levy_base = sum(world.taxpayers.notice_over(scale) * income for scale, income in payers)
 		kinds = {line.name: line.kind for line in lines}
 		self.record.levy_requisition_rate, self.record.levy_office_rate = budget.levy_rates(
-			self.levy_sought(), kinds, self.record.levy_base)
+			self.fiscal.levy_sought(), kinds, self.record.levy_base)
 
 	def accede(self, world: Any) -> None:
 		"""The ruler ages a year and may die at his age band's mortality; his heir accedes, backed by the strongest faction
@@ -201,15 +251,15 @@ class Government(CorveeMixin, CreditRecordMixin, FiscalMixin, CoinageMixin, Ente
 
 	def advance(self, world: Any) -> None:
 		self.staff_wanted.clear()
-		self.fade_default_record()
-		self.set_bond_terms(world)
+		self.credit_record.fade_default_record()
+		self.credit_record.set_bond_terms(world)
 		self.purses.redeem_bonds(self.account_id)
 		self.accede(world)
 		lines, share = self.pay_standing_need(world)
 		self.pay_patron(share, world)
 		self.act(world)
-		self.run_enterprises(world)
-		self.build_works_by_corvee(world)
-		self.build_works(lines, world)
+		self.enterprises.run_enterprises(world)
+		self.corvee.build_works_by_corvee(world)
+		self.surplus.build_works(lines, world)
 		self.employ_standing(lines, share, world)
 		self.seek_shortfall(lines, world)

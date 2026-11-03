@@ -210,7 +210,7 @@ Left, for the next run to settle:
   problem to measure.
 - Shipped openings need regenerating (the port split changed the spin-up cache keys).
 - God objects left outside economy and labour: `ActorWorld` (sim/actors/world.py, composed of sixteen view classes),
-  `CountryWorld` (sim/agents/country*.py, six) and `Government` (sim/agents/government*.py, nine mixins).
+  `CountryWorld` (sim/agents/country*.py, six); `Government` (sim/agents/government*.py) now holds nine plain parts (`government.<part>.<method>`).
   `Actor(Reviewable, Borrower)` keeps two overridable-default bases. The module classes were composed by inheritance
   (`Actors`, `Markets`, `Disease` and twenty more); each now derives from `Module` alone and holds its behaviour as parts
   (`PARTS`, `sim/assembly/module.py`): the assembly binds a declared view, command, phase or provision name to the one part

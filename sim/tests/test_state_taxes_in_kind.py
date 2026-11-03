@@ -64,7 +64,7 @@ check("a levy limited to tiles takes its rate of what those tiles made",
 
 # ---- the tonnes move into the stores, and the lines draw on them before they buy ------------------------
 state = Government("government:home", ActorRecord(kind="government"))
-state.receive_revenue(world)
+state.stores.receive_revenue(world)
 check("a levy on a non-grain good puts that good in the state's stores",
 	  abs(state.record.stores.get("wine_kg", 0.0) - 500.0) < 1e-9
 	  and abs(state.record.stores.get("olive_oil_kg", 0.0) - 20.0) < 1e-9, state.record.stores)
@@ -74,7 +74,7 @@ check("goods taken in kind are not booked as coin taxation",
 	  state.record.income.get("taxation", 0.0) == 0.0, state.record.income)
 
 ration = Line("army rations", "requisition", materials={"wine": 800.0}, material_cost=800.0 * WINE_PRICE)
-drawn = state.draw_stores([ration], world)[0]
+drawn = state.stores.draw_stores([ration], world)[0]
 check("a budget line draws the stored wine before it buys", abs(drawn.materials.get("wine", 0.0) - 300.0) < 1e-9, drawn)
 check("the line buys only the rest, at the same price", abs(drawn.material_cost - 300.0 * WINE_PRICE) < 1e-9, drawn)
 check("what a line drew has left the stores", state.record.stores.get("wine_kg", 0.0) == 0.0, state.record.stores)

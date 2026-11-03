@@ -130,7 +130,7 @@ check("with no ship type on sale the navy's ships are unbuyable, not free",
 # ---- stores supply what the market will not ---------------------------------------------------------------------------------
 state = Government("government:home", ActorRecord(kind="government", money=1.0e6))
 state.record.stores = {GRAIN: 30.0}
-drawn = state.draw_stores([Line("dole", "requisition", unbuyable={GRAIN: 100.0})], bare)[0]
+drawn = state.stores.draw_stores([Line("dole", "requisition", unbuyable={GRAIN: 100.0})], bare)[0]
 check("what the stores hold meets unbuyable need first", drawn.unbuyable == {GRAIN: 70.0} and state.record.stores[GRAIN] == 0.0, drawn)
 
 # ---- the consequence: unmet goods are recorded and a state with any lends nothing ---------------------------------------------
@@ -159,5 +159,5 @@ check("a plant whose input is on sale and affordable runs in full", share == 1.0
 granary_world = Market({})
 granary_world.material_price = lambda material: 1.0
 granary_world.state.record.grain_price_reference = 5.0
-spent = granary_world.state.restock_granary(1.0e6, granary_world)
+spent = granary_world.state.granary.restock_granary(1.0e6, granary_world)
 check("a granary cannot restock with grain nobody sells", spent == 0.0 and granary_world.purchases == [], (spent, granary_world.purchases))

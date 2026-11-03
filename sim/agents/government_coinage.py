@@ -29,12 +29,15 @@ def debasement_decision(government: Any, world: Any, shortfall: Any = None) -> f
 	return min(DEBASEMENT_SHARE_CEILING, shortfall / struck_again)
 
 
-class CoinageMixin:
-	"""Mixed into `Government`."""
+class Coinage:
+	"""A state's coin: the decision to strike lighter coin, on the government that owns the record."""
+
+	def __init__(self, government: Any) -> None:
+		self.government = government
 
 	def decide_debasement(self, world: Any) -> float:
 		"""Choose and record this year's cut; call after the standing need is paid."""
-		share = debasement_decision(self, world)
-		self.record.coin_cut_share = share  # type: ignore[attr-defined]
-		self.record.coin_metal_kept *= 1.0 - share  # type: ignore[attr-defined]
+		share = debasement_decision(self.government, world)
+		self.government.record.coin_cut_share = share
+		self.government.record.coin_metal_kept *= 1.0 - share
 		return share
