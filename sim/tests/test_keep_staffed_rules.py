@@ -44,7 +44,7 @@ class KeepCommand(unittest.TestCase):
 class Household:
     def __init__(self, hires):
         self.hired = []
-        self._world = Game(keep_staffed_hires=lambda: hires)
+        self._world = Game(actors=Game(keep_staffed_hires=lambda: hires))
         self.controls = StaffControls(self._world, book=None, capacity=None, hiring=None, market=None)
         self.controls.hire_to_cover = self.hire_to_cover
 

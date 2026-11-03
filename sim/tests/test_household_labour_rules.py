@@ -90,13 +90,13 @@ class Seller:
     """The wages part that sells the founder's own hours, over stand-ins for the hours and trades parts."""
 
     def __init__(self, committed=0.0, pool=2000.0):
-        household = Game(wage_hours_this_year=0.0, wages_earned=0.0, hours_offered_for_wages={}, reputation=0.0)
+        household = Game(wage_hours_this_year=0.0, hours_offered_for_wages={}, reputation=0.0)
         self.household = household
         self.received = []
         self.logged = []
         self._world = Game(
-            founder_alive=True, workforce=household, view=workforce_stand_in.view_of(household), state=Game(household=household),
-            wages={"scribe": 1}, EDGE_EMPLOYERS="employers", revenue=lambda: 1000.0, active_hours_still_wanted=lambda: 0.0,
+            founder_alive=True, workforce=household, trades=Game(wages={"scribe": 1}), EDGE_EMPLOYERS="employers",
+            finance=Game(revenue=lambda: 1000.0), actors=Game(active_hours_still_wanted=lambda: 0.0),
             money_text=lambda amount, grouped=False: "%d" % amount,
             send=lambda command: self.received.append(command.amount))
         self.pool, self.committed = pool, committed
@@ -142,13 +142,12 @@ class SellingHours(unittest.TestCase):
         self.assertEqual(pay, 1500.0)
         self.assertEqual(seller.received, [])
         self.assertEqual(seller.logged, [])
-        self.assertEqual((seller.household.wage_hours_this_year, seller.household.wages_earned,
-                          seller.household.hours_offered_for_wages), (0.0, 0.0, {}))
+        self.assertEqual((seller.household.wage_hours_this_year, seller.household.hours_offered_for_wages), (0.0, {}))
 
     def test_a_quote_reads_the_revenue_as_the_sale_would_leave_it(self):
         seller = Seller()
         seen = []
-        seller._world.revenue = lambda: seen.append(seller.household.wage_hours_this_year) or 1000.0
+        seller._world.finance.revenue = lambda: seen.append(seller.household.wage_hours_this_year) or 1000.0
         seller.work_for_wages("scribe", 500, commit=False)
         self.assertEqual(seen, [0.0, 500.0])
 
@@ -167,7 +166,7 @@ class Channels:
         self.contract_hours = {"scribe": contracted}
         self._world = Game(
             workforce=Game(contract_hours=self.contract_hours, hours_wanted_once={}),
-            HOURS_PER_PERSON_YEAR=2000.0, trades_absent=set())
+            trades=Game(HOURS_PER_PERSON_YEAR=2000.0, trades_absent=set()))
         self.supply, self.productivity, self._employed = supply, productivity, employed
         self.hands = Hands(self._world, supply=self, trades=None)
         self.hands.labour_productivity = self.labour_productivity

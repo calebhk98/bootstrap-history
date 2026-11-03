@@ -46,7 +46,7 @@ class _Settlement:
     def __init__(self, pool=1000.0, payroll=5000.0, modes=FOOT_AND_CART):
         self.asked = []
         self._pool, self._payroll = pool, payroll
-        world = SimpleNamespace(built_ways=lambda: {})
+        world = SimpleNamespace(scenario=SimpleNamespace(built_ways=lambda: {}))
         self.modes = modes
         self.settlement = labour_settlement.Settlement(world)
         self.settlement.base_tile = lambda: "a1"

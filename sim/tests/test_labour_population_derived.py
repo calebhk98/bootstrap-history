@@ -5,7 +5,6 @@ QUICK_TOPIC = True
 
 import types
 import unittest
-from sim.tests import workforce_stand_in
 
 from .harness import *  # noqa: F401,F403
 from sim.labour.labour_population_report import PopulationReport
@@ -23,10 +22,12 @@ class _StubLabour:
         self._core_by_tile = core_by_tile
         household = types.SimpleNamespace(trades_created=set(), trade_schools={})
         self._world = types.SimpleNamespace(
-            wages={trade: 1.0 for trade in FAMILIES}, trades_absent=set(absent), trade_family=lambda trade: FAMILIES.get(trade, "craft"),
-            workforce=household, view=workforce_stand_in.view_of(household), state=types.SimpleNamespace(household=household, economy=types.SimpleNamespace()),
-            trade_registry={trade: {"literate": True} for trade in literate},
-            population=types.SimpleNamespace(working_age=WORKING_PEOPLE, total=2.0 * WORKING_PEOPLE))
+            trades=types.SimpleNamespace(
+                wages={trade: 1.0 for trade in FAMILIES}, trades_absent=set(absent),
+                trade_family=lambda trade: FAMILIES.get(trade, "craft"),
+                trade_registry={trade: {"literate": True} for trade in literate}),
+            workforce=household,
+            people=types.SimpleNamespace(population=types.SimpleNamespace(working_age=WORKING_PEOPLE, total=2.0 * WORKING_PEOPLE)))
         self.NO_DEMAND_TRADE_SHARE = Supply.NO_DEMAND_TRADE_SHARE
         trades = Trades(self._world)
         self.supply = Supply(self._world, book=self, capacity=None, settlement=self, trades=trades)

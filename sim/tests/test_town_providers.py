@@ -6,7 +6,6 @@ QUICK_TOPIC = True
 
 import types
 import unittest
-from sim.tests import workforce_stand_in
 
 from sim.assembly.api import NeedsAccess
 from sim.engine import mod_code
@@ -27,11 +26,13 @@ class Town:
         household = types.SimpleNamespace(base_tile=None)
         self.providers, self.premiums = [], []   # the functions the game's providers gave to the two points
         self._world = types.SimpleNamespace(
-            provided_town_population=lambda tile, nominal: last_answer([function(tile, nominal) for function in self.providers]),
-            has_town_premiums=lambda: bool(self.premiums),
-            provided_mortality_premium=lambda tile, town: last_answer([function(tile, town) for function in self.premiums]),
-            home_tiles_held=lambda: homes, population=types.SimpleNamespace(total=NATION), pop_scale=1.0,
-            people_by_tile=lambda: None, workforce=household, view=workforce_stand_in.view_of(household))
+            people=types.SimpleNamespace(
+                provided_town_population=lambda tile, nominal: last_answer([function(tile, nominal) for function in self.providers]),
+                has_town_premiums=lambda: bool(self.premiums),
+                provided_mortality_premium=lambda tile, town: last_answer([function(tile, town) for function in self.premiums]),
+                home_tiles_held=lambda: homes, population=types.SimpleNamespace(total=NATION), pop_scale=1.0,
+                people_by_tile=lambda: None),
+            workforce=household)
         self.settlement = Settlement(self._world)
 
 

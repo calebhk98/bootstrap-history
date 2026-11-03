@@ -149,7 +149,7 @@ class TradeAvailabilityTests(unittest.TestCase):
 
     def population(self, absent=("machinist",), created=(), schools=None):
         world = SimpleNamespace(
-            trades_absent=set(absent),
+            trades=SimpleNamespace(trades_absent=set(absent)),
             workforce=SimpleNamespace(trades_created=set(created), trade_schools=schools or {}))
         return SimpleNamespace(_world=world)
 

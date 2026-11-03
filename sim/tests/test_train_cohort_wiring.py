@@ -5,7 +5,6 @@ QUICK_TOPIC = True
 
 import types
 import unittest
-from sim.tests import workforce_stand_in
 
 from sim.labour.labour_training import Training
 from sim.labour.trade_first_hands import cohort_rows
@@ -23,9 +22,9 @@ class Teacher:
         self.paid = []
         self.household = types.SimpleNamespace(training=[], trades_created=set(), teaching_hours_this_year=None)
         self._world = types.SimpleNamespace(
-            workforce=self.household, view=workforce_stand_in.view_of(self.household), year=YEAR, state=types.SimpleNamespace(household=self.household, scenario=types.SimpleNamespace(year=YEAR)),
+            workforce=self.household, year=YEAR,
             send=lambda command: self.paid.append((command.amount, command.purpose)), EDGE_WORKERS="workers",
-            HOURS_PER_PERSON_YEAR=HOURS_PER_PERSON_YEAR,
+            trades=types.SimpleNamespace(HOURS_PER_PERSON_YEAR=HOURS_PER_PERSON_YEAR),
             plain_number=lambda number: str(number), money_text=lambda money, grouped=False: str(money))
         self.training = Training(self._world, advice=None, book=None, capacity=None, hours=self, market=None, supply=None, trades=None)
         self.training.train_check = self.train_check

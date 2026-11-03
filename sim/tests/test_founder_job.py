@@ -1,7 +1,6 @@
 """The founder works a normal job (Complaint 518): the hours the founder has not spoken for are offered in the trade
 the founder holds and paid that trade's market wage, like any worker's. There is no separate practice income."""
 import unittest
-from sim.tests import workforce_stand_in
 from types import SimpleNamespace
 
 from sim.labour.labour_hours import FounderHours
@@ -23,8 +22,10 @@ def labour(wages=None, alive=True, wage_hours=0.0, teaching=0.0, relocation=0.0,
     household = Household(wage_hours_this_year=wage_hours, teaching_hours_this_year=teaching,
                           relocation_hours_this_year=relocation, supervision_hours_this_year=supervision,
                           bondage_years_left=0, directors_extra=0.0)
-    world = SimpleNamespace(household=household, director_overhead_hours=lambda: 0.0, cfg={"founder_hours_per_year": POOL_HOURS, "director_hours_per_year": 0.0},
-                            founder_alive=alive, workforce=household, view=workforce_stand_in.view_of(household), bondage_years_left=0)
+    world = SimpleNamespace(
+        actors=SimpleNamespace(director_overhead_hours=lambda: 0.0),
+        scenario=SimpleNamespace(cfg={"founder_hours_per_year": POOL_HOURS, "director_hours_per_year": 0.0}),
+        founder_alive=alive, workforce=household, bondage_years_left=0)
     hours_part = SimpleNamespace(_world=world, BONDAGE_HOURS_SHARE=0.25)
     hours_part.director_pool = lambda: FounderHours.director_pool(hours_part)
     hours_part.director_hours_committed = lambda: FounderHours.director_hours_committed(hours_part)

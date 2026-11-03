@@ -9,7 +9,6 @@ or whose garrison is not present counts for the part that is. Small fixtures, no
 QUICK_TOPIC = True
 
 import collections
-import random
 import unittest
 
 from types import SimpleNamespace
@@ -20,7 +19,7 @@ from sim.mechanics.module import Mechanics
 from sim.living_stock.api import ChangeHeld
 from sim.tests import module_harness
 from sim.tests import hazards_host, projects_host, ventures_host
-from sim.workforce.module import Workforce
+from sim.tests import workforce_stand_in
 
 POWDER_KG = "gunpowder_kg"
 WORKS, GUNS, WALL = "powder_works", "gun", "wall"
@@ -219,16 +218,14 @@ class HazardLabelsFollowTheMechanics(unittest.TestCase):
 
 
 class _Survivors:
-    """The people of a household and the dice that decide who lives (the workforce module's survive_staff)."""
+    """The people of a household and the dice that decide who lives (the pools' lose_share)."""
 
     def __init__(self, seed):
-        self.rng = random.Random(seed)
         self.state = SimpleNamespace(household=SimpleNamespace(
-            scholars=7.0, artisans=9.0, employees={"carpenter": 3.0, "smith": 5.0}))
+            slaves=0, freedmen=0, staff_wanted={}, employees={"carpenter": 3.0, "smith": 5.0}))
 
     def apply_staff_survival(self, survival_share):
-        workforce = module_harness.build(Workforce, seat=self.state.household, views={"acting_balance": lambda: self.state.household.capital, "game_random": self.rng})
-        workforce.survive_staff(survival_share)
+        workforce_stand_in.lose_share(self.state.household, survival_share)
 
 
 class StaffScalesByTheShare(unittest.TestCase):
@@ -239,8 +236,6 @@ class StaffScalesByTheShare(unittest.TestCase):
                 host = _Survivors(seed)
                 host.apply_staff_survival(survival_share)
                 household = host.state.household
-                self.assertAlmostEqual(household.scholars, 7.0 * survival_share)
-                self.assertAlmostEqual(household.artisans, 9.0 * survival_share)
                 self.assertAlmostEqual(household.employees["smith"], 5.0 * survival_share)
 
     def test_a_trade_that_loses_everyone_leaves_the_books(self):
@@ -251,7 +246,7 @@ class StaffScalesByTheShare(unittest.TestCase):
     def test_everyone_survives_a_share_of_one(self):
         host = _Survivors(1)
         host.apply_staff_survival(1.0)
-        self.assertEqual((host.state.household.scholars, host.state.household.artisans), (7.0, 9.0))
+        self.assertEqual(host.state.household.employees, {"carpenter": 3.0, "smith": 5.0})
 
 
 class TheMagazineRunsDry(unittest.TestCase):

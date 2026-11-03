@@ -47,14 +47,12 @@ def view_of(seat, **more):
 
 
 class World(SimpleNamespace):
-    """A fake labour world whose purse is the `capital` of its `workforce` object (read live, put back by `restore_purse`)."""
+    """A fake labour world whose `finance.balance` is the `capital` of its `workforce` object (read live); the other
+    finance facts are given as `finance_facts`."""
 
     @property
-    def balance(self):
-        return self.workforce.capital
-
-    def restore_purse(self, balance):
-        self.workforce.capital = balance
+    def finance(self):
+        return SimpleNamespace(balance=self.workforce.capital, **getattr(self, "finance_facts", {}))
 
 
 def seat_of(**fields):
@@ -81,3 +79,13 @@ class Game(SimpleNamespace):
         handlers = dict(MODULE_SPECS[0].applies)
         module = module_harness.build(Workforce, seat=self, world=getattr(self, "society", None))
         return getattr(module, handlers[type(command)])(command)
+
+
+def lose_share(household, survival_share):
+    """`StaffPools.lose_share` over the household's people on the books (the pools' resync is left out: it counts what this sets)."""
+    from sim.labour.labour_pools import StaffPools
+    from sim.labour.staff_book import StaffBook
+    world = SimpleNamespace(workforce=household)
+    pools = StaffPools(world, book=StaffBook(world), trades=None)
+    pools.resync_pools = lambda: None
+    pools.lose_share(survival_share)

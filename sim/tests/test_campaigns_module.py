@@ -332,7 +332,7 @@ class StepCampaignsTests(unittest.TestCase):
 
 class MarchingRecording(Campaigns):
 
-    def _reference_equipment(self, owner):
+    def reference_equipment(self, owner):
         self.calls.append(("reference", owner))
         return 1.0
 
@@ -347,7 +347,7 @@ class MarchingRecording(Campaigns):
     def _camp(self, host, days, modes, pay_years, lost):
         self.calls.append(("camp", host.tile, days, pay_years))
 
-    def _contest(self, host, armies, defender, days_left, modes, pay_years, lost, reference):
+    def contest(self, host, armies, defender, days_left, modes, pay_years, lost, reference):
         self.calls.append(("contest", host.tile, defender, days_left))
 
 

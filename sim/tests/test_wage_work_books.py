@@ -16,7 +16,7 @@ from sim.workforce.api import WorkForWages
 
 
 def household(**fields):
-    books = dict(wage_hours_this_year=0.0, wages_earned=0.0, wage_work_last_year=None, log=[], capital=100.0)
+    books = dict(wage_hours_this_year=0.0, wage_work_last_year=None, log=[], capital=100.0)
     books.update(fields)
     return types.SimpleNamespace(**books)
 
@@ -27,7 +27,7 @@ class Books:
     def __init__(self, held=None, year=100):
         self.held = held or household()
         self._world = workforce_stand_in.World(
-            workforce=self.held, view=workforce_stand_in.view_of(self.held), year=year,
+            workforce=self.held, year=year,
             state=types.SimpleNamespace(household=self.held, scenario=types.SimpleNamespace(year=year)),
             plain_number=lambda number: "%g" % number, money_text=lambda money, grouped=False, short=False: "%g" % money,
             logged_events=lambda: len(self.held.log))

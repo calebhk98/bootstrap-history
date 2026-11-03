@@ -5,7 +5,6 @@ QUICK_TOPIC = True
 
 import types
 import unittest
-from sim.tests import workforce_stand_in
 from unittest import mock
 
 from sim.labour import labour_pools
@@ -29,10 +28,10 @@ class Bondage:
                                                reputation=0.0, market_pressure=0.0)
         self.refusals = []
         self._world = types.SimpleNamespace(
-            workforce=self.household, view=workforce_stand_in.view_of(self.household), year=YEAR,
-            note_buy_refusal=self.refusals.append, can_pay=lambda price: price <= self.cash, EDGE_SLAVE_TRADERS="slave_traders",
+            workforce=self.household, year=YEAR, note_buy_refusal=self.refusals.append, EDGE_SLAVE_TRADERS="slave_traders",
             send=self._send,
-            refusal_text=lambda what, price: "cannot afford %s" % what)
+            finance=types.SimpleNamespace(can_pay=lambda price: price <= self.cash,
+                                          refusal_text=lambda what, price: "cannot afford %s" % what))
         self.pools = StaffPools(self._world, book=self, trades=self)
         self.bondage = BondagePart(self._world, advice=self, capacity=self, pools=self.pools, schedule=None)
         self.bondage.slave_quote = self.slave_quote

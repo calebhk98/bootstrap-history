@@ -14,8 +14,8 @@ def _Book(other_staff, supply):
     """The owner's book over a stub world: a household with a staff map and the other employers' staff."""
     return StaffBook(SimpleNamespace(
         workforce=SimpleNamespace(employees={}, staff_wanted={}),
-        actors_staff_nationwide=lambda trade: other_staff.get(trade, 0.0),
-        HOURS_PER_PERSON_YEAR=2000.0))
+        actors=SimpleNamespace(actors_staff_nationwide=lambda trade: other_staff.get(trade, 0.0)),
+        trades=SimpleNamespace(HOURS_PER_PERSON_YEAR=2000.0)))
 
 
 # ---- the founder's book is the owner's ----
@@ -46,8 +46,9 @@ class _Estimate:
     """A supply part whose book holds the core's headcounts and whose trades are all available."""
 
     def __init__(self, in_core):
-        world = SimpleNamespace(population=SimpleNamespace(total=1000.0, working_age=600.0),
-                                urban_fraction=lambda: 0.2, trades_absent=())
+        world = SimpleNamespace(people=SimpleNamespace(population=SimpleNamespace(total=1000.0, working_age=600.0),
+                                                       urban_fraction=lambda: 0.2),
+                                trades=SimpleNamespace(trades_absent=()))
         self._in_core = in_core
         self.supply = labour_supply.Supply(world, book=self, capacity=None, settlement=None, trades=self)
 

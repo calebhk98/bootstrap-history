@@ -22,7 +22,8 @@ class Ledger:
         self.log = []
         self._world = SimpleNamespace(
             state=SimpleNamespace(household=SimpleNamespace(log=self.log), scenario=SimpleNamespace(year=100)),
-            concerns_to_close_for_staffing=lambda: list(stops), stopped_yearly_value=lambda node_ids: 10.0 * len(node_ids))
+            actors=SimpleNamespace(concerns_to_close_for_staffing=lambda: list(stops),
+                                   stopped_yearly_value=lambda node_ids: 10.0 * len(node_ids)))
         event_stand_in.stood_in(self._world)
         self.ledger = StaffLedger(self._world, book=self, market=None)
 

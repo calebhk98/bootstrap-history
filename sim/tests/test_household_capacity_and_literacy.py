@@ -19,13 +19,15 @@ class _StubLabour:
     def __init__(self, literacy=1.0, institutional=0.0, supervision=0.0, headcount_now=0.0, room_places=0.0,
                  absent=(), done=(), operating=(), room_sources=()):
         projects = types.SimpleNamespace(done=set(done), operating=set(operating))
+        nodes = {node_id: {} for node_id, _ in room_sources}
         self._world = types.SimpleNamespace(
-            pop_scale=1.0, HOURS_PER_PERSON_YEAR=2000.0,
-            trades_absent=set(absent), projects=projects,
-            ROOM_SOURCES=list(room_sources), nodes={node_id: {} for node_id, _ in room_sources},
-            is_venture=lambda node_id: True, is_visible=lambda node_id: True,
-            closure=lambda nodes, node_id: {node_id}, start_reason=lambda node_id, _why=True: (True, ""),
-            money_text=lambda amount, grouped=False: "%g" % amount, housing_price_per_place=lambda: 100.0)
+            projects=projects, money_text=lambda amount, grouped=False: "%g" % amount,
+            people=types.SimpleNamespace(pop_scale=1.0),
+            trades=types.SimpleNamespace(HOURS_PER_PERSON_YEAR=2000.0, trades_absent=set(absent)),
+            scenario=types.SimpleNamespace(nodes=nodes, closure=lambda nodes, node_id: {node_id}),
+            knowledge=types.SimpleNamespace(ROOM_SOURCES=list(room_sources), is_venture=lambda node_id: True,
+                                            is_visible=lambda node_id: True, start_reason=lambda node_id, _why=True: (True, "")),
+            finance=types.SimpleNamespace(housing_price_per_place=lambda: 100.0))
         self.literacy, self.institutional, self.supervision = literacy, institutional, supervision
         self.headcount_now, self.room_places = headcount_now, room_places
         self.supply = Supply(self._world, book=self, capacity=self, settlement=self, trades=self)

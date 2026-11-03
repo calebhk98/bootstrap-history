@@ -22,15 +22,17 @@ class ReachLabour:
 
     def __init__(self):
         homes = tuple(tiles_held(load_civ("rome_100ad")))
-        economy = types.SimpleNamespace(improvements={}, society_labour_hours=dict(HOURS_BY_TRADE))
         self._world = types.SimpleNamespace(
-            home_tiles_held=lambda: homes, population=types.SimpleNamespace(total=NATION, working_age=0.55 * NATION), pop_scale=1.0,
-            provided_town_population=lambda tile, nominal_people: None, has_town_premiums=lambda: False,
-            people_by_tile=lambda: None, held_and_running=lambda: (), built_ways=lambda: {}, wages=dict.fromkeys(HOURS_BY_TRADE, 1.0),
-            trade_family=lambda trade: "farm" if trade == "farmer" else "craft",
+            people=types.SimpleNamespace(
+                home_tiles_held=lambda: homes, population=types.SimpleNamespace(total=NATION, working_age=0.55 * NATION), pop_scale=1.0,
+                provided_town_population=lambda tile, nominal_people: None, has_town_premiums=lambda: False,
+                people_by_tile=lambda: None),
+            knowledge=types.SimpleNamespace(held_and_running=lambda: ()),
+            scenario=types.SimpleNamespace(built_ways=lambda: {}),
+            trades=types.SimpleNamespace(wages=dict.fromkeys(HOURS_BY_TRADE, 1.0),
+                                         trade_family=lambda trade: "farm" if trade == "farmer" else "craft"),
             workforce=types.SimpleNamespace(trade_schools={}, trades_created=set(), employees={}, base_tile=None),
-            society=types.SimpleNamespace(society_labour_hours=dict(HOURS_BY_TRADE)),
-            state=types.SimpleNamespace(economy=economy))
+            society=types.SimpleNamespace(society_labour_hours=dict(HOURS_BY_TRADE)))
         self.settlement = Settlement(self._world)
         self.book = StaffBook(self._world)
         self.supply = Supply(self._world, book=self.book, capacity=None, settlement=self.settlement, trades=None)

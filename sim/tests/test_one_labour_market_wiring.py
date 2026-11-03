@@ -13,34 +13,32 @@ UNDER_TEST = {"hire"}
 
 TRADE = "artisan"
 HOURS_PER_YEAR = 2000.0
-SUPPLY = 10_000.0
 RATES = {"artisan": 0.9, "labourer": 0.4, "scribe": 1.1}
 
 
-def real_market(pressure=None, employed=None):
+def real_market(employed=None):
+    """The labour market over a world that gives no economy wage yet, a schedule and a book of the people employed."""
     employed = dict(employed or {})
     world = types.SimpleNamespace(
         workforce=types.SimpleNamespace(worker_housing_places=None),
-        year=0, state=types.SimpleNamespace(scenario=types.SimpleNamespace(year=0)),
-        HOURS_PER_PERSON_YEAR=HOURS_PER_YEAR, price_index=1.5, wage_index=1.3,
-        economy=types.SimpleNamespace(agent_wage_per_hour=lambda trade: None), real_output_per_head=lambda: 1.1,
-        wages={}, actor_staff_fte=lambda name: 0.0)
-    labour = types.SimpleNamespace(
-        _world=world, wage_schedule=lambda: types.SimpleNamespace(training_years={}),
-        market_supply=lambda trade: SUPPLY + HOURS_PER_YEAR * employed.get(trade, 0.0),
-        employed=lambda trade: employed.get(trade, 0.0),
-        set_employed=lambda trade, people: employed.__setitem__(trade, people),
-        base_annual_wage=lambda trade: 100.0, wage_cost_factors=lambda trade: {"weighted": 1.2},
-        LABOUR_PAY_SHARE_OF_OUTPUT_GAIN=1.0)
-    return LabourMarket(labour), labour
+        trades=types.SimpleNamespace(HOURS_PER_PERSON_YEAR=HOURS_PER_YEAR, wage_index=1.3),
+        finance=types.SimpleNamespace(price_index=1.5, real_output_per_head=lambda: 1.1),
+        economy=types.SimpleNamespace(agent_wage_per_hour=lambda trade: None),
+        actors=types.SimpleNamespace(actor_staff_total=lambda: 0.0))
+    schedule = types.SimpleNamespace(base_annual_wage=lambda trade: 100.0, LABOUR_PAY_SHARE_OF_OUTPUT_GAIN=1.0)
+    book = types.SimpleNamespace(headcount=lambda: sum(employed.values()))
+    market = LabourMarket(world, schedule=schedule, settlement=types.SimpleNamespace(home_town_population_estimate=lambda: 1000.0),
+                          book=book)
+    market.cost_factors = lambda trade: {"weighted": 1.2}
+    return market
 
 
 class HireQuoteTests(unittest.TestCase):
     def test_the_wage_quoted_does_not_depend_on_how_many_are_taken_on_or_how_hard_the_trade_is_leaned_on(self):
-        market, _labour = real_market()
-        calm, _labour = real_market()
-        self.assertEqual(market.quote_annual(TRADE), market.quote_annual(TRADE))
-        self.assertEqual(market.quote_annual(TRADE), calm.quote_annual(TRADE))
+        calm = real_market()
+        leaned_on = real_market(employed={TRADE: 400.0})
+        self.assertEqual(calm.quote_annual(TRADE), calm.quote_annual(TRADE))
+        self.assertEqual(leaned_on.quote_annual(TRADE), calm.quote_annual(TRADE))
 
 
 class WorldReadsTheOneMarketTests(unittest.TestCase):

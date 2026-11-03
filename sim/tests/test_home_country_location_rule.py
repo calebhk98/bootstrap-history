@@ -35,7 +35,7 @@ class HomeLocationTests(unittest.TestCase):
 
 
 def FounderBase(chosen):
-    return Settlement(SimpleNamespace(home_tiles_held=lambda: TILES, workforce=SimpleNamespace(base_tile=chosen)))
+    return Settlement(SimpleNamespace(people=SimpleNamespace(home_tiles_held=lambda: TILES), workforce=SimpleNamespace(base_tile=chosen)))
 
 
 class FounderBaseTileTests(unittest.TestCase):
