@@ -15,7 +15,7 @@ def actor(actor_id, money, controller="ai", concerns=(), margin=None):
     margins = {node_id: margin for node_id in concerns}
     return types.SimpleNamespace(
         actor_id=actor_id, money=money, concerns=set(concerns), record=types.SimpleNamespace(controller=controller, last_margin=0.0),
-        margin_of=lambda node_id: margins.get(node_id), concern_count=lambda: len(concerns))
+        holdings=types.SimpleNamespace(margin_of=lambda node_id: margins.get(node_id), concern_count=lambda: len(concerns)))
 
 
 class SaleTermsTests(unittest.TestCase):
