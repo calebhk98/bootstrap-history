@@ -13,7 +13,7 @@ import dataclasses
 from dataclasses import dataclass, field
 from typing import Any, ClassVar, Dict, Tuple
 
-from .accounts import Book
+from sim.book import Book
 from .capital_markets_record import CapitalMarketsRecord
 from .carriage_record import CarriageRecord
 from .credit_record import CreditRecord

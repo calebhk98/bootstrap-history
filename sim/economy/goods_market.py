@@ -29,7 +29,7 @@ import numpy
 
 from sim.constants import declare
 
-from .accounts import ROUNDING_SHARE
+from sim.book import ROUNDING_SHARE
 from .goods_market_demand import DemandSchedule
 from .goods_market_fills import buyer_fills, make_fill, seller_fills, without_edge_self_trades
 from .goods_market_logit import allocate

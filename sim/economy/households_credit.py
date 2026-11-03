@@ -13,7 +13,7 @@ from . import credit
 from sim.world.need_basket import Basket, PricedNeed
 from .households_cohort import Cohort
 from .households_orders import FLOOR_BUDGET_PRICE_MARGIN
-from .accounts import ROUNDING_SHARE
+from sim.book import ROUNDING_SHARE
 from .types import Bid, CurrencyId, GoodId, GoodSpec, LoanRequest
 
 HOUSEHOLD_LOAN_YEARS = declare(

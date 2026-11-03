@@ -10,7 +10,7 @@ from dataclasses import dataclass, field
 from operator import attrgetter
 from typing import Dict, List, Optional, Sequence, Tuple
 
-from .accounts import Book, DeliveredMove
+from sim.book import Book, DeliveredMove
 from .settlement_limits import CANNOT_PAY, limit_by_purse, limit_by_stock, pair_fills
 from .types import (AgentId, ClearingResult, CurrencyId, Fill, LabourResult, Pairing, Transfer, is_edge)
 

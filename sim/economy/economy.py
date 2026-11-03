@@ -136,7 +136,8 @@ class Economy:
     def view(self) -> YearView:
         return CreditView(self.record.memory, self.record.book, self.area_map, self.setup.currency_id, labour_area,
                           loans=lambda: self.record.credit.loans, equity=self._equity_read,
-                          loss_rates=lambda: self.record.credit.loss_rates)
+                          loss_rates=lambda: self.record.credit.loss_rates,
+                          pooled=self.record.credit.contracts.deposit_value)
 
     def _equity_read(self, view) -> Dict[str, float]:
         return equity.holdings(self.setup, self.record, view)
@@ -265,7 +266,8 @@ class Economy:
         self._build_plant(plant_runs)
         close_view = CreditView(record.memory, record.book, self.area_map, money, labour_area,
                                 loans=lambda: record.credit.loans, equity=self._equity_read,
-                                loss_rates=lambda: record.credit.loss_rates)
+                                loss_rates=lambda: record.credit.loss_rates,
+                                pooled=record.credit.contracts.deposit_value)
         received = dict(interest)
         for payment in rent:
             received[payment.payee] = received.get(payment.payee, 0.0) + payment.amount

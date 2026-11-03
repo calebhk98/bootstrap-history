@@ -6,7 +6,7 @@ from typing import Dict, List, Tuple
 
 from . import producer_table
 from . import credit_claims, ownership
-from .accounts import ROUNDING_SHARE
+from sim.book import ROUNDING_SHARE
 from .credit import Default
 from .types import GoodsMove, Transfer
 

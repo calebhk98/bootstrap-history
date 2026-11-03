@@ -25,10 +25,9 @@ class Bank(Part):
 			refusal = Refusal("economy_not_open", "The economy has not opened yet.")
 		if refusal is not None:
 			return {"ok": False, "error": refusal, "cause": refusal.cause}
+		paid = needs.send(WithdrawHouseholdMoney(float(capital)))     # the money leaves the household first; a refusal founds nothing
+		if isinstance(paid, Refusal):
+			return {"ok": False, "error": paid, "cause": paid.cause}
 		bank_id = needs.send(FoundBankFromOutside(float(capital)))
-		if bank_id is None:
-			refusal = Refusal("capital_not_positive", "Nothing went into the bank.")
-			return {"ok": False, "error": refusal, "cause": refusal.cause}
-		needs.send(WithdrawHouseholdMoney(float(capital)))
 		return {"ok": True, "bank": bank_id, "capital": float(capital),
 		        "note": "Households with savings now deposit with it; its earnings above its capital are paid to you."}

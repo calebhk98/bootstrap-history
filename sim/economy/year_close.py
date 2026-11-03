@@ -177,6 +177,8 @@ def close_agents(setup, record, view, ledger: YearLedger, area_map, carriage,
         record.credit.ask_for_loans(carriage_hours.wage_loans(setup, record, ledger.crew_hours_bought,
                                                            {(result.trade, result.area): result.hours_hired + result.idle_hours
                                                             for result in ledger.labour_results}))
+    for lender, interest in record.capital_markets.take_pool_income().items():     # the actors' pool paid this year
+        property_income[lender] = property_income.get(lender, 0.0) + interest
     for cohort_id, cohort in sorted(record.cohorts.items()):
         received = dict(ledger.received.get(cohort_id, {}))
         for good, quantity in ledger.grown.get(cohort_id, {}).items():
