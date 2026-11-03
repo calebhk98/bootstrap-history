@@ -8,12 +8,12 @@ from typing import Any, Callable, List, Optional
 
 from . import business_books, business_review, firm_exit, research_choice
 from .base import RecordedActor
-from .firm_expansion import ExpansionMixin
+from .firm_expansion import Expansion
 from .borrowing import TRACK_RECORD_YEARS
 from .tuning import EXIT_LOSS_YEARS, VALUE_HORIZON_YEARS
 
 
-class Firm(ExpansionMixin, RecordedActor):
+class Firm(RecordedActor):
 	kind = "firm"
 	researches = True
 	keeps_purchases = True   # what it buys at the market joins its stores (a state draws its purchases at once)
@@ -25,6 +25,10 @@ class Firm(ExpansionMixin, RecordedActor):
 	on_capacity_change: Optional[Callable[[str], None]] = None
 	# Set by the registry: finds another actor by id (the founder whose stake the firm returns).
 	find_actor: Optional[Callable[[str], Any]] = None
+
+	def __init__(self, *args: Any, **kwargs: Any) -> None:
+		super().__init__(*args, **kwargs)
+		self.expansion = Expansion(self)
 
 	def imitation_candidates(self, world: Any) -> List[str]:
 		# a firm values only the concern it is aiming at
@@ -89,4 +93,4 @@ class Firm(ExpansionMixin, RecordedActor):
 		if (had_plants and not self.concerns) or EXIT_LOSS_YEARS <= max(self.record.weak_years, self.record.insolvent_years):
 			firm_exit.close_firm(self, world)
 		else:
-			self.expand(world)
+			self.expansion.expand(world)

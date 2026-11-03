@@ -2,7 +2,7 @@
 earns more than the capital costs expands, an entrant expects what is left after that, and a market that stops growing
 stops gaining capacity.
 
-Rules, each called on the fake world: `Firm.expand` (the return on a step against the rate, the margin gate, the
+Rules, each called on the fake world: `Firm.expansion.expand` (the return on a step against the rate, the margin gate, the
 scale ceiling, the outlay it books) and `ActorRegistry.rivals_of` (an expanded incumbent leaves an entrant a smaller
 share). What an entrant expects is test_entry_gross_rule."""
 QUICK_TOPIC = True
@@ -49,7 +49,7 @@ class ExpandTests(unittest.TestCase):
 		world = ReturnWorld(return_on_step=0.5)
 		world.rate = 0.12
 		_registry, firm = make_firm(world)
-		firm.expand(world)
+		firm.expansion.expand(world)
 		self.assertAlmostEqual(firm.capacity_of("shop"), 1.0 + EXPANSION_RATE)
 		self.assertGreater(firm.record.outlays.get("expansion", 0.0), 0.0)
 
@@ -57,7 +57,7 @@ class ExpandTests(unittest.TestCase):
 		world = ReturnWorld(return_on_step=0.5)
 		world.rate = 1.0
 		_registry, firm = make_firm(world)
-		firm.expand(world)
+		firm.expansion.expand(world)
 		self.assertEqual(firm.capacity_of("shop"), 1.0)
 
 	def test_a_step_whose_site_rent_and_management_outrun_its_margin_is_not_built(self):
@@ -70,39 +70,39 @@ class ExpandTests(unittest.TestCase):
 		world = DearSiteWorld(return_on_step=0.5)
 		world.rate = 0.12
 		_registry, firm = make_firm(world)
-		firm.expand(world)
+		firm.expansion.expand(world)
 		self.assertEqual(firm.capacity_of("shop"), 1.0)
 
 	def test_a_firm_with_no_margin_does_not_expand(self):
 		world = ReturnWorld()
 		_registry, firm = make_firm(world, margin=-1.0)
-		firm.expand(world)
+		firm.expansion.expand(world)
 		self.assertEqual(firm.capacity_of("shop"), 1.0)
 
 	def test_a_market_that_adds_nothing_to_a_step_stops_expansion(self):
 		world = ReturnWorld(return_on_step=0.0)
 		_registry, firm = make_firm(world)
-		firm.expand(world)
+		firm.expansion.expand(world)
 		self.assertEqual(firm.capacity_of("shop"), 1.0)
 
 	def test_a_firm_at_the_scale_ceiling_does_not_grow(self):
 		world = ReturnWorld(ceiling=1.0)
 		_registry, firm = make_firm(world)
-		firm.expand(world)
+		firm.expansion.expand(world)
 		self.assertEqual(firm.capacity_of("shop"), 1.0)
 
 	def test_a_firm_grows_one_step_a_year_however_good_the_return(self):
 		world = ReturnWorld(return_on_step=100.0)
 		world.rate = 0.0
 		_registry, firm = make_firm(world)
-		firm.expand(world)
+		firm.expansion.expand(world)
 		self.assertAlmostEqual(firm.capacity_of("shop"), 1.0 + EXPANSION_RATE)
 
 	def test_the_owners_tell_the_registry_so_its_totals_follow(self):
 		world = ReturnWorld()
 		registry, firm = make_firm(world)
 		before = registry.capacity_in("shop")
-		firm.expand(world)
+		firm.expansion.expand(world)
 		self.assertGreater(registry.capacity_in("shop"), before)
 
 

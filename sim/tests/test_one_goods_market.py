@@ -38,13 +38,13 @@ def stand_in(**changes):
 home_only = stand_in()
 market_home = GoodsMarket(home_only)
 home_only.goods_market = market_home
-check("pepper has no price: nothing in reach makes it", price_rules.basis_with_imports(home_only._price_tables()[1].get("pepper_kg"), market_home.offered_by("pepper_kg")) is None)
-check("...so it cannot be quoted or bought", not market_home.can_be_bought("pepper_kg"))
-check("no home technique in reach offers pepper", market_home.offered_by("pepper_kg") is None)
-prices = market_home.household_prices()
+check("pepper has no price: nothing in reach makes it", price_rules.basis_with_imports(home_only._price_tables()[1].get("pepper_kg"), market_home.offers.offered_by("pepper_kg")) is None)
+check("...so it cannot be quoted or bought", not market_home.offers.can_be_bought("pepper_kg"))
+check("no home technique in reach offers pepper", market_home.offers.offered_by("pepper_kg") is None)
+prices = market_home.offers.household_prices()
 check("so households are given no price for it, and a good the home makes keeps its price",
       "pepper_kg" not in prices and prices["wheat_kg"] == 3.0, prices)
-check("a good the home makes is sold by the home", market_home.offered_by("wheat_kg") == HOME_SELLER, market_home.offered_by("wheat_kg"))
+check("a good the home makes is sold by the home", market_home.offers.offered_by("wheat_kg") == HOME_SELLER, market_home.offers.offered_by("wheat_kg"))
 
 model, _final_goods = household_needs.household_model((), lambda: content.load_needs(ROOT))
 wanted = household_needs.demand_by_material(model, {"wheat_kg": 1.0}, 1_000_000.0, 550.0)

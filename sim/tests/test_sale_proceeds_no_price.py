@@ -26,9 +26,10 @@ class CallerTests(unittest.TestCase):
         stand_in = Game(
             _sim=Game(_material_tag=lambda material: ("iron",),
                              economy=Game(agent_offered_tonnes=lambda material: None)),
-            price_at_tile_per_tonne=lambda material: 10.0, sale_proceeds=lambda *args: None,
+            pricing=Game(price_at_tile_per_tonne=lambda material: 10.0, sale_proceeds=lambda *args: None,
+                         carriage_per_tonne=lambda material, price: 1.0),
             posted_tonnes=lambda side, key: 0.0, acting_party_id="founder",
-            import_tonnes_available=lambda material: None, _carriage_per_tonne=lambda material, price: 1.0)
+            import_tonnes_available=lambda material: None)
         self.assertIsNone(GoodsMarket.quote(stand_in, "iron"))
 
     def test_quote_sell_with_no_proceeds_sells_nothing_and_names_no_stock_key(self):
@@ -36,7 +37,7 @@ class CallerTests(unittest.TestCase):
         stand_in = Game(
             quote=lambda material: {"stock_key": "iron"}, posted_tonnes=lambda side, key: 0.0,
             sale_limits=lambda material: (10.0, 100.0),
-            sale_proceeds=lambda *args: recorded.append(args))
+            pricing=Game(sale_proceeds=lambda *args: recorded.append(args)))
         self.assertEqual(GoodsMarket.quote_sell(stand_in, "iron", 5.0), (None, 0.0, 0.0))
         self.assertEqual(len(recorded), 1)
 

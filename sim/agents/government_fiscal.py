@@ -2,7 +2,6 @@
 from typing import Any, Dict, List
 
 from . import arrears, budget, fiscal_response, government_levers
-from .government_coinage import debasement_decision
 from .budget_line import Line
 from .liability import COLLECTIVE
 from .tuning_fiscal import KIND_DEMAND_RATE_STEP, RATE_RAISE_STEP
@@ -23,7 +22,7 @@ class Fiscal:
 		self.government.record.fiscal_response = choice
 		kind = choice.get(fiscal_response.KIND, 0.0)
 		raised = choice.get(fiscal_response.RATE, 0.0)
-		self.apply_debasement(choice.get(fiscal_response.DEBASE, 0.0), world)
+		self.government.coinage.decide_debasement(world, choice.get(fiscal_response.DEBASE, 0.0))
 		if kind > 0.0:
 			self.demand_in_kind(kind, world)
 		if raised > 0.0:
@@ -49,13 +48,6 @@ class Fiscal:
 			if not hasattr(change, "cause"):
 				set_levers[lever] = value
 		return set_levers
-
-	def apply_debasement(self, amount: float, world: Any) -> float:
-		"""Cut the metal in the coin as far as covering `amount` of the shortfall takes; the cut, recorded."""
-		share = debasement_decision(self.government, world, amount)
-		self.government.record.coin_cut_share = share
-		self.government.record.coin_metal_kept *= 1.0 - share
-		return share
 
 	def deferred_fraction(self, lines: List[Line], share: float) -> float:
 		"""Share of the pay left unpaid that the state's choice defers as owed (the rest is cut and never owed)."""

@@ -30,7 +30,7 @@ class GoodsViews(Part):
 	def purchase_quote(self, material, tonnes, already=0.0):
 		"""(money, mean money per tonne) to buy `tonnes` of a material now, the price rising as the order is filled; None when
 		it has no price."""
-		return self.parts.market_objects.goods_market.quote_buy(material, tonnes, already)
+		return self.parts.market_objects.goods_market.pricing.quote_buy(material, tonnes, already)
 
 	def sale_quote(self, material, tonnes):
 		"""(stock key, tonnes the market takes now, money for them) if the acting seat sold `tonnes` of a material; the figure
@@ -39,20 +39,20 @@ class GoodsViews(Part):
 
 	def can_be_bought(self, material):
 		"""Whether anyone in reach sells the material at a price."""
-		return self.parts.market_objects.goods_market.can_be_bought(material)
+		return self.parts.market_objects.goods_market.offers.can_be_bought(material)
 
 	def material_seller(self, material):
 		"""Who sells a material to the home society: the home society's own id, a trading partner, or None when no one does."""
-		return self.parts.market_objects.goods_market.offered_by(material)
+		return self.parts.market_objects.goods_market.offers.offered_by(material)
 
 	def home_unit_price(self, material):
 		"""Money per unit the home society's sellers ask for a material (or a curated commodity, by the material it is priced as);
 		None when no home seller offers it."""
-		return self.parts.market_objects.goods_market.home_unit_price(material)
+		return self.parts.market_objects.goods_market.offers.home_unit_price(material)
 
 	def household_prices(self):
 		"""{material: what a household pays per unit now}."""
-		return self.parts.market_objects.goods_market.household_prices()
+		return self.parts.market_objects.goods_market.offers.household_prices()
 
 	def commodities_sold_by_acting_party(self):
 		return self.parts.market_objects.goods_market.commodities_sold_by(self.parts.market_objects.goods_market.acting_party_id)

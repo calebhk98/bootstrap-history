@@ -78,11 +78,11 @@ class QuoteVolume(unittest.TestCase):
             economy=types.SimpleNamespace(agent_offered_tonnes=lambda material: offered),
             _material_market_tonnes=lambda key: market)
         stand_in = types.SimpleNamespace(
-            _sim=sim, acting_party_id="founder", price_at_tile_per_tonne=lambda material: 10.0,
-            _carriage_per_tonne=lambda material, price: 1.0,
-            purchase_cost=lambda material, tonnes: (0.0, 11.0), sale_proceeds=lambda *args: (0.0, 9.0),
-            posted_tonnes=lambda side, key: 0.0, price_kind=lambda material: "market",
-            making_cost_per_tonne=lambda material: None)
+            _sim=sim, acting_party_id="founder", posted_tonnes=lambda side, key: 0.0,
+            pricing=types.SimpleNamespace(
+                price_at_tile_per_tonne=lambda material: 10.0, carriage_per_tonne=lambda material, price: 1.0,
+                purchase_cost=lambda material, tonnes: (0.0, 11.0), sale_proceeds=lambda *args: (0.0, 9.0),
+                price_kind=lambda material: "market", making_cost_per_tonne=lambda material: None))
         return GoodsMarket.quote(stand_in, "alum_kg")["market_available_tonnes_per_year"]
 
     def test_the_volume_is_the_economys_offer_else_the_throttles_market_tonnes(self):
@@ -90,7 +90,7 @@ class QuoteVolume(unittest.TestCase):
         self.assertEqual(self.quote(3.0, 5.0), 3.0)
 
     def test_a_material_with_no_price_has_no_quote(self):
-        stand_in = types.SimpleNamespace(_sim=None, price_at_tile_per_tonne=lambda material: None)
+        stand_in = types.SimpleNamespace(_sim=None, pricing=types.SimpleNamespace(price_at_tile_per_tonne=lambda material: None))
         self.assertIsNone(GoodsMarket.quote(stand_in, "ghost"))
 
 
