@@ -38,7 +38,7 @@ def limits(sim, outputs_by_recipe, tile_ids):
     recipes = timber_recipes(outputs_by_recipe)
     if not recipes:
         return []
-    felled = sim.timber_felled()
+    felled = sim.farm.timber_felled()
     hours_per_tonne_km = haul_hours_per_tonne_km(sim)
     found = []
     for tile in sorted(tile_ids):

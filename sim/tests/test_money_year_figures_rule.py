@@ -12,11 +12,9 @@ from .harness import check
 
 from sim.economy import api as economy_api
 from sim.economy.types import EDGE_MINT, EDGE_WEAR
-from sim.markets.port import EconomyPort
 from sim.markets.agent_economy import AgentEconomy
 
 read_saved_result = AgentEconomy.spin_up_result
-read_game_result = EconomyPort.spin_up_result
 
 
 def stand_in(edge_net, supply_change, backing_good=""):
@@ -48,5 +46,4 @@ saved = {"settled": True, "years": 12, "gap": 0.01}
 read = read_saved_result(SimpleNamespace(stored={"record": {"spin_up_result": saved}}))
 check("the agent economy reads the saved first-stage result as a copy", read == saved and read is not saved, read)
 check("before the opening is saved the result is empty", read_saved_result(SimpleNamespace(stored={})) == {})
-check("a game reports what its agent economy saved",
-      read_game_result(SimpleNamespace(agent=SimpleNamespace(spin_up_result=lambda: saved))) == saved)
+

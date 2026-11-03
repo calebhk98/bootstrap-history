@@ -18,9 +18,9 @@ def stub_game(hours_by_destination, working_age, has_government=True):
     government = Government("government:home", ActorRecord(kind="government"))
     government.record.corvee_hours = dict(hours_by_destination)
     return SimpleNamespace(actors=SimpleNamespace(government_of=lambda country: government if has_government else None),
-                           economy=SimpleNamespace(
-                               agent_people_by_tile_and_trade=lambda: {"home": {"farmer": working_age / 2.0, "smith": working_age / 2.0},
-                                                                       "abroad": {"farmer": 5000.0}}),
+                           economy=SimpleNamespace(opening=False, parts=SimpleNamespace(producers=SimpleNamespace(
+                               people_by_tile_and_trade=lambda: {"home": {"farmer": working_age / 2.0, "smith": working_age / 2.0},
+                                                                 "abroad": {"farmer": 5000.0}}))),
                            labour=SimpleNamespace(settlement_tiles=lambda: {"home": 900.0}))
 
 

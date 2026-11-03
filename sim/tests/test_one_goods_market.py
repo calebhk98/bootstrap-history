@@ -25,12 +25,14 @@ def stand_in(**changes):
     values = dict(
         _flows=flows, year=-100, state=SimpleNamespace(acting_seat=FOUNDER, projects=SimpleNamespace()), techniques_held=frozenset,
         **market_stand_in.market_memory(), economy=SimpleNamespace(agent_prices_at=lambda: None),
-        _material_prices=lambda: {"wheat_kg": 3.0, "iron": 5.0}, _price_tables=lambda: (None, {"wheat_kg": "solved", "iron": "solved"}),
-        _priced_key=lambda material, prices: material if material in prices else None,
-        _commodity_materials=lambda commodity: [commodity])
+        materials=SimpleNamespace(
+            prices=lambda: {"wheat_kg": 3.0, "iron": 5.0},
+            priced_key=lambda material, prices: material if material in prices else None,
+            commodity_materials=lambda commodity: [commodity]),
+        _price_tables=lambda: (None, {"wheat_kg": "solved", "iron": "solved"}))
     values.update(changes)
     game = SimpleNamespace(**values)
-    game._market_flows = lambda: game._flows
+    game.market_flows = lambda: game._flows
     return game
 
 

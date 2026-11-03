@@ -18,7 +18,7 @@ def bonded_for_sale(sim, economy):
 def settle_purchases(sim, economy, outcome):
     """Move the people the economy bought out of the bonded strata of the tiles they were bought on and pay, over the
     exchange edge (in coin), their owners the ask and the merchants the carriage. Returns the people moved."""
-    buyer = sim.edge(agents_api.edges.EDGE_ECONOMY)
+    buyer = sim.state.edge(agents_api.edges.EDGE_ECONOMY)
     coin = economy_api.coin_per_unit(economy)
     moved = 0.0
     for lot in outcome.bonded_lots:

@@ -29,7 +29,7 @@ class GoodsPricing:
     def making_cost_per_tonne(self, material):
         """Money per tonne it costs the home society to make a material (the cost table); None when no technique
         in reach makes it."""
-        cost = self._sim._material_price_per_kg(material)
+        cost = self._sim.materials.price_per_kg(material)
         return None if cost is None else cost / tonnes_per_unit(material)
 
     def price_at_tile_per_tonne(self, material):
@@ -48,12 +48,12 @@ class GoodsPricing:
 
     def carriage_per_tonne(self, material, price_per_tonne):
         """Money per tonne to carry a material the home sells to the buyer."""
-        return self._sim.foreign.material_carriage_per_tonne(self._sim._material_tag(material)[0], price_per_tonne)
+        return self._sim.foreign.material_carriage_per_tonne(self._sim.materials.tag(material)[0], price_per_tonne)
 
     def economy_good(self, material):
         """The key the economy trades a material under (a curated commodity is traded as the material it is priced as),
         or None when no one sells it."""
-        return self._sim._priced_key(material, self.market.offers.home_prices())
+        return self._sim.materials.priced_key(material, self.market.offers.home_prices())
 
     def _climb(self, material, taken_before, tonnes, selling=False):
         """Mean factor on the price while buying (or selling) `tonnes` more of a material after `taken_before`
@@ -81,7 +81,7 @@ class GoodsPricing:
     def _bought_this_year(self, material):
         """Tonnes the asking seat has ordered from the market this year in the material's commodity, which the economy
         has not yet cleared, and its running works have drawn."""
-        commodity = self._sim._material_tag(material)[0]
+        commodity = self._sim.materials.tag(material)[0]
         return self.market.posted_tonnes("buy", commodity) + self.market.drawn_tonnes(commodity)
 
     def purchase_cost(self, material, tonnes, already=0.0):

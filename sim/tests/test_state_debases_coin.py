@@ -71,7 +71,7 @@ class Recorder:
         self.calls.append((cut, restrike_share))
 
 
-port = SimpleNamespace(_world=SimpleNamespace(state_treasury=lambda: SimpleNamespace(record=SimpleNamespace(coin_cut_share=0.15))),
+port = SimpleNamespace(_world=SimpleNamespace(finance=SimpleNamespace(state_treasury=lambda: SimpleNamespace(record=SimpleNamespace(coin_cut_share=0.15)))),
                        _agent=SimpleNamespace(figures=YearFigures()))
 port._agent.figures.floor_costs = {"stale": 1.0}
 recorder = Recorder()

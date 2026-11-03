@@ -30,6 +30,10 @@ class HouseholdReads:
         answers = CountryAnswers(economy, country)
         return answers if answers.has_labour_market() else None
 
+    def trade_book(self, country):
+        """What crossed the country's border last year, by good ({good: {"in_tonnes", "in_value", "out_tonnes", "out_value"}})."""
+        return economy_api.country_figures.trade_book(self._agent.economy(), country)
+
     def land_rent_per_hectare(self):
         """Mean rent per hectare-year the land market let land at last year, in coin."""
         economy = self._agent.economy()

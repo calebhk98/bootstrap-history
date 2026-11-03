@@ -81,8 +81,8 @@ def opening_values(sim):
     people = float(sim.population.total)
     production = demand.production_data()
     trades_data = _load("world", "trades.json").get("trades", {})
-    allowed = allowed_entries(production, set(sim.techniques_granted()))
-    mint_recipe = mint_recipe_id(civ, production, set(sim.techniques_granted()))
+    allowed = allowed_entries(production, set(sim.production.techniques_granted()))
+    mint_recipe = mint_recipe_id(civ, production, set(sim.production.techniques_granted()))
     unskilled = unskilled_trade(trades_data)
     partners = partner_openings(sim)
     partner_prices = {}
@@ -118,14 +118,14 @@ def opening_values(sim):
         "carriage_feed_good": FREIGHT_FEED_PRICE_MATERIAL,
         "carriage_teams": {mode: {key: rate[key] for key in ("carriers", "tonne_km_per_team_day", "team_payload_tonnes", "animal_feed_kg_per_tonne_km")}
                            for mode, rate in rates.items()},
-        "held_nodes": sorted(sim.held_and_running(include_starting=False)),
+        "held_nodes": sorted(sim.production.held_and_running(include_starting=False)),
         "ways": {key: dict(way) for key, way in sorted(sim.state.economy.improvements.items())},
         "site_limits": [[limit.recipe_id, limit.tile, limit.capacity_runs_per_year, limit.yield_factor]
                         for limit in port_sites.site_limits(
                             sim, {entry_id: production[entry_id]["outputs"] for entry_id in allowed},
                             list(tile_ids) + [tile for opened in partners.values() for tile in opened["tiles"]])],
         "stores": opening_store_values(sim, tile_ids, int(sim.cfg["start_year"])),
-        "literacy": {field: sim.literacy(field) for field in LITERACY_FIELDS},
+        "literacy": {field: sim.production.literacy(field) for field in LITERACY_FIELDS},
     }
 
 
@@ -250,7 +250,7 @@ def build_setup(sim, opening=None, production=None):
         working_hours_per_year=float(sim.HOURS_PER_PERSON_YEAR), working_share=float(opening["working_share"]),
         gini=demand.GINI_COEFFICIENT_PREINDUSTRIAL_AGRARIAN, opening_population_by_tile=population_by_tile,
         need_share_by_trade={trade: float(share) for trade, share in (opening.get("need_shares") or {}).items()},
-        unskilled_trade=opening["unskilled_trade"], debt_bondage_years=sim.debt_bondage_term_years(), opening_prices=prices, opening_wages=wages, opening_rate=float(opening["rate"]),
+        unskilled_trade=opening["unskilled_trade"], debt_bondage_years=sim.finance.debt_bondage_term_years(), opening_prices=prices, opening_wages=wages, opening_rate=float(opening["rate"]),
         capital_tile=by_people[0], port_tile=(coastal or by_people)[0],
         land_per_run={recipe_id: float(production[recipe_id].get("land_hectare_years") or 0.0)
                       for recipe_id in recipes if production[recipe_id].get("land_hectare_years")},
@@ -259,7 +259,7 @@ def build_setup(sim, opening=None, production=None):
         household_work=households_work.load_household_work(), ready_to_eat=households_work.ready_to_eat_goods(need_data),
         milled_as=household_grinding.milled_as_map(need_data),
         recipes_by_country=recipes_by_country(str(civ["id"]), opening["recipes"], partners),
-        tile_owners=sim.tile_owner_map(),
+        tile_owners=sim.farm.tile_owner_map(),
         world_map=world_map, improvements=dict(opening["ways"]),
         kernels=dict(sim.bound_kernels()),
         site_limits=tuple(SiteLimit(*limit) for limit in opening["site_limits"]),

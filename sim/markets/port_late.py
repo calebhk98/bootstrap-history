@@ -14,7 +14,7 @@ cost_of_making = making_cost.cost_of_making
 def techniques_held(sim):
     """The nodes whose entries the economy's producers may run: those the society started with or was
     granted, and those some producer in it runs now (any seat's, any firm's concerns)."""
-    return sim.techniques_granted() | frozenset(sim.techniques_in_use())
+    return sim.production.techniques_granted() | frozenset(sim.production.techniques_in_use())
 
 
 def late_goods_costs(sim, prices, goods, held_nodes, production):
@@ -32,7 +32,7 @@ def late_goods_costs(sim, prices, goods, held_nodes, production):
             wages[trade] = sim.economy.labour.quote(trade)
         return wages[trade]
 
-    rate = float(sim.economy.base_rate())
+    rate = float(sim.finance.market_rate())
     found = {}
     for good in goods:
         if good in prices:
