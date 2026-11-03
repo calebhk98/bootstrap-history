@@ -5,8 +5,8 @@
     year when revenue did not cover the costs paid plus the plant's charge at the live rate, sheds
     workplaces whose expected sales do not cover running cost (all of them, so it exits, when none would), and asks for a loan to rebuild and grow when new plant would earn more than
     the live rate. A funded loan becomes capacity through `producers.with_capacity`.
-`entrants(recipes, view, sites, occupied)` -> new `Producer`s where the expected return beats the live
-    rate, best first, at most a declared number a year. Owners and sites come from the caller.
+The entry of new producers is `entry.entry_plans` (and `entry_margin`, `entry_trial`): where the expected return beats
+    the live rate, best first, as the gap and the returns decide. Owners and sites come from the caller.
 """
 import math
 from dataclasses import dataclass

@@ -154,16 +154,25 @@ def settle(merchant: Merchant, book, goods: Sequence[GoodId], units_worn: Mappin
     return moves + worn
 
 
-def last_prices(setup, memory) -> Dict[GoodId, float]:
-    """Each carrier good's price last year, averaged over the areas that cleared it, else the opening's; a good with
-    neither is left out."""
+def _weighted_mean(rows: Sequence[Tuple[float, float]]) -> float:
+    """The mean of (price, weight) rows by weight; the plain mean when no row has a weight."""
+    total = math.fsum(weight for _price, weight in rows)
+    if total <= 0.0:
+        return math.fsum(price for price, _weight in rows) / len(rows)
+    return math.fsum(price * weight for price, weight in rows) / total
+
+
+def last_prices(setup, memory, weights: Mapping[str, float]) -> Dict[GoodId, float]:
+    """Each carrier good's price last year, the mean over the areas that cleared it (quotes are no one's payment)
+    weighted by what each usually trades (`weights`, by market key; equal where none is known), else the opening's;
+    a good with neither is left out."""
     wanted = set(carrier_goods(setup))
-    seen: Dict[GoodId, List[float]] = {}
-    for key, price in sorted(memory.prices.items()):
+    seen: Dict[GoodId, List[Tuple[float, float]]] = {}
+    for key, price in sorted(memory.cleared_prices.items()):
         good = key.split(MARKET_KEY_SEPARATOR, 1)[0]
         if good in wanted and price > 0.0:
-            seen.setdefault(good, []).append(price)
-    prices = {good: math.fsum(seen[good]) / len(seen[good]) if good in seen else opening_price_today(setup, memory, good)
+            seen.setdefault(good, []).append((price, weights.get(key, 0.0)))
+    prices = {good: _weighted_mean(seen[good]) if good in seen else opening_price_today(setup, memory, good)
               for good in wanted}
     return {good: price for good, price in prices.items() if price is not None}
 

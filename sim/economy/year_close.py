@@ -56,6 +56,12 @@ def money_taxes(setup, record, view, ledger: YearLedger) -> None:
     if duty:
         record.book.transfer_many(duty)
         received += math.fsum(transfer.amount for transfer in duty)
+    landed_duty = tariffs.landed_duty_transfers(
+        setup.import_duty_share, {key: paid for key, paid in ledger.imports_paid.items() if key[0] in ledger.import_accounts},
+        lambda account: record.book.balance(account, setup.currency_id), setup.state_agent, setup.currency_id)
+    if landed_duty:     # cargo landed on an import account and sold to the economy's buyers
+        record.book.transfer_many(landed_duty)
+        received += math.fsum(transfer.amount for transfer in landed_duty)
     carried_duty = tariffs.carried_duty_transfers(ledger.carried_in, setup.carried_tariff,
                                                   lambda carrier: record.book.balance(carrier, setup.currency_id),
                                                   setup.state_agent, setup.currency_id)

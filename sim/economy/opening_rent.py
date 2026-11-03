@@ -99,13 +99,15 @@ def shares_of_revenue(setup, record) -> Dict[str, float]:
     return rent_share_of_revenue(rows)
 
 
-def settle(setup, record, view, plot_hectares_by_tile: Mapping[str, float]) -> Dict[AgentId, float]:
+def settle(setup, record, view, plot_hectares_by_tile: Mapping[str, float],
+           own_value_by_tile: Mapping[str, float]) -> Dict[AgentId, float]:
     """The first year's rent on the producers placed: the record's posted rent and each producer's rent a run are set
     as the year's close would set them, a producer's plant is sized to the share that works once the rent is a cost,
-    and the rent each cohort receives is returned."""
+    and the rent each cohort receives is returned. `own_value_by_tile` is what a hectare returns the households working it
+    themselves (`land_lease_year.own_plot_returns`), the return a rent bid must beat for them to let the land."""
     result, demands = land_market.post_rents(setup, record, view, {agent_id: producer.expected_sales
                                                                     for agent_id, producer in record.producers.items()},
-                                             plot_hectares_by_tile)
+                                             plot_hectares_by_tile, own_value_by_tile)
     for producer_id, producer in list(record.producers.items()):
         if producer.land_rent_per_run <= 0.0:
             continue

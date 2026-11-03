@@ -9,7 +9,8 @@ import unittest
 
 from sim.economy.credit_record import CreditRecord
 from sim.economy.land_record import LandRecord
-from sim.economy import titles, titles_concentration, titles_inheritance
+from sim.economy import titles, titles_inheritance
+from sim.tests import titles_concentration
 
 TILE = "village"
 TILES = {TILE: types.SimpleNamespace(cropland_hectares=100.0)}

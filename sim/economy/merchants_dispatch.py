@@ -5,6 +5,7 @@ from sim.unit_conversions import KILOGRAMS_PER_TONNE
 from . import carried_book, carriage_fleet_book, carriage_hours, carriage_wear, merchants, merchants_transit, route_dues
 from .market_memory import market_key
 from .inventory import held_stock
+from .national_prices import usual_volumes
 from .year_ledger import YearLedger
 
 
@@ -27,7 +28,7 @@ def dispatch_merchants(setup, record, carriage, ledger: YearLedger, area_map) ->
     carried: dict = {}
     carried_goods: dict = {}
     carrier_goods = carriage_wear.carrier_goods(setup)
-    prices = carriage_wear.last_prices(setup, record.memory) if carrier_goods else {}
+    prices = carriage_wear.last_prices(setup, record.memory, usual_volumes(record)) if carrier_goods else {}
     dues = route_dues.owed_per_tonne(setup, carriage, record.memory.opening_wage_level(money))
     wear = carriage_wear.Wear(setup, carriage, record.carriage.area_imbalance) if carriage_wear.wears(setup) else None
     for merchant in sorted(record.merchants.values(), key=lambda each: each.agent_id):
@@ -44,7 +45,7 @@ def dispatch_merchants(setup, record, carriage, ledger: YearLedger, area_map) ->
     populated = {cohort.tile for cohort in record.cohorts.values()}
     for merchant in sorted(record.merchants.values(), key=lambda each: each.agent_id):
         fills = ledger.buy_fills.get(merchant.agent_id, [])
-        if not fills:
+        if not fills and not merchants.ships_held_stock(merchant, held_stock(record.book, merchant.agent_id)):
             if crew is not None:
                 merchant.carriage_hours_wanted = {}     # nothing shipped: no carriers to bid for next year
                 merchant.carriage_money_wanted = {}
@@ -108,6 +109,6 @@ def _price_on(record, area_map, good, tile):
     """The price the good's market area holding the tile last cleared at; None when it has no market there or
     none has cleared."""
     try:
-        return record.memory.prices.get(market_key(good, area_map.area_of(good, tile)))
+        return record.memory.cleared_prices.get(market_key(good, area_map.area_of(good, tile)))
     except KeyError:
         return None

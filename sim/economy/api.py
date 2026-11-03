@@ -142,8 +142,8 @@ def land_rent_per_hectare(economy, country=None):
 
 
 def land_rent_at_tile(economy, tile, country=None):
-    """Rent per hectare-year the land market let land at on one tile last year; the mean over the tiles of `country`
-    (the home country's when none is named) where land was let where none was let on this tile; None where none was let
+    """Rent per hectare-year the land market let land at on one tile last year; where none was let on this tile, the
+    mean over the tiles of `country` (the home country's when none is named) where land was let; None where none was let
     anywhere."""
     rent = economy.record.land.land_rent.get(tile, 0.0)
     return rent if rent > 0.0 else land_rent_per_hectare(economy, country)

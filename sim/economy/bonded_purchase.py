@@ -12,7 +12,7 @@ from .types import EDGE_EXCHANGE, Transfer
 
 def settle(book, currency: str, lots: Sequence,
            ) -> Tuple[Dict[Tuple[str, str], float], float, List[dict], Dict[Tuple[str, str], Dict[str, float]]]:
-    """Charge the employers named in the lots for the bonded bought. Returns ({(tile, trade): people}, money paid, the lots as paid
+    """Charge the employers named in the lots for the bonded bought. Returns ({(tile, trade): people paid for}, money paid, the lots as paid
     [{origin, destination, trade, people, ask, carriage}: money per lot, scaled to what was paid], and the people
     each employer holds {(tile, trade): {employer: people}}: an employer holds the people its payment bought, not the share it was
     named for)."""
@@ -27,7 +27,6 @@ def settle(book, currency: str, lots: Sequence,
     for (area, trade), group in sorted(grouped.items()):
         people = sum(lot.people for lot in group)
         key = (area_tile(area), trade)
-        bought[key] = bought.get(key, 0.0) + people
         price = sum(lot.people * lot.price for lot in group)
         transfers = []
         owned = held.setdefault(key, {})
@@ -40,6 +39,7 @@ def settle(book, currency: str, lots: Sequence,
         paid = sum(transfer.amount for transfer in transfers)
         paid_total += paid
         scale = paid / price if price > 0.0 else 0.0
+        bought[key] = bought.get(key, 0.0) + people * scale     # the people the payment bought, not all the lot named
         for lot in group:
             paid_lots.append({"origin": area_tile(lot.origin), "destination": key[0], "trade": trade,
                               "people": lot.people, "ask": lot.ask * lot.people * scale,
@@ -50,6 +50,8 @@ def settle(book, currency: str, lots: Sequence,
 def _payers(group) -> List[Tuple[str, float]]:
     """Each employer's share of the group's price, weighted by what each lot costs."""
     price = sum(lot.people * lot.price for lot in group)
+    if price <= 0.0:
+        return []     # a free lot names nobody to pay
     shares: Dict[str, float] = {}
     for lot in group:
         for employer, share in lot.payers:

@@ -4,7 +4,7 @@ QUICK_TOPIC = True
 
 import unittest
 
-from sim.economy.baseline_checks import feasibility, food_eaten_over_need
+from sim.tests.baseline_checks import feasibility, food_eaten_over_need
 from sim.economy.year_accounts import GoodAccount, TileAccount, YearAccounts
 
 

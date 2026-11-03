@@ -10,8 +10,8 @@ gives a land top-decile share, so the top decile is printed, never checked.
 """
 from typing import Dict, List, Mapping, NamedTuple, Optional, Sequence, Tuple
 
-from . import titles, titles_ground
-from .types import AgentId, TileId
+from sim.economy import titles, titles_ground
+from sim.economy.types import AgentId, TileId
 
 LANDHOLDERS_ONLY = "landholders_only"       # holders with no land are left out of the Gini
 LANDLESS_COUNTED = "landless_counted"       # every household is in it, with zero hectares if it holds none

@@ -2,7 +2,7 @@
 QUICK_TOPIC = True
 import unittest
 
-from sim.economy import titles_concentration
+from sim.tests import titles_concentration
 
 
 class NoLandBandTests(unittest.TestCase):

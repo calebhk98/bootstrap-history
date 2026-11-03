@@ -43,6 +43,10 @@ def unit_price(rate):
 
 class CapitalRecoveryFactor(unittest.TestCase):
 
+    def test_a_tiny_rate_is_the_nil_rate_factor_not_a_rounding_artefact(self):
+        for rate in (1e-300, 1e-18, 1e-12):
+            self.assertAlmostEqual(capital_market.capital_recovery_factor(rate, 20.0), 1.0 / 20.0, places=9)
+
     def test_a_nil_rate_is_depreciation_alone(self):
         self.assertAlmostEqual(capital_market.capital_recovery_factor(0.0, 20.0), 1.0 / 20.0)
 

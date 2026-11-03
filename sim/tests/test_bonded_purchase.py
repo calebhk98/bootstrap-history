@@ -119,3 +119,11 @@ book.transfer(Transfer(EDGE_MINT, "forge", "coin", 100.0, "opening"))
 lots = [BondedLot("work@t1", "smith", "work@t2", 4.0, 10.0, 2.0, payers=(("forge", 0.5), ("mill", 0.5)))]
 _, _paid, _lots, held = bonded_purchase.settle(book, "coin", lots)
 check("an employer with no cash holds none of the people it was named for", abs(held[("t1", "smith")]["forge"] - 2.0) < 1e-9 and "mill" not in held[("t1", "smith")], held)
+book = Book()
+book.transfer(Transfer(EDGE_MINT, "forge", "coin", 12.0, "opening"))
+lots = [BondedLot("work@t1", "smith", "work@t2", 4.0, 10.0, 2.0, payers=(("forge", 1.0),))]
+bought_here, _paid, _lots, _held = bonded_purchase.settle(book, "coin", lots)
+check("the people reported bought are those the payment bought, not all ordered", abs(bought_here[("t1", "smith")] - 1.0) < 1e-9, bought_here)
+lots = [BondedLot("work@t1", "smith", "work@t2", 4.0, 0.0, 0.0, payers=(("forge", 1.0),))]
+bought_here, _paid, _lots, _held = bonded_purchase.settle(Book(), "coin", lots)
+check("a lot priced at nothing is settled without a division by zero", bought_here == {("t1", "smith"): 0.0}, bought_here)

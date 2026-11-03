@@ -5,7 +5,7 @@ from typing import Dict, List, Sequence
 
 from sim.constants import declare
 
-from .year_accounts import YearAccounts
+from sim.economy.year_accounts import YearAccounts
 
 FEASIBILITY_TOLERANCE = declare(
     "FEASIBILITY_TOLERANCE", 1e-6, kind="physical_constant", unit="share of the good's largest flow",

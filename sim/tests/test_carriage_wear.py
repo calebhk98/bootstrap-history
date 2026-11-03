@@ -140,7 +140,7 @@ class CarriersInTheBook(unittest.TestCase):
         merchant.carrier_wear = {}
         merchant.carrier_fleet_wanted = {CART: 5.5 / 10.0}
         record = types.SimpleNamespace(book=self.book_holding(kept=5.0), merchants={"m1": merchant})
-        view = types.SimpleNamespace(price=lambda good, area: 400.0)
+        view = types.SimpleNamespace(offered_price=lambda good, area: 400.0)
         area_map = types.SimpleNamespace(goods=lambda: [CART], area_of=lambda good, tile: "area:" + tile)
         bids, budget = carriage_fleet_book.bids(setup, record, view, area_map)
         self.assertEqual([(bid.buyer, bid.good, bid.tile) for bid in bids], [("m1", CART, merchant.home_tile)])

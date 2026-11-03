@@ -71,6 +71,18 @@ def buyer(floor=0.0, flexible=1e6, budget=1e9):
 
 
 class MarketTests(unittest.TestCase):
+    def test_a_market_with_no_maker_loses_its_streak(self):
+        setup, record, view, area_map = market(makers=False)
+        record.goods.margin_years[KEY] = 5
+        plans(setup, record, view, area_map, buyer())
+        self.assertNotIn(KEY, record.goods.margin_years)
+
+    def test_a_market_absent_from_the_bids_loses_its_streak(self):
+        setup, record, view, area_map = market()
+        record.goods.margin_years[KEY] = 5
+        plans(setup, record, view, area_map, {})
+        self.assertNotIn(KEY, record.goods.margin_years)
+
     def test_a_high_expected_price_draws_newcomers_only_once_it_has_lasted(self):
         setup, record, view, area_map = market()
         counts = [len(plans(setup, record, view, area_map, buyer())) for _year in range(LOSS_YEARS_BEFORE_EXIT)]
