@@ -24,7 +24,7 @@ class SeatExchange:
         """The acting seat as a party to an exchange, with what each concern it runs earns a year (what a taker values)."""
         needs = self.needs
         world = self.actor_world()   # type: ignore[attr-defined]
-        margins = {node_id: world.concern_margin(node_id) for node_id in sorted(needs.operating() - needs.techniques_granted())}
+        margins = {node_id: world.concerns.concern_margin(node_id) for node_id in sorted(needs.operating() - needs.techniques_granted())}
         return self.seat_party(needs.acting_seat(), margins)   # type: ignore[attr-defined]
 
     def _refuse_unsupported(self, side: Dict[str, Any]) -> None:
@@ -91,7 +91,7 @@ class SeatExchange:
         """(the acting seat as seller, the candidate buyers, the finder of an actor by id, the world) for selling a concern."""
         needs = self.needs
         world = self.actor_world()   # type: ignore[attr-defined]
-        party = self.seat_party(needs.acting_seat(), {node_id: world.concern_margin(node_id)})   # type: ignore[attr-defined]
+        party = self.seat_party(needs.acting_seat(), {node_id: world.concerns.concern_margin(node_id)})   # type: ignore[attr-defined]
         cast = self.cast()   # type: ignore[attr-defined]
 
         def find_actor(actor_id: Any) -> Any:

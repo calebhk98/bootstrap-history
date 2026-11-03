@@ -18,7 +18,7 @@ def crowded_registry():
     """A registry of many firms aiming at three shared concerns, in a world where many inventions are on show."""
     world = FakeWorld(year=50)
     for name in SHARED + ["invention_%d" % number for number in range(INVENTION_COUNT)]:
-        world.nodes[name] = make_node(name, hours=100.0, revenue=10.0, upkeep=1.0)
+        world.setting.nodes[name] = make_node(name, hours=100.0, revenue=10.0, upkeep=1.0)
         world.demonstrated_nodes.add(name)
     registry = ActorRegistry(ActorsState(home_country="home"))
     registry.world = world
@@ -48,7 +48,7 @@ finally:
     Firm.imitation_worth = real_worth
 check("a firm's candidates are its own target alone, not every invention in the world",
       all(firm.imitation_candidates(world) in ([firm.record.target], []) for firm in registry.of_kind("firm"))
-      and len(world.demonstrated()) > 50, len(world.demonstrated()))
+      and len(world.knowledge.demonstrated()) > 50, len(world.knowledge.demonstrated()))
 check("a firm prices at most its own target, not every invention in the world",
       worth_calls[0] <= FIRM_COUNT, (worth_calls[0], FIRM_COUNT * INVENTION_COUNT))
 

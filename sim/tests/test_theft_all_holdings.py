@@ -4,6 +4,7 @@ never destroyed. The coin module sends the ledger's commands for both (`DrawDown
 
 QUICK_TOPIC = True
 
+from sim.tests.agents_fake_world import flat_namespace
 import types
 import unittest
 
@@ -130,7 +131,7 @@ class WhatAnActorKeeps(unittest.TestCase):
                   for name in ("a", "b", "c")}
         registry = types.SimpleNamespace(actors=actors, state=types.SimpleNamespace(home_country="home"), get=lambda _id: None)
         module = module_harness.build(Coin, views={
-            "cast": registry, "actor_world": types.SimpleNamespace(material_price=lambda m: 1.0),
+            "cast": registry, "actor_world": flat_namespace(material_price=lambda m: 1.0),
             "lent_share": lambda: reads.append(1) or 0.25, "visible_scale": lambda *call: 0.5, "order_reach": 0.0})
         module.charge_actors_theft(ChargeActorsTheft())
         self.assertEqual(len(reads), 1)

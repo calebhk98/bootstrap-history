@@ -7,6 +7,7 @@ its own.
 A view given as a plain value is that value; as a function it is called with the view's arguments; a keyed view is a dict or a
 function of the key. Defaults are the quiet answers: no work built, an empty purse, a state that reaches everyone, nothing
 organised against the household. The commands the module sent are in `module_harness.sent(module)`. Dice are `random.Random`."""
+from sim.tests.agents_fake_world import flat_namespace
 import random
 from contextlib import contextmanager
 from types import SimpleNamespace
@@ -33,7 +34,7 @@ def _government(unfunded: Optional[Dict[str, float]] = None):
 
 
 def defaults(seed: int) -> Dict[str, Any]:
-	world = SimpleNamespace(government=lambda: _government(), collectible_share=lambda: 1.0, order_share=lambda: 1.0,
+	world = flat_namespace(government=lambda: _government(), collectible_share=lambda: 1.0, order_share=lambda: 1.0,
 	                        inspection_share=lambda: 1.0, forest_share=lambda: 1.0)
 	return {
 		"year": 100, "civilisation": {"id": "rome", "starting_tax_share": 0.1}, "events_enabled": True,

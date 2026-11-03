@@ -41,9 +41,9 @@ class Government(CorveeMixin, CreditRecordMixin, FiscalMixin, CoinageMixin, Ente
 		return self.record.country is None
 
 	def imitation_worth(self, node_id: str, world: Any) -> float:
-		gains = invention_gains(world.nodes[node_id])
-		gain = weighted_gain(gains, world.state_weights())
-		return max(0.0, gain) * world.state_revenue() * GOVERNMENT_WORTH_SHARE_PER_GAIN
+		gains = invention_gains(world.setting.nodes[node_id])
+		gain = weighted_gain(gains, world.setting.state_weights())
+		return max(0.0, gain) * world.revenue.state_revenue() * GOVERNMENT_WORTH_SHARE_PER_GAIN
 
 	def research_worth(self, node_id: str, world: Any) -> float:
 		"""A state researches what its priorities weight (military, administration, ...), as it values copying it."""
@@ -51,15 +51,15 @@ class Government(CorveeMixin, CreditRecordMixin, FiscalMixin, CoinageMixin, Ente
 
 	# ---- what it borrows against -------------------------------------------
 	def credit_earning(self, world: Any) -> float:
-		return world.state_revenue() + max(0.0, self.record.enterprise_margin)
+		return world.revenue.state_revenue() + max(0.0, self.record.enterprise_margin)
 
 	def credit_ceiling(self, world: Any) -> float:
 		"""A state borrows only once it holds a technology declaring the `state_credit` mechanic."""
-		return super().credit_ceiling(world) if world.state_may_borrow(self) else 0.0
+		return super().credit_ceiling(world) if world.credit.state_may_borrow(self) else 0.0
 
 	def credit_standing(self, world: Any) -> float:
 		"""Lenders trust a state as far as it can assess and collect."""
-		return world.state_reach()
+		return world.taxpayers.state_reach()
 
 	# ---- what it takes -------------------------------------------------------
 	def levy_rates(self) -> Tuple[float, float]:
@@ -72,7 +72,7 @@ class Government(CorveeMixin, CreditRecordMixin, FiscalMixin, CoinageMixin, Ente
 		One rule for every taxpayer: the state sees a visible scale (staff, wealth,
 		prominence), and the shortfall it must raise sets the rate.
 		"""
-		requisition, office = world.levy_shares(world.visible_scale_of(payer), payer.standing())
+		requisition, office = world.taxpayers.levy_shares(world.taxpayers.visible_scale_of(payer), payer.standing())
 		parts = {"requisition": requisition * max(0.0, taxable), "office": office * max(0.0, taxable)}
 		return sum(parts.values()), parts
 
@@ -82,14 +82,14 @@ class Government(CorveeMixin, CreditRecordMixin, FiscalMixin, CoinageMixin, Ente
 		if parts["requisition"] > 0.0 and payer.demand_stance() != demand_answer.COMPLY:
 			# a refused requisition is paid, with a penalty, only if the state can enforce it; a negotiated
 			# one is paid in part, and in service, if the state takes the offer
-			draw = world.rng_for("demand", getattr(payer, "actor_id", ""), world.year).random()
-			answer = demand_answer.settle_demand(payer.demand_stance(), parts["requisition"], world.state_reach(),
+			draw = world.setting.rng_for("demand", getattr(payer, "actor_id", ""), world.setting.year).random()
+			answer = demand_answer.settle_demand(payer.demand_stance(), parts["requisition"], world.taxpayers.state_reach(),
 												 payer.standing(), draw, payer.service_worth())
 			parts["requisition"] = answer["paid"] - answer["penalty"]
 			if answer["penalty"] > 0.0:
 				parts["penalty"] = answer["penalty"]
 			if answer["service"] > 0.0:
-				ledger.transfer(payer, world.edge(EDGE_STATE_SPENDING), answer["service"], "service to the state")
+				ledger.transfer(payer, world.setting.edge(EDGE_STATE_SPENDING), answer["service"], "service to the state")
 			if answer["refused"]:
 				payer.set_defiance(demand_answer.defiance_after_refusal(payer.defiance()))
 			levy = sum(parts.values())
@@ -100,7 +100,7 @@ class Government(CorveeMixin, CreditRecordMixin, FiscalMixin, CoinageMixin, Ente
 	def military_ask(self, taxable: float, scale: float, world: Any) -> float:
 		"""What the state asks of a militarily useful taxpayer in arms: its unfunded army need,
 		in proportion to the taxpayer's part of the visible income, never past the ceiling."""
-		return budget.military_ask_of(self.record.unfunded.get("army", 0.0), self.record.levy_base, world.notice_over(scale), taxable)
+		return budget.military_ask_of(self.record.unfunded.get("army", 0.0), self.record.levy_base, world.taxpayers.notice_over(scale), taxable)
 
 	def arrears_owed(self) -> float:
 		"""Pay the state owes its army and officials from earlier years."""
@@ -125,7 +125,7 @@ class Government(CorveeMixin, CreditRecordMixin, FiscalMixin, CoinageMixin, Ente
 		soldiers, wanted = headcount.checked_army(world, self.record, wanted, soldiers, others)
 		conscripts = min(conscripts, soldiers)
 		self.serve_conscripts(conscripts, world)
-		standing = budget.standing_lines(world, soldiers, conscripts) + budget.concession_lines(world.group_claims())
+		standing = budget.standing_lines(world, soldiers, conscripts) + budget.concession_lines(world.groups.group_claims())
 		standing = self.staff_works_by_corvee(standing, world)
 		self.record.material_need = state_enterprises.needs_of(standing)
 		lines = self.draw_stores(standing, world)
@@ -150,23 +150,23 @@ class Government(CorveeMixin, CreditRecordMixin, FiscalMixin, CoinageMixin, Ente
 			bought = line.material_cost if line.materials else 0.0   # its materials are bought with bids in the agent economy's book
 			if share > 0.0:
 				if not line.labour:   # a labour line's pay is offered in the labour market (sim/markets/port_staff.py)
-					ledger.transfer(self, world.edge(EDGE_STATE_SPENDING), (line.money - bought) * share, line.name)
+					ledger.transfer(self, world.setting.edge(EDGE_STATE_SPENDING), (line.money - bought) * share, line.name)
 			weight = sum(line.materials.values())
 			for commodity, tonnes in line.materials.items():
-				world.market_purchase(self.actor_id, commodity, tonnes * share, bought * share * tonnes / weight)
+				world.market.market_purchase(self.actor_id, commodity, tonnes * share, bought * share * tonnes / weight)
 
 	def pay_patron(self, share: float, world: Any) -> None:
 		"""Fund the founder as patron from what is left of the purse after the standing need.
 		A state that left any of its need unpaid funds nobody, and nor does one whose country the economy keeps no pay or output
 		for (it cannot say what to give)."""
 		try:
-			ask = world.patron_ask() if share >= 1.0 else 0.0
+			ask = world.patronage.patron_ask() if share >= 1.0 else 0.0
 		except NoCountryEconomy:
 			ask = 0.0
 		grant = min(ask, max(0.0, self.money))
 		self.record.patron_grant = grant
 		if grant > 0.0:
-			ledger.transfer(self, world.edge(EDGE_PATRONAGE), grant, "patronage")
+			ledger.transfer(self, world.setting.edge(EDGE_PATRONAGE), grant, "patronage")
 
 	def employ_standing(self, lines: List[budget.Line], share: float, world: Any) -> None:
 		"""Post the places of the lines it paid for; the labour core hires for them (soldiers among them) and pays them."""
@@ -176,8 +176,8 @@ class Government(CorveeMixin, CreditRecordMixin, FiscalMixin, CoinageMixin, Ente
 
 	def seek_shortfall(self, lines: List[budget.Line], world: Any) -> None:
 		"""Set the rate it takes from the income it can see so that the unfunded need is raised."""
-		payers = world.visible_taxpayers()
-		self.record.levy_base = sum(world.notice_over(scale) * income for scale, income in payers)
+		payers = world.taxpayers.visible_taxpayers()
+		self.record.levy_base = sum(world.taxpayers.notice_over(scale) * income for scale, income in payers)
 		kinds = {line.name: line.kind for line in lines}
 		self.record.levy_requisition_rate, self.record.levy_office_rate = budget.levy_rates(
 			self.levy_sought(), kinds, self.record.levy_base)
@@ -188,10 +188,10 @@ class Government(CorveeMixin, CreditRecordMixin, FiscalMixin, CoinageMixin, Ente
 		may dispute the accession by arms (settled at the seat in the revolt phase)."""
 		record = self.record
 		record.ruler_age = ruler.opening_age() if record.ruler_age is None else record.ruler_age + 1.0
-		rng = world.rng_for("accession", self.actor_id, world.year)
+		rng = world.setting.rng_for("accession", self.actor_id, world.setting.year)
 		if not ruler.dies(record.ruler_age, 1.0, rng.random()):
 			return
-		backing = world.faction_backing()
+		backing = world.groups.faction_backing()
 		leader, challenger = ruler.contenders(backing)
 		record.ruler_age = ruler.heir_age(record.ruler_age)
 		record.ruler_backer = leader or ""

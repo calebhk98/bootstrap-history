@@ -6,10 +6,15 @@ from sim.economy.api import opening_market_rate
 from sim.finance.api import DefaultOnDebt
 from sim.world import demand
 
-class CapitalView:
-	"""Read-only questions about the market and about saving; mixed into `ActorWorld`."""
+class Credit:
+	"""Read-only questions about the market and about saving. `world` is the root that hands out the parts."""
 
-	needs: Any
+	def __init__(self, world: Any) -> None:
+		self.world = world
+
+	@property
+	def needs(self) -> Any:
+		return self.world.needs
 
 	def debt_service_share_of_surplus(self) -> float:
 		return self.needs.debt_service_share_of_surplus()
@@ -27,7 +32,7 @@ class CapitalView:
 	def state_may_borrow(self, state: Any) -> bool:
 		"""Whether a state holds a technology that declares the `state_credit` mechanic, in its own
 		knowledge or in what its society already knows."""
-		return any(state.knows(node_id, self) for node_id in self.nodes_with_mechanic("state_credit"))
+		return any(state.knows(node_id, self.world) for node_id in self.nodes_with_mechanic("state_credit"))
 
 	def nodes_with_mechanic(self, mechanic: str) -> Any:
 		"""The tree nodes that declare a mechanic."""
@@ -57,10 +62,11 @@ class CapitalView:
 		income spread over the people as the civilisation's inequality says. A labourer's yearly pay keeps
 		him and his dependents at the wage floor, so it is what each person needs, spread over everyone."""
 		population = self.needs.population_total()
-		income = self.society_output()  # type: ignore[attr-defined]
+		income = self.world.revenue.society_output()
 		if population <= 0.0 or income <= 0.0:
 			return 0.0
-		need_per_person = self.pay_per_person_year(self.trade_of_role("unskilled")) * self.needs.working_age() / population  # type: ignore[attr-defined]
+		labour = self.world.labour
+		need_per_person = labour.pay_per_person_year(labour.trade_of_role("unskilled")) * self.needs.working_age() / population
 		bins = demand.income_bins(population, income / population)
 		surplus = sum(income_bin.population * max(0.0, income_bin.income_per_capita_per_year - need_per_person)
 					  for income_bin in bins)

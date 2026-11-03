@@ -1,6 +1,7 @@
 """Complaint 617: the navy buys durable ships made by shipwrights."""
 QUICK_TOPIC = True
 
+from sim.tests.agents_fake_world import flat_namespace
 import unittest
 from types import SimpleNamespace
 
@@ -40,7 +41,7 @@ class ShipPurchases(unittest.TestCase):
         self.assertEqual(port.materials_in("iron"), ["iron_bar_kg"])
 
     def test_navy_buys_missing_hulls_and_keeps_only_the_crew_on_payroll(self):
-        world = SimpleNamespace(
+        world = flat_namespace(
             government=lambda: SimpleNamespace(record=SimpleNamespace(levers={})),
             territory=lambda: SimpleNamespace(coast_km=100.0),
             fleet_goods=lambda: [{"material": "test_hull", "life": 20.0,

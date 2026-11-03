@@ -4,6 +4,7 @@ seat's work (stand-ins and a household facade, no game)."""
 
 QUICK_TOPIC = True
 
+from sim.tests.agents_fake_world import flat_world
 from sim.ledger.api import OpenPurse
 from types import SimpleNamespace
 
@@ -126,21 +127,21 @@ class World(ActorWorld):
 
 
 world = World(StubModule())
-check("the actors see the inventions of every seat", world.founder_inventions() == ["kiln", "lathe", "loom"], world.founder_inventions())
-check("a concern some seat runs is in public use", world.is_public("loom") and not world.is_public("kiln"), None)
+check("the actors see the inventions of every seat", world.knowledge.founder_inventions() == ["kiln", "lathe", "loom"], world.knowledge.founder_inventions())
+check("a concern some seat runs is in public use", world.knowledge.is_public("loom") and not world.knowledge.is_public("kiln"), None)
 disclosed[FIRST_SEAT_ID]["lathe"] = {"mode": "secret", "published_year": None, "licensees": {}}
 check("an observer at the maker's door sees a secret less than a published work",
-      world.exposure("lathe", Places.first) < world.exposure("loom", Places.first), None)
+      world.knowledge.exposure("lathe", Places.first) < world.knowledge.exposure("loom", Places.first), None)
 check("an observer a range away from the maker sees half what one at the door does",
-      abs(world.exposure("loom", Places.second) - world.exposure("loom", Places.first) / 2.0) < 1e-9, None)
+      abs(world.knowledge.exposure("loom", Places.second) - world.knowledge.exposure("loom", Places.first) / 2.0) < 1e-9, None)
 held_fixture.hold(second_knowledge, {"lathe"})
 disclosed["second"]["lathe"] = {"mode": "publish", "published_year": 130, "licensees": {}}
 check("a second maker publishing the same invention makes it public knowledge",
-      world.disclosure_mode("lathe") == "publish", world.disclosure_mode("lathe"))
+      world.disclosure.disclosure_mode("lathe") == "publish", world.disclosure.disclosure_mode("lathe"))
 held_fixture.drop(second_knowledge, {"lathe"})
 del disclosed["second"]["lathe"]
 check("the best view of an invention is from the nearest maker's place",
-      world.exposure("kiln", Places.second) >= world.exposure("kiln", Places.first), None)
+      world.knowledge.exposure("kiln", Places.second) >= world.knowledge.exposure("kiln", Places.first), None)
 
 
 # ---- a licence between seats moves a fee and the know-how, and the know-how is not the licensee's own work
@@ -155,6 +156,7 @@ maker = host.party(FIRST_SEAT_ID, dealings=SeatsSeat(), business=Business())
 buyer = host.party("second", dealings=SeatsSeat(), business=Business())
 
 
+@flat_world
 class LicenceWorld:
     nodes = {"lathe": {"pre": []}}
 
@@ -211,7 +213,7 @@ disclosed[FIRST_SEAT_ID]["lathe"] = {"mode": "license", "published_year": None,
 firm = Firm()
 royalty_world = World(RoyaltySim())
 before = maker.money
-paid = royalty_world.collect_royalty(firm, "lathe", 200.0)
+paid = royalty_world.disclosure.collect_royalty(firm, "lathe", 200.0)
 check("the royalty goes to the seat that licensed the invention and to nobody else",
       abs(paid - 20.0) < 1e-9 and abs(maker.money - before - 20.0) < 1e-9 and abs(firm.money - 80.0) < 1e-9, (paid, maker.money, firm.money))
-check("a firm nobody licensed owes nobody", royalty_world.collect_royalty(Firm(), "loom", 200.0) == 0.0, None)
+check("a firm nobody licensed owes nobody", royalty_world.disclosure.collect_royalty(Firm(), "loom", 200.0) == 0.0, None)

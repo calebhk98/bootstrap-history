@@ -19,11 +19,11 @@ def debasement_decision(government: Any, world: Any, shortfall: Any = None) -> f
 	coin recovers metal on the part of the stock struck again, so the cut that covers the shortfall
 	is the shortfall over that part's worth, never past the ceiling.
 	"""
-	if world.coin_regime() != STRUCK_COIN:
+	if world.revenue.coin_regime() != STRUCK_COIN:
 		return 0.0
 	if shortfall is None:   # unless the state's fiscal response sized it, the whole unfunded need
 		shortfall = sum(government.record.unfunded.values())
-	struck_again = world.coin_stock_value() * COIN_RESTRIKE_SHARE_PER_YEAR
+	struck_again = world.revenue.coin_stock_value() * COIN_RESTRIKE_SHARE_PER_YEAR
 	if shortfall <= 0.0 or struck_again <= 0.0:
 		return 0.0
 	return min(DEBASEMENT_SHARE_CEILING, shortfall / struck_again)

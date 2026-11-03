@@ -22,7 +22,7 @@ def expected_concern_margin(actor: Any, node_id: str, world: Any) -> float:
 	yearly = business_books.yearly_costs(world, node_id)
 	if yearly is None:   # the actor's country keeps no record of the costs: the concern is worth nothing to it
 		return 0.0
-	return world.entry_gross(node_id, rivals, 1.0) - sum(yearly)
+	return world.concerns.entry_gross(node_id, rivals, 1.0) - sum(yearly)
 
 
 def concern_worth(actor: Any, node_id: str, world: Any) -> float:
@@ -33,7 +33,7 @@ def concern_worth(actor: Any, node_id: str, world: Any) -> float:
 def options(actor: Any, world: Any, room: int = RESEARCH_PROGRAMMES_AT_ONCE, budget: float = float("inf")) -> List[Option]:
 	"""The nodes worth researching, best first, priced by the shared plan until `room` of them pay within `budget`."""
 	candidates = []
-	for node_id in sorted(world.nodes):
+	for node_id in sorted(world.setting.nodes):
 		if actor.knows(node_id, world) or node_id in actor.works or research.missing_prerequisites(actor, node_id, world):
 			continue
 		worth = actor.research_worth(node_id, world)
@@ -58,7 +58,7 @@ def options(actor: Any, world: Any, room: int = RESEARCH_PROGRAMMES_AT_ONCE, bud
 
 def reviews_this_year(actor: Any, world: Any) -> bool:
 	"""Whether the actor looks for research this year: every RESEARCH_REVIEW_YEARS, each actor in its own year."""
-	return (world.year + zlib.crc32(actor.identity().encode())) % RESEARCH_REVIEW_YEARS == 0
+	return (world.setting.year + zlib.crc32(actor.identity().encode())) % RESEARCH_REVIEW_YEARS == 0
 
 
 def decide(actor: Any, world: Any) -> List[str]:

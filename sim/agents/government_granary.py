@@ -15,21 +15,21 @@ class GranaryMixin:
 
 	def granary_target(self, world: Any) -> float:
 		"""Tonnes of grain the state wants in store."""
-		return (GRANARY_RESERVE_YEARS_OF_URBAN_FOOD * world.urban_population()
-				* world.subsistence_kg_per_person_year() / 1000.0)
+		return (GRANARY_RESERVE_YEARS_OF_URBAN_FOOD * world.people.urban_population()
+				* world.people.subsistence_kg_per_person_year() / 1000.0)
 
 	def keep_granary(self, world: Any) -> float:
 		"""Spoil, then sell what is above the target or what a dear market calls for; the tonnes sold."""
 		record = self.record  # type: ignore[attr-defined]
-		staple = world.staple_material()
+		staple = world.quotes.staple_material()
 		stored = record.stores.get(staple, 0.0) * (1.0 - GRANARY_LOSS_SHARE_PER_YEAR)
-		price = world.material_price(staple)
+		price = world.quotes.material_price(staple)
 		normal = record.grain_price_reference if record.grain_price_reference > 0.0 else price
 		sell = max(0.0, stored - self.granary_target(world))
 		if price > normal * (1.0 + GRANARY_RELEASE_PRICE_PREMIUM):
 			sell = max(sell, GRANARY_RELEASE_SHARE * stored)
 		if sell > 0.0:
-			world.market_sale(self.actor_id, staple, sell)  # type: ignore[attr-defined]
+			world.market.market_sale(self.actor_id, staple, sell)  # type: ignore[attr-defined]
 		record.stores[staple] = stored - sell
 		record.grain_price_reference = normal + GRANARY_PRICE_MEMORY * (price - normal)
 		return sell
@@ -39,14 +39,14 @@ class GranaryMixin:
 		TEMPORARY HEURISTIC (CLAUDE.md 4.4): the bid is taken as filled, as the market does not report what a
 		state's bid bought."""
 		record = self.record  # type: ignore[attr-defined]
-		staple = world.staple_material()
+		staple = world.quotes.staple_material()
 		shortfall = self.granary_target(world) - record.stores.get(staple, 0.0)
-		if excess <= 0.0 or shortfall <= 0.0 or world.material_price(staple) >= record.grain_price_reference:
+		if excess <= 0.0 or shortfall <= 0.0 or world.quotes.material_price(staple) >= record.grain_price_reference:
 			return 0.0
-		cost = world.material_cost(staple, shortfall)
+		cost = world.quotes.material_cost(staple, shortfall)
 		if cost is None or cost <= 0.0:
 			return 0.0
 		bought = min(1.0, excess / cost)
-		world.market_purchase(self.actor_id, world.commodity_of(staple), shortfall * bought, cost * bought)  # type: ignore[attr-defined]
+		world.market.market_purchase(self.actor_id, world.quotes.commodity_of(staple), shortfall * bought, cost * bought)  # type: ignore[attr-defined]
 		record.stores[staple] = record.stores.get(staple, 0.0) + shortfall * bought
 		return cost * bought

@@ -3,6 +3,7 @@ whose takings repay its cost over its horizon; a state takes nodes in the intere
 
 QUICK_TOPIC = True
 
+from sim.tests.agents_fake_world import flat_world
 from .harness import check
 
 from sim.agents import research_choice
@@ -12,6 +13,7 @@ from .agents_fake_world import make_node
 from .test_research_every_actor import ResearchWorld, actors
 
 
+@flat_world
 class ChoiceWorld(ResearchWorld):
 	def __init__(self, actor=None):
 		super().__init__()

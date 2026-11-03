@@ -37,7 +37,7 @@ def office_income(government: Any, world: Any) -> Dict[str, float]:
 	"""What the state's office-holders took last year: the salaries it paid and the fees they keep from the
 	revenue that passes through their hands (TEMPORARY HEURISTIC, CLAUDE.md 4.4: a share of the state's
 	revenue until fees are a form of revenue of their own)."""
-	return {SALARIES: salaries_paid(government.record), FEES: OFFICE_FEE_SHARE_OF_REVENUE * world.state_revenue()}
+	return {SALARIES: salaries_paid(government.record), FEES: OFFICE_FEE_SHARE_OF_REVENUE * world.revenue.state_revenue()}
 
 
 def army_paid_share(record: Any) -> Optional[float]:
@@ -83,7 +83,7 @@ def servant_sectors(government: Any, world: Any) -> List[Sector]:
 						  for line, fall in sorted(falls.items()))
 		unpaid = sum(record.unfunded.get(name, 0.0) for name in SALARY_LINES)
 		if unpaid > 0.0:
-			words += " (%s of the state's pay unpaid)" % world.money_text(unpaid, grouped=True)
+			words += " (%s of the state's pay unpaid)" % world.groups.money_text(unpaid, grouped=True)
 		sectors.append(Sector(OFFICE_HOLDERS, "administration", "the state's office-holders",
 							  "what they take from the state has fallen: " + words,
 							  sum(falls.values()), expected, budget.officials_kept(world), 1.0,
@@ -129,10 +129,10 @@ def run_army_year(government: Any, world: Any) -> Dict[str, float]:
 	if acted["severity"] > 0.0:
 		record.army = max(0.0, record.army - acted["deserters"])
 		if acted["seized"] > 0.0:
-			ledger.transfer(government, world.edge(EDGE_STATE_SPENDING), acted["seized"], "mutineers take their arrears")
+			ledger.transfer(government, world.setting.edge(EDGE_STATE_SPENDING), acted["seized"], "mutineers take their arrears")
 			record.arrears[ARMY_LINE] = max(0.0, arrears - acted["seized"])
-		world.say(LogLine("army_mutiny", "MUTINY: the army, unpaid, has lost its loyalty; %s soldiers desert and the rest take %s from the treasury"
-						  % (world.plain_number(acted["deserters"]), world.money_text(acted["seized"], grouped=True)),
+		world.groups.say(LogLine("army_mutiny", "MUTINY: the army, unpaid, has lost its loyalty; %s soldiers desert and the rest take %s from the treasury"
+						  % (world.groups.plain_number(acted["deserters"]), world.groups.money_text(acted["seized"], grouped=True)),
 						  deserters=acted["deserters"], seized=acted["seized"]))
 	return acted
 

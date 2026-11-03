@@ -4,6 +4,7 @@ makes the reading None and the actor does not enter, never the home figure. The 
 
 QUICK_TOPIC = True
 
+from sim.tests.agents_fake_world import flat_world
 from .harness import check
 
 from sim.agents import business_books, firm_entry, state_enterprises
@@ -119,21 +120,21 @@ def country_world(shared):
 
 
 world = country_world(HomeShared())
-rent = world.site_rent("shop", 2.0, "far_tile")
+rent = world.site.site_rent("shop", 2.0, "far_tile")
 check("a country's site rent is its hectares at the country's rent, not the home world's", rent == HECTARES * 2.0 * COUNTRY_RENT, rent)
 check("a country the economy has no part for has no site rent (None)", country_world(NoPart()).site_rent("shop", 1.0, None) is None)
 check("a country that let no land has no site rent (None)", country_world(NoLandLet()).site_rent("shop", 1.0, None) is None)
 
 check("a country's ramped-up concern takes the book figure at its cost scale",
-	  world.concern_gross("shop") == BOOK_TAKINGS * COST_SCALE, world.concern_gross("shop"))
+	  world.concerns.concern_gross("shop") == BOOK_TAKINGS * COST_SCALE, world.concerns.concern_gross("shop"))
 check("...none where the economy has no part for the country (None)", country_world(NoPart()).concern_gross("shop") is None)
 check("...none for a goods category (None)", country_world(GoodsCategory()).concern_gross("shop") is None)
 
-costs = world.plant_costs("shop")
+costs = world.concerns.plant_costs("shop")
 check("a country's yearly costs are its own, not the home world's", costs == (BOOK_UPKEEP * COST_SCALE, 2.0 * 14.0 + 3.0 * 10.0), costs)
 check("...none where the economy has no part for the country (None)", country_world(NoPart()).plant_costs("shop") is None)
-check("a country's hourly pay is its person-year over the hours of a year", world.hourly_pay("mason") == 14.0 / world.hours_per_person_year)
-check("...none for a trade it pays nothing for (None)", world.hourly_pay("astronomer") is None)
+check("a country's hourly pay is its person-year over the hours of a year", world.labour.hourly_pay("mason") == 14.0 / world.labour.hours_per_person_year)
+check("...none for a trade it pays nothing for (None)", world.labour.hourly_pay("astronomer") is None)
 
 
 # ---- the manager's hours are paid at the best paid trade of the country ---------------------------
@@ -149,6 +150,7 @@ check("the yearly costs an entrant weighs are the world's plant costs",
 
 
 # ---- the entry decision: a state abroad opens only the entry whose figures it can read -----------
+@flat_world
 class MonopolyShared(HomeShared):
 	def __init__(self):
 		super().__init__()

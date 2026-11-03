@@ -54,21 +54,21 @@ class WorldReadsTheOneMarketTests(unittest.TestCase):
 
     def test_the_world_hands_every_actor_the_one_market(self):
         world, market = self.world()
-        self.assertIs(world.labour_market, market)
+        self.assertIs(world.labour.labour_market, market)
 
     def test_a_person_years_pay_and_an_hours_pay_are_the_markets_quote(self):
         world, _market = self.world()
-        self.assertEqual(world.pay_per_person_year(TRADE), RATES[TRADE] * HOURS_PER_YEAR)
-        self.assertEqual(world.hourly_pay(TRADE), RATES[TRADE])
+        self.assertEqual(world.labour.pay_per_person_year(TRADE), RATES[TRADE] * HOURS_PER_YEAR)
+        self.assertEqual(world.labour.hourly_pay(TRADE), RATES[TRADE])
 
     def test_a_concerns_wage_bill_is_its_crew_at_the_markets_quotes(self):
         world, _market = self.world()
         expected = 2.0 * RATES["artisan"] * HOURS_PER_YEAR + 1.0 * RATES["scribe"] * HOURS_PER_YEAR
-        self.assertAlmostEqual(world.concern_wage_bill("any_works"), expected)
+        self.assertAlmostEqual(world.concerns.concern_wage_bill("any_works"), expected)
 
     def test_the_labourers_annual_wage_is_the_markets_quote_for_a_labourer(self):
         world, _market = self.world()
-        self.assertEqual(world._annual_labourer_wage(), RATES["labourer"] * HOURS_PER_YEAR)
+        self.assertEqual(world.groups._annual_labourer_wage(), RATES["labourer"] * HOURS_PER_YEAR)
 
 
 if __name__ == "__main__":

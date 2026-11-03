@@ -84,9 +84,9 @@ def issuers_among(registry: Any, world: Any) -> List[Any]:
 		issuer = registry.actors[issuer_id]
 		if issuer.record.exited_year is None and issuer.record.issued > 0.0:
 			found.append((issuer_id, issuer, issuer.record.last_margin))
-	for seat_id, party in sorted(world.seat_parties().items()):
+	for seat_id, party in sorted(world.seats.seat_parties().items()):
 		if party.record.issued > 0.0:
-			found.append((seat_id, party, world.seat_margin(seat_id)))
+			found.append((seat_id, party, world.seats.seat_margin(seat_id)))
 	return found
 
 
@@ -95,7 +95,7 @@ def pay_dividends(registry: Any, world: Any) -> float:
 	by share, never more than its purse; returns the total paid."""
 	paid = 0.0
 	holders = dict(registry.actors)
-	holders.update(world.seat_parties())
+	holders.update(world.seats.seat_parties())
 	for issuer_id, issuer, margin in issuers_among(registry, world):
 		pool = min(DIVIDEND_PAYOUT_SHARE * max(0.0, margin), max(0.0, issuer.money))
 		if pool <= 0.0:

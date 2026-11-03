@@ -5,17 +5,27 @@ Prices are per tonne in home money (the foreign side is its solved price convert
 What households at a
 place buy for themselves in a year is the depth a trader sizes its cargo to.
 """
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from sim.foreign_trade.api import NoteActorHomeTrade, NoteActorTrade, NoteCargoLeg
 from sim.world.material_units import tonnes_per_unit
 
+from .world_memo import once
 
-class TradeView:
-	"""Mixed into `ActorWorld`."""
+
+class Trade:
+	"""The traders' view of the places with a market. `world` is the root that hands out the parts."""
+
+	def __init__(self, world: Any) -> None:
+		self.world = world
+		self._memo: Dict[str, Any] = {}
+
+	@property
+	def needs(self) -> Any:
+		return self.world.needs
 
 	def _home_place(self) -> str:
-		return str(self.needs.civilisation().get("id"))  # type: ignore[attr-defined]
+		return str(self.needs.civilisation().get("id"))
 
 	def trade_places(self, location: Optional[str]) -> List[str]:
 		"""Every place with a market this year: the home society; `location` is not filtered."""
@@ -27,7 +37,7 @@ class TradeView:
 
 	def _prices_per_tonne(self, place: str) -> Dict[str, float]:
 		def compute() -> Dict[str, float]:
-			needs = self.needs  # type: ignore[attr-defined]
+			needs = self.needs
 			per_unit = needs.material_prices()
 			prices = {}
 			for material, price in per_unit.items():
@@ -35,18 +45,18 @@ class TradeView:
 				if price and price > 0.0 and tonnes and tonnes > 0.0:
 					prices[material] = price / tonnes
 			return prices
-		return self._once("trade_prices:" + place, compute)  # type: ignore[attr-defined,no-any-return]
+		return once(self._memo, "trade_prices:" + place, compute)  # type: ignore[no-any-return]
 
 	def _depth_by_material(self, place: str) -> Dict[str, float]:
 		"""Tonnes a year households at a place buy of each good: at home from live prices and size, as the
 		engine's own foreign trade does."""
 		def compute() -> Dict[str, float]:
-			needs = self.needs  # type: ignore[attr-defined]
+			needs = self.needs
 			per_hour = needs.money_per_labour_hour()
 			prices = needs.household_prices()
 			return needs.home_household_tonnes({material: price / per_hour for material, price in prices.items()
 												if price > 0.0})
-		return self._once("trade_depth:home", compute)  # type: ignore[attr-defined,no-any-return]
+		return once(self._memo, "trade_depth:home", compute)  # type: ignore[no-any-return]
 
 	def trade_materials(self) -> List[str]:
 		"""Goods households buy that are priced at home and at some partner and may cross a border."""
@@ -61,15 +71,15 @@ class TradeView:
 			abroad = set()
 			for place in places[1:]:
 				abroad.update(self._prices_per_tonne(place))
-			refused = self.needs.not_traded_materials()  # type: ignore[attr-defined]
+			refused = self.needs.not_traded_materials()
 			return sorted(material for material in wanted if material in home and material in abroad
 						  and material not in refused)
-		return self._once("trade_materials", compute)  # type: ignore[attr-defined,no-any-return]
+		return once(self._memo, "trade_materials", compute)  # type: ignore[no-any-return]
 
 	def has_market(self, material: str, place: str) -> bool:
 		if place != self._home_place():
 			return True
-		return self.needs.agent_price_response(material, 0.0, 0.0) is not None  # type: ignore[attr-defined,no-any-return]
+		return self.needs.agent_price_response(material, 0.0, 0.0) is not None
 
 	def price_at(self, material: str, place: str) -> Optional[float]:
 		return self._prices_per_tonne(place).get(material)
@@ -98,13 +108,13 @@ class TradeView:
 		price = self.price_at(material, place)
 		if not price:
 			return None
-		landed, taken = self.needs.actor_home_trade[material]  # type: ignore[attr-defined]
-		factor = self.needs.agent_price_response(  # type: ignore[attr-defined]
+		landed, taken = self.needs.actor_home_trade[material]
+		factor = self.needs.agent_price_response(
 			material, landed + (tonnes if landing else 0.0), taken + (0.0 if landing else tonnes))
 		return None if factor is None else price * factor
 
 	def _delivered(self) -> Dict[Tuple[str, str], float]:
-		return self._memo.setdefault("delivered", {})  # type: ignore[attr-defined,no-any-return]
+		return self._memo.setdefault("delivered", {})  # type: ignore[no-any-return]
 
 	def delivered_this_year(self, material: str, destination: str) -> float:
 		return self._delivered().get((material, destination), 0.0)
@@ -120,7 +130,7 @@ class TradeView:
 		paid = (self.price_at(material, source) or 0.0) * tonnes
 		received = (self.price_at(material, destination) or 0.0) * tonnes
 		home = self._home_place()
-		needs = self.needs  # type: ignore[attr-defined]
+		needs = self.needs
 		if source == home:
 			needs.send(NoteActorHomeTrade(material, tonnes, False))
 		if destination == home:

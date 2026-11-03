@@ -7,6 +7,7 @@ QUICK_TOPIC = True
 
 import contextlib
 import math
+from types import SimpleNamespace
 import unittest
 
 from sim.agents import relations
@@ -14,7 +15,7 @@ from sim.agents.trader import route_terms
 from sim.economy.tariffs import duty_transfers
 from sim.economy.types import EDGE_EXTERNAL
 from sim.markets import trade_duty
-from sim.actors.world_trade import TradeView
+from sim.actors.world_trade import Trade
 from sim.tests.store_stand_in import base_book
 from sim.engine.state import FounderState, HouseholdState, SimulationState
 from sim.engine.state_seat import bind_seat, seat_from_template
@@ -78,12 +79,15 @@ class _Sim:
         return {"freight_per_tonne": 3.0}
 
 
-class _View(TradeView):
+class _View(Trade):
+    """The trade part over a stand-in world that is also its own `trade` part, as the traders' route rules ask a world."""
+
     def __init__(self, sim):
-        self._sim = sim
-        self.needs = fake_needs(
+        super().__init__(SimpleNamespace(needs=fake_needs(
             civilisation=sim.civ, foreign_economies=sim.foreign_economies, partner_facts=sim._foreign_economy_facts,
-            border_duty_per_tonne=lambda source, destination, price: trade_duty.duty_per_tonne(sim, source, destination, price))
+            border_duty_per_tonne=lambda source, destination, price: trade_duty.duty_per_tonne(sim, source, destination, price))))
+        self._sim = sim
+        self.trade = self
 
     def price_at(self, material, place):
         return self._sim.prices[place]
@@ -110,7 +114,7 @@ class MerchantsSeeTheCharge(unittest.TestCase):
 
     def test_trade_diverts_to_the_untaxed_source(self):
         world = self.view
-        gains = lambda source: world.price_at("cassia_kg", "rome") - world.price_at("cassia_kg", source) - world.freight_between(source, "rome", "cassia_kg", 1.0)   # noqa: E731
+        gains = lambda source: world.trade.price_at("cassia_kg", "rome") - world.trade.price_at("cassia_kg", source) - world.trade.freight_between(source, "rome", "cassia_kg", 1.0)   # noqa: E731
         self.assertGreater(gains("han"), gains("parthia"))
         relations.set_side(self.sim.stores, "rome", "han", tariff=0.5)
         self.assertLess(gains("han"), gains("parthia"))

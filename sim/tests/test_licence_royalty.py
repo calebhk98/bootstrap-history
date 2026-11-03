@@ -28,7 +28,7 @@ def raises(call):
 
 
 world = RoyaltyWorld(year=100)
-world.nodes["loom"] = make_node("loom")
+world.setting.nodes["loom"] = make_node("loom")
 world.registry = registry = ActorRegistry(ActorsState(home_country="home"))
 holder = registry.add("firm:1", ActorRecord(kind="firm", money=100.0))
 holder.record.patents["loom"] = {"granted": 90, "expires": 110, "licensees": []}

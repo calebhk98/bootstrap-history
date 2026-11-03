@@ -9,11 +9,11 @@ def management_places(world: Any, node_id: str, capacity: float = 1.0) -> Option
 	"""(trade, people) of the managers a concern run at `capacity` times its founding size needs: its staff over the
 	span of control, in the best paid trade among its staff at the pay of the actor's own country; (None, 0) for a
 	concern with no staff; None when that country pays nothing for a trade of the staff."""
-	staff = world.concern_staff(node_id)
+	staff = world.concerns.concern_staff(node_id)
 	people = sum(staff.values()) * capacity
 	if people <= 0.0:
 		return None, 0.0
-	pay = {trade: world.hourly_pay(trade) for trade in sorted(staff)}
+	pay = {trade: world.labour.hourly_pay(trade) for trade in sorted(staff)}
 	if any(wage is None for wage in pay.values()):
 		return None
 	return max(pay, key=lambda trade: pay[trade]), people / MANAGEMENT_SPAN_OF_CONTROL
@@ -26,7 +26,7 @@ def management_cost(world: Any, node_id: str, capacity: float = 1.0) -> Optional
 	if places is None:
 		return None
 	trade, people = places
-	return 0.0 if trade is None else people * world.hours_per_person_year * world.hourly_pay(trade)
+	return 0.0 if trade is None else people * world.labour.hours_per_person_year * world.labour.hourly_pay(trade)
 
 
 def firm_tile(registry: Any, actor: Optional[Any]) -> Optional[str]:
@@ -44,7 +44,7 @@ def carrying_cost(world: Any, node_id: str, capacity: float = 1.0, tile: Optiona
 	a sale in the firm's own market needs no carrier, so a firm carries nothing more for it, and where
 	goods cross places the traders who carry them bear it. None when the actor's country keeps no record of
 	the rent or the pay."""
-	rent = world.site_rent(node_id, capacity, tile)
+	rent = world.site.site_rent(node_id, capacity, tile)
 	management = management_cost(world, node_id, capacity)
 	return None if rent is None or management is None else rent + management
 
@@ -54,13 +54,13 @@ def expected_takings(registry: Any, world: Any, node_id: str) -> float:
 	to this year's takings, so a one-year spike in price does not draw a crowd of entrants. Revised
 	once a year."""
 	state = registry.state
-	spot = world.entry_gross(node_id, 0.0, 1.0)
+	spot = world.concerns.entry_gross(node_id, 0.0, 1.0)
 	if node_id not in state.expected_takings:
 		state.expected_takings[node_id] = spot
-	elif state.expected_takings_year.get(node_id) != world.year:
+	elif state.expected_takings_year.get(node_id) != world.setting.year:
 		previous = state.expected_takings[node_id]
 		state.expected_takings[node_id] = previous + ENTRANT_EXPECTATION_ADJUSTMENT_SHARE * (spot - previous)
-	state.expected_takings_year[node_id] = world.year
+	state.expected_takings_year[node_id] = world.setting.year
 	return state.expected_takings[node_id]
 
 
@@ -69,8 +69,8 @@ def expected_entry_gross(registry: Any, world: Any, node_id: str, rivals: float,
 	market's sharing as it stands. Entrants discount a rise in what a lone operator takes (a one-year
 	spike) toward last year's expectation, but never lean on an expectation above today's takings: the
 	firms already in are seen at once, so a stale high expectation cannot draw a crowd past what the market holds."""
-	spot = world.entry_gross(node_id, rivals, entrants)
-	spot_alone = world.entry_gross(node_id, 0.0, 1.0)
+	spot = world.concerns.entry_gross(node_id, rivals, entrants)
+	spot_alone = world.concerns.entry_gross(node_id, 0.0, 1.0)
 	if spot_alone <= 0.0:
 		return spot
 	return spot * min(1.0, expected_takings(registry, world, node_id) / spot_alone)
@@ -79,7 +79,7 @@ def expected_entry_gross(registry: Any, world: Any, node_id: str, rivals: float,
 def expected_levy(world: Any, payer: Any, takings: float) -> float:
 	"""What the state would levy a year on `payer` from `takings`: the same assessment a firm's books pay, so an
 	entrant weighs the margin it will keep, not the margin before the state's share."""
-	return float(world.government().assess(payer, takings, world)[0])
+	return float(world.setting.government().assess(payer, takings, world)[0])
 
 
 def personal_capital(stratum: Any) -> float:

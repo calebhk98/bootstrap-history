@@ -18,7 +18,7 @@ class Bank:
 		capital = command.capital
 		world = needs.actor_world()
 		held = needs.techniques_held()
-		knows = any(node_id in held or node_id in world.baseline_knowledge() for node_id in needs.mechanic[bank_rules.BANKING_MECHANIC])
+		knows = any(node_id in held or node_id in world.knowledge.baseline_knowledge() for node_id in needs.mechanic[bank_rules.BANKING_MECHANIC])
 		refusal = bank_rules.refusal_for(knows, capital, needs.acting_balance())
 		if refusal is None and not needs.agent_economy_opened():
 			refusal = Refusal("economy_not_open", "The economy has not opened yet.")

@@ -17,7 +17,7 @@ from .tuning_spinoff import SPINOFF_CHANCE_PER_STAFF_YEAR, SPINOFF_MIN_YEARS
 
 def know_how(node_id: str, world: Any, parent: Any) -> List[str]:
 	"""The steps below `node_id` that the parent knows and the baseline does not, prerequisites first."""
-	baseline = world.baseline_knowledge()
+	baseline = world.knowledge.baseline_knowledge()
 	chain: List[str] = []
 	seen = set()
 
@@ -25,7 +25,7 @@ def know_how(node_id: str, world: Any, parent: Any) -> List[str]:
 		if current in seen or current in baseline:
 			return
 		seen.add(current)
-		for prerequisite in world.nodes[current].get("pre") or ():
+		for prerequisite in world.setting.nodes[current].get("pre") or ():
 			visit(prerequisite)
 		chain.append(current)
 
@@ -35,7 +35,7 @@ def know_how(node_id: str, world: Any, parent: Any) -> List[str]:
 
 def leavers_expected(parent: Any, node_id: str, world: Any) -> float:
 	"""How many of the parent's staff in a year consider leaving to found a rival."""
-	years = world.year - parent.opened_year_of(node_id, world.year)
+	years = world.setting.year - parent.opened_year_of(node_id, world.setting.year)
 	if years < SPINOFF_MIN_YEARS:
 		return 0.0
 	staff = sum(parent.workforce.values())
@@ -45,11 +45,11 @@ def leavers_expected(parent: Any, node_id: str, world: Any) -> float:
 def release_leaver(parent: Any, node_id: str, world: Any, index: int) -> None:
 	"""One person of the concern's staff leaves the parent: the trade is drawn by each trade's share of the
 	concern's staff among those the parent holds."""
-	held = {trade: people for trade, people in sorted(world.concern_staff(node_id).items())
+	held = {trade: people for trade, people in sorted(world.concerns.concern_staff(node_id).items())
 			if parent.workforce.get(trade, 0.0) > 0.0}
 	if not held:
 		return
-	draw = world.rng_for(world.year, "leaver", parent.actor_id, node_id, index).random() * sum(held.values())
+	draw = world.setting.rng_for(world.setting.year, "leaver", parent.actor_id, node_id, index).random() * sum(held.values())
 	trade = sorted(held)[-1]
 	for candidate in sorted(held):
 		draw -= held[candidate]
@@ -57,7 +57,7 @@ def release_leaver(parent: Any, node_id: str, world: Any, index: int) -> None:
 			trade = candidate
 			break
 	if parent.kind == "household":
-		world.release_seat_staff(parent.actor_id, trade, 1.0)
+		world.seats.release_seat_staff(parent.actor_id, trade, 1.0)
 	else:
 		left = parent.workforce[trade] - 1.0   # the person leaves the hires; the places it posts are the parent's own
 		if left > 1e-9:
@@ -68,7 +68,7 @@ def release_leaver(parent: Any, node_id: str, world: Any, index: int) -> None:
 
 def parents_of(registry: Any, world: Any) -> List[Any]:
 	"""Businesses whose staff may leave: firms, players and seats (the founder's households), in id order."""
-	seats = world.seat_parties()
+	seats = world.seats.seat_parties()
 	parents = [registry.actors[parent_id] for parent_id in sorted(registry.actors)
 			   if registry.actors[parent_id].kind in ("firm", "player")]
 	return parents + [seats[seat_id] for seat_id in sorted(seats)]
@@ -79,18 +79,18 @@ def consider_spinoffs(registry: Any, world: Any) -> List[str]:
 	while a rival would pass the test any entrant does: it earns after what a firm carries, and a founder
 	(or, with no strata, the pooled capital) puts up the whole stake."""
 	founded: List[str] = []
-	pool = [world.society_output() * ENTREPRENEURIAL_CAPITAL_SHARE]
+	pool = [world.revenue.society_output() * ENTREPRENEURIAL_CAPITAL_SHARE]
 	for parent in parents_of(registry, world):
 		parent_id = parent.actor_id
 		if parent.record.exited_year is not None:
 			continue
 		for node_id in sorted(parent.concerns):
-			if node_id in world.baseline_knowledge():
+			if node_id in world.knowledge.baseline_knowledge():
 				continue
 			expected_leavers = leavers_expected(parent, node_id, world)
 			if expected_leavers <= 0.0:
 				continue
-			draw = world.rng_for(world.year, "spinoff", parent_id, node_id).random()
+			draw = world.setting.rng_for(world.setting.year, "spinoff", parent_id, node_id).random()
 			leavers = int(expected_leavers) + (1 if draw < expected_leavers - int(expected_leavers) else 0)
 			for index in range(leavers):
 				firm_id = _found_rival(registry, world, parent, node_id, pool)
@@ -113,19 +113,19 @@ def _found_rival(registry: Any, world: Any, parent: Any, node_id: str, pool: Lis
 	expected -= enforcement.expected_damages(world, "", node_id, expected)
 	if expected <= 0.0:
 		return None
-	stake = world.copy_cost(node_id) * ENTRY_STAKE_BUFFER
+	stake = world.concerns.copy_cost(node_id) * ENTRY_STAKE_BUFFER
 	strata_exist = bool(registry.of_kind("stratum"))
 	founders = firm_entry.founder_candidates(registry) if strata_exist else []
 	founder = founders[0] if founders else None
 	own, borrowed = firm_entry.stake_split(stake, founder, strata_exist, pool[0])
-	if borrowed > 0.0 or expected * VALUE_HORIZON_YEARS <= stake or expected <= stake * world.market_rate():
+	if borrowed > 0.0 or expected * VALUE_HORIZON_YEARS <= stake or expected <= stake * world.credit.market_rate():
 		return None
 	serial = len(registry.state.records) + 1
 	while "firm:%d" % serial in registry.state.records:
 		serial += 1
 	firm_id = "firm:%d" % serial
 	firm = registry.add(firm_id, ActorRecord(
-		kind="firm", name=firm_id, target=node_id, last_margin=expected, founded_year=world.year,
+		kind="firm", name=firm_id, target=node_id, last_margin=expected, founded_year=world.setting.year,
 		location=tile, country=parent.record.country, spun_off_from=parent.actor_id))
 	firm.learn(know_how(node_id, world, parent), world)
 	if founder is not None:
@@ -133,5 +133,5 @@ def _found_rival(registry: Any, world: Any, parent: Any, node_id: str, pool: Lis
 	else:
 		pool[0] -= own
 		ledger.transfer(registry.state.edge(EDGE_POOLED_CAPITAL), firm, own, EDGE_POOLED_CAPITAL)
-	firm.business.open_plant(node_id, world.year, tile)
+	firm.business.open_plant(node_id, world.setting.year, tile)
 	return firm_id

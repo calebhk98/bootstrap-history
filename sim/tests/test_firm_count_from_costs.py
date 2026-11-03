@@ -84,7 +84,9 @@ check("a spike over a settled market draws fewer than the same takings met fresh
 
 
 # ---- site rent: every concern occupies a plot from its staff; land it works comes on top
-from sim.actors.world_site import SiteView, FLOOR_AREA_PER_WORKER_SQUARE_METRES
+from types import SimpleNamespace
+
+from sim.actors.world_site import Site, FLOOR_AREA_PER_WORKER_SQUARE_METRES
 from sim.agents.api import supply
 from sim.world import merchant_terms
 
@@ -103,19 +105,13 @@ class LandMarket:
 		return self.by_tile.get(tile, self.mean)
 
 
-class Site(SiteView):
-	needs = fake_needs(agent_land_rent_at=LandMarket().agent_land_rent_at)
-	nodes = {"ag2_sugar_voyage": {"annual_output_t": 120.0}, "workshop": {}}
-	engine_land_price = 7.0
-
-	def concern_staff(self, node_id):
-		return {"artisan": 4.0, "labourer": 6.0}
-
-	def material_price(self, material):
-		return self.engine_land_price if material == "hectare_land" else 0.0
-
-
-site = Site()
+ENGINE_LAND_PRICE = 7.0
+# the site part over a world with two concerns, one crew and the engine's land price
+site = Site(SimpleNamespace(
+	needs=fake_needs(agent_land_rent_at=LandMarket().agent_land_rent_at),
+	setting=SimpleNamespace(nodes={"ag2_sugar_voyage": {"annual_output_t": 120.0}, "workshop": {}}),
+	concerns=SimpleNamespace(concern_staff=lambda node_id: {"artisan": 4.0, "labourer": 6.0}),
+	quotes=SimpleNamespace(material_price=lambda material: ENGINE_LAND_PRICE if material == "hectare_land" else 0.0)))
 plot = site.plot_hectares("workshop")
 check("a concern with no declared output still occupies a plot, from its staff at a stated floor area",
 	abs(plot - 10.0 * FLOOR_AREA_PER_WORKER_SQUARE_METRES / 10000.0) < 1e-12 and plot > 0.0, plot)
@@ -129,7 +125,7 @@ check("rent is the hectares at the rent of the tile the concern stands on",
 check("a tile where no land was let pays the mean rent of the land let", abs(site.site_rent("workshop", tile="moor") - 40.0 * plot) < 1e-9)
 check("a dearer tile costs more", site.site_rent("workshop", tile="coast") > site.site_rent("workshop", tile="hills"))
 LandMarket.on = False
-check("while the economy opens the rent is the engine's land price", abs(site.site_rent("workshop", tile="coast") - 7.0 * plot) < 1e-9)
+check("while the economy opens the rent is the engine's land price", abs(site.site_rent("workshop", tile="coast") - ENGINE_LAND_PRICE * plot) < 1e-9)
 LandMarket.on = True
 
 # ---- where a firm stands: its own tile, else the home country's

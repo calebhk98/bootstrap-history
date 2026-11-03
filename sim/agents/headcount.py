@@ -57,6 +57,6 @@ def fit(wanted: float, hands: Optional[Hands], claimed_elsewhere: float = 0.0) -
 def checked_army(world: Any, record: Any, wanted: float, soldiers: float, claimed_elsewhere: float) -> Tuple[float, float]:
 	"""(soldiers to pay this year, wanted force within what the country can spare); the check is booked on the
 	record. An army larger than the country can spare disbands to it at once."""
-	result = fit(wanted, world.state_hands(), claimed_elsewhere)
+	result = fit(wanted, world.people.state_hands(), claimed_elsewhere)
 	record.headcount["army"] = result.as_record()
 	return min(soldiers, result.granted), result.granted

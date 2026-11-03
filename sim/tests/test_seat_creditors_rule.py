@@ -2,6 +2,7 @@
 most and repay themselves its proceeds, and leave a plant that pays. Each rule is called on a stand-in seat."""
 QUICK_TOPIC = True
 
+from sim.tests.agents_fake_world import flat_namespace
 import unittest
 from types import SimpleNamespace
 
@@ -17,7 +18,7 @@ def _seat(capital, limit, upkeep=100.0, size=2.0):
     module = projects_host.build(
         acting_balance=capital, credit_limit=lambda *arguments: limit, year=1,
         venture_size=lambda entry_key: size)
-    world = SimpleNamespace(upkeep=lambda entry_key, plant_size: upkeep * plant_size)
+    world = flat_namespace(upkeep=lambda entry_key, plant_size: upkeep * plant_size)
     return SeatReview(module, world), module
 
 

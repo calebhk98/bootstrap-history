@@ -35,35 +35,35 @@ def SimWorld(game):
 
 class CopyCostScopeTests(unittest.TestCase):
     def test_the_cost_is_the_games_project_cost(self):
-        self.assertEqual(SimWorld(_Game()).copy_cost("iron_works"), 12.5)
+        self.assertEqual(SimWorld(_Game()).concerns.copy_cost("iron_works"), 12.5)
 
     def test_the_cost_is_asked_inside_an_open_scope(self):
         game = _Game()
-        SimWorld(game).copy_cost("iron_works")
+        SimWorld(game).concerns.copy_cost("iron_works")
         self.assertIsNotNone(game.scopes_seen[0])
 
     def test_every_ask_of_one_view_shares_one_table(self):
         game = _Game()
         world = SimWorld(game)
-        world.copy_cost("iron_works")
-        world.copy_cost("loom")
+        world.concerns.copy_cost("iron_works")
+        world.concerns.copy_cost("loom")
         self.assertIs(game.scopes_seen[0], game.scopes_seen[1])
 
     def test_two_views_do_not_share_a_table(self):
         game = _Game()
-        SimWorld(game).copy_cost("iron_works")
-        SimWorld(game).copy_cost("iron_works")
+        SimWorld(game).concerns.copy_cost("iron_works")
+        SimWorld(game).concerns.copy_cost("iron_works")
         self.assertIsNot(game.scopes_seen[0], game.scopes_seen[1])
 
     def test_no_scope_is_left_open_on_the_game_afterwards(self):
         game = _Game()
-        SimWorld(game).copy_cost("iron_works")
+        SimWorld(game).concerns.copy_cost("iron_works")
         self.assertIsNone(game.sharing._scope)
 
     def test_no_scope_is_left_open_when_the_pricing_fails(self):
         game = _Game()
         with self.assertRaises(ValueError):
-            SimWorld(game).copy_cost("broken")
+            SimWorld(game).concerns.copy_cost("broken")
         self.assertIsNone(game.sharing._scope)
 
 

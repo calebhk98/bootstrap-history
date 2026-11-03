@@ -7,15 +7,15 @@ from .stratum_year import PROPERTY, income_parts
 
 def rent_total(world: Any) -> float:
 	"""The rent producers paid last year on every tile where land was let; zero where none was let."""
-	return sum(world.land_rent_paid_by_tile().values())
+	return sum(world.revenue.land_rent_paid_by_tile().values())
 
 
 def rent_of(stratum: Any, holders: List[Any], world: Any) -> Optional[float]:
 	"""The rent that went to this stratum: its slice of the rent the household cohorts received by what each owns
-	(`world.land_rent_owners`, the same owners a land tax is drawn from). None where no land was let."""
+	(`world.revenue.land_rent_owners`, the same owners a land tax is drawn from). None where no land was let."""
 	if rent_total(world) <= 0.0:
 		return None
-	received = dict((owner.actor_id, rent) for owner, rent in world.land_rent_owners())
+	received = dict((owner.actor_id, rent) for owner, rent in world.revenue.land_rent_owners())
 	return received.get(stratum.actor_id, 0.0) if received else None
 
 

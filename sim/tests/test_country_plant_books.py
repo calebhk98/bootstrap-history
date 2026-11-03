@@ -3,6 +3,7 @@ The rule is called on built inputs; a figure the country keeps no record of make
 
 QUICK_TOPIC = True
 
+from sim.tests.agents_fake_world import flat_world
 from .harness import check
 
 from sim.agents.api import ActorRegistry, ActorsState, CastEntry, CountryProfile, CountryWorld, seed_cast
@@ -128,6 +129,7 @@ class CrewAnswers(Answers):
 		return {"mason": 9.0}.get(trade, 0.0)
 
 
+@flat_world
 class CrewShared(HomeShared):
 	def country_economy(self, country):
 		return CrewAnswers()

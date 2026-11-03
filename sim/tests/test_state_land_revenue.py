@@ -119,7 +119,7 @@ check("the rent paid on a tile is shared among its cohorts by what each owns",
 only_b = land_rents.rent_received_by_cohort(SimpleNamespace(land_per_run={"farm": 1.0}), rent_record, frozenset({"b"}))
 check("limited to tiles, only those tiles' cohorts receive rent", only_b == {"household:b:0": 5.0}, only_b)
 
-from sim.actors.world_revenue import RevenueView
+from sim.actors.world_revenue import Revenue
 from sim.tests.world_stand_in import fake_needs
 
 
@@ -131,15 +131,16 @@ class StubSim:
 		self.registry = SimpleNamespace(of_kind=lambda kind: strata)
 
 
-class StubView(RevenueView):
-	def __init__(self, sim):
-		self.needs, self.registry = sim.needs, sim.registry
-
-	def pay_per_person_year(self, trade):
-		return 1.0
-
+class StubRevenue(Revenue):
 	def society_output(self):
 		return 0.0
+
+
+def StubView(sim):
+	"""The revenue part over a world that pays one a person-year and makes nothing."""
+	world = SimpleNamespace(needs=sim.needs, registry=sim.registry, labour=SimpleNamespace(pay_per_person_year=lambda trade: 1.0))
+	world.revenue = StubRevenue(world)
+	return world.revenue
 
 
 poor = owner("poor", 0.0)

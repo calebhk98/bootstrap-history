@@ -28,11 +28,11 @@ class Reach:
 		"""The share of what is due that the home state's paid officials collect, kept for as long as the year, the works held,
 		the people and the officials' unpaid share are unchanged."""
 		world = self.needs.actor_world()
-		unfunded = world.government().record.unfunded.get("administration", 0.0)
+		unfunded = world.setting.government().record.unfunded.get("administration", 0.0)
 		key = self._reach_key(unfunded)
 		memo = self._state_reach_memo
 		if memo is None or memo[0] != key:
-			memo = self._state_reach_memo = (key, world.collectible_share())
+			memo = self._state_reach_memo = (key, world.collection.collectible_share())
 		return memo[1]
 
 	def order_reach(self):
@@ -49,9 +49,9 @@ class Reach:
 
 	def _staff_reach(self, line_name, share_name):
 		world = self.needs.actor_world()
-		unfunded = world.government().record.unfunded.get(line_name, 0.0)
+		unfunded = world.setting.government().record.unfunded.get(line_name, 0.0)
 		key = self._reach_key(unfunded)
 		memo = self._staff_reach_memo.get(line_name)
 		if memo is None or memo[0] != key:
-			memo = self._staff_reach_memo[line_name] = (key, getattr(world, share_name)())
+			memo = self._staff_reach_memo[line_name] = (key, getattr(world.collection, share_name)())
 		return memo[1]

@@ -21,13 +21,13 @@ def world_in(year, hazards=HAZARDS):
 
 class ArmyWantedTests(unittest.TestCase):
     def test_with_no_sack_hazard_running_the_state_wants_its_opening_force(self):
-        self.assertEqual(world_in(120).army_wanted(), OPENING)
+        self.assertEqual(world_in(120).army.army_wanted(), OPENING)
 
     def test_while_a_sack_hazard_runs_the_state_wants_the_goal_for_that_pressure(self):
         world = world_in(240)
-        self.assertAlmostEqual(world.threat_pressure(), 0.1)
-        self.assertEqual(world.army_wanted(), army_goal(OPENING, 0.1))
-        self.assertGreater(world.army_wanted(), world_in(120).army_wanted())
+        self.assertAlmostEqual(world.army.threat_pressure(), 0.1)
+        self.assertEqual(world.army.army_wanted(), army_goal(OPENING, 0.1))
+        self.assertGreater(world.army.army_wanted(), world_in(120).army.army_wanted())
 
     def test_a_civilisation_that_declares_no_hazard_never_raises_its_army(self):
-        self.assertEqual(world_in(240, hazards=[]).army_wanted(), OPENING)
+        self.assertEqual(world_in(240, hazards=[]).army.army_wanted(), OPENING)

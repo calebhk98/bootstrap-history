@@ -42,24 +42,24 @@ def foresters_kept(people: float, working_days: float) -> float:
 
 
 def working_days_of(world: Any) -> float:
-	return float(world.hours_per_person_year) / HOURS_PER_WORKING_DAY
+	return float(world.labour.hours_per_person_year) / HOURS_PER_WORKING_DAY
 
 
 def staff_line(world: Any, name: str, trade: str, kept: float) -> List[Line]:
 	if kept <= 0.0:
 		return []
-	return [Line(name, "office", {trade: kept}, kept * world.pay_per_person_year(trade))]
+	return [Line(name, "office", {trade: kept}, kept * world.labour.pay_per_person_year(trade))]
 
 
 def guards_line(world: Any) -> List[Line]:
-	return staff_line(world, GUARDS_LINE, world.trade_of_role(GUARD_ROLE), guards_kept(world.population_total(), working_days_of(world)))
+	return staff_line(world, GUARDS_LINE, world.labour.trade_of_role(GUARD_ROLE), guards_kept(world.people.population_total(), working_days_of(world)))
 
 
 def inspectors_line(world: Any) -> List[Line]:
-	return staff_line(world, INSPECTORS_LINE, world.trade_of_role(INSPECTOR_ROLE),
-					  inspectors_kept(world.population_total(), working_days_of(world)))
+	return staff_line(world, INSPECTORS_LINE, world.labour.trade_of_role(INSPECTOR_ROLE),
+					  inspectors_kept(world.people.population_total(), working_days_of(world)))
 
 
 def foresters_line(world: Any) -> List[Line]:
-	return staff_line(world, FORESTERS_LINE, world.trade_of_role(FORESTER_ROLE),
-					  foresters_kept(world.population_total(), working_days_of(world)))
+	return staff_line(world, FORESTERS_LINE, world.labour.trade_of_role(FORESTER_ROLE),
+					  foresters_kept(world.people.population_total(), working_days_of(world)))

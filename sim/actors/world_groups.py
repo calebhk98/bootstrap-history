@@ -1,5 +1,5 @@
 """What interest groups can see of who is hurt: producers the founder's sales displace and
-employers whose hands the founder's hiring bids up. Mixed into `ActorWorld`."""
+employers whose hands the founder's hiring bids up."""
 from typing import Any, Dict, List, Optional
 
 from sim.agents.api import CONCESSION_PREFIX, Sector, sector_key
@@ -7,6 +7,7 @@ from sim.polity.api import AddScandal
 from sim.reporting.api import RecordEvent
 
 from .rules import plain_number
+from .world_memo import once
 
 
 def founder_share_of_sellers(sellers, other_actors_concerns):
@@ -15,19 +16,31 @@ def founder_share_of_sellers(sellers, other_actors_concerns):
     return min(1.0, max(0.0, 1.0 - other_actors_concerns / sellers))
 
 
-class GroupView:
-	"""Read-only questions behind who organises and what it asks of the state."""
+def commodity_quote(needs: Any, commodity: str) -> Any:
+	"""The quote for the first priced material the commodity is made of (its main product)."""
+	material = needs.main_material_of[commodity]
+	return None if material is None else needs.material_trade_quote[material]
 
-	needs: Any
-	registry: Any
+
+class Groups:
+	"""Read-only questions behind who organises and what it asks of the state. `world` is the root that hands out the parts."""
+
+	def __init__(self, world: Any) -> None:
+		self.world = world
+		self._memo: Dict[str, Any] = {}
+
+	@property
+	def needs(self) -> Any:
+		return self.world.needs
+
+	@property
+	def goods_category_names(self) -> Any:
+		"""The goods categories: concerns in them share one market."""
+		return self.needs.goods_categories()
 
 	def _annual_labourer_wage(self) -> float:
-		return max(1e-9, self.pay_per_person_year(self.trade_of_role("unskilled")))
-
-	def _commodity_quote(self, commodity: str) -> Any:
-		"""The quote for the first priced material the commodity is made of (its main product)."""
-		material = self.needs.main_material_of[commodity]
-		return None if material is None else self.needs.material_trade_quote[material]
+		labour = self.world.labour
+		return max(1e-9, labour.pay_per_person_year(labour.trade_of_role("unskilled")))
 
 	def displaced_producers(self) -> List[Sector]:
 		"""Producers of each commodity the founder sold into the market this year: what the
@@ -37,7 +50,7 @@ class GroupView:
 		sectors = []
 		for commodity in needs.commodities_sold_by_acting_party():
 			state = needs.market_state[commodity]
-			quote = self._commodity_quote(commodity)
+			quote = commodity_quote(needs, commodity)
 			if state is None or quote is None:
 				continue
 			displaced = state["displaced_by_founder_tonnes"]
@@ -60,7 +73,7 @@ class GroupView:
 		needs = self.needs
 		nodes = needs.tree_nodes()
 		hours: Dict[str, Dict[str, float]] = {}
-		for category in sorted(self.goods_category_names):  # type: ignore[attr-defined]
+		for category in sorted(self.goods_category_names):
 			for node_id in needs.nodes_in_category[category]:
 				for trade, trade_hours in (nodes[node_id].get("lab") or {}).items():
 					hours.setdefault(category, {})[trade] = hours.get(category, {}).get(trade, 0.0) + trade_hours
@@ -72,7 +85,7 @@ class GroupView:
 		operating = set(needs.operating())
 		for category in sorted(hours):
 			founder_concerns = len(operating.intersection(needs.nodes_in_category[category]))
-			actors_concerns = self.module.actor_concerns_in(category)
+			actors_concerns = self.world.module.actor_concerns_in(category)
 			ratio = self._category_price_ratio(category) if founder_concerns + actors_concerns else None
 			if ratio is None or ratio >= 1.0:
 				continue
@@ -93,42 +106,44 @@ class GroupView:
 	def sectors(self) -> Dict[str, Sector]:
 		"""Everyone hurt this year, by key."""
 		def compute() -> Dict[str, Sector]:
-			strata = self.registry.home_actors("stratum")
-			goods = Sector.of_goods(strata, self.goods_categories(), self) if strata else []
+			world = self.world
+			registry = world.registry
+			strata = registry.home_actors("stratum")
+			goods = Sector.of_goods(strata, self.goods_categories(), world) if strata else []
 			caused = self.displaced_producers() + goods
-			firms = self.registry.home_actors("firm")
-			foundations = [foundation for kind in ("church", "academy") for foundation in self.registry.home_actors(kind)]
-			governments = [government for government in self.registry.of_kind("government")
+			firms = registry.home_actors("firm")
+			foundations = [foundation for kind in ("church", "academy") for foundation in registry.home_actors(kind)]
+			governments = [government for government in registry.of_kind("government")
 						   if government.record.country is None]
-			servants = [sector for government in governments for sector in Sector.of_servants(government, self)]
-			falling = Sector.of_strata(strata, self) + Sector.of_firms(firms, self) + Sector.of_foundations(foundations) + servants
+			servants = [sector for government in governments for sector in Sector.of_servants(government, world)]
+			falling = Sector.of_strata(strata, world) + Sector.of_firms(firms, world) + Sector.of_foundations(foundations) + servants
 			total_fall = sum(sector.lost_income for sector in falling)
 			# what the founder is blamed for in a body's loss: the share of it his measured doing explains
 			share = min(1.0, sum(sector.lost_income for sector in caused) / total_fall) if total_fall > 0.0 else 0.0
 			for sector in falling:
 				sector.blame_share = share
-			Sector.remember_welfare(strata, self)
+			Sector.remember_welfare(strata, world)
 			Sector.remember_margins(firms)
 			Sector.remember_foundations(foundations)
 			for government in governments:
-				Sector.remember_servants(government, self)
+				Sector.remember_servants(government, world)
 			return {sector_key(sector.kind, sector.subject): sector for sector in caused + falling}
-		return self._once("sectors", compute)  # type: ignore[attr-defined,no-any-return]
+		return once(self._memo, "sectors", compute)  # type: ignore[no-any-return]
 
 	def group_claims(self) -> Dict[str, float]:
 		"""What the state has undertaken to make good to each organised group, by budget line name."""
 		return {CONCESSION_PREFIX + group.actor_id: group.record.claim
-				for group in self.registry.home_actors("interest_group") if group.organised()}
+				for group in self.world.registry.home_actors("interest_group") if group.organised()}
 
 	def faction_backing(self) -> Dict[str, float]:
 		"""The weight each organised group can put behind a claimant to the throne: its strength."""
 		return {group.actor_id: group.record.strength
-				for group in self.registry.home_actors("interest_group")
+				for group in self.world.registry.home_actors("interest_group")
 				if group.organised() and group.record.strength > 0.0}
 
 	def scope_revenue(self, scope: float) -> float:
 		"""The state's yearly revenue from a territory holding `scope` of the whole."""
-		return max(1e-9, self.state_revenue() * scope)  # type: ignore[attr-defined,no-any-return]
+		return max(1e-9, self.world.revenue.state_revenue() * scope)
 
 	def founder_protection(self) -> float:
 		return float(self.needs.standing()["protection"])
@@ -137,8 +152,9 @@ class GroupView:
 		"""A group's petition puts blame on the founder; the log says who and why, once in a while."""
 		self.needs.send(AddScandal(amount))
 		last = group_record.last_logged_year
-		if last is None or self.year - last >= year_gap:  # type: ignore[attr-defined]
-			group_record.last_logged_year = self.year  # type: ignore[attr-defined]
+		year = self.world.setting.year
+		if last is None or year - last >= year_gap:
+			group_record.last_logged_year = year
 			self.needs.send(RecordEvent.from_line(text))  # the caller passes a LogLine (InterestGroup.words)
 
 	def money_text(self, amount: float, grouped: bool = False, short: bool = False) -> str:
@@ -153,11 +169,11 @@ class GroupView:
 
 	def state_in_deficit(self) -> bool:
 		"""Whether the state could pay all it set out to last year."""
-		record = self.government().record
+		record = self.world.setting.government().record
 		return sum(record.unfunded.values()) > 1e-9
 
 	def concession_paid(self, line_name: str) -> float:
 		"""What the state paid last year on a named line of its budget."""
-		record = self.government().record
+		record = self.world.setting.government().record
 		return max(0.0, record.need.get(line_name, 0.0) - record.unfunded.get(line_name, 0.0))
 

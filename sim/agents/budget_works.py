@@ -33,28 +33,28 @@ def works_upkeep_lines(world: Any) -> List[Line]:
 	for work in state_works.WORKS:
 		person_years = stock[work.name] * MASONRY_PERSON_YEARS_PER_M2 / PUBLIC_BUILDING_LIFE_YEARS
 		if person_years > 0.0:
-			lines.append(budget_lines.paid(world, work.name, "requisition", {world.trade_of_role(work.role): person_years}))
+			lines.append(budget_lines.paid(world, work.name, "requisition", {world.labour.trade_of_role(work.role): person_years}))
 	return [line for line in lines if line.money > 0.0]
 
 
 def collection_line(world: Any) -> List[Line]:
 	"""Collectors for the forms the state raises: each form's base, counted in years of an unskilled wage, over
 	what a collector handles of that kind of base in a year."""
-	wage = world.pay_per_person_year(world.trade_of_role("unskilled"))
+	wage = world.labour.pay_per_person_year(world.labour.trade_of_role("unskilled"))
 	if wage <= 0.0:
 		return []
 	collectors = 0.0
-	for assessed in world.revenue_assessments():
+	for assessed in world.revenue.revenue_assessments():
 		handled = BASE_PER_COLLECTOR_WAGE_YEAR.get(assessed.basis, PROPERTY_TAX_BASE_PER_COLLECTOR_WAGE_YEAR)
 		collectors += assessed.base / wage / handled
-	line = budget_lines.paid(world, "tax_collection", "office", {world.trade_of_role("clerk"): collectors})
+	line = budget_lines.paid(world, "tax_collection", "office", {world.labour.trade_of_role("clerk"): collectors})
 	return [line] if line.money > 0.0 else []
 
 
 def _frontier_disease_loss(world: Any) -> float:
 	"""The share of working-age people the diseases of the frontier region take in a year, when the world can say
 	(a country that does not follow its regions' disease reads none)."""
-	read = getattr(world, "frontier_disease_loss", None)   # a foreign country's world does not follow its regions' disease
+	read = getattr(world.people, "frontier_disease_loss", None)   # a foreign country's world does not follow its regions' disease
 	return float(read()) if read is not None else 0.0
 
 
@@ -63,18 +63,18 @@ def campaign_line(world: Any, soldiers: float) -> List[Line]:
 	back, more men marching as the frontier region's disease takes some of them. The army does not move on the
 	map, so the distance is the radius of a region with the frontier's length.
 	TEMPORARY HEURISTIC (CLAUDE.md 4.4)."""
-	marching = soldiers * min(1.0, CAMPAIGN_SHARE_OF_ARMY_PER_UNIT_THREAT * world.threat_pressure())
+	marching = soldiers * min(1.0, CAMPAIGN_SHARE_OF_ARMY_PER_UNIT_THREAT * world.army.threat_pressure())
 	marching *= disease.nation.provisioning_factor(_frontier_disease_loss(world))
-	days = 2.0 * (world.territory().frontier_km / (2.0 * math.pi)) / MARCH_KM_PER_DAY
+	days = 2.0 * (world.revenue.territory().frontier_km / (2.0 * math.pi)) / MARCH_KM_PER_DAY
 	tonnes = marching * days * SOLDIER_GRAIN_KG_PER_DAY / 1000.0
 	if tonnes <= 0.0:
 		return []
-	return [Line("campaign", "requisition", {}, 0.0, **goods(world, world.staple_material(), tonnes))]
+	return [Line("campaign", "requisition", {}, 0.0, **goods(world, world.quotes.staple_material(), tonnes))]
 
 
 def donative_line(world: Any, soldiers: float) -> List[Line]:
 	"""The gift to each soldier when a new ruler has acceded and it is still unpaid."""
-	if not world.government().record.accession_due or soldiers <= 0.0:
+	if not world.setting.government().record.accession_due or soldiers <= 0.0:
 		return []
 	return [Line("donative", "requisition",
-				 transfer=soldiers * world.pay_per_person_year(world.trade_of_role("soldier")) * DONATIVE_SHARE_OF_ANNUAL_PAY)]
+				 transfer=soldiers * world.labour.pay_per_person_year(world.labour.trade_of_role("soldier")) * DONATIVE_SHARE_OF_ANNUAL_PAY)]

@@ -33,16 +33,16 @@ def run_orders(player: Any, world: Any) -> None:
 		name = order.get("command") if isinstance(order, dict) else None
 		handler = commands.get(name) if isinstance(name, str) else None
 		if handler is None:
-			write_journal(player, world.year, name, False, "unknown command")
+			write_journal(player, world.setting.year, name, False, "unknown command")
 			continue
 		try:
 			detail = handler(player, order, world)
 		except CommandRejected as reason:
-			write_journal(player, world.year, name, False, str(reason))
+			write_journal(player, world.setting.year, name, False, str(reason))
 		except (KeyError, TypeError, ValueError, AttributeError) as error:
-			write_journal(player, world.year, name, False, "invalid command: %s %s" % (type(error).__name__, error))
+			write_journal(player, world.setting.year, name, False, "invalid command: %s %s" % (type(error).__name__, error))
 		else:
-			write_journal(player, world.year, name, True, detail or "")
+			write_journal(player, world.setting.year, name, True, detail or "")
 
 
 def _node_of(order: Dict[str, Any]) -> str:

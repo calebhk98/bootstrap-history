@@ -30,7 +30,7 @@ class SightWorld(FakeWorld):
 
 def make_world(shows):
 	world = SightWorld()
-	world.nodes["shop"] = make_node("shop", hours=100.0, revenue=60000.0, upkeep=1000.0)
+	world.setting.nodes["shop"] = make_node("shop", hours=100.0, revenue=60000.0, upkeep=1000.0)
 	world.demonstrated_nodes = {"shop"}
 	world.proven = {"shop"}
 	world.shows["shop"] = shows

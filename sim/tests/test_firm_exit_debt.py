@@ -26,7 +26,7 @@ class NoGrowthWorld(FakeWorld):
 def indebted_firm(debt, revenue):
 	"""A firm running a concern past its ramp that owes `debt`, in a world where the concern earns `revenue` less costs."""
 	world = NoGrowthWorld(year=50)
-	world.nodes["shop"] = make_node("shop", hours=100.0, revenue=revenue, upkeep=1000.0)
+	world.setting.nodes["shop"] = make_node("shop", hours=100.0, revenue=revenue, upkeep=1000.0)
 	world.demonstrated_nodes = {"shop"}
 	registry = ActorRegistry(ActorsState(home_country="home"))
 	firm = registry.add("firm:1", ActorRecord(kind="firm", founded_year=0, business=Business.running(["shop"], opened_year=0)))
@@ -38,7 +38,7 @@ def years_until_closed(world, firm, limit=3 * EXIT_LOSS_YEARS + 10):
 	for _ in range(limit):
 		if firm.record.exited_year is not None:
 			break
-		world.year += 1
+		world.setting.year += 1
 		firm.act(world)
 	return firm
 

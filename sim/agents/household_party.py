@@ -135,7 +135,7 @@ class HouseholdParty:
 
 	def knows(self, node_id: str, world: Any) -> bool:
 		with self._ports.acting():
-			return node_id in self._ports.knowledge() or node_id in world.baseline_knowledge()
+			return node_id in self._ports.knowledge() or node_id in world.knowledge.baseline_knowledge()
 
 	def learn(self, chain: Any, world: Any) -> None:
 		with self._ports.acting():
@@ -183,7 +183,7 @@ class HouseholdParty:
 
 	def release_plant(self, node_id: str, world: Any) -> Plant:
 		with self._ports.acting():
-			plant = self._ports.release_plant(node_id, world.year)
+			plant = self._ports.release_plant(node_id, world.setting.year)
 		if plant is None:
 			raise KeyError("the business runs no plant of " + node_id)
 		return plant

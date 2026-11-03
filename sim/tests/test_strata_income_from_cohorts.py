@@ -12,7 +12,7 @@ from sim.agents import stratum_year
 from sim.agents.api import Stratum, observed_incomes, stratum_id
 from sim.agents.records import ActorRecord
 from sim.agents.strata_observed import slice_income
-from sim.actors.world_cast import CastView
+from sim.actors.world_people import People
 
 from .agents_fake_world import FakeWorld
 from .world_stand_in import fake_needs
@@ -65,16 +65,11 @@ class OpeningSim:
         self.registry = SimpleNamespace(of_kind=lambda kind: strata)
 
 
-class View(CastView):
-    def __init__(self, sim):
-        self.needs = sim.needs
-        self.registry = sim.registry
-
-    def pay_per_person_year(self, trade):
-        return PAY[trade]
-
-    def society_output(self):
-        return 1.0e6
+def View(sim):
+    """The people part over a world that pays the fixture's wages and makes a million."""
+    world = SimpleNamespace(needs=sim.needs, registry=sim.registry, labour=SimpleNamespace(pay_per_person_year=lambda trade: PAY[trade]),
+                            revenue=SimpleNamespace(society_output=lambda: 1.0e6))
+    return People(world)
 
 
 toilers, artisans = stratum("toilers", 8000.0, "labourer"), stratum("artisans", 2000.0, "artisan")

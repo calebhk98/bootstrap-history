@@ -73,7 +73,7 @@ class SurplusSpending(unittest.TestCase):
         paid = gap * MASONRY_PERSON_YEARS_PER_M2 * WAGE
         self.assertAlmostEqual(world.state.record.outlays["building " + work.name], paid)
         self.assertAlmostEqual(world.state.money, 1.0e9 - paid)
-        self.assertAlmostEqual(world.edge(EDGE_BUILDERS).balance(), paid)
+        self.assertAlmostEqual(world.setting.edge(EDGE_BUILDERS).balance(), paid)
 
     def test_nothing_is_spent_while_the_reserve_is_below_its_ceiling(self):
         need = 100.0

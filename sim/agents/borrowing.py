@@ -46,8 +46,8 @@ class Borrower:
 		"""The most this actor may owe in all: what its earning can carry at the market rate, and no
 		more than lenders hold after the others' loans."""
 		carried = capital_market.serviceable_debt(
-			self.credit_earning(world), max(world.market_rate(), world.starting_rate()), world.debt_service_share_of_surplus())
-		room = world.credit_headroom(self.identity())  # type: ignore[attr-defined]
+			self.credit_earning(world), max(world.credit.market_rate(), world.credit.starting_rate()), world.credit.debt_service_share_of_surplus())
+		room = world.credit.credit_headroom(self.identity())  # type: ignore[attr-defined]
 		return carried if room is None else min(carried, room)
 
 	def spare_credit(self, world: Any) -> float:
@@ -66,12 +66,12 @@ class Borrower:
 		"""The rate on `amount` borrowed on top of what the actor owes, by the share of the ceiling it then uses."""
 		ceiling = self.credit_ceiling(world)
 		used = (self.debt() + amount) / ceiling if ceiling > 0.0 else 1.0
-		return capital_market.borrower_rate(world.market_rate(), self.standing_discount(world), used)
+		return capital_market.borrower_rate(world.credit.market_rate(), self.standing_discount(world), used)
 
 	def may_issue_bonds(self, world: Any) -> bool:
 		"""Whether the actor's society holds a technology declaring the `bond_market` mechanic, in the actor's own
 		knowledge or in what its society already knows."""
-		return any(self.knows(node_id, world) for node_id in world.nodes_with_mechanic("bond_market"))  # type: ignore[attr-defined]
+		return any(self.knows(node_id, world) for node_id in world.credit.nodes_with_mechanic("bond_market"))  # type: ignore[attr-defined]
 
 	def prepare_bonds(self, world: Any) -> None:
 		"""The year's bond terms and redemptions for an actor that is not a state: where its society holds the bond
@@ -80,7 +80,7 @@ class Borrower:
 		term are repaid."""
 		bonds = self.purses.bonds  # type: ignore[attr-defined]
 		if self.may_issue_bonds(world):
-			bonds.set_terms(self.account_id, world.market_rate(), self.borrowing_rate(world))  # type: ignore[attr-defined]
+			bonds.set_terms(self.account_id, world.credit.market_rate(), self.borrowing_rate(world))  # type: ignore[attr-defined]
 		else:
 			bonds.terms.pop(self.account_id, None)  # type: ignore[attr-defined]
 		self.purses.redeem_bonds(self.account_id)  # type: ignore[attr-defined]
@@ -91,7 +91,7 @@ class Borrower:
 		if debt > 0.0:
 			ceiling = self.credit_ceiling(world)
 			used = debt / ceiling if ceiling > 0.0 else 1.0
-		return capital_market.borrower_rate(world.market_rate(), self.standing_discount(world), used)
+		return capital_market.borrower_rate(world.credit.market_rate(), self.standing_discount(world), used)
 
 	@property
 	def arrears_book(self) -> Any:
@@ -115,7 +115,7 @@ class Borrower:
 		owed = (floating * self.borrowing_rate(world) if floating > 0.0 else 0.0) + bonds.coupons_due(self.account_id)  # type: ignore[attr-defined]
 		paid, unpaid = borrowing_arrears.settle_year(owed, self.spare_credit(world))
 		if paid > 0.0:
-			world.pay_interest(self, paid, "interest")
+			world.credit.pay_interest(self, paid, "interest")
 		record.interest_arrears += unpaid
 		# A debt over its ceiling owes the excess as principal due (a margin call); unpaid, it is arrears at any rate.
 		margin_call = max(0.0, debt - self.credit_ceiling(world))

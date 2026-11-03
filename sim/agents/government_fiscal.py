@@ -31,7 +31,7 @@ class FiscalMixin:
 	def pull_tax_response_levers(self, choice: Dict[str, float], world: Any) -> Dict[str, Any]:
 		"""Set the tax-response levers the choice covered money with (the same levers a player pulls): collective liability, a
 		full amnesty, and a remission of a step of the rate in the share of its yield the choice took. The levers it set."""
-		context = government_levers.LeverContext(declared_forms=world.revenue_forms())
+		context = government_levers.LeverContext(declared_forms=world.revenue.revenue_forms())
 		wanted = {}
 		if choice.get(fiscal_response.LIABILITY, 0.0) > 0.0:
 			wanted[fiscal_response.LIABILITY] = COLLECTIVE
@@ -67,12 +67,12 @@ class FiscalMixin:
 		"""Raise the rate of each form paid in kind, as far as `amount` of money's worth of the base reaches, through
 		the same lever a player pulls; the rates it set. Next year's assessment is on them."""
 		record = self.record  # type: ignore[attr-defined]
-		forms = [form for form in world.revenue_forms() if form.get("paid_in") and form["rate"] > 0.0]
+		forms = [form for form in world.revenue.revenue_forms() if form.get("paid_in") and form["rate"] > 0.0]
 		capacity = fiscal_response.in_kind_base(record, world) * KIND_DEMAND_RATE_STEP
 		if capacity <= 0.0:
 			return {}
 		fraction = min(1.0, amount / capacity)
-		context = government_levers.LeverContext(declared_forms=world.revenue_forms())
+		context = government_levers.LeverContext(declared_forms=world.revenue.revenue_forms())
 		rates: Dict[str, float] = {}
 		for form in forms:
 			rate = min(1.0, form["rate"] * (1.0 + KIND_DEMAND_RATE_STEP * fraction))
@@ -90,7 +90,7 @@ class FiscalMixin:
 		if capacity <= 0.0:
 			return {}
 		fraction = min(1.0, amount / capacity)
-		context = government_levers.LeverContext(declared_forms=world.revenue_forms())
+		context = government_levers.LeverContext(declared_forms=world.revenue.revenue_forms())
 		rates: Dict[str, float] = {}
 		for assessed in raisable:
 			rate = min(1.0, assessed.rate * (1.0 + RATE_RAISE_STEP * fraction))

@@ -31,18 +31,18 @@ class StandInSim:
 class EntryGrossTests(unittest.TestCase):
     def test_a_concern_shares_its_takings_among_rivals_and_entrants(self):
         world = ActorWorld(StandInSim())
-        self.assertAlmostEqual(world.entry_gross("weaver", rivals=3.0, entrants=2), TAKINGS * MARKET_FACTOR / 5.0)
-        self.assertAlmostEqual(world.entry_gross("school", rivals=3.0, entrants=1), TAKINGS * MARKET_FACTOR / 4.0)
+        self.assertAlmostEqual(world.concerns.entry_gross("weaver", rivals=3.0, entrants=2), TAKINGS * MARKET_FACTOR / 5.0)
+        self.assertAlmostEqual(world.concerns.entry_gross("school", rivals=3.0, entrants=1), TAKINGS * MARKET_FACTOR / 4.0)
 
     def test_a_concern_expects_less_the_more_rivals_there_are(self):
         world = ActorWorld(StandInSim())
-        self.assertLess(world.entry_gross("weaver", 6.0, 1), world.entry_gross("weaver", 1.0, 1))
+        self.assertLess(world.concerns.entry_gross("weaver", 6.0, 1), world.concerns.entry_gross("weaver", 1.0, 1))
 
 
 class EntrantsRateTests(unittest.TestCase):
     def test_the_entrants_cost_of_capital_is_the_capital_markets_rate(self):
         game = StandInSim(market_rate=0.0731)
-        self.assertEqual(ActorWorld(game).market_rate(), 0.0731)
+        self.assertEqual(ActorWorld(game).credit.market_rate(), 0.0731)
 
 
 if __name__ == "__main__":

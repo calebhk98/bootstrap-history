@@ -57,7 +57,7 @@ class EntryWorld(FakeWorld):
 
 
 world = EntryWorld()
-world.nodes["shop"] = make_node("shop", hours=100.0, revenue=60000.0, upkeep=1000.0)
+world.setting.nodes["shop"] = make_node("shop", hours=100.0, revenue=60000.0, upkeep=1000.0)
 world.demonstrated_nodes = {"shop"}
 world.proven = {"shop"}
 registry, stratum = make_stratum(members=1000.0, savings=1.0e9)

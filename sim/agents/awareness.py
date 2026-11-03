@@ -25,7 +25,7 @@ def knows_it_exists(actor: Any, node_id: str, world: Any) -> bool:
 	aware = getattr(actor, "aware", None)
 	if aware is None or not getattr(actor, "researches", False) or node_id in aware or actor.knows(node_id, world):
 		return True
-	return node_id not in world.demonstrated()
+	return node_id not in world.knowledge.demonstrated()
 
 
 def record_contact(actor: Any, source_place: Any, volume: float) -> None:
@@ -56,7 +56,7 @@ def volume_with(learner: Any, holders: Iterable[Any], world: Any) -> float:
 	total = 0.0
 	for holder in holders:
 		place = holder.location()
-		total += float(world.contact_volume(holder.location(), learner.location()))
+		total += float(world.research.contact_volume(holder.location(), learner.location()))
 		total += learner.contacts.get(NO_PLACE if place is None else str(place), 0.0)
 	return total
 
@@ -65,9 +65,9 @@ def spread(actors: Iterable[Any], world: Any) -> List[str]:
 	"""One year of news: each actor that lacks a shown node and is not aware of it may become aware.
 	Returns "actor:node" for each new awareness, in order. Contact events fade after being counted."""
 	ordered = sorted(actors, key=lambda actor: actor.identity())
-	demonstrated = world.demonstrated()
+	demonstrated = world.knowledge.demonstrated()
 	held = {node_id for actor in ordered for node_id in actor.knowledge}
-	shown = sorted((demonstrated | held) - world.baseline_knowledge())
+	shown = sorted((demonstrated | held) - world.knowledge.baseline_knowledge())
 	found = []
 	for node_id in shown:
 		holders = [actor for actor in ordered if node_id in actor.knowledge]
@@ -75,10 +75,10 @@ def spread(actors: Iterable[Any], world: Any) -> List[str]:
 			if learner.knows(node_id, world) or node_id in learner.aware:
 				continue
 			volume = volume_with(learner, [holder for holder in holders if holder is not learner], world)
-			volume += DEMONSTRATION_VOLUME * float(world.exposure(node_id, learner.location()))
-			roll = world.rng_for(world.year, "awareness", node_id, learner.identity()).random()
+			volume += DEMONSTRATION_VOLUME * float(world.knowledge.exposure(node_id, learner.location()))
+			roll = world.setting.rng_for(world.setting.year, "awareness", node_id, learner.identity()).random()
 			if roll < hazard(volume):
-				learner.aware[node_id] = world.year
+				learner.aware[node_id] = world.setting.year
 				found.append("%s:%s" % (learner.identity(), node_id))
 	for learner in ordered:
 		fade_contacts(learner)

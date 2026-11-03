@@ -12,7 +12,7 @@ import unittest
 
 from sim.actors.api import NoteTraderMargin
 from sim.agents import edges
-from sim.actors.world_trade import TradeView
+from sim.actors.world_trade import Trade
 from sim.foreign_trade.api import NoteActorHomeTrade, NoteCargoLeg, SettleTraderCargo
 from sim.foreign_trade.module import ForeignTrade
 from sim.foreign_trade.state import ForeignTradeWorld
@@ -136,11 +136,24 @@ class CargoSettlement(unittest.TestCase):
                          [PayActorFromEdge(edges.EDGE_FREIGHT, "government:" + PARTNER, 3.0, "tax:tariff")])
 
 
-class Shipping(TradeView):
-    """A trader's view of the world with prices fixed and the module's leg book behind the game's seams."""
+class ShippingTrade(Trade):
+    """The trade part with prices fixed."""
+
+    def _home_place(self):
+        return "home"
+
+    def price_at(self, material, place):
+        return 10.0 if place == "home" else 4.0
+
+    def freight_between(self, source, destination, material, tonnes):
+        return 2.0 * tonnes
+
+
+class Shipping:
+    """A stand-in world with prices fixed and the module's leg book behind the game's seams."""
 
     def __init__(self):
-        self.notes, self._memo = [], {}
+        self.notes = []
         self.module = trade_module()
         module = self.module
 
@@ -157,38 +170,21 @@ class Shipping(TradeView):
                     self_notes.append(("home" if isinstance(command, NoteActorHomeTrade) else "partner", command))
         self_notes = self.notes
         self.needs = Needs()
-
-    def _home_place(self):
-        return "home"
-
-    def price_at(self, material, place):
-        return 10.0 if place == "home" else 4.0
-
-    def freight_between(self, source, destination, material, tonnes):
-        return 2.0 * tonnes
-
-    def commodity_of(self, material):
-        return material
-
-    def market_sale(self, seller_id, material, tonnes):
-        self.notes.append(("sale", tonnes))
-
-    def market_purchase(self, buyer_id, commodity, tonnes):
-        self.notes.append(("purchase", tonnes))
+        self.trade = ShippingTrade(self)
 
 
 class ShippingNotesTheLeg(unittest.TestCase):
     def test_the_home_side_is_left_to_the_book(self):
         world = Shipping()
-        self.assertEqual(world.ship(TRADER, "grain", 5.0, PARTNER, "home"), (20.0, 50.0))
+        self.assertEqual(world.trade.ship(TRADER, "grain", 5.0, PARTNER, "home"), (20.0, 50.0))
         self.assertEqual([note for note in world.notes if note[0] in ("sale", "purchase")], [])
         (leg,) = world.module.cargo_legs()
         self.assertEqual((leg["kind"], leg["tonnes"], leg["paid"], leg["received"], leg["carriage"]), ("in", 5.0, 20.0, 50.0, 10.0))
 
     def test_cargo_leaving_home_is_a_taking_leg_and_cargo_arriving_a_landing_leg(self):
         world = Shipping()
-        world.ship(TRADER, "grain", 5.0, "home", PARTNER)
-        world.ship(TRADER, "grain", 3.0, PARTNER, "home")
+        world.trade.ship(TRADER, "grain", 5.0, "home", PARTNER)
+        world.trade.ship(TRADER, "grain", 3.0, PARTNER, "home")
         self.assertEqual([note for note in world.notes if note[0] in ("sale", "purchase")], [])
         self.assertEqual(sorted(leg["kind"] for leg in world.module.cargo_legs()), ["in", "out"])
 

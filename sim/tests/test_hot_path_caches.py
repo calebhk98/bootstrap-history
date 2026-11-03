@@ -7,6 +7,7 @@ output looked up the production catalog through a path-resolving call.
 """
 QUICK_TOPIC = True
 
+from sim.tests.agents_fake_world import flat_world
 import os
 
 from .harness import *  # noqa: F401,F403
@@ -45,6 +46,7 @@ check("a warm production lookup lists no directories",
 from sim.agents.base import Actor as _Actor
 
 
+@flat_world
 class _CountingWorld:
     year = 100
 
@@ -83,6 +85,7 @@ from sim.agents.api import Business as _Business
 from sim.engine.state import ActorRecord as _Record, ActorsState as _ActorsState
 
 
+@flat_world
 class _TonnesWorld:
     year = 100
 

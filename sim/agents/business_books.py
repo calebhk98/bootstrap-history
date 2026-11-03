@@ -18,7 +18,7 @@ def operate(business: Business, owner: Any, entry_key: str, world: Any, rivals: 
 	Returns the year's margin."""
 	weight = adoption.plant_weight(owner.adoption, entry_key)   # the share of the plant that runs the technique
 	size = business.size_of(entry_key) * weight
-	books = world.plant_books(entry_key, business.opened_year_of(entry_key, world.year), rivals, size)
+	books = world.enterprises.plant_books(entry_key, business.opened_year_of(entry_key, world.setting.year), rivals, size)
 	if books is None:   # the plant's country keeps no record of a figure its books need: it stands idle
 		business.note_crew_found(entry_key, 0.0)
 		business.note_takings(entry_key, 0.0)
@@ -29,12 +29,12 @@ def operate(business: Business, owner: Any, entry_key: str, world: Any, rivals: 
 	business.note_takings(entry_key, takings)
 	upkeep = books.upkeep
 	wages = found * books.wages   # at the economy's wage for each trade (the core's clearing pays the crew, not here)
-	if not world.sells_on_book(entry_key):   # what sells in the book is paid when the year's market clears
-		ledger.transfer(world.edge(EDGE_CUSTOMERS), owner, takings, "takings")
-	ledger.transfer(owner, world.edge(EDGE_SUPPLIERS), upkeep, "upkeep")
-	state = world.government()
+	if not world.market.sells_on_book(entry_key):   # what sells in the book is paid when the year's market clears
+		ledger.transfer(world.setting.edge(EDGE_CUSTOMERS), owner, takings, "takings")
+	ledger.transfer(owner, world.setting.edge(EDGE_SUPPLIERS), upkeep, "upkeep")
+	state = world.setting.government()
 	levy = 0.0 if state is owner else state.collect(owner, takings, world)   # a state does not levy its own works
-	royalty = world.collect_royalty(owner, entry_key, takings)
+	royalty = world.disclosure.collect_royalty(owner, entry_key, takings)
 	return takings - upkeep - wages - levy - royalty
 
 
@@ -43,28 +43,28 @@ def carry(business: Business, owner: Any, entry_key: str, world: Any) -> float:
 	(hired and paid by the clearing like any crew; the same costs an entrant weighs, firm_entry.carrying_cost).
 	Returns the rent paid plus the managers' estimated pay."""
 	size = business.size_of(entry_key)
-	rent = world.site_rent(entry_key, size, owner.location())
+	rent = world.site.site_rent(entry_key, size, owner.location())
 	places = firm_entry.management_places(world, entry_key, size)
 	if rent is None or places is None:   # the plant's country keeps no record of a figure: it pays nothing it cannot read
 		return 0.0
-	ledger.transfer(owner, world.edge(EDGE_LANDOWNERS), rent, "site rent")
+	ledger.transfer(owner, world.setting.edge(EDGE_LANDOWNERS), rent, "site rent")
 	trade, people = places
 	if trade is None:
 		return rent
 	posted = owner.record.staff_wanted
 	posted[trade] = posted.get(trade, 0.0) + people
-	return rent + people * world.hours_per_person_year * world.hourly_pay(trade)
+	return rent + people * world.labour.hours_per_person_year * world.labour.hourly_pay(trade)
 
 
 def yearly_costs(world: Any, entry_key: str) -> Optional[Tuple[float, float]]:
 	"""(upkeep, wage bill) of a plant of the entry at its founding size: what a new operator expects to pay; None
 	when the actor's country keeps no record of a figure they need."""
-	return world.plant_costs(entry_key)
+	return world.concerns.plant_costs(entry_key)
 
 
 def ramp(business: Business, entry_key: str, world: Any) -> float:
 	"""How far a plant has ramped up, 0..1."""
-	return world.ramp(business.opened_year_of(entry_key, world.year), entry_key)
+	return world.concerns.ramp(business.opened_year_of(entry_key, world.setting.year), entry_key)
 
 
 def any_ramping(business: Business, world: Any) -> bool:

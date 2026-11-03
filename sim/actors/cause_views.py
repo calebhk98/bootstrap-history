@@ -17,7 +17,7 @@ class CauseViews:
 	def army_figures(self) -> Dict[str, float]:
 		"""Soldiers the state's threat calls for and soldiers it keeps."""
 		world = self.actor_world()  # type: ignore[attr-defined]
-		return {"wanted": world.army_wanted(), "under_arms": world.soldiers_under_arms()}
+		return {"wanted": world.army.army_wanted(), "under_arms": world.army.soldiers_under_arms()}
 
 	def state_knows(self, node_id: str) -> bool:
 		"""Whether the acting seat's government holds the technology."""

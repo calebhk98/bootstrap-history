@@ -31,7 +31,7 @@ highest = 0.0
 excess = 0.0
 years = 0
 while firm.record.exited_year is None and years < 100:
-	world.year += 1
+	world.setting.year += 1
 	years += 1
 	year_interest = firm.debt() * firm.borrowing_rate(world)
 	firm.act(world)
@@ -56,7 +56,7 @@ check("the unpaid interest is arrears", firm.record.interest_arrears > 0.0 and f
 # a borrower paying its interest is untouched
 world, registry, firm = firm_owing(debt=5.0, margin=1.0e6)
 for _ in range(10):
-	world.year += 1
+	world.setting.year += 1
 	firm.pay_interest(world)
 check("a firm that can pay its interest has no arrears and does not default",
 	firm.record.interest_arrears == 0.0 and firm.record.arrears_years == 0 and firm.record.exited_year is None, firm.record.arrears_years)

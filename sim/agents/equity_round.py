@@ -16,8 +16,8 @@ from .tuning_patent import DIVIDEND_PAYOUT_SHARE
 def whole_equity_worth(firm: Any, world: Any) -> float:
 	"""What the whole of the firm's equity is worth now: the present value, at the market rate, of the dividends it
 	pays out of its last margin."""
-	return capital_market.perpetuity_value(DIVIDEND_PAYOUT_SHARE * firm.record.last_margin, world.market_rate(),
-										   capital_market.RATE_FLOOR_SHARE * world.starting_rate())
+	return capital_market.perpetuity_value(DIVIDEND_PAYOUT_SHARE * firm.record.last_margin, world.credit.market_rate(),
+										   capital_market.RATE_FLOOR_SHARE * world.credit.starting_rate())
 
 
 def raise_equity(registry: Any, world: Any, firm: Any) -> float:

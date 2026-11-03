@@ -3,6 +3,7 @@ pricing a landed good before lenders first meet cannot loop back through society
 
 QUICK_TOPIC = True
 
+from sim.tests.agents_fake_world import flat_namespace
 import types
 import unittest
 
@@ -17,7 +18,7 @@ def world_with(offers):
     def output_must_not_be_read():
         raise AssertionError("household saving read before lenders met")
     return finance_host.build(lender_offers_made=lambda: dict(purses.offers),
-                              actor_world=types.SimpleNamespace(household_saving=output_must_not_be_read))
+                              actor_world=flat_namespace(household_saving=output_must_not_be_read))
 
 
 class FundsBeforeTheLendersMeet(unittest.TestCase):

@@ -21,7 +21,7 @@ def terms_problem(licensee: Any, fee: float, royalty: float, node_id: Any = None
 		return Refusal("licensee_cannot_pay", "the licensee cannot pay the fee", fee=fee, treasury=licensee.money)
 	if node_id is not None and world is not None and licensee.kind in VALUING_KINDS:
 		worth = licensee.imitation_worth(node_id, world)
-		stream = royalty * world.entry_gross(node_id, 0.0, 1.0) * VALUE_HORIZON_YEARS if royalty > 0.0 else 0.0
+		stream = royalty * world.concerns.entry_gross(node_id, 0.0, 1.0) * VALUE_HORIZON_YEARS if royalty > 0.0 else 0.0
 		if fee + stream > worth:
 			return Refusal("fee_above_value", "the licensee values the know-how below these terms",
 						   fee=fee, royalty_stream=stream, worth=worth)
@@ -31,7 +31,7 @@ def terms_problem(licensee: Any, fee: float, royalty: float, node_id: Any = None
 def grant(licensor: Any, licensee: Any, node_id: str, fee: float, world: Any) -> bool:
 	"""The licensee pays `fee` to the licensor and can make `node_id` at once. False, and nothing
 	moves, when there is nothing the licensee still lacks or when someone else holds the patent."""
-	entry = world.patent_entry(node_id)
+	entry = world.disclosure.patent_entry(node_id)
 	if entry is not None and entry["holder"] != getattr(licensor, "actor_id", None):
 		return False
 	chain = imitation.missing_chain(node_id, world, licensee)
@@ -58,7 +58,7 @@ def collect_patent_royalty(world: Any, find_holder: Any, firm: Any, node_id: str
 	owed = getattr(getattr(firm, "record", None), "royalty_owed", {}).get(node_id)
 	holder = find_holder(owed["holder"]) if owed else None
 	entry = holder.record.patents.get(node_id) if holder is not None else None
-	if entry is None or not patent.live(entry, world.year):
+	if entry is None or not patent.live(entry, world.setting.year):
 		return 0.0
 	due = min(royalty_due(takings, {"royalty": owed["rate"]}), max(0.0, firm.money))
 	ledger.transfer(firm, holder, due, "licence")

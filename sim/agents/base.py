@@ -74,7 +74,7 @@ class Actor(Reviewable, Borrower):
 
 	# ---- what the actor values -------------------------------------------
 	def knows(self, node_id: str, world: Any) -> bool:
-		return node_id in self.knowledge or node_id in world.baseline_knowledge()
+		return node_id in self.knowledge or node_id in world.knowledge.baseline_knowledge()
 
 	def imitation_worth(self, node_id: str, world: Any) -> float:
 		"""Money-equivalent worth to this actor of having the invention."""
@@ -112,9 +112,9 @@ class Actor(Reviewable, Borrower):
 
 	def output_by_concern(self, material: str, world: Any) -> List[Tuple[str, float]]:
 		"""[(node id, tonnes a year)] of `material` each of the actor's concerns puts on the market."""
-		makers = world.concerns_making(material)
-		return [(node_id, world.concern_output_tonnes(node_id, material,
-													  self.opened_year_of(node_id, world.year),
+		makers = world.enterprises.concerns_making(material)
+		return [(node_id, world.concerns.concern_output_tonnes(node_id, material,
+													  self.opened_year_of(node_id, world.setting.year),
 													  self.staffed_share(node_id) * self.capacity_of(node_id)))
 				for node_id in sorted(node_id for node_id in self.concerns if node_id in makers)]
 
@@ -124,9 +124,9 @@ class Actor(Reviewable, Borrower):
 
 	def sell_output(self, world: Any) -> None:
 		"""Put what the actor's concerns make this year into the one goods market, each concern at its own cost."""
-		for material in sorted({made for node_id in self.concerns for made in world.materials_made_by(node_id)}):
+		for material in sorted({made for node_id in self.concerns for made in world.enterprises.materials_made_by(node_id)}):
 			by_concern = self.output_by_concern(material, world)
-			world.market_sale(self.actor_id, material, sum(tonnes for _node_id, tonnes in by_concern), by_concern)
+			world.market.market_sale(self.actor_id, material, sum(tonnes for _node_id, tonnes in by_concern), by_concern)
 
 	def prominence(self) -> float:
 		"""How prominent the actor is as a person; a business has none."""
@@ -172,20 +172,20 @@ class Actor(Reviewable, Borrower):
 	def imitation_candidates(self, world: Any) -> List[str]:
 		"""The inventions this actor might value, in id order; an actor that
 		values only some of them narrows this so it is not scanned in full."""
-		return sorted(world.demonstrated())
+		return sorted(world.knowledge.demonstrated())
 
 	def imitation_options(self, world: Any) -> List[Option]:
 		"""Priced options for the inventions that look most worth copying."""
 		candidates = []
 		known = self.knowledge
-		baseline = world.baseline_knowledge()
+		baseline = world.knowledge.baseline_knowledge()
 		for node_id in self.imitation_candidates(world):
 			if node_id in known or node_id in baseline or node_id in self.works \
 					or not awareness.knows_it_exists(self, node_id, world):
 				continue
 			worth = self.imitation_worth(node_id, world)
 			if worth > 0 and imitation.in_sight(self.location(), node_id, world):
-				candidates.append((worth * world.exposure(node_id, self.location()), node_id))
+				candidates.append((worth * world.knowledge.exposure(node_id, self.location()), node_id))
 		candidates.sort(key=lambda item: (-item[0], item[1]))
 		options = []
 		for worth, node_id in candidates[:ATTENTION_SPAN]:
@@ -208,7 +208,7 @@ class Actor(Reviewable, Borrower):
 		for option in self.decision_policy.choose(self, decision):
 			detail = option.detail
 			self.works[option.subject] = imitation.start_work(
-				option.subject, detail["chain"], detail["plan"], world.year)
+				option.subject, detail["chain"], detail["plan"], world.setting.year)
 			begun.append(option.subject)
 		return begun
 
@@ -222,7 +222,7 @@ class Actor(Reviewable, Borrower):
 			if not imitation.work_year(self, node_id, work, world):
 				continue
 			del self.works[node_id]
-			roll = world.rng_for(world.year, self.kind, node_id, self.identity())
+			roll = world.setting.rng_for(world.setting.year, self.kind, node_id, self.identity())
 			if roll.random() < imitation.copy_chance(work["chain"], world):
 				self.learn(work["chain"], world)
 				self.on_copied(node_id, world)
@@ -245,7 +245,7 @@ class Actor(Reviewable, Borrower):
 
 	def commit_research(self, node_id: str, costs: Dict[str, Any], world: Any) -> str:
 		"""Take the research on as a project in `works`."""
-		work = imitation.start_work(node_id, [node_id], costs, world.year)
+		work = imitation.start_work(node_id, [node_id], costs, world.setting.year)
 		work["research"] = True
 		self.works[node_id] = work
 		return "research begun, %d years" % costs["years"]

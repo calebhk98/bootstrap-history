@@ -3,6 +3,7 @@ world's levy rule; the labour pool, the wage, the visible scale and the shared c
 test_actor_pool_rules."""
 
 QUICK_TOPIC = True
+from sim.tests.agents_fake_world import flat_namespace
 from types import SimpleNamespace
 
 from .harness import *  # noqa: F401,F403
@@ -18,7 +19,7 @@ SCALE_LINE = 0.5
 
 
 def levy_world():
-    return SimpleNamespace(
+    return flat_namespace(
         visible_scale_of=lambda payer: scales[payer.actor_id],
         levy_shares=lambda scale, protection: (0.10 * scale, 0.05 * scale) if scale > SCALE_LINE else (0.0, 0.0))
 

@@ -3,6 +3,7 @@ levy rates and the goods market. Each is called on a stand-in `self` and world c
 
 QUICK_TOPIC = True
 
+from sim.tests.agents_fake_world import flat_namespace
 from types import SimpleNamespace
 import unittest
 from unittest import mock
@@ -29,7 +30,7 @@ class SeekShortfall(unittest.TestCase):
         return SimpleNamespace(record=record, levy_sought=lambda: sought)
 
     def world(self, payers):
-        return SimpleNamespace(visible_taxpayers=lambda: payers, notice_over=lambda scale: scale)
+        return flat_namespace(visible_taxpayers=lambda: payers, notice_over=lambda scale: scale)
 
     def test_the_base_is_the_visible_income_weighted_by_notice_and_the_rate_is_shortfall_over_it(self):
         stand_in = self.stand_in({"army": 100.0, "administration": 100.0})
@@ -53,7 +54,7 @@ class SeekShortfall(unittest.TestCase):
 class SpendOnLines(unittest.TestCase):
     def run_lines(self, lines, share):
         bids, transfers = [], []
-        world = SimpleNamespace(market_purchase=lambda buyer, commodity, tonnes, money: bids.append((buyer, commodity, tonnes, money)),
+        world = flat_namespace(market_purchase=lambda buyer, commodity, tonnes, money: bids.append((buyer, commodity, tonnes, money)),
                                 edge=lambda name: name)
         stand_in = SimpleNamespace(actor_id="state")
         with mock.patch.object(government.ledger, "transfer", lambda payer, edge, money, purpose: transfers.append((edge, money, purpose))):

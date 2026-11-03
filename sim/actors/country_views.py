@@ -38,7 +38,7 @@ class CountryViews:
 	def teaching_knowledge(self) -> Tuple[Dict[str, set], set, Any]:
 		"""(nodes held by each active actor, what the society already knows, what has been demonstrated): who can teach a trade."""
 		return (country_rules.knowledge_by_actor(self.cast().actors), set(self.needs.techniques_granted()),  # type: ignore[attr-defined]
-		        self.actor_world().demonstrated())  # type: ignore[attr-defined]
+		        self.actor_world().knowledge.demonstrated())  # type: ignore[attr-defined]
 
 	def harvest_share_taken(self, material: str) -> float:
 		"""Share of the harvest of a material the home state's forms take from growers; none without a government."""

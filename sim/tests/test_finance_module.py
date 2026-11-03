@@ -4,6 +4,7 @@ call are tested where they are (test_credit_freeze_rules, test_affordability_and
 
 QUICK_TOPIC = True
 
+from sim.tests.agents_fake_world import flat_namespace
 import unittest
 from types import SimpleNamespace
 
@@ -61,7 +62,7 @@ class SettleInterest(unittest.TestCase):
     def module(self, debt, ceiling=1000.0, rate=0.1):
         purses = Purses()
         purses.set_net("founder", -debt, "opening")
-        world = SimpleNamespace(pay_interest=lambda payer, owed, purpose: payer.note_outlay(purpose, sum(payer.purses.pay_interest(payer.account_id, owed).values())))
+        world = flat_namespace(pay_interest=lambda payer, owed, purpose: payer.note_outlay(purpose, sum(payer.purses.pay_interest(payer.account_id, owed).values())))
         module = finance_host.build(seat=FinanceSeat(), cast_state=SimpleNamespace(purses=purses), actor_world=world,
                                     acting_balance=lambda: purses.net("founder"))
         module.credit_limit = lambda *arguments: ceiling
@@ -158,7 +159,7 @@ class LendersMeeting(unittest.TestCase):
         return [command for command in module_harness.sent(module) if isinstance(command, kind)]
 
     def test_the_year_shares_the_pools_interest_before_it_fixes_who_offers_what(self):
-        world = SimpleNamespace(household_saving=lambda: 3.0)
+        world = flat_namespace(household_saving=lambda: 3.0)
         government = SimpleNamespace(actor_id="state", money=1000.0, record=SimpleNamespace(need={"army": 400.0}),
                                      cannot_meet_own_need=lambda: False)
         module = finance_host.build(state_treasury=government, actor_world=world)

@@ -19,8 +19,8 @@ from .tuning_trader import TRADER_DEPTH_SHARE, TRADER_RISK_SHARE
 def depth_room(world: Any, source: str, destination: str, material: str, planned: float = 0.0) -> float:
 	"""Tonnes a year that traders may still bring to the destination from any source, by the share of
 	buyers' depth, less what has already arrived there and `planned` cargo not yet shipped."""
-	depth = world.market_depth(material, destination)
-	return max(0.0, depth * TRADER_DEPTH_SHARE - world.delivered_this_year(material, destination) - planned)
+	depth = world.trade.market_depth(material, destination)
+	return max(0.0, depth * TRADER_DEPTH_SHARE - world.trade.delivered_this_year(material, destination) - planned)
 
 
 class Trader(RecordedActor):
@@ -35,7 +35,7 @@ class Trader(RecordedActor):
 		"""Trusted as its record lengthens, and not at all while it runs at a loss."""
 		if self.record.loss_years > 0 or self.record.founded_year is None:
 			return 0.0
-		return min(1.0, max(0.0, world.year - self.record.founded_year) / TRACK_RECORD_YEARS)
+		return min(1.0, max(0.0, world.setting.year - self.record.founded_year) / TRACK_RECORD_YEARS)
 
 	def cargo_budget(self, world: Any) -> float:
 		return max(0.0, self.money) + self.spare_credit(world)
@@ -44,17 +44,17 @@ class Trader(RecordedActor):
 		home = self.record.location
 		if home is None:
 			return []
-		return sorted({home} | set(world.trade_places(home)))
+		return sorted({home} | set(world.trade.trade_places(home)))
 
 	def route_options(self, world: Any) -> List[Option]:
 		"""One option per route that gains: a cargo sized by the buyers' depth left and by the budget."""
 		budget = self.cargo_budget(world)
-		rate = max(world.market_rate(), 0.0)
+		rate = max(world.credit.market_rate(), 0.0)
 		options = []
 		places = self.places(world)
 		# cargo already sized for a destination this year, so two sources do not each fill its room
 		planned: Dict[Tuple[str, str], float] = {}
-		for material in sorted(world.trade_materials()):
+		for material in sorted(world.trade.trade_materials()):
 			for source, destination, terms in gaining_routes(world, material, places, lambda _source: places):
 				arriving = planned.get((material, destination), 0.0)
 				tonnes = budget / terms["outlay"]
@@ -66,7 +66,7 @@ class Trader(RecordedActor):
 					continue
 				planned[(material, destination)] = arriving + tonnes
 				interest = terms["bought"] * rate
-				landed = world.price_after_cargo(material, destination, tonnes, True)
+				landed = world.trade.price_after_cargo(material, destination, tonnes, True)
 				average_sold = terms["sold"] if landed is None else (terms["sold"] + landed) / 2.0
 				options.append(Option(
 					subject=route_key(material, source, destination),
@@ -79,11 +79,11 @@ class Trader(RecordedActor):
 		"""Buy at the source, carry and sell at the destination; the margin made."""
 		detail = option.detail
 		tonnes = detail["tonnes"]
-		paid, received = world.ship(self.actor_id, detail["material"], tonnes, detail["source"], detail["destination"])
-		freight = world.freight_between(detail["source"], detail["destination"], detail["material"], tonnes)
-		ledger.transfer(self, world.edge(EDGE_MARKET), paid, "edge:market purchase")
-		ledger.transfer(self, world.edge(EDGE_FREIGHT), freight, EDGE_FREIGHT)
-		ledger.transfer(world.edge(EDGE_MARKET), self, received, "edge:market sale")
+		paid, received = world.trade.ship(self.actor_id, detail["material"], tonnes, detail["source"], detail["destination"])
+		freight = world.trade.freight_between(detail["source"], detail["destination"], detail["material"], tonnes)
+		ledger.transfer(self, world.setting.edge(EDGE_MARKET), paid, "edge:market purchase")
+		ledger.transfer(self, world.setting.edge(EDGE_FREIGHT), freight, EDGE_FREIGHT)
+		ledger.transfer(world.setting.edge(EDGE_MARKET), self, received, "edge:market sale")
 		margin = received - paid - freight
 		route = self.record.routes.setdefault(
 			option.subject, {"material": detail["material"], "tonnes": 0.0, "margin": 0.0, "years": 0})
@@ -95,7 +95,7 @@ class Trader(RecordedActor):
 		"""A trader in default stops carrying cargo; the claim is written off."""
 		super().default(world)
 		self.record.routes.clear()
-		self.record.exited_year = world.year
+		self.record.exited_year = world.setting.year
 
 	def act(self, world: Any) -> None:
 		if self.record.exited_year is not None:
@@ -115,6 +115,6 @@ class Trader(RecordedActor):
 		self.record.loss_years = self.record.loss_years + 1 if margin < 0 or not chosen else 0
 		if self.record.loss_years >= EXIT_LOSS_YEARS:
 			self.record.routes.clear()
-			self.record.exited_year = world.year
+			self.record.exited_year = world.setting.year
 			if self.money > 0.0:
-				ledger.transfer(self, world.edge(EDGE_POOLED_CAPITAL), self.money, EDGE_POOLED_CAPITAL)  # its owners take back what is left
+				ledger.transfer(self, world.setting.edge(EDGE_POOLED_CAPITAL), self.money, EDGE_POOLED_CAPITAL)  # its owners take back what is left

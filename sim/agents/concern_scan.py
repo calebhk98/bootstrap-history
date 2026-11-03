@@ -16,7 +16,7 @@ def plant_figures(business: Business, entry_key: str, registry: Any, world: Any,
 	keeps no record of a cost."""
 	tile = firm_entry.firm_tile(registry, None)
 	size = business.size_of(entry_key)
-	takings = world.entry_gross(entry_key, 0.0, 1.0) * size
+	takings = world.concerns.entry_gross(entry_key, 0.0, 1.0) * size
 	yearly = business_books.yearly_costs(world, entry_key)
 	carried = firm_entry.carrying_cost(world, entry_key, tile=tile)
 	if yearly is None or carried is None:   # the country keeps no record of a cost: the plant has no row
@@ -24,7 +24,7 @@ def plant_figures(business: Business, entry_key: str, registry: Any, world: Any,
 	upkeep, wages = yearly[0] * size, yearly[1] * size
 	carried *= size
 	costs = upkeep + wages + carried
-	return {"node": entry_key, "owner": owner_id or business.owner_id, "size": size, "sells": bool(world.sells_on_book(entry_key)),
+	return {"node": entry_key, "owner": owner_id or business.owner_id, "size": size, "sells": bool(world.market.sells_on_book(entry_key)),
 			"takings": takings, "upkeep": upkeep, "wages": wages, "carried": carried,
 			"costs": costs, "margin": takings - costs, "pays": takings > costs}
 

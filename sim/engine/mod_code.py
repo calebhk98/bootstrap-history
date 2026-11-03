@@ -318,7 +318,7 @@ class ModCodeApi:
     @staticmethod
     def rng(world: Any, *parts: Any) -> random.Random:
         """The world's keyed random source, so saves and the fingerprint stay reproducible."""
-        return world.rng_for(*parts)
+        return world.setting.rng_for(*parts)
 
 
 def operations_of(mods_dir: str) -> List[Operations]:

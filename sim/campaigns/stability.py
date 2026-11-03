@@ -38,8 +38,8 @@ class Stability:
 
 	# ---- readings of a state's year
 	def _state_grievance(self, world: Any, record: Any) -> Optional[float]:
-		income = sum(world.notice_over(scale) * income for scale, income in world.visible_taxpayers())
-		return rules.state_grievance(income, float(world.pay_per_person_year("labourer")), float(world.hours_per_person_year),
+		income = sum(world.taxpayers.notice_over(scale) * income for scale, income in world.taxpayers.visible_taxpayers())
+		return rules.state_grievance(income, float(world.labour.pay_per_person_year("labourer")), float(world.labour.hours_per_person_year),
 		                             sum(record.corvee_hours.values()), sum(record.revenue_by_form.values()),
 		                             record.need.get("dole", 0.0), record.unfunded.get("dole", 0.0), sum(record.unfunded.values()))
 
@@ -59,9 +59,9 @@ class Stability:
 
 	def _stability_of(self, owner: str) -> None:
 		world = self.needs.country_world[owner]
-		record = world.government().record
+		record = world.setting.government().record
 		year = int(self.needs.year())
-		people_by_tile = {tile: people for tile, people in sorted(world.collection_people_by_tile().items()) if people > 0.0}
+		people_by_tile = {tile: people for tile, people in sorted(world.collection.collection_people_by_tile().items()) if people > 0.0}
 		self.needs.send(SetLandTakenMemory(owner, unrest.fade_memory(record.land_taken_by_tile)))
 		if not people_by_tile:
 			return
@@ -99,7 +99,7 @@ class Stability:
 	# ---- a rising and what it changes
 	def _rising(self, owner: str, world: Any, record: Any, tile: str, soldiers: float, strength: float,
 	            garrison: Optional[Army], garrison_strength: float, on_seat: bool, year: int, cause: str) -> str:
-		draw = world.rng_for("revolt", tile, year).random()
+		draw = world.setting.rng_for("revolt", tile, year).random()
 		result = revolt.resolve(soldiers, strength, 0.0 if garrison is None else garrison.soldiers, garrison_strength, on_seat, draw)
 		self.needs.send(RecordWorldEvent("revolt", actors=(owner,), tiles=(tile,), cause=cause, facts=dict(
 			outcome=result.kind, rising_win_probability=result.rising_win_probability, rising_lost=result.rising_lost,
@@ -118,7 +118,7 @@ class Stability:
 	                        faction_members: float, reference: float, year: int) -> None:
 		"""The runner-up faction takes arms at the seat against the garrison there, in proportion to its backing."""
 		challenger = record.succession_challenger
-		backing = world.faction_backing()
+		backing = world.groups.faction_backing()
 		total = sum(backing.values())
 		if seat is None or challenger not in backing or total <= 0.0:
 			self.needs.send(CloseSuccessionDispute(owner))

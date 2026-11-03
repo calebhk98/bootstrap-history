@@ -17,13 +17,13 @@ class PlantBooks(NamedTuple):
 
 def home_books(world: Any, entry_key: str, opened_year: int, rivals: float, size: float) -> PlantBooks:
 	"""The books of a plant in the home economy."""
-	return PlantBooks(world.concern_takings(entry_key, opened_year, rivals, size), world.upkeep(entry_key, size),
-					  world.concern_wage_bill(entry_key, size))
+	return PlantBooks(world.concerns.concern_takings(entry_key, opened_year, rivals, size), world.concerns.upkeep(entry_key, size),
+					  world.concerns.concern_wage_bill(entry_key, size))
 
 
 def home_costs(world: Any, entry_key: str) -> Tuple[float, float]:
 	"""(upkeep, wage bill) of a plant of the concern at its founding size in the home economy."""
-	return world.upkeep(entry_key), world.concern_wage_bill(entry_key)
+	return world.concerns.upkeep(entry_key), world.concerns.concern_wage_bill(entry_key)
 
 
 def wage_bill_at(staff: Mapping[str, float], size: float, span_factor: float,

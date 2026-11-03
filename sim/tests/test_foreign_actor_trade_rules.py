@@ -7,7 +7,7 @@ QUICK_TOPIC = True
 import unittest
 from types import SimpleNamespace
 
-from sim.actors.world_trade import TradeView
+from sim.actors.world_trade import Trade
 from sim.foreign_trade import rules
 from sim.foreign_trade.commands import ResetActorTradeTallies, NoteActorHomeTrade, NoteActorTrade, NoteCargoLeg
 from sim.foreign_trade.constants import BOUGHT, SOLD
@@ -56,10 +56,10 @@ class ResetTalliesTests(unittest.TestCase):
 class ShipTests(unittest.TestCase):
     def ship(self, source, destination):
         needs = fake_needs(landed_cost=lambda paid, carriage: paid + carriage)
-        view = SimpleNamespace(
-            duty_between=lambda *args: 0.0, price_at=lambda material, place: 2.0, _home_place=lambda: "home",
-            freight_between=lambda *args: 1.0, needs=needs, _delivered=lambda: {})
-        paid_received = TradeView.ship(view, "trader", "wheat", 3.0, source, destination)
+        view = Trade(SimpleNamespace(needs=needs))
+        view.duty_between, view.price_at, view._home_place = lambda *args: 0.0, lambda material, place: 2.0, lambda: "home"
+        view.freight_between, view._delivered = lambda *args: 1.0, lambda: {}
+        paid_received = view.ship("trader", "wheat", 3.0, source, destination)
         calls = []
         for command in needs.sent:
             if isinstance(command, NoteActorHomeTrade):
@@ -81,7 +81,7 @@ class ShipTests(unittest.TestCase):
 
     def test_a_cargo_of_nothing_moves_nothing(self):
         self.assertEqual(self.ship("home", PARTNER)[0], (6.0, 6.0))
-        self.assertEqual(TradeView.ship(SimpleNamespace(), "trader", "wheat", 0.0, "home", PARTNER), (0.0, 0.0))
+        self.assertEqual(Trade(SimpleNamespace(needs=None)).ship("trader", "wheat", 0.0, "home", PARTNER), (0.0, 0.0))
 
 
 if __name__ == "__main__":

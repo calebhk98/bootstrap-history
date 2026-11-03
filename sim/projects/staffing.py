@@ -37,7 +37,7 @@ class Staffing:
 		"""The seat's business under the yearly review (sim/agents/business_review.py); what closed and why. Plants it
 		shuts are dated `year` (the scenario's when not given)."""
 		world = self.needs.actor_world()
-		world.review_year = year
+		world.seats.review_year = year
 		return self.needs.send(ReviewConcerns(tuple(rules)))
 
 	def note_venture_year(self):
@@ -47,7 +47,7 @@ class Staffing:
 		world = needs.actor_world()
 		for node_id in sorted(needs.operating()):
 			if node_id in nodes:
-				needs.send(NoteConcernYear(node_id, world.concern_margin(node_id)))
+				needs.send(NoteConcernYear(node_id, world.concerns.concern_margin(node_id)))
 
 	def staffing_closed_hand_shortfall(self):
 		"""(scholars, craftsmen) the household lacks to reopen every concern shut for want of staff.

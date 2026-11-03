@@ -5,6 +5,7 @@ the coin module's `charge_keeping` command handler over plain actors; the househ
 test_coin_keeping_charged."""
 QUICK_TOPIC = True
 
+from sim.tests.agents_fake_world import flat_namespace
 import sim.engine.core  # noqa: F401  (loads the engine in its import order)
 import types
 import unittest
@@ -99,7 +100,7 @@ class KeepingByAnyActor(unittest.TestCase):
     def charged(self, **actors):
         """What each named actor is charged by one `ChargeKeeping`: {actor id: (edge, money, cause)}."""
         registry = types.SimpleNamespace(actors=actors, state=types.SimpleNamespace(home_country="home"))
-        world = types.SimpleNamespace(pay_per_person_year=lambda trade: 100.0)
+        world = flat_namespace(pay_per_person_year=lambda trade: 100.0)
         module = module_harness.build(Coin, views={"civilisation": HOME_COIN, "money_per_labour_hour": MONEY_PER_HOUR,
                                                    "cast": registry, "actor_world": world})
         module.charge_keeping(ChargeKeeping())

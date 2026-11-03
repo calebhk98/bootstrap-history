@@ -17,7 +17,7 @@ def idle_share_of(stratum: Any, world: Any) -> Optional[float]:
 	trade = stratum.record.plan.get("trade")
 	if not trade:
 		return None
-	idle, offered = world.idle_hours_by_trade().get(trade, (0.0, 0.0))
+	idle, offered = world.stakes.idle_hours_by_trade().get(trade, (0.0, 0.0))
 	return idle / offered if offered > 0.0 else None
 
 
@@ -76,12 +76,12 @@ def jobless_sectors(strata: List[Any], world: Any) -> List[Sector]:
 			continue
 		trade = record.plan.get("trade")
 		working = record.members * float(record.plan.get("work_share", STRATUM_WORKING_SHARE))
-		pay = world.pay_per_person_year(trade)
-		technique = world.displacing_technique(trade) or ""
+		pay = world.labour.pay_per_person_year(trade)
+		technique = world.stakes.displacing_technique(trade) or ""
 		cause = "%d%% of the hours of %s work now go unhired, against %d%% they had come to expect" % (
 			round(100.0 * share), trade, round(100.0 * reference))
 		if technique:
-			cause += ", since %s does the work with fewer hands" % world.technique_name(technique)
+			cause += ", since %s does the work with fewer hands" % world.stakes.technique_name(technique)
 		sectors.append(Sector(JOBLESS_WORKERS, record.stratum, "the %s (out of work)" % record.name, cause,
 							  rise * working * pay, working * pay, rise * working, 1.0, technique=technique))
 	return sectors

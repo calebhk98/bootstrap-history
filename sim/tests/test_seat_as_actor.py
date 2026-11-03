@@ -1,5 +1,6 @@
 """A seat holds patents and company shares like any actor: they live in the seat's stored dealings, write through the party an
 exchange deals with, pay dividends to it, and survive a save (small fixture, no game)."""
+from sim.tests.agents_fake_world import flat_world
 import json
 
 from .harness import *  # noqa: F401,F403
@@ -69,6 +70,7 @@ class Registry:
         self.actors = actors
 
 
+@flat_world
 class World:
     def seat_margin(self, seat_id):
         return 0.0

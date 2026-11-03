@@ -35,12 +35,12 @@ class PlayerWorld(FakeWorld):
 def make_world(seed=1, risk=0.0):
 	world = PlayerWorld(seed)
 	world.baseline = {"base", "shop"}
-	world.nodes["base"] = make_node("base")
-	world.nodes["tech"] = make_node("tech", ["base"], hours=100.0, years=3.0, revenue=0.0)
-	world.nodes["tech"]["risk"] = risk
-	world.nodes["deep"] = make_node("deep", ["tech"], years=1.0)
-	world.nodes["shop"] = make_node("shop", ["base"], hours=100.0, years=1.0, revenue=500.0, upkeep=50.0)
-	world.nodes["mill"] = make_node("mill", ["base"], hours=100.0, years=2.0, revenue=2000.0, upkeep=100.0)
+	world.setting.nodes["base"] = make_node("base")
+	world.setting.nodes["tech"] = make_node("tech", ["base"], hours=100.0, years=3.0, revenue=0.0)
+	world.setting.nodes["tech"]["risk"] = risk
+	world.setting.nodes["deep"] = make_node("deep", ["tech"], years=1.0)
+	world.setting.nodes["shop"] = make_node("shop", ["base"], hours=100.0, years=1.0, revenue=500.0, upkeep=50.0)
+	world.setting.nodes["mill"] = make_node("mill", ["base"], hours=100.0, years=2.0, revenue=2000.0, upkeep=100.0)
 	return world
 
 
@@ -51,7 +51,7 @@ def make_player(actor_id="player:2", money=1000.0, controller="human", world=Non
 
 def year_on(player, world):
 	player.advance(world)
-	world.year += 1
+	world.setting.year += 1
 
 
 def last_entry(player):
@@ -103,7 +103,7 @@ world = make_world()
 player = make_player()
 player.record.workforce["labourer"] = 0.05      # the people the labour core hired for the concern (a hundred hours of a 2000 hour year)
 player.record.orders.append({"command": "open", "node": "shop"})
-player.record.workforce["labourer"] = 100.0 / world.hours_per_person_year   # the crew the labour core hired at the last clearing
+player.record.workforce["labourer"] = 100.0 / world.labour.hours_per_person_year   # the crew the labour core hired at the last clearing
 year_on(player, world)
 check("open runs a concern and yields takings less upkeep (the clearing pays the crew)",
 	  "shop" in player.concerns and abs(player.money - (1000.0 + 500.0 - 50.0)) < 1e-6, player.money)
@@ -178,7 +178,7 @@ check("a human player with no orders does nothing",
 	  human.money == 1000.0 and not human.works and not human.concerns and not human.knowledge and not human.record.journal)
 
 world = make_world()
-world.nodes["dud"] = make_node("dud", ["base"], revenue=0.0)
+world.setting.nodes["dud"] = make_node("dud", ["base"], revenue=0.0)
 robot = make_player(money=5000.0, controller="ai")
 robot.record.workforce["labourer"] = 1.0
 for _year in range(6):

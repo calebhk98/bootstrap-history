@@ -4,6 +4,7 @@ is not tested through a game."""
 
 QUICK_TOPIC = True
 
+from sim.tests.agents_fake_world import flat_namespace
 import unittest
 from types import SimpleNamespace
 
@@ -41,7 +42,7 @@ class Refusals(unittest.TestCase):
 class TheBank(unittest.TestCase):
     def test_the_capital_leaves_the_seats_money_once_the_economy_takes_it_in(self):
         module = finance_host.build(year=3, techniques_held=lambda: {"a_bank_node"}, acting_balance=5000.0,
-                                    actor_world=SimpleNamespace(baseline_knowledge=lambda: set()),
+                                    actor_world=flat_namespace(baseline_knowledge=lambda: set()),
                                     mechanic={seat_bank.BANKING_MECHANIC: {"a_bank_node": {}}},
                                     agent_economy_opened=True, answers={FoundBankFromOutside: "bank:1"})
         answer = module.found_bank(FoundBank(1000.0))
@@ -51,7 +52,7 @@ class TheBank(unittest.TestCase):
 
     def test_a_capital_the_economy_turns_down_is_refused_and_the_money_stays(self):
         module = finance_host.build(year=3, techniques_held=lambda: {"a_bank_node"}, acting_balance=5000.0,
-                                    actor_world=SimpleNamespace(baseline_knowledge=lambda: set()),
+                                    actor_world=flat_namespace(baseline_knowledge=lambda: set()),
                                     mechanic={seat_bank.BANKING_MECHANIC: {"a_bank_node": {}}},
                                     agent_economy_opened=True, answers={FoundBankFromOutside: None})
         answer = module.found_bank(FoundBank(1000.0))
@@ -106,14 +107,14 @@ class TheCommand(unittest.TestCase):
 
     def test_a_society_that_already_knows_banking_lets_a_seat_found_one(self):
         module = finance_host.build(year=3, techniques_held=lambda: set(), acting_balance=5000.0,
-                                    actor_world=SimpleNamespace(baseline_knowledge=lambda: {"a_bank_node"}),
+                                    actor_world=flat_namespace(baseline_knowledge=lambda: {"a_bank_node"}),
                                     mechanic={seat_bank.BANKING_MECHANIC: {"a_bank_node": {}}},
                                     agent_economy_opened=True, answers={FoundBankFromOutside: "bank:2"})
         self.assertTrue(module.found_bank(FoundBank(1000.0))["ok"])
 
     def test_a_seat_that_knows_no_banking_is_refused_and_nothing_is_sent(self):
         module = finance_host.build(year=3, techniques_held=lambda: set(), acting_balance=5000.0,
-                                    actor_world=SimpleNamespace(baseline_knowledge=lambda: set()),
+                                    actor_world=flat_namespace(baseline_knowledge=lambda: set()),
                                     mechanic={seat_bank.BANKING_MECHANIC: {"a_bank_node": {}}}, agent_economy_opened=True)
         answer = module.found_bank(FoundBank(1000.0))
         self.assertFalse(answer["ok"])

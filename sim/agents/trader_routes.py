@@ -17,11 +17,11 @@ def route_key(material: str, source: str, destination: str) -> str:
 def route_terms(world: Any, source: str, destination: str, material: str) -> Optional[Dict[str, float]]:
 	"""Per tonne: what a cargo costs to buy and carry, and what carrying it gains before the cost of
 	its capital. None when either end has no price."""
-	bought = world.price_at(material, source)
-	sold = world.price_at(material, destination)
+	bought = world.trade.price_at(material, source)
+	sold = world.trade.price_at(material, destination)
 	if not bought or not sold or bought <= 0.0 or sold <= 0.0:
 		return None
-	freight = world.freight_between(source, destination, material, 1.0)
+	freight = world.trade.freight_between(source, destination, material, 1.0)
 	outlay = bought + freight
 	return {"bought": bought, "sold": sold, "freight": freight, "outlay": outlay,
 			"gain": sold - outlay - bought * TRADER_RISK_SHARE}
@@ -29,7 +29,7 @@ def route_terms(world: Any, source: str, destination: str, material: str) -> Opt
 
 def price_answers(world: Any, material: str, destination: str) -> bool:
 	"""Whether the destination's market moves with cargo, so the price limits a cargo and not a share of depth."""
-	return world.price_after_cargo(material, destination, 0.0, True) is not None
+	return world.trade.price_after_cargo(material, destination, 0.0, True) is not None
 
 
 def paying_tonnes(world: Any, source: str, destination: str, material: str, terms: Dict[str, float],
@@ -39,8 +39,8 @@ def paying_tonnes(world: Any, source: str, destination: str, material: str, term
 	after the cargo is taken. A place whose market does not answer keeps its price. Prices move monotonically
 	with cargo, so the limit is found by halving."""
 	def pays(cargo: float) -> bool:
-		sold = world.price_after_cargo(material, destination, cargo, True)
-		bought = world.price_after_cargo(material, source, cargo, False)
+		sold = world.trade.price_after_cargo(material, destination, cargo, True)
+		bought = world.trade.price_after_cargo(material, source, cargo, False)
 		sold = terms["sold"] if sold is None else sold
 		bought = terms["bought"] if bought is None else bought
 		return sold - bought * (1.0 + TRADER_RISK_SHARE + rate) - terms["freight"] > 0.0
@@ -66,7 +66,7 @@ def gaining_routes(world: Any, material: str, sources: Sequence[str],
 		ladders.setdefault(destinations, [])
 		for place in (source,) + destinations:
 			if place not in price_of:
-				price = world.price_at(material, place)
+				price = world.trade.price_at(material, place)
 				price_of[place] = price if price and price > 0.0 else 0.0
 	for destinations, ladder in ladders.items():
 		ladder.extend(sorted((price_of[place], order, place) for order, place in enumerate(destinations)
@@ -82,5 +82,5 @@ def gaining_routes(world: Any, material: str, sources: Sequence[str],
 			if destination == source:
 				continue
 			terms = route_terms(world, source, destination, material)
-			if terms is not None and terms["gain"] > 0.0 and world.has_market(material, destination):
+			if terms is not None and terms["gain"] > 0.0 and world.trade.has_market(material, destination):
 				yield source, destination, terms

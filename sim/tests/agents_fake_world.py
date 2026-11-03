@@ -6,10 +6,52 @@ dictionaries a test fills in. A test that needs a member this does not have subc
 own file, so tests owning different mechanisms never edit this one together.
 """
 import random
+from types import SimpleNamespace
 from typing import Any, Dict, List, Optional, Set, Tuple
 
 from sim.agents import business_plant_books, ledger
+from sim.agents.narrowed_world import world_surface
 from sim.agents.records import ActorsState
+
+
+class FakePart:
+	"""One part of a fake world: asks the fake world for the member of that name, so a test fills in or overrides the flat
+	member on `FakeWorld` (or its subclass) and the actors reach it as `world.<part>.<member>`. Setting a member sets it
+	on the fake world."""
+
+	def __init__(self, world: Any) -> None:
+		self.__dict__["_world"] = world
+
+	def __getattr__(self, name: str) -> Any:
+		return getattr(self.__dict__["_world"], name)
+
+	def __setattr__(self, name: str, value: Any) -> None:
+		setattr(self.__dict__["_world"], name, value)
+
+
+def flat_world(cls: Any) -> Any:
+	"""Class decorator for a test's own stand-in world that answers the members of the protocol directly: each part of the
+	world is a `FakePart` over an instance, so the actors reach its methods as `world.<part>.<method>`."""
+	parts = frozenset(world_surface())
+	inherited = getattr(cls, "__getattr__", None)
+
+	def part_or_missing(self: Any, name: str) -> Any:
+		if name in parts:
+			return FakePart(self)
+		if inherited is not None:
+			return inherited(self, name)
+		raise AttributeError(name)
+	cls.__getattr__ = part_or_missing
+	return cls
+
+
+def flat_namespace(**members: Any) -> Any:
+	"""A stand-in world of plain members (`SimpleNamespace(**members)`) whose parts answer them, as `flat_world` does a class."""
+	world = SimpleNamespace(**members)
+	for part in world_surface():
+		if part not in members:
+			setattr(world, part, FakePart(world))
+	return world
 
 
 class FakeLabourMarket:
@@ -77,6 +119,9 @@ class FakeWorld:
 		# trade family -> people that can be put on research; node -> materials no one sells
 		self.hands: Dict[str, float] = {}
 		self.unsold: Dict[str, List[str]] = {}
+		# the parts of the world protocol, each answered by the flat member of this class
+		for part in world_surface():
+			setattr(self, part, FakePart(self))
 
 	ROLE_TRADES = {"unskilled": "labourer", "soldier": "soldier", "clerk": "scribe", "builder": "mason", "sailor": "sailor",
 	               "merchant": "merchant"}

@@ -17,7 +17,7 @@ class CreditRecordMixin:
 	def set_bond_terms(self, world: Any) -> None:
 		"""The terms the state sells bonds at this year: the going rate as the coupon, and the yield the market asks of
 		this state (its borrowing rate, which carries the premium its default record earns) as the price."""
-		self.purses.bonds.set_terms(self.account_id, world.market_rate(), self.borrowing_rate(world))  # type: ignore[attr-defined]
+		self.purses.bonds.set_terms(self.account_id, world.credit.market_rate(), self.borrowing_rate(world))  # type: ignore[attr-defined]
 
 	def creditors(self) -> Dict[str, float]:
 		"""Who is owed what by this state: the lenders whose deposits fund its debt, and their claims."""

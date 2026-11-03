@@ -29,8 +29,8 @@ class SharedMarketWorld(FakeWorld):
 def make_world(rate=0.12, takings=60000.0):
 	world = SharedMarketWorld()
 	world.rate = rate
-	world.nodes["shop"] = make_node("shop", hours=100.0, revenue=takings, upkeep=1000.0)
-	world.nodes["shop"]["cost"] = 6000.0
+	world.setting.nodes["shop"] = make_node("shop", hours=100.0, revenue=takings, upkeep=1000.0)
+	world.setting.nodes["shop"]["cost"] = 6000.0
 	world.demonstrated_nodes = {"shop"}
 	world.proven = {"shop"}
 	return world
