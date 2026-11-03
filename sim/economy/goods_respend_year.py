@@ -161,7 +161,5 @@ def _settle(record, ledger, result) -> Tuple[float, Dict[str, Tuple[float, float
         bought = done.bought_by_buyer()
         delivered = sum(move.quantity for move in done.postings if isinstance(move, GoodsMove))
         ledger.note_postings(done.postings, "sales")
-        for shortfall in done.shortfalls:
-            ledger.unpaid[shortfall.agent] = ledger.unpaid.get(shortfall.agent, 0.0) + shortfall.unpaid_amount
     ledger.note_clearing(result, delivered)
     return delivered, bought

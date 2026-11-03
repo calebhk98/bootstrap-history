@@ -26,9 +26,10 @@ the prose fields.
 """
 from typing import Any, Dict, Iterable, List, Mapping, Optional, Set, Tuple
 
+from sim.world.plant_baskets import ENERGY_CARRIERS
+
 from .types import GoodId, PlantBuild, PlantPart, Recipe
 
-ENERGY_CARRIER_FIELDS = ("thermal_mj", "mechanical_mj", "electrical_mj")
 
 
 def _basis_output(recipe_id: str, outputs: Mapping[GoodId, float]) -> float:
@@ -74,7 +75,7 @@ def fold_plant(chosen: Iterable[Any]):
 def recipe_from_entry(recipe_id: str, entry: Mapping[str, Any]) -> Recipe:
     outputs = {good: float(quantity) for good, quantity in entry["outputs"].items() if quantity > 0}
     inputs = {good: float(quantity) for good, quantity in (entry.get("inputs") or {}).items() if quantity > 0}
-    for carrier in ENERGY_CARRIER_FIELDS:
+    for carrier in ENERGY_CARRIERS:
         if entry.get(carrier, 0) > 0:
             inputs[carrier] = inputs.get(carrier, 0.0) + float(entry[carrier])
     labour = {trade: float(hours) for trade, hours in (entry.get("labour_hours") or {}).items() if hours > 0}

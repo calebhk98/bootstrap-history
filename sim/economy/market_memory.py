@@ -246,7 +246,7 @@ class YearView:
     def price(self, good: GoodId, area: AreaId) -> Optional[float]:
         """The planning price: the remembered price, last year's trade blended with the older price in proportion to
         the trade's share of the market's usual volume (`year_goods.remembered_price`), or, where nothing traded,
-        the quote (`quote_kind` says which); None where the market has no price. A reader that needs the price
+        the quote (`price_kind` says which); None where the market has no price. A reader that needs the price
         both sides agreed to last year uses `cleared_price`."""
         return self._memory.prices.get(good + KEY_SEPARATOR + area)
 
@@ -270,11 +270,6 @@ class YearView:
             if figure is not None:
                 found[name] = figure
         return found
-
-    def quote_kind(self, good: GoodId, area: AreaId) -> Optional[str]:
-        """What `price` is when nothing traded last year (a QUOTE_* kind); None when it is a traded price or
-        the opening estimate no market has replaced (`price_kind` names those too)."""
-        return self._memory.quote_kinds.get(good + KEY_SEPARATOR + area)
 
     def price_kind(self, good: GoodId, area: AreaId) -> Optional[str]:
         """PRICE_SMOOTHED_TRADE, or the kind of quote or estimate `price` is; None when the market has no price."""
@@ -317,14 +312,8 @@ class YearView:
     def basket_price_level(self, currency: CurrencyId) -> float:
         return self._memory.basket_price_levels.get(currency, 1.0)
 
-    def chained_price_level(self, currency: CurrencyId) -> float:
-        return self._memory.price_levels.get(currency, 1.0)
-
     def opening_wage_level(self, currency: CurrencyId) -> float:
         return self._memory.opening_wage_level(currency)
-
-    def expected_inflation(self, currency: CurrencyId) -> float:
-        return self._memory.expected_inflation.get(currency, OPENING_EXPECTED_INFLATION)
 
     def observed_inflation(self, currency: CurrencyId) -> Optional[float]:
         return self._memory.observed_inflation.get(currency)

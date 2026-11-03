@@ -28,7 +28,7 @@ def national_prices(record, keep: Optional[Callable[[str, str], bool]] = None) -
     """Each good's price over its market areas (those `keep` accepts, every area for None), weighted by what each
     usually trades. Only areas whose figure is a traded price count, quoted areas do not: a quote is no one's
     payment, so the price index follows trades where there are any. A good none of whose areas has a traded
-    price with a weight is given the figure of its first area, which is then a quote (`MarketView.quote_kind`)."""
+    price with a weight is given the figure of its first area, which is then a quote (`MarketView.price_kind`)."""
     prices = {}
     for good, markets in _markets_by_good(record, keep).items():
         value = math.fsum(price * weight for _key, price, traded, weight in markets if traded)

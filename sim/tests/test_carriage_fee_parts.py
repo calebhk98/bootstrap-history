@@ -60,7 +60,6 @@ class WhatIsLeftOfAFee(unittest.TestCase):
     def test_the_margin_is_not_a_cash_need_so_a_poor_merchant_still_ships(self):
         result = self.dispatch(cash=0.0, carrier_money=lambda source, destination: 0.4, margin_kept=True)
         self.assertAlmostEqual(result.moves[0].quantity, 10.0)
-        self.assertEqual(result.stranded, ())
 
 
 class MerchantsBidForFeed(unittest.TestCase):

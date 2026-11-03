@@ -13,7 +13,7 @@ from .types import EDGE_EXCHANGE, Transfer
 def settle(book, currency: str, lots: Sequence,
            ) -> Tuple[Dict[Tuple[str, str], float], float, List[dict], Dict[Tuple[str, str], Dict[str, float]]]:
     """Charge the employers named in the lots for the bonded bought. Returns ({(tile, trade): people paid for}, money paid, the lots as paid
-    [{origin, destination, trade, people, ask, carriage}: money per lot, scaled to what was paid], and the people
+    [{origin, destination, trade, people, ask, carriage}: people and money per lot, scaled to what was paid, so ask / people is the owners' price per person], and the people
     each employer holds {(tile, trade): {employer: people}}: an employer holds the people its payment bought, not the share it was
     named for)."""
     bought: Dict[Tuple[str, str], float] = {}
@@ -42,7 +42,7 @@ def settle(book, currency: str, lots: Sequence,
         bought[key] = bought.get(key, 0.0) + people * scale     # the people the payment bought, not all the lot named
         for lot in group:
             paid_lots.append({"origin": area_tile(lot.origin), "destination": key[0], "trade": trade,
-                              "people": lot.people, "ask": lot.ask * lot.people * scale,
+                              "people": lot.people * scale, "ask": lot.ask * lot.people * scale,
                               "carriage": lot.carriage * lot.people * scale})
     return bought, paid_total, paid_lots, held
 

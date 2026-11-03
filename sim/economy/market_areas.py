@@ -5,7 +5,7 @@ of the good's value, so a price gap inside an area is bounded by carriage. Silve
 civilisation; grain stays within a tile or a few. Goods of similar value per tonne share one
 partition (log-scale buckets), so the map holds a few partitions, not one per good.
 
-Standalone: `sim.constants`, `sim.geography.api` and `sim.economy.types` only.
+Imports only `sim.constants`, `sim.geography.api` and `sim.economy.types`.
 """
 import math
 from dataclasses import replace

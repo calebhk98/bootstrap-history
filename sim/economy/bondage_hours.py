@@ -95,6 +95,17 @@ def hold(held: Dict[str, Dict[str, Dict[AgentId, float]]], bought: Mapping[Tuple
             rows[employer] = rows.get(employer, 0.0) + people
 
 
+def release(held: Dict[str, Dict[str, Dict[AgentId, float]]], employer: AgentId) -> None:
+    """Drop the bought bonded people `employer` holds (it left the economy), and the tile and trade rows that leaves empty."""
+    for tile in list(held):
+        for trade in list(held[tile]):
+            held[tile][trade].pop(employer, None)
+            if not held[tile][trade]:
+                del held[tile][trade]
+        if not held[tile]:
+            del held[tile]
+
+
 @dataclasses.dataclass
 class HeldPlacement:
     offers: List[LabourOffer]

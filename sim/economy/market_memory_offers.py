@@ -16,7 +16,7 @@ NO_OFFER_MEMORY_SHARE = declare(
     why="Planners who find nothing traded learn what the posted bids, asks or making cost say, partway in a "
         "year: a cost-covering quote taken whole would tell every maker its runs pay and no maker would "
         "ever leave. How fast that news travelled is not modelled; a planner that reads the quote itself "
-        "(MarketView.quote_kind) needs no speed.")
+        "(MarketView.price_kind) needs no speed.")
 
 
 def price_toward_quote(old: Optional[float], quote_price: float) -> float:

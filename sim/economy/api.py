@@ -22,7 +22,7 @@ from .credit import risk_premium
 from .currency import currency_from_coin_standard
 from .economy import Economy
 from .market_memory import KEY_SEPARATOR, market_key
-from .opening_rate import against_history, opening_market_rate, solved_opening_rate
+from .opening_rate import opening_market_rate
 from .metal_stock import COIN_WEAR_PER_YEAR
 from .notional import shown_prices, shown_prices_with_kinds
 from .producers import Producer, expected_output_prices, live_input_prices, live_wages
@@ -68,7 +68,7 @@ __all__ = [
     "all_producers", "carried_last_year", "backing_marginal_cost", "set_improvements", "begin_spin_up", "trim_workforce_to_expected_hours",
     "rename_agent", "coin_per_unit", "currency_id", "backing_good", "home_country", "economy_countries", "country_of_tile", "economy_tiles",
     "capital_tile", "port_tile", "tile_in_economy", "recipes_of", "good_specs", "recipe_allowed_at", "opening_prices_of", "unskilled_trade",
-    "economy_trades", "opening_rate", "working_hours_per_year", "opening_wage_level", "priced_trade_wage", "country_trade_wage",
+    "economy_trades", "opening_rate", "opening_market_rate", "labour_area", "COIN_WEAR_PER_YEAR", "working_hours_per_year", "opening_wage_level", "priced_trade_wage", "country_trade_wage",
     "trade_wage_at", "hunger_goods", "health_figures", "crop_site_inputs",
 ]
 

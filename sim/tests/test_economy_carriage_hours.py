@@ -116,7 +116,6 @@ class ShortfallTests(unittest.TestCase):
     def test_half_the_carriers_carry_half_the_goods(self):
         result = self.ship(2.5)
         self.assertAlmostEqual(result.moves[0].quantity, 5.0)
-        self.assertAlmostEqual(result.stranded[0][2], 5.0)
 
     def test_no_carriers_carry_nothing(self):
         result = self.ship(0.0)

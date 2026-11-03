@@ -107,7 +107,6 @@ class Plan:
     runs: float
     labour_bids: Tuple[LabourBid, ...] = ()
     bids: Tuple[Bid, ...] = ()
-    expected_margin_per_run: float = 0.0    # before the capital charge; what an idle producer weighs
     wanted_runs: float = 0.0                # runs it wanted before the land it was granted capped them
     wage_line: float = 0.0                  # cash the plan sets for the planned runs' labour
 
@@ -284,9 +283,8 @@ def plan(producer: Producer, recipe: Recipe, view: MarketView, cash: float) -> P
     labour_cost = unit_cost.labour_cost_per_run(recipe, wages)
     rent = producer.land_rent_per_run
     variable = input_cost + labour_cost + rent
-    margin = revenue - variable
     if producer.capacity_runs <= 0.0 or revenue <= 0.0 or not math.isfinite(variable):
-        return Plan(0.0, expected_margin_per_run=margin)
+        return Plan(0.0)
     # cash pays what the market asks now (as the cash target is struck); the lagging expectation only chooses runs
     paying_prices = {**inputs, **market_inputs}
     held_value = sum(min(view.stock(producer.agent_id, good, producer.tile), quantity * producer.capacity_runs)
@@ -302,7 +300,7 @@ def plan(producer: Producer, recipe: Recipe, view: MarketView, cash: float) -> P
         runs = min(runs, producer.land_run_cap)
     ratio = working_cost_ratio(revenue, variable)
     if runs <= 0.0 or ratio <= 0.0:
-        return Plan(0.0, expected_margin_per_run=margin, wanted_runs=wanted)
+        return Plan(0.0, wanted_runs=wanted)
     # the workplaces that work are the cheaper ones: what an hour or an input is worth is judged at their cost
     labour_bids = _labour_bids(producer, recipe, view, runs, revenue / ratio, input_cost + rent, wages)
     # an input is bid up to the price at which the run breaks even at the input prices seen now, not at the
@@ -310,7 +308,7 @@ def plan(producer: Producer, recipe: Recipe, view: MarketView, cash: float) -> P
     live_variable = unit_cost.input_cost_per_run(recipe, {**inputs, **market_inputs}) + labour_cost + rent
     bids = _input_bids(producer, recipe, view, runs, market_inputs, max(cash, 0.0) - runs * labour_cost,
                        revenue / ratio - live_variable, live_variable, wages)
-    return Plan(runs, tuple(labour_bids), tuple(bids), margin, wanted, runs * labour_cost)
+    return Plan(runs, tuple(labour_bids), tuple(bids), wanted, runs * labour_cost)
 
 
 def within_a_years_change(producer: Producer, runs: float) -> float:

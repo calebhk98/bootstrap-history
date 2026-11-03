@@ -84,7 +84,6 @@ class Merchant:
     carriage_hours_wanted: Optional[Dict[str, float]] = None   # crew hours its shipments needed last year, by (trade, source tile) market key: this year's bid for carriers; None until it has shipped
     carriage_money_wanted: Dict[str, float] = field(default_factory=dict)   # the carriage money those hours stand for, by the same key: the most an hour is worth to it
     carrier_wear: Dict[str, float] = field(default_factory=dict)   # carrier units its shipments wore last year, by good (carriage_wear): this year's bid for carriers
-    carrier_team_days: Dict[str, float] = field(default_factory=dict)   # team-days its shipments worked last year, by carriage mode
     carrier_fleet_wanted: Dict[str, float] = field(default_factory=dict)   # wear a year its routes' stock called for last year, less what it hired, by carrier good (carriage_fleet): the fleet it bids to hold
     in_transit: List[merchants_transit.Shipment] = field(default_factory=list)   # hauls still on the road (their goods wait in the transit account)
     price_history: Dict[Tuple[GoodId, AreaId], List[float]] = field(default_factory=dict)   # prices of distant markets that news has not yet reached it, newest last
@@ -109,7 +108,6 @@ class CrewHire:
 class Dispatch:
     moves: Tuple[DeliveredMove, ...]
     transfers: Tuple[Transfer, ...]
-    stranded: Tuple[Tuple[GoodId, TileId, float], ...]     # (good, tile, quantity) it could not pay or find carriers to carry
     crew_hours_wanted: Dict[str, float] = field(default_factory=dict)   # by crew key, before any cut for want of carriers
     crew_money_wanted: Dict[str, float] = field(default_factory=dict)   # the carriage money those hours stand for, by crew key
     fleet_wanted: Dict[str, float] = field(default_factory=dict)   # wear a year the routes' stock called for, by carrier good, before any cut for want of carriers
@@ -141,6 +139,9 @@ def within_purse(transfers: Sequence[Transfer], balance: float) -> Tuple[Transfe
 
 
 def expected_price(merchant: Merchant, view: MarketView, good: GoodId, area: AreaId) -> Optional[float]:
+    """What the merchant expects a market to pay for its good: its own expectation, else the planning price. A seller
+    reads what buyers will pay, a bid ceiling included, so it follows unmet demand (`year_close.learned_prices`); a
+    buyer of goods or carriers reads `offered_price`, what is on offer to buy."""
     price = merchant.expected_prices.get((good, area))
     return price if price is not None else view.price(good, area)
 
@@ -470,7 +471,7 @@ def dispatch(merchant: Merchant, carriage: CarriageTable,
                 needed[key] = needed.get(key, 0.0) + row[4] * hours
         cut = {key: max(0.0, crew.hours_hired.get(key, 0.0)) / total for key, total in needed.items()
                if total > crew.hours_hired.get(key, 0.0)}
-    moves, transfers, dues_paid, stranded = [], [], [], []
+    moves, transfers, dues_paid = [], [], []
     purse = max(0.0, cash) * (1.0 - PURSE_ROUNDING_MARGIN)
     spare = None if fleet is None else dict(fleet.capacity)     # wear the carts bear, drawn down by what is carried (the planned size above only sizes the crew hours)
     for good, tile, route, quantity, _planned, outlay_unit, crew_rows, dues_unit, payout_unit, tonnes_per_unit, wear_per_tonne in shipments:
@@ -483,8 +484,6 @@ def dispatch(merchant: Merchant, carriage: CarriageTable,
         if spare is not None:
             for carrier in spare:
                 spare[carrier] -= carried * tonnes_per_unit * wear_per_tonne.get(carrier, 0.0)
-        if carried < quantity:
-            stranded.append((good, tile, quantity - carried))
         if carried <= 0.0:
             continue
         years = merchants_transit.years_between(carriage, tile, route[0])
@@ -502,7 +501,7 @@ def dispatch(merchant: Merchant, carriage: CarriageTable,
         if fee > 0.0:
             transfers.append(Transfer(merchant.agent_id, carrier_of(tile) or EDGE_CARRIAGE, currency, fee,
                                       "carriage of %s" % good))
-    return Dispatch(tuple(moves), within_purse(transfers, cash), tuple(stranded), wanted, worth, fleet_wanted, tuple(dues_paid))
+    return Dispatch(tuple(moves), within_purse(transfers, cash), wanted, worth, fleet_wanted, tuple(dues_paid))
 
 
 def close_year(merchant: Merchant, prices: Mapping[Tuple[GoodId, AreaId], float],

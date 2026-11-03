@@ -50,7 +50,7 @@ def dispatch_merchants(setup, record, carriage, ledger: YearLedger, area_map) ->
                 merchant.carriage_hours_wanted = {}     # nothing shipped: no carriers to bid for next year
                 merchant.carriage_money_wanted = {}
             if wear is not None:     # its fleet's wanted size stands: it may ship again
-                merchant.carrier_wear, merchant.carrier_team_days = {}, {}
+                merchant.carrier_wear = {}
                 carriage_wear.settle(merchant, record.book, carrier_goods, {})
             continue
         hire = None
@@ -80,7 +80,7 @@ def dispatch_merchants(setup, record, carriage, ledger: YearLedger, area_map) ->
             merchant.carriage_hours_wanted = done.crew_hours_wanted
             merchant.carriage_money_wanted = done.crew_money_wanted
         if wear is not None:
-            merchant.carrier_wear, merchant.carrier_team_days = carriage_wear.exposure(wear, done.moves, setup.specs)
+            merchant.carrier_wear = carriage_wear.exposure(wear, done.moves, setup.specs)
             carriage_wear.settle(merchant, record.book, carrier_goods,
                                  {good: units for good, units in merchant.carrier_wear.items() if good not in lives})
             if lives:

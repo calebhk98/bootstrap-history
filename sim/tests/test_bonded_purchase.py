@@ -113,6 +113,8 @@ lots = [BondedLot("work@t1", "smith", "work@t2", 4.0, 10.0, 2.0, payers=(("forge
 _, paid, paid_lots, held = bonded_purchase.settle(book, "coin", lots)
 check("an employer short of cash pays what it has and the owners are paid that share",
       abs(paid - 12.0) < 1e-9 and abs(paid_lots[0]["ask"] - 10.0) < 1e-9, (paid, paid_lots))
+check("a lot paid in part names only the people paid for, at the owners' ask a person",
+      abs(paid_lots[0]["people"] - 1.0) < 1e-9 and abs(paid_lots[0]["ask"] / paid_lots[0]["people"] - 10.0) < 1e-9, paid_lots)
 check("an employer short of cash holds only the people its payment bought", abs(held[("t1", "smith")]["forge"] - 1.0) < 1e-9, held)
 book = Book()
 book.transfer(Transfer(EDGE_MINT, "forge", "coin", 100.0, "opening"))

@@ -7,7 +7,7 @@ QUICK_TOPIC = True
 import unittest
 from types import SimpleNamespace
 
-from sim.economy.setup import recipe_tile_key
+from sim.economy.setup import recipe_of_tile_key, recipe_tile_key
 from sim.markets import port_sites
 
 WEATHER = 0.8
@@ -92,6 +92,11 @@ class HarmedYieldsTests(unittest.TestCase):
 
     def test_a_tile_no_provider_names_is_unharmed(self):
         self.assertEqual(self.harmed({"somewhere else": 0.1}), self.yields)
+
+
+class RecipeTileKeyTests(unittest.TestCase):
+    def test_the_recipe_of_a_key_is_the_recipe_it_was_built_from(self):
+        self.assertEqual(recipe_of_tile_key(recipe_tile_key("wheat", "t:1")), "wheat")
 
 
 if __name__ == "__main__":

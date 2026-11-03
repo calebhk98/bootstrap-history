@@ -55,6 +55,12 @@ def settle(setup, record, inputs, report, before, context, carriage) -> Dict[str
         record.labour.workforce, record.unfree.fugitives, taxed, subsistence, income,
         inputs.amnesty_share, inputs.immunity_years, moving_cost, setup.flight.arrears_owed_by_fugitive, setup.flight.share_after_immunity)
     after_return = people_before(record.labour)
-    for area, people in after_market.items():   # those who came home are moves too: demography takes the net with the market's
-        report.migrated[area] = report.migrated.get(area, 0.0) + after_return.get(area, 0.0) - people
+    add_returners(report.migrated, after_market, after_return)
     return came
+
+
+def add_returners(migrated: Dict[str, float], after_market: Dict[str, float], after_return: Dict[str, float]) -> None:
+    """Add to `migrated` (net move by area) the people who came home: those who came home are moves too, and demography
+    takes the net with the market's. An area with no workers until the returners arrived has no row after the market."""
+    for area in sorted(set(after_market) | set(after_return)):
+        migrated[area] = migrated.get(area, 0.0) + after_return.get(area, 0.0) - after_market.get(area, 0.0)

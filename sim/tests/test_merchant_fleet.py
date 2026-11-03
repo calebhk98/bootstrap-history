@@ -31,7 +31,6 @@ class DispatchIsBoundByTheFleet(unittest.TestCase):
     def test_a_merchant_with_no_fleet_ships_nothing(self):
         done = ship(fleet_of({CART: 0.0}))
         self.assertEqual(done.moves, ())
-        self.assertAlmostEqual(done.stranded[0][2], 10.0)
 
     def test_a_merchant_with_no_fleet_ships_only_what_it_hires(self):
         wear = types.SimpleNamespace(units_per_tonne=lambda _source, _destination: {CART: WEAR_PER_TONNE})

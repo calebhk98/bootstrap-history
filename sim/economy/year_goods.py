@@ -15,7 +15,8 @@ from . import goods_respend, goods_respend_year, households_cohort
 from .home_scope import on_home_tile
 from .goods_market_fills import sold_by_seller_tile
 from .inventory import held_stock, holding_reservation
-from .household_work_year import basket_key, cohort_basket
+from .household_work_year import cohort_basket
+from .opening_bid_memory import BidMemory
 from .market_memory import market_key
 from .market_memory_asks import memory_reference_volume, note_bids, note_offers, price_after_resumed_trade, wanted_at
 from .market_memory_asks import REPRESENTATIVE_TRADE_SHARE
@@ -45,15 +46,11 @@ def add_orders(book: OrderBook, orders: AgentOrders) -> None:
 def cohort_orders(setup, record, view, ledger: YearLedger, order_book: OrderBook, own_options=None) -> List:
     """Households' bids for the year; returns their savings offers for the credit market."""
     funds = []
-    priced_by_tile = {}
-    store_by_tile = {}
+    memory = BidMemory()     # the priced needs and store weights cohorts of one basket share
     money = setup.currency_id
     for cohort in sorted(record.cohorts.values(), key=lambda each: each.agent_id):
-        basket = cohort_basket(setup, record, cohort)
-        key = basket_key(record, cohort)
-        priced = priced_by_tile.get(key)
-        if priced is None:
-            priced = priced_by_tile[key] = households.need_prices(basket, view, cohort.tile)
+        basket = memory.basket(setup, record, cohort)
+        priced = memory.priced(setup, record, view, cohort, basket)
         income = ledger.wages_in.get(cohort.agent_id, 0.0) + record.capital_markets.property_income.get(cohort.agent_id, 0.0)
         cash = record.book.balance(cohort.agent_id, money)
         tool_bids = tool_wear.tool_bids(
@@ -63,7 +60,7 @@ def cohort_orders(setup, record, view, ledger: YearLedger, order_book: OrderBook
         add_orders(order_book, AgentOrders(bids=tuple(tool_bids)))
         orders = households.goods_orders(cohort, view, cash - sum(bid.budget for bid in tool_bids), income,
                                          basket, setup.specs, priced,
-                                         smooth_rise=not record.settling, shared_store=store_by_tile)
+                                         smooth_rise=not record.settling, shared_store=memory.stores(record, cohort))
         orders = less_what_it_grew(orders, cohort, basket, ledger.grown_units.get(cohort.agent_id))
         households_cohort.change_cohort(
             record.cohorts, cohort.agent_id, planned_spending=sum(bid.budget for bid in tool_bids) + sum(bid.budget for bid in orders.bids))
@@ -181,8 +178,6 @@ def clear_goods(setup, record, view, area_map, order_book: OrderBook, plans, led
                 delivered = sum(move.quantity for move in done_settlement.postings if isinstance(move, GoodsMove))
                 ledger.note_postings(done_settlement.postings, "sales")
                 ledger.note_plant_purchases(done_settlement.postings, good, plant_goods)
-                for shortfall in done_settlement.shortfalls:
-                    ledger.unpaid[shortfall.agent] = ledger.unpaid.get(shortfall.agent, 0.0) + shortfall.unpaid_amount
             ledger.note_clearing(result, delivered)
             idle_years = note_bids(record.memory, key, bids, offers) + note_offers(record.memory, key, bids, offers)
             left_markets[(good, area)] = goods_respend_year.LeftMarket(

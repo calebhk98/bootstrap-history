@@ -151,14 +151,12 @@ class DispatchAndCloseTests(unittest.TestCase):
         orders = plan(merchant(), 5.0, 2.0, cash=0.0, held={("salt", "a"): 10.0})
         self.assertEqual([offer.tile for offer in orders.offers], ["a"])
 
-    def test_goods_it_cannot_pay_to_carry_are_stranded(self):
+    def test_goods_it_cannot_pay_to_carry_are_left_behind(self):
         carriage, _m, area_a, _b = world()
         who = merchant()
         plan(who, 2.0, 5.0)
         result = merchants.dispatch(who, carriage, SPECS, "coin", 4.0, {("salt", "a"): 10.0})
         self.assertAlmostEqual(result.moves[0].quantity, 4.0)
-        self.assertEqual([(good, tile) for good, tile, _quantity in result.stranded], [("salt", "a")])
-        self.assertAlmostEqual(result.stranded[0][2], 6.0)
 
     def test_close_year_moves_expectations_and_pays_the_owner_half_the_profit(self):
         who = merchant(prices={("salt", "x"): 2.0})

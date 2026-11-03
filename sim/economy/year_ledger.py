@@ -14,7 +14,6 @@ SALE_PREFIX = "sale of "    # settlement's purpose for a goods sale
 
 @dataclass
 class YearLedger:
-    money_in: Dict[AgentId, float] = field(default_factory=dict)
     money_out: Dict[AgentId, float] = field(default_factory=dict)
     wages_in: Dict[AgentId, float] = field(default_factory=dict)
     sales_in: Dict[AgentId, float] = field(default_factory=dict)
@@ -36,7 +35,6 @@ class YearLedger:
     mint_takes: List[Tuple[ClearingResult, Dict[Tuple[AgentId, str], float]]] = field(default_factory=list)   # clearing, units delivered to the mint by (seller, tile)
     pending_mint_takes: Dict[Tuple[AgentId, str], float] = field(default_factory=dict, repr=False)
     labour_results: List[LabourResult] = field(default_factory=list)
-    unpaid: Dict[AgentId, float] = field(default_factory=dict)
     imports_paid: Dict[Tuple[AgentId, GoodId], float] = field(default_factory=dict)       # money paid to foreign partners
     carried_in: Dict[Tuple[AgentId, str], float] = field(default_factory=dict)   # (carrier, source country): value at the source of what it carried into the home country (the tariff rides on it)
     exports_received: Dict[Tuple[AgentId, GoodId], float] = field(default_factory=dict)   # money received from them
@@ -46,8 +44,6 @@ class YearLedger:
     bids_by_market: Dict[Tuple[GoodId, str], list] = field(default_factory=dict)  # (good, area): the year's bids
     import_accounts: frozenset = frozenset()   # accounts whose sales are goods that crossed the border (customs)
     export_accounts: frozenset = frozenset()   # accounts whose purchases leave over the border
-    bonded_bought: Dict[Tuple[str, str], float] = field(default_factory=dict)   # (tile, trade): bonded people bought
-    bonded_paid: float = 0.0               # money paid for them
     migrated_by_tile: Dict[str, float] = field(default_factory=dict)   # net working people the labour market moved, by tile
     bonded_lots: list = field(default_factory=list)   # the lots as paid (bonded_purchase.settle)
     wage_floor_per_hour: float = 0.0       # what a worker's household costs less its plot, per hour, over the areas
@@ -56,7 +52,6 @@ class YearLedger:
     def note_postings(self, postings: Iterable[object], purpose_kind: str = "") -> None:
         for posting in postings:
             if isinstance(posting, Transfer):
-                self.money_in[posting.payee] = self.money_in.get(posting.payee, 0.0) + posting.amount
                 self.money_out[posting.payer] = self.money_out.get(posting.payer, 0.0) + posting.amount
                 self._note_foreign(posting)
                 if purpose_kind == "wages":

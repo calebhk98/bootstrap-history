@@ -5,7 +5,6 @@ held by nobody, abandoned). A holder is any actor: a cohort, a firm, a state. Th
 titles from its cohorts' ownership shares, so rent flows as before until a title moves. A title moves by
 foreclosure: a loan pledges a share, and on default the share passes to the lender while the borrower's
 family stays on it as a tenant (`record.land.tenancies`: tile -> rows of tenant, lessor, share, rent arrears).
-Reads fall back on ownership shares for a record that has no titles yet.
 """
 from typing import Dict, List, Mapping, Optional
 
