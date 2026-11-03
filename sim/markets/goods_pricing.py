@@ -22,9 +22,9 @@ class GoodsPricing:
     """The goods market's prices: the price at the acting tile, carriage and the climb over an order
     (`goods_market.pricing`). Who offers what is `goods_market.offers`."""
 
-    def __init__(self, market):
+    def __init__(self, sim, market):
         self.market = market
-        self._sim = market._sim
+        self._sim = sim
 
     def making_cost_per_tonne(self, material):
         """Money per tonne it costs the home society to make a material (the cost table); None when no technique

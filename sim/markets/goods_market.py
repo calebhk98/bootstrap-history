@@ -29,7 +29,7 @@ class GoodsMarket:
     def __init__(self, sim):
         self._sim = sim
         self.offers = GoodsOffers(sim)
-        self.pricing = GoodsPricing(self)
+        self.pricing = GoodsPricing(sim, self)
 
     @property
     def acting_party_id(self):
