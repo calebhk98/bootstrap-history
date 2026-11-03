@@ -307,9 +307,12 @@ class ProgressPhase(Part):
 		# Stage 5: spend the money, record the hours actually done, the second place a standing allocation can go
 		# unhonoured, and the completion check. Nothing to return - project_state carries every result.
 		needs = self.needs
-		if not pay_edge_or_log(needs.send, edges.EDGE_SUPPLIERS, money, "project payments"):
-			# the bill stays owed in full and the project waits on money
+		if pay_edge_or_log(needs.send, edges.EDGE_SUPPLIERS, money, "project payments") is not None:
+			# the bill stays owed in full and the project waits on money; hours not paid for do not count as worked
 			money = 0.0
+			unpaid_hours = max(0.0, spent_hours - refunded)
+			project_state["ph_left"] += unpaid_hours
+			refunded += unpaid_hours
 			project_state["underfunded_this_year"] = True
 			project_state["why_underfunded"] = "the year's payment was refused"
 		needs.send(NoteSpend(money))

@@ -104,8 +104,9 @@ class Mothball(Part):
 		if any(prereq_id not in needs.techniques_held() for prereq_id in node["pre"]):
 			return False, ("you no longer have what it stands on: "
 			               + ", ".join(prereq_id for prereq_id in node["pre"] if prereq_id not in needs.techniques_held()))
-		if not pay_edge_or_log(needs.send, edges.EDGE_WORKERS, fee, "known technique restored"):
-			return False, "the payment was refused; it stays shut"
+		refused = pay_edge_or_log(needs.send, edges.EDGE_WORKERS, fee, "known technique restored")
+		if refused is not None:
+			return False, refused
 		needs.send(LearnTechnique(node_id))
 		# Back in service means back in OPERATION: restore is what a player types to reopen something they shut, so a
 		# concern goes back on the books; any other work just stops being shut.

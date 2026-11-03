@@ -198,11 +198,11 @@ def _play_init(args, sitting):
     straight through.
     """
     sim, nodes, session, app_cfg, kit, horizon = _play_build_sim(args, defer_economy=_resuming_a_save(args))
-    result = _play_resolve_session(args, sim, session, sitting.carried_route_ids)
+    result = _play_resolve_session(args, sim, session, sitting)
     if result is None:
         # the save could not stand in for the economy's opening; build the game the long way
         sim, nodes, session, app_cfg, kit, horizon = _play_build_sim(args)
-        result = _play_resolve_session(args, sim, session, sitting.carried_route_ids)
+        result = _play_resolve_session(args, sim, session, sitting)
     if result == 1:
         return 1
     session, fresh = result
@@ -273,9 +273,9 @@ def _play_build_sim(args, defer_economy=False):
     return sim, nodes, session, app_cfg, kit, horizon
 
 
-def _carry_known_routes(sim, args, nodes, carried_route_ids):
+def _carry_known_routes(sim, args, nodes, sitting):
     """Apply --known-routes (a file) or the wizard's carried ids to a fresh game."""
-    route_ids = list(carried_route_ids)
+    route_ids = list(sitting.carried_route_ids)
     route_file = getattr(args, "known_routes", None)
     if route_file:
         route_ids += replay.read_known_routes(route_file)
@@ -288,7 +288,7 @@ def _carry_known_routes(sim, args, nodes, carried_route_ids):
     print("   Carrying over %d known routes: the fog is lifted for them, nothing is given." % len(applied))
 
 
-def _play_resolve_session(args, sim, session, carried_route_ids=()):
+def _play_resolve_session(args, sim, session, sitting):
     """Resolve which save this sitting is actually playing: reject a
     --session path that does not exist and names no --civ (a typo, not an
     invitation to start fresh), load an existing save into sim, and fork a
@@ -338,7 +338,7 @@ def _play_resolve_session(args, sim, session, carried_route_ids=()):
         else:
             print("Resumed from %s: %d AD." % (session, sim.view("year")()))
     # after the load, so a resumed game keeps its carried routes (the load restores its own)
-    _carry_known_routes(sim, args, sim.view("tree_nodes")(), carried_route_ids)
+    _carry_known_routes(sim, args, sim.view("tree_nodes")(), sitting)
 
     if (fresh or checkpoint_source) and session:
         # WRITE IT NOW, not after the first command. The menu tells the player

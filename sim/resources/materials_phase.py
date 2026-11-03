@@ -101,7 +101,7 @@ class MaterialsPhase(Part):
         needs = self.needs
         ceiling = NITRE_BED_SPEND_CEILING_LABOUR_HOURS * needs.money_per_labour_hour()
         spend = sizing.nitre_bed_yearly_spend(needs.acting_balance(), ceiling)
-        if not pay_edge_or_log(needs.send, edges.EDGE_BUILDERS, spend, "nitre beds laid down"):
+        if pay_edge_or_log(needs.send, edges.EDGE_BUILDERS, spend, "nitre beds laid down") is not None:
             return
         square_metres = spend / self.parts.woodland.nitre_base_cost()
         self.seat.nitre_bed_m2 += square_metres

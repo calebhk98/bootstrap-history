@@ -27,11 +27,8 @@ ARGUMENT_RECEIVERS = {"args", "namespace", "parsed", "options"}
 
 # Genuinely optional hooks: the probe's name, who defines it, why a plain read would be wrong. A name here is allowed on any receiver.
 OPTIONAL = {
-	"lends_from_purse": "set True by a mod's actor class (mods/bh_religion_h5p1/hooks.py); an actor class without it does not lend",
 	"research_hands": "defined by a researcher-like actor (sim/projects/researcher.py) and a country crew (sim/agents/country_state_crew.py); other actors do no research",
-	"held_tonnes": "defined by actors that hold materials (sim/agents/base.py, sim/projects/researcher.py); a world stub or a bare party has none",
-	"imitation_worth": "defined by actor kinds that imitate (sim/agents/base.py, foundation.py, government.py); a taker of another kind may lack it",
-	"rivals_of": "callback installed by the registry on actors that compete (sim/agents/firm.py, player.py); absent on a stand-alone actor",
+	"rivals_of": "callback field of the actors that run concerns in the shared market (sim/agents/firm.py, player.py), which the registry installs; the registry probes any actor's class for it to find them",
 	"on_capacity_change": "callback installed on firms by the registry (sim/agents/firm.py); absent on an actor with no registry",
 	"find_actor": "callback installed by the registry on firms and players (sim/agents/firm.py, player.py); absent on an actor with no registry",
 	"command_table": "table installed by the registry on players (sim/agents/player.py); absent on actors that take no commands",
@@ -39,7 +36,6 @@ OPTIONAL = {
 	"aware": "the awareness map of actors that keep one (sim/agents/records.py, base.py); a party stub has none",
 	"purses": "the purse book of ledger-backed parties (sim/agents/purses.py); a party outside the ledger has none",
 	"stands_at_home": "class flag of a seat's party and account (sim/agents/household_party.py, sim/ledger/seat_account.py); other parties do not carry coin",
-	"keeps_purchases": "class flag on actor kinds (sim/agents/base.py, firm.py); a party stub that is not an actor lacks it",
 	"input_share": "method of owners with plants of their own (sim/agents/government_enterprises.py); other owners have no enterprises part",
 	"ui_readable": "attribute set by the decorator that marks a method readable by the UI (sim/engine/readable.py); an undecorated method lacks it",
 	"register": "optional entry point of a mod's code module (sim/engine/mod_code.py); a module without it registers nothing",

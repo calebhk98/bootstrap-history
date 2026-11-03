@@ -51,7 +51,6 @@ def money_seat(sim):
 	living_cost = send(ChargeLivingCost(living_cost, view("dependants_beyond_means")(
 		living_cost, view("revenue_estimate")(), view("upkeep")(), view("mine_operating_cost")())))
 	mine_cost = view("mine_operating_cost")()
-	send(NoteMineCostPaid(mine_cost))
 	revenue, upkeep = view("revenue_estimate")(), view("upkeep")()
 	keeping_owed, keeping = view("coin_keeping_due")(revenue, upkeep, living_cost, mine_cost)
 	# the concerns the clearing pays are credited when it clears (sim/markets/port_year.py `_settle_seats`)
@@ -59,8 +58,9 @@ def money_seat(sim):
 	# a charge the seat cannot pay is logged with its cause (the credit steps below judge the seat); unguarded coin is not guarded
 	pay_edge_or_log(send, edges.EDGE_SUPPLIERS, upkeep, "running costs of concerns")
 	send(PayWages(living_cost, "living costs"))
-	pay_edge_or_log(send, edges.EDGE_SUPPLIERS, mine_cost, "mine running costs")
-	keeping_paid = keeping if pay_edge_or_log(send, edges.EDGE_COIN_GUARDS, keeping, "keeping coin under guard") else 0.0
+	if pay_edge_or_log(send, edges.EDGE_SUPPLIERS, mine_cost, "mine running costs") is None:
+		send(NoteMineCostPaid(mine_cost))
+	keeping_paid = keeping if pay_edge_or_log(send, edges.EDGE_COIN_GUARDS, keeping, "keeping coin under guard") is None else 0.0
 	send(ChargeHouseholdTheft(keeping_paid, keeping_owed))
 	send(AutoMothballMines())
 	# staff hired or taught this year get first claim on reclaiming what attrition shut, before anything is judged still short and closed again

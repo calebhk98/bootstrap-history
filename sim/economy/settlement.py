@@ -4,7 +4,7 @@ Fills are aggregate per agent. Buyers and sellers are walked in order and matche
 buyer pays the sellers its quantity falls on and each seller's goods go to those buyers. When a payer
 cannot cover what it owes, or a seller no longer holds what it sold, the affected pairs settle for the part that can be met: the undelivered quantity stays with the seller
 and the unpaid money stays with the payer, and the gap is returned as a `Shortfall`. A negative
-clearing price (a waste someone is paid to take) reverses who pays.
+fill price (a waste someone is paid to take) reverses who pays.
 """
 from dataclasses import dataclass, field
 from operator import attrgetter
@@ -34,13 +34,13 @@ class Settlement:
 
 
 def settle_goods(book: Book, result: ClearingResult) -> Settlement:
-    return _settle(book, result.fills, result.price, result.currency, result.good,
+    return _settle(book, result.fills, result.currency, result.good,
                    "sale of %s" % result.good, delivers_goods=True)
 
 
 def settle_labour(book: Book, result: LabourResult) -> Settlement:
     """Wages employer to worker; hours not paid for are reported as unsettled."""
-    return _settle(book, result.fills, result.wage, result.currency, result.trade,
+    return _settle(book, result.fills, result.currency, result.trade,
                    "wages for %s" % result.trade, delivers_goods=False)
 
 
@@ -54,8 +54,10 @@ def book_legacy(book: Book, agent: AgentId, currency: CurrencyId, amount: float,
     return transfer
 
 
-def _settle(book: Book, fills: Sequence[Fill], price: float, currency: CurrencyId, item: str,
+def _settle(book: Book, fills: Sequence[Fill], currency: CurrencyId, item: str,
             purpose: str, delivers_goods: bool) -> Settlement:
+    """Each pair of a buyer and a seller moves money at the seller's own fill price: a seller receives its ask, and a
+    buyer pays the asks of the sellers its quantity falls on (its own fill price is the mean the clearing chose)."""
     order = attrgetter("agent", "tile")
     buys = sorted((fill for fill in fills if fill.side == "buy" and fill.quantity > 0.0), key=order)
     sells = sorted((fill for fill in fills if fill.side == "sell" and fill.quantity > 0.0), key=order)
@@ -69,14 +71,17 @@ def _settle(book: Book, fills: Sequence[Fill], price: float, currency: CurrencyI
         limit_by_stock(remaining_stock, sells, seller_indices, amounts, unsettled)
     buyers = [buys[index].agent for index in buyer_indices]
     sellers = [sells[index].agent for index in seller_indices]
-    payers, payees = (buyers, sellers) if price >= 0.0 else (sellers, buyers)
-    unit_price = abs(price)
+    pair_prices = [sells[index].price for index in seller_indices]
+    payers = [buyer if price >= 0.0 else seller for buyer, seller, price in zip(buyers, sellers, pair_prices)]
+    payees = [seller if price >= 0.0 else buyer for buyer, seller, price in zip(buyers, sellers, pair_prices)]
+    unit_prices = [abs(price) for price in pair_prices]
     remaining_cash = {payer: book.balance(payer, currency) for payer in set(payers)}
-    unpaid = limit_by_purse(remaining_cash, payers, amounts, unit_price, unsettled)
+    unpaid = limit_by_purse(remaining_cash, payers, amounts, unit_prices, unsettled)
     transfers, moves = [], []
     edge_payers = {payer for payer in remaining_cash if is_edge(payer)}
     edge_sellers = {(sell.agent, sell.tile) for sell in sells if is_edge(sell.agent)}
-    for buy_index, sell_index, amount, payer, payee in zip(buyer_indices, seller_indices, amounts, payers, payees):
+    for buy_index, sell_index, amount, payer, payee, unit_price in zip(buyer_indices, seller_indices, amounts, payers,
+                                                                       payees, unit_prices):
         if amount <= 0.0:
             continue
         buy, sell = buys[buy_index], sells[sell_index]

@@ -54,7 +54,7 @@ class RandomEvents(Part):
 		self.needs.send(ScaleProtection(constants.PATRON_DEATH_PROTECTION_RETENTION))
 		gift = constants.PATRON_DEATH_COURTING_GIFT_LABOUR_HOURS * self.needs.money_per_labour_hour() * self.needs.price_index()
 		wants_court = self.needs.founder()["policy"].get("auto_court_heir", not self.needs.automation()["manual"])
-		courted = wants_court and pay_edge_or_log(self.needs.send, edges.EDGE_OFFICIALS, gift, "courting a patron's heir")
+		courted = wants_court and pay_edge_or_log(self.needs.send, edges.EDGE_OFFICIALS, gift, "courting a patron's heir") is None
 		protection_now = self.needs.standing()["protection"]
 		if courted:
 			text = ("your patron dies; auto_court_heir courts his heir afresh for %s. Protection falls from %d%% to %d%% and "
@@ -79,7 +79,7 @@ class RandomEvents(Part):
 		lost = capital_lost(self.needs.acting_balance(), fraction)
 		if lost <= 0.0:
 			return 0.0
-		if not pay_edge_or_log(self.needs.send, edges.EDGE_DESTROYED, lost, cause):
+		if pay_edge_or_log(self.needs.send, edges.EDGE_DESTROYED, lost, cause) is not None:
 			return 0.0
 		return lost
 

@@ -235,9 +235,11 @@ def _remember_markets(setup, record, left_markets, totals) -> None:
             signal = price_toward_quote(old, quote.price) if quote is not None else None
             if signal is not None:
                 quote_kind = quote.kind
-        updates.append((key, good, signal, quote_kind, cleared[(good, area)], market.delivered))
+        updates.append((key, good, signal, quote_kind, cleared[(good, area)], market.delivered, received is not None))
     traded = set()
-    for key, good, signal, quote_kind, price, delivered in updates:
+    for key, good, signal, quote_kind, price, delivered, from_trade in updates:
+        if from_trade:
+            memory.drop_quote_kind(key)               # the price now comes from a clearing, whatever settled of it
         if quote_kind is not None:
             memory.set_quote_kind(key, quote_kind)
         if signal is not None and signal > 0.0:

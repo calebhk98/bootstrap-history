@@ -36,6 +36,7 @@ EVENT_KINDS = {
     "arrears_staff_leaving": _entry(ECONOMIC, failure=True),
     "arrears_hours_lost": _entry(ECONOMIC, failure=True),
     "staff_left_unpaid": _entry(ECONOMIC, failure=True),
+    "unpaid_charge": _entry(ECONOMIC, failure=True, notable=True),
     "creditors_took": _entry(ECONOMIC),
     "treasury_watching": _entry(ECONOMIC),
     "household_disperses": _entry(failure=True),

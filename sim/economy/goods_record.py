@@ -11,7 +11,7 @@ class GoodsRecord(OwnedRecord):
     volumes: Dict[str, float] = field(default_factory=dict)              # market_key -> units delivered last year in all rounds; a market with no orders is absent
     unsold: Dict[str, float] = field(default_factory=dict)               # market_key -> units offered beyond what was delivered last year
     unmet: Dict[str, float] = field(default_factory=dict)                # market_key -> units buyers asked for at the asks they faced beyond what was delivered last year
-    curves: Dict[str, Any] = field(default_factory=dict)                 # market_key -> the book of the last clearing at the port (market_curves.py)
+    curves: Dict[str, Any] = field(default_factory=dict)                 # market_key -> the first round's book at the port, before any sale or respend (market_curves.py)
     margin_years: Dict[str, int] = field(default_factory=dict)           # market_key -> years in a row the expected price stood above the entry price
     index_base_prices: Dict[str, float] = field(default_factory=dict)    # the price level's base; opening if empty
     opening_basket: Dict[str, float] = field(default_factory=dict)       # good -> quantity at the opening, as far as the opening supplies it

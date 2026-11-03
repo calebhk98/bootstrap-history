@@ -173,7 +173,7 @@ def available_units(reg: Registry, dimension: str, civ_id: Optional[str]) -> Lis
 
 
 def civ_of(sim: Any) -> Optional[Mapping[str, Any]]:
-    """The game's civilisation record; None when a tool formats a figure without a game (the only caller that passes no Sim)."""
+    """The game's civilisation record; None when `sim` is None: a figure formatted without a game has no civilisation."""
     return None if sim is None else sim.civ
 
 

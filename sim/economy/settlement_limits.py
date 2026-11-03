@@ -50,21 +50,22 @@ def limit_by_stock(held: Dict[Tuple[AgentId, str], float], sells: Sequence[Fill]
                    amounts: List[float], unsettled: Dict[Tuple[AgentId, str], float]) -> None:
     """Scale each seller's pairs down to what it holds on its tile (`held`, by agent and tile)."""
     keys = [(sells[index].agent, sells[index].tile) for index in seller_indices]
-    scales = _scales(keys, amounts, held, 1.0, lambda key: key[0])
+    scales = _scales(keys, amounts, held, [1.0] * len(amounts), lambda key: key[0])
     for key in sorted(scales):
         wanted, scale = scales[key]
         unsettled[(key[0], CANNOT_DELIVER)] = unsettled.get((key[0], CANNOT_DELIVER), 0.0) + wanted * (1.0 - scale)
     _apply(keys, amounts, scales)
 
 
-def limit_by_purse(balances: Dict[AgentId, float], payers: List[AgentId], amounts: List[float], unit_price: float,
+def limit_by_purse(balances: Dict[AgentId, float], payers: List[AgentId], amounts: List[float], unit_prices: List[float],
                    unsettled: Dict[Tuple[AgentId, str], float]) -> Dict[AgentId, float]:
-    """Scale each payer's pairs down to what it can pay; returns the money left unpaid per payer."""
-    scales = _scales(payers, amounts, balances, unit_price, lambda payer: payer)
+    """Scale each payer's pairs down to what it can pay, each pair at its own unit price (non-negative); returns the
+    money left unpaid per payer."""
+    scales = _scales(payers, amounts, balances, unit_prices, lambda payer: payer)
     unpaid: Dict[AgentId, float] = {}
     for payer in sorted(scales):
         owed, _scale = scales[payer]
-        unpaid[payer] = owed * unit_price - max(balances[payer], 0.0)
+        unpaid[payer] = owed - max(balances[payer], 0.0)
     lost = {payer: 0.0 for payer in scales}
     for payer, amount in zip(payers, amounts):
         if payer in scales:
@@ -75,15 +76,15 @@ def limit_by_purse(balances: Dict[AgentId, float], payers: List[AgentId], amount
     return unpaid
 
 
-def _scales(keys, amounts: List[float], capacity: dict, unit: float, agent_of) -> dict:
-    """For each non-edge key whose pairs together ask for more than its capacity: (asked, scale to fit)."""
+def _scales(keys, amounts: List[float], capacity: dict, unit_prices: List[float], agent_of) -> dict:
+    """For each non-edge key whose pairs together cost more than its capacity: (what they cost, scale to fit)."""
     asked: dict = {}
-    for key, amount in zip(keys, amounts):
-        asked[key] = asked.get(key, 0.0) + amount
+    for key, amount, unit in zip(keys, amounts, unit_prices):
+        asked[key] = asked.get(key, 0.0) + amount * unit
     scales = {}
     for key, total in asked.items():
-        if total * unit > capacity[key] and not is_edge(agent_of(key)):
-            scales[key] = (total, max(capacity[key], 0.0) / (total * unit))
+        if total > capacity[key] and not is_edge(agent_of(key)):
+            scales[key] = (total, max(capacity[key], 0.0) / total)
     return scales
 
 

@@ -10,7 +10,7 @@ share of a licensed concern's takings the licensee pays the holder every year, o
 import math
 from typing import Any, Callable, Dict, List
 
-from sim.refusal import Refusal, cause_of
+from sim.refusal import Refusal, cause_of, facts_of
 
 from . import joint_stock, ledger, patent
 from .player_commands import CommandRejected, number_of
@@ -118,7 +118,7 @@ def problem(giver: Any, receiver: Any, give: Dict[str, Any], take: Dict[str, Any
 		reason = receives_problem(taker, incoming, world)
 		if reason:
 			return Refusal(cause_of(reason) or "deal_problem", "%s %s" % (taker.actor_id, reason),
-						   taker=taker.actor_id, **getattr(reason, "facts", {}))
+						   taker=taker.actor_id, **facts_of(reason))
 	return ""
 
 

@@ -44,8 +44,9 @@ def run(government: Any, world: Any) -> float:
 	business = government.business
 	takings = margin = 0.0
 	for entry_key in sorted(business.operating()):
-		plant_margin = (business_books.operate(business, government, entry_key, world, 0.0)
-						- business_books.carry(business, government, entry_key, world))
+		operated = business_books.operate(business, government, entry_key, world, 0.0)
+		carried = business_books.carry(business, government, entry_key, world)
+		plant_margin = operated - (0.0 if carried is None else carried)    # no reading: nothing was paid
 		business.tally.note_year(entry_key, plant_margin)
 		takings += business.reading.plant_of(entry_key).takings
 		margin += plant_margin

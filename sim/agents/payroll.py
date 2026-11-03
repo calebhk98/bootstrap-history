@@ -11,6 +11,7 @@ from sim.book import InsufficientFunds
 
 from . import ledger
 from .edges import EDGE_WORKERS
+from .purses import DEBT_FLOOR
 
 
 def free_strata(registry: Any) -> List[Any]:
@@ -37,15 +38,19 @@ def share_out(payer: Any, payees: List[Any], weights: List[float], amount: float
 		return
 	give_back = ledger.cover(payer, payees, amount)
 	moved = 0.0
+	paid: List[Any] = []
 	for index, payee in enumerate(payees):
 		part = amount - moved if index == len(payees) - 1 else amount * weights[index] / total
 		try:
 			ledger.transfer(payer, payee, part, purpose)
 		except InsufficientFunds:
-			if moved == 0.0:   # nothing has left the purse: the draw made for these payments is not kept
-				give_back()
+			for earlier, earlier_part in reversed(paid):   # what already left the purse comes back, then the draw made for these payments
+				ledger.transfer(earlier, payer, earlier_part, purpose)
+			give_back()
 			raise
-		moved += part
+		if part > DEBT_FLOOR:   # a part below the floor moves nothing, and the last payee takes it up
+			moved += part
+			paid.append((payee, part))
 
 
 def pay_savers(registry: Any, payer: Any, amount: float) -> None:

@@ -1,6 +1,8 @@
 """A state's choice of how to meet a shortfall, and the parts of it that reach the books (fiscal_response.py)."""
 from typing import Any, Dict, List
 
+from sim.refusal import Refusal
+
 from . import arrears, budget, fiscal_response, government_levers
 from .budget_line import Line
 from .liability import COLLECTIVE
@@ -45,7 +47,7 @@ class Fiscal:
 		set_levers = {}
 		for lever, value in wanted.items():
 			change = government_levers.set_lever(self.government.record, {"lever": lever, "value": value}, context)
-			if not hasattr(change, "cause"):
+			if not isinstance(change, Refusal):
 				set_levers[lever] = value
 		return set_levers
 
@@ -73,7 +75,7 @@ class Fiscal:
 			rate = min(1.0, form["rate"] * (1.0 + KIND_DEMAND_RATE_STEP * fraction))
 			change = government_levers.set_lever(record, {"lever": government_levers.REVENUE, "name": form["form"],
 														 "value": rate}, context)
-			if not hasattr(change, "cause"):
+			if not isinstance(change, Refusal):
 				rates[form["form"]] = rate
 		return rates
 
@@ -91,7 +93,7 @@ class Fiscal:
 			rate = min(1.0, assessed.rate * (1.0 + RATE_RAISE_STEP * fraction))
 			change = government_levers.set_lever(self.government.record, {"lever": government_levers.REVENUE, "name": assessed.form,
 																 "value": rate}, context)
-			if not hasattr(change, "cause"):
+			if not isinstance(change, Refusal):
 				rates[assessed.form] = rate
 		return rates
 

@@ -12,6 +12,7 @@ from unittest import mock
 
 from sim.engine import settings
 from sim.ui import cli, cli_interactive, cli_interactive_saveload
+from sim.ui.sitting import Sitting
 from sim.tests.ui_stand_in import Game
 
 
@@ -58,7 +59,7 @@ class ResumeTests(unittest.TestCase):
                 mock.patch.object(cli_interactive, "_carry_known_routes", lambda *arguments: None), \
                 mock.patch.object(cli_interactive, "_is_claimed_slot", lambda session: False), \
                 mock.patch("builtins.print"):
-            result = cli_interactive._play_resolve_session(Game(civ=None), sim, path)
+            result = cli_interactive._play_resolve_session(Game(civ=None), sim, path, Sitting())
         return result, loaded, saved
 
     def make_save(self, name):
