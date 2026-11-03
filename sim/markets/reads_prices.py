@@ -124,6 +124,13 @@ class PriceReads:
         units = economy_api.actor_fundable_amount(economy, amount / per_unit, existing_debt / per_unit, collateral_value / per_unit, arrears / per_unit)
         return None if units is None else units * per_unit
 
+    def lender_listing(self):
+        """The lenders of the last lending, cheapest ask first: {"currency", "coin_per_unit", "lenders": [(lender, offered, balance,
+        ask)]} in the economy's units; no lenders before they have met."""
+        listing = economy_api.lender_listing(self._agent.economy())
+        return {"currency": listing["currency"], "coin_per_unit": listing["coin_per_unit"],
+                "lenders": [(each.lender, each.offered, each.balance, each.ask) for each in listing["lenders"]]}
+
     def risk_premium(self, debt_after, collateral_value, arrears):
         """The rate added to the market rate for an actor owing `debt_after` (coin) against `collateral_value`, with `arrears` unpaid."""
         per_unit = economy_api.coin_per_unit(self._agent.economy())

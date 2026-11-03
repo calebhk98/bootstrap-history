@@ -5,7 +5,8 @@ QUICK_TOPIC = True
 
 import unittest
 
-from sim.agents.purses import EDGE_SAVERS, POOL
+from sim.agents.purses import POOL
+from sim.tests.pool_lenders import SAVERS
 from sim.tests.test_pooled_lending import market
 
 TOLERANCE_SHARE = 1e-9
@@ -28,7 +29,7 @@ class PoolPaysWhatItReceived(unittest.TestCase):
 
     def test_payments_are_pro_rata_to_deposits(self):
         purses, lenders = lent_market(interest=30.0)
-        deposits = {account: purses.deposit(account) for account in [EDGE_SAVERS] + [lender.account_id for lender in lenders]}
+        deposits = {account: purses.deposit(account) for account in [SAVERS] + [lender.account_id for lender in lenders]}
         total = sum(deposits.values())
         paid = purses.settle_interest()
         for account, deposit in deposits.items():
@@ -36,7 +37,7 @@ class PoolPaysWhatItReceived(unittest.TestCase):
 
     def test_depositors_leaving_before_settlement_do_not_make_the_pool_overpay(self):
         purses, _lenders = lent_market(interest=50.0)
-        purses.set_offers({EDGE_SAVERS: 1000.0})   # the lenders take their deposits back, draining the pool
+        purses.set_offers({})   # the lenders take their deposits back, draining the pool
         received = purses.purse(POOL)
         paid = purses.settle_interest()
         self.assertLessEqual(sum(paid.values()), received + 1e-9)

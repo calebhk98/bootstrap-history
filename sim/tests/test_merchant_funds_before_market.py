@@ -4,30 +4,28 @@ pricing a landed good before lenders first meet cannot loop back through society
 QUICK_TOPIC = True
 
 from sim.tests.agents_fake_world import flat_namespace
-import types
 import unittest
 
-from sim.agents.api import EDGE_SAVERS, Purses
 from sim.tests import finance_host
 
 
-def world_with(offers):
-    purses = Purses()
-    purses.set_offers(offers)
-
+def world_with(listing):
+    """The finance module over the economy's lender listing as the markets view answers it (`(answered, listing)`)."""
     def output_must_not_be_read():
         raise AssertionError("household saving read before lenders met")
-    return finance_host.build(lender_offers_made=lambda: dict(purses.offers),
+    return finance_host.build(agent_lender_listing=lambda: listing,
                               actor_world=flat_namespace(household_saving=output_must_not_be_read))
 
 
 class FundsBeforeTheLendersMeet(unittest.TestCase):
 
-    def test_no_offers_means_no_pooled_funds_and_no_call_into_output(self):
-        self.assertEqual(world_with({}).households_loanable_funds(), 0.0)
+    def test_no_lenders_listed_means_no_pooled_funds_and_no_call_into_output(self):
+        self.assertEqual(world_with((False, None)).households_loanable_funds(), 0.0)
+        self.assertEqual(world_with((True, {"coin_per_unit": 2.0, "lenders": []})).households_loanable_funds(), 0.0)
 
-    def test_after_the_meeting_the_households_offer_is_read(self):
-        self.assertEqual(world_with({EDGE_SAVERS: 7.0, "state": 3.0}).households_loanable_funds(), 7.0)
+    def test_after_the_meeting_what_the_economys_lenders_offered_is_read_in_coin(self):
+        listing = {"coin_per_unit": 2.0, "lenders": [("cohort:a", 3.0, 3.0, 0.05), ("bank:b", 4.0, 1.0, 0.06)]}
+        self.assertEqual(world_with((True, listing)).households_loanable_funds(), 14.0)
 
 
 if __name__ == "__main__":

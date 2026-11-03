@@ -9,6 +9,7 @@ from sim.agents.api import demand_answer, edges
 from sim.assembly.api import Part
 from sim.hazards.api import capital_lost
 from sim.ledger.api import TakeFromHouseholdPurse, pay_edge_or_log
+from sim.refusal import Refusal
 from sim.reporting.api import RecordEvent
 
 from . import state_demand
@@ -37,7 +38,8 @@ class Demands(Part):
 		lost = capital_lost(self.needs.acting_balance(), fraction)
 		if lost <= 0.0:
 			return 0.0
-		self.needs.send(TakeFromHouseholdPurse(taker_id, lost, cause))
+		if isinstance(self.needs.send(TakeFromHouseholdPurse(taker_id, lost, cause)), Refusal):
+			return 0.0   # the household could not cover it: nothing was taken
 		return lost
 
 	def answer_confiscation(self, fraction, cause):
@@ -75,8 +77,9 @@ class Demands(Part):
 			if settled["cost"] > 0.0 and pay_edge_or_log(self.needs.send, edges.EDGE_OFFICIALS, settled["cost"], "concealing wealth") is not None:
 				settled = dict(settled, cost=0.0, concealed=0.0)   # no one is paid to keep it hidden: nothing stays hidden
 			if settled["seized"] > 0.0:
-				self.needs.send(TakeFromHouseholdPurse(self.needs.state_treasury().actor_id, settled["seized"], "wealth found hidden"))
-				self.needs.send(RecordEvent.of("hidden_wealth_found", "The state found wealth you had hidden and took it with a penalty"))
+				taken = self.needs.send(TakeFromHouseholdPurse(self.needs.state_treasury().actor_id, settled["seized"], "wealth found hidden"))
+				if not isinstance(taken, Refusal):
+					self.needs.send(RecordEvent.of("hidden_wealth_found", "The state found wealth you had hidden and took it with a penalty"))
 			seat.concealed = settled["concealed"]
 		if seat.defiance > 0.0:
 			seat.defiance = demand_answer.defiance_fading(seat.defiance)

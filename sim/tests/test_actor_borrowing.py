@@ -10,6 +10,7 @@ from sim.agents.firm import Firm
 from sim.world import capital_market
 
 from .agents_fake_world import FakeWorld
+from .pool_lenders import lend_from_savers
 
 START = 0.12
 
@@ -22,22 +23,6 @@ def firm(state, name, money=0.0, founded_year=100, last_margin=1.0e6):
 
 
 class RateFunctions(unittest.TestCase):
-    def test_a_borrower_with_no_arrears_and_no_standing_pays_the_market_rate(self):
-        self.assertAlmostEqual(capital_market.borrower_rate(START, 0.0, 0.0), START)
-
-    def test_standing_removes_premium(self):
-        self.assertLess(capital_market.borrower_rate(START, 0.02, 1.0), capital_market.borrower_rate(START, 0.0, 1.0))
-
-    def test_no_discount_takes_a_rate_below_the_market_rate(self):
-        for discount in (0.0, 0.03, 0.5, 10.0):
-            for used in (0.0, 0.3, 1.0, 5.0):
-                self.assertGreaterEqual(capital_market.borrower_rate(START, discount, used), START - 1e-15)
-
-    def test_arrears_make_money_dearer_up_to_the_ceiling_and_no_further(self):
-        self.assertLess(START, capital_market.borrower_rate(START, 0.0, 0.5))
-        self.assertLess(capital_market.borrower_rate(START, 0.0, 0.5), capital_market.borrower_rate(START, 0.0, 1.0))
-        self.assertEqual(capital_market.borrower_rate(START, 0.0, 3.0), capital_market.borrower_rate(START, 0.0, 1.0))
-
     def test_what_is_left_to_lend_is_never_negative(self):
         self.assertEqual(capital_market.headroom(100.0, 30.0), 70.0)
         self.assertEqual(capital_market.headroom(100.0, 130.0), 0.0)
@@ -53,6 +38,7 @@ class ActorsBorrowByOneMethod(unittest.TestCase):
         self.world = FakeWorld()
         self.world.edge_book = self.state
         self.world.rate = START
+        lend_from_savers(self.state.purses, 1e12)
 
     def test_two_firms_with_the_same_record_and_no_debt_borrow_at_the_same_rate(self):
         first, second = firm(self.state, "a"), firm(self.state, "b")

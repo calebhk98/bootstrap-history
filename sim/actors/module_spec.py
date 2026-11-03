@@ -27,7 +27,7 @@ from .module import Actors
 READS_BY_OWNER = {
 	"markets": ("unit_mass_kg", "goods_categories", "nodes_in_category", "market_state", "commodities_sold_by_acting_party",
 	            "economy_output_value", "coin_stock_value", "main_material_of", "material_trade_quote", "material_purchase_cost",
-	            "household_prices", "household_basket", "agent_trades_good", "agent_price_response", "agent_country", "agent_cohort_incomes",
+	            "household_prices", "household_basket", "agent_trades_good", "agent_lender_listing", "agent_price_response", "agent_country", "agent_cohort_incomes",
 	            "agent_cohort_land_rents", "agent_need_floor_costs", "agent_land_rent_at", "agent_land_rent_paid_by_tile",
 	            "agent_land_rent_per_hectare", "agent_output_tonnes_by_tile", "agent_idle_hours_by_trade", "agent_fugitive_share_by_tile",
 	            "country_opening_basket", "country_volume_baseline", "country_traded_volumes", "fleet_goods", "goods_carried_last_year",

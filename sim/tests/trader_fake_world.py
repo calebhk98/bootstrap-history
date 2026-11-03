@@ -2,6 +2,7 @@
 from sim.agents.api import ActorRegistry, ActorsState
 
 from .agents_fake_world import FakeWorld
+from .pool_lenders import lend_from_savers
 
 
 class TradeWorld(FakeWorld):
@@ -51,4 +52,7 @@ class TradeWorld(FakeWorld):
 
 
 def make_registry():
-	return ActorRegistry(ActorsState(home_country="home"))
+	"""A registry whose pool can borrow from one lender with funds enough for any test's trading."""
+	registry = ActorRegistry(ActorsState(home_country="home"))
+	lend_from_savers(registry.state.purses, 1e12)
+	return registry

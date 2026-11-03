@@ -80,20 +80,22 @@ class BondBook:
 		return sum(bond.face * bond.coupon for bond in self.held.get(issuer, ()))
 
 	def age(self, issuer: str) -> float:
-		"""A year passes: bonds at their term fall due and are returned; their face is what the issuer must repay."""
+		"""A year passes: bonds at their term fall due; the face of all that are due, this year's and any left unpaid, is what the
+		issuer must repay. They stay on the book as its debt until `retire_due`."""
 		due = 0.0
-		kept = []
 		for bond in self.held.get(issuer, ()):
 			bond.years_left -= 1.0
 			if bond.years_left <= EPSILON:
 				due += bond.face
-			else:
-				kept.append(bond)
+		return due
+
+	def retire_due(self, issuer: str) -> None:
+		"""The bonds that have fallen due are repaid: they leave the book."""
+		kept = [bond for bond in self.held.get(issuer, ()) if bond.years_left > EPSILON]
 		if kept:
 			self.held[issuer] = kept
 		else:
 			self.held.pop(issuer, None)
-		return due
 
 	def write_off(self, issuer: str) -> float:
 		"""The issuer defaults: its bonds end and the market loses what it paid for them."""

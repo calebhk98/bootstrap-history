@@ -8,10 +8,12 @@ import unittest
 from sim.agents import ledger
 from sim.agents.api import ActorRecord, ActorsState
 from sim.agents.firm import Firm
-from sim.agents.purses import COIN, DEPOSIT_LOST, EDGE_SAVERS, POOL
+from sim.agents.purses import COIN, DEPOSIT_LOST, POOL
+from sim.book import EDGE_EXCHANGE
 from sim.engine.state import deserialize_state, serialize_state
 
 from .agents_fake_world import FakeWorld
+from .pool_lenders import SAVERS, lend_from_savers
 
 
 def pair(money=100.0):
@@ -20,6 +22,7 @@ def pair(money=100.0):
     second = Firm("second", ActorRecord(kind="firm"))
     for actor in (first, second):
         actor.attach(state.purses)
+    lend_from_savers(state.purses, 1e6)
     return state, first, second
 
 
@@ -40,7 +43,7 @@ class ActorDebtInBook(unittest.TestCase):
         self.assertEqual(first.debt(), 150.0)
         self.assertEqual(second.money, 250.0)
         self.assertEqual(purses.claims["first"], {POOL: 150.0})
-        self.assertEqual(purses.book.balance(EDGE_SAVERS, COIN), -150.0)
+        self.assertEqual(purses.book.balance(EDGE_EXCHANGE, COIN), -150.0)
 
     def test_money_coming_in_repays_the_claim_first(self):
         state, first, second = pair(100.0)
@@ -92,11 +95,11 @@ class ActorDebtInBook(unittest.TestCase):
         state, first, second = pair(0.0)
         lender = Firm("lender", ActorRecord(kind="firm", money=40.0))
         lender.attach(state.purses)
-        state.purses.set_offers({"lender": 1000.0, EDGE_SAVERS: 1000.0})
+        state.purses.set_offers({"lender": 1000.0})
         ledger.transfer(first, second, 100.0, "buy")
         self.assertEqual(state.purses.claims["first"], {POOL: 100.0})   # one claim, whatever the lenders behind it
         self.assertEqual(state.purses.deposit("lender"), 40.0)           # the whole of what it holds
-        self.assertEqual(state.purses.deposit(EDGE_SAVERS), 60.0)
+        self.assertEqual(state.purses.deposit(SAVERS), 60.0)
         self.assertEqual(state.purses.purse("lender"), 0.0)
         self.assertEqual(lender.money, 40.0)                              # a deposit is still the lender's wealth
 
@@ -110,7 +113,7 @@ class ActorDebtInBook(unittest.TestCase):
         self.assertAlmostEqual(state.purses.purse("lender"), 0.0)    # nothing reaches a depositor before the settlement
         received = state.purses.settle_interest()
         self.assertAlmostEqual(received["lender"], 10.0 * 40.0 / 110.0)   # the interest itself was drawn from the savers, so they hold 70
-        self.assertAlmostEqual(received[EDGE_SAVERS], 10.0 * 70.0 / 110.0)
+        self.assertAlmostEqual(received[SAVERS], 10.0 * 70.0 / 110.0)
         self.assertAlmostEqual(state.purses.purse("lender"), 10.0 * 40.0 / 110.0)
         self.assertAlmostEqual(first.money, -110.0)                  # the interest was drawn on the facility too
 
@@ -140,7 +143,7 @@ class ActorDebtInBook(unittest.TestCase):
     def test_a_payment_into_a_big_debt_with_small_lenders_repays_without_overdrawing(self):
         # shares of a few millionths: summing the parts one by one must not come to more than the purse holds
         state, first, second = pair(0.0)
-        state.purses.contracts.set_facility("first", {EDGE_SAVERS: 548598094.2657492, "founder": 21.916031828153518,
+        state.purses.contracts.set_facility("first", {SAVERS: 548598094.2657492, "founder": 21.916031828153518,
                                                       "government:x": 42.367055428964726}, COIN)
         second.money = 0.6549334790574173
         ledger.transfer(second, first, 0.6549334790574173, "sale")
@@ -153,7 +156,7 @@ class ActorDebtInBook(unittest.TestCase):
         again = deserialize_state(serialize_state(state), ActorsState)
         self.assertEqual(again.purses.debt("first"), 150.0)
         self.assertEqual(again.purses.purse("second"), 250.0)
-        self.assertEqual(again.purses.book.balance(EDGE_SAVERS, COIN), -150.0)
+        self.assertEqual(again.purses.book.balance(EDGE_EXCHANGE, COIN), -150.0)
 
 
 if __name__ == "__main__":

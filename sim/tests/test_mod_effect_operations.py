@@ -32,6 +32,11 @@ effects.pay(money_game, "government:x", "government:y", 2.0, "a gift")
 check("pay_edge sends the ledger the actor, the named edge, the amount and the purpose", sent_money[0] == PayEdgeFrom("government:x", edges.EDGE_OFFICIALS, 10.0, "a bribe"), sent_money)
 check("receive_from_edge sends the payment the other way", sent_money[1] == PayActorFromEdge(edges.EDGE_OFFICIALS, "government:x", 4.0, "returned"), sent_money)
 check("pay sends the payer, the payee, the amount and the purpose", sent_money[2] == PayActor("government:x", "government:y", 2.0, "a gift"), sent_money)
+refusal_game = Game(actors=money_game.actors, send=lambda command: "a refusal")
+check("pay hands the refusal back to the mod when the payer cannot cover it",
+      effects.pay(refusal_game, "government:x", "government:y", 2.0, "a gift") == "a refusal")
+check("pay_edge hands the refusal back to the mod when the payer cannot cover it",
+      effects.pay_edge(refusal_game, "government:x", edges.EDGE_OFFICIALS, 2.0, "a bribe") == "a refusal")
 refused = []
 for edge, amount in ((edges.EDGE_OFFICIALS, -1.0), ("nowhere", 1.0)):
     try:

@@ -1,6 +1,6 @@
-"""Money that lands with households: the people's strata take wages, interest and the state's pay.
+"""Money that lands with households: the people's strata take wages and the state's pay.
 
-A body of people is a stratum actor with a purse. Wages, the state's pay and the interest lenders earn
+A body of people is a stratum actor with a purse. Wages and the state's pay
 are shared among the home country's free strata, so the money reaches the people who earn it and what
 they pay back (taxes, spending) is paid from their own purses. Where no stratum exists yet, the money
 goes to a named edge instead.
@@ -67,13 +67,6 @@ def _undo(payer: Any, paid: List[Any], charges: List[tuple], purpose: Any, give_
 	give_back()
 	if refusal is not None:
 		raise refusal
-
-
-def pay_savers(registry: Any, payer: Any, amount: float) -> None:
-	"""Interest the people earn as lenders: to the free strata in proportion to what they hold saved."""
-	savers = [stratum for stratum in free_strata(registry) if stratum.money > 0.0]
-	if savers:
-		share_out(payer, savers, [stratum.money for stratum in savers], amount, "interest_on_lending")
 
 
 def pay_wages(registry: Any, payer: Any, amount: float, purpose: Any, world: Any) -> None:

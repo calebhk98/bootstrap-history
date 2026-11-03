@@ -20,6 +20,7 @@ from sim.finance.constants import LENDABLE_RESERVE_SHARE
 from .agents_fake_world import FakeWorld
 
 WAGE = 1000.0
+from .pool_lenders import lend_from_savers
 
 
 class StateWorld(FakeWorld):
@@ -137,6 +138,7 @@ class LendingThroughThePool(unittest.TestCase):
 
     def test_a_state_that_offers_nothing_earns_nothing(self):
         purses = Purses()
+        lend_from_savers(purses, 1e6)
         purses.set_net("state", 1000.0, "opening")
         purses.set_net("firm", 0.0, "opening")
         purses.set_offers({})

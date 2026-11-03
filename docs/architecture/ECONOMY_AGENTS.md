@@ -212,25 +212,30 @@ double-entry book (`sim/book.py`, the class the economy's own agents use; the ac
 `ActorsState.purses`, `sim/agents/purses.py`). The book exists from the first posting of a game and is saved with
 the actors. The decision for who may owe what, and to whom:
 
-- A purse is never negative. Only edge accounts (the edges named in `sim/agents/edges.py`, and the savers) may go
-  below zero.
-- A debt is a loan claim. An actor that pays more than its purse holds draws the shortfall on its facility: the
-  household savers (`edge:savers`, the lenders the simulation does not model one by one) put the money into its
-  purse and hold a claim for the principal. Money that comes in repays the claim before it is kept. The claim is the
-  lender's asset and the actor's liability, the way `economy/credit_claims.py` already treats a cohort's or a
-  merchant's loan, and moves no money by itself.
-- `Actor.money` stays the net position (purse less claim), so every reader keeps its meaning; `Actor.debt()` is the
-  claim's principal and `spendable` the purse above zero plus the credit still open. Interest is added to the claim
-  as before (`Borrower.pay_interest`); the market's pool still shares it among the lenders at the yearly meeting.
-- Lenders are the accounts that offer funds at the yearly meeting (a state's reserve, a firm's spare
-  cash) and the household savers (`edge:savers`, the households the simulation does not model one by one). A draw is
-  shared among them in proportion to what they offer, each lending no more than its purse holds, and each holds a claim
-  for its part. Interest is paid straight to the claim holders in proportion to their claims (the savers' part reaches the
-  strata that hold savings), so there is no interest pool; `state_lending` is the claims the state holds. A lender's
-  own cash book is told of each loan and repayment so its purse still equals its books. The market rate and
-  what an actor may draw are the economy's own: `Borrower.draw_limit` asks the credit market's `fundable_amount` (the rule
-  the clearing applies to every request, priced by the economy's risk premium and floored by the lowest lender ask), and the
-  rate on a draw is the market rate plus that premium; the savers are a labelled stand-in for cohorts' savings, which are in the same book but not yet the lenders.
+- A purse is never negative. Only edge accounts (the edges named in `sim/agents/edges.py`) may go below zero.
+- A debt is a loan claim. An actor that pays more than its purse holds draws the shortfall on its facility: the pool
+  puts the money into its purse and holds one claim for the principal. Money that comes in repays the claim before it is
+  kept. `Actor.money` stays the net position (purse less claim), so every reader keeps its meaning; `Actor.debt()` is the
+  claim's principal and `spendable` the purse above zero plus the credit still open.
+- No money appears from nowhere. The pool's funds are real: the accounts that offered funds at the yearly meeting (a
+  state's reserve, a firm's spare cash) and the economy's own lenders (cohorts' savings, banks, funds). When the pool lacks
+  what a draw needs, `Purses._fund_pool` takes it from the economy's lenders (`economy_api.lender_listing`, reached through
+  the markets view `agent_lender_listing`) cheapest ask first, only lenders asking no more than the draw's rate, each
+  lending no more than it offered and its account holds. The money crosses `edge:exchange`: units from the lender to the
+  exchange, coin from the exchange to the pool, at the coin per unit. A lender's claim on the pool is a deposit; interest
+  is shared among the deposits at the yearly settlement and an economy lender is paid it in units into its own account,
+  and gets its deposit back, the same way, from what the pool holds beyond its lending. The only exception is a
+  bookkeeping reset (`Purses.set_net`), which stands the account outside the book behind the debt it writes.
+- A draw beyond what the borrower may be lent (`Purses.limit`, set by the actors module to the borrower's `draw_limit`)
+  or beyond what the lenders can supply is refused: `Purses._draw` raises `InsufficientFunds`, nothing moves, and the
+  ledger turns it into a `cannot_pay` refusal. A cover is all or nothing. The actor does with less (a staff bid, a
+  purchase, a line of spending) or logs an `unpaid_charge`. A bond that falls due and cannot be paid stays on the book as
+  debt and falls due again.
+- The market rate and what an actor may draw are the economy's own: `Borrower.draw_limit` asks the credit market's
+  `fundable_amount` (the rule the clearing applies to every request, priced by the economy's risk premium and floored by
+  the lowest lender ask), and the rate on a draw is the market rate plus that premium, for the seat's arrears and the
+  credit lines alike. Interest the pool receives waits in it until the yearly settlement; `state_lending` is the claims the
+  state holds. A lender's own cash book is told of each loan and repayment so its purse still equals its books.
 
 ## One money per labour hour (`Complaints/closed/115`)
 

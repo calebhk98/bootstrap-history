@@ -1,11 +1,34 @@
 """The actors' purse book as lenders use it: who offers what, what is lent out and owed, and the year's sharing of interest."""
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
-from sim.agents.api import EDGE_SAVERS, payroll
 from sim.assembly.api import Part
 
 
 class Lending(Part):
+
+	def connect_purses(self) -> None:
+		"""The purses ask this module what an account may be lent and who lends to the pool (never saved, set whenever the
+		registry is built over a state)."""
+		purses = self.world.purses
+		purses.limit = self.draw_limit
+		purses.lenders_for = self.lenders_for_draw
+
+	def draw_limit(self, account: str, amount: float) -> float:
+		"""The most of a draw of `amount` the account may be lent: its actor's own limit; all of it for an account no borrower
+		stands behind (an edge, a seat's household), which the lenders' supply still bounds."""
+		return self.parts.cast.actor_world().credit.limit(account, amount)
+
+	def lenders_for_draw(self, account: str, amount: float) -> Optional[Tuple[str, float, List[Tuple[str, float, float, float]]]]:
+		"""(the economy's unit, coin per unit, [(lender, offered, balance, ask)] cheapest first) of the lenders whose ask is no
+		more than the rate the account would pay on `amount`; None before lenders have met or while the economy opens."""
+		answered, listing = self.needs.agent_lender_listing()
+		if not answered or not listing["lenders"]:
+			return None
+		world = self.parts.cast.actor_world()
+		actor = world.registry.actors.get(account)
+		ceiling = None if actor is None else actor.rate_on_loan(world, amount)
+		lenders = [row for row in listing["lenders"] if ceiling is None or row[3] <= ceiling]
+		return listing["currency"], listing["coin_per_unit"], lenders
 
 	def lender_offers_made(self) -> Dict[str, float]:
 		"""The funds each lender account offers this year, by account, in the order the pool keeps them."""
@@ -30,14 +53,9 @@ class Lending(Part):
 	def settle_lender_interest(self, command: Any = None) -> None:
 		received = self.world.purses.settle_interest()
 		for lender, amount in received.items():
-			if lender == EDGE_SAVERS:
-				continue
-			party = self._lender_party(lender)
+			party = self._lender_party(lender)   # the economy's lenders were paid in units in the book: no actor behind them
 			if party is not None:
 				party.payments.note_income("interest_on_lending", amount)
-		savers = received.get(EDGE_SAVERS, 0.0)
-		if savers > 0.0:
-			payroll.pay_savers(self.parts.cast.cast(), self.parts.cast.edge(EDGE_SAVERS), savers)
 
 	def _lender_party(self, account: str) -> Any:
 		"""The actor behind a lender's account, or None for an edge."""

@@ -71,20 +71,22 @@ class ModEffects:
 
     # ---- money ------------------------------------------------------------------------------------------
 
-    def pay(self, sim: Any, payer_id: str, payee_id: str, amount: float, purpose: str) -> None:
-        """Move coin between two actors through the ledger."""
+    def pay(self, sim: Any, payer_id: str, payee_id: str, amount: float, purpose: str) -> Any:
+        """Move coin between two actors through the ledger. None when paid; the `Refusal` when the payer cannot cover it, for the
+        mod to act on (nothing moved)."""
         self._actor(sim, payer_id), self._actor(sim, payee_id)
-        sim.send(PayActor(payer_id, payee_id, self._amount(amount), self.need_cause(purpose)))
+        return sim.send(PayActor(payer_id, payee_id, self._amount(amount), self.need_cause(purpose)))
 
-    def pay_edge(self, sim: Any, actor_id: str, edge: str, amount: float, purpose: str) -> None:
-        """An actor pays a named edge: the coin leaves every purse and the edge keeps what crossed it."""
+    def pay_edge(self, sim: Any, actor_id: str, edge: str, amount: float, purpose: str) -> Any:
+        """An actor pays a named edge: the coin leaves every purse and the edge keeps what crossed it. None when paid; the
+        `Refusal` when the payer cannot cover it (nothing moved)."""
         self._actor(sim, actor_id)
-        sim.send(PayEdgeFrom(actor_id, self.edge_name(edge), self._amount(amount), self.need_cause(purpose)))
+        return sim.send(PayEdgeFrom(actor_id, self.edge_name(edge), self._amount(amount), self.need_cause(purpose)))
 
-    def receive_from_edge(self, sim: Any, actor_id: str, edge: str, amount: float, purpose: str) -> None:
+    def receive_from_edge(self, sim: Any, actor_id: str, edge: str, amount: float, purpose: str) -> Any:
         """A named edge pays an actor: coin enters the purses, and the edge's book shows where it came from."""
         self._actor(sim, actor_id)
-        sim.send(PayActorFromEdge(self.edge_name(edge), actor_id, self._amount(amount), self.need_cause(purpose)))
+        return sim.send(PayActorFromEdge(self.edge_name(edge), actor_id, self._amount(amount), self.need_cause(purpose)))
 
     # ---- goods ------------------------------------------------------------------------------------------
 

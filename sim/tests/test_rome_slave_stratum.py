@@ -11,6 +11,7 @@ from sim.agents.strata_seed import follow_population
 from sim.agents.stratum_year import settle_keep, true_up_keep, grow
 
 from .agents_fake_world import FakeWorld, flat_world
+from .pool_lenders import lend_from_savers
 
 civ = S.load_civ("rome_100ad")
 declared = civ["cast"]["strata"]
@@ -48,6 +49,7 @@ def founded_registry(people):
     profile.population = people
     state.countries[civ["id"]] = profile
     registry = ActorRegistry(state)
+    lend_from_savers(state.purses, 1e12)
     seed_strata(registry, CostedWorld(people, 1.0).trade_of_role)
     return registry
 
