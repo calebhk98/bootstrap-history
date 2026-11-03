@@ -79,3 +79,13 @@ class Game(SimpleNamespace):
         handlers = dict(MODULE_SPECS[0].applies)
         module = module_harness.build(Workforce, seat=self, world=getattr(self, "society", None))
         return getattr(module, handlers[type(command)])(command)
+
+
+def lose_share(household, survival_share):
+    """`StaffPools.lose_share` over the household's people on the books (the pools' resync is left out: it counts what this sets)."""
+    from sim.labour.labour_pools import StaffPools
+    from sim.labour.staff_book import StaffBook
+    world = SimpleNamespace(workforce=household)
+    pools = StaffPools(world, book=StaffBook(world), trades=None)
+    pools.resync_pools = lambda: None
+    pools.lose_share(survival_share)

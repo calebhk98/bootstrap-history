@@ -23,6 +23,8 @@ class FakePart:
 		self.__dict__["_world"] = world
 
 	def __getattr__(self, name: str) -> Any:
+		if name in ("frontier_disease_loss", "fugitive_share") and not hasattr(self.__dict__["_world"], name):
+			return lambda: None      # a world that does not follow its regions' disease or its people's flight
 		return getattr(self.__dict__["_world"], name)
 
 	def __setattr__(self, name: str, value: Any) -> None:
@@ -47,7 +49,7 @@ def flat_world(cls: Any) -> Any:
 
 def flat_namespace(**members: Any) -> Any:
 	"""A stand-in world of plain members (`SimpleNamespace(**members)`) whose parts answer them, as `flat_world` does a class."""
-	world = SimpleNamespace(**members)
+	world = SimpleNamespace(**{"frontier_disease_loss": lambda: None, "fugitive_share": lambda: None, **members})
 	for part in world_surface():
 		if part not in members:
 			setattr(world, part, FakePart(world))
@@ -125,6 +127,12 @@ class FakeWorld:
 
 	ROLE_TRADES = {"unskilled": "labourer", "soldier": "soldier", "clerk": "scribe", "builder": "mason", "sailor": "sailor",
 	               "merchant": "merchant"}
+
+	def frontier_disease_loss(self) -> None:
+		return None
+
+	def fugitive_share(self) -> None:
+		return None
 
 	def trade_of_role(self, role: str) -> str:
 		return self.ROLE_TRADES[role]
