@@ -4,7 +4,7 @@ same logit; the leftover going on to other needs is this project's extension (in
 account). The functions here are the rules; goods_respend_year.py runs them on a year's markets.
 """
 import math
-from typing import Dict, List, Mapping, Optional, Sequence
+from typing import Dict, List, Mapping, Sequence
 
 from sim.world import need_basket
 
@@ -82,8 +82,3 @@ def offers_left(offers: Sequence[Offer], sold: Mapping[tuple, float]) -> List[Of
             left.append(Offer(offer.seller, offer.good, offer.area, offer.tile, offer.quantity - taken,
                               offer.reservation_price))
     return left
-
-
-def cheapest_ask(offers: Sequence[Offer]) -> Optional[float]:
-    asks = [offer.reservation_price for offer in offers if offer.quantity > 0.0 and offer.reservation_price > 0.0]
-    return min(asks) if asks else None

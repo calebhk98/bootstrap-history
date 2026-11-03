@@ -1,7 +1,8 @@
 """The year's end: carriage, money taxes, the mint, every agent's close, spoilage, and what the
 markets remember for next year."""
 import math
-from typing import Dict, Tuple
+from types import MappingProxyType
+from typing import Dict, Mapping, Tuple
 
 from . import producer_table
 from .staffed_runs import staffed_runs
@@ -15,7 +16,6 @@ from .national_prices import national_prices, traded_spending_weights, usual_vol
 from .notional import recently_traded_goods
 from .setup import labour_area
 from .taxes_bases import YearFacts
-from .clearing_totals import market_totals
 from .types import is_edge
 from .year_goods import _held_stock
 from .year_ledger import YearLedger
@@ -39,8 +39,11 @@ def tax_facts(setup, record, view, ledger: YearLedger) -> YearFacts:
     away = foreign_agents(setup, record)
     home_cohorts = [cohort for cohort in record.cohorts.values() if cohort.agent_id not in away]
     working = {cohort.agent_id: cohort.working_people for cohort in home_cohorts}
-    wage_year = {cohort.agent_id: (view.wage(setup.unskilled_trade, labour_area(cohort.tile)) or 0.0) * hours
-                 for cohort in home_cohorts}
+    wage_year = {}
+    for cohort in home_cohorts:
+        wage = view.wage(setup.unskilled_trade, labour_area(cohort.tile))
+        if wage is not None:
+            wage_year[cohort.agent_id] = wage * hours
     cash = {agent: record.book.balance(agent, money) for agent in record.book.agents()
             if not is_edge(agent) and agent not in away}
     return YearFacts(currency=money, working_people=working, wage_per_labour_year=wage_year, cash=cash,
@@ -94,10 +97,14 @@ def wear_and_spoilage(setup, record, durable_users=()) -> None:
     book.transfer_many(metal_stock.yearly_wear(cash, record.currency))
 
 
-def close_agents(setup, record, view, ledger: YearLedger, area_map, carriage) -> None:
+def close_agents(setup, record, view, ledger: YearLedger, area_map, carriage,
+                 income_received: Mapping[str, float] = MappingProxyType({})) -> None:
+    """Close every agent's year. `income_received` is the year's other property income by payee (interest, rent); it is
+    added to the dividends and profits paid out here, so the households close on this year's property income and it is
+    what the record keeps."""
     money = setup.currency_id
-    property_income: Dict[str, float] = {}
-    traded, round_prices = market_totals(ledger.clearings, ledger.delivered_by_market)
+    property_income: Dict[str, float] = dict(income_received)
+    traded, round_prices = ledger.market_totals()
     clearing_prices = {key: price for key, price in round_prices.items() if traded[key] > 0.0 and price is not None}
     prepared_buyers: Dict = {}
     service_lives = {good: spec.service_life_years for good, spec in setup.specs.items()}
@@ -154,7 +161,7 @@ def close_agents(setup, record, view, ledger: YearLedger, area_map, carriage) ->
         producer_table.put_producer(record.producers, _with_practice(
             _with_sales(closed.producer, recipe, ledger, demand_runs, prices_here), producer.last_runs,
             {trade: practice.pool_units(crews_of_recipe[producer.recipe_id], trade) for trade in producer.crew_runs}))
-    prices, volumes = learned_prices(ledger.clearings, ledger.delivered_by_market, record.memory)
+    prices, volumes = learned_prices(ledger.market_totals(), record.memory)
     anchors = {(good, area.area_id): area.anchor_tile for good in area_map.goods() for area in area_map.areas(good)}
     ordered = (sorted(prices.items()), sorted(volumes.items()))
     interest_rate = own_rate(view, money)
@@ -175,7 +182,7 @@ def close_agents(setup, record, view, ledger: YearLedger, area_map, carriage) ->
         received = dict(ledger.received.get(cohort_id, {}))
         for good, quantity in ledger.grown.get(cohort_id, {}).items():
             received[good] = received.get(good, 0.0) + quantity
-        income = ledger.wages_in.get(cohort_id, 0.0) + record.capital_markets.property_income.get(cohort_id, 0.0)
+        income = ledger.wages_in.get(cohort_id, 0.0) + property_income.get(cohort_id, 0.0)
         spent = ledger.money_out.get(cohort_id, 0.0)
         closed, moves = households.close_year(cohort, received, view, setup.specs, cohort_basket(setup, record, cohort, buying=False),
                                                    income, spent)
@@ -199,10 +206,10 @@ def _news_lag_of(carriage, home, anchors):
     return lag_years
 
 
-def learned_prices(clearings, delivered, memory):
-    """(prices, volumes) by (good, area) that traders learn from the year: the price the market now
-    remembers, which for a market that sold nothing is what buyers would have paid."""
-    volumes, cleared = market_totals(clearings, delivered)
+def learned_prices(totals, memory):
+    """(prices, volumes) by (good, area) that traders learn from the year, from its `(quantity, price)` market totals:
+    the price the market now remembers, which for a market that sold nothing is what buyers would have paid."""
+    volumes, cleared = totals
     prices = {}
     for key, price in cleared.items():
         remembered = memory.prices.get(market_key(*key), price)

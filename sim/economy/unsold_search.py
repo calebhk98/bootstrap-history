@@ -80,11 +80,11 @@ def _held_value(setup, record, view, offer: Offer) -> Optional[float]:
                                           spec.spoilage_per_year if spec is not None else 0.0)
 
 
-def flood_price(wanted, held: float, lowest: float, highest: float, points: int = 200) -> float:
+def flood_price(wanted, held: float, lowest: Optional[float], highest: float, points: int = 200) -> float:
     """The price in [lowest, highest] at which a seller holding `held` units that are worth nothing unsold earns most from
     the buyers (`wanted(price)` is the quantity they want there): price times the smaller of the stock and the want, the
     highest such price when several earn alike. Asking less than this sells no more and takes less."""
-    if not 0.0 < lowest < highest:
+    if lowest is None or not 0.0 < lowest < highest:
         return highest
     ratio = (highest / lowest) ** (1.0 / (points - 1))
     prices = [lowest * ratio ** step for step in range(points - 1)] + [highest]
@@ -122,7 +122,7 @@ def unsold_above_the_floor(buyers: goods_market.Buyers, offers: Sequence[Offer],
     keys = {(offers[index].seller, offers[index].tile) for index in floors}
     if len(keys) != len(floors):
         return False
-    wanted = buyers.schedule.total_at(max(next(iter(floors.values())), buyers.minimum_price))
+    wanted = buyers.schedule.total_at(buyers.at_least_minimum(next(iter(floors.values()))))
     held = math.fsum(offers[index].quantity for index in floors)
     return wanted * (1.0 + UNSOLD_BOUND_MARGIN) < held * (1.0 - ROUNDING_SHARE)
 

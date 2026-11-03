@@ -9,7 +9,7 @@ import unittest
 from unittest import mock
 
 from sim.economy import bank_spread, banks, credit, credit_claims, lender_ask, loss_memory
-from sim.economy.credit_view import CreditView, loss_rate_of
+from sim.economy.credit_view import CreditView
 from sim.economy.households_orders import HOUSEHOLD_TIME_PREFERENCE
 from sim.economy.market_memory import MarketMemory
 from sim.economy.types import FundsOffer, Loan, LoanRequest
@@ -165,7 +165,6 @@ class ViewTests(unittest.TestCase):
         loans = [Loan("l", "saver", "borrower", "coin", 900.0, rate=0.05, years_left=3.0, issued_year=0)]
         view = CreditView(MarketMemory(), None, _Areas(), "coin", loans=lambda: loans, loss_rates=lambda: {"saver": 0.1})
         self.assertAlmostEqual(view.loss_rate("saver", "coin"), 0.1)
-        self.assertEqual(loss_rate_of(object(), "saver", "coin"), 0.0)
 
 
 if __name__ == "__main__":

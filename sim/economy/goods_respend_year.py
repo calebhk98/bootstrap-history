@@ -5,13 +5,23 @@ and a cohort still rationed goes on until nothing more is bought. Money no offer
 import math
 from typing import Dict, List, Tuple
 
-from . import goods_market, settlement
+from sim.constants import declare
+
+from . import goods_market, market_quote, settlement
 from .entry import wanted_in_round
 from .goods_market import quantity_at
-from .goods_respend import bids_adding_demand, cheapest_ask, need_of_good, offers_left, rationed_money, respend_bids
+from .goods_respend import bids_adding_demand, need_of_good, offers_left, rationed_money, respend_bids
 from .types import Bid, GoodsMove
 
 Market = Tuple[str, str]
+
+APPORTIONED_WANTED_SHARE = declare(
+    "RESPEND_APPORTIONED_WANTED_SHARE", 1.0, kind="temporary_heuristic",
+    unit="share of the round's wanted counted for the bids that add demand",
+    source=None, confidence="D",
+    why="A respend round's clearing gives the demand of all its bids together; the part that is new demand is taken "
+        "pro rata to the adding bids' demand at one price, not computed bid by bid at the asks each faced.",
+    retire="Complaint 964 exact wanted quantity per bid")
 
 
 class LeftMarket:
@@ -106,7 +116,7 @@ def respend(setup, record, view, ledger, markets: Dict[Market, LeftMarket], bask
             asks = {}
             for good in need_by_buyer(buyer):
                 ask = markets.get((good, view.area_of(good, cohort.tile)))
-                if ask is not None and (price := cheapest_ask(ask.offers)) is not None:
+                if ask is not None and (price := market_quote.lowest_unfilled_ask(ask.offers)) is not None:
                     asks[good] = price
             by_need = rationed[buyer]
             cash = record.book.balance(buyer, setup.currency_id)
@@ -133,7 +143,7 @@ def respend(setup, record, view, ledger, markets: Dict[Market, LeftMarket], bask
             market.last_delivered = moved
             market.offers = offers_left(market.offers, sold_by_seller(result))
             spent_any = spent_any or result.quantity > 0.0
-            fallback = cheapest_ask(market.offers)
+            fallback = market_quote.lowest_unfilled_ask(market.offers)
             for buyer, by_need in rationed_in(bids, result, households, fallback, need_by_buyer).items():
                 for need_id, amount in by_need.items():
                     rationed.setdefault(buyer, {})[need_id] = rationed.get(buyer, {}).get(need_id, 0.0) + amount
@@ -143,13 +153,19 @@ def respend(setup, record, view, ledger, markets: Dict[Market, LeftMarket], bask
 
 def _wanted_adding(adding, bids, offers, result) -> float:
     """What a respend round's buyers asked for, less what buyers already counted in the market asked again: the round's
-    wanted quantity in the share the adding bids hold of the bids' demand at the cheapest ask."""
+    wanted quantity in the share the adding bids hold of the bids' demand at the price `wanted_in_round` reads demand at."""
     wanted = wanted_in_round(bids, offers, result)
     if len(adding) == len(bids):
         return wanted
-    price = cheapest_ask(offers)
-    total = math.fsum(quantity_at(bid, price) for bid in bids) if price is not None else 0.0
-    return wanted * math.fsum(quantity_at(bid, price) for bid in adding) / total if total > 0.0 else 0.0
+    price = market_quote.lowest_unfilled_ask(offers)
+    if price is None:
+        price = market_quote.best_unfilled_bid(bids)
+    if price is None:
+        return 0.0
+    total = math.fsum(quantity_at(bid, price) for bid in bids)
+    if total <= 0.0:
+        return 0.0
+    return APPORTIONED_WANTED_SHARE * wanted * math.fsum(quantity_at(bid, price) for bid in adding) / total
 
 
 def _settle(record, ledger, result) -> float:

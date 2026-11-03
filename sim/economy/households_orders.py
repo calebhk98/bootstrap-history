@@ -17,7 +17,6 @@ from sim.constants import declare
 
 from . import durable_stock, households_buffer_stock, opening_resting
 from . import lender_ask
-from .credit_view import claims_of, equity_of, loss_rate_of
 from .households_ability import affordable_goods, household_budget_for_need, quantity_per_need_unit
 from .households_basket import (Basket, PricedNeed, need_prices, need_units, price_ceilings, quality_reach,
                                 with_quality_reach)
@@ -141,13 +140,13 @@ def goods_orders(cohort: Cohort, view: MarketView, cash: float, income_this_year
                            for need in priced)
     # what it has lent counts toward the wealth it spends from, so a loss to default cuts its spending;
     # spending follows Eurace's consumption budget (households_buffer_stock): mean net income, cash, shares
-    claims = claims_of(view, cohort.agent_id, area_currency)
+    claims = view.claims(cohort.agent_id, area_currency)
     from . import households_store            # imported here: that module needs this one's constants
     weights, store_prices, held = households_store.store_holding(cohort, view, specs, priced, shared_store)
     # the pace is set by the larger of this year's and last year's income, since a year's income so far
     # understates a household's usual income in its first year
     # what it owns of the firms is wealth it already holds: as of the last close, not after the year's wages are paid out
-    owned = households_buffer_stock.share_wealth_carried(cohort.share_wealth, equity_of(view, cohort.agent_id))
+    owned = households_buffer_stock.share_wealth_carried(cohort.share_wealth, view.equity(cohort.agent_id))
     store_value = _store_value_outside_use(cohort, priced, basket, specs, weights, store_prices, held,
                                            cash, owned, income_this_year, floor_cost, cohort.last_year_income)
     mean_income = households_buffer_stock.mean_net_income(income_this_year, cohort.last_year_income)
@@ -234,6 +233,6 @@ def goods_orders(cohort: Cohort, view: MarketView, cash: float, income_this_year
                                                      above_buffer, real_rate, cash, floor_cost))
     if savings > 0.0:
         ask = lender_ask.lowest_ask(HOUSEHOLD_TIME_PREFERENCE, cohort.expected_inflation,
-                                    expected_loss_rate=loss_rate_of(view, cohort.agent_id, area_currency))
+                                    expected_loss_rate=view.loss_rate(cohort.agent_id, area_currency))
         funds = (FundsOffer(cohort.agent_id, area_currency, savings, ask),)
     return AgentOrders(bids=tuple(bids), offers=offers, funds_offers=funds)

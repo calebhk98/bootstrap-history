@@ -97,8 +97,7 @@ class MarketView(Protocol):
         """Adaptive expectation of next year's rise in the price level, as a share."""
 
     def observed_inflation(self, currency: CurrencyId) -> Optional[float]:
-        """Last year's rise in prices, the weighted median of the goods' changes; None before there is one. A view
-        may omit it; holders then read the change in the price level."""
+        """Last year's rise in prices, the weighted median of the goods' changes; None before there is one."""
 
     def cash(self, agent: AgentId, currency: CurrencyId) -> float:
         """The agent's money now."""
@@ -107,8 +106,13 @@ class MarketView(Protocol):
         """The agent's holding of a good on a tile now."""
 
     def equity(self, agent: AgentId) -> float:
-        """What the agent owns of the firms (net worth by ownership share), in money. A view may omit it
-        (`credit_view.equity_of` then reads zero)."""
+        """What the agent owns of the firms (net worth by ownership share), in money; zero where the view has no firms."""
+
+    def claims(self, agent: AgentId, currency: CurrencyId) -> float:
+        """What the agent expects to collect on loans it has made; zero where the view has no loans."""
+
+    def loss_rate(self, agent: AgentId, currency: CurrencyId) -> float:
+        """The loss the agent expects per year of credit exposure; zero where the view has no loans."""
 
 
 @dataclass(frozen=True)

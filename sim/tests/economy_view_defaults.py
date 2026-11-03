@@ -11,6 +11,18 @@ class ViewDefaults:
     def cleared_price(self, good, area):
         return None
 
+    def observed_inflation(self, currency):
+        return None
+
+    def equity(self, agent):
+        return 0.0
+
+    def claims(self, agent, currency):
+        return 0.0
+
+    def loss_rate(self, agent, currency):
+        return 0.0
+
     def prices_across(self, good, areas):
         return [self.price(good, each.area_id) for each in areas]
 

@@ -309,6 +309,18 @@ class YearView:
     def observed_inflation(self, currency: CurrencyId) -> Optional[float]:
         return self._memory.observed_inflation.get(currency)
 
+    def equity(self, agent: AgentId) -> float:
+        """What the agent owns of the firms: nothing counted in a view that has no firms (`CreditView` has them)."""
+        return 0.0
+
+    def claims(self, agent: AgentId, currency: CurrencyId) -> float:
+        """What the agent expects to collect on loans it has made: nothing counted in a view that has no loans."""
+        return 0.0
+
+    def loss_rate(self, agent: AgentId, currency: CurrencyId) -> float:
+        """The loss the agent expects per year of credit exposure: none in a view that has no loans."""
+        return 0.0
+
     def cash(self, agent: AgentId, currency: CurrencyId) -> float:
         return self._book.balance(agent, currency)
 

@@ -86,11 +86,11 @@ def _bisect(demand, low: float, high: float, supply: float) -> float:
     return math.exp(log_high)
 
 
-def _price_scale(bids: Sequence[Bid], last_price: Optional[float]) -> float:
+def _price_scale(bids: Sequence[Bid], last_price: Optional[float]) -> Optional[float]:
     references = [bid.reference_price for bid in bids if bid.reference_price > 0.0]
     if references:
         return math.fsum(references) / len(references)
-    return last_price if last_price and last_price > 0.0 else 1.0
+    return last_price if last_price and last_price > 0.0 else None
 
 
 def clear(bids: Sequence[Bid], offers: Sequence[Offer], good: GoodId, area: AreaId,
@@ -103,15 +103,17 @@ def clear(bids: Sequence[Bid], offers: Sequence[Offer], good: GoodId, area: Area
     if not offers:
         return _empty(good, area, currency, held_price, bids)
 
-    minimum_price = MINIMUM_PRICE_SHARE_OF_REFERENCE * _price_scale(bids, last_price)
-    effective = [max(offer.reservation_price, minimum_price) for offer in offers]
+    scale = _price_scale(bids, last_price)
+    minimum_price = None if scale is None else MINIMUM_PRICE_SHARE_OF_REFERENCE * scale
+    floor = lambda price: price if minimum_price is None else max(price, minimum_price)   # noqa: E731
+    effective = [floor(offer.reservation_price) for offer in offers]
     demand = _demand_function(bids)
 
     if demand(effective[0]) <= 0.0:
         lowest = effective[0]
         price = held_price if last_price is not None and lowest <= last_price else lowest
         supply = math.fsum(offer.quantity for offer, reservation in zip(offers, effective)
-                           if reservation <= max(price, minimum_price))
+                           if reservation <= floor(price))
         return _empty(good, area, currency, price, bids, supply)
 
     levels, running = [], 0.0

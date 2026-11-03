@@ -1,7 +1,6 @@
 """The market view with the credit market's holdings added: what an agent is owed and what it owns of firms.
 
-`claims_of(view, agent, currency)` and `equity_of(view, agent)` read them from any view and give zero from
-one that has no loans or firms.
+A plain `YearView` answers the same three questions (`equity`, `claims`, `loss_rate`) with zero: it has no loans or firms.
 """
 from typing import Callable, Mapping, Sequence
 
@@ -47,17 +46,3 @@ class CreditView(YearView):
             self._equity = dict(self._equity_of_all(self))
         return self._equity.get(agent, 0.0)
 
-
-def equity_of(view, agent: AgentId) -> float:
-    reader = getattr(view, "equity", None)
-    return reader(agent) if reader is not None else 0.0
-
-
-def claims_of(view, agent: AgentId, currency: CurrencyId) -> float:
-    reader = getattr(view, "claims", None)
-    return reader(agent, currency) if reader is not None else 0.0
-
-
-def loss_rate_of(view, agent: AgentId, currency: CurrencyId) -> float:
-    reader = getattr(view, "loss_rate", None)
-    return reader(agent, currency) if reader is not None else 0.0
