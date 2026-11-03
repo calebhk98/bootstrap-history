@@ -36,6 +36,10 @@ class CountryRevenue(SharedPart):
 	def state_revenue(self) -> float:
 		return sum(assessment.money for assessment in self.revenue_assessments())
 
+	def fugitive_share(self) -> None:
+		"""A country does not follow its people's flight: no figure."""
+		return None
+
 	def harvest_tonnes(self) -> float:
 		"""Grain the country's farm harvested last year (none before its first)."""
 		return float(self.world.profile.farm.get("harvest_kg", 0.0)) / 1000.0

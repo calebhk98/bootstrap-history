@@ -9,7 +9,7 @@ from sim.assembly.api import Command
 @dataclass(frozen=True)
 class ChargeLivingCost(Command):
 	"""The year's living cost is billed to the acting seat: `living_cost` less the `dependants_beyond_means` its income cannot carry
-	and less the wages already paid in advance (which are then used up). Answers the amount to pay."""
+	and less the staff wages the labour core's clearing pays from the household's purse, never below zero. Answers the amount to pay."""
 	living_cost: float
 	dependants_beyond_means: float
 

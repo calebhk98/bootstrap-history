@@ -53,9 +53,9 @@ def collection_line(world: Any) -> List[Line]:
 
 def _frontier_disease_loss(world: Any) -> float:
 	"""The share of working-age people the diseases of the frontier region take in a year, when the world can say
-	(a country that does not follow its regions' disease reads none)."""
-	read = getattr(world.people, "frontier_disease_loss", None)   # a foreign country's world does not follow its regions' disease
-	return float(read()) if read is not None else 0.0
+	(a country that does not follow its regions' disease takes none from the march)."""
+	loss = world.people.frontier_disease_loss()
+	return 0.0 if loss is None else float(loss)
 
 
 def campaign_line(world: Any, soldiers: float) -> List[Line]:
