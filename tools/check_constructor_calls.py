@@ -8,9 +8,14 @@ statically, and a call with `*args` or `**kwargs` are skipped and counted.
 Also checked: every class in a module's `PARTS` is built as `part_class(module)` by Module.build_parts, so its constructor must
 take exactly (self, module).
 
-Run from the repository root; prints one line per problem and exits 1 if any. `--stats` adds a final `checked N, skipped M` line."""
+Run from the repository root; prints one line per problem and exits 1 if any. `--stats` adds a final `checked N, skipped M` line, and `--reasons` the skipped calls counted per reason.
+
+A call with `*args` or `**kwargs` is checked for what it writes out (its leading positional arguments and its keyword names). A built-in
+exception, called or used as a base, takes positional arguments and no keyword."""
 import ast
+import builtins
 import sys
+from collections import Counter
 
 sys.path.insert(0, "tools")
 from class_index import Index  # noqa: E402
@@ -27,6 +32,15 @@ class Signature:
         self.keyword_only = keyword_only
         self.varargs = varargs
         self.varkw = varkw
+
+
+def builtin_exception(name):
+    """True for a name that is a built-in exception class (`ValueError`, `KeyError`, ...)."""
+    found = getattr(builtins, name, None)
+    return isinstance(found, type) and issubclass(found, BaseException)
+
+
+EXCEPTION_SIGNATURE = Signature([], [], True, False)   # a built-in exception takes any positional arguments and no keyword
 
 
 def decorator_name(decorator):
@@ -49,6 +63,7 @@ class Checker:
         self.problems = []
         self.checked = 0
         self.skipped = 0
+        self.reasons = Counter()
 
     # ---- constructors ----
     def signature_of(self, module_name, node):
@@ -67,6 +82,9 @@ class Checker:
             if ast.unparse(base) in NO_INIT_BASES:
                 refs.append(("none", None))
                 continue
+            if isinstance(base, ast.Name) and builtin_exception(base.id) and not self.is_rebound(module_name, base.id):
+                refs.append(("exception", None))
+                continue
             found = self.index.resolve(module_name, base)
             if found is not None and found[0] == "class":
                 refs.append(("class", (found[1], found[2])))
@@ -78,15 +96,16 @@ class Checker:
         if node.keywords or any(decorator_name(d) not in PLAIN_DECORATORS for d in node.decorator_list):
             return None
         inits = [item for item in node.body if isinstance(item, ast.FunctionDef) and item.name == "__init__"]
+        news = [item for item in node.body if isinstance(item, ast.FunctionDef) and item.name == "__new__"]
         for item in node.body:
-            if isinstance(item, ast.FunctionDef) and item.name == "__new__":
-                return None
             if isinstance(item, ast.Assign) and any(isinstance(t, ast.Name) and t.id in ("__init__", "__new__") for t in item.targets):
                 return None
-        if len(inits) > 1 or (inits and inits[0].decorator_list):
+        if len(inits) > 1 or len(news) > 1 or (inits and inits[0].decorator_list) or (news and (news[0].decorator_list or inits)):
             return None
         if inits:
             return self._from_function(inits[0])
+        if news:
+            return self._from_function(news[0])
         options = dataclass_options(node)
         if options is not None and options.get("init") is not False:
             fields = self._dataclass_fields(module_name, node)
@@ -99,6 +118,8 @@ class Checker:
                 return None
             if kind == "class":
                 return self.signature_of(ref[0], ref[1])
+            if kind == "exception":
+                return EXCEPTION_SIGNATURE
         return Signature([], [], False, False)
 
     @staticmethod
@@ -165,7 +186,7 @@ class Checker:
     def problem_of(self, signature, call):
         """Why `call` does not fit `signature`, or None. Returns "skip" when the call uses * or **."""
         if any(isinstance(a, ast.Starred) for a in call.args) or any(k.arg is None for k in call.keywords):
-            return "skip"
+            return self.partial_problem(signature, call)
         if len(call.args) > len(signature.positional) and not signature.varargs:
             return "%d positional arguments given, the constructor takes %d" % (len(call.args), len(signature.positional))
         given = {name for name, _, _ in signature.positional[:len(call.args)]}
@@ -180,25 +201,97 @@ class Checker:
         missing += [name for name, required in signature.keyword_only if required and name not in given]
         return "missing required argument%s %s" % ("s" if len(missing) > 1 else "", ", ".join(missing)) if missing else None
 
+    def is_rebound(self, module_name, name):
+        """True when the file binds `name` itself (so it is not the built-in)."""
+        module = self.index.modules[module_name]
+        return name in module.bound or name in module.imports or name in module.classes
+
+    def skip(self, reason):
+        self.skipped += 1
+        self.reasons[reason] += 1
+
+    def unresolved_reason(self, module, function):
+        """Why a capitalised call target is not a known class: a name classification for --stats."""
+        if isinstance(function, ast.Name):
+            if function.id in module.imports:
+                sources = {source for _, source, _ in module.imports[function.id]}
+                return "imported name from %s" % ("outside sim/mods" if not any(self.index.is_module(s) for s in sources) else "a module that does not yield one class")
+            if function.id in module.classes:
+                return "class name defined twice or also rebound in the file"
+            return "name is bound some other way or is a builtin"
+        chain = function
+        while isinstance(chain, ast.Attribute):
+            chain = chain.value
+        if isinstance(chain, ast.Name) and (chain.id in module.imports or chain.id in module.classes):
+            return "attribute of an imported or local name that is not a module"
+        return "attribute of a value (self., a local or a call result)"
+
+    def unreadable_reason(self, module_name, node):
+        if node.keywords:
+            return "class has keywords (metaclass)"
+        if any(decorator_name(d) not in PLAIN_DECORATORS for d in node.decorator_list):
+            return "class has a decorator"
+        if any(isinstance(item, ast.FunctionDef) and item.name == "__new__" for item in node.body):
+            return "__new__ with __init__, overloaded or decorated"
+        inits = [item for item in node.body if isinstance(item, ast.FunctionDef) and item.name == "__init__"]
+        if len(inits) > 1 or (inits and inits[0].decorator_list):
+            return "overloaded or decorated __init__"
+        if any(kind == "unknown" for kind, _ in self._base_refs(module_name, node)):
+            return "a base class does not resolve"
+        return "other"
+
+    def check_call(self, module, node, signature, where, class_name):
+        reason = self.problem_of(signature, node)
+        if reason == "skip":
+            self.skip("call passes * or ** and writes out nothing to check")
+            return
+        self.checked += 1
+        if reason:
+            self.problems.append("%s:%d %s(...) is %s.%s: %s" % (module.path, node.lineno, ast.unparse(node.func), where, class_name, reason))
+
+    def partial_problem(self, signature, call):
+        """A call with `*args` or `**kwargs`: only its leading positional arguments and its written keywords can be checked.
+        "skip" when it has none of either."""
+        leading = []
+        for argument in call.args:
+            if isinstance(argument, ast.Starred):
+                break
+            leading.append(argument)
+        written = [keyword for keyword in call.keywords if keyword.arg is not None]
+        if not leading and not written:
+            return "skip"
+        if len(leading) > len(signature.positional) and not signature.varargs:
+            return "%d positional arguments given, the constructor takes %d" % (len(leading), len(signature.positional))
+        given = {name for name, _, _ in signature.positional[:len(leading)]}
+        allowed = {name for name, _, only in signature.positional if not only} | {name for name, _ in signature.keyword_only}
+        for keyword in written:
+            if keyword.arg in given:
+                return "argument %s given twice" % keyword.arg
+            if keyword.arg not in allowed and not signature.varkw:
+                return "unexpected keyword argument %s" % keyword.arg
+            given.add(keyword.arg)
+        return None
+
     def check_module(self, module):
         for node in ast.walk(module.tree):
             if isinstance(node, ast.Call):
                 found = self.index.resolve(module.name, node.func)
+                if found is None and isinstance(node.func, ast.Name) and builtin_exception(node.func.id) \
+                        and not self.is_rebound(module.name, node.func.id):
+                    self.check_call(module, node, EXCEPTION_SIGNATURE, "builtins", node.func.id)
+                    continue
                 if found is None:
                     last = node.func.id if isinstance(node.func, ast.Name) else node.func.attr if isinstance(node.func, ast.Attribute) else ""
                     if last[:1].isupper():
-                        self.skipped += 1
+                        self.skip("call target does not resolve: " + self.unresolved_reason(module, node.func))
                     continue
                 if found[0] != "class":
                     continue
                 signature = self.signature_of(found[1], found[2])
-                reason = "skip" if signature is None else self.problem_of(signature, node)
-                if reason == "skip":
-                    self.skipped += 1
+                if signature is None:
+                    self.skip("constructor unreadable: " + self.unreadable_reason(found[1], found[2]))
                     continue
-                self.checked += 1
-                if reason:
-                    self.problems.append("%s:%d %s(...) is %s.%s: %s" % (module.path, node.lineno, ast.unparse(node.func), found[1], found[2].name, reason))
+                self.check_call(module, node, signature, found[1], found[2].name)
             elif isinstance(node, ast.ClassDef):
                 self.check_parts(module, node)
 
@@ -211,7 +304,7 @@ class Checker:
                 found = self.index.resolve(module.name, value)
                 signature = None if found is None or found[0] != "class" else self.signature_of(found[1], found[2])
                 if signature is None:
-                    self.skipped += 1
+                    self.skip("PARTS entry unresolved")
                     continue
                 self.checked += 1
                 names = [name for name, _, _ in signature.positional]
@@ -233,6 +326,9 @@ def main():
         print(line)
     if "--stats" in sys.argv:
         print("checked %d, skipped %d" % (checker.checked, checker.skipped))
+    if "--reasons" in sys.argv:
+        for reason, count in checker.reasons.most_common():
+            print("  skipped %4d  %s" % (count, reason))
     sys.exit(1 if checker.problems or index.parse_errors else 0)
 
 

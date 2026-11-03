@@ -2,7 +2,7 @@
 
 1. Every view, command, phase and provision name a module_spec.py declares resolves on the module's implementation: a method of
    the class, or a method of exactly one class in its PARTS.
-2. Every `self.parts.<part>.<member>` in a part names a part of the same module and a member that part's class has; when the member
+2. Every `self.parts.<part>` in a part (with or without a member after it) names a part of the same module, and every `self.parts.<part>.<member>` names a part of the same module and a member that part's class has; when the member
    is assigned in the part's methods from a constructor call that resolves, `.<submember>` is checked against that class too.
 3. Every other `self.<name>` in a part is defined on the part (method, class attribute, assigned anywhere in the class or its
    bases) or is one of Part's own names.
@@ -225,13 +225,15 @@ def check_module(pkg, problems):
 				if isinstance(node, ast.Attribute) and isinstance(node.value, ast.Name) and node.value.id == "self" \
 						and node.attr not in own and node.attr not in PART_NAMES:
 					problems.append("%s.%s: self.%s is not defined (line %d)" % (pkg, part_class.__name__, node.attr, node.lineno))
+				if isinstance(node, ast.Attribute) and isinstance(node.value, ast.Attribute) and node.value.attr == "parts" \
+						and isinstance(node.value.value, ast.Name) and node.value.value.id == "self" \
+						and node.attr not in parts and not node.attr.startswith("__"):
+					problems.append("%s.%s: self.parts.%s is not a part (line %d)" % (pkg, part_class.__name__, node.attr, node.lineno))
 				if isinstance(node, ast.Attribute) and isinstance(node.value, ast.Attribute) \
 						and isinstance(node.value.value, ast.Attribute) and node.value.value.attr == "parts" \
 						and isinstance(node.value.value.value, ast.Name) and node.value.value.value.id == "self":
 					target, member = node.value.attr, node.attr
-					if target not in parts:
-						problems.append("%s.%s: self.parts.%s is not a part (line %d)" % (pkg, part_class.__name__, target, node.lineno))
-					elif member not in attributes_of(parts[target]):
+					if target in parts and member not in attributes_of(parts[target]):
 						problems.append("%s.%s: self.parts.%s.%s is not defined (line %d)" % (
 							pkg, part_class.__name__, target, member, node.lineno))
 				if isinstance(node, ast.Attribute) and not node.attr.startswith("__") and isinstance(node.value, ast.Attribute) \
