@@ -112,3 +112,9 @@ class Module:
 		"""What a memo over the acting seat's `channel` is keyed by: it moves with every bump of the channel for this seat and
 		on a load, and differs between seats."""
 		return (self.clock.era, self.clock.acting_seat) + self.clock.counter(self.module_id, channel, True)
+
+
+# Names the bases give every module and part: a declared view, command, phase or provision method may not take one, since the
+# assembly would bind to the helper instead of the behaviour. Instance attributes set in `__init__` are listed by hand.
+RESERVED_NAMES = frozenset(name for base in (Module, Part) for name in dir(base) if not name.startswith("__")) | frozenset(
+	("module", "parts", "needs", "clock", "module_id", "kernels", "world", "seat"))

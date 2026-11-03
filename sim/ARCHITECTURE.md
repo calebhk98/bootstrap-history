@@ -45,7 +45,7 @@ name (`ViewSpec.compute`, `applies`, `PhaseHook.method`, `Provision.method`) res
 one, else to the one part of `PARTS` that has it (two parts having it is an `AssemblyError`). The assembly generates the
 one-line method on the module class for such a name (`_with_part_methods`), so a mod's layer over the module can still
 override it and reach the part with `super()`; the binding itself takes the part's bound method (`bound_method`). Only
-declared names are reachable this way: a layer cannot override what parts call on each other. Data a mod's layer replaces
+declared names are reachable this way: a layer cannot override what parts call on each other, so a mod's override never reaches a part-to-part call inside the module. A declared name may not be one the `Module` or `Part` bases define (`setup`, `bump`, `kernel`, ...); a layer method that is neither declared nor an existing method of the module is an `AssemblyError`. Data a mod's layer replaces
 (`Projects.START_CHECKS`) stays an attribute of the module class and is read by the part as `self.module.START_CHECKS`. A module
 class keeps its own methods only for lifecycle (`setup`) or for a name no part owns.
 
@@ -105,13 +105,14 @@ is handed: the views and commands it declared with `api.reads(...)` and `api.sen
 
 Run from the repository root.
 
-1. `bash tools/done_check.sh` prints the migration's counts (`Sim`'s bases and mixins left, the module graph
-   summary, undeclared reads, writes outside the owners of money, string reads of `legacy_*` views, walled-package
-   import breaks, economy record parts written by a non-owner) and exits 1 when a gating one is above zero (it prints
-   `failing checks:` and names them). It runs two checks of its own that can be run alone:
-   `python3 tools/check_package_walls.py` (the import walls of `economy`, `agents`, `labour`, `geography` and `ui`,
-   `docs/architecture/PACKAGE_WALLS.md`) and `python3 tools/check_record_owners.py` (a write to an economy record
-   part by a module that does not own it).
+1. `bash tools/done_check.sh` prints the migration's counts and exits 1 when a gating one is above zero (it prints
+   `failing checks:` and names them). The failing checks are: mixin classes left in the `Sim` MRO and in `sim/labour`;
+   classes composed by inheritance (`tools/check_class_bases.py`, all of `sim/` but the tests); module reads and sends not
+   declared in their spec (`tools/check_module_reads.py`); UI views and commands missing from a built game
+   (`tools/check_ui_views.py`); direct capital/money writes outside their owners; string reads of `legacy_*` views; walled-package
+   import breaks (`tools/check_package_walls.py`, `docs/architecture/PACKAGE_WALLS.md`); economy record parts written by a
+   non-owner (`tools/check_record_owners.py`); part structure and private reaches into a part (`tools/check_parts.py`); and
+   attributes read from an adapter object that its class lacks (`tools/check_attribute_calls.py`). Each can be run alone.
 2. `python3 tools/measure/module_graph.py --modules` prints, per module, the views it reads, the commands it
    sends and how many modules depend on it; without `--modules` only the totals.
 3. `python3 tools/check_module_reads.py` lists every view read or command sent that the module's spec does not

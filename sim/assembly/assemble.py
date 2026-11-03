@@ -6,7 +6,7 @@ from .errors import AssemblyError
 from .framework import FRAMEWORK_ID, framework_spec
 from .kernels import check_replacement
 from .mod_access import ModAccess, NeedsAccess
-from .module import Module
+from .module import Module, RESERVED_NAMES
 from .read_guard import GuardedView
 from .needs import Needs, Point
 from .operations import Applied, apply_all
@@ -217,6 +217,9 @@ def _part_forwarder(part_name: str, method: str) -> Callable:
 def _with_part_methods(module_id: str, built: type, declared: Sequence[str]) -> type:
 	"""The implementation with, for each declared name it lacks, a method that calls the one part of `PARTS` that has it."""
 	added: Dict[str, Callable] = {}
+	clashes = sorted(name for name in declared if name in RESERVED_NAMES)
+	if clashes:
+		raise AssemblyError("module %s declares %s, which the Module and Part bases already define; rename the method" % (module_id, ", ".join(clashes)))
 	for name in sorted(declared):
 		if callable(getattr(built, name, None)):
 			continue
@@ -244,7 +247,10 @@ def _implementation(assembly: Assembly, module_id: str, spec: ModuleSpec) -> typ
 	built = _with_part_methods(module_id, spec.implementation, declared)
 	for mod_id, layer in assembly.applied.layers.get(module_id, []):
 		for name, value in vars(layer).items():
-			if callable(value) and not name.startswith("__") and name not in declared:
+			if callable(value) and not name.startswith("_") and name not in declared:
+				if not callable(getattr(built, name, None)):
+					raise AssemblyError("mod %s extends module %s with %s, which the module neither declares nor has; the layer would never be called" % (
+						mod_id, module_id, name))
 				assembly.unstable.setdefault(module_id, []).append((mod_id, name))
 		built = type("%s+%s" % (built.__name__, layer.__name__), (layer, built), {})
 	missing = [name for name in declared if not callable(getattr(built, name, None))]
