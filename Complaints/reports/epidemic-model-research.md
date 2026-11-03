@@ -41,6 +41,8 @@ and an engine adapter), and it reads places and routes only through `sim.geograp
 
 ## 1. What exists today
 
+*Present-day note: `sim/engine/society_hazards.py` (`_shock_staff_loss`), `sim/engine/fog.py` and the engine adapter named above no longer exist; the staff-loss hazard and `STAFF_LOSS_HAZARD_ANNUAL_CHANCE` are in `sim/hazards/` (`shocks.py`, `constants.py`, `knowledge_risk.py`), and `sim/disease/` now exists. The "checked against the code" statement near the top of this report is dated and not current.*
+
 Read from the code (no numbers stated, run the commands to measure).
 
 - `data/civilizations/*.json` carry `hazards` entries with `staff_loss`, `years`

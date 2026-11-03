@@ -75,7 +75,7 @@ Related: 473 (the spin-up does not settle, so a longer spin-up cannot replace sh
 
 - Partner civilisation records read once per game (`partner_civ`; `load_civ` was called thousands of times a year).
 - Route graph compiled once per set of modes and improvements; defender search remembered.
-- Carrier models (`engine/foreign_routes.py`) kept between price changes.
+- Carrier models (`sim/geography/routes_carriers.py`) kept between price changes.
 - Merchant route search: trip years kept per pair, tighter destination loop.
 - Merchants with no cash search only for the stock they hold; book totals read without per-agent sorting.
 - Round 2: route search skips what cannot pay; the year became flat, merchants its largest part.

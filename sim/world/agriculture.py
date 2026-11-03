@@ -21,7 +21,7 @@ CONSUMER on the population side: it takes a plain
 `food_available_calories_per_day` number and treats it as exogenous.
 `Storage.step` below hands back exactly that number
 (`food_available_kcal_per_day` in `YearFlows`); the actual wiring between the
-two happens in `sim/engine/core.py`, not in this file.
+two happens in the callers (`sim/agents/country_farm.py`), not in this file.
 
 THE TWO CONSUMERS THIS IS SHAPED FOR. (1) The demography model: birth and
 death rates there respond to calories per person, so this module's job is to

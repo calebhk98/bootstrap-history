@@ -1057,8 +1057,8 @@ class Population(object):
         point.
 
         `disease_burden` defaults to PRE_INDUSTRIAL_DISEASE_BURDEN (1.0):
-        every existing caller, including the engine's own call site in
-        sim/engine/core.py, does not pass this argument and so is completely
+        every existing caller, including the engine's own call site,
+        does not pass this argument and so is completely
         unaffected by this parameter's existence - see the module docstring
         and this task's own report for exactly what a caller would need to
         compute to pass in something other than the default.

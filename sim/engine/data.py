@@ -99,7 +99,7 @@ class SimulationDefaults(TypedDict):
     """`DEFAULTS`, below - the run-configuration knobs every `Sim` starts
     from before a civilization file or a CLI flag overrides any of them.
     Fixed at exactly these thirteen keys (read individually by name at
-    every call site in cli.py, cli_interactive.py and core.py), unlike the
+    every call site in cli.py, cli_interactive.py and the engine root), unlike the
     `cfg` dict callers build FROM it, which also carries whatever a
     civilization file or the command line adds and stays a plain mapping
     for that reason."""
@@ -505,7 +505,7 @@ def is_downstream(nodes: Nodes, node_id: str, target: str) -> bool:
 # goal (raise literacy past some level, cut epidemic mortality by some
 # fraction) is a checkpoint node carrying a `win_condition` field instead of
 # a normal cost - see start_check in sim/projects/start_checks.py (which refuses to let
-# anyone "start" one by hand) and core.py's per-year check (which completes
+# anyone "start" one by hand) and the projects module's per-year check (sim/projects/completion.py, which completes
 # it itself the moment the live measurement crosses the target). Either way
 # `closure()`, `critical_path()`, `topo_order()` and `Sim.run()` take one
 # node id and never need to know which kind it is; that is the whole point
@@ -570,7 +570,7 @@ def resolve_goal(tree: JSONDict, nodes: Nodes, name: Optional[str]) -> str:
 
 
 # A node's `win_condition` names a metric Sim knows how to read (see
-# core.py's _win_condition_value, the only other place this table is read),
+# `win_condition_value` in sim/seats/goals.py, the only other place this table is read),
 # and this is the one place that turns it into a sentence a player can read
 # - used when `start_reason` refuses to let anyone start one by hand, and
 # anywhere else that explains what a threshold goal actually is. Each

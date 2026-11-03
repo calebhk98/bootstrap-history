@@ -23,12 +23,11 @@ because of money or the generic scholar/artisan pools, both of which end up
 abundant (tens of millions of denarii, hundreds of scholars and artisans).
 It stalls on a small, fixed set of NAMED CRAFT TRADES the tree calls
 `TRADES_ABSENT` - chemist, electrician, engineer, machinist, optician -
-which do not exist in this civilisation at all until you personally teach
-them (`trade_available` in sim/labour/labour_trades.py), and which grow ONLY through
-`step()`'s once-a-year, two-people-at-a-time auto-teach (core.py, "4a2"),
-gated further by a 25-year per-trade cooldown. Once a trade's headcount is
-above zero, `market_supply(t) <= 0.0` - the sole trigger auto-teach uses to
-decide a trade is worth training more of - is simply never true again unless
+which do not exist in this civilisation at all until someone teaches
+them (`trade_available` in sim/labour/labour_trades.py). This note is a dated finding about the rules as they were
+when it was written (the trade-formation rules are in sim/labour/trade_formation.py); re-measure before relying on it.
+Once a trade's headcount is above zero, `market_supply(t) <= 0.0` - the trigger the old auto-teach used
+to decide a trade is worth training more of - is simply never true again unless
 every last person of that trade dies out, so in a deathless, failure-free
 world a trade that got taught once, early, for two people, STAYS at two
 people for the rest of the run, however many projects are starved for it.

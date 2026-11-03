@@ -1,6 +1,6 @@
 # Mod hooks plan: land tiles, commands and new actor kinds
 
-Status: commands, policies, actor kinds and mod code (stages 2 to 4) are built, as described in `mods/README.md`; the land-tile readers of section 1.1 are the work that remains outside Complaint 118.
+Status: commands, policies, actor kinds and mod code (stages 2 to 4) are built, as described in `mods/README.md`; Complaint 118 is closed: a mod's map overlay (tiles, layers and catalogue rows such as deposits) already reaches the engine's merged map. What remains is the readers of section 1.1 that still open the base map on their own (`map_source.load_map()` in `sim/geography/tile_names.py` and `tile_lookup.py`, bare `load_geography()` in `sim/world/land.py` and `sim/ui/cli_interactive.py`).
 
 Complaint 118 left three things a mod cannot do: add land tiles, add commands, add actor kinds.
 This document says how each is discovered today, where a mod would hook in, what blocks it, the
@@ -94,7 +94,7 @@ What blocks a mod:
 3. **Name collisions are asserts, not mod errors**, and a typed command word is one flat namespace
    shared with aliases, so two mods choosing `survey` collide with no message naming either mod.
 4. **No fog or fuzz contract for a mod handler.** `fog_hidden` exists on the entry, but a handler
-   that prints a tech id leaks under fog; the scanner test `test_scanners_and_scheduling.py` checks
+   that prints a tech id leaks under fog; the fog tests (for example `sim/tests/test_fog_leak3.py`) check
    the repository's own commands only.
 5. **Declarative precedent exists but only for figures.** `data/ui/figures.json` (and each mod's
    copy) is read by `sim/engine/ui_data.py`: figures name state paths, a path may call a method only
@@ -189,7 +189,7 @@ Two tiers, so most mods never need code.
 
 **Tier A, declarative (no code, no consent).** `mods/<id>/data/ui/commands.json`, beside the
 existing `figures.json`, merged in mod load order by a new `sim/engine/ui_data` sibling
-(`ui_commands.py`):
+(built as `sim/content/commands.py`):
 
 - `kind: "read"`: name, group, summary, usage, description, `shape` (one of the existing plain
   shapes), and `shows`: a list of `{label, path, unit?, digits?}` using the same state-path grammar
@@ -331,7 +331,7 @@ Stage 0 (the fixture mod and test harness), stage 2 (declarative commands, `sim/
 `sim/content/actor_kinds_data.py`) and stage 4 (Python hooks with consent, `sim/engine/mod_code.py`,
 `sim/content/mods_ids.py`) are built; `mods/README.md` describes them.
 
-**Stage 1: land tiles. Open.**
+**Stage 1: land tile readers. Open; the overlay itself works (Complaint 118, closed).**
 - Thread `world_map` through the readers in section 1.1 (`sim/geography/tile_names.py`, `tile_lookup.py`,
   `territory.py`, `crop_climate.py`, `places.py`, `tile_holdings.py`, `sim/world/land.py`,
   `sim/ui/cli_interactive.py`) and add a test that fails when `map_source.load_map()` or a bare `load_geography()`
@@ -344,5 +344,5 @@ Stage 0 (the fixture mod and test harness), stage 2 (declarative commands, `sim/
 defaults: `sim/content/mods.py`, `sim/content/tree_merge.py`, `data/branches`), then 3, 5, 6, 7, 13. Rank 4 is
 Stage 1. Each change keeps the fingerprint identical.
 
-Record the result by moving Complaint 118 to `Complaints/closed/` when stage 1 passes. Open question for the owner:
+Complaint 118 is already in `Complaints/closed/`; stage 1 closes the reader gap that note does not cover. Open question for the owner:
 whether stage 4 should stay shipped, given the safety boundary in section 2.2.

@@ -246,8 +246,8 @@ CALENDAR_FLOOR_REPUTATION_SCALE = declare(
         "limited node's calendar floor - a civilisation that already "
         "does a hundred complicated things does not start the "
         "hundred-and-first's social diffusion from zero credibility. "
-        "Tuned to a similar order of magnitude as economy.py's "
-        "REPUTATION_EASE_SCALE (120.0) for a related but distinct "
+        "Tuned to a similar order of magnitude as the polity "
+        "module's REPUTATION_EASE_SCALE (sim/polity/constants.py) for a related but distinct "
         "effect; not fitted to any measured diffusion-speed curve.")
 
 MINOR_FAILURE_SHARE = declare(

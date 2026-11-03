@@ -32,7 +32,7 @@ class Capability(Part):
 		benefit it is not collecting right now (the capability nodes' `lost_benefit`, plague_preparedness aside).
 
 		fin_university is the one entry needing its own gate in the table: its sole running()-gated effect
-		(update_protection, society.py) is an `or` with school_founded, so closing it costs nothing while
+		(`update_protection`, sim/polity/protection.py) is an `or` with school_founded, so closing it costs nothing while
 		school_founded is still open, and warning anyway would be a false alarm.
 		"""
 		nodes = self.needs.tree_nodes()
