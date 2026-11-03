@@ -102,44 +102,46 @@ class Purses:
         return (sum(contract.principal for contract in self.contracts.all() if contract.kind != DEPOSIT and contract.currency == COIN)
                 + self.bonds.total_paid())
 
-    def drawable(self, account: str, shortfall: float) -> float:
+    def drawable(self, account: str, shortfall: float, taking: float = 0.0) -> float:
         """The most of a draw of `shortfall` the account is lent now: what its borrower may be lent (`limit`), and what the pool
         holds beyond the interest it owes plus what the economy's lenders can supply for a draw of that size (`_lender_capacities`,
-        the same plan `_draw` takes funds by), so a draw this approves is never refused for want of funds."""
+        the same plan `_draw` takes funds by), so a draw this approves is never refused for want of funds. `taking` is a deposit the
+        account takes back first, which the same funds must pay."""
         if is_edge(account):
             return max(0.0, shortfall)   # an edge is the other side of a posting: it is never short
         if shortfall <= DEBT_FLOOR:
             return 0.0
         allowed = shortfall if self.limit is None or self._limits_off else max(0.0, min(shortfall, self.limit(account, shortfall)))
         free = max(0.0, self.purse(POOL) - self.interest_pending)
-        if allowed - free <= DEBT_FLOOR:
+        if allowed - free + taking <= DEBT_FLOOR:
             return allowed
         capacities = self._lender_capacities(account, allowed)
         supply = 0.0 if capacities is None else capacities[1] * sum(units for _lender, units in capacities[2])
-        return min(allowed, free + supply)
+        return max(0.0, min(allowed, free + supply - taking))
+
+    def takeable(self, account: str) -> float:
+        """What the account can take back of its deposit now: the deposit, as far as the pool holds it free or the lenders refill it."""
+        deposit = self.deposit(account)
+        if deposit <= DEBT_FLOOR:
+            return 0.0
+        free = max(0.0, self.purse(POOL) - self.interest_pending)
+        if deposit - free <= DEBT_FLOOR:
+            return deposit
+        capacities = self._lender_capacities("", deposit)
+        refill = 0.0 if capacities is None else capacities[1] * sum(units for _lender, units in capacities[2])
+        return min(deposit, free + refill)
 
     def payable(self, account: str, amount: float) -> float:
-        """The most of `amount` the account can pay now: its purse, its deposit (taken back first) and what it is lent beyond."""
+        """The most of `amount` the account can pay now: its purse, its deposit as far as it can take it back (`takeable`) and what
+        it is lent beyond."""
         if is_edge(account) or amount <= DEBT_FLOOR:
             return max(0.0, amount)
-        held = self.purse(account) + self.deposit(account)
+        purse = self.purse(account)
+        taking = min(self.takeable(account), max(0.0, amount - purse))
+        held = purse + taking
         if held >= amount * (1.0 - ROUNDING_SHARE):
             return amount
-        return min(amount, held + self.drawable(account, amount - held))
-
-    def pay_up_to(self, payer: str, payee: str, amount: float, purpose: str) -> float:
-        """Pay `amount` or as much of it as the payer can (`payable`); answers what was paid. Never raises for want of funds."""
-        affordable = self.payable(payer, amount)
-        if affordable > DEBT_FLOOR:
-            try:
-                self.transfer(payer, payee, affordable, purpose)
-                return affordable
-            except InsufficientFunds:
-                affordable = min(affordable, self.purse(payer) + self.deposit(payer))   # the draw was refused: what it holds
-                if affordable > DEBT_FLOOR:
-                    self.transfer(payer, payee, affordable, purpose)
-                    return affordable
-        return 0.0
+        return min(amount, held + self.drawable(account, amount - held, taking))
 
     def set_offers(self, offers: Dict[str, float]) -> None:
         """The funds each lender offers from now on: a lender's deposit in the pool moves to what it offers (from its
@@ -201,7 +203,7 @@ class Purses:
         if not is_edge(payer) and amount > DEBT_FLOOR:
             held = self.purse(payer)
             if held < amount * (1.0 - ROUNDING_SHARE):   # a purse short only by float dust pays as it is
-                beyond = amount - held - self.deposit(payer)   # what no deposit covers: refused now, before anything moves
+                beyond = amount - held - self.takeable(payer)   # what no deposit it can take back covers: refused now, before anything moves
                 if beyond > DEBT_FLOOR and not self._limits_off and self.drawable(payer, beyond) < beyond * (1.0 - ROUNDING_SHARE):
                     raise InsufficientFunds("%s may be lent %.2f of the %.2f it lacks" % (payer, self.drawable(payer, beyond), beyond))
                 taken = self._take_back(payer, min(amount - held, self.deposit(payer)))

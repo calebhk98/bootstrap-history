@@ -13,7 +13,7 @@ from sim.tests import harness, module_harness  # noqa: F401  (harness isolates t
 
 
 def actors_over(purses=None, cast=None, seat_ids=(), views=None, **world_fields):
-    module = module_harness.build(Actors, views={"seat_list": {"joined": list(seat_ids), "playing": list(seat_ids)},
+    module = module_harness.build(Actors, views={"seat_list": {"joined": list(seat_ids), "playing": list(seat_ids), "households": []},
                                                  "seat_dealings": lambda seat_id: SeatsSeat(), **(views or {})},
                                   world=SimpleNamespace(purses=purses, edge=lambda name: "edge " + name, **world_fields))
     if cast is not None:
@@ -72,9 +72,10 @@ class SettleLenderInterest(unittest.TestCase):
 class LendersForADraw(unittest.TestCase):
     listing = {"currency": "unit", "coin_per_unit": 2.0, "lenders": [("cohort:a", 10.0, 10.0, 10.0, 0.04), ("bank:b", 5.0, 5.0, 5.0, 0.09)]}
 
-    def lenders(self, account, rate, listing=(True, listing)):
+    def lenders(self, account, rate, listing=(True, listing), households=(), room=None):
         credit = SimpleNamespace(rate_ceiling=lambda account_id, amount: rate)
-        module = actors_over(views={"agent_lender_listing": lambda: listing})
+        module = actors_over(views={"agent_lender_listing": lambda: listing, "credit_room": lambda account_id: room,
+                                    "seat_list": {"joined": list(households), "playing": list(households), "households": list(households)}})
         module.parts.cast.actor_world = lambda: SimpleNamespace(credit=credit)
         return module.lenders_for_draw(account, 100.0)
 
@@ -88,6 +89,16 @@ class LendersForADraw(unittest.TestCase):
     def test_no_lenders_listed_or_an_economy_still_opening_offers_none(self):
         self.assertIsNone(self.lenders("firm:1", 0.05, (False, None)))
         self.assertIsNone(self.lenders("firm:1", 0.05, (True, dict(self.listing, lenders=[]))))
+
+
+    def test_a_seat_household_is_given_back_its_own_granted_line_the_clearing_counted_against_the_lenders(self):
+        listing = (True, {"currency": "unit", "coin_per_unit": 2.0, "lenders": [("cohort:a", 10.0, 1.0, 10.0, 0.04), ("bank:b", 5.0, 5.0, 5.0, 0.09)]})
+        rows = self.lenders("seat:a", 0.10, listing, households=("seat:a",), room=12.0)[2]   # a line of 12 coin is 6 units
+        self.assertEqual([(row[0], row[1]) for row in rows], [("cohort:a", 7.0), ("bank:b", 5.0)])
+
+    def test_another_borrower_does_not_get_a_seats_line_back(self):
+        listing = (True, {"currency": "unit", "coin_per_unit": 2.0, "lenders": [("cohort:a", 10.0, 1.0, 10.0, 0.04)]})
+        self.assertEqual(self.lenders("firm:1", 0.10, listing, households=("seat:a",), room=12.0)[2][0][1], 1.0)
 
 
 class RateCeiling(unittest.TestCase):

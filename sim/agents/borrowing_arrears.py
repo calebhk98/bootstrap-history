@@ -12,10 +12,10 @@ ARREARS_YEARS_BEFORE_DEFAULT = declare(
 		"Stands in for lenders weighing what the borrower's assets and income can still carry.")
 
 
-def settle_year(owed: float, spare_credit: float) -> Tuple[float, float]:
-	"""(paid, unpaid) of `owed` interest: it is paid by drawing on the facility, and only within the room the
-	facility has left under the ceiling; a borrower past its ceiling pays nothing."""
-	paid = min(owed, max(0.0, spare_credit))
+def settle_year(owed: float, payable: float) -> Tuple[float, float]:
+	"""(paid, unpaid) of `owed` interest: it is paid from the purse and then by drawing on the facility, as far as the
+	borrower can pay (`Purses.payable`); a borrower with neither cash nor credit pays nothing."""
+	paid = min(owed, max(0.0, payable))
 	return paid, owed - paid
 
 

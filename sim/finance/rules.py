@@ -3,12 +3,14 @@ from .constants import LENDABLE_RESERVE_SHARE
 
 
 def calculate_credit_ceiling(raw_credit, running_cost_floor, serviceable, price_index=1.0, market_cap=None):
-	"""The nominal borrowing ceiling. `market_cap` is what lenders can still advance (in the same units as the other
-	figures); None before the market has met."""
-	limit = min(raw_credit, serviceable)
+	"""The nominal borrowing ceiling: the line the seat asks lenders for (its name and its serviceable debt, never under a year's
+	running costs, which the ask includes) and, once lenders have met, no more than they granted. `market_cap` is what lenders
+	granted the line (in the same units as the other figures); None before the market has met. A floor lenders did not grant is
+	not lent: the seat does with less."""
+	limit = max(min(raw_credit, serviceable), running_cost_floor)
 	if market_cap is not None:
 		limit = min(limit, market_cap)
-	return max(limit, running_cost_floor) * price_index
+	return limit * price_index
 
 
 def bearable_part(amount, capital, credit_limit_after):
