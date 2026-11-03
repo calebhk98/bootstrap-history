@@ -28,12 +28,28 @@ class RealProgrammeLevel(unittest.TestCase):
         self.assertAlmostEqual(record.state_budget.goods_budget, 300.0)
 
 
+def EconomySetup_for_scope(owners):
+    tiles = {"t1": types.SimpleNamespace(country=None), "t2": types.SimpleNamespace(country=None)}
+    return types.SimpleNamespace(
+        civ_id="home", tiles=tiles, tile_owners=owners,
+        country_of=lambda tile: owners[tile]["owner"] if tile in owners else "home",
+        countries=lambda: ("home",) + tuple(sorted({owners[tile]["owner"] for tile in tiles if tile in owners} - {"home"})))
+
+
 class HomeCohorts(unittest.TestCase):
     def test_only_cohorts_on_home_tiles_are_home_cohorts(self):
         setup = types.SimpleNamespace(countries=lambda: ["home", "away"], civ_id="home",
                                       country_of=lambda tile: "home" if tile.startswith("h") else "away")
         record = types.SimpleNamespace(cohorts={"a": types.SimpleNamespace(tile="h1"), "b": types.SimpleNamespace(tile="x1")})
         self.assertEqual([cohort.tile for cohort in home_scope.home_cohorts(setup, record)], ["h1"])
+
+    def test_a_tile_changing_hands_changes_the_answer(self):
+        owners = {}
+        setup = EconomySetup_for_scope(owners)
+        self.assertFalse(home_scope.has_partners(setup))
+        owners["t1"] = {"owner": "away", "control": "away"}
+        self.assertTrue(home_scope.has_partners(setup))
+        self.assertFalse(home_scope.on_home_tile(setup, "t1"))
 
     def test_with_one_country_every_tile_is_home(self):
         setup = types.SimpleNamespace(countries=lambda: ["home"], civ_id="home", country_of=lambda tile: "other")

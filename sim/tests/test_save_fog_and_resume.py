@@ -9,7 +9,7 @@ from unittest import mock
 
 from sim.knowledge.api import fog_mismatch
 from sim.refusal import cause_of
-from sim.ui import cli
+from sim.ui import cli_common
 
 QUICK_TOPIC = True
 
@@ -33,9 +33,9 @@ class FogMismatch(unittest.TestCase):
 
 
 def civ_for(session, asked, saved="england_1300", claimed=False, exists=True):
-    with mock.patch.object(cli, "civ_of_save", lambda path: saved), mock.patch.object(cli, "_is_claimed_slot", lambda path: claimed), \
-            mock.patch.object(cli.os.path, "exists", lambda path: exists), mock.patch.object(cli, "default_civilisation_id", lambda: "default"):
-        return cli._civ_for_session(SimpleNamespace(session=session, civ=asked))
+    with mock.patch.object(cli_common, "civ_of_save", lambda path: saved), mock.patch.object(cli_common, "_is_claimed_slot", lambda path: claimed), \
+            mock.patch.object(cli_common.os.path, "exists", lambda path: exists), mock.patch.object(cli_common, "default_civilisation_id", lambda: "default"):
+        return cli_common._civ_for_session(SimpleNamespace(session=session, civ=asked))
 
 
 class CivilisationOfASession(unittest.TestCase):

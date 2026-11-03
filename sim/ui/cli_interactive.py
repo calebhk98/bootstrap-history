@@ -57,11 +57,7 @@ from .protocol import (_agent_dispatch, _agent_end_reason, final_report,
 from sim.constants import declare
 from sim.seats.api import SetFounderLife
 
-# Session/session-file and display-preference helpers live in cli.py because
-# cli_agent.py needs the session helpers too, and _wrap/_apply_display_prefs
-# mutate a module-level _DISPLAY_WIDTH that only means what it says while it
-# stays beside the function that writes it - see cli.py's own comments on
-# both for the full reasoning.
+# Session and display-preference helpers shared with cli_agent.py live in cli_common.py.
 from .play_dice import dice_for_play
 from .sitting import Sitting
 from .cli_common import (ENDLESS_HORIZON_YEARS, HORIZON_MODES,

@@ -14,6 +14,7 @@ from sim.constants import declare
 
 from .households_basket import Basket
 from .price_setting import LOGIT_INTENSITY, choice_shares
+from .setup import DEFAULT_FUEL_NEED_ID, DEFAULT_HUNGER_NEED_ID
 
 _DATA_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "data", "world", "household_work.json")
 
@@ -55,7 +56,7 @@ def cooking_fuel_per_person_per_year(data: Mapping[str, Any], has_hearth: bool =
     return per_day * float(data["days_per_year"]) if per_day else 0.0
 
 
-def with_cooking_fuel(basket: Basket, fuel_per_person: float, fuel_need: str = "warmth") -> Basket:
+def with_cooking_fuel(basket: Basket, fuel_per_person: float, fuel_need: str = DEFAULT_FUEL_NEED_ID) -> Basket:
     """The basket with a cooking fuel floor added to the fuel need's floor (the climate floor heats the dwelling;
     cooking burns fuel beyond it). Left whole when there is none to add."""
     if fuel_per_person <= 0.0:
@@ -161,7 +162,7 @@ def ready_to_eat_goods(need_data: Mapping[str, Any]) -> frozenset:
                      if attributes.get("ready_to_eat"))
 
 
-def without_hearth_basket(basket: Basket, ready_goods: frozenset, food_need: str = "food") -> Basket:
+def without_hearth_basket(basket: Basket, ready_goods: frozenset, food_need: str = DEFAULT_HUNGER_NEED_ID) -> Basket:
     """The basket for a household with no hearth: the goods that serve the food need are only those eaten as
     bought (cooked meals, bread, cheese), since it cannot cook raw grain or meat. Left whole when none of
     them is in the basket (it would go hungry for want of a seller, not of a hearth)."""

@@ -3,10 +3,9 @@ ceilings on how much one worker can crop, the headline farm-population-share
 calibration, and the two functions the farm-sizing callers (`sim/agents/country_farm.py`) use to turn "how
 many people are there" into "how much land, worked by how many hands".
 
-This module holds the LABOUR DEMAND subject of `sim/world/agriculture.py`'s
-farming domain - see that file's own docstring, "THIS FILE IS A COMPOSITION
-POINT", for the other two subject files and why the constants and tables
-stay in that file instead: `hectares_per_worker_annual_hours_
+This module holds the LABOUR DEMAND subject of the farming domain (the facade
+is `sim/world/agriculture.py`; the constants and tables are in
+`sim/world/agriculture_core.py`): `hectares_per_worker_annual_hours_
 ceiling` and `hectares_per_worker_harvest_window_ceiling` (the two ceilings
 on a worker's cropped area, and why the harvest window is the binding one),
 `hectares_cropped_per_farm_worker` (the smaller of the two), `holding_
@@ -16,15 +15,15 @@ package exists to compute), and `farm_workers_fte_for_population` /
 `farmland_for_population` (the seam to the rest of the engine - see the
 SIZING A CIVILISATION'S FARM FROM ITS POPULATION section below).
 
-STANDALONE THE SAME WAY THE PARENT MODULE IS. Nothing here imports from
+Standalone like the rest of the farming domain: nothing here imports from
 `sim/engine/`; the only imports besides the standard library are from
-`sim.world.agriculture` (the declared constants and the Crop/Soil/Rotation/
+`sim.world.agriculture_core` (the declared constants and the Crop/Soil/Rotation/
 Toolkit/StorageTechnique tables these functions take as optional arguments),
 `sim.world.agriculture_yield` (`Land`, which `farmland_for_population`
 builds), and `sim.world.agriculture_storage` (`annual_food_demand_kg_per_
 person`, which `fraction_of_population_that_must_farm` divides by this
-module's own output-per-worker figure). See `sim/world/agriculture.py`'s own
-STANDALONE ON PURPOSE section for why that matters and to whom.
+module's own output-per-worker figure). See `sim/world/agriculture_core.py`'s
+STANDALONE ON PURPOSE section.
 """
 from typing import Optional
 

@@ -9,10 +9,7 @@ CLI commands are split by subject across four files:
   - cli_agent.py        - the machine-playable protocol: `agent`.
   - cli_analysis.py     - planning and diagnostic commands: `plan`, `search`,
     `why`.
-Everything importable from `ui.cli` is: the functions living in the
-other three files are re-imported below, at the bottom of this file (so
-they can themselves import session/display helpers defined earlier in this
-module - see the comment there for why the order matters).
+Session, display and horizon helpers shared by the command files live in cli_common.py.
 
 `cmd_run`, `cmd_compare`, `cmd_sensitivity`, `cmd_sweep`, `cmd_validate`,
 `cmd_path`, `cmd_costs` and `cmd_goals` live here rather than in one of the
@@ -1476,11 +1473,6 @@ def main():
             "spin-up-trace": cmd_spin_up_trace, "spin-up-sensitivity": cmd_spin_up_sensitivity}[args.cmd](args)
 
 
-# Re-exported here so every name that simulator.py, path_search.py, planner.py and the tests import from `ui.cli` by
-# name still resolves; the command modules import what they share from cli_common, not from here.
-from .cli_common import (  # noqa: F401
-    ENDLESS_HORIZON_YEARS, HORIZON_MODES, _apply_display_prefs, _civ_for_session, _founder_lifetime_hours,
-    _goal_for_session, _is_claimed_slot, _is_endless_horizon, _pick_session_filename, _resolve_horizon, _wrap)
 from .cli_interactive import cmd_civs, cmd_menu, cmd_play
 from .cli_agent import cmd_agent
 from .cli_analysis import cmd_plan, cmd_search, cmd_why

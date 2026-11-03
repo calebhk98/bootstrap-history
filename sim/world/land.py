@@ -32,7 +32,7 @@ The INTENSIVE margin - diminishing returns to more labour on the SAME
 ground, the second and third ploughing of one field yielding less than the
 first - is the other source of rent, and it does not need a worse region to
 exist anywhere: crowd one region hard enough and it earns rent from itself.
-See the LABOUR INTENSITY section below, sim/world/agriculture.py's own
+See the LABOUR INTENSITY section below, sim/world/agriculture_core.py's own
 Cobb-Douglas production function (the source this section's physics is
 DUPLICATED from, per this module's STANDALONE section, never imported), and
 margin_outcome_for_civilization's own docstring for where the two margins
@@ -57,8 +57,8 @@ by `tools/generate_geography_tiles.py`; a region's figures are sums over
 its tiles. Nothing here is tuned so a computed price matches
 a book figure for `hectare_land`.
 
-THE SAME UNIT `sim/world/agriculture.py` ALREADY USES, ON PURPOSE.
-`sim/world/agriculture.py`'s own `Land(hectares, quality=...)` already
+THE SAME UNIT `sim/world/agriculture_yield.py` ALREADY USES, ON PURPOSE.
+`sim/world/agriculture_yield.py`'s own `Land(hectares, quality=...)` already
 carries "a plain multiplier on yield, 1.0 being the 'decent land' baseline
 data/production/40_organics.json's own wheat entry describes" - see that
 class's own docstring, which also names the EXTENSIVE MARGIN (bringing
@@ -67,13 +67,13 @@ on the land rather than being folded into one society-wide yield number.
 `fertility_quality_multiplier` here is exactly that same multiplier, in
 the same units, anchored at the same place (Italia = 1.0). This is
 deliberate, not a coincidence of two authors picking the same round number:
-a later module that wants to hand agriculture.py's demography/food loop a
+a later module that wants to hand the farming domain's demography/food loop a
 real, geography-driven `Land(hectares, quality=region.fertility_quality_
 multiplier)` instead of a flat 1.0 needs no unit conversion and no rename
 to do it - see WHAT A LATER CONQUEST MECHANISM WOULD TOUCH below for
 exactly where that wiring would go. THIS MODULE DOES NOT DO THAT WIRING
-ITSELF: nothing here imports `sim.world.agriculture` (see STANDALONE below),
-and no caller in this round hands agriculture.py this number.
+ITSELF: nothing here imports `sim.world.agriculture*` (see STANDALONE below),
+and no caller in this round hands the farming domain this number.
 
 THE MECHANISM, IN ORDER.
 
@@ -175,7 +175,7 @@ particular civilization's price come out anywhere in particular:
   - a caloric requirement per person per year (a biological fact),
   - wheat's own calorie density (a biological fact, used only to turn the
     first number into a mass of grain - the same single-staple
-    simplification `sim/world/agriculture.py`'s own `annual_food_demand_
+    simplification `sim/world/agriculture_storage.py`'s own `annual_food_demand_
     kg_per_person` already documents and, per that function's own
     docstring, UNDERSTATES real land need because grain is the highest-
     yield-per-hectare calorie source a real diet is not exclusively made
@@ -195,7 +195,7 @@ result is a kilogram figure this module's margin-finder can compare
 directly against each region's own grain-equivalent output capacity. TAG:
 TEMPORARY HEURISTIC (CLAUDE.md SS3.4) on the whole quantity - the day a
 real, closed food-demand system exists (this project's own architecture
-notes name `sim/world/agriculture.py` and `sim/world/demography.py` as
+notes name `sim/world/agriculture_core.py` and `sim/world/demography.py` as
 where it would live), THIS is the one function that changes, and every
 region's own rent computation downstream of it is already wired to take
 whatever number it produces, exactly the promise `sim/world/deposits.py`'s
@@ -209,7 +209,7 @@ and never computes a labour-hours price - `sim/prices/solve_prices.py`'s own
 This module follows the identical split for the identical reason (see
 `sim/world/deposits.py`'s own STANDALONE section: nothing here imports
 `sim.engine`, `sim.solve_prices` or any other `sim.world` module, so a
-concurrent edit to `data/production/`, `sim/world/agriculture.py` or
+concurrent edit to `data/production/`, `sim/world/agriculture_core.py` or
 `sim/world/demography.py` - all owned by other agents as this module is
 written - cannot break this one or be broken by it). Every function below
 that needs a reference yield takes it as an explicit argument, defaulting
@@ -438,7 +438,7 @@ def reference_yield_kg_per_hectare(
 
 # LAND_HUMAN_CALORIC_NEED_KCAL_PER_DAY is this module's own public name for
 # sim/world/shared_constants's SUBSISTENCE_ENERGY_REQUIREMENT_KCAL_PER_
-# ADULT_DAY (see this file's top-of-file import). sim/world/agriculture.py
+# ADULT_DAY (see this file's top-of-file import). sim/world/agriculture_core.py
 # needs the identical figure, under its own HUMAN_ENERGY_
 # REQUIREMENT_KCAL_PER_ADULT_DAY name, and imports the same shared
 # declaration. sim/world/demand.py's HUMAN_SUBSISTENCE_CALORIES_PER_
@@ -456,7 +456,7 @@ LAND_HUMAN_CALORIC_NEED_KCAL_PER_DAY = (
 # WHEAT_ENERGY_KCAL_PER_KG is imported directly under this same name from
 # sim.world.shared_constants (see the top-of-file import): the value is the
 # same physical fact (wheat's own calorie density) this module,
-# agriculture.py and demand.py all need, not three modules independently
+# agriculture_core.py and demand.py all need, not three modules independently
 # landing on a coincidentally-equal number. Turns a caloric requirement into
 # a mass of grain, the unit this module's regional yields are already
 # stated in.
@@ -467,7 +467,7 @@ LAND_HUMAN_CALORIC_NEED_KCAL_PER_DAY = (
 # year), not a `declare()` of its own - see that module's own LAND USE
 # section for why this pair is the HARD duplication case (the same physical
 # fact under a different name AND a different unit, not merely a different
-# name) and sim/world/agriculture.py's own comment at its
+# name) and sim/world/agriculture_core.py's own comment at its
 # FALLOW_SHARE_OF_HOLDING import for the other side of it. It is arithmetic
 # on one already-declared number, the same convention this module already
 # uses for LAND_ANNUAL_FARM_LABOUR_HOURS_PER_CAPITA below.
@@ -486,7 +486,7 @@ DIET_DIVERSITY_LAND_MULTIPLIER = declare(
     unit="multiplier on grain-equivalent land need (dimensionless)",
     source=None,
     confidence="D",
-    why="sim/world/agriculture.py's own annual_food_demand_kg_per_person "
+    why="sim/world/agriculture_storage.py's own annual_food_demand_kg_per_person "
         "documents this exact gap: 'real pre-industrial diets were not "
         "100% grain calories... that simplification runs in the direction "
         "of UNDERSTATING how much land a real diet needs'. This module "
@@ -494,20 +494,20 @@ DIET_DIVERSITY_LAND_MULTIPLIER = declare(
         "the same gap (oil, wine, legumes, pasture for draught and dairy "
         "animals) - the DIRECTION is not in doubt, the SIZE is a "
         "placeholder pending a real multi-crop diet model, which is "
-        "agriculture.py's job, not this module's.")
+        "agriculture_core.py's job, not this module's.")
 
 LAND_CALENDAR_DAYS_PER_YEAR = declare(
     "LAND_CALENDAR_DAYS_PER_YEAR", 365.0,
     kind="physical_constant",
     unit="days/year",
     source="A plain calendar year, rounded to whole days - not the Julian "
-           "365.25 average sim/world/agriculture.py's own DAYS_PER_YEAR "
+           "365.25 average sim/world/agriculture_core.py's own DAYS_PER_YEAR "
            "and sim/world/demand.py's own DAYS_PER_YEAR use for the "
            "identical conversion. Declared here at the value this module "
            "already used rather than reconciled with those, because this "
            "task extracts numbers, it does not tune them - see this "
            "module's own STANDALONE section for why it does not simply "
-           "import agriculture.py's DAYS_PER_YEAR instead.",
+           "import agriculture_core.py's DAYS_PER_YEAR instead.",
     confidence="C",
     why="Converts the daily caloric need above into the annual grain mass "
         "this function's own land-demand arithmetic runs on.")
@@ -543,7 +543,7 @@ def quantity_demanded_kg_grain_equivalent(population: float) -> float:
 # statement about the MAP's own filing system, not about either
 # civilization's land.
 #
-# THE FIX, FOLLOWING sim/world/agriculture.py'S OWN PHYSICS RATHER THAN
+# THE FIX, FOLLOWING sim/world/agriculture_core.py'S OWN PHYSICS RATHER THAN
 # REBUILDING IT. That module's `gross_harvest_kg` is Cobb-Douglas in land
 # and labour - constant returns to the two together, but its own
 # LABOUR_OUTPUT_ELASTICITY < 1 means output on a FIXED parcel grows slower
@@ -553,12 +553,12 @@ def quantity_demanded_kg_grain_equivalent(population: float) -> float:
 # gives the closed form for why: for harvest = TFP * hectares**(1-e) *
 # hours**e, the extra kilograms the next hour of labour buys is
 # e * harvest / hours, which falls as hours rises because e < 1. This
-# module does NOT import agriculture.py (see the module docstring's
+# module does NOT import agriculture_core.py (see the module docstring's
 # STANDALONE section) - every constant below is DUPLICATED from it, with
 # the same discipline REFERENCE_WHEAT_YIELD_KG_PER_HECTARE above already
 # uses, and the functions below reproduce the SAME shape on a
 # PER-HECTARE basis (land fixed at exactly one hectare, so there is no
-# separate land exponent to carry) rather than calling agriculture.py's
+# separate land exponent to carry) rather than calling agriculture_core.py's
 # own code.
 #
 # WHAT LAND EARNS FROM THIS, AND WHY IT IS ADDITIVE WITH THE EXTENSIVE
@@ -598,7 +598,7 @@ def quantity_demanded_kg_grain_equivalent(population: float) -> float:
 # LAND_REFERENCE_LABOUR_HOURS_PER_HECTARE, LAND_LABOUR_OUTPUT_ELASTICITY
 # and LAND_ANNUAL_LABOUR_HOURS_PER_FARM_WORKER are this module's own public
 # names for a single shared declaration (see this file's top-of-file
-# import) that also backs sim/world/agriculture.py's REFERENCE_LABOUR_
+# import) that also backs sim/world/agriculture_core.py's REFERENCE_LABOUR_
 # HOURS_PER_HECTARE, LABOUR_OUTPUT_ELASTICITY and ANNUAL_LABOUR_HOURS_PER_
 # FARM_WORKER - THE EXACT PAIR OF DUPLICATIONS THAT PROMPTED sim/world/
 # shared_constants.py TO EXIST (see that module's own docstring and
@@ -629,7 +629,7 @@ LAND_AGRARIAN_POPULATION_SHARE = declare(
     "LAND_AGRARIAN_POPULATION_SHARE", 0.85,
     kind="temporary_heuristic",
     unit="fraction of population engaged in farming (dimensionless)",
-    source="sim/world/agriculture.py's own docstring names 'the historical "
+    source="sim/world/agriculture_core.py's own docstring names 'the historical "
            "80-90%' as the farm-population share of a pre-industrial "
            "society (in the course of explaining why its own computed "
            "farm-population share comes out far below that figure) - a "
@@ -651,7 +651,7 @@ LAND_ANNUAL_FARM_LABOUR_HOURS_PER_CAPITA = (
     LAND_ANNUAL_LABOUR_HOURS_PER_FARM_WORKER * LAND_AGRARIAN_POPULATION_SHARE)
 # ~1,190 hours/person/year. Arithmetic on two already-declared numbers, not
 # a fact of its own - the same non-declare() treatment
-# GROSS_YIELD_AT_REFERENCE_LABOUR_KG_PER_HA gets in sim/world/agriculture.py.
+# GROSS_YIELD_AT_REFERENCE_LABOUR_KG_PER_HA gets in sim/world/agriculture_core.py.
 # TAG: COMPOUNDING HEURISTIC (CLAUDE.md SS3.4) - this multiplies two
 # temporary_heuristic figures together, so its own uncertainty is at least
 # as large as the wider of the two, not smaller; declared confidence D on
@@ -705,7 +705,7 @@ def yield_kg_per_hectare_at_intensity(
     """Kilograms of grain-equivalent one hectare at this fertility produces
     in a season, at `labour_hours_per_hectare` of labour applied to it -
     `reference_yield_kg_per_hectare`'s own flat figure, generalised to
-    depend on labour the way `sim/world/agriculture.py`'s `gross_harvest_kg`
+    depend on labour the way `sim/world/agriculture_yield.py`'s `gross_harvest_kg`
     does.
 
     Cobb-Douglas in labour alone (land is fixed at exactly one hectare, so

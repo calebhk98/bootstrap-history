@@ -91,7 +91,7 @@ quantity. This is not a new idea invented for this module: it is Marshall's
 kilogram of silver already sitting in the cupel. See MARKET-CLEARING PRICE
 below for the closed form and why it exists in closed form at all.
 
-TAKE WHAT YOU NEED AS PARAMETERS. Exactly as sim/world/agriculture.py takes
+TAKE WHAT YOU NEED AS PARAMETERS. Exactly as sim/world/agriculture_core.py takes
 weather and sim/world/deposits.py takes the quantity demanded, every
 function below takes population, income, the wage and any cost-side price
 as an explicit argument. This module does not compute a wage, a population,
@@ -115,7 +115,7 @@ call once per candidate price vector, not a replacement for that solver. It
 does not model saving, credit, storage of wealth across years, or a
 household's labour-supply decision (how many hours to work, and at what
 trade) - income per capita is an input here, not an output, in the same
-spirit as sim/world/agriculture.py taking labour_hours as a pool rather
+spirit as sim/world/agriculture_core.py taking labour_hours as a pool rather
 than deriving how many hours someone chooses to work.
 
 THE STAKEHOLDER'S ARGUMENT, ENGAGED RATHER THAN DODGED. "An industrial base
@@ -229,7 +229,7 @@ GINI_COEFFICIENT_PREINDUSTRIAL_AGRARIAN = declare(
 DEFAULT_NUM_INCOME_BINS = 20
 # A numerical resolution choice (how finely the continuous Pareto
 # distribution is discretised for aggregate arithmetic), not a fact about
-# the world - see agriculture.py's own HARVEST_WINDOW_DAYS-adjacent constants
+# the world - see agriculture_core.py's own HARVEST_WINDOW_DAYS-adjacent constants
 # for the house style of declaring facts and leaving numerical-method
 # choices as plain module constants. income_bins()'s own docstring shows
 # this converges: doubling it changes no bin's ANALYTICALLY EXACT
@@ -662,7 +662,7 @@ HUMAN_SUBSISTENCE_CALORIES_PER_CAPITA_DAY = declare(
     kind="biological_parameter",
     unit="kcal/person/day",
     source="FAO minimum dietary energy requirement, adult average - the "
-           "same figure sim/world/agriculture.py's own "
+           "same figure sim/world/agriculture_core.py's own "
            "HUMAN_ENERGY_REQUIREMENT_KCAL_PER_ADULT_DAY and sim/world/"
            "demography.py's SUBSISTENCE_CALORIES_PER_ADULT_EQUIVALENT_DAY "
            "use. Declared again here under its own name, deliberately, "
@@ -680,7 +680,7 @@ WHEAT_ENERGY_KCAL_PER_KG = declare(
     kind="biological_parameter",
     unit="kcal/kg",
     source="Standard food-composition figures for whole wheat grain, "
-           "matching sim/world/agriculture.py's own WHEAT_ENERGY_KCAL_PER_KG "
+           "matching sim/world/agriculture_core.py's own WHEAT_ENERGY_KCAL_PER_KG "
            "(declared independently here for the same standalone reason).",
     confidence="A",
     why="The other half of turning a calorie requirement into a kilogram "
@@ -690,7 +690,7 @@ DAYS_PER_YEAR = declare(
     "DAYS_PER_YEAR", 365.25,
     kind="physical_constant",
     unit="days/year",
-    source="Julian calendar year average, matching sim/world/agriculture.py's "
+    source="Julian calendar year average, matching sim/world/agriculture_core.py's "
            "own DAYS_PER_YEAR (declared independently here for the same "
            "standalone reason - see this module's own STANDALONE section).",
     confidence="A",
@@ -701,7 +701,7 @@ DAYS_PER_YEAR = declare(
 FOOD_SUBSISTENCE_QUANTITY_KG_PER_CAPITA_PER_YEAR = (
     HUMAN_SUBSISTENCE_CALORIES_PER_CAPITA_DAY * DAYS_PER_YEAR / WHEAT_ENERGY_KCAL_PER_KG)
 # ~236.3 kg/person/year - arithmetic on two already-declared numbers, not a
-# fact of its own, matching agriculture.py's own convention for
+# fact of its own, matching agriculture_core.py's own convention for
 # GROSS_YIELD_AT_REFERENCE_LABOUR_KG_PER_HA.
 
 # ============================================================================
@@ -1020,7 +1020,7 @@ def joint_output_value_shares(
 # sim/tests/test_demand.py, to report the two disagreements the task that
 # produced this module names; nothing in this file's functions reads them,
 # and they must never be adjusted to make a computed figure agree - see
-# sim/world/agriculture.py's own CALIBRATION TARGETS section for the same
+# sim/world/agriculture_core.py's own CALIBRATION TARGETS section for the same
 # discipline applied there first.
 # ============================================================================
 

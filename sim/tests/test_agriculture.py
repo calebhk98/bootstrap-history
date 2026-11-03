@@ -179,30 +179,16 @@ class WeatherTests(unittest.TestCase):
         self.assertAlmostEqual(bad_year / normal, 0.5, places=6)
 
     def test_bad_year_reduces_consumption_and_food_per_person_through_storage(self):
-        # Same land, same labour, same population, same starting stock -
-        # the only difference is which weather multiplier gets drawn. The
-        # test forces the draw directly (rather than hunting for a seed
-        # that happens to produce a bad year) by monkeypatching the
-        # module-level draw function Storage.step calls.
+        # Same land, labour, population and starting stock; only the weather
+        # multiplier passed to Storage.step differs.
         land = _reference_land(hectares=6.0)
         population = 15.0
-
-        original_draw = agriculture.draw_weather_multiplier
-        try:
-            # Storage.step now passes a Soil's weather_stdev_fraction as a
-            # second positional argument (see agriculture.py's Storage.step
-            # and draw_weather_multiplier) - accept and ignore it here.
-            agriculture.draw_weather_multiplier = lambda rng, weather_stdev_fraction=None: 1.0
-            good_storage = agriculture.Storage(stock_kg=1000.0, seed=3)
-            good_flows = step_storage(good_storage, land, labour_hours=6.0 * 150.0,
-                                           population=population)
-
-            agriculture.draw_weather_multiplier = lambda rng, weather_stdev_fraction=None: 0.4
-            bad_storage = agriculture.Storage(stock_kg=1000.0, seed=3)
-            bad_flows = step_storage(bad_storage, land, labour_hours=6.0 * 150.0,
-                                         population=population)
-        finally:
-            agriculture.draw_weather_multiplier = original_draw
+        good_storage = agriculture.Storage(stock_kg=1000.0, seed=3)
+        good_flows = step_storage(good_storage, land, labour_hours=6.0 * 150.0,
+                                  population=population, weather_multiplier=1.0)
+        bad_storage = agriculture.Storage(stock_kg=1000.0, seed=3)
+        bad_flows = step_storage(bad_storage, land, labour_hours=6.0 * 150.0,
+                                 population=population, weather_multiplier=0.4)
 
         self.assertLess(bad_flows.gross_harvest_kg, good_flows.gross_harvest_kg)
         self.assertLess(bad_flows.food_available_kcal_per_day,

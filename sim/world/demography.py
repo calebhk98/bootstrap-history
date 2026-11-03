@@ -46,7 +46,7 @@ amount of invention to own explicitly rather than a hundred hidden guesses
 dressed up as precision.
 
 WHAT THIS MODULE DOES NOT DO. It does not know where food comes from -
-`sim/world/agriculture.py` hands `step()` a number of calories available per
+`sim/world/agriculture_core.py` hands `step()` a number of calories available per
 day (see `sim/demography/recovery.py` for the wiring), and
 this module treats that as an exogenous input, the same way it currently
 treats immigration and emigration. It also
@@ -785,7 +785,7 @@ def _excess_mortality_multiplier(nutrition_ratio: float, vulnerability: float) -
 
     THE DRAG IS JENSEN'S INEQUALITY ACTING ON YEAR-TO-YEAR NUTRITION
     VARIANCE, NOT A MISSING FLOOR OR DOUBLE-COUNTING. The nutrition ratio
-    this function receives varies year to year (from agriculture.py's
+    this function receives varies year to year (from agriculture_core.py's
     weather draw and the granary's only-partial buffering of it, neither
     owned by this module) even when its long-run MEAN sits at exactly 1.0.
     Because this function is FLAT at and above 1.0 and RISING below it, it
@@ -802,7 +802,7 @@ def _excess_mortality_multiplier(nutrition_ratio: float, vulnerability: float) -
     more than a good year of the same size gives back), not an artefact of
     this module, and it needs no unsourced floor to produce it. The
     remaining lever, to the extent the input side of that asymmetry can
-    still be narrowed, is agriculture.py's own storage/consumption
+    still be narrowed, is agriculture_core.py's own storage/consumption
     asymmetry (outside this module's ownership - see that module's
     GRANARY_CAPACITY_YEARS_OF_DEMAND and MAXIMUM_INTAKE_MULTIPLE_OF_
     SUBSISTENCE: a bigger reserve narrows the decline further, a bigger

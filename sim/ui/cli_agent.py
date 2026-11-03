@@ -1,12 +1,12 @@
 """The machine-playable protocol: `agent`.
 
 `cmd_agent` is the JSON-in/JSON-out driver a
-script or another process talks to - see the module docstring in cli.py for
+script or another process talks to - see sim/PROTOCOL.md for
 the protocol table. It deliberately does not call `_apply_display_prefs` (a
 human terminal's own cosmetic settings have no business changing what a
-script sees - see that function's own docstring in cli.py) and so needs
+script sees - see that function's own docstring in cli_common.py) and so needs
 none of cli_interactive.py's display machinery, only the session-resolution
-helpers cli.py also hands to the human-facing `play` command.
+helpers cli_common.py also hands to the human-facing `play` command.
 """
 import json, os, random, sys
 
@@ -19,9 +19,7 @@ from .save_policy import SavePolicy
 from sim.engine.ui_port import settings, units
 from sim.ui.proto import step_progress
 
-# Session helpers: shared with cli_interactive.py's cmd_play for the same
-# reason (a --session file resumes the civilisation/goal it was started
-# with), so they live in cli.py rather than in either front end alone.
+# Session helpers shared with cli_interactive.py live in cli_common.py.
 from .cli_common import _civ_for_session, _goal_for_session, _is_claimed_slot, _pick_session_filename
 from sim.engine import ui_port
 from sim.engine.ui_port import DetRNG, load_strategy
