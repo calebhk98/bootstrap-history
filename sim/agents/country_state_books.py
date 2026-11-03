@@ -16,8 +16,7 @@ class CountryEnterprises(SharedPart):
 
 	def plant_books(self, node_id: str, opened_year: int, rivals: float, size: float) -> Optional[PlantBooks]:
 		"""Takings, upkeep and wages of a plant at `size` founding sizes at the country's own prices, wages and cost scale (the
-		civilisation file's scale on the tree's book coin); None when its economy has no part for it, no wage for a trade
-		the crew needs, or the concern sells into a goods category."""
+		civilisation file's scale on the tree's book coin); None when its economy has no part for it, or the concern sells into a goods category."""
 		economy = self.world.own.get_or_none()
 		if economy is None:
 			return None

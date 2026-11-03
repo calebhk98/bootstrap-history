@@ -604,8 +604,8 @@ def country_trade_wage(economy, trade, country=None):
 
 
 def trade_wage_at(economy, trade, tile):
-    """The wage per hour a bid for `trade` on `tile` is funded at: the area's last wage, else the unpaid-trade wage on
-    the area's unskilled wage (`trade_wages.wage_in_area`)."""
+    """The wage per hour a bid for `trade` on `tile` is funded at: the area's last wage, else the one wage rule
+    (`trade_wages.wage_in_area`)."""
     view = economy.view()
     return trade_wages.wage_in_area(economy.setup, economy.record.memory, trade, view.area_of(trade, tile))
 

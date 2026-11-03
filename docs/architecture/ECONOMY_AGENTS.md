@@ -233,9 +233,14 @@ the actors. The decision for who may owe what, and to whom:
 
 ## One money per labour hour (`Complaints/closed/115`)
 
-What an hour of work is worth in the game's coin is one figure: the agent economy's wage for the unskilled trade
-(`EconomyPort.unskilled_wage`, read by the labour package's `wage_schedule`). Before the economy has opened there is
-no wage to read, so the opening is counted at the price solver's figure (the coin's labour cost); the economy's
+What an hour of work is worth in the game's coin is one figure: the agent economy's wage for the unskilled trade. It
+reaches the labour package by one chain: `labour_wage_schedule.wage_schedule` reads `world.economy.unskilled_wage`, which
+is `agent_unskilled_wage`, which is `PriceReads.unskilled_wage_per_hour`. That figure and every other trade's wage come
+from one rule (`sim/economy/trade_wages.py`), for the home country and a partner alike: the wage the trade's labour market
+paid; else the opening wage of the trade times `opening_wage_level`; else the unskilled wage of the same scope times one
+plus the trade's training premium. A trade id the setup does not know is an error. Before the economy has opened there is
+no wage to read, so the opening is counted at the opening figure (`money_per_labour_hour` times the home price level); the
+economy's
 opening (`open_agent` in `sim/markets/port.py` sends `RepriceOpeningMoney`; `sim/engine/opening_money.py` does the
 repricing) then reprices everything counted at that figure, the
 founder's and every seat's purse and the tree's money fields, by the ratio of the two, and sets

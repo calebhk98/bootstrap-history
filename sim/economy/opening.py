@@ -15,6 +15,7 @@ from sim.labour.api import MarketState
 from sim.refusal import Refusal
 
 from . import producer_table
+from .home_scope import has_partners
 from . import households_cohort
 from . import recipes as recipes_module
 from . import carriage_fleet_book, durable_stock, equity, goods_market, opening_basket, opening_bid_memory, opening_income, opening_metal, opening_own, opening_placement, opening_plans, opening_rent, opening_resting, opening_runs, households, households_store, labour_state, location, location_inputs, mint, opening_stores, ownership, sites, titles
@@ -215,7 +216,7 @@ def _open_country_producers(setup, record, area_map, carriage, priced_goods, fin
                                                ceilings, yields)
     incumbents = opening_runs.first_choices(ranked)
     _place_producers(setup, record, area_map, carriage, final, incumbents, runs, yields,
-                     tiles if len(setup.countries()) > 1 else None)
+                     tiles if has_partners(setup) else None)
 
 
 def _store_goods(setup, view, area_map, priced_goods) -> set:

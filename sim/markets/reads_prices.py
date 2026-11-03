@@ -85,13 +85,13 @@ class PriceReads:
         return self.answers()[2]
 
     def unskilled_wage_per_hour(self):
-        """The home labour markets' wage for an hour of the trade anyone can take up, in coin."""
+        """The home labour markets' wage for an hour of the trade anyone can take up, in coin (the engine's unit)."""
         economy = self._agent.economy()
         return self.wage_per_hour(economy_api.unskilled_trade(economy))
 
     def wage_per_hour_at(self, trade, tile):
         """The wage per hour, in coin, a bid for the trade on `tile` is funded at (sim/economy/trade_wages.py): the wage of the tile's own
-        labour area, else the unpriced-trade wage."""
+        labour area, else the one wage rule."""
         economy = self._agent.economy()
         return economy_api.trade_wage_at(economy, trade, self._agent.tile_in_economy(tile)) * economy_api.coin_per_unit(economy)
 
@@ -101,10 +101,11 @@ class PriceReads:
         return economy_api.hours_offered_in_area_of(economy, trade, self._agent.tile_in_economy(tile))
 
     def wage_per_hour(self, trade, country=None):
-        """The country figure, in coin: the trade's hours-weighted wage over the country's labour markets; a trade no market has priced (soldiers, scribes) has the wage the staff
-        bids use for it, so every wage stands on the same rule (sim/economy/trade_wages.py), home or partner."""
+        """The country figure, in coin: the trade's hours-weighted wage over the country's labour markets, or the one wage rule
+        (sim/economy/trade_wages.py) for a trade they have not paid, home or partner alike. A country with no part in this economy
+        is priced as the home country; the agents' country views (`HouseholdReads.country`) are for partners and refuse one."""
         economy = self._agent.economy()
-        scope = country if country in economy_api.economy_countries(economy) else None   # any other country is answered as the home country
+        scope = country if country in economy_api.economy_countries(economy) else None
         return economy_api.country_trade_wage(economy, trade, scope) * economy_api.coin_per_unit(economy)
 
     def credit_room(self, borrower_id):

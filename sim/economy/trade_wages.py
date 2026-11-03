@@ -14,7 +14,8 @@ country's hours-weighted figure (sim/economy/api.py `country_trade_wage`).
 
 Households differ on purpose: a household is a seller, and what it faces in a market with no recorded wage is its own
 reservation wage (`faced_wage`), the least it will work for, not the wage an employer would be billed. A tax or land
-bid that reads a wage for a cohort reads the recorded one and does without when there is none."""
+bid that reads a wage for a cohort prices a trade by the rule above like any other caller. A country in the economy always
+answers (`NoCountryEconomy` is raised only for a country with no economy part)."""
 from typing import Optional
 
 from .market_memory import market_key

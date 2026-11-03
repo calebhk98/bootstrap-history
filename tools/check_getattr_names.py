@@ -36,7 +36,6 @@ OPTIONAL = {
 	"aware": "the awareness map of actors that keep one (sim/agents/records.py, base.py); a party stub has none",
 	"purses": "the purse book of ledger-backed parties (sim/agents/purses.py); a party outside the ledger has none",
 	"stands_at_home": "class flag of a seat's party and account (sim/agents/household_party.py, sim/ledger/seat_account.py); other parties do not carry coin",
-	"input_share": "method of owners with plants of their own (sim/agents/government_enterprises.py); other owners have no enterprises part",
 	"ui_readable": "attribute set by the decorator that marks a method readable by the UI (sim/engine/readable.py); an undecorated method lacks it",
 	"register": "optional entry point of a mod's code module (sim/engine/mod_code.py); a module without it registers nothing",
 	"receiver_tile": "field of money moves that cross tiles (sim/book.py); a plain move lacks it",

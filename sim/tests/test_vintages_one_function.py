@@ -8,7 +8,7 @@ import unittest
 from unittest import mock
 
 importlib.import_module("sim.economy.api")     # loads the package in its own import order
-from sim.economy import goods_market, state_budget, year_accounts
+from sim.economy import goods_market, home_scope, state_budget, year_accounts
 from sim.economy.goods_market_fills import make_fill
 from sim.markets import port_late
 from sim.resources.costs import MineCosts
@@ -33,11 +33,11 @@ class HomeCohorts(unittest.TestCase):
         setup = types.SimpleNamespace(countries=lambda: ["home", "away"], civ_id="home",
                                       country_of=lambda tile: "home" if tile.startswith("h") else "away")
         record = types.SimpleNamespace(cohorts={"a": types.SimpleNamespace(tile="h1"), "b": types.SimpleNamespace(tile="x1")})
-        self.assertEqual([cohort.tile for cohort in state_budget.home_cohorts(setup, record)], ["h1"])
+        self.assertEqual([cohort.tile for cohort in home_scope.home_cohorts(setup, record)], ["h1"])
 
     def test_with_one_country_every_tile_is_home(self):
         setup = types.SimpleNamespace(countries=lambda: ["home"], civ_id="home", country_of=lambda tile: "other")
-        self.assertTrue(state_budget.on_home_tile(setup, "anywhere"))
+        self.assertTrue(home_scope.on_home_tile(setup, "anywhere"))
 
 
 class OpeningWageAtIndexBase(unittest.TestCase):
