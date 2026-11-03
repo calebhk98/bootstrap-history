@@ -30,9 +30,8 @@ Each item names where it lives now; confirm with the command before relying on i
   areas holding the capital and the playing seats' base tiles (`market_curves.kept_areas`).
 - **Traded volumes come from the economy.** Real output is measured from the economy's `traded_volumes` against its
   opening basket (`sim/reporting/output.py`); the quote's available tonnes is the economy's offered quantity.
-- **Cost comparers use the calculator at the economy's prices.** `CostBook` (`sim/prices/cost_books.py`,
-  `entry_cost.py`) is a book over `cost_of_making` fed the economy's input prices, wages, rate and land rent; the
-  node market factor is economy price over long-run cost (`sim/production/node_revenue_market.py`).
+- **Cost comparers use the calculator at the economy's prices.** `cost_of_making` (`sim/prices/making_cost.py`) is
+  fed the economy's input prices, wages, rate and land rent by the caller; the node market factor is economy price over long-run cost (`sim/production/node_revenue_market.py`).
 - **Unsold stock is searched within the year.** `sim/economy/unsold_search.py` (`clear_with_search`) lowers the asks
   of sellers left with unsold stock to the highest common level at which they sell out or reach their floor; the
   floor includes the queued holding value (`inventory.queued_holding_value`).

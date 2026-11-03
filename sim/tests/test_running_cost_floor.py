@@ -5,14 +5,10 @@ QUICK_TOPIC = True
 
 import unittest
 
-from sim.prices import entry_cost, solve_prices
+from sim.prices import solve_prices
 from sim.tests.test_capital_charge import WAGES, works_entry
 
 RATE = 0.12
-
-
-def book(production):
-    return entry_cost.CostBook({"ore_kg": 1.0}.get, WAGES.get, RATE, production=production)
 
 
 class RunningCostSplitTests(unittest.TestCase):
@@ -31,15 +27,6 @@ class RunningCostSplitTests(unittest.TestCase):
             "widget_kg", entry, {"ore_kg": 1.0}, WAGES, include_capital=flag)[1]["widget_kg"]
             for flag in (True, False)]
         self.assertEqual(both[0], both[1])
-
-
-class CostBookTests(unittest.TestCase):
-    def test_running_cost_is_below_full_cost_by_the_plants_repayment(self):
-        cost_book = book({"widget_kg": works_entry()})
-        full = cost_book.unit_cost("widget_kg", "widget_kg")
-        running = cost_book.running_unit_cost("widget_kg", "widget_kg")
-        self.assertIsNotNone(running)
-        self.assertLess(running, full)
 
 
 if __name__ == "__main__":
