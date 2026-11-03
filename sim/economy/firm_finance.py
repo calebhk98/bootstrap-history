@@ -145,8 +145,8 @@ def write_off_ratio(debt: float, capital_and_cash: float, illiquid: bool) -> flo
     the rescaling factor times the firm's capital stock plus cash (`TOTAL_ASSETS = TOTAL_VALUE_CAPITAL_STOCK +
     PAYMENT_ACCOUNT`, Financial_Management/Firm_Financial_Management_Functions.c; the stock held is not counted);
     an illiquid firm whose capital and cash would let the debt rise takes the factor
-    times the debt instead. The whole write-off falls in the one idle year (its months of idle period are our one
-    step)."""
+    times the debt instead. Eurace spreads the write-off over the idle months and lands near, not exactly on, the
+    target; here the whole write-off falls in the one idle year, so the debt lands on the target."""
     if debt <= ARREARS_EPSILON:
         return 0.0
     target = DEBT_RESCALING_FACTOR * capital_and_cash
