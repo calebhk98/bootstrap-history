@@ -20,9 +20,10 @@ class WorkforceWorld:
     EDGE_SLAVE_TRADERS = edges.EDGE_SLAVE_TRADERS
     EDGE_EMPLOYERS = edges.EDGE_EMPLOYERS
 
-    def __init__(self, needs, owner):
+    def __init__(self, needs, owner, parts):
         self._needs = needs
-        self._owner = owner          # the workforce module: its own views are asked of it directly
+        self._owner = owner          # the workforce module: its seat and world state
+        self._parts = parts          # its parts, which answer the rest
         self._trade_registry = None
         self._economy = AgentEconomyReads(needs)
         self._projects = ProjectReads(needs)
@@ -81,15 +82,15 @@ class WorkforceWorld:
     @property
     def staff_scale(self):
         """The share of the institutional staff ceiling the acting seat's income can pay, as `staff_capacity` last worked it out."""
-        return self._owner.staff_scale()
+        return self._parts.core.staff_scale()
 
     @staff_scale.setter
     def staff_scale(self, scale):
-        self._owner.set_staff_scale(scale)
+        self._parts.core.set_staff_scale(scale)
 
     def note_buy_refusal(self, refusal):
         """Keep why the acting seat's purchase of people was refused, for the screen that asked."""
-        self._owner.note_buy_refusal(NoteBuyRefusal(refusal))
+        self._parts.core.note_buy_refusal(NoteBuyRefusal(refusal))
 
     # ---- the scenario ----
 
@@ -299,7 +300,7 @@ class WorkforceWorld:
 
     @property
     def wages(self):
-        return self._owner.starting_wages()
+        return self._parts.fact_views.starting_wages()
 
     @property
     def trades_absent(self):
@@ -321,18 +322,18 @@ class WorkforceWorld:
         return self._needs.trade_family[trade]
 
     def build_wage_schedule(self, civ):
-        return self._owner.wage_schedule_for(civ)
+        return self._parts.fact_views.wage_schedule_for(civ)
 
     def techniques_available_to(self, production, reached_nodes):
         return solve_prices_core.techniques_available_to(production, reached_nodes)
 
     @property
     def wage_index(self):
-        return self._owner.opening_wage_index()
+        return self._parts.fact_views.opening_wage_index()
 
     @property
     def HOURS_PER_PERSON_YEAR(self):
-        return self._owner.hours_per_person_year()
+        return self._parts.views.hours_per_person_year()
 
     # ---- the farm ----
 

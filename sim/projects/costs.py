@@ -1,10 +1,12 @@
 """What starting a project costs now, all factors applied, and the frozen bill of one in hand.
 
 Needs: price_index, state_interest, tree, material_cost_factor, project_material_parts, project_cost_without_materials."""
+from sim.assembly.api import Part
+
 from . import constants, cost_rules
 
 
-class Costs:
+class Costs(Part):
 
 	def cost_money_factor(self):
 		"""What a denarius of QUOTED cost means, for spending purposes: the price level. The model is in REAL terms, so debasement

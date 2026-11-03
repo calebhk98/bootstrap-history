@@ -15,7 +15,7 @@ def markets_over(economy=None, goods_market=None, **views):
     from sim.tests import module_harness
     markets = module_harness.build(Markets, views=views)
     if economy is not None:
-        markets.economy = economy
+        markets.parts.market_objects.economy = economy
     if goods_market is not None:
-        markets.goods_market = goods_market
+        markets.parts.market_objects.goods_market = goods_market
     return markets

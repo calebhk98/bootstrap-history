@@ -9,6 +9,7 @@ from typing import Any, Dict, Optional, Tuple
 
 from sim.actors.api import SetLenderOffers, SettleLenderInterest
 from sim.agents.api import EDGE_SAVERS
+from sim.assembly.api import Part
 from sim.economy.api import opening_market_rate
 from sim.ledger.api import NoteHolderBooking
 from sim.world import capital_market
@@ -17,7 +18,7 @@ from . import rules
 from .constants import BACKGROUND_BORROWING_SHARE, LENDING_HORIZON_YEARS
 
 
-class CapitalMarket:
+class CapitalMarket(Part):
 
 	def market_rate(self) -> float:
 		"""The yearly market rate: the agent economy's credit market's, or the rate the opening solves while the economy opens."""

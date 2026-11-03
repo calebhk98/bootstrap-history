@@ -3,6 +3,7 @@ the seat and rename it in the stores the root keeps, and renames it in its own a
 from typing import Any
 
 from sim.assembly.api import MoveSeat
+from sim.assembly.api import Part
 from sim.diffusion.api import RekeyDisclosures
 from sim.rekey import rekey
 
@@ -12,13 +13,13 @@ from .commands import HandOverSeat
 DEALING_FIELDS = ("patents", "shares_held", "shares_issued", "offers", "offer_serial")
 
 
-class Handover:
+class Handover(Part):
 
     def hand_over_seat(self, command: HandOverSeat) -> Any:
         """Pass `from_id`'s seat to `to_id`: the seat's fields, its account with the debts and claims, and whatever else is
         keyed by its id; it leaves the year. Answers a Refusal that changed nothing, or what moved (the registry's account)."""
         from_id, to_id = command.from_id, command.to_id
-        seats = self._slots()
+        seats = self.parts.run._slots()
         holds = []
         if to_id in seats:
             slot = self.seat_of(to_id)

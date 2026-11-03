@@ -1,4 +1,5 @@
 """What the module answers about held stock: how much, what a node lacks, and how an opening is credited."""
+from sim.assembly.api import Part
 from sim.labour.api import production_data
 from sim.ledger.api import ChangeStock
 from sim.world.material_units import tonnes_per_unit
@@ -9,7 +10,7 @@ from .data import kilograms_per_unit, stock_rates
 HERDS = "herds"
 
 
-class Holding:
+class Holding(Part):
     """Views over the held stock and the commands that change it (needs: goods_stock, material_commodity, tree,
     civilisation, stock_land, endemic_stock_loss, producer_capacities)."""
 

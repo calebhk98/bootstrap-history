@@ -1,11 +1,13 @@
 """Standing timber: the tiles' felled ledger, cut by the firms that fell wood and regrown a year at a time."""
 from typing import Dict
 
+from sim.assembly.api import Part
+
 from .channels import TIMBER
 from .commands import FellTimber, RegrowTimber
 
 
-class Timber:
+class Timber(Part):
     """Needs: felled_after_cuts, felled_after_regrowth."""
 
     def timber_felled(self) -> Dict[str, float]:

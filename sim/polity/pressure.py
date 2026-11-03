@@ -2,28 +2,29 @@
 military supply, and the tail risk of outright confiscation. The reports it acts on are in notice.py.
 
 Needs: revenue_estimate, civilisation, events_enabled, game_random, money_text, send (RecordEvent)."""
+from sim.assembly.api import Part
 from sim.reporting.api import RecordEvent
 
 from . import constants
 
 
-class Pressure:
+class Pressure(Part):
 
 	def state_pressure(self, year):
 		needs = self.needs
 		seat = self.seat
 		money_text = needs.money_text
-		self.settle_household_year()
-		notice = self.state_notice()
+		self.parts.demands.settle_household_year()
+		notice = self.parts.notice.state_notice()
 		revenue = max(0.0, needs.revenue_estimate())
 		state_pressure_cfg = needs.civilisation().get("state_pressure") or {}
 
-		req_share, req_why = self.requisition_report()
-		off_share, off_name = self.office_report()
+		req_share, req_why = self.parts.notice.requisition_report()
+		off_share, off_name = self.parts.notice.office_report()
 		took = (req_share + off_share) * revenue
 		if took > 0.5:
 			office_paid = off_share * revenue
-			answer = self.answer_state_demand(took - office_paid)
+			answer = self.parts.demands.answer_state_demand(took - office_paid)
 			if answer["penalty"] > 0.0:
 				needs.send(RecordEvent.of("requisition_enforced", "You refused the requisition and the state enforced it: "
 				                          "the demand and a penalty of %s on top" % money_text(answer["penalty"], grouped=True)))
@@ -37,7 +38,7 @@ class Pressure:
 					                          (", with %s of service" % money_text(answer["service"], grouped=True))
 					                          if answer["service"] > 0.5 else "")))
 			took = office_paid + answer["paid"]
-			self.pay_state(took, {"office": office_paid, "requisition": answer["paid"] - answer["penalty"],
+			self.parts.transfers.pay_state(took, {"office": office_paid, "requisition": answer["paid"] - answer["penalty"],
 			                      "penalty": answer["penalty"]})
 			last = seat.said_requisition
 			if year - last >= 15:
@@ -59,11 +60,11 @@ class Pressure:
 				                          "holdings that are not all in one place, are what blunt it when it arrives"
 				                          % (notice, constants.STATE_NOTICE_THRESHOLD)))
 
-		if needs.events_enabled() and self.military_demand_eligible():
+		if needs.events_enabled() and self.parts.notice.military_demand_eligible():
 			last = seat.last_military_demand
 			if (year - last >= constants.MILITARY_DEMAND_COOLDOWN_YEARS
 					and needs.game_random().random() < constants.MILITARY_DEMAND_ANNUAL_CHANCE):
-				take = (self.state_military_ask(revenue, self.household_scale())
+				take = (self.parts.notice.state_military_ask(revenue, self.parts.notice.household_scale())
 				        * (1.0 - constants.MILITARY_DEMAND_PROTECTION_DISCOUNT * seat.protection))
 				take = max(0.0, take)
 			else:
@@ -71,9 +72,9 @@ class Pressure:
 			if take > 0.0:
 				seat.last_military_demand = year
 				asked = take
-				answered = self.answer_state_demand(asked)
+				answered = self.parts.demands.answer_state_demand(asked)
 				take = answered["paid"]
-				self.pay_state(take, {"military supply": take - answered["penalty"], "penalty": answered["penalty"]})
+				self.parts.transfers.pay_state(take, {"military supply": take - answered["penalty"], "penalty": answered["penalty"]})
 				name = state_pressure_cfg.get("military_name", "the arsenal")
 				if seat.demand_stance == "comply":
 					said = ("%s asks for your output: %s handed over in powder, iron or finished pieces. Refusing a state that "
@@ -87,7 +88,7 @@ class Pressure:
 					        % (name, money_text(asked, grouped=True)))
 				needs.send(RecordEvent.of("state_military_demand", said, asked=asked, taken=take, stance=seat.demand_stance))
 
-		probability, conf_why = self.confiscation_risk()
+		probability, conf_why = self.parts.notice.confiscation_risk()
 		if probability > 0.0:
 			band = int(probability / 0.05)
 			last_band = seat.said_confiscation_band
@@ -99,7 +100,7 @@ class Pressure:
 				                                                   ("Held off by: " + "; ".join(conf_why)) if conf_why else
 				                                                   "Nothing you have built is holding it off yet")))
 			if needs.events_enabled() and needs.game_random().random() < probability:
-				answer, demanded, lost = self.answer_confiscation(constants.CONFISCATION_CAPITAL_LOSS, "confiscation by the state")
+				answer, demanded, lost = self.parts.demands.answer_confiscation(constants.CONFISCATION_CAPITAL_LOSS, "confiscation by the state")
 				name = state_pressure_cfg.get("confiscation_name", "confiscation")
 				if lost > 0.5:
 					seat.reputation = max(0.0, seat.reputation - constants.CONFISCATION_REPUTATION_LOSS)

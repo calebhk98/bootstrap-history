@@ -1,6 +1,7 @@
 """The nation's people by age: the opening, the counts others read, and what cuts them (a shock, a death, settlers)."""
 from sim.actors.api import ScaleStrata
 from sim.agents import api as agents_api
+from sim.assembly.api import Part
 from sim.hazards.api import RecordWorldEvent
 from sim.refusal import Refusal
 from sim.reporting.api import RecordEvent
@@ -12,7 +13,7 @@ from .constants import DEFAULT_POPULATION_100AD, POP_SCALE_FLOOR
 from .people import People
 
 
-class Counts:
+class Counts(Part):
 
     def _bands(self):
         """The three age bands as they stand."""

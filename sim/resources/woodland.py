@@ -5,6 +5,7 @@ shortage is a bed. Both are bought once and yield every year after, and neither 
 from typing import Any, Dict
 
 from sim.agents.api import edges
+from sim.assembly.api import Part
 from sim.ledger.api import PayEdge
 from sim.refusal import Refusal
 from sim.reporting.api import RecordEvent
@@ -16,7 +17,7 @@ from .constants import (FOREST_HA_PER_MILLION_KM2_BASE, FOREST_HA_PER_MILLION_KM
                         NITRE_LABOUR_HOURS_PER_M2, NITRE_YIELD_T_PER_M2, REVENUE_SCALE_CAP_MULTIPLE)
 
 
-class Woodland:
+class Woodland(Part):
     """Needs: land_area_of, tiles_listed_by, civilisation, price_index, money_per_labour_hour, revenue_estimate, forest_reach, can_pay,
     area_text. Sends PayEdge, RecordEvent."""
 
@@ -54,7 +55,7 @@ class Woodland:
         state_reach = self.needs.forest_reach()
         return ceilings.forest_ceiling_hectares(
             self.home_land_area_km2(), state_reach, FOREST_HA_PER_MILLION_KM2_BASE, FOREST_HA_PER_MILLION_KM2_PER_SC,
-            ceilings.revenue_scale_multiple(self.needs.revenue_estimate(), self.revenue_scale(), REVENUE_SCALE_CAP_MULTIPLE))
+            ceilings.revenue_scale_multiple(self.needs.revenue_estimate(), self.parts.mine_costs.revenue_scale(), REVENUE_SCALE_CAP_MULTIPLE))
 
     def buy_forest(self, command: BuyForest) -> Any:
         """Coppice woodland, bought outright; the hectares bought are cut to the room under the ceiling."""

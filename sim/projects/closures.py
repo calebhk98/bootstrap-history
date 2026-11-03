@@ -1,11 +1,12 @@
 """Why a work is shut and since when: the one place a closure is recorded, and what is asked of the record."""
 from . import closure_reasons
+from sim.assembly.api import Part
 from sim.ventures.api import ForgetClosureReason, MothballConcern
 
 from sim.reporting.api import NoteConcernChange
 
 
-class Closures:
+class Closures(Part):
 	# Why a work is shut; the only two writers are close_work and clear_closure.
 	CLOSED_FOR_STAFF = closure_reasons.CLOSED_FOR_STAFF
 	CLOSED_BY_CHOICE = closure_reasons.CLOSED_BY_CHOICE
@@ -23,7 +24,7 @@ class Closures:
 		node = needs.tree_nodes()[node_id]
 		needs.send(NoteConcernChange("closure", node_id, reason, node["rev"], node["up"]))
 		if cascade:
-			self.close_lapsed_dependents(closing_year)
+			self.parts.running_gates.close_lapsed_dependents(closing_year)
 
 	def closure_of(self, node_id):
 		"""The closure record of a currently shut work, else None."""

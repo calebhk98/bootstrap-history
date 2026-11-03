@@ -18,8 +18,16 @@ from .shocks import Shocks
 from .world import WorldHazards
 
 
-class Hazards(Relief, Advice, Causes, KnowledgeRisk, Shocks, RandomEvents, Sack, WorldHazards, Events, Module):
+class Hazards(Module):
 
-	def setup(self) -> None:
-		self._counters_cache = None      # (the mechanics rows it was built from, the counters)
-		self.disaster_this_year = None
+	PARTS = {
+		"relief": Relief,
+		"advice": Advice,
+		"causes": Causes,
+		"knowledge_risk": KnowledgeRisk,
+		"shocks": Shocks,
+		"random_events": RandomEvents,
+		"sack": Sack,
+		"world_hazards": WorldHazards,
+		"events": Events,
+	}

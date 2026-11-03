@@ -28,7 +28,7 @@ from sim.ledger.module_spec import MODULE_SPECS
 from sim.seats.dealings import DEALING_FIELDS, Dealings
 from sim.seats.api import SetDealing
 from sim.ventures.api import AdoptPlant, ReleasePlant
-from sim.ventures.module import Ventures
+from sim.ventures.plants import Plants
 from sim.tests import module_harness
 
 
@@ -119,8 +119,8 @@ class MoneyHost:
                 self.on_receive(command.node_ids, command.granted)
             return None
         if isinstance(command, SetDealing):
-            return Dealings.set_dealing(SimpleNamespace(_slots=lambda: self.dealings), command)
+            return Dealings.set_dealing(SimpleNamespace(parts=SimpleNamespace(run=SimpleNamespace(_slots=lambda: self.dealings))), command)
         if isinstance(command, (ReleasePlant, AdoptPlant)):
             owner = SimpleNamespace(seat_of=lambda seat_id: SimpleNamespace(business=self.businesses[seat_id]))
-            return (Ventures.apply_release_plant if isinstance(command, ReleasePlant) else Ventures.apply_adopt_plant)(owner, command)
+            return (Plants.apply_release_plant if isinstance(command, ReleasePlant) else Plants.apply_adopt_plant)(owner, command)
         return self._handlers[type(command)](command)

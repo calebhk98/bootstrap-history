@@ -1,4 +1,5 @@
 """What an epidemic year does to each playing seat: its staff, its deputies and its takings."""
+from sim.assembly.api import Part
 from sim.hazards.api import LoseCapital, constants as hazard_constants
 from sim.reporting.api import RecordEvent
 from sim.workforce.api import LoseStaff
@@ -7,7 +8,7 @@ from . import rules
 from .technology_effects import working_age_death_share
 
 
-class SeatsHit:
+class SeatsHit(Part):
 
     def hit_seats(self, command):
         """Cut each playing seat's people and cash by the working-age share the year's epidemics killed; the answer is
@@ -15,7 +16,7 @@ class SeatsHit:
         share = working_age_death_share(command.deaths_by_band, float(self.needs.working_age()))
         if share < rules.EPIDEMIC_NOTICE_SHARE:
             return 0.0
-        name = " and ".join(self._names or ["an epidemic"])
+        name = " and ".join(self.parts.epidemics.names or ["an epidemic"])
         for seat_id in self.needs.seat_list()["playing"]:
             with self.needs.act_as(seat_id):
                 people_before = self.needs.send(LoseStaff(name, 1 - share, 1 - share))["people_before"]

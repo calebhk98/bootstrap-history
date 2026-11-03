@@ -8,6 +8,7 @@ the way is lost. The partner's state catches it with the chance its reach gives,
 of its holding. Caught, the haul is seized, the carrying is not refunded, the state shuts its markets to the taker for
 some years, and the taker's scandal rises. Not caught, the stock is delivered and the partner has that much less to sell."""
 from sim.agents.api import edges
+from sim.assembly.api import Part
 from sim.constants import declare
 from sim.foreign_trade.api import CloseMarketsTo, RecordStockTaken, SettleFlow
 from sim.ledger.api import ChangeStock, PayEdge
@@ -30,7 +31,7 @@ SMUGGLING_SCANDAL = declare(
         "units, which is a real but minor bump; not measured.")
 
 
-class Trading:
+class Trading(Part):
     """The quotes and the two settlements (needs: partners, partner, partner_refusal, partner_gate,
     partner_landed_price, partner_carry, partner_catch_chance, can_pay, acting_balance, year; sends PayEdge,
     ChangeStock, SettleFlow, RecordStockTaken, CloseMarketsTo, RaiseScandal)."""
@@ -77,7 +78,7 @@ class Trading:
         if not self.needs.can_pay(command.cost):
             return Refusal("cannot_afford", "cannot pay %.6g for %s" % (command.cost, command.material))
         self.needs.send(PayEdge(edges.EDGE_MARKET, command.cost, "stock bought abroad"))
-        self.needs.send(ChangeStock(self.commodity_of(command.material), command.tonnes))
+        self.needs.send(ChangeStock(self.parts.holding.commodity_of(command.material), command.tonnes))
         self.needs.send(SettleFlow(command.partner, command.tonnes, command.cost))
         return True
 
@@ -135,7 +136,7 @@ class Trading:
             self.punish_smuggler(has_government, outcome)
             return outcome
         outcome["delivered_units"] = command.arrives_units
-        self.needs.send(ChangeStock(self.commodity_of(command.material),
+        self.needs.send(ChangeStock(self.parts.holding.commodity_of(command.material),
                                     command.arrives_units * tonnes_per_unit(command.material)))
         if has_government:
             self.needs.send(RecordStockTaken(command.partner, command.material, command.units))

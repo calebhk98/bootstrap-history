@@ -5,6 +5,7 @@ hours by the tonne, priced at the unskilled hour like every other labour cost; c
 the tonne through the route's freight. Any actor holding money pays the keeping cost, a foreign one at its own
 country's pay."""
 from sim.agents.api import edges
+from sim.assembly.api import Part
 from sim.labour.api import wage_provider
 from sim.ledger.api import PayEdgeFrom
 from sim.world import coin_metal
@@ -13,7 +14,7 @@ from . import rules
 from .constants import COIN_GUARD_HOURS_PER_TONNE_YEAR, KEEPING_CAUSE, KEEPING_PAY_TRADE
 
 
-class Keeping:
+class Keeping(Part):
     """The views of the hoard and its keeping cost, and the command `ChargeKeeping` (needs: civilisation,
     money_per_labour_hour, acting_balance, credit_limit, partner_coin_standard, partner_route_cost, cast,
     actor_world; sends PayEdgeFrom)."""

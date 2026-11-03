@@ -4,11 +4,13 @@ Needs: opening_civilisation, civilisation, population_total, real_output_hours, 
 state_budget_figures, army_figures, state_knows, home_strata_rows, tiles_listed_by."""
 from typing import Any, Dict, Optional, Tuple
 
+from sim.assembly.api import Part
+
 from . import cause_report
 from .cause_quantities import QUANTITIES
 
 
-class Causes:
+class Causes(Part):
 
     def event_cause_report(self, hazard: Dict[str, Any]) -> Dict[str, Any]:
         """`{checked, conditions, failed, strength}` for an event, each cause read from its owner's view as things stand."""

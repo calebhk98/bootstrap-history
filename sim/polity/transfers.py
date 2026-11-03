@@ -7,6 +7,7 @@ A node declares `mechanics.state_levy = {"share": s}`; while it is open the stat
 
 Needs: state_treasury, transfer_listening, acting_balance, cast, mechanic, tree,
 money_text, money_per_labour_hour, running_mechanics, operating, concern_revenue, output_factor, send (SayOnce, RecordEvent)."""
+from sim.assembly.api import Part
 from sim.hazards.api import SayOnce
 from sim.ledger.api import PayActorFromHousehold
 from sim.reporting.api import RecordEvent
@@ -14,7 +15,7 @@ from sim.reporting.api import RecordEvent
 from . import rules
 
 
-class Transfers:
+class Transfers(Part):
 
 	def pay_state(self, amount, purpose):
 		"""The household pays the state: the founder's loss is the treasury's gain."""

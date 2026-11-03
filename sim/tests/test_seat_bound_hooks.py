@@ -10,7 +10,8 @@ from sim.knowledge.module import HELD_CHANGES, Knowledge
 from sim.materials.module import Materials
 from sim.production.caches import SeatMemos
 from sim.production.module import Production
-from sim.projects.projects import ACTIVE_CHANGES, Projects
+from sim.projects.channels import ACTIVE_CHANGES
+from sim.projects.projects import Projects
 from sim.projects.state import ProjectsSeat
 from sim.tests import module_harness
 from sim.ventures.channels import OPERATING_CHANGES
@@ -27,7 +28,7 @@ class SeatBoundHooks(unittest.TestCase):
         module._memos = {"a": SeatMemos(), "b": SeatMemos()}
         module.clock.act_as("a")
         module.seat_bound()
-        self.assertEqual(module._memos, {})
+        self.assertEqual(module.parts.views._memos, {})
 
     def test_materials_drops_the_acting_seats_remembered_demand(self):
         module = module_harness.build(Materials)

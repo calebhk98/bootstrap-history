@@ -1,9 +1,11 @@
 """When a trade a project needs will first have hands: the start gate, the start reply and the stall gate read one rule
 (start_rules.py `trade_wait_years`, `trade_wait_outlasts`)."""
+from sim.assembly.api import Part
+
 from . import start_rules
 
 
-class TradeWait:
+class TradeWait(Part):
 	def years_until_trade_has_hands(self, trade):
 		"""0 when hands exist now; else years until the soonest trainees join; None when nobody is on the way."""
 		needs = self.needs

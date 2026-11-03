@@ -1,8 +1,9 @@
 """The founder sells a built concern to another actor through the exchange (the actors module addresses the exchange to the seat)."""
 from sim.actors.api import SellSeatConcern
+from sim.assembly.api import Part
 
 
-class Sales:
+class Sales(Part):
 	def _not_selling(self, node_id):
 		"""Why the acting seat has nothing to sell under this id, or None when it runs it."""
 		if node_id not in self.seat.business.operating() or node_id in self.needs.techniques_granted():

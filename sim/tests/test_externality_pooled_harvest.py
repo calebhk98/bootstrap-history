@@ -55,7 +55,7 @@ class PooledHarvest(unittest.TestCase):
 
     def test_a_half_ruined_tile_cuts_the_harvest_by_its_share_of_the_land(self):
         self.farm.weather_cells()
-        tile, share = max(self.farm._tile_share.items(), key=lambda item: item[1])
+        tile, share = max(self.farm.parts.weather._tile_share.items(), key=lambda item: item[1])
         weather = self.harvest(harmed=False)
         ANSWERS.append({"yield_factor_by_tile": {tile: 0.5}})
         self.assertAlmostEqual(self.harvest(), weather * (1.0 - 0.5 * share))

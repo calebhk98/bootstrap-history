@@ -88,9 +88,10 @@ class PortWorld:
 
 	FREIGHT_FEED_PRICE_MATERIAL = FREIGHT_FEED_PRICE_MATERIAL
 
-	def __init__(self, needs, owner):
+	def __init__(self, needs, owner, parts):
 		self._needs = needs
-		self._owner = owner          # the markets module: its own views are asked of it directly
+		self._owner = owner          # the markets module: its clock, kernels and saved state
+		self._parts = parts          # its parts: the objects, the clearing
 		self.state = StateReads(needs, owner)
 		self.labour = LabourReads(needs)
 		self.map = MapReads(needs)               # the land module's map views
@@ -107,11 +108,11 @@ class PortWorld:
 
 	@property
 	def economy(self):
-		return self._owner.economy
+		return self._parts.market_objects.economy
 
 	@property
 	def goods_market(self):
-		return self._owner.goods_market
+		return self._parts.market_objects.goods_market
 
 	def agent_record(self):
 		"""The agent economy's saved record."""
@@ -121,17 +122,17 @@ class PortWorld:
 		return self._owner.world.money_from_economy
 
 	def _market_flows(self):
-		return self._owner.legacy_market_flows()
+		return self._parts.clearing.legacy_market_flows()
 
 	def market_state(self, material):
-		return self._owner.market_state(material)
+		return self._parts.clearing.market_state(material)
 
 	def remembered(self, name):
 		"""What the acting seat's goods market worked out and kept under `name`, or None."""
-		return self._owner._seat_cache(name)
+		return self._parts.market_objects.seat_cache(name)
 
 	def remember(self, name, value):
-		self._owner._set_seat_cache(name, value)
+		self._parts.market_objects.set_seat_cache(name, value)
 
 	# ---- the scenario ----
 

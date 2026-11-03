@@ -5,10 +5,11 @@ holds waits for a seller to appear: a technique reached, a route opened, a partn
 from typing import Any, Callable, List, Optional, Tuple
 
 from sim.agents.api import research_gate
+from sim.assembly.api import Part
 from sim.world.material_units import tonnes_per_unit
 
 
-class Availability:
+class Availability(Part):
     """Needs: tree_nodes, can_be_bought, goods_stock."""
 
     def materials_without_a_seller(self, node_id: str, held_tonnes: Optional[Callable[[str], float]] = None) -> List[str]:
@@ -18,8 +19,8 @@ class Availability:
         can_be_bought = self.needs.can_be_bought
         if not node.get("req_any") and all(can_be_bought[material] for material in node["mat"]):
             return []       # the common case, answered without working out the fuel substitution
-        needs = self.project_material_needs(node_id)
-        held = held_tonnes or (lambda material: self.needs.goods_stock[self.material_pool(material)[0]])
+        needs = self.parts.project_bill.project_material_needs(node_id)
+        held = held_tonnes or (lambda material: self.needs.goods_stock[self.parts.supply.material_pool(material)[0]])
         return research_gate.materials_short_of_stock(
             {material: needs[material] * tonnes_per_unit(material) for material in needs},
             lambda material: can_be_bought[material], held)

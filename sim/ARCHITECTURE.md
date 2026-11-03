@@ -36,6 +36,19 @@ are being removed; the measure is command 1.
 The engine chooses the modules in `sim/engine/game_assembly.py`: any `sim/<package>/module_spec.py` lists its
 specs in `MODULE_SPECS`. Which module reads and sends what is printed by command 2.
 
+**A module class is composed, not inherited.** Every implementation derives from `Module` alone and holds its behaviour as
+**parts**: `PARTS = {"name": PartClass}` (`Part` in `module.py`). The assembly builds the parts when it instantiates the module,
+hands them `needs` when it wires the module, and runs each part's `setup()` and then the module's. A part keeps the state it
+owns (set in `__init__`), reads the module's `world`, `seat`, `needs`, `clock` and `kernel(...)` under the same names, and
+reaches a sibling as `self.parts.<name>`, never through the module class. A declared view, command handler, phase or provision
+name (`ViewSpec.compute`, `applies`, `PhaseHook.method`, `Provision.method`) resolves to a method of the module class if it has
+one, else to the one part of `PARTS` that has it (two parts having it is an `AssemblyError`). The assembly generates the
+one-line method on the module class for such a name (`_with_part_methods`), so a mod's layer over the module can still
+override it and reach the part with `super()`; the binding itself takes the part's bound method (`bound_method`). Only
+declared names are reachable this way: a layer cannot override what parts call on each other. Data a mod's layer replaces
+(`Projects.START_CHECKS`) stays an attribute of the module class and is read by the part as `self.module.START_CHECKS`. A module
+class keeps its own methods only for lifecycle (`setup`) or for a name no part owns.
+
 ## 3. The modules
 
 One owner per fact. Find a module's views and commands in its `module_spec.py`, and its door in its `api.py`.

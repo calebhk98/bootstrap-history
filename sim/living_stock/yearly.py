@@ -4,6 +4,7 @@ nearest the middle of what the holder holds. A row whose data says `grows_on` "p
 less the live weight already grazing; one that says "arable" is raised in a nursery on the tile's arable land at the
 output per hectare its production entry gives. Growth the land cannot hold or the labour hired does not cover is not made; the labour a year's growth takes is
 posted for the next clearing."""
+from sim.assembly.api import Part
 from sim.workforce.api import ONCE_STOCK, PostHoursOnce
 
 from . import rules
@@ -14,7 +15,7 @@ GROWS_ON_PASTURE = "pasture"
 GROWS_ON_ARABLE = "arable"
 
 
-class Yearly:
+class Yearly(Part):
     """The phase `living_stock` (needs: stock_land, endemic_stock_loss, nursery_room_units, hours_hired_once;
     sends PostHoursOnce)."""
 
@@ -43,12 +44,12 @@ class Yearly:
         place = land["place"]
         pastured = [material for material, rates in sorted(rates_by_material.items())
                     if rates.get("grows_on") == GROWS_ON_PASTURE]
-        grazing = sum(self.held(material) * kilograms_per_unit(material) for material in pastured)
+        grazing = sum(self.parts.holding.held(material) * kilograms_per_unit(material) for material in pastured)
         pasture_room = rules.pasture_room_kg(place, land["pasture_kg"], grazing)
         society_herds = self.world.society_herds
         hired, wanted = dict(self.needs.hours_hired_once(ONCE_STOCK)), {}
         for material, rates in sorted(rates_by_material.items()):
-            held = self.held(material)
+            held = self.parts.holding.held(material)
             if held <= 0.0:
                 continue
             room = None
@@ -65,6 +66,6 @@ class Yearly:
             if material in society_herds:
                 society_herds[material] = rules.society_herd_after(society_herds[material], held, after)
                 self.bump(HERDS)
-            self.change(material, after - held)
+            self.parts.holding.change(material, after - held)
         for trade, hours in sorted(wanted.items()):
             self.needs.send(PostHoursOnce(ONCE_STOCK, trade, hours))

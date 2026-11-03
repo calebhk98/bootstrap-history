@@ -11,6 +11,7 @@ from typing import Any, Dict, List
 
 from sim.agents.api import GOVERNMENT_PREFIX, edges
 from sim.actors.api import NoteTraderMargin
+from sim.assembly.api import Part
 from sim.ledger.api import PayActorFromEdge, PayEdgeFrom
 from sim.refusal import Refusal
 
@@ -18,7 +19,7 @@ from . import rules
 from .constants import SETTLEMENT
 
 
-class Cargo:
+class Cargo(Part):
 
     def cargo_legs(self) -> List[Dict[str, Any]]:
         """The legs noted since the last settlement, in a stable order."""
@@ -40,10 +41,10 @@ class Cargo:
 
     def _pay_partner(self, partner: str, tonnes_signed: float, value: float) -> None:
         """Settle one side of a cargo with a partner in coin, and count it against the route's carriers."""
-        per_coin = self.money_per_partner_coin(partner)
+        per_coin = self.parts.payments.money_per_partner_coin(partner)
         if per_coin and value > 0.0:
-            self.settle_flow(partner, tonnes_signed, value, per_coin)
-        self.record_lift(partner, self.partner_facts(partner)["route"], tonnes_signed, 0.0)
+            self.parts.payments.settle_flow(partner, tonnes_signed, value, per_coin)
+        self.parts.payments.record_lift(partner, self.parts.economies.partner_facts(partner)["route"], tonnes_signed, 0.0)
 
     def apply_settle_trader_cargo(self, command: Any) -> None:
         """Settle every noted leg. `results` is what the book gave each leg that entered it ({leg id: {"tonnes", "money"}}); a

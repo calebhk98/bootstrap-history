@@ -16,11 +16,17 @@ from .ways import Ways
 from .works import Works
 
 
-class Land(Ownership, Colonies, MapViews, MapPlaces, MapCarriage, MapTimber, MapDeposits, Ways, Works, Held, Module):
+class Land(Module):
 
-    def setup(self) -> None:
-        self._caches = {}       # the transfer count, the owner map last seen and the tiles by owner; never saved
-        self._tile_facts = {}   # tile -> what it gives an army; static, never saved
-        self._map_cache = None
-        self._deposit_catalogue_cache = None
-        self._geography_cache = None
+    PARTS = {
+        "ownership": Ownership,
+        "colonies": Colonies,
+        "map_views": MapViews,
+        "map_places": MapPlaces,
+        "map_carriage": MapCarriage,
+        "map_timber": MapTimber,
+        "map_deposits": MapDeposits,
+        "ways": Ways,
+        "works": Works,
+        "held": Held,
+    }

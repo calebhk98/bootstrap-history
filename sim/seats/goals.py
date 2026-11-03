@@ -1,6 +1,7 @@
 """Goals: the formal goal, the year each goal was reached, a measurement goal's value and anatomy (the rules are goal_rules.py)."""
 from typing import Any, Dict, List, Optional
 
+from sim.assembly.api import Part
 from sim.knowledge.api import LearnTechnique
 from sim.reporting.api import RecordEvent
 
@@ -9,7 +10,13 @@ from .commands import ForgetGoalClosure, RecordGoalReached, RememberGoalClosure,
 from .goal_rules import AnatomyRow
 
 
-class Goals:
+class Goals(Part):
+
+    def __init__(self, module):
+        super().__init__(module)
+        self._conditioned: Optional[List[str]] = None   # node ids that carry a win_condition, built on first ask
+        self._closures: Dict[str, Any] = {}   # seat id -> the nodes its goal needs, once worked out
+        self._critical_floors: Dict[str, float] = {}   # seat id -> the shortest road in years to its goal, once worked out
 
     def goal(self) -> Dict[str, Any]:
         """The acting seat's formal goal: {node: its id or None, year: the year it was reached or None, years: the year each

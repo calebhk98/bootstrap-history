@@ -5,6 +5,7 @@ of the metal (ratio below one) makes a unit of coin buy less of everything, so t
 shortage lowers it. Holders of coin and of debts written in coin bear the change: nothing is indexed or compensated.
 The society's coin stock is its opening stock plus what trade has brought in (the partners' ledgers are foreign
 trade's); a partner's is its opening stock plus what the ledger says it gained or paid out."""
+from sim.assembly.api import Part
 from sim.labour.api import people_fed_per_worker
 from sim.unit_conversions import HOURS_PER_PERSON_YEAR
 from sim.world import balance_of_payments, coin_metal
@@ -14,7 +15,12 @@ from .constants import REVALUATION_YEARLY_CAP, REVALUATION_YEARLY_SHARE
 RATIOS = "ratios"
 
 
-class Prices:
+class Prices(Part):
+
+    def __init__(self, module):
+        super().__init__(module)
+        self._home_opening = None        # coin the society opened with, worked out on first use (never saved)
+        self._partner_openings = {}
     """The phase `coin_revaluation` and the stock and price-level views (needs: civilisation, opening_population,
     opening_money_per_labour_hour, foreign_coin_home_units, foreign_coin_partner_units, partner_coin_standard,
     partner_opening_facts, coin_value_ratio)."""

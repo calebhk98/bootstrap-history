@@ -13,5 +13,12 @@ from .contest import Contest
 from .stability import Stability
 
 
-class Campaigns(Armies, CampaignYear, Contest, Captives, Stability, Module):
-	pass
+class Campaigns(Module):
+
+	PARTS = {
+		"armies": Armies,
+		"campaign_year": CampaignYear,
+		"contest": Contest,
+		"captives": Captives,
+		"stability": Stability,
+	}

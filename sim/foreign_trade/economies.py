@@ -11,12 +11,19 @@ from types import SimpleNamespace
 from typing import Any, Dict, List, Optional
 
 from sim.agents.api import GOVERNMENT_PREFIX, exports_allowed
+from sim.assembly.api import Part
 from sim.refusal import Refusal
 
 from . import rules
 
 
-class Economies:
+class Economies(Part):
+
+    def __init__(self, module):
+        super().__init__(module)
+        self._partner_civs = {}          # the civilisation files loaded so far (never saved)
+        self._facts_cache = {}           # acting seat -> partner -> (prices, facts, techniques known, coin price)
+        self._materials_cache = {}       # acting seat -> (household prices, commodity -> material keys)
 
     def partners(self) -> List[str]:
         """Every economy enabled for this year, sorted by id. Each is a country of the one agent economy."""

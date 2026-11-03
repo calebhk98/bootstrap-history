@@ -1,14 +1,15 @@
 """The gates `open` applies for want of running works and of people, as one function."""
+from sim.assembly.api import Part
 from sim.refusal import Refusal
 
 
-class OpenGate:
+class OpenGate(Part):
 	def open_refusal(self, node_id, unit_count=None, with_advice=True):
 		"""Why a built concern cannot be opened now for want of a running work or of people, else None.
 
 		The one answer `open` refuses with and `stuck` recommends against; `unit_count` is the size `open` would found
 		(what `opening_fee` says unless given)."""
-		gate_refusal = self.running_gate_refusal(node_id)
+		gate_refusal = self.parts.running_gates.running_gate_refusal(node_id)
 		if gate_refusal:
 			return gate_refusal
 		if unit_count is None:

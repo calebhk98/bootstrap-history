@@ -18,10 +18,13 @@ from .people import People
 from .seats_hit import SeatsHit
 
 
-class Disease(Burden, Forecast, Epidemics, SeatsHit, Contact, People, Module):
+class Disease(Module):
 
-    def setup(self) -> None:
-        self._entry_cache = {}      # (tiles held, modes, source tiles) -> days to each held tile; never saved
-        self._deaths_by_tile = None  # the last disease year's deaths by tile; empty after a load, as the engine's was
-        self._names = None          # the pathogens that killed in the last disease year
-        self._forecast = None       # the forecast, kept until the next disease year
+    PARTS = {
+        "burden": Burden,
+        "forecast": Forecast,
+        "epidemics": Epidemics,
+        "seats_hit": SeatsHit,
+        "contact": Contact,
+        "people": People,
+    }

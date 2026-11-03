@@ -4,12 +4,13 @@ Needs: money_text, held_goods, goods_stock, material_commodity, sale_quote, tech
 venture_real_upkeep, mine_capacity, mine_workings, mine_working_cost, staff."""
 from typing import List
 
+from sim.assembly.api import Part
 from sim.living_stock.api import stock_rates
 
 from . import remedy_rules
 
 
-class CashRemedies:
+class CashRemedies(Part):
 
 	def cash_remedies(self) -> List[str]:
 		"""Lines like "sell iron 40 (the order pays about 1,200 when the year clears)", largest amount first."""

@@ -9,6 +9,7 @@ Needs: civilisation, partners_in_agent_economy, weather_seed, seat_list, events_
 import random
 from typing import Any, Dict, List
 
+from sim.assembly.api import Part
 from sim.demography.api import KillPeople
 from sim.refusal import LogLine
 from sim.reporting.api import RecordEvent
@@ -17,7 +18,7 @@ from . import rules, world_data
 from .commands import RecordWorldEvent
 
 
-class WorldHazards:
+class WorldHazards(Part):
 
 	def countries_in_game(self) -> List[str]:
 		"""The home country, then every partner whose people live in the agent economy, sorted."""
@@ -58,5 +59,5 @@ class WorldHazards:
 			if people <= 0.0:
 				continue
 			if shortfall >= threshold:
-				self.record_world_event(RecordWorldEvent("famine", actors=(country,), cause="food unmet",
+				self.parts.events.record_world_event(RecordWorldEvent("famine", actors=(country,), cause="food unmet",
 				                                         facts={"food_shortfall": shortfall, "people": people}))

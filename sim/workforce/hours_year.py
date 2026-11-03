@@ -1,7 +1,8 @@
 """The end of the seat's year of hours: where they went is kept, and the tallies reset for the next year."""
+from sim.assembly.api import Part
 
 
-class HoursYear:
+class HoursYear(Part):
 
 	def close_hours_year(self, command):
 		workforce = self.seat
@@ -9,7 +10,7 @@ class HoursYear:
 		# spend_last_year already captures the year's spending, so a player can see the breakdown as `hours_this_year` in
 		# `state` rather than only a final hours-left figure with no way to tell where the rest went.
 		workforce.hours_this_year = {
-			"available": round(self.labour.hours.director_pool(), 1),
+			"available": round(self.parts.core.labour.hours.director_pool(), 1),
 			"wage_work": round(workforce.wage_hours_this_year, 1),
 			"teaching": round(workforce.teaching_hours_this_year, 1),
 			"moving": round(workforce.relocation_hours_this_year or 0.0, 1),
@@ -24,7 +25,7 @@ class HoursYear:
 		}
 		# Reset AFTER the progress pass, which is where the hours you sold are subtracted from the hours you have left to
 		# direct.
-		self.labour.wages.close_wage_year()
+		self.parts.core.labour.wages.close_wage_year()
 		# Contracted work is bought for a year and expires with it: hours you paid a shop for in 142 are not still sitting
 		# there in 143.
 		workforce.contract_hours = {}

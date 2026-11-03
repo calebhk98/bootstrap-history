@@ -17,7 +17,7 @@ class SeatReview:
 		self._year = module.needs.year() if year is None else year
 
 	def staff_closures(self):
-		return self._module.concerns_to_close_for_staffing()
+		return self._module.parts.staffing_shortfall.concerns_to_close_for_staffing()
 
 	def reopening_order(self, entry_keys):
 		"""Staff closures still worth reopening (known, in the tree), best earning for the hands they tie up first."""
@@ -28,7 +28,7 @@ class SeatReview:
 		                                                / max(0.01, sum(world.concern_staff(node_id).values()))))
 
 	def reopens_staffed_plant(self, entry_key):
-		did_open, _message = self._module._open_venture(entry_key)
+		did_open, _message = self._module.parts.auto_open._open_venture(entry_key)
 		return did_open
 
 	def sheds_losses(self):
@@ -56,7 +56,7 @@ class SeatReview:
 		return needs.acting_balance() < -needs.credit_limit(None, None, None)
 
 	def shut(self, entry_key, reason):
-		self._module.close_work(entry_key, reason, self._year)
+		self._module.parts.closures.close_work(entry_key, reason, self._year)
 
 	def proceeds_of_seizure(self, entry_key):
 		size = self._module.needs.venture_size[entry_key]
