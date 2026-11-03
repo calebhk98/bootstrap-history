@@ -6,6 +6,7 @@ through the world's market; the trader books what it paid, what it got and the c
 """
 from typing import Any, Dict, List, Optional, Tuple
 
+from sim.book import ROUNDING_SHARE, InsufficientFunds
 from sim.refusal import Refusal
 
 from . import ledger
@@ -23,6 +24,11 @@ def depth_room(world: Any, source: str, destination: str, material: str, planned
 	buyers' depth, less what has already arrived there and `planned` cargo not yet shipped."""
 	depth = world.trade.market_depth(material, destination)
 	return max(0.0, depth * TRADER_DEPTH_SHARE - world.trade.delivered_this_year(material, destination) - planned)
+
+
+def cargo_affordable(cost: float, budget: float) -> bool:
+	"""Whether a cargo that costs `cost` (purchase and carriage) is within the `budget` of money and credit left."""
+	return cost <= budget * (1.0 + ROUNDING_SHARE)
 
 
 class Trader(RecordedActor):
@@ -82,6 +88,8 @@ class Trader(RecordedActor):
 		None, when an end has no price (the shipment is refused) or the carriage cannot be priced."""
 		detail = option.detail
 		tonnes = detail["tonnes"]
+		if not cargo_affordable(option.cost, self.cargo_budget(world)):   # earlier cargo this year used the money and credit
+			return None
 		freight = world.trade.freight_between(detail["source"], detail["destination"], detail["material"], tonnes)
 		if freight is None:
 			return None
@@ -89,8 +97,15 @@ class Trader(RecordedActor):
 		if isinstance(shipped, Refusal):
 			return None
 		paid, received = shipped
-		ledger.transfer(self, world.setting.edge(EDGE_MARKET), paid, "edge:market purchase")
-		ledger.transfer(self, world.setting.edge(EDGE_FREIGHT), freight, EDGE_FREIGHT)
+		try:
+			ledger.transfer(self, world.setting.edge(EDGE_MARKET), paid, "edge:market purchase")
+			try:
+				ledger.transfer(self, world.setting.edge(EDGE_FREIGHT), freight, EDGE_FREIGHT)
+			except InsufficientFunds:
+				ledger.reverse(world.setting.edge(EDGE_MARKET), self, paid, "edge:market purchase")
+				raise
+		except InsufficientFunds:   # the budget said it could pay and the book disagrees: nothing is carried
+			return None
 		ledger.transfer(world.setting.edge(EDGE_MARKET), self, received, "edge:market sale")
 		margin = received - paid - freight
 		route = self.record.routes.setdefault(

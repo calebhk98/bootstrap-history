@@ -6,14 +6,15 @@ where the book took none of it. Settling trues the trader's purse up from the bo
 tally on what really crossed.
 A leg is a plain dict kept in the module's world state (`cargo`, leg id -> leg), so a save carries it.
 
-(needs: home_unit_price; sends PayActorFromEdge, PayEdgeFrom, NoteTraderMargin)"""
+(needs: home_unit_price; sends PayActorFromEdge, PayEdgeFrom, NoteTraderMargin, RecordEvent)"""
 from typing import Any, Dict, List
 
 from sim.agents.api import GOVERNMENT_PREFIX, edges
 from sim.actors.api import NoteTraderMargin
 from sim.assembly.api import Part
-from sim.ledger.api import PayActorFromEdge, PayEdgeFrom
+from sim.ledger.api import UNPAID_CHARGE_KIND, PayActorFromEdge, PayEdgeFrom
 from sim.refusal import Refusal
+from sim.reporting.api import RecordEvent
 
 from . import rules
 from .constants import SETTLEMENT
@@ -74,5 +75,8 @@ class Cargo(Part):
         if delta > 0.0:
             self.needs.send(PayActorFromEdge(edges.EDGE_MARKET, trader_id, delta, SETTLEMENT))
         else:
-            self.needs.send(PayEdgeFrom(trader_id, edges.EDGE_MARKET, -delta, SETTLEMENT))
+            refusal = self.needs.send(PayEdgeFrom(trader_id, edges.EDGE_MARKET, -delta, SETTLEMENT))
+            if isinstance(refusal, Refusal):   # a loss beyond what the trader can pay stays unpaid: no money is made up for it
+                self.needs.send(RecordEvent.of(UNPAID_CHARGE_KIND, "%s could not pay its cargo loss: %s" % (trader_id, refusal),
+                                               actor=trader_id, edge=edges.EDGE_MARKET, amount=-delta, purpose=SETTLEMENT, cause=refusal.cause))
 

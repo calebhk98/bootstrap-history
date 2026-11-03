@@ -5,6 +5,7 @@ from sim.assembly.api import KEYED, QUOTE, ModuleSpec, PhaseHook, Provision, Vie
 from sim.actors.api import DrawDownActorStore, HoldEdgeGoods
 from sim.demography.api import TakeFromGranary
 from sim.ledger.api import DrawDownStock, PayEdge, PayEdgeFrom
+from sim.reporting.api import RecordEvent
 
 from .commands import ChargeActorsTheft, ChargeHouseholdTheft, ChargeKeeping, PlunderHousehold
 from .module import Coin
@@ -50,7 +51,7 @@ MODULE_SPECS = (ModuleSpec(
     applies=((ChargeKeeping, "charge_keeping"), (ChargeActorsTheft, "charge_actors_theft"),
              (ChargeHouseholdTheft, "charge_household_theft"), (PlunderHousehold, "plunder_household")),
     reads=tuple(name for names in READS_BY_OWNER.values() for name in names),
-    sends=(PayEdge, PayEdgeFrom, DrawDownStock, DrawDownActorStore, TakeFromGranary, HoldEdgeGoods),
+    sends=(PayEdge, PayEdgeFrom, RecordEvent, DrawDownStock, DrawDownActorStore, TakeFromGranary, HoldEdgeGoods),
     phases=(PhaseHook("coin_revaluation", "revalue_coin_metals"),),
     provides=(Provision("transfer_surcharge", "carriage_surcharge", "carriage"),),
 ),)

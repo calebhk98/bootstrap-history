@@ -17,6 +17,7 @@ from sim.coin.module import Coin
 from sim.foreign_trade.module import ForeignTrade
 from sim.foreign_trade.state import ForeignTradeWorld
 from sim.ledger.api import PayEdgeFrom
+from sim.refusal import Refusal
 from sim.tests import module_harness
 from sim.world import coin_metal
 
@@ -100,7 +101,7 @@ class KeepingByAnyActor(unittest.TestCase):
     def charged(self, **actors):
         """What each named actor is charged by one `ChargeKeeping`: {actor id: (edge, money, cause)}."""
         registry = types.SimpleNamespace(actors=actors, state=types.SimpleNamespace(home_country="home"))
-        world = flat_namespace(pay_per_person_year=lambda trade: 100.0)
+        world = flat_namespace(labour=types.SimpleNamespace(trade_of_role=lambda role: "guard", pay_per_person_year=lambda trade: 100.0))
         module = module_harness.build(Coin, views={"civilisation": HOME_COIN, "money_per_labour_hour": MONEY_PER_HOUR,
                                                    "cast": registry, "actor_world": world})
         module.charge_keeping(ChargeKeeping())
@@ -114,6 +115,17 @@ class KeepingByAnyActor(unittest.TestCase):
         self.assertEqual(paid["state"], (EDGE_COIN_GUARDS, expected, KEEPING_CAUSE))
         self.assertEqual(paid["firm"], paid["state"])
         self.assertEqual(KEEPING_CAUSE, EDGE_COIN_GUARDS)
+
+    def test_a_refused_keeping_charge_is_skipped_and_logged_with_its_cause(self):
+        registry = types.SimpleNamespace(actors={"state": self.actor(1.0e8)}, state=types.SimpleNamespace(home_country="home"))
+        module = module_harness.build(
+            Coin, views={"civilisation": HOME_COIN, "money_per_labour_hour": MONEY_PER_HOUR, "cast": registry,
+                         "actor_world": flat_namespace(labour=types.SimpleNamespace(trade_of_role=lambda role: "guard", pay_per_person_year=lambda trade: 100.0))},
+            answers={PayEdgeFrom: Refusal("cannot_pay", "short")})
+        module.charge_keeping(ChargeKeeping())
+        (charge, event) = module_harness.sent(module)
+        self.assertIsInstance(charge, PayEdgeFrom)
+        self.assertEqual((event.kind, event.facts["actor"], event.facts["cause"]), ("unpaid_charge", "state", "cannot_pay"))
 
     def test_a_larger_treasury_is_charged_more(self):
         paid = self.charged(poor=self.actor(1.0e3), rich=self.actor(1.0e8))

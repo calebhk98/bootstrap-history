@@ -28,18 +28,27 @@ class Ledger(Module):
 		seat_id = self.clock.acting_seat if seat_id is None else seat_id
 		return SeatAccount(self.seat_of(seat_id), self.needs.cast_state().purses, seat_id)
 
-	def pay_edge(self, command: Any) -> Optional[Refusal]:
+	@staticmethod
+	def try_transfer(payer: Any, payee: Any, amount: float, purpose: Any) -> Optional[Refusal]:
+		"""The payment, or a `cannot_pay` refusal when the payer cannot cover it (nothing moved, nothing entered in any book)."""
 		try:
-			ledger.transfer(self.account(), self.edge(command.edge), command.amount, command.purpose)
+			ledger.transfer(payer, payee, amount, purpose)
 		except InsufficientFunds as error:
-			return Refusal("cannot_pay", str(error))
-		self.bump_seat(MONEY)
+			return Refusal("cannot_pay", str(error), amount=amount)
 		return None
 
-	def pay_edge_from(self, command: Any) -> None:
+	def pay_edge(self, command: Any) -> Optional[Refusal]:
+		refusal = self.try_transfer(self.account(), self.edge(command.edge), command.amount, command.purpose)
+		if refusal is None:
+			self.bump_seat(MONEY)
+		return refusal
+
+	def pay_edge_from(self, command: Any) -> Optional[Refusal]:
 		actor = self.needs.cast().actors[command.actor]
-		ledger.transfer(actor, self.edge(command.edge), command.amount, command.purpose)
-		self.bump(MONEY)
+		refusal = self.try_transfer(actor, self.edge(command.edge), command.amount, command.purpose)
+		if refusal is None:
+			self.bump(MONEY)
+		return refusal
 
 	def pay_actor_from_edge(self, command: Any) -> Any:
 		payee = self.needs.cast().get(command.payee)
@@ -49,31 +58,35 @@ class Ledger(Module):
 		self.bump(MONEY)
 		return None
 
-	def pay_actor(self, command: Any) -> None:
+	def pay_actor(self, command: Any) -> Optional[Refusal]:
 		payer = self.needs.cast().get(command.payer)
 		if command.payee in self.needs.seat_list()["joined"]:
 			payee = self.account(command.payee)
 		else:
 			cast = self.needs.cast()
 			payee = cast.get(command.payee) or cast.countries.ensure_government(command.payee[len(GOVERNMENT_PREFIX):])
-		ledger.transfer(payer, payee, command.amount, command.purpose)
-		self.bump(MONEY)
+		refusal = self.try_transfer(payer, payee, command.amount, command.purpose)
+		if refusal is None:
+			self.bump(MONEY)
+		return refusal
 
 	def pay_actor_from_household(self, command: Any) -> Any:
 		payee = self.needs.cast().get(command.payee)
 		if payee is None:
 			return Refusal("no_such_actor", "the cast holds no actor %s" % command.payee)
-		ledger.transfer(self.account(), payee, command.amount, command.purpose)
-		self.bump_seat(MONEY)
-		return None
+		refusal = self.try_transfer(self.account(), payee, command.amount, command.purpose)
+		if refusal is None:
+			self.bump_seat(MONEY)
+		return refusal
 
 	def take_from_household_purse(self, command: Any) -> Any:
 		taker = self.needs.cast().get(command.taker)
 		if taker is None:
 			return Refusal("no_such_actor", "the cast holds no actor %s" % command.taker)
-		ledger.transfer(self.account(), taker, command.amount, command.purpose)
-		self.bump_seat(MONEY)
-		return None
+		refusal = self.try_transfer(self.account(), taker, command.amount, command.purpose)
+		if refusal is None:
+			self.bump_seat(MONEY)
+		return refusal
 
 	def settle_with_edge(self, command: Any) -> None:
 		ledger.settle(self.account(), self.edge(command.edge), command.balance, command.purpose)
@@ -134,11 +147,15 @@ class Ledger(Module):
 		ledger.transfer(self.account(), self.edge(EDGE_EXCHANGE), command.amount, BANK_CAPITAL_LABEL)
 		self.bump_seat(MONEY)
 
-	def pay_exchange(self, command: Any) -> None:
+	def pay_exchange(self, command: Any) -> Optional[Refusal]:
 		cast = self.needs.cast()
-		cast.state.purses.transfer(command.actor, EDGE_EXCHANGE, command.coin, "exchange")
+		try:
+			cast.state.purses.transfer(command.actor, EDGE_EXCHANGE, command.coin, "exchange")
+		except InsufficientFunds as error:
+			return Refusal("cannot_pay", str(error), amount=command.coin)
 		cast.actors[command.actor].payments.note_outlay(command.label, command.coin)
 		self.bump(MONEY)
+		return None
 
 	def receive_from_exchange(self, command: Any) -> None:
 		cast = self.needs.cast()

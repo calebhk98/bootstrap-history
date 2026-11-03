@@ -176,3 +176,17 @@ for _year in range(EXIT_LOSS_YEARS):
 check("a trader with nothing worth carrying for long enough gives up", idle.record.exited_year is not None)
 check("a trader that gives up hands what it holds back to its owners", idle.money == 0.0
 	  and idle.record.outlays.get("edge:pooled capital") == 500.0, (idle.money, idle.record.outlays))
+
+# ---- a cargo the trader cannot pay for is not shipped -----------------------------------------
+from sim.agents.policy import Option
+from sim.agents.trader import cargo_affordable
+
+check("a cargo costing more than the budget is not affordable", not cargo_affordable(101.0, 100.0))
+check("a cargo costing the budget or less is affordable", cargo_affordable(100.0, 100.0) and cargo_affordable(40.0, 100.0))
+world = make_world()
+registry = make_registry()
+broke = add_trader(registry, 10.0)
+too_big = Option(subject="grain@town>port", worth=1.0, cost=1.0e12,
+				 detail={"material": "grain", "source": "town", "destination": "port", "tonnes": 1.0e11})
+check("a cargo beyond money and credit is refused before anything is shipped or paid",
+	  broke.ship_cargo(too_big, world) is None and not world.shipped and broke.money == 10.0, (world.shipped, broke.money))

@@ -14,6 +14,7 @@ opening wage that fixes the unit (`coin_per_unit`).
 from typing import Callable, Dict, List, Optional, Sequence, Tuple
 
 from sim.economy import api as economy_api
+from sim.refusal import Refusal
 from sim.economy.api import (EDGE_CONSUMPTION, EDGE_EXCHANGE, EDGE_LEGACY, AgentOrders, Bid, GoodsMove, Offer,
                              Transfer)
 
@@ -125,6 +126,25 @@ def purchase_orders(economy, purchases: Sequence[dict], tonnes_per_unit: Callabl
         orders[account] = AgentOrders(bids=(held.bids if held else ()) + (bid,))
         funding.append((buyer, purchase["budget"], budget))
     return orders, funding
+
+
+def keep_paid_purchases(orders: Dict[str, AgentOrders], funding: Sequence[Tuple[str, float, float]],
+                        pay: Callable[[str, float], object]):
+    """Pay for each purchase (`pay(buyer, coin)` answers a Refusal when the buyer cannot): (the orders, the funding) of the
+    purchases paid, and [(buyer, coin, refusal)] of those refused. A refused purchase is dropped with its bid, so no unit is
+    funded that was not paid for; a buyer with nothing paid for has no order. The k-th funding of a buyer is its k-th bid."""
+    kept_bids: Dict[str, Tuple[Bid, ...]] = {}
+    kept, refused, seen = [], [], {}
+    for buyer, coin, units in funding:
+        account = buy_account(buyer)
+        index = seen[account] = seen.get(account, -1) + 1
+        answer = pay(buyer, coin)
+        if isinstance(answer, Refusal):
+            refused.append((buyer, coin, answer))
+            continue
+        kept.append((buyer, coin, units))
+        kept_bids[account] = kept_bids.get(account, ()) + (orders[account].bids[index],)
+    return {account: AgentOrders(bids=bids) for account, bids in kept_bids.items()}, kept, refused
 
 
 def standing_bids(economy, flows: dict, tile: str, tonnes_per_unit: Callable[[str], float],

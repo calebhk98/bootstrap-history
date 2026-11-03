@@ -119,7 +119,7 @@ class PayActorCommand(unittest.TestCase):
         opened = []
         registry = SimpleNamespace(
             get=lambda actor_id: SimpleNamespace(actor_id=actor_id) if actor_id.split(":")[-1] in governments or actor_id == "trader" else None,
-            ensure_government=lambda country: opened.append(country) or SimpleNamespace(actor_id="government:" + country))
+            countries=SimpleNamespace(ensure_government=lambda country: opened.append(country) or SimpleNamespace(actor_id="government:" + country)))
         module = ledger_over(cast=registry, seat_list={"joined": ["seat1"]}, cast_state=SimpleNamespace(purses=object()))
         module.seat_slot_of = lambda seat_id: LedgerSeat()
         return module, opened
@@ -234,8 +234,9 @@ class TonnesLedgerState(unittest.TestCase):
 class NoteHolderBookingCommand(unittest.TestCase):
     def booked(self, holder, signed):
         entries = []
-        lender = SimpleNamespace(note_income=lambda label, amount: entries.append(("actor in", label, amount)),
-                                 note_outlay=lambda label, amount: entries.append(("actor out", label, amount)))
+        lender = SimpleNamespace(payments=SimpleNamespace(
+            note_income=lambda label, amount: entries.append(("actor in", label, amount)),
+            note_outlay=lambda label, amount: entries.append(("actor out", label, amount))))
         module, _registry, _treasury = seat_ledger(seats=("seat:a",))
         module.needs.cast = lambda: SimpleNamespace(actors={"abbey": lender})
         module.note_holder_booking(NoteHolderBooking(holder, signed, "loan"))
