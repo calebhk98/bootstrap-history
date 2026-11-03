@@ -7,6 +7,7 @@ from types import SimpleNamespace
 
 from sim.tests.economy_view_defaults import ViewDefaults
 from sim.book import Book, Transfer
+from sim.world import need_basket
 from sim.economy import equity, households
 from sim.economy.types import GoodSpec
 
@@ -22,7 +23,7 @@ NEED_DATA = {
     "goods": {"grain": {"satisfies": {"food": 1.0}}, "beads": {"satisfies": {"adornment": 1.0}}},
 }
 SPECS = {name: GoodSpec(name, 1.0, 0.0, 0.0, name) for name in ("grain", "beads")}
-BASKET = households.make_basket(NEED_DATA, {})
+BASKET = need_basket.make_basket(NEED_DATA, {})
 
 
 class OwningView(ViewDefaults):

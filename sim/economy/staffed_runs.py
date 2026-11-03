@@ -11,7 +11,7 @@ def staffed_runs(labour_hours_per_run: Mapping[str, float], hours_hired: Mapping
     return min(hired / per_run for hired, per_run in needs)
 
 
-def change_anchor(last_runs: float, staffed: float) -> float:
+def change_anchor(last_runs: float, staffed: Optional[float]) -> float:
     """Runs a year's change in output is counted from: the runs worked, or the runs the hired hands could have worked
     when more (a run that failed for want of an input leaves the crew in place)."""
-    return max(last_runs, staffed)
+    return last_runs if staffed is None else max(last_runs, staffed)

@@ -10,12 +10,12 @@ def tonnes_sold(asked, held, market_room):
 WORKSHOP_CATEGORY = "your own workshop"
 CONCERNS_NAMED_PER_CATEGORY = declare(
 	"CONCERNS_NAMED_PER_CATEGORY", 6, kind="temporary_heuristic", unit="concerns", source=None, confidence="D",
-	retire="the market-ceiling report paging through every concern of a category",
+	retire="no complaint covers it; a report-layout bound, retired when the market-ceiling report pages through every concern of a category",
 	why="The report of what the market ceiling took names this many of a category's biggest concerns; more would not fit "
 	    "a line, and the rows' amounts do not depend on it.")
 WORKSHOP_TAKINGS_FLOOR = declare(
 	"WORKSHOP_TAKINGS_FLOOR", 0.5, kind="temporary_heuristic", unit="money a year", source=None, confidence="D",
-	retire="the market-ceiling report paging through every concern of a category",
+	retire="no complaint covers it; a report-rounding bound, retired when the market-ceiling report pages through every concern of a category",
 	why="A workshop whose yearly takings are below this is left out of the ceiling report as a row of its own: it would "
 	    "show as nothing at the report's one-decimal rounding.")
 

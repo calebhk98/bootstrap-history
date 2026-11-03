@@ -11,7 +11,8 @@ from typing import Any, Dict, Mapping
 
 from sim.default_civilisation import CIVILISATION_DIRECTORY, default_civilisation_id
 from sim.world import demography
-from sim.labour import wages
+from sim.labour import wages  # noqa: F401  (engine/data.py reads wage_provider.wages.WageSchedule)
+from sim.labour.market import trades as market_trades
 
 REFERENCE_POPULATION = 10000.0
 
@@ -72,13 +73,6 @@ def people_fed_per_worker() -> float:
     return population.total / population.working_age
 
 
-def _field(trade: Any, name: str) -> Any:
-    return trade.get(name) if isinstance(trade, Mapping) else getattr(trade, name)
-
-
 def training_years_by_trade(registry: Mapping[str, Any]) -> Dict[str, float]:
-    """Years of training per trade; a trade that states none takes its family's median. The registry's
-    trades are records or plain mappings (the shape a state carries)."""
-    return wages.training_years_with_family_default(
-        {trade_id: _field(trade, "training_years") for trade_id, trade in registry.items()},
-        {trade_id: _field(trade, "family") for trade_id, trade in registry.items()})
+    """Years of training per trade; a trade that states none takes its family's median (labour/market/trades.py)."""
+    return market_trades.training_years_by_trade(registry)

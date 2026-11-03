@@ -13,7 +13,7 @@ from sim.economy.api import backing_good, health_figures, hunger_goods, opening_
 
 OUTCOMES_KEPT = declare(
     "OUTCOMES_KEPT", 100, kind="temporary_heuristic", unit="years of rows", source=None, confidence="D",
-    retire="the health figures kept as running sums in sim/economy/diagnostics, not as the yearly rows they are cut from",
+    retire="no complaint covers it; a save-size bound, retired when the health figures are kept as running sums in sim/economy/diagnostics, not as the yearly rows they are cut from",
     why="The health figures are read from the stored yearly rows; a game longer than this forgets its first years, so the "
         "save does not grow with the game.")
 

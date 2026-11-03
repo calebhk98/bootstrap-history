@@ -4,6 +4,7 @@ QUICK_TOPIC = True
 
 import unittest
 
+from sim.world import need_basket
 from sim.economy import households, households_orders
 from sim.economy.types import GoodSpec
 from sim.tests.test_economy_households import BASKET, SPECS, View, budget_total, cohort
@@ -89,7 +90,7 @@ class SpendingRiseSmoothingTests(unittest.TestCase):
 
 class UnsoldGoodTests(unittest.TestCase):
     """A good with no seller has no price, so it draws no bid and its need's money goes to goods that have one."""
-    SHELTER = households.make_basket({
+    SHELTER = need_basket.make_basket({
         "needs": {"shelter": {"surplus_budget_share": 1.0, "subsistence_per_capita_per_year": 0.0}},
         "goods": {"brick": {"satisfies": {"shelter": 1.0}}, "lime": {"satisfies": {"shelter": 0.5}}}}, {})
     SPECS = {"brick": GoodSpec("brick", 1.0, 0.0, 5.0, "brick"), "lime": GoodSpec("lime", 1.0, 0.0, 5.0, "lime")}

@@ -16,7 +16,7 @@ from .unit_mass import tonnes_per_unit
 # Points along an order at which the economy's response is read; the order's mean climb is their mean.
 PRICE_SLICES = declare(
     "PRICE_SLICES", 8, kind="temporary_heuristic", unit="points along an order", source=None, confidence="D",
-    retire="the economy's price response read as a curve over the order (sim/economy/api.price_response)",
+    retire="no complaint covers it; a numerical resolution of the sampled price response, retired when the economy returns an order's mean price in closed form (sim/economy/api.price_response)",
     why="The climb of the price over an order is the mean of the economy's response at this many evenly spaced points; "
         "more points follow a steep book more closely and cost a response read each.")
 

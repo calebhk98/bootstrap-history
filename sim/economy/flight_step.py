@@ -10,7 +10,7 @@ from .labour_inputs import TONNES_CARRIED_PER_MIGRANT
 from .setup import area_tile
 
 
-def people_before(setup, labour) -> Dict[str, float]:
+def people_before(labour) -> Dict[str, float]:
     """People now in each labour area that has workers."""
     return {area: people_in(labour.workforce, area) for area in labour.workforce.workers}
 
@@ -38,11 +38,11 @@ def settle(setup, record, inputs, report, before, context, carriage) -> Dict[str
         cost = carriage.cost_per_tonne(area_tile(refuge), area_tile(home)) * TONNES_CARRIED_PER_MIGRANT
         return cost if math.isfinite(cost) else math.inf
 
-    after_market = people_before(setup, record.labour)
+    after_market = people_before(record.labour)
     came = flight_year.return_fugitives(
         record.labour.workforce, record.unfree.fugitives, taxed, subsistence, income,
         inputs.amnesty_share, inputs.immunity_years, moving_cost, setup.flight.arrears_owed_by_fugitive, setup.flight.share_after_immunity)
-    after_return = people_before(setup, record.labour)
+    after_return = people_before(record.labour)
     for area, people in after_market.items():   # those who came home are moves too: demography takes the net with the market's
         report.migrated[area] = report.migrated.get(area, 0.0) + after_return.get(area, 0.0) - people
     return came

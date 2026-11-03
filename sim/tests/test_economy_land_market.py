@@ -138,7 +138,7 @@ class SettleYearTests(unittest.TestCase):
         paid = land_market.settle_year(setup, record, view, wanted)
         self.assertAlmostEqual(record.land.land_rent["rich"], 0.0)
         self.assertGreater(record.land.land_rent["short"], 0.0)
-        self.assertEqual(record.producers["producer:rich"].land_run_cap, -1.0)
+        self.assertIsNone(record.producers["producer:rich"].land_run_cap)
         self.assertAlmostEqual(record.producers["producer:short"].land_run_cap, 100.0)
         self.assertAlmostEqual(record.producers["producer:short"].land_rent_per_run, record.land.land_rent["short"])
         self.assertAlmostEqual(sum(each.amount for each in paid), 100.0 * record.land.land_rent["short"])

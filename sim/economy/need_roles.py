@@ -9,9 +9,9 @@ HOUSEHOLD_WORK_ROLE = "household_work"
 
 
 def need_of_role(need_data: Mapping[str, Any], role: str) -> str:
-    """The id of the need that plays `role` (the first by id that names it) in the needs data ({"needs": {...}});
-    raises ValueError when no need has it."""
+    """The id of the one need that plays `role` in the needs data ({"needs": {...}}); raises ValueError when no need
+    has it or several do (content/need_data.check_needs refuses the data with several)."""
     found = sorted(need_id for need_id, spec in need_data["needs"].items() if spec.get("role") == role)
-    if not found:
-        raise ValueError("no need in the needs data has the role %r" % role)
+    if len(found) != 1:
+        raise ValueError("%d needs in the needs data have the role %r, not one" % (len(found), role))
     return found[0]

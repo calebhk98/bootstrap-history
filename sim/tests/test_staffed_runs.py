@@ -20,6 +20,9 @@ class StaffedRunsTest(unittest.TestCase):
         self.assertEqual(change_anchor(20.0, 50.0), 50.0)
         self.assertEqual(change_anchor(60.0, 50.0), 60.0)
 
+    def test_with_no_staffed_figure_the_anchor_is_the_runs_worked(self):
+        self.assertEqual(change_anchor(20.0, None), 20.0)
+
 
 class YearsChangeTest(unittest.TestCase):
     def test_a_crew_that_stayed_while_inputs_failed_lets_the_plan_stay_high(self):

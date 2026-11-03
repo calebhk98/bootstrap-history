@@ -19,7 +19,7 @@ class HeadroomWithLandTest(unittest.TestCase):
 
 class LandShortTilesTest(unittest.TestCase):
     def test_a_tile_where_a_landed_producer_was_cut_is_short(self):
-        rows = [("a", 0.0, True), ("b", -1.0, True), ("c", 5.0, True)]     # (tile, land_run_cap, recipe takes land)
+        rows = [("a", 0.0, True), ("b", None, True), ("c", 5.0, True)]     # (tile, land_run_cap, recipe takes land)
         self.assertEqual(land_short_tiles(rows), {"a", "c"})
 
     def test_a_cap_on_a_recipe_that_takes_no_land_does_not_count(self):

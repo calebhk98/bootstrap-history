@@ -53,13 +53,14 @@ class CrewChoiceTests(unittest.TestCase):
 FREIGHT_LAND_VIEWS = ("carriage_facts", "mode_carrier", "modes_carrying")
 
 
-def _economy(grain_price=1.0):
+def _economy(grain_price=1.0, staple="wheat_kg", other_prices=None):
     """The freight module over a price table, a flat wage, the market rate and the real map."""
-    prices = {"wheat_kg": grain_price, "wood_kg": 0.5, "coal_kg": 0.4, "iron_bar_kg": 8.0, "ox": 4000.0, "mule": 3000.0}
+    prices = {staple: grain_price, **(other_prices or {}), "wood_kg": 0.5, "coal_kg": 0.4, "iron_bar_kg": 8.0, "ox": 4000.0, "mule": 3000.0}
     return module_harness.build(Freight, views={
         "material_prices": lambda: prices, "material_price": lambda tag: prices.get(tag), "trade_registry": lambda: {"labourer": {"fallback": True}, "sailor": {"role": "sailor"}, "merchant": {"role": "merchant"}},
             "wage": lambda trade: 2.0,
-        "market_rate": lambda: 0.05, **land_views.of({}, FREIGHT_LAND_VIEWS)})
+        "market_rate": lambda: 0.05, "civilisation": lambda: {"id": "t", "staple": staple},
+        **land_views.of({}, FREIGHT_LAND_VIEWS)})
 
 
 class EngineCrewTests(unittest.TestCase):
@@ -69,6 +70,11 @@ class EngineCrewTests(unittest.TestCase):
         rig = sea_freight.crew_to_sail(sea_freight.MERCHANT_HULL_CARGO_TONNES)
         self.assertGreaterEqual(cheap.sea_crew(), rig)
         self.assertGreater(dear.sea_crew(), cheap.sea_crew())
+
+    def test_the_feed_is_priced_at_the_civilisations_staple_not_at_wheat(self):
+        rice_civ = _economy(0.001, staple="rice_kg", other_prices={"wheat_kg": 100.0})
+        self.assertEqual(rice_civ.sea_crew(), _economy(0.001).sea_crew())
+        self.assertEqual(rice_civ.carrier_feed_material("cart"), "rice_kg")
 
     def test_the_carrier_model_and_the_loss_rate_use_the_chosen_crew(self):
         economy = _economy(100.0)

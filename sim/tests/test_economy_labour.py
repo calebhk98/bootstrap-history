@@ -6,7 +6,8 @@ import unittest
 
 import types
 
-from sim.economy import labour, trade_wages
+from sim.economy import trade_wages
+from sim.labour.api import reservation_wage_per_hour
 from sim.labour.api import CAREER_YEARS, wages
 from sim.economy.households_orders import HOUSEHOLD_TIME_PREFERENCE
 
@@ -22,11 +23,11 @@ class TrainingPremiumTests(unittest.TestCase):
 
 class ReservationAndTrainingTests(unittest.TestCase):
     def test_reservation_wage_is_the_outside_option_without_danger(self):
-        self.assertAlmostEqual(labour.reservation_wage(2000.0, 2000.0, 0.0, 30.0), 1.0)
+        self.assertAlmostEqual(reservation_wage_per_hour(2000.0, 2000.0, 0.0, 30.0), 1.0)
 
     def test_danger_raises_the_reservation_wage(self):
-        safe = labour.reservation_wage(2000.0, 2000.0, 0.001, 30.0)
-        risky = labour.reservation_wage(2000.0, 2000.0, 0.02, 30.0)
+        safe = reservation_wage_per_hour(2000.0, 2000.0, 0.001, 30.0)
+        risky = reservation_wage_per_hour(2000.0, 2000.0, 0.02, 30.0)
         self.assertGreater(safe, 1.0)
         self.assertGreater(risky, safe)
 

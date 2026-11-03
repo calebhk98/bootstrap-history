@@ -175,7 +175,7 @@ def _working_capital(producer, recipe, currency, worked, capacity, cash_kept, pa
     paid_now = unit_cost.variable_cost_per_run(recipe, inputs, wages)
     if not math.isfinite(paid_now) or paid_now <= 0.0 or revenue_per_run <= paid_now:
         return None
-    smoothed = within_a_years_change(replaced(producer, last_runs=worked, staffed_runs=-1.0, capacity_runs=capacity),
+    smoothed = within_a_years_change(replaced(producer, last_runs=worked, staffed_runs=None, capacity_runs=capacity),
                                      capacity * paying)
     short_runs = smoothed - cash_kept / paid_now
     if short_runs <= 0.0:
@@ -207,7 +207,7 @@ def _investment(producer, recipe, view, capacity, worked, cost_per_run, wear) ->
     if recipe.plant_life_years <= 0.0:
         return 0.0, 0.0
     wanted = runs_for_stock(producer, recipe, view, cost_per_run, expected_output_prices(producer, recipe, view) or {})
-    planned = within_a_years_change(replaced(producer, last_runs=worked, staffed_runs=-1.0, capacity_runs=producer.capacity_runs),
+    planned = within_a_years_change(replaced(producer, last_runs=worked, staffed_runs=None, capacity_runs=producer.capacity_runs),
                                     worked if math.isinf(wanted) else wanted)
     return plant_investment.split(plant_investment.investment_runs(planned, capacity, wear), wear)
 

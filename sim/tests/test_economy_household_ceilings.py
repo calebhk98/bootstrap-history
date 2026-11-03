@@ -6,6 +6,7 @@ import dataclasses
 import unittest
 
 from sim.tests.economy_view_defaults import ViewDefaults
+from sim.world import need_basket
 from sim.economy import households
 from sim.economy.types import GoodSpec
 from sim.world.climate_needs import PERSONS_PER_HOUSEHOLD
@@ -22,7 +23,7 @@ NEED_DATA = {
     },
 }
 SPECS = {name: GoodSpec(name, 1.0, 0.0, 0.0, name) for name in ("grain", "beads", "gold_leaf")}
-BASKET = households.make_basket(NEED_DATA, {})
+BASKET = need_basket.make_basket(NEED_DATA, {})
 
 
 class View(ViewDefaults):

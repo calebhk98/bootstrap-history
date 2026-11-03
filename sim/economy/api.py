@@ -8,7 +8,7 @@ WALL = "two-way"  # nothing here reaches sim/engine/; the markets module's port 
 
 import math
 
-from . import route_dues, carried_book, carriage_wear, national_prices, crop_sites, unit_cost, country_figures, diagnostics, late_recipes, opening_metal, household_grinding, households, households_work, labour_state, land_rents, market_curves, prices_at as tile_prices, taxes, tile_costs, workforce_settle
+from . import route_dues, carried_book, carriage_wear, national_prices, crop_sites, unit_cost, country_figures, diagnostics, late_recipes, opening_metal, household_grinding, households, households_work, need_roles, labour_state, land_rents, market_curves, prices_at as tile_prices, taxes, tile_costs, workforce_settle
 from .bank_founding import found_from_outside
 from .diagnostics import person_equivalent_unemployment
 from .fixture_setups import GRAIN as FIXTURE_STAPLE, LABOURER as FIXTURE_UNSKILLED_TRADE, small_setup as fixture_small_setup, stationary_setup as fixture_stationary_setup
@@ -51,7 +51,7 @@ from sim.world import capital_market
 __all__ = [
     "FIXTURE_STAPLE", "FIXTURE_UNSKILLED_TRADE", "fixture_small_setup", "fixture_stationary_setup",
     "YearAccounts", "baseline_checks", "settling", "spin_up_sensitivity",
-    "carriage_wear", "crop_sites", "unit_cost", "diagnostics", "household_grinding", "households", "households_work", "taxes", "tile_costs", "currency_from_coin_standard", "Economy", "external_orders",
+    "carriage_wear", "crop_sites", "unit_cost", "diagnostics", "household_grinding", "households", "households_work", "need_roles", "taxes", "tile_costs", "currency_from_coin_standard", "Economy", "external_orders",
     "price_response", "prices_at", "offered_units", "watch_tiles",
     "shown_prices", "Producer", "expected_output_prices", "live_input_prices", "live_wages", "AgentOrders",
     "EconomyYearInputs", "recipe_tile_key", "recipes_from_production_data", "plant_builds", "with_tool_wear", "EconomyRecord", "EconomySetup", "SetupTrade", "SiteLimit",
