@@ -159,7 +159,7 @@ Six reviewers ran the audit prompt again; the orchestrator opened a citation fro
   by one (`goods_market.post_order`), staff bids are funded first, and an order that cannot be paid is dropped silently.
   The gate also holds on a player's own buy of the same good.
 - **Labour.** The founder's own wage work is paid from `EDGE_EMPLOYERS` at the quote plus a reputation bonus, outside the
-  core (`sim/labour/labour_wages.py work_for_wages`, `labour_job.py`, `wage_fallback.py`). Plague survival rounds
+  core (`sim/labour/labour_wages.py work_for_wages`, `labour_job.py` and `wage_fallback.py` (both since deleted)). Plague survival rounds
   fractional staff to whole people (`sim/workforce/rules.py surviving_people`). `labour_market_api.in_current_money`
   scales the cleared wage again by the civilisation's static wage and price indices, and `wage_index` is still a second
   wage level (screens, score, demography's wage event). Founder-trained apprentices and granted staff are added to the
