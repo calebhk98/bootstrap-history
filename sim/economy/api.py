@@ -68,7 +68,7 @@ __all__ = [
     "all_producers", "carried_last_year", "backing_marginal_cost", "set_improvements", "begin_spin_up", "trim_workforce_to_expected_hours",
     "rename_agent", "coin_per_unit", "currency_id", "backing_good", "home_country", "economy_countries", "country_of_tile", "economy_tiles",
     "capital_tile", "port_tile", "tile_in_economy", "recipes_of", "good_specs", "recipe_allowed_at", "opening_prices_of", "unskilled_trade",
-    "economy_trades", "opening_rate", "working_hours_per_year", "import_duty_share", "opening_wage_level", "priced_trade_wage", "country_trade_wage",
+    "economy_trades", "opening_rate", "working_hours_per_year", "opening_wage_level", "priced_trade_wage", "country_trade_wage",
     "trade_wage_at", "hunger_goods", "health_figures", "crop_site_inputs",
 ]
 
@@ -581,10 +581,6 @@ def opening_rate(economy):
 
 def working_hours_per_year(economy):
     return economy.setup.working_hours_per_year
-
-
-def import_duty_share(economy):
-    return economy.setup.import_duty_share
 
 
 def opening_wage_level(economy):

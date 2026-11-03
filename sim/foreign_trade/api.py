@@ -4,6 +4,6 @@ WALL = "two-way"  # nothing here imports sim/engine/; the engine bridge hands it
 
 from .commands import (ResetActorTradeTallies, CloseMarketsTo, NoteActorHomeTrade, NoteActorTrade, NoteCargoLeg, RecordStockTaken,
                        SettleFlow, SettleTraderCargo)
-from .constants import OPENING_CARRIERS_PER_ROUTE
+from .constants import LANDING, OPENING_CARRIERS_PER_ROUTE, TAKING
 from .state import ForeignTradeWorld
 from . import rules

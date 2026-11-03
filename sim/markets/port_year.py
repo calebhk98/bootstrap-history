@@ -34,8 +34,6 @@ class YearRun:
         economy.change_setup(**port_cropland.follow_farm_sites(world, economy_api.economy_tiles(economy),
                                                                       economy_api.crop_site_inputs(economy)[0]),
                              working_hours_per_year=float(world.scenario.HOURS_PER_PERSON_YEAR),
-                             import_duty_share=port_duty.import_duty_shares(
-                                 legs, lambda country: trade_duty.import_terms(world, country)[0]),
                              carried_tariff=port_duty.carried_tariffs(
                                  economy_api.economy_countries(economy), economy_api.home_country(economy),
                                  lambda country: trade_duty.import_terms(world, country)[0]))

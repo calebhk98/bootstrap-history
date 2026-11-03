@@ -12,7 +12,7 @@ import unittest
 
 from sim.agents import relations
 from sim.agents.trader_routes import route_terms
-from sim.economy.tariffs import carried_duty_transfers, duty_transfers, landed_duty_transfers
+from sim.economy.tariffs import carried_duty_transfers
 from sim.economy.types import EDGE_EXTERNAL
 from sim.markets import trade_duty
 from sim.actors.world_trade import Trade
@@ -39,32 +39,27 @@ def _border_terms(sim):
                                         relations.embargoes(sim.stores, destination, source))
 
 
-class TheStateCollects(unittest.TestCase):
+class ALandedCargoPaysItsTariffOnce(unittest.TestCase):
 
-    def test_the_duty_inside_what_was_paid_goes_from_the_border_to_the_treasury(self):
-        transfers = duty_transfers({"cassia_kg": 0.25}, {("merchant", "cassia_kg"): 80.0, ("house", "cassia_kg"): 20.0,
-                                                         ("merchant", "wheat_kg"): 40.0}, "state:rome", "denarius")
-        self.assertEqual([(each.payer, each.payee, each.amount) for each in transfers],
-                         [(EDGE_EXTERNAL, "state:rome", 25.0)])
-
-    def test_a_good_with_no_tariff_carries_no_duty(self):
-        self.assertEqual(duty_transfers({}, {("merchant", "wheat_kg"): 40.0}, "state:rome", "denarius"), [])
-
-
-class TheStateCollectsOnLandedCargo(unittest.TestCase):
-
-    def test_a_landed_import_pays_the_duty_inside_its_sales_from_the_import_account_to_the_treasury(self):
-        transfers = landed_duty_transfers({"cassia_kg": 0.25}, {("leg:1", "cassia_kg"): 80.0, ("leg:1", "wheat_kg"): 40.0},
-                                          lambda account: 1000.0, "state:rome", "denarius")
-        self.assertEqual([(each.payer, each.payee, each.amount) for each in transfers], [("leg:1", "state:rome", 20.0)])
-
-    def test_an_import_account_pays_no_more_than_it_holds(self):
-        [transfer] = landed_duty_transfers({"cassia_kg": 0.25}, {("leg:1", "cassia_kg"): 80.0}, lambda account: 5.0,
-                                           "state:rome", "denarius")
-        self.assertEqual(transfer.amount, 5.0)
-
-    def test_a_good_with_no_tariff_pays_nothing(self):
-        self.assertEqual(landed_duty_transfers({}, {("leg:1", "wheat_kg"): 40.0}, lambda account: 1000.0, "state:rome", "denarius"), [])
+    def test_the_year_close_takes_no_tariff_from_the_sales_of_a_landed_cargo(self):
+        """The trader's cargo leg pays the duty at landing (foreign_trade/cargo.py); the year close adds none on the sales."""
+        from unittest import mock
+        from sim.book import Book
+        from sim.economy.tax_record import TaxRecord
+        from sim.economy.types import EDGE_MINT, Transfer
+        from sim.economy.year_close import money_taxes
+        from sim.economy.year_ledger import YearLedger
+        book = Book()
+        book.transfer(Transfer(EDGE_MINT, "leg:1", "coin", 1000.0, "opening"))
+        ledger = YearLedger(import_accounts=frozenset({"leg:1"}))
+        ledger.note_postings([Transfer("house", "leg:1", "coin", 80.0, "sale of cassia_kg")], "sales")
+        setup = SimpleNamespace(tax_forms=(), state_agent="state:rome", currency_id="coin", carried_tariff={},
+                                import_duty_share={"cassia_kg": 0.2})
+        record = SimpleNamespace(book=book, taxes=TaxRecord())
+        with mock.patch("sim.economy.year_close.state_budget.close_year") as close_year:
+            money_taxes(setup, record, None, ledger)
+        self.assertEqual(book.balance("state:rome", "coin"), 0.0)
+        self.assertEqual(close_year.call_args.args[3], 0.0)
 
 
 class TheStateCollectsOnCarriedGoods(unittest.TestCase):
@@ -92,13 +87,12 @@ class TheStateCollectsOnCarriedGoods(unittest.TestCase):
 
 class LedgerTalliesTheBorder(unittest.TestCase):
 
-    def test_only_money_paid_straight_to_the_border_carries_the_tariff(self):
+    def test_money_paid_to_the_border_and_to_an_import_account_both_count_as_imports(self):
         from sim.economy.types import Transfer
         from sim.economy.year_ledger import YearLedger
         ledger = YearLedger(import_accounts=frozenset({"importer"}))
         ledger.note_postings([Transfer("house", EDGE_EXTERNAL, "coin", 30.0, "sale of silk"),
                               Transfer("house", "importer", "coin", 12.0, "sale of silk")], "sales")
-        self.assertEqual(ledger.border_imports_paid, {("house", "silk"): 30.0})
         self.assertEqual(sum(ledger.imports_paid.values()), 42.0)
 
 

@@ -9,8 +9,7 @@ economy's coin, converted by `coin_per_unit`.
 """
 from sim.economy import api as economy_api
 from sim.economy.api import EDGE_CARGO, AgentOrders, Bid, GoodsMove, Offer, Transfer, external_edge
-
-LANDING, TAKING = "in", "out"
+from sim.foreign_trade.api import LANDING, TAKING
 
 
 def _enters_book(economy, leg):

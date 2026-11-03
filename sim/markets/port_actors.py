@@ -4,7 +4,7 @@ A firm's or a state's `market_sale` and `market_purchase` are noted through the 
 agent economy's stored record, so a save carries them). When the economy's year runs they become orders:
 
 - a sale: the goods enter an account named for the seller and are offered at the lowest price the seller takes;
-  after the clear the money the account holds is the seller's proceeds, and what did not sell goes back out;
+  after the clear the money the account holds is the seller's proceeds, and what did not sell goes back to the seller's stores;
 - a purchase: the buyer's coin funds a fixed-quantity bid; the unspent budget returns. Complete capital assets
   remain in its asset account; materials bought for use are consumed.
 
@@ -13,6 +13,7 @@ opening wage that fixes the unit (`coin_per_unit`).
 """
 from typing import Callable, Dict, List, Optional, Sequence, Tuple
 
+from sim.agents.api import stock_keeping
 from sim.economy import api as economy_api
 from sim.refusal import Refusal
 from sim.economy.api import (EDGE_CONSUMPTION, EDGE_EXCHANGE, EDGE_LEGACY, AgentOrders, Bid, GoodsMove, Offer,
@@ -193,9 +194,9 @@ def fund(economy, funding: Sequence[Tuple[str, float, float]]) -> None:
 
 
 def close(economy, sales: Sequence[dict], purchases: Sequence[dict]):
-    """Close every account after the clear. Unsold goods go back out; bought capital assets are retained; the money each
+    """Close every account after the clear. Unsold goods are reported to go back to the seller; bought capital assets are retained; the money each
     account holds goes to the exchange edge. Returns ({seller: units of money its sales fetched}, {buyer: units of
-    its budget left unspent}, {buyer: {good: units}} delivered)."""
+    its budget left unspent}, {buyer: {good: units}} delivered, {seller: {good: units}} unsold, which the seller takes back)."""
     book, currency = economy_api.economy_book(economy), economy_api.currency_id(economy)
     accounts = ([(sale_account(actor), actor, EDGE_LEGACY, "unsold actor output")
                  for actor in sorted({sale["seller"] for sale in sales})]
@@ -204,6 +205,7 @@ def close(economy, sales: Sequence[dict], purchases: Sequence[dict]):
     proceeds: Dict[str, float] = {}
     refunds: Dict[str, float] = {}
     delivered: Dict[str, Dict[str, float]] = {}
+    unsold: Dict[str, Dict[str, float]] = {}
     moves, transfers = [], []
     for account, actor, outflow, label in accounts:
         for good, tiles in sorted(book.holdings(account)["goods"].items()):
@@ -214,13 +216,18 @@ def close(economy, sales: Sequence[dict], purchases: Sequence[dict]):
                                 and spec.capital_asset and spec.service_life_years > 0.0 else outflow)
                     moves.append(GoodsMove(account, receiver, good, tile, quantity,
                                            "durable purchase" if receiver != outflow else label))
-                    if outflow == EDGE_CONSUMPTION:
-                        by_good = delivered.setdefault(actor, {})
-                        by_good[good] = by_good.get(good, 0.0) + quantity
+                    by_good = (delivered if outflow == EDGE_CONSUMPTION else unsold).setdefault(actor, {})
+                    by_good[good] = by_good.get(good, 0.0) + quantity
         money = max(0.0, book.balance(account, currency))
         if money > 0.0:
             transfers.append(Transfer(account, EDGE_EXCHANGE, currency, money, "exchange"))
             (proceeds if outflow == EDGE_LEGACY else refunds)[actor] = money
     economy_api.move_goods(economy, moves)
     economy_api.post_transfers(economy, transfers)
-    return proceeds, refunds, delivered
+    return proceeds, refunds, delivered, unsold
+
+
+def take_back(stores: Dict[str, float], unsold_units: Dict[str, float], tonnes_per_unit: Callable[[str], Optional[float]]) -> None:
+    """The goods a seller did not sell (`unsold_units`: {good: units}) join its stores in tonnes; a good with no finite mass is not carried."""
+    stock_keeping.add_delivery(stores, {good: units * tonnes_per_unit(good) for good, units in sorted(unsold_units.items())
+                                        if tonnes_per_unit(good) is not None})
