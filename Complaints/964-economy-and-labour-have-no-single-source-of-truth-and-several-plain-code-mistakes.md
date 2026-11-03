@@ -292,3 +292,27 @@ the assembly refuses a name clash and a dead layer method, and new checks gate `
 - **Documentation** (docs reviewer): `MULTI_ACTOR_STATE_PLAN.md` section 4 names classes and data switches that do
   not exist; plan stage and complaint status disagree on mods; about fifty comments name `core.py`, `economy.py` or
   `society.py` for logic that lives elsewhere.
+
+## Audit pass 6 (commit 3c64559)
+
+Six reviewers ran the audit prompt again; the orchestrator opened a citation from each. No crash was found. Since the
+pass, every game had failed to start (a view part in `sim/materials/readings.py` had taken the name of the per-seat
+memo class `demand.py` builds; restored as `seat_readings.py`), found by the first test run and not by five passes of
+reading; `tools/check_constructor_calls.py` and `tools/check_class_names.py` now gate `done_check` against that kind of
+error. Fixed this pass: a respend bid in the same market counted a buyer's want twice in unmet demand, entry and
+expansion; a clearing with no price read as 0; "traded" now means delivered; a crew with no wage was paid nothing in
+merchants' fees; a refused staff payment let a seat keep staff the clearing hired out to others; an unpayable edge
+payment raised instead of refusing; eight pairs of same-name classes; a broad `except` that silently stopped
+auto-commissioning; research-report lines on the Eurace manual and the Peters model.
+
+Left:
+
+- `tools/check_attribute_calls.py` does not follow `self.world` inside `sim/actors/world_*.py`.
+- Every `act_as` into another seat replaces the seat's `active` and `employees` containers (`sim/projects/applied.py`,
+  `sim/workforce/staff_watch.py`), so a reference held across an inner `act_as` writes to a detached dict; no such
+  holder was found.
+- `purses.cover` draws on the facility before `book.transfer` can refuse, so a refused payment can leave a draw behind.
+- The cold opening of a full civilisation solves its opening twice (once to price the coin metal at the margin). The
+  income root find now starts from the last root and stops at a relative tolerance of 1e-3, and the own-plot share starts
+  from its last value; measured on Rome with `rome_counts.py` (scratch), each open settles in a third of the demand
+  evaluations once the solve has settled.
