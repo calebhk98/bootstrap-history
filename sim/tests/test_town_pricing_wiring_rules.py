@@ -20,7 +20,7 @@ from sim.tests import finance_host
 def bondage_module(labourer_quote):
     """The finance module of a household owing a debt in bondage, over a labour market quoting the labourer's hour."""
     return finance_host.build(seat=FinanceSeat(bondage_years_left=5, bondage_debt=1.0e9), game_config={"founder_hours_per_year": 2000.0},
-                              labour_market=types.SimpleNamespace(quote=lambda trade: labourer_quote[trade]))
+                              labour_market=types.SimpleNamespace(quote_unskilled=lambda: labourer_quote["labourer"]))
 
 
 def WorkshopGame(annual_quote):

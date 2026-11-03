@@ -10,6 +10,7 @@ from .harness import check
 from sim.agents import business_books, firm_entry, state_enterprises
 from sim.agents.api import ActorRecord, ActorRegistry, ActorsState, CastEntry, CountryProfile, CountryWorld, Government, seed_cast
 from sim.agents.country_state_site import costs_at_country_prices, gross_at_country_prices, rent_of_site
+from sim.agents.no_country_economy import NoCountryEconomy
 from sim.agents.tuning import MANAGEMENT_SPAN_OF_CONTROL
 
 from .agents_fake_world import make_node
@@ -27,7 +28,7 @@ HOME_WAGE_PER_HOUR = 7.0
 
 
 def pay(trade):
-	return PAY.get(trade)
+	return PAY[trade]
 
 
 # ---- the rules, on built inputs ---------------------------------------------------------------
@@ -38,8 +39,6 @@ check("a ramped-up concern takes the book figure at the country's cost scale and
 check("a concern in a goods category has no takings in a country (None)", gross_at_country_prices(BOOK_TAKINGS, COST_SCALE, 1.0, True, 1.0) is None)
 check("a plant's yearly costs are the book upkeep at the cost scale and the crew's pay in the country",
 	  costs_at_country_prices(BOOK_UPKEEP, STAFF, COST_SCALE, SPAN, pay) == (BOOK_UPKEEP * COST_SCALE, 2.0 * 14.0 + 3.0 * 10.0))
-check("a crew with a trade the country pays nothing for has no costs (None)",
-	  costs_at_country_prices(BOOK_UPKEEP, {"astronomer": 1.0}, COST_SCALE, SPAN, pay) is None)
 
 
 # ---- a world with its own (home) figures that a country's reading must not use ----------------
@@ -134,14 +133,18 @@ costs = world.concerns.plant_costs("shop")
 check("a country's yearly costs are its own, not the home world's", costs == (BOOK_UPKEEP * COST_SCALE, 2.0 * 14.0 + 3.0 * 10.0), costs)
 check("...none where the economy has no part for the country (None)", country_world(NoPart()).plant_costs("shop") is None)
 check("a country's hourly pay is its person-year over the hours of a year", world.labour.hourly_pay("mason") == 14.0 / world.labour.hours_per_person_year)
-check("...none for a trade it pays nothing for (None)", world.labour.hourly_pay("astronomer") is None)
 
 
 # ---- the manager's hours are paid at the best paid trade of the country ---------------------------
 manager = firm_entry.management_cost(world, "shop", 2.0)
 check("a country's manager hours cost the best paid trade's pay over the span of control, not the home quote",
 	  abs(manager - 5.0 * 2.0 / MANAGEMENT_SPAN_OF_CONTROL * 14.0) < 1e-9, manager)
-check("a country the economy has no part for has no manager cost (None)", firm_entry.management_cost(country_world(NoPart()), "shop", 1.0) is None)
+try:
+	firm_entry.management_cost(country_world(NoPart()), "shop", 1.0)
+	refused = False
+except NoCountryEconomy:
+	refused = True
+check("a country the economy has no part for refuses a manager cost (NoCountryEconomy)", refused)
 check("carrying a concern needs both the rent and the manager: missing either is None",
 	  firm_entry.carrying_cost(country_world(NoLandLet()), "shop") is None and firm_entry.carrying_cost(country_world(NoPart()), "shop") is None
 	  and firm_entry.carrying_cost(world, "shop", 1.0) == HECTARES * COUNTRY_RENT + firm_entry.management_cost(world, "shop", 1.0))

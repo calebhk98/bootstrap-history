@@ -333,7 +333,7 @@ def _mine_rows_for_material(sim, material, workings, want):
             "rated_capacity_t_per_yr": round(working["capacity"], 2),
             "actual_output_t_per_yr": round(actual, 2),
             "material_demand_t_per_yr": round(want, 2),
-            "costs_you_a_year": round(report["operating_cost"], 1),
+            "costs_you_a_year": (None if report["operating_cost"] is None else round(report["operating_cost"], 1)),   # None: unknown (the material is unpriced)
             "utilization": ("%d%%" % round(100.0 * util))
                            if actual > 0 else "-",
             # WHETHER IT IS ACTUALLY SUPPLYING ANYTHING, as a plain flag,
