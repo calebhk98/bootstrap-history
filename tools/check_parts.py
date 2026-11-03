@@ -2,12 +2,13 @@
 
 1. Every view, command, phase and provision name a module_spec.py declares resolves on the module's implementation: a method of
    the class, or a method of exactly one class in its PARTS.
-2. Every `self.parts.<part>.<member>` in a part names a part of the same module and a member that part's class has.
+2. Every `self.parts.<part>.<member>` in a part names a part of the same module and a member that part's class has; when the member
+   is assigned in the part's methods from a constructor call that resolves, `.<submember>` is checked against that class too.
 3. Every other `self.<name>` in a part is defined on the part (method, class attribute, assigned anywhere in the class or its
    bases) or is one of Part's own names.
 4. A module class derives from Module only.
-5. No code under `sim/` (tests excluded) reaches a private member of a part: `...parts.<name>._member`, or `_member` on a local
-   or `self` attribute that was assigned from `...parts.<name>`. A part's privates are for the part's own class."""
+5. No code under `sim/` (tests excluded) reaches a private member of a part: `...parts.<name>._member` (the owner is any name ending in `parts`, so
+   `_parts` too), or `_member` on a local or `self` attribute that was assigned from `...parts.<name>`. A part's privates are for the part's own class."""
 import ast
 import glob
 import importlib
@@ -41,12 +42,36 @@ def attributes_of(cls):
 	return names
 
 
+def member_classes(part_class):
+	"""{attribute: class} for each `self.<attribute> = Class(...)` in the part's methods whose class resolves in the part's module
+	and answers every attribute (no `__getattr__`)."""
+	module = sys.modules.get(part_class.__module__)
+	found = {}
+	try:
+		tree = ast.parse(textwrap.dedent(inspect.getsource(part_class)))
+	except (OSError, TypeError):
+		return found
+	for function in ast.walk(tree):
+		if not isinstance(function, ast.FunctionDef):
+			continue
+		for node in ast.walk(function):
+			if not (isinstance(node, ast.Assign) and isinstance(node.value, ast.Call) and isinstance(node.value.func, ast.Name)):
+				continue
+			klass = getattr(module, node.value.func.id, None)
+			if not inspect.isclass(klass) or hasattr(klass, "__getattr__"):
+				continue
+			for target in node.targets:
+				if isinstance(target, ast.Attribute) and isinstance(target.value, ast.Name) and target.value.id == "self":
+					found[target.attr] = klass
+	return found
+
+
 def is_parts_member(node):
-	"""True for `<anything>.parts.<name>` and a bare `parts.<name>`."""
+	"""True for `<anything>.<owner>.<name>` and a bare `<owner>.<name>`, where the owner's name ends in `parts` (`parts`, `_parts`)."""
 	if not isinstance(node, ast.Attribute):
 		return False
 	owner = node.value
-	return (isinstance(owner, ast.Attribute) and owner.attr == "parts") or (isinstance(owner, ast.Name) and owner.id == "parts")
+	return (isinstance(owner, ast.Attribute) and owner.attr.endswith("parts")) or (isinstance(owner, ast.Name) and owner.id.endswith("parts"))
 
 
 def is_private(name):
@@ -133,9 +158,21 @@ def check_module(pkg, problems):
 					elif member not in attributes_of(parts[target]):
 						problems.append("%s.%s: self.parts.%s.%s is not defined (line %d)" % (
 							pkg, part_class.__name__, target, member, node.lineno))
+				if isinstance(node, ast.Attribute) and not node.attr.startswith("__") and isinstance(node.value, ast.Attribute) \
+						and isinstance(node.value.value, ast.Attribute) and isinstance(node.value.value.value, ast.Attribute) \
+						and node.value.value.value.attr == "parts" and isinstance(node.value.value.value.value, ast.Name) \
+						and node.value.value.value.value.id == "self":
+					target, member = node.value.value.attr, node.value.attr
+					klass = member_classes(parts[target]).get(member) if target in parts else None
+					if klass is not None and node.attr not in attributes_of(klass):
+						problems.append("%s.%s: self.parts.%s.%s.%s is not defined by %s (line %d)" % (
+							pkg, part_class.__name__, target, member, node.attr, klass.__name__, node.lineno))
 
 
 def main(names):
+	if not os.path.isdir("data"):
+		print("data/ is not next to sim/ in %s: every module fails to import without it (MapDataError); run from a checkout with data/" % os.getcwd())
+		return 2
 	problems = []
 	packages = names or sorted(os.path.basename(os.path.dirname(path)) for path in glob.glob("sim/*/module_spec.py"))
 	for pkg in packages:
