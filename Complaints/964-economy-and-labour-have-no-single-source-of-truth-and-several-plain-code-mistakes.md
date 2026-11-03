@@ -209,13 +209,9 @@ Left, for the next run to settle:
   supply matches demand (seen by the agent fixing the inflow, from a scratch script): a clearing or wage-stickiness
   problem to measure.
 - Shipped openings need regenerating (the port split changed the spin-up cache keys).
-- God objects left outside economy and labour: `ActorWorld` (sim/actors/world.py, composed of sixteen view classes),
-  `CountryWorld` (sim/agents/country*.py, six); `Government` (sim/agents/government*.py) now holds nine plain parts (`government.<part>.<method>`).
-  `Actor(Reviewable, Borrower)` keeps two overridable-default bases. The module classes were composed by inheritance
-  (`Actors`, `Markets`, `Disease` and twenty more); each now derives from `Module` alone and holds its behaviour as parts
-  (`PARTS`, `sim/assembly/module.py`): the assembly binds a declared view, command, phase or provision name to the one part
-  that has the method, with no forwarder written by hand (`sim/ARCHITECTURE.md` section 2). Left: `ActorWorld` still asks its
-  host six questions through `sim/actors/host.py`, a seam to remove when it is handed the parts.
+- God objects: every module class derives from `Module` alone and holds its behaviour as parts (`PARTS`,
+  `sim/assembly/module.py`; `sim/ARCHITECTURE.md` section 2). `Labour`, `ActorWorld`, `CountryWorld`, `Government`,
+  `Firm` and `GoodsMarket` hold plain parts. Audit pass 4 lists what is left.
 - Two runtime breaks this round were found only by reading (a reader called methods its object lacked); a static
   check of `self.<part>.<method>()` against the part's class would catch these without a run.
 - `python3 sim/simulator.py spin-up-trace --civ rome_100ad --years 20` on commit 70a6d6b printed nothing and was
@@ -223,3 +219,42 @@ Left, for the next run to settle:
   cache keys). Slow or stuck is not known; the next run should dump the stack periodically
   (`python3 -X faulthandler -c "import faulthandler,sys; faulthandler.dump_traceback_later(300, repeat=True); ..."` or
   an equivalent wrapper) to show where the opening spends its time.
+
+## Audit pass 4 (commit e8a29ba)
+
+Six reviewers ran the audit prompt again; the orchestrator opened a citation from each. Fixed at once: the markets port's
+reader (`PortWorld`) was called with `view` and `draw_deposit`, which it lacks, so every economy year would have raised
+(`sim/markets/port_year_inputs.py`, `port_staff.py`, `port_goods_orders.py`, `port_sites.py`). Being fixed:
+
+- **Hubs.** `WorkforceWorld` (`sim/workforce/world.py`) forwards every view the labour parts read; `EconomyPort` and
+  `PortWorld` (`sim/markets/port*.py`) are facades, and `PortWorld` exposes private names (`_material_prices`,
+  `_material_tag`, `_material_market_tonnes`, `_pooled_farm_weather_multiplier`). `SharedPart.__getattr__`
+  (`sim/agents/country_part.py`) forwards any missing name to the home part. `Actor`, `RecordedActor`, `ActorRegistry`
+  and `Business` are large classes.
+- **Private reaches.** Parts reach other parts' private members (`grep -rnE "parts\.[a-z_]+\._[a-z]" sim`), and
+  several modules reach private fields of objects they do not own (`registry._research_costs`, `titles._held`,
+  `merchants._candidate_routes`, `goods_market._crossing`, `economy._own_plot_options`, `instance._world`,
+  `labour_market._dominant_output_key`). The registry keeps caches in its `__dict__` (`_tile_owners`, `_patent_index`).
+- **Assembly.** A declared name that clashes with a `Module`/`Part` helper binds silently; a mod layer method that is not
+  declared is a silent no-op; mod overrides do not reach part-to-part calls.
+- **Labour.** The working year changes between posting staff and settling them (`port_year.run_year` posts, then the
+  economy applies the year's hours), so staff come out scaled by the ratio of the two years. Newcomers placed before the
+  step are scaled down by `_follow_population` with everyone else. The young of a trade cannot choose that trade, so a
+  trained trade that pays best is drained (`switching.py`). A refused staff funding is silent and the whole staff goes.
+  The founder's wage work for a trade the economy lacks is dropped while the log says it was offered; a sale that warns
+  does not reduce the hours left (`wage_fallback.py`). Plague losses and pool writes are undone by the next clearing or
+  resync. The scholar and craft hands gates count commissions differently. `pay_book` mixes lifetime and yearly sums.
+- **Goods.** `joint_labour_ceilings` gives a trade with no wage seen a ceiling of zero while another trade has one.
+  Missing values still read as zero in `rates.charged_rate`, `opening_stationary`, `year_accounts`,
+  `households_store`, `land_bid` and seat concern revenue. Three price records coexist in market memory and the
+  smoothed one is labelled traded. Route dues scale the toll with the wage. Self-trade wash counts as unmet demand. The
+  opposite-order refusal tells the player to cancel an order no command cancels. Carriage and the cost factor on a
+  seat's goods order may reach no carrier. Refused project material orders are forgotten, `reconcile` matches by
+  material, and a reorder with no price holds a project for ever.
+- **Citations.** `goods_respend.py` quotes a sentence Eurace does not contain; `runs_for_stock` and the firm write-off
+  differ from the Eurace rules they cite without saying how.
+- **Checks.** No permanent check catches a call to a method the receiving object lacks, a private part reach, or a
+  multi-base class outside five packages.
+- **Documentation.** Docstrings name deleted files and removed mixins; `ACTORS.md`, `MOD_HOOKS_PLAN.md`,
+  `MODULE_MIGRATION_TASKS.md`, `mods/README.md` and `sim/labour/market/DESIGN.md` describe code that is gone; many
+  older complaints cite paths that no longer exist.
