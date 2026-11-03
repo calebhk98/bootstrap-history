@@ -30,6 +30,11 @@ class _InvalidatingDict(dict):
             for key, value in dict(*args, **kwargs).items():
                 super().__setitem__(key, self._wrap_value(value))
 
+    @property
+    def on_change(self):
+        """The callback this container reports each change to, or None."""
+        return self._on_change
+
     def _fire(self):
         if self._on_change is not None:
             self._on_change()

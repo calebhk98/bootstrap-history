@@ -55,6 +55,8 @@ class ApplyingHours(Part):
         cost = places * self.needs.housing_price_per_place()
         if places <= 0 or cost > self.needs.acting_balance():
             return 0.0
-        self.needs.send(PayEdge(edges.EDGE_BUILDERS, cost, "worker housing built"))
+        refusal = self.needs.send(PayEdge(edges.EDGE_BUILDERS, cost, "worker housing built"))
+        if refusal:
+            return refusal
         self.seat.worker_housing_places = (self.seat.worker_housing_places or 0.0) + places
         return places

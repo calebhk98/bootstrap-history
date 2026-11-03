@@ -132,7 +132,7 @@ class Government(RecordedActor):
 		if parts["requisition"] > 0.0 and payer.stance.demand_stance() != demand_answer.COMPLY:
 			# a refused requisition is paid, with a penalty, only if the state can enforce it; a negotiated
 			# one is paid in part, and in service, if the state takes the offer
-			draw = world.setting.rng_for("demand", getattr(payer, "actor_id", ""), world.setting.year).random()
+			draw = world.setting.rng_for("demand", payer.actor_id, world.setting.year).random()
 			answer = demand_answer.settle_demand(payer.stance.demand_stance(), parts["requisition"], world.taxpayers.state_reach(),
 												 payer.stance.standing(), draw, payer.stance.service_worth())
 			parts["requisition"] = answer["paid"] - answer["penalty"]

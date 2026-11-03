@@ -13,11 +13,6 @@ class Staff(Part):
 			return 0.0
 		return self.parts.cast.cast().staff.home_staff_fte(trade)  # type: ignore[attr-defined,no-any-return]
 
-	def actor_staff_nationwide(self, trade: str) -> float:
-		"""The same people as `actor_staff_fte`: the home country's actors only, as the labour core's pool is the home country's.
-		Kept for the workforce module's declared read until it reads `actor_staff` instead."""
-		return self.actor_staff_fte(trade)
-
 	def actor_staff_total(self) -> float:
 		"""People of every trade that firms and governments employ."""
 		if not self.world.records:

@@ -100,7 +100,6 @@ METHOD_OF_VIEW_MORE = {
     "found_deposits": "found_deposits",
     "founder_wage_income": "founder_wage_income",
     "founding_worker_years": "founding_worker_years",
-    "actor_staff_nationwide": "actor_staff_nationwide",
     "freight_mode_costs": "_freight_mode_costs",
     "frontier_disease_loss": "frontier_disease_loss",
     "funding_breakdown": "funding_breakdown",

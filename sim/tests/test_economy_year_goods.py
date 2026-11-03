@@ -71,7 +71,7 @@ class PriceAfterTradeTests(unittest.TestCase):
 class NationalPriceTests(unittest.TestCase):
     def test_areas_are_weighted_by_what_they_usually_trade_not_this_year_alone(self):
         # an area that trades only in alternate years must not swing the national price each year
-        memory = MarketMemory(prices={"tin|a": 1.0, "tin|b": 10.0}, volume_weights={"tin|a": 70.0, "tin|b": 30.0})
+        memory = MarketMemory(prices={"tin|a": 1.0, "tin|b": 10.0}, volume_weights={"tin|a": 70.0, "tin|b": 30.0}, trade_age={"tin|a": 1, "tin|b": 0})
         record = types.SimpleNamespace(memory=memory, goods=types.SimpleNamespace(volumes={"tin|a": 0.0, "tin|b": 100.0}))
         self.assertAlmostEqual(national_prices(record)["tin"], 0.7 * 1.0 + 0.3 * 10.0)
 

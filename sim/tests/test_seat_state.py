@@ -14,6 +14,8 @@ from sim.engine.state_seat import FIRST_SEAT_ID, SeatState
 class Seats:
     """The seat registry of a game over a bare state."""
 
+    assembly = None
+
     def __init__(self, state):
         self.state = state
 

@@ -47,6 +47,14 @@ OPTIONAL = {
 	"cause": "attribute of a Refusal (sim/refusal.py); the reply probed may be plain text",
 	"facts": "attribute of a Refusal (sim/refusal.py); the reply probed may be plain text",
 	"choices": "attribute of a Refusal (sim/refusal.py); the reply probed may be plain text",
+	"enterprises": "part of an owner with plants of its own (sim/agents/government.py); a firm or a player owner has none",
+	"part_name": "attribute set on a forwarding method (sim/assembly/assemble.py _part_forwarder); a method the module class defines itself lacks it",
+	"_guard_view": "set on the copies the read guard hands out (sim/assembly/read_guard.py); a plain dict, list or set lacks it",
+	"location": "method of actors and seat parties (sim/agents/base.py, household_party.py); an edge (a named account, sim/agents/edges.py) has none",
+	"record": "the record of an actor or a seat (sim/agents/base.py, household_party.py); an edge or a bare party has none",
+	"keys": "a payment's purpose is a mapping of label to share or a single label (sim/coin/rules.py); a label has no keys",
+	"OWNERS": "class constant of the economy record's part classes (sim/economy/*_record.py); a table field's type (a Dict[...]) has none",
+	"to_canon_dict": "defined by the few saved classes with a canonical form; serialize_state meets arbitrary objects (sim/engine/state.py)",
 }
 
 

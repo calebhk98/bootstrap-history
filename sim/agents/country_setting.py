@@ -15,6 +15,10 @@ class _NoGovernment:
 	def __init__(self) -> None:
 		self.record = ActorRecord(kind="government")
 
+	@property
+	def knowledge(self) -> Any:
+		return self.record.knowledge
+
 	def collect(self, payer: Any, taxable: float, world: Any) -> float:
 		return 0.0
 

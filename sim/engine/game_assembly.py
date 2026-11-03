@@ -69,12 +69,16 @@ def check_record(assembly: assembly_api.Assembly, saved: Dict[str, Any]) -> Opti
 		"; kernels: " + ", ".join(kernels) if kernels else "")
 
 
+def _follow(sim: Any, seat_id: str) -> None:
+	sim.state.acting_seat = seat_id
+
+
 def attach(sim: Any) -> None:
 	"""Point every module at this game's state: the world slots, and the acting seat's. A slot a new game or a new seat
 	does not have yet is built fresh; a loaded save already carries all of them (revive checked it)."""
 	assembly, state = sim.assembly, sim.state
 	assembly.seat_records = lambda: sim.state.seats
-	assembly.follow = lambda seat_id: setattr(sim.state, "acting_seat", seat_id)
+	assembly.follow = lambda seat_id: _follow(sim, seat_id)
 	assembly.mod_memory = lambda: sim.state.interface
 	from . import opening_money, seat_move, seat_registry
 	assembly.add_seat = lambda seat_id, template: seat_registry.register_seat(sim, seat_id, template)

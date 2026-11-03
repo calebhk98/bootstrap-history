@@ -14,8 +14,8 @@ def _Book(other_staff, supply):
     """The owner's book over a stub world: a household with a staff map and the other employers' staff."""
     return StaffBook(SimpleNamespace(
         workforce=SimpleNamespace(employees={}, staff_wanted={}),
-        actors=SimpleNamespace(actors_staff_nationwide=lambda trade: other_staff.get(trade, 0.0)),
-        trades=SimpleNamespace(HOURS_PER_PERSON_YEAR=2000.0)))
+        actors=SimpleNamespace(actor_staff_fte=lambda trade: other_staff.get(trade, 0.0)),
+        economy=SimpleNamespace(agent_working_hours=lambda: None), trades=SimpleNamespace(HOURS_PER_PERSON_YEAR=2000.0)))
 
 
 # ---- the founder's book is the owner's ----

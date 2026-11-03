@@ -5,6 +5,7 @@ literacy limits apply unchanged."""
 import math
 
 from . import trade_data
+from sim.refusal import Refusal
 from sim.reporting.api import RecordEvent
 
 
@@ -87,7 +88,8 @@ class StaffControls:
                                        hiring_outlay, self._world.finance.spending_power("buy"))
         if places <= 0:
             return False
-        if not self._world.commands.build_worker_housing(places):
+        built = self._world.commands.build_worker_housing(places)
+        if isinstance(built, Refusal) or not built:
             return False
         self._world.send(RecordEvent.of("policy_housing", "%s: you build housing for %d more people" % (label, places), policy=label, places=places))
         return True

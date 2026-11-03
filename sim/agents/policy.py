@@ -84,7 +84,7 @@ class ExportPolicy(ValuePolicy):
 	def choose(self, actor: Any, decision: Decision) -> List[Option]:
 		if decision.kind != EXPORT_DECISION:
 			return super().choose(actor, decision)
-		kept_back = getattr(getattr(actor, "record", None), "state_monopolies", None) or ()
+		kept_back = actor.record.state_monopolies
 		offered = [option for option in decision.options if option.subject not in kept_back]
 		return super().choose(actor, Decision(decision.kind, offered, decision.budget))
 

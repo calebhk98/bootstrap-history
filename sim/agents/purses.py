@@ -118,10 +118,16 @@ class Purses:
         if not is_edge(payee):
             self._repay(payee)
 
-    def cover(self, payer: str, amount: float) -> None:
+    def cover(self, payer: str, amount: float) -> Callable[[], None]:
         """Make the payer's purse hold `amount`: it takes back its deposit first and draws the rest on its facility,
-        both in one go (an account that will make several payments covers their sum first)."""
-        self._cover(payer, amount)
+        both in one go (an account that will make several payments covers their sum first). Answers the call that gives
+        back what this did, for a caller whose payments then fail before any money has moved."""
+        undo = self._cover(payer, amount)
+
+        def give_back() -> None:
+            for reverse in reversed(undo):
+                reverse()
+        return give_back
 
     def _cover(self, payer: str, amount: float) -> List[Callable[[], None]]:
         """`cover`, answering the steps that undo what it did, in the order it did them."""
@@ -142,7 +148,6 @@ class Purses:
         """Pay `owed` to the pool its facility is drawn on; it reaches the depositors at the next settlement."""
         if owed <= 0.0 or (sum(self.contracts.facility_of(borrower).values()) <= 0.0 and self.bonds.debt(borrower) <= 0.0):
             return {}
-        self.cover(borrower, owed)
         self.transfer(borrower, POOL, owed, purpose)
         self.interest_pending += owed
         return {POOL: owed}
@@ -267,8 +272,7 @@ class Purses:
         (on a new bond when its purse falls short); the face repaid. Call once a year."""
         due = self.bonds.age(issuer)
         if due > DEBT_FLOOR:
-            self.cover(issuer, due)
-            self.book.transfer(Transfer(issuer, POOL, COIN, due, BOND_REDEEMED))
+            self.transfer(issuer, POOL, due, BOND_REDEEMED)
             if self.named_lenders.names(issuer):
                 owed = self.debt(issuer) + due
                 self.named_lenders.repaid(issuer, due / owed if owed > 0.0 else 1.0)

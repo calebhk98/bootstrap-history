@@ -26,7 +26,7 @@ class CountryArmy(SharedPart):
 		"""Iron and ammunition one equipped soldier uses a year at the share of the military work the country's own
 		state holds (its knowledge and what its civilisation starts with)."""
 		work = self.shared.military_work_ids()
-		known = set(getattr(self.world.setting.government(), "knowledge", ())) | set(self.world.knowledge.baseline_knowledge())
+		known = set(self.world.setting.government().knowledge) | set(self.world.knowledge.baseline_knowledge())
 		return self.shared.equipment_kg_at_adoption(sum(1 for node_id in work if node_id in known) / len(work) if work else 0.0)
 
 	def threat_pressure(self) -> float:

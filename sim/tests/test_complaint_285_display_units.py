@@ -15,6 +15,7 @@ from types import SimpleNamespace
 
 from sim.engine import units as U
 from sim.tests.harness import ROOT
+from sim.tests.ui_stand_in import Game
 from sim.ui.proto.render_typed import render_pretty
 from sim.ui.proto.util import _coin_hoard_line
 from sim.ui.units_text import for_text
@@ -30,7 +31,7 @@ FAKE_UNITS = {
 FIELDS = {"area": ("hectares", 5.0, "hectare"), "mass": ("needed_tonnes", 14.0, "tonne"),
           "money": ("capital", 1200.0, "civ_coin"), "temperature": ("furnace_celsius", 100.0, "celsius")}
 HOURS_PER_COIN = 2.0
-GAME = SimpleNamespace(civ={"id": "rome_100ad"}, labour=SimpleNamespace(money_per_labour_hour=lambda: 1.0 / HOURS_PER_COIN))
+GAME = Game(civ={"id": "rome_100ad"}, labour=SimpleNamespace(money_per_labour_hour=lambda: 1.0 / HOURS_PER_COIN))
 # Mass quantities in tonnes: 14 t is 2 blob (7 kg each); the number printed is the converted one.
 HAND_REPLIES = [
     ("why", {"ok": True, "id": "x", "name": "x", "material_rows": [

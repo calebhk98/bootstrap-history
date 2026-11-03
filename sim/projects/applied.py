@@ -28,7 +28,7 @@ class Applied(Part):
 	def _watch_active(self, seat_id):
 		seat = self.seat_of(seat_id)
 		watched = seat.active
-		if not (isinstance(watched, _InvalidatingDict) and watched._on_change == self.active_changed):   # wrapped once per seat
+		if not (isinstance(watched, _InvalidatingDict) and watched.on_change == self.active_changed):   # wrapped once per seat
 			seat.active = _InvalidatingDict(watched, on_change=self.active_changed)
 		self.bump_seat(ACTIVE_CHANGES, seat_id)
 

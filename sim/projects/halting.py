@@ -9,7 +9,7 @@ def halt_active_projects(active, paid_towards, bountied):
     for node_id in halted:
         entry = active.pop(node_id, None)
         if entry:
-            spent = entry.get("spent", 0.0) if isinstance(entry, dict) else getattr(entry, "spent", 0.0)
+            spent = entry.get("spent", 0.0)
             paid_towards[node_id] = paid_towards.get(node_id, 0.0) + max(0.0, spent)
             kept += max(0.0, spent)
         bountied.discard(node_id)

@@ -26,7 +26,9 @@ class Farm(Part):
             return Refusal(cause, "hectares must be greater than zero")
         if cause:
             return Refusal(cause, "cannot pay %.6g for %.6g hectares of farmland" % (cost, hectares))
-        self.needs.send(PayEdge(edges.EDGE_LANDOWNERS, cost, "farmland bought"))
+        refusal = self.needs.send(PayEdge(edges.EDGE_LANDOWNERS, cost, "farmland bought"))
+        if refusal:
+            return refusal
         self.needs.send(ChangeFarmland(hectares))
         return hectares
 

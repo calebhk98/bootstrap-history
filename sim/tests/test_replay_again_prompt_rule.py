@@ -6,6 +6,7 @@ import tempfile
 
 from .harness import check
 from sim.ui import cli_interactive, replay
+from sim.ui.sitting import Sitting
 from sim.tests.ui_stand_in import Game
 
 QUICK_TOPIC = True
@@ -24,7 +25,7 @@ def _again(game, session):
     printed = io.StringIO()
     try:
         with contextlib.redirect_stdout(printed):
-            reply = cli_interactive._play_handle_session_command("again", ["again"], game, session, {}, None)
+            reply = cli_interactive._play_handle_session_command("again", ["again"], game, session, {}, None, Sitting())
     finally:
         cli_interactive._new_game, cli_interactive._load_civ_list = saved
     return reply, handed.get("routes"), printed.getvalue()

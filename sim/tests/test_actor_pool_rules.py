@@ -46,8 +46,8 @@ class VisibleScale(unittest.TestCase):
     def test_any_actor_is_seen_by_its_staff_its_wealth_and_its_prominence(self):
         seen = []
         module = types.SimpleNamespace(needs=fake_needs(visible_scale=lambda *args: seen.append(args) or 0.4))
-        actor = types.SimpleNamespace(workforce={"smith": 3.0, "mason": 2.0}, money=500.0, concealed_wealth=lambda: 100.0,
-                                      prominence=lambda: 0.25, defiance=lambda: 0.5)
+        stance = types.SimpleNamespace(concealed_wealth=lambda: 100.0, prominence=lambda: 0.25, defiance=lambda: 0.5)
+        actor = types.SimpleNamespace(workforce={"smith": 3.0, "mason": 2.0}, money=500.0, stance=stance)
         self.assertEqual(ActorWorld(module.needs).taxpayers.visible_scale_of(actor), 0.4)
         headcount, wealth, eminence, defiance = seen[0]
         self.assertEqual((headcount, eminence, defiance), (5.0, 0.25, 0.5))

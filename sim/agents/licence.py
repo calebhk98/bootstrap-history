@@ -32,7 +32,7 @@ def grant(licensor: Any, licensee: Any, node_id: str, fee: float, world: Any) ->
 	"""The licensee pays `fee` to the licensor and can make `node_id` at once. False, and nothing
 	moves, when there is nothing the licensee still lacks or when someone else holds the patent."""
 	entry = world.disclosure.patent_entry(node_id)
-	if entry is not None and entry["holder"] != getattr(licensor, "actor_id", None):
+	if entry is not None and entry["holder"] != licensor.actor_id:
 		return False
 	chain = imitation.missing_chain(node_id, world, licensee)
 	if not chain:

@@ -126,8 +126,8 @@ class WhatAnActorKeeps(unittest.TestCase):
 
     def test_every_actor_of_a_year_shares_one_reading_of_the_lent_share(self):
         reads = []
-        record = types.SimpleNamespace(exited_year=None, stratum=None, country=None, stores={}, holdings={})
-        actors = {name: types.SimpleNamespace(record=record, money=100.0, workforce={}, prominence=lambda: 0.0)
+        record = types.SimpleNamespace(exited_year=None, stratum=None, country=None, stores={}, holdings={}, shares_held={})
+        actors = {name: types.SimpleNamespace(record=record, money=100.0, workforce={}, stance=types.SimpleNamespace(prominence=lambda: 0.0))
                   for name in ("a", "b", "c")}
         registry = types.SimpleNamespace(actors=actors, state=types.SimpleNamespace(home_country="home"), get=lambda _id: None)
         module = module_harness.build(Coin, views={

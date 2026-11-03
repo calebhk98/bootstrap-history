@@ -7,6 +7,8 @@ goes to a named edge instead.
 """
 from typing import Any, List
 
+from sim.book import InsufficientFunds
+
 from . import ledger
 from .edges import EDGE_WORKERS
 
@@ -33,11 +35,16 @@ def share_out(payer: Any, payees: List[Any], weights: List[float], amount: float
 	total = sum(weights)
 	if amount == 0.0 or total <= 0.0:
 		return
-	ledger.cover(payer, payees, amount)
+	give_back = ledger.cover(payer, payees, amount)
 	moved = 0.0
 	for index, payee in enumerate(payees):
 		part = amount - moved if index == len(payees) - 1 else amount * weights[index] / total
-		ledger.transfer(payer, payee, part, purpose)
+		try:
+			ledger.transfer(payer, payee, part, purpose)
+		except InsufficientFunds:
+			if moved == 0.0:   # nothing has left the purse: the draw made for these payments is not kept
+				give_back()
+			raise
 		moved += part
 
 

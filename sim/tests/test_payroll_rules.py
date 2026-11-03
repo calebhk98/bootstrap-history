@@ -42,6 +42,7 @@ class Registry:
 class World:
     def __init__(self):
         self.workers_edge = Purse()
+        self.setting = self   # the world's setting names the edge
 
     def edge(self, name):
         assert name == EDGE_WORKERS
