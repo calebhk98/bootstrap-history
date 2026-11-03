@@ -45,7 +45,8 @@ class LabourRecord(OwnedRecord):
     def add_workers(self, area: str, trade: TradeId, people: float) -> None:
         """People placed in `trade` from outside the clearing (a seat's apprentices, staff an institution granted). They
         live in the area already, so demography counts them: they leave the area's other trades, each in proportion to
-        its workers, and the area's headcount is unchanged."""
+        its workers, and the area's headcount is unchanged. Where the other trades hold fewer than that, the rest are
+        added, and the next year's following of demography (`Economy._follow_population`) scales the area back."""
         take_from_other_trades(self.workforce.workers.get(area, {}), trade, people)
         add_people(self.workforce, area, trade, people)
 
