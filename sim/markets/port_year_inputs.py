@@ -74,8 +74,9 @@ class YearInputsBuilder:
         asks = []
         for seat_id in sim.state.seats_playing():
             with sim.scenario.act_as(seat_id):
-                base, _floor, serviceable = sim.finance.credit_line_sought()
-                line = max(0.0, min(base, serviceable)) * sim.scenario.price_index / coin
+                base, floor, serviceable = sim.finance.credit_line_sought()
+                # the running-cost floor is asked of the lenders too: the seat's ceiling is what they grant
+                line = max(0.0, min(base, serviceable), floor) * sim.scenario.price_index / coin
             if line > 0.0:
                 asks.append(economy_api.credit_line_request(seat_id, currency, line, rate))
         return tuple(asks)
