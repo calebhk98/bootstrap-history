@@ -9,18 +9,19 @@ from sim.prices.api import long_run_costs
 from sim.prices.api import prices as price_solver
 
 
-def wage_function(sim, production):
+def wage_function(sim):
     """Money an hour of each trade pays at the opening: the labour market's quote, or for a trade it has not
     met (a plant's builders) the unskilled hour plus the trade's training premium, the rule the economy prices
     a trade with no wage by (sim/economy/trade_wages.py)."""
     registry = sim.state.trade_registry
+    training_years_of = labour_api.wage_provider.training_years_by_trade(registry)
     unskilled = sim.economy.labour.quote(labour_api.trade_of_role(registry, "unskilled"))
 
     def wage_of(trade):
         quote = sim.economy.labour.quote(trade) if trade in registry else None
         if quote is not None and quote > 0.0:
             return quote
-        training_years = float((registry.get(trade) or {}).get("training_years") or 0.0)
+        training_years = training_years_of.get(trade, 0.0)    # a trade outside the registry has no training to price
         return unskilled * (1.0 + economy_api.premium_for_training_years(training_years))
     return wage_of
 
@@ -35,10 +36,11 @@ def opening_costs(sim, production=None):
     at the opening wages, rate and rent. `production` replaces the shared entries (a crop made at its tiles' yield)."""
     production = cost_entries() if production is None else production
     techniques = sim.production.techniques_granted() | frozenset(sim.production.techniques_in_use())
-    wage_of = wage_function(sim, production)
-    rent_of = long_run_costs.opening_rent_of(techniques, wage_of, sim.scenario.civ, production)
+    wage_of = wage_function(sim)
+    rent_of = long_run_costs.opening_rent_of(techniques, wage_of, sim.scenario.civ, production,
+                                             registry=sim.state.trade_registry)
     costs = long_run_costs.long_run_costs(techniques, wage_of, float(sim.finance.market_rate()), rent_of, sim.scenario.civ,
-                                          production)
+                                          production, registry=sim.state.trade_registry)
     # A household good only a technique not yet held makes has no supplier at the opening, so it is seeded no
     # price that would draw demand to it; a founder's research or a partner's price brings it in.
     return {good: cost.cost for good, cost in costs.items()

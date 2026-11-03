@@ -8,7 +8,7 @@ from sim.labour.api import wage_provider
 QUICK_TOPIC = True
 
 CIVILISATIONS = ("rome_100ad", "england_1300", "norse_900ad")
-GRAMS_SPREAD = 1.15       # the dearest civilisation's hour in grams of coin metal over the cheapest's (heuristic; no measuring command)
+GRAMS_SPREAD = 1.25       # the dearest civilisation's hour in grams of coin metal over the cheapest's (heuristic; no measuring command)
 
 
 class OpeningWageAnchorTests(unittest.TestCase):

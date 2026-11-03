@@ -29,10 +29,6 @@ def reference_civilisation() -> Dict[str, Any]:
         return json.load(handle)
 
 
-def reference_discount_rate() -> float:
-    return float(reference_civilisation()["starting_interest_rate"])
-
-
 def staple_material(civ: Mapping[str, Any]) -> str:
     """The grain the civilisation's subsistence basket is priced in: its `staple`, else the default."""
     staple = civ.get("staple", DEFAULT_STAPLE_MATERIAL)
@@ -79,7 +75,13 @@ def people_fed_per_worker() -> float:
     return population.total / population.working_age
 
 
+def _field(trade: Any, name: str) -> Any:
+    return trade.get(name) if isinstance(trade, Mapping) else getattr(trade, name)
+
+
 def training_years_by_trade(registry: Mapping[str, Any]) -> Dict[str, float]:
+    """Years of training per trade; a trade that states none takes its family's median. The registry's
+    trades are records or plain mappings (the shape a state carries)."""
     return wages.training_years_with_family_default(
-        {trade_id: trade.training_years for trade_id, trade in registry.items()},
-        {trade_id: trade.family for trade_id, trade in registry.items()})
+        {trade_id: _field(trade, "training_years") for trade_id, trade in registry.items()},
+        {trade_id: _field(trade, "family") for trade_id, trade in registry.items()})

@@ -233,7 +233,8 @@ def build_setup(sim, opening=None, production=None):
     prices = {good: price for good, price in opening["prices"].items() if good in specs and price > 0.0}
     prices = port_closure.makeable_prices(prices, production, recipes)
     recipes = {recipe_id: plant_builds.with_plant_from(recipe, prices) for recipe_id, recipe in recipes.items()}
-    trades = {trade: SetupTrade(trade, float(spec.get("training_years") or 0.0),
+    training_years = labour_api.wage_provider.training_years_by_trade(trades_data)
+    trades = {trade: SetupTrade(trade, training_years[trade],
                                float(spec.get("fatality_risk_per_year", 0.0)), str(spec.get("family", "")))
               for trade, spec in sorted(trades_data.items())}
     wages = dict(opening["wages"])

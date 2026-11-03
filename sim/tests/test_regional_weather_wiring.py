@@ -11,7 +11,6 @@ from .harness import check
 from sim import simulator
 from sim.agriculture import rules
 from sim.agriculture.constants import FARM_WEATHER_POOLED_CELL_CAP
-from sim.engine import data
 from sim.tests import land_host
 from sim.geography import api as geography_api
 from sim.tests import agriculture_stand_in
@@ -36,7 +35,7 @@ def _seed(civ, year, region=None, salt=424242):
 # --- the cells and their weights
 cells = _cells(ROME)
 home_regions = set(geography_api.regions_of_tiles(geography_api.tiles_held(ROME)))
-tiles = data.load_geography()["land_tiles"]["tiles"]
+tiles = geography_api.load_geography()["land_tiles"]["tiles"]
 check("the weights are shares of the territory's cultivable land: they sum to one",
       abs(sum(cell.weight for cell in cells) - 1.0) < 1e-9, sum(cell.weight for cell in cells))
 check("every cell sits in a region the civilisation holds, and the territory breaks into more cells than regions",

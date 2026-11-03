@@ -6,7 +6,7 @@ QUICK_TOPIC = True
 from .harness import *  # noqa: F401,F403
 
 from sim.engine import settings as _SETTINGS
-from sim.engine.data import money_short
+from sim.scenario.api import money_short
 from sim.ui import cli as _CLI
 from sim.ui import cli_common as _CLI_COMMON
 from sim.ui import protocol as _protocol

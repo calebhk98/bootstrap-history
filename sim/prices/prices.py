@@ -159,8 +159,6 @@ if REPO_ROOT not in sys.path:
 
 from sim.prices import disposal_cost, rent_standin, solve_prices, solve_prices_reach  # noqa: E402
 from sim.prices.engine_seam import load_production             # noqa: E402
-from sim.labour.api import wages                                     # noqa: E402
-from sim.labour.api import wage_provider                # noqa: E402
 from sim.prices import solve_cache                              # noqa: E402
 from sim.constants import declare                                # noqa: E402
 from sim.geography.api import tiles_held                    # noqa: E402
@@ -294,17 +292,25 @@ def hours_to_denarii(price_in_labour_hours: float, prices_json: Dict[str, Any]) 
     return price_in_labour_hours * denarii_per_labour_hour(prices_json)
 
 
+def trades_used(production_entries: ProductionEntries) -> List[str]:
+    """Every trade a production entry works or builds its plant with, sorted."""
+    trades = set()
+    for entry in production_entries.values():
+        trades.update(entry.get("labour_hours") or {})
+        for plant in entry.get("capital") or ():
+            trades.update(plant.get("build_labour_hours") or {})
+    return sorted(trades)
+
+
 def solver_wage_ratios(production_entries: ProductionEntries,
                        document_ratios: Dict[str, float]) -> Dict[str, float]:
-    """Wage of every trade the entries use, in labour hours an hour: the document's, and for a trade
-    it does not list the same training rule the labour market uses."""
-    wage_by_trade = dict(document_ratios)
-    registry = solver_trade_registry(production_entries)
-    training_years = wage_provider.training_years_by_trade(registry)
-    for trade in registry:
-        wage_by_trade.setdefault(trade, wages.training_premium(
-            training_years[trade], wage_provider.reference_discount_rate()))
-    return wage_by_trade
+    """Wage of every trade the entries use, in labour hours an hour: the document's. A trade the entries
+    use that the document does not list is an error; the wage document owns every wage, the solver invents none."""
+    missing = sorted(trade for trade in trades_used(production_entries) if trade not in document_ratios)
+    if missing:
+        raise ValueError("the wage document lists no wage for the trades %s; every trade the solver "
+                         "prices needs one" % missing)
+    return dict(document_ratios)
 
 
 def default_production_entries() -> ProductionEntries:

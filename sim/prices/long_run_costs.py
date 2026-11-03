@@ -23,13 +23,7 @@ class LongRunCost:
 
 
 def _trades(production: Mapping[str, Any], numeraire_trade: str) -> Iterable[str]:
-    trades = set()
-    for entry in production.values():
-        trades.update((entry.get("labour_hours") or {}))
-        for plant in entry.get("capital") or ():
-            trades.update((plant.get("build_labour_hours") or {}))
-    trades.add(numeraire_trade)
-    return sorted(trades)
+    return sorted(set(price_engine.trades_used(production)) | {numeraire_trade})
 
 
 def long_run_costs(techniques: Iterable[str],
@@ -37,16 +31,18 @@ def long_run_costs(techniques: Iterable[str],
                    rate: float,
                    rent_of: Optional[Callable[[str], float]] = None,
                    civilization: Optional[Mapping[str, Any]] = None,
-                   production: Optional[Mapping[str, Any]] = None) -> Dict[str, LongRunCost]:
+                   production: Optional[Mapping[str, Any]] = None,
+                   registry: Optional[Mapping[str, Any]] = None) -> Dict[str, LongRunCost]:
     """{good: LongRunCost} for the goods the held techniques (or one step beyond them) can make.
 
     `wage_of(trade)` is money an hour; costs come back in the same money. `rent_of(key)` is money per unit of
     an extracted good (and per hectare of land); None charges none. `civilization` supplies the territory
     whose climate decides which crops are made and the state's waste-dumping rule; the cost reads neither its
-    population nor its income.
+    population nor its income. `registry` is the live trade registry that names the unskilled trade (the
+    production entries' own when none is given).
     """
     production = production if production is not None else price_engine.default_production_entries()
-    numeraire_trade = solve_prices.numeraire_trade(production)
+    numeraire_trade = solve_prices.numeraire_trade(production, registry)
     numeraire = wage_of(numeraire_trade)
     ratios = {trade: wage_of(trade) / numeraire for trade in _trades(production, numeraire_trade)}
     rent_hours = {}
@@ -64,13 +60,14 @@ def long_run_costs(techniques: Iterable[str],
 
 def opening_rent_of(techniques: Iterable[str], wage_of: Callable[[str], float],
                     civilization: Optional[Mapping[str, Any]] = None,
-                    production: Optional[Mapping[str, Any]] = None) -> Callable[[str], float]:
+                    production: Optional[Mapping[str, Any]] = None,
+                    registry: Optional[Mapping[str, Any]] = None) -> Callable[[str], float]:
     """`rent_of` for `long_run_costs` at the opening: the labelled stand-in (`rent_standin.py`), money an hour of
     the numeraire trade buys times the hours of rent per unit. Ore and land rent are Ricardian margins that need a
     quantity demanded; until the economy's own rent replaces them (ONE_PRICE_OWNER_PLAN.md stage 5) the opening
     fixes it from physical figures and no price."""
     production = production if production is not None else price_engine.default_production_entries()
-    numeraire_trade = solve_prices.numeraire_trade(production)
+    numeraire_trade = solve_prices.numeraire_trade(production, registry)
     numeraire = wage_of(numeraire_trade)
     ratios = price_engine.solver_wage_ratios(
         production, {trade: wage_of(trade) / numeraire for trade in _trades(production, numeraire_trade)})

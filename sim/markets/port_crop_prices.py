@@ -45,7 +45,7 @@ def opening_costs_at_tiles(sim, production_data, allowed, fertility_by_tile: Map
     arable = [entry_id for entry_id in allowed
               if str(production_data[entry_id].get("extracted_from") or "").startswith(ARABLE_SOURCE)]
     recipes = recipes_from_production_data(production_data, arable)
-    wage_of = port_costs.wage_function(sim, port_costs.cost_entries())
+    wage_of = port_costs.wage_function(sim)
     wages = {trade: wage_of(trade) for recipe in recipes.values() for trade in recipe.labour_hours}
     yields = supply_yields(recipes, first, wages, fertility_by_tile, people_by_tile)
     if not yields:

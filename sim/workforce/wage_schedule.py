@@ -4,7 +4,8 @@ from typing import Any, Mapping, Optional
 
 from sim.default_civilisation import REPOSITORY_ROOT
 from sim.content import api as content
-from sim.labour.api import wage_provider, wages
+from sim.economy.api import HOUSEHOLD_TIME_PREFERENCE
+from sim.labour.api import CAREER_YEARS, wage_provider, wages
 from sim.world import demand
 
 
@@ -23,7 +24,7 @@ def build_schedule(registry: Mapping[str, Any], civ: Mapping[str, Any],
     unskilled trade, so no money enters until the last step. Closure: the
     wage floor needs the staple's cost, and that cost is built from labour
     at wages, but in numeraire hours the unskilled wage is 1 by definition,
-    so the staple solves once from the training premiums alone. The real-wage
+    so the staple solves once from the training premiums alone, priced at the households' own time preference like every other training premium. The real-wage
     condition is then a plain number: the hours of work needed to buy the
     subsistence basket per hour worked. Below 1 the market wage clears it;
     above 1 the floor lifts the unskilled wage. Money is anchored to the
@@ -34,7 +35,7 @@ def build_schedule(registry: Mapping[str, Any], civ: Mapping[str, Any],
     standard = wage_provider.coin_standard(civ)
     civilisation_id = civ.get("id")
     opening = wages.WageSchedule(
-        wage_provider.training_years_by_trade(registry), 1.0, 0.0, civ["starting_interest_rate"])
+        wage_provider.training_years_by_trade(registry), 1.0, 0.0, HOUSEHOLD_TIME_PREFERENCE, CAREER_YEARS)
     with warnings.catch_warnings():
         # Catalogue diagnostics belong to the solver tools, not to every start-up.
         warnings.simplefilter("ignore")
@@ -58,4 +59,4 @@ def build_schedule(registry: Mapping[str, Any], civ: Mapping[str, Any],
         hours_per_kg[staple], wage_provider.people_fed_per_worker())
     return wages.WageSchedule(
         wage_provider.training_years_by_trade(registry), 1.0 / coin_hours, subsistence_hours,
-        civ["starting_interest_rate"])
+        HOUSEHOLD_TIME_PREFERENCE, CAREER_YEARS)
