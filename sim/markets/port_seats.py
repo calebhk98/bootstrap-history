@@ -42,7 +42,7 @@ def settle_seats(sim, economy, offered_by_seat, inputs_by_seat, edge_id):
     takings = {seat_id: economy_api.settle_agent_takings(economy, seat_id, edge_id) * coin
                for seat_id in sorted(sim.state.seats)}
     for seat_id in sorted(offered_by_seat):
-        with sim.act_as(seat_id):
+        with sim.scenario.act_as(seat_id):
             sim.send(ReceiveFromEdge(edges.EDGE_CUSTOMERS, takings.get(seat_id, 0.0), "concern sales"))
             sim.send(PayEdge(edges.EDGE_SUPPLIERS, inputs_by_seat.get(seat_id, 0.0), "inputs of concerns sold in the book"))
     return sold, takings

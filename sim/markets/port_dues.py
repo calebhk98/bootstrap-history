@@ -15,8 +15,8 @@ def settle(sim, economy) -> None:
         if units <= 0.0:
             continue
         if holder in sim.state.seats:
-            with sim.act_as(holder):
+            with sim.scenario.act_as(holder):
                 sim.send(ReceiveFromEdge(edges.EDGE_CUSTOMERS, units * coin, "route dues"))
         else:
-            government = sim.actors.countries.ensure_government(holder)
+            government = sim.scenario.actors.countries.ensure_government(holder)
             sim.send(ReceiveFromExchange(government.actor_id, units * coin, "route dues"))

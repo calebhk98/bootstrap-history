@@ -31,7 +31,7 @@ class YearRun:
         # the year's working day is set before any hours are posted, so posting and settling convert people and hours alike
         economy.change_setup(**port_cropland.follow_farm_sites(world, economy_api.economy_tiles(economy),
                                                                       economy_api.crop_site_inputs(economy)[0]),
-                             working_hours_per_year=float(world.HOURS_PER_PERSON_YEAR))
+                             working_hours_per_year=float(world.scenario.HOURS_PER_PERSON_YEAR))
         agent.sync_ways()
         agent.admit_techniques()
         orders, offered, seat_inputs = self._seats.orders()
@@ -47,11 +47,12 @@ class YearRun:
         orders.update(staff_orders)
         actor_staff_orders, actor_staff_posted = port_staff.post_actors(world, economy, agent.actor_tile)
         orders.update(actor_staff_orders)
-        goods_orders, goods_posted = port_goods_orders.post(world, economy, agent.stored.pop("seat_orders", {}),
+        goods_orders, goods_posted = port_goods_orders.post(world, economy, agent.stored.get("seat_orders", {}),
                                                             agent.tile_in_economy)
         orders.update(goods_orders)
         economy_api.watch_tiles(economy, self._seats.seat_tiles())
         outcome = economy.step(self._inputs.build(orders, port_cargo.border_accounts(economy, legs)))
+        agent.stored.pop("seat_orders", None)   # spent only once the step has run; a step that raises keeps the orders
         agent.figures.forget()
         port_bondage.settle_purchases(world, economy, outcome)
         if outcome.migrated_by_tile:   # the labour market's moves go to demography, which owns where people live

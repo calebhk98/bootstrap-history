@@ -23,7 +23,7 @@ class _Market(GoodsMarket):
         super().__init__(sim)
         self.pricing = SimpleNamespace(
             price_at_tile_per_tonne=lambda material: 10.0, carriage_per_tonne=lambda material, price_per_tonne: 1.0,
-            making_cost_per_tonne=lambda material: 5.0, price_kind=lambda material: "traded",
+            making_cost_per_tonne=lambda material: 5.0, price_kind=lambda material: "smoothed_trade",
             purchase_cost=lambda material, tonnes, already=0.0: (11.0 * tonnes, 11.0),
             sale_proceeds=lambda material, tonnes, already=0.0: (10.0 * tonnes, 10.0))
 

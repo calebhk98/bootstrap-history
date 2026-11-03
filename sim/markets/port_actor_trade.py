@@ -58,7 +58,7 @@ class ActorTrade:
         that entered, as dicts)."""
         world, agent = self._world, self._agent
         economy = agent.economy()
-        known = world.actors.actors
+        known = world.scenario.actors.actors
         stored = agent.stored
         sales = [sale for sale in stored.pop("sales", []) if sale["seller"] in known]
         purchases = [purchase for purchase in stored.pop("purchases", []) if purchase["buyer"] in known]
@@ -84,7 +84,7 @@ class ActorTrade:
         back out. Bought capital assets stay with their buyer and materials are used up."""
         economy = self._agent.economy()
         proceeds, refunds, _bought, delivered = port_actors.close(economy, sales, purchases)
-        actors_api.keep_deliveries(self._world.actors.actors, delivered)   # goods a buyer that keeps its purchases bought join its stores, in tonnes
+        actors_api.keep_deliveries(self._world.scenario.actors.actors, delivered)   # goods a buyer that keeps its purchases bought join its stores, in tonnes
         coin = economy_api.coin_per_unit(economy)
         for amounts, label in ((proceeds, "market sales"), (refunds, "market purchases returned")):
             for actor_id, units in sorted(amounts.items()):

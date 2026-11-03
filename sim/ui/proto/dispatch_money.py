@@ -324,7 +324,8 @@ def _cmd_sell(sim, nodes, cmd, ended):
          usage=["cancel_orders sell iron", "cancel_orders buy iron"],
          options={"side": "buy or sell", "material": "the material whose posted orders on that side are withdrawn"},
          description="Withdraws every order of yours to buy or to sell the material that the year's clearing has not yet "
-                     "settled. Nothing was paid or moved, so nothing is refunded. Refused when no such order is posted.")
+                     "settled. Nothing was paid or moved, so nothing is refunded. An order a project placed (its row in the "
+                     "orders list names the project) is kept: stop the project to end it. Refused when no such order is posted.")
 def _cmd_cancel_orders(sim, nodes, cmd, ended):
     side = str(cmd.get("side") or "").lower()
     if side not in ("buy", "sell"):
@@ -336,7 +337,7 @@ def _cmd_cancel_orders(sim, nodes, cmd, ended):
     if isinstance(reply, Refusal):
         return {"ok": False, "error": reply}
     return {"ok": True, "cancelled_orders": reply["cancelled"], "cancelled_tonnes": reply["tonnes"], "side": side,
-            "material": reply["material"], "capital": round(sim.view("acting_balance")(), 1)}
+            "material": reply["material"], "kept_for_projects": reply["kept_for_projects"], "capital": round(sim.view("acting_balance")(), 1)}
 
 
 @command("money", shape="bare", group="money", aliases=("ledger", "accounts", "cash"),

@@ -8,7 +8,11 @@ to these two for callers not yet in a module."""
 from sim.assembly.api import Module
 
 from .absorption import Absorption
-from .agent_views import AgentViews
+from .agent_views_labour import AgentLabourViews
+from .agent_views_land import AgentLandViews
+from .agent_views_outcome import AgentOutcomeViews
+from .agent_views_prices import AgentPriceViews
+from .agent_views_volumes import AgentVolumeViews
 from .category_views import Categories
 from .clearing import Clearing
 from .commands_applied import Applying
@@ -26,6 +30,10 @@ class Markets(Module):
 		"household_needs": HouseholdNeeds,
 		"absorption": Absorption,
 		"goods_views": GoodsViews,
-		"agent_views": AgentViews,
+		"agent_price_views": AgentPriceViews,
+		"agent_labour_views": AgentLabourViews,
+		"agent_land_views": AgentLandViews,
+		"agent_volume_views": AgentVolumeViews,
+		"agent_outcome_views": AgentOutcomeViews,
 		"applying": Applying,
 	}

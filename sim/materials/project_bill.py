@@ -109,7 +109,7 @@ class ProjectBill(Part):
                 continue
             ordered += posted["committed_money"]
             entries.append({"material": material, "stock_key": stock_key, "tonnes": posted["tonnes"],
-                            "quoted": posted["committed_money"]})
+                            "quoted": posted["committed_money"], "order_id": posted["order_id"]})
         return ordered, entries
 
     def reorder_project_materials(self, command: Any) -> Tuple[float, list]:

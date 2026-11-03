@@ -32,8 +32,7 @@ def reconcile(on_order: Sequence[Mapping[str, Any]], results: Sequence[Mapping[s
     """(money the bill rises by, the shortfalls) once the clearing has run: the bill fell by the quote of each order, so it rises
     by the quote less what the order's tonnes actually cost the project. A shortfall is {"material", "stock_key", "tonnes",
     "cause"}: the tonnes the order left unbought and why (the refusal's cause, or "unfilled"). Each posted order takes the
-    result that is its own: the first not yet taken for its material and tonnes, so two orders for one material are not both
-    credited with all of it."""
+    result carrying its own order id, so another order for the same material is never credited to it."""
     add_back, shortfalls, taken = 0.0, [], set()
     for entry in on_order:
         mine = [] if entry.get("unposted") else _own_results(entry, results, taken)
@@ -48,16 +47,13 @@ def reconcile(on_order: Sequence[Mapping[str, Any]], results: Sequence[Mapping[s
 
 
 def _own_results(entry: Mapping[str, Any], results: Sequence[Mapping[str, Any]], taken: set) -> List[Mapping[str, Any]]:
-    """The one result of `entry`'s order among those of its material not yet `taken` (its tonnes first, else the next of the
-    material), marked taken; none when the clearing handled no such order."""
-    open_results = [position for position, result in enumerate(results)
-                    if result["material"] == entry["material"] and position not in taken]
-    same_size = [position for position in open_results if abs(results[position].get("tonnes", 0.0) - entry["tonnes"]) <= 1e-9]
-    chosen = (same_size or open_results or [None])[0]
-    if chosen is None:
-        return []
-    taken.add(chosen)
-    return [results[chosen]]
+    """The result carrying `entry`'s order id, marked taken; none when the clearing handled no such order."""
+    order_id = entry.get("order_id")
+    for position, result in enumerate(results):
+        if order_id is not None and result.get("order_id") == order_id and position not in taken:
+            taken.add(position)
+            return [result]
+    return []
 
 
 def kept_after_reorder(entries: Sequence[Mapping[str, Any]]) -> List[Dict[str, Any]]:

@@ -39,7 +39,7 @@ class GoodsPricing:
         return None if per_unit is None else per_unit / tonnes_per_unit(material)
 
     def price_kind(self, material):
-        """What the price of a material is: "traded", a quote named by what it is (best_unfilled_bid,
+        """What the price of a material is: "smoothed_trade" (a market that traded), a quote named by what it is (best_unfilled_bid,
         lowest_unfilled_ask, cost_covering, opening_estimate), an estimate, the cost table's making cost while the
         economy opens."""
         good = self.economy_good(material)

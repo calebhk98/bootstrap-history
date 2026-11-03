@@ -7,6 +7,7 @@ from sim.ui import figures_headline  # noqa: F401  (registers the headline figur
 from sim.engine.ui_port import CloseCashPeriod, CloseCausePeriod, plain_number
 from sim.ui.figures import figure_snapshot
 
+from .wage_figures import wage_origin
 from .state import _agent_state
 from .event_kinds import is_notable
 from .refusal_cause import event_codes
@@ -774,9 +775,7 @@ def _agent_economy(sim, cmd=None):
         # a second version of a wage this file already prints elsewhere.
         out["wages_by_trade"] = [
             {"trade": trade, "a_year_of_one": round(sim.view("labour_market")().quote_annual(trade), 0),
-             "wage_foundation": {
-                 "base_for_skill_and_difficulty": round(sim.view("base_annual_wage")[trade], 2),
-                 **{factor_key: round(value, 3) for factor_key, value in sim.view("labour_market")().cost_factors(trade).items()}}}
+             **wage_origin(sim, trade)}
             for trade in sorted(WAGES) if sim.view("trade_available")[trade]]
     return out
 

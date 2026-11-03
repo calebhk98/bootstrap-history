@@ -26,7 +26,7 @@ WAGES = {"labourer": 2.0, "kilnman": 5.0}
 def stand_in_society(live_prices=None):
     economy = types.SimpleNamespace(agent_prices=lambda: live_prices,
                                     labour=types.SimpleNamespace(quote=lambda trade: WAGES.get(trade, 0.0)))
-    return types.SimpleNamespace(economy=economy, civ={"id": "testland"}, finance=types.SimpleNamespace(market_rate=lambda: 0.0))
+    return types.SimpleNamespace(economy=economy, scenario=types.SimpleNamespace(civ={"id": "testland"}), finance=types.SimpleNamespace(market_rate=lambda: 0.0))
 
 
 def opening():

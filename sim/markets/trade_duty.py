@@ -24,7 +24,7 @@ def terms(world, destination, source):
 
 
 def home_country(world):
-    return world.civ.get("id")
+    return world.scenario.civ.get("id")
 
 
 def import_terms(world, partner):

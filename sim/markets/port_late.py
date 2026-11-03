@@ -38,7 +38,7 @@ def late_goods_costs(sim, prices, goods, held_nodes, production):
         if good in prices:
             continue
         made = cost_of_making(good, held_nodes, input_price_of, wage_of, rate, production=production,
-                              civilization=sim.civ)
+                              civilization=sim.scenario.civ)
         if made is not None and made.unit_cost > 0.0:
             found[good] = made.unit_cost
     return found

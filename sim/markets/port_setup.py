@@ -76,9 +76,9 @@ LITERACY_FIELDS = ("literacy_general", "literacy_elite")
 def opening_values(sim):
     """What the setup takes from the engine at the opening: kept in the save so a resumed game rebuilds
     the same markets, producers and price base however the engine's own tables have moved since."""
-    civ = sim.civ
+    civ = sim.scenario.civ
     tile_ids = sim.map.tiles_held_by(civ)
-    people = float(sim.population.total)
+    people = float(sim.scenario.population.total)
     production = demand.production_data()
     trades_data = _load("world", "trades.json").get("trades", {})
     allowed = allowed_entries(production, set(sim.production.techniques_granted()))
@@ -101,7 +101,7 @@ def opening_values(sim):
     return {
         "partners": partners,
         "population_by_tile": people_by_tile,
-        "working_share": sim.population.working_age / people if people > 0.0 else 0.0,
+        "working_share": sim.scenario.population.working_age / people if people > 0.0 else 0.0,
         "recipes": allowed,
         "mint_recipe": mint_recipe,
         "prices": prices,
@@ -124,7 +124,7 @@ def opening_values(sim):
                         for limit in port_sites.site_limits(
                             sim, {entry_id: production[entry_id]["outputs"] for entry_id in allowed},
                             list(tile_ids) + [tile for opened in partners.values() for tile in opened["tiles"]])],
-        "stores": opening_store_values(sim, tile_ids, int(sim.cfg["start_year"])),
+        "stores": opening_store_values(sim, tile_ids, int(sim.scenario.cfg["start_year"])),
         "literacy": {field: sim.production.literacy(field) for field in LITERACY_FIELDS},
     }
 
@@ -182,7 +182,7 @@ def build_setup(sim, opening=None, production=None):
     opening = opening or opening_values(sim)
     unit = coin_per_unit(opening)
     opening = in_units(opening)
-    civ = sim.civ
+    civ = sim.scenario.civ
     tile_ids = sim.map.tiles_held_by(civ)
     world_map = sim.map.economy_map
     partners = opening.get("partners") or {}
@@ -199,7 +199,7 @@ def build_setup(sim, opening=None, production=None):
     recipes = recipes_from_production_data(production, every_recipe)
     trades_data = _load("world", "trades.json").get("trades", {})
     life_years = {good: float(entry["years"]) for good, entry in _load("world", "service_lives.json").get("years", {}).items()}
-    recipes = tool_wear_recipes(recipes, trades_data, life_years, float(sim.HOURS_PER_PERSON_YEAR))
+    recipes = tool_wear_recipes(recipes, trades_data, life_years, float(sim.scenario.HOURS_PER_PERSON_YEAR))
     mint_recipe = (recipes_from_production_data(production, [opening["mint_recipe"]])[opening["mint_recipe"]]
                    if opening.get("mint_recipe") else None)
     need_data = _load("world", "needs.json")
@@ -247,7 +247,7 @@ def build_setup(sim, opening=None, production=None):
         tax_forms=taxes.forms_from_civ_data(civ.get("state_revenue") or []),
         hiding=agents_api.evasion.hidden_share,   # the one hiding rule the actor layer uses (Complaint 657)
         flight=agents_api.flight,   # the actor layer's flight rules (Complaint 657)
-        working_hours_per_year=float(sim.HOURS_PER_PERSON_YEAR), working_share=float(opening["working_share"]),
+        working_hours_per_year=float(sim.scenario.HOURS_PER_PERSON_YEAR), working_share=float(opening["working_share"]),
         gini=demand.GINI_COEFFICIENT_PREINDUSTRIAL_AGRARIAN, opening_population_by_tile=population_by_tile,
         need_share_by_trade={trade: float(share) for trade, share in (opening.get("need_shares") or {}).items()},
         unskilled_trade=opening["unskilled_trade"], debt_bondage_years=sim.finance.debt_bondage_term_years(), opening_prices=prices, opening_wages=wages, opening_rate=float(opening["rate"]),

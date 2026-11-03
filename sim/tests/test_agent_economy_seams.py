@@ -22,7 +22,7 @@ def _stand_in_game():
     purses = types.SimpleNamespace(adopt_book=lambda book, contracts: adopted.append((book, contracts)))
     state = types.SimpleNamespace(actors=types.SimpleNamespace(purses=purses))
     record = {}
-    return types.SimpleNamespace(state=state, civ={"id": "home"}, agent_record=lambda: record), adopted
+    return types.SimpleNamespace(state=state, scenario=types.SimpleNamespace(civ={"id": "home"}), agent_record=lambda: record), adopted
 
 
 class OpeningRecordTests(unittest.TestCase):

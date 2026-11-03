@@ -17,7 +17,8 @@ def stub_game(hours_by_destination, working_age, has_government=True):
     (the core also holds people on a tile the nation does not hold, who carry none of it)."""
     government = Government("government:home", ActorRecord(kind="government"))
     government.record.corvee_hours = dict(hours_by_destination)
-    return SimpleNamespace(actors=SimpleNamespace(government_of=lambda country: government if has_government else None),
+    return SimpleNamespace(scenario=SimpleNamespace(actors=SimpleNamespace(countries=SimpleNamespace(
+                               government_of=lambda country: government if has_government else None))),
                            economy=SimpleNamespace(opening=False, parts=SimpleNamespace(producers=SimpleNamespace(
                                people_by_tile_and_trade=lambda: {"home": {"farmer": working_age / 2.0, "smith": working_age / 2.0},
                                                                  "abroad": {"farmer": 5000.0}}))),

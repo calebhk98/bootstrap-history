@@ -126,7 +126,7 @@ check("the coin metal is priced at the economy's price on the tile",
       metal_price is not None and abs(metal_price - PAID[COIN_METAL]) <= 1e-9 * metal_price, metal_price)
 check("a good no home seller offers has no home unit price", market.offers.home_unit_price("cobalt_kg") is None)
 coin = {"material": COIN_METAL, "kg_per_unit": 0.0035}
-world = SimpleNamespace(civ={"coin_standard": coin}, goods_market=market, finance=SimpleNamespace(coin_stock_units=lambda: 2000.0))
+world = SimpleNamespace(scenario=SimpleNamespace(civ={"coin_standard": coin}), goods_market=market, finance=SimpleNamespace(coin_stock_units=lambda: 2000.0))
 expected_stock = 2000.0 * coin["kg_per_unit"] * metal_price
 check("the coin the society holds is counted at that price",
       abs(port_money.coin_stock_value(world) - expected_stock) <= 1e-9 * expected_stock, (port_money.coin_stock_value(world), expected_stock))
