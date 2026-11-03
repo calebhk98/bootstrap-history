@@ -86,7 +86,8 @@ def wage_scale(setup, record, carriage) -> float:
     labour part (each hauled route's crew hours, handling included, over both legs of the round trip the
     emptiness of the returns leaves, at that wage) follows the wage of the area the goods left instead, as last
     year's labour market cleared it. The routes are last year's carried flows, so the mix of modes is the one
-    used. The rest of a fee (feed, carts, animals) keeps its price. 1 where the wages are the one priced, or
+    used. The multiplier is the change in the labour part over the whole fee, so the table's fee as a whole moves
+    by the labour change, spread over all its parts; route dues are paid apart from it, unscaled. 1 where the wages are the one priced, or
     nothing is known of either; never below 0."""
     carried = record.carriage.carried
     if not carried or setup.carriage_wage <= 0.0 or not hires(setup):

@@ -16,6 +16,7 @@ class LabourRecord(OwnedRecord):
     hours_idle: Dict[str, float] = field(default_factory=dict)           # labour market_key -> hours offered and not hired last year (hours hired are the core's `workforce.hired_hours`, see `hours_hired_in`)
     hours_hired_by_employer: Dict[AgentId, Dict[TradeId, float]] = field(default_factory=dict)   # employer -> trade -> paid hours the last clearing hired for it
     sold_share_expected: Dict[str, float] = field(default_factory=dict)  # labour market_key -> share of offered hours households expect to sell, smoothed over the years (household_work_year.py)
+    newcomers_by_area: Dict[str, float] = field(default_factory=dict)    # labour area -> people placed in the core since the year's population last followed demography (they are in no cohort's count)
     opening_sold_hours_per_worker: float = 0.0   # hours a working person was seeded to sell a year (zero: a whole working year)
     opening_sold_hours_by_area: Dict[str, float] = field(default_factory=dict)   # labour area -> hours a working person there was seeded to sell a year (empty: the one figure above)
 
@@ -45,6 +46,12 @@ class LabourRecord(OwnedRecord):
     def add_workers(self, area: str, trade: TradeId, people: float) -> None:
         """People who joined the economy from outside the clearing (a seat's apprentices, staff an institution granted)."""
         add_people(self.workforce, area, trade, people)
+        self.newcomers_by_area[area] = self.newcomers_by_area.get(area, 0.0) + people
+
+    def take_newcomers(self) -> Dict[str, float]:
+        """The people placed in each labour area since the last call; the count starts again."""
+        placed, self.newcomers_by_area = self.newcomers_by_area, {}
+        return placed
 
     def seed_workforce(self, workforce: MarketState) -> None:
         """The labour core's opening state."""

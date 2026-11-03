@@ -1,6 +1,7 @@
 """A household rationed on a good spends what it did not spend on the goods that meet the same need, then on its
-other needs, before anything is saved (Eurace: "if the choice is rationed, the leftover budget goes to a second
-choice by the same logit"). The functions here are the rules; goods_respend_year.py runs them on a year's markets.
+other needs, before anything is saved. A rationed Eurace household sends the leftover to a second choice by the
+same logit; the leftover going on to other needs is this project's extension (in Eurace it stays in the payment
+account). The functions here are the rules; goods_respend_year.py runs them on a year's markets.
 """
 import math
 from typing import Dict, List, Mapping, Optional, Sequence

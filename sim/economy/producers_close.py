@@ -21,7 +21,6 @@ from .protocols import MarketView
 from .types import GoodId, LoanRequest, Recipe, Transfer
 from .producers_working_capital import WORKING_CAPITAL_PURPOSE
 from .replaced import replaced
-from .rates import charged_rate
 
 LOSS_YEARS_BEFORE_EXIT = declare(
     "LOSS_YEARS_BEFORE_EXIT", 3, kind="temporary_heuristic", unit="consecutive years",
@@ -76,14 +75,14 @@ def close_year(producer: Producer, recipe: Recipe, revenue: float, costs: float,
     whose runs pay and who lost nothing grows toward the sales it will expect (capacity_growth.py)."""
     first_output = min(recipe.outputs)
     currency = view.currency_of(view.area_of(first_output, producer.tile))
-    rate = charged_rate(view.interest_rate(currency))
+    rate = view.interest_rate(currency)       # None for a currency with no remembered rate: no capital charge or expansion is judged
     cash = max(0.0, view.cash(producer.agent_id, currency))
     inputs = live_input_prices(producer, recipe, view)
     wages = live_wages(producer, recipe, view)
     expectations = next_expectations(producer, recipe, view, inputs, wages)
     worked = producer.capacity_runs if worked_runs is None else min(max(0.0, worked_runs), producer.capacity_runs)
-    charge = unit_cost.capital_charge_per_run(recipe, inputs, wages, rate) * worked
-    loss = worked <= 0.0 or revenue < costs + (charge if math.isfinite(charge) else 0.0)
+    charge = None if rate is None else unit_cost.capital_charge_per_run(recipe, inputs, wages, rate) * worked
+    loss = worked <= 0.0 or revenue < costs + (charge if charge is not None and math.isfinite(charge) else 0.0)
     losses = producer.years_of_loss + 1 if loss else 0
     has_plant = recipe.plant_life_years > 0.0
     revenue_per_run, cost_per_run = _expected_run(producer, recipe, view, expectations, inputs, wages, ground_goods)
@@ -125,7 +124,8 @@ def close_year(producer: Producer, recipe: Recipe, revenue: float, costs: float,
         capacity = capacity_growth.grown_capacity(capacity, expected, paying, OUTPUT_CHANGE_SHARE_PER_YEAR)
     target = working_capital_target(recipe, capacity, inputs, wages)
     replacement, growth = _investment(producer, recipe, view, capacity, worked, cost_per_run, wear if has_plant else 0.0)
-    request, grown = _expansion(producer, recipe, view, currency, rate, growth, inputs, wages, price_share_after)
+    request, grown = (None, 0.0) if rate is None else _expansion(
+        producer, recipe, view, currency, rate, growth, inputs, wages, price_share_after)
     if request is None:
         request = _working_capital(producer, recipe, currency, worked, capacity, min(cash, target), paying,
                                    revenue_per_run, inputs, wages, _pledgeable(producer, recipe, view, cash, capacity))
@@ -156,7 +156,9 @@ def _behind_the_stock(producer, recipe, view, prices, ground_goods):
     not queue (every hectare yields its rent while held): its price stands."""
     if producer.expected_sales <= 0.0:
         return prices
-    rate = charged_rate(view.interest_rate(view.currency_of(view.area_of(min(recipe.outputs), producer.tile))))
+    rate = view.interest_rate(view.currency_of(view.area_of(min(recipe.outputs), producer.tile)))
+    if rate is None:
+        return prices
     return {good: inventory.queued_holding_value(
         price, max(0.0, view.stock(producer.agent_id, good, producer.tile) - recipe.inputs.get(good, 0.0) * producer.capacity_runs),
         producer.expected_sales * recipe.outputs[good] * producer.yield_factor, rate, 0.0) if good not in ground_goods else price

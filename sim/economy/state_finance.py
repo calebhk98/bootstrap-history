@@ -7,7 +7,7 @@ from sim.constants import declare
 
 from . import credit, currency
 from .types import LoanRequest
-from .rates import charged_rate
+from .rates import own_rate
 
 DEBT_LIMIT_YEARS_OF_REVENUE = declare(
     "DEBT_LIMIT_YEARS_OF_REVENUE", 3.0, kind="temporary_heuristic",
@@ -51,7 +51,7 @@ def finance_deficit(policy, record, view, setup, deficit: float, revenue: float)
             amount = min(remaining, headroom)
             if amount <= 0.0:
                 continue
-            rate = max(charged_rate(view.interest_rate(money)), 1e-9)
+            rate = max(own_rate(view, money), 1e-9)
             collateral = revenue * STATE_COLLATERAL_YEARS_OF_REVENUE
             # the multiple limits what the state pays over the market rate; the premium its own leverage
             # earns lenders is on top of it, else a market rate near zero would price the state out

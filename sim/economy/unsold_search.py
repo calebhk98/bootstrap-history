@@ -19,7 +19,6 @@ from sim.book import ROUNDING_SHARE
 from . import demand_search, goods_market, inventory, seller_offers, titles_value
 from .ask_adjust import band_edge
 from .types import Offer
-from .rates import charged_rate
 
 UNSOLD_BOUND_MARGIN = 1e-12    # float noise of two sums of the same demand, not a model number
 SEARCH_PRECISION = 1e-4     # numerical tolerance of the bisection on the ask level, not a model number
@@ -53,19 +52,25 @@ def _floors(setup, record, view, offers: Sequence[Offer], original: Sequence[Off
         cost = costs[key] if key in costs else seller_offers.unit_cost(setup, record, view, offer)
         if cost is None:
             continue
-        floor = max(seller_offers.unit_value(original[index], cost), _held_value(setup, record, view, original[index]))
+        held_value = _held_value(setup, record, view, original[index])
+        if held_value is None:
+            continue
+        floor = max(seller_offers.unit_value(original[index], cost), held_value)
         if offer.reservation_price > floor:
             floors[index] = floor
     return floors
 
 
-def _held_value(setup, record, view, offer: Offer) -> float:
+def _held_value(setup, record, view, offer: Offer) -> Optional[float]:
     """What the offer's last unit is worth to its producer kept for later sales (inventory.queued_holding_value):
-    a seller that expects buyers next year does not sell a storable good below that this year."""
+    a seller that expects buyers next year does not sell a storable good below that this year; None when no
+    rate is remembered for the offer's currency."""
     producer = record.producers[offer.seller]
     recipe = setup.recipes[producer.recipe_id]
     spec = setup.specs.get(offer.good)
-    rate = charged_rate(view.interest_rate(view.currency_of(offer.area)))
+    rate = view.interest_rate(view.currency_of(offer.area))
+    if rate is None:
+        return None
     if spec is not None and not spec.portable:
         # ground never queues behind the stock: every hectare yields its rent while held
         return titles_value.hectare_value(record.land.land_rent.get(offer.tile, 0.0),

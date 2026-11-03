@@ -38,7 +38,7 @@ def price_with_supply(bids: Optional[Sequence[Bid]], good: GoodId, area: AreaId,
         buyers = goods_market.Buyers(bids, None)
     offer = Offer(SELLER, good, area, "", quantity, 0.0)
     # the crossing is the price `goods_market.clear` reports; the fills it would also build are not needed
-    return goods_market._crossing(buyers, goods_market.in_clearing_order([offer]), with_wants=False)[0]
+    return goods_market.crossing(buyers, goods_market.in_clearing_order([offer]), with_wants=False)[0]
 
 
 def share_after_addition(bids: Sequence[Bid], good: GoodId, area: AreaId, traded: float, added: float,

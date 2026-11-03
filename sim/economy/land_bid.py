@@ -29,10 +29,10 @@ def hours_per_hectare(recipe: Recipe, land_per_run: float) -> float:
 def crop_margin_per_hectare(recipe: Recipe, land_per_run: float, fertility: float,
                             output_prices: Mapping[GoodId, float], wage_per_hour: float) -> float:
     """What a hectare-year of the recipe nets: its outputs at their prices (cut by the tile's fertility) less
-    the hours it takes at the wage."""
+    the hours it takes at the wage. Every output must have a price (the caller leaves out a recipe whose output has none)."""
     if land_per_run <= 0.0:
         return 0.0
-    revenue = fertility * math.fsum(output_prices.get(good, 0.0) * quantity for good, quantity in recipe.outputs.items())
+    revenue = fertility * math.fsum(output_prices[good] * quantity for good, quantity in recipe.outputs.items())
     return (revenue - wage_per_hour * math.fsum(recipe.labour_hours.values())) / land_per_run
 
 

@@ -47,7 +47,7 @@ def free_share(record, holder: AgentId, tile: TileId) -> float:
     return max(0.0, holding(record, tile, holder) - pledged(record.credit, holder, tile))
 
 
-def _held(record, tile: TileId) -> Dict[AgentId, float]:
+def held_shares(record, tile: TileId) -> Dict[AgentId, float]:
     if not record.land.titles:
         record.land.titles = {}
     if not record.land.titles.get(tile):
@@ -96,7 +96,7 @@ def foreclose(record, loan) -> float:
     tile, pledge = loan.collateral_tile, loan.collateral_share
     if not tile or pledge <= EPSILON or loan.lender == loan.borrower:
         return 0.0
-    held = _held(record, tile)
+    held = held_shares(record, tile)
     moved = min(pledge, held.get(loan.borrower, 0.0))
     if moved <= EPSILON:
         return 0.0
@@ -112,7 +112,7 @@ def pass_title(record, tile: TileId, giver: AgentId, receiver: AgentId, share: f
     """`share` of the tile's land passes from giver to receiver, no more than the giver holds. A receiver that
     was the giver's tenant on the tile now holds that much outright, so its tenancy under the giver shrinks.
     Returns the share moved."""
-    held = _held(record, tile)
+    held = held_shares(record, tile)
     moved = min(share, held.get(giver, 0.0))
     if moved <= EPSILON or giver == receiver:
         return 0.0
@@ -132,7 +132,7 @@ def pass_title(record, tile: TileId, giver: AgentId, receiver: AgentId, share: f
 
 def release(record, tile: TileId, lessor: AgentId, share: float) -> None:
     """Abandoned land: the lessor's title on `share` of the tile goes back to no holder."""
-    held = _held(record, tile)
+    held = held_shares(record, tile)
     left = held.get(lessor, 0.0) - share
     if left <= EPSILON:
         held.pop(lessor, None)

@@ -30,7 +30,6 @@ from .types import (AgentId, Bid, EDGE_CONSUMPTION, EDGE_PRODUCTION, GoodId, Goo
                     Offer, Recipe, TileId)
 from .replaced import replaced
 from .staffed_runs import change_anchor
-from .rates import charged_rate
 
 EXPECTATION_ADJUSTMENT_SHARE = declare(
     "EXPECTATION_ADJUSTMENT_SHARE", 0.5, kind="temporary_heuristic",
@@ -274,7 +273,9 @@ def _break_even_scale(producer, recipe, view, prices, live_inputs=None, wages=No
                             recipe, prices)
     wages = live_wages(producer, recipe, view) if wages is None else wages
     revenue = unit_cost.revenue_per_run(recipe, prices) * producer.yield_factor
-    rate = charged_rate(view.interest_rate(view.currency_of(view.area_of(min(recipe.outputs), producer.tile))))
+    rate = view.interest_rate(view.currency_of(view.area_of(min(recipe.outputs), producer.tile)))
+    if rate is None:
+        return None, 0.0
     cost = unit_cost.variable_cost_per_run(recipe, inputs, wages, producer.land_rent_per_run) + unit_cost.capital_charge_per_run(
         recipe, inputs, wages, rate)
     if not (revenue > 0.0 and math.isfinite(cost) and cost > 0.0):
@@ -432,9 +433,10 @@ def runs_for_stock(producer: Producer, recipe: Recipe, view: MarketView, run_cos
                    output_prices: Optional[Mapping[GoodId, float]] = None) -> float:
     """Runs a producer plans from expected demand and its stock, not from price: what it expects to sell plus the gap
     between its target stock (inventory.target_stock, the safety stock) and what it holds, closed over
-    STOCK_CLEARING_YEARS; a surplus is worked off the same way and a shortfall refilled. This is the production
-    quantity of Eurace@Unibi (Cons_Goods/Firm_Producer_Functions.c, Firm_calc_production_quantity: critical stock less
-    current stock), whose refill is whole in one period where this one is spread. The price only decides whether
+    STOCK_CLEARING_YEARS; a surplus is worked off the same way and a shortfall refilled. This differs from the production
+    quantity of Eurace@Unibi (Cons_Goods/Firm_Producer_Functions.c, Firm_calc_production_quantity), an (s,S) rule: zero
+    above a critical stock, the critical stock set from market share times the forecast plus a variance buffer, then
+    smoothed. Here the gap is spread over STOCK_CLEARING_YEARS and a surplus is worked off, not stopped at. The price only decides whether
     runs pay at all (`plan`). Unlimited while it has no record of sales. With the run's cost and the outputs'
     prices, outputs that are piling up do not count while what a run makes of the others, at those prices, covers
     the cost: a joint recipe runs for the output that pays, and plans from the gaps of those others. With the prices

@@ -23,7 +23,7 @@ def add_ground(record, tile_id: TileId, receiver: AgentId, hectares: float, arab
     if hectares <= 0.0 or arable_before <= 0.0:
         return 0.0
     keep = arable_before / (arable_before + hectares)
-    held = titles._held(record, tile_id)
+    held = titles.held_shares(record, tile_id)
     for holder in list(held):
         held[holder] *= keep
     held[receiver] = held.get(receiver, 0.0) + hectares / (arable_before + hectares)

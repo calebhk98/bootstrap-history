@@ -10,11 +10,17 @@ def joint_labour_ceilings(hours_per_run: Mapping[str, float], last_wages: Mappin
     hours last (last wage times hours): each trade's maximum is its last wage scaled by surplus over the
     last-wage bill. That equals the last wage plus the trade's share of the surplus over the bill, shared in
     proportion to its part of the bill, so a paying run leaves every trade at least its last wage and a run
-    that does not pay cuts every trade by the same share. One trade gets the whole surplus per hour. Trades
-    with no wage seen share the surplus by hours."""
+    that does not pay cuts every trade by the same share. One trade gets the whole surplus per hour. A trade
+    with no wage seen claims like the priced trades' average hour (their bill over their hours), so it shares
+    the surplus by its hours at that wage and is never left at nothing; with no wage seen for any trade the
+    trades share the surplus by hours."""
     total_hours = sum(hours_per_run.values())
-    bill = sum(hours * last_wages.get(trade, 0.0) for trade, hours in hours_per_run.items())
+    priced = {trade: hours for trade, hours in hours_per_run.items() if trade in last_wages}
+    priced_bill = sum(hours * last_wages[trade] for trade, hours in priced.items())
     room = max(0.0, surplus)
-    if bill <= 0.0:
+    if priced_bill <= 0.0:
         return {trade: room / total_hours for trade in hours_per_run}
-    return {trade: last_wages.get(trade, 0.0) * room / bill for trade in hours_per_run}
+    average_wage = priced_bill / sum(priced.values())
+    claimed = {trade: last_wages.get(trade, average_wage) for trade in hours_per_run}
+    bill = sum(hours * claimed[trade] for trade, hours in hours_per_run.items())
+    return {trade: claimed[trade] * room / bill for trade in hours_per_run}

@@ -3,9 +3,8 @@ that tile (geography's `route_dues_by_holder`). The setup prices them per tonne 
 table already charges them in its handling, so a fee covers them; the merchant pays them as money to the holder's
 account, and the port turns that account's money into the holder's coin (markets/port_dues.py).
 
-The setup prices dues at the opening wage; `owed_per_tonne` scales them by the year's carriage wage scale
-(`CarriageTable.scale`, set by `carriage_hours.wage_scale`), as the table scales the handling that contains them. A
-merchant whose purse cannot cover both the dues and the fee of a shipment pays the dues first, to the holders in
+A due is money, not labour, so `owed_per_tonne` charges it as the setup priced it and does not apply the year's
+carriage wage scale (`CarriageTable.scale`, built from the labour part of a fee only). A merchant whose purse cannot cover both the dues and the fee of a shipment pays the dues first, to the holders in
 name order, and the carrier is paid what is left of the purse (merchants.py `dispatch`)."""
 from typing import Callable, Dict
 
@@ -24,11 +23,10 @@ def account(holder: str) -> str:
 
 def owed_per_tonne(setup, carriage: CarriageTable) -> Callable[[TileId, TileId], Dict[str, float]]:
     """A function giving {holder: money per tonne} of the dues on the cheapest haul between two tiles, by who holds the
-    tile each is levied at now, at the year's wage (the opening's dues times the table's scale when called)."""
+    tile each is levied at now, as the setup priced them: a toll is not worked by a crew, so the year's wage does not move it."""
     def owed(source: TileId, destination: TileId) -> Dict[str, float]:
         if not setup.route_dues:
             return {}
         legs = [{"from": tile, "mode": mode} for tile, mode in carriage.haul(source, destination).legs]
-        by_holder = route_dues_by_holder(legs, setup.route_dues, setup.country_of)
-        return {holder: owed * carriage.scale for holder, owed in by_holder.items()}
+        return route_dues_by_holder(legs, setup.route_dues, setup.country_of)
     return owed

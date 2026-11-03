@@ -37,6 +37,11 @@ class JointLabourCeilings(unittest.TestCase):
         self.assertAlmostEqual(ceilings["a"], 2.0)
         self.assertAlmostEqual(ceilings["b"], 2.0)
 
+    def test_a_trade_with_no_wage_beside_a_priced_trade_still_gets_a_share(self):
+        ceilings = joint_labour_ceilings({"a": 10.0, "b": 5.0}, {"a": 2.0}, surplus=100.0)
+        self.assertAlmostEqual(ceilings["a"], 100.0 / 15.0)
+        self.assertAlmostEqual(ceilings["b"], 100.0 / 15.0)
+
     def test_no_surplus_bids_nothing(self):
         ceilings = joint_labour_ceilings({"a": 1.0}, {"a": 1.0}, surplus=-3.0)
         self.assertEqual(ceilings["a"], 0.0)

@@ -9,7 +9,6 @@ from .households_own import Option, plot_hectares
 from .protocols import AgentOrders
 from .setup import labour_area
 from .types import EDGE_CONSUMPTION, Bid, GoodsMove
-from .rates import charged_rate
 
 
 def best_margin(setup, view, cohort, options: Mapping[str, List[Option]], tile_spec):
@@ -52,7 +51,9 @@ def actor_bids(setup, record, view, buyer: str, tile_id: str, margin_per_hectare
         if not sellers or buyer in sellers:
             continue
         area = view.area_of(good, tile_id)
-        rate = charged_rate(view.interest_rate(view.currency_of(area)))
+        rate = view.interest_rate(view.currency_of(area))
+        if rate is None:
+            continue
         bid = land_bid.hectare_bid(buyer, good, area, tile_id,
                                    land_bid.earning_per_hectare(margin_per_hectare, record.land.land_rent.get(tile_id, 0.0)),
                                    view.price(good, area), titles_value.capitalising_rate(rate, setup.opening_rate),

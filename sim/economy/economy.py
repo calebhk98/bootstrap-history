@@ -10,7 +10,7 @@ from typing import Any, Dict, Mapping, Optional, Tuple
 
 from sim.world import capital_market
 
-from .rates import charged_rate
+from .rates import own_rate
 from . import producer_table
 from . import outlay_room, taxes, bondage, bondage_hours, bonded_purchase, banks, carriage_hours, credit, credit_idle_rate, credit_lines, debt_relief, credit_claims, currency, equity, land_market, lending, merchants_credit, producers, shares, sites, state_budget, tax_farming, titles_inheritance, titles_moves, titles_plots, unit_cost
 from .credit_view import CreditView
@@ -193,13 +193,13 @@ class Economy:
         staff_mint(setup, record, view, labour_bids)
         labour_bids.extend(carriage_hours.bids(setup, record))    # merchants' carriers, from last year's shipments
         outside_option = outside_option_by_tile(setup, record, view)
-        land_lease_year.lease_in_market(setup, record, view, self._own_plot_options())
-        land_bid_year.take_up_own(setup, record, self._own_plot_options())
+        land_lease_year.lease_in_market(setup, record, view, self.own_plot_options())
+        land_bid_year.take_up_own(setup, record, self.own_plot_options())
         everyone = labour_offers(setup, record, view, outside_option, inputs.labour_levy_hours_per_worker,
                                  inputs.population_by_tile)
         for orders in inputs.engine_orders.values():
             everyone.extend(orders.labour_offers)    # a seat's own hours, sold at the market's wage
-        context = labour_context(setup, record, view, self.carriage, inputs, self._own_plot_options(), outside_option)
+        context = labour_context(setup, record, view, self.carriage, inputs, self.own_plot_options(), outside_option)
         context = dataclasses.replace(context, outlay_room=outlay_room.by_employer(
             plans, setup.state_agent, record.state_budget, lambda employer: record.book.balance(employer, money)))
         held_placed = bondage_hours.place_held(
@@ -227,7 +227,7 @@ class Economy:
         self._grow_own(offers, ledger, inputs.harvest_factor, kept)
         capital_year.note_exposure(setup, record, view, self.area_map, ledger, inputs.harvest_factor, inputs.institutions)
         order_book = {}
-        funds = cohort_orders(setup, record, view, ledger, order_book, self._own_plot_options())
+        funds = cohort_orders(setup, record, view, ledger, order_book, self.own_plot_options())
         state_orders(setup, record, view, self.area_map, order_book, {})
         mint_held = mint_orders(setup, record, self.area_map, order_book,
                                 ledger.hours_hired.get(mint_agent(setup), {}))
@@ -254,8 +254,8 @@ class Economy:
         rent = land_market.settle_year(setup, record, view,
                                        {producer_id: plan.wanted_runs for producer_id, plan in plans.items()},
                                        self._own_hectares, inputs.land_tax_share_of_rent,
-                                       land_lease_year.asks(setup, record, view, self._own_plot_options()), ledger,
-                                       land_lease_year.own_plot_returns(setup, record, view, self._own_plot_options()))
+                                       land_lease_year.asks(setup, record, view, self.own_plot_options()), ledger,
+                                       land_lease_year.own_plot_returns(setup, record, view, self.own_plot_options()))
         interest = self._service_loans(view.year)
         bonded = bondage.service(record, money, ledger.wages_in, placed.value_placed, placed.cash_share)
         record.book.transfer_many(bonded)
@@ -287,8 +287,9 @@ class Economy:
     def _follow_population(self, inputs: YearInputs) -> None:
         """Demography's people and working-age people per tile are the one count: each tile's cohorts are rescaled to its
         people, and their working people to its working-age people (the working-age share follows demography); then the
-        labour core's workers and trainees on each tile to the working people the cohorts hold. The core adds no entrants
-        or leavers of its own."""
+        labour core's workers and trainees on each tile to the working people the cohorts hold plus the newcomers placed
+        since the last year (apprentices, granted staff), whom no cohort counts yet. The core adds no entrants or leavers
+        of its own."""
         if not inputs.population_by_tile:
             return
         record = self.record
@@ -316,9 +317,11 @@ class Economy:
         working: Dict[str, float] = {}
         for cohort in record.cohorts.values():
             working[cohort.tile] = working.get(cohort.tile, 0.0) + cohort.working_people
+        newcomers = record.labour.take_newcomers()
         for tile, people in sorted(working.items()):
             area = labour_area(tile)
             held = people_in(record.labour.workforce, area)
+            people += newcomers.get(area, 0.0)      # people placed this year are in no cohort's count and are not scaled away
             if held > 0.0 and held != people:
                 scale_people(record.labour.workforce, area, people / held)
 
@@ -328,7 +331,7 @@ class Economy:
             if producer is not None and producer.yield_factor != factor:
                 producer_table.put_producer(self.record.producers, replaced(producer, yield_factor=factor))
 
-    def _own_plot_options(self):
+    def own_plot_options(self):
         setup = self.setup
         return own_production_options(setup.recipes, setup.land_per_run, setup.basket)
 
@@ -339,7 +342,7 @@ class Economy:
         plan, held = {}, self._hectares_held()
         for cohort_id, cohort in sorted(self.record.cohorts.items()):
             tile = self.setup.tiles.get(cohort.tile)
-            plan[cohort_id] = hours_for_own_plan(cohort, self._own_plot_options(), tile.fertility if tile else 0.0,
+            plan[cohort_id] = hours_for_own_plan(cohort, self.own_plot_options(), tile.fertility if tile else 0.0,
                                                  self.setup.recipes, self.setup.land_per_run, held.get(cohort_id, 0.0))
         self._work_hours = household_work_year.decide(self.setup, self.record, view, everyone, outside_option or {})
         return plan, self._work_hours
@@ -347,7 +350,7 @@ class Economy:
     def _hour_supply(self, everyone, view, outside_option) -> HourSupply:
         """The hours households sell as a schedule against the wage (labour_supply.py)."""
         plan, work = self._fixed_home_hours(everyone, view, outside_option)
-        plot = household_hours_year.plot_schedules(self.setup, self.record, view, everyone, self._own_plot_options(),
+        plot = household_hours_year.plot_schedules(self.setup, self.record, view, everyone, self.own_plot_options(),
                                                    self._hectares_held())
         faced = {(offer.trade, offer.area): view.wage(offer.trade, offer.area) or offer.reservation_wage for offer in everyone}
         return HourSupply(everyone, plan, work, plot, faced)
@@ -359,7 +362,7 @@ class Economy:
                   kept: Optional[Dict[str, float]] = None) -> None:
         """Hours kept back and hours nobody hired go into the household's own plot (households_own.py)."""
         setup, record = self.setup, self.record
-        options = self._own_plot_options()
+        options = self.own_plot_options()
         kept = kept or {}
         self._own_hectares = {}
         held = self._hectares_held()
@@ -455,7 +458,7 @@ class Economy:
         what wore out last year, no dearer than the price at which the plant still earns the live rate."""
         record, setup = self.record, self.setup
         money = setup.currency_id
-        rate = max(charged_rate(view.interest_rate(money)), 1e-9)
+        rate = max(own_rate(view, money), 1e-9)
         rebuilt: Dict[str, float] = {}
         worn = record.credit.take_rebuilds()
         for producer_id, runs in sorted(worn.items()):

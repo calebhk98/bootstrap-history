@@ -146,15 +146,12 @@ worker is worth less than the first.
 
 The core is complete and tested (`python3 -m sim.tests --only labour_core_training,labour_core_clearing,labour_core_switching,labour_core_migration,labour_core_opening,labour_core_year,labour_core_bid_ranking,labour_core_import_cost,labour_core_seed_and_reservations,labour_core_skilled_ceiling,labour_core_substitute_wage,labour_core_supply_schedule`).
 The agent economy (on by default) calls it every year (`sim/economy/year_labour.py`) and keeps its state
-in its record, so the core sets the wage every employer is quoted. The engine's hours by trade are
-the core's people by trade (`sim/labour/labour_allocation.py`); until the agent economy has opened they follow
-the need the recipe graph puts on each trade. Still outside the core:
+in its record, so the core sets the wage every employer is quoted. The core's people by trade are the economy's
+(`sim/economy/api.py`, `people_by_trade`); `sim/labour/labour_allocation.py` holds only the society's labour need by
+trade (household demand through the recipe graph, which the spin-up follows until the agent economy has opened) and
+the farming technique, and moves no one between trades.
 
-- Complaint 429 (done for `literate`, `taught_from`, `tool_basket`, `staff_resource`, `fatality_risk_per_year`,
-  now read from the trade registry): `difficulty` and `fallback` are still derived in code, and
-  `legacy_trade_defaults.py` keeps the role constants.
-- Complaint 430: a saved field and a yearly call, plus the household fields for a standing pay premium and
-  school cohorts.
-- Complaint 432: the subsistence staple is wheat for every civilisation.
-- Complaint 433: the player's hire command takes a premium and shows how many can be found.
-- Complaint 434: recipe need shares behind trade populations overweight mining and omit transport.
+What stays outside the core is what it is given and does not decide: the trade registry (`trades.py`, filled from
+data), the households' saved fields and yearly call, the subsistence staple, the hire command's premium and the
+recipe need shares. Each was a complaint, now closed (`Complaints/closed/`), and none is left open here; a new gap
+is filed in `Complaints/`.

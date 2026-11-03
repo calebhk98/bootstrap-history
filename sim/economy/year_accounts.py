@@ -3,7 +3,7 @@ how well each cohort ate and was paid. Read from the year's own book flows, stoc
 engine's real-output measure (Complaint 554). Nothing here changes the economy."""
 import math
 from dataclasses import dataclass, field
-from typing import Dict, List, Mapping
+from typing import Dict, List, Mapping, Optional
 
 from .types import EDGE_CONSUMPTION, EDGE_PRODUCTION, EDGE_SPOILAGE
 
@@ -76,15 +76,16 @@ class TileAccount:
 class RealWage:
     trade: str
     wage_per_hour: float
-    wage_per_hour_opening: float
-    basket_cost_per_head: float             # the opening's basket per head at this year's prices
-    basket_cost_per_head_opening: float     # the same at the prices the price level is based on
+    wage_per_hour_opening: Optional[float]      # None when the opening paid this trade no wage
+    basket_cost_per_head: Optional[float]       # the opening's basket per head at this year's prices; None when a good is unpriced
+    basket_cost_per_head_opening: Optional[float]   # the same at the prices the price level is based on
     working_hours_per_year: float
 
     @property
     def real_wage_index(self) -> float:
         """Baskets a wage buys over the baskets the opening's wage bought: one at the opening."""
-        if min(self.basket_cost_per_head, self.wage_per_hour_opening, self.basket_cost_per_head_opening) <= 0.0:
+        figures = (self.basket_cost_per_head, self.wage_per_hour_opening, self.basket_cost_per_head_opening)
+        if None in figures or min(figures) <= 0.0:
             return math.nan
         return (self.wage_per_hour / self.basket_cost_per_head) / (
             self.wage_per_hour_opening / self.basket_cost_per_head_opening)
@@ -92,7 +93,7 @@ class RealWage:
     @property
     def baskets_per_working_year(self) -> float:
         return (self.wage_per_hour * self.working_hours_per_year / self.basket_cost_per_head
-                if self.basket_cost_per_head > 0.0 else math.nan)
+                if self.basket_cost_per_head is not None and self.basket_cost_per_head > 0.0 else math.nan)
 
 
 @dataclass(frozen=True)
@@ -171,11 +172,12 @@ def _plant_wear(setup, record, ledger) -> Dict[str, float]:
     return dict(sorted(wear.items()))
 
 
-def basket_cost_per_head(goods, prices: Mapping[str, float], people: float) -> float:
-    """What the opening's basket (national quantities) costs per person at `prices`."""
-    if people <= 0.0:
-        return 0.0
-    return math.fsum(quantity * prices.get(good, 0.0) for good, quantity in goods.opening_basket.items()) / people
+def basket_cost_per_head(goods, prices: Mapping[str, float], people: float) -> Optional[float]:
+    """What the opening's basket (national quantities) costs per person at `prices`; None with no people or a
+    basket good that has no price."""
+    if people <= 0.0 or any(prices.get(good) is None for good in goods.opening_basket):
+        return None
+    return math.fsum(quantity * prices[good] for good, quantity in goods.opening_basket.items()) / people
 
 
 def _need_units(need, goods: Mapping[str, float], specs) -> float:
@@ -196,7 +198,7 @@ def _cohorts(setup, record, ledger, prices) -> List[CohortAccount]:
             cohort=cohort_id, tile=cohort.tile, income_class=cohort.income_class, people=cohort.people,
             need_per_head=need.subsistence_per_person, eaten_per_head=(bought + own) / cohort.people,
             bought_per_head=bought / cohort.people, own_plot_per_head=own / cohort.people,
-            real_income_per_head=cohort.last_year_income / cohort.people / cost if cost > 0.0 else math.nan))
+            real_income_per_head=cohort.last_year_income / cohort.people / cost if cost is not None and cost > 0.0 else math.nan))
     return rows
 
 
@@ -218,5 +220,5 @@ def _real_wages(setup, record, prices, wages) -> Dict[str, RealWage]:
     people = math.fsum(setup.opening_population_by_tile.values())
     now = basket_cost_per_head(record.goods, prices, people)
     then = basket_cost_per_head(record.goods, record.goods.index_base_prices or setup.opening_prices, people)
-    return {trade: RealWage(trade, wage, setup.opening_wages.get(trade, 0.0), now, then, setup.working_hours_per_year)
+    return {trade: RealWage(trade, wage, setup.opening_wages.get(trade), now, then, setup.working_hours_per_year)
             for trade, wage in sorted(wages.items())}

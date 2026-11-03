@@ -6,10 +6,12 @@ as any trainee; those not admitted stay in their old trade. The fallback trade t
 Of the people who consider a change in a year, one career's worth in a lifetime of them (`1 / career_years` of
 a trade's people) are the young who have just come of working age: they hold no trade yet, so their baseline is the
 unskilled income, their horizon is a whole career and they weigh a trade with no stay threshold, since the training
-premium (premium.py) leaves exactly such a person indifferent at the long-run wage. The rest are established workers:
+premium (premium.py) leaves exactly such a person indifferent at the long-run wage. Their own trade is one of their
+options, scored at what it pays now over a career against the unskilled income with no training to pay, so a trade that
+pays best keeps its young. The rest are established workers:
 half a career ahead, the old trade's income to give up, and only a move worth more than staying. The economy keeps
 the core's people equal to demography's by scaling every worker and trainee of a tile by one factor
-(`scale_people`), so trainees in a cohort are not lost or created by it.
+(`scale_people` in sim/economy/labour_state.py), so trainees in a cohort are not lost or created by it.
 """
 import math
 from operator import sub
@@ -101,11 +103,13 @@ def switch_trades(state: MarketState, inputs: YearInputs, clearings: Mapping, re
             stale = _carry_out(state, inputs, report, area, moves)
 
 
-def _odds(inputs, state, area, source, destinations, own, later_income, vacancies, subsistence, chances, young):
+def _odds(inputs, state, area, source, destinations, own, later_income, vacancies, subsistence, chances, young,
+          stay_income=None):
     """The odds of each band of `source` workers moving to each worthwhile destination: (targets, per
     band the share of each target), or None for a band that stays. `own` is the income given up. The young weigh a
     whole career and weigh every trade paying more than `own` after training, even one worth less than staying
-    once the training is paid for (module docstring)."""
+    once the training is paid for (module docstring). The young may stay in `source`, scored at `stay_income` (what it
+    pays now) over the career against `own`; an established worker's stay scores nothing, being the income given up."""
     rate = inputs.discount_rate
     remaining = inputs.career_years if young else inputs.career_years * REMAINING_CAREER_SHARE
     if young:   # a vacancy that pays no more than the unskilled option is not an opening (it is in `later_income`)
@@ -121,6 +125,9 @@ def _odds(inputs, state, area, source, destinations, own, later_income, vacancie
         years = inputs.trades[trade].training_years * (1.0 if young else _training_share(inputs, source, trade))
         lost.append(own * expectations.annuity_factor(rate, years))
         gain.append(expectations.present_value(later_income[trade] - own, rate, years, remaining))
+    stay_score = 0.0
+    if young and stay_income is not None:
+        stay_score = expectations.present_value(stay_income - own, rate, 0.0, remaining) / subsistence
     bands = []
     exp = math.exp
     for band, count in enumerate(state.workers[area][source]):
@@ -134,10 +141,10 @@ def _odds(inputs, state, area, source, destinations, own, later_income, vacancie
         if not scores:
             bands.append(None)
             continue
-        top = max(scores)
+        top = max(scores + [stay_score])
         scale = SWITCHING_TASTE_SCALE
         weights = [exp((score - top) / scale) for score in scores]
-        total = math.fsum(weights + [exp((0.0 - top) / scale)])   # the last is staying
+        total = math.fsum(weights + [exp((stay_score - top) / scale)])   # the last is staying
         cutoff = total * NEGLIGIBLE_MOVE_SHARE
         leader = weights.index(max(weights))
         shares = [weight / total if weight >= cutoff else 0.0 for weight in weights]
@@ -182,7 +189,7 @@ def _planned_moves(state, inputs, area, sources, destinations, income, baseline,
                 odds = kept[1]
             else:
                 odds = _odds(inputs, state, area, source, destinations, own, later_income, vacancies, subsistence,
-                             chances, is_young)
+                             chances, is_young, income[source] if is_young else None)
                 if snapshot is None:
                     snapshot = dict(later_income)
                 planned[(source, is_young)] = (snapshot, odds)

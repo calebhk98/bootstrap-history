@@ -17,7 +17,7 @@ from .producers_close import WORKING_CAPITAL_PURPOSE
 from .types import FundsOffer
 from .households_basket import need_prices
 from .year_goods import _held_stock
-from .rates import charged_rate
+from .rates import own_rate
 
 
 def service(record, money: str, year: int, bondage_years: float = 0.0) -> Dict[str, float]:
@@ -99,7 +99,7 @@ def household_requests(setup, record, view, ledger, priced_by_tile) -> List:
     """Loans households ask for to meet the floors their cash does not cover."""
     money = setup.currency_id
     debts = credit_claims.debts_by_borrower(record.credit.loans, money)
-    rate = charged_rate(view.interest_rate(money))
+    rate = own_rate(view, money)
     requests = []
     for cohort_id, cohort in sorted(record.cohorts.items()):
         key = basket_key(record, cohort)
@@ -129,7 +129,7 @@ def _pledging_title(setup, record, cohort, request, live_rate):
 
 def merchant_requests(setup, record, view, area_map, carriage) -> List:
     money = setup.currency_id
-    rate = charged_rate(view.interest_rate(money))
+    rate = own_rate(view, money)
     debts = credit_claims.debts_by_borrower(record.credit.loans, money)
     requests = []
     for merchant_id, merchant in sorted(record.merchants.items()):
