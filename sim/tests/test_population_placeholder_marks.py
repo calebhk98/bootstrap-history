@@ -55,7 +55,7 @@ class PlaceholderFollowsTheRegistry(unittest.TestCase):
 
     def test_the_flag_matches_the_kind_of_the_source_constant_for_every_trade(self):
         mismatches = []
-        for trade in sorted(self.labour.report._world.wages):
+        for trade in sorted(self.labour.report._world.trades.wages):
             source = self.labour.report._trade_density_source(trade)
             expected = source is not None and source in REGISTRY and REGISTRY[source].get("kind") == "temporary_heuristic"
             if self.labour.report._density_is_placeholder(trade) != expected:
@@ -63,14 +63,14 @@ class PlaceholderFollowsTheRegistry(unittest.TestCase):
         self.assertEqual(mismatches, [])
 
     def test_every_source_constant_a_trade_rests_on_is_declared(self):
-        for trade in sorted(self.labour.report._world.wages):
+        for trade in sorted(self.labour.report._world.trades.wages):
             source = self.labour.report._trade_density_source(trade)
             if source is not None:
                 self.assertIn(source, REGISTRY, (trade, source))
 
     def test_a_trade_derived_from_need_is_not_a_placeholder_and_one_on_a_declared_share_is(self):
-        derived = [trade for trade in self.labour.report._world.wages if self.labour.report._trade_density_source(trade) is None]
-        declared = [trade for trade in self.labour.report._world.wages if self.labour.report._trade_density_source(trade) is not None]
+        derived = [trade for trade in self.labour.report._world.trades.wages if self.labour.report._trade_density_source(trade) is None]
+        declared = [trade for trade in self.labour.report._world.trades.wages if self.labour.report._trade_density_source(trade) is not None]
         self.assertTrue(derived and declared)
         self.assertFalse(any(self.labour.report._density_is_placeholder(trade) for trade in derived))
         self.assertTrue(any(self.labour.report._density_is_placeholder(trade) for trade in declared))

@@ -20,9 +20,8 @@ class _Stub:
 
     def __init__(self, sources, done=(), research=1.0):
         self._world = types.SimpleNamespace(
-            LABOUR_PRODUCTIVITY_SOURCES=tuple(sources),
             projects=types.SimpleNamespace(done=set(done)),
-            research_productivity=lambda: research)
+            knowledge=types.SimpleNamespace(LABOUR_PRODUCTIVITY_SOURCES=tuple(sources), research_productivity=lambda: research))
 
 
 class Productivity(unittest.TestCase):

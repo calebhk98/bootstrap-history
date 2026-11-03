@@ -6,7 +6,6 @@ QUICK_TOPIC = True
 
 import types
 import unittest
-from sim.tests import workforce_stand_in
 
 from sim.assembly.api import NeedsAccess
 from sim.engine import mod_code
@@ -21,9 +20,10 @@ def labour(overhead_hours):
     household = types.SimpleNamespace(wage_hours_this_year=100.0, teaching_hours_this_year=10.0,
                                       relocation_hours_this_year=20.0, supervision_hours_this_year=30.0,
                                       bondage_years_left=0, directors_extra=0.0)
-    world = types.SimpleNamespace(household=household, director_overhead_hours=lambda: overhead_hours,
-                                  cfg={"founder_hours_per_year": POOL_HOURS, "director_hours_per_year": 0.0},
-                                  founder_alive=True, workforce=household, view=workforce_stand_in.view_of(household), bondage_years_left=0)
+    world = types.SimpleNamespace(
+        actors=types.SimpleNamespace(director_overhead_hours=lambda: overhead_hours),
+        scenario=types.SimpleNamespace(cfg={"founder_hours_per_year": POOL_HOURS, "director_hours_per_year": 0.0}),
+        founder_alive=True, workforce=household, bondage_years_left=0)
     stub = types.SimpleNamespace(_world=world, BONDAGE_HOURS_SHARE=0.25)
     stub.director_pool = lambda: FounderHours.director_pool(stub)
     stub.director_hours_committed = lambda: FounderHours.director_hours_committed(stub)

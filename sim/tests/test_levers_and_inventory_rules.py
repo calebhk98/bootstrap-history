@@ -39,7 +39,7 @@ class HousingTests(unittest.TestCase):
             stand_in = types.SimpleNamespace(
                 SUPERVISION_ROOM_SELF=6.0, SUPERVISION_ROOM_PER_DIRECTOR_EXTRA=1.0,
                 _world=types.SimpleNamespace(workforce=household(directors_extra=0.0, worker_housing_places=places),
-                                             effect_sum=lambda effect, base: base))
+                                             knowledge=types.SimpleNamespace(effect_sum=lambda effect, base: base)))
             return Capacity.supervision_room(stand_in)
         self.assertEqual(room(5.0), room(0.0) + 5.0)
 
@@ -50,8 +50,9 @@ class TradeSchoolTests(unittest.TestCase):
         paid = []
         stand_in = types.SimpleNamespace(
             trades=types.SimpleNamespace(trade_available=lambda trade: True),
-            _world=workforce_stand_in.World(wages={"chemist": 1.0}, trade_school_price_per_seat=lambda: 50.0,
-                                         workforce=held, view=workforce_stand_in.view_of(held), EDGE_WORKERS="workers",
+            _world=workforce_stand_in.World(trades=types.SimpleNamespace(wages={"chemist": 1.0}),
+                                         finance_facts={"trade_school_price_per_seat": lambda: 50.0},
+                                         workforce=held, EDGE_WORKERS="workers",
                                          send=lambda command: paid.append(command.amount)))
         self.assertEqual(Training.found_trade_school(stand_in, "chemist", 2), (True, None))
         self.assertEqual(held.trade_schools, {"chemist": 2.0})
@@ -62,8 +63,10 @@ class TradeSchoolTests(unittest.TestCase):
 class PopulationReportTests(unittest.TestCase):
     def test_each_trade_row_carries_national_reachable_and_employed_figures(self):
         stand_in = types.SimpleNamespace(
-            _world=types.SimpleNamespace(civ={"population": 1000.0, "short_name": "Rome"}, population=types.SimpleNamespace(total=1500.0),
-                                         urban_fraction=lambda: 0.1, wages={"smith": 1.0}, plain_number=lambda number: "%g" % number),
+            _world=types.SimpleNamespace(scenario=types.SimpleNamespace(civ={"population": 1000.0, "short_name": "Rome"}),
+                                         people=types.SimpleNamespace(population=types.SimpleNamespace(total=1500.0),
+                                                                      urban_fraction=lambda: 0.1),
+                                         trades=types.SimpleNamespace(wages={"smith": 1.0}), plain_number=lambda number: "%g" % number),
             supply=types.SimpleNamespace(national_trade_population=lambda trade: 900.0, reachable_trade_population=lambda trade: 40.0),
             trades=types.SimpleNamespace(trade_available=lambda trade: True), book=types.SimpleNamespace(employed=lambda trade: 4.0),
             _density_is_placeholder=lambda trade: False,

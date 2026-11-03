@@ -47,14 +47,12 @@ def view_of(seat, **more):
 
 
 class World(SimpleNamespace):
-    """A fake labour world whose purse is the `capital` of its `workforce` object (read live, put back by `restore_purse`)."""
+    """A fake labour world whose `finance.balance` is the `capital` of its `workforce` object (read live); the other
+    finance facts are given as `finance_facts`."""
 
     @property
-    def balance(self):
-        return self.workforce.capital
-
-    def restore_purse(self, balance):
-        self.workforce.capital = balance
+    def finance(self):
+        return SimpleNamespace(balance=self.workforce.capital, **getattr(self, "finance_facts", {}))
 
 
 def seat_of(**fields):

@@ -31,7 +31,7 @@ QUICK_TOPIC = True
 # =============================================================================
 
 # HIRE AND TRAIN LAND WHOLE PEOPLE.
-roster = SimpleNamespace(_world=SimpleNamespace(wages={"smith": 1.0, "machinist": 1.0}))
+roster = SimpleNamespace(_world=SimpleNamespace(trades=SimpleNamespace(wages={"smith": 1.0, "machinist": 1.0})))
 refused_hire = Hiring.hire_check(roster, "smith", 2.5)[2]
 refused_train = Training.train_check(roster, "machinist", 1.5)[1]
 check("hire refuses a fractional number of people", cause_of(refused_hire) == "count_not_whole", refused_hire)
@@ -45,14 +45,12 @@ check("a whole number is not refused for being fractional",
 # =============================================================================
 
 
-def wall_of(trade, institutional=0.0, literacy=1.0, absent=()):
+def wall_of(trade, institutional=0.0, literacy=1.0):
     stand_in = SimpleNamespace(
         LITERATE_CAPACITY_FLOOR=1.5,
         trades=SimpleNamespace(LITERATE_TRADES=frozenset({"scholar", "scribe"}), literacy_factor=lambda trade: literacy),
         capacity=SimpleNamespace(staff_capacity=lambda: (institutional, 0.0, 0.0)),
-        _people_of_trade_in_reach=lambda trade: 35.0,
-        _world=SimpleNamespace(pop_scale=1.0, HOURS_PER_PERSON_YEAR=2000.0,
-                               trades_absent=set(absent)))
+        _people_of_trade_in_reach=lambda trade: 35.0)
     return Supply.literate_capacity(stand_in, trade)
 
 

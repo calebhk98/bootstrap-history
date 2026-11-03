@@ -61,9 +61,10 @@ class WageStub:
 
     def __init__(self, ratios):
         world = types.SimpleNamespace(
-            civ={"staple": "wheat_kg"}, trade_registry={"smith": {"tool_basket": ["iron_kg"]}},
-            last_market_price_ratio=lambda material: ratios.get(material, 1.0),
-            material_price_factor=lambda material: 1.0)
+            scenario=types.SimpleNamespace(civ={"staple": "wheat_kg"}),
+            trades=types.SimpleNamespace(trade_registry={"smith": {"tool_basket": ["iron_kg"]}}),
+            finance=types.SimpleNamespace(last_market_price_ratio=lambda material: ratios.get(material, 1.0),
+                                          material_price_factor=lambda material: 1.0))
         self.market = LabourMarket(world, schedule=None, settlement=None, book=None)
         self.market.WAGE_SHARE_FOOD, self.market.WAGE_SHARE_HOUSING = 0.5, 0.0
         self.market.WAGE_SHARE_TOOLS, self.market.WAGE_SHARE_SKILL_AND_DIFFICULTY = 0.5, 0.0
@@ -101,8 +102,9 @@ class RecordingStub:
         self.reporting.real_price_ratio = self.market_price_ratio
         self.wages = WageStub({})
         self.wages._world = types.SimpleNamespace(
-            civ=self.civ, trade_registry=self.trade_registry,
-            last_market_price_ratio=self.reporting.last_market_price_ratio, material_price_factor=lambda material: 1.0)
+            scenario=types.SimpleNamespace(civ=self.civ), trades=types.SimpleNamespace(trade_registry=self.trade_registry),
+            finance=types.SimpleNamespace(last_market_price_ratio=self.reporting.last_market_price_ratio,
+                                          material_price_factor=lambda material: 1.0))
 
     def record_wage_market_ratios(self):
         self.reporting.record_wage_market_ratios()

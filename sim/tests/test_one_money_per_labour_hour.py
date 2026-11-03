@@ -12,9 +12,9 @@ from sim.tests.labour_stand_in import stand_in_world
 
 def _labour(paid, price_level=1.0):
     world = stand_in_world()
-    world.build_wage_schedule = lambda civ: build_schedule(data.TRADE_REGISTRY, civ)
-    world.economy_unskilled_wage = lambda: paid
-    world.home_price_level = lambda: price_level
+    world.trades.build_wage_schedule = lambda civ: build_schedule(data.TRADE_REGISTRY, civ)
+    world.economy.unskilled_wage = lambda: paid
+    world.finance.home_price_level = lambda: price_level
     return Labour(world)
 
 

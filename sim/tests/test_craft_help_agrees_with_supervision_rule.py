@@ -12,7 +12,7 @@ FAMILIES = {"labourer": "labour", "porter": "labour", "smith": "craft", "chemist
 
 
 def _Labour():
-    return Trades(Game(wages={trade: 1.0 for trade in FAMILIES}, trade_family=FAMILIES.get))
+    return Trades(Game(trades=Game(wages={trade: 1.0 for trade in FAMILIES}, trade_family=FAMILIES.get)))
 
 
 class CraftHelpTests(unittest.TestCase):

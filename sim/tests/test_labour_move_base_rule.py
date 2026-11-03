@@ -4,7 +4,6 @@ QUICK_TOPIC = True
 
 import types
 import unittest
-from sim.tests import workforce_stand_in
 
 from sim.labour.labour_relocation import Relocation
 from sim.workforce.api import ONCE_COMMISSION
@@ -16,8 +15,8 @@ HOME, TOWN, EMPTY, CUT_OFF = "home_tile", "far_town", "empty_tile", "cut_off_til
 
 class _World(types.SimpleNamespace):
     @property
-    def balance(self):
-        return self.workforce.capital
+    def finance(self):
+        return types.SimpleNamespace(balance=self.workforce.capital)
 
 
 class _Mover:
@@ -28,7 +27,7 @@ class _Mover:
         self.paid, self.pressure_cleared, self.pools_resynced, self.sent = [], 0, 0, []
         self.quote = quote
         self._world = _World(
-            workforce=self.household, view=workforce_stand_in.view_of(self.household), EDGE_WORKERS="workers",
+            workforce=self.household, EDGE_WORKERS="workers",
             money_text=lambda amount, grouped=False: "%.0f" % amount, plain_number=lambda value: "%.0f" % value,
             send=self._send)
         self.relocation = Relocation(self._world, book=None, hours=None, market=None, pools=self, settlement=self)

@@ -21,12 +21,13 @@ class StandInLabour:
 
     def __init__(self, afford, artisans=BASE_ARTISANS, room_sources=(("freedman_staff", FLAT_PLACES),)):
         projects = types.SimpleNamespace(done=set(), operating=set())
+        nodes = {node_id: {} for node_id, _places in room_sources}
         self._world = types.SimpleNamespace(
-            household=types.SimpleNamespace(), projects=projects,
-            ROOM_SOURCES=list(room_sources), nodes={node_id: {} for node_id, _places in room_sources},
-            is_venture=lambda node_id: True, is_visible=lambda node_id: True,
-            closure=lambda nodes, node_id: {node_id}, start_reason=lambda node_id, _why=True: (True, ""),
-            money_text=lambda amount, grouped=False: "%g" % amount, housing_price_per_place=lambda: 100.0)
+            projects=projects, money_text=lambda amount, grouped=False: "%g" % amount,
+            scenario=types.SimpleNamespace(nodes=nodes, closure=lambda nodes, node_id: {node_id}),
+            knowledge=types.SimpleNamespace(ROOM_SOURCES=list(room_sources), is_venture=lambda node_id: True,
+                                            is_visible=lambda node_id: True, start_reason=lambda node_id, _why=True: (True, "")),
+            finance=types.SimpleNamespace(housing_price_per_place=lambda: 100.0))
         self.afford, self.artisans = afford, artisans
         self.capacity = Capacity(self._world, book=None, market=None, schedule=None, trades=None)
         self.capacity._institutional_load = self._institutional_load

@@ -7,7 +7,6 @@ what it reads, with the sim's cost functions returning figures written out here.
 QUICK_TOPIC = True
 UNDER_TEST = {"hire"}   # the method this module tests, called on a stand-in
 
-from sim.tests import workforce_stand_in
 
 from .harness import check
 
@@ -85,7 +84,7 @@ class Payer:
         self.paid = []
         household = Game(contract_hours={}, commissioned={}, hours_wanted_once={})
         self._world = Game(
-            wages={"smith": 1.0}, workforce=household, view=workforce_stand_in.view_of(household), state=Game(household=household), EDGE_WORKERS="workers", HOURS_PER_PERSON_YEAR=2000.0,
+            trades=Game(wages={"smith": 1.0}, HOURS_PER_PERSON_YEAR=2000.0), workforce=household, state=Game(household=household), EDGE_WORKERS="workers",
             send=self.paid.append, money_text=lambda money, grouped=False: "%.0f" % money)
         self.fee = fee
         self.hire_asked = []

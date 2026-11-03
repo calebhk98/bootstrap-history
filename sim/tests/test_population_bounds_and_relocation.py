@@ -23,19 +23,19 @@ class TownShrinksWithNationTests(unittest.TestCase):
         world = stand_in_world()
         labour = Labour(world)
         before = labour.settlement.home_town_population_estimate()
-        shrink(world.population, 5000)
+        shrink(world.people.population, 5000)
         after = labour.settlement.home_town_population_estimate()
         self.assertLess(after, before * 0.25 * 0.5)
-        self.assertLessEqual(after, world.population.total)
+        self.assertLessEqual(after, world.people.population.total)
         for total in (500, 30, 3):
-            shrink(world.population, total)
+            shrink(world.people.population, total)
             self.assertLessEqual(labour.settlement.home_town_population_estimate(), total)
 
     def test_the_town_never_exceeds_the_nation_in_any_civilisation(self):
         for civ_id in ("rome_100ad", "norse_900ad", "mexica_1500", "han_china_100ad"):
             for total in (None, 5000, 200, 30):
                 world = stand_in_world(civ_id, total)
-                self.assertLessEqual(Labour(world).settlement.home_town_population_estimate(), world.population.total + 1e-6, (civ_id, total))
+                self.assertLessEqual(Labour(world).settlement.home_town_population_estimate(), world.people.population.total + 1e-6, (civ_id, total))
 
 
 class InvariantCheckerTests(unittest.TestCase):

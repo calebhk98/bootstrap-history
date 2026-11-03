@@ -21,8 +21,9 @@ def Labour(directors_extra=0.0, housing=0.0, held=(), units=1.0):
     value = lambda key, spec: spec["flat"] if "flat" in spec else spec["per_unit"] * units
     world = SimpleNamespace(
         workforce=SimpleNamespace(directors_extra=directors_extra, worker_housing_places=housing),
-        effect_terms=lambda channel: terms, effect_holds=holds, effect_value=value,
-        effect_sum=lambda channel, start=0.0: start + sum(value(key, spec) for key, spec in terms if holds(key, spec)))
+        knowledge=SimpleNamespace(
+            effect_terms=lambda channel: terms, effect_holds=holds, effect_value=value,
+            effect_sum=lambda channel, start=0.0: start + sum(value(key, spec) for key, spec in terms if holds(key, spec))))
     return Capacity(world, book=None, market=None, schedule=None, trades=None)
 
 

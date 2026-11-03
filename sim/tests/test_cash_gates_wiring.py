@@ -19,10 +19,9 @@ class World:
     def __init__(self, power):
         self.power = power
         self.asked = []
-        self.wages = {"smith": 1.0}
-        self.trades_absent = {"smith"}
+        self.trades = Game(wages={"smith": 1.0}, trades_absent={"smith"}, trade_notes={})
         self.economy = Game(agent_trades=lambda: None)      # the economy has not narrowed the trades it holds
-        self.trade_notes = {}
+        self.finance = Game(spending_power=self.spending_power, refusal_text=self.refusal_text)
         self.workforce = Game(contract_hours={}, hours_wanted_once={})
         self.state = Game(household=self.workforce,
                                            projects=Game(done=set(), active={}))

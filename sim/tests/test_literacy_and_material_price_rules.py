@@ -19,8 +19,7 @@ class _Society:
 
     def __init__(self, literacy, institutional=0.0):
         self.literacy, self.institutional = literacy, institutional
-        world = types.SimpleNamespace(pop_scale=1.0, HOURS_PER_PERSON_YEAR=10.0, trades_absent=())
-        self.supply = Supply(world, book=None, capacity=self, settlement=None, trades=self)
+        self.supply = Supply(types.SimpleNamespace(), book=None, capacity=self, settlement=None, trades=self)
         self.supply._people_of_trade_in_reach = lambda trade: 40.0
 
     def literate_capacity(self, trade):

@@ -16,7 +16,7 @@ from sim.tests import module_harness
 class Stepped(Demography):
     """The module with the regions' feeding and stepping stood in: the seam under test is the yearly step's."""
 
-    def _regions(self):
+    def regions_kept_to_nation(self):
         return {"north": object(), "south": object()}
 
     def _regional_kcal_per_day(self, regions):
