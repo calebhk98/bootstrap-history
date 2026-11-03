@@ -7,7 +7,7 @@ import unittest
 
 from sim.labour.labour_supply import Supply
 from sim.labour.labour_trades import Trades
-from sim.labour.workforce_spinup import FARM_TRADE
+from sim.labour.trade_data import farm_trade
 from sim.constants import REGISTRY
 
 WORKING = 60000.0
@@ -19,7 +19,7 @@ LABOUR_FAMILY = ("porter", "carter", "sailor", "miner")
 class _Labour:
     def __init__(self, core):
         self._core = core
-        families = {trade: "labour" for trade in LABOUR_FAMILY + (FARM_TRADE, "labourer")}
+        families = {trade: "labour" for trade in LABOUR_FAMILY + (farm_trade(), "labourer")}
         families["smith"] = "craft"
         household = types.SimpleNamespace(trades_created=set(), trade_schools={})
         self._world = types.SimpleNamespace(

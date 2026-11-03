@@ -2,6 +2,15 @@
 import math
 
 
+def annuity_factor(discount_rate: float, years: float) -> float:
+    """Present value of one unit a year for `years`, discounted continuously."""
+    if years <= 0.0:
+        return 0.0
+    if discount_rate <= 0.0:
+        return years
+    return (1.0 - math.exp(-discount_rate * years)) / discount_rate
+
+
 def training_premium(training_years: float, discount_rate: float, career_years: float) -> float:
     """Wage multiple that leaves a trainee indifferent to skipping training.
 
@@ -12,7 +21,6 @@ def training_premium(training_years: float, discount_rate: float, career_years: 
     training_years = min(max(0.0, training_years), career_years * 0.9)
     if training_years == 0.0:
         return 1.0
-    discounted_career = 1.0 - math.exp(-discount_rate * career_years)
-    discounted_after_training = (math.exp(-discount_rate * training_years)
-                                 - math.exp(-discount_rate * career_years))
+    discounted_career = annuity_factor(discount_rate, career_years)
+    discounted_after_training = discounted_career - annuity_factor(discount_rate, training_years)
     return discounted_career / discounted_after_training

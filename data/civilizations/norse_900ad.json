@@ -26,6 +26,7 @@
   },
   "currency": "hacksilver by weight",
   "currency_words": {"long": "in hacksilver", "short": "hacksilver"},
+  "staple": "wheat_kg",
   "coin_standard": {
     "regime": "weighed_metal",
     "material": "silver_kg",

@@ -7,7 +7,7 @@ QUICK_TOPIC = True
 import unittest
 
 from sim.engine import data, validate_unlinked_producers
-from sim.labour.labour_market import production_data
+from sim.world.demand import production_data
 
 PRODUCTION = {"smelt": {"outputs": {"lead_kg": 1.0}, "operated_by": ["runs"]}}
 NODES = {

@@ -9,7 +9,7 @@ import json
 import os
 import unittest
 
-from sim.labour import labour_allocation
+from sim.labour import trade_data
 from sim.content.catalog import load_production_catalog
 from sim.prices.solve_prices_core import techniques_available_to
 from sim.labour import workforce_carriage, workforce_spinup
@@ -59,7 +59,7 @@ class NeedSharesTests(unittest.TestCase):
         # A trade whose every recipe makes a good no need names has no demand of its own unless a recipe
         # uses the good (shaft work in a start that holds water power but runs nothing that draws it); the labour
         # package floors such trades (NO_DEMAND_TRADE_SHARE). Any other trade must be in the shares.
-        farm_trade = labour_allocation.FARM_TRADE
+        farm_trade = trade_data.farm_trade()
         needs = need_demand.load_needs(_ROOT)
         for civ in _civilisations():
             reached = set(civ["starting_techs"])

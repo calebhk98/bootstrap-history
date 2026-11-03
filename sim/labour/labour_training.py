@@ -1,13 +1,14 @@
 """Teaching trades into existence: trade schools, the years and hours a trade takes to teach, and `train`."""
-import math
 
 from sim.refusal import Refusal
 from .labour_wage_schedule import person_year_hours
 from . import trade_data, trade_first_hands, trade_formation
 from .labour_refusals import cash_in_hand_refusal, literate_wall_refusal
 from .request_rules import teaching_fee, teaching_hours_refusal, train_request_refusal
+from .room_advice import hire_room_refusal
 from .staff_moves import crosses_literacy_wall
 from sim.ledger.api import PayEdge
+from sim.world.demand import production_data
 
 
 class Training:
@@ -44,13 +45,13 @@ class Training:
     def training_years_from(self, trade, source):
         """Years to turn a person of `source` into `trade`: the trade's full apprenticeship scaled by the share
         of its tasks the source does not do (trade_formation)."""
-        shares = trade_formation.shipped_task_shares()
+        shares = trade_formation.task_shares_for(production_data())
         uncovered = trade_formation.uncovered_share(shares.get(trade, {}), shares.get(source, {}))
         return trade_formation.training_years(self._full_years(trade), uncovered)
 
     def uncovered_from(self, trade, source):
         """The share of `trade`'s tasks that people of `source` do not already do."""
-        shares = trade_formation.shipped_task_shares()
+        shares = trade_formation.task_shares_for(production_data())
         return trade_formation.uncovered_share(shares.get(trade, {}), shares.get(source, {}))
 
     def training_hours_per_person(self, trade, source=None):
@@ -73,7 +74,7 @@ class Training:
         created = self._world.workforce.trades_created
         present = [other for other in self._world.trades.wages
                    if other != trade and (other not in self._world.trades.trades_absent or other in created)]
-        ranked = trade_formation.nearest_sources(trade, trade_formation.shipped_task_shares(), present)
+        ranked = trade_formation.nearest_sources(trade, trade_formation.task_shares_for(production_data()), present)
         return ranked[0][1] if ranked else None
 
     def train_check(self, trade, count, frm=None):
@@ -112,22 +113,10 @@ class Training:
         refusal = teaching_hours_refusal(hours, pool, count, trade)
         if refusal:
             return None, refusal
-        # THE SAME ROOM `hire` AND `buy` SHARE: household_room exists so all
-        # three verbs agree on the same ceiling. `train` must check it too,
-        # or a household could teach its way past its actual capacity to
-        # feed, house and oversee people, ending up unable to hire the
-        # artisans it needs to supervise anything it just taught. People
-        # you teach have to be fed, housed and overseen like anybody else.
+        # people you teach are fed, housed and overseen like anybody else: the room `hire` and `buy` share
         room = self.capacity.household_room()
         if count > room:
-            whole = int(max(0.0, room))
-            advice = self.advice.room_advice()
-            return None, Refusal("household_room", "you can feed, house and oversee %.2f more people, "
-                                 "and teaching %g would make %g. %s %s"
-                                 % (math.floor(max(0.0, room) * 100) / 100.0, count, count,
-                                    "Teach %d instead." % whole if whole >= 1
-                                    else "There is no room for even one.",
-                                    advice), room=max(0.0, room), remedies=advice.facts["remedies"])
+            return None, hire_room_refusal(room, count, self.advice.room_advice())
         # Teaching pulls the SOURCE trade's people off their own bench for the
         # duration, which is exactly what market_pressure prices for buying
         # slaves and labour market price_factor now prices for hiring: the more of
@@ -149,7 +138,7 @@ class Training:
         """The first actor other than you that holds the knowledge to teach `trade` (trade_formation.teachers_of),
         or None when you teach it yourself from what you know."""
         by_actor, baseline, demonstrated = self._world.knowledge.teaching_knowledge()
-        teachers = trade_formation.teachers_of(trade, trade_formation.shipped_gating_nodes(), by_actor, baseline,
+        teachers = trade_formation.teachers_of(trade, trade_formation.gating_nodes_for(production_data()), by_actor, baseline,
                                                demonstrated)
         named = [teacher for teacher in teachers if teacher in by_actor]
         return named[0] if named else None

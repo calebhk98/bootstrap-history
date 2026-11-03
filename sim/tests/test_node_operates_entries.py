@@ -11,7 +11,7 @@ import unittest
 
 from sim.engine import data, validate_production
 from sim.production import node_output, node_revenue_census
-from sim.labour.labour_market import production_data
+from sim.world.demand import production_data
 
 CHARCOAL = {"outputs": {"charcoal_kg": 1000.0}, "inputs": {"wood_kg": 4000.0}, "labour_hours": {"labourer": 30.0},
             "requires_node": None, "operated_by": ["burner"]}

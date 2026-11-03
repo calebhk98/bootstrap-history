@@ -5,7 +5,7 @@ cheap because much of it is coerced, and manumission is modelled as strictly bet
 on every other ground. slave_quote is the market depth and rising-price curve buy_slaves prices against."""
 from sim.constants import declare
 from sim.polity.api import GainReputation
-from .buy_cap import over_room_refusal
+from .room_advice import hire_room_refusal
 from sim.ledger.api import PayEdge
 from sim.refusal import Refusal
 
@@ -147,8 +147,8 @@ class Bondage:
             return 0
         # The household room cap `hire` enforces: a person you own needs feeding, housing and oversight too.
         room = self.capacity.household_room()
-        refusal = over_room_refusal(n_people, room, lambda: self.advice.staff_advice("artisans"))
-        if refusal:
+        if n_people > room:
+            refusal = hire_room_refusal(room, n_people, self.advice.room_advice())
             self._world.commands.note_buy_refusal(refusal)
             return 0
         # A town's slave market has a depth. Buying beyond it bids the price up.

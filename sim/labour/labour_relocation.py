@@ -5,6 +5,7 @@ from sim.constants import declare
 from sim.polity.api import ScaleFamiliarity, ScaleProtection
 from sim.ledger.api import NoteSpend, PayEdge
 from sim.refusal import Refusal
+from sim.unit_conversions import CIVIL_DAYS_PER_YEAR
 from sim.workforce.api import ONCE_COMMISSION
 
 
@@ -34,7 +35,7 @@ class Relocation:
         days = self.settlement.travel_days_to_tile(tile)
         if days is None:
             return None
-        year_share = min(1.0, days / 365.0)
+        year_share = min(1.0, days / CIVIL_DAYS_PER_YEAR)
         hours = year_share * self.hours.director_pool()
         # The whole payroll is paid while it walks, and does no other work.
         money = year_share * self._relocation_wage_bill_per_year()

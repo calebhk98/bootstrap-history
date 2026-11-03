@@ -79,8 +79,8 @@ class ModEconomicCatalogTests(unittest.TestCase):
                          sum(goods[m] * q for m, q in self.nodes[0]["mat"].items()))
         self.assertIs(production, load_production_catalog(str(self.root), str(self.root / "mods")))
         self.assertEqual(4, demand.derived_intermediate_demand("test_acme_k3f9:ore", {"test_acme_k3f9:ingot": 2}, production)[0])
-        need, _breakdown = labour_market.labour_hours_required_by_trade({"test_acme_k3f9:ingot": 2}, production)
-        self.assertEqual(2, need["test_acme_k3f9:clockmaker"])
+        coefficients = labour_market.labour_hours_coefficients_per_unit_output("test_acme_k3f9:ingot", production)
+        self.assertEqual(1, coefficients["test_acme_k3f9:clockmaker"])
         self.assertFalse(check(production, material_namespace(production),
                                set(load_trade_registry(str(self.root), production,
                                                        str(self.root / "mods")))))

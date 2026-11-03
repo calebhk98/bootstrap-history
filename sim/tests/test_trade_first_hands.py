@@ -9,6 +9,7 @@ from .harness import *  # noqa: F401,F403
 from sim.projects.start_rules import STALL_YEARS_BEFORE_ABANDONMENT
 from sim.labour import trade_formation as formation
 from sim.labour import trade_first_hands as hands
+from sim.world.demand import production_data
 
 FULL = 8.0
 UNCOVERED = 0.75
@@ -51,7 +52,7 @@ check("keep paid up front is the whole time when there are none", abs(hands.prep
 registry = json.loads((Path(__file__).resolve().parents[2] / "data" / "world" / "trades.json").read_text())
 registry = registry.get("trades", registry)
 absent = sorted(trade for trade, row in registry.items() if row.get("initially_absent"))
-shares = formation.shipped_task_shares()
+shares = formation.task_shares_for(production_data())
 practised = [trade for trade in registry if trade not in absent]
 for trade in absent:
     ranked = formation.nearest_sources(trade, shares, practised)

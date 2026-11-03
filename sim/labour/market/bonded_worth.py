@@ -11,8 +11,7 @@ import dataclasses
 import heapq
 from typing import Dict, List, Mapping, Optional, Sequence, Tuple
 
-from .expectations import annuity_factor
-from .premium import training_premium
+from .premium import annuity_factor, training_premium
 
 
 @dataclasses.dataclass(frozen=True)

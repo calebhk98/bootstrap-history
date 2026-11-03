@@ -3,8 +3,7 @@
 Run after the year's switching and migration. For each (area, trade) where employers want hours and no
 one of the trade works or trains, the first people come from the routes that need no teacher: migrants from
 areas that hold the trade (up to their spare hands), then bonded people bought where the area's
-civilisation allows it, at the owners' ask and the buyers' bid (formation_bonded.py; `trade_formation.first_people_plan`
-orders the same routes for any caller). Any trade still short of hands after that may buy bonded people the same way. Conversion
+civilisation allows it, at the owners' ask and the buyers' bid (formation_bonded.py). Any trade still short of hands after that may buy bonded people the same way. Conversion
 needs a teacher and a payer, so the caller's own verbs (training schools) carry it out. Any employer's
 vacancy counts, not one actor's.
 """

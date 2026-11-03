@@ -5,7 +5,6 @@ from typing import Callable, Dict, List, Optional, Sequence, Set, Tuple
 from sim.constants import declare
 
 from . import asks, layoffs
-from .asks import VACANCY_SHARE_THRESHOLD, WAGE_UPDATE_PER_ROUND  # noqa: F401  (declared beside the rounds that use them)
 from .applications import hire_through_rounds
 from .import_cost import ImportCosts
 from .premium import training_premium
@@ -21,24 +20,11 @@ WAGE_SHARE_CLOSED_PER_YEAR = declare(
         "clearing point is reached at once, and the ask falls by asks.py, so the downward stickiness lives there. "
         "Every hour of the trade in the area is paid the one wage. The speed is not fitted.")
 
-MATCHING_EFFICIENCY_PER_YEAR = declare(
-    "MATCHING_EFFICIENCY_PER_YEAR", 2.0, kind="temporary_heuristic", unit="per year",
-    source=None, confidence="D",
-    why="Rate at which vacancies and searchers meet. Used only by the founder's recruitable estimate in "
-        "labour_market_api.py; the clearing itself hires by applications.py. Set so a slack market fills nearly all of "
-        "a vacancy in a year while a tight one fills part; not fitted.")
-
 FIRM_LABOUR_SUPPLY_ELASTICITY = declare(
     "FIRM_LABOUR_SUPPLY_ELASTICITY", 2.0, kind="temporary_heuristic", unit="elasticity of recruits to pay",
     source=None, confidence="C",
     why="How strongly an employer's pay over its rivals' raises how fast it recruits; the monopsony "
         "literature puts the firm-level elasticity of labour supply at a few.")
-
-MATCHING_SEARCHER_ELASTICITY = declare(
-    "MATCHING_SEARCHER_ELASTICITY", 0.5, kind="temporary_heuristic", unit="elasticity of fill to searchers per vacancy",
-    source=None, confidence="C",
-    why="How much more of a vacancy fills when more searchers chase it; matching-function estimates put the "
-        "elasticity of hires to searchers near one half.")
 
 ON_THE_JOB_SEARCH_SHARE = declare(
     "ON_THE_JOB_SEARCH_SHARE", 0.1, kind="temporary_heuristic", unit="share of a lower payer's hours per year",
