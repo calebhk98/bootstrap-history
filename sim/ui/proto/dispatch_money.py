@@ -156,10 +156,10 @@ def _buy_material(sim, cmd, quantity):
 def _buy_mine(sim, cmd, quantity):
     mat = cmd.get("material")
     # GENERALISED beyond the seven hand-named metals (see
-    # economy.py's mineable()/mine_catalog_hint(), and
+    # sim/resources/costs.py's mineable()/mine_catalog_hint(), and
     # COMMODITY_DYNAMISM.md for why a closed list here would be a real
     # bug: "no mine, no supply lever" for anything else the tree ever
-    # asks a node to buy). The membership check lives in economy.py's
+    # asks a node to buy). The membership check lives in sim/resources/costs.py's
     # mineable(); this file calls it rather than keeping its own list.
     if not sim.view("mineable")[mat]:
         return {"ok": False, "error": Refusal("unknown_material", "material must be one of: " + sim.view("mine_catalog_hint")(),
@@ -361,7 +361,7 @@ def _cmd_money(sim, nodes, cmd, ended):
     # material_price_factor() responds for every material a node
     # buys, not just the 9 curated commodities, so what it
     # is doing to costs needs a line here too, not only inside one
-    # project's own `why`. See economy.py's material_market_summary().
+    # project's own `why`. See sim/materials/supply.py's material_market_summary().
     _mat_mkt = sim.view("material_market_summary")()
     _sources = sim.view("revenue_sources")()
     _squeeze = sim.view("market_absorption_by_category")(-(_sources.get("_what_the_market_will_not_absorb") or 0.0))
@@ -422,9 +422,9 @@ def _cmd_money(sim, nodes, cmd, ended):
             # HOW CLOSE, not just how far it goes. See warn_near_the_limit.
             "of_that_limit_you_have_used": (
                 _share_of_limit_used(sim)),
-            # committed_spend(), NOT A SECOND SUM OF THE SAME FIELD: 'start'
+            # committed_cost(), NOT A SECOND SUM OF THE SAME FIELD: 'start'
             # needs the identical total for its own aggregate warning (see
-            # committed_spend()'s docstring, economy.py). One call, read
+            # committed_cost()'s docstring, sim/projects/applied.py). One call, read
             # from both places.
             "still_owed_on_work_in_hand": round(sim.view("committed_cost")(), 1),
             # THE OTHER HALF OF THE SAME QUESTION 'start' WARNS ABOUT:

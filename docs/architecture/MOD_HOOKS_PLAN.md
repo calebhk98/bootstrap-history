@@ -37,7 +37,7 @@ answer for it. So the mechanism exists. What blocks real use:
    simulation's map: `sim/geography/tile_names.py` (`_tiles`, `_climate_words`, `_region_names`
    through a bare `load_geography()`), `tile_lookup.py` (nearest tile), `territory.py`
    (`map_source.load_map()` for frontier and roads), `crop_climate.py` (`load_geography()`),
-   `sim/engine/agents_port_cast.py` (`load_geography()["land_tiles"]`), `sim/ui/cli_interactive.py`
+   `sim/geography/places.py` (`load_geography()["land_tiles"]`), `sim/ui/cli_interactive.py`
    (`load_geography()`), and the default arguments in `sim/world/land.py`
    (`load_region_lands`, `load_tile_lands`) and `tile_holdings.py`. A mod tile is therefore
    invisible to place names, territory, the cast's anchors and the interactive map. Counts below.
@@ -152,8 +152,8 @@ No new loader. The change is to make the existing overlay complete.
    `world_map` argument (as `load_geography(world_map)` and `queries` already do), threaded from
    `sim.world_map`. A static-analysis test fails if `map_source.load_map()` or a bare
    `load_geography()` appears outside the geography package's one defaulting function.
-2. **Tile validation inside `queries.problems`** (new module `sim/geography/map_validate.py`, so the
-   file stays short). For every tile, in the merged map: required fields present and typed
+2. **Tile validation inside `queries.problems`** (a new module, so the
+   file stays short; not written yet). For every tile, in the merged map: required fields present and typed
    (`lat`, `lon` in range, `land_area_km2` positive, `coastal` boolean); `koppen_class` in the
    `climate_classes` catalogue; the region label in `regions`; every `borders` entry a tile in the
    merged map; and every layer a model declares as required has a value for the tile. Required
@@ -248,8 +248,8 @@ than implying the facade protects anyone. This matches `Complaints/118` and `mod
 The registry already exists; the work is to make it a contract, give a kind data to run on, and
 connect mods.
 
-1. **Write the kind contract** as a `typing.Protocol` in `sim/agents/kind_contract.py` (exported
-   from `api.py`): constructor `(actor_id, record, policy)`, `kind`, `identity()`, `year(world)`,
+1. **Write the kind contract** as a `typing.Protocol` beside the registry in `sim/agents/` (exported
+   from `api.py`; the data-declared kind is `sim/agents/declared_kind.py`): constructor `(actor_id, record, policy)`, `kind`, `identity()`, `year(world)`,
    plus optional capabilities declared as named flags rather than `hasattr` probes
    (`runs_concerns`, `has_staff`, `borrows`). `registry._wrap` reads the flags. The existing kinds
    adopt it without behaviour change (fingerprint check).
@@ -295,14 +295,13 @@ counts are measured.
 
 | Rank | Place | What is enumerated | Why it matters | Fix direction |
 |---|---|---|---|---|
-| 1 | Done: per-category traits (`never_abandoned`, `practisable`) and the ordered `diffusion_traits` live in `data/world/category_traits.json`, read through `sim/knowledge/category_traits.py`; a mod overlays its own `data/category_traits.json`; `validate` reports a node category with no entry | Technology categories and trait names | Was: every new branch domain needed an engine edit | The literal trait name `medical` is still read by `sim/engine/hazard_relief.py` |
+| 1 | Done: per-category traits (`never_abandoned`, `practisable`) and the ordered `diffusion_traits` live in `data/world/category_traits.json`, read through `sim/knowledge/category_traits.py`; a mod overlays its own `data/category_traits.json`; `validate` reports a node category with no entry | Technology categories and trait names | Was: every new branch domain needed an engine edit | The literal trait name `medical` is still read by `sim/hazards/relief.py` |
 | 2 | `sim/content/mods.py` `_node_defaults`; `sim/content/tree_merge.py` `DEFAULTS` and the second list near line 50 | Node field defaults, written in more than one place | A new node field is a multi-place edit; a mod and the base can disagree | One defaults table in data, read by both loaders |
 | 3 | `sim/labour/legacy_trade_defaults.py` `GENERIC_STAFF_TRADES`; literal trade ids in engine code (see counts) | Trade names such as the labourer, artisan, scholar | Trades are data (`data/world/trades.json`), the engine names a few | A `role` attribute on a trade record (`general_labour`, `skilled`, `learned`) read by the engine |
 | 4 | Base-map-only readers (section 1.4) | Which map is open | Blocks land tiles | Section 2.1 |
 | 5 | `sim/engine/data.py` `STARTING_KITS`, `WIN_CONDITION_LABELS` | Starting kits and win metric labels | A new scenario or goal type edits Python | Move to `data/world/starting_kits.json` and the metric catalogue, mod-mergeable |
-| 6 | Hazard kinds: `HAZARD_KINDS` in `sim/ui/figures_headline.py` and `sim/engine/hazard_relief.py`, the `_shock_*` methods in `sim/engine/society_hazards.py`, `sim/ui/proto/hazard_words.py`, `sim/engine/fog.py` loops | Four hazard kinds | A new hazard kind is a code change in five files (the complaint's point 7) | One hazard-kind registry (name, shock function, words, fog rule); data rows for ordinary hazards of an existing kind are already civilisation data |
+| 6 | Hazard kinds: `HAZARD_KINDS` in `sim/ui/figures_headline.py` and `sim/hazards/constants.py`, the shock rules in `sim/hazards/shocks.py`, `sim/ui/proto/hazard_words.py`, the knowledge module's loops | Four hazard kinds | A new hazard kind is a code change in five files (the complaint's point 7) | One hazard-kind registry (name, shock function, words, fog rule); data rows for ordinary hazards of an existing kind are already civilisation data |
 | 7 | `sim/agents/api.py` import list | Which agent modules register their kinds, spawners and commands | An in-repo kind needs an edit to the door; the dispatch modules show the better pattern | Discover by name, as `dispatch.py` does, or by a manifest |
-| 8 | `sim/engine/core.py` `class Sim(...)` base list (mixins) | Engine mechanisms | Each mechanism adds a base class; low churn, but it is the largest enumeration | Mixin discovery by name is risky for ordering; leave, but record the order as data if mods ever hook the year |
 | 9 | `sim/geography/mechanisms.py` `OWNER_OF_MECHANISM`, `resources_catalogue.py` `DEPOSIT_MECHANISMS`, `sim/world/deposits.py` `DEPTH_CLASSES`, `HARDNESS_CLASSES` | Resource and deposit mechanisms and classes | Mechanisms are code by design; the classes are content | Move the classes to the catalogue; keep mechanisms as the stated code boundary |
 | 10 | `sim/agents/stratum_year.py` `TIERS`, `sim/agents/cast.py` `CONSUMED_CAST_KEYS`, `sim/agents/exchange.py` `SIDE_KEYS`, `sim/economy/currency.py` `REGIMES`, `state_policy.py` `STATE_FINANCING_ORDER` | Need tiers, cast keys, exchange sides, currency regimes, financing order | Low churn; some are mechanisms, some content (tiers) | Tiers into the needs catalogue; leave the rest |
 | 11 | Display-order lists in `sim/ui/proto` (`GROUP_ORDER`, `TIER_NAMES`, `KIND_ORDER`, `_SCORE_COMPONENT_ORDER`, `WAITING_KIND_ORDER`) | Presentation order | A new item falls to the end, which is safe | Leave |
@@ -311,7 +310,7 @@ counts are measured.
 
 Already good, to copy: `dispatch_*`, `parse_*` and `render_*` discovery by name; the command
 registry; `figures.json` plus `@readable`; geography catalogues merged by folder; the `mechanics`
-index (`sim/engine/mechanics.py`) that reads node data; the actor, spawner and policy registries.
+index (`sim/mechanics/`) that reads node data; the actor, spawner and policy registries.
 
 Literal content ids in non-test code, measured 2026-10-06 by
 a scratch script that counts lines holding the quoted id in `sim/` outside the tests (not kept; a
@@ -327,80 +326,23 @@ above are the check.
 
 ## 4. Staged plan
 
-Each stage lists the files it touches. "Waits" means the stage edits a directory another branch is
-changing; do not start it until that branch merges.
+Stage 0 (the fixture mod and test harness), stage 2 (declarative commands, `sim/content/commands.py`,
+`sim/ui/proto/mod_commands.py`), stage 3 (the actor kind contract and data kinds, `sim/agents/declared_kind.py`,
+`sim/content/actor_kinds_data.py`) and stage 4 (Python hooks with consent, `sim/engine/mod_code.py`,
+`sim/content/mods_ids.py`) are built; `mods/README.md` describes them.
 
-Branches in flight to respect (from `git branch`, measured 2026-10-06): the geography work
-(`civilisations-hold-tiles-and-roads` touches `sim/geography/tile_holdings.py`, the engine's use of
-routes; `map-data-licence-audit` touches `data/world/geography/`) and the counterparty work
-(`every-posting-names-a-counterparty` touches `sim/agents/`, the ledger and every posting). Check
-`git log <branch>` before starting a stage that waits.
+**Stage 1: land tiles. Open.**
+- Thread `world_map` through the readers in section 1.1 (`sim/geography/tile_names.py`, `tile_lookup.py`,
+  `territory.py`, `crop_climate.py`, `places.py`, `tile_holdings.py`, `sim/world/land.py`,
+  `sim/ui/cli_interactive.py`) and add a test that fails when `map_source.load_map()` or a bare `load_geography()`
+  appears outside the geography package's one defaulting function.
+- Tile validation inside `queries.problems` (section 2.1 item 2), reciprocal borders at merge time in
+  `sim/geography/map_source.py`, and map ids in `check_declared_dependencies` (`sim/content/mods_ids.py`).
+- Docs: the `mods/README.md` map paragraph and `sim/geography/INTERFACE.md` (`problems`).
 
-**Stage 0: fixtures and a mod test harness. Does not wait.**
-- New `sim/tests/mod_fixtures/ana_hooks_test_k3f9/` (the "hooks test mod"): `mod.json`, one tile
-  file, one commands file (one read command, one macro), one actor kind file, and a small Python
-  commands module held back until Stage 4. Reuse `ModTestBase.add_mod` from
-  `sim/tests/test_mod_removal_and_civs.py` for temporary mods.
-- New `sim/tests/test_mod_hooks_end_to_end.py`: installs the fixture mod, opens a game, and asserts
-  the three things in later stages. It starts as a list of expected failures, one per hook.
-- Touches: `sim/tests/` only.
+**Stage 5: the audit follow-ups, in rank order, one small change each.** Ranks 1 and 2 first (categories and node
+defaults: `sim/content/mods.py`, `sim/content/tree_merge.py`, `data/branches`), then 3, 5, 6, 7, 13. Rank 4 is
+Stage 1. Each change keeps the fingerprint identical.
 
-**Stage 1: land tiles. Waits for the geography branches.**
-- 1a. Failing tests: a mod tile is visible to `tile_names`, `territory`, `land.load_tile_lands`,
-  `agents_port_cast`; `problems()` reports a tile with a dangling border, unknown class, unknown
-  region, missing required layer; reciprocal borders; tile removal pruning; a route from a base
-  tile to the mod tile; food potential for it; fingerprint unchanged for the base map.
-- 1b. Thread `world_map` through the readers in section 1.1 and add the static test.
-  Touches `sim/geography/tile_names.py`, `tile_lookup.py`, `territory.py`, `crop_climate.py`,
-  `tile_holdings.py`, `sim/world/land.py`, `sim/engine/agents_port_cast.py`,
-  `sim/ui/cli_interactive.py`.
-- 1c. Validation and merge-time borders: new `sim/geography/map_validate.py`, edits to
-  `map_source.py` (origin per entry, reciprocal borders), `queries.py` (`problems`), data rows
-  `required_layers` under `data/world/geography/parameters/` (**data/world/geography waits**).
-- 1d. Map ids in `check_declared_dependencies`: `sim/engine/mods_ids.py`.
-- Docs: `mods/README.md` map paragraph, `sim/geography/INTERFACE.md` (`problems`).
-
-**Stage 2: declarative commands (Tier A). Does not wait** (touches `sim/ui/proto`, `sim/engine`).
-- Tests: a read command and a macro from a mod appear in `help`, `KNOWN_COMMANDS`, the typed
-  parser and a protocol reply; a name clash names both mods; a macro naming a missing command fails
-  at load naming the file; an override and a removal with the dangling-reference check; fog scan
-  covers them.
-- Files: new `sim/engine/ui_commands.py` (load and validate), new `sim/ui/proto/mod_commands.py`
-  (turn a declaration into a registry entry and a handler), edit `sim/ui/proto/dispatch.py` (call it
-  before the snapshots), `command_registry.py` (an `owner` field, a clash error naming mods
-  instead of an assert), `typed.py` only if the alias snapshot needs to move.
-- Docs: `mods/README.md`, `sim/PROTOCOL.md`.
-
-**Stage 3: the actor kind contract and data kinds. Waits for the counterparty branch** (edits
-`sim/agents/registry.py`, `records.py`, `base.py`, which that branch is changing).
-- Tests: the existing kinds satisfy the contract (flags replace `hasattr`); a data-declared kind from
-  the fixture mod is created from a civilisation's cast, consumes a need, spawns by its rule, pays
-  through the ledger, and the conservation test still holds; removing the mod gives the clear error;
-  fingerprint unchanged for base play.
-- Files: new `sim/agents/kind_contract.py`, `sim/agents/generic_kind.py`,
-  `sim/agents/kind_data.py` (load `actor_kinds.json`); edit `registry.py` (`_wrap`, flags, error),
-  `records.py` (`extra`), `api.py`, `society_disclosure.py` and `licence.py` (`report_as`).
-  Engine side: `sim/engine/agents_port*.py` hands the loader the mod list.
-- Docs: `sim/agents/MULTIPLAYER.md`, `docs/architecture/ACTORS.md`.
-
-**Stage 4: Python hooks (Tier B) for commands and kinds. After 2 and 3.**
-- Tests: a mod without consent does not run (a marker file is not written); with consent it
-  registers a command and a kind; a changed file needs consent again; names must carry the
-  prefix; a handler's state lives in `mod_state` and survives save and load.
-- Files: new `sim/engine/mod_code.py` (consent file, hash, import), `sim/simulator.py` (a
-  `mod-allow` and a `validate` report), manifest keys in `sim/content/mods.py`, `sim/engine/mods_ids.py`
-  (`code`, `permissions`), `sim/ui/proto/mod_commands.py` (decorator).
-- Docs: `mods/README.md` security paragraph, `mods/TASKS.md`.
-
-**Stage 5: the audit follow-ups, in rank order, one small change each. Each waits only if its
-files are in a directory under change.**
-- Ranks 1 and 2 first (categories and node defaults: `economy_production.py`, `fog.py`,
-  `society_diffusion.py`, `mods.py`, `tree_merge.py`, `data/branches`), then 3, 5, 6, 7, 13.
-  Rank 4 is Stage 1b. Each change keeps the fingerprint identical.
-
-**Order and dependencies.** 0, then 2 (independent of both waiting branches) while the geography
-and counterparty branches land; then 1 and 3 in either order; then 4; 5 throughout.
-
-Record the result by moving Complaint 118 to `Complaints/closed/` when Stages 1 to 4 pass, and by
-turning `mods/TASKS.md` items 3 and 4 into links to this plan. Open question for the owner: whether
-Stage 4 ships at all, given the safety boundary in section 2.2; Stages 1 to 3 are useful without it.
+Record the result by moving Complaint 118 to `Complaints/closed/` when stage 1 passes. Open question for the owner:
+whether stage 4 should stay shipped, given the safety boundary in section 2.2.

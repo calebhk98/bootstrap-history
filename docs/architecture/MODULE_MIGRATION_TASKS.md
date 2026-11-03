@@ -1,6 +1,6 @@
 # Module migration tasks
 
-Note: this is a record of past work. `TEST_MIGRATION.md`, `sim/engine/cause_book.py`, `sim/engine/view_share.py` and `sim/tests/helpers/views.py` no longer exist, and the engine mixins it plans to remove are gone (`Sim` has no base classes); the current shape is `sim/ARCHITECTURE.md`.
+Note: this is a record of past work. The engine mixins it plans to remove are gone (`Sim` has no base classes); the current shape is `sim/ARCHITECTURE.md`, and `bash tools/done_check.sh` measures what is left.
 
 **Status:** the modules listed below are in the tree and `Sim` has no base classes (measure with
 `python3 -c "import sys;sys.path.insert(0,'.');from sim.engine.core import Sim;print(Sim.__bases__)"`). The design is
@@ -97,8 +97,8 @@ The slow suite (`python3 -m sim.tests --slow`) is green at `b0b3a8d0`. Full equi
   - Removing a module removes its fields.
   - The orchestrator applies the hub-file wiring.
   - Acceptance: a toy module's state survives a save round trip, and it appears and disappears in the save fields as the module is added and removed.
-- [x] **1.4** (`sim/tests/module_harness.py`; the rules are in `MODULE_MIGRATION_GUIDE.md`) `sim/tests/helpers/views.py`: `make_views(**plain_dicts)` and a recording `FakeCommands`. Also the test migration rules in `docs/architecture/TEST_MIGRATION.md`.
-- [x] **1.5** (`catalogue/`) Catalogue drafts in `docs/architecture/catalogue/<owner>.md`, one per Complaint 508 owner:
+- [x] **1.4** (`sim/tests/module_harness.py`; the rules are in `MODULE_MIGRATION_GUIDE.md`) `make_views(**plain_dicts)` and a recording `FakeCommands`.
+- [x] **1.5** Catalogue drafts, one per Complaint 508 owner (the drafts are no longer in the tree; each module's `module_spec.py` is the catalogue now):
   - Group cross-mixin reads by what the consumer wants to know.
   - Map writes onto the command vocabulary.
   - Draft limits: a view serves at least 3 callers or is a quote; about 25 views at most per owner.
@@ -144,10 +144,7 @@ The slow suite (`python3 -m sim.tests --slow`) is green at `b0b3a8d0`. Full equi
 
 ### Phase 5: remaining mixins, leaves to hub
 
-- [ ] **5.0 (read-only agent)** Re-measure and fix the order. Expected: campaigns, revolts and captives; hazards; coin and theft; foreign trade; society; projects; production; the older economy code last.
-- [ ] **5.x** One topic per task. Up to 2 agents at once on topics that neither read each other nor share files.
-  - A task is done only when its mixin leaves `Sim`'s bases, its forwarders and its test fakes are gone, and its caches are views.
-  - The orchestrator runs the full equivalence tier and the quick tier per merge, and the long tier every fifth merge.
+- [x] Done: `Sim` has no base classes and no mixin classes remain (`bash tools/done_check.sh`, the first lines).
 
 ### Phase 6: UI and protocol
 
@@ -197,7 +194,7 @@ actors (21), hazards, workforce (20 each), projects (19).
   `legacy_*` views (20); direct capital/money writes outside owners 0 (6).
 - [x] The shared answers are the `sharing` module's (`sim/sharing/`): it publishes `shared_answer` (workforce), `shared_answers` (actors) and
   `shared_bill` (materials) and reads exactly the views its stamp confirms an answer by (`sim/sharing/stamp.py`; markets publishes
-  `others_trade_stamp` for the year's trade by other parties). `sim/engine/view_share.py`, `bridge_actors.py`, `bridge_materials.py`,
+  `others_trade_stamp` for the year's trade by other parties). the engine's `view_share.py`, `bridge_actors.py`, `bridge_materials.py`,
   `bridge_stores.py`, `bridge_interface.py` and the bridge views `legacy_goods_market` and `game_attribute` are gone. Measure:
   `python3 tools/measure/module_graph.py`.
 - [ ] No other `legacy_*` view that hands out a live object (`legacy_world_map`,
@@ -274,7 +271,7 @@ actors (21), hazards, workforce (20 each), projects (19).
   store's owner (`DrawDownStock`, the actors' new `DrawDownActorStore`, `TakeFromGranary`, `HoldEdgeGoods`; `TakeGoods` is deleted).
   The cause book is reporting's (`sim/reporting/cause_rules.py`, `causes.py`; rows and the readings they are measured from are
   `ReportingSeat` fields): `NoteWageShock` and `NoteConcernChange` carry the figures their senders read, `CloseCausePeriod` closes a
-  seat's period, `cause_rows` and `causes_since` are its views, and `sim/engine/cause_book.py` is gone. `RepriceOpeningMoney` is applied
+  seat's period, `cause_rows` and `causes_since` are its views, and the engine's cause book is gone. `RepriceOpeningMoney` is applied
   by markets (the flag, each seat's `RescaleHouseholdMoney`), which asks the root to count the tree afresh with the assembly's
   `RepriceTree`. `RegisterSeat` is split: the assembly applies `AddSeat` and `MoveSeat` (`sim/assembly/root_commands.py`, through hooks
   the game sets on the assembly in `game_assembly.attach`, because the registry holds each seat's record and the root's own state),

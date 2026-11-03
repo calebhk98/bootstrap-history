@@ -7,106 +7,10 @@ from dataclasses import dataclass, field
 from typing import Any, Callable, Dict, List, Optional
 
 
-class _InvalidatingSet(set):
-    """A set that calls `on_change` after every mutation, with no exceptions.
-
-    A cache keyed off the set's exact membership cannot go stale, whichever call site adds to or discards from it.
-
-    Every mutating method a plain `set` exposes is overridden so that
-    swapping this in for `set()` changes nothing observable except that
-    `on_change` now fires. Non-mutating methods (`copy`, `union`, membership
-    tests, iteration, `len`) are inherited unchanged.
-    """
-
-    def __init__(self, iterable=(), on_change=None):
-        set.__init__(self, iterable)
-        self._on_change = on_change
-
-    def _fire(self):
-        if self._on_change is not None:
-            self._on_change()
-
-    def add(self, item):
-        if item not in self:
-            set.add(self, item)
-            self._fire()
-
-    def discard(self, item):
-        if item in self:
-            set.discard(self, item)
-            self._fire()
-
-    def remove(self, item):
-        set.remove(self, item)      # raises KeyError, same as a plain set
-        self._fire()
-
-    def pop(self):
-        item = set.pop(self)
-        self._fire()
-        return item
-
-    def clear(self):
-        if self:
-            set.clear(self)
-            self._fire()
-
-    def update(self, *others):
-        before = len(self)
-        set.update(self, *others)
-        if len(self) != before:
-            self._fire()
-
-    def difference_update(self, *others):
-        before = len(self)
-        set.difference_update(self, *others)
-        if len(self) != before:
-            self._fire()
-
-    def intersection_update(self, *others):
-        before = len(self)
-        set.intersection_update(self, *others)
-        if len(self) != before:
-            self._fire()
-
-    def symmetric_difference_update(self, other):
-        before = frozenset(self)
-        set.symmetric_difference_update(self, other)
-        if frozenset(self) != before:
-            self._fire()
-
-    def __ior__(self, other):
-        before = len(self)
-        result = set.__ior__(self, other)
-        if len(self) != before:
-            self._fire()
-        return result
-
-    def __iand__(self, other):
-        before = len(self)
-        result = set.__iand__(self, other)
-        if len(self) != before:
-            self._fire()
-        return result
-
-    def __isub__(self, other):
-        before = len(self)
-        result = set.__isub__(self, other)
-        if len(self) != before:
-            self._fire()
-        return result
-
-    def __ixor__(self, other):
-        before = frozenset(self)
-        result = set.__ixor__(self, other)
-        if frozenset(self) != before:
-            self._fire()
-        return result
-
-
 class _InvalidatingDict(dict):
     """A dictionary that calls `on_change` after every mutation.
 
-    Follows the exact pattern of _InvalidatingSet above. Used for
+    Used for
     `seat.active` (projects module) and `seat.employees` (workforce module) so that
     derived-state caches keyed on active project membership or workforce
     changes are reliably invalidated whenever keys or values mutate,

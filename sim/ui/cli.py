@@ -509,47 +509,14 @@ def _validate_basket_supply(civ_start_check, civilisations, production):
     return errors
 
 
-# Complaints/37: A FOUNDER'S WHOLE WORKING LIFE, IN HOURS - used only to say
-# how big a number is, never to gate anything a player can actually do
-# (neither cmd_path nor cmd_why stops a player starting a project past this
-# many hours; this is a claim made TO the player, not a rule enforced on
-# them). USED to be a separately typed 72,000, two lines below a SEPARATE
-# printed sentence deriving 60,000 from "2000/yr for 30 yrs" - both wrong,
-# because both were literals and DEFAULTS["founder_hours_per_year"] is DATA a
-# civilisation can set (see that field's own "2,000, NOT 2,400" comment for
-# why it moved off the 2,400 that made 72,000 exact). Typing a corrected
-# 60,000 in its place would only move the drift, not close it: if a scenario
-# ever sets founder_hours_per_year (or the expected working-life figure
-# below) to something else, a typed number is wrong again the moment it
-# does.
-#
-# So there is no typed lifetime figure any more. `_founder_lifetime_hours()`
-# computes it from the same two DEFAULTS entries the rest of the engine
-# reads for exactly this founder: `founder_hours_per_year` (how many hours a
-# year the founder works, same figure a hired man is paid by) and
-# `founder_life_mean` (the founder's EXPECTED REMAINING WORKING LIFE IN
-# YEARS - not a new "expected working years" invented for this print
-# statement, but the existing DEFAULTS entry core.py itself uses as the mean
-# of the founder's mortality draw: "founder remaining lifespan, elite male
-# already aged 35", see core.py's `life_left`). Multiplying those two must
-# go through one function, not be duplicated separately at each print
-# site: cmd_path's printed budget, cmd_path's feasibility judgement and
-# cmd_why's "% of a life" figure all call this one function, so whatever
-# DEFAULTS says, they cannot say two different things about it.
-#
-# (2,000 * 28 = 56,000 today. This is not a hardcoded literal because a
-# literal drifts the moment DEFAULTS changes, and the drift is easy to get
-# wrong even when "fixed" by hand: 28 years is the figure the mortality
-# model actually uses for founder_life_mean, not a round 30 a hand-typed
-# literal might use instead.)
+# A founder's whole working life in hours: used only to say how big a number is, never to gate what a player can do.
+# It is computed from the config's founder_hours_per_year and founder_life_mean (ui/founder_budget.py), never typed.
 def _founder_lifetime_hours(cfg=None):
     """Founder-hours a whole working life holds: hours/year * expected
     working years, both read from `cfg` if given (a live Sim's config, which
     may override either) and otherwise from DEFAULTS - the same source
-    core.py reads `founder_hours_per_year` and `founder_life_mean` from for
-    the founder's real hours ledger and real mortality draw. No caller of
-    this function may re-derive or re-type either input: that duplication
-    is exactly what lets two figures that should agree drift apart.
+    the founder's hours ledger (sim/labour/labour_hours.py) and mortality draw
+    (sim/scenario/rules.py) read.
     """
     return founder_budget(DEFAULTS, cfg)[2]
 
@@ -760,8 +727,8 @@ def _summarise_success_rate(label, run_count, success_count):
     if "[events disabled]" in label:
         print("                      NOTE: '--no-events' turns off weather/plague/")
         print("                      political hazards only. Project-failure rolls")
-        print("                      (projects.py _complete) and fractional-headcount")
-        print("                      rounding (labour.py _stochastic_round) still draw")
+        print("                      (sim/projects/completion.py complete) and fractional-headcount")
+        print("                      rounding (sim/labour/staff_moves.py stochastic_round) still draw")
         print("                      from the same RNG regardless of this flag, so this")
         print("                      batch still has real seed-to-seed variance - it is")
         print("                      reproducible for one seed, not noise-free. See")
@@ -1126,18 +1093,7 @@ def _print_ablation_table(scored):
               (node_id, success_rate, confidence_interval, median_year or "never", ("%d yr" % delay) if median_year else "n/a", verdict))
 
 
-# Complaints/37 section 2: cmd_sweep's "mortality" axis sweeps
-# founder_life_mean and needs a spread to draw around each mean point. This
-# USED to be a separately declared 4.0, half of DEFAULTS["founder_life_sd"]
-# (8.0) - the standard deviation every ordinary game, core.py's own
-# founder-lifespan draw, and this file's own _ingame_options all actually
-# use. A sweep whose whole purpose is to show how the OUTCOME is distributed
-# under mortality was doing so at half the real variance, understating the
-# tail in both directions - exactly the thing a sweep is for. Fixed by
-# deleting the second number: the mortality axis below now reads
-# DEFAULTS["founder_life_sd"] directly, the same way it already reads
-# DEFAULTS["founder_life_mean"] for its central values, so there is only one
-# place left that can disagree with itself.
+# cmd_sweep's mortality axis reads DEFAULTS["founder_life_sd"] for its spread and DEFAULTS["founder_life_mean"] for its central values.
 
 
 def cmd_sweep(args):
@@ -1509,9 +1465,9 @@ def main():
         subparser.add_argument("--horizon", type=int, default=500)
         subparser.add_argument("--no-events", action="store_true",
                        help="turn off weather/plague/political hazard rolls. NOT a "
-                            "noise-free baseline: project-failure risk (projects.py "
-                            "_complete) and fractional-headcount rounding (labour.py "
-                            "_stochastic_round) both draw from the same self.rng "
+                            "noise-free baseline: project-failure risk (projects/completion.py "
+                            "complete) and fractional-headcount rounding (labour/staff_moves.py "
+                            "stochastic_round) both draw from the same self.rng "
                             "regardless of this flag, so a --no-events batch still "
                             "has real seed-to-seed variance. What this flag actually "
                             "buys you is a run reproducible for one fixed seed, same "
@@ -1726,9 +1682,9 @@ def main():
     subparser.add_argument("--no-events", action="store_true",
                    help="turn off weather/plague/political hazard rolls, for a "
                         "playthrough with fewer surprises. This does NOT make the "
-                        "session noise-free: project-failure risk (projects.py "
-                        "_complete) and fractional-headcount rounding (labour.py "
-                        "_stochastic_round) still draw from the same self.rng "
+                        "session noise-free: project-failure risk (projects/completion.py "
+                        "complete) and fractional-headcount rounding (labour/staff_moves.py "
+                        "stochastic_round) still draw from the same self.rng "
                         "either way. A --session is reproducible run-to-run because "
                         "it replays the same seed, not because this flag removed "
                         "the randomness - it only removed the hazard rolls.")
