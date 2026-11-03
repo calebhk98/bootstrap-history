@@ -83,11 +83,11 @@ class TheSeatRecord(unittest.TestCase):
         self.record(ports).patents["loom"]["licensees"].append("firm:1")
         self.assertEqual(ports.sent, [("patents", {"loom": {"expires": 120, "licensees": ["firm:1"]}})])
 
-    def test_shares_held_are_the_records_holdings(self):
+    def test_shares_held_are_the_records_shares_held(self):
         ports = ports_holding(shares_held={"firm:1": 0.2})
         record = self.record(ports)
-        record.holdings["firm:2"] = 0.1
-        self.assertEqual((ports.sent, record.holdings), ([("shares_held", {"firm:1": 0.2, "firm:2": 0.1})], {"firm:1": 0.2, "firm:2": 0.1}))
+        record.shares_held["firm:2"] = 0.1
+        self.assertEqual((ports.sent, record.shares_held), ([("shares_held", {"firm:1": 0.2, "firm:2": 0.1})], {"firm:1": 0.2, "firm:2": 0.1}))
 
     def test_equity_issued_and_the_offer_count_are_sent_when_set(self):
         ports = ports_holding()
@@ -111,7 +111,7 @@ class TheSeatRecord(unittest.TestCase):
     def test_a_record_with_no_ports_stores_nothing(self):
         record = SeatRecord(kind="household")
         record.issued = 1.0
-        self.assertEqual((record.patents, record.holdings, record.offers, record.issued), ({}, {}, [], 0.0))
+        self.assertEqual((record.patents, record.shares_held, record.offers, record.issued), ({}, {}, [], 0.0))
 
 
 class ThePartysPlants(unittest.TestCase):
@@ -134,12 +134,12 @@ class ThePartysPlants(unittest.TestCase):
 
     def test_releasing_a_plant_asks_the_owner_with_the_year(self):
         party, calls = self.party("the plant")
-        self.assertEqual((party.holdings.release_plant("mill", SimpleNamespace(year=140)), calls), ("the plant", [("release", "mill", 140)]))
+        self.assertEqual((party.holdings.release_plant("mill", SimpleNamespace(setting=SimpleNamespace(year=140))), calls), ("the plant", [("release", "mill", 140)]))
 
     def test_releasing_a_plant_the_seat_does_not_run_is_an_error(self):
         party, _calls = self.party(None)
         with self.assertRaises(KeyError):
-            party.holdings.release_plant("mill", SimpleNamespace(year=140))
+            party.holdings.release_plant("mill", SimpleNamespace(setting=SimpleNamespace(year=140)))
 
     def test_receiving_a_plant_hands_it_to_the_owner(self):
         party, calls = self.party(None)

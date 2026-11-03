@@ -92,7 +92,7 @@ class StateReach(unittest.TestCase):
     def test_a_partners_chance_to_catch_is_its_own_governments_reach_against_how_visible_the_bite_is(self):
         asked = []
         world = SimpleNamespace(taxpayers=SimpleNamespace(state_reach=lambda: 1))
-        actors = SimpleNamespace(world_for=lambda government, home: asked.append((government, home)) or world,
+        actors = SimpleNamespace(countries=SimpleNamespace(world_for=lambda government, home: asked.append((government, home)) or world),
                                  get=lambda actor_id: actor_id)
         chance = partner_catch_chance(actors, "home world", "han_china_100ad", 0.5)
         self.assertEqual((chance, asked), (stock_dynamics.catch_chance(1.0, visibility_factor(0.5)),

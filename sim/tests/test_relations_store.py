@@ -19,6 +19,7 @@ from sim.ui.proto.seat_address import run_as_seat
 from sim.agents.api import relations
 from sim.tests.seat_views_stand_in import give_seats_slots
 from sim.tests.ui_stand_in import FactViews
+from sim.tests.interface_fixture import shipped_declared
 
 
 class Game(FactViews):
@@ -29,6 +30,7 @@ class Game(FactViews):
         self.state.seats["northern"] = seat_from_template({"country": "han"}, {})
         give_seats_slots(self.state)
         self.session_seat = None
+        self.interface_declared = shipped_declared   # the shipped commands, as the interface module declares them
         self.year = 100
         self.civ = {"id": "rome"}
         self.saved_stores = {}

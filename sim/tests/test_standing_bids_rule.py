@@ -19,7 +19,8 @@ class StandingBidTests(unittest.TestCase):
         economy = SimpleNamespace(
             area_map=SimpleNamespace(goods=lambda: [GADGET], area_of=lambda good, tile: "area"),
             view=lambda: SimpleNamespace(price=lambda good, area: 0.5),
-            setup=SimpleNamespace(opening_prices={GADGET: 400.0}))
+            setup=SimpleNamespace(opening_prices={GADGET: 400.0}, currency_id="coin"),
+            record=SimpleNamespace(memory=SimpleNamespace(opening_wage_level=lambda currency: 1.0)))   # opening-year money is today's
         flows = {"drawn": {GADGET: 1.0}}
         bids = port_actors.standing_bids(economy, flows, "tile", lambda good: 0.5,
                                                  lambda commodity: [commodity])

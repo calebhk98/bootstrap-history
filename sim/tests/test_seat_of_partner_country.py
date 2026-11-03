@@ -103,6 +103,7 @@ check("a seat of another country names it", seats_module("han").acting_country()
 class Registry:
     def __init__(self):
         self.asked = []
+        self.countries = self   # the registry's country part answers the government questions
 
     def government_of(self, country):
         self.asked.append(country)

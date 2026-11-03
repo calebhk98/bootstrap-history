@@ -33,7 +33,7 @@ class Labour:
 def make_world(taught=12.0, founder_staff=2.0, actor_staff=3.0):
     labour = Labour()
     labour.taught = taught
-    actors = types.SimpleNamespace(home_staff_fte=lambda trade, excluding=None: actor_staff if trade == TAUGHT else 0.0)
+    actors = types.SimpleNamespace(staff=types.SimpleNamespace(home_staff_fte=lambda trade, excluding=None: actor_staff if trade == TAUGHT else 0.0))
     needs = fake_needs(trade_available=labour.trade_available, people_who_exist=labour.people_who_exist,
                        taught_trade_people=labour.taught_trade_people, trades_absent=TRADES_ABSENT,
                        staff_on_all_books=lambda trade: {TAUGHT: founder_staff, "smith": 5.0}.get(trade, 0.0))
@@ -55,6 +55,7 @@ check("a trade people practise already is drawn from the whole country's people"
 
 class Firm:
     actor_id = "firm:1"
+    kind = "firm"
 
     def __init__(self, hired=0.0):
         self.workforce = {TAUGHT: hired} if hired else {}
@@ -63,8 +64,7 @@ class Firm:
 
 
 class StaffWorld:
-    def concern_staff(self, node_id):
-        return {TAUGHT: 4.0}
+    concerns = types.SimpleNamespace(concern_staff=lambda node_id: {TAUGHT: 4.0})
 
 
 firm = Firm()

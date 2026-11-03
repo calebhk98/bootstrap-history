@@ -32,6 +32,7 @@ check("the addressing key is not an argument of the handler", without_seat({"cmd
 
 
 from sim.tests.ui_stand_in import FactViews
+from sim.tests.interface_fixture import shipped_declared
 
 # ---- the same command, different households
 class Game(FactViews):
@@ -45,6 +46,7 @@ class Game(FactViews):
             held.modules.setdefault("seats", SeatsSeat())
             held.modules.setdefault("knowledge", KnowledgeSeat())
         self.session_seat = None
+        self.interface_declared = shipped_declared   # the shipped commands, as the interface module declares them
         self.year = 100
         self.civ = {"id": "home"}
 

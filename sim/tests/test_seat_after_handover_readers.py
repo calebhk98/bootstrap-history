@@ -59,7 +59,7 @@ heir = state.seats["heir"]
 bind_seat(state, "heir")
 check("bind_seat: the root aliases are the heir's own objects",
       state.acting_seat == "heir" and state.acting_record.household is heir.household
-      and state.acting_record.founder is heir.founder and state.acting_record.shares_held is heir.holdings and state.acting_record.seat_progress is heir.seat_progress
+      and state.acting_record.founder is heir.founder and state.acting_record.holdings is heir.holdings and state.acting_record.seat_progress is heir.seat_progress
       and state.seats["heir"].modules["workforce"].scholars == 2.0 and state.acting_record.founder._founder_death_year == 30, None)
 
 # ---- the purse

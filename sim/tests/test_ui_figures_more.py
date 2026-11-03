@@ -7,6 +7,7 @@ import unittest
 from types import SimpleNamespace
 from unittest import mock
 
+from sim.tests.interface_fixture import shipped_declared
 from sim.tests.ui_stand_in import StandIn
 from sim.ui import figures as figure_registry
 from sim.ui import figures_world  # noqa: F401  (registers the figures)
@@ -27,7 +28,7 @@ class _Game(StandIn):
             staff=lambda: {"employees": self.employees},
             eminence_report={"now": 3.0, "settles_at_if_nothing_changes": 5.0, "chance_of_ruin_this_year": 0.01},
             state_notice=0.25, state_reach=0.4, household_scale=1.5, hazard_figure=lambda kind, hazard: 0.2,
-            techniques_held={"a", "b", "c"}, techniques_granted={"a"}, active_projects={"x": {}}, civilisation={"hazards": []})
+            interface_declared=shipped_declared, techniques_held={"a", "b", "c"}, techniques_granted={"a"}, active_projects={"x": {}}, civilisation={"hazards": []})
 
 
 class FigureTests(unittest.TestCase):

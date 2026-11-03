@@ -192,6 +192,10 @@ class HouseholdParty:
 		with self._ports.acting():
 			return node_id in self._ports.knowledge() or node_id in world.knowledge.baseline_knowledge()
 
+	def imitation_worth(self, node_id: str, world: Any) -> float:
+		"""A seat's worth of an invention is the player's to judge, as a player actor's is: nothing here."""
+		return 0.0
+
 	def learn(self, chain: Any, world: Any) -> None:
 		with self._ports.acting():
 			self._ports.receive(chain, False)

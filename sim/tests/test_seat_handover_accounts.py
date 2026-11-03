@@ -43,7 +43,7 @@ def build():
     leaver.modules["seats"].offers.append({"id": "third#1", "from": "third", "to": "leaver", "give": {}, "take": {}, "expires": 9})
     leaver.modules["seats"].offer_serial = 1
     third.modules["diffusion"].disclosures["fire"] = {"mode": "licence", "licensees": {"leaver": {"fee": 1.0}}}
-    game.state.actors.records["firm:1"] = ActorRecord(kind="firm", holdings={"leaver": 0.3}, spun_off_from="leaver",
+    game.state.actors.records["firm:1"] = ActorRecord(kind="firm", shares_held={"leaver": 0.3}, spun_off_from="leaver",
                                                       royalty_owed={"loom": {"holder": "leaver", "rate": 0.1}})
     return game
 
@@ -90,7 +90,7 @@ check("another seat's stake in the leaver, its offer from the leaver and its dis
 check("the leaver's inbox of offers passes with the seat, addressed to the replacement",
       heir_seat.modules["seats"].offers[0]["to"] == "heir" and heir_seat.modules["seats"].offer_serial == 1, heir_seat.modules["seats"].offers)
 record = game.state.actors.records["firm:1"]
-check("another actor's records name the replacement", record.holdings == {"heir": 0.3} and record.spun_off_from == "heir"
+check("another actor's records name the replacement", record.shares_held == {"heir": 0.3} and record.spun_off_from == "heir"
       and record.royalty_owed["loom"]["holder"] == "heir", record)
 
 # ---- the replacement keeps its own founder: whether it lives, its years and why its run ended stay the replacement's

@@ -82,7 +82,7 @@ class _Stub(FactViews):
         return self._standing
 
     def trade_shortage_kind(self, trade_id, need, total_demand=None):
-        return progress_rules.shortage_kind(self.labour.hands.hours_you_can_call_on(trade_id), need, total_demand)
+        return progress_rules.shortage_kind(self.labour.hours_you_can_call_on(trade_id), need, total_demand)
 
 
 NODE = {"yrs": 2, "ph": 100, "lab": {"chemist": 1000.0}}

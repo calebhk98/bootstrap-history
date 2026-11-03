@@ -42,10 +42,10 @@ class SchoolLabour:
 
 school_game = Game(labour=SchoolLabour(), view=lambda name: (lambda: {"chemist": 1.0}), capital=500.0, civ={})
 for word in ("trade_school", "school"):
-    school_game.assembly.modules["workforce"].labour.founded.clear()
+    school_game.labour.founded.clear()
     reply = _cmd_buy(school_game, {}, {"cmd": "buy", "what": word, "trade": "chemist", "n": 1}, None)
     check("buy %s founds a school for the trade named" % word,
-          reply["ok"] and school_game.assembly.modules["workforce"].labour.founded == [("chemist", 1.0)] and reply["trade_school_seats"] == 1.0
+          reply["ok"] and school_game.labour.founded == [("chemist", 1.0)] and reply["trade_school_seats"] == 1.0
           and reply["trade"] == "chemist", reply)
 
 # ---- founding a school: the trade must exist, and the seats must be paid for ------------------------------
