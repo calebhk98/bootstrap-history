@@ -7,7 +7,6 @@ from .harness import *  # noqa: F401,F403
 
 from sim.engine import settings as _SETTINGS
 from sim.engine.data import money_short
-from sim.ui import cli as _CLI
 from sim.ui import cli_common as _CLI_COMMON
 from sim.ui import protocol as _protocol
 from sim.ui.proto.render_typed import render_pretty
@@ -61,13 +60,13 @@ check("a training row names its trade and is never printed as None",  # presenta
       "carter x2, ready 104" in labour and "None" not in labour, labour.split("IN TRAINING")[-1][:120])
 
 # --- the display width: `_wrap` uses the width it is given; the preference reaches both readers of it ----------------
-narrow_lines = _CLI._wrap("word " * 40, width=30, indent="   ").splitlines()
-wide_lines = _CLI._wrap("word " * 40, width=150, indent="   ").splitlines()
-check("cli._wrap uses the width it is given (narrower wraps the same text into more lines)",
+narrow_lines = _CLI_COMMON._wrap("word " * 40, width=30, indent="   ").splitlines()
+wide_lines = _CLI_COMMON._wrap("word " * 40, width=150, indent="   ").splitlines()
+check("cli_common._wrap uses the width it is given (narrower wraps the same text into more lines)",
       len(narrow_lines) > len(wide_lines) >= 1, (len(narrow_lines), len(wide_lines)))
-_CLI._apply_display_prefs({"display_width": 222})
+_CLI_COMMON._apply_display_prefs({"display_width": 222})
 carried = (_CLI_COMMON._DISPLAY_WIDTH, _protocol.DISPLAY_WIDTH)
 # Put the module globals back so no later check in this process renders at width 222.
-_CLI._apply_display_prefs(dict(_SETTINGS.CONFIG_DEFAULTS))
-check("_apply_display_prefs carries an Options override into cli._wrap's default and protocol.DISPLAY_WIDTH",
+_CLI_COMMON._apply_display_prefs(dict(_SETTINGS.CONFIG_DEFAULTS))
+check("_apply_display_prefs carries an Options override into cli_common._wrap's default and protocol.DISPLAY_WIDTH",
       carried == (222, 222), carried)

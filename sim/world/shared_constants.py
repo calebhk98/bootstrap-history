@@ -1,13 +1,13 @@
 """Physical and biological facts that more than one `sim/world/` domain
 needs, declared exactly ONCE - so they cannot drift apart the way
-`sim/world/land.py` and `sim/world/agriculture.py`'s own copies already had,
+`sim/world/land.py` and `sim/world/agriculture_core.py`'s own copies already had,
 silently, before this module existed.
 
-THE INCIDENT THIS MODULE EXISTS FOR. `land.py` needed `agriculture.py`'s
+THE INCIDENT THIS MODULE EXISTS FOR. `land.py` needed `agriculture_core.py`'s
 Cobb-Douglas labour-intensity physics (the labour output elasticity and the
 reference labour-hours-per-hectare figure it is calibrated against) but is
 STANDALONE by design (see land.py's own STANDALONE section) and may not
-import `agriculture.py`. The only options were to duplicate the numbers
+import `agriculture_core.py`. The only options were to duplicate the numbers
 under new names, which is what happened, or to duplicate the whole
 mechanism, which is worse. Duplicating a NUMBER with nothing keeping the two
 declarations equal is exactly the failure mode CLAUDE.md's naming section
@@ -49,7 +49,7 @@ NOTHING but `sim.constants.declare` - no other `sim/world/` module, no
 source. A module that imports only this file therefore gains no new
 concurrent-edit exposure beyond what importing `sim.constants` already
 carries (every domain file already accepts that): `land.py` importing this
-file cannot be broken by a concurrent edit to `agriculture.py`, `demand.py`,
+file cannot be broken by a concurrent edit to `agriculture_core.py`, `demand.py`,
 `demography.py` or `military_logistics.py`, because none of them is
 upstream of it. This is the same "imports nothing itself" property
 `sim.constants` already has for the registry mechanism, extended to actual
@@ -79,7 +79,7 @@ directly.
 
 HOW A CONSUMER USES ONE OF THESE. Import the value under its OWN local
 name, exactly as any other declared constant is used - there is no special
-API. `sim/world/land.py` and `sim/world/agriculture.py` both do this for
+API. `sim/world/land.py` and `sim/world/agriculture_core.py` both do this for
 every constant below; see either one's own comment at the import for the
 convention (a module keeps its historical public attribute name, e.g.
 `agriculture.LABOUR_OUTPUT_ELASTICITY`, but that name is now an alias for
@@ -99,7 +99,7 @@ SUBSISTENCE_ENERGY_REQUIREMENT_KCAL_PER_ADULT_DAY = declare(
     unit="kcal/adult/day",
     source="FAO minimum dietary energy requirement, adult average. "
            "sim/world/land.py (as LAND_HUMAN_CALORIC_NEED_KCAL_PER_DAY) and "
-           "sim/world/agriculture.py "
+           "sim/world/agriculture_core.py "
            "(as HUMAN_ENERGY_REQUIREMENT_KCAL_PER_ADULT_DAY) both import "
            "this declaration rather than declaring their own. "
            "sim/world/demand.py, sim/world/demography.py and "
@@ -124,7 +124,7 @@ WHEAT_ENERGY_KCAL_PER_KG = declare(
     unit="kcal/kg of threshed whole wheat grain",
     source="Standard food-composition figures for whole wheat grain (on "
            "the order of 3,300-3,400 kcal/kg). sim/world/land.py and "
-           "sim/world/agriculture.py both import this declaration under "
+           "sim/world/agriculture_core.py both import this declaration under "
            "the same name. sim/world/military_logistics.py (as "
            "GRAIN_ENERGY_KCAL_PER_KG) and sim/world/demand.py (under this "
            "exact name) each still declare the same figure independently - "
@@ -132,7 +132,7 @@ WHEAT_ENERGY_KCAL_PER_KG = declare(
            "why those stay separate.",
     confidence="B",
     why="Turns a caloric requirement into a mass of grain - the unit both "
-        "land.py's regional yields and agriculture.py's harvest arithmetic "
+        "land.py's regional yields and agriculture_core.py's harvest arithmetic "
         "are already stated in.")
 
 # ============================================================================
@@ -140,10 +140,10 @@ WHEAT_ENERGY_KCAL_PER_KG = declare(
 # ============================================================================
 # REFERENCE_LABOUR_HOURS_PER_HECTARE lives in sim/world/farm_labour.py (built from sub-tasks in data, which
 # this module may not read). The other numbers here are what land.py's own LABOUR INTENSITY section
-# duplicated from agriculture.py to build the SAME diminishing-returns curve
+# duplicated from agriculture_core.py to build the SAME diminishing-returns curve
 # (output scales with labour_hours ** LABOUR_OUTPUT_ELASTICITY, anchored to
 # reproduce the reference yield at the reference labour intensity) on a
-# per-hectare basis without importing agriculture.py itself. See land.py's
+# per-hectare basis without importing agriculture_core.py itself. See land.py's
 # own module docstring, LABOUR INTENSITY section, for the physics; this is
 # now the one place that physics's own numbers live.
 
@@ -155,7 +155,7 @@ LABOUR_OUTPUT_ELASTICITY = declare(
            "typically fall in the 0.3-0.6 range; 0.5 (output scales with "
            "the square root of labour hours) is the midpoint of that "
            "range, not a number derived for any crop or region this "
-           "project prices specifically. sim/world/agriculture.py (as "
+           "project prices specifically. sim/world/agriculture_core.py (as "
            "LABOUR_OUTPUT_ELASTICITY) and sim/world/land.py (as "
            "LAND_LABOUR_OUTPUT_ELASTICITY) both import this declaration - "
            "the exact pair that prompted this module's creation, per "
@@ -164,8 +164,8 @@ LABOUR_OUTPUT_ELASTICITY = declare(
     why="The curve shape that makes doubling labour on fixed land yield "
         "less than double the output - the whole mechanism behind "
         "diminishing returns to labour intensity in both land.py and "
-        "agriculture.py. The two modules use this identical curve for two "
-        "different purposes (agriculture.py's headline farm-population "
+        "agriculture_core.py. The two modules use this identical curve for two "
+        "different purposes (agriculture_core.py's headline farm-population "
         "calibration; land.py's intensive-margin land rent) and both "
         "purposes silently assume the SAME elasticity describes the SAME "
         "physical crop - a good reason for them to share one declaration "
@@ -180,12 +180,12 @@ ANNUAL_LABOUR_HOURS_PER_FARM_WORKER = declare(
            "farm calendar (bursts at ploughing, sowing and harvest, slack "
            "in between); 1,400 is a round midpoint, not a figure sourced "
            "to any one civilization this project prices. "
-           "sim/world/agriculture.py (as ANNUAL_LABOUR_HOURS_PER_FARM_"
+           "sim/world/agriculture_core.py (as ANNUAL_LABOUR_HOURS_PER_FARM_"
            "WORKER) and sim/world/land.py (as LAND_ANNUAL_LABOUR_HOURS_"
            "PER_FARM_WORKER) both import this declaration.",
     confidence="C",
     why="How many hours one adult can give to field work across a year - "
-        "agriculture.py uses it (against REFERENCE_LABOUR_HOURS_PER_"
+        "agriculture_core.py uses it (against REFERENCE_LABOUR_HOURS_PER_"
         "HECTARE) as one of two competing ceilings on hectares cropped per "
         "worker; land.py uses it (against LAND_AGRARIAN_POPULATION_SHARE, "
         "which stays local to land.py - see that constant's own "
@@ -202,7 +202,7 @@ ANNUAL_LABOUR_HOURS_PER_FARM_WORKER = declare(
 # apart from Britannia and Mesopotamia (far, nearly independent), replacing
 # the two assumptions Complaints/49 measured as both wrong in the same
 # direction - a region record is one weather system, and two region records
-# draw independently. Declared here, not in sim/world/agriculture.py (which
+# draw independently. Declared here, not in sim/world/agriculture_core.py (which
 # already owns WEATHER_YIELD_STDEV_FRACTION and the clip bounds this same
 # mechanism also reads), because it is a genuine
 # sim/world/ climate fact, not an engine heuristic, so it belongs in this
@@ -262,7 +262,7 @@ GROWING_SEASON_WEATHER_DECORRELATION_LENGTH_KM = declare(
 # were duplicated under different NAMES but the same VALUE and the same
 # UNITS, this one was duplicated under a different name, a different value
 # AND a different unit that happen to describe the same physical fact from
-# two directions: agriculture.py's FALLOW_SHARE_OF_HOLDING (0.5, the
+# two directions: agriculture_core.py's FALLOW_SHARE_OF_HOLDING (0.5, the
 # fraction of a holding idle in any one year) and land.py's own former
 # FALLOW_HOLDING_MULTIPLIER (2.0, holding hectares per CROPPED hectare) are
 # related by holding_multiplier = 1 / (1 - fallow_share) - algebraically
@@ -280,7 +280,7 @@ FALLOW_SHARE_OF_HOLDING = declare(
     source="The two-field rotation - one year cropped, one year bare "
            "fallow - is the standard Mediterranean practice of this "
            "period, named in data/production/40_organics.json's wheat_kg "
-           "yield_basis. sim/world/agriculture.py imports this declaration "
+           "yield_basis. sim/world/agriculture_core.py imports this declaration "
            "under this exact name; land.py's own FALLOW_HOLDING_MULTIPLIER "
            "(holding hectares per cropped hectare, = 1 / (1 - this)) is "
            "DERIVED arithmetic from this single declaration, not a second, "
@@ -291,7 +291,7 @@ FALLOW_SHARE_OF_HOLDING = declare(
         "The later three-field rotation drops the idle share to one "
         "third, which is why this is a property of the TECHNIQUE (an "
         "agricultural improvement should be able to change it) rather "
-        "than a constant of nature - see agriculture.py's own "
+        "than a constant of nature - see agriculture_core.py's own "
         "THREE_FIELD_FALLOW_SHARE_OF_HOLDING for exactly that improved "
         "case, declared separately because it names a DIFFERENT "
         "technique's own share, not a duplicate of this one.")

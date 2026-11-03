@@ -28,7 +28,7 @@ def foreign_agents(setup, record) -> set:
     """Agents living or working on another country's tiles: the home state does not assess them."""
     if not has_partners(setup):
         return set()
-    away = lambda tile: not on_home_tile(setup, tile)   # noqa: E731
+    away = lambda tile: not on_home_tile(setup, tile, True)   # noqa: E731
     return ({cohort.agent_id for cohort in record.cohorts.values() if away(cohort.tile)}
             | {producer.agent_id for producer in record.producers.values() if away(producer.tile)}
             | {merchant.agent_id for merchant in record.merchants.values() if away(merchant.home_tile)})

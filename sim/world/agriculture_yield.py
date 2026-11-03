@@ -1,10 +1,9 @@
 """The production function: how much land, labour, weather and technique
 turn into a harvest, and the marginal value of one more hour on it.
 
-This module holds the YIELD subject of `sim/world/agriculture.py`'s farming
-domain - see that file's own docstring, "THIS FILE IS A COMPOSITION POINT",
-for the other two subject files and why the constants and tables stay in
-that file instead: `Land` (a parcel, its size and its quality), one year's
+This module holds the YIELD subject of the farming domain (the facade is
+`sim/world/agriculture.py`; the constants and tables are in
+`sim/world/agriculture_core.py`): `Land` (a parcel, its size and its quality), one year's
 weather as a single multiplicative draw, the harvest-window helpers that
 turn a labour pool into the area a crew can actually reap in a season,
 `gross_harvest_kg` (the Cobb-Douglas production function itself, capped at
@@ -13,12 +12,11 @@ what the harvest window lets the labour pool bring in), and
 same function, which is what a labour market needs to price the last hour of
 farm work against everything else).
 
-STANDALONE THE SAME WAY THE PARENT MODULE IS. Nothing here imports from
+Standalone like the rest of the farming domain: nothing here imports from
 `sim/engine/`; the only imports besides the standard library are from
-`sim.world.agriculture` itself, for the declared constants and the
+`sim.world.agriculture_core`, for the declared constants and the
 Crop/Toolkit/Rotation tables this module's functions take as optional
-arguments - see `sim/world/agriculture.py`'s own STANDALONE ON PURPOSE
-section for why that matters and to whom.
+arguments (see its STANDALONE ON PURPOSE section).
 """
 import random
 from typing import Optional
@@ -143,7 +141,7 @@ def _max_hectares_harvestable_by_labour(
         return max_hectares_reapable_by_crew(
             worker_count, hours_per_worker_day=hours_per_worker_day,
             crop=crop, toolkit=toolkit)
-    # Deferred import to avoid circular dependency with agriculture_labour.py.
+    # Call-time import: agriculture_labour imports this module.
     from .agriculture_labour import hectares_cropped_per_farm_worker
     worker_equivalents = labour_hours / ANNUAL_LABOUR_HOURS_PER_FARM_WORKER
     return worker_equivalents * hectares_cropped_per_farm_worker(crop, toolkit)

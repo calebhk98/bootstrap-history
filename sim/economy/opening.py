@@ -164,7 +164,6 @@ def _open(setup: EconomySetup, replacement: float, plans=None, start=None) -> Tu
     start.share_hired = own.share_hired
     _seed_durable_stocks(setup, record, view)
     final_by_tile = _final_demand(setup, record, view, replacement, own=own)
-    record.goods.seed_opening_own_grown(own.grown_totals())
     for country in setup.countries():
         _open_country_producers(setup, record, area_map, carriage, priced_goods, final_by_tile, country)
     sites.apply_site_limits(record, setup)

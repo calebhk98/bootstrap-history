@@ -17,19 +17,21 @@ class Allocation:
     def __init__(self, world, schedule):
         self._world = world
         self.schedule = schedule
-        self._need_shares_cache = None          # (techniques reached, shares) of the last answer; set by _non_farm_need_shares
+        self._need_shares_cache = None          # (techniques reached, tiles held, civ id, shares) of the last answer; set by _non_farm_need_shares
 
     def _non_farm_need_shares(self):
         """Each non-farm trade's share of need from household demand through
         the recipe graph; with no recipe available, the current split."""
         reached = frozenset(self._world.scenario.civ["starting_techs"]) | frozenset(self._world.projects.done)
+        civ = self._world.scenario.civ
+        held = tuple(geography.tiles_held(civ))
+        key = (reached, held, civ.get("id"))
         cached = self._need_shares_cache
-        if cached is None or cached[0] != reached:
+        if cached is None or cached[0] != key:
             shares = workforce_spinup.need_shares_by_trade(
                 labour_market.production_data(), reached, self._world.trades.techniques_available_to,
-                workforce_carriage.carriage_for(reached, geography.tiles_held(self._world.scenario.civ)),
-                self._world.scenario.civ)
-            cached = self._need_shares_cache = (reached, shares)
+                workforce_carriage.carriage_for(reached, list(held)), civ)
+            cached = self._need_shares_cache = (key, shares)
         if cached[1]:
             return cached[1]
         hours = self._world.society.society_labour_hours

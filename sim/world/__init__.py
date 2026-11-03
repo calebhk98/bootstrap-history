@@ -10,7 +10,7 @@ the economy's farms and plots are the one food model, so `agriculture.py` suppli
 no national farm year runs.
 
 What that means for anyone editing here: a change to a model's shape reaches every module that imports it, so run the
-suite, not just this package's tests. `agriculture.py` is a composition point over `agriculture_yield.py` (the production
-function), `agriculture_storage.py` (the granary) and `agriculture_labour.py`; it keeps the declared constants and the
-crop, soil, rotation and toolkit tables and re-exports everything.
+suite, not just this package's tests. `agriculture.py` is a facade that re-exports `agriculture_core.py` (the declared constants and the
+crop, soil, rotation and toolkit tables), `agriculture_yield.py` (the production function), `agriculture_storage.py` (the
+granary) and `agriculture_labour.py`.
 """

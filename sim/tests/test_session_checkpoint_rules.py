@@ -11,7 +11,7 @@ import unittest
 from unittest import mock
 
 from sim.engine import settings
-from sim.ui import cli, cli_interactive, cli_interactive_saveload
+from sim.ui import cli_common, cli_interactive, cli_interactive_saveload
 from sim.ui.sitting import Sitting
 from sim.tests.ui_stand_in import Game
 
@@ -43,8 +43,8 @@ class CheckpointTests(unittest.TestCase):
     def test_the_horizon_is_read_from_the_saves_sidecar(self):
         path = os.path.join(self.folder, "game.json")
         with open(path + ".meta.json", "w") as sidecar:
-            json.dump({"horizon_years": cli.ENDLESS_HORIZON_YEARS}, sidecar)
-        self.assertEqual(settings.load_session_meta(path)["horizon_years"], cli.ENDLESS_HORIZON_YEARS)
+            json.dump({"horizon_years": cli_common.ENDLESS_HORIZON_YEARS}, sidecar)
+        self.assertEqual(settings.load_session_meta(path)["horizon_years"], cli_common.ENDLESS_HORIZON_YEARS)
 
 
 class ResumeTests(unittest.TestCase):
@@ -87,23 +87,23 @@ class EndlessTests(unittest.TestCase):
             return cli_interactive._new_game_ask_horizon({"default_horizon": 500})
 
     def test_choosing_endless_by_number_carries_the_large_finite_horizon(self):
-        number = 1 + [mode[0] for mode in cli.HORIZON_MODES].index("endless")
-        self.assertEqual(self.ask([str(number)]), cli.ENDLESS_HORIZON_YEARS)
+        number = 1 + [mode[0] for mode in cli_common.HORIZON_MODES].index("endless")
+        self.assertEqual(self.ask([str(number)]), cli_common.ENDLESS_HORIZON_YEARS)
 
     def test_choosing_endless_by_name_does_the_same(self):
-        self.assertEqual(self.ask(["endless"]), cli.ENDLESS_HORIZON_YEARS)
+        self.assertEqual(self.ask(["endless"]), cli_common.ENDLESS_HORIZON_YEARS)
 
     def test_a_named_preset_carries_its_years(self):
         self.assertEqual(self.ask(["challenge"]), 400)
 
     def test_a_remembered_endless_horizon_is_accepted_by_a_blank_answer(self):
         with mock.patch("builtins.input", side_effect=[""]), mock.patch("builtins.print"):
-            self.assertEqual(cli_interactive._new_game_ask_horizon({"default_horizon": cli.ENDLESS_HORIZON_YEARS}),
-                             cli.ENDLESS_HORIZON_YEARS)
+            self.assertEqual(cli_interactive._new_game_ask_horizon({"default_horizon": cli_common.ENDLESS_HORIZON_YEARS}),
+                             cli_common.ENDLESS_HORIZON_YEARS)
 
     def test_a_game_with_the_endless_span_is_endless_and_one_with_a_standard_span_is_not(self):
-        self.assertTrue(cli._is_endless_horizon(-100 + cli.ENDLESS_HORIZON_YEARS, -100))
-        self.assertFalse(cli._is_endless_horizon(-100 + 500, -100))
+        self.assertTrue(cli_common._is_endless_horizon(-100 + cli_common.ENDLESS_HORIZON_YEARS, -100))
+        self.assertFalse(cli_common._is_endless_horizon(-100 + 500, -100))
 
 
 if __name__ == "__main__":

@@ -205,10 +205,10 @@ SHAPE.
                   `Storage.step` for the identity `sim/tests/test_
                   agriculture.py`'s conservation check verifies every year.
 
-THIS FILE IS A COMPOSITION POINT over three sibling files, grouped by
-subject rather than gathered into one large file, so an agent working on one
-part of farming is not forced to collide with one working on another part.
-The three siblings hold the functions and classes:
+`agriculture.py` COMPOSES THIS FILE WITH THREE SIBLINGS, grouped by subject
+rather than gathered into one large file, so an agent working on one part of
+farming is not forced to collide with one working on another part. The
+siblings hold the functions and classes:
 
     agriculture_yield.py     the production function itself: `Land`, one
                               year's weather draw, the harvest-window
@@ -242,13 +242,9 @@ subject as the rest of what this file declares, so moving only the
 instance-construction lines to a sibling would group by file size rather
 than by subject.
 
-THE IMPORT SURFACE MATCHES A SINGLE agriculture.py. Every declared constant,
-`Crop`/`Soil`/`Rotation`/`Toolkit`/`StorageTechnique` and their table
-instances, `Land`, `Storage`, `YearFlows`, and every function this module
-exports is reachable as `agriculture.<name>`. The relative imports just
-above the `if __name__ == "__main__":` block below pull the three siblings'
-names into this module's own namespace for exactly that reason: nothing
-elsewhere in the repository needs to know these three files exist.
+THE IMPORT SURFACE IS `agriculture.py`. It re-exports every name here and
+every name of the three siblings, so `agriculture.<name>` reaches any of them.
+Siblings import what they need from this file directly.
 """
 import collections
 
