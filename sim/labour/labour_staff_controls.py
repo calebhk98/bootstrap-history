@@ -47,7 +47,7 @@ class StaffControls:
 
     def replace_lost_foremen(self):
         """auto_replace_foreman: hire the specialists open concerns need and lack."""
-        for trade, used in sorted(self._world.actors.venture_foremen_used().items()):
+        for trade, used in sorted(self._world.ventures.venture_foremen_used().items()):
             short = math.ceil(used - self.book.employed(trade) - 0.01)
             self.hire_to_cover(trade, short, "auto_replace_foreman")
 
@@ -55,7 +55,7 @@ class StaffControls:
         """Hire what the flagged concerns need and the household lacks (the projects module works out how many).
 
         Hires through `hire` so its cash, room and literacy limits apply unchanged."""
-        for resource, short in self._world.actors.keep_staffed_hires().items():
+        for resource, short in self._world.ventures.keep_staffed_hires().items():
             self.hire_to_cover(trade_data.staff_resource_trade(trade_data.registry_of(self._world), resource), short,
                                "keep_staffed", partial=True)
 
@@ -67,7 +67,7 @@ class StaffControls:
         if not self._world.policy.get("reserve_staff", False):
             return
         workforce = self._world.workforce
-        scholars_free, craftsmen_free = self._world.actors.venture_staff_free()
+        scholars_free, craftsmen_free = self._world.ventures.venture_staff_free()
         for trade, target, free in ((trade_data.generic_craft_trade(), workforce.reserve_craftsmen, craftsmen_free),
                                     (trade_data.scholar_trade(), workforce.reserve_scholars, scholars_free)):
             short = math.ceil(target - free - 0.01)
@@ -87,7 +87,7 @@ class StaffControls:
                                        hiring_outlay, self._world.finance.spending_power("buy"))
         if places <= 0:
             return False
-        if not self._world.finance.build_worker_housing(places):
+        if not self._world.commands.build_worker_housing(places):
             return False
         self._world.send(RecordEvent.of("policy_housing", "%s: you build housing for %d more people" % (label, places), policy=label, places=places))
         return True

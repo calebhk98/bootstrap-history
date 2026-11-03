@@ -38,7 +38,6 @@ READS_BY_OWNER = {
     "production": ("concern_market", "running", "institution_units", "upkeep", "revenue_estimate", "is_venture", "held_trade"),
     "projects": ("active_projects", "project_order", "staffing_closed_hand_shortfall", "start_check", "exclusion_reason",
                  "active_hours_still_wanted", "keep_staffed_hires", "concerns_to_close_for_staffing"),
-    "sharing": ("shared_answer",),
     "materials": ("material_price_factor",),
     "finance": ("debt_status", "credit_limit", "living_cost", "spending_power", "can_pay", "purchase_refusal"),
     "resources": ("mine_operating_cost",),

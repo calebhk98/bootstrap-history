@@ -34,7 +34,7 @@ def holdings_in_use(holdings) -> bool:
 
 def stock_in_use(ledger_seat) -> bool:
 	"""Whether the seat's tonnes ledger holds any tonnes: a lazily made ledger or snapshot with nothing in it does not."""
-	stock, opening = ledger_seat._material_stock_ledger, ledger_seat._material_stock_opening
+	stock, opening = ledger_seat.material_stock_ledger, ledger_seat.material_stock_opening
 	return any((opening or {}).get("tonnes", {}).values()) or (any(stock.values()) if stock else False)
 
 

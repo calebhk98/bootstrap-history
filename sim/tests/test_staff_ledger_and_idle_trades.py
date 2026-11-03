@@ -32,9 +32,9 @@ class Ledger:
         self._world = SimpleNamespace(
             workforce=household, projects=projects, state=SimpleNamespace(household=household, scenario=SimpleNamespace(year=100)),
             scenario=SimpleNamespace(nodes={node_id: {"name": node_id.title(), "lab": {}} for node_id in set(foremen) | set(active or {})}),
-            actors=SimpleNamespace(venture_foremen_used=lambda: {trade: 1.0 for trade in foremen.values()},
-                                   venture_foreman=lambda node_id: (foremen[node_id], 1.0),
-                                   concerns_to_close_for_staffing=lambda: [], stopped_yearly_value=lambda node_ids: 0.0))
+            ventures=SimpleNamespace(venture_foremen_used=lambda: {trade: 1.0 for trade in foremen.values()},
+                                    venture_foreman=lambda node_id: (foremen[node_id], 1.0),
+                                    concerns_to_close_for_staffing=lambda: [], stopped_yearly_value=lambda node_ids: 0.0))
         event_stand_in.stood_in(self._world)
         self.ledger = StaffLedger(self._world, book=self, market=market)
         self.controls = StaffControls(self._world, book=self, capacity=self, hiring=self, market=market)

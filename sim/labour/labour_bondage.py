@@ -154,13 +154,13 @@ class Bondage:
         room = self.capacity.household_room()
         refusal = over_room_refusal(n_people, room, lambda: self.advice.staff_advice("artisans"))
         if refusal:
-            self._world.note_buy_refusal(refusal)
+            self._world.commands.note_buy_refusal(refusal)
             return 0
         # A town's slave market has a depth. Buying beyond it bids the price up.
         price = self.slave_quote(n_people)
         workforce = self._world.workforce
         if not self._world.finance.can_pay(price):
-            self._world.note_buy_refusal(self._world.finance.refusal_text("%d slaves" % n_people, price))
+            self._world.commands.note_buy_refusal(self._world.finance.refusal_text("%d slaves" % n_people, price))
             return 0
         self._world.send(PayEdge(self._world.EDGE_SLAVE_TRADERS, price, "slaves bought"))
         workforce.slaves += n_people

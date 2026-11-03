@@ -23,7 +23,7 @@ def labour(wages=None, alive=True, wage_hours=0.0, teaching=0.0, relocation=0.0,
                           relocation_hours_this_year=relocation, supervision_hours_this_year=supervision,
                           bondage_years_left=0, directors_extra=0.0)
     world = SimpleNamespace(
-        actors=SimpleNamespace(director_overhead_hours=lambda: 0.0),
+        directors=SimpleNamespace(overhead_hours=lambda: 0.0),
         scenario=SimpleNamespace(cfg={"founder_hours_per_year": POOL_HOURS, "director_hours_per_year": 0.0}),
         founder_alive=alive, workforce=household, bondage_years_left=0)
     hours_part = SimpleNamespace(_world=world, BONDAGE_HOURS_SHARE=0.25)

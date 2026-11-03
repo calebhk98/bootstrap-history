@@ -37,5 +37,5 @@ class FounderHours:
         workforce = self._world.workforce
         return hours_committed(workforce.teaching_hours_this_year,
                                workforce.relocation_hours_this_year,
-                               (workforce.supervision_hours_this_year or 0.0) + self._world.actors.director_overhead_hours(),
+                               (workforce.supervision_hours_this_year or 0.0) + self._world.directors.overhead_hours(),
                                workforce.wage_hours_this_year)

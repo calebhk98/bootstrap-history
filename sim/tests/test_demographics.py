@@ -12,7 +12,6 @@ HOURS = 2000.0
 
 def labour_of(civ_id="rome_100ad"):
     world = stand_in_world(civ_id)
-    world.actors.shared_answer = lambda key, inputs, compute, standalone=False: compute()
     world.people.home_tiles_held_version = lambda: 0
     world.knowledge.effect_factor = lambda channel, value, exponent=None: value
     return world, Labour(world)

@@ -24,7 +24,7 @@ class _StubLabour:
             projects=projects, money_text=lambda amount, grouped=False: "%g" % amount,
             people=types.SimpleNamespace(pop_scale=1.0),
             trades=types.SimpleNamespace(HOURS_PER_PERSON_YEAR=2000.0, trades_absent=set(absent)),
-            scenario=types.SimpleNamespace(nodes=nodes, closure=lambda nodes, node_id: {node_id}),
+            scenario=types.SimpleNamespace(nodes=nodes, closure=lambda node_id: {node_id}),
             knowledge=types.SimpleNamespace(ROOM_SOURCES=list(room_sources), is_venture=lambda node_id: True,
                                             is_visible=lambda node_id: True, start_reason=lambda node_id, _why=True: (True, "")),
             finance=types.SimpleNamespace(housing_price_per_place=lambda: 100.0))

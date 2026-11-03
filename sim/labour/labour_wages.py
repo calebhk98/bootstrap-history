@@ -176,6 +176,6 @@ class Wages:
         return self.wage_for_hours(trade, self.hours_for_sale())
 
     def wage_signature(self):
-        """A cheap fingerprint of what moves a trade's market wage (the economy sets it once a year), for callers
-        that cache a figure derived from `standing_job_pay`."""
-        return self._world.year
+        """What moves a trade's market wage, for callers that cache a figure derived from `standing_job_pay`: the year and
+        every trade's quoted wage now (the wage changes at the year's clearing and before the economy opens, not only with the year)."""
+        return (self._world.year, tuple(self.market.quote_annual(trade) for trade in sorted(self._world.trades.wages)))
