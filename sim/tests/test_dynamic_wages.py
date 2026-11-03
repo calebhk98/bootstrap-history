@@ -5,7 +5,11 @@ from .harness import *
 
 from sim.engine.data import ANNUAL_WAGE
 from sim.labour.labour_market_api import LabourMarket
+from sim.engine.data import _STARTING_SCHEDULE
+from sim.labour.wages import training_premium
+from sim.workforce.wage_schedule import HOUSEHOLD_TIME_PREFERENCE
 from sim.labour.wage_factors import annual_wage, housing_factor, tools_factor, weighted_factor
+CHEMIST_TRAINING_YEARS = _STARTING_SCHEDULE.training_years["chemist"]
 
 SHARES = (LabourMarket.WAGE_SHARE_FOOD, LabourMarket.WAGE_SHARE_HOUSING, LabourMarket.WAGE_SHARE_TOOLS,
           LabourMarket.WAGE_SHARE_SKILL_AND_DIFFICULTY)
@@ -42,5 +46,8 @@ check("the market ratio of a tool scales its factor",
 # --- the annual figure is the base through every factor
 check("the annual wage is the base times every factor on it",
       abs(annual_wage(1000.0, 1.1, 1.2, 1.3, 1.4, 1.5) - 1000.0 * 1.1 * 1.2 * 1.3 * 1.4 * 1.5) < 1e-9)
+# the training premium is priced at the households' own time preference (the wage rule), so a trade's wage over the unskilled trade's
+# is that premium, not a multiple chosen beforehand
+premium = training_premium(CHEMIST_TRAINING_YEARS, HOUSEHOLD_TIME_PREFERENCE)
 check("skill and job difficulty still distinguish trades at neutral prices (the calibrated table)",
-      ANNUAL_WAGE["chemist"] > ANNUAL_WAGE["labourer"] * 2, (ANNUAL_WAGE["chemist"], ANNUAL_WAGE["labourer"]))
+      premium > 1.0 and abs(ANNUAL_WAGE["chemist"] / ANNUAL_WAGE["labourer"] - premium) < 1e-9, (ANNUAL_WAGE["chemist"], ANNUAL_WAGE["labourer"], premium))

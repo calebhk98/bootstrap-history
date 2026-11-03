@@ -33,10 +33,10 @@ check("nothing bought adds nothing", top_ups(95.0, clearing(SELLS, [0.0, 0.0])) 
 check("no sellers add nothing", top_ups(95.0, clearing([], [])) == {})
 check("the book's own edges are not paid a top-up",
       top_ups(95.0, clearing([("edge:mint", "t1", 5.0, 100.0)] + SELLS[:1], [5.0, 10.0])).keys() == {"mine_a"})
-check("a clearing with no pairing shares the mint's purchase by what each seller sold",
-      abs(sum(top_ups(95.0, clearing(SELLS, [60.0, 40.0], paired=False)).values())
-          - 100.0 * (600.0 * 15.0 + 200.0 * 5.0) / 800.0) < 1e-9,
-      top_ups(95.0, clearing(SELLS, [60.0, 40.0], paired=False)))
+# settlement follows the clearing's pairing: a result that traded carries one, so a clearing without one has no taking to top up
+unpaired = clearing(SELLS, [60.0, 40.0], paired=False)
+check("a clearing with no pairing has no taking by the mint to top up, however much the mint bought",
+      top_ups(95.0, unpaired) == {} and received_price(95.0, unpaired) == 80.0, (top_ups(95.0, unpaired), received_price(95.0, unpaired)))
 
 check("the mint holds its coin metal while bullion is cheaper than coin", not melting_pays(88.0, 100.0))
 check("the mint sells coin metal once bullion fetches at least parity", melting_pays(100.0, 100.0))
