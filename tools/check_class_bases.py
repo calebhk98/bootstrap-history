@@ -1,12 +1,12 @@
-"""Find classes that bundle behaviour by inheriting it, in the packages that were split into parts.
+"""Find classes that bundle behaviour by inheriting it, anywhere in `sim/` except `sim/tests`.
 
-A class in `sim/labour`, `sim/markets`, `sim/agents`, `sim/actors` or `sim/economy` that is named `...Mixin`, or that has
+A class that is named `...Mixin`, or that has
 more than one base, composes by inheritance; its behaviour belongs in plain parts it owns and callers address as
 `<owner>.<part>.<method>`. The files are parsed with `ast`, never imported.
 
 Allowed several bases (a base that is not a bundle of behaviour):
   - `Actor(Reviewable, Borrower)`: two interfaces of overridable defaults the actors' subclasses override.
-  - a class whose extra bases are only `Protocol`, `Generic`, `Enum`, `NamedTuple`, `TypedDict` or `Exception` families.
+  - a class whose extra bases are only `Protocol`, `Generic`, `Enum`, `NamedTuple`, `TypedDict` or exception families (names ending `Error` or `Exception`).
   - `CollectionView`.
 Prints `file:line: class Name(bases)` for each violation and exits 1 when there is any. A class in `PENDING` is printed
 with a `pending` prefix and does not fail the run.
@@ -15,7 +15,8 @@ import ast
 import os
 import sys
 
-PACKAGES = ("sim/labour", "sim/markets", "sim/agents", "sim/actors", "sim/economy")
+PACKAGES = ("sim",)
+EXCLUDED = ("sim/tests",)
 REPOSITORY_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ALLOWED_MULTIPLE = {("agents/base.py", "Actor"): {"Reviewable", "Borrower"}}
 TYPING_BASES = {"Protocol", "Generic", "Enum", "IntEnum", "NamedTuple", "TypedDict", "Exception", "ValueError", "RuntimeError",
@@ -49,7 +50,7 @@ def violations_in(path, relative):
         if node.name.endswith("Mixin"):
             found.append((node.lineno, description + " is a mixin"))
             continue
-        extra = [name for name in bases if name not in TYPING_BASES]
+        extra = [name for name in bases if name not in TYPING_BASES and not name.endswith(('Error', 'Exception'))]
         if len(extra) <= 1:
             continue
         allowed = None
@@ -65,7 +66,8 @@ def violations_in(path, relative):
 def main():
     count = 0
     for package in PACKAGES:
-        for directory, _names, files in os.walk(os.path.join(REPOSITORY_ROOT, package)):
+        for directory, names, files in os.walk(os.path.join(REPOSITORY_ROOT, package)):
+            names[:] = sorted(name for name in names if os.path.relpath(os.path.join(directory, name), REPOSITORY_ROOT) not in EXCLUDED)
             for name in sorted(files):
                 if not name.endswith(".py"):
                     continue

@@ -15,7 +15,7 @@ markets_mixin_count="$(grep -rhE --include=*.py '^class [A-Za-z0-9_]*Mixin\b' si
 echo "mixin classes in sim/labour: $labour_mixin_count"
 echo "mixin classes in sim/markets: $markets_mixin_count"
 
-# classes in labour, markets, agents, actors and economy that are a ...Mixin or inherit behaviour from more than one base (the allowed
+# classes anywhere in sim/ (tests excluded) that are a ...Mixin or inherit behaviour from more than one base (the allowed
 # bases and the classes still waiting for their split are in tools/check_class_bases.py)
 class_base_output="$(python3 tools/check_class_bases.py 2>&1)"
 class_base_status=$?
@@ -94,9 +94,19 @@ owner_status=$?
 echo "writes to an economy record part by a module that does not own it: $(printf '%s\n' "$owner_output" | grep -c .)"
 printf '%s\n' "$owner_output" | grep . | sed 's/^/  /'
 
-port_reach="$(grep -rnE '(\beconomy|_economy)\.(record|setup)\b' sim/markets --include='port*.py' | cut -d: -f1,2)"
-echo "economy record/setup reach-through from sim/markets/port*.py: $(printf '%s\n' "$port_reach" | grep -c .)"
+port_reach="$(grep -rnE '(\beconomy|_economy)\.(record|setup)\b' sim/markets --include='*.py' | cut -d: -f1,2)"
+echo "economy record/setup reach-through from sim/markets (report only): $(printf '%s\n' "$port_reach" | grep -c .)"
 printf '%s\n' "$port_reach" | grep . | sed 's/^/  /'
+
+parts_output="$(python3 tools/check_parts.py 2>&1)"
+parts_status=$?
+echo "part structure problems and private reaches into a part (tools/check_parts.py): $(printf '%s\n' "$parts_output" | grep -c .)"
+printf '%s\n' "$parts_output" | grep . | tail -5 | sed 's/^/  /'
+
+attribute_output="$(python3 tools/check_attribute_calls.py 2>&1)"
+attribute_status=$?
+echo "attributes read from an adapter object that its class lacks (tools/check_attribute_calls.py): $(printf '%s\n' "$attribute_output" | grep -c .)"
+printf '%s\n' "$attribute_output" | grep . | tail -5 | sed 's/^/  /'
 
 # Checks that fail the run when above zero; the other counts above are a backlog and stay informational.
 failed_checks=()
@@ -108,6 +118,8 @@ failed_checks=()
 [ "$money_count" -gt 0 ] && failed_checks+=("direct capital/money writes outside owners")
 [ "$legacy_count" -gt 0 ] && failed_checks+=("string reads of legacy_* views outside tests")
 [ "$wall_status" -ne 0 ] && failed_checks+=("package walls (tools/check_package_walls.py)")
+[ "$parts_status" -ne 0 ] && failed_checks+=("part structure and private reaches (tools/check_parts.py)")
+[ "$attribute_status" -ne 0 ] && failed_checks+=("adapter attributes (tools/check_attribute_calls.py)")
 [ "$owner_status" -ne 0 ] && failed_checks+=("record part writers (tools/check_record_owners.py)")
 
 if [ "${#failed_checks[@]}" -eq 0 ]; then
