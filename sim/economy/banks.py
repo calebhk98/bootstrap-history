@@ -49,6 +49,15 @@ class Bank:
     failed_year: int = -1                                        # the year its depositors ran; below zero while it stands
     paid_in: float = 0.0                                         # the capital its founder put in, which no dividend returns
     owner_loss: float = 0.0                                      # the capital its founder lost when the bank failed
+    dividend_paid: float = 0.0                                   # what the last year end paid its founder as a dividend
+
+
+def dividends_paid_to(record, owner: AgentId) -> float:
+    """What the banks `owner` founded paid it as a dividend at the last year end, when the owner keeps its money outside the
+    economy's households (a seat): a household's dividend is shared among its tile's cohorts and is theirs."""
+    if owner in record.cohorts:
+        return 0.0
+    return sum(bank.dividend_paid for _bank_id, bank in sorted(record.capital_markets.banks.items()) if bank.founder == owner)
 
 
 def is_deposit(capital_markets, loan: Loan) -> bool:

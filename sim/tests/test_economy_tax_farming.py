@@ -16,6 +16,7 @@ from sim.economy.types import CurrencySpec, Transfer
 
 MONEY = "coin"
 STATE = "state:test"
+NOT_THE_ECONOMYS_AGENTS = ("staff:escrow", "bank:b")
 POLL = TaxForm("poll", "adult_labour_years", 0.05)
 
 
@@ -24,6 +25,8 @@ def bidding_record(base=1000.0, state_take=40.0, cash=None):
     record.taxes.tax_history = {"poll": {"base": base, "state_take": state_take}}
     for agent, amount in (cash or {"rich": 500.0, "poor": 5.0}).items():
         record.book.transfer(Transfer("edge:legacy", agent, MONEY, amount, "opening"))
+        if agent not in NOT_THE_ECONOMYS_AGENTS:
+            record.merchants[agent] = None   # the economy's own agents; only the names matter here
     return record
 
 
@@ -38,6 +41,10 @@ class BidTests(unittest.TestCase):
         self.assertEqual([agent for _price, _cash, agent in offers], ["rich", "poor"])
         self.assertAlmostEqual(offers[0][0], 0.05 * 1000.0 * tax_farming.TAX_FARMER_REACH / 1.1)
         self.assertEqual(offers[1][0], 5.0)
+
+    def test_an_escrow_account_or_a_banks_cash_does_not_bid(self):
+        record = bidding_record(cash={"staff:escrow": 900.0, "bank:b": 900.0, "rich": 500.0})
+        self.assertEqual([agent for _price, _cash, agent in tax_farming.bids(record, POLL, 0.1, STATE, MONEY)], ["rich"])
 
     def test_nobody_bids_without_a_year_of_history(self):
         record = bidding_record()
