@@ -284,12 +284,6 @@ class ActorReads:
     def actor_staff_fte(self, trade):
         return self._needs.actor_staff[trade]
 
-    def actors_staff_nationwide(self, trade):
-        return self._needs.actor_staff_nationwide[trade]
-
-    def actor_staff_total(self):
-        return self._needs.actor_staff_total()
-
     def active_hours_still_wanted(self):
         return self._needs.active_hours_still_wanted()
 

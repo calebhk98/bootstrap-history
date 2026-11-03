@@ -92,15 +92,20 @@ class AgentEconomyReads:
     def agent_people_by_trade(self):
         return self._needs.agent_people_by_trade()
 
-    def agent_people_by_tile_and_trade(self):
-        return self._needs.agent_people_by_tile_and_trade()
+    def agent_wage_at(self, trade, tile):
+        """Money one hour of the trade costs a bid on `tile` (the wage of the tile's labour area, else the unpriced-trade
+        wage); None until the game's money is priced at the economy."""
+        if self._needs.agent_unskilled_wage() is None:
+            return None
+        return self._needs.agent_wage_at(trade, tile)
 
-    def agent_idle_hours_by_trade(self):
-        """{trade: (hours offered and not hired last year, hours offered)} nationwide."""
-        return self._needs.agent_idle_hours_by_trade()
+    def agent_hours_offered_at(self, trade, tile):
+        """Hours of the trade households offered in `tile`'s labour area at the last clearing; None before one."""
+        return self._needs.agent_hours_offered_at(trade, tile)
 
-    def agent_wage_per_hour(self, trade):
-        return self._needs.agent_wage[trade]
+    def agent_working_hours(self):
+        """The hours a person-year counts in the running economy; None while it opens."""
+        return self._needs.agent_working_hours()
 
     def agent_trades(self):
         """The trades the agent economy holds; None until it opens."""

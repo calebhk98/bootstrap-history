@@ -2,9 +2,16 @@
 from sim.constants import declare
 
 
+def person_year_hours(world):
+    """The hours a person-year counts: the running economy's working year once it is open, else the scenario's."""
+    hours = world.economy.agent_working_hours()
+    return hours if hours is not None else world.trades.HOURS_PER_PERSON_YEAR
+
+
 class WageScheduleReader:
-    def __init__(self, world):
+    def __init__(self, world, settlement):
         self._world = world
+        self._settlement = settlement
         self._wage_schedule_cache = None   # the opening's wage schedule, built on first use
 
     def opening_wage_schedule(self):
@@ -42,8 +49,8 @@ class WageScheduleReader:
     def wage_per_hour(self, trade):
         """Money one hour of this trade is paid: what the economy's labour markets pay it, or before the
         economy has opened the opening schedule's (training premium times the money value of an unskilled hour)."""
-        paid = None if self._world.economy.unskilled_wage() is None else self._world.economy.agent_wage_per_hour(trade)
+        paid = self._world.economy.agent_wage_at(trade, self._settlement.base_tile())
         return paid if paid is not None else self.wage_schedule().wage_per_hour(trade)
 
     def base_annual_wage(self, trade):
-        return self.wage_per_hour(trade) * self._world.trades.HOURS_PER_PERSON_YEAR
+        return self.wage_per_hour(trade) * person_year_hours(self._world)

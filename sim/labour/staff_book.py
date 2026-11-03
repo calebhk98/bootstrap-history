@@ -4,6 +4,7 @@ of every employer against the people the labour core holds.
 The founder's household keeps its staff as a trade-to-head-count map (the workforce module's `employees`); only
 this part reads or writes it from labour. Firms and states keep their own staff in the agent registry;
 `reserved_people` adds both so one trade's reservations read from one place. Complaint 556."""
+from .labour_wage_schedule import person_year_hours
 
 
 class StaffBook:
@@ -66,21 +67,17 @@ class StaffBook:
         self.set_employed(trade, self.employed(trade) + people)
 
     def reserved_people(self, trade):
-        """People of a trade already given to an employer: the founder's staff, and the firms' and states' staff
-        (the army counted whole)."""
-        return self.employed(trade) + self._world.actors.actors_staff_nationwide(trade)
+        """People of a trade already given to an employer: the founder's staff, and the home country's firms' and
+        states' staff (the army counted whole)."""
+        return self.employed(trade) + self._world.actors.actor_staff_fte(trade)
 
     def reserved_hours(self, trade):
         """Hours a year reserved by employers for a trade."""
-        return self.reserved_people(trade) * self._world.trades.HOURS_PER_PERSON_YEAR
+        return self.reserved_people(trade) * person_year_hours(self._world)
 
     def core_people_by_trade(self):
         """Working people by trade in the agent economy's labour core; None while it opens."""
         return self._world.economy.agent_people_by_trade()
-
-    def core_people_by_tile_and_trade(self):
-        """The labour core's working people by tile, then trade; None while the economy opens."""
-        return self._world.economy.agent_people_by_tile_and_trade()
 
     def headcount(self):
         workforce = self._world.workforce

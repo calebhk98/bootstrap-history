@@ -35,24 +35,6 @@ def crew_ledger():
 
 
 class CarriageHireTests(unittest.TestCase):
-    def test_hired_reports_the_hours_and_the_average_pay_of_the_merchants_carriers(self):
-        found = carriage_hours.hired(crew_ledger(), "m1", [fixture.LABOURER])
-        self.assertAlmostEqual(found["hours"], 40.0)
-        self.assertAlmostEqual(found["wage"], (30.0 * 1.0 + 10.0 * 2.0) / 40.0)
-
-    def test_hired_counts_only_the_trades_asked_for(self):
-        found = carriage_hours.hired(crew_ledger(), "m1", ["smith"])
-        self.assertEqual((found["hours"], found["wage"]), (7.0, 9.0))
-
-    def test_a_merchant_that_hired_nobody_is_paid_no_wage(self):
-        self.assertEqual(carriage_hours.hired(crew_ledger(), "nobody", [fixture.LABOURER]), {"hours": 0.0, "wage": 0.0})
-
-    def test_the_hired_index_sums_each_employers_purchases_by_trade_and_area(self):
-        index = carriage_hours.hired_index(crew_ledger())
-        self.assertEqual(index[("m1", fixture.LABOURER, "work@town")], (40.0, 50.0))
-        self.assertEqual(index[("farm", fixture.LABOURER, "work@town")], (100.0, 100.0))
-        self.assertNotIn(("family", fixture.LABOURER, "work@town"), index)
-
     def test_keys_that_share_a_labour_market_share_the_hours_hired_in_proportion_to_their_hours(self):
         who = Merchant("m1", "town", "owner", 1.0)
         who.carriage_hours_wanted = {market_key(fixture.LABOURER, "hills"): 30.0, market_key(fixture.LABOURER, "town"): 10.0}

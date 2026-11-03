@@ -68,7 +68,7 @@ _VIEWS = (
 	("market_state", KEYED), ("opening_population", None),
 	("nodes_in_category", KEYED),
 	("agent_prices", None), ("agent_prices_at", QUOTE), ("agent_seat_sale_outlook", QUOTE),
-	("agent_producers_by_good", None), ("agent_producer_runs", None), ("agent_worker_years_by_recipe", None), ("agent_wage", KEYED), ("agent_unskilled_wage", None), ("agent_people_by_trade", None),
+	("agent_producers_by_good", None), ("agent_producer_runs", None), ("agent_worker_years_by_recipe", None), ("agent_wage", KEYED), ("agent_wage_at", QUOTE), ("agent_hours_offered_at", QUOTE), ("agent_working_hours", None), ("agent_unskilled_wage", None), ("agent_people_by_trade", None),
 	("agent_people_by_tile_and_trade", None), ("agent_land_rent", None), ("agent_land_rent_per_hectare", None),
 	("agent_land_rent_at", QUOTE), ("agent_land_rent_paid_by_tile", None), ("agent_trades_good", KEYED),
 	("agent_price_response", QUOTE), ("agent_country", KEYED), ("agent_cohort_incomes", None),

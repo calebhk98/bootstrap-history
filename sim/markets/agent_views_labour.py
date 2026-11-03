@@ -7,9 +7,25 @@ from .agent_view_part import AgentViewPart
 class AgentLabourViews(AgentViewPart):
 
 	def agent_wage(self, trade):
-		"""The wage in the acting seat's own labour markets, or None while the agent economy opens."""
+		"""The country figure: the trade's hours-weighted wage over the acting seat's country's labour markets, or None while
+		the agent economy opens. A seat's own bid is funded at `agent_wage_at`."""
 		parts = self._answering()
 		return None if parts is None else parts.prices.wage_per_hour(trade, self._economy().world.scenario.acting_country())
+
+	def agent_wage_at(self, trade, tile):
+		"""The wage per hour in coin a bid for the trade on `tile` is funded at (trade_wage.py), or None while the agent economy opens."""
+		parts = self._answering()
+		return None if parts is None else parts.prices.wage_per_hour_at(trade, tile)
+
+	def agent_hours_offered_at(self, trade, tile):
+		"""Hours of the trade the households of `tile`'s labour area offered at the last clearing; None while the economy opens or before one."""
+		parts = self._answering()
+		return None if parts is None else parts.prices.hours_offered_at(trade, tile)
+
+	def agent_working_hours(self):
+		"""The hours a person-year counts in the running economy; None while it opens."""
+		parts = self._answering()
+		return None if parts is None else economy_api.working_hours_per_year(self._economy().agent.economy())
 
 	def agent_unskilled_wage(self):
 		"""Money one hour of the unskilled trade is paid in the agent economy; None until the game's money is priced at it."""

@@ -18,7 +18,7 @@ def dispatch_merchants(setup, record, carriage, ledger: YearLedger, area_map) ->
     households of the tile the goods leave (Complaints/552)."""
     money = setup.currency_id
     crew = carriage_hours.crew_for(setup, record.carriage, carriage)
-    index = carriage_hours.hired_index(ledger) if crew is not None else {}
+    index = ledger.hours_hired_by_market if crew is not None else {}
     carriers = {}
     for cohort in record.cohorts.values():
         held = carriers.get(cohort.tile)
@@ -60,7 +60,7 @@ def dispatch_merchants(setup, record, carriage, ledger: YearLedger, area_map) ->
             hours_hired, wages = ((carriage_hours.engaged(record, merchant, index)) if carriage_hours.planned(merchant)
                                   else (None, {}))
             hire = merchants.CrewHire(crew.hours_per_tonne, hours_hired, wages,
-                                    lambda key: carriage_hours.last_wage(record.memory, key), area_map.area_of)
+                                    lambda key: carriage_hours.crew_wage(setup, record.memory, key), area_map.area_of)
         done = merchants.dispatch(merchant, fills, carriage, setup.specs, money,
                                   record.book.balance(merchant.agent_id, money), _held_stock(record.book, merchant.agent_id),
                                   carrier_of=carriers.get, crew=hire,

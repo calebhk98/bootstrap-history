@@ -25,7 +25,7 @@ from sim.economy.api import EDGE_EXCHANGE, AgentOrders, LabourBid, LabourOffer, 
 from sim.refusal import Refusal
 from sim.ledger.api import PayEdge, PayExchange, ReceiveFromEdge, ReceiveFromExchange
 from sim.reporting.api import RecordEvent
-from .trade_wage import unpriced_trade_wage
+from .trade_wage import trade_wage_at
 from sim.workforce.api import ONCE_STOCK, ClearingSettled, HoursArrived, NewcomersPlaced, NoteClearedWage, StaffArrived
 
 STAFF_PREFIX = "staff:"
@@ -61,7 +61,7 @@ def employer_bids(economy, employer_id, wanted, tile, affordable_coin):
         if people <= 0.0 or trade not in trades:
             continue
         area = view.area_of(trade, tile)
-        wage = view.wage(trade, area) or unpriced_trade_wage(economy, trade)
+        wage = trade_wage_at(economy, trade, tile)
         if wage and wage > 0.0:
             asked.append((trade, area, people * economy_api.working_hours_per_year(economy), wage))
     affordable_units = max(0.0, affordable_coin) / economy_api.coin_per_unit(economy)

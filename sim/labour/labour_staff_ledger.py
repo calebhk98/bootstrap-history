@@ -51,8 +51,9 @@ class StaffLedger:
             if not node:
                 continue
             record = projects.active[node_id]
-            lab_left = (record.get("lab_left") if isinstance(record, dict)
-                        else getattr(record, "lab_left", None)) or node.get("lab") or {}
+            lab_left = record.get("lab_left")
+            if lab_left is None:
+                lab_left = node.get("lab") or {}
             for trade, hours in lab_left.items():
                 if not trade_data.is_generic_staff(trade) and hours > 0:
                     drawn.setdefault(trade, []).append("project " + node_id)

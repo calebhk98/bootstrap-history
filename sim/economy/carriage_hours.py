@@ -17,6 +17,7 @@ from .merchants import Merchant
 from .producers_close import WORKING_CAPITAL_PURPOSE
 from .setup import labour_area
 from .types import LabourBid, LoanRequest
+from .year_labour import trade_premium
 
 CrewRows = Tuple[Tuple[str, float], ...]      # ((crew key, crew hours),): a crew key is market_key(trade, tile hired at)
 
@@ -152,19 +153,25 @@ def last_wage(memory, key: str) -> Optional[float]:
     return memory.wages.get(market_key(trade, labour_area(tile)))
 
 
-def hired_index(ledger) -> Dict[Tuple[str, str, str], Tuple[float, float]]:
-    """{(employer, trade, area): (hours bought, money paid)} over the year's labour markets."""
-    found: Dict[Tuple[str, str, str], Tuple[float, float]] = {}
-    for result in ledger.labour_results:
-        for fill in result.fills:
-            if fill.side == "buy":
-                bought, paid = found.get((fill.agent, result.trade, result.area), (0.0, 0.0))
-                found[(fill.agent, result.trade, result.area)] = (bought + fill.quantity, paid + fill.quantity * fill.price)
-    return found
+def crew_wage(setup, memory, key: str) -> Optional[float]:
+    """The wage an hour of the crew `key` is priced at: its market's last wage, else the wage the economy opened with
+    for the trade, else the unskilled wage of the same area plus the trade's training premium (the rule the seat's
+    staff bids use for an unpriced trade); None when none of them exists."""
+    found = last_wage(memory, key)
+    if found is not None:
+        return found
+    trade, tile = _split(key)
+    opening = setup.opening_wages.get(trade)
+    if opening and opening > 0.0:
+        return opening
+    unskilled = memory.wages.get(market_key(setup.unskilled_trade, labour_area(tile)))
+    if unskilled is None:
+        return None
+    return unskilled * (1.0 + trade_premium(setup, trade))
 
 
 def engaged(record, merchant: Merchant, index) -> Tuple[Dict[str, float], Dict[str, float]]:
-    """({crew key: hours hired}, {crew key: average wage}) for the merchant's plan, from `hired_index`. Keys
+    """({crew key: hours hired}, {crew key: average wage}) for the merchant's plan, from `YearLedger.hours_hired_by_market` (hours the employer paid for, not hours matched). Keys
     that share a labour market (goods leaving unpopulated tiles are bid for at home) share what was hired in
     proportion to their hours."""
     populated = {cohort.tile for cohort in record.cohorts.values()}
@@ -183,21 +190,6 @@ def engaged(record, merchant: Merchant, index) -> Tuple[Dict[str, float], Dict[s
         hours_by_key[key] = bought * hours / markets[market_of[key]] if markets[market_of[key]] > 0.0 else 0.0
         wage_by_key[key] = paid / bought if bought > 0.0 else 0.0
     return hours_by_key, wage_by_key
-
-
-def hired(ledger, merchant_id: str, trades) -> Dict[str, float]:
-    """{"hours": hours this merchant's carriers worked, "wage": their average pay an hour}, over `trades`."""
-    hours = sum(ledger.hours_hired.get(merchant_id, {}).get(trade, 0.0) for trade in trades)
-    paid = 0.0
-    quantity = 0.0
-    for result in ledger.labour_results:
-        if result.trade not in trades:
-            continue
-        for fill in result.fills:
-            if fill.agent == merchant_id and fill.side == "buy":
-                paid += fill.quantity * fill.price
-                quantity += fill.quantity
-    return {"hours": hours, "wage": paid / quantity if quantity > 0.0 else 0.0}
 
 
 def wage_loans(setup, record, hired_last_year=None, supply_last_year=None) -> List[LoanRequest]:

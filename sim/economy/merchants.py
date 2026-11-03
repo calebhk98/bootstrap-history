@@ -101,7 +101,7 @@ class CrewHire:
     hours_per_tonne: Callable[[TileId, TileId], Tuple[Tuple[str, float], ...]]
     hours_hired: Optional[Mapping[str, float]]
     wage: Mapping[str, float]
-    market_wage: Callable[[str], Optional[float]]     # None: no wage yet in that market, so the crew cannot be priced
+    market_wage: Callable[[str], Optional[float]]     # None: no wage in that market and none from the unpriced-trade rule, so the crew cannot be priced
     area_of: Callable[[GoodId, TileId], AreaId]
 
 
@@ -438,8 +438,8 @@ def dispatch(merchant: Merchant, fills: Sequence[Fill], carriage: CarriageTable,
                                                   for key, hours in crew.hours_per_tonne(tile, route[0]))
         crew_wages = {} if crew is None else {key: crew.market_wage(key) for key, _hours in crew_rows}
         priced_rows = tuple((key, hours) for key, hours in crew_rows if crew_wages[key] is not None)
-        # a crew with no wage in its market yet is left out of the pay figures below (the route is still planned, so the
-        # hours get bid for and the market makes a wage); the route's gain is then the whole fee
+        # a crew row with no wage even from the unpriced-trade rule is left out of the pay figures below (the route is
+        # still planned, so the hours get bid for and the market makes a wage)
         crew_money = 0.0 if crew is None else min(per_unit, math.fsum(hours * crew.wage.get(key, 0.0)
                                                                       for key, hours in crew_rows))
         worn_money = None if carrier_money is None else carrier_money(tile, route[0])    # None: no carrier price to charge
@@ -460,11 +460,11 @@ def dispatch(merchant: Merchant, fills: Sequence[Fill], carriage: CarriageTable,
             for carrier in spare:
                 spare[carrier] -= affordable * tonnes_per_unit * wear_per_tonne.get(carrier, 0.0)
         route_hours = math.fsum(hours for _key, hours in crew_rows)
-        gain = per_unit
-        if crew is not None and crew_rows and len(priced_rows) == len(crew_rows):      # what an hour is worth is the haul's gain once the fee's other parts (feed, carts, animals, tolls) are paid
+        gain = 0.0      # no priced crew row: nothing to value the hours by, so no money is bid for them
+        if crew is not None and priced_rows:      # what an hour is worth is the haul's gain once the fee's other parts (feed, carts, animals, tolls) are paid
             spread = (merchant.expected_prices.get((good, route[1]), 0.0)
                       - merchant.expected_prices.get((good, crew.area_of(good, tile)), math.inf))
-            crew_pay = math.fsum(hours * crew_wages[key] for key, hours in crew_rows)
+            crew_pay = math.fsum(hours * crew_wages[key] for key, hours in priced_rows)
             gain = max(0.0, spread - max(0.0, per_unit - crew_pay)) if math.isfinite(spread) else 0.0
         for key, hours in crew_rows:      # shared by the route's hours
             wanted[key] = wanted.get(key, 0.0) + quantity * hours

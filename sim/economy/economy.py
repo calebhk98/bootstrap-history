@@ -193,8 +193,8 @@ class Economy:
         outside_option = outside_option_by_tile(setup, record, view)
         land_lease_year.lease_in_market(setup, record, view, self.own_plot_options())
         land_bid_year.take_up_own(setup, record, self.own_plot_options())
-        everyone = labour_offers(setup, record, view, outside_option, inputs.labour_levy_hours_per_worker,
-                                 inputs.population_by_tile)
+        levied_tiles = tuple(inputs.population_by_tile)      # the tiles of the nation whose state levies (port_levy.py spreads the hours over them)
+        everyone = labour_offers(setup, record, view, outside_option, inputs.labour_levy_hours_per_worker, levied_tiles)
         for orders in inputs.engine_orders.values():
             everyone.extend(orders.labour_offers)    # a seat's own hours, sold at the market's wage
         context = labour_context(setup, record, view, self.carriage, inputs, self.own_plot_options(), outside_option)
@@ -317,7 +317,9 @@ class Economy:
         for tile, people in sorted(working.items()):
             area = labour_area(tile)
             held = people_in(record.labour.workforce, area)
-            if held > 0.0 and held != people:
+            if held <= 0.0:      # the core holds nobody there: the tile's working people start as the unskilled trade
+                record.labour.add_workers(area, self.setup.unskilled_trade, people)
+            elif held != people:
                 scale_people(record.labour.workforce, area, people / held)
 
     def _follow_yields(self, inputs: EconomyYearInputs) -> None:

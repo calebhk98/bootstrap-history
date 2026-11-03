@@ -187,6 +187,16 @@ def labour_market_rows(economy):
     return rows
 
 
+def hours_offered_in_area_of(economy, trade, tile):
+    """Hours of `trade` the households of `tile`'s labour area offered at the last clearing (hired plus left idle, after
+    the hours they keep for plot and home work); None before a clearing."""
+    labour = economy.record.labour
+    if not labour.hours_idle:
+        return None
+    key = market_key(trade, economy.view().area_of(trade, tile))
+    return labour.hours_cleared_in(key) + labour.hours_idle.get(key, 0.0)
+
+
 def wages_by_trade_weighted(economy, country=None):
     """Last year's wage per hour of each trade: the remembered wage of each of its labour markets weighted
     by the hours hired there last year. A trade that hired no hours is left out (its remembered wages are

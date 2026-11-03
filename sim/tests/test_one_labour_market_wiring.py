@@ -23,11 +23,11 @@ def real_market(employed=None):
         workforce=types.SimpleNamespace(worker_housing_places=None),
         trades=types.SimpleNamespace(HOURS_PER_PERSON_YEAR=HOURS_PER_YEAR, wage_index=1.3),
         finance=types.SimpleNamespace(price_index=1.5, real_output_per_head=lambda: 1.1),
-        economy=types.SimpleNamespace(agent_wage_per_hour=lambda trade: None),
-        actors=types.SimpleNamespace(actor_staff_total=lambda: 0.0))
+        economy=types.SimpleNamespace(agent_wage_at=lambda trade, tile: None, agent_working_hours=lambda: None),
+        actors=types.SimpleNamespace(actor_staff_fte=lambda trade: 0.0))
     schedule = types.SimpleNamespace(base_annual_wage=lambda trade: 100.0, LABOUR_PAY_SHARE_OF_OUTPUT_GAIN=1.0)
     book = types.SimpleNamespace(headcount=lambda: sum(employed.values()))
-    market = LabourMarket(world, schedule=schedule, settlement=types.SimpleNamespace(home_town_population_estimate=lambda: 1000.0),
+    market = LabourMarket(world, schedule=schedule, settlement=types.SimpleNamespace(home_town_population_estimate=lambda: 1000.0, base_tile=lambda: "home"),
                           book=book)
     market.cost_factors = lambda trade: {"weighted": 1.2}
     return market

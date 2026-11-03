@@ -19,6 +19,7 @@ class YearLedger:
     sales_in: Dict[AgentId, float] = field(default_factory=dict)
     received: Dict[AgentId, Dict[GoodId, float]] = field(default_factory=dict)
     hours_hired: Dict[AgentId, Dict[str, float]] = field(default_factory=dict)
+    hours_hired_by_market: Dict[Tuple[AgentId, str, str], Tuple[float, float]] = field(default_factory=dict)   # (employer, trade, area): (hours paid for, money paid)
     crew_hours_bought: Dict[AgentId, Dict[Tuple[str, str], float]] = field(default_factory=dict)   # merchants that bid for crew: hours sold them by (trade, area)
     hours_sold: Dict[AgentId, float] = field(default_factory=dict)
     spare_hours: Dict[AgentId, float] = field(default_factory=dict)   # hours a household had left once its own plot took what the land it holds could
@@ -129,6 +130,9 @@ class YearLedger:
             if fill.side == "buy":
                 trades = self.hours_hired.setdefault(fill.agent, {})
                 trades[result.trade] = trades.get(result.trade, 0.0) + quantity
+                market = (fill.agent, result.trade, result.area)
+                bought, paid_money = self.hours_hired_by_market.get(market, (0.0, 0.0))
+                self.hours_hired_by_market[market] = (bought + quantity, paid_money + quantity * fill.price)
             else:
                 self.hours_sold[fill.agent] = self.hours_sold.get(fill.agent, 0.0) + quantity
 

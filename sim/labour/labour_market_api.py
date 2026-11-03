@@ -6,9 +6,12 @@ hires through the labour core (sim/markets/port_staff.py). The wage is the econo
 wage for the trade (labour_wages.py reads it; before the economy opens, the opening schedule with
 the cost-of-living factors and the price and wage indices, which only the opening needs).
 """
+import math
+
 from sim.constants import declare
 
 from . import trade_data, wage_provider
+from .labour_wage_schedule import person_year_hours
 from .wage_factors import annual_wage, housing_factor, tools_factor, weighted_factor
 
 
@@ -115,9 +118,10 @@ class LabourMarket:
                 + max(0.0, world.workforce.worker_housing_places or 0.0))
 
     def town_workers(self):
-        """People every employer in the town has on its books: the founder's household and every
-        firm and government."""
-        return self.book.headcount() + self._world.actors.actor_staff_total()
+        """People every employer in the town has on its books: the founder's household and the home country's
+        firms and governments."""
+        return self.book.headcount() + math.fsum(self._world.actors.actor_staff_fte(trade)
+                                                 for trade in sorted(self._world.trades.wages))
 
     def town_housing_factor(self):
         """The housing multiplier on a wage. It reads how full the town's housing is from everyone
@@ -130,9 +134,9 @@ class LabourMarket:
         """The economy's wage for the trade over a year. Only before the economy opens, the opening schedule's with the
         cost-of-living factors, the price index and the wage index."""
         world = self._world
-        wage = world.economy.agent_wage_per_hour(trade)
+        wage = world.economy.agent_wage_at(trade, self.settlement.base_tile())
         if wage is not None:
-            return wage * world.trades.HOURS_PER_PERSON_YEAR
+            return wage * person_year_hours(world)
         base = self.schedule.base_annual_wage(trade)
         factors = self.cost_factors(trade)
         return annual_wage(base, factors["weighted"], world.finance.price_index, world.trades.wage_index, 1.0, self.pay_scale())
@@ -151,7 +155,7 @@ class LabourMarket:
 
     def quote(self, trade):
         """Money one hour of a trade costs now: the one wage of the trade."""
-        return self._annual(trade) / self._world.trades.HOURS_PER_PERSON_YEAR
+        return self._annual(trade) / person_year_hours(self._world)
 
     def commission_cost(self, trade, hours):
         """What a one-off job of `hours` costs: the hour the market quotes."""

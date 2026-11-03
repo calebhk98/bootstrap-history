@@ -5,7 +5,7 @@ kept in the agent's `YearFigures` until the economy's state changes."""
 from sim.economy import api as economy_api
 from sim.world.material_units import tonnes_per_unit
 
-from .trade_wage import unpriced_trade_wage
+from .trade_wage import trade_wage_at, unpriced_trade_wage
 
 
 class PriceReads:
@@ -90,8 +90,20 @@ class PriceReads:
         wages = self.answers()[1]
         return wages.get(economy_api.unskilled_trade(self._agent.economy()))
 
+    def wage_per_hour_at(self, trade, tile):
+        """The wage per hour, in coin, a bid for the trade on `tile` is funded at (trade_wage.py): the wage of the tile's own
+        labour area, else the unpriced-trade wage; None when neither exists."""
+        economy = self._agent.economy()
+        wage = trade_wage_at(economy, trade, self._agent.tile_in_economy(tile))
+        return None if wage is None else wage * economy_api.coin_per_unit(economy)
+
+    def hours_offered_at(self, trade, tile):
+        """Hours of the trade the households of `tile`'s labour area offered at the last clearing; None before one."""
+        economy = self._agent.economy()
+        return economy_api.hours_offered_in_area_of(economy, trade, self._agent.tile_in_economy(tile))
+
     def wage_per_hour(self, trade, country=None):
-        """The trade's wage in its labour markets; a trade no market has priced (soldiers, scribes) has the wage the staff
+        """The country figure: the trade's hours-weighted wage over the country's labour markets; a trade no market has priced (soldiers, scribes) has the wage the staff
         bids use for it (trade_wage.py), so every wage stands on the same rule."""
         wages = self.answers(country)[1]
         if trade in wages:

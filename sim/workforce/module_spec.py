@@ -27,7 +27,7 @@ READS_BY_OWNER = {
     "ledger": ("acting_balance",),
     "polity": ("standing", "rep_factor"),
     "reporting": ("event_log", "last_market_price_ratio", "real_output_per_head"),
-    "markets": ("agent_prices", "agent_wage", "agent_people_by_trade", "agent_people_by_tile_and_trade", "agent_idle_hours_by_trade", "agent_country", "agent_unskilled_wage", "agent_trades"),
+    "markets": ("agent_prices", "agent_wage_at", "agent_hours_offered_at", "agent_working_hours", "agent_people_by_trade", "agent_country", "agent_unskilled_wage", "agent_trades"),
     "demography": ("population", "pop_scale", "people_by_tile", "urban_fraction"),
     "agriculture": ("farm_land",),
     "land": ("home_tiles_held", "home_tiles_held_version", "built_ways", "held_techniques"),
@@ -43,7 +43,7 @@ READS_BY_OWNER = {
     "resources": ("mine_operating_cost",),
     "prices": ("price_index",),
     "coin": ("home_price_level",),
-    "actors": ("actor_staff", "actor_staff_nationwide", "actor_staff_total", "teaching_knowledge"),
+    "actors": ("actor_staff", "teaching_knowledge"),
 }
 
 _LIVE = dict(cached=False)
