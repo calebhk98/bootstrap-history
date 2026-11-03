@@ -14,7 +14,7 @@ from typing import Dict, List, Optional, Tuple
 from . import credit, trade_wages
 from .market_memory import KEY_SEPARATOR as MARKET_KEY_SEPARATOR, market_key
 from .merchants import Merchant
-from .producers_close import WORKING_CAPITAL_PURPOSE
+from .producers_working_capital import WORKING_CAPITAL_PURPOSE
 from .setup import labour_area
 from .types import LabourBid, LoanRequest
 
@@ -87,12 +87,14 @@ def wage_scale(setup, record, carriage) -> float:
     emptiness of the returns leaves, at that wage) follows the wage of the area the goods left instead, as last
     year's labour market cleared it. The routes are last year's carried flows, so the mix of modes is the one
     used. The multiplier is the change in the labour part over the whole fee, so the table's fee as a whole moves
-    by the labour change, spread over all its parts; route dues are paid apart from it, unscaled. Carriers are priced in the area they
+    by the labour change, spread over all its parts; route dues are paid apart from it (route_dues.py). Carriers are priced in the area they
     are hired in (`hiring_area`: the first merchant, by id, that wanted carriage from the tile gives it its home where nobody lives).
-    1 where the wages are the one priced or nothing is carried; never below 0."""
+    The rates and `carriage_wage` are opening-year money, so the whole table is carried to today's money by the memory's
+    `opening_wage_level` and the labour part then follows the wage against `carriage_wage` at that level. 1 where nothing has
+    changed since the opening or nothing is carried; never below 0."""
     carried = record.carriage.carried
     if not carried or setup.carriage_wage <= 0.0 or not hires(setup):
-        return 1.0
+        return record.memory.opening_wage_level(setup.currency_id)
     crew = Crew(setup, carriage, record.carriage.area_imbalance)
     populated = {cohort.tile for cohort in record.cohorts.values()}
     hired_in: Dict[str, str] = {}
@@ -100,6 +102,7 @@ def wage_scale(setup, record, carriage) -> float:
         for key in sorted(merchant.carriage_hours_wanted or {}):
             tile = _split(key)[1]
             hired_in.setdefault(tile, hiring_area(record, merchant, tile, populated))
+    level = record.memory.opening_wage_level(setup.currency_id)
     money = 0.0
     labour_change = 0.0
     for source, row in sorted(carried.items()):
@@ -110,8 +113,8 @@ def wage_scale(setup, record, carriage) -> float:
             money += tonnes * cost
             for trade, hours in crew.hours_by_trade(source, destination).items():
                 wage = trade_wages.wage_in_area(setup, record.memory, trade, hired_in.get(source) or labour_area(source))
-                labour_change += tonnes * hours * (wage - setup.carriage_wage)
-    return max(0.0, 1.0 + labour_change / money) if money > 0.0 else 1.0     # a fee never pays the shipper
+                labour_change += tonnes * hours * (wage - setup.carriage_wage * level)
+    return max(0.0, level + labour_change / money) if money > 0.0 else level     # a fee never pays the shipper
 
 
 def planned(merchant: Merchant) -> bool:

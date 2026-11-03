@@ -16,7 +16,6 @@ from typing import List, Mapping, Tuple
 
 from sim.unit_conversions import CIVIL_DAYS_PER_YEAR
 
-from .store_return import STORE_STORAGE_COST_PER_KG_YEAR
 from .types import EDGE_SPOILAGE, GoodId, GoodsMove, GoodSpec, TileId
 
 EDGE_TRANSIT = "edge:transit"        # goods on the road between a merchant's purchase and its destination tile
@@ -42,10 +41,11 @@ def lost_share(spoilage_per_year: float, years: int) -> float:
     return 1.0 - (1.0 - min(1.0, max(0.0, spoilage_per_year))) ** years
 
 
-def storage_per_unit(spec: GoodSpec, years: int) -> float:
+def storage_per_unit(spec: GoodSpec, years: int, storage_per_kg_year: float) -> float:
     """What housing and guarding a unit costs at the stages of a haul held `years`: the storage a year holds
-    by the kilogram, for each year beyond the first (the year every merchant holds its goods anyway)."""
-    return STORE_STORAGE_COST_PER_KG_YEAR * spec.unit_mass_kg * max(0, years - 1)
+    by the kilogram (`storage_per_kg_year`, today's money), for each year beyond the first (the year every merchant
+    holds its goods anyway)."""
+    return storage_per_kg_year * spec.unit_mass_kg * max(0, years - 1)
 
 
 def advance(merchant, specs: Mapping[GoodId, GoodSpec]) -> Tuple[GoodsMove, ...]:

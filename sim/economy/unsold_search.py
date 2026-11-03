@@ -18,10 +18,10 @@ from sim.book import ROUNDING_SHARE
 
 from . import demand_search, goods_market, inventory, seller_offers, titles_value
 from .ask_adjust import band_edge
+from .demand_search import SEARCH_PRECISION
 from .types import Offer
 
 UNSOLD_BOUND_MARGIN = 1e-12    # float noise of two sums of the same demand, not a model number
-SEARCH_PRECISION = 1e-4     # numerical tolerance of the bisection on the ask level, not a model number
 
 
 def _sold_by_offer(result, offers: Sequence[Offer]) -> dict:

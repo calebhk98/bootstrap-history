@@ -21,6 +21,7 @@ from .market_memory_offers import price_after_thin_trade, price_toward_quote
 from .notional import making_costs
 from .protocols import AgentOrders
 from .recipes import input_depth_order
+from . import store_return
 from .taxes_bases import YearFacts
 from .types import Bid, GoodsMove, Offer
 from .entry import unmet_quantity, wanted_in_round
@@ -102,6 +103,7 @@ def less_what_it_grew(orders: AgentOrders, cohort, basket, grown_units) -> Agent
 def merchant_orders(setup, record, view, area_map, carriage, order_book: OrderBook) -> None:
     money = setup.currency_id
     rate = own_rate(view, money)
+    storage = store_return.storage_cost_per_kg_year(view.opening_wage_level(money))
     shares = merchants.RouteShares()
     ordered = sorted(record.merchants.values(), key=lambda each: each.agent_id)
     carrier_bids, carrier_budget = (carriage_fleet_book.bids(setup, record, view, area_map,
@@ -112,7 +114,7 @@ def merchant_orders(setup, record, view, area_map, carriage, order_book: OrderBo
     for merchant in ordered[first:] + ordered[:first]:
         held = _held_stock(record.book, merchant.agent_id)
         orders = merchants.orders(merchant, view, carriage, area_map, record.book.balance(merchant.agent_id, money) - carrier_budget.get(merchant.agent_id, 0.0),
-                                  held, setup.specs, rate, shares)
+                                  held, setup.specs, rate, shares, storage_per_kg_year=storage)
         add_orders(order_book, orders)
 
 

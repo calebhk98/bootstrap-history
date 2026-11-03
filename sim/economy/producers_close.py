@@ -63,11 +63,12 @@ def close_year(producer: Producer, recipe: Recipe, revenue: float, costs: float,
                worked_runs: Optional[float] = None,
                price_share_after: Optional[Callable[[GoodId, float], float]] = None,
                ground_goods: Collection[GoodId] = (), service_lives: Optional[Mapping[GoodId, float]] = None,
-               interest: float = 0.0, demand_runs: Optional[float] = None) -> YearClose:
+               interest: float = 0.0, demand_runs: Optional[float] = None,
+               spoilage: Optional[Mapping[GoodId, float]] = None) -> YearClose:
     """`worked_runs` is what the producer ran this year (all its capacity when not given). Idle plant is
     sunk, so the year's capital charge falls only on the capacity worked. `price_share_after(good, added)` is
     the share of a good's price that remains when the producer adds that much output a year (expansion_price.py);
-    without it the producer expects the price it sees. `service_lives` maps a good to the years it lasts: idle
+    without it the producer expects the price it sees. `spoilage` maps an output to its yearly spoilage, which the queue behind held stock loses (a good left out counts as keeping). `service_lives` maps a good to the years it lasts: idle
     capacity with tools wears at theirs (idle_capacity.py). `interest` is what the producer's loans cost it a year:
     with the rent, wages, inputs and wear it makes the year's net earnings, and a producer whose remembered earnings
     are negative closes that share of its capacity (producer_losses.py), whatever its expected margin says. With
@@ -85,7 +86,7 @@ def close_year(producer: Producer, recipe: Recipe, revenue: float, costs: float,
     loss = worked <= 0.0 or revenue < costs + (charge if charge is not None and math.isfinite(charge) else 0.0)
     losses = producer.years_of_loss + 1 if loss else 0
     has_plant = recipe.plant_life_years > 0.0
-    revenue_per_run, cost_per_run = _expected_run(producer, recipe, view, expectations, inputs, wages, ground_goods)
+    revenue_per_run, cost_per_run = _expected_run(producer, recipe, view, expectations, inputs, wages, ground_goods, spoilage)
     margin = revenue_per_run - cost_per_run
     paying = share_working(revenue_per_run, cost_per_run) if math.isfinite(margin) else 0.0
     shedding = margin <= 0.0      # expected sales do not cover running cost, whatever the years behind
@@ -135,25 +136,27 @@ def close_year(producer: Producer, recipe: Recipe, revenue: float, costs: float,
     return YearClose(survivor, _dividend(producer, currency, surplus), request, grown, replacement)
 
 
-def _expected_run(producer, recipe, view, expectations, inputs, wages, ground_goods=()) -> Tuple[float, float]:
+def _expected_run(producer, recipe, view, expectations, inputs, wages, ground_goods=(), spoilage=None) -> Tuple[float, float]:
     """(expected revenue, variable cost) of one run at expected prices; plant already built is sunk and left
     out. A cost or price that cannot be known counts as no margin: (0, infinity)."""
     prices = {good: expectations[good] if good in expectations else view.price(good, view.area_of(good, producer.tile))
               for good in recipe.outputs}
     if any(price is None for price in prices.values()):
         return 0.0, math.inf
-    prices = _behind_the_stock(producer, recipe, view, prices, ground_goods)
+    prices = _behind_the_stock(producer, recipe, view, prices, ground_goods, spoilage)
     cost = unit_cost.variable_cost_per_run(recipe, inputs, wages, producer.land_rent_per_run)
     if not math.isfinite(cost):
         return 0.0, math.inf
     return unit_cost.revenue_per_run(recipe, prices) * producer.yield_factor, cost
 
 
-def _behind_the_stock(producer, recipe, view, prices, ground_goods):
+def _behind_the_stock(producer, recipe, view, prices, ground_goods, spoilage=None):
     """A run's output joins the queue behind the stock the producer holds beyond its own runs' inputs, so it is
     worth what the last unit of that queue fetches (inventory.queued_holding_value): a producer holding years of
     unsold output does not count on the market's price, which a market with no trade leaves standing. Ground does
-    not queue (every hectare yields its rent while held): its price stands."""
+    not queue (every hectare yields its rent while held): its price stands. `spoilage` maps a good to its yearly spoilage
+    (a good it omits is counted as keeping)."""
+    spoilage = spoilage or {}
     if producer.expected_sales <= 0.0:
         return prices
     rate = view.interest_rate(view.currency_of(view.area_of(min(recipe.outputs), producer.tile)))
@@ -161,7 +164,7 @@ def _behind_the_stock(producer, recipe, view, prices, ground_goods):
         return prices
     return {good: inventory.queued_holding_value(
         price, max(0.0, view.stock(producer.agent_id, good, producer.tile) - recipe.inputs.get(good, 0.0) * producer.capacity_runs),
-        producer.expected_sales * recipe.outputs[good] * producer.yield_factor, rate, 0.0) if good not in ground_goods else price
+        producer.expected_sales * recipe.outputs[good] * producer.yield_factor, rate, spoilage.get(good, 0.0)) if good not in ground_goods else price
         for good, price in prices.items()}
 
 
@@ -219,13 +222,14 @@ def _expansion(producer, recipe, view, currency, rate, runs, inputs, wages, pric
         return None, 0.0
     prices = expected_output_prices(producer, recipe, view) or {}
     if price_share_after is not None:
-        before = unit_cost.return_on_capital(recipe, prices, inputs, wages)
+        before = unit_cost.return_after_recovery(recipe, prices, inputs, wages, rate)
         if before is None or before <= rate:
             return None, 0.0        # the price can only fall with the addition, so the return cannot beat the rate
         prices = {good: price * price_share_after(good, runs * recipe.outputs[good] * producer.yield_factor)
                   for good, price in prices.items()}
+    after_recovery = unit_cost.return_after_recovery(recipe, prices, inputs, wages, rate)
     yearly_return = unit_cost.return_on_capital(recipe, prices, inputs, wages)
-    if yearly_return is None or yearly_return <= rate:
+    if yearly_return is None or after_recovery is None or after_recovery <= rate:
         return None, 0.0
     amount = runs * value
     return LoanRequest(producer.agent_id, currency, amount, credit.earnable_rate(yearly_return), recipe.plant_life_years,

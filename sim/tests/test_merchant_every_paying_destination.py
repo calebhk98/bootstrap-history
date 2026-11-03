@@ -57,16 +57,16 @@ def merchant_expecting(prices, volumes):
 
 
 def orders_for(who, cash=1000.0):
-    return merchants.orders(who, NoView(), LineCarriage(), StubAreaMap(), cash, {}, {"salt": SALT}, 0.0)
+    return merchants.orders(who, NoView(), LineCarriage(), StubAreaMap(), cash, {}, {"salt": SALT}, 0.0, storage_per_kg_year=0.0)
 
 
 class GoodRoutesTests(unittest.TestCase):
     def test_two_destinations_that_both_pay_both_get_a_row(self):
-        rows = merchants._good_routes("salt", SALT, AREAS, prices_by_area(1.0, 3.0, 3.5, None), LineCarriage(), 0.0, {"area0"})
+        rows = merchants._good_routes("salt", SALT, AREAS, prices_by_area(1.0, 3.0, 3.5, None), LineCarriage(), 0.0, 0.0, {"area0"})
         self.assertEqual(sorted(row[3].area_id for row in rows), ["area1", "area2"])
 
     def test_a_destination_that_does_not_pay_gets_no_row(self):
-        rows = merchants._good_routes("salt", SALT, AREAS, prices_by_area(1.0, 1.1, 3.5, None), LineCarriage(), 0.0, {"area0"})
+        rows = merchants._good_routes("salt", SALT, AREAS, prices_by_area(1.0, 1.1, 3.5, None), LineCarriage(), 0.0, 0.0, {"area0"})
         self.assertEqual([row[3].area_id for row in rows], ["area2"])
 
 

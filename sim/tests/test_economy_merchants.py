@@ -51,7 +51,7 @@ def plan(who, price_a, price_b, cash=1000.0, good="salt", held=None, rate=0.0, v
     who.expected_prices = {(good, area_a[good]): price_a, (good, area_b[good]): price_b}
     if volumes:
         who.expected_volumes = {(good, area_b[good]): 100.0}
-    return merchants.orders(who, View({}), carriage, area_map, cash, held or {}, SPECS, rate)
+    return merchants.orders(who, View({}), carriage, area_map, cash, held or {}, SPECS, rate, storage_per_kg_year=0.0)
 
 
 class GapTests(unittest.TestCase):
@@ -86,14 +86,12 @@ class GapTests(unittest.TestCase):
         bid = plan(merchant(), 2.0, 4.0, rate=0.05).bids[0]
         spec = SPECS["salt"]
         price_there = 4.0
-        net = price_there - bid.maximum_price - merchants.gap_cost_per_unit(
-            spec, bid.maximum_price, price_there, CARRIAGE_PER_UNIT, 0.05)
-        self.assertAlmostEqual(net, 0.0, places=9)
+        self.assertAlmostEqual(bid.maximum_price, merchants._break_even_price(spec, price_there, CARRIAGE_PER_UNIT, 0.05, 0.0), places=9)
         self.assertGreater(bid.maximum_price, 2.0)
 
     def test_a_merchant_with_no_price_information_does_not_trade(self):
         carriage, area_map, _a, _b = world()
-        self.assertEqual(merchants.orders(merchant(), View({}), carriage, area_map, 100.0, {}, SPECS, 0.0).bids, ())
+        self.assertEqual(merchants.orders(merchant(), View({}), carriage, area_map, 100.0, {}, SPECS, 0.0, storage_per_kg_year=0.0).bids, ())
 
 
 class LimitTests(unittest.TestCase):
@@ -224,7 +222,7 @@ def run_loop(count, years, capital=500.0):
         for who in crowd:
             held = {(good, tile): book.stock(who.agent_id, good, tile) for good in SPECS for tile in TILES}
             all_orders.append(merchants.orders(who, view, carriage, area_map, book.balance(who.agent_id, "coin"),
-                                               held, SPECS, INTEREST_RATE))
+                                               held, SPECS, INTEREST_RATE, storage_per_kg_year=0.0))
         prices, volumes, fills = {}, {}, []
         markets = ((area_a, Bid("households", "salt", area_a, "a", 0.0, 40.0, 2.0, 1.0, 1e9), Offer("producer", "salt", area_a, "a", 120.0, 1.0)),
                    (area_b, Bid("households", "salt", area_b, "b", 0.0, 80.0, 4.0, 1.0, 1e9),

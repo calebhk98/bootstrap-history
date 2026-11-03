@@ -41,6 +41,22 @@ class UnitCostTests(unittest.TestCase):
         got = unit_cost.return_on_capital(SMELT, {"metal": 10.0, "silver": 10.0}, PRICES, WAGES)
         self.assertAlmostEqual(got, (110.0 - 35.0) / (240.0 + 35.0))
 
+    def test_return_after_recovery_beats_the_rate_exactly_when_the_margin_covers_interest_on_working_capital(self):
+        rate = 0.05
+        outputs = {"metal": 10.0, "silver": 10.0}
+        employed = 240.0 + 35.0
+        got = unit_cost.return_after_recovery(SMELT, outputs, PRICES, WAGES, rate)
+        margin = unit_cost.expected_margin(SMELT, outputs, PRICES, WAGES, rate)
+        self.assertAlmostEqual(got - rate, (margin - rate * 35.0) / employed)
+
+    def test_the_wear_of_a_short_lived_plant_lowers_the_return_after_recovery(self):
+        outputs = {"metal": 10.0, "silver": 10.0}
+        gross = unit_cost.return_on_capital(SMELT, outputs, PRICES, WAGES)
+        self.assertLess(unit_cost.return_after_recovery(SMELT, outputs, PRICES, WAGES, 0.05), gross)
+
+    def test_a_run_that_cannot_be_priced_has_no_return_after_recovery(self):
+        self.assertIsNone(unit_cost.return_after_recovery(SMELT, {"metal": 10.0}, {}, WAGES, 0.05))
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -12,6 +12,7 @@ from sim.economy import merchants
 from sim.economy.types import GoodSpec, MarketArea
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 
+STORAGE = 0.02      # money per kilogram a year
 TILES = tuple("t%d" % number for number in range(7))
 
 
@@ -29,7 +30,7 @@ class LineCarriage:
         return abs(TILES.index(from_tile) - TILES.index(to_tile)) * self.days_per_step
 
 
-def plain_routes(good, spec, areas, prices, carriage, interest_rate, source_ids=None):
+def plain_routes(good, spec, areas, prices, carriage, interest_rate, storage_per_kg_year, source_ids=None):
     """Every source against every priced destination, dearest first, no shortcut: a row for each that pays."""
     interest = max(0.0, interest_rate)
     spoilage = min(1.0, max(0.0, spec.spoilage_per_year))
@@ -49,12 +50,12 @@ def plain_routes(good, spec, areas, prices, carriage, interest_rate, source_ids=
             if net > 0.0:
                 years = merchants.merchants_transit.years_between(carriage, source.anchor_tile, destination.anchor_tile)
                 if years > 1:
-                    net -= (price_here * interest + merchants.merchants_transit.storage_per_unit(spec, 2)) * (years - 1) + price_there * (
+                    net -= (price_here * interest + merchants.merchants_transit.storage_per_unit(spec, 2, storage_per_kg_year)) * (years - 1) + price_there * (
                         merchants.merchants_transit.lost_share(spec.spoilage_per_year, years) - spoilage)
                 if net > 0.0:
                     outlay = price_here + carriage_per_unit
                     rows.append((-net / outlay, good, source, destination, price_here, outlay,
-                                 merchants._break_even_price(spec, price_there, carriage_per_unit, interest_rate, years)))
+                                 merchants._break_even_price(spec, price_there, carriage_per_unit, interest_rate, storage_per_kg_year, years)))
     return rows
 
 
@@ -80,8 +81,8 @@ class GoodRoutesTests(unittest.TestCase):
 
     def check(self, prices, spec, rate, carriage, source_ids=None):
         by_area = {area.area_id: price for area, price in zip(self.areas, prices)}
-        self.assertEqual(merchants._good_routes("salt", spec, self.areas, by_area, carriage, rate, source_ids),
-                         plain_routes("salt", spec, self.areas, by_area, carriage, rate, source_ids))
+        self.assertEqual(merchants._good_routes("salt", spec, self.areas, by_area, carriage, rate, STORAGE, source_ids),
+                         plain_routes("salt", spec, self.areas, by_area, carriage, rate, STORAGE, source_ids))
 
     def test_random_prices_give_the_rows_of_a_plain_search(self):
         generator = random.Random(7)
@@ -94,7 +95,7 @@ class GoodRoutesTests(unittest.TestCase):
             sources = generator.choice((None, {"area1", "area3", "area5"}))
             self.check(prices, spec, rate, carriage, sources)
             found += bool(merchants._good_routes("salt", spec, self.areas, dict(zip((a.area_id for a in self.areas), prices)),
-                                                 carriage, rate, sources))
+                                                 carriage, rate, STORAGE, sources))
         self.assertGreater(found, 20)
 
     def test_kept_cost_tables_give_the_rows_of_a_plain_search_before_and_after_a_reprice(self):
@@ -111,12 +112,12 @@ class GoodRoutesTests(unittest.TestCase):
     def test_flat_prices_give_no_rows(self):
         spec = GoodSpec("salt", 1000.0, 0.0, 0.0, "food")
         by_area = {area.area_id: 3.0 for area in self.areas}
-        self.assertEqual(merchants._good_routes("salt", spec, self.areas, by_area, LineCarriage(0.0, 10.0), 0.05), [])
+        self.assertEqual(merchants._good_routes("salt", spec, self.areas, by_area, LineCarriage(0.0, 10.0), 0.05, 0.0), [])
 
     def test_a_good_with_no_price_gives_no_rows(self):
         spec = GoodSpec("salt", 1000.0, 0.0, 0.0, "food")
         by_area = {area.area_id: None for area in self.areas}
-        self.assertEqual(merchants._good_routes("salt", spec, self.areas, by_area, LineCarriage(0.0, 10.0), 0.05), [])
+        self.assertEqual(merchants._good_routes("salt", spec, self.areas, by_area, LineCarriage(0.0, 10.0), 0.05, 0.0), [])
 
 
 if __name__ == "__main__":

@@ -8,7 +8,7 @@ import math
 import random
 import unittest
 
-from sim.economy import goods_market, unsold_search
+from sim.economy import demand_search, goods_market, unsold_search
 from sim.economy.types import Bid, Offer
 
 GOOD, AREA = "grain", "area"
@@ -27,7 +27,7 @@ def search_without_the_shortcut(bids, offers, floors, buyers, last_price):
     best = trial(low)
     high = max(offers[index].reservation_price for index in searched)
     ceiling = high
-    while high - low > unsold_search.SEARCH_PRECISION * (high if low > 0.0 else ceiling):
+    while high - low > demand_search.SEARCH_PRECISION * (high if low > 0.0 else ceiling):
         middle = math.sqrt(low) * math.sqrt(high) if low > 0.0 else 0.5 * (low + high)
         attempt = trial(middle)
         if attempt[1]:

@@ -8,7 +8,7 @@ import unittest
 
 import numpy
 
-from sim.economy.goods_market import _pairing, _ration_buyers, _without_washed, clear_at_one_price as clear, quantity_at
+from sim.economy.goods_market import _pairing, _without_washed, clear_at_one_price as clear, quantity_at, ration
 from sim.economy.types import Bid, Fill, Offer
 from sim.tests import economy_reference_clearing as reference
 
@@ -23,6 +23,12 @@ def offer(seller="s1", quantity=10.0, reservation=1.0):
 
 def run(bids, offers, last_price=None):
     return clear(bids, offers, "grain", "area", "coin", last_price)
+
+
+def rationed(bids, price, available):
+    """What each buyer is served at `price` with `available` to share, by buyer."""
+    served = ration(bids, [quantity_at(item, price) for item in bids], available)
+    return {item.buyer: quantity for item, quantity in zip(bids, served)}
 
 
 def total(result, side):
@@ -97,13 +103,13 @@ class ClearingTests(unittest.TestCase):
         # Demand is continuous, so the clearing price leaves nothing to ration; the rule applies to
         # whatever gap is left (a price held by a cap, a rounding remainder) and is tested directly.
         need, want = bid("need", floor=8.0, priority=0), bid("want", floor=8.0, priority=1)
-        served = dict((item.buyer, quantity) for item, quantity in _ration_buyers([need, want], 1.0, 10.0))
+        served = rationed([need, want], 1.0, 10.0)
         self.assertAlmostEqual(served["need"], 8.0)
         self.assertAlmostEqual(served["want"], 2.0)
 
     def test_rationing_is_pro_rata_within_a_tier(self):
         pair = [bid("a", floor=6.0), bid("b", floor=12.0)]
-        served = dict((item.buyer, quantity) for item, quantity in _ration_buyers(pair, 1.0, 9.0))
+        served = rationed(pair, 1.0, 9.0)
         self.assertAlmostEqual(served["a"], 3.0)
         self.assertAlmostEqual(served["b"], 6.0)
 

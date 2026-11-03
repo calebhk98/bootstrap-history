@@ -10,7 +10,7 @@ from typing import Mapping, Optional
 
 from sim.constants import declare
 
-from . import credit, merchants
+from . import credit, merchants, store_return
 from .types import CurrencyId, LoanRequest
 
 MERCHANT_LOAN_YEARS = declare(
@@ -34,7 +34,8 @@ def credit_request(merchant, view, carriage, area_map, cash: float, held_stock, 
     limit = MERCHANT_LEVERAGE_LIMIT * equity - debt
     if limit <= 0.0:
         return None
-    candidates = merchants.candidate_routes(merchant, view, carriage, area_map, held_stock, specs, interest_rate)
+    candidates = merchants.candidate_routes(merchant, view, carriage, area_map, held_stock, specs, interest_rate,
+                                       store_return.storage_cost_per_kg_year(view.opening_wage_level(currency)))
     remaining = max(0.0, cash)
     wanted, gain = 0.0, 0.0
     own, group = merchants.RouteShares(), merchants.RouteShares()

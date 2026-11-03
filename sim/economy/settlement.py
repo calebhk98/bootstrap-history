@@ -12,7 +12,7 @@ from typing import Dict, List, Optional, Sequence, Tuple
 
 from .accounts import Book, DeliveredMove
 from .settlement_limits import CANNOT_PAY, limit_by_purse, limit_by_stock, pair_fills
-from .types import (EDGE_LEGACY, AgentId, ClearingResult, CurrencyId, Fill, LabourResult, Pairing, Transfer, is_edge)
+from .types import (AgentId, ClearingResult, CurrencyId, Fill, LabourResult, Pairing, Transfer, is_edge)
 
 @dataclass(frozen=True)
 class Shortfall:
@@ -56,16 +56,6 @@ def settle_labour(book: Book, result: LabourResult) -> Settlement:
     """Wages employer to worker; hours not paid for are reported as unsettled."""
     return _settle(book, result.fills, result.currency, result.trade,
                    "wages for %s" % result.trade, delivers_goods=False)
-
-
-def book_legacy(book: Book, agent: AgentId, currency: CurrencyId, amount: float, purpose: str):
-    """A one-sided engine posting: positive pays the agent from the legacy edge, negative takes from the agent."""
-    if amount == 0.0:
-        return None
-    transfer = (Transfer(EDGE_LEGACY, agent, currency, amount, purpose) if amount > 0.0
-                else Transfer(agent, EDGE_LEGACY, currency, -amount, purpose))
-    book.transfer(transfer)
-    return transfer
 
 
 def _settle(book: Book, fills: Sequence[Fill], currency: CurrencyId, item: str,

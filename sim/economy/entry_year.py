@@ -43,7 +43,7 @@ def open_entrants(setup, record, view, area_map, unmet_by_market: Dict[Tuple[str
     by_limits = sites.limits_by_recipe(setup.site_limits)
     siting = location.entry_siting(setup, record, view, area_map, carriage or _carriage(setup))
     traded = _traded_volume(record, view, area_map)
-    plans = entry_plans(setup.recipes, view, unmet, record.land.land_rent, setup.land_per_run, traded, siting,
+    plans = entry_plans(setup.recipes, view, unmet, traded, siting,
                         unfilled_at_cost(setup, record, view, area_map, bids_by_market, traded),
                         lambda recipe_id, tile: site_rent_per_run(setup, record, view, recipe_id, tile),
                         entry_practice.crews_of_recipe(record.producers))

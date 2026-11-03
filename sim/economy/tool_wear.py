@@ -11,9 +11,9 @@ import dataclasses
 import math
 from typing import Dict, Iterable, List, Mapping, Optional, Sequence, Tuple
 
+from .households_orders import FLOOR_BUDGET_PRICE_MARGIN
 from .types import Bid, GoodId, GoodSpec, Recipe, ToolFallback, TradeId
 
-TOOL_BID_PRICE_MARGIN = 0.25      # budget set aside above last year's price, as for a household's floors
 
 WearPerHour = Mapping[TradeId, Mapping[GoodId, float]]
 
@@ -107,8 +107,8 @@ def tool_bids(buyer, tile, area_of, price_of, held_of, recipes: Mapping[str, Rec
         quantity = max(0.0, stock - held + wear)
         if quantity > 0.0:
             rows.append((good, quantity, price))
-    wanted_cash = sum(quantity * price * (1.0 + TOOL_BID_PRICE_MARGIN) for _good, quantity, price in rows)
+    wanted_cash = sum(quantity * price * (1.0 + FLOOR_BUDGET_PRICE_MARGIN) for _good, quantity, price in rows)
     scale = min(1.0, max(0.0, cash) / wanted_cash) if wanted_cash > 0.0 else 0.0
     return [Bid(buyer, good, area_of(good), tile, quantity, 0.0, price, 0.0,
-                quantity * price * (1.0 + TOOL_BID_PRICE_MARGIN) * scale)
+                quantity * price * (1.0 + FLOOR_BUDGET_PRICE_MARGIN) * scale)
             for good, quantity, price in rows if scale > 0.0]

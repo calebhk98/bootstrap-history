@@ -33,10 +33,17 @@ STORE_SERVICE_UNLIMITED = declare(
         "applied here; a household's own use of its hoard would replace this.")
 
 
-def carry_cost_share(spec: GoodSpec, price: float) -> float:
-    """Yearly cost of holding a unit as a share of its price: spoilage, wear, and storage by mass."""
+def storage_cost_per_kg_year(money_level: float) -> float:
+    """What housing and guarding a kilogram for a year costs in today's money: the declared figure is in opening-year
+    money, carried forward by `money_level` (the memory's `opening_wage_level`)."""
+    return STORE_STORAGE_COST_PER_KG_YEAR * money_level
+
+
+def carry_cost_share(spec: GoodSpec, price: float, money_level: float = 1.0) -> float:
+    """Yearly cost of holding a unit as a share of its price: spoilage, wear, and storage by mass (`money_level`
+    carries the storage figure to today's money)."""
     return (spec.spoilage_per_year + 1.0 / spec.service_life_years
-            + STORE_STORAGE_COST_PER_KG_YEAR * spec.unit_mass_kg / price)
+            + storage_cost_per_kg_year(money_level) * spec.unit_mass_kg / price)
 
 
 def expected_price_change(price: float, usual_price: Optional[float]) -> float:
@@ -64,10 +71,10 @@ def service_values_per_year(priced_needs: Iterable, specs: Mapping[str, GoodSpec
 
 
 def carrying_return(spec: GoodSpec, price: float, usual_price: Optional[float],
-                    service_value: float = 0.0) -> float:
+                    service_value: float = 0.0, money_level: float = 1.0) -> float:
     """Expected yearly return on holding a unit, as a share of its price: the expected price change
     and the value of the service it gives (`service_value`, money a year) less the cost of carrying it."""
-    return expected_price_change(price, usual_price) + service_value / price - carry_cost_share(spec, price)
+    return expected_price_change(price, usual_price) + service_value / price - carry_cost_share(spec, price, money_level)
 
 
 def split_by_return(returns: Mapping[str, float]) -> Dict[str, float]:

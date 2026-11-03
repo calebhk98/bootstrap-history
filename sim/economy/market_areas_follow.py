@@ -16,7 +16,7 @@ from .merchants import Merchant
 from .record import EconomyRecord
 
 _MEMORY_MARKETS = ("prices", "usual_prices", "volume_weights", "trade_age", "years_without_bids",
-                   "years_without_offers", "cleared_prices")
+                   "years_without_offers", "cleared_prices", "quote_kinds")
 _GOODS_MARKETS = ("volumes", "unsold", "unmet", "margin_years", "curves")
 
 

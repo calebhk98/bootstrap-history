@@ -34,15 +34,6 @@ def recently_traded_goods(memory: MarketMemory) -> Set[str]:
     return {key.split(KEY_SEPARATOR, 1)[0] for key in memory.trade_age if memory.traded_within(key, RECENT_TRADE_YEARS)}
 
 
-def notional_prices(setup, record, market=None) -> Dict[str, float]:
-    """Cost per unit of the cheapest recipe making each good that has not traded lately, at the live
-    prices of its inputs, the live wages and interest rate; a joint run's cost is shared among its
-    outputs by value. A good is priced after the goods it is made from, so a chain of untraded goods
-    follows its inputs. A good whose cheapest maker cannot be priced is left out."""
-    market = national_prices(record) if market is None else market
-    return _estimated_prices(setup, record, market, thin=False)
-
-
 def _estimated_prices(setup, record, market, thin: bool) -> Dict[str, float]:
     """Each good's estimate where the market's own price does not stand for it, goods taken in input-depth
     order so a good costed from its inputs sees their estimates: untraded goods at what they cost to make,

@@ -9,7 +9,7 @@ import unittest
 
 from sim.economy.labour_record import LabourRecord
 from sim.economy.market_memory import MarketMemory
-from sim.economy.notional import notional_prices, recently_traded_goods, shown_prices
+from sim.economy.notional import recently_traded_goods, shown_prices
 from sim.economy.types import Recipe
 from sim.economy.year_close import remember_basket_price_level
 
@@ -71,26 +71,28 @@ class NotionalPriceTests(unittest.TestCase):
         memory.note_trading({"ore|a"})
         return memory
 
-    def test_an_untraded_good_follows_the_cost_of_making_it_at_todays_prices(self):
-        record = record_with(self.memory(), {})
-        prices = notional_prices(setup_with({"smelt": smelt()}, {"tin": 99.0}), record)
-        self.assertAlmostEqual(prices["tin"], (4.0 * 3.0 + 10.0 * 0.5) / 2.0)
+    def shown(self, memory, recipes):
+        return shown_prices(setup_with(recipes, {}), record_with(memory, {}))
 
-    def test_a_traded_good_has_no_notional_price(self):
+    def test_a_traded_good_shows_its_market_price_not_the_cost_of_making_it(self):
         memory = self.memory()
         memory.note_trading({"ore|a", "tin|a"})
-        self.assertNotIn("tin", notional_prices(setup_with({"smelt": smelt()}, {}), record_with(memory, {})))
+        shown, stale = self.shown(memory, {"smelt": smelt()})
+        self.assertEqual(shown["tin"], 99.0)
+        self.assertNotIn("tin", stale)
 
-    def test_a_good_whose_maker_cannot_be_priced_gets_none(self):
+    def test_a_good_whose_maker_cannot_be_priced_keeps_its_last_price(self):
         memory = MarketMemory(prices={"tin|a": 99.0}, wages={"labour|a": 0.5}, rates={"coin": 0.0})
-        self.assertNotIn("tin", notional_prices(setup_with({"smelt": smelt()}, {}), record_with(memory, {})))
+        shown, stale = self.shown(memory, {"smelt": smelt()})
+        self.assertEqual(shown["tin"], 99.0)
+        self.assertIn("tin", stale)
 
     def test_a_cost_chains_through_an_untraded_input(self):
         alloy = Recipe("alloy", {"bronze": 1.0}, {"tin": 1.0}, {})
         memory = self.memory()
         memory.prices["bronze|a"] = 50.0
-        prices = notional_prices(setup_with({"smelt": smelt(), "alloy": alloy}, {}), record_with(memory, {}))
-        self.assertAlmostEqual(prices["bronze"], prices["tin"])
+        shown, _stale = self.shown(memory, {"smelt": smelt(), "alloy": alloy})
+        self.assertAlmostEqual(shown["bronze"], shown["tin"])
 
     def test_the_game_sees_cost_for_a_made_good_and_the_stale_last_price_otherwise(self):
         memory = self.memory()

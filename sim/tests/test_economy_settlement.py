@@ -6,9 +6,9 @@ import random
 import unittest
 
 from sim.economy.accounts import Book, InsufficientFunds
-from sim.economy.settlement import Settlement, book_legacy, settle_goods, settle_labour
+from sim.economy.settlement import Settlement, settle_goods, settle_labour
 from sim.economy.settlement_limits import CANNOT_DELIVER, CANNOT_PAY
-from sim.economy.types import (EDGE_LEGACY, EDGE_MINT, EDGE_PRODUCTION, ClearingResult, Fill, GoodsMove, LabourResult,
+from sim.economy.types import (EDGE_MINT, EDGE_PRODUCTION, ClearingResult, Fill, GoodsMove, LabourResult,
                                Pairing, Transfer)
 
 
@@ -206,21 +206,6 @@ class LabourSettlementTests(unittest.TestCase):
         outcome = settle_labour(book, self.labour_result())
         self.assertAlmostEqual(book.balance("household", "coin"), 10.0)
         self.assertAlmostEqual(outcome.shortfalls[0].unsettled_quantity, 20.0)
-
-
-class LegacyTests(unittest.TestCase):
-    def test_a_legacy_posting_is_booked_against_the_legacy_edge(self):
-        book = Book()
-        book_legacy(book, "alice", "coin", 10.0, "engine grant")
-        self.assertEqual(book.balance("alice", "coin"), 10.0)
-        self.assertEqual(book.balance(EDGE_LEGACY, "coin"), -10.0)
-        book_legacy(book, "alice", "coin", -4.0, "engine charge")
-        self.assertEqual(book.balance("alice", "coin"), 6.0)
-        self.assertEqual(book.total("coin"), 0.0)
-
-    def test_a_legacy_charge_cannot_overdraw_an_agent(self):
-        with self.assertRaises(InsufficientFunds):
-            book_legacy(Book(), "alice", "coin", -4.0, "engine charge")
 
 
 class RandomisedTests(unittest.TestCase):
