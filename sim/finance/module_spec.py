@@ -25,7 +25,7 @@ READS_BY_OWNER = {
 	"workforce": ("staff", "money_per_labour_hour", "labour_market", "wage_bill", "wages_charged_last_year", "household_dependant_people", "hours_for_sale",
 	              "best_wage_trade", "work_for_wages_dry_run", "standing_job_pay"),
 	"actors": ("cast", "cast_state", "state_treasury", "actor_world", "lender_offers_made", "cash_and_deposit", "loans_out", "debt_owed"),
-	"markets": ("sale_quote", "agent_rate", "agent_credit_room", "agent_economy_opened", "household_bill_per_person"),
+	"markets": ("sale_quote", "agent_rate", "agent_credit_room", "agent_fundable_amount", "agent_risk_premium", "agent_economy_opened", "household_bill_per_person"),
 	"resources": ("forest_hectares", "mine_operating_cost", "mine_capacity", "mine_workings", "mine_working_cost"),
 	"production": ("held_trade", "revenue_capacity", "revenue_estimate", "upkeep"),
 	"scenario": ("year", "civilisation", "game_config", "money_text"),
@@ -47,6 +47,8 @@ MODULE_SPECS = (ModuleSpec(
 	publishes=(
 		ViewSpec("market_rate", "market_rate", **_LIVE),
 		ViewSpec("credit_room", "credit_room", kind=QUOTE),
+		ViewSpec("fundable_amount", "fundable_amount", kind=QUOTE),
+		ViewSpec("risk_premium", "risk_premium", kind=QUOTE),
 		ViewSpec("state_lending", "state_lending", **_LIVE),
 		ViewSpec("households_loanable_funds", "households_loanable_funds", **_LIVE),
 		ViewSpec("lent_share", "lent_share", **_LIVE),

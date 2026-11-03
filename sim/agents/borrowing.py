@@ -1,8 +1,10 @@
 """How any actor borrows: one rule for a firm, a state and (through the same pure functions) the founder.
 
-An actor's debt is its purse below zero. What it will be lent is the smaller of what its standing earning
-can carry at the market rate and what lenders still hold after everyone else's loans. What it pays is the
-market rate plus a premium for the share of that ceiling it has used, less a discount for its standing.
+An actor's debt is its purse below zero. What it will be lent is the economy's own rule for every borrower
+(`draw_limit`): what its standing earning can carry at the market rate is its collateral, lenders price the debt
+against it (the economy's risk premium) and lend while that price stays under what a borrower pays and over what a
+lender asks, within what lenders still hold after everyone else's loans. What it pays is the market rate plus that
+premium, less a discount for its standing.
 """
 from typing import Any, Tuple
 
@@ -43,16 +45,30 @@ class Borrower:
 		return STANDING_DISCOUNT_CAP * max(0.0, min(1.0, self.credit_standing(world)))
 
 	def credit_ceiling(self, world: Any) -> float:
-		"""The most this actor may owe in all: what its earning can carry at the market rate, and no
-		more than lenders hold after the others' loans."""
+		"""The most this actor may owe in all before lenders price it, which is also the security it shows them: the debt its
+		standing earning can carry at the market rate, and no more than lenders hold after the others' loans. `draw_limit`
+		is what it may draw."""
 		carried = capital_market.serviceable_debt(
 			self.credit_earning(world), max(world.credit.market_rate(), world.credit.starting_rate()), world.credit.debt_service_share_of_surplus())
 		room = world.credit.credit_headroom(self.identity())  # type: ignore[attr-defined]
 		return carried if room is None else min(carried, room)
 
+	def draw_limit(self, world: Any, amount: float) -> float:
+		"""The most of a draw of `amount` the actor is lent on top of what it owes: within its ceiling (what its earning can
+		carry, and what lenders still hold), and cut by the economy's one rule for every borrower (`credit_cap.fundable_amount`
+		at the economy's risk premium and its lowest lender ask, the ceiling being the security shown). Nothing with no ceiling.
+		The whole of what the ceiling allows where the credit market has not yet met."""
+		debt = self.debt()
+		ceiling = self.credit_ceiling(world)
+		wanted = max(0.0, min(amount, ceiling - debt))
+		if wanted <= 0.0:
+			return 0.0
+		fundable = world.credit.fundable_amount(wanted, debt, ceiling, self.arrears_book.interest_arrears)
+		return wanted if fundable is None else fundable
+
 	def spare_credit(self, world: Any) -> float:
-		"""What the actor may still borrow: its ceiling less what it already owes."""
-		return max(0.0, self.credit_ceiling(world) - self.debt())
+		"""What the actor may still borrow: its ceiling less what it owes, as far as lenders lend it."""
+		return self.draw_limit(world, max(0.0, self.credit_ceiling(world) - self.debt()))
 
 	# Whether the actor pays for copies on credit; a firm does, a state and a household keep to their purse.
 	borrows_for_copies = False
@@ -63,10 +79,11 @@ class Borrower:
 		return purse + self.spare_credit(world) if self.borrows_for_copies else purse
 
 	def rate_on_loan(self, world: Any, amount: float) -> float:
-		"""The rate on `amount` borrowed on top of what the actor owes, by the share of the ceiling it then uses."""
-		ceiling = self.credit_ceiling(world)
-		used = (self.debt() + amount) / ceiling if ceiling > 0.0 else 1.0
-		return capital_market.borrower_rate(world.credit.market_rate(), self.standing_discount(world), used)
+		"""The rate on `amount` borrowed on top of what the actor owes: the market rate plus the economy's risk premium on the
+		debt then owed, less the discount for its standing (never under the market rate)."""
+		market_rate = world.credit.market_rate()
+		premium = world.credit.risk_premium(self.debt() + amount, self.credit_ceiling(world), self.arrears_book.interest_arrears)
+		return market_rate + max(0.0, (0.0 if premium is None else premium) - self.standing_discount(world))
 
 	def may_issue_bonds(self, world: Any) -> bool:
 		"""Whether the actor's society holds a technology declaring the `bond_market` mechanic, in the actor's own
@@ -86,12 +103,8 @@ class Borrower:
 		self.purses.redeem_bonds(self.account_id)  # type: ignore[attr-defined]
 
 	def borrowing_rate(self, world: Any) -> float:
-		debt = self.debt()
-		used = 0.0
-		if debt > 0.0:
-			ceiling = self.credit_ceiling(world)
-			used = debt / ceiling if ceiling > 0.0 else 1.0
-		return capital_market.borrower_rate(world.credit.market_rate(), self.standing_discount(world), used)
+		"""The rate on the debt it owes now."""
+		return self.rate_on_loan(world, 0.0)
 
 	@property
 	def arrears_book(self) -> Any:

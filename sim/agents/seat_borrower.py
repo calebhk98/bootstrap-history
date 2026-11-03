@@ -38,6 +38,10 @@ class SeatBorrower(Borrower):
 	def credit_ceiling(self, world: Any) -> float:
 		return self._ceiling()
 
+	def draw_limit(self, world: Any, amount: float) -> float:
+		"""The seat's line is already the economy's rule applied: its owner's ceiling is what the credit clearing granted it."""
+		return max(0.0, min(amount, self._ceiling() - self.debt()))
+
 	def borrowing_rate(self, world: Any) -> float:
 		return self._rate()
 

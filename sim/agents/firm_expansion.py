@@ -42,7 +42,7 @@ class Expansion:
 			shortfall = max(0.0, cost - max(0.0, firm.money))
 			rate = world.credit.market_rate()
 			if shortfall > 0.0:
-				if shortfall > firm.credit_ceiling(world) - firm.debt():
+				if firm.draw_limit(world, shortfall) < shortfall:
 					if gain > cost * rate:
 						equity_need.note_need(firm, shortfall)  # lenders will not fund it, so it raises equity
 					continue

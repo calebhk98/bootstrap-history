@@ -16,7 +16,8 @@ from .banks import DEPOSIT_BANKING
 from .funds import POOLED_FUNDS
 from .insurance import INSURANCE_UNDERWRITING, RISK_POOLING
 from .secondary_trade import BOND_MARKET, SHARE_TRADING
-from .credit_lines import line_request as credit_line_request
+from .credit_lines import line_request as credit_line_request, actor_fundable as _actor_fundable, lender_standings as _lender_standings
+from .credit import risk_premium
 from .currency import currency_from_coin_standard
 from .economy import Economy
 from .foreign import external_orders
@@ -62,6 +63,7 @@ __all__ = [
     "settle_agent_takings", "route_dues_account", "tile_holders", "indebted_tiles", "fugitive_share_by_tile", "title_holdings", "money_revenue_forms", "admit_recipes", "move_goods", "post_transfers", "cohort_incomes", "cohort_land_rents", "land_rent_per_hectare",
     "land_rent_paid_by_tile", "land_rent_at_tile", "DEPOSIT_BANKING", "POOLED_FUNDS", "INSURANCE_UNDERWRITING", "RISK_POOLING", "BOND_MARKET", "SHARE_TRADING", "country_figures", "carried_book", "idle_hours_by_trade", "output_by_tile",
     "person_equivalent_unemployment", "labour_market_rows",
+    "actor_fundable_amount", "risk_premium", "lender_listing",
 ]
 
 from .market_memory import KEY_SEPARATOR as _KEY_SEPARATOR
@@ -627,3 +629,22 @@ def health_figures(economy, outcomes, staple, metals):
 def crop_site_inputs(economy):
     """(yield factor by recipe and tile, land a run takes by recipe) for the producers that crop land."""
     return economy.setup.yield_factor_by_recipe_tile, economy.setup.land_per_run
+
+
+def actor_fundable_amount(economy, amount, existing_debt, collateral_value, arrears):
+    """The most of a draw of `amount` an actor that already owes `existing_debt` is lent, by the same rule as every borrower
+    in the clearing (credit_lines.actor_fundable) at the lowest rate any lender asked at the last lending. Economy units.
+    None before lenders have met."""
+    ask = economy.record.credit.lowest_ask_offered
+    if ask is None:
+        return None
+    rate = interest_rate(economy)
+    return _actor_fundable(amount, existing_debt, collateral_value, arrears, economy.setup.opening_rate if rate is None else rate, ask)
+
+
+def lender_listing(economy):
+    """{"currency", "coin_per_unit", "lenders"}: the lenders of the last lending, cheapest ask first, each with its kind
+    (cohort, bank, fund), what it offered, what its account holds and its ask, in the economy's units."""
+    currency = economy.setup.currency_id
+    return {"currency": currency, "coin_per_unit": economy.setup.coin_per_unit,
+            "lenders": _lender_standings(economy.record, currency)}

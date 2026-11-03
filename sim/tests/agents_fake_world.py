@@ -12,6 +12,7 @@ from typing import Any, Dict, List, Optional, Set, Tuple
 from sim.agents import business_plant_books, ledger
 from sim.agents.narrowed_world import world_surface
 from sim.agents.records import ActorsState
+from sim.economy import api as economy_api
 
 
 class FakePart:
@@ -266,6 +267,15 @@ class FakeWorld:
 
 	def credit_headroom(self, actor_id: str) -> Optional[float]:
 		return None
+
+	def fundable_amount(self, amount: float, existing_debt: float, collateral_value: float, arrears: float) -> Optional[float]:
+		return None
+
+	def risk_premium(self, debt_after: float, collateral_value: float, arrears: float) -> Optional[float]:
+		return economy_api.risk_premium(debt_after, collateral_value, arrears)
+
+	def limit(self, actor_id: str, amount: float) -> float:
+		return amount
 
 	def pay_interest(self, payer: Any, owed: float, purpose: Any = "interest") -> None:
 		"""Interest goes to the lenders the payer's purses name; the fixture keeps the total paid."""

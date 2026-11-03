@@ -29,6 +29,21 @@ class Credit:
 		"""What lenders will still advance an actor beyond what others owe; None before the market has met."""
 		return self.needs.credit_room(actor_id)
 
+	def fundable_amount(self, amount: float, existing_debt: float, collateral_value: float, arrears: float) -> Optional[float]:
+		"""The most of a draw of `amount` the credit market lends an actor that owes `existing_debt` against `collateral_value`
+		(the economy's one rule for every borrower); None before the market has met."""
+		return self.needs.fundable_amount(amount, existing_debt, collateral_value, arrears)
+
+	def risk_premium(self, debt_after: float, collateral_value: float, arrears: float) -> Optional[float]:
+		"""The rate the credit market adds to the market rate for that debt against that collateral; None while the economy opens."""
+		return self.needs.risk_premium(debt_after, collateral_value, arrears)
+
+	def limit(self, actor_id: str, amount: float) -> float:
+		"""The most of a draw of `amount` the actor behind the account may take, by its own `draw_limit`; the whole of it for an
+		account no borrower stands behind (an edge, a seat's household)."""
+		actor = self.world.registry.actors.get(actor_id)
+		return amount if actor is None else actor.draw_limit(self.world, amount)
+
 	def state_may_borrow(self, state: Any) -> bool:
 		"""Whether a state holds a technology that declares the `state_credit` mechanic, in its own
 		knowledge or in what its society already knows."""

@@ -47,7 +47,7 @@ READS_BY_OWNER = {
 	"seats": ("acting_seat", "acting_country", "seat_list", "seat_country", "seats_holding_patent", "seat_place", "seat_dealings", "dealings_listing"),
 	"demography": ("pop_scale_for", "population_total", "working_age", "urban_fraction", "people_by_tile", "nutrition_ratio_last_year"),
 	"scenario": ("year", "civilisation", "game_setting", "opening_civilisation", "civilisation_record", "money_text", "mass_rate_text"),
-	"finance": ("credit_limit", "credit_room", "state_lending", "debt_interest_rate", "debt_service_share_of_surplus", "market_rate"),
+	"finance": ("credit_limit", "credit_room", "fundable_amount", "risk_premium", "state_lending", "debt_interest_rate", "debt_service_share_of_surplus", "market_rate"),
 	"ventures": ("operating", "operating_by_seat", "venture_opened_year", "venture_size", "concern_staff"),
 	"knowledge": ("tree_nodes", "techniques_held", "techniques_granted", "techniques_by_seat"),
 	"projects": ("substitute_quality_discount", "project_cost", "effective_risk", "seat_review"),

@@ -31,6 +31,17 @@ class AgentPriceViews(AgentViewPart):
 		parts = self._answering()
 		return (False, None) if parts is None else (True, parts.prices.credit_room(borrower_id))
 
+	def agent_fundable_amount(self, amount, existing_debt, collateral_value, arrears):
+		"""(True, the most of a draw of `amount` coin the credit market lends an actor that owes `existing_debt`, None before
+		lenders have met) when the agent economy answers; (False, None) while it opens."""
+		parts = self._answering()
+		return (False, None) if parts is None else (True, parts.prices.fundable_amount(amount, existing_debt, collateral_value, arrears))
+
+	def agent_risk_premium(self, debt_after, collateral_value, arrears):
+		"""(True, the rate added to the market rate for that debt) when the agent economy answers; (False, None) while it opens."""
+		parts = self._answering()
+		return (False, None) if parts is None else (True, parts.prices.risk_premium(debt_after, collateral_value, arrears))
+
 	def fleet_goods(self, holder_id):
 		return self.parts.market_objects.economy.fleet_goods(holder_id)
 

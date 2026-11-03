@@ -42,7 +42,8 @@ def defaults() -> Dict[str, Any]:
 		"techniques_held": lambda: set(), "techniques_granted": lambda: set(), "venture_real_upkeep": lambda node_id: 0.0,
 		"mine_capacity": lambda: {}, "mine_workings": lambda: [], "mine_working_cost": lambda working: 0.0,
 		"committed_cost": 0.0, "tree_nodes": {},
-		"agent_rate": lambda: None, "agent_credit_room": lambda borrower_id: (False, None), "agent_economy_opened": False,
+		"agent_rate": lambda: None, "agent_credit_room": lambda borrower_id: (False, None),
+		"agent_fundable_amount": lambda amount, debt, collateral, arrears: (False, None), "agent_risk_premium": lambda debt, collateral, arrears: (False, None), "agent_economy_opened": False,
 	}
 
 
