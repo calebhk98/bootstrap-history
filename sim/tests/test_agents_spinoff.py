@@ -17,10 +17,10 @@ from .agents_fake_world import FakeWorld, make_node
 
 class SpinWorld(FakeWorld):
 	patent = None
-	capacity = 1.0
+	state_reach_share = 1.0
 
 	def state_reach(self):
-		return self.capacity
+		return self.state_reach_share
 
 	def entry_gross(self, node_id, rivals, entrants):
 		return float(self.nodes[node_id].get("rev", 0.0)) / (1.0 + rivals + entrants)
@@ -88,9 +88,9 @@ check("a player's concern can spawn a rival", len(spinoff.consider_spinoffs(regi
 registry, parent = make_parent()
 world.patent = {"holder": "player:z", "expires": 200, "licensees": []}
 check("a patent a state fully enforces leaves a rival nothing to expect", spinoff.consider_spinoffs(registry, world) == [])
-world.capacity = 0.0
+world.state_reach_share = 0.0
 check("a patent a state cannot enforce does not stop a rival", len(spinoff.consider_spinoffs(registry, world)) >= 1)
-world.capacity = 1.0
+world.state_reach_share = 1.0
 world.patent = None
 world.output = 1.0
 check("capital too thin to fund the stake stops it", spinoff.consider_spinoffs(registry, world) == [])

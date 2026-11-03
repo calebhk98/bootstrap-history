@@ -43,7 +43,7 @@ def labour_offers(setup, record, view, subsistence_by_tile, levy_hours_per_worke
                   levied_tiles: Sequence[str] = ()) -> List[LabourOffer]:
     """Each cohort's share of the tile's workers in each trade, as hours at the reservation wage. The hours a state
     levies (`levy_hours_per_worker`) come off the hours of the workers on the tiles it holds (`levied_tiles`) before
-    they are offered, never below nothing for an offer."""
+    they are offered: the hours left are asked at a dearer wage, and a levy of the whole year leaves nothing to offer."""
     danger = {trade: spec.fatality_risk_per_year for trade, spec in setup.trades.items()}
     levied = set(levied_tiles)
     offers: List[LabourOffer] = []
@@ -58,12 +58,12 @@ def labour_offers(setup, record, view, subsistence_by_tile, levy_hours_per_worke
         if area not in people_by_area:
             people_by_area[area] = people_by_trade(record.labour.workforce, area)
         workers = {trade: count * share for trade, count in people_by_area[area].items()}
-        made = households.labour_offers(cohort, workers, view, subsistence_by_tile.get(cohort.tile, 0.0),
-                                        setup.working_hours_per_year, danger)
-        if cohort.tile in levied and levy_hours_per_worker > 0.0:
-            kept = max(0.0, 1.0 - levy_hours_per_worker / setup.working_hours_per_year)
-            made = [dataclasses.replace(offer, hours=offer.hours * kept) for offer in made]
-        offers.extend(made)
+        hours_left = setup.working_hours_per_year
+        if cohort.tile in levied:
+            hours_left = max(0.0, hours_left - max(0.0, levy_hours_per_worker))
+        if hours_left <= 0.0:
+            continue
+        offers.extend(households.labour_offers(cohort, workers, view, subsistence_by_tile.get(cohort.tile, 0.0), hours_left, danger))
     return offers
 
 

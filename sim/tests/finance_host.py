@@ -27,7 +27,7 @@ def defaults() -> Dict[str, Any]:
 		"year": 100, "civilisation": {"id": "rome", "starting_interest_rate": 0.1, "starting_tax_share": 0.0},
 		"game_config": {"founder_hours_per_year": 3000.0},
 		"money_text": lambda amount, grouped=False, short=False: "%d money" % round(amount), "price_index": 1.0,
-		"cast": SimpleNamespace(actors={}, active_firms=lambda: [], purse_lenders=lambda: []),
+		"cast": SimpleNamespace(actors={}, concerns=SimpleNamespace(active_firms=lambda: []), purse_lenders=lambda: []),
 		"state_treasury": SimpleNamespace(actor_id="state"), "actor_world": SimpleNamespace(), "lender_offers_made": {},
 		"cash_and_deposit": lambda account: 0.0, "loans_out": lambda lender=None: 0.0, "debt_owed": lambda account: 0.0,
 		"cast_state": SimpleNamespace(purses=Purses()), "acting_balance": 0.0,

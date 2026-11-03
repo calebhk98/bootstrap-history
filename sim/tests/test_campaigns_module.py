@@ -40,7 +40,7 @@ def army(soldiers=1000.0, owner=OWNER, tile=HOME, army_id="a1", food=0.0, target
 def country_world(force=1000.0, equipment=12.5, arrears=0.0, wage=10.0, population=1000.0):
     government = SimpleNamespace(record=SimpleNamespace(army=force, arrears={"army": arrears}))
     return flat_namespace(equipment_kg_per_soldier=lambda: equipment, soldiers_under_arms=lambda: force,
-                           government=lambda: government, pay_per_person_year=lambda kind: wage,
+                           government=lambda: government, pay_per_person_year=lambda kind: wage, trade_of_role=lambda role: role,
                            population_total=lambda: population, rng_for=lambda *key: SimpleNamespace(random=lambda: 0.25))
 
 

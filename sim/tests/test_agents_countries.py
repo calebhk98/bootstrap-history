@@ -188,7 +188,7 @@ own_view = CountryWorld(world, profiles["beta"], registry)
 check("a country's government is its own actor in the registry", own_view.setting.government() is beta_actor)
 beta_firm = registry.add("firm:beta", ActorRecord(kind="firm", country="beta", money=100.0))
 beta_purse = beta_actor.money
-taken = registry.countries.world_for(beta_firm, world).government().collect(beta_firm, 100.0, beta_world)
+taken = registry.countries.world_for(beta_firm, world).setting.government().collect(beta_firm, 100.0, beta_world)
 check("a foreign state levies a firm of its own country at its tax share and reach, money moving across",
 	  abs(taken - 100.0 * 0.2 * beta_world.taxpayers.state_reach()) < 1e-9 and abs(beta_firm.money - (100.0 - taken)) < 1e-9
 	  and abs(beta_actor.money - (beta_purse + taken)) < 1e-9, (taken, beta_firm.money, beta_actor.money))

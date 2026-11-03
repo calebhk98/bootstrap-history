@@ -65,7 +65,7 @@ class CostBookMemoTests(unittest.TestCase):
         current = {}
         shared = prices_stand_in.build(household_prices=lambda: current["prices"], market_rate=lambda: current["rate"],
                                        year=lambda: current["year"], techniques_in_use=lambda: current["techniques"])
-        with mock.patch.object(shared, "economy_cost_book", side_effect=lambda: built.append(1) or object()):
+        with mock.patch.object(shared.parts.cost_books, "economy_cost_book", side_effect=lambda: built.append(1) or object()):
             for prices, rate, year, techniques in situations:
                 current.update(prices=prices, rate=rate, year=year, techniques=techniques)
                 shared.cost_book()

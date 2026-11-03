@@ -41,7 +41,8 @@ class View(ViewDefaults):
 def world(people=10.0, working=10.0):
     tile = TileSpec(TILE, 40.0, 10.0, 1.0, False, (), 1.0, 1.0, climate_class="Cfb")       # a hundred hectares
     setup = types.SimpleNamespace(tiles={TILE: tile}, recipes={"grow_grain": GRAIN_RECIPE}, land_per_run=LAND,
-                                  servant_trade="servant", working_hours_per_year=2000.0,
+                                  servant_trade="servant", unskilled_trade="labourer", currency_id="coin", opening_wages={},
+                                  trades={"servant": types.SimpleNamespace(training_years=0.0)}, working_hours_per_year=2000.0,
                                   basket_for=lambda tile_id: BASKET)
     record = types.SimpleNamespace(cohorts={POOR: Cohort(POOR, TILE, 0, people, working, 0.0)}, land=types.SimpleNamespace(titles={TILE: {LANDLORD: 1.0}}, tenancies={}, land_rent={TILE: 24.0}, cleared_hectares={}), credit=types.SimpleNamespace(loans=[]))
     return setup, record, own_production_options(setup.recipes, LAND, BASKET)

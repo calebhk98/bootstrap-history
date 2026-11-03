@@ -14,6 +14,9 @@ class ViewDefaults:
     def observed_inflation(self, currency):
         return None
 
+    def opening_wage_level(self, currency):
+        return 1.0
+
     def equity(self, agent):
         return 0.0
 

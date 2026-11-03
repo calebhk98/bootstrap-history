@@ -2,6 +2,7 @@
 artisans fall by a share down to a floor; a count already below the floor stays (a dispersal never hires)."""
 import unittest
 
+from sim.labour import legacy_trade_defaults, trade_data
 from sim.tests import module_harness
 from sim.workforce.api import DisperseDependants
 from sim.workforce.module import Workforce
@@ -11,8 +12,9 @@ QUICK_TOPIC = True
 
 
 def dispersed(artisans, floor, retention):
-    seat = WorkforceSeat(artisans=artisans, freedmen=4)
-    module_harness.build(Workforce, seat=seat).disperse_dependants(DisperseDependants(floor, retention))
+    # artisans are the craft people on the staff book (plus freedmen and slaves), and the pool is rebuilt from the book after a dispersal
+    seat = WorkforceSeat(artisans=artisans, freedmen=4, employees={trade_data.generic_craft_trade(): artisans})
+    module_harness.build(Workforce, seat=seat, views={"trade_family": lambda trade: legacy_trade_defaults.CRAFT_FAMILY}).disperse_dependants(DisperseDependants(floor, retention))
     return seat
 
 

@@ -177,7 +177,7 @@ class GrantsSurviveTheYearsResync(unittest.TestCase):
     def test_people_bought_and_trained_count_at_the_slave_productivity(self):
         game = Bondage()
         game.household.slaves = 10
-        self.assertAlmostEqual(self.resynced(game).artisans, 10 * game.TRAINED_SLAVE_ARTISAN_PRODUCTIVITY)
+        self.assertAlmostEqual(self.resynced(game).artisans, 10 * game.pools.TRAINED_SLAVE_ARTISAN_PRODUCTIVITY)
 
 
 if __name__ == "__main__":

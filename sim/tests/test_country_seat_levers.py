@@ -33,7 +33,7 @@ class LeverGame(FactViews):
         self.record = ActorRecord(kind="government", revenue_forms=[dict(FORM)])
         self.asked = []
         government = Game(record=self.record)
-        self.actors = Game(government_of=lambda country: self.asked.append(country) or (government if governed else None))
+        self.actors = Game(countries=Game(government_of=lambda country: self.asked.append(country) or (government if governed else None)))
 
 
 def send(game, **fields):

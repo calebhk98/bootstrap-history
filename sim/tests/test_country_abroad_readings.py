@@ -121,17 +121,17 @@ def country_world(shared):
 world = country_world(HomeShared())
 rent = world.site.site_rent("shop", 2.0, "far_tile")
 check("a country's site rent is its hectares at the country's rent, not the home world's", rent == HECTARES * 2.0 * COUNTRY_RENT, rent)
-check("a country the economy has no part for has no site rent (None)", country_world(NoPart()).site_rent("shop", 1.0, None) is None)
-check("a country that let no land has no site rent (None)", country_world(NoLandLet()).site_rent("shop", 1.0, None) is None)
+check("a country the economy has no part for has no site rent (None)", country_world(NoPart()).site.site_rent("shop", 1.0, None) is None)
+check("a country that let no land has no site rent (None)", country_world(NoLandLet()).site.site_rent("shop", 1.0, None) is None)
 
 check("a country's ramped-up concern takes the book figure at its cost scale",
 	  world.concerns.concern_gross("shop") == BOOK_TAKINGS * COST_SCALE, world.concerns.concern_gross("shop"))
-check("...none where the economy has no part for the country (None)", country_world(NoPart()).concern_gross("shop") is None)
-check("...none for a goods category (None)", country_world(GoodsCategory()).concern_gross("shop") is None)
+check("...none where the economy has no part for the country (None)", country_world(NoPart()).concerns.concern_gross("shop") is None)
+check("...none for a goods category (None)", country_world(GoodsCategory()).concerns.concern_gross("shop") is None)
 
 costs = world.concerns.plant_costs("shop")
 check("a country's yearly costs are its own, not the home world's", costs == (BOOK_UPKEEP * COST_SCALE, 2.0 * 14.0 + 3.0 * 10.0), costs)
-check("...none where the economy has no part for the country (None)", country_world(NoPart()).plant_costs("shop") is None)
+check("...none where the economy has no part for the country (None)", country_world(NoPart()).concerns.plant_costs("shop") is None)
 check("a country's hourly pay is its person-year over the hours of a year", world.labour.hourly_pay("mason") == 14.0 / world.labour.hours_per_person_year)
 
 

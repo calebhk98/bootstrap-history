@@ -10,7 +10,7 @@ QUICK_TOPIC = True
 import json
 import re
 import unittest
-from types import SimpleNamespace
+from sim.tests.ui_stand_in import Game
 
 from sim.engine import units as U
 from sim.ui.proto.render_typed import render_pretty
@@ -49,8 +49,7 @@ class HandScreens(unittest.TestCase):
         registry = json.loads(json.dumps(U.load_units(U.ROOT)))
         registry["units"].update(BLOBS)
         U.set_registry(registry)
-        self.game = SimpleNamespace(civ={"id": "rome_100ad", "currency_words": {"long": "denarii", "short": "den"}},
-                                    labour=SimpleNamespace(money_per_labour_hour=lambda: 0.5))
+        self.game = Game(civ={"id": "rome_100ad", "currency_words": {"long": "denarii", "short": "den"}}, money_per_labour_hour=0.5)
 
     def tearDown(self):
         U.set_registry(None)

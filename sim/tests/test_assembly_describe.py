@@ -22,8 +22,13 @@ class Layer:
         return super().double()
 
 
+class TopLayer:
+    def derived(self):
+        return super().derived()
+
+
 class Helping:
-    def helper(self):
+    def run_market(self):
         return 1
 
 
@@ -37,7 +42,7 @@ def full_assembly():
     added = ModuleSpec("one:extra", Quiet, publishes=(ViewSpec("extra", "provided"),))
     operations = [
         Operations("one", added=(added,), replaced={"base": changed(BASE, implementation=Replacement)}),
-        Operations("two", layers={"top": (Layer,)}, adjusters={"double": ((lambda needs, value: value, ()),)},
+        Operations("two", layers={"top": (TopLayer,)}, adjusters={"double": ((lambda needs, value: value, ()),)},
                    provided={"town_size": (lambda: 1,)}),
         Operations("three", removed=("gone",))]
     return build(town, gone, operations=operations)
@@ -59,7 +64,7 @@ class RecordTest(unittest.TestCase):
         self.assertIsNone(self.record["modules"]["top"]["replaced_by"])
 
     def test_layers_list_mod_and_class_in_order(self):
-        self.assertEqual(self.record["modules"]["top"]["layers"], [["two", dotted(Layer)]])
+        self.assertEqual(self.record["modules"]["top"]["layers"], [["two", dotted(TopLayer)]])
         self.assertEqual(self.record["modules"]["base"]["layers"], [])
 
     def test_removed_modules_are_listed_with_their_remover_and_not_as_modules(self):
@@ -98,7 +103,7 @@ class DependencyLinesTest(unittest.TestCase):
         assembly = build(operations=[Operations("one", layers={"base": (Helping,)})])
         listed = [line for line in dependency_lines(assembly) if "unstable" in line]  # presentation: the listing's marker
         self.assertEqual(len(listed), 1)
-        self.assertIn("helper", listed[0])
+        self.assertIn("run_market", listed[0])
         self.assertIn("one", listed[0])
 
     def test_a_layer_overriding_a_declared_method_is_not_listed(self):
