@@ -24,6 +24,11 @@ except ImportError:  # Windows: misses are not coordinated
     fcntl = None
 
 _ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+
+def relative_to_checkout(text):
+    """`text` as a path relative to the checkout when it names a place inside it; any other text unchanged."""
+    return os.path.relpath(text, _ROOT) if text.startswith(_ROOT + os.sep) else text
 DEFAULT_CACHE_DIRECTORY = cache_root.cache_directory("price_solves")
 _DIGEST_LENGTH = 32
 _DATA_SUFFIXES = (".json", ".md", ".txt", ".csv")

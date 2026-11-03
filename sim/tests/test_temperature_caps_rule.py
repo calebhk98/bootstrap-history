@@ -18,33 +18,7 @@ class CapabilityFloorByCarrierTests(unittest.TestCase):
     """
 
     def test_the_default_floor_applies_with_no_active_consumer(self):
-        floor = solve_prices_core.capability_floor_by_carrier({})
-        self.assertEqual(floor["thermal_mj"],
-                        solve_prices_core.THERMAL_MJ_MINIMUM_USABLE_TEMPERATURE_C)
-
-    def test_a_consumers_stated_need_no_longer_raises_the_shared_floor(self):
-        # This is the exact scenario the old test suite's
-        # "an_active_consumer_can_raise_the_floor_above_the_default" test
-        # pinned as CORRECT - it was pinning the bug. A consumer's own
-        # requirement is now graded separately (see
-        # PerConsumerGradingTests below); it must not touch the shared
-        # floor every OTHER, unlabelled consumer reads.
-        entries = {
-            "hot_process": {"outputs": {"widget_kg": 1.0}, "inputs": {},
-                            "labour_hours": {}, "thermal_mj": 5.0,
-                            "temperature_needed_c": 2000.0},
-        }
-        floor = solve_prices_core.capability_floor_by_carrier(entries)
-        self.assertEqual(floor["thermal_mj"],
-                        solve_prices_core.THERMAL_MJ_MINIMUM_USABLE_TEMPERATURE_C)
-
-    def test_a_stated_need_below_the_default_does_not_lower_it_either(self):
-        entries = {
-            "mild_process": {"outputs": {"widget_kg": 1.0}, "inputs": {},
-                             "labour_hours": {}, "thermal_mj": 5.0,
-                             "temperature_needed_c": 150.0},
-        }
-        floor = solve_prices_core.capability_floor_by_carrier(entries)
+        floor = solve_prices_core.capability_floor_by_carrier()
         self.assertEqual(floor["thermal_mj"],
                         solve_prices_core.THERMAL_MJ_MINIMUM_USABLE_TEMPERATURE_C)
 

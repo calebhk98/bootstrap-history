@@ -101,7 +101,7 @@ class CountryAnswers:
         economy = self._economy
         own_tiles = country_figures.country_tiles(economy, self._country)
         rent = land_rent_at_tile(economy, tile if tile in own_tiles else None, self._country)
-        return rent * self._coin if rent > 0.0 else None
+        return rent * self._coin if rent is not None and rent > 0.0 else None
 
     def land_rent_curve(self, tiles=None):
         """(people, rent received in coin) of the country's household cohorts, poorest first: the rent paid on its

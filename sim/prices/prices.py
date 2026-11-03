@@ -1,7 +1,7 @@
 """Ask the price solver for a price.
 
 Prices are calculated from recipes, land rent, wages and transport by
-`sim/prices/solve_prices.py`, gated to what a civilization has reached
+`sim/prices/solve_prices_core.py` (the design is written up in the docstring of `sim/prices/solve_prices.py`, which holds no code), gated to what a civilization has reached
 (Complaints/38). This module is the engine's one call into the solver. It is
 thin: it imports the solver rather than re-implementing it. There is no price
 book; a material nothing can make has no price.
@@ -43,12 +43,12 @@ that subset once from `data/production/` itself (every distinct
 non-null `requires_node`, which by construction excludes both the
 "available to everyone" state - `requires_node: null` - and the "nobody has
 classified this yet" state - the field absent entirely; see
-`solve_prices.techniques_available_to` for why those two are not gates
+`solve_prices_core.techniques_available_to` for why those two are not gates
 either), and `solved_prices` below intersects it with whatever the caller
 passes as `held_technology_ids` before ever touching the cache. A caller
 may pass its FULL technology set without pre-filtering; the exact same
 gate-only key comes out the far side. This is also, incidentally, exactly
-the right input to hand `solve_prices.techniques_available_to` for the
+the right input to hand `solve_prices_core.techniques_available_to` for the
 actual solve: a technique's `requires_node` is checked for membership in
 `reached_nodes`, and a technique's `requires_node` is always a gate node by
 this module's own construction, so the intersected set answers every
@@ -62,12 +62,9 @@ that CAN change a solved price - see above), and a differently-keyed entry
 is simply a different dict entry; nothing is ever evicted. This is safe
 because `data/production/` does not change while one game is running (it is
 committed data, read once and reused - see `_default_production_entries`
-below) and because prices computed here are NEVER PERSISTED: nothing in this
-module is a `SAVE_FIELDS` entry, no cached vector is written to a save, and
-per CLAUDE.md section 3.5 it must not become one - a saved price vector from
-an old build would be exactly the kind of migration hazard that section
-rules out, and there is no need to invite it when a cache miss just re-solves
-from the same committed data a fresh load would read anyway.
+below) and because prices computed here are never part of a save: a solve is
+kept in this process and in the solve cache on disk (`sim/prices/solve_cache.py`, keyed on the data and
+source it was computed from), and a miss re-solves from the same data.
 
 The one hazard this project has actually been burned by - `id()` recycling a
 freed object's address into a live cache entry, see CLAUDE.md section 6 and
@@ -78,8 +75,8 @@ before trusting it. A caller that hands in a DIFFERENT `production_entries`
 object (a test building synthetic data, mainly) can never collide with a
 real one that happens to reuse the same gate-node ids.
 
-LABOUR-HOURS TO DENARII. `sim/prices/solve_prices.py` prices everything in
-labour-hours - one hour of the unskilled trade, its numeraire (`solve_prices.numeraire_trade`), equals 1.0 - because a
+LABOUR-HOURS TO DENARII. `sim/prices/solve_prices_core.py` prices everything in
+labour-hours - one hour of the unskilled trade, its numeraire (`solve_prices_core.numeraire_trade`), equals 1.0 - because a
 recipe graph can produce relative amounts of unskilled effort. Money enters
 only here, at the edge: the wage document carries `money_per_labour_hour`,
 which `sim.workforce.wage_schedule.build_schedule` derives from the
@@ -87,15 +84,12 @@ civilisation's coin (the coin material's solved labour hours per kg times the
 coin's mass), so a price in money is its labour hours times that rate.
 `denarii_per_labour_hour` is the one place the rate is read.
 
-WHAT THIS DOES NOT HANDLE, LEFT FOR THE NEXT STEP. `solve_prices.py` itself
-flags MINOR JOINT BYPRODUCTS (platinum, coal tar and the like) that were split
-by mass as lower bounds rather than independent prices - see that module's own
-docstring. This file still reports them as "solved" rather than a third
-category, because a third provenance state is a design decision of its own; a caller that
-cares can already recover the distinction by re-running
-`solve_prices.minor_joint_byproducts_split_by_mass` against the same
-`SolvedPrices.chosen_recipe_by_material`, which is exposed for exactly that
-kind of downstream question.
+WHAT THIS DOES NOT HANDLE, LEFT FOR THE NEXT STEP. the solver
+prices MINOR JOINT BYPRODUCTS (platinum, coal tar and the like) by mass where no reference price
+exists: lower bounds rather than independent prices (`sim/prices/joint_allocation.py`). This file reports
+them as "solved" rather than a third category, because a third provenance state is a design decision
+of its own; `SolvedPrices.chosen_recipe_by_material` is exposed for a caller that wants to recover the
+distinction.
 
 RENT IS AN ARGUMENT (Complaints/507). `solved_prices` takes
 `rent_hours_per_kg_by_material` and charges exactly that (empty: none). A
@@ -110,9 +104,8 @@ hold the exact same gate-node set while holding completely different
 territory. A cache key of `gate_nodes_held` alone cannot distinguish them, so
 `solved_prices` and `priced_goods_table` take an explicit `civilization_id`
 parameter and fold it into the cache key alongside `gate_nodes_held`, together
-with the rent a caller supplied. It defaults to `None`, which resolves to
-`solve_prices.DEFAULT_LAND_CIVILIZATION` (the default civilisation) - the same
-default the CLI uses when `--civ` is omitted.
+with the rent a caller supplied. It defaults to `None`, which resolves to the
+reference civilisation (`engine_seam.load_civ(None)`) - the same default the CLI uses when `--civ` is omitted.
 """
 import contextlib
 import functools
@@ -125,7 +118,7 @@ from typing import Any, Callable, Dict, FrozenSet, Iterable, Iterator, List, Map
 # TYPE ALIASES.
 #
 # Prices: a {material: price} table, in EITHER unit this module handles -
-# labour-hours (solve_prices.py's own numeraire) or denarii
+# labour-hours (the solver's own numeraire) or denarii
 # (the economy module's) - see LABOUR-HOURS TO DENARII in the module
 # docstring above for the conversion between them. The unit is never part
 # of the type, the same way it is never part of a plain `float`; each
@@ -138,7 +131,7 @@ Prices = Dict[str, float]
 # a TypedDict: `data/production/_SCHEMA.md` documents a genuinely
 # per-process-shape schema (a smelting entry and a synthesis entry do not
 # share a field list), and this module only ever passes these entries
-# through to `solve_prices.py` and `validate_production.py` (both
+# through to `solve_prices_core.py` and `validate_production.py` (both
 # unannotated, out of this task's scope) without reading their fields
 # itself - the one exception, `entry.get("requires_node")` /
 # `entry.get("outputs")` in `all_gate_nodes`/`priced_goods_table`, reads
@@ -150,7 +143,7 @@ ProductionEntries = Dict[str, Any]
 # material ids, open and data-driven.
 Provenance = Dict[str, str]
 
-HERE = os.path.dirname(os.path.abspath(__file__))              # sim/engine
+HERE = os.path.dirname(os.path.abspath(__file__))              # sim/prices
 SIMDIR = os.path.dirname(HERE)                                  # sim
 REPO_ROOT = os.path.dirname(SIMDIR)                             # repo root
 if REPO_ROOT not in sys.path:
@@ -167,7 +160,7 @@ class SolvedPrices(object):
     """One gated solve's result, cached and handed back verbatim on a hit.
 
     `prices_in_labour_hours` and `chosen_recipe_by_material` are exactly
-    `solve_prices.solve`'s own return values, kept in the solver's native
+    `solve_prices_core.solve`'s own return values, kept in the solver's native
     unit (see LABOUR-HOURS TO DENARII in the module docstring) so a caller
     that wants the solver's own numeraire, not a converted one, still can.
     `resolvable_materials` is which materials have ANY path to a price under
@@ -230,13 +223,12 @@ def _default_production_entries() -> ProductionEntries:
 
 
 def reset_caches_for_tests() -> None:
-    """Clear both module-level caches.
+    """Clear this module's caches, the default production entries and the numeraires.
 
     Only tests should call this: it exists because several tests build
     their own small, synthetic `production_entries` and need a clean cache
-    between them, and because a real engine process never wants to see
-    `data/production/` change mid-run (see WHAT INVALIDATES THE CACHE in the
-    module docstring) so nothing else has a reason to call it.
+    between them. The caches of `making_cost` and `energy_prices` hold the entries object they were built
+    from and confirm a hit with `is`, so replacing the default entries here makes them miss.
     """
     global _DEFAULT_PRODUCTION_ENTRIES
     _DEFAULT_PRODUCTION_ENTRIES = None
@@ -252,7 +244,7 @@ def all_gate_nodes(production_entries: Optional[ProductionEntries] = None) -> Fr
     node: `requires_node: null` means available to everyone (not a gate -
     nothing to hold) and a missing `requires_node` means nobody has
     classified the entry yet (also not a gate - see
-    `solve_prices.techniques_available_to`, which treats both the same way,
+    `solve_prices_core.techniques_available_to`, which treats both the same way,
     by dropping or admitting the technique itself rather than by ever
     treating the field as a node id). `.get("requires_node")` already
     returns None for both of those cases, which is why testing "is not
@@ -432,8 +424,8 @@ def solved_prices(held_technology_ids: Iterable[str],
 
     `civilization_id` decides whose territory the land rent stand-in
     prices (see RENT NEEDS A CIVILIZATION in the module docstring); it
-    defaults to `None`, which resolves to `solve_prices.
-    DEFAULT_LAND_CIVILIZATION` (the default civilisation), matching what the CLI does when
+    defaults to `None`, which resolves to the reference
+    civilisation (`engine_seam.load_civ(None)`), matching what the CLI does when
     `--civ` is omitted. Passing `held_technology_ids` from a civilization's
     `starting_techs` without ALSO passing that civilization's own id here
     would silently price its land as the default civilisation's - the parameter is separate

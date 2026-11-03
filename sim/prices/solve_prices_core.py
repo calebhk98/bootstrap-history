@@ -16,7 +16,6 @@ import collections
 import math
 import os
 import sys
-import warnings
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO_ROOT = os.path.dirname(os.path.dirname(HERE))
@@ -26,7 +25,7 @@ from sim.labour.api import trade_of_role
 from sim.prices import engine_seam
 from sim.world import capital_builds
 from sim.prices import disposal_cost  # noqa: E402
-from sim.prices.joint_allocation import allocate_joint_cost, outputs_split_by_mass  # noqa: E402
+from sim.prices.joint_allocation import allocate_joint_cost  # noqa: E402
 from sim.prices.price_change import relative_price_change  # noqa: E402
 from sim.world.capital_market import stand_yearly_share  # noqa: E402  (CAPITAL)
 # DAMPING_FACTOR, MAXIMUM_ITERATIONS, CONVERGENCE_TOLERANCE, INITIAL_PRICE_
@@ -118,7 +117,7 @@ CAPABILITY_CAP_FIELDS = {
 }
 
 
-def capability_floor_by_carrier(production_entries):
+def capability_floor_by_carrier():
     """{carrier_material: the carrier's own UNIVERSAL default floor} - one
     entry per carrier named in CAPABILITY_CAP_FIELDS.
 
@@ -136,11 +135,6 @@ def capability_floor_by_carrier(production_entries):
     (THERMAL_MJ_MINIMUM_USABLE_TEMPERATURE_C's own citation) - which
     decides `thermal_mj`'s own ordinary pool price, the one every consumer
     with no stated requirement of its own pays.
-
-    `production_entries` is kept as a parameter, though unused, so every
-    existing call site (and `meets_capability_floor` below, which takes
-    this function's own return value) can keep calling this function the
-    same way regardless of what it computes internally.
     """
     return {carrier: default_floor
             for carrier, (_reached_field, _needed_field, default_floor)
@@ -178,7 +172,8 @@ def capability_required_grades(production_entries):
 
 def capability_price_for_requirement(carrier, required_value, production_entries,
                                      current_prices, wage_by_trade,
-                                     rent_hours_per_kg_by_material=None, interest_rate=0.0):
+                                     rent_hours_per_kg_by_material=None, interest_rate=0.0,
+                                     dump_minimum_distance_kilometres=0.0):
     """(price, recipe_id) for the CHEAPEST technique that both supplies
     `carrier` and clears `required_value` on the physical dimension
     CAPABILITY_CAP_FIELDS grades it by, costed at this round's own
@@ -228,7 +223,8 @@ def capability_price_for_requirement(carrier, required_value, production_entries
             continue
         result = recipe_cost_and_allocation(
             recipe_id, entry, current_prices, wage_by_trade,
-            rent_hours_per_kg_by_material=rent_hours_per_kg_by_material, interest_rate=interest_rate)
+            rent_hours_per_kg_by_material=rent_hours_per_kg_by_material, interest_rate=interest_rate,
+            dump_minimum_distance_kilometres=dump_minimum_distance_kilometres)
         if result is None:
             continue
         _total_cost, output_prices = result
@@ -858,9 +854,11 @@ def batch_energy_cost_hours(entry, current_prices, capability_band_price_by_carr
 
 
 def allocate_output_prices(outputs, current_prices, total_process_cost_hours,
-                            reference_price_by_material=None, interest_rate=0.0, disposal_costs=None):
+                            reference_price_by_material=None, interest_rate=0.0, disposal_costs=None,
+                            dump_minimum_distance_kilometres=0.0):
     if len(outputs) > 1 and disposal_costs is None:
-        disposal_costs = disposal_cost.disposal_cost_by_material(outputs, current_prices, interest_rate)
+        disposal_costs = disposal_cost.disposal_cost_by_material(
+            outputs, current_prices, interest_rate, dump_minimum_distance_kilometres)
     return allocate_joint_cost(outputs, total_process_cost_hours, reference_price_by_material, disposal_costs,
                                disposal_cost.waste_materials())
 
@@ -869,7 +867,8 @@ def recipe_cost_and_allocation(recipe_id, entry, current_prices, wage_by_trade,
                                rent_hours_per_kg_by_material=None,
                                capability_band_price_by_carrier=None,
                                reference_price_by_material=None,
-                               interest_rate=0.0, include_capital=True, disposal_costs=None):
+                               interest_rate=0.0, include_capital=True, disposal_costs=None,
+                               dump_minimum_distance_kilometres=0.0):
     """Cost one recipe's whole batch, then split it across its outputs.
 
     Returns (total_process_cost_hours, {output_material: price_per_unit}),
@@ -934,7 +933,8 @@ def recipe_cost_and_allocation(recipe_id, entry, current_prices, wage_by_trade,
     waste_input_costs = disposal_costs
     if waste_input_costs is None and any(
             current_prices.get(material, 0.0) < 0.0 for material in inputs):
-        waste_input_costs = disposal_cost.disposal_cost_by_material(inputs, current_prices, interest_rate)
+        waste_input_costs = disposal_cost.disposal_cost_by_material(
+            inputs, current_prices, interest_rate, dump_minimum_distance_kilometres)
     material_cost_hours = batch_material_cost_hours(inputs, current_prices, waste_input_costs)
     if material_cost_hours is None:
         return None
@@ -968,7 +968,7 @@ def recipe_cost_and_allocation(recipe_id, entry, current_prices, wage_by_trade,
 
     output_prices = allocate_output_prices(
         outputs, current_prices, total_process_cost_hours, reference_price_by_material, interest_rate,
-        disposal_costs)
+        disposal_costs, dump_minimum_distance_kilometres)
 
     return total_process_cost_hours, output_prices
 
@@ -1051,7 +1051,7 @@ def solve(production_entries, producers_of, resolvable_materials, wage_by_trade,
     prices = {material: start.get(material, INITIAL_PRICE_GUESS_HOURS) for material in resolvable_materials}
     chosen_recipe_by_material = {}
     recipe_ids_in_order = sorted(production_entries)  # stable order; see above
-    floor_by_carrier = capability_floor_by_carrier(production_entries)
+    floor_by_carrier = capability_floor_by_carrier()
     required_grades_by_carrier = capability_required_grades(production_entries)
 
     final_residual = float("inf")
@@ -1067,7 +1067,7 @@ def solve(production_entries, producers_of, resolvable_materials, wage_by_trade,
 
         band_price_by_carrier = solve_prices_round.band_prices(
             required_grades_by_carrier, suppliers_by_carrier, prices, wage_by_trade,
-            rent_hours_per_kg_by_material, interest_rate)
+            rent_hours_per_kg_by_material, interest_rate, dump_minimum_distance_kilometres)
 
         # What waste costs to dispose of this round: no output is priced below minus it.
         disposal_costs = disposal_cost.disposal_cost_by_material(
@@ -1084,42 +1084,3 @@ def solve(production_entries, producers_of, resolvable_materials, wage_by_trade,
             break
 
     return prices, iterations_run, final_residual, chosen_recipe_by_material
-
-
-def minor_joint_byproducts_split_by_mass(production_entries, chosen_recipe_by_material,
-                                         prices, wage_by_trade, share_threshold=0.5,
-                                         rent_hours_per_kg_by_material=None, interest_rate=0.0,
-                                         reference_price_by_material=None):
-    """{material: value_share} for every material whose CONVERGED, CHOSEN
-    recipe is a joint-production recipe in which this material holds under
-    `share_threshold` of the batch's value and was split by mass.
-
-    A joint output is valued at a reference price when the caller gave one or when a sole-output route
-    makes it (what making it alone costs); a recorded waste with neither is worth nothing; any other is
-    valued by mass (the labelled fallback of sim/prices/joint_allocation.py). Those prices are a real lower bound on cost, not a real relative
-    price, and every caller that prints one must be able to say so next to it.
-    """
-    direct = {material for entry in production_entries.values()
-              if len(entry.get("outputs") or {}) == 1 for material in entry["outputs"]}
-    references = set(reference_price_by_material or ()) | direct
-    flagged = {}
-    for material, recipe_id in chosen_recipe_by_material.items():
-        entry = production_entries[recipe_id]
-        outputs = entry.get("outputs") or {}
-        if material not in outputs_split_by_mass(outputs, references, disposal_cost.waste_materials()):
-            continue
-        result = recipe_cost_and_allocation(
-            recipe_id, entry, prices, wage_by_trade,
-            rent_hours_per_kg_by_material=rent_hours_per_kg_by_material, interest_rate=interest_rate)
-        if result is None:
-            continue
-        total_process_cost, _output_prices = result
-        if total_process_cost <= 0:
-            continue
-        value_share = (outputs[material] * prices[material]) / total_process_cost
-        if value_share < share_threshold:
-            flagged[material] = value_share
-    if flagged:
-        warnings.warn("joint byproducts priced by mass, with no reference price: %s"
-                      % ", ".join(sorted(flagged)))
-    return flagged

@@ -11,6 +11,7 @@ import warnings
 
 from sim import simulator
 from sim.prices import rent_standin, joint_allocation, solve_prices_core, engine_seam
+from sim.tests.price_solver_helpers import minor_joint_byproducts_split_by_mass
 
 
 def joint_entry():
@@ -174,7 +175,7 @@ def _solve_ungated_once():
         entries, producers, rent_hours_per_kg_by_material=rent)
     prices, iterations, residual, chosen = solve_prices_core.solve(
         entries, producers, resolvable, wages, rent_hours_per_kg_by_material=rent)
-    by_mass = solve_prices_core.minor_joint_byproducts_split_by_mass(
+    by_mass = minor_joint_byproducts_split_by_mass(
         entries, chosen, prices, wages, rent_hours_per_kg_by_material=rent)
     return SolvedRun(prices, by_mass, iterations, residual, chosen, entries)
 

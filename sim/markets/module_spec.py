@@ -51,6 +51,7 @@ READS_BY_OWNER = {
 	                           "real_output_hours", "held_techniques", "techniques_spread", "mechanic"),
 	"port: foreign trade and freight": ("partner_facts", "partners_in_agent_economy", "civilisation_record",
 	                                    "cargo_legs", "freight_mode_costs", "material_carriage_per_tonne"),
+	"land": ("home_tiles_held",),
 	"port: land, farm and resources": ("farm_sites", "farm_weather", "harvest_weather", "externality_yield_factors", "tile_owner_map",
 	                                   "tiles_owned_by", "timber_felled", "found_deposits", "partner_deposits"),
 }

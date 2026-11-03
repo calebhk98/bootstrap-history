@@ -80,7 +80,8 @@ class GoodsPricing:
         for index in range(slices):
             along = taken_before + (tonnes * (index + SLICE_MIDDLE) / slices if tonnes > 0.0 else 0.0)
             if not selling and offered is not None:
-                along = min(along, offered * (1.0 - SLICE_MIDDLE / slices))    # the last tonne the sellers hold is the dearest
+                cap = offered * (1.0 - SLICE_MIDDLE / slices) if tonnes > 0.0 else offered   # an order of nothing reads at what is offered
+                along = min(along, cap)    # the last tonne the sellers hold is the dearest
             if along <= 0.0:
                 total += 1.0
                 continue

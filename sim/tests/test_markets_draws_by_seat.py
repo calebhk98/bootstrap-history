@@ -35,6 +35,13 @@ class DrawsBySeat(unittest.TestCase):
 		self.assertEqual(market.drawn_tonnes("iron"), 0.0)
 		self.assertEqual(market.drawn_tonnes("iron", seat_id="a"), 3.0)
 
+	def test_a_seat_renamed_keeps_its_draws_under_the_new_id(self):
+		game, market = market_for(["a", "b"])
+		market.note_draw("iron", 3.0)
+		market.rename_draws("a", "c")
+		self.assertEqual(market.drawn_tonnes("iron", seat_id="c"), 3.0)
+		self.assertEqual(market.drawn_tonnes("iron", seat_id="a"), 0.0)
+
 	def test_a_draw_that_is_not_positive_is_not_noted(self):
 		_game, market = market_for(["a"])
 		market.note_draw("iron", 0.0)

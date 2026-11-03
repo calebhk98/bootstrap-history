@@ -32,11 +32,6 @@ def import_terms(world, partner):
     return terms(world, home_country(world), partner)
 
 
-def export_terms(world, partner):
-    """What `partner`'s state holds toward goods from the home country."""
-    return terms(world, partner, home_country(world))
-
-
 def duty_per_tonne(world, source, destination, price_per_tonne):
     """Money the destination country's state charges on a tonne bought at `price_per_tonne` in `source`;
     infinite when it embargoes the crossing. Places are countries (the home one by its id)."""

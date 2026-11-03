@@ -20,6 +20,12 @@ class ScenarioReads:
 		return self._needs.civilisation()
 
 	@property
+	def held_civ(self):
+		"""The civilisation's record with the tiles the country holds now as its home tiles (what the opening record lists
+		are the tiles it opened with)."""
+		return {**self._needs.civilisation(), "home_tiles": list(self._needs.home_tiles_held())}
+
+	@property
 	def cfg(self):
 		return self._needs.game_config()
 

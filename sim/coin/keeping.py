@@ -21,6 +21,10 @@ class Keeping(Part):
     money_per_labour_hour, acting_balance, credit_limit, partner_coin_standard, partner_route_cost, cast,
     actor_world; sends PayEdgeFrom, RecordEvent)."""
 
+    def __init__(self, module):
+        super().__init__(module)
+        self.keeping_paid_share = {}    # actor id -> the share of this year's keeping cost it paid; theft reads it the same year
+
     def coin_kg_per_unit(self):
         return wage_provider.coin_standard(self.needs.civilisation())["kg_per_unit"]
 
@@ -62,6 +66,7 @@ class Keeping(Part):
         registry, world = self.needs.cast(), self.needs.actor_world()
         keeping_trade = world.labour.trade_of_role(KEEPING_PAY_ROLE)
         home_pay = world.labour.pay_per_person_year(keeping_trade)
+        self.keeping_paid_share = {}
         for actor_id, actor in sorted(registry.actors.items()):  # id order, as a loaded game wraps them
             record = actor.record
             if record.exited_year is not None or actor.money <= 0.0 or record.stratum:
@@ -77,5 +82,6 @@ class Keeping(Part):
                 guards = edges.EDGE_COIN_GUARDS if at_home else "%s:%s" % (edges.EDGE_COIN_GUARDS, country)
                 refusal = self.needs.send(PayEdgeFrom(actor_id, guards, cost, KEEPING_CAUSE))
                 if isinstance(refusal, Refusal):   # the actor cannot pay it: this year's keeping goes unpaid
+                    self.keeping_paid_share[actor_id] = 0.0
                     self.needs.send(RecordEvent.of(UNPAID_CHARGE_KIND, "%s could not pay %s: %s" % (actor_id, KEEPING_CAUSE, refusal),
                                                    actor=actor_id, edge=guards, amount=cost, purpose=KEEPING_CAUSE, cause=refusal.cause))

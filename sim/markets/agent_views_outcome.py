@@ -2,6 +2,8 @@
 from sim.economy import api as economy_api
 
 from .agent_view_part import AgentViewPart
+from .port_health import health_report, staple_good
+from .port_setup import build_setup
 
 
 class AgentOutcomeViews(AgentViewPart):
@@ -23,7 +25,6 @@ class AgentOutcomeViews(AgentViewPart):
 
 	def agent_health(self, metals=(), staple=None):
 		"""The agent economy's health figures over the years this game has played (port_health.py)."""
-		from .port_health import health_report
 		return health_report(self._economy().agent, metals, staple)
 
 	def agent_last_outcome(self):
@@ -44,11 +45,9 @@ class AgentOutcomeViews(AgentViewPart):
 
 	def agent_traded_staple(self):
 		"""The staple good households buy most of whose market cleared lately; None when none did."""
-		from .port_health import staple_good
 		return staple_good(self.parts.market_objects.economy.agent, self.agent_stale_goods())
 
 	def agent_opening_setup(self):
 		"""The setup of the opening this game saved."""
-		from .port_setup import build_setup
 		world = self.parts.market_objects.economy.world
 		return build_setup(world, world.agent_record()["opening"])

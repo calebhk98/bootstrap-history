@@ -161,7 +161,7 @@ def band_suppliers(required_grades_by_carrier, production_entries):
 
 
 def band_prices(required_grades_by_carrier, suppliers_by_carrier, prices, wage_by_trade,
-                rent_hours_per_kg_by_material, interest_rate):
+                rent_hours_per_kg_by_material, interest_rate, dump_minimum_distance_kilometres=0.0):
     """{carrier: {required_value: (price, recipe_id) or None}}: as `capability_price_for_requirement` for each
     required value, costing each supplying recipe once per round however many requirements it can clear."""
     bands = {}
@@ -177,7 +177,8 @@ def band_prices(required_grades_by_carrier, suppliers_by_carrier, prices, wage_b
                     result = core.recipe_cost_and_allocation(
                         recipe_id, entry, prices, wage_by_trade,
                         rent_hours_per_kg_by_material=rent_hours_per_kg_by_material,
-                        interest_rate=interest_rate)
+                        interest_rate=interest_rate,
+                        dump_minimum_distance_kilometres=dump_minimum_distance_kilometres)
                     price_by_recipe[recipe_id] = None if result is None else result[1][carrier]
                 price = price_by_recipe[recipe_id]
                 if price is None:

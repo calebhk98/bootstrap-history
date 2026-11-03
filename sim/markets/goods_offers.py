@@ -39,33 +39,20 @@ class GoodsOffers:
         key = self._sim.materials.priced_key(material, prices)
         return None if key is None else prices[key]
 
-    def _worked_out_offers(self):
-        """(household prices, seller of each material): every priced material has the home society as its seller. The
-        same objects while the home prices are the same object."""
-        sim = self._sim
-        prices = self.home_prices()
-        cache = sim.remembered("goods_offers")
-        if cache is not None and cache[0] is prices:
-            return prices, cache[1]
-        sellers = {material: HOME_SELLER for material in prices}
-        sim.remember("goods_offers", (prices, sellers))
-        return prices, sellers
-
     def household_prices(self):
         """{material: money per unit} households are asked to pay: the economy's price on the acting tile where the
         home society makes it and the economy has a market for it (the cost of making while the economy opens),
         nothing where no one does. The same object while the home prices have not changed."""
-        return self._worked_out_offers()[0]
+        return self.home_prices()
 
     def unit_price(self, material):
         """Money per unit to buy a material (the home sellers' price on the acting tile), or None when no one in
         reach sells it."""
-        price = self.home_unit_price(material)
-        return price if price is not None else self.household_prices().get(material)
+        return self.home_unit_price(material)
 
     def can_be_bought(self, material):
         return self.unit_price(material) is not None
 
     def offered_by(self, material):
         """HOME_SELLER when a technique the society holds or can reach makes the material, None when nothing does."""
-        return self._worked_out_offers()[1].get(material)
+        return HOME_SELLER if material in self.home_prices() else None

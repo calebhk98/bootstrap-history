@@ -143,6 +143,15 @@ class KeepingByAnyActor(unittest.TestCase):
         self.assertIsInstance(charge, PayEdgeFrom)
         self.assertEqual((event.kind, event.facts["actor"], event.facts["cause"]), ("unpaid_charge", "state", "cannot_pay"))
 
+    def test_an_actor_whose_keeping_was_refused_is_noted_as_having_paid_none_of_it(self):
+        registry = types.SimpleNamespace(actors={"state": self.actor(1.0e8)}, state=types.SimpleNamespace(home_country="home"))
+        module = module_harness.build(
+            Coin, views={"civilisation": HOME_COIN, "money_per_labour_hour": MONEY_PER_HOUR, "cast": registry,
+                         "actor_world": flat_namespace(labour=types.SimpleNamespace(trade_of_role=lambda role: "guard", pay_per_person_year=lambda trade: 100.0))},
+            answers={PayEdgeFrom: Refusal("cannot_pay", "short")})
+        module.charge_keeping(ChargeKeeping())
+        self.assertEqual(module.parts.keeping.keeping_paid_share, {"state": 0.0})
+
     def test_a_larger_treasury_is_charged_more(self):
         paid = self.charged(poor=self.actor(1.0e3), rich=self.actor(1.0e8))
         self.assertGreater(paid["rich"][1], paid["poor"][1])

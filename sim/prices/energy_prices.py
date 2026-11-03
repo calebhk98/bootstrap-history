@@ -85,7 +85,8 @@ def pool_only(goods: Mapping[str, float]) -> EnergyPrices:
 
 
 def grade_bands(entries: Mapping[str, Any], available: Mapping[str, Any], prices_in_labour_hours: Mapping[str, float],
-                wage_by_trade: Mapping[str, float], money_per_hour: float, interest_rate: float):
+                wage_by_trade: Mapping[str, float], money_per_hour: float, interest_rate: float,
+                dump_minimum_distance_kilometres: float = 0.0):
     """(money per megajoule of each stated grade, the same in labour hours with its technique, the grades
     nothing in `available` supplies). A grade no held technique reaches has no band: it is unavailable,
     not priced at a technique the society does not hold."""
@@ -95,7 +96,8 @@ def grade_bands(entries: Mapping[str, Any], available: Mapping[str, Any], prices
     for carrier, required_values in capability_required_grades(entries).items():
         for required in required_values:
             found = solve_prices_core.capability_price_for_requirement(
-                carrier, required, available, prices_in_labour_hours, wage_by_trade, interest_rate=interest_rate)
+                carrier, required, available, prices_in_labour_hours, wage_by_trade, interest_rate=interest_rate,
+                dump_minimum_distance_kilometres=dump_minimum_distance_kilometres)
             if found is None:
                 unreachable.add((carrier, required))
                 continue
@@ -114,7 +116,8 @@ def graded(held_technology_ids, prices_json: Dict[str, Any], goods: Mapping[str,
                                         interest_rate=interest_rate, civilization=civilization,
                                         unskilled_trade=unskilled_trade)
     ratios = solve_prices_core.wage_ratios_by_trade(prices_json, unskilled_trade)
-    key = (solved.gate_nodes_held, solved.civilization_id, tuple(sorted(ratios.items())),
+    dump_distance = price_solver.waste_dump_minimum_distance(civilization)
+    key = (dump_distance, solved.gate_nodes_held, solved.civilization_id, tuple(sorted(ratios.items())),
            prices_json["money_per_labour_hour"], solved.interest_rate,
            price_solver.territory_fingerprint(civilization), tuple(sorted(goods.items())))
     cached = _CACHE.get(key)
@@ -126,7 +129,7 @@ def graded(held_technology_ids, prices_json: Dict[str, Any], goods: Mapping[str,
     hour_prices = {material: price / money_per_hour for material, price in goods.items()}
     available, _unreached, _unclassified = solve_prices_core.techniques_available_to(entries, solved.gate_nodes_held)
     bands, hour_bands, unreachable = grade_bands(entries, available, solved.prices_in_labour_hours, wage_by_trade,
-                                                 money_per_hour, solved.interest_rate)
+                                                 money_per_hour, solved.interest_rate, dump_distance)
     # Keyed by address; the entry itself is kept and confirmed with `is`, so a recycled address cannot match.
     own = IdentityCache()
 
@@ -136,7 +139,8 @@ def graded(held_technology_ids, prices_json: Dict[str, Any], goods: Mapping[str,
             return hit
         result = recipe_cost_and_allocation("node-entry", entry, hour_prices, wage_by_trade,
                                             capability_band_price_by_carrier=hour_bands,
-                                            interest_rate=solved.interest_rate)
+                                            interest_rate=solved.interest_rate,
+                                            dump_minimum_distance_kilometres=dump_distance)
         cost = {} if result is None else {
             material: price * money_per_hour for material, price in result[1].items()}
         own.put(entry, cost)

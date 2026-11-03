@@ -12,7 +12,7 @@ from sim.economy import api as economy_api
 
 from sim.prices.api import solve_cache
 from .port_key import SPIN_UP_SOURCE_MODULES, setup_digest
-from .port_setup import build_setup
+from .port_setup import OPENING_MONEY_FIELDS, build_setup
 
 MARGIN_CACHE_DIRECTORY = cache_root.cache_directory("backing_margin")
 
@@ -38,8 +38,6 @@ def priced_at_the_margin(sim, opening):
     scale = price / marginal
     metal = sim.scenario.civ["coin_standard"].get("material")
     scaled = dict(opening)
-    scaled["prices"] = {good: (value if good == metal else value * scale) for good, value in opening["prices"].items()}
-    scaled["wages"] = {trade: value * scale for trade, value in opening["wages"].items()}
-    scaled["carriage"] = {mode: value * scale for mode, value in opening["carriage"].items()}
-    scaled["carriage_balanced"] = {mode: value * scale for mode, value in opening["carriage_balanced"].items()}
+    for field in OPENING_MONEY_FIELDS:
+        scaled[field] = {key: (value if field == "prices" and key == metal else value * scale) for key, value in opening[field].items()}
     return scaled
