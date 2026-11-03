@@ -99,9 +99,9 @@ check("a starter founding of a scalable institution is charged at the size asked
 check("units asked of what is not scalable are ignored", Opener().opening_fee("mill", 3) == (800.0, 0.8))
 
 business = Business(plants=[Plant(entry_key="mill", opened_year=100, state=MOTHBALLED, since_year=105, reason="staff_short")])
-business.open_plant("mill", 115)
+business.lifecycle.open_plant("mill", 115)
 check("a plant reopened after a closure keeps its first opening year and its size, so the ramp does not restart",
-      business.opened_year_of("mill", None) == 100 and business.state_of("mill") == "operating" and business.size_of("mill") == 1.0)
+      business.reading.opened_year_of("mill", None) == 100 and business.reading.state_of("mill") == "operating" and business.reading.size_of("mill") == 1.0)
 running = Business(plants=[Plant(entry_key="mill", opened_year=100)])
-running.open_plant("mill", 120)
-check("a plant already running that is opened again is restarted from that year", running.opened_year_of("mill", None) == 120)
+running.lifecycle.open_plant("mill", 120)
+check("a plant already running that is opened again is restarted from that year", running.reading.opened_year_of("mill", None) == 120)

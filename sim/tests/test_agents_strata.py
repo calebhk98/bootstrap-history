@@ -234,7 +234,7 @@ for _year in range(3):
 	registry.advance(world)
 check("a stratum never researches or copies",
 	  not toilers.knowledge and not toilers.works and not toilers.workforce
-	  and toilers.imitation_candidates(world) == [] and toilers.consider_imitation(world) == [])
+	  and toilers.imitation_candidates(world) == [] and toilers.copying.consider_imitation(world) == [])
 
 # ---- people with land of their own eat from it when wages fall short ------------------------
 plot_world = StrataWorld()

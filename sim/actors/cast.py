@@ -53,7 +53,7 @@ class Cast(Part):
 	def follow_tile_transfer(self, command: Any) -> None:
 		"""A foreign country's state reads its tiles from its profile: move the tile between the profiles of the countries that
 		lost and gained it."""
-		self.cast().move_tile_between_countries(command.tile, command.previous, command.to_actor)
+		self.cast().countries.move_tile_between_countries(command.tile, command.previous, command.to_actor)
 
 	def cast_state(self) -> Any:
 		"""The cast's saved records, for readers that look at them without making the registry."""
@@ -96,11 +96,11 @@ class Cast(Part):
 		self.seed_opening_cast()  # a bare record made first would keep the cast from giving it its place and kind
 		country = self.needs.acting_country()
 		if country is not None:
-			government = self.cast().government_of(country)
+			government = self.cast().countries.government_of(country)
 			if government is not None:
 				return government
 		civilisation = self.needs.civilisation()
-		return self.cast().ensure_government(str(civilisation.get("id")), civilisation.get("name", ""))
+		return self.cast().countries.ensure_government(str(civilisation.get("id")), civilisation.get("name", ""))
 
 	def _actor_world(self) -> ActorWorld:
 		parts = self.parts
@@ -112,4 +112,4 @@ class Cast(Part):
 
 	def country_world(self, owner: str) -> Any:
 		"""The world the owner's state sees (the shared one for the home country, else its country's scope)."""
-		return self.cast().world_of_country(owner, self._actor_world())
+		return self.cast().countries.world_of_country(owner, self._actor_world())

@@ -46,12 +46,12 @@ class Firm(RecordedActor):
 
 	def on_copied(self, node_id: str, world: Any) -> None:
 		if node_id == self.record.target:
-			self.business.open_plant(node_id, world.setting.year, self.location())
+			self.business.lifecycle.open_plant(node_id, world.setting.year, self.location())
 
 	def accept_licence(self, node_id: str, chain: List[str], world: Any) -> None:
 		"""A licensed concern becomes the firm's own business."""
 		self.learn(chain, world)
-		self.business.open_plant(node_id, world.setting.year, self.location())
+		self.business.lifecycle.open_plant(node_id, world.setting.year, self.location())
 
 	def operate(self, world: Any, interest: float = 0.0) -> None:
 		for node_id in sorted(self.concerns):
@@ -59,8 +59,8 @@ class Firm(RecordedActor):
 			margin = (business_books.operate(self.business, self, node_id, world, rivals)
 					  - business_books.carry(self.business, self, node_id, world))
 			self.record.last_margin = margin
-			self.business.note_year(node_id, margin)
-		self.record.loss_years = self.business.longest_loss_run()
+			self.business.tally.note_year(node_id, margin)
+		self.record.loss_years = self.business.reading.longest_loss_run()
 		if self.record.loss_years == 0 and self.concerns:
 			weak = firm_exit.earns_less_than_plant_would_lend_for(self, world)
 			self.record.weak_years = self.record.weak_years + 1 if weak else 0
@@ -89,7 +89,7 @@ class Firm(RecordedActor):
 		super().act(world)
 		self.operate(world, interest)
 		had_plants = bool(self.concerns)
-		self.business.review(self, world, rules=(business_review.LOSS_MAKING,))
+		self.business.reviews.review(self, world, rules=(business_review.LOSS_MAKING,))
 		if (had_plants and not self.concerns) or EXIT_LOSS_YEARS <= max(self.record.weak_years, self.record.insolvent_years):
 			firm_exit.close_firm(self, world)
 		else:

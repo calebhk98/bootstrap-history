@@ -221,7 +221,7 @@ class OperatingWorks(unittest.TestCase):
     def test_the_open_works_are_the_live_set_of_the_seats_plants(self):
         module = ventures_host.build(operating={"shop"})
         self.assertEqual(set(module.operating()), {"shop"})
-        module.seat.business.open_plant("mill", 100)
+        module.seat.business.lifecycle.open_plant("mill", 100)
         self.assertEqual(set(module.operating()), {"shop", "mill"})
 
 

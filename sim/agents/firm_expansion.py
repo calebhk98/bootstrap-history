@@ -50,6 +50,6 @@ class Expansion:
 			if gain <= cost * rate:
 				continue
 			ledger.transfer(firm, world.setting.edge(EDGE_BUILDERS), cost, "expansion")
-			firm.business.set_size(node_id, capacity + step)
+			firm.business.tally.set_size(node_id, capacity + step)
 			if firm.on_capacity_change is not None:
 				firm.on_capacity_change(firm.actor_id)

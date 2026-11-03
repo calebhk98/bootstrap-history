@@ -100,7 +100,7 @@ def register(api):
         """The holder's own yearly cost of keeping `amount` of coin: the engine's guard cost plus the engine's
         expected theft on it, at the holder's own visibility."""
         actor = holder_actor(access, name)
-        scale = access.view("visible_scale")(sum(actor.workforce.values()), actor.money, actor.prominence(), 0.0) if actor else 0.0
+        scale = access.view("visible_scale")(sum(actor.workforce.values()), actor.money, actor.stance.prominence(), 0.0) if actor else 0.0
         stolen = theft_exposure.expected_theft_loss(
             {"coin": amount}, {"coin": COIN_GUARD_HOURS_PER_TONNE_YEAR}, scale, access.view("state_reach")(), 0.0)
         return access.view("coin_keeping_cost")(amount) + stolen

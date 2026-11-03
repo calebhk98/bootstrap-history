@@ -95,7 +95,7 @@ check("a node the giver does not know cannot be offered",
 # ---- a concern moves with its opened year and size ----------------------------------------
 a.concerns.add("forge")
 a.knowledge.add("forge")
-a.business.adopt(Plant("forge", opened_year=60, size=2.5, margin=12.0))
+a.business.lifecycle.adopt(Plant("forge", opened_year=60, size=2.5, margin=12.0))
 offer = exchange.make_offer(a, b, {"concern": "forge"}, {"money": 50.0}, world)
 check("a buyer who cannot know the concern is refused",
 	  cause_of(rejection(lambda: exchange.accept(b, offer["id"], registry.get, world))) == "taker_cannot_make"
@@ -105,8 +105,8 @@ offer = exchange.make_offer(a, b, {"concern": "forge", "knowledge": ["forge"]}, 
 exchange.accept(b, offer["id"], registry.get, world)
 check("a concern arrives with the knowledge to run it", "forge" in b.concerns and "forge" not in a.concerns)
 check("the concern keeps its opened year and size",
-	  b.opened_year_of("forge", 0) == 60 and b.capacity_of("forge") == 2.5 and a.business.plant_of("forge") is None)
-check("the seller's margin record goes with it", a.business.margin_of("forge") is None)
+	  b.opened_year_of("forge", 0) == 60 and b.capacity_of("forge") == 2.5 and a.business.reading.plant_of("forge") is None)
+check("the seller's margin record goes with it", a.business.reading.margin_of("forge") is None)
 a.knowledge.discard("forge")
 b.concerns.discard("mill")
 a.concerns.add("mill")
@@ -165,7 +165,7 @@ check("a human receiver is not answered for", len(robot.record.offers) == 1)
 robot.record.controller = "ai"
 robot.record.offers.clear()
 robot.concerns.add("forge")
-robot.business.note_margin("forge", 10.0)
+robot.business.tally.note_margin("forge", 10.0)
 human.concerns.add("mill")
 human.knowledge.update({"mill"})
 robot.knowledge.add("mill")

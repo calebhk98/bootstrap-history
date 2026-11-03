@@ -5,7 +5,7 @@ The shared surface is `money`, `workforce`, `knowledge`, `concerns` and
 delegates to the simulation state; a `RecordedActor` keeps an `ActorRecord`)
 and what they value. Decisions go through the actor's `decision_policy`.
 """
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any, Dict, List, Optional, Set
 
 from .business import Business, PlantKeys
 from .business_closing import release_plant
@@ -13,12 +13,14 @@ from .business_plant import Plant
 from .business_review import Reviewable
 from .records import ActorRecord
 
-from . import awareness, imitation, ledger, research, research_choice
+from . import imitation, ledger, research_choice
+from .actor_copying import ActorCopying
+from .actor_output import ActorOutput
+from .actor_stance import ActorStance, RecordedStance
 from .borrowing import Borrower
 from .ledger import Purpose
 from .purses import EDGE_OUTSIDE, Purses
-from .policy import Decision, Option, Policy, ValuePolicy
-from .tuning import ATTENTION_SPAN
+from .policy import Policy, ValuePolicy
 
 
 class Actor(Reviewable, Borrower):
@@ -29,6 +31,9 @@ class Actor(Reviewable, Borrower):
 
 	def __init__(self, policy: Optional[Policy] = None) -> None:
 		self.decision_policy = policy or ValuePolicy()
+		self.stance: ActorStance = ActorStance(self)
+		self.copying = ActorCopying(self)
+		self.output = ActorOutput(self)
 
 	# ---- shared state; subclasses provide storage -------------------------
 	@property
@@ -110,57 +115,11 @@ class Actor(Reviewable, Borrower):
 		"""Take up a plant another actor handed over."""
 		raise NotImplementedError
 
-	def output_by_concern(self, material: str, world: Any) -> List[Tuple[str, float]]:
-		"""[(node id, tonnes a year)] of `material` each of the actor's concerns puts on the market."""
-		makers = world.enterprises.concerns_making(material)
-		return [(node_id, world.concerns.concern_output_tonnes(node_id, material,
-													  self.opened_year_of(node_id, world.setting.year),
-													  self.staffed_share(node_id) * self.capacity_of(node_id)))
-				for node_id in sorted(node_id for node_id in self.concerns if node_id in makers)]
-
-	def output_of(self, material: str, world: Any) -> float:
-		"""Tonnes a year of `material` the actor's concerns put on the market."""
-		return sum(tonnes for _node_id, tonnes in self.output_by_concern(material, world))
-
 	def sell_output(self, world: Any) -> None:
 		"""Put what the actor's concerns make this year into the one goods market, each concern at its own cost."""
 		for material in sorted({made for node_id in self.concerns for made in world.enterprises.materials_made_by(node_id)}):
-			by_concern = self.output_by_concern(material, world)
+			by_concern = self.output.output_by_concern(material, world)
 			world.market.market_sale(self.actor_id, material, sum(tonnes for _node_id, tonnes in by_concern), by_concern)
-
-	def prominence(self) -> float:
-		"""How prominent the actor is as a person; a business has none."""
-		return 0.0
-
-	def standing(self) -> float:
-		"""Standing and patronage that bargain a levy down, 0..1."""
-		return 0.0
-
-	def demand_stance(self) -> str:
-		"""How the actor answers the state's demands: comply unless it has said otherwise."""
-		return "comply"
-
-	def set_demand_stance(self, stance: str) -> None:
-		"""Answer the state's demands from now on with `stance`."""
-		raise NotImplementedError
-
-	def service_worth(self) -> float:
-		"""Money's worth of service the actor will offer the state in place of part of a demand."""
-		return 0.0
-
-	def concealed_wealth(self) -> float:
-		"""Wealth the actor holds where the state cannot count it."""
-		return 0.0
-
-	def defiance(self) -> float:
-		"""0..1: how far the state holds the actor's refusals against it."""
-		return 0.0
-
-	def set_concealed_wealth(self, amount: float) -> None:
-		"""Hold `amount` of its wealth out of the state's sight."""
-
-	def set_defiance(self, level: float) -> None:
-		"""The state now holds the actor's defiance at `level`."""
 
 	def copy_budget(self, world: Any) -> float:
 		"""Money it will commit to new copies this year: its purse and what it may still borrow."""
@@ -173,67 +132,6 @@ class Actor(Reviewable, Borrower):
 		"""The inventions this actor might value, in id order; an actor that
 		values only some of them narrows this so it is not scanned in full."""
 		return sorted(world.knowledge.demonstrated())
-
-	def imitation_options(self, world: Any) -> List[Option]:
-		"""Priced options for the inventions that look most worth copying."""
-		candidates = []
-		known = self.knowledge
-		baseline = world.knowledge.baseline_knowledge()
-		for node_id in self.imitation_candidates(world):
-			if node_id in known or node_id in baseline or node_id in self.works \
-					or not awareness.knows_it_exists(self, node_id, world):
-				continue
-			worth = self.imitation_worth(node_id, world)
-			if worth > 0 and imitation.in_sight(self.location(), node_id, world):
-				candidates.append((worth * world.knowledge.exposure(node_id, self.location()), node_id))
-		candidates.sort(key=lambda item: (-item[0], item[1]))
-		options = []
-		for worth, node_id in candidates[:ATTENTION_SPAN]:
-			chain = imitation.missing_chain(node_id, world, self)
-			if not chain:
-				continue
-			plan = imitation.copy_plan(self, chain, world)
-			options.append(Option(subject=node_id, worth=worth, cost=plan["total"],
-								  chance=imitation.copy_chance(chain, world),
-								  detail={"chain": chain, "plan": plan}))
-		return options
-
-	def consider_imitation(self, world: Any) -> List[str]:
-		"""Ask the policy which invention to copy, and begin those copies."""
-		options = self.imitation_options(world)
-		if not options:
-			return []
-		decision = Decision("imitate", options, self.copy_budget(world))
-		begun = []
-		for option in self.decision_policy.choose(self, decision):
-			detail = option.detail
-			self.works[option.subject] = imitation.start_work(
-				option.subject, detail["chain"], detail["plan"], world.setting.year)
-			begun.append(option.subject)
-		return begun
-
-	def work_on_copies(self, world: Any) -> List[str]:
-		"""Advance every copy a year; returns the ids that succeeded (its crew is what the labour core hired, kept as it is)."""
-		finished = []
-		for node_id in sorted(self.works):
-			work = self.works[node_id]
-			if work.get("research"):
-				continue
-			if not imitation.work_year(self, node_id, work, world):
-				continue
-			del self.works[node_id]
-			roll = world.setting.rng_for(world.setting.year, self.kind, node_id, self.identity())
-			if roll.random() < imitation.copy_chance(work["chain"], world):
-				self.learn(work["chain"], world)
-				self.on_copied(node_id, world)
-				finished.append(node_id)
-			else:
-				self.record_failure(node_id)
-		return finished
-
-	def start_research(self, node_id: str, world: Any) -> str:
-		"""Begin researching a node (any actor, one path: `research.py`); refuses with the reason."""
-		return research.begin(self, node_id, world)
 
 	def research_worth(self, node_id: str, world: Any) -> float:
 		"""What researching the node is worth to this actor (0: it does not choose research for itself)."""
@@ -249,10 +147,6 @@ class Actor(Reviewable, Borrower):
 		work["research"] = True
 		self.works[node_id] = work
 		return "research begun, %d years" % costs["years"]
-
-	def work_on_research(self, world: Any) -> List[str]:
-		"""Advance every research a year at the country's literacy; returns the nodes learned."""
-		return research.work_year(self, world)
 
 	def accept_licence(self, node_id: str, chain: List[str], world: Any) -> None:
 		"""Licensed know-how arrives complete: learned, and the actor can make it."""
@@ -273,11 +167,11 @@ class Actor(Reviewable, Borrower):
 
 	def act(self, world: Any) -> None:
 		"""The actor's own business for the year."""
-		self.consider_imitation(world)
-		self.work_on_copies(world)
+		self.copying.consider_imitation(world)
+		self.copying.work_on_copies(world)
 		if self.researches:
 			research_choice.decide(self, world)
-		self.work_on_research(world)
+		self.copying.work_on_research(world)
 
 	def advance(self, world: Any) -> None:
 		"""One year: the places it posts are rebuilt by what it does; the labour core hires for them at the clearing."""
@@ -290,6 +184,7 @@ class RecordedActor(Actor):
 
 	def __init__(self, actor_id: str, record: ActorRecord, policy: Optional[Policy] = None) -> None:
 		super().__init__(policy)
+		self.stance = RecordedStance(self)
 		self.actor_id = actor_id
 		self.record = record
 		if not record.business.owner_id:
@@ -375,44 +270,23 @@ class RecordedActor(Actor):
 	def location(self) -> Optional[str]:
 		return self.record.location
 
-	def demand_stance(self) -> str:
-		return self.record.demand_stance
-
-	def set_demand_stance(self, stance: str) -> None:
-		self.record.demand_stance = stance
-
-	def service_worth(self) -> float:
-		return self.record.service_offer
-
-	def concealed_wealth(self) -> float:
-		return self.record.concealed
-
-	def defiance(self) -> float:
-		return self.record.defiance
-
-	def set_concealed_wealth(self, amount: float) -> None:
-		self.record.concealed = max(0.0, amount)
-
-	def set_defiance(self, level: float) -> None:
-		self.record.defiance = level
-
 	def opened_year_of(self, node_id: str, default: int) -> int:
-		return self.record.business.opened_year_of(node_id, default)
+		return self.record.business.reading.opened_year_of(node_id, default)
 
 	def staffed_share(self, node_id: str) -> float:
-		return self.record.business.crew_found_of(node_id)
+		return self.record.business.reading.crew_found_of(node_id)
 
 	def capacity_of(self, node_id: str) -> float:
-		return self.record.business.size_of(node_id)
+		return self.record.business.reading.size_of(node_id)
 
 	def margin_of(self, node_id: str) -> Optional[float]:
-		return self.record.business.margin_of(node_id)
+		return self.record.business.reading.margin_of(node_id)
 
 	def release_plant(self, node_id: str, world: Any) -> Plant:
 		return release_plant(self.record.business, node_id, world)
 
 	def receive_plant(self, plant: Plant, world: Any) -> None:
-		self.record.business.adopt(plant)
+		self.record.business.lifecycle.adopt(plant)
 
 	def note_income(self, purpose: Purpose, amount: float) -> None:
 		for label, part in ledger.parts(purpose, amount).items():

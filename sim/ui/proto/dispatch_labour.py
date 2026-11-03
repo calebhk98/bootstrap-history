@@ -37,9 +37,9 @@ def _cmd_work(sim, nodes, cmd, ended):
         pay, err = sim.view("work_for_wages_dry_run")(cmd.get("trade"), cmd.get("hours", 0))
     else:
         pay, err = sim.send(ui_port.WorkForWages(cmd.get("trade"), cmd.get("hours", 0)))
-    # A message WITH pay is a warning (the hours would starve a project), not a refusal: the work happened.
-    if err and pay <= 0:
-        return {"ok": False, "error": err}
+    # A plain message is a warning (the hours would starve a project), not a refusal: the work happened.
+    if isinstance(err, Refusal):
+        return {"ok": False, "error": err, "cause": err.cause}
     out = {"ok": True, "trade": cmd.get("trade"), "hours": cmd.get("hours"),
            "expected_pay": round(pay, 1), "capital": round(sim.view("acting_balance")(), 1),
            "your_hours_left_this_year": round(

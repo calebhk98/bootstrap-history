@@ -45,9 +45,11 @@ def exports_value(world: Any) -> Base:
 	return Base(world.revenue.trade_value("out"))
 
 
-def coin_stock(world: Any) -> Base:
-	"""Coin the society holds: the only wealth the simulation models as a stock."""
-	return Base(world.revenue.coin_stock_value())
+def coin_stock(world: Any) -> Optional[Base]:
+	"""Coin the society holds: the only wealth the simulation models as a stock. None when the coin metal has no price, so the
+	form is not assessed."""
+	value = world.revenue.coin_stock_value()
+	return None if value is None else Base(value)
 
 
 def earned_income(stratum: Any) -> float:
@@ -83,7 +85,7 @@ def land_value(world: Any, tiles: Optional[FrozenSet[str]] = None) -> Base:
 	return Base(base.value / rate, payers=tuple((owner, rent / rate) for owner, rent in base.payers))
 
 
-BASES: Dict[str, Callable[[Any], Base]] = {
+BASES: Dict[str, Callable[[Any], Optional[Base]]] = {
 	"harvest": harvest,
 	"adult_labour_years": adult_labour_years,
 	"imports_value": imports_value,

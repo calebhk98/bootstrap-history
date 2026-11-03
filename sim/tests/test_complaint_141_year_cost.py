@@ -43,7 +43,7 @@ def counting_worth(self, node_id, world_view):
 Firm.imitation_worth = counting_worth
 try:
     for firm in registry.of_kind("firm"):
-        firm.imitation_options(world)
+        firm.copying.imitation_options(world)
 finally:
     Firm.imitation_worth = real_worth
 check("a firm's candidates are its own target alone, not every invention in the world",
@@ -65,7 +65,7 @@ def counting_concerns(self):
 
 Firm.concerns = property(counting_concerns)
 try:
-    answers = [registry.rivals_of(SHARED[0], "firm:1") for _ in range(50)]
+    answers = [registry.concerns.rivals_of(SHARED[0], "firm:1") for _ in range(50)]
 finally:
     Firm.concerns = real_concerns
 check("rivals_of still counts the other operators of the concern",

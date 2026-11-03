@@ -126,7 +126,7 @@ class TheOwnersKeepTheirRecords(unittest.TestCase):
 
     def test_a_released_plant_leaves_the_named_seats_business_dated_when_it_had_no_year(self):
         module, seats = self.ventures()
-        seats["second"].business.open_plant("mill", None)
+        seats["second"].business.lifecycle.open_plant("mill", None)
         plant = module.apply_release_plant(ReleasePlant("second", "mill", 140))
         self.assertEqual((plant.entry_key, plant.opened_year, set(seats["second"].business.operating())), ("mill", 140, set()))
 
@@ -138,8 +138,8 @@ class TheOwnersKeepTheirRecords(unittest.TestCase):
         module, seats = self.ventures()
         plant = Plant(entry_key="mill", opened_year=90, size=3.0)
         module.apply_adopt_plant(AdoptPlant("second", plant))
-        self.assertEqual((set(seats["second"].business.operating()), seats["second"].business.size_of("mill"),
-                          seats["second"].business.opened_year_of("mill", 0)), ({"mill"}, 3.0, 90))
+        self.assertEqual((set(seats["second"].business.operating()), seats["second"].business.reading.size_of("mill"),
+                          seats["second"].business.reading.opened_year_of("mill", 0)), ({"mill"}, 3.0, 90))
         self.assertEqual(set(seats["founder"].business.operating()), set())
 
 

@@ -75,7 +75,7 @@ def decide(actor: Any, world: Any) -> List[str]:
 	begun = []
 	for option in actor.decision_policy.choose(actor, Decision(RESEARCH_DECISION, offers, budget))[:room]:
 		try:
-			actor.start_research(option.subject, world)
+			actor.copying.start_research(option.subject, world)
 		except CommandRejected:
 			continue
 		begun.append(option.subject)

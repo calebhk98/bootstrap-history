@@ -108,11 +108,11 @@ class Groups:
 		def compute() -> Dict[str, Sector]:
 			world = self.world
 			registry = world.registry
-			strata = registry.home_actors("stratum")
+			strata = registry.countries.home_actors("stratum")
 			goods = Sector.of_goods(strata, self.goods_categories(), world) if strata else []
 			caused = self.displaced_producers() + goods
-			firms = registry.home_actors("firm")
-			foundations = [foundation for kind in ("church", "academy") for foundation in registry.home_actors(kind)]
+			firms = registry.countries.home_actors("firm")
+			foundations = [foundation for kind in ("church", "academy") for foundation in registry.countries.home_actors(kind)]
 			governments = [government for government in registry.of_kind("government")
 						   if government.record.country is None]
 			servants = [sector for government in governments for sector in Sector.of_servants(government, world)]
@@ -133,12 +133,12 @@ class Groups:
 	def group_claims(self) -> Dict[str, float]:
 		"""What the state has undertaken to make good to each organised group, by budget line name."""
 		return {CONCESSION_PREFIX + group.actor_id: group.record.claim
-				for group in self.world.registry.home_actors("interest_group") if group.organised()}
+				for group in self.world.registry.countries.home_actors("interest_group") if group.organised()}
 
 	def faction_backing(self) -> Dict[str, float]:
 		"""The weight each organised group can put behind a claimant to the throne: its strength."""
 		return {group.actor_id: group.record.strength
-				for group in self.world.registry.home_actors("interest_group")
+				for group in self.world.registry.countries.home_actors("interest_group")
 				if group.organised() and group.record.strength > 0.0}
 
 	def scope_revenue(self, scope: float) -> float:

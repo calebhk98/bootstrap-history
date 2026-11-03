@@ -67,8 +67,8 @@ class Revenue:
 		trade = self.needs.trade_value_in_year(self.world.setting.year - 1)
 		return float(trade.get(direction, 0.0))
 
-	def coin_stock_value(self) -> float:
-		"""Money's worth of the coin this society holds, from its coin standard."""
+	def coin_stock_value(self) -> Optional[float]:
+		"""Money's worth of the coin this society holds, from its coin standard; None when the metal has no price."""
 		return self.needs.coin_stock_value()
 
 	def coin_regime(self) -> str:

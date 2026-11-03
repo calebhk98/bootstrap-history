@@ -107,12 +107,12 @@ player.record.workforce["labourer"] = 100.0 / world.labour.hours_per_person_year
 year_on(player, world)
 check("open runs a concern and yields takings less upkeep (the clearing pays the crew)",
 	  "shop" in player.concerns and abs(player.money - (1000.0 + 500.0 - 50.0)) < 1e-6, player.money)
-check("the concern's margin is on the record", abs(player.business.margin_of("shop") - 350.0) < 1e-6, player.business.plants)
+check("the concern's margin is on the record", abs(player.business.reading.margin_of("shop") - 350.0) < 1e-6, player.business.plants)
 player.record.orders.append({"command": "close", "node": "shop"})
 before = player.money
 year_on(player, world)
 check("close stops the concern", "shop" not in player.concerns and abs(player.money - before) < 1e-6, player.money)
-check("close forgets the concern's margin", player.business.plant_of("shop") is None)
+check("close forgets the concern's margin", player.business.reading.plant_of("shop") is None)
 
 player = make_player()
 player.record.orders.append({"command": "open", "node": "deep"})
@@ -199,13 +199,13 @@ world.public_nodes.clear()
 world.exposures["shop"] = 0.0
 check("a profitable concern nobody can see is not", operator.proven_concerns(world) == [])
 world.exposures["shop"] = 1.0
-operator.business.note_margin("shop", -1.0)
+operator.business.tally.note_margin("shop", -1.0)
 check("a concern running at a loss is not", operator.proven_concerns(world) == [])
 
 # ---- the firm runs through the same rule ----------------------------------------------------
 world = make_world()
 firm = Firm("firm:1", ActorRecord(kind="firm", money=1000.0, founded_year=90))
-firm.business.adopt(Plant("shop", opened_year=95))
+firm.business.lifecycle.adopt(Plant("shop", opened_year=95))
 firm.rivals_of = lambda node_id, asking_id: 1.0
 firm.record.workforce["labourer"] = 0.05
 firm.operate(world)

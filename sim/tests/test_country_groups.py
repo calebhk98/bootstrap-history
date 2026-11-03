@@ -120,7 +120,7 @@ group = registry.actors.get("group:far:displaced_workers:poor")
 check("a group of the country forms, named for the country, and answers to it",
 	  formed == ["group:far:displaced_workers:poor"] and group is not None and group.record.country == "far", formed)
 check("the home country's groups are those with no country: the foreign group is not among them",
-	  [each.actor_id for each in registry.home_actors("interest_group")] == [] and registry.country_of(group) == "far")
+	  [each.actor_id for each in registry.countries.home_actors("interest_group")] == [] and registry.countries.country_of(group) == "far")
 check("the home state's own bans do not include a foreign group's", registry.prohibitions() == {})
 
 group.record.claim = 321.0
@@ -152,5 +152,5 @@ check("a group founded for a country records the country; the home country's rec
 
 # ---- the home country's own readings leave the country's actors out ------------------------------------------
 check("the home state reads only the bodies of people that answer to it",
-	  [each.actor_id for each in registry.home_actors("stratum")] == [stratum_id("home", "peasants")]
+	  [each.actor_id for each in registry.countries.home_actors("stratum")] == [stratum_id("home", "peasants")]
 	  and [each.actor_id for each in registry.of_kind("stratum")] == sorted([stratum_id("home", "peasants"), stratum_id("far", "poor")]))

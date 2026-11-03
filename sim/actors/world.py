@@ -42,7 +42,7 @@ from .world_disclosure import Disclosure
 from .world_enterprises import Enterprises
 from .world_groups import Groups
 from .world_knowledge import Knowledge
-from .world_labour import Labour
+from .world_labour import ActorLabourReads
 from .world_market import Market
 from .world_patronage import Patronage
 from .world_people import People
@@ -75,7 +75,7 @@ class ActorWorld:
 		self.taxpayers = Taxpayers(self)
 		self.revenue = Revenue(self)
 		self.collection = HomeCollection(self)
-		self.labour = Labour(self)
+		self.labour = ActorLabourReads(self)
 		self.quotes = Quotes(self)
 		self.groups = Groups(self)
 		self.stakes = Stakes(self)

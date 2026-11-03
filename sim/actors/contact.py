@@ -17,7 +17,7 @@ class Contact(Part):
 		receivers = []
 		for actor_id in sorted(registry.actors):
 			actor = registry.actors[actor_id]
-			country = registry.country_of(actor)
+			country = registry.countries.country_of(actor)
 			places_by_country.setdefault(country, []).append(actor.location())
 			if country == command.conqueror:
 				receivers.append(actor)

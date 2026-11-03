@@ -88,7 +88,7 @@ class Theft(Part):
                 lambda record=record: joint_stock.shares_worth(record.holdings, registry.get), lent_share)
             if not exposure.values:
                 continue
-            scale = self.needs.visible_scale(sum(actor.workforce.values()), actor.money, actor.prominence())
+            scale = self.needs.visible_scale(sum(actor.workforce.values()), actor.money, actor.stance.prominence())
             self.steal_from(actor_id, exposure, theft_exposure.THEFT_SHARE_PER_YEAR_AT_FULL_EXPOSURE,
                             {kind: COIN_GUARD_HOURS_PER_TONNE_YEAR for kind in GUARDED_KINDS}, scale,
                             self.needs.order_reach(), 0.0)

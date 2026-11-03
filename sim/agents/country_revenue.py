@@ -36,6 +36,10 @@ class CountryRevenue(SharedPart):
 	def state_revenue(self) -> float:
 		return sum(assessment.money for assessment in self.revenue_assessments())
 
+	def fugitive_share(self) -> None:
+		"""A country does not follow its people's flight: no figure."""
+		return None
+
 	def harvest_tonnes(self) -> float:
 		"""Grain the country's farm harvested last year (none before its first)."""
 		return float(self.world.profile.farm.get("harvest_kg", 0.0)) / 1000.0
@@ -80,9 +84,10 @@ class CountryRevenue(SharedPart):
 		recorded them (imports where they landed, exports where they left)."""
 		return float(self.world.own.get().trade_value(direction))
 
-	def coin_stock_value(self) -> float:
-		"""Money's worth of the metal in the money the country's own people and producers hold."""
-		return float(self.world.own.get().coin_stock_value())
+	def coin_stock_value(self) -> Optional[float]:
+		"""Money's worth of the metal in the money the country's own people and producers hold; None when the metal has no price."""
+		value = self.world.own.get().coin_stock_value()
+		return None if value is None else float(value)
 
 	def coin_regime(self) -> str:
 		"""The standard of the money the country's economy uses."""

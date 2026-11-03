@@ -65,10 +65,10 @@ class Opening(Part):
 			needs.send(PayEdge(edges.EDGE_BUILDERS, fee, "opening a venture"))
 		# A reopening keeps the plant's first opening year, so the ramp does not restart.
 		year = needs.year()
-		business.open_plant(node_id, year)
-		business.note_opened_year_if_unknown(node_id, year)
+		business.lifecycle.open_plant(node_id, year)
+		business.tally.note_opened_year_if_unknown(node_id, year)
 		if scalable:
-			business.set_size(node_id, unit_count)
+			business.tally.set_size(node_id, unit_count)
 			self.bump_seat(INSTITUTION_UNITS_CHANGES)
 		node = needs.tree_nodes()[node_id]
 		needs.send(NoteConcernChange("opening", node_id, "opened", node["rev"], node["up"]))
@@ -139,7 +139,7 @@ class Opening(Part):
 				                  money_text(needs.spending_power("buy"), grouped=True)))
 			needs.send(PayEdge(edges.EDGE_BUILDERS, fee, "expanding a venture"))
 		units_now = have + add_units
-		self.seat.business.set_size(node_id, units_now)
+		self.seat.business.tally.set_size(node_id, units_now)
 		self.bump_seat(INSTITUTION_UNITS_CHANGES)
 		earns, costs = node["rev"] * units_now, node["up"] * units_now
 		return True, ("%s expanded from %.2f to %.2f units for %s: it "

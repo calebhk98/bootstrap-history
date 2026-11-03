@@ -57,11 +57,11 @@ def build(answers: Dict[type, Any] = None, seat: VenturesSeat = None, **views: A
 		seat.businesses = [record.business]
 	opened = set(every_view.pop("operating")) if "operating" in views else set(getattr(record, "operating", None) or ())
 	for key in sorted(opened):
-		if seat.business.plant_of(key) is None:
-			seat.business.open_plant(key, None)
+		if seat.business.reading.plant_of(key) is None:
+			seat.business.lifecycle.open_plant(key, None)
 	for key in sorted(getattr(record, "mothballed", None) or ()):
-		if seat.business.plant_of(key) is None:
-			seat.business.mothball(key, None, "")
+		if seat.business.reading.plant_of(key) is None:
+			seat.business.lifecycle.mothball(key, None, "")
 	if "techniques_held" not in views and hasattr(record, "done"):
 		every_view["techniques_held"] = record.done
 	if "techniques_granted" not in views and hasattr(record, "granted"):

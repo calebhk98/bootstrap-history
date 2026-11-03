@@ -13,9 +13,9 @@ def answer_demand(player: Any, order: Dict[str, Any], world: Any) -> str:
 		service = max(0.0, float(order.get("service") or 0.0))
 	except (TypeError, ValueError) as reason:
 		raise CommandRejected(str(reason)) from reason
-	player.set_demand_stance(stance)
+	player.stance.set_demand_stance(stance)
 	player.record.service_offer = service
-	capacity, standing = world.taxpayers.state_reach(), player.standing()
+	capacity, standing = world.taxpayers.state_reach(), player.stance.standing()
 	if stance == demand_answer.NEGOTIATE:
 		odds = demand_answer.negotiation_odds(1.0, capacity, standing, service)
 		return ("answering the state's demands by: negotiating. The state takes your offer with a chance of %.0f%% and "

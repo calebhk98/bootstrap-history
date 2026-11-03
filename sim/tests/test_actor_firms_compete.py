@@ -13,7 +13,7 @@ from sim.engine.state import ActorRecord
 
 # ---- one rule assesses every actor (actors built here; the world answers the levy rule)
 registry = ActorRegistry(ActorsState(home_country="home"))
-state_actor = registry.ensure_government("home")
+state_actor = registry.countries.ensure_government("home")
 scales = {}
 SCALE_LINE = 0.5
 

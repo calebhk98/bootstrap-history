@@ -60,8 +60,8 @@ def country_of(actor):
 
 
 firms = [firm(None, 17.0), firm(HOME, 19.0), firm("far", 23.0)]
-view.registry.active_firms = lambda: firms
-view.registry.country_of = country_of
+view.registry.concerns.active_firms = lambda: firms
+view.registry.countries.country_of = country_of
 home_firm_incomes = sorted(income for _scale, income in view.taxpayers.firm_taxpayers(HOME))
 check("the home state sees the firm with no country and the firm of its own country, not a foreign firm",
 	  home_firm_incomes == [17.0, 19.0], home_firm_incomes)

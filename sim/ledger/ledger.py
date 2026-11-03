@@ -50,7 +50,7 @@ class Ledger(Module):
 			payee = self.account(command.payee)
 		else:
 			cast = self.needs.cast()
-			payee = cast.get(command.payee) or cast.ensure_government(command.payee[len(GOVERNMENT_PREFIX):])
+			payee = cast.get(command.payee) or cast.countries.ensure_government(command.payee[len(GOVERNMENT_PREFIX):])
 		ledger.transfer(payer, payee, command.amount, command.purpose)
 		self.bump(MONEY)
 

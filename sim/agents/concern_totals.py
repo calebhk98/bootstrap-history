@@ -22,7 +22,7 @@ class ConcernTotals:
 		if record.exited_year is not None:
 			current: Dict[str, float] = {}
 		else:
-			current = record.business.sizes()
+			current = record.business.reading.sizes()
 		previous = self._contribution.get(operator_id, {})
 		if current == previous:
 			return

@@ -6,7 +6,7 @@ from sim.agents.api import flight_inputs, government_levers, government_levers_t
 def government_flight_values(world, away_by_tile):
     """{field of YearInputs: value} for the state's take by tile, its reach, amnesty and immunity, given the share of
     each tile's people already away; empty without a government. `world` is the actors' world."""
-    government = world.registry.government_of(None)
+    government = world.registry.countries.government_of(None)
     if government is None:
         return {}
     record = government.record
