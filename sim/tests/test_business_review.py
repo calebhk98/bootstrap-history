@@ -23,10 +23,10 @@ def a_firm_running(entry_key):
 
 def years_until_closed(business, owner, world, margin, limit=3 * EXIT_LOSS_YEARS):
 	"""Tally `margin` year after year, reviewing the loss rule each time; the number of years until a plant is closed."""
-	entry_key = next(iter(business.entry_keys()))
+	entry_key = next(iter(business.reading.entry_keys()))
 	for years in range(1, limit + 1):
-		business.note_year(entry_key, margin)
-		closed = business.review(owner, world, rules=(business_review.LOSS_MAKING,))
+		business.tally.note_year(entry_key, margin)
+		closed = business.reviews.review(owner, world, rules=(business_review.LOSS_MAKING,))
 		if closed:
 			return years, closed
 	return None, []
@@ -38,14 +38,14 @@ class LossRuleIsOneRule(unittest.TestCase):
 		years, closed = years_until_closed(firm.business, firm, world, margin=-1.0)
 		self.assertEqual(years, EXIT_LOSS_YEARS)
 		self.assertEqual([(closure.entry_key, closure.reason) for closure in closed], [("shop", business_review.LOSS_MAKING)])
-		self.assertIsNone(firm.business.plant_of("shop"))
+		self.assertIsNone(firm.business.reading.plant_of("shop"))
 
 	def test_a_profitable_year_restarts_the_count(self):
 		world, firm = a_firm_running("shop")
 		for margin in [-1.0] * (EXIT_LOSS_YEARS - 1) + [1.0] + [-1.0] * (EXIT_LOSS_YEARS - 1):
-			firm.business.note_year("shop", margin)
-			self.assertEqual(firm.business.review(firm, world, rules=(business_review.LOSS_MAKING,)), [])
-		self.assertEqual(firm.business.plant_of("shop").loss_years, EXIT_LOSS_YEARS - 1)
+			firm.business.tally.note_year("shop", margin)
+			self.assertEqual(firm.business.reviews.review(firm, world, rules=(business_review.LOSS_MAKING,)), [])
+		self.assertEqual(firm.business.reading.plant_of("shop").loss_years, EXIT_LOSS_YEARS - 1)
 
 
 if __name__ == "__main__":

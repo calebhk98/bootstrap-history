@@ -29,7 +29,7 @@ class PlantKeepsItsStateTests(unittest.TestCase):
     def test_mothballing_keeps_the_same_plant_with_its_size_and_age(self):
         plant = Plant(entry_key=NODE, size=2.5, opened_year=92)
         business = Business(plants=[plant])
-        returned = business.mothball(NODE, 100, "by_choice")
+        returned = business.lifecycle.mothball(NODE, 100, "by_choice")
         self.assertIs(returned, plant)
         self.assertEqual((plant.state, plant.since_year, plant.reason, plant.size, plant.opened_year),
                          (MOTHBALLED, 100, "by_choice", 2.5, 92))
@@ -37,7 +37,7 @@ class PlantKeepsItsStateTests(unittest.TestCase):
     def test_restoring_returns_the_same_plant_operating_with_no_reason(self):
         plant = Plant(entry_key=NODE, size=2.5, opened_year=92, state=MOTHBALLED, since_year=100, reason="by_choice")
         business = Business(plants=[plant])
-        self.assertIs(business.restore(NODE), plant)
+        self.assertIs(business.lifecycle.restore(NODE), plant)
         self.assertEqual((plant.state, plant.since_year, plant.reason, plant.size, plant.opened_year),
                          (OPERATING, None, "", 2.5, 92))
 
@@ -47,7 +47,7 @@ class ReleasePlantTests(unittest.TestCase):
         business = Business(plants=[Plant(entry_key=NODE, size=1.0, opened_year=92)])
         plant = release_plant(business, NODE, SimpleNamespace(year=100))
         self.assertEqual((plant.size, plant.opened_year), (1.0, 92))
-        self.assertIsNone(business.plant_of(NODE))
+        self.assertIsNone(business.reading.plant_of(NODE))
 
     def test_a_plant_with_no_recorded_opening_is_dated_to_now(self):
         business = Business(plants=[Plant(entry_key=NODE)])
@@ -65,7 +65,7 @@ class ClosingTests(unittest.TestCase):
         dependents_closed_in = []
         module.close_lapsed_dependents = dependents_closed_in.append
         module.close_work(NODE, "by_choice")
-        self.assertEqual((business.state_of(NODE), business.plant_of(NODE).reason, dependents_closed_in),
+        self.assertEqual((business.reading.state_of(NODE), business.reading.plant_of(NODE).reason, dependents_closed_in),
                          (MOTHBALLED, "by_choice", [100]))
 
     def test_close_work_for_staff_is_remembered_and_cascade_can_be_turned_off(self):
@@ -90,12 +90,12 @@ class RestoreWorkTests(unittest.TestCase):
 
     def test_restoring_a_concern_pays_the_fee_and_puts_the_same_plant_back_to_work(self):
         ok, paid, business = self.restore(venture=True)
-        plant = business.plant_of(NODE)
+        plant = business.reading.plant_of(NODE)
         self.assertEqual((ok, paid, plant.state, plant.reason, plant.size, plant.opened_year), (True, [5.0], OPERATING, "", 2.0, 92))
 
     def test_restoring_a_work_that_is_not_a_concern_leaves_no_plant(self):
         ok, paid, business = self.restore(venture=False)
-        self.assertEqual((ok, paid, business.plant_of(NODE)), (True, [5.0], None))
+        self.assertEqual((ok, paid, business.reading.plant_of(NODE)), (True, [5.0], None))
 
 
 class QuoteWiringTests(unittest.TestCase):

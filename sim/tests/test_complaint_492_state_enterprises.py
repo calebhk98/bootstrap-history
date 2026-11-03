@@ -79,7 +79,7 @@ world.setting.nodes["salt_works"]["inputs"] = {"brine_kg": 10.0}
 state_enterprises.open_enterprises(state, world)
 state_enterprises.run(state, world)
 check("a works with no inputs held and no money to buy them makes nothing",
-	  state.record.enterprise_takings == 0.0 and state.business.crew_found_of("salt_works") == 0.0,
+	  state.record.enterprise_takings == 0.0 and state.business.reading.crew_found_of("salt_works") == 0.0,
 	  state.record.enterprise_takings)
 world, state = state_with(monopolies=["salt_kg"])
 world.setting.nodes["salt_works"]["inputs"] = {"brine_kg": 10.0}
@@ -87,13 +87,13 @@ state.record.stores["brine_kg"] = 10.0
 state_enterprises.open_enterprises(state, world)
 state_enterprises.run(state, world)
 check("inputs in the stores are consumed and the works runs", state.record.stores["brine_kg"] == 0.0
-	  and state.business.crew_found_of("salt_works") == 1.0 and state.record.enterprise_takings > 0.0, state.record.stores)
+	  and state.business.reading.crew_found_of("salt_works") == 1.0 and state.record.enterprise_takings > 0.0, state.record.stores)
 world, state = state_with(monopolies=["salt_kg"])
 world.setting.nodes["salt_works"]["inputs"] = {"brine_kg": 10.0}
 state_enterprises.open_enterprises(state, world)
 state_enterprises.run(state, world)
 check("inputs the stores lack are bought at the market's price with the purse",
-	  world.purchases == [(state.actor_id, "brine_kg", 10.0)] and state.business.crew_found_of("salt_works") == 1.0,
+	  world.purchases == [(state.actor_id, "brine_kg", 10.0)] and state.business.reading.crew_found_of("salt_works") == 1.0,
 	  world.purchases)
 
 # ---- an arsenal's output is goods the state holds ----------------------------------------------------------

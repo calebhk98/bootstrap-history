@@ -33,7 +33,7 @@ class _ConcernWatch:
 		self.known: Set[str] = set()
 
 	def __call__(self) -> None:
-		current = set(self.record.business.entry_keys())
+		current = set(self.record.business.reading.entry_keys())
 		if current != self.known:
 			self.version[0] += 1
 			self.concern_set_version[0] += 1

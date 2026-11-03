@@ -19,7 +19,7 @@ def entries_for(government: Any, world: Any) -> List[str]:
 	its plants makes, the first known entry that makes the good and earns (an entry with no takings model, or none the state's country can read, is no business to open)."""
 	record = government.record
 	wanted = set(record.state_enterprises)
-	made = {material for entry_key in government.business.entry_keys() for material in world.enterprises.materials_made_by(entry_key)}
+	made = {material for entry_key in government.business.reading.entry_keys() for material in world.enterprises.materials_made_by(entry_key)}
 	for material in sorted(record.state_monopolies):
 		if material in made or any(material in world.enterprises.materials_made_by(entry_key) for entry_key in wanted):
 			continue
@@ -33,8 +33,8 @@ def open_enterprises(government: Any, world: Any) -> List[str]:
 	"""Open a plant of each entry the state should run and does not yet; the entries opened."""
 	opened = []
 	for entry_key in entries_for(government, world):
-		if government.business.plant_of(entry_key) is None:
-			government.business.open_plant(entry_key, world.setting.year)
+		if government.business.reading.plant_of(entry_key) is None:
+			government.business.lifecycle.open_plant(entry_key, world.setting.year)
 			opened.append(entry_key)
 	return opened
 
@@ -46,8 +46,8 @@ def run(government: Any, world: Any) -> float:
 	for entry_key in sorted(business.operating()):
 		plant_margin = (business_books.operate(business, government, entry_key, world, 0.0)
 						- business_books.carry(business, government, entry_key, world))
-		business.note_year(entry_key, plant_margin)
-		takings += business.plant_of(entry_key).takings
+		business.tally.note_year(entry_key, plant_margin)
+		takings += business.reading.plant_of(entry_key).takings
 		margin += plant_margin
 	government.record.enterprise_takings, government.record.enterprise_margin = takings, margin
 	return margin

@@ -397,22 +397,22 @@ class RecordedActor(Actor):
 		self.record.defiance = level
 
 	def opened_year_of(self, node_id: str, default: int) -> int:
-		return self.record.business.opened_year_of(node_id, default)
+		return self.record.business.reading.opened_year_of(node_id, default)
 
 	def staffed_share(self, node_id: str) -> float:
-		return self.record.business.crew_found_of(node_id)
+		return self.record.business.reading.crew_found_of(node_id)
 
 	def capacity_of(self, node_id: str) -> float:
-		return self.record.business.size_of(node_id)
+		return self.record.business.reading.size_of(node_id)
 
 	def margin_of(self, node_id: str) -> Optional[float]:
-		return self.record.business.margin_of(node_id)
+		return self.record.business.reading.margin_of(node_id)
 
 	def release_plant(self, node_id: str, world: Any) -> Plant:
 		return release_plant(self.record.business, node_id, world)
 
 	def receive_plant(self, plant: Plant, world: Any) -> None:
-		self.record.business.adopt(plant)
+		self.record.business.lifecycle.adopt(plant)
 
 	def note_income(self, purpose: Purpose, amount: float) -> None:
 		for label, part in ledger.parts(purpose, amount).items():

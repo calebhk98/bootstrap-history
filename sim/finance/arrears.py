@@ -79,7 +79,7 @@ class Arrears(Part):
 
 	def shed_loss_makers(self, year: int) -> None:
 		"""Shut the plants that keep losing money; in arrears with a deficit, stop maintaining anything that costs more than it
-		returns (the loss rule of `Business.review`, the same for every owner). A ruined run once held works whose upkeep exceeded
+		returns (the loss rule of `Business.reviews.review`, the same for every owner). A ruined run once held works whose upkeep exceeded
 		their revenue, so net income sat near zero for ever: a household lets the loss-makers go the year it notices, and then its
 		income is its practice again, which is enough."""
 		shed = [closure.entry_key for closure in self.needs.send(ReviewVentures(tuple((business_review.LOSS_MAKING,)), year))]

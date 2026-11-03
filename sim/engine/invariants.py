@@ -82,7 +82,7 @@ def check_technique_invariants(sim):
         if business is None:
             continue
         scope = registry.world_for(actor, world)
-        for entry_key in business.entry_keys():
+        for entry_key in business.reading.entry_keys():
             held = actor.knows(entry_key, scope) or entry_key in actor.record.royalty_owed
             assert held, "%s runs %s without holding the technique" % (actor.actor_id, entry_key)
     return True

@@ -111,14 +111,14 @@ class RivalsFollowCapacityTests(unittest.TestCase):
 		world = ReturnWorld()
 		registry, firm = make_firm(world)
 		before = registry.rivals_of("shop", "")
-		firm.business.set_size("shop", 6.0)
+		firm.business.tally.set_size("shop", 6.0)
 		registry.note_capacity_change(firm.actor_id)
 		self.assertAlmostEqual(registry.rivals_of("shop", "") - before, 5.0)
 
 	def test_a_firm_does_not_count_its_own_capacity_among_its_rivals(self):
 		world = ReturnWorld()
 		registry, firm = make_firm(world)
-		firm.business.set_size("shop", 6.0)
+		firm.business.tally.set_size("shop", 6.0)
 		registry.note_capacity_change(firm.actor_id)
 		self.assertEqual(registry.rivals_of("shop", firm.actor_id), 0.0)
 

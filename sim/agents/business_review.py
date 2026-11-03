@@ -58,7 +58,7 @@ class Reviewable:
 
 	def standing_margin(self, entry_key: str, world: Any) -> float:
 		"""What the plant makes in a year at today's figures, to rank it and to tell a loss-maker."""
-		plant = self.business.plant_of(entry_key)  # type: ignore[attr-defined]
+		plant = self.business.reading.plant_of(entry_key)  # type: ignore[attr-defined]
 		return 0.0 if plant is None or plant.margin is None else plant.margin
 
 	def creditors_press(self, world: Any) -> bool:
@@ -67,7 +67,7 @@ class Reviewable:
 
 	def shut(self, entry_key: str, reason: str, world: Any) -> None:
 		"""Close the plant; a firm forgets it."""
-		self.business.close_plant(entry_key)  # type: ignore[attr-defined]
+		self.business.lifecycle.close_plant(entry_key)  # type: ignore[attr-defined]
 
 	def proceeds_of_seizure(self, entry_key: str, world: Any) -> float:
 		"""What the creditors' taking of the plant repays."""
@@ -140,6 +140,6 @@ def reopen(business: "Business", owner: Any, world: Any) -> List[str]:
 def seize_all(business: "Business", owner: Any, world: Any) -> List[Closure]:
 	"""The owner defaults: its creditors take every plant it has, running or shut. The knowledge stays with the owner."""
 	closed: List[Closure] = []
-	for entry_key in list(business.entry_keys()):
+	for entry_key in list(business.reading.entry_keys()):
 		_close(business, owner, world, entry_key, CREDITOR_SEIZURE, closed)
 	return closed

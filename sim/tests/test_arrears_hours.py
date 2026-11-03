@@ -54,7 +54,7 @@ class Owner(business_review.Reviewable):
 
 
 plants = Business.running(["short_of_staff", "shut_by_player", "running"], opened_year=0)
-plants.mothball("short_of_staff", 5, business_review.STAFF_SHORT)
-plants.mothball("shut_by_player", 5, "player")
+plants.lifecycle.mothball("short_of_staff", 5, business_review.STAFF_SHORT)
+plants.lifecycle.mothball("shut_by_player", 5, "player")
 check("only the plants the staffing rule shut come back, and only when the owner can staff them; one shut on purpose never does",
       business_review.reopen(plants, Owner(plants), None) == ["short_of_staff"], business_review.reopen(plants, Owner(plants), None))

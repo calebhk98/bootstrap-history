@@ -17,7 +17,7 @@ class StateKeys(MutableSet):
 		return set(iterable)
 
 	def __contains__(self, entry_key: object) -> bool:
-		plant = self._business.plant_of(entry_key)
+		plant = self._business.reading.plant_of(entry_key)
 		return plant is not None and plant.state == self._state
 
 	def __iter__(self) -> Iterator[str]:
@@ -30,13 +30,13 @@ class StateKeys(MutableSet):
 		if value in self:
 			return
 		if self._state == OPERATING:
-			self._business.open_plant(value, None)
+			self._business.lifecycle.open_plant(value, None)
 		else:
-			self._business.mothball(value, None, "")
+			self._business.lifecycle.mothball(value, None, "")
 
 	def discard(self, value: str) -> None:
 		if value in self:
-			self._business.close_plant(value)
+			self._business.lifecycle.close_plant(value)
 
 	def update(self, *others: Any) -> None:
 		for other in others:
@@ -61,7 +61,7 @@ class Closures(Mapping):
 		self._business = business
 
 	def __getitem__(self, entry_key: str) -> Dict[str, object]:
-		plant = self._business.plant_of(entry_key)
+		plant = self._business.reading.plant_of(entry_key)
 		if plant is None or plant.state != MOTHBALLED or not plant.reason:
 			raise KeyError(entry_key)
 		return {"reason": plant.reason, "year": plant.since_year}
