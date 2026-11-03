@@ -511,8 +511,8 @@ class CreditPart(Protocol):
 		"""(what the state has out on loan, the yearly rate lenders earn) at the last meeting."""
 		...
 
-	def pay_interest(self, payer: Any, owed: float, purpose: str = "interest") -> None:
-		"""A borrower pays the interest on its debt to its lenders."""
+	def pay_interest(self, payer: Any, owed: float, purpose: str = "interest") -> float:
+		"""A borrower pays the interest on its debt to its lenders; what was paid (interest the lenders refuse is carried as arrears)."""
 		...
 
 	def founder_credit_limit(self) -> float:

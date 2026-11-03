@@ -8,12 +8,15 @@ from .harness import check
 
 from sim.agents.api import ActorRecord, Business, ActorRegistry, ActorsState
 from sim.agents import firm_exit
-from sim.agents.purses import COIN, EDGE_OUTSIDE, EDGE_SAVERS
+from sim.agents.purses import COIN, EDGE_OUTSIDE
 from sim.agents.stratum import Stratum  # noqa: F401  (registers the kind)
 from sim.agents.tuning import EXIT_LOSS_YEARS
 from sim.book import Transfer
 
 from .agents_fake_world import FakeWorld, make_node
+from .pool_lenders import lend_from_savers
+
+CREDITOR = "lender:creditor"   # the lender whose claim the closing firm's cash repays
 
 
 class NoGrowthWorld(FakeWorld):
@@ -30,6 +33,7 @@ def indebted_firm(debt, revenue):
 	world.demonstrated_nodes = {"shop"}
 	registry = ActorRegistry(ActorsState(home_country="home"))
 	firm = registry.add("firm:1", ActorRecord(kind="firm", founded_year=0, business=Business.running(["shop"], opened_year=0)))
+	lend_from_savers(registry.state.purses, 1e12)
 	firm.money = -debt
 	return world, registry, firm
 
@@ -74,16 +78,16 @@ def closing_with(cash, owed):
 	purses = registry.state.purses
 	if cash > 0.0:
 		purses.book.transfer(Transfer(EDGE_OUTSIDE, firm.account_id, COIN, cash, "fixture"))
-	purses.contracts.set_facility(firm.account_id, {EDGE_SAVERS: owed}, COIN)
+	purses.contracts.set_facility(firm.account_id, {CREDITOR: owed}, COIN)
 	return world, registry, firm, backer
 
 
 def close_and_measure(cash, owed):
 	world, registry, firm, backer = closing_with(cash, owed)
 	purses = registry.state.purses
-	savers_before = purses.purse(EDGE_SAVERS)
+	savers_before = purses.purse(CREDITOR)
 	firm_exit.close_firm(firm, world)
-	return (purses.purse(EDGE_SAVERS) - savers_before, backer.money, purses.debt(firm.account_id), purses.purse(firm.account_id))
+	return (purses.purse(CREDITOR) - savers_before, backer.money, purses.debt(firm.account_id), purses.purse(firm.account_id))
 
 
 recovered, to_backer, still_owed, left = close_and_measure(cash=150.0, owed=100.0)

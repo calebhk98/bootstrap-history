@@ -8,7 +8,6 @@ from sim.agents.api import SeatBorrower, business_review
 from sim.assembly.api import Part
 from sim.ledger.api import NoteSeatCash
 from sim.reporting.api import RecordEvent
-from sim.world import capital_market
 
 from .affordability import near_limit
 from .constants import DEBT_RATE_REPUTATION_DISCOUNT_CAP, DEBT_RATE_REPUTATION_SCALE
@@ -19,17 +18,18 @@ class Arrears(Part):
 
 	def debt_interest_rate(self) -> float:
 		"""What arrears cost the seat a year. It starts from the civilisation's loanable-funds market rate (its own starting rate
-		until the market has met), plus a premium for the share of its credit limit it has used. A household with no standing
-		borrows from whoever will have it and pays for it: standing is what makes money cheap."""
+		until the market has met), plus the economy's risk premium for the debt it owes against its credit limit and the interest it
+		has left unpaid. A household with no standing borrows from whoever will have it and pays for it: standing is what makes
+		money cheap."""
 		needs = self.needs
 		discount = sum(discount for _node_id, discount in needs.effect_values("debt_rate_discount"))
 		discount += min(DEBT_RATE_REPUTATION_DISCOUNT_CAP, max(0.0, needs.standing()["reputation"]) / DEBT_RATE_REPUTATION_SCALE)
-		used = 0.0
+		premium = 0.0
 		capital = needs.acting_balance()
 		if capital < 0:
-			limit = self.parts.credit_line.credit_limit()
-			used = -capital / limit if limit > 0 else 1.0
-		return capital_market.borrower_rate(self.parts.capital_market.market_rate(), discount, used)
+			answered = self.parts.capital_market.risk_premium(-capital, self.parts.credit_line.credit_limit(), self.seat.interest_arrears)
+			premium = 0.0 if answered is None else answered
+		return self.parts.capital_market.market_rate() + max(0.0, premium - max(0.0, discount))
 
 	def settle_interest(self) -> Any:
 		"""The year's interest on the acting seat's debt by the one rule every borrower follows: (the interest owed, the part paid)."""

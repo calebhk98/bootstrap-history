@@ -23,9 +23,9 @@ def hold_reserve(offers: Sequence[FundsOffer], already_reserved: Iterable[AgentI
 
 
 def line_ceiling(market_rate: float, line: float) -> float:
-    """The most a borrower of a line of `line` pays: the market rate plus the whole premium its standing leaves at the
-    limit, and the premium on the line itself, which is the security it shows."""
-    return capital_market.borrower_rate(market_rate, 0.0, 1.0) + credit.risk_premium(line, line, 0.0)
+    """The most a borrower of a line of `line` pays: the market rate plus the premium on the line itself, which is the
+    security it shows (the one risk premium every loan is priced by)."""
+    return market_rate + credit.risk_premium(line, line, 0.0)
 
 
 def line_request(borrower: AgentId, currency: CurrencyId, line: float, market_rate: float) -> LoanRequest:

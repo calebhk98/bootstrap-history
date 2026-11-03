@@ -2,6 +2,7 @@
 producers of a goods category the founder's concerns undersell (312), and what a prohibition reaches (313)."""
 QUICK_TOPIC = True
 
+from .pool_lenders import lend_from_savers
 from .harness import check
 
 from sim.agents.api import ActorRegistry, ActorsState, CountryProfile, Sector
@@ -43,6 +44,7 @@ def build():
 	state = ActorsState(home_country="home")
 	state.countries["home"] = CountryProfile(country="home", population=100000.0, strata=DEFINITIONS)
 	registry = ActorRegistry(state)
+	lend_from_savers(state.purses, 1e12)
 	world = StrataWorld()
 	strata_spawner(registry, world)
 	return registry, world

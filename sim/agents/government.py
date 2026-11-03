@@ -12,6 +12,8 @@ weight (military, infrastructure, prestige, ...), through its policy.
 """
 from typing import Any, Dict, List, Tuple
 
+from sim.book import InsufficientFunds
+
 from . import arrears, budget, demand_answer, headcount, ledger, state_enterprises, state_works
 from .base import Actor, RecordedActor
 from .government_coinage import Coinage
@@ -23,13 +25,24 @@ from .government_granary import Granary
 from .government_markets import Markets
 from .government_stores import Stores
 from .government_surplus import Surplus
-from .purses import Purses
+from .purses import DEBT_FLOOR, Purses
 from .edges import EDGE_PATRONAGE, EDGE_STATE_SPENDING
 from .no_country_economy import NoCountryEconomy
 from . import ruler
 from .tuning import GOVERNMENT_WORTH_SHARE_PER_GAIN
 from .tuning_spending import PUBLIC_BUILDING_LIFE_YEARS
 from .values import invention_gains, weighted_gain
+
+
+def _spend_what_it_can(state: Any, edge: Any, amount: float, purpose: str) -> None:
+	"""Pay `amount` to the edge. Credit the lenders refuse (its limit, or the funds they hold) cuts the spending to the purse; a
+	state with nothing in it spends nothing on the line this year."""
+	try:
+		ledger.transfer(state, edge, amount, purpose)
+	except InsufficientFunds:
+		affordable = max(0.0, state.money)
+		if affordable > DEBT_FLOOR:
+			ledger.transfer(state, edge, min(amount, affordable), purpose)
 
 
 class Government(RecordedActor):
@@ -200,7 +213,7 @@ class Government(RecordedActor):
 			bought = line.material_cost if line.materials else 0.0   # its materials are bought with bids in the agent economy's book
 			if share > 0.0:
 				if not line.labour:   # a labour line's pay is offered in the labour market (sim/markets/port_staff.py)
-					ledger.transfer(self, world.setting.edge(EDGE_STATE_SPENDING), (line.money - bought) * share, line.name)
+					_spend_what_it_can(self, world.setting.edge(EDGE_STATE_SPENDING), (line.money - bought) * share, line.name)
 			weight = sum(line.materials.values())
 			for commodity, tonnes in line.materials.items():
 				world.market.market_purchase(self.actor_id, commodity, tonnes * share, bought * share * tonnes / weight)

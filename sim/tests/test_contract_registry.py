@@ -14,6 +14,8 @@ from sim.contracts import DEPOSIT, FACILITY, STATE_DEBT, TERM_LOAN, Contract, Co
 from sim.economy.accounts import Book
 from sim.economy.types import Loan
 
+from .pool_lenders import lend_from_savers
+
 
 def actor_in_debt_on_both_paths():
     """A firm with 40 drawn on its facility and a term loan of 100 (arrears 5), in one shared registry."""
@@ -22,6 +24,7 @@ def actor_in_debt_on_both_paths():
     other = Firm("firm:b", ActorRecord(kind="firm"))
     for actor in (firm, other):
         actor.attach(state.purses)
+    lend_from_savers(state.purses, 1e6)
     ledger.transfer(firm, other, 100.0, "buy")
     registry = Contracts()
     registry.term_loans.append(Loan("loan:1", "lender:x", "firm:a", COIN, 100.0, 0.1, 4.0, 0.0, arrears=5.0))
@@ -84,6 +87,7 @@ class OneRegistry(unittest.TestCase):
         other = Firm("firm:b", ActorRecord(kind="firm"))
         for actor in (firm, other):
             actor.attach(state.purses)
+        lend_from_savers(state.purses, 1e6)
         ledger.transfer(firm, other, 25.0, "buy")
         registry = Contracts()
         state.purses.adopt_book(Book(), registry)

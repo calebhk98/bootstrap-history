@@ -48,6 +48,7 @@ class Cast(Part):
 		if registry is None or registry.state is not state:
 			registry = ActorRegistry(state, self.extensions())
 			self._registry = registry
+			self.parts.lending.connect_purses()
 		return registry
 
 	def follow_tile_transfer(self, command: Any) -> None:

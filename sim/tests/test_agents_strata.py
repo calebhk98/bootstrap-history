@@ -2,6 +2,7 @@
 
 QUICK_TOPIC = True
 
+from .pool_lenders import lend_from_savers
 from .harness import check
 
 from sim.agents.api import ActorRecord, ActorRegistry, ActorsState, CountryProfile
@@ -49,6 +50,7 @@ def build(definitions, population=100000.0, **profile_fields):
 	state.countries["home"] = CountryProfile(country="home", population=population, strata=definitions,
 											 **profile_fields)
 	registry = ActorRegistry(state)
+	lend_from_savers(state.purses, 1e12)
 	strata_spawner(registry, StrataWorld())
 	return registry
 

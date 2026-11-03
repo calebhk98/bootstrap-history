@@ -2,6 +2,7 @@
 from typing import Any, Optional, Tuple
 
 from sim.agents.api import SAVING_SHARE_OF_SURPLUS
+from sim.book import InsufficientFunds
 from sim.economy.api import opening_market_rate
 from sim.finance.api import DefaultOnDebt
 from sim.world import demand
@@ -57,10 +58,17 @@ class Credit:
 		"""(what the state has out on loan, the yearly rate lenders earn) at the last meeting."""
 		return self.needs.state_lending()
 
-	def pay_interest(self, payer: Any, owed: float, purpose: str = "interest") -> None:
-		"""A borrower pays the interest on its debt to its lenders."""
-		received = payer.purses.pay_interest(payer.account_id, owed)
-		payer.payments.note_outlay(purpose, sum(received.values()))
+	def pay_interest(self, payer: Any, owed: float, purpose: str = "interest") -> float:
+		"""A borrower pays the interest on its debt to its lenders; what was paid. Interest the lenders refuse to advance the
+		payer (its limit, or the funds they hold) is not paid: it is carried as arrears."""
+		try:
+			received = payer.purses.pay_interest(payer.account_id, owed)
+		except InsufficientFunds:
+			payer.arrears_book.interest_arrears += owed
+			return 0.0
+		paid = sum(received.values())
+		payer.payments.note_outlay(purpose, paid)
+		return paid
 
 	def founder_credit_limit(self) -> float:
 		"""The most the founder's household may owe in all."""

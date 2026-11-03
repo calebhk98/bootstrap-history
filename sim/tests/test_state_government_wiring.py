@@ -8,6 +8,8 @@ from types import SimpleNamespace
 import unittest
 from unittest import mock
 
+from sim.book import InsufficientFunds
+
 from sim.agents import government
 from sim.agents.budget import LEVY_RATE_CEILING
 from sim.agents.budget_line import Line
@@ -49,6 +51,28 @@ class SeekShortfall(unittest.TestCase):
         stand_in = self.stand_in({"army": 100.0})
         Government.seek_shortfall(stand_in, [Line("army", "requisition")], self.world([]))
         self.assertEqual(stand_in.record.levy_requisition_rate, LEVY_RATE_CEILING)
+
+
+class SpendWhatItCan(unittest.TestCase):
+    def spend(self, money, refuse_above):
+        paid = []
+
+        def transfer(payer, edge, amount, purpose):
+            if amount > refuse_above:
+                raise InsufficientFunds("lenders hold no such sum")
+            paid.append(amount)
+        with mock.patch.object(government.ledger, "transfer", transfer):
+            government._spend_what_it_can(SimpleNamespace(money=money), "edge", 100.0, "roads")
+        return paid
+
+    def test_a_payment_the_lenders_refuse_is_cut_to_the_purse(self):
+        self.assertEqual(self.spend(40.0, 50.0), [40.0])
+
+    def test_a_state_with_nothing_in_its_purse_spends_nothing(self):
+        self.assertEqual(self.spend(-30.0, 50.0), [])
+
+    def test_a_payment_the_lenders_allow_is_made_in_full(self):
+        self.assertEqual(self.spend(0.0, 1000.0), [100.0])
 
 
 class SpendOnLines(unittest.TestCase):

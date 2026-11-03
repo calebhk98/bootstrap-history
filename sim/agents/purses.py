@@ -8,11 +8,13 @@ pool until the year's settlement shares it among the depositors in proportion to
 falls on the pool and through it on every deposit in proportion, once. So an actor's net position (purse and
 deposit less debt) moves by exactly what the transfers move, which is what `net` reports and `Actor.money` shows.
 
-Depositors are the accounts that offered funds (`set_offers`: a state's reserve, a household's savings, a firm's
-spare cash) and the household savers the simulation does not model one by one (`EDGE_SAVERS`), who deposit
-whatever the pool lacks and are paid back from what it holds beyond its lending.
+Depositors are the accounts that offered funds (`set_offers`: a state's reserve, a firm's spare cash) and the
+economy's own lenders (cohorts' savings, banks, funds), who deposit what the pool lacks, cheapest ask first and no
+dearer than the draw's rate. Their money crosses `edge:exchange` at the coin per economy unit, and returns the same way
+with its interest. A draw beyond what the borrower may be lent, or beyond what lenders can supply, is refused with
+`InsufficientFunds` and nothing moves: no money appears from nowhere.
 """
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional, Set, Tuple
 
 from sim.book import EDGE_EXCHANGE, ROUNDING_SHARE, Book, InsufficientFunds, Transfer, is_edge
 from sim.contracts import DEPOSIT, FACILITY, Contracts
@@ -22,7 +24,6 @@ from .bonds import BondBook
 from .named_lenders import NamedLenders
 
 COIN = "engine_coin"                          # the currency of the actors' money in the shared book (the engine counts in this coin)
-EDGE_SAVERS = "edge:savers"                   # the household savers who lend to actors
 EDGE_OUTSIDE = "edge:outside the book"        # the other side of a posting whose payer or payee keeps no account here
 FACILITY_DRAW = "facility draw"
 FACILITY_REPAYMENT = "facility repayment"
@@ -44,8 +45,17 @@ class Purses:
         self.book = book if book is not None else Book()
         # the debts: each draw on an actor's facility is a contract in the registry the economy shares
         self.contracts: Contracts = contracts if contracts is not None else Contracts()
-        # depositor -> funds it offers this year; the savers' offer is the weight of the unmodelled households
+        # depositor -> funds it offers this year
         self.offers: Dict[str, float] = {}
+        # the economy's lenders that have deposited in the pool, and the unit and coin per unit their money crosses at
+        self.unit_lenders: Set[str] = set()
+        self.unit: Optional[str] = None
+        self.coin_per_unit: float = 1.0
+        # never saved, set by the actors module: what an account may be lent of a draw (limit), and the economy's lenders
+        # for a draw by an account: (unit, coin per unit, [(lender, offered, balance, ask)] cheapest first) or None
+        self.limit: Optional[Callable[[str, float], float]] = None
+        self.lenders_for: Optional[Callable[[str, float], Optional[Tuple[str, float, List[Tuple[str, float, float, float]]]]]] = None
+        self._limits_off = False
         # interest borrowers have paid the pool since the last settlement, owed to the depositors
         self.interest_pending: float = 0.0
         # told (account, signed amount, label) when a lender's net position moves by a draw or a repayment
@@ -89,10 +99,10 @@ class Purses:
 
     def set_offers(self, offers: Dict[str, float]) -> None:
         """The funds each lender offers from now on: a lender's deposit in the pool moves to what it offers (from its
-        purse, or back to it); the savers' offer keeps its weight whatever the others hold."""
+        purse, or back to it)."""
         self.offers = {lender: amount for lender, amount in offers.items() if amount > 0.0}
         for account in sorted(set(self.offers) | set(self.contracts.deposits)):
-            if is_edge(account):
+            if is_edge(account) or account in self.unit_lenders:
                 continue
             held = self.deposit(account)
             target = self.offers.get(account, 0.0)
@@ -147,8 +157,7 @@ class Purses:
         if not is_edge(payer) and amount > DEBT_FLOOR:
             held = self.purse(payer)
             if held < amount * (1.0 - ROUNDING_SHARE):   # a purse short only by float dust pays as it is
-                taken = min(amount - held, self.deposit(payer))
-                self._take_back(payer, taken)
+                taken = self._take_back(payer, min(amount - held, self.deposit(payer)))
                 if taken > DEBT_FLOOR:
                     undo.append(lambda: self._place(payer, taken))
                 held = self.purse(payer)
@@ -174,7 +183,7 @@ class Purses:
     def settle_interest(self) -> Dict[str, float]:
         """Share the interest the pool received among its depositors in proportion to their deposits, never more
         than the pool holds (the deposit rate is whatever that comes to; interest lost in a default is not paid),
-        then pay the savers back what the pool holds beyond that; what each depositor received."""
+        then give the economy's lenders back what the pool holds beyond its lending; what each depositor received (coin)."""
         paid: Dict[str, float] = {}
         shares = {depositor: contract.principal for depositor, contract in sorted(self.contracts.deposits.items())}
         total = sum(shares.values())
@@ -184,25 +193,39 @@ class Purses:
             for depositor, principal in shares.items():
                 part = min(available * principal / total, max(0.0, self.purse(POOL)))
                 if part > DEBT_FLOOR:
-                    self.book.transfer(Transfer(POOL, depositor, COIN, part, DEPOSIT_INTEREST))
+                    self._pay_depositor(depositor, part, DEPOSIT_INTEREST)
                     paid[depositor] = part
             for depositor in paid:
-                if not is_edge(depositor):
+                if not is_edge(depositor) and depositor not in self.unit_lenders:
                     self._repay(depositor)
-        saved = self.deposit(EDGE_SAVERS)
-        back = min(saved, self.purse(POOL))
-        if back > DEBT_FLOOR:
-            self.book.transfer(Transfer(POOL, EDGE_SAVERS, COIN, back, DEPOSIT_TAKEN_BACK))
-            self.contracts.withdraw(EDGE_SAVERS, back, DEBT_FLOOR)
+        for lender in sorted(self.unit_lenders) + [EDGE_OUTSIDE]:
+            back = min(self.deposit(lender), self.purse(POOL))
+            if back > DEBT_FLOOR:
+                self._pay_depositor(lender, back, DEPOSIT_TAKEN_BACK)
+                self.contracts.withdraw(lender, back, DEBT_FLOOR)
+            if self.deposit(lender) <= DEBT_FLOOR:
+                self.unit_lenders.discard(lender)
         return paid
+
+    def _pay_depositor(self, depositor: str, coin: float, purpose: str) -> None:
+        """The pool pays `coin` to a depositor: an economy lender is paid in the economy's unit across the exchange."""
+        if depositor in self.unit_lenders and self.unit is not None:
+            self.book.transfer(Transfer(POOL, EDGE_EXCHANGE, COIN, coin, purpose))
+            self.book.transfer(Transfer(EDGE_EXCHANGE, depositor, self.unit, coin / self.coin_per_unit, purpose))
+        else:
+            self.book.transfer(Transfer(POOL, depositor, COIN, coin, purpose))
 
     def set_net(self, account: str, value: float, purpose: str) -> None:
         """Bring the account's net position to `value`, the other side being the account outside the book."""
         difference = value - self.net(account)
-        if difference > 0.0:
-            self.transfer(EDGE_OUTSIDE, account, difference, purpose)
-        elif difference < 0.0:
-            self.transfer(account, EDGE_OUTSIDE, -difference, purpose)
+        self._limits_off = True   # bookkeeping reset, not a purchase: a draw it makes is not held to the borrower's limit
+        try:
+            if difference > 0.0:
+                self.transfer(EDGE_OUTSIDE, account, difference, purpose)
+            elif difference < 0.0:
+                self.transfer(account, EDGE_OUTSIDE, -difference, purpose)
+        finally:
+            self._limits_off = False
 
     def repay_from_purse(self, borrower: str) -> None:
         """The borrower takes back its deposit and pays the pool what its purse holds."""
@@ -228,8 +251,13 @@ class Purses:
         return {POOL: lost} if lost > 0.0 else {}
 
     def _draw(self, borrower: str, shortfall: float) -> Callable[[], None]:
-        """The borrower draws `shortfall`; answers the step that gives it back (the pool keeps the funds the savers placed)."""
-        self._fund_pool(shortfall)
+        """The borrower draws `shortfall`; answers the step that gives it back. Raises `InsufficientFunds`, with nothing moved,
+        when the borrower may not be lent so much (`limit`) or the lenders cannot supply it."""
+        if self.limit is not None and not self._limits_off:
+            allowed = self.limit(borrower, shortfall)
+            if allowed < shortfall * (1.0 - ROUNDING_SHARE):
+                raise InsufficientFunds("%s may be lent %.2f of the %.2f it lacks" % (borrower, allowed, shortfall))
+        self._fund_pool(shortfall, borrower)
         deposits = {depositor: contract.principal for depositor, contract in self.contracts.deposits.items()}
         if self.bonds.issues(borrower):
             # the market buys a bond for the shortfall: the borrower owes its face, the depositors paid the price
@@ -259,35 +287,84 @@ class Purses:
                     self.named_lenders.held[borrower][lender] -= shortfall * deposit / total
         return give_back
 
-    def _fund_pool(self, amount: float) -> None:
-        """The pool can pay out `amount` and still hold the interest it owes its depositors: the savers deposit what
-        its depositors' funds leave short."""
+    def _fund_pool(self, amount: float, borrower: Optional[str] = None) -> None:
+        """The pool can pay out `amount` and still hold the interest it owes its depositors: what its depositors' funds
+        leave short is lent to it by the economy's lenders, cheapest ask first (`_lender_plan`), or the draw is refused."""
         lacking = amount - (self.purse(POOL) - self.interest_pending)
-        if lacking > 0.0:
-            self.book.transfer(Transfer(EDGE_SAVERS, POOL, COIN, lacking, DEPOSIT_PLACED))
-            self.contracts.deposit(EDGE_SAVERS, POOL, COIN, lacking)
+        if lacking <= DEBT_FLOOR:
+            return
+        plan = self._lender_plan(lacking, borrower)
+        if plan is None and self._limits_off:
+            # a bookkeeping reset (`set_net`) that sets an actor's net position below zero: the account outside the book
+            # stands behind the debt it writes, and is paid back like a lender
+            self.book.transfer(Transfer(EDGE_OUTSIDE, POOL, COIN, lacking, DEPOSIT_PLACED))
+            self.contracts.deposit(EDGE_OUTSIDE, POOL, COIN, lacking)
+            return
+        if plan is None:
+            raise InsufficientFunds("lenders cannot supply the %.2f the pool lacks" % lacking)
+        unit, per_unit, parts = plan
+        self.unit, self.coin_per_unit = unit, per_unit
+        for lender, units in parts:
+            coin = units * per_unit
+            self.book.transfer(Transfer(lender, EDGE_EXCHANGE, unit, units, DEPOSIT_PLACED))
+            self.book.transfer(Transfer(EDGE_EXCHANGE, POOL, COIN, coin, DEPOSIT_PLACED))
+            self.contracts.deposit(lender, POOL, COIN, coin)
+            self.unit_lenders.add(lender)
+
+    def _lender_plan(self, lacking: float, borrower: Optional[str]) -> Optional[Tuple[str, float, List[Tuple[str, float]]]]:
+        """(unit, coin per unit, [(lender, units)]) covering `lacking` coin from the cheapest ask up, each lender giving at
+        most what it offered beyond what it already has in the pool and what its account holds; None when they fall short."""
+        offer = None if self.lenders_for is None else self.lenders_for(borrower if borrower is not None else "", lacking)
+        if offer is None:
+            return None
+        unit, per_unit, lenders = offer
+        remaining = lacking
+        parts: List[Tuple[str, float]] = []
+        for lender, offered, balance, _ask in lenders:
+            units = min(offered - self.deposit(lender) / per_unit, balance, remaining / per_unit)
+            if units * per_unit > DEBT_FLOOR:
+                parts.append((lender, units))
+                remaining -= units * per_unit
+            if remaining <= lacking * ROUNDING_SHARE:
+                return unit, per_unit, parts
+        return None
 
     def _place(self, account: str, amount: float) -> None:
         if amount > DEBT_FLOOR:
             self.book.transfer(Transfer(account, POOL, COIN, amount, DEPOSIT_PLACED))
             self.contracts.deposit(account, POOL, COIN, amount)
 
-    def _take_back(self, account: str, amount: float) -> None:
+    def _take_back(self, account: str, amount: float) -> float:
+        """The account takes back up to `amount` of its deposit, as far as the pool holds it or the lenders refill it;
+        answers what it took."""
         amount = min(amount, self.deposit(account))
-        if amount > DEBT_FLOOR:
+        if amount <= DEBT_FLOOR:
+            return 0.0
+        try:
             self._fund_pool(amount)
-            self.book.transfer(Transfer(POOL, account, COIN, amount, DEPOSIT_TAKEN_BACK))
-            self.contracts.withdraw(account, amount, DEBT_FLOOR)
+        except InsufficientFunds:
+            amount = min(amount, max(0.0, self.purse(POOL) - self.interest_pending))
+            if amount <= DEBT_FLOOR:
+                return 0.0
+        self._pay_depositor(account, amount, DEPOSIT_TAKEN_BACK)
+        self.contracts.withdraw(account, amount, DEBT_FLOOR)
+        return amount
 
     def redeem_bonds(self, issuer: str) -> float:
-        """A year passes for the issuer's bonds: those at their term are paid off at face, the issuer drawing the cash
-        (on a new bond when its purse falls short); the face repaid. Call once a year."""
+        """A year passes for the issuer's bonds: those at their term fall due and are paid off at face, the issuer drawing
+        the cash (on a new bond when its purse falls short); the face repaid. A payment refused leaves the due bonds on the
+        book as debt, due again next year (the issuer is in arrears). Call once a year."""
         due = self.bonds.age(issuer)
-        if due > DEBT_FLOOR:
+        if due <= DEBT_FLOOR:
+            return 0.0
+        try:
             self.transfer(issuer, POOL, due, BOND_REDEEMED)
-            if self.named_lenders.names(issuer):
-                owed = self.debt(issuer) + due
-                self.named_lenders.repaid(issuer, due / owed if owed > 0.0 else 1.0)
+        except InsufficientFunds:
+            return 0.0
+        self.bonds.retire_due(issuer)
+        if self.named_lenders.names(issuer):
+            owed = self.debt(issuer) + due
+            self.named_lenders.repaid(issuer, due / owed if owed > 0.0 else 1.0)
         return due
 
     def _repay(self, borrower: str) -> None:
@@ -314,7 +391,7 @@ class Purses:
 
     def _tell(self, account: str, signed: float, label: str) -> None:
         """A depositor's wealth fell by a default's loss: it is told, so the books it keeps account for it."""
-        if self.observer is not None and not is_edge(account) and account != POOL:
+        if self.observer is not None and not is_edge(account) and account != POOL and account not in self.unit_lenders:
             self.observer(account, signed, label)
 
     def adopt_book(self, book: Any, contracts: Optional[Contracts] = None) -> None:
@@ -344,6 +421,7 @@ class Purses:
         return {"book": self.book.to_record(only=(COIN,)),
                 "facilities": self.contracts.to_records(facilities=True),
                 "offers": dict(sorted(self.offers.items())), "interest_pending": self.interest_pending,
+                "unit_lenders": sorted(self.unit_lenders), "unit": self.unit, "coin_per_unit": self.coin_per_unit,
                 "named_lenders": self.named_lenders.to_canon_dict(), "bonds": self.bonds.to_canon_dict()}
 
     @classmethod
@@ -352,6 +430,9 @@ class Purses:
         purses.contracts.load_records(record["facilities"])
         purses.offers = dict(record.get("offers") or {})
         purses.interest_pending = float(record.get("interest_pending", 0.0))
+        purses.unit_lenders = set(record.get("unit_lenders") or ())
+        purses.unit = record.get("unit")
+        purses.coin_per_unit = float(record.get("coin_per_unit", 1.0))
         purses.named_lenders = NamedLenders.from_record(record.get("named_lenders") or {})
         purses.bonds = BondBook.from_record(record.get("bonds") or {})
         return purses

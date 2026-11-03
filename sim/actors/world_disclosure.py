@@ -2,7 +2,9 @@
 from typing import Any
 
 from sim.agents.api import PROOF_YEARS, SECRET_EXPOSURE, licence
-from sim.ledger.api import PayActor
+from sim.ledger.api import UNPAID_CHARGE_KIND, PayActor
+from sim.refusal import Refusal, cause_of
+from sim.reporting.api import RecordEvent
 
 from sim.seats.api import (base_visibility, builders_of, disclosure_modes, most_open_mode, seat_royalties_due, seat_royalties_paid,
 						   years_to_be_believed)
@@ -63,6 +65,10 @@ class Disclosure:
 		paid = 0.0
 		owed = seat_royalties_due(needs.techniques_by_seat(), node_id, firm.actor_id, takings, needs.disclosures.__getitem__)
 		for seat_id, due in seat_royalties_paid(owed, firm.money):
-			needs.send(PayActor(firm.actor_id, seat_id, due, "licence"))
+			refusal = needs.send(PayActor(firm.actor_id, seat_id, due, "licence"))
+			if isinstance(refusal, Refusal):   # the firm could not cover it: not paid, and said so
+				needs.send(RecordEvent.of(UNPAID_CHARGE_KIND, "could not pay %s a licence royalty: %s" % (seat_id, refusal),
+				                          edge=seat_id, amount=due, purpose="licence", cause=cause_of(refusal)))
+				continue
 			paid += due
 		return paid + licence.collect_patent_royalty(self.world, self._holder_of, firm, node_id, takings)

@@ -12,6 +12,7 @@ from sim.agents.stratum import Stratum  # noqa: F401  (registers the kind)
 from sim.agents.purses import POOL
 
 from .agents_fake_world import FakeWorld
+from .pool_lenders import lend_from_savers
 
 
 def firm_owing(debt, margin):
@@ -19,6 +20,7 @@ def firm_owing(debt, margin):
 	world = FakeWorld(year=50)
 	registry = ActorRegistry(ActorsState(home_country="home"))
 	firm = registry.add("firm:1", ActorRecord(kind="firm", founded_year=0, last_margin=margin, business=Business()))
+	lend_from_savers(registry.state.purses, 1e12)
 	firm.money = -debt
 	return world, registry, firm
 

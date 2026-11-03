@@ -225,7 +225,9 @@ def register(api):
             unpaid = access.send(PayEdge(edges.EDGE_COIN_GUARDS, carry_cost(access, name, paid), CARRY_CAUSE))
             if unpaid is not None:
                 return refuse("the carriage home could not be paid: %s" % unpaid, cause=unpaid.cause)
-            access.send(PayActor(holder.actor_id, seat, paid, PAYOUT_CAUSE))
+            unpaid = access.send(PayActor(holder.actor_id, seat, paid, PAYOUT_CAUSE))
+            if unpaid is not None:
+                return refuse("the holder could not pay out: %s" % unpaid, cause=unpaid.cause)
         entry["amount"] -= asked
         return {"ok": True, "holder": name, "asked": round(asked, 1), "paid": round(paid, 1),
                 "written_off": round(asked - paid, 1), "fees_taken_from_claim": round(fees, 1),
@@ -266,7 +268,9 @@ def register(api):
         receiver = ensure_holder(access, target)
         settle(access, target, seat)
         if moved > 0.0:
-            access.send(PayActor(issuer.actor_id, receiver.actor_id, moved, LETTER_CAUSE))
+            unpaid = access.send(PayActor(issuer.actor_id, receiver.actor_id, moved, LETTER_CAUSE))
+            if unpaid is not None:
+                return refuse("the issuer could not honour the letter: %s" % unpaid, cause=unpaid.cause)
         entry["amount"] -= asked
         arrived = memory(access).setdefault(target, {}).setdefault(seat, {"amount": 0.0, "settled_year": access.view("year")()})
         arrived["amount"] += moved
@@ -359,7 +363,8 @@ def register(api):
             claim_taken = min(entry["amount"], (amount - taken) / share) if share > 0.0 else 0.0
             paid = min(claim_taken * share, max(0.0, holder_actor(access, name).money))
             if paid > 0.0:
-                access.send(PayActor(holder_actor(access, name).actor_id, taker.actor_id, paid, "confiscation of a claim"))
+                if access.send(PayActor(holder_actor(access, name).actor_id, taker.actor_id, paid, "confiscation of a claim")) is not None:
+                    continue   # the holder could not pay: nothing is taken from this claim
                 entry["amount"] -= claim_taken
                 taken += paid
         return taken

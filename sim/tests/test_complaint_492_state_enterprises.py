@@ -11,6 +11,7 @@ from sim.agents import budget, state_enterprises
 from sim.agents.api import ActorRecord, Government
 
 from .agents_fake_world import FakeWorld, make_node
+from .pool_lenders import lend_from_savers
 
 OPENING_MONEY = 1000.0
 TAKINGS = 20000.0
@@ -36,6 +37,7 @@ class StateWorld(FakeWorld):
 def state_with(monopolies=(), enterprises=(), money=OPENING_MONEY, crew_found=True):
 	"""A state and its world; `crew_found` gives the state the people the labour core would have hired for its plants."""
 	world = StateWorld()
+	lend_from_savers(world.state.purses, 1e12)
 	if crew_found:
 		world.state.record.workforce["labourer"] = 100.0
 	world.state.record.state_monopolies = set(monopolies)

@@ -16,6 +16,7 @@ from sim.ledger.api import (CloseCashPeriod, CreditSeat, DebitSeat, NoteHolderBo
 from sim.ledger.ledger import Ledger
 from sim.refusal import Refusal
 from sim.tests import module_harness
+from sim.tests.pool_lenders import lend_from_savers
 
 SEAT = "founder"
 
@@ -58,11 +59,18 @@ class PayActorFromHouseholdCommand(unittest.TestCase):
         module.pay_actor_from_household(PayActorFromHousehold(treasury.actor_id, 300.0, {"requisition": 200.0, "office": 100.0}))
         self.assertEqual(module.seat.cash_flow, {"requisition": -200.0, "office": -100.0})
 
-    def test_a_household_that_cannot_cover_it_is_paid_into_debt(self):
-        module, _registry, treasury = seat_ledger(100.0)
+    def test_a_household_that_cannot_cover_it_is_paid_into_debt_when_lenders_hold_the_funds(self):
+        module, registry, treasury = seat_ledger(100.0)
+        lend_from_savers(registry.state.purses, 1e6)
         module.pay_actor_from_household(PayActorFromHousehold(treasury.actor_id, 300.0, "confiscation"))
         self.assertEqual(module.acting_balance(), -200.0)
         self.assertEqual(treasury.money, 300.0)
+
+    def test_a_household_that_cannot_cover_it_and_finds_no_lender_is_refused_and_nothing_moves(self):
+        module, _registry, treasury = seat_ledger(100.0)
+        answer = module.pay_actor_from_household(PayActorFromHousehold(treasury.actor_id, 300.0, "confiscation"))
+        self.assertIsInstance(answer, Refusal)
+        self.assertEqual((module.acting_balance(), treasury.money), (100.0, 0.0))
 
     def test_an_actor_the_cast_does_not_hold_is_refused_and_nothing_moves(self):
         module, _registry, _treasury = seat_ledger(100.0)
@@ -250,7 +258,7 @@ class NoteHolderBookingCommand(unittest.TestCase):
         self.assertEqual(self.booked("abbey", -2.0), ([("actor out", "loan", 2.0)], {}))
 
     def test_an_edge_or_an_unknown_holder_keeps_no_books(self):
-        self.assertEqual(self.booked("edge:savers", 5.0), ([], {}))
+        self.assertEqual(self.booked("edge:exchange", 5.0), ([], {}))
 
 
 class SeatMoneyCommands(unittest.TestCase):

@@ -25,11 +25,6 @@ RATE_CEILING_SHARE = declare(
     unit="multiple of the starting rate", source=None, confidence="D",
     why="The highest the market rate rises however scarce funds are; beyond it borrowers stop borrowing "
         "and lenders turn to the risks of lending to desperate borrowers, which are not modelled.")
-ARREARS_PREMIUM_AT_CEILING = declare(
-    "ARREARS_PREMIUM_AT_CEILING", 0.5, kind="temporary_heuristic",
-    unit="share of the market rate added at the credit ceiling", source=None, confidence="D",
-    why="What a borrower at the limit of what lenders will advance pays over the market rate, rising "
-        "in proportion to the share of the ceiling used. Stands in for a default-probability model.")
 LENDER_RESERVE_SHARE = declare(
     "LENDER_RESERVE_SHARE", 0.2, kind="temporary_heuristic",
     unit="share of the funds lenders hold", source=None, confidence="D",
@@ -89,14 +84,6 @@ def stand_yearly_share(rate: float, life_years: float, establishment_years: floa
     there is no wait."""
     return (establishment_carry_factor(rate, establishment_years)
             * capital_recovery_factor(rate, bearing_years(life_years, establishment_years)))
-
-
-def borrower_rate(market_rate: float, standing_discount: float, share_of_ceiling_used: float) -> float:
-    """What one borrower pays: never less than the market rate (what the market itself pays savers), plus
-    the part of the arrears premium that its standing does not remove. A discount only removes premium."""
-    used = max(0.0, min(1.0, share_of_ceiling_used))
-    premium = market_rate * ARREARS_PREMIUM_AT_CEILING * used
-    return market_rate + max(0.0, premium - max(0.0, standing_discount))
 
 
 def perpetuity_value(yearly_income: float, rate: float, rate_floor: float = 1e-9) -> float:

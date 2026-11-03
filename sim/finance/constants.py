@@ -272,18 +272,6 @@ BONDAGE_WAGE_MARKUP = declare(
         "little above the cheapest free-market rate. Tuned, not "
         "measured.")
 
-LENDING_HORIZON_YEARS = declare(
-    "LENDING_HORIZON_YEARS", 10.0, kind="temporary_heuristic",
-    unit="years of household saving", source=None, confidence="D",
-    why="How many years of what households save stand as funds lenders hold in loanable form. Stands "
-        "in for an accumulating stock of savings with its own losses and uses.")
-
-BACKGROUND_BORROWING_SHARE = declare(
-    "BACKGROUND_BORROWING_SHARE", 0.5, kind="temporary_heuristic",
-    unit="share of the funds households' saving supports", source=None, confidence="D",
-    why="What the economy the simulation does not model actor by actor (farmers, traders, landlords) "
-        "borrows against the same savings. Stands in for those borrowers.")
-
 LENDABLE_RESERVE_SHARE = declare(
     "LENDABLE_RESERVE_SHARE", 0.1, kind="temporary_heuristic",
     unit="share of the state's reserve beyond a year's need", source=None, confidence="D",
