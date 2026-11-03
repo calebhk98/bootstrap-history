@@ -39,7 +39,7 @@ class CountryLabour(SharedPart):
 		economy = self.world.own.get_or_none()
 		if economy is None:
 			return None
-		count = self.world.holder.staff_fte_in_country(trade, self.world.profile.country, actor_id)
+		count = self.world.holder.staff.staff_fte_in_country(trade, self.world.profile.country, actor_id)
 		return people_left(economy.people_of_trade(trade), count)
 
 	def pay_wages(self, payer: Any, amount: float, purpose: Any) -> None:
