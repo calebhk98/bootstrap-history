@@ -163,8 +163,7 @@ def serialize_state(obj: Any) -> Any:
 			val = getattr(obj, f.name)
 			out[f.name] = serialize_state(val)
 		return out
-	from sim.invalidating import _InvalidatingSet
-	if isinstance(obj, (set, _InvalidatingSet)):
+	if isinstance(obj, set):
 		return {"__set__": sorted(serialize_state(x) for x in obj)}
 	if isinstance(obj, (dict, _InvalidatingDict, collections.defaultdict, collections.Counter)):
 		return {str(k): serialize_state(v) for k, v in obj.items() if not str(k).startswith("_on_change")}

@@ -233,7 +233,7 @@ def _cmd_start(sim, nodes, cmd, ended):
     # everyone else already in hand: two or three
     # foundations, each priced honestly on its own screen, can together
     # ask for more than the household currently holds. This is that
-    # aggregate: committed_spend() (economy.py) is the exact same sum
+    # aggregate: committed_cost() (sim/projects/applied.py) is the exact same sum
     # `money`'s "still_owed_on_work_in_hand" already prints, read here
     # instead of re-totalled, and funding_capacity() is the identical
     # number the un-manual director's own start heuristic already uses

@@ -1,30 +1,12 @@
 # One household demand model, and the other duplicates Complaint 115 still lists
 
-Note: this is a record of past work. Files it names under `sim/engine/` have since moved or gone: `economy_port*.py` is `sim/markets/port*.py`, `agents_port*.py` is `sim/actors/world*.py`, `joint_allocation.py` is `sim/prices/joint_allocation.py`, `foreign_economies.py` is `sim/content/foreign_economies.py`, `real_output.py` is `sim/reporting/output.py`; `economy_capital_market.py`, `market_demand.py`, `geography_port.py` and the foreign trader files no longer exist (`grep -rn <function name> sim` finds the current owner).
-
-**Status:** stages 1 to 4 built on branch `one-demand-model` (2026-10-06); stage 6 started (2026-10-09: traders' cargo is in the book and the coin ledger, Complaint 115 items 2 and 3); stage 5 done by the owner's decision of 2026-10-09 to retire the agent-economy-off mode (the engine's capital market, its loan records and the off-only price model are deleted; actors borrow through the economy's book, `ECONOMY_AGENTS.md`); sections 2 and 3 below describe the off mode and are kept as the record of what was removed; the solver's demand anchors now face the climate floors of the civilisation's tiles (`joint_allocation._climate_basket`) and the strata's cost of living is the economy's own tile prices on each tile's floors (`EconomyPort.agent_need_floor_costs`); stage 7 measured, see Complaint 115 "Still two owners". Written against
-branch `structural-dedupe-and-owner-decisions`. It answers the "Still two owners" list in
-`Complaints/closed/115-multiple-parallel-models-need-an-authoritative-one.md`: three household demand models, the engine's
-capital market with the agent economy off, and the merchant stand-ins.
-
-What is built. Stage 1: `sim/world/need_basket.py` holds the pure kernel (`make_basket`, `need_prices` taking a
-`price_of(good)` function, `price_ceilings`, `subsistence_cost_per_person`, `need_units`, `limit_satiation`);
-`sim/economy/households_basket.py` re-exports it and prices a basket from a market view. Stage 2: `climate_basket`,
-`basket_with_floors` and `mean_climate_basket` make climate floors a kernel function; `baskets_by_tile` calls it.
-Stage 3: `NeedDemandModel.final_demand` takes price index, floors and surplus split from the kernel; the engine adapter
-(`market_demand.household_basket`) gives it the people-weighted floors of the civilisation's tiles, so shelter, clothing
-and warmth carry demand in the opt-out game. Stage 4: strata pay the floor of each need in turn
-(`SimWorld.need_floor_costs_per_person_year`, `stratum_year.run_year`); `STRATUM_OTHER_NEED_FOOD_MULTIPLE`,
-`housing_cost_per_person_year` and `HOUSING_FLOOR_AREA_PER_PERSON_M2` are gone; `record.shortfall` is keyed by need id.
-
-What stage 3 and 4 left for later. (The price solver's demand anchors, which built the model without climate floors, are gone: ONE_PRICE_OWNER_PLAN.md
-stage 1.) The strata cost comes from the engine's goods-market
-prices in both modes; with the agent economy on, asking the economy's own tile prices through `sim/economy/api.py` is
-not done. `household_saving` (`agents_port_capital.py`) still uses `income_bins` and belongs to stage 5.
-`agents_port_budget.py`, `wage_schedule.py` and `foreign_capacity.py` still read the food-floor constant or the model
-without a civilisation. Stratum surplus beyond the floors and schooling is saved, not spent by need weight: that needs a
-labelled propensity and is open. The fingerprint was not recorded (owner's rule for this branch); record a new baseline
-before merging.
+**Status:** done. The kernel is `sim/world/need_basket.py` (pure basket types and price functions, climate floors in
+`climate_basket`, `basket_with_floors`, `mean_climate_basket`); `sim/economy/households_basket.py` re-exports it and
+prices a basket from a market view; `NeedDemandModel.final_demand` takes the price index, floors and surplus split from
+it; strata pay the floor of each need in turn (`stratum_year.run_year`). The agent-economy-off mode and its capital
+market were deleted (owner decision recorded in `Complaints/closed/115-multiple-parallel-models-need-an-authoritative-one.md`).
+Sections 1 and 2 describe the three models as they were compared; find the current owner of any name with
+`grep -rn <name> sim`.
 
 Rules this plan keeps (`CLAUDE.md` section 4): no hardcoded outcomes, interventions through normal rules, every
 heuristic labelled, no save migration, no content ids in the engine. Tests below pin relationships, never dated
@@ -60,11 +42,10 @@ whose floor is declared `subsistence_from_climate` gets zero here (see the table
 
 Readers. Find them with `grep -rnE "NeedDemandModel|household_demand_by_material|income_bins|household_quantity_demanded|market_clearing_price" sim --include=*.py | grep -v tests`:
 
-- `sim/engine/market_demand.py` (`household_demand_by_material`): the year's demand ratio against the opening, which moves the engine's market price when the agent economy is off, and builds `base_basket` (`sim/engine/real_output.py`).
-- `sim/engine/agents_port_capital.py` (`household_saving`): income bins to a savings flow, which supplies the engine's loanable funds.
+- `sim/markets/household_needs.py`: builds the model and its income bins for the year's household demand.
+- `sim/actors/world_credit.py`: income bins to a savings flow.
 - `sim/economy/households_cohort.py`: only `income_bins`, to cut a tile into income classes.
 - `sim/labour/workforce_spinup.py`: `budget_weights_by_good`, `input_coefficients_per_unit_output`.
-- `sim/engine/agents_port_budget.py` and `sim/workforce/wage_schedule.py`: only the food floor constant, to price a subsistence dole and the wage floor.
 
 ### 1.2 The agent economy's household baskets (`sim/economy/households_basket.py` and its orders)
 
@@ -73,7 +54,7 @@ on a tile from the market view, with a constant-elasticity mix inside the need, 
 price ceiling above which a buyer stops buying a good. `households_orders.goods_orders` then turns a cohort's cash,
 income, expectations and savings target into orders: floors, plus the surplus split by need weight, limited by
 satiation, thinned for durables already held (`_durable_ratio`), and routed to goods that are affordable.
-`economy_port_setup.baskets_by_tile` replaces the floors of climate needs with each tile's climate floor
+`baskets_by_tile` (`sim/markets/port_setup.py`) replaces the floors of climate needs with each tile's climate floor
 (`sim/world/climate_needs.py`).
 
 Inputs. The same `needs.json` and recipes, the tile's market prices, the cohort's income and cash, tile climate, the
@@ -91,7 +72,7 @@ the food cost, `STRATUM_OTHER_NEED_FOOD_MULTIPLE`, labelled as standing in for t
 order from its purse; the unpaid share of each tier is its shortfall, and the ratio of resources to the food bill is its
 welfare, which drives births and moves.
 
-Inputs. The engine's own food cost (`agents_port_cast.subsistence_cost_per_person_year`: the dole material priced by
+Inputs. The engine's own food cost (`subsistence_cost_per_person_year` (`sim/actors/world_people.py`): the dole material priced by
 `material_cost`, not by the agent economy's market) and a housing cost built from labourers' pay and the market rate.
 No `needs.json`, no climate, no substitution, no income response: a richer stratum buys the same tiers and saves the rest.
 
@@ -143,108 +124,15 @@ durables held, stores, credit, order routing and ceilings as bids. Derived deman
 the closed-form helpers stay in `demand.py` and `need_demand.py`, but they call the kernel for floors, the price index
 and the surplus split.
 
-### 2.1 How the other two become readers
+### 2.1 Stages
 
-- **Aggregate model.** `NeedDemandModel.final_demand` keeps its loop over income bins but takes need specs and the price
-  index from the kernel, and takes floors per need for the whole civilisation as the people-weighted mean of tile
-  floors. It needs from the kernel what it lacks today: climate floors (a function of the civilisation's tiles,
-  supplied through the geography api by the engine adapter `sim/engine/market_demand.py`), and the one price index.
-  What the kernel lacks that the aggregate model needs, and keeps: recipe-derived demand, the Pareto bins, the
-  protected-floor rule below committed cost (an aggregate shortcut for what clearing does per cohort), and a
-  satiation switch for the solver (`satiate=False`).
-- **Strata.** `SimWorld` (`sim/engine/agents_port*.py`) answers new questions from the kernel: the cost per person of
-  each need's floor, and the quantities a class of given income buys by need. With the agent economy on, the answer
-  comes from the economy through `sim/economy/api.py` and the port (the prices the cohorts actually pay). With it off,
-  the adapter calls the kernel with the engine's prices. `stratum_year` then pays need by need (food, shelter, the rest
-  of the floors, then surplus by weight) instead of food, housing and a multiple, and `STRATUM_OTHER_NEED_FOOD_MULTIPLE`
-  goes. What the kernel lacks that strata need: a per-need shortfall (the economy records the unmet floor already; the
-  kernel needs to return floors and affordable quantities so a purse that cannot pay reports which need failed), and a
-  rule for what a stratum with no market tile uses for prices (the national price, `national_prices.py`).
-- **Food floor constant readers** (`agents_port_budget`, `wage_schedule`) read the kernel's food floor instead of the
-  constant in `demand.py`.
+Stages 1 to 5 are done and stages 6 and 7 are recorded in Complaint 115 (closed). The kernel is `sim/world/need_basket.py`
+(with `sim/world/climate_needs.py`); the aggregate model (`sim/world/need_demand.py`, `sim/world/need_final_demand.py`)
+and the strata (`sim/agents/stratum_year.py`) read it. The agent-economy-off mode, its capital market and the engine's
+merchant stand-ins were deleted by the owner's decision, so no staged work remains in this file. Find the current owner
+of any name with `grep -rn <name> sim`.
 
-### 2.2 Decisions this needs from the owner
-
-1. Confirm the spend-weighted index as the one index (it changes the aggregate demand ratio for any need with several
-   goods, which moves the engine's off-economy market prices; the fingerprint will change for the opt-out game).
-2. Confirm the below-floor behaviour stays two-level: the analytic rule for aggregates, clearing for cohorts, with a
-   test that they agree when income covers the floors.
-
-## 3. Capital market when the agent economy is off
-
-State today. `sim/engine/economy_capital_market.py` (`update_capital_market`, `market_loans`, `market_funds`,
-`market_credit_room`) meets once a year and sets a rate from funds demanded against funds held, using
-`sim/world/capital_market.py`. With the agent economy on, `market_rate` and `market_credit_room` already ask the
-economy first (`economy.api.credit_room`, `agent_rate`); the engine record answers only when it is off. But
-`update_capital_market` still runs every year from `society_actors.advance_actors`, so the engine's record is built and
-its savings supply (`household_saving`, which reads `income_bins`) is computed even when nobody reads them.
-
-Recommendation. The economy's credit market is the one owner of the rate. Each of its lenders (households, firms,
-state) and borrowers is an actor with a purse, which is what the loanable-funds ratio stands in for. Concretely:
-
-- With the agent economy on: stop calling `update_capital_market` and `market_loans`; keep `capital_market_report` as a
-  thin reader of the economy's rate and room. Nothing reads the engine record in that mode.
-- With it off (opt-out, used by tests of old mechanisms): keep the world-level ratio rate as a labelled heuristic in
-  `sim/world/capital_market.py`, behind one function `loanable_rate(funds, loans)`; delete the founder-specific
-  record fields the economy cannot supply.
-- The saving flow (`household_saving`) is then read from the kernel's surplus split (stage 3 below), not from a
-  second use of `income_bins`.
-
-What the economy lacks that the engine's market gives: the founder's own loan (`FOUNDER_LOAN`) is a borrower the
-economy already receives through `agent_credit_room(actor_id)`; check it handles an id that is not a cohort or a firm.
-The state's lending (`state_lending`) is read by `Government`; give it an economy-port member that returns the
-economy's own figure.
-
-## 4. Merchant stand-ins
-
-State today (Complaint 115, "Merchants (405)"). The trader actors own inter-country flows of goods that actors carry.
-Two stand-ins still own the rest: the engine's aggregate `foreign_traders` flow (`sim/engine/foreign_traders.py`,
-`foreign_economies.foreign_trade_year_end`), dormant when the agent economy is on, and the economy's `_external_orders`
-(`sim/engine/economy_port_year.py`), which offers imports and bids for exports of any good no actor carried that year,
-capped by `FOREIGN_TRADE_SHARE`. The economy's own `merchants.py` moves goods between tiles only, with no partner.
-
-Recommendation. Trader actors are the one owner of cross-border flows, and economy merchants the one owner of
-cross-tile flows, so one mechanism (carry a gap net of carriage, risk and interest) is used by every actor. The route
-to get there is Complaint 115 items 2 to 5: a trader as an account in the book, a partner on each order, a per-partner
-edge, and domestic routes for traders. Until then `_external_orders` stays for goods nobody carries. Measure how much
-it still carries with the existing checks in `sim/tests/test_foreign_actor_trade.py` before deleting anything.
-
-What the stand-ins have that traders lack: a partner-less aggregate cap (`FOREIGN_TRADE_SHARE`) that stops an
-uncarried good flowing without limit. The replacement is a trader founded where the gap is positive
-(`trader_entry.py`), which needs the partner book to cover intermediates and ores first.
-
-## 5. Staged plan
-
-Every stage leaves the game playable (the default agent-economy game and the opt-out game both start and run a
-decade), is its own commit, and adds tests that pin a relationship. Agents may take stages in parallel only where the
-file sets are disjoint, as listed.
-
-| Stage | Change | Files touched | Tests pinning a relationship | Waits on |
-|---|---|---|---|---|
-| 1 | Add `sim/world/need_basket.py`, move the pure basket types and price functions into it, make `households_basket.py` re-export. No behaviour change. | new `sim/world/need_basket.py`; `sim/economy/households_basket.py`; `sim/economy/households_orders.py` (import only) | The economy's priced needs equal the kernel's for the same prices (fingerprint of the default game unchanged: `python3 -m sim.tests.fingerprint check`) | Nothing in sim/economy beyond a rebase: `households*.py` is being edited by the counterparty-postings branch, so land after it merges, or touch only the import lines |
-| 2 | Climate floors become a kernel function of tile climate; `baskets_by_tile` calls it. | `sim/world/need_basket.py`, `sim/world/climate_needs.py` (read), `sim/engine/economy_port_setup.py`, `sim/engine/geography_port.py` (tile climate) | A hotter tile has no larger warmth floor than a colder one; a tile's floors equal the kernel's for its climate | Geography branch (`civilisations-hold-tiles-and-roads`) changes tile ownership and the map surface the port reads: rebase after it |
-| 3 | The aggregate model reads the kernel: floors per need for the civilisation, the one price index, surplus split. | `sim/world/need_demand.py`, `sim/engine/market_demand.py`, `sim/prices/joint_allocation.py` (anchors), `sim/engine/agents_port_capital.py` | Adding an identical good to a need leaves its price index and demand unchanged; at income above the floors the aggregate demand for a need equals the economy's for one cohort of that income; demand rises with income for every need whose weight is positive, and the food share falls (Engel) | Stage 1. Changes the opt-out game's fingerprint on purpose: record a new baseline in the same commit and say so |
-| 4 | Strata read the kernel through `SimWorld`: per-need floors, per-need shortfall, no multiple constant. | `sim/agents/stratum_year.py`, `sim/agents/tuning_strata.py`, `sim/agents/protocols.py`, `sim/agents/api.py`, `sim/engine/agents_port_cast.py`, `sim/engine/agents_port_budget.py`, `sim/economy/api.py` (one new question), `sim/engine/economy_port.py` | A stratum whose income covers the floors has zero shortfall; shortfall is monotone non-increasing in income; welfare of a stratum falls when its need prices rise; strata and cohort floors agree for the same tile | Counterparty-postings branch (`sim/agents/stratum_year.py`, `protocols.py`, `agents_port.py`, `sim/economy/households*.py` are all in its diff): do not start until it merges |
-| 5 | Capital: engine meeting stops when the agent economy is on; saving flow from the kernel; state lending through a port member. | `sim/engine/economy_capital_market.py`, `sim/engine/society_actors.py`, `sim/engine/agents_port_capital.py`, `sim/world/capital_market.py`, `sim/economy/api.py` | The rate with the agent economy on equals the economy's rate; with it off, the rate rises when funds demanded rise against funds held; founder credit room is never negative | Stage 3 for the saving flow. `society_actors.py` is in the counterparty branch's diff: rebase after it |
-| 6 | Merchants: Complaint 115 items 2 to 5, then retire `_external_orders` and the aggregate `foreign_traders` flow once no good depends on them. | `sim/agents/trader*.py`, `sim/economy/merchants*.py`, `sim/economy/foreign.py`, `sim/engine/economy_port_year.py`, `sim/engine/foreign_traders.py`, `sim/engine/foreign_economies.py`, `sim/engine/foreign_actor_trade.py` | A good carried by an actor is not also offered by a stand-in the same year; a trader's cargo moves both ends' prices toward each other, never apart; money conserved across the border | Counterparty branch (trader files). Geography branch if domestic trader routes use new route queries |
-| 7 | Retire what the kernel replaced: the unused canned three-good basket and food-share constants in `demand.py` if nothing reads them; `STRATUM_OTHER_NEED_FOOD_MULTIPLE`; the strata wage bridge for the home country. Move the Complaint 115 lines to `Complaints/closed/` with the measurement. | `sim/world/demand.py`, `sim/agents/tuning_strata.py`, `Complaints/115-*.md` | `grep` for the removed names returns nothing; full suite and `--slow` pass | Stages 3 to 6 |
-
-Disjoint sets for parallel agents: stages 1 and 2 share the kernel file, so one agent; stage 3 (world and market
-demand files) and stage 4 (agents files) are disjoint from each other and may run together once stage 1 has landed and
-the counterparty branch has merged; stage 5 and stage 6 touch different engine and agent files and may run together
-after stage 3; stage 7 last.
-
-## 6. What waits on the in-flight branches
-
-- `every-posting-names-a-counterparty`: edits `sim/agents/` (stratum, trader, registry, ledger, protocols, records) and
-  engine adapters (`agents_port.py`, `society_actors.py`, `economy_credit.py`, `economy_goods.py`). Stages 4, 5 and 6
-  wait for it. The households files under `sim/economy/` are named in its scope too, so stage 1 either lands after it
-  or keeps to import lines.
-- `civilisations-hold-tiles-and-roads`: reshapes geography and the map surface that tile climate and route queries
-  come from. Stage 2 and the domestic-route part of stage 6 wait for it.
-- Stage 3 and the kernel's pure code in stage 1 touch neither branch's files and can start now.
-
-## 7. Risks
+## 3. Risks
 
 - Stage 3 and stage 4 change behaviour on purpose: prices in the opt-out game and strata welfare move. Each records
   its fingerprint change and a ranged check (wage-to-grain ratio, urban share, grain more volatile than metals), not a

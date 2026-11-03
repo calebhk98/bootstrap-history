@@ -17,8 +17,7 @@ through `shared_ledger` in `sim/prices/memos.py`, which also maps a material
 key to its curated commodity from each commodity's `material_keys`. The live
 material price, availability and demand rules are in `sim/materials/`; this
 framework supplies the curated per-commodity records they read. Later
-sections written against the earlier `economy.py` name that system by the
-old file; the rules they describe are in `sim/materials/` now.
+sections describe the rules in `sim/materials/`.
 
 ## 1. What a commodity is, here
 
@@ -34,7 +33,7 @@ A commodity is a bulk, fungible good that:
 4. has a **price** that moves against how hard demand leans on supply, in
    BOTH directions: scarcity should raise it, and a glut should lower it.
 
-That last point is the one thing the existing `economy.py` genuinely lacks
+That last point is the one thing the material price rules in `sim/materials/supply.py` genuinely lack
 (see 4.4 below), and it is the specific mechanism the balloon example in the
 brief needs: automated looms do not just make more cloth, they must make
 cloth **cheaper**, and that price has to be visible to whatever buys cloth
@@ -61,7 +60,7 @@ explained:
   "national_output_t_per_yr": 15000,
   "output_conf": "C",
   "output_source": "data/world/resources.json:empire_output_100ad.copper",
-  "market_share": 0.03,                    // fraction of national output an ordinary buyer can actually purchase, see economy.py MARKET_SHARE
+  "market_share": 0.03,                    // fraction of national output an ordinary buyer can actually purchase, see MARKET_SHARE in sim/materials/constants.py
   "elasticity": 1.0,                       // how hard price reacts to demand/supply imbalance
   "price_floor_factor": 0.35,              // price never falls below this fraction of base, however large the glut
   "price_ceiling_factor": 8.0,             // ...or rises above this multiple, however large the shortage
@@ -79,13 +78,13 @@ explained:
 - **`material_keys`** is the bridge to the existing tech tree: every node's
   `mat` dict is keyed by strings like `copper_kg`, and this list says which
   of those keys this commodity answers for. This is deliberately the same
-  idea as `economy.py`'s `MATERIAL_CHECKS`, generalised: one commodity can
+  idea as `MATERIAL_CHECKS` in `sim/materials/constants.py`, generalised: one commodity can
   answer for several material keys (`copper_wire_kg` AND `wire_drawn_kg` are
   both "copper wire"), and a material key answers for at most one commodity.
 - **`national_output_t_per_yr`** is a FLOW (tonnes per year), not a stock.
   So is everything else about production and consumption in this framework.
   See section 8 for why a flow model and not a stockpile model.
-- **`market_share`** and the mine-cost tables are read from `economy.py`
+- **`market_share`** and the mine-cost tables are read from `sim/materials/constants.py`
   where they already exist (copper, iron, coal, lead, tin, silver, gold),
   rather than re-guessed, specifically so the two do not drift apart. Where
   a commodity has no existing entry (cloth, wool, coffee, cotton, copper
@@ -98,7 +97,7 @@ explained:
   existing production route's output (`kind: "multiplier"`, with an
   `output_multiplier`). Multiple `kind: "manufacture"` entries on the same
   commodity are read as alternatives, and the model picks whichever built
-  one has the highest multiplier -- exactly `economy.py`'s `chosen_fuel()`
+  one has the highest multiplier -- exactly `chosen_fuel()` in `sim/materials/demand.py`
   pattern, generalised.
 - **`recipe`** is what turns this into a chain. `copper_wire`'s recipe is
   `{"copper": 1.05}`: one kilogram of drawn wire needs 1.05 kg of copper
@@ -118,7 +117,7 @@ explained:
 **Consumption already exists.** Every one of the tech tree's 2,831 nodes
 carries a `mat` dict of material keys to kilograms. `commodity_demand()` in
 `commodities.py` sums those, converts to tonnes/year the same way
-`economy.py`'s `annual_material_demand()` does (kilograms of a project's bill
+`annual_material_demand()` in `sim/materials/demand.py` does (kilograms of a project's bill
 of materials spread over its `build_yrs`, plus half that again forever for
 anything built and still standing with upkeep), and rolls them up by
 commodity via `material_keys`. Nothing new had to be invented here; this is
@@ -162,12 +161,12 @@ factor = clamp(ratio ** elasticity, price_floor_factor, price_ceiling_factor)
 price  = solved_price_in_labour_hours_per_kg_of_price_material * factor
 ```
 
-This is deliberately symmetric where `economy.py`'s
-`material_price_factor()` is not:
+This is deliberately symmetric where `material_price_factor()` in `sim/materials/supply.py`
+is not:
 
 ### 4.1 Why the existing version only goes up
 
-`economy.py`'s premium is `1.0 + 0.9 * min(1.5, need/supply)^2`, floored at
+The premium there is `1.0 + 0.9 * min(1.5, need/supply)^2`, floored at
 `1.0`. It cannot go below 1.0 because in that model MORE of your own supply
 just relieves a premium down to the flat catalogue price; the catalogue
 price is never itself represented as something that falls. That was
@@ -322,7 +321,7 @@ recursively, bottom-up:
 in one build. `copper_wire`'s recipe is `{"copper": 1.05}`, so the request
 propagates up as "5.25 t of copper, please." Roman copper output is 15,000
 t/yr (`resources.json`, `[C]`), and an ordinary buyer's market share of that
-is 3% (`economy.py.MARKET_SHARE["copper"]`, reused, not re-derived) --
+is 3% (`MARKET_SHARE["copper"]` in `sim/materials/constants.py`, reused, not re-derived) --
 450 t/yr reachable, which comfortably covers 5.25 t on its own. So the
 regression check ALSO simulate a
 much larger ask (kilometres of wire at industrial scale, tens of tonnes,
@@ -386,7 +385,7 @@ actually binds a plan.
   together, copper wire from copper), and something obtainable only by
   trade (coffee, cotton). The other roughly 170 priced materials have no commodity entry and `commodity_demand()` silently
   ignores material keys it does not recognise, exactly like
-  `economy.py.MATERIAL_CHECKS` does today.
+  `MATERIAL_CHECKS` does today.
 - **Fibres are lumped.** `cloth` answers for both `cloth_kg` (wool cloth)
   and `linen_kg` (flax cloth), and its `recipe` only checks against wool.
   This is wrong in detail (a linen shortage should not be masked by a wool
@@ -414,26 +413,11 @@ actually binds a plan.
 
 ## 10. The hard problems a second pass will hit
 
-1. **Merging with `economy.py` without breaking the regression suite --
-   DONE for the one mechanism that needed it, deliberately not attempted
-   for the rest.** `economy.py.MATERIAL_CHECKS`, `MARKET_SHARE`,
-   `material_price_factor()` and `resource_throttle()` are load-bearing for
-   the entire running simulation, including debt, credit limits and mine
-   mothballing, all of which have their own regression tests keyed to exact
-   numbers. A wholesale swap of those for `commodities.py`'s OWN
-   price/national-output machinery would have to reproduce every one of
-   those numbers exactly while extending correctly to the materials that
-   are not yet tracked -- a careful, mechanical migration for no actual
-   gain, since the numbers were already cross-sourced to agree (section 2's
-   own note). What this pass did instead: added `copper_wire_kg`,
-   `wire_drawn_kg` and `gold_kg` to `MATERIAL_CHECKS` directly (real
-   material keys, 36+ live nodes, previously untracked entirely), fixed a
-   latent aggregation bug in `resource_throttle()`/`material_price_factor()`
-   that checking three copper-drawing keys against one copper supply would
-   otherwise have made worse, and wired `propagate_demand()` itself in via
-   `supply_override` for the one question (chained-shortage attribution)
-   neither function can answer. The regression suite's count grew rather
-   than shrank, and stayed green throughout.
+1. **Merging with the material rules in `sim/materials/`.** `MATERIAL_CHECKS`, `MARKET_SHARE`,
+   `material_price_factor()` and the throttle quote (`sim/materials/throttle.py`) drive the running
+   simulation and have regression tests keyed to exact numbers, so they were not replaced by
+   `commodities.py`'s own price machinery. `propagate_demand()` is wired in through
+   `supply_override` for the one question (chained-shortage attribution) they cannot answer.
 2. **Recipe cycles and multi-input recipes.** The demonstration chain
    (copper -> copper wire) is linear. A real recipe graph is not: steel
    needs iron AND coal (as coke) AND limestone flux; gunpowder needs three

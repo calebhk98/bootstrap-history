@@ -25,16 +25,12 @@ from typing import (Any, cast, Dict, Iterable, List, Optional, Protocol,
 
 # Imported fully qualified (sim.unit_conversions, not a bare
 # unit_conversions) rather than this package's usual bare sibling-import
-# style, matching sim/engine/core.py's own documented choice to import
-# sim/world/shared_constants.py the same way - see either module's own "HOW
-# A CONSUMER USES ONE OF THESE" section for why one spelling everywhere
-# avoids this file loading a second time under a second sys.modules key.
-# Unlike core.py (which is only ever reached through an entry point that
-# has already put the repository root on sys.path - simulator.py, cli.py,
-# sim/tests/harness.py), this file may be imported by a caller that put
+# style, so one spelling everywhere avoids this file loading a second time under
+# a second sys.modules key. Unlike the engine (which is only ever reached through an entry point that
+# has already put the repository root on sys.path), this file may be imported by a caller that put
 # sim/ and sim/engine/ on sys.path but not the repository root - so this
-# file adds it itself, the same
-# guarded, idempotent snippet core.py uses, rather than depending on every
+# file adds it itself, a
+# guarded, idempotent snippet, rather than depending on every
 # caller to have done it first. (`os` is already imported above; only `sys`
 # is new here.)
 import sys
@@ -158,8 +154,8 @@ class CommodityLedger:
         # A LIVE SIM KNOWS ITS OWN NUMBERS BETTER THAN THIS FILE DOES. Without
         # this, country_output() always answers from commodities.json's own
         # (separately-sourced) national_output_t_per_yr, which is a second
-        # guess at a figure economy.py's MARKET_SHARE/mine_capacity/
-        # mineral_scale already compute precisely for the seven materials
+        # guess at a figure sim/materials (MARKET_SHARE), sim/resources/workings.py (mine_capacity) and
+        # sim/geography (mineral_scale) already compute precisely for the seven materials
         # both files track -- exactly the drift section 10.1 of
         # COMMODITIES.md warns a real merge has to avoid. `supply_override`
         # is {commodity_id: tonnes_per_year}; when a commodity id is present
@@ -172,7 +168,7 @@ class CommodityLedger:
         self.supply_override: Dict[str, float] = supply_override or {}
         # Reverse index: a material key like "copper_kg" answers for at most
         # one commodity. Built once, not per call -- annual_material_demand()
-        # in economy.py has the same shape of cache for the same reason.
+        # in sim/materials/demand.py has the same shape of cache for the same reason.
         self._material_to_commodity: Dict[str, str] = {}
         for commodity_id, commodity in self.commodities.items():
             for material_key in commodity.get("material_keys", []):
@@ -180,12 +176,12 @@ class CommodityLedger:
 
     # ---- consumption: what a set of built/active nodes eats -------------
     #
-    # This mirrors economy.py's annual_material_demand(): a node under
+    # This mirrors sim/materials/demand.py's annual_material_demand(): a node under
     # construction (`active_ids`) eats its whole bill of materials spread
     # over build_yrs; a node already standing with upkeep (`node_ids`, i.e.
     # `Sim.done`) eats HALF that again, every year, forever, because a
     # furnace does not stop burning charcoal once it is finished being
-    # built. See economy.py's own comment on that halving for why.
+    # built. See that function for why.
 
     def material_kg_per_yr(self, node_ids: Iterable[str] = (),
                             active_ids: Iterable[str] = ()) -> Dict[str, float]:
@@ -250,7 +246,7 @@ class CommodityLedger:
     # and they combine differently:
     #   - ROUTE entries ("mine", "farm", "manufacture"): alternative ways to
     #     make the thing at all. Only the BEST built one counts (chosen_fuel()
-    #     in economy.py is the same pattern: pick the best available option,
+    #     in sim/materials/demand.py is the same pattern: pick the best available option,
     #     don't stack every option you happen to also know).
     #   - MULTIPLIER entries ("multiplier"): a boost layered on top of
     #     whatever route you are using (a water pump, selective breeding).
@@ -326,7 +322,7 @@ class CommodityLedger:
                           standing_multiplier: float = 1.0) -> float:
         """Tonnes/yr an ORDINARY buyer (you, with no special standing) can
         actually purchase out of the country's output. `standing_multiplier`
-        stands in for what economy.py's MARKET_SHARE escalation by patronage
+        stands in for what MARKET_SHARE escalation (sim/materials/constants.py) by patronage
         (patron_imperial, patron_senatorial, citizenship) does on a live Sim;
         this module has no Sim and no civilization, so it takes that factor
         as a plain number instead of re-deriving it from patronage flags.
@@ -351,7 +347,7 @@ class CommodityLedger:
 
     # ---- price --------------------------------------------------------
     #
-    # Symmetric, unlike economy.py's material_price_factor(), which is a
+    # Symmetric, unlike sim/materials/supply.py's material_price_factor(), which is a
     # premium that can only rise. See COMMODITIES.md section 4.1 for why
     # that function cannot represent "automated looms make cloth cheaper,"
     # and section 4.2 for the worked example this enables.
@@ -447,7 +443,7 @@ class CommodityLedger:
 
     # ---- demand propagation: the real test -------------------------------
     #
-    # resource_throttle() in economy.py checks a FLAT list of material keys
+    # The throttle quote (sim/materials/throttle.py) checks a FLAT list of material keys
     # against supply, each independently. It has no notion of one material
     # being manufactured from another, so it cannot say "wire-drawing
     # capacity is fine, copper is not, so wire is short despite nobody
@@ -496,8 +492,8 @@ class CommodityLedger:
 
         def own_capacity(cid: str) -> float:
             # A LEAF commodity named in supply_override skips this file's
-            # own national-output guess entirely: economy.py's
-            # wire_chain_report() passes THIS civilisation's actual copper
+            # own national-output guess entirely: a caller with
+            # a live civilisation passes THIS civilisation's actual copper
             # (mine_capacity plus its own market share at its own standing),
             # already reachable-tonnage, not a raw national total waiting for
             # a second share discount. See CommodityLedger's own comment.
