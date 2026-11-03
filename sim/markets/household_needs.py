@@ -8,7 +8,7 @@ import copy
 
 from sim.geography.api import settlement
 from sim.world import demand, need_basket, need_demand
-from sim.world.material_units import tonnes_per_unit
+from .unit_mass import tonnes_per_unit
 
 from .constants import MEAN_INCOME_HOURS_PER_CAPITA
 
@@ -64,5 +64,5 @@ def budget_scaled_final_tonnes(units, prices_in_hours, population, final_goods):
 	               if prices_in_hours.get(material) is not None)
 	income = population * MEAN_INCOME_HOURS_PER_CAPITA
 	scale = min(1.0, income / spending) if spending > 0.0 else 1.0
-	return {material: quantity * scale * tonnes_per_unit(material)
-	        for material, quantity in units.items() if material in final_goods}
+	return {material: quantity * scale * per_unit for material, quantity in units.items() if material in final_goods
+	        for per_unit in [tonnes_per_unit(material)] if per_unit is not None}

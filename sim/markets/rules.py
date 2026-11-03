@@ -1,5 +1,5 @@
 """The goods market's plain rules: functions of their inputs, with no game behind them."""
-
+from sim.constants import declare
 
 
 def tonnes_sold(asked, held, market_room):
@@ -7,10 +7,17 @@ def tonnes_sold(asked, held, market_room):
 	return min(asked, held, market_room)
 
 
-
-
 WORKSHOP_CATEGORY = "your own workshop"
-CONCERNS_NAMED_PER_CATEGORY = 6
+CONCERNS_NAMED_PER_CATEGORY = declare(
+	"CONCERNS_NAMED_PER_CATEGORY", 6, kind="temporary_heuristic", unit="concerns", source=None, confidence="D",
+	retire="the market-ceiling report paging through every concern of a category",
+	why="The report of what the market ceiling took names this many of a category's biggest concerns; more would not fit "
+	    "a line, and the rows' amounts do not depend on it.")
+WORKSHOP_TAKINGS_FLOOR = declare(
+	"WORKSHOP_TAKINGS_FLOOR", 0.5, kind="temporary_heuristic", unit="money a year", source=None, confidence="D",
+	retire="the market-ceiling report paging through every concern of a category",
+	why="A workshop whose yearly takings are below this is left out of the ceiling report as a row of its own: it would "
+	    "show as nothing at the report's one-decimal rounding.")
 
 
 def absorption_by_category(deduction, concern_rows, category_of, workshop_nominal):
@@ -25,7 +32,7 @@ def absorption_by_category(deduction, concern_rows, category_of, workshop_nomina
 		group = groups.setdefault(category, {"nominal": 0.0, "members": []})
 		group["nominal"] += amount
 		group["members"].append((amount, node_id))
-	if workshop_nominal > 0.5:
+	if workshop_nominal > WORKSHOP_TAKINGS_FLOOR:
 		groups[WORKSHOP_CATEGORY] = {"nominal": workshop_nominal, "members": []}
 	squeezed_total = sum(group["nominal"] for group in groups.values())
 	if squeezed_total <= 0:

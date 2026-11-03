@@ -4,7 +4,7 @@ Each figure is read from the game through the port's world (the weather, the peo
 or from the port's rule modules (port_land, port_flight, port_bondage, port_institutions, port_sites, port_levy)."""
 from sim.economy import api as economy_api
 from sim.economy.api import EconomyYearInputs
-from sim.world.material_units import tonnes_per_unit
+from .unit_mass import tonnes_per_unit
 
 from . import port_actors, port_bondage, port_flight, port_institutions, port_land, port_levy, port_sites
 
@@ -57,7 +57,7 @@ class YearInputsBuilder:
         coin, currency = economy_api.coin_per_unit(economy), economy_api.currency_id(economy)
         rate = sim.finance.market_rate()
         asks = []
-        for seat_id in sorted(sim.state.playing_seats() or sim.state.seats):
+        for seat_id in sim.state.seats_playing():
             with sim.scenario.act_as(seat_id):
                 base, _floor, serviceable = sim.finance.credit_line_sought()
                 line = max(0.0, min(base, serviceable)) * sim.scenario.price_index / coin

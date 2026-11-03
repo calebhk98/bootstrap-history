@@ -59,7 +59,7 @@ def stub_game():
             prices=lambda: TABLE_PRICE_PER_UNIT,
             tag=lambda material: (material, material),
             priced_key=lambda tag, prices: tag if tag in prices else None,
-            price_per_kg=TABLE_PRICE_PER_UNIT.get,
+            price_per_unit=TABLE_PRICE_PER_UNIT.get,
             market_tonnes=lambda key: 1000.0),
         foreign=types.SimpleNamespace(
             material_carriage_per_tonne=lambda key, price_per_tonne: CARRIAGE_PER_TONNE.get(key, 0.0)),

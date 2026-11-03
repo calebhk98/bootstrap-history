@@ -49,11 +49,10 @@ READS_BY_OWNER = {
 	                           "material_price", "material_commodity_map", "material_market_tonnes", "goods_stock",
 	                           "commodity_materials", "not_traded_materials", "can_pay", "spending_power", "project_cost",
 	                           "real_output_hours", "held_techniques", "techniques_spread", "mechanic"),
-	"port: foreign trade and freight": ("partner", "partner_facts", "partners_in_agent_economy", "civilisation_record",
+	"port: foreign trade and freight": ("partner_facts", "partners_in_agent_economy", "civilisation_record",
 	                                    "partner_price_per_unit", "actors_carry",
-	                                    "cargo_legs", "foreign_route", "freight_mode_costs", "material_carriage_per_tonne",
-	                                    "trader_margin_share", "cargo_lost_share", "trader_cycle_years", "trader_agent_cost",
-	                                    "partner_price_level", "partner_coin_opening", "foreign_coin_partner_units", "partner_own_economy"),
+	                                    "cargo_legs", "freight_mode_costs", "material_carriage_per_tonne",
+	                                    "partner_own_economy"),
 	"port: land, farm and resources": ("farm_sites", "farm_weather", "harvest_weather", "externality_yield_factors", "tile_owner_map",
 	                                   "tiles_owned_by", "timber_felled", "found_deposits", "partner_deposits"),
 }
@@ -78,14 +77,14 @@ _VIEWS = (
 	("producers_stamp", None), ("producer_capacities", None), ("goods_carried_last_year", None),
 	("country_trade_book", KEYED), ("country_opening_basket", KEYED), ("country_volume_baseline", KEYED), ("country_traded_volumes", KEYED),
 	("fleet_goods", QUOTE), ("economy_output_value", None), ("coin_stock_value", None),
-	("market_absorption_by_category", QUOTE), ("legacy_market_flows", None), ("agent_economy_store", None),
+	("market_absorption_by_category", QUOTE), ("agent_economy_store", None),
 	("money_from_economy", None), ("unit_mass_kg", QUOTE), ("border_duty_per_tonne", QUOTE),
-	("household_demand_units", QUOTE), ("household_basket", None), ("home_household_tonnes", QUOTE), ("partner_household_demand", KEYED),
+	("household_basket", None), ("home_household_tonnes", QUOTE), ("partner_household_demand", KEYED),
 	("materials_serving", KEYED), ("material_substitutes", KEYED), ("material_serves_a_need", KEYED),
 	("agent_rate", None), ("open_agent_economy", None), ("flush_agent_record", None), ("agent_spin_up_result", None),
 	("agent_health", QUOTE), ("agent_last_outcome", None), ("agent_trades", None), ("agent_opening_figures", None), ("agent_stale_goods", None),
 	("agent_traded_staple", None), ("agent_opening_setup", None), ("agent_credit_room", QUOTE), ("agent_fundable_amount", QUOTE), ("agent_risk_premium", QUOTE), ("agent_lender_listing", None), ("agent_economy_opened", None),
-	("household_need_floors_per_person", None), ("household_bill_per_person", None),
+	("household_bill_per_person", None),
 )
 
 

@@ -6,10 +6,10 @@ trade (port_actor_trade), the seats' concerns (port_seat_concerns) and the input
 from sim.agents.api import COIN_RESTRIKE_SHARE_PER_YEAR
 from sim.demography.api import MovePeople
 from sim.economy import api as economy_api
-from sim.world.material_units import tonnes_per_unit
+from .unit_mass import tonnes_per_unit
 
-from . import (port_bondage, port_cargo, port_cropland, port_dues, port_goods_orders, port_health, port_sites,
-               port_staff)
+from . import (port_bondage, port_cargo, port_cropland, port_dues, port_duty, port_goods_orders, port_health, port_sites,
+               port_staff, trade_duty)
 from .port_year_inputs import recipe_outputs
 
 
@@ -28,21 +28,24 @@ class YearRun:
     def run_year(self):
         world, agent = self._world, self._agent
         economy = agent.economy()
-        # the year's working day is set before any hours are posted, so posting and settling convert people and hours alike
+        legs = world.foreign.cargo_legs()
+        # the year's working day is set before any hours are posted, so posting and settling convert people and hours alike;
+        # the tariff the home state holds is read now, as the landed goods are priced
         economy.change_setup(**port_cropland.follow_farm_sites(world, economy_api.economy_tiles(economy),
                                                                       economy_api.crop_site_inputs(economy)[0]),
-                             working_hours_per_year=float(world.scenario.HOURS_PER_PERSON_YEAR))
+                             working_hours_per_year=float(world.scenario.HOURS_PER_PERSON_YEAR),
+                             import_duty_share=port_duty.import_duty_shares(
+                                 legs, lambda country: trade_duty.import_terms(world, country)[0]))
         agent.sync_ways()
         agent.admit_techniques()
         orders, offered, seat_inputs = self._seats.orders()
-        legs = world.foreign.cargo_legs()
         moves, cargo_orders, fundings = port_cargo.cargo_orders(economy, legs, tonnes_per_unit)
         economy_api.move_goods(economy, moves)
         economy_api.post_transfers(economy, fundings)
         orders.update(cargo_orders)
         self.strike_state_coin(economy)
         sales, purchases = self._trade.post_orders(orders)
-        staff_orders, staff_posted = port_staff.post(world, economy, sorted(world.state.playing_seats() or world.state.seats),
+        staff_orders, staff_posted = port_staff.post(world, economy, world.state.seats_playing(),
                                                      agent.tile_in_economy, agent.stored.setdefault("trades_lacking_logged", {}))
         orders.update(staff_orders)
         actor_staff_orders, actor_staff_posted = port_staff.post_actors(world, economy, agent.actor_tile)

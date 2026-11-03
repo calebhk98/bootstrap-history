@@ -8,9 +8,14 @@ game carries its years) and cut to the last OUTCOMES_KEPT. A row holds the field
 """
 from types import SimpleNamespace
 
+from sim.constants import declare
 from sim.economy.api import backing_good, health_figures, hunger_goods, opening_quantities
 
-OUTCOMES_KEPT = 100   # yearly rows held for the health figures
+OUTCOMES_KEPT = declare(
+    "OUTCOMES_KEPT", 100, kind="temporary_heuristic", unit="years of rows", source=None, confidence="D",
+    retire="the health figures kept as running sums in sim/economy/diagnostics, not as the yearly rows they are cut from",
+    why="The health figures are read from the stored yearly rows; a game longer than this forgets its first years, so the "
+        "save does not grow with the game.")
 
 
 def health_row(outcome):
@@ -28,13 +33,12 @@ def note_year(stored, outcome):
     del rows[:-OUTCOMES_KEPT]
 
 
-def staple_good(agent):
-    """The good of the hunger need with the largest opening basket quantity, or None."""
+def staple_good(agent, stale=()):
+    """The good of the hunger need with the largest opening basket quantity, leaving out the `stale` goods (those whose markets
+    have not cleared lately: a good nobody trades shows what it would cost to make, not a price); None when none is left."""
     economy = agent.economy()
-    goods = hunger_goods(economy)
-    if not goods:
-        return None
     opening = opening_quantities(economy)
+    goods = [good for good in hunger_goods(economy) if good not in stale]
     return max(goods, key=lambda good: opening.get(good, 0.0), default=None)
 
 

@@ -10,7 +10,7 @@ class YearFigures:
         self.forget()
 
     def forget(self):
-        self.answers = None             # (prices by good, wage by trade, rate) of the home country, in coin
+        self.answers = None             # (prices by good, rate) of the home country, in coin
         self.stale = set()              # goods whose shown price is not a market's, read with `answers`
         self.country_answers = {}       # the same for a partner country, by country
         self.kinds = None               # (the answers they belong to, {good: kind of its shown price})

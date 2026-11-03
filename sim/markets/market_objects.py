@@ -23,13 +23,6 @@ class MarketObjects(Part):
 	def set_seat_cache(self, name, value):
 		self._caches[(self.clock.acting_seat, name)] = value
 
-	def seat_dict(self, name):
-		key = (self.clock.acting_seat, name)
-		remembered = self._caches.get(key)
-		if remembered is None:
-			remembered = self._caches[key] = {}
-		return remembered
-
 	def agent_economy_store(self):
 		"""The agent economy's record, where the traders' cargo legs are kept; the port and the foreign trade module write it in place."""
 		return self.world.agent_economy

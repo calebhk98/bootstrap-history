@@ -5,6 +5,7 @@ data files and on the source this module can reach, port_key.SPIN_UP_SOURCE_MODU
 import collections
 
 from sim.agents.api import PURSE_CURRENCY
+from sim.constants import declare
 from sim.economy import api as economy_api
 from sim.economy.api import EconomyYearInputs
 from sim.prices.api import solve_cache
@@ -15,7 +16,10 @@ from .spin_up import (SPIN_UP_CACHE_DIRECTORY, SPIN_UP_MAXIMUM_YEARS, SPIN_UP_ME
                       SPIN_UP_TRIMMED_YEARS, spin_up_years)
 from .spin_up_gap import SPIN_UP_RATE_FLOOR, change_gap, price_gap, window_gaps
 
-SPIN_UP_WATCHED_GOODS = 12
+SPIN_UP_WATCHED_GOODS = declare(
+    "SPIN_UP_WATCHED_GOODS", 12, kind="temporary_heuristic", unit="goods", source=None, confidence="D", retire="Complaints/473",
+    why="The spin-up reads whether prices have settled from the goods the opening basket spends most on; this many cover "
+        "most of the spending, and a settled-ness test over every good would be dominated by thinly traded ones.")
 
 
 def spin_up_cache_key(setup):

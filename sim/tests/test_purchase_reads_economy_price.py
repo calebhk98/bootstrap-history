@@ -65,7 +65,7 @@ class _Market(GoodsMarket):
                 prices=lambda: dict(cost_table if cost_table is not None else paid),
                 priced_key=lambda material, prices: material if material in prices else None,
                 tag=lambda material: (material, None),
-                price_per_kg=lambda material: (cost_table if cost_table is not None else paid).get(material)),
+                price_per_unit=lambda material: (cost_table if cost_table is not None else paid).get(material)),
             foreign=SimpleNamespace(material_carriage_per_tonne=lambda key, price: CARRIAGE))
         super().__init__(sim)
         self.offers = _Offers(sim)

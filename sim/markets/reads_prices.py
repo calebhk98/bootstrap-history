@@ -3,7 +3,7 @@
 Money is counted in coin here, the engine's unit; quantities in tonnes. Everything is read through `sim.economy.api` and
 kept in the agent's `YearFigures` until the economy's state changes."""
 from sim.economy import api as economy_api
-from sim.world.material_units import tonnes_per_unit
+from .unit_mass import tonnes_per_unit
 
 
 
@@ -14,7 +14,7 @@ class PriceReads:
         self._world = world
 
     def answers(self, country=None):
-        """(prices by good, hours-weighted wage per hour by trade, rate), for this year; built once a year. A good
+        """(prices by good, rate), for this year; built once a year. A good
         whose markets have not cleared lately shows what it costs to make at today's prices and wages, or
         its last price when nothing makes it; `stale_goods()` names those. For a partner `country` that is part
         of the economy, those of its own markets; any other country is answered as the home country."""
@@ -28,18 +28,13 @@ class PriceReads:
             if country not in figures.country_answers:
                 coin = economy_api.coin_per_unit(economy)
                 prices, _stale = economy_api.shown_prices_of(economy, country)
-                wages = economy_api.wages_by_trade_weighted(economy, country)
-                figures.country_answers[country] = ({good: price * coin for good, price in prices.items()},
-                                                    {trade: wage * coin for trade, wage in wages.items()}, home[2])
+                figures.country_answers[country] = ({good: price * coin for good, price in prices.items()}, home[1])
             return figures.country_answers[country]
         if figures.answers is None or not agent.current():
             economy = agent.economy()
-            wages = economy_api.wages_by_trade_weighted(economy)
             coin = economy_api.coin_per_unit(economy)
             prices, figures.stale = economy_api.shown_prices_of(economy)
-            figures.answers = ({good: price * coin for good, price in prices.items()},
-                               {trade: wage * coin for trade, wage in wages.items()},
-                               economy_api.interest_rate(economy))
+            figures.answers = ({good: price * coin for good, price in prices.items()}, economy_api.interest_rate(economy))
         return figures.answers
 
     def price_kind(self, good):
@@ -76,13 +71,13 @@ class PriceReads:
         has no book for it."""
         per_unit = tonnes_per_unit(material)
         economy = self._agent.economy()
-        if not per_unit or per_unit <= 0.0 or material not in economy.area_map.goods():
+        if per_unit is None or material not in economy.area_map.goods():
             return None
         units = economy_api.offered_units(economy, material, self._agent.tile_in_economy(tile))
         return None if units is None else units * per_unit
 
     def rate(self):
-        return self.answers()[2]
+        return self.answers()[1]
 
     def unskilled_wage_per_hour(self):
         """The home labour markets' wage for an hour of the trade anyone can take up, in coin (the engine's unit)."""
@@ -143,8 +138,8 @@ class PriceReads:
     def market_record(self, material):
         """Tonnes the material's markets sold, left unsold and left unmet last year."""
         per_unit = tonnes_per_unit(material)
-        return {name: quantity * per_unit
-                for name, quantity in economy_api.market_record(self._agent.economy(), material).items()}
+        record = economy_api.market_record(self._agent.economy(), material)
+        return None if per_unit is None else {name: quantity * per_unit for name, quantity in record.items()}
 
     def price_response(self, material, landed_tonnes, taken_tonnes, tile=None):
         """Factor on a material's price once more tonnes land in its market or are taken out, from the book the
@@ -152,7 +147,7 @@ class PriceReads:
         tile's own area. None when the market has none."""
         per_unit = tonnes_per_unit(material)
         economy = self._agent.economy()
-        if not per_unit or per_unit <= 0.0 or material not in economy.area_map.goods():
+        if per_unit is None or material not in economy.area_map.goods():
             return None
         return economy_api.price_response(economy, material, landed_tonnes / per_unit, taken_tonnes / per_unit,
                                           tile=None if tile is None else self._agent.tile_in_economy(tile))

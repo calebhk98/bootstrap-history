@@ -10,7 +10,7 @@ from sim.world import census as census_module, demand
 
 from .port_setup import allowed_entries
 
-SPREAD_BY_FOOD_CAPACITY = declare(
+PARTNER_POPULATION_SPREAD_BY_FOOD_CAPACITY = declare(
     "PARTNER_POPULATION_SPREAD_BY_FOOD_CAPACITY", 1.0, kind="temporary_heuristic",
     unit="share of a census-less partner's population placed by food capacity", source=None, confidence="D",
     retire="a sourced census per partner (data/world/census)",
@@ -41,7 +41,7 @@ def _people_by_tile(sim, civ, tile_ids):
         located = {tile: (sim.map.tile_description(tile)["lat"], sim.map.tile_description(tile)["lon"]) for tile in tile_ids}
         people, farthest = census_module.place_on_nearest_tile(entries, located, haversine_km)
         return {tile: people.get(tile, 0.0) for tile in tile_ids}, farthest, census_id
-    total = float(civ.get("population") or 0.0) * SPREAD_BY_FOOD_CAPACITY
+    total = float(civ.get("population") or 0.0) * PARTNER_POPULATION_SPREAD_BY_FOOD_CAPACITY
     return ({tile: total * settlement.population_share(tile_ids, tile) for tile in tile_ids}, 0.0,
             POPULATION_BY_FOOD_CAPACITY)
 

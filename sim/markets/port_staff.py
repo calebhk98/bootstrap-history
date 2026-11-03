@@ -19,7 +19,6 @@ import math
 
 from sim.actors import api as actors_api
 from sim.agents.api import edges
-from sim.constants import declare
 from sim.economy import api as economy_api
 from sim.economy.api import EDGE_EXCHANGE, WAGE_CEILING_MULTIPLE, AgentOrders, LabourBid, LabourOffer, Transfer
 from sim.refusal import Refusal
@@ -195,20 +194,15 @@ def post(sim, economy, seat_ids, tile_of, trades_logged):
             trades, funded, offered, unposted = [], 0.0, False, None
             wanted = seat_places(sim, economy)
             note_trades_lacking(sim, trades_lacking(economy, wanted), trades_logged.setdefault(seat_id, []))
-            bids, units = seat_staff_bids(sim, economy, seat_id, tile)
-            refusal = None
+            # the bids are made from what the seat can spend when they are made, so the retry after a refusal sees the purse as it is then
+            bids, units, refusal = bids_paid(
+                lambda _attempt: seat_staff_bids(sim, economy, seat_id, tile), (1, 2),
+                lambda units: sim.send(PayEdge(edges.EDGE_WORKERS, units * economy_api.coin_per_unit(economy), "wages offered in the labour market")))
             if bids:
-                paid = sim.send(PayEdge(edges.EDGE_WORKERS, units * economy_api.coin_per_unit(economy), "wages offered in the labour market"))
-                if isinstance(paid, Refusal):
-                    bids, units = seat_staff_bids(sim, economy, seat_id, tile)
-                    if bids:
-                        paid = sim.send(PayEdge(edges.EDGE_WORKERS, units * economy_api.coin_per_unit(economy), "wages offered in the labour market"))
-                    refusal = paid if isinstance(paid, Refusal) else None
-                if refusal is None:
-                    economy_api.post_transfers(economy, [Transfer(EDGE_EXCHANGE, staff_account(seat_id), economy_api.currency_id(economy), units, "wages offered")])
-                    orders[staff_account(seat_id)] = AgentOrders(labour_bids=tuple(bids))
-                    trades, funded = sorted({bid.trade for bid in bids}), units
-            elif wanted_places_exist(sim):
+                economy_api.post_transfers(economy, [Transfer(EDGE_EXCHANGE, staff_account(seat_id), economy_api.currency_id(economy), units, "wages offered")])
+                orders[staff_account(seat_id)] = AgentOrders(labour_bids=tuple(bids))
+                trades, funded = sorted({bid.trade for bid in bids}), units
+            elif refusal is None and wanted_places_exist(sim):
                 unposted = unposted_cause(economy, wanted)
             offers, dropped = work_offers(economy, seat_id, sim.labour.wage_work_offered(), tile)
             note_refusals(sim, refusal, dropped)
@@ -267,7 +261,8 @@ def note_actor_unposted(sim, actor_id, cause):
 
 def bids_paid(bids_for, budgets, pay):
     """(bids, units, refusal) for an employer's wage bill: the bids that `bids_for(budget)` makes for the first budget whose
-    payment `pay(units)` is not refused, the later budgets being smaller, so a refused employer hires fewer hours. The refusal
+    payment `pay(units)` is not refused, the later budgets being smaller (or a fresh reading of what the employer can spend),
+    so a refused employer hires fewer hours. The refusal
     is the last one met (None when none was), and no bids when no budget could be paid."""
     refusal = None
     for budget in budgets:

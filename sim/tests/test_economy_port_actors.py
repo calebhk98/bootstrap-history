@@ -123,9 +123,9 @@ class FundTests(unittest.TestCase):
 class CloseTests(unittest.TestCase):
     def test_a_sale_account_returns_its_money_as_proceeds_and_its_unsold_goods_go_back_out(self):
         book = Book({"sale:firm:a": {GRAIN: {FARMS: 1.5}}}, {"sale:firm:a": 7.0})
-        (proceeds, refunds, bought, delivered), moves, transfers = closed(
+        (proceeds, refunds, delivered), moves, transfers = closed(
             [{"seller": "firm:a", "material": GRAIN, "tonnes": 4.0, "concerns": []}], [], book)
-        self.assertEqual((proceeds, refunds, bought, delivered), ({"firm:a": 7.0}, {}, {}, {}))
+        self.assertEqual((proceeds, refunds, delivered), ({"firm:a": 7.0}, {}, {}))
         self.assertEqual([(move.giver, move.receiver, move.quantity) for move in moves],
                          [("sale:firm:a", "edge:legacy", 1.5)])
         self.assertEqual([(each.payer, each.payee, each.amount) for each in transfers],
@@ -133,10 +133,10 @@ class CloseTests(unittest.TestCase):
 
     def test_a_buy_account_returns_the_unspent_budget_and_reports_what_was_delivered(self):
         book = Book({"buy:state:a": {GRAIN: {FARMS: 3.0}}}, {"buy:state:a": 2.0})
-        (proceeds, refunds, bought, delivered), _moves, _transfers = closed(
+        (proceeds, refunds, delivered), _moves, _transfers = closed(
             [], [{"buyer": "state:a", "commodity": "grain", "tonnes": 6.0, "budget": 40.0}], book)
-        self.assertEqual((proceeds, refunds, bought, delivered),
-                         ({}, {"state:a": 2.0}, {"state:a": 3.0}, {"state:a": {GRAIN: 3.0}}))
+        self.assertEqual((proceeds, refunds, delivered),
+                         ({}, {"state:a": 2.0}, {"state:a": {GRAIN: 3.0}}))
 
     def test_a_bought_capital_asset_with_a_service_life_is_kept_in_the_held_account(self):
         specs = {GRAIN: types.SimpleNamespace(capital_asset=True, service_life_years=10.0)}

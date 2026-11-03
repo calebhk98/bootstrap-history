@@ -42,8 +42,9 @@ class StateReads:
 	def trade_registry(self):
 		return self._needs.trade_registry()
 
-	def playing_seats(self):
-		return self._needs.seat_list()["playing"]
+	def seats_playing(self):
+		"""The seats whose run has not ended, in id order; every joined seat before any is playing."""
+		return sorted(self._needs.seat_list()["playing"] or self.seats)
 
 	def edge(self, name):
 		return self._needs.cast_state().edge(name)
@@ -120,6 +121,10 @@ class PortWorld:
 	def send(self, command):
 		return self._needs.send(command)
 
+	def household_need_data(self):
+		"""{"needs", "goods"} of the base game with the installed mods applied."""
+		return self._needs.household_need_data()
+
 	def bound_kernels(self):
 		"""The module's kernels as the assembly bound them: a mod's replacement, else the reference."""
 		return dict(self._owner.kernels)
@@ -142,7 +147,7 @@ class PortWorld:
 		return self._owner.world.money_from_economy
 
 	def market_flows(self):
-		return self._parts.clearing.legacy_market_flows()
+		return self._parts.clearing.market_flows()
 
 	def market_state(self, material):
 		return self._parts.clearing.market_state(material)

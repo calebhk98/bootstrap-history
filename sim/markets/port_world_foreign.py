@@ -1,19 +1,16 @@
-"""The port's reads of the partner countries, the freight and trader terms, the coin and the deposits."""
+"""The port's reads of the partner countries, the freight terms and the deposits."""
 from sim.foreign_trade.api import SettleTraderCargo
 from sim.resources.api import DrawDeposit
 
 
 class ForeignReads:
-	"""One member per view of the foreign trade, freight, coin and resources owners the port asks. `PortWorld.foreign` holds it."""
+	"""One member per view of the foreign trade, freight and resources owners the port asks. `PortWorld.foreign` holds it."""
 
 	def __init__(self, needs):
 		self._needs = needs
 
 	def partners_in_agent_economy(self):
 		return self._needs.partners_in_agent_economy()
-
-	def partner_civ(self, civilization_id):
-		return self._needs.partner[civilization_id]["civ"]
 
 	def foreign_economy_facts(self, civilization_id):
 		return self._needs.partner_facts[civilization_id]
@@ -30,10 +27,7 @@ class ForeignReads:
 	def settle_trader_cargo(self, results):
 		return self._needs.send(SettleTraderCargo(results))
 
-	# ---- freight and the traders' terms ----
-
-	def _foreign_route(self, civilization, imbalance=None, cargo="goods"):
-		return self._needs.foreign_route(civilization, imbalance, cargo)
+	# ---- freight ----
 
 	def freight_mode_costs(self, imbalance=1.0, modes=None, cargo=None):
 		return self._needs.freight_mode_costs(imbalance, modes, cargo)
@@ -41,28 +35,7 @@ class ForeignReads:
 	def material_carriage_per_tonne(self, material, price_per_tonne):
 		return self._needs.material_carriage_per_tonne(material, price_per_tonne)
 
-	def _trader_margin_share(self, civilization_id, route, price_flexibility=None):
-		return self._needs.trader_margin_share(civilization_id, route, price_flexibility)
-
-	def _cargo_lost_share(self, route, material=None, civilization_id=None, destination_demand_tonnes=None):
-		return self._needs.cargo_lost_share(route, material, civilization_id, destination_demand_tonnes)
-
-	def _trader_cycle_years(self, route, civilization_id=None, destination_demand_tonnes=None):
-		return self._needs.trader_cycle_years(route, civilization_id, destination_demand_tonnes)
-
-	def _agent_cost_per_tonne(self, civilization_id, route):
-		return self._needs.trader_agent_cost(civilization_id, route)
-
-	# ---- the partners' coin and the deposits ----
-
-	def partner_price_level(self, civilization_id):
-		return self._needs.partner_price_level[civilization_id]
-
-	def _partner_coin_opening_units(self, civilization_id):
-		return self._needs.partner_coin_opening[civilization_id]
-
-	def foreign_coin_partner_units(self, partner):
-		return self._needs.foreign_coin_partner_units[partner]
+	# ---- the deposits ----
 
 	def found_deposits(self, material):
 		return self._needs.found_deposits[material]

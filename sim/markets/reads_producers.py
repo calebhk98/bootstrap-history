@@ -1,7 +1,7 @@
 """What the agent economy answers about its producers and the people who work for them. Part of the port."""
 from sim.economy import api as economy_api
 from sim.materials.api import ProducerCapacityCache
-from sim.world.material_units import tonnes_per_unit
+from .unit_mass import tonnes_per_unit
 
 
 class ProducerReads:
@@ -39,13 +39,14 @@ class ProducerReads:
             # summed in id order: a loaded game holds the producers in id order, a live one in the order they entered
             lambda: sorted(economy_api.producers_of(economy).values(), key=lambda each: each.agent_id),
             economy_api.recipes_of(economy))
-        return units.get(material, 0.0) * tonnes_per_unit(material)
+        per_unit = tonnes_per_unit(material)
+        return 0.0 if per_unit is None else units.get(material, 0.0) * per_unit
 
     def worker_years_by_recipe(self):
         """Worker-years a year the economy's producers can put into each recipe at full capacity."""
         economy = self._agent.economy()
         years = {}
-        for producer in economy_api.producers_of(economy).values():
+        for producer in sorted(economy_api.producers_of(economy).values(), key=lambda each: each.agent_id):   # a float sum: in id order, as a loaded game holds them
             recipe = economy_api.recipes_of(economy).get(producer.recipe_id)
             if recipe is not None:
                 years[producer.recipe_id] = years.get(producer.recipe_id, 0.0) + (
@@ -64,7 +65,8 @@ class ProducerReads:
 
     def output_tonnes_by_tile(self):
         """Tonnes of each good the producers made on each tile last year."""
-        return {tile: {good: units * tonnes_per_unit(good) for good, units in row.items()}
+        return {tile: {good: units * per_unit for good, units in row.items()
+                       for per_unit in [tonnes_per_unit(good)] if per_unit is not None}
                 for tile, row in economy_api.output_by_tile(self._agent.economy()).items()}
 
     def people_by_trade(self):

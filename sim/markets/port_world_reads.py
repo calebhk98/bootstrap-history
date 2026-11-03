@@ -64,7 +64,8 @@ class MaterialReads:
 		"""Every priced material's money price per unit of the material (a read-only table)."""
 		return self._needs.material_prices()
 
-	def price_per_kg(self, tag):
+	def price_per_unit(self, tag):
+		"""Money price of one unit of the material, from the cost table."""
 		return self._needs.material_price[tag]
 
 	def priced_key(self, tag, prices):
