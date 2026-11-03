@@ -31,9 +31,6 @@ class PricedTradeWage(unittest.TestCase):
         wage = trade_wages.priced_trade_wage(setup(training_years=5.0), "smith", None, 1.5, 2.0)
         self.assertGreater(wage, 1.5)
 
-    def test_a_scope_with_no_opening_wages_prices_on_the_unskilled_wage_alone(self):
-        self.assertEqual(trade_wages.priced_trade_wage(setup({"smith": 9.0}), "smith", None, 1.5, None), 1.5)
-
     def test_the_home_scope_with_no_unskilled_wage_prices_on_the_opening_unskilled_wage_in_todays_money(self):
         self.assertEqual(trade_wages.priced_trade_wage(setup(), "smith", None, None, 2.0), 2.0)
         wage = trade_wages.priced_trade_wage(setup(training_years=5.0), "smith", None, None, 2.0)
@@ -42,8 +39,12 @@ class PricedTradeWage(unittest.TestCase):
     def test_the_home_scope_is_never_none(self):
         self.assertIsNotNone(trade_wages.priced_trade_wage(setup(), "smith", None, None, 1.0))
 
-    def test_a_partner_scope_with_no_paid_and_no_unskilled_wage_is_none(self):
-        self.assertIsNone(trade_wages.priced_trade_wage(setup({"smith": 9.0}), "smith", None, None, None))
+    def test_an_area_with_no_recorded_wage_at_all_is_still_priced(self):
+        self.assertEqual(trade_wages.priced_trade_wage(setup({"smith": 9.0}), "smith", None, None, 1.5), 13.5)
+
+    def test_an_unknown_trade_is_an_error_not_an_unskilled_wage(self):
+        with self.assertRaises(KeyError):
+            trade_wages.priced_trade_wage(setup(), "glassblower", None, 1.5, 1.0)
 
 
 class WageInArea(unittest.TestCase):
