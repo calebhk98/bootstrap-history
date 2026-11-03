@@ -199,6 +199,11 @@ def orders(merchant: Merchant, view: MarketView, carriage: CarriageTable, area_m
     return AgentOrders(bids=tuple(bids), offers=tuple(offers))
 
 
+def ships_held_stock(merchant: Merchant, held_stock: Mapping[Tuple[GoodId, TileId], float]) -> bool:
+    """Whether some route of the merchant starts at a tile where it holds stock, bought this year or not."""
+    return any(held_stock.get(key, 0.0) > 0.0 for key in merchant.routes)
+
+
 def _holding_offers(merchant, view, area_map, held_stock, specs, interest_rate) -> List[Offer]:
     offers = []
     for (good, tile), quantity in sorted(held_stock.items()):

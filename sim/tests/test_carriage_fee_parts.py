@@ -74,7 +74,7 @@ class MerchantsBidForFeed(unittest.TestCase):
         record = types.SimpleNamespace(book=Book(), merchants={"m1": basic.merchant()})
         record.merchants["m1"].carrier_wear = {FEED_GOOD: 3.0}
         record.merchants["m1"].carrier_fleet_wanted = {}
-        view = types.SimpleNamespace(price=lambda good, area: price)
+        view = types.SimpleNamespace(offered_price=lambda good, area: price)
         area_map = types.SimpleNamespace(goods=lambda: [FEED_GOOD], area_of=lambda good, tile: "area:" + tile)
         return setup, record, view, area_map
 
