@@ -11,11 +11,12 @@ QUICK_TOPIC = True
 class MaterialsOrderedByTheActingSeat(unittest.TestCase):
     def test_a_deliverable_material_is_ordered_at_its_quote(self):
         bill = {"rows": [{"material": "lead_kg", "deliverable_now_tonnes": 2.0, "priced": True, "cost_of_deliverable": 50.0}]}
-        module = materials_stand_in.build(answers={BuyMaterial: {"tonnes": 2.0, "committed_money": 50.0}})
+        module = materials_stand_in.build(answers={BuyMaterial: {"tonnes": 2.0, "committed_money": 50.0, "order_id": 7}})
         module.project_material_bill = lambda node_id: bill
         ordered, awaited = module.order_project_materials("any_node")
         self.assertEqual(ordered, 50.0)
         self.assertEqual([(entry["material"], entry["tonnes"], entry["quoted"]) for entry in awaited], [("lead_kg", 2.0, 50.0)])
+        self.assertEqual([entry["order_id"] for entry in awaited], [7])
         self.assertEqual(module_harness.sent(module), [BuyMaterial("lead_kg", 2.0, 25.0, "any_node", 1.0, True)])
 
     def test_a_row_with_nothing_deliverable_or_no_price_orders_nothing(self):

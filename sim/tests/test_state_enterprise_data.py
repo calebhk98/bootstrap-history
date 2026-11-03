@@ -47,7 +47,7 @@ class World:
 
 def state(enterprises=(), monopolies=(), operating=()):
     return SimpleNamespace(record=SimpleNamespace(state_enterprises=set(enterprises), state_monopolies=set(monopolies)),
-                           business=SimpleNamespace(entry_keys=lambda: list(operating)), knows=lambda entry_key, world: True)
+                           business=SimpleNamespace(reading=SimpleNamespace(entry_keys=lambda: list(operating))), knows=lambda entry_key, world: True)
 
 
 world = World({"blast_furnace": ["cast_iron_kg"], "salt_works": ["salt_kg"]})

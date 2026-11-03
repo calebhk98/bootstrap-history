@@ -38,7 +38,8 @@ check("a draw inside the chance is caught and one outside is not",
 
 # ---- the export policy decides -------------------------------------------------------------
 def actor_with(monopolies, policy=None):
-    return SimpleNamespace(record=SimpleNamespace(state_monopolies=set(monopolies)), decision_policy=policy)
+    """A state as the cast makes it: it decides exports by the export policy unless a test gives it another."""
+    return SimpleNamespace(record=SimpleNamespace(state_monopolies=set(monopolies)), decision_policy=policy or ExportPolicy())
 
 
 check("a state with no monopoly sells what it is asked to",

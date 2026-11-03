@@ -13,6 +13,7 @@ from sim.ui.cli_interactive import _play_print_welcome
 from sim.ui.proto.event_groups import group_disaster_events
 from sim.ui.proto.help import _agent_help
 from sim.tests.ui_stand_in import Game
+from sim.tests.interface_fixture import shipped_declared
 
 QUICK_TOPIC = True
 
@@ -127,7 +128,7 @@ check("a hidden prerequisite with no prerequisites of its own counts as near",
       _hidden_kinds(["leaf_resource"], done_one) == [FOG_KIND_HINTS["RESOURCE"]])
 
 # --- 99 and 102: the first-screen help points at the beginner index and at sittings
-help_reply = _agent_help(Game(fog=False), "commands")
+help_reply = _agent_help(Game(fog=False, interface_declared=shipped_declared), "commands")
 first_key = next(iter(help_reply))
 # presentation: the first heading of the commands page
 check("help commands opens with a short beginner index",

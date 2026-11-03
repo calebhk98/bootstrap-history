@@ -126,7 +126,7 @@ check("trade duties follow the trade that crossed the border",
 
 # ---- a lever on a rate (595) moves the form's yield -------------------------------------------------
 levered = StateView({"state_revenue": [POLL]}, BasesWorld([POLL]))
-levered.government().record.levers["revenue"] = {"poll_tax": {"rate": 0.04}}
+levered.world.setting.government().record.levers["revenue"] = {"poll_tax": {"rate": 0.04}}
 forms = levered.revenue_forms()
 check("the government's lever sets the rate of a declared form", [form["rate"] for form in forms] == [0.04], forms)
 

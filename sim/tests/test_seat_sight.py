@@ -122,11 +122,13 @@ class StubModule:
 
 
 class World(ActorWorld):
-    def distance_km(self, place_a, place_b):
-        return 0.0 if place_a == place_b else OBSERVATION_RANGE_KM
+    def __init__(self, *parts):
+        super().__init__(*parts)
+        self.setting.distance_km = lambda place_a, place_b: 0.0 if place_a == place_b else OBSERVATION_RANGE_KM   # distances decided here
 
 
-world = World(StubModule())
+stub_module = StubModule()
+world = World(stub_module.needs, stub_module)
 check("the actors see the inventions of every seat", world.knowledge.founder_inventions() == ["kiln", "lathe", "loom"], world.knowledge.founder_inventions())
 check("a concern some seat runs is in public use", world.knowledge.is_public("loom") and not world.knowledge.is_public("kiln"), None)
 disclosed[FIRST_SEAT_ID]["lathe"] = {"mode": "secret", "published_year": None, "licensees": {}}
@@ -190,6 +192,7 @@ class Firm:
 
     def __init__(self):
         self.money = 100.0
+        self.record = SimpleNamespace(royalty_owed={})   # no royalty owed under a patent
 
     payments = property(lambda self: self)   # a stand-in party pays through itself
 
@@ -205,7 +208,7 @@ class RoyaltySim:
 
     def __init__(self):
         self.cast = lambda: SimpleNamespace(actors={}, patent_holders=lambda node_id: [], get=lambda actor_id: None)
-        self.seat_party = lambda seat_id: maker if seat_id == FIRST_SEAT_ID else buyer
+        self.seat_party = lambda seat_id: maker if seat_id == FIRST_SEAT_ID else buyer   # the seat book's question
         self.needs = fake_needs({PayActor: lambda command: ledger.transfer(firm, self.seat_party(command.payee), command.amount, command.purpose)},
                                 legacy_seats=state.seats, techniques_by_seat=lambda: techniques_of(state.seats), disclosures=disclosed)
 
@@ -213,7 +216,8 @@ class RoyaltySim:
 disclosed[FIRST_SEAT_ID]["lathe"] = {"mode": "license", "published_year": None,
                                        "licensees": {"firm:7": {"fee": 0.0, "royalty": 0.1, "year": 120}}}
 firm = Firm()
-royalty_world = World(RoyaltySim())
+royalty_sim = RoyaltySim()
+royalty_world = World(royalty_sim.needs, royalty_sim, royalty_sim)
 before = maker.money
 paid = royalty_world.disclosure.collect_royalty(firm, "lathe", 200.0)
 check("the royalty goes to the seat that licensed the invention and to nobody else",

@@ -33,7 +33,7 @@ class PriceBook:
 
 class Market(GoodsPricing):
     def __init__(self, economy, traded=True):
-        super().__init__(SimpleNamespace(_sim=SimpleNamespace(economy=economy)))
+        super().__init__(SimpleNamespace(economy=economy), None)
         self.traded = traded
 
     def economy_good(self, material):

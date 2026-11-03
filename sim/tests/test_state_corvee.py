@@ -30,7 +30,7 @@ class CorveeWorld(FakeWorld):
 	def __init__(self, forms, hands=None, threat=0.0, army=0.0, urban=0.0, spectacle=0.0):
 		super().__init__()
 		self.urban, self.spectacle = urban, spectacle
-		self.forms, self.hands, self.threat, self.army = forms, hands, threat, army
+		self.forms, self.hands, self.threat, self.army_goal = forms, hands, threat, army   # `army` is the world's part
 		self.state = Government("government:home", ActorRecord(kind="government", money=0.0))
 		self.prices = {"wheat_kg": 2.0, "iron_bar_kg": 3.0}
 
@@ -80,7 +80,7 @@ class CorveeWorld(FakeWorld):
 		return people
 
 	def army_wanted(self):
-		return self.army
+		return self.army_goal
 
 	def equipment_kg_per_soldier(self):
 		return 1.0

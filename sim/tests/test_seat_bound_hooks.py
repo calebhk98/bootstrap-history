@@ -52,7 +52,7 @@ class SeatBoundHooks(unittest.TestCase):
         module.clock.act_as("a")
         before = module.clock.counter(module.module_id, OPERATING_CHANGES, True)
         module.seat_bound()
-        self.assertEqual(module.seat.business.watch, module.operating_changed)
+        self.assertEqual(module.seat.business.watch, module.parts.plants.operating_changed)
         self.assertNotEqual(module.clock.counter(module.module_id, OPERATING_CHANGES, True), before)
 
     def test_projects_wraps_the_acting_seats_projects_in_hand_and_counts_the_change(self):

@@ -54,7 +54,7 @@ civ = {"id": "home", "name": "Home", "state_revenue": [dict(POLL), dict(DUTY)]}
 home_country, entries, profiles = cast.cast_from_civilisations(civ, [])
 registry = ActorRegistry(ActorsState(home_country=home_country))
 seed_cast(registry, home_country, entries, profiles)
-record = registry.government("home").record
+record = registry.countries.government("home").record
 check("setup copies the file's forms into the state's record", record.revenue_forms == civ["state_revenue"], record.revenue_forms)
 civ["state_revenue"][0]["rate"] = 0.5
 civ["state_revenue"].pop()

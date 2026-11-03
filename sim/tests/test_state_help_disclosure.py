@@ -9,10 +9,12 @@ from sim.ui.proto.render_screen_state import render_state
 from sim.ui.proto.render_screen_state_views import SECTIONS
 from sim.ui.proto.typed import parse_typed
 from sim.tests.ui_stand_in import FactViews
+from sim.tests.interface_fixture import shipped_declared
 
 
 class _Stub(FactViews):
     fog = False
+    interface_declared = staticmethod(shipped_declared)   # the shipped commands, as the interface module declares them
 
 
 _reply = {"year": 100, "capital": 5000.0, "net_per_year": -10.0, "founder_alive": True,

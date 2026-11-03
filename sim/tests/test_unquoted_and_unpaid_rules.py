@@ -13,7 +13,7 @@ from sim.coin.exposure import actor_exposure
 from sim.freight import rules
 from sim.freight.route import Leg, Route
 from sim.ledger.api import pay_edge_or_log
-from sim.refusal import Refusal
+from sim.refusal import Refusal, cause_of
 
 
 def quotes_of(prices):
@@ -27,13 +27,15 @@ class PayEdgeOrLog(unittest.TestCase):
         def send(command):
             sent.append(command)
             return Refusal("cannot_pay", "no funds") if type(command).__name__ == "PayEdge" else None
-        self.assertFalse(pay_edge_or_log(send, "edge:suppliers", 5.0, "running costs"))
+        refusal = pay_edge_or_log(send, "edge:suppliers", 5.0, "running costs")
+        self.assertIsInstance(refusal, Refusal)
+        self.assertEqual(cause_of(refusal), "cannot_pay")
         event = sent[1]
         self.assertEqual((event.kind, event.facts["cause"], event.facts["amount"]), ("unpaid_charge", "cannot_pay", 5.0))
 
     def test_a_paid_charge_logs_nothing(self):
         sent = []
-        self.assertTrue(pay_edge_or_log(lambda command: sent.append(command), "edge:suppliers", 5.0, "running costs"))
+        self.assertIsNone(pay_edge_or_log(lambda command: sent.append(command), "edge:suppliers", 5.0, "running costs"))
         self.assertEqual(len(sent), 1)
 
 
@@ -44,8 +46,9 @@ class UnquotedMaterial(unittest.TestCase):
         self.assertIsNone(revenue_bases.harvest(world))
 
     def test_an_offer_of_a_store_with_no_price_cannot_be_weighed(self):
-        self.assertIsNone(side_worth({"stores": {"grain": 2.0}}, None, None, quotes_of({})))
-        self.assertEqual(side_worth({"stores": {"grain": 2.0}}, None, None, quotes_of({"grain": 3.0})), 6.0)
+        taker = SimpleNamespace(imitation_worth=lambda node_id, world: 0.0)
+        self.assertIsNone(side_worth({"stores": {"grain": 2.0}}, taker, None, quotes_of({})))
+        self.assertEqual(side_worth({"stores": {"grain": 2.0}}, taker, None, quotes_of({"grain": 3.0})), 6.0)
 
     def test_a_store_with_no_price_is_not_exposed_to_theft(self):
         exposure = actor_exposure("firm", 0.0, {"grain": 5.0}, lambda material: None, lambda: 0.0, 0.0)

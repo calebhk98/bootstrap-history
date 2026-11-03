@@ -24,6 +24,7 @@ def economy_over(areas=None, prices=None, trade_age=None, curves=None):
     areas = areas or {}
     memory = types.SimpleNamespace(prices=dict(prices or {}), trade_age=dict(trade_age or {}),
                                    volume_weights={key: 1.0 for key in (prices or {})}, quote_kinds={})
+    memory.traded_within = lambda key, years: memory.trade_age.get(key) is not None and memory.trade_age[key] <= years
     return types.SimpleNamespace(
         setup=types.SimpleNamespace(port_tile="port", country_of=lambda tile: "home"),
         area_map=types.SimpleNamespace(area_of=lambda good, tile: areas.get(tile, "a") if good == GRAIN else "other"),

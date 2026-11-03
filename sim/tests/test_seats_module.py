@@ -99,20 +99,20 @@ class Joining(unittest.TestCase):
         self.assertEqual(module_harness.sent(module), [])
 
     def test_a_country_seat_needs_a_government_to_hold(self):
-        registry = SimpleNamespace(state=SimpleNamespace(countries={"north": 1}), government_of=lambda name: "gov" if name == "home" else None)
+        registry = SimpleNamespace(state=SimpleNamespace(countries={"north": 1}), countries=SimpleNamespace(government_of=lambda name: "gov" if name == "home" else None))
         module = seats_over({"founder": seat()}, seeded_actor_registry=registry)
         answer = module.join_seat(JoinSeat("realm", {"kind": "country", "country": "north"}))
         self.assertIsInstance(answer, Refusal)
         self.assertEqual(answer.cause, "no_government")
 
     def test_a_country_seat_of_the_games_own_country_is_registered_with_no_country(self):
-        registry = SimpleNamespace(state=SimpleNamespace(countries={"home": 1}), government_of=lambda name: "gov")
+        registry = SimpleNamespace(state=SimpleNamespace(countries={"home": 1}), countries=SimpleNamespace(government_of=lambda name: "gov"))
         module = seats_over({"founder": seat()}, seeded_actor_registry=registry)
         module.join_seat(JoinSeat("realm", {"kind": "country"}))
         self.assertIsNone(module_harness.sent(module)[0].template["country"])
 
     def test_a_country_seat_still_draws_its_founders_lifespan(self):
-        registry = SimpleNamespace(state=SimpleNamespace(countries={"home": 1}), government_of=lambda name: "gov")
+        registry = SimpleNamespace(state=SimpleNamespace(countries={"home": 1}), countries=SimpleNamespace(government_of=lambda name: "gov"))
         dice = random.Random(3)
         module = seats_over({"founder": seat()}, seeded_actor_registry=registry, game_random=dice)
         module.join_seat(JoinSeat("realm", {"kind": "country"}))
