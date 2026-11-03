@@ -8,6 +8,7 @@ import math
 from typing import Dict, List, Optional, Set, Tuple
 
 from . import carried_book, households
+from .home_scope import has_partners
 from .market_memory import KEY_SEPARATOR, YearView
 from .national_prices import national_prices, national_wages
 from .setup import LABOUR_AREA_PREFIX, labour_area
@@ -25,7 +26,7 @@ def home_when_shared(economy, country: Optional[str]) -> Optional[str]:
     economy holds several; None (everything) when it holds only the home one."""
     if country is not None:
         return country
-    return economy.setup.civ_id if len(economy.setup.countries()) > 1 else None
+    return economy.setup.civ_id if has_partners(economy.setup) else None
 
 
 def population(economy, country: Optional[str]) -> float:

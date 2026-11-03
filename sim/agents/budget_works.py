@@ -41,8 +41,6 @@ def collection_line(world: Any) -> List[Line]:
 	"""Collectors for the forms the state raises: each form's base, counted in years of an unskilled wage, over
 	what a collector handles of that kind of base in a year."""
 	wage = world.labour.pay_per_person_year(world.labour.trade_of_role("unskilled"))
-	if wage <= 0.0:
-		return []
 	collectors = 0.0
 	for assessed in world.revenue.revenue_assessments():
 		handled = BASE_PER_COLLECTOR_WAGE_YEAR.get(assessed.basis, PROPERTY_TAX_BASE_PER_COLLECTOR_WAGE_YEAR)

@@ -40,7 +40,7 @@ class Stability(Part):
 	# ---- readings of a state's year
 	def _state_grievance(self, world: Any, record: Any) -> Optional[float]:
 		income = sum(world.taxpayers.notice_over(scale) * income for scale, income in world.taxpayers.visible_taxpayers())
-		return rules.state_grievance(income, float(world.labour.pay_per_person_year("labourer")), float(world.labour.hours_per_person_year),
+		return rules.state_grievance(income, float(world.labour.pay_per_person_year(world.labour.trade_of_role("unskilled"))), float(world.labour.hours_per_person_year),
 		                             sum(record.corvee_hours.values()), sum(record.revenue_by_form.values()),
 		                             record.need.get("dole", 0.0), record.unfunded.get("dole", 0.0), sum(record.unfunded.values()))
 

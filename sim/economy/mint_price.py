@@ -52,7 +52,8 @@ def top_ups(mint_price: float, result: ClearingResult, settled: Optional[Dict[Tu
 
 def received_price(mint_price: float, result: ClearingResult, settled: Optional[Dict[Tuple[str, str], float]] = None) -> float:
     """What the sellers of a market got per unit sold, on average: the market's mean price plus the top-ups spread over
-    the units the non-edge sellers sold (less the mint's units that did not settle, when `settled` is given)."""
+    the units the non-edge sellers sold (less the mint's units that did not settle, when `settled` is given). Called for results that traded only
+    (`year_goods._received_price` skips a clearing with no quantity)."""
     paid = sum(top_ups(mint_price, result, settled).values())
     sold = sum(fill.quantity for fill in result.fills if fill.side == "sell" and fill.quantity > 0.0 and not is_edge(fill.agent))
     if settled is not None:

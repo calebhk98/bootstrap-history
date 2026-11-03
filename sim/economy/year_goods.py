@@ -12,6 +12,7 @@ from typing import Dict, List, Optional, Tuple
 from . import (currency, mint_price, land_bid_year, carriage_fleet_book, carriage_wear, households, market_curves, market_quote, merchants, producers, seller_cash, seller_offers, settlement,
                state_budget, state_store, taxes, tool_wear, unsold_search)
 from . import goods_respend, goods_respend_year, households_cohort
+from .home_scope import on_home_tile
 from .household_work_year import basket_key, cohort_basket
 from .market_memory import market_key
 from .market_memory_asks import memory_reference_volume, note_bids, note_offers, price_after_resumed_trade, wanted_at
@@ -330,7 +331,7 @@ def _produce_and_offer(setup, record, view, producer_id, plan, in_kind, order_bo
 
 
 def _tax_in_kind(setup, record, producer, recipe, forms, ledger) -> None:
-    if not forms or setup.country_of(producer.tile) != setup.civ_id:
+    if not forms or not on_home_tile(setup, producer.tile):
         return
     output = {(producer.agent_id, good): ledger.output.get((producer.agent_id, good), 0.0) for good in recipe.outputs}
     held = {(producer.agent_id, good): record.book.stock(producer.agent_id, good, producer.tile)

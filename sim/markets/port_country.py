@@ -19,10 +19,6 @@ class CountryAnswers:
         self._country = country
         self._coin = coin_per_unit(economy)
         self._hours = working_hours_per_year(economy)
-        self._wages = country_figures.wages_per_hour(economy, country)
-
-    def has_labour_market(self) -> bool:
-        return bool(self._wages)
 
     def pay_per_person_year(self, trade: str) -> float:
         """What a person-year of a trade pays in the country's labour markets; a trade nobody hired is priced by the

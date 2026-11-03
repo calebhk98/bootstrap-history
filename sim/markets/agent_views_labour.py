@@ -14,7 +14,7 @@ class AgentLabourViews(AgentViewPart):
 
 	def agent_wage_at(self, trade, tile):
 		"""The wage per hour in coin a bid for the trade on `tile` is funded at (sim/economy/trade_wages.py), or None until the game's
-		money is priced at the economy (the first ask opens it). The economy's rule always gives a wage for the home country."""
+		money is priced at the economy (the first ask opens it). The one wage rule always gives a wage, for any country."""
 		parts = self._answering()
 		if parts is None or not self._economy().world.money_from_economy():
 			return None

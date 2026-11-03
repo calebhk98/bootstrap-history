@@ -9,6 +9,7 @@ from .staffed_runs import staffed_runs
 from .expected_sales import demand_seen, market_capacities
 from . import (practice, firm_finance, firm_year, tax_farming, merchants_transit, carriage_hours, carriage_wear, currency, expansion_price, households, inventory, merchants, metal_stock, ownership, producer_exit, shares,
                producers, producers_close, state_budget, tariffs, taxes, trade_wages)
+from .home_scope import has_partners, home_cohorts, on_home_tile
 from .household_work_year import cohort_basket
 from . import households_cohort
 from .market_memory import market_key
@@ -25,9 +26,9 @@ from .rates import own_rate
 
 def foreign_agents(setup, record) -> set:
     """Agents living or working on another country's tiles: the home state does not assess them."""
-    if len(setup.countries()) < 2:
+    if not has_partners(setup):
         return set()
-    away = lambda tile: not state_budget.on_home_tile(setup, tile)   # noqa: E731
+    away = lambda tile: not on_home_tile(setup, tile)   # noqa: E731
     return ({cohort.agent_id for cohort in record.cohorts.values() if away(cohort.tile)}
             | {producer.agent_id for producer in record.producers.values() if away(producer.tile)}
             | {merchant.agent_id for merchant in record.merchants.values() if away(merchant.home_tile)})
@@ -37,7 +38,7 @@ def tax_facts(setup, record, view, ledger: YearLedger) -> YearFacts:
     money = setup.currency_id
     hours = setup.working_hours_per_year
     away = foreign_agents(setup, record)
-    home = [cohort for cohort in state_budget.home_cohorts(setup, record) if cohort.agent_id not in away]
+    home = home_cohorts(setup, record)
     working = {cohort.agent_id: cohort.working_people for cohort in home}
     wage_year = {cohort.agent_id: trade_wages.wage_in_view(setup, view, setup.unskilled_trade, labour_area(cohort.tile)) * hours
                  for cohort in home}

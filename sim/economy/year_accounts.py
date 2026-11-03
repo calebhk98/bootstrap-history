@@ -218,7 +218,8 @@ def _tiles(cohorts: List[CohortAccount]) -> List[TileAccount]:
 
 def opening_wage_at_index_base(setup, record, trade: str) -> Optional[float]:
     """The setup's opening wage of `trade` in the money the index base prices stand in: the base is the prices when the
-    spin-up was rebased, so the opening-year wage is scaled by the level the rebase kept (one before any rebase)."""
+    spin-up was rebased, so the opening-year wage is scaled by the level the rebase kept (one before any rebase); None for a trade
+    the setup opened with no wage."""
     wage = setup.opening_wages.get(trade)
     if wage is None:
         return None

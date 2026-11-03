@@ -62,7 +62,7 @@ class CampaignYear(Part):
 		record = world.setting.government().record
 		owed = army_raising.pay_owed_share(record.arrears.get("army", 0.0), self.parts.armies.owner_force(army.owner), army.soldiers)
 		army.pay_owed = owed
-		return army_raising.pay_owed_years(owed, army.soldiers, float(world.labour.pay_per_person_year("soldier")))
+		return army_raising.pay_owed_years(owed, army.soldiers, float(world.labour.pay_per_person_year(world.labour.trade_of_role("soldier"))))
 
 	def reference_equipment(self, owner: str) -> float:
 		"""The equipment burden of the reference soldier, whose quality is 1: the plain iron kit of the logistics model."""

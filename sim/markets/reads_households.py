@@ -22,13 +22,12 @@ class HouseholdReads:
 
     def country(self, country):
         """What the economy answers for a partner country in it (`CountryAnswers`), or None when the country is
-        not in this economy or its labour markets have no wage yet."""
+        the home country or not in this economy (a country in it always answers: the one wage rule prices a trade its markets have not paid)."""
         economy = self._agent.economy()
         if country == economy_api.home_country(economy) or country not in economy_api.economy_countries(economy):
             return None
         from .port_country import CountryAnswers
-        answers = CountryAnswers(economy, country)
-        return answers if answers.has_labour_market() else None
+        return CountryAnswers(economy, country)
 
     def trade_book(self, country):
         """What crossed the country's border last year, by good ({good: {"in_tonnes", "in_value", "out_tonnes", "out_value"}})."""

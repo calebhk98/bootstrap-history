@@ -8,6 +8,7 @@ from typing import ClassVar, Dict, List, Tuple
 from sim.constants import declare
 
 from . import currency, households_basket, state_finance, trade_wages
+from .home_scope import home_cohorts
 from .setup import labour_area
 from .types import Bid, EDGE_CONSUMPTION, GoodsMove, LabourBid
 
@@ -96,16 +97,6 @@ def _trades(setup):
     return trades or [setup.unskilled_trade]
 
 
-def on_home_tile(setup, tile: str) -> bool:
-    """Whether the home country holds `tile` (always, with one country): the home state taxes and hires only there."""
-    return len(setup.countries()) < 2 or setup.country_of(tile) == setup.civ_id
-
-
-def home_cohorts(setup, record) -> list:
-    """The cohorts living on home tiles."""
-    return [cohort for cohort in record.cohorts.values() if on_home_tile(setup, cohort.tile)]
-
-
 def wage_labour_bids(setup, record, view, wage_budget: float) -> List[LabourBid]:
     """The home state's bids for hours, spread over the home cohorts' tiles and the trades it hires."""
     if wage_budget <= 0.0:
@@ -122,8 +113,6 @@ def wage_labour_bids(setup, record, view, wage_budget: float) -> List[LabourBid]
         for tile, people in sorted(working.items()):
             area = labour_area(tile)
             wage = trade_wages.wage_in_view(setup, view, trade, area)
-            if wage <= 0.0:     # a free hour: no bid
-                continue
             ceiling = wage * STATE_WAGE_CEILING_MULTIPLE
             hours = min(wage_budget / len(trades) * people / total_working / ceiling,
                         people * setup.working_hours_per_year * STATE_MAX_SHARE_OF_TILE_HOURS)
