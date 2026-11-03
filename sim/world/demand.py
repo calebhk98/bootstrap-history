@@ -811,7 +811,7 @@ def market_clearing_price(
 # data/production/ (zinc_electrolytic_kg -> zinc_kg+germanium_g+indium_g is
 # the sharpest example, and this module's own worked example) are named
 # after a PROCESS rather than after the material they principally produce.
-# _dominant_output_key picks the output with the largest quantity by
+# dominant_output_key picks the output with the largest quantity by
 # kg-equivalent mass as the one the entry's `inputs` are quoted "per unit
 # of" - a bookkeeping convenience for finding a denominator, not a claim
 # about which output deserves the cost (that question is what
@@ -835,10 +835,10 @@ def _kg_equivalent(material_key: str, quantity: float) -> float:
             return quantity * multiplier
     return quantity   # unrecognised unit suffix - compared as-is, which
                        # only matters for picking a basis output and is
-                       # flagged in _dominant_output_key's own docstring.
+                       # flagged in dominant_output_key's own docstring.
 
 
-def _dominant_output_key(entry: Dict[str, Any]) -> str:
+def dominant_output_key(entry: Dict[str, Any]) -> str:
     """Which of `entry`'s outputs its `inputs` and `labour_hours` are
     quoted "per unit of" - see this section's own docstring for why this
     is a mass-based bookkeeping choice, not a value judgement.
@@ -867,7 +867,7 @@ def input_coefficients_per_unit_output(
     if recipe_key not in production:
         raise KeyError("no data/production/ entry for %r" % (recipe_key,))
     entry = production[recipe_key]
-    basis_key = _dominant_output_key(entry)
+    basis_key = dominant_output_key(entry)
     basis_quantity = entry["outputs"][basis_key]
     if not basis_quantity:
         raise ValueError("%r's dominant output %r has a zero or missing "
@@ -958,7 +958,7 @@ def _illustrative_recursive_labour_content_price_per_kg(
     visiting.add(material_key)
 
     entry = production[material_key]
-    basis_key = _dominant_output_key(entry)
+    basis_key = dominant_output_key(entry)
     basis_quantity = entry["outputs"][basis_key]
     direct_hours = sum(entry.get("labour_hours", {}).values())
     price = direct_hours / basis_quantity

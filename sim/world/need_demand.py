@@ -112,7 +112,7 @@ class NeedDemandModel:
                     recipe_key, self.production)
             except (KeyError, ValueError):
                 continue
-            producers[demand._dominant_output_key(entry)].append(coefficients)
+            producers[demand.dominant_output_key(entry)].append(coefficients)
         table: Dict[str, Dict[str, float]] = {}
         for material, recipes in producers.items():
             averaged: Dict[str, float] = collections.defaultdict(float)

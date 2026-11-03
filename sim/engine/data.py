@@ -37,7 +37,14 @@ from .mod_world_data import load_starting_kits
 from sim.content.api import (apply_mod_civilization, check_all_civilizations, check_starting_techs,
                        is_hidden, mod_civ_ids)
 from sim.prices.api import energy_prices
+from sim.constants import declare
 from . import copy_visibility_defaults, money_units
+
+UNPRICED_MATERIAL_PRICE = declare(
+    "UNPRICED_MATERIAL_PRICE", 0.0, kind="temporary_heuristic", unit="money per unit of the material",
+    source=None, confidence="D", retire="Complaint 964",
+    why="A node's material bill is read by project costs and screens as a number; until they carry an unknown "
+        "bill, a material the price solver cannot resolve counts as free and the bill is a lower bound.")
 from sim.production.api import node_revenue
 from sim.labour.api import wage_provider
 from .default_civilisation import default_civilisation_id
@@ -323,8 +330,8 @@ def load(held_technology_ids: Optional[Iterable[str]] = None,
     for node in nodes.values():
         if not has_luck_component(node):
             node["risk"] = 0.0
-        # TRANSITIONAL: a material the price solver cannot resolve counts as free, so the cost is a lower bound.
-        node["_material_hours"] = sum(goods.get(material, 0.0) * quantity
+        # a material the price solver cannot resolve is charged UNPRICED_MATERIAL_PRICE, so the cost is a lower bound
+        node["_material_hours"] = sum(goods.get(material, UNPRICED_MATERIAL_PRICE) * quantity
                                       for material, quantity in node["mat"].items()) / rate
         node["_hired_hours"] = sum(node["lab"].values())
     energy = energy_prices.graded(held_technology_ids, document, goods, civilization_id)

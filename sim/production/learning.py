@@ -8,6 +8,7 @@ from sim.assembly.api import Part
 from sim.geography.api import route, usable_modes
 from sim.prices.api import prices as price_solver
 from sim.unit_conversions import CIVIL_DAYS_PER_YEAR
+from sim.world.plant_figures import priced_total
 
 from .industry_learning import (input_availability, learning_multiplier, learning_value_ratio,
                                 repair_hours_by_trade, running_availability, work_hours_by_trade)
@@ -36,11 +37,16 @@ class Learning(Part):
 		prices = self.needs.done_memo("concern_prices_held", held, lambda: self.parts.volume.concern_prices_in_hours(held))
 		founding = self.parts.depth.founding_worker_years(node_id)
 		multiplier = learning_multiplier(self.parts.depth.industry_experience(node_id), founding, mastery_worker_years(founding))
-		purchases = {material: quantity * prices.get(material, 0.0) for material, quantity in baskets.purchases.items()}
-		purchases_value = sum(purchases.values()) + sum(basket["value"] for basket in baskets.energy_bought.values())
-		net = (sum(quantity * prices.get(material, 0.0) for material, quantity in baskets.outputs.items())
-		       + sum(basket["value"] for basket in baskets.energy_sold.values()) - purchases_value)
-		ratio = learning_value_ratio(net, purchases_value, sum(baskets.labour_hours.values()), multiplier)
+		# an input or output with no price has no value to weigh: the value share stays at one and the input
+		# is left out of the supply weights
+		purchases = {material: quantity * prices[material]
+		             for material, quantity in baskets.purchases.items() if prices.get(material) is not None}
+		sold = priced_total(baskets.outputs, prices)
+		ratio = 1.0
+		if sold is not None and len(purchases) == len(baskets.purchases):
+			purchases_value = sum(purchases.values()) + sum(basket["value"] for basket in baskets.energy_bought.values())
+			net = sold + sum(basket["value"] for basket in baskets.energy_sold.values()) - purchases_value
+			ratio = learning_value_ratio(net, purchases_value, sum(baskets.labour_hours.values()), multiplier)
 		repairs = repair_hours_by_trade(baskets.plant)
 		ratio *= running_availability(baskets.labour_hours, repairs, self.parts.depth.industry_tenure_by_trade(node_id))
 		return ratio * self.concern_input_availability(node_id, purchases)

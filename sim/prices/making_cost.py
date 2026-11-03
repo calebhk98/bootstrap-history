@@ -137,7 +137,7 @@ def cost_of_making(good: str,
     best = None
     for recipe_id in catalogue.producers_of.get(good, ()):
         entry = catalogue.available[recipe_id]
-        if not core._meets_capability_floor(good, entry, catalogue.floor_by_carrier):
+        if not core.meets_capability_floor(good, entry, catalogue.floor_by_carrier):
             continue
         if civilization is not None and not price_engine.climate_allows_entry(entry, civilization):
             continue
@@ -150,7 +150,7 @@ def cost_of_making(good: str,
             references = _references(outputs, reference_price_of, catalogue, bill)
         disposal_costs = (disposal_cost.disposal_cost_by_material(outputs, prices, rate, dump_distance)
                           if len(outputs) > 1 else None)
-        unit_cost = core._allocate_output_prices(
+        unit_cost = core.allocate_output_prices(
             outputs, prices, costed["total"], references, rate, disposal_costs)[good]
         if best is None or unit_cost < best[0]:
             best = (unit_cost, recipe_id, costed)
@@ -191,11 +191,11 @@ def _bill(recipe_id: str, entry: Mapping[str, Any], prices: _Prices, wages: _Fun
     waste_costs = None
     if any(prices.get(material, 0.0) < 0.0 for material in inputs):
         waste_costs = disposal_cost.disposal_cost_by_material(inputs, prices, rate)
-    material_cost = core._material_cost_hours(inputs, prices, waste_costs)
-    land_cost = core._land_cost_hours(entry, prices)
-    capital_cost = core._capital_cost_hours_per_unit(
+    material_cost = core.batch_material_cost_hours(inputs, prices, waste_costs)
+    land_cost = core.batch_land_cost_hours(entry, prices)
+    capital_cost = core.capital_cost_hours_per_unit(
         (entry.get("capital") or []) if include_plant else [], prices, wages, rate)
-    energy_cost = core._energy_cost_hours(entry, prices, bands)
+    energy_cost = core.batch_energy_cost_hours(entry, prices, bands)
     if None in (material_cost, land_cost, capital_cost, energy_cost):
         return None
     outputs = entry.get("outputs") or {}

@@ -67,9 +67,10 @@ def _apply_unlisted_upkeep(node: dict, goods: Mapping[str, float], wages: Mappin
     else:
         build_bill = (sum(wages[trade] * hours for trade, hours in node["lab"].items()) / money_per_labour_hour
                       + node.get("_material_hours", 0.0) + node["cap_hours"])
-        if node_upkeep.is_programme(node):
-            node["up_hours"] = (node_upkeep.programme_spending_hours(node, goods, wages, money_per_labour_hour)
-                                + node_upkeep.maintenance_hours(node, build_bill))
+        spending = (node_upkeep.programme_spending_hours(node, goods, wages, money_per_labour_hour)
+                    if node_upkeep.is_programme(node) else None)     # None: no programme, or a consumable unpriced
+        if spending is not None:
+            node["up_hours"] = spending + node_upkeep.maintenance_hours(node, build_bill)
             basis = "programme"
         elif node.get("kind") == "SCIENCE":
             node["up_hours"] = node_upkeep.staff_places_hours_cost(node, wages, money_per_labour_hour)
@@ -83,13 +84,18 @@ def _apply_unlisted_upkeep(node: dict, goods: Mapping[str, float], wages: Mappin
 
 def _apply_output(node: dict, baskets: node_output.Baskets, goods: Mapping[str, float],
                   wages: Mapping[str, float], money_per_labour_hour: float) -> float:
-    """Derive the node's revenue and upkeep from its baskets; returns the build hours of its plant."""
+    """Derive the node's revenue and upkeep from its baskets; returns the build hours of its plant. A node whose
+    baskets hold a good with no price, or whose plant has a material with no price, is left unset (it earns
+    nothing derivable and takes the unlisted upkeep path, with no plant hours)."""
+    takings = plant_figures.takings(baskets, goods)
+    parts = plant_figures.upkeep_parts(node.get("kind"), baskets, goods, wages, money_per_labour_hour)
+    if takings is None or parts is None:
+        return 0.0
     node["_output_per_year"], node["_purchases_per_year"] = baskets.outputs, baskets.purchases
     node["_energy_sold_per_year"], node["_energy_bought_per_year"] = baskets.energy_sold, baskets.energy_bought
     node["_labour_hours_per_year"] = baskets.labour_hours
-    node["rev_hours"] = plant_figures.takings(baskets, goods) / money_per_labour_hour
+    node["rev_hours"] = takings / money_per_labour_hour
     node["_revenue_basis"] = "output"
-    parts = plant_figures.upkeep_parts(node.get("kind"), baskets, goods, wages, money_per_labour_hour)
     build_hours = parts["plant_build_hours"]
     node["_upkeep_hours_parts"] = parts
     node["up_hours"] = parts["staff"] + parts["plant"]
