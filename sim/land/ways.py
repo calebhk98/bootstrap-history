@@ -90,7 +90,9 @@ class Ways(Part):
         if not needs.can_pay(quote["money"]):
             return False, "a %s of %.1f km costs about %s; %s." % (
                 way, quote["km"], needs.money_text(quote["money"], grouped=True), needs.afford_means())
-        needs.send(PayEdge(edges.EDGE_BUILDERS, quote["money"], "building a %s" % way))
+        refusal = needs.send(PayEdge(edges.EDGE_BUILDERS, quote["money"], "building a %s" % way))
+        if refusal:
+            return False, refusal
         year = needs.year()
         self.world.ways_under_construction.setdefault(key, {})[way] = ways_rules.pending_way(year, quote)
         return True, "started a %s of %.1f km %s for %s%s; a crew of %d will take about %.1f years." % (

@@ -2,6 +2,7 @@
 from typing import Any, Dict, Optional
 
 from .country_part import SharedPart
+from .records import ActorRecord
 from .tuning_country import COUNTRY_OBSERVATION_RANGE_KM
 
 # the word a civilisation's values use for a weight, as in `w_military`
@@ -9,7 +10,10 @@ WEIGHT_PREFIX = "w_"
 
 
 class _NoGovernment:
-	"""Stands in for a government actor the scope was not given: it takes nothing."""
+	"""Stands in for a government actor the scope was not given: it takes nothing and its record is empty."""
+
+	def __init__(self) -> None:
+		self.record = ActorRecord(kind="government")
 
 	def collect(self, payer: Any, taxable: float, world: Any) -> float:
 		return 0.0

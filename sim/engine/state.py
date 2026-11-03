@@ -246,7 +246,7 @@ def _deserialize_typed(val: Any, target_type: Any) -> Any:
 			hints = {}
 			try:
 				hints = get_type_hints(ActiveProjectState)
-			except Exception:
+			except NameError:   # an annotation names a type not importable here: fields keep their declared annotation
 				hints = {}
 			reconstructed = {}
 			for f in dataclasses.fields(ActiveProjectState):
@@ -266,7 +266,7 @@ def _deserialize_typed(val: Any, target_type: Any) -> Any:
 		hints = {}
 		try:
 			hints = get_type_hints(target_type)
-		except Exception:
+		except NameError:   # an annotation names a type not importable here: fields keep their declared annotation
 			hints = {}
 		field_kwargs = {}
 		for f in dataclasses.fields(target_type):

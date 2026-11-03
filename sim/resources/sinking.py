@@ -57,7 +57,9 @@ class Sinking(Part):
             cost = tonnes * capex * price_index * scale
         if tonnes <= 0:
             return Refusal("cannot_afford", "the purchase budget does not cover a tonne of these workings")
-        self.needs.send(PayEdge(edges.EDGE_BUILDERS, cost, "mines opened"))
+        refusal = self.needs.send(PayEdge(edges.EDGE_BUILDERS, cost, "mines opened"))
+        if refusal:
+            return refusal
         # each investment is its own working with its own sinking time and carries the cost it was sunk for
         if seat.mine_tranches is None:
             seat.mine_tranches = []

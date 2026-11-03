@@ -8,7 +8,7 @@ from sim.agents.api import edges
 from sim.assembly.api import Part
 from sim.knowledge.api import LearnTechnique, RevealFrom
 from sim.diffusion.api import ApplyTechEffects
-from sim.ledger.api import PayEdge
+from sim.ledger.api import pay_edge_or_log
 from sim.living_stock.api import ChangeHeld
 from sim.polity.api import AddGovernance, AddScandal, CarryOutTransfers, GainReputation
 from sim.production.api import LearnFromFailure
@@ -49,10 +49,7 @@ class Completion(Part):
 		goal = self.needs.goal()["node"]
 		cache = self._goal_closures
 		if goal not in cache:
-			try:
-				cache[goal] = set(self.needs.tree_closure(goal))
-			except Exception:
-				cache[goal] = set()
+			cache[goal] = set(self.needs.tree_closure(goal))
 		return cache[goal]
 
 	def failure_severity(self, node_id, lost, means):
@@ -72,14 +69,11 @@ class Completion(Part):
 		condition = nodes[goal].get("win_condition")
 		done = needs.techniques_held()
 		if condition and goal not in done:
-			try:
-				metric = condition.get("metric") or "goal measure"
-				fraction = metric in goal_rules.FRACTION_METRICS
-				measures[metric.replace("_", " ")] = (needs.win_condition_value(condition), fraction)
-				for label, ceiling in goal_rules.GOAL_DETERMINANTS.get(metric, ()):
-					measures[label] = (float(needs.literacy_ceiling[ceiling]), True)
-			except (ValueError, AttributeError):
-				pass
+			metric = condition.get("metric") or "goal measure"
+			fraction = metric in goal_rules.FRACTION_METRICS
+			measures[metric.replace("_", " ")] = (needs.win_condition_value(condition), fraction)
+			for label, ceiling in goal_rules.GOAL_DETERMINANTS.get(metric, ()):
+				measures[label] = (float(needs.literacy_ceiling[ceiling]), True)
 		return goal_rules.snapshot(measures, len(road & done), len(road))
 
 	def goal_effect_lines(self, node_id, before):
@@ -191,7 +185,8 @@ class Completion(Part):
 		# What the purse and the credit line left cannot bear is not forgiven: it is added to what the project still
 		# costs, paid through the gated instalments.
 		_borne = needs.bearable_part_of(_lost)
-		needs.send(PayEdge(edges.EDGE_DESTROYED, _borne, "failure losses"))
+		if not pay_edge_or_log(needs.send, edges.EDGE_DESTROYED, _borne, "failure losses"):
+			_borne = 0.0   # what could not be paid is added to what the project still costs
 		if not claimed:
 			for _loss_line in self.lose_what_was_risked(node_id):
 				needs.send(RecordEvent.of("failure_loss", "%s: %s" % (node["name"], _loss_line)))

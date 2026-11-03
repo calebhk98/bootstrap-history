@@ -2,7 +2,7 @@
 from sim.agents.api import edges
 from sim.assembly.api import Part
 from sim.knowledge.api import LearnTechnique
-from sim.ledger.api import PayEdge
+from sim.ledger.api import pay_edge_or_log
 from sim.refusal import LogLine, Refusal
 
 from sim.ventures.api import CloseConcern, RestoreConcern
@@ -104,7 +104,8 @@ class Mothball(Part):
 		if any(prereq_id not in needs.techniques_held() for prereq_id in node["pre"]):
 			return False, ("you no longer have what it stands on: "
 			               + ", ".join(prereq_id for prereq_id in node["pre"] if prereq_id not in needs.techniques_held()))
-		needs.send(PayEdge(edges.EDGE_WORKERS, fee, "known technique restored"))
+		if not pay_edge_or_log(needs.send, edges.EDGE_WORKERS, fee, "known technique restored"):
+			return False, "the payment was refused; it stays shut"
 		needs.send(LearnTechnique(node_id))
 		# Back in service means back in OPERATION: restore is what a player types to reopen something they shut, so a
 		# concern goes back on the books; any other work just stops being shut.

@@ -12,9 +12,9 @@ Depositors are the accounts that offered funds (`set_offers`: a state's reserve,
 spare cash) and the household savers the simulation does not model one by one (`EDGE_SAVERS`), who deposit
 whatever the pool lacks and are paid back from what it holds beyond its lending.
 """
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable, Dict, List, Optional
 
-from sim.book import ROUNDING_SHARE, Book, Transfer, is_edge
+from sim.book import ROUNDING_SHARE, Book, InsufficientFunds, Transfer, is_edge
 from sim.contracts import DEPOSIT, FACILITY, Contracts
 from sim.rekey import rekey
 
@@ -104,24 +104,39 @@ class Purses:
 
     # ---- postings ---------------------------------------------------------------------------
     def transfer(self, payer: str, payee: str, amount: float, purpose: str) -> None:
-        """Move `amount`; a payer short of it draws the rest on its facility first, and a payee in debt repays."""
+        """Move `amount`; a payer short of it draws the rest on its facility first, and a payee in debt repays. The draw
+        and the posting are one step: a posting the book refuses undoes what the draw did before it raises."""
         if not amount > DEBT_FLOOR:
             return   # rounding residue: the books carry noise larger than this
-        self.cover(payer, amount)
-        self.book.transfer(Transfer(payer, payee, COIN, amount, purpose))
+        undo = self._cover(payer, amount)
+        try:
+            self.book.transfer(Transfer(payer, payee, COIN, amount, purpose))
+        except InsufficientFunds:
+            for reverse in reversed(undo):
+                reverse()
+            raise
         if not is_edge(payee):
             self._repay(payee)
 
     def cover(self, payer: str, amount: float) -> None:
         """Make the payer's purse hold `amount`: it takes back its deposit first and draws the rest on its facility,
         both in one go (an account that will make several payments covers their sum first)."""
+        self._cover(payer, amount)
+
+    def _cover(self, payer: str, amount: float) -> List[Callable[[], None]]:
+        """`cover`, answering the steps that undo what it did, in the order it did them."""
+        undo: List[Callable[[], None]] = []
         if not is_edge(payer) and amount > DEBT_FLOOR:
             held = self.purse(payer)
             if held < amount * (1.0 - ROUNDING_SHARE):   # a purse short only by float dust pays as it is
-                self._take_back(payer, min(amount - held, self.deposit(payer)))
+                taken = min(amount - held, self.deposit(payer))
+                self._take_back(payer, taken)
+                if taken > DEBT_FLOOR:
+                    undo.append(lambda: self._place(payer, taken))
                 held = self.purse(payer)
                 if held < amount * (1.0 - ROUNDING_SHARE):
-                    self._draw(payer, amount - held)
+                    undo.append(self._draw(payer, amount - held))
+        return undo
 
     def pay_interest(self, borrower: str, owed: float, purpose: str = INTEREST_PAID) -> Dict[str, float]:
         """Pay `owed` to the pool its facility is drawn on; it reaches the depositors at the next settlement."""
@@ -195,18 +210,37 @@ class Purses:
             self.contracts.scale_deposits(factor)
         return {POOL: lost} if lost > 0.0 else {}
 
-    def _draw(self, borrower: str, shortfall: float) -> None:
+    def _draw(self, borrower: str, shortfall: float) -> Callable[[], None]:
+        """The borrower draws `shortfall`; answers the step that gives it back (the pool keeps the funds the savers placed)."""
         self._fund_pool(shortfall)
+        deposits = {depositor: contract.principal for depositor, contract in self.contracts.deposits.items()}
         if self.bonds.issues(borrower):
             # the market buys a bond for the shortfall: the borrower owes its face, the depositors paid the price
             self.book.transfer(Transfer(POOL, borrower, COIN, shortfall, BOND_SOLD))
-            self.bonds.sell(borrower, shortfall)
+            bond = self.bonds.sell(borrower, shortfall)
         else:
             self.book.transfer(Transfer(POOL, borrower, COIN, shortfall, FACILITY_DRAW))
             self.contracts.draw(borrower, POOL, COIN, shortfall)
-        if self.named_lenders.names(borrower):
-            self.named_lenders.drew(borrower, shortfall, {depositor: contract.principal
-                                                          for depositor, contract in self.contracts.deposits.items()})
+            bond = None
+        named = self.named_lenders.names(borrower)
+        if named:
+            self.named_lenders.drew(borrower, shortfall, deposits)
+
+        def give_back() -> None:
+            if bond is not None:
+                self.book.transfer(Transfer(borrower, POOL, COIN, shortfall, BOND_REDEEMED))
+                self.bonds.held[borrower].remove(bond)
+                if not self.bonds.held[borrower]:
+                    del self.bonds.held[borrower]
+            else:
+                self.book.transfer(Transfer(borrower, POOL, COIN, shortfall, FACILITY_REPAYMENT))
+                self.contracts.repay_facility(borrower, POOL, shortfall)
+                self.contracts.tidy_facility(borrower, DEBT_FLOOR)
+            total = sum(deposits.values())
+            if named and total > 0.0:   # `drew` recorded nothing against an empty pool
+                for lender, deposit in deposits.items():
+                    self.named_lenders.held[borrower][lender] -= shortfall * deposit / total
+        return give_back
 
     def _fund_pool(self, amount: float) -> None:
         """The pool can pay out `amount` and still hold the interest it owes its depositors: the savers deposit what

@@ -22,11 +22,15 @@ class Granary:
 				* world.people.subsistence_kg_per_person_year() / 1000.0)
 
 	def keep_granary(self, world: Any) -> float:
-		"""Spoil, then sell what is above the target or what a dear market calls for; the tonnes sold."""
+		"""Spoil, then sell what is above the target or what a dear market calls for; the tonnes sold. With no
+		quote for the staple the store spoils and nothing is sold, and the price memory is left as it was."""
 		record = self.government.record
 		staple = world.quotes.staple_material()
 		stored = record.stores.get(staple, 0.0) * (1.0 - GRANARY_LOSS_SHARE_PER_YEAR)
 		price = world.quotes.material_price(staple)
+		if price is None:
+			record.stores[staple] = stored
+			return 0.0
 		normal = record.grain_price_reference if record.grain_price_reference > 0.0 else price
 		sell = max(0.0, stored - self.granary_target(world))
 		if price > normal * (1.0 + GRANARY_RELEASE_PRICE_PREMIUM):
@@ -44,7 +48,8 @@ class Granary:
 		record = self.government.record
 		staple = world.quotes.staple_material()
 		shortfall = self.granary_target(world) - record.stores.get(staple, 0.0)
-		if excess <= 0.0 or shortfall <= 0.0 or world.quotes.material_price(staple) >= record.grain_price_reference:
+		price = world.quotes.material_price(staple)
+		if excess <= 0.0 or shortfall <= 0.0 or price is None or price >= record.grain_price_reference:
 			return 0.0
 		cost = world.quotes.material_cost(staple, shortfall)
 		if cost is None or cost <= 0.0:

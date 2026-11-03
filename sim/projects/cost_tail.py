@@ -5,7 +5,7 @@ Making it wait a whole extra year for that is a bookkeeping artefact, so the sli
 payment."""
 from sim.agents.api import edges
 from sim.assembly.api import Part
-from sim.ledger.api import NoteSpend, PayEdge
+from sim.ledger.api import NoteSpend, pay_edge_or_log
 
 from .constants import COST_TAIL_SETTLE_SHARE
 
@@ -18,7 +18,8 @@ class CostTail(Part):
 			return 0.0
 		if tail > COST_TAIL_SETTLE_SHARE * self.needs.project_cost(node_id):
 			return 0.0
-		self.needs.send(PayEdge(edges.EDGE_SUPPLIERS, tail, "project payments"))
+		if not pay_edge_or_log(self.needs.send, edges.EDGE_SUPPLIERS, tail, "project payments"):
+			return 0.0   # the sliver stays owed
 		self.needs.send(NoteSpend(tail))
 		project_state["spent"] += tail
 		project_state["cost_left"] = 0.0

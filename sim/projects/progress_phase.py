@@ -6,7 +6,7 @@ check. Every random draw the stages make (completion rolls the dice once per att
 project."""
 from sim.agents.api import edges
 from sim.assembly.api import Part
-from sim.ledger.api import NoteSpend, PayEdge
+from sim.ledger.api import NoteSpend, pay_edge_or_log
 from sim.materials.api import ApplyThrottle, ReorderProjectMaterials
 from sim.refusal import Refusal
 from sim.reporting.api import RecordEvent
@@ -307,7 +307,11 @@ class ProgressPhase(Part):
 		# Stage 5: spend the money, record the hours actually done, the second place a standing allocation can go
 		# unhonoured, and the completion check. Nothing to return - project_state carries every result.
 		needs = self.needs
-		needs.send(PayEdge(edges.EDGE_SUPPLIERS, money, "project payments"))
+		if not pay_edge_or_log(needs.send, edges.EDGE_SUPPLIERS, money, "project payments"):
+			# the bill stays owed in full and the project waits on money
+			money = 0.0
+			project_state["underfunded_this_year"] = True
+			project_state["why_underfunded"] = "the year's payment was refused"
 		needs.send(NoteSpend(money))
 		project_state["spent"] += money
 		project_state["cost_left"] = max(0.0, project_state["cost_left"] - money)

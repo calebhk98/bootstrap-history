@@ -28,10 +28,7 @@ class Goals(Part):
         shown. What the goal needs is worked out once and kept (the engine's other readers of it share the same set)."""
         needed = self.goal_closure()
         if needed is None:
-            try:
-                needed = self.needs.tree_closure(self.goal()["node"])
-            except Exception:
-                needed = set()
+            needed = self.needs.tree_closure(self.goal()["node"])
             self.remember_goal_closure(RememberGoalClosure(needed))
         return node_id in needed
 

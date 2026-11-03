@@ -242,7 +242,7 @@ def respond(government: Any, world: Any, lines: Sequence[Any], gap: float) -> Di
 	if gap <= _TINY:
 		return {}
 	decision = menu(government, world, lines, gap)
-	policy = getattr(government, "decision_policy", None)
+	policy = government.decision_policy
 	if isinstance(policy, FiscalPolicy):
 		return {option.subject: option.worth for option in policy.choose(government, decision)}
 	if isinstance(policy, CallbackPolicy):

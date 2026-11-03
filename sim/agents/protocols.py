@@ -365,8 +365,8 @@ class QuotesPart(Protocol):
 		"""Money to buy this many tonnes of a material at the price the market quotes; None when no market sells it."""
 		...
 
-	def material_price(self, material: str) -> float:
-		"""Money for one tonne of a material at the price the market quotes."""
+	def material_price(self, material: str) -> Optional[float]:
+		"""Money for one tonne of a material at the price the market quotes; None when no market sells it."""
 		...
 
 	def staple_material(self) -> str:

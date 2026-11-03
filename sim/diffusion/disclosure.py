@@ -80,7 +80,7 @@ class Disclosure(Part):
         others = [seat_id for seat_id in self.needs.seat_list()["playing"] if seat_id != acting]
         registry = self.needs.cast()
         return [actor.identity() for kind in ("firm", "government") for actor in registry.of_kind(kind)
-                if getattr(actor.record, "exited_year", None) is None] + others
+                if actor.record.exited_year is None] + others
 
     def disclosure_listing(self) -> List[Dict[str, Any]]:
         """Every invention of yours with what you have chosen for it."""

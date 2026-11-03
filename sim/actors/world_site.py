@@ -52,15 +52,17 @@ class Site:
 		"""Hectares a concern occupies: the plot its staff need and the land its output works."""
 		return self.plot_hectares(node_id, capacity) + self.worked_hectares(node_id, capacity)
 
-	def land_rent_at(self, tile: Optional[str]) -> float:
+	def land_rent_at(self, tile: Optional[str]) -> Optional[float]:
 		"""Yearly rent of a hectare on a tile: the agent economy's land market's rent there (the mean rent
-		of the land let where none was let on the tile); the engine's land price while the economy opens."""
+		of the land let where none was let on the tile); the engine's land price while the economy opens; None when
+		neither is quoted."""
 		rent = self.needs.agent_land_rent_at(tile)
 		if rent is None or rent <= 0.0:
-			return float(self.world.quotes.material_price("hectare_land"))
+			return self.world.quotes.material_price("hectare_land")
 		return float(rent)
 
-	def site_rent(self, node_id: str, capacity: float = 1.0, tile: Optional[str] = None) -> float:
+	def site_rent(self, node_id: str, capacity: float = 1.0, tile: Optional[str] = None) -> Optional[float]:
 		"""Yearly rent of the site a concern run at `capacity` times its founding size occupies, on the
-		tile its firm stands on."""
-		return self.site_hectares(node_id, capacity) * self.land_rent_at(tile)
+		tile its firm stands on; None when no rent is quoted."""
+		rent = self.land_rent_at(tile)
+		return None if rent is None else self.site_hectares(node_id, capacity) * rent

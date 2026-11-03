@@ -9,7 +9,7 @@ from sim.demography.api import StepPopulation
 from sim.finance.api import (ChargeInterest, EnforceCreditLimit, JudgeInsolvency, ServeBondageYear, ShedLossMakers,
                              WarnNearLimit)
 from sim.hazards.api import RecoverOutput
-from sim.ledger.api import PayEdge, PayWages, ReceiveFromEdge
+from sim.ledger.api import PayWages, ReceiveFromEdge, pay_edge_or_log
 from sim.polity.api import CloseStandingYear, RenewStanding
 from sim.projects.api import (AdvanceProjects, AutoOpenVentures, CloseLapsedDependents, CloseSpendYear, CloseUnstaffedVentures, NoteVentureYear,
                               ReopenRestaffedVentures)
@@ -56,11 +56,12 @@ def money_seat(sim):
 	keeping_owed, keeping = view("coin_keeping_due")(revenue, upkeep, living_cost, mine_cost)
 	# the concerns the clearing pays are credited when it clears (sim/markets/port_year.py `_settle_seats`)
 	send(ReceiveFromEdge(edges.EDGE_CUSTOMERS, view("estimated_revenue")(), "venture revenue"))
-	send(PayEdge(edges.EDGE_SUPPLIERS, upkeep, "running costs of concerns"))
+	# a charge the seat cannot pay is logged with its cause (the credit steps below judge the seat); unguarded coin is not guarded
+	pay_edge_or_log(send, edges.EDGE_SUPPLIERS, upkeep, "running costs of concerns")
 	send(PayWages(living_cost, "living costs"))
-	send(PayEdge(edges.EDGE_SUPPLIERS, mine_cost, "mine running costs"))
-	send(PayEdge(edges.EDGE_COIN_GUARDS, keeping, "keeping coin under guard"))
-	send(ChargeHouseholdTheft(keeping, keeping_owed))
+	pay_edge_or_log(send, edges.EDGE_SUPPLIERS, mine_cost, "mine running costs")
+	keeping_paid = keeping if pay_edge_or_log(send, edges.EDGE_COIN_GUARDS, keeping, "keeping coin under guard") else 0.0
+	send(ChargeHouseholdTheft(keeping_paid, keeping_owed))
 	send(AutoMothballMines())
 	# staff hired or taught this year get first claim on reclaiming what attrition shut, before anything is judged still short and closed again
 	year = sim.year

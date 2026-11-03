@@ -8,7 +8,7 @@ transfer_listening, send (PayEdge, TakeFromHouseholdPurse, RecordEvent)."""
 from sim.agents.api import demand_answer, edges
 from sim.assembly.api import Part
 from sim.hazards.api import capital_lost
-from sim.ledger.api import PayEdge, TakeFromHouseholdPurse
+from sim.ledger.api import TakeFromHouseholdPurse, pay_edge_or_log
 from sim.reporting.api import RecordEvent
 
 from . import state_demand
@@ -24,8 +24,8 @@ class Demands(Part):
 		stance = seat.demand_stance
 		draw = self.needs.game_random().random() if stance not in PAYS_IN_FULL else 1.0
 		answer = demand_answer.settle_demand(stance, amount, self.parts.reach.state_reach(), seat.protection, draw, seat.service_offer)
-		if answer["service"] > 0.0:
-			self.needs.send(PayEdge(edges.EDGE_STATE_SPENDING, answer["service"], "service to the state"))
+		if answer["service"] > 0.0 and not pay_edge_or_log(self.needs.send, edges.EDGE_STATE_SPENDING, answer["service"], "service to the state"):
+			answer = dict(answer, service=0.0)   # the service offered was not rendered
 		if answer["refused"]:
 			seat.defiance = demand_answer.defiance_after_refusal(seat.defiance)
 			seat.scandal += demand_answer.blame_for_refusal(True)
@@ -71,8 +71,8 @@ class Demands(Part):
 			draw = self.needs.game_random().random()
 			settled = demand_answer.settle_concealment(seat.demand_stance, max(0.0, self.needs.acting_balance()), self.parts.reach.state_reach(),
 			                                           seat.protection, draw)
-			if settled["cost"] > 0.0:
-				self.needs.send(PayEdge(edges.EDGE_OFFICIALS, settled["cost"], "concealing wealth"))
+			if settled["cost"] > 0.0 and not pay_edge_or_log(self.needs.send, edges.EDGE_OFFICIALS, settled["cost"], "concealing wealth"):
+				settled = dict(settled, cost=0.0, concealed=0.0)   # no one is paid to keep it hidden: nothing stays hidden
 			if settled["seized"] > 0.0:
 				self.needs.send(TakeFromHouseholdPurse(self.needs.state_treasury().actor_id, settled["seized"], "wealth found hidden"))
 				self.needs.send(RecordEvent.of("hidden_wealth_found", "The state found wealth you had hidden and took it with a penalty"))

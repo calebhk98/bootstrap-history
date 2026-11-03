@@ -82,9 +82,7 @@ def check_technique_invariants(sim):
     registry = sim.view("cast")()
     world = sim.view("actor_world")()
     for actor in registry.actors.values():
-        business = getattr(actor.record, "business", None)
-        if business is None:
-            continue
+        business = actor.record.business
         scope = registry.countries.world_for(actor, world)
         for entry_key in business.reading.entry_keys():
             held = actor.knows(entry_key, scope) or entry_key in actor.record.royalty_owed
@@ -100,8 +98,8 @@ def check_capacity_invariants(sim):
     people = {country: people_of(sim, country) for country in sim.view("countries_in_game")()}
     home = sim.civ["id"]
     for actor in registry.actors.values():
-        business = getattr(actor.record, "business", None)
-        for plant in (business.plants if business is not None else ()):
+        business = actor.record.business
+        for plant in business.plants:
             assert math.isfinite(plant.size) and plant.size >= 0.0, \
                 "%s plant %s has size %r" % (actor.actor_id, plant.entry_key, plant.size)
             assert 0.0 <= plant.crew_found <= 1.0 + 1e-9, \

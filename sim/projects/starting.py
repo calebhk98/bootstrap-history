@@ -9,7 +9,7 @@ from sim.polity.api import RecordBribe
 from typing import Any, Dict, Optional, Tuple
 
 from sim.agents.api import CommandRejected, edges, research
-from sim.ledger.api import PayEdge
+from sim.ledger.api import pay_edge_or_log
 
 from . import bribe_rules, constants, funding, instantaneous, materials_wait, record_rules, start_rules
 from .commands import Bribe, PostBounty, PutProjectFirst, StartProject, StopProject
@@ -144,7 +144,8 @@ class Starting(Part):
 		price = needs.bounty_price(command.node_id)
 		if price > needs.acting_balance():
 			return False
-		needs.send(PayEdge(edges.EDGE_WORKERS, price, "bounties posted"))
+		if not pay_edge_or_log(needs.send, edges.EDGE_WORKERS, price, "bounties posted"):
+			return False
 		needs.send(NoteSpend(price))
 		self.seat.bounties_paid += 1
 		# The prize pays for all the work: no poster hours, no hired trades.
@@ -171,7 +172,8 @@ class Starting(Part):
 			return False, self._bribe_refusal_text(refusal, amount, capital)
 		plan = bribe_rules.plan(amount, standing["scandal"], standing["bribes_year_to_date"], income, weight,
 		                        constants.BRIBE_MEMORY_DECAY, constants.BRIBE_PROTECTION_CAP, constants.BRIBE_INCOME_SHARE, per_point)
-		needs.send(PayEdge(edges.EDGE_OFFICIALS, plan.paid, "bribes"))
+		if not pay_edge_or_log(needs.send, edges.EDGE_OFFICIALS, plan.paid, "bribes"):
+			return False, "the payment was refused; nothing was spent or changed"
 		needs.send(RecordBribe(plan.scandal, plan.bribes_year_to_date))
 		return True, self._bribe_text(standing, needs.standing(), plan)
 

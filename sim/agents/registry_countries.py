@@ -32,9 +32,7 @@ class RegistryCountries:
 
 	def country_of(self, actor: Any) -> str:
 		"""The country an actor answers to: its own, else the home country."""
-		record = getattr(actor, "record", None)
-		country = None if record is None else record.country
-		return country or self.registry.state.home_country
+		return actor.record.country or self.registry.state.home_country
 
 	def country_of_tile(self, tile: str) -> Optional[str]:
 		"""The country whose profile holds a tile; None when none does."""

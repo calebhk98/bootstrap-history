@@ -53,7 +53,9 @@ class Works(Part):
         if not needs.can_pay(quote["money"]):
             return False, "%.2g of %s costs about %s; %s." % (
                 capacity, node_id, needs.money_text(quote["money"], grouped=True), needs.afford_means())
-        needs.send(PayEdge(edges.EDGE_BUILDERS, quote["money"], "building %s" % node_id))
+        refusal = needs.send(PayEdge(edges.EDGE_BUILDERS, quote["money"], "building %s" % node_id))
+        if refusal:
+            return False, refusal
         self.world.works_under_construction.setdefault(tile, {})[node_id] = [needs.year() + quote["years"], capacity]
         return True, "started %.2g of %s on %s for %s; it will take about %.1f years." % (
             capacity, node_id, tile, needs.money_text(quote["money"], grouped=True), quote["years"])

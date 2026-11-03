@@ -113,7 +113,8 @@ class Traders(Part):
         if route is None:
             return 0.0
         daily = self.needs.carriage_facts()["loss_per_day"]
-        return rules.cargo_loss_share(route, daily, sea_freight.hull_loss_per_thousand_km(self.parts.models.sea_crew()))
+        crew = self.parts.models.sea_crew()
+        return rules.cargo_loss_share(route, daily, None if crew is None else sea_freight.hull_loss_per_thousand_km(crew))
 
     def trader_cost_share(self, route, material=None, civilization_id=None, price_flexibility=None,
                           destination_demand_tonnes=None):
