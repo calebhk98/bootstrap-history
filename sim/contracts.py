@@ -17,7 +17,6 @@ from sim.rekey import rename_text
 
 FACILITY = "facility"
 TERM_LOAN = "term_loan"
-STATE_DEBT = "state_debt"
 DEPOSIT = "deposit"
 
 
@@ -87,12 +86,11 @@ class Contracts:
             self._term_debts[currency] = owed
         return self._term_debts[currency]
 
-    def exposure(self, lender: Optional[str] = None, currency: Optional[str] = None, kind: Optional[str] = None) -> float:
+    def exposure(self, lender: Optional[str] = None, currency: Optional[str] = None) -> float:
         """The principal the lender (every lender when none is named) has out."""
         return sum(contract.principal for contract in self.all()
                    if (lender is None or contract.lender == lender)
-                   and (currency is None or contract.currency == currency)
-                   and (kind is None or contract.kind == kind))
+                   and (currency is None or contract.currency == currency))
 
     def facility_of(self, borrower: str) -> Dict[str, float]:
         """lender -> principal it has drawn out on the borrower's facility."""
@@ -106,12 +104,6 @@ class Contracts:
             held[lender] = Contract("facility:%s:%s" % (borrower, lender), lender, borrower, currency, amount, kind=FACILITY)
         else:
             contract.principal += amount
-
-    def set_facility(self, borrower: str, principals: Dict[str, float], currency: str) -> None:
-        """Replace the borrower's facility by `principals` (lender -> principal)."""
-        self.facilities.pop(borrower, None)
-        for lender, principal in principals.items():
-            self.draw(borrower, lender, currency, principal)
 
     def repay_facility(self, borrower: str, lender: str, amount: float) -> None:
         self.facilities[borrower][lender].principal -= amount
@@ -161,6 +153,19 @@ class Contracts:
             contract.principal *= factor
 
     # ---- defaults ---------------------------------------------------------------------------
+    def forgive_facility(self, borrower: str, amount: float) -> float:
+        """The lenders drop `amount` of the borrower's facility principal, the larger drawings first; answers what was dropped (no more
+        than the facility). No money moves."""
+        held = self.facilities.get(borrower) or {}
+        left = max(0.0, amount)
+        for lender in sorted(held, key=lambda who: (-held[who].principal, who)):
+            part = min(left, held[lender].principal)
+            held[lender].principal -= part
+            left -= part
+        if held and sum(contract.principal for contract in held.values()) <= 0.0:
+            del self.facilities[borrower]
+        return max(0.0, amount) - left
+
     def default(self, borrower: str, kind: Optional[str] = None) -> List[Contract]:
         """The borrower closes owing: its contracts of `kind` (all kinds when none) end and are returned. No
         money moves: each lender's claim and the borrower's debt go together, so the loss is booked once."""

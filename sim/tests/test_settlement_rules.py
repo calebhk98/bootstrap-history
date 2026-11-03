@@ -5,7 +5,7 @@ QUICK_TOPIC = True
 import unittest
 
 from sim.finance.constants import SETTLEMENT_CAPITAL_RETAINED_FRACTION, SETTLEMENT_CREDIT_FREEZE_YEARS, SETTLEMENT_REPUTATION_HIT
-from sim.ledger.api import SettleWithEdge
+from sim.ledger.api import WriteOffHouseholdDebt
 from sim.polity.api import SetReputation
 from sim.reporting.api import RecordEvent
 from sim.tests import finance_host, module_harness
@@ -32,7 +32,7 @@ class Debtor:
 
 def settle(debtor, year=100, limit=1000.0):
     debtor.module.settle_insolvency(year, limit)
-    debtor.lines = [command.balance for command in module_harness.sent(debtor.module) if isinstance(command, SettleWithEdge)]
+    debtor.lines = [command.amount for command in module_harness.sent(debtor.module) if isinstance(command, WriteOffHouseholdDebt)]
 
 
 class SettleInsolvency(unittest.TestCase):
@@ -40,7 +40,7 @@ class SettleInsolvency(unittest.TestCase):
     def test_what_is_owed_after_the_write_off_is_the_retained_share_of_the_line(self):
         debtor = Debtor()
         settle(debtor)
-        self.assertAlmostEqual(abs(debtor.lines[0]), 1000.0 * SETTLEMENT_CAPITAL_RETAINED_FRACTION)
+        self.assertAlmostEqual(3000.0 - debtor.lines[0], 1000.0 * SETTLEMENT_CAPITAL_RETAINED_FRACTION)
 
     def test_a_settlement_never_abandons_a_persona_or_institution(self):
         debtor = Debtor()

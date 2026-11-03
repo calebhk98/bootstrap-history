@@ -161,8 +161,8 @@ class Government(RecordedActor):
 			if taken < levy:
 				parts = {name: part * taken / levy for name, part in parts.items()}
 				levy = taken
-			ledger.pay_up_to(payer, self, levy, parts)
-		return levy
+			return ledger.pay_up_to(payer, self, levy, parts)
+		return 0.0
 
 	def military_ask(self, taxable: float, scale: float, world: Any) -> float:
 		"""What the state asks of a militarily useful taxpayer in arms: its unfunded army need,
@@ -233,7 +233,7 @@ class Government(RecordedActor):
 		grant = min(ask, max(0.0, self.money))
 		self.record.patron_grant = grant
 		if grant > 0.0:
-			ledger.transfer(self, world.setting.edge(EDGE_PATRONAGE), grant, "patronage")
+			self.record.patron_grant = ledger.pay_up_to(self, world.setting.edge(EDGE_PATRONAGE), grant, "patronage")
 
 	def employ_standing(self, lines: List[budget.Line], share: float, world: Any) -> None:
 		"""Post the places of the lines it paid for; the labour core hires for them (soldiers among them) and pays them."""

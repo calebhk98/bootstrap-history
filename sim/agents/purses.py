@@ -225,12 +225,18 @@ class Purses:
         self.interest_pending += owed
         return {POOL: owed}
 
-    def pay_arrears(self, borrower: str, owed: float) -> None:
-        """Pay interest that went unpaid in earlier years, from the purse; like any interest it waits in the pool."""
+    def pay_arrears(self, borrower: str, owed: float) -> float:
+        """Pay interest that went unpaid in earlier years from the purse, taking the deposit back first when the purse is short;
+        like any interest it waits in the pool. Never borrows to pay; answers what reached the pool."""
+        short = owed - self.purse(borrower)
+        if short > DEBT_FLOOR:
+            self._take_back(borrower, min(short, self.deposit(borrower)))
         paid = min(owed, self.purse(borrower))
         if paid > DEBT_FLOOR:
             self.book.transfer(Transfer(borrower, POOL, COIN, paid, INTEREST_PAID))
             self.interest_pending += paid
+            return paid
+        return 0.0
 
     def settle_interest(self) -> Dict[str, float]:
         """Share the interest the pool received among its depositors in proportion to their deposits, never more
@@ -287,10 +293,14 @@ class Purses:
         self._take_back(borrower, self.deposit(borrower))
         self._repay(borrower)
 
-    def write_off(self, borrower: str) -> Dict[str, float]:
-        """The borrower closes owing: the claim against it is dropped and the pool bears the loss, every deposit
-        losing in proportion (the cash was booked as an outlay when it left and no repayment follows); the loss."""
-        lost = sum(contract.principal for contract in self.contracts.default(borrower, FACILITY)) + self.bonds.write_off(borrower)
+    def write_off(self, borrower: str, amount: Optional[float] = None) -> Dict[str, float]:
+        """The lenders drop the claim against the borrower and the pool bears the loss, every deposit losing in proportion (the
+        cash was booked as an outlay when it left and no repayment follows); the loss. The whole claim when no `amount` is named,
+        else that much of its facility: one rule for a closing firm and a household settling."""
+        if amount is None:
+            lost = sum(contract.principal for contract in self.contracts.default(borrower, FACILITY)) + self.bonds.write_off(borrower)
+        else:
+            lost = self.contracts.forgive_facility(borrower, amount)
         if self.named_lenders.names(borrower):
             deposits = {depositor: contract.principal for depositor, contract in self.contracts.deposits.items()}
             for depositor, part in self.named_lenders.settle_default(borrower, lost, deposits).items():
@@ -430,7 +440,7 @@ class Purses:
             self.transfer(issuer, POOL, due, BOND_REDEEMED)
         except InsufficientFunds:
             return 0.0
-        self.bonds.retire_due(issuer)
+        self.interest_pending += self.bonds.retire_due(issuer)   # the discount is the depositors' return
         if self.named_lenders.names(issuer):
             owed = self.debt(issuer) + due
             self.named_lenders.repaid(issuer, due / owed if owed > 0.0 else 1.0)

@@ -163,10 +163,10 @@ class TakeFromHouseholdPurse(Command):
 
 
 @dataclass(frozen=True)
-class SettleWithEdge(Command):
-	"""The acting seat's household is brought to `balance` by moving the difference to or from a named edge."""
-	edge: str
-	balance: float
+class WriteOffHouseholdDebt(Command):
+	"""The lenders drop up to `amount` of the acting seat's household debt, the pool's lenders bearing the loss (the one default
+	rule `Purses.write_off`); no edge pays it."""
+	amount: float
 	purpose: Any
 
 

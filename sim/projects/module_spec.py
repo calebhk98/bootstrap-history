@@ -5,7 +5,7 @@ under their own watch (any field of a record), so no channel can say when the an
 from sim.assembly.api import FIRST, KEYED, QUOTE, ExtensionPoint, ModuleSpec, PhaseHook, ViewSpec
 from sim.diffusion.api import ApplyTechEffects
 from sim.knowledge.api import LearnTechnique, RevealFrom
-from sim.ledger.api import NoteSpend, PayEdge, ReceiveFromEdge
+from sim.ledger.api import NoteSpend, PayEdge, WriteOffHouseholdDebt
 from sim.living_stock.api import ChangeHeld
 from sim.materials.api import ApplyThrottle, ReorderProjectMaterials, SettleProjectMaterials
 from sim.polity.api import AddGovernance, AddScandal, CarryOutTransfers, GainReputation, RecordBribe
@@ -128,7 +128,7 @@ MODULE_SPECS = (ModuleSpec(
 	         (RestoreProjectOrder, "apply_restore_project_order"), (Exclude, "apply_exclude"), (Include, "apply_include"), (KeepStaffed, "apply_keep_staffed"),
 	         (WatchActive, "apply_watch_active")),
 	reads=tuple(name for names in READS_BY_OWNER.values() for name in names),
-	sends=(PayEdge, NoteSpend, ReceiveFromEdge, RecordBribe, RecordEvent, NoteConcernChange, RecordAutomation, RecordAutomationSkip, SettleProjectMaterials, ReorderProjectMaterials,
+	sends=(PayEdge, NoteSpend, WriteOffHouseholdDebt, RecordBribe, RecordEvent, NoteConcernChange, RecordAutomation, RecordAutomationSkip, SettleProjectMaterials, ReorderProjectMaterials,
 	       ClearMothball, CloseConcern, ForgetClosureReason, MothballConcern, NoteConcernYear, RestoreConcern, ReviewConcerns,
 	       ReviewReopening, OpenVenture, ReleaseHours, LearnTechnique, RevealFrom, ChangeHeld,
 	       CarryOutTransfers, ApplyTechEffects, GainReputation, AddScandal, AddGovernance, GrantStaff, RecordGoalReached, LoseCrew,

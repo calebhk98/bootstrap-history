@@ -3,9 +3,8 @@
 `Business.reviews.review` (sim/agents/business_review.py) decides which plants close and why; this answers what is particular to
 the founder's seat: the supervision pool, the policy that lets losses be shed, the credit line, and the way a shut plant is
 mothballed rather than forgotten."""
-from sim.agents.api import edges
 from sim.finance.api import constants as finance_constants
-from sim.ledger.api import ReceiveFromEdge
+from sim.ledger.api import WriteOffHouseholdDebt
 
 
 class SeatReview:
@@ -63,4 +62,4 @@ class SeatReview:
 		return self._world.concerns.upkeep(entry_key, size) * finance_constants.CREDITOR_SEIZURE_VALUE_MULTIPLE
 
 	def receive_seizure(self, entry_key, proceeds):
-		self._module.needs.send(ReceiveFromEdge(edges.EDGE_CREDITORS, proceeds, "concern seized by creditors"))
+		self._module.needs.send(WriteOffHouseholdDebt(proceeds, "concern seized by creditors"))

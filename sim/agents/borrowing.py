@@ -148,9 +148,9 @@ class Borrower:
 	def pay_arrears_from_purse(self) -> None:
 		"""Interest left unpaid in earlier years is paid from whatever cash the actor now holds."""
 		record = self.arrears_book
-		paid = min(record.interest_arrears, max(0.0, self.money))  # type: ignore[attr-defined]
+		wanted = min(record.interest_arrears, max(0.0, self.money))  # type: ignore[attr-defined]
+		paid = self.purses.pay_arrears(self.account_id, wanted) if wanted > DEBT_FLOOR else 0.0  # type: ignore[attr-defined]
 		if paid > DEBT_FLOOR:
-			self.purses.pay_arrears(self.account_id, paid)  # type: ignore[attr-defined]
 			self.payments.note_outlay("interest arrears", paid)  # type: ignore[attr-defined]
 			record.interest_arrears -= paid
 

@@ -10,7 +10,7 @@ from sim.agents import ledger
 from sim.agents.api import ActorRecord, ActorsState
 from sim.agents.firm import Firm
 from sim.agents.purses import COIN, POOL, Purses
-from sim.contracts import DEPOSIT, FACILITY, STATE_DEBT, TERM_LOAN, Contract, Contracts
+from sim.contracts import DEPOSIT, FACILITY, TERM_LOAN, Contract, Contracts
 from sim.book import Book
 from sim.economy.types import Loan
 
@@ -61,14 +61,13 @@ class OneRegistry(unittest.TestCase):
         registry.draw("firm:a", "lender:x", COIN, 30.0)
         registry.term_loans.append(Loan("loan:1", "lender:x", "firm:b", COIN, 70.0, 0.1, 4.0, 0.0))
         self.assertEqual(registry.exposure("lender:x", COIN), 100.0)
-        self.assertEqual(registry.exposure("lender:x", COIN, FACILITY), 30.0)
 
-    def test_state_debt_is_a_kind_of_the_same_registry(self):
+    def test_a_default_of_one_kind_leaves_the_other(self):
         registry = Contracts()
-        registry.term_loans.append(Contract("bond:1", "lender:x", "state:a", COIN, 50.0, 0.05, 10.0, kind=STATE_DEBT))
+        registry.term_loans.append(Contract("bond:1", "lender:x", "state:a", COIN, 50.0, 0.05, 10.0, kind=TERM_LOAN))
         registry.draw("state:a", "lender:y", COIN, 10.0)
         self.assertEqual(registry.debt("state:a", COIN), 60.0)
-        self.assertEqual([c.contract_id for c in registry.default("state:a", STATE_DEBT)], ["bond:1"])
+        self.assertEqual([c.contract_id for c in registry.default("state:a", TERM_LOAN)], ["bond:1"])
         self.assertEqual(registry.debt("state:a", COIN), 10.0)
 
     def test_each_owner_saves_its_own_kind_and_a_load_restores_both(self):

@@ -9,13 +9,12 @@ import unittest
 from types import SimpleNamespace
 
 from sim.actors.api import SetLenderOffers, SettleLenderInterest
-from sim.agents.api import edges
 from sim.finance.commands import NoteLenderPosting
 from sim.finance.constants import (DEBT_BONDAGE_DEFAULT_TERM_YEARS, INSOLVENCY_ARTISAN_FLOOR, INSOLVENCY_YEARS_BEFORE_BLEED)
 from sim.finance.state import FinanceSeat
 from sim.labour import trade_data
 from sim.agents.api import Purses
-from sim.ledger.api import NoteHolderBooking, NoteSeatCash, SettleWithEdge
+from sim.ledger.api import NoteHolderBooking, NoteSeatCash, WriteOffHouseholdDebt
 from sim.reporting.api import RecordEvent
 from sim.tests.pool_lenders import lend_from_savers
 from sim.tests import finance_host, module_harness
@@ -146,15 +145,15 @@ class EnterDebtBondage(unittest.TestCase):
     def test_a_society_with_debt_bondage_puts_the_debtor_into_service_for_the_term(self):
         module = self.module({"debt_bondage": True, "bondage_years": 8.0})
         self.assertTrue(module.enter_debt_bondage(100))
-        settled = [(command.edge, command.balance) for command in module_harness.sent(module) if isinstance(command, SettleWithEdge)]
+        settled = [command.amount for command in module_harness.sent(module) if isinstance(command, WriteOffHouseholdDebt)]
         self.assertEqual((module.seat.bondage_years_left, module.seat.bondage_debt), (8.0, 700.0))
-        self.assertEqual(settled, [(edges.EDGE_CREDITORS, 0.0)])
+        self.assertEqual(settled, [700.0])
         self.assertEqual([event.kind for event in events(module)], ["debt_bondage"])
 
     def test_a_society_without_it_does_not(self):
         module = self.module({"debt_bondage": False})
         self.assertFalse(module.enter_debt_bondage(100))
-        self.assertEqual((module.seat.bondage_years_left, [c for c in module_harness.sent(module) if isinstance(c, SettleWithEdge)]), (0.0, []))
+        self.assertEqual((module.seat.bondage_years_left, [c for c in module_harness.sent(module) if isinstance(c, WriteOffHouseholdDebt)]), (0.0, []))
 
     def test_a_debtor_already_in_service_is_not_put_in_again(self):
         module = self.module({"debt_bondage": True}, years_left=3.0)
