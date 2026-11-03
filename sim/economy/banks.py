@@ -52,6 +52,11 @@ class Bank:
     dividend_paid: float = 0.0                                   # what the last year end paid its founder as a dividend
 
 
+def note_dividend(bank: Bank, paid: float) -> None:
+    """The year end paid the bank's founder `paid` as a dividend (nothing when it paid none)."""
+    bank.dividend_paid = paid
+
+
 def dividends_paid_to(record, owner: AgentId) -> float:
     """What the banks `owner` founded paid it as a dividend at the last year end, when the owner keeps its money outside the
     economy's households (a seat): a household's dividend is shared among its tile's cohorts and is theirs."""

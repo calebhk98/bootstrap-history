@@ -19,7 +19,7 @@ def service_deposits(record, money: str, year: int) -> Dict[AgentId, float]:
     Returns the interest each depositor received."""
     received: Dict[AgentId, float] = {}
     for bank_id, bank in sorted(record.capital_markets.banks.items()):
-        bank.dividend_paid = 0.0
+        banks.note_dividend(bank, 0.0)
         deposits = [loan for loan in banks.deposits_of(record, bank_id) if loan.issued_year < year]
         if deposits:
             kept, defaults, interest = _pay(record, bank_id, deposits, money, year)
@@ -90,4 +90,4 @@ def _pay_founder(record, bank, money: str) -> None:
     paid = min(surplus, cash)
     if paid > 0.0:
         record.book.transfer_many(ownership.spread(record, [Transfer(bank.agent_id, bank.founder, money, paid, "dividend")]))
-        bank.dividend_paid = paid
+        banks.note_dividend(bank, paid)
