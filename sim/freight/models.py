@@ -11,7 +11,7 @@ from sim.labour import api as labour_api
 from sim.geography.api import transport as freight_physics
 
 from . import rules
-from .constants import (CANAL_MODE, CARAVAN_STRING_SIZE, FREIGHT_FEED_PRICE_MATERIAL,
+from .constants import (CANAL_MODE, CARAVAN_STRING_SIZE,
                         FREIGHT_VEHICLE_MATERIAL, LAND_FREIGHT_TEAM_SIZE, RAIL_MODE, SEA_MODE)
 
 
@@ -54,15 +54,20 @@ class Models(Part):
         """Geography's train as a freight carrier ({inputs, fuel_material, stock_material, stock_kg})."""
         return self.needs.mode_carrier(RAIL_MODE)["train"]
 
+    def feed_price_material(self):
+        """The material whose book price turns the draught animals' (and the sea crew's) feed kilograms into money: the
+        civilisation's staple grain, a stand-in for fodder, dearer per kilogram than fodder, so the feed cost is an upper bound."""
+        return labour_api.wage_provider.staple_material(self.needs.civilisation())
+
     def carrier_feed_material(self, mode):
         """The material whose price a mode's feed (or fuel) is counted at: coal for a train, the draught animals'
         feed otherwise."""
         train = self.train_carrier() if mode == RAIL_MODE else None
-        return train["fuel_material"] if train else FREIGHT_FEED_PRICE_MATERIAL
+        return train["fuel_material"] if train else self.feed_price_material()
 
     def sea_crew(self):
         """Hands a merchant hull sails with; None while the feed or the timber has no price."""
-        grain_price = self.needs.material_price[FREIGHT_FEED_PRICE_MATERIAL]
+        grain_price = self.needs.material_price[self.feed_price_material()]
         wood_price = self.needs.material_price[FREIGHT_VEHICLE_MATERIAL]
         if grain_price is None or wood_price is None:
             return None
@@ -101,7 +106,7 @@ class Models(Part):
         draught = {"wood_kg": vehicle_wood, "ox": ox_price}
         wanted = {"cart": draught, "road": draught, "pack": {"wood_kg": vehicle_wood, "mule": mule_price},
                   "river_boat": draught, CANAL_MODE: draught, RAIL_MODE: {train["stock_material"]: stock_price},
-                  SEA_MODE: {FREIGHT_FEED_PRICE_MATERIAL: self.needs.material_price[FREIGHT_FEED_PRICE_MATERIAL],
+                  SEA_MODE: {self.feed_price_material(): self.needs.material_price[self.feed_price_material()],
                              "wood_kg": vehicle_wood}}
         unpriced = {mode: sorted(material for material, price in needed.items() if price is None)
                     for mode, needed in wanted.items()}

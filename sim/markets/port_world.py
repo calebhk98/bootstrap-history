@@ -7,7 +7,6 @@ partners and the freight, coin and resources owners are in port_world_foreign.py
 port_world_map.py (`map`)."""
 from types import SimpleNamespace
 
-from sim.freight.api import FREIGHT_FEED_PRICE_MATERIAL
 
 from . import trade_duty
 from .port_world_foreign import ForeignReads
@@ -101,8 +100,6 @@ class LabourReads:
 
 
 class PortWorld:
-
-	FREIGHT_FEED_PRICE_MATERIAL = FREIGHT_FEED_PRICE_MATERIAL
 
 	def __init__(self, needs, owner, parts):
 		self._needs = needs

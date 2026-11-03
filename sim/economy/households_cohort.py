@@ -12,7 +12,7 @@ from typing import Dict, List, Mapping, Optional, Tuple
 from sim.constants import declare
 from sim.world import demand
 
-from . import labour
+from sim.labour.api import reservation_wage_per_hour
 from .protocols import MarketView
 from .types import AgentId, LabourOffer, TileId, TradeId
 from .replaced import replaced
@@ -103,8 +103,8 @@ def labour_offers(cohort: Cohort, workers_by_trade: Mapping[TradeId, float], vie
         workers = workers_by_trade[trade]
         if workers <= 0.0:
             continue
-        reservation = labour.reservation_wage(subsistence_cost_per_year, working_hours_per_year,
-                                              danger_by_trade.get(trade, 0.0), value_of_life)
+        reservation = reservation_wage_per_hour(subsistence_cost_per_year, working_hours_per_year,
+                                                danger_by_trade.get(trade, 0.0), value_of_life)
         offers.append(LabourOffer(cohort.agent_id, trade, view.area_of(trade, cohort.tile),
                                   workers * working_hours_per_year, reservation))
     return offers

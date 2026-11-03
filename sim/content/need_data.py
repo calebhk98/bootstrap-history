@@ -41,7 +41,9 @@ def load_needs(root: str, mods_dir: Optional[str] = None) -> Dict[str, Dict[str,
 
 
 def check_needs(needs: Dict[str, Any], goods: Dict[str, Any]) -> None:
-    """Every good names known needs; every need has a budget weight, none negative (a need met by floors alone has none)."""
+    """Every good names known needs; every need has a budget weight, none negative (a need met by floors alone has none);
+    each role (the part a need plays in the economy's books) belongs to one need."""
+    roles: Dict[str, str] = {}
     for need_id, spec in needs.items():
         if "surplus_budget_share" not in spec or not spec["surplus_budget_share"] >= 0:
             raise ModError("need %r needs a surplus_budget_share that is not negative" % need_id)
@@ -49,6 +51,11 @@ def check_needs(needs: Dict[str, Any], goods: Dict[str, Any]) -> None:
             raise ModError("need %r needs a positive satiation_per_capita_per_year" % need_id)
         if not spec.get("satiation_multiple_of_floor", 1) >= 1:
             raise ModError("need %r needs a satiation_multiple_of_floor of at least one" % need_id)
+        role = spec.get("role")
+        if role is not None:
+            if role in roles:
+                raise ModError("needs %r and %r both have the role %r" % (roles[role], need_id, role))
+            roles[role] = need_id
     for material, attributes in goods.items():
         for need_id, effectiveness in (attributes.get("satisfies") or {}).items():
             if need_id not in needs:

@@ -8,6 +8,7 @@ import time
 import unittest
 
 from sim.tests.economy_view_defaults import ViewDefaults
+from sim.world import need_basket
 from sim.economy import households, opening_resting
 from sim.economy.types import EDGE_CONSUMPTION, GoodSpec
 
@@ -31,7 +32,7 @@ SPECS = {
     "plough": GoodSpec("plough", 10.0, 0.0, 5.0, "tool"),
     "pepper": GoodSpec("pepper", 1.0, 0.0, 0.0, "spice"),
 }
-BASKET = households.make_basket(NEED_DATA, {})
+BASKET = need_basket.make_basket(NEED_DATA, {})
 
 
 class View(ViewDefaults):
@@ -222,7 +223,7 @@ class SavingTests(unittest.TestCase):
 
 
 class SubstituteCeilingTests(unittest.TestCase):
-    FOOD = households.make_basket({
+    FOOD = need_basket.make_basket({
         "needs": {"food": {"surplus_budget_share": 1.0, "subsistence_per_capita_per_year": 200.0}},
         "goods": {"grain": {"satisfies": {"food": 1.0}}, "meat": {"satisfies": {"food": 1.0}}}}, {})
     SPECS = {"grain": GoodSpec("grain", 1.0, 0.1, 0.0, "food"), "meat": GoodSpec("meat", 1.0, 0.5, 0.0, "food")}

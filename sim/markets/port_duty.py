@@ -2,7 +2,11 @@
 
 Part of the port. A state's tariff toward a country is a share of the goods' value at their source (sim/markets/trade_duty.py), so a
 good landed at that value plus the tariff has the share `tariff / (1 + tariff)` of its landed price as duty. The economy
-(sim/economy/tariffs.py) takes that share of what buyers pay a foreign edge for the good, for the home state."""
+(sim/economy/tariffs.py) takes that share of what buyers pay a foreign edge for the good, for the home state.
+
+APPROXIMATION (no complaint covers it yet): the share is taken of the landed price as if that price were source value plus
+tariff only. The landed price also carries carriage from the source, and the tariff is on the value at the source, so with
+carriage the true duty share is smaller than `tariff / (1 + tariff)`; the economy's duty is overstated by that carriage."""
 from .port_cargo import LANDING
 
 
@@ -17,5 +21,5 @@ def import_duty_shares(legs, tariff_toward):
         tariff = tariff_toward(leg["partner"])
         good = leg["material"]
         tonnes[good] = tonnes.get(good, 0.0) + leg["tonnes"]
-        duty[good] = duty.get(good, 0.0) + leg["tonnes"] * tariff / (1.0 + tariff)
+        duty[good] = duty.get(good, 0.0) + leg["tonnes"] * tariff / (1.0 + tariff)   # approximation: ignores carriage in the landed price (module docstring)
     return {good: duty[good] / tonnes[good] for good in sorted(tonnes) if duty[good] > 0.0}

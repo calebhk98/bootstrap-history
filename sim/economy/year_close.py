@@ -276,7 +276,7 @@ def _with_sales(producer, recipe, ledger: YearLedger, sold: float, prices):
     """Expected sales move toward the runs it sold this year (`sold`, from `runs_sold`)."""
     worked = worked_runs(producer, recipe, ledger, producers.paying_output(recipe, prices))
     staffed = staffed_runs(recipe.labour_hours, ledger.hours_hired.get(producer.agent_id, {}))
-    staffed = -1.0 if staffed is None else min(staffed, producer.capacity_runs)
+    staffed = None if staffed is None else min(staffed, producer.capacity_runs)
     if producer.expected_sales <= 0.0:
         return replaced(producer, expected_sales=sold, last_runs=worked, staffed_runs=staffed)
     share = producers.EXPECTATION_ADJUSTMENT_SHARE

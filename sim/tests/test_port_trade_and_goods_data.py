@@ -7,7 +7,7 @@ import os
 
 from .harness import *  # noqa: F401,F403
 
-from sim.economy import labour
+from sim.labour.api import reservation_wage_per_hour
 from sim.content.catalog import trade_fields, trade_from
 from sim.labour import trade_data
 
@@ -38,8 +38,8 @@ for name, spec in sorted(trades_file.items()):
           isinstance(risk, (int, float)) and 0.0 <= risk < 1.0 and spec.get("fatality_source") and spec.get("fatality_confidence"), spec)
 check("mining, seafaring and soldiering carry a risk",
       all(trades_file[name]["fatality_risk_per_year"] > 0.0 for name in ("miner", "sailor", "soldier")))
-dangerous_ask = labour.reservation_wage(100.0, 2000.0, trades_file["miner"]["fatality_risk_per_year"], 20.0)
-safe_ask = labour.reservation_wage(100.0, 2000.0, 0.0, 20.0)
+dangerous_ask = reservation_wage_per_hour(100.0, 2000.0, trades_file["miner"]["fatality_risk_per_year"], 20.0)
+safe_ask = reservation_wage_per_hour(100.0, 2000.0, 0.0, 20.0)
 check("a dangerous trade's offered wage exceeds a safe one with equal subsistence", dangerous_ask > safe_ask, (dangerous_ask, safe_ask))
 
 # 443: service lives are in data.

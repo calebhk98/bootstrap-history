@@ -17,7 +17,7 @@ def _economy(prices=None):
     return module_harness.build(Freight, views={
         "material_prices": lambda: table, "material_price": lambda tag: table.get(tag), "trade_registry": lambda: {"labourer": {"fallback": True}, "sailor": {"role": "sailor"}, "merchant": {"role": "merchant"}},
             "wage": lambda trade: 2.0,
-        "market_rate": lambda: 0.05, **land_views.of({}, FREIGHT_LAND_VIEWS)})
+        "market_rate": lambda: 0.05, "civilisation": lambda: {"id": "t", "staple": "wheat_kg"}, **land_views.of({}, FREIGHT_LAND_VIEWS)})
 
 
 class RailCarriageTests(unittest.TestCase):

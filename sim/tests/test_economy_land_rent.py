@@ -49,7 +49,7 @@ class PlanRentTests(unittest.TestCase):
     def test_without_rent_or_cap_the_plan_is_unchanged(self):
         view = farm_view(5.0)
         self.assertEqual(producers.plan(farmer(), FARM, view, 1000.0),
-                         producers.plan(farmer(land_rent_per_run=0.0, land_run_cap=-1.0), FARM, view, 1000.0))
+                         producers.plan(farmer(land_rent_per_run=0.0, land_run_cap=None), FARM, view, 1000.0))
 
 
 class EntryRentTests(unittest.TestCase):

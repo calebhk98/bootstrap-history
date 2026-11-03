@@ -27,10 +27,6 @@ CANAL_MODE = "canal"
 DOMESTIC_CART_MODE = "cart"
 # Vehicles and hulls are priced as their timber (their iron fittings are left out).
 FREIGHT_VEHICLE_MATERIAL = "wood_kg"
-# The existing book price that turns transport.py's feed kilograms into money: a stand-in for fodder, not the
-# civilisation's staple (that is its `staple` field, read through wage_provider.staple_material). Wheat is dearer per
-# kilogram than real fodder, so the feed cost is an upper bound.
-FREIGHT_FEED_PRICE_MATERIAL = "wheat_kg"
 # Hauled materials whose routes are kept, before the oldest are dropped.
 MATERIAL_ROUTES_KEPT = 512
 

@@ -2,6 +2,6 @@
 
 WALL = "two-way"  # nothing here imports sim/engine/; the engine bridge hands it the legacy state it still needs
 
-from .constants import FREIGHT_FEED_PRICE_MATERIAL, SEA_MODE
+from .constants import SEA_MODE
 from .route import Leg, Route
 from . import rules

@@ -6,9 +6,9 @@ import dataclasses
 import types
 import unittest
 
-from sim.economy import diagnostics, labour
+from sim.economy import diagnostics
+from sim.labour.api import reservation_wage_per_hour
 from sim.world.need_basket import NeedSpec
-from sim.economy import legacy_need_defaults
 from sim.economy.setup import EconomySetup, SetupTrade
 
 
@@ -16,8 +16,8 @@ class SetupContentIdTests(unittest.TestCase):
     def test_hunger_need_and_unskilled_trade_are_setup_fields(self):
         defaults = {field.name: field.default for field in dataclasses.fields(EconomySetup)}
         self.assertIs(defaults["unskilled_trade"], dataclasses.MISSING)   # required: the port names it
-        self.assertEqual(defaults["hunger_need"], legacy_need_defaults.HUNGER_NEED_ID)
-        self.assertEqual(defaults["fuel_need"], legacy_need_defaults.FUEL_NEED_ID)
+        for name in ("hunger_need", "fuel_need", "work_need"):
+            self.assertIs(defaults[name], dataclasses.MISSING)   # required: the port reads them from the needs' roles
 
 
 class HungerNeedTests(unittest.TestCase):
@@ -35,8 +35,8 @@ class DangerPayTests(unittest.TestCase):
         self.assertEqual(SetupTrade("miner").fatality_risk_per_year, 0.0)
 
     def test_a_risky_trade_has_a_higher_reservation_wage(self):
-        safe = labour.reservation_wage(100.0, 2000.0, SetupTrade("clerk").fatality_risk_per_year, 20.0)
-        risky = labour.reservation_wage(100.0, 2000.0, SetupTrade("miner", 0.0, 0.01).fatality_risk_per_year, 20.0)
+        safe = reservation_wage_per_hour(100.0, 2000.0, SetupTrade("clerk").fatality_risk_per_year, 20.0)
+        risky = reservation_wage_per_hour(100.0, 2000.0, SetupTrade("miner", 0.0, 0.01).fatality_risk_per_year, 20.0)
         self.assertGreater(risky, safe)
 
 

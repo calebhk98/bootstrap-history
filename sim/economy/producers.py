@@ -93,12 +93,12 @@ class Producer:
     expected_sales: float = 0.0             # runs' worth of output it expects to sell a year; 0 unknown
     last_runs: float = -1.0                 # runs it worked last year; below zero before its first year
     land_rent_per_run: float = 0.0          # rent on the land a run works, set yearly by the land market
-    land_run_cap: float = -1.0              # runs the land it was granted allows; below zero for no limit
+    land_run_cap: Optional[float] = None    # runs the land it was granted allows; None for no limit
     workshops: int = 1                      # independent workshops it stands for: each newcomer to its recipe and tile joins it
     net_earnings_history: Tuple[float, ...] = ()   # its last years' net earnings, oldest first (firm_finance.py)
     revenue_history: Tuple[float, ...] = ()        # its last years' revenue, oldest first
     idle_years: int = 0                     # years it stays idle after a bankruptcy: no runs, no dividend
-    staffed_runs: float = -1.0              # runs the hands it hired last year could have worked; below zero when unknown
+    staffed_runs: Optional[float] = None    # runs the hands it hired last year could have worked; None when unknown
     crew_runs: Mapping[str, float] = field(default_factory=dict)   # runs its crew has made, by trade (practice.py); a trade absent is an established crew
 
 
@@ -298,7 +298,7 @@ def plan(producer: Producer, recipe: Recipe, view: MarketView, cash: float) -> P
                  runs_for_stock(producer, recipe, view, variable, outputs))
     runs = max(0.0, min(within_a_years_change(producer, chosen), affordable))
     wanted = runs
-    if producer.land_run_cap >= 0.0:
+    if producer.land_run_cap is not None:
         runs = min(runs, producer.land_run_cap)
     ratio = working_cost_ratio(revenue, variable)
     if runs <= 0.0 or ratio <= 0.0:
@@ -319,7 +319,7 @@ def within_a_years_change(producer: Producer, runs: float) -> float:
     if producer.last_runs < 0.0:
         return runs
     step = OUTPUT_CHANGE_SHARE_PER_YEAR * producer.capacity_runs
-    anchor = change_anchor(producer.last_runs, min(producer.staffed_runs, producer.capacity_runs))
+    anchor = change_anchor(producer.last_runs, None if producer.staffed_runs is None else min(producer.staffed_runs, producer.capacity_runs))
     return max(anchor - step, min(anchor + step, runs))
 
 

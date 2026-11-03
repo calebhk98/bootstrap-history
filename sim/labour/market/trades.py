@@ -24,7 +24,9 @@ def _median(values: List[float]) -> float:
     return ordered[len(ordered) // 2] if ordered else 0.0
 
 
-def trade_specs(registry: Mapping[str, Any]) -> Dict[str, TradeSpec]:
+def training_years_by_trade(registry: Mapping[str, Any]) -> Dict[str, float]:
+    """Years of training per trade; a trade that states none takes the median of its family's stated years (the
+    registry's entries are plain mappings or records)."""
     years_by_family: Dict[str, List[float]] = {}
     for entry in registry.values():
         if field_of(entry, "training_years") is not None:
@@ -35,6 +37,11 @@ def trade_specs(registry: Mapping[str, Any]) -> Dict[str, TradeSpec]:
         stated = field_of(entry, "training_years")
         years[trade_id] = float(stated) if stated is not None else _median(
             years_by_family.get(field_of(entry, "family", ""), []))
+    return years
+
+
+def trade_specs(registry: Mapping[str, Any]) -> Dict[str, TradeSpec]:
+    years = training_years_by_trade(registry)
     flagged = {trade_id for trade_id, entry in registry.items() if field_of(entry, "fallback")}
     if not flagged and years:
         fewest = min(years.values())

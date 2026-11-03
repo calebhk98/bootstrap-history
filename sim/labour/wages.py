@@ -14,7 +14,7 @@ Nothing here knows about any civilisation or actor: a `WageSchedule` is built
 from plain numbers, so any actor that owns a workforce can own one.
 """
 import copy
-from typing import Any, Dict, Iterable, Mapping, Optional
+from typing import Any, Dict, Iterable, Mapping
 
 from sim.constants import declare
 from sim.unit_conversions import HOURS_PER_PERSON_YEAR
@@ -53,22 +53,6 @@ def subsistence_wage_per_hour(food_kg_per_person_year: float,
     yearly_need = (food_kg_per_person_year * food_price_per_kg
                    * people_fed_per_worker * non_food_markup)
     return yearly_need / hours_per_year
-
-
-def training_years_with_family_default(registry_training: Mapping[str, Optional[float]],
-                                       family_of: Mapping[str, str]) -> Dict[str, float]:
-    """Years per trade; a trade that states none takes its family's median."""
-    known_by_family: Dict[str, list] = {}
-    for trade, years in registry_training.items():
-        if years is not None:
-            known_by_family.setdefault(family_of.get(trade, ""), []).append(years)
-    resolved = {}
-    for trade, years in registry_training.items():
-        if years is None:
-            family_years = sorted(known_by_family.get(family_of.get(trade, ""), [0.0]))
-            years = family_years[len(family_years) // 2]
-        resolved[trade] = float(years)
-    return resolved
 
 
 class WageSchedule(object):

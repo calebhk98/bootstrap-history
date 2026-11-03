@@ -209,7 +209,7 @@ class Economy:
                                      bondage_hours.works_of_producers(record), bondage.BONDED_HOURS_OWED_SHARE)
         everyone, labour_bids = placed.offers, placed.bids
         supply = self._hour_supply(everyone, view, outside_option)
-        people_before = flight_step.people_before(setup, record.labour)
+        people_before = flight_step.people_before(record.labour)
         labour_report = clear_labour(setup, record, labour_bids, everyone, ledger, context, supply=supply)
         flight_step.settle(setup, record, inputs, labour_report, people_before, context, self.carriage)
         ledger.migrated_by_tile = {area_tile(area): change for area, change in sorted(labour_report.migrated.items()) if change}

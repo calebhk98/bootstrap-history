@@ -6,7 +6,7 @@ nodes it holds; the economy only receives the recipes.
 """
 import dataclasses
 
-from sim.economy.api import (opening_market_rate, EconomySetup, carriage_wear, SiteLimit, SetupTrade, currency_from_coin_standard, goods_specs, household_grinding, households, households_work,
+from sim.economy.api import (opening_market_rate, EconomySetup, carriage_wear, SiteLimit, SetupTrade, currency_from_coin_standard, goods_specs, household_grinding, households_work, need_roles,
                              plant_builds, recipe_tile_key,
                              recipes_from_production_data, taxes, tile_costs, with_tool_wear)
 from sim.agents import api as agents_api
@@ -16,7 +16,7 @@ from sim.labour import api as labour_api
 
 from . import port_closure, port_crop_prices, port_data, port_sites
 from .port_stores import opening_store_values
-from sim.freight.api import FREIGHT_FEED_PRICE_MATERIAL, SEA_MODE
+from sim.freight.api import SEA_MODE
 
 
 def _runnable(entry, held_nodes):
@@ -110,7 +110,7 @@ def opening_values(sim):
         "carriage_crew": {mode: [rate["crew_trade"], rate["crew_hours_per_tonne_km"]]
                           for mode, rate in rates.items()},
         "carriage_handling_trade": {mode: rate["handling_trade"] for mode, rate in rates.items() if rate.get("handling_trade")},
-        "carriage_feed_good": FREIGHT_FEED_PRICE_MATERIAL,
+        "carriage_feed_good": labour_api.wage_provider.staple_material(civ),
         "carriage_teams": {mode: {key: rate[key] for key in ("carriers", "tonne_km_per_team_day", "team_payload_tonnes", "animal_feed_kg_per_tonne_km")}
                            for mode, rate in rates.items()},
         "held_nodes": sorted(sim.production.held_and_running(include_starting=False)),
@@ -197,7 +197,7 @@ def build_setup(sim, opening=None, production=None):
     mint_recipe = (recipes_from_production_data(production, [opening["mint_recipe"]])[opening["mint_recipe"]]
                    if opening.get("mint_recipe") else None)
     need_data = sim.household_need_data()
-    basket = households.make_basket(need_data, production, civ_values=society_at_opening(civ, opening))
+    basket = need_basket.make_basket(need_data, production, civ_values=society_at_opening(civ, opening))
     goods = set()
     for recipe in recipes.values():
         goods.update(recipe.outputs, recipe.inputs, recipe.plant_goods)
@@ -243,6 +243,9 @@ def build_setup(sim, opening=None, production=None):
         working_hours_per_year=float(sim.scenario.HOURS_PER_PERSON_YEAR), working_share=float(opening["working_share"]),
         gini=demand.GINI_COEFFICIENT_PREINDUSTRIAL_AGRARIAN, opening_population_by_tile=population_by_tile,
         need_share_by_trade={trade: float(share) for trade, share in (opening.get("need_shares") or {}).items()},
+        hunger_need=need_roles.need_of_role(need_data, need_roles.HUNGER_ROLE),
+        fuel_need=need_roles.need_of_role(need_data, need_roles.FUEL_ROLE),
+        work_need=need_roles.need_of_role(need_data, need_roles.HOUSEHOLD_WORK_ROLE),
         unskilled_trade=opening["unskilled_trade"], servant_trade=opening["servant_trade"], debt_bondage_years=sim.finance.debt_bondage_term_years(), opening_prices=prices, opening_wages=wages, opening_rate=float(opening["rate"]),
         capital_tile=by_people[0], port_tile=(coastal or by_people)[0],
         land_per_run={recipe_id: float(production[recipe_id].get("land_hectare_years") or 0.0)
