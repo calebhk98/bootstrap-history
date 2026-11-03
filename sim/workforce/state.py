@@ -40,8 +40,8 @@ class WorkforceSeat:
     reserve_scholars: int = 0
     # the apprentices in training, one row per intake (sim/labour/labour_training.py)
     training: List[TrainingRow] = field(default_factory=list)
-    trade_schools: Optional[int] = None
-    worker_housing_places: Optional[int] = None
+    trade_schools: Optional[Dict[str, float]] = None
+    worker_housing_places: Optional[float] = None
     # the standing bid in the labour core: people wanted by trade (the places `hire` posts); `employees` is what the core hired last clearing
     staff_wanted: Dict[str, float] = field(default_factory=dict)
     # one-year orders in the labour core, purpose -> trade -> hours: posted with the standing places, cleared at the clearing;
