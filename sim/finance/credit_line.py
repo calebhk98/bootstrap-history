@@ -16,7 +16,7 @@ from . import rules
 from .affordability import appearances_spending, spending_power_of
 from .constants import (CREDIT_LINE_EARNING_MULTIPLE, CREDIT_LINE_FLOOR_UPKEEP_BUFFER_SHARE,
                         CREDIT_LINE_LABOUR_HOURS_PER_FOREST_HA, CREDIT_LINE_LABOUR_HOURS_PER_REPUTATION_POINT,
-                        CREDIT_SURPLUS_YEARS_MULTIPLE, LIVING_COST_APPEARANCES_SHARE_OF_ROOM, LIVING_COST_STATUS_PER_CAPITAL,
+                        CREDIT_SURPLUS_YEARS_MULTIPLE, DEBT_SERVICE_SHARE_OF_SURPLUS, LIVING_COST_APPEARANCES_SHARE_OF_ROOM, LIVING_COST_STATUS_PER_CAPITAL,
                         SPENDING_DRAW_SHARE_ORDINARY)
 
 
@@ -53,13 +53,13 @@ class CreditLine(Part):
 		floor = self.living_cost(revenue=earning if revenue is None else revenue, upkeep=upkeep_amount, capital=capital) \
 			+ upkeep_amount * CREDIT_LINE_FLOOR_UPKEEP_BUFFER_SHARE
 		# no lender advances more than income can carry: the one carried-debt function (`capital_market.serviceable_debt`) every
-		# borrower uses, at the opening's rate where money is cheaper than at the start (cheaper money from society's saving does
-		# not enlarge what this borrower can carry), the share being the years of earning a lender will carry at that opening rate.
+		# borrower uses (`Borrower.credit_ceiling`), at the opening's rate where money is cheaper than at the start (cheaper money
+		# from society's saving does not enlarge what this borrower can carry), at the same share of the earning going on interest.
 		# The running tab carries interest too, so only the earning left after that interest backs new advances.
 		market_rate = self.parts.capital_market.market_rate()
 		opening_rate = opening_market_rate()
 		serviceable = floor + capital_market.serviceable_debt(
-			earning - floor * market_rate, max(market_rate, opening_rate), CREDIT_SURPLUS_YEARS_MULTIPLE * opening_rate)
+			earning - floor * market_rate, max(market_rate, opening_rate), DEBT_SERVICE_SHARE_OF_SURPLUS)
 		return base, floor, serviceable
 
 	def credit_limit(self, revenue: Optional[float] = None, upkeep: Optional[float] = None, capital: Optional[float] = None) -> float:

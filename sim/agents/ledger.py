@@ -46,13 +46,15 @@ def listening(hook: Callable[[Any, Any, float, Purpose], None]) -> Iterator[None
 def transfer(payer: Any, payee: Any, amount: float, purpose: Purpose) -> None:
 	"""Move `amount` from `payer` to `payee`.
 
-	`purpose` is a label, or a mapping of label to share of the amount when one
-	payment covers several things; the amount moved is authoritative. A payer in
+	`purpose` is a label, or a mapping of label to the amount of each part when one
+	payment covers several things; the amount moved is authoritative, so a mapping that totals more or less is booked in
+	proportion (`scaled`). A payer in
 	the one book draws what its purse lacks on its facility within its limit; beyond
 	that, or beyond what the economy's lenders hold, the payment raises `InsufficientFunds`.
 	"""
 	if amount == 0:
 		return
+	purpose = scaled(purpose, amount)
 	purses = getattr(payer, "purses", None)
 	if purses is not None and getattr(payee, "purses", None) is purses:
 		# both keep accounts in the one book: a single posting, the payer drawing on its facility if short
@@ -114,6 +116,7 @@ def reverse(payee: Any, payer: Any, amount: float, purpose: Purpose) -> None:
 	It repays no facility, charges no coin cost and posts no flow line."""
 	if amount == 0:
 		return
+	purpose = scaled(purpose, amount)
 	purses = getattr(payee, "purses", None)
 	if purses is not None and getattr(payer, "purses", None) is purses:
 		purses.reverse(payee.account_id, payer.account_id, amount, purposes_label(purpose))
@@ -138,6 +141,16 @@ def cover(payer: Any, payees: List[Any], amount: float) -> Callable[[], None]:
 def purposes_label(purpose: Purpose) -> str:
 	"""A posting's purpose as the book's one label."""
 	return purpose if isinstance(purpose, str) else "+".join(sorted(purpose))
+
+
+def scaled(purpose: Purpose, amount: float) -> Purpose:
+	"""The purpose with a mapping's parts brought to total `amount`, in proportion; a label as it is."""
+	if not isinstance(purpose, Mapping):
+		return purpose
+	total = sum(purpose.values())
+	if total <= 0.0 or abs(total - amount) <= abs(amount) * ROUNDING_SHARE:
+		return purpose
+	return {name: part * amount / total for name, part in purpose.items()}
 
 
 def parts(purpose: Purpose, amount: float) -> Mapping[str, float]:

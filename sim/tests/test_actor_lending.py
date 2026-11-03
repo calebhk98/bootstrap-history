@@ -73,21 +73,40 @@ class LendersForADraw(unittest.TestCase):
     listing = {"currency": "unit", "coin_per_unit": 2.0, "lenders": [("cohort:a", 10.0, 10.0, 10.0, 0.04), ("bank:b", 5.0, 5.0, 5.0, 0.09)]}
 
     def lenders(self, account, rate, listing=(True, listing)):
-        actor = SimpleNamespace(rate_on_loan=lambda world, amount: rate)
+        credit = SimpleNamespace(rate_ceiling=lambda account_id, amount: rate)
         module = actors_over(views={"agent_lender_listing": lambda: listing})
-        module.parts.cast.actor_world = lambda: SimpleNamespace(registry=SimpleNamespace(actors={"firm:1": actor}))
+        module.parts.cast.actor_world = lambda: SimpleNamespace(credit=credit)
         return module.lenders_for_draw(account, 100.0)
 
     def test_only_lenders_asking_no_more_than_the_draws_rate_are_offered(self):
         unit, per_unit, rows = self.lenders("firm:1", 0.05)
         self.assertEqual((unit, per_unit, [row[0] for row in rows]), ("unit", 2.0, ["cohort:a"]))
 
-    def test_an_account_no_actor_stands_behind_is_offered_every_lender(self):
-        self.assertEqual([row[0] for row in self.lenders("seat:a", 0.0)[2]], ["cohort:a", "bank:b"])
+    def test_a_dearer_rate_offers_every_lender_cheapest_first(self):
+        self.assertEqual([row[0] for row in self.lenders("firm:1", 0.10)[2]], ["cohort:a", "bank:b"])
 
     def test_no_lenders_listed_or_an_economy_still_opening_offers_none(self):
         self.assertIsNone(self.lenders("firm:1", 0.05, (False, None)))
         self.assertIsNone(self.lenders("firm:1", 0.05, (True, dict(self.listing, lenders=[]))))
+
+
+class RateCeiling(unittest.TestCase):
+    def credit(self, households=("seat:a",)):
+        from sim.actors.world_credit import Credit
+        import contextlib
+        actor = SimpleNamespace(rate_on_loan=lambda world, amount: 0.07)
+        needs = SimpleNamespace(seat_list=lambda: {"households": list(households)}, act_as=lambda seat_id: contextlib.nullcontext(),
+                                household_rate_on_loan=lambda amount: 0.06, market_rate=lambda: 0.04)
+        return Credit(SimpleNamespace(registry=SimpleNamespace(actors={"firm:1": actor}), needs=needs))
+
+    def test_an_actor_pays_its_own_rate_on_the_loan(self):
+        self.assertEqual(self.credit().rate_ceiling("firm:1", 10.0), 0.07)
+
+    def test_a_seat_household_pays_its_own_rate_on_the_loan(self):
+        self.assertEqual(self.credit().rate_ceiling("seat:a", 10.0), 0.06)
+
+    def test_the_pool_refilling_a_take_back_is_held_to_the_market_rate(self):
+        self.assertEqual(self.credit().rate_ceiling("pool:credit", 10.0), 0.04)
 
 
 if __name__ == "__main__":

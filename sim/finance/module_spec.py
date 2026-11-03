@@ -55,6 +55,7 @@ MODULE_SPECS = (ModuleSpec(
 		ViewSpec("capital_market_report", "capital_market_report", **_SEAT),
 		ViewSpec("debt_status", "debt_status", **_SEAT),
 		ViewSpec("debt_interest_rate", "debt_interest_rate", **_SEAT),
+		ViewSpec("household_rate_on_loan", "household_rate_on_loan", kind=QUOTE, seat_scoped=True),
 		ViewSpec("debt_service_share_of_surplus", "debt_service_share_of_surplus", **_LIVE),
 		ViewSpec("credit_limit", "credit_limit", kind=QUOTE, seat_scoped=True),
 		ViewSpec("credit_line_sought", "credit_line_sought", kind=QUOTE, seat_scoped=True),
