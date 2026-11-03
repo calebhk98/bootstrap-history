@@ -47,7 +47,7 @@ class MarketClearing(Part):
 
 	# ---- the turn of the year ----
 
-	def step_market(self, seats=None):
+	def step_market(self):
 		"""Close the year: the agent economy's year runs, then the actors' trade tallies reset."""
 		self.needs.send(FinishWays())
 		economy = self.parts.market_objects.economy

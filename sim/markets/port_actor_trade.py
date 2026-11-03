@@ -88,10 +88,12 @@ class ActorTrade:
 
     def settle(self, sales, purchases):
         """What the actors' sales fetched and their budgets left over turn back into their coin; the goods unsold go
-        back out. Bought capital assets stay with their buyer and materials are used up."""
+        back to their seller's stores. Bought capital assets stay with their buyer and materials are used up."""
         economy = self._agent.economy()
-        proceeds, refunds, delivered = port_actors.close(economy, sales, purchases)
+        proceeds, refunds, delivered, unsold = port_actors.close(economy, sales, purchases)
         actors_api.keep_deliveries(self._world.scenario.actors.actors, delivered, tonnes_per_unit)   # goods a buyer that keeps its purchases bought join its stores, in tonnes
+        for seller, goods in sorted(unsold.items()):   # what did not sell goes back to the seller's stores
+            port_actors.take_back(self._world.scenario.actors.actors[seller].record.stores, goods, tonnes_per_unit)
         coin = economy_api.coin_per_unit(economy)
         for amounts, label in ((proceeds, "market sales"), (refunds, "market purchases returned")):
             for actor_id, units in sorted(amounts.items()):

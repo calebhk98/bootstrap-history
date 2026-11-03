@@ -7,7 +7,7 @@ write the flows and the record in place."""
 from sim.assembly.api import KEYED, QUOTE, ModuleSpec, PhaseHook, RepriceTree, ViewSpec
 from sim.demography.api import MovePeople, RecordFoodEaten
 from sim.diffusion.api import NoteFirstRuns
-from sim.foreign_trade.api import ResetActorTradeTallies, SettleFlow, SettleTraderCargo
+from sim.foreign_trade.api import ResetActorTradeTallies, SettleTraderCargo
 from sim.land.api import FinishWays
 from sim.ledger.api import ChangeStock, PayEdge, RescaleHouseholdMoney, PayExchange, ReceiveFromEdge, ReceiveFromExchange
 from sim.reporting.api import CloseRealOutput, RecordEvent
@@ -104,5 +104,5 @@ MODULE_SPECS = (ModuleSpec(
 	kernels=KERNELS,
 	reads=tuple(name for names in READS_BY_OWNER.values() for name in names),
 	sends=(MovePeople, RecordFoodEaten, ResetActorTradeTallies, CloseRealOutput, FinishWays, RepriceOpeningMoney, RepriceTree, RescaleHouseholdMoney, PayEdge, ReceiveFromEdge, ChangeStock, PayExchange, ReceiveFromExchange,
-	       SettleFlow, SettleTraderCargo, FellTimber, RegrowTimber, DrawDeposit, NoteFirstRuns, StaffArrived, HoursArrived, ClearingSettled, NewcomersPlaced, NoteClearedWage, RecordEvent),
+	       SettleTraderCargo, FellTimber, RegrowTimber, DrawDeposit, NoteFirstRuns, StaffArrived, HoursArrived, ClearingSettled, NewcomersPlaced, NoteClearedWage, RecordEvent),
 ),)

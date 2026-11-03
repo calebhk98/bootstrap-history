@@ -1,4 +1,5 @@
 """The working time a state takes from its people, handed to the agent economy each year."""
+import math
 
 
 def levy_hours_per_worker(sim) -> float:
@@ -10,5 +11,5 @@ def levy_hours_per_worker(sim) -> float:
 	by_tile = None if economy.opening else economy.parts.producers.people_by_tile_and_trade()
 	if government is None or not by_tile:
 		return 0.0
-	workers = sum(sum(by_tile.get(tile, {}).values()) for tile in sim.labour.settlement_tiles())
+	workers = math.fsum(math.fsum(by_tile.get(tile, {}).values()) for tile in sim.labour.settlement_tiles())
 	return max(0.0, government.corvee.corvee_hours_taken() / workers) if workers > 0.0 else 0.0
