@@ -34,6 +34,8 @@ class Party:
     def location(self):
         return self.place
 
+    payments = property(lambda self: self)   # a stand-in party pays through itself
+
     def credit(self, amount, purpose):
         self.money += amount
 

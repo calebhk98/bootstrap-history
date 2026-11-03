@@ -44,9 +44,9 @@ printf '%s\n' "$ui_view_output" | grep . | tail -5 | sed 's/^/  /'
 # agent economy's book). The seat's party in sim/agents/household*.py reaches the seat's purse, which is the ledger's, so it counts.
 outside_money_owners() { grep -v '^sim/tests/' | grep -vE '^sim/(ledger|economy)/' | grep -vE '^sim/agents/[^h]|^sim/agents/h[^o]'; }
 
-# Files that own a balance (the actor's `money` property, the purses, the seat accounts and the ledger that writes them).
+# Files that own a balance (the actor's `money` property and its payments part that moves it, the purses, the seat accounts and the ledger that writes them).
 # Any other file that writes `.capital` or `.money` is counted, with its file:line.
-money_owner_files='^sim/(agents/base|agents/purses|ledger/ledger|ledger/seat_account)\.py:'
+money_owner_files='^sim/(agents/base|agents/actor_payments|agents/purses|ledger/ledger|ledger/seat_account)\.py:'
 # Files that define a book transfer (`Book`, `Purses.transfer`, the agents' `ledger.transfer`) or the ledger that calls them.
 book_owner_files='^sim/(book|agents/purses|agents/ledger|ledger/ledger)\.py:'
 outside_owner_files() { grep -v '^sim/tests/' | grep -vE "$1" | cut -d: -f1,2; }

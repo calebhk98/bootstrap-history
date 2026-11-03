@@ -67,7 +67,7 @@ class MoneyHost:
             staff=lambda: {"employees": self.employees}, techniques_held=lambda: self.known,
             seat_dealings=_Keyed(lambda seat_id: {name: plain(getattr(self.dealings[seat_id], name)) for name in DEALING_FIELDS}),
             operating=lambda: self.businesses[self.state.acting_seat].operating(),
-            venture_opened_year=lambda node_id, default: self.businesses[self.state.acting_seat].opened_year_of(node_id, default),
+            venture_opened_year=lambda node_id, default: self.businesses[self.state.acting_seat].holdings.opened_year_of(node_id, default),
             venture_size=_Keyed(lambda node_id: self.businesses[self.state.acting_seat].size_of(node_id)))
         self._act(self.state.acting_seat)
         self.send(RestorePurse(capital))

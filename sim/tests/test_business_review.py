@@ -35,7 +35,7 @@ def years_until_closed(business, owner, world, margin, limit=3 * EXIT_LOSS_YEARS
 class LossRuleIsOneRule(unittest.TestCase):
 	def test_a_firm_closes_a_plant_after_the_shared_run_of_loss_years(self):
 		world, firm = a_firm_running("shop")
-		years, closed = years_until_closed(firm.business, firm, world, margin=-1.0)
+		years, closed = years_until_closed(firm.business, firm.review, world, margin=-1.0)
 		self.assertEqual(years, EXIT_LOSS_YEARS)
 		self.assertEqual([(closure.entry_key, closure.reason) for closure in closed], [("shop", business_review.LOSS_MAKING)])
 		self.assertIsNone(firm.business.reading.plant_of("shop"))
@@ -44,7 +44,7 @@ class LossRuleIsOneRule(unittest.TestCase):
 		world, firm = a_firm_running("shop")
 		for margin in [-1.0] * (EXIT_LOSS_YEARS - 1) + [1.0] + [-1.0] * (EXIT_LOSS_YEARS - 1):
 			firm.business.tally.note_year("shop", margin)
-			self.assertEqual(firm.business.reviews.review(firm, world, rules=(business_review.LOSS_MAKING,)), [])
+			self.assertEqual(firm.business.reviews.review(firm.review, world, rules=(business_review.LOSS_MAKING,)), [])
 		self.assertEqual(firm.business.reading.plant_of("shop").loss_years, EXIT_LOSS_YEARS - 1)
 
 

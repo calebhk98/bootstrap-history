@@ -262,7 +262,7 @@ class FakeWorld:
 	def pay_interest(self, payer: Any, owed: float, purpose: Any = "interest") -> None:
 		"""Interest goes to the lenders the payer's purses name; the fixture keeps the total paid."""
 		payer.purses.pay_interest(payer.account_id, owed)
-		payer.note_outlay(purpose, owed)
+		payer.payments.note_outlay(purpose, owed)
 		self.interest_paid += owed
 
 	def collect_royalty(self, actor: Any, node_id: str, takings: float) -> float:

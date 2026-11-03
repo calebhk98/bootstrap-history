@@ -32,7 +32,7 @@ class SaleSetupTests(unittest.TestCase):
 
     def test_the_seller_carries_the_concerns_margin_and_the_buyers_are_the_live_firms_and_players(self):
         party, buyers, find_actor, _world = self.setup()
-        self.assertEqual(party.margin_of(NODE), 7.0)
+        self.assertEqual(party.holdings.margin_of(NODE), 7.0)
         self.assertEqual([buyer.actor_id for buyer in buyers], ["firm:live", "player:live"])
         self.assertEqual((find_actor("seat:0"), find_actor("firm:live")), (party, "found firm:live"))
 

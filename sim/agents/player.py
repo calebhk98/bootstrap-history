@@ -58,9 +58,9 @@ class Player(RecordedActor):
 		"""Concerns it runs at a profit where others could see them, for competitors to enter after."""
 		proven = []
 		for node_id in sorted(self.concerns):
-			if (self.margin_of(node_id) or 0.0) <= 0.0:
+			if (self.holdings.margin_of(node_id) or 0.0) <= 0.0:
 				continue
-			if world.setting.year - self.opened_year_of(node_id, world.setting.year) < world.disclosure.proof_years(node_id):
+			if world.setting.year - self.holdings.opened_year_of(node_id, world.setting.year) < world.disclosure.proof_years(node_id):
 				continue
 			if world.knowledge.is_public(node_id) or world.knowledge.exposure(node_id, self.location()) >= PLAYER_VISIBLE_EXPOSURE:
 				proven.append(node_id)
@@ -89,7 +89,7 @@ class Player(RecordedActor):
 	def decide(self, world: Any) -> None:
 		"""An AI player: shut what it expects to lose on, open what it knows pays, research what is worth it."""
 		for node_id in sorted(self.concerns):
-			if (self.margin_of(node_id) or 0.0) < 0 and self.expected_margin(node_id, world) <= 0:
+			if (self.holdings.margin_of(node_id) or 0.0) < 0 and self.expected_margin(node_id, world) <= 0:
 				self.business.lifecycle.close_plant(node_id)
 		for node_id in sorted(self.knowledge - self.concerns):
 			if node_id in world.setting.nodes and self.expected_margin(node_id, world) > 0:

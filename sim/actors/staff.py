@@ -41,7 +41,7 @@ class Staff(Part):
 		each firm in business, firms in the registry's order."""
 		if not self.world.records:
 			return []
-		return [(node_id, firm.capacity_of(node_id), firm.staffed_share(node_id))
+		return [(node_id, firm.holdings.capacity_of(node_id), firm.holdings.staffed_share(node_id))
 		        for firm in self.parts.cast.cast().concerns.active_firms() for node_id in firm.concerns]
 
 	def concern_versions(self) -> Tuple[int, int]:

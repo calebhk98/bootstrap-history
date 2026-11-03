@@ -59,9 +59,7 @@ class Firm:
     def __init__(self, hired=0.0):
         self.workforce = {TAUGHT: hired} if hired else {}
         self.record = types.SimpleNamespace(staff_wanted={})
-
-    def capacity_of(self, node_id):
-        return 1.0
+        self.holdings = types.SimpleNamespace(capacity_of=lambda node_id: 1.0)
 
 
 class StaffWorld:

@@ -58,6 +58,8 @@ class Issuer:
         self.money = 1000.0
         self.paid = 0.0
 
+    payments = property(lambda self: self)   # a stand-in party pays through itself
+
     def debit(self, amount, purpose):
         self.money -= amount
 
@@ -92,6 +94,8 @@ class Shareholder:
         self.record = ActorRecord(kind="firm", holdings={FIRST_SEAT_ID: 0.2})
         self.money = 0.0
 
+    payments = property(lambda self: self)   # a stand-in party pays through itself
+
     def credit(self, amount, purpose):
         self.money += amount
 
@@ -115,10 +119,10 @@ check("a seat that issued equity pays its shareholder by share of its margin", p
 # the party moves the seat's money only through the ledger: purse and cash book
 cash = host.ledger.seat
 before_flow, before_money = dict(cash.cash_flow), party.money
-party.credit(5.0, "a gift")
-party.debit(2.0, "a toll")
-party.note_income("rent", 3.0)
-party.note_outlay("rent", 1.0)
+party.payments.credit(5.0, "a gift")
+party.payments.debit(2.0, "a toll")
+party.payments.note_income("rent", 3.0)
+party.payments.note_outlay("rent", 1.0)
 check("a party's credit and debit move the seat's purse and enter the cash book under their cause",
       abs(party.money - before_money - 3.0) < 1e-9 and cash.cash_flow.get("a gift") == 5.0 and cash.cash_flow.get("a toll") == -2.0, cash.cash_flow)
 check("a posting made in the book is entered in the cash book without moving the purse again",

@@ -27,14 +27,14 @@ class Expansion:
 		if firm.record.last_margin <= 0.0:
 			return
 		for node_id in sorted(firm.concerns):
-			if firm.staffed_share(node_id) < 1.0:
+			if firm.holdings.staffed_share(node_id) < 1.0:
 				continue
-			capacity = firm.capacity_of(node_id)
+			capacity = firm.holdings.capacity_of(node_id)
 			if capacity >= world.concerns.scale_ceiling(node_id):
 				continue
 			step = capacity * EXPANSION_RATE
 			rivals = firm.rivals_of(node_id, firm.actor_id) if firm.rivals_of else 0.0
-			gain = world.capacity.expansion_gain(node_id, firm.opened_year_of(node_id, world.setting.year), capacity, step, rivals)
+			gain = world.capacity.expansion_gain(node_id, firm.holdings.opened_year_of(node_id, world.setting.year), capacity, step, rivals)
 			gain -= self._added_carry(node_id, capacity, step, world)
 			cost = world.capacity.plant_cost(node_id, firm, step)
 			if gain <= 0.0:

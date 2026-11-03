@@ -53,7 +53,7 @@ class PurseBookAnswers(unittest.TestCase):
 class SettleLenderInterest(unittest.TestCase):
     def settle(self, received, seat_ids=()):
         income, shared = [], []
-        abbey = SimpleNamespace(note_income=lambda purpose, amount: income.append(("abbey", purpose, amount)))
+        abbey = SimpleNamespace(payments=SimpleNamespace(note_income=lambda purpose, amount: income.append(("abbey", purpose, amount))))
         cast = SimpleNamespace(actors={"abbey": abbey})
         module = actors_over(SimpleNamespace(settle_interest=lambda: received), cast, seat_ids)
         with mock.patch("sim.actors.lending.payroll", SimpleNamespace(pay_savers=lambda registry, edge, amount: shared.append((edge, amount)))):

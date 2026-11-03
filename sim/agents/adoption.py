@@ -59,10 +59,10 @@ def margin_per_share(margin: float, weight: float) -> float:
 def observed_gap(actor: Any, node_id: str, world: Any) -> float:
 	"""Margin of the technique (the actor's own when it runs it, else what the economy shows) over the mean
 	margin of the actor's other concerns."""
-	own = actor.margin_of(node_id)
+	own = actor.holdings.margin_of(node_id)
 	new_margin = (float(world.concerns.concern_margin(node_id)) if own is None
 				  else margin_per_share(float(own), plant_weight(actor.adoption, node_id)))
-	others = [actor.margin_of(other) for other in sorted(actor.concerns) if other != node_id]
+	others = [actor.holdings.margin_of(other) for other in sorted(actor.concerns) if other != node_id]
 	others = [margin for margin in others if margin is not None]
 	return margin_gap(new_margin, sum(others) / len(others) if others else 0.0)
 
@@ -129,7 +129,7 @@ def advance_actor(actor: Any, world: Any) -> List[str]:
 		entry["share"] = next_share(entry["share"], gap)
 		if node_id in mandates:
 			entry["share"] = max(entry["share"], float(mandates[node_id]))
-			own = actor.margin_of(node_id)
+			own = actor.holdings.margin_of(node_id)
 			if own is not None and own < 0.0:
 				pay(government, actor, -own, "mandate compensation")
 	return events

@@ -148,7 +148,7 @@ def find_offer(receiver: Any, offer_id: Any) -> Dict[str, Any]:
 
 
 def move_concern(source: Any, target: Any, node_id: str, world: Any) -> None:
-	target.receive_plant(source.release_plant(node_id, world), world)
+	target.holdings.receive_plant(source.holdings.release_plant(node_id, world), world)
 
 
 def hand_over(source: Any, target: Any, side: Dict[str, Any], world: Any) -> None:

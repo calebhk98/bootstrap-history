@@ -50,7 +50,7 @@ class ExpandTests(unittest.TestCase):
 		world.rate = 0.12
 		_registry, firm = make_firm(world)
 		firm.expansion.expand(world)
-		self.assertAlmostEqual(firm.capacity_of("shop"), 1.0 + EXPANSION_RATE)
+		self.assertAlmostEqual(firm.holdings.capacity_of("shop"), 1.0 + EXPANSION_RATE)
 		self.assertGreater(firm.record.outlays.get("expansion", 0.0), 0.0)
 
 	def test_a_cost_of_capital_above_the_added_margin_stops_expansion(self):
@@ -58,7 +58,7 @@ class ExpandTests(unittest.TestCase):
 		world.rate = 1.0
 		_registry, firm = make_firm(world)
 		firm.expansion.expand(world)
-		self.assertEqual(firm.capacity_of("shop"), 1.0)
+		self.assertEqual(firm.holdings.capacity_of("shop"), 1.0)
 
 	def test_a_step_whose_site_rent_and_management_outrun_its_margin_is_not_built(self):
 		# Complaint 679: the books charge a plant's site and a manager's hours on the whole of its size, so a step
@@ -71,32 +71,32 @@ class ExpandTests(unittest.TestCase):
 		world.rate = 0.12
 		_registry, firm = make_firm(world)
 		firm.expansion.expand(world)
-		self.assertEqual(firm.capacity_of("shop"), 1.0)
+		self.assertEqual(firm.holdings.capacity_of("shop"), 1.0)
 
 	def test_a_firm_with_no_margin_does_not_expand(self):
 		world = ReturnWorld()
 		_registry, firm = make_firm(world, margin=-1.0)
 		firm.expansion.expand(world)
-		self.assertEqual(firm.capacity_of("shop"), 1.0)
+		self.assertEqual(firm.holdings.capacity_of("shop"), 1.0)
 
 	def test_a_market_that_adds_nothing_to_a_step_stops_expansion(self):
 		world = ReturnWorld(return_on_step=0.0)
 		_registry, firm = make_firm(world)
 		firm.expansion.expand(world)
-		self.assertEqual(firm.capacity_of("shop"), 1.0)
+		self.assertEqual(firm.holdings.capacity_of("shop"), 1.0)
 
 	def test_a_firm_at_the_scale_ceiling_does_not_grow(self):
 		world = ReturnWorld(ceiling=1.0)
 		_registry, firm = make_firm(world)
 		firm.expansion.expand(world)
-		self.assertEqual(firm.capacity_of("shop"), 1.0)
+		self.assertEqual(firm.holdings.capacity_of("shop"), 1.0)
 
 	def test_a_firm_grows_one_step_a_year_however_good_the_return(self):
 		world = ReturnWorld(return_on_step=100.0)
 		world.rate = 0.0
 		_registry, firm = make_firm(world)
 		firm.expansion.expand(world)
-		self.assertAlmostEqual(firm.capacity_of("shop"), 1.0 + EXPANSION_RATE)
+		self.assertAlmostEqual(firm.holdings.capacity_of("shop"), 1.0 + EXPANSION_RATE)
 
 	def test_the_owners_tell_the_registry_so_its_totals_follow(self):
 		world = ReturnWorld()

@@ -41,6 +41,7 @@ class Edge:
 		self.actor_id = name
 		self.account_id = name
 		self.purses = purses
+		self.payments = EdgePayments(self)
 		self._goods = goods if goods is not None else {}
 
 	def receive_goods(self, material: str, tonnes: float) -> None:
@@ -60,13 +61,20 @@ class Edge:
 		"""Money that crossed the edge either way."""
 		return self.purses.book.edge_volume(self.name, COIN)
 
+
+class EdgePayments:
+	"""Money paid to and from an edge (`edge.payments`)."""
+
+	def __init__(self, edge: Edge) -> None:
+		self.edge = edge
+
 	def credit(self, amount: float, purpose: Any) -> None:
 		"""Money paid to the edge."""
-		self.purses.transfer(EDGE_OUTSIDE, self.name, float(amount), purposes_label(purpose))
+		self.edge.purses.transfer(EDGE_OUTSIDE, self.edge.name, float(amount), purposes_label(purpose))
 
 	def debit(self, amount: float, purpose: Any) -> None:
 		"""Money paid out by the edge."""
-		self.purses.transfer(self.name, EDGE_OUTSIDE, float(amount), purposes_label(purpose))
+		self.edge.purses.transfer(self.edge.name, EDGE_OUTSIDE, float(amount), purposes_label(purpose))
 
 	def note_income(self, purpose: Any, amount: float) -> None:
 		"""An edge keeps no books by purpose; the book holds what crossed it."""

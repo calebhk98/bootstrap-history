@@ -229,7 +229,7 @@ world.setting.nodes["plough"] = make_node("plough", revenue=100.0)
 world.demonstrated_nodes.add("plough")
 world.public_nodes.add("plough")
 toilers = stratum(registry, "toilers")
-toilers.credit(1.0e9, "test")
+toilers.payments.credit(1.0e9, "test")
 for _year in range(3):
 	registry.advance(world)
 check("a stratum never researches or copies",

@@ -3,6 +3,7 @@ staff and years, the parent keeps what it knew, the stake is pooled capital, and
 
 QUICK_TOPIC = True
 
+from types import SimpleNamespace
 from sim.tests.agents_fake_world import flat_world
 from .harness import check
 
@@ -122,9 +123,7 @@ class SeatParent:
 		self.concerns = {"mill"}
 		self.knowledge = {"gear", "mill"}
 		self.money = 1000.0
-
-	def opened_year_of(self, node_id, default):
-		return self.opened_years.get(node_id, default)
+		self.holdings = SimpleNamespace(opened_year_of=lambda node_id, default: self.opened_years.get(node_id, default))
 
 
 @flat_world

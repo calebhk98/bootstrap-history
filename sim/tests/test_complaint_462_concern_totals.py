@@ -35,7 +35,7 @@ def full_totals(registry):
 	totals, categories = {}, {}
 	for operator in registry.concerns.market_operators():
 		for held in operator.concerns:
-			size = operator.capacity_of(held)
+			size = operator.holdings.capacity_of(held)
 			totals[held] = totals.get(held, 0.0) + size
 			category = NODES[held]["cat"]
 			categories[category] = categories.get(category, 0.0) + size
@@ -61,7 +61,7 @@ for step in range(400):
 	elif action == "close":
 		firm.concerns.discard(node)
 	elif action == "grow" and node in firm.concerns:
-		firm.business.tally.set_size(node, firm.capacity_of(node) * dice.uniform(1.0, 2.0))
+		firm.business.tally.set_size(node, firm.holdings.capacity_of(node) * dice.uniform(1.0, 2.0))
 		registry.concerns.note_capacity_change(firm.actor_id)
 	elif action == "exit":
 		firm.concerns.clear()

@@ -144,7 +144,7 @@ check("a foreign government's opening money is booked as an edge",
 check("a declared actor's fields reach its record",
 	  registry.actors["observer:1"].record.controller == "llm" and registry.actors["observer:1"].record.knowledge == {"wheel"}
 	  and registry.actors["observer:1"].money == 20.0)
-registry.actors["government:beta"].debit(3.0, "edge:test")
+registry.actors["government:beta"].payments.debit(3.0, "edge:test")
 check("seeding twice creates nothing and leaves existing actors alone",
 	  seed_cast(registry, home_country, entries, profiles) == [] and registry.actors["government:beta"].money == 7.0)
 loaded = deserialize_state(serialize_state(state), ActorsState)

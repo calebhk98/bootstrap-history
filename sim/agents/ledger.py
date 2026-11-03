@@ -39,11 +39,11 @@ def transfer(payer: Any, payee: Any, amount: float, purpose: Purpose) -> None:
 	if purses is not None and getattr(payee, "purses", None) is purses:
 		# both keep accounts in the one book: a single posting, the payer drawing on its facility if short
 		purses.transfer(payer.account_id, payee.account_id, amount, purposes_label(purpose))
-		payer.note_outlay(purpose, amount)
-		payee.note_income(purpose, amount)
+		payer.payments.note_outlay(purpose, amount)
+		payee.payments.note_income(purpose, amount)
 	else:
-		payer.debit(amount, purpose)
-		payee.credit(amount, purpose)
+		payer.payments.debit(amount, purpose)
+		payee.payments.credit(amount, purpose)
 	hook = AFTER_TRANSFER[0]
 	if hook is not None:
 		AFTER_TRANSFER[0] = None

@@ -62,7 +62,7 @@ class SettleInterest(unittest.TestCase):
     def module(self, debt, ceiling=1000.0, rate=0.1):
         purses = Purses()
         purses.set_net("founder", -debt, "opening")
-        world = flat_namespace(pay_interest=lambda payer, owed, purpose: payer.note_outlay(purpose, sum(payer.purses.pay_interest(payer.account_id, owed).values())))
+        world = flat_namespace(pay_interest=lambda payer, owed, purpose: payer.payments.note_outlay(purpose, sum(payer.purses.pay_interest(payer.account_id, owed).values())))
         module = finance_host.build(seat=FinanceSeat(), cast_state=SimpleNamespace(purses=purses), actor_world=world,
                                     acting_balance=lambda: purses.net("founder"))
         module.credit_limit = lambda *arguments: ceiling

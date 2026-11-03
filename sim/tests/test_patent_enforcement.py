@@ -108,6 +108,8 @@ class SeatParty:
 		self.concerns = {"mill"}
 		self.money = 900.0
 
+	payments = property(lambda self: self)   # a stand-in party pays through itself
+
 	def debit(self, amount, purpose):
 		self.money -= amount
 
