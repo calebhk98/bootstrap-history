@@ -21,8 +21,10 @@ find on the income left unspent, not by iterating income into demand: that map h
 intercept, so it falls a little a pass without reaching a fixed point and stops wherever its pass bound does.
 """
 import math
-from typing import Callable, Dict, Mapping, Tuple, Union
+from dataclasses import dataclass
+from typing import Callable, Dict, Mapping, Optional, Tuple, Union
 
+from sim.constants import declare
 from sim.refusal import Refusal
 
 from .households_cohort import Cohort
@@ -31,11 +33,26 @@ from .types import GoodId, TileId
 # the share of its income a household may leave unspent and still count as saving nothing: above the margin its bids
 # leave unspent by construction (BUDGET_SAFETY_SHARE), below any saving that moves a price
 SAVING_TOLERANCE = 5e-8
-OPENING_INCOME_TOLERANCE = 1e-6     # relative width of the bracket the income is found in
+OPENING_INCOME_TOLERANCE = declare(
+    "OPENING_INCOME_TOLERANCE", 1e-3, kind="temporary_heuristic",
+    unit="relative width of the bracket the opening's income per head is found in", source=None, confidence="D",
+    why="The opening is a starting state that the spin-up years then move, so an income within a tenth of a percent "
+        "of the root is enough; a tighter bracket spends solves halving around a jump in the unspent income "
+        "that no later year reads. A numerical tolerance, not a behaviour. Not fitted.",
+    retire="the opening's income settled by the spin-up years themselves, with no separate root find")
 # numerical bounds, not behaviour: the halvings that look for an income at which households save nothing (below the
 # ceiling by a factor no income is bought at) and the passes of the root find, which converges in a handful
 OPENING_INCOME_HALVINGS = 30
 OPENING_INCOME_PASSES = 100
+WARM_BRACKET_WIDENINGS = 6       # doublings of the bracket around a previous root before the search starts from the ceiling
+
+
+@dataclass
+class OpeningStart:
+    """What one opening solve carries from one opening to the next as a starting guess (the solve passes it along; nothing
+    else holds it): the last income per head found below the ceiling and the last share of hours producers hired."""
+    income_per_head: Optional[float] = None
+    share_hired: Optional[float] = None
 
 
 def value_of(final_by_tile: Mapping[TileId, Mapping[GoodId, float]], prices: Mapping[GoodId, float]) -> float:
@@ -45,12 +62,57 @@ def value_of(final_by_tile: Mapping[TileId, Mapping[GoodId, float]], prices: Map
                      if prices.get(good) is not None)
 
 
-def settled_income_per_head(ceiling: float, people: float, demand_at: Callable[[float], Tuple[float, float]]
-                            ) -> Union[Tuple[float, float], Refusal]:
+def _bracket_around(start: float, ceiling: float, unspent: Callable[[float], float], unspent_ceiling: float):
+    """(low, high, unspent at high, the high before it, its unspent) around the root, found by widening from `start`
+    (a root of a nearby solve) until the unspent income changes sign; None when no bracket is found within
+    WARM_BRACKET_WIDENINGS doublings or below the lowest income the cold search would look at. `high` is the ceiling when
+    the widening reaches it."""
+    width = 4.0 * OPENING_INCOME_TOLERANCE
+    unspent(start)      # the demand an income buys leans on the labour share the call before left (the ceiling's, here): settle it first
+    value = unspent(start)
+    if value <= 0.0:
+        low = start
+        for _widening in range(WARM_BRACKET_WIDENINGS):
+            candidate = low * (1.0 + width)
+            if candidate >= ceiling:
+                return low, ceiling, unspent_ceiling, None, 0.0
+            value = unspent(candidate)
+            if value > 0.0:
+                return low, candidate, value, None, 0.0
+            low = candidate
+            width *= 2.0
+        return None
+    high, previous_high, previous_unspent = start, None, 0.0
+    for _widening in range(WARM_BRACKET_WIDENINGS):
+        candidate = high / (1.0 + width)
+        if candidate < ceiling * 0.5 ** OPENING_INCOME_HALVINGS:
+            return None
+        lower = unspent(candidate)
+        if lower <= 0.0:
+            return candidate, high, value, previous_high, previous_unspent
+        previous_high, previous_unspent, high, value = high, value, candidate, lower
+        width *= 2.0
+    return None
+
+
+def _saves_above(high: float, ceiling: float, unspent: Callable[[float], float]) -> bool:
+    """Whether households still save at each doubling of `high` below the ceiling: the root asked for is the largest, and a
+    bracket found near a previous root may sit under a higher one where the unspent income falls to zero again."""
+    income = 2.0 * high
+    while income < ceiling:
+        if unspent(income) <= 0.0:
+            return False
+        income *= 2.0
+    return True
+
+
+def settled_income_per_head(ceiling: float, people: float, demand_at: Callable[[float], Tuple[float, float]],
+                            start: Optional[float] = None) -> Union[Tuple[float, float], Refusal]:
     """(income per head, labour share of it) at which households save nothing net: the `ceiling` (full employment at
     the opening wage) when they spend all of it, else the largest income below it at which the value of the demand
     that income buys, per head, covers the income (up to SAVING_TOLERANCE of it). `demand_at(income per head)` gives
-    the value of the demand that income buys and the share of that value which pays labour. A Refusal when there are
+    the value of the demand that income buys and the share of that value which pays labour. A `start` (the root of a nearby
+    solve) is widened into a bracket that straddles the sign change, falling back to the search from the ceiling. A Refusal when there are
     no people, or no positive income at which households save nothing (`no_positive_income_fixed_point`), or the root
     find does not close (`income_root_not_found`)."""
     if people <= 0.0 or ceiling <= 0.0:
@@ -71,6 +133,11 @@ def settled_income_per_head(ceiling: float, people: float, demand_at: Callable[[
     # the bracket (or there is only one such income) the bracket is halved.
     high, previous_high, previous_unspent = ceiling, None, 0.0
     low = None
+    bracket = _bracket_around(start, ceiling, unspent, unspent_high) if start is not None and 0.0 < start < ceiling else None
+    if bracket is not None and _saves_above(bracket[1], ceiling, unspent):
+        low, high, unspent_high, previous_high, previous_unspent = bracket
+        if high - low <= OPENING_INCOME_TOLERANCE * high:
+            return low, seen[low]
     looked_past_low = False
     for _pass in range(OPENING_INCOME_PASSES):
         floor = 0.0 if low is None else low
