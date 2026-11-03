@@ -64,7 +64,7 @@ class StoreSaleTests(unittest.TestCase):
 class NoDurablesTests(unittest.TestCase):
     def test_without_service_lives_there_is_no_store_candidate(self):
         view = View()
-        self.assertEqual(households_store.store_candidates(fixture.specs(), view.prices, 0.3), {})
+        self.assertEqual(households_store.store_candidates(fixture.specs(), view.prices, 0.3, money_level=1.0), {})
 
 
 if __name__ == "__main__":

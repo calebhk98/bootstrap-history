@@ -67,7 +67,7 @@ class EconomySetup:
     hiding: Any = None  # (rate, reach) -> share of its base a payer hides; the port hands in the actor layer's rule, None: none
     flight: Any = None  # the actors' flight rules (expected_penalty_of_leaving, arrears_owed_by_fugitive, share_after_immunity), handed in by the port; None: no flight
     debt_bondage_years: float = 0.0               # term of service a landless household in default owes its creditor; 0: the society has no debt bondage (bondage.py)
-    import_duty_share: Dict[GoodId, float] = field(default_factory=dict)   # per good, the share of its landed price that is the state's tariff; nothing sets it yet, so imports pay no duty here
+    import_duty_share: Dict[GoodId, float] = field(default_factory=dict)   # per good, the share of its landed price that is the state's tariff toward the source; the port sets it each year (markets/port_duty.py)
     carriage_rates_balanced: Dict[str, float] = field(default_factory=dict)   # likewise with the opposite flow filling every return; none: same
     carriage_crew: Dict[str, Tuple[str, float]] = field(default_factory=dict)   # mode id (land, river, sea) -> (crew trade, crew hours per tonne-km), geography's; none: carriage hires no hours
     carriage_handling: Dict[str, float] = field(default_factory=dict)   # mode id -> hours of handling a tonne each time a haul changes to the mode, for the modes whose handling the rates price

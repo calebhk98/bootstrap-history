@@ -31,7 +31,7 @@ def clearing_prices(stocks, references=None, specs=None, wealth=WEALTH_IN_STORE,
     references = references or {good: REFERENCE_PRICE for good in stocks}
     prices = dict(references)
     for _ in range(steps):
-        weights = store_candidates(specs, prices, STAPLE_PRICE_PER_KG, references)
+        weights = store_candidates(specs, prices, STAPLE_PRICE_PER_KG, references, money_level=1.0)
         for good in stocks:
             wanted = weights[good] * wealth / stocks[good]
             prices[good] = math.sqrt(prices[good] * wanted)
@@ -76,14 +76,14 @@ class StoreRatioTests(unittest.TestCase):
     def test_a_dearer_good_draws_a_smaller_share_when_its_usual_price_is_unchanged(self):
         specs = {"a": spec("a"), "b": spec("b")}
         references = {"a": REFERENCE_PRICE, "b": REFERENCE_PRICE}
-        cheap = store_candidates(specs, {"a": REFERENCE_PRICE, "b": REFERENCE_PRICE}, STAPLE_PRICE_PER_KG, references)
-        risen = store_candidates(specs, {"a": 2.0 * REFERENCE_PRICE, "b": REFERENCE_PRICE}, STAPLE_PRICE_PER_KG, references)
+        cheap = store_candidates(specs, {"a": REFERENCE_PRICE, "b": REFERENCE_PRICE}, STAPLE_PRICE_PER_KG, references, money_level=1.0)
+        risen = store_candidates(specs, {"a": 2.0 * REFERENCE_PRICE, "b": REFERENCE_PRICE}, STAPLE_PRICE_PER_KG, references, money_level=1.0)
         self.assertLess(risen["a"], cheap["a"])
 
     def test_without_a_usual_price_the_split_follows_carrying_cost_alone(self):
         specs = {"dense": spec("dense"), "bulky": spec("bulky", mass=5.0)}
         prices = {"dense": REFERENCE_PRICE, "bulky": REFERENCE_PRICE}
-        weights = store_candidates(specs, prices, STAPLE_PRICE_PER_KG)
+        weights = store_candidates(specs, prices, STAPLE_PRICE_PER_KG, money_level=1.0)
         self.assertGreater(weights["dense"], weights["bulky"])
         self.assertAlmostEqual(sum(weights.values()), 1.0)
 

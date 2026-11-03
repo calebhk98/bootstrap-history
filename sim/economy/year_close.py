@@ -131,7 +131,8 @@ def close_agents(setup, record, view, ledger: YearLedger, area_map, carriage,
         closed = producers_close.close_year(producer, recipe, revenue, costs, view, worked, price_share,
                                             [good for good in recipe.outputs if good in setup.specs and not setup.specs[good].portable],
                                             service_lives, firm_finance.interest_due(loans_of.get(producer_id, []), producer_id),
-                                            demand_runs)
+                                            demand_runs,
+                                            spoilage={good: setup.specs[good].spoilage_per_year for good in recipe.outputs if good in setup.specs})
         year = None
         if not closed.exited:       # the dividend, the financing check and bankruptcy follow Eurace@Unibi (firm_year.py)
             closed, _paid, year = firm_year.settle_year(setup, record, view, producer, closed, recipe, revenue, costs,

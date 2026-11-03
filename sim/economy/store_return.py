@@ -39,7 +39,7 @@ def storage_cost_per_kg_year(money_level: float) -> float:
     return STORE_STORAGE_COST_PER_KG_YEAR * money_level
 
 
-def carry_cost_share(spec: GoodSpec, price: float, money_level: float = 1.0) -> float:
+def carry_cost_share(spec: GoodSpec, price: float, money_level: float) -> float:
     """Yearly cost of holding a unit as a share of its price: spoilage, wear, and storage by mass (`money_level`
     carries the storage figure to today's money)."""
     return (spec.spoilage_per_year + 1.0 / spec.service_life_years
@@ -71,7 +71,7 @@ def service_values_per_year(priced_needs: Iterable, specs: Mapping[str, GoodSpec
 
 
 def carrying_return(spec: GoodSpec, price: float, usual_price: Optional[float],
-                    service_value: float = 0.0, money_level: float = 1.0) -> float:
+                    service_value: float = 0.0, *, money_level: float) -> float:
     """Expected yearly return on holding a unit, as a share of its price: the expected price change
     and the value of the service it gives (`service_value`, money a year) less the cost of carrying it."""
     return expected_price_change(price, usual_price) + service_value / price - carry_cost_share(spec, price, money_level)

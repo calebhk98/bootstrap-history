@@ -38,8 +38,8 @@ class StoreServiceTests(unittest.TestCase):
         self.assertEqual(service_values_per_year([need], {"plate": spec("plate", life=0.0)}), {})
 
     def test_service_raises_the_return_by_its_share_of_the_price(self):
-        plain = carrying_return(spec("plate"), PLATE_PRICE, None)
-        served = carrying_return(spec("plate"), PLATE_PRICE, None, service_value=12.0)
+        plain = carrying_return(spec("plate"), PLATE_PRICE, None, money_level=1.0)
+        served = carrying_return(spec("plate"), PLATE_PRICE, None, service_value=12.0, money_level=1.0)
         self.assertAlmostEqual(served - plain, 12.0 / PLATE_PRICE)
 
     def test_storage_by_the_kilogram_costs_more_money_after_inflation_and_the_return_falls(self):
@@ -52,7 +52,7 @@ class StoreServiceTests(unittest.TestCase):
         need = display_need(300.0, [("cheap", 300.0, 1.0), ("dear", 3000.0, 1.0)])
         specs = {"cheap": spec("cheap"), "dear": spec("dear")}
         values = service_values_per_year([need], specs)
-        weights = store_candidates(specs, {"cheap": 300.0, "dear": 3000.0}, 0.3, service_values=values)
+        weights = store_candidates(specs, {"cheap": 300.0, "dear": 3000.0}, 0.3, service_values=values, money_level=1.0)
         self.assertGreater(weights["cheap"], weights["dear"])
 
 
