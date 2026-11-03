@@ -22,13 +22,13 @@ class Allocation:
     def _non_farm_need_shares(self):
         """Each non-farm trade's share of need from household demand through
         the recipe graph; with no recipe available, the current split."""
-        reached = frozenset(self._world.civ["starting_techs"]) | frozenset(self._world.projects.done)
+        reached = frozenset(self._world.scenario.civ["starting_techs"]) | frozenset(self._world.projects.done)
         cached = self._need_shares_cache
         if cached is None or cached[0] != reached:
             shares = workforce_spinup.need_shares_by_trade(
-                labour_market.production_data(), reached, self._world.techniques_available_to,
-                workforce_carriage.carriage_for(reached, geography.tiles_held(self._world.civ)),
-                self._world.civ)
+                labour_market.production_data(), reached, self._world.trades.techniques_available_to,
+                workforce_carriage.carriage_for(reached, geography.tiles_held(self._world.scenario.civ)),
+                self._world.scenario.civ)
             cached = self._need_shares_cache = (reached, shares)
         if cached[1]:
             return cached[1]
@@ -50,10 +50,10 @@ class Allocation:
         each weighted by how far it has spread."""
         projects = self._world.projects
         year = self._world.year
-        starting = set(self._world.civ.get("starting_techs", ()))
+        starting = set(self._world.scenario.civ.get("starting_techs", ()))
         adoption = {}
-        declarations = {node_id: self._world.mechanic(node_id, "farming_technique")
-                        for node_id in self._world.nodes_with_mechanic("farming_technique")}
+        declarations = {node_id: self._world.knowledge.mechanic(node_id, "farming_technique")
+                        for node_id in self._world.knowledge.nodes_with_mechanic("farming_technique")}
         for node_id in declarations:
             if node_id not in projects.done:
                 continue

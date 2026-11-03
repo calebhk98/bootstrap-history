@@ -15,7 +15,7 @@ class PopulationReport:
     def _trade_density_source(self, trade):
         """Name of the declared constant this trade's people in reach rest on, None when it is the labour core's count or
         unavailable. Used by population_report and _density_is_placeholder to look up metadata."""
-        if not self.trades.trade_available(trade) or trade in self._world.trades_absent or trade in self.trades.LITERATE_TRADES:
+        if not self.trades.trade_available(trade) or trade in self._world.trades.trades_absent or trade in self.trades.LITERATE_TRADES:
             return None
         if not (self.book.core_people_by_trade() or {}).get(trade):
             return "NO_DEMAND_TRADE_SHARE"
@@ -56,12 +56,12 @@ class PopulationReport:
         # `reference_pop`/`scale_from_baseline` are kept as the screen's
         # own "before simulated changes" comparison, not as inputs to
         # `pop`.
-        reference_pop = float(self._world.civ.get("population", 0.0))
-        pop = self._world.population.total
+        reference_pop = float(self._world.scenario.civ.get("population", 0.0))
+        pop = self._world.people.population.total
         scale_from_baseline = (pop / reference_pop) if reference_pop else 1.0
-        urban_frac = self._world.urban_fraction()
+        urban_frac = self._world.people.urban_fraction()
         trades = []
-        for trade in sorted(self._world.wages):
+        for trade in sorted(self._world.trades.wages):
             national = self.supply.national_trade_population(trade)
             reach = self.supply.reachable_trade_population(trade) if self.trades.trade_available(trade) else 0.0
             have = self.book.employed(trade)
@@ -76,7 +76,7 @@ class PopulationReport:
                 "is_placeholder": self._density_is_placeholder(trade),
             })
         return {
-            "civilisation": self._world.civ.get("short_name", self._world.civ.get("name", self._world.civ.get("id", ""))),
+            "civilisation": self._world.scenario.civ.get("short_name", self._world.scenario.civ.get("name", self._world.scenario.civ.get("id", ""))),
             "population": round(pop),
             "reference_population_before_simulated_changes": round(reference_pop),
             "population_change_from_reference": round(scale_from_baseline - 1.0, 4),

@@ -22,13 +22,13 @@ class Training:
 
     def found_trade_school(self, trade, seats):
         """Create durable local training capacity for one named trade."""
-        if trade not in self._world.wages or not self.trades.trade_available(trade):
+        if trade not in self._world.trades.wages or not self.trades.trade_available(trade):
             return False, ("the trade must exist before a school can reproduce "
                            "it; teach or discover %s first" % trade)
         seats = float(seats)
-        cost = seats * self._world.trade_school_price_per_seat()
+        cost = seats * self._world.finance.trade_school_price_per_seat()
         workforce = self._world.workforce
-        if seats <= 0 or cost > self._world.balance:
+        if seats <= 0 or cost > self._world.finance.balance:
             return False, "cannot afford that trade school"
         self._world.send(PayEdge(self._world.EDGE_WORKERS, cost, "trade schools"))
         schools = workforce.trade_schools
@@ -56,7 +56,7 @@ class Training:
         if not source:
             return 0.0
         return trade_formation.teacher_hours_per_person(self.training_years_from(trade, source),
-                                                        self._world.HOURS_PER_PERSON_YEAR)
+                                                        self._world.trades.HOURS_PER_PERSON_YEAR)
 
     def _full_years(self, trade):
         return float(trade_data.registry_of(self._world).get(trade, {}).get("training_years", 0.0) or 0.0)
@@ -68,8 +68,8 @@ class Training:
         if stated:
             return stated
         created = self._world.workforce.trades_created
-        present = [other for other in self._world.wages
-                   if other != trade and (other not in self._world.trades_absent or other in created)]
+        present = [other for other in self._world.trades.wages
+                   if other != trade and (other not in self._world.trades.trades_absent or other in created)]
         ranked = trade_formation.nearest_sources(trade, trade_formation.shipped_task_shares(), present)
         return ranked[0][1] if ranked else None
 
@@ -83,8 +83,8 @@ class Training:
         # training-hours, and "0.03 engineers" was exactly as false whichever
         # verb put it there.
         frm, refusal = train_request_refusal(
-            trade in self._world.wages, trade, count, lambda: frm or self.source_trade_for(trade),
-            lambda source: source in self._world.trades_absent and source not in self._world.workforce.trades_created)
+            trade in self._world.trades.wages, trade, count, lambda: frm or self.source_trade_for(trade),
+            lambda source: source in self._world.trades.trades_absent and source not in self._world.workforce.trades_created)
         if refusal:
             return None, refusal
         count = float(round(count))
@@ -101,7 +101,7 @@ class Training:
             if crosses_literacy_wall(have, count, cap):
                 return None, literate_wall_refusal(trade, cap, have)
         years = self.training_years_from(trade, frm)
-        teaching_hours = trade_formation.teacher_hours_per_person(years, self._world.HOURS_PER_PERSON_YEAR) * count
+        teaching_hours = trade_formation.teacher_hours_per_person(years, self._world.trades.HOURS_PER_PERSON_YEAR) * count
         teacher = self.outside_teacher(trade)
         # another actor holding the knowledge teaches and is paid for their hours; otherwise it is your own
         hours = 0.0 if teacher else teaching_hours
@@ -134,8 +134,8 @@ class Training:
         # the early slice is paid as staff from its own date, so the source's wages are kept up front only for the rest
         kept_years = trade_first_hands.prepaid_keep_years(years, self._full_years(trade), uncovered)
         fee = teaching_fee(count, self.market.quote_annual(frm), kept_years, teacher, teaching_hours,
-                           self._world.HOURS_PER_PERSON_YEAR)      # the source's wages while they learn
-        if fee > self._world.spending_power("buy"):
+                           self._world.trades.HOURS_PER_PERSON_YEAR)      # the source's wages while they learn
+        if fee > self._world.finance.spending_power("buy"):
             return None, cash_in_hand_refusal(self._world, 
                 "keeping %g %s%s fed while they learn"
                 % (count, trade, "" if count == 1 else "s"), fee)
@@ -145,7 +145,7 @@ class Training:
     def outside_teacher(self, trade):
         """The first actor other than you that holds the knowledge to teach `trade` (trade_formation.teachers_of),
         or None when you teach it yourself from what you know."""
-        by_actor, baseline, demonstrated = self._world.teaching_knowledge()
+        by_actor, baseline, demonstrated = self._world.knowledge.teaching_knowledge()
         teachers = trade_formation.teachers_of(trade, trade_formation.shipped_gating_nodes(), by_actor, baseline,
                                                demonstrated)
         named = [teacher for teacher in teachers if teacher in by_actor]

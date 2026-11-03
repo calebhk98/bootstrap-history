@@ -5,7 +5,9 @@ work_for_wages and wage_bill are the two directions of the same trade: a founder
 the going rate, and a household paying its standing staff that same rate every year. Both are settled by the
 year's clearing (sim/markets/port_staff.py) at the one wage of the trade, which the labour market quotes."""
 from sim.reporting.api import RecordEvent
+from sim.refusal import Refusal
 from .founder_hours import hours_free
+from .labour_refusals import economy_lacks, economy_lacks_refusal
 from .hours_sale_warning import sale_at_a_loss_note, starving_warning
 from .staff_moves import (FOUNDER_DEAD, HOURS_NOT_POSITIVE, HOURS_SHORT, NO_SUCH_TRADE, TRADE_ABSENT,
                           wage_work_blocker)
@@ -23,11 +25,11 @@ class Wages:
     def wage_for_hours(self, trade, hours):
         """What `hours` of the founder's own work pay now at the trade's market wage, the one wage every employer pays. The
         figure work_for_wages expects and every quote of that pay (the stall banner, the year's wage-work rule) reads."""
-        return wage_for_hours_of(self.market.quote_annual(trade), self._world.HOURS_PER_PERSON_YEAR, hours)
+        return wage_for_hours_of(self.market.quote_annual(trade), self._world.trades.HOURS_PER_PERSON_YEAR, hours)
 
     def best_wage_trade(self):
         """The trade open to the founder that pays most an hour, or None when none is open."""
-        trades = [trade for trade in self._world.wages if self.trades.trade_available(trade)]
+        trades = [trade for trade in self._world.trades.wages if self.trades.trade_available(trade)]
         return max(trades, key=lambda trade: self.wage_for_hours(trade, 1.0), default=None)
 
     def work_for_wages(self, trade, hours, commit=True):
@@ -42,38 +44,40 @@ class Wages:
         what the year's clearing hires of them, at the one market wage of the trade, the same the game charges you when
         you hire someone, so there is no arbitrage in either direction. The pay returned is the quote, not money in
         hand. The cost is your own hours, which are the one resource nothing else can buy: hours offered here are
-        hours the standing job (labour_job.py) does not sell and your own projects cannot have.
+        hours the standing job (`standing_job_pay`, below) does not sell and your own projects cannot have.
 
         With `commit` False it is a quote: the pay and the note as the sale would leave them, with no offer, log line
         or book kept (the hours count against the year only while the note is worked out).
         """
         blocker = wage_work_blocker(
-            self._world.founder_alive, trade in self._world.wages,
+            self._world.founder_alive, trade in self._world.trades.wages,
             lambda: self.trades.trade_available(trade), hours,
             lambda: self.hours.director_pool() - self.hours.director_hours_committed())
         # A TRADE NOBODY HERE PRACTISES IS A TRADE NOBODY HERE WILL PAY YOU FOR: the gate is trade_available(), the
         # same test `hire` uses. The founder really does know chemistry; what he lacks is a customer, until the
         # trade has been taught and trade_available() turns true.
         if blocker == FOUNDER_DEAD:
-            return 0.0, ("there is nobody left to do the work: these are YOUR "
-                         "hours, and the founder is dead. What you built goes "
-                         "on; you do not.")
+            return 0.0, Refusal("founder_dead", "there is nobody left to do the work: these are YOUR "
+                                "hours, and the founder is dead. What you built goes "
+                                "on; you do not.")
         if blocker == NO_SUCH_TRADE:
-            here = sorted(candidate_trade for candidate_trade in self._world.wages if self.trades.trade_available(candidate_trade))
-            return 0.0, ("no such trade. you could work as: " + ", ".join(here))
+            here = sorted(candidate_trade for candidate_trade in self._world.trades.wages if self.trades.trade_available(candidate_trade))
+            return 0.0, Refusal("no_such_trade", "no such trade. you could work as: " + ", ".join(here), choices=here)
         if blocker == TRADE_ABSENT:
-            return 0.0, ("nobody here will pay you to be a %s: the trade does "
-                         "not exist in this society, so there is no employer "
-                         "for it. Teach it first with train, or work at "
-                         "something they do recognise." % trade)
+            return 0.0, Refusal("trade_absent", "nobody here will pay you to be a %s: the trade does "
+                                "not exist in this society, so there is no employer "
+                                "for it. Teach it first with train, or work at "
+                                "something they do recognise." % trade)
+        if economy_lacks(self._world, trade):
+            return 0.0, economy_lacks_refusal(trade)
         hours = float(hours)
         if blocker == HOURS_NOT_POSITIVE:
-            return 0.0, "hours must be greater than zero"
+            return 0.0, Refusal("hours_not_positive", "hours must be greater than zero")
         # EVERY HOUR ALREADY SPOKEN FOR, not just the ones sold for wages: teaching counts as well as wage work.
         if blocker == HOURS_SHORT:
             left = self.hours.director_pool() - self.hours.director_hours_committed()
-            return 0.0, ("you have %.0f of your own hours left this year, not %.0f"
-                         % (max(0.0, left), hours))
+            return 0.0, Refusal("hours_short", "you have %.0f of your own hours left this year, not %.0f"
+                                % (max(0.0, left), hours), hours_left=max(0.0, left))
         # Your own labour is worth the trade rate: the SAME rate the game
         # charges you to employ somebody in that trade, which is the point.
         # It has to be derived from the labour market quote, not a separate hourly
@@ -81,7 +85,7 @@ class Wages:
         # either direction" claim becomes false.
         workforce = self._world.workforce
         pay = self.wage_for_hours(trade, hours)
-        revenue_before = self._world.revenue()
+        revenue_before = self._world.finance.revenue()
         if commit:
             offered = workforce.hours_offered_for_wages
             offered[trade] = offered.get(trade, 0.0) + hours
@@ -103,7 +107,7 @@ class Wages:
         # active_hours_still_wanted (projects.py), the same formula step()
         # itself uses to hand out the pool, so this can never warn about a
         # shortfall step() would not also produce.
-        _wanted = self._world.active_hours_still_wanted()
+        _wanted = self._world.actors.active_hours_still_wanted()
         _starve = None
         if _wanted:
             _starve = starving_warning(_wanted, max(0.0, self.hours.director_pool() - self.hours.director_hours_committed()))
@@ -111,7 +115,7 @@ class Wages:
             self.log_wage_work(trade, hours, pay)
         # SAY WHEN IT IS A BAD TRADE: hours sold here are hours the standing job does not sell, and when
         # that job pays more than this trade the sale loses money. The sale still happens.
-        message = sale_at_a_loss_note(pay, revenue_before - self._world.revenue(),
+        message = sale_at_a_loss_note(pay, revenue_before - self._world.finance.revenue(),
                                       lambda amount: self._world.money_text(amount, grouped=True))
         if message:
             return message + (" Also: " + _starve if _starve else "")

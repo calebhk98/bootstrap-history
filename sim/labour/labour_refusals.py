@@ -9,7 +9,7 @@ def cash_in_hand_refusal(world, what, fee):
     """Refusal of a wage, an apprentice's keep or a job's fee for want of money. A wage or fee is spent outright, so it
     draws on the purchase budget; purchase_rule states that rule, the budget and the shortfall, the same text `start`
     and `buy` give."""
-    return Refusal("cash_short", world.refusal_text(what, fee))
+    return Refusal("cash_short", world.finance.refusal_text(what, fee))
 
 
 def economy_lacks(world, trade):

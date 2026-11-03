@@ -3,8 +3,6 @@ from sim.agents.api import edges
 from sim.assembly.api import Part
 from sim.ledger.api import PayEdge
 
-from . import rules
-
 
 class ApplyingHours(Part):
 
@@ -33,9 +31,6 @@ class ApplyingHours(Part):
     def spend_director_hours(self, command):
         self.seat.director_hours_spent_founder += command.hours
 
-    def settle_living_cost(self, command):
-        self.seat.living_cost_paid += command.amount
-
     def set_wage_hours_sold(self, command):
         self.seat.wage_hours_this_year = command.hours
 
@@ -46,27 +41,14 @@ class ApplyingHours(Part):
             self.seat.reserve_scholars = command.scholars
 
     def bleed_staff(self, command):
-        seat = self.seat
-        seat.artisans = rules.count_after_bleed(seat.artisans, command.artisan_floor, command.bleed)
-        seat.scholars = rules.count_after_bleed(seat.scholars, command.scholar_floor, command.bleed * command.scholar_discount)
+        self.parts.core.labour.pools.bleed(command.artisan_floor, command.bleed, command.scholar_floor,
+                                           command.bleed * command.scholar_discount)
 
     def disperse_dependants(self, command):
-        seat = self.seat
-        seat.freedmen = 0
-        seat.artisans = rules.count_after_bleed(seat.artisans, command.artisan_floor, 1.0 - command.artisan_retention)
+        self.parts.core.labour.pools.disperse_dependants(command.artisan_floor, command.artisan_retention)
 
     def lose_crew(self, command):
-        employees = self.seat.employees
-        lost = []
-        for trade, share in command.crew:
-            have = employees.get(trade, 0.0)
-            kept = rules.surviving_people(have, 1.0 - share)
-            if kept > 0:
-                employees[trade] = kept
-            else:
-                employees.pop(trade, None)
-            lost.append((trade, have, kept))
-        return tuple(lost)
+        return self.parts.core.labour.pools.lose_crew(command.crew)
 
     def build_housing(self, command):
         places = float(command.places)

@@ -66,7 +66,7 @@ def _kilogram_equivalent(material_key: str, quantity: float) -> float:
     return quantity
 
 
-def _dominant_output_key(entry: Dict[str, Any]) -> str:
+def dominant_output_key(entry: Dict[str, Any]) -> str:
     """Which of `entry`'s outputs its `labour_hours` are quoted "per unit
     of" - the identical bookkeeping choice sim.world.demand._dominant_
     output_key makes for `inputs`, restated here rather than imported (see
@@ -85,7 +85,7 @@ def labour_hours_coefficients_per_unit_output(
     plant the recipe runs in, amortised over `service_life_years` *
     `annual_output_at_basis` - identical to how `sim.world.demand.input_
     coefficients_per_unit_output` amortises `capital.build_materials`, and
-    to how `sim.solve_prices.recipe_cost_and_allocation` prices the same
+    to how `sim.prices.solve_prices_core.recipe_cost_and_allocation` prices the same
     two `labour_hours` fields).
 
     Building a furnace that is never fired still needs its trades' worth of
@@ -98,7 +98,7 @@ def labour_hours_coefficients_per_unit_output(
     if recipe_key not in production:
         raise KeyError("no data/production/ entry for %r" % (recipe_key,))
     entry = production[recipe_key]
-    basis_key = _dominant_output_key(entry)
+    basis_key = dominant_output_key(entry)
     basis_quantity = entry["outputs"][basis_key]
     if not basis_quantity:
         raise ValueError("%r's dominant output %r has a zero or missing "

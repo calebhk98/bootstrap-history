@@ -1,6 +1,7 @@
 """What the seat does about its people before it starts new projects: teach the trades the society has lost, and sell the
 hours a standing `work` order asks for. Runs as the `seat_prelude` phase."""
 from sim.assembly.api import Part
+from sim.refusal import Refusal
 from sim.reporting.api import RecordEvent
 
 from .constants import RETEACH_EVERY
@@ -178,13 +179,9 @@ class Prelude(Part):
 				_take = min(_want, _room)
 				_got = 0.0
 				if _take > 0.5:
-					_pay, _werr = self.parts.core.labour.wages.work_for_wages(workforce.work_trade, _take)
-					# pay > 0 with an error is a WARNING (a bad trade, or
-					# starving an active project of its last hours), not a
-					# refusal - see work_for_wages's own docstring. The sale
-					# happened either way; only a genuine refusal (pay <= 0)
-					# means none of it landed.
-					if _pay > 0 or not _werr:
+					_, _werr = self.parts.core.labour.wages.work_for_wages(workforce.work_trade, _take)
+					# a refusal has a cause; any other answer is a warning on a sale that happened
+					if not isinstance(_werr, Refusal):
 						_got = _take
 				# SAY SO, THE SAME WAY AN UNHONOURED PROJECT DIRECTIVE DOES,
 				# BELOW. A standing instruction nobody is told failed is the

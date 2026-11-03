@@ -24,9 +24,9 @@ class Hiring:
         """Everything `hire` and `quote hire` agree on before a bid is posted: the whole-person count and the
         first year's wages the bid would put at stake, or a refusal. Returns (count, outlay, refusal)."""
         trade = str(trade or "").strip().lower()
-        if trade not in self._world.wages:
+        if trade not in self._world.trades.wages:
             return None, None, Refusal("no_such_trade", "no such trade: %s. Trades: %s"
-                                       % (trade, ", ".join(sorted(self._world.wages))))
+                                       % (trade, ", ".join(sorted(self._world.trades.wages))))
         if isinstance(count, str) or isinstance(count, bool):
             return None, None, Refusal("count_not_a_number", "n must be a number, not %r" % (count,))
         if count <= 0:
@@ -41,11 +41,11 @@ class Hiring:
         if not self.trades.trade_available(trade):
             return None, None, Refusal("trade_absent", "there are no %ss to hire in this society at any price: %s "
                                        'Teach one: {"cmd":"train","trade":"%s","n":1}'
-                                       % (trade, self._world.trade_notes.get(trade, ""), trade))
-        if trade not in self._world.trades_absent:
+                                       % (trade, self._world.trades.trade_notes.get(trade, ""), trade))
+        if trade not in self._world.trades.trades_absent:
             exist = self.supply.people_who_exist(trade)
             on_books = self.book.employed(trade)
-            rivals = self._world.actor_staff_fte(trade)
+            rivals = self._world.actors.actor_staff_fte(trade)
             if trade_supply_rules.hire_leaves_nobody(on_books, rivals, count, exist):
                 return None, None, Refusal("nobody_left", "only about %.1f %ss exist in this country and you "
                                            "already employ %.1f%s: there is nobody left to hire."
@@ -58,7 +58,7 @@ class Hiring:
             if crosses_literacy_wall(have, count, cap):
                 return None, None, literate_wall_refusal(trade, cap, have)
         outlay = count * self.market.quote_annual(trade)
-        if outlay > self._world.spending_power("buy"):
+        if outlay > self._world.finance.spending_power("buy"):
             return None, None, Refusal("cash_short", cash_in_hand_refusal(self._world, 
                 "offering %g %s%s a year's wages" % (count, trade, "" if count == 1 else "s"), outlay).message)
         room = self.capacity.household_room() - self.book.staff_posted()

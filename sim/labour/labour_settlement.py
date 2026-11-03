@@ -29,16 +29,16 @@ class Settlement:
 
     def held_tiles(self):
         """The tiles this nation holds."""
-        return tuple(self._world.home_tiles_held())
+        return tuple(self._world.people.home_tiles_held())
 
     def settlement_tiles(self):
         """{tile id: people living there} for the tiles this nation holds: the regions' people once tracked, else
         the nation spread by food potential."""
-        tracked = self._world.people_by_tile()
+        tracked = self._world.people.people_by_tile()
         if tracked is not None:
             return tracked
         homes = self.held_tiles()
-        total = self._world.population.total
+        total = self._world.people.population.total
         return {tile: total * settlement.population_share(homes, tile)
                 for tile in settlement.tile_ids(homes)}
 
@@ -58,19 +58,19 @@ class Settlement:
         registered town provider says, capped at the tile's people."""
         tile_people = self.settlement_tiles().get(tile, 0.0)
         nominal = tile_people * self.TOWN_MAX_SHARE_OF_TILE
-        provided = self._world.provided_town_population(tile, nominal)
+        provided = self._world.people.provided_town_population(tile, nominal)
         return nominal if provided is None else min(provided, tile_people)
 
     def town_mortality_premium_by_tile(self):
         """{tile: premium} for the tiles whose town carries a mortality premium from a registered provider: the premium
         of the town's people averaged over all the tile's people (a share of the baseline death rate). Empty with
         no provider."""
-        if not self._world.has_town_premiums():
+        if not self._world.people.has_town_premiums():
             return {}
         found = {}
         for tile, people in sorted(self.settlement_tiles().items()):
             town = self._town_population_at(tile)
-            premium = self._world.provided_mortality_premium(tile, town)
+            premium = self._world.people.provided_mortality_premium(tile, town)
             if premium and town > 0.0 and people > 0.0:
                 found[tile] = premium * min(1.0, town / people)
         return found
@@ -81,7 +81,7 @@ class Settlement:
 
     def held_technologies(self):
         """Technologies this actor's people can travel with: the civilisation's own and those built."""
-        return frozenset(self._world.held_and_running())
+        return frozenset(self._world.knowledge.held_and_running())
 
     def reachable_tiles(self, days_budget=None):
         """{tile: days} a hire can travel to the base from within `days_budget` (default
@@ -91,7 +91,7 @@ class Settlement:
         base = self.base_tile()
         if base is None:
             return {}
-        return geography.reach([base], geography.usable_modes([held]), days_budget, self._world.built_ways(), held_nodes=held)
+        return geography.reach([base], geography.usable_modes([held]), days_budget, self._world.scenario.built_ways(), held_nodes=held)
 
     def reach_population_estimate(self, days_budget=None):
         """People in the home territory's towns within a hire's travel budget of the base,
@@ -107,5 +107,5 @@ class Settlement:
         (geography's route over the ways built, weighted by time); None when no route joins the tiles."""
         held = self.held_technologies()
         found = geography.route([self.base_tile()], [tile], geography.usable_modes([held]),
-                                self._world.built_ways(), held_nodes=held, fastest=True)
+                                self._world.scenario.built_ways(), held_nodes=held, fastest=True)
         return None if found is None else found["days"]

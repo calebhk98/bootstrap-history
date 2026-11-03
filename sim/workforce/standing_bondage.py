@@ -4,15 +4,12 @@ from sim.assembly.api import Part
 from sim.reporting.api import RecordEvent
 
 from . import constants, rules
-from .commands_hours import SettleLivingCost
 
 
 class StandingBondage(Part):
 
 	def charge_living_cost(self, command):
-		charged = rules.living_cost_charged(command.living_cost, command.dependants_beyond_means, self.parts.fact_views.wages_charged_last_year())
-		self.parts.applying_hours.settle_living_cost(SettleLivingCost(charged))
-		return charged
+		return rules.living_cost_charged(command.living_cost, command.dependants_beyond_means, self.parts.fact_views.wages_charged_last_year())
 
 	def auto_buy_people(self, command):
 		# only when the optimizer is playing: buying people in manual mode with no command and no log line would hide the acquisition

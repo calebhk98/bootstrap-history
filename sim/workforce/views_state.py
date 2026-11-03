@@ -37,9 +37,9 @@ class ViewsState(Part):
                 "director_hours_spent": seat.director_hours_spent_founder}
 
     def pay_book(self):
-        """The acting seat's pay books: wages its own work earned and the living cost paid."""
-        seat = self.seat
-        return {"paid_in_clearing": self.parts.fact_views.wages_charged_last_year(), "earned": seat.wages_earned, "paid": seat.wages_paid, "living_cost_paid": seat.living_cost_paid}
+        """The acting seat's pay book: what the last clearing charged it for its staff and one-year orders (the payroll at the
+        market wage before any clearing)."""
+        return {"paid_in_clearing": self.parts.fact_views.wages_charged_last_year()}
 
     def trade_schools(self):
         """{trade: training seats the acting seat has founded}."""

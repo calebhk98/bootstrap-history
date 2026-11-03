@@ -8,7 +8,7 @@ from types import SimpleNamespace
 from sim.tests import module_harness
 from sim.workforce import rules as workforce_rules
 from sim.workforce.api import LoseStaff, NoteTradeSpread, SetEmployed, TakeWageFallback
-from sim.workforce.api import AutoBuyPeople, AutoManumit, CloseHoursYear, FadeMarketPressure, NoteBuyRefusal, SettleLivingCost
+from sim.workforce.api import AutoBuyPeople, AutoManumit, CloseHoursYear, FadeMarketPressure, NoteBuyRefusal
 from sim.reporting.api import RecordEvent
 from sim.workforce.constants import AUTO_MANUMIT_ANNUAL_CHANCE, MARKET_PRESSURE_ANNUAL_FADE, MARKET_PRESSURE_DECAY, WAGE_FALLBACK_LIVING_COST_YEARS, WAGE_FALLBACK_MAX_HOURS, WAGE_FALLBACK_MIN_HOURS
 from sim.workforce.module import Workforce
@@ -104,12 +104,6 @@ class HoursYear(unittest.TestCase):
         self.assertEqual((household.contract_hours, household.teaching_hours_this_year, household.relocation_hours_this_year,
                           household.supervision_hours_this_year), ({}, 0.0, 0.0, 0.0))
 
-
-class LivingCost(unittest.TestCase):
-    def test_settling_the_living_cost_adds_the_bill_to_what_was_paid(self):
-        seat = WorkforceSeat(living_cost_paid=100.0)
-        module_harness.build(Workforce, seat=seat, views={}).settle_living_cost(SettleLivingCost(50.0))
-        self.assertEqual(seat.living_cost_paid, 150.0)
 
 
 class StandingPolicyRules(unittest.TestCase):

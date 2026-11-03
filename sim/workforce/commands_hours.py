@@ -49,13 +49,6 @@ class SpendDirectorHours(Command):
 
 
 @dataclass(frozen=True)
-class SettleLivingCost(Command):
-    """The year's living cost, `amount` of it, was billed: the wages paid in advance are used up and the bill is added to what the
-    seat has paid for living."""
-    amount: float
-
-
-@dataclass(frozen=True)
 class SetWageHoursSold(Command):
     """The hours the acting seat has sold for wages this year are `hours` (a figure being tried, then put back)."""
     hours: float

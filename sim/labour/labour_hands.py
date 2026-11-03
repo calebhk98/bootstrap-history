@@ -18,34 +18,27 @@ class Hands:
         return hands_available(self._world.workforce.scholars, self._world.founder_alive, 0.0, 1.0)
 
     def scholar_hands_available(self):
-        """Scholars you can actually put on a project this year: the ones on
-        your own staff, yourself, plus the ones whose time you have already
-        bought under contract.
+        """Scholars you can actually put on a project this year: your staff, yourself, and a scholar for every year of
+        scholar hours you have bought, delivered or still on order (the one rule `_hands_with_commissioned` states)."""
+        scholar_family = self._world.trades.trade_family(trade_data.scholar_trade())
+        return self._hands_with_commissioned(self._world.workforce.scholars,
+                                             lambda trade: self._world.trades.trade_family(trade) == scholar_family)
 
-        THE SAME FIX craft_hands_available() GOT, ARRIVING LATE. That
-        function's own comment records the bug: a gate that read the payroll
-        alone, so work you had already paid an outside shop to do could not
-        satisfy the requirement - and the refusal's advice was to go and
-        commission it. `commission` could not unblock the gate that
-        recommended commission.
+    def wage_fallback_trade(self):
+        """The trade a founder with no work sells his hours in: the scholar trade once he has a scholar's hands to spare, else
+        the trade the registry says a scholar is taught from."""
+        if self.effective_scholars() >= 1:
+            return trade_data.scholar_trade()
+        return trade_data.taught_from(trade_data.registry_of(self._world), trade_data.scholar_trade())
 
-        It was fixed for craft trades and never extended to scholars, so the
-        identical defect survived for them and was reported as
-        Complaints/34: buying labourer hours works, buying SCHOLAR hours
-        does nothing. Reproduced against the live protocol - a 2,000-hour
-        scholar commission succeeded, took the money, and left the refusal
-        byte-identical.
-
-        A year of a scholar's time IS a scholar, for the purpose of whether
-        you may attempt a thing that needs one. Buying the work rather than
-        the person is the whole point of `commission`, and it is what
-        somebody in this position actually did.
-        """
-        scholar_family = self._world.trade_family(trade_data.scholar_trade())
-        contracted = contracted_hours_of(self._world.workforce.contract_hours,
-                                         lambda trade: self._world.trade_family(trade) == scholar_family)
-        return (self.effective_scholars()
-                + contracted / self._world.HOURS_PER_PERSON_YEAR)
+    def _hands_with_commissioned(self, staff, counts_trade):
+        """Staff on the payroll, the founder while alive, and a person for every full year of commissioned hours in the
+        trades `counts_trade` accepts. A year of a trade's time is a person of it for whether a thing that needs one may
+        be attempted, and buying a job rather than a person is the point of `commission`, so a gate that read the payroll
+        alone could not be unblocked by the advice to commission."""
+        return hands_available(staff, self._world.founder_alive,
+                               contracted_hours_of(self.commissioned_hours(), counts_trade),
+                               self._world.trades.HOURS_PER_PERSON_YEAR)
 
     # ---- a technology can make the SAME worker do more, without replacing
     # them ------------------------------------------------------------------
@@ -100,7 +93,7 @@ class Hands:
     #   prc_capstan_turret_lathe "unskilled operator can repeat production" -
     #                       still an operator, still a machinist, just a much
     #                       faster one per hour; machinist.
-    # LABOUR_PRODUCTIVITY_SOURCES: [(node, trade, bonus)] from each node's `labour_productivity` (MechanicsMixin).
+    # LABOUR_PRODUCTIVITY_SOURCES: [(node, trade, bonus)] from each node's `labour_productivity`, as the mechanics module's view gives them.
     # NEVER MORE THAN HALF AGAIN, however many of the above a run has built.
     # Every other saturating multiplier in this file (labour market price_factor,
     # literacy_factor) is capped for the same reason: an uncapped sum of
@@ -133,12 +126,12 @@ class Hands:
         """
         bonus = 0.0
         projects = self._world.projects
-        for node, row_trade, add in self._world.LABOUR_PRODUCTIVITY_SOURCES:
+        for node, row_trade, add in self._world.knowledge.LABOUR_PRODUCTIVITY_SOURCES:
             if row_trade == trade and node in projects.done:
                 bonus += add
         productivity = min(self.LABOUR_PRODUCTIVITY_CAP, 1.0 + bonus)
         if trade == trade_data.scholar_trade():
-            productivity *= self._world.research_productivity()
+            productivity *= self._world.knowledge.research_productivity()
         return productivity
 
     def hours_you_can_call_on(self, trade):
@@ -184,22 +177,6 @@ class Hands:
         return self.commissioned_hours().get(trade, 0.0)
 
     def craft_hands_available(self):
-        """Craftsmen you can actually put on a job this year: the ones on your
-        own staff, plus the ones whose time you have already bought.
-
-        Hours under contract are people for as long as the contract runs. A
-        year of a carpenter's time IS a carpenter, for the purposes of whether
-        you can attempt a thing that needs one, and buying a job rather than a
-        person is the whole point of `commission`."""
-        workforce = self._world.workforce
-        contracted = contracted_hours_of(self.commissioned_hours(), self.trades.is_craft_trade)
-        # AND YOURSELF. effective_scholars() has always counted the founder as
-        # one of the scholars - "you are your own natural philosopher" - and
-        # nothing counted them as a pair of hands, though the premise of the
-        # whole game is a person who knows how every one of these things is
-        # made. The asymmetry had a cost: workshop_first wants two craftsmen,
-        # and a Norse run that could field one could never build the place
-        # craftsmen work, so it ended six hundred years later with 136
-        # technologies and no staff at all.
-        return hands_available(workforce.artisans, self._world.founder_alive, contracted,
-                               self._world.HOURS_PER_PERSON_YEAR)
+        """Craftsmen you can actually put on a job this year: your staff, yourself, and a craftsman for every year of craft
+        hours you have bought (the one rule `_hands_with_commissioned` states)."""
+        return self._hands_with_commissioned(self._world.workforce.artisans, self.trades.is_craft_trade)

@@ -39,35 +39,36 @@ class Commissions:
         # of its staff and it never opened another concern. commission() does
         # its own affordability check against cash AND credit, which is the
         # check that should govern here too.
-        if self._world.spending_power("buy") <= 0:
+        if self._world.finance.spending_power("buy") <= 0:
             return None
-        need = getattr(self._world, "goal_closure", None)
+        need = self._world.scenario.goal_closure
         if need is None:
             try:
-                need = self._world.goal_closure = self._world.closure(self._world.nodes, self._world.goal)
+                need = self._world.scenario.closure(self._world.scenario.nodes, self._world.scenario.goal)
             except Exception:
-                need = self._world.goal_closure = set()
+                need = set()
+            self._world.remember_goal_closure(need)
         seen = 0
         done_nodes, active_nodes = self._world.projects.done, self._world.projects.active
-        for node_id in self._world.order:
+        for node_id in self._world.scenario.order:
             if seen >= look:
                 break
             if node_id in done_nodes or node_id in active_nodes or node_id not in need:
                 continue
-            if self._world.exclusion_reason(node_id):
+            if self._world.knowledge.exclusion_reason(node_id):
                 continue
-            node = self._world.nodes[node_id]
+            node = self._world.scenario.nodes[node_id]
             if any(prereq_id not in done_nodes for prereq_id in node["pre"]):
                 continue
             seen += 1
             short = node["art"] - self.hands.craft_hands_available()
             if short <= 0 or node["sch"] > self.hands.effective_scholars():
                 continue
-            hours = short * self._world.HOURS_PER_PERSON_YEAR
+            hours = short * self._world.trades.HOURS_PER_PERSON_YEAR
             # The cheapest craft trade this society actually has that can
             # spare the time: a workshop needs hands, not a particular guild.
             best = None
-            for trade in sorted(self._world.wages):
+            for trade in sorted(self._world.trades.wages):
                 if not self.trades.is_craft_trade(trade) or not self.trades.trade_available(trade):
                     continue
                 spare = commission_spare_hours(self.supply.market_supply(trade), self.hands.hours_reserved(trade))
@@ -86,16 +87,16 @@ class Commissions:
         """What `commission` and `quote commission` agree on before money
         moves. Returns (fee, refusal)."""
         trade = str(trade or "").strip().lower()
-        known = trade in self._world.wages
+        known = trade in self._world.trades.wages
         if known and economy_lacks(self._world, trade):
             return None, economy_lacks_refusal(trade)
         exists = known and hours > 0 and self.trades.trade_available(trade)
         spare = commission_spare_hours(self.supply.market_supply(trade), self.hands.hours_reserved(trade)) if exists else 0.0
-        refusal = commission_request_refusal(known, trade, hours, exists, self._world.trade_notes.get(trade, ""), spare)
+        refusal = commission_request_refusal(known, trade, hours, exists, self._world.trades.trade_notes.get(trade, ""), spare)
         if refusal:
             return None, refusal
         fee = self.commission_fee(trade, hours)
-        if fee > self._world.spending_power("buy"):
+        if fee > self._world.finance.spending_power("buy"):
             return None, cash_in_hand_refusal(self._world, 
                 "%.0f hours of a %s" % (hours, trade), fee)
         return fee, None

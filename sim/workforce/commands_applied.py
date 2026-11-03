@@ -2,7 +2,6 @@
 from sim.assembly.api import Part
 from sim.reporting.api import RecordEvent
 
-from . import rules
 from .state import ONCE_COMMISSION
 
 
@@ -31,7 +30,6 @@ class Applying(Part):
 		seat.hours_offered_for_wages = {}
 		seat.wages_paid = command.wages_charged
 		pay = command.wage_work_pay
-		seat.wages_earned = (seat.wages_earned or 0.0) + pay
 		if pay > 0.0:
 			last = dict(seat.wage_work_last_year or {"hours": round(offered, 1), "wage_income": 0.0})
 			last["wage_income"] = round(last.get("wage_income", 0.0) + pay, 1)
@@ -73,23 +71,10 @@ class Applying(Part):
 		seat = self.seat
 		before = self.parts.core.labour.ledger.staff_snapshot()
 		people_before = seat.scholars + seat.artisans + sum(seat.employees.values())
-		self.survive_staff(command.survival_share)
+		self.parts.core.labour.pools.lose_share(command.survival_share)
 		seat.directors_extra *= command.deputies_share
 		self.parts.core.labour.ledger.log_staff_reduction(command.cause, before)
 		return {"people_before": people_before, "people_after": seat.scholars + seat.artisans + sum(seat.employees.values())}
-
-	def survive_staff(self, survival_share):
-		"""Scholars, artisans and each trade's hired people are scaled by the share, fractions kept; a trade left with nobody is dropped."""
-		seat = self.seat
-		survive = rules.surviving_people
-		seat.scholars = survive(seat.scholars, survival_share)
-		seat.artisans = survive(seat.artisans, survival_share)
-		for trade in sorted(seat.employees):
-			survivors = survive(seat.employees[trade], survival_share)
-			if survivors > 0:
-				seat.employees[trade] = survivors
-			else:
-				seat.employees.pop(trade)
 
 	def release_staff(self, command):
 		with self.needs.act_as(command.seat_id):

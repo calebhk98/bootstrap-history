@@ -2,6 +2,8 @@
 outright grants of trained people that institutions make."""
 from sim.constants import declare
 
+from sim.workforce.api import rules as workforce_rules
+
 from . import trade_data
 
 
@@ -22,6 +24,55 @@ class StaffPools:
         self.book.add_newcomers(trade_data.scholar_trade(), scholars)
         self.book.add_newcomers(trade_data.generic_craft_trade(), artisans)
         self.resync_pools()
+
+    # ---- losses: written to the people on the books, which `resync_pools` counts, and to the places the books keep
+    # (`StaffBook.set_employed` moves the standing bid down by the people lost, so the next clearing does not refill the dead)
+
+    def lose_share(self, survival_share):
+        """Every trade's hired people, and the slaves and freedmen, fall to the share that survives, fractions kept."""
+        workforce = self._world.workforce
+        for trade in sorted(workforce.employees):
+            self.book.set_employed(trade, workforce_rules.surviving_people(workforce.employees[trade], survival_share))
+        workforce.slaves = int(round(workforce_rules.surviving_people(workforce.slaves, survival_share)))
+        workforce.freedmen = int(round(workforce_rules.surviving_people(workforce.freedmen, survival_share)))
+        self.resync_pools()
+
+    def lose_crew(self, share_by_trade):
+        """Each (trade, share) loses that share of the trade's hired people. Answers (trade, had, kept) per trade."""
+        lost = []
+        for trade, share in share_by_trade:
+            have = self.book.employed(trade)
+            kept = workforce_rules.surviving_people(have, 1.0 - share)
+            self.book.set_employed(trade, kept)
+            lost.append((trade, have, kept))
+        self.resync_pools()
+        return tuple(lost)
+
+    def bleed(self, artisan_floor, artisan_bleed, scholar_floor, scholar_bleed):
+        """People the household cannot pay leave: the craft pool falls by `artisan_bleed` (not below the floor), the scholars
+        by `scholar_bleed` (not below theirs)."""
+        workforce = self._world.workforce
+        self.book.set_employed(trade_data.scholar_trade(),
+                               workforce_rules.count_after_bleed(self.book.employed(trade_data.scholar_trade()), scholar_floor, scholar_bleed))
+        self._scale_craft_people(workforce_rules.count_after_bleed(workforce.artisans, artisan_floor, artisan_bleed) / workforce.artisans
+                                 if workforce.artisans > 0 else 1.0)
+        self.resync_pools()
+
+    def disperse_dependants(self, artisan_floor, artisan_retention):
+        """The freedmen leave the household and the craft pool keeps the share `artisan_retention` of itself (not below the floor)."""
+        workforce = self._world.workforce
+        before = workforce.artisans
+        workforce.freedmen = 0
+        self._scale_craft_people(workforce_rules.count_after_bleed(before, artisan_floor, 1.0 - artisan_retention) / before if before > 0 else 1.0)
+        self.resync_pools()
+
+    def _scale_craft_people(self, ratio):
+        """Hired craft people and slaves fall to `ratio` of what they were; the craft pool follows by `resync_pools`."""
+        workforce = self._world.workforce
+        for trade in sorted(workforce.employees):
+            if self.trades.is_craft_trade(trade):
+                self.book.set_employed(trade, workforce.employees[trade] * ratio)
+        workforce.slaves = int(round(workforce.slaves * ratio))
 
     FREEDMAN_ARTISAN_PRODUCTIVITY = declare(
         "FREEDMAN_ARTISAN_PRODUCTIVITY", 1.0, kind="temporary_heuristic",

@@ -68,6 +68,4 @@ class WorkforceSeat:
     director_hours_spent_founder: float = 0.0
     # ---- pay ----
     wages_paid: Optional[float] = None    # what the last clearing charged the seat for its staff and one-year orders; None before one
-    wages_earned: Optional[float] = None
-    living_cost_paid: float = 0.0
     said_deputies: int = 0

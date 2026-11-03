@@ -136,7 +136,7 @@ class CallersTests(unittest.TestCase):
 
     def test_labour_reads_the_one_answer(self):
         needs = SimpleNamespace(held_techniques=lambda include_starting: frozenset({"a"}))
-        self.assertEqual(WorkforceWorld(needs, None, None).held_and_running(), frozenset({"a"}))
+        self.assertEqual(WorkforceWorld(needs, None, None).knowledge.held_and_running(), frozenset({"a"}))
 
     def test_a_partner_an_action_returns_is_refused_until_it_is_held(self):
         host = _Host(done=set(), operating=())

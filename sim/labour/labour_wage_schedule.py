@@ -10,7 +10,7 @@ class WageSchedule:
     def opening_wage_schedule(self):
         """The civilisation's opening wage schedule, built once."""
         if self._wage_schedule_cache is None:
-            self._wage_schedule_cache = self._world.build_wage_schedule(self._world.civ)
+            self._wage_schedule_cache = self._world.trades.build_wage_schedule(self._world.scenario.civ)
         return self._wage_schedule_cache
 
     def wage_schedule(self):
@@ -18,9 +18,9 @@ class WageSchedule:
         economy pays it, or before the economy has opened the opening's figure times the price level.
         Reading builds a priced copy and changes nothing."""
         opening = self.opening_wage_schedule()
-        paid = self._world.economy_unskilled_wage()
+        paid = self._world.economy.unskilled_wage()
         return opening.priced_at(paid if paid is not None
-                                 else opening.money_per_labour_hour * self._world.home_price_level())
+                                 else opening.money_per_labour_hour * self._world.finance.home_price_level())
 
     def money_per_labour_hour(self):
         """Money one hour of the unskilled numeraire trade is worth here."""
@@ -42,8 +42,8 @@ class WageSchedule:
     def wage_per_hour(self, trade):
         """Money one hour of this trade is paid: what the economy's labour markets pay it, or before the
         economy has opened the opening schedule's (training premium times the money value of an unskilled hour)."""
-        paid = None if self._world.economy_unskilled_wage() is None else self._world.economy.agent_wage_per_hour(trade)
+        paid = None if self._world.economy.unskilled_wage() is None else self._world.economy.agent_wage_per_hour(trade)
         return paid if paid is not None else self.wage_schedule().wage_per_hour(trade)
 
     def base_annual_wage(self, trade):
-        return self.wage_per_hour(trade) * self._world.HOURS_PER_PERSON_YEAR
+        return self.wage_per_hour(trade) * self._world.trades.HOURS_PER_PERSON_YEAR

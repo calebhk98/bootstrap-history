@@ -14,7 +14,7 @@ from .commands import (BuildHousing, CloseHoursYear, GrantStaff, NoteTradeSpread
 from .commands_people import (BuySlaves, CommissionHours, FireStaff, FoundTradeSchool, HireStaff, Manumit, MoveBase, TrainStaff,
                               WorkForWages)
 from .commands_hours import (AllocateHours, BleedStaff, CancelWork, DisperseDependants, DrawTradeHours, LoseCrew, OrderWork, ReleaseHours,
-                             ResetTradeHours, SetReserve, SetWageHoursSold, SettleLivingCost, SpendDirectorHours, WatchStaff)
+                             ResetTradeHours, SetReserve, SetWageHoursSold, SpendDirectorHours, WatchStaff)
 from .commands_bondage import AutoBuyPeople, AutoManumit, ChargeLivingCost, FadeMarketPressure, NoteBuyRefusal
 from .state import STAFF, WorkforceSeat, WorkforceSociety
 from .module import Workforce
@@ -156,7 +156,7 @@ MODULE_SPECS = (ModuleSpec(
              (CloseHoursYear, "close_hours_year"),
              (AllocateHours, "allocate_hours"), (ReleaseHours, "release_hours"), (OrderWork, "order_work"), (CancelWork, "cancel_work"),
              (DrawTradeHours, "draw_trade_hours"), (ResetTradeHours, "reset_trade_hours"), (SpendDirectorHours, "spend_director_hours"),
-             (SettleLivingCost, "settle_living_cost"), (SetWageHoursSold, "set_wage_hours_sold"), (SetReserve, "set_reserve"),
+             (SetWageHoursSold, "set_wage_hours_sold"), (SetReserve, "set_reserve"),
              (BleedStaff, "bleed_staff"), (DisperseDependants, "disperse_dependants"), (LoseCrew, "lose_crew"), (WatchStaff, "watch_staff"),
              (BuildHousing, "build_housing"), (ChargeLivingCost, "charge_living_cost"), (AutoBuyPeople, "auto_buy_people"),
              (AutoManumit, "auto_manumit"), (FadeMarketPressure, "fade_market_pressure"), (NoteBuyRefusal, "note_buy_refusal"),
