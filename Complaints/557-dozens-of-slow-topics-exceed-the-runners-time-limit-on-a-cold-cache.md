@@ -21,7 +21,7 @@ The runner fails any topic still running after `TOPIC_SECONDS` (`sim/tests/__mai
 ## Done (where to look)
 
 - `priced_at_the_margin` (`sim/markets/port_coin.py`) re-opened a whole blank economy on every game build; its result is kept in `.cache/backing_margin`, keyed like the spin-up (`sim/tests/test_backing_margin_cache.py`). A warm game build fell from tens of seconds to about two (measure: `ROME_CACHE_DIR=<dir with only test_topic_seconds.json> python3 -m sim.tests --slow --only <topic> --jobs 1`).
-- `load_civ` re-read and re-checked every mod on every call (thousands a year); `get_ordered_mods` (`sim/engine/mods.py`) now keeps the order per directory until a file under it changes. Measure: `python3 -c "import time; from sim.engine.data import load_civ; t=time.time(); [load_civ('rome_100ad') for _ in range(200)]; print(time.time()-t)"`.
+- `load_civ` re-read and re-checked every mod on every call (thousands a year); `get_ordered_mods` (`sim/content/mods.py`) now keeps the order per directory until a file under it changes. Measure: `python3 -c "import time; from sim.engine.data import load_civ; t=time.time(); [load_civ('rome_100ad') for _ in range(200)]; print(time.time()-t)"`.
 - Stale openings fail fast (`sim/tests/test_stale_opening_guard.py`); `full_length_opening_checks` is one topic per civilisation; several topics cut years or split by subject (`real_output`, `cli_in_process`, `home_cargo_price`, `state_debases_coin`).
 
 ## Tried and not kept
