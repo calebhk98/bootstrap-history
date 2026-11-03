@@ -13,7 +13,7 @@ from typing import Any, Dict, Mapping, Optional, Tuple
 
 from sim.world import demand
 
-from .good_mass import unit_mass_and_source
+from .good_mass import unit_mass
 from .market_areas import AreaMap
 from .state_policy import StatePolicy
 from .tile_costs import CarriageTable, carriage_table
@@ -180,7 +180,7 @@ def goods_specs(goods: Mapping[GoodId, str], spoilage_rates: Mapping[GoodId, flo
     production = demand.production_data()
     specs = {}
     for good, category in sorted(goods.items()):
-        mass, _source = unit_mass_and_source(good, production)
+        mass = unit_mass(good, production)
         decay_rate = float(spoilage_rates.get(good, 0.0))   # continuous, per year
         specs[good] = GoodSpec(good_id=good, unit_mass_kg=mass,
                                spoilage_per_year=1.0 - math.exp(-decay_rate),

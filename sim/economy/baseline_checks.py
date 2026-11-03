@@ -1,5 +1,5 @@
 """Baseline checks on a controlled run's yearly accounts (Complaint 554): physical feasibility (no good used beyond
-what was made plus what was held) and the food eaten per head. Each returns the measured figures; the tests apply the bounds. Bounded dynamics are in settling.py. Changes nothing."""
+what was made plus what was held) and the food eaten per head. Each returns the measured figures; the tests apply the bounds. Changes nothing."""
 from dataclasses import dataclass
 from typing import Dict, List, Sequence
 

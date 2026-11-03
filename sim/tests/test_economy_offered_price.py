@@ -58,7 +58,7 @@ class MemoryKindTests(unittest.TestCase):
 
 class ViewOfferedPriceTests(unittest.TestCase):
     def test_the_view_reads_the_memorys_offered_price(self):
-        view = YearView(memory_with(3.0, ever_traded=True), None, types.SimpleNamespace(goods=lambda: ()), "coin")
+        view = YearView(memory_with(3.0, ever_traded=True), None, types.SimpleNamespace(goods=lambda: ()), "coin", None)
         self.assertIsNone(view.offered_price("stone", "a"))
 
 

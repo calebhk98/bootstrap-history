@@ -49,8 +49,9 @@ def open_entrants(setup, record, view, area_map, unmet_by_market: Dict[Tuple[str
                         entry_practice.crews_of_recipe(record.producers))
     if bids_by_market:
         planned = tuple((plan.good, view.area_of(plan.good, plan.tile)) for plan in plans)
+        first_margin_plan = len(plans)
         plans += margin_entry_plans(setup, record, view, area_map, bids_by_market, planned, siting)
-        planned += tuple((plan.good, view.area_of(plan.good, plan.tile)) for plan in plans)
+        planned += tuple((plan.good, view.area_of(plan.good, plan.tile)) for plan in plans[first_margin_plan:])
         plans += trial_entry_plans(setup, record, view, area_map, bids_by_market, planned, siting)
     for plan in plans:
         recipe = setup.recipes[plan.recipe_id]

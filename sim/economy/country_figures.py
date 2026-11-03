@@ -126,7 +126,7 @@ def opening_basket(economy, country: Optional[str]) -> Dict[str, float]:
 
 def _floor_view(economy):
     setup, record = economy.setup, economy.record
-    return YearView(record.memory, record.book, economy.area_map, setup.currency_id, labour_area)
+    return YearView(record.memory, record.book, economy.area_map, setup.currency_id, setup, labour_area)
 
 
 def _tile_floor_costs(economy, view, tile) -> Dict[str, float]:

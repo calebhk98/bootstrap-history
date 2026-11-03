@@ -81,7 +81,7 @@ class PoolDeposits(unittest.TestCase):
     def test_a_cohorts_claims_include_what_the_pool_owes_it(self):
         contracts = Contracts()
         contracts.deposit("cohort:a", "pool:credit", "engine_coin", 100.0, unit_value=0.5)
-        view = CreditView(MarketMemory(), None, types.SimpleNamespace(goods=lambda: ()), "coin", None, pooled=contracts.deposit_value)
+        view = CreditView(MarketMemory(), None, types.SimpleNamespace(goods=lambda: ()), "coin", None, None, pooled=contracts.deposit_value)
         self.assertAlmostEqual(view.claims("cohort:a", "coin"), 50.0)
         self.assertEqual(view.claims("cohort:b", "coin"), 0.0)
 

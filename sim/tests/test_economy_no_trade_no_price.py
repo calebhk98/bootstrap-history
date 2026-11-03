@@ -80,7 +80,7 @@ class ReaderTests(unittest.TestCase):
     def test_a_view_says_when_its_price_is_a_quote(self):
         memory = MarketMemory(prices={"grain|a": 3.0}, quote_kinds={"grain|a": QUOTE_BEST_UNFILLED_BID},
                               cleared_prices={})
-        view = YearView(memory, None, types.SimpleNamespace(goods=lambda: ["grain"]), "coin")
+        view = YearView(memory, None, types.SimpleNamespace(goods=lambda: ["grain"]), "coin", None)
         self.assertEqual(view.quote_kind("grain", "a"), QUOTE_BEST_UNFILLED_BID)
         self.assertIsNone(view.cleared_price("grain", "a"))
 

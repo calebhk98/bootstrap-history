@@ -22,7 +22,7 @@ from typing import Dict, List, Mapping, Optional, Tuple
 
 from sim.constants import declare
 
-from . import ask_adjust, inventory, practice, tool_fallback, unit_cost
+from . import ask_adjust, inventory, practice, tool_fallback, trade_wages, unit_cost
 from .labour_ceilings import joint_labour_ceilings
 from .planning_price import held_to_band, is_bare_quote
 from .protocols import MarketView
@@ -194,9 +194,9 @@ def live_wages(producer: Producer, recipe: Recipe, view: MarketView) -> Dict[str
 
 
 def live_wages_at(tile: TileId, recipe: Recipe, view: MarketView) -> Dict[str, float]:
-    """`live_wages` for a recipe worked on a tile, with no producer there yet."""
-    trades = _priced_names(recipe)[1]
-    return view.present_prices_at(trades, tile, True)
+    """`live_wages` for a recipe worked on a tile, with no producer there yet: each trade at the one wage rule
+    (`trade_wages.wage_in_view`), so a trade the memory holds no wage for is priced, never left out."""
+    return {trade: trade_wages.wage_in_view(view.setup, view, trade, view.area_of(trade, tile)) for trade in _priced_names(recipe)[1]}
 
 
 def next_expectations(producer: Producer, recipe: Recipe, view: MarketView,

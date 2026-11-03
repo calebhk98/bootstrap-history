@@ -9,7 +9,7 @@ import unittest
 
 from sim.economy import carriage_fleet_book, carriage_wear, merchants
 from sim.book import Book
-from sim.economy.types import Fill, GoodSpec
+from sim.economy.types import GoodSpec
 from sim.tests import test_economy_merchants as basic
 
 FEED_GOOD = "grain"
@@ -42,8 +42,7 @@ class WhatIsLeftOfAFee(unittest.TestCase):
         carriage, _map, area_a, _b = basic.world()
         who = basic.merchant()
         basic.plan(who, 2.0, 5.0)
-        fills = (Fill("m1", "salt", area_a["salt"], "a", 10.0, 2.0, "buy"),)
-        return merchants.dispatch(who, fills, carriage, basic.SPECS, "coin", cash, {("salt", "a"): 10.0},
+        return merchants.dispatch(who, carriage, basic.SPECS, "coin", cash, {("salt", "a"): 10.0},
                                   carrier_of={"a": "the poorest of a"}.get, **kwargs)
 
     def test_without_a_decomposed_fee_the_poorest_are_paid_as_before(self):

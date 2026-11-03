@@ -26,7 +26,7 @@ Every movement of money or goods is a `Transfer` or `GoodsMove` booked through `
 An agent's purse never goes below zero except an edge account's (types.EDGE_*).
 """
 from dataclasses import dataclass, field
-from typing import Mapping, Optional, Protocol, Sequence, Tuple
+from typing import Any, Mapping, Optional, Protocol, Sequence, Tuple
 
 from .types import (AgentId, AreaId, Bid, CurrencyId, FundsOffer, GoodId, LabourBid, LabourOffer,
                     LoanRequest, Offer, SiteLimit, TileId, TradeId)
@@ -64,9 +64,11 @@ class MarketView(Protocol):
     def prices_across(self, good: GoodId, areas) -> list:
         """`price(good, area.area_id)` for each of `areas` (the good's areas), in order."""
 
-    def present_prices_at(self, names: tuple, tile: TileId, wages: bool = False) -> Mapping[str, float]:
-        """`price` (or `wage` when `wages`) of each of `names` (goods or trades) in its area on `tile`, those with a
-        figure only."""
+    setup: Any
+    """The trades and opening wages (`trade_wages.wage_in_view` prices a trade from them)."""
+
+    def present_prices_at(self, names: tuple, tile: TileId) -> Mapping[str, float]:
+        """`price` of each of `names` (goods) in its area on `tile`, those with a price only."""
 
     def usual_price(self, good: GoodId, area: AreaId) -> Optional[float]:
         """A slow average of the clearing price, which holders of durable goods compare today's with.

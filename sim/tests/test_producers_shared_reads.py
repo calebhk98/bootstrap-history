@@ -9,7 +9,7 @@ import unittest
 
 import math
 
-from sim.tests.economy_view_defaults import ViewDefaults
+from sim.tests.economy_view_defaults import ViewDefaults, setup_of
 from sim.economy import producers, producers_close, unit_cost
 from sim.economy.types import Recipe
 
@@ -19,6 +19,7 @@ TRADES = ["hand", "smith"]
 
 class View(ViewDefaults):
     year = 3
+    setup = setup_of(*TRADES)
 
     def __init__(self, generator, with_clearing):
         self.prices = {good: generator.uniform(0.2, 9.0) for good in GOODS if generator.random() < 0.85}

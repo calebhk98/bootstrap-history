@@ -51,7 +51,7 @@ def household_plans(setup, record, area_map, room_by_tile: Optional[Mapping[Tile
     the hours of hired work a tile's hands leave room for (None: no limit). Hours hired are bought in the market area
     of the service, so the households of an area whose servants the hands of its tiles together cannot supply find
     hiring dearer: the area posts the price at which hiring fits."""
-    view = YearView(record.memory, record.book, area_map, setup.currency_id, labour_area)
+    view = YearView(record.memory, record.book, area_map, setup.currency_id, setup, labour_area)
     outside = year_labour.outside_option_by_tile(setup, record, view)
     offers = year_labour.labour_offers(setup, record, view, outside)
     floors: Dict[TileId, float] = {}
