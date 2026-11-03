@@ -40,11 +40,29 @@ class Credit:
 		return self.needs.risk_premium(debt_after, collateral_value, arrears)
 
 	def limit(self, actor_id: str, amount: float) -> float:
-		"""The most of a draw of `amount` the actor behind the account may be lent by the economy's rule (its `rule_limit`); the
-		whole of it for an account no borrower of the registry stands behind (an edge, the pool, a seat's household, whose line
-		the clearing granted it): the lenders' supply bounds the draw either way (`Purses.drawable`)."""
+		"""The most of a draw of `amount` the account may be lent by the economy's rule: its actor's own (`rule_limit`), a seat
+		household's by its credit line less its debt, the whole of it for an account nobody stands behind (an edge, the pool): the
+		lenders' supply bounds the draw either way (`Purses.drawable`)."""
 		actor = self.world.registry.actors.get(actor_id)
-		return amount if actor is None else actor.rule_limit(self.world, amount)
+		if actor is not None:
+			return actor.rule_limit(self.world, amount)
+		if actor_id in self.needs.seat_list()["households"]:
+			with self.needs.act_as(actor_id):
+				debt = max(0.0, -self.needs.acting_balance())
+				return max(0.0, min(amount, self.needs.credit_limit() - debt))
+		return amount
+
+	def rate_ceiling(self, account: str, amount: float) -> float:
+		"""The yearly rate the account would pay on a draw of `amount`, which no lender asking more may be asked to lend: its actor's
+		or its seat household's own rate on the debt then owed, else the market rate (the least any borrower pays, and what the pool
+		earns on what it lends)."""
+		actor = self.world.registry.actors.get(account)
+		if actor is not None:
+			return actor.rate_on_loan(self.world, amount)
+		if account in self.needs.seat_list()["households"]:
+			with self.needs.act_as(account):
+				return self.needs.household_rate_on_loan(amount)
+		return self.market_rate()
 
 	def state_may_borrow(self, state: Any) -> bool:
 		"""Whether a state holds a technology that declares the `state_credit` mechanic, in its own

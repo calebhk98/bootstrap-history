@@ -2,6 +2,7 @@
 draw for an account no borrower stands behind (an edge, a seat's household)."""
 QUICK_TOPIC = True
 
+import contextlib
 import types
 import unittest
 
@@ -10,9 +11,20 @@ from sim.book import InsufficientFunds
 
 
 class Limit(unittest.TestCase):
-    def credit(self):
+    def credit(self, balance=0.0, line=50.0):
         borrower = types.SimpleNamespace(rule_limit=lambda world, amount: min(amount, 5.0))
-        return Credit(types.SimpleNamespace(registry=types.SimpleNamespace(actors={"firm:1": borrower})))
+        needs = types.SimpleNamespace(seat_list=lambda: {"households": ["seat:a"]}, act_as=lambda seat_id: contextlib.nullcontext(),
+                                      acting_balance=lambda: balance, credit_limit=lambda: line)
+        return Credit(types.SimpleNamespace(registry=types.SimpleNamespace(actors={"firm:1": borrower}), needs=needs))
+
+    def test_a_seat_household_is_limited_to_its_credit_line_less_what_it_owes(self):
+        self.assertEqual(self.credit(balance=-20.0, line=50.0).limit("seat:a", 100.0), 30.0)
+
+    def test_a_seat_household_within_its_line_may_draw_all_it_asks(self):
+        self.assertEqual(self.credit(balance=10.0, line=50.0).limit("seat:a", 12.0), 12.0)
+
+    def test_a_seat_household_at_or_past_its_line_may_draw_nothing(self):
+        self.assertEqual(self.credit(balance=-60.0, line=50.0).limit("seat:a", 5.0), 0.0)
 
     def test_a_borrowers_account_is_limited_by_its_own_rule_limit(self):
         self.assertEqual(self.credit().limit("firm:1", 9.0), 5.0)

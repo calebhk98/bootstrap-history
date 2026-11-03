@@ -496,8 +496,13 @@ class CreditPart(Protocol):
 		...
 
 	def limit(self, actor_id: str, amount: float) -> float:
-		"""The most of a draw of `amount` the actor behind the account may be lent by the economy's rule (its `rule_limit`); the
-		whole of it for an account no actor stands behind (the lenders' supply bounds the draw either way)."""
+		"""The most of a draw of `amount` the actor or seat household behind the account may be lent by the economy's rule (its `rule_limit`); the
+		whole of it for an account no one stands behind (the lenders' supply bounds the draw either way)."""
+		...
+
+	def rate_ceiling(self, account: str, amount: float) -> float:
+		"""The yearly rate the account would pay on a draw of `amount`, which no lender asking more may be asked to lend; the market
+		rate for an account nobody stands behind."""
 		...
 
 	def state_may_borrow(self, state: Any) -> bool:

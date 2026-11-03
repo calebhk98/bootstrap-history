@@ -21,13 +21,20 @@ class Arrears(Part):
 		until the market has met), plus the economy's risk premium for the debt it owes against its credit limit and the interest it
 		has left unpaid. A household with no standing borrows from whoever will have it and pays for it: standing is what makes
 		money cheap."""
+		return self.rate_on_debt(max(0.0, -self.needs.acting_balance()))
+
+	def household_rate_on_loan(self, amount: float) -> float:
+		"""What the seat would pay a year on a further draw of `amount`: the rate on the debt it would then owe."""
+		return self.rate_on_debt(max(0.0, -self.needs.acting_balance()) + amount)
+
+	def rate_on_debt(self, debt: float) -> float:
+		"""The market rate plus the economy's risk premium on `debt` against the credit limit, less the seat's standing discount."""
 		needs = self.needs
 		discount = sum(discount for _node_id, discount in needs.effect_values("debt_rate_discount"))
 		discount += min(DEBT_RATE_REPUTATION_DISCOUNT_CAP, max(0.0, needs.standing()["reputation"]) / DEBT_RATE_REPUTATION_SCALE)
 		premium = 0.0
-		capital = needs.acting_balance()
-		if capital < 0:
-			answered = self.parts.capital_market.risk_premium(-capital, self.parts.credit_line.credit_limit(), self.seat.interest_arrears)
+		if debt > 0.0:
+			answered = self.parts.capital_market.risk_premium(debt, self.parts.credit_line.credit_limit(), self.seat.interest_arrears)
 			premium = 0.0 if answered is None else answered
 		return self.parts.capital_market.market_rate() + max(0.0, premium - max(0.0, discount))
 

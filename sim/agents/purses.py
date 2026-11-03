@@ -422,7 +422,13 @@ class Purses:
         try:
             self._fund_pool(amount)
         except InsufficientFunds:
-            amount = min(amount, max(0.0, self.purse(POOL) - self.interest_pending))
+            # the lenders offered cannot refill it all: what they can refill and what the pool holds free is taken, the rest stays deposited
+            capacities = self._lender_capacities("", amount)
+            refill = 0.0 if capacities is None else capacities[1] * sum(units for _lender, units in capacities[2])
+            free = max(0.0, self.purse(POOL) - self.interest_pending)
+            if refill > DEBT_FLOOR:
+                self._fund_pool(free + refill)
+            amount = min(amount, free + refill)
             if amount <= DEBT_FLOOR:
                 return 0.0
         self._pay_depositor(account, amount, DEPOSIT_TAKEN_BACK)

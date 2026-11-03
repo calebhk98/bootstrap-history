@@ -267,7 +267,7 @@ def _agent_state_shorten(out, full):
                         "hazards_still_ahead": len(knowledge_risk.get("known_hazards_ahead", [])),
                         "in_full": '{"cmd":"risk"}'}
                 elif field == "training_pending" and out[field]:
-                    out["in_training"] = len(out[field])
+                    out["in_training"] = sum(row["people"] for row in out[field])
                 del out[field]
                 elided.append('%s -> {"cmd":"%s"}' % (field, where))
         # THE ONE COMMAND FOR "WHY AM I NOT GETTING ON", advertised where a

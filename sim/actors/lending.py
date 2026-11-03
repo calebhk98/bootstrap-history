@@ -14,22 +14,19 @@ class Lending(Part):
 		purses.lenders_for = self.lenders_for_draw
 
 	def draw_limit(self, account: str, amount: float) -> float:
-		"""The most of a draw of `amount` the account may be lent: its actor's own limit; all of it for an account no borrower
-		stands behind (an edge, a seat's household), which the lenders' supply still bounds."""
+		"""The most of a draw of `amount` the account may be lent: its actor's or seat household's own limit; all of it for an account
+		no borrower stands behind (an edge, the pool), which the lenders' supply still bounds."""
 		return self.parts.cast.actor_world().credit.limit(account, amount)
 
 	def lenders_for_draw(self, account: str, amount: float) -> Optional[Tuple[str, float, List[Tuple[str, float, float, float]]]]:
 		"""(the economy's unit, coin per unit, [(lender, capacity, balance, ask)] cheapest first) of the lenders whose ask is no
-		more than the rate the account would pay on a draw of `amount`; None before lenders have met or while the economy opens.
-		An account no registry actor stands behind (the pool refilling for a depositor's take-back, a seat's household, whose
-		line the clearing already priced) meets every lender: the lenders' own capacity still bounds the draw."""
+		more than the rate the account would pay on a draw of `amount` (`Credit.rate_ceiling`: the market rate for the pool refilling a
+		depositor's take-back); None before lenders have met or while the economy opens."""
 		answered, listing = self.needs.agent_lender_listing()
 		if not answered or not listing["lenders"]:
 			return None
-		world = self.parts.cast.actor_world()
-		actor = world.registry.actors.get(account)
-		ceiling = None if actor is None else actor.rate_on_loan(world, amount)
-		lenders = [row for row in listing["lenders"] if ceiling is None or row[4] <= ceiling]
+		ceiling = self.parts.cast.actor_world().credit.rate_ceiling(account, amount)
+		lenders = [row for row in listing["lenders"] if row[4] <= ceiling]
 		return listing["currency"], listing["coin_per_unit"], [(row[0], row[2], row[3], row[4]) for row in lenders]
 
 	def lender_offers_made(self) -> Dict[str, float]:
