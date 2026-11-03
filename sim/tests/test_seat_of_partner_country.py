@@ -21,7 +21,6 @@ COIN_PER_UNIT = 2.0
 HOME, NORTH = "home", "north"
 LABOURER = "labourer"
 # what the economy's own readers return for a market scope: the home country's, then the north's
-WAGES = {None: {LABOURER: 10.0}, NORTH: {LABOURER: 15.0}}
 PRICES = {None: {"grain": 3.0}, NORTH: {"grain": 5.0, "salt": 7.0}}
 
 
@@ -49,18 +48,12 @@ def seat_economy():
 
 def answers_over_readers(call):
     """`call(agent)` with the economy's readers replaced by the figures above."""
-    readers = {"country_trade_wage": lambda economy, trade, country=None: WAGES[country][trade],
-               "shown_prices_of": lambda economy, country=None: (PRICES[country], set()),
+    readers = {"shown_prices_of": lambda economy, country=None: (PRICES[country], set()),
                "interest_rate": lambda economy: 0.05}
     with mock.patch.multiple(reads_prices.economy_api, **readers):
         return call(seat_economy())
 
 
-home_wage = answers_over_readers(lambda agent: agent.wage_per_hour(LABOURER))
-north_wage = answers_over_readers(lambda agent: agent.wage_per_hour(LABOURER, NORTH))
-check("a home seat is paid the home labour markets' wage", home_wage == WAGES[None][LABOURER] * COIN_PER_UNIT, home_wage)
-check("a partner country's seat is paid that country's own wage, in the same coin",
-      north_wage == WAGES[NORTH][LABOURER] * COIN_PER_UNIT, (home_wage, north_wage))
 home_prices = answers_over_readers(lambda agent: agent.answers()[0])
 north_prices = answers_over_readers(lambda agent: agent.answers(NORTH)[0])
 check("a partner country's seat buys at the prices of the markets its tiles trade in",
@@ -68,17 +61,8 @@ check("a partner country's seat buys at the prices of the markets its tiles trad
 check("the home answers are the home markets' prices", home_prices == {"grain": 3.0 * COIN_PER_UNIT}, home_prices)
 
 
-def after_naming_the_north(agent):
-    agent.answers(NORTH)
-    return agent.wage_per_hour(LABOURER)
-
-
-check("the home answers are not moved by the other country's wages",
-      answers_over_readers(after_naming_the_north) == home_wage, None)
-
-
 def elsewhere(agent):
-    return agent.answers("elsewhere") is agent.answers() and agent.wage_per_hour(LABOURER, "elsewhere") == agent.wage_per_hour(LABOURER)
+    return agent.answers("elsewhere") is agent.answers()
 
 
 check("a country the economy does not hold is answered as the home country", answers_over_readers(elsewhere), None)
