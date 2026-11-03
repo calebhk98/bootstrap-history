@@ -25,13 +25,10 @@ class _Economy:
         self.opened = True
         self.responses_asked = []
         self.tiles_asked = set()
-        self.posted = {}      # (side, commodity) -> tonnes the acting seat has ordered
+        self.agent = types.SimpleNamespace(stored={})      # the record the seat's posted orders are kept in
 
     def acting_tile(self):
         return "tile"
-
-    def posted_goods_tonnes(self, seat_id, side, commodity):
-        return self.posted.get((side, commodity), 0.0)
 
     def agent_prices_at(self, tile=None):
         return dict(TILE_PRICE_PER_UNIT) if self.opened else None
@@ -58,16 +55,17 @@ def stub_game():
     game = types.SimpleNamespace(
         economy=_Economy(),
         _price_tables=lambda: ({}, {material: "solved" for material in TABLE_PRICE_PER_UNIT}),
-        _material_prices=lambda: TABLE_PRICE_PER_UNIT,
-        _material_tag=lambda material: (material, material),
-        _priced_key=lambda tag, prices: tag if tag in prices else None,
-        _material_price_per_kg=TABLE_PRICE_PER_UNIT.get,
-        _material_market_tonnes=lambda key: 1000.0,
+        materials=types.SimpleNamespace(
+            prices=lambda: TABLE_PRICE_PER_UNIT,
+            tag=lambda material: (material, material),
+            priced_key=lambda tag, prices: tag if tag in prices else None,
+            price_per_kg=TABLE_PRICE_PER_UNIT.get,
+            market_tonnes=lambda key: 1000.0),
         foreign=types.SimpleNamespace(
             material_carriage_per_tonne=lambda key, price_per_tonne: CARRIAGE_PER_TONNE.get(key, 0.0)),
-        _market_flows=lambda: flows,
+        market_flows=lambda: flows,
         year=100, state=types.SimpleNamespace(projects=types.SimpleNamespace(), acting_seat="founder"), techniques_held=frozenset,
-        market_rate=lambda: 0.05,
+        finance=types.SimpleNamespace(market_rate=lambda: 0.05),
         **market_stand_in.market_memory())
     return game, GoodsMarket(game)
 
@@ -157,7 +155,7 @@ class ClimbTests(unittest.TestCase):
     def test_what_the_founder_ordered_this_year_moves_the_price_of_the_next_order(self):
         game, market = stub_game()
         before = market.quote("wheat_kg")["buy_per_tonne"]
-        game.economy.posted[("buy", "wheat_kg")] = 50.0
+        game.economy.agent.stored["seat_orders"] = {"founder": [{"side": "buy", "stock_key": "wheat_kg", "tonnes": 50.0}]}
         self.assertGreater(market.quote("wheat_kg")["buy_per_tonne"], before)
 
     def test_a_good_the_economy_has_no_book_for_cannot_be_costed(self):

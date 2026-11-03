@@ -21,11 +21,11 @@ class GoodsViews(Part):
 		return self.parts.market_objects.goods_market.sale_limits(material)
 
 	def material_trade_quote(self, material):
-		return self.parts.market_objects.economy.trade_quote(material)
+		return self.parts.market_objects.goods_market.quote(material)
 
 	def material_purchase_cost(self, material, tonnes):
 		"""(money, mean money per tonne) to buy `tonnes`; None when the material has no price."""
-		return self.parts.market_objects.economy.purchase_cost(material, tonnes)
+		return self.parts.market_objects.goods_market.pricing.quote_buy(material, tonnes, 0.0)
 
 	def purchase_quote(self, material, tonnes, already=0.0):
 		"""(money, mean money per tonne) to buy `tonnes` of a material now, the price rising as the order is filled; None when

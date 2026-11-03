@@ -49,6 +49,6 @@ def _people_by_tile(sim, civ, tile_ids):
 def _partner_prices(sim, partner_id):
     """The partner's solved prices in home money, for the goods only it can price."""
     facts = sim.foreign.foreign_economy_facts(partner_id)
-    home = sim.economy.material_prices()
+    home = sim.materials.prices()
     return {good: price for good, price in facts["prices_in_home_money"].items()
             if price > 0.0 and not home.get(good)}

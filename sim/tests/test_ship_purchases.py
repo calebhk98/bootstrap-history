@@ -26,7 +26,7 @@ def storage_economy(capital_asset):
 
 class ShipPurchases(unittest.TestCase):
     def test_fleet_planning_does_not_open_an_unopened_economy(self):
-        world = SimpleNamespace(techniques_granted=lambda: frozenset({"sea_mortise_tenon"}))
+        world = SimpleNamespace(production=SimpleNamespace(techniques_granted=lambda: frozenset({"sea_mortise_tenon"})))
         port = EconomyPort(world)
         port._opening = True
         goods = port.fleet_goods("state:a")
@@ -35,7 +35,7 @@ class ShipPurchases(unittest.TestCase):
         self.assertGreater(goods[0]["life"], 0.0)
 
     def test_a_new_good_without_a_curated_commodity_group_can_be_bought(self):
-        world = SimpleNamespace(_material_commodity_map=lambda: {"iron_bar_kg": "iron"})
+        world = SimpleNamespace(materials=SimpleNamespace(commodity_map=lambda: {"iron_bar_kg": "iron"}))
         port = EconomyPort(world)
         self.assertEqual(port.materials_in("warship"), ["warship"])
         self.assertEqual(port.materials_in("iron"), ["iron_bar_kg"])

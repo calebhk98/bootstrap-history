@@ -90,14 +90,10 @@ def committed_money(orders):
 
 
 def staff_funding_coin(sim, economy, seat_id, tile_of):
-    """Money the port will draw from the seat for its staff places this year, ahead of any goods order."""
-    hours = economy_api.working_hours_per_year(economy)
+    """Money the port will draw from the seat for its staff places this year, ahead of any goods order: the figure `post` draws
+    (port_staff.seat_staff_bids). It can still move before then, as the wages it reads change at the clearing."""
     with sim.act_as(seat_id):
-        wanted = port_staff.places_with_once(sim.labour.staff_posting(), sim.labour.once_posting(), hours)
-        if not wanted:
-            return 0.0
-        _bids, units = port_staff.employer_bids(economy, seat_id, wanted, tile_of(sim.labour.base_tile()),
-                                                sim.spending_power("buy"))
+        _bids, units = port_staff.seat_staff_bids(sim, economy, seat_id, tile_of(sim.labour.base_tile()))
     return units * economy_api.coin_per_unit(economy)
 
 
@@ -144,7 +140,7 @@ def post(sim, economy, orders_by_seat, tile_of):
                         Bid(account, good, area, tile, 0.0, units, price, 0.0, budget, maximum_price=price))
                     entries.append({"order": order, "account": account, "extra": extra, "budget": budget})
                 else:
-                    tonnes = min(order["tonnes"], sim.material_stock_t(order["stock_key"]))
+                    tonnes = min(order["tonnes"], sim.materials.stock_t(order["stock_key"]))
                     if tonnes <= 0.0:
                         entries.append({"refused": refused(order, "not_held", "no %s is held to sell." % order["material"])})
                         continue

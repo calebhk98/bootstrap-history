@@ -23,18 +23,18 @@ class YearInputsBuilder:
 
     def build(self, engine_orders, border_accounts=((), ())) -> YearInputs:
         sim = self._world
-        weather = sim._pooled_farm_weather_multiplier(sim.year, harmed=False)   # harm is applied per producer below
+        weather = sim.farm.pooled_weather_multiplier(sim.year, harmed=False)   # harm is applied per producer below
         economy = self._agent.economy()
-        harmed = sim.externality_yield_factors(sim.year)
-        yields = port_sites.crop_yields(economy, weather, sim.farm_weather_by_tile(sim.year))
+        harmed = sim.farm.externality_yield_factors(sim.year)
+        yields = port_sites.crop_yields(economy, weather, sim.farm.weather_by_tile(sim.year))
         yields = port_sites.harmed_yields(yields, harmed, economy_api.producers_of(economy))
         people = sim.labour.settlement_tiles()
-        bands = sim.regional_people_by_band()    # demography's (children, working age, elderly) by tile
+        bands = sim.state.regional_people_by_band()    # demography's (children, working age, elderly) by tile
         return YearInputs(year=sim.year, population_by_tile=people,
                           working_people_by_tile={tile: bands[tile][1] for tile in people if tile in bands},
                           working_hours_per_year=sim.HOURS_PER_PERSON_YEAR,
                           yield_factor_by_producer=yields, engine_orders=engine_orders, harvest_factor=weather,
-                          state_capacity=sim.state_reach(),
+                          state_capacity=sim.finance.state_reach(),
                           import_accounts=border_accounts[0], export_accounts=border_accounts[1],
                           labour_levy_hours_per_worker=port_levy.levy_hours_per_worker(sim),
                           debt_relief_tiles=port_land.debt_relief_tiles(sim, economy),
@@ -56,11 +56,11 @@ class YearInputsBuilder:
         give (the market's room not yet applied) in the economy's money."""
         sim, economy = self._world, self._agent.economy()
         coin, currency = economy_api.coin_per_unit(economy), economy_api.currency_id(economy)
-        rate = sim.market_rate()
+        rate = sim.finance.market_rate()
         asks = []
-        for seat_id in sorted(sim.playing_seats() or sim.state.seats):
+        for seat_id in sorted(sim.state.playing_seats() or sim.state.seats):
             with sim.act_as(seat_id):
-                base, _floor, serviceable = sim.credit_line_sought()
+                base, _floor, serviceable = sim.finance.credit_line_sought()
                 line = max(0.0, min(base, serviceable)) * sim.price_index / coin
             if line > 0.0:
                 asks.append(economy_api.credit_line_request(seat_id, currency, line, rate))
@@ -72,5 +72,5 @@ class YearInputsBuilder:
         tiles = sorted(self._seats.seat_tiles())
         if not tiles:
             return ()
-        return port_actors.standing_bids(self._agent.economy(), sim._market_flows(), tiles[0], tonnes_per_unit,
+        return port_actors.standing_bids(self._agent.economy(), sim.market_flows(), tiles[0], tonnes_per_unit,
                                          sim.economy.materials_in)

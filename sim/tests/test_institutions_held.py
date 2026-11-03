@@ -21,8 +21,8 @@ class Government:
 
 def game(government, nodes_by_mechanic):
     return Game(actors=types.SimpleNamespace(government_of=lambda actor: government),
-                                 nodes_with_mechanic=lambda mechanic: nodes_by_mechanic.get(mechanic, []),
-                                 actor_world=lambda: None)
+                                 production=types.SimpleNamespace(nodes_with_mechanic=lambda mechanic: nodes_by_mechanic.get(mechanic, [])),
+                                 state=types.SimpleNamespace(actor_world=lambda: None))
 
 
 class Held(unittest.TestCase):

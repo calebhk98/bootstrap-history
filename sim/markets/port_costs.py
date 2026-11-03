@@ -15,7 +15,7 @@ def wage_function(sim, production):
     ratios = price_solver.solver_wage_ratios(production, {})
 
     def wage_of(trade):
-        quote = sim.economy.labour.quote(trade) if trade in sim.trade_registry else 0.0
+        quote = sim.economy.labour.quote(trade) if trade in sim.state.trade_registry else 0.0
         return quote if quote > 0.0 else unskilled * ratios.get(trade, 1.0)
     return wage_of
 
@@ -29,12 +29,12 @@ def opening_costs(sim, production=None):
     """{good: money per unit} the cost of making each good the society can make with the techniques it holds,
     at the opening wages, rate and rent. `production` replaces the shared entries (a crop made at its tiles' yield)."""
     production = cost_entries() if production is None else production
-    techniques = sim.techniques_granted() | frozenset(sim.techniques_in_use())
+    techniques = sim.production.techniques_granted() | frozenset(sim.production.techniques_in_use())
     wage_of = wage_function(sim, production)
     rent_of = long_run_costs.opening_rent_of(techniques, wage_of, sim.civ, production)
-    costs = long_run_costs.long_run_costs(techniques, wage_of, float(sim.economy.base_rate()), rent_of, sim.civ,
+    costs = long_run_costs.long_run_costs(techniques, wage_of, float(sim.finance.market_rate()), rent_of, sim.civ,
                                           production)
     # A household good only a technique not yet held makes has no supplier at the opening, so it is seeded no
     # price that would draw demand to it; a founder's research or a partner's price brings it in.
     return {good: cost.cost for good, cost in costs.items()
-            if cost.cost > 0.0 and not (cost.provenance == "gated" and sim.serves_a_need(good))}
+            if cost.cost > 0.0 and not (cost.provenance == "gated" and sim.materials.serves_a_need(good))}

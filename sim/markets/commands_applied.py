@@ -14,13 +14,13 @@ class Applying(Part):
 		self.parts.market_objects.goods_market.note_draw(command.commodity, command.tonnes)
 
 	def forget_actor_orders(self, command):
-		self.parts.market_objects.economy.forget_actor_orders(command.actor_id)
+		self.parts.market_objects.economy.parts.trade.forget_orders(command.actor_id)
 
 	def note_actor_sale(self, command):
-		self.parts.market_objects.economy.note_actor_sale(command.seller_id, command.material, command.tonnes, command.from_concerns)
+		self.parts.market_objects.economy.parts.trade.note_sale(command.seller_id, command.material, command.tonnes, command.from_concerns)
 
 	def note_actor_purchase(self, command):
-		self.parts.market_objects.economy.note_actor_purchase(command.buyer_id, command.commodity, command.tonnes, command.budget)
+		self.parts.market_objects.economy.parts.trade.note_purchase(command.buyer_id, command.commodity, command.tonnes, command.budget)
 
 	def move_goods(self, command):
 		move = economy_api.GoodsMove(command.giver, command.receiver, command.good, command.tile, command.quantity, command.purpose)
@@ -57,6 +57,6 @@ class Applying(Part):
 		if not agent.opened():
 			return None
 		economy = agent.economy()
-		units = float(command.capital) / economy.setup.coin_per_unit
+		units = float(command.capital) / economy_api.coin_per_unit(economy)
 		bank = economy_api.found_bank_from_outside(economy, self.clock.acting_seat, units, self.needs.year(), economy_api.EDGE_EXCHANGE)
 		return None if bank is None else bank.agent_id

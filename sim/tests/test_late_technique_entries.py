@@ -24,9 +24,9 @@ WAGES = {"labourer": 2.0, "kilnman": 5.0}
 
 
 def stand_in_society(live_prices=None):
-    economy = types.SimpleNamespace(agent_prices=lambda: live_prices, base_rate=lambda: 0.0,
+    economy = types.SimpleNamespace(agent_prices=lambda: live_prices,
                                     labour=types.SimpleNamespace(quote=lambda trade: WAGES.get(trade, 0.0)))
-    return types.SimpleNamespace(economy=economy, civ={"id": "testland"})
+    return types.SimpleNamespace(economy=economy, civ={"id": "testland"}, finance=types.SimpleNamespace(market_rate=lambda: 0.0))
 
 
 def opening():
@@ -80,8 +80,7 @@ class AdmitTechniquesWiring(unittest.TestCase):
 
     def port(self, admitted, in_use):
         society = stand_in_society()
-        society.techniques_granted = lambda: frozenset({"a"})
-        society.techniques_in_use = lambda: in_use
+        society.production = types.SimpleNamespace(techniques_granted=lambda: frozenset({"a"}), techniques_in_use=lambda: in_use)
         return types.SimpleNamespace(_world=society, figures=YearFigures(),
                                      stored={"opening": opening(), "techniques_admitted": admitted})
 
