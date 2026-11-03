@@ -12,8 +12,11 @@ For each adapter class the check follows where an instance goes:
 An attribute read on a binding that is not a method, class attribute, property, or `self.<attribute>` assignment of the adapter class (or
 a base) is reported, as is one read on a sub-reader the adapter builds (`self.state = StateReads(...)`). Heuristic: an adapter
 whose instance leaves through a factory, a `return` or a lambda is followed by the names `world`, `_world`, `reads` and `sim` in the
-files of its own package. A class with `__getattr__`, or a base that cannot be found, is not checked.
-Prints `file:line: <binding>.<attribute> is not defined by <Adapter>` per problem and exits 1 when there is any."""
+files of its own package. A local alias (`x = <bound>`, `x = self.<bound>`, `a, b = <bound>, other`) is a binding of the same adapter in its function. In sim/agents (and files importing `protocols`) `world.<part>.<member>` is read against the protocol class
+sim/agents/protocols.py names for the part. A subclass of
+`SharedPart` also has the members of its part's protocol (installed at class creation). A class
+with `__getattr__`, or a base that cannot be found, is not checked.
+Prints `file:line: <binding>.<attribute> is not defined by <Adapter> (<file of the class>)` per problem and exits 1 when there is any."""
 import ast
 import glob
 import os
@@ -112,11 +115,79 @@ def call_name(call):
 	return None
 
 
+def class_string(node, name):
+	"""The string a class body assigns to `name`, else None."""
+	for statement in node.body:
+		if isinstance(statement, ast.Assign) and isinstance(statement.value, ast.Constant) and isinstance(statement.value.value, str) \
+				and any(isinstance(target, ast.Name) and target.id == name for target in statement.targets):
+			return statement.value.value
+	return None
+
+
+def forwarded_members(info, classes):
+	"""Names `SharedPart.__init_subclass__` installs on a subclass: the public members of the protocol its `part` names."""
+	part = class_string(info.node, "part")
+	protocols = [candidate for candidate in classes.get("World", ()) if candidate.relative == "sim/agents/protocols.py"]
+	if not part or not protocols:
+		return set()
+	protocol_name = None
+	for statement in protocols[0].node.body:
+		if isinstance(statement, ast.AnnAssign) and isinstance(statement.target, ast.Name) and statement.target.id == part:
+			annotation = statement.annotation
+			protocol_name = annotation.value if isinstance(annotation, ast.Constant) else getattr(annotation, "id", None)
+	names = set()
+	for candidate in classes.get(protocol_name, ()):
+		if candidate.relative != "sim/agents/protocols.py":
+			continue
+		for statement in candidate.node.body:
+			if isinstance(statement, (ast.FunctionDef, ast.AsyncFunctionDef)):
+				names.add(statement.name)
+			elif isinstance(statement, ast.AnnAssign) and isinstance(statement.target, ast.Name):
+				names.add(statement.target.id)
+	return {name for name in names if not name.startswith("_")}
+
+
+PROTOCOLS_FILE = "sim/agents/protocols.py"
+
+
+def protocol_parts(classes):
+	"""{part name: protocol class name} from the annotations of `World` in sim/agents/protocols.py."""
+	parts = {}
+	for info in classes.get("World", ()):
+		if info.relative != PROTOCOLS_FILE:
+			continue
+		for statement in info.node.body:
+			if isinstance(statement, ast.AnnAssign) and isinstance(statement.target, ast.Name):
+				annotation = statement.annotation
+				name = annotation.value if isinstance(annotation, ast.Constant) else getattr(annotation, "id", None)
+				if isinstance(name, str):
+					parts[statement.target.id] = name
+	return parts
+
+
+def protocol_names(classes, protocol_name, seen=()):
+	"""Every public member name of a protocol class and its protocol bases; None when a base is not found."""
+	found = [info for info in classes.get(protocol_name, ()) if info.relative == PROTOCOLS_FILE]
+	if not found or protocol_name in seen:
+		return None
+	names = set(found[0].members)
+	for base in base_names(found[0].node):
+		if base in NEUTRAL_BASES:
+			continue
+		inherited = protocol_names(classes, base, seen + (protocol_name,))
+		if inherited is None:
+			return None
+		names |= inherited
+	return names | OBJECT_NAMES
+
+
 def resolve_members(info, classes, seen=()):
 	"""The class's members with those of its bases; None when a base cannot be found (the class is not checked)."""
 	if info.dynamic:
 		return None
 	members = set(info.members) | OBJECT_NAMES
+	if "SharedPart" in base_names(info.node):
+		members |= forwarded_members(info, classes)
 	for name in base_names(info.node):
 		if name in NEUTRAL_BASES:
 			continue
@@ -319,6 +390,25 @@ class Checker:
 						for keyword in node.keywords:
 							if keyword.arg and self.is_bound(keyword.value, node, keys):
 								changed |= self.bind_argument(node, None, keyword.arg, adapter)
+					changed |= self.bind_aliases(relative, tree, adapter, keys)
+
+	def bind_aliases(self, relative, tree, adapter, keys):
+		"""`alias = bound`, `alias = self.bound` and `a, b = bound, other` bind the alias in its function as the same adapter."""
+		changed = False
+		for node in ast.walk(tree):
+			if not isinstance(node, ast.Assign):
+				continue
+			for target in node.targets:
+				pairs = []
+				if isinstance(target, ast.Tuple) and isinstance(node.value, ast.Tuple) and len(target.elts) == len(node.value.elts):
+					pairs = list(zip(target.elts, node.value.elts))
+				elif not isinstance(target, ast.Tuple):
+					pairs = [(target, node.value)]
+				for alias, value in pairs:
+					key = key_of(alias)
+					if key is not None and key != key_of(value) and self.is_bound(value, node, keys):
+						changed |= self.bind(relative, adapter, key, self.scope_for(node, key))
+		return changed
 
 	def is_bound(self, expression, place, keys):
 		key = key_of(expression)
@@ -376,7 +466,35 @@ class Checker:
 		problems = set()
 		for relative, tree in self.trees.items():
 			self.visit(relative, tree, self.bindings.get(relative, {}), None, problems)
+			self.report_protocol_reads(relative, tree, problems)
 		return sorted(problems)
+
+	def report_protocol_reads(self, relative, tree, problems):
+		"""`world.<part>.<member>` and `self.world.<part>.<member>` in sim/agents: the actors' world is typed by the protocols, so the
+		member must be one the part's protocol names."""
+		if not (relative.startswith("sim/agents/") or "protocols" in self.imports_of(tree)):
+			return
+		parts = protocol_parts(self.classes)
+		for node in ast.walk(tree):
+			if not (isinstance(node, ast.Attribute) and isinstance(node.value, ast.Attribute) and node.value.attr in parts):
+				continue
+			owner = node.value.value
+			if not (isinstance(owner, ast.Name) and owner.id == "world" or isinstance(owner, ast.Attribute) and owner.attr == "world"
+			        and isinstance(owner.value, ast.Name) and owner.value.id == "self"):
+				continue
+			protocol = parts[node.value.attr]
+			names = protocol_names(self.classes, protocol)
+			if names is not None and node.attr not in names and not node.attr.startswith("__"):
+				problems.add("%s:%d: %s.%s is not defined by %s (%s)" % (
+					relative, node.lineno, ast.unparse(node.value), node.attr, protocol, PROTOCOLS_FILE))
+
+	@staticmethod
+	def imports_of(tree):
+		names = set()
+		for node in ast.walk(tree):
+			if isinstance(node, ast.ImportFrom):
+				names |= {alias.name for alias in node.names} | set((node.module or "").split("."))
+		return names
 
 	def visit(self, relative, node, by_adapter, self_adapter, problems):
 		if isinstance(node, ast.ClassDef):
@@ -387,7 +505,10 @@ class Checker:
 			if owner is not None:
 				checked = [self.members[(info.relative, owner)] for info in self.classes[owner]]
 				if not any(members is None or node.attr in members for members in checked):
-					problems.add("%s:%d: %s.%s is not defined by %s" % (relative, node.lineno, ast.unparse(node.value), node.attr, owner))
+					candidates = {info.relative for info in self.classes[owner]}
+					near = {candidate for candidate in candidates if os.path.dirname(candidate) == os.path.dirname(relative)}
+					files = ", ".join(sorted(near or candidates))
+					problems.add("%s:%d: %s.%s is not defined by %s (%s)" % (relative, node.lineno, ast.unparse(node.value), node.attr, owner, files))
 		for child in ast.iter_child_nodes(node):
 			self.visit(relative, child, by_adapter, self_adapter, problems)
 
