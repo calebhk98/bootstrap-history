@@ -201,7 +201,10 @@ class Contracts:
         deposits: Dict[str, Contract] = {}
         for contract in self.deposits.values():
             if contract.lender in deposits:
-                deposits[contract.lender].principal += contract.principal
+                joined = deposits[contract.lender]
+                value = joined.principal * joined.unit_value + contract.principal * contract.unit_value
+                joined.principal += contract.principal
+                joined.unit_value = value / joined.principal if joined.principal > 0.0 else joined.unit_value
             else:
                 deposits[contract.lender] = contract
         self.deposits = deposits

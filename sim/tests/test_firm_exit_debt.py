@@ -56,7 +56,7 @@ years_until_closed(world, firm)
 check("a firm whose interest outruns its margin closes", firm.record.exited_year is not None,
 	(firm.record.last_margin, firm.debt(), owed_at_start))
 check("what a closed firm owed is written off: no lender holds a claim on it",
-	firm.debt() == 0.0 and not registry.state.purses.claims.get(firm.account_id), registry.state.purses.claims)
+	firm.debt() == 0.0 and not registry.state.purses.contracts.facility_of(firm.account_id), registry.state.purses.contracts.facilities)
 check("a closed firm runs nothing and owes nothing", not firm.concerns and firm.money == 0.0, firm.money)
 
 # the same margin with a debt its margin carries stays open and pays the interest

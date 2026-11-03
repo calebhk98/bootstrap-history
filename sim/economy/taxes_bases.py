@@ -5,7 +5,7 @@ data uses to its function. Adding a basis is one function and one registry line;
 good id appears here. The names match the bases `sim/agents/revenue_bases.py` reads.
 """
 from dataclasses import dataclass, field
-from typing import Callable, Dict, Mapping, Optional, Tuple
+from typing import Callable, Dict, Iterable, Mapping, Optional, Tuple
 
 from .types import AgentId, CurrencyId, GoodId, TileId, is_edge
 
@@ -31,6 +31,13 @@ class Base:
     quantity: float = 0.0            # physical amount where the base is a good, so a share can be paid in kind
     good: GoodId = ""
     tile: TileId = ""
+
+
+def taxable_cash(balances: Mapping[AgentId, float], taxpayers: Iterable[AgentId]) -> Dict[AgentId, float]:
+    """The cash the coin stock is assessed on: what the taxpayers hold (the households, producers and merchants), not a bank's
+    or fund's or insurer's holding of other people's money, nor a cargo or carriage account, nor an edge."""
+    liable = set(taxpayers)
+    return {agent: amount for agent, amount in balances.items() if agent in liable and not is_edge(agent)}
 
 
 def _sum_by_agent(pairs: Mapping[Tuple[AgentId, GoodId], float]) -> Dict[AgentId, float]:

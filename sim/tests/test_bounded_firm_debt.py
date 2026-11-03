@@ -43,7 +43,7 @@ check("debt stays within the ceiling plus a year's interest", excess <= 1e-6, (h
 check("a firm with no income and a facility defaults in bounded years", firm.record.exited_year is not None, (years, firm.debt()))
 check("it takes the years of arrears, no fewer",
 	years >= borrowing_arrears.ARREARS_YEARS_BEFORE_DEFAULT, years)
-check("the claim is written off through the pool: nothing is owed", firm.debt() == 0.0 and not purses.claims.get(firm.account_id))
+check("the claim is written off through the pool: nothing is owed", firm.debt() == 0.0 and not purses.contracts.facility_of(firm.account_id))
 check("the pool's books balance after the default", purses.book.check_conservation(1e-9).ok)
 check("the pool holds no negative balance", purses.purse(POOL) >= -1e-9, purses.purse(POOL))
 

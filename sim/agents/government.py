@@ -212,7 +212,7 @@ class Government(RecordedActor):
 				if not line.labour:   # a labour line's pay is offered in the labour market (sim/markets/port_staff.py)
 					_spend_what_it_can(self, world.setting.edge(EDGE_STATE_SPENDING), (line.money - bought) * share, line.name)
 			weight = sum(line.materials.values())
-			for commodity, tonnes in line.materials.items():
+			for commodity, tonnes in line.materials.items() if weight > 0.0 else ():
 				world.market.market_purchase(self.actor_id, commodity, tonnes * share, bought * share * tonnes / weight)
 
 	def pay_patron(self, share: float, world: Any) -> None:

@@ -42,7 +42,7 @@ class ActorDebtInBook(unittest.TestCase):
         self.assertEqual(first.money, -150.0)
         self.assertEqual(first.debt(), 150.0)
         self.assertEqual(second.money, 250.0)
-        self.assertEqual(purses.claims["first"], {POOL: 150.0})
+        self.assertEqual(purses.contracts.facility_of("first"), {POOL: 150.0})
         self.assertEqual(purses.book.balance(EDGE_EXCHANGE, COIN), -150.0)
 
     def test_money_coming_in_repays_the_claim_first(self):
@@ -52,7 +52,7 @@ class ActorDebtInBook(unittest.TestCase):
         self.assertEqual(state.purses.debt("first"), 0.0)
         self.assertEqual(state.purses.purse("first"), 50.0)
         self.assertEqual(first.money, 50.0)
-        self.assertNotIn("first", state.purses.claims)
+        self.assertFalse(state.purses.contracts.facility_of("first"))
 
     def test_no_purse_goes_below_zero_and_the_book_balances(self):
         state, first, second = pair(10.0)
@@ -97,7 +97,7 @@ class ActorDebtInBook(unittest.TestCase):
         lender.attach(state.purses)
         state.purses.set_offers({"lender": 1000.0})
         ledger.transfer(first, second, 100.0, "buy")
-        self.assertEqual(state.purses.claims["first"], {POOL: 100.0})   # one claim, whatever the lenders behind it
+        self.assertEqual(state.purses.contracts.facility_of("first"), {POOL: 100.0})   # one claim, whatever the lenders behind it
         self.assertEqual(state.purses.deposit("lender"), 40.0)           # the whole of what it holds
         self.assertEqual(state.purses.deposit(SAVERS), 60.0)
         self.assertEqual(state.purses.purse("lender"), 0.0)
@@ -124,7 +124,7 @@ class ActorDebtInBook(unittest.TestCase):
         state.purses.set_offers({"lender": 1000.0})
         ledger.transfer(first, second, 100.0, "buy")
         ledger.transfer(second, first, 50.0, "sell")
-        self.assertAlmostEqual(state.purses.claims["first"][POOL], 50.0)
+        self.assertAlmostEqual(state.purses.contracts.facility_of("first")[POOL], 50.0)
         self.assertAlmostEqual(state.purses.purse(POOL), 50.0)
 
     def test_a_depositor_is_told_of_its_share_of_a_default_so_its_books_account_for_its_wealth(self):

@@ -8,6 +8,7 @@ import unittest
 
 from sim.book import Book
 from sim.economy.taxes import TaxForm, YearFacts, assess, forms_from_civ_data
+from sim.economy.taxes_bases import taxable_cash
 from sim.economy.types import EDGE_MINT, EDGE_PRODUCTION, GoodsMove, Transfer
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -192,6 +193,13 @@ class SharedPurseTests(unittest.TestCase):
             book.transfer_many(transfers)     # raises InsufficientFunds if the second call spends the same cash again
         self.assertAlmostEqual(book.balance("peasants", "coin"), 0.0)
         self.assertAlmostEqual(book.balance(STATE, "coin"), 120.0)
+
+
+class TaxableCash(unittest.TestCase):
+    def test_only_the_taxpayers_cash_is_the_coin_stock_base(self):
+        balances = {"cohort:a": 50.0, "producer:b": 30.0, "merchant:c": 20.0, "bank:d": 900.0, "fund:e": 700.0, EDGE_MINT: 5.0}
+        self.assertEqual(taxable_cash(balances, ["cohort:a", "producer:b", "merchant:c", EDGE_MINT]),
+                         {"cohort:a": 50.0, "producer:b": 30.0, "merchant:c": 20.0})
 
 
 if __name__ == "__main__":
