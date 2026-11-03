@@ -88,5 +88,43 @@ class ActorsBorrowByOneMethod(unittest.TestCase):
         self.assertEqual(firm(self.state, "f", money=500.0).pay_interest(self.world), 0.0)
 
 
+class DrawLimit(unittest.TestCase):
+    """Borrower.draw_limit: one rule for every borrower, the economy's (design D1)."""
+    def setUp(self):
+        self.state = ActorsState()
+        self.world = FakeWorld()
+        self.world.edge_book = self.state
+        self.world.rate = START
+        self.actor = firm(self.state, "a")
+        self.ceiling = self.actor.credit_ceiling(self.world)
+
+    def test_a_draw_inside_the_ceiling_is_the_whole_draw_while_the_market_has_not_met(self):
+        self.assertEqual(self.actor.draw_limit(self.world, 0.5 * self.ceiling), 0.5 * self.ceiling)
+
+    def test_a_draw_past_the_ceiling_is_cut_to_what_the_ceiling_leaves(self):
+        self.actor.money = -0.25 * self.ceiling
+        self.assertAlmostEqual(self.actor.draw_limit(self.world, 10.0 * self.ceiling), 0.75 * self.ceiling)
+
+    def test_the_economys_fundable_amount_cuts_the_draw_further(self):
+        asked = []
+        self.world.fundable_amount = lambda amount, debt, collateral, arrears: asked.append((amount, debt, collateral, arrears)) or 7.0
+        self.assertEqual(self.actor.draw_limit(self.world, 0.5 * self.ceiling), 7.0)
+        self.assertEqual(asked, [(0.5 * self.ceiling, 0.0, self.ceiling, 0.0)])
+
+    def test_an_actor_with_nothing_to_show_lenders_draws_nothing(self):
+        self.assertEqual(firm(self.state, "b", last_margin=0.0).draw_limit(self.world, 100.0), 0.0)
+
+    def test_the_rate_on_a_draw_is_the_market_rate_plus_the_economys_premium(self):
+        self.world.risk_premium = lambda debt_after, collateral, arrears: 0.04
+        free_of_standing = firm(self.state, "c", founded_year=self.world.year)
+        free_of_standing.credit_standing = lambda world: 0.0
+        self.assertAlmostEqual(free_of_standing.rate_on_loan(self.world, 10.0), START + 0.04)
+
+    def test_standing_takes_only_premium_off_the_rate(self):
+        self.world.risk_premium = lambda debt_after, collateral, arrears: 0.0
+        self.actor.credit_standing = lambda world: 1.0
+        self.assertAlmostEqual(self.actor.rate_on_loan(self.world, 10.0), START)
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -115,6 +115,20 @@ class PriceReads:
         room = economy_api.credit_room(economy, borrower_id)
         return None if room is None else room * economy_api.coin_per_unit(economy)
 
+    def fundable_amount(self, amount, existing_debt, collateral_value, arrears):
+        """The most of a draw of `amount` coin the credit market lends an actor that owes `existing_debt` and offers
+        `collateral_value` (arrears are interest it has not paid), in coin; None before lenders have met."""
+        self.answers()
+        economy = self._agent.economy()
+        per_unit = economy_api.coin_per_unit(economy)
+        units = economy_api.actor_fundable_amount(economy, amount / per_unit, existing_debt / per_unit, collateral_value / per_unit, arrears / per_unit)
+        return None if units is None else units * per_unit
+
+    def risk_premium(self, debt_after, collateral_value, arrears):
+        """The rate added to the market rate for an actor owing `debt_after` (coin) against `collateral_value`, with `arrears` unpaid."""
+        per_unit = economy_api.coin_per_unit(self._agent.economy())
+        return economy_api.risk_premium(debt_after / per_unit, collateral_value / per_unit, arrears / per_unit)
+
     def trades_good(self, material):
         """Whether the economy has a market for the material."""
         return material in self._agent.economy().area_map.goods()

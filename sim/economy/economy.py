@@ -399,7 +399,7 @@ class Economy:
         requests = record.credit.take_requests()
         requests = (requests + list(credit_asks) + lending.household_requests(setup, record, view, ledger, priced_by_tile)
                     + lending.merchant_requests(setup, record, view, self.area_map, self.carriage))
-        record.credit.open_lending(sum(offer.amount for offer in funds if offer.currency == money))
+        record.credit.open_lending(funds, money)
         if not requests:
             record.credit.clear_expansion()      # a working-capital loan struck ahead of the year left no plant to wait for
             if funds:       # savings on offer and nobody borrowing

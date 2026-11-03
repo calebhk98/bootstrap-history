@@ -39,9 +39,8 @@ def menu(government: Any, world: Any, lines: Sequence[Any], gap: float) -> Decis
 	pay_need = sum(line.money for line in lines if line.name in arrears.PAY_LINES)
 	rate = world.credit.market_rate()
 	options = [_option(CUT, gap, {"services_lost": 1.0})]
-	ceiling = government.credit_ceiling(world)
-	if ceiling > 0.0:
-		borrowed = min(gap, ceiling)
+	borrowed = government.draw_limit(world, gap)
+	if borrowed > 0.0:
 		options.append(_option(BORROW, borrowed, {"interest": government.rate_on_loan(world, borrowed)}))
 	carry = {"interest": rate, "unpaid_pay": need / pay_need if pay_need > 0.0 else 0.0}
 	if pay_need > 0.0:

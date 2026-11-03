@@ -80,6 +80,9 @@ class Lender(Government):
 	def credit_ceiling(self, world):
 		return BORROWING_CEILING
 
+	def draw_limit(self, world, amount):
+		return min(amount, BORROWING_CEILING)
+
 	def rate_on_loan(self, world, amount):
 		return 0.08
 

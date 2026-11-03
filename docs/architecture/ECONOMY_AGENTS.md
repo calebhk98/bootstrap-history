@@ -227,9 +227,10 @@ the actors. The decision for who may owe what, and to whom:
   shared among them in proportion to what they offer, each lending no more than its purse holds, and each holds a claim
   for its part. Interest is paid straight to the claim holders in proportion to their claims (the savers' part reaches the
   strata that hold savings), so there is no interest pool; `state_lending` is the claims the state holds. A lender's
-  own cash book is told of each loan and repayment so its purse still equals its books. The market rate and the
-  credit ceiling are still the ones `Borrower.credit_ceiling` reads (the agent economy's credit market answers
-  them); the savers are a labelled stand-in for cohorts' savings, which are in the same book but not yet the lenders.
+  own cash book is told of each loan and repayment so its purse still equals its books. The market rate and
+  what an actor may draw are the economy's own: `Borrower.draw_limit` asks the credit market's `fundable_amount` (the rule
+  the clearing applies to every request, priced by the economy's risk premium and floored by the lowest lender ask), and the
+  rate on a draw is the market rate plus that premium; the savers are a labelled stand-in for cohorts' savings, which are in the same book but not yet the lenders.
 
 ## One money per labour hour (`Complaints/closed/115`)
 

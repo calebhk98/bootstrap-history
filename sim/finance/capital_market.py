@@ -3,7 +3,7 @@
 The rate and the room a borrower may still be lent are the agent economy's credit market's. What the module adds is who lends
 to the actors: once a year, before the actors act, the lenders' offers are fixed from what households save, what the state holds
 beyond its need and what each firm holds, and the interest the pool holds is shared among its depositors.
-Needs: civilisation, agent_rate, agent_credit_room, cast, state_treasury, actor_world, lender_offers_made, cash_and_deposit,
+Needs: civilisation, agent_rate, agent_credit_room, agent_fundable_amount, agent_risk_premium, cast, state_treasury, actor_world, lender_offers_made, cash_and_deposit,
 loans_out, debt_owed, send (SetLenderOffers, SettleLenderInterest, NoteHolderBooking)."""
 from typing import Any, Dict, Optional, Tuple
 
@@ -29,6 +29,18 @@ class CapitalMarket(Part):
 		credit market answers)."""
 		answered, room = self.needs.agent_credit_room(actor_id)
 		return room if answered else None
+
+	def fundable_amount(self, amount: float, existing_debt: float, collateral_value: float, arrears: float) -> Optional[float]:
+		"""The most of a draw of `amount` the credit market lends an actor that owes `existing_debt` against `collateral_value`
+		(the one rule of the clearing, in coin); None before lenders have met or while the economy opens."""
+		answered, fundable = self.needs.agent_fundable_amount(amount, existing_debt, collateral_value, arrears)
+		return fundable if answered else None
+
+	def risk_premium(self, debt_after: float, collateral_value: float, arrears: float) -> Optional[float]:
+		"""The rate the credit market adds to the market rate for an actor owing `debt_after` against `collateral_value`; None
+		while the economy opens."""
+		answered, premium = self.needs.agent_risk_premium(debt_after, collateral_value, arrears)
+		return premium if answered else None
 
 	def market_funds(self, world: Any) -> Dict[str, float]:
 		"""Funds lenders hold, by source."""

@@ -65,7 +65,7 @@ class CountryCredit(SharedPart):
 
 	part = "credit"
 	# home: the founder's own credit and debts are the home seat's; rate and lending figures are the shared market's until a country keeps its own
-	home_members = frozenset(("credit_headroom", "debt_service_share_of_surplus", "founder_credit_limit", "founder_debt_rate", "founder_defaults", "household_saving", "market_rate", "nodes_with_mechanic", "pay_interest", "starting_rate", "state_lending"))
+	home_members = frozenset(("credit_headroom", "debt_service_share_of_surplus", "founder_credit_limit", "founder_debt_rate", "founder_defaults", "fundable_amount", "household_saving", "limit", "market_rate", "nodes_with_mechanic", "pay_interest", "risk_premium", "starting_rate", "state_lending"))
 
 	def state_may_borrow(self, state: Any) -> bool:
 		"""Whether the state holds a technology declaring the `state_credit` mechanic, in its own knowledge or its country's."""

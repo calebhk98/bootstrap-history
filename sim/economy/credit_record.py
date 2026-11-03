@@ -2,14 +2,14 @@
 lenders have lost and what borrowers were lent."""
 import dataclasses
 from dataclasses import dataclass, field
-from typing import Dict, List
+from typing import Dict, List, Optional, Sequence
 
 from sim.contracts import TERM_LOAN, Contracts
 from sim.rekey import rekey
 
 from . import credit_claims
 from .record_parts import OwnedRecord
-from .types import AgentId, Loan, LoanRequest, TileId
+from .types import AgentId, CurrencyId, FundsOffer, Loan, LoanRequest, TileId
 
 
 TRANSFER_TOLERANCE = 1e-9    # numerical: a share of a loan this close to the whole moves the loan itself
@@ -32,11 +32,14 @@ class CreditRecord(OwnedRecord):
     expansion_runs: Dict[AgentId, float] = field(default_factory=dict)   # capacity a loan request would build
     worn_runs: Dict[AgentId, float] = field(default_factory=dict)        # plant that wore out last year, to rebuild
     funds_offered: float = 0.0                                           # savings on offer at the last lending, home currency
+    lowest_ask_offered: Optional[float] = None                           # the lowest rate any lender asked at the last lending; None before one
+    offered_by_lender: Dict[AgentId, float] = field(default_factory=dict)  # each lender's savings on offer at the last lending
+    ask_by_lender: Dict[AgentId, float] = field(default_factory=dict)    # each lender's lowest rate at the last lending
     lent_by_borrower: Dict[AgentId, float] = field(default_factory=dict)  # what each borrower was lent at the last lending
     credit_granted: Dict[AgentId, float] = field(default_factory=dict)   # what the last clearing granted each credit line asked for (credit_lines.py)
 
     AGENT_KEYED = ("remembered_defaults", "credit_losses", "loss_rates", "losses_seen", "expansion_runs", "worn_runs",
-                   "lent_by_borrower", "credit_granted")
+                   "offered_by_lender", "ask_by_lender", "lent_by_borrower", "credit_granted")
     SAVED_KEYS = {"contracts": "loans"}
     ENCODERS = {"contracts": lambda contracts: contracts.to_records(facilities=False)}
     DECODERS = {"contracts": _contracts_from,
@@ -131,9 +134,17 @@ class CreditRecord(OwnedRecord):
         worn, self.worn_runs = self.worn_runs, {}
         return worn
 
-    def open_lending(self, funds_offered: float) -> None:
-        """A lending begins: savings on offer, and nothing lent or granted yet."""
-        self.funds_offered = funds_offered
+    def open_lending(self, offers: Sequence[FundsOffer], currency: CurrencyId) -> None:
+        """A lending begins: the savings on offer in `currency` (in all, by lender, and the lowest ask among them), and
+        nothing lent or granted yet. A lender with several offers is on offer for their sum at the lowest of their asks."""
+        self.offered_by_lender, self.ask_by_lender = {}, {}
+        for offer in offers:
+            if offer.currency != currency or offer.amount <= 0.0:
+                continue
+            self.offered_by_lender[offer.lender] = self.offered_by_lender.get(offer.lender, 0.0) + offer.amount
+            self.ask_by_lender[offer.lender] = min(offer.minimum_rate, self.ask_by_lender.get(offer.lender, offer.minimum_rate))
+        self.funds_offered = sum(self.offered_by_lender.values())
+        self.lowest_ask_offered = min(self.ask_by_lender.values(), default=None)
         self.lent_by_borrower = {}
         self.credit_granted = {}
 

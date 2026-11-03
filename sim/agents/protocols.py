@@ -486,6 +486,20 @@ class CreditPart(Protocol):
 		"""What lenders will still advance an actor beyond what others owe; None before the market has met."""
 		...
 
+	def fundable_amount(self, amount: float, existing_debt: float, collateral_value: float, arrears: float) -> Optional[float]:
+		"""The most of a draw of `amount` the credit market lends an actor that owes `existing_debt` against `collateral_value`
+		(one rule for every borrower); None before the market has met."""
+		...
+
+	def risk_premium(self, debt_after: float, collateral_value: float, arrears: float) -> Optional[float]:
+		"""The rate the credit market adds to the market rate for that debt against that collateral; None while the economy opens."""
+		...
+
+	def limit(self, actor_id: str, amount: float) -> float:
+		"""The most of a draw of `amount` the actor behind the account may take, by its own `draw_limit`; the whole of it for
+		an account no actor stands behind."""
+		...
+
 	def state_may_borrow(self, state: Any) -> bool:
 		...
 
