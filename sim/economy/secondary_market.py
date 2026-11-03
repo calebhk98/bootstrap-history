@@ -50,10 +50,7 @@ def present_value(coupon_per_unit: float, redemption_per_unit: float, years_left
     `rate`. A claim with no end (`years_left` none or zero) is a perpetuity."""
     if years_left is None or years_left <= 0.0:
         return capital_market.perpetuity_value(coupon_per_unit, rate)
-    growth = 1.0 + max(-0.99, rate)
-    years = max(1, int(round(years_left)))
-    coupons = sum(coupon_per_unit / growth ** year for year in range(1, years + 1))
-    return coupons + redemption_per_unit / growth ** years
+    return capital_market.bullet_value(coupon_per_unit, redemption_per_unit, years_left, rate)
 
 
 def _supply(asks: Sequence[Ask], price: float) -> float:

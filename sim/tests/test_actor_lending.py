@@ -70,7 +70,7 @@ class SettleLenderInterest(unittest.TestCase):
 
 
 class LendersForADraw(unittest.TestCase):
-    listing = {"currency": "unit", "coin_per_unit": 2.0, "lenders": [("cohort:a", 10.0, 10.0, 0.04), ("bank:b", 5.0, 5.0, 0.09)]}
+    listing = {"currency": "unit", "coin_per_unit": 2.0, "lenders": [("cohort:a", 10.0, 10.0, 10.0, 0.04), ("bank:b", 5.0, 5.0, 5.0, 0.09)]}
 
     def lenders(self, account, rate, listing=(True, listing)):
         actor = SimpleNamespace(rate_on_loan=lambda world, amount: rate)

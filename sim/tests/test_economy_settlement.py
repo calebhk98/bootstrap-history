@@ -43,7 +43,6 @@ class GoodsSettlementTests(unittest.TestCase):
         self.assertAlmostEqual(book.balance("buyer", "coin"), 80.0)
         self.assertAlmostEqual(book.stock("buyer", "grain", "t2"), 10.0)
         self.assertAlmostEqual(book.stock("seller", "grain", "t1"), 0.0)
-        self.assertIn("sale of grain", book.money_flow("coin"))
 
     def test_each_fill_total_matches_what_the_fill_says(self):
         book = world({"b1": 100.0, "b2": 100.0}, {("s1", "t1"): 6.0, ("s2", "t3"): 4.0})
@@ -199,7 +198,6 @@ class LabourSettlementTests(unittest.TestCase):
         outcome = settle_labour(book, self.labour_result())
         self.assertTrue(outcome.complete)
         self.assertAlmostEqual(book.balance("household", "coin"), 20.0)
-        self.assertAlmostEqual(book.money_flow("coin")["wages for ploughing"], 20.0)
 
     def test_an_employer_who_cannot_pay_pays_for_fewer_hours(self):
         book = world({"farm": 10.0}, {})

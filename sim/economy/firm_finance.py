@@ -11,6 +11,7 @@ from typing import Iterable, NamedTuple, Sequence, Tuple
 
 from sim.constants import declare
 
+from . import credit
 from .replaced import replaced
 
 HISTORY_YEARS = declare(
@@ -125,11 +126,6 @@ def insolvent(equity: float) -> bool:
     return equity < 0.0
 
 
-def installment_of(loan) -> float:
-    """The principal a loan returns at the year's end (credit.service_split's rule)."""
-    return loan.principal if loan.years_left <= 1.0 else loan.principal / loan.years_left
-
-
 def interest_due(loans: Iterable, borrower: str) -> float:
     """Eurace@Unibi, Firm_compute_financial_payments: interest on the loans standing."""
     return sum(loan.principal * loan.rate for loan in loans if loan.borrower == borrower)
@@ -137,7 +133,7 @@ def interest_due(loans: Iterable, borrower: str) -> float:
 
 def financial_commitments(loans: Iterable, borrower: str) -> float:
     """Eurace@Unibi, Firm_compute_financial_payments: interest plus installments on the loans standing."""
-    return sum(loan.principal * loan.rate + installment_of(loan) for loan in loans if loan.borrower == borrower)
+    return sum(loan.principal * loan.rate + credit.installment_of(loan) for loan in loans if loan.borrower == borrower)
 
 
 def write_off_ratio(debt: float, capital_and_cash: float, illiquid: bool) -> float:

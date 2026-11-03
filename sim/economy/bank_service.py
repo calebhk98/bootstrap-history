@@ -75,8 +75,7 @@ def _return_idle(record, bank, money: str) -> None:
 
 
 def _due(loan: Loan) -> float:
-    installment = loan.principal if loan.years_left <= 1.0 else loan.principal / loan.years_left
-    return loan.arrears + loan.principal * loan.rate + installment
+    return loan.arrears + loan.principal * loan.rate + credit.installment_of(loan)
 
 
 def _pay_founder(record, bank, money: str) -> None:

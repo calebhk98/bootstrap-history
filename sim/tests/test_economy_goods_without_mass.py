@@ -28,6 +28,11 @@ class GoodsWithoutMass(unittest.TestCase):
             self.assertFalse(specs()[good].portable, good)
         self.assertTrue(specs()["wheat_kg"].portable)
 
+    def test_a_spoilage_rate_is_a_continuous_yearly_decay_given_as_a_plain_number(self):
+        spec = goods_specs({"wheat_kg": "", "stone_tons": ""}, {"wheat_kg": 0.5})
+        self.assertAlmostEqual(spec["wheat_kg"].spoilage_per_year, 1.0 - math.exp(-0.5))
+        self.assertEqual(spec["stone_tons"].spoilage_per_year, 0.0)
+
     def test_tonne_unit_is_a_tonne(self):
         self.assertEqual(specs()["stone_tons"].unit_mass_kg, 1000.0)
 

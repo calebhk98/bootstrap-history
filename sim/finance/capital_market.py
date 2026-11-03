@@ -59,7 +59,7 @@ class CapitalMarket(Part):
 		if not answered:
 			return 0.0, 0.0
 		offered = sum(row[1] for row in listing["lenders"])
-		held = sum(min(row[1], row[2]) for row in listing["lenders"])
+		held = sum(min(row[1], row[3]) for row in listing["lenders"])
 		return offered * listing["coin_per_unit"], (offered - held) * listing["coin_per_unit"]
 
 	def economy_pooled(self) -> float:

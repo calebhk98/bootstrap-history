@@ -22,6 +22,13 @@ class CarriedBookTests(unittest.TestCase):
         carried_book.note_carried(carried, "grain", "a1", "b1", units=5.0, tonnes=1.0, price_at_origin=3.0, price_at_destination=5.0)
         self.assertEqual(carried, {"grain": {"a1": {"b1": [3.0, 45.0, 75.0]}}})
 
+    def test_a_crossing_into_the_home_country_is_kept_by_carrier_and_source_at_the_value_at_the_origin(self):
+        crossing = {}
+        carried_book.note_crossing(crossing, "merchant:1", "north", 10.0, 3.0, 5.0)
+        carried_book.note_crossing(crossing, "merchant:1", "north", 5.0, None, 5.0)
+        carried_book.note_crossing(crossing, "merchant:2", "east", 1.0, 2.0, None)
+        self.assertEqual(crossing, {("merchant:1", "north"): 30.0 + 25.0, ("merchant:2", "east"): 2.0})
+
     def test_an_end_without_a_price_takes_the_other_ends(self):
         carried = {}
         carried_book.note_carried(carried, "grain", "a1", "b1", 10.0, 2.0, None, 5.0)

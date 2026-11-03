@@ -48,12 +48,14 @@ def actor_fundable(amount: float, existing_debt: float, collateral_value: float,
 
 @dataclass(frozen=True)
 class LenderStanding:
-    """One lender of the last lending: what it can still lend (its offer after the reserve it keeps back, less what the year's
-    loans took, and for a bank no more than the cash it holds beyond its reserve, which its depositors' pledged funds do not
-    add to), what its account holds now and the lowest rate it asked (the economy's units). `kind` is cohort, bank or fund."""
+    """One lender of the last lending: the offer it made, what it can still lend (the offer after the reserve it keeps back,
+    less what the year's loans took, and for a bank no more than the cash it holds beyond its reserve, which its depositors'
+    pledged funds do not add to), what its account holds now and the lowest rate it asked (the economy's units). `kind` is
+    cohort, bank or fund."""
     lender: AgentId
     kind: str
-    offered: float
+    offer: float
+    capacity: float
     balance: float
     ask: float
 
@@ -69,7 +71,7 @@ def lender_standings(record, currency: CurrencyId) -> List[LenderStanding]:
             capacity = min(capacity, banks.free_cash(record, bank, currency))
         capacity = max(0.0, capacity - record.credit.lent_by_lender.get(lender, 0.0))
         standings.append(LenderStanding(lender, "cohort" if lender in record.cohorts else "bank" if bank is not None else "fund",
-                                        capacity, record.book.balance(lender, currency), record.credit.ask_by_lender[lender]))
+                                        offered, capacity, record.book.balance(lender, currency), record.credit.ask_by_lender[lender]))
     return sorted(standings, key=lambda each: (each.ask, each.lender))
 
 

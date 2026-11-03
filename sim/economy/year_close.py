@@ -56,6 +56,12 @@ def money_taxes(setup, record, view, ledger: YearLedger) -> None:
     if duty:
         record.book.transfer_many(duty)
         received += math.fsum(transfer.amount for transfer in duty)
+    carried_duty = tariffs.carried_duty_transfers(ledger.carried_in, setup.carried_tariff,
+                                                  lambda carrier: record.book.balance(carrier, setup.currency_id),
+                                                  setup.state_agent, setup.currency_id)
+    if carried_duty:     # the economy's own merchants bringing goods in from another country of it
+        record.book.transfer_many(carried_duty)
+        received += math.fsum(transfer.amount for transfer in carried_duty)
     farmed = dict(record.taxes.tax_farms)
     received += math.fsum(farm["price"] for farm in farmed.values())      # the farmers paid up front
     if forms:
@@ -67,7 +73,8 @@ def money_taxes(setup, record, view, ledger: YearLedger) -> None:
         for form in forms:
             if form.name in farmed:
                 farmed_transfers, _farmed_moves, farmed_assessments = taxes.assess(
-                    [form], facts, farmed[form.name]["farmer"], {}, tax_farming.TAX_FARMER_REACH, setup.hiding, cash_left)
+                    [form], facts, farmed[form.name]["farmer"], {}, tax_farming.TAX_FARMER_REACH, setup.hiding, cash_left,
+                    frozenset({setup.state_agent}))      # the state does not pay a farmer for its own treasury
                 record.book.transfer_many(farmed_transfers)
                 ledger.note_postings(farmed_transfers)
                 assessments = assessments + farmed_assessments

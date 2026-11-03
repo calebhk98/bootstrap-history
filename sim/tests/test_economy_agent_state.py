@@ -9,7 +9,7 @@ import unittest
 
 from sim.economy import state_budget, state_finance
 from sim.economy.state_policy import StatePolicy
-from sim.economy.types import CurrencySpec
+from sim.economy.types import CurrencySpec, Loan
 from sim.tests.economy_state_fixture import COIN, opened  # noqa: F401  (test_state_printing_scale_rule opens a fixture economy through it)
 
 STATE = "state:fixture"
@@ -72,6 +72,13 @@ class FinancingOrderTests(unittest.TestCase):
         self.assertAlmostEqual(supplied["issue"], 500.0)
         self.assertAlmostEqual(expected, headroom)
         self.assertEqual(record.credit.loan_requests[0].borrower, STATE)
+
+    def test_what_the_state_owes_in_arrears_uses_up_its_headroom_like_principal(self):
+        setup, record, view = economy_of(("borrow",))
+        record.credit.loans.append(Loan("loan:0:1", "lender", STATE, COIN, 100.0, rate=0.05, years_left=5.0, issued_year=0, arrears=40.0))
+        headroom = state_finance.DEBT_LIMIT_YEARS_OF_REVENUE * REVENUE - 140.0
+        _in_hand, expected, _supplied = state_finance.finance_deficit(setup.state_policy, record, view, setup, headroom + 500.0, REVENUE)
+        self.assertAlmostEqual(expected, headroom)
 
     def test_a_deficit_inside_the_headroom_is_only_borrowed(self):
         _record, (_in_hand, _expected, supplied) = finance(100.0, ("borrow", "issue"))

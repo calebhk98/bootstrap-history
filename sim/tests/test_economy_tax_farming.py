@@ -80,6 +80,16 @@ class RememberYearTests(unittest.TestCase):
         self.assertAlmostEqual(taxes.tax_history["poll"]["state_take"], 90.0 * 0.5 / 0.9)
 
 
+class FarmedAssessTests(unittest.TestCase):
+    def test_the_state_is_not_taxed_for_the_farmer_when_it_is_named_exempt(self):
+        from sim.economy import taxes
+        from sim.economy.taxes_bases import YearFacts
+        facts = YearFacts(currency=MONEY, cash={STATE: 900.0, "farmer": 50.0, "rich": 100.0})
+        form = TaxForm("hoard", "coin_stock", 0.1)
+        transfers, _moves, _assessments = taxes.assess([form], facts, "farmer", {}, 1.0, None, None, frozenset({STATE}))
+        self.assertEqual([(each.payer, each.payee) for each in transfers], [("rich", "farmer")])
+
+
 class StateChoiceTests(unittest.TestCase):
     class State:
         decision_policy = ValuePolicy()

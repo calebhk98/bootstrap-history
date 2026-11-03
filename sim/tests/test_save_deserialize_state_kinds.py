@@ -25,7 +25,7 @@ from sim.reporting.api import ReportingSeat
 from sim.resources.api import ResourcesSeat
 from sim.tests.harness import check
 
-EMPTY_BOOK = {"money": {}, "goods": {}, "gross_money": {}, "gross_goods": {}, "money_by_purpose": {}, "goods_by_purpose": {},
+EMPTY_BOOK = {"money": {}, "goods": {}, "gross_money": {}, "gross_goods": {}, "goods_by_purpose": {},
               "edge_money_volume": {}, "edge_money_net": {}, "edge_goods_volume": {}, "edge_goods_net": {}, "supply_at_start": {}}
 
 # ---- what the blob is read as when no class is named

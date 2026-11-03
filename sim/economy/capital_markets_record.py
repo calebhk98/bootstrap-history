@@ -18,8 +18,10 @@ class CapitalMarketsRecord(OwnedRecord):
     property_income: Dict[AgentId, float] = field(default_factory=dict)  # dividends and interest last year
     pool_income: Dict[AgentId, float] = field(default_factory=dict)      # interest the actors' pool paid a lender since the last year's close, in the economy's unit
 
+    last_pool_income: Dict[AgentId, float] = field(default_factory=dict)  # what the pool paid each lender at the last close, in the economy's unit
+
     OWNERS = ("capital_markets_record", "banks", "funds", "insurance", "shares", "portfolio_year", "secondary_trade", "capital_year")
-    AGENT_KEYED = ("banks", "shares", "last_dividends", "capital", "property_income", "pool_income")
+    AGENT_KEYED = ("banks", "shares", "last_dividends", "capital", "property_income", "pool_income", "last_pool_income")
     SAVED_SORTED = ("banks", "shares", "last_dividends")
     ENCODERS = {"capital": lambda capital: capital.to_plain()}
     DECODERS = {"banks": lambda value: {key: Bank(**each) for key, each in value.items()},
@@ -32,14 +34,12 @@ class CapitalMarketsRecord(OwnedRecord):
     def take_pool_income(self) -> Dict[AgentId, float]:
         """The interest the actors' pool paid lenders since the last close; the close counts it in the year's income, once."""
         taken, self.pool_income = self.pool_income, {}
+        self.last_pool_income = dict(taken)
         return taken
 
     def note_pool_income(self, agent: AgentId, amount: float) -> None:
         """The actors' pool paid `agent` (a lender of the economy) `amount` of interest; it joins the year's property income."""
         self.pool_income[agent] = self.pool_income.get(agent, 0.0) + amount
-
-    def add_property_income(self, agent: AgentId, amount: float) -> None:
-        self.property_income[agent] = self.property_income.get(agent, 0.0) + amount
 
     def forget_producer(self, producer_id: AgentId) -> None:
         """The producer closed: nobody holds shares in it and it pays no dividend."""

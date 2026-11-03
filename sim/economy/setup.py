@@ -70,6 +70,7 @@ class EconomySetup:
     flight: Any = None  # the actors' flight rules (expected_penalty_of_leaving, arrears_owed_by_fugitive, share_after_immunity), handed in by the port; None: no flight
     debt_bondage_years: float = 0.0               # term of service a landless household in default owes its creditor; 0: the society has no debt bondage (bondage.py)
     import_duty_share: Dict[GoodId, float] = field(default_factory=dict)   # per good, the share of its landed price that is the state's tariff toward the source; the port sets it each year (markets/port_duty.py)
+    carried_tariff: Dict[str, float] = field(default_factory=dict)   # source country -> the share of the value at the source the home state charges on goods carried in from it; the port sets it each year (markets/port_duty.py)
     carriage_rates_balanced: Dict[str, float] = field(default_factory=dict)   # likewise with the opposite flow filling every return; none: same
     carriage_crew: Dict[str, Tuple[str, float]] = field(default_factory=dict)   # mode id (land, river, sea) -> (crew trade, crew hours per tonne-km), geography's; none: carriage hires no hours
     carriage_handling: Dict[str, float] = field(default_factory=dict)   # mode id -> hours of handling a tonne each time a haul changes to the mode, for the modes whose handling the rates price
@@ -171,7 +172,7 @@ def recipe_tile_key(recipe_id: str, tile: TileId) -> str:
     return recipe_id + "@" + tile
 
 
-def goods_specs(goods: Mapping[GoodId, str], spoilage_rates: Mapping[GoodId, Mapping[str, Any]],
+def goods_specs(goods: Mapping[GoodId, str], spoilage_rates: Mapping[GoodId, float],
                 service_lives: Optional[Mapping[GoodId, float]] = None) -> Dict[GoodId, GoodSpec]:
     """A `GoodSpec` per good (its unit mass from `good_mass`), the spoilage table and any stated
     service life. `goods` maps each good to a category label from data."""
@@ -180,7 +181,7 @@ def goods_specs(goods: Mapping[GoodId, str], spoilage_rates: Mapping[GoodId, Map
     specs = {}
     for good, category in sorted(goods.items()):
         mass, _source = unit_mass_and_source(good, production)
-        decay_rate = float((spoilage_rates.get(good) or {}).get("rate", 0.0))   # continuous, per year
+        decay_rate = float(spoilage_rates.get(good, 0.0))   # continuous, per year
         specs[good] = GoodSpec(good_id=good, unit_mass_kg=mass,
                                spoilage_per_year=1.0 - math.exp(-decay_rate),
                                service_life_years=float(service_lives.get(good, 0.0)),

@@ -32,18 +32,19 @@ class LenderCapacity(unittest.TestCase):
     def test_a_cohorts_capacity_is_its_offer_after_the_reserve_less_what_the_years_loans_took(self):
         record = record_with({"cohort:a": 100.0}, {"cohort:a": 0.05}, lent={"cohort:a": 30.0}, balances={"cohort:a": 100.0})
         [standing] = credit_lines.lender_standings(record, "coin")
-        self.assertAlmostEqual(standing.offered, capital_market.lendable_capacity(100.0) - 30.0)
+        self.assertAlmostEqual(standing.capacity, capital_market.lendable_capacity(100.0) - 30.0)
+        self.assertEqual(standing.offer, 100.0)     # the full offer stays whole beside the capacity
 
     def test_a_banks_capacity_is_the_cash_it_holds_beyond_its_reserve_not_what_depositors_pledged(self):
         # the bank offered 500 (its own free cash and the reserve-cut pledges), but holds 60 and owes its depositors nothing yet
         record = record_with({"bank:0": 500.0}, {"bank:0": 0.06}, bank_ids=("bank:0",), cohort_ids=(), balances={"bank:0": 60.0})
         [standing] = credit_lines.lender_standings(record, "coin")
-        self.assertEqual((standing.kind, standing.offered), ("bank", 60.0))
+        self.assertEqual((standing.kind, standing.capacity, standing.offer), ("bank", 60.0, 500.0))
 
     def test_a_capacity_is_never_below_nothing(self):
         record = record_with({"cohort:a": 10.0}, {"cohort:a": 0.05}, lent={"cohort:a": 50.0}, balances={"cohort:a": 10.0})
         [standing] = credit_lines.lender_standings(record, "coin")
-        self.assertEqual(standing.offered, 0.0)
+        self.assertEqual(standing.capacity, 0.0)
 
     def test_the_cheapest_ask_is_listed_first(self):
         record = record_with({"cohort:a": 10.0, "cohort:b": 10.0}, {"cohort:a": 0.09, "cohort:b": 0.04}, cohort_ids=("cohort:a", "cohort:b"))
@@ -57,6 +58,18 @@ class LendingOpensAndCounts(unittest.TestCase):
         self.assertEqual(credit.lent_by_lender, {"cohort:a": 40.0})
         credit.open_lending([], "coin")
         self.assertEqual(credit.lent_by_lender, {})
+
+
+class BeforeLendersMeet(unittest.TestCase):
+    def test_a_draw_is_bounded_by_what_the_pool_holds_when_the_rule_allows_all_and_no_lender_is_listed(self):
+        from sim.agents.purses import POOL, Purses
+        purses = Purses()
+        purses.limit = lambda account, amount: amount       # an account no borrower stands behind: the rule allows the whole draw
+        purses.lenders_for = lambda account, amount: None   # lenders have not met
+        purses.book.transfer(Transfer("edge:legacy", POOL, "engine_coin", 30.0, "seed"))
+        self.assertEqual(purses.drawable("firm:1", 500.0), 30.0)
+        purses.book.transfer(Transfer(POOL, "edge:legacy", "engine_coin", 30.0, "seed"))
+        self.assertEqual(purses.drawable("firm:1", 500.0), 0.0)
 
 
 class PoolDeposits(unittest.TestCase):
@@ -77,6 +90,7 @@ class PoolDeposits(unittest.TestCase):
         pool_deposits.note_pool_posting(record, "cohort:a", 5.0)
         pool_deposits.note_pool_posting(record, "cohort:a", 2.0)
         self.assertEqual(record.capital_markets.take_pool_income(), {"cohort:a": 7.0})
+        self.assertEqual(record.capital_markets.last_pool_income, {"cohort:a": 7.0})   # kept for a fund's expected income
         self.assertEqual(record.capital_markets.take_pool_income(), {})
 
     def test_the_property_income_set_is_what_the_close_gives(self):

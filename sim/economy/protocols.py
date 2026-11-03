@@ -22,7 +22,7 @@ The year (`economy.Economy.step`), one civilisation's economy:
     6. close     each agent closes its year (consumes, records unmet need, updates expectations,
                  idles or exits); `inventory.carry` applies spoilage to every held stock
 
-Every movement of money or goods is a `Transfer` or `GoodsMove` booked through `accounts.Book`.
+Every movement of money or goods is a `Transfer` or `GoodsMove` booked through `book.Book`.
 An agent's purse never goes below zero except an edge account's (types.EDGE_*).
 """
 from dataclasses import dataclass, field
@@ -39,7 +39,6 @@ class AgentOrders:
     offers: Tuple[Offer, ...] = ()
     labour_bids: Tuple[LabourBid, ...] = ()
     labour_offers: Tuple[LabourOffer, ...] = ()
-    loan_requests: Tuple[LoanRequest, ...] = ()
     funds_offers: Tuple[FundsOffer, ...] = ()
 
 

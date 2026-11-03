@@ -9,6 +9,7 @@ import types
 import unittest
 from unittest import mock
 
+from sim.contracts import Contracts
 from sim.economy import funds, shares
 from sim.economy.capital_state import CapitalState, Fund
 from sim.economy.producers import Producer
@@ -42,7 +43,8 @@ class Purse:
 class FundFixture(unittest.TestCase):
     def setUp(self):
         self.setup = types.SimpleNamespace(currency_id=MONEY, opening_rate=0.05)
-        self.record = types.SimpleNamespace(book=Purse({SAVER: 1000.0, OTHER: 1000.0}), cohorts={}, producers={PRODUCER: Producer(PRODUCER, MANAGER, "grow", "town", 4.0)}, capital_markets=types.SimpleNamespace(capital=CapitalState(), shares={}, last_dividends={PRODUCER: 20.0}), credit=types.SimpleNamespace(loans=[], remembered_defaults={}))
+        self.record = types.SimpleNamespace(book=Purse({SAVER: 1000.0, OTHER: 1000.0}), cohorts={}, producers={PRODUCER: Producer(PRODUCER, MANAGER, "grow", "town", 4.0)}, capital_markets=types.SimpleNamespace(capital=CapitalState(), shares={}, last_dividends={PRODUCER: 20.0}, last_pool_income={}),
+                                       credit=types.SimpleNamespace(loans=[], remembered_defaults={}, contracts=Contracts()))
         self.fund = Fund(FUND, MANAGER, 0)
         self.record.capital_markets.capital.funds[FUND] = self.fund
         self.money = MONEY
@@ -196,6 +198,14 @@ class WhatTheFundEarnsAndBuys(FundFixture):
         self.record.credit.loans.append(Loan("loan:0:1", self.fund.agent_id, self.producer_id, self.money, 100.0, rate=0.07,
                                       years_left=4.0, issued_year=0))
         self.assertAlmostEqual(funds.expected_income(self.record, self.fund), 0.25 * 20.0 + 7.0)
+
+    def test_the_pool_interest_it_was_paid_at_the_last_close_is_expected_again(self):
+        self.record.capital_markets.last_pool_income[self.fund.agent_id] = 3.0
+        self.assertAlmostEqual(funds.expected_income(self.record, self.fund), 0.0 + 3.0)
+
+    def test_what_the_actors_pool_owes_the_fund_is_in_its_net_assets_in_the_economys_unit(self):
+        self.record.credit.contracts.deposit(self.fund.agent_id, "pool:credit", "engine_coin", 100.0, unit_value=0.5)
+        self.assertAlmostEqual(funds.net_assets(self.setup, self.record, self.fund, MARKET_RATE), 50.0)
 
     def test_the_yield_is_the_expected_income_over_the_worth(self):
         self.subscribed(100.0)
