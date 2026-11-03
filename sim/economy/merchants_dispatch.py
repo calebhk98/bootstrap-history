@@ -76,7 +76,6 @@ def dispatch_merchants(setup, record, carriage, ledger: YearLedger, area_map) ->
         if crew is not None:
             merchant.carriage_hours_wanted = done.crew_hours_wanted
             merchant.carriage_money_wanted = done.crew_money_wanted
-            merchant.carriage_crew_unpriced = done.crew_unpriced
         if wear is not None:
             merchant.carrier_wear, merchant.carrier_team_days = carriage_wear.exposure(wear, done.moves, setup.specs)
             carriage_wear.settle(merchant, record.book, carrier_goods,
