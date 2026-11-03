@@ -147,13 +147,16 @@ days and monthly planning.
   bank and government deposits plus bank reserves equal fiat money plus credit money) and Chapter 11 lists 33 tested
   rules: balance sheet identities (assets equal liabilities plus equity per agent type), cross-agent identities (bank
   loans equal firm debts; household money equals household deposits; bonds equal holdings), and the monetary
-  conservation rule. The manual says these were "successfully tested".
+  conservation rule. The manual says these were "successfully tested", but its own run of them fails the fiat and credit
+  money conservation rules (32 and 33) at iteration 800 and puts a difference in rule 20 down to statistical error
+  ("Why certain rules fail", user manual Chapter 11).
 - Household consumption (user manual 3.3.2, OPENED): `CONSUMPTION_BUDGET = MEAN_NET_INCOME + CARROL_CONSUMPTION_PARAMETER *
   PAYMENT_ACCOUNT + TRADING_ACTIVITY * CARROL_CONSUMPTION_PARAMETER * (asset_wealth - WEALTH_INCOME_RATIO_TARGET *
   MEAN_NET_INCOME)`. The manual (10.1.3) names it "the constant from buffer stock saving theory", a target wealth to
   income ratio and a target savings rate. That is a Carroll-type rule: income plus a small fraction of the excess over target
-  wealth. The manual says the initial values are a payment account equal to 15 monthly wages and index assets worth 10 monthly
-  wages (the numbers are the authors' choices, not sourced from data in that chapter).
+  wealth. The manual's prose says the initial values are a payment account equal to 15 monthly wages and index assets worth 10
+  monthly wages, but its own table of initial values gives mean net income 1.5, payment account 15 and wealth 25: the payment
+  account is 10 monthly incomes and wealth 16.67 (the numbers are the authors' choices, not sourced from data in that chapter).
 - External validation against data for the 2011 manual: NO SOURCE FOUND in what I opened. The papers cited probably
   contain it; I did not read them.
 
