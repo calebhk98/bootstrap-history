@@ -56,13 +56,13 @@ class StateWorld(FakeWorld):
     def __init__(self):
         super().__init__(year=100)
         self.weights = {"military": 0.9, "information": -0.5}
-        self.revenue = 1.0e9
+        self.revenue_total = 1.0e9
 
     def state_weights(self):
         return self.weights
 
     def state_revenue(self):
-        return self.revenue
+        return self.revenue_total
 
 
 def valued_world(*nodes):
@@ -106,9 +106,9 @@ flipped = {option.subject for option in government.copying.imitation_options(wor
 check("changing what the state values changes what it wants, ids unchanged",
       "test_gun" not in flipped and "test_mod:cannon" not in flipped, sorted(flipped))
 world.weights["military"] = 0.9
-world.revenue = 0.0
+world.revenue_total = 0.0
 check("a state with no revenue values nothing", not government.copying.imitation_options(world))
-world.revenue = 1.0e9
+world.revenue_total = 1.0e9
 
 # ---- a policy chooses, and an actor begins and carries on copies ----------------------------------------------------
 begun = government.copying.consider_imitation(world)

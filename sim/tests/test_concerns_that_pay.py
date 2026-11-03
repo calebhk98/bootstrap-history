@@ -6,10 +6,12 @@ from .harness import *  # noqa: F401,F403
 
 from sim.agents import concern_scan
 from sim.agents.business import Business
+from sim.tests.agents_fake_world import flat_world
 
 FIELDS = {"node", "owner", "size", "sells", "takings", "upkeep", "wages", "carried", "costs", "margin", "pays"}
 
 
+@flat_world
 class FakeWorld:
     """One plant per unit of size: takings 10, upkeep 2, wages 3, rent 1, no manager; only "pays" sells in the book."""
     year = 0

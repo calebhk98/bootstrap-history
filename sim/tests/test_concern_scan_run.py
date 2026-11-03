@@ -10,12 +10,14 @@ from .harness import check
 
 from sim.agents.api import Business
 from sim.engine import concern_scan_run
+from sim.tests.agents_fake_world import flat_world
 from sim.tests.ui_stand_in import Game
 from sim.ventures.state import VenturesSeat
 
 FIELDS = {"node", "owner", "size", "sells", "takings", "upkeep", "wages", "carried", "costs", "margin", "pays"}
 
 
+@flat_world
 class FakeWorld:
     """One plant per unit of size: takings 10, upkeep 2, wages 3, rent 1; only "pays" sells in the book."""
     year = 0

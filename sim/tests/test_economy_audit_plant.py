@@ -11,7 +11,7 @@ from sim.economy import economy, producers, unit_cost
 from sim.economy.accounts import Book
 from sim.economy.economy import Economy
 from sim.economy.households_cohort import Cohort
-from sim.labour.api import MarketState
+from sim.economy.labour_record import LabourRecord
 from sim.economy.types import EDGE_ISSUE, EDGE_PRODUCTION, GoodsMove, Transfer
 
 RECIPE = pytypes.SimpleNamespace(plant_goods={"iron": 2.0, "wood": 10.0}, plant_life_years=20.0)
@@ -31,8 +31,8 @@ class Credit:
 def economy_of():
     """An Economy with only the pieces the plant methods read."""
     self = object.__new__(Economy)
-    self.setup = pytypes.SimpleNamespace(recipes={"recipe": RECIPE}, currency_id="coin")
-    self.record = pytypes.SimpleNamespace(book=Book(), producers={"mill": producers.Producer("mill", "owner", "recipe", "t1", 1.0)}, cohorts={}, labour=pytypes.SimpleNamespace(workforce=MarketState()), credit=Credit({"mill": 1.0}))
+    self.setup = pytypes.SimpleNamespace(recipes={"recipe": RECIPE}, currency_id="coin", unskilled_trade="labourer")
+    self.record = pytypes.SimpleNamespace(book=Book(), producers={"mill": producers.Producer("mill", "owner", "recipe", "t1", 1.0)}, cohorts={}, labour=LabourRecord(), credit=Credit({"mill": 1.0}))
     self.area_map = pytypes.SimpleNamespace(goods=lambda: ("iron", "wood"))
     return self
 

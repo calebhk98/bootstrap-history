@@ -128,7 +128,7 @@ claims = far.groups.group_claims()
 check("a country's state owes what it has undertaken to its own groups", claims == {CONCESSION_PREFIX + group.actor_id: 321.0}, claims)
 lines = budget.concession_lines(claims)
 check("the claim reaches the country's budget as a requisition line", [(line.name, line.money) for line in lines] == [(CONCESSION_PREFIX + group.actor_id, 321.0)])
-check("a country with no group owes none", build()[2].group_claims() == {})
+check("a country with no group owes none", build()[2].groups.group_claims() == {})
 
 government = registry.actors["government:far"]
 government.record.need = {CONCESSION_PREFIX + group.actor_id: 321.0}

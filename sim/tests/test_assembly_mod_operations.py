@@ -38,7 +38,7 @@ class TimesTen:
 
 
 class WithHelper:
-    def helper(self):
+    def run_market(self):
         return 1
 
     def double(self):
@@ -236,7 +236,7 @@ class ExtendTest(unittest.TestCase):
 
     def test_a_layer_overriding_an_undeclared_method_is_listed_unstable(self):
         assembly = build(operations=[Operations("one", layers={"base": (WithHelper,)})])
-        self.assertEqual(assembly.unstable, {"base": [("one", "helper")]})
+        self.assertEqual(assembly.unstable, {"base": [("one", "run_market")]})
 
     def test_a_layer_may_extend_a_module_a_mod_added(self):
         spec = ModuleSpec("religion:temple", Empty, publishes=(ViewSpec("temple_count", "provided"),))

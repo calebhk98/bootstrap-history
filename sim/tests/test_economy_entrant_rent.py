@@ -65,9 +65,11 @@ class EntrySitingByOwnRentTests(unittest.TestCase):
         """The variable cost per run `entry_siting` prices a grain run at on `tile`, the site rent being what the entrant's own use pays."""
         recipe = fixture.recipes()[fixture.FARM]
         setup = types.SimpleNamespace(opening_wages={fixture.LABOURER: 1.0}, yield_factor_by_recipe_tile={}, specs={},
+                                      unskilled_trade=fixture.LABOURER, currency_id="coin",
+                                      trades={trade: types.SimpleNamespace(training_years=0.0) for trade in recipe.labour_hours},
                                       working_hours_per_year=2000.0)
         record = types.SimpleNamespace(labour=types.SimpleNamespace(workforce=None))
-        view = types.SimpleNamespace(wage=lambda trade, area: None)
+        view = types.SimpleNamespace(wage=lambda trade, area: None, opening_wage_level=lambda currency: 1.0)
         with mock.patch.object(location, "site_rent_per_run", lambda *_args: rent_of_the_entrants_use[tile]), \
                 mock.patch.object(location, "live_input_prices", lambda *_args: {}), \
                 mock.patch.object(location.location_inputs, "input_haul_cost", lambda *_args: 0.0), \

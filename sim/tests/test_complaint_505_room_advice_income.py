@@ -27,7 +27,8 @@ class StandInLabour:
             scenario=types.SimpleNamespace(nodes=nodes, closure=lambda node_id: {node_id}),
             knowledge=types.SimpleNamespace(ROOM_SOURCES=list(room_sources), is_venture=lambda node_id: True,
                                             is_visible=lambda node_id: True, start_reason=lambda node_id, _why=True: (True, "")),
-            finance=types.SimpleNamespace(housing_price_per_place=lambda: 100.0))
+            finance=types.SimpleNamespace(housing_price_per_place=lambda: 100.0),
+            commands=types.SimpleNamespace(set_staff_scale=lambda scale: None))
         self.afford, self.artisans = afford, artisans
         self.capacity = Capacity(self._world, book=None, market=None, schedule=None, trades=None)
         self.capacity._institutional_load = self._institutional_load

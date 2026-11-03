@@ -52,7 +52,7 @@ def economy_of(order, regime="fiat", cash=0.0, revenue=REVENUE, **policy_changes
     """(setup, record, view) of a state with `cash` and last year's `revenue`, financing in `order`."""
     policy = StatePolicy(financing_order=order, **policy_changes)
     setup = types.SimpleNamespace(currency_id=COIN, state_agent=STATE, state_policy=policy, trades={}, unskilled_trade="labourer",
-                                  opening_wages={"labourer": 1.0}, working_hours_per_year=2000.0)
+                                  opening_wages={"labourer": 1.0}, working_hours_per_year=2000.0, countries=lambda: ("home",))
     record = types.SimpleNamespace(currency=currency(regime), book=StubBook(cash), cohorts={}, state_budget=state_budget.StateBudget(revenue=revenue), credit=StubCredit())
     view = types.SimpleNamespace(interest_rate=lambda money: 0.05, chained_price_level=lambda money: 1.0, opening_wage_level=lambda money: 1.0, wage=lambda trade, area: None)
     return setup, record, view

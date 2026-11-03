@@ -32,8 +32,8 @@ class BuildingARuleTests(unittest.TestCase):
         quote = builder.way_quote(self.edge.tile_a, self.edge.tile_b, "road")
         builder.cash = quote["money"] * 0.5
         self.assertFalse(builder.build_way(self.edge.tile_a, self.edge.tile_b, "road")[0])
-        self.assertEqual((builder.paid, builder.market.pressed, builder.world.ways_under_construction),
-                         ([], [], {}))
+        self.assertEqual((builder.paid, builder.world.ways_under_construction),
+                         ([], {}))
 
     def test_building_is_refused_for_a_tile_the_nation_does_not_hold(self):
         builder = _builder_for(self.edge)

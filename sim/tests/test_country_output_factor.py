@@ -5,7 +5,7 @@ QUICK_TOPIC = True
 
 from .harness import check
 
-from sim.agents import country_hazards
+from sim.agents import country_army, country_hazards
 from sim.agents.api import ActorRegistry, ActorsState, CastEntry, CountryProfile, CountryWorld, seed_cast
 from sim.agents.business_plant_books import books_at_country_prices
 from sim.agents.country_state_site import gross_at_country_prices
@@ -81,7 +81,7 @@ def country_world(hazards, shared):
 
 war = country_world(HAZARDS, Shared())
 peace = country_world([], Shared())
-check("a country's output factor is its own hazards' at the year", war.output_factor() == 0.6 and peace.output_factor() == 1.0)
+check("a country's output factor is its own hazards' at the year", country_army.output_factor(war) == 0.6 and country_army.output_factor(peace) == 1.0)
 check("its plant books take the factor off the takings",
-	  abs(war.plant_books("shop", 90, 0.0, 1.0).takings - 0.6 * peace.plant_books("shop", 90, 0.0, 1.0).takings) < 1e-9)
-check("its ramped-up takings take it too", abs(war.concern_gross("shop") - 0.6 * peace.concern_gross("shop")) < 1e-9)
+	  abs(war.enterprises.plant_books("shop", 90, 0.0, 1.0).takings - 0.6 * peace.enterprises.plant_books("shop", 90, 0.0, 1.0).takings) < 1e-9)
+check("its ramped-up takings take it too", abs(war.concerns.concern_gross("shop") - 0.6 * peace.concerns.concern_gross("shop")) < 1e-9)

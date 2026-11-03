@@ -37,13 +37,23 @@ def send(host, command):
 
 def workforce_command(household, command):
     """The workforce module's own handler applies a workforce command to the household object standing in for its seat."""
+    from sim.labour import legacy_trade_defaults
+    from sim.labour.trade_data import generic_craft_trade, scholar_trade
     from sim.tests import module_harness
     from sim.workforce.module import Workforce
     from sim.workforce.module_spec import MODULE_SPECS
+    from sim.workforce.state import WorkforceSeat
     handlers = dict(MODULE_SPECS[0].applies)
     if type(command) not in handlers:
         raise AssertionError("the stand-in does not apply %s" % type(command).__name__)
-    return getattr(module_harness.build(Workforce, seat=household), handlers[type(command)])(command)
+    # the household's flat counts become a workforce seat (craft and scholar people on the staff book) and its counts are read back
+    seat = WorkforceSeat(slaves=household.slaves, freedmen=household.freedmen, artisans=household.artisans, scholars=household.scholars,
+                         employees={trade: float(count) for trade, count in ((generic_craft_trade(), household.artisans), (scholar_trade(), household.scholars)) if count})
+    module = module_harness.build(Workforce, seat=seat, views={"trade_family": lambda trade: legacy_trade_defaults.CRAFT_FAMILY})
+    answer = getattr(module, handlers[type(command)])(command)
+    for key in ("slaves", "freedmen", "artisans", "scholars"):
+        setattr(household, key, getattr(seat, key))
+    return answer
 
 
 def bound(host):

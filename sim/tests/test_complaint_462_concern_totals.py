@@ -7,6 +7,7 @@ import random
 from .harness import check
 
 from sim.agents.business import Business
+from sim.agents.business_parts import PlantReading
 from sim.agents.registry import ActorRegistry
 from sim.engine.state import ActorRecord, ActorsState
 
@@ -16,7 +17,7 @@ NODES = {"node_%d" % number: {"cat": "cat_%d" % (number % 3)} for number in rang
 class CountingSizes:
 	"""Counts how often a business's plant sizes are read."""
 	reads = 0
-	real = Business.sizes
+	real = PlantReading.sizes
 
 	@staticmethod
 	def counted(business):
@@ -76,7 +77,7 @@ check("totals equal a full recomputation after random entries, exits and capacit
 
 def reads_for_one_change(count):
 	registry = registry_of(count)
-	Business.sizes = CountingSizes.counted
+	PlantReading.sizes = CountingSizes.counted
 	try:
 		CountingSizes.reads = 0
 		registry.actors["firm:000"].business.tally.set_size("node_0", 3.0)
@@ -85,7 +86,7 @@ def reads_for_one_change(count):
 		registry.concerns.concerns_in("cat_0", NODES)
 		return CountingSizes.reads
 	finally:
-		Business.sizes = CountingSizes.real
+		PlantReading.sizes = CountingSizes.real
 
 
 small, large = reads_for_one_change(10), reads_for_one_change(400)

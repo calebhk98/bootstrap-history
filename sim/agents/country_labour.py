@@ -17,7 +17,7 @@ class CountryLabour(SharedPart):
 
 	def pay_per_person_year(self, trade: str) -> float:
 		"""What a person-year of a trade pays in this country's own labour markets."""
-		return self.world.own.get().pay_per_person_year(trade)
+		return float(self.world.own.answer("pay", self.world.own.get().pay_per_person_year(trade)))
 
 	def hourly_pay(self, trade: str) -> float:
 		"""What an hour of a trade pays in this country's own labour markets."""

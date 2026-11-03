@@ -28,7 +28,7 @@ game = Game(
     material_trade_quote=lambda material: {"material": material, "buy_per_tonne": 7.0, "sell_per_tonne": 6.0,
                                            "market_available_tonnes_per_year": 100.0},
     material_purchase_cost=lambda material, tonnes: quoted_orders.append((material, tonnes)) or (170.0, 17.0),
-    capital=1000.0, spending_power=lambda kind: 1500.0,
+    capital=1000.0, spending_power=lambda kind: 1500.0, civ={"name": "Rome"},
     view=finance_host.purchase_views(lambda kind: 1500.0))
 reply = _quote_material(game, {"material": "coal_kg"}, 10.0)
 check("the material quote's cost for an order is the purchase cost of that order", reply["to_buy_it"] == 170.0

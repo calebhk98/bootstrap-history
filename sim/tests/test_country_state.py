@@ -189,7 +189,7 @@ check("the state's revenue is what its forms yield", abs(world.revenue.state_rev
 bare_world, _ = country_world(profile_with([]))
 check("a country declaring no forms raises nothing", bare_world.revenue.state_revenue() == 0.0 and bare_world.revenue.revenue_assessments() == [])
 taxing_less = profile_with([dict(FORMS[0], rate=0.05)])
-check("a lower declared rate yields less", country_world(taxing_less)[0].state_revenue() < poll.money)
+check("a lower declared rate yields less", country_world(taxing_less)[0].revenue.state_revenue() < poll.money)
 
 # ---- the same budget lines as the home state, given the same inputs -----------------------------
 profile = profile_with(FORMS)
@@ -237,7 +237,7 @@ check("a country's equipment per soldier is its own adoption of the military wor
 	  abs(armed_world.army.equipment_kg_per_soldier() - (EQUIPMENT_KG_AT_NO_ADOPTION + EQUIPMENT_KG_PER_ADOPTION * 0.5)) < 1e-9,
 	  armed_world.army.equipment_kg_per_soldier())
 check("a country holding none of it keeps the floor equipment",
-	  abs(country_world(profile_with(FORMS))[0].equipment_kg_per_soldier() - EQUIPMENT_KG_AT_NO_ADOPTION) < 1e-9)
+	  abs(country_world(profile_with(FORMS))[0].army.equipment_kg_per_soldier() - EQUIPMENT_KG_AT_NO_ADOPTION) < 1e-9)
 
 # ---- rent owners are the country's own strata, by the rent its cohorts received ------------------------------
 rent_world, rent_registry = country_world(profile_with(FORMS))

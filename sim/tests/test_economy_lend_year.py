@@ -20,7 +20,7 @@ def lend_without_funds(last_rate, ceiling):
     memory = MarketMemory()
     memory.rates[MONEY] = last_rate
     request = LoanRequest("borrower", MONEY, 100.0, ceiling, 4.0, 0.0, "expansion")
-    record = types.SimpleNamespace(memory=memory, merchants={}, book=Book(), producers={}, credit=CreditRecord(loan_requests=[request], expansion_runs={"borrower": 3.0}), capital_markets=CapitalMarketsRecord())
+    record = types.SimpleNamespace(memory=memory, cohorts={}, merchants={}, book=Book(), producers={}, credit=CreditRecord(loan_requests=[request], expansion_runs={"borrower": 3.0}), capital_markets=CapitalMarketsRecord())
     fake = types.SimpleNamespace(record=record, setup=types.SimpleNamespace(currency_id=MONEY, opening_rate=0.05), area_map=None,
                                  carriage=None)
     with mock.patch.object(economy_module.lending, "household_requests", return_value=[]), \

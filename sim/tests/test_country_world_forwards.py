@@ -75,8 +75,12 @@ check("a country with no economy raises for pay, output and both cost figures",
       and raises(outside.people.subsistence_cost_per_person_year) and raises(outside.people.need_floor_costs_per_person_year), None)
 
 
+@flat_world
 class NoEconomy:
-    """A shared world with no country_economy member at all."""
+    """A shared world whose economy answers for no country."""
+
+    def country_economy(self, country):
+        return None
 
     def pay_per_person_year(self, trade):
         return 10.0
