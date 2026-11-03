@@ -31,27 +31,41 @@ def record_year(economy, offered_by_seat, proceeds_units, coin):
     return kept
 
 
+def dividend_of_takings(dividend_units, coin, takings):
+    """The bank dividend in coin a seat's takings hold: what its banks paid it (in the economy's units), never more than
+    the takings (both zero when either is not above zero)."""
+    return min(max(0.0, dividend_units) * coin, max(0.0, takings))
+
+
 def settle_seats(sim, economy, offered_by_seat, inputs_by_seat, edge_id):
-    """After the clearing: ({seat: {material: [offered, sold, proceeds in coin]}}, {seat: coin its account held}).
-    Each seat that offered output has its ledger credited the money the clearing paid it, gross, less what its concerns'
-    inputs cost (`inputs_by_seat`, in coin); every seat's unsold goods and money go back over `edge_id`."""
+    """After the clearing: {seat: {material: [offered, sold, proceeds in coin]}} for the seats that offered output.
+    Every seat's ledger is credited the dividend its banks paid it (its own posting); a seat that offered output is also
+    credited the rest of what the clearing paid it, gross, less what its concerns' inputs cost (`inputs_by_seat`, in
+    coin). Every seat's unsold goods and money go back over `edge_id`."""
     coin = economy_api.coin_per_unit(economy)
     book, currency = economy_api.economy_book(economy), economy_api.currency_id(economy)
-    proceeds = {seat_id: max(0.0, book.balance(seat_id, currency)) for seat_id in sorted(sim.state.seats)}
+    seats = sorted(sim.state.seats)
+    balances = {seat_id: max(0.0, book.balance(seat_id, currency)) for seat_id in seats}
+    paid = {seat_id: economy_api.bank_dividends_to(economy, seat_id) for seat_id in seats}
+    proceeds = {seat_id: max(0.0, balances[seat_id] - dividend_of_takings(paid[seat_id], coin, balances[seat_id] * coin) / coin)
+                for seat_id in seats}
     sold = record_year(economy, offered_by_seat, proceeds, coin)
-    takings = {seat_id: economy_api.settle_agent_takings(economy, seat_id, edge_id) * coin
-               for seat_id in sorted(sim.state.seats)}
-    for seat_id in sorted(offered_by_seat):
+    takings = {seat_id: economy_api.settle_agent_takings(economy, seat_id, edge_id) * coin for seat_id in seats}
+    for seat_id in seats:
+        dividend = dividend_of_takings(paid[seat_id], coin, takings[seat_id])
         with sim.scenario.act_as(seat_id):
-            sale = takings.get(seat_id, 0.0)
+            if dividend > 0.0:
+                sim.send(ReceiveFromEdge(edges.EDGE_INTEREST, dividend, "bank dividend"))
+            if seat_id not in offered_by_seat:
+                continue
+            sale = takings[seat_id] - dividend
             sim.send(ReceiveFromEdge(edges.EDGE_CUSTOMERS, sale, "concern sales"))
             unpaid = pay_edge_or_log(sim.send, edges.EDGE_SUPPLIERS, inputs_by_seat.get(seat_id, 0.0), "inputs of concerns sold in the book")
             if unpaid is not None and sale > 0.0:   # the inputs stay unpaid, so the sale is not booked either
                 if pay_edge_or_log(sim.send, edges.EDGE_CUSTOMERS, sale, "concern sales reversed, inputs unpaid") is None:
-                    takings[seat_id] = 0.0
                     for figures in sold.get(seat_id, {}).values():   # the units and money of a sale that is not booked
                         figures[1], figures[2] = 0.0, 0.0
-    return sold, takings
+    return sold
 
 
 def outlook(economy, seat_sales, seat_id, material, quantity):

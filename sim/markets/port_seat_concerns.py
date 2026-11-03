@@ -81,7 +81,7 @@ class SeatConcerns:
         """What each seat's goods fetched goes to its ledger, less what its concerns' inputs cost; what did not sell goes
         back to the engine (port_seats.settle_seats)."""
         stored = self._agent.stored
-        sold, _takings = port_seats.settle_seats(self._world, self._agent.economy(), offered, inputs, EDGE_LEGACY)
+        sold = port_seats.settle_seats(self._world, self._agent.economy(), offered, inputs, EDGE_LEGACY)
         stored["seat_sales"] = {**stored.get("seat_sales", {}), **sold}
 
     def sale_outlook(self, seat_id, material, quantity):

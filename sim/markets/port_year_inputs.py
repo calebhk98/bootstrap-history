@@ -15,6 +15,13 @@ def recipe_outputs(economy):
     return {recipe_id: recipe.outputs for recipe_id, recipe in economy_api.recipes_of(economy).items()}
 
 
+def credit_line_asked(base, floor, serviceable, price_index, coin):
+    """The credit line a seat asks the lenders for, in the economy's money: its name and earning's line (`base`) held to
+    what it can service, but never under the running-cost `floor` (the seat's ceiling is what the lenders grant); the
+    engine's money is `price_index` times the opening's, and `coin` of it make a unit of the economy's money."""
+    return max(0.0, min(base, serviceable), floor) * price_index / coin
+
+
 class YearInputsBuilder:
 
     def __init__(self, world, agent, seats):
@@ -75,8 +82,7 @@ class YearInputsBuilder:
         for seat_id in sim.state.seats_playing():
             with sim.scenario.act_as(seat_id):
                 base, floor, serviceable = sim.finance.credit_line_sought()
-                # the running-cost floor is asked of the lenders too: the seat's ceiling is what they grant
-                line = max(0.0, min(base, serviceable), floor) * sim.scenario.price_index / coin
+                line = credit_line_asked(base, floor, serviceable, sim.scenario.price_index, coin)
             if line > 0.0:
                 asks.append(economy_api.credit_line_request(seat_id, currency, line, rate))
         return tuple(asks)
