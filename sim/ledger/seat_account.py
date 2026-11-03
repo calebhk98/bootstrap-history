@@ -19,6 +19,7 @@ class SeatAccount:
 
     def __init__(self, cash: Any, purses: Any, account: str) -> None:
         self.cash, self.book, self.account = cash, purses, account
+        self.payments = SeatPayments(self)
 
     @property
     def purses(self) -> Any:
@@ -48,20 +49,27 @@ class SeatAccount:
     def money(self, value: float) -> None:
         self.capital = value
 
+
+class SeatPayments:
+    """How money reaches and leaves the seat's account (`account.payments`), entered in the cash book under its cause."""
+
+    def __init__(self, account: "SeatAccount") -> None:
+        self.account = account
+
     def note_income(self, purpose: Any, amount: float) -> None:
         """Money that came in by a posting in the book, entered in the cash book under its cause."""
-        cash_book.record(self.cash, 1.0, float(amount), purpose)
+        cash_book.record(self.account.cash, 1.0, float(amount), purpose)
 
     def note_outlay(self, purpose: Any, amount: float) -> None:
         """Money that went out by a posting in the book, entered in the cash book under its cause."""
-        cash_book.record(self.cash, -1.0, float(amount), purpose)
+        cash_book.record(self.account.cash, -1.0, float(amount), purpose)
 
     def credit(self, amount: float, purpose: Any) -> None:
         """Money in with no counterparty in the book (`CreditSeat`: the sender posts the other side), entered under its cause."""
-        self.capital += float(amount)
+        self.account.capital += float(amount)
         self.note_income(purpose, amount)
 
     def debit(self, amount: float, purpose: Any) -> None:
         """Money out with no counterparty in the book (`DebitSeat`), entered under its cause."""
-        self.capital -= float(amount)
+        self.account.capital -= float(amount)
         self.note_outlay(purpose, amount)

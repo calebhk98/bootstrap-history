@@ -213,11 +213,11 @@ managing = firm_entry.management_cost(world, "shop")
 check("a firm's year through the shared rule: the purse gains takings less upkeep; the margin also counts the crew's wages and the managers' places posted to the labour market",
 	  managing > 0.0 and abs(firm.money - (1000.0 + 250.0 - 50.0)) < 1e-6
 	  and abs(firm.record.last_margin - (100.0 - managing)) < 1e-6, firm.money)
-check("a firm's staffing and loss years are kept", firm.staffed_share("shop") == 1.0 and firm.record.loss_years == 0)
+check("a firm's staffing and loss years are kept", firm.holdings.staffed_share("shop") == 1.0 and firm.record.loss_years == 0)
 firm.record.workforce.clear()
 firm.operate(world)
 check("a firm that finds no staff makes nothing and loses its upkeep",
-	  firm.staffed_share("shop") == 0.0 and firm.record.loss_years == 1 and abs(firm.record.last_margin + 50.0 + managing) < 1e-6, firm.record.last_margin)
+	  firm.holdings.staffed_share("shop") == 0.0 and firm.record.loss_years == 1 and abs(firm.record.last_margin + 50.0 + managing) < 1e-6, firm.record.last_margin)
 
 # ---- deterministic with the same seed -------------------------------------------------------
 def run(seed):

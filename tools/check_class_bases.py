@@ -5,7 +5,6 @@ more than one base, composes by inheritance; its behaviour belongs in plain part
 `<owner>.<part>.<method>`. The files are parsed with `ast`, never imported.
 
 Allowed several bases (a base that is not a bundle of behaviour):
-  - `Actor(Reviewable, Borrower)`: two interfaces of overridable defaults the actors' subclasses override.
   - a class whose extra bases are only `Protocol`, `Generic`, `Enum`, `NamedTuple`, `TypedDict` or exception families (names ending `Error` or `Exception`).
   - `CollectionView`.
 Prints `file:line: class Name(bases)` for each violation and exits 1 when there is any. A class in `PENDING` is printed
@@ -18,7 +17,7 @@ import sys
 PACKAGES = ("sim",)
 EXCLUDED = ("sim/tests",)
 REPOSITORY_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-ALLOWED_MULTIPLE = {("agents/base.py", "Actor"): {"Reviewable", "Borrower"}}
+ALLOWED_MULTIPLE = {}
 TYPING_BASES = {"Protocol", "Generic", "Enum", "IntEnum", "NamedTuple", "TypedDict", "Exception", "ValueError", "RuntimeError",
                 "KeyError", "TypeError", "object", "ABC"}
 ALLOWED_CLASSES = {"CollectionView"}

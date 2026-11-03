@@ -15,7 +15,7 @@ class Dragon(RecordedActor):
 	kind = "dragon"
 
 	def act(self, world):
-		self.debit(1.0, "upkeep")
+		self.payments.debit(1.0, "upkeep")
 
 
 extensions = shipped_extensions()

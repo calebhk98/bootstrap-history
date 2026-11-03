@@ -131,7 +131,7 @@ class Borrower:
 		paid = min(record.interest_arrears, max(0.0, self.money))  # type: ignore[attr-defined]
 		if paid > DEBT_FLOOR:
 			self.purses.pay_arrears(self.account_id, paid)  # type: ignore[attr-defined]
-			self.note_outlay("interest arrears", paid)  # type: ignore[attr-defined]
+			self.payments.note_outlay("interest arrears", paid)  # type: ignore[attr-defined]
 			record.interest_arrears -= paid
 
 	def write_off_debt(self) -> None:
@@ -140,7 +140,7 @@ class Borrower:
 		self.purses.write_off(self.account_id)  # type: ignore[attr-defined]
 		forgiven = self.money - before  # type: ignore[attr-defined]
 		if forgiven > DEBT_FLOOR:
-			self.note_income("debt forgiven", forgiven)  # type: ignore[attr-defined]
+			self.payments.note_income("debt forgiven", forgiven)  # type: ignore[attr-defined]
 
 	def default(self, world: Any) -> None:
 		"""The lenders write the claim off, the pool bearing the loss; an actor that can close overrides this to

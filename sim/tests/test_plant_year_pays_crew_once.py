@@ -18,6 +18,8 @@ class Purse:
         self.record = SimpleNamespace(country=None)
         self.income, self.outlays = [], []
 
+    payments = property(lambda self: self)   # a stand-in party pays through itself
+
     def debit(self, amount, purpose):
         self.balance -= amount
         self.outlays.append((purpose, amount))

@@ -21,6 +21,8 @@ class Purse:
     def is_bonded(self):
         return self.bonded
 
+    payments = property(lambda self: self)   # a stand-in party pays through itself
+
     def debit(self, amount, purpose):
         self.money -= amount
 

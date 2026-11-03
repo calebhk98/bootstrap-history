@@ -22,6 +22,8 @@ class Party:
 		self.money = money
 		self.record = SimpleNamespace(patents=patents or {}, royalty_owed=royalty_owed or {})
 
+	payments = property(lambda self: self)   # a stand-in party pays through itself
+
 	def debit(self, amount, purpose):
 		self.money -= amount
 

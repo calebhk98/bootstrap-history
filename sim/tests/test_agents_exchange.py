@@ -105,7 +105,7 @@ offer = exchange.make_offer(a, b, {"concern": "forge", "knowledge": ["forge"]}, 
 exchange.accept(b, offer["id"], registry.get, world)
 check("a concern arrives with the knowledge to run it", "forge" in b.concerns and "forge" not in a.concerns)
 check("the concern keeps its opened year and size",
-	  b.opened_year_of("forge", 0) == 60 and b.capacity_of("forge") == 2.5 and a.business.reading.plant_of("forge") is None)
+	  b.holdings.opened_year_of("forge", 0) == 60 and b.holdings.capacity_of("forge") == 2.5 and a.business.reading.plant_of("forge") is None)
 check("the seller's margin record goes with it", a.business.reading.margin_of("forge") is None)
 a.knowledge.discard("forge")
 b.concerns.discard("mill")
@@ -117,13 +117,13 @@ check("a buyer that already knows the node can take the concern", "mill" in b.co
 # ---- acceptance re-validates --------------------------------------------------------------
 b.money, a.money = 1000.0, 1000.0
 offer = exchange.make_offer(a, b, {"stores": {"grain": 10.0}}, {"money": 800.0}, world)
-b.debit(900.0, "spent")
+b.payments.debit(900.0, "spent")
 snapshot = (a.money, b.money, dict(a.record.stores), dict(b.record.stores))
 reason = raises(lambda: exchange.accept(b, offer["id"], registry.get, world))
 check("an offer the receiver can no longer pay is rejected", reason is not None, reason)
 check("a rejected acceptance moves nothing",
 	  snapshot == (a.money, b.money, dict(a.record.stores), dict(b.record.stores)))
-b.credit(900.0, "found")
+b.payments.credit(900.0, "found")
 a.record.stores["grain"] = 0.0
 reason = raises(lambda: exchange.accept(b, offer["id"], registry.get, world))
 check("an offer the giver can no longer give is rejected, money unmoved", reason is not None and b.money == 1000.0, reason)

@@ -45,7 +45,7 @@ class Credit:
 	def pay_interest(self, payer: Any, owed: float, purpose: str = "interest") -> None:
 		"""A borrower pays the interest on its debt to its lenders."""
 		received = payer.purses.pay_interest(payer.account_id, owed)
-		payer.note_outlay(purpose, sum(received.values()))
+		payer.payments.note_outlay(purpose, sum(received.values()))
 
 	def founder_credit_limit(self) -> float:
 		"""The most the founder's household may owe in all."""

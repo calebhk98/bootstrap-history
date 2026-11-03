@@ -126,7 +126,7 @@ class RegistryConcerns:
 		operators = self._holders.get(node_id, ())
 		count = self.capacity_in(node_id)
 		if asking_id in operators:
-			count -= self.registry.actors[asking_id].capacity_of(node_id)
+			count -= self.registry.actors[asking_id].holdings.capacity_of(node_id)
 		world = self.registry.world
 		founder_operates = world is not None and world.knowledge.is_public(node_id)
 		return count + (1 if founder_operates else 0)

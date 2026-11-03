@@ -99,16 +99,16 @@ class Ledger(Module):
 		cash_book.close_period(self.seat, self.account().capital, self.needs.year())
 
 	def credit_seat(self, command: Any) -> None:
-		self.account(command.seat).credit(command.amount, command.purpose)
+		self.account(command.seat).payments.credit(command.amount, command.purpose)
 		self.bump_seat(MONEY, command.seat)
 
 	def debit_seat(self, command: Any) -> None:
-		self.account(command.seat).debit(command.amount, command.purpose)
+		self.account(command.seat).payments.debit(command.amount, command.purpose)
 		self.bump_seat(MONEY, command.seat)
 
 	def note_seat_cash(self, command: Any) -> None:
 		account = self.account(command.seat)
-		(account.note_income if command.direction > 0.0 else account.note_outlay)(command.purpose, command.amount)
+		(account.payments.note_income if command.direction > 0.0 else account.payments.note_outlay)(command.purpose, command.amount)
 		self.bump_seat(MONEY, command.seat)
 
 	def note_spend(self, command: Any) -> None:
@@ -123,7 +123,7 @@ class Ledger(Module):
 
 	def _note_booking(self, holder: Any, command: Any) -> None:
 		if holder is not None:
-			(holder.note_income if command.signed > 0.0 else holder.note_outlay)(command.label, abs(command.signed))
+			(holder.payments.note_income if command.signed > 0.0 else holder.payments.note_outlay)(command.label, abs(command.signed))
 
 	def withdraw_household_money(self, command: Any) -> None:
 		ledger.transfer(self.account(), self.edge(EDGE_EXCHANGE), command.amount, BANK_CAPITAL_LABEL)
@@ -132,13 +132,13 @@ class Ledger(Module):
 	def pay_exchange(self, command: Any) -> None:
 		cast = self.needs.cast()
 		cast.state.purses.transfer(command.actor, EDGE_EXCHANGE, command.coin, "exchange")
-		cast.actors[command.actor].note_outlay(command.label, command.coin)
+		cast.actors[command.actor].payments.note_outlay(command.label, command.coin)
 		self.bump(MONEY)
 
 	def receive_from_exchange(self, command: Any) -> None:
 		cast = self.needs.cast()
 		cast.state.purses.transfer(EDGE_EXCHANGE, command.actor, command.coin, "exchange")
-		cast.actors[command.actor].note_income(command.label, command.coin)
+		cast.actors[command.actor].payments.note_income(command.label, command.coin)
 		self.bump(MONEY)
 
 	def receive_from_edge(self, command: Any) -> None:

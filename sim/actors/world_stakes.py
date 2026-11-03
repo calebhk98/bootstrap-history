@@ -28,7 +28,7 @@ class Stakes:
 			running[node_id] = int(self.needs.venture_opened_year(node_id, 0))
 		for actor in self.world.registry.of_kind("firm"):
 			for node_id in actor.concerns:
-				running[node_id] = max(running.get(node_id, 0), int(actor.opened_year_of(node_id, 0)))
+				running[node_id] = max(running.get(node_id, 0), int(actor.holdings.opened_year_of(node_id, 0)))
 		return running
 
 	def displacing_technique(self, trade: str) -> Any:

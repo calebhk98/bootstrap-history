@@ -134,16 +134,16 @@ class ThePartysPlants(unittest.TestCase):
 
     def test_releasing_a_plant_asks_the_owner_with_the_year(self):
         party, calls = self.party("the plant")
-        self.assertEqual((party.release_plant("mill", SimpleNamespace(year=140)), calls), ("the plant", [("release", "mill", 140)]))
+        self.assertEqual((party.holdings.release_plant("mill", SimpleNamespace(year=140)), calls), ("the plant", [("release", "mill", 140)]))
 
     def test_releasing_a_plant_the_seat_does_not_run_is_an_error(self):
         party, _calls = self.party(None)
         with self.assertRaises(KeyError):
-            party.release_plant("mill", SimpleNamespace(year=140))
+            party.holdings.release_plant("mill", SimpleNamespace(year=140))
 
     def test_receiving_a_plant_hands_it_to_the_owner(self):
         party, calls = self.party(None)
-        party.receive_plant("the plant", SimpleNamespace(year=140))
+        party.holdings.receive_plant("the plant", SimpleNamespace(year=140))
         self.assertEqual(calls, [("adopt", "the plant")])
 
 

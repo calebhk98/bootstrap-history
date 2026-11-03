@@ -34,7 +34,7 @@ class Lending(Part):
 				continue
 			party = self._lender_party(lender)
 			if party is not None:
-				party.note_income("interest_on_lending", amount)
+				party.payments.note_income("interest_on_lending", amount)
 		savers = received.get(EDGE_SAVERS, 0.0)
 		if savers > 0.0:
 			payroll.pay_savers(self.parts.cast.cast(), self.parts.cast.edge(EDGE_SAVERS), savers)

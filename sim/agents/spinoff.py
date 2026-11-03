@@ -35,7 +35,7 @@ def know_how(node_id: str, world: Any, parent: Any) -> List[str]:
 
 def leavers_expected(parent: Any, node_id: str, world: Any) -> float:
 	"""How many of the parent's staff in a year consider leaving to found a rival."""
-	years = world.setting.year - parent.opened_year_of(node_id, world.setting.year)
+	years = world.setting.year - parent.holdings.opened_year_of(node_id, world.setting.year)
 	if years < SPINOFF_MIN_YEARS:
 		return 0.0
 	staff = sum(parent.workforce.values())

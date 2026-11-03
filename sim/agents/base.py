@@ -8,22 +8,21 @@ and what they value. Decisions go through the actor's `decision_policy`.
 from typing import Any, Dict, List, Optional, Set
 
 from .business import Business, PlantKeys
-from .business_closing import release_plant
-from .business_plant import Plant
-from .business_review import Reviewable
 from .records import ActorRecord
 
-from . import imitation, ledger, research_choice
+from . import imitation, research_choice
 from .actor_copying import ActorCopying
+from .actor_holdings import ActorHoldings, RecordedHoldings
 from .actor_output import ActorOutput
+from .actor_payments import ActorPayments, RecordedPayments
+from .actor_review import ActorReview
 from .actor_stance import ActorStance, RecordedStance
 from .borrowing import Borrower
-from .ledger import Purpose
-from .purses import EDGE_OUTSIDE, Purses
+from .purses import Purses
 from .policy import Policy, ValuePolicy
 
 
-class Actor(Reviewable, Borrower):
+class Actor(Borrower):
 	kind = "actor"
 	keeps_purchases = False   # whether what the actor buys at the market joins its stores
 	researches = False   # whether the actor does research and takes part in knowledge spreading (`research.py`)
@@ -34,6 +33,9 @@ class Actor(Reviewable, Borrower):
 		self.stance: ActorStance = ActorStance(self)
 		self.copying = ActorCopying(self)
 		self.output = ActorOutput(self)
+		self.holdings = ActorHoldings(self)
+		self.payments = ActorPayments(self)
+		self.review = ActorReview(self)
 
 	# ---- shared state; subclasses provide storage -------------------------
 	@property
@@ -60,23 +62,6 @@ class Actor(Reviewable, Borrower):
 	def works(self) -> Dict[str, Dict[str, Any]]:
 		raise NotImplementedError
 
-	# ---- moving money -----------------------------------------------------
-	def credit(self, amount: float, purpose: Purpose) -> None:
-		"""Money in, with the purpose it came for."""
-		self.money += amount
-		self.note_income(purpose, amount)
-
-	def debit(self, amount: float, purpose: Purpose) -> None:
-		"""Money out, with the purpose it went for."""
-		self.money -= amount
-		self.note_outlay(purpose, amount)
-
-	def note_income(self, purpose: Purpose, amount: float) -> None:
-		"""Hook: an actor with books records what came in."""
-
-	def note_outlay(self, purpose: Purpose, amount: float) -> None:
-		"""Hook: an actor with books records what went out."""
-
 	# ---- what the actor values -------------------------------------------
 	def knows(self, node_id: str, world: Any) -> bool:
 		return node_id in self.knowledge or node_id in world.knowledge.baseline_knowledge()
@@ -87,33 +72,6 @@ class Actor(Reviewable, Borrower):
 
 	def location(self) -> Optional[str]:
 		return None
-
-	def opened_year_of(self, node_id: str, default: int) -> int:
-		"""When the actor began running a concern."""
-		return default
-
-	def staffed_share(self, node_id: str) -> float:
-		"""Share of a concern's staff the actor has found."""
-		return 1.0
-
-	def capacity_of(self, node_id: str) -> float:
-		"""How many times its founding size the actor runs a concern at."""
-		return 1.0
-
-	def margin_of(self, node_id: str) -> Optional[float]:
-		"""What a concern made last year, or None when the actor does not track it singly."""
-		return None
-
-	def concern_count(self) -> int:
-		return len(self.concerns)
-
-	def release_plant(self, node_id: str, world: Any) -> Plant:
-		"""Stop running a concern and hand over its plant, to be taken up by another actor."""
-		raise NotImplementedError
-
-	def receive_plant(self, plant: Plant, world: Any) -> None:
-		"""Take up a plant another actor handed over."""
-		raise NotImplementedError
 
 	def sell_output(self, world: Any) -> None:
 		"""Put what the actor's concerns make this year into the one goods market, each concern at its own cost."""
@@ -185,6 +143,8 @@ class RecordedActor(Actor):
 	def __init__(self, actor_id: str, record: ActorRecord, policy: Optional[Policy] = None) -> None:
 		super().__init__(policy)
 		self.stance = RecordedStance(self)
+		self.holdings = RecordedHoldings(self)
+		self.payments = RecordedPayments(self)
 		self.actor_id = actor_id
 		self.record = record
 		if not record.business.owner_id:
@@ -216,14 +176,6 @@ class RecordedActor(Actor):
 	@money.setter
 	def money(self, value: float) -> None:
 		self.purses.set_net(self.actor_id, float(value), "set")
-
-	def credit(self, amount: float, purpose: Purpose) -> None:
-		self.purses.transfer(EDGE_OUTSIDE, self.actor_id, amount, ledger.purposes_label(purpose))
-		self.note_income(purpose, amount)
-
-	def debit(self, amount: float, purpose: Purpose) -> None:
-		self.purses.transfer(self.actor_id, EDGE_OUTSIDE, amount, ledger.purposes_label(purpose))
-		self.note_outlay(purpose, amount)
 
 	@property
 	def workforce(self) -> Dict[str, float]:
@@ -269,32 +221,6 @@ class RecordedActor(Actor):
 
 	def location(self) -> Optional[str]:
 		return self.record.location
-
-	def opened_year_of(self, node_id: str, default: int) -> int:
-		return self.record.business.reading.opened_year_of(node_id, default)
-
-	def staffed_share(self, node_id: str) -> float:
-		return self.record.business.reading.crew_found_of(node_id)
-
-	def capacity_of(self, node_id: str) -> float:
-		return self.record.business.reading.size_of(node_id)
-
-	def margin_of(self, node_id: str) -> Optional[float]:
-		return self.record.business.reading.margin_of(node_id)
-
-	def release_plant(self, node_id: str, world: Any) -> Plant:
-		return release_plant(self.record.business, node_id, world)
-
-	def receive_plant(self, plant: Plant, world: Any) -> None:
-		self.record.business.lifecycle.adopt(plant)
-
-	def note_income(self, purpose: Purpose, amount: float) -> None:
-		for label, part in ledger.parts(purpose, amount).items():
-			self.record.income[label] = self.record.income.get(label, 0.0) + part
-
-	def note_outlay(self, purpose: Purpose, amount: float) -> None:
-		for label, part in ledger.parts(purpose, amount).items():
-			self.record.outlays[label] = self.record.outlays.get(label, 0.0) + part
 
 	def identity(self) -> str:
 		return self.actor_id

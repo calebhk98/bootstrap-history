@@ -89,7 +89,7 @@ class Firm(RecordedActor):
 		super().act(world)
 		self.operate(world, interest)
 		had_plants = bool(self.concerns)
-		self.business.reviews.review(self, world, rules=(business_review.LOSS_MAKING,))
+		self.business.reviews.review(self.review, world, rules=(business_review.LOSS_MAKING,))
 		if (had_plants and not self.concerns) or EXIT_LOSS_YEARS <= max(self.record.weak_years, self.record.insolvent_years):
 			firm_exit.close_firm(self, world)
 		else:

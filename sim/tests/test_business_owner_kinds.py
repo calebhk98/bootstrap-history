@@ -55,7 +55,7 @@ check("the same year gives the same margin and carrying cost to a firm, a player
 	  len(set(results.values())) == 1 and results["firm"][0] > 0.0, results)
 check("it posts the same places for its crew", len({tuple(sorted(owner.staff_wanted.items())) for owner in owners.values()}) == 1
 	  and owners["firm"].staff_wanted["labourer"] >= world.concerns.concern_staff("shop")["labourer"] * SIZE, owners["firm"].staff_wanted)
-check("it finds the same share of its crew", len({owner.staffed_share("shop") for owner in owners.values()}) == 1)
+check("it finds the same share of its crew", len({owner.holdings.staffed_share("shop") for owner in owners.values()}) == 1)
 check("it pays the same: money after the year is the same", len({round(owner.money, 9) for owner in owners.values()}) == 1)
 expected = OPENING_MONEY + world.concerns.concern_takings("shop", OPENED, 1.0, SIZE) - world.concerns.upkeep("shop", SIZE) \
 	- world.site.site_rent("shop", SIZE)
@@ -69,7 +69,7 @@ check("the books balance per owner: purse = opening + income - outlays",
 owners = owners_of_one_business(world, crew_found=False)
 results = {kind: one_year(owner, world) for kind, owner in owners.items()}
 check("with nobody hired, no owner finds any of the crew and each loses the same",
-	  {owner.staffed_share("shop") for owner in owners.values()} == {0.0} and len(set(results.values())) == 1 and results["firm"][0] < 0.0, results)
+	  {owner.holdings.staffed_share("shop") for owner in owners.values()} == {0.0} and len(set(results.values())) == 1 and results["firm"][0] < 0.0, results)
 
 # ---- closing and moving a plant are the business's too ------------------------------------------------
 world = make_world()
@@ -78,8 +78,8 @@ firm, player = owners["firm"], owners["player"]
 plant = business_closing.release_plant(firm.business, "shop", world)
 check("a plant released leaves its owner with nothing of it", "shop" not in firm.concerns and firm.business.reading.plant_of("shop") is None)
 player.business.lifecycle.close_plant("shop")
-player.receive_plant(plant, world)
-check("...and arrives with its size and age", player.capacity_of("shop") == SIZE and player.opened_year_of("shop", 0) == OPENED)
+player.holdings.receive_plant(plant, world)
+check("...and arrives with its size and age", player.holdings.capacity_of("shop") == SIZE and player.holdings.opened_year_of("shop", 0) == OPENED)
 
 # ---- the business is saved with its owner's record and comes back whole ---------------------------------
 owner = owners["player"]

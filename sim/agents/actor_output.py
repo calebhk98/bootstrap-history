@@ -11,8 +11,8 @@ class ActorOutput:
 		"""[(node id, tonnes a year)] of `material` each of the actor's concerns puts on the market."""
 		makers = world.enterprises.concerns_making(material)
 		return [(node_id, world.concerns.concern_output_tonnes(node_id, material,
-													  self.actor.opened_year_of(node_id, world.setting.year),
-													  self.actor.staffed_share(node_id) * self.actor.capacity_of(node_id)))
+													  self.actor.holdings.opened_year_of(node_id, world.setting.year),
+													  self.actor.holdings.staffed_share(node_id) * self.actor.holdings.capacity_of(node_id)))
 				for node_id in sorted(node_id for node_id in self.actor.concerns if node_id in makers)]
 
 	def output_of(self, material: str, world: Any) -> float:
