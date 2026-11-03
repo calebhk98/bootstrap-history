@@ -59,7 +59,6 @@ class WorkforceSeat:
     # standing order id -> [hours ordered, shortfall kind] last reported as unused, so repeats stay quiet
     unused_hours_reported: Dict[str, List[Any]] = field(default_factory=dict)
     work_trade: Optional[str] = None
-    wage_hours_this_year: float = 0.0
     # hours of its own the seat offers in the labour core this year: trade -> hours; paid at the clearing, then spent
     hours_offered_for_wages: Dict[str, float] = field(default_factory=dict)
     wage_work_last_year: Optional[Dict[str, float]] = None
@@ -69,3 +68,8 @@ class WorkforceSeat:
     # ---- pay ----
     wages_paid: Optional[float] = None    # what the last clearing charged the seat for its staff and one-year orders; None before one
     said_deputies: int = 0
+
+    @property
+    def wage_hours_this_year(self) -> float:
+        """Hours the seat has offered for wages since the last clearing: the total of its per-trade offers, which the clearing spends."""
+        return sum(self.hours_offered_for_wages.values())

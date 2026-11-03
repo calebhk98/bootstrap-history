@@ -2,6 +2,7 @@
 import math
 
 from sim.refusal import Refusal
+from .labour_wage_schedule import person_year_hours
 from . import trade_data, trade_first_hands, trade_formation
 from .labour_refusals import cash_in_hand_refusal, literate_wall_refusal
 from .request_rules import teaching_fee, teaching_hours_refusal, train_request_refusal
@@ -58,7 +59,7 @@ class Training:
         if not source:
             return 0.0
         return trade_formation.teacher_hours_per_person(self.training_years_from(trade, source),
-                                                        self._world.trades.HOURS_PER_PERSON_YEAR)
+                                                        person_year_hours(self._world))
 
     def _full_years(self, trade):
         return float(trade_data.registry_of(self._world).get(trade, {}).get("training_years", 0.0) or 0.0)
@@ -103,7 +104,7 @@ class Training:
             if crosses_literacy_wall(have, count, cap):
                 return None, literate_wall_refusal(trade, cap, have)
         years = self.training_years_from(trade, frm)
-        teaching_hours = trade_formation.teacher_hours_per_person(years, self._world.trades.HOURS_PER_PERSON_YEAR) * count
+        teaching_hours = trade_formation.teacher_hours_per_person(years, person_year_hours(self._world)) * count
         teacher = self.outside_teacher(trade)
         # another actor holding the knowledge teaches and is paid for their hours; otherwise it is your own
         hours = 0.0 if teacher else teaching_hours
@@ -136,7 +137,7 @@ class Training:
         # the early slice is paid as staff from its own date, so the source's wages are kept up front only for the rest
         kept_years = trade_first_hands.prepaid_keep_years(years, self._full_years(trade), uncovered)
         fee = teaching_fee(count, self.market.quote_annual(frm), kept_years, teacher, teaching_hours,
-                           self._world.trades.HOURS_PER_PERSON_YEAR)      # the source's wages while they learn
+                           person_year_hours(self._world))      # the source's wages while they learn
         if fee > self._world.finance.spending_power("buy"):
             return None, cash_in_hand_refusal(self._world, 
                 "keeping %g %s%s fed while they learn"
@@ -181,20 +182,8 @@ class Training:
         rows = trade_first_hands.cohort_rows(
             current_year, trade, float(count), years, self._full_years(trade), plan["uncovered"])
         workforce.training.extend(rows)
-        # SAY WHAT IT TOOK: teaching can quietly eat most of a year's
-        # founder-hours, with nothing left afterward to supervise what it
-        # just cost elsewhere to run - the reply has to report the actual
-        # hours and money spent, not just a brief note about when training
-        # finishes. Teaching is the most expensive thing you can do with a
-        # year.
         _left = max(0.0, self.hours.director_pool() - self.hours.director_hours_committed())
-        # WHAT HAS HAPPENED, AND WHAT IS STILL NEEDED - not just the first
-        # half: "ready in year N" has to say plainly that they cannot do a
-        # day of the work before that year (ready is the year they MATURE,
-        # not the year they start), and that the workforce module's
-        # apprenticeship step (sim/workforce/apprenticeships.py) adds them to the staff itself the moment they do, automatically
-        # - no 'hire' needed to put THESE apprentices to work. Either half
-        # missing leaves the other easy to misread.
+        # the reply states the hours and money spent and the year they mature (they start work then, without a hire)
         return True, ("%g %s%s finish training during %d's annual resolution "
                       "and join your staff automatically immediately afterward "
                       "- no 'hire' needed for them. "

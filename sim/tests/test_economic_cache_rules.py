@@ -7,7 +7,6 @@ import types
 import unittest
 
 from sim.tests import materials_stand_in, production_host
-from sim.workforce.api import SetWageHoursSold
 
 
 def household(**versions):
@@ -24,6 +23,7 @@ class RevenueStandIn:
     def __init__(self):
         self.household = household()
         self.computed = 0
+        self.counting = []
         self.year = 100
         self.price_level = 1.0
         self.output_factor = 1.0
@@ -35,8 +35,7 @@ class RevenueStandIn:
             year=lambda: self.year, output_factor=lambda: self.output_factor, home_price_level=lambda: self.price_level,
             farm_holdings=lambda: {"hectares": self.farm_hectares},
             techniques_version=lambda: self.household.done_version, operating_version=lambda: self.household.operating_version,
-            institution_units_version=lambda: self.household.institution_units_version,
-            answers={SetWageHoursSold: lambda command: setattr(self.household, "wage_hours_this_year", command.hours)})
+            institution_units_version=lambda: self.household.institution_units_version)
         self.module._compute_revenue_uncached = self._compute_revenue_uncached
 
     def revenue(self):
@@ -45,8 +44,9 @@ class RevenueStandIn:
     def revenue_capacity(self):
         return self.module.revenue_capacity()
 
-    def _compute_revenue_uncached(self):
+    def _compute_revenue_uncached(self, counting_offers=True):
         self.computed += 1
+        self.counting.append(counting_offers)
         return (3.0 * self.computed, 1.0)
 
 
@@ -76,15 +76,19 @@ class RevenueMemoTest(unittest.TestCase):
             sim.revenue()
             self.assertEqual(sim.computed, 2, name)
 
-    def test_capacity_sells_no_hours_and_leaves_the_household_as_it_was(self):
+    def test_capacity_with_hours_offered_is_computed_without_counting_them_and_leaves_the_memo_alone(self):
         sim = RevenueStandIn()
         sim.household.wage_hours_this_year = 40.0
         sim.revenue()
         sim.revenue_capacity()
-        self.assertEqual(sim.household.wage_hours_this_year, 40.0)
-        self.assertEqual(sim.computed, 2)
+        self.assertEqual(sim.counting, [True, False])
         sim.revenue()
-        self.assertEqual(sim.computed, 3)
+        self.assertEqual(sim.computed, 2)
+
+    def test_capacity_with_no_hours_offered_is_the_memoised_revenue(self):
+        sim = RevenueStandIn()
+        self.assertEqual(sim.revenue_capacity(), sim.revenue())
+        self.assertEqual(sim.computed, 1)
 
 
 class MaterialDemandStandIn:

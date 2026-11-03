@@ -1,5 +1,6 @@
 """Buying a job rather than a person: the fee, the checks, `commission`, and the automatic commission for a
 project blocked only on hands."""
+from .labour_wage_schedule import person_year_hours
 from .labour_refusals import cash_in_hand_refusal, economy_lacks, economy_lacks_refusal
 from .request_rules import commission_request_refusal
 from .staff_moves import commission_spare_hours
@@ -58,7 +59,7 @@ class Commissions:
             short = node["art"] - self.hands.craft_hands_available()
             if short <= 0 or node["sch"] > self.hands.effective_scholars():
                 continue
-            hours = short * self._world.trades.HOURS_PER_PERSON_YEAR
+            hours = short * person_year_hours(self._world)
             # The cheapest craft trade this society actually has that can
             # spare the time: a workshop needs hands, not a particular guild.
             best = None

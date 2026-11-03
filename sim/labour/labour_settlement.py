@@ -50,9 +50,6 @@ class Settlement:
             return chosen
         return settlement.default_base_tile(homes)
 
-    def distance_to_tile_km(self, tile):
-        return settlement.distance_km(self.held_tiles(), self.base_tile(), tile)
-
     def _town_population_at(self, tile):
         """People in `tile`'s town: a set share of the tile's own people (demography's count, `settlement_tiles`), or what a
         registered town provider says, capped at the tile's people."""

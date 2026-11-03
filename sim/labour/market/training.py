@@ -45,15 +45,6 @@ def _incumbents(state: MarketState, area: str, trade: str) -> float:
     return math.fsum(bands) if bands is not None else 0.0
 
 
-def open_places(state: MarketState, inputs: YearInputs, area: str, trade: str) -> float:
-    """Trainees this trade can still take on here this year. Infinite for a trade needing no training."""
-    spec = inputs.trades[trade]
-    if spec.training_years <= 0.0:
-        return math.inf
-    seats = _school_places(inputs, area, trade)[0] if inputs.schools else 0.0
-    return max(0.0, _incumbents(state, area, trade) * APPRENTICES_PER_MASTER + seats - enrolled(state, area, trade))
-
-
 def enrol(state: MarketState, inputs: YearInputs, area: str, trade: str,
           bands: Sequence[float], training_share: float = 1.0) -> List[float]:
     """Take people (per band) into a trade's training here, as far as places allow. Returns, per band,

@@ -99,12 +99,6 @@ class TrainingTests(unittest.TestCase):
             return sum(state.workers["vale"]["healer"])
         self.assertGreater(graduates(0.5), graduates(0.0))
 
-    def test_incumbents_teach_apprentices(self):
-        state = records.MarketState(workers={"vale": {"carver": aptitude.split_evenly(100.0)}})
-        places = training.open_places(state, inputs(), "vale", "carver")
-        self.assertGreater(places, 0.0)
-        self.assertLess(places, 100.0)
-
     def test_the_state_round_trips_through_plain_data(self):
         state = records.MarketState(workers={"vale": {"digger": aptitude.split_evenly(3.0)}},
                                     wages={"vale": {"digger": 0.5}})

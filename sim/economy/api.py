@@ -575,11 +575,6 @@ def economy_trades(economy):
     return frozenset(economy.setup.trades)
 
 
-def opening_wage(economy, trade):
-    """The wage per hour the economy opened with for `trade`; None for a trade it opened without."""
-    return economy.setup.opening_wages.get(trade)
-
-
 def opening_rate(economy):
     return economy.setup.opening_rate
 
@@ -592,11 +587,18 @@ def import_duty_share(economy):
     return economy.setup.import_duty_share
 
 
+def priced_trade_wage(economy, trade, paid, unskilled):
+    """The wage per hour of a trade by the one rule (`trade_wages`): what its market `paid` (None if nothing), else the
+    opening wage at the chained price level, else `unskilled` (the caller's scope of unskilled wage) plus the trade's
+    premium; None when none exists. Wages are in the economy's units."""
+    level = economy.record.memory.price_levels.get(economy.setup.currency_id, 1.0)
+    return trade_wages.priced_trade_wage(economy.setup, trade, paid, unskilled, level)
+
+
 def unpaid_trade_wage(economy, trade):
-    """The wage per hour of a trade no market has paid, on the country's unskilled wage (`trade_wages`); None when
-    neither the opening wage nor an unskilled wage exists."""
-    unskilled = wages_by_trade_weighted(economy).get(economy.setup.unskilled_trade)
-    return trade_wages.unpaid_trade_wage(economy.setup, trade, unskilled)
+    """The wage per hour of a trade no market has paid, by the one rule on the country-weighted unskilled wage; None
+    when none exists."""
+    return priced_trade_wage(economy, trade, None, wages_by_trade_weighted(economy).get(economy.setup.unskilled_trade))
 
 
 def trade_wage_at(economy, trade, tile):
@@ -604,11 +606,6 @@ def trade_wage_at(economy, trade, tile):
     the area's unskilled wage (`trade_wages.wage_in_area`); None when none exists."""
     view = economy.view()
     return trade_wages.wage_in_area(economy.setup, economy.record.memory, trade, view.area_of(trade, tile))
-
-
-def trade_premium_of(economy, trade):
-    """What a trade's training adds to the unskilled wage, as a share of it."""
-    return trade_premium(economy.setup, trade)
 
 
 def hunger_goods(economy):

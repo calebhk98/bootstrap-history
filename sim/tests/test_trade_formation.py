@@ -17,14 +17,6 @@ check("shares of a trade sum to one", all(abs(sum(row.values()) - 1.0) < 1e-9 fo
 check("a recipe's hours are split over its inputs",
       abs(SHARES["farmer"]["extract:grain"] - 1.0) < 1e-9 and abs(SHARES["smith"]["ore"] - 5.0 / 16.0) < 1e-9, SHARES["smith"])
 
-# distance
-check("identical task shares are at distance zero", formation.task_distance(SHARES["smith"], SHARES["smith"]) < 1e-9)
-check("distance is symmetric",
-      formation.task_distance(SHARES["smith"], SHARES["wright"]) == formation.task_distance(SHARES["wright"], SHARES["smith"]))
-check("trades sharing no task are at distance one", formation.task_distance(SHARES["farmer"], SHARES["smith"]) == 1.0)
-check("a trade that shares tasks is nearer than one that shares none",
-      formation.task_distance(SHARES["fitter"], SHARES["wright"]) < formation.task_distance(SHARES["fitter"], SHARES["farmer"]))
-
 # conversion time
 near_years = formation.training_years(6.0, formation.uncovered_share(SHARES["fitter"], SHARES["wright"]))
 far_years = formation.training_years(6.0, formation.uncovered_share(SHARES["fitter"], SHARES["farmer"]))

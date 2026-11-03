@@ -6,7 +6,6 @@ reads them through the views of their owners (knowledge publishes `techniques_ve
 publishes is cached: legacy code writes that state directly (the record of what is done, operating and granted)."""
 from sim.assembly.api import KEYED, QUOTE, ModuleSpec, ViewSpec
 from sim.diffusion.api import NoteFirstRuns
-from sim.workforce.api import SetWageHoursSold
 
 from .commands import (AccrueExperience, LearnFromFailure, RefreshDoneCaches,
                        RefreshOperatingCaches)
@@ -17,7 +16,7 @@ READS_BY_OWNER = {
 	"scenario": ("year", "game_setting", "civilisation"),
 	"content": ("trade_family",),
 	"workforce": ("money_per_labour_hour", "staff", "staff_version", "hour_commitments", "hours_available", "wage_signature",
-	              "market_annual_wage", "standing_job_pay", "headcount", "base_tile", "people_who_exist", "hours_per_person_year",
+	              "market_annual_wage", "standing_job_pay", "capacity_job_pay", "headcount", "base_tile", "people_who_exist", "hours_per_person_year",
 	              "literacy_references"),
 	"mechanics": ("capability_sets", "mechanic", "running_mechanics", "effect_sum"),
 	"knowledge": ("techniques_held", "techniques_version", "techniques_granted", "done_year", "tree_nodes", "category_trait"),
@@ -89,5 +88,5 @@ MODULE_SPECS = (ModuleSpec(
 	applies=((AccrueExperience, "apply_accrue_experience"), (LearnFromFailure, "apply_learn_from_failure"),
 	         (RefreshDoneCaches, "apply_refresh_done_caches"), (RefreshOperatingCaches, "apply_refresh_operating_caches")),
 	reads=tuple(name for names in READS_BY_OWNER.values() for name in names),
-	sends=(SetWageHoursSold, NoteFirstRuns),
+	sends=(NoteFirstRuns,),
 ),)

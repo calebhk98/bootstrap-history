@@ -9,7 +9,7 @@ from typing import Dict, List, Mapping
 
 from sim.constants import declare
 
-from . import currency, mint_staffing
+from . import currency, mint_staffing, trade_wages
 from .setup import labour_area
 from .state_budget import STATE_WAGE_CEILING_MULTIPLE
 from .types import LabourBid, Transfer
@@ -67,13 +67,12 @@ def staff(setup, record, view, labour_bids: List[LabourBid], capacity_fine_kilog
     if not _striking(setup, spec) or capacity_fine_kilograms <= 0.0:
         return
     agent, area = mint_agent(setup), labour_area(setup.capital_tile)
-    level = view.chained_price_level(setup.currency_id)
     bids = []
     per_trade = hours_per_fine_kilogram(setup.mint_recipe, spec)
     value = mint_staffing.hour_value(currency.mint_parity(spec), math.fsum(per_trade.values()))
     for trade, per_kilogram in sorted(per_trade.items()):
-        wage = view.wage(trade, area) or setup.opening_wages.get(trade, 0.0) * level
-        if wage > 0.0:
+        wage = trade_wages.wage_in_view(setup, view, trade, area)
+        if wage is not None:     # no wage rule applies: no bid
             bids.append(LabourBid(agent, trade, area, capacity_fine_kilograms * per_kilogram,
                                   max(wage * STATE_WAGE_CEILING_MULTIPLE, value)))
     wage_bill = math.fsum(bid.hours * bid.maximum_wage for bid in bids)

@@ -42,15 +42,37 @@ class Supply:
         population = self._world.people.population
         return population.working_age / population.total if population.total > 0 else 0.0
 
-    def _people_of_trade_in_reach(self, trade):
-        """People-equivalents of an ordinary trade the seat's bids reach: the hours the households of the base tile's labour
-        area offered at the last clearing (what they keep for plot and home work is not offered) over a working year;
-        where none were offered (or the core has not cleared), the declared floor share of the working people in the
-        towns reached."""
+    def _fallback_people(self):
+        """The declared floor share of the working people of the base's town: what a trade holds where the core holds nobody of
+        it in the base area."""
+        return self.settlement.home_town_population_estimate() * self._working_fraction() * self.NO_DEMAND_TRADE_SHARE
+
+    def _core_people_in_base_area(self, trade):
+        """The core's people of the trade in the base tile's labour area (a tile is an area); None before the core has opened."""
+        by_tile = self._world.economy.agent_people_by_tile_and_trade()
+        if by_tile is None:
+            return None
+        return by_tile.get(self.settlement.base_tile(), {}).get(trade, 0.0)
+
+    def reach_is_placeholder(self, trade):
+        """Whether the reach figure the 'population' command shows (`market_supply` of an ordinary trade) is the declared floor:
+        no hours were offered in the base area at the last clearing, or the core has not cleared."""
         offered = self._world.economy.agent_hours_offered_at(trade, self.settlement.base_tile())
-        if offered is not None and offered > 0.0:
-            return offered / person_year_hours(self._world)
-        return self.settlement.reach_population_estimate() * self._working_fraction() * self.NO_DEMAND_TRADE_SHARE
+        return offered is None or offered <= 0.0
+
+    def _people_of_trade_in_reach(self, trade):
+        """Headcount of an ordinary trade the seat's bids reach: the core's people of the trade in the base tile's labour area (all
+        of them, whatever share of their year they offer), else the floor `_fallback_people` of the same area's town."""
+        people = self._core_people_in_base_area(trade)
+        return people if people else self._fallback_people()
+
+    def _hours_offered_in_reach(self, trade):
+        """Hours a year of an ordinary trade the seat can hire in the base tile's labour area: what its households offered at the
+        last clearing, at that clearing's wage (what they keep for plot and home work is not offered); where none were offered
+        (or the core has not cleared) the floor's people over a working year."""
+        if not self.reach_is_placeholder(trade):
+            return self._world.economy.agent_hours_offered_at(trade, self.settlement.base_tile())
+        return self._fallback_people() * person_year_hours(self._world)
 
     NO_DEMAND_TRADE_SHARE = declare(
         "NO_DEMAND_TRADE_SHARE", 0.00005, kind="temporary_heuristic",
@@ -71,17 +93,22 @@ class Supply:
             "modelling who-taught-whom explicitly.")
 
     def market_supply(self, trade):
-        """Hours a year of this trade the labour core offers, as a read-only view: the hours its households offer in the
-        base tile's labour area (the literate trades: the literacy ceiling's people), less the firms' and governments' staff, plus the
-        places of the trade schools. A trade only the founder teaches has the people taught."""
+        """Hours a year of this trade the labour core offers, as a read-only view: the hours its households offered in the
+        base tile's labour area at the last clearing (`_hours_offered_in_reach`; the literate trades: the literacy ceiling's
+        people over a working year), less the firms' and governments' staff, plus the places of the trade schools, and never more
+        than every person who exists works. A trade only the founder teaches has the people taught."""
         if not self.trades.trade_available(trade):
             return 0.0
         hours_per_person = person_year_hours(self._world)
         school_hours = (self._world.workforce.trade_schools or {}).get(trade, 0.0) * hours_per_person
         if trade in self._world.trades.trades_absent:
             return max(0.0, self._taught_trade_people(trade) - self._world.actors.actor_staff_fte(trade)) * hours_per_person
-        people = self.literate_capacity(trade) if trade in self.trades.LITERATE_TRADES else self._people_of_trade_in_reach(trade)
-        hours = max(0.0, people - self._world.actors.actor_staff_fte(trade)) * hours_per_person + school_hours
+        staff_hours = self._world.actors.actor_staff_fte(trade) * hours_per_person
+        if trade in self.trades.LITERATE_TRADES:
+            offered_hours = self.literate_capacity(trade) * hours_per_person
+        else:
+            offered_hours = self._hours_offered_in_reach(trade)
+        hours = max(0.0, offered_hours - staff_hours) + school_hours
         return trade_supply_rules.supply_hours(hours, self.people_who_exist(trade), hours_per_person)
 
     def market_hours_offered(self):
@@ -122,9 +149,10 @@ class Supply:
                 + (workforce.trade_schools or {}).get(trade, 0.0))
 
     def hands_available(self, trade):
-        """People of a trade a hire can draw on: `_people_of_trade_in_reach`, the same figure `market_supply` offers; the whole
-        working age for the unskilled pool, the people taught for a trade only
-        you teach, the literacy ceiling for a literate trade."""
+        """People of a trade a hire can draw on: `_people_of_trade_in_reach`, the core's people in the base area (a headcount;
+        `market_supply` offers the hours those people offered, which is fewer where households keep part of their year, less
+        staff, plus school places); the whole working age for the unskilled pool, the people taught for a trade only you teach,
+        the literacy ceiling for a literate trade."""
         if trade in self._world.trades.trades_absent:
             return self._taught_trade_people(trade)
         if trade_data.drawn_from_unskilled_pool(trade):

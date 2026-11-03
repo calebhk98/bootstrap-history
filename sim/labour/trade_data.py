@@ -6,16 +6,10 @@ teacher), so a mod's trade works without code. The role constants that remain ar
 legacy_trade_defaults.py.
 """
 import functools
-from typing import Any, Callable, Dict, FrozenSet, Mapping, Optional, Tuple
+from typing import Any, Callable, Dict, FrozenSet, Mapping, Tuple
 
 from . import legacy_trade_defaults
 from .market import trades as market_trades
-
-
-def registry_view(training_years: Mapping[str, float], family_of: Callable[[str], str]) -> Dict[str, Dict[str, Any]]:
-    """The registry fields labour can reach, as plain entries the market core reads."""
-    return {trade: {"family": family_of(trade), "training_years": years}
-            for trade, years in training_years.items()}
 
 
 @functools.lru_cache(maxsize=64)
@@ -93,12 +87,6 @@ def staff_resource_trade(registry: Mapping[str, Mapping[str, Any]], resource: st
     """The trade that fills a generic staffing resource (the first by id that names it)."""
     filling = sorted(trade for trade, fields in registry.items() if fields.get("staff_resource") == resource)
     return filling[0] if filling else resource
-
-
-def trade_of_family(trade_ids, family_of: Callable[[str], str], family: str) -> Optional[str]:
-    """The first trade, by id, of a family; None if the family has none."""
-    found = sorted(trade for trade in trade_ids if family_of(trade) == family)
-    return found[0] if found else None
 
 
 def scholar_trade() -> str:

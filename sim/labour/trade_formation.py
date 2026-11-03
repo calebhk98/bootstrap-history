@@ -11,7 +11,6 @@ spread over the recipe's input materials (a recipe with no inputs books them to 
 between trades is the angle between their task shares (Gathmann and Schonberg).
 """
 import functools
-import math
 from dataclasses import dataclass, field
 from typing import AbstractSet, Any, Dict, FrozenSet, List, Mapping, Optional, Sequence, Tuple
 
@@ -113,16 +112,6 @@ def teacher_present(trade: str, gating: Mapping[str, AbstractSet[str]], knowledg
                     baseline: AbstractSet[str] = frozenset(), demonstrated: AbstractSet[str] = frozenset()) -> bool:
     """Whether any actor holds the knowledge to teach `trade` (see `teachers_of`)."""
     return bool(teachers_of(trade, gating, knowledge_by_actor, baseline, demonstrated))
-
-
-def task_distance(first: Mapping[str, float], second: Mapping[str, float]) -> float:
-    """One minus the cosine between two task descriptions: zero for the same shares, one for none in common.
-    Symmetric. A trade with no recorded tasks is at distance one from everything."""
-    dot = sum(value * second.get(task, 0.0) for task, value in first.items())
-    norm = math.sqrt(sum(value * value for value in first.values())) * math.sqrt(sum(value * value for value in second.values()))
-    if norm <= 0.0:
-        return 1.0
-    return max(0.0, min(1.0, 1.0 - dot / norm))
 
 
 def uncovered_share(new_trade: Mapping[str, float], source: Mapping[str, float]) -> float:

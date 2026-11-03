@@ -46,8 +46,3 @@ def directors_next(directors, capacity, approach_rate, attrition_rate):
     """Deputies directing work next year: they approach what the institutions allow and are lost at the attrition rate,
     never below nothing."""
     return max(0.0, directors + ((capacity - directors) * approach_rate - directors * attrition_rate))
-
-
-def can_afford_replacement(capital, annual_wage, years_of_wage):
-    """Whether the household holds more than the wage of a replacement for the years it must be able to carry him."""
-    return capital > annual_wage * years_of_wage

@@ -146,13 +146,6 @@ class LabourMarket:
         every number taken on (a hire is a standing bid in the labour core, sim/markets/port_staff.py)."""
         return self._annual(trade)
 
-    def quote_annual_in(self, trade, country):
-        """Money one person-year of a trade costs in another country's labour markets, from the wages those
-        markets set (the agent economy's labour areas of that country); None while the country is not part of
-        the economy or its markets have no wage. The home country is `quote_annual`."""
-        answers = self._world.economy.agent_country(country)
-        return None if answers is None else answers.pay_per_person_year(trade)
-
     def quote(self, trade):
         """Money one hour of a trade costs now: the one wage of the trade."""
         return self._annual(trade) / person_year_hours(self._world)

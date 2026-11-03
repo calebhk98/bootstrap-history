@@ -2,6 +2,7 @@
 technology makes an hour worth once bought."""
 from sim.constants import declare
 
+from .labour_wage_schedule import person_year_hours
 from . import trade_data
 from .hands import contracted_hours_of, hands_available
 from sim.workforce.api import ONCE_COMMISSION
@@ -38,7 +39,7 @@ class Hands:
         alone could not be unblocked by the advice to commission."""
         return hands_available(staff, self._world.standing.founder_alive,
                                contracted_hours_of(self.commissioned_hours(), counts_trade),
-                               self._world.trades.HOURS_PER_PERSON_YEAR)
+                               person_year_hours(self._world))
 
     # ---- a technology can make the SAME worker do more, without replacing
     # them ------------------------------------------------------------------

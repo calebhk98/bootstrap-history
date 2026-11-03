@@ -17,7 +17,7 @@ class PopulationReport:
         unavailable. Used by population_report and _density_is_placeholder to look up metadata."""
         if not self.trades.trade_available(trade) or trade in self._world.trades.trades_absent or trade in self.trades.LITERATE_TRADES:
             return None
-        if not (self.book.core_people_by_trade() or {}).get(trade):
+        if self.supply.reach_is_placeholder(trade):
             return "NO_DEMAND_TRADE_SHARE"
         return None
 

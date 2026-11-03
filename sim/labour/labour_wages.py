@@ -6,6 +6,7 @@ the going rate, and a household paying its standing staff that same rate every y
 year's clearing (sim/markets/port_staff.py) at the one wage of the trade, which the labour market quotes."""
 from sim.reporting.api import RecordEvent
 from sim.refusal import Refusal
+from .labour_wage_schedule import person_year_hours
 from .founder_hours import hours_free
 from .labour_refusals import economy_lacks, economy_lacks_refusal
 from .hours_sale_warning import sale_at_a_loss_note, starving_warning
@@ -25,7 +26,7 @@ class Wages:
     def wage_for_hours(self, trade, hours):
         """What `hours` of the founder's own work pay now at the trade's market wage, the one wage every employer pays. The
         figure work_for_wages expects and every quote of that pay (the stall banner, the year's wage-work rule) reads."""
-        return wage_for_hours_of(self.market.quote_annual(trade), self._world.trades.HOURS_PER_PERSON_YEAR, hours)
+        return wage_for_hours_of(self.market.quote_annual(trade), person_year_hours(self._world), hours)
 
     def best_wage_trade(self):
         """The trade open to the founder that pays most an hour, or None when none is open."""
@@ -80,35 +81,29 @@ class Wages:
         workforce = self._world.workforce
         pay = self.wage_for_hours(trade, hours)
         revenue_before = self._world.finance.revenue()
-        if commit:
-            offered = workforce.hours_offered_for_wages
-            offered[trade] = offered.get(trade, 0.0) + hours
-        hours_before = workforce.wage_hours_this_year
-        workforce.wage_hours_this_year = hours_before + hours
+        offered = workforce.hours_offered_for_wages
+        offered_before = offered.get(trade)
+        offered[trade] = (offered_before or 0.0) + hours
         try:
             message = self._sale_note(pay, revenue_before, commit, trade, hours)
         finally:
-            if not commit:
-                workforce.wage_hours_this_year = hours_before
+            if not commit:     # a quote is the sale tried and put back
+                if offered_before is None:
+                    offered.pop(trade, None)
+                else:
+                    offered[trade] = offered_before
         return pay, message
 
     def _sale_note(self, pay, revenue_before, commit, trade, hours):
         """The warning about the sale just made (or quoted): hours that starve a project, or a trade that pays less than the standing job."""
-        # DO NOT BLOCK IT - WARN ABOUT IT: selling hours is a legitimate
-        # way to dig out of debt, so this must never refuse the sale, only
-        # warn when it would starve an active project of the hours it
-        # still wants this year. Computed from project_hour_pace/
-        # active_hours_still_wanted (projects.py), the same formula step()
-        # itself uses to hand out the pool, so this can never warn about a
-        # shortfall step() would not also produce.
+        # a sale that would starve an active project of the hours it still wants is warned about, never refused (selling hours can pay a debt)
         _wanted = self._world.actors.active_hours_still_wanted()
         _starve = None
         if _wanted:
             _starve = starving_warning(_wanted, max(0.0, self.hours.director_pool() - self.hours.director_hours_committed()))
         if commit:
             self.log_wage_work(trade, hours, pay)
-        # SAY WHEN IT IS A BAD TRADE: hours sold here are hours the standing job does not sell, and when
-        # that job pays more than this trade the sale loses money. The sale still happens.
+        # hours sold here are hours the standing job does not sell; the note says when that loses money
         message = sale_at_a_loss_note(pay, revenue_before - self._world.finance.revenue(),
                                       lambda amount: self._world.game.money_text(amount, grouped=True))
         if message:
@@ -136,14 +131,13 @@ class Wages:
         return {"hours": round(workforce.wage_hours_this_year, 1)}
 
     def close_wage_year(self):
-        """Keep the year's wage-work books as last year's (the clearing adds the pay when it comes), then clear them."""
+        """Keep the year's wage-work books as last year's; the offers stay until the clearing pays and spends them (`clearing_settled`)."""
         workforce = self._world.workforce
         summary = self.wage_work_this_year()
         if summary:
             summary["year"] = self._world.game.year
             summary["wage_income"] = 0.0
         workforce.wage_work_last_year = summary or None
-        workforce.wage_hours_this_year = 0.0
 
     def log_wage_work(self, trade, hours, pay):
         """One log line saying what the offer should earn at the market wage."""
@@ -154,20 +148,21 @@ class Wages:
         """(pay, message) for work_for_wages as a quote: nothing is posted, logged or kept."""
         return self.work_for_wages(trade, hours, commit=False)
 
-    def hours_for_sale(self):
+    def hours_for_sale(self, counting_offers=True):
         """Hours of the year the household has not spoken for (teaching, moving, supervising its own
         businesses, hours already sold on request); none once the founder is dead. TEMPORARY HEURISTIC:
         hours put into the household's own projects are not taken out (they are worked alongside the job)
-        until a project's hours are the hours of a seat."""
+        until a project's hours are the hours of a seat. With `counting_offers` False the hours offered for wages this year are
+        not taken out: the standing job in an ordinary year."""
         if not self._world.standing.founder_alive:
             return 0.0
-        return hours_free(self.hours.director_pool(), self.hours.director_hours_committed())
+        return hours_free(self.hours.director_pool(), self.hours.director_hours_committed(counting_offers))
 
-    def standing_job_pay(self, trade):
+    def standing_job_pay(self, trade, counting_offers=True):
         """A year of the unspoken-for hours sold in `trade` at its market wage; nothing without a trade."""
         if trade is None:
             return 0.0
-        return self.wage_for_hours(trade, self.hours_for_sale())
+        return self.wage_for_hours(trade, self.hours_for_sale(counting_offers))
 
     def wage_signature(self):
         """What moves a trade's market wage, for callers that cache a figure derived from `standing_job_pay`: the year and

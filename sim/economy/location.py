@@ -12,7 +12,7 @@ from dataclasses import dataclass
 from typing import Callable, Dict, List, Mapping, Optional, Sequence, Tuple
 
 from .entrant_rent import site_rent_per_run
-from . import crop_sites, entry_practice, labour_state, location_inputs, practice, sites, unit_cost
+from . import crop_sites, entry_practice, labour_state, location_inputs, practice, sites, trade_wages, unit_cost
 from .location_land import headroom_with_land, land_short_tiles
 from .market_areas import MarketArea
 from .producers import Producer, live_input_prices
@@ -201,17 +201,14 @@ def _tile_part(setup, record, view, carriage, recipe, by_recipe, supplies, capac
         recipe.recipe_id + "@" + tile, 1.0))
     variable = None
     if factor > 0.0:
-        wages = {trade: _wage(setup, view, trade, tile) for trade in recipe.labour_hours}
-        variable = unit_cost.variable_cost_per_run(
-            recipe, live_input_prices(probe, recipe, view), wages,
-            site_rent_per_run(setup, record, view, recipe.recipe_id, tile, factor))
+        wages = {trade: trade_wages.wage_in_view(setup, view, trade, labour_area(tile)) for trade in recipe.labour_hours}
+        if None not in wages.values():     # a trade with no wage under the rule cannot be costed: no run is sited here
+            variable = unit_cost.variable_cost_per_run(
+                recipe, live_input_prices(probe, recipe, view), wages,
+                site_rent_per_run(setup, record, view, recipe.recipe_id, tile, factor))
     input_haul = location_inputs.input_haul_cost(recipe, setup.specs, carriage, supplies, tile)
     spare = spare_hours(labour_state.people_by_trade(record.labour.workforce, labour_area(tile)), setup.working_hours_per_year,
                         committed.get(tile, 0.0))
     return (variable, factor, input_haul, staffable_runs(recipe if first_year is None else first_year, spare),
             sites.headroom_runs(recipe, tile, by_recipe, capacity.get((recipe.recipe_id, tile), 0.0)))
 
-
-def _wage(setup, view, trade, tile) -> float:
-    wage = view.wage(trade, labour_area(tile))
-    return setup.opening_wages.get(trade, math.inf) if wage is None else wage

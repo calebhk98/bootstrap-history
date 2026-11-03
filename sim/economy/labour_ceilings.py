@@ -22,7 +22,7 @@ def joint_labour_ceilings(hours_per_run: Mapping[str, float], last_wages: Mappin
     room = max(0.0, surplus)
     if priced_bill <= 0.0:
         return {trade: room / total_hours for trade in hours_per_run}
-    average_wage = priced_bill / sum(priced.values())
-    claimed = {trade: last_wages.get(trade, average_wage) for trade in hours_per_run}
+    priced_trades_average_wage = priced_bill / sum(priced.values())     # a claim on the surplus, not a wage rule (trade_wages)
+    claimed = {trade: last_wages.get(trade, priced_trades_average_wage) for trade in hours_per_run}
     bill = sum(hours * claimed[trade] for trade, hours in hours_per_run.items())
     return {trade: claimed[trade] * room / bill for trade in hours_per_run}

@@ -66,11 +66,6 @@ def validate_coin_standard(civ: Mapping[str, Any]) -> None:
         raise ValueError("civilization %r coin_standard fineness must be a share above 0 and at most 1" % name)
 
 
-def coin_gross_kg_per_unit(standard: Mapping[str, Any]) -> float:
-    """Mass of one coin: the metal it stands for over its fineness (1 when none is stated)."""
-    return standard["kg_per_unit"] / standard.get("fineness", 1.0)
-
-
 def coin_standard(civ: Mapping[str, Any]) -> Dict[str, Any]:
     validate_coin_standard(civ)
     return civ["coin_standard"]

@@ -42,23 +42,6 @@ needed = curve.cumulative_for_proficiency(0.5, FLOOR, RATE)
 check("the units for a proficiency give that proficiency back", abs(curve.proficiency(needed, FLOOR, RATE) - 0.5) < 1e-9, needed)
 check("a first attempt's proficiency needs one unit", curve.cumulative_for_proficiency(FLOOR, FLOOR, RATE) == 1.0)
 
-# error falls with proficiency, to a floor above zero
-check("a first attempt spoils the most", curve.error_share(0.0, 0.3, 0.02) == 0.3)
-check("full proficiency spoils the floor share", abs(curve.error_share(1.0, 0.3, 0.02) - 0.02) < 1e-12)
-check("error falls as proficiency rises", curve.error_share(0.2, 0.3, 0.02) > curve.error_share(0.8, 0.3, 0.02))
-try:
-    curve.error_share(1.0, 0.3, 0.0)
-    refused = False
-except ValueError:
-    refused = True
-check("an error floor of zero is refused", refused)
-
-# spillover: what others have made counts in part
-check("learning pools a share of what others have made", abs(curve.pooled_units(10.0, 100.0, 0.25) - 35.0) < 1e-9)
-check("no spillover is own output only", curve.pooled_units(10.0, 100.0, 0.0) == 10.0)
-check("a trade that learns from its neighbours is ahead of one that learns alone",
-      curve.proficiency(curve.pooled_units(10.0, 100.0, 0.5), FLOOR, RATE) > curve.proficiency(10.0, FLOOR, RATE))
-
 # the teacher caps the first cohort's start
 UNCOVERED = 0.25
 rows_free = hands.cohort_rows(100, "fitter", 4.0, 3.0, 8.0, UNCOVERED)

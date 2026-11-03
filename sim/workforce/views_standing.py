@@ -16,6 +16,10 @@ class StandingViews(Part):
 		"""A year of the seat's unspoken-for hours sold in `trade` at its market wage; nothing without a trade."""
 		return self.parts.core.labour.wages.standing_job_pay(trade)
 
+	def capacity_job_pay(self, trade):
+		"""`standing_job_pay` in an ordinary year: the hours offered for wages this year are not taken out."""
+		return self.parts.core.labour.wages.standing_job_pay(trade, counting_offers=False)
+
 	def hours_for_sale(self):
 		"""Hours of the year the acting seat's household has not spoken for; none once the founder is dead."""
 		return self.parts.core.labour.wages.hours_for_sale()

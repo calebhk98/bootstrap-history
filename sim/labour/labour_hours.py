@@ -25,8 +25,9 @@ class FounderHours:
                           self._world.standing.bondage_years_left > 0, self.BONDAGE_HOURS_SHARE,
                           self._world.workforce.directors_extra, self._world.scenario.cfg["director_hours_per_year"])
 
-    def director_hours_committed(self):
-        """Hours of your own year already spoken for before any project sees them.
+    def director_hours_committed(self, counting_offers=True):
+        """Hours of your own year already spoken for before any project sees them (`counting_offers` False: leaving out the
+        hours offered for wages this year).
 
         WAGE HOURS BELONG HERE: keeping a separate tally for `work` would let
         a founder sell an entire year of hours for wages and then still
@@ -38,4 +39,4 @@ class FounderHours:
         return hours_committed(workforce.teaching_hours_this_year,
                                workforce.relocation_hours_this_year,
                                (workforce.supervision_hours_this_year or 0.0) + self._world.directors.overhead_hours(),
-                               workforce.wage_hours_this_year)
+                               workforce.wage_hours_this_year if counting_offers else 0.0)

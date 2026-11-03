@@ -3,7 +3,7 @@ values built here, no game. (The payroll trim, the replacement and the scholar t
 QUICK_TOPIC = True
 
 from .harness import *  # noqa: F401,F403
-from sim.workforce.staff_phase_rules import (approach, artisan_goal, can_afford_replacement, craft_headcount, directors_next,
+from sim.workforce.staff_phase_rules import (approach, artisan_goal, craft_headcount, directors_next,
                                             has_room_to_hire, hires_needed, scholar_goal)
 
 # --- room to hire
@@ -41,6 +41,3 @@ check("deputies approach what the institutions allow", abs(directors_next(0.0, 1
 check("deputies are lost at the attrition rate", abs(directors_next(10.0, 10.0, 0.12, 0.1) - 9.0) < 1e-12)
 check("deputies never go below nothing", directors_next(0.0, 0.0, 0.12, 0.1) == 0.0 and directors_next(0.01, 0.0, 0.0, 5.0) == 0.0)
 
-# --- a replacement is paid for only when the household can carry him
-check("a household holding more than the years of a replacement's wage may advance it", can_afford_replacement(100.0, 20.0, 4.0))
-check("a household holding exactly that or less may not", not can_afford_replacement(80.0, 20.0, 4.0) and not can_afford_replacement(10.0, 20.0, 4.0))

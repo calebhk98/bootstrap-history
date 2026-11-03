@@ -5,7 +5,7 @@ literacy limits apply unchanged."""
 import math
 
 from . import trade_data
-from sim.refusal import Refusal
+from sim.refusal import Refusal, cause_of
 from sim.reporting.api import RecordEvent
 
 
@@ -97,7 +97,7 @@ class StaffControls:
     def hire_buying_room(self, trade, count, label="auto_hire"):
         """`hire`, and when it is refused only for want of room, buy the room (see buy_room_for) and hire again."""
         hired, reply = self.hiring.hire(trade, count)
-        if hired or getattr(reply, "cause", None) != "household_room":
+        if hired or cause_of(reply) != "household_room":
             return hired, reply
         if not self.buy_room_for(float(count), count * self.market.quote_annual(trade), label):
             return hired, reply

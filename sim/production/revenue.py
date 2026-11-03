@@ -11,8 +11,6 @@ Needs: the views of READS_BY_OWNER in module_spec.py."""
 from sim.assembly.api import Part
 from sim.world import plant_figures
 
-from sim.workforce.api import SetWageHoursSold
-
 from . import rules
 from .bondage_workshop_rules import workshop_craft_wages, workshop_output_value
 from .concern_earnings import ledger_row
@@ -42,12 +40,9 @@ class Revenue(Part):
 	def revenue_capacity(self):
 		"""What you would earn in an ordinary year, with your own hands on your own work, none of this year's hours sold on
 		request. Used where a swing in ONE year should not count - a lender does not cut your line because you took a job this year."""
-		_sold = self.needs.hour_commitments()["wage_hours"]
-		self.needs.send(SetWageHoursSold(0.0))
-		try:
+		if not self.needs.hour_commitments()["wage_hours"]:
 			return self.revenue()
-		finally:
-			self.needs.send(SetWageHoursSold(_sold))
+		return sum(self._compute_revenue_uncached(counting_offers=False))
 
 	def revenue(self):
 		"""Total annual revenue across all active concerns, workshops, and state funding.
@@ -100,8 +95,9 @@ class Revenue(Part):
 		"""What one open concern earns in a year before the output factor: the figure the screens quote."""
 		return self.needs.venture_real_earnings(node_id, None, False, False)
 
-	def _compute_revenue_uncached(self):
-		"""(the estimate, the forecast of the concerns the clearing pays), both after the output factor."""
+	def _compute_revenue_uncached(self, counting_offers=True):
+		"""(the estimate, the forecast of the concerns the clearing pays), both after the output factor; with `counting_offers`
+		False, the standing job is sold without this year's hours offered for wages taken out."""
 		needs = self.needs
 		total_revenue = 0.0
 		book_forecast = 0.0
@@ -129,7 +125,7 @@ class Revenue(Part):
 		# quickly, so its income buys the next one. A saturating curve caps that without ever making a venture worthless.
 		# What your own workshop sells: a payroll without credited output is pure cost, and it needs somewhere to work.
 		total_revenue += self.workshop_output()
-		total_revenue += self.founder_wage_income()
+		total_revenue += self.founder_wage_income(counting_offers)
 		gross = total_revenue
 		ceiling = self.parts.concern_market.priced(REVENUE_CEILING_LABOUR_HOURS_PER_POP_SCALE) * needs.pop_scale() \
 			* needs.real_output_per_head() * needs.price_index()
@@ -211,11 +207,12 @@ class Revenue(Part):
 		nodes = self.needs.tree_nodes()
 		return "scholar" if any(nodes[node_id]["sch"] > 0 for node_id in held) else "artisan"
 
-	def founder_wage_income(self):
+	def founder_wage_income(self, counting_offers=True):
 		"""Yearly pay of the founder's standing job: the hours not spoken for, sold in the held trade at
 		that trade's market wage (`standing_job_pay`, sim/labour/labour_wages.py). One person's hours sell once however many skills the
 		founder holds, and a dead founder sells none."""
-		return self.needs.standing_job_pay[self.held_trade()]
+		pay = self.needs.standing_job_pay if counting_offers else self.needs.capacity_job_pay
+		return pay[self.held_trade()]
 
 	def revenue_sources(self):
 		"""Where the money actually comes from, itemised.

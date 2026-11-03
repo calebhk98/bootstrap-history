@@ -88,12 +88,11 @@ def wage_scale(setup, record, carriage) -> float:
     year's labour market cleared it. The routes are last year's carried flows, so the mix of modes is the one
     used. The multiplier is the change in the labour part over the whole fee, so the table's fee as a whole moves
     by the labour change, spread over all its parts; route dues are paid apart from it, unscaled. 1 where the wages are the one priced, or
-    nothing is known of either; never below 0."""
+    nothing is known of either (a crew no wage rule prices is left out); never below 0."""
     carried = record.carriage.carried
     if not carried or setup.carriage_wage <= 0.0 or not hires(setup):
         return 1.0
     crew = Crew(setup, carriage, record.carriage.area_imbalance)
-    wages = record.memory.wages
     money = 0.0
     labour_change = 0.0
     for source, row in sorted(carried.items()):
@@ -103,8 +102,8 @@ def wage_scale(setup, record, carriage) -> float:
                 continue
             money += tonnes * cost
             for trade, hours in crew.hours_by_trade(source, destination).items():
-                wage = wages.get(market_key(trade, labour_area(source)), 0.0)
-                if wage > 0.0:
+                wage = trade_wages.wage_in_area(setup, record.memory, trade, labour_area(source))
+                if wage is not None:
                     labour_change += tonnes * hours * (wage - setup.carriage_wage)
     return max(0.0, 1.0 + labour_change / money) if money > 0.0 else 1.0     # a fee never pays the shipper
 
@@ -145,13 +144,6 @@ def bids(setup, record) -> List[LabourBid]:
     return found
 
 
-def last_wage(memory, key: str) -> Optional[float]:
-    """What an hour of the crew `key` (trade and tile it is hired at) was last paid in its labour market; None when
-    that market has no wage yet."""
-    trade, tile = _split(key)
-    return memory.wages.get(market_key(trade, labour_area(tile)))
-
-
 def crew_wage(setup, memory, key: str) -> Optional[float]:
     """The wage an hour of the crew `key` is priced at (`trade_wages.wage_in_area` of the tile's labour area); None when
     none exists."""
@@ -159,8 +151,8 @@ def crew_wage(setup, memory, key: str) -> Optional[float]:
     return trade_wages.wage_in_area(setup, memory, trade, labour_area(tile))
 
 
-def engaged(record, merchant: Merchant, index) -> Tuple[Dict[str, float], Dict[str, float]]:
-    """({crew key: hours hired}, {crew key: average wage}) for the merchant's plan, from `YearLedger.hours_hired_by_market` (hours the employer paid for, not hours matched). Keys
+def engaged(record, merchant: Merchant, index) -> Tuple[Dict[str, float], Dict[str, Optional[float]]]:
+    """({crew key: hours hired}, {crew key: average wage, None where nothing was hired}) for the merchant's plan, from `YearLedger.hours_hired_by_market` (hours the employer paid for, not hours matched). Keys
     that share a labour market (goods leaving unpopulated tiles are bid for at home) share what was hired in
     proportion to their hours."""
     populated = {cohort.tile for cohort in record.cohorts.values()}
@@ -172,12 +164,12 @@ def engaged(record, merchant: Merchant, index) -> Tuple[Dict[str, float], Dict[s
         market_of[key] = (trade, hiring_area(record, merchant, tile, populated))
         markets[market_of[key]] = markets.get(market_of[key], 0.0) + hours
     hours_by_key: Dict[str, float] = {}
-    wage_by_key: Dict[str, float] = {}
+    wage_by_key: Dict[str, Optional[float]] = {}
     for key, hours in plan.items():
         trade, area = market_of[key]
         bought, paid = index.get((merchant.agent_id, trade, area), (0.0, 0.0))
         hours_by_key[key] = bought * hours / markets[market_of[key]] if markets[market_of[key]] > 0.0 else 0.0
-        wage_by_key[key] = paid / bought if bought > 0.0 else 0.0
+        wage_by_key[key] = paid / bought if bought > 0.0 else None
     return hours_by_key, wage_by_key
 
 
@@ -212,8 +204,8 @@ def wage_loans(setup, record, hired_last_year=None, supply_last_year=None) -> Li
                 share = 1.0
             else:
                 share = min(1.0, available / wanted_in_market[market]) if wanted_in_market[market] > 0.0 else 0.0
-            wage = record.memory.wages.get(market_key(trade, areas[key]))
-            if wage is None:     # an unwaged market cannot be billed: its crew is left out of bill and worth alike
+            wage = trade_wages.wage_in_area(setup, record.memory, trade, areas[key])
+            if wage is None:     # no wage rule prices this crew: it is left out of bill and worth alike
                 continue
             bill += wanted * share * wage
             worth += merchant.carriage_money_wanted.get(key, 0.0) * share

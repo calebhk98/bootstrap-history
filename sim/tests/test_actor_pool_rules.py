@@ -24,6 +24,7 @@ def labour_of(actor_staff=0.0):
     labour = Labour(world)
     labour.book.core_people_by_trade = lambda: {"smith": 1000.0}
     world.economy.agent_hours_offered_at = lambda trade, tile: 100.0 * HOURS
+    world.economy.agent_people_by_tile_and_trade = lambda: {labour.settlement.base_tile(): {"smith": 100.0}}
     return labour
 
 

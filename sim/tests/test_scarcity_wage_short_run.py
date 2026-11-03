@@ -147,16 +147,6 @@ class HoursWorkersKeepBackAreNotHandsInHand(unittest.TestCase):
                               ).wage("vale", "healer")
         self.assertGreater(partial, every_hour)
 
-    def test_the_cap_is_where_hours_sold_here_and_fetched_first_fill_the_bids(self):
-        held = state(healers=1.0, hill_healers=5000.0)
-        year_inputs = inputs([hungry(hours=HOURS * 300.0)], {"vale": [Route("hill", 20.0)]},
-                             {("healer", "vale"): lambda wage: HOURS,
-                              ("healer", "hill"): lambda wage: 5000.0 * HOURS * self.gradually(wage)})
-        costs = ImportCosts(held, year_inputs)
-        cap = costs.wage("vale", "healer")
-        filled = costs.hours_at("vale", "healer", cap) + costs._fetched("vale", "healer", ["hill"], cap)
-        self.assertAlmostEqual(filled, HOURS * 300.0, delta=1e-3 * HOURS * 300.0)
-
     def test_the_unskilled_wage_stops_at_the_fetch_cost_when_the_hands_on_the_spot_withhold_their_hours(self):
         specs = trades.trade_specs({"digger": {"family": "earth", "training_years": 0, "fallback": True}})
         held = MarketState(workers={"vale": {"digger": [500.0, 0.0, 0.0, 0.0, 0.0]},

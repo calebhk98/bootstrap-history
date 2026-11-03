@@ -7,7 +7,7 @@ from typing import ClassVar, Dict, List, Tuple
 
 from sim.constants import declare
 
-from . import currency, households_basket, state_finance
+from . import currency, households_basket, state_finance, trade_wages
 from .setup import labour_area
 from .types import Bid, EDGE_CONSUMPTION, GoodsMove, LabourBid
 
@@ -106,13 +106,12 @@ def wage_labour_bids(setup, record, view, wage_budget: float) -> List[LabourBid]
     if total_working <= 0.0:
         return []
     trades = _trades(setup)
-    level = view.chained_price_level(setup.currency_id)
     bids = []
     for trade in trades:
         for tile, people in sorted(working.items()):
             area = labour_area(tile)
-            wage = view.wage(trade, area) or setup.opening_wages.get(trade, 0.0) * level
-            if wage <= 0.0:
+            wage = trade_wages.wage_in_view(setup, view, trade, area)
+            if wage is None or wage <= 0.0:     # no wage rule applies (or a free hour): no bid
                 continue
             ceiling = wage * STATE_WAGE_CEILING_MULTIPLE
             hours = min(wage_budget / len(trades) * people / total_working / ceiling,

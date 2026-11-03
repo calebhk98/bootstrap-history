@@ -51,19 +51,3 @@ def cumulative_for_proficiency(target: float, floor: float, learning_rate: float
     if target <= floor:
         return 1.0
     return (floor / target) ** (1.0 / learning_exponent(learning_rate))
-
-
-def error_share(proficiency_now: float, error_at_first: float, error_at_competence: float) -> float:
-    """Share of output spoilt: from `error_at_first` for a first attempt to `error_at_competence` (the physical floor,
-    above zero) at full proficiency, linear in proficiency. Spoilage is separate from speed because speed gains can
-    come with capital deepening and a quality loss (Thompson), not from learning alone."""
-    if error_at_competence <= 0.0:
-        raise ValueError("the error at competence has a floor above zero: %r" % (error_at_competence,))
-    level = max(0.0, min(1.0, proficiency_now))
-    return error_at_first + (error_at_competence - error_at_first) * level
-
-
-def pooled_units(own_units: float, others_units: float, spillover: float) -> float:
-    """Cumulative units an actor learns from: its own plus a share of what others in the trade have made (Thornton and
-    Thompson: spillovers across yards could exceed a yard's own learning). `spillover` is in [0, 1]."""
-    return max(0.0, own_units) + max(0.0, min(1.0, spillover)) * max(0.0, others_units)

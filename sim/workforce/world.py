@@ -92,6 +92,9 @@ class AgentEconomyReads:
     def agent_people_by_trade(self):
         return self._needs.agent_people_by_trade()
 
+    def agent_people_by_tile_and_trade(self):
+        return self._needs.agent_people_by_tile_and_trade()
+
     def agent_wage_at(self, trade, tile):
         """Money one hour of the trade costs a bid on `tile` (the wage of the tile's labour area, else the unpriced-trade
         wage); None until the game's money is priced at the economy."""

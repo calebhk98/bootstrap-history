@@ -86,11 +86,6 @@ class ImportCosts:
             found = self._spare_sources[key] = (remaining, sum(remaining))
         return found
 
-    def _fetched(self, area: str, trade: str, sources: Sequence[str], wage: float) -> float:
-        """The hours the trade's workers in the `sources` areas can spare for `area` at a wage: those they sell
-        at it beyond what their own employers bid for."""
-        return sum(max(0.0, self.hours_at(other, trade, wage) - self.wanted.get((other, trade), 0.0)) for other in sources)
-
     def wage(self, area: str, trade: str) -> Optional[float]:
         """The wage an hour of `trade` in `area` can be had for by fetching hands from elsewhere, as far as
         hands to spare reach. Each reachable area with a wage for the trade offers the hours its workers sell

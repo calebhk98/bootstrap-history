@@ -31,9 +31,6 @@ class ApplyingHours(Part):
     def spend_director_hours(self, command):
         self.seat.director_hours_spent_founder += command.hours
 
-    def set_wage_hours_sold(self, command):
-        self.seat.wage_hours_this_year = command.hours
-
     def set_reserve(self, command):
         if command.craftsmen is not None:
             self.seat.reserve_craftsmen = command.craftsmen

@@ -12,6 +12,7 @@ from sim.workforce.reteach_rules import PROJECT_IN_HAND_SCORE, past_cooldown, te
 from sim.labour.labour_hands import Hands
 from sim.labour.labour_wages import Wages
 from sim.refusal import cause_of
+from sim.workforce.state import WorkforceSeat
 from sim.ui.proto.dispatch_labour import _cmd_hire
 from sim.tests import production_host
 from sim.tests.workforce_host import workforce_over
@@ -90,7 +91,8 @@ class Seller:
     """The wages part that sells the founder's own hours, over stand-ins for the hours and trades parts."""
 
     def __init__(self, committed=0.0, pool=2000.0):
-        household = Game(wage_hours_this_year=0.0, hours_offered_for_wages={}, reputation=0.0)
+        household = WorkforceSeat()
+        household.reputation = 0.0
         self.household = household
         self.received = []
         self.logged = []

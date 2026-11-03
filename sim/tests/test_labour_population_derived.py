@@ -16,7 +16,7 @@ FAMILIES = {"smith": "craft", "scholar": "scholar", "moddedtrade": "craft"}
 
 
 class _StubLabour:
-    """Only what a trade's people read: the core's people by tile, the tiles reached and the trade registry."""
+    """Only what a trade's people read: the core's people by tile, the base tile and the trade registry."""
 
     def __init__(self, core_by_tile=None, absent=(), literate=()):
         self._core_by_tile = core_by_tile
@@ -29,6 +29,7 @@ class _StubLabour:
             workforce=household,
             economy=types.SimpleNamespace(
                 agent_working_hours=lambda: None,
+                agent_people_by_tile_and_trade=lambda: core_by_tile,
                 agent_hours_offered_at=lambda trade, tile: None if core_by_tile is None else core_by_tile.get(tile, {}).get(trade, 0.0) * 2000.0),
             people=types.SimpleNamespace(population=types.SimpleNamespace(working_age=WORKING_PEOPLE, total=2.0 * WORKING_PEOPLE)))
         self.NO_DEMAND_TRADE_SHARE = Supply.NO_DEMAND_TRADE_SHARE
@@ -51,19 +52,16 @@ class _StubLabour:
                 totals[trade] = totals.get(trade, 0.0) + people
         return totals
 
-    def reachable_tiles(self, days_budget=None):
-        return {"near": 0.5}
-
     def base_tile(self):
         return "home"
 
-    def reach_population_estimate(self):
+    def home_town_population_estimate(self):
         return 2.0 * WORKING_PEOPLE
 
 
 class PeopleInReachTests(unittest.TestCase):
 
-    def test_the_people_the_base_tiles_households_offer_are_the_trades_people(self):
+    def test_the_core_people_in_the_base_tile_are_the_trades_people(self):
         labour = _StubLabour({"home": {"moddedtrade": 30.0}, "near": {"moddedtrade": 12.0}, "far": {"moddedtrade": 500.0}})
         self.assertEqual(labour._people_of_trade_in_reach("moddedtrade"), 30.0)
         self.assertIsNone(labour._trade_density_source("moddedtrade"))

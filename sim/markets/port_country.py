@@ -7,8 +7,8 @@ import math
 from typing import Dict, Optional
 
 from sim.world.material_units import tonnes_per_unit
-from sim.economy.api import (carried_book, cohort_land_rents, country_figures, land_rent_at_tile, coin_per_unit, trade_premium_of,
-                             unskilled_trade, working_hours_per_year)
+from sim.economy.api import (carried_book, cohort_land_rents, country_figures, land_rent_at_tile, coin_per_unit,
+                             priced_trade_wage, unskilled_trade, working_hours_per_year)
 
 
 class CountryAnswers:
@@ -19,21 +19,19 @@ class CountryAnswers:
         self._country = country
         self._coin = coin_per_unit(economy)
         self._hours = working_hours_per_year(economy)
-        self._wages = {trade: wage * self._coin
-                       for trade, wage in country_figures.wages_per_hour(economy, country).items()}
+        self._wages = country_figures.wages_per_hour(economy, country)
 
     def has_labour_market(self) -> bool:
         return bool(self._wages)
 
     def pay_per_person_year(self, trade: str) -> Optional[float]:
-        """What a person-year of a trade pays in the country's labour markets; a trade nobody hired is paid what
-        its training adds to the unskilled wage, as at home. None while the country's markets have no wage."""
-        if trade in self._wages:
-            return self._wages[trade] * self._hours
-        unskilled = self._wages.get(unskilled_trade(self._economy))
-        if unskilled is None:
+        """What a person-year of a trade pays in the country's labour markets; a trade nobody hired is priced by the
+        one rule (sim/economy/trade_wages.py) on the country's unskilled wage. None while the country's markets
+        have no wage."""
+        if not self._wages:
             return None
-        return unskilled * (1.0 + trade_premium_of(self._economy, trade)) * self._hours
+        wage = priced_trade_wage(self._economy, trade, self._wages.get(trade), self._wages.get(unskilled_trade(self._economy)))
+        return None if wage is None else wage * self._coin * self._hours
 
     def society_output(self) -> Optional[float]:
         output = country_figures.output_value(self._economy, self._country)

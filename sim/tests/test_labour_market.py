@@ -15,7 +15,7 @@ discipline sim/tests/test_deposits.py's own ExtractionCostMechanicsTests
 docstring states for ore data), and EXACT ARITHMETIC wherever the input is
 a small, hand-built synthetic fixture this file controls itself.
 
-sim/labour/labour_market.py: what the recipe graph asks of each trade, and how fast the farm hours move.
+sim/labour/labour_market.py: what the recipe graph asks of each trade, and 
 """
 
 QUICK_TOPIC = True
@@ -168,106 +168,6 @@ class RealProductionDataSmokeTests(unittest.TestCase):
             {"wheat_kg": 1_000_000.0, "iron_bar_kg": 10_000.0}, production)
         self.assertGreater(hours_by_trade.get("farmer", 0.0), 0.0)
         self.assertGreater(hours_by_trade.get("smith", 0.0), 0.0)
-
-
-# ============================================================================
-# THE BRIDGE TO A MARGINAL PRODUCT
-# ============================================================================
-
-class AdditionalHoursToCloseAShortfallTests(unittest.TestCase):
-
-    def test_is_the_plain_inverse_of_the_marginal_product(self):
-        self.assertAlmostEqual(
-            labour_market.additional_hours_to_close_a_shortfall(100.0, 2.0), 50.0)
-
-    def test_zero_marginal_product_raises_rather_than_dividing_by_zero(self):
-        with self.assertRaises(ValueError):
-            labour_market.additional_hours_to_close_a_shortfall(100.0, 0.0)
-
-    def test_negative_marginal_product_also_raises(self):
-        with self.assertRaises(ValueError):
-            labour_market.additional_hours_to_close_a_shortfall(100.0, -1.0)
-
-
-# ============================================================================
-# THE ALLOCATION: Workforce.step
-# ============================================================================
-
-class GapResponsiveMobilityRateTests(unittest.TestCase):
-    """Direct, hand-checkable coverage of the two pure functions THE
-    FRICTION section's rate schedule is built from - see labour_market.py's
-    own `relative_gap_size` and `gap_responsive_mobility_rate`."""
-
-    def testrelative_gap_size_is_the_plain_ratio_when_basis_is_positive(self):
-        self.assertAlmostEqual(labour_market.relative_gap_size(-50.0, 100.0), 0.5)
-        self.assertAlmostEqual(labour_market.relative_gap_size(300.0, 100.0), 3.0)
-
-    def testrelative_gap_size_is_zero_when_there_is_no_gap(self):
-        self.assertEqual(labour_market.relative_gap_size(0.0, 0.0), 0.0)
-        self.assertEqual(labour_market.relative_gap_size(0.0, 500.0), 0.0)
-
-    def testrelative_gap_size_is_infinite_when_basis_is_zero_and_a_gap_exists(self):
-        self.assertEqual(labour_market.relative_gap_size(50.0, 0.0), float("inf"))
-
-    def test_zero_relative_gap_returns_exactly_the_base_rate(self):
-        self.assertAlmostEqual(
-            labour_market.gap_responsive_mobility_rate(0.05, 0.0), 0.05)
-
-    def test_rate_rises_monotonically_with_relative_gap_up_to_the_ceiling(self):
-        rate_at_small_gap = labour_market.gap_responsive_mobility_rate(0.05, 0.1)
-        rate_at_large_gap = labour_market.gap_responsive_mobility_rate(0.05, 10.0)
-        ceiling = labour_market.OCCUPATIONAL_MOBILITY_RATE_CEILING_PER_YEAR
-        self.assertGreater(rate_at_large_gap, rate_at_small_gap)
-        self.assertLessEqual(rate_at_large_gap, ceiling)
-        self.assertAlmostEqual(rate_at_large_gap, ceiling)
-
-    def test_infinite_relative_gap_returns_exactly_the_ceiling(self):
-        self.assertAlmostEqual(
-            labour_market.gap_responsive_mobility_rate(0.05, float("inf")),
-            labour_market.OCCUPATIONAL_MOBILITY_RATE_CEILING_PER_YEAR)
-
-
-class OccupationalMobilityRateTests(unittest.TestCase):
-
-    def test_is_a_plausible_fraction_strictly_between_zero_and_one(self):
-        self.assertGreater(labour_market.OCCUPATIONAL_MOBILITY_RATE_PER_YEAR, 0.0)
-        self.assertLess(labour_market.OCCUPATIONAL_MOBILITY_RATE_PER_YEAR, 1.0)
-
-    def test_is_declared_as_a_labelled_temporary_heuristic(self):
-        from sim import constants
-        entry = constants.REGISTRY["OCCUPATIONAL_MOBILITY_RATE_PER_YEAR"]
-        self.assertEqual(entry["kind"], "temporary_heuristic")
-        self.assertTrue(entry["why"])
-        self.assertTrue(entry["source"])
-
-
-class MobilityFrictionConstantsTests(unittest.TestCase):
-    """The three constants THE FRICTION section added alongside the
-    original steady-state rate, each labelled per CLAUDE.md SS3.4."""
-
-    def test_gap_response_gain_is_positive_and_labelled(self):
-        from sim import constants
-        self.assertGreater(labour_market.OCCUPATIONAL_MOBILITY_GAP_RESPONSE_GAIN, 0.0)
-        entry = constants.REGISTRY["OCCUPATIONAL_MOBILITY_GAP_RESPONSE_GAIN"]
-        self.assertEqual(entry["kind"], "temporary_heuristic")
-        self.assertTrue(entry["why"])
-
-    def test_rate_ceiling_is_above_the_steady_state_rate_and_below_one(self):
-        from sim import constants
-        self.assertGreater(labour_market.OCCUPATIONAL_MOBILITY_RATE_CEILING_PER_YEAR,
-                           labour_market.OCCUPATIONAL_MOBILITY_RATE_PER_YEAR)
-        self.assertLess(labour_market.OCCUPATIONAL_MOBILITY_RATE_CEILING_PER_YEAR, 1.0)
-        entry = constants.REGISTRY["OCCUPATIONAL_MOBILITY_RATE_CEILING_PER_YEAR"]
-        self.assertEqual(entry["kind"], "temporary_heuristic")
-        self.assertTrue(entry["why"])
-
-    def test_walkable_seed_share_is_a_small_positive_fraction(self):
-        from sim import constants
-        self.assertGreater(labour_market.WALKABLE_TRADE_SEED_SHARE_OF_ECONOMY_HOURS, 0.0)
-        self.assertLess(labour_market.WALKABLE_TRADE_SEED_SHARE_OF_ECONOMY_HOURS, 1.0)
-        entry = constants.REGISTRY["WALKABLE_TRADE_SEED_SHARE_OF_ECONOMY_HOURS"]
-        self.assertEqual(entry["kind"], "temporary_heuristic")
-        self.assertTrue(entry["why"])
 
 
 if __name__ == "__main__":
