@@ -10,7 +10,7 @@ from sim.labour.api import MarketState, TradeSpec, opening_labour_market, seed_h
 
 from . import mint, mint_labour, opening_placement, practice
 from .market_memory import market_key
-from .setup import area_tile, labour_area
+from .setup import labour_area
 
 
 def core_trades(setup, extra_trades: Iterable[str] = ()) -> Dict[str, TradeSpec]:

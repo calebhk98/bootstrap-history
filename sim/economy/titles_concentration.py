@@ -40,7 +40,6 @@ LAND_GINI_SOURCED: Tuple[SourcedGini, ...] = (
     SourcedGini("england_enclosure_parishes", LANDLESS_COUNTED, 0.65, 0.82,
                 "Kumon 2021: 18th to 19th century enclosure parishes, landless 40 to 50 percent"),
 )
-NO_LAND_BAND = ("han_china", "mexica")      # nothing opened gives a land Gini for them: no band, a check skips them
 
 
 def band(denominator: str, settings: Optional[Sequence[str]] = None) -> Optional[Tuple[float, float]]:

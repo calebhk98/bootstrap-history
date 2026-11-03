@@ -27,7 +27,9 @@ from typing import Callable, Dict, Mapping, Optional, Tuple, Union
 from sim.constants import declare
 from sim.refusal import Refusal
 
+from . import producers, unit_cost
 from .households_cohort import Cohort
+from .replaced import replaced
 from .types import GoodId, TileId
 
 # the share of its income a household may leave unspent and still count as saving nothing: above the margin its bids
@@ -181,7 +183,6 @@ def labour_share_of(runs: Mapping[str, float], recipes: Mapping[str, object], wa
                     value: float) -> float:
     """Share of an output of `value` that the producers of `runs` pay their workers (the rest is rent and the
     plant's charge, which their owners receive); at most one."""
-    from . import unit_cost
     bill = math.fsum(count * unit_cost.labour_cost_per_run(recipes[recipe_id], wages) for recipe_id, count in runs.items())
     return min(1.0, bill / value) if value > 0.0 else 0.0
 
@@ -199,7 +200,6 @@ def with_income(cohorts: Mapping[str, Cohort], per_head: float, labour_share: fl
     """The cohorts with each class's last year's income: the labour share of the total divided by working people
     (every worker is paid alike), the rest by what each class owns."""
     working, people = _tile_totals(cohorts)
-    from .replaced import replaced
     paid = {}
     for agent_id, cohort in cohorts.items():
         tile_total = per_head * people[cohort.tile]
@@ -226,7 +226,6 @@ def working_share(recipe, prices: Mapping[GoodId, float], wages: Mapping[str, fl
     households' demand needs has that much more plant than it works, and the first year's plan (plant times this
     share) is the runs it was sized for. A run that cannot be priced counts as working in full (the first year's
     plan finds out)."""
-    from . import producers, unit_cost
     variable = unit_cost.variable_cost_per_run(recipe, prices, wages, rent_per_run)
     revenue = unit_cost.revenue_per_run(recipe, prices) * yield_factor
     if not math.isfinite(variable) or variable <= 0.0 or revenue <= 0.0:

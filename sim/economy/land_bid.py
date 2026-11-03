@@ -11,8 +11,8 @@ becomes that actor's title (titles_ground.add_ground); no other holder gives up 
 import math
 from typing import Mapping, Optional, Sequence, Tuple
 
-from . import titles_ground, titles_value
-from .types import AgentId, AreaId, Bid, GoodId, Recipe, TileId
+from . import titles_ground, titles_value, unit_cost
+from .types import AgentId, AreaId, Bid, GoodId, Recipe, TileId, TradeId
 
 
 def land_goods(specs: Mapping[GoodId, object], recipes: Mapping[str, Recipe]) -> Tuple[GoodId, ...]:
@@ -27,13 +27,13 @@ def hours_per_hectare(recipe: Recipe, land_per_run: float) -> float:
 
 
 def crop_margin_per_hectare(recipe: Recipe, land_per_run: float, fertility: float,
-                            output_prices: Mapping[GoodId, float], wage_per_hour: float) -> float:
+                            output_prices: Mapping[GoodId, float], wages: Mapping[TradeId, float]) -> float:
     """What a hectare-year of the recipe nets: its outputs at their prices (cut by the tile's fertility) less
-    the hours it takes at the wage. Every output must have a price (the caller leaves out a recipe whose output has none)."""
+    the hours it takes, each trade's hours at that trade's wage (a trade with no wage makes the margin -inf). Every output must have a price (the caller leaves out a recipe whose output has none)."""
     if land_per_run <= 0.0:
         return 0.0
     revenue = fertility * math.fsum(output_prices[good] * quantity for good, quantity in recipe.outputs.items())
-    return (revenue - wage_per_hour * math.fsum(recipe.labour_hours.values())) / land_per_run
+    return (revenue - unit_cost.labour_cost_per_run(recipe, wages)) / land_per_run
 
 
 def earning_per_hectare(crop_margin: float, rent_per_hectare: float) -> float:

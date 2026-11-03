@@ -8,7 +8,7 @@ import unittest
 
 from sim.tests.economy_view_defaults import ViewDefaults
 from sim.economy import household_grinding, household_work_year, households, households_work
-from sim.economy.households_basket import make_basket
+from sim.world.need_basket import make_basket
 from sim.economy.households_cohort import Cohort
 from sim.economy.market_memory import market_key
 from sim.economy.setup import labour_area
@@ -43,7 +43,7 @@ class View(ViewDefaults):
 
 def setup():
     return types.SimpleNamespace(
-        household_work=DATA, working_hours_per_year=1000.0, servant_trade="servant", hunger_need="food", fuel_need="warmth",
+        household_work=DATA, working_hours_per_year=1000.0, servant_trade="servant", hunger_need="food", fuel_need="warmth", work_need="household_work",
         ready_to_eat=frozenset(), milled_as=household_grinding.milled_as_map(NEED_DATA),
         basket_for=lambda tile: make_basket(NEED_DATA, {}))
 
@@ -90,12 +90,12 @@ class GrindingChoiceTests(unittest.TestCase):
 
     def test_the_milled_grain_leaves_the_food_need_so_the_household_buys_the_milled_good(self):
         basket = make_basket(NEED_DATA, {})
-        food = next(need for need in household_grinding.without_goods(basket, ("wheat_kg",)).needs if need.need_id == "food")
+        food = next(need for need in household_grinding.without_goods(basket, ("wheat_kg",), "food").needs if need.need_id == "food")
         self.assertEqual([good for good, _effect in food.goods], ["flour_kg"])
 
     def test_the_basket_keeps_a_grain_when_nothing_else_would_serve(self):
         basket = make_basket({"needs": NEED_DATA["needs"], "goods": {"wheat_kg": NEED_DATA["goods"]["wheat_kg"]}}, {})
-        food = next(need for need in household_grinding.without_goods(basket, ("wheat_kg",)).needs if need.need_id == "food")
+        food = next(need for need in household_grinding.without_goods(basket, ("wheat_kg",), "food").needs if need.need_id == "food")
         self.assertEqual([good for good, _effect in food.goods], ["wheat_kg"])
 
     def test_grain_a_household_grew_and_ate_counts_toward_its_floor_though_it_buys_that_grain_milled(self):

@@ -6,7 +6,7 @@ import unittest
 from types import SimpleNamespace
 
 from sim.economy.land_record import LandRecord
-from sim.economy import land_market
+from sim.economy import land_lease, land_market
 from sim.economy.accounts import Book
 from sim.economy.households_cohort import cohort_id, cohorts_for_tile
 from sim.economy.producers import Producer
@@ -54,13 +54,13 @@ class LeaseTests(unittest.TestCase):
         posted = settle(setup, record, 5.0)
         self.assertGreater(posted, low_cleared)
         self.assertLess(posted, high)
-        self.assertAlmostEqual(posted, high + land_market.LAND_RENT_ADJUSTMENT_SHARE * (low_cleared - high))
+        self.assertAlmostEqual(posted, high + land_lease.LAND_RENT_ADJUSTMENT_SHARE * (low_cleared - high))
 
     def test_a_tile_nobody_asks_land_on_decays_instead_of_dropping_to_zero(self):
         setup, record = economy_with(100.0)
         high = settle(setup, record, 300.0)
         land_market.settle_year(setup, record, view(), {})
-        self.assertAlmostEqual(record.land.land_rent["t"], high * (1.0 - land_market.LAND_RENT_ADJUSTMENT_SHARE))
+        self.assertAlmostEqual(record.land.land_rent["t"], high * (1.0 - land_lease.LAND_RENT_ADJUSTMENT_SHARE))
 
     def test_alternating_demand_swings_rent_less_than_it_swings_what_land_clears_at(self):
         setup, record = economy_with(100.0)

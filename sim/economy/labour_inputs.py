@@ -12,7 +12,7 @@ from sim.labour.api import CAREER_YEARS, Route, YearInputs as CoreInputs
 
 from . import flight_routes
 from .households_cohort import VALUE_OF_LIFE_YEARS_OF_INCOME
-from .households_orders import HOUSEHOLD_TIME_PREFERENCE
+from .household_time_preference import HOUSEHOLD_TIME_PREFERENCE
 from .labour_ask_floor import ask_floor_by_tile
 from .setup import labour_area
 from .year_labour import outside_option_by_tile

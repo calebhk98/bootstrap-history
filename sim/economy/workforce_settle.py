@@ -90,7 +90,7 @@ def trim_people(state, wanted: Dict[Tuple[str, str], float], fallback: str, work
     no more people than its wanted hours need. `working_hours_per_year` is the hours a person sells, one figure or one per
     area (`default_hours` for an area it does not name)."""
     for area, by_trade in state.workers.items():
-        for trade, bands in by_trade.items():
+        for trade, bands in list(by_trade.items()):
             people = sum(bands)
             keep = wanted.get((area, trade), 0.0) / opening_placement.hours_per_worker_in(area, working_hours_per_year, default_hours)
             if trade == fallback or people <= keep:

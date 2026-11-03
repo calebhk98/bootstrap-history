@@ -6,7 +6,8 @@ QUICK_TOPIC = True
 import types
 import unittest
 
-from sim.economy.households_basket import Basket, NeedSpec, need_prices
+from sim.world.need_basket import Basket, NeedSpec
+from sim.economy.households_basket import need_prices
 from sim.economy.market_memory import PRICE_REMEMBERED, MarketMemory, YearView
 from sim.economy.types import (QUOTE_BEST_UNFILLED_BID, QUOTE_COST_COVERING, QUOTE_LOWEST_UNFILLED_ASK,
                                QUOTE_OPENING_ESTIMATE)

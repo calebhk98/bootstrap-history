@@ -4,7 +4,7 @@ import math
 import unittest
 
 from sim.economy.accounts import Book, InsufficientFunds
-from sim.economy.households_basket import price_ceilings
+from sim.world.need_basket import price_ceilings
 from sim.economy.types import Transfer
 
 

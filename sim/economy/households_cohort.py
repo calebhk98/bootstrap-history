@@ -130,12 +130,6 @@ def change_cohort(cohorts: Dict[AgentId, Cohort], cohort_id: AgentId, **changes)
     cohorts[cohort_id] = replaced(cohorts[cohort_id], **changes)
 
 
-def rescale_cohort(cohorts: Dict[AgentId, Cohort], cohort_id: AgentId, scale: float) -> None:
-    """The row for `cohort_id` with its people, and its working people, multiplied by `scale`."""
-    cohort = cohorts[cohort_id]
-    cohorts[cohort_id] = replaced(cohort, people=cohort.people * scale, working_people=cohort.working_people * scale)
-
-
 def set_people(cohorts: Dict[AgentId, Cohort], cohort_id: AgentId, people: float, working_people: float) -> None:
     """The row for `cohort_id` with these people, of whom `working_people` work (never more than the people)."""
     cohorts[cohort_id] = replaced(cohorts[cohort_id], people=people, working_people=min(working_people, people))

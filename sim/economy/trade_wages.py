@@ -25,7 +25,7 @@ from typing import Optional
 
 from sim.labour.api import CAREER_YEARS, wages
 
-from .households_orders import HOUSEHOLD_TIME_PREFERENCE
+from .household_time_preference import HOUSEHOLD_TIME_PREFERENCE
 from .market_memory import market_key
 
 

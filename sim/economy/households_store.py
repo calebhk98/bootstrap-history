@@ -6,7 +6,7 @@ from typing import Dict, List, Mapping, Optional, Tuple
 
 from sim.constants import declare
 
-from .households_orders import HOUSEHOLD_TIME_PREFERENCE
+from .household_time_preference import HOUSEHOLD_TIME_PREFERENCE
 from .inventory import holding_reservation
 from .store_return import (STORE_SERVICE_UNLIMITED, STORE_STORAGE_COST_PER_KG_YEAR, carrying_return,
                            service_values_per_year, split_by_return)

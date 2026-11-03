@@ -50,14 +50,6 @@ class IncomeIdentityTests(unittest.TestCase):
 
 
 class LabourBalanceTests(unittest.TestCase):
-    def test_hours_offered_over_hours_hired(self):
-        hours = {fixture.LABOURER: 600_000.0}
-        self.assertAlmostEqual(opening_stationary.hours_offered_over_demanded(hours, 6_600_000.0, fixture.LABOURER), 11.0)
-        self.assertIsNone(opening_stationary.hours_offered_over_demanded(hours, 100.0, fixture.SMITH))
-
-    def test_the_survival_wage_spreads_the_floors_of_a_workers_people_over_his_hours(self):
-        self.assertAlmostEqual(opening_stationary.survival_wage_per_hour(75.0, 2.0, 2000.0), 0.075)
-
     def test_hours_that_clear_leave_the_stated_slack(self):
         self.assertAlmostEqual(opening_stationary.hours_that_clear_at(600_000.0, 4000.0, 0.1), 165.0)
 

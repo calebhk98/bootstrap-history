@@ -8,15 +8,14 @@ labour market the hours that grow its own-plot plan (the shortfall, kept up and 
 the wage: money does not feed a family where nobody sells food. `plot_hectares` says how much land the
 plots take, for the land market to draw from the tile's arable area.
 """
-import dataclasses
 import math
-from typing import Dict, List, Mapping, Optional, Sequence, Tuple
+from typing import Dict, List, Mapping, Optional, Tuple
 
 from sim.constants import declare
 
-from .households_basket import Basket
+from sim.world.need_basket import Basket
 from .households_cohort import Cohort
-from .types import EDGE_PRODUCTION, AgentId, GoodId, GoodsMove, LabourOffer, Recipe
+from .types import EDGE_PRODUCTION, GoodId, GoodsMove, Recipe
 
 OWN_PLAN_RELEASE_SHARE_PER_YEAR = declare(
     "OWN_PLAN_RELEASE_SHARE_PER_YEAR", 0.2, kind="temporary_heuristic",
@@ -141,17 +140,3 @@ def next_own_plan(plan: Mapping[str, float], unmet: Mapping[str, float], money_l
     needs = set(plan) | {need for need, units in unmet.items() if units > 0.0}
     nxt = {need: plan.get(need, 0.0) * kept + max(0.0, unmet.get(need, 0.0)) for need in sorted(needs)}
     return {need: units for need, units in nxt.items() if units > 1e-9}
-
-
-def withhold_hours(offers: Sequence[LabourOffer], hours_by_worker: Mapping[AgentId, float]
-                   ) -> Tuple[List[LabourOffer], Dict[AgentId, float]]:
-    """(offers with each worker's hours cut in proportion to what it keeps back, hours kept by worker)."""
-    offered: Dict[AgentId, float] = {}
-    for offer in offers:
-        offered[offer.worker] = offered.get(offer.worker, 0.0) + offer.hours
-    kept = {worker: min(hours, offered.get(worker, 0.0)) for worker, hours in hours_by_worker.items()
-            if hours > 0.0 and offered.get(worker, 0.0) > 0.0}
-    cut = [offer if offer.worker not in kept else
-           dataclasses.replace(offer, hours=offer.hours * (1.0 - kept[offer.worker] / offered[offer.worker]))
-           for offer in offers]
-    return cut, kept

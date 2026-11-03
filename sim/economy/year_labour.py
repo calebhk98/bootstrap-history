@@ -7,6 +7,7 @@ import dataclasses
 from typing import Dict, List, Sequence, Tuple
 
 from sim.labour.api import people_in, run_labour_year
+from sim.world.need_basket import subsistence_cost_per_person
 
 from . import households, households_work, settlement
 from .labour_ask_floor import mean_floor_per_hour
@@ -22,7 +23,7 @@ def subsistence_cost_by_tile(setup, record, view) -> Dict[str, float]:
     """Money a person needs a year for the floors of every need, at last year's prices on each tile."""
     costs = {}
     for tile in sorted({cohort.tile for cohort in record.cohorts.values()}):
-        costs[tile] = households.subsistence_cost_per_person(households.need_prices(setup.basket_for(tile), view, tile))
+        costs[tile] = subsistence_cost_per_person(households.need_prices(setup.basket_for(tile), view, tile))
     return costs
 
 

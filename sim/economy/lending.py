@@ -11,7 +11,7 @@ from typing import Dict, List
 from sim.world import capital_market
 
 from . import bank_service, banks, bondage, credit, credit_claims, households_credit, lender_ask, loss_memory, merchants_credit, titles, titles_ground, titles_value
-from .households_orders import HOUSEHOLD_TIME_PREFERENCE
+from .household_time_preference import HOUSEHOLD_TIME_PREFERENCE
 from .household_work_year import basket_key, cohort_basket
 from .producers_close import WORKING_CAPITAL_PURPOSE
 from .types import FundsOffer

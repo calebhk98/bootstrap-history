@@ -36,11 +36,6 @@ class SourcedBandTests(unittest.TestCase):
                            by_denominator[titles_concentration.LANDHOLDERS_ONLY])
         self.assertAlmostEqual(by_denominator[titles_concentration.LANDHOLDERS_ONLY], titles_concentration.gini([2.0, 4.0, 6.0]))
 
-    def test_no_row_is_for_han_china_or_the_mexica(self):
-        settings = {row.setting for row in titles_concentration.LAND_GINI_SOURCED}
-        for civilisation in titles_concentration.NO_LAND_BAND:
-            self.assertFalse(any(civilisation in setting for setting in settings))
-
 
 if __name__ == "__main__":
     unittest.main()

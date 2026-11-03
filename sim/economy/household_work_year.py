@@ -12,7 +12,6 @@ from .market_memory import market_key
 from .setup import labour_area
 from .types import AgentId, LabourOffer
 
-WORK_NEED = "household_work"
 HEARTH_EPSILON = 1e-9
 
 
@@ -60,7 +59,7 @@ def cohort_basket(setup, record, cohort: Cohort, buying: bool = True):
     if cohort.hired_work_per_person > 0.0:
         basket = dataclasses.replace(basket, needs=tuple(
             dataclasses.replace(need, subsistence_per_person=cohort.hired_work_per_person)
-            if need.need_id == WORK_NEED else need for need in basket.needs))
+            if need.need_id == setup.work_need else need for need in basket.needs))
     return basket
 
 
@@ -71,7 +70,7 @@ def service_price_per_hour(setup, view, tile, wage_price: float) -> float:
     area = view.area_of
     prices = []
     for need in setup.basket_for(tile).needs:
-        if need.need_id != WORK_NEED:
+        if need.need_id != setup.work_need:
             continue
         for good, effect in need.goods:
             posted = view.offered_price(good, area(good, tile))

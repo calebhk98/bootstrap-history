@@ -10,7 +10,7 @@ from unittest import mock
 
 from sim.economy import bank_spread, banks, credit, credit_claims, lender_ask, loss_memory
 from sim.economy.credit_view import CreditView
-from sim.economy.households_orders import HOUSEHOLD_TIME_PREFERENCE
+from sim.economy.household_time_preference import HOUSEHOLD_TIME_PREFERENCE
 from sim.economy.market_memory import MarketMemory
 from sim.economy.types import FundsOffer, Loan, LoanRequest
 

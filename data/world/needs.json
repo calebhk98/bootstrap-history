@@ -1,7 +1,8 @@
 {
- "_internal": "`subsistence_from_climate` names the floor per person sim/world/climate_needs.py calculates for each tile from its climate. TRANSITIONAL: surplus_budget_share is a labelled heuristic weight per need (water's is small because its floor is most of what a household spends on it) (normalised over the needs that have a priced good). A good's effectiveness is per unit of its own production unit, in the need's unit. Mods add needs (ids namespaced by mod id) and add or extend goods; a production entry may also carry `satisfies` for its dominant output.",
+ "_internal": "`role` names the part a need plays in the economy (hunger: the need whose unmet floor counts as hunger; fuel: the need a hearth's cooking fuel is added to; household_work: the need met by hours of household work), read through sim/economy/need_roles.py. `subsistence_from_climate` names the floor per person sim/world/climate_needs.py calculates for each tile from its climate. TRANSITIONAL: surplus_budget_share is a labelled heuristic weight per need (water's is small because its floor is most of what a household spends on it) (normalised over the needs that have a priced good). A good's effectiveness is per unit of its own production unit, in the need's unit. Mods add needs (ids namespaced by mod id) and add or extend goods; a production entry may also carry `satisfies` for its dominant output.",
  "needs": {
   "food": {
+   "role": "hunger",
    "surplus_budget_share": 0.30,
    "subsistence_constant": "FOOD_SUBSISTENCE_QUANTITY_KG_PER_CAPITA_PER_YEAR",
    "unit": "kg wheat equivalent",
@@ -89,6 +90,7 @@
    "effectiveness_basis": "mass of coin struck"
   },
   "warmth": {
+   "role": "fuel",
    "subsistence_from_climate": "warmth_mj",
    "surplus_budget_share": 0.15,
    "unit": "megajoules of fuel heat",
@@ -111,6 +113,7 @@
    "effectiveness_basis": "one hour of play at a table, or one numbered chance, taken as equal"
   },
   "household_work": {
+   "role": "household_work",
    "surplus_budget_share": 0.0,
    "unit": "hours of household work done by another",
    "floor_basis": "No market floor: a household does its own cooking, water and fuel, cleaning, grinding and childcare with its own hours first, and hires only what its income lets it (sim/economy/households_work.py). A household hires the hours it would rather sell at the market wage than do itself, up to the work there is, and that is its floor of this need (household_work_year.py); it has no share of surplus spending.",

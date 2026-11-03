@@ -6,13 +6,9 @@ each seller the mint bought from is topped up from its own ask to the mint price
 charge stays with the mint as seigniorage (`mint.settle_mint`). This price for metal is the anchor of a commodity money:
 when other prices fall, metal at the mint is worth more than it costs to make, so makers expand.
 """
-from typing import Dict, Iterable, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
-from .types import ClearingResult, Fill, Transfer, EDGE_MINT, is_edge
-
-
-def mint_bought(fills: Iterable[Fill]) -> float:
-    return sum(fill.quantity for fill in fills if fill.agent == EDGE_MINT and fill.side == "buy")
+from .types import ClearingResult, Transfer, EDGE_MINT, is_edge
 
 
 def _taken_by_mint(result: ClearingResult) -> List[Tuple[str, str, float, float]]:
