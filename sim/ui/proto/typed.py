@@ -587,6 +587,12 @@ def _parse_open_or_named_tech(command, rest, words, nums, want_json):
             else {"cmd": command, "id": want}), None
 
 
+def _parse_cancel_orders(command, rest, words, nums, want_json):
+    if len(words) != 2 or words[0].lower() not in ("buy", "sell"):
+        return None, "cancel_orders needs a side and a material ('cancel_orders sell iron')."
+    return {"cmd": "cancel_orders", "side": words[0].lower(), "material": words[1].lower()}, None
+
+
 def _parse_withdraw(command, rest, words, nums, want_json):
     return {"cmd": "withdraw"}, None
 
@@ -905,6 +911,7 @@ _COMMAND_PARSERS = {
     "ventures": _parse_ventures,
     "market": _parse_market,
     "sell": _parse_sell,
+    "cancel_orders": _parse_cancel_orders,
     "risk": _parse_risk,
     "rush": _parse_rush,
     "state": _parse_state,

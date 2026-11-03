@@ -319,6 +319,26 @@ def _cmd_sell(sim, nodes, cmd, ended):
     return _order_reply(sim, sim.send(ui_port.SellMaterial(material, quantity, limit)), quantity)
 
 
+@command("cancel_orders", group="money",
+         summary="withdraw a posted buy or sell order before the year clears",
+         usage=["cancel_orders sell iron", "cancel_orders buy iron"],
+         options={"side": "buy or sell", "material": "the material whose posted orders on that side are withdrawn"},
+         description="Withdraws every order of yours to buy or to sell the material that the year's clearing has not yet "
+                     "settled. Nothing was paid or moved, so nothing is refunded. Refused when no such order is posted.")
+def _cmd_cancel_orders(sim, nodes, cmd, ended):
+    side = str(cmd.get("side") or "").lower()
+    if side not in ("buy", "sell"):
+        return {"ok": False, "error": "side must be buy or sell"}
+    material = str(cmd.get("material") or "").lower()
+    if not material:
+        return {"ok": False, "error": "material is required"}
+    reply = sim.send(ui_port.CancelMaterialOrders(side, material))
+    if isinstance(reply, Refusal):
+        return {"ok": False, "error": reply}
+    return {"ok": True, "cancelled_orders": reply["cancelled"], "cancelled_tonnes": reply["tonnes"], "side": side,
+            "material": reply["material"], "capital": round(sim.view("acting_balance")(), 1)}
+
+
 @command("money", shape="bare", group="money", aliases=("ledger", "accounts", "cash"),
          summary="the whole ledger",
          usage=["money"], options={},

@@ -65,7 +65,7 @@ from sim.ledger.api import CloseCashPeriod  # noqa: F401
 from sim.reporting.api import NOTICE, WAGE, CloseCausePeriod  # noqa: F401
 from sim.agriculture.api import InvestFarm, SellFarm  # noqa: F401
 from sim.land.api import BuildWay, FoundColony  # noqa: F401
-from sim.markets.api import BuyMaterial, SellMaterial  # noqa: F401
+from sim.markets.api import BuyMaterial, CancelMaterialOrders, SellMaterial  # noqa: F401
 from sim.polity.api import SettleWithState, WithdrawFromPublicLife  # noqa: F401
 from sim.projects.api import (Bribe, MothballWork, PostBounty, ReorderProjects, RestoreProjectOrder, RestoreWork,  # noqa: F401
                               StartProject, StopProject)  # noqa: F401
