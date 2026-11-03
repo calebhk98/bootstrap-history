@@ -91,6 +91,14 @@ class SellMaterial(Command):
 
 
 @dataclass(frozen=True)
+class CancelMaterialOrders(Command):
+	"""The acting seat withdraws its posted orders to `side` ("buy" or "sell") a material before the year clears. Nothing was
+	paid or moved yet. Answers {"cancelled": count, "tonnes": total}, or a refusal when the seat has no such order."""
+	side: str
+	material: str
+
+
+@dataclass(frozen=True)
 class RepriceOpeningMoney(Command):
 	"""The agent economy opened and settled its own wage: the game's money, counted until now at the figure `before` (money
 	per labour hour), becomes the economy's. Every seat's purse and the tree's money fields move by the ratio of the two,

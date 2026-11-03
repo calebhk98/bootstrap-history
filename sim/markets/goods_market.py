@@ -163,6 +163,15 @@ class GoodsMarket:
 
     # ---- orders -----------------------------------------------------------------------
 
+    def cancel_orders(self, side, material):
+        """Withdraw the asking seat's posted orders to `side` a material, which nothing has settled yet: {"cancelled": count,
+        "tonnes": total}, or a refusal with a cause when it has none."""
+        material = str(material or "").strip().lower()
+        count, tonnes = port_goods_orders.cancel_orders(self._sim.economy.agent.stored, self.acting_party_id, side, material)
+        if not count:
+            return Refusal("no_such_order", "no order to %s %s is posted." % (side, material), material=material, side=side)
+        return {"cancelled": count, "tonnes": tonnes, "side": side, "material": material}
+
     def post_order(self, side, material, tonnes, limit_per_tonne=None, project=None, cost_factor=1.0, limit_includes_carriage=False):
         """Post the asking seat's order for the year's clearing: "buy" `tonnes` paying the market no more than `limit_per_tonne`,
         or "sell" them (cut to the stock not already ordered sold) at no less; the quote's mean price over the order when no limit
@@ -185,7 +194,7 @@ class GoodsMarket:
         for other in economy.posted_goods_orders(self.acting_party_id):
             if other["side"] != side and other["good"] == good:
                 return Refusal("opposite_order_posted", "an order to %s %s is already posted this year; a seat does not trade with "
-                               "itself, so this order is refused (cancel that one first)." % (other["side"], material),
+                               "itself, so this order is refused (withdraw that one first with the cancel-orders command)." % (other["side"], material),
                                material=material, posted_side=other["side"])
         if not buying:
             tonnes = min(tonnes, self.sale_limits(material)[0])

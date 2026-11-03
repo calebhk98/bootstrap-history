@@ -8,7 +8,7 @@ settles at once. When the economy's year runs each order becomes a bid or an off
 
 A buy's limit is the market price ceiling; the carriage to the seat's tile and the order's cost factor (a project's opposition
 and geography) are reserved with it and charged on the tonnes that arrive. After the clearing the goods the buy account holds go
-to the seat's stock, the carriage and factor on them are charged, and the rest of the money is refunded; the sale account's
+to the seat's stock, the carriage (paid to the carriers' edge) and factor (paid with the purchase) on them are charged, and the rest of the money is refunded; the sale account's
 unsold goods go back to the seat's stock and its money is the sale's proceeds. What each seat bought and sold is kept as
 `stored["seat_trades"]`, the figure the next year reads, with `"orders"`: one result per order, including an order whose payment
 was refused or whose goods the seat no longer held (with the refusal's cause), so none vanishes silently.
@@ -40,6 +40,16 @@ def add_order(stored, seat_id, order):
     "cost_factor", "project"}, waits for the year's clearing. A buy's limit is the market price per tonne at most; carriage and
     the cost factor are charged on the tonnes that arrive."""
     stored.setdefault("seat_orders", {}).setdefault(seat_id, []).append(order)
+
+
+def cancel_orders(stored, seat_id, side, material):
+    """Withdraw the seat's waiting orders to `side` a material; (count, tonnes) withdrawn. Nothing was paid or moved before the year."""
+    kept, cancelled = [], []
+    for order in stored.get("seat_orders", {}).get(seat_id, ()):
+        (cancelled if order["side"] == side and order["material"] == material else kept).append(order)
+    if cancelled:
+        stored["seat_orders"][seat_id] = kept
+    return len(cancelled), sum(order["tonnes"] for order in cancelled)
 
 
 def posted_orders(stored, seat_id=None):
@@ -193,8 +203,12 @@ def settle(sim, economy, posted):
                 spent = max(0.0, entry["budget"] * coin - max(0.0, money - entry["extra"] * coin))
                 carriage = order.get("carriage_per_tonne", 0.0) * tonnes
                 charged = min(money, (spent + carriage) * (order.get("cost_factor", 1.0) - 1.0) + carriage)
+                carriage_paid = min(charged, carriage)
                 if money - charged > 0.0:
                     sim.send(ReceiveFromEdge(edges.EDGE_MARKET, money - charged, "materials order unspent"))
+                if carriage_paid > 0.0:   # the haul goes to the carriers, not to the sellers' edge
+                    sim.send(ReceiveFromEdge(edges.EDGE_MARKET, carriage_paid, "carriage on materials ordered"))
+                    sim.send(PayEdge(edges.EDGE_FREIGHT, carriage_paid, "carriage on materials ordered"))
                 trade["bought"][key] = trade["bought"].get(key, 0.0) + tonnes
                 result.update(bought_tonnes=tonnes, paid=spent + charged)
             else:
