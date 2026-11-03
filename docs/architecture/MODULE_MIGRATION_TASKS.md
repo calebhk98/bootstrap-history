@@ -2,17 +2,18 @@
 
 Note: this is a record of past work. `TEST_MIGRATION.md`, `sim/engine/cause_book.py`, `sim/engine/view_share.py` and `sim/tests/helpers/views.py` no longer exist, and the engine mixins it plans to remove are gone (`Sim` has no base classes); the current shape is `sim/ARCHITECTURE.md`.
 
-**Status:** in progress on branch `sim-module-registry-plan`, base `mr-base` = `0be2f72` (a local tag; the code there is identical to the branch head before phase 0). The design is
-`MODULE_REGISTRY_PLAN.md`; this file is the execution order and is ticked as each task merges. The work lands as one
-pull request when every box is ticked. `main` is frozen for the duration (owner decision 2026-10-25).
+**Status:** the modules listed below are in the tree and `Sim` has no base classes (measure with
+`python3 -c "import sys;sys.path.insert(0,'.');from sim.engine.core import Sim;print(Sim.__bases__)"`). The design is
+`MODULE_REGISTRY_PLAN.md`; this file is the execution order and is ticked as each task merges. What is left is
+measured by `bash tools/done_check.sh` (mixin classes, classes composed by inheritance, undeclared module reads, UI
+views missing from a built game); `sim/engine/bridge.py` and `bridge_land.py` are the engine bridge that is emptied as
+owners take their views.
 
 ## Where it stands
 
-Phase 6b is done: no module depends on the engine bridge or reads a `legacy_*` view, every module declares its reads and
-sends (`tools/check_module_reads.py`), and the read guard's inventory refused no write. The full equivalence tier is
-identical at `5c152a46` (the verification record is in phase 6b below). What is left is phase 9 (the long tier against
-`mr-base`, regenerated openings, the bugs kept on purpose, the forwarder mixins on `Sim` that keep Complaint 508 open,
-the real PR) and the owner's call on the module splits the width reviews propose (catalogue entries, "Width review").
+Every module in the table below declares its reads and sends (`python3 tools/check_module_reads.py`). The forwarder
+files `sim/engine/forward_*.py` are gone. Re-measure before acting on a claim in the phase lists: a ticked box was true
+when it merged, an unticked one may have been done since.
 
 Operating rules: only the orchestrating session merges; agents work in worktrees on `mr/<task>` branched from the
 integration branch, own named files, never edit `core.py`, `state.py`, `state_seat.py`, `core_seats.py`,
@@ -28,7 +29,7 @@ Each row merged with the micro equivalence tier identical to the base and the pr
 |---|---|---|
 | ledger | `sim/ledger/` | owns the tonnes ledger and the pool of capacity keys swept out of it, every seat's account in the actors' book and its cash book (`OpenPurse`, `CreditSeat`, `DebitSeat`, `NoteSeatCash`, `CloseCashPeriod`; views `acting_balance`, `seat_balance`, `cash_book`); every money path outside the agents' and the economy's own books is a ledger command; Complaint 790 |
 | living stock, defence stores | `sim/living_stock/`, `sim/defence_stores/` | |
-| projects | `sim/projects/` | starting, progress, completion, staffing, exclusions, running gates, closures, reviews; its seat state holds the projects in hand (`active`, watched by `WatchActive`, published as `active_projects` and `active_project_ids`), the retry counts, the bounties and the credit paid towards stopped projects (`failed_attempts`, `bountied`, `paid_towards`, `bounties_paid`), last year's project spending (`spend_last_year`, closed by `CloseSpendYear`) and the exclusions and staffing records; it shuts, restores and reviews works by the ventures module's commands; still to do: `cause_book.py` |
+| projects | `sim/projects/` | starting, progress, completion, staffing, exclusions, running gates, closures, reviews; its seat state holds the projects in hand (`active`, watched by `WatchActive`, published as `active_projects` and `active_project_ids`), the retry counts, the bounties and the credit paid towards stopped projects (`failed_attempts`, `bountied`, `paid_towards`, `bounties_paid`), last year's project spending (`spend_last_year`, closed by `CloseSpendYear`) and the exclusions and staffing records; it shuts, restores and reviews works by the ventures module's commands |
 | ventures | `sim/ventures/` | what a concern ties up and earns, opening by hand, the founder's sale, coverage roll-out; the seat state holds the seat's businesses and their plants (`VenturesSeat`), published as `operating`, `mothballed`, `closure_records`, `operating_by_seat`, `venture_size` and `venture_opened_year` and changed by `MothballConcern`, `RestoreConcern`, `CloseConcern`, `ForgetClosureReason`, `StopOperating`, `ShutForgotten`, `NoteConcernYear`, `ReviewConcerns`, `ReviewReopening` and `WatchBusiness`; the exchange still opens, closes and hands over plants on the seat's `Business` record directly (`HouseholdParty`), so the views hand out its own sets and are uncached |
 | coin | `sim/coin/` | carriage is the ledger's `transfer_surcharge` point |
 | campaigns | `sim/campaigns/` | |
@@ -47,17 +48,17 @@ Each row merged with the micro equivalence tier identical to the base and the pr
 | polity | `sim/polity/` | standing, state notice, demands, patronage, the society's value weights; Complaint 760 |
 | disease | `sim/disease/` | the epidemic year runs inside demography's regional step, as two commands around the externality door |
 | demography | `sim/demography/` | the three age bands, regions, urban share, food eaten, the farm holding; the age bands are the only copy (no `Sim.population` mirror) |
-| actors | `sim/actors/` | the cast, its records and the actors' world (was the engine's `agents_port*`); `state.actors` is a property over the slot |
+| actors | `sim/actors/` | the cast, its records and the actors' world; `state.actors` is a property over the slot |
 | workforce | `sim/workforce/` | the labour package behind `WorkforceWorld`; the staff, hours and pay books are its seat state; still to do: its remaining `legacy_state` reads (purse, bondage, built ways, the projects' sets) and cached views once Labour's in-place writes become commands; Complaints 762, 764 |
 | land | `sim/land/` | the owner map, colonies, the map and geography handles, the built ways, the works and improvements, the held techniques; `BuildWay` and `BuildWork` answer `(ok, text)` so the protocol replies keep their wording |
-| markets | `sim/markets/` | the market book, flows, clearing, goods categories, household demand ratios, the goods market object and the port over the agent economy (`port*.py`, `goods_*.py`; the module builds `economy` and `goods_market`, which read the game through `PortWorld`); `Sim.economy` and `Sim.goods_market` are forwarders. The household need model is the module's (`household_needs.py`, `household_views.py`: `household_demand_units`, `household_basket`, `home_household_tonnes`, `partner_household_demand`; it reads the bridged `installed_mod_ids` and `household_need_data`, which need the mods directory and the engine's mod loader, so they stay bridged; the substitute views `materials_serving`, `material_substitutes`, `material_serves_a_need` (`need_substitutes.py`), the credit views `agent_rate`, `agent_credit_room`, `agent_economy_opened` and the `FoundBankFromOutside` command are the module's). Still bridged: the repricing of the opening's money (`RepriceOpeningMoney`). The shipped openings must be regenerated (`simulator.py openings`): the spin-up source moved, so the shipped keys no longer match |
+| markets | `sim/markets/` | the market book, flows, clearing, goods categories, household demand ratios, the goods market object and the port over the agent economy (`port*.py`, `goods_*.py`; the module builds `economy` and `goods_market`, which read the game through `PortWorld`);  The household need model is the module's (`household_needs.py`, `household_views.py`: `household_demand_units`, `household_basket`, `home_household_tonnes`, `partner_household_demand`; it reads the bridged `installed_mod_ids` and `household_need_data`, which need the mods directory and the engine's mod loader, so they stay bridged; the substitute views `materials_serving`, `material_substitutes`, `material_serves_a_need` (`need_substitutes.py`), the credit views `agent_rate`, `agent_credit_room`, `agent_economy_opened` and the `FoundBankFromOutside` command are the module's). Still bridged: the repricing of the opening's money (`RepriceOpeningMoney`). |
 | finance | `sim/finance/` | credit limit, interest and arrears, insolvency, debt bondage, purchases and affordability, the seat bank; the agent economy's own credit and bank files in `sim/economy/` stay behind its api; Complaint 763 |
 | stores | `sim/stores/` | the declared mod stores and their saved values (`StoresWorld.values`); a game's declarations are the answers to its `store_declarations` point (the base game's and the mods' data through the bridge views `base_store_declarations` and `data_store_declarations`, and mod code through `api.store`); `Sim.stores` is a property over the module's `store_book` view |
 | production | `sim/production/` | revenue, upkeep, concerns and their book sales, volume, industry depth and learning, techniques in use, capability; still to do: `projects.operating` and the revenue caches on the household, `node_rederive.py` (shared tree pricing), and its `legacy_game` reads |
 
 The slow suite (`python3 -m sim.tests --slow`) is green at `b0b3a8d0`. Full equivalence tier identical at the prices, demography, land, markets, production, projects last-mixins (`161acde1`, which includes the ledger money) and phase 6 (`0c5c18aa`, which includes the year composition) merges; stress tier and protocol transcripts identical after each module. Phase 6b: the full tier at `2294c07f` found Rome seed 1 diverging at year 16 (the army's food check, a read left dead by a move; fixed in `49f8ee4c`, where Rome seed 1 is identical over 40 years); England and Han seed 1 identical at `4bd5f60b`, Rome seed 2 at `2294c07f`; the full tier identical, all four scenarios, at `00c664b8` and at `5c152a46` (every phase 6b merge, the width reviews included); micro identical at `282b5913`, `e682ec98`, `d967c61f`, `9c661d02`, `54052b76` and `a38d1f2a` (`Sim` inherits no mixin; Complaint 922 fixed) (the seat purse; stress identical there too, against the baseline re-recorded for Complaint 921); stress and the protocol transcripts identical at `5a11b0f8` (re-run with `python3 -m sim.tests.equiv check docs/architecture/baseline/<tier>.json --tier <tier>`).
 
-Phase 6 (a) is done: `sim/ui/` reads views and sends commands (`tools/check_ui_views.py` checks every name it uses exists; a 168-command protocol session gave identical replies to the base). Still to do in phase 6: the forwarders left in `sim/engine/forward_*.py` (the seats, workforce, production and core-property mixins are gone: the change hooks are `change_hooks.py`, the tree rederivation calls are plain functions in `node_rederive.py`, and the facts the root states on itself are class attributes of `Sim` built by `root_facts.py`) that engine code, mods and tests still call, and the mixin fakes in the tests (137 files, mostly the labour package's own mixins). Next: those forwarders' engine callers, the projects record's shared sets and the purses; phase 7 in progress (the mod registries other than the ui's are extension points of their owners: `mod_code.py`, `docs/architecture/MODULE_REGISTRY_PLAN.md` section 4.5); then 8 and 9.
+`sim/ui/` reads views and sends commands (`python3 tools/check_ui_views.py` checks every name it uses exists in a built game). The forwarders in `sim/engine/forward_*.py` and the mixin fakes in the tests are gone (`grep -rl Mixin sim/tests` lists what is left); the mod registries other than the ui's are extension points of their owners (`mod_code.py`, `docs/architecture/MODULE_REGISTRY_PLAN.md` section 4.5).
 
 ## Task list
 
@@ -137,8 +138,8 @@ Phase 6 (a) is done: `sim/ui/` reads views and sends commands (`tools/check_ui_v
 
 ### Phase 4: walled packages become modules (serial)
 
-- [ ] Labour becomes workforce, geography becomes land, the economy becomes markets, and disease becomes its own module.
-- [ ] Their adapters (`LabourWorld`, `GeographyWorld`, `SimWorld`) become declared view lists, and the lazy port properties go.
+- [x] Labour becomes workforce (`sim/workforce/`), geography becomes land (`sim/land/`), the economy becomes markets (`sim/markets/`), and disease becomes its own module (`sim/disease/`).
+- [x] The old adapters are gone: a module reads the game through the views its spec declares (`WorkforceWorld` in `sim/workforce/world.py` is built over the module's `needs`).
 - [ ] After the phase: the long equivalence tier.
 
 ### Phase 5: remaining mixins, leaves to hub
