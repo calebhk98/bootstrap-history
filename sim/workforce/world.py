@@ -1,15 +1,15 @@
 """What the labour package reads of the game: `send` and the acting seat's own state here, and one reader group per owning module
-(world_reads.py): `scenario`, `knowledge`, `finance`, `people`, `trades`, `actors`, plus `projects` and `economy` below.
+(world_reads.py): `scenario`, `knowledge`, `finance`, `people`, `trades`, `actors`, `ventures`, `directors`, plus `projects` and
+`economy` below; the commands it sends are `commands` (world_commands.py).
 
 `Labour` (sim/labour/) asks this object where it used to ask the engine. Every fact comes from a named view of its owner
 and every change to a fact another module owns is that owner's command. What is still handed out live: the game's random
 source (`rng`, shared by every module that draws), the project sets the views of knowledge and projects return, and the game
 a mod's provider is handed."""
 from sim.agents.api import edges
-from sim.seats.api import RememberGoalClosure
 
-from .commands_bondage import NoteBuyRefusal
-from .world_reads import ActorReads, FinanceReads, KnowledgeReads, PeopleReads, ScenarioReads, TradeReads
+from .world_commands import WorldCommands
+from .world_reads import ActorReads, DirectorReads, FinanceReads, KnowledgeReads, PeopleReads, ScenarioReads, TradeReads, VentureReads
 
 
 class WorkforceWorld:
@@ -23,14 +23,17 @@ class WorkforceWorld:
         self._needs = needs
         self._owner = owner          # the workforce module: its seat and world state
         self._parts = parts          # its parts, which answer the rest
-        self._economy = AgentEconomyReads(needs)
-        self._projects = ProjectReads(needs)
+        self.economy = AgentEconomyReads(needs)    # what the agent economy answers, as the views the module declares give it
+        self.projects = ProjectReads(needs)        # the acting seat's project sets, each asked of its owner when read
+        self.commands = WorldCommands(needs, parts)
         self.scenario = ScenarioReads(needs)
         self.knowledge = KnowledgeReads(needs)
         self.finance = FinanceReads(needs)
         self.people = PeopleReads(needs)
         self.trades = TradeReads(needs, parts)
         self.actors = ActorReads(needs)
+        self.ventures = VentureReads(needs)
+        self.directors = DirectorReads(needs)
 
     def send(self, command):
         """Apply a command through the module that owns it."""
@@ -63,11 +66,6 @@ class WorkforceWorld:
         return self._owner.world
 
     @property
-    def projects(self):
-        """The acting seat's project sets (done, operating, in hand, granted), each asked of its owner when read."""
-        return self._projects
-
-    @property
     def bondage_years_left(self):
         return self._needs.debt_status()["bondage_years_left"]
 
@@ -76,23 +74,6 @@ class WorkforceWorld:
         """The game's random source (shared and live: every draw moves the stream every other module draws from)."""
         return self._needs.game_random()
 
-    @property
-    def staff_scale(self):
-        """The share of the institutional staff ceiling the acting seat's income can pay, as `staff_capacity` last worked it out."""
-        return self._parts.core.staff_scale()
-
-    @staff_scale.setter
-    def staff_scale(self, scale):
-        self._parts.core.set_staff_scale(scale)
-
-    def remember_goal_closure(self, closure):
-        """Keep what the goal needs, once worked out."""
-        self._needs.send(RememberGoalClosure(closure))
-
-    def note_buy_refusal(self, refusal):
-        """Keep why the acting seat's purchase of people was refused, for the screen that asked."""
-        self._parts.core.note_buy_refusal(NoteBuyRefusal(refusal))
-
     def money_text(self, amount, grouped=False, short=False):
         """A sum in the civilisation's coin as the player's chosen unit writes it."""
         return self._needs.money_text(amount, grouped, short)
@@ -100,11 +81,6 @@ class WorkforceWorld:
     def plain_number(self, value, digits=0):
         """A count, a number of people or of hours."""
         return self._needs.plain_number(value, digits)
-
-    @property
-    def economy(self):
-        """What the agent economy answers, as the views the module declares give it."""
-        return self._economy
 
 
 class ProjectReads:

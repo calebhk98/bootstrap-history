@@ -96,43 +96,14 @@ class StaffPools:
             "measured efficiency gap.")
 
     def resync_pools(self):
-        """Recompute the two aggregate pools the tech tree asks for from the
-        actual people on the books. `art` and `sch` in the tree mean "trained
-        people who understand your methods", so they are the sum of the trades,
-        not a number that floats free of them.
-
-        ONLY `scholar` COUNTS AS A TRAINED SCHOLAR. TRADE_FAMILY groups
-        scholar, chemist, engineer, scribe and merchant together as
-        "scholar" - and that grouping is real and stays exactly as it is for
-        market_supply(), where it means "draws on the same small, literate-
-        or-propertied slice of the population", which is equally true of all
-        five. It is not the same claim as "is a trained natural philosopher":
-        a node gated on "2 trained scholars" must be started on the strength
-        of people actually trained as scholars, not on scribes, chemists,
-        engineers or merchants who have never been asked to do a
-        philosopher's work. STAFF_SOURCES - the advice this same household
-        is given on how to get scholars - names only `hire scholar` and
-        never the other four, for the same reason: the five-way grouping is
-        sized for the labour MARKET, not the staff ROSTER. train()'s own
-        docstring already makes the non-interchangeability of the taught
-        trades explicit ("the machinists you made are no use at all when
-        you need a chemist");
-        nothing about a chemist makes them a scholar either.
-
-        WHAT AN INSTITUTION GRANTED OUTRIGHT is on the books as staff of
-        its trade (see grant_staff), so it is counted with the rest.
-        """
+        """Recompute the two aggregate pools the tech tree asks for (`art` and `sch`: trained people who understand your
+        methods) from the people on the books. Only the `scholar` trade counts as a scholar; scribes, chemists, engineers and
+        merchants share its market family but are not natural philosophers. Staff an institution granted outright are on the
+        books as staff of their trade (see grant_staff) and count with the rest."""
         workforce = self._world.workforce
         craft = sum(count for trade, count in self.book.employed_by_trade().items() if self.trades.is_craft_trade(trade))
         schol = self.book.employed(trade_data.scholar_trade())
-        # PEOPLE STILL LEARNING ARE NOT YET CRAFTSMEN. This function
-        # recomputes self.household.artisans from scratch on every call, so
-        # anyone still in the training queue must be excluded from the count
-        # here: counting them early makes the training lag that buy_slaves'
-        # own docstring promises do nothing. Once a training row matures and
-        # step() adds its capacity to self.household.artisans directly, this
-        # function must not count that person via `learning` again - by
-        # then they are simply part of `owned` below.
+        # Anyone still in the training queue is excluded from the count; once a row matures its capacity is part of `owned`.
         # buy_slaves stores WORKER_EQUIVALENT_UNTRAINED of a worker per person
         # bought, so that is the divisor that recovers the headcount still
         # learning.

@@ -44,10 +44,10 @@ class Commissions:
         need = self._world.scenario.goal_closure
         if need is None:
             try:
-                need = self._world.scenario.closure(self._world.scenario.nodes, self._world.scenario.goal)
+                need = self._world.scenario.closure(self._world.scenario.goal)
             except Exception:
                 need = set()
-            self._world.remember_goal_closure(need)
+            self._world.commands.remember_goal_closure(need)
         seen = 0
         done_nodes, active_nodes = self._world.projects.done, self._world.projects.active
         for node_id in self._world.scenario.order:

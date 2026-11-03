@@ -56,7 +56,7 @@ BASELINE_FIELDS = (
     "_said_parallelism", "_said_command_index", "_said_deputies",
     "_said_near_limit",
     "pop_children", "pop_working_age", "pop_elderly", "farm_stock_kg",
-    "_material_stock_ledger", "farm_hectares", "worker_housing_places",
+    "material_stock_ledger", "farm_hectares", "worker_housing_places",
     "trade_schools", "last_withdrawal",
     "hours_this_year", "_founder_death_aged", "_founder_death_year",
     "trade_introduced_year", "trades_endemic",

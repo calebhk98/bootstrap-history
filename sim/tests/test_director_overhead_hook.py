@@ -21,7 +21,7 @@ def labour(overhead_hours):
                                       relocation_hours_this_year=20.0, supervision_hours_this_year=30.0,
                                       bondage_years_left=0, directors_extra=0.0)
     world = types.SimpleNamespace(
-        actors=types.SimpleNamespace(director_overhead_hours=lambda: overhead_hours),
+        directors=types.SimpleNamespace(overhead_hours=lambda: overhead_hours),
         scenario=types.SimpleNamespace(cfg={"founder_hours_per_year": POOL_HOURS, "director_hours_per_year": 0.0}),
         founder_alive=True, workforce=household, bondage_years_left=0)
     stub = types.SimpleNamespace(_world=world, BONDAGE_HOURS_SHARE=0.25)

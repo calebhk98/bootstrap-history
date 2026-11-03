@@ -73,7 +73,7 @@ class Advice:
         # founder with six places - the last node in the game, true and
         # useless - while workshop_first, one prerequisite away, went unnamed.
         want = sources_to_build(self._world.knowledge.ROOM_SOURCES, projects.done, self._world.scenario.nodes, self._world.knowledge.is_visible,
-                                lambda node_id: len(self._world.scenario.closure(self._world.scenario.nodes, node_id) - projects.done))
+                                lambda node_id: len(self._world.scenario.closure(node_id) - projects.done))
         startable_now = any(self._world.knowledge.start_reason(node_id, _why=False)[0] for node_id, _places in want)
         return room_advice(self._world.money_text(self._world.finance.housing_price_per_place(), grouped=True),
                            reopen, want, startable_now, self._places_text)

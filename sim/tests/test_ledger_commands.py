@@ -200,30 +200,30 @@ class TonnesLedgerState(unittest.TestCase):
     """The seat's tonnes ledger and the capacity pool are the ledger's own state."""
 
     def module(self, stock=None):
-        return module_harness.build(Ledger, views={"year": 100}, seat=LedgerSeat(_material_stock_ledger=stock), world=LedgerWorld(), module_id="ledger")
+        return module_harness.build(Ledger, views={"year": 100}, seat=LedgerSeat(material_stock_ledger=stock), world=LedgerWorld(), module_id="ledger")
 
     def test_a_change_is_counted_in_the_stock_and_in_the_years_opening_snapshot(self):
         module = self.module({"iron": 2.0})
         module.change_stock(ChangeStock("iron", 3.0))
-        self.assertEqual(module.seat._material_stock_ledger["iron"], 5.0)
-        self.assertEqual(module.seat._material_stock_opening, {"year": 100, "tonnes": {"iron": 5.0}})
+        self.assertEqual(module.seat.material_stock_ledger["iron"], 5.0)
+        self.assertEqual(module.seat.material_stock_opening, {"year": 100, "tonnes": {"iron": 5.0}})
 
     def test_the_first_change_of_a_new_year_counts_once_in_the_opening_stock(self):
         module = self.module({"iron": 2.0})
-        module.seat._material_stock_opening = {"year": 99, "tonnes": {"iron": 1.0}}
+        module.seat.material_stock_opening = {"year": 99, "tonnes": {"iron": 1.0}}
         module.change_stock(ChangeStock("iron", 3.0))
-        self.assertEqual(module.seat._material_stock_opening, {"year": 100, "tonnes": {"iron": 5.0}})
+        self.assertEqual(module.seat.material_stock_opening, {"year": 100, "tonnes": {"iron": 5.0}})
 
     def test_the_first_change_of_the_year_snapshots_the_stock_before_it(self):
         module = self.module({"iron": 2.0})
         module.bank_stock(BankStock((("iron", 4.0),)))
-        self.assertEqual(module.seat._material_stock_opening["tonnes"], {"iron": 2.0})
-        self.assertEqual(module.seat._material_stock_ledger["iron"], 4.0)
+        self.assertEqual(module.seat.material_stock_opening["tonnes"], {"iron": 2.0})
+        self.assertEqual(module.seat.material_stock_ledger["iron"], 4.0)
 
     def test_drawing_down_never_takes_the_stock_below_zero(self):
         module = self.module({"grain": 1.0})
         module.draw_down_stock(DrawDownStock("grain", 5.0))
-        self.assertEqual(module.seat._material_stock_ledger["grain"], 0.0)
+        self.assertEqual(module.seat.material_stock_ledger["grain"], 0.0)
 
     def test_capacity_keys_are_swept_out_of_the_ledger_into_the_worlds_pool(self):
         module = self.module({"iron": 1.0, "scholar_hours": 40.0})

@@ -190,7 +190,7 @@ class Capacity:
         # calculation above - "grow the staff toward what you can house and
         # pay" has to be able to mean nobody.
         scale = self._staff_scale_for(afford, scholars + artisans, extra)
-        self._world.staff_scale = scale     # step() applies this to `extra` too
+        self._world.commands.set_staff_scale(scale)     # step() applies this to `extra` too
         return (base_sc + scholars * scale * pop, base_ar + artisans * scale * pop,
                 directors * min(1.0, scale * self.DIRECTOR_SCALE_HEADROOM) * pop)
 

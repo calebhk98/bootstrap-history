@@ -8,8 +8,13 @@
    bases) or is one of Part's own names.
 4. A module class derives from Module only.
 5. No code under `sim/` (tests excluded) reaches a private member of a part: `...parts.<name>._member` (the owner is any name ending in `parts`, so
-   `_parts` too), or `_member` on a local or `self` attribute that was assigned from `...parts.<name>`. A part's privates are for the part's own class."""
+   `_parts` too), or `_member` on a local or `self` attribute that was assigned from `...parts.<name>`. A part's privates are for the part's own class.
+6. Every `self.world.<name>` and `self.seat.<name>` in a part (and on a local alias of either) is a member of the world_state or seat_state
+   class its module spec declares; a spec that declares none for that slot is skipped.
+7. Every `parts.<name>.<member>` (also on `economy.parts` and `port.parts`) in sim/markets names a member of the class AgentParts
+   (sim/markets/port_parts.py, a plain holder) builds that attribute from."""
 import ast
+import dataclasses
 import glob
 import importlib
 import inspect
@@ -122,6 +127,76 @@ def check_private_reaches(problems):
 			problems.append("%s:%d: reaches a private member of a part: %s" % (path, line, text))
 
 
+def state_attributes(state_class):
+	"""Names a state class answers to: dir(), dataclass fields and anything its methods assign to self."""
+	names = set(dir(state_class))
+	if dataclasses.is_dataclass(state_class):
+		names |= {field.name for field in dataclasses.fields(state_class)}
+	return names | attributes_of(state_class)
+
+
+def state_reaches(part_class, slot_attributes):
+	"""(line, slot, name) for each `self.world.X` / `self.seat.X` (or a local alias of either) in a part whose X the slot's state class lacks."""
+	tree = ast.parse(textwrap.dedent(inspect.getsource(part_class)))
+	first_line = inspect.getsourcelines(part_class)[1] - 1
+	found = []
+	for function in ast.walk(tree):
+		if not isinstance(function, (ast.FunctionDef, ast.AsyncFunctionDef)):
+			continue
+		alias = {}
+		for node in ast.walk(function):
+			if isinstance(node, ast.Assign) and isinstance(node.value, ast.Attribute) and isinstance(node.value.value, ast.Name) \
+					and node.value.value.id == "self" and node.value.attr in slot_attributes:
+				for target in node.targets:
+					if isinstance(target, ast.Name):
+						alias[target.id] = node.value.attr
+		for node in ast.walk(function):
+			if not isinstance(node, ast.Attribute):
+				continue
+			owner, slot = node.value, None
+			if isinstance(owner, ast.Name) and owner.id in alias:
+				slot = alias[owner.id]
+			elif isinstance(owner, ast.Attribute) and isinstance(owner.value, ast.Name) and owner.value.id == "self" \
+					and owner.attr in slot_attributes:
+				slot = owner.attr
+			if slot is not None and node.attr not in slot_attributes[slot]:
+				found.append((first_line + node.lineno, slot, node.attr))
+	return found
+
+
+def check_state_reaches(pkg, spec, problems):
+	slot_attributes = {}
+	for slot, state_class in (("world", spec.world_state), ("seat", spec.seat_state)):
+		if state_class is not None:
+			slot_attributes[slot] = state_attributes(state_class)
+	if not slot_attributes:
+		return
+	for part_class in spec.implementation.PARTS.values():
+		for line, slot, name in sorted(set(state_reaches(part_class, slot_attributes))):
+			problems.append("%s.%s: self.%s.%s is not a member of %s (line %d)" % (
+				pkg, part_class.__name__, slot, name, getattr(spec, slot + "_state").__name__, line))
+
+
+def check_agent_parts(problems):
+	"""`parts.<name>.<member>`, `economy.parts.<name>.<member>` and `<port>.parts.<name>.<member>` in sim/markets against AgentParts
+	(sim/markets/port_parts.py), a plain holder of parts built in its __init__: the member must exist on the class `<name>` is built from."""
+	from sim.markets.port_parts import AgentParts
+	classes = member_classes(AgentParts)
+	for path in sorted(glob.glob("sim/markets/*.py")):
+		with open(path, encoding="utf-8") as handle:
+			tree = ast.parse(handle.read(), path)
+		for node in ast.walk(tree):
+			if not (isinstance(node, ast.Attribute) and isinstance(node.value, ast.Attribute) and node.value.attr in classes):
+				continue
+			holder = node.value.value
+			is_holder = (isinstance(holder, ast.Name) and holder.id == "parts") or (
+				isinstance(holder, ast.Attribute) and holder.attr == "parts" and isinstance(holder.value, (ast.Name, ast.Attribute))
+				and (holder.value.id if isinstance(holder.value, ast.Name) else holder.value.attr).lstrip("_") in ("economy", "port"))
+			klass = classes[node.value.attr]
+			if is_holder and node.attr not in attributes_of(klass):
+				problems.append("%s:%d: parts.%s.%s is not defined by %s" % (path, node.lineno, node.value.attr, node.attr, klass.__name__))
+
+
 def check_module(pkg, problems):
 	spec_file = "sim/%s/module_spec.py" % pkg
 	if not os.path.exists(spec_file):
@@ -138,6 +213,7 @@ def check_module(pkg, problems):
 			holders = [part for part, cls in implementation.PARTS.items() if callable(getattr(cls, name, None))]
 			if len(holders) != 1:
 				problems.append("%s: declared %s resolves on %s" % (pkg, name, holders or "nothing"))
+		check_state_reaches(pkg, spec, problems)
 		parts = implementation.PARTS
 		for part_name, part_class in parts.items():
 			if not issubclass(part_class, Part):
@@ -182,6 +258,7 @@ def main(names):
 			problems.append("%s: %s: %s" % (pkg, type(error).__name__, error))
 	if not names:
 		check_private_reaches(problems)
+		check_agent_parts(problems)
 	for line in problems:
 		print(line)
 	return 1 if problems else 0

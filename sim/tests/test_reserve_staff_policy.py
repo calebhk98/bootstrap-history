@@ -33,9 +33,9 @@ class _Labour:
             workforce=household, policy={"reserve_staff": policy_on},
             state=Game(founder=Game(policy={"reserve_staff": policy_on}), household=household,
                                   scenario=Game(year=100)),
-            actors=Game(venture_staff_free=lambda: (free_scholars, free_craftsmen)),
-            finance=Game(housing_price_per_place=lambda: price, spending_power=lambda kind: spending,
-                         build_worker_housing=lambda places: self.housing_built.append(places) or True))
+            ventures=Game(venture_staff_free=lambda: (free_scholars, free_craftsmen)),
+            finance=Game(housing_price_per_place=lambda: price, spending_power=lambda kind: spending),
+            commands=Game(build_worker_housing=lambda places: self.housing_built.append(places) or True))
         event_stand_in.stood_in(self._world)
         market = Game(quote_annual=lambda trade: 50.0)
         self.controls = StaffControls(self._world, book=None, capacity=self, hiring=None, market=market)

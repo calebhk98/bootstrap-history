@@ -18,7 +18,6 @@ HOURS = 2000.0
 
 def labour_of(actor_staff=0.0):
     world = stand_in_world("rome_100ad")
-    world.actors.shared_answer = lambda key, inputs, compute, standalone=False: compute()
     world.people.home_tiles_held_version = lambda: 0
     world.knowledge.effect_factor = lambda channel, value, exponent=None: value
     world.actors.actor_staff_fte = lambda trade: actor_staff

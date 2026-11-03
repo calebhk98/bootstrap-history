@@ -152,14 +152,14 @@ class Ledger(Module):
 
 	def stock_ledger(self) -> Any:
 		"""The seat's tonnes ledger, made on first use, with the capacity keys swept into the world's capacity pool."""
-		self.seat._material_stock_ledger = rules.settled_stock(self.seat._material_stock_ledger, self.world.capacity_pool)
-		return self.seat._material_stock_ledger
+		self.seat.material_stock_ledger = rules.settled_stock(self.seat.material_stock_ledger, self.world.capacity_pool)
+		return self.seat.material_stock_ledger
 
 	def opening_stock(self) -> Any:
 		"""The tonnes as the year's accounting began; the snapshot is taken here if this year has none."""
-		self.seat._material_stock_opening = rules.year_opening_record(
-			self.seat._material_stock_opening, self.needs.year(), self.stock_ledger())
-		return self.seat._material_stock_opening["tonnes"]
+		self.seat.material_stock_opening = rules.year_opening_record(
+			self.seat.material_stock_opening, self.needs.year(), self.stock_ledger())
+		return self.seat.material_stock_opening["tonnes"]
 
 	def change_stock(self, command: Any) -> None:
 		stock = self.stock_ledger()
@@ -184,7 +184,7 @@ class Ledger(Module):
 	def goods_stock_opening(self) -> Any:
 		"""The acting seat's tonnes by commodity key as they stood when this year's accounting began, as the books stand now:
 		read it, never write it. Nothing is recorded by asking."""
-		return rules.year_opening_record(self.seat._material_stock_opening, self.needs.year(), self.held_goods())["tonnes"]
+		return rules.year_opening_record(self.seat.material_stock_opening, self.needs.year(), self.held_goods())["tonnes"]
 
 	def goods_stock(self, commodity: str) -> float:
 		return self.stock_ledger().get(commodity, 0.0)

@@ -3,7 +3,6 @@ class holding the module's `needs`. `WorkforceWorld` (world.py) holds one of eac
 from sim.demography.api import rules as demography_rules
 from sim.prices.api import solve_prices_core
 
-from .commands import BuildHousing
 from .provided import last_answer, overhead_hours
 
 
@@ -38,7 +37,8 @@ class ScenarioReads:
         """What the goal needs, once worked out (None before)."""
         return self._needs.goal_closure()
 
-    def closure(self, nodes, goal):
+    def closure(self, goal):
+        """The nodes the goal needs."""
         return self._needs.tree_closure(goal)
 
     def built_ways(self):
@@ -185,9 +185,6 @@ class FinanceReads:
     def trade_school_price_per_seat(self):
         return self._needs.trade_school_price_per_seat()
 
-    def build_worker_housing(self, places):
-        return self._needs.send(BuildHousing(places))
-
 
 class PeopleReads:
     """The nation's people and places, from the demography module and the town providers."""
@@ -293,15 +290,15 @@ class ActorReads:
     def actor_staff_total(self):
         return self._needs.actor_staff_total()
 
-    def director_overhead_hours(self):
-        """Hours of the directed-hours pool the game's overhead providers charge (none unless a mod provided some)."""
-        return overhead_hours(self._needs.director_overhead())
-
     def active_hours_still_wanted(self):
         return self._needs.active_hours_still_wanted()
 
-    def shared_answer(self, key, inputs, compute, standalone=False):
-        return self._needs.shared_answer(key, inputs, compute, standalone)
+
+class VentureReads:
+    """The acting seat's open concerns as the staffing rules see them: foremen, free hands, hires to keep and concerns to close."""
+
+    def __init__(self, needs):
+        self._needs = needs
 
     def stopped_yearly_value(self, node_ids):
         rows = self._needs.concern_market()
@@ -321,3 +318,14 @@ class ActorReads:
 
     def venture_staff_free(self):
         return self._needs.venture_staff_free()
+
+
+class DirectorReads:
+    """What the directed-hours pool is charged."""
+
+    def __init__(self, needs):
+        self._needs = needs
+
+    def overhead_hours(self):
+        """Hours of the directed-hours pool the game's overhead providers charge (none unless a mod provided some)."""
+        return overhead_hours(self._needs.director_overhead())

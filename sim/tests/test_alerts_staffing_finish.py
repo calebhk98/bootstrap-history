@@ -54,10 +54,10 @@ check("a newly blocked project stops the step",
 def departures(cause, counts, stops=()):
     log = []
     ledger = SimpleNamespace(_world=SimpleNamespace(
-        actors=SimpleNamespace(concerns_to_close_for_staffing=lambda: list(stops), stopped_yearly_value=lambda node_ids: 0.0),
+        ventures=SimpleNamespace(concerns_to_close_for_staffing=lambda: list(stops), stopped_yearly_value=lambda node_ids: 0.0),
         state=SimpleNamespace(household=SimpleNamespace(log=log), scenario=SimpleNamespace(year=100))))
     event_stand_in.stood_in(ledger._world)
-    ledger.yearly_value_of = lambda node_ids: ledger._world.actors.stopped_yearly_value(node_ids)
+    ledger.yearly_value_of = lambda node_ids: ledger._world.ventures.stopped_yearly_value(node_ids)
     StaffLedger.log_staff_lost(ledger, cause, counts)
     return [message for _, message in log]
 
