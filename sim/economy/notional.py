@@ -62,7 +62,7 @@ def _estimated_prices(setup, record, market, thin: bool) -> Dict[str, float]:
                 estimated[good] = live[good] = cost
             continue
         wanted = record.goods.opening_basket.get(good, 0.0)
-        if not thin or wanted <= 0.0:
+        if not thin or wanted <= 0.0 or good not in live:     # a good traded only outside this country's markets has no price here
             continue
         depth = min(1.0, traded.get(good, 0.0) / (THIN_MARKET_SHARE_OF_OPENING_DEMAND * wanted))
         if depth >= 1.0:

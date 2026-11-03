@@ -7,7 +7,6 @@ import unittest
 
 from sim.economy import credit, credit_claims, households
 from sim.economy.accounts import Book
-from sim.economy.credit_view import claims_of
 from sim.economy.types import Loan, Transfer
 
 from sim.tests.test_economy_households import BASKET, SPECS, View, cohort
@@ -83,9 +82,6 @@ class HouseholdWealthTests(unittest.TestCase):
         orders = households.goods_orders(cohort(people=10.0, last_year_spending=5000.0, last_year_income=5000.0),
                                          Lender(), cash=CASH, income_this_year=5000.0, basket=BASKET, specs=SPECS)
         return sum(bid.flexible_quantity * bid.reference_price for bid in orders.bids)
-
-    def test_a_view_without_loans_gives_no_claims(self):
-        self.assertEqual(claims_of(View(), "household:t:0", "coin"), 0.0)
 
     def test_a_household_with_claims_spends_more_than_one_without(self):
         self.assertGreater(self.spending(10000.0), self.spending(0.0))

@@ -257,8 +257,8 @@ def _settle_income(setup, record, view, priced_goods, replacement, own, start) -
     (opening_income.py): the producers sized to that demand then pay out the income the households received.
     Workers are paid alike out of the labour share of it; owners receive the rest by what they own. The demand is what
     households buy after their own plots (opening_own.py), whose hours depend on the runs that demand takes: at each
-    income the share of hours producers hire is settled first, from the share the last income left (a nearby income's share
-    is nearly its own). `start` carries the last income found and share hired into the next opening."""
+    income the share of hours producers hire is settled first, always from the share this solve began with (a nearby
+    income's share is nearly its own), so the demand is a function of the income alone. `start` carries the last income found and share hired into the next opening."""
     people = math.fsum(cohort.people for cohort in record.cohorts.values())
     recipes = setup.recipes
     ceilings = opening_runs.run_ceilings(recipes, sites.limits_by_recipe(setup.site_limits))
@@ -268,8 +268,10 @@ def _settle_income(setup, record, view, priced_goods, replacement, own, start) -
     share = {"labour": 0.0}
     memory = opening_bid_memory.BidMemory()
     hands_hours = math.fsum(cohort.working_people for cohort in record.cohorts.values()) * setup.working_hours_per_year
+    warm_share = own.share_hired
 
     def demand_at(per_head):
+        own.share_hired = warm_share
         households_cohort.put_cohorts(record.cohorts, opening_income.with_income(record.cohorts, per_head, share["labour"]))
         for _pass in range(OWN_PLOT_PASSES):
             own.in_kind = 0.0

@@ -17,7 +17,7 @@ class YearFacts:
     output: Mapping[Tuple[AgentId, GoodId], float] = field(default_factory=dict)     # grown or made by (producer, good)
     producer_tile: Mapping[AgentId, TileId] = field(default_factory=dict)            # where a producer's output lies
     working_people: Mapping[AgentId, float] = field(default_factory=dict)            # by household cohort, soldiers under arms excluded
-    wage_per_labour_year: Mapping[AgentId, float] = field(default_factory=dict)      # by cohort: money for one working person-year
+    wage_per_labour_year: Mapping[AgentId, float] = field(default_factory=dict)      # by cohort with a wage remembered: money for one working person-year
     imports_paid: Mapping[Tuple[AgentId, GoodId], float] = field(default_factory=dict)    # money paid to EDGE_EXTERNAL
     exports_received: Mapping[Tuple[AgentId, GoodId], float] = field(default_factory=dict)  # money received from EDGE_EXTERNAL
     cash: Mapping[AgentId, float] = field(default_factory=dict)                      # money held at the year's close
@@ -54,9 +54,11 @@ def harvest(form, facts: YearFacts, prices: Mapping[GoodId, float]) -> Dict[Agen
 
 
 def adult_labour_years(form, facts: YearFacts, prices: Mapping[GoodId, float]) -> Dict[AgentId, Base]:
-    """Each cohort's working people, each worth a year of labour at the cohort's wage."""
-    return {cohort: Base(people * facts.wage_per_labour_year.get(cohort, 0.0))
-            for cohort, people in sorted(facts.working_people.items()) if people > 0.0}
+    """Each cohort's working people, each worth a year of labour at the cohort's wage; a cohort with no wage remembered
+    has no base to measure and is not assessed."""
+    return {cohort: Base(people * facts.wage_per_labour_year[cohort])
+            for cohort, people in sorted(facts.working_people.items())
+            if people > 0.0 and cohort in facts.wage_per_labour_year}
 
 
 def imports_value(form, facts: YearFacts, prices: Mapping[GoodId, float]) -> Dict[AgentId, Base]:

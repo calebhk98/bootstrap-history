@@ -4,8 +4,9 @@ Agents close their year from this: a producer from what it took in and paid out,
 it received and earned, a merchant from what it bought where. It is rebuilt every year and not saved.
 """
 from dataclasses import dataclass, field
-from typing import Dict, Iterable, List, Tuple
+from typing import Dict, Iterable, List, Optional, Tuple
 
+from .clearing_totals import MarketKey, market_totals
 from .types import AgentId, ClearingResult, Fill, GoodId, GoodsMove, LabourResult, Transfer, is_external_edge
 
 SALE_PREFIX = "sale of "    # settlement's purpose for a goods sale
@@ -31,6 +32,7 @@ class YearLedger:
     output: Dict[Tuple[AgentId, GoodId], float] = field(default_factory=dict)
     clearings: List[ClearingResult] = field(default_factory=list)
     delivered_by_market: Dict[Tuple[GoodId, str], float] = field(default_factory=dict)   # (good, area): goods settlement moved
+    totals_cache: Optional[Tuple[Dict[MarketKey, float], Dict[MarketKey, Optional[float]]]] = field(default=None, repr=False, compare=False)
     labour_results: List[LabourResult] = field(default_factory=list)
     unpaid: Dict[AgentId, float] = field(default_factory=dict)
     imports_paid: Dict[Tuple[AgentId, GoodId], float] = field(default_factory=dict)       # money paid to foreign partners
@@ -102,11 +104,18 @@ class YearLedger:
     def note_clearing(self, result: ClearingResult, delivered: float) -> None:
         """Keep a clearing and the goods its settlement delivered (less than it matched when a buyer could not pay)."""
         self.clearings.append(result)
+        self.totals_cache = None
         market = (result.good, result.area)
         self.delivered_by_market[market] = self.delivered_by_market.get(market, 0.0) + delivered
         for fill in result.fills:
             if fill.side == "buy":
                 self.buy_fills.setdefault(fill.agent, []).append(fill)
+
+    def market_totals(self):
+        """`clearing_totals.market_totals` of the year's clearings, worked out once until another clearing is noted."""
+        if self.totals_cache is None:
+            self.totals_cache = market_totals(self.clearings, self.delivered_by_market)
+        return self.totals_cache
 
     def note_labour(self, result: LabourResult, postings: Iterable[object] = (), settled: bool = True) -> None:
         """Hours count as hired and sold in proportion to the wages actually paid: hours an employer

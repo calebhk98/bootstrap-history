@@ -7,7 +7,7 @@ market area of the good clears and settles.
 """
 import dataclasses
 import math
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 from . import (currency, mint_price, land_bid_year, carriage_fleet_book, carriage_wear, households, market_curves, market_quote, merchants, producers, seller_cash, seller_offers, settlement,
                state_budget, state_store, taxes, tool_wear, unsold_search)
@@ -22,7 +22,6 @@ from .protocols import AgentOrders
 from .recipes import input_depth_order
 from .taxes_bases import YearFacts
 from .types import Bid, GoodsMove, Offer
-from .clearing_totals import market_totals
 from .entry import unmet_quantity, wanted_in_round
 from .year_ledger import YearLedger
 from .rates import own_rate
@@ -201,16 +200,15 @@ def clear_goods(setup, record, view, area_map, order_book: OrderBook, plans, led
                                lambda cohort: cohort_basket(setup, record, cohort))
     for market_id, market in left_markets.items():
         ledger.bids_by_market[market_id] = market.all_bids     # demand over the same rounds as the traded quantity
-    _remember_markets(setup, record, left_markets)
+    _remember_markets(setup, record, left_markets, ledger.market_totals())
     _record_year_markets(record, ledger, left_markets)
 
 
-def _remember_markets(setup, record, left_markets) -> None:
+def _remember_markets(setup, record, left_markets, totals) -> None:
     """Each market's memory, once, after every round: the quantity delivered over its clearings and the price weighted by
     quantity (`clearing_totals.market_totals`), so a market that traded only in the respend is remembered as traded.
     All signals are worked out from last year's memory before any of it moves."""
-    quantity, cleared = market_totals((result for market in left_markets.values() for result in market.results),
-                                      {key: market.delivered for key, market in left_markets.items()})
+    quantity, cleared = totals
     memory = record.memory
     costs = None                                  # what each good costs to make, worked out when first needed
     updates = []
@@ -218,10 +216,11 @@ def _remember_markets(setup, record, left_markets) -> None:
         key = market_key(good, area)
         old, total = market.last_price, quantity[(good, area)]
         quote_kind = None
-        if total > 0.0:
+        received = _received_price(setup, record, good, market.results) if total > 0.0 else None
+        if received is not None:
             usual = memory.volume_weights.get(key, 0.0)
             reference = memory_reference_volume(usual, wanted_at(market.all_bids, old))
-            signal = price_after_trade(old, key in memory.quote_kinds, _received_price(setup, record, good, market.results),
+            signal = price_after_trade(old, key in memory.quote_kinds, received,
                                        total, reference, market.idle_years)
             if total < REPRESENTATIVE_TRADE_SHARE * usual:
                 if costs is None:
@@ -271,16 +270,19 @@ def _record_year_markets(record, ledger: YearLedger, left_markets) -> None:
         record.memory.note_volume(key, 0.0)
 
 
-def _received_price(setup, record, good, results) -> float:
+def _received_price(setup, record, good, results) -> Optional[float]:
     """The price a market's sellers got per unit over its clearings, weighted by quantity: the settled price, plus the
-    mint's top-up where it bought coin metal."""
+    mint's top-up where it bought coin metal; None when no clearing traded."""
     spec = record.currency
     traded = [result for result in results if result.quantity > 0.0]
+    quantity = math.fsum(result.quantity for result in traded)
+    if quantity <= 0.0:
+        return None
     if not currency.has_mint(spec) or good != spec.backing_good:
-        return math.fsum(result.quantity * result.price for result in traded) / math.fsum(result.quantity for result in traded)
+        return math.fsum(result.quantity * result.price for result in traded) / quantity
     return math.fsum(result.quantity * mint_price.received_price(result.price, mint_price.mint_bought(result.fills),
                                                                  currency.mint_price(spec), result.fills)
-                     for result in traded) / math.fsum(result.quantity for result in traded)
+                     for result in traded) / quantity
 
 
 def price_after_trade(old, old_was_quote, cleared, quantity, reference_volume, quiet_years):

@@ -20,6 +20,10 @@ TOLERANCE = spin_up_run.SPIN_UP_TOLERANCE
 
 
 class ChangeGapTests(unittest.TestCase):
+    def test_a_watched_price_that_vanishes_is_a_whole_change(self):
+        self.assertEqual(spin_up_gap.price_gap({}, {"grain": 1.0}), 1.0)
+        self.assertEqual(spin_up_gap.price_gap({}, {}), 0.0)
+
     def test_a_price_is_measured_by_its_relative_change(self):
         self.assertAlmostEqual(spin_up_gap.change_gap(1.5, 1.0), 0.5)
 

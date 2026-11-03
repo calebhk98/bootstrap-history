@@ -76,11 +76,12 @@ def _empty(good, area, currency, price: Optional[float], bids, supply_at_price=0
                           market_quote.no_trade_quote(bids, offers))
 
 
-def _price_scale(bids: Sequence[Bid], last_price: Optional[float]) -> float:
+def _price_scale(bids: Sequence[Bid], last_price: Optional[float]) -> Optional[float]:
+    """The mean reference price the buyers quote, else the last price; None when neither exists."""
     references = [bid.reference_price for bid in bids if bid.reference_price > 0.0]
     if references:
         return math.fsum(references) / len(references)
-    return last_price if last_price and last_price > 0.0 else 1.0
+    return last_price if last_price and last_price > 0.0 else None
 
 
 class Buyers:
@@ -88,10 +89,15 @@ class Buyers:
 
     def __init__(self, bids: Sequence[Bid], last_price: Optional[float]):
         self.bids = sorted(bids, key=_BID_ORDER)
-        self.minimum_price = MINIMUM_PRICE_SHARE_OF_REFERENCE * _price_scale(self.bids, last_price)
+        scale = _price_scale(self.bids, last_price)
+        self.minimum_price = None if scale is None else MINIMUM_PRICE_SHARE_OF_REFERENCE * scale   # None: no unit to tie a token price to
         self.last_price = last_price
         self._wants: dict = {}     # price -> (each buyer's want, their total)
         self._traded: dict = {}    # (price, quantity available) -> what the buyers are served in all
+
+    def at_least_minimum(self, price: float) -> float:
+        """`price`, raised to the minimum price when there is one."""
+        return price if self.minimum_price is None else max(price, self.minimum_price)
 
     @cached_property
     def schedule(self) -> DemandSchedule:
@@ -184,7 +190,7 @@ def clear(bids: Sequence[Bid], offers: Sequence[Offer], good: GoodId, area: Area
 
 def _asks(buyers: Buyers, ordered: Sequence[Offer]) -> List[float]:
     """The prices the offers are sold at: each ask, none below the token price that keeps prices positive."""
-    return [max(offer.reservation_price, buyers.minimum_price) for offer in ordered]
+    return [buyers.at_least_minimum(offer.reservation_price) for offer in ordered]
 
 
 def _trades(buyers: Buyers, ordered: Sequence[Offer], asks: Sequence[float]) -> bool:
@@ -231,9 +237,9 @@ def requested_by_buyers(buyers: Buyers, offers: Sequence[Offer]) -> float:
     return allocate(buyers.bids, ordered, asks, buyers.schedule).requested
 
 
-def price_and_sold(buyers: Buyers, ordered: List[Offer], seller: str) -> Tuple[float, float]:
-    """The clearing price and what a seller that is not a book edge sells, as `clear` gives them, without
-    building fills. `ordered` is in clearing order (`in_clearing_order`, `with_offer`)."""
+def price_and_sold(buyers: Buyers, ordered: List[Offer], seller: str) -> Tuple[Optional[float], float]:
+    """The clearing price (None when the market has none) and what a seller that is not a book edge sells, as `clear` gives
+    them, without building fills; called only by tests. `ordered` is in clearing order (`in_clearing_order`, `with_offer`)."""
     price, eligible, supply, _wants = crossing(buyers, ordered, with_wants=False)
     if eligible is None:
         return price, 0.0
@@ -262,8 +268,7 @@ def crossing(buyers: Buyers, offers: List[Offer], with_wants: bool = True):
     if not offers:
         return held_price, None, 0.0, None
 
-    minimum_price = buyers.minimum_price
-    effective = [max(offer.reservation_price, minimum_price) for offer in offers]
+    effective = [buyers.at_least_minimum(offer.reservation_price) for offer in offers]
     schedule = buyers.schedule
 
     demand_at_first = schedule.total_at(effective[0])
@@ -275,7 +280,7 @@ def crossing(buyers: Buyers, offers: List[Offer], with_wants: bool = True):
         lowest = effective[0]
         price = held_price if last_price is not None and lowest <= last_price else lowest
         supply = math.fsum(offer.quantity for offer, reservation in zip(offers, effective)
-                           if reservation <= max(price, minimum_price))
+                           if reservation <= buyers.at_least_minimum(price))
         return price, None, supply, None
 
     levels, running = [], 0.0

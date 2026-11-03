@@ -110,7 +110,7 @@ class ClearingTests(unittest.TestCase):
         self.assertEqual(result.fills, ())
         self.assertEqual(result.price, 2.5)
         self.assertAlmostEqual(result.unmet_floor, 5.0)
-        self.assertEqual(run([bid(floor=1.0)], [], None).price, 0.0)
+        self.assertIsNone(run([bid(floor=1.0)], [], None).price)
 
     def test_no_bids_keeps_last_price_if_a_seller_would_sell_at_it(self):
         result = run([], [offer("a", 5.0, 1.0)], last_price=3.0)
