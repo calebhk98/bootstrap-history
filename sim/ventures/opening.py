@@ -62,7 +62,9 @@ class Opening(Part):
 				                      "advance against a purchase you can raise %s"
 				                      % (money_text(fee, grouped=True), money_text(needs.acting_balance(), grouped=True),
 				                         money_text(needs.spending_power("buy"), grouped=True)))
-			needs.send(PayEdge(edges.EDGE_BUILDERS, fee, "opening a venture"))
+			refusal = needs.send(PayEdge(edges.EDGE_BUILDERS, fee, "opening a venture"))
+			if refusal:
+				return False, refusal
 		# A reopening keeps the plant's first opening year, so the ramp does not restart.
 		year = needs.year()
 		business.lifecycle.open_plant(node_id, year)
@@ -137,7 +139,9 @@ class Opening(Part):
 				               % (node_id, add_units, money_text(fee, grouped=True),
 				                  money_text(needs.acting_balance(), grouped=True),
 				                  money_text(needs.spending_power("buy"), grouped=True)))
-			needs.send(PayEdge(edges.EDGE_BUILDERS, fee, "expanding a venture"))
+			refusal = needs.send(PayEdge(edges.EDGE_BUILDERS, fee, "expanding a venture"))
+			if refusal:
+				return False, refusal
 		units_now = have + add_units
 		self.seat.business.tally.set_size(node_id, units_now)
 		self.bump_seat(INSTITUTION_UNITS_CHANGES)

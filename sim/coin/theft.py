@@ -56,7 +56,8 @@ class Theft(Part):
         taken = min(wanted, exposure.purse)
         if taken > 0.0:
             if holder is None:
-                self.needs.send(PayEdge(edges.EDGE_THIEVES, taken, cause))
+                if self.needs.send(PayEdge(edges.EDGE_THIEVES, taken, cause)):   # the purse cannot be taken from: no theft happened
+                    return 0.0
             else:
                 self.needs.send(PayEdgeFrom(holder, edges.EDGE_THIEVES, taken, cause))
         return taken

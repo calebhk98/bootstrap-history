@@ -5,4 +5,5 @@ WALL = "two-way"  # nothing here imports sim/engine/; the engine bridge hands it
 from .commands import STORE_ACTOR, STORE_GRANARY, STORE_STOCK, BankStock, ChangeStock, CloseCashPeriod, CreditSeat, DebitSeat, DrawDownStock, NoteSeatCash, NoteSpend, OpenCashBook, OpenPurse, PayActor, PayActorFromEdge, PayActorFromHousehold, PayEdge, PayEdgeFrom, PayExchange, NoteHolderBooking, PayWages, ReceiveFromEdge, ReceiveFromExchange, RescaleHouseholdMoney, RestorePurse, SettleWithEdge, TakeFromHouseholdPurse, WithdrawHouseholdMoney
 from . import cash_book, rules
 from .seat_account import SeatAccount
+from .unpaid import UNPAID_CHARGE_KIND, pay_edge_or_log
 from .state import LedgerSeat, LedgerWorld

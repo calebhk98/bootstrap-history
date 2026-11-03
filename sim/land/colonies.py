@@ -72,7 +72,9 @@ class Colonies(Part):
         if cause == "cannot_afford":
             return Refusal(cause, "outfitting %s settlers costs %s, more than you can raise" % (
                 needs.plain_number(settlers), needs.money_text(cost, grouped=True)))
-        needs.send(PayEdge(edges.EDGE_BUILDERS, cost, "outfitting a settlement"))
+        refusal = needs.send(PayEdge(edges.EDGE_BUILDERS, cost, "outfitting a settlement"))
+        if refusal:
+            return refusal
         needs.send(SendSettlers(settlers))
         self.parts.ownership.hand_over(tile_id, self.clock.acting_seat, tile_owners.settlement_level(), "colony founded")
         self.seat.colonies.append({

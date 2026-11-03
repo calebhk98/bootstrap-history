@@ -77,7 +77,9 @@ class Trading(Part):
         its own coin's metal, as every foreign payment is."""
         if not self.needs.can_pay(command.cost):
             return Refusal("cannot_afford", "cannot pay %.6g for %s" % (command.cost, command.material))
-        self.needs.send(PayEdge(edges.EDGE_MARKET, command.cost, "stock bought abroad"))
+        refusal = self.needs.send(PayEdge(edges.EDGE_MARKET, command.cost, "stock bought abroad"))
+        if refusal:
+            return refusal
         self.needs.send(ChangeStock(self.parts.holding.commodity_of(command.material), command.tonnes))
         self.needs.send(SettleFlow(command.partner, command.tonnes, command.cost))
         return True
@@ -128,7 +130,9 @@ class Trading(Part):
                  "chance_caught": command.chance_caught}
         if not self.needs.can_pay(command.cost):
             return Refusal("cannot_afford", "cannot pay %.6g to carry %s" % (command.cost, command.material))
-        self.needs.send(PayEdge(edges.EDGE_MARKET, command.cost, "stock smuggled"))
+        refusal = self.needs.send(PayEdge(edges.EDGE_MARKET, command.cost, "stock smuggled"))
+        if refusal:
+            return refusal
         caught = stock_dynamics.is_caught(self.smuggling_draw(terms), command.chance_caught)
         has_government = self.needs.partner[command.partner]["has_government"]
         outcome = dict(terms, ok=True, caught=caught, delivered_units=0.0, closed_until=None)

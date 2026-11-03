@@ -10,7 +10,7 @@ RecordEvent)."""
 from sim.agents.api import edges
 from sim.assembly.api import Part
 from sim.knowledge.api import ForgetTechnique
-from sim.ledger.api import PayEdge
+from sim.ledger.api import pay_edge_or_log
 from sim.reporting.api import RecordEvent
 from sim.seats.api import EndRun
 from sim.unit_conversions import PERCENT_SCALE
@@ -63,10 +63,13 @@ class Year(Part):
 		seat.eminence = seat.eminence * constants.EMINENCE_DECAY_RATE + self.parts.eminence.prominence_hazard()
 		# you can buy your way out of trouble, and a sane player does
 		capital = needs.acting_balance()
+		spend = 0.0
 		if (seat.scandal > constants.AUTO_BRIBE_SCANDAL_THRESHOLD and capital > self.parts.eminence.priced(constants.AUTO_BRIBE_CAPITAL_THRESHOLD_LABOUR_HOURS)
 				and needs.founder()["policy"].get("auto_bribe", not needs.automation()["manual"])):
 			spend = min(capital * constants.AUTO_BRIBE_CAPITAL_SHARE, seat.scandal * self.parts.eminence.priced(constants.AUTO_BRIBE_COST_LABOUR_HOURS_PER_SCANDAL_POINT))
-			needs.send(PayEdge(edges.EDGE_OFFICIALS, spend, "bribes"))
+			if not pay_edge_or_log(needs.send, edges.EDGE_OFFICIALS, spend, "bribes"):   # unpaid, no one is bought
+				spend = 0.0
+		if spend > 0.0:
 			seat.bribes_ytd = constants.BRIBES_YTD_DECAY * seat.bribes_ytd + spend
 			seat.scandal -= (spend / self.parts.eminence.priced(constants.BRIBE_SCANDAL_REDUCTION_LABOUR_HOURS_PER_POINT) * weights["bribability"])
 		else:

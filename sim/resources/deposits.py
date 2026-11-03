@@ -160,7 +160,9 @@ class Deposits(Part):
         if not self.needs.can_pay(cost):
             return Refusal("cannot_afford", "prospecting %.0f person-days costs about %s; %s." % (
                 person_days, self.needs.money_text(cost, True), self.needs.afford_means()), cost=cost)
-        self.needs.send(PayEdge(edges.EDGE_BUILDERS, cost, "prospecting"))
+        refusal = self.needs.send(PayEdge(edges.EDGE_BUILDERS, cost, "prospecting"))
+        if refusal:
+            return refusal
         seat = self.seat
         already = {row["id"] for row in seat.deposits_found}
         seed = self.needs.weather_seed(0, region="prospecting")   # the game's own dice, kept in the save

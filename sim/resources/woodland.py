@@ -72,7 +72,9 @@ class Woodland(Part):
         cost = hectares * self.forest_price_per_hectare()
         if cost > 0 and not self.needs.can_pay(cost):
             return Refusal("cannot_afford", "the coppice costs more than the purchase budget covers", cost=cost)
-        self.needs.send(PayEdge(edges.EDGE_LANDOWNERS, cost, "forest bought"))
+        refusal = self.needs.send(PayEdge(edges.EDGE_LANDOWNERS, cost, "forest bought"))
+        if refusal:
+            return refusal
         self.seat.forest_ha += hectares
         self.bump_seat(FOREST)
         return hectares
@@ -85,7 +87,9 @@ class Woodland(Part):
         cost = square_metres * self.nitre_base_cost() * self.needs.price_index()
         if not self.needs.can_pay(cost):
             return Refusal("cannot_afford", "the nitre beds cost more than the purchase budget covers", cost=cost)
-        self.needs.send(PayEdge(edges.EDGE_BUILDERS, cost, "nitre beds laid down"))
+        refusal = self.needs.send(PayEdge(edges.EDGE_BUILDERS, cost, "nitre beds laid down"))
+        if refusal:
+            return refusal
         self.seat.nitre_bed_m2 += square_metres
         self.bump_seat(NITRE)
         return square_metres
