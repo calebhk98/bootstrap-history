@@ -18,7 +18,7 @@ from . import producer_table
 from .home_scope import has_partners
 from . import households_cohort
 from . import recipes as recipes_module
-from . import carriage_fleet_book, durable_stock, equity, goods_market, opening_basket, opening_bid_memory, opening_income, opening_metal, opening_own, opening_placement, opening_plans, opening_rent, opening_resting, opening_runs, households, households_store, labour_state, location, location_inputs, mint, opening_stores, ownership, sites, titles
+from . import carriage_fleet_book, durable_stock, equity, land_lease_year, goods_market, opening_basket, opening_bid_memory, opening_income, opening_metal, opening_own, opening_placement, opening_plans, opening_rent, opening_resting, opening_runs, households, households_store, labour_state, location, location_inputs, mint, opening_stores, ownership, sites, titles
 from sim.book import Book
 from .market_areas import AreaMap
 from .market_memory import MarketMemory, YearView, market_key
@@ -168,7 +168,8 @@ def _open(setup: EconomySetup, replacement: float, plans=None, start=None) -> Tu
         _open_country_producers(setup, record, area_map, carriage, priced_goods, final_by_tile, country)
     sites.apply_site_limits(record, setup)
     opening_runs.fit_to_supply(setup, record)
-    rent = opening_rent.settle(setup, record, view, own.hectares_by_tile(record.cohorts))
+    rent = opening_rent.settle(setup, record, view, own.hectares_by_tile(record.cohorts),
+                               land_lease_year.own_plot_returns(setup, record, view, own.options))
     figure = record.capital_markets.property_income
     record.capital_markets.set_property_income(opening_rent.property_income_with_rent(figure, rent))
     incomes = opening_rent.income_after_rent({agent_id: cohort.last_year_income for agent_id, cohort in record.cohorts.items()},

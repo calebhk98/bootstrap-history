@@ -4,7 +4,6 @@
 `step(inputs)` runs a year and returns what the engine reads back.
 """
 import dataclasses
-import math
 from dataclasses import dataclass, field
 from typing import Any, Dict, Mapping, Optional, Tuple
 
@@ -71,13 +70,12 @@ class YearOutcome:
 
 def plant_worth_ratio(yearly_return: float, rate: float, life_years: float) -> float:
     """What a plant earning `yearly_return` per unit of its cost for its whole life is worth, as a multiple
-    of that cost, discounted at `rate`: an annuity, so a rate near zero is bounded by the plant's life. A
-    plant that does not wear out has no life to bound it, so it earns no ceiling above its cost."""
+    of that cost, discounted at `rate`: the return over the cost's recovery factor (`capital_market.capital_recovery_factor`),
+    so a rate near zero is bounded by the plant's life. A plant that does not wear out has no life to bound it,
+    so it earns no ceiling above its cost."""
     if life_years <= 0.0:
         return 1.0
-    if rate <= 1e-9:
-        return yearly_return * life_years
-    return yearly_return * -math.expm1(-life_years * math.log1p(rate)) / rate
+    return yearly_return / capital_market.capital_recovery_factor(rate, life_years)
 
 
 class Economy:
@@ -201,8 +199,6 @@ class Economy:
         for orders in inputs.engine_orders.values():
             everyone.extend(orders.labour_offers)    # a seat's own hours, sold at the market's wage
         context = labour_context(setup, record, view, self.carriage, inputs, self.own_plot_options(), outside_option)
-        context = dataclasses.replace(context, outlay_room=outlay_room.by_employer(
-            plans, setup.state_agent, record.state_budget, lambda employer: record.book.balance(employer, money)))
         held_placed = bondage_hours.place_held(
             record.unfree.bonded_held, lambda area, trade: people_by_trade(record.labour.workforce, area).get(trade, 0.0), everyone, labour_bids,
             setup.working_hours_per_year, context.ask_floor_per_worker_year, labour_area)
@@ -210,6 +206,8 @@ class Economy:
                 in bondage_hours.payable_keep(held_placed.keep, lambda employer: record.book.balance(employer, money))]
         record.book.transfer_many(keep)
         ledger.note_paid_outside_markets(keep)
+        context = dataclasses.replace(context, outlay_room=outlay_room.by_employer(     # after the keep is paid out of the purses
+            plans, setup.state_agent, record.state_budget, lambda employer: record.book.balance(employer, money)))
         placed = bondage_hours.place(record.unfree.bondage, held_placed.offers, held_placed.bids,
                                      bondage_hours.works_of_producers(record), bondage.BONDED_HOURS_OWED_SHARE)
         everyone, labour_bids = placed.offers, placed.bids

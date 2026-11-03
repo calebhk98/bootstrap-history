@@ -2,7 +2,9 @@
 property income contains it, so a year after the opening sees the same rent and costs as the opening.
 
 Each test calls one plain function with written-out inputs (sim/economy/opening_rent.py, opening_income.py)."""
+import types
 import unittest
+from unittest import mock
 
 from sim.economy import opening_income, opening_rent
 from sim.economy.types import Recipe
@@ -57,6 +59,19 @@ class PropertyIncomeSplitTests(unittest.TestCase):
     def test_rent_beyond_the_property_income_is_all_the_property_income_there_is_plus_the_excess(self):
         split = opening_rent.property_income_with_rent({"a": 10.0}, {"a": 30.0})
         self.assertAlmostEqual(split["a"], 30.0)
+
+
+class OwnPlotReturnTests(unittest.TestCase):
+    def test_the_rent_is_posted_against_the_return_of_the_households_own_plots(self):
+        record = types.SimpleNamespace(producers={})
+        result = types.SimpleNamespace(rent_per_hectare_by_tile={})
+        with mock.patch.object(opening_rent.land_market, "post_rents", return_value=(result, {})) as post, \
+                mock.patch.object(opening_rent.land_market, "rent_postings", return_value=[]), \
+                mock.patch.object(opening_rent.land_rents, "booked_by_tile", return_value={}), \
+                mock.patch.object(opening_rent.ownership, "spread", return_value=[]):
+            record.land = types.SimpleNamespace()
+            opening_rent.settle(types.SimpleNamespace(currency_id="coin"), record, None, {"t": 2.0}, {"t": 5.0})
+        self.assertEqual(post.call_args.args[-1], {"t": 5.0})
 
 
 class WorkingShareTests(unittest.TestCase):

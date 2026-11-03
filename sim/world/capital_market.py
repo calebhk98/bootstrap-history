@@ -5,6 +5,7 @@ demanded to funds held; the rate is the civilisation's starting rate (an initial
 how far that ratio has moved from its starting value; a borrower pays that rate plus a premium for its
 own arrears, less a discount for its own standing.
 """
+import math
 from typing import Optional
 
 from sim.constants import declare
@@ -56,9 +57,8 @@ def capital_recovery_factor(rate: float, life_years: float) -> float:
     still unpaid: one over the life when the rate is nil, the rate when the life is endless."""
     if life_years <= 0.0:
         raise ValueError("a plant needs a positive life")
-    if rate <= 0.0:
-        return 1.0 / life_years
-    return rate / (1.0 - (1.0 + rate) ** -life_years)
+    paid_off = -math.expm1(-life_years * math.log1p(rate)) if rate > 0.0 else 0.0     # the share of a unit repaid by one year's annuity of 1/rate
+    return rate / paid_off if paid_off > 0.0 else 1.0 / life_years     # a rate too small to register is nil
 
 
 def establishment_carry_factor(rate: float, establishment_years: float) -> float:
