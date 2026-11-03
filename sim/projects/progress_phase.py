@@ -5,6 +5,7 @@ labour and bill follow from that, whether the household can afford the bill, the
 check. Every random draw the stages make (completion rolls the dice once per attempt) runs once, in this order, for each
 project."""
 from sim.agents.api import edges
+from sim.assembly.api import Part
 from sim.ledger.api import NoteSpend, PayEdge
 from sim.materials.api import ApplyThrottle, ReorderProjectMaterials
 from sim.refusal import Refusal
@@ -16,7 +17,7 @@ from .arrears_hours_line import arrears_hours_line
 from .hour_offer import hours_offered, unmet_directive_cause
 
 
-class ProgressPhase:
+class ProgressPhase(Part):
 	def apply_advance_projects(self, command):
 		"""The year's progress step for the acting seat: (hours left in the pool, the same before wage work, the hours
 		the projects effectively used)."""
@@ -164,7 +165,7 @@ class ProgressPhase:
 		# one out of the share the player asked for it to have.
 		needs = self.needs
 		_dir_hours = needs.hour_commitments()["allocations"].get(node_id)
-		_pace_cap = self.project_hour_pace(node_id)
+		_pace_cap = self.parts.progress_hours.project_hour_pace(node_id)
 		_project_throttle = needs.send(ApplyThrottle(node_id))
 		per = hours_offered(remaining, _pace_cap, _dir_hours, _project_throttle)
 		remaining -= per
@@ -222,7 +223,7 @@ class ProgressPhase:
 			project_state["cost_left"] = max(0.0, needs.project_cost(node_id) - project_state["spent"])
 		# LABOUR BY TRADE, HOURS A TOTAL AND A CEILING: what binds is the scarcest trade this project actually needs
 		# (see lab_year_draw); this call site only has to act on what it returns.
-		hired_hours, worst, frac, _abandon = self.lab_year_draw(node_id, project_state, frac, hired_left)
+		hired_hours, worst, frac, _abandon = self.parts.progress_hours.lab_year_draw(node_id, project_state, frac, hired_left)
 		if _abandon:
 			needs.send(RecordEvent.of("project_abandoned", "ABANDONED %s: %s" % (node_id, _abandon)))
 			self.seat.active.pop(node_id, None)
@@ -316,13 +317,13 @@ class ProgressPhase:
 			if _inner_gap > 1.0 and project_state.get("why_underfunded") and needs.acting_balance() >= 0:
 				directed_hours_unused.append((node_id, round(_inner_gap, 0), project_state["why_underfunded"]))
 			elif _inner_gap > 1.0 and project_state.get("short_of_trade"):
-				directed_hours_unused.append((node_id, round(_inner_gap, 0), self.trade_shortfall_note(project_state)))
+				directed_hours_unused.append((node_id, round(_inner_gap, 0), self.parts.progress_hours.trade_shortfall_note(project_state)))
 		# Count it HERE, after the hired-hours scaling and the affordability clamp, not before them: accumulating the
 		# notional figure instead would make the year's project spend disagree with the actual capital movement.
-		self.spent_this_year += money
+		self.parts.applied.spent_this_year += money
 		# calendar_floor, NOT a second copy of this formula - expected_calendar_years needs the identical figure to
 		# project retries honestly.
-		floor = self.calendar_floor(node_id)
+		floor = self.parts.risk.calendar_floor(node_id)
 		# THE BILL HAS TO BE PAID. Hours done and years elapsed are not enough; if the money never arrived, the thing was
 		# never built.
 		# HALF AN HOUR IS NOTHING LEFT TO DO: the give-back hands back a fraction of what was offered, so on a throttled
@@ -331,9 +332,9 @@ class ProgressPhase:
 		if project_state["ph_left"] < 0.5:
 			project_state["ph_left"] = 0.0
 		if project_state["ph_left"] <= 0 and project_state["yrs"] >= floor:
-			self.settle_cost_tail(node_id, project_state)
+			self.parts.cost_tail.settle_cost_tail(node_id, project_state)
 		if project_state["ph_left"] <= 0 and project_state["yrs"] >= floor and project_state["cost_left"] <= 0.5:
-			self._complete(node_id)
+			self.parts.completion._complete(node_id)
 			if _afford_context is not None:
 				_afford_context["revenue"] = needs.revenue_estimate()
 				_afford_context["upkeep"] = needs.upkeep()
@@ -345,7 +346,7 @@ class ProgressPhase:
 		#    gives every project equal attention finishes nothing, which is a real failure mode but not the one we are
 		#    trying to model here.
 		needs = self.needs
-		active_sorted = self.hour_priority_queue()
+		active_sorted = self.parts.hour_queue.hour_priority_queue()
 		remaining = pool
 		needs.send(ResetTradeHours())
 		# Summed as the loop runs, not re-read from the active record afterwards, because a project that completes THIS
@@ -384,7 +385,7 @@ class ProgressPhase:
 			needs.send(RecordEvent.from_line(arrears_hours_line(_arrears_hours_lost, needs.plain_number)))  # plain line: arrears_hours_line builds the LogLine and its kind
 		# A STANDING ALLOCATION THE PLAYER GAVE, AND DID NOT GET - SAID, NOT LEFT FOR THEM TO NOTICE. Sorted by id for a
 		# deterministic order across runs with the same seed - several projects can be cut short in the same year.
-		self.report_unused_directed_hours(_directed_hours_unused)
+		self.parts.allocation_notes.report_unused_directed_hours(_directed_hours_unused)
 		# Snapshot BEFORE 5b spends more of `remaining` on wage work: otherwise offered_to_projects below double-counts
 		# wage hours as though they had been offered to projects too, since 5b draws from the same pool.
 		remaining_after_projects = remaining

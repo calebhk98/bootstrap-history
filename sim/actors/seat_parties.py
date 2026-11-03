@@ -8,6 +8,7 @@ module. It holds no record of the seat's dealings or business: it reads them fro
 from typing import Any, ContextManager, Dict, Iterable, Optional
 
 from sim.agents.api import HouseholdParty
+from sim.assembly.api import Part
 from sim.knowledge.api import ReceiveTechniques
 from sim.ledger.api import CreditSeat, DebitSeat, NoteSeatCash, RestorePurse
 from sim.seats.api import SetDealing
@@ -76,11 +77,7 @@ class Ports:
         self._needs.send(AdoptPlant(self._seat_id, plant))
 
 
-class SeatParties:
-    """Mixed into `Actors`."""
-
-    needs: Any
-    world: Any
+class SeatParties(Part):
 
     def seat_party(self, seat_id: str, margins: Optional[Dict[str, float]] = None) -> HouseholdParty:
         """`seat_id` as an actor an exchange can deal with: it holds patents and shares, pays and is paid."""
@@ -94,4 +91,4 @@ class SeatParties:
         """The actor with this id: a seat that has joined, else one in the registry."""
         if isinstance(actor_id, str) and actor_id in self.needs.seat_list()["joined"]:
             return self.seat_party(actor_id)
-        return self.cast().get(actor_id) if isinstance(actor_id, str) else None
+        return self.parts.cast.cast().get(actor_id) if isinstance(actor_id, str) else None

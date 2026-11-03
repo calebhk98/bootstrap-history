@@ -1,9 +1,11 @@
 """Who gets the founder's hours first: the one queue the allocator and every screen read, so a displayed rank is the rank
 the next step applies."""
+from sim.assembly.api import Part
+
 from .hour_offer import priority_queue
 
 
-class HourQueue:
+class HourQueue(Part):
 	def hour_priority_queue(self):
 		"""Active projects in the order they draw on the hour pool: projects with a standing `allocate` first, then the
 		rest by tree priority."""

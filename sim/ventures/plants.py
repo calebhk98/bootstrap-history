@@ -6,7 +6,7 @@ from sim.production.api import RefreshOperatingCaches
 from .channels import INSTITUTION_UNITS_CHANGES, OPERATING_CHANGES
 
 
-class Business(Part):
+class Plants(Part):
 
 	def mothballed(self):
 		"""The works the acting seat has shut and may reopen (the live set)."""

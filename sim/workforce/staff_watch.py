@@ -1,10 +1,11 @@
 """Telling the world when the payroll changes: the seat's employees report each change, and the staff channel moves."""
+from sim.assembly.api import Part
 from sim.invalidating import _InvalidatingDict
 
 from .state import STAFF
 
 
-class StaffWatch:
+class StaffWatch(Part):
 
     def staff_changed(self):
         """Something on the acting seat's payroll changed."""

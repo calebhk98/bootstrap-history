@@ -1,13 +1,15 @@
 """The project order: which projects the household's hours serve first. Saved with the game, changed by three commands."""
 from typing import Tuple
 
+from sim.assembly.api import Part
+
 from . import order_rules
 from .commands import PutProjectFirst, ReorderProjects, RestoreProjectOrder
 
 ORDER = "order"        # the project order changed
 
 
-class ProjectOrder:
+class ProjectOrder(Part):
 	def project_order(self) -> Tuple[str, ...]:
 		return tuple(self.world.order)
 

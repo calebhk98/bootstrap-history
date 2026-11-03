@@ -1,12 +1,14 @@
 """The yearly staffing check: which concerns a real shortfall of people forces shut."""
 from collections import defaultdict
 
+from sim.assembly.api import Part
+
 from .constants import FOUNDER_IS_WORTH, STAFFING_CLOSURE_SLACK
 from .staffing_choice import (HAND_RESOURCES, closures_for_shortfall, flagged_claims, flagged_concerns, missing_when_opened,
                               people_to_hire_for, shortfalls_beyond, staffing_allowances)
 
 
-class StaffingShortfall:
+class StaffingShortfall(Part):
 	def _staffing_draw_of(self, node_id, foreman_units=None):
 		"""What one concern holds of each resource, whether or not it is running.
 
@@ -81,7 +83,7 @@ class StaffingShortfall:
 		needs = self.needs
 		operating = needs.operating()
 		concerns = flagged_concerns(self.seat.keep_staffed, needs.techniques_held(), needs.tree_nodes(), operating,
-		                            self.staff_closure_age)
+		                            self.parts.closures.staff_closure_age)
 		if not concerns:
 			return {}
 		claimed, totals = flagged_claims(

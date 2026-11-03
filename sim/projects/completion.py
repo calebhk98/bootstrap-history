@@ -5,6 +5,7 @@ the calendar banked, the loss charged and logged); a finished project leaves the
 applies its effects, earns standing, and may hand over the staff an institution grants. The goal's road is read before
 and after so the log can say how finishing moved it."""
 from sim.agents.api import edges
+from sim.assembly.api import Part
 from sim.knowledge.api import LearnTechnique, RevealFrom
 from sim.diffusion.api import ApplyTechEffects
 from sim.ledger.api import PayEdge
@@ -25,8 +26,8 @@ from .permanent_benefit import permanent_parts
 from .risk_rules import attempt_fails
 
 
-class Completion:
-	def _setup_completion(self) -> None:
+class Completion(Part):
+	def setup(self) -> None:
 		self._goal_closures = {}                  # goal -> the nodes it needs (the tree does not change under a goal)
 
 	def reputation_gain_of(self, node):
@@ -103,7 +104,7 @@ class Completion:
 	def _complete(self, node_id):
 		needs = self.needs
 		node = needs.tree_nodes()[node_id]
-		_risk_this_attempt = self.effective_risk(node_id)
+		_risk_this_attempt = self.parts.risk.effective_risk(node_id)
 		if attempt_fails(needs.game_random().random(), _risk_this_attempt):
 			self._fail_attempt(node_id, _risk_this_attempt)
 			return
@@ -175,7 +176,7 @@ class Completion:
 		# A bounty's claimant redoes the work: the poster's prize holds and no hours or money fall on the poster.
 		self.seat.active[node_id]["ph_left"] = (
 			0.0 if claimed else
-			node["ph"] * self.rebuild_work_factor(node_id) * FAILURE_RESET_SHARE)
+			node["ph"] * self.parts.rebuild.rebuild_work_factor(node_id) * FAILURE_RESET_SHARE)
 		# THE CALENDAR CLOCK IS NOT WIPED: a failed attempt must not reset the multi-year diffusion clock to zero,
 		# restarting the whole process from nothing. Even ONE failed attempt already does real social groundwork
 		# (workshops retooled, a workforce that has seen it once, a regulator who already sat through the pitch), so the
@@ -183,7 +184,7 @@ class Completion:
 		# that has nothing to show after only one failure. What this banks keeps growing, with diminishing returns, as
 		# the failure count grows, and is capped well short of the whole clock (RETRY_CALENDAR_CAP) so a retried
 		# programme is only ever readier, never instantly ready.
-		_retain = self._retry_calendar_retain(node_id)
+		_retain = self.parts.risk._retry_calendar_retain(node_id)
 		self.seat.active[node_id]["yrs"] = _yrs_before * _retain
 		_lost = 0.0 if claimed else needs.failure_loss(node_id)
 		_severity = self.failure_severity(node_id, max(0.0, _lost), needs.funding_capacity())
@@ -196,7 +197,7 @@ class Completion:
 				needs.send(RecordEvent.of("failure_loss", "%s: %s" % (node["name"], _loss_line)))
 		self.seat.active[node_id]["cost_left"] = (self.seat.active[node_id].get("cost_left") or 0.0) + (_lost - _borne)
 		# A failure always announces itself; its size sets how loudly.
-		_next_risk = self.effective_risk(node_id)
+		_next_risk = self.parts.risk.effective_risk(node_id)
 		_banked = self.seat.active[node_id]["yrs"]
 		attempts = self.seat.failed_attempts[node_id]
 		if claimed:

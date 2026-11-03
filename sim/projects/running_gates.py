@@ -1,14 +1,15 @@
 """The works a node needs running: what is missing, the sentence that says so, and closing what relied on a lapsed work."""
+from sim.assembly.api import Part
 from sim.refusal import Refusal
 from sim.reporting.api import RecordEvent
 
 from . import closure_reasons, running_gate_rules
 
 
-class RunningGates:
+class RunningGates(Part):
 	CLOSED_GATE_LAPSED = closure_reasons.CLOSED_GATE_LAPSED
 
-	def _setup_running_gates(self) -> None:
+	def setup(self) -> None:
 		self._gate_index_cache = None             # (the tree it was built from, {work: ids that require it running})
 
 	def _unmet_of(self, node):
@@ -85,5 +86,5 @@ class RunningGates:
 			unmet = self.unmet_running_gates(node_id)
 			needs.send(RecordEvent.of("work_closed_gate_lapsed", "%s closed: the work it needs running (%s) has stopped"
 			                          % (node_id, ", ".join(unmet)), work=node_id, gates=list(unmet)))
-			self.close_work(node_id, self.CLOSED_GATE_LAPSED, year, cascade=False)
+			self.parts.closures.close_work(node_id, self.CLOSED_GATE_LAPSED, year, cascade=False)
 			closed.append(node_id)

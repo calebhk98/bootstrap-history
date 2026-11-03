@@ -7,8 +7,8 @@ the land and the seats it reads through the views its spec declares."""
 from sim.assembly.api import Module
 
 from .cast import Cast
-from .contact import Contact
 from .cause_views import CauseViews
+from .contact import Contact
 from .country_views import CountryViews
 from .lending import Lending
 from .literacy_views import LiteracyViews
@@ -19,8 +19,18 @@ from .staff import Staff
 from .year import Year
 
 
-class Actors(Cast, Society, CountryViews, LiteracyViews, CauseViews, Lending, SeatParties, SeatExchange, Staff, Contact, Year, Module):
+class Actors(Module):
 
-	def setup(self) -> None:
-		self._registry = None   # never saved: rebuilt over the world slot on first use and after a load
-		self._extensions = None   # never saved: asked of the providers on first use
+	PARTS = {
+		"cast": Cast,
+		"society": Society,
+		"country_views": CountryViews,
+		"literacy_views": LiteracyViews,
+		"cause_views": CauseViews,
+		"lending": Lending,
+		"seat_parties": SeatParties,
+		"seat_exchange": SeatExchange,
+		"staff": Staff,
+		"contact": Contact,
+		"year": Year,
+	}

@@ -5,9 +5,13 @@
 
 A table view is given as its value (or a function of no arguments), a keyed view as a dict (or a function of the
 key), a quote as a function of its arguments. The module's own views are its own methods, as in a game."""
+from types import SimpleNamespace
 from typing import Any, Dict, List, Optional
 
 from sim.assembly.api import Clock
+
+
+_ASSEMBLY_NAMES = ("parts", "needs", "world", "seat", "clock", "module_id", "kernels")
 
 
 class _FakeView:
@@ -59,7 +63,28 @@ def _calling_its_parts(implementation: type) -> type:
 		for method, value in vars(part_class).items():
 			if callable(value) and not method.startswith("__") and not hasattr(implementation, method) and method not in added:
 				added[method] = forwarder(part_name, method)
-	return type(implementation.__name__, (implementation,), added) if added else implementation
+
+	def set_on_the_part(self, name: str, value: Any) -> None:
+		"""A test replaces a method or a remembered figure on the module; the part that owns it takes the replacement, so the parts that call it see it."""
+		if name not in _ASSEMBLY_NAMES and self.__dict__.get("parts") is not None:
+			for part in vars(self.parts).values():
+				if name in vars(part) or hasattr(type(part), name):
+					setattr(part, name, value)
+					return
+		object.__setattr__(self, name, value)
+	added["__setattr__"] = set_on_the_part
+	return type(implementation.__name__, (implementation,), added)
+
+
+def part(part_class: type, siblings: Optional[Dict[str, Any]] = None, views: Optional[Dict[str, Any]] = None,
+         answers: Optional[Dict[type, Any]] = None, world: Any = None, seat: Any = None) -> Any:
+	"""One part over a stand-in module: `siblings` are the parts it reaches as `self.parts.<name>` (anything with the methods it calls),
+	`views` and `answers` as for `build`. The part's `setup()` is not run."""
+	module = SimpleNamespace(parts=SimpleNamespace(**(siblings or {})), clock=Clock(), module_id="under_test", kernels={}, world=world, seat=seat,
+	                         needs=_FakeNeeds(views or {}, answers or {}), seat_of=lambda seat_id: None, seat_version=lambda channel: None)
+	instance = part_class(module)
+	instance.needs = module.needs
+	return instance
 
 
 def sent(module: Any) -> List[Any]:

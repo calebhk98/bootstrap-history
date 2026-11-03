@@ -3,6 +3,7 @@
 `start_project` is the PLAYER-CHOSEN start. It applies the same legality test as the optimizer's loop and, if it
 passes, takes the shared research path (sim/agents/research.py, every actor's start) with this seat as the researcher.
 In `--manual` mode the optimizer's loop is switched off, so this is then the only way anything starts."""
+from sim.assembly.api import Part
 from sim.ledger.api import NoteSpend
 from sim.polity.api import RecordBribe
 from typing import Any, Dict, Optional, Tuple
@@ -20,8 +21,8 @@ from .researcher import SeatResearcher
 BOUNTY_CRAFT_CATEGORIES = ("glass_optics", "metallurgy", "precision", "power", "agriculture", "information", "instruments")
 
 
-class Starting:
-	def _setup_starting(self) -> None:
+class Starting(Part):
+	def setup(self) -> None:
 		self.last_materials_paid = 0.0           # money of the material orders the last start posted (not saved)
 
 	# ---- registering a project ----------------------------------------------------------------------------------
@@ -41,7 +42,7 @@ class Starting:
 			own_output_claim = self.needs.own_output_claim(node_id)
 			bill, _materials_ordered, awaiting = self.needs.send(SettleProjectMaterials(node_id))
 			cost_left = bill
-		record = record_rules.new_record(node, self.rebuild_work_factor(node_id), ph_left, spent, cost_left,
+		record = record_rules.new_record(node, self.parts.rebuild.rebuild_work_factor(node_id), ph_left, spent, cost_left,
 		                                 include_labour, bill, own_output_claim)
 		if awaiting:
 			materials_wait.record_orders(record, awaiting)      # the project waits for these orders to be filled at the clearing
@@ -57,7 +58,7 @@ class Starting:
 		# Materials due now are ordered for the year's clearing; what is left is the bill paid in instalments.
 		bill, materials_ordered, awaiting = needs.send(SettleProjectMaterials(node_id))
 		if precaution:
-			bill += self.precaution_extra_cost(node_id, bill)
+			bill += self.parts.precaution.precaution_extra_cost(node_id, bill)
 		price = bill
 		paid_towards = self.seat.paid_towards
 		paid_now = funding.paid_credit(price, paid_towards.get(node_id, 0.0))
@@ -76,18 +77,18 @@ class Starting:
 		if precaution:
 			record = self.seat.active[node_id]
 			record["precaution"] = True
-			record["ph_left"] += self.precaution_extra_hours(node_id)
+			record["ph_left"] += self.parts.precaution.precaution_extra_hours(node_id)
 		# A genuinely instantaneous capability should not need an otherwise empty annual turn merely to trip the
 		# completion check. Anything with money, labour, risk, or a calendar floor stays on the normal path.
-		if not any(not entry.get("refused") for entry in awaiting) and instantaneous.is_instantaneous(node["ph"], self.calendar_floor(node_id), price, node["lab"], self.effective_risk(node_id)):
-			self._complete(node_id)
+		if not any(not entry.get("refused") for entry in awaiting) and instantaneous.is_instantaneous(node["ph"], self.parts.risk.calendar_floor(node_id), price, node["lab"], self.parts.risk.effective_risk(node_id)):
+			self.parts.completion._complete(node_id)
 			return "done"
 		if paid_now > 0.5:
 			needs.send(RecordEvent("project_restarted", "%s begun again; the %s already "
 			                       "paid on it before comes off the bill"
 			                       % (node_id, needs.money_text(paid_now, True))))
 		# A thing you just chose to work on should get first call on your own hours.
-		self.apply_put_project_first(PutProjectFirst(node_id))
+		self.parts.project_order.apply_put_project_first(PutProjectFirst(node_id))
 		return "begun"
 
 	# ---- the commands -------------------------------------------------------------------------------------------
@@ -96,7 +97,7 @@ class Starting:
 		refusal = self.needs.start_refusal(command.node_id)       # the quote the player was shown, adjusters included
 		if refusal:
 			return False, refusal
-		if command.precaution and self.precaution_spec(command.node_id) is None:
+		if command.precaution and self.parts.precaution.precaution_spec(command.node_id) is None:
 			return False, "%s offers no pilot plant or redundant team to pay for." % self.needs.tree[command.node_id]["name"]
 		try:
 			research.begin(SeatResearcher(self, command.precaution), command.node_id, self.needs.actor_world())

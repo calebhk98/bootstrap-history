@@ -8,6 +8,7 @@ opinion wins. The order of `START_CHECKS` (blocker_rules.py) is the contract."""
 from typing import Any, Dict, Optional, Tuple
 
 from sim.agents.api import research_gate
+from sim.assembly.api import Part
 from sim.refusal import Refusal
 
 from . import constants, funding, start_money, start_rules
@@ -20,11 +21,16 @@ Verdict = Optional[Tuple[bool, Any]]
 SOCIAL_CATEGORIES = ("social", "institution", "foundation", "capability", "material")
 
 
-class StartChecks:
+class StartChecks(Part):
 	START_CHECKS = START_CHECKS
 
-	def _setup_start_checks(self) -> None:
-		self._own_checks = {check.cause: getattr(self, "_check_" + check.cause) for check in self.START_CHECKS if not check.source}
+	def setup(self) -> None:
+		self._own_checks = {check.cause: self._own_check(check.cause) for check in self.START_CHECKS if not check.source}
+
+	def _own_check(self, cause: str) -> Any:
+		"""The method that runs the check `cause`: this part's, else the running gates' part's."""
+		name = "_check_" + cause
+		return getattr(self if hasattr(self, name) else self.parts.running_gates, name)
 
 	# ---- the test ---------------------------------------------------------------------------------------------
 
@@ -209,7 +215,7 @@ class StartChecks:
 		# been poached. People being TAUGHT count when they qualify before the stall gate would abandon the project.
 		none_left = [] if ignore_trade else sorted(
 			trade_id for trade_id, want in (node["lab"] or {}).items()
-			if want > 0 and self.needs.market_supply[trade_id] <= 0.0 and self.trade_wait_outlasts(trade_id))
+			if want > 0 and self.needs.market_supply[trade_id] <= 0.0 and self.parts.trade_wait.trade_wait_outlasts(trade_id))
 		if none_left:
 			return False, (("this needs %s and there is not one left here to do "
 			                "it: nobody holds the trade and nobody is being taught it "

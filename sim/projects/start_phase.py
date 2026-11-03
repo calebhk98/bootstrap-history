@@ -6,12 +6,13 @@ from typing import Dict, List, Optional, Tuple
 
 from .auto_start import judge_start_candidate
 from .commands import PostBounty
+from sim.assembly.api import Part
 from sim.reporting.api import RecordAutomation, RecordAutomationSkip
 from .phase_rules import candidates_in_order, max_active_projects, money_is_thin, non_bountied_count
 
 
-class StartPhase:
-	def _setup_start_phase(self) -> None:
+class StartPhase(Part):
+	def setup(self) -> None:
 		self._start_hours: Dict[Optional[str], Tuple[float, float]] = {}     # acting seat -> (pool, hired room) of its last start phase
 
 	def start_hours(self) -> Tuple[float, float]:
@@ -47,7 +48,7 @@ class StartPhase:
 		candidates = candidates_in_order(needs.project_order(), lambda node_id: needs.tree[node_id], needs.project_cost, money_is_thin(revenue, fixed))
 		# Only a normal start and a bounty change the count, so it is tracked as they happen, not rebuilt per node.
 		non_bountied_active = non_bountied_count(self.seat.active, self.seat.bountied)
-		room = needs.funding_capacity() - self.committed_cost()
+		room = needs.funding_capacity() - self.parts.applied.committed_cost()
 		said_blocked = False
 		too_dear: List[Tuple[str, float]] = []
 		for node_id in candidates:
@@ -72,15 +73,15 @@ class StartPhase:
 				too_dear.append((node_id, room))
 				continue
 			before = needs.acting_balance()
-			if node_id in bounty_set and self.bounty_eligible(node_id) and self.post_bounty(PostBounty(node_id)):
+			if node_id in bounty_set and self.parts.starting.bounty_eligible(node_id) and self.parts.starting.post_bounty(PostBounty(node_id)):
 				needs.send(RecordAutomation("auto_start", "bounty", needs.tree[node_id]["name"],
 				                            "on the bounty list and eligible, so a bounty was posted instead of starting it", before))
 				# a bounty adds to both `active` and `bountied`: the count of non-bountied projects is unchanged
-				room = needs.funding_capacity() - self.committed_cost()
+				room = needs.funding_capacity() - self.parts.applied.committed_cost()
 				continue
-			self.initialize_project(node_id)
+			self.parts.starting.initialize_project(node_id)
 			non_bountied_active += 1
-			room = needs.funding_capacity() - self.committed_cost()
+			room = needs.funding_capacity() - self.parts.applied.committed_cost()
 		if too_dear:
 			# one row a year: the highest-priority candidate and how many more were dearer than their room
 			first, first_room = too_dear[0]

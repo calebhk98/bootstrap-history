@@ -1,8 +1,10 @@
 """Things an actor will not do: the exclusion list the automatic starters honour (`excluded` of the seat's projects)."""
+from sim.assembly.api import Part
+
 from . import exclusion_rules
 
 
-class Exclusions:
+class Exclusions(Part):
 	def exclusion_entry_known(self, entry):
 		return exclusion_rules.entry_known(entry, self.needs.tree_nodes())
 

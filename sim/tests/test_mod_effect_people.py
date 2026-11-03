@@ -15,6 +15,7 @@ from sim.engine.mod_effects import ModEffects
 from sim.agents.api import edges
 from sim.content.api import ModError
 from sim.refusal import Refusal, cause_of
+from sim.tests import module_harness
 from sim.tests.bridge_send import attach_send
 from sim.tests.ui_stand_in import Game
 
@@ -83,10 +84,11 @@ class MoveStratumPeopleTests(unittest.TestCase):
         self.farmers, self.artisans, self.foreign = stratum(None, "farmers", 1000.0), stratum(None, "artisans", 200.0), stratum(ABROAD, "farmers", 50.0)
         actors = {actor.actor_id: actor for actor in (self.farmers, self.artisans, self.foreign)}
         actors["government:home"] = SimpleNamespace(actor_id="government:home", record=ActorRecord(kind="government"))
-        self.module = SimpleNamespace(cast=lambda: SimpleNamespace(actors=actors), needs=SimpleNamespace(civilisation=lambda: {"id": HOME}))
+        self.module = module_harness.part(Contact, siblings={"cast": SimpleNamespace(cast=lambda: SimpleNamespace(actors=actors))},
+                                          views={"civilisation": lambda: {"id": HOME}})
 
     def move(self, source, target, count):
-        return Contact.move_stratum_people(self.module, MoveStratumPeople(source.actor_id, target.actor_id, count))
+        return self.module.move_stratum_people(MoveStratumPeople(source.actor_id, target.actor_id, count))
 
     def test_the_count_leaves_one_stratum_and_joins_the_other(self):
         answer = self.move(self.farmers, self.artisans, 300.0)

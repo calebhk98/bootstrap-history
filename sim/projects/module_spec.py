@@ -20,7 +20,8 @@ from .commands import (AdvanceProjects, AutoOpenVentures, Bribe, CloseLapsedDepe
                        CompleteProject, Exclude, HaltActiveProjects, Include, KeepStaffed, MothballWork, NoteVentureYear, NoteYearSpend, PostBounty, PutProjectFirst, ReopenRestaffedVentures, ReorderProjects, ResetProjectProgress,
                        RestoreProjectOrder, RestoreWork, ReviewVentures, StartProject, StopProject, WatchActive)
 from .project_order import ORDER
-from .projects import ACTIVE, ACTIVE_CHANGES, START, Projects
+from .channels import ACTIVE, ACTIVE_CHANGES, START
+from .projects import Projects
 from .state import ProjectsSeat, ProjectsWorld
 
 READS_BY_OWNER = {

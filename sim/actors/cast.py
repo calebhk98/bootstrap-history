@@ -4,17 +4,17 @@ from typing import Any, List, Optional, Tuple
 
 from sim.agents.api import (ActorExtensions, ActorRegistry, cast_from_civilisations, combine_extensions, seed_cast,
                             shipped_extensions)
+from sim.assembly.api import Part
 
+from .host import WorldHost
 from .world import ActorWorld
 
 
-class Cast:
-	"""Mixed into `Actors`."""
-
-	needs: Any
-	world: Any
-	_registry: Optional[ActorRegistry] = None   # over the world slot; made again when a load replaces it
-	_extensions: Optional[ActorExtensions] = None   # what the game's providers answered; asked once per game
+class Cast(Part):
+	def __init__(self, module):
+		super().__init__(module)
+		self._registry = None   # never saved: rebuilt over the world slot on first use and after a load
+		self._extensions = None   # never saved: asked of the providers on first use
 
 	def extensions(self) -> ActorExtensions:
 		"""The kinds, founding rules, policies and commands the shipped game and its mods give the actors."""
@@ -112,8 +112,8 @@ class Cast:
 
 	def actor_world(self) -> ActorWorld:
 		"""What the actors can see and price, with its own table of this turn's shared answers."""
-		return ActorWorld(self)
+		return ActorWorld(WorldHost(self.module))
 
 	def country_world(self, owner: str) -> Any:
 		"""The world the owner's state sees (the shared one for the home country, else its country's scope)."""
-		return self.cast().world_of_country(owner, ActorWorld(self))
+		return self.cast().world_of_country(owner, ActorWorld(WorldHost(self.module)))

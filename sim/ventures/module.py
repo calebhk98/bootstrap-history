@@ -5,10 +5,10 @@ The businesses are its seat state, written only by its commands (a deal's plants
 over what is operating and shut hand out the record's own sets, read only, and are uncached."""
 from sim.assembly.api import Module
 
-from .business import Business
 from .coverage import Coverage
 from .crew import Crew
 from .opening import Opening
+from .plants import Plants
 from .quotes import Quotes
 from .sales import Sales
 
@@ -16,7 +16,7 @@ from .sales import Sales
 class Ventures(Module):
 
 	PARTS = {
-		"business": Business,
+		"plants": Plants,
 		"crew": Crew,
 		"quotes": Quotes,
 		"opening": Opening,
