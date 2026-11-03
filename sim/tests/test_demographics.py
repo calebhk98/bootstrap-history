@@ -20,7 +20,7 @@ def labour_of(civ_id="rome_100ad"):
 class ReachablePool(unittest.TestCase):
     def test_a_common_trades_reachable_pool_is_the_core_people_of_it_in_the_tiles_reached(self):
         _world, labour = labour_of()
-        labour.book.core_people_by_tile_and_trade = lambda: {labour.settlement.base_tile(): {"smith": 40.0}, "far_tile": {"smith": 900.0}}
+        _world.economy.agent_hours_offered_at = lambda trade, tile: 40.0 * HOURS if tile == labour.settlement.base_tile() else 900.0 * HOURS
         labour.book.core_people_by_trade = lambda: {"smith": 1000.0}
         self.assertAlmostEqual(labour.supply.market_supply("smith"), 40.0 * HOURS)
 
@@ -30,7 +30,7 @@ class ReachablePool(unittest.TestCase):
 
     def test_the_country_holds_more_smiths_than_one_households_own_town_reaches(self):
         _world, labour = labour_of()
-        labour.book.core_people_by_tile_and_trade = lambda: {labour.settlement.base_tile(): {"smith": 40.0}}
+        _world.economy.agent_hours_offered_at = lambda trade, tile: 40.0 * HOURS
         labour.book.core_people_by_trade = lambda: {"smith": 1000.0}
         self.assertGreater(labour.supply.national_trade_population("smith"), labour.supply.reachable_trade_population("smith"))
 

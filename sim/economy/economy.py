@@ -266,16 +266,15 @@ class Economy:
         close_view = CreditView(record.memory, record.book, self.area_map, money, labour_area,
                                 loans=lambda: record.credit.loans, equity=self._equity_read,
                                 loss_rates=lambda: record.credit.loss_rates)
-        close_agents(setup, record, close_view, ledger, self.area_map, self.carriage)
+        received = dict(interest)
+        for payment in rent:
+            received[payment.payee] = received.get(payment.payee, 0.0) + payment.amount
+        close_agents(setup, record, close_view, ledger, self.area_map, self.carriage, received)
         open_entrants(setup, record, close_view, self.area_map, ledger.unmet_demand, self.carriage,
                       with_standing_bids(ledger.bids_by_market, inputs.standing_bids))
         restake_owners(setup, record, close_view)
         extraction = sites.extraction_by_tile(record, setup)
         close_idle_producers(setup, record)
-        for lender, received in interest.items():
-            record.capital_markets.add_property_income(lender, received)
-        for payment in rent:
-            record.capital_markets.add_property_income(payment.payee, payment.amount)
         wear_and_spoilage(setup, record, inputs.durable_users)
         level = remember_basket_price_level(setup, record)
         record.memory.advance_year()

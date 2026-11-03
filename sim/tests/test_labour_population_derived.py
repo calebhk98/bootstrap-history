@@ -23,10 +23,13 @@ class _StubLabour:
         household = types.SimpleNamespace(trades_created=set(), trade_schools={})
         self._world = types.SimpleNamespace(
             trades=types.SimpleNamespace(
-                wages={trade: 1.0 for trade in FAMILIES}, trades_absent=set(absent),
+                wages={trade: 1.0 for trade in FAMILIES}, HOURS_PER_PERSON_YEAR=2000.0, trades_absent=set(absent),
                 trade_family=lambda trade: FAMILIES.get(trade, "craft"),
                 trade_registry={trade: {"literate": True} for trade in literate}),
             workforce=household,
+            economy=types.SimpleNamespace(
+                agent_working_hours=lambda: None,
+                agent_hours_offered_at=lambda trade, tile: None if core_by_tile is None else core_by_tile.get(tile, {}).get(trade, 0.0) * 2000.0),
             people=types.SimpleNamespace(population=types.SimpleNamespace(working_age=WORKING_PEOPLE, total=2.0 * WORKING_PEOPLE)))
         self.NO_DEMAND_TRADE_SHARE = Supply.NO_DEMAND_TRADE_SHARE
         trades = Trades(self._world)
@@ -38,9 +41,6 @@ class _StubLabour:
 
     def _trade_density_source(self, trade):
         return self.report._trade_density_source(trade)
-
-    def core_people_by_tile_and_trade(self):
-        return self._core_by_tile
 
     def core_people_by_trade(self):
         if self._core_by_tile is None:
@@ -63,9 +63,9 @@ class _StubLabour:
 
 class PeopleInReachTests(unittest.TestCase):
 
-    def test_the_core_people_of_the_tiles_reached_are_the_trades_people(self):
+    def test_the_people_the_base_tiles_households_offer_are_the_trades_people(self):
         labour = _StubLabour({"home": {"moddedtrade": 30.0}, "near": {"moddedtrade": 12.0}, "far": {"moddedtrade": 500.0}})
-        self.assertEqual(labour._people_of_trade_in_reach("moddedtrade"), 42.0)
+        self.assertEqual(labour._people_of_trade_in_reach("moddedtrade"), 30.0)
         self.assertIsNone(labour._trade_density_source("moddedtrade"))
 
     def test_a_trade_the_core_holds_nobody_of_gets_the_declared_floor(self):

@@ -60,13 +60,6 @@ class TradeReachTransportTests(unittest.TestCase):
         self.assertIn(self.labour.settlement.base_tile(), tiles)
         self.assertTrue(all(days <= 30.0 for days in tiles.values()))
 
-    def test_trade_people_follow_the_reach(self):
-        self.labour.book.core_people_by_tile_and_trade = lambda: {tile: {"smith": 10.0} for tile in self.labour.settlement.settlement_tiles()}
-        base = self.labour.supply._people_of_trade_in_reach("smith")
-        self.assertEqual(base, 10.0)
-        self.labour.settlement.HIRE_TRAVEL_DAYS = 60.0
-        self.assertGreater(self.labour.supply._people_of_trade_in_reach("smith"), base)
-
 
 if __name__ == "__main__":
     unittest.main()
