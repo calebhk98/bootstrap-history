@@ -18,8 +18,8 @@ class _Market(GoodsMarket):
     def __init__(self, offered):
         economy = SimpleNamespace(agent_offered_tonnes=lambda material, tile=None: offered)
         sim = SimpleNamespace(economy=economy, state=SimpleNamespace(acting_seat="seat"),
-                              _material_tag=lambda material: (material, None),
-                              _material_market_tonnes=lambda key: REFERENCE)
+                              materials=SimpleNamespace(tag=lambda material: (material, None),
+                                                        market_tonnes=lambda key: REFERENCE))
         super().__init__(sim)
         self.pricing = SimpleNamespace(
             price_at_tile_per_tonne=lambda material: 10.0, carriage_per_tonne=lambda material, price_per_tonne: 1.0,

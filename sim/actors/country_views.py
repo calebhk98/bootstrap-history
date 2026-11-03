@@ -29,7 +29,7 @@ class CountryViews(Part):
 		return frozenset(self.parts.cast.state_treasury().knowledge)
 
 	def holder_treasury(self, holder: str) -> str:
-		government = self.parts.cast.cast().government_of(holder)
+		government = self.parts.cast.cast().countries.government_of(holder)
 		return country_rules.treasury_account(holder, self.needs.seat_list()["joined"], None if government is None else government.actor_id)
 
 	def partner_catch_chance(self, civilization_id: str, share_of_holding: float) -> float:
@@ -42,6 +42,6 @@ class CountryViews(Part):
 
 	def harvest_share_taken(self, material: str) -> float:
 		"""Share of the harvest of a material the home state's forms take from growers; none without a government."""
-		if self.parts.cast.cast().government_of(None) is None:
+		if self.parts.cast.cast().countries.government_of(None) is None:
 			return 0.0
 		return tax_burden.harvest_share_taken(self.parts.cast.actor_world(), material)

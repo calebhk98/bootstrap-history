@@ -122,26 +122,26 @@ class Government(RecordedActor):
 		One rule for every taxpayer: the state sees a visible scale (staff, wealth,
 		prominence), and the shortfall it must raise sets the rate.
 		"""
-		requisition, office = world.taxpayers.levy_shares(world.taxpayers.visible_scale_of(payer), payer.standing())
+		requisition, office = world.taxpayers.levy_shares(world.taxpayers.visible_scale_of(payer), payer.stance.standing())
 		parts = {"requisition": requisition * max(0.0, taxable), "office": office * max(0.0, taxable)}
 		return sum(parts.values()), parts
 
 	def collect(self, payer: Actor, taxable: float, world: Any) -> float:
 		"""Levy `payer` and receive it; the amount taken."""
 		levy, parts = self.assess(payer, taxable, world)
-		if parts["requisition"] > 0.0 and payer.demand_stance() != demand_answer.COMPLY:
+		if parts["requisition"] > 0.0 and payer.stance.demand_stance() != demand_answer.COMPLY:
 			# a refused requisition is paid, with a penalty, only if the state can enforce it; a negotiated
 			# one is paid in part, and in service, if the state takes the offer
 			draw = world.setting.rng_for("demand", getattr(payer, "actor_id", ""), world.setting.year).random()
-			answer = demand_answer.settle_demand(payer.demand_stance(), parts["requisition"], world.taxpayers.state_reach(),
-												 payer.standing(), draw, payer.service_worth())
+			answer = demand_answer.settle_demand(payer.stance.demand_stance(), parts["requisition"], world.taxpayers.state_reach(),
+												 payer.stance.standing(), draw, payer.stance.service_worth())
 			parts["requisition"] = answer["paid"] - answer["penalty"]
 			if answer["penalty"] > 0.0:
 				parts["penalty"] = answer["penalty"]
 			if answer["service"] > 0.0:
 				ledger.transfer(payer, world.setting.edge(EDGE_STATE_SPENDING), answer["service"], "service to the state")
 			if answer["refused"]:
-				payer.set_defiance(demand_answer.defiance_after_refusal(payer.defiance()))
+				payer.stance.set_defiance(demand_answer.defiance_after_refusal(payer.stance.defiance()))
 			levy = sum(parts.values())
 		if levy > 0.0:
 			ledger.transfer(payer, self, levy, parts)

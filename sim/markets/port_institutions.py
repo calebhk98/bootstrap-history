@@ -19,9 +19,9 @@ def institutions_of(mechanics_known):
 
 def held(sim):
     """The institutions the home state's society holds; none without a government."""
-    government = sim.actors.government_of(None)
+    government = sim.actors.countries.government_of(None)
     if government is None:
         return ()
-    world = sim.actor_world()
+    world = sim.state.actor_world()
     return institutions_of({mechanic for mechanic in MECHANIC_INSTITUTIONS
-                            if any(government.knows(node_id, world) for node_id in sim.nodes_with_mechanic(mechanic))})
+                            if any(government.knows(node_id, world) for node_id in sim.production.nodes_with_mechanic(mechanic))})

@@ -24,7 +24,7 @@ class SaleProceedsTests(unittest.TestCase):
 class CallerTests(unittest.TestCase):
     def test_quote_is_none_when_the_sale_has_no_proceeds(self):
         stand_in = Game(
-            _sim=Game(_material_tag=lambda material: ("iron",),
+            _sim=Game(materials=Game(tag=lambda material: ("iron",)),
                              economy=Game(agent_offered_tonnes=lambda material: None)),
             pricing=Game(price_at_tile_per_tonne=lambda material: 10.0, sale_proceeds=lambda *args: None,
                          carriage_per_tonne=lambda material, price: 1.0),

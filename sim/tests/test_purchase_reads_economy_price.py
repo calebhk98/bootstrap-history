@@ -10,7 +10,7 @@ from .harness import check
 
 from sim.engine.data import load_civ
 from sim.tests import market_stand_in
-from sim.markets.port import EconomyPort
+from sim.markets import port_money
 from sim.markets.goods_market import GoodsMarket
 from sim.markets.goods_offers import GoodsOffers
 from sim.engine.material_units import tonnes_per_unit
@@ -48,7 +48,7 @@ class _Economy:
 
 class _Offers(GoodsOffers):
     def offered_by(self, material):
-        return "home" if material in self._sim._material_prices() else None
+        return "home" if material in self._sim.materials.prices() else None
 
     def household_prices(self):
         return {}
@@ -61,11 +61,12 @@ class _Market(GoodsMarket):
         self.economy = _Economy(paid)
         sim = SimpleNamespace(
             economy=self.economy, **market_stand_in.market_memory(), state=SimpleNamespace(acting_seat="seat"),
-            _material_prices=lambda: dict(cost_table if cost_table is not None else paid),
-            _priced_key=lambda material, prices: material if material in prices else None,
-            _material_tag=lambda material: (material, None),
-            foreign=SimpleNamespace(material_carriage_per_tonne=lambda key, price: CARRIAGE),
-            _material_price_per_kg=lambda material: (cost_table if cost_table is not None else paid).get(material))
+            materials=SimpleNamespace(
+                prices=lambda: dict(cost_table if cost_table is not None else paid),
+                priced_key=lambda material, prices: material if material in prices else None,
+                tag=lambda material: (material, None),
+                price_per_kg=lambda material: (cost_table if cost_table is not None else paid).get(material)),
+            foreign=SimpleNamespace(material_carriage_per_tonne=lambda key, price: CARRIAGE))
         super().__init__(sim)
         self.offers = _Offers(sim)
         self.bought = {}
@@ -125,10 +126,10 @@ check("the coin metal is priced at the economy's price on the tile",
       metal_price is not None and abs(metal_price - PAID[COIN_METAL]) <= 1e-9 * metal_price, metal_price)
 check("a good no home seller offers has no home unit price", market.offers.home_unit_price("cobalt_kg") is None)
 coin = {"material": COIN_METAL, "kg_per_unit": 0.0035}
-port = SimpleNamespace(_sim=SimpleNamespace(civ={"coin_standard": coin}, goods_market=market), coin_stock_units=lambda: 2000.0)
+world = SimpleNamespace(civ={"coin_standard": coin}, goods_market=market, finance=SimpleNamespace(coin_stock_units=lambda: 2000.0))
 expected_stock = 2000.0 * coin["kg_per_unit"] * metal_price
 check("the coin the society holds is counted at that price",
-      abs(EconomyPort.coin_stock_value(port) - expected_stock) <= 1e-9 * expected_stock, (EconomyPort.coin_stock_value(port), expected_stock))
+      abs(port_money.coin_stock_value(world) - expected_stock) <= 1e-9 * expected_stock, (port_money.coin_stock_value(world), expected_stock))
 def trade_over(goods_market):
     return module_harness.build(ForeignTrade, views={"civilisation_record": load_civ,
                                                      "home_unit_price": goods_market.offers.home_unit_price})

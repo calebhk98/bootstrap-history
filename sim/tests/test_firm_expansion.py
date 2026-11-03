@@ -3,7 +3,7 @@ earns more than the capital costs expands, an entrant expects what is left after
 stops gaining capacity.
 
 Rules, each called on the fake world: `Firm.expansion.expand` (the return on a step against the rate, the margin gate, the
-scale ceiling, the outlay it books) and `ActorRegistry.rivals_of` (an expanded incumbent leaves an entrant a smaller
+scale ceiling, the outlay it books) and `RegistryConcerns.rivals_of` (an expanded incumbent leaves an entrant a smaller
 share). What an entrant expects is test_entry_gross_rule."""
 QUICK_TOPIC = True
 
@@ -101,26 +101,26 @@ class ExpandTests(unittest.TestCase):
 	def test_the_owners_tell_the_registry_so_its_totals_follow(self):
 		world = ReturnWorld()
 		registry, firm = make_firm(world)
-		before = registry.capacity_in("shop")
+		before = registry.concerns.capacity_in("shop")
 		firm.expansion.expand(world)
-		self.assertGreater(registry.capacity_in("shop"), before)
+		self.assertGreater(registry.concerns.capacity_in("shop"), before)
 
 
 class RivalsFollowCapacityTests(unittest.TestCase):
 	def test_an_entrant_faces_more_rivals_once_an_incumbent_has_expanded(self):
 		world = ReturnWorld()
 		registry, firm = make_firm(world)
-		before = registry.rivals_of("shop", "")
-		firm.business.set_size("shop", 6.0)
-		registry.note_capacity_change(firm.actor_id)
-		self.assertAlmostEqual(registry.rivals_of("shop", "") - before, 5.0)
+		before = registry.concerns.rivals_of("shop", "")
+		firm.business.tally.set_size("shop", 6.0)
+		registry.concerns.note_capacity_change(firm.actor_id)
+		self.assertAlmostEqual(registry.concerns.rivals_of("shop", "") - before, 5.0)
 
 	def test_a_firm_does_not_count_its_own_capacity_among_its_rivals(self):
 		world = ReturnWorld()
 		registry, firm = make_firm(world)
-		firm.business.set_size("shop", 6.0)
-		registry.note_capacity_change(firm.actor_id)
-		self.assertEqual(registry.rivals_of("shop", firm.actor_id), 0.0)
+		firm.business.tally.set_size("shop", 6.0)
+		registry.concerns.note_capacity_change(firm.actor_id)
+		self.assertEqual(registry.concerns.rivals_of("shop", firm.actor_id), 0.0)
 
 
 if __name__ == "__main__":

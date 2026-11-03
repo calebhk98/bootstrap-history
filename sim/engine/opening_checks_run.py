@@ -58,9 +58,9 @@ def sited_ore_ratios(game, prices, costs, stale) -> Dict[str, float]:
 def price_ratios(game) -> Dict[str, Dict[str, float]]:
     """{group: {good: price over making cost}} for the sited ores, the staple and the coin metal, after one step;
     only goods whose markets cleared lately (a stale good's shown price is its cost, not a trade)."""
-    setup = game.view("agent_economy_setup")()
+    opened = game.view("agent_opening_figures")()
     prices, costs, stale = game.view("agent_prices")(), game.view("material_prices")(), game.view("agent_stale_goods")()
-    named = {"staple": game.view("agent_traded_staple")(), "coin_metal": setup.currency.backing_good}
+    named = {"staple": game.view("agent_traded_staple")(), "coin_metal": opened["backing_good"]}
     ratios = {"sited_ores": sited_ore_ratios(game, prices, costs, stale)}
     for group, good in named.items():
         usable = good and good not in stale and prices.get(good) and costs.get(good)
@@ -76,14 +76,14 @@ def check_game(game, trace=None) -> List[opening_checks.CheckResult]:
     game.send(StartDoneYearRecord())
     game.step()
     outcome = game.view("agent_last_outcome")()
-    setup = game.view("agent_economy_setup")()
+    opened = game.view("agent_opening_figures")()
     ratios = price_ratios(game)
     return [opening_checks.price_over_cost("price_over_cost_" + group, ratios[group])
             for group in ("sited_ores", "staple", "coin_metal")] + [
         opening_checks.money_against_wear(rows),
-        opening_checks.wage_over_floor(outcome.wages.get(setup.unskilled_trade), outcome.wage_floor_per_hour),
+        opening_checks.wage_over_floor(outcome.wages.get(opened["unskilled_trade"]), outcome.wage_floor_per_hour),
         opening_checks.spin_up_settled(result, SPIN_UP_TOLERANCE),
-        opening_checks.rate_against_history(setup.opening_rate, game.view("civilisation")().get("starting_interest_rate"))]
+        opening_checks.rate_against_history(opened["opening_rate"], game.view("civilisation")().get("starting_interest_rate"))]
 
 
 def check_civilisation(civ_id: str) -> List[opening_checks.CheckResult]:

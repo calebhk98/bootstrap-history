@@ -560,6 +560,20 @@ def unskilled_trade(economy):
     return economy.setup.unskilled_trade
 
 
+def economy_trades(economy):
+    """The trades the labour core has markets for."""
+    return frozenset(economy.setup.trades)
+
+
+def opening_wage(economy, trade):
+    """The wage per hour the economy opened with for `trade`; None for a trade it opened without."""
+    return economy.setup.opening_wages.get(trade)
+
+
+def opening_rate(economy):
+    return economy.setup.opening_rate
+
+
 def working_hours_per_year(economy):
     return economy.setup.working_hours_per_year
 

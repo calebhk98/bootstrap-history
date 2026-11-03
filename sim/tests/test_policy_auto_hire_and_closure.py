@@ -49,7 +49,7 @@ class _Owner(business_review.Reviewable):
 
     def shut(self, entry_key, reason, world):
         self.shut_plants.append((entry_key, reason))
-        self.business.mothball(entry_key, 100, reason)
+        self.business.lifecycle.mothball(entry_key, 100, reason)
 
     def receive_seizure(self, entry_key, proceeds, world):
         self.seized.append(entry_key)
@@ -61,20 +61,20 @@ class BusinessReviewSparesAndLeavesAlone(unittest.TestCase):
     def _review(self, rules, spared=(), shut=()):
         business = Business.running(["shop", "school", "theory"])
         for entry_key in shut:
-            business.mothball(entry_key, 99, "by_choice")
+            business.lifecycle.mothball(entry_key, 99, "by_choice")
         owner = _Owner(business, spared=spared, margins={"shop": -5.0, "school": -1.0, "theory": -9.0})
-        closed = business.review(owner, None, rules)
+        closed = business.reviews.review(owner, None, rules)
         return business, owner, closed
 
     def test_a_loss_making_plant_that_is_not_spared_is_shut_and_a_spared_one_is_kept(self):
         business, owner, closed = self._review((business_review.LOSS_MAKING,), spared={"theory"})
         self.assertEqual({entry_key for entry_key, _reason in owner.shut_plants}, {"shop", "school"})
-        self.assertEqual(business.state_of("theory"), "operating")
+        self.assertEqual(business.reading.state_of("theory"), "operating")
 
     def test_the_creditors_take_the_worst_loss_makers_but_not_what_is_spared(self):
         business, owner, closed = self._review((business_review.CREDITOR_SEIZURE,), spared={"theory"})
         self.assertNotIn("theory", owner.seized)
-        self.assertEqual(business.state_of("theory"), "operating")
+        self.assertEqual(business.reading.state_of("theory"), "operating")
         self.assertEqual(owner.seized[0], "shop")
         self.assertTrue(all(reason == business_review.CREDITOR_SEIZURE for _key, reason in closed))
 

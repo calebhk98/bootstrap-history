@@ -20,7 +20,7 @@ class GoodsOffers:
         goods it has a market for; a good it has none for is absent, not priced at its cost. While the economy opens the
         cost table answers (the opening is built from it). The same object while neither has changed."""
         sim = self._sim
-        table = sim._material_prices()
+        table = sim.materials.prices()
         paid = sim.economy.agent_prices_at()
         if paid is None:
             return table
@@ -36,7 +36,7 @@ class GoodsOffers:
         it is priced as) at the acting tile; None when no home seller offers it. The one price of the coin metal
         in the mint and in cargo."""
         prices = self.home_prices()
-        key = self._sim._priced_key(material, prices)
+        key = self._sim.materials.priced_key(material, prices)
         return None if key is None else prices[key]
 
     def _worked_out_offers(self):

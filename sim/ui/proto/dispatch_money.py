@@ -126,9 +126,11 @@ def _buy_school(sim, cmd, quantity):
 
 
 def _price_limit(cmd):
-    """The most (buy) or least (sell) per tonne the player states for an order, or None for the quote."""
-    limit = cmd.get("limit")
-    return None if limit in (None, "") else _qty(limit)
+    """(limit, error): the most (buy) or least (sell) per tonne the player states for an order, None for the quote; the error
+    says why a stated limit is not a number."""
+    if cmd.get("limit") in (None, ""):
+        return None, None
+    return _qty(cmd, "limit")
 
 
 def _order_reply(sim, posted, asked):
@@ -145,7 +147,10 @@ def _order_reply(sim, posted, asked):
 
 
 def _buy_material(sim, cmd, quantity):
-    return _order_reply(sim, sim.send(ui_port.BuyMaterial(cmd.get("material"), quantity, _price_limit(cmd))), quantity)
+    limit, err = _price_limit(cmd)
+    if err:
+        return {"ok": False, "error": err}
+    return _order_reply(sim, sim.send(ui_port.BuyMaterial(cmd.get("material"), quantity, limit)), quantity)
 
 
 def _buy_mine(sim, cmd, quantity):
@@ -308,7 +313,30 @@ def _cmd_sell(sim, nodes, cmd, ended):
     held = sim.view("sale_limits")[material][0]
     if sale_orders.asks_more_than_held(quantity, held):
         return {"ok": False, "error": sale_orders.not_enough_held_refusal(material, held, quantity)}
-    return _order_reply(sim, sim.send(ui_port.SellMaterial(material, quantity, _price_limit(cmd))), quantity)
+    limit, err = _price_limit(cmd)
+    if err:
+        return {"ok": False, "error": err}
+    return _order_reply(sim, sim.send(ui_port.SellMaterial(material, quantity, limit)), quantity)
+
+
+@command("cancel_orders", group="money",
+         summary="withdraw a posted buy or sell order before the year clears",
+         usage=["cancel_orders sell iron", "cancel_orders buy iron"],
+         options={"side": "buy or sell", "material": "the material whose posted orders on that side are withdrawn"},
+         description="Withdraws every order of yours to buy or to sell the material that the year's clearing has not yet "
+                     "settled. Nothing was paid or moved, so nothing is refunded. Refused when no such order is posted.")
+def _cmd_cancel_orders(sim, nodes, cmd, ended):
+    side = str(cmd.get("side") or "").lower()
+    if side not in ("buy", "sell"):
+        return {"ok": False, "error": "side must be buy or sell"}
+    material = str(cmd.get("material") or "").lower()
+    if not material:
+        return {"ok": False, "error": "material is required"}
+    reply = sim.send(ui_port.CancelMaterialOrders(side, material))
+    if isinstance(reply, Refusal):
+        return {"ok": False, "error": reply}
+    return {"ok": True, "cancelled_orders": reply["cancelled"], "cancelled_tonnes": reply["tonnes"], "side": side,
+            "material": reply["material"], "capital": round(sim.view("acting_balance")(), 1)}
 
 
 @command("money", shape="bare", group="money", aliases=("ledger", "accounts", "cash"),

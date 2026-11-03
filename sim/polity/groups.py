@@ -19,7 +19,7 @@ class Groups(Part):
 	def _group_records(self):
 		if not self.needs.cast_recorded():
 			return []
-		return [group.record for group in self.needs.cast().home_actors("interest_group")
+		return [group.record for group in self.needs.cast().countries.home_actors("interest_group")
 		        if group.record.exited_year is None]
 
 	def interest_groups(self):
@@ -67,7 +67,7 @@ class Groups(Part):
 	def _technique_bans(self):
 		"""technique -> (name of the group, its pull) for the groups whose demand is to forbid one technique."""
 		bans = {}
-		for group in self.needs.cast().home_actors("interest_group"):
+		for group in self.needs.cast().countries.home_actors("interest_group"):
 			record = group.record
 			if record.exited_year is None and record.demands and record.technique:
 				bans[record.technique] = (record.name, record.strength)
@@ -98,7 +98,7 @@ class Groups(Part):
 		reached = Sector.reached_by(node_id, nodes, supply.materials_made_by, lambda material: self.needs.material_pool[material][0],
 		                            lambda material: self.needs.material_substitutes[material])
 		for subject in sorted(reached & set(banned)):
-			strength = max((group.record.strength for group in registry.home_actors("interest_group")
+			strength = max((group.record.strength for group in registry.countries.home_actors("interest_group")
 			                if group.record.subject == subject and group.record.demands and not group.record.technique),
 			               default=0.0)
 			return banned[subject], subject, strength

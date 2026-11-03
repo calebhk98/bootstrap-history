@@ -29,7 +29,8 @@ class YearRun:
         world, agent = self._world, self._agent
         economy = agent.economy()
         # the year's working day is set before any hours are posted, so posting and settling convert people and hours alike
-        economy.change_setup(**port_cropland.follow_farm_sites(world, economy.setup),
+        economy.change_setup(**port_cropland.follow_farm_sites(world, economy_api.economy_tiles(economy),
+                                                                      economy_api.crop_site_inputs(economy)[0]),
                              working_hours_per_year=float(world.HOURS_PER_PERSON_YEAR))
         agent.sync_ways()
         agent.admit_techniques()
@@ -41,7 +42,7 @@ class YearRun:
         orders.update(cargo_orders)
         self.strike_state_coin(economy)
         sales, purchases = self._trade.post_orders(orders)
-        staff_orders, staff_posted = port_staff.post(world, economy, sorted(world.playing_seats() or world.state.seats),
+        staff_orders, staff_posted = port_staff.post(world, economy, sorted(world.state.playing_seats() or world.state.seats),
                                                      agent.tile_in_economy)
         orders.update(staff_orders)
         actor_staff_orders, actor_staff_posted = port_staff.post_actors(world, economy, agent.actor_tile)
@@ -72,7 +73,7 @@ class YearRun:
 
     def strike_state_coin(self, economy):
         """The cut the home state decided on this year lowers the metal in the coin it issues."""
-        cut = self._world.state_treasury().record.coin_cut_share
+        cut = self._world.finance.state_treasury().record.coin_cut_share
         self._agent.figures.forget()
         economy.strike_lighter_coin(cut, COIN_RESTRIKE_SHARE_PER_YEAR)
 

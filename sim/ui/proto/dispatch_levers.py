@@ -36,7 +36,7 @@ def seat_government(sim, cmd):
     if named is not None and named != country:
         return None, None, _refusal("not_your_country", "you hold the government of %s and can set only its levers, not %s's."
                                     % (country, named), [country], country=named)
-    government = sim.view("cast")().government_of(None if country == str(sim.view("civilisation")()["id"]) else country)
+    government = sim.view("cast")().countries.government_of(None if country == str(sim.view("civilisation")()["id"]) else country)
     if government is None:
         return None, None, _refusal("no_government", "%s has no government to set." % country)
     return government, country, None

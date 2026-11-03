@@ -74,12 +74,13 @@ def _fake_sim(home_prices, gated=()):
         border_terms=lambda destination, source: (0.0, False),
         _price_tables=lambda: ({}, {material: ("gated" if material in gated else "solved")
                                     for material in home_prices}),
-        _material_tag=lambda material: (material, material),
-        _material_prices=lambda: home_prices,
+        materials=types.SimpleNamespace(
+            tag=lambda material: (material, material),
+            prices=lambda: home_prices,
+            price_per_kg=lambda material: home_prices.get(material),
+            priced_key=lambda tag, prices: tag if tag in prices else None),
         year=100, state=types.SimpleNamespace(projects=types.SimpleNamespace()), techniques_held=frozenset,
-        market_rate=lambda: 0.05,
-        _material_price_per_kg=lambda material: home_prices.get(material),
-        _priced_key=lambda tag, prices: tag if tag in prices else None,
+        finance=types.SimpleNamespace(market_rate=lambda: 0.05),
         economy=types.SimpleNamespace(agent_prices_at=lambda tile=None: None),      # the economy is still opening
     )
 

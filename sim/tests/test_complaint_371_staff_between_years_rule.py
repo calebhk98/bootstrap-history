@@ -63,12 +63,12 @@ class StaffBetweenYears(unittest.TestCase):
     def advance_with(self, registry, spawner, read_during_last_turn=True):
         registry.extensions.spawners[:] = [("test_spawner", spawner)]
         if read_during_last_turn:
-            registry.actors["firm:004"].advance = lambda world: registry.staff_fte("smith")
+            registry.actors["firm:004"].advance = lambda world: registry.staff.staff_fte("smith")
         registry.advance(IdleWorld())
 
     def assert_counts_match(self, registry):
         for trade in TRADES:
-            self.assertEqual(fresh_sum(registry, trade), registry.staff_fte(trade), trade)
+            self.assertEqual(fresh_sum(registry, trade), registry.staff.staff_fte(trade), trade)
 
     def test_a_firm_entering_after_the_last_turn_is_counted(self):
         registry = registry_of_firms(5)
@@ -77,7 +77,7 @@ class StaffBetweenYears(unittest.TestCase):
             reg.add("firm:900", ActorRecord(kind="firm", workforce={"smith": 4.0, "scribe": 0.5}))
             return ["firm:900"]
         self.advance_with(registry, enter)
-        self.assertEqual(5 * 1.5 + 4.0, registry.staff_fte("smith"))
+        self.assertEqual(5 * 1.5 + 4.0, registry.staff.staff_fte("smith"))
         self.assert_counts_match(registry)
 
     def test_an_actor_taking_on_people_after_the_last_turn_is_counted(self):
@@ -88,8 +88,8 @@ class StaffBetweenYears(unittest.TestCase):
             reg.actors["firm:001"].workforce["smith"] += 1.0
             return []
         self.advance_with(registry, form_group)
-        self.assertEqual(5 * 1.5 + 1.0, registry.staff_fte("smith"))
-        self.assertEqual(2.0, registry.staff_fte("scribe"))
+        self.assertEqual(5 * 1.5 + 1.0, registry.staff.staff_fte("smith"))
+        self.assertEqual(2.0, registry.staff.staff_fte("scribe"))
         self.assert_counts_match(registry)
 
     def test_the_count_is_right_when_no_turn_read_it(self):

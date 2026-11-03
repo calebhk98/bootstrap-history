@@ -29,41 +29,40 @@ class ClosureRecord(unittest.TestCase):
 
 	def test_a_closure_records_its_reason_and_year(self):
 		business = a_business_running("mill")
-		business.mothball("mill", 40, STAFF)
+		business.lifecycle.mothball("mill", 40, STAFF)
 		self.assertEqual(business.closures()["mill"], {"reason": STAFF, "year": 40})
 
 	def test_restoring_clears_the_record_so_a_later_manual_closure_has_its_own_year(self):
 		business = a_business_running("mill")
-		business.mothball("mill", 40, STAFF)
-		business.restore("mill")
+		business.lifecycle.mothball("mill", 40, STAFF)
+		business.lifecycle.restore("mill")
 		self.assertNotIn("mill", business.closures())
-		business.mothball("mill", 70, MANUAL)
+		business.lifecycle.mothball("mill", 70, MANUAL)
 		self.assertEqual(business.closures()["mill"], {"reason": MANUAL, "year": 70})
 
 	def test_only_the_reason_that_resolves_a_closure_clears_it(self):
 		business = a_business_running("mill")
-		business.mothball("mill", 40, MANUAL)
-		self.assertFalse(business.forget_reason("mill", STAFF))
+		business.lifecycle.mothball("mill", 40, MANUAL)
+		self.assertFalse(business.lifecycle.forget_reason("mill", STAFF))
 		self.assertEqual(business.closures()["mill"]["reason"], MANUAL)
-		self.assertTrue(business.forget_reason("mill", MANUAL))
+		self.assertTrue(business.lifecycle.forget_reason("mill", MANUAL))
 		self.assertNotIn("mill", business.closures())
 
 	def test_clearing_with_no_reason_removes_whatever_closure_there_is(self):
 		business = a_business_running("mill")
-		business.mothball("mill", 40, STAFF)
-		self.assertTrue(business.forget_reason("mill"))
+		business.lifecycle.mothball("mill", 40, STAFF)
+		self.assertTrue(business.lifecycle.forget_reason("mill"))
 		self.assertNotIn("mill", business.closures())
 
 	def test_a_running_plant_has_no_closure_record(self):
 		business = a_business_running("mill")
-		self.assertFalse(business.forget_reason("mill"))
+		self.assertFalse(business.lifecycle.forget_reason("mill"))
 		self.assertNotIn("mill", business.closures())
 
 	def test_opening_a_shut_plant_brings_it_back_and_clears_its_record(self):
 		business = Business(plants=[Plant("mill", state=MOTHBALLED, since_year=40, reason=STAFF)])
-		open_the_plant = Business.open_plant   # the function under test, called by name
-		open_the_plant(business, "mill", 50)
-		self.assertEqual(business.state_of("mill"), "operating")
+		business.lifecycle.open_plant("mill", 50)
+		self.assertEqual(business.reading.state_of("mill"), "operating")
 		self.assertNotIn("mill", business.closures())
 
 
@@ -80,12 +79,12 @@ class ReopeningAnswersOnlyStaffingClosures(unittest.TestCase):
 
 	def test_a_work_shut_for_want_of_staff_is_reopened(self):
 		business = a_business_running("mill")
-		business.mothball("mill", 40, STAFF)
+		business.lifecycle.mothball("mill", 40, STAFF)
 		self.assertEqual(business_review.reopen(business, self.Owner(), None), ["mill"])
 
 	def test_a_work_the_player_shut_on_purpose_is_never_reopened_on_its_own(self):
 		business = a_business_running("mill")
-		business.mothball("mill", 40, MANUAL)
+		business.lifecycle.mothball("mill", 40, MANUAL)
 		self.assertEqual(business_review.reopen(business, self.Owner(), None), [])
 
 
@@ -97,7 +96,7 @@ class StaffingClosureDiscount(unittest.TestCase):
 
 	def game_with(self, reason, shut_year, year):
 		business = a_business_running("mill")
-		business.mothball("mill", shut_year, reason)
+		business.lifecycle.mothball("mill", shut_year, reason)
 		projects = types.SimpleNamespace(mothballed=business.mothballed(), closures=business.closures())
 		module = projects_host.build(projects_record=projects, year=year)
 		# the build cost that makes opening the concern cost 1000

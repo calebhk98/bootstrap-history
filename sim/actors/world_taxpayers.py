@@ -26,8 +26,8 @@ class Taxpayers:
 
 	def visible_scale_of(self, actor: Any) -> float:
 		"""How large and visible any actor looks to the state: its staff, its wealth and its prominence."""
-		return self.needs.visible_scale(sum(actor.workforce.values()), demand_answer.visible_wealth(actor.money, actor.concealed_wealth()),
-										actor.prominence(), actor.defiance())
+		return self.needs.visible_scale(sum(actor.workforce.values()), demand_answer.visible_wealth(actor.money, actor.stance.concealed_wealth()),
+										actor.stance.prominence(), actor.stance.defiance())
 
 	def seat_taxpayers(self, country: Optional[str]) -> List[Tuple[float, float]]:
 		"""(visible scale, taxable income) of the playing household seats that belong to `country`; a seat with no
@@ -55,8 +55,8 @@ class Taxpayers:
 		actors = self.world.registry
 		home = actors.state.home_country
 		return [(self.visible_scale_of(firm), income)
-				for firm, income in taxpayer_income.firm_incomes_in(actors.active_firms(), country or home, actors.country_of,
-																	actors.country_of_tile)]
+				for firm, income in taxpayer_income.firm_incomes_in(actors.concerns.active_firms(), country or home, actors.countries.country_of,
+																	actors.countries.country_of_tile)]
 
 	def visible_taxpayers(self) -> List[Tuple[float, float]]:
 		"""(visible scale, taxable income) of every actor the home state can see: the home country's playing seats and the firms that answer to it."""

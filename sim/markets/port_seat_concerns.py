@@ -22,7 +22,7 @@ class SeatConcerns:
 
     def seats_playing(self):
         """The seats whose concerns sell this year (a seat whose run ended sells nothing)."""
-        return sorted(self._world.playing_seats() or self._world.state.seats)
+        return sorted(self._world.state.playing_seats() or self._world.state.seats)
 
     def orders(self):
         """(the orders of every seat's running concerns' output for the year, one agent per seat named by its seat id;
@@ -44,11 +44,11 @@ class SeatConcerns:
         view = economy.view()
         moves, offers = [], []
         offered = offered_by_seat.setdefault(seat_id, (tile, {}))[1]
-        for node_id in sorted(world.operating()):
-            quantities = world.concern_book_offer(node_id)
+        for node_id in sorted(world.production.operating()):
+            quantities = world.production.concern_book_offer(node_id)
             if not quantities:
                 continue
-            inputs[seat_id] = inputs.get(seat_id, 0.0) + world.concern_book_inputs_cost(node_id)
+            inputs[seat_id] = inputs.get(seat_id, 0.0) + world.production.concern_book_inputs_cost(node_id)
             for material, quantity in sorted(quantities.items()):
                 offered[material] = offered.get(material, 0.0) + quantity
                 moves.append(GoodsMove(EDGE_LEGACY, seat_id, material, tile, quantity, "concern output"))
@@ -62,7 +62,7 @@ class SeatConcerns:
         the variable cost of the cheapest technique the concern holds that the economy knows, at the
         economy's live prices and wages. With no such technique it sells at what the market pays."""
         recipes = economy_api.recipes_of(self._agent.economy())
-        keys = price_rules.entry_keys_held_for(node_id, price_solver.default_production_entries(), self._world.techniques_spread())
+        keys = price_rules.entry_keys_held_for(node_id, price_solver.default_production_entries(), self._world.production.techniques_spread())
         best = None
         for key in sorted(keys):
             recipe = recipes.get(key)
@@ -99,7 +99,7 @@ class SeatConcerns:
         """The tiles the playing seats buy and sell on, whose markets' books the economy keeps."""
         world = self._world
         tiles = set()
-        for seat_id in world.playing_seats() or world.state.seats:
+        for seat_id in world.state.playing_seats() or world.state.seats:
             with world.act_as(seat_id):
                 tiles.add(self._agent.tile_in_economy(world.labour.base_tile()))
         return tiles

@@ -1,6 +1,6 @@
 """The founder's seat as the owner of a reviewed business: how its plants are shut, spared and seized.
 
-`Business.review` (sim/agents/business_review.py) decides which plants close and why; this answers what is particular to
+`Business.reviews.review` (sim/agents/business_review.py) decides which plants close and why; this answers what is particular to
 the founder's seat: the supervision pool, the policy that lets losses be shed, the credit line, and the way a shut plant is
 mothballed rather than forgotten."""
 from sim.agents.api import edges

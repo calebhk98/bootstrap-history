@@ -74,9 +74,8 @@ class HaulRoute(unittest.TestCase):
 class QuoteVolume(unittest.TestCase):
     def quote(self, offered, market):
         sim = types.SimpleNamespace(
-            _material_tag=lambda material: (material, None),
-            economy=types.SimpleNamespace(agent_offered_tonnes=lambda material: offered),
-            _material_market_tonnes=lambda key: market)
+            materials=types.SimpleNamespace(tag=lambda material: (material, None), market_tonnes=lambda key: market),
+            economy=types.SimpleNamespace(agent_offered_tonnes=lambda material: offered))
         stand_in = types.SimpleNamespace(
             _sim=sim, acting_party_id="founder", posted_tonnes=lambda side, key: 0.0,
             pricing=types.SimpleNamespace(

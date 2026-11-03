@@ -8,7 +8,7 @@ def staff(business: Business, owner: Any, entry_key: str, world: Any, weight: fl
 	"""Post the places a plant needs (the labour core hires for them at the next clearing, paid there) and return the share
 	of them the owner's people hired so far cover, which is the share of its output that gets made. `weight` is the share of
 	the plant that runs the technique (its adoption share)."""
-	size = business.size_of(entry_key) * weight
+	size = business.reading.size_of(entry_key) * weight
 	inputs = getattr(getattr(owner, "enterprises", None), "input_share", None)   # an owner with plants of its own that holds their inputs physically finds them first
 	input_found = 1.0 if inputs is None else inputs(entry_key, size, world)
 	found = input_found

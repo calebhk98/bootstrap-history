@@ -4,12 +4,12 @@ rotation and the soil nitrogen stock now make them (`Sim.farm_sites`), not as th
 from sim.economy.api import tile_costs
 
 
-def follow_farm_sites(sim, setup) -> dict:
+def follow_farm_sites(sim, held_tiles, yield_factor_by_recipe_tile) -> dict:
     """The setup fields that follow the farm's sites, for `Economy.change_setup`: each held tile's cropped share and
     yield factor (`tiles`), and the yield of every recipe keyed to a changed tile; empty when nothing changed."""
-    tiles = dict(setup.tiles)
+    tiles = dict(held_tiles)
     changed = {}
-    for tile_id, site in sorted(sim.farm_sites().items()):
+    for tile_id, site in sorted(sim.farm.sites().items()):
         tile = tiles.get(tile_id)
         if tile is None:
             continue
@@ -19,5 +19,5 @@ def follow_farm_sites(sim, setup) -> dict:
             changed[tile_id] = followed.fertility
     if not changed:
         return {}
-    factors = {key: changed.get(key.rpartition("@")[2], factor) for key, factor in setup.yield_factor_by_recipe_tile.items()}
+    factors = {key: changed.get(key.rpartition("@")[2], factor) for key, factor in yield_factor_by_recipe_tile.items()}
     return {"tiles": tiles, "yield_factor_by_recipe_tile": factors}

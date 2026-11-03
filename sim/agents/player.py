@@ -39,19 +39,19 @@ class Player(RecordedActor):
 			raise CommandRejected("not known")
 		if node_id in self.concerns:
 			raise CommandRejected("already open")
-		self.business.open_plant(node_id, world.setting.year)
+		self.business.lifecycle.open_plant(node_id, world.setting.year)
 		return "opened"
 
 	def end_concern(self, node_id: str, world: Any) -> str:
 		if node_id not in self.concerns:
 			raise CommandRejected("not open")
-		self.business.close_plant(node_id)
+		self.business.lifecycle.close_plant(node_id)
 		return "closed"
 
 	def operate(self, world: Any) -> None:
 		for node_id in sorted(self.concerns):
 			rivals = self.rivals_of(node_id, self.actor_id) if self.rivals_of else 0.0
-			self.business.note_margin(node_id, business_books.operate(self.business, self, node_id, world, rivals))
+			self.business.tally.note_margin(node_id, business_books.operate(self.business, self, node_id, world, rivals))
 		self.record.last_margin = sum(plant.margin for plant in self.business.plants if plant.margin is not None)
 
 	def proven_concerns(self, world: Any) -> List[str]:
@@ -90,10 +90,10 @@ class Player(RecordedActor):
 		"""An AI player: shut what it expects to lose on, open what it knows pays, research what is worth it."""
 		for node_id in sorted(self.concerns):
 			if (self.margin_of(node_id) or 0.0) < 0 and self.expected_margin(node_id, world) <= 0:
-				self.business.close_plant(node_id)
+				self.business.lifecycle.close_plant(node_id)
 		for node_id in sorted(self.knowledge - self.concerns):
 			if node_id in world.setting.nodes and self.expected_margin(node_id, world) > 0:
-				self.business.open_plant(node_id, world.setting.year)
+				self.business.lifecycle.open_plant(node_id, world.setting.year)
 		research_choice.decide(self, world)
 
 	def act(self, world: Any) -> None:
@@ -101,5 +101,5 @@ class Player(RecordedActor):
 		run_orders(self, world)
 		if self.record.controller == "ai":
 			self.decide(world)
-		self.work_on_research(world)
+		self.copying.work_on_research(world)
 		self.operate(world)

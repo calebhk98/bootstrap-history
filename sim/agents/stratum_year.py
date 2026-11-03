@@ -179,7 +179,7 @@ def settle_keep(registry: Any, world: Any) -> None:
 		if actor.record.labour_product > 0.0:
 			ledger.transfer(registry.state.edge(EDGE_ECONOMY), owner, actor.record.labour_product, EDGE_ECONOMY)
 			actor.record.labour_product = 0.0
-		cost = actor.record.members * registry.world_for(actor, world).people.subsistence_cost_per_person_year()
+		cost = actor.record.members * registry.countries.world_for(actor, world).people.subsistence_cost_per_person_year()
 		ledger.transfer(owner, actor, cost, "keep of bonded")
 		actor.record.allowance += cost
 
@@ -194,7 +194,7 @@ def true_up_keep(registry: Any, world: Any) -> None:
 		owner = registry.actors.get(actor.neighbour_id(str(actor.record.plan.get("owner") or "")))
 		if owner is None or owner is actor:
 			continue
-		cost = actor.record.members * registry.world_for(actor, world).people.subsistence_cost_per_person_year()
+		cost = actor.record.members * registry.countries.world_for(actor, world).people.subsistence_cost_per_person_year()
 		shortfall = cost - actor.record.allowance
 		if shortfall > 0.0:
 			ledger.transfer(owner, actor, shortfall, "keep of bonded")

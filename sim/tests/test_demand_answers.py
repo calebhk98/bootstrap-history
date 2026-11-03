@@ -86,18 +86,18 @@ player = Player("player:b", ActorRecord(kind="player", controller="human"))
 player.record.orders.append({"command": "answer_demand", "stance": "negotiate", "service": 25})
 run_orders(player, PressedWorld())
 check("the command sets the stance and the service on offer",
-      player.demand_stance() == "negotiate" and player.service_worth() == 25.0, player.record.journal)
+      player.stance.demand_stance() == "negotiate" and player.stance.service_worth() == 25.0, player.record.journal)
 check("the journal gives the odds of the offer", "chance" in player.record.journal[-1]["detail"], player.record.journal[-1])
 player.record.orders.append({"command": "answer_demand", "stance": "conceal"})
 run_orders(player, PressedWorld())
-check("the command accepts concealing", player.demand_stance() == "conceal" and player.record.journal[-1]["ok"],
+check("the command accepts concealing", player.stance.demand_stance() == "conceal" and player.record.journal[-1]["ok"],
       player.record.journal[-1])
 
 # ---- refusing marks the actor ---------------------------------------------------------------------------------------
 _taken, payer, _state = levy_on("refuse", 0.99)
-check("a refusal the state could not enforce still marks the actor as defiant", payer.defiance() > 0.0, payer.defiance())
+check("a refusal the state could not enforce still marks the actor as defiant", payer.stance.defiance() > 0.0, payer.stance.defiance())
 _taken, payer, _state = levy_on("comply", 0.0)
-check("complying leaves no mark", payer.defiance() == 0.0)
+check("complying leaves no mark", payer.stance.defiance() == 0.0)
 check("defiance makes the actor look larger to the state", demand_answer.notice_surcharge(0.8) > demand_answer.notice_surcharge(0.2) > 0.0)
 check("with none there is no surcharge", demand_answer.notice_surcharge(0.0) == 0.0)
 check("the state forgets slowly", 0.0 < demand_answer.defiance_fading(0.5) < 0.5)
@@ -136,18 +136,18 @@ def hiding(draw, stance="conceal"):
 payer, state, world = hiding(0.99)
 demand_year.settle_year(payer, world)
 check("the actor's hidden wealth is recorded and the hiding is paid for out of its purse",
-      payer.concealed_wealth() > 0.0 and payer.money < 10000.0 and state.money == 0.0, (payer.concealed_wealth(), payer.money))
+      payer.stance.concealed_wealth() > 0.0 and payer.money < 10000.0 and state.money == 0.0, (payer.stance.concealed_wealth(), payer.money))
 payer, state, world = hiding(0.0)
 demand_year.settle_year(payer, world)
 check("a state that finds the hoard takes it into its purse and the actor keeps nothing hidden",
-      state.money > 0.0 and payer.concealed_wealth() == 0.0 and payer.money < 10000.0, (state.money, payer.money))
+      state.money > 0.0 and payer.stance.concealed_wealth() == 0.0 and payer.money < 10000.0, (state.money, payer.money))
 payer, state, world = hiding(0.99)
-payer.set_demand_stance("comply")
-payer.set_concealed_wealth(2000.0)
-payer.set_defiance(0.5)
+payer.stance.set_demand_stance("comply")
+payer.stance.set_concealed_wealth(2000.0)
+payer.stance.set_defiance(0.5)
 demand_year.settle_year(payer, world)
 check("an actor that stops concealing brings the wealth back, and the state's memory of its refusals fades",
-      payer.concealed_wealth() == 0.0 and 0.0 < payer.defiance() < 0.5, (payer.concealed_wealth(), payer.defiance()))
+      payer.stance.concealed_wealth() == 0.0 and 0.0 < payer.stance.defiance() < 0.5, (payer.stance.concealed_wealth(), payer.stance.defiance()))
 
 # ---- the founder's household ----------------------------------------------------------------------------------------------
 class Treasury:

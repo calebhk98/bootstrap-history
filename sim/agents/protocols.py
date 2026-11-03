@@ -169,6 +169,11 @@ class PeoplePart(Protocol):
 		"""Money for one person's food at subsistence for a year."""
 		...
 
+	def frontier_disease_loss(self) -> Optional[float]:
+		"""The share of working-age people the diseases of the frontier tiles take in a year, or None where the world does not
+		follow its regions' disease (a foreign country)."""
+		...
+
 	def country_economy(self, country: str) -> Any:
 		"""The economy's own answers for a country that is part of it (pay_per_person_year, society_output,
 		need_floor_costs_per_person_year), or None when the country is not (a country view then raises NoCountryEconomy)."""
@@ -265,7 +270,7 @@ class RevenuePart(Protocol):
 		"""Money's worth of goods imported ("in") or exported ("out") in the last completed year."""
 		...
 
-	def coin_stock_value(self) -> float:
+	def coin_stock_value(self) -> Optional[float]:
 		"""Money's worth of the coin this society holds, from its coin standard."""
 		...
 
@@ -280,6 +285,11 @@ class RevenuePart(Protocol):
 	def land_rent_owners(self, tiles: Optional[FrozenSet[str]] = None) -> List[Tuple[Any, float]]:
 		"""(actor, rent received) of the rent paid on `tiles` (all when none), where the world can say which actors
 		the rent went to; empty where it cannot."""
+		...
+
+	def fugitive_share(self) -> Optional[float]:
+		"""Share of the country's people who are away having fled the state's take, or None where the world does not follow
+		its people's flight (a foreign country)."""
 		...
 
 	def held_tiles(self) -> List[str]:

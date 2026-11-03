@@ -45,7 +45,7 @@ def make_parent(kind="firm", staff=500.0):
 	registry = ActorRegistry(ActorsState(home_country="home"))
 	parent = registry.add("firm:1" if kind == "firm" else "player:p", ActorRecord(kind=kind, money=1000.0, founded_year=50))
 	parent.knowledge.update({"gear", "mill"})
-	parent.business.adopt(Plant("mill", opened_year=80))
+	parent.business.lifecycle.adopt(Plant("mill", opened_year=80))
 	parent.workforce["labourer"] = staff
 	return registry, parent
 
@@ -59,7 +59,7 @@ few = spinoff.leavers_expected(make_parent(staff=10.0)[1], "mill", world)
 many = spinoff.leavers_expected(make_parent(staff=100.0)[1], "mill", world)
 check("more staff, more leavers", many > few > 0.0, (few, many))
 young = make_parent()[1]
-young.business.adopt(Plant("mill", opened_year=99))
+young.business.lifecycle.adopt(Plant("mill", opened_year=99))
 check("a concern too young spawns nothing", spinoff.leavers_expected(young, "mill", world) == 0.0)
 check("no ceiling is declared: how many leave is not capped", not hasattr(spinoff, "SPINOFF_CHANCE_CAP"))
 

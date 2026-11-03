@@ -10,6 +10,8 @@ from sim.foreign_trade.api import ResetActorTradeTallies
 from sim.land.api import FinishWays
 from sim.reporting.api import CloseRealOutput
 
+from . import port_goods_orders
+
 
 class Clearing(Part):
 
@@ -34,7 +36,7 @@ class Clearing(Part):
 		record = self.parts.market_objects.economy.agent_market_record(commodity)
 		if record is None:
 			return None
-		displaced = min(record["sold"], self.parts.market_objects.economy.seat_traded_tonnes(self.parts.market_objects.goods_market.acting_party_id, "sold").get(commodity, 0.0))
+		displaced = min(record["sold"], port_goods_orders.traded_tonnes(self.parts.market_objects.economy.agent.stored, self.parts.market_objects.goods_market.acting_party_id, "sold").get(commodity, 0.0))
 		return {
 			"material": commodity,
 			"society_sales_tonnes": record["sold"] - displaced,
@@ -49,7 +51,8 @@ class Clearing(Part):
 		"""Close the year: the agent economy's year runs, then the actors' trade tallies reset."""
 		self.needs.send(FinishWays())
 		economy = self.parts.market_objects.economy
-		outcome = economy.run_agent_year()
+		economy.open_agent()
+		outcome = economy.parts.year.run_year()
 		accounts = outcome.accounts
 		if accounts is None:
 			self.needs.send(RecordFoodEaten(None, {}))

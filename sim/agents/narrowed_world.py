@@ -7,17 +7,13 @@ from typing import Any, Callable, Dict, FrozenSet
 
 from . import protocols
 
-# members a shipped actor probes for with a default, because a foreign country's world does not follow them
-OPTIONAL_MEMBERS = {"people": frozenset({"frontier_disease_loss"}), "revenue": frozenset({"fugitive_share"})}
-
 
 def world_surface() -> Dict[str, FrozenSet[str]]:
-	"""The members an actor may ask of each part of its world: those of the part's protocol and the optional ones."""
+	"""The members an actor may ask of each part of its world: those of the part's protocol."""
 	surface = {}
 	for part, protocol in protocols.World.__annotations__.items():
 		protocol_class = getattr(protocols, protocol) if isinstance(protocol, str) else protocol
-		surface[part] = (frozenset(name for name in vars(protocol_class) if not name.startswith("_"))
-						 | OPTIONAL_MEMBERS.get(part, frozenset()))
+		surface[part] = frozenset(name for name in vars(protocol_class) if not name.startswith("_"))
 	return surface
 
 

@@ -45,7 +45,7 @@ def build(shared):
 	registry = ActorRegistry(ActorsState(home_country="home"))
 	entry = CastEntry(actor_id="government:far", country="far", kind="government", money=1.0, params={})
 	seed_cast(registry, "home", [entry], {"home": CountryProfile(country="home"), "far": CountryProfile(country="far", population=24000.0)})
-	registry.staff_fte_in_country = lambda trade, country, actor_id: EMPLOYED_ELSEWHERE.get(trade, 0.0)
+	registry.staff.staff_fte_in_country = lambda trade, country, actor_id: EMPLOYED_ELSEWHERE.get(trade, 0.0)
 	return CountryWorld(shared, registry.state.countries["far"], registry), registry
 
 

@@ -53,7 +53,7 @@ def _node_of(order: Dict[str, Any]) -> str:
 
 
 def research(player: Any, order: Dict[str, Any], world: Any) -> str:
-	return player.start_research(_node_of(order), world)
+	return player.copying.start_research(_node_of(order), world)
 
 
 def open_concern(player: Any, order: Dict[str, Any], world: Any) -> str:

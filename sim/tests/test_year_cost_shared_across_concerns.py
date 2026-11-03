@@ -110,25 +110,25 @@ class ConcernSetVersion(unittest.TestCase):
 
     def test_a_size_change_leaves_the_set_version_alone_and_a_new_concern_moves_it(self):
         registry = self.registry()
-        before = (registry.version[0], registry.concern_set_version[0])
-        registry.note_capacity_change("firm:000")
-        self.assertEqual(registry.concern_set_version[0], before[1])
-        self.assertGreater(registry.version[0], before[0])
+        before = (registry.concerns.version[0], registry.concerns.concern_set_version[0])
+        registry.concerns.note_capacity_change("firm:000")
+        self.assertEqual(registry.concerns.concern_set_version[0], before[1])
+        self.assertGreater(registry.concerns.version[0], before[0])
         registry.actors["firm:000"].concerns.add("node_1")
-        self.assertGreater(registry.concern_set_version[0], before[1])
+        self.assertGreater(registry.concerns.concern_set_version[0], before[1])
 
     def test_the_techniques_in_use_are_not_worked_out_again_for_a_size_change(self):
         registry = self.registry()
         walks = []
-        original = registry.concerns_of_active_firms
-        registry.concerns_of_active_firms = lambda: walks.append(1) or original()
+        original = registry.concerns.concerns_of_active_firms
+        registry.concerns.concerns_of_active_firms = lambda: walks.append(1) or original()
         module = production_host.build(
             techniques_granted=set(), operating={}, techniques_held=[], 
-            concern_versions=lambda: (registry.version[0], registry.concern_set_version[0]),
-            concerns_of_active_firms=lambda: registry.concerns_of_active_firms())
+            concern_versions=lambda: (registry.concerns.version[0], registry.concerns.concern_set_version[0]),
+            concerns_of_active_firms=lambda: registry.concerns.concerns_of_active_firms())
         first = module.techniques_in_use()
         for _firm in range(25):
-            registry.note_capacity_change("firm:000")
+            registry.concerns.note_capacity_change("firm:000")
             module.techniques_in_use()
         self.assertEqual(len(walks), 1)
         registry.actors["firm:000"].concerns.add("node_1")
@@ -202,10 +202,10 @@ class PatentHolders(unittest.TestCase):
     def test_the_concerns_of_active_firms_follow_the_holders(self):
         registry = self.registry()
         registry.actors["firm:001"].concerns.add("node_1")
-        self.assertEqual(registry.concerns_of_active_firms(), {"node_0", "node_1"})
+        self.assertEqual(registry.concerns.concerns_of_active_firms(), {"node_0", "node_1"})
         for number in range(3):
             registry.actors["firm:00%d" % number].record.exited_year = 100
-        self.assertEqual(registry.concerns_of_active_firms(), set())
+        self.assertEqual(registry.concerns.concerns_of_active_firms(), set())
 
 
 class ActorsOfAKind(unittest.TestCase):

@@ -15,7 +15,7 @@ def plant_figures(business: Business, entry_key: str, registry: Any, world: Any,
 	"""One plant's yearly figures at full ramp, as an entrant sees them, scaled to its size; None when the actor's country
 	keeps no record of a cost."""
 	tile = firm_entry.firm_tile(registry, None)
-	size = business.size_of(entry_key)
+	size = business.reading.size_of(entry_key)
 	takings = world.concerns.entry_gross(entry_key, 0.0, 1.0) * size
 	yearly = business_books.yearly_costs(world, entry_key)
 	carried = firm_entry.carrying_cost(world, entry_key, tile=tile)
@@ -31,8 +31,8 @@ def plant_figures(business: Business, entry_key: str, registry: Any, world: Any,
 
 def scan_business(business: Business, registry: Any, world: Any, owner_id: Optional[str] = None) -> List[Dict[str, Any]]:
 	"""`plant_figures` of each plant the business is running, in entry order."""
-	rows = (plant_figures(business, entry_key, registry, world, owner_id) for entry_key in sorted(business.entry_keys())
-			if business.state_of(entry_key) == OPERATING)
+	rows = (plant_figures(business, entry_key, registry, world, owner_id) for entry_key in sorted(business.reading.entry_keys())
+			if business.reading.state_of(entry_key) == OPERATING)
 	return [row for row in rows if row is not None]
 
 

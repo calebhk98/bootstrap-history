@@ -37,11 +37,11 @@ class Plants(Part):
 
 	def venture_opened_year(self, node_id, default):
 		"""The year the plant first opened, or `default` where nothing records it."""
-		return self.seat.business.opened_year_of(node_id, default)
+		return self.seat.business.reading.opened_year_of(node_id, default)
 
 	def venture_size(self, node_id):
 		"""How many founding sizes the seat's plant of this concern is (one where it records none)."""
-		return self.seat.business.size_of(node_id)
+		return self.seat.business.reading.size_of(node_id)
 
 	def operating_changed(self):
 		"""A plant of a seat's business opened, shut or closed."""
@@ -57,13 +57,13 @@ class Plants(Part):
 		self.seat_of(command.seat_id).business.watch = self.operating_changed
 
 	def apply_release_plant(self, command):
-		plant = self.seat_of(command.seat_id).business.close_plant(command.node_id)
+		plant = self.seat_of(command.seat_id).business.lifecycle.close_plant(command.node_id)
 		if plant is not None and plant.opened_year is None:
 			plant.opened_year = command.year
 		return plant
 
 	def apply_adopt_plant(self, command):
-		self.seat_of(command.seat_id).business.adopt(command.plant)
+		self.seat_of(command.seat_id).business.lifecycle.adopt(command.plant)
 
 	def apply_note_operating_changed(self, command):
 		self.bump_seat(OPERATING_CHANGES)
@@ -84,25 +84,25 @@ class Plants(Part):
 			self.seat.business.operating().discard(node_id)
 
 	def apply_mothball_concern(self, command):
-		self.seat.business.mothball(command.node_id, command.year, command.reason)
+		self.seat.business.lifecycle.mothball(command.node_id, command.year, command.reason)
 
 	def apply_restore_concern(self, command):
-		self.seat.business.restore(command.node_id)
+		self.seat.business.lifecycle.restore(command.node_id)
 
 	def apply_close_concern(self, command):
-		self.seat.business.close_plant(command.node_id)
+		self.seat.business.lifecycle.close_plant(command.node_id)
 
 	def apply_forget_closure_reason(self, command):
-		return self.seat.business.forget_reason(command.node_id, command.reason)
+		return self.seat.business.lifecycle.forget_reason(command.node_id, command.reason)
 
 	def apply_review_concerns(self, command):
-		return self.seat.business.review(FounderReview(), self.needs.actor_world(), command.rules)
+		return self.seat.business.reviews.review(FounderReview(), self.needs.actor_world(), command.rules)
 
 	def apply_review_reopening(self, command):
-		return self.seat.business.review_reopening(FounderReview(), self.needs.actor_world())
+		return self.seat.business.reviews.review_reopening(FounderReview(), self.needs.actor_world())
 
 	def apply_note_concern_year(self, command):
-		self.seat.business.note_year(command.node_id, command.margin)
+		self.seat.business.tally.note_year(command.node_id, command.margin)
 
 	def apply_sell_concern(self, command):
 		return self.parts.sales.sell_concern(command.node_id)
