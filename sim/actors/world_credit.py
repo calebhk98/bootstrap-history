@@ -1,11 +1,9 @@
-"""What an actor can see of the loanable-funds market of its civilisation, and what households save."""
-from typing import Any, Optional, Tuple
+"""What an actor can see of the loanable-funds market of its civilisation."""
+from typing import Any, Optional
 
-from sim.agents.api import SAVING_SHARE_OF_SURPLUS
 from sim.book import InsufficientFunds
 from sim.economy.api import opening_market_rate
-from sim.finance.api import DefaultOnDebt
-from sim.world import demand
+
 
 class Credit:
 	"""Read-only questions about the market and about saving. `world` is the root that hands out the parts."""
@@ -73,10 +71,6 @@ class Credit:
 		"""The tree nodes that declare a mechanic."""
 		return tuple(self.needs.mechanic[mechanic])
 
-	def state_lending(self) -> Tuple[float, float]:
-		"""(what the state has out on loan, the yearly rate lenders earn) at the last meeting."""
-		return self.needs.state_lending()
-
 	def pay_interest(self, payer: Any, owed: float, purpose: str = "interest") -> float:
 		"""A borrower pays the interest on its debt to its lenders; what was paid. Interest the lenders refuse to advance the
 		payer (its limit, or the funds they hold) is not paid: the caller carries it as arrears."""
@@ -87,28 +81,3 @@ class Credit:
 		paid = sum(received.values())
 		payer.payments.note_outlay(purpose, paid)
 		return paid
-
-	def founder_credit_limit(self) -> float:
-		"""The most the founder's household may owe in all."""
-		return self.needs.credit_limit()
-
-	def founder_debt_rate(self) -> float:
-		return self.needs.debt_interest_rate()
-
-	def founder_defaults(self) -> None:
-		self.needs.send(DefaultOnDebt(self.needs.year()))
-
-	def household_saving(self) -> float:
-		"""Yearly saving of the society's households: a share of the income above subsistence, with
-		income spread over the people as the civilisation's inequality says. A labourer's yearly pay keeps
-		him and his dependents at the wage floor, so it is what each person needs, spread over everyone."""
-		population = self.needs.population_total()
-		income = self.world.revenue.society_output()
-		if population <= 0.0 or income <= 0.0:
-			return 0.0
-		labour = self.world.labour
-		need_per_person = labour.pay_per_person_year(labour.trade_of_role("unskilled")) * self.needs.working_age() / population
-		bins = demand.income_bins(population, income / population)
-		surplus = sum(income_bin.population * max(0.0, income_bin.income_per_capita_per_year - need_per_person)
-					  for income_bin in bins)
-		return SAVING_SHARE_OF_SURPLUS * surplus

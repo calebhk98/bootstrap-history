@@ -11,12 +11,6 @@ class RefreshLenderOffers(Command):
 
 
 @dataclass(frozen=True)
-class DefaultOnDebt(Command):
-	"""The acting seat's household defaults on its debt in `year`."""
-	year: int
-
-
-@dataclass(frozen=True)
 class ChargeInterest(Command):
 	"""The acting seat's household pays the year's interest on its debt by the shared arrears rule. Answers the interest owed."""
 	year: int

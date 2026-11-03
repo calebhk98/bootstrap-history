@@ -15,9 +15,6 @@ class Applied(Part):
 		        "bondage_years_left": seat.bondage_years_left, "bondage_debt": seat.bondage_debt,
 		        "last_settlement": seat.last_settlement, "interest_paid": seat.interest_paid}
 
-	def apply_default_on_debt(self, command: Any) -> None:
-		self.parts.insolvency.default_on_debt(command.year)
-
 	def apply_charge_interest(self, command: Any) -> float:
 		return self.parts.arrears.charge_interest(command.year)
 

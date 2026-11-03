@@ -9,7 +9,7 @@ holds, and applies the commands that address the exchange to a seat (seat_exchan
 from sim.assembly.api import FIRST, KEYED, LIST, QUOTE, ExtensionPoint, ModuleSpec, Provision, ViewSpec
 from sim.agents.api import ActorsState
 from sim.coin.api import ChargeActorsTheft, ChargeKeeping
-from sim.finance.api import DefaultOnDebt, RefreshLenderOffers
+from sim.finance.api import RefreshLenderOffers
 from sim.foreign_trade.api import NoteActorHomeTrade, NoteActorTrade, NoteCargoLeg
 from sim.knowledge.api import ReceiveTechniques
 from sim.ledger.api import CreditSeat, DebitSeat, NoteSeatCash, PayActor, RestorePurse
@@ -47,7 +47,7 @@ READS_BY_OWNER = {
 	"seats": ("acting_seat", "acting_country", "seat_list", "seat_country", "seats_holding_patent", "seat_place", "seat_dealings", "dealings_listing"),
 	"demography": ("pop_scale_for", "population_total", "working_age", "urban_fraction", "people_by_tile", "nutrition_ratio_last_year"),
 	"scenario": ("year", "civilisation", "game_setting", "opening_civilisation", "civilisation_record", "money_text", "mass_rate_text"),
-	"finance": ("credit_limit", "credit_room", "fundable_amount", "risk_premium", "state_lending", "debt_interest_rate", "household_rate_on_loan", "debt_service_share_of_surplus", "market_rate"),
+	"finance": ("credit_limit", "credit_room", "fundable_amount", "risk_premium", "household_rate_on_loan", "debt_service_share_of_surplus", "market_rate"),
 	"ventures": ("operating", "operating_by_seat", "venture_opened_year", "venture_size", "concern_staff"),
 	"knowledge": ("tree_nodes", "techniques_held", "techniques_granted", "techniques_by_seat"),
 	"projects": ("substitute_quality_discount", "project_cost", "effective_risk", "seat_review"),
@@ -129,7 +129,7 @@ MODULE_SPECS = (ModuleSpec(
 		Provision("player_commands", "shipped_player_commands", "commands"),
 	),
 	reads=tuple(name for names in READS_BY_OWNER.values() for name in names),
-	sends=(ChargeKeeping, ChargeActorsTheft, RefreshLenderOffers, DefaultOnDebt, AccrueExperience, ForgetActorOrders, NoteActorSale,
+	sends=(ChargeKeeping, ChargeActorsTheft, RefreshLenderOffers, AccrueExperience, ForgetActorOrders, NoteActorSale,
 	       NoteActorPurchase, ReleaseStaff, NoteActorHomeTrade, NoteActorTrade, NoteCargoLeg, AddScandal, RecordEvent, PayActor,
 	       CreditSeat, DebitSeat, NoteSeatCash, RestorePurse, ReceiveTechniques, SetDealing, ReleasePlant, AdoptPlant),
 ),)

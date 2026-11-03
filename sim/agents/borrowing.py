@@ -78,6 +78,13 @@ class Borrower:
 		"""What the actor may still borrow: its ceiling less what it owes, as far as lenders lend it."""
 		return self.draw_limit(world, max(0.0, self.credit_ceiling(world) - self.debt()))
 
+	def payable_now(self, world: Any, amount: float) -> float:
+		"""The most of `amount` the actor can pay now: its purse, the deposit it can take back, and what it is lent beyond them
+		(`draw_limit`)."""
+		purses = self.purses  # type: ignore[attr-defined]
+		held = max(0.0, purses.purse(self.account_id)) + purses.takeable(self.account_id)
+		return amount if held >= amount else held + self.draw_limit(world, amount - held)
+
 	# Whether the actor pays for copies on credit; a firm does, a state and a household keep to their purse.
 	borrows_for_copies = False
 
@@ -134,7 +141,7 @@ class Borrower:
 		bonds = self.purses.bonds  # type: ignore[attr-defined]
 		floating = max(0.0, debt - bonds.debt(self.account_id))  # type: ignore[attr-defined]
 		owed = (floating * self.borrowing_rate(world) if floating > 0.0 else 0.0) + bonds.coupons_due(self.account_id)  # type: ignore[attr-defined]
-		asked, unpaid = borrowing_arrears.settle_year(owed, self.purses.payable(self.account_id, owed))  # type: ignore[attr-defined]
+		asked, unpaid = borrowing_arrears.settle_year(owed, self.payable_now(world, owed))
 		paid = world.credit.pay_interest(self, asked, "interest") if asked > 0.0 else 0.0   # what the lenders really took
 		record.interest_arrears += unpaid + (asked - paid)
 		# A debt over its ceiling owes the excess as principal due (a margin call); unpaid, it is arrears at any rate.

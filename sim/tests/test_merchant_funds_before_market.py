@@ -3,7 +3,6 @@ pricing a landed good before lenders first meet cannot loop back through society
 
 QUICK_TOPIC = True
 
-from sim.tests.agents_fake_world import flat_namespace
 import unittest
 
 from sim.tests import finance_host
@@ -11,15 +10,12 @@ from sim.tests import finance_host
 
 def world_with(listing):
     """The finance module over the economy's lender listing as the markets view answers it (`(answered, listing)`)."""
-    def output_must_not_be_read():
-        raise AssertionError("household saving read before lenders met")
-    return finance_host.build(agent_lender_listing=lambda: listing,
-                              actor_world=flat_namespace(household_saving=output_must_not_be_read))
+    return finance_host.build(agent_lender_listing=lambda: listing)
 
 
 class FundsBeforeTheLendersMeet(unittest.TestCase):
 
-    def test_no_lenders_listed_means_no_pooled_funds_and_no_call_into_output(self):
+    def test_no_lenders_listed_means_no_pooled_funds(self):
         self.assertEqual(world_with((False, None)).households_loanable_funds(), 0.0)
         self.assertEqual(world_with((True, {"coin_per_unit": 2.0, "lenders": []})).households_loanable_funds(), 0.0)
 

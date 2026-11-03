@@ -512,27 +512,8 @@ class CreditPart(Protocol):
 		"""The tree nodes that declare a mechanic."""
 		...
 
-	def state_lending(self) -> Tuple[float, float]:
-		"""(what the state has out on loan, the yearly rate lenders earn) at the last meeting."""
-		...
-
 	def pay_interest(self, payer: Any, owed: float, purpose: str = "interest") -> float:
 		"""A borrower pays the interest on its debt to its lenders; what was paid (interest the lenders refuse is carried as arrears)."""
-		...
-
-	def founder_credit_limit(self) -> float:
-		"""The most the founder's household may owe in all."""
-		...
-
-	def founder_debt_rate(self) -> float:
-		"""The yearly rate the founder's household pays on what it owes."""
-		...
-
-	def founder_defaults(self) -> None:
-		"""The founder's household meets its lenders' default: it stops what it cannot fund, then settles or enters service."""
-		...
-
-	def household_saving(self) -> float:
 		...
 
 

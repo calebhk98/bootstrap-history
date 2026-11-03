@@ -54,6 +54,12 @@ class NoPurses:
 	def drawable(self, account_id, amount):
 		return amount   # the lenders hold all the household asks
 
+	def purse(self, account_id):
+		return 0.0
+
+	def takeable(self, account_id):
+		return 0.0
+
 
 def founder_borrower(money, world):
 	"""The founder's household reduced to what the shared rule reads: a purse, an arrears book, and a world that answers the
@@ -78,6 +84,7 @@ class FounderWorld(FakeWorld):
 
 	def founder_defaults(self):
 		self.defaults += 1
+		return True
 
 
 def years_until_founder_defaults():

@@ -49,7 +49,6 @@ MODULE_SPECS = (ModuleSpec(
 		ViewSpec("credit_room", "credit_room", kind=QUOTE),
 		ViewSpec("fundable_amount", "fundable_amount", kind=QUOTE),
 		ViewSpec("risk_premium", "risk_premium", kind=QUOTE),
-		ViewSpec("state_lending", "state_lending", **_LIVE),
 		ViewSpec("households_loanable_funds", "households_loanable_funds", **_LIVE),
 		ViewSpec("lent_share", "lent_share", **_LIVE),
 		ViewSpec("capital_market_report", "capital_market_report", **_SEAT),
@@ -80,7 +79,7 @@ MODULE_SPECS = (ModuleSpec(
 		ViewSpec("purchase_remedies_text", "purchase_remedies_text", kind=QUOTE, seat_scoped=True),
 	),
 	applies=(
-		(commands.RefreshLenderOffers, "refresh_lender_offers"), (commands.DefaultOnDebt, "apply_default_on_debt"),
+		(commands.RefreshLenderOffers, "refresh_lender_offers"),
 		(commands.ChargeInterest, "apply_charge_interest"), (commands.ShedLossMakers, "apply_shed_loss_makers"),
 		(commands.WarnNearLimit, "apply_warn_near_limit"), (commands.EnforceCreditLimit, "apply_enforce_credit_limit"),
 		(commands.JudgeInsolvency, "judge_insolvency"), (commands.ServeBondageYear, "serve_bondage_year"),
