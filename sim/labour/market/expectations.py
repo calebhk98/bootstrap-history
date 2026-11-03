@@ -9,7 +9,8 @@ from typing import Dict, Mapping, Optional, Tuple
 
 from sim.constants import declare
 
-from .clearing import reservation_wage, target_for_demand
+from .clearing import target_for_demand
+from .reservation import reservation_wage
 from .premium import annuity_factor
 from .records import LabourClearing, MarketState, YearInputs
 

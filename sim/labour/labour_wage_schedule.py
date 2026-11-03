@@ -24,7 +24,7 @@ class WageScheduleReader:
         economy pays it at the base tile (the wage `quote_unskilled` and `wage_per_hour` read), or before the economy has
         opened the opening's figure times the price level. Reading builds a priced copy and changes nothing."""
         opening = self.opening_wage_schedule()
-        unskilled = trade_data.fallback_trade_of(self._world, opening.training_years)
+        unskilled = trade_data.fallback_trade_of(self._world)
         paid = self._world.economy.agent_wage_at(unskilled, self._settlement.base_tile())
         return opening.priced_at(paid if paid is not None
                                  else opening.money_per_labour_hour * self._world.finance.home_price_level())

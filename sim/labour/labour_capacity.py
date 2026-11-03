@@ -47,7 +47,7 @@ class Capacity:
                  if trade not in self._world.trades.trades_absent]
         blended = blended_annual_wage(wages)
         return blended if blended is not None else market.quote_annual(
-            trade_data.fallback_trade_of(self._world, self.schedule.wage_schedule().training_years))
+            trade_data.fallback_trade_of(self._world))
 
     STAFF_EXTRA_HEADROOM_WEIGHT = declare(
         "STAFF_EXTRA_HEADROOM_WEIGHT", 1.35, kind="temporary_heuristic",

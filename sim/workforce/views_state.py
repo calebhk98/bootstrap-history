@@ -31,7 +31,7 @@ class ViewsState(Part):
         return {"allocations": seat.hour_allocations, "work_trade": seat.work_trade, "wage_hours": seat.wage_hours_this_year,
                 "wages_offered_for": dict(seat.hours_offered_for_wages), "teaching_hours": seat.teaching_hours_this_year,
                 "relocation_hours": seat.relocation_hours_this_year, "supervision_hours": seat.supervision_hours_this_year,
-                "contract_hours": seat.contract_hours, "commissioned": seat.commissioned, "last_year": seat.hours_this_year,
+                "contract_hours": seat.contract_hours, "last_year": seat.hours_this_year,
                 "wage_work_last_year": seat.wage_work_last_year, "trade_hours_used": seat.trade_hours_used,
                 "unused_reported": seat.unused_hours_reported, "last_taught": seat.last_taught,
                 "director_hours_spent": seat.director_hours_spent_founder}

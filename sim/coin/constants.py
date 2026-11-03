@@ -30,4 +30,4 @@ KEEPING_BASIS = ("guard hours per tonne of coin per year, a labelled heuristic "
 CARRIAGE_CAUSE = "coin carriage"
 CREDIT_PURPOSES = frozenset({"interest", "loan", "loan repayment"})  # claims on a debtor: no coin changes hands
 THEFT_CAUSE = "theft"
-GUARDED_KINDS = ("coin",)   # coin is guarded by the keeping cost already charged; stock is watched by nobody
+GUARDED_KINDS = ("coin",)   # the kinds whose guards are charged (the keeping cost); theft_exposure.GUARDABLE_KINDS are those a guard could watch

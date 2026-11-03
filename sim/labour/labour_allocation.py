@@ -45,7 +45,7 @@ class Allocation:
 
     def unskilled_trade(self):
         """The registry's flagged fallback trade: the one anyone can take up at once."""
-        return trade_data.fallback_trade_of(self._world, self.schedule.wage_schedule().training_years)
+        return trade_data.fallback_trade_of(self._world)
 
     def farming_technique(self):
         """This society's farming technique from the technologies it holds,

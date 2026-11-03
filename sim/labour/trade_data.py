@@ -5,31 +5,15 @@ A trade that does not state a field gets the generic answer (not literate, no to
 teacher), so a mod's trade works without code. The role constants that remain are in
 legacy_trade_defaults.py.
 """
-import functools
-from typing import Any, Callable, Dict, FrozenSet, Mapping, Tuple
+from typing import Any, Dict, FrozenSet, Mapping, Tuple
 
 from . import legacy_trade_defaults
 from .market import trades as market_trades
 
 
-@functools.lru_cache(maxsize=64)
-def _fallback_of(entries: Tuple[Tuple[str, float, str], ...]) -> str:
-    registry = {trade: {"family": family, "training_years": years} for trade, years, family in entries}
-    return market_trades.fallback_trade(market_trades.trade_specs(registry))
-
-
-def fallback_trade(training_years: Mapping[str, float], family_of: Callable[[str], str]) -> str:
-    """The work anyone can take up at once (the trade needing the fewest training years). Memoised on
-    the registry's content, which the callers ask about many times a year."""
-    return _fallback_of(tuple((trade, years, family_of(trade)) for trade, years in training_years.items()))
-
-
-def fallback_trade_of(world, training_years: Mapping[str, float]) -> str:
+def fallback_trade_of(world) -> str:
     """The world's unskilled fallback trade: the registry's flagged trade, else the fewest-years rule."""
-    registry = registry_of(world)
-    if registry:
-        return market_trades.fallback_trade_of_registry(registry)
-    return fallback_trade(training_years, world.trades.trade_family)
+    return market_trades.fallback_trade_of_registry(registry_of(world))
 
 
 def registry_of(world) -> Mapping[str, Mapping[str, Any]]:

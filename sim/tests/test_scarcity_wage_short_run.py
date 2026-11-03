@@ -6,7 +6,7 @@ QUICK_TOPIC = True
 
 import unittest
 
-from sim.labour.market import clearing, expectations, scarcity, trades
+from sim.labour.market import clearing, expectations, reservation as reservations, scarcity, trades
 from sim.labour.market.import_cost import ImportCosts
 from sim.labour.market.records import EmployerHoursBid, MarketState, Route, YearInputs
 
@@ -105,6 +105,17 @@ class FetchingTrainedHandsBoundsTheWage(unittest.TestCase):
         self.assertIsNone(ImportCosts(state(healers=1.0), year_inputs).supply("vale", "healer"))
 
 
+class AMarketWithNoWageYetIsPricedAtTheReservationWage(unittest.TestCase):
+
+    def test_the_hours_the_workers_sell_at_their_reservation_wage_count_toward_the_shortage(self):
+        held = state(healers=100.0, hill_healers=5000.0)
+        del held.wages["vale"]["healer"]
+        year_inputs = inputs([hungry(hours=100.0 * HOURS)], {"vale": [Route("hill", 20.0)]},
+                             {("healer", "vale"): lambda wage: 100.0 * HOURS * min(1.0, wage / 1.0)})
+        self.assertIsNone(ImportCosts(held, year_inputs).supply("vale", "healer"))
+        self.assertIsNone(ImportCosts(held, year_inputs).wage("vale", "healer"))
+
+
 class OwnWorkersOfferMoreHoursAtTheScarcityWage(unittest.TestCase):
 
     def test_hours_sold_rise_with_the_wage_past_the_long_run_cap(self):
@@ -201,7 +212,7 @@ class EntrantsExpectTheLongRunCap(unittest.TestCase):
         year_inputs = inputs([hungry()])
         cap = long_run_cap(held, year_inputs)
         result = settle(held, year_inputs)
-        reservation = clearing.reservation_wage(year_inputs, "vale", SPECS["healer"].fatality_risk_per_year)
+        reservation = reservations.reservation_wage(year_inputs, "vale", SPECS["healer"].fatality_risk_per_year)
         expected = expectations.income_at_graduation(held, year_inputs, {("vale", "healer"): result}, "vale", "healer", WHOLE_BAND)
         self.assertGreater(result.wage, cap)
         self.assertLessEqual(expected, 100.0 + (cap - reservation) * HOURS + 1e-6)

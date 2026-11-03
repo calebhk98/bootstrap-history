@@ -7,7 +7,7 @@ import types
 import unittest
 
 from sim.labour.labour_capacity import Capacity
-from sim.labour.market import clearing, expectations, trades
+from sim.labour.market import clearing, expectations, reservation, trades
 from sim.labour.market.records import EmployerHoursBid, MarketState, YearInputs
 from sim.labour.request_rules import source_trade_unusable
 from sim.labour.staff_book import StaffBook
@@ -47,7 +47,7 @@ class StartOfYearWages(unittest.TestCase):
 
 class MissingOutsideOption(unittest.TestCase):
     def test_no_stated_subsistence_gives_no_reservation_wage(self):
-        self.assertIsNone(clearing.reservation_wage(inputs({}), "vale", 0.0))
+        self.assertIsNone(reservation.reservation_wage(inputs({}), "vale", 0.0))
 
     def test_no_stated_subsistence_gives_no_expected_income_and_no_income_at_graduation(self):
         self.assertIsNone(expectations.expected_income(MarketState(), inputs({}), {}, "vale", "aaa"))

@@ -4,7 +4,7 @@ Every read is a view of an owner that has not moved yet, published by the engine
 is uncached while labour writes the seat's people and hours in place (it keeps no count of its writes), so no channel can say
 when they changed; only the payroll reports its changes (the `staff` channel)."""
 from sim.assembly.api import KEYED, LIST, QUOTE, ExtensionPoint, ModuleSpec, PhaseHook, ViewSpec
-from sim.ledger.api import NoteSpend, PayEdge, ReceiveFromEdge
+from sim.ledger.api import NoteSpend, PayEdge
 from sim.polity.api import GainReputation, ScaleFamiliarity, ScaleProtection
 from sim.seats.api import RememberGoalClosure
 from sim.reporting.api import RecordAutomation, RecordAutomationSkip, RecordEvent
@@ -26,7 +26,7 @@ READS_BY_OWNER = {
     "seats": ("founder", "acting_country", "seat_list", "goal", "goal_closure"),
     "ledger": ("acting_balance",),
     "polity": ("standing", "rep_factor"),
-    "reporting": ("event_log", "last_market_price_ratio", "real_output_per_head"),
+    "reporting": ("last_market_price_ratio", "real_output_per_head"),
     "markets": ("agent_prices", "agent_wage_at", "agent_hours_offered_at", "agent_working_hours", "agent_people_by_trade", "agent_people_by_tile_and_trade", "agent_country", "agent_trades"),
     "demography": ("population", "pop_scale", "people_by_tile", "urban_fraction"),
     "agriculture": ("farm_land",),
@@ -40,7 +40,6 @@ READS_BY_OWNER = {
                  "active_hours_still_wanted", "keep_staffed_hires", "concerns_to_close_for_staffing"),
     "materials": ("material_price_factor",),
     "finance": ("debt_status", "credit_limit", "living_cost", "spending_power", "can_pay", "purchase_refusal"),
-    "resources": ("mine_operating_cost",),
     "prices": ("price_index",),
     "coin": ("home_price_level",),
     "actors": ("actor_staff", "teaching_knowledge"),
@@ -61,7 +60,6 @@ MODULE_SPECS = (ModuleSpec(
         ViewSpec("wage_schedule_for", "wage_schedule_for", kind=QUOTE, **_LIVE),
         ViewSpec("settlement_tiles", "settlement_tiles", **_LIVE),
         ViewSpec("labour_need_shares", "labour_need_shares", **_LIVE),
-        ViewSpec("opening_wage_index", "opening_wage_index", **_LIVE),
         ViewSpec("staff_on_all_books", "staff_on_all_books", kind=KEYED, **_LIVE),
         ViewSpec("training_queue", "training_queue", **_SEAT),
         ViewSpec("hour_commitments", "hour_commitments", **_SEAT),
@@ -170,6 +168,6 @@ MODULE_SPECS = (ModuleSpec(
         ExtensionPoint("director_overhead", LIST),         # () -> hours a year already spoken for; the answers are added, each at least zero
     ),
     reads=tuple(name for names in READS_BY_OWNER.values() for name in names),
-    sends=(BuildHousing, PayEdge, NoteSpend, ReceiveFromEdge, RecordEvent, RecordAutomation, RecordAutomationSkip, GainReputation, ScaleFamiliarity, ScaleProtection,
+    sends=(BuildHousing, PayEdge, NoteSpend, RecordEvent, RecordAutomation, RecordAutomationSkip, GainReputation, ScaleFamiliarity, ScaleProtection,
            RememberGoalClosure),
 ),)

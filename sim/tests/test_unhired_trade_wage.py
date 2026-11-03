@@ -47,12 +47,11 @@ class UnhiredTradeWageTests(unittest.TestCase):
     def test_unhired_trade_is_priced_from_unskilled_wage_and_premium(self):
         economy = economy_with_unhired_scribe()
         unskilled = 1.2
-        agent = PriceReads(types.SimpleNamespace(economy=lambda: economy), None)
-        agent.answers = lambda country=None: ({}, {}, 0.05)
         premium = api.trade_premium(economy.setup, SCRIBE)
+        wage_in_coin = api.country_trade_wage(economy, SCRIBE, None) * api.coin_per_unit(economy)
         self.assertGreater(premium, 0.0)
-        self.assertAlmostEqual(agent.wage_per_hour(SCRIBE), unskilled * (1.0 + premium) * COIN_PER_UNIT)
-        self.assertLess(agent.wage_per_hour(SCRIBE), OPENING_WAGE * COIN_PER_UNIT)
+        self.assertAlmostEqual(wage_in_coin, unskilled * (1.0 + premium) * COIN_PER_UNIT)
+        self.assertLess(wage_in_coin, OPENING_WAGE * COIN_PER_UNIT)
 
 
 class CreditRoomUnitsTests(unittest.TestCase):

@@ -36,8 +36,7 @@ class SeatConcerns:
         world, agent = self._world, self._agent
         economy = agent.economy()
         area_map = economy.area_map
-        base_tile = world.labour.base_tile()
-        tile = base_tile if base_tile in economy_api.economy_tiles(economy) else economy_api.capital_tile(economy)
+        tile = agent.tile_in_economy(world.labour.base_tile())
         view = economy.view()
         moves, offers = [], []
         offered = offered_by_seat.setdefault(seat_id, (tile, {}))[1]
@@ -82,9 +81,8 @@ class SeatConcerns:
         """What each seat's goods fetched goes to its ledger, less what its concerns' inputs cost; what did not sell goes
         back to the engine (port_seats.settle_seats)."""
         stored = self._agent.stored
-        sold, takings = port_seats.settle_seats(self._world, self._agent.economy(), offered, inputs, EDGE_LEGACY)
+        sold, _takings = port_seats.settle_seats(self._world, self._agent.economy(), offered, inputs, EDGE_LEGACY)
         stored["seat_sales"] = {**stored.get("seat_sales", {}), **sold}
-        stored["seat_takings"] = takings
 
     def sale_outlook(self, seat_id, material, quantity):
         """What the seat may count as sold of `quantity` units of a material it makes: its last clearing's share and

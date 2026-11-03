@@ -82,7 +82,7 @@ class Payer:
 
     def __init__(self, fee):
         self.paid = []
-        household = Game(contract_hours={}, commissioned={}, hours_wanted_once={})
+        household = Game(contract_hours={}, hours_wanted_once={})
         self._world = Game(
             trades=Game(wages={"smith": 1.0}, HOURS_PER_PERSON_YEAR=2000.0), workforce=household, state=Game(household=household), EDGE_WORKERS="workers",
             send=self.paid.append, game=Game(money_text=lambda money, grouped=False: "%.0f" % money))

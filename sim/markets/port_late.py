@@ -2,11 +2,12 @@
 
 Part of the port. The opening fixes the recipes the economy's producers can run; the techniques some
 producer in the society runs later (the founder's, any firm's concerns) allow more entries. This builds
-the opening values with those entries, their trades' wages and the prices of goods that had none; the
+the opening values with those entries and the prices of goods that had none (no wages: a trade the economy opened without is
+priced by the one wage rule, sim/economy/trade_wages.py); the
 economy is then given what it lacks from a setup built from them (`AgentEconomy.admit_techniques` (agent_economy.py)), the
 same setup a resumed game builds from its saved opening.
 """
-from .port_setup import allowed_entries, opening_wages
+from .port_setup import allowed_entries
 from sim.prices.api import making_cost, solve_prices_core
 cost_of_making = making_cost.cost_of_making
 
@@ -59,25 +60,20 @@ def late_goods_costs(sim, prices, goods, held_nodes, production, wage_level=1.0)
 
 
 def opening_with_techniques(sim, opening, held_nodes, production, wage_level):
-    """`opening` with the entries `held_nodes` allow that it lacks, their trades' wages (in opening-year money: today's quote over
-    `wage_level`, today's money per opening-year money) and the cost of making the goods they touch that it had no price for;
-    None when they add nothing."""
+    """`opening` with the entries `held_nodes` allow that it lacks and the cost of making the goods they touch that it had no
+    price for (in opening-year money: today's cost over `wage_level`, today's money per opening-year money); None when they
+    add nothing. The wages stay the opening's: a trade only a late entry uses has none, and the one wage rule prices it."""
     known = set(opening["recipes"])
     added = [entry_id for entry_id in allowed_entries(production, held_nodes) if entry_id not in known]
     if not added:
         return None
     touched = set()
-    trades = set()
     for entry_id in added:
         entry = production[entry_id]
         touched.update(entry.get("outputs") or {}, entry.get("inputs") or {})
-        trades.update(entry.get("labour_hours") or {})
     prices = dict(opening["prices"])
     prices.update(late_goods_costs(sim, prices, sorted(touched), held_nodes, production, wage_level))
-    wages = {**opening["wages"],
-             **opening_wages(sim, trades - set(opening["wages"]), wage_level)}
     grown = dict(opening)
     grown["recipes"] = sorted(known.union(added))
     grown["prices"] = prices
-    grown["wages"] = wages
     return grown

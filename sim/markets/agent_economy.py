@@ -23,7 +23,7 @@ from .port_coin import priced_at_the_margin
 from .port_setup import build_setup, opening_values
 from .year_figures import YearFigures
 
-NOTED_PER_SEAT = ("seat_takings", "seat_sales", "seat_orders", "seat_trades", "trades_lacking_logged", "sales", "purchases")
+NOTED_PER_SEAT = ("seat_sales", "seat_orders", "seat_trades", "trades_lacking_logged", "sales", "purchases")
 
 
 class AgentEconomy:

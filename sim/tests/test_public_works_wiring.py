@@ -13,7 +13,7 @@ from sim.refusal import cause_of
 from sim.tests import module_harness, production_host, ventures_host
 from sim.ui.proto.dispatch_rollout import _cmd_rollout
 from sim.unit_conversions import HOURS_PER_PERSON_YEAR
-from sim.workforce.constants import BASE_WORKING_DAY_HOURS
+from sim.world.farm_labour import hours_per_working_day
 from sim.workforce.module import Workforce
 from sim.tests.ui_stand_in import Game
 
@@ -87,7 +87,7 @@ check("with no work declaring a working day the year is the convention",
       lit_game([], {}).hours_per_person_year() == HOURS_PER_PERSON_YEAR, None)
 check("a longer day gives a longer year in the same proportion",
       abs(lit_game([LIGHTS], {LIGHTS: 0.5}).hours_per_person_year()
-          - HOURS_PER_PERSON_YEAR * (1.0 + 1.0 / BASE_WORKING_DAY_HOURS)) < 1e-9, None)
+          - HOURS_PER_PERSON_YEAR * (1.0 + 1.0 / hours_per_working_day())) < 1e-9, None)
 
 # ---- the schooling flow
 def schools(values, shut=(), reaches=None):

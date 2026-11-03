@@ -70,7 +70,6 @@ class Relocation:
         workforce.relocation_hours_this_year = (
             (workforce.relocation_hours_this_year or 0.0) + hours)
         # Local contracts and the local market's memory stay behind.
-        workforce.commissioned = {}
         workforce.contract_hours = {}
         workforce.hours_wanted_once.pop(ONCE_COMMISSION, None)
         self._world.send(ScaleFamiliarity(self.RELOCATION_STANDING_RETAINED))

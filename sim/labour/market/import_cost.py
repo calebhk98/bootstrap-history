@@ -9,6 +9,7 @@ from .carriage import carriage_from
 from .fetch_wage import fetch_wage
 from .premium import annuity_factor
 from .records import MarketState, YearInputs
+from .reservation import reservation_wage
 
 
 class ImportCosts:
@@ -73,6 +74,14 @@ class ImportCosts:
             found = self._spare_sources[key] = (remaining, sum(remaining))
         return found
 
+    def going(self, area: str, trade: str) -> Optional[float]:
+        """The wage the trade paid in the area at the start of the year; before any is paid, what its hands must be paid
+        (the reservation wage); None where the area states no outside option either."""
+        paid = self.wages.get(area, {}).get(trade)
+        if paid is not None:
+            return paid
+        return reservation_wage(self.inputs, area, self.inputs.trades[trade].fatality_risk_per_year)
+
     def wage(self, area: str, trade: str) -> Optional[float]:
         """The wage an hour of `trade` in `area` can be had for by fetching hands from elsewhere, as far as
         hands to spare reach. Each reachable area with a wage for the trade offers the hours its workers sell
@@ -83,11 +92,14 @@ class ImportCosts:
         spot sell enough at the going wage already, or the spare hands do not fill the shortage: the bids then
         set the wage. The search is the kernel `fetch_wage`, called as the year's inputs carry it."""
         inputs = self.inputs
+        going = self.going(area, trade)
+        if going is None:
+            return None
 
         def offers() -> List[Tuple[float, str]]:
             return self._offer_costs(area, trade)
         search = inputs.fetch_wage or fetch_wage
-        return search(area, self.wanted.get((area, trade), 0.0), self.wages.get(area, {}).get(trade, 0.0),
+        return search(area, self.wanted.get((area, trade), 0.0), going,
                       self.most.get((area, trade), 0.0), offers,
                       lambda other, wage: self.hours_at(other, trade, wage),
                       lambda other: self.wanted.get((other, trade), 0.0),
@@ -100,7 +112,9 @@ class ImportCosts:
         share is what the sources spare at it, so the bound grows with the hours that can come instead of
         switching on once they cover the whole shortage."""
         wanted = self.wanted.get((area, trade), 0.0)
-        going = self.wages.get(area, {}).get(trade, 0.0)
+        going = self.going(area, trade)
+        if going is None:
+            return None
         shortage = wanted - self.hours_at(area, trade, going)
         if wanted <= 0.0 or shortage <= 0.0:
             return None

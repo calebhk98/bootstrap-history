@@ -141,11 +141,14 @@ class Supply:
         return self._taught_trade_people(trade)
 
     def _taught_trade_people(self, trade):
-        """People in a trade only you teach: your staff, their own students
-        (approximated as a multiple of your headcount) and school places."""
-        workforce = self._world.workforce
-        return (self.book.employed(trade) * self.TAUGHT_TRADE_SUPPLY_MULTIPLIER
-                + (workforce.trade_schools or {}).get(trade, 0.0))
+        """People in a trade only you teach: once a school stands and the labour core has opened, the core's own count of the
+        trade (its trainees are real people there); before, your staff, their own students (approximated as a multiple of your
+        headcount) and school places."""
+        seats = (self._world.workforce.trade_schools or {}).get(trade, 0.0)
+        in_core = self.book.core_people_by_trade()
+        if seats > 0.0 and in_core is not None:
+            return in_core.get(trade, 0.0)
+        return self.book.employed(trade) * self.TAUGHT_TRADE_SUPPLY_MULTIPLIER + seats
 
     def hands_available(self, trade):
         """People of a trade a hire can draw on: `_people_of_trade_in_reach`, the core's people in the base area (a headcount;
