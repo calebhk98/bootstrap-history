@@ -266,7 +266,7 @@ class TakeAndHoldTests(unittest.TestCase):
         module, _ = build(owners=owners, extra={"year": year, "store": lambda name: {"default": None, "values": controls or {}}})
         module.world.held_since = held_since
         module.world.armies = armies
-        module._consolidate_conquests()
+        module.consolidate_conquests()
         return module
 
     def test_a_tile_held_with_an_army_on_it_rises_in_control_and_one_left_empty_does_not(self):
@@ -299,7 +299,7 @@ class Recording(Campaigns):
     def _keep_within_force(self, owners):
         self.calls.append(("keep", owners))
 
-    def _consolidate_conquests(self):
+    def consolidate_conquests(self):
         self.calls.append(("consolidate",))
 
 

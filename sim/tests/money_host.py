@@ -119,7 +119,7 @@ class MoneyHost:
                 self.on_receive(command.node_ids, command.granted)
             return None
         if isinstance(command, SetDealing):
-            return Dealings.set_dealing(SimpleNamespace(parts=SimpleNamespace(run=SimpleNamespace(_slots=lambda: self.dealings))), command)
+            return Dealings.set_dealing(SimpleNamespace(parts=SimpleNamespace(run=SimpleNamespace(slots=lambda: self.dealings))), command)
         if isinstance(command, (ReleasePlant, AdoptPlant)):
             owner = SimpleNamespace(seat_of=lambda seat_id: SimpleNamespace(business=self.businesses[seat_id]))
             return (Plants.apply_release_plant if isinstance(command, ReleasePlant) else Plants.apply_adopt_plant)(owner, command)

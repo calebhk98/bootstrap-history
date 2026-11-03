@@ -81,7 +81,7 @@ class Starting(Part):
 		# A genuinely instantaneous capability should not need an otherwise empty annual turn merely to trip the
 		# completion check. Anything with money, labour, risk, or a calendar floor stays on the normal path.
 		if not any(not entry.get("refused") for entry in awaiting) and instantaneous.is_instantaneous(node["ph"], self.parts.risk.calendar_floor(node_id), price, node["lab"], self.parts.risk.effective_risk(node_id)):
-			self.parts.completion._complete(node_id)
+			self.parts.completion.complete(node_id)
 			return "done"
 		if paid_now > 0.5:
 			needs.send(RecordEvent("project_restarted", "%s begun again; the %s already "

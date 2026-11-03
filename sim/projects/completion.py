@@ -1,6 +1,6 @@
 """What finishing a piece of work actually does, and what a failed attempt costs.
 
-`_complete` rolls the dice on the project's live risk: a failed roll is `_fail_attempt` (the attempt is counted, part of
+`complete` rolls the dice on the project's live risk: a failed roll is `_fail_attempt` (the attempt is counted, part of
 the calendar banked, the loss charged and logged); a finished project leaves the record in hand, becomes a held technique,
 applies its effects, earns standing, and may hand over the staff an institution grants. The goal's road is read before
 and after so the log can say how finishing moved it."""
@@ -101,7 +101,7 @@ class Completion(Part):
 		free_scholars, free_craftsmen = self.needs.venture_staff_free()
 		return staff_shortfall(need_scholars, need_craftsmen, free_scholars, free_craftsmen)
 
-	def _complete(self, node_id):
+	def complete(self, node_id):
 		needs = self.needs
 		node = needs.tree_nodes()[node_id]
 		_risk_this_attempt = self.parts.risk.effective_risk(node_id)
@@ -184,7 +184,7 @@ class Completion(Part):
 		# that has nothing to show after only one failure. What this banks keeps growing, with diminishing returns, as
 		# the failure count grows, and is capped well short of the whole clock (RETRY_CALENDAR_CAP) so a retried
 		# programme is only ever readier, never instantly ready.
-		_retain = self.parts.risk._retry_calendar_retain(node_id)
+		_retain = self.parts.risk.retry_calendar_retain(node_id)
 		self.seat.active[node_id]["yrs"] = _yrs_before * _retain
 		_lost = 0.0 if claimed else needs.failure_loss(node_id)
 		_severity = self.failure_severity(node_id, max(0.0, _lost), needs.funding_capacity())

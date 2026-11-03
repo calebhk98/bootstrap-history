@@ -41,7 +41,7 @@ class Ownership(Part):
 
     def __init__(self, module):
         super().__init__(module)
-        self._caches = {}       # the transfer count, the owner map last seen and the tiles by owner; never saved
+        self.caches = {}       # the transfer count, the owner map last seen and the tiles by owner; never saved
 
 
     def tile_owner_map(self) -> Dict[str, Dict[str, str]]:
@@ -66,24 +66,24 @@ class Ownership(Part):
     def home_tiles_held_version(self) -> Any:
         """Changes whenever who owns a tile does (a transfer, or a replaced owner map)."""
         owners = self.tile_owner_map()
-        seen = self._caches.get("owner_map_seen")
+        seen = self.caches.get("owner_map_seen")
         if seen is None or seen[0] is not owners:
             seen = (owners, (seen[1] + 1) if seen else 0)
-            self._caches["owner_map_seen"] = seen
-        return (self._caches.get("transfers", 0), seen[1])
+            self.caches["owner_map_seen"] = seen
+        return (self.caches.get("transfers", 0), seen[1])
 
     def _owned_tiles_memo(self) -> Dict[str, Any]:
         """{actor: sorted tiles} and the home country's held tiles, rebuilt only when the owner map is replaced or a
         transfer has changed it."""
         owners = self.tile_owner_map()
-        memo = self._caches.get("owned_tiles")
-        key = (self._caches.get("transfers", 0), str(self.needs.civilisation().get("id")), self.parts.map_views.world_map)
+        memo = self.caches.get("owned_tiles")
+        key = (self.caches.get("transfers", 0), str(self.needs.civilisation().get("id")), self.parts.map_views.world_map)
         if memo is None or memo["owners"] is not owners or memo["key"] != key:
             by_actor: Dict[Any, List[str]] = {}
             for tile_id, entry in sorted(owners.items()):
                 by_actor.setdefault(entry["owner"], []).append(tile_id)
             memo = {"owners": owners, "key": key, "by_actor": by_actor, "home": None}
-            self._caches["owned_tiles"] = memo
+            self.caches["owned_tiles"] = memo
         return memo
 
     def tiles_owned_by(self, actor_id: Optional[str]) -> List[str]:
@@ -104,7 +104,7 @@ class Ownership(Part):
 
     def hand_over(self, tile_id: str, to_actor: Optional[str], control: Optional[str], cause: str) -> Optional[str]:
         controls = ControlStore(self.needs)
-        self._caches["transfers"] = self._caches.get("transfers", 0) + 1
+        self.caches["transfers"] = self.caches.get("transfers", 0) + 1
         previous = tile_owners.transfer(self.tile_owner_map(), tile_id, to_actor, control, self.parts.map_views.world_map, controls)
         self.needs.send(FollowTileTransfer(tile_id, previous, to_actor))
         self.needs.send(RecordWorldEvent(

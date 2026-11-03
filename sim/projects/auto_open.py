@@ -35,7 +35,7 @@ class AutoOpen(Part):
 		self._auto_open_log_blocked(blocked, opened)
 		return opened
 
-	def _open_venture(self, node_id, units=None):
+	def open_venture(self, node_id, units=None):
 		"""(did it open, the reply): the ventures' `open`, asked through its command."""
 		return self.needs.send(OpenVenture(node_id, units))
 
@@ -121,7 +121,7 @@ class AutoOpen(Part):
 		for node_id in caps:
 			_bleed = needs.institution_upkeep(node_id, None, False) - nodes[node_id]["rev"]
 			if _bleed <= _bleed_room:
-				did_open, _message = self._open_venture(node_id)
+				did_open, _message = self.open_venture(node_id)
 				if did_open:
 					opened.append(node_id)
 					_surplus -= _bleed
@@ -136,7 +136,7 @@ class AutoOpen(Part):
 			starter = max(0.0, min(1.0, _bleed_room / _bleed))
 			if starter < STARTER_FOUNDING_MIN_UNITS:
 				continue
-			did_open, _message = self._open_venture(node_id, starter)
+			did_open, _message = self.open_venture(node_id, starter)
 			if did_open:
 				opened.append(node_id)
 				_spent = _bleed * starter
@@ -174,7 +174,7 @@ class AutoOpen(Part):
 				step = min(1.0, room) if per_unit <= 0 else max(0.0, min(1.0, room, afford_room / per_unit))
 				if step < AUTO_EXPAND_MIN_STEP_UNITS:
 					continue
-				did_open, _message = self._open_venture(node_id, step)
+				did_open, _message = self.open_venture(node_id, step)
 				if did_open:
 					opened.append(node_id)
 					_spent = max(0.0, per_unit) * step
@@ -212,7 +212,7 @@ class AutoOpen(Part):
 						                     "quicker against what you can raise"
 						                     % (_payback, PAYBACK_LIMIT_YEARS)))
 					continue
-			did_open, why = self._open_venture(node_id)
+			did_open, why = self.open_venture(node_id)
 			if did_open:
 				opened.append(node_id)
 			elif blocked is None:

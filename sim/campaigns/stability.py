@@ -54,7 +54,7 @@ class Stability(Part):
 		field = sorted((Army.from_dict(record) for record in self.world.armies.values()
 		                if record["owner"] == owner and record["tile"] == tile and record["soldiers"] >= 1.0),
 		               key=lambda army: army.army_id)
-		garrison = self.parts.contest._garrison(owner, tile, {})
+		garrison = self.parts.contest.garrison(owner, tile, {})
 		side = field + ([garrison] if garrison.soldiers > 0.0 else [])
 		return campaign_contest.combine(side) if side else None
 
@@ -79,7 +79,7 @@ class Stability(Part):
 		rule = government_levers_tax.liability_rule(record)
 		rate = tax_burden.harvest_share_taken(world)
 		eaten = self.needs.food_eaten()
-		reference = self.parts.campaign_year._reference_equipment(owner)
+		reference = self.parts.campaign_year.reference_equipment(owner)
 		seat = collection.seat_tile(people_by_tile)
 		self.needs.send(ResetStateUnrest(owner))
 		for tile, count in people_by_tile.items():

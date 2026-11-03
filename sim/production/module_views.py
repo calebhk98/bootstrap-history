@@ -30,12 +30,6 @@ class Views(Part):
 		return (done, (self.needs.techniques_version(), self.needs.operating_version(), len(done), len(self.needs.techniques_granted()),
 		               len(self.needs.operating())), self.needs.tree_nodes())
 
-	def practice_set(self):
-		return self.parts.revenue._practice_set()
-
-	def practisable(self, node_id):
-		return self.parts.revenue._practisable(node_id)
-
 	def institution_expansion_convexity(self):
 		return INSTITUTION_EXPANSION_CONVEXITY
 

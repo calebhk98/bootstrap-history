@@ -22,7 +22,7 @@ class Staffing(Part):
 		which is what the game did - is a fortune of concerns running themselves for ever on an empty payroll."""
 		needs = self.needs
 		planned = self.parts.staffing_shortfall.concerns_to_close_for_staffing()
-		shortfalls = self.parts.staffing_shortfall._staffing_shortfalls(self.parts.staffing_shortfall.staffing_held_totals()) if planned else {}
+		shortfalls = self.parts.staffing_shortfall.staffing_shortfalls(self.parts.staffing_shortfall.staffing_held_totals()) if planned else {}
 		concern_rows = needs.concern_market()
 		earnings_stopped = round(sum(concern_rows.get(node_id, 0.0) for node_id in planned), 1)
 		closed = [closure.entry_key for closure in self.review_ventures((business_review.STAFF_SHORT,), year)]
@@ -62,7 +62,7 @@ class Staffing(Part):
 			if (self.parts.closures.staff_closure_age(node_id) is None or node_id not in needs.techniques_held()
 					or node_id not in nodes):
 				continue
-			held = self.parts.staffing_shortfall._staffing_draw_of(node_id, needs.reopen_units[node_id])
+			held = self.parts.staffing_shortfall.staffing_draw_of(node_id, needs.reopen_units[node_id])
 			needed_scholars += held.get("scholars", 0.0)
 			needed_craftsmen += held.get("craftsmen", 0.0)
 		free_scholars, free_craftsmen = needs.venture_staff_free()

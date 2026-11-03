@@ -59,6 +59,8 @@ class ActorRegistry:
 		# which firms hold each concern (kept current by _ConcernWatch), and the ids in order
 		self._holders: Dict[str, Set[str]] = {}
 		self._ordered_ids: Optional[List[str]] = None
+		self._tile_owners: Optional[Dict[str, str]] = None   # tile -> country, never saved; `forget_tile_owners` drops it
+		self.patent_index = patent_index.PatentIndex()
 		# of_kind answers, in id order: a new actor joins its kind's list, a replaced actor drops them all
 		self._by_kind: Dict[str, List[Any]] = {}
 		self._by_kind_count = 0
@@ -80,7 +82,7 @@ class ActorRegistry:
 		# country -> the world its actors see this year (rebuilt every `advance`)
 		self._scoped: Dict[str, Any] = {}
 		# node -> (year, cost): what researching it cost when last worked out (see ActorWorld.research.research_cost)
-		self._research_costs: Dict[str, Any] = {}
+		self.research_costs: Dict[str, Any] = {}
 		for actor_id in sorted(state.records):
 			self._wrap(actor_id)
 
@@ -278,10 +280,20 @@ class ActorRegistry:
 
 	def country_of_tile(self, tile: str) -> Optional[str]:
 		"""The country whose profile holds a tile; None when none does."""
-		owners = self.__dict__.get("_tile_owners")
-		if owners is None:
-			owners = self.__dict__["_tile_owners"] = taxpayer_income.tile_owners(self.state.countries)
-		return owners.get(tile)
+		if self._tile_owners is None:
+			self._tile_owners = taxpayer_income.tile_owners(self.state.countries)
+		return self._tile_owners.get(tile)
+
+	def move_tile_between_countries(self, tile: str, previous: Optional[str], gained_by: Optional[str]) -> None:
+		"""Move `tile` between the profiles of the country that lost it and the one that gained it. The only writer of a
+		profile's tiles, so it is the one place the remembered tile -> country map is dropped."""
+		for country, profile in (self.state.countries or {}).items():
+			if country == previous and tile in profile.home_tiles:
+				profile.home_tiles.remove(tile)
+			if country == gained_by and tile not in profile.home_tiles:
+				profile.home_tiles.append(tile)
+				profile.home_tiles.sort()
+		self._tile_owners = None
 
 	def government_of(self, country: Optional[str]) -> Optional[Government]:
 		"""The government of a country (the home country for None), if it has one."""
@@ -335,7 +347,7 @@ class ActorRegistry:
 
 	def patent_holders(self, node_id: str) -> List[RecordedActor]:
 		"""The actors whose patents name the node (see patent_index.py); each may have let it expire."""
-		return list(patent_index.holders_of(self, node_id))
+		return list(self.patent_index.holders_of(self.actors, node_id))
 
 	def concerns_of_active_firms(self) -> Set[str]:
 		"""Every concern some firm that has not exited runs, read from the holder index."""

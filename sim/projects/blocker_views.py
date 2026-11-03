@@ -44,7 +44,7 @@ class BlockerViews(Part):
 	def _classify(self, check: blocker_rules.StartCheck, node_id: str, node: Dict[str, Any], text: Any) -> List[Dict[str, Any]]:
 		if check.cause == "missing_prereqs":
 			return self._missing_prereq_entries(node_id, node, text)
-		gap = self.parts.start_checks._substitution_result(node_id)[2] if check.cause == "substitution" else None
+		gap = self.parts.start_checks.substitution_result(node_id)[2] if check.cause == "substitution" else None
 		ids = blocker_rules.supply_blocker_ids(check.cause, gap, self._visible)
 		shut_text = None
 		if self.needs.is_venture[node_id] and not self.needs.running[node_id]:

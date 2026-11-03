@@ -105,13 +105,13 @@ class Revenue(Part):
 		needs = self.needs
 		total_revenue = 0.0
 		book_forecast = 0.0
-		practice_set = self._practice_set()
+		practice_set = self.practice_set()
 		nodes = needs.tree_nodes()
 		granted = needs.techniques_granted()
 		operating = needs.operating()
 		# Scan only what could possibly pay: a node that is neither operating nor practised is skipped below, and was already
-		# skipped for the whole rest of `done`, which only grows (see _revenue_upkeep_candidates).
-		for node_id in self._revenue_upkeep_candidates():
+		# skipped for the whole rest of `done`, which only grows (see revenue_upkeep_candidates).
+		for node_id in self.revenue_upkeep_candidates():
 			practice = node_id in practice_set
 			if node_id in granted and not practice:
 				continue          # the society's, not yours
@@ -205,7 +205,7 @@ class Revenue(Part):
 	def held_trade(self):
 		"""The trade the founder sells hours in: scholar when a skill the founder holds asks for
 		scholars, else artisan; None when the founder holds no skill."""
-		held = self._practice_set()
+		held = self.practice_set()
 		if not held:
 			return None
 		nodes = self.needs.tree_nodes()
@@ -213,7 +213,7 @@ class Revenue(Part):
 
 	def founder_wage_income(self):
 		"""Yearly pay of the founder's standing job: the hours not spoken for, sold in the held trade at
-		that trade's market wage (labour_job.py). One person's hours sell once however many skills the
+		that trade's market wage (`standing_job_pay`, sim/labour/labour_wages.py). One person's hours sell once however many skills the
 		founder holds, and a dead founder sells none."""
 		return self.needs.standing_job_pay[self.held_trade()]
 
@@ -233,7 +233,7 @@ class Revenue(Part):
 	# A granted node whose category is flagged practisable is a skill the founder holds and works with their own hands; the held
 	# skills choose the trade the founder's hours are sold in (held_trade). A granted fleet of merchant ships is owned by other
 	# people, so shipping is not one.
-	def _practisable(self, node_id):
+	def practisable(self, node_id):
 		"""Is this granted node a skill the founder holds and works with their own hands?"""
 		return self.needs.category_trait(self.needs.tree_nodes()[node_id].get("cat"), "practisable")
 
@@ -265,30 +265,30 @@ class Revenue(Part):
 		           " and %d more" % (len(young) - 6) if len(young) > 6 else "",
 		           young[0][1] * 100, needs.game_setting["revenue_ramp_years"]))
 
-	def _practice_set(self):
+	def practice_set(self):
 		"""The granted skills you actually practise, as a set, computed once: the answer never changes unless the granted
-		set does, which happens at setup and never again. (`revenue` once called `_practisable` per done node per call.)"""
+		set does, which happens at setup and never again. (`revenue` once called `practisable` per done node per call.)"""
 		granted = self.needs.techniques_granted()
 		memos = self.parts.views.memos()
 		cache = memos.practice
 		if cache is None or cache[0] != len(granted):
-			cache = (len(granted), frozenset(node_id for node_id in granted if self._practisable(node_id)))
+			cache = (len(granted), frozenset(node_id for node_id in granted if self.practisable(node_id)))
 			memos.practice = cache
 		return cache[1]
 
-	def _revenue_upkeep_candidates(self):
+	def revenue_upkeep_candidates(self):
 		"""Every node in `done` that revenue() or upkeep() could possibly charge or pay for - operating, or in your practice
 		set - in done_in_order()'s own tree order. Neither can do anything with a node that is neither, and scanning the whole
 		of `done` (most of the tree by the late game) to throw almost all of it away is wasted work.
 
 		Cached on three signals: the identity of done_in_order()'s cached list (a NEW list exactly when `done` changes; a length
 		check is not safe, since a year that finishes one thing and abandons another leaves the length unchanged), the
-		`operating` version counter, and the identity of `_practice_set`'s frozenset (new exactly when the granted set grows).
+		`operating` version counter, and the identity of `practice_set`'s frozenset (new exactly when the granted set grows).
 		Strong references and `is`, not bare id() integers: a freed object's address is handed straight to the next same-sized
 		allocation, so two different objects compare equal by id() often enough to replay a stale answer.
 		"""
 		seq = self.parts.views.done_in_order()
-		practice_set = self._practice_set()
+		practice_set = self.practice_set()
 		operating_version = self.needs.operating_version()
 		memos = self.parts.views.memos()
 		cached = memos.candidates

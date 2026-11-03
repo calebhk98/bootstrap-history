@@ -83,7 +83,7 @@ METHOD_OF_VIEW = {
     "held_goods": "_material_stock", "material_demand": "annual_material_demand",
     "material_shortfall": "material_shortfall_t", "own_production_tags": "_own_production_tags",
     "own_supply_by_commodity": "demand_and_own_supply_by_material", "partners": "partner_countries",
-    "practice_set": "_practice_set", "prerequisite_message": "missing_prereq_message",
+    "practice_set": "practice_set", "prerequisite_message": "missing_prereq_message",
     "purchase_quote": "material_purchase_cost", "resource_throttle": "peek_resource_throttle",
     "revenue_estimate": "revenue", "schooling_flow": "_schooling_flow", "start_check": "start_reason",
     "visibility": "is_visible", "visible_to_player": "_visible_to_player",

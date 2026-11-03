@@ -324,8 +324,8 @@ class _Staffed(_Host):
     def staffing_open_refusal(self, node_id, unit_count=1.0, with_advice=True):
         return self.projects_module.staffing_open_refusal(node_id, unit_count, with_advice)
 
-    def _staffing_draw_of(self, node_id, foreman_units=None):
-        return self.projects_module._staffing_draw_of(node_id, foreman_units)
+    def staffing_draw_of(self, node_id, foreman_units=None):
+        return self.projects_module.staffing_draw_of(node_id, foreman_units)
 
     def concerns_to_close_for_staffing(self):
         return self.projects_module.concerns_to_close_for_staffing()
@@ -335,7 +335,7 @@ class AGarrisonIsStaffedLikeAForeman(unittest.TestCase):
 
     def test_an_open_concern_draws_its_garrison_from_the_labour_market(self):
         host = _Staffed(soldiers=5.0)
-        self.assertEqual(host._staffing_draw_of(WALL)["soldier"], 20.0)
+        self.assertEqual(host.staffing_draw_of(WALL)["soldier"], 20.0)
         self.assertEqual(host.venture_foremen_used()["soldier"], 20.0)
 
     def test_opening_is_refused_while_the_garrison_is_not_free(self):

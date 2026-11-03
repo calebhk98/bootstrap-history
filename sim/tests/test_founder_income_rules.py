@@ -75,7 +75,7 @@ class DependantsBeyondMeansTests(unittest.TestCase):
 class FoundersJobTests(unittest.TestCase):
     def held(self, nodes, practice):
         module = production_host.build(tree_nodes=nodes)
-        module._practice_set = lambda: practice
+        module.practice_set = lambda: practice
         return module.held_trade()
 
     def test_a_founder_who_holds_no_skill_sells_no_trade(self):

@@ -97,7 +97,7 @@ class TheOwnersKeepTheirRecords(unittest.TestCase):
     def test_the_seats_module_publishes_a_copy_of_a_named_seats_stored_dealings(self):
         slots = {"founder": SeatsSeat(), "second": SeatsSeat(patents={"loom": {"granted": 1}})}
         module = module_harness.build(Seats, module_id="seats")
-        module._slots = lambda: slots
+        module.slots = lambda: slots
         published = module.seat_dealings("second")
         published["patents"]["loom"]["granted"] = 2
         self.assertEqual(published["shares_issued"], 0.0)
@@ -106,7 +106,7 @@ class TheOwnersKeepTheirRecords(unittest.TestCase):
     def test_set_dealing_replaces_one_stored_field_of_the_named_seat_with_a_copy(self):
         slots = {"founder": SeatsSeat(), "second": SeatsSeat()}
         module = module_harness.build(Seats, module_id="seats")
-        module._slots = lambda: slots
+        module.slots = lambda: slots
         offers = [{"id": "offer:1"}]
         module.set_dealing(SetDealing("second", "offers", offers))
         offers[0]["id"] = "changed"
@@ -114,7 +114,7 @@ class TheOwnersKeepTheirRecords(unittest.TestCase):
 
     def test_set_dealing_refuses_a_field_that_is_not_a_dealing(self):
         module = module_harness.build(Seats, module_id="seats")
-        module._slots = lambda: {"founder": SeatsSeat()}
+        module.slots = lambda: {"founder": SeatsSeat()}
         with self.assertRaises(KeyError):
             module.set_dealing(SetDealing("founder", "goal", "x"))
 

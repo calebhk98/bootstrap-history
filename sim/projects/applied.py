@@ -69,7 +69,7 @@ class Applied(Part):
 		self.bump_seat(ACTIVE)
 
 	def apply_complete_project(self, command):
-		self.parts.completion._complete(command.node_id)
+		self.parts.completion.complete(command.node_id)
 		self.bump_seat(ACTIVE)
 
 	def apply_close_work(self, command):

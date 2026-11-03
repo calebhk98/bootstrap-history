@@ -53,14 +53,19 @@ def track(record: Any, replaces_actor: bool) -> None:
         CHANGES[0] += 1
 
 
-def holders_of(registry: Any, node_id: str) -> List[Any]:
-    """The registry's actors whose patents name `node_id` (live or expired), in no particular order."""
-    stamp = CHANGES[0]
-    held = registry.__dict__.get("_patent_index")
-    if held is None or held[0] != stamp:
-        by_node: Dict[str, List[Any]] = {}
-        for actor in registry.actors.values():
-            for held_node in actor.record.patents:
-                by_node.setdefault(held_node, []).append(actor)
-        held = registry.__dict__["_patent_index"] = (stamp, by_node)
-    return held[1].get(node_id, [])
+class PatentIndex:
+    """node id -> the actors whose patents name it, rebuilt on the first question after any `PatentBook` changed."""
+
+    def __init__(self) -> None:
+        self.stamp: Any = None
+        self.by_node: Dict[str, List[Any]] = {}
+
+    def holders_of(self, actors: Dict[str, Any], node_id: str) -> List[Any]:
+        """The actors whose patents name `node_id` (live or expired), in no particular order."""
+        if self.stamp != CHANGES[0]:
+            by_node: Dict[str, List[Any]] = {}
+            for actor in actors.values():
+                for held_node in actor.record.patents:
+                    by_node.setdefault(held_node, []).append(actor)
+            self.stamp, self.by_node = CHANGES[0], by_node
+        return self.by_node.get(node_id, [])

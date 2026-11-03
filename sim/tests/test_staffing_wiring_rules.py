@@ -24,7 +24,7 @@ def Closing(closed_keys):
     module.recorded = []
     module.STAFFING_REMEDIES = ()
     module.concerns_to_close_for_staffing = lambda: ["a"] if closed_keys else []
-    module._staffing_shortfalls = lambda held: {"craftsmen": 1.0}
+    module.staffing_shortfalls = lambda held: {"craftsmen": 1.0}
     module.staffing_held_totals = lambda: {}
     module.review_ventures = lambda rules, year: [types.SimpleNamespace(entry_key=key) for key in closed_keys]
     module.record_staffing_closures = lambda count, shortfalls: module.recorded.append(count)

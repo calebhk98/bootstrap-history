@@ -15,7 +15,7 @@ from .risk_rules import control_relief_multiplier, effective_risk_of
 
 
 class Risk(Part):
-	def _retry_calendar_retain(self, node_id, attempt_index=None):
+	def retry_calendar_retain(self, node_id, attempt_index=None):
 		# The real failure count still drives every actual retry; `attempt_index` only lets a projection ask about a
 		# hypothetical one.
 		if attempt_index is None:
@@ -42,7 +42,7 @@ class Risk(Part):
 
 	def calendar_floor(self, node_id):
 		"""Calendar years THIS attempt needs to elapse before a completion roll can fire at all - the SAME formula the
-		year uses to gate `_complete`, not a second copy of it. Diffusion-limited nodes (yrs >= 5) shrink as reputation
+		year uses to gate `complete`, not a second copy of it. Diffusion-limited nodes (yrs >= 5) shrink as reputation
 		grows: a civilisation that already does a hundred complicated things does not start the social diffusion of the
 		hundred-and-first from zero credibility."""
 		return calendar_floor_years(
@@ -98,7 +98,7 @@ class Risk(Part):
 		try:
 			return expected_years_to_succeed(
 				floor, _active.get("yrs", 0.0) if _active is not None else None, initial_failed_attempts,
-				lambda attempt_index: self._retry_calendar_retain(node_id, attempt_index), risk_after,
+				lambda attempt_index: self.retry_calendar_retain(node_id, attempt_index), risk_after,
 				_max_extra_attempts)
 		finally:
 			if _had_key:

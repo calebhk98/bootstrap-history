@@ -16,11 +16,9 @@ class Recovery(Part):
     def step_population(self, command):
         year = command.year
         # each region eats what its households ate in the economy's last year, steps on its own, and the nation is their sum
-        regions = self.parts.regions._regions()
-        kcal_by_region = self.parts.regions._regional_kcal_per_day(regions)
-        self.parts.regions._last_demographic_step = self.parts.regions._step_regions(regions, kcal_by_region, year)
+        self.parts.regions.step_year(year)
         record = self.world.yearly_record
-        record.append(rules.yearly_record_row(year, self.parts.counts._bands().total, self.parts.regions._last_demographic_step))
+        record.append(rules.yearly_record_row(year, self.parts.counts.bands().total, self.parts.regions.demographic_flows()))
         del record[:-YEARLY_RECORD_LIMIT]
         self.needs.send(AdvanceColonies(year))
-        self.parts.counts._refresh_indexes(year)
+        self.parts.counts.refresh_indexes(year)
