@@ -17,6 +17,7 @@ from typing import Dict, List, Mapping, Optional, Sequence, Tuple
 from .accounts import DeliveredMove
 from .market_memory import KEY_SEPARATOR as MARKET_KEY_SEPARATOR
 from .merchants import Merchant
+from .setup import opening_price_today
 from .types import EDGE_CONSUMPTION, GoodId, GoodsMove, TileId
 
 CARRIER_ACCOUNT_PREFIX = "carriers:"
@@ -161,7 +162,7 @@ def last_prices(setup, memory) -> Dict[GoodId, float]:
         good = key.split(MARKET_KEY_SEPARATOR, 1)[0]
         if good in wanted and price > 0.0:
             seen.setdefault(good, []).append(price)
-    prices = {good: math.fsum(seen[good]) / len(seen[good]) if good in seen else setup.opening_prices.get(good)
+    prices = {good: math.fsum(seen[good]) / len(seen[good]) if good in seen else opening_price_today(setup, memory, good)
               for good in wanted}
     return {good: price for good, price in prices.items() if price is not None}
 
