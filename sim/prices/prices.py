@@ -158,6 +158,7 @@ if REPO_ROOT not in sys.path:
 
 from sim.prices import disposal_cost, rent_standin, solve_prices_reach, solve_prices_core  # noqa: E402
 from sim.prices.engine_seam import load_production             # noqa: E402
+from sim.labour.api import wage_provider                       # noqa: E402
 from sim.prices import engine_seam, solve_cache             # noqa: E402
 from sim.constants import declare                                # noqa: E402
 from sim.geography.api import tiles_held                    # noqa: E402
@@ -518,7 +519,8 @@ def solved_prices_at_wages(held_technology_ids: Iterable[str],
                                 & set(held_technology_ids))
     rent_key = None if rent_hours_per_kg_by_material is None else tuple(sorted(rent_hours_per_kg_by_material.items()))
     # Wages move with the labour market, so the cache is keyed on them too.
-    cache_key = (gate_nodes_held, civilization_id,
+    # The land rent stand-in prices the civilisation's staple, so a variant naming another staple is solved as itself.
+    cache_key = (gate_nodes_held, civilization_id, wage_provider.staple_material(civilization),
                  tuple(sorted(document_ratios.items())), admitted_entry_keys, interest_rate, territory,
                  farmed_hectares, rent_key)
 
@@ -544,7 +546,7 @@ def solved_prices_at_wages(held_technology_ids: Iterable[str],
         try:
             key = solve_cache.solve_key({
                 "production": production_entries, "gates": sorted(gate_nodes_held),
-                "civilization": civilization_id, "wage_ratios": document_ratios,
+                "civilization": civilization_id, "staple": wage_provider.staple_material(civilization), "wage_ratios": document_ratios,
                 "admitted_entries": sorted(admitted_entry_keys), "interest_rate": interest_rate,
                 "territory": territory, "farmed_hectares": farmed_hectares, "rent": rent_key},
                 source_modules=_SOLVER_SOURCE)
