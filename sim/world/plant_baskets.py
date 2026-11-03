@@ -113,10 +113,13 @@ def _best_entry_per_line(entries: List[Dict[str, Any]], goods: Mapping[str, floa
 
 def _covers_its_staff(entry: Mapping[str, Any], goods: Mapping[str, float], energy: Any,
                       wages: Optional[Mapping[str, float]]) -> bool:
-    """True when a batch adds at least what the hours it asks cost at these wages (always, without wages)."""
+    """True when a batch adds at least what the hours it asks cost at these wages (always, without wages). A trade
+    with no wage leaves the staff cost unknown, so the batch is not shown to cover it."""
     if wages is None:
         return True
-    staff = sum(wages.get(trade, 0.0) * hours for trade, hours in (entry.get("labour_hours") or {}).items())
+    staff = priced_total(entry.get("labour_hours") or {}, wages)
+    if staff is None:
+        return False
     net = net_per_batch(entry, goods, energy)
     return net is not None and net >= staff * (1.0 - 1e-9)     # a price at cost adds exactly its staff
 
