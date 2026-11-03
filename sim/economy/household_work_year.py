@@ -4,7 +4,7 @@ it hires become its floor of the `household_work` need, bought from domestic ser
 import dataclasses
 from typing import Dict, Mapping, Sequence, Tuple
 
-from . import household_grinding, households_work, labour_state, titles_worked
+from . import household_grinding, households_work, labour_state, titles_worked, trade_wages
 from .households_basket import need_prices
 from . import households_cohort
 from .households_cohort import Cohort
@@ -124,12 +124,12 @@ def work_terms(setup, record, view, cohort: Cohort, offers: Sequence[LabourOffer
     if expected is None:
         expected = expected_shares(setup, record, offers) if lacks_history(record, mine) else {}
     value = households_work.hour_value(
-        [(offer.hours, (view.wage(offer.trade, offer.area) or offer.reservation_wage)
+        [(offer.hours, trade_wages.faced_wage(view.wage(offer.trade, offer.area), offer.reservation_wage)
           * sold_share_at(record, offer.trade, offer.area, expected.get((offer.trade, offer.area), 1.0)))
          for offer in mine])
     milled, ground = grinding_plan(setup, record, view, cohort, value)
     needed = households_work.hours_needed(cohort.people, setup.household_work, has_hearth(record, cohort), ground)
-    wage_price = view.wage(setup.servant_trade, labour_area(cohort.tile)) or servant_price_fallback_per_hour
+    wage_price = trade_wages.faced_wage(view.wage(setup.servant_trade, labour_area(cohort.tile)), servant_price_fallback_per_hour)
     return (households_work.net_hour_value(value, households_work.supervision_share(setup.household_work)), needed,
             service_price_per_hour(setup, view, cohort.tile, wage_price), milled)
 

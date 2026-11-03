@@ -136,10 +136,6 @@ class LabourClearing:
     def idle_hours(self) -> float:
         return max(0.0, self.hours_offered - self.hours_hired)
 
-    def employment_share(self) -> float:
-        """Share of offered hours hired: the chance an hour offered here finds work."""
-        return self.hours_hired / self.hours_offered if self.hours_offered > 0.0 else 0.0
-
 
 @dataclasses.dataclass
 class YearReport:

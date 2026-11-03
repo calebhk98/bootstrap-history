@@ -61,6 +61,7 @@ class MarketMemory:
     basket_price_levels: Dict[CurrencyId, float] = field(default_factory=dict)
     expected_inflation: Dict[CurrencyId, float] = field(default_factory=dict)
     price_levels: Dict[CurrencyId, float] = field(default_factory=dict)   # the opening's level (1.0) chained by each year's observed inflation (the weighted median): what real figures are turned nominal with
+    opening_wage_levels: Dict[CurrencyId, float] = field(default_factory=dict)   # the price level the setup's opening wages stand at: the product of the chained levels each rebase reset (absent: 1.0)
     observed_inflation: Dict[CurrencyId, float] = field(default_factory=dict)   # last year's, the weighted median of price changes
     last_year_prices: Dict[str, float] = field(default_factory=dict)    # good: national price the year before, for that median
     currency_of_area: Dict[AreaId, CurrencyId] = field(default_factory=dict)
@@ -117,9 +118,16 @@ class MarketMemory:
         self.last_year_prices = dict(prices)
 
     def rebase_price_levels(self, money: CurrencyId) -> None:
-        """The price level of `money` is one, both the basket's and the chained one."""
+        """The price level of `money` is one, both the basket's and the chained one. The setup's opening wages stay in
+        opening-year money, so the chained level being reset moves into `opening_wage_levels`."""
+        self.opening_wage_levels[money] = self.opening_wage_level(money)
         self.basket_price_levels[money] = 1.0
         self.price_levels[money] = 1.0
+
+    def opening_wage_level(self, money: CurrencyId) -> float:
+        """Today's money per opening-year money for a wage the setup holds: the level before the last rebase times the
+        chained level since."""
+        return self.opening_wage_levels.get(money, 1.0) * self.price_levels.get(money, 1.0)
 
     def price_kind(self, key: str) -> Optional[str]:
         """What the price remembered for a market is: PRICE_SMOOTHED_TRADE when it traded last year, else the quote's
@@ -302,6 +310,9 @@ class YearView:
 
     def chained_price_level(self, currency: CurrencyId) -> float:
         return self._memory.price_levels.get(currency, 1.0)
+
+    def opening_wage_level(self, currency: CurrencyId) -> float:
+        return self._memory.opening_wage_level(currency)
 
     def expected_inflation(self, currency: CurrencyId) -> float:
         return self._memory.expected_inflation.get(currency, OPENING_EXPECTED_INFLATION)

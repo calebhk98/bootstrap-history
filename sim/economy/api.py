@@ -106,9 +106,7 @@ def opening_quantities(economy):
 
 def opening_prices_in_hours(economy):
     """Opening price of each good in hours of the unskilled trade's opening wage: the weights a basket is valued at."""
-    wage = economy.setup.opening_wages.get(economy.setup.unskilled_trade, 0.0)
-    if not wage > 0.0:
-        return {}
+    wage = economy.setup.opening_wages[economy.setup.unskilled_trade]     # always there and positive: sim/markets/port_setup.py
     return {good: price / wage for good, price in sorted(economy.setup.opening_prices.items()) if price > 0.0}
 
 
@@ -587,11 +585,14 @@ def import_duty_share(economy):
     return economy.setup.import_duty_share
 
 
-def priced_trade_wage(economy, trade, paid, unskilled):
+def priced_trade_wage(economy, trade, paid, unskilled, country=None):
     """The wage per hour of a trade by the one rule (`trade_wages`): what its market `paid` (None if nothing), else the
-    opening wage at the chained price level, else `unskilled` (the caller's scope of unskilled wage) plus the trade's
-    premium; None when none exists. Wages are in the economy's units."""
-    level = economy.record.memory.price_levels.get(economy.setup.currency_id, 1.0)
+    opening wage in today's money, else `unskilled` (the caller's scope of unskilled wage) plus the trade's
+    premium; None when none exists. Wages are in the economy's units. The opening set wages for the home country only:
+    a partner `country` has none of its own, so an unpaid trade of its is priced on its unskilled wage alone."""
+    level = economy.record.memory.opening_wage_level(economy.setup.currency_id)
+    if country is not None and country != home_country(economy):
+        level = None
     return trade_wages.priced_trade_wage(economy.setup, trade, paid, unskilled, level)
 
 

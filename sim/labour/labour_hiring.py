@@ -57,7 +57,10 @@ class Hiring:
             have = self.book.trade_headcount_pending(trade)
             if crosses_literacy_wall(have, count, cap):
                 return None, None, literate_wall_refusal(trade, cap, have)
-        outlay = count * self.market.quote_annual(trade)
+        wage = self.market.quote_annual(trade)
+        if wage is None:
+            return None, None, Refusal("no_wage_exists", "no wage exists for %s under the economy's rule, so nobody can be offered one." % trade)
+        outlay = count * wage
         if outlay > self._world.finance.spending_power("buy"):
             return None, None, Refusal("cash_short", cash_in_hand_refusal(self._world, 
                 "offering %g %s%s a year's wages" % (count, trade, "" if count == 1 else "s"), outlay).message)

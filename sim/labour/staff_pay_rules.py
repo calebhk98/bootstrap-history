@@ -3,7 +3,7 @@
 
 def wage_bill_of(heads, pay_of_trade):
     """What the standing staff costs in a year: the head of each trade times its pay."""
-    return sum(head * pay_of_trade(trade) for trade, head in heads.items())
+    return sum(head * pay for trade, head in heads.items() for pay in [pay_of_trade(trade)] if pay is not None)
 
 
 def wage_for_hours_of(annual_wage, hours_per_person_year, hours):

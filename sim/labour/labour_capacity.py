@@ -72,8 +72,8 @@ class Capacity:
         the start: what hiring costs the market now, so an affordability
         budget turns into a headcount in the money it is paid in."""
         market = self.market
-        wages = [market.quote_annual(trade) for trade in sorted(self._world.trades.wages)
-                 if trade not in self._world.trades.trades_absent]
+        wages = [wage for trade in sorted(self._world.trades.wages) if trade not in self._world.trades.trades_absent
+                 for wage in [market.quote_annual(trade)] if wage is not None]
         blended = blended_annual_wage(wages)
         return blended if blended is not None else market.quote_annual(
             trade_data.fallback_trade_of(self._world, self.schedule.wage_schedule().training_years))
@@ -224,7 +224,8 @@ class Capacity:
                     * self._world.finance.rep_factor()
                     + max(0.0, self._world.finance.balance) * self.STAFF_CAPITAL_INCOME_RATE)
         budget = spare * self.STAFF_BUDGET_SHARE_OF_SPARE
-        afford = budget / self.staff_wage_reference()
+        reference = self.staff_wage_reference()
+        afford = 0.0 if reference is None else budget / reference     # no wage to price a hire at: none can be paid for
         # A civilization of 1.5 million simply cannot field the trained people a
         # civilization of 65 million can, however rich you are. This is the single
         # biggest structural difference between playing Rome and playing Norway.

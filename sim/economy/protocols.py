@@ -93,6 +93,9 @@ class MarketView(Protocol):
         each year's observed inflation, the weighted median of the goods' price changes. Unlike `basket_price_level`
         (a reported statistic) a few thin goods whose asks run away do not move it."""
 
+    def opening_wage_level(self, currency: CurrencyId) -> float:
+        """Today's money per opening-year money for the wages the setup opened with (see `MarketMemory.opening_wage_level`)."""
+
     def expected_inflation(self, currency: CurrencyId) -> float:
         """Adaptive expectation of next year's rise in the price level, as a share."""
 

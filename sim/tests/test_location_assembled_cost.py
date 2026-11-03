@@ -20,5 +20,16 @@ class AssembledCostTests(unittest.TestCase):
         self.assertEqual(location.cost_per_run(recipe, wages, prices, 0.5, 1.0, 0.0), math.inf)
 
 
+class SiteCostTests(unittest.TestCase):
+    def test_a_trade_with_no_wage_costs_infinity_not_a_crash(self):
+        self.assertEqual(location.site_cost(None, 0.3, 0.8, 0.002, 1.5), math.inf)
+
+    def test_a_priced_run_costs_its_assembled_cost(self):
+        self.assertEqual(location.site_cost(5.0, 0.3, 0.8, 0.002, 1.5), location.assembled_cost(5.0, 0.3, 0.8, 0.002, 1.5))
+
+    def test_no_yield_costs_infinity(self):
+        self.assertEqual(location.site_cost(5.0, 0.3, 0.0, 0.002, 1.5), math.inf)
+
+
 if __name__ == "__main__":
     unittest.main()
