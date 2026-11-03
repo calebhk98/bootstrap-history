@@ -6,6 +6,7 @@ QUICK_TOPIC = True
 import json
 import os
 import unittest
+from types import SimpleNamespace
 
 from sim.engine.ui_port import ROOT
 from sim.labour.api import hours_by_trade, people_by_trade_of_all_employers, shares_by_group
@@ -57,17 +58,11 @@ class HoursByTrade(unittest.TestCase):
 
 
 class _StubLabour:
+    """The labour package as the rule reads it: its book of people and its allocation."""
+
     def __init__(self, core, reserved):
-        self._core, self._reserved = core, reserved
-
-    def core_people_by_trade(self):
-        return self._core
-
-    def reserved_people(self, trade):
-        return self._reserved.get(trade, 0.0)
-
-    def unskilled_trade(self):
-        return POOL
+        self.book = SimpleNamespace(core_people_by_trade=lambda: core, reserved_people=lambda trade: reserved.get(trade, 0.0))
+        self.allocation = SimpleNamespace(unskilled_trade=lambda: POOL)
 
 
 class PeopleByMainOccupation(unittest.TestCase):

@@ -67,7 +67,8 @@ class ModEconomicCatalogTests(unittest.TestCase):
     def test_new_material_chain_is_solved_and_visible_everywhere(self):
         production = load_production_catalog(str(self.root), str(self.root / "mods"))
         self.assertIn("test_acme_k3f9:ingot", material_namespace(production, self.nodes))
-        price_book = {"wage_rates_denarii_per_hour": {"labourer": {"rate": 1.0}},
+        # the wage document lists a wage for every trade the entries use; the solver invents none
+        price_book = {"wage_rates_denarii_per_hour": {"labourer": {"rate": 1.0}, "test_acme_k3f9:clockmaker": {"rate": 1.0}},
                       "money_per_labour_hour": 1.0}
         solved = prices.solved_prices([], price_book, production_entries=production)
         self.assertIn("test_acme_k3f9:ingot", solved.resolvable_materials)
@@ -97,7 +98,9 @@ class ModEconomicCatalogTests(unittest.TestCase):
         self.assertIn("no production recipe", message)
 
     def test_new_trade_identity_does_not_require_static_wage(self):
-        registry = load_trade_registry(str(self.root), mods_dir=str(self.root / "mods"))
+        # the base trades come from the repository (the schedule's solver prices every trade the base recipes use)
+        repo = Path(__file__).resolve().parents[2]
+        registry = load_trade_registry(str(repo), mods_dir=str(self.root / "mods"))
         self.assertIn("test_acme_k3f9:clockmaker", registry)
         self.assertTrue(registry["test_acme_k3f9:clockmaker"].initially_absent)
         self.assertIn("established", registry["test_acme_k3f9:clockmaker"].note)

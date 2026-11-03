@@ -23,8 +23,8 @@ SMITHS = 500.0
 
 def inputs(smith_maximum, smiths_wanted=SMITHS * 20.0):
     # the diggers' bid is slack (below the diggers on hand) so their wage and the digger vacancy stay put
-    bids = [records.Bid("farm", "digger", "vale", DIGGERS * 0.5 * HOURS, 3.0),
-            records.Bid("works", "smith", "vale", smiths_wanted * HOURS, smith_maximum)]
+    bids = [records.EmployerHoursBid("farm", "digger", "vale", DIGGERS * 0.5 * HOURS, 3.0),
+            records.EmployerHoursBid("works", "smith", "vale", smiths_wanted * HOURS, smith_maximum)]
     return records.YearInputs(trades=trades.trade_specs(REGISTRY), bids=bids,
                               subsistence_per_worker_year={"vale": HOURS}, hours_per_worker_year=HOURS,
                               discount_rate=DISCOUNT, career_years=CAREER)
@@ -91,11 +91,16 @@ class NewHandsComeThroughTrainingPlaces(unittest.TestCase):
             places = training.APPRENTICES_PER_MASTER * aptitude.band_total(state.workers["vale"]["smith"])
             self.assertLessEqual(trainees_of(state), places * (1.0 + 1e-9))
 
-    def test_the_ceiling_alone_does_not_draw_diggers_into_the_trade(self):
-        state = start()
+    def test_the_ceiling_alone_draws_only_the_young_into_the_trade_and_a_higher_maximum_draws_no_more(self):
+        # the young who have just come of working age (a career's turnover of a trade's people) are the new hands; they
+        # enter through the trade's places like any trainee (switching.py), and an established digger does not move
+        state, other = start(), start()
         for _year in range(10):
             state, report = year.run_year(state, inputs(smith_maximum=1e6))
-            self.assertLessEqual(report.switched.get("vale", {}).get("smith", 0.0), 1e-9)
+            other, higher = year.run_year(other, inputs(smith_maximum=1e9))
+            switched = report.switched.get("vale", {}).get("smith", 0.0)
+            self.assertLessEqual(switched, DIGGERS / CAREER)
+            self.assertEqual(switched, higher.switched.get("vale", {}).get("smith", 0.0))
 
 
 class ExpectedIncomeIsContinuousAcrossBalance(unittest.TestCase):

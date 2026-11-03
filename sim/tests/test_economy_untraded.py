@@ -82,7 +82,7 @@ class NotionalPriceTests(unittest.TestCase):
         self.assertNotIn("tin", notional_prices(setup_with({"smelt": smelt()}, {}), record_with(memory, {})))
 
     def test_a_good_whose_maker_cannot_be_priced_gets_none(self):
-        memory = MarketMemory(prices={"tin|a": 99.0}, wages={"labour|a": 0.5})
+        memory = MarketMemory(prices={"tin|a": 99.0}, wages={"labour|a": 0.5}, rates={"coin": 0.0})
         self.assertNotIn("tin", notional_prices(setup_with({"smelt": smelt()}, {}), record_with(memory, {})))
 
     def test_a_cost_chains_through_an_untraded_input(self):

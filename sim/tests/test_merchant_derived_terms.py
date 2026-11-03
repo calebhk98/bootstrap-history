@@ -283,8 +283,7 @@ class WaitTests(unittest.TestCase):
 class _Traders(Freight):
     """The cycle of a route as the module reads it, with its fleet and its market given."""
 
-    def __init__(self, carriers=10.0):
-        self.carriers = carriers
+    carriers = 10.0
 
     def route_carriers(self, civilization_id, route):
         return self.carriers
@@ -296,18 +295,25 @@ class _Traders(Freight):
         return 100.0
 
 
+def _traders(carriers):
+    """The freight module with its parts wired, its fleet and houses given."""
+    module = module_harness.build(_Traders)
+    module.carriers = carriers
+    return module
+
+
 class CycleTests(unittest.TestCase):
 
     def test_a_route_with_sea_legs_waits_for_the_season_and_one_without_does_not(self):
         sea = Route((Leg("a", "b", "sail", 1000.0, 1.0, 10.0),))
         land = Route((Leg("a", "b", "cart", 1000.0, 1.0, 10.0),))
-        traders = _Traders(1.0e9)
+        traders = _traders(1.0e9)
         self.assertGreater(traders.trader_cycle_years(sea), traders.trader_cycle_years(land))
         self.assertAlmostEqual(traders.trader_cycle_years(land), 10.0 / 365.0, places=6)
 
     def test_selling_into_a_thin_market_lengthens_the_cycle(self):
         land = Route((Leg("a", "b", "cart", 1000.0, 1.0, 10.0),))
-        traders = _Traders(1.0e9)
+        traders = _traders(1.0e9)
         thick = traders.trader_cycle_years(land, destination_demand_tonnes=1.0e9)
         thin = traders.trader_cycle_years(land, destination_demand_tonnes=100.0)
         self.assertGreater(thin, thick)

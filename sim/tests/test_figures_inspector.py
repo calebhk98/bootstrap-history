@@ -17,7 +17,13 @@ HEADLINE = ("cash", "recurring_net", "income", "upkeep", "population",
 
 
 class Game(FactViews, SimpleNamespace):
-    """A game at a year whose figures read from plain attributes."""
+    """A game at a year whose figures read from plain attributes. Its declared figures are the live registry, so a figure
+    a test registers is declared."""
+
+    def view(self, name):
+        if name == "interface_declared":
+            return lambda: SimpleNamespace(figures=figure_registry.FIGURES)
+        return super().view(name)
 
 
 def history_record(year, figure_name, value, components=None):

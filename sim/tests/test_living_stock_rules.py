@@ -219,6 +219,8 @@ class BuyCommand(unittest.TestCase):
 class _Capital:
     """A game as the purchase screen reads it: a purse, a quote view, a held view and a send that charges the quote."""
 
+    civ = {"id": "testland"}      # the civilisation record the money text reads its units from
+
     def __init__(self, purse, quote, sent, answer=True):
         self.purse, self.quote, self.sent, self.answer = purse, quote, sent, answer
 

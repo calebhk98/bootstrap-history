@@ -5,7 +5,7 @@ QUICK_TOPIC = True
 
 import unittest
 
-from sim.agents.policy import CallbackPolicy, IdlePolicy
+from sim.agents.policy import CallbackPolicy, IdlePolicy, ValuePolicy
 from sim.agents import policy_land
 from sim.economy import debt_relief, titles, titles_inheritance, titles_management
 from sim.economy.households_cohort import cohort_id, cohorts_for_tile
@@ -145,7 +145,7 @@ class DebtReliefTests(unittest.TestCase):
 
 class StateChoiceTests(unittest.TestCase):
     class State:
-        decision_policy = None
+        decision_policy = ValuePolicy()
 
     def test_a_state_with_the_default_policy_offers_relief_to_nobody(self):
         self.assertEqual(policy_land.debt_relief_tiles(self.State(), ["a", "b"]), [])

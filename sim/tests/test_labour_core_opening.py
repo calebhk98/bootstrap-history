@@ -49,7 +49,7 @@ class OpeningTests(unittest.TestCase):
 
     def test_a_year_runs_from_the_opening(self):
         inputs = records.YearInputs(
-            trades=self.specs, bids=[records.Bid("yard", "carver", "vale", 100 * HOURS, 5.0)],
+            trades=self.specs, bids=[records.EmployerHoursBid("yard", "carver", "vale", 100 * HOURS, 5.0)],
             subsistence_per_worker_year={"vale": HOURS}, hours_per_worker_year=HOURS,
             discount_rate=0.05, career_years=30.0)
         state, report = year.run_year(self.state, inputs)

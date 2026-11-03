@@ -30,6 +30,8 @@ class Purse:
 
 
 class Business:
+    reading = tally = property(lambda self: self)   # the business answers its reading and its tally itself
+
     def size_of(self, key):
         return 1.0
 

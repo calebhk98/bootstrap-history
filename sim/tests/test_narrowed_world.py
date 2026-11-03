@@ -48,7 +48,7 @@ class NarrowedWorldTests(unittest.TestCase):
 	def test_the_surface_holds_what_actors_ask_by_part_and_not_the_engine_handles(self):
 		surface = world_surface()
 		self.assertTrue({"edge", "rng_for", "year"} <= surface["setting"])
-		self.assertTrue("land_rent_per_hectare" in surface["stakes"] and "market_rate" in surface["capital"])
+		self.assertTrue("land_rent_per_hectare" in surface["stakes"] and "market_rate" in surface["credit"])
 		self.assertFalse({"module", "needs", "registry"} & set(surface))
 		self.assertFalse({"module", "needs", "registry"} & set().union(*surface.values()))
 

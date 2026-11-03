@@ -9,6 +9,7 @@ QUICK_TOPIC = True
 import json
 import os
 import unittest
+from types import SimpleNamespace
 
 from sim.constants import REGISTRY
 from sim.diffusion.literacy_rules import common_ceiling
@@ -37,7 +38,7 @@ def _labour(done=(), year=100, done_year=None):
     world.projects.done = set(done)
     world.projects.done_year = dict(done_year or {})
     world.projects.granted = set()
-    world.year = year
+    world.game = SimpleNamespace(year=year)
     return Labour(world), world
 
 
@@ -61,7 +62,7 @@ class TechniqueTests(unittest.TestCase):
     def test_adoption_grows_with_age(self):
         labour, world = _labour(done=("fud_mechanical_reaper",), year=100, done_year={"fud_mechanical_reaper": 100})
         early = labour.allocation.farming_technique().toolkit.reaping_rate_multiplier
-        world.year += 60
+        world.game.year += 60
         late = labour.allocation.farming_technique().toolkit.reaping_rate_multiplier
         self.assertGreater(late, early)
 

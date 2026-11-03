@@ -43,7 +43,9 @@ def workforce_command(household, command):
     handlers = dict(MODULE_SPECS[0].applies)
     if type(command) not in handlers:
         raise AssertionError("the stand-in does not apply %s" % type(command).__name__)
-    return getattr(module_harness.build(Workforce, seat=household), handlers[type(command)])(command)
+    from sim.labour import trade_data
+    families = {"trade_family": lambda trade: "scholar" if trade == trade_data.scholar_trade() else "craft"}
+    return getattr(module_harness.build(Workforce, seat=household, views=families), handlers[type(command)])(command)
 
 
 def bound(host):

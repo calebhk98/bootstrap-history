@@ -32,7 +32,7 @@ class StakeWorld(FakeWorld):
         self.technique = None
         self.rent_per_hectare = 2.0
         self.tithable = 1000.0
-        self.revenue = 10000.0
+        self.state_income = 10000.0
         self.strata = []
         self.said = []
 
@@ -77,7 +77,7 @@ class StakeWorld(FakeWorld):
         return self.strata
 
     def state_revenue(self):
-        return self.revenue
+        return self.state_income
 
     def state_reach(self):
         return 0.5
@@ -220,7 +220,7 @@ government.record.unfunded = {"administration": 0.0, "army": 0.0}
 group_servants.remember_servants(government, world)
 check("a state that pays its way has no unhappy servants", Sector.of_servants(government, world) == [])
 government.record.unfunded = {"administration": 2500.0, "army": 90000.0}
-world.revenue = 5000.0
+world.state_income = 5000.0
 found = by_key(Sector.of_servants(government, world))
 check("office-holders whose salaries go unpaid and whose fees fall form a group",
       ("office_holders", "administration") in found, list(found))

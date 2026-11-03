@@ -45,13 +45,13 @@ class PlantKeepsItsStateTests(unittest.TestCase):
 class ReleasePlantTests(unittest.TestCase):
     def test_a_released_plant_leaves_with_its_size_and_age_and_the_business_forgets_it(self):
         business = Business(plants=[Plant(entry_key=NODE, size=1.0, opened_year=92)])
-        plant = release_plant(business, NODE, SimpleNamespace(year=100))
+        plant = release_plant(business, NODE, SimpleNamespace(setting=SimpleNamespace(year=100)))
         self.assertEqual((plant.size, plant.opened_year), (1.0, 92))
         self.assertIsNone(business.reading.plant_of(NODE))
 
     def test_a_plant_with_no_recorded_opening_is_dated_to_now(self):
         business = Business(plants=[Plant(entry_key=NODE)])
-        self.assertEqual(release_plant(business, NODE, SimpleNamespace(year=100)).opened_year, 100)
+        self.assertEqual(release_plant(business, NODE, SimpleNamespace(setting=SimpleNamespace(year=100))).opened_year, 100)
 
     def test_releasing_a_plant_the_business_does_not_run_is_an_error(self):
         with self.assertRaises(KeyError):
@@ -73,7 +73,7 @@ class ClosingTests(unittest.TestCase):
         projects = SimpleNamespace(business=business)
         module = projects_host.build(projects_record=projects, year=100, tree_nodes={NODE: {"rev": 0.0, "up": 0.0}})
         module.close_lapsed_dependents = lambda year: self.fail("cascade was off")
-        module.close_work(NODE, module.CLOSED_FOR_STAFF, cascade=False)
+        module.close_work(NODE, module.parts.closures.CLOSED_FOR_STAFF, cascade=False)
         self.assertEqual(module.seat.ever_closed_for_staff, {NODE})
 
 

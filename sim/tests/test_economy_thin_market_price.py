@@ -21,7 +21,8 @@ def alloy_game(traded_in_area_a, wanted=100000.0):
     memory = MarketMemory(prices=prices, wages={"labour|a": 0.5}, rates={"coin": 0.0})
     memory.volume_weights = {"alloy|a": traded_in_area_a, "metal|a": 500.0}
     memory.note_trading({"alloy|a", "metal|a"})
-    record = types.SimpleNamespace(memory=memory, labour=LabourRecord(), goods=types.SimpleNamespace(volumes={}, opening_basket={"alloy": wanted},
+    # last year's traded volume: a market with no entry traded nothing, so these markets traded what they usually trade
+    record = types.SimpleNamespace(memory=memory, labour=LabourRecord(), goods=types.SimpleNamespace(volumes=dict(memory.volume_weights), opening_basket={"alloy": wanted},
                                                                    index_base_prices={}))
     recipe = Recipe("melt", {"alloy": 1.0}, {"metal": 2.0}, {"labour": 4.0})
     setup = types.SimpleNamespace(recipes={"melt": recipe}, opening_prices={}, currency_id="coin",

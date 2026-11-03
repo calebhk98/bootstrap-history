@@ -6,7 +6,7 @@ import json
 import os
 import unittest
 
-from sim.prices.prices import _default_production_entries, solved_prices
+from sim.prices.prices import _default_production_entries, solved_prices, trades_used
 
 GRAMS_PER_KILOGRAM = 1000.0
 
@@ -37,9 +37,11 @@ class GoldCostsMoreThanSilver(unittest.TestCase):
         path = os.path.join(REPOSITORY_ROOT, "data", "civilizations", "rome_100ad.json")
         with open(path) as handle:
             techs = json.load(handle)["starting_techs"]
-        # Only the wage document's shape is read; both metals are priced from the same wages.
-        prices_json = {"wage_rates_denarii_per_hour": {"labourer": {"rate": 1.0}},
-                       "money_per_labour_hour": 1.0}
+        # The wage document lists a wage for every trade the entries use (the solver invents none); both metals are
+        # priced from the same wages.
+        wages = {trade: {"rate": 1.0} for trade in trades_used(_default_production_entries())}
+        wages["labourer"] = {"rate": 1.0}
+        prices_json = {"wage_rates_denarii_per_hour": wages, "money_per_labour_hour": 1.0}
         prices = solved_prices(techs, prices_json, civilization_id="rome_100ad").prices_in_labour_hours
         self.assertGreater(prices["gold_kg"], prices["silver_kg"])
 

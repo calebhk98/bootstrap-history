@@ -14,6 +14,7 @@ from sim.engine import validate_action_results
 from sim.living_stock.api import ChangeHeld
 from sim.tests import module_harness, projects_host
 from sim.workforce.module import Workforce
+from sim.workforce.state import WorkforceSeat
 
 
 class _Host:
@@ -21,7 +22,7 @@ class _Host:
 
     def __init__(self, risks, employees=None, stock=None, seed=1):
         self.nodes = {"voyage": {"id": "voyage", "risks": risks} if risks is not None else {"id": "voyage"}}
-        self.state = SimpleNamespace(household=SimpleNamespace(employees=dict(employees or {})))
+        self.state = SimpleNamespace(household=WorkforceSeat(employees=dict(employees or {})))
         self.rng = random.Random(seed)
         self.stock = dict(stock or {})
         self.module = projects_host.build(tree=self.nodes, stock_held=lambda material: self.stock.get(material, 0.0))
@@ -31,7 +32,7 @@ class _Host:
         if isinstance(command, ChangeHeld):
             self.stock[command.material] = self.stock.get(command.material, 0.0) + command.units
             return None
-        module = module_harness.build(Workforce, seat=self.state.household, views={"game_random": self.rng})
+        module = module_harness.build(Workforce, seat=self.state.household, views={"game_random": self.rng, "trade_family": lambda trade: "craft"})
         return module.lose_crew(command)
 
     def lose_what_was_risked(self, node_id):
