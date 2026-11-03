@@ -1,12 +1,12 @@
 """Complaint 421, Complaint 640: the automation phases over stand-ins: the auto_hire setting picks what the staff phase
-does (hire_stance), the policy command stores replace-only, the start phase and the mine order record what they skipped
+does (staff_grows), the policy command stores replace-only, the start phase and the mine order record what they skipped
 with a reason_kind, an auto_mine order carries its id from its audit row to the tranche and the working it became.
 The decisions are in test_auto_start_rule and test_automation_modes."""
 QUICK_TOPIC = True
 
 import unittest
 
-from sim.workforce.staff_replacement import GROW_STANCE, REPLACE_ONLY, REPLACE_STANCE, hire_stance
+from sim.workforce.staff_replacement import REPLACE_ONLY, staff_grows
 from sim.ledger.api import PayEdge
 from sim.materials.api import ApplyThrottle
 from sim.reporting.api import RecordAutomation, RecordAutomationSkip
@@ -16,15 +16,15 @@ from sim.tests.ui_stand_in import Game
 
 
 class HireStance(unittest.TestCase):
-    def test_the_setting_and_the_credit_room_pick_the_stance(self):
-        self.assertEqual(hire_stance(True, True), GROW_STANCE)
-        self.assertEqual(hire_stance(REPLACE_ONLY, True), REPLACE_STANCE)
+    def test_the_setting_and_the_credit_room_pick_whether_the_staff_grows(self):
+        self.assertTrue(staff_grows(True, True))
+        self.assertFalse(staff_grows(REPLACE_ONLY, True))
 
     def test_off_or_no_room_does_nothing(self):
-        self.assertIsNone(hire_stance(False, True))
-        self.assertIsNone(hire_stance(None, True))
-        self.assertIsNone(hire_stance(True, False))
-        self.assertIsNone(hire_stance(REPLACE_ONLY, False))
+        self.assertFalse(staff_grows(False, True))
+        self.assertFalse(staff_grows(None, True))
+        self.assertFalse(staff_grows(True, False))
+        self.assertFalse(staff_grows(REPLACE_ONLY, False))
 
 
 class PolicyCommand(unittest.TestCase):

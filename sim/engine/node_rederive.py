@@ -5,12 +5,11 @@ per held gate set); research that adds a gate changes what can be made and at wh
 re-derives when that set changes.
 
 Composition code, not a module's: it replaces `Sim.nodes`, the one tree object every module reads through the `legacy_tree` view,
-and shares `opening_money.priced_nodes` and the wage schedule with the opening's repricing, so it moves with the tree itself.
+and shares `opening_money`'s opening schedule and pricing with the opening's repricing, so it moves with the tree itself.
 """
 from sim.prices.api import prices as price_solver
 from . import money_units, opening_money
 from sim.production.api import node_revenue
-from sim.workforce.api import build_schedule
 
 
 def held_gate_set(held_techs):
@@ -28,11 +27,13 @@ def refresh_derived_nodes(sim):
     gates = held_gate_set(held)
     if gates == sim._derived_gate_set:
         return
-    schedule = build_schedule(sim.view("trade_records")(), sim.start_civ)
-    derived = node_revenue.for_civilisation(sim.nodes, sim.start_civ, schedule, held_techs=held)
+    schedule = opening_money.opening_schedule(sim)
+    derived = node_revenue.for_civilisation(sim.nodes, sim.start_civ, schedule, held_techs=held,
+                                            unskilled_trade=sim.view("unskilled_trade")())
     money_units.price_nodes(derived.values(), schedule.wages_per_hour(), schedule.money_per_labour_hour)
-    sim.nodes = opening_money.priced_nodes(sim, derived, schedule)
-    sim.state.economy.nodes_money_per_labour_hour = schedule.money_per_labour_hour
+    priced = opening_money.priced_schedule(sim, schedule)
+    sim.nodes = opening_money.priced_nodes(derived, priced)
+    sim.state.economy.nodes_money_per_labour_hour = priced.money_per_labour_hour
     sim._derived_gate_set = gates
     # revenue, upkeep and capability_factor memos were read from the old figures
     sim._done_changed()

@@ -235,7 +235,7 @@ actors (21), hazards, workforce (20 each), projects (19).
   `game_random` and `acting_as`; `nodes_with_mechanic`, `state_military_diffusion`, `partner_reached` and `concern_rows_stopped`
   are read as `mechanic`, `diffusion_index`, `partner_gate_refusal` and `concern_market`.
 - [x] Workforce publishes `wage_bill`, `unskilled_trade`, `settlement_tiles`, `labour_need_shares` and `opening_wage_index`
-  (`sim/workforce/views_facts.py`). Workforce also publishes `starting_wages` and `wage_schedule_for` (the
+  (`sim/workforce/views_facts.py`). Workforce also publishes `wage_schedule_for` (the
   schedule builder is `sim/workforce/wage_schedule.py`).
 - [x] Markets publish `material_serves_a_need`, `materials_serving`, `material_substitutes`, `agent_rate`, `agent_credit_room`
   and `agent_economy_opened`; founding a bank is the markets command `FoundBankFromOutside`, so finance no longer holds the

@@ -18,12 +18,16 @@ class CalculatedViews(Part):
         """The opening wage schedule of a civilisation record: the workforce module's, which builds it once per record."""
         return self.needs.wage_schedule_for(civilisation)
 
+    def held_civilisation(self) -> Dict[str, Any]:
+        """The home civilisation's record with the tiles it holds now as its home tiles, so the solve prices the ground the
+        country has, not the ground its file opened with."""
+        return {**self.needs.civilisation(), "home_tiles": list(self.needs.home_tiles_held())}
+
     def held_goods_prices_in_hours(self, held: FrozenSet[str]) -> Dict[str, float]:
         """{material: labour-hour price} of every material the solver prices when the techniques `held` are known, at the
         farming the civilisation opens with (one solve per set)."""
-        civilisation = self.needs.civilisation()
         hours, _provenance = price_solver.goods_in_hours(
-            held, self.opening_schedule(civilisation).document(), civilisation,
+            held, self.opening_schedule(self.needs.civilisation()).document(), self.held_civilisation(),
             unskilled_trade=self.needs.unskilled_trade())
         return hours
 

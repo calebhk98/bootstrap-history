@@ -7,6 +7,7 @@ Every default is an empty world: nothing granted or in use, no farmland, no sell
 overrides the views it is about."""
 from typing import Any, Dict, Optional
 
+from sim.geography.api import tiles_held
 from sim.prices.module import Prices
 from sim.tests import module_harness
 
@@ -22,7 +23,7 @@ class _OpeningSchedule:
 def build(views: Optional[Dict[str, Any]] = None, **overrides: Any) -> Prices:
     """A Prices module whose reads are plain values; keyword arguments (or `views`) override a view by name."""
     plain: Dict[str, Any] = {
-        "civilisation": {"id": "stand_in", "starting_interest_rate": 0.05}, "year": 100, "techniques_granted": set(),
+        "civilisation": {"id": "stand_in", "starting_interest_rate": 0.05, "price_index": 1.0}, "year": 100, "techniques_granted": set(),
         "techniques_in_use": frozenset(), "techniques_held": set(),
         "operating": set(), "price_epoch": (), "producers_stamp": (), "market_rate": 0.05,
         "money_per_labour_hour": 1.0, "labour_quote": lambda trade: 1.0, "farm_land_hectares": 0.0,
@@ -32,4 +33,6 @@ def build(views: Optional[Dict[str, Any]] = None, **overrides: Any) -> Prices:
         "wage_schedule_for": lambda civilisation: _OpeningSchedule(), "unskilled_trade": "labourer"}
     plain.update(views or {})
     plain.update(overrides)
+    if "home_tiles_held" not in plain:      # the ground the civilisation's file names, as a game that has not conquered holds
+        plain["home_tiles_held"] = lambda: tiles_held(plain["civilisation"])
     return module_harness.build(Prices, views=plain, module_id="prices")

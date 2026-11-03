@@ -20,7 +20,7 @@ No third-party dependencies. Python 3.8+.
 Design notes and the full protocol: sim/PROTOCOL.md
 """
 
-import functools, json, os, sys
+import json, os, sys
 sys.setrecursionlimit(20000)
 import collections
 from typing import Any, Dict, FrozenSet, Iterable, List, Optional, Tuple, TypedDict
@@ -144,10 +144,28 @@ TRADE_NOTES: Dict[str, str] = trade_notes(TRADE_REGISTRY)
 TRADES_ABSENT: FrozenSet[str] = trades_absent(TRADE_REGISTRY)
 TRADE_FAMILY: Dict[str, str] = {trade_id: trade.family for trade_id, trade in TRADE_REGISTRY.items()}
 
+_HELD_CIVILISATION_SCHEDULES: Dict[str, wage_provider.wages.WageSchedule] = {}
+
+
+def schedule_of_civilisation(civ: JSONDict) -> wage_provider.wages.WageSchedule:
+    """The opening wage schedule of a civilisation record the caller holds (it may exist only in
+    memory), over this module's trade registry; the one builder of tools' schedules, remembered by the record's
+    whole content so a variant is never served another's schedule."""
+    key = json.dumps(civ, sort_keys=True, default=str)
+    schedule = _HELD_CIVILISATION_SCHEDULES.get(key)
+    if schedule is None:
+        schedule = _HELD_CIVILISATION_SCHEDULES[key] = build_schedule(_TRADE_REGISTRY, civ)
+    return schedule
+
+
+def unskilled_numeraire() -> str:
+    """The trade whose hour every wage here is stated against: this module's trade registry's unskilled one."""
+    return trade_of_role(_TRADE_REGISTRY, "unskilled")
+
+
 # Starting wages: the labour-market schedule before any year has passed.
 # Sim carries the live schedule; these serve tools and validation.
-_STARTING_SCHEDULE = build_schedule(
-    _TRADE_REGISTRY, wage_provider.reference_civilisation())
+_STARTING_SCHEDULE = schedule_of_civilisation(wage_provider.reference_civilisation())
 WAGES: Dict[str, float] = _STARTING_SCHEDULE.wages_per_hour()
 ANNUAL_WAGE: Dict[str, float] = {
     trade: _STARTING_SCHEDULE.annual_wage(trade) for trade in WAGES}
@@ -170,32 +188,18 @@ def money_unit_note(civ: Optional[JSONDict]) -> str:
             "market, so they will not match surviving price records." % money_word(civ))
 
 
-@functools.lru_cache(maxsize=None)
 def starting_schedule(civilization_id: Optional[str] = None) -> wage_provider.wages.WageSchedule:
     """The opening wage schedule of a civilisation (the default one if none)."""
     if civilization_id is None:
         return _STARTING_SCHEDULE
-    return build_schedule(_TRADE_REGISTRY, load_civ(civilization_id))
-
-
-_HELD_CIVILISATION_SCHEDULES: Dict[str, wage_provider.wages.WageSchedule] = {}
-
-
-def schedule_of_civilisation(civ: JSONDict) -> wage_provider.wages.WageSchedule:
-    """The opening wage schedule of a civilisation record the caller holds (it may exist only in
-    memory), remembered by its whole content so a variant is never served another's schedule."""
-    key = json.dumps(civ, sort_keys=True, default=str)
-    schedule = _HELD_CIVILISATION_SCHEDULES.get(key)
-    if schedule is None:
-        schedule = _HELD_CIVILISATION_SCHEDULES[key] = build_schedule(_TRADE_REGISTRY, civ)
-    return schedule
+    return schedule_of_civilisation(load_civ(civilization_id))
 
 
 def kit_capital(kit_id: str, civ: JSONDict) -> float:
     """Opening money of a kit for a civilisation: its unskilled-worker-years times the
     civilisation's opening annual unskilled wage."""
     schedule = schedule_of_civilisation(civ)
-    return scenario_rules.kit_capital(STARTING_KITS[kit_id], schedule.annual_wage(trade_of_role(_TRADE_REGISTRY, "unskilled")))
+    return scenario_rules.kit_capital(STARTING_KITS[kit_id], schedule.annual_wage(unskilled_numeraire()))
 
 
 def _variant_base(base_id: str, chain: tuple) -> JSONDict:
@@ -242,7 +246,7 @@ def load_civ(name: Optional[str] = None, _chain: tuple = ()) -> JSONDict:
                          % (civ.get("id", name), ", ".join(duplicates)))
     check_starting_techs(civ, get_ordered_mods(MODDIR))
     wage_provider.validate_coin_standard(civ)
-    for field in ("starting_interest_rate", "starting_tax_share"):
+    for field in ("starting_interest_rate", "starting_tax_share", "wage_index", "price_index"):
         if not isinstance(civ.get(field), (int, float)) or isinstance(civ.get(field), bool):
             raise ValueError("civilization %r must declare a numeric %s"
                              % (civ.get("id", name), field))
@@ -320,7 +324,7 @@ def load(held_technology_ids: Optional[Iterable[str]] = None,
         held_technology_ids = load_civ(civilization_id)["starting_techs"]
     from sim.prices.api import prices as price_solver
     goods, _provenance = price_solver.priced_goods_table(
-        held_technology_ids, document, civilization_id=civilization_id)
+        held_technology_ids, document, civilization_id=civilization_id, unskilled_trade=unskilled_numeraire())
     production = load_production_catalog(ROOT, MODDIR)
     load_trade_registry(ROOT, production, MODDIR, nodes=nodes.values())
     validate_mod_material_paths(nodes.values(), production, manifests)
@@ -333,7 +337,8 @@ def load(held_technology_ids: Optional[Iterable[str]] = None,
         node["_material_hours"] = sum(goods.get(material, UNPRICED_MATERIAL_PRICE) * quantity
                                       for material, quantity in node["mat"].items()) / rate
         node["_hired_hours"] = sum(node["lab"].values())
-    energy = energy_prices.graded(held_technology_ids, document, goods, civilization_id)
+    energy = energy_prices.graded(held_technology_ids, document, goods, civilization_id,
+                                  unskilled_trade=unskilled_numeraire())
     node_revenue.apply_revenue(nodes.values(), goods, wages, rate, energy)
     for node in nodes.values():
         node["_derived_for"] = civilization_id or default_civilisation_id()
@@ -357,7 +362,7 @@ def goods_provenance(held_technology_ids: Iterable[str] = (),
                 else starting_schedule(civilization_id))
     _goods, provenance = price_solver.priced_goods_table(
         held_technology_ids, schedule.document(),
-        civilization_id=civilization_id, civilization=civilization)
+        civilization_id=civilization_id, civilization=civilization, unskilled_trade=unskilled_numeraire())
     return provenance
 
 
@@ -373,7 +378,8 @@ def calculated_goods_prices(held_technology_ids: Iterable[str] = (),
                 else starting_schedule(civilization_id))
     document = schedule.document()
     goods, _provenance = price_solver.priced_goods_table(
-        held_technology_ids, document, civilization_id=civilization_id, civilization=civilization)
+        held_technology_ids, document, civilization_id=civilization_id, civilization=civilization,
+        unskilled_trade=unskilled_numeraire())
     if money_per_labour_hour is not None:
         goods = {material: _in_coin(price, document, money_per_labour_hour)
                  for material, price in goods.items()}
@@ -382,10 +388,10 @@ def calculated_goods_prices(held_technology_ids: Iterable[str] = (),
 
 def nodes_in_civ_money(nodes: Dict[str, JSONDict], civ: JSONDict) -> Dict[str, JSONDict]:
     """The tree with every money field in the civilisation's coin."""
-    schedule = build_schedule(_TRADE_REGISTRY, civ)
+    schedule = schedule_of_civilisation(civ)
     first = next(iter(nodes.values()), None)
     if first is not None and civ.get("id") and first.get("_derived_for") != civ["id"]:
-        nodes = node_revenue.for_civilisation(nodes, civ, schedule)
+        nodes = node_revenue.for_civilisation(nodes, civ, schedule, unskilled_trade=unskilled_numeraire())
         money_units.price_nodes(nodes.values(), schedule.wages_per_hour(), schedule.money_per_labour_hour)
         return nodes
     return money_units.rebased_nodes(

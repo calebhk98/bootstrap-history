@@ -83,5 +83,5 @@ def people_to_free(slaves, share_divisor):
 
 
 def opening_wage_index(civilisation):
-	"""The wage index the civilisation opens on (the index is measured against it); one when the file names none."""
-	return float(civilisation.get("wage_index", 1.0))
+	"""The wage index the civilisation opens on (the index is measured against it); its file states it."""
+	return float(civilisation["wage_index"])

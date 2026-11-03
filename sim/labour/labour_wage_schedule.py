@@ -12,13 +12,10 @@ class WageScheduleReader:
     def __init__(self, world, settlement):
         self._world = world
         self._settlement = settlement
-        self._wage_schedule_cache = None   # the opening's wage schedule, built on first use
 
     def opening_wage_schedule(self):
-        """The civilisation's opening wage schedule, built once."""
-        if self._wage_schedule_cache is None:
-            self._wage_schedule_cache = self._world.trades.build_wage_schedule(self._world.scenario.civ)
-        return self._wage_schedule_cache
+        """The civilisation's opening wage schedule: the workforce module's, which builds it once per record."""
+        return self._world.trades.build_wage_schedule(self._world.scenario.civ)
 
     def wage_schedule(self):
         """The opening schedule priced at the present level: an hour of the unskilled trade is worth what the

@@ -12,7 +12,7 @@ from .constants import (
     TRADE_REPLACEMENT_TARGET_HEADCOUNT,
 )
 from .staff_phase_rules import approach, artisan_goal, craft_headcount, directors_next, has_room_to_hire, scholar_goal
-from .staff_replacement import GROW_STANCE, hire_stance, replacement_wanted
+from .staff_replacement import replacement_wanted, staff_grows
 
 
 class StaffYear(Part):
@@ -35,8 +35,7 @@ class StaffYear(Part):
         # whose work is the way out. The affordability arithmetic below decides how many.
         _hire_room = has_room_to_hire(self.needs.acting_balance(), self.needs.credit_limit(), AUTO_HIRE_CREDIT_ROOM_SHARE)
         _hire_mode = self.needs.founder()["policy"].get("auto_hire", not self.needs.automation()["manual"])
-        _hire_stance = hire_stance(_hire_mode, _hire_room)
-        if _hire_stance == GROW_STANCE:
+        if staff_grows(_hire_mode, _hire_room):
             # Supervision-room headroom is scaled by the same affordability scale as the ceilings.
             extra = self.parts.core.labour.capacity.supervision_room() * staff_scale
             # The scholar target is capped at the literacy wall hire() and train() enforce.

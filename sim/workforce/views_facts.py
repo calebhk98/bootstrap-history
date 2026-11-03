@@ -2,7 +2,6 @@
 import copy
 
 from sim.assembly.api import Part
-from sim.labour.api import wage_provider
 
 from . import rules
 from .wage_schedule import build_schedule
@@ -12,14 +11,7 @@ class FactViews(Part):
 
 	def __init__(self, module):
 		super().__init__(module)
-		self._starting_wages = None  # the reference civilisation's opening wages, worked out when first asked; never saved
 		self._schedules = {}  # {civilisation id: (record, its opening schedule)}; a record that differs from the kept one (a variant keeping the id) is built afresh
-
-	def starting_wages(self):
-		"""{trade: money an hour pays} on the reference civilisation's opening schedule."""
-		if self._starting_wages is None:
-			self._starting_wages = build_schedule(self.needs.trade_records(), wage_provider.reference_civilisation()).wages_per_hour()
-		return self._starting_wages
 
 	def wage_schedule_for(self, civ):
 		"""The wage schedule a civilisation record opens on, built from the trade registry and the price solver once per

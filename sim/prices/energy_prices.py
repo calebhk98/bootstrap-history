@@ -106,15 +106,17 @@ def grade_bands(entries: Mapping[str, Any], available: Mapping[str, Any], prices
 
 def graded(held_technology_ids, prices_json: Dict[str, Any], goods: Mapping[str, float],
            civilization_id: Optional[str] = None, interest_rate: Optional[float] = None,
-           civilization: Optional[Mapping[str, Any]] = None) -> EnergyPrices:
-    """The graded carrier prices of a society holding these technologies, in the coin of `prices_json`."""
+           civilization: Optional[Mapping[str, Any]] = None, unskilled_trade: Optional[str] = None) -> EnergyPrices:
+    """The graded carrier prices of a society holding these technologies, in the coin of `prices_json`; the wages are
+    stated against `unskilled_trade`'s hour (the committed registry's when none)."""
     entries = price_solver.default_production_entries()
     solved = price_solver.solved_prices(held_technology_ids, prices_json, civilization_id=civilization_id,
-                                        interest_rate=interest_rate, civilization=civilization)
-    ratios = solve_prices_core.wage_ratios_by_trade(prices_json)
+                                        interest_rate=interest_rate, civilization=civilization,
+                                        unskilled_trade=unskilled_trade)
+    ratios = solve_prices_core.wage_ratios_by_trade(prices_json, unskilled_trade)
     key = (solved.gate_nodes_held, solved.civilization_id, tuple(sorted(ratios.items())),
            prices_json["money_per_labour_hour"], solved.interest_rate,
-           price_solver.territory_fingerprint(civilization))
+           price_solver.territory_fingerprint(civilization), tuple(sorted(goods.items())))
     cached = _CACHE.get(key)
     pool = {carrier: goods[carrier] for carrier in ENERGY_CARRIERS if carrier in goods}
     if cached is not None and cached[0] is entries:

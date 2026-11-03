@@ -8,7 +8,8 @@ import unittest
 from sim.tests import workforce_stand_in
 
 from sim.engine import data
-from sim.workforce.reteach_rules import PROJECT_IN_HAND_SCORE, past_cooldown, teaching_budget, trade_is_gone
+from sim.workforce.constants import PROJECT_IN_HAND_SCORE
+from sim.workforce.reteach_rules import past_cooldown, teaching_budget, trade_is_gone
 from sim.labour.labour_hands import Hands
 from sim.labour.labour_wages import Wages
 from sim.refusal import cause_of

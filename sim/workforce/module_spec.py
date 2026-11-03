@@ -58,7 +58,6 @@ MODULE_SPECS = (ModuleSpec(
         ViewSpec("wage_bill", "wage_bill", **_SEAT),
         ViewSpec("wages_charged_last_year", "wages_charged_last_year", **_SEAT),
         ViewSpec("unskilled_trade", "unskilled_trade", **_LIVE),
-        ViewSpec("starting_wages", "starting_wages", **_LIVE),
         ViewSpec("wage_schedule_for", "wage_schedule_for", kind=QUOTE, **_LIVE),
         ViewSpec("settlement_tiles", "settlement_tiles", **_LIVE),
         ViewSpec("labour_need_shares", "labour_need_shares", **_LIVE),

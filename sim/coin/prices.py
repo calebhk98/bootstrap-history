@@ -16,14 +16,14 @@ RATIOS = "ratios"
 
 
 class Prices(Part):
+    """The phase `coin_revaluation` and the stock and price-level views (needs: civilisation, opening_population,
+    opening_money_per_labour_hour, foreign_coin_home_units, foreign_coin_partner_units, partner_coin_standard,
+    partner_opening_facts, coin_value_ratio)."""
 
     def __init__(self, module):
         super().__init__(module)
         self._home_opening = None        # coin the society opened with, worked out on first use (never saved)
         self._partner_openings = {}
-    """The phase `coin_revaluation` and the stock and price-level views (needs: civilisation, opening_population,
-    opening_money_per_labour_hour, foreign_coin_home_units, foreign_coin_partner_units, partner_coin_standard,
-    partner_opening_facts, coin_value_ratio)."""
 
     def home_coin_metal(self):
         return self.needs.civilisation()["coin_standard"]["material"]

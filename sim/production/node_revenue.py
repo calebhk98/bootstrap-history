@@ -104,10 +104,11 @@ def _apply_output(node: dict, baskets: node_output.Baskets, goods: Mapping[str, 
 
 
 def for_civilisation(nodes: Mapping[str, dict], civ: Mapping[str, Any], schedule: Any,
-                     held_techs: Optional[Iterable[str]] = None) -> Dict[str, dict]:
+                     held_techs: Optional[Iterable[str]] = None, unskilled_trade: Optional[str] = None) -> Dict[str, dict]:
     """Copies of `nodes` with revenue and upkeep derived at this civilisation's prices and wages, in its
     coin, for the techniques held (default: its starting techniques). Cached on what the figures depend
-    on: the civilisation, the gate technologies held, its wages and the nodes."""
+    on: the civilisation (its people, ground and staple), the gate technologies held, its wages, the trade whose hour is
+    the wage unit (`unskilled_trade`: the live registry's, else the committed one's) and the nodes."""
     from sim.prices.api import prices as price_solver, solve_prices_core
     civilization_id = civ["id"]
     held = list(civ["starting_techs"] if held_techs is None else held_techs)
@@ -115,16 +116,17 @@ def for_civilisation(nodes: Mapping[str, dict], civ: Mapping[str, Any], schedule
     document = schedule.document()
     rate = schedule.money_per_labour_hour
     key = (civilization_id, held_gates,
-           tuple(sorted(solve_prices_core.wage_ratios_by_trade(document).items())), rate, _what_nodes_state(nodes),
-           float(civ["starting_interest_rate"]), price_solver.territory_fingerprint(civ))
+           tuple(sorted(solve_prices_core.wage_ratios_by_trade(document, unskilled_trade).items())), rate,
+           _what_nodes_state(nodes),
+           float(civ["starting_interest_rate"]), price_solver.territory_fingerprint(civ), unskilled_trade)
     cached = _DERIVED_FOR_CIVILISATION.get(key)
     if cached is None:
         derivation_calls.append(key)
         interest_rate = float(civ["starting_interest_rate"])
         goods, _provenance = price_solver.priced_goods_table(
-            held, document, civilization_id=civilization_id, civilization=civ)
+            held, document, civilization_id=civilization_id, civilization=civ, unskilled_trade=unskilled_trade)
         energy = energy_prices.graded(held, document, goods, civilization_id, interest_rate,
-                                      civilization=civ)
+                                      civilization=civ, unskilled_trade=unskilled_trade)
         copies = {node_id: dict(node) for node_id, node in nodes.items()}
         apply_revenue(copies.values(), goods, schedule.wages_per_hour(), rate, energy)
         cached = {node_id: {field: node[field] for field in DERIVED_FIELDS if field in node}
