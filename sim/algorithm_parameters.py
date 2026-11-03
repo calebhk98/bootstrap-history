@@ -61,8 +61,7 @@ all, the same choice sim/ui/presentation.py makes and for the same reason
 WHY MOVED RATHER THAN LEFT AND MERELY GATHERED BY REFERENCE. The
 stakeholder's stated reason ("if you want to tune them, they should be in
 one place") means "one place to edit," not "one place to read about" -
-gathering pointers here while the real assignment stayed in solve_prices_
-core.py would not let anyone tune anything from this
+gathering pointers here while the real assignment stayed in sim/prices/solve_prices_core.py would not let anyone tune anything from this
 file. Each constant's own original comment moved WITH it, verbatim
 (CLAUDE.md SS6: comments are load-bearing and this project does not strip
 them), so nothing explaining WHY a value is what it is was lost in the

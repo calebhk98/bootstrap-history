@@ -392,7 +392,7 @@ def resolve_save_dir(cfg: Optional[Config] = None, ensure: bool = True) -> str:
 # Per-session meta: the one field (horizon) a save's own file cannot carry.
 # ---------------------------------------------------------------------------
 
-def _meta_path(session: Optional[str]) -> Optional[str]:
+def meta_path(session: Optional[str]) -> Optional[str]:
     return session + ".meta.json" if session else None
 
 
@@ -401,7 +401,7 @@ def load_session_meta(session: Optional[str]) -> SessionMeta:
     the same policy as load_config: an absent or corrupt sidecar is exactly
     what an ordinary flag-driven save (never touched by the menu or the
     in-game options command) always has."""
-    path = _meta_path(session)
+    path = meta_path(session)
     if not path or not os.path.exists(path):
         return {}
     try:
@@ -413,7 +413,7 @@ def load_session_meta(session: Optional[str]) -> SessionMeta:
 
 
 def save_session_meta(session: Optional[str], meta: SessionMeta) -> bool:
-    path = _meta_path(session)
+    path = meta_path(session)
     if not path:
         return False
     tmp = path + ".tmp"
@@ -433,7 +433,7 @@ def move_session_meta(old_session: Optional[str], new_session: Optional[str]) ->
     exactly the kind of small unannounced loss a save-relocation feature
     exists to never cause."""
     old_meta = load_session_meta(old_session)
-    old_path = _meta_path(old_session)
+    old_path = meta_path(old_session)
     if old_meta:
         save_session_meta(new_session, old_meta)
     if old_path and os.path.exists(old_path):

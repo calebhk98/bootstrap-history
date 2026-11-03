@@ -1458,7 +1458,7 @@ def _explain_active_wait(sim, nodes, node_id):
         out["waiting_on"] = _waiting_on(sim, nodes, node_id, _st, _bill)
         out["waiting_on_kind"] = cause_of(out["waiting_on"])
         # SAME FIELD `state` ALREADY PRINTS PER PROJECT, HERE TOO. Arrears
-        # gives unspendable founder hours back (core.py's underfunded path),
+        # gives unspendable founder hours back (the projects module's afford gate, sim/projects/progress_phase.py),
         # so ph_left never sits at 0 and waiting_on's money branch above can
         # never fire - "waiting on: your hours" is what a player in arrears
         # sees here, full stop, on the one screen that names a single

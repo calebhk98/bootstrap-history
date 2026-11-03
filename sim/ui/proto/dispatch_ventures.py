@@ -237,7 +237,7 @@ def _cmd_start(sim, nodes, cmd, ended):
     # `money`'s "still_owed_on_work_in_hand" already prints, read here
     # instead of re-totalled, and funding_capacity() is the identical
     # number the un-manual director's own start heuristic already uses
-    # to avoid over-committing itself (step(), core.py) - given here as
+    # to avoid over-committing itself (sim/finance/credit_line.py) - given here as
     # the real ceiling, not a second formula that could drift from it.
     _stacked = stacked_commitment(sim.view("committed_cost")(), sim.view("acting_balance")(), len(sim.view("active_projects")()), sim.view("funding_capacity"))
     if _stacked:

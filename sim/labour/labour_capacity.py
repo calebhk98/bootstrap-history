@@ -211,7 +211,7 @@ class Capacity:
         # Below Rome's own literacy_elite (0.9, the number every one of the
         # figures above was already tuned against) this narrows the pool;
         # printing, schools and libraries raise literacy_elite
-        # (apply_tech_effects, society.py) and widen it again as a run goes
+        # (apply_tech_effects in sim/diffusion/tech_effects.py) and widen it again as a run goes
         # on, which is the entire point of building them.
         scholars *= self.trades.literacy_factor(trade_data.scholar_trade())
         if with_directors:

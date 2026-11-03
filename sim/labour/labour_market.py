@@ -168,8 +168,8 @@ def labour_hours_required_by_trade(
 # (a shortfall divided by a rate is a number of hours; there is no
 # heuristic here to label) and taking the marginal product as a PARAMETER
 # rather than importing agriculture.py, per this module's own STANDALONE
-# section. A caller that HAS agriculture.py in scope (sim/engine/core.py,
-# eventually, or this module's own worked example below) computes the real
+# section. A caller that has the marginal product in scope
+# (or this module's own worked example below) computes the real
 # number and hands it in; this module never computes one on its own.
 
 def additional_hours_to_close_a_shortfall(

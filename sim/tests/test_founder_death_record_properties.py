@@ -18,13 +18,13 @@ def game_without_founder():
 class FounderDeathRecord(unittest.TestCase):
 
 	def test_the_age_at_death_is_read_from_the_founders_state(self):
-		self.assertEqual(ui_port.founder_death_aged(game(_founder_death_aged=61)), 61)
+		self.assertEqual(ui_port.founder_death_aged(game(death_aged=61)), 61)
 
 	def test_the_year_of_death_is_read_from_the_founders_state(self):
-		self.assertEqual(ui_port.founder_death_year(game(_founder_death_year=140)), 140)
+		self.assertEqual(ui_port.founder_death_year(game(death_year=140)), 140)
 
 	def test_an_unrecorded_death_reads_as_none(self):
-		self.assertIsNone(ui_port.founder_death_aged(game(_founder_death_aged=None)))
+		self.assertIsNone(ui_port.founder_death_aged(game(death_aged=None)))
 
 	def test_a_seat_with_no_founder_record_reads_as_none(self):
 		self.assertIsNone(ui_port.founder_death_year(game_without_founder()))

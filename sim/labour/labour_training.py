@@ -187,8 +187,8 @@ class Training:
         # WHAT HAS HAPPENED, AND WHAT IS STILL NEEDED - not just the first
         # half: "ready in year N" has to say plainly that they cannot do a
         # day of the work before that year (ready is the year they MATURE,
-        # not the year they start), and that core.py adds them to
-        # self.household.employees itself the moment they do, automatically
+        # not the year they start), and that the workforce module's
+        # apprenticeship step (sim/workforce/apprenticeships.py) adds them to the staff itself the moment they do, automatically
         # - no 'hire' needed to put THESE apprentices to work. Either half
         # missing leaves the other easy to misread.
         return True, ("%g %s%s finish training during %d's annual resolution "

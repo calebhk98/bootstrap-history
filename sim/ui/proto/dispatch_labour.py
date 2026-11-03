@@ -76,11 +76,10 @@ def _cmd_allocate(sim, nodes, cmd, ended):
     # - 100 hours a year of manual work, 500 to one project, 1400 to
     # another - had no way to say so once and have it stand, in a game
     # played over hundreds of turns. This writes s.hour_allocations,
-    # which core.py's step() - and nowhere else - reads; `portfolio`
-    # below reads the same numbers step() actually applied, never a
-    # second guess at them. See core.py's own long comment on exactly
-    # how a directive changes the allocator (order, not ceiling) and
-    # what happens when it cannot be honoured.
+    # which the projects module's progress phase
+    # (sim/projects/progress_hours.py) reads; `portfolio` below reads the
+    # same numbers it actually applied, never a second guess at them. A
+    # directive changes the allocator's order, not its ceiling.
     target_id = cmd.get("id")
     if target_id is None:
         _rows = [{"id": target_id, "hours_a_year": hours}
