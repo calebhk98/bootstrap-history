@@ -7,7 +7,7 @@ import types
 import unittest
 from sim.tests import workforce_stand_in
 
-from sim.refusal import cause_of, facts_of
+from sim.refusal import Refusal, cause_of, facts_of
 from sim.labour.labour_wages import Wages
 from sim.ui.proto.dispatch_labour import _cmd_work
 from sim.tests import event_stand_in
@@ -116,7 +116,7 @@ class WorkCommand(unittest.TestCase):
 
     def test_a_refused_sale_is_not_ok_and_earns_nothing(self):
         game = self.game()
-        game.answers[WorkForWages] = (0.0, "hours must be greater than zero")
+        game.answers[WorkForWages] = (0.0, Refusal("hours_not_positive", "hours must be greater than zero"))
         reply = _cmd_work(game, {}, {"cmd": "work", "trade": "scholar", "hours": 0}, None)
         self.assertIs(reply["ok"], False)
 

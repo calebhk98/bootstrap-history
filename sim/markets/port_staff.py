@@ -70,12 +70,26 @@ def employer_bids(economy, employer_id, wanted, tile, affordable_coin):
     return bids, min(affordable_units, math.fsum(bid.hours * bid.maximum_wage for bid in bids))
 
 
+def unposted_cause(economy, wanted, tile):
+    """Why places that made no bid were not posted: "no_wage_exists" when a trade asked for has no wage under the rule (so nothing can
+    be priced), else "no_affordable_bid" (the employer could not pay for any hour)."""
+    trades = economy_api.economy_trades(economy)
+    unpriced = any(people > 0.0 and trade in trades and economy_api.trade_wage_at(economy, trade, tile) is None
+                   for trade, people in wanted.items())
+    return "no_wage_exists" if unpriced else "no_affordable_bid"
+
+
+def seat_places(sim, economy):
+    """{trade: people} the acting seat's places and one-year orders ask for."""
+    return places_with_once(sim.labour.staff_posting(), sim.labour.once_posting(), economy_api.working_hours_per_year(economy))
+
+
 def seat_staff_bids(sim, economy, seat_id, tile):
     """(bids, economy units to fund them with) for the acting seat's places and one-year orders on `tile`; the one figure the
     seat's committed money (`port_goods_orders.staff_funding_coin`) and the year's posting (`post`) both draw. Call it inside
     `sim.scenario.act_as(seat_id)`. The figure can still move between the two: the wage it reads is the economy's current one, and the
     wages change at the clearing and when `place_newcomers` adds workers, which `post` does first."""
-    wanted = places_with_once(sim.labour.staff_posting(), sim.labour.once_posting(), economy_api.working_hours_per_year(economy))
+    wanted = seat_places(sim, economy)
     if not wanted:
         return [], 0.0
     return employer_bids(economy, seat_id, wanted, tile, sim.finance.spending_power("buy"))
@@ -185,7 +199,7 @@ def post(sim, economy, seat_ids, tile_of):
                     orders[staff_account(seat_id)] = AgentOrders(labour_bids=tuple(bids))
                     trades, funded = sorted({bid.trade for bid in bids}), units
             elif wanted_places_exist(sim):
-                unposted = "no_affordable_bid"
+                unposted = unposted_cause(economy, seat_places(sim, economy), tile)
             offers, dropped = work_offers(economy, seat_id, sim.labour.wage_work_offered(), tile)
             note_refusals(sim, refusal, dropped)
             if offers:
@@ -232,6 +246,14 @@ def settle(sim, economy, posted):
                 sim.send(StaffArrived(trade, staff.get(trade, 0.0)))
 
 
+def note_actor_unposted(sim, actor_id, cause):
+    """A seat's places that posted nothing are logged in its own log with the cause; a firm or state has no log to carry it."""
+    if actor_id in sim.state.seats:
+        sim.send(RecordEvent(
+            "actor_places_not_posted", "Your places were not posted to the labour market (%s), so they hire no one this year." % cause.replace("_", " "),
+            {"cause": cause}, seat=actor_id))
+
+
 def post_actors(sim, economy, tile_of_actor):
     """({account: AgentOrders}, [ids of the actors that posted]) for the year: the firms', states' and players' places become
     bids like a seat's; each posting actor's money goes into its staff account."""
@@ -241,8 +263,11 @@ def post_actors(sim, economy, tile_of_actor):
             continue
         bids, units = employer_bids(economy, actor_id, actor.record.staff_wanted, tile_of_actor(actor_id), max(0.0, actor.money))
         if not bids:
+            note_actor_unposted(sim, actor_id, unposted_cause(economy, actor.record.staff_wanted, tile_of_actor(actor_id)))
             continue
-        if isinstance(sim.send(PayExchange(actor_id, units * economy_api.coin_per_unit(economy), "wages offered in the labour market")), Refusal):
+        paid = sim.send(PayExchange(actor_id, units * economy_api.coin_per_unit(economy), "wages offered in the labour market"))
+        if isinstance(paid, Refusal):
+            note_actor_unposted(sim, actor_id, paid.cause)
             continue
         economy_api.post_transfers(economy, [Transfer(EDGE_EXCHANGE, staff_account(actor_id), economy_api.currency_id(economy), units, "wages offered")])
         orders[staff_account(actor_id)] = AgentOrders(labour_bids=tuple(bids))

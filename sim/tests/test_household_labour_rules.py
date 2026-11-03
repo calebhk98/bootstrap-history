@@ -58,7 +58,7 @@ class Job:
     def director_pool(self):
         return self.pool
 
-    def director_hours_committed(self):
+    def director_hours_committed(self, counting_offers=True):
         return self.committed
 
     def wage_for_hours(self, trade, hours):
@@ -97,7 +97,7 @@ class Seller:
         self.received = []
         self.logged = []
         self._world = Game(
-            standing=Game(founder_alive=True), workforce=household, trades=Game(wages={"scribe": 1}), EDGE_EMPLOYERS="employers",
+            standing=Game(founder_alive=True), workforce=household, economy=Game(agent_trades=lambda: None), trades=Game(wages={"scribe": 1}), EDGE_EMPLOYERS="employers",
             finance=Game(revenue=lambda: 1000.0), actors=Game(active_hours_still_wanted=lambda: 0.0),
             game=Game(money_text=lambda amount, grouped=False: "%d" % amount),
             send=lambda command: self.received.append(command.amount))
@@ -115,8 +115,8 @@ class Seller:
     def director_pool(self):
         return self.pool
 
-    def director_hours_committed(self):
-        return self.committed + self.household.wage_hours_this_year
+    def director_hours_committed(self, counting_offers=True):
+        return self.committed + (self.household.wage_hours_this_year if counting_offers else 0.0)
 
     def wage_for_hours(self, trade, hours):
         return 3.0 * hours
