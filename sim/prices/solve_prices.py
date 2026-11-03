@@ -21,13 +21,11 @@ provider (`sim/labour/wages.py`) supplies the wage ratios. Nothing here is a
 lookup of a finished price - only of the physical recipe and the relative
 wage, which is what the mechanism is allowed to take as given.
 
-NUMERAIRE: one hour of UNSKILLED labour, per the design doc's Part 2.1. The
-`labourer` trade is the unskilled one - it is the cheapest trade in the wage
-table, and entries in data/production/ that need generic unskilled effort
-(spinning thread, moving ore) already book it to `labourer` rather than to a
-craft. Every wage is expressed as a ratio against `labourer`'s rate, so
-`wage_of("labourer") == 1.0` by construction and every price this script
-prints is "how many hours of unskilled labour", never denarii.
+NUMERAIRE: one hour of UNSKILLED labour, per the design doc's Part 2.1. The trade registry's unskilled
+trade (`numeraire_trade()`, the fallback trade the economy's labour markets use) is the unskilled one; entries
+in data/production/ that need generic unskilled effort (spinning thread, moving ore) book it rather than a
+craft. Every wage is expressed as a ratio against that trade's rate, so its wage is 1.0 by construction and
+every price this script prints is "how many hours of unskilled labour", never denarii.
 
 RENT ON EXTRACTED MATERIALS (Complaints/32, fixed this round for six of
 seven metals). Extracted materials (ore at the pit head, timber in the
@@ -224,7 +222,7 @@ instructions from CLAUDE.md name as the point of the exercise.
                     build, using the `capital` mechanism below, at the
                     typical output data/world/resources.json's water_power
                     constraint gives), mechanical_mj_human_muscle (a
-                    labourer's own sustained output, from that same file's
+                    worker's own sustained output, from that same file's
                     human_power constraint), mechanical_mj_motor (electrical
                     energy through a motor - see CONVERSIONS) or one of the
                     three mechanical_mj_heat_engine_* techniques (thermal
@@ -737,7 +735,7 @@ from sim.prices.solve_prices_core import (                  # noqa: E402
     GROWTH_BOUND_HOURS,
     INITIAL_PRICE_GUESS_HOURS,
     MAXIMUM_ITERATIONS,
-    NUMERAIRE_TRADE,
+    numeraire_trade,
     THERMAL_MJ_MINIMUM_USABLE_TEMPERATURE_C,
     _build_material_dependency_graph,
     capability_graded_price,

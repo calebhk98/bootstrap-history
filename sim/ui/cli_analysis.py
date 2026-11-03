@@ -27,7 +27,7 @@ from sim.constants import declare
 from sim.unit_conversions import PERCENT_SCALE
 from sim.ui.presentation import EXPLAIN_NEAR_MATCH_SUGGESTIONS_SHOWN
 
-from .cli import _founder_lifetime_hours
+from .cli_common import _founder_lifetime_hours
 
 
 def cmd_plan(args):

@@ -44,8 +44,7 @@ import random
 from dataclasses import dataclass
 from typing import Optional
 
-from . import agriculture
-from .agriculture import (
+from .agriculture_core import (
     DAYS_PER_YEAR,
     DEFAULT_CROP,
     DEFAULT_ROTATION,
@@ -298,6 +297,7 @@ class Storage(object):
             # Through the `agriculture` module object, not a bare name - see
             # this file's own top-of-file comment on why: a monkeypatched
             # `agriculture.draw_weather_multiplier` has to reach this call.
+            from . import agriculture   # at call time: the facade imports this module
             weather_multiplier = agriculture.draw_weather_multiplier(
                 self._random, soil.weather_stdev_fraction)
         harvest_kg = gross_harvest_kg(land, labour_hours, technique_multiplier,

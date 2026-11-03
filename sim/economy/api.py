@@ -42,7 +42,7 @@ from .debt_relief import indebted_tiles as record_indebted_tiles
 from .titles_moves import holdings as record_title_holdings
 from .spin_up_state import spin_up_state as year_spin_up_state
 from .year_close import rebase_basket_price_level
-from .year_labour import trade_premium
+from .trade_wages import premium_for_training_years, trade_premium
 from sim.world import capital_market
 
 __all__ = [
@@ -53,7 +53,7 @@ __all__ = [
     "shown_prices", "Producer", "expected_output_prices", "live_input_prices", "live_wages", "AgentOrders",
     "EconomyYearInputs", "recipe_tile_key", "recipes_from_production_data", "plant_builds", "with_tool_wear", "EconomyRecord", "EconomySetup", "SetupTrade", "SiteLimit",
     "goods_specs", "EDGE_EXTERNAL", "EDGE_LEGACY", "EDGE_CARGO", "EDGE_CONSUMPTION", "EDGE_PRODUCTION", "EDGE_EXCHANGE", "external_edge", "Bid", "GoodsMove", "LabourBid", "LabourOffer", "Offer", "Transfer",
-    "variable_cost_per_run", "rebase_basket_price_level", "trade_premium", "title_wealth",
+    "variable_cost_per_run", "rebase_basket_price_level", "trade_premium", "premium_for_training_years", "title_wealth",
     "traded_volumes", "country_traded_volumes", "country_opening_basket", "market_record", "opening_quantities", "opening_prices_in_hours", "opening_price_in_current_money", "wages_by_trade_weighted", "interest_rate", "producers_of",
     "external_trade_net", "external_trade_volume", "account_balance", "account_holdings",
     "credit_room", "credit_line_request", "economy_from_record", "blank_economy", "export_record", "economy_book", "economy_contracts", "finish_spin_up", "note_spin_up_result", "spin_up_state", "money_year_figures","shown_prices_of","shown_price_kinds_of",

@@ -6,10 +6,9 @@ for it (`LabourClearing.wage`), and the workers who offered them share the recei
 import dataclasses
 from typing import Dict, List, Sequence, Tuple
 
-from sim.labour.api import CAREER_YEARS, people_in, run_labour_year, wages
+from sim.labour.api import people_in, run_labour_year
 
 from . import households, households_work, settlement
-from .households_orders import HOUSEHOLD_TIME_PREFERENCE
 from .labour_ask_floor import mean_floor_per_hour
 from .labour_bids import sloped_bids
 from .labour_state import core_trades, mirror_wages, people_by_trade
@@ -66,17 +65,6 @@ def labour_offers(setup, record, view, subsistence_by_tile, levy_hours_per_worke
             made = [dataclasses.replace(offer, hours=offer.hours * kept) for offer in made]
         offers.extend(made)
     return offers
-
-
-def trade_premium(setup, trade) -> float:
-    """What a trade's training years add to the pay a worker asks, as a share over the unskilled wage: the core's
-    training premium (a multiple, labour/market/premium.py) less one, at the family's own time preference, since the
-    family pays for training by going without, not by borrowing. Quotes of a wage for a trade nobody has bid for yet
-    use it (a trade the setup has no spec for is a KeyError); the clearing reads the same multiple at the same rate (`labour_context`)."""
-    spec = setup.trades[trade]
-    if spec.training_years <= 0.0:
-        return 0.0
-    return wages.training_premium(spec.training_years, HOUSEHOLD_TIME_PREFERENCE, CAREER_YEARS) - 1.0
 
 
 def _result(clearing, currency: str, offers: Sequence[LabourOffer]) -> LabourResult:

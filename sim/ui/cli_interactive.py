@@ -64,10 +64,11 @@ from sim.seats.api import SetFounderLife
 # both for the full reasoning.
 from .play_dice import dice_for_play
 from .sitting import Sitting
-from .cli import (ENDLESS_HORIZON_YEARS, HORIZON_MODES,
+from .cli_common import (ENDLESS_HORIZON_YEARS, HORIZON_MODES,
                   _apply_display_prefs, _civ_for_session, _goal_for_session,
                   _is_claimed_slot, _is_endless_horizon, _pick_session_filename,
-                  _resolve_horizon, _wrap, load_strategy)
+                  _resolve_horizon, _wrap)
+from sim.engine.ui_port import load_strategy
 
 # Save/load browsing and the civilisation list live in
 # cli_interactive_saveload.py - see this file's own docstring for why that

@@ -23,7 +23,7 @@ section for why that matters and to whom.
 import random
 from typing import Optional
 
-from .agriculture import (
+from .agriculture_core import (
     ANNUAL_LABOUR_HOURS_PER_FARM_WORKER,
     DEFAULT_CROP,
     DEFAULT_ROTATION,

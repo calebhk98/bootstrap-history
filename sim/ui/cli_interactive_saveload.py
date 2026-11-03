@@ -33,7 +33,7 @@ from sim.engine.ui_port import settings
 from .memory import merge_session_meta
 from .protocol import load_state, save_state
 
-from .cli import _pick_session_filename, _wrap
+from .cli_common import _pick_session_filename, _wrap
 from sim.engine import ui_port
 
 
