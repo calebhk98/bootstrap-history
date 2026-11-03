@@ -528,6 +528,8 @@ def _richest_class(record, tile) -> int:
 
 
 def _open_merchants(setup, record, prices, final_by_tile) -> None:
+    if not setup.opening_population_by_tile:
+        return     # no populated tile to base a merchant in
     count = max(1, int(round(len(setup.tiles) * MERCHANTS_PER_TILE)))
     output_value = math.fsum(quantity * prices[good]
                              for good, quantity in opening_runs.national_totals(final_by_tile).items()

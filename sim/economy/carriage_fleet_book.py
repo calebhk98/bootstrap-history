@@ -5,6 +5,7 @@ held carriers by service life is booked with every other durable (year_close.wea
 import math
 from typing import Dict, List, Mapping, Optional, Sequence, Tuple
 
+from sim.constants import declare
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 
 from . import carriage_fleet, carriage_wear, merchants_legs
@@ -12,7 +13,11 @@ from .carriage_fleet import FleetLimit
 from .merchants import MERCHANT_BID_ELASTICITY
 from .types import AgentId, Bid, EDGE_PRODUCTION, GoodId, GoodsMove, Transfer
 
-FLEET_OPENING_TILES = 12     # populated tiles a merchant's opening hauls are averaged over, the most populous first
+FLEET_OPENING_TILES = declare(
+    "FLEET_OPENING_TILES", 12, kind="temporary_heuristic", unit="tiles", source=None, confidence="D",
+    retire="Complaints/closed/631-merchants-have-no-fleet-and-are-not-worn.md: a merchant's opening fleet is sized from the routes it will plan",
+    why="Populated tiles a merchant's opening hauls are averaged over, the most populous first, to size its opening "
+        "fleet; the fleet a merchant needs is not yet derived from the routes it will plan.")
 FLEET_OPENING_REASON = "opening stock of a durable in use"
 
 
