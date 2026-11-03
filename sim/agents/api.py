@@ -22,7 +22,6 @@ from .registry import ActorRegistry
 from .extensions import ActorExtensions, combine as combine_extensions
 from .shipped import shipped_extensions
 from .purses import COIN as PURSE_CURRENCY, EDGE_EXCHANGE, EDGE_OUTSIDE, Purses
-from .saving import SAVING_SHARE_OF_SURPLUS
 from .sector import CONCESSION_PREFIX, Sector, sector_key
 from .tuning_coinage import COIN_RESTRIKE_SHARE_PER_YEAR
 from .tuning import MANAGEMENT_SPAN_EXPONENT, OBSERVATION_RANGE_KM, PROOF_YEARS, SECRET_EXPOSURE
@@ -54,7 +53,7 @@ __all__ = ["Hands", "PURSE_CURRENCY", "EDGE_EXCHANGE", "EDGE_OUTSIDE", "Purses",
            "Decision", "ActorRegistry", "ActorExtensions", "combine_extensions", "shipped_extensions", "ActorRecord", "ActorsState",
            "CastEntry", "CountryProfile",
            "edges", "payroll", "patronage", "taxpayer_income", "ledger", "licence", "patent", "supply", "imitation", "joint_stock", "revenue", "government_levers", "army_raising", "authority", "collection", "government_levers_land", "government_levers_tax", "land_moves", "revolt", "ruler", "unrest",
-           "SAVING_SHARE_OF_SURPLUS", "CONCESSION_PREFIX", "Sector", "sector_key",
+           "CONCESSION_PREFIX", "Sector", "sector_key",
            "MANAGEMENT_SPAN_EXPONENT", "TRADE_TONNES_FOR_UNIT_CONTACT", "CONQUEST_CONTACT_VOLUME", "MIGRANT_CONTACT_VOLUME_PER_PERSON", "adoption", "awareness", "stock_keeping", "OBSERVATION_RANGE_KM", "PLAYER_VISIBLE_EXPOSURE", "PROOF_YEARS", "SECRET_EXPOSURE",
            "THREAT_ARMY_RESPONSE", "army_goal", "sack_pressure", "FOOD_NEED", "cast_from_civilisations", "profile_from_civilisation", "seed_cast",
            "CountryWorld", "CountryLiteracy", "Player", "Stratum", "stratum_id", "seed_strata", "true_up_keep", "bondage_tiles", "bonded_for_sale", "buy_bonded", "add_captives", "captives_from_losses", "captives_from_conquest",

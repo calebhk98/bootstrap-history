@@ -3,6 +3,8 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from sim.assembly.api import Part
 
+from .line_claim import with_own_claim
+
 
 class Lending(Part):
 
@@ -26,7 +28,11 @@ class Lending(Part):
 		if not answered or not listing["lenders"]:
 			return None
 		ceiling = self.parts.cast.actor_world().credit.rate_ceiling(account, amount)
-		lenders = [row for row in listing["lenders"] if row[4] <= ceiling]
+		rows = listing["lenders"]
+		if account in self.needs.seat_list()["households"]:   # its granted line was counted against the lenders: it draws on it
+			room = self.needs.credit_room(account)
+			rows = with_own_claim(rows, 0.0 if room is None else room / listing["coin_per_unit"])
+		lenders = [row for row in rows if row[4] <= ceiling]
 		return listing["currency"], listing["coin_per_unit"], [(row[0], row[2], row[3], row[4]) for row in lenders]
 
 	def lender_offers_made(self) -> Dict[str, float]:

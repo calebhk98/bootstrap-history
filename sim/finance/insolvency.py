@@ -32,17 +32,18 @@ class Insolvency(Part):
 		come before any default. Default itself is the shared arrears rule (`charge_interest`, then `default_on_debt`)."""
 		self.answer_exhausted_credit(year)
 
-	def default_on_debt(self, year: int) -> None:
+	def default_on_debt(self, year: int) -> bool:
 		"""The lenders default the founder's debt after too many years of arrears: first the responses to exhausted credit, then
 		entry into service for a civilisation that had it, otherwise a settlement that writes most of the debt off. The household
-		is left poor rather than impossibly indebted, which is a position it can work out of."""
+		is left poor rather than impossibly indebted, which is a position it can work out of. Whether it defaulted: a household
+		still within its line has not, and the arrears stay owed."""
 		self.answer_exhausted_credit(year)
 		limit = self.parts.credit_line.credit_limit()
 		if self.needs.acting_balance() >= -limit:
-			return
-		if self.enter_debt_bondage(year):
-			return
-		self.settle_insolvency(year, limit)
+			return False
+		if not self.enter_debt_bondage(year):
+			self.settle_insolvency(year, limit)
+		return True
 
 	def answer_exhausted_credit(self, year: int) -> None:
 		"""Past the limit, in this order: stop paying for new work, let go of what cannot be maintained, and shed the household

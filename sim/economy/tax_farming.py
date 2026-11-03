@@ -1,7 +1,7 @@
 """Tax farming: a state lets the right to collect a money form of revenue for a year to the best bidder.
 
 The state names the forms to farm (`EconomyYearInputs.farmed_forms`, its choice through its decision policy). Any
-actor holding cash may bid: it expects the form's base of last year taxed at its own reach, discounted at the
+agent of the economy (a household cohort, a producer, a merchant) may bid: it expects the form's base of last year taxed at its own reach, discounted at the
 market rate for waiting a year, and offers no more than it holds. The highest bid at or above what the state
 expects to collect itself, discounted the same way, wins. The farmer pays the state its price at once, then
 collects the form from the payers through the ordinary assessment (taxes.py) at its own reach; the surplus
@@ -34,14 +34,15 @@ def reserve_price(state_take: float, interest_rate: float) -> float:
 
 def bids(record, form, interest_rate: float, state_agent: AgentId, currency: str,
          reach: float = TAX_FARMER_REACH) -> List[Tuple[float, float, AgentId]]:
-    """(price, cash, bidder) for every actor holding cash, best first: the price is what the bidder expects
-    to take, discounted a year, and no more than its cash. Empty without a year of history to expect from."""
+    """(price, cash, bidder) for every agent of the economy holding cash, best first: the price is what the bidder expects
+    to take, discounted a year, and no more than its cash. A bank's or fund's cash is its depositors' and an escrow account's is
+    the payee's, so neither bids. Empty without a year of history to expect from."""
     history = record.taxes.tax_history.get(form.name)
     if not history or history["base"] <= 0.0:
         return []
     worth = expected_take(form.rate, history["base"], reach) / (1.0 + max(0.0, interest_rate))
     offers = []
-    for agent in sorted(record.book.agents()):
+    for agent in sorted(set(record.cohorts) | set(record.producers) | set(record.merchants)):
         cash = record.book.balance(agent, currency)
         if is_edge(agent) or agent == state_agent or cash <= 0.0:
             continue

@@ -78,6 +78,16 @@ class ActorsBorrowByOneMethod(unittest.TestCase):
         self.assertEqual(paid, 0.0)
         self.assertAlmostEqual(debtor.record.interest_arrears, owed)
 
+    def test_a_firm_holding_cash_beside_a_bond_pays_the_coupon_from_its_purse_and_does_not_fall_into_arrears(self):
+        issuer = firm(self.state, "g", money=500.0)
+        self.state.purses.bonds.set_terms(issuer.account_id, 0.05, 0.05)
+        self.state.purses.bonds.sell(issuer.account_id, 100.0)   # a bond owed, its cash not in the purse: coupon 5 a year
+        self.world.credit_headroom = lambda actor_id: 0.0        # no credit room at all
+        owed, paid = issuer.settle_interest(self.world)
+        self.assertAlmostEqual(owed, 5.0)
+        self.assertAlmostEqual(paid, 5.0)
+        self.assertEqual(issuer.record.interest_arrears, 0.0)
+
     def test_a_firm_with_no_debt_pays_nothing(self):
         self.assertEqual(firm(self.state, "f", money=500.0).pay_interest(self.world), 0.0)
 

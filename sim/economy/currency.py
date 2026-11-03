@@ -73,15 +73,6 @@ def issue(spec: CurrencySpec, amount: float, purpose: str) -> list:
     return [Transfer(types.EDGE_ISSUE, spec.issuer, spec.currency_id, amount, purpose)]
 
 
-def retire(spec: CurrencySpec, amount: float, purpose: str) -> list:
-    """Money the issuer takes out of circulation (taxes burned, notes redeemed)."""
-    if spec.issuer is None:
-        raise ValueError("%s has no issuer" % spec.currency_id)
-    if amount < 0.0:
-        raise ValueError("amount must not be negative")
-    return [Transfer(spec.issuer, types.EDGE_ISSUE, spec.currency_id, amount, purpose)]
-
-
 def debase(spec: CurrencySpec, new_backing_per_unit: float) -> CurrencySpec:
     """The issuer strikes the same unit with a different amount of metal; the caller decides when."""
     if spec.regime != "struck_coin":

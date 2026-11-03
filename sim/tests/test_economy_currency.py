@@ -76,11 +76,9 @@ class ParityTests(unittest.TestCase):
 
 
 class IssueTests(unittest.TestCase):
-    def test_issue_and_retire(self):
+    def test_issue(self):
         [made] = currency.issue(fiat_spec(), 50.0, "deficit")
         self.assertEqual((made.payer, made.payee, made.amount), (types.EDGE_ISSUE, "state", 50.0))
-        [gone] = currency.retire(fiat_spec(), 20.0, "tax")
-        self.assertEqual((gone.payer, gone.payee, gone.amount), ("state", types.EDGE_ISSUE, 20.0))
 
     def test_no_issuer_cannot_issue(self):
         spec = currency.currency_from_coin_standard(

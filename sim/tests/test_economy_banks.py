@@ -234,6 +234,25 @@ class Dividends(unittest.TestCase):
         self.assertAlmostEqual(balance(record, FOUNDER) - before, 30.0)
         self.assertGreaterEqual(banks.capital_of(record, BANK, MONEY), bank.paid_in - 1e-6)
 
+    def test_the_dividend_is_remembered_as_what_the_bank_paid_its_founder_not_as_a_sale(self):
+        record, bank = self.capital_only_bank()
+        record.book.transfer(Transfer(FOUNDER, BANK, MONEY, 30.0, "earnings"))
+        self.serviced(record)
+        self.assertAlmostEqual(bank.dividend_paid, 30.0)
+        self.assertAlmostEqual(banks.dividends_paid_to(record, FOUNDER), 0.0 if FOUNDER in record.cohorts else 30.0)
+
+    def test_a_founder_outside_the_households_is_told_the_dividend_a_year_end_paid_it(self):
+        record, bank = self.capital_only_bank()
+        bank.founder, bank.dividend_paid = "seat:a", 12.0
+        self.assertEqual(banks.dividends_paid_to(record, "seat:a"), 12.0)
+        self.assertEqual(banks.dividends_paid_to(record, "seat:b"), 0.0)
+
+    def test_a_year_end_that_pays_nothing_clears_the_last_ones(self):
+        record, bank = self.capital_only_bank()
+        bank.dividend_paid = 9.0
+        self.serviced(record)
+        self.assertEqual(bank.dividend_paid, 0.0)
+
 
 if __name__ == "__main__":
     unittest.main()

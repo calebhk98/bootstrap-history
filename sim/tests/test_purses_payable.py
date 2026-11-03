@@ -49,16 +49,24 @@ class Payable(unittest.TestCase):
             purses.transfer("firm:1", "firm:2", affordable, "test")   # raises InsufficientFunds if the gate lied
             self.assertAlmostEqual(purses.purse("firm:2"), affordable)
 
-    def test_pay_up_to_pays_what_it_can_and_answers_it(self):
-        purses = purses_with({"cohort:a": (10.0, 0.05)}, held=5.0)
-        paid = purses.pay_up_to("firm:1", "firm:2", 100.0, "test")
-        self.assertAlmostEqual(paid, 25.0)
-        self.assertAlmostEqual(purses.purse("firm:2"), 25.0)
-        self.assertAlmostEqual(purses.debt("firm:1"), 20.0)
 
-    def test_pay_up_to_with_nothing_to_pay_with_pays_nothing_and_does_not_raise(self):
-        purses = Purses()
-        self.assertEqual(purses.pay_up_to("firm:1", "firm:2", 10.0, "test"), 0.0)
+class DepositThePoolCannotReturn(unittest.TestCase):
+    def lent_out(self, offered_units):
+        purses = purses_with({"cohort:a": (offered_units, 0.05)} if offered_units else {})
+        purses.book.transfer(Transfer(EDGE_OUTSIDE, "firm:1", COIN, 30.0, "seed"))
+        purses.set_offers({"firm:1": 30.0})
+        purses.transfer("firm:2", "firm:3", 30.0, "test")   # firm:2 draws the whole pool; firm:1's deposit is lent out
+        return purses
+
+    def test_a_deposit_the_pool_has_lent_out_and_no_lender_refills_is_not_takeable(self):
+        purses = self.lent_out(0.0)
+        self.assertAlmostEqual(purses.takeable("firm:1"), 0.0)
+        self.assertAlmostEqual(purses.payable("firm:1", 30.0), 0.0)
+
+    def test_the_lenders_that_refill_it_make_that_much_of_the_deposit_takeable(self):
+        purses = self.lent_out(10.0)   # 10 units are 20 coin
+        self.assertAlmostEqual(purses.takeable("firm:1"), 20.0)
+        self.assertAlmostEqual(purses.payable("firm:1", 30.0), 20.0)   # the same lenders cannot refill the deposit and be drawn on again
 
 
 class RefusedPayment(unittest.TestCase):
@@ -107,6 +115,19 @@ class BookkeepingReset(unittest.TestCase):
         purses.set_net("firm:1", -50.0, "set")
         self.assertAlmostEqual(purses.book.balance("cohort:a", UNIT), 100.0)
         self.assertAlmostEqual(purses.debt("firm:1"), 50.0)
+
+
+    def test_the_account_outside_the_book_that_stands_behind_a_reset_debt_earns_no_interest(self):
+        purses = purses_with({})
+        purses.book.transfer(Transfer(EDGE_OUTSIDE, "firm:1", COIN, 30.0, "seed"))
+        purses.set_offers({"firm:1": 30.0})
+        purses.set_net("firm:2", -30.0, "set")   # the account outside the book funds the 30 the pool lacks
+        purses.book.transfer(Transfer(EDGE_OUTSIDE, "firm:3", COIN, 8.0, "seed"))
+        purses.transfer("firm:3", POOL, 8.0, "interest")
+        purses.interest_pending += 8.0
+        paid = purses.settle_interest()
+        self.assertEqual(sorted(paid), ["firm:1"])
+        self.assertAlmostEqual(paid["firm:1"], 8.0)
 
 
 class SumsDoNotDependOnCreationOrder(unittest.TestCase):

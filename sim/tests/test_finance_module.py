@@ -93,12 +93,20 @@ class SettleInterest(unittest.TestCase):
     def test_a_default_after_the_run_of_years_clears_the_arrears_and_asks_the_owner(self):
         module, _purses = self.module(990.0, ceiling=1000.0)
         defaults = []
-        module.default_on_debt = lambda year: defaults.append(year)
+        module.default_on_debt = lambda year: defaults.append(year) or True
         for _year in range(40):
             module.settle_interest()
             if defaults:
                 break
         self.assertEqual((len(defaults), module.seat.interest_arrears, module.seat.arrears_years), (1, 0.0, 0))
+
+
+    def test_a_household_still_within_its_line_has_not_defaulted_and_its_arrears_stay_owed(self):
+        module, _purses = self.module(990.0, ceiling=1000.0)
+        module.default_on_debt = lambda year: False
+        for _year in range(40):
+            module.settle_interest()
+        self.assertGreater(module.seat.interest_arrears, 0.0)
 
 
 class JudgeInsolvency(unittest.TestCase):

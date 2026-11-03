@@ -89,13 +89,15 @@ def pay_up_to(payer: Any, payee: Any, amount: float, purpose: Purpose) -> float:
 	"""Pay `amount`, or as much of it as `payer` can (`payable`); answers what was paid, which is nothing for a payer with
 	nothing to pay with. Never raises `InsufficientFunds`: the caller does with less."""
 	affordable = payable(payer, amount)
-	for attempt in (affordable, 0.0 if getattr(payer, "purses", None) is None else min(affordable, payer.purses.purse(payer.account_id))):
+	purses = getattr(payer, "purses", None)
+	held = 0.0 if purses is None else purses.purse(payer.account_id) + purses.takeable(payer.account_id)
+	for attempt in (affordable, min(affordable, held)):
 		if attempt <= 0.0:
 			return 0.0
 		try:
 			transfer(payer, payee, attempt, purpose)
 			return attempt
-		except InsufficientFunds:   # the lenders refused the draw after all: try what the payer's purse itself holds
+		except InsufficientFunds:   # the lenders refused the draw after all: try what the payer itself holds, its purse and the deposit it can take back
 			continue
 	return 0.0
 

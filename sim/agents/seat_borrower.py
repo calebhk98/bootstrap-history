@@ -19,9 +19,9 @@ class SeatBorrower(Borrower):
 	kind = "household"
 
 	def __init__(self, account_id: str, purses: Any, arrears: Any, *, balance: Callable[[], float], note_outlay: Callable[[Any, float], None],
-	             ceiling: Callable[[], float], rate: Callable[[], float], defaults: Callable[[], None]) -> None:
+	             ceiling: Callable[[], float], rate: Callable[[], float], defaults: Callable[[], bool]) -> None:
 		"""`balance()` is the seat's purse, `ceiling()` the most it may owe, `rate()` what it pays a year on its debt and
-		`defaults()` what the lenders' default does to the household."""
+		`defaults()` what the lenders' default does to the household (whether it defaulted: a household within its line has not)."""
 		self.account_id, self.purses, self._arrears = account_id, purses, arrears
 		self._balance = balance
 		self.payments = SeatBorrowerPayments(note_outlay)
@@ -47,7 +47,8 @@ class SeatBorrower(Borrower):
 		return self._rate()
 
 	def default(self, world: Any) -> None:
-		"""The lenders' default: the owner stops what it cannot fund, then the arrears are cleared."""
-		self._defaults()
-		self._arrears.interest_arrears = 0.0
-		self._arrears.arrears_years = 0
+		"""The lenders' default: the owner stops what it cannot fund, then the arrears are cleared. A household still within its
+		line is not in default, and its arrears stay owed."""
+		if self._defaults():
+			self._arrears.interest_arrears = 0.0
+			self._arrears.arrears_years = 0
