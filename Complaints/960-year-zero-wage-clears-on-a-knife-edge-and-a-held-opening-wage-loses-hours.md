@@ -47,8 +47,8 @@ opening's costs, or seeding whole heads so supply is at least demand, `labour_st
 ## Producers' short-run supply response (branch producer-supply-elasticity)
 
 Opened sources put the short-run supply elasticity of staple output far below what `producers.share_working`'s spread
-gives at break-even (`Complaints/reports/research-short-run-supply-elasticity.md`). `producer_supply_spread.py`
-derives the spread from a target elasticity, but wiring it in fails: a normal cost spread wide enough for a low
+gives at break-even (`Complaints/reports/research-short-run-supply-elasticity.md`). A module that derived the spread from a target
+elasticity (deleted unwired; see git history for `sim/economy/producer_supply_spread.py`) showed why wiring it in fails: a normal cost spread wide enough for a low
 elasticity at the margin gives a fat lower tail, so a producer earning a small share of its cost still runs a large
 share of its capacity and the exit and shedding rules stop working. Needed first: a cost distribution steep only near
 the margin (thin lower tail), or a closure rule. Measured with the held opening wage (patch 1 above) and the sourced
