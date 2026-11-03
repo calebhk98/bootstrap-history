@@ -5,7 +5,7 @@ from typing import Dict, List, Tuple
 
 
 from . import producer_table
-from . import credit_claims, ownership
+from . import bondage_hours, credit_claims, ownership
 from sim.book import ROUNDING_SHARE
 from .credit import Default
 from .types import GoodsMove, Transfer
@@ -36,6 +36,7 @@ def exit_producer(record, producer_id: str, payout: List[Transfer]) -> List[Tran
     record.credit.default_term_loans(producer_id)
     record.credit.forget_producer(producer_id)
     record.capital_markets.forget_producer(producer_id)
+    bondage_hours.release(record.unfree.bonded_held, producer_id)
     producer_table.remove_producer(record.producers, producer_id)
     return paid
 

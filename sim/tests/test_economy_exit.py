@@ -8,6 +8,7 @@ from unittest import mock
 
 from sim.economy.capital_markets_record import CapitalMarketsRecord
 from sim.economy.credit_record import CreditRecord
+from sim.economy.unfree_record import UnfreeRecord
 from sim.economy import entry, producer_exit, producers, producers_close
 from sim.economy.types import Loan, Transfer
 from sim.tests.economy_fixture import HILLS, ORE
@@ -128,7 +129,8 @@ def exiting(cash, loans, goods=None):
     """A record holding one producer (owned by "owner") with `cash` and `goods`, owing `loans`; ownership.spread is the identity."""
     credit = CreditRecord()
     credit.add_loans(list(loans))
-    record = types.SimpleNamespace(book=StubBook(cash, goods or {}), producers={"producer": types.SimpleNamespace(owner="owner")}, credit=credit, capital_markets=CapitalMarketsRecord())
+    record = types.SimpleNamespace(book=StubBook(cash, goods or {}), producers={"producer": types.SimpleNamespace(owner="owner")}, credit=credit, capital_markets=CapitalMarketsRecord(),
+                             unfree=UnfreeRecord())
     return record
 
 
@@ -162,11 +164,19 @@ class ExitBooksTests(unittest.TestCase):
         self.assertEqual(record.credit.credit_losses, {})
 
 
+class ExitBondedTests(unittest.TestCase):
+    def test_an_exited_producer_leaves_no_bonded_people_for_a_later_producer_of_its_id(self):
+        record = exiting(0.0, [])
+        record.unfree.bonded_held = {"tile": {"smith": {"producer": 3.0, "other": 1.0}}, "gone": {"smith": {"producer": 2.0}}}
+        exit_with(record, [])
+        self.assertEqual(record.unfree.bonded_held, {"tile": {"smith": {"other": 1.0}}})
+
+
 class CloseIdleProducersTests(unittest.TestCase):
     def test_a_closed_producer_leaves_by_the_one_exit_so_its_shares_and_ledgers_are_forgotten_too(self):
         from sim.economy import entry_year
         record = types.SimpleNamespace(
-            book=StubBook(30.0, {ORE: {HILLS: 2.0}}), credit=CreditRecord(), capital_markets=CapitalMarketsRecord(),
+            book=StubBook(30.0, {ORE: {HILLS: 2.0}}), credit=CreditRecord(), capital_markets=CapitalMarketsRecord(), unfree=UnfreeRecord(),
             producers={"sliver": farmer(agent_id="sliver", owner="owner", capacity_runs=0.0)})
         record.capital_markets.shares["sliver"] = {"holder": 0.5}
         record.credit.expansion_runs.clear()

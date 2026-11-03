@@ -10,8 +10,8 @@ are the cost-price dual (`unit_cost`). From the runs come the flows that a year 
 - the wage the labour market clears at when more hours are offered than demanded (the survival wage, which
   `labour_ask_floor` sets), against the wage the cost table states.
 
-Nothing here reads a game; the opening calls it with its own final demand, and a test calls it with the small
-fixture's. The opening does not yet seed its producers or its wage from it (Complaint 473).
+Nothing here reads a game; the fixture setups (fixture_setups.py) call it with their final demand. The opening does
+not seed its producers or its wage from it (Complaint 473).
 """
 import math
 from dataclasses import dataclass

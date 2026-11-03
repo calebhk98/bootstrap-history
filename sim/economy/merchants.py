@@ -139,6 +139,9 @@ def within_purse(transfers: Sequence[Transfer], balance: float) -> Tuple[Transfe
 
 
 def expected_price(merchant: Merchant, view: MarketView, good: GoodId, area: AreaId) -> Optional[float]:
+    """What the merchant expects a market to pay for its good: its own expectation, else the planning price. A seller
+    reads what buyers will pay, a bid ceiling included, so it follows unmet demand (`year_close.learned_prices`); a
+    buyer of goods or carriers reads `offered_price`, what is on offer to buy."""
     price = merchant.expected_prices.get((good, area))
     return price if price is not None else view.price(good, area)
 

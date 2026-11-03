@@ -56,13 +56,10 @@ class YearOutcome:
     hunger_by_tile: Dict[str, float] = field(default_factory=dict)   # food floor units short
     output: Dict[str, float] = field(default_factory=dict)
     idle_hours: float = 0.0
-    vacant_hours: float = 0.0
     hired_hours: float = 0.0
     wage_floor_per_hour: float = 0.0               # the lowest a worker's ask could fall to (labour_ask_floor.py)
     extraction: Dict[Tuple[str, str], float] = field(default_factory=dict)   # runs worked per (recipe, tile) on a site
     money_audit: Optional[MoneyAudit] = None       # where money entered and left this year
-    bonded_bought: Dict[Tuple[str, str], float] = field(default_factory=dict)   # (tile, trade): bonded people bought this year
-    bonded_paid: float = 0.0                       # money the buyers paid for them over the exchange edge
     bonded_lots: list = field(default_factory=list)   # the lots bought: origin and destination tile, trade, people, the owners' ask and the carriage paid
     accounts: Optional[YearAccounts] = None        # production, use, consumption, investment, stocks; food eaten; real wage
     migrated_by_tile: Dict[str, float] = field(default_factory=dict)   # net working people the labour market moved to (+) or from (-) each tile: a request to demography, which moves the people
@@ -211,14 +208,14 @@ class Economy:
         placed = bondage_hours.place(record.unfree.bondage, held_placed.offers, held_placed.bids,
                                      bondage_hours.works_of_producers(record), bondage.BONDED_HOURS_OWED_SHARE)
         everyone, labour_bids = placed.offers, placed.bids
-        supply = self._hour_supply(everyone, view, outside_option)
+        supply = self._hour_supply(everyone, view)
         people_before = flight_step.people_before(record.labour)
         labour_report = clear_labour(setup, record, labour_bids, everyone, ledger, context, supply=supply)
         flight_step.settle(setup, record, inputs, labour_report, people_before, context, self.carriage)
         ledger.migrated_by_tile = {area_tile(area): change for area, change in sorted(labour_report.migrated.items()) if change}
         state_budget.lapse_unspent_wages(record.state_budget, state_budget.wages_paid(ledger.labour_results, setup.state_agent))
         offers, kept = supply.sold, supply.kept
-        ledger.bonded_bought, ledger.bonded_paid, ledger.bonded_lots, bought_held = bonded_purchase.settle(
+        _bought, _paid, ledger.bonded_lots, bought_held = bonded_purchase.settle(
             record.book, money, labour_report.bonded_lots)
         bondage_hours.hold(record.unfree.bonded_held, bought_held)
         bondage_hours.deliver(ledger.hours_hired, placed)
@@ -336,7 +333,7 @@ class Economy:
         setup = self.setup
         return own_production_options(setup.recipes, setup.land_per_run, setup.basket)
 
-    def _fixed_home_hours(self, everyone, view, outside_option) -> Tuple[Dict[str, float], Dict[str, float]]:
+    def _fixed_home_hours(self, everyone, view) -> Tuple[Dict[str, float], Dict[str, float]]:
         """(own-plot plan hours, household work hours) each cohort keeps back whatever the wage: the plan at the tile's
         usual fertility (it plants before it knows the harvest), and the household work it does itself
         (household_work_year.py)."""
@@ -348,9 +345,9 @@ class Economy:
         self._work_hours = household_work_year.decide(self.setup, self.record, view, everyone)
         return plan, self._work_hours
 
-    def _hour_supply(self, everyone, view, outside_option) -> HourSupply:
+    def _hour_supply(self, everyone, view) -> HourSupply:
         """The hours households sell as a schedule against the wage (labour_supply.py)."""
-        plan, work = self._fixed_home_hours(everyone, view, outside_option)
+        plan, work = self._fixed_home_hours(everyone, view)
         plot = household_hours_year.plot_schedules(self.setup, self.record, view, everyone, self.own_plot_options(),
                                                    self.hectares_held())
         faced = {(offer.trade, offer.area): trade_wages.faced_wage(view.wage(offer.trade, offer.area), offer.reservation_wage) for offer in everyone}
@@ -514,11 +511,10 @@ class Economy:
     def _outcome(self, ledger: YearLedger, level: float, extraction, stocks_at_start) -> YearOutcome:
         record, setup = self.record, self.setup
         money = setup.currency_id
-        idle = vacant = hired = 0.0
+        idle = hired = 0.0
         for result in ledger.labour_results:
             hired += result.hours_hired
             idle += result.idle_hours
-            vacant += result.vacant_hours
         mean_wages = national_wages(record)
         hunger: Dict[str, float] = {}
         for cohort in record.cohorts.values():
@@ -537,8 +533,8 @@ class Economy:
         return YearOutcome(year=record.memory.year, basket_price_level=level, prices=prices,
                            wages=mean_wages, rate=record.memory.rates[money],
                            money_supply=record.book.money_supply(money), hunger_by_tile=hunger,
-                           output=dict(sorted(output.items())), idle_hours=idle, vacant_hours=vacant, hired_hours=hired,
+                           output=dict(sorted(output.items())), idle_hours=idle, hired_hours=hired,
                            wage_floor_per_hour=ledger.wage_floor_per_hour, extraction=extraction,
                            money_audit=year_report(record),
-                           migrated_by_tile=dict(ledger.migrated_by_tile), bonded_bought=dict(ledger.bonded_bought), bonded_paid=ledger.bonded_paid, bonded_lots=list(ledger.bonded_lots),
+                           migrated_by_tile=dict(ledger.migrated_by_tile), bonded_lots=list(ledger.bonded_lots),
                            accounts=build_accounts(setup, record, ledger, stocks_at_start, prices, mean_wages))
