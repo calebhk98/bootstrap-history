@@ -33,7 +33,7 @@ MUTATING_METHODS = frozenset((
     "sort", "reverse", "difference_update", "intersection_update", "symmetric_difference_update",
     # sim.contracts.Contracts, reached as `credit.contracts`
     "default", "draw", "deposit", "withdraw", "rename", "adopt", "scale_deposits", "repay_facility", "tidy_facility",
-    "set_facility"))
+    "forgive_facility"))
 LEDGER = "book"      # the shared ledger: no owner module, written only through Book's methods
 READING_METHODS = frozenset(("get", "items", "values", "keys", "copy"))
 PASSING_FUNCTIONS = frozenset(("sorted", "list", "tuple", "reversed", "iter", "enumerate"))
