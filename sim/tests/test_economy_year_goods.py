@@ -9,7 +9,7 @@ import unittest
 from sim.economy.clearing_totals import market_totals
 from sim.economy.market_memory import MarketMemory
 from sim.economy.types import Bid, Offer
-from sim.economy.accounts import Book
+from sim.book import Book
 from sim.economy.types import EDGE_CONSUMPTION, EDGE_PRODUCTION, GoodsMove
 from sim.economy.year_close import held_only, learned_prices, national_prices
 from sim.economy import market_quote

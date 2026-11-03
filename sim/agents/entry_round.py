@@ -40,6 +40,7 @@ class NicheEntry:
 			return None
 		gross = firm_entry.expected_entry_gross(registry, world, node_id, rivals, waiting + 1)
 		probe = Firm("probe", ActorRecord(kind="firm", founded_year=world.setting.year))
+		probe.attach(registry.state.purses)   # asks the same lenders the entrant would
 		expected = gross - self.costs - firm_entry.expected_levy(world, probe, gross)
 		expected -= enforcement.expected_damages(world, "", node_id, expected)
 		if expected <= 0:

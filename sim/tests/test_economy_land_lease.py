@@ -7,7 +7,7 @@ from types import SimpleNamespace
 
 from sim.economy.land_record import LandRecord
 from sim.economy import land_lease, land_market
-from sim.economy.accounts import Book
+from sim.book import Book
 from sim.economy.households_cohort import cohort_id, cohorts_for_tile
 from sim.economy.producers import Producer
 from sim.economy.types import EDGE_MINT, Recipe, TileSpec, Transfer

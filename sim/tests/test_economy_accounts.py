@@ -5,7 +5,7 @@ QUICK_TOPIC = True
 import json
 import unittest
 
-from sim.economy.accounts import (Book, DeliveredMove, InsufficientFunds, InsufficientGoods, NegativeAmount)
+from sim.book import (Book, DeliveredMove, InsufficientFunds, InsufficientGoods, NegativeAmount)
 from sim.economy.types import EDGE_MINT, EDGE_PRODUCTION, GoodsMove, Transfer
 
 

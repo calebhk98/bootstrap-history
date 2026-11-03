@@ -11,7 +11,7 @@ from unittest import mock
 
 from sim.economy import bank_service, banks, credit_claims
 from sim.economy.credit_record import CreditRecord
-from sim.economy.accounts import Book
+from sim.book import Book
 from sim.economy.types import EDGE_MINT, FundsOffer, Loan, Transfer
 from sim.tests.bank_fixture import BankFixture  # noqa: F401  (test_bank_runs builds its scenarios on it)
 

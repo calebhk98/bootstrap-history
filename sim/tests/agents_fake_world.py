@@ -277,11 +277,12 @@ class FakeWorld:
 	def limit(self, actor_id: str, amount: float) -> float:
 		return amount
 
-	def pay_interest(self, payer: Any, owed: float, purpose: Any = "interest") -> None:
-		"""Interest goes to the lenders the payer's purses name; the fixture keeps the total paid."""
+	def pay_interest(self, payer: Any, owed: float, purpose: Any = "interest") -> float:
+		"""Interest goes to the lenders the payer's purses name; the fixture keeps the total paid and answers it."""
 		payer.purses.pay_interest(payer.account_id, owed)
 		payer.payments.note_outlay(purpose, owed)
 		self.interest_paid += owed
+		return owed
 
 	def collect_royalty(self, actor: Any, node_id: str, takings: float) -> float:
 		return 0.0

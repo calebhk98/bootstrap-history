@@ -7,7 +7,7 @@ QUICK_TOPIC = True
 import types
 import unittest
 
-from sim.economy.accounts import Book
+from sim.book import Book
 from sim.economy.carriage_record import CarriageRecord
 from sim.economy.economy import Economy
 from sim.economy.market_areas_follow import follow, old_areas_by_new

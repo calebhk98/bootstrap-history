@@ -213,11 +213,6 @@ class WhatTheFundEarnsAndBuys(FundFixture):
     def test_a_fund_with_no_cash_makes_no_offer(self):
         self.assertIsNone(funds.offer_of(self.setup, self.record, self.fund, MARKET_RATE))
 
-    def test_the_units_a_household_holds_are_listed_by_fund(self):
-        self.subscribed(100.0)
-        self.assertEqual(funds.owned_by(self.record, self.saver), {self.fund.agent_id: 100.0})
-        self.assertEqual(funds.owned_by(self.record, self.other), {})
-
 
 if __name__ == "__main__":
     unittest.main()

@@ -61,7 +61,7 @@ def hours_hired_by_farm(merchant_bid_hours):
     """Hours the farm is hired for in a labour market of scarce supply, when a merchant also bids `merchant_bid_hours`
     for its carriers at a higher wage; the bids go through the year's labour clearing together."""
     import types
-    from sim.economy.accounts import Book
+    from sim.book import Book
     from sim.economy.market_memory import MarketMemory
     from sim.economy.types import EDGE_MINT, LabourBid, LabourOffer, Transfer
     from sim.economy.year_labour import clear_labour
@@ -276,7 +276,7 @@ class WageLoanTests(unittest.TestCase):
     """Carriers are paid at the labour market, before lenders meet, so a merchant short of cash borrows its wage bill."""
 
     def record(self, cash):
-        from sim.economy.accounts import Book
+        from sim.book import Book
         from sim.economy.market_memory import market_key
         from sim.economy.setup import labour_area
         from sim.economy.types import EDGE_MINT, Transfer

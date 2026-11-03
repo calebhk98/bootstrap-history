@@ -8,18 +8,22 @@ from typing import Dict, Iterable, List, Sequence, Tuple
 
 from sim.world import capital_market
 
-from . import credit, credit_cap
+from . import banks, credit, credit_cap
 from .types import AgentId, CurrencyId, FundsOffer, Loan, LoanRequest
 
 LINE_PURPOSE = "credit line"
 
 
+def reserved_offer(amount: float, already_reserved: bool) -> float:
+    """What a lender puts up of `amount` once the reserve lenders keep back is held out. A lender that has already held its
+    reserve against what it takes in (a bank, against its deposits) is not cut twice."""
+    return amount if already_reserved else capital_market.lendable_capacity(amount)
+
+
 def hold_reserve(offers: Sequence[FundsOffer], already_reserved: Iterable[AgentId] = ()) -> List[FundsOffer]:
-    """The offers with the reserve lenders keep back held out. A lender that has already held its reserve
-    against what it takes in (a bank, against its deposits) is not cut twice."""
+    """The offers with the reserve lenders keep back held out (`reserved_offer`)."""
     skipped = set(already_reserved)
-    return [offer if offer.lender in skipped else replace(offer, amount=capital_market.lendable_capacity(offer.amount))
-            for offer in offers]
+    return [replace(offer, amount=reserved_offer(offer.amount, offer.lender in skipped)) for offer in offers]
 
 
 def line_ceiling(market_rate: float, line: float) -> float:
@@ -44,8 +48,9 @@ def actor_fundable(amount: float, existing_debt: float, collateral_value: float,
 
 @dataclass(frozen=True)
 class LenderStanding:
-    """One lender of the last lending: what it put on offer, what its account holds now and the lowest rate it asked
-    (the economy's units). `kind` is cohort, bank or fund."""
+    """One lender of the last lending: what it can still lend (its offer after the reserve it keeps back, less what the year's
+    loans took, and for a bank no more than the cash it holds beyond its reserve, which its depositors' pledged funds do not
+    add to), what its account holds now and the lowest rate it asked (the economy's units). `kind` is cohort, bank or fund."""
     lender: AgentId
     kind: str
     offered: float
@@ -55,9 +60,16 @@ class LenderStanding:
 
 def lender_standings(record, currency: CurrencyId) -> List[LenderStanding]:
     """The lenders of the last lending, cheapest ask first (ties by id)."""
-    standings = [LenderStanding(lender, "cohort" if lender in record.cohorts else "bank" if lender in record.capital_markets.banks else "fund",
-                                offered, record.book.balance(lender, currency), record.credit.ask_by_lender[lender])
-                 for lender, offered in record.credit.offered_by_lender.items()]
+    banks_by_id = record.capital_markets.banks
+    standings = []
+    for lender, offered in record.credit.offered_by_lender.items():
+        bank = banks_by_id.get(lender)
+        capacity = reserved_offer(offered, bank is not None)
+        if bank is not None:
+            capacity = min(capacity, banks.free_cash(record, bank, currency))
+        capacity = max(0.0, capacity - record.credit.lent_by_lender.get(lender, 0.0))
+        standings.append(LenderStanding(lender, "cohort" if lender in record.cohorts else "bank" if bank is not None else "fund",
+                                        capacity, record.book.balance(lender, currency), record.credit.ask_by_lender[lender]))
     return sorted(standings, key=lambda each: (each.ask, each.lender))
 
 

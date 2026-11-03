@@ -31,7 +31,7 @@ def operate(business: Business, owner: Any, entry_key: str, world: Any, rivals: 
 	wages = found * books.wages   # at the economy's wage for each trade (the core's clearing pays the crew, not here)
 	if not world.market.sells_on_book(entry_key):   # what sells in the book is paid when the year's market clears
 		ledger.transfer(world.setting.edge(EDGE_CUSTOMERS), owner, takings, "takings")
-	ledger.transfer(owner, world.setting.edge(EDGE_SUPPLIERS), upkeep, "upkeep")
+	ledger.pay_up_to(owner, world.setting.edge(EDGE_SUPPLIERS), upkeep, "upkeep")   # the margin carries the whole upkeep; what the owner cannot pay stays unpaid
 	state = world.setting.government()
 	levy = 0.0 if state is owner else state.collect(owner, takings, world)   # a state does not levy its own works
 	royalty = world.disclosure.collect_royalty(owner, entry_key, takings)
@@ -48,7 +48,7 @@ def carry(business: Business, owner: Any, entry_key: str, world: Any) -> Optiona
 	if rent is None:   # the plant's country keeps no record of the rent: it pays nothing it cannot read
 		return None
 	trade, people = firm_entry.management_places(world, entry_key, size)
-	ledger.transfer(owner, world.setting.edge(EDGE_LANDOWNERS), rent, "site rent")
+	ledger.pay_up_to(owner, world.setting.edge(EDGE_LANDOWNERS), rent, "site rent")   # the rent counts in full; an owner short of it pays what it can
 	if trade is None:
 		return rent
 	posted = owner.record.staff_wanted

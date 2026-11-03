@@ -35,18 +35,6 @@ class WearTests(unittest.TestCase):
     def test_fiat_does_not_wear(self):
         self.assertEqual(metal_stock.yearly_wear({"a": 1000.0}, self.fiat), [])
 
-    def test_metal_goods_are_lost(self):
-        moves = metal_stock.metal_loss({("a", "silver_plate_kg", "t1"): 10.0, ("a", "x", "t2"): 0.0})
-        self.assertEqual(len(moves), 1)
-        self.assertEqual((moves[0].giver, moves[0].receiver, moves[0].tile), ("a", types.EDGE_WEAR, "t1"))
-        self.assertLess(moves[0].quantity, 10.0)
-
-
-class OpeningStockTests(unittest.TestCase):
-    def test_opening_stock_is_the_sum_of_targets(self):
-        self.assertAlmostEqual(metal_stock.opening_money_stock({"a": 10.0, "b": 2.5}), 12.5)
-        self.assertEqual(metal_stock.opening_money_stock({}), 0.0)
-
 
 if __name__ == "__main__":
     unittest.main()

@@ -36,10 +36,11 @@ class CreditRecord(OwnedRecord):
     offered_by_lender: Dict[AgentId, float] = field(default_factory=dict)  # each lender's savings on offer at the last lending
     ask_by_lender: Dict[AgentId, float] = field(default_factory=dict)    # each lender's lowest rate at the last lending
     lent_by_borrower: Dict[AgentId, float] = field(default_factory=dict)  # what each borrower was lent at the last lending
+    lent_by_lender: Dict[AgentId, float] = field(default_factory=dict)   # what each lender put out at the last lending (lines counted: a room is claimed)
     credit_granted: Dict[AgentId, float] = field(default_factory=dict)   # what the last clearing granted each credit line asked for (credit_lines.py)
 
     AGENT_KEYED = ("remembered_defaults", "credit_losses", "loss_rates", "losses_seen", "expansion_runs", "worn_runs",
-                   "offered_by_lender", "ask_by_lender", "lent_by_borrower", "credit_granted")
+                   "offered_by_lender", "ask_by_lender", "lent_by_borrower", "lent_by_lender", "credit_granted")
     SAVED_KEYS = {"contracts": "loans"}
     ENCODERS = {"contracts": lambda contracts: contracts.to_records(facilities=False)}
     DECODERS = {"contracts": _contracts_from,
@@ -146,6 +147,7 @@ class CreditRecord(OwnedRecord):
         self.funds_offered = sum(self.offered_by_lender.values())
         self.lowest_ask_offered = min(self.ask_by_lender.values(), default=None)
         self.lent_by_borrower = {}
+        self.lent_by_lender = {}
         self.credit_granted = {}
 
     def grant_lines(self, granted: Dict[AgentId, float], asked: List[AgentId]) -> None:
@@ -156,6 +158,7 @@ class CreditRecord(OwnedRecord):
 
     def note_lent(self, loan: Loan) -> None:
         self.lent_by_borrower[loan.borrower] = self.lent_by_borrower.get(loan.borrower, 0.0) + loan.principal
+        self.lent_by_lender[loan.lender] = self.lent_by_lender.get(loan.lender, 0.0) + loan.principal
 
     def shrink_collateral(self, tile: TileId, keep: float) -> None:
         """Loans pledged on `tile` are secured by `keep` of the share they were, as the tile's land grows."""

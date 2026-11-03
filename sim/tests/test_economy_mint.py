@@ -8,7 +8,7 @@ import types as pytypes
 import unittest
 
 from sim.economy import currency, mint
-from sim.economy.accounts import Book
+from sim.book import Book
 from sim.economy.types import EDGE_ISSUE, EDGE_MINT, EDGE_PRODUCTION, GoodsMove, Transfer
 
 METAL = "silver_kg"

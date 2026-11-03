@@ -40,10 +40,11 @@ class Credit:
 		return self.needs.risk_premium(debt_after, collateral_value, arrears)
 
 	def limit(self, actor_id: str, amount: float) -> float:
-		"""The most of a draw of `amount` the actor behind the account may take, by its own `draw_limit`; the whole of it for an
-		account no borrower stands behind (an edge, a seat's household)."""
+		"""The most of a draw of `amount` the actor behind the account may be lent by the economy's rule (its `rule_limit`); the
+		whole of it for an account no borrower of the registry stands behind (an edge, the pool, a seat's household, whose line
+		the clearing granted it): the lenders' supply bounds the draw either way (`Purses.drawable`)."""
 		actor = self.world.registry.actors.get(actor_id)
-		return amount if actor is None else actor.draw_limit(self.world, amount)
+		return amount if actor is None else actor.rule_limit(self.world, amount)
 
 	def state_may_borrow(self, state: Any) -> bool:
 		"""Whether a state holds a technology that declares the `state_credit` mechanic, in its own
@@ -60,11 +61,10 @@ class Credit:
 
 	def pay_interest(self, payer: Any, owed: float, purpose: str = "interest") -> float:
 		"""A borrower pays the interest on its debt to its lenders; what was paid. Interest the lenders refuse to advance the
-		payer (its limit, or the funds they hold) is not paid: it is carried as arrears."""
+		payer (its limit, or the funds they hold) is not paid: the caller carries it as arrears."""
 		try:
 			received = payer.purses.pay_interest(payer.account_id, owed)
 		except InsufficientFunds:
-			payer.arrears_book.interest_arrears += owed
 			return 0.0
 		paid = sum(received.values())
 		payer.payments.note_outlay(purpose, paid)

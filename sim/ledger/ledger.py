@@ -143,9 +143,11 @@ class Ledger(Module):
 		if holder is not None:
 			(holder.payments.note_income if command.signed > 0.0 else holder.payments.note_outlay)(command.label, abs(command.signed))
 
-	def withdraw_household_money(self, command: Any) -> None:
-		ledger.transfer(self.account(), self.edge(EDGE_EXCHANGE), command.amount, BANK_CAPITAL_LABEL)
-		self.bump_seat(MONEY)
+	def withdraw_household_money(self, command: Any) -> Optional[Refusal]:
+		refusal = self.try_transfer(self.account(), self.edge(EDGE_EXCHANGE), command.amount, BANK_CAPITAL_LABEL)
+		if refusal is None:
+			self.bump_seat(MONEY)
+		return refusal
 
 	def pay_exchange(self, command: Any) -> Optional[Refusal]:
 		cast = self.needs.cast()
@@ -167,10 +169,15 @@ class Ledger(Module):
 		ledger.transfer(self.edge(command.edge), self.account(), command.amount, command.purpose)
 		self.bump_seat(MONEY)
 
-	def pay_wages(self, command: Any) -> None:
+	def pay_wages(self, command: Any) -> Optional[Refusal]:
+		"""The seat's wages to the people, all or none: a `cannot_pay` refusal, with nothing moved, when it cannot cover them."""
 		registry = self.needs.cast()
-		rules.pay_wages(registry, self.account(), command.amount, command.purpose, self.edge(edges.EDGE_WORKERS))
+		try:
+			rules.pay_wages(registry, self.account(), command.amount, command.purpose, self.edge(edges.EDGE_WORKERS))
+		except InsufficientFunds as error:
+			return Refusal("cannot_pay", str(error), amount=command.amount)
 		self.bump_seat(MONEY)
+		return None
 
 	def stock_ledger(self) -> Any:
 		"""The seat's tonnes ledger, made on first use, with the capacity keys swept into the world's capacity pool."""
@@ -244,4 +251,4 @@ class Ledger(Module):
 		for charge in self.needs.transfer_surcharge(payer, payee, amount, purpose):
 			if charge is not None:
 				edge_name, charged, cause = charge
-				ledger.transfer(payer, self.edge(edge_name), charged, cause)
+				ledger.pay_up_to(payer, self.edge(edge_name), charged, cause)   # a payer short of the charge pays what it can

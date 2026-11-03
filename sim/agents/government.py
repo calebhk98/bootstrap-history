@@ -140,7 +140,7 @@ class Government(RecordedActor):
 		return sum(parts.values()), parts
 
 	def collect(self, payer: Actor, taxable: float, world: Any) -> float:
-		"""Levy `payer` and receive it; the amount taken."""
+		"""Levy `payer` and receive it; the amount taken, which is less than the levy when the payer cannot pay all of it."""
 		levy, parts = self.assess(payer, taxable, world)
 		if parts["requisition"] > 0.0 and payer.stance.demand_stance() != demand_answer.COMPLY:
 			# a refused requisition is paid, with a penalty, only if the state can enforce it; a negotiated
@@ -152,12 +152,16 @@ class Government(RecordedActor):
 			if answer["penalty"] > 0.0:
 				parts["penalty"] = answer["penalty"]
 			if answer["service"] > 0.0:
-				ledger.transfer(payer, world.setting.edge(EDGE_STATE_SPENDING), answer["service"], "service to the state")
+				ledger.pay_up_to(payer, world.setting.edge(EDGE_STATE_SPENDING), answer["service"], "service to the state")
 			if answer["refused"]:
 				payer.stance.set_defiance(demand_answer.defiance_after_refusal(payer.stance.defiance()))
 			levy = sum(parts.values())
 		if levy > 0.0:
-			ledger.transfer(payer, self, levy, parts)
+			taken = ledger.payable(payer, levy)   # a payer short of the levy pays what it can, its parts scaled alike
+			if taken < levy:
+				parts = {name: part * taken / levy for name, part in parts.items()}
+				levy = taken
+			ledger.pay_up_to(payer, self, levy, parts)
 		return levy
 
 	def military_ask(self, taxable: float, scale: float, world: Any) -> float:

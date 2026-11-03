@@ -8,7 +8,7 @@ import json
 import unittest
 
 from sim.economy import merchants, merchants_transit
-from sim.economy.accounts import Book
+from sim.book import Book
 from sim.economy.market_areas import AreaMap
 from sim.economy.merchants import Merchant
 from sim.economy.record import EconomyRecord

@@ -180,8 +180,7 @@ def settle_keep(registry: Any, world: Any) -> None:
 			ledger.transfer(registry.state.edge(EDGE_ECONOMY), owner, actor.record.labour_product, EDGE_ECONOMY)
 			actor.record.labour_product = 0.0
 		cost = actor.record.members * registry.countries.world_for(actor, world).people.subsistence_cost_per_person_year()
-		ledger.transfer(owner, actor, cost, "keep of bonded")
-		actor.record.allowance += cost
+		actor.record.allowance += ledger.pay_up_to(owner, actor, cost, "keep of bonded")   # a keeper pays what it can
 
 
 def true_up_keep(registry: Any, world: Any) -> None:
@@ -197,8 +196,7 @@ def true_up_keep(registry: Any, world: Any) -> None:
 		cost = actor.record.members * registry.countries.world_for(actor, world).people.subsistence_cost_per_person_year()
 		shortfall = cost - actor.record.allowance
 		if shortfall > 0.0:
-			ledger.transfer(owner, actor, shortfall, "keep of bonded")
-			actor.record.allowance += shortfall
+			actor.record.allowance += ledger.pay_up_to(owner, actor, shortfall, "keep of bonded")
 
 
 def settle_strata(registry: Any, world: Any) -> None:

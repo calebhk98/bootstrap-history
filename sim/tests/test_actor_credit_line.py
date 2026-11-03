@@ -12,6 +12,7 @@ from sim.economy import api, credit_lines
 from sim.economy.credit_record import CreditRecord
 from sim.economy.types import FundsOffer
 from sim.finance.module import Finance
+from sim.world import capital_market
 from sim.markets.reads_prices import PriceReads
 from sim.tests import module_harness
 
@@ -60,7 +61,7 @@ def economy_over(credit, balances=None, cohorts=(), banks=(), coin_per_unit=2.0)
     book = types.SimpleNamespace(balance=lambda agent, currency: (balances or {}).get(agent, 0.0))
     record = types.SimpleNamespace(
         credit=credit, book=book, cohorts={name: None for name in cohorts},
-        capital_markets=types.SimpleNamespace(banks={name: None for name in banks}),
+        capital_markets=types.SimpleNamespace(banks={name: types.SimpleNamespace(agent_id=name, reserve_share=0.1) for name in banks}),
         memory=types.SimpleNamespace(rates={"coin": RATE}))
     return types.SimpleNamespace(record=record, setup=types.SimpleNamespace(currency_id="coin", opening_rate=RATE, coin_per_unit=coin_per_unit))
 
@@ -85,11 +86,12 @@ class EconomyAnswers(unittest.TestCase):
         self.assertEqual(api.risk_premium(0.0, 100.0, 0.0), 0.0)
         self.assertGreater(api.risk_premium(200.0, 100.0, 0.0), api.risk_premium(50.0, 100.0, 0.0))
 
-    def test_the_lenders_are_listed_cheapest_ask_first_with_kind_offer_and_balance(self):
+    def test_the_lenders_are_listed_cheapest_ask_first_with_kind_capacity_and_balance(self):
         listing = api.lender_listing(self.met())
-        self.assertEqual([(each.lender, each.kind, each.offered, each.balance, each.ask) for each in listing["lenders"]],
-                         [("saver", "cohort", 100.0, 90.0, 0.05), ("fund", "fund", 30.0, 10.0, 0.06),
-                          ("bank", "bank", 50.0, 70.0, 0.07)])
+        self.assertEqual([(each.lender, each.kind, round(each.offered, 9), each.balance, each.ask) for each in listing["lenders"]],
+                         [("saver", "cohort", round(capital_market.lendable_capacity(100.0), 9), 90.0, 0.05),
+                          ("fund", "fund", round(capital_market.lendable_capacity(30.0), 9), 10.0, 0.06),
+                          ("bank", "bank", 50.0, 70.0, 0.07)])   # a bank has held its reserve already
         self.assertEqual((listing["currency"], listing["coin_per_unit"]), ("coin", 2.0))
 
 

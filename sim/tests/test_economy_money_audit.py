@@ -6,7 +6,7 @@ QUICK_TOPIC = True
 import unittest
 
 from sim.economy import money_audit
-from sim.economy.accounts import Book
+from sim.book import Book
 from sim.economy.merchants import EDGE_CARRIAGE
 from sim.economy.types import EDGE_LEGACY, EDGE_MINT, EDGE_PRODUCTION, CurrencySpec, GoodsMove, Transfer
 

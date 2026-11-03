@@ -108,14 +108,6 @@ class PriceLevelAndRateTests(unittest.TestCase):
             currency.basket_price_level({"a": 2.0}, {"a": 1.0, "b": 1.0}, {"a": 1.0, "b": 1.0}), 2.0)
         self.assertEqual(currency.basket_price_level({"a": 2.0}, {}, {}), 1.0)
 
-    def test_exchange_rate_at_metal_parity(self):
-        penny = currency.currency_from_coin_standard(
-            "e", {"regime": "struck_coin", "material": "silver_kg", "kg_per_unit": 0.00135}, "penny", issuer="king")
-        self.assertAlmostEqual(currency.exchange_rate(silver_spec(), penny, {"silver_kg": 10.0}), 2.0)
-
-    def test_exchange_rate_none_for_fiat(self):
-        self.assertIsNone(currency.exchange_rate(fiat_spec(), silver_spec(), {"silver_kg": 10.0}))
-
 
 if __name__ == "__main__":
     unittest.main()

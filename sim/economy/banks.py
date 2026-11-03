@@ -68,9 +68,9 @@ def owed_to_depositors(record, bank_id: AgentId) -> float:
 
 
 def assets_of(record, bank_id: AgentId, money: str) -> float:
-    """What the bank holds in cash and is owed on its loans, as the loans' lenders value them."""
+    """What the bank holds in cash, is owed on its loans (as the loans' lenders value them) and has deposited in the actors' pool."""
     claims = credit_claims.claims_by_lender((loan for loan in record.credit.loans if loan.lender == bank_id), money)
-    return record.book.balance(bank_id, money) + claims.get(bank_id, 0.0)
+    return record.book.balance(bank_id, money) + claims.get(bank_id, 0.0) + record.credit.contracts.deposit_value(bank_id)
 
 
 def capital_of(record, bank_id: AgentId, money: str) -> float:

@@ -11,7 +11,7 @@ from sim.agents.api import ActorRecord, ActorsState
 from sim.agents.firm import Firm
 from sim.agents.purses import COIN, POOL, Purses
 from sim.contracts import DEPOSIT, FACILITY, STATE_DEBT, TERM_LOAN, Contract, Contracts
-from sim.economy.accounts import Book
+from sim.book import Book
 from sim.economy.types import Loan
 
 from .pool_lenders import lend_from_savers

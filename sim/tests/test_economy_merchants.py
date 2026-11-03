@@ -7,7 +7,7 @@ import unittest
 
 from sim.tests.economy_view_defaults import ViewDefaults
 from sim.economy import goods_market, merchants, settlement
-from sim.economy.accounts import Book
+from sim.book import Book
 from sim.economy.market_areas import AreaMap
 from sim.economy.merchants import Merchant
 from sim.tests.test_economy_tile_costs import unit_cost_table

@@ -7,7 +7,7 @@ import types
 import unittest
 
 from sim.economy import credit, credit_claims, lending, ownership, titles, titles_value
-from sim.economy.accounts import Book
+from sim.book import Book
 from sim.economy.households_cohort import cohort_id, cohorts_for_tile
 from sim.economy.households_credit import subsistence_request
 from sim.economy.market_memory import MarketMemory

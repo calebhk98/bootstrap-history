@@ -3,10 +3,13 @@
 `credit` and `debit` live on `Actor`; an actor with a persistent record keeps
 income and outlays by purpose, so its purse always equals its opening money
 plus income less outlays. `transfer` is the one way a payer's loss becomes a
-payee's gain, so money between actors is neither created nor destroyed.
+payee's gain, so money between actors is neither created nor destroyed. A payer short of what it pays raises
+`InsufficientFunds` with nothing moved; a caller that can do with less asks `payable` or pays by `pay_up_to`.
 """
 import contextlib
 from typing import Any, Callable, Iterator, List, Mapping, Optional, Union
+
+from sim.book import ROUNDING_SHARE, InsufficientFunds
 
 Purpose = Union[str, Mapping[str, float]]
 
@@ -44,8 +47,9 @@ def transfer(payer: Any, payee: Any, amount: float, purpose: Purpose) -> None:
 	"""Move `amount` from `payer` to `payee`.
 
 	`purpose` is a label, or a mapping of label to share of the amount when one
-	payment covers several things; the amount moved is authoritative. A
-	household's purse may go negative, as it always could.
+	payment covers several things; the amount moved is authoritative. A payer in
+	the one book draws what its purse lacks on its facility within its limit; beyond
+	that, or beyond what the economy's lenders hold, the payment raises `InsufficientFunds`.
 	"""
 	if amount == 0:
 		return
@@ -69,6 +73,40 @@ def transfer(payer: Any, payee: Any, amount: float, purpose: Purpose) -> None:
 		finally:
 			AFTER_TRANSFER[0] = hook
 			_IN_HOOK[0] = False
+
+
+def payable(payer: Any, amount: float) -> float:
+	"""The most of `amount` the payer can pay now: its purse, its deposit and what the economy's lenders will lend it
+	(`Purses.payable`); all of it for a payer outside the one book. A caller that can do with less caps what it pays to this,
+	or uses `pay_up_to`."""
+	purses = getattr(payer, "purses", None)
+	return amount if purses is None else float(purses.payable(payer.account_id, amount))
+
+
+def pay_up_to(payer: Any, payee: Any, amount: float, purpose: Purpose) -> float:
+	"""Pay `amount`, or as much of it as `payer` can (`payable`); answers what was paid, which is nothing for a payer with
+	nothing to pay with. Never raises `InsufficientFunds`: the caller does with less."""
+	affordable = payable(payer, amount)
+	for attempt in (affordable, 0.0 if getattr(payer, "purses", None) is None else min(affordable, payer.purses.purse(payer.account_id))):
+		if attempt <= 0.0:
+			return 0.0
+		try:
+			transfer(payer, payee, attempt, purpose)
+			return attempt
+		except InsufficientFunds:   # the lenders refused the draw after all: try what the payer's purse itself holds
+			continue
+	return 0.0
+
+
+def pay_in_full(payer: Any, payee: Any, amount: float, purpose: Purpose) -> bool:
+	"""Pay all of `amount` or nothing: False, with nothing moved, when the payer cannot (`payable`) or the lenders refuse the draw."""
+	if payable(payer, amount) < amount * (1.0 - ROUNDING_SHARE):
+		return False
+	try:
+		transfer(payer, payee, amount, purpose)
+	except InsufficientFunds:
+		return False
+	return True
 
 
 def reverse(payee: Any, payer: Any, amount: float, purpose: Purpose) -> None:

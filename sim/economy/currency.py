@@ -143,19 +143,3 @@ def basket_price_level(prices_now: Mapping[GoodId, float], prices_base: Mapping[
             now_cost += prices_now[good] * quantity
             base_cost += prices_base[good] * quantity
     return now_cost / base_cost if base_cost > 0.0 else 1.0
-
-
-def exchange_rate(spec_from: CurrencySpec, spec_to: CurrencySpec,
-                  backing_prices: Mapping[GoodId, float]) -> Optional[float]:
-    """Units of `spec_to` money per unit of `spec_from`, at metal parity: the value of the metal in one
-    unit of each, priced in a common numeraire by `backing_prices`. None if either is fiat (a floating
-    rate is a later mechanism) or a backing price is missing."""
-    values = []
-    for spec in (spec_from, spec_to):
-        if spec.backing_good is None:
-            return None
-        price = backing_prices.get(spec.backing_good)
-        if not price or price <= 0.0:
-            return None
-        values.append(spec.backing_per_unit * price)
-    return values[0] / values[1]

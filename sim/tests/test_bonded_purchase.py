@@ -10,7 +10,7 @@ from sim.agents.bonded_sale import (CAPTIVE_SHARE_OF_CONQUERED_PEOPLE, CAPTIVE_S
 from sim.agents.records import CountryProfile
 from sim.agents.stratum import stratum_id
 from sim.economy import bonded_purchase
-from sim.economy.accounts import Book
+from sim.book import Book
 from sim.economy.types import EDGE_EXCHANGE, EDGE_MINT, Transfer
 from sim.labour.market.bonded_worth import BondedLot
 

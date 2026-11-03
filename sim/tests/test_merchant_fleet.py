@@ -6,7 +6,7 @@ import types
 import unittest
 
 from sim.economy import carriage_fleet_book, carriage_wear, inventory, merchants, merchants_legs
-from sim.economy.accounts import Book
+from sim.book import Book
 from sim.economy.carriage_fleet import FleetLimit
 from sim.economy.types import EDGE_PRODUCTION, Fill, GoodsMove, GoodSpec
 from sim.tests.test_economy_merchants import SPECS, merchant, plan, world

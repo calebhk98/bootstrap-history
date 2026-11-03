@@ -8,7 +8,7 @@ import types
 import unittest
 
 from sim.economy import carriage_fleet_book, carriage_wear, merchants
-from sim.economy.accounts import Book
+from sim.book import Book
 from sim.economy.types import Fill, GoodSpec
 from sim.tests import test_economy_merchants as basic
 

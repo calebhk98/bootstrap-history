@@ -27,7 +27,6 @@ EDGE_EXTERNAL = "edge:external"          # foreign economies not modelled as age
 EDGE_PRODUCTION = "edge:production"      # goods made: the counterparty of output
 EDGE_CONSUMPTION = "edge:consumption"    # goods used up by households, inputs used in production
 EDGE_SPOILAGE = "edge:spoilage"          # goods lost while held
-EDGE_DEFAULT = "edge:default"            # debt written off
 EDGE_LEGACY = "edge:legacy"              # engine postings that do not yet name a counterparty
 EDGE_CARGO = "edge:cargo"                # money between a trader's purse and its cargo account
 

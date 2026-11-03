@@ -5,7 +5,7 @@ QUICK_TOPIC = True
 import random
 import unittest
 
-from sim.economy.accounts import Book, InsufficientFunds
+from sim.book import Book, InsufficientFunds
 from sim.economy.settlement import Settlement, settle_goods, settle_labour
 from sim.economy.settlement_limits import CANNOT_DELIVER, CANNOT_PAY
 from sim.economy.types import (EDGE_MINT, EDGE_PRODUCTION, ClearingResult, Fill, GoodsMove, LabourResult,

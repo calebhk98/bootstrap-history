@@ -12,7 +12,7 @@ The first unit costs one unit of money; a fund with nothing in it is worth nothi
 and interest its holdings pay, which stay in it (units are not paid an income, their worth rises), so a household
 reads a fund's yield from what it has earned over what it is worth.
 """
-from typing import Dict, List, Optional, Sequence
+from typing import List, Optional, Sequence
 
 from . import credit_claims, secondary_trade, shares
 from .capital_state import Fund
@@ -145,8 +145,3 @@ def offer_of(setup, record, fund: Fund, market_rate: float) -> Optional[FundsOff
     """The cash the fund holds, offered to the credit market and to the savers' claims at the market rate."""
     cash = cash_to_invest(setup, record, fund)
     return FundsOffer(fund.agent_id, setup.currency_id, cash, market_rate) if cash > EPSILON else None
-
-
-def owned_by(record, holder: AgentId) -> Dict[str, float]:
-    """The units a holder has in each fund."""
-    return {fund_id: fund.units[holder] for fund_id, fund in sorted(record.capital_markets.capital.funds.items()) if holder in fund.units}

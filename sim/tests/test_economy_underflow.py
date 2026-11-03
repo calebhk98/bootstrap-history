@@ -5,7 +5,7 @@ QUICK_TOPIC = True
 
 import unittest
 
-from sim.economy.accounts import Book, InsufficientFunds
+from sim.book import Book, InsufficientFunds
 from sim.economy.types import Transfer
 
 

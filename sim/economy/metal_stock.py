@@ -1,10 +1,10 @@
-"""Wear and loss of coin and metal goods, and the opening money stock."""
-from typing import Mapping, Tuple
+"""Wear and loss of coin."""
+from typing import Mapping
 
 from sim.constants import declare
 
 from . import types
-from .types import AgentId, CurrencySpec, GoodId, GoodsMove, TileId, Transfer
+from .types import AgentId, CurrencySpec, Transfer
 
 COIN_WEAR_PER_YEAR = declare(
     "COIN_WEAR_PER_YEAR", 0.01, kind="temporary_heuristic", unit="share of coin per year",
@@ -29,16 +29,3 @@ def yearly_wear(money_holdings_by_agent: Mapping[AgentId, float], spec: Currency
     return [Transfer(agent, types.EDGE_WEAR, spec.currency_id, amount * share, purpose)
             for agent, amount in money_holdings_by_agent.items()
             if amount > 0.0 and not types.is_edge(agent)]
-
-
-def metal_loss(goods_holdings: Mapping[Tuple[AgentId, GoodId, TileId], float],
-               loss_share: float = METAL_GOODS_LOSS_PER_YEAR) -> list:
-    """Holdings of metal goods, keyed (agent, good, tile); the caller chooses which goods are metal."""
-    return [GoodsMove(agent, types.EDGE_WEAR, good, tile, quantity * loss_share, "metal loss")
-            for (agent, good, tile), quantity in goods_holdings.items()
-            if quantity > 0.0 and not types.is_edge(agent)]
-
-
-def opening_money_stock(cash_targets_by_agent: Mapping[AgentId, float]) -> float:
-    """The opening stock is derived from what agents want to hold, not authored."""
-    return sum(cash_targets_by_agent.values())

@@ -10,7 +10,7 @@ from sim.agents.firm import Firm
 from sim.world import capital_market
 
 from .agents_fake_world import FakeWorld
-from .pool_lenders import lend_from_savers
+from .pool_lenders import lend_from_savers, lend_through
 
 START = 0.12
 
@@ -70,35 +70,49 @@ class ActorsBorrowByOneMethod(unittest.TestCase):
         self.assertAlmostEqual(debtor.money, -1.0e5 - owed)
         self.assertGreater(self.world.interest_paid, 0.0)
 
+    def test_interest_the_lenders_refuse_is_reported_unpaid_and_carried_as_arrears_once(self):
+        debtor = firm(self.state, "e", money=-1.0e5)
+        self.world.pay_interest = lambda payer, owed, purpose="interest": 0.0   # the lenders took none of it
+        owed, paid = debtor.settle_interest(self.world)
+        self.assertGreater(owed, 0.0)
+        self.assertEqual(paid, 0.0)
+        self.assertAlmostEqual(debtor.record.interest_arrears, owed)
+
     def test_a_firm_with_no_debt_pays_nothing(self):
         self.assertEqual(firm(self.state, "f", money=500.0).pay_interest(self.world), 0.0)
 
 
 class DrawLimit(unittest.TestCase):
-    """Borrower.draw_limit: one rule for every borrower, the economy's (design D1)."""
+    """Borrower.rule_limit: one rule for every borrower, the economy's (design D1); draw_limit adds what the lenders can supply."""
     def setUp(self):
         self.state = ActorsState()
         self.world = FakeWorld()
         self.world.edge_book = self.state
         self.world.rate = START
+        lend_from_savers(self.state.purses, 1e12)
         self.actor = firm(self.state, "a")
         self.ceiling = self.actor.credit_ceiling(self.world)
 
     def test_a_draw_inside_the_ceiling_is_the_whole_draw_while_the_market_has_not_met(self):
-        self.assertEqual(self.actor.draw_limit(self.world, 0.5 * self.ceiling), 0.5 * self.ceiling)
+        self.assertEqual(self.actor.rule_limit(self.world, 0.5 * self.ceiling), 0.5 * self.ceiling)
 
     def test_a_draw_past_the_ceiling_is_cut_to_what_the_ceiling_leaves(self):
         self.actor.money = -0.25 * self.ceiling
-        self.assertAlmostEqual(self.actor.draw_limit(self.world, 10.0 * self.ceiling), 0.75 * self.ceiling)
+        self.assertAlmostEqual(self.actor.rule_limit(self.world, 10.0 * self.ceiling), 0.75 * self.ceiling)
 
     def test_the_economys_fundable_amount_cuts_the_draw_further(self):
         asked = []
         self.world.fundable_amount = lambda amount, debt, collateral, arrears: asked.append((amount, debt, collateral, arrears)) or 7.0
-        self.assertEqual(self.actor.draw_limit(self.world, 0.5 * self.ceiling), 7.0)
+        self.assertEqual(self.actor.rule_limit(self.world, 0.5 * self.ceiling), 7.0)
         self.assertEqual(asked, [(0.5 * self.ceiling, 0.0, self.ceiling, 0.0)])
 
+    def test_the_draw_limit_is_the_rules_limit_cut_to_what_the_lenders_can_supply(self):
+        lend_through(self.state.purses, {"cohort:small": (30.0, 0.05)}, coin_per_unit=1.0)   # replaces the lenders: 30 coin on offer
+        self.assertEqual(self.actor.rule_limit(self.world, 100.0), 100.0)
+        self.assertAlmostEqual(self.actor.draw_limit(self.world, 100.0), 30.0)
+
     def test_an_actor_with_nothing_to_show_lenders_draws_nothing(self):
-        self.assertEqual(firm(self.state, "b", last_margin=0.0).draw_limit(self.world, 100.0), 0.0)
+        self.assertEqual(firm(self.state, "b", last_margin=0.0).rule_limit(self.world, 100.0), 0.0)
 
     def test_the_rate_on_a_draw_is_the_market_rate_plus_the_economys_premium(self):
         self.world.risk_premium = lambda debt_after, collateral, arrears: 0.04

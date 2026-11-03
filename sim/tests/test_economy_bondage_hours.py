@@ -7,7 +7,7 @@ import types
 import unittest
 
 from sim.economy import bondage, bondage_hours
-from sim.economy.accounts import Book
+from sim.book import Book
 from sim.economy.credit_record import CreditRecord
 from sim.economy.types import LabourBid, LabourOffer, Transfer
 

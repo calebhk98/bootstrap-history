@@ -6,7 +6,7 @@ import types
 import unittest
 
 from sim.economy import taxes
-from sim.economy.accounts import Book
+from sim.book import Book
 from sim.economy.types import EDGE_EXTERNAL, EDGE_MINT, Transfer, external_edge
 from sim.economy.year_close import tax_facts
 from sim.economy.year_ledger import YearLedger

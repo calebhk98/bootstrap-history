@@ -3,7 +3,7 @@ QUICK_TOPIC = True
 import math
 import unittest
 
-from sim.economy.accounts import Book, InsufficientFunds
+from sim.book import Book, InsufficientFunds
 from sim.world.need_basket import price_ceilings
 from sim.economy.types import Transfer
 

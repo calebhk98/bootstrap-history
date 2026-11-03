@@ -8,7 +8,7 @@ import types
 import unittest
 
 from sim.economy import land_bid, land_bid_year, titles, titles_ground, titles_value
-from sim.economy.accounts import Book
+from sim.book import Book
 from sim.economy.households_cohort import cohort_id, cohorts_for_tile
 from sim.economy.market_memory import MarketMemory
 from sim.economy.producers import Producer

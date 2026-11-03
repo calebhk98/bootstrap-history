@@ -6,7 +6,7 @@ import types
 import unittest
 
 from sim.economy import year_goods
-from sim.economy.accounts import Book
+from sim.book import Book
 from sim.economy.market_memory import MarketMemory, market_key
 from sim.economy.types import EDGE_ISSUE, EDGE_PRODUCTION, Bid, GoodsMove, Offer, Transfer
 from sim.economy.year_ledger import YearLedger
