@@ -88,6 +88,15 @@ class ActorsBorrowByOneMethod(unittest.TestCase):
         self.assertAlmostEqual(paid, 5.0)
         self.assertEqual(issuer.record.interest_arrears, 0.0)
 
+    def test_what_a_firm_can_pay_counts_the_lenders_that_refill_its_deposit_only_once(self):
+        purses = self.state.purses
+        depositor = firm(self.state, "depositor", money=30.0)
+        lend_through(purses, {"cohort:a": (10.0, 0.05)}, coin_per_unit=2.0)   # 20 coin on offer
+        purses.set_offers({depositor.account_id: 30.0})                       # the whole purse is placed as a deposit
+        purses.transfer("other", "elsewhere", 30.0, "test")                   # another account draws the pool empty
+        self.assertAlmostEqual(depositor.payable_now(self.world, 100.0), purses.payable(depositor.account_id, 100.0))
+        self.assertAlmostEqual(depositor.payable_now(self.world, 100.0), 20.0)   # the same 20 coin cannot refill the deposit and be drawn on again
+
     def test_a_firm_with_no_debt_pays_nothing(self):
         self.assertEqual(firm(self.state, "f", money=500.0).pay_interest(self.world), 0.0)
 

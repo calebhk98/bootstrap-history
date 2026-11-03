@@ -85,11 +85,9 @@ class Borrower:
 		return self.draw_limit(world, max(0.0, self.credit_ceiling(world) - self.debt()))
 
 	def payable_now(self, world: Any, amount: float) -> float:
-		"""The most of `amount` the actor can pay now: its purse, the deposit it can take back, and what it is lent beyond them
-		(`draw_limit`)."""
-		purses = self.purses  # type: ignore[attr-defined]
-		held = max(0.0, purses.purse(self.account_id)) + purses.takeable(self.account_id)
-		return amount if held >= amount else held + self.draw_limit(world, amount - held)
+		"""The most of `amount` the actor can pay now: the purses' own answer (`Purses.payable`: its purse, the deposit it can
+		take back, and what it may be lent beyond them, the same lenders counted once)."""
+		return self.purses.payable(self.account_id, amount)  # type: ignore[attr-defined]
 
 	# Whether the actor pays for copies on credit; a firm does, a state and a household keep to their purse.
 	borrows_for_copies = False
