@@ -2,7 +2,7 @@
 
 It runs as the `staff` phase of each seat's year."""
 from sim.assembly.api import Part
-from sim.labour.api import bonded_pseudo_trade, generic_craft_trade, generic_staff_trades, scholar_target, scholar_trade
+from sim.labour.api import generic_craft_trade, generic_staff_trades, scholar_target, scholar_trade
 from sim.reporting.api import RecordAutomation, RecordAutomationSkip, RecordEvent
 from sim.world import demography
 

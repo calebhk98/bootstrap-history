@@ -1,5 +1,6 @@
 {
- "_doc": "What a heap of each waste material looks like, so the ground it covers can be worked out. bulk_density_kg_per_m3: kilograms of the loose material in one cubic metre. heap_height_m: height the tipped heap stands at. A material without an entry takes the labelled default heap in sim/prices/disposal_cost.py. Read by sim/prices/disposal_cost.py; a key must be a material some production entry makes (checked by test_waste_disposal_data). Tars are liquids: the 'heap' is the depth of the pit they are tipped into.",
+ "_doc": "What a heap of each waste material looks like, so the ground it covers can be worked out. bulk_density_kg_per_m3: kilograms of the loose material in one cubic metre. heap_height_m: height the tipped heap stands at. A material without an entry takes the labelled default heap in sim/prices/disposal_cost.py. `services` names the sink services (production entries) that disposal is priced from, by role. Read by sim/prices/disposal_cost.py; a key must be a material some production entry makes (checked by test_waste_disposal_data). Tars are liquids: the 'heap' is the depth of the pit they are tipped into.",
+ "services": {"handling": "waste_handling_job", "haulage": "waste_haulage_tkm", "ground": "dump_ground_m2"},
  "materials": {
   "basic_slag_kg": {
    "bulk_density_kg_per_m3": 1760.0,

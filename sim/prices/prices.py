@@ -30,10 +30,9 @@ goods market, not here.
 CACHE KEY: THE SET OF GATE NODES HELD, PLUS THE CIVILIZATION FOR LAND RENT.
 See RENT NEEDS A CIVILIZATION below for why a bare gate-node set stopped
 being enough. The gate-node reasoning that follows is otherwise unchanged.
-`solve_prices.py`'s own docstring measured this: a gated solve costs 0.371s,
-but only 82 of the tree's 2,864 nodes (2.9%) are ever named by a
+A gated solve is costly, but only a small share of the tree's nodes is ever named by a
 `requires_node` anywhere in `data/production/` - a GATE, in this file's
-terms. Every other node a civilization holds cannot possibly change which
+terms (the share is `len(all_gate_nodes()) / len(tree nodes)`). Every other node a civilization holds cannot possibly change which
 technique is cheapest, because no recipe's availability depends on it. So
 caching on the full held-technology set (which changes on almost every
 turn, as ordinary non-gate nodes complete) would almost never hit, and
@@ -159,7 +158,7 @@ if REPO_ROOT not in sys.path:
 
 from sim.prices import disposal_cost, rent_standin, solve_prices_reach, solve_prices_core  # noqa: E402
 from sim.prices.engine_seam import load_production             # noqa: E402
-from sim.prices import solve_cache                              # noqa: E402
+from sim.prices import engine_seam, solve_cache             # noqa: E402
 from sim.constants import declare                                # noqa: E402
 from sim.geography.api import tiles_held                    # noqa: E402
 
@@ -251,6 +250,7 @@ def reset_caches_for_tests() -> None:
     global _DEFAULT_PRODUCTION_ENTRIES
     _DEFAULT_PRODUCTION_ENTRIES = None
     _SOLVE_CACHE.clear()
+    _TREE_NODES.clear()
 
 
 def all_gate_nodes(production_entries: Optional[ProductionEntries] = None) -> FrozenSet[str]:
@@ -272,13 +272,6 @@ def all_gate_nodes(production_entries: Optional[ProductionEntries] = None) -> Fr
         entry["requires_node"]
         for entry in production_entries.values()
         if entry.get("requires_node") is not None)
-
-
-def solver_trade_registry(production_entries: ProductionEntries) -> Dict[str, Any]:
-    """The trade registry, checked against the loaded technologies as well as recipes."""
-    from .engine_seam import load_mod_tree_nodes, load_trade_registry
-    root = os.path.dirname(os.path.dirname(HERE))
-    return load_trade_registry(root, production_entries, nodes=load_mod_tree_nodes(root))
 
 
 def denarii_per_labour_hour(prices_json: Dict[str, Any]) -> float:
@@ -374,8 +367,7 @@ def civilization_record(civilization: Optional[Mapping[str, Any]], civilization_
     `civilization_id` (the reference civilisation's when none). An id that names no record is an error."""
     if civilization is not None:
         return civilization
-    from .engine_seam import load_civ
-    return load_civ(civilization_id)
+    return engine_seam.load_civ(civilization_id)
 
 
 def _solve_to_json(production_entries: ProductionEntries,
@@ -581,9 +573,8 @@ _SOLVER_SOURCE = ("sim.prices.prices",)
 def _tree_nodes() -> Dict[str, Any]:
     """The tech tree by node id, read once per process."""
     if _TREE_NODES.get("nodes") is None:
-        from .engine_seam import load_mod_tree_nodes
         root = os.path.dirname(os.path.dirname(HERE))
-        _TREE_NODES["nodes"] = {node["id"]: node for node in load_mod_tree_nodes(root)}
+        _TREE_NODES["nodes"] = {node["id"]: node for node in engine_seam.load_mod_tree_nodes(root)}
     return _TREE_NODES["nodes"]
 
 
@@ -602,13 +593,16 @@ def _requirements_of(nodes: Dict[str, Any], node_id: str) -> FrozenSet[str]:
         cached.clear()
         cached["tree"] = nodes
     if node_id not in cached:
-        from .engine_seam import closure
-        cached[node_id] = frozenset(closure(nodes, node_id))
+        cached[node_id] = frozenset(engine_seam.closure(nodes, node_id))
     return cached[node_id]
 
 
 def production_entries_outputs(production_entries: ProductionEntries) -> Set[str]:
     return {material for entry in production_entries.values() for material in (entry.get("outputs") or {})}
+
+
+# how many argument sets the in-reach memo keeps before it starts over (a game asks for a few dozen)
+IN_REACH_MEMO_LIMIT = 256
 
 
 def entries_in_reach(held: Set[str], held_gate_nodes: FrozenSet[str], resolvable_materials: Set[str],
@@ -620,6 +614,9 @@ def entries_in_reach(held: Set[str], held_gate_nodes: FrozenSet[str], resolvable
         memo["entries"] = production_entries
     key = (frozenset(held), frozenset(held_gate_nodes), frozenset(resolvable_materials))
     if key not in memo:
+        if len(memo) > IN_REACH_MEMO_LIMIT:
+            memo.clear()
+            memo["entries"] = production_entries
         memo[key] = _entries_in_reach(held, held_gate_nodes, resolvable_materials, production_entries)
     return memo[key]
 
@@ -714,13 +711,15 @@ def goods_in_hours(held_technology_ids: Iterable[str],
                    civilization: Mapping[str, Any],
                    farmed_hectares: Optional[float] = None,
                    interest_rate: Optional[float] = None,
-                   production_entries: Optional[ProductionEntries] = None
+                   production_entries: Optional[ProductionEntries] = None,
+                   unskilled_trade: Optional[str] = None
                    ) -> Tuple[Prices, Provenance]:
     """(labour-hour cost of each good, provenance): the one builder of the goods table. `document` is the wage
-    document of the civilisation's opening schedule, which supplies the wage ratios; the table is in labour hours
-    and a caller states it in a coin by `rules.money_prices`."""
+    document of the civilisation's opening schedule, which supplies the wage ratios against the hour of
+    `unskilled_trade` (the live registry's, else the committed one's); the table is in labour hours and a caller
+    states it in a coin by `rules.money_prices`."""
     hours, provenance, _recipe = priced_goods_in_hours(
-        held_technology_ids, solve_prices_core.wage_ratios_by_trade(document), production_entries,
+        held_technology_ids, solve_prices_core.wage_ratios_by_trade(document, unskilled_trade), production_entries,
         interest_rate=interest_rate, civilization=civilization, farmed_hectares=farmed_hectares)
     return hours, provenance
 

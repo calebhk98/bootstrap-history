@@ -10,7 +10,7 @@ energy it sells, the way the solver charged the goods it makes.
 from typing import Any, Callable, Dict, Iterable, Mapping, Optional, Tuple
 
 from sim.world import plant_baskets
-from sim.prices import solve_prices_core
+from sim.prices import prices as price_solver, solve_prices_core
 from sim.prices.solve_prices_core import CAPABILITY_CAP_FIELDS, capability_required_grades, recipe_cost_and_allocation
 from sim.prices.identity_cache import IdentityCache
 
@@ -108,7 +108,6 @@ def graded(held_technology_ids, prices_json: Dict[str, Any], goods: Mapping[str,
            civilization_id: Optional[str] = None, interest_rate: Optional[float] = None,
            civilization: Optional[Mapping[str, Any]] = None) -> EnergyPrices:
     """The graded carrier prices of a society holding these technologies, in the coin of `prices_json`."""
-    from . import prices as price_solver
     entries = price_solver.default_production_entries()
     solved = price_solver.solved_prices(held_technology_ids, prices_json, civilization_id=civilization_id,
                                         interest_rate=interest_rate, civilization=civilization)

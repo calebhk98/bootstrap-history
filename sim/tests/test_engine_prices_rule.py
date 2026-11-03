@@ -168,6 +168,23 @@ class PricedGoodsTableTests(unittest.TestCase):
         # 3 labour-hours at 2 denarii/hour = 6 denarii.
         self.assertAlmostEqual(goods["straw_kg"], 6.0)
 
+    def test_the_hours_table_is_the_money_table_over_the_money_of_an_hour(self):
+        prices_json = _prices_json(labourer_rate=2.0, money_per_labour_hour=5.0)
+        entries = {
+            "straw": _entry({"straw_kg": 1.0}, requires_node=None, labour_hours={"labourer": 3.0}),
+            "bale": _entry({"bale_kg": 2.0}, inputs={"straw_kg": 4.0}, requires_node=None,
+                           labour_hours={"labourer": 1.0, "smith": 1.0}),
+        }
+        civilization = engine_prices.civilization_record(None)
+        hours, hours_provenance = engine_prices.goods_in_hours(
+            set(), prices_json, civilization, production_entries=entries, unskilled_trade="labourer")
+        money, money_provenance = engine_prices.priced_goods_table(
+            set(), prices_json, production_entries=entries, civilization=civilization)
+        self.assertEqual(hours_provenance, money_provenance)
+        self.assertEqual(sorted(hours), sorted(money))
+        for material, price in hours.items():
+            self.assertAlmostEqual(money[material] / prices_json["money_per_labour_hour"], price, places=12)
+
     def test_a_material_nothing_makes_has_no_price(self):
         entries = {
             "requires_missing_input": _entry(

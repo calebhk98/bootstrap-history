@@ -29,7 +29,7 @@ def build(views: Optional[Dict[str, Any]] = None, **overrides: Any) -> Prices:
         "household_prices": {}, "material_seller": lambda material: None, "agent_wage": lambda trade: None,
         "agent_land_rent": None, "is_venture": lambda node_id: False, "concern_baskets_now": lambda node_id: None,
         "venture_ramp": lambda node_id: 1.0, "material_pool": lambda material: (material, material),
-        "wage_schedule_for": lambda civilisation: _OpeningSchedule()}
+        "wage_schedule_for": lambda civilisation: _OpeningSchedule(), "unskilled_trade": "labourer"}
     plain.update(views or {})
     plain.update(overrides)
     return module_harness.build(Prices, views=plain, module_id="prices")

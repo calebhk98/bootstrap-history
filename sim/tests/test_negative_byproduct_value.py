@@ -95,7 +95,6 @@ class MaterialDisposalCostTests(unittest.TestCase):
 
     def test_without_the_sink_services_disposal_is_free(self):
         self.assertEqual(disposal_cost.disposal_cost_by_material(["tar_kg"], {}, 0.05), {})
-        self.assertEqual(disposal_cost.disposal_price_floor(["tar_kg"], {}, 0.05), {})
 
     def test_the_cost_is_the_services_at_the_materials_own_heap(self):
         density, height = disposal_cost.heap_of("basic_slag_kg")

@@ -22,6 +22,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 REPO_ROOT = os.path.dirname(os.path.dirname(HERE))
 if REPO_ROOT not in sys.path:
     sys.path.insert(0, REPO_ROOT)
+from sim.prices import engine_seam
 from sim.world import capital_builds
 from sim.prices import disposal_cost  # noqa: E402
 from sim.prices.joint_allocation import allocate_joint_cost, outputs_split_by_mass  # noqa: E402
@@ -44,17 +45,26 @@ from sim.algorithm_parameters import (           # noqa: E402  (see sys.path abo
 LAND_MATERIAL = "hectare_land"
 
 
+# {id of a production catalogue: (the catalogue, its numeraire trade)}; the catalogue is kept so the id stays its own
+_NUMERAIRE_BY_CATALOGUE = {}
+
+
 def numeraire_trade(production_entries=None, registry=None):
     """The trade whose hour is the unit every wage is stated in: the trade registry's unskilled one, the same trade
     the economy's labour markets fall back to (`sim.labour.api.trade_of_role`). `registry` is a live one (trade id
     to its fields); without it the registry is read for `production_entries` (the committed catalogue's when none)."""
     from sim.labour.api import trade_of_role
     if registry is None:
-        from sim.prices import engine_seam
         entries = engine_seam.load_production()[0] if production_entries is None else production_entries
+        cached = _NUMERAIRE_BY_CATALOGUE.get(id(entries))
+        if cached is not None and cached[0] is entries:
+            return cached[1]
         loaded = engine_seam.load_trade_registry(REPO_ROOT, entries, nodes=engine_seam.load_mod_tree_nodes(REPO_ROOT))
         registry = {trade_id: {"family": trade.family, "training_years": trade.training_years, **trade.extra}
                     for trade_id, trade in loaded.items()}
+        trade = trade_of_role(registry, "unskilled")
+        _NUMERAIRE_BY_CATALOGUE[id(entries)] = (entries, trade)
+        return trade
     return trade_of_role(registry, "unskilled")
 
 

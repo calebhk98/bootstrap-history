@@ -49,8 +49,7 @@ class SinkAgreesWithGeographyTests(unittest.TestCase):
 
     def test_the_services_are_the_ones_the_disposal_module_reads(self):
         made = {material for key in SINK_KEYS for material in self.production[key]["outputs"]}
-        self.assertEqual(made, {disposal_cost.HANDLING_SERVICE, disposal_cost.HAULAGE_SERVICE,
-                                disposal_cost.GROUND_SERVICE})
+        self.assertEqual(made, set(disposal_cost.sink_services()))
 
 
 class WasteHeapDataTests(unittest.TestCase):

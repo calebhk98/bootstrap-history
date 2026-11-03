@@ -26,7 +26,7 @@ class PricedByItsOwnFields(unittest.TestCase):
         civ = {"id": "rome_100ad", "starting_interest_rate": 0.31}
         seen = []
 
-        def table(held, document, civilization, farmed_hectares, interest_rate):
+        def table(held, document, civilization, farmed_hectares, interest_rate, unskilled_trade):
             seen.append(civilization)
             return {"grain": 3.0}, {"grain": "solved"}
 

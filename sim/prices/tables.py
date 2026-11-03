@@ -53,13 +53,14 @@ class Tables(Part):
         granted = granted_now
         civ = self.needs.civilisation()
         document = self.parts.calculated_views.opening_schedule(civ).document()
+        unskilled = self.needs.unskilled_trade()
         incumbent = self._incumbent_table_cache
         if incumbent is None or incumbent[0] != (granted, farmed, rate):
             incumbent = self._incumbent_table_cache = (
-                (granted, farmed, rate), *price_solver.goods_in_hours(granted, document, civ, farmed, rate))
+                (granted, farmed, rate), *price_solver.goods_in_hours(granted, document, civ, farmed, rate, unskilled_trade=unskilled))
         hours, basis = incumbent[1], incumbent[2]
         if in_use != granted:
-            run_hours, run_basis = price_solver.goods_in_hours(in_use, document, civ, farmed, rate)
+            run_hours, run_basis = price_solver.goods_in_hours(in_use, document, civ, farmed, rate, unskilled_trade=unskilled)
             tables = rules.merge_by_reach(hours, basis, run_hours, run_basis)
         else:
             tables = (dict(hours), dict(basis))
