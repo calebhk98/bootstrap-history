@@ -8,7 +8,7 @@ from . import cli_in_process as _runner_module
 from .cli_in_process import run as run_command   # only commands that build no game are run here
 
 from sim.engine import units
-from sim.ui import cli as _cli_module
+from sim.ui import cli_common as _cli_common_module
 from sim.ui import protocol as _protocol_module
 
 # --- exit status and streams
@@ -29,11 +29,11 @@ check("...and the environment a call replaced", os.environ.get("CLI_IN_PROCESS_P
       and "ONLY" not in os.environ, dict(os.environ))
 del os.environ["CLI_IN_PROCESS_PROBE"]
 
-_display_before = (_cli_module._DISPLAY_WIDTH, _protocol_module.DISPLAY_WIDTH, _protocol_module.DEFAULT_AVAILABLE_LIMIT)
+_display_before = (_cli_common_module._DISPLAY_WIDTH, _protocol_module.DISPLAY_WIDTH, _protocol_module.DEFAULT_AVAILABLE_LIMIT)
 with _runner_module._swapped(["simulator.py"], "", None, _cwd_before):
-    _cli_module._DISPLAY_WIDTH, _protocol_module.DISPLAY_WIDTH, _protocol_module.DEFAULT_AVAILABLE_LIMIT = 150, 150, 7
+    _cli_common_module._DISPLAY_WIDTH, _protocol_module.DISPLAY_WIDTH, _protocol_module.DEFAULT_AVAILABLE_LIMIT = 150, 150, 7
 check("the runner restores the display width and rows per page a command applied",
-      (_cli_module._DISPLAY_WIDTH, _protocol_module.DISPLAY_WIDTH, _protocol_module.DEFAULT_AVAILABLE_LIMIT) == _display_before,
+      (_cli_common_module._DISPLAY_WIDTH, _protocol_module.DISPLAY_WIDTH, _protocol_module.DEFAULT_AVAILABLE_LIMIT) == _display_before,
       _display_before)
 
 # --- state a call starts fresh and hands back

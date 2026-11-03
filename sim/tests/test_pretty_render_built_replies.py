@@ -8,6 +8,7 @@ from .harness import *  # noqa: F401,F403
 from sim.engine import settings as _SETTINGS
 from sim.engine.data import money_short
 from sim.ui import cli as _CLI
+from sim.ui import cli_common as _CLI_COMMON
 from sim.ui import protocol as _protocol
 from sim.ui.proto.render_typed import render_pretty
 
@@ -65,7 +66,7 @@ wide_lines = _CLI._wrap("word " * 40, width=150, indent="   ").splitlines()
 check("cli._wrap uses the width it is given (narrower wraps the same text into more lines)",
       len(narrow_lines) > len(wide_lines) >= 1, (len(narrow_lines), len(wide_lines)))
 _CLI._apply_display_prefs({"display_width": 222})
-carried = (_CLI._DISPLAY_WIDTH, _protocol.DISPLAY_WIDTH)
+carried = (_CLI_COMMON._DISPLAY_WIDTH, _protocol.DISPLAY_WIDTH)
 # Put the module globals back so no later check in this process renders at width 222.
 _CLI._apply_display_prefs(dict(_SETTINGS.CONFIG_DEFAULTS))
 check("_apply_display_prefs carries an Options override into cli._wrap's default and protocol.DISPLAY_WIDTH",

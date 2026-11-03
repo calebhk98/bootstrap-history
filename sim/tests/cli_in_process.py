@@ -60,8 +60,8 @@ def _swapped(argv, input_text, environment, cwd):
     saved_argv, saved_environment, saved_cwd = sys.argv, dict(os.environ), os.getcwd()
     saved_exec = os.execvpe
     # Display preferences a command applies are module globals; a process would take them to its grave.
-    from sim.ui import cli, protocol
-    saved_display = (cli._DISPLAY_WIDTH, protocol.DISPLAY_WIDTH, protocol.DEFAULT_AVAILABLE_LIMIT)
+    from sim.ui import cli_common, protocol
+    saved_display = (cli_common._DISPLAY_WIDTH, protocol.DISPLAY_WIDTH, protocol.DEFAULT_AVAILABLE_LIMIT)
     process_state = _ProcessState()
 
     def refuse_exec(*_arguments, **_keywords):
@@ -81,7 +81,7 @@ def _swapped(argv, input_text, environment, cwd):
         yield
     finally:
         process_state.restore()
-        cli._DISPLAY_WIDTH, protocol.DISPLAY_WIDTH, protocol.DEFAULT_AVAILABLE_LIMIT = saved_display
+        cli_common._DISPLAY_WIDTH, protocol.DISPLAY_WIDTH, protocol.DEFAULT_AVAILABLE_LIMIT = saved_display
         os.execvpe = saved_exec
         os.chdir(saved_cwd)
         os.environ.clear()

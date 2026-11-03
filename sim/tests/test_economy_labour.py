@@ -6,8 +6,8 @@ import unittest
 
 import types
 
-from sim.economy import labour, year_labour
-from sim.labour.api import wages
+from sim.economy import labour, trade_wages
+from sim.labour.api import CAREER_YEARS, wages
 from sim.economy.households_orders import HOUSEHOLD_TIME_PREFERENCE
 
 
@@ -16,8 +16,8 @@ class TrainingPremiumTests(unittest.TestCase):
         # the family gives up consumption to train a child; a spike in the loan market's rate must not
         # turn into a spike in skilled wages
         setup = types.SimpleNamespace(trades={"smith": types.SimpleNamespace(training_years=5.0)})
-        self.assertAlmostEqual(year_labour.trade_premium(setup, "smith"),
-                               wages.training_premium(5.0, HOUSEHOLD_TIME_PREFERENCE, year_labour.CAREER_YEARS) - 1.0)
+        self.assertAlmostEqual(trade_wages.trade_premium(setup, "smith"),
+                               wages.training_premium(5.0, HOUSEHOLD_TIME_PREFERENCE, CAREER_YEARS) - 1.0)
 
 
 class ReservationAndTrainingTests(unittest.TestCase):
