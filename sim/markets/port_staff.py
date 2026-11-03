@@ -29,8 +29,9 @@ from sim.workforce.api import ONCE_STOCK, ClearingSettled, HoursArrived, Newcome
 STAFF_PREFIX = "staff:"
 WORK_PREFIX = "work:"
 
-# what a seat put into the year's clearing: the trades it bid for, the economy units its staff account was funded with, whether it offered hours of its own
-Posted = namedtuple("Posted", "trades funded_units offered")
+# what a seat put into the year's clearing: the trades it bid for, the economy units its staff account was funded with, whether it
+# offered hours of its own, and the cause when it had places that no bid carried (a refused wage payment states itself in `note_refusals`; None otherwise)
+Posted = namedtuple("Posted", "trades funded_units offered unposted_cause")
 
 STAFF_WAGE_CEILING_MULTIPLE = declare(
     "STAFF_WAGE_CEILING_MULTIPLE", 1.5, kind="temporary_heuristic", unit="multiple of last year's wage", source=None, confidence="D",
@@ -69,6 +70,17 @@ def employer_bids(economy, employer_id, wanted, tile, affordable_coin):
     return bids, min(affordable_units, math.fsum(bid.hours * bid.maximum_wage for bid in bids))
 
 
+def seat_staff_bids(sim, economy, seat_id, tile):
+    """(bids, economy units to fund them with) for the acting seat's places and one-year orders on `tile`; the one figure the
+    seat's committed money (`port_goods_orders.staff_funding_coin`) and the year's posting (`post`) both draw. Call it inside
+    `sim.act_as(seat_id)`. The figure can still move between the two: the wage it reads is the economy's current one, and the
+    wages change at the clearing and when `place_newcomers` adds workers, which `post` does first."""
+    wanted = places_with_once(sim.labour.staff_posting(), sim.labour.once_posting(), economy.setup.working_hours_per_year)
+    if not wanted:
+        return [], 0.0
+    return employer_bids(economy, seat_id, wanted, tile, sim.spending_power("buy"))
+
+
 def work_offers(economy, seat_id, offered, tile):
     """(offers, hours not offered by trade): the hours of a trade a seat offers of its own, as offers for its work account at no
     reservation wage (it sells at the market's); an hour of a trade the economy lacks is not offered, and is returned."""
@@ -97,9 +109,16 @@ def place_newcomers(sim, economy, tile):
     newcomers = sim.labour.newcomers()
     if not newcomers:
         return
+    lacking = {}
     for trade, people in sorted(newcomers.items()):
         if trade in economy.setup.trades:
             economy_api.add_workers(economy, tile, trade, people)
+        elif people > 0.0:
+            lacking[trade] = float(people)
+    if lacking:
+        sim.send(RecordEvent.of("newcomers_not_placed", "The labour market has no such trade, so these newly trained or granted people "
+                                "did not join it: %s." % ", ".join("%s %.1f" % (trade, people) for trade, people in sorted(lacking.items())),
+                                cause="trade_not_in_economy", people_by_trade=lacking))
     sim.send(NewcomersPlaced())
 
 
@@ -134,6 +153,11 @@ def split_hired(hired, standing, once, working_hours):
     return standing_hired, once_hired
 
 
+def wanted_places_exist(sim):
+    """Whether the acting seat has places or one-year orders to post."""
+    return bool(sim.labour.staff_posting()) or any(hours > 0.0 for orders in sim.labour.once_posting().values() for hours in orders.values())
+
+
 def post(sim, economy, seat_ids, tile_of):
     """({account: AgentOrders}, {seat id: Posted}) for the year; each posting seat's money goes into its staff account. Every seat is
     a key: one whose places were not posted (no places, no affordable bid, or a wage payment refused, which its log states) has no trades
@@ -141,13 +165,12 @@ def post(sim, economy, seat_ids, tile_of):
     orders, posted = {}, {}
     setup = economy.setup
     for seat_id in seat_ids:
-        posted[seat_id] = Posted((), 0.0, False)
+        posted[seat_id] = Posted((), 0.0, False, None)
         with sim.act_as(seat_id):
             tile = tile_of(sim.labour.base_tile())
             place_newcomers(sim, economy, tile)
-            trades, funded, offered = [], 0.0, False
-            wanted = places_with_once(sim.labour.staff_posting(), sim.labour.once_posting(), setup.working_hours_per_year)
-            bids, units = employer_bids(economy, seat_id, wanted, tile, sim.spending_power("buy")) if wanted else ([], 0.0)
+            trades, funded, offered, unposted = [], 0.0, False, None
+            bids, units = seat_staff_bids(sim, economy, seat_id, tile)
             refusal = None
             if bids:
                 paid = sim.send(PayEdge(edges.EDGE_WORKERS, units * setup.coin_per_unit, "wages offered in the labour market"))
@@ -157,12 +180,14 @@ def post(sim, economy, seat_ids, tile_of):
                     economy_api.post_transfers(economy, [Transfer(EDGE_EXCHANGE, staff_account(seat_id), setup.currency_id, units, "wages offered")])
                     orders[staff_account(seat_id)] = AgentOrders(labour_bids=tuple(bids))
                     trades, funded = sorted({bid.trade for bid in bids}), units
+            elif wanted_places_exist(sim):
+                unposted = "no_affordable_bid"
             offers, dropped = work_offers(economy, seat_id, sim.labour.wage_work_offered(), tile)
             note_refusals(sim, refusal, dropped)
             if offers:
                 orders[work_account(seat_id)] = AgentOrders(labour_offers=offers)
                 offered = True
-        posted[seat_id] = Posted(trades, funded, offered)
+        posted[seat_id] = Posted(trades, funded, offered, unposted)
     return orders, posted
 
 
@@ -176,6 +201,11 @@ def settle(sim, economy, posted):
         hired, charged, earned = {}, 0.0, 0.0
         with sim.act_as(seat_id):
             standing, once = sim.labour.staff_posting(), sim.labour.once_posting()
+        if seat_posted.unposted_cause is not None:
+            with sim.act_as(seat_id):
+                sim.send(RecordEvent.of("staff_places_not_posted", "Your places and one-year orders for hours were not posted "
+                                        "to the labour market (%s), so they hire no one this year." % seat_posted.unposted_cause.replace("_", " "),
+                                        cause=seat_posted.unposted_cause, once_purposes=sorted(purpose for purpose, orders in once.items() if orders)))
         if seat_posted.trades:
             account = staff_account(seat_id)
             hired = economy_api.hours_hired_by_employer(economy, account)

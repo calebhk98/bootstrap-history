@@ -126,9 +126,11 @@ def _buy_school(sim, cmd, quantity):
 
 
 def _price_limit(cmd):
-    """The most (buy) or least (sell) per tonne the player states for an order, or None for the quote."""
-    limit = cmd.get("limit")
-    return None if limit in (None, "") else _qty(limit)
+    """(limit, error): the most (buy) or least (sell) per tonne the player states for an order, None for the quote; the error
+    says why a stated limit is not a number."""
+    if cmd.get("limit") in (None, ""):
+        return None, None
+    return _qty(cmd, "limit")
 
 
 def _order_reply(sim, posted, asked):
@@ -145,7 +147,10 @@ def _order_reply(sim, posted, asked):
 
 
 def _buy_material(sim, cmd, quantity):
-    return _order_reply(sim, sim.send(ui_port.BuyMaterial(cmd.get("material"), quantity, _price_limit(cmd))), quantity)
+    limit, err = _price_limit(cmd)
+    if err:
+        return {"ok": False, "error": err}
+    return _order_reply(sim, sim.send(ui_port.BuyMaterial(cmd.get("material"), quantity, limit)), quantity)
 
 
 def _buy_mine(sim, cmd, quantity):
@@ -308,7 +313,10 @@ def _cmd_sell(sim, nodes, cmd, ended):
     held = sim.view("sale_limits")[material][0]
     if sale_orders.asks_more_than_held(quantity, held):
         return {"ok": False, "error": sale_orders.not_enough_held_refusal(material, held, quantity)}
-    return _order_reply(sim, sim.send(ui_port.SellMaterial(material, quantity, _price_limit(cmd))), quantity)
+    limit, err = _price_limit(cmd)
+    if err:
+        return {"ok": False, "error": err}
+    return _order_reply(sim, sim.send(ui_port.SellMaterial(material, quantity, limit)), quantity)
 
 
 @command("money", shape="bare", group="money", aliases=("ledger", "accounts", "cash"),

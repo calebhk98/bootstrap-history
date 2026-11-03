@@ -90,14 +90,10 @@ def committed_money(orders):
 
 
 def staff_funding_coin(sim, economy, seat_id, tile_of):
-    """Money the port will draw from the seat for its staff places this year, ahead of any goods order."""
-    hours = economy_api.working_hours_per_year(economy)
+    """Money the port will draw from the seat for its staff places this year, ahead of any goods order: the figure `post` draws
+    (port_staff.seat_staff_bids). It can still move before then, as the wages it reads change at the clearing."""
     with sim.act_as(seat_id):
-        wanted = port_staff.places_with_once(sim.labour.staff_posting(), sim.labour.once_posting(), hours)
-        if not wanted:
-            return 0.0
-        _bids, units = port_staff.employer_bids(economy, seat_id, wanted, tile_of(sim.labour.base_tile()),
-                                                sim.spending_power("buy"))
+        _bids, units = port_staff.seat_staff_bids(sim, economy, seat_id, tile_of(sim.labour.base_tile()))
     return units * economy_api.coin_per_unit(economy)
 
 
