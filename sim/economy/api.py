@@ -32,7 +32,7 @@ from . import plant_builds, trade_wages
 from .tool_wear import with_tool_wear
 from .record import EconomyRecord
 from .setup import EconomySetup, SetupTrade, goods_specs, recipe_tile_key
-from .setup import labour_area, opening_price_today
+from .setup import area_tile, labour_area, opening_price_today
 from .state_wage_ceiling import WAGE_CEILING_MULTIPLE
 from .types import (EDGE_CARGO, EDGE_CONSUMPTION, EDGE_EXCHANGE, EDGE_EXTERNAL, EDGE_LEGACY, EDGE_MINT, EDGE_PRODUCTION, EDGE_WEAR, Bid,
                     GoodsMove, LabourBid, LabourOffer, Offer, SiteLimit, Transfer, external_edge)
@@ -44,7 +44,7 @@ from .debt_relief import indebted_tiles as record_indebted_tiles
 from .titles_moves import holdings as record_title_holdings
 from .spin_up_state import spin_up_state as year_spin_up_state
 from .year_close import rebase_basket_price_level
-from .households_orders import HOUSEHOLD_TIME_PREFERENCE
+from .household_time_preference import HOUSEHOLD_TIME_PREFERENCE
 from .trade_wages import premium_for_training_years, trade_premium
 from sim.world import capital_market
 
@@ -125,7 +125,7 @@ def people_by_trade(economy, country=None):
 
 def people_by_tile_and_trade(economy):
     """Working people of the labour core by tile and trade, over every labour area (trainees are not counted)."""
-    return {labour_state.area_tile(area): labour_state.people_by_trade(economy.record.labour.workforce, area)
+    return {area_tile(area): labour_state.people_by_trade(economy.record.labour.workforce, area)
             for area in sorted(economy.record.labour.workforce.workers)}
 
 
@@ -453,7 +453,6 @@ def title_holdings(economy, tiles):
 
 def fugitive_share_by_tile(economy):
     """{tile: share of the people who belonged to it that are away, having fled the state's take} (flight_year.py)."""
-    from .setup import area_tile
     workforce = economy.record.labour.workforce
     shares = {}
     for area, row in sorted(economy.record.unfree.fugitives.items()):

@@ -41,7 +41,7 @@ def hands_left_by_tile(setup, record) -> Dict[TileId, float]:
 
 def service_goods(setup, tile: TileId) -> Dict[str, float]:
     """{good: hours of household work one unit does} for the goods that serve the tile's household-work need."""
-    return {good: effect for need in setup.basket_for(tile).needs if need.need_id == household_work_year.WORK_NEED
+    return {good: effect for need in setup.basket_for(tile).needs if need.need_id == setup.work_need
             for good, effect in need.goods if effect > 0.0}
 
 

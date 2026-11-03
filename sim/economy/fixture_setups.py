@@ -6,7 +6,7 @@ import dataclasses
 from sim.economy import household_hours_year, opening_stationary, year_labour
 from sim.economy.economy import Economy
 from sim.world.need_demand import NEED_SUBSTITUTION_ELASTICITY
-from sim.economy.households_basket import Basket, NeedSpec
+from sim.world.need_basket import Basket, NeedSpec
 from sim.economy.setup import EconomySetup, SetupTrade
 from sim.economy.tile_costs import world_map_of
 from sim.economy.types import CurrencySpec, GoodSpec, Recipe, TileSpec

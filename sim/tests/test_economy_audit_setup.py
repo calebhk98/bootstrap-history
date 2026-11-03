@@ -7,16 +7,17 @@ import types
 import unittest
 
 from sim.economy import diagnostics, labour
-from sim.economy.households_basket import NeedSpec
-from sim.economy.setup import DEFAULT_FUEL_NEED_ID, DEFAULT_HUNGER_NEED_ID, EconomySetup, SetupTrade
+from sim.world.need_basket import NeedSpec
+from sim.economy import legacy_need_defaults
+from sim.economy.setup import EconomySetup, SetupTrade
 
 
 class SetupContentIdTests(unittest.TestCase):
     def test_hunger_need_and_unskilled_trade_are_setup_fields(self):
         defaults = {field.name: field.default for field in dataclasses.fields(EconomySetup)}
         self.assertIs(defaults["unskilled_trade"], dataclasses.MISSING)   # required: the port names it
-        self.assertEqual(defaults["hunger_need"], DEFAULT_HUNGER_NEED_ID)
-        self.assertEqual(defaults["fuel_need"], DEFAULT_FUEL_NEED_ID)
+        self.assertEqual(defaults["hunger_need"], legacy_need_defaults.HUNGER_NEED_ID)
+        self.assertEqual(defaults["fuel_need"], legacy_need_defaults.FUEL_NEED_ID)
 
 
 class HungerNeedTests(unittest.TestCase):

@@ -9,7 +9,7 @@ import unittest
 from sim.economy import currency
 from sim.economy.households_cohort import Cohort
 from sim.economy.households_close import close_year
-from sim.economy.households_basket import Basket, NeedSpec
+from sim.world.need_basket import Basket, NeedSpec
 from sim.economy.market_memory import MarketMemory
 
 

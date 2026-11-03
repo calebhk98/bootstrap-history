@@ -335,10 +335,10 @@ class Economy:
         """(own-plot plan hours, household work hours) each cohort keeps back whatever the wage: the plan at the tile's
         usual fertility (it plants before it knows the harvest), and the household work it does itself
         (household_work_year.py)."""
-        plan, held = {}, self._hectares_held()
+        plan, held, options = {}, self._hectares_held(), self.own_plot_options()
         for cohort_id, cohort in sorted(self.record.cohorts.items()):
             tile = self.setup.tiles.get(cohort.tile)
-            plan[cohort_id] = hours_for_own_plan(cohort, self.own_plot_options(), tile.fertility if tile else 0.0,
+            plan[cohort_id] = hours_for_own_plan(cohort, options, tile.fertility if tile else 0.0,
                                                  self.setup.recipes, self.setup.land_per_run, held.get(cohort_id, 0.0))
         self._work_hours = household_work_year.decide(self.setup, self.record, view, everyone, outside_option or {})
         return plan, self._work_hours

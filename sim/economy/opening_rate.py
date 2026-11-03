@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from typing import Optional, Sequence, Tuple
 
 from . import credit, lender_ask
-from .households_orders import HOUSEHOLD_TIME_PREFERENCE
+from .household_time_preference import HOUSEHOLD_TIME_PREFERENCE
 from .market_memory import OPENING_EXPECTED_INFLATION
 from .types import FundsOffer, LoanRequest
 

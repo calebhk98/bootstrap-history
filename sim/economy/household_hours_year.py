@@ -61,17 +61,9 @@ def plot_schedules(setup, record, view, offers: Sequence[LabourOffer], options: 
 
 
 def plot_schedule(per_worker_hours: float, marginal: float, usable_per_worker: float, workers: float) -> Callable[[float], float]:
-    """Hours a cohort keeps for its plot at a wage (`households_hours_offered.plot_hours_kept` times its workers),
-    with what does not depend on the wage worked out once: it is asked at many wages."""
-    if per_worker_hours <= 0.0 or usable_per_worker <= 0.0 or marginal <= 0.0:
-        return lambda wage_per_hour: 0.0 * workers
-    usable = min(per_worker_hours, usable_per_worker)
-    exponent = 1.0 / (1.0 - households_hours_offered.LABOUR_OUTPUT_ELASTICITY)
-
+    """Hours a cohort keeps for its plot at a wage: `households_hours_offered.plot_hours_kept` times its workers."""
     def kept(wage_per_hour: float) -> float:
-        if wage_per_hour <= 0.0:
-            return usable * workers
-        return min(usable, per_worker_hours * (marginal / wage_per_hour) ** exponent) * workers
+        return households_hours_offered.plot_hours_kept(per_worker_hours, wage_per_hour, marginal, usable_per_worker) * workers
     return kept
 
 

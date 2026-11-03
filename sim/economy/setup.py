@@ -13,6 +13,7 @@ from typing import Any, Dict, Mapping, Optional, Tuple
 
 from sim.world import demand
 
+from . import legacy_need_defaults
 from .good_mass import unit_mass_and_source
 from .market_areas import AreaMap
 from .state_policy import StatePolicy
@@ -20,11 +21,6 @@ from .tile_costs import CarriageTable, carriage_table
 from .types import AgentId, CurrencySpec, GoodId, GoodSpec, Recipe, SiteLimit, TileId, TileSpec, TradeId
 
 LABOUR_AREA_PREFIX = "work@"
-
-# TRANSITIONAL: the basket need ids the economy reads as fuel and as hunger. The need list (data/world/needs.json)
-# carries no role flag for them, as trades carry roles in the registry. retire: a role on the need in needs.json.
-DEFAULT_FUEL_NEED_ID = "warmth"
-DEFAULT_HUNGER_NEED_ID = "food"
 
 
 def labour_area(tile: TileId) -> str:
@@ -55,7 +51,7 @@ class EconomySetup:
     handling_rates: Dict[str, float]               # money per tonne per leg by mode, at the opening
     specs: Dict[GoodId, GoodSpec]
     recipes: Dict[str, Recipe]
-    basket: Any                                    # households.Basket
+    basket: Any                                    # sim.world.need_basket.Basket
     trades: Dict[TradeId, SetupTrade]
     tax_forms: Tuple[Any, ...]                     # taxes.TaxForm
     working_hours_per_year: float
@@ -80,8 +76,9 @@ class EconomySetup:
     carriage_carriers: Dict[str, Tuple[float, Tuple[Tuple[str, float], ...]]] = field(default_factory=dict)   # mode id -> (tonne-km a team moves a day, ((carrier good, units worn per tonne-km),)): what a tonne-km wears (carriage_wear); none: carriage wears nothing
     need_share_by_trade: Dict[str, float] = field(default_factory=dict)   # trade -> its share of the society's non-farm labour need (recipes and carriage), seeds the trades no producer's runs staff
     carriage_wage: float = 0.0     # the wage an hour (unskilled trade) the land carriage rates were priced at; 0: they follow no wage
-    fuel_need: str = DEFAULT_FUEL_NEED_ID       # the basket need fuel meets; a hearth's cooking fuel is added to its floor
-    hunger_need: str = DEFAULT_HUNGER_NEED_ID   # the basket need whose unmet floor counts as hunger
+    fuel_need: str = legacy_need_defaults.FUEL_NEED_ID       # the basket need fuel meets (need_roles.FUEL_ROLE); a hearth's cooking fuel is added to its floor
+    hunger_need: str = legacy_need_defaults.HUNGER_NEED_ID   # the basket need whose unmet floor counts as hunger (need_roles.HUNGER_ROLE)
+    work_need: str = legacy_need_defaults.WORK_NEED_ID       # the basket need met by hours of household work (need_roles.HOUSEHOLD_WORK_ROLE)
     yield_factor_by_recipe_tile: Dict[str, float] = field(default_factory=dict)
     land_per_run: Dict[str, float] = field(default_factory=dict)      # hectare-years of land a run takes
     basket_by_tile: Dict[TileId, Any] = field(default_factory=dict)   # floors that follow the tile's climate

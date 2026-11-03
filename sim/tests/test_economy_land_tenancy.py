@@ -17,7 +17,7 @@ HECTARES = 100.0
 
 
 def margin_at(wage, fertility=1.0):
-    return land_bid.crop_margin_per_hectare(WHEAT, 1.0, fertility, PRICES, wage)
+    return land_bid.crop_margin_per_hectare(WHEAT, 1.0, fertility, PRICES, {"hand": wage})
 
 
 class RentFollowsLabourScarcityTests(unittest.TestCase):

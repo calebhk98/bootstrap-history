@@ -27,9 +27,8 @@ def seed(record) -> None:
 
 def shares(record, tile: TileId) -> Dict[AgentId, float]:
     """Holder -> share of the tile's land (below one in total when part of it is abandoned)."""
-    held = record.land.titles.get(tile)
-    if held:
-        return dict(held)
+    if record.land.titles:
+        return dict(record.land.titles.get(tile, {}))
     return {cohort.agent_id: cohort.ownership_share for cohort in record.cohorts.values() if cohort.tile == tile}
 
 
@@ -48,9 +47,7 @@ def free_share(record, holder: AgentId, tile: TileId) -> float:
 
 
 def held_shares(record, tile: TileId) -> Dict[AgentId, float]:
-    if not record.land.titles:
-        record.land.titles = {}
-    if not record.land.titles.get(tile):
+    if tile not in record.land.titles:
         record.land.titles[tile] = shares(record, tile)
     return record.land.titles[tile]
 
@@ -142,13 +139,6 @@ def release(record, tile: TileId, lessor: AgentId, share: float) -> None:
 
 def tenant_share(record, tile: TileId, tenant: AgentId) -> float:
     return sum(row["share"] for row in record.land.tenancies.get(tile, ()) if row["tenant"] == tenant)
-
-
-def top_holder_share(record, tile: TileId) -> float:
-    """The largest holder's share of the land that has a holder."""
-    held = shares(record, tile)
-    total = sum(held.values())
-    return max(held.values()) / total if total > 0.0 else 0.0
 
 
 def settle_tenancies(record, currency: CurrencyId, arable_by_tile: Mapping[TileId, float],

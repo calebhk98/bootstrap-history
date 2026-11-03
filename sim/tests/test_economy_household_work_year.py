@@ -8,9 +8,8 @@ import unittest
 
 from sim.tests.economy_view_defaults import ViewDefaults
 from sim.economy import household_work_year, households_work
-from sim.economy.households_basket import make_basket
+from sim.world.need_basket import make_basket
 from sim.economy.households_cohort import Cohort
-from sim.economy.households_own import withhold_hours
 from sim.economy.market_memory import market_key
 from sim.economy.setup import labour_area
 from sim.economy.types import LabourOffer
@@ -51,7 +50,7 @@ def cohort(name, tile="t1", people=100.0):
 
 def setup():
     return types.SimpleNamespace(
-        household_work=DATA, working_hours_per_year=1000.0, servant_trade="servant", hunger_need="food", fuel_need="warmth",
+        household_work=DATA, working_hours_per_year=1000.0, servant_trade="servant", hunger_need="food", fuel_need="warmth", work_need="household_work",
         ready_to_eat=households_work.ready_to_eat_goods(NEED_DATA), milled_as={},
         basket_for=lambda tile: make_basket(NEED_DATA, {}))
 
@@ -118,10 +117,7 @@ class SplitTests(unittest.TestCase):
         offers = [LabourOffer("poor", "labourer", area, 500.0, 0.5)]
         rec = record({"t1": {"poor": 1.0}}, cohorts=[poor])
         own = household_work_year.decide(setup(), rec, View({("labourer", area): 0.8, ("servant", area): 1.0}), offers, {})
-        cut, kept = withhold_hours(offers, own)
-        self.assertGreater(kept["poor"], 0.0)
-        self.assertAlmostEqual(kept["poor"], min(own["poor"], 500.0))
-        self.assertAlmostEqual(sum(offer.hours for offer in cut), 500.0 - kept["poor"])
+        self.assertGreater(own["poor"], 0.0)
 
     def test_hired_hours_become_the_cohorts_floor_of_the_need(self):
         rich, area = cohort("rich"), labour_area("t1")

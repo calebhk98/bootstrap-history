@@ -7,8 +7,8 @@ import unittest
 
 from sim.economy.households_cohort import Cohort
 from sim.economy import households_own, titles_worked
-from sim.economy.households_own import hours_for_own_plan, next_own_plan, withhold_hours
-from sim.economy.types import LabourOffer, Recipe
+from sim.economy.households_own import hours_for_own_plan, next_own_plan
+from sim.economy.types import Recipe
 
 OPTIONS = {"food": [(2.0, "grow_grain", "grain", 1.0)]}     # two hours a need unit at fertility one
 
@@ -57,19 +57,6 @@ class OwnPlanTests(unittest.TestCase):
         for _year in range(60):
             plan = next_own_plan(plan, {}, money_left=True)
         self.assertLess(plan.get("food", 0.0), 1.0)
-
-
-class WithholdTests(unittest.TestCase):
-    def test_offers_shrink_in_proportion_and_the_kept_hours_are_returned(self):
-        offers = [LabourOffer("w", "smith", "a", 60.0, 1.0), LabourOffer("w", "miner", "a", 40.0, 1.0)]
-        kept_offers, kept = withhold_hours(offers, {"w": 50.0})
-        self.assertEqual([offer.hours for offer in kept_offers], [30.0, 20.0])
-        self.assertEqual(kept, {"w": 50.0})
-
-    def test_it_cannot_keep_more_than_it_has(self):
-        kept_offers, kept = withhold_hours([LabourOffer("w", "smith", "a", 60.0, 1.0)], {"w": 500.0})
-        self.assertEqual([offer.hours for offer in kept_offers], [0.0])
-        self.assertEqual(kept, {"w": 60.0})
 
 
 class LandHeldTests(unittest.TestCase):

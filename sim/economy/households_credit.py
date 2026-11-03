@@ -10,7 +10,7 @@ from typing import List, Mapping, Optional
 from sim.constants import declare
 
 from . import credit
-from .households_basket import Basket, PricedNeed
+from sim.world.need_basket import Basket, PricedNeed
 from .households_cohort import Cohort
 from .households_orders import FLOOR_BUDGET_PRICE_MARGIN
 from .accounts import ROUNDING_SHARE

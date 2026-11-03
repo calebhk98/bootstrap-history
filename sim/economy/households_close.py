@@ -7,7 +7,8 @@ with what the cohort got of it; the shortfall is recorded for demography to read
 from typing import Dict, List, Mapping, Tuple
 
 from . import currency, durable_stock, households_buffer_stock, opening_resting
-from .households_basket import Basket, need_prices, subsistence_cost_per_person
+from sim.world.need_basket import Basket, subsistence_cost_per_person
+from .households_basket import need_prices
 from .households_cohort import Cohort, renewed
 from .households_own import next_own_plan
 from .protocols import MarketView

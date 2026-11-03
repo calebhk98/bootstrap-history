@@ -7,16 +7,6 @@ remembered price toward its target.
 import math
 from typing import Dict, List, Optional, Sequence, Tuple
 
-from sim.constants import declare
-
-
-DANGER_PREMIUM_EXPONENT = declare(
-    "DANGER_PREMIUM_EXPONENT", 1.0, kind="temporary_heuristic",
-    unit="exponent on the yearly fatality risk", source=None, confidence="D",
-    why="Shape of the pay a worker demands for a risky trade. One is linear: pay for a risk is its "
-        "probability times the value placed on a life, as if workers were indifferent to risk. Real "
-        "attitudes to risk, and what a worker knows about it, are not modelled.")
-
 Entry = Tuple[float, str, float]     # (limit price, agent id, quantity)
 
 
@@ -107,11 +97,11 @@ def reservation_wage(subsistence_cost_per_year: float, working_hours_per_year: f
                      fatality_risk_per_year: float, value_of_life_years_of_income: float) -> float:
     """Per hour: what keeps a family at subsistence, plus pay for the danger of the trade.
 
-    The danger pay is the yearly risk of death, raised to the declared exponent, times the number of years
-    of subsistence income a life is valued at, spread over the year's hours.
+    The danger pay is the yearly risk of death times the number of years of subsistence income a life is
+    valued at, spread over the year's hours; the same rule as the labour core's `reservation_wage`.
     """
     if working_hours_per_year <= 0:
         raise ValueError("working_hours_per_year must be positive")
     outside_option = subsistence_cost_per_year / working_hours_per_year
-    danger = max(0.0, fatality_risk_per_year) ** DANGER_PREMIUM_EXPONENT * value_of_life_years_of_income
+    danger = max(0.0, fatality_risk_per_year) * value_of_life_years_of_income
     return outside_option * (1.0 + danger)

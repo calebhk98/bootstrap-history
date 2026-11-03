@@ -42,6 +42,12 @@ class TraineeTrimTests(unittest.TestCase):
         self.assertAlmostEqual(_in_training(state, "smith"), 6.0)
         self.assertAlmostEqual(_people(state, "smith"), 10.0)
 
+    def test_a_glutted_trade_with_no_fallback_entry_yet_is_trimmed_without_changing_the_dict_mid_iteration(self):
+        state = _state({"smith": [10.0, 10.0]}, {})
+        workforce_settle.trim_people(state, {("area", "smith"): 5 * HOURS_PER_YEAR}, "labourer", HOURS_PER_YEAR)
+        self.assertAlmostEqual(_people(state, "smith"), 5.0)
+        self.assertAlmostEqual(_people(state, "labourer"), 15.0)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -41,7 +41,7 @@ def world(rent=20.0):
     recipes = {"grow_grain": GRAIN_RECIPE, "clear": clear, "farm": Recipe("farm", {"grain": 10.0}, {}, {"hand": 4.0})}
     setup = types.SimpleNamespace(
         tiles={TILE: tile}, recipes=recipes, land_per_run={**LAND, "farm": 2.0}, servant_trade="servant", unskilled_trade="labourer", opening_wages={},
-        trades={"servant": types.SimpleNamespace(training_years=0.0)}, working_hours_per_year=2000.0,
+        trades={"servant": types.SimpleNamespace(training_years=0.0), "hand": types.SimpleNamespace(training_years=0.0)}, working_hours_per_year=2000.0,
         specs={GROUND: GoodSpec(GROUND, float("inf"), 0.0, 0.0, "")}, opening_rate=0.05, currency_id="coin",
         basket_for=lambda tile_id: BASKET)
     from sim.economy.accounts import Book

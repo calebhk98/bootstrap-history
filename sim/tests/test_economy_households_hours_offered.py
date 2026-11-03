@@ -5,7 +5,7 @@ QUICK_TOPIC = True
 import unittest
 
 from sim.economy import households_hours_offered as rule
-from sim.economy.households_basket import Basket, NeedSpec
+from sim.world.need_basket import Basket, NeedSpec
 from sim.economy.households_cohort import Cohort
 from sim.economy.households_own import own_production
 from sim.economy.types import Recipe

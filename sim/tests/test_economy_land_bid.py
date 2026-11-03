@@ -25,12 +25,17 @@ GRAIN_RECIPE = Recipe("farm", {CROP: 10.0}, {}, {"farmer": 20.0})
 
 class MarginTests(unittest.TestCase):
     def test_margin_is_output_value_less_hours_at_the_wage_per_hectare(self):
-        margin = land_bid.crop_margin_per_hectare(GRAIN_RECIPE, 2.0, 1.0, {CROP: 3.0}, 0.5)
+        margin = land_bid.crop_margin_per_hectare(GRAIN_RECIPE, 2.0, 1.0, {CROP: 3.0}, {"farmer": 0.5})
         self.assertAlmostEqual(margin, (10.0 * 3.0 - 20.0 * 0.5) / 2.0)
 
+    def test_each_trade_of_the_recipe_is_charged_at_its_own_wage(self):
+        mixed = Recipe("farm", {CROP: 10.0}, {}, {"farmer": 10.0, "smith": 10.0})
+        margin = land_bid.crop_margin_per_hectare(mixed, 1.0, 1.0, {CROP: 3.0}, {"farmer": 0.5, "smith": 1.5})
+        self.assertAlmostEqual(margin, 10.0 * 3.0 - 10.0 * 0.5 - 10.0 * 1.5)
+
     def test_fertility_scales_the_crop_not_the_hours(self):
-        poor = land_bid.crop_margin_per_hectare(GRAIN_RECIPE, 1.0, 0.5, {CROP: 3.0}, 0.5)
-        rich = land_bid.crop_margin_per_hectare(GRAIN_RECIPE, 1.0, 1.5, {CROP: 3.0}, 0.5)
+        poor = land_bid.crop_margin_per_hectare(GRAIN_RECIPE, 1.0, 0.5, {CROP: 3.0}, {"farmer": 0.5})
+        rich = land_bid.crop_margin_per_hectare(GRAIN_RECIPE, 1.0, 1.5, {CROP: 3.0}, {"farmer": 0.5})
         self.assertAlmostEqual(rich - poor, 10.0 * 3.0)
 
     def test_a_hectare_earns_the_better_of_farming_and_rent_never_less_than_nothing(self):

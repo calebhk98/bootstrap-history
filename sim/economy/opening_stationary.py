@@ -73,22 +73,6 @@ def _plant_wear_cost(recipe: Recipe, prices: Mapping[GoodId, float]) -> float:
                      if prices.get(good) is not None) / recipe.plant_life_years
 
 
-def hours_offered_over_demanded(hours_by_trade: Mapping[str, float], hours_offered: float,
-                                trade: str) -> Optional[float]:
-    """How many times the hours offered cover the hours the stationary runs hire in `trade`; None where
-    nothing hires it. Above one the labour market clears at the workers' ask floor, not at the stated wage."""
-    demanded = hours_by_trade.get(trade, 0.0)
-    return hours_offered / demanded if demanded > 0.0 else None
-
-
-def survival_wage_per_hour(floor_cost_per_person: float, people_per_worker: float, hours_per_worker_year: float) -> float:
-    """The least wage a worker's year of hours is sold for when the plot grows nothing: what his people's floors
-    cost, spread over the hours (the survival side of `labour_ask_floor.wage_floor_per_worker_year`)."""
-    if hours_per_worker_year <= 0.0:
-        return math.inf
-    return floor_cost_per_person * people_per_worker / hours_per_worker_year
-
-
 def hours_that_clear_at(demanded_hours: float, workers: float, slack_share: float,
                         kept_per_worker: float = 0.0) -> float:
     """Hours a worker has a year so that the hours he offers exceed the hours demanded by `slack_share`, after the

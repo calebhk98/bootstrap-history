@@ -1,27 +1,21 @@
 """What households need, as data: the needs, their floors and weights, and the goods that serve them.
 
-The pure part lives in sim/world/need_basket.py (re-exported here so callers keep one import); this
+The pure part lives in sim/world/need_basket.py (import its names from there); this
 module adds pricing a basket at a tile from the economy's market view. Build one priced list per tile
 and share it across that tile's classes.
 """
 from typing import Dict, List
 
 from sim.world import need_basket
-from sim.world.need_basket import (Basket, NeedSpec, PricedNeed, make_basket, need_units, price_ceilings,
-                                   quality_reach, satiation_limit, subsistence_cost_per_person,
-                                   with_quality_reach)
+from sim.world.need_basket import Basket, PricedNeed
 
 from .protocols import MarketView
 from .types import TileId
 
-__all__ = ["Basket", "NeedSpec", "PricedNeed", "make_basket", "need_prices", "need_units", "price_ceilings",
-           "quality_reach", "satiation_limit", "subsistence_cost_per_person",
-           "with_quality_reach"]
-
-
 # basket id -> (basket, goods it names, priced needs by the tuple of those goods' prices); about one basket per tile
 _priced_by_basket: Dict[int, tuple] = {}
 MAX_BASKETS_KEPT = 4096
+MAX_PRICINGS_KEPT = 64      # per basket: prices change every year, so old pricings are not read again
 
 
 def need_prices(basket: Basket, view: MarketView, tile: TileId) -> List[PricedNeed]:
@@ -38,5 +32,7 @@ def need_prices(basket: Basket, view: MarketView, tile: TileId) -> List[PricedNe
     key = tuple(prices.values())
     priced = by_prices.get(key)
     if priced is None:
+        if len(by_prices) >= MAX_PRICINGS_KEPT:
+            by_prices.clear()
         priced = by_prices[key] = tuple(need_basket.need_prices(basket, prices.__getitem__))
     return list(priced)
