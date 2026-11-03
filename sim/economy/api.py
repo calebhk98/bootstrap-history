@@ -27,7 +27,7 @@ from .notional import shown_prices, shown_prices_with_kinds
 from .producers import Producer, expected_output_prices, live_input_prices, live_wages
 from .protocols import AgentOrders, EconomyYearInputs
 from .recipes import recipes_from_production_data
-from . import plant_builds
+from . import plant_builds, trade_wages
 from .tool_wear import with_tool_wear
 from .record import EconomyRecord
 from .setup import EconomySetup, SetupTrade, goods_specs, recipe_tile_key
@@ -590,6 +590,20 @@ def working_hours_per_year(economy):
 
 def import_duty_share(economy):
     return economy.setup.import_duty_share
+
+
+def unpaid_trade_wage(economy, trade):
+    """The wage per hour of a trade no market has paid, on the country's unskilled wage (`trade_wages`); None when
+    neither the opening wage nor an unskilled wage exists."""
+    unskilled = wages_by_trade_weighted(economy).get(economy.setup.unskilled_trade)
+    return trade_wages.unpaid_trade_wage(economy.setup, trade, unskilled)
+
+
+def trade_wage_at(economy, trade, tile):
+    """The wage per hour a bid for `trade` on `tile` is funded at: the area's last wage, else the unpaid-trade wage on
+    the area's unskilled wage (`trade_wages.wage_in_area`); None when none exists."""
+    view = economy.view()
+    return trade_wages.wage_in_area(economy.setup, economy.record.memory, trade, view.area_of(trade, tile))
 
 
 def trade_premium_of(economy, trade):

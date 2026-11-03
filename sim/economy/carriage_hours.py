@@ -11,13 +11,12 @@ merchant that owns the carriers.
 import math
 from typing import Dict, List, Optional, Tuple
 
-from . import credit
+from . import credit, trade_wages
 from .market_memory import KEY_SEPARATOR as MARKET_KEY_SEPARATOR, market_key
 from .merchants import Merchant
 from .producers_close import WORKING_CAPITAL_PURPOSE
 from .setup import labour_area
 from .types import LabourBid, LoanRequest
-from .year_labour import trade_premium
 
 CrewRows = Tuple[Tuple[str, float], ...]      # ((crew key, crew hours),): a crew key is market_key(trade, tile hired at)
 
@@ -154,20 +153,10 @@ def last_wage(memory, key: str) -> Optional[float]:
 
 
 def crew_wage(setup, memory, key: str) -> Optional[float]:
-    """The wage an hour of the crew `key` is priced at: its market's last wage, else the wage the economy opened with
-    for the trade, else the unskilled wage of the same area plus the trade's training premium (the rule the seat's
-    staff bids use for an unpriced trade); None when none of them exists."""
-    found = last_wage(memory, key)
-    if found is not None:
-        return found
+    """The wage an hour of the crew `key` is priced at (`trade_wages.wage_in_area` of the tile's labour area); None when
+    none exists."""
     trade, tile = _split(key)
-    opening = setup.opening_wages.get(trade)
-    if opening and opening > 0.0:
-        return opening
-    unskilled = memory.wages.get(market_key(setup.unskilled_trade, labour_area(tile)))
-    if unskilled is None:
-        return None
-    return unskilled * (1.0 + trade_premium(setup, trade))
+    return trade_wages.wage_in_area(setup, memory, trade, labour_area(tile))
 
 
 def engaged(record, merchant: Merchant, index) -> Tuple[Dict[str, float], Dict[str, float]]:

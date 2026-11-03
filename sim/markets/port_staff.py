@@ -25,7 +25,6 @@ from sim.economy.api import EDGE_EXCHANGE, AgentOrders, LabourBid, LabourOffer, 
 from sim.refusal import Refusal
 from sim.ledger.api import PayEdge, PayExchange, ReceiveFromEdge, ReceiveFromExchange
 from sim.reporting.api import RecordEvent
-from .trade_wage import trade_wage_at
 from sim.workforce.api import ONCE_STOCK, ClearingSettled, HoursArrived, NewcomersPlaced, NoteClearedWage, StaffArrived
 
 STAFF_PREFIX = "staff:"
@@ -51,7 +50,7 @@ def work_account(seat_id):
 
 
 def employer_bids(economy, employer_id, wanted, tile, affordable_coin):
-    """(bids, economy units to fund them with) for one employer's places: each trade's hours at the economy's wage (the unpriced-trade wage, trade_wage.py, before the market has one), the bid's maximum wage being the ceiling over that wage. When the places at the wage cost more
+    """(bids, economy units to fund them with) for one employer's places: each trade's hours at the economy's wage (the unpriced-trade wage, sim/economy/trade_wages.py, before the market has one), the bid's maximum wage being the ceiling over that wage. When the places at the wage cost more
     than `affordable_coin` the hours are scaled down together to what it buys; the account is funded with the ceiling bill of
     those hours or all the employer can afford, whichever is less."""
     view, trades = economy.view(), economy_api.economy_trades(economy)
@@ -61,7 +60,7 @@ def employer_bids(economy, employer_id, wanted, tile, affordable_coin):
         if people <= 0.0 or trade not in trades:
             continue
         area = view.area_of(trade, tile)
-        wage = trade_wage_at(economy, trade, tile)
+        wage = economy_api.trade_wage_at(economy, trade, tile)
         if wage and wage > 0.0:
             asked.append((trade, area, people * economy_api.working_hours_per_year(economy), wage))
     affordable_units = max(0.0, affordable_coin) / economy_api.coin_per_unit(economy)

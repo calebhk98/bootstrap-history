@@ -13,7 +13,7 @@ class AgentLabourViews(AgentViewPart):
 		return None if parts is None else parts.prices.wage_per_hour(trade, self._economy().world.scenario.acting_country())
 
 	def agent_wage_at(self, trade, tile):
-		"""The wage per hour in coin a bid for the trade on `tile` is funded at (trade_wage.py), or None while the agent economy opens."""
+		"""The wage per hour in coin a bid for the trade on `tile` is funded at (sim/economy/trade_wages.py), or None while the agent economy opens."""
 		parts = self._answering()
 		return None if parts is None else parts.prices.wage_per_hour_at(trade, tile)
 
