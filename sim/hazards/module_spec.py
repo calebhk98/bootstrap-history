@@ -1,6 +1,6 @@
 """Hazards' module spec (sim/assembly).
 
-Every read is a view of the module that owns it. Grouped by the owner each is catalogued under (docs/architecture/catalogue)."""
+Every read is a view of the module that owns it. Grouped by the owner module that publishes it (READS_BY_OWNER)."""
 from sim.assembly.api import QUOTE, ModuleSpec, PhaseHook, ViewSpec
 from sim.coin.api import PlunderHousehold
 from sim.demography.api import CutPopulation, KillPeople, RefreshDemographicIndexes

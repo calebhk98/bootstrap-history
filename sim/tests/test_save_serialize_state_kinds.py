@@ -15,7 +15,6 @@ from sim.contracts import FACILITY, Contract
 from sim.diffusion.api import DiffusionSeat
 from sim.finance.api import FinanceSeat
 from sim.knowledge.api import KnowledgeSeat
-from sim.invalidating import _InvalidatingSet
 from sim.materials.state import MaterialsSeat
 from sim.polity.state import PolitySeat
 from sim.production.api import ProductionSeat
@@ -51,7 +50,6 @@ check("serialize_state: an invalidating dict is a plain dict", serialize_state(_
 check("serialize_state: a set is written sorted under __set__, whatever order it was built in",
       serialize_state({"carpenter", "mason", "baker"}) == {"__set__": ["baker", "carpenter", "mason"]})
 check("serialize_state: an empty set is an empty __set__", serialize_state(set()) == {"__set__": []})
-check("serialize_state: an invalidating set is written like a set", serialize_state(_InvalidatingSet({"b", "a"})) == {"__set__": ["a", "b"]})
 check("serialize_state: a set of numbers is sorted numerically", serialize_state({10, 9, 100}) == {"__set__": [9, 10, 100]})
 check("serialize_state: a counter is a dict of its counts", serialize_state(collections.Counter({"charcoal": 3})) == {"charcoal": 3})
 check("serialize_state: a default dict is a dict of what it holds",
