@@ -16,12 +16,14 @@ def route_key(material: str, source: str, destination: str) -> str:
 
 def route_terms(world: Any, source: str, destination: str, material: str) -> Optional[Dict[str, float]]:
 	"""Per tonne: what a cargo costs to buy and carry, and what carrying it gains before the cost of
-	its capital. None when either end has no price."""
+	its capital. None when either end or the carriage has no price."""
 	bought = world.trade.price_at(material, source)
 	sold = world.trade.price_at(material, destination)
 	if not bought or not sold or bought <= 0.0 or sold <= 0.0:
 		return None
 	freight = world.trade.freight_between(source, destination, material, 1.0)
+	if freight is None:
+		return None
 	outlay = bought + freight
 	return {"bought": bought, "sold": sold, "freight": freight, "outlay": outlay,
 			"gain": sold - outlay - bought * TRADER_RISK_SHARE}

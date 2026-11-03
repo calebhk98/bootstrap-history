@@ -6,6 +6,8 @@ through the world's market; the trader books what it paid, what it got and the c
 """
 from typing import Any, Dict, List, Tuple
 
+from sim.refusal import Refusal
+
 from . import ledger
 from .base import RecordedActor
 from .edges import EDGE_FREIGHT, EDGE_MARKET, EDGE_POOLED_CAPITAL
@@ -76,11 +78,17 @@ class Trader(RecordedActor):
 		return options
 
 	def ship_cargo(self, option: Option, world: Any) -> float:
-		"""Buy at the source, carry and sell at the destination; the margin made."""
+		"""Buy at the source, carry and sell at the destination; the margin made. Nothing moves, and the margin is
+		zero, when an end has no price (the shipment is refused) or the carriage cannot be priced."""
 		detail = option.detail
 		tonnes = detail["tonnes"]
-		paid, received = world.trade.ship(self.actor_id, detail["material"], tonnes, detail["source"], detail["destination"])
 		freight = world.trade.freight_between(detail["source"], detail["destination"], detail["material"], tonnes)
+		if freight is None:
+			return 0.0
+		shipped = world.trade.ship(self.actor_id, detail["material"], tonnes, detail["source"], detail["destination"])
+		if isinstance(shipped, Refusal):
+			return 0.0
+		paid, received = shipped
 		ledger.transfer(self, world.setting.edge(EDGE_MARKET), paid, "edge:market purchase")
 		ledger.transfer(self, world.setting.edge(EDGE_FREIGHT), freight, EDGE_FREIGHT)
 		ledger.transfer(world.setting.edge(EDGE_MARKET), self, received, "edge:market sale")
