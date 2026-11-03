@@ -16,6 +16,8 @@ class CountryGroups(SharedPart):
 	"""The group-facing readings of `CountryWorld`."""
 
 	part = "groups"
+	# home: who a technique displaces and how figures are worded are the shared world's
+	home_members = frozenset(("displaced_producers", "founder_protection", "lodge_blame", "money_text", "plain_number"))
 
 	def __init__(self, world: Any) -> None:
 		super().__init__(world)
@@ -86,6 +88,8 @@ class CountryStakes(SharedPart):
 	"""The stakes of the country's workers."""
 
 	part = "stakes"
+	# home: what a technique displaces and its names are the same everywhere; rent and tithe figures are the shared world's until a country keeps its own
+	home_members = frozenset(("displacing_technique", "land_rent_per_hectare", "technique_name", "tithable_sales_value"))
 
 	def idle_hours_by_trade(self) -> Dict[str, Any]:
 		"""(hours offered and not hired, hours offered) of each trade in the country's own labour markets last year."""

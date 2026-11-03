@@ -19,6 +19,8 @@ class CountryArmy(SharedPart):
 	"""The country's force, from its profile and its civilisation's declared hazards."""
 
 	part = "army"
+	# home: what a military technique needs in equipment is a property of the technique
+	home_members = frozenset(("equipment_kg_at_adoption", "equipment_material", "military_work_ids"))
 
 	def equipment_kg_per_soldier(self) -> float:
 		"""Iron and ammunition one equipped soldier uses a year at the share of the military work the country's own

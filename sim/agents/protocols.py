@@ -312,6 +312,10 @@ class CollectionPart(Protocol):
 		number, their literacy and the road from the seat (collection.py)."""
 		...
 
+	def corruption_share(self, tiles: Optional[Iterable[str]] = None) -> float:
+		"""The share of what officials collect on `tiles` (all the state holds when none) that they keep."""
+		...
+
 
 class LabourPart(Protocol):
 	"""The one labour market, what a trade pays and the people free to hire."""

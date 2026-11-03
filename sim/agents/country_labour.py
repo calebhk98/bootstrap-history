@@ -12,6 +12,8 @@ class CountryLabour(SharedPart):
 	"""The country's own labour markets, read through its part of the economy."""
 
 	part = "labour"
+	# home: trade names and the hours in a person-year are the same in every country
+	home_members = frozenset(("hours_per_person_year", "labour_market", "trade_exists", "trade_of_role"))
 
 	def pay_per_person_year(self, trade: str) -> float:
 		"""What a person-year of a trade pays in this country's own labour markets."""
@@ -36,14 +38,12 @@ class CountryLabour(SharedPart):
 
 	def free_fte(self, trade: str, actor_id: Optional[str]) -> Optional[float]:
 		"""People of a trade left in this country's labour markets for `actor_id`; None when the economy has no part for the
-		country or the holder cannot count its employers, never the founder's pool."""
+		country, never the founder's pool."""
 		economy = self.world.own.get_or_none()
 		if economy is None:
 			return None
-		count = getattr(self.world.holder, "staff_fte_in_country", None)
-		if not callable(count):
-			return None
-		return people_left(economy.people_of_trade(trade), count(trade, self.world.profile.country, actor_id))
+		count = self.world.holder.staff_fte_in_country(trade, self.world.profile.country, actor_id)
+		return people_left(economy.people_of_trade(trade), count)
 
 	def pay_wages(self, payer: Any, amount: float, purpose: Any) -> None:
 		"""Pay a country's people: its free strata by their numbers, or the workers' edge while it has none."""

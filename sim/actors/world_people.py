@@ -25,7 +25,7 @@ class People:
 	def subsistence_kg_per_person_year(self) -> float:
 		return demand.FOOD_SUBSISTENCE_QUANTITY_KG_PER_CAPITA_PER_YEAR
 
-	def frontier_disease_loss(self) -> float:
+	def frontier_disease_loss(self) -> Optional[float]:
 		"""The share of working-age people the diseases of the tiles on the frontier take in a year."""
 		return self.needs.frontier_disease_loss()
 

@@ -35,6 +35,8 @@ class CountrySite(SharedPart):
 	"""The site reading of `CountryWorld`."""
 
 	part = "site"
+	# home: a site's hectares are a property of the site
+	home_members = frozenset(("site_hectares",))
 
 	def site_rent(self, node_id: str, capacity: float = 1.0, tile: Optional[str] = None) -> Optional[float]:
 		"""Yearly rent of the site a concern at `capacity` founding sizes occupies, at the rent the country's land market let
@@ -49,6 +51,8 @@ class CountryConcerns(SharedPart):
 	"""The entry-figure readings of `CountryWorld`."""
 
 	part = "concerns"
+	# home: a concern's margin, staff and costs are figures of the technique at the shared prices
+	home_members = frozenset(("concern_margin", "concern_output_tonnes", "concern_staff", "concern_takings", "concern_wage_bill", "copy_cost", "copy_risk", "entry_gross", "proven_concerns", "ramp", "scale_ceiling", "upkeep"))
 
 	def concern_gross(self, node_id: str) -> Optional[float]:
 		"""Yearly takings of a concern once ramped up, at the country's prices; None when the economy has no part for the
