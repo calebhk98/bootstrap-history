@@ -32,7 +32,6 @@ class YearInputsBuilder:
         bands = sim.state.regional_people_by_band()    # demography's (children, working age, elderly) by tile
         return YearInputs(year=sim.year, population_by_tile=people,
                           working_people_by_tile={tile: bands[tile][1] for tile in people if tile in bands},
-                          working_hours_per_year=sim.HOURS_PER_PERSON_YEAR,
                           yield_factor_by_producer=yields, engine_orders=engine_orders, harvest_factor=weather,
                           state_capacity=sim.finance.state_reach(),
                           import_accounts=border_accounts[0], export_accounts=border_accounts[1],
