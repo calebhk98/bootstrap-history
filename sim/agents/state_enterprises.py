@@ -103,7 +103,7 @@ def keep_for_own_use(government: Any, material: str, tonnes: float, world: Any) 
 def sell(government: Any, world: Any) -> None:
 	"""Put the plants' output to its use: kept for the state's lines first, the rest sold into the goods market."""
 	for material in sorted({made for entry_key in government.concerns for made in world.enterprises.materials_made_by(entry_key)}):
-		by_concern: List[Tuple[str, float]] = government.output_by_concern(material, world)
+		by_concern: List[Tuple[str, float]] = government.output.output_by_concern(material, world)
 		total = sum(tonnes for _entry_key, tonnes in by_concern)
 		kept = keep_for_own_use(government, material, total, world)
 		share = 0.0 if total <= 0.0 else (total - kept) / total

@@ -26,8 +26,8 @@ class Taxpayers:
 
 	def visible_scale_of(self, actor: Any) -> float:
 		"""How large and visible any actor looks to the state: its staff, its wealth and its prominence."""
-		return self.needs.visible_scale(sum(actor.workforce.values()), demand_answer.visible_wealth(actor.money, actor.concealed_wealth()),
-										actor.prominence(), actor.defiance())
+		return self.needs.visible_scale(sum(actor.workforce.values()), demand_answer.visible_wealth(actor.money, actor.stance.concealed_wealth()),
+										actor.stance.prominence(), actor.stance.defiance())
 
 	def seat_taxpayers(self, country: Optional[str]) -> List[Tuple[float, float]]:
 		"""(visible scale, taxable income) of the playing household seats that belong to `country`; a seat with no

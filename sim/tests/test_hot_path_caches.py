@@ -70,11 +70,11 @@ class _ManyConcerns(_Actor):
 
 
 _world = _CountingWorld(["node_07", "node_03"])
-_total = _ManyConcerns().output_of("steel", _world)
+_total = _ManyConcerns().output.output_of("steel", _world)
 check("an actor's supply asks only the concerns that make the material, in id order",
       _world.asked == ["node_03", "node_07"] and _total == 4.0, _world.asked)
 _world = _CountingWorld([])
-_ManyConcerns().output_of("steel", _world)
+_ManyConcerns().output.output_of("steel", _world)
 check("an actor with no concern making the material asks about none",
       _world.asked == [], _world.asked)
 
@@ -139,12 +139,12 @@ _registry = _registry_of_firms(60)
 _world = _TonnesWorld(["steelworks"])
 # Firms now put their output into the one goods market themselves (`sell_output`); the market's
 # total is the flows they report, so there is no registry-wide supply walk left to index.
-_tonnes = {actor_id: actor.output_of("steel", _world) for actor_id, actor in _registry.actors.items()}
+_tonnes = {actor_id: actor.output.output_of("steel", _world) for actor_id, actor in _registry.actors.items()}
 check("only the actors holding a concern that makes the material report any of it",
       {actor_id for actor_id, tonnes in _tonnes.items() if tonnes > 0.0} == {"firm:017", "firm:042"}
       and abs(sum(_tonnes.values()) - 1.0) < 1e-12, _tonnes)
 check("...and an actor with no concern making the material asks the world about none of its concerns",
-      _registry.actors["firm:001"].output_of("steel", _world) == 0.0)
+      _registry.actors["firm:001"].output.output_of("steel", _world) == 0.0)
 
 
 # --- the staffing tally survives an actor's turn that left staff as it was found.

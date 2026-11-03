@@ -101,5 +101,5 @@ class Player(RecordedActor):
 		run_orders(self, world)
 		if self.record.controller == "ai":
 			self.decide(world)
-		self.work_on_research(world)
+		self.copying.work_on_research(world)
 		self.operate(world)

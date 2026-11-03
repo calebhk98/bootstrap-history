@@ -12,19 +12,19 @@ from .edges import EDGE_OFFICIALS
 
 def settle_year(actor: Any, world: Any) -> Dict[str, float]:
 	"""One year of concealment and forgetting for `actor`; what was hidden, what hiding cost, what the state seized."""
-	stance = actor.demand_stance()
+	stance = actor.stance.demand_stance()
 	settled = {"concealed": 0.0, "cost": 0.0, "seized": 0.0, "found": 0.0}
-	if stance == demand_answer.CONCEAL or actor.concealed_wealth() > 0.0:
+	if stance == demand_answer.CONCEAL or actor.stance.concealed_wealth() > 0.0:
 		draw = world.setting.rng_for("conceal", actor.actor_id, world.setting.year).random()
 		settled = demand_answer.settle_concealment(stance, max(0.0, actor.money), world.taxpayers.state_reach(),
-												   actor.standing(), draw)
+												   actor.stance.standing(), draw)
 		if settled["cost"] > 0.0:
 			ledger.transfer(actor, world.setting.edge(EDGE_OFFICIALS), settled["cost"], "concealing wealth")
 		if settled["seized"] > 0.0:
 			ledger.transfer(actor, world.setting.government(), settled["seized"], "wealth found hidden")
-		actor.set_concealed_wealth(settled["concealed"])
-	if actor.defiance() > 0.0:
-		actor.set_defiance(demand_answer.defiance_fading(actor.defiance()))
+		actor.stance.set_concealed_wealth(settled["concealed"])
+	if actor.stance.defiance() > 0.0:
+		actor.stance.set_defiance(demand_answer.defiance_fading(actor.stance.defiance()))
 	return settled
 
 
@@ -35,7 +35,7 @@ def settle_all(registry: Any, world: Any) -> List[str]:
 		actor = registry.actors[actor_id]
 		if actor.record.exited_year is not None or actor.kind == "government":
 			continue
-		if actor.demand_stance() == demand_answer.CONCEAL or actor.concealed_wealth() > 0.0 or actor.defiance() > 0.0:
+		if actor.stance.demand_stance() == demand_answer.CONCEAL or actor.stance.concealed_wealth() > 0.0 or actor.stance.defiance() > 0.0:
 			settle_year(actor, registry.countries.world_for(actor, world))
 			settled.append(actor_id)
 	return settled

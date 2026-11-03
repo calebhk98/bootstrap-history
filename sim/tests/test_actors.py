@@ -91,9 +91,9 @@ modded = make_node("test_mod:cannon", gains={"military": 0.9})
 world = valued_world(gun, cartoons, faint, modded)
 unaware_government = state_with(world, aware=False)
 check("a government that has not come to know of a shown invention is not offered it",
-      not unaware_government.imitation_options(world), sorted(option.subject for option in unaware_government.imitation_options(world)))
+      not unaware_government.copying.imitation_options(world), sorted(option.subject for option in unaware_government.copying.imitation_options(world)))
 government = state_with(world)
-subjects = {option.subject: option for option in government.imitation_options(world)}
+subjects = {option.subject: option for option in government.copying.imitation_options(world)}
 check("a militarily valuable invention is on offer to the government", "test_gun" in subjects, sorted(subjects))
 check("an invention the state weighs negatively is not", "test_cartoons" not in subjects, sorted(subjects))
 check("a mod invention with a declared military value is on offer without code changes",
@@ -102,26 +102,26 @@ check("a mod invention with a declared military value is on offer without code c
 check("a real but negligible gain is worth less than it costs",
       "test_faint" not in subjects or subjects["test_faint"].net <= 0)
 world.weights["military"] = -0.5
-flipped = {option.subject for option in government.imitation_options(world)}
+flipped = {option.subject for option in government.copying.imitation_options(world)}
 check("changing what the state values changes what it wants, ids unchanged",
       "test_gun" not in flipped and "test_mod:cannon" not in flipped, sorted(flipped))
 world.weights["military"] = 0.9
 world.revenue = 0.0
-check("a state with no revenue values nothing", not government.imitation_options(world))
+check("a state with no revenue values nothing", not government.copying.imitation_options(world))
 world.revenue = 1.0e9
 
 # ---- a policy chooses, and an actor begins and carries on copies ----------------------------------------------------
-begun = government.consider_imitation(world)
+begun = government.copying.consider_imitation(world)
 check("the government begins copying what it values and ignores the rest",
       set(begun) == set(government.works) and "test_gun" in begun and "test_mod:cannon" in begun
       and "test_cartoons" not in government.works and "test_faint" not in government.works, sorted(government.works))
 government.money = 1.0e6
-finished = government.work_on_copies(world)
+finished = government.copying.work_on_copies(world)
 check("the copy is not finished in the first year, spends the treasury and posts places for its trades",
       "test_gun" not in finished and "test_gun" in government.works
       and government.staff_wanted.get("labourer", 0.0) > 0 and government.money < 1.0e6, (finished, government.money))
 for _ in range(imitation.copy_years(gun)):
-    finished = government.work_on_copies(world)
+    finished = government.copying.work_on_copies(world)
 check("the copy finishes after its planned time and the state then knows the technique",
       "test_gun" in government.knowledge and "test_gun" not in government.works,
       (sorted(government.knowledge), sorted(government.works)))
@@ -132,14 +132,14 @@ doomed = state_with(doomed_world)
 doomed.decision_policy = CallbackPolicy(lambda actor, decision: [o.subject for o in decision.options])
 plan = imitation.copy_plan(doomed, ["test_doomed"], doomed_world)
 doomed.works["test_doomed"] = imitation.start_work("test_doomed", ["test_doomed"], plan, doomed_world.setting.year)
-doomed.work_on_copies(doomed_world)
-finished = doomed.work_on_copies(doomed_world)
+doomed.copying.work_on_copies(doomed_world)
+finished = doomed.copying.work_on_copies(doomed_world)
 check("a copy that fails teaches nothing, costs what was spent and is counted",
       not finished and "test_doomed" not in doomed.knowledge
       and doomed.record.failed_copies.get("test_doomed") == 1 and doomed.money < 1.0e6)
 doomed.money = 0.0
 doomed.works["test_doomed"] = imitation.start_work("test_doomed", ["test_doomed"], plan, doomed_world.setting.year)
-doomed.work_on_copies(doomed_world)
+doomed.copying.work_on_copies(doomed_world)
 check("a purse that cannot pay stalls the work instead of forgiving it",
       doomed.works["test_doomed"]["progress"] < 1.0 and doomed.works["test_doomed"]["stalled"] > 0)
 
@@ -150,10 +150,10 @@ chooser = policy_registry.countries.ensure_government("home")
 chooser.money = 1.0e6
 chooser.record.aware.update({node_id: policy_world.setting.year for node_id in policy_world.knowledge.demonstrated()})
 chooser.decision_policy = IdlePolicy()
-chooser.consider_imitation(policy_world)
+chooser.copying.consider_imitation(policy_world)
 check("an idle policy copies nothing however valuable the invention", not chooser.works)
 chooser.decision_policy = CallbackPolicy(lambda actor, decision: ["test_visible", "not_on_offer"])
-chooser.consider_imitation(policy_world)
+chooser.copying.consider_imitation(policy_world)
 check("a callback policy chooses for the actor and cannot pick what is not on offer",
       set(chooser.works) == {"test_visible"})
 policy_extensions = shipped_extensions()
