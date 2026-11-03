@@ -101,8 +101,8 @@ class PriceReads:
         return economy_api.hours_offered_in_area_of(economy, trade, self._agent.tile_in_economy(tile))
 
     def wage_per_hour(self, trade, country=None):
-        """The country figure, in coin: the trade's hours-weighted wage over the country's labour markets, or the one wage rule
-        (sim/economy/trade_wages.py) for a trade they have not paid, home or partner alike. A country with no part in this economy
+        """The country figure, in coin: the trade's wage over the country's labour areas (hours-weighted, else people-weighted), or the one wage rule
+        (sim/economy/trade_wages.py) for a trade the core holds no wage for, home or partner alike. A country with no part in this economy
         is priced as the home country; the agents' country views (`HouseholdReads.country`) are for partners and refuse one."""
         economy = self._agent.economy()
         scope = country if country in economy_api.economy_countries(economy) else None
