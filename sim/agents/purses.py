@@ -245,7 +245,7 @@ class Purses:
         than the pool holds (the deposit rate is whatever that comes to; interest lost in a default is not paid),
         then give the economy's lenders back what the pool holds beyond its lending; what each depositor received (coin)."""
         paid: Dict[str, float] = {}
-        shares = {depositor: contract.principal for depositor, contract in sorted(self.contracts.deposits.items())}
+        shares = {depositor: contract.principal for depositor, contract in sorted(self.contracts.deposits.items()) if depositor != EDGE_OUTSIDE}   # the account outside the book earns nothing
         total = sum(shares.values())
         owed, self.interest_pending = self.interest_pending, 0.0
         available = min(owed, max(0.0, self.purse(POOL)))

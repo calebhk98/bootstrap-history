@@ -126,8 +126,9 @@ class Contracts:
         if contract is None:
             self.deposits[depositor] = Contract("deposit:%s" % depositor, depositor, pool, currency, amount, kind=DEPOSIT, unit_value=unit_value)
         else:
+            value = contract.principal * contract.unit_value + amount * unit_value   # the lender's own unit: what the old and the new are worth
             contract.principal += amount
-            contract.unit_value = unit_value
+            contract.unit_value = value / contract.principal if contract.principal > 0.0 else unit_value
 
     def deposit_of(self, depositor: str) -> float:
         contract = self.deposits.get(depositor)

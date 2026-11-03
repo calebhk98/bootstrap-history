@@ -117,6 +117,19 @@ class BookkeepingReset(unittest.TestCase):
         self.assertAlmostEqual(purses.debt("firm:1"), 50.0)
 
 
+    def test_the_account_outside_the_book_that_stands_behind_a_reset_debt_earns_no_interest(self):
+        purses = purses_with({})
+        purses.book.transfer(Transfer(EDGE_OUTSIDE, "firm:1", COIN, 30.0, "seed"))
+        purses.set_offers({"firm:1": 30.0})
+        purses.set_net("firm:2", -30.0, "set")   # the account outside the book funds the 30 the pool lacks
+        purses.book.transfer(Transfer(EDGE_OUTSIDE, "firm:3", COIN, 8.0, "seed"))
+        purses.transfer("firm:3", POOL, 8.0, "interest")
+        purses.interest_pending += 8.0
+        paid = purses.settle_interest()
+        self.assertEqual(sorted(paid), ["firm:1"])
+        self.assertAlmostEqual(paid["firm:1"], 8.0)
+
+
 class SumsDoNotDependOnCreationOrder(unittest.TestCase):
     def test_the_contracts_are_listed_in_the_order_a_load_produces(self):
         contracts = Contracts()
