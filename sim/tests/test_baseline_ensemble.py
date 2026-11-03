@@ -97,8 +97,8 @@ with tempfile.TemporaryDirectory() as directory:
 from sim.ui.cli_baseline import cmd_baseline_ensemble
 
 with tempfile.TemporaryDirectory() as directory:
-	arguments = Game(civ="fixture_civ", seeds=3, years=4, jobs=1, directory=directory)
-	check("the subcommand plays the seeds and succeeds", cmd_baseline_ensemble(arguments, runner=stub_runner) == 0)
+	arguments = Game(civ="fixture_civ", seeds=3, years=4, jobs=1)
+	check("the subcommand plays the seeds and succeeds", cmd_baseline_ensemble(arguments, runner=stub_runner, directory=directory) == 0)
 	stored = baseline_ensemble.read_cache("fixture_civ", directory)
 	check("and leaves the cache the screen reads", stored is not None and stored["runs"] == 3 and stored["years"] == 4
 		and stored["seeds"] == [1, 2, 3])
