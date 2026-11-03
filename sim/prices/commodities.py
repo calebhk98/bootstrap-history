@@ -1,18 +1,10 @@
 """Commodities as first-class things: iron, wool, coffee, copper, gold...
 
-THIS MODULE IS IMPORTED: `economy.py`'s `wire_chain_report()` calls
-`CommodityLedger.propagate_demand()` -- the one mechanism here with no
-analogue anywhere in the existing code (COMMODITIES.md section 7: a
-recipe-chain demand walk that names WHICH link broke, not one flat
-throttle) -- handed THIS CIVILISATION'S ACTUAL copper numbers via
-`supply_override` below, rather than the independent national estimate
-`commodities.json` would otherwise guess. `core.py` does not import
-this module and `Sim` has no inventory (`Ledger`, the stock-tracking
-class below, is exercised by the demo and the regression suite only): see
-`data/world/COMMODITIES.md` section "What was decided" for why a full
-swap of `resource_throttle()`/`MARKET_SHARE`/`material_price_factor()` for
-this module's OWN (separately-sourced) price/national-output machinery was
-rejected, and what was taken instead.
+The curated commodity records of `commodities.json`, loaded through `shared_ledger` in `sim/prices/memos.py`.
+`CommodityLedger.propagate_demand()` is the recipe-chain demand walk that names WHICH link broke (COMMODITIES.md
+section 7); `supply_override` lets a caller hand it a civilisation's own reachable numbers in place of the national
+estimate `commodities.json` carries. The live material price and availability rules are in `sim/materials/`, not here.
+`Ledger`, the stock-tracking class below, is exercised by the demo and the regression suite only.
 
 Read `COMMODITIES.md` first. It explains every field in `commodities.json`
 and the reasoning behind every function below; the comments here point back
