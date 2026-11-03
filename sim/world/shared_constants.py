@@ -197,18 +197,16 @@ ANNUAL_LABOUR_HOURS_PER_FARM_WORKER = declare(
 # ============================================================================
 # How far apart two points on the ground have to be before one year's
 # growing-season weather at one stops predicting the other's. This is the
-# ONE number sim/engine/core.py's per-cell pooled harvest weather (WIRING
-# THREE) turns on: it is what tells Gaul and Hispania (close, correlated)
+# ONE number the per-cell pooled harvest weather (`pooled_weather_multiplier`,
+# sim/markets/port_world_reads.py) turns on: it is what tells Gaul and Hispania (close, correlated)
 # apart from Britannia and Mesopotamia (far, nearly independent), replacing
 # the two assumptions Complaints/49 measured as both wrong in the same
 # direction - a region record is one weather system, and two region records
 # draw independently. Declared here, not in sim/world/agriculture.py (which
 # already owns WEATHER_YIELD_STDEV_FRACTION and the clip bounds this same
-# mechanism also reads), because this task's own ownership boundary is
-# sim/engine/core.py and sim/world/shared_constants.py, not agriculture.py -
-# see CLAUDE.md's own "own ONLY" convention. It is nonetheless a genuine
+# mechanism also reads), because it is a genuine
 # sim/world/ climate fact, not an engine heuristic, so it belongs in this
-# file's registry rather than as a bare literal in core.py.
+# file's registry rather than as a bare literal in the caller.
 
 GROWING_SEASON_WEATHER_DECORRELATION_LENGTH_KM = declare(
     "GROWING_SEASON_WEATHER_DECORRELATION_LENGTH_KM", 600.0,

@@ -100,11 +100,8 @@ class Sim:
         self.session_seat = None
         self._stack_cautions = {}   # per seat: whether it was told of the stack caution
         self._founder_death_cache = None   # the founder's death read off the log by the UI, once it is found
-        # MANUAL MODE: the optimizer in step() 4b never starts anything on its
-        # own. The only projects that ever become active are ones something
-        # called start_project() on, i.e. a human or an agent choosing them.
-        # See the comment on step() 4b and on start_project() for why this
-        # exists: without it, "choosing" a node in `play` was cosmetic.
+        # MANUAL MODE: the optimizer in the projects module's start phase (sim/projects/start_phase.py) never starts
+        # anything on its own; only projects a human or an agent chose become active.
         self.send(SetValueWeights(tuple(self.civ["values"].items())))
         # A civilization brings its own date, its own price level and its own
         # capacity to fund things. Norse Scandinavia does not start in 100 AD.

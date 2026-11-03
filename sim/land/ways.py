@@ -24,7 +24,7 @@ from .commands import BuildWay, FinishWays
 
 
 class Ways(Part):
-    """Mixed into `Land`."""
+    """A part of the land module: the ways built on the land."""
 
 
     def built_ways(self) -> Dict[str, Dict[str, bool]]:

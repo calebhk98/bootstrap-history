@@ -48,7 +48,7 @@ class DetRNG(random.Random):
 
     NOT THE SAME THING AS `--no-events`, and deliberately independent of it.
     `--no-events` only silences DATED weather/plague/political hazards (this
-    engine's `self.events` flag gating `_shocks` in core.py) and, alone,
+    engine's `self.events` flag gating the hazards module's dated shocks) and, alone,
     still leaves project-failure risk, attrition, manumission and stochastic
     rounding drawing from an ordinary seeded rng every time - see that flag's
     own help text, which says exactly this. This class is the other half: it
@@ -71,7 +71,7 @@ def ensure_fixed_hash_seed(seed="0"):
     reproducible on its own - but CPython hashes strings differently in every
     process by default (`hash("machinist")` differs run to run unless
     `PYTHONHASHSEED` is fixed), and this engine has at least one documented
-    site (core.py's own comment on `rng.sample(losable, ...)`) where walking
+    site (sim/hazards/sack.py's `sample(losable, ...)`) where walking
     a bare, unsorted `set` of ids would depend on that hash order - so a
     --deterministic run whose output depended on iteration order over some
     other such set

@@ -127,7 +127,7 @@ from typing import Any, Callable, Dict, FrozenSet, Iterable, Iterator, List, Map
 #
 # Prices: a {material: price} table, in EITHER unit this module handles -
 # labour-hours (solve_prices.py's own numeraire) or denarii
-# (prices.json's/economy.py's) - see LABOUR-HOURS TO DENARII in the module
+# (the economy module's) - see LABOUR-HOURS TO DENARII in the module
 # docstring above for the conversion between them. The unit is never part
 # of the type, the same way it is never part of a plain `float`; each
 # function's own docstring says which one it is holding.

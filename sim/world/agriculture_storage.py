@@ -97,7 +97,7 @@ def granary_capacity_kg(
     term inside `Storage.step`'s own one-year accounting - see
     GRANARY_CAPACITY_YEARS_OF_DEMAND's own declaration for why the cap lives
     here, as a plain function callers apply to whatever they carry forward,
-    rather than inside `Storage` itself. A caller (sim/engine/core.py) that
+    rather than inside `Storage` itself. A caller (`sim/agents/country_farm.py`) that
     ignores this entirely just gets an uncapped granary - nothing in
     `Storage.step` enforces it - so applying it is the caller's choice, the
     same way applying `storage_technique` at all is.
@@ -197,8 +197,8 @@ class Storage(object):
 
         `weather_multiplier` defaults to `None`, meaning "draw one from
         `self._random` the way this method always has" (step 2 below). A
-        caller that passes a number instead (sim/engine/core.py's
-        `_pooled_farm_weather_multiplier`, Complaints/46-one-weather-draw-
+        caller that passes a number instead (`pooled_weather_multiplier` in
+        sim/markets/port_world_reads.py, Complaints/46-one-weather-draw-
         for-a-continent.md) gets that number used AS this year's weather
         multiplier verbatim, and `self._random`/`draw_weather_multiplier`
         are not touched at all - this is what lets a caller that already

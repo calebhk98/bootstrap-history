@@ -27,7 +27,7 @@ critical ones go first.
 WHAT THIS DELIBERATELY DOES NOT DO: it does not simulate concurrency, money,
 staff or trade availability while planning - `Sim.step()` already does all of
 that, live, every year, against whatever priority order it is handed (see
-core.py step() 4b: `order` is a PREFERENCE the greedy loop consults, not a
+the projects module's start phase, sim/projects/start_phase.py: `order` is a PREFERENCE the greedy loop consults, not a
 schedule it is bound to; anything not yet legal is simply skipped that year
 and reconsidered the next). So the planner's job is narrower and more honest
 than "solve the whole game": say which of the ~149 nodes the goal actually
@@ -38,7 +38,7 @@ duplicating logic that already exists and is already tested, badly.
 
 SIDE BRANCHES. The 149-node closure is EVERYTHING the goal needs and nothing
 else; it is not everything a household needs to survive on the way there.
-`step()` already has a reactive fallback for this (core.py, "EARN A LIVING
+The start phase already has a reactive fallback for this (sim/projects/start_phase.py, "EARN A LIVING
 FIRST") that switches to whatever pays best when revenue is thin - but that
 is a patch applied after the fact, not a plan. A few cheap, high-margin,
 short-payback revenue nodes woven into the order ahead of time give the
@@ -265,7 +265,7 @@ def pick_staffing(nodes, need, sim):
     `staff_capacity_sources` (sim/mechanics/rules.py), the same table `staff_capacity()`
     itself iterates, so the planner cannot drift out of step with the rule it
     is planning against - the failure mode that once put a second,
-    hand-maintained copy of a material list in core.py and cost a KeyError in
+    hand-maintained copy of a material list in the engine and cost a KeyError in
     a run forty years deep.
 
     Ordered by what each one costs, cheapest first: the school that makes the
