@@ -47,18 +47,26 @@ def port_share(record, good: str, key: str) -> float:
 
 
 def national_wages(record, keep: Optional[Callable[[str], bool]] = None) -> Dict[str, float]:
-    """Each trade's wage per hour over its labour markets (those `keep` accepts by market key), weighted by the
-    hours hired there last year; the plain mean for a trade that hired nowhere."""
-    rows: Dict[str, List[Tuple[float, float]]] = {}
+    """Each trade's wage per hour over its labour markets (those `keep` accepts by market key), from the wages the
+    labour core holds (mirrored by `labour_state.mirror_wages`; the core gives every trade a wage in every area each
+    year). Weighted by the hours hired in each market last year; for a trade that hired nowhere, by the people
+    working it there (the wage is what those workers would accept); with no people either, the plain mean."""
+    rows: Dict[str, List[Tuple[float, float, float]]] = {}
     for key, wage in sorted(record.memory.wages.items()):
         if keep is None or keep(key):
-            rows.setdefault(key.split(KEY_SEPARATOR, 1)[0], []).append((wage, record.labour.hours_cleared_in(key)))
+            trade, area = key.split(KEY_SEPARATOR, 1)
+            people = math.fsum(record.labour.workforce.workers.get(area, {}).get(trade, ()))
+            rows.setdefault(trade, []).append((wage, record.labour.hours_cleared_in(key), people))
     wages = {}
-    for trade, pairs in rows.items():
-        hours = math.fsum(weight for _wage, weight in pairs)
-        wages[trade] = (math.fsum(wage * weight for wage, weight in pairs) / hours if hours > 0.0
-                        else math.fsum(wage for wage, _weight in pairs) / len(pairs))
-    return wages
+    for trade, entries in rows.items():
+        for weight_index in (1, 2):
+            total = math.fsum(entry[weight_index] for entry in entries)
+            if total > 0.0:
+                wages[trade] = math.fsum(entry[0] * entry[weight_index] for entry in entries) / total
+                break
+        else:
+            wages[trade] = math.fsum(entry[0] for entry in entries) / len(entries)
+    return dict(sorted(wages.items()))
 
 
 def traded_spending_weights(volumes: Mapping[str, float], prices: Mapping[str, float], goods: Set[str]) -> Dict[str, float]:
