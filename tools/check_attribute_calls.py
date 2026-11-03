@@ -332,6 +332,8 @@ class Checker:
 				for child in ast.iter_child_nodes(node):
 					parents[child] = node
 			for node in ast.walk(tree):
+				if isinstance(node, ast.Call):
+					self.seed_self_arguments(node)
 				if not (isinstance(node, ast.Call) and call_name(node) in self.adapter_names):
 					continue
 				adapter = call_name(node)
@@ -353,6 +355,21 @@ class Checker:
 					self.bind_argument(parents[parent], None, parent.arg, adapter)
 				elif isinstance(parent, (ast.Return, ast.Lambda)):
 					self.escaped.add(adapter)
+
+	def seed_self_arguments(self, call):
+		"""An adapter class passing `self` to a call (`Part(self)` in its `__init__`) binds the callee's parameter to that adapter."""
+		owner = self.enclosing(call, ast.ClassDef)
+		if owner is None or owner.name not in self.adapter_names or not self.is_adapter_class(owner):
+			return
+		for position, argument in enumerate(call.args):
+			if isinstance(argument, ast.Name) and argument.id == "self":
+				self.bind_argument(call, position, None, owner.name)
+		for keyword in call.keywords:
+			if keyword.arg and isinstance(keyword.value, ast.Name) and keyword.value.id == "self":
+				self.bind_argument(call, None, keyword.arg, owner.name)
+
+	def is_adapter_class(self, node):
+		return any(info.node is node and is_adapter_name(info.name, info.relative) for info in self.classes[node.name])
 
 	def bind_argument(self, call, position, keyword, adapter):
 		changed = False
@@ -437,11 +454,11 @@ class Checker:
 			return self_adapter
 		key = key_of(node)
 		if key is not None:
-			if key.startswith("self.") and self_adapter is not None:
-				return self.sub_reader(self_adapter, key[len("self."):])
 			for adapter, keys in keys_by_adapter.items():
 				if key in keys:
 					return adapter
+			if key.startswith("self.") and self_adapter is not None:
+				return self.sub_reader(self_adapter, key[len("self."):])
 			return None
 		if isinstance(node, ast.Attribute):
 			owner = self.type_of(node.value, keys_by_adapter, self_adapter)
