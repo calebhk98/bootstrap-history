@@ -78,9 +78,10 @@ class MineCosts(Part):
         capex, _opex = self.capex_opex(material)
         return capex
 
-    def mine_opex(self, material: str) -> float:
+    def mine_opex(self, material: str) -> Optional[float]:
+        """Running cost per t/yr; None for a name nothing prices (not free: callers skip it)."""
         _capex, opex = self.capex_opex(material)
-        return 0.0 if opex is None else opex
+        return opex
 
     def mineable(self, material: str) -> bool:
         """Can standing production capacity be sunk in this material at all: any name something prices."""
@@ -89,17 +90,20 @@ class MineCosts(Part):
     def mine_catalog_hint(self) -> str:
         return rules.catalog_hint(self.works_materials())
 
-    def operating_cost_of(self, working: Dict[str, Any]) -> float:
-        """What this working costs to run this year, whether or not its output is used."""
-        return (working["capacity"] * self.mine_opex(working["material"]) * self.needs.price_index()
-                * self.parts.workings.cost_scale_of(working))
+    def operating_cost_of(self, working: Dict[str, Any]) -> Optional[float]:
+        """What this working costs to run this year, whether or not its output is used; None when nothing prices its material."""
+        opex = self.mine_opex(working["material"])
+        if opex is None:
+            return None
+        return working["capacity"] * opex * self.needs.price_index() * self.parts.workings.cost_scale_of(working)
 
     def mine_operating_cost(self) -> float:
         """The workings' running costs together, charged every year they stand."""
-        return sum(self.operating_cost_of(working) for working in self.seat.mines)
+        costs = (self.operating_cost_of(working) for working in self.seat.mines)
+        return sum(cost for cost in costs if cost is not None)     # a working nothing prices adds no known cost
 
-    def operating_cost_new(self, material: str, tonnes: float) -> float:
-        """What a freshly commissioned working of `tonnes` will be charged a year."""
+    def operating_cost_new(self, material: str, tonnes: float) -> Optional[float]:
+        """What a freshly commissioned working of `tonnes` will be charged a year; None when nothing prices the material."""
         return self.operating_cost_of({"material": material, "capacity": tonnes, "intensity_yrs": 0.0})
 
     def revenue_scale(self) -> float:

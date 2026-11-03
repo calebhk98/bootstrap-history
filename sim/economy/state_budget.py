@@ -59,7 +59,7 @@ def plan_year(setup, record, view, labour_bids: List[LabourBid]) -> None:
     budget.held_back = reserve + budget.unplanned_cash
     if policy.real_spending_target > 0.0:
         # a stated programme is paid from every coin on hand first, then financed
-        planned = policy.real_spending_target * view.chained_price_level(money)
+        planned = policy.real_spending_target * view.opening_wage_level(money)   # the target is in opening-year money; the level survives the rebase
         budget.real_programme = True
         spendable = min(cash, planned)
     deficit = max(0.0, planned - spendable)
@@ -96,11 +96,22 @@ def _trades(setup):
     return trades or [setup.unskilled_trade]
 
 
+def on_home_tile(setup, tile: str) -> bool:
+    """Whether the home country holds `tile` (always, with one country): the home state taxes and hires only there."""
+    return len(setup.countries()) < 2 or setup.country_of(tile) == setup.civ_id
+
+
+def home_cohorts(setup, record) -> list:
+    """The cohorts living on home tiles."""
+    return [cohort for cohort in record.cohorts.values() if on_home_tile(setup, cohort.tile)]
+
+
 def wage_labour_bids(setup, record, view, wage_budget: float) -> List[LabourBid]:
+    """The home state's bids for hours, spread over the home cohorts' tiles and the trades it hires."""
     if wage_budget <= 0.0:
         return []
     working: Dict[str, float] = {}
-    for cohort in record.cohorts.values():
+    for cohort in home_cohorts(setup, record):
         working[cohort.tile] = working.get(cohort.tile, 0.0) + cohort.working_people
     total_working = math.fsum(working.values())
     if total_working <= 0.0:
@@ -111,7 +122,7 @@ def wage_labour_bids(setup, record, view, wage_budget: float) -> List[LabourBid]
         for tile, people in sorted(working.items()):
             area = labour_area(tile)
             wage = trade_wages.wage_in_view(setup, view, trade, area)
-            if wage is None or wage <= 0.0:     # no wage rule applies (or a free hour): no bid
+            if wage <= 0.0:     # a free hour: no bid
                 continue
             ceiling = wage * STATE_WAGE_CEILING_MULTIPLE
             hours = min(wage_budget / len(trades) * people / total_working / ceiling,

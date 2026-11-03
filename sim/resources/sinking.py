@@ -81,7 +81,8 @@ class Sinking(Part):
                                            else "no such material: %s. %s" % (material, self.parts.mine_costs.mine_catalog_hint())),
                            material=material, minable=minable)
         # each working's own cost, not the material average: closing two of very different ages saves what those two cost
-        saved = sum(self.parts.mine_costs.operating_cost_of(working) for working in workings)
+        costs = (self.parts.mine_costs.operating_cost_of(working) for working in workings)
+        saved = sum(cost for cost in costs if cost is not None)     # a working nothing prices saves no known cost
         seat = self.seat
         seat.mines = [working for working in seat.mines if working.get("material") != material]
         seat.mine_tranches = [tranche for tranche in (seat.mine_tranches or []) if tranche[0] != material]
@@ -95,14 +96,15 @@ class Sinking(Part):
         (the survivors keep their own commissioning year and depletion clock) and the running cost saved is paid back. The
         shaft floods and the crew disperses, so bringing the capacity back means sinking it again."""
         seat = self.seat
-        order = sorted(self.parts.workings.mine_capacity(), key=lambda material: -self.parts.mine_costs.mine_opex(material))
-        for material in order:
+        opex_of = {material: self.parts.mine_costs.mine_opex(material) for material in self.parts.workings.mine_capacity()}
+        order = sorted((material for material, opex in opex_of.items() if opex is not None), key=lambda material: -opex_of[material])
+        for material in order:     # a material nothing prices has no running cost to save, so it is left standing
             if self.needs.acting_balance() >= 0:
                 break
             kept = []
             for working in self.parts.workings.workings_of(material):
                 cut = working["capacity"] * MOTHBALL_CUT_SHARE
-                self.needs.send(ReceiveFromEdge(edges.EDGE_SUPPLIERS, cut * self.parts.mine_costs.mine_opex(material) * self.needs.price_index(),
+                self.needs.send(ReceiveFromEdge(edges.EDGE_SUPPLIERS, cut * opex_of[material] * self.needs.price_index(),
                                                 "mine running costs saved by mothballing"))
                 working["capacity"] -= cut
                 if working["capacity"] >= 1.0:
