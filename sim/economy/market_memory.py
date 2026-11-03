@@ -153,9 +153,9 @@ class MarketMemory:
                 kinds[good] = kind
         return kinds
 
-    def note_cleared(self, key: str, price: float, quantity: float) -> None:
+    def note_cleared(self, key: str, price: Optional[float], quantity: float) -> None:
         """Keep the price a market cleared at when it traded; forget it when it did not."""
-        if quantity > 0.0 and price > 0.0:
+        if quantity > 0.0 and price is not None and price > 0.0:
             self.cleared_prices[key] = price
         else:
             self.cleared_prices.pop(key, None)

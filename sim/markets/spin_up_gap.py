@@ -33,15 +33,16 @@ def change_gap(new, old, floor=0.0):
 
 
 def price_gap(new_prices, old_prices):
-    """The largest relative change among goods priced in both years (a good with no earlier price is skipped)."""
-    return max((change_gap(new_prices.get(good, 0.0), old) for good, old in old_prices.items() if old > 0.0),
-               default=0.0)
+    """The largest relative change among goods priced in both years (a good with no price in either year is skipped:
+    an unpriced watched good has no change to measure)."""
+    return max((change_gap(new_prices[good], old) for good, old in old_prices.items()
+                if old > 0.0 and new_prices.get(good) is not None), default=0.0)
 
 
 def state_gaps(before, after):
     """{quantity: change between two states}; "prices" is the largest relative change of the watched prices."""
     gaps = {name: change_gap(after[name], before[name], floor) for name, floor in QUANTITY_FLOORS.items()
-            if name in before and name in after}
+            if before.get(name) is not None and after.get(name) is not None}     # a rate with none stated has no gap
     gaps["prices"] = price_gap(after["prices"], before["prices"])
     return gaps
 

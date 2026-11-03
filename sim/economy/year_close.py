@@ -97,8 +97,8 @@ def wear_and_spoilage(setup, record, durable_users=()) -> None:
 def close_agents(setup, record, view, ledger: YearLedger, area_map, carriage) -> None:
     money = setup.currency_id
     property_income: Dict[str, float] = {}
-    traded, round_prices = market_totals(ledger.clearings)
-    clearing_prices = {key: price for key, price in round_prices.items() if traded[key] > 0.0}
+    traded, round_prices = market_totals(ledger.clearings, ledger.delivered_by_market)
+    clearing_prices = {key: price for key, price in round_prices.items() if traded[key] > 0.0 and price is not None}
     prepared_buyers: Dict = {}
     service_lives = {good: spec.service_life_years for good, spec in setup.specs.items()}
     cohorts_by_tile: Dict = {}           # the tiles' cohorts, unchanged until the households close below
@@ -154,7 +154,7 @@ def close_agents(setup, record, view, ledger: YearLedger, area_map, carriage) ->
         producer_table.put_producer(record.producers, _with_practice(
             _with_sales(closed.producer, recipe, ledger, demand_runs, prices_here), producer.last_runs,
             {trade: practice.pool_units(crews_of_recipe[producer.recipe_id], trade) for trade in producer.crew_runs}))
-    prices, volumes = learned_prices(ledger.clearings, record.memory)
+    prices, volumes = learned_prices(ledger.clearings, ledger.delivered_by_market, record.memory)
     anchors = {(good, area.area_id): area.anchor_tile for good in area_map.goods() for area in area_map.areas(good)}
     ordered = (sorted(prices.items()), sorted(volumes.items()))
     interest_rate = own_rate(view, money)
@@ -199,11 +199,15 @@ def _news_lag_of(carriage, home, anchors):
     return lag_years
 
 
-def learned_prices(clearings, memory):
+def learned_prices(clearings, delivered, memory):
     """(prices, volumes) by (good, area) that traders learn from the year: the price the market now
     remembers, which for a market that sold nothing is what buyers would have paid."""
-    volumes, cleared = market_totals(clearings)
-    prices = {key: memory.prices.get(market_key(*key), price) for key, price in cleared.items()}
+    volumes, cleared = market_totals(clearings, delivered)
+    prices = {}
+    for key, price in cleared.items():
+        remembered = memory.prices.get(market_key(*key), price)
+        if remembered is not None:      # a market with no price remembered and none quoted has none to learn from
+            prices[key] = remembered
     return prices, volumes
 
 

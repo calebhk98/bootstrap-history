@@ -145,10 +145,11 @@ def bids(setup, record) -> List[LabourBid]:
     return found
 
 
-def last_wage(memory, key: str) -> float:
-    """What an hour of the crew `key` (trade and tile it is hired at) was last paid in its labour market, 0 when unknown."""
+def last_wage(memory, key: str) -> Optional[float]:
+    """What an hour of the crew `key` (trade and tile it is hired at) was last paid in its labour market; None when
+    that market has no wage yet."""
     trade, tile = _split(key)
-    return memory.wages.get(market_key(trade, labour_area(tile)), 0.0)
+    return memory.wages.get(market_key(trade, labour_area(tile)))
 
 
 def hired_index(ledger) -> Dict[Tuple[str, str, str], Tuple[float, float]]:
@@ -230,7 +231,10 @@ def wage_loans(setup, record, hired_last_year=None, supply_last_year=None) -> Li
                 share = 1.0
             else:
                 share = min(1.0, available / wanted_in_market[market]) if wanted_in_market[market] > 0.0 else 0.0
-            bill += wanted * share * record.memory.wages.get(market_key(trade, areas[key]), 0.0)
+            wage = record.memory.wages.get(market_key(trade, areas[key]))
+            if wage is None:     # an unwaged market cannot be billed: its crew is left out of bill and worth alike
+                continue
+            bill += wanted * share * wage
             worth += merchant.carriage_money_wanted.get(key, 0.0) * share
         short = bill - max(0.0, record.book.balance(merchant.agent_id, money))
         if short > 0.0 and bill > 0.0 and worth > bill:

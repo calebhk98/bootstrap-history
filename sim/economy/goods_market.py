@@ -70,7 +70,7 @@ def _quantity(floor, flexible, reference, elasticity, budget, price):
     return min(wanted, budget / price)
 
 
-def _empty(good, area, currency, price, bids, supply_at_price=0.0, offers=()) -> ClearingResult:
+def _empty(good, area, currency, price: Optional[float], bids, supply_at_price=0.0, offers=()) -> ClearingResult:
     unmet = math.fsum(max(0.0, bid.floor_quantity) for bid in bids)
     return ClearingResult(good, area, currency, price, 0.0, 0.0, supply_at_price, unmet, (),
                           market_quote.no_trade_quote(bids, offers))
@@ -196,13 +196,12 @@ def _trades(buyers: Buyers, ordered: Sequence[Offer], asks: Sequence[float]) -> 
     return wanted > 0.0 and math.fsum(offer.quantity for offer in ordered) > ROUNDING_SHARE * wanted
 
 
-def _held_price(buyers: Buyers, asks: Sequence[float]) -> float:
+def _held_price(buyers: Buyers, asks: Sequence[float]) -> Optional[float]:
     """The figure a market that did not trade carries as its price: the last price held, or the lowest ask when that is
-    above it (and zero with neither; the result has a quote, not a price)."""
+    above it (None with neither; the result has a quote, not a price)."""
     last_price = buyers.last_price
-    held = last_price if last_price is not None else 0.0
     if not asks or (last_price is not None and asks[0] <= last_price):
-        return held
+        return last_price
     return asks[0]
 
 
@@ -259,7 +258,7 @@ def crossing(buyers: Buyers, offers: List[Offer], with_wants: bool = True):
     the buyers; the eligible offers and wants are None when nothing trades, and supply is then what would
     sell at the price. Without `with_wants` the wants are left out (None)."""
     last_price = buyers.last_price
-    held_price = last_price if last_price is not None else 0.0
+    held_price = last_price     # None with no last price: nothing was held
     if not offers:
         return held_price, None, 0.0, None
 

@@ -190,7 +190,7 @@ def clear_goods(setup, record, view, area_map, order_book: OrderBook, plans, led
                 ledger.note_plant_purchases(done_settlement.postings, result.price, plant_goods)
                 for shortfall in done_settlement.shortfalls:
                     ledger.unpaid[shortfall.agent] = ledger.unpaid.get(shortfall.agent, 0.0) + shortfall.unpaid_amount
-            ledger.note_clearing(result)
+            ledger.note_clearing(result, delivered)
             idle_years = note_bids(record.memory, key, bids, offers) + note_offers(record.memory, key, bids, offers)
             left_markets[(good, area)] = goods_respend_year.LeftMarket(
                 bids, result, goods_respend.offers_left(offers, goods_respend_year.sold_by_seller(result)),
@@ -206,10 +206,11 @@ def clear_goods(setup, record, view, area_map, order_book: OrderBook, plans, led
 
 
 def _remember_markets(setup, record, left_markets) -> None:
-    """Each market's memory, once, after every round: the quantity summed over its clearings and the price weighted by
+    """Each market's memory, once, after every round: the quantity delivered over its clearings and the price weighted by
     quantity (`clearing_totals.market_totals`), so a market that traded only in the respend is remembered as traded.
     All signals are worked out from last year's memory before any of it moves."""
-    quantity, cleared = market_totals(result for market in left_markets.values() for result in market.results)
+    quantity, cleared = market_totals((result for market in left_markets.values() for result in market.results),
+                                      {key: market.delivered for key, market in left_markets.items()})
     memory = record.memory
     costs = None                                  # what each good costs to make, worked out when first needed
     updates = []

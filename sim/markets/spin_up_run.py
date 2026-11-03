@@ -65,11 +65,12 @@ def settle(economy, inputs, watched):
     for _year in range(spin_up_years()[0]):
         outcome = economy.step(inputs)
         years += 1
-        now = (outcome.basket_price_level, economy_api.interest_rate(economy) or 0.0,
-               {good: outcome.prices.get(good, 0.0) for good in watched})
+        now = (outcome.basket_price_level, economy_api.interest_rate(economy),
+               {good: outcome.prices[good] for good in watched if outcome.prices.get(good) is not None})
         if before is not None:
             gap = max(change_gap(now[0], before[0]) if before[0] > 0.0 else 0.0,
-                      change_gap(now[1], before[1], SPIN_UP_RATE_FLOOR) if before[1] > 0.0 else 0.0,
+                      change_gap(now[1], before[1], SPIN_UP_RATE_FLOOR)
+                      if now[1] is not None and before[1] is not None and before[1] > 0.0 else 0.0,     # no rate: no rate gap
                       price_gap(now[2], before[2]))
             if gap < SPIN_UP_TOLERANCE:
                 settled = True
@@ -85,8 +86,8 @@ def settle_trimmed(economy, inputs, watched):
     for _year in range(spin_up_years()[1]):
         outcome = economy.step(inputs)
         state = economy_api.spin_up_state(economy, outcome)
-        state.update(price_level=outcome.basket_price_level, rate=economy_api.interest_rate(economy) or 0.0,
-                     prices={good: outcome.prices.get(good, 0.0) for good in watched})
+        state.update(price_level=outcome.basket_price_level, rate=economy_api.interest_rate(economy),
+                     prices={good: outcome.prices[good] for good in watched if outcome.prices.get(good) is not None})
         states.append(state)
     return list(states)
 

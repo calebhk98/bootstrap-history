@@ -456,7 +456,7 @@ def _labour_bids(producer, recipe, view, runs, revenue, input_cost, wages) -> Li
     ceilings = joint_labour_ceilings(recipe.labour_hours, wages, revenue - input_cost)
     return [LabourBid(producer.agent_id, trade, view.area_of(trade, producer.tile),
                       runs * recipe.labour_hours[trade], ceilings[trade])
-            for trade in sorted(recipe.labour_hours)]
+            for trade in sorted(recipe.labour_hours) if trade in ceilings]     # no ceilings: a run with no hours bids none
 
 
 def input_ceiling(price: float, margin_per_run: float, variable_cost_per_run: float,

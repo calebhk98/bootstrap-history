@@ -2,11 +2,13 @@
 what it could not spend on the goods still offered (goods_respend.py), the markets clear again against the stock left,
 and a cohort still rationed goes on until nothing more is bought. Money no offered good takes stays with the cohort.
 """
+import math
 from typing import Dict, List, Tuple
 
 from . import goods_market, settlement
 from .entry import wanted_in_round
-from .goods_respend import cheapest_ask, need_of_good, offers_left, rationed_money, respend_bids
+from .goods_market import quantity_at
+from .goods_respend import bids_adding_demand, cheapest_ask, need_of_good, offers_left, rationed_money, respend_bids
 from .types import Bid, GoodsMove
 
 Market = Tuple[str, str]
@@ -15,7 +17,7 @@ Market = Tuple[str, str]
 class LeftMarket:
     """A cleared market as the second round finds it: its bids and first-round result, the offers with what sold taken
     off, its last price, what has been delivered in it, what its buyers wanted (`wanted_in_round`, summed over the
-    rounds), the bids of every round and the clearings of every round. What is unsold is what the last round to
+    rounds), the bids that add demand in each round (`bids_adding_demand`) and the clearings of every round. What is unsold is what the last round to
     clear it left on offer."""
 
     def __init__(self, bids, result, offers, last_price, delivered, wanted, idle_years=0):
@@ -24,7 +26,7 @@ class LeftMarket:
         self.idle_years = idle_years   # years the market lacked bids or offers, before this year
         self.results = [result]
         self.bids = bids
-        self.all_bids = list(bids)     # the bids of every round
+        self.all_bids = list(bids)     # the first round's bids and the later rounds' that add demand
         self.last_offered = result.offered_at_price     # on offer at the last round's price
         self.last_delivered = delivered                 # moved in the last round
         self.result = result
@@ -121,9 +123,10 @@ def respend(setup, record, view, ledger, markets: Dict[Market, LeftMarket], bask
             market = markets[key]
             bids = new_bids[key]
             result = goods_market.clear(bids, market.offers, key[0], key[1], setup.currency_id, market.last_price)
-            market.wanted += wanted_in_round(bids, market.offers, result)
+            adding = bids_adding_demand(market.all_bids, bids)
+            market.wanted += _wanted_adding(adding, bids, market.offers, result)
             market.results.append(result)
-            market.all_bids.extend(bids)
+            market.all_bids.extend(adding)
             moved = _settle(record, ledger, result)
             market.delivered += moved
             market.last_offered = result.offered_at_price
@@ -138,6 +141,17 @@ def respend(setup, record, view, ledger, markets: Dict[Market, LeftMarket], bask
             break
 
 
+def _wanted_adding(adding, bids, offers, result) -> float:
+    """What a respend round's buyers asked for, less what buyers already counted in the market asked again: the round's
+    wanted quantity in the share the adding bids hold of the bids' demand at the cheapest ask."""
+    wanted = wanted_in_round(bids, offers, result)
+    if len(adding) == len(bids):
+        return wanted
+    price = cheapest_ask(offers)
+    total = math.fsum(quantity_at(bid, price) for bid in bids) if price is not None else 0.0
+    return wanted * math.fsum(quantity_at(bid, price) for bid in adding) / total if total > 0.0 else 0.0
+
+
 def _settle(record, ledger, result) -> float:
     """Settle a round's result and return the goods it delivered."""
     delivered = 0.0
@@ -147,5 +161,5 @@ def _settle(record, ledger, result) -> float:
         ledger.note_postings(done.postings, "sales")
         for shortfall in done.shortfalls:
             ledger.unpaid[shortfall.agent] = ledger.unpaid.get(shortfall.agent, 0.0) + shortfall.unpaid_amount
-    ledger.note_clearing(result)
+    ledger.note_clearing(result, delivered)
     return delivered

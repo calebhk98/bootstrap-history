@@ -87,7 +87,7 @@ class LearnedPriceTests(unittest.TestCase):
         # the clearing result of a dry market carries last year's price; the memory carries the signal
         clearing = types.SimpleNamespace(good="tin", area="a", price=20.0, quantity=0.0)
         memory = MarketMemory(prices={"tin|a": 3.0})
-        prices, volumes = learned_prices([clearing], memory)
+        prices, volumes = learned_prices([clearing], {}, memory)
         self.assertEqual(prices[("tin", "a")], 3.0)
         self.assertEqual(volumes[("tin", "a")], 0.0)
 

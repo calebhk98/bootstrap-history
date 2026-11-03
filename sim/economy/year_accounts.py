@@ -132,8 +132,8 @@ def _goods(setup, record, ledger, stocks_at_start) -> Dict[str, GoodAccount]:
         for good, quantity in ledger.grown.get(cohort_id, {}).items():
             grown[good] = grown.get(good, 0.0) + quantity
     turnover: Dict[str, float] = {}
-    for result in ledger.clearings:
-        turnover[result.good] = turnover.get(result.good, 0.0) + result.quantity
+    for (good, _area), quantity in ledger.delivered_by_market.items():     # what traded is what was delivered
+        turnover[good] = turnover.get(good, 0.0) + quantity
     goods = set(stocks_now) | set(stocks_at_start) | set(turnover) | set(setup.specs)
     accounts = {}
     for good in sorted(goods):

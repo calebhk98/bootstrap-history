@@ -233,7 +233,7 @@ class ClearingResult:
     good: GoodId
     area: AreaId
     currency: CurrencyId
-    price: float                     # the crossing the solver worked from; a price traded at only when quantity > 0
+    price: Optional[float]           # the crossing the solver worked from; a price traded at only when quantity > 0; None with no price held and no ask
     quantity: float
     demand_at_price: float
     offered_at_price: float

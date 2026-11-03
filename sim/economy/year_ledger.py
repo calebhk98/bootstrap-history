@@ -29,6 +29,7 @@ class YearLedger:
     sold: Dict[Tuple[AgentId, GoodId], float] = field(default_factory=dict)
     output: Dict[Tuple[AgentId, GoodId], float] = field(default_factory=dict)
     clearings: List[ClearingResult] = field(default_factory=list)
+    delivered_by_market: Dict[Tuple[GoodId, str], float] = field(default_factory=dict)   # (good, area): goods settlement moved
     labour_results: List[LabourResult] = field(default_factory=list)
     unpaid: Dict[AgentId, float] = field(default_factory=dict)
     imports_paid: Dict[Tuple[AgentId, GoodId], float] = field(default_factory=dict)       # money paid to foreign partners
@@ -97,8 +98,11 @@ class YearLedger:
             key = (transfer.payer, good)
             self.exports_received[key] = self.exports_received.get(key, 0.0) + transfer.amount
 
-    def note_clearing(self, result: ClearingResult) -> None:
+    def note_clearing(self, result: ClearingResult, delivered: float) -> None:
+        """Keep a clearing and the goods its settlement delivered (less than it matched when a buyer could not pay)."""
         self.clearings.append(result)
+        market = (result.good, result.area)
+        self.delivered_by_market[market] = self.delivered_by_market.get(market, 0.0) + delivered
         for fill in result.fills:
             if fill.side == "buy":
                 self.buy_fills.setdefault(fill.agent, []).append(fill)

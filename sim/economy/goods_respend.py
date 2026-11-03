@@ -62,6 +62,14 @@ def respend_bids(buyer: str, tile: str, basket: need_basket.Basket, rationed: Ma
             for good, amount in sorted(spend.items())]
 
 
+def bids_adding_demand(earlier: Sequence[Bid], bids: Sequence[Bid]) -> List[Bid]:
+    """The bids of a later round that add demand to a market: a buyer that already bid there in an earlier round wants
+    the same units again, the part it was rationed on, so only a buyer new to the market counts in full. The one rule
+    for what a market's demand is over its rounds (the stored bids, the wanted quantity and so the unmet quantity)."""
+    bidding = {bid.buyer for bid in earlier}
+    return [bid for bid in bids if bid.buyer not in bidding]
+
+
 def offers_left(offers: Sequence[Offer], sold: Mapping[tuple, float]) -> List[Offer]:
     """The offers with what sold (by (seller, tile)) taken off; offers with nothing left are dropped."""
     left = []
