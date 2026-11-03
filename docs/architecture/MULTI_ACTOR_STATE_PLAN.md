@@ -181,7 +181,7 @@ whole-game runs (`python3 -m sim.tests --slow` and the fingerprint) are the orch
   price leaves out only the asking seat's flows, and lenders and borrowers are per seat.
 - **D, a second seat and the year steps every seat.** `sim/engine/year_run.py` orders the year: world phases once under
   the first seat still in play, seat phases for each seat in join order inside `act_as`; `sim/seats/run.py` ends a seat's
-  run alone. A seat is built from data (`seat_from_template`, `join_seat` in `sim/seats/run.py`, the civilisation's `cast.seats`). Known
+  run alone. A seat is built from data (`seat_from_template` in `sim/engine/state_seat.py`, `join_seat` in `sim/seats/run.py`, the civilisation's `cast.seats`). Known
   limits: the society's farm workforce is sized under the first seat in play; interest groups' blame and the state's
   petitions land on the seat acting when they fire; seats share one random stream, so an idle second seat changes later
   dice for the first.
@@ -197,7 +197,7 @@ whole-game runs (`python3 -m sim.tests --slow` and the fingerprint) are the orch
   from the country's own part of the economy (`sim/economy/country_figures.py`) and raises `NoCountryEconomy` for a country not in the
   economy; there is no scaling fallback.
 - **I, a seat from another country.** The acting seat's country sets the wage, the prices and the state it deals with
-  (`acting_country` in `sim/seats/run.py`, `state_treasury`). The engine's own price level, state capacity and geographic home still read
+  (`acting_country` in `sim/seats/run.py`, `state_treasury` in `sim/actors/cast.py`). The engine's own price level, state capacity and geographic home still read
   the game's country, so a partner seat's costs that come from them are the home's.
 - **Seat dealings (Complaint 103).** A seat holds patents, shares held and its own issued equity in `HoldingsState`;
   `seat_party(seat_id)` (`sim/actors/seat_parties.py`) is the actor an exchange deals with. The commands `patent`, `offer`, `offers`, `accept`,

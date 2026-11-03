@@ -54,7 +54,7 @@ choice (`test_business_crew_rule`).
 
 Rules are called on inputs the test builds (a stub founder over the real mixin, a `HouseholdState`, a built reply); the
 whole-game checks sit in a `_scenario` file next to each. Extractions: `freight_markup` in `sim/freight/rules.py` (freight markup and
-scarcity factor of a bought material, used by `sim/freight/haul.py`; `scarcity_factor` is used by `sim/materials/supply.py`), `sim/diffusion/diffusion_curve.py` (the leak of a
+scarcity factor of a bought material, used by `sim/freight/haul.py`; `scarcity_factor`, in `sim/materials/rules.py`, is used by `sim/materials/supply.py`), `sim/diffusion/diffusion_curve.py` (the leak of a
 venture's edge and the knowledge half-life, used by `sim/diffusion/spread.py`). Deleted as held elsewhere:
 `test_material_supply_whole_game` (the output of a made material is deposits plus producer capacity, held by
 `test_material_supply_from_capacity`); the per-material grant and year checks of `test_living_stock_crops` (held by
