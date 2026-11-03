@@ -7,7 +7,7 @@ QUICK_TOPIC = True
 from types import SimpleNamespace
 import unittest
 
-from sim.actors.world_budget import BudgetView
+from sim.actors.world_taxpayers import Taxpayers
 from sim.tests.world_stand_in import fake_needs
 from sim.resources import constants as resource_constants
 from sim.tests import resources_stand_in
@@ -24,7 +24,8 @@ def reach_stand_in(unfunded, shares, year=100):
     """The polity module whose government record holds `unfunded` by line, and whose agents' world answers `shares` by share name."""
     calls = []
     world_shares = {name: (lambda value=value, name=name: calls.append(name) or value) for name, value in shares.items()}
-    world = SimpleNamespace(government=lambda: SimpleNamespace(record=SimpleNamespace(unfunded=unfunded)), **world_shares)
+    world = SimpleNamespace(setting=SimpleNamespace(government=lambda: SimpleNamespace(record=SimpleNamespace(unfunded=unfunded))),
+                            collection=SimpleNamespace(**world_shares))
     module = polity_host.build(actor_world=world, year=year, techniques_version=1, operating_version=1, population_total=1000.0)
     return module, world, calls
 
@@ -48,13 +49,13 @@ class StaffReach(unittest.TestCase):
     def test_more_of_the_lines_pay_left_unpaid_is_read_again(self):
         module, world, calls = reach_stand_in({"guards": 0.1}, {"order_share": 0.6})
         self.reach(module, "guards", "order_share")
-        world.government().record.unfunded["guards"] = 0.5
+        world.setting.government().record.unfunded["guards"] = 0.5
         self.reach(module, "guards", "order_share")
         self.assertEqual(calls, ["order_share", "order_share"])
 
     def test_another_lines_unpaid_pay_does_not_make_it_read_again(self):
         module, world, calls = reach_stand_in({"guards": 0.1}, {"order_share": 0.6})
-        record = world.government().record
+        record = world.setting.government().record
         self.reach(module, "guards", "order_share")
         record.unfunded["inspectors"] = 0.9
         self.reach(module, "guards", "order_share")
@@ -80,17 +81,17 @@ class StateReach(unittest.TestCase):
     def test_officials_left_unpaid_make_the_reach_be_read_again(self):
         module, world, calls = reach_stand_in({"administration": 0.0}, {"collectible_share": 0.8})
         module.state_reach()
-        world.government().record.unfunded["administration"] = 100.0
+        world.setting.government().record.unfunded["administration"] = 100.0
         module.state_reach()
         self.assertEqual(calls, ["collectible_share", "collectible_share"])
 
     def test_the_agents_view_of_the_state_reads_the_games_authority(self):
         stand_in = SimpleNamespace(needs=fake_needs(state_authority=lambda: 0.42))
-        self.assertEqual(BudgetView.state_reach(stand_in), 0.42)
+        self.assertEqual(Taxpayers(stand_in).state_reach(), 0.42)
 
     def test_a_partners_chance_to_catch_is_its_own_governments_reach_against_how_visible_the_bite_is(self):
         asked = []
-        world = SimpleNamespace(state_reach=lambda: 1)
+        world = SimpleNamespace(taxpayers=SimpleNamespace(state_reach=lambda: 1))
         actors = SimpleNamespace(world_for=lambda government, home: asked.append((government, home)) or world,
                                  get=lambda actor_id: actor_id)
         chance = partner_catch_chance(actors, "home world", "han_china_100ad", 0.5)

@@ -20,23 +20,23 @@ def army_line(world: Any, soldiers: float, conscripts: float = 0.0) -> List[Line
 	if soldiers <= 0.0:
 		return []
 	paid = max(0.0, soldiers - conscripts)
-	tonnes = soldiers * world.equipment_kg_per_soldier() / 1000.0
-	soldier = world.trade_of_role("soldier")   # the trade the army is booked in (data/world/trades.json)
+	tonnes = soldiers * world.army.equipment_kg_per_soldier() / 1000.0
+	soldier = world.labour.trade_of_role("soldier")   # the trade the army is booked in (data/world/trades.json)
 	return [Line("army", "requisition", {soldier: paid} if paid > 0.0 else {},
-				 paid * world.pay_per_person_year(soldier), **goods(world, world.equipment_material(), tonnes))]
+				 paid * world.labour.pay_per_person_year(soldier), **goods(world, world.army.equipment_material(), tonnes))]
 
 
 def officials_kept(world: Any) -> float:
 	"""Officials the state keeps on its rolls: its people over the number one official can keep on them."""
-	return world.population_total() / ADMINISTRATIVE_SPAN
+	return world.people.population_total() / ADMINISTRATIVE_SPAN
 
 
 def administration_line(world: Any) -> List[Line]:
 	officials = officials_kept(world)
 	if officials <= 0.0:
 		return []
-	clerk = world.trade_of_role("clerk")
-	return [Line("administration", "office", {clerk: officials}, officials * world.pay_per_person_year(clerk))]
+	clerk = world.labour.trade_of_role("clerk")
+	return [Line("administration", "office", {clerk: officials}, officials * world.labour.pay_per_person_year(clerk))]
 
 
 def concession_lines(claims: Dict[str, float]) -> List[Line]:
@@ -82,7 +82,7 @@ def standing_lines(world: Any, soldiers: Optional[float] = None, conscripts: flo
 			+ budget_lines.dole_line(world) + budget_lines.navy_line(world) + budget_works.works_upkeep_lines(world)
 			+ budget_works.collection_line(world) + budget_works.campaign_line(world, soldiers)
 			+ budget_works.donative_line(world, max(0.0, soldiers - conscripts)))
-	record = world.government().record
+	record = world.setting.government().record
 	return government_levers.scaled(record, lines) + government_levers.lever_lines(record, world)
 
 
@@ -99,7 +99,7 @@ def army_goal(opening: float, pressure: float) -> float:
 
 def army_wanted(world: Any) -> float:
 	"""The force the state wants: the army lever its controller set, else what the world derives."""
-	return government_levers.army_target(world.government().record, world.army_wanted())
+	return government_levers.army_target(world.setting.government().record, world.army.army_wanted())
 
 
 def army_next_year(soldiers: float, wanted: float, funded: float) -> float:

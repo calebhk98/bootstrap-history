@@ -20,8 +20,8 @@ class SurplusMixin:
 		"""Pay the bodies of people in its country the cost of the floors of the needs they report going without,
 		as far as `excess` reaches (shared by need when it does not). Returns what was paid."""
 		needs = []
-		floor_costs = world.need_floor_costs_per_person_year()
-		for stratum in world.country_strata():
+		floor_costs = world.people.need_floor_costs_per_person_year()
+		for stratum in world.people.country_strata():
 			shortfall = stratum.record.shortfall
 			need = stratum.record.members * sum(cost * shortfall.get(need_id, 0.0) for need_id, cost in floor_costs.items())
 			if need > 0.0:
@@ -43,16 +43,16 @@ class SurplusMixin:
 		excess -= self.relieve_strata(excess, world)
 		excess -= self.restock_granary(excess, world)  # type: ignore[attr-defined]
 		for work, gap in state_works.gaps(world):
-			trade = world.trade_of_role(work.role)
-			wage = world.pay_per_person_year(trade)
+			trade = world.labour.trade_of_role(work.role)
+			wage = world.labour.pay_per_person_year(trade)
 			if excess <= 0.0 or wage <= 0.0:
 				continue
-			share_cap = MAX_STATE_SHARE_OF_TRADE * world.national_people(trade)
+			share_cap = MAX_STATE_SHARE_OF_TRADE * world.labour.national_people(trade)
 			people = min(gap * MASONRY_PERSON_YEARS_PER_M2, excess / wage, share_cap)
 			if people <= 0.0:
 				continue
 			built = budget.Line("building " + work.name, "requisition", {trade: people}, people * wage)
-			ledger.transfer(self, world.edge(EDGE_BUILDERS), built.money, built.name)
+			ledger.transfer(self, world.setting.edge(EDGE_BUILDERS), built.money, built.name)
 			state_works.held(world)[work.name] += people / MASONRY_PERSON_YEARS_PER_M2
 			self.employ_standing([built], 1.0, world)  # type: ignore[attr-defined]
 			excess -= built.money

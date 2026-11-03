@@ -6,7 +6,6 @@ from sim.agents.api import (ActorExtensions, ActorRegistry, cast_from_civilisati
                             shipped_extensions)
 from sim.assembly.api import Part
 
-from .host import WorldHost
 from .world import ActorWorld
 
 
@@ -110,10 +109,14 @@ class Cast(Part):
 		civilisation = self.needs.civilisation()
 		return self.cast().ensure_government(str(civilisation.get("id")), civilisation.get("name", ""))
 
+	def _actor_world(self) -> ActorWorld:
+		parts = self.parts
+		return ActorWorld(self.needs, parts.cast, parts.seat_parties, parts.staff)
+
 	def actor_world(self) -> ActorWorld:
 		"""What the actors can see and price, with its own table of this turn's shared answers."""
-		return ActorWorld(WorldHost(self.module))
+		return self._actor_world()
 
 	def country_world(self, owner: str) -> Any:
 		"""The world the owner's state sees (the shared one for the home country, else its country's scope)."""
-		return self.cast().world_of_country(owner, ActorWorld(WorldHost(self.module)))
+		return self.cast().world_of_country(owner, self._actor_world())

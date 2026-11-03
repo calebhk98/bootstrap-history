@@ -24,8 +24,8 @@ class SeatReview:
 		needs, world = self._module.needs, self._world
 		done, nodes = needs.techniques_held(), needs.tree_nodes()
 		reopenable = [node_id for node_id in entry_keys if node_id in done and node_id in nodes]
-		return sorted(reopenable, key=lambda node_id: -(world.concern_margin(node_id)
-		                                                / max(0.01, sum(world.concern_staff(node_id).values()))))
+		return sorted(reopenable, key=lambda node_id: -(world.concerns.concern_margin(node_id)
+		                                                / max(0.01, sum(world.concerns.concern_staff(node_id).values()))))
 
 	def reopens_staffed_plant(self, entry_key):
 		did_open, _message = self._module.parts.auto_open._open_venture(entry_key)
@@ -49,7 +49,7 @@ class SeatReview:
 		return entry_key in self._module.needs.capability_sets()[0]
 
 	def standing_margin(self, entry_key):
-		return self._world.concern_margin(entry_key)
+		return self._world.concerns.concern_margin(entry_key)
 
 	def creditors_press(self):
 		needs = self._module.needs
@@ -60,7 +60,7 @@ class SeatReview:
 
 	def proceeds_of_seizure(self, entry_key):
 		size = self._module.needs.venture_size[entry_key]
-		return self._world.upkeep(entry_key, size) * finance_constants.CREDITOR_SEIZURE_VALUE_MULTIPLE
+		return self._world.concerns.upkeep(entry_key, size) * finance_constants.CREDITOR_SEIZURE_VALUE_MULTIPLE
 
 	def receive_seizure(self, entry_key, proceeds):
 		self._module.needs.send(ReceiveFromEdge(edges.EDGE_CREDITORS, proceeds, "concern seized by creditors"))

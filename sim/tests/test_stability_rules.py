@@ -3,6 +3,8 @@ ruler's life and succession, and land confiscation and reform each take built in
 
 QUICK_TOPIC = True
 
+from sim.tests.agents_fake_world import flat_namespace
+from sim.tests.agents_fake_world import flat_world
 import unittest
 from types import SimpleNamespace
 
@@ -86,12 +88,12 @@ class CorruptionTests(unittest.TestCase):
         self.assertIs(revenue.leaked(assessed, 0.0), assessed)
 
     def test_the_share_officials_keep_is_the_worlds_reading(self):
-        self.assertEqual(authority.kept_on(SimpleNamespace(corruption_share=lambda tiles: 0.3), None), 0.3)
+        self.assertEqual(authority.kept_on(flat_namespace(corruption_share=lambda tiles: 0.3), None), 0.3)
 
     def test_conscription_and_the_levy_follow_authority(self):
         self.assertEqual(authority.conscripts(1000.0, 0.1, 1.0), 100.0)
         self.assertEqual(authority.conscripts(1000.0, 0.1, 0.5), 50.0)
-        self.assertEqual(authority.levy_reach(SimpleNamespace(collectible_share=lambda tiles=None: 0.4)), 0.4)
+        self.assertEqual(authority.levy_reach(flat_namespace(collectible_share=lambda tiles=None: 0.4)), 0.4)
 
 
 class UnrestTests(unittest.TestCase):
@@ -208,6 +210,7 @@ class RulerTests(unittest.TestCase):
         record = ActorRecord(kind="government")
         state = Government("government", record)
 
+        @flat_world
         class World:
             year = 100
             backing = {"g1": 3.0, "g2": 2.9}

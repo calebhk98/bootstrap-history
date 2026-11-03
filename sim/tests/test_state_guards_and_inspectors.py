@@ -60,13 +60,13 @@ class OrderWorld(FakeWorld):
 
 
 world = OrderWorld()
-guards = order.guards_kept(world.population_total(), WORKING_DAYS)
-inspectors = order.inspectors_kept(world.population_total(), WORKING_DAYS)
+guards = order.guards_kept(world.people.population_total(), WORKING_DAYS)
+inspectors = order.inspectors_kept(world.people.population_total(), WORKING_DAYS)
 check("guards kept follow the people and the days one person's watch takes",
       abs(guards - 40_000.0 * order.PATROL_DAYS_PER_PERSON / WORKING_DAYS) < 1e-9, guards)
 check("no people need no guards and no inspectors", order.guards_kept(0.0, WORKING_DAYS) == 0.0 and order.inspectors_kept(0.0, WORKING_DAYS) == 0.0)
 by_name = {line.name: line for line in order.guards_line(world) + order.inspectors_line(world) + order.foresters_line(world)}
-foresters = order.foresters_kept(world.population_total(), WORKING_DAYS)
+foresters = order.foresters_kept(world.people.population_total(), WORKING_DAYS)
 check("the state keeps a guards, an inspectors and a foresters line", {"guards", "inspectors", "foresters"} == set(by_name), sorted(by_name))
 check("the foresters line pays the foresters kept at the going wage",
       abs(by_name["foresters"].wages - foresters * 10.0) < 1e-6 and by_name["foresters"].transfer == 0.0, by_name["foresters"])

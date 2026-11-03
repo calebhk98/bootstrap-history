@@ -29,7 +29,7 @@ class Firm(ExpansionMixin, RecordedActor):
 	def imitation_candidates(self, world: Any) -> List[str]:
 		# a firm values only the concern it is aiming at
 		target = self.record.target
-		return [target] if target in world.demonstrated() else []
+		return [target] if target in world.knowledge.demonstrated() else []
 
 	def imitation_worth(self, node_id: str, world: Any) -> float:
 		if node_id != self.record.target:
@@ -42,12 +42,12 @@ class Firm(ExpansionMixin, RecordedActor):
 
 	def on_copied(self, node_id: str, world: Any) -> None:
 		if node_id == self.record.target:
-			self.business.open_plant(node_id, world.year, self.location())
+			self.business.open_plant(node_id, world.setting.year, self.location())
 
 	def accept_licence(self, node_id: str, chain: List[str], world: Any) -> None:
 		"""A licensed concern becomes the firm's own business."""
 		self.learn(chain, world)
-		self.business.open_plant(node_id, world.year, self.location())
+		self.business.open_plant(node_id, world.setting.year, self.location())
 
 	def operate(self, world: Any, interest: float = 0.0) -> None:
 		for node_id in sorted(self.concerns):
@@ -70,7 +70,7 @@ class Firm(ExpansionMixin, RecordedActor):
 		"""A firm is trusted as its record lengthens, and not at all while it runs at a loss."""
 		if self.record.loss_years > 0 or self.record.founded_year is None:
 			return 0.0
-		return min(1.0, max(0.0, world.year - self.record.founded_year) / TRACK_RECORD_YEARS)
+		return min(1.0, max(0.0, world.setting.year - self.record.founded_year) / TRACK_RECORD_YEARS)
 
 	def default(self, world: Any) -> None:
 		"""A firm in default closes: its plant is sold or scrapped to repay what it can, the rest is written off."""

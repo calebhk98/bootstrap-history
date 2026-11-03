@@ -38,7 +38,7 @@ class Armies(Part):
 
 	def owner_force(self, owner: str) -> float:
 		"""Soldiers the owner's state keeps now."""
-		return float(self.needs.country_world[owner].soldiers_under_arms()) if self.needs.has_state[owner] else 0.0
+		return float(self.needs.country_world[owner].army.soldiers_under_arms()) if self.needs.has_state[owner] else 0.0
 
 	def free_soldiers(self, owner: str) -> float:
 		return army_raising.available_soldiers(self.owner_force(owner), fielded_soldiers(self.world.armies, owner))
@@ -65,7 +65,7 @@ class Armies(Part):
 		army_id = rules.army_id(self.world.next_id)
 		self.world.next_id += 1
 		world = self.needs.country_world[owner]
-		army = Army(army_id, owner, tile, float(soldiers), float(world.equipment_kg_per_soldier()),
+		army = Army(army_id, owner, tile, float(soldiers), float(world.army.equipment_kg_per_soldier()),
 		            animals=float(soldiers) * campaign_supply.TRAIN_ANIMALS_PER_SOLDIER, home_tile=tile,
 		            raised_year=int(self.needs.year()))
 		self.save_army(army)

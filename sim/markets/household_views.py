@@ -86,7 +86,7 @@ class HouseholdNeeds(Part):
 		floors = self.parts.market_objects.economy.agent_need_floor_costs_at()
 		if floors:
 			return dict(floors)
-		return self.needs.actor_world().need_floor_costs_per_person_year()
+		return self.needs.actor_world().people.need_floor_costs_per_person_year()
 
 	def household_bill_per_person(self):
 		"""One person's yearly bill for every need's floor: the figure the founder and an economy household pay."""

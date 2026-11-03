@@ -3,6 +3,7 @@ owners' views that feed it answer what the rule needs (Complaints/266)."""
 
 QUICK_TOPIC = True
 
+from sim.tests.agents_fake_world import flat_namespace
 from types import SimpleNamespace
 
 from sim.tests import module_harness
@@ -104,7 +105,7 @@ class Treasury:
 	record = Record()
 
 	def knows(self, node_id, world):
-		return node_id == "wheel" and world.army_wanted() == 50.0
+		return node_id == "wheel" and world.army.army_wanted() == 50.0
 
 
 class CastStub:
@@ -112,7 +113,7 @@ class CastStub:
 		return Treasury()
 
 	def actor_world(self):
-		return SimpleNamespace(army_wanted=lambda: 50.0, soldiers_under_arms=lambda: 30.0)
+		return flat_namespace(army_wanted=lambda: 50.0, soldiers_under_arms=lambda: 30.0)
 
 	def cast(self):
 		def stratum(country=None, exited=None, welfare=1.0, reference=1.0, plan=None):

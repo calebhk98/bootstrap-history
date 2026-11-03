@@ -49,7 +49,7 @@ class VisibleScale(unittest.TestCase):
         module = types.SimpleNamespace(needs=fake_needs(visible_scale=lambda *args: seen.append(args) or 0.4))
         actor = types.SimpleNamespace(workforce={"smith": 3.0, "mason": 2.0}, money=500.0, concealed_wealth=lambda: 100.0,
                                       prominence=lambda: 0.25, defiance=lambda: 0.5)
-        self.assertEqual(ActorWorld(module).visible_scale_of(actor), 0.4)
+        self.assertEqual(ActorWorld(module.needs).taxpayers.visible_scale_of(actor), 0.4)
         headcount, wealth, eminence, defiance = seen[0]
         self.assertEqual((headcount, eminence, defiance), (5.0, 0.25, 0.5))
         self.assertLess(wealth, 500.0)      # what is hidden is not counted
@@ -60,7 +60,7 @@ class ConcernTakings(unittest.TestCase):
         module = types.SimpleNamespace(needs=fake_needs(
             tree_nodes={"loom": {"cat": "textiles"}}, game_setting={"revenue_ramp_years": 5}, year=10, ramp_share_at_full_depth=0.5,
             industry_depth=lambda node_id: 0.0, concern_takings=lambda node_id, ramp: 1000.0, node_output_market_factor=lambda node: 1.0))
-        self.assertEqual(ActorWorld(module).concern_takings("loom", 10, rivals=2.0, capacity=2.0), 2000.0 / 4.0)
+        self.assertEqual(ActorWorld(module.needs).concerns.concern_takings("loom", 10, rivals=2.0, capacity=2.0), 2000.0 / 4.0)
 
 
 if __name__ == "__main__":

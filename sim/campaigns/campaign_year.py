@@ -32,7 +32,7 @@ class CampaignYear(Part):
 	def campaign_modes(self, owner: str) -> List[str]:
 		if owner == str(self.needs.civilisation()["id"]):
 			return list(self.needs.home_modes())
-		return list(self.needs.country_world[owner].collection_modes())
+		return list(self.needs.country_world[owner].collection.collection_modes())
 
 	def campaign_column(self, army: Army, modes: List[str]) -> tuple:
 		"""(kg of grain a day the army's column brings, tile it comes from): the nearest tile of the owner's within the
@@ -59,10 +59,10 @@ class CampaignYear(Part):
 
 	def _pay_years(self, army: Army) -> float:
 		world = self.needs.country_world[army.owner]
-		record = world.government().record
+		record = world.setting.government().record
 		owed = army_raising.pay_owed_share(record.arrears.get("army", 0.0), self.parts.armies.owner_force(army.owner), army.soldiers)
 		army.pay_owed = owed
-		return army_raising.pay_owed_years(owed, army.soldiers, float(world.pay_per_person_year("soldier")))
+		return army_raising.pay_owed_years(owed, army.soldiers, float(world.labour.pay_per_person_year("soldier")))
 
 	def _reference_equipment(self, owner: str) -> float:
 		"""The equipment burden of the reference soldier, whose quality is 1: the plain iron kit of the logistics model."""

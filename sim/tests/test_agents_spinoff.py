@@ -3,6 +3,7 @@ staff and years, the parent keeps what it knew, the stake is pooled capital, and
 
 QUICK_TOPIC = True
 
+from sim.tests.agents_fake_world import flat_world
 from .harness import check
 
 from sim.agents.business_plant import Plant
@@ -33,9 +34,9 @@ class SpinWorld(FakeWorld):
 def make_world():
 	world = SpinWorld(year=100)
 	world.baseline = {"base"}
-	world.nodes["base"] = make_node("base")
-	world.nodes["gear"] = make_node("gear", ["base"])
-	world.nodes["mill"] = make_node("mill", ["gear"], hours=100.0, revenue=2000.0)
+	world.setting.nodes["base"] = make_node("base")
+	world.setting.nodes["gear"] = make_node("gear", ["base"])
+	world.setting.nodes["mill"] = make_node("mill", ["gear"], hours=100.0, revenue=2000.0)
 	world.output = 1.0e9
 	return world
 
@@ -93,9 +94,9 @@ world.patent = None
 world.output = 1.0
 check("capital too thin to fund the stake stops it", spinoff.consider_spinoffs(registry, world) == [])
 world.output = 1.0e9
-world.nodes["mill"]["rev"] = 0.0
+world.setting.nodes["mill"]["rev"] = 0.0
 check("a concern that would not pay an entrant spawns none", spinoff.consider_spinoffs(registry, world) == [])
-world.nodes["mill"]["rev"] = 2000.0
+world.setting.nodes["mill"]["rev"] = 2000.0
 spinoff.SPINOFF_CHANCE_PER_STAFF_YEAR = 0.0
 check("no chance, no rival", spinoff.consider_spinoffs(registry, world) == [])
 spinoff.SPINOFF_CHANCE_PER_STAFF_YEAR = original_rate
@@ -126,6 +127,7 @@ class SeatParent:
 		return self.opened_years.get(node_id, default)
 
 
+@flat_world
 class SeatWorld(SpinWorld):
 	released = None
 
@@ -138,7 +140,7 @@ class SeatWorld(SpinWorld):
 
 
 seat_world = SeatWorld(year=100)
-seat_world.nodes, seat_world.baseline, seat_world.output = world.nodes, world.baseline, 1.0e9
+seat_world.setting.nodes, seat_world.baseline, seat_world.output = world.setting.nodes, world.baseline, 1.0e9
 seat_world.seat = SeatParent()
 registry = ActorRegistry(ActorsState(home_country="home"))
 spinoff.SPINOFF_CHANCE_PER_STAFF_YEAR = 1.0

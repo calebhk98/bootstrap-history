@@ -26,7 +26,7 @@ class GrowthWorld(FakeWorld):
 
 def make_world():
 	world = GrowthWorld()
-	world.nodes["shop"] = make_node("shop", hours=100.0, revenue=60000.0, upkeep=1000.0)
+	world.setting.nodes["shop"] = make_node("shop", hours=100.0, revenue=60000.0, upkeep=1000.0)
 	return world
 
 

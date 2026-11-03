@@ -3,6 +3,7 @@ with no economy of its own, or one that cannot answer a figure, raises NoCountry
 
 QUICK_TOPIC = True
 
+from sim.tests.agents_fake_world import flat_world
 from .harness import check
 
 from sim.agents.country_view import CountryWorld, NoCountryEconomy
@@ -23,6 +24,7 @@ class Own:
         return {FOOD_NEED: 77.0, "shelter": 11.0}
 
 
+@flat_world
 class Shared:
     """The home country's world."""
 
@@ -60,17 +62,17 @@ def raises(call):
 beta = CountryProfile(country="beta", population=500_000, price_index=2.0)
 inside = CountryWorld(Shared(Own()), beta, Holder())
 check("a country in the economy pays what its own labour markets pay, not the home pay scaled",
-      inside.pay_per_person_year("labourer") == 321.0, inside.pay_per_person_year("labourer"))
-check("its output is what its own producers make", inside.society_output() == 9.0e6, None)
+      inside.labour.pay_per_person_year("labourer") == 321.0, inside.labour.pay_per_person_year("labourer"))
+check("its output is what its own producers make", inside.revenue.society_output() == 9.0e6, None)
 check("its cost of living is its own floor, not the home figure over its price index",
-      inside.subsistence_cost_per_person_year() == 77.0 and inside.need_floor_costs_per_person_year()["shelter"] == 11.0, None)
+      inside.people.subsistence_cost_per_person_year() == 77.0 and inside.people.need_floor_costs_per_person_year()["shelter"] == 11.0, None)
 check("a trade its markets have no wage for raises rather than take the home pay",
-      raises(lambda: inside.pay_per_person_year("scribe")), None)
+      raises(lambda: inside.labour.pay_per_person_year("scribe")), None)
 
 outside = CountryWorld(Shared(None), beta, Holder())
 check("a country with no economy raises for pay, output and both cost figures",
-      raises(lambda: outside.pay_per_person_year("labourer")) and raises(outside.society_output)
-      and raises(outside.subsistence_cost_per_person_year) and raises(outside.need_floor_costs_per_person_year), None)
+      raises(lambda: outside.labour.pay_per_person_year("labourer")) and raises(outside.revenue.society_output)
+      and raises(outside.people.subsistence_cost_per_person_year) and raises(outside.people.need_floor_costs_per_person_year), None)
 
 
 class NoEconomy:
@@ -81,6 +83,6 @@ class NoEconomy:
 
 
 check("a shared world that cannot answer for countries raises, it does not answer with the home figure",
-      raises(lambda: CountryWorld(NoEconomy(), beta, Holder()).pay_per_person_year("labourer")), None)
+      raises(lambda: CountryWorld(NoEconomy(), beta, Holder()).labour.pay_per_person_year("labourer")), None)
 check("the error is a LookupError naming the country",
       issubclass(NoCountryEconomy, LookupError) and NoCountryEconomy("beta").country == "beta", None)

@@ -21,7 +21,7 @@ class CorveeMixin:
 
 	def serve_conscripts(self, served: float, world: Any) -> None:
 		"""Book the hours the conscripts who could be spared take from their households."""
-		self.record.corvee_hours[revenue_labour.ARMY_DUE] = served * world.hours_per_person_year  # type: ignore[attr-defined]
+		self.record.corvee_hours[revenue_labour.ARMY_DUE] = served * world.labour.hours_per_person_year  # type: ignore[attr-defined]
 
 	def staff_works_by_corvee(self, lines: List[Line], world: Any) -> List[Line]:
 		"""The lines with the labour owed to the works taking the place of their wages; what is left over is kept to

@@ -46,7 +46,7 @@ def years_to_learn(actor, world, node_id):
 	actor.start_research(node_id, world)
 	for year in range(1, 20):
 		actor.work_on_research(world)
-		world.year += 1
+		world.setting.year += 1
 		if node_id in actor.knowledge:
 			return year
 	return None

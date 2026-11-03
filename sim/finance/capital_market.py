@@ -36,7 +36,7 @@ class CapitalMarket(Part):
 		firms = sum(max(0.0, firm.money) for firm in self.needs.cast().active_firms())
 		spare = rules.state_spare_reserve(government.money, sum(government.record.need.values()), government.cannot_meet_own_need())
 		return {
-			"households": LENDING_HORIZON_YEARS * world.household_saving(),
+			"households": LENDING_HORIZON_YEARS * world.credit.household_saving(),
 			"firms": firms,
 			"state": rules.lendable_share_of_reserve(spare),
 		}

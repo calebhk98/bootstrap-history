@@ -50,4 +50,4 @@ def pay_savers(registry: Any, payer: Any, amount: float) -> None:
 
 def pay_wages(registry: Any, payer: Any, amount: float, purpose: Any, world: Any) -> None:
 	"""Wages: to the people, or to the workers edge while there are no strata."""
-	pay_households(registry, payer, amount, purpose, world.edge(EDGE_WORKERS))
+	pay_households(registry, payer, amount, purpose, world.setting.edge(EDGE_WORKERS))

@@ -22,8 +22,8 @@ class Line:
 def goods(world: Any, material: str, tonnes: float) -> Dict[str, Any]:
 	"""The goods fields of a line that needs `tonnes` of a material: bought at the market's price when it is on sale,
 	otherwise unbuyable (needed, not bought, costing nothing)."""
-	commodity = world.commodity_of(material)
-	cost = world.material_cost(material, tonnes)
+	commodity = world.quotes.commodity_of(material)
+	cost = world.quotes.material_cost(material, tonnes)
 	if cost is None:
 		return {"unbuyable": {commodity: tonnes}}
 	return {"materials": {commodity: tonnes}, "material_cost": cost}

@@ -1,9 +1,10 @@
 """An interest group's year (`InterestGroup.advance`), what the founder reads of groups (`interest_groups`,
 `group_levy_reasons`), the start gate's prohibition check, and the sectors the founder's sales and hiring hurt
-(`GroupView`). Stand-in worlds carry only what each rule reads."""
+(`Groups`). Stand-in worlds carry only what each rule reads."""
 
 QUICK_TOPIC = True
 
+from sim.tests.agents_fake_world import flat_world
 import math
 import types
 import unittest
@@ -11,7 +12,7 @@ import unittest
 from sim.agents.api import ActorRecord, Sector
 from sim.agents.group import InterestGroup
 from sim.agents.group_tuning import GRIEVANCE_RETENTION, GROUP_PULL_SCALE
-from sim.actors.world_groups import GroupView
+from sim.actors.world_groups import Groups
 from sim.polity.state import PolitySeat
 from sim.tests import polity_host
 from sim.tests.world_stand_in import fake_needs
@@ -20,6 +21,7 @@ from sim.refusal import cause_of
 REVENUE = 1.0e6
 
 
+@flat_world
 class World:
     """What a group's year reads: this year's sectors, the state's revenue, capacity and purse, the founder's cover."""
 
@@ -232,16 +234,12 @@ class StartGate(unittest.TestCase):
 class HurtSectors(unittest.TestCase):
 
     def view(self, state, quote, pressured=None, factor=1.0):
-        view = GroupView()
-        view.needs = fake_needs(
+        needs = fake_needs(
             commodities_sold_by_acting_party=["iron"], main_material_of=lambda commodity: commodity,
             material_trade_quote=lambda material: quote, market_state=lambda commodity: state,
             market_supply=lambda trade: 2.0e6, mass_rate_text=lambda amount, **options: "%s a year" % amount)
-        view.labour_market = types.SimpleNamespace(unscarce_annual=lambda trade: 100.0)
-        view.hours_per_person_year = 2000.0
-        view.pay_per_person_year = lambda trade: 100.0
-        view.trade_of_role = lambda role: "labourer"
-        return view
+        return Groups(types.SimpleNamespace(
+            needs=needs, labour=types.SimpleNamespace(pay_per_person_year=lambda trade: 100.0, trade_of_role=lambda role: "labourer")))
 
     def test_what_the_founder_displaced_is_a_loss_at_the_price_and_a_base_of_all_sales(self):
         view = self.view({"displaced_by_founder_tonnes": 10.0, "society_sales_tonnes": 30.0}, {"buy_per_tonne": 50.0})

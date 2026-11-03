@@ -29,7 +29,7 @@ class Contest(Part):
 		owned = self.needs.tiles_owned_by[defender]
 		share = settlement.population_share(owned, tile) if tile in owned else 0.0
 		free = campaign_year_rules.garrison_strength(self.parts.armies.free_soldiers(defender), share)
-		equipment = float(self.needs.country_world[defender].equipment_kg_per_soldier()) if self.needs.has_state[defender] else 0.0
+		equipment = float(self.needs.country_world[defender].army.equipment_kg_per_soldier()) if self.needs.has_state[defender] else 0.0
 		return Army("garrison", defender, tile, free, equipment)
 
 	def _contest(self, army: Army, armies: Dict[str, Army], defender: str, days_left: float, modes: List[str],
@@ -40,7 +40,7 @@ class Contest(Part):
 		garrison = self._garrison(defender, tile, armies)
 		side = field + ([garrison] if garrison.soldiers >= 1.0 else [])
 		year = int(self.needs.year())
-		rng = self.needs.country_world[army.owner].rng_for("battle", tile, army.army_id, year)
+		rng = self.needs.country_world[army.owner].setting.rng_for("battle", tile, army.army_id, year)
 		site = self.parts.campaign_year.campaign_site(tile)
 		site.fortification = self.tile_fortification(tile)
 		result = "defenders_gone" if not side else "continues"

@@ -78,7 +78,7 @@ def follow_population(registry: Any, world: Any) -> float:
 	home = [stratum for stratum in registry.of_kind("stratum")
 			if stratum.record.country is None and stratum.record.exited_year is None]
 	counted = sum(stratum.record.members for stratum in home)
-	people = world.population_total()
+	people = world.people.population_total()
 	if counted <= 0.0 or people <= 0.0:
 		return 1.0
 	factor = people / counted

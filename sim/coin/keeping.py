@@ -55,7 +55,7 @@ class Keeping(Part):
         """Every actor in business that holds money (a state, a firm) pays to keep it as coin. A foreign country's
         actor pays at its country's own pay level (its own labour markets) to its own country's guards."""
         registry, world = self.needs.cast(), self.needs.actor_world()
-        home_pay = max(1e-9, world.pay_per_person_year(KEEPING_PAY_TRADE))
+        home_pay = max(1e-9, world.labour.pay_per_person_year(KEEPING_PAY_TRADE))
         for actor_id, actor in sorted(registry.actors.items()):  # id order, as a loaded game wraps them
             record = actor.record
             if record.exited_year is not None or actor.money <= 0.0 or record.stratum:
@@ -64,7 +64,7 @@ class Keeping(Part):
             at_home = country in (None, registry.state.home_country)
             cost = self.coin_keeping_cost(actor.money)
             if not at_home:
-                cost *= registry.world_for(actor, world).pay_per_person_year(KEEPING_PAY_TRADE) / home_pay
+                cost *= registry.world_for(actor, world).labour.pay_per_person_year(KEEPING_PAY_TRADE) / home_pay
             if cost > 0.0:
                 guards = edges.EDGE_COIN_GUARDS if at_home else "%s:%s" % (edges.EDGE_COIN_GUARDS, country)
                 self.needs.send(PayEdgeFrom(actor_id, guards, cost, KEEPING_CAUSE))

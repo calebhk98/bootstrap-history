@@ -13,7 +13,7 @@ def staff(business: Business, owner: Any, entry_key: str, world: Any, weight: fl
 	input_found = 1.0 if inputs is None else inputs(entry_key, size, world)
 	found = input_found
 	posted = owner.record.staff_wanted
-	for trade, wanted in sorted(world.concern_staff(entry_key).items()):
+	for trade, wanted in sorted(world.concerns.concern_staff(entry_key).items()):
 		wanted *= size
 		if wanted <= 0.0:
 			continue

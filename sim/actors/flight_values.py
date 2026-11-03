@@ -10,8 +10,8 @@ def government_flight_values(world, away_by_tile):
     if government is None:
         return {}
     record = government.record
-    people = {tile: count * (1.0 - away_by_tile.get(tile, 0.0)) for tile, count in world.collection_people_by_tile().items() if count > 0.0}
-    reach = world.collection_shares()
+    people = {tile: count * (1.0 - away_by_tile.get(tile, 0.0)) for tile, count in world.collection.collection_people_by_tile().items() if count > 0.0}
+    reach = world.collection.collection_shares()
     taxed = flight_inputs.taxed_share_by_tile(government_levers.revenue_forms(record), reach,
                                               government_levers_tax.liability_rule(record), record.registered_people, people)
     return {"taxed_share_by_tile": taxed, "state_reach_by_tile": dict(reach),

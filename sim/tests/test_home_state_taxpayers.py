@@ -7,7 +7,7 @@ from types import SimpleNamespace
 
 from .harness import check
 
-from sim.actors.world_budget import BudgetView
+from sim.actors.world_taxpayers import Taxpayers
 
 from .world_stand_in import fake_needs
 
@@ -15,19 +15,7 @@ HOME = "home"
 SEAT_INCOME = {"founder": 5.0, "native": 7.0, "stranger": 11.0, "ruler": 13.0}
 
 
-class HomeView(BudgetView):
-	def __init__(self, countries, playing):
-		self.acting = None
-		self.needs = fake_needs(
-			seat_country=countries, acting_seat="founder", seat_list={"playing": playing}, act_as=self._act_as,
-			revenue_estimate=lambda: SEAT_INCOME[self.acting])
-		self.registry = SimpleNamespace(state=SimpleNamespace(home_country=HOME), active_firms=lambda: [], country_of=lambda actor: HOME, country_of_tile=lambda tile: None)
-
-	@contextlib.contextmanager
-	def _act_as(self, seat_id):
-		self.acting = seat_id
-		yield
-
+class FlatScale(Taxpayers):
 	def visible_scale_of(self, actor):
 		return 1.0
 
@@ -35,14 +23,31 @@ class HomeView(BudgetView):
 		return 1.0
 
 
+class HomeView:
+	"""A stand-in world whose taxpayers part sees every actor at scale one."""
+
+	def __init__(self, countries, playing):
+		self.acting = None
+		self.needs = fake_needs(
+			seat_country=countries, acting_seat="founder", seat_list={"playing": playing}, act_as=self._act_as,
+			revenue_estimate=lambda: SEAT_INCOME[self.acting])
+		self.registry = SimpleNamespace(state=SimpleNamespace(home_country=HOME), active_firms=lambda: [], country_of=lambda actor: HOME, country_of_tile=lambda tile: None)
+		self.taxpayers = FlatScale(self)
+
+	@contextlib.contextmanager
+	def _act_as(self, seat_id):
+		self.acting = seat_id
+		yield
+
+
 # the country each seat plays for; the country seat "ruler" is not among the playing household seats
 countries = {"founder": None, "native": HOME, "stranger": "far", "ruler": "far"}
 view = HomeView(countries, ["founder", "native", "stranger"])
-incomes = sorted(income for _scale, income in view.visible_taxpayers())
+incomes = sorted(income for _scale, income in view.taxpayers.visible_taxpayers())
 check("the home state sees the seat with no country and the seat of its own country, not a stranger's or a country seat",
 	  incomes == [SEAT_INCOME["founder"], SEAT_INCOME["native"]], incomes)
 check("a foreign state's seats are the ones the same rule selects for that country",
-	  [income for _scale, income in view.seat_taxpayers("far")] == [SEAT_INCOME["stranger"]], view.seat_taxpayers("far"))
+	  [income for _scale, income in view.taxpayers.seat_taxpayers("far")] == [SEAT_INCOME["stranger"]], view.taxpayers.seat_taxpayers("far"))
 
 
 # firms: a firm belongs to the country its record names (none is the game's own), whatever tile it stands on
@@ -57,20 +62,19 @@ def country_of(actor):
 firms = [firm(None, 17.0), firm(HOME, 19.0), firm("far", 23.0)]
 view.registry.active_firms = lambda: firms
 view.registry.country_of = country_of
-home_firm_incomes = sorted(income for _scale, income in view.firm_taxpayers(HOME))
+home_firm_incomes = sorted(income for _scale, income in view.taxpayers.firm_taxpayers(HOME))
 check("the home state sees the firm with no country and the firm of its own country, not a foreign firm",
 	  home_firm_incomes == [17.0, 19.0], home_firm_incomes)
 check("a foreign state's firms are the ones the same rule selects for that country",
-	  [income for _scale, income in view.firm_taxpayers("far")] == [23.0], view.firm_taxpayers("far"))
-visible = sorted(income for _scale, income in view.visible_taxpayers())
+	  [income for _scale, income in view.taxpayers.firm_taxpayers("far")] == [23.0], view.taxpayers.firm_taxpayers("far"))
+visible = sorted(income for _scale, income in view.taxpayers.visible_taxpayers())
 check("the home state's visible taxpayers are its seats and its own firms only",
 	  visible == sorted([SEAT_INCOME["founder"], SEAT_INCOME["native"], 17.0, 19.0]), visible)
 
 
 # the acting seat's scale is its staff, its purse less what it hides, no prominence of a business's kind and its defiance
-scale_view = BudgetView()
-scale_view.needs = fake_needs(
+scale_view = Taxpayers(SimpleNamespace(needs=fake_needs(
 	standing=lambda: {"concealed": 30.0, "defiance": 0.25}, staff=lambda: {"employees": {"smith": 2.0, "mason": 3.0}},
-	acting_balance=lambda: 100.0, visible_scale=lambda headcount, wealth, prominence, defiance: (headcount, wealth, prominence, defiance))
+	acting_balance=lambda: 100.0, visible_scale=lambda headcount, wealth, prominence, defiance: (headcount, wealth, prominence, defiance))))
 check("the acting seat's visible scale is read from the owners' views: staff, wealth less what is concealed, no prominence, defiance",
 	  scale_view.acting_seat_visible_scale() == (5.0, 70.0, 0.0, 0.25), scale_view.acting_seat_visible_scale())

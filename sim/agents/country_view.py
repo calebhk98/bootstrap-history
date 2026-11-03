@@ -1,164 +1,63 @@
 """`CountryWorld`: the world an actor of another country sees.
 
-Questions about the country (its people, state and its revenue, techniques, values, government, how much of the
-founder's work reaches it) are answered from its profile (the state's in country_state.py), and its pay, output and prices from its own part of the economy.
-Every other member of the shared world passes straight through, by explicit forwarding methods generated from the `World` protocol at class creation.
+It has the parts of the shared world (`ActorWorld`, sim/actors/world.py). Questions about the country (its people,
+state and its revenue, techniques, values, government, how much of the founder's work reaches it) are answered by
+parts built here from its profile, and its pay, output and prices from its own part of the economy. Every other part is
+the shared world's, passed straight through (`SharedPart`).
+
+    setting, knowledge             country_setting.py       people                 country_people.py
+    labour, research               country_labour.py        revenue, army, taxpayers   country_revenue.py, country_army.py,
+    collection, credit, quotes,   country_money.py                                country_taxpayers.py
+    market                                                  groups, stakes         country_groups.py
+    patronage                      country_patronage.py     concerns, site         country_state_site.py
+    enterprises                    country_state_books.py
 """
-import inspect
-from typing import Any, Dict, Optional, Set
+from typing import Any
 
-from .country_hands import hands_of
-from .country_population import people_counted
-from .country_groups import CountryGroupsView
-from .country_patronage import CountryPatronageView
-from .country_state import CountryStateView
-from .country_state_books import CountryBooksView
-from .country_state_crew import CountryCrewView
-from .country_state_site import CountrySiteView
-from .no_country_economy import NoCountryEconomy
-from .protocols import World
+from .country_army import CountryArmy
+from .country_groups import CountryGroups, CountryStakes
+from .country_labour import CountryLabour
+from .country_money import CountryCredit, CountryCollection, CountryMarket, CountryQuotes
+from .country_part import OwnEconomy, SharedPart
+from .country_patronage import CountryPatronage
+from .country_people import CountryPeople
+from .country_revenue import CountryRevenue
+from .country_setting import CountryKnowledge, CountrySetting
+from .country_state_books import CountryEnterprises
+from .country_state_crew import CountryResearch
+from .country_state_site import CountryConcerns, CountrySite
+from .country_taxpayers import CountryTaxpayers
+from .no_country_economy import NoCountryEconomy  # noqa: F401  (raised by the parts; callers import it from here)
 from .records import CountryProfile
-from .literacy import CountryLiteracy
-from .stratum_year import FOOD_NEED
-from .tuning_country import COUNTRY_OBSERVATION_RANGE_KM
-
-# members the shared world answers that the protocol does not name yet
-EXTRA_FORWARDED: tuple = ()
-# the word a civilisation's values use for a weight, as in `w_military`
-WEIGHT_PREFIX = "w_"
 
 
-class _NoGovernment:
-	"""Stands in for a government actor the scope was not given: it takes nothing."""
-
-	def collect(self, payer: Any, taxable: float, world: Any) -> float:
-		return 0.0
-
-	def levy_rates(self) -> Any:
-		return 0.0, 0.0
-
-
-class CountryWorld(CountryStateView, CountryGroupsView, CountryPatronageView, CountryBooksView, CountryCrewView, CountrySiteView):
-	"""What an actor of `profile`'s country sees. `holder` is the registry (or its saved state)."""
+class CountryWorld:
+	"""What an actor of `profile`'s country sees. `shared` is the shared world, `holder` the registry (or its saved state)."""
 
 	def __init__(self, shared: Any, profile: CountryProfile, holder: Any) -> None:
-		self._shared = shared
+		self.shared = shared
 		self.profile = profile
-		self._holder = holder
-		self._baseline: Optional[frozenset] = None
-
-	# ---- the country's own questions
-	@property
-	def civ_id(self) -> str:
-		return self.profile.country
-
-	def baseline_knowledge(self) -> Set[str]:
-		if self._baseline is None:
-			self._baseline = frozenset(self.profile.starting_techs)
-		return self._baseline  # type: ignore[return-value]
-
-	def population_total(self) -> float:
-		return people_counted(self.profile)
-
-	def country_strata(self):
-		state = getattr(self._holder, "state", self._holder)
-		home = state.home_country
-		return [actor for actor in self._holder.of_kind("stratum")
-				if (actor.record.country or home) == self.profile.country]
-
-	def literacy(self, field: str) -> float:
-		return CountryLiteracy(self.country_strata()).get(field)
-
-	def research_productivity(self) -> float:
-		return self._shared.research_productivity(self.profile.country)
-
-	def urban_population(self) -> float:
-		return people_counted(self.profile) * self.profile.urban_fraction
-
-	def state_reach(self) -> float:
-		"""What the country's paid officials collect of what is due, over its roads (collection_world.py)."""
-		return self.collectible_share()
-
-	def tax_share(self) -> float:
-		"""Share of its taxpayers' income the country's state starts out taking."""
-		return self.profile.tax_share
-
-	def state_hands(self) -> Any:
-		"""The people and food this country can give its state (country_hands.py)."""
-		return hands_of(self.profile)
-
-	def government(self) -> Any:
-		"""The country's own government actor; one that takes nothing when the scope was not given a registry."""
-		lookup = getattr(self._holder, "government_of", None)
-		actor = lookup(self.profile.country) if callable(lookup) else None
-		return actor if actor is not None else _NoGovernment()
-
-	def state_weights(self) -> Dict[str, float]:
-		"""The shared weights, with the country's own values over them where it declares any."""
-		weights = dict(self._shared.state_weights())
-		values = self.profile.extra.get("values")
-		if isinstance(values, dict):
-			for key, weight in values.items():
-				if key.startswith(WEIGHT_PREFIX) and isinstance(weight, (int, float)):
-					weights[key[len(WEIGHT_PREFIX):]] = float(weight)
-		return weights
-
-	def _own_economy(self) -> Any:
-		"""The economy's answers for this country; raises NoCountryEconomy when it has none."""
-		lookup = getattr(self._shared, "country_economy", None)
-		own = lookup(self.profile.country) if callable(lookup) else None
-		if own is None:
-			raise NoCountryEconomy(self.profile.country)
-		return own
-
-	def _answer(self, figure: str, answer: Any) -> Any:
-		if answer is None or answer == {}:
-			raise NoCountryEconomy(self.profile.country, figure)
-		return answer
-
-	def pay_per_person_year(self, trade: str) -> float:
-		"""What a person-year of a trade pays in this country's own labour markets."""
-		return self._answer("pay", self._own_economy().pay_per_person_year(trade))
-
-	def society_output(self) -> float:
-		"""What this country's producers make at its prices."""
-		return self._answer("output", self._own_economy().society_output())
-
-	def need_floor_costs_per_person_year(self) -> Dict[str, float]:
-		"""The country's floor of each need at its own prices."""
-		return self._answer("need floors", self._own_economy().need_floor_costs_per_person_year())
-
-	def subsistence_cost_per_person_year(self) -> float:
-		"""The country's food floor at its own prices."""
-		return self._answer("food floor", self.need_floor_costs_per_person_year().get(FOOD_NEED))
-
-	def exposure(self, node_id: str, location: Optional[str]) -> float:
-		"""How much of the founder's work reaches an observer here: the shared visibility, thinned by
-		the distance between the observer (the country, when no place is given) and the founder."""
-		visibility = self._shared.exposure(node_id, None)
-		distance = self._shared.distance_km(location or self.profile.location, None)
-		return visibility / (1.0 + distance / COUNTRY_OBSERVATION_RANGE_KM)
-
-
-def _forward_method(name: str) -> Any:
-	def forward(self: CountryWorld, *args: Any, **kwargs: Any) -> Any:
-		return getattr(self._shared, name)(*args, **kwargs)
-	forward.__name__ = name
-	return forward
-
-
-def _forward_property(name: str) -> property:
-	return property(lambda self: getattr(self._shared, name), doc="The shared world's " + name + ".")
-
-
-def forward_world_member(name: str, is_property: bool = False) -> None:
-	"""Pass a shared-world member through, unless CountryWorld answers it itself."""
-	if not hasattr(CountryWorld, name):
-		setattr(CountryWorld, name, _forward_property(name) if is_property else _forward_method(name))
-
-
-for _name, _member in inspect.getmembers(World):
-	if not _name.startswith("_") and (isinstance(_member, property) or callable(_member)):
-		forward_world_member(_name, isinstance(_member, property))
-for _name in EXTRA_FORWARDED:
-	forward_world_member(_name)
+		self.holder = holder
+		self.own = OwnEconomy(shared, profile)
+		self.setting = CountrySetting(self)
+		self.knowledge = CountryKnowledge(self)
+		self.disclosure = SharedPart(self, "disclosure")
+		self.seats = SharedPart(self, "seats")
+		self.people = CountryPeople(self)
+		self.army = CountryArmy(self)
+		self.taxpayers = CountryTaxpayers(self)
+		self.revenue = CountryRevenue(self)
+		self.collection = CountryCollection(self)
+		self.labour = CountryLabour(self)
+		self.quotes = CountryQuotes(self)
+		self.groups = CountryGroups(self)
+		self.stakes = CountryStakes(self)
+		self.patronage = CountryPatronage(self)
+		self.credit = CountryCredit(self)
+		self.capacity = SharedPart(self, "capacity")
+		self.site = CountrySite(self)
+		self.concerns = CountryConcerns(self)
+		self.enterprises = CountryEnterprises(self)
+		self.market = CountryMarket(self)
+		self.trade = SharedPart(self, "trade")
+		self.research = CountryResearch(self)

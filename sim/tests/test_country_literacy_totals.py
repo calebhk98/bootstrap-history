@@ -70,9 +70,9 @@ class CountryLiteracyTotalsTests(unittest.TestCase):
         people(registry, None, "workers", 1000, 0.9)
         foreign = people(registry, "other", "workers", 100, 0.2)
         view = CountryWorld(FakeWorld(), CountryProfile(country="other"), registry)
-        self.assertAlmostEqual(view.literacy("literacy_general"), 0.2)
+        self.assertAlmostEqual(view.people.literacy("literacy_general"), 0.2)
         foreign.record.literacy = 0.6
-        self.assertAlmostEqual(view.literacy("literacy_general"), 0.6)
+        self.assertAlmostEqual(view.people.literacy("literacy_general"), 0.6)
 
     def test_migration_keeps_the_number_of_readers(self):
         registry = ActorRegistry(ActorsState(home_country="home"))

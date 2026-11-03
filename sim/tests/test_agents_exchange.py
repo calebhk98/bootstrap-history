@@ -26,9 +26,9 @@ class ExchangeWorld(FakeWorld):
 def make_world():
 	world = ExchangeWorld()
 	world.baseline = {"base"}
-	world.nodes["base"] = make_node("base")
-	world.nodes["mill"] = make_node("mill", ["base"])
-	world.nodes["forge"] = make_node("forge", ["base"])
+	world.setting.nodes["base"] = make_node("base")
+	world.setting.nodes["mill"] = make_node("mill", ["base"])
+	world.setting.nodes["forge"] = make_node("forge", ["base"])
 	world.prices = {"grain": 10.0, "iron": 50.0}
 	return world
 
@@ -133,9 +133,9 @@ check("a payer never goes below zero", min(a.money, b.money) >= 0.0)
 b.record.offers.clear()
 a.record.stores["grain"] = 50.0
 offer = exchange.make_offer(a, b, {"stores": {"grain": 1.0}}, {}, world)
-check("a live offer is kept", exchange.expire_offers(b, world.year) == [] and len(b.record.offers) == 1)
+check("a live offer is kept", exchange.expire_offers(b, world.setting.year) == [] and len(b.record.offers) == 1)
 world.year = offer["expires"] + 1
-check("an expired offer vanishes", exchange.expire_offers(b, world.year) == [offer["id"]] and b.record.offers == [])
+check("an expired offer vanishes", exchange.expire_offers(b, world.setting.year) == [offer["id"]] and b.record.offers == [])
 world.year = 100
 offer = exchange.make_offer(a, b, {"stores": {"grain": 1.0}}, {}, world)
 exchange.decline(b, offer["id"])

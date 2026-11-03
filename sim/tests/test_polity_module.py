@@ -3,6 +3,7 @@ and the views take (protection, visible scale, familiarity, the scandal warning 
 
 QUICK_TOPIC = True
 
+from sim.tests.agents_fake_world import flat_namespace
 import unittest
 from types import SimpleNamespace
 
@@ -75,7 +76,7 @@ class StateRecords(unittest.TestCase):
     def module(self):
         record = SimpleNamespace(registered_people={"a": 5.0}, unrest_by_tile={"x": 1.0}, hold_by_tile={"x": 1.0}, risings=[1, 2],
                                  ruler_age=0, ruler_backer="", accession_due=False, army=0.0, land_taken_by_tile={})
-        world = SimpleNamespace(government=lambda: SimpleNamespace(record=record), soldiers_under_arms=lambda: 100)
+        world = flat_namespace(government=lambda: SimpleNamespace(record=record), soldiers_under_arms=lambda: 100)
         return polity_host.build(country_world=lambda owner: world), record
 
     def test_people_are_registered_by_the_larger_count(self):

@@ -187,7 +187,7 @@ class Game:
         needs = fake_needs(labour_market=lambda: self.labour.market, civilisation=self.civ, hours_per_person_year=HOURS_PER_PERSON_YEAR,
                            year=100, agent_country=lambda country: self.economy.agent_country(country),
                            trade_registry=lambda: {trade_id: {"family": trade.family, **trade.extra} for trade_id, trade in data.TRADE_REGISTRY.items()})
-        world = ActorWorld(types.SimpleNamespace(needs=needs, cast=lambda: self.actors))
+        world = ActorWorld(needs, types.SimpleNamespace(cast=lambda: self.actors))
         return {"wild_stock": lambda: {}, "seeded_actor_registry": lambda: self.actors, "actor_world": lambda: world}[name]
 
 

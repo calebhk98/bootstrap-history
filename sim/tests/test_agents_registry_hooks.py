@@ -32,7 +32,7 @@ def hatch(registry, world):
 	if "dragon:2" in registry.actors:
 		return []
 	registry.add("dragon:2", ActorRecord(kind="dragon", money=5.0))
-	hatched.append(world.year)
+	hatched.append(world.setting.year)
 	return ["dragon:2"]
 
 
@@ -40,7 +40,7 @@ extensions.spawners.append(("test_hatchery", hatch))
 world = FakeWorld()
 registry.advance(world)
 check("a provided kind takes its yearly turn", dragon.money == 9.0, dragon.money)
-check("a provided spawner runs after the actors' turns", "dragon:2" in registry.actors and hatched == [world.year])
+check("a provided spawner runs after the actors' turns", "dragon:2" in registry.actors and hatched == [world.setting.year])
 combined = combine_extensions([], [[("test_hatchery", hatch)], [("other", hatch)], [("test_hatchery", lambda registry, world: [])]], None, [], [])
 names = [name for name, _spawner in combined.spawners]
 check("providing a spawner name again replaces it in place", names == ["test_hatchery", "other"], names)
@@ -84,7 +84,7 @@ crowded = ActorRegistry(ActorsState(home_country="home"))
 crowded.add("firm:2", ActorRecord(kind="firm", money=1.0, target="kept"))
 entry_world = FakeWorld()
 entry_world.proven = {"mill"}
-entry_world.nodes["mill"] = {"id": "mill", "pre": [], "lab": {"labourer": 10.0}, "yrs": 1.0, "rev": 1.0e6, "up": 0.0}
+entry_world.setting.nodes["mill"] = {"id": "mill", "pre": [], "lab": {"labourer": 10.0}, "yrs": 1.0, "rev": 1.0e6, "up": 0.0}
 entry_world.demonstrated_nodes = {"mill"}
 entry_world.entry_gross = lambda node_id, rivals, entrants: 1.0e6
 entry_world.concern_wage_bill = lambda node_id, capacity=1.0: 0.0

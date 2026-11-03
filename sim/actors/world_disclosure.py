@@ -1,4 +1,4 @@
-"""What the world view says about how each invention was disclosed (kept secret, licensed, published)."""
+"""What the world says about how each invention was disclosed (kept secret, licensed, published)."""
 from typing import Any
 
 from sim.agents.api import PROOF_YEARS, SECRET_EXPOSURE, licence
@@ -8,11 +8,15 @@ from sim.seats.api import (base_visibility, builders_of, disclosure_modes, most_
 						   years_to_be_believed)
 
 
-class DisclosureView:
-	"""Mixed into `ActorWorld`: reads the founder's choice per invention."""
+class Disclosure:
+	"""Reads the founder's choice per invention. `world` is the root that hands out the parts."""
 
-	needs: Any
-	registry: Any
+	def __init__(self, world: Any) -> None:
+		self.world = world
+
+	@property
+	def needs(self) -> Any:
+		return self.world.needs
 
 	def disclosure_mode(self, node_id: str) -> str:
 		"""What the makers of an invention chose: the widest choice any seat that built it made."""
@@ -28,33 +32,29 @@ class DisclosureView:
 
 	def base_visibility(self, node_id: str) -> float:
 		"""How much of an invention can be learned before distance counts, 0..1."""
-		return base_visibility(self.disclosure_mode(node_id), self.is_public(node_id),  # type: ignore[attr-defined]
+		return base_visibility(self.disclosure_mode(node_id), self.world.knowledge.is_public(node_id),
 							   self.needs.copy_difficulty[node_id], SECRET_EXPOSURE)
 
 	def proof_years(self, node_id: str) -> float:
 		"""Years a concern must run at a profit before outsiders believe it."""
 		return years_to_be_believed(self.disclosure_mode(node_id), PROOF_YEARS, self.secret_exposure(node_id))
 
-	def seat_parties(self) -> Any:
-		"""Every seat as an actor, by seat id: the founder and other players hold patents and shares."""
-		return self.module.seat_parties()
-
 	def state_grants_patents(self, actor: Any) -> bool:
 		"""Whether the state holds a technology that declares the `patent_grant` mechanic, in its own
 		knowledge or in what its society already knows."""
-		state = self.government()
-		return any(state.knows(node_id, self) for node_id in self.needs.mechanic["patent_grant"])
+		state = self.world.setting.government()
+		return any(state.knows(node_id, self.world) for node_id in self.needs.mechanic["patent_grant"])
 
 	def patent_entry(self, node_id: str) -> Any:
 		"""The live patent on an invention as {"holder", "expires", "licensees"}, or None."""
 		needs = self.needs
-		holders = self.registry.patent_holders(node_id) + [self.module.seat_party(seat_id) for seat_id in needs.seats_holding_patent(node_id)]
-		return licence.live_patent(holders, node_id, self.year)
+		holders = self.world.registry.patent_holders(node_id) + [self.world.seat_book.seat_party(seat_id) for seat_id in needs.seats_holding_patent(node_id)]
+		return licence.live_patent(holders, node_id, self.world.setting.year)
 
-	def _holder(self, holder_id: str) -> Any:
+	def _holder_of(self, holder_id: str) -> Any:
 		"""The actor with this id: one in the registry, else a seat."""
-		needs = self.needs
-		return self.registry.get(holder_id) or (self.module.seat_party(holder_id) if holder_id in needs.seat_list()["joined"] else None)
+		seat_book = self.world.seat_book
+		return self.world.registry.get(holder_id) or (seat_book.seat_party(holder_id) if holder_id in self.needs.seat_list()["joined"] else None)
 
 	def collect_royalty(self, firm: Any, node_id: str, takings: float) -> float:
 		"""The royalty a licensed firm's takings owe each seat that licensed it the invention, never more than its
@@ -65,4 +65,4 @@ class DisclosureView:
 		for seat_id, due in seat_royalties_paid(owed, firm.money):
 			needs.send(PayActor(firm.actor_id, seat_id, due, "licence"))
 			paid += due
-		return paid + licence.collect_patent_royalty(self, self._holder, firm, node_id, takings)
+		return paid + licence.collect_patent_royalty(self.world, self._holder_of, firm, node_id, takings)

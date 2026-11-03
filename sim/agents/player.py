@@ -33,13 +33,13 @@ class Player(RecordedActor):
 
 	# ---- concerns ---------------------------------------------------------
 	def begin_concern(self, node_id: str, world: Any) -> str:
-		if node_id not in world.nodes:
+		if node_id not in world.setting.nodes:
 			raise CommandRejected("no such node")
 		if not self.knows(node_id, world):
 			raise CommandRejected("not known")
 		if node_id in self.concerns:
 			raise CommandRejected("already open")
-		self.business.open_plant(node_id, world.year)
+		self.business.open_plant(node_id, world.setting.year)
 		return "opened"
 
 	def end_concern(self, node_id: str, world: Any) -> str:
@@ -60,9 +60,9 @@ class Player(RecordedActor):
 		for node_id in sorted(self.concerns):
 			if (self.margin_of(node_id) or 0.0) <= 0.0:
 				continue
-			if world.year - self.opened_year_of(node_id, world.year) < world.proof_years(node_id):
+			if world.setting.year - self.opened_year_of(node_id, world.setting.year) < world.disclosure.proof_years(node_id):
 				continue
-			if world.is_public(node_id) or world.exposure(node_id, self.location()) >= PLAYER_VISIBLE_EXPOSURE:
+			if world.knowledge.is_public(node_id) or world.knowledge.exposure(node_id, self.location()) >= PLAYER_VISIBLE_EXPOSURE:
 				proven.append(node_id)
 		return proven
 
@@ -92,8 +92,8 @@ class Player(RecordedActor):
 			if (self.margin_of(node_id) or 0.0) < 0 and self.expected_margin(node_id, world) <= 0:
 				self.business.close_plant(node_id)
 		for node_id in sorted(self.knowledge - self.concerns):
-			if node_id in world.nodes and self.expected_margin(node_id, world) > 0:
-				self.business.open_plant(node_id, world.year)
+			if node_id in world.setting.nodes and self.expected_margin(node_id, world) > 0:
+				self.business.open_plant(node_id, world.setting.year)
 		research_choice.decide(self, world)
 
 	def act(self, world: Any) -> None:

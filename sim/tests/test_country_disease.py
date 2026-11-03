@@ -45,7 +45,7 @@ def years(registry, count, world=None):
 	world = world or PopulationWorld()
 	for _ in range(count):
 		strata_spawner(registry, world)
-		world.year += 1
+		world.setting.year += 1
 
 
 def deaths_of(profile):

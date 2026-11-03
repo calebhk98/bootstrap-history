@@ -7,7 +7,7 @@ import types
 import unittest
 from sim.tests import market_stand_in
 
-from sim.actors.world_stakes import StakeView
+from sim.actors.world_stakes import Stakes
 from sim.tests.world_stand_in import fake_needs
 
 
@@ -37,9 +37,9 @@ class MarketState(unittest.TestCase):
 class TithableSales(unittest.TestCase):
     def value(self, quotes, states):
         needs = fake_needs(material_commodity=lambda material: material, market_state=lambda commodity: states.get(commodity),
-                           materials_serving=lambda need: ["wheat", "rice", "ghost"])
-        view = types.SimpleNamespace(needs=needs, _commodity_quote=lambda commodity: quotes.get(commodity))
-        return StakeView.tithable_sales_value(view, "food")
+                           materials_serving=lambda need: ["wheat", "rice", "ghost"],
+                           main_material_of=lambda commodity: commodity, material_trade_quote=lambda material: quotes.get(material))
+        return Stakes(types.SimpleNamespace(needs=needs)).tithable_sales_value("food")
 
     def test_the_value_is_the_sold_tonnes_at_the_buy_quote_summed_over_the_needs_commodities(self):
         quotes = {"wheat": {"buy_per_tonne": 10.0}, "rice": {"buy_per_tonne": 20.0}}

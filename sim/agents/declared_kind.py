@@ -36,10 +36,10 @@ class DeclaredKind(RecordedActor):
 		members = record.members
 		trade = declaration.get("trade")
 		if trade and members > 0.0:
-			wages = members * float(declaration.get("work_share", 1.0)) * world.pay_per_person_year(trade)
+			wages = members * float(declaration.get("work_share", 1.0)) * world.labour.pay_per_person_year(trade)
 			if wages > 0.0:
-				ledger.transfer(world.edge(EDGE_ECONOMY), self, wages, EDGE_ECONOMY)
-		floor_costs = world.need_floor_costs_per_person_year()
+				ledger.transfer(world.setting.edge(EDGE_ECONOMY), self, wages, EDGE_ECONOMY)
+		floor_costs = world.people.need_floor_costs_per_person_year()
 		record.shortfall = {}
 		for need_id in sorted(declaration["needs"]):
 			need = members * float(declaration["needs"][need_id]) * floor_costs.get(need_id, 0.0)

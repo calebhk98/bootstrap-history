@@ -68,7 +68,7 @@ class StateWorld(FakeWorld):
 def valued_world(*nodes):
     world = StateWorld()
     for node in nodes:
-        world.nodes[node["id"]] = node
+        world.setting.nodes[node["id"]] = node
         world.demonstrated_nodes.add(node["id"])
     return world
 
@@ -80,7 +80,7 @@ def state_with(world, aware=True):
     government = state_registry.ensure_government("home")
     government.money = 1.0e6
     if aware:
-        government.record.aware.update({node_id: world.year for node_id in world.demonstrated()})
+        government.record.aware.update({node_id: world.setting.year for node_id in world.knowledge.demonstrated()})
     return government
 
 
@@ -131,14 +131,14 @@ doomed_world = valued_world(make_node("test_doomed", traits=["military"], risk=5
 doomed = state_with(doomed_world)
 doomed.decision_policy = CallbackPolicy(lambda actor, decision: [o.subject for o in decision.options])
 plan = imitation.copy_plan(doomed, ["test_doomed"], doomed_world)
-doomed.works["test_doomed"] = imitation.start_work("test_doomed", ["test_doomed"], plan, doomed_world.year)
+doomed.works["test_doomed"] = imitation.start_work("test_doomed", ["test_doomed"], plan, doomed_world.setting.year)
 doomed.work_on_copies(doomed_world)
 finished = doomed.work_on_copies(doomed_world)
 check("a copy that fails teaches nothing, costs what was spent and is counted",
       not finished and "test_doomed" not in doomed.knowledge
       and doomed.record.failed_copies.get("test_doomed") == 1 and doomed.money < 1.0e6)
 doomed.money = 0.0
-doomed.works["test_doomed"] = imitation.start_work("test_doomed", ["test_doomed"], plan, doomed_world.year)
+doomed.works["test_doomed"] = imitation.start_work("test_doomed", ["test_doomed"], plan, doomed_world.setting.year)
 doomed.work_on_copies(doomed_world)
 check("a purse that cannot pay stalls the work instead of forgiving it",
       doomed.works["test_doomed"]["progress"] < 1.0 and doomed.works["test_doomed"]["stalled"] > 0)
@@ -148,7 +148,7 @@ policy_world = valued_world(make_node("test_visible", traits=["military"]))
 policy_registry = ActorRegistry(ActorsState(home_country="home"))
 chooser = policy_registry.ensure_government("home")
 chooser.money = 1.0e6
-chooser.record.aware.update({node_id: policy_world.year for node_id in policy_world.demonstrated()})
+chooser.record.aware.update({node_id: policy_world.setting.year for node_id in policy_world.knowledge.demonstrated()})
 chooser.decision_policy = IdlePolicy()
 chooser.consider_imitation(policy_world)
 check("an idle policy copies nothing however valuable the invention", not chooser.works)

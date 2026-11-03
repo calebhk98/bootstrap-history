@@ -38,9 +38,9 @@ def raises(call):
 def make_world():
 	world = PatentWorld()
 	world.baseline = {"base"}
-	world.nodes["base"] = make_node("base")
-	world.nodes["loom"] = make_node("loom", ["base"])
-	world.nodes["pump"] = make_node("pump", ["base"])
+	world.setting.nodes["base"] = make_node("base")
+	world.setting.nodes["loom"] = make_node("loom", ["base"])
+	world.setting.nodes["pump"] = make_node("pump", ["base"])
 	world.registry = ActorRegistry(ActorsState(home_country="home"))
 	return world
 
@@ -60,7 +60,7 @@ check("an actor must know what it patents", raises(lambda: patent.apply(b, "loom
 check("a baseline technique cannot be patented", raises(lambda: patent.apply(a, "base", world)))
 patent.apply(a, "loom", world)
 entry = dict(a.record.patents["loom"])
-check("the grant records the term", entry["expires"] > world.year and entry["granted"] == world.year, entry)
+check("the grant records the term", entry["expires"] > world.setting.year and entry["granted"] == world.setting.year, entry)
 check("a second claim is refused while the right lives", raises(lambda: patent.apply(a, "loom", world)))
 check("the holder is found", patent.holder_of(world, "loom") == "player:a")
 b.knowledge.add("loom")

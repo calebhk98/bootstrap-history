@@ -25,5 +25,5 @@ class Captives(Part):
 		owned = self.needs.tiles_owned_by[loser]
 		if tile not in owned or not self.needs.has_state[loser]:
 			return 0.0
-		people = float(self.needs.country_world[loser].population_total()) * settlement.population_share(owned, tile)
+		people = float(self.needs.country_world[loser].people.population_total()) * settlement.population_share(owned, tile)
 		return self._add_captives(winner, loser, captives_from_conquest(people), tile, "conquest")

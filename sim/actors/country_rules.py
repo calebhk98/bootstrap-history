@@ -44,7 +44,7 @@ def country_literacy(registry: Any, country: Optional[str]) -> CountryLiteracy:
 def partner_catch_chance(registry: Any, world: Any, civilization_id: str, share_of_holding: float) -> float:
 	"""Chance the partner's state finds out a taking of this share of what it holds: its reach (what its paid officials collect of
 	what is due over its roads) against how visible the bite is."""
-	reach = float(registry.world_for(registry.get(GOVERNMENT_PREFIX + civilization_id), world).state_reach())
+	reach = float(registry.world_for(registry.get(GOVERNMENT_PREFIX + civilization_id), world).taxpayers.state_reach())
 	return stock_dynamics.catch_chance(reach, visibility_factor(share_of_holding))
 
 

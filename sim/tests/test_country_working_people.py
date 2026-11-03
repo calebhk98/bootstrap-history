@@ -59,7 +59,7 @@ def country_world(shared):
 
 def refuses(world, trade):
 	try:
-		world.national_people(trade)
+		world.labour.national_people(trade)
 	except NoCountryEconomy as error:
 		return error.country
 	return None
@@ -67,8 +67,8 @@ def refuses(world, trade):
 
 world = country_world(Shared())
 check("unskilled labour is the working people the country's labour markets hold, not its profile's working age",
-	  world.national_people("labourer") == MARKET_PEOPLE != PROFILE_WORKING_AGE, world.national_people("labourer"))
-check("a skilled trade is the people its markets hold in the trade", world.national_people("scribe") == 7.0)
+	  world.labour.national_people("labourer") == MARKET_PEOPLE != PROFILE_WORKING_AGE, world.labour.national_people("labourer"))
+check("a skilled trade is the people its markets hold in the trade", world.labour.national_people("scribe") == 7.0)
 
 
 class Empty(Shared):

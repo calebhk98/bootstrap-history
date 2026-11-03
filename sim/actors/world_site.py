@@ -14,17 +14,22 @@ FLOOR_AREA_PER_WORKER_SQUARE_METRES = declare(
 		"market's rent. Stands in for a floor plan per concern, which no data gives.")
 
 
-class SiteView:
-	"""Read-only questions about the site of a concern; mixed into `ActorWorld`."""
+class Site:
+	"""Read-only questions about the site of a concern. `world` is the root that hands out the parts."""
 
-	needs: Any
+	def __init__(self, world: Any) -> None:
+		self.world = world
+
+	@property
+	def needs(self) -> Any:
+		return self.world.needs
 
 	def worked_hectares(self, node_id: str, capacity: float = 1.0) -> float:
 		"""Hectare-years of land a year of a concern run at `capacity` times its founding size works: for
 		each production entry the concern gates that works land, its declared yearly output over the
 		output of one batch, times the land one batch takes. Zero for a concern that declares no output
 		or whose entries work no land."""
-		node = self.nodes[node_id]  # type: ignore[attr-defined]
+		node = self.world.setting.nodes[node_id]
 		hectares = 0.0
 		for entry in production_data().values():
 			land_per_batch = float(entry.get("land_hectare_years") or 0.0)
@@ -40,7 +45,7 @@ class SiteView:
 	def plot_hectares(self, node_id: str, capacity: float = 1.0) -> float:
 		"""Hectares of building plot a concern run at `capacity` times its founding size occupies: its
 		staff at the stated floor area per person (workshop, plant and yard together)."""
-		people = sum(self.concern_staff(node_id).values()) * capacity  # type: ignore[attr-defined]
+		people = sum(self.world.concerns.concern_staff(node_id).values()) * capacity
 		return people * FLOOR_AREA_PER_WORKER_SQUARE_METRES / SQUARE_METRES_PER_HECTARE
 
 	def site_hectares(self, node_id: str, capacity: float = 1.0) -> float:
@@ -52,7 +57,7 @@ class SiteView:
 		of the land let where none was let on the tile); the engine's land price while the economy opens."""
 		rent = self.needs.agent_land_rent_at(tile)
 		if rent is None or rent <= 0.0:
-			return float(self.material_price("hectare_land"))  # type: ignore[attr-defined]
+			return float(self.world.quotes.material_price("hectare_land"))
 		return float(rent)
 
 	def site_rent(self, node_id: str, capacity: float = 1.0, tile: Optional[str] = None) -> float:

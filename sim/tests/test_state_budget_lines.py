@@ -3,6 +3,7 @@ line built from a stand-in world that answers only what the line reads. No game.
 
 QUICK_TOPIC = True
 
+from sim.tests.agents_fake_world import flat_world
 import types
 import unittest
 
@@ -13,6 +14,7 @@ from sim.agents.tuning_spending import (COAST_KM_PER_SHIP, COURT_RETAINERS_PER_O
 WAGE = {"labourer": 10.0, "mason": 20.0, "sailor": 15.0, "trireme_wright": 25.0}
 
 
+@flat_world
 class StubWorld:
     def __init__(self, road_km=100.0, coast_km=500.0, urban=10000.0, fleet=(), levers=None, price=2.0, national=1.0e9):
         self._territory = types.SimpleNamespace(road_km=road_km, coast_km=coast_km)

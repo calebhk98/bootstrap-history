@@ -23,7 +23,7 @@ OPENING_MONEY = 5000.0
 
 def make_world():
 	world = FakeWorld(year=100)
-	world.nodes["shop"] = make_node("shop", hours=4000.0, revenue=20000.0, upkeep=60.0)
+	world.setting.nodes["shop"] = make_node("shop", hours=4000.0, revenue=20000.0, upkeep=60.0)
 	return world
 
 
@@ -35,7 +35,7 @@ def owners_of_one_business(world, crew_found=True):
 		owner = registry.add("%s:1" % kind, ActorRecord(kind=kind, money=OPENING_MONEY, founded_year=90))
 		owner.business.adopt(Plant("shop", opened_year=OPENED, size=SIZE))
 		if crew_found:
-			owner.record.workforce.update({trade: people * SIZE for trade, people in world.concern_staff("shop").items()})
+			owner.record.workforce.update({trade: people * SIZE for trade, people in world.concerns.concern_staff("shop").items()})
 		owners[kind] = owner
 	return owners
 
@@ -54,11 +54,11 @@ check("the three owners' businesses are the same plant", len({tuple((plant.entry
 check("the same year gives the same margin and carrying cost to a firm, a player and a state",
 	  len(set(results.values())) == 1 and results["firm"][0] > 0.0, results)
 check("it posts the same places for its crew", len({tuple(sorted(owner.staff_wanted.items())) for owner in owners.values()}) == 1
-	  and owners["firm"].staff_wanted["labourer"] >= world.concern_staff("shop")["labourer"] * SIZE, owners["firm"].staff_wanted)
+	  and owners["firm"].staff_wanted["labourer"] >= world.concerns.concern_staff("shop")["labourer"] * SIZE, owners["firm"].staff_wanted)
 check("it finds the same share of its crew", len({owner.staffed_share("shop") for owner in owners.values()}) == 1)
 check("it pays the same: money after the year is the same", len({round(owner.money, 9) for owner in owners.values()}) == 1)
-expected = OPENING_MONEY + world.concern_takings("shop", OPENED, 1.0, SIZE) - world.upkeep("shop", SIZE) \
-	- world.site_rent("shop", SIZE)
+expected = OPENING_MONEY + world.concerns.concern_takings("shop", OPENED, 1.0, SIZE) - world.concerns.upkeep("shop", SIZE) \
+	- world.site.site_rent("shop", SIZE)
 check("takings less upkeep and site rent is what the purse gained (the crew and the managers are posted to the labour market and paid by its clearing, not here)", all(abs(owner.money - expected) < 1e-6 for owner in owners.values()),
 	  [owner.money for owner in owners.values()])
 check("the books balance per owner: purse = opening + income - outlays",

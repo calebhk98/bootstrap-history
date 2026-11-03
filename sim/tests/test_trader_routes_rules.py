@@ -1,5 +1,6 @@
 """Trader route rules (Complaints/115, 529), on a world the test builds: a cargo is sized by the price it makes, and a
 good is only carried to a place that has a market for it."""
+from sim.tests.agents_fake_world import flat_world
 from .harness import *  # noqa: F401,F403
 
 from sim.agents.trader import depth_room
@@ -9,6 +10,7 @@ from sim.agents.tuning_trader import TRADER_DEPTH_SHARE, TRADER_RISK_SHARE
 QUICK_TOPIC = True
 
 
+@flat_world
 class PlainWorld:
     """Two places for one good. A price answers cargo linearly (a place in `book_slope`) or does not move (no book)."""
 
@@ -46,8 +48,8 @@ RATE = 0.05
 
 
 def pays(world, cargo):
-    sold = world.price_after_cargo("grain", "far", cargo, True)
-    bought = world.price_after_cargo("grain", "near", cargo, False)
+    sold = world.trade.price_after_cargo("grain", "far", cargo, True)
+    bought = world.trade.price_after_cargo("grain", "near", cargo, False)
     return sold - bought * (1.0 + TRADER_RISK_SHARE + RATE) - world.freight > 0.0
 
 

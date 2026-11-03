@@ -134,8 +134,8 @@ def make_offer(giver: Any, receiver: Any, give: Dict[str, Any], take: Dict[str, 
 		raise CommandRejected(reason)
 	giver.record.offer_serial += 1
 	offer = {"id": "%s#%d" % (giver.actor_id, giver.record.offer_serial), "from": giver.actor_id,
-			 "to": receiver.actor_id, "give": give, "take": take, "year": world.year,
-			 "expires": world.year + int(OFFER_LIFETIME_YEARS)}
+			 "to": receiver.actor_id, "give": give, "take": take, "year": world.setting.year,
+			 "expires": world.setting.year + int(OFFER_LIFETIME_YEARS)}
 	receiver.record.offers.append(offer)
 	return offer
 
@@ -172,7 +172,7 @@ def accept(receiver: Any, offer_id: Any, find_actor: Callable[[str], Any], world
 	giver = find_actor(offer["from"])
 	if giver is None:
 		raise CommandRejected("the offerer is gone")
-	if world.year > offer["expires"]:
+	if world.setting.year > offer["expires"]:
 		raise CommandRejected("the offer has expired")
 	reason = problem(giver, receiver, offer["give"], offer["take"], world)
 	if reason:

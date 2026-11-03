@@ -12,8 +12,8 @@ from unittest import mock
 from sim.agents.business import Business
 from sim.agents.business_closing import release_plant
 from sim.agents.business_plant import MOTHBALLED, OPERATING, Plant
-from sim.actors import world as actors_world
-from sim.actors.world import ActorWorld
+from sim.actors import world_concerns
+from sim.actors.world_concerns import Concerns
 from sim.ventures import crew, quotes
 from sim.production import revenue as production_revenue
 from sim.ledger.api import PayEdge
@@ -164,19 +164,20 @@ class FirmSideTests(unittest.TestCase):
     def test_a_firms_takings_go_through_the_same_size_arithmetic_as_the_founders(self):
         seen = {}
         needs = fake_needs(concern_takings=lambda node_id, ramp: 100.0, node_output_market_factor=lambda node: 0.9)
-        world = SimpleNamespace(nodes={NODE: {"cat": "other"}}, needs=needs, goods_category_names=set(),
-                                ramp=lambda opened_year, node_id=None: 0.5)
-        with mock.patch.object(actors_world.business_books, "takings_of_size",
+        world = SimpleNamespace(setting=SimpleNamespace(nodes={NODE: {"cat": "other"}}), needs=needs)
+        part = Concerns(world)
+        part.ramp = lambda opened_year, node_id=None: 0.5
+        with mock.patch.object(world_concerns.business_books, "takings_of_size",
                                lambda takings, size, market: seen.update(takings=takings, size=size, market=market) or takings * size):
-            result = ActorWorld.concern_takings(world, NODE, 90, rivals=1.0, capacity=2.0)
+            result = part.concern_takings(NODE, 90, rivals=1.0, capacity=2.0)
         self.assertEqual(seen, {"takings": 100.0, "size": 2.0, "market": 0.9})
         self.assertEqual(result, 200.0 / 3.0)
 
     def test_a_firms_crew_and_upkeep_are_the_engines_for_that_concern(self):
         needs = fake_needs(concern_staff=lambda node_id: {"smith": 2.0}, concern_upkeep=lambda node_id, capacity: 7.0 * capacity)
         world = SimpleNamespace(needs=needs)
-        self.assertEqual(ActorWorld.concern_staff(world, NODE), {"smith": 2.0})
-        self.assertEqual(ActorWorld.upkeep(world, NODE, 2.0), 14.0)
+        self.assertEqual(Concerns(world).concern_staff(NODE), {"smith": 2.0})
+        self.assertEqual(Concerns(world).upkeep(NODE, 2.0), 14.0)
 
 
 if __name__ == "__main__":

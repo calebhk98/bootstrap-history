@@ -22,32 +22,32 @@ def harvest(world: Any, tiles: Optional[FrozenSet[str]] = None, material: Option
 	share of it: TEMPORARY HEURISTIC (CLAUDE.md 4.4), spread over the state's tiles by arable hectares, as no
 	harvest is recorded by tile, retire: Complaint 622); any other good is what the country's producers made of
 	it last year, tile by tile."""
-	staple = world.staple_material()   # the grain the harvest is counted in: the civilisation's staple
+	staple = world.quotes.staple_material()   # the grain the harvest is counted in: the civilisation's staple
 	if material is not None and material != staple:
-		tonnes = world.output_tonnes(material, tiles)
-		return Base(tonnes * world.material_price(material), tonnes, material)
-	tonnes = world.harvest_tonnes() * (1.0 if tiles is None else world.arable_share(tiles))
-	return Base(tonnes * world.material_price(staple), tonnes, staple)
+		tonnes = world.revenue.output_tonnes(material, tiles)
+		return Base(tonnes * world.quotes.material_price(material), tonnes, material)
+	tonnes = world.revenue.harvest_tonnes() * (1.0 if tiles is None else world.revenue.arable_share(tiles))
+	return Base(tonnes * world.quotes.material_price(staple), tonnes, staple)
 
 
 def adult_labour_years(world: Any) -> Base:
 	"""The working age less the soldiers under arms (who owe no poll tax), each worth a year of unskilled
 	labour at the going wage."""
-	people = max(0.0, world.national_people(world.trade_of_role("unskilled")) - world.soldiers_under_arms())
-	return Base(people * world.pay_per_person_year(world.trade_of_role("unskilled")))
+	people = max(0.0, world.labour.national_people(world.labour.trade_of_role("unskilled")) - world.army.soldiers_under_arms())
+	return Base(people * world.labour.pay_per_person_year(world.labour.trade_of_role("unskilled")))
 
 
 def imports_value(world: Any) -> Base:
-	return Base(world.trade_value("in"))
+	return Base(world.revenue.trade_value("in"))
 
 
 def exports_value(world: Any) -> Base:
-	return Base(world.trade_value("out"))
+	return Base(world.revenue.trade_value("out"))
 
 
 def coin_stock(world: Any) -> Base:
 	"""Coin the society holds: the only wealth the simulation models as a stock."""
-	return Base(world.coin_stock_value())
+	return Base(world.revenue.coin_stock_value())
 
 
 def earned_income(stratum: Any) -> float:
@@ -59,24 +59,24 @@ def earned_income(stratum: Any) -> float:
 def stratum_income(world: Any) -> Base:
 	"""What each of the country's bodies of people earned since the state last assessed it; the money is
 	taken from the bodies themselves (`ledger.transfer`), so the payers go with the base."""
-	assessed = world.government().record.income_assessed
+	assessed = world.setting.government().record.income_assessed
 	payers = tuple((stratum, max(0.0, earned_income(stratum) - assessed.get(stratum.actor_id, 0.0)))
-				   for stratum in world.country_strata())
+				   for stratum in world.people.country_strata())
 	return Base(sum(income for _stratum, income in payers), payers=payers)
 
 
 def land_rent(world: Any, tiles: Optional[FrozenSet[str]] = None) -> Base:
 	"""Rent producers paid on the land they let last year, summed over the tiles (only `tiles` when given); the
 	owners who received it are the payers where the world can name them."""
-	paid = world.land_rent_paid_by_tile()
+	paid = world.revenue.land_rent_paid_by_tile()
 	total = sum(rent for tile, rent in paid.items() if tiles is None or tile in tiles)
-	return Base(total, payers=tuple(world.land_rent_owners(tiles)) if total > 0.0 else ())
+	return Base(total, payers=tuple(world.revenue.land_rent_owners(tiles)) if total > 0.0 else ())
 
 
 def land_value(world: Any, tiles: Optional[FrozenSet[str]] = None) -> Base:
 	"""What the land let is worth: the rent capitalised at the market rate of interest, so land is worth what
 	its rent would buy in the loan market. Nothing is taxable where there is no rate."""
-	rate = world.market_rate()
+	rate = world.credit.market_rate()
 	base = land_rent(world, tiles)
 	if rate <= 0.0:
 		return Base(0.0)

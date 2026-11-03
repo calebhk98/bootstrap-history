@@ -5,12 +5,14 @@ test_state_revenue_forms_scenario."""
 QUICK_TOPIC = True
 
 
+from types import SimpleNamespace
+
 from .harness import check, S
 
 from sim.agents import revenue, revenue_labour
 from sim.agents.api import Government
 from sim.agents.records import ActorRecord
-from sim.actors.world_revenue import RevenueView
+from sim.actors.world_revenue import Revenue
 from sim.tests.world_stand_in import fake_needs
 
 from .agents_fake_world import FakeWorld
@@ -67,19 +69,13 @@ class BasesWorld(FakeWorld):
         return revenue.assess(self)
 
 
-class StateView(RevenueView):
-    """The revenue questions over a stand-in game: its declared forms, its government and the bases of BasesWorld."""
+class StateView(Revenue):
+    """The revenue part over a stand-in game: its declared forms, its government and the bases of BasesWorld."""
 
     def __init__(self, civ, forms_world):
-        self.needs = fake_needs(civilisation=civ)
+        government = Government("government:home", ActorRecord(kind="government", revenue_forms=list(civ.get("state_revenue") or ())))
+        super().__init__(SimpleNamespace(needs=fake_needs(civilisation=civ), setting=SimpleNamespace(government=lambda: government)))
         self._forms_world = forms_world
-        self._government = Government("government:home", ActorRecord(kind="government", revenue_forms=list(civ.get("state_revenue") or ())))
-
-    def government(self):
-        return self._government
-
-    def _once(self, key, compute):
-        return compute()
 
     def revenue_assessments(self):
         return revenue.assess(self._forms_world)

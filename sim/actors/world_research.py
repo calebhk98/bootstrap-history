@@ -1,4 +1,4 @@
-"""What a researching actor asks of the world: hands, sellers and substitutes (mixed into `ActorWorld`)."""
+"""What a researching actor asks of the world: hands, sellers and substitutes."""
 from typing import Any, List, Optional
 
 from sim.agents.api import OBSERVATION_RANGE_KM, TRADE_TONNES_FOR_UNIT_CONTACT, research_gate
@@ -8,11 +8,15 @@ from sim.seats import api as seats_api
 
 
 
-class ResearchView:
-	"""Read-only questions behind the start gates in `sim/agents/research_gate.py`."""
+class Research:
+	"""Read-only questions behind the start gates in `sim/agents/research_gate.py`. `world` is the root that hands out the parts."""
 
-	needs: Any
-	registry: Any
+	def __init__(self, world: Any) -> None:
+		self.world = world
+
+	@property
+	def needs(self) -> Any:
+		return self.world.needs
 
 	def research_trades(self, family: str) -> List[str]:
 		"""The trades whose people count as hands of a family (scholars; or the craft trades), the same for every country."""
@@ -27,7 +31,7 @@ class ResearchView:
 		own = getattr(actor, "research_hands", None)
 		if own is not None:
 			return own(family)
-		return sum(actor.workforce.get(trade, 0.0) + (self.free_fte(trade, actor.identity()) or 0.0)
+		return sum(actor.workforce.get(trade, 0.0) + (self.world.labour.free_fte(trade, actor.identity()) or 0.0)
 				   for trade in self.research_trades(family))
 
 	def unsold_materials(self, actor: Any, node_id: str) -> List[str]:
@@ -40,7 +44,7 @@ class ResearchView:
 	def contact_volume(self, place_a: Optional[str], place_b: Optional[str]) -> float:
 		"""News passing between two places in a year: neighbours see each other's work (the range an onlooker
 		sees at), and each tonne carried between them is a visit (`TRADE_TONNES_FOR_UNIT_CONTACT`)."""
-		neighbour = seats_api.seen_from(1.0, self.distance_km(place_a, place_b), OBSERVATION_RANGE_KM)
+		neighbour = seats_api.seen_from(1.0, self.world.setting.distance_km(place_a, place_b), OBSERVATION_RANGE_KM)
 		carried = self.needs.goods_carried_last_year()
 		tonnes = flow_ledger.tonnes_between(carried, str(place_a), str(place_b)) + flow_ledger.tonnes_between(
 			carried, str(place_b), str(place_a))
@@ -52,8 +56,9 @@ class ResearchView:
 	def research_cost(self, node_id: str, max_age_years: int) -> float:
 		"""What the node costs to pioneer, worked out afresh only when the last figure is `max_age_years` old
 		(the cost walks the founder's materials and labour, so every actor's yearly look would repeat it)."""
-		kept = self.registry._research_costs
+		kept = self.world.registry._research_costs
 		stamped = kept.get(node_id)
-		if stamped is None or self.year - stamped[0] >= max_age_years:
-			stamped = kept[node_id] = (self.year, self.copy_cost(node_id))
+		year = self.world.setting.year
+		if stamped is None or year - stamped[0] >= max_age_years:
+			stamped = kept[node_id] = (year, self.world.concerns.copy_cost(node_id))
 		return stamped[1]

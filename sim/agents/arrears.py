@@ -34,7 +34,7 @@ def settle(government: Any, world: Any) -> Dict[str, float]:
 	for name, amount in sorted(record.arrears.items()):
 		if amount > 0.0:
 			paid[name] = amount * covered
-			world.pay_wages(government, paid[name], name)
+			world.labour.pay_wages(government, paid[name], name)
 			record.arrears[name] = amount - paid[name]
 	record.arrears = {name: amount for name, amount in record.arrears.items() if amount > 1e-9}
 	record.arrears_paid = paid

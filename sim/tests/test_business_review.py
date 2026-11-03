@@ -15,7 +15,7 @@ from .agents_fake_world import FakeWorld, make_node
 
 def a_firm_running(entry_key):
 	world = FakeWorld(year=50)
-	world.nodes[entry_key] = make_node(entry_key, hours=100.0, revenue=10.0, upkeep=1.0)
+	world.setting.nodes[entry_key] = make_node(entry_key, hours=100.0, revenue=10.0, upkeep=1.0)
 	registry = ActorRegistry(ActorsState(home_country="home"))
 	firm = registry.add("firm:1", ActorRecord(kind="firm", founded_year=0, business=Business.running([entry_key], opened_year=0)))
 	return world, firm

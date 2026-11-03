@@ -46,12 +46,12 @@ class Holder(RecordedActor):
         chance = float(declaration["failure_chance_per_year"])
         if chance <= 0.0 or self.money <= 0.0:
             return
-        roll = world.rng_for(world.year, "cash_shelter_failure", self.actor_id)
+        roll = world.setting.rng_for(world.setting.year, "cash_shelter_failure", self.actor_id)
         if roll.random() < chance:
             lost = self.money * float(declaration["failure_loss_share"])
-            ledger.transfer(self, world.edge(edges.EDGE_THIEVES), lost, FAILURE_CAUSE)
-            self.record.cause = "looted in year %d" % world.year
-            self.record.last_logged_year = world.year
+            ledger.transfer(self, world.setting.edge(edges.EDGE_THIEVES), lost, FAILURE_CAUSE)
+            self.record.cause = "looted in year %d" % world.setting.year
+            self.record.last_logged_year = world.setting.year
 
 
 def register(api):

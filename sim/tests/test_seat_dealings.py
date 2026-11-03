@@ -95,7 +95,7 @@ class Game:
 sim = Game()
 world = DealWorld(year=100)
 world.registry, world.game = sim.actors, sim
-world.nodes["loom"] = make_node("loom")
+world.setting.nodes["loom"] = make_node("loom")
 world.baseline = set()
 sim.build(world)
 seat = sim.slot

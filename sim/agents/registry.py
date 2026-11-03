@@ -79,7 +79,7 @@ class ActorRegistry:
 		self._totals = ConcernTotals()
 		# country -> the world its actors see this year (rebuilt every `advance`)
 		self._scoped: Dict[str, Any] = {}
-		# node -> (year, cost): what researching it cost when last worked out (see ActorWorld.research_cost)
+		# node -> (year, cost): what researching it cost when last worked out (see ActorWorld.research.research_cost)
 		self._research_costs: Dict[str, Any] = {}
 		for actor_id in sorted(state.records):
 			self._wrap(actor_id)
@@ -318,7 +318,7 @@ class ActorRegistry:
 
 	def proven_concerns(self, world: Any) -> List[str]:
 		"""Concerns some player has shown to pay, the founder's and every player actor's, in id order."""
-		proven = set(world.proven_concerns())
+		proven = set(world.concerns.proven_concerns())
 		for actor in self.actors.values():
 			shown = getattr(actor, "proven_concerns", None)
 			if shown is not None and actor.record.exited_year is None:
@@ -359,7 +359,7 @@ class ActorRegistry:
 		count = self.capacity_in(node_id)
 		if asking_id in operators:
 			count -= self.actors[asking_id].capacity_of(node_id)
-		founder_operates = self.world is not None and self.world.is_public(node_id)
+		founder_operates = self.world is not None and self.world.knowledge.is_public(node_id)
 		return count + (1 if founder_operates else 0)
 
 	def _workforces(self) -> Dict[str, Dict[str, float]]:
@@ -381,7 +381,7 @@ class ActorRegistry:
 		before = self._workforces()
 		for actor_id in sorted(self.actors):
 			actor = self.actors[actor_id]
-			world.market_forget(actor_id)
+			world.market.market_forget(actor_id)
 			if actor.record.exited_year is not None:
 				continue
 			# the tally is a count of everyone's staff as of the acting actor's staff in `_staff_basis`
@@ -419,16 +419,16 @@ class ActorRegistry:
 		carries, more than the capital it ties up would earn at the market's rate."""
 		self.world = world
 		founded = []
-		pool = [world.society_output() * ENTREPRENEURIAL_CAPITAL_SHARE]
+		pool = [world.revenue.society_output() * ENTREPRENEURIAL_CAPITAL_SHARE]
 		waiting: Dict[str, int] = {}
 		for firm in self.active_firms():
 			target = firm.record.target
 			if target is not None and target not in firm.concerns:
-				key = world.market_key(target)
+				key = world.market.market_key(target)
 				waiting[key] = waiting.get(key, 0) + 1
 		strata_exist = bool(self.of_kind("stratum"))
 		for node_id in self.proven_concerns(world):
-			key = world.market_key(node_id)
+			key = world.market.market_key(node_id)
 			niche = NicheEntry(self, world, node_id, pool, strata_exist)
 			while True:
 				firm_id = niche.found(self.rivals_of(node_id, ""), waiting.get(key, 0))
@@ -454,8 +454,8 @@ class ActorRegistry:
 		from .group_tuning import GROUP_ORGANISING_WEIGHT
 		home = country == self.state.home_country
 		formed = []
-		for key, sector in sorted(world.sectors().items()):
-			if sector.lost_income / world.scope_revenue(sector.scope) < GROUP_ORGANISING_WEIGHT:
+		for key, sector in sorted(world.groups.sectors().items()):
+			if sector.lost_income / world.groups.scope_revenue(sector.scope) < GROUP_ORGANISING_WEIGHT:
 				continue
 			group_id = "group:" + key if home else "group:%s:%s" % (country, key)
 			existing = self.actors.get(group_id)
@@ -463,7 +463,7 @@ class ActorRegistry:
 				continue
 			if existing is None:
 				existing = self.add(group_id, ActorRecord(**InterestGroup.founded_by(sector, None if home else country),
-														  founded_year=world.year))
+														  founded_year=world.setting.year))
 			else:
 				existing.record.exited_year = None
 			existing.record.lost_income = 0.0

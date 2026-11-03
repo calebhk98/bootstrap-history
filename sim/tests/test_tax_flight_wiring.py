@@ -1,5 +1,6 @@
 """Complaint 657: the year's flight wiring. Each test builds the inputs and calls the rule the engine hands its numbers to:
 the take by tile, the penalty on each route, the tenants who leave, the fugitives and their return."""
+from sim.tests.agents_fake_world import flat_namespace
 import unittest
 from types import SimpleNamespace
 
@@ -167,7 +168,7 @@ def income_form(rate, reach, base=1000.0):
 
 class TheMenuNetsTheBaseLostToFlight(unittest.TestCase):
 	def world(self, reach, rate=0.2, away=0.0):
-		return SimpleNamespace(revenue_assessments=lambda: [income_form(rate, reach)], fugitive_share=lambda: away)
+		return flat_namespace(revenue_assessments=lambda: [income_form(rate, reach)], fugitive_share=lambda: away)
 
 	def test_a_raise_beyond_the_officials_reach_yields_less_than_the_extra_rate_on_the_base(self):
 		naive = (fiscal_response.new_rate_of(0.2) - 0.2) * 1000.0 * 0.4
@@ -203,7 +204,7 @@ class FlightOptionsInTheMenu(unittest.TestCase):
 	def state_and_world(self, away):
 		form = {"form": "levy", "basis": "harvest", "rate": 0.3}
 		state = Government("government:home", ActorRecord(kind="government", money=0.0, revenue_forms=[form]))
-		world = SimpleNamespace(revenue_assessments=lambda: [income_form(0.3, 0.4)], fugitive_share=lambda: away,
+		world = flat_namespace(revenue_assessments=lambda: [income_form(0.3, 0.4)], fugitive_share=lambda: away,
 								revenue_forms=lambda: [form])
 		return state, world
 

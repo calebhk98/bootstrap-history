@@ -104,14 +104,14 @@ def build():
 
 
 registry, shared, far = build()
-sectors = far.sectors()
+sectors = far.groups.sectors()
 check("the country's falling incomes are read at its own pay: workers whose trade pays half what they expected are a sector",
 	  list(sectors) == ["displaced_workers:poor"], list(sectors))
 sector = sectors["displaced_workers:poor"]
 expected_fall = EXPECTED_WAGES - MEMBERS * STRATUM_WORKING_SHARE * WAGE
 check("...of the people of the country alone and the income they lost", abs(sector.lost_income - expected_fall) < 1e-6, sector.lost_income)
 check("none of the loss is laid at the founder's door", sector.blame_share == 0.0)
-check("the country's sectors are read once a year", far.sectors() is sectors)
+check("the country's sectors are read once a year", far.groups.sectors() is sectors)
 check("...and the home stratum, whose pay fell as far, is not among them (only the country's own people are read)",
 	  "displaced_workers:peasants" not in sectors and sector.members == MEMBERS * STRATUM_WORKING_SHARE, sector.members)
 
@@ -124,7 +124,7 @@ check("the home country's groups are those with no country: the foreign group is
 check("the home state's own bans do not include a foreign group's", registry.prohibitions() == {})
 
 group.record.claim = 321.0
-claims = far.group_claims()
+claims = far.groups.group_claims()
 check("a country's state owes what it has undertaken to its own groups", claims == {CONCESSION_PREFIX + group.actor_id: 321.0}, claims)
 lines = budget.concession_lines(claims)
 check("the claim reaches the country's budget as a requisition line", [(line.name, line.money) for line in lines] == [(CONCESSION_PREFIX + group.actor_id, 321.0)])
@@ -134,10 +134,10 @@ government = registry.actors["government:far"]
 government.record.need = {CONCESSION_PREFIX + group.actor_id: 321.0}
 government.record.unfunded = {CONCESSION_PREFIX + group.actor_id: 100.0}
 check("what the country's state paid on a line is its need less what it left unfunded, from its own government",
-	  far.concession_paid(CONCESSION_PREFIX + group.actor_id) == 221.0 and far.state_in_deficit())
+	  far.groups.concession_paid(CONCESSION_PREFIX + group.actor_id) == 221.0 and far.groups.state_in_deficit())
 government.record.unfunded = {}
-check("a state that paid all it set out to is not in deficit", not far.state_in_deficit())
-check("its revenue from a territory is its own", far.scope_revenue(0.5) == max(1e-9, 0.5 * far.state_revenue()))
+check("a state that paid all it set out to is not in deficit", not far.groups.state_in_deficit())
+check("its revenue from a territory is its own", far.groups.scope_revenue(0.5) == max(1e-9, 0.5 * far.revenue.state_revenue()))
 
 # the group's year runs against the country's world: the compensation it receives is the country's state's payment
 group.advance(far)

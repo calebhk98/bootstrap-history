@@ -86,11 +86,11 @@ class Appliers(Part):
 	# ---- the records of a country's state ----
 
 	def _government_record(self, owner):
-		return self.needs.country_world[owner].government().record
+		return self.needs.country_world[owner].setting.government().record
 
 	def strike_from_force(self, command):
 		world = self.needs.country_world[command.owner]
-		world.government().record.army = army_raising.struck_from_force(float(world.soldiers_under_arms()), command.killed)
+		world.setting.government().record.army = army_raising.struck_from_force(float(world.army.soldiers_under_arms()), command.killed)
 
 	def set_land_taken_memory(self, command):
 		self._government_record(command.owner).land_taken_by_tile = command.by_tile

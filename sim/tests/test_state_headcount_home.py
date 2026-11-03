@@ -8,15 +8,16 @@ from .harness import check
 
 from sim.agents import headcount
 from sim.agents.records import ActorRecord
-from sim.actors.world_budget import BudgetView
+from sim.actors.world_people import People
+from sim.actors.world_quotes import Quotes
 
 from .world_stand_in import fake_needs
 
 WORKING_AGE = 1.0e6
 
 
-class HomeView(BudgetView):
-    """The budget questions over a stand-in game: its working age, farm share of the hours, last nutrition and the state's granary."""
+class HomeView:
+    """The people and quotes parts over a stand-in game: its working age, farm share of the hours, last nutrition and the state's granary."""
 
     def __init__(self, farm_share=0.0, nutrition=None, granary=0.0):
         record = ActorRecord(kind="government")
@@ -25,13 +26,12 @@ class HomeView(BudgetView):
         self.needs = fake_needs(
             working_age=WORKING_AGE, population_total=4.0 * WORKING_AGE, farm_share_of_hours=farm_share, civilisation=lambda: {"staple": "wheat_kg"},
             nutrition_ratio_last_year=lambda: None if flows is None else flows.nutrition_ratio)
-        self._record = record
+        self.setting = SimpleNamespace(government=lambda: SimpleNamespace(record=record))
+        self.quotes = Quotes(self)
+        self.people = People(self)
 
-    def government(self):
-        return SimpleNamespace(record=self._record)
 
-
-hands = HomeView().state_hands()
+hands = HomeView().people.state_hands()
 check("the home country's hands are its working age", hands.working_age == WORKING_AGE, hands)
 check("with no farm share of the hours yet and no famine, no hands are held back", hands.farm_hands == 0.0 and hands.food_ratio == 1.0, hands)
 

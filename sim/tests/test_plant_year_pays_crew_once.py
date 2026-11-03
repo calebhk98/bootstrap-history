@@ -3,6 +3,7 @@ and pays no wages itself (the labour core's clearing pays the crew), takings sca
 returns is takings less upkeep and the crew's wage bill. The stand-ins carry only what `operate` reads; staffing is a recorder."""
 QUICK_TOPIC = True
 
+from sim.tests.agents_fake_world import flat_world
 import unittest
 from types import SimpleNamespace
 from unittest import mock
@@ -40,6 +41,7 @@ class Business:
         self.takings = takings
 
 
+@flat_world
 class World:
     year = 10
 

@@ -48,12 +48,12 @@ def levy_of(declared: Any, world: Any) -> Levy:
 	if per not in (PERSON, HOUSEHOLD) or destination not in DESTINATIONS or not 0.0 <= commute <= 1.0:
 		raise ValueError("form %r: labour is owed per %r|%r to %r|%r and commuted by a share of 0..1"
 						 % (declared["form"], PERSON, HOUSEHOLD, WORKS_DUE, ARMY_DUE))
-	people = world.national_people(world.trade_of_role("unskilled")) if per == PERSON else world.population_total() / PERSONS_PER_HOUSEHOLD
+	people = world.labour.national_people(world.labour.trade_of_role("unskilled")) if per == PERSON else world.people.population_total() / PERSONS_PER_HOUSEHOLD
 	return Levy(float(declared["rate"]) * max(0.0, people) * authority.levy_reach(world), max(0.0, people), destination, commute)
 
 
 def person_years(hours: float, world: Any) -> float:
-	return hours / world.hours_per_person_year
+	return hours / world.labour.hours_per_person_year
 
 
 def offset_upkeep(lines: List[Line], years: float) -> Tuple[List[Line], float]:

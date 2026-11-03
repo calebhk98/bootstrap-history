@@ -52,7 +52,7 @@ check("a state holding the salt monopoly opens a plant of the entry that makes s
 state_enterprises.open_enterprises(state, world)
 check("opening again adds no second plant", len(state.business.plants) == 1)
 state_enterprises.run(state, world)
-crew = world.concern_staff("salt_works")["labourer"]
+crew = world.concerns.concern_staff("salt_works")["labourer"]
 check("the plant posts its crew's places to the labour market", state.staff_wanted.get("labourer", 0.0) >= crew, state.staff_wanted)
 check("the state's takings are the plant's takings", abs(state.record.enterprise_takings - TAKINGS) < 1e-6,
 	  state.record.enterprise_takings)
@@ -75,21 +75,21 @@ check("...and puts no goods on the market", all(tonnes == 0.0 for _seller, _mate
 
 # ---- without inputs nothing is made; stores supply them -----------------------------------------------------
 world, state = state_with(monopolies=["salt_kg"], money=0.0)
-world.nodes["salt_works"]["inputs"] = {"brine_kg": 10.0}
+world.setting.nodes["salt_works"]["inputs"] = {"brine_kg": 10.0}
 state_enterprises.open_enterprises(state, world)
 state_enterprises.run(state, world)
 check("a works with no inputs held and no money to buy them makes nothing",
 	  state.record.enterprise_takings == 0.0 and state.business.crew_found_of("salt_works") == 0.0,
 	  state.record.enterprise_takings)
 world, state = state_with(monopolies=["salt_kg"])
-world.nodes["salt_works"]["inputs"] = {"brine_kg": 10.0}
+world.setting.nodes["salt_works"]["inputs"] = {"brine_kg": 10.0}
 state.record.stores["brine_kg"] = 10.0
 state_enterprises.open_enterprises(state, world)
 state_enterprises.run(state, world)
 check("inputs in the stores are consumed and the works runs", state.record.stores["brine_kg"] == 0.0
 	  and state.business.crew_found_of("salt_works") == 1.0 and state.record.enterprise_takings > 0.0, state.record.stores)
 world, state = state_with(monopolies=["salt_kg"])
-world.nodes["salt_works"]["inputs"] = {"brine_kg": 10.0}
+world.setting.nodes["salt_works"]["inputs"] = {"brine_kg": 10.0}
 state_enterprises.open_enterprises(state, world)
 state_enterprises.run(state, world)
 check("inputs the stores lack are bought at the market's price with the purse",
@@ -121,5 +121,5 @@ check("the state's own plant is not assessed for the state's levy", asked == [],
 
 # ---- an entry with no takings is not opened for a monopoly -------------------------------------------------
 world, state = state_with(monopolies=["salt_kg"])
-world.nodes["salt_works"]["rev"] = 0.0
+world.setting.nodes["salt_works"]["rev"] = 0.0
 check("a monopoly whose only entry earns nothing opens no plant", state_enterprises.open_enterprises(state, world) == [])

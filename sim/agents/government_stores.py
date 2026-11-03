@@ -23,7 +23,7 @@ class StoresMixin:
 	def receive_revenue(self, world: Any) -> None:
 		"""Take this year's revenue: coin into the purse, goods into the stores, and note both by form."""
 		record = self.record  # type: ignore[attr-defined]
-		assessments = world.revenue_assessments()
+		assessments = world.revenue.revenue_assessments()
 		record.revenue_by_form = {assessed.form: assessed.money for assessed in assessments}
 		collected = self.collect_from_payers(assessments)
 		record.revenue_by_form.update(collected)
@@ -40,7 +40,7 @@ class StoresMixin:
 			if assessed.in_labour:
 				record.corvee_due[assessed.labour_to] = record.corvee_due.get(assessed.labour_to, 0.0) + (1.0 - assessed.commute) * assessed.hours
 		unmodelled = sum(assessed.coin_money for assessed in assessments)
-		ledger.transfer(world.edge(EDGE_TAXPAYERS), self, unmodelled, "taxation")
+		ledger.transfer(world.setting.edge(EDGE_TAXPAYERS), self, unmodelled, "taxation")
 
 	def collect_from_payers(self, assessments: List[Any]) -> Dict[str, float]:
 		"""Take each payer's share of the forms that fall on actors, from the purse it holds; the income
@@ -69,7 +69,7 @@ class StoresMixin:
 			materials, cost, unbuyable = dict(line.materials), line.material_cost, dict(line.unbuyable)
 			price_per_tonne = line.material_cost / sum(line.materials.values()) if line.materials else 0.0
 			for material in sorted(stores):
-				commodity = world.commodity_of(material)
+				commodity = world.quotes.commodity_of(material)
 				take = min(stores[material], unbuyable.get(commodity, 0.0))   # what nobody sells is met from the stores first
 				if take > 0.0:
 					unbuyable[commodity] -= take

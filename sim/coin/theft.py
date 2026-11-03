@@ -84,7 +84,7 @@ class Theft(Part):
             if record.country not in (None, registry.state.home_country):
                 continue
             exposure = exposures.actor_exposure(
-                actor_id, actor.money, record.stores, world.material_price,
+                actor_id, actor.money, record.stores, world.quotes.material_price,
                 lambda record=record: joint_stock.shares_worth(record.holdings, registry.get), lent_share)
             if not exposure.values:
                 continue

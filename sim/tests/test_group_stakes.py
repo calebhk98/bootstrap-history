@@ -4,6 +4,7 @@ reaches a technique through its substitutes. Small fixtures, no whole game."""
 
 QUICK_TOPIC = True
 
+from sim.tests.agents_fake_world import flat_world
 from types import SimpleNamespace
 
 from .harness import check
@@ -278,6 +279,7 @@ check("a state in deficit compensates instead", not state_response(0.9, 0.9, Tru
 check("a church cannot obtain a prohibition, only be made good", not state_response(0.9, 0.9, False, "clergy", 100.0, 1000.0)["ban"])
 
 
+@flat_world
 class GroupWorld(StakeWorld):
     def __init__(self):
         super().__init__()

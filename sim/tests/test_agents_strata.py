@@ -225,7 +225,7 @@ check("two runs from the same start agree exactly", run_once() == run_once())
 
 registry = build(DEFINITIONS)
 world = StrataWorld()
-world.nodes["plough"] = make_node("plough", revenue=100.0)
+world.setting.nodes["plough"] = make_node("plough", revenue=100.0)
 world.demonstrated_nodes.add("plough")
 world.public_nodes.add("plough")
 toilers = stratum(registry, "toilers")

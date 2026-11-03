@@ -4,6 +4,7 @@ home state's for the same inputs. The rules are called directly, with no whole g
 
 QUICK_TOPIC = True
 
+from sim.tests.agents_fake_world import flat_world
 from .harness import check
 
 from sim import simulator as S
@@ -82,6 +83,7 @@ class Shared(StateWorld):
 		return 0.0
 
 
+@flat_world
 class HomeInputs(Shared):
 	"""The home world answering the questions a country's world answers from its profile, with the same figures."""
 
@@ -153,11 +155,11 @@ def country_world(profile, shared=None):
 check("no foreign-government class remains", not hasattr(agents_api, "Foreign" + "Government"))
 world, registry = country_world(profile_with(FORMS))
 check("a country buys at its own prices, not the home market's",
-	  world.material_cost("iron_kg", 3.0) == 3.0 * COUNTRY_PRICE and world.material_price("iron_kg") == COUNTRY_PRICE,
-	  (world.material_cost("iron_kg", 3.0), world.material_price("iron_kg")))
-check("a material its markets do not quote is not on sale (None), not free and not the home price", world.material_cost("unpriced_kg", 3.0) is None)
+	  world.quotes.material_cost("iron_kg", 3.0) == 3.0 * COUNTRY_PRICE and world.quotes.material_price("iron_kg") == COUNTRY_PRICE,
+	  (world.quotes.material_cost("iron_kg", 3.0), world.quotes.material_price("iron_kg")))
+check("a material its markets do not quote is not on sale (None), not free and not the home price", world.quotes.material_cost("unpriced_kg", 3.0) is None)
 check("its coin standard and coin stock are its own, not the home's",
-	  world.coin_regime() == "struck_coin" and world.coin_stock_value() == COUNTRY_COIN_STOCK)
+	  world.revenue.coin_regime() == "struck_coin" and world.revenue.coin_stock_value() == COUNTRY_COIN_STOCK)
 check("a country's state is the one Government, scoped to the country",
 	  type(registry.actors["government:far"]) is Government and registry.actors["government:far"].record.country == "far")
 
@@ -167,10 +169,10 @@ check("a country's forms are the ones its civilisation file declares",
 han = S.load_civ("han_china_100ad")
 check("the forms of a shipped civilisation reach its profile whole",
 	  profile_from_civilisation(han).extra["state_revenue"] == han["state_revenue"] and len(han["state_revenue"]) > 1)
-check("a country's world offers the forms its profile carries", world.revenue_forms() == FORMS)
+check("a country's world offers the forms its profile carries", world.revenue.revenue_forms() == FORMS)
 assessed = {assessment.form: assessment for assessment in revenue.assess(world)}
 check("every declared form is assessed, in order", list(assessed) == [form["form"] for form in FORMS], list(assessed))
-soldiers = world.soldiers_under_arms()
+soldiers = world.army.soldiers_under_arms()
 poll = assessed["poll_tax"]
 check("a poll tax is its rate on the working age less the soldiers, at the country's own pay",
 	  abs(poll.base - (LABOUR_MARKET_PEOPLE - soldiers) * 10.0) < 1e-6 and abs(poll.money - 0.1 * poll.base) < 1e-6, poll)
@@ -181,18 +183,18 @@ duty = assessed["import_duty"]
 check("a customs form is its rate on the imports the country's own trade book shows",
 	  abs(duty.base - COUNTRY_TRADE["in"]) < 1e-9 and abs(duty.money - 0.05 * COUNTRY_TRADE["in"]) < 1e-9, duty)
 check("a skilled trade's people are those its own labour markets hold; unskilled labour is every working person they hold, not the profile's working age",
-	  world.national_people("scribe") == SKILLED_PEOPLE and world.national_people("labourer") == LABOUR_MARKET_PEOPLE != WORKING_AGE)
-check("the country's trade book is its own, not the home world's", world.trade_value("out") == COUNTRY_TRADE["out"])
-check("the state's revenue is what its forms yield", abs(world.state_revenue() - sum(a.money for a in assessed.values())) < 1e-9)
+	  world.labour.national_people("scribe") == SKILLED_PEOPLE and world.labour.national_people("labourer") == LABOUR_MARKET_PEOPLE != WORKING_AGE)
+check("the country's trade book is its own, not the home world's", world.revenue.trade_value("out") == COUNTRY_TRADE["out"])
+check("the state's revenue is what its forms yield", abs(world.revenue.state_revenue() - sum(a.money for a in assessed.values())) < 1e-9)
 bare_world, _ = country_world(profile_with([]))
-check("a country declaring no forms raises nothing", bare_world.state_revenue() == 0.0 and bare_world.revenue_assessments() == [])
+check("a country declaring no forms raises nothing", bare_world.revenue.state_revenue() == 0.0 and bare_world.revenue.revenue_assessments() == [])
 taxing_less = profile_with([dict(FORMS[0], rate=0.05)])
 check("a lower declared rate yields less", country_world(taxing_less)[0].state_revenue() < poll.money)
 
 # ---- the same budget lines as the home state, given the same inputs -----------------------------
 profile = profile_with(FORMS)
 world, registry = country_world(profile)
-home = HomeInputs(profile, world.revenue_assessments())
+home = HomeInputs(profile, world.revenue.revenue_assessments())
 home_lines = budget.standing_lines(home, 100.0)
 country_lines = budget.standing_lines(world, 100.0)
 check("a country's state keeps the lines the home state keeps",
@@ -212,7 +214,7 @@ tiled = profile_with(FORMS)
 tiled.home_tiles = list(profile_from_civilisation(han).home_tiles)[:6]
 tiled_world, _ = country_world(tiled)
 check("its roads and coast are those of the tiles it holds",
-	  tiled_world.territory() == territory.holdings(tiled.home_tiles) and tiled_world.held_tiles() == tiled.home_tiles)
+	  tiled_world.revenue.territory() == territory.holdings(tiled.home_tiles) and tiled_world.revenue.held_tiles() == tiled.home_tiles)
 check("a country holding tiles keeps a road line; one holding none does not",
 	  any(line.name == "roads" for line in budget.standing_lines(tiled_world, 0.0))
 	  and not any(line.name == "roads" for line in budget.standing_lines(world, 0.0)))
@@ -224,7 +226,7 @@ check("the state pays the lines it keeps from its purse", share > 0.0 and {line.
 check("revenue by form is booked for the forms it declares",
 	  set(government.record.revenue_by_form) >= {form["form"] for form in FORMS[:2]}, government.record.revenue_by_form)
 check("what it takes in kind enters its stores", government.record.stores.get("wheat_kg", 0.0) > 0.0, government.record.stores)
-check("nobody is its patron and no interest group holds a claim on it", world.patron_ask() == 0.0 and world.group_claims() == {})
+check("nobody is its patron and no interest group holds a claim on it", world.patronage.patron_ask() == 0.0 and world.groups.group_claims() == {})
 
 # ---- equipment per soldier follows how much of the military work the country's own state holds --------------
 armed = profile_with(FORMS)
@@ -232,8 +234,8 @@ armed.starting_techs = ["sword"]
 armed_world, armed_registry = country_world(armed)
 armed_registry.actors["government:far"].knowledge.add("pike")
 check("a country's equipment per soldier is its own adoption of the military work, not the home figure",
-	  abs(armed_world.equipment_kg_per_soldier() - (EQUIPMENT_KG_AT_NO_ADOPTION + EQUIPMENT_KG_PER_ADOPTION * 0.5)) < 1e-9,
-	  armed_world.equipment_kg_per_soldier())
+	  abs(armed_world.army.equipment_kg_per_soldier() - (EQUIPMENT_KG_AT_NO_ADOPTION + EQUIPMENT_KG_PER_ADOPTION * 0.5)) < 1e-9,
+	  armed_world.army.equipment_kg_per_soldier())
 check("a country holding none of it keeps the floor equipment",
 	  abs(country_world(profile_with(FORMS))[0].equipment_kg_per_soldier() - EQUIPMENT_KG_AT_NO_ADOPTION) < 1e-9)
 
@@ -245,10 +247,10 @@ rich = rent_registry.add(stratum_id("far", "rich"), ActorRecord(kind="stratum", 
 																 plan={"property_share": 0.5}))
 home_stratum = rent_registry.add(stratum_id("home", "rich"), ActorRecord(kind="stratum", stratum="rich", members=50.0,
 																		  plan={"property_share": 0.5}))
-owners = rent_world.land_rent_owners()
+owners = rent_world.revenue.land_rent_owners()
 check("the rent a country's tiles pay is received by that country's strata, by the rent of their slice of its cohorts",
 	  [(who.actor_id, rent) for who, rent in owners] == [(rich.actor_id, RENT_TO_THE_RICH)], [(who.actor_id, rent) for who, rent in owners])
 check("the seats of the country are among the taxpayers its state can see",
-	  rent_world.visible_taxpayers() == [SEAT_TAXPAYER], rent_world.visible_taxpayers())
+	  rent_world.taxpayers.visible_taxpayers() == [SEAT_TAXPAYER], rent_world.taxpayers.visible_taxpayers())
 check("a land-rent form is drawn from those owners, never the home strata",
 	  all(who.record.country == "far" for who, _rent in owners))

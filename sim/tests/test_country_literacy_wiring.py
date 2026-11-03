@@ -68,10 +68,10 @@ check("research productivity is capped", Reading(10.0).research_productivity(Non
 check("no letters, no research", Reading(0.0).research_productivity(None) == 0.0, None)
 
 asked = []
-view = CountryWorld(SimpleNamespace(research_productivity=lambda country: asked.append(country) or 0.8), SimpleNamespace(country="other"),
+view = CountryWorld(SimpleNamespace(people=SimpleNamespace(research_productivity=lambda country: asked.append(country) or 0.8)), SimpleNamespace(country="other"),
                     SimpleNamespace(of_kind=lambda kind: list(STRATA), state=SimpleNamespace(home_country="home")))
-check("a foreign player's research runs at its own country's productivity", view.research_productivity() == 0.8 and asked == ["other"], asked)
-check("a foreign player reads the literacy of its own country's strata", abs(view.literacy("literacy_elite") - 0.6) < 1e-12, view.literacy("literacy_elite"))
+check("a foreign player's research runs at its own country's productivity", view.people.research_productivity() == 0.8 and asked == ["other"], asked)
+check("a foreign player reads the literacy of its own country's strata", abs(view.people.literacy("literacy_elite") - 0.6) < 1e-12, view.people.literacy("literacy_elite"))
 
 
 # ---- the hours a project can call on

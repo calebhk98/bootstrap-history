@@ -11,5 +11,5 @@ def release_plant(business: Business, entry_key: str, world: Any) -> Plant:
 	if plant is None:
 		raise KeyError("the business runs no plant of " + entry_key)
 	if plant.opened_year is None:
-		plant.opened_year = world.year
+		plant.opened_year = world.setting.year
 	return plant

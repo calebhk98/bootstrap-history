@@ -21,7 +21,7 @@ def refused_cause(actor, world, node_id):
 
 def world_with(**node_fields):
 	world = ResearchWorld()
-	world.nodes["tech"].update(node_fields)
+	world.setting.nodes["tech"].update(node_fields)
 	return world
 
 
@@ -52,7 +52,7 @@ check("a plain commodity serves at the discount",
 for name in actors():
 	actor = actors()[name]
 	world = world_with(req_any=[{"options": {"bronze_boiler": 0.6}}])
-	world.nodes["bronze_boiler"] = world.nodes["base"]
+	world.setting.nodes["bronze_boiler"] = world.setting.nodes["base"]
 	check("%s is refused when no option of a req_any group is known" % name, refused_cause(actor, world, "tech") == "no_substitute", name)
 	actor.knowledge.add("bronze_boiler")
 	check("%s starts once it knows an option" % name, refused_cause(actor, world, "tech") is None, name)

@@ -4,6 +4,7 @@ unbroken game read a different pool from the one a reloaded game reads. The regi
 spawner that changes staff; no game is built."""
 QUICK_TOPIC = True
 
+from sim.tests.agents_fake_world import flat_world
 import unittest
 
 from sim.agents.api import Business
@@ -13,6 +14,7 @@ from sim.engine.state import ActorRecord, ActorsState
 TRADES = ("smith", "scribe")
 
 
+@flat_world
 class IdleWorld:
     year = 100
 

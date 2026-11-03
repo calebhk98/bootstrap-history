@@ -35,7 +35,7 @@ def concern_worth(holder: Any, node_id: str) -> float:
 def side_worth(side: Dict[str, Any], taker: Any, holder: Any, world: Any, find_actor: Any = None) -> float:
 	"""What `taker` counts the things in `side` (held by `holder`) as worth."""
 	worth = side.get("money", 0.0)
-	worth += sum(tonnes * world.material_price(material) for material, tonnes in side.get("stores", {}).items())
+	worth += sum(tonnes * world.quotes.material_price(material) for material, tonnes in side.get("stores", {}).items())
 	valuer = getattr(taker, "imitation_worth", None)
 	if valuer is not None:
 		worth += sum(valuer(node_id, world) for node_id in side.get("knowledge", ()) if not taker.knows(node_id, world))
@@ -81,7 +81,7 @@ def finder(registry: Any, world: Any) -> Callable[[str], Any]:
 		found = registry.get(actor_id)
 		if found is None:
 			if not seats:
-				seats.update(world.seat_parties())
+				seats.update(world.seats.seat_parties())
 			found = seats.get(actor_id)
 		return found
 	return find
@@ -92,7 +92,7 @@ def exchange_answers(registry: Any, world: Any) -> List[str]:
 	find = finder(registry, world)
 	for actor_id in sorted(registry.actors):
 		actor = registry.actors[actor_id]
-		exchange.expire_offers(actor, world.year)
+		exchange.expire_offers(actor, world.setting.year)
 		if actor.record.offers:
 			answer_offers(actor, find, registry.world_for(actor, world))
 	return []

@@ -57,9 +57,9 @@ def hands_short(needed: float, available: float) -> float:
 
 def refusals(actor: Any, node_id: str, world: Any) -> List[Refusal]:
 	"""Every reason this actor may not begin researching the node now, each with a `cause` and its `facts`."""
-	if node_id not in world.nodes:
+	if node_id not in world.setting.nodes:
 		return [Refusal("no_such_node", "no such node")]
-	node = world.nodes[node_id]
+	node = world.setting.nodes[node_id]
 	if actor.knows(node_id, world):
 		return [Refusal("already_known", "already known")]
 	if node_id in actor.works:
@@ -72,7 +72,7 @@ def refusals(actor: Any, node_id: str, world: Any) -> List[Refusal]:
 		found.append(Refusal("prerequisites_unknown", "prerequisites unknown: " + ", ".join(sorted(missing)),
 							 missing=sorted(missing)))
 	group = unserved_substitute_group(node, lambda option: actor.knows(option, world),
-									  lambda option: option in world.nodes, world.purchasable_substitute_discount())
+									  lambda option: option in world.setting.nodes, world.research.purchasable_substitute_discount())
 	if group is not None:
 		found.append(Refusal("no_substitute", "nothing that would serve: any of %s"
 							 % ", ".join(sorted(group.get("options") or ())), options=sorted(group.get("options") or ())))
@@ -81,7 +81,7 @@ def refusals(actor: Any, node_id: str, world: Any) -> List[Refusal]:
 		if needed <= 0:
 			continue
 		try:
-			hands = world.research_hands(actor, family)
+			hands = world.research.research_hands(actor, family)
 		except NoCountryEconomy as error:     # the actor's country keeps no record of its people: it cannot start the work
 			found.append(Refusal("no_country_hands", "the actor's country keeps no record of its %s hands" % family,
 								 country=error.country, family=family))
@@ -90,7 +90,7 @@ def refusals(actor: Any, node_id: str, world: Any) -> List[Refusal]:
 		if short > 0.0:
 			found.append(Refusal(cause, "needs %d trained %s, and only %.1f can be put on it" % (
 				needed, "scholars" if family == SCHOLAR_FAMILY else "craftsmen", needed - short), needed=needed, short=short))
-	unsold = world.unsold_materials(actor, node_id)
+	unsold = world.research.unsold_materials(actor, node_id)
 	if unsold:
 		found.append(Refusal("materials_unsold", "no one in reach sells " + ", ".join(unsold), materials=list(unsold)))
 	return found

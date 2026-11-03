@@ -2,6 +2,7 @@
 
 QUICK_TOPIC = True
 
+from sim.tests.agents_fake_world import flat_world
 import unittest
 
 from sim.agents import budget
@@ -12,6 +13,7 @@ WAGE = {"soldier": 10.0, "scribe": 30.0}
 PRICE_PER_TONNE = 200.0
 
 
+@flat_world
 class StubWorld:
     """What the line rules read of a world: wages, an equipment burden, a price for the iron, the head count."""
 
@@ -104,6 +106,7 @@ class ArmyWanted(unittest.TestCase):
         self.assertEqual(budget.army_goal(-5.0, 0.1), 0.0)
 
 
+@flat_world
 class StubPeople:
     def __init__(self, working_age, soldiers):
         self.working_age, self.soldiers = working_age, soldiers
@@ -131,6 +134,7 @@ class PollTax(unittest.TestCase):
         self.assertEqual(revenue_bases.adult_labour_years(StubPeople(1000.0, 5000.0)).value, 0.0)
 
 
+@flat_world
 class StubHarvest:
     def __init__(self, tonnes):
         self.tonnes = tonnes

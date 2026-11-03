@@ -3,6 +3,7 @@ the state's military holdings are counted, and what choosing a licence records. 
 
 QUICK_TOPIC = True
 
+from sim.tests.agents_fake_world import flat_namespace
 import types
 import unittest
 
@@ -21,7 +22,7 @@ def licensee(kind="firm", money=1000.0, worth=500.0):
     return types.SimpleNamespace(kind=kind, money=money, imitation_worth=lambda node_id, world: worth)
 
 
-WORLD = types.SimpleNamespace(entry_gross=lambda node_id, a, b: 100.0)
+WORLD = flat_namespace(entry_gross=lambda node_id, a, b: 100.0)
 
 
 class Terms(unittest.TestCase):

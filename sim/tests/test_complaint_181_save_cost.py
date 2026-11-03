@@ -126,7 +126,7 @@ class ImitationScanTests(unittest.TestCase):
         world = self.CountingWorld(inventions)
         firm = Firm("firm:scan", ActorRecord(kind="firm", money=1e6))
         firm.imitation_options(world)
-        return world.baseline_reads, len(world.founder_inventions())
+        return world.baseline_reads, len(world.knowledge.founder_inventions())
 
     def test_the_scan_has_many_inventions_to_look_at(self):
         self.assertGreaterEqual(self.reads(80)[1], 50)

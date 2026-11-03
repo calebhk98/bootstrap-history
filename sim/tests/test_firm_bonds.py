@@ -41,7 +41,7 @@ world = BondWorld(year=50)
 registry, firm, purses = firm_with_savers(world, knows=True)
 firm.prepare_bonds(world)
 coupon, asked = purses.bonds.terms[firm.account_id]
-check("a firm whose society holds the bond market sells at the going rate as coupon", abs(coupon - world.market_rate()) < 1e-12, coupon)
+check("a firm whose society holds the bond market sells at the going rate as coupon", abs(coupon - world.credit.market_rate()) < 1e-12, coupon)
 check("and at the yield its own borrowing rate gives", abs(asked - firm.borrowing_rate(world)) < 1e-12, asked)
 purses.cover(firm.account_id, 100.0)
 check("a shortfall is met by a bond, not a facility draw", purses.bonds.debt(firm.account_id) > 0.0 and not purses.contracts.facility_of(firm.account_id),

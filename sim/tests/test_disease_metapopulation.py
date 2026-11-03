@@ -4,6 +4,7 @@ patches built in the test; the expected-value stepping (`metapopulation.expected
 
 QUICK_TOPIC = True
 
+from sim.tests.agents_fake_world import flat_world
 import unittest
 
 from sim.agents import budget_works
@@ -270,6 +271,7 @@ class ReadersOfRegionalDiseaseTest(unittest.TestCase):
         self.assertAlmostEqual(sick, healthy / 0.8)
 
     def test_a_campaign_needs_more_grain_where_the_frontier_regions_disease_takes_more_of_the_men(self):
+        @flat_world
         class World:
             loss = 0.0
 

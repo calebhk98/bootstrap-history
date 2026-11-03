@@ -1,8 +1,8 @@
 """The state's collected share by tile, read from the world: its officials, their literacy, its people and the road.
 
-Mixed into the home world and a country's view; each supplies `collection_people_by_tile` and `collection_modes`
-(the people on each tile held, and the route modes its technologies open). The state's guards and inspectors reach a
-tile by the same time rule (order.py).
+The home world's `collection` part and a country's both extend this; each supplies `collection_people_by_tile` and
+`collection_modes` (the people on each tile held, and the route modes its technologies open). The state's guards and
+inspectors reach a tile by the same time rule (order.py).
 """
 from typing import Any, Dict, Optional, Iterable
 
@@ -15,7 +15,11 @@ FAR_DAYS = 1.0e9
 
 
 class CollectionView:
-	"""What the officials of the state collect, tile by tile."""
+	"""What the officials of the state collect, tile by tile. `world` is the root that hands out the parts it reads."""
+
+	def __init__(self, world: Any) -> None:
+		self.world = world
+		self._ground: Dict[str, Any] = {}
 
 	def collection_people_by_tile(self) -> Dict[str, float]:
 		raise NotImplementedError
@@ -29,32 +33,32 @@ class CollectionView:
 
 	def staff_employed(self, line_name: str, trade: str, kept: float) -> float:
 		"""Staff of a budget line on the payroll: those the line asks for, less the share it left unpaid."""
-		record = self.government().record  # type: ignore[attr-defined]
-		need = kept * self.pay_per_person_year(trade)  # type: ignore[attr-defined]
+		record = self.world.setting.government().record
+		need = kept * self.world.labour.pay_per_person_year(trade)
 		return collection.officials_employed(kept, need, record.unfunded.get(line_name, 0.0))
 
 	def officials_employed(self) -> float:
 		"""Officials on the payroll: those the administration line asks for, less the share it left unpaid."""
-		return self.staff_employed(ADMINISTRATION_LINE, self.trade_of_role("clerk"), budget.officials_kept(self))
+		return self.staff_employed(ADMINISTRATION_LINE, self.world.labour.trade_of_role("clerk"), budget.officials_kept(self.world))
 
 	def working_days_per_year(self) -> float:
-		return order.working_days_of(self)
+		return order.working_days_of(self.world)
 
 	def guards_employed(self) -> float:
-		return self.staff_employed(order.GUARDS_LINE, self.trade_of_role(order.GUARD_ROLE),
-								   order.guards_kept(self.population_total(), self.working_days_per_year()))  # type: ignore[attr-defined]
+		return self.staff_employed(order.GUARDS_LINE, self.world.labour.trade_of_role(order.GUARD_ROLE),
+								   order.guards_kept(self.world.people.population_total(), self.working_days_per_year()))
 
 	def inspectors_employed(self) -> float:
-		return self.staff_employed(order.INSPECTORS_LINE, self.trade_of_role(order.INSPECTOR_ROLE),
-								   order.inspectors_kept(self.population_total(), self.working_days_per_year()))  # type: ignore[attr-defined]
+		return self.staff_employed(order.INSPECTORS_LINE, self.world.labour.trade_of_role(order.INSPECTOR_ROLE),
+								   order.inspectors_kept(self.world.people.population_total(), self.working_days_per_year()))
 
 	def foresters_employed(self) -> float:
-		return self.staff_employed(order.FORESTERS_LINE, self.trade_of_role(order.FORESTER_ROLE),
-								   order.foresters_kept(self.population_total(), self.working_days_per_year()))  # type: ignore[attr-defined]
+		return self.staff_employed(order.FORESTERS_LINE, self.world.labour.trade_of_role(order.FORESTER_ROLE),
+								   order.foresters_kept(self.world.people.population_total(), self.working_days_per_year()))
 
 	def _collection_ground(self) -> Dict[str, Any]:
 		"""The people on each tile and the days of road from the seat to it, kept for the year."""
-		memo = self.__dict__.setdefault("_collection_memo", {})
+		memo = self._ground
 		if "people" not in memo:
 			people = self.collection_people_by_tile()
 			seat = collection.seat_tile(people)
@@ -72,19 +76,19 @@ class CollectionView:
 		memo = self._collection_ground()
 		if "shares" not in memo:
 			shares = collection.tile_shares(self.officials_employed(), self.working_days_per_year(),
-											self.literacy("literacy_elite"), memo["people"], memo["days"])  # type: ignore[attr-defined]
+											self.world.people.literacy("literacy_elite"), memo["people"], memo["days"])
 			memo["shares"] = self._held(shares)
 		return memo["shares"]  # type: ignore[no-any-return]
 
 	def _held(self, shares: Dict[str, float]) -> Dict[str, float]:
 		"""Each tile's reach scaled by the share of risings its garrison puts down (the last stability phase's reading)."""
-		held = self.government().record.hold_by_tile  # type: ignore[attr-defined]
+		held = self.world.setting.government().record.hold_by_tile
 		return {tile: authority.authority(share, held.get(tile, 1.0)) for tile, share in shares.items()}
 
 	def collectible_share(self, tiles: Optional[Iterable[str]] = None) -> float:
 		"""The share of what is due on `tiles` (all the state holds when none) that its officials collect."""
 		shares = self.collection_shares()
-		return collection.collectible_share(shares, self.__dict__["_collection_memo"]["people"], tiles)
+		return collection.collectible_share(shares, self._ground["people"], tiles)
 
 	def order_share(self, tiles: Optional[Iterable[str]] = None) -> float:
 		"""The share of the people on `tiles` (all the state holds when none) that its employed guards watch."""

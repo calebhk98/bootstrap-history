@@ -118,19 +118,19 @@ check("relief is no more than the surplus", abs(world.state.record.outlays.get("
 
 # ---- the home state taxes its own country's strata only, and reports the levy -------------------------
 from types import SimpleNamespace
-from sim.actors.world_budget import BudgetView
+from sim.actors.world_people import People
 
 
-class BudgetStubView(BudgetView):
-	def __init__(self, strata):
-		self.registry = SimpleNamespace(of_kind=lambda kind: strata)
+def people_over(strata):
+	"""The home world's people part over a registry holding these strata."""
+	return People(SimpleNamespace(needs=None, registry=SimpleNamespace(of_kind=lambda kind: strata)))
 
 
 home_body = make_stratum("rich", 1.0e3, 1.0e6, 5.0e6)
 foreign_body = make_stratum("rich", 1.0e3, 1.0e6, 5.0e6)
 foreign_body.record.country = "han"
 check("the home state's strata are the ones it taxes: the bodies of its own country, not a foreign one's",
-      BudgetStubView([home_body, foreign_body]).country_strata() == [home_body])
+      people_over([home_body, foreign_body]).country_strata() == [home_body])
 world = make_world()
 world.forms = [dict(LEVY, rate=0.01)]
 world.state.receive_revenue(world)
