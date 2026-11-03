@@ -55,6 +55,9 @@ class FakeView:
 
     chained_price_level = basket_price_level
 
+    def opening_wage_level(self, money):
+        return 1.0
+
 
 def world(spec, recipe="default"):
     book = Book()
@@ -65,6 +68,8 @@ def world(spec, recipe="default"):
         civ_id="realm", state_agent="state", currency_id="coin", capital_tile="t1",
         opening_population_by_tile={"t1": 3.0, "t2": 1.0}, tiles={"t1": 0, "t2": 0},
         opening_wages={}, specs={}, mint_recipe=_recipe() if recipe == "default" else recipe)
+    setup.trades = {trade: None for trade in setup.mint_recipe.labour_hours} if recipe == "default" else {}   # the trades the recipe hires
+    setup.unskilled_trade = min(setup.trades, default=None)
     record = pytypes.SimpleNamespace(book=book, currency=spec, memory=pytypes.SimpleNamespace(prices=BullionAtParity()),
                                      cohorts={}, producers={}, merchants={})
     mint.seed_opening_metal(setup, record)

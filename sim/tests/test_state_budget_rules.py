@@ -18,7 +18,7 @@ class StubWorld:
     """What the line rules read of a world: wages, an equipment burden, a price for the iron, the head count."""
 
     def __init__(self, people=1.0e6, iron_on_sale=True):
-        self.people = people
+        self.head_count = people
         self.iron_on_sale = iron_on_sale
 
     def trade_of_role(self, role):
@@ -40,7 +40,7 @@ class StubWorld:
         return tonnes * PRICE_PER_TONNE if self.iron_on_sale else None
 
     def population_total(self):
-        return self.people
+        return self.head_count
 
 
 class StandingLines(unittest.TestCase):

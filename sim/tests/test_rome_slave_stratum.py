@@ -10,7 +10,7 @@ from sim.agents.api import ActorsState, ActorRegistry, profile_from_civilisation
 from sim.agents.strata_seed import follow_population
 from sim.agents.stratum_year import settle_keep, true_up_keep, grow
 
-from .agents_fake_world import FakeWorld
+from .agents_fake_world import FakeWorld, flat_world
 
 civ = S.load_civ("rome_100ad")
 declared = civ["cast"]["strata"]
@@ -25,16 +25,17 @@ check("the declared owner of the bonded is a declared stratum",
       declared_bonded[0]["owner"] in {entry["name"] for entry in declared}, declared_bonded)
 
 
+@flat_world
 class CostedWorld(FakeWorld):
     """A world that counts a fixed number of people and prices a person-year of keep."""
 
     def __init__(self, people, keep_cost):
         super().__init__()
-        self.people = people
+        self.counted_people = people
         self.keep_cost = keep_cost
 
     def population_total(self):
-        return self.people
+        return self.counted_people
 
     def subsistence_cost_per_person_year(self):
         return self.keep_cost

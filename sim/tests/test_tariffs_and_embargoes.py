@@ -24,6 +24,7 @@ import sim.ui.proto.dispatch  # noqa: F401  (registers every command)
 from sim.ui.proto.seat_address import run_as_seat
 
 from .world_stand_in import fake_needs
+from sim.tests.interface_fixture import shipped_declared
 from sim.tests.ui_stand_in import FactViews
 from .seat_views_stand_in import give_seats_slots
 
@@ -158,6 +159,7 @@ class Game(FactViews):
         self.year = 100
         self.civ = {"id": "rome"}
         self.saved_stores = {}
+        self.interface_declared = shipped_declared   # the shipped commands, as the interface module declares them
 
     @property
     def stores(self):

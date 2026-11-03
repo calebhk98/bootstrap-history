@@ -31,8 +31,9 @@ class Directive:
         self.state = types.SimpleNamespace(household=household, scenario=types.SimpleNamespace(year=50))
         self.room = room
         self.sold = []
-        self.labour = types.SimpleNamespace(director_pool=lambda: room, director_hours_committed=lambda: 0.0,
-                                            work_for_wages=self._work)
+        self.labour = types.SimpleNamespace(
+            hours=types.SimpleNamespace(director_pool=lambda: room, director_hours_committed=lambda: 0.0),
+            wages=types.SimpleNamespace(work_for_wages=self._work))
         self.module = workforce_over(self)
 
     def _work(self, trade, hours):
