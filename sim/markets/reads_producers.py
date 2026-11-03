@@ -15,14 +15,15 @@ class ProducerReads:
         """[(recipe id, capacity in runs)] of every producer; empty before the economy opens."""
         if not self._agent.opened():
             return []
-        return [(producer.recipe_id, producer.capacity_runs) for producer in economy_api.all_producers(self._agent.economy())]
+        producers = sorted(economy_api.all_producers(self._agent.economy()), key=lambda each: each.agent_id)   # id order: a loaded game holds them so
+        return [(producer.recipe_id, producer.capacity_runs) for producer in producers]
 
     def runs_last_year(self):
         """[{tile, runs, inputs, outputs}] of each producer that ran last year."""
         economy = self._agent.economy()
         recipes = economy_api.recipes_of(economy)
         rows = []
-        for producer in economy_api.all_producers(economy):
+        for producer in sorted(economy_api.all_producers(economy), key=lambda each: each.agent_id):
             recipe = recipes.get(producer.recipe_id)
             if producer.last_runs > 0.0 and recipe is not None:
                 rows.append({"tile": producer.tile, "runs": producer.last_runs, "inputs": dict(recipe.inputs), "outputs": dict(recipe.outputs)})

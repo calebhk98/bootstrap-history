@@ -20,7 +20,7 @@ from sim.living_stock import yearly
 from sim.refusal import Refusal, cause_of
 from sim.tests import finance_host, module_harness
 from sim.ui.proto import stock_purchases
-from sim.world.material_units import tonnes_per_unit
+from sim.markets.unit_mass import tonnes_per_unit, unit_mass_kg
 from sim.tests.ui_stand_in import Game
 
 EGGS, HERD = "eggs_kg", "herd_kg"
@@ -29,7 +29,7 @@ EGGS, HERD = "eggs_kg", "herd_kg"
 def _module(tonnes=None, nodes=None, civ=None, **views):
     """The module with `tonnes` held by commodity key (a material is its own key here), a node table and a civilisation."""
     tonnes = tonnes or {}
-    plain = {"material_commodity": lambda material: material, "goods_stock": lambda key: tonnes.get(key, 0.0),
+    plain = {"unit_mass_kg": unit_mass_kg, "material_commodity": lambda material: material, "goods_stock": lambda key: tonnes.get(key, 0.0),
              "tree": (nodes or {}).get, "civilisation": civ or {}}
     plain.update(views)
     return module_harness.build(LivingStock, views=plain, world=LivingStockWorld())

@@ -5,11 +5,12 @@ Prices are per tonne in home money (the foreign side is its solved price convert
 What households at a
 place buy for themselves in a year is the depth a trader sizes its cargo to.
 """
+import math
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 from sim.foreign_trade.api import NoteActorHomeTrade, NoteActorTrade, NoteCargoLeg
 from sim.refusal import Refusal
-from sim.world.material_units import tonnes_per_unit
+from sim.unit_conversions import KILOGRAMS_PER_TONNE
 
 from .world_memo import once
 
@@ -42,9 +43,9 @@ class Trade:
 			per_unit = needs.material_prices()
 			prices = {}
 			for material, price in per_unit.items():
-				tonnes = tonnes_per_unit(material)
-				if price and price > 0.0 and tonnes and tonnes > 0.0:
-					prices[material] = price / tonnes
+				kilograms = self.needs.unit_mass_kg(material)
+				if price and price > 0.0 and 0.0 < kilograms < math.inf:
+					prices[material] = price / (kilograms / KILOGRAMS_PER_TONNE)
 			return prices
 		return once(self._memo, "trade_prices:" + place, compute)  # type: ignore[no-any-return]
 

@@ -12,7 +12,7 @@ READS_BY_OWNER = {
     "production": ("techniques_in_use", "price_epoch"),
     "finance": ("market_rate",),
     "workforce": ("money_per_labour_hour", "labour_quote", "farm_land_hectares", "wage_schedule_for", "unskilled_trade"),
-    "markets": ("household_prices", "material_seller", "agent_wage", "agent_land_rent", "producers_stamp"),
+    "markets": ("household_prices", "material_seller", "producers_stamp"),
     "materials": ("material_pool",),
 }
 

@@ -15,7 +15,6 @@ from sim.ledger.api import ChangeStock, PayEdge
 from sim.polity.api import RaiseScandal
 from sim.refusal import Refusal, cause_of
 from sim.world import stock_dynamics
-from sim.world.material_units import tonnes_per_unit
 
 from . import rules
 
@@ -68,7 +67,7 @@ class Trading(Part):
                       or [Refusal("no_partner_sells", "no partner you trade with sells %s" % material)])[0]
             return {"ok": False, "cause": cause_of(reason), "error": reason}
         per_tonne, seller = min(offers)
-        tonnes = units * tonnes_per_unit(material)
+        tonnes = units * self.parts.holding.tonnes_per_unit(material)
         return {"ok": True, "material": material, "units": units, "partner": seller,
                 "tonnes": tonnes, "per_tonne": per_tonne, "cost": per_tonne * tonnes}
 
@@ -110,7 +109,7 @@ class Trading(Part):
         return {"ok": False, "cause": cause_of(reason), "error": reason}
 
     def smuggle_terms(self, material, units, civilization_id):
-        tonnes = units * tonnes_per_unit(material)
+        tonnes = units * self.parts.holding.tonnes_per_unit(material)
         carry_per_tonne, lost = self.needs.partner_carry(civilization_id, material)
         holding = max(1e-12, self.partner_holding(civilization_id, material))
         return {"ok": True, "material": material, "units": units, "partner": civilization_id, "tonnes": tonnes,
@@ -141,7 +140,7 @@ class Trading(Part):
             return outcome
         outcome["delivered_units"] = command.arrives_units
         self.needs.send(ChangeStock(self.parts.holding.commodity_of(command.material),
-                                    command.arrives_units * tonnes_per_unit(command.material)))
+                                    command.arrives_units * self.parts.holding.tonnes_per_unit(command.material)))
         if has_government:
             self.needs.send(RecordStockTaken(command.partner, command.material, command.units))
         return outcome

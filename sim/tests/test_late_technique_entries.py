@@ -21,10 +21,15 @@ PRODUCTION = {
                     "requires_node": "kiln_node"},
 }
 WAGES = {"labourer": 2.0, "kilnman": 5.0}
+LAND_RENT = 7.0
+UNKNOWN_TRADE = {"brick_kg": {"outputs": {"brick_kg": 1000.0}, "labour_hours": {"mason": 10.0}, "unit_dimension": "mass",
+                              "requires_node": "kiln_node"}}
+GROWN = {"flax_kg": {"outputs": {"flax_kg": 1000.0}, "labour_hours": {"labourer": 10.0}, "land_hectare_years": 2.0,
+                     "unit_dimension": "mass", "requires_node": "flax_node"}}
 
 
-def stand_in_society(live_prices=None):
-    economy = types.SimpleNamespace(agent_prices=lambda: live_prices,
+def stand_in_society(live_prices=None, land_rent=LAND_RENT):
+    economy = types.SimpleNamespace(agent_prices=lambda: live_prices, agent_land_rent_per_hectare=lambda: land_rent,
                                     labour=types.SimpleNamespace(quote=lambda trade: WAGES.get(trade, 0.0)))
     registry = {"labourer": {"fallback": True}, "kilnman": {}}      # the trades the labour side knows; the unskilled one is the fallback
     return types.SimpleNamespace(economy=economy, scenario=types.SimpleNamespace(civ={"id": "testland"}), finance=types.SimpleNamespace(market_rate=lambda: 0.0),
@@ -76,6 +81,19 @@ class OpeningWithTechniques(unittest.TestCase):
         cost = port_late.late_goods_costs(
             stand_in_society(None), {"lime_kg": 1.0}, ["cement_kg"], frozenset({"kiln_node"}), PRODUCTION)
         self.assertAlmostEqual(cost["cement_kg"], (1000.0 * 1.0 + 20.0 * 5.0) / 1000.0)
+
+    def test_a_late_good_pays_the_land_rent_of_the_hectare_years_it_occupies(self):
+        cost = port_late.late_goods_costs(
+            stand_in_society(), {}, ["flax_kg"], frozenset({"flax_node"}), GROWN)
+        self.assertAlmostEqual(cost["flax_kg"], (10.0 * 2.0 + 2.0 * LAND_RENT) / 1000.0)
+
+    def test_a_late_good_on_land_has_no_cost_while_the_land_market_has_no_rent(self):
+        self.assertEqual(port_late.late_goods_costs(
+            stand_in_society(land_rent=None), {}, ["flax_kg"], frozenset({"flax_node"}), GROWN), {})
+
+    def test_a_good_needing_a_trade_the_game_does_not_know_has_no_cost_not_a_free_one(self):
+        self.assertEqual(port_late.late_goods_costs(
+            stand_in_society(), {}, ["brick_kg"], frozenset({"kiln_node"}), UNKNOWN_TRADE), {})
 
     def test_a_good_whose_input_has_no_price_gets_none(self):
         self.assertEqual(port_late.late_goods_costs(

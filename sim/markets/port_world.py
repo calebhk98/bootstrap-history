@@ -67,9 +67,6 @@ class LabourReads:
 	def money_per_labour_hour(self):
 		return self._needs.money_per_labour_hour()
 
-	def wage_per_hour(self, trade):
-		return self._needs.wage[trade]
-
 	def farming_technique(self):
 		return self._needs.farming_technique()
 

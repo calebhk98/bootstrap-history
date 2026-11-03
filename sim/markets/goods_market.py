@@ -6,7 +6,6 @@ The founder, a firm, the state and the foreign traders deal with `Sim.goods_mark
                                climb the economy's own book gives the order (goods_pricing.py)
     post_order                 a seat's order for the year's clearing, at its price limit; nothing settles until then
                                (port_goods_orders.py), as a seat's hires do
-    price / state              what screens read
 
 A seat is identified by its seat id (`state.acting_seat` for the asking seat); a firm or the state by its actor id. A seat's
 orders and an actor's reach the same clearing, which sets the price. The asking seat's own orders keep the marginal curves
@@ -44,19 +43,20 @@ class GoodsMarket:
     # ---- the records ----
 
     def reset_draws(self):
-        """Start a fresh count of what running works draw from the market."""
-        self._sim.market_flows()["drawn"] = {}
+        """Start a fresh count of what the asking seat's running works draw from the market; other seats' counts stay."""
+        self._sim.market_flows()["drawn"][self.acting_party_id] = {}
 
     def note_draw(self, commodity, tonnes):
-        """Running works used `tonnes` the founder neither held nor made."""
+        """The asking seat's running works used `tonnes` it neither held nor made."""
         if tonnes > 0:
-            drawn = self._sim.market_flows()["drawn"]
+            drawn = self._sim.market_flows()["drawn"].setdefault(self.acting_party_id, {})
             drawn[commodity] = drawn.get(commodity, 0.0) + tonnes
 
     # ---- reads ------------------------------------------------------------------------
 
-    def drawn_tonnes(self, commodity):
-        return self._sim.market_flows()["drawn"].get(commodity, 0.0)
+    def drawn_tonnes(self, commodity, seat_id=None):
+        """Tonnes of a commodity the seat's (the asking one by default) running works drew from the market this year."""
+        return self._sim.market_flows()["drawn"].get(seat_id or self.acting_party_id, {}).get(commodity, 0.0)
 
     def posted_tonnes(self, side, commodity, seat_id=None):
         """Tonnes the seat (the asking one by default) has ordered to buy or sell of a commodity that the year's clearing has not
@@ -87,10 +87,6 @@ class GoodsMarket:
         """Commodities this seat sold into the last clearing."""
         return sorted(port_goods_orders.traded_tonnes(self._stored, seller_id, "sold"))
 
-    def state(self, material):
-        """The market for one material as of now."""
-        return self._sim.market_state(material)
-
     # ---- quotes -----------------------------------------------------------------------
 
     def quote(self, material):
@@ -118,11 +114,6 @@ class GoodsMarket:
                 "making_cost_per_tonne": self.pricing.making_cost_per_tonne(material),
                 "market_available_tonnes_per_year": (
                     offered if offered is not None else sim.materials.market_tonnes(emp_key))}
-
-    def price(self, material):
-        """Money to buy one tonne now, or None when the material has no price."""
-        quote = self.quote(material)
-        return None if quote is None else quote["buy_per_tonne"]
 
     def _with_buyers(self, material, quote):
         """The quote with the tonnes the economy's buyers took and still wanted last year of the good the material is

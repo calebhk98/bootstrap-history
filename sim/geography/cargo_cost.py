@@ -4,31 +4,18 @@ The carrier's cost per tonne-km is `freight_cost.py`; the cargo's cost depends o
 perishability and on how long it is tied up, so it is a share of the price (or money on a stated
 value), not a rate over the route. Foreign routes and domestic hauls use the same terms.
 
-Standalone: rates, years and distances in; shares and money out. Spoilage rates are data in
-`data/world/spoilage.json`.
+Standalone: rates, years and distances in; shares and money out. The spoilage rates are data
+(`data/world/spoilage.json`, read with the installed mods applied through the content module's `spoilage_rates` view).
 """
-import functools
-import json
 import math
-import os
 
 from sim.constants import declare
 
-SPOILAGE_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(
-    os.path.abspath(__file__)))), "data", "world", "spoilage.json")
 MAX_LOST_SHARE = declare(
     "MAX_LOST_SHARE", 0.9, kind="temporary_heuristic",
     unit="share of a cargo", source=None, confidence="D",
     why="A cap so a very long or hazardous route does not price a good at infinity; goods "
         "that are mostly lost are not carried and a route-risk model would replace the cap.")
-
-
-@functools.lru_cache(maxsize=None)
-def spoilage_rates(path=SPOILAGE_PATH):
-    """{material: decay rate per year} for the goods that spoil."""
-    with open(path) as source:
-        document = json.load(source)
-    return {material: float(entry["rate"]) for material, entry in document["rates_per_year"].items()}
 
 
 def interest_money(cargo_value, annual_rate, years):
@@ -58,8 +45,3 @@ def lost_share(*shares):
         kept *= 1.0 - share
     return min(MAX_LOST_SHARE, 1.0 - kept)
 
-
-def worst_spoilage_rate(materials):
-    """The fastest-spoiling of a commodity's materials (zero for none that spoil)."""
-    rates = spoilage_rates()
-    return max((rates.get(material, 0.0) for material in materials), default=0.0)

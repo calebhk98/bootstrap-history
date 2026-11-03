@@ -4,21 +4,28 @@ A node declares only physical quantities. The bill asks the market what the part
 today, at the economy's price on the founder's tile plus carriage, the price climbing over the order, and posts the buy
 orders for it at the start; the tonnes arrive in stock at the year's clearing, and the project waits for them (sim/projects)."""
 import collections
+import math
 from typing import Any, Dict, Optional, Tuple
 
 from sim.assembly.api import Part
 from sim.markets.api import BuyMaterial
 from sim.refusal import Refusal
 from sim.projects.api import constants as project_constants
-from sim.world.material_units import tonnes_per_unit
+from sim.unit_conversions import KILOGRAMS_PER_TONNE
 
 from . import rules
 
 
 class ProjectBill(Part):
-    """Needs: tree_nodes, active_projects, goods_stock, purchase_quote, shared_bill, opposition_factor,
+    """Needs: tree_nodes, active_projects, goods_stock, purchase_quote, unit_mass_kg, shared_bill, opposition_factor,
     material_cost_factor, can_pay, purchase_refusal, project_cost, project_cost_now, cost_money_factor, civ_cost_factor,
     rebuild_work_factor, failure_reset_share. Sends BuyMaterial."""
+
+    def tonnes_per_unit(self, material: str) -> float:
+        """Tonnes in one unit of a material (the markets `unit_mass_kg` view). A unit with no mass, land, moves no tonnes: it
+        is not bought through the goods market, so it adds none to the bill."""
+        kilograms = self.needs.unit_mass_kg(material)
+        return kilograms / KILOGRAMS_PER_TONNE if math.isfinite(kilograms) else 0.0
 
     def project_material_needs(self, node_id: str) -> collections.Counter:
         """{material key: units} the project physically consumes, with the fuel substitution the throttle applies."""
@@ -32,7 +39,7 @@ class ProjectBill(Part):
     def compute_material_bill(self, node_id: str) -> Dict[str, Any]:
         needs = self.needs
         span = rules.build_span(needs.tree_nodes()[node_id])
-        return rules.material_bill(self.project_material_needs(node_id), span, tonnes_per_unit, self.parts.supply.material_pool,
+        return rules.material_bill(self.project_material_needs(node_id), span, self.tonnes_per_unit, self.parts.supply.material_pool,
                                    lambda commodity: needs.goods_stock[commodity],
                                    lambda tag: self.unclaimed_own_supply(tag, node_id), needs.purchase_quote,
                                    self.parts.supply.market_tonnes, self.parts.supply.own_material_supply)

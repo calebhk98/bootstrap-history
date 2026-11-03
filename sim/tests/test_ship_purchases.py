@@ -5,6 +5,9 @@ from sim.tests.agents_fake_world import flat_namespace
 import unittest
 from types import SimpleNamespace
 
+from sim.content.api import service_life_years
+from sim.content.tree_source import NO_MODS_DIRECTORY
+
 from sim.agents import budget_lines
 from sim.book import Book, GoodsMove
 from sim.economy.types import GoodSpec
@@ -26,7 +29,8 @@ def storage_economy(capital_asset):
 
 class ShipPurchases(unittest.TestCase):
     def test_fleet_planning_does_not_open_an_unopened_economy(self):
-        world = SimpleNamespace(production=SimpleNamespace(techniques_granted=lambda: frozenset({"sea_mortise_tenon"})))
+        world = SimpleNamespace(production=SimpleNamespace(techniques_granted=lambda: frozenset({"sea_mortise_tenon"})),
+                                materials=SimpleNamespace(service_life_years=lambda: service_life_years(NO_MODS_DIRECTORY)))
         port = EconomyPort(world)
         port._opening = True
         goods = port.fleet_goods("state:a")

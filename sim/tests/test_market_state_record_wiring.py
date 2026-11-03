@@ -38,7 +38,7 @@ class TithableSales(unittest.TestCase):
     def value(self, quotes, states):
         needs = fake_needs(material_commodity=lambda material: material, market_state=lambda commodity: states.get(commodity),
                            materials_serving=lambda need: ["wheat", "rice", "ghost"],
-                           main_material_of=lambda commodity: commodity, material_trade_quote=lambda material: quotes.get(material))
+                           main_material_of=lambda commodity: commodity, goods_quote=lambda material: quotes.get(material))
         return Stakes(types.SimpleNamespace(needs=needs)).tithable_sales_value("food")
 
     def test_the_value_is_the_sold_tonnes_at_the_buy_quote_summed_over_the_needs_commodities(self):

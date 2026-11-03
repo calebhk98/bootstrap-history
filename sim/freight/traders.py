@@ -20,7 +20,7 @@ from .constants import SEA_MODE
 class Traders(Part):
     """Needs: partners, labour_quote, hours_per_person_year, trade_population, working_age, households_loanable_funds, market_rate,
     route_lift_years_per_tonne, route_capital_per_lift_tonne, lift_capacity_tonnes, opening_carriers_per_route,
-    carriage_facts, plus what Models needs."""
+    carriage_facts, spoilage_rates, plus what Models needs."""
 
     def route_carriers(self, civilization_id, route):
         """Carriers on a route; endless for a route of no legs. With no partner named, the opening fleet."""
@@ -103,7 +103,7 @@ class Traders(Part):
         spoilage = 0.0
         if material is not None:
             spoilage = cargo_cost.spoilage_share(
-                cargo_cost.spoilage_rates().get(material, 0.0),
+                self.needs.spoilage_rates().get(material, 0.0),
                 self.trader_cycle_years(route, civilization_id, destination_demand_tonnes))
         return cargo_cost.lost_share(self.route_cargo_loss_share(route), spoilage)
 

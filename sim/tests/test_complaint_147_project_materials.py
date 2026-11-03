@@ -15,7 +15,7 @@ from sim.materials import rules
 from sim.projects.api import constants as project_constants
 from sim.materials.constants import COKE_PER_CHARCOAL
 from sim.tests import materials_stand_in
-from sim.world.material_units import tonnes_per_unit
+from sim.markets.unit_mass import tonnes_per_unit
 from sim.ui.proto.techtree import _material_row
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))

@@ -11,6 +11,14 @@ from sim.economy.api import (carried_book, cohort_land_rents, country_figures, l
                              country_trade_wage, working_hours_per_year)
 
 
+def trade_book_in_coin(economy, country: str) -> Dict[str, Dict[str, float]]:
+    """What crossed the country's border last year by good: tonnes each way, and money each way in coin (imports at the price
+    where they landed, exports at the price where they left)."""
+    coin = coin_per_unit(economy)
+    return {good: {key: value * coin if key.endswith("_value") else value for key, value in entry.items()}
+            for good, entry in country_figures.trade_book(economy, country).items()}
+
+
 class CountryAnswers:
     """The questions foreign governments, strata and firms ask about their country, answered from its tiles."""
 
@@ -66,8 +74,7 @@ class CountryAnswers:
     def trade_book(self) -> Dict[str, Dict[str, float]]:
         """The goods that crossed the country's border last year: tonnes and money each way, by good (imports at the
         price where they landed, exports at the price where they left)."""
-        return {good: {key: value * self._coin if key.endswith("_value") else value for key, value in entry.items()}
-                for good, entry in country_figures.trade_book(self._economy, self._country).items()}
+        return trade_book_in_coin(self._economy, self._country)
 
     def trade_value(self, direction: str) -> float:
         """Money's worth of the goods imported ("in") or exported ("out") last year: what the merchants carried across the

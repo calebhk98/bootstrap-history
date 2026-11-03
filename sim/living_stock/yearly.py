@@ -8,7 +8,7 @@ from sim.assembly.api import Part
 from sim.workforce.api import ONCE_STOCK, PostHoursOnce
 
 from . import rules
-from .data import kilograms_per_unit, stock_entry, stock_rates
+from .data import stock_entry, stock_rates
 from .holding import HERDS
 
 GROWS_ON_PASTURE = "pasture"
@@ -16,7 +16,7 @@ GROWS_ON_ARABLE = "arable"
 
 
 class Yearly(Part):
-    """The phase `living_stock` (needs: stock_land, endemic_stock_loss, nursery_room_units, hours_hired_once;
+    """The phase `living_stock` (needs: unit_mass_kg, stock_land, endemic_stock_loss, nursery_room_units, hours_hired_once;
     sends PostHoursOnce)."""
 
     def nursery_room_units(self, material, place):
@@ -44,7 +44,7 @@ class Yearly(Part):
         place = land["place"]
         pastured = [material for material, rates in sorted(rates_by_material.items())
                     if rates.get("grows_on") == GROWS_ON_PASTURE]
-        grazing = sum(self.parts.holding.held(material) * kilograms_per_unit(material) for material in pastured)
+        grazing = sum(self.parts.holding.held(material) * self.parts.holding.kilograms_per_unit(material) for material in pastured)
         pasture_room = rules.pasture_room_kg(place, land["pasture_kg"], grazing)
         society_herds = self.world.society_herds
         hired, wanted = dict(self.needs.hours_hired_once(ONCE_STOCK)), {}
@@ -55,14 +55,14 @@ class Yearly(Part):
             room = None
             loss = rates["annual_loss"] + self.needs.endemic_stock_loss(place, rates.get("species"))
             if rates.get("grows_on") == GROWS_ON_PASTURE and pasture_room is not None:
-                room = pasture_room / kilograms_per_unit(material)
+                room = pasture_room / self.parts.holding.kilograms_per_unit(material)
             elif rates.get("grows_on") == GROWS_ON_ARABLE:
                 room = self.nursery_room_units(material, place)
             after, grown = rules.material_year(
                 held, rates, room, loss, society_herds.get(material, 0.0),
                 lambda billed, material=material: self.hire_growth_labour(material, billed, hired, wanted))
             if rates.get("grows_on") == GROWS_ON_PASTURE and pasture_room is not None:
-                pasture_room = max(0.0, pasture_room - grown * kilograms_per_unit(material))
+                pasture_room = max(0.0, pasture_room - grown * self.parts.holding.kilograms_per_unit(material))
             if material in society_herds:
                 society_herds[material] = rules.society_herd_after(society_herds[material], held, after)
                 self.bump(HERDS)

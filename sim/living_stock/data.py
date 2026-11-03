@@ -4,8 +4,6 @@ import json
 import os
 
 from sim.labour.api import production_data
-from sim.unit_conversions import KILOGRAMS_PER_TONNE
-from sim.world.material_units import tonnes_per_unit
 
 LIVING_STOCK_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
                                  "data", "world", "living_stock.json")
@@ -27,6 +25,3 @@ def stock_entry(material):
             return entry
     return None
 
-
-def kilograms_per_unit(material):
-    return tonnes_per_unit(material) * KILOGRAMS_PER_TONNE

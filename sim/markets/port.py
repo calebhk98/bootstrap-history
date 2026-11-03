@@ -7,7 +7,7 @@ change without them knowing. The port files (port*.py) are the only code that im
 the agent economy answers, and the engine's own opening figures answer
 while it opens. The port reads the game through `PortWorld` (port_world.py).
 """
-from . import port_actors, port_data, port_goods_orders
+from . import port_actors, port_goods_orders
 from .commands import RepriceOpeningMoney
 
 
@@ -134,7 +134,7 @@ class EconomyPort:
         from sim.prices.api import prices as price_solver
         from .port_setup import allowed_entries
         production = price_solver.default_production_entries()
-        lives = port_data.service_life_years()
+        lives = self._sim.materials.service_life_years()
         allowed = allowed_entries(production, set(self._sim.production.techniques_granted()))
         return port_actors.fleet_goods(production, allowed, lambda good: lives.get(good, 0.0), lambda _good: 0.0)
 

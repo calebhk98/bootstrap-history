@@ -98,7 +98,8 @@ class LateGoodPriceVintage(unittest.TestCase):
                                 "labour_hours": {"kilnman": 20.0}, "unit_dimension": "mass", "requires_node": "kiln_node"}}
         society = types.SimpleNamespace(
             economy=types.SimpleNamespace(agent_prices=lambda: {"lime_kg": 6.0}, labour=types.SimpleNamespace(quote=lambda trade: 5.0)),
-            scenario=types.SimpleNamespace(civ={"id": "testland"}), finance=types.SimpleNamespace(market_rate=lambda: 0.0))
+            scenario=types.SimpleNamespace(civ={"id": "testland"}), finance=types.SimpleNamespace(market_rate=lambda: 0.0),
+            state=types.SimpleNamespace(trade_registry={"kilnman": {}}))
         cost = port_late.late_goods_costs(society, {}, ["cement_kg"], frozenset({"kiln_node"}), production, 3.0)
         self.assertAlmostEqual(cost["cement_kg"], (1000.0 * 6.0 + 20.0 * 5.0) / 1000.0 / 3.0)
 

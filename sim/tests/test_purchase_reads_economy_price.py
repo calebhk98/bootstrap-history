@@ -13,7 +13,7 @@ from sim.tests import market_stand_in
 from sim.markets import port_money
 from sim.markets.goods_market import GoodsMarket
 from sim.markets.goods_offers import GoodsOffers
-from sim.engine.material_units import tonnes_per_unit
+from sim.markets.unit_mass import tonnes_per_unit
 from sim.foreign_trade.module import ForeignTrade
 from sim.tests import module_harness
 

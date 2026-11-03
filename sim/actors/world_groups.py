@@ -19,7 +19,7 @@ def founder_share_of_sellers(sellers, other_actors_concerns):
 def commodity_quote(needs: Any, commodity: str) -> Any:
 	"""The quote for the first priced material the commodity is made of (its main product)."""
 	material = needs.main_material_of[commodity]
-	return None if material is None else needs.material_trade_quote[material]
+	return None if material is None else needs.goods_quote[material]
 
 
 class Groups:

@@ -14,4 +14,3 @@ from sim.ledger.api import PayActor, PayEdge, TakeFromHouseholdPurse
 from sim.mod_errors import ModError
 from sim.workforce.api import FireStaff, HireStaff, MoveBase
 from sim.world import climate_needs, demography
-from sim.world.material_units import tonnes_per_unit

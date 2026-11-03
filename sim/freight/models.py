@@ -39,7 +39,7 @@ def _land_freight_inputs(team_size):
 
 
 class Models(Part):
-    """Needs: mode_carrier, carriage_facts, modes_carrying, wage, material_price, material_prices, market_rate.
+    """Needs: mode_carrier, carriage_facts, modes_carrying, labour_quote, material_price, material_prices, market_rate.
     A mode whose feed, vehicle or animals have no price is not offered: `unpriced_modes` names what each lacks."""
 
     def __init__(self, module):
@@ -71,14 +71,14 @@ class Models(Part):
         wood_price = self.needs.material_price[FREIGHT_VEHICLE_MATERIAL]
         if grain_price is None or wood_price is None:
             return None
-        return rules.sea_crew_hands(self.needs.wage[self.trade_of_role("sailor")], grain_price, wood_price)
+        return rules.sea_crew_hands(self.needs.labour_quote(self.trade_of_role("sailor")), grain_price, wood_price)
 
     def carrier_models(self):
         """{mode: (physical inputs, carrier prices, working days a year, hull loss per 1000 km)}: the carrier unit
         each mode's inputs describe, priced from this society's prices; a mode with an unpriced input is left out.
         Kept while the price table, the sea crew's wage and the team size are the same."""
         prices = self.needs.material_prices()
-        key = (self.needs.wage[self.trade_of_role("sailor")], LAND_FREIGHT_TEAM_SIZE)
+        key = (self.needs.labour_quote(self.trade_of_role("sailor")), LAND_FREIGHT_TEAM_SIZE)
         cached = self._models_cache
         if cached is not None and cached[0] is prices and cached[1] == key:
             return cached[2]
@@ -141,8 +141,8 @@ class Models(Part):
         """{mode: home money per tonne-km}: feed and crew, the carrier's capital at the market rate, hull losses, and
         the return leg (`imbalance` 0 when flows balance, 1 when the carrier comes back empty). The same function
         prices foreign legs and domestic hauls. A mode whose feed or carrier has no price is absent."""
-        land_wage = self.needs.wage[self.trade_of_role("unskilled")]
-        sea_wage = self.needs.wage[self.trade_of_role("sailor")]
+        land_wage = self.needs.labour_quote(self.trade_of_role("unskilled"))
+        sea_wage = self.needs.labour_quote(self.trade_of_role("sailor"))
         rate = self.needs.market_rate()
         walking = frozenset(self.needs.carriage_facts()["walking_modes"])
         carrying = frozenset(self.needs.modes_carrying(cargo)) if cargo else frozenset()
@@ -162,6 +162,6 @@ class Models(Part):
     def freight_handling_costs(self):
         """{mode: home money per tonne} charged once per leg of that mode: port handling at sea, and the tolls or port
         dues the geography states for each mode (paid at the carrier's wage)."""
-        wage = self.needs.wage[self.trade_of_role("unskilled")]
+        wage = self.needs.labour_quote(self.trade_of_role("unskilled"))
         return rules.handling_money_per_tonne(self.needs.carriage_facts()["dues_hours_per_tonne"], wage, SEA_MODE,
                                               sea_freight.PORT_HANDLING_HOURS_PER_TONNE)
