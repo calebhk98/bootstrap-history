@@ -24,13 +24,3 @@ def build(views: Optional[Dict[str, Any]] = None, **overrides: Any) -> Prices:
     plain.update(views or {})
     plain.update(overrides)
     return module_harness.build(Prices, views=plain, module_id="prices")
-
-
-def build_over_book(cost_book: Any, reference: str, commodity_of_material: Optional[Dict[str, str]] = None, **overrides: Any) -> Prices:
-    """A Prices module costed against one given `CostBook`, whose incumbents make every good by the entry `reference`."""
-    module = build(**overrides)
-    memo: Dict[Any, Any] = {}
-    module.cost_book = lambda: (None, cost_book, memo)
-    module.reference_entry = lambda material: reference
-    module.material_commodity_map = lambda: dict(commodity_of_material or {})
-    return module

@@ -9,7 +9,9 @@ second scenario may supply another. Nothing here is imported at run time except 
 to this file.
 """
 import random
-from typing import Any, Callable, Dict, FrozenSet, Iterable, List, Optional, Protocol, Set, Tuple
+from typing import Any, Callable, Dict, FrozenSet, Iterable, List, Optional, Protocol, Set, Tuple, Union
+
+from sim.refusal import Refusal
 
 from .revenue import Assessment
 from .sector import Sector
@@ -689,8 +691,8 @@ class TradePart(Protocol):
 		the year's cargo; None where the place's market does not answer."""
 		...
 
-	def freight_between(self, source: str, destination: str, material: str, tonnes: float) -> float:
-		"""Money to carry `tonnes` of a material from one place to another."""
+	def freight_between(self, source: str, destination: str, material: str, tonnes: float) -> Optional[float]:
+		"""Money to carry `tonnes` of a material from one place to another; None where the carriage cannot be priced."""
 		...
 
 	def market_depth(self, material: str, place: str) -> float:
@@ -701,8 +703,8 @@ class TradePart(Protocol):
 		"""Tonnes every shipper has brought to a place so far this year, from any source."""
 		...
 
-	def ship(self, trader_id: str, material: str, tonnes: float, source: str, destination: str) -> Tuple[float, float]:
-		"""Buy at the source and sell at the destination: (money paid, money received)."""
+	def ship(self, trader_id: str, material: str, tonnes: float, source: str, destination: str) -> Union[Tuple[float, float], Refusal]:
+		"""Buy at the source and sell at the destination: (money paid, money received), or a refusal."""
 		...
 
 	def country_of_place(self, place: str) -> Optional[str]:

@@ -6,7 +6,6 @@ QUICK_TOPIC = True
 import unittest
 
 from sim.prices import entry_cost, solve_prices
-from sim.tests import prices_stand_in
 from sim.tests.test_capital_charge import WAGES, works_entry
 
 RATE = 0.12
@@ -41,21 +40,6 @@ class CostBookTests(unittest.TestCase):
         running = cost_book.running_unit_cost("widget_kg", "widget_kg")
         self.assertIsNotNone(running)
         self.assertLess(running, full)
-
-class StubGame:
-    """Just enough of the engine for the cost ratios: one good made by one entry."""
-    def __init__(self, entry):
-        self.prices = prices_stand_in.build_over_book(book({"widget_kg": entry}), "widget_kg", {"widget_kg": "widget"})
-
-    def entry_cost_ratio(self, entry_key, material, running=False):
-        return self.prices.entry_cost_ratio(entry_key, material, running)
-
-
-class OffersTests(unittest.TestCase):
-    def test_a_producer_with_its_plant_built_offers_below_the_incumbents_full_cost(self):
-        game = StubGame(works_entry())
-        self.assertLess(game.entry_cost_ratio("widget_kg", "widget_kg", running=True), 1.0)
-        self.assertAlmostEqual(game.entry_cost_ratio("widget_kg", "widget_kg"), 1.0)
 
 
 if __name__ == "__main__":

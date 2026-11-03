@@ -11,7 +11,7 @@ from types import SimpleNamespace
 import unittest
 
 from sim.agents import relations
-from sim.agents.trader import route_terms
+from sim.agents.trader_routes import route_terms
 from sim.economy.tariffs import duty_transfers
 from sim.economy.types import EDGE_EXTERNAL
 from sim.markets import trade_duty

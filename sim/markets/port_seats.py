@@ -47,7 +47,10 @@ def settle_seats(sim, economy, offered_by_seat, inputs_by_seat, edge_id):
             sim.send(ReceiveFromEdge(edges.EDGE_CUSTOMERS, sale, "concern sales"))
             unpaid = pay_edge_or_log(sim.send, edges.EDGE_SUPPLIERS, inputs_by_seat.get(seat_id, 0.0), "inputs of concerns sold in the book")
             if unpaid is not None and sale > 0.0:   # the inputs stay unpaid, so the sale is not booked either
-                pay_edge_or_log(sim.send, edges.EDGE_CUSTOMERS, sale, "concern sales reversed, inputs unpaid")
+                if pay_edge_or_log(sim.send, edges.EDGE_CUSTOMERS, sale, "concern sales reversed, inputs unpaid") is None:
+                    takings[seat_id] = 0.0
+                    for figures in sold.get(seat_id, {}).values():   # the units and money of a sale that is not booked
+                        figures[1], figures[2] = 0.0, 0.0
     return sold, takings
 
 

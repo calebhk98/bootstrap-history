@@ -1,7 +1,7 @@
 """getattr/hasattr/setattr probes with a literal name that nothing justifies. Run from the repository root.
 
 A `getattr(obj, "name", ...)`, `hasattr(obj, "name")` or `setattr(obj, "name", ...)` in sim/ and mods/ (tests excluded) is allowed only when
-  (a) the name is in OPTIONAL below: a hook that some implementations define and others do not, each with who defines it and why a plain
+  (a) the name is in OPTIONAL below (or in OPTIONAL_IN_FILE for that file): a hook that some implementations define and others do not, each with who defines it and why a plain
       read would be wrong; or the name is a command-line option read off a parsed `args` / `namespace`; or
   (b) the receiver's class can be resolved statically and that class (or a base) defines the name. A receiver resolves when it is `self`
       in a class, a parameter with an annotation naming a class, a local assigned once from `Class(...)`, a `self.<attribute>` annotated
@@ -40,9 +40,6 @@ OPTIONAL = {
 	"ui_readable": "attribute set by the decorator that marks a method readable by the UI (sim/engine/readable.py); an undecorated method lacks it",
 	"register": "optional entry point of a mod's code module (sim/engine/mod_code.py); a module without it registers nothing",
 	"receiver_tile": "field of money moves that cross tiles (sim/book.py); a plain move lacks it",
-	"cause": "attribute of a Refusal (sim/refusal.py); the reply probed may be plain text",
-	"facts": "attribute of a Refusal (sim/refusal.py); the reply probed may be plain text",
-	"choices": "attribute of a Refusal (sim/refusal.py); the reply probed may be plain text",
 	"enterprises": "part of an owner with plants of its own (sim/agents/government.py); a firm or a player owner has none",
 	"part_name": "attribute set on a forwarding method (sim/assembly/assemble.py _part_forwarder); a method the module class defines itself lacks it",
 	"_guard_view": "set on the copies the read guard hands out (sim/assembly/read_guard.py); a plain dict, list or set lacks it",
@@ -51,6 +48,15 @@ OPTIONAL = {
 	"keys": "a payment's purpose is a mapping of label to share or a single label (sim/coin/rules.py); a label has no keys",
 	"OWNERS": "class constant of the economy record's part classes (sim/economy/*_record.py); a table field's type (a Dict[...]) has none",
 	"to_canon_dict": "defined by the few saved classes with a canonical form; serialize_state meets arbitrary objects (sim/engine/state.py)",
+}
+
+# Names allowed only in one file: the probes of a reply that may be plain text, which only that file reads.
+OPTIONAL_IN_FILE = {
+	"sim/refusal.py": {
+		"cause": "attribute of a Refusal; the reply probed may be plain text",
+		"facts": "attribute of a Refusal; the reply probed may be plain text",
+		"choices": "attribute of a Refusal; the reply probed may be plain text",
+	},
 }
 
 
@@ -311,7 +317,7 @@ class Visitor:
 		return None
 
 	def judge(self, call, kind, name):
-		if name.startswith("__") and name.endswith("__") or name in OPTIONAL:
+		if name.startswith("__") and name.endswith("__") or name in OPTIONAL or name in OPTIONAL_IN_FILE.get(self.relative, {}):
 			return
 		receiver = call.args[0]
 		if isinstance(receiver, ast.Name) and receiver.id in ARGUMENT_RECEIVERS and name in self.options:

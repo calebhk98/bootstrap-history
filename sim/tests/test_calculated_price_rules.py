@@ -20,14 +20,6 @@ class GoodsInCoin(unittest.TestCase):
         self.assertEqual(rules.goods_in_coin({}, 2.0, 1.0), {})
 
 
-class CostRatio(unittest.TestCase):
-
-    def test_a_ratio_of_two_costs_and_none_where_either_cannot_be_costed(self):
-        self.assertEqual(rules.cost_ratio(3.0, 2.0), 1.5)
-        for own, reference in ((None, 2.0), (3.0, None), (3.0, 0.0)):
-            self.assertIsNone(rules.cost_ratio(own, reference))
-
-
 class SolvedMaterials(unittest.TestCase):
 
     def test_only_materials_made_with_the_held_techniques_are_solved(self):

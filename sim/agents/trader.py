@@ -4,7 +4,7 @@ It values only the margin between a good's price where it is cheap and where it 
 carriage, the interest the cargo's capital would earn and a share lost on the way. The goods move
 through the world's market; the trader books what it paid, what it got and the carriage.
 """
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from sim.refusal import Refusal
 
@@ -14,7 +14,7 @@ from .edges import EDGE_FREIGHT, EDGE_MARKET, EDGE_POOLED_CAPITAL
 from .borrowing import TRACK_RECORD_YEARS
 from .policy import Decision, Option
 from .tuning import EXIT_LOSS_YEARS
-from .trader_routes import gaining_routes, paying_tonnes, price_answers, route_key, route_terms  # noqa: F401  (re-exported)
+from .trader_routes import gaining_routes, paying_tonnes, price_answers, route_key
 from .tuning_trader import TRADER_DEPTH_SHARE, TRADER_RISK_SHARE
 
 
@@ -77,17 +77,17 @@ class Trader(RecordedActor):
 					detail={"material": material, "source": source, "destination": destination, "tonnes": tonnes}))
 		return options
 
-	def ship_cargo(self, option: Option, world: Any) -> float:
-		"""Buy at the source, carry and sell at the destination; the margin made. Nothing moves, and the margin is
-		zero, when an end has no price (the shipment is refused) or the carriage cannot be priced."""
+	def ship_cargo(self, option: Option, world: Any) -> Optional[float]:
+		"""Buy at the source, carry and sell at the destination; the margin made. Nothing moves, and the answer is
+		None, when an end has no price (the shipment is refused) or the carriage cannot be priced."""
 		detail = option.detail
 		tonnes = detail["tonnes"]
 		freight = world.trade.freight_between(detail["source"], detail["destination"], detail["material"], tonnes)
 		if freight is None:
-			return 0.0
+			return None
 		shipped = world.trade.ship(self.actor_id, detail["material"], tonnes, detail["source"], detail["destination"])
 		if isinstance(shipped, Refusal):
-			return 0.0
+			return None
 		paid, received = shipped
 		ledger.transfer(self, world.setting.edge(EDGE_MARKET), paid, "edge:market purchase")
 		ledger.transfer(self, world.setting.edge(EDGE_FREIGHT), freight, EDGE_FREIGHT)
@@ -117,10 +117,15 @@ class Trader(RecordedActor):
 		for key, route in self.record.routes.items():
 			if key not in shipped:
 				route["tonnes"] = 0.0
-		margin = sum(self.ship_cargo(option, world) for option in chosen) - interest
+		results = [(option, self.ship_cargo(option, world)) for option in chosen]
+		for option, made in results:
+			route = self.record.routes.get(option.subject)
+			if made is None and route is not None:   # a refused or unpriced shipment leaves no cargo and no margin for the year
+				route["tonnes"], route["margin"] = 0.0, 0.0
+		margin = sum(made for _option, made in results if made is not None) - interest
 		self.record.last_margin = margin
-		# a year at a loss or with nothing worth carrying both count toward giving up
-		self.record.loss_years = self.record.loss_years + 1 if margin < 0 or not chosen else 0
+		# a year at a loss or with nothing carried (nothing worth carrying, or every shipment refused) counts toward giving up
+		self.record.loss_years = self.record.loss_years + 1 if margin < 0 or all(made is None for _option, made in results) else 0
 		if self.record.loss_years >= EXIT_LOSS_YEARS:
 			self.record.routes.clear()
 			self.record.exited_year = world.setting.year

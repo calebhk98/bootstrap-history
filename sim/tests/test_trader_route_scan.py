@@ -9,7 +9,7 @@ from .harness import check
 
 from sim.agents.api import ActorRecord
 from sim.agents.policy import Option
-from sim.agents.trader import route_key, route_terms
+from sim.agents.trader_routes import route_key, route_terms
 from sim.agents.trader_entry import candidate_routes
 from sim.agents.tuning import ENTREPRENEURIAL_CAPITAL_SHARE
 from sim.agents.tuning_trader import TRADER_DEPTH_SHARE, TRADER_RISK_SHARE

@@ -11,6 +11,7 @@ from sim.agents.api import edges
 from sim.ledger.api import PayEdge, ReceiveFromEdge
 from sim.markets import port_seats
 from sim.production import concern_sales
+from sim.refusal import Refusal
 
 PRICE = 3.0
 COIN = 2.0
@@ -33,7 +34,17 @@ class StandInSim:
         self.postings.append((self.acting, command.edge, sign * command.amount, command.purpose))
 
 
-def settle(units_offered, units_taken, inputs_cost):
+class RefusesInputs(StandInSim):
+    """A stand-in whose seat cannot pay the suppliers' edge."""
+    def send(self, command):
+        if isinstance(command, PayEdge) and command.edge == edges.EDGE_SUPPLIERS:
+            return Refusal("cannot_pay", "no funds")
+        if not isinstance(command, (PayEdge, ReceiveFromEdge)):
+            return None   # the log line of the refusal
+        return super().send(command)
+
+
+def settle(units_offered, units_taken, inputs_cost, sim=None):
     """The settlement after a clearing in which buyers took `units_taken` of `units_offered` at PRICE."""
     book = types.SimpleNamespace(balance=lambda seat, currency: units_taken * PRICE if seat == "seat" else 0.0)
     economy = types.SimpleNamespace(
@@ -41,7 +52,7 @@ def settle(units_offered, units_taken, inputs_cost):
         area_map=types.SimpleNamespace(area_of=lambda good, tile: "area"),
         view=lambda: types.SimpleNamespace(price=lambda good, area: PRICE))
     holdings = {"goods": {"acid": {"tile": units_offered - units_taken}}}
-    sim = StandInSim({"seat", "idle"})
+    sim = sim or StandInSim({"seat", "idle"})
     api = port_seats.economy_api
     with mock.patch.object(api, "economy_book", lambda eco: book), \
             mock.patch.object(api, "account_holdings", lambda eco, seat: holdings), \
@@ -67,6 +78,12 @@ class SeatIsPaidWhatTheClearingPaid(unittest.TestCase):
     def test_the_inputs_are_charged_so_the_net_is_the_proceeds_less_them(self):
         postings, _, _ = settle(1000.0, 10.0, 25.0)
         self.assertAlmostEqual(sum(amount for _, _, amount, _ in postings), 10.0 * PRICE * COIN - 25.0)
+
+    def test_a_sale_reversed_because_the_inputs_were_refused_is_returned_as_not_booked(self):
+        postings, sold, takings = settle(1000.0, 10.0, 25.0, RefusesInputs({"seat", "idle"}))
+        self.assertEqual(sum(amount for _, _, amount, _ in postings), 0.0)
+        self.assertEqual(takings["seat"], 0.0)
+        self.assertEqual(sold["seat"]["acid"], [1000.0, 0.0, 0.0])
 
     def test_a_seat_that_offered_nothing_is_not_touched(self):
         postings, _, _ = settle(1000.0, 10.0, 0.0)

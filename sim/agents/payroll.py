@@ -44,8 +44,8 @@ def share_out(payer: Any, payees: List[Any], weights: List[float], amount: float
 		try:
 			ledger.transfer(payer, payee, part, purpose)
 		except InsufficientFunds:
-			for earlier, earlier_part in reversed(paid):   # what already left the purse comes back, then the draw made for these payments
-				ledger.transfer(earlier, payer, earlier_part, purpose)
+			for earlier, earlier_part in reversed(paid):   # what already left the purse comes back by direct postings, then the draw made for these payments
+				ledger.reverse(earlier, payer, earlier_part, purpose)
 			give_back()
 			raise
 		if part > DEBT_FLOOR:   # a part below the floor moves nothing, and the last payee takes it up

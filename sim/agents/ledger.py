@@ -53,6 +53,23 @@ def transfer(payer: Any, payee: Any, amount: float, purpose: Purpose) -> None:
 			AFTER_TRANSFER[0] = hook
 
 
+def reverse(payee: Any, payer: Any, amount: float, purpose: Purpose) -> None:
+	"""Take back a payment `payer` made to `payee`: the money returns and the books of both forget the payment.
+	It repays no facility, charges no coin cost and posts no flow line."""
+	if amount == 0:
+		return
+	purses = getattr(payee, "purses", None)
+	if purses is not None and getattr(payer, "purses", None) is purses:
+		purses.reverse(payee.account_id, payer.account_id, amount, purposes_label(purpose))
+	else:
+		payee.payments.debit(amount, purpose)
+		payer.payments.credit(amount, purpose)
+		payee.payments.note_outlay(purpose, -amount)
+		payer.payments.note_income(purpose, -amount)
+	payee.payments.note_income(purpose, -amount)
+	payer.payments.note_outlay(purpose, -amount)
+
+
 def cover(payer: Any, payees: List[Any], amount: float) -> Callable[[], None]:
 	"""Before `payer` pays `amount` to several payees in the one book: its facility is drawn once for what its
 	purse lacks, not once per payment. Answers the call that gives the draw back (nothing to give back outside the one book)."""

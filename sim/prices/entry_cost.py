@@ -44,11 +44,6 @@ class CostBook:
         """What a unit costs a producer whose plant is built: the full cost without the plant's repayment."""
         return self.unit_cost(entry_key, material, include_plant=False)
 
-    def cheapest_entry(self, material: str, techniques: FrozenSet[str]) -> Optional[str]:
-        """The entry the held techniques make `material` cheapest by at the book's prices, or None."""
-        made = self._cost(material, techniques, True)
-        return None if made is None else made.recipe_id
-
     def cheapest_cost(self, material: str, techniques: FrozenSet[str], include_plant: bool = True) -> Optional[float]:
         """The least a unit of `material` costs to make by any entry the held techniques allow, or None."""
         made = self._cost(material, techniques, include_plant)

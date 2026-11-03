@@ -118,6 +118,19 @@ class Purses:
         if not is_edge(payee):
             self._repay(payee)
 
+    def reverse(self, payee: str, payer: str, amount: float, purpose: str) -> None:
+        """Undo an earlier payment of `amount` from `payer` to `payee`: one posting back. The payee draws what it
+        has since spent; no facility of the payer is repaid by it, and a refused posting undoes the draw."""
+        if not amount > DEBT_FLOOR:
+            return
+        undo = self._cover(payee, amount)
+        try:
+            self.book.transfer(Transfer(payee, payer, COIN, amount, purpose))
+        except InsufficientFunds:
+            for reverse in reversed(undo):
+                reverse()
+            raise
+
     def cover(self, payer: str, amount: float) -> Callable[[], None]:
         """Make the payer's purse hold `amount`: it takes back its deposit first and draws the rest on its facility,
         both in one go (an account that will make several payments covers their sum first). Answers the call that gives
