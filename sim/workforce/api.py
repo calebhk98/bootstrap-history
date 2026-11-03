@@ -13,5 +13,5 @@ from .commands_bondage import AutoBuyPeople, AutoManumit, ChargeLivingCost, Fade
 from .state import ONCE_COMMISSION, ONCE_STOCK, TrainingRow, WorkforceSeat
 from . import rules
 from .staff_replacement import REPLACE_ONLY, completion_grants_staff
-from .wage_schedule import OpeningSchedules, build_schedule
+from .wage_schedule import opening_schedule
 from .staff_loss_waves import wave_exposure

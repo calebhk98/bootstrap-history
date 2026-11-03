@@ -68,18 +68,27 @@ def build_schedule(registry: Mapping[str, Any], civ: Mapping[str, Any],
 
 
 class OpeningSchedules:
-    """The opening schedules built so far, one per distinct civilisation record: a record that differs in any field (a variant
-    keeping its id) is built afresh. The one memo behind every opening-schedule read."""
+    """The opening schedules built so far, one per distinct civilisation record over one trade registry: a record that
+    differs in any field (a variant keeping its id), or a registry another mod set made, is built afresh."""
 
     def __init__(self):
-        self._held = {}   # civilisation id -> [(record as built, its schedule)]
+        self._held = {}   # civilisation id -> [(record as built, registry as built, its schedule)]
 
-    def schedule_for(self, civ, build):
-        """The schedule of `civ`, from `build()` on the first ask for a record equal to it."""
+    def schedule_for(self, civ, registry, build):
+        """The schedule of `civ` over `registry`, from `build()` on the first ask for a record equal to it."""
         held = self._held.setdefault(civ.get("id"), [])
-        for record, schedule in held:
-            if record == civ:
+        for record, built_over, schedule in held:
+            if record == civ and (built_over is registry or built_over == registry):
                 return schedule
         schedule = build()
-        held.append((copy.deepcopy(civ), schedule))
+        held.append((copy.deepcopy(civ), registry, schedule))
         return schedule
+
+
+_OPENING_SCHEDULES = OpeningSchedules()
+
+
+def opening_schedule(registry: Mapping[str, Any], civ: Mapping[str, Any]) -> wages.WageSchedule:
+    """The opening wage schedule of a civilisation record over a trade registry, built once per (record, registry): the one
+    memo behind every opening-schedule read. A registry is not edited once it is loaded."""
+    return _OPENING_SCHEDULES.schedule_for(civ, registry, lambda: build_schedule(registry, civ))

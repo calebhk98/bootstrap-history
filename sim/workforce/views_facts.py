@@ -2,19 +2,15 @@
 from sim.assembly.api import Part
 
 from . import rules
-from .wage_schedule import OpeningSchedules, build_schedule
+from .wage_schedule import opening_schedule
 
 
 class FactViews(Part):
 
-	def __init__(self, module):
-		super().__init__(module)
-		self._schedules = OpeningSchedules()
-
 	def wage_schedule_for(self, civ):
 		"""The wage schedule a civilisation record opens on, built from the trade registry and the price solver once per
 		record."""
-		return self._schedules.schedule_for(civ, lambda: build_schedule(self.needs.trade_records(), civ))
+		return opening_schedule(self.needs.trade_records(), civ)
 
 	def wages_charged_last_year(self):
 		"""What the last clearing charged the acting seat for its staff and one-year orders; before any clearing, the payroll

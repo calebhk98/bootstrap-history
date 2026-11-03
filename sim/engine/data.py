@@ -47,7 +47,7 @@ UNPRICED_MATERIAL_PRICE = declare(
 from sim.production.api import node_revenue
 from sim.labour.api import trade_of_role, wage_provider
 from .default_civilisation import default_civilisation_id
-from sim.workforce.api import OpeningSchedules, build_schedule
+from sim.workforce.api import opening_schedule
 from sim.content.api import (
     family_of_trade, load_base_tree, load_production_catalog, load_tech_effects, load_trade_registry, trade_notes,
     trade_registry, trades_absent, validate_mod_material_paths,
@@ -144,14 +144,12 @@ TRADE_NOTES: Dict[str, str] = trade_notes(TRADE_REGISTRY)
 TRADES_ABSENT: FrozenSet[str] = trades_absent(TRADE_REGISTRY)
 TRADE_FAMILY: Dict[str, str] = {trade_id: trade.family for trade_id, trade in TRADE_REGISTRY.items()}
 
-_HELD_CIVILISATION_SCHEDULES = OpeningSchedules()
-
 
 def schedule_of_civilisation(civ: JSONDict) -> wage_provider.wages.WageSchedule:
     """The opening wage schedule of a civilisation record the caller holds (it may exist only in
     memory), over this module's trade registry; the one builder of tools' schedules, remembered by the record's
     whole content so a variant is never served another's schedule."""
-    return _HELD_CIVILISATION_SCHEDULES.schedule_for(civ, lambda: build_schedule(_TRADE_REGISTRY, civ))
+    return opening_schedule(_TRADE_REGISTRY, civ)
 
 
 def unskilled_numeraire() -> str:
