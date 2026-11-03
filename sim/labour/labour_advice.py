@@ -75,7 +75,7 @@ class Advice:
         want = sources_to_build(self._world.knowledge.ROOM_SOURCES, projects.done, self._world.scenario.nodes, self._world.knowledge.is_visible,
                                 lambda node_id: len(self._world.scenario.closure(node_id) - projects.done))
         startable_now = any(self._world.knowledge.start_reason(node_id, _why=False)[0] for node_id, _places in want)
-        return room_advice(self._world.money_text(self._world.finance.housing_price_per_place(), grouped=True),
+        return room_advice(self._world.game.money_text(self._world.finance.housing_price_per_place(), grouped=True),
                            reopen, want, startable_now, self._places_text)
 
     def staff_advice(self, kind, deficit=None):

@@ -649,11 +649,10 @@ def _play_finish(sim, nodes, args, session):
     return 0
 
 
-# THE SAME FLOOR core.py's Sim.__init__ APPLIES AT YEAR ZERO (see
-# _ingame_options below, "THE SAME DRAW core.py's Sim.__init__ makes"), kept
-# as its own declared name because core.py has not migrated its own copy to
-# declare() yet - two independent literals with the same value, not one
-# shared source, so a change to one will not reach the other.
+# The floor under the remaining-life draw made when mortality is switched on
+# in game (see _ingame_options below). The year-zero draw takes its floor from
+# the `founder_life_terms` view; this is a separate declared value, so a change
+# to one will not reach the other.
 INGAME_MORTALITY_MIN_REMAINING_LIFE_YEARS = declare(
     "INGAME_MORTALITY_MIN_REMAINING_LIFE_YEARS", 5, kind="temporary_heuristic",
     unit="years", source=None, confidence="D",
@@ -791,13 +790,10 @@ def _ingame_options(sim, session):
                         "of a life without."))
             confirm = _ask("   Turn mortality on now? [y/N] ", ["y", "n"], "n")
             if confirm == "y":
-                # THE SAME DRAW core.py's Sim.__init__ makes for a mortal
-                # founder at year zero (self.life_left = ... rng.gauss(...)),
-                # made here instead because that constructor only ever runs
-                # once, at the start of the game, and this founder is
-                # choosing to become mortal partway through it. See core.py
-                # around "founder remaining lifespan" for the line this
-                # mirrors.
+                # The same kind of draw Sim.__init__ makes for a mortal
+                # founder at year zero (sim/engine/core.py, "founder remaining
+                # lifespan"), made here because that runs once at the start
+                # and this founder is becoming mortal partway through.
                 mean = sim.view("game_config")().get("founder_life_mean", DEFAULTS["founder_life_mean"])
                 std_dev = sim.view("game_config")().get("founder_life_sd", DEFAULTS["founder_life_sd"])
                 sim.view("game_config")()["immortal"] = False

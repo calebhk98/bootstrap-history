@@ -11,8 +11,8 @@ The task this module answers to says the tests matter more than the model,
 because a demographic model that LOOKS plausible and is WRONG is the easiest
 thing in the world to write. So every class below checks a property, not a
 number: exact accounting, boundedness at subsistence, a directional response
-to less food, and - the one the old scalar `pop_deficit` mechanism in
-sim/engine/core.py could never have passed - that recovery from a mortality
+to less food, and - the one a scalar `pop_deficit` mechanism
+could never have passed - that recovery from a mortality
 shock depends on WHICH cohorts survived it, not merely on how many people
 did.
 
@@ -565,8 +565,7 @@ class FoodShockAndRecoveryTests(unittest.TestCase):
     """Halve the food, watch mortality rise and fertility fall and the
     population fall; restore the food, watch the population recover over a
     generational timescale. No term anywhere in demography.py references a
-    remembered trend or a fixed recovery horizon (the whole thing
-    sim/engine/core.py's _demographic_recovery uses) - what recovery there
+    remembered trend or a fixed recovery horizon - what recovery there
     is has to come from births and deaths computed off the actual surviving
     cohorts, which is exactly what these tests are set up to distinguish
     from a decay constant.
@@ -634,7 +633,7 @@ class FoodShockAndRecoveryTests(unittest.TestCase):
                          max(recovery_trajectory) * 0.98)
 
     def test_recovery_is_not_a_decay_constant_it_depends_on_who_survived(self):
-        """The decisive test. sim/engine/core.py's `_demographic_recovery`
+        """The decisive test. A scalar recovery rule
         would treat any two population losses of the SAME SIZE identically
         - `pop_deficit` is a fraction of baseline, with no notion of which
         people that fraction refers to, and decays back down on a clock set
@@ -808,7 +807,7 @@ class DiseaseAndSanitationTests(unittest.TestCase):
 
     def test_default_disease_burden_changes_nothing(self):
         # Every existing call site - every test above this class, and the
-        # engine's own sim/engine/core.py - calls step()/stationary()
+        # engine's own callers - calls step()/stationary()
         # without disease_burden. This is the one test whose entire job is
         # to confirm that omitting it is IDENTICAL to passing
         # PRE_INDUSTRIAL_DISEASE_BURDEN explicitly, not merely close to it.

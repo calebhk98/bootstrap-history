@@ -22,10 +22,10 @@ class Teacher:
         self.paid = []
         self.household = types.SimpleNamespace(training=[], trades_created=set(), teaching_hours_this_year=None)
         self._world = types.SimpleNamespace(
-            workforce=self.household, year=YEAR,
+            workforce=self.household,
             send=lambda command: self.paid.append((command.amount, command.purpose)), EDGE_WORKERS="workers",
             trades=types.SimpleNamespace(HOURS_PER_PERSON_YEAR=HOURS_PER_PERSON_YEAR),
-            plain_number=lambda number: str(number), money_text=lambda money, grouped=False: str(money))
+            game=types.SimpleNamespace(year=YEAR, plain_number=lambda number: str(number), money_text=lambda money, grouped=False: str(money)))
         self.training = Training(self._world, advice=None, book=None, capacity=None, hours=self, market=None, supply=None, trades=None)
         self.training.train_check = self.train_check
         self.training._full_years = self._full_years

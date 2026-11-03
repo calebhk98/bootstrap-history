@@ -45,7 +45,7 @@ class Job:
 
     def __init__(self, alive=True, pool=2000.0, committed=500.0, rate=2.0):
         self.pool, self.committed, self.rate = pool, committed, rate
-        self.wages = Wages(Game(founder_alive=alive), book=None, hours=self, market=None, trades=None)
+        self.wages = Wages(Game(standing=Game(founder_alive=alive)), book=None, hours=self, market=None, trades=None)
         self.wages.wage_for_hours = self.wage_for_hours
 
     def hours_for_sale(self):
@@ -95,9 +95,9 @@ class Seller:
         self.received = []
         self.logged = []
         self._world = Game(
-            founder_alive=True, workforce=household, trades=Game(wages={"scribe": 1}), EDGE_EMPLOYERS="employers",
+            standing=Game(founder_alive=True), workforce=household, trades=Game(wages={"scribe": 1}), EDGE_EMPLOYERS="employers",
             finance=Game(revenue=lambda: 1000.0), actors=Game(active_hours_still_wanted=lambda: 0.0),
-            money_text=lambda amount, grouped=False: "%d" % amount,
+            game=Game(money_text=lambda amount, grouped=False: "%d" % amount),
             send=lambda command: self.received.append(command.amount))
         self.pool, self.committed = pool, committed
         self.wages = Wages(self._world, book=None, hours=self, market=None, trades=self)

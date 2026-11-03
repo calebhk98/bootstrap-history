@@ -13,7 +13,7 @@ class Trades:
 
     # ---- literacy bounds who you can hire ----------------------------------
     # FINDINGS_ROUND2 section Q: every civ file carries literacy_general and
-    # literacy_elite, and apply_tech_effects (society.py) raises them when
+    # literacy_elite, and apply_tech_effects (sim/diffusion/tech_effects.py) raises them when
     # paper, printing, schools and libraries are built. Nothing else reading
     # either number would let a scribe cost the same to hire in a society
     # where two people in a hundred could read as in one where nine could.

@@ -1,14 +1,14 @@
 """What the labour package reads of the game: `send` and the acting seat's own state here, and one reader group per owning module
-(world_reads.py): `scenario`, `knowledge`, `finance`, `people`, `trades`, `actors`, `ventures`, `directors`, plus `projects` and
+(world_reads.py): `scenario`, `knowledge`, `finance`, `people`, `trades`, `actors`, `ventures`, `directors`, `game`, `standing`, plus `projects` and
 `economy` below; the commands it sends are `commands` (world_commands.py).
 
 `Labour` (sim/labour/) asks this object where it used to ask the engine. Every fact comes from a named view of its owner
-and every change to a fact another module owns is that owner's command. What is still handed out live: the game's random
-source (`rng`, shared by every module that draws), the project sets the views of knowledge and projects return, and the game
+and every change to a fact another module owns is that owner's command. What is still handed out live: the project sets the views of knowledge and projects return, and the game
 a mod's provider is handed."""
 from sim.agents.api import edges
 
 from .world_commands import WorldCommands
+from .world_reads_game import GameReads, StandingReads
 from .world_reads import ActorReads, DirectorReads, FinanceReads, KnowledgeReads, PeopleReads, ScenarioReads, TradeReads, VentureReads
 
 
@@ -34,17 +34,12 @@ class WorkforceWorld:
         self.actors = ActorReads(needs)
         self.ventures = VentureReads(needs)
         self.directors = DirectorReads(needs)
+        self.game = GameReads(needs)
+        self.standing = StandingReads(needs)
 
     def send(self, command):
         """Apply a command through the module that owns it."""
         return self._needs.send(command)
-
-    def reputation(self):
-        return self._needs.standing()["reputation"]
-
-    @property
-    def founder_alive(self):
-        return self._needs.founder()["alive"]
 
     @property
     def workforce(self):
@@ -52,35 +47,9 @@ class WorkforceWorld:
         return self._owner.seat
 
     @property
-    def year(self):
-        return self._needs.year()
-
-    @property
-    def policy(self):
-        """The acting seat's standing policy switches (read here, never written)."""
-        return self._needs.founder()["policy"]
-
-    @property
     def society(self):
         """The society's labour hours by trade: the module's own world state."""
         return self._owner.world
-
-    @property
-    def bondage_years_left(self):
-        return self._needs.debt_status()["bondage_years_left"]
-
-    @property
-    def rng(self):
-        """The game's random source (shared and live: every draw moves the stream every other module draws from)."""
-        return self._needs.game_random()
-
-    def money_text(self, amount, grouped=False, short=False):
-        """A sum in the civilisation's coin as the player's chosen unit writes it."""
-        return self._needs.money_text(amount, grouped, short)
-
-    def plain_number(self, value, digits=0):
-        """A count, a number of people or of hours."""
-        return self._needs.plain_number(value, digits)
 
 
 class ProjectReads:

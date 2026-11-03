@@ -43,6 +43,22 @@ class FounderState:
 	_founder_death_aged: Optional[int] = None
 	_founder_death_year: Optional[int] = None
 
+	@property
+	def death_aged(self) -> Optional[int]:
+		return self._founder_death_aged   # None until recorded
+
+	@death_aged.setter
+	def death_aged(self, aged: Optional[int]) -> None:
+		self._founder_death_aged = aged
+
+	@property
+	def death_year(self) -> Optional[int]:
+		return self._founder_death_year   # None until recorded
+
+	@death_year.setter
+	def death_year(self, year: Optional[int]) -> None:
+		self._founder_death_year = year
+
 
 @dataclass
 class SimulationState:

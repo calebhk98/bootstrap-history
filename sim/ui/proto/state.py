@@ -54,7 +54,7 @@ def _agent_state_standing(sim):
     # _worth_knowing_early just below.
     _wd = sim.view("diffusion_report")()
     return {
-        # NO "suspicion" FIELD: `scandal` is the live mechanic (see core.py:
+        # NO "suspicion" FIELD: `scandal` is the live mechanic (the polity module, sim/polity/year.py:
         # "doing something a society cannot explain is alarming; doing a
         # lot of ordinary things over decades is not"). `suspicion` is set
         # to 0.0 at startup and never written again - reporting a dead

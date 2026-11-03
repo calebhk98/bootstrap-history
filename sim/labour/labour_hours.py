@@ -21,8 +21,8 @@ class FounderHours:
 
     def director_pool(self):
         # In bondage most of your hours are owed to somebody else, not all: the evenings are where the work gets done.
-        return hours_pool(self._world.founder_alive, self._world.scenario.cfg["founder_hours_per_year"],
-                          self._world.bondage_years_left > 0, self.BONDAGE_HOURS_SHARE,
+        return hours_pool(self._world.standing.founder_alive, self._world.scenario.cfg["founder_hours_per_year"],
+                          self._world.standing.bondage_years_left > 0, self.BONDAGE_HOURS_SHARE,
                           self._world.workforce.directors_extra, self._world.scenario.cfg["director_hours_per_year"])
 
     def director_hours_committed(self):

@@ -21,7 +21,7 @@ def stand_in_world(civ_id="rome_100ad", total=None):
                                people_by_tile=lambda: None, pop_scale=1.0, provided_town_population=lambda tile, nominal_people: None,
                                has_town_premiums=lambda: False, population=population),
         projects=SimpleNamespace(done=set(), done_year={}, granted=set(), operating=set(), active={}),
-        finance=SimpleNamespace(balance=0.0), bondage_years_left=0, set_farm_land=lambda hectares, quality: None,
+        finance=SimpleNamespace(balance=0.0), standing=SimpleNamespace(founder_alive=True, bondage_years_left=0), set_farm_land=lambda hectares, quality: None,
         knowledge=SimpleNamespace(held_and_running=lambda: frozenset(civ.get("starting_techs", ())), literacy=lambda field: 0.05),
         trades=SimpleNamespace(trades_absent=set(), wages=data.WAGES, trade_family=data.trade_family, HOURS_PER_PERSON_YEAR=2000.0,
                                techniques_available_to=solve_prices_core.techniques_available_to,

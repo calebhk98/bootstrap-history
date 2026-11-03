@@ -49,7 +49,7 @@ class Allocation:
         """This society's farming technique from the technologies it holds,
         each weighted by how far it has spread."""
         projects = self._world.projects
-        year = self._world.year
+        year = self._world.game.year
         starting = set(self._world.scenario.civ.get("starting_techs", ()))
         adoption = {}
         declarations = {node_id: self._world.knowledge.mechanic(node_id, "farming_technique")

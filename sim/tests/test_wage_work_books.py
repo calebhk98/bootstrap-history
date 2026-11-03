@@ -27,9 +27,9 @@ class Books:
     def __init__(self, held=None, year=100):
         self.held = held or household()
         self._world = workforce_stand_in.World(
-            workforce=self.held, year=year,
+            workforce=self.held,
             state=types.SimpleNamespace(household=self.held, scenario=types.SimpleNamespace(year=year)),
-            plain_number=lambda number: "%g" % number, money_text=lambda money, grouped=False, short=False: "%g" % money,
+            game=types.SimpleNamespace(year=year, plain_number=lambda number: "%g" % number, money_text=lambda money, grouped=False, short=False: "%g" % money),
             logged_events=lambda: len(self.held.log))
         event_stand_in.stood_in(self._world)
         self.wages = Wages(self._world, book=None, hours=None, market=None, trades=None)

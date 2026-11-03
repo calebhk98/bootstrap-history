@@ -25,7 +25,7 @@ def labour(wages=None, alive=True, wage_hours=0.0, teaching=0.0, relocation=0.0,
     world = SimpleNamespace(
         directors=SimpleNamespace(overhead_hours=lambda: 0.0),
         scenario=SimpleNamespace(cfg={"founder_hours_per_year": POOL_HOURS, "director_hours_per_year": 0.0}),
-        founder_alive=alive, workforce=household, bondage_years_left=0)
+        standing=SimpleNamespace(founder_alive=alive, bondage_years_left=0), workforce=household)
     hours_part = SimpleNamespace(_world=world, BONDAGE_HOURS_SHARE=0.25)
     hours_part.director_pool = lambda: FounderHours.director_pool(hours_part)
     hours_part.director_hours_committed = lambda: FounderHours.director_hours_committed(hours_part)

@@ -15,7 +15,7 @@ class Hands:
 
     def effective_scholars(self):
         """You are your own natural philosopher; everyone else is hired."""
-        return hands_available(self._world.workforce.scholars, self._world.founder_alive, 0.0, 1.0)
+        return hands_available(self._world.workforce.scholars, self._world.standing.founder_alive, 0.0, 1.0)
 
     def scholar_hands_available(self):
         """Scholars you can actually put on a project this year: your staff, yourself, and a scholar for every year of
@@ -36,7 +36,7 @@ class Hands:
         trades `counts_trade` accepts. A year of a trade's time is a person of it for whether a thing that needs one may
         be attempted, and buying a job rather than a person is the point of `commission`, so a gate that read the payroll
         alone could not be unblocked by the advice to commission."""
-        return hands_available(staff, self._world.founder_alive,
+        return hands_available(staff, self._world.standing.founder_alive,
                                contracted_hours_of(self.commissioned_hours(), counts_trade),
                                self._world.trades.HOURS_PER_PERSON_YEAR)
 

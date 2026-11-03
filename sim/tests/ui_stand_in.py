@@ -181,9 +181,9 @@ LABOUR_METHOD_OF_COMMAND = {"HireStaff": "hire", "FireStaff": "fire", "TrainStaf
 def ui_state(**memory):
     """The `state` of a stand-in game holding the interface's saved memory (read it back through `ui_port`)."""
     record = SimpleNamespace(
-        holdings=SimpleNamespace(_dashboard_history=memory.get("dashboard_history")),
-        founder=SimpleNamespace(_founder_death_aged=memory.get("founder_death_aged"), _founder_death_year=memory.get("founder_death_year")),
-        seat_progress=SimpleNamespace(_said_command_index=memory.get("said_command_index"), _said_parallelism=memory.get("said_parallelism")))
+        holdings=SimpleNamespace(dashboard_history=memory.get("dashboard_history")),
+        founder=SimpleNamespace(death_aged=memory.get("founder_death_aged"), death_year=memory.get("founder_death_year")),
+        seat_progress=SimpleNamespace(said_command_index=memory.get("said_command_index"), said_parallelism=memory.get("said_parallelism")))
     return SimpleNamespace(acting_record=record, acting_seat="founder")
 
 

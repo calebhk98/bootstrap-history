@@ -111,4 +111,4 @@ class Commissions:
             return False, refusal
         self._world.send(PostHoursOnce(ONCE_COMMISSION, trade, hours))
         return True, ("%.0f hours of a %s posted to the labour market: they are hired at the year's clearing at its wage "
-                      "(about %s at today's)" % (hours, trade, self._world.money_text(fee)))
+                      "(about %s at today's)" % (hours, trade, self._world.game.money_text(fee)))

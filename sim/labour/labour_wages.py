@@ -50,7 +50,7 @@ class Wages:
         or book kept (the hours count against the year only while the note is worked out).
         """
         blocker = wage_work_blocker(
-            self._world.founder_alive, trade in self._world.trades.wages,
+            self._world.standing.founder_alive, trade in self._world.trades.wages,
             lambda: self.trades.trade_available(trade), hours,
             lambda: self.hours.director_pool() - self.hours.director_hours_committed())
         # A TRADE NOBODY HERE PRACTISES IS A TRADE NOBODY HERE WILL PAY YOU FOR: the gate is trade_available(), the
@@ -116,7 +116,7 @@ class Wages:
         # SAY WHEN IT IS A BAD TRADE: hours sold here are hours the standing job does not sell, and when
         # that job pays more than this trade the sale loses money. The sale still happens.
         message = sale_at_a_loss_note(pay, revenue_before - self._world.finance.revenue(),
-                                      lambda amount: self._world.money_text(amount, grouped=True))
+                                      lambda amount: self._world.game.money_text(amount, grouped=True))
         if message:
             return message + (" Also: " + _starve if _starve else "")
         return _starve
@@ -146,7 +146,7 @@ class Wages:
         workforce = self._world.workforce
         summary = self.wage_work_this_year()
         if summary:
-            summary["year"] = self._world.year
+            summary["year"] = self._world.game.year
             summary["wage_income"] = 0.0
         workforce.wage_work_last_year = summary or None
         workforce.wage_hours_this_year = 0.0
@@ -154,7 +154,7 @@ class Wages:
     def log_wage_work(self, trade, hours, pay):
         """One log line saying what the offer should earn at the market wage."""
         self._world.send(RecordEvent.of("wage_work_sold", "wage work: offered %s hours as a %s, about %s at this year's clearing"
-                    % (self._world.plain_number(hours), trade, self._world.money_text(pay, grouped=True, short=True)), trade=trade, hours=hours, pay=pay))
+                    % (self._world.game.plain_number(hours), trade, self._world.game.money_text(pay, grouped=True, short=True)), trade=trade, hours=hours, pay=pay))
 
     def work_for_wages_dry_run(self, trade, hours):
         """(pay, message) for work_for_wages as a quote: nothing is posted, logged or kept."""
@@ -165,7 +165,7 @@ class Wages:
         businesses, hours already sold on request); none once the founder is dead. TEMPORARY HEURISTIC:
         hours put into the household's own projects are not taken out (they are worked alongside the job)
         until a project's hours are the hours of a seat."""
-        if not self._world.founder_alive:
+        if not self._world.standing.founder_alive:
             return 0.0
         return hours_free(self.hours.director_pool(), self.hours.director_hours_committed())
 
@@ -178,4 +178,4 @@ class Wages:
     def wage_signature(self):
         """What moves a trade's market wage, for callers that cache a figure derived from `standing_job_pay`: the year and
         every trade's quoted wage now (the wage changes at the year's clearing and before the economy opens, not only with the year)."""
-        return (self._world.year, tuple(self.market.quote_annual(trade) for trade in sorted(self._world.trades.wages)))
+        return (self._world.game.year, tuple(self.market.quote_annual(trade) for trade in sorted(self._world.trades.wages)))

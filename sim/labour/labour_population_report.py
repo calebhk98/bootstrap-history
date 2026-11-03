@@ -39,7 +39,7 @@ class PopulationReport:
         """Everything the 'population' command (protocol.py) shows, worked
         out here rather than in the command layer: the country's own
         numbers (population, urban_fraction - already loaded for
-        pop_scale, see core.py), the size of the one town this household
+        pop_scale), the size of the one town this household
         actually reaches, and - per trade - the three-way comparison that
         is the whole point of this command: how many exist in the
         country, how many are within reach, how many you employ, and what
@@ -108,5 +108,5 @@ class PopulationReport:
                 "specialist does not practise in every town and the ones who "
                 "do are not all for hire. The common crafts are the ones "
                 "sized straight off a town's own population."
-                % self._world.plain_number(pop)),
+                % self._world.game.plain_number(pop)),
         }

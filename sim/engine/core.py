@@ -98,8 +98,8 @@ class Sim:
         # set after the build by whoever front-ends the game (and `seed` again by a load); None while a game has none
         self.seed = None
         self.session_seat = None
-        self._stack_cautions = {}   # per seat: whether it was told of the stack caution
-        self._founder_death_cache = None   # the founder's death read off the log by the UI, once it is found
+        self.stack_cautions = {}   # per seat: whether it was told of the stack caution
+        self.founder_death_cache = None   # the founder's death read off the log by the UI, once it is found
         # MANUAL MODE: the optimizer in the projects module's start phase (sim/projects/start_phase.py) never starts
         # anything on its own; only projects a human or an agent chose become active.
         self.send(SetValueWeights(tuple(self.civ["values"].items())))

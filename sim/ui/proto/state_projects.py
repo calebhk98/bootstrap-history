@@ -55,7 +55,7 @@ def _agent_state_active_projects(sim, nodes):
                      "hours_offered_this_year": progress.get("hours_offered_this_year", 0.0),
                      "hours_effective_this_year": progress.get("hours_effective_this_year", 0.0),
                      # WHY THIS MUCH, READ BACK FROM THE ALLOCATOR ITSELF.
-                     # core.py's step() (5. progress) writes these four onto
+                     # the projects module's progress phase (sim/projects/progress_phase.py) writes these four onto
                      # the same st dict as it decides each project's share of
                      # the pool; `portfolio` and _waiting_on's own "your
                      # hours" sentence both read them from here, so the share
@@ -79,7 +79,7 @@ def _agent_state_active_projects(sim, nodes):
                      # SAME PLACE AS THE FOUR ABOVE - None when nothing was
                      # ever directed here, which keeps an undirected
                      # project's reply byte-for-byte what it always was.
-                     # See `allocate` and core.py step()'s own comment on
+                     # See sim/projects/progress_hours.py on
                      # hour_allocations.
                      "hours_directed_this_year": progress.get("hours_directed_this_year"),
                      # THE LIVE RISK: what the dice use now, after any failed

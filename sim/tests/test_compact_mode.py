@@ -148,10 +148,7 @@ check("_split_json_flag leaves an ordinary line untouched",
 
 # ===========================================================================
 # PART 2: the enricher itself, on synthetic replies - so this is exercised
-# whether or not the live engine currently runs end to end (six other
-# agents are mid-edit on society.py/labour.py/economy.py/constants.py in
-# this same checkout as this is written; see PART 3's own comment on why
-# that cannot affect this file's verdict either way).
+# whether or not the live engine currently runs end to end.
 # ===========================================================================
 
 # --- errors pass through completely untouched - a compact reply is never

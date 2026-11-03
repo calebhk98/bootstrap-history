@@ -30,7 +30,7 @@ class _Labour:
         household = Game(reserve_craftsmen=reserve_craftsmen, reserve_scholars=reserve_scholars,
                                     log=[])
         self._world = Game(
-            workforce=household, policy={"reserve_staff": policy_on},
+            workforce=household, game=Game(policy={"reserve_staff": policy_on}),
             state=Game(founder=Game(policy={"reserve_staff": policy_on}), household=household,
                                   scenario=Game(year=100)),
             ventures=Game(venture_staff_free=lambda: (free_scholars, free_craftsmen)),
