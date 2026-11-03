@@ -33,10 +33,10 @@ class PriceBook:
 
 class Market(GoodsPricing):
     def __init__(self, economy, traded=True):
-        self._sim = SimpleNamespace(economy=economy)
+        super().__init__(SimpleNamespace(_sim=SimpleNamespace(economy=economy)))
         self.traded = traded
 
-    def _economy_good(self, material):
+    def economy_good(self, material):
         return GOOD if self.traded else None
 
     def price_at_tile_per_tonne(self, material):

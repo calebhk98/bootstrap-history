@@ -22,7 +22,7 @@ TYPING_BASES = {"Protocol", "Generic", "Enum", "IntEnum", "NamedTuple", "TypedDi
                 "KeyError", "TypeError", "object", "ABC"}
 ALLOWED_CLASSES = {"CollectionView"}
 # Classes still composed by inheritance, waiting for their own split: reported on stdout after the violations, not failing.
-PENDING = {"Firm", "ExpansionMixin", "GoodsMarket"}
+PENDING = set()
 
 
 def base_name(node):

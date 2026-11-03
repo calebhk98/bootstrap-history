@@ -19,7 +19,12 @@ KIND_MAKING_COST_TABLE = "making_cost_table"
 
 
 class GoodsPricing:
-    """Mixin of `GoodsOffers`: the price at the acting tile, carriage and the climb over an order."""
+    """The goods market's prices: the price at the acting tile, carriage and the climb over an order
+    (`goods_market.pricing`). Who offers what is `goods_market.offers`."""
+
+    def __init__(self, market):
+        self.market = market
+        self._sim = market._sim
 
     def making_cost_per_tonne(self, material):
         """Money per tonne it costs the home society to make a material (the cost table); None when no technique
@@ -30,31 +35,31 @@ class GoodsPricing:
     def price_at_tile_per_tonne(self, material):
         """Money per tonne to buy a material from the cheapest seller in reach before carriage: the economy's price
         on the acting tile; None when no one in reach sells it."""
-        per_unit = self.unit_price(material)
+        per_unit = self.market.offers.unit_price(material)
         return None if per_unit is None else per_unit / tonnes_per_unit(material)
 
     def price_kind(self, material):
         """What the price of a material is: "traded", a quote named by what it is (best_unfilled_bid,
         lowest_unfilled_ask, cost_covering, opening_estimate), an estimate, the cost table's making cost while the
         economy opens."""
-        good = self._economy_good(material)
+        good = self.economy_good(material)
         kind = None if good is None else self._sim.economy.agent_price_kind(good)
         return KIND_MAKING_COST_TABLE if kind is None else kind
 
-    def _carriage_per_tonne(self, material, price_per_tonne):
+    def carriage_per_tonne(self, material, price_per_tonne):
         """Money per tonne to carry a material the home sells to the buyer."""
         return self._sim.foreign.material_carriage_per_tonne(self._sim._material_tag(material)[0], price_per_tonne)
 
-    def _economy_good(self, material):
+    def economy_good(self, material):
         """The key the economy trades a material under (a curated commodity is traded as the material it is priced as),
         or None when no one sells it."""
-        return self._sim._priced_key(material, self._home_prices())
+        return self._sim._priced_key(material, self.market.offers.home_prices())
 
     def _climb(self, material, taken_before, tonnes, selling=False):
         """Mean factor on the price while buying (or selling) `tonnes` more of a material after `taken_before`
         tonnes bought (or sold) this year or in the same bill, read from the economy's book at points along the
         order. One where the economy has no book for the good."""
-        good = self._economy_good(material)
+        good = self.economy_good(material)
         economy = self._sim.economy
         if good is None or taken_before + tonnes <= 0.0:
             return 1.0
@@ -77,7 +82,7 @@ class GoodsPricing:
         """Tonnes the asking seat has ordered from the market this year in the material's commodity, which the economy
         has not yet cleared, and its running works have drawn."""
         commodity = self._sim._material_tag(material)[0]
-        return self.posted_tonnes("buy", commodity) + self.drawn_tonnes(commodity)
+        return self.market.posted_tonnes("buy", commodity) + self.market.drawn_tonnes(commodity)
 
     def purchase_cost(self, material, tonnes, already=0.0):
         """(money, mean money per tonne) to buy `tonnes` of a material now: the price on the acting tile climbing
@@ -88,7 +93,7 @@ class GoodsPricing:
             return None
         tonnes = max(0.0, tonnes)
         mean = (price * self._climb(material, already + self._bought_this_year(material), tonnes)
-                + self._carriage_per_tonne(material, price))
+                + self.carriage_per_tonne(material, price))
         return mean * tonnes, mean
 
     def quote_buy(self, material, tonnes, already=0.0):

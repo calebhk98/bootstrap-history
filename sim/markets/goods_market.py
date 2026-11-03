@@ -20,10 +20,16 @@ from .goods_pricing import GoodsPricing
 from .rules import tonnes_sold
 
 
-class GoodsMarket(GoodsPricing, GoodsOffers):
+class GoodsMarket:
+    """The goods market. Its concerns are parts, addressed as `goods_market.<part>.<method>`:
+
+        pricing   the price at the acting tile, carriage and the climb over an order   (goods_pricing.py)
+        offers    who sells what and the household price table                          (goods_offers.py)"""
 
     def __init__(self, sim):
         self._sim = sim
+        self.offers = GoodsOffers(sim)
+        self.pricing = GoodsPricing(self)
 
     @property
     def acting_party_id(self):
@@ -90,21 +96,21 @@ class GoodsMarket(GoodsPricing, GoodsOffers):
         held technique makes it for, None when none does."""
         sim = self._sim
         material = str(material or "").strip().lower()
-        price = self.price_at_tile_per_tonne(material)
+        price = self.pricing.price_at_tile_per_tonne(material)
         if price is None:
             return None
         emp_key = sim._material_tag(material)[0]
         offered = sim.economy.agent_offered_tonnes(material)
-        proceeds = self.sale_proceeds(material, 0.0, self.posted_tonnes("sell", emp_key))
+        proceeds = self.pricing.sale_proceeds(material, 0.0, self.posted_tonnes("sell", emp_key))
         if proceeds is None:
             return None
-        carriage = self._carriage_per_tonne(material, price)
+        carriage = self.pricing.carriage_per_tonne(material, price)
         return {"material": material, "stock_key": emp_key,
-                "buy_per_tonne": self.purchase_cost(material, 0.0)[1],
+                "buy_per_tonne": self.pricing.purchase_cost(material, 0.0)[1],
                 "sell_per_tonne": proceeds[1],
-                "price_at_tile_per_tonne": price, "price_kind": self.price_kind(material),
+                "price_at_tile_per_tonne": price, "price_kind": self.pricing.price_kind(material),
                 "carriage_per_tonne": carriage,
-                "making_cost_per_tonne": self.making_cost_per_tonne(material),
+                "making_cost_per_tonne": self.pricing.making_cost_per_tonne(material),
                 "market_available_tonnes_per_year": (
                     offered if offered is not None else sim._material_market_tonnes(emp_key))}
 
@@ -116,7 +122,7 @@ class GoodsMarket(GoodsPricing, GoodsOffers):
     def _with_buyers(self, material, quote):
         """The quote with the tonnes the economy's buyers took and still wanted last year of the good the material is
         traded as, None where the economy does not trade it."""
-        good = self._economy_good(material)
+        good = self.pricing.economy_good(material)
         record = None if good is None else self._sim.economy.agent_good_market_record(good)
         return {**quote, "buyers_take_tonnes_per_year": None if record is None else record["sold"] + record["unmet"]}
 
@@ -150,7 +156,7 @@ class GoodsMarket(GoodsPricing, GoodsOffers):
         sold = tonnes_sold(tonnes, held, room)
         if sold <= 0:
             return key, 0.0, 0.0
-        proceeds = self.sale_proceeds(material, sold, self.posted_tonnes("sell", key))
+        proceeds = self.pricing.sale_proceeds(material, sold, self.posted_tonnes("sell", key))
         if proceeds is None:
             return None, 0.0, 0.0
         return key, sold, proceeds[0]
@@ -170,7 +176,7 @@ class GoodsMarket(GoodsPricing, GoodsOffers):
             return Refusal("no_price", "%s has no price here, so it cannot be ordered." % material, material=material)
         if tonnes <= 0:
             return Refusal("no_quantity", "an order needs a quantity above zero.", material=material)
-        good = self._economy_good(material)
+        good = self.pricing.economy_good(material)
         if good is None:
             return Refusal("not_traded", "%s is not traded in the economy, so it cannot be ordered." % material, material=material)
         key = quote["stock_key"]
@@ -186,8 +192,8 @@ class GoodsMarket(GoodsPricing, GoodsOffers):
             if tonnes <= 0:
                 return Refusal("not_enough_held", "no %s is held that is not already ordered sold." % material, material=material)
         carriage = quote["carriage_per_tonne"] if buying else 0.0
-        mean = (self.purchase_cost(quote["material"], tonnes)[1] - carriage if buying
-                else self.sale_proceeds(quote["material"], tonnes, self.posted_tonnes("sell", key))[1])
+        mean = (self.pricing.purchase_cost(quote["material"], tonnes)[1] - carriage if buying
+                else self.pricing.sale_proceeds(quote["material"], tonnes, self.posted_tonnes("sell", key))[1])
         limit = float(limit_per_tonne) if limit_per_tonne is not None else mean
         if buying and limit_per_tonne is not None and limit_includes_carriage:
             limit -= carriage

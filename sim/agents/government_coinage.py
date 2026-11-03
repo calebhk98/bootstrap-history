@@ -35,9 +35,10 @@ class Coinage:
 	def __init__(self, government: Any) -> None:
 		self.government = government
 
-	def decide_debasement(self, world: Any) -> float:
-		"""Choose and record this year's cut; call after the standing need is paid."""
-		share = debasement_decision(self.government, world)
+	def decide_debasement(self, world: Any, shortfall: Any = None) -> float:
+		"""Choose and record this year's cut; call after the standing need is paid. `shortfall` is the part of it the state's
+		fiscal response chose to cover by debasing (`Fiscal.meet_shortfall`); left out, the whole unfunded need."""
+		share = debasement_decision(self.government, world, shortfall)
 		self.government.record.coin_cut_share = share
 		self.government.record.coin_metal_kept *= 1.0 - share
 		return share

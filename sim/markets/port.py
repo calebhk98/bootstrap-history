@@ -396,7 +396,7 @@ class EconomyPort:
     def purchase_cost(self, material, tonnes, already=0.0):
         """(money, mean money per tonne) to buy `tonnes` more, given `already` bought this year;
         None when the material has no price."""
-        return self.goods.quote_buy(material, tonnes, already)
+        return self.goods.pricing.quote_buy(material, tonnes, already)
 
     # ---- money --------------------------------------------------------------------------------
     def cost_scale(self):
@@ -416,7 +416,7 @@ class EconomyPort:
         """Money's worth of the metal in the coin this society holds, from its coin standard, at the metal's price
         (the same one cargo and the partners' coin are counted at)."""
         coin = self._sim.civ["coin_standard"]
-        return self.coin_stock_units() * coin["kg_per_unit"] * (self._sim.goods_market.home_unit_price(coin["material"]) or 0.0)
+        return self.coin_stock_units() * coin["kg_per_unit"] * (self._sim.goods_market.offers.home_unit_price(coin["material"]) or 0.0)
 
     # ---- credit -------------------------------------------------------------------------------
     def base_rate(self):

@@ -41,7 +41,7 @@ check("a material nobody sells is refused", _quote_material(unpriced, {"material
 
 # ---- the material cost reaches the market's quote
 asked = []
-game = Game(goods_market=Game(quote_buy=lambda material, tonnes, already: asked.append((material, tonnes, already)) or (1.0, 1.0)))
+game = Game(goods_market=Game(pricing=Game(quote_buy=lambda material, tonnes, already: asked.append((material, tonnes, already)) or (1.0, 1.0))))
 market_stand_in.markets_over(goods_market=game.goods_market).purchase_quote("coal_kg", 3.0, 2.0)
 check("the bill's price of an order is the goods market's quote for it", asked == [("coal_kg", 3.0, 2.0)], asked)
 

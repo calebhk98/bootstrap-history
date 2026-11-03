@@ -41,7 +41,7 @@ def make_registry(savings=1.0e9):
 # ---- a firm lenders will not fund notes the equity it needs ------------------------------------------------
 world = make_world()
 registry, firm = make_registry()
-firm.expand(world)
+firm.expansion.expand(world)
 need = firm.record.plan.get(equity_need.NEED_KEY, 0.0)
 check("an expansion lenders will not fund that pays leaves a need for equity", need > 0.0, firm.record.plan)
 

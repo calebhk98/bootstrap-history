@@ -6,13 +6,16 @@ from .edges import EDGE_BUILDERS
 from .tuning import EXPANSION_RATE
 
 
-class ExpansionMixin:
-	"""Mixed into `Firm`: capacity is bought with the purse or with credit, one step a year."""
+class Expansion:
+	"""A firm's growth (`firm.expansion`): capacity is bought with the purse or with credit, one step a year."""
+
+	def __init__(self, firm: Any) -> None:
+		self.firm = firm
 
 	def _added_carry(self, node_id: str, capacity: float, step: float, world: Any) -> float:
 		"""What `step` more founding sizes add to the site rent and the manager's hours a plant carries whatever it sells
 		(the figure `business_books.carry` pays); nothing when the country keeps no record of either."""
-		tile = self.location()  # type: ignore[attr-defined]
+		tile = self.firm.location()
 		before = firm_entry.carrying_cost(world, node_id, capacity, tile)
 		after = firm_entry.carrying_cost(world, node_id, capacity + step, tile)
 		return 0.0 if before is None or after is None else after - before
@@ -20,32 +23,33 @@ class ExpansionMixin:
 	def expand(self, world: Any) -> None:
 		"""Add capacity to each concern whose staff was found in full and whose added margin pays
 		the rate on the money it takes: the market rate from the purse, the actor's own rate on what it borrows."""
-		if self.record.last_margin <= 0.0:  # type: ignore[attr-defined]
+		firm = self.firm
+		if firm.record.last_margin <= 0.0:
 			return
-		for node_id in sorted(self.concerns):  # type: ignore[attr-defined]
-			if self.staffed_share(node_id) < 1.0:  # type: ignore[attr-defined]
+		for node_id in sorted(firm.concerns):
+			if firm.staffed_share(node_id) < 1.0:
 				continue
-			capacity = self.capacity_of(node_id)  # type: ignore[attr-defined]
+			capacity = firm.capacity_of(node_id)
 			if capacity >= world.concerns.scale_ceiling(node_id):
 				continue
 			step = capacity * EXPANSION_RATE
-			rivals = self.rivals_of(node_id, self.actor_id) if self.rivals_of else 0.0  # type: ignore[attr-defined]
-			gain = world.capacity.expansion_gain(node_id, self.opened_year_of(node_id, world.setting.year), capacity, step, rivals)  # type: ignore[attr-defined]
+			rivals = firm.rivals_of(node_id, firm.actor_id) if firm.rivals_of else 0.0
+			gain = world.capacity.expansion_gain(node_id, firm.opened_year_of(node_id, world.setting.year), capacity, step, rivals)
 			gain -= self._added_carry(node_id, capacity, step, world)
-			cost = world.capacity.plant_cost(node_id, self, step)
+			cost = world.capacity.plant_cost(node_id, firm, step)
 			if gain <= 0.0:
 				continue
-			shortfall = max(0.0, cost - max(0.0, self.money))  # type: ignore[attr-defined]
+			shortfall = max(0.0, cost - max(0.0, firm.money))
 			rate = world.credit.market_rate()
 			if shortfall > 0.0:
-				if shortfall > self.credit_ceiling(world) - self.debt():  # type: ignore[attr-defined]
+				if shortfall > firm.credit_ceiling(world) - firm.debt():
 					if gain > cost * rate:
-						equity_need.note_need(self, shortfall)  # lenders will not fund it, so it raises equity
+						equity_need.note_need(firm, shortfall)  # lenders will not fund it, so it raises equity
 					continue
-				rate = max(rate, self.borrowing_rate(world))  # type: ignore[attr-defined]
+				rate = max(rate, firm.borrowing_rate(world))
 			if gain <= cost * rate:
 				continue
-			ledger.transfer(self, world.setting.edge(EDGE_BUILDERS), cost, "expansion")
-			self.business.set_size(node_id, capacity + step)  # type: ignore[attr-defined]
-			if self.on_capacity_change is not None:  # type: ignore[attr-defined]
-				self.on_capacity_change(self.actor_id)  # type: ignore[attr-defined]
+			ledger.transfer(firm, world.setting.edge(EDGE_BUILDERS), cost, "expansion")
+			firm.business.set_size(node_id, capacity + step)
+			if firm.on_capacity_change is not None:
+				firm.on_capacity_change(firm.actor_id)

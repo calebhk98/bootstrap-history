@@ -84,23 +84,18 @@ def _fake_sim(home_prices, gated=()):
     )
 
 
-class _Offers(GoodsOffers):
-    def __init__(self, sim):
-        self._sim = sim
-
-
 class SellerInReachTests(unittest.TestCase):
 
     def setUp(self):
         self.sim = _fake_sim(home_prices={"wheat_kg": 4.0})
 
     def test_a_material_the_home_prices_keeps_its_home_seller_and_price(self):
-        offers = _Offers(self.sim)
+        offers = GoodsOffers(self.sim)
         self.assertEqual(offers.offered_by("wheat_kg"), HOME_SELLER)
         self.assertEqual(offers.household_prices()["wheat_kg"], 4.0)
 
     def test_a_material_no_one_in_reach_makes_has_no_seller_and_no_price(self):
-        offers = _Offers(self.sim)
+        offers = GoodsOffers(self.sim)
         self.assertIsNone(offers.offered_by("cobalt_kg"))
         self.assertIsNone(offers.unit_price("cobalt_kg"))
         self.assertFalse(offers.can_be_bought("cobalt_kg"))
@@ -114,12 +109,12 @@ class CheapestSellerInReachTests(unittest.TestCase):
 
     def test_a_partner_that_sells_dearer_leaves_the_gated_home_technique_the_seller(self):
         sim = _fake_sim(home_prices={"glass_kg": 2.0}, gated={"glass_kg"})
-        offers = _Offers(sim)
+        offers = GoodsOffers(sim)
         self.assertEqual(offers.offered_by("glass_kg"), HOME_SELLER)
         self.assertEqual(offers.unit_price("glass_kg"), 2.0)
 
     def test_a_good_the_home_runs_a_producer_for_stays_with_the_home_even_where_a_partner_is_cheaper(self):
-        offers = _Offers(self._sim(gated={"glass_kg"}))
+        offers = GoodsOffers(self._sim(gated={"glass_kg"}))
         self.assertEqual(offers.offered_by("wheat_kg"), HOME_SELLER)
         self.assertEqual(offers.unit_price("wheat_kg"), 4.0)
 
@@ -136,7 +131,7 @@ class ProjectNeedsASellerTests(unittest.TestCase):
         return game.start_gate_material_seller("alloy_works", self.NODE, False, None, why)
 
     def test_a_project_needing_an_unsold_material_cannot_start_and_says_why(self):
-        offers = _Offers(_fake_sim({"wheat_kg": 4.0}))
+        offers = GoodsOffers(_fake_sim({"wheat_kg": 4.0}))
         verdict = self._verdict(self._project(offers), True)
         self.assertFalse(verdict[0])
         self.assertIn("cobalt_kg", verdict[1])
@@ -147,11 +142,11 @@ class ProjectNeedsASellerTests(unittest.TestCase):
         self.assertEqual((check.cause, check.kind), ("materials_have_a_seller", "supply"))
 
     def test_the_boolean_answer_needs_no_sentence(self):
-        offers = _Offers(_fake_sim({"wheat_kg": 4.0}))
+        offers = GoodsOffers(_fake_sim({"wheat_kg": 4.0}))
         self.assertEqual(self._verdict(self._project(offers), False), (False, None))
 
     def test_stock_already_held_needs_no_seller(self):
-        offers = _Offers(_fake_sim({"wheat_kg": 4.0}))
+        offers = GoodsOffers(_fake_sim({"wheat_kg": 4.0}))
         self.assertIsNone(self._verdict(self._project(offers, stock_tonnes=math.inf), True))
 
 

@@ -18,7 +18,7 @@ def cargo_of_partner_with(material, kg_per_unit):
     _game, goods_market = stub_game()
     return module_harness.build(ForeignTrade, views={
         "civilisation_record": lambda partner: {"coin_standard": {"material": material, "kg_per_unit": kg_per_unit}},
-        "home_unit_price": goods_market.home_unit_price})
+        "home_unit_price": goods_market.offers.home_unit_price})
 
 
 class PartnerCoinTests(unittest.TestCase):

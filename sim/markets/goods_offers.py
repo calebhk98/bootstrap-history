@@ -10,9 +10,12 @@ from .goods_imports import HOME_SELLER
 
 
 class GoodsOffers:
-    """Mixin of `GoodsMarket`: reads of who sells what."""
+    """Reads of who sells what (`goods_market.offers`)."""
 
-    def _home_prices(self):
+    def __init__(self, sim):
+        self._sim = sim
+
+    def home_prices(self):
         """{material: money per unit} the home society's sellers ask at the acting tile: the economy's price, for the
         goods it has a market for; a good it has none for is absent, not priced at its cost. While the economy opens the
         cost table answers (the opening is built from it). The same object while neither has changed."""
@@ -32,7 +35,7 @@ class GoodsOffers:
         """Money per unit the home society's sellers ask for a material (or a curated commodity, by the material
         it is priced as) at the acting tile; None when no home seller offers it. The one price of the coin metal
         in the mint and in cargo."""
-        prices = self._home_prices()
+        prices = self.home_prices()
         key = self._sim._priced_key(material, prices)
         return None if key is None else prices[key]
 
@@ -40,7 +43,7 @@ class GoodsOffers:
         """(household prices, seller of each material): every priced material has the home society as its seller. The
         same objects while the home prices are the same object."""
         sim = self._sim
-        prices = self._home_prices()
+        prices = self.home_prices()
         cache = sim.remembered("goods_offers")
         if cache is not None and cache[0] is prices:
             return cache[1], cache[2]

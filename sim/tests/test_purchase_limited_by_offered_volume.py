@@ -21,24 +21,11 @@ class _Market(GoodsMarket):
                               _material_tag=lambda material: (material, None),
                               _material_market_tonnes=lambda key: REFERENCE)
         super().__init__(sim)
-
-    def price_at_tile_per_tonne(self, material):
-        return 10.0
-
-    def _carriage_per_tonne(self, material, price_per_tonne):
-        return 1.0
-
-    def making_cost_per_tonne(self, material):
-        return 5.0
-
-    def price_kind(self, material):
-        return "traded"
-
-    def purchase_cost(self, material, tonnes, already=0.0):
-        return 11.0 * tonnes, 11.0
-
-    def sale_proceeds(self, material, tonnes, already=0.0):
-        return 10.0 * tonnes, 10.0
+        self.pricing = SimpleNamespace(
+            price_at_tile_per_tonne=lambda material: 10.0, carriage_per_tonne=lambda material, price_per_tonne: 1.0,
+            making_cost_per_tonne=lambda material: 5.0, price_kind=lambda material: "traded",
+            purchase_cost=lambda material, tonnes, already=0.0: (11.0 * tonnes, 11.0),
+            sale_proceeds=lambda material, tonnes, already=0.0: (10.0 * tonnes, 10.0))
 
     def posted_tonnes(self, side, commodity, seat_id=None):
         return 0.0
