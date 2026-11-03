@@ -746,7 +746,7 @@ def render_labour(out):
 def render_population(out):
     """The country, the one town this household actually reaches, and
     every trade's three numbers side by side - see population_report()
-    (labour.py) for where every figure in this comes from.
+    (sim/labour/labour_population_report.py) for where every figure in this comes from.
     """
     lines = ["POPULATION: %s" % out.get("civilisation", "")]
     lines.append("country: %s people, %s%% urban (~%s urban dwellers)"

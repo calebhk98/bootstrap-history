@@ -390,7 +390,7 @@ A mod can ship a map overlay in `mods/<id>/data/world/geography/` (tile edits in
 patches in `layers/`, new resources, deposits, route modes or a whole replacement map). It merges
 under the same add, override and remove rules as the rest of the mod system, new ids carry the mod's
 prefix, and `sim/geography/map_source.py` states the folder layout. The game opens the map once with
-every installed mod's overlay in load order (`sim/engine/geography_port.py`), and the agent economy's
+every installed mod's overlay in load order (the content module's `map_overlays` view, `sim/content/module.py`, feeds the land module's `OpenGeography` command), and the agent economy's
 tiles and carriage costs come from it. A mineral row may carry `mine_demand_goods`, the goods whose demand a mine of it supplies (the `mines` screen
 reads it; a material without it is its own demand good). A mechanic no data field or actor kind expresses is mod code. There is no price table: every price comes from
 production data, so a mod prices a good by giving it a production path.

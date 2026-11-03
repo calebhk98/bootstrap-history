@@ -10,21 +10,7 @@ from typing import Any, Callable, Dict, List, Optional
 class _InvalidatingSet(set):
     """A set that calls `on_change` after every mutation, with no exceptions.
 
-    Backs `Sim.operating` (see the `operating` property on `EconomyMixin`
-    below) so that a cache keyed off operating's exact membership -
-    `capability_factor()`'s - cannot go stale, no matter which of the nine
-    call sites across core.py/projects.py/economy.py/society.py adds to or
-    discards from it, and without asking any of them to remember a second
-    line. The `done`/`_done_changed()` convention this project already has
-    relies on every one of ITS mutation sites remembering to call
-    `_done_changed()` by hand; that is a real convention and it has held,
-    but a second one just like it - one more rule written down at every call
-    site instead of enforced at one - is exactly the shape that has already
-    produced three drifted-apart bugs elsewhere in this codebase today. This
-    set makes the equivalent mistake impossible for `operating` specifically:
-    there is only one `.add`, only one `.discard`, and they are these. It is
-    the same reasoning that made `revealed` (engine/fog.py) a property rather
-    than a plain attribute, extended to a set instead of a ratchet.
+    A cache keyed off the set's exact membership cannot go stale, whichever call site adds to or discards from it.
 
     Every mutating method a plain `set` exposes is overridden so that
     swapping this in for `set()` changes nothing observable except that
@@ -121,7 +107,7 @@ class _InvalidatingDict(dict):
     """A dictionary that calls `on_change` after every mutation.
 
     Follows the exact pattern of _InvalidatingSet above. Used for
-    `self.household.active` and the workforce module's employees so that
+    `seat.active` (projects module) and `seat.employees` (workforce module) so that
     derived-state caches keyed on active project membership or workforce
     changes are reliably invalidated whenever keys or values mutate,
     without requiring scattered callers across the engine to remember

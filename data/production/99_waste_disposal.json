@@ -1,5 +1,5 @@
 {
- "_note": "The disposal sink (Complaints/309). Getting rid of a waste is work and ground, not a price: a waste is loaded and tipped (waste_handling_job), carried to a dump (a waste_haulage_tkm technique per carriage mode) and left on ground that stays held while the heap stands (dump_ground_m2). These are services: they make no matter, so they carry service true and each is priced through the same cost routine as any recipe. sim/engine/disposal_cost.py combines their solved prices with a material's bulk density and heap height (data/world/waste_heaps.json) into the cost of disposing of one unit of it, which is the lowest price a waste by-product can take. Where no technique for the services is in a solve, disposal is free. The labour figures are the carriage mode figures of sim/geography (the cheapest technique available wins, as for any good); test_waste_disposal_data checks they still equal the geography module's.",
+ "_note": "The disposal sink (Complaints/309). Getting rid of a waste is work and ground, not a price: a waste is loaded and tipped (waste_handling_job), carried to a dump (a waste_haulage_tkm technique per carriage mode) and left on ground that stays held while the heap stands (dump_ground_m2). These are services: they make no matter, so they carry service true and each is priced through the same cost routine as any recipe. sim/prices/disposal_cost.py combines their solved prices with a material's bulk density and heap height (data/world/waste_heaps.json) into the cost of disposing of one unit of it, which is the lowest price a waste by-product can take. Where no technique for the services is in a solve, disposal is free. The labour figures are the carriage mode figures of sim/geography (the cheapest technique available wins, as for any good); test_waste_disposal_data checks they still equal the geography module's.",
  "materials": {
   "waste_handling_job": {
    "outputs": {"waste_handling_job": 1.0},
@@ -47,7 +47,7 @@
    "service": true,
    "unit_dimension": "area",
    "basis": "one square metre of ground held under a heap for one year",
-   "yield_basis": "A square metre is a ten-thousandth of a hectare; held for a year it ties up that many hectare-years, charged at hectare_land's solved rent like any land use. A heap never gives its ground back, so sim/engine/disposal_cost.py capitalises this yearly price at the interest rate.",
+   "yield_basis": "A square metre is a ten-thousandth of a hectare; held for a year it ties up that many hectare-years, charged at hectare_land's solved rent like any land use. A heap never gives its ground back, so sim/prices/disposal_cost.py capitalises this yearly price at the interest rate.",
    "conf": "A",
    "requires_node": null
   }

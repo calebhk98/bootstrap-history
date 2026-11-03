@@ -14,8 +14,7 @@ Split from 490 (closed). Open points:
 
 ## Update 2026-10-23
 
-`step_regions` (`sim/world/regional_population.py`) now takes `epidemic_deaths_by_tile`, and `step_regions_of_people`
-(`sim/engine/regional_people.py`) passes `sim.epidemic_deaths_by_tile()`. A region takes the deaths that happened on its
+`step_regions` (`sim/world/regional_population.py`) now takes `epidemic_deaths_by_tile`, and the demography module (`sim/demography/regions.py`) passes the disease module's `epidemic_deaths_by_tile` view. A region takes the deaths that happened on its
 tile; deaths no tile accounts for (other providers' deaths, an untracked tile) are shared by band share, which is also
 the whole of it when no deaths by tile exist (`None`). The third open point above is done; the status stays open for the rest.
 Check: `python3 -m sim.tests --only regional_epidemic_deaths_follow_the_tile`.

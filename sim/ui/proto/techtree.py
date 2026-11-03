@@ -275,7 +275,7 @@ def _full_entry(sim, nodes, node_id, fog):
         # See strip_self_play_advice: a node's own note is data written by a
         # designer ranking it against the rest of the tree, not something the
         # founder in the story could know, and that stays cut whether or not
-        # fog is on - see the block comment in fog.py.
+        # fog is on - see strip_self_play_advice in sim/knowledge/fog_words.py.
         entry["note"] = strip_self_play_advice(node["note"])
     # THE HONEST TOTAL, not the risk and the floor left for the player to
     # multiply by hand - and only HERE, on the full per-node entry, not on
@@ -283,7 +283,7 @@ def _full_entry(sim, nodes, node_id, fog):
     # those have their own reply-budget to keep inside, and this number is
     # worth a few extra bytes on the one
     # row you asked to actually look at, not on every row of a six-wide
-    # sampler. See expected_calendar_years' own docstring (projects.py): it
+    # sampler. See expected_calendar_years' own docstring (sim/projects/risk.py): it
     # is >= the floor above, strictly more once risk is above zero, and it
     # is why a 45%-risk, 4-year-floor node is not a 4-year project.
     if node.get("risk"):
@@ -887,7 +887,7 @@ def _explain_identity(sim, nodes, node_id, node):
     """
     return {
         "id": node_id, "name": node["name"], "cat": node["cat"], "confidence": node["conf"],
-        # See strip_self_play_advice (fog.py): drops any sentence that ranks
+        # See strip_self_play_advice (sim/knowledge/fog_words.py): drops any sentence that ranks
         # this node against the game or the tree itself - "the pivot of the
         # entire game", "THE highest expected-value node in the tree" - and
         # keeps everything else the note says. Applied here, not only under
@@ -1049,7 +1049,7 @@ def _explain_timing_and_risk(sim, nodes, node_id, node):
         # node is not a 4-year project: the bare geometric series 1/(1-p) is
         # 1.82 attempts, and even that understates it once learning from failures
         # (the industry depth, RETRY_CALENDAR_CAP/DECAY - see
-        # expected_calendar_years' own docstring in projects.py) starts
+        # expected_calendar_years' own docstring in sim/projects/risk.py) starts
         # moving both the odds and the wait on every attempt after the
         # first. This must be computed through the SAME retry rule
         # _complete actually applies, not a second, looser approximation of
@@ -1176,7 +1176,7 @@ def _explain_staffing(sim, nodes, node_id, node):
     `open` actually checks.
     """
     # THE SUPERVISION FIGURE, from the SAME function open_venture() enforces
-    # (see venture_hands, projects.py) - not a second estimate of it. Only
+    # (see venture_hands, sim/ventures/crew.py) - not a second estimate of it. Only
     # meaningful for something that could ever be a going concern; knowledge
     # alone (is_venture false) has nothing to keep an eye on.
     _is_venture = sim.view("is_venture")[node_id]
@@ -1215,7 +1215,7 @@ def _explain_classification(sim, nodes, node_id, node):
         # engine said it the same way for all three. Most of what you build is
         # a plain prerequisite: done once, it counts for ever, whatever you do
         # with it afterward (see missing_prerequisites below, which reads
-        # `done`, never `running`). A CAPABILITY_INSTITUTIONS node is not that:
+        # `done`, never `running`). A capability-institution node (see `capability_sets`) is not that:
         # a school's scholars, a workshop's household places, a patron's
         # credit, and a patron's willingness to have his name behind
         # something the state is wary of, ALL stop the moment you close the

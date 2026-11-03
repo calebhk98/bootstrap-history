@@ -1,5 +1,7 @@
 # Sim instance-state inventory
 
+Note: this is a record of a past measurement. The mixins it scopes the count to (`EconomyMixin`, `FogMixin`, `GeographyMixin`, `LabourMixin`, `ProjectsMixin`, `SocietyMixin`) are gone (`Sim` has no base classes), and state now lives in the owning module's `state.py`; the counts describe the checkout they were run on. Current ownership is `STATE_OWNERSHIP_MAP.md` and `sim/ARCHITECTURE.md`.
+
 **Status:** measured, input to `HOUSEHOLD_EXTRACTION.md`. Every number below
 was produced by the scripts described in "Method", run against this checkout
 of `sim/engine/`; nothing here is copied from `sim/ARCHITECTURE.md`'s "~157

@@ -8,9 +8,9 @@ computation runs, not what it claims about the simulated world.
 
 WHAT BELONGS HERE. A fixed-point solver's damping factor, its convergence
 tolerance, its iteration cap; a search's maximum period count. Gathered
-from sim/engine/solve_prices_core.py (the price solver's own damped-Jacobi loop), the
+from sim/prices/solve_prices_core.py (the price solver's own damped-Jacobi loop), the
 project's iterative numerical search rather than a closed-form calculation. The strongly-connected-components pass
-sim/engine/solve_prices_core.py's own resolvability check runs
+sim/prices/solve_prices_core.py's own resolvability check runs
 (`_strongly_connected_components`, Tarjan's algorithm) was also examined
 for this task and holds nothing that belongs here: it is deliberately
 iterative rather than recursive specifically to avoid Python's recursion
@@ -72,7 +72,7 @@ WHY THE OLD LOCATIONS STILL WORK UNCHANGED. sim/prices/solve_prices.py does
 `from solve_prices_core import (..., DAMPING_FACTOR, CONVERGENCE_TOLERANCE,
 ...)` - a real, working import this task did not want to edit, outside its own ownership boundary in
 spirit if not in the letter of CLAUDE.md's file list, just to relocate a
-number. sim/engine/solve_prices_core.py therefore re-imports each moved name from
+number. sim/prices/solve_prices_core.py therefore re-imports each moved name from
 this file and keeps it bound at its own old attribute name (see that
 file's own comment at the import), so `solve_prices_core.DAMPING_FACTOR`
 still resolves exactly as it always did and neither sibling file needed to
@@ -86,9 +86,9 @@ THESE section).
 """
 
 # ============================================================================
-# sim/engine/solve_prices_core.py - the damped-Jacobi price solver
+# sim/prices/solve_prices_core.py - the damped-Jacobi price solver
 # ============================================================================
-# Moved here verbatim, comments included, from sim/engine/solve_prices_core.py's
+# Moved here verbatim, comments included, from sim/prices/solve_prices_core.py's
 # own "Damped Jacobi fixed-point iteration" section. See that file's own
 # import of these five names for why its own module attributes still work
 # unchanged.
@@ -116,7 +116,7 @@ DAMPING_FACTOR = 0.5
 # room before compute_resolvable_materials gives up and reports it as
 # unresolved. Lowering it enough to cut off a component BEFORE it would
 # have converged is the one way this stops being inert - see the loop at
-# sim/engine/solve_prices_core.py's own use of this name for where that boundary
+# sim/prices/solve_prices_core.py's own use of this name for where that boundary
 # is checked.
 MAXIMUM_ITERATIONS = 2000
 

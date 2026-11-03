@@ -5,12 +5,12 @@
 What is wrong now:
 
 - **Two stages, not a ladder.** A technique is known, built or operating; `adopt_yrs` is folded into `yrs`
-  at load (`sim/engine/tree_merge.py`, `sim/engine/mods.py`). No per-country adoption share, so "this country has
+  at load (`sim/content/tree_merge.py`, `sim/content/mods.py`). No per-country adoption share, so "this country has
   aircraft, but only a few" is not state.
 - **Diffusion has one carrier.** Exposure is visibility by distance (`sim/agents/country_view.py`,
   `exposure`). No carrying by trade, espionage or battlefield contact, and no "knows it exists" state that
   cuts the search without granting the skill to make it.
-- **Contact triggers are thin.** Expedition `returns` exist (`sim/engine/action_results.py`) and only route
+- **Contact triggers are thin.** Expedition `returns` exist (`sim/land/action_results.py`) and only route
   nodes use them; no node requires samples brought back from a region (rubber, latex).
 - **No state subsidy or mandate.** Governments copy what they value (`sim/agents/government.py`), but cannot
   pay or order firms and mines to adopt a technique that does not pay.
@@ -39,8 +39,8 @@ unit count; subsidy and mandate levers on the government (481).
   `req_any` substitutes, scholar and craftsmen hands, materials someone sells. `research.begin` refuses with the
   first failing gate, as a `Refusal` carrying its `cause` (`scholar_staff`, `craft_staff`, `no_substitute`,
   `materials_unsold`, `prerequisites_unknown`, `cannot_afford`). Test: `--only research_start_gates`.
-- Done: the founder's start (`start_project` in `sim/engine/projects_starting.py`) calls `research.begin` with the seat
-  as researcher (`sim/engine/seat_researcher.py`); the seat answers hands, held stock and bill from its own books, and
+- Done: the founder's start (`start_project` in `sim/projects/starting.py`) calls `research.begin` with the seat
+  as researcher (`sim/projects/researcher.py`); the seat answers hands, held stock and bill from its own books, and
   the founder's other gates (win condition, social approval, credit) still run first in `start_reason`. With the staff
   in place the founder's bill and an actor's plan for the same node are equal (the test was removed from the suite).
   Difference: an actor with no staff of a trade pays the hiring premium on that trade's hours; the founder's bill

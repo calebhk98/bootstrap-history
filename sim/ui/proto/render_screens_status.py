@@ -170,7 +170,7 @@ def render_risk(out):
         # REPEATED ROLLS, NOT ONE. A per-year percentage over a window that
         # can run decades reads as one low-stakes check, and it is not one:
         # the engine rolls it independently EVERY year the window is open
-        # (SocietyMixin._shocks runs once per simulated year, and this same
+        # (Shocks.shocks in sim/hazards/shocks.py runs once per simulated year, and this same
         # hazard is tested again each time). A Rome player, shown a figure
         # like this and told nothing about the window, built the hedges the
         # game suggested, was sacked twice in the same window anyway, and

@@ -45,7 +45,7 @@ soils resist tillage until the tool and team can pull hard enough.
   that the fallow hectares of the holding leave, plus the manure's available share) with a saturating response, normalised
   to native soil under the two-field rotation. Rates are declared with sources (most recalled, marked) in that module.
 - Geography only multiplies: `crop_site(..., nutrient_factor)` and `food_potential(..., nutrient_factors)`.
-  `sim/engine/soil_nitrogen_year.py` owns the yearly step (phase `soil_nitrogen`) and feeds the factors to the tile food view
+  `step_soil_nitrogen` in `sim/agriculture/soil.py` owns the yearly step (phase `soil_nitrogen`) and feeds the factors to the tile food view
   and `Sim.farm_sites()`. `Rotation` gained `legume_share_of_holding` (three-field: half the spring field).
 - Manure is a transitional rule (`MANURE_COLLECTED_SHARE`, `sim/geography/soil_nutrients.py`): the society's draught herd's collected
   dung is spread over the held cropland. Dung is made by herd and draught recipes (544, closed: `data/production/95_herds.json`) but the only
@@ -54,7 +54,7 @@ soils resist tillage until the tool and team can pull hard enough.
 
 ## Done: the farm model reads the stock
 
-- `Sim.refresh_farm_territory()` (`sim/engine/soil_nitrogen_year.py`) rebuilds the farm's ladder, ceiling and the cleared
+- `refresh_farm_territory` (`sim/engine/farm_territory_refresh.py`) rebuilds the farm's ladder, ceiling and the cleared
   ground's quality from `farm_sites()` at the start of each year (and after a load), so national farm yield follows the soil
   nitrogen stock and the society's rotation. `THREE_FIELD_SOIL_FERTILITY_YIELD_MULTIPLIER` is deleted: the three-field
   rotation's edge is its smaller fallow (more cropped hectares) and its legumes' gain to the stock.

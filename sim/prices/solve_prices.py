@@ -726,7 +726,7 @@ if REPO_ROOT not in sys.path:
     sys.path.insert(0, REPO_ROOT)
 from sim.prices.engine_seam import load_production, materials_the_tree_consumes  # noqa: E402
 
-# The price algebra lives in sim/engine/solve_prices_core.py; this module
+# The price algebra lives in sim/prices/solve_prices_core.py; this module
 # re-exports it so `solve_prices.<name>` call sites and the mechanism essay
 # above stay in one place.
 from sim.prices.solve_prices_core import (                  # noqa: E402

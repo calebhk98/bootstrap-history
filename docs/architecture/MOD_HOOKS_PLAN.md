@@ -26,7 +26,7 @@ Today the map is already a merged set of folders, and a tile add already works. 
 patches them (`override`) or deletes them (`remove`); `layers/*.json` patches per-tile values; any
 other subfolder is a catalogue (regions, climate classes, route modes, resources, deposits). The
 engine opens the map once with every installed mod in load order
-(`sim/engine/geography_port.py`, `GeographyPortMixin.world_map`), and `load_geography(world_map)`
+(the content module's `map_overlays` view, `sim/content/module.py`, feeds the land module's `OpenGeography`), and `load_geography(world_map)`
 (`sim/geography/loading.py`) turns it into the older `land_tiles` dict.
 
 A probe overlay with one new tile (not committed; run with `python3 -I` on a scratch folder) showed:
@@ -103,39 +103,25 @@ What blocks a mod:
 
 ### 1.3 Actor kinds
 
-Registry: `sim/agents/registry.py` holds `ACTOR_CLASSES` (kind to class), `SPAWNERS` (rules that
-found actors after the year's turns) and `WORLD_SCOPE`; `register_actor_kind(kind, class)`,
-`register_spawner(name, fn)` and `sim/agents/policy.py` `register_policy(kind, factory)` /
-`make_policy` add to them, and `sim/agents/api.py` exports all four. The cast
-(`sim/agents/cast.py`, `seed_cast`) creates actors from a civilisation's `cast.actors` entries by
-`kind` and deliberately skips a kind that is not registered yet, creating it on a later call. The
-shipped kinds register themselves at import (`trader.py`, `stratum.py`, `player.py`,
-`government.py`); `api.py` imports each of those modules by name so the registration
-happens.
+The actors module (`sim/actors/module_spec.py`) owns five extension points: `actor_kinds` (kind to the class
+that builds its actors), `actor_spawners` (rules that found actors after the year's turns), `actor_world_scope`,
+`actor_policies` and `player_commands`. `sim/agents/extensions.py` combines what the providers answered into
+one `ActorExtensions`; a later answer replaces an earlier one of the same name. The game's own kinds, spawners,
+policies and commands come from `sim/agents/shipped.py`. The cast (`sim/actors/cast.py`) builds actors from a
+civilisation's `cast.actors` entries by `kind`.
 
-So the registry is real and keyed by kind, and `MULTIPLAYER.md` says "a mod can add a kind of
-actor". In practice a mod cannot, because:
+`ActorRegistry` (`sim/agents/registry.py`) builds each actor as
+`extensions.kinds[record.kind](actor_id, record, make_policy(record.policy_kind, extensions.policies))`; a
+kind that is not provided is refused with an error that names the mod when the kind is a mod's. The base class
+is `RecordedActor` (`sim/agents/base.py`); the registry probes a built actor with `hasattr` for `rivals_of`,
+`on_capacity_change` and `find_actor`. A mod brings a kind either as data (`DeclaredKind` in
+`sim/agents/declared_kind.py`: needs, a trade, birth and death rates) or as allowed mod code. `ActorRecord`
+(`sim/agents/records.py`) is one flat record carrying the union of firm, government, stratum and group
+fields.
 
-1. **No loader**, as for commands: nothing imports mod Python, and the engine's mod loader never
-   reads a kind declaration from data.
-2. **A kind class needs a large implicit interface.** It is built as
-   `ACTOR_CLASSES[kind](actor_id, record, make_policy(policy_kind))` (`registry._wrap`), is run by
-   `ActorRegistry.advance`, and the registry probes it with `hasattr` for `rivals_of`,
-   `on_capacity_change`, `find_actor`. The interface is a base class (`RecordedActor`,
-   `sim/agents/base.py`) plus duck-typed extras, written nowhere as a contract.
-3. **One flat record.** `ActorRecord` (`sim/agents/records.py`) carries the union of firm,
-   government, stratum and group fields; a new kind with its own state has nowhere to put it except
-   by editing that dataclass.
-4. **Enumerated kind names in engine code.** `society_disclosure.py` lists `("firm", "government")`
-   for a report, `licence.py` and `society_disclosure.py` compare to `"firm"` and
-   `"interest_group"`. A mod kind is invisible to those, which is correct for a report about firms
-   but must be a stated choice, not an accident.
-5. **A save made with a mod kind fails with `KeyError`** when the mod is later removed
-   (`registry._wrap`); there is no message naming the mod. No migration is wanted (CLAUDE.md 4.6),
-   only a clear error.
-6. **A "species" needs data, not just a class.** CLAUDE.md 4.3 says dragons are agents with calorie
-   needs, not a branch. The needs catalogue (`data/world/needs.json`, `sim/world/need_demand.py`)
-   already lets a mod declare needs and goods; a kind has no data way to say "consumes these needs".
+Engine code that names kinds (`SOCIETY_KINDS` in `sim/actors/society_rules.py` and `VALUING_KINDS` in
+`sim/agents/licence.py` list `("firm", "government")`) does not see a mod's kind; that is a stated choice for a report
+about firms.
 
 ### 1.4 Counts (2026-10-06)
 
@@ -143,7 +129,7 @@ actor". In practice a mod cannot, because:
 |---|---|---|
 | Protocol commands registered | 76 | `grep -rn '^@command(\|register_command(' sim/ui --include='*.py' \| wc -l` |
 | `dispatch_*.py` modules found by name | 27 | `ls sim/ui/proto \| grep -c '^dispatch_'` |
-| Actor kinds registered by the shipped code | 4 beyond the three built in | `grep -rn 'register_actor_kind(' sim --include='*.py' \| grep -v 'def \|tests\|api.py' \| wc -l` |
+| Actor kinds the game ships | see `shipped_kinds` | `python3 -c "from sim.agents.shipped import shipped_kinds; print(sorted(shipped_kinds()))"` |
 | Readers of the base map only, `map_source.load_map()` | 7 | `grep -rn 'load_map()' sim --include='*.py' \| grep -v tests \| wc -l` |
 | Calls of `load_geography()` with no map | 11 | `grep -rn 'load_geography()' sim --include='*.py' \| grep -v tests \| wc -l` |
 | Mod test topics | 6 | `ls sim/tests/test_mod_*.py \| wc -l` |
@@ -285,11 +271,11 @@ connect mods.
    CLAUDE.md 4.3: no bespoke branch, no hand-set outcome; the species competes for the same food
    and labour through the ordinary markets. Money moves only through `ledger.transfer`, so the
    conservation test covers it.
-5. **Python kinds (Tier B, same consent as commands).** The module calls `register_actor_kind`,
-   `register_policy` and `register_spawner` from `sim.agents.api` (the only door of the walled
-   package). The loader prefixes names: kind and spawner names must start with `<mod_id>:`,
+5. **Python kinds (Tier B, same consent as commands).** The module declares `api.actor_kind`,
+   `api.policy` and `api.spawner` on the `api` object it is handed (`sim/mod_api.py` is the only
+   door its Python imports). The loader prefixes names: kind and spawner names must start with `<mod_id>:`,
    checked at registration, so two mods cannot register the same kind.
-6. **Clear failure on a missing mod.** `registry._wrap` raises an error naming the kind and, because
+6. **Clear failure on a missing mod.** `ActorRegistry` raises an error naming the kind and, because
    the save records the mod ids it was made with, the missing mod. No migration, only the message.
 7. **Engine enumerations stated.** The three kind-name comparisons in section 1.3 item 4 get a
    comment-free fix: the reports read a `report_as` capability on the class (`firm`, `government`,
@@ -310,7 +296,7 @@ counts are measured.
 | Rank | Place | What is enumerated | Why it matters | Fix direction |
 |---|---|---|---|---|
 | 1 | Done: per-category traits (`never_abandoned`, `practisable`) and the ordered `diffusion_traits` live in `data/world/category_traits.json`, read through `sim/knowledge/category_traits.py`; a mod overlays its own `data/category_traits.json`; `validate` reports a node category with no entry | Technology categories and trait names | Was: every new branch domain needed an engine edit | The literal trait name `medical` is still read by `sim/engine/hazard_relief.py` |
-| 2 | `sim/engine/mods.py` `_node_defaults`; `sim/engine/tree_merge.py` `DEFAULTS` and the second list near line 50 | Node field defaults, written in more than one place | A new node field is a multi-place edit; a mod and the base can disagree | One defaults table in data, read by both loaders |
+| 2 | `sim/content/mods.py` `_node_defaults`; `sim/content/tree_merge.py` `DEFAULTS` and the second list near line 50 | Node field defaults, written in more than one place | A new node field is a multi-place edit; a mod and the base can disagree | One defaults table in data, read by both loaders |
 | 3 | `sim/labour/legacy_trade_defaults.py` `GENERIC_STAFF_TRADES`; literal trade ids in engine code (see counts) | Trade names such as the labourer, artisan, scholar | Trades are data (`data/world/trades.json`), the engine names a few | A `role` attribute on a trade record (`general_labour`, `skilled`, `learned`) read by the engine |
 | 4 | Base-map-only readers (section 1.4) | Which map is open | Blocks land tiles | Section 2.1 |
 | 5 | `sim/engine/data.py` `STARTING_KITS`, `WIN_CONDITION_LABELS` | Starting kits and win metric labels | A new scenario or goal type edits Python | Move to `data/world/starting_kits.json` and the metric catalogue, mod-mergeable |
@@ -402,7 +388,7 @@ routes; `map-data-licence-audit` touches `data/world/geography/`) and the counte
   registers a command and a kind; a changed file needs consent again; names must carry the
   prefix; a handler's state lives in `mod_state` and survives save and load.
 - Files: new `sim/engine/mod_code.py` (consent file, hash, import), `sim/simulator.py` (a
-  `mod-allow` and a `validate` report), manifest keys in `sim/engine/mods.py`, `sim/engine/mods_ids.py`
+  `mod-allow` and a `validate` report), manifest keys in `sim/content/mods.py`, `sim/engine/mods_ids.py`
   (`code`, `permissions`), `sim/ui/proto/mod_commands.py` (decorator).
 - Docs: `mods/README.md` security paragraph, `mods/TASKS.md`.
 

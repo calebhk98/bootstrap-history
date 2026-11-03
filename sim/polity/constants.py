@@ -101,7 +101,7 @@ MILITARY_EQUIPMENT_ERA_CAMPAIGN_TEMPO_ENGAGEMENTS_PER_YEAR = declare(
         "tempo model of its own (see its module docstring's WHERE THIS "
         "MODEL IS WRONG (d) and daily_supply_requirement_kg()'s "
         "engagements_per_day parameter) and takes one as a plain "
-        "argument for exactly that reason; this is society.py's own "
+        "argument for exactly that reason; this is the polity module's own "
         "placeholder for 'a modest campaigning season', standing in "
         "for the campaign-calendar mechanism (marches, sieges, battles "
         "at different intensities) that would derive a real figure. "
@@ -295,8 +295,8 @@ EMINENCE_REPUTATION_SCALE = declare(
     "EMINENCE_REPUTATION_SCALE", 100.0, kind="temporary_heuristic",
     unit="reputation points", source=None, confidence="D",
     why="Reference reputation this hazard treats as '1.0 famous' - "
-        "reputation's own scale is itself invented (see STANDING_* in "
-        "economy.py), so this normalisation is a heuristic layered on "
+        "reputation's own scale is itself invented (see the standing figures "
+        "in this module), so this normalisation is a heuristic layered on "
         "a heuristic.")
 EMINENCE_WEALTH_VISIBLE_THRESHOLD_LABOUR_HOURS = declare(
     "EMINENCE_WEALTH_VISIBLE_THRESHOLD_LABOUR_HOURS", 5040000.0, kind="temporary_heuristic",
@@ -566,7 +566,7 @@ EMINENCE_DECAY_RATE = declare(
     unit="dimensionless (fraction kept per year, before this year's "
          "hazard is added)", source=None, confidence="D",
     why="How much of last year's eminence survives before adding this "
-        "year's prominence_hazard() - see society.py's eminence_report "
+        "year's prominence_hazard() - see eminence_report (sim/polity/eminence.py) "
         "and prominence_hazard, which both reference this same rate "
         "(as self.EMINENCE_DECAY_RATE) so the reported settling value "
         "can never disagree with what actually accumulates here. "
@@ -632,7 +632,7 @@ EMINENCE_CONFISCATION_CAPITAL_LOSS = declare(
     unit="dimensionless (fraction of capital)", source=None,
     confidence="D",
     why="Fraction of capital the eminence-driven confiscation outcome "
-        "takes - distinct from society.py's state-notice-driven "
+        "takes - distinct from the state-notice-driven "
         "CONFISCATION_CAPITAL_LOSS, this is the court's jealousy of a "
         "great man, unbribable by design (see prominence_hazard's own "
         "docstring). Tuned, not measured.")

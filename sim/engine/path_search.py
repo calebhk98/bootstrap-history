@@ -6,16 +6,15 @@ THE OWNER'S OWN DIAGNOSIS, TAKEN LITERALLY. `planner.py` computes one
 structural ordering by critical-path method and stops; this module is what
 "solve the deterministic problem first" actually looks like. `run
 --no-events` already turns off dated shocks, but a project's own risk of
-FAILING outright is a separate roll in `projects.py:_complete`
+FAILING outright is a separate roll in `_complete` in sim/projects/completion.py
 (`self.rng.random() < n["risk"]`) that fires whether or not events are on -
 so a fully dice-free trial needs a seeded rng whose `random()` always returns
 1.0, never below any probability threshold anywhere in the engine (a
 project's failure risk, the 3.5% yearly attrition roll, the 25% manumission
-roll, the fractional-headcount rounding in `_stochastic_round`). See
+roll, the fractional-headcount rounding in `stochastic_round`). See
 `DetRNG` in `sim/ui/cli.py` - shared from there because `--deterministic` on
 `run`/`compare`/`play`/`agent` needs the exact same rng, for the exact same
-reason. Nothing in `core.py`, `projects.py`, `labour.py`, `society.py` or
-`economy.py` is edited to get this - the same rules run, against a
+reason. No engine or module code is edited to get this - the same rules run, against a
 different sequence of "how did that roll come out".
 
 THE FIRST QUESTION - DOES THE CURRENT PLAN EVEN GET THERE WITH THE DICE
@@ -25,7 +24,7 @@ abundant (tens of millions of denarii, hundreds of scholars and artisans).
 It stalls on a small, fixed set of NAMED CRAFT TRADES the tree calls
 `TRADES_ABSENT` - chemist, electrician, engineer, machinist, optician -
 which do not exist in this civilisation at all until you personally teach
-them (`labour.py:trade_available`), and which grow ONLY through
+them (`trade_available` in sim/labour/labour_trades.py), and which grow ONLY through
 `step()`'s once-a-year, two-people-at-a-time auto-teach (core.py, "4a2"),
 gated further by a 25-year per-trade cooldown. Once a trade's headcount is
 above zero, `market_supply(t) <= 0.0` - the sole trigger auto-teach uses to
@@ -33,7 +32,7 @@ decide a trade is worth training more of - is simply never true again unless
 every last person of that trade dies out, so in a deathless, failure-free
 world a trade that got taught once, early, for two people, STAYS at two
 people for the rest of the run, however many projects are starved for it.
-That is not a bug this module can fix (core.py/labour.py are not this
+That is not a bug this module can fix (the engine and the labour package are not this
 module's to edit); it is a fact about how the given rules grow named-trade
 labour, and the only lever a strategy ORDER has over it is which nodes get
 to spend that frozen, tiny pool of hours, and in what sequence.
@@ -212,10 +211,9 @@ def stuck_active(sim, need):
 
 def diagnose_capital_trap(sim, need, min_closure_frac=0.9):
     """Is this dice-free household caught in the insolvency cycle
-    `engine/projects.py` (`enforce_credit_limit`/`auto_open_ventures`) itself
-    documents as a known risk - "half the credit line is the line: below it
-    you can still open your way out, above it you are digging" - rather than
-    genuinely progressing?
+    (credit limit enforced by `enforce_credit_limit` in sim/finance/insolvency.py,
+    ventures opened by `auto_open_ventures` in sim/projects/auto_open.py)
+    rather than genuinely progressing?
 
     MEASURED, AGAINST THE 434 AD FIXTURE, NOT GUESSED. Rome's planned order,
     run dice-free to year 434, sits at capital -4,789, zero scholars, zero

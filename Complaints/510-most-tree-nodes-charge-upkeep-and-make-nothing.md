@@ -43,7 +43,7 @@ rows) counts, per civilisation, the held concerns whose takings exceed their run
 the biggest losers. It is reported, never a failing check; it reuses the entry test's figures
 (`SimWorld.entry_gross`, `business_books.yearly_costs`, `firm_entry.carrying_cost`) in `sim/agents/concern_scan.py`.
 Open: `finery_puddling` pays with takings several times what `origin/main` showed for it; the cause is not traced
-(`sim/tests/test_firm_entry_default_game.py` uses it).
+(a test that used it, `test_firm_entry_default_game`, is no longer in the tree).
 
 ## Progress (branch one-business-object)
 

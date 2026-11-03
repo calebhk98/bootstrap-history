@@ -15,7 +15,7 @@ is fixed too (`true_up_keep`).
 
 **What is built (648).**
 
-1. Captives by campaign. `sim/engine/captives.py` (called from two lines of `sim/engine/campaign_year.py`, 485's file: after a
+1. Captives by campaign. `sim/campaigns/captives.py` (called from two lines of `sim/campaigns/campaign_year.py`, 485's file: after a
    decided battle, and in `_take` before the tile changes hands) gives the winner's bonded stratum a share of the beaten side's
    losses (`captives_from_losses`, `CAPTIVE_SHARE_OF_DEFEATED_LOSSES`) and a share of a taken tile's people
    (`captives_from_conquest`, `CAPTIVE_SHARE_OF_CONQUERED_PEOPLE`), both in `sim/agents/bonded_sale.py`; a society with no bonded

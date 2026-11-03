@@ -1,4 +1,4 @@
-{"_doc": "Open-sea legs whose midpoint lies in a box need the listed tech nodes (or a `route:<id>` result an action returns, see sim/engine/action_results.py) held by a party to the trade (not necessarily by every carrier). Coast legs are restricted only by a lane that names edge_classes.",
+{"_doc": "Open-sea legs whose midpoint lies in a box need the listed tech nodes (or a `route:<id>` result an action returns, see sim/land/action_results.py) held by a party to the trade (not necessarily by every carrier). Coast legs are restricted only by a lane that names edge_classes.",
  "entries": [
   {"id": "west_african_coast", "box": {"lat_min": -35, "lat_max": 27, "lon_min": -26, "lon_max": 20}, "edge_classes": ["coast", "open_sea"],
    "requires_nodes": ["route:west_african_coast"], "kind": "heuristic", "conf": "D",

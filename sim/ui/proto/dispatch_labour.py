@@ -348,7 +348,7 @@ def _cmd_hire(sim, nodes, cmd, ended):
     if not hired:
         return {"ok": False, "error": err}
     # HIRING AND LETTING GO ARE DECISIONS, not standing facts the way
-    # payroll is - neither labour.py nor core.py logs either one, so a
+    # payroll is - neither the workforce module nor the engine logs either one, so a
     # player reading `log` back saw the wage bill change with nothing
     # saying they were the one who changed it. `hire` already composed a
     # precise sentence for this ("2 smiths taken on for 750 denarii...");

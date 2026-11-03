@@ -2,13 +2,12 @@
 
 **Status:** open
 
-- Fog is a per-seat set of revealed technology ids (`sim/engine/fog.py`, `seat_sight.py`). A seat hears of
-  another seat's techniques when distance-scaled visibility passes a threshold (`sim/engine/visibility.py`,
-  `view_share.py`).
+- Fog is a per-seat set of revealed technology ids (`sim/knowledge/module.py`, `sim/seats/sight.py`). A seat hears of
+  another seat's techniques when distance-scaled visibility passes a threshold (`sim/seats/visibility.py`).
 - There is no record of what an actor believes about another (army size, wealth, techniques) with a
   value, a confidence and the date learned; no news that travels at route speed; no battle reports that
   reach different powers differently; no deception or cover story; no espionage.
-- A secret technique leaks a fixed share (`SECRET_EXPOSURE / copy_difficulty`, `visibility.py`), not a
+- A secret technique leaks a fixed share (`SECRET_EXPOSURE / copy_difficulty`, `base_visibility` in `sim/seats/visibility.py`), not a
   per-year chance that rises with activity.
 
 Why it matters: the group's third report makes this central (each faction acts on its own beliefs; a

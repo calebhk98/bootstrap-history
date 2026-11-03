@@ -32,11 +32,11 @@ class DetRNG(random.Random):
 
     Every probability check anywhere in this engine is "< threshold" with
     threshold in (0, 1) - a project's own risk of failing outright
-    (engine/projects.py `_complete`), the 3.5% yearly attrition roll, the 25%
+    (`_complete` in sim/projects/completion.py), the yearly attrition roll, the
     manumission roll, the fractional-headcount rounding in
-    `labour.py:_stochastic_round`, and every dated hazard `society.py`'s
-    `_shocks` rolls for (staff loss, a sack, and their own "does it come to
-    nothing instead" counter-rolls) - so a draw of 1.0 is never below any of
+    `stochastic_round` (sim/labour/staff_moves.py), and every dated hazard
+    `Shocks.shocks` (sim/hazards/shocks.py) rolls for (staff loss, a sack, and
+    their own "does it come to nothing instead" counter-rolls) - so a draw of 1.0 is never below any of
     them: nothing fails, nobody dies, nothing is freed by luck, no hazard
     lands, every fraction rounds down. `randint`/`sample` are never reached in
     a run built this way (they sit behind `not self.founder_alive`, and a

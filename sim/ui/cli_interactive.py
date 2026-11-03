@@ -862,7 +862,7 @@ def _ingame_options(sim, session):
 
 
 # THE SAME DEFAULT sim/polity/constants.py DECLARES AS EMINENCE_DANGER_WEIGHT_DEFAULT
-# (0.5) - kept as its own name because this file has no Sim/SocietyMixin
+# (0.5) - kept as its own name because this file has no Sim
 # instance to read that constant from (cmd_civs works from the raw civ JSON
 # files directly, before any game has started), same shape as
 # INGAME_MORTALITY_MIN_REMAINING_LIFE_YEARS just above.

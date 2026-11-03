@@ -93,7 +93,7 @@ def duration(node):
     all: the larger of its own calendar floor (`yrs`, which the schema itself
     says "labour cannot buy down") and what one director's hours alone would
     take (`ph`/2000, a founder's year - see DEFAULTS). This is exactly the
-    per-node term critical_path() in engine/data.py sums along the single
+    per-node term critical_path() in sim/knowledge/tree_paths.py sums along the single
     longest chain to one target; it is not exposed per-node there, so it is
     repeated here rather than reused, to get it for every node in the closure
     at once instead of one target at a time.
@@ -210,7 +210,7 @@ def pick_side_branches(nodes, need, sim, limit):
     competing with the spine for scarce trades centuries into a run, because
     that is the earliest any of them can possibly fire. Sorting candidates
     by `_closure_depth` (the size of the candidate's own unmet-prerequisite
-    closure - the same measure `_room_advice` in labour.py already sorts
+    closure - the same measure `room_advice` in sim/labour/room_advice.py already sorts
     "nearest first" by) instead of, or even only as a tiebreak after
     filtering out the deepest candidates from, the net/cost ranking looked
     like a strict improvement and is not one: tried head to head against
@@ -262,7 +262,7 @@ def pick_staffing(nodes, need, sim):
     "ran out of horizon", first blocked node quantum_solidstate_theory.
 
     The list is not repeated here. It is read from
-    `LabourMixin.STAFF_CAPACITY_SOURCES`, the same table `staff_capacity()`
+    `staff_capacity_sources` (sim/mechanics/rules.py), the same table `staff_capacity()`
     itself iterates, so the planner cannot drift out of step with the rule it
     is planning against - the failure mode that once put a second,
     hand-maintained copy of a material list in core.py and cost a KeyError in

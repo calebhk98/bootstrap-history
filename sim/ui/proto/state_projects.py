@@ -146,7 +146,7 @@ def _agent_state_operations(sim, nodes):
         # staff ceiling - and so never showed up in shut_concerns above. This
         # is `state`, the screen a player actually rereads every year, which
         # is exactly where the corpus bug's lesson said a DONE/OPERATING
-        # split has to be loud: see ProjectsMixin.capability_gaps.
+        # split has to be loud: see capability_gaps (sim/production/capability.py).
         "critical_capabilities_not_operating": sim.view("capability_gaps")() or None,
         # Which people each shut, profitable concern is short of.
         "shut_for_want_of_staff": shut_for_want_of_staff(sim, nodes),
@@ -194,7 +194,7 @@ def _agent_state_spend_and_net(sim):
         # THE STANDING FIGURE HAS TO READ THE STANDING REVENUE: this counts
         # "the STANDING flows only" per the comment on shut_concerns above -
         # the household's ordinary-year position, not this particular
-        # year's - so it must read revenue_capacity() (economy.py), not
+        # year's - so it must read revenue_capacity() (sim/production/revenue.py), not
         # plain revenue(), which dips for a year whenever `work` sells
         # founder-hours. revenue_capacity() exists for exactly this - it
         # is what credit_limit() already reads, with the identical

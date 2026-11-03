@@ -45,7 +45,7 @@ sides would agree to.
 - Expected loss reads the loss share of exposure as a yearly rate; a lender that lost and then holds no claims asks the
   whole loss share. `RATE_FLOOR_SHARE` (capital_market) is a separate typed floor that this does not retire.
 - `capital_market.market_rate_answered` still bounds the engine-facing rate nominally (`bounded_rate` takes `expected_inflation`
-  but the engine-facing `market_rate` (`sim/actors/world_capital.py`) does not pass it), and the clearing's cause is not stored on the record.
+  but the engine-facing `market_rate` (`sim/finance/capital_market.py`) does not pass it), and the clearing's cause is not stored on the record.
 - `market_rate()` reports `record.memory.rates[currency]`: the base rate of the last `_lend` clearing of the spin-up, the
   year's second and smaller clearing (the first, `lending.lend_working_capital`, writes nothing to memory). It is a marginal
   rate, not a loan-weighted average and not a real rate, so it sits below the median ask where the cheapest lender's funds

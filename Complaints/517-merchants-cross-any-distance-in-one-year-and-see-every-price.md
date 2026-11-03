@@ -39,7 +39,7 @@ length, by value per kilogram.
 ## Attempt not merged (branch `merchant-reach-chains` (deleted unmerged; its code is lost), commit `3c44bcf9`)
 
 Built: a merchant deals only at tiles within one year's haul of its home or of a tile it has traded at, so its
-stretch grows with experience and long distances are covered by chains (`sim/economy/merchants_reach.py`,
+stretch grows with experience and long distances are covered by chains (`sim/economy/merchants_reach.py`, not in the tree,
 `Merchant.traded_tiles`); distant volumes arrive as late as prices (`Merchant.volume_history`); the fastest haul is
 compared with the cheapest on carriage, interest and spoilage (`CarriageTable.fastest_haul`). Not merged: a six-year
 in-process run of a Rome game took about a fifth longer, with the cause not isolated (the fastest-haul searches run

@@ -3,7 +3,7 @@
 A held lot stands on one tile, the holder's: the held tile nearest the middle of what the holder holds. Pasture
 room is that holding's grass beyond the live weight already grazing; nursery room is the place's arable land at
 a production entry's output per hectare. The stock's own ledger, its production entry and its labour stay with
-the caller (sim/engine/living_stock_growth.py).
+the caller (sim/living_stock/).
 """
 import functools
 

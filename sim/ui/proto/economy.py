@@ -245,7 +245,7 @@ def _power_status(sim, nodes):
     rung, since is_visible already governs which rungs qualify. The
     generation/demand FIGURES are safe to show even so: both functions sum
     only over self.done/self.active, and is_visible(node_id) is unconditionally
-    true for anything in either set (fog.py's own definition) - a number is
+    true for anything in either set (`visibility` in sim/knowledge/module.py) - a number is
     never built from a node the player has not already built or started
     themselves. The workshop-versus-grid split on projects goes further: it
     distinguishes the two scales for a project only once the player has
