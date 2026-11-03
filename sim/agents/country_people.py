@@ -23,7 +23,7 @@ class CountryPeople(SharedPart):
 
 	def country_strata(self) -> List[Any]:
 		holder = self.world.holder
-		state = getattr(holder, "state", holder)
+		state = holder.state
 		home = state.home_country
 		return [actor for actor in holder.of_kind("stratum")
 				if (actor.record.country or home) == self.world.profile.country]

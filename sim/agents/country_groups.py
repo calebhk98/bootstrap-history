@@ -26,9 +26,7 @@ class CountryGroups(SharedPart):
 	def _country_actors(self, kinds: Any) -> List[Any]:
 		"""The actors of these kinds that answer to the country, still in business, in id order."""
 		holder = self.world.holder
-		of_kind = getattr(holder, "of_kind", None)
-		if of_kind is None:
-			return []
+		of_kind = holder.of_kind
 		country_of = holder.countries.country_of
 		return [actor for kind in kinds for actor in of_kind(kind)
 				if actor.record.exited_year is None and country_of(actor) == self.world.profile.country]

@@ -30,9 +30,8 @@ class CountrySetting(SharedPart):
 		return self.world.profile.country
 
 	def government(self) -> Any:
-		"""The country's own government actor; one that takes nothing when the scope was not given a registry."""
-		lookup = getattr(self.world.holder, "government_of", None)
-		actor = lookup(self.world.profile.country) if callable(lookup) else None
+		"""The country's own government actor; one that takes nothing when the country has none."""
+		actor = self.world.holder.countries.government_of(self.world.profile.country)
 		return actor if actor is not None else _NoGovernment()
 
 	def state_weights(self) -> Dict[str, float]:

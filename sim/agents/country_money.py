@@ -48,13 +48,13 @@ class CountryMarket(SharedPart):
 
 	def market_purchase(self, buyer_id: str, commodity: str, tonnes: float, budget: float = 0.0) -> None:
 		"""What its state buys is paid for at once."""
-		buyer = getattr(self.world.holder, "actors", {}).get(buyer_id)
+		buyer = self.world.holder.actors.get(buyer_id)
 		if buyer is not None and budget > 0.0:
 			ledger.transfer(buyer, self.world.setting.edge(EDGE_STATE_SPENDING), budget, "purchase")
 
 	def market_sale(self, seller_id: str, material: str, tonnes: float, from_concerns: Any = None) -> None:
 		"""What a country's state sells is paid for at the price the market quotes."""
-		seller = getattr(self.world.holder, "actors", {}).get(seller_id)
+		seller = self.world.holder.actors.get(seller_id)
 		if seller is not None and tonnes > 0.0:
 			ledger.transfer(self.world.setting.edge(EDGE_STATE_SPENDING), seller, self.world.quotes.material_cost(material, tonnes) or 0.0, "sale")
 

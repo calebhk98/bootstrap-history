@@ -23,8 +23,7 @@ class CountryTaxpayers(SharedPart):
 	def visible_taxpayers(self) -> List[Tuple[float, float]]:
 		"""(visible scale, taxable income) of the firms and the players' seats of the country the state can see."""
 		holder = self.world.holder
-		lookup = getattr(holder, "active_firms", None)
-		firms = lookup() if callable(lookup) else []
+		firms = holder.concerns.active_firms()
 		country = self.world.profile.country
 		seats = list(self.shared.seat_taxpayers(country))
 		return seats + [(self.shared.visible_scale_of(firm), income) for firm, income in taxpayer_income.firm_incomes_in(
