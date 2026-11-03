@@ -201,6 +201,11 @@ class TaxableCash(unittest.TestCase):
         self.assertEqual(taxable_cash(balances, ["cohort:a", "producer:b", "merchant:c", EDGE_MINT]),
                          {"cohort:a": 50.0, "producer:b": 30.0, "merchant:c": 20.0})
 
+    def test_the_coin_stock_base_leaves_out_who_is_not_a_taxpayer(self):
+        from sim.economy.taxes_bases import coin_stock
+        facts = YearFacts(currency="coin", cash={"cohort:a": 50.0, "bank:d": 900.0}, taxpayers=frozenset({"cohort:a"}))
+        self.assertEqual({agent: base.value for agent, base in coin_stock(None, facts, {}).items()}, {"cohort:a": 50.0})
+
 
 if __name__ == "__main__":
     unittest.main()

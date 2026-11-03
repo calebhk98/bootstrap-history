@@ -22,7 +22,7 @@ def facts_after(*postings, imports=(), exports=()):
         ledger.note_postings([transfer], "sales")
     setup = types.SimpleNamespace(currency_id="coin", working_hours_per_year=2000.0, unskilled_trade="labour",
                                   countries=lambda: ["home"])
-    record = types.SimpleNamespace(book=book, cohorts={})
+    record = types.SimpleNamespace(book=book, cohorts={}, producers={}, merchants={})
     return tax_facts(setup, record, types.SimpleNamespace(wage=lambda *_args: 0.0), ledger)
 
 

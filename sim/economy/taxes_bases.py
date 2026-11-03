@@ -5,7 +5,7 @@ data uses to its function. Adding a basis is one function and one registry line;
 good id appears here. The names match the bases `sim/agents/revenue_bases.py` reads.
 """
 from dataclasses import dataclass, field
-from typing import Callable, Dict, Iterable, Mapping, Optional, Tuple
+from typing import Callable, Dict, FrozenSet, Iterable, Mapping, Optional, Tuple
 
 from .types import AgentId, CurrencyId, GoodId, TileId, is_edge
 
@@ -23,6 +23,7 @@ class YearFacts:
     cash: Mapping[AgentId, float] = field(default_factory=dict)                      # money held at the year's close
     sales: Mapping[Tuple[AgentId, GoodId], float] = field(default_factory=dict)      # money received by (seller, good)
     held_goods: Optional[Mapping[Tuple[AgentId, GoodId], float]] = None              # stock held; None: output is assumed held
+    taxpayers: Optional[FrozenSet[AgentId]] = None    # whose money is a stock of wealth (households, producers, merchants); None: every holder
 
 
 @dataclass(frozen=True)
@@ -81,9 +82,10 @@ def sales_value(form, facts: YearFacts, prices: Mapping[GoodId, float]) -> Dict[
 
 
 def coin_stock(form, facts: YearFacts, prices: Mapping[GoodId, float]) -> Dict[AgentId, Base]:
-    """Money held by each agent: the wealth the economy models as a stock. Edge accounts hold none that is taxable."""
-    return {agent: Base(amount) for agent, amount in sorted(facts.cash.items())
-            if amount > 0.0 and not is_edge(agent)}
+    """Money held by each taxpayer: the wealth the economy models as a stock. A bank's, fund's or insurer's holding of
+    other people's money, a cargo or carriage account and an edge hold none that is taxable."""
+    held = facts.cash if facts.taxpayers is None else taxable_cash(facts.cash, facts.taxpayers)
+    return {agent: Base(amount) for agent, amount in sorted(held.items()) if amount > 0.0 and not is_edge(agent)}
 
 
 BASES: Dict[str, Callable] = {

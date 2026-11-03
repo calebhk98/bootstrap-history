@@ -16,7 +16,7 @@ from .market_memory import market_key
 from .national_prices import national_prices, traded_spending_weights, usual_volumes
 from .notional import recently_traded_goods
 from .setup import labour_area
-from .taxes_bases import YearFacts, taxable_cash
+from .taxes_bases import YearFacts
 from .types import is_edge
 from .inventory import held_stock
 from .year_ledger import YearLedger
@@ -42,9 +42,10 @@ def tax_facts(setup, record, view, ledger: YearLedger) -> YearFacts:
     working = {cohort.agent_id: cohort.working_people for cohort in home}
     wage_year = {cohort.agent_id: trade_wages.wage_in_view(setup, view, setup.unskilled_trade, labour_area(cohort.tile)) * hours
                  for cohort in home}
-    taxpayers = (set(record.cohorts) | set(record.producers) | set(record.merchants)) - set(away)
-    cash = taxable_cash({agent: record.book.balance(agent, money) for agent in record.book.agents()}, taxpayers)
-    return YearFacts(currency=money, working_people=working, wage_per_labour_year=wage_year, cash=cash,
+    cash = {agent: record.book.balance(agent, money) for agent in record.book.agents()
+            if not is_edge(agent) and agent not in away}
+    taxpayers = frozenset((set(record.cohorts) | set(record.producers) | set(record.merchants)) - set(away))
+    return YearFacts(currency=money, working_people=working, wage_per_labour_year=wage_year, cash=cash, taxpayers=taxpayers,
                      imports_paid={key: paid for key, paid in ledger.imports_paid.items() if key[0] not in away},
                      exports_received={key: paid for key, paid in ledger.exports_received.items() if key[0] not in away})
 
