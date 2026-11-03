@@ -50,7 +50,7 @@ BASELINE_FIELDS = (
     "wages_paid", "bondage_years_left", "bondage_debt",
     "money_real", "credit_frozen_until", "interest_paid",
     "wage_hours_this_year", "teaching_hours_this_year", "trade_hours_used",
-    "total_spend", "director_hours_spent_founder", "bounties_paid",
+    "total_spend", "bounties_paid",
     "atrocity", "gov", "last_patron_death",
     "_said_debasement", "_said_autoopen", "_said_output", "_said_scandal",
     "_said_parallelism", "_said_command_index", "_said_deputies",

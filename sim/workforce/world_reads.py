@@ -85,9 +85,6 @@ class KnowledgeReads:
     def nodes_with_mechanic(self, name):
         return tuple(self._needs.mechanic[name])
 
-    def effect_factor(self, channel, start=1.0, exponent=None):
-        return self._needs.effect_factor(channel, start, exponent)
-
     def effect_holds(self, node_id, spec):
         return self._needs.effect_holds(node_id, spec)
 
@@ -208,10 +205,6 @@ class PeopleReads:
 
     def home_tiles_held(self):
         return self._needs.home_tiles_held()
-
-    def home_tiles_held_version(self):
-        """Changes whenever the tiles the home country owns might."""
-        return self._needs.home_tiles_held_version()
 
     def provided_town_population(self, tile, nominal_people):
         """People the town providers say live at `tile`, or None when none has an opinion (the last answer wins)."""

@@ -392,6 +392,9 @@ _THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 _ROOT = os.path.dirname(os.path.dirname(_THIS_DIR))
 CIVILIZATIONS_DIR = os.path.join(_ROOT, "data", "civilizations")
 
+# the material a recipe's `land_hectare_years` is priced in
+LAND_MATERIAL = "hectare_land"
+
 
 # ============================================================================
 # THE REFERENCE YIELD - what a decent (quality 1.0) hectare produces

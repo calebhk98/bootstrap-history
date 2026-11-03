@@ -3,6 +3,7 @@ from typing import Any, Optional
 
 from sim.agents.api import supply
 from sim.world.demand import production_data
+from sim.world.land import LAND_MATERIAL
 from sim.constants import declare
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 
@@ -58,7 +59,7 @@ class Site:
 		neither is quoted."""
 		rent = self.needs.agent_land_rent_at(tile)
 		if rent is None or rent <= 0.0:
-			return self.world.quotes.material_price("hectare_land")
+			return self.world.quotes.material_price(LAND_MATERIAL)
 		return float(rent)
 
 	def site_rent(self, node_id: str, capacity: float = 1.0, tile: Optional[str] = None) -> Optional[float]:

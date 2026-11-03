@@ -8,7 +8,7 @@ import json
 import types
 import unittest
 
-from sim.workforce.api import SpendDirectorHours, WorkforceSeat
+from sim.workforce.api import WorkforceSeat
 from sim.workforce.rules import work_order_shortfall
 from sim.engine.state import deserialize_state, serialize_state
 from sim.tests import projects_host
@@ -70,19 +70,13 @@ class StandingWorkDirective(unittest.TestCase):
 
 def Offer(directive):
     """The projects module over a pool whose standing allocations are these, the materials module letting every project run
-    at full pace; the founder's hours spent are recorded."""
+    at full pace."""
     allocations = {"b": directive} if directive else {}
     module = projects_host.build(
         hour_commitments=lambda: {"allocations": allocations}, material_binding=lambda: None,
         founder={"alive": True, "life_left": 10.0, "dead_reason": None, "policy": {}})
-    module.spent = []
     module.project_hour_pace = lambda node_id: 3000.0
-
-    def send(command):
-        if isinstance(command, SpendDirectorHours):
-            module.spent.append(command.hours)
-        return 1.0          # the materials module: the project runs at full pace
-    module.needs.send = send
+    module.needs.send = lambda command: 1.0      # the materials module: the project runs at full pace
     return module
 
 
@@ -94,7 +88,6 @@ class OfferHours(unittest.TestCase):
         self.assertEqual(project["hours_offered_this_year"], 500.0)
         self.assertEqual(project["hours_directed_this_year"], 500.0)
         self.assertEqual(project["ph_left"], 1500.0)
-        self.assertEqual(game.spent, [500.0])
 
     def test_an_undirected_project_has_no_directive_to_read_back(self):
         game = Offer(None)

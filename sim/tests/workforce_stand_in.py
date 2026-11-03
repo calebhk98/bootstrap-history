@@ -6,12 +6,9 @@ from sim.tests.ui_stand_in import FactViews
 STAFF_FIELDS = ("employees", "scholars", "artisans", "directors_extra", "slaves", "freedmen", "manumitted_total",
                 "reserve_craftsmen", "reserve_scholars")
 HOURS = {"allocations": "hour_allocations", "work_trade": "work_trade", "wage_hours": "wage_hours_this_year",
-         "wages_offered_for": "hours_offered_for_wages", "teaching_hours": "teaching_hours_this_year",
-         "relocation_hours": "relocation_hours_this_year", "supervision_hours": "supervision_hours_this_year",
-         "contract_hours": "contract_hours", "last_year": "hours_this_year",
+         "teaching_hours": "teaching_hours_this_year", "last_year": "hours_this_year",
          "wage_work_last_year": "wage_work_last_year", "trade_hours_used": "trade_hours_used",
-         "unused_reported": "unused_hours_reported", "last_taught": "last_taught",
-         "director_hours_spent": "director_hours_spent_founder"}
+         "unused_reported": "unused_hours_reported"}
 EMPTY = {"employees": {}, "hour_allocations": {}, "contract_hours": {}, "trade_hours_used": {},
          "unused_hours_reported": {}, "last_taught": {}, "trades_created": set(), "trades_endemic": set(), "trade_introduced_year": {},
          "training": [], "staff_wanted": {}}

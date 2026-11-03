@@ -14,7 +14,7 @@ from sim.reporting.api import NoteConcernChange, RecordAutomation, RecordAutomat
 from sim.seats.api import RecordGoalReached
 from sim.ventures.api import (ClearMothball, CloseConcern, ForgetClosureReason, MothballConcern, NoteConcernYear, OpenVenture, RestoreConcern,
                               ReviewConcerns, ReviewReopening)
-from sim.workforce.api import DrawTradeHours, GrantStaff, LoseCrew, ReleaseHours, ResetTradeHours, SpendDirectorHours
+from sim.workforce.api import DrawTradeHours, GrantStaff, LoseCrew, ReleaseHours, ResetTradeHours
 
 from .commands import (AdvanceProjects, AutoOpenVentures, Bribe, CloseLapsedDependents, CloseSpendYear, CloseUnstaffedVentures, CloseWork,
                        CompleteProject, Exclude, HaltActiveProjects, Include, KeepStaffed, MothballWork, NoteVentureYear, NoteYearSpend, PostBounty, PutProjectFirst, ReopenRestaffedVentures, ReorderProjects, ResetProjectProgress,
@@ -132,7 +132,7 @@ MODULE_SPECS = (ModuleSpec(
 	       ClearMothball, CloseConcern, ForgetClosureReason, MothballConcern, NoteConcernYear, RestoreConcern, ReviewConcerns,
 	       ReviewReopening, OpenVenture, ReleaseHours, LearnTechnique, RevealFrom, ChangeHeld,
 	       CarryOutTransfers, ApplyTechEffects, GainReputation, AddScandal, AddGovernance, GrantStaff, RecordGoalReached, LoseCrew,
-	       LearnFromFailure, ApplyThrottle, DrawTradeHours, ResetTradeHours, SpendDirectorHours),
+	       LearnFromFailure, ApplyThrottle, DrawTradeHours, ResetTradeHours),
 	phases=(PhaseHook("start_projects", "start_projects_hook"),),
 	extension_points=(ExtensionPoint("extra_start_checks", FIRST),),
 ),)

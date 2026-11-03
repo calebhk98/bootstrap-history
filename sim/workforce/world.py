@@ -108,8 +108,3 @@ class AgentEconomyReads:
         """The trades the agent economy holds; None until the game's money is priced at it."""
         return self._needs.agent_trades()
 
-    def agent_country(self, country):
-        return self._needs.agent_country[country]
-
-    def agent_prices(self):
-        return self._needs.agent_prices()

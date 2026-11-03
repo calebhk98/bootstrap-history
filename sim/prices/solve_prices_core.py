@@ -24,6 +24,8 @@ if REPO_ROOT not in sys.path:
 from sim.labour.api import trade_of_role
 from sim.prices import engine_seam
 from sim.world import capital_builds
+from sim.world.land import LAND_MATERIAL
+from sim.world.plant_baskets import ENERGY_CARRIERS
 from sim.prices import disposal_cost  # noqa: E402
 from sim.prices.joint_allocation import allocate_joint_cost  # noqa: E402
 from sim.prices.price_change import relative_price_change  # noqa: E402
@@ -41,8 +43,6 @@ from sim.algorithm_parameters import (           # noqa: E402  (see sys.path abo
     DAMPING_FACTOR, MAXIMUM_ITERATIONS, CONVERGENCE_TOLERANCE,
     INITIAL_PRICE_GUESS_HOURS, GROWTH_BOUND_HOURS)
 
-# the material a recipe's `land_hectare_years` is priced in
-LAND_MATERIAL = "hectare_land"
 
 
 # {id of a production catalogue: (the catalogue, its numeraire trade)}; the catalogue is kept so the id stays its own
@@ -72,12 +72,7 @@ def numeraire_trade(production_entries=None, registry=None):
     return trade_of_role(registry, "unskilled")
 
 
-# The three energy carriers (see ENERGY in this module's docstring). Named
-# once here rather than spelled out at each of the three call sites that
-# would otherwise hand-write the tuple, so that adding a carrier cannot
-# silently miss one of them - a real risk a bare tuple repeated three times
-# invites.
-ENERGY_CARRIER_FIELDS = ("thermal_mj", "mechanical_mj", "electrical_mj")
+# The energy carriers (see ENERGY in this module's docstring) are named once, in sim/world/plant_baskets.py.
 
 # PHYSICAL CAPABILITY CAPS (Complaints/43 - see TEMPERATURE in this
 # module's own docstring for the full defect and the reasoning behind the
@@ -106,7 +101,7 @@ THERMAL_MJ_MINIMUM_USABLE_TEMPERATURE_C = 700.0
 # `capability_price_for_requirement` below, and TEMPERATURE in the module
 # docstring for why grading is PER CONSUMER rather than one shared floor).
 # Keyed by carrier rather than hand-written at each call site for the same
-# reason ENERGY_CARRIER_FIELDS above is: so a second physical dimension -
+# reason ENERGY_CARRIERS above is: so a second physical dimension -
 # torque, pressure, whatever a future stakeholder names next - slots in as
 # one more entry here, read by the same functions, rather than a second,
 # parallel, hand-rolled comparison. See the module docstring's TEMPERATURE
@@ -401,7 +396,7 @@ def _dependency_materials(entry, resolved=frozenset()):
     dependencies = set((entry.get("inputs") or {}).keys())
     for capital_good in (entry.get("capital") or []):
         dependencies.update(capital_builds.materials_needed(capital_good, resolved))
-    for energy_key in ENERGY_CARRIER_FIELDS:
+    for energy_key in ENERGY_CARRIERS:
         if entry.get(energy_key):
             dependencies.add(energy_key)
     if entry.get("land_hectare_years"):
@@ -842,7 +837,7 @@ def batch_energy_cost_hours(entry, current_prices, capability_band_price_by_carr
     # graded price when it states its own requirement, and falls back to
     # the same flat lookup as before otherwise.
     energy_cost_hours = 0.0
-    for energy_key in ENERGY_CARRIER_FIELDS:
+    for energy_key in ENERGY_CARRIERS:
         energy_quantity_per_batch = entry.get(energy_key) or 0.0
         if energy_quantity_per_batch:
             energy_price = capability_graded_price(

@@ -9,6 +9,8 @@ in the same order using only the price lookups that move. The results are identi
 import collections
 
 from sim.world import capital_builds
+from sim.world.land import LAND_MATERIAL
+from sim.world.plant_baskets import ENERGY_CARRIERS
 from sim.prices import solve_prices_core as core
 from sim.world.capital_market import stand_yearly_share
 
@@ -40,7 +42,7 @@ class RecipePlan:
              capital_good["annual_output_at_basis"])
             for capital_good in (entry.get("capital") or []))
         self.energy = tuple(
-            (energy_key, entry.get(energy_key)) for energy_key in core.ENERGY_CARRIER_FIELDS
+            (energy_key, entry.get(energy_key)) for energy_key in ENERGY_CARRIERS
             if entry.get(energy_key) or 0.0)
         self.holding_years = float(entry.get("holding_years") or 0.0)
         self.output_meets_floor = {
@@ -62,7 +64,7 @@ def plan_cost(plan, prices, wage_by_trade, band_price_by_carrier, interest_rate,
         material_cost_hours += quantity_per_batch * input_price
 
     if plan.land_hectare_years:
-        land_price = prices.get(core.LAND_MATERIAL)
+        land_price = prices.get(LAND_MATERIAL)
         if land_price is None:
             return None
         land_cost_hours = plan.land_hectare_years * land_price

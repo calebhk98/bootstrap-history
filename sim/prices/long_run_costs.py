@@ -10,7 +10,7 @@ from typing import Any, Callable, Dict, Iterable, Mapping, Optional
 
 from sim.prices import prices as price_engine
 from sim.prices import rent_standin, solve_prices_core
-from sim.prices.solve_prices_core import LAND_MATERIAL
+from sim.world.land import LAND_MATERIAL
 
 
 @dataclass(frozen=True)

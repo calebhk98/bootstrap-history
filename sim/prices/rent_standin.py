@@ -10,9 +10,10 @@ import json
 
 from sim.constants import declare
 from sim.labour.api import wage_provider
-from sim.prices.solve_prices_core import LAND_MATERIAL, recipe_cost_and_allocation
+from sim.prices.solve_prices_core import recipe_cost_and_allocation
 from sim.world import deposits
 from sim.world import land
+from sim.world.land import LAND_MATERIAL
 
 STAND_IN_ORE_DEMAND_SHARE_OF_OPENING_OUTPUT = declare(
     "STAND_IN_ORE_DEMAND_SHARE_OF_OPENING_OUTPUT", 1.0, kind="temporary_heuristic",

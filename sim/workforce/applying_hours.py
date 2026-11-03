@@ -28,9 +28,6 @@ class ApplyingHours(Part):
     def reset_trade_hours(self, command):
         self.seat.trade_hours_used = {}
 
-    def spend_director_hours(self, command):
-        self.seat.director_hours_spent_founder += command.hours
-
     def set_reserve(self, command):
         if command.craftsmen is not None:
             self.seat.reserve_craftsmen = command.craftsmen

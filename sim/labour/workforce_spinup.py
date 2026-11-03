@@ -27,6 +27,7 @@ from typing import Any, Callable, Dict, Iterable, Mapping, Optional
 
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 from sim.world import demand, need_demand
+from sim.world.plant_baskets import ENERGY_CARRIERS
 from sim.labour import labour_market, trade_data, workforce_carriage
 
 def _dominant_output(entry: Mapping[str, Any]) -> Optional[str]:
@@ -36,9 +37,6 @@ def _dominant_output(entry: Mapping[str, Any]) -> Optional[str]:
     return demand.dominant_output_key(entry)
 
 
-# Recipe fields that draw an energy carrier; the carrier is the material of the same name that the
-# energy techniques (thermal_mj_charcoal, mechanical_mj_waterwheel, ...) output.
-ENERGY_CARRIER_FIELDS = ("thermal_mj", "mechanical_mj", "electrical_mj")
 
 
 def _input_coefficients(recipe_id: str, production: Mapping[str, Any]) -> Dict[str, float]:
@@ -47,7 +45,7 @@ def _input_coefficients(recipe_id: str, production: Mapping[str, Any]) -> Dict[s
     coefficients = demand.input_coefficients_per_unit_output(recipe_id, dict(production))
     entry = production[recipe_id]
     basis_quantity = entry["outputs"][_dominant_output(entry)]
-    for carrier in ENERGY_CARRIER_FIELDS:
+    for carrier in ENERGY_CARRIERS:
         drawn = entry.get(carrier)
         if drawn:
             coefficients[carrier] = coefficients.get(carrier, 0.0) + drawn / basis_quantity

@@ -190,7 +190,6 @@ RELOCATIONS = [
     ("/seats/*/modules/workforce/wages_paid", "/seats/*/household/wages_paid"),
     ("/seats/*/modules/workforce/said_deputies", "/seats/*/household/_said_deputies"),
     ("/seats/*/modules/workforce/trade_hours_used", "/seats/*/projects/trade_hours_used"),
-    ("/seats/*/modules/workforce/director_hours_spent_founder", "/seats/*/founder/director_hours_spent_founder"),
     ("/modules/workforce/society_labour_hours", "/economy/society_labour_hours"),
     ("/seats/*/modules/finance/interest_paid", "/seats/*/household/interest_paid"),
     ("/seats/*/modules/finance/bondage_years_left", "/seats/*/household/bondage_years_left"),
