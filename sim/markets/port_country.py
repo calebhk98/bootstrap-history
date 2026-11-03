@@ -6,7 +6,7 @@ labelled estimate."""
 import math
 from typing import Dict, Optional
 
-from sim.world.material_units import tonnes_per_unit
+from .unit_mass import tonnes_per_unit
 from sim.economy.api import (carried_book, cohort_land_rents, country_figures, land_rent_at_tile, coin_per_unit,
                              country_trade_wage, working_hours_per_year)
 
@@ -40,7 +40,8 @@ class CountryAnswers:
         """Money for a tonne of a material at the price its market areas touching the country quote; None when
         none of them trades it."""
         price = country_figures.prices(self._economy, self._country).get(material)
-        return None if price is None else price * self._coin / tonnes_per_unit(material)
+        per_unit = tonnes_per_unit(material)
+        return None if price is None or per_unit is None else price * self._coin / per_unit
 
     def price_per_unit(self, material: str) -> Optional[float]:
         """Money for one unit of a material at the price its market areas touching the country quote; None when none
@@ -52,13 +53,13 @@ class CountryAnswers:
         """The standard of the money the one economy uses."""
         return country_figures.currency(self._economy).regime
 
-    def coin_stock_value(self) -> float:
+    def coin_stock_value(self) -> Optional[float]:
         """Money's worth of the backing metal in the money held on the country's tiles, at the country's price of
-        that metal (none for fiat money, which has no metal)."""
+        that metal; None for fiat money (no metal) and while the metal has no price."""
         spec = country_figures.currency(self._economy)
         price = country_figures.prices(self._economy, self._country).get(spec.backing_good) if spec.backing_good else None
         if price is None:
-            return 0.0
+            return None
         held = country_figures.money_held(self._economy, self._country)
         return held * spec.backing_per_unit * price * self._coin
 

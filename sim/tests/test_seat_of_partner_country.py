@@ -49,8 +49,7 @@ def seat_economy():
 
 def answers_over_readers(call):
     """`call(agent)` with the economy's readers replaced by the figures above."""
-    readers = {"wages_by_trade_weighted": lambda economy, country=None: WAGES[country],
-               "country_trade_wage": lambda economy, trade, country=None: WAGES[country][trade],
+    readers = {"country_trade_wage": lambda economy, trade, country=None: WAGES[country][trade],
                "shown_prices_of": lambda economy, country=None: (PRICES[country], set()),
                "interest_rate": lambda economy: 0.05}
     with mock.patch.multiple(reads_prices.economy_api, **readers):

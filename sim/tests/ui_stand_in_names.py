@@ -146,7 +146,6 @@ METHOD_OF_VIEW_MORE = {
     "knowledge_risk": "knowledge_risk",
     "landed_cost": "landed_cost",
     "last_market_price_ratio": "last_market_price_ratio",
-    "legacy_market_flows": "_market_flows",
     "levy_shares": "levy_shares",
     "licensable_actor_ids": "licensable_actor_ids",
     "literacy": "literacy",

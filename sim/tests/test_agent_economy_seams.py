@@ -1,5 +1,5 @@
 """AgentEconomy.economy takes the opening's record from the disk cache (so from an entry shipped with the checkout)
-before spinning up, and PriceReads.answers states the economy's prices and wages in coin. Both run on a stand-in
+before spinning up, and PriceReads.answers states the economy's prices in coin. Both run on a stand-in
 game and a stand-in economy API; the cache rules are test_shipped_openings."""
 QUICK_TOPIC = True
 
@@ -84,16 +84,14 @@ class AnswersTests(unittest.TestCase):
         self.agent = PriceReads(self.core, self.game)
         api = reads_prices.economy_api
         for patcher in (
-                mock.patch.object(api, "wages_by_trade_weighted", lambda economy, country=None: {"smith": 2.0, "weaver": 0.5}),
                 mock.patch.object(api, "shown_prices_of", lambda economy, country=None: ({"iron": 3.0}, {"salt"})),
                 mock.patch.object(api, "interest_rate", lambda economy: 0.07)):
             patcher.start()
             self.addCleanup(patcher.stop)
 
-    def test_prices_and_wages_are_the_apis_in_coin_and_the_rate_is_unchanged(self):
-        prices, wages, rate = self.agent.answers()
+    def test_prices_are_the_apis_in_coin_and_the_rate_is_unchanged(self):
+        prices, rate = self.agent.answers()
         self.assertEqual(prices, {"iron": 3.0 * self.COIN})
-        self.assertEqual(wages, {"smith": 2.0 * self.COIN, "weaver": 0.5 * self.COIN})
         self.assertEqual(rate, 0.07)
 
     def test_the_goods_without_a_market_price_are_the_stale_ones(self):

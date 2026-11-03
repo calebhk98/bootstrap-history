@@ -104,7 +104,8 @@ class GoodsMarket:
         if price is None:
             return None
         emp_key = sim.materials.tag(material)[0]
-        offered = sim.economy.agent_offered_tonnes(material)
+        good = self.pricing.economy_good(material)
+        offered = None if good is None else sim.economy.agent_offered_tonnes(good)
         proceeds = self.pricing.sale_proceeds(material, 0.0, self.posted_tonnes("sell", emp_key))
         if proceeds is None:
             return None

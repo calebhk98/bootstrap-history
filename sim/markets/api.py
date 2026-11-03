@@ -2,34 +2,18 @@
 
 WALL = "two-way"  # nothing here imports sim/engine/
 
-from .commands import (BuyMaterial, CancelMaterialOrders, FoundBankFromOutside, ForgetActorOrders, MarkMoneyPricedAtEconomy, NoteActorPurchase, NoteActorSale,
+from .commands import (BuyMaterial, CancelMaterialOrders, FoundBankFromOutside, ForgetActorOrders, NoteActorPurchase, NoteActorSale,
                        MoveGoods, NoteDraw, RenameMarketSeat, RepriceOpeningMoney, ResetDraws,
                        SellMaterial)
-from .constants import MEAN_INCOME_HOURS_PER_CAPITA
-from sim.prices.rules import HOME_SELLER
-from .rules import tonnes_sold
-from .spin_up import (SPIN_UP_MAXIMUM_YEARS, SPIN_UP_MEASURED_YEARS, SPIN_UP_TOLERANCE, SPIN_UP_TRIMMED_YEARS, SPIN_UP_YEARS_ENV,
-                      spin_up_years)
+from .spin_up import SPIN_UP_MAXIMUM_YEARS, SPIN_UP_TOLERANCE, SPIN_UP_YEARS_ENV
 from .port_key import SPIN_UP_SOURCE_MODULES, spin_up_key
 
 
 # ---- the agent economy's opening, for the tools that run it on their own (the opening checks, the spin-up trace) ----
 
-def build_setup(world, opening=None, production=None):
-	"""The agent economy's setup for what `world` (the port's reads of a game) holds, or for `opening`."""
-	from .port_setup import build_setup as build
-	return build(world, opening, production)
-
-
 def opening_setup(game):
 	"""The setup of the opening `game` saved."""
 	return game.view("agent_opening_setup")()
-
-
-def unit_mass_kg(material):
-	"""Kilograms in one unit of a material, as the freight model reads it."""
-	from .port_setup import unit_mass_kg as mass
-	return mass(material)
 
 
 def spin_up_trace(game, years):

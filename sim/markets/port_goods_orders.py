@@ -19,7 +19,7 @@ from sim.economy import api as economy_api
 from sim.economy.api import EDGE_EXCHANGE, EDGE_LEGACY, AgentOrders, Bid, GoodsMove, Offer, Transfer
 from sim.ledger.api import ChangeStock, PayEdge, ReceiveFromEdge
 from sim.refusal import Refusal
-from sim.world.material_units import tonnes_per_unit
+from .unit_mass import tonnes_per_unit
 
 from . import port_staff
 
@@ -126,13 +126,13 @@ def post(sim, economy, orders_by_seat, tile_of):
             entries = posted.setdefault(seat_id, [])
             for index, order in enumerate(orders):
                 good = order["good"]
-                if good is None or good not in traded:
+                per_unit = None if good is None or good not in traded else tonnes_per_unit(good)
+                if per_unit is None:
                     entries.append({"refused": refused(order, "not_traded", "%s is not traded in the economy." % order["material"])})
                     continue
                 if order["tonnes"] <= 0.0 or not order["limit_per_tonne"] > 0.0:
                     entries.append({"refused": refused(order, "no_quantity", "the order has no quantity or no price limit.")})
                     continue
-                per_unit = tonnes_per_unit(good)
                 area = economy.area_map.area_of(good, tile)
                 price = order["limit_per_tonne"] * per_unit / coin
                 if order["side"] == "buy":
@@ -184,7 +184,7 @@ def settle(sim, economy, posted):
                 for tile, quantity in sorted(tiles.items()):
                     if quantity > 0.0:
                         moves.append(GoodsMove(entry["account"], EDGE_LEGACY, good, tile, quantity, "seat goods delivered"))
-                        tonnes += quantity * tonnes_per_unit(good)
+                        tonnes += quantity * (tonnes_per_unit(good) or 0.0)
             money = max(0.0, book.balance(entry["account"], currency))
             if money > 0.0:
                 transfers.append(Transfer(entry["account"], EDGE_EXCHANGE, currency, money, "exchange"))

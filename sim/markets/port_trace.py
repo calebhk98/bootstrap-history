@@ -69,10 +69,3 @@ def coin_wear_per_year():
     return economy_api.COIN_WEAR_PER_YEAR
 
 
-def traded_staple(agent, stale):
-    """The good of the hunger need with the largest opening basket quantity among those whose markets cleared
-    lately (a good nobody trades shows what it would cost to make, not a price); None when none did."""
-    economy = agent.economy()
-    opening = economy_api.opening_quantities(economy)
-    goods = [good for good in economy_api.hunger_goods(economy) if good not in stale]
-    return max(goods, key=lambda good: opening.get(good, 0.0), default=None)

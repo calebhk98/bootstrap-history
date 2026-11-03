@@ -27,6 +27,7 @@ class CallerTests(unittest.TestCase):
             _sim=Game(materials=Game(tag=lambda material: ("iron",)),
                              economy=Game(agent_offered_tonnes=lambda material: None)),
             pricing=Game(price_at_tile_per_tonne=lambda material: 10.0, sale_proceeds=lambda *args: None,
+                         economy_good=lambda material: material,
                          carriage_per_tonne=lambda material, price: 1.0),
             posted_tonnes=lambda side, key: 0.0, acting_party_id="founder",
             import_tonnes_available=lambda material: None)

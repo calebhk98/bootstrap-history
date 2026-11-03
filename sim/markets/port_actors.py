@@ -81,7 +81,15 @@ def good_for(economy, commodity: str, materials_in: Callable[[str], Sequence[str
     return next((material for material in materials_in(commodity) if material in traded), None)
 
 
-def sale_orders(economy, sales: Sequence[dict], tonnes_per_unit: Callable[[str], float],
+def fleet_goods(production: dict, candidates: Sequence[str], life_of: Callable[[str], float],
+                held_of: Callable[[str], float]) -> List[dict]:
+    """The naval goods among `candidates` (in their order), each with its service life, the buyer's stock of it and its crew:
+    the rows the fleet purchase screens read."""
+    return [{"material": good, "life": life_of(good), "held": held_of(good), "crew": production[good]["naval_crew"]}
+            for good in candidates if production[good].get("naval_crew")]
+
+
+def sale_orders(economy, sales: Sequence[dict], tonnes_per_unit: Callable[[str], Optional[float]],
                 tile_of: Callable[[str], str], reservation_of: Callable[[str, str, str, str], float]):
     """(goods moves, {account: AgentOrders}) that put the year's sales in the book. A seller's reservation for a
     material is the tonnes-weighted mean of what its concerns cost it to make a unit (`reservation_of(seller, node,
@@ -89,9 +97,10 @@ def sale_orders(economy, sales: Sequence[dict], tonnes_per_unit: Callable[[str],
     moves, offers = [], {}
     for sale in sorted(sales, key=lambda each: (each["seller"], each["material"])):
         good = sale["material"]
-        units = sale["tonnes"] / tonnes_per_unit(good)
-        if good not in economy.area_map.goods() or units <= 0.0:
+        per_unit = tonnes_per_unit(good)
+        if per_unit is None or good not in economy.area_map.goods() or sale["tonnes"] <= 0.0:
             continue
+        units = sale["tonnes"] / per_unit
         seller = sale["seller"]
         tile = tile_of(seller)
         concerns = [(node, tonnes) for node, tonnes in sale["concerns"] if tonnes > 0.0]
@@ -105,7 +114,7 @@ def sale_orders(economy, sales: Sequence[dict], tonnes_per_unit: Callable[[str],
     return moves, {account: AgentOrders(offers=tuple(each)) for account, each in offers.items()}
 
 
-def purchase_orders(economy, purchases: Sequence[dict], tonnes_per_unit: Callable[[str], float],
+def purchase_orders(economy, purchases: Sequence[dict], tonnes_per_unit: Callable[[str], Optional[float]],
                     tile_of: Callable[[str], str], materials_in: Callable[[str], Sequence[str]], coin_per_unit: float):
     """({account: AgentOrders}, [(buyer, coin to turn into units, units)]) for the year's purchases. Each is a bid
     for a fixed quantity that pays up to the whole budget."""
@@ -114,10 +123,11 @@ def purchase_orders(economy, purchases: Sequence[dict], tonnes_per_unit: Callabl
         good = good_for(economy, purchase["commodity"], materials_in)
         if good is None:
             continue
-        units = purchase["tonnes"] / tonnes_per_unit(good)
+        per_unit = tonnes_per_unit(good)
         budget = purchase["budget"] / coin_per_unit
-        if units <= 0.0 or budget <= 0.0:
+        if per_unit is None or purchase["tonnes"] <= 0.0 or budget <= 0.0:
             continue
+        units = purchase["tonnes"] / per_unit
         buyer, account = purchase["buyer"], buy_account(purchase["buyer"])
         tile = tile_of(buyer)
         area = economy.area_map.area_of(good, tile)
@@ -147,7 +157,7 @@ def keep_paid_purchases(orders: Dict[str, AgentOrders], funding: Sequence[Tuple[
     return {account: AgentOrders(bids=bids) for account, bids in kept_bids.items()}, kept, refused
 
 
-def standing_bids(economy, flows: dict, tile: str, tonnes_per_unit: Callable[[str], float],
+def standing_bids(economy, flows: dict, tile: str, tonnes_per_unit: Callable[[str], Optional[float]],
                   materials_in: Callable[[str], Sequence[str]]) -> Tuple[Bid, ...]:
     """What the founder's running works drew from the market this year as fixed-quantity bids at the economy's price, for
     firm entry to read. They are not cleared: the works have already used the goods."""
@@ -155,7 +165,8 @@ def standing_bids(economy, flows: dict, tile: str, tonnes_per_unit: Callable[[st
     view, found = economy.view(), []
     for commodity, tonnes in sorted(wanted.items()):
         good = good_for(economy, commodity, materials_in)
-        units = tonnes / tonnes_per_unit(good) if good is not None and tonnes > 0.0 else 0.0
+        per_unit = tonnes_per_unit(good) if good is not None and tonnes > 0.0 else None
+        units = 0.0 if per_unit is None else tonnes / per_unit
         area = economy.area_map.area_of(good, tile) if units > 0.0 else None
         price = standing_price(view.price(good, area), economy_api.opening_price_in_current_money(economy, good)) if units > 0.0 else None
         if price is not None:
@@ -182,7 +193,7 @@ def fund(economy, funding: Sequence[Tuple[str, float, float]]) -> None:
 def close(economy, sales: Sequence[dict], purchases: Sequence[dict]):
     """Close every account after the clear. Unsold goods go back out; bought capital assets are retained; the money each
     account holds goes to the exchange edge. Returns ({seller: units of money its sales fetched}, {buyer: units of
-    its budget left unspent}, {buyer: units of goods it bought}, {buyer: {good: units}} delivered)."""
+    its budget left unspent}, {buyer: {good: units}} delivered)."""
     book, currency = economy_api.economy_book(economy), economy_api.currency_id(economy)
     accounts = ([(sale_account(actor), actor, EDGE_LEGACY, "unsold actor output")
                  for actor in sorted({sale["seller"] for sale in sales})]
@@ -190,11 +201,10 @@ def close(economy, sales: Sequence[dict], purchases: Sequence[dict]):
                    for actor in sorted({purchase["buyer"] for purchase in purchases})])
     proceeds: Dict[str, float] = {}
     refunds: Dict[str, float] = {}
-    bought: Dict[str, float] = {}
     delivered: Dict[str, Dict[str, float]] = {}
     moves, transfers = [], []
     for account, actor, outflow, label in accounts:
-        for good, tiles in book.holdings(account)["goods"].items():
+        for good, tiles in sorted(book.holdings(account)["goods"].items()):
             for tile, quantity in sorted(tiles.items()):
                 if quantity > 0.0:
                     spec = economy_api.good_specs(economy).get(good)
@@ -203,7 +213,6 @@ def close(economy, sales: Sequence[dict], purchases: Sequence[dict]):
                     moves.append(GoodsMove(account, receiver, good, tile, quantity,
                                            "durable purchase" if receiver != outflow else label))
                     if outflow == EDGE_CONSUMPTION:
-                        bought[actor] = bought.get(actor, 0.0) + quantity
                         by_good = delivered.setdefault(actor, {})
                         by_good[good] = by_good.get(good, 0.0) + quantity
         money = max(0.0, book.balance(account, currency))
@@ -212,4 +221,4 @@ def close(economy, sales: Sequence[dict], purchases: Sequence[dict]):
             (proceeds if outflow == EDGE_LEGACY else refunds)[actor] = money
     economy_api.move_goods(economy, moves)
     economy_api.post_transfers(economy, transfers)
-    return proceeds, refunds, bought, delivered
+    return proceeds, refunds, delivered

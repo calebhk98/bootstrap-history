@@ -17,7 +17,7 @@ class MarketClearing(Part):
 
 	# ---- the year's flows ----
 
-	def legacy_market_flows(self):
+	def market_flows(self):
 		"""{"year", "drawn": {commodity: tonnes}}: what the founder's running works drew from the market this year, written by
 		the goods market; it starts again from nothing when the year turns. The live record."""
 		world = self.world

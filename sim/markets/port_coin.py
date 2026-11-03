@@ -29,10 +29,11 @@ def _backing_margin(setup):
 
 def priced_at_the_margin(sim, opening):
     """`opening` with its coin figures counted at the coin the metal's marginal cost makes: the share the
-    prices, wages and carriage are scaled by is kept as `coin_worth_scale` (1 when the money has no metal)."""
+    prices, wages and carriage are scaled by is the metal's price over its marginal cost; unchanged when the money has no
+    metal or the metal has no cost to make at the margin."""
     found = _backing_margin(build_setup(sim, opening))
-    if found is None:
-        return dict(opening, coin_worth_scale=1.0)
+    if found is None or not found[0] > 0.0:
+        return opening
     marginal, price = found
     scale = price / marginal
     metal = sim.scenario.civ["coin_standard"].get("material")
@@ -40,7 +41,5 @@ def priced_at_the_margin(sim, opening):
     scaled["prices"] = {good: (value if good == metal else value * scale) for good, value in opening["prices"].items()}
     scaled["wages"] = {trade: value * scale for trade, value in opening["wages"].items()}
     scaled["carriage"] = {mode: value * scale for mode, value in opening["carriage"].items()}
-    scaled["carriage_wage"] = opening["carriage_wage"] * scale
     scaled["carriage_balanced"] = {mode: value * scale for mode, value in opening["carriage_balanced"].items()}
-    scaled["coin_worth_scale"] = scale
     return scaled

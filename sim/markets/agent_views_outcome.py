@@ -44,8 +44,8 @@ class AgentOutcomeViews(AgentViewPart):
 
 	def agent_traded_staple(self):
 		"""The staple good households buy most of whose market cleared lately; None when none did."""
-		from .port_trace import traded_staple
-		return traded_staple(self.parts.market_objects.economy.agent, self.agent_stale_goods())
+		from .port_health import staple_good
+		return staple_good(self.parts.market_objects.economy.agent, self.agent_stale_goods())
 
 	def agent_opening_setup(self):
 		"""The setup of the opening this game saved."""

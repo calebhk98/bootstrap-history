@@ -9,10 +9,16 @@ the order, since the economy has not yet seen them. Nothing here reads a ratio o
 """
 import math
 
-from sim.world.material_units import tonnes_per_unit
+from sim.constants import declare
+
+from .unit_mass import tonnes_per_unit
 
 # Points along an order at which the economy's response is read; the order's mean climb is their mean.
-PRICE_SLICES = 8
+PRICE_SLICES = declare(
+    "PRICE_SLICES", 8, kind="temporary_heuristic", unit="points along an order", source=None, confidence="D",
+    retire="the economy's price response read as a curve over the order (sim/economy/api.price_response)",
+    why="The climb of the price over an order is the mean of the economy's response at this many evenly spaced points; "
+        "more points follow a steep book more closely and cost a response read each.")
 
 # a price the economy does not set: the cost table's while it opens
 KIND_MAKING_COST_TABLE = "making_cost_table"
@@ -29,14 +35,16 @@ class GoodsPricing:
     def making_cost_per_tonne(self, material):
         """Money per tonne it costs the home society to make a material (the cost table); None when no technique
         in reach makes it."""
-        cost = self._sim.materials.price_per_kg(material)
-        return None if cost is None else cost / tonnes_per_unit(material)
+        cost = self._sim.materials.price_per_unit(material)
+        per_unit = tonnes_per_unit(material)
+        return None if cost is None or per_unit is None else cost / per_unit
 
     def price_at_tile_per_tonne(self, material):
         """Money per tonne to buy a material from the cheapest seller in reach before carriage: the economy's price
         on the acting tile; None when no one in reach sells it."""
-        per_unit = self.market.offers.unit_price(material)
-        return None if per_unit is None else per_unit / tonnes_per_unit(material)
+        price = self.market.offers.unit_price(material)
+        per_unit = tonnes_per_unit(material)
+        return None if price is None or per_unit is None else price / per_unit
 
     def price_kind(self, material):
         """What the price of a material is: "smoothed_trade" (a market that traded), a quote named by what it is (best_unfilled_bid,

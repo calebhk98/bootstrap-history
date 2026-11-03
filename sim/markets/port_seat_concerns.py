@@ -20,16 +20,12 @@ class SeatConcerns:
         self._world = world
         self._agent = agent
 
-    def seats_playing(self):
-        """The seats whose concerns sell this year (a seat whose run ended sells nothing)."""
-        return sorted(self._world.state.playing_seats() or self._world.state.seats)
-
     def orders(self):
         """(the orders of every seat's running concerns' output for the year, one agent per seat named by its seat id;
         {seat: (tile, {material: quantity offered})}; {seat: what its concerns' inputs cost})."""
         world = self._world
         orders, offered, inputs = {}, {}, {}
-        for seat_id in self.seats_playing():
+        for seat_id in world.state.seats_playing():
             with world.scenario.act_as(seat_id):
                 orders.update(self._acting_orders(seat_id, offered, inputs))
         return orders, offered, inputs
@@ -99,7 +95,7 @@ class SeatConcerns:
         """The tiles the playing seats buy and sell on, whose markets' books the economy keeps."""
         world = self._world
         tiles = set()
-        for seat_id in world.state.playing_seats() or world.state.seats:
+        for seat_id in world.state.seats_playing():
             with world.scenario.act_as(seat_id):
                 tiles.add(self._agent.tile_in_economy(world.labour.base_tile()))
         return tiles

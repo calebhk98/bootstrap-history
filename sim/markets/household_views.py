@@ -47,13 +47,6 @@ class HouseholdNeeds(Part):
 		"""Whether the needs data names the material as serving some household need."""
 		return need_substitutes.serves_a_need(self._needs_served(), material)
 
-	def household_demand_units(self, prices_in_hours, population, income_per_capita):
-		"""{material: units a year} households (and what they buy through recipes) want at these labour-hour prices, with the
-		warmth, clothing and shelter floors the civilisation's tiles' climate sets."""
-		base, _final = self._household_model()
-		basket = self._civilisation_basket(base)
-		return household_needs.demand_by_material(base, prices_in_hours, population, income_per_capita, basket)
-
 	def household_basket(self):
 		"""The household need basket of the civilisation: the installed content's needs with the floors its tiles' climate sets."""
 		base, _final = self._household_model()
@@ -80,7 +73,7 @@ class HouseholdNeeds(Part):
 				units, prices_in_hours, population, final)
 		return answer
 
-	def household_need_floors_per_person(self):
+	def _household_need_floors_per_person(self):
 		"""What one person's floor of each need costs a year on the seat's tile: the economy's prices and the tile's climate
 		floors (the need basket). While the economy opens, the same basket on the goods market."""
 		floors = self.parts.market_objects.economy.agent_need_floor_costs_at()
@@ -90,4 +83,4 @@ class HouseholdNeeds(Part):
 
 	def household_bill_per_person(self):
 		"""One person's yearly bill for every need's floor: the figure the founder and an economy household pay."""
-		return sum(self.household_need_floors_per_person().values())
+		return sum(self._household_need_floors_per_person().values())

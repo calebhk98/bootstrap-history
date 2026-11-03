@@ -46,9 +46,9 @@ class GoodsOffers:
         prices = self.home_prices()
         cache = sim.remembered("goods_offers")
         if cache is not None and cache[0] is prices:
-            return cache[1], cache[2]
+            return prices, cache[1]
         sellers = {material: HOME_SELLER for material in prices}
-        sim.remember("goods_offers", (prices, prices, sellers))
+        sim.remember("goods_offers", (prices, sellers))
         return prices, sellers
 
     def household_prices(self):

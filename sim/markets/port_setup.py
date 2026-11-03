@@ -5,9 +5,6 @@ The tree's knowledge stays here: which production entries the society can run is
 nodes it holds; the economy only receives the recipes.
 """
 import dataclasses
-import json
-import os
-from typing import Dict
 
 from sim.economy.api import (opening_market_rate, EconomySetup, carriage_wear, SiteLimit, SetupTrade, currency_from_coin_standard, goods_specs, household_grinding, households, households_work,
                              plant_builds, recipe_tile_key,
@@ -17,27 +14,9 @@ from sim.world import demand, need_basket
 from sim.geography.api import dues_hours_per_tonne, sea_freight, settlement
 from sim.labour import api as labour_api
 
-from . import port_closure, port_crop_prices, port_sites
+from . import port_closure, port_crop_prices, port_data, port_sites
 from .port_stores import opening_store_values
 from sim.freight.api import FREIGHT_FEED_PRICE_MATERIAL, SEA_MODE
-
-ARABLE_SOURCE = "arable land"   # the production entries' `extracted_from` for crops (some add a note after it)
-DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "data")
-
-
-def _load(*parts):
-    with open(os.path.join(DATA_DIR, *parts), encoding="utf-8") as handle:
-        return json.load(handle)
-
-
-_UNIT_MASS_KG: Dict[str, float] = {}
-
-
-def unit_mass_kg(material: str) -> float:
-    """Kilograms in one unit of a material, as the freight model reads it (stated, then inferred from the id)."""
-    if material not in _UNIT_MASS_KG:
-        _UNIT_MASS_KG[material] = goods_specs({material: ""}, {})[material].unit_mass_kg
-    return _UNIT_MASS_KG[material]
 
 
 def _runnable(entry, held_nodes):
@@ -128,7 +107,6 @@ def opening_values(sim):
         "rate": float(opening_market_rate()),
         "carriage": dict(modes),
         "carriage_balanced": sim.foreign.freight_mode_costs(0.0, cargo="goods"),
-        "carriage_wage": sim.labour.wage_per_hour(unskilled),
         "carriage_crew": {mode: [rate["crew_trade"], rate["crew_hours_per_tonne_km"]]
                           for mode, rate in rates.items()},
         "carriage_handling_trade": {mode: rate["handling_trade"] for mode, rate in rates.items() if rate.get("handling_trade")},
@@ -174,7 +152,6 @@ def in_units(opening):
     counted["prices"] = {good: _counted(price / unit) for good, price in opening["prices"].items()}
     counted["wages"] = {trade: _counted(wage / unit) for trade, wage in opening["wages"].items()}
     counted["carriage"] = {mode: _counted(rate / unit) for mode, rate in opening["carriage"].items()}
-    counted["carriage_wage"] = _counted(opening["carriage_wage"] / unit)
     counted["carriage_balanced"] = {mode: _counted(rate / unit) for mode, rate in opening["carriage_balanced"].items()}
     return counted
 
@@ -215,21 +192,18 @@ def build_setup(sim, opening=None, production=None):
     every_recipe = sorted(set(opening["recipes"]).union(*(opened["recipes"] for opened in partners.values())))
     recipes = recipes_from_production_data(production, every_recipe)
     trades_data = sim.state.trade_registry
-    life_years = {good: float(entry["years"]) for good, entry in _load("world", "service_lives.json").get("years", {}).items()}
+    life_years = port_data.service_life_years()
     recipes = tool_wear_recipes(recipes, trades_data, life_years, float(sim.scenario.HOURS_PER_PERSON_YEAR))
     mint_recipe = (recipes_from_production_data(production, [opening["mint_recipe"]])[opening["mint_recipe"]]
                    if opening.get("mint_recipe") else None)
-    need_data = _load("world", "needs.json")
+    need_data = sim.household_need_data()
     basket = households.make_basket(need_data, production, civ_values=society_at_opening(civ, opening))
     goods = set()
     for recipe in recipes.values():
         goods.update(recipe.outputs, recipe.inputs, recipe.plant_goods)
     for need in basket.needs:
         goods.update(good for good, _effect in need.goods)
-    spoilage = _load("world", "spoilage.json").get("rates_per_year", {})
-    service_lives = {good: float(entry["years"])
-                     for good, entry in _load("world", "service_lives.json").get("years", {}).items()}
-    specs = goods_specs({good: "" for good in goods}, spoilage, service_lives)
+    specs = goods_specs({good: "" for good in goods}, port_data.spoilage_rates(), life_years)
     prices = {good: price for good, price in opening["prices"].items() if good in specs and price > 0.0}
     prices = port_closure.makeable_prices(prices, production, recipes)
     recipes = {recipe_id: plant_builds.with_plant_from(recipe, prices) for recipe_id, recipe in recipes.items()}
@@ -240,8 +214,9 @@ def build_setup(sim, opening=None, production=None):
     wages = dict(opening["wages"])
     by_people = sorted(tile_ids, key=lambda tile: (-population_by_tile[tile], tile))   # the home country's tiles
     coastal = [tile for tile in by_people if tiles[tile].coastal]
-    port_handling = sea_freight.PORT_HANDLING_HOURS_PER_TONNE * wages[opening["unskilled_trade"]]
-    dues = {mode: hours * float(opening["carriage_wage"]) for mode, hours in dues_hours_per_tonne(world_map).items()
+    unskilled_wage = wages[opening["unskilled_trade"]]   # the carriers' hour is the opening's quote of the unskilled trade, as every other wage
+    port_handling = sea_freight.PORT_HANDLING_HOURS_PER_TONNE * unskilled_wage
+    dues = {mode: hours * unskilled_wage for mode, hours in dues_hours_per_tonne(world_map).items()
             if hours > 0.0}      # tolls and port dues: unskilled hours at the opening wage, paid to the tile's holder (economy/route_dues.py)
     return EconomySetup(
         civ_id=str(civ["id"]),
@@ -251,7 +226,7 @@ def build_setup(sim, opening=None, production=None):
         handling_rates={mode: dues.get(mode, 0.0) + (port_handling if mode == SEA_MODE else 0.0)
                         for mode in sorted(set(dues) | {SEA_MODE})},
         route_dues=dues,
-        carriage_wage=float(opening["carriage_wage"]),
+        carriage_wage=unskilled_wage,
         carriage_crew={mode: (str(crew[0]), float(crew[1])) for mode, crew in opening["carriage_crew"].items()},
         carriage_carriers=carriage_wear.table(
             opening["carriage_teams"],
@@ -305,7 +280,7 @@ def cropland_yields(production, recipes, tiles):
     """{recipe@tile: yield factor} for the recipes that grow on arable land: the tile's soil, climate and water
     (geography's crop_site) against the reference field. Pasture, forest and mines do not read it."""
     return {recipe_tile_key(recipe_id, tile_id): tile.fertility
-            for recipe_id in sorted(recipes) if str(production[recipe_id].get("extracted_from") or "").startswith(ARABLE_SOURCE)
+            for recipe_id in sorted(recipes) if str(production[recipe_id].get("extracted_from") or "").startswith(port_crop_prices.ARABLE_SOURCE)
             for tile_id, tile in sorted(tiles.items())}
 
 

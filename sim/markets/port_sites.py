@@ -12,6 +12,7 @@ Recipes that fell standing timber are limited by the tile's stock instead (port_
 Recipes for resources the catalogue lists no ore for (coal, salt, quarries) declare no limit and keep the
 economy's labelled fallback (`UNSITED_EXTRACTION_ANYWHERE`).
 """
+from sim.constants import declare
 from sim.economy import api as economy_api
 from sim.economy.api import SiteLimit, recipe_tile_key
 from sim.geography.api import ore_tonnes_per_tonne
@@ -19,7 +20,11 @@ from sim.unit_conversions import KILOGRAMS_PER_TONNE
 
 from . import port_timber
 
-SITE_YIELD_FACTOR = 1.0   # an ore recipe's output per run is ore, whatever its grade
+SITE_YIELD_FACTOR = declare(
+    "SITE_YIELD_FACTOR", 1.0, kind="engineering_estimate", unit="output per run over the recipe's stated output", source=None,
+    confidence="B",
+    why="An ore recipe's output per run is ore, whatever its grade (the grade is in the ore's recovery, not in the run), so a "
+        "mine site's yield factor does not scale the run.")
 
 
 def _ore_recipes(sim, outputs_by_recipe):
