@@ -54,4 +54,4 @@ class ActorLabourReads:
 			return None
 		exist = needs.taught_trade_people[trade] if trade in needs.trades_absent() else needs.people_who_exist[trade]
 		founder = needs.staff_on_all_books[trade]
-		return max(0.0, exist - founder - self.world.registry.home_staff_fte(trade, excluding=actor_id))
+		return max(0.0, exist - founder - self.world.registry.staff.home_staff_fte(trade, excluding=actor_id))

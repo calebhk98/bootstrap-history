@@ -40,7 +40,7 @@ def make_node(node_id, traits=(), gains=None, revenue=0.0, upkeep=0.0, hours=400
 # ---- the actor kinds share one base, and a recorded actor's money is an account in the purses book -----------------
 registry = ActorRegistry(ActorsState(home_country="home"))
 firm = registry.add("firm:test", ActorRecord(kind="firm", money=50.0))
-state_actor = registry.ensure_government("home")
+state_actor = registry.countries.ensure_government("home")
 check("a firm and a government are Actors too",
       issubclass(Firm, RecordedActor) and issubclass(Government, RecordedActor) and issubclass(RecordedActor, Actor))
 check("every recorded actor kind exposes the same shared surface",
@@ -77,7 +77,7 @@ def state_with(world, aware=True):
     """A government with a treasury; aware of every invention shown in `world` unless `aware` is False (an actor takes up
     only what it knows exists, awareness.py)."""
     state_registry = ActorRegistry(ActorsState(home_country="home"))
-    government = state_registry.ensure_government("home")
+    government = state_registry.countries.ensure_government("home")
     government.money = 1.0e6
     if aware:
         government.record.aware.update({node_id: world.setting.year for node_id in world.knowledge.demonstrated()})
@@ -146,7 +146,7 @@ check("a purse that cannot pay stalls the work instead of forgiving it",
 # ---- policies drive any actor ---------------------------------------------------------------------------------------
 policy_world = valued_world(make_node("test_visible", traits=["military"]))
 policy_registry = ActorRegistry(ActorsState(home_country="home"))
-chooser = policy_registry.ensure_government("home")
+chooser = policy_registry.countries.ensure_government("home")
 chooser.money = 1.0e6
 chooser.record.aware.update({node_id: policy_world.setting.year for node_id in policy_world.knowledge.demonstrated()})
 chooser.decision_policy = IdlePolicy()

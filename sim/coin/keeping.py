@@ -64,7 +64,7 @@ class Keeping(Part):
             at_home = country in (None, registry.state.home_country)
             cost = self.coin_keeping_cost(actor.money)
             if not at_home:
-                cost *= registry.world_for(actor, world).labour.pay_per_person_year(KEEPING_PAY_TRADE) / home_pay
+                cost *= registry.countries.world_for(actor, world).labour.pay_per_person_year(KEEPING_PAY_TRADE) / home_pay
             if cost > 0.0:
                 guards = edges.EDGE_COIN_GUARDS if at_home else "%s:%s" % (edges.EDGE_COIN_GUARDS, country)
                 self.needs.send(PayEdgeFrom(actor_id, guards, cost, KEEPING_CAUSE))

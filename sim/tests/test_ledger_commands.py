@@ -22,7 +22,7 @@ SEAT = "founder"
 
 def society(household_money):
     registry = ActorRegistry(ActorsState(home_country="rome_100ad"))
-    treasury = registry.ensure_government("rome_100ad")
+    treasury = registry.countries.ensure_government("rome_100ad")
     household = registry.add("household", ActorRecord(kind="firm", money=household_money))
     return registry, treasury, household
 

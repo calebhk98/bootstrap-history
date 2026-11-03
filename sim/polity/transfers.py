@@ -28,7 +28,7 @@ class Transfers(Part):
 
 	def state_claims(self):
 		"""What the state has undertaken to make good to organised interest groups this year."""
-		return sum(group.record.claim for group in self.needs.cast().home_actors("interest_group")
+		return sum(group.record.claim for group in self.needs.cast().countries.home_actors("interest_group")
 		           if group.organised())
 
 	def transfer_size(self, spec):

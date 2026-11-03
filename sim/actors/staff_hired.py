@@ -7,4 +7,4 @@ def set_staff(registry, staff_by_actor):
 	for actor_id, actor in sorted(registry.actors.items()):
 		actor.record.workforce.clear()
 		actor.record.workforce.update(staff_by_actor.get(actor_id, {}))
-	registry.refresh_staff()
+	registry.staff.refresh_staff()

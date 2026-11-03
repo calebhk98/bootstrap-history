@@ -94,7 +94,7 @@ def exchange_answers(registry: Any, world: Any) -> List[str]:
 		actor = registry.actors[actor_id]
 		exchange.expire_offers(actor, world.setting.year)
 		if actor.record.offers:
-			answer_offers(actor, find, registry.world_for(actor, world))
+			answer_offers(actor, find, registry.countries.world_for(actor, world))
 	return []
 
 

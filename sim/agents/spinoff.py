@@ -103,7 +103,7 @@ def consider_spinoffs(registry: Any, world: Any) -> List[str]:
 
 def _found_rival(registry: Any, world: Any, parent: Any, node_id: str, pool: List[float]) -> Optional[str]:
 	"""A rival of the parent founded into its concern, or None when an entrant would not earn enough."""
-	rivals = registry.rivals_of(node_id, "")
+	rivals = registry.concerns.rivals_of(node_id, "")
 	tile = firm_entry.firm_tile(registry, parent)
 	yearly = business_books.yearly_costs(world, node_id)
 	carried = firm_entry.carrying_cost(world, node_id, tile=tile)

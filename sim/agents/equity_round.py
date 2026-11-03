@@ -42,7 +42,7 @@ def raise_equity(registry: Any, world: Any, firm: Any) -> float:
 
 def equity_rounds(registry: Any, world: Any) -> List[str]:
 	"""Yearly: every firm held back for want of credit raises equity. Founds no actors."""
-	for firm in registry.active_firms():
+	for firm in registry.concerns.active_firms():
 		if firm.record.plan.get(NEED_KEY, 0.0) > 0.0:
 			raise_equity(registry, world, firm)
 	return []

@@ -33,7 +33,7 @@ def registry_of(count):
 
 def full_totals(registry):
 	totals, categories = {}, {}
-	for operator in registry.market_operators():
+	for operator in registry.concerns.market_operators():
 		for held in operator.concerns:
 			size = operator.capacity_of(held)
 			totals[held] = totals.get(held, 0.0) + size
@@ -44,8 +44,8 @@ def full_totals(registry):
 
 def agrees(registry):
 	totals, categories = full_totals(registry)
-	return (all(abs(registry.capacity_in(node) - totals.get(node, 0.0)) < 1e-9 for node in NODES)
-			and all(abs(registry.concerns_in(category, NODES) - categories.get(category, 0.0)) < 1e-9
+	return (all(abs(registry.concerns.capacity_in(node) - totals.get(node, 0.0)) < 1e-9 for node in NODES)
+			and all(abs(registry.concerns.concerns_in(category, NODES) - categories.get(category, 0.0)) < 1e-9
 					for category in ("cat_0", "cat_1", "cat_2")))
 
 
@@ -62,7 +62,7 @@ for step in range(400):
 		firm.concerns.discard(node)
 	elif action == "grow" and node in firm.concerns:
 		firm.business.tally.set_size(node, firm.capacity_of(node) * dice.uniform(1.0, 2.0))
-		registry.note_capacity_change(firm.actor_id)
+		registry.concerns.note_capacity_change(firm.actor_id)
 	elif action == "exit":
 		firm.concerns.clear()
 		firm.record.exited_year = 1
@@ -80,9 +80,9 @@ def reads_for_one_change(count):
 	try:
 		CountingSizes.reads = 0
 		registry.actors["firm:000"].business.tally.set_size("node_0", 3.0)
-		registry.note_capacity_change("firm:000")
-		registry.capacity_in("node_0")
-		registry.concerns_in("cat_0", NODES)
+		registry.concerns.note_capacity_change("firm:000")
+		registry.concerns.capacity_in("node_0")
+		registry.concerns.concerns_in("cat_0", NODES)
 		return CountingSizes.reads
 	finally:
 		Business.sizes = CountingSizes.real

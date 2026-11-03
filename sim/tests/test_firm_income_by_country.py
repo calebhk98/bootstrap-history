@@ -60,8 +60,8 @@ def country_world():
 
 
 world, registry = country_world()
-check("the registry says whose a tile is", registry.country_of_tile("far_tile") == "far" and registry.country_of_tile("home_tile") == "home"
-	  and registry.country_of_tile("sea") is None)
+check("the registry says whose a tile is", registry.countries.country_of_tile("far_tile") == "far" and registry.countries.country_of_tile("home_tile") == "home"
+	  and registry.countries.country_of_tile("sea") is None)
 traveller = registry.add("firm:1", ActorRecord(kind="firm", name="traveller", last_margin=8.0, founded_year=100))
 traveller.business.plants.extend([Plant(entry_key="mill", opened_year=100, tile="home_tile", takings=1.0),
 								   Plant(entry_key="forge", opened_year=100, tile="far_tile", takings=3.0)])

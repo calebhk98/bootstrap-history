@@ -36,6 +36,6 @@ def settle_all(registry: Any, world: Any) -> List[str]:
 		if actor.record.exited_year is not None or actor.kind == "government":
 			continue
 		if actor.demand_stance() == demand_answer.CONCEAL or actor.concealed_wealth() > 0.0 or actor.defiance() > 0.0:
-			settle_year(actor, registry.world_for(actor, world))
+			settle_year(actor, registry.countries.world_for(actor, world))
 			settled.append(actor_id)
 	return settled

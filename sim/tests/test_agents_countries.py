@@ -163,8 +163,8 @@ world.setting.nodes["wheel"] = make_node("wheel")
 home_actor = registry.actors["government:alpha"]
 beta_actor = registry.actors["government:beta"]
 check("a country's scope is shipped", EXTENSIONS.world_scope is not None)
-check("a home actor sees the shared world", registry.world_for(home_actor, world) is world)
-beta_world = registry.world_for(beta_actor, world)
+check("a home actor sees the shared world", registry.countries.world_for(home_actor, world) is world)
+beta_world = registry.countries.world_for(beta_actor, world)
 check("a foreign actor sees its country's world", isinstance(beta_world, CountryWorld) and beta_world.setting.civ_id == "beta")
 check("a foreign actor's baseline tree is its own country's techniques",
 	  beta_world.knowledge.baseline_knowledge() == {"loom"} and beta_actor.knows("loom", beta_world)
@@ -188,7 +188,7 @@ own_view = CountryWorld(world, profiles["beta"], registry)
 check("a country's government is its own actor in the registry", own_view.setting.government() is beta_actor)
 beta_firm = registry.add("firm:beta", ActorRecord(kind="firm", country="beta", money=100.0))
 beta_purse = beta_actor.money
-taken = registry.world_for(beta_firm, world).government().collect(beta_firm, 100.0, beta_world)
+taken = registry.countries.world_for(beta_firm, world).government().collect(beta_firm, 100.0, beta_world)
 check("a foreign state levies a firm of its own country at its tax share and reach, money moving across",
 	  abs(taken - 100.0 * 0.2 * beta_world.taxpayers.state_reach()) < 1e-9 and abs(beta_firm.money - (100.0 - taken)) < 1e-9
 	  and abs(beta_actor.money - (beta_purse + taken)) < 1e-9, (taken, beta_firm.money, beta_actor.money))

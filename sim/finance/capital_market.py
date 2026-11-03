@@ -33,7 +33,7 @@ class CapitalMarket(Part):
 	def market_funds(self, world: Any) -> Dict[str, float]:
 		"""Funds lenders hold, by source."""
 		government = self.needs.state_treasury()
-		firms = sum(max(0.0, firm.money) for firm in self.needs.cast().active_firms())
+		firms = sum(max(0.0, firm.money) for firm in self.needs.cast().concerns.active_firms())
 		spare = rules.state_spare_reserve(government.money, sum(government.record.need.values()), government.cannot_meet_own_need())
 		return {
 			"households": LENDING_HORIZON_YEARS * world.credit.household_saving(),
@@ -57,7 +57,7 @@ class CapitalMarket(Part):
 		its own."""
 		offers = {EDGE_SAVERS: sources["households"], self.needs.state_treasury().actor_id: sources["state"]}
 		registry = self.needs.cast()
-		for firm in registry.active_firms():
+		for firm in registry.concerns.active_firms():
 			offers[firm.actor_id] = self.needs.cash_and_deposit[firm.actor_id]
 		for lender in registry.purse_lenders():
 			offers[lender.actor_id] = self.needs.cash_and_deposit[lender.actor_id]

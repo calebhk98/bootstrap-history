@@ -50,15 +50,15 @@ check("the shipped spawners include the firm entry and the interest groups",
 # ---- an actor of another country sees its country's world --------------------------------
 state.countries["far"] = CountryProfile(country="far", name="Far", starting_techs={"plough"})
 foreign = registry.add("dragon:far", ActorRecord(kind="dragon", country="far"))
-check("an actor with no country answers to the home country", registry.country_of(dragon) == "home")
-check("an actor's own country is its country", registry.country_of(foreign) == "far")
+check("an actor with no country answers to the home country", registry.countries.country_of(dragon) == "home")
+check("an actor's own country is its country", registry.countries.country_of(foreign) == "far")
 extensions.world_scope = None
-registry._scoped = {}
-check("with no scope provided every actor sees the shared world", registry.world_for(foreign, world) is world)
+registry.countries._scoped = {}
+check("with no scope provided every actor sees the shared world", registry.countries.world_for(foreign, world) is world)
 extensions.world_scope = lambda shared, profile, actors_state: ("scoped", profile.country)
-check("a home actor still sees the shared world", registry.world_for(dragon, world) is world)
-registry._scoped = {}
-check("a foreign actor sees its country's scope", registry.world_for(foreign, world) == ("scoped", "far"))
+check("a home actor still sees the shared world", registry.countries.world_for(dragon, world) is world)
+registry.countries._scoped = {}
+check("a foreign actor sees its country's scope", registry.countries.world_for(foreign, world) == ("scoped", "far"))
 
 # ---- the roster and countries round-trip through the save ---------------------------------
 saved = ActorsState(home_country="home")

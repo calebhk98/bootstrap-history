@@ -55,8 +55,8 @@ class Taxpayers:
 		actors = self.world.registry
 		home = actors.state.home_country
 		return [(self.visible_scale_of(firm), income)
-				for firm, income in taxpayer_income.firm_incomes_in(actors.active_firms(), country or home, actors.country_of,
-																	actors.country_of_tile)]
+				for firm, income in taxpayer_income.firm_incomes_in(actors.concerns.active_firms(), country or home, actors.countries.country_of,
+																	actors.countries.country_of_tile)]
 
 	def visible_taxpayers(self) -> List[Tuple[float, float]]:
 		"""(visible scale, taxable income) of every actor the home state can see: the home country's playing seats and the firms that answer to it."""

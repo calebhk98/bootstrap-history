@@ -35,7 +35,7 @@ def patented_nodes(registry: Any, world: Any) -> set:
 def operators_of(registry: Any, world: Any, node_id: str) -> list:
 	"""Who runs a concern: the actors in business, and the seats that run it themselves."""
 	seats = world.seats.seat_parties()
-	return registry.operators_of(node_id) + [seats[seat_id] for seat_id in sorted(seats) if node_id in seats[seat_id].concerns]
+	return registry.concerns.operators_of(node_id) + [seats[seat_id] for seat_id in sorted(seats) if node_id in seats[seat_id].concerns]
 
 
 def margin_of(operator: Any, world: Any) -> float:

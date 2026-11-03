@@ -69,7 +69,7 @@ class Run(Part):
         registry = self.needs.seeded_actor_registry()
         home = self._home()
         others = sorted(name for name in registry.state.countries if name != home)
-        return [name for name in [home] + others if registry.government_of(name) is not None]
+        return [name for name in [home] + others if registry.countries.government_of(name) is not None]
 
     def _home(self) -> str:
         return str(self.needs.civilisation().get("id"))

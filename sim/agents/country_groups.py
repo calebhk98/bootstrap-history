@@ -27,7 +27,7 @@ class CountryGroups(SharedPart):
 		of_kind = getattr(holder, "of_kind", None)
 		if of_kind is None:
 			return []
-		country_of = holder.country_of
+		country_of = holder.countries.country_of
 		return [actor for kind in kinds for actor in of_kind(kind)
 				if actor.record.exited_year is None and country_of(actor) == self.world.profile.country]
 

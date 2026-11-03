@@ -65,7 +65,7 @@ def counting_concerns(self):
 
 Firm.concerns = property(counting_concerns)
 try:
-    answers = [registry.rivals_of(SHARED[0], "firm:1") for _ in range(50)]
+    answers = [registry.concerns.rivals_of(SHARED[0], "firm:1") for _ in range(50)]
 finally:
     Firm.concerns = real_concerns
 check("rivals_of still counts the other operators of the concern",

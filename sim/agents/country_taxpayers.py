@@ -26,7 +26,7 @@ class CountryTaxpayers(SharedPart):
 		country = self.world.profile.country
 		seats = list(self.shared.seat_taxpayers(country))
 		return seats + [(self.shared.visible_scale_of(firm), income) for firm, income in taxpayer_income.firm_incomes_in(
-			firms, country, holder.country_of, holder.country_of_tile)]
+			firms, country, holder.countries.country_of, holder.countries.country_of_tile)]
 
 	def notice_over(self, scale: float, capacity: Optional[float] = None) -> float:
 		return self.shared.notice_over(scale, self.state_reach() if capacity is None else capacity)
