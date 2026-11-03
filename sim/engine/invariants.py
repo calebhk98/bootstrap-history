@@ -15,13 +15,9 @@ def check_simulation_invariants(state):
     for key, value in demographics.items():
         assert math.isfinite(value) and value >= 0.0, \
             "invalid demographic %s=%r" % (key, value)
-    economy = state.economy
     for key, value in (state.seats[state.acting_seat].modules["ledger"].material_stock_ledger or {}).items():
         assert math.isfinite(value) and value >= -1e-9, \
             "negative or non-finite physical stockpile %s=%r" % (key, value)
-    for key, value in (getattr(economy, "commodity_prices", None) or {}).items():
-        assert math.isfinite(value) and value >= 0.0, \
-            "negative or non-finite commodity price %s=%r" % (key, value)
     allocated_fte = 0.0
     for project_id, project in state.seats[state.acting_seat].modules["projects"].active.items():
         status = project.get("status")
@@ -48,6 +44,14 @@ def check_tile_owner_invariants(sim):
     stand on are listed by one seat only and owned by it."""
     found = sim.view("tile_ownership_problems")()
     assert not found, "tile ownership broken: %r" % (found,)
+    return True
+
+
+def check_price_invariants(sim):
+    """Assert every price the agent economy quotes is finite and not negative (a good with no price is absent or None)."""
+    for good, price in (sim.view("agent_prices")() or {}).items():
+        assert price is None or (math.isfinite(price) and price >= 0.0), \
+            "negative or non-finite commodity price %s=%r" % (good, price)
     return True
 
 
@@ -116,4 +120,5 @@ def check_yearly_invariants(sim):
     ownership, techniques held, and production limits."""
     check_tile_owner_invariants(sim)
     check_technique_invariants(sim)
+    check_price_invariants(sim)
     return check_capacity_invariants(sim)
