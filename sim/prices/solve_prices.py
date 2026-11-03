@@ -684,30 +684,9 @@ hide something:
     tree's own prerequisite structure and the civilisation's own starting
     set, both of which are initial conditions rather than results.
 
-HOW EXPENSIVE IS THIS, ACTUALLY - MEASURED, BECAUSE IT DECIDES THE WIRING.
-The question that matters for putting this in the engine is not how long one
-solve takes but how OFTEN one is needed, and the answer is: far less often
-than "every turn", because almost nothing in the tree is a gate.
-
-    full ungated solve      0.673 s   1076 iterations   183 materials
-    gated solve (rome)      0.371 s   1076 iterations   107 materials
-    distinct nodes used as a gate   82 of 2864 in the tree, 2.9%
-
-Only 82 nodes can change the answer. Unlocking a node has about a 97% chance
-of not being a gate at all, so a year in which a hundred nodes complete will
-usually need NO re-solve, and can need at most as many as there are newly
-unlocked gates. Over an entire game the number of distinct solves is bounded
-by 82 and in practice is far below it.
-
-So the engine should key a cached price vector on the set of GATE nodes held
-- not on the full technology set, which changes constantly and would defeat
-the cache - and re-solve only when that set changes. Under that scheme the
-per-turn cost is a set comparison, and the 0.37 s is paid a few dozen times
-across a whole game rather than once a turn.
-
-The 1076 iterations are a separate matter and are not currently a problem.
-Damping is 0.5 against a 1e-10 tolerance, which is conservative; if the solve
-ever does become hot, that is the knob, not the architecture.
+HOW OFTEN A SOLVE IS NEEDED. Almost nothing in the tree is a gate, so unlocking a node almost never changes the
+answer. The engine keys a cached price vector on the set of GATE nodes held (not the full technology set) and
+re-solves only when that set changes; the per-turn cost is a set comparison.
 
 WHAT A GATED SOLVE COSTS. Fewer techniques means fewer materials have any
 path to a price at all, so a gated run resolves strictly fewer materials
@@ -715,56 +694,3 @@ than an ungated one and reports the difference. That is the correct answer
 rather than a regression: a material no Roman could make does not have a
 Roman price, and printing one for it was the bug.
 """
-import os
-import sys
-
-HERE = os.path.dirname(os.path.abspath(__file__))
-REPO_ROOT = os.path.dirname(os.path.dirname(HERE))
-if REPO_ROOT not in sys.path:
-    sys.path.insert(0, REPO_ROOT)
-from sim.prices.engine_seam import load_production, materials_the_tree_consumes  # noqa: E402
-
-# The price algebra lives in sim/prices/solve_prices_core.py; this module
-# re-exports it so `solve_prices.<name>` call sites and the mechanism essay
-# above stay in one place.
-from sim.prices.solve_prices_core import (                  # noqa: E402
-    CAPABILITY_CAP_FIELDS,
-    CONVERGENCE_TOLERANCE,
-    DAMPING_FACTOR,
-    ENERGY_CARRIER_FIELDS,
-    GROWTH_BOUND_HOURS,
-    INITIAL_PRICE_GUESS_HOURS,
-    MAXIMUM_ITERATIONS,
-    numeraire_trade,
-    THERMAL_MJ_MINIMUM_USABLE_TEMPERATURE_C,
-    _build_material_dependency_graph,
-    capability_graded_price,
-    _component_is_productive,
-    _dependency_materials,
-    _entries_relevant_to_component,
-    _grow_resolvable_by_topological_pass,
-    _has_external_anchor,
-    meets_capability_floor,
-    _pending_entries,
-    _strongly_connected_components,
-    build_producers_index,
-    capability_floor_by_carrier,
-    capability_price_for_requirement,
-    capability_required_grades,
-    compute_resolvable_materials,
-    load_starting_interest_rate,
-    load_starting_technologies,
-    minor_joint_byproducts_split_by_mass,
-    recipe_cost_and_allocation,
-    solve,
-    techniques_available_to,
-    wage_ratios_by_trade,
-)
-
-# The rent the opening carries when a caller supplies none (a temporary stand-in, Complaints/507); the solver
-# itself charges only the rent it is handed.
-from sim.prices.rent_standin import (                       # noqa: E402,F401
-    DEFAULT_LAND_CIVILIZATION,
-    land_rent_hours_per_hectare,
-    rent_hours_per_kg_by_ore_material,
-)

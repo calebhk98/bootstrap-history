@@ -14,8 +14,6 @@ from typing import Any, Callable, Dict, FrozenSet, Iterable, Mapping, Optional, 
 from sim.prices import disposal_cost, solve_prices_core as core, solve_prices_round
 from sim.prices import prices as price_engine
 
-LAND_MATERIAL = "hectare_land"
-
 Techniques = Union[FrozenSet[str], Iterable[str], str]
 
 
@@ -42,7 +40,7 @@ class _Prices:
 
     def get(self, material: str, default: Optional[float] = None) -> Optional[float]:
         price = self.input_price_of(material)
-        if price is None and material == LAND_MATERIAL:
+        if price is None and material == core.LAND_MATERIAL:
             price = self.rent_of(material) if self.rent_of is not None else 0.0
         return default if price is None else price
 
@@ -56,17 +54,33 @@ class _Prices:
         return self.get(material) is not None
 
 
-class _Function:
-    """A mapping read through a function, for the lookups the cost arithmetic does by key."""
+class _Wages:
+    """The wage of each trade read through a function; a trade it has no wage for raises KeyError, so a recipe that
+    needs that trade has no cost rather than a free one."""
 
-    def __init__(self, function: Callable[[str], float]):
+    def __init__(self, function: Callable[[str], Optional[float]]):
+        self.function = function
+
+    def get(self, key: str, default: Optional[float] = None) -> Optional[float]:
+        wage = self.function(key)
+        return default if wage is None else wage
+
+    def __getitem__(self, key: str) -> float:
+        wage = self.function(key)
+        if wage is None:
+            raise KeyError(key)
+        return wage
+
+
+class _Rents:
+    """The rent of a good or of land through a function; a good it names none for pays none."""
+
+    def __init__(self, function: Callable[[str], Optional[float]]):
         self.function = function
 
     def get(self, key: str, default: float = 0.0) -> float:
-        value = self.function(key)
-        return default if value is None else value
-
-    __getitem__ = get
+        rent = self.function(key)
+        return default if rent is None else rent
 
 
 @dataclass
@@ -105,7 +119,7 @@ def _catalogue(production: Mapping[str, Any], techniques: Techniques) -> _Catalo
 def cost_of_making(good: str,
                    techniques: Techniques,
                    input_price_of: Callable[[str], Optional[float]],
-                   wage_of: Callable[[str], float],
+                   wage_of: Callable[[str], Optional[float]],
                    rate: float,
                    rent_of: Optional[Callable[[str], float]] = None,
                    reference_price_of: Optional[Callable[[str], Optional[float]]] = None,
@@ -115,8 +129,9 @@ def cost_of_making(good: str,
     """The cheapest cost of one unit of `good`, or None when nothing the techniques allow can make it or an
     input has no price.
 
-    `techniques` is the held gate nodes, or one recipe id to cost that recipe alone. `rent_of(key)` is money
-    per unit of an extracted good (and per hectare-year of land); None charges none. `reference_price_of(good)`
+    `techniques` is the held gate nodes, or one recipe id to cost that recipe alone. `wage_of(trade)` is money an
+    hour, None where the trade has no wage (a recipe needing it has no cost). `rent_of(key)` is money per unit
+    of an extracted good (and per hectare-year of land); None charges none. `reference_price_of(good)`
     is what a joint run's outputs are worth, to split the run's cost by value; an output it gives none for is
     valued at what its cheapest sole-output route costs now, else by mass (sim/prices/joint_allocation.py).
     `include_plant` False is the running cost of a plant already built. `civilization` supplies the state's
@@ -125,11 +140,14 @@ def cost_of_making(good: str,
     production = production if production is not None else price_engine.default_production_entries()
     catalogue = _catalogue(production, techniques)
     prices = _Prices(input_price_of, rent_of)
-    wages = _Function(wage_of)
-    rents = _Function(rent_of) if rent_of is not None else {}
+    wages = _Wages(wage_of)
+    rents = _Rents(rent_of) if rent_of is not None else {}
     dump_distance = price_engine.waste_dump_minimum_distance(civilization)
-    bands = solve_prices_round.band_prices(
-        catalogue.required_grades, catalogue.suppliers, prices, wages, rents, rate)
+    try:
+        bands = solve_prices_round.band_prices(
+            catalogue.required_grades, catalogue.suppliers, prices, wages, rents, rate)
+    except KeyError:     # a supplier of a graded carrier needs a trade with no wage: no grade of it has a price
+        bands = {carrier: {} for carrier in catalogue.required_grades}
 
     def bill(recipe_id: str) -> Optional[Dict[str, Any]]:
         return _bill(recipe_id, catalogue.available[recipe_id], prices, wages, rents, rate, bands, include_plant)
@@ -184,9 +202,17 @@ def _references(outputs: Mapping[str, float], reference_price_of, catalogue: _Ca
     return references
 
 
-def _bill(recipe_id: str, entry: Mapping[str, Any], prices: _Prices, wages: _Function, rents, rate: float,
+def _bill(recipe_id: str, entry: Mapping[str, Any], prices: _Prices, wages: _Wages, rents, rate: float,
           bands, include_plant: bool) -> Optional[Dict[str, Any]]:
     """The cost of one batch of a recipe by source, or None when an input has no price."""
+    try:
+        return _bill_priced(entry, prices, wages, rents, rate, bands, include_plant)
+    except KeyError:     # a trade of the recipe or its plant has no wage
+        return None
+
+
+def _bill_priced(entry: Mapping[str, Any], prices: _Prices, wages: _Wages, rents, rate: float, bands,
+                 include_plant: bool) -> Optional[Dict[str, Any]]:
     inputs = entry.get("inputs") or {}
     waste_costs = None
     if any(prices.get(material, 0.0) < 0.0 for material in inputs):

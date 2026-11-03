@@ -380,23 +380,6 @@ def calculated_goods_prices(held_technology_ids: Iterable[str] = (),
     return goods
 
 
-def calculated_goods_table(held_technology_ids: Iterable[str] = (),
-                           civilization_id: Optional[str] = None,
-                           civilization: Optional[JSONDict] = None,
-                           farmed_hectares: Optional[float] = None,
-                           interest_rate: Optional[float] = None
-                           ) -> Tuple[Dict[str, float], Dict[str, str]]:
-    """(labour-hour price, provenance) of every material the solver prices, from one solve."""
-    from sim.prices.api import prices as price_solver
-    schedule = (schedule_of_civilisation(civilization) if civilization is not None
-                else starting_schedule(civilization_id))
-    document = schedule.document()
-    goods, provenance = price_solver.priced_goods_table(
-        held_technology_ids, document, civilization_id=civilization_id, civilization=civilization,
-        farmed_hectares=farmed_hectares, interest_rate=interest_rate)
-    return ({material: _in_coin(price, document, 1.0) for material, price in goods.items()}, provenance)
-
-
 def nodes_in_civ_money(nodes: Dict[str, JSONDict], civ: JSONDict) -> Dict[str, JSONDict]:
     """The tree with every money field in the civilisation's coin."""
     schedule = build_schedule(_TRADE_REGISTRY, civ)

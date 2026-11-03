@@ -2,9 +2,8 @@
 capital and energy cost terms, choice of technique, and the damped
 fixed-point `solve` loop itself.
 
-sim/prices/solve_prices.py is the thin composition point every import
-names, and ITS module docstring - not this file's - is what every "see the
-module docstring" comment below actually means:
+sim/prices/solve_prices.py holds no code; ITS module docstring - not this file's - is what every
+"see the module docstring" comment below actually means:
 that essay is the design reasoning for the whole tool (rent, energy,
 capital, land, cycles, era gates, choice of technique), and splitting it
 apart by function would break every one of those cross references for no
@@ -14,7 +13,6 @@ ore and land rent mechanisms, `recipe_cost_and_allocation`, and `solve`
 itself.
 """
 import collections
-import json
 import math
 import os
 import sys
@@ -24,6 +22,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 REPO_ROOT = os.path.dirname(os.path.dirname(HERE))
 if REPO_ROOT not in sys.path:
     sys.path.insert(0, REPO_ROOT)
+from sim.prices import engine_seam
 from sim.world import capital_builds
 from sim.prices import disposal_cost  # noqa: E402
 from sim.prices.joint_allocation import allocate_joint_cost, outputs_split_by_mass  # noqa: E402
@@ -42,6 +41,13 @@ from sim.algorithm_parameters import (           # noqa: E402  (see sys.path abo
     DAMPING_FACTOR, MAXIMUM_ITERATIONS, CONVERGENCE_TOLERANCE,
     INITIAL_PRICE_GUESS_HOURS, GROWTH_BOUND_HOURS)
 
+# the material a recipe's `land_hectare_years` is priced in
+LAND_MATERIAL = "hectare_land"
+
+
+# {id of a production catalogue: (the catalogue, its numeraire trade)}; the catalogue is kept so the id stays its own
+_NUMERAIRE_BY_CATALOGUE = {}
+
 
 def numeraire_trade(production_entries=None, registry=None):
     """The trade whose hour is the unit every wage is stated in: the trade registry's unskilled one, the same trade
@@ -49,11 +55,16 @@ def numeraire_trade(production_entries=None, registry=None):
     to its fields); without it the registry is read for `production_entries` (the committed catalogue's when none)."""
     from sim.labour.api import trade_of_role
     if registry is None:
-        from sim.prices import engine_seam
         entries = engine_seam.load_production()[0] if production_entries is None else production_entries
+        cached = _NUMERAIRE_BY_CATALOGUE.get(id(entries))
+        if cached is not None and cached[0] is entries:
+            return cached[1]
         loaded = engine_seam.load_trade_registry(REPO_ROOT, entries, nodes=engine_seam.load_mod_tree_nodes(REPO_ROOT))
         registry = {trade_id: {"family": trade.family, "training_years": trade.training_years, **trade.extra}
                     for trade_id, trade in loaded.items()}
+        trade = trade_of_role(registry, "unskilled")
+        _NUMERAIRE_BY_CATALOGUE[id(entries)] = (entries, trade)
+        return trade
     return trade_of_role(registry, "unskilled")
 
 
@@ -319,39 +330,6 @@ def wage_ratios_by_trade(prices_json, unskilled_trade=None):
             if not trade.startswith("_")}
 
 
-def load_starting_interest_rate(civilization_id):
-    """The yearly rate on loans the civilization starts at (an initial condition, as its starting
-    technologies are): the market rate its plant must earn over depreciation, until a market has met."""
-    path = os.path.join(REPO_ROOT, "data", "civilizations", "%s.json" % civilization_id)
-    if os.path.exists(path):
-        with open(path) as handle:
-            return float(json.load(handle)["starting_interest_rate"])
-    from sim.prices.engine_seam import load_civ        # a civilisation a mod defines is not a file of its own
-    return float(load_civ(civilization_id)["starting_interest_rate"])
-
-
-def load_starting_technologies(civilization_id):
-    """The set of tech-tree node ids a civilization begins the game holding.
-
-    This is read straight from `data/civilizations/<id>.json`'s
-    `starting_techs`, which is an INITIAL CONDITION - what this society has
-    already worked out by the year it starts in - and so is exactly the kind
-    of input CLAUDE.md section 3.1 allows. It is not a schedule of when
-    techniques were invented; there is no such table here and there must not
-    be one.
-    """
-    path = os.path.join(REPO_ROOT, "data", "civilizations",
-                        "%s.json" % civilization_id)
-    if not os.path.exists(path):
-        available = sorted(name[:-len(".json")]
-                           for name in os.listdir(os.path.dirname(path))
-                           if name.endswith(".json") and not name.startswith("_"))
-        raise FileNotFoundError(
-            "no civilization %r - have: %s" % (civilization_id, ", ".join(available)))
-    with open(path) as handle:
-        civilization = json.load(handle)
-    return set(civilization.get("starting_techs") or [])
-
 
 def techniques_available_to(production_entries, reached_nodes):
     """Split the production entries into what this era can run and what it cannot.
@@ -426,7 +404,7 @@ def _dependency_materials(entry, resolved=frozenset()):
         if entry.get(energy_key):
             dependencies.add(energy_key)
     if entry.get("land_hectare_years"):
-        dependencies.add("hectare_land")
+        dependencies.add(LAND_MATERIAL)
     return dependencies
 
 
@@ -585,7 +563,7 @@ def _has_external_anchor(entry, resolved_so_far):
         if any(material in resolved_so_far
                for way in capital_builds.builds(capital_good) for material in way[0]):
             return True
-    if entry.get("land_hectare_years") and "hectare_land" in resolved_so_far:
+    if entry.get("land_hectare_years") and LAND_MATERIAL in resolved_so_far:
         return True
     return False
 
@@ -821,7 +799,7 @@ def batch_land_cost_hours(entry, current_prices):
     land_hectare_years = entry.get("land_hectare_years") or 0.0
     if not land_hectare_years:
         return 0.0
-    land_price = current_prices.get("hectare_land")
+    land_price = current_prices.get(LAND_MATERIAL)
     if land_price is None:
         return None
     return land_hectare_years * land_price

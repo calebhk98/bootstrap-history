@@ -13,13 +13,12 @@ from .constants import (FIREWOOD_PER_CHARCOAL_MASS_RATIO, GENERIC_MARKET_SHARE_L
 class Supply(Part):
     """Needs: civilisation, tiles_listed_by, forest_increment, commodity_record, commodity_country_output, material_commodity_map,
     material_prices, mine_works_materials, empire_output, pop_scale, mineral_scale, found_deposits, agent_producer_capacity,
-    price_epoch, producers_stamp, running_stamp, effect_best, mechanic, running, forest_hectares,
+    done_memo, running_stamp, effect_best, mechanic, running, forest_hectares,
     nitre_beds, mine_capacity, mine_depletion, can_be_bought, goods_stock,
     held_goods, goods_quote, tree_nodes, visibility, material_freight_factor."""
 
     def __init__(self, module):
         super().__init__(module)
-        self._done_memo: Optional[Tuple] = None     # (stamp, done set, answers) while the techniques held are unchanged
         self._running_tables: Optional[Tuple] = None   # (projects, stamp, tree, tables) while what is built and run is unchanged
         self._coppice: Optional[Tuple] = None       # (tiles held, mean stem wood increment of them)
 
@@ -52,20 +51,6 @@ class Supply(Part):
 
     # ---- memos that hold while what is built and run is unchanged ----
 
-    def done_memo(self, name: str, key: Any, compute: Any) -> Any:
-        """`compute()` remembered per (name, key) while the techniques held, the techniques in use, the price level and the
-        economy's producers are unchanged."""
-        done = self.needs.techniques_held()
-        stamp = (self.needs.price_epoch(), len(done), self.needs.producers_stamp())
-        memo = self._done_memo
-        if memo is None or memo[0] != stamp or memo[1] is not done:
-            memo = self._done_memo = (stamp, done, {})
-        table = memo[2]
-        entry = (name, key)
-        if entry not in table:
-            table[entry] = compute()
-        return table[entry]
-
     def running_kept(self, name: str) -> Dict[Any, Any]:
         """A dict for derived values that depend only on which nodes are built, granted and operating; it starts empty
         whenever that changes."""
@@ -83,7 +68,7 @@ class Supply(Part):
         return 0.0 if tonnes is None else tonnes
 
     def generic_national_output(self, commodity: str) -> float:
-        return self.done_memo("national_output", commodity, lambda: self.generic_national_output_uncached(commodity))
+        return self.needs.done_memo("national_output", commodity, lambda: self.generic_national_output_uncached(commodity))
 
     def generic_national_output_uncached(self, commodity: str) -> float:
         """Tonnes a year the society can bring to market of a material with no curated figure: a commodity the catalogue
@@ -110,7 +95,7 @@ class Supply(Part):
         return self.needs.pop_scale() if commodity == "charcoal" else self.needs.mineral_scale[commodity]
 
     def generic_market_share(self, commodity: str) -> float:
-        return self.done_memo("market_share", commodity, lambda: self.generic_market_share_uncached(commodity))
+        return self.needs.done_memo("market_share", commodity, lambda: self.generic_market_share_uncached(commodity))
 
     def generic_market_share_uncached(self, commodity: str) -> float:
         """The fraction of the society's output an ordinary buyer can reach for a material the tracked table has no

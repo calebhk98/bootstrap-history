@@ -38,7 +38,7 @@ def build(seat: Optional[MaterialsSeat] = None, views: Optional[Dict[str, Any]] 
         "agent_producer_capacity": lambda material: None,
         "material_freight_factor": lambda commodity: 1.0, "material_prices": {}, "material_commodity_map": {},
         "commodity_record": lambda commodity: {}, "commodity_country_output": lambda commodity: 0.0,
-        "price_epoch": (), "producers_stamp": (),
+        "done_memo": lambda name, key, compute: compute(),
         "mine_capacity": {}, "mine_depletion": lambda material: 1.0, "forest_hectares": 0.0,
         "nitre_beds": {"square_metres": 0.0, "tonnes_per_square_metre": 0.0}, "found_deposits": lambda material: [],
         "mine_works_materials": (), "shortage_remedy_plan": lambda binding, shortfall=None: {"text": "buy some"},

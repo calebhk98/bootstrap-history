@@ -10,14 +10,13 @@ from sim.prices import rules
 from sim.tests.store_stand_in import base_book
 
 
-class GoodsInCoin(unittest.TestCase):
+class MoneyPrices(unittest.TestCase):
 
-    def test_a_price_is_rebased_from_the_documents_coin_to_the_asked_coin(self):
-        goods = rules.goods_in_coin({"wheat": 4.0, "iron": 10.0}, 2.0, 1.0)
-        self.assertEqual(goods, {"wheat": 4.0 / 2.0 * 1.0, "iron": 10.0 / 2.0 * 1.0})
+    def test_a_labour_hour_price_is_stated_in_the_coin_of_an_hour(self):
+        self.assertEqual(rules.money_prices({"wheat": 2.0, "iron": 5.0}, 3.0), {"wheat": 6.0, "iron": 15.0})
 
     def test_an_empty_table_stays_empty(self):
-        self.assertEqual(rules.goods_in_coin({}, 2.0, 1.0), {})
+        self.assertEqual(rules.money_prices({}, 3.0), {})
 
 
 class SolvedMaterials(unittest.TestCase):

@@ -11,7 +11,7 @@ READS_BY_OWNER = {
     "knowledge": ("civilisation", "civilisation_record", "year", "techniques_granted", "techniques_held"),
     "production": ("techniques_in_use", "price_epoch"),
     "finance": ("market_rate",),
-    "workforce": ("money_per_labour_hour", "labour_quote", "farm_land_hectares", "wage_schedule_for"),
+    "workforce": ("money_per_labour_hour", "labour_quote", "farm_land_hectares", "wage_schedule_for", "unskilled_trade"),
     "markets": ("household_prices", "material_seller", "agent_wage", "agent_land_rent", "producers_stamp"),
     "materials": ("material_pool",),
 }

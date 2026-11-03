@@ -62,7 +62,7 @@ def plan_cost(plan, prices, wage_by_trade, band_price_by_carrier, interest_rate,
         material_cost_hours += quantity_per_batch * input_price
 
     if plan.land_hectare_years:
-        land_price = prices.get("hectare_land")
+        land_price = prices.get(core.LAND_MATERIAL)
         if land_price is None:
             return None
         land_cost_hours = plan.land_hectare_years * land_price

@@ -7,8 +7,6 @@ from sim.labour.api import stochastic_round
 
 from .staff_phase_rules import hires_needed
 
-MIN_STAFF_GONE_TO_LOG = 0.005
-
 
 class StaffHiring(Part):
 

@@ -9,13 +9,7 @@ class WageFallback(Part):
 
 	def take_wage_fallback(self, command):
 		remaining = command.remaining_hours
-		# 5b. IF THERE IS NO WORK AND NO MONEY, TAKE A JOB. A man who arrives
-		#     with four hundred denarii and a lens does not sit watching his
-		#     savings run out; he teaches, or writes, or sets bones for money. It
-		#     is in the protocol as `work` for a player and the optimizer had no
-		#     equivalent, so a single bad year in the opening decade could end a
-		#     run: one Rome seed earned four technologies in five hundred years
-		#     because a fire in 103 took a fifth of everything it had.
+		# with no work and thin means the household sells its idle hours for wages, as a player does with `work`
 		if (not self.needs.automation()["manual"] and remaining > WAGE_FALLBACK_MIN_HOURS
 				and (self.needs.acting_balance() < self.needs.living_cost() * WAGE_FALLBACK_LIVING_COST_YEARS
 				     or not self.needs.active_projects())):

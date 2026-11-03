@@ -27,7 +27,7 @@ QUICK_TOPIC = True
 import collections
 import unittest
 
-from sim.prices import solve_prices
+from sim.prices import solve_prices_core, engine_seam
 
 
 class ResolvabilityAcceptsProductiveCyclesTests(unittest.TestCase):
@@ -46,8 +46,8 @@ class ResolvabilityAcceptsProductiveCyclesTests(unittest.TestCase):
             "axe": {"outputs": {"axe_each": 1.0}, "inputs": {"iron_kg": 2.0},
                     "labour_hours": {"labourer": 3.0}},
         }
-        resolvable = solve_prices.compute_resolvable_materials(
-            entries, solve_prices.build_producers_index(entries))
+        resolvable = solve_prices_core.compute_resolvable_materials(
+            entries, solve_prices_core.build_producers_index(entries))
 
         self.assertEqual(
             resolvable, {"timber_m3", "iron_kg", "axe_each"},
@@ -66,8 +66,8 @@ class ResolvabilityAcceptsProductiveCyclesTests(unittest.TestCase):
             "bread": {"outputs": {"bread_kg": 1.0}, "inputs": {"wheat_kg": 1.3},
                       "labour_hours": {"labourer": 0.2}},
         }
-        resolvable = solve_prices.compute_resolvable_materials(
-            entries, solve_prices.build_producers_index(entries))
+        resolvable = solve_prices_core.compute_resolvable_materials(
+            entries, solve_prices_core.build_producers_index(entries))
 
         self.assertEqual(
             resolvable, {"wheat_kg", "bread_kg"},
@@ -83,8 +83,8 @@ class ResolvabilityAcceptsProductiveCyclesTests(unittest.TestCase):
                     "labour_hours": {"labourer": 1.0}},
         }
         diagnostics = []
-        resolvable = solve_prices.compute_resolvable_materials(
-            entries, solve_prices.build_producers_index(entries),
+        resolvable = solve_prices_core.compute_resolvable_materials(
+            entries, solve_prices_core.build_producers_index(entries),
             diagnostics=diagnostics)
 
         self.assertEqual(resolvable, set())
@@ -99,8 +99,8 @@ class ResolvabilityAcceptsProductiveCyclesTests(unittest.TestCase):
             "ghost": {"outputs": {"ghost_kg": 1.0}, "inputs": {"ghost_kg": 0.5}},
         }
         diagnostics = []
-        resolvable = solve_prices.compute_resolvable_materials(
-            entries, solve_prices.build_producers_index(entries),
+        resolvable = solve_prices_core.compute_resolvable_materials(
+            entries, solve_prices_core.build_producers_index(entries),
             diagnostics=diagnostics)
 
         self.assertEqual(resolvable, set())
@@ -118,8 +118,8 @@ class ResolvabilityAcceptsProductiveCyclesTests(unittest.TestCase):
             "bread": {"outputs": {"bread_kg": 1.0}, "inputs": {"wheat_kg": 1.3},
                       "labour_hours": {"labourer": 0.2}},
         }
-        resolvable = solve_prices.compute_resolvable_materials(
-            entries, solve_prices.build_producers_index(entries))
+        resolvable = solve_prices_core.compute_resolvable_materials(
+            entries, solve_prices_core.build_producers_index(entries))
         self.assertEqual(resolvable, {"wheat_kg", "bread_kg"})
 
     def test_the_real_dataset_is_currently_acyclic_so_nothing_is_lost_today(self):
@@ -128,9 +128,9 @@ class ResolvabilityAcceptsProductiveCyclesTests(unittest.TestCase):
         # production entry introduces a genuine cycle, this fails and names
         # what stopped resolving - which is the moment the pass has to be
         # fixed rather than worked around.
-        entries, _duplicates = solve_prices.load_production()
-        resolvable = solve_prices.compute_resolvable_materials(
-            entries, solve_prices.build_producers_index(entries))
+        entries, _duplicates = engine_seam.load_production()
+        resolvable = solve_prices_core.compute_resolvable_materials(
+            entries, solve_prices_core.build_producers_index(entries))
         unresolved = sorted(
             material
             for entry in entries.values()
@@ -167,8 +167,8 @@ class EnergyDependenciesAreTrackedForResolvabilityTests(unittest.TestCase):
                           "labour_hours": {"smith": 0.06},
                           "mechanical_mj": 0.15},
         }
-        resolvable = solve_prices.compute_resolvable_materials(
-            entries, solve_prices.build_producers_index(entries))
+        resolvable = solve_prices_core.compute_resolvable_materials(
+            entries, solve_prices_core.build_producers_index(entries))
         self.assertEqual(
             resolvable, {"iron_bar_kg"},
             "wire_drawn_kg resolved despite needing mechanical_mj, which "
@@ -189,8 +189,8 @@ class EnergyDependenciesAreTrackedForResolvabilityTests(unittest.TestCase):
                           "labour_hours": {"smith": 0.06},
                           "mechanical_mj": 0.15},
         }
-        resolvable = solve_prices.compute_resolvable_materials(
-            entries, solve_prices.build_producers_index(entries))
+        resolvable = solve_prices_core.compute_resolvable_materials(
+            entries, solve_prices_core.build_producers_index(entries))
         self.assertEqual(resolvable, {"iron_bar_kg", "mechanical_mj", "wire_drawn_kg"})
 
     def test_a_material_needing_unpriced_electrical_energy_has_no_path(self):
@@ -207,8 +207,8 @@ class EnergyDependenciesAreTrackedForResolvabilityTests(unittest.TestCase):
                          "labour_hours": {"furnaceman": 0.1},
                          "electrical_mj": 46.0},
         }
-        resolvable = solve_prices.compute_resolvable_materials(
-            entries, solve_prices.build_producers_index(entries))
+        resolvable = solve_prices_core.compute_resolvable_materials(
+            entries, solve_prices_core.build_producers_index(entries))
         self.assertEqual(
             resolvable, {"bauxite_kg"},
             "aluminium_kg resolved despite needing electrical_mj, which "
@@ -229,8 +229,8 @@ class EnergyDependenciesAreTrackedForResolvabilityTests(unittest.TestCase):
                          "labour_hours": {"furnaceman": 0.1},
                          "electrical_mj": 46.0},
         }
-        resolvable = solve_prices.compute_resolvable_materials(
-            entries, solve_prices.build_producers_index(entries))
+        resolvable = solve_prices_core.compute_resolvable_materials(
+            entries, solve_prices_core.build_producers_index(entries))
         self.assertEqual(resolvable, {"bauxite_kg", "electrical_mj", "aluminium_kg"})
 
     def test_a_conversion_chain_across_all_three_carriers_resolves(self):
@@ -253,8 +253,8 @@ class EnergyDependenciesAreTrackedForResolvabilityTests(unittest.TestCase):
             "widget": {"outputs": {"widget_kg": 1.0}, "inputs": {},
                       "labour_hours": {}, "electrical_mj": 5.0},
         }
-        resolvable = solve_prices.compute_resolvable_materials(
-            entries, solve_prices.build_producers_index(entries))
+        resolvable = solve_prices_core.compute_resolvable_materials(
+            entries, solve_prices_core.build_producers_index(entries))
         self.assertEqual(
             resolvable,
             {"charcoal_kg", "thermal_mj", "mechanical_mj", "electrical_mj",
@@ -274,7 +274,7 @@ class EnergyDependenciesAreTrackedForResolvabilityTests(unittest.TestCase):
             "outputs": {"widget_kg": 1.0}, "inputs": {},
             "labour_hours": {"labourer": 3.0}, "mechanical_mj": 10.0,
         }
-        total_cost, output_prices = solve_prices.recipe_cost_and_allocation(
+        total_cost, output_prices = solve_prices_core.recipe_cost_and_allocation(
             "widget", entry, {"mechanical_mj": 2.0},
             collections.defaultdict(lambda: 1.0))
         self.assertEqual(total_cost, 23.0)
@@ -288,7 +288,7 @@ class EnergyDependenciesAreTrackedForResolvabilityTests(unittest.TestCase):
             "outputs": {"widget_kg": 1.0}, "inputs": {},
             "labour_hours": {"labourer": 3.0}, "mechanical_mj": 10.0,
         }
-        result = solve_prices.recipe_cost_and_allocation(
+        result = solve_prices_core.recipe_cost_and_allocation(
             "widget", entry, {}, collections.defaultdict(lambda: 1.0))
         self.assertIsNone(result)
 

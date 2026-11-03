@@ -1,4 +1,6 @@
 """The views the workforce module publishes that answer a fact of its labour implementation."""
+import copy
+
 from sim.assembly.api import Part
 from sim.labour.api import wage_provider
 
@@ -11,6 +13,7 @@ class FactViews(Part):
 	def __init__(self, module):
 		super().__init__(module)
 		self._starting_wages = None  # the reference civilisation's opening wages, worked out when first asked; never saved
+		self._schedules = {}  # {civilisation id: (record, its opening schedule)}; a record that differs from the kept one (a variant keeping the id) is built afresh
 
 	def starting_wages(self):
 		"""{trade: money an hour pays} on the reference civilisation's opening schedule."""
@@ -19,8 +22,12 @@ class FactViews(Part):
 		return self._starting_wages
 
 	def wage_schedule_for(self, civ):
-		"""The wage schedule a civilisation opens on, built from the trade registry and the price solver."""
-		return build_schedule(self.needs.trade_records(), civ)
+		"""The wage schedule a civilisation record opens on, built from the trade registry and the price solver once per
+		record."""
+		held = self._schedules.get(civ["id"])
+		if held is None or held[0] != civ:
+			held = self._schedules[civ["id"]] = (copy.deepcopy(civ), build_schedule(self.needs.trade_records(), civ))
+		return held[1]
 
 	def wages_charged_last_year(self):
 		"""What the last clearing charged the acting seat for its staff and one-year orders; before any clearing, the payroll

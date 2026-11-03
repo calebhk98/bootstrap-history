@@ -5,7 +5,7 @@ QUICK_TOPIC = True
 import math
 import unittest
 
-from sim.prices import disposal_cost, joint_allocation, solve_prices, solve_prices_core
+from sim.prices import disposal_cost, joint_allocation, solve_prices_core
 from sim.world import demand
 
 OUTPUTS = {"tar_kg": 1000.0, "charcoal_kg": 2500.0}
@@ -95,7 +95,6 @@ class MaterialDisposalCostTests(unittest.TestCase):
 
     def test_without_the_sink_services_disposal_is_free(self):
         self.assertEqual(disposal_cost.disposal_cost_by_material(["tar_kg"], {}, 0.05), {})
-        self.assertEqual(disposal_cost.disposal_price_floor(["tar_kg"], {}, 0.05), {})
 
     def test_the_cost_is_the_services_at_the_materials_own_heap(self):
         density, height = disposal_cost.heap_of("basic_slag_kg")
@@ -174,10 +173,10 @@ def solve_kiln(sink=True, rule=0.0, gate=None, tar_reference=-1.0):
     if sink:
         entries.update({key: value for key, value in real_sink_entries().items()
                         if gate is None or value.get("requires_node") in (None, *gate)})
-    producers = solve_prices.build_producers_index(entries)
-    resolvable = solve_prices.compute_resolvable_materials(
+    producers = solve_prices_core.build_producers_index(entries)
+    resolvable = solve_prices_core.compute_resolvable_materials(
         entries, producers, rent_hours_per_kg_by_material={"hectare_land": 40.0})
-    prices, _i, _r, chosen = solve_prices.solve(
+    prices, _i, _r, chosen = solve_prices_core.solve(
         entries, producers, resolvable, {"labourer": 1.0, "carter": 1.0, "porter": 1.0},
         rent_hours_per_kg_by_material={"hectare_land": 40.0}, interest_rate=0.05,
         reference_price_by_material=None if tar_reference is None else {"tar_kg": tar_reference},

@@ -8,7 +8,6 @@ import os
 from unittest import mock
 import unittest
 
-from sim.prices import prices
 
 from sim.engine import data
 from sim.content.api import ModError
@@ -49,13 +48,6 @@ class RealLoadPathTests(ModTestBase):
                 data.load()
         for word in (trade, "test_acme_k3f9"):
             self.assertIn(word, str(caught.exception))
-
-    def test_price_solver_registry_sees_technologies(self):
-        trade = _labour_only_trade()
-        self.add_mod("test_acme_k3f9", trades={trade: {"remove": True}})
-        with mock.patch("sim.content.catalog.get_ordered_mods", return_value=self.manifests()):
-            with self.assertRaises(ModError):
-                prices.solver_trade_registry({})
 
     def test_all_civs_checked_at_load_even_if_unpicked(self):
         tech_id, civ_id = _tech_only_in_one_non_rome_civ()

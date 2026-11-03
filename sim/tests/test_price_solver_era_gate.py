@@ -23,7 +23,7 @@ QUICK_TOPIC = True
 
 import unittest
 
-from sim.prices import solve_prices
+from sim.prices import engine_seam, solve_prices_core
 
 
 def entry(requires_node="__absent__"):
@@ -49,7 +49,7 @@ class EraGateTests(unittest.TestCase):
             "not_reached": entry("electrolysis"),
             "unclassified": entry(),
         }
-        available, unreached, unclassified = solve_prices.techniques_available_to(
+        available, unreached, unclassified = solve_prices_core.techniques_available_to(
             entries, {"smelting"})
         self.assertEqual(sorted(available), ["reached", "universal"])
         self.assertEqual(unreached, ["not_reached"])
@@ -62,7 +62,7 @@ class EraGateTests(unittest.TestCase):
         # do it again: the panel carries no requires_node until someone
         # labels it.
         entries = {"photovoltaic_like": entry()}
-        available, _unreached, unclassified = solve_prices.techniques_available_to(
+        available, _unreached, unclassified = solve_prices_core.techniques_available_to(
             entries, {"anything"})
         self.assertEqual(available, {})
         self.assertEqual(unclassified, ["photovoltaic_like"])
@@ -72,7 +72,7 @@ class EraGateTests(unittest.TestCase):
         # It cannot do anything that names a node, and the gate must not
         # decide that an era set this small means "gating is not worth it".
         entries = {"gathering": entry(None), "smelting": entry("smelting")}
-        available, unreached, _unclassified = solve_prices.techniques_available_to(
+        available, unreached, _unclassified = solve_prices_core.techniques_available_to(
             entries, set())
         self.assertEqual(sorted(available), ["gathering"])
         self.assertEqual(unreached, ["smelting"])
@@ -82,7 +82,7 @@ class EraGateTests(unittest.TestCase):
         # "no entry at all" in its report, so the gate returning a view that
         # aliased or emptied the original would make that report wrong.
         entries = {"a": entry(None), "b": entry("unreached_node")}
-        available, _unreached, _unclassified = solve_prices.techniques_available_to(
+        available, _unreached, _unclassified = solve_prices_core.techniques_available_to(
             entries, set())
         self.assertEqual(len(entries), 2)
         self.assertIsNot(available, entries)
@@ -92,15 +92,9 @@ class EraGateTests(unittest.TestCase):
         # not a table of invention dates living in the solver - see
         # CLAUDE.md section 3.1 and the module docstring. This asserts the
         # shape and the source, never a count that authoring would churn.
-        reached = solve_prices.load_starting_technologies("rome_100ad")
+        reached = engine_seam.load_civ("rome_100ad")["starting_techs"]
         self.assertTrue(reached)
         self.assertTrue(all(isinstance(node_id, str) for node_id in reached))
-
-    def test_an_unknown_civilization_names_the_real_ones(self):
-        with self.assertRaises(FileNotFoundError) as raised:
-            solve_prices.load_starting_technologies("atlantis_9000bc")
-        self.assertIn("rome_100ad", str(raised.exception))
-
 
 if __name__ == "__main__":
     unittest.main()

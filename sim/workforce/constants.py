@@ -72,15 +72,6 @@ TRADE_REPLACEMENT_TARGET_HEADCOUNT = declare(
         "founder has ever taught, once attrition has thinned it - "
         "enough that a taught trade cannot silently vanish from a "
         "single death. Round number, not measured.")
-TRADE_REPLACEMENT_AFFORDABILITY_YEARS = declare(
-    "TRADE_REPLACEMENT_AFFORDABILITY_YEARS", 6, kind="temporary_heuristic",
-    unit="years of that trade's annual wage", source=None,
-    confidence="D",
-    why="How much spare capital (in years of the trade's own wage) "
-        "the household must hold before auto_hire replaces a lost "
-        "taught worker - a buffer so this does not spend the "
-        "household into arrears over one specialist. Tuned, not "
-        "measured.")
 
 WAGE_FALLBACK_MIN_HOURS = declare(
     "WAGE_FALLBACK_MIN_HOURS", 100.0, kind="temporary_heuristic",

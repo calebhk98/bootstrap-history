@@ -9,8 +9,8 @@ rent per hectare and a mine's own marginal cost replace it (ONE_PRICE_OWNER_PLAN
 import json
 
 from sim.constants import declare
-from sim.default_civilisation import default_civilisation_id
-from sim.prices.solve_prices_core import recipe_cost_and_allocation
+from sim.labour.api import wage_provider
+from sim.prices.solve_prices_core import LAND_MATERIAL, recipe_cost_and_allocation
 from sim.world import deposits
 from sim.world import land
 
@@ -131,20 +131,9 @@ def rent_hours_per_kg_by_ore_material(production_entries, wage_by_trade):
     return rent_by_ore_material
 
 
-# See sim/world/land.py's own `solve_prices` module docstring for the mechanism (the
-# margin of cultivation over a civilization's own regions, not an ore
-# deposit's grade) and for why this defaults to Rome's own territory when
-# no --civ is given: mirroring rent_hours_per_kg_by_ore_material's own
-# Rome-anchored default (data/world/resources.json's empire_output_100ad
-# has no per-civilization breakdown either), even though land's OWN
-# mechanism, unlike ore's, is genuinely per-civilization the moment --civ
-# names one.
-DEFAULT_LAND_CIVILIZATION = default_civilisation_id()
-
-
-def land_rent_hours_per_hectare(production_entries, wage_by_trade,
-                                civilization_id=None, civilizations=None, farmed_hectares=None):
-    """{"hectare_land": hours of rent per hectare}, or {} if there is no
+def land_rent_hours_per_hectare(production_entries, wage_by_trade, civilization, farmed_hectares=None):
+    """{"hectare_land": hours of rent per hectare} of the civilisation record `civilization` (the mod-applied one:
+    a record that cannot be read is an error, not free land), or {} if there is no
     reference crop price or no priceable land to convert into one this
     round - see sim/world/land.py's own `solve_prices` module docstring for the mechanism
     (the Ricardian margin of cultivation over a civilization's own held
@@ -188,47 +177,37 @@ def land_rent_hours_per_hectare(production_entries, wage_by_trade,
     using `hectare_land`'s price that THIS function's own return value
     fixes beforehand. See WHY NO NEW CYCLE in the `solve_prices` module docstring.
     """
-    civilization_id = civilization_id or DEFAULT_LAND_CIVILIZATION
-    wheat_entry = production_entries.get("wheat_kg")
+    staple = wage_provider.staple_material(civilization)
+    wheat_entry = production_entries.get(staple)
     if wheat_entry is None:
-        # Gated out of this era, or (should not happen - wheat_kg carries
-        # requires_node: null, admitted to every era) simply absent. Either
-        # way there is no reference crop price to convert the physical rent
-        # into hours with, so land keeps the old RENT_IS_ZERO answer.
+        # The staple is gated out of this era: no reference crop price to convert the physical rent into hours
+        # with, so land keeps the RENT_IS_ZERO answer.
         return {}
     # the reference is wheat's labour alone: the plough team's capital is priced by the main solve, and
     # needs the land rent this function is still to fix
     labour_only = {key: value for key, value in wheat_entry.items() if key != "capital"}
     wheat_cost = recipe_cost_and_allocation(
-        "wheat_kg", labour_only, {"hectare_land": 0.0}, wage_by_trade)
+        staple, labour_only, {LAND_MATERIAL: 0.0}, wage_by_trade)
     if wheat_cost is None:
         return {}
     _wheat_total_hours, wheat_output_prices = wheat_cost
-    wheat_price_per_kg = wheat_output_prices.get("wheat_kg")
+    wheat_price_per_kg = wheat_output_prices.get(staple)
     if not wheat_price_per_kg:
         return {}
 
-    try:
-        outcome = land.margin_outcome_for_civilization(
-            civilization_id, civilizations=civilizations, farmed_hectares=farmed_hectares)
-    except (FileNotFoundError, KeyError):
-        # An unknown civilization id, or one missing a population field -
-        # should not happen for this project's own data/civilizations/
-        # files, handled the same way a missing ore recipe is: no rent
-        # guessed, the old zero-rent answer stands.
-        return {}
+    outcome = land.margin_outcome_for_civilization(
+        civilization["id"], civilizations={civilization["id"]: civilization}, farmed_hectares=farmed_hectares)
     rent_kg_per_hectare = outcome.price_kg_grain_equivalent_per_hectare
     if rent_kg_per_hectare <= 0.0:
         return {}
     rent_hours = rent_kg_per_hectare * wheat_price_per_kg
-    return {"hectare_land": rent_hours}
+    return {LAND_MATERIAL: rent_hours}
 
 
-def stand_in_rent(production_entries, wage_by_trade, civilization_id=None, civilizations=None, farmed_hectares=None):
+def stand_in_rent(production_entries, wage_by_trade, civilization, farmed_hectares=None):
     """{good: hours of rent per unit} the opening carries when the caller supplies none: the ore rents and the
-    land rent."""
+    land rent of the civilisation record `civilization`."""
     rent = rent_hours_per_kg_by_ore_material(production_entries, wage_by_trade)
     rent.update(land_rent_hours_per_hectare(
-        production_entries, wage_by_trade, civilization_id=civilization_id, civilizations=civilizations,
-        farmed_hectares=farmed_hectares))
+        production_entries, wage_by_trade, civilization, farmed_hectares=farmed_hectares))
     return rent
