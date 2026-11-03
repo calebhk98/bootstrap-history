@@ -170,7 +170,7 @@ class Training:
             return False, refusal
         count, frm, hours, fee, years = plan["count"], plan["from"], plan["hours"], plan["fee"], plan["years"]
         workforce = self._world.workforce
-        current_year = self._world.year
+        current_year = self._world.game.year
         self._world.send(PayEdge(self._world.EDGE_WORKERS, fee, "training fees"))
         workforce.teaching_hours_this_year = (workforce.teaching_hours_this_year or 0.0) + hours
         workforce.trades_created.add(trade)
@@ -199,5 +199,5 @@ class Training:
                       "%s of your own hours (%s left this year) and %s "
                       "to keep them while they learn"
                       % (count, trade, "s" if count != 1 else "", trade_first_hands.year_joined(rows[-1][1]), frm,
-                         self._world.plain_number(hours), self._world.plain_number(_left),
-                         self._world.money_text(fee, grouped=True)))
+                         self._world.game.plain_number(hours), self._world.game.plain_number(_left),
+                         self._world.game.money_text(fee, grouped=True)))

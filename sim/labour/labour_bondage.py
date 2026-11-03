@@ -166,7 +166,7 @@ class Bondage:
         workforce.slaves += n_people
         workforce.market_pressure = workforce.market_pressure + n_people
         # Untrained on arrival. They become productive through the workforce's training queue.
-        workforce.training.append([n_people * self.pools.WORKER_EQUIVALENT_UNTRAINED, self._world.year + self.TRAINING_YEARS])
+        workforce.training.append([n_people * self.pools.WORKER_EQUIVALENT_UNTRAINED, self._world.game.year + self.TRAINING_YEARS])
         return n_people
 
     MANUMISSION_ARTISAN_UPLIFT = declare(

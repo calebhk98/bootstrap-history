@@ -21,7 +21,7 @@ class _StubLabour:
         projects = types.SimpleNamespace(done=set(done), operating=set(operating))
         nodes = {node_id: {} for node_id, _ in room_sources}
         self._world = types.SimpleNamespace(
-            projects=projects, money_text=lambda amount, grouped=False: "%g" % amount,
+            projects=projects, game=types.SimpleNamespace(money_text=lambda amount, grouped=False: "%g" % amount),
             people=types.SimpleNamespace(pop_scale=1.0),
             trades=types.SimpleNamespace(HOURS_PER_PERSON_YEAR=2000.0, trades_absent=set(absent)),
             scenario=types.SimpleNamespace(nodes=nodes, closure=lambda node_id: {node_id}),

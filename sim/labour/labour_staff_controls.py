@@ -64,7 +64,7 @@ class StaffControls:
 
         Spare means free after every open concern's claim (`venture_staff_free`).
         Buys housing first when the household has no room for them."""
-        if not self._world.policy.get("reserve_staff", False):
+        if not self._world.game.policy.get("reserve_staff", False):
             return
         workforce = self._world.workforce
         scholars_free, craftsmen_free = self._world.ventures.venture_staff_free()

@@ -28,7 +28,7 @@ class Bondage:
                                                reputation=0.0, market_pressure=0.0)
         self.refusals = []
         self._world = types.SimpleNamespace(
-            workforce=self.household, year=YEAR, commands=types.SimpleNamespace(note_buy_refusal=self.refusals.append), EDGE_SLAVE_TRADERS="slave_traders",
+            workforce=self.household, game=types.SimpleNamespace(year=YEAR), commands=types.SimpleNamespace(note_buy_refusal=self.refusals.append), EDGE_SLAVE_TRADERS="slave_traders",
             send=self._send,
             finance=types.SimpleNamespace(can_pay=lambda price: price <= self.cash,
                                           refusal_text=lambda what, price: "cannot afford %s" % what))

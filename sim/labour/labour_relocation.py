@@ -59,8 +59,8 @@ class Relocation:
         if money > balance:
             return False, ("moving to %s takes about %d days and would cost %s in "
                            "wages while your household travels; you have %s."
-                           % (tile, math.ceil(days), self._world.money_text(money, grouped=True),
-                              self._world.money_text(balance, grouped=True)))
+                           % (tile, math.ceil(days), self._world.game.money_text(money, grouped=True),
+                              self._world.game.money_text(balance, grouped=True)))
         self._world.send(PayEdge(self._world.EDGE_WORKERS, money, "relocation"))
         self._world.send(NoteSpend(money))
         workforce.relocation_hours_this_year = (
@@ -77,5 +77,5 @@ class Relocation:
                       "paid, %d hours of your year gone, local contracts "
                       "dropped and local standing mostly left behind. The town "
                       "there holds about %s people."
-                      % (tile, math.ceil(days), self._world.money_text(money, grouped=True), round(hours),
-                         self._world.plain_number(self.settlement.home_town_population_estimate())))
+                      % (tile, math.ceil(days), self._world.game.money_text(money, grouped=True), round(hours),
+                         self._world.game.plain_number(self.settlement.home_town_population_estimate())))

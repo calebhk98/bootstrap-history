@@ -12,7 +12,8 @@ class Labour:
     def __init__(self, wages):
         self._world = SimpleNamespace(scenario=SimpleNamespace(civ={"id": "rome_100ad", "short_name": "Rome", "population": 1000.0}),
                                       people=SimpleNamespace(population=SimpleNamespace(total=900.0), urban_fraction=lambda: 0.2),
-                                      trades=SimpleNamespace(wages=wages), plain_number=lambda number: "%d" % number)
+                                      trades=SimpleNamespace(wages=wages),
+                                      game=SimpleNamespace(plain_number=lambda number: "%d" % number))
         self.report = PopulationReport(self._world, book=self, settlement=self, supply=self, trades=self)
         self.report._density_is_placeholder = self._density_is_placeholder
 

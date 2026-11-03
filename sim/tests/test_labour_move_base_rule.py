@@ -28,7 +28,7 @@ class _Mover:
         self.quote = quote
         self._world = _World(
             workforce=self.household, EDGE_WORKERS="workers",
-            money_text=lambda amount, grouped=False: "%.0f" % amount, plain_number=lambda value: "%.0f" % value,
+            game=types.SimpleNamespace(money_text=lambda amount, grouped=False: "%.0f" % amount, plain_number=lambda value: "%.0f" % value),
             send=self._send)
         self.relocation = Relocation(self._world, book=None, hours=None, market=None, pools=self, settlement=self)
         self.relocation.relocation_quote = self.relocation_quote

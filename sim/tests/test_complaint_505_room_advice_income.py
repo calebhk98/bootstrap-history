@@ -23,7 +23,7 @@ class StandInLabour:
         projects = types.SimpleNamespace(done=set(), operating=set())
         nodes = {node_id: {} for node_id, _places in room_sources}
         self._world = types.SimpleNamespace(
-            projects=projects, money_text=lambda amount, grouped=False: "%g" % amount,
+            projects=projects, game=types.SimpleNamespace(money_text=lambda amount, grouped=False: "%g" % amount),
             scenario=types.SimpleNamespace(nodes=nodes, closure=lambda node_id: {node_id}),
             knowledge=types.SimpleNamespace(ROOM_SOURCES=list(room_sources), is_venture=lambda node_id: True,
                                             is_visible=lambda node_id: True, start_reason=lambda node_id, _why=True: (True, "")),

@@ -32,7 +32,7 @@ check("the cut is the declared ratio between the ages",
 class Labour:
     def __init__(self, total, reference=1000.0):
         self._world = SimpleNamespace(civ={"id": "rome_100ad", "short_name": "Rome", "population": reference}, population=SimpleNamespace(total=total),
-                                      urban_fraction=lambda: 0.2, wages={}, plain_number=lambda number: "%d" % number)
+                                      urban_fraction=lambda: 0.2, wages={}, game=SimpleNamespace(plain_number=lambda number: "%d" % number))
         self.report = PopulationReport(self._world, book=None, settlement=self, supply=None, trades=None)
 
     def population_report(self):
