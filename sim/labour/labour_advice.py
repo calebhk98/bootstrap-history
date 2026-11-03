@@ -19,7 +19,7 @@ class Advice:
     # STAFF_CAPACITY_SOURCES needs for its own unit-scaled arithmetic - two
     # declared names per figure rather than one, so a rename or a cast can
     # never silently turn a place count into a fraction of one.
-    # ROOM_SOURCES: [(node id, places)] from each node's `room_places` (MechanicsMixin).
+    # ROOM_SOURCES: [(node id, places)] from each node's `room_places`, as the mechanics module's view gives them.
     # fin_trial_balance, fin_company_town and fin_chain_store - the
     # organisation entries added alongside STAFF_CAPACITY_SOURCES above - are
     # deliberately NOT in ROOM_SOURCES, even though every one of them raises
@@ -66,16 +66,16 @@ class Advice:
         # endowment_land or court an imperial patron, instead of simply
         # reopening what they already own.
         projects = self._world.projects
-        reopen = sources_to_reopen(self._world.ROOM_SOURCES, projects.done, projects.operating, self._world.nodes,
-                                   self._world.is_venture)
+        reopen = sources_to_reopen(self._world.knowledge.ROOM_SOURCES, projects.done, projects.operating, self._world.scenario.nodes,
+                                   self._world.knowledge.is_venture)
         # NEAREST FIRST, and nearest means how much of the tree stands between
         # you and it. Sorted on size alone this offered power_grid (+130) to a
         # founder with six places - the last node in the game, true and
         # useless - while workshop_first, one prerequisite away, went unnamed.
-        want = sources_to_build(self._world.ROOM_SOURCES, projects.done, self._world.nodes, self._world.is_visible,
-                                lambda node_id: len(self._world.closure(self._world.nodes, node_id) - projects.done))
-        startable_now = any(self._world.start_reason(node_id, _why=False)[0] for node_id, _places in want)
-        return room_advice(self._world.money_text(self._world.housing_price_per_place(), grouped=True),
+        want = sources_to_build(self._world.knowledge.ROOM_SOURCES, projects.done, self._world.scenario.nodes, self._world.knowledge.is_visible,
+                                lambda node_id: len(self._world.scenario.closure(self._world.scenario.nodes, node_id) - projects.done))
+        startable_now = any(self._world.knowledge.start_reason(node_id, _why=False)[0] for node_id, _places in want)
+        return room_advice(self._world.money_text(self._world.finance.housing_price_per_place(), grouped=True),
                            reopen, want, startable_now, self._places_text)
 
     def staff_advice(self, kind, deficit=None):
@@ -95,13 +95,13 @@ class Advice:
 
         def waiting_on_kind(node_id):
             # Asked DIRECTLY of the node's own requirement, never through start_reason, which calls this function.
-            node = self._world.nodes[node_id]
+            node = self._world.scenario.nodes[node_id]
             return (node["art"] > self._world.workforce.artisans + 1e-9 if kind == "artisans"
                     else node["sch"] > self.hands.effective_scholars() + 1e-9)
 
-        steps = staff_remedies(kind, self._world.STAFF_SOURCES.get(kind, []), deficit, projects.done,
-                               projects.operating, self._world.is_venture, self._world.is_visible, waiting_on_kind,
-                               self._world.staff_hire_advice)
+        steps = staff_remedies(kind, self._world.knowledge.STAFF_SOURCES.get(kind, []), deficit, projects.done,
+                               projects.operating, self._world.knowledge.is_venture, self._world.knowledge.is_visible, waiting_on_kind,
+                               self._world.knowledge.staff_hire_advice)
         bits = [sentence for sentence, _remedy in steps]
         remedies = [remedy for _sentence, remedy in steps]
         if not bits:

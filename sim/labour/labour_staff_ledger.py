@@ -27,14 +27,14 @@ class StaffLedger:
         if not any(count > 0 for count in counts.values()):
             return
         world = self._world
-        stops = sorted(world.concerns_to_close_for_staffing())
+        stops = sorted(world.actors.concerns_to_close_for_staffing())
         # plain line: staff_lost_line builds the LogLine and its kind
         self._world.send(RecordEvent.from_line(staff_lost_line(
             cause, counts, stops, self.yearly_value_of(stops))))
 
     def yearly_value_of(self, node_ids):
         """What the named running concerns take in a year, as the ledger credits it."""
-        return self._world.stopped_yearly_value(node_ids)
+        return self._world.actors.stopped_yearly_value(node_ids)
 
     def log_staff_reduction(self, cause, before):
         """Log every trade whose headcount fell since `before`, with why."""
@@ -47,7 +47,7 @@ class StaffLedger:
         drawn = {}
         projects = self._world.projects
         for node_id in sorted(projects.active):
-            node = self._world.nodes.get(node_id)
+            node = self._world.scenario.nodes.get(node_id)
             if not node:
                 continue
             record = projects.active[node_id]
@@ -56,7 +56,7 @@ class StaffLedger:
             for trade, hours in lab_left.items():
                 if not trade_data.is_generic_staff(trade) and hours > 0:
                     drawn.setdefault(trade, []).append("project " + node_id)
-        for trade in sorted(self._world.venture_foremen_used()):
+        for trade in sorted(self._world.actors.venture_foremen_used()):
             drawn.setdefault(trade, []).append("open concern")
         return drawn
 
@@ -77,11 +77,11 @@ class StaffLedger:
         """Open concerns whose specialist foreman trade has exactly one person."""
         rows = []
         for node_id in sorted(self._world.projects.operating):
-            if node_id not in self._world.nodes:
+            if node_id not in self._world.scenario.nodes:
                 continue
-            trade, _fte = self._world.venture_foreman(node_id)
+            trade, _fte = self._world.actors.venture_foreman(node_id)
             if trade and round(self.book.employed(trade)) == 1:
-                rows.append({"concern": self._world.nodes[node_id].get("name", node_id),
+                rows.append({"concern": self._world.scenario.nodes[node_id].get("name", node_id),
                              "trade": trade,
                              "warning": "depends on one %s; losing them closes it" % trade})
         return rows

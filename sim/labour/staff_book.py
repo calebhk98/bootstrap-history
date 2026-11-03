@@ -68,11 +68,11 @@ class StaffBook:
     def reserved_people(self, trade):
         """People of a trade already given to an employer: the founder's staff, and the firms' and states' staff
         (the army counted whole)."""
-        return self.employed(trade) + self._world.actors_staff_nationwide(trade)
+        return self.employed(trade) + self._world.actors.actors_staff_nationwide(trade)
 
     def reserved_hours(self, trade):
         """Hours a year reserved by employers for a trade."""
-        return self.reserved_people(trade) * self._world.HOURS_PER_PERSON_YEAR
+        return self.reserved_people(trade) * self._world.trades.HOURS_PER_PERSON_YEAR
 
     def core_people_by_trade(self):
         """Working people by trade in the agent economy's labour core; None while it opens."""

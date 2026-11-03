@@ -39,7 +39,7 @@ class Supply:
         return cap
 
     def _working_fraction(self):
-        population = self._world.population
+        population = self._world.people.population
         return population.working_age / population.total if population.total > 0 else 0.0
 
     def _people_of_trade_in_reach(self, trade):
@@ -78,18 +78,18 @@ class Supply:
         places of the trade schools. A trade only the founder teaches has the people taught."""
         if not self.trades.trade_available(trade):
             return 0.0
-        hours_per_person = self._world.HOURS_PER_PERSON_YEAR
+        hours_per_person = self._world.trades.HOURS_PER_PERSON_YEAR
         school_hours = (self._world.workforce.trade_schools or {}).get(trade, 0.0) * hours_per_person
-        if trade in self._world.trades_absent:
-            return max(0.0, self._taught_trade_people(trade) - self._world.actor_staff_fte(trade)) * hours_per_person
+        if trade in self._world.trades.trades_absent:
+            return max(0.0, self._taught_trade_people(trade) - self._world.actors.actor_staff_fte(trade)) * hours_per_person
         people = self.literate_capacity(trade) if trade in self.trades.LITERATE_TRADES else self._people_of_trade_in_reach(trade)
-        hours = max(0.0, people - self._world.actor_staff_fte(trade)) * hours_per_person + school_hours
+        hours = max(0.0, people - self._world.actors.actor_staff_fte(trade)) * hours_per_person + school_hours
         return trade_supply_rules.supply_hours(hours, self.people_who_exist(trade), hours_per_person)
 
     def market_hours_offered(self):
         """Hours a year the labour core offers across every trade the seat can hire (market_supply summed): what projects'
         hired labour may draw on in a year."""
-        return sum(self.market_supply(trade) for trade in sorted(self._world.wages))
+        return sum(self.market_supply(trade) for trade in sorted(self._world.trades.wages))
 
     def reachable_trade_population(self, trade):
         """What this household's own labour market actually holds of this
@@ -110,7 +110,7 @@ class Supply:
         """
         if trade_data.literate_trades(trade_data.registry_of(self._world), (trade,)):
             return self.literate_capacity(trade)
-        return self.market_supply(trade) / self._world.HOURS_PER_PERSON_YEAR
+        return self.market_supply(trade) / self._world.trades.HOURS_PER_PERSON_YEAR
 
     def taught_trade_people(self, trade):
         """People in a trade only the founder teaches (see `_taught_trade_people`); what firms draw on too."""
@@ -127,14 +127,14 @@ class Supply:
         """People of a trade a hire can draw on: the labour core's people of it in the tiles reached, or last year's idle
         hours of it if those are more; the whole working age for the unskilled pool, the people taught for a trade only
         you teach, the literacy ceiling for a literate trade."""
-        if trade in self._world.trades_absent:
+        if trade in self._world.trades.trades_absent:
             return self._taught_trade_people(trade)
         if trade_data.drawn_from_unskilled_pool(trade):
-            return self._world.population.working_age
+            return self._world.people.population.working_age
         if trade in self.trades.LITERATE_TRADES:
             return self.literate_capacity(trade)
         idle, _offered = self._world.economy.agent_idle_hours_by_trade().get(trade, (0.0, 0.0))
-        return max(self._people_of_trade_in_reach(trade), idle / self._world.HOURS_PER_PERSON_YEAR)
+        return max(self._people_of_trade_in_reach(trade), idle / self._world.trades.HOURS_PER_PERSON_YEAR)
 
     def people_who_exist(self, trade):
         """Hands a hire of this trade can draw on (`hands_available`), counting your own staff even if a collapse has left
@@ -147,9 +147,9 @@ class Supply:
         least one person in every trade it draws hours from; supply is the
         people who exist in those trades."""
         trades = sorted(trade for trade, hours in (node["lab"] or {}).items()
-                        if hours > 0 and trade not in self._world.trades_absent
+                        if hours > 0 and trade not in self._world.trades.trades_absent
                         and self.trades.trade_available(trade))
-        working_age = self._world.population.working_age
+        working_age = self._world.people.population.working_age
         craft_supply = sum(self.people_who_exist(trade) for trade in trades)
         scholar_supply = self.people_who_exist(trade_data.scholar_trade())
         empty = [trade for trade in trades if self.people_who_exist(trade) < 1.0]
@@ -182,7 +182,7 @@ class Supply:
         if not self.trades.trade_available(trade):
             return 0.0
         if trade_data.drawn_from_unskilled_pool(trade):
-            return self._world.population.working_age   # any of the working age may be called up
-        if trade in self._world.trades_absent:
+            return self._world.people.population.working_age   # any of the working age may be called up
+        if trade in self._world.trades.trades_absent:
             return self._taught_trade_people(trade)
         return (self.book.core_people_by_trade() or {}).get(trade, 0.0)

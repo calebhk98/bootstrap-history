@@ -55,7 +55,7 @@ class Relocation:
             return False, "no route over the ways your people can travel joins %s to your base." % tile
         days, hours, money = quote
         workforce = self._world.workforce
-        balance = self._world.balance
+        balance = self._world.finance.balance
         if money > balance:
             return False, ("moving to %s takes about %d days and would cost %s in "
                            "wages while your household travels; you have %s."

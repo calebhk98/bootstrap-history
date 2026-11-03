@@ -105,10 +105,10 @@ class LabourMarket:
         would have caught it happened to sit behind a stray sys.exit in
         another test module and had never run.
         """
-        food = self._world.last_market_price_ratio(wage_provider.staple_material(self._world.civ))
+        food = self._world.finance.last_market_price_ratio(wage_provider.staple_material(self._world.scenario.civ))
         housing = self.town_housing_factor()
         basket = trade_data.tool_basket(trade_data.registry_of(self._world), trade)
-        tools = tools_factor(basket, self._world.material_price_factor, self._world.last_market_price_ratio)
+        tools = tools_factor(basket, self._world.finance.material_price_factor, self._world.finance.last_market_price_ratio)
         return {"food": food, "housing": housing, "tools": tools,
                 "skill_and_difficulty": 1.0,
                 "weighted": weighted_factor(self.WAGE_SHARE_FOOD, self.WAGE_SHARE_HOUSING, self.WAGE_SHARE_TOOLS,
@@ -116,7 +116,7 @@ class LabourMarket:
 
     def pay_scale(self):
         """What an hour pays against the opening schedule, at this economy's output per hour."""
-        return self._world.real_output_per_head() ** self.schedule.LABOUR_PAY_SHARE_OF_OUTPUT_GAIN
+        return self._world.finance.real_output_per_head() ** self.schedule.LABOUR_PAY_SHARE_OF_OUTPUT_GAIN
 
     def town_housing_room(self):
         """People the home town can house beyond those already there: the spare share of its
@@ -128,7 +128,7 @@ class LabourMarket:
     def town_workers(self):
         """People every employer in the town has on its books: the founder's household and every
         firm and government."""
-        return self.book.headcount() + self._world.actor_staff_total()
+        return self.book.headcount() + self._world.actors.actor_staff_total()
 
     def town_housing_factor(self):
         """The housing multiplier on a wage. It reads how full the town's housing is from everyone
@@ -143,10 +143,10 @@ class LabourMarket:
         world = self._world
         wage = world.economy.agent_wage_per_hour(trade)
         if wage is not None:
-            return wage * world.HOURS_PER_PERSON_YEAR
+            return wage * world.trades.HOURS_PER_PERSON_YEAR
         base = self.schedule.base_annual_wage(trade)
         factors = self.cost_factors(trade)
-        return annual_wage(base, factors["weighted"], world.price_index, world.wage_index, 1.0, self.pay_scale())
+        return annual_wage(base, factors["weighted"], world.finance.price_index, world.trades.wage_index, 1.0, self.pay_scale())
 
     def quote_annual(self, trade):
         """Money one person-year of a trade costs now: the economy's wage for the trade, the same for every employer and
@@ -166,7 +166,7 @@ class LabourMarket:
 
     def quote(self, trade):
         """Money one hour of a trade costs now: the one wage of the trade."""
-        return self._annual(trade) / self._world.HOURS_PER_PERSON_YEAR
+        return self._annual(trade) / self._world.trades.HOURS_PER_PERSON_YEAR
 
     def commission_cost(self, trade, hours):
         """What a one-off job of `hours` costs: the hour the market quotes."""

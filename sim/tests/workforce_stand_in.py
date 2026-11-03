@@ -27,9 +27,7 @@ def views_over(seat):
         "staff": lambda: {key: _get(seat, key) for key in STAFF_FIELDS},
         "hour_commitments": lambda: {key: _get(seat, field, None if key in ("work_trade", "last_year", "wage_work_last_year") else 0)
                                      for key, field in HOURS.items()},
-        "pay_book": lambda: {"paid_in_clearing": 0.0, "earned": _get(seat, "wages_earned", None),
-                             "paid": _get(seat, "wages_paid"),
-                             "living_cost_paid": _get(seat, "living_cost_paid")},
+        "pay_book": lambda: {"paid_in_clearing": 0.0},
         "training_queue": lambda: _get(seat, "training"),
         "trade_schools": lambda: _get(seat, "trade_schools", None) or {},
         "worker_housing_places": lambda: _get(seat, "worker_housing_places", None) or 0.0,

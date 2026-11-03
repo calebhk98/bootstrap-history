@@ -7,15 +7,6 @@ from .hire_outcome import craft_trades_report
 from .wage_provider import reference_civilisation
 
 
-class _LiterateTrades:
-    """The trades whose practice is reading: this world's own on an instance, the shipped set on the class."""
-
-    def __get__(self, instance, owner=None):
-        if instance is None:
-            return frozenset()
-        return trade_data.literate_trades(trade_data.registry_of(instance._world), instance._world.wages)
-
-
 class Trades:
     def __init__(self, world):
         self._world = world
@@ -38,14 +29,17 @@ class Trades:
     # drawings, exactly like the other four, so excluding it would let it
     # bypass the literacy ceiling that caps machinists, chemists,
     # engineers and opticians.
-    LITERATE_TRADES = _LiterateTrades()
+    @property
+    def LITERATE_TRADES(self):
+        """The trades whose practice is reading, as this world's trade registry states them."""
+        return trade_data.literate_trades(trade_data.registry_of(self._world), self._world.trades.wages)
 
     def is_craft_trade(self, trade):
-        return self._world.trade_family(trade) == legacy_trade_defaults.CRAFT_FAMILY
+        return self._world.trades.trade_family(trade) == legacy_trade_defaults.CRAFT_FAMILY
 
     def craft_trades_report(self):
         """The trades that supervise as craft and those that do not, by the same test `is_craft_trade` applies."""
-        return craft_trades_report(self._world.wages, self.is_craft_trade)
+        return craft_trades_report(self._world.trades.wages, self.is_craft_trade)
 
     # The literacy this file's trade shares and staff ceilings were already
     # tuned against, before literacy was read anywhere: the default
@@ -92,9 +86,9 @@ class Trades:
         if trade not in self.LITERATE_TRADES:
             return 1.0
         if trade == trade_data.scholar_trade():
-            lit, ref = self._world.literacy("literacy_elite"), self.LITERACY_REFERENCE_ELITE
+            lit, ref = self._world.knowledge.literacy("literacy_elite"), self.LITERACY_REFERENCE_ELITE
         else:
-            lit, ref = self._world.literacy("literacy_general"), self.LITERACY_REFERENCE_GENERAL
+            lit, ref = self._world.knowledge.literacy("literacy_general"), self.LITERACY_REFERENCE_GENERAL
         # NOT CLAMPED AT ONE: Rome starts AT the reference, so clamping here
         # would return exactly 1.0 for Rome for ever, no matter how much
         # printing, movable type, schools and academies raise
@@ -114,7 +108,7 @@ class Trades:
         An absent trade is not expensive, it is absent, and the only way to have
         one is to teach somebody the trade yourself.
         """
-        if trade not in self._world.trades_absent:
+        if trade not in self._world.trades.trades_absent:
             return True
         workforce = self._world.workforce
         return (trade in workforce.trades_created
@@ -122,4 +116,4 @@ class Trades:
 
     def available_trades(self):
         """Every trade this society has that the labour market can supply."""
-        return [trade for trade in sorted(self._world.wages) if self.trade_available(trade)]
+        return [trade for trade in sorted(self._world.trades.wages) if self.trade_available(trade)]

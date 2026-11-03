@@ -42,7 +42,7 @@ def _dominant_output(entry: Mapping[str, Any]) -> Optional[str]:
     outputs = entry.get("outputs") or {}
     if not outputs:
         return None
-    return labour_market._dominant_output_key(entry)
+    return labour_market.dominant_output_key(entry)
 
 
 # Recipe fields that draw an energy carrier; the carrier is the material of the same name that the

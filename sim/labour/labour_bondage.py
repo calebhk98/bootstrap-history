@@ -109,7 +109,7 @@ class Bondage:
         # year as sellers restock, so buying in slices is priced as one
         # large purchase unless you actually wait between them.
         depth = max(self.SLAVE_MARKET_DEPTH_FLOOR,
-                    self.SLAVE_MARKET_DEPTH_SCALE * self._world.pop_scale ** self.SLAVE_MARKET_DEPTH_POP_EXPONENT)
+                    self.SLAVE_MARKET_DEPTH_SCALE * self._world.people.pop_scale ** self.SLAVE_MARKET_DEPTH_POP_EXPONENT)
         # Integrate the rising price ACROSS the purchase instead of applying
         # one end-price surcharge to the whole block, so grouping does not
         # change the per-head cost: the nth head costs what the nth head
@@ -118,7 +118,7 @@ class Bondage:
         people_count = float(n_people)
         exponent = self.SLAVE_PRICE_CONGESTION_EXPONENT
         integral = (((already + people_count) ** exponent) - (already ** exponent)) / (exponent * (depth ** (exponent - 1.0)))
-        return self.SLAVE_BASE_PRICE * (people_count + integral) * self._world.price_index
+        return self.SLAVE_BASE_PRICE * (people_count + integral) * self._world.finance.price_index
 
     def buy_slaves(self, n_people):
         """The option the model refuses to hide, and refuses to make costless.
@@ -159,8 +159,8 @@ class Bondage:
         # A town's slave market has a depth. Buying beyond it bids the price up.
         price = self.slave_quote(n_people)
         workforce = self._world.workforce
-        if not self._world.can_pay(price):
-            self._world.note_buy_refusal(self._world.refusal_text("%d slaves" % n_people, price))
+        if not self._world.finance.can_pay(price):
+            self._world.note_buy_refusal(self._world.finance.refusal_text("%d slaves" % n_people, price))
             return 0
         self._world.send(PayEdge(self._world.EDGE_SLAVE_TRADERS, price, "slaves bought"))
         workforce.slaves += n_people

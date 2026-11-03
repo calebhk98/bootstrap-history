@@ -47,7 +47,7 @@ class Capacity:
     # (how fast an institution actually trains people).
 
     # STAFF_CAPACITY_SOURCES: [(node, scholars, artisans, directors, scales_with_units, must_be_running)]
-    # from each node's `staff_capacity` (MechanicsMixin).
+    # from each node's `staff_capacity`, as the mechanics module's `staff_capacity_sources` view gives them.
 
     STAFF_CAPITAL_INCOME_RATE = declare(
         "STAFF_CAPITAL_INCOME_RATE", 0.06, kind="temporary_heuristic",
@@ -72,8 +72,8 @@ class Capacity:
         the start: what hiring costs the market now, so an affordability
         budget turns into a headcount in the money it is paid in."""
         market = self.market
-        wages = [market.unscarce_annual(trade) for trade in sorted(self._world.wages)
-                 if trade not in self._world.trades_absent]
+        wages = [market.unscarce_annual(trade) for trade in sorted(self._world.trades.wages)
+                 if trade not in self._world.trades.trades_absent]
         blended = blended_annual_wage(wages)
         return blended if blended is not None else market.unscarce_annual(
             trade_data.fallback_trade_of(self._world, self.schedule.wage_schedule().training_years))
@@ -145,7 +145,7 @@ class Capacity:
         # the original single unit - exactly the constants below, unchanged -
         # and the actual capacity a further unit buys otherwise. The COST of
         # each further unit is where the diminishing return lives (see
-        # ProjectsMixin.institution_unit_cost); this is simply how big the
+        # the production module's institution_unit_cost view); this is simply how big the
         # place you paid for actually is.
         # STAFF_CAPACITY_SOURCES is the whole list, in one place, because the
         # planner needs to read it too. A plan built from the tech tree alone
@@ -197,10 +197,10 @@ class Capacity:
     def _institutional_load(self, with_directors=False):
         """Scholars and artisans (and directors) the running institutions train outright, before affordability."""
         scholars = artisans = directors = 0.0
-        for key, _sc, _ar, _di, scaled, must_run in self._world.STAFF_CAPACITY_SOURCES:
-            if not (self._world.running(key) if must_run else self._world.has(key)):
+        for key, _sc, _ar, _di, scaled, must_run in self._world.knowledge.STAFF_CAPACITY_SOURCES:
+            if not (self._world.knowledge.running(key) if must_run else self._world.knowledge.has(key)):
                 continue
-            units = self._world.institution_units(key) if scaled else 1.0
+            units = self._world.knowledge.institution_units(key) if scaled else 1.0
             scholars += _sc * units
             artisans += _ar * units
             directors += _di * units
@@ -220,9 +220,9 @@ class Capacity:
 
     def _staffing_affordability(self):
         """(people the spare income can pay, population scale on institutional ceilings)."""
-        spare = max(0.0, (self._world.revenue() - self._world.upkeep() - self._world.living_cost())
-                    * self._world.rep_factor()
-                    + max(0.0, self._world.balance) * self.STAFF_CAPITAL_INCOME_RATE)
+        spare = max(0.0, (self._world.finance.revenue() - self._world.finance.upkeep() - self._world.finance.living_cost())
+                    * self._world.finance.rep_factor()
+                    + max(0.0, self._world.finance.balance) * self.STAFF_CAPITAL_INCOME_RATE)
         budget = spare * self.STAFF_BUDGET_SHARE_OF_SPARE
         afford = budget / self.staff_wage_reference()
         # A civilization of 1.5 million simply cannot field the trained people a
@@ -232,7 +232,7 @@ class Capacity:
         # programme, it just has to grow into it: making that impossible
         # would be a modelling error, not a finding.
         pop = (self.STAFF_POP_SCALE_FLOOR
-               + self.STAFF_POP_SCALE_VARIABLE * min(1.0, self._world.pop_scale ** self.STAFF_POP_SCALE_EXPONENT))
+               + self.STAFF_POP_SCALE_VARIABLE * min(1.0, self._world.people.pop_scale ** self.STAFF_POP_SCALE_EXPONENT))
         return afford, pop
 
     def _staff_scale_for(self, afford, institutional_people, extra):
@@ -290,7 +290,7 @@ class Capacity:
         room = (self.SUPERVISION_ROOM_SELF
                 + self.SUPERVISION_ROOM_PER_DIRECTOR_EXTRA * workforce.directors_extra
                 + max(0.0, workforce.worker_housing_places or 0.0))
-        room = self._world.effect_sum("supervision_room", room)
+        room = self._world.knowledge.effect_sum("supervision_room", room)
         # A SECOND TOWN, NOT A SECOND SCHOOLROOM. workshop_first, school_founded
         # and academy_network above are each a single PLACE a founder can stand
         # in; fin_chain_store is the tree's own word for the thing that is not
@@ -330,11 +330,11 @@ class Capacity:
         if housing > 0.0:
             rows.append({"source": "worker housing", "people": housing,
                          "what_it_is": "places you have bought to house the people you employ"})
-        for key, spec in self._world.effect_terms("supervision_room"):
-            if self._world.effect_holds(key, spec):
+        for key, spec in self._world.knowledge.effect_terms("supervision_room"):
+            if self._world.knowledge.effect_holds(key, spec):
                 rows.append({"source": key,
-                             "people": (round(self._world.effect_value(key, spec), 2) if "per_unit" in spec
-                                        else self._world.effect_value(key, spec)),
+                             "people": (round(self._world.knowledge.effect_value(key, spec), 2) if "per_unit" in spec
+                                        else self._world.knowledge.effect_value(key, spec)),
                              "what_it_is": spec["words"]})
         return rows
 
