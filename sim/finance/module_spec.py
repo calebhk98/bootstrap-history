@@ -9,7 +9,7 @@ Nothing it publishes is cached: the agents' shared arrears rule writes `interest
 through the household's `arrears_book`, and every answer reads the economy, the actors' book and the household directly."""
 from sim.assembly.api import QUOTE, ModuleSpec, PhaseHook, ViewSpec
 from sim.actors.api import SetLenderOffers, SettleLenderInterest
-from sim.ledger.api import NoteHolderBooking, NoteSeatCash, SettleWithEdge, WithdrawHouseholdMoney
+from sim.ledger.api import NoteHolderBooking, NoteSeatCash, WriteOffHouseholdDebt, WithdrawHouseholdMoney
 from sim.markets.api import FoundBankFromOutside
 from sim.polity.api import SetReputation
 from sim.projects.api import HaltActiveProjects, ReviewVentures
@@ -87,7 +87,7 @@ MODULE_SPECS = (ModuleSpec(
 	),
 	phases=(PhaseHook("credit_limit", "step_credit_limit"),),
 	reads=tuple(name for names in READS_BY_OWNER.values() for name in names),
-	sends=(RecordEvent, SetReputation, SettleWithEdge, WithdrawHouseholdMoney, MothballMines, BleedStaff, DisperseDependants, Manumit,
+	sends=(RecordEvent, SetReputation, WriteOffHouseholdDebt, WithdrawHouseholdMoney, MothballMines, BleedStaff, DisperseDependants, Manumit,
 	       HaltActiveProjects, ReviewVentures, NoteSeatCash, NoteHolderBooking, SetLenderOffers, SettleLenderInterest,
 	       FoundBankFromOutside),
 ),)

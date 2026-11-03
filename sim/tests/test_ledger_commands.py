@@ -11,7 +11,7 @@ from sim.agents.api import EDGE_EXCHANGE, EDGE_OUTSIDE, PURSE_CURRENCY, ActorReg
 from sim.engine.state import ActorRecord, deserialize_state, serialize_state
 from sim.ledger.api import (CloseCashPeriod, CreditSeat, DebitSeat, NoteHolderBooking, NoteSeatCash, NoteSpend, OpenCashBook, OpenPurse,
                             BankStock, ChangeStock, DrawDownStock, LedgerSeat, LedgerWorld, PayActor, PayActorFromHousehold, PayEdge, PayExchange,
-                            ReceiveFromEdge, ReceiveFromExchange, RescaleHouseholdMoney, RestorePurse, SettleWithEdge, TakeFromHouseholdPurse,
+                            ReceiveFromEdge, ReceiveFromExchange, RescaleHouseholdMoney, RestorePurse, TakeFromHouseholdPurse,
                             WithdrawHouseholdMoney)
 from sim.ledger.ledger import Ledger
 from sim.refusal import Refusal
@@ -166,14 +166,6 @@ class ExchangeCommands(unittest.TestCase):
         ledger_over(cast=registry).receive_from_exchange(ReceiveFromExchange(firm.actor_id, 75.0, "market sales"))
         self.assertEqual(firm.money, 575.0)
         self.assertEqual(firm.record.income, {"market sales": 75.0})
-
-
-class SettleWithEdgeCommand(unittest.TestCase):
-    def test_the_household_is_brought_to_the_balance_by_moving_the_difference_over_the_edge(self):
-        module, registry, _treasury = seat_ledger(-300.0)
-        edge = registry.state.edge("edge:creditors")
-        module.settle_with_edge(SettleWithEdge("edge:creditors", -50.0, "debts written off in settlement"))
-        self.assertEqual((module.acting_balance(), edge.balance()), (-50.0, -250.0))
 
 
 class RescaleHouseholdMoneyCommand(unittest.TestCase):

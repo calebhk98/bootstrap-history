@@ -10,6 +10,7 @@ from typing import Dict, Optional, Tuple
 from sim.assembly.api import Part
 from sim.economy.api import opening_market_rate
 from sim.projects.api import funding as project_funding
+from sim.world import capital_market
 
 from . import rules
 from .affordability import appearances_spending, spending_power_of
@@ -51,15 +52,14 @@ class CreditLine(Part):
 		# everyone can run a tab for a season: a year's running costs, priced at the standing income
 		floor = self.living_cost(revenue=earning if revenue is None else revenue, upkeep=upkeep_amount, capital=capital) \
 			+ upkeep_amount * CREDIT_LINE_FLOOR_UPKEEP_BUFFER_SHARE
-		# no lender advances more than income can carry. The years of earning a lender will carry are the opening figure, less
-		# when money has grown dearer than at the start; cheaper money from society's saving does not enlarge what this borrower
-		# can carry.
+		# no lender advances more than income can carry: the one carried-debt function (`capital_market.serviceable_debt`) every
+		# borrower uses, at the opening's rate where money is cheaper than at the start (cheaper money from society's saving does
+		# not enlarge what this borrower can carry), the share being the years of earning a lender will carry at that opening rate.
+		# The running tab carries interest too, so only the earning left after that interest backs new advances.
 		market_rate = self.parts.capital_market.market_rate()
-		years = CREDIT_SURPLUS_YEARS_MULTIPLE
-		if market_rate > 0:
-			years *= min(1.0, opening_market_rate() / market_rate)
-		# the running tab carries interest too, so only the earning left after that interest backs new advances
-		serviceable = floor + max(0.0, earning - floor * market_rate) * years
+		opening_rate = opening_market_rate()
+		serviceable = floor + capital_market.serviceable_debt(
+			earning - floor * market_rate, max(market_rate, opening_rate), CREDIT_SURPLUS_YEARS_MULTIPLE * opening_rate)
 		return base, floor, serviceable
 
 	def credit_limit(self, revenue: Optional[float] = None, upkeep: Optional[float] = None, capital: Optional[float] = None) -> float:

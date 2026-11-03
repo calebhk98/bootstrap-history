@@ -8,7 +8,7 @@ import unittest
 
 from sim.agents.api import ActorRecord, ActorsState
 from sim.agents.firm import Firm
-from sim.agents.purses import COIN, POOL, Purses
+from sim.agents.purses import POOL, Purses
 
 from .pool_lenders import lend_from_savers
 
@@ -81,7 +81,7 @@ class PooledLending(unittest.TestCase):
         purses.cover(borrowers[1].account_id, 60.0)
         purses.write_off(borrowers[0].account_id)
         claims = purses.contracts.total_deposits()
-        assets = purses.purse(POOL) + purses.lent() - purses.contracts.exposure(None, COIN, "term_loan")
+        assets = purses.purse(POOL) + purses.lent() - sum(contract.principal for contract in purses.contracts.term_loans)
         self.assertAlmostEqual(claims, assets)
 
     def test_a_deposit_is_taken_back_before_a_facility_is_drawn(self):

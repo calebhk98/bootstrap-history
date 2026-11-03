@@ -5,9 +5,9 @@ Needs: acting_balance, standing, money_text, civilisation, revenue_estimate,
 upkeep, mine_operating_cost, game_config, labour_market, money_per_labour_hour."""
 from typing import Any
 
-from sim.agents.api import business_review, edges
+from sim.agents.api import business_review
 from sim.assembly.api import Part
-from sim.ledger.api import SettleWithEdge
+from sim.ledger.api import WriteOffHouseholdDebt
 from sim.polity.api import SetReputation
 from sim.reporting.api import RecordEvent
 from sim.resources.api import MothballMines
@@ -105,7 +105,7 @@ class Insolvency(Part):
 		if term > 0.0 and not seat.bondage_years_left:
 			seat.bondage_years_left = term
 			seat.bondage_debt = -needs.acting_balance()
-			needs.send(SettleWithEdge(edges.EDGE_CREDITORS, 0.0, "debt taken into bondage"))
+			needs.send(WriteOffHouseholdDebt(seat.bondage_debt, "debt taken into bondage"))
 			needs.send(RecordEvent.of("debt_bondage", "BONDAGE: you cannot pay, and you enter service for "
 				"your debt. For about %d years most of your hours "
 				"belong to someone else. It is not the end: it is "
@@ -124,7 +124,7 @@ class Insolvency(Part):
 		needs.send(SetReputation(max(0.0, reputation_before - SETTLEMENT_REPUTATION_HIT)))
 		owed = settlement_owed(limit, self.parts.credit_line.credit_limit(), SETTLEMENT_CAPITAL_RETAINED_FRACTION)
 		needs.send(SetReputation(reputation_before))
-		needs.send(SettleWithEdge(edges.EDGE_CREDITORS, -owed, "debts written off in settlement"))
+		needs.send(WriteOffHouseholdDebt(max(0.0, -needs.acting_balance() - owed), "debts written off in settlement"))
 		# the number announced has to be the number applied
 		reputation_hit = reputation_hit_taken(SETTLEMENT_REPUTATION_HIT, needs.standing()["reputation"])
 		needs.send(SetReputation(max(0.0, needs.standing()["reputation"] - SETTLEMENT_REPUTATION_HIT)))

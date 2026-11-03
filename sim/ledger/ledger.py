@@ -88,9 +88,14 @@ class Ledger(Module):
 			self.bump_seat(MONEY)
 		return refusal
 
-	def settle_with_edge(self, command: Any) -> None:
-		ledger.settle(self.account(), self.edge(command.edge), command.balance, command.purpose)
-		self.bump_seat(MONEY)
+	def write_off_household_debt(self, command: Any) -> None:
+		account = self.account()
+		purses = self.needs.cast_state().purses
+		forgiven = min(max(0.0, command.amount), purses.debt(account.account_id))
+		if forgiven > 0.0:
+			purses.write_off(account.account_id, forgiven)
+			account.payments.note_income(command.purpose, forgiven)
+			self.bump_seat(MONEY)
 
 	def rescale_household_money(self, command: Any) -> None:
 		account = self.account()

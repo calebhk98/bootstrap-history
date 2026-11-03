@@ -92,6 +92,13 @@ def perpetuity_value(yearly_income: float, rate: float, rate_floor: float = 1e-9
     return max(0.0, yearly_income) / max(rate, rate_floor)
 
 
+def bullet_value(coupon: float, redemption: float, years: float, rate: float) -> float:
+    """What a claim paying `coupon` a year for `years` whole years (at least one) and `redemption` at the end is worth now at `rate`."""
+    growth = 1.0 + max(-0.99, rate)
+    periods = max(1, int(round(years)))
+    return sum(coupon / growth ** period for period in range(1, periods + 1)) + redemption / growth ** periods
+
+
 def headroom(capacity: float, lent: float) -> float:
     """What lenders can still advance: what they will lend less what is lent."""
     return max(0.0, capacity - lent)

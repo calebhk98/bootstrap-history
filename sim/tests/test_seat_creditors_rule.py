@@ -9,7 +9,7 @@ from types import SimpleNamespace
 from sim.agents import business_review
 from sim.agents.api import Business
 from sim.finance.api import constants as finance_constants
-from sim.ledger.api import ReceiveFromEdge
+from sim.ledger.api import WriteOffHouseholdDebt
 from sim.projects.review import SeatReview
 from sim.tests import module_harness, projects_host
 
@@ -34,7 +34,7 @@ class CreditorsPress(unittest.TestCase):
         proceeds = seat.proceeds_of_seizure("shop")
         self.assertEqual(proceeds, 200.0 * finance_constants.CREDITOR_SEIZURE_VALUE_MULTIPLE)
         seat.receive_seizure("shop", proceeds)
-        self.assertEqual([command.amount for command in module_harness.sent(module) if isinstance(command, ReceiveFromEdge)], [proceeds])
+        self.assertEqual([command.amount for command in module_harness.sent(module) if isinstance(command, WriteOffHouseholdDebt)], [proceeds])
 
 
 class _Seat(business_review.Reviewable):
