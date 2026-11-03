@@ -10,8 +10,7 @@ from pathlib import Path
 
 
 from sim.content import catalog
-from sim.engine import data
-from sim.workforce import wage_schedule
+from sim.labour.api import wage_provider
 from sim.prices.solve_prices_core import wage_ratios_by_trade
 from sim.labour import wages
 
@@ -77,7 +76,7 @@ class ProviderTests(unittest.TestCase):
                 "test_acme_k3f9:clockmaker": {"family": "craft"},
                 "test_acme_k3f9:surveyor": {"family": "craft", "training_years": 9}}}))
             registry = catalog.load_trade_registry(str(root), mods_dir=str(root / "mods"))
-        schedule = wage_schedule.build_schedule(registry, data.load_civ("rome_100ad"))
+        schedule = wages.WageSchedule(wage_provider.training_years_by_trade(registry), 2.0, 1.0, 0.05)
         self.assertGreater(schedule.wage_per_hour("test_acme_k3f9:clockmaker"), schedule.floor_per_hour)
         # A trade that states no training takes its family's median.
         self.assertEqual(schedule.wage_per_hour("test_acme_k3f9:clockmaker"), schedule.wage_per_hour("smith"))

@@ -5,6 +5,7 @@ QUICK_TOPIC = True
 import unittest
 
 from sim.engine import data
+from sim.scenario.api import money_short
 
 CIVS = ["rome_100ad", "han_china_100ad", "norse_900ad", "mexica_1500", "england_1300",
         "sample_egypt_100bc_e7k2:egypt"]
@@ -19,7 +20,7 @@ class CurrencyWordsAreCivData(unittest.TestCase):
     def test_money_word_reads_the_civ_file(self):
         civ = {"currency": "invented shell", "currency_words": {"long": "shells", "short": "sh"}}
         self.assertEqual(data.money_word(civ), "shells")
-        self.assertEqual(data.money_short(civ), "sh")
+        self.assertEqual(money_short(civ), "sh")
 
     def test_engine_holds_no_per_currency_table(self):
         self.assertFalse(hasattr(data, "MONEY_WORDS"))

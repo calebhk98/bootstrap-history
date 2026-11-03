@@ -25,9 +25,8 @@ sys.setrecursionlimit(20000)
 import collections
 from typing import Any, Dict, FrozenSet, Iterable, List, Optional, Tuple, TypedDict
 from sim.prices.api import identity_cache
-from sim.scenario.api import money_short, money_word, rules as scenario_rules  # noqa: F401 - the coin's words are the scenario module's
+from sim.scenario.api import money_word, rules as scenario_rules  # noqa: F401 - the coin's words are the scenario module's
 IdentityCache = identity_cache.IdentityCache
-from sim.geography.api import haversine_km, load_geography
 from sim.content.api import get_ordered_mods, load_mod_tree
 from sim.content.api import MissingVariantBase
 from sim.content.api import load_win_condition_labels
@@ -195,7 +194,7 @@ def schedule_of_civilisation(civ: JSONDict) -> wage_provider.wages.WageSchedule:
 def kit_capital(kit_id: str, civ: JSONDict) -> float:
     """Opening money of a kit for a civilisation: its unskilled-worker-years times the
     civilisation's opening annual unskilled wage."""
-    schedule = build_schedule(_TRADE_REGISTRY, civ)
+    schedule = schedule_of_civilisation(civ)
     return scenario_rules.kit_capital(STARTING_KITS[kit_id], schedule.annual_wage(trade_of_role(_TRADE_REGISTRY, "unskilled")))
 
 

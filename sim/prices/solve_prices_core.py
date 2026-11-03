@@ -43,24 +43,19 @@ from sim.algorithm_parameters import (           # noqa: E402  (see sys.path abo
     INITIAL_PRICE_GUESS_HOURS, GROWTH_BOUND_HOURS)
 
 
-_DEFAULT_NUMERAIRE_TRADE = []
-
-
-def numeraire_trade(production_entries=None):
+def numeraire_trade(production_entries=None, registry=None):
     """The trade whose hour is the unit every wage is stated in: the trade registry's unskilled one, the same trade
-    the economy's labour markets fall back to (`sim.labour.api.trade_of_role`). Without `production_entries`, the
-    committed catalogue's registry, read once per process."""
+    the economy's labour markets fall back to (`sim.labour.api.trade_of_role`). `registry` is a live one (trade id
+    to its fields); without it the registry is read for `production_entries` (the committed catalogue's when none)."""
     from sim.labour.api import trade_of_role
-    from sim.prices import engine_seam
-    if production_entries is None and _DEFAULT_NUMERAIRE_TRADE:
-        return _DEFAULT_NUMERAIRE_TRADE[0]
-    entries = engine_seam.load_production()[0] if production_entries is None else production_entries
-    registry = engine_seam.load_trade_registry(REPO_ROOT, entries, nodes=engine_seam.load_mod_tree_nodes(REPO_ROOT))
-    unskilled = trade_of_role({trade_id: {"family": trade.family, "training_years": trade.training_years, **trade.extra}
-                               for trade_id, trade in registry.items()}, "unskilled")
-    if production_entries is None:
-        _DEFAULT_NUMERAIRE_TRADE.append(unskilled)
-    return unskilled
+    if registry is None:
+        from sim.prices import engine_seam
+        entries = engine_seam.load_production()[0] if production_entries is None else production_entries
+        loaded = engine_seam.load_trade_registry(REPO_ROOT, entries, nodes=engine_seam.load_mod_tree_nodes(REPO_ROOT))
+        registry = {trade_id: {"family": trade.family, "training_years": trade.training_years, **trade.extra}
+                    for trade_id, trade in loaded.items()}
+    return trade_of_role(registry, "unskilled")
+
 
 # The three energy carriers (see ENERGY in this module's docstring). Named
 # once here rather than spelled out at each of the three call sites that

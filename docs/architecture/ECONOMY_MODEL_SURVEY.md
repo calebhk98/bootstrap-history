@@ -9,7 +9,7 @@ commands in `CLAUDE.md` §5.
 
 Prices are solved as a damped fixed point over the recipes in
 `data/production/` (`sim/prices/solve_prices_core.py`), in labour-hours with the
-`labourer` trade as numeraire, plus two rent mechanisms (ore deposits, arable
+registry's unskilled trade as numeraire, plus two rent mechanisms (ore deposits, arable
 land). Joint outputs split the shared cost by value at reference prices (the
 caller's, else the sole-output route's, else mass: `sim/prices/joint_allocation.py`); the survey below
 was written when demand anchors set the split. Labour moves between trades
