@@ -5,6 +5,7 @@ QUICK_TOPIC = True
 
 import unittest
 
+from sim.tests.economy_view_defaults import ViewDefaults
 from sim.economy import producers
 from sim.economy.types import Recipe
 
@@ -16,7 +17,7 @@ FLOOR = 5.0 - producers.OUTPUT_CHANGE_SHARE_PER_YEAR * 10.0      # the fewest ru
 RUN_COST = 10.0 * 1.0 + 5.0 * 1.0
 
 
-class View:
+class View(ViewDefaults):
     year = 3
 
     def __init__(self, held, prices=PRICES):

@@ -38,14 +38,16 @@ INDEX_PRICE_ADJUSTMENT = declare(
     retire="Complaints/106: a price formed by a market maker's inventory or an auction replaces the adjustment speed")
 INDEX_PRICE_ADJUSTMENT_MAX = declare(
     "INDEX_PRICE_ADJUSTMENT_MAX", 1.1, kind="temporary_heuristic", unit="largest rise of the share price in a year, as a ratio",
-    source="Eurace@Unibi shipped state 0_after_2k_transient.xml (opened): index_price_adj_max 1.1. The C applies it "
-           "monthly; here it limits a year.", confidence="D",
+    source="Eurace@Unibi shipped state 0_after_2k_transient.xml (opened): index_price_adj_max 1.1. The C clamps on every iteration "
+           "(daily: ClearingHouse_update_price, called daily by the Financial model.xml); here the clamp limits a year and is far "
+           "tighter.", confidence="D",
     why="A ceiling on the price's yearly rise.",
     retire="Complaints/106: a price formed by a market maker's inventory or an auction replaces the ceiling")
 INDEX_PRICE_ADJUSTMENT_MIN = declare(
     "INDEX_PRICE_ADJUSTMENT_MIN", 0.9, kind="temporary_heuristic", unit="largest fall of the share price in a year, as a ratio",
-    source="Eurace@Unibi shipped state 0_after_2k_transient.xml (opened): index_price_adj_min 0.9. The C applies it "
-           "monthly; here it limits a year.", confidence="D",
+    source="Eurace@Unibi shipped state 0_after_2k_transient.xml (opened): index_price_adj_min 0.9. The C clamps on every iteration "
+           "(daily: ClearingHouse_update_price, called daily by the Financial model.xml); here the clamp limits a year and is far "
+           "tighter.", confidence="D",
     why="A floor under the price's yearly fall.",
     retire="Complaints/106: a price formed by a market maker's inventory or an auction replaces the floor")
 

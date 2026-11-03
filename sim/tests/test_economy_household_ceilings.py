@@ -5,6 +5,7 @@ QUICK_TOPIC = True
 import dataclasses
 import unittest
 
+from sim.tests.economy_view_defaults import ViewDefaults
 from sim.economy import households
 from sim.economy.types import GoodSpec
 from sim.world.climate_needs import PERSONS_PER_HOUSEHOLD
@@ -24,7 +25,7 @@ SPECS = {name: GoodSpec(name, 1.0, 0.0, 0.0, name) for name in ("grain", "beads"
 BASKET = households.make_basket(NEED_DATA, {})
 
 
-class View:
+class View(ViewDefaults):
     year = 1
 
     def __init__(self, prices):

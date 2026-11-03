@@ -5,6 +5,7 @@ QUICK_TOPIC = True
 
 import unittest
 
+from sim.tests.economy_view_defaults import ViewDefaults
 from sim.economy import merchants, merchants_credit
 from sim.economy.market_areas import AreaMap
 from sim.economy.merchants import Merchant
@@ -17,7 +18,7 @@ SPECS = {"salt": SALT}
 DESTINATION_VOLUME = 100.0
 
 
-class View:
+class View(ViewDefaults):
     year = 1
 
     def price(self, good, area):

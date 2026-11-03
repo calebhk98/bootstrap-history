@@ -1,8 +1,10 @@
 """Sellers that sell out with buyers turned away raise their asks within the year's clearing, the mirror of the unsold
 search (unsold_search.py): that one lowers asks to the highest common level at which everything sells, this one raises
 them to the highest common level at which the buyers still ask for all that is offered. Beyond it the buyers' money (or their ceilings)
-no longer buys the stock, so the ask is where demand equals what is offered. Lengnick 2013, Caiani et al. 2016 and
-Peters 2020 raise a firm's price when its inventory runs short as they cut it when stock is left; in a fair or a harvest
+no longer buys the stock, so the ask is where demand equals what is offered. Lengnick 2013 and Caiani et al. 2016
+raise a firm's price when its inventory runs short as they cut it when stock is left; Peters 2022 (arXiv 2205.00752) sets
+its price rule by output against the demand since the last strategy change, with a NAIRU and an average-price condition,
+not by inventory. In a fair or a harvest
 market the sold-out seller does so on the spot, since buyers are standing there with money unspent. Without it the
 buyers' unspent money was involuntary saving and the price the market remembered stayed below the crossing.
 """

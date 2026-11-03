@@ -6,13 +6,14 @@ QUICK_TOPIC = True
 
 import unittest
 
+from sim.tests.economy_view_defaults import ViewDefaults
 from sim.economy import producers
 from sim.economy.types import Recipe
 
 CART = Recipe("cart", {"cart": 1.0}, {"bar": 15.0, "timber": 0.4}, {"carpenter": 150.0, "smith": 15.0})
 
 
-class View:
+class View(ViewDefaults):
     year = 3
 
     def __init__(self, prices, wages):

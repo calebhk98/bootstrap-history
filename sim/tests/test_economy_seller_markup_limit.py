@@ -8,6 +8,7 @@ QUICK_TOPIC = True
 import types
 import unittest
 
+from sim.tests.economy_view_defaults import ViewDefaults
 from sim.economy import seller_offers, unsold_search
 from sim.economy.producers import Producer
 from sim.economy.types import Bid, Offer, Recipe
@@ -18,7 +19,7 @@ MARKUP = SUBSTITUTION / (SUBSTITUTION - 1.0)
 RUN_COST_PER_UNIT = 2.0 * 3.0 + 4.0 * 0.5     # two of metal at three, four hours at half
 
 
-class View:
+class View(ViewDefaults):
     def interest_rate(self, currency):
         return 0.0
 

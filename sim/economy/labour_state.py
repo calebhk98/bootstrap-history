@@ -114,8 +114,9 @@ def scale_people(state: MarketState, area: str, factor: float) -> None:
 
 
 def mirror_wages(wages: Dict[str, float], state: MarketState) -> None:
-    """Rebuild whole the market wages the core settled, under the economy's market keys, for whoever reads a wage: a
-    market the core holds no wage for is not quoted one."""
+    """Rebuild whole the remembered wages from the core's wages (`state.wages`, area -> trade -> wage) under the economy's
+    market keys, for whoever reads a wage: a market the core holds no wage for is not quoted one. The only writer of
+    `MarketMemory.wages`; the opening calls it with the seeds in a state of their own."""
     wages.clear()
     for area, by_trade in state.wages.items():
         for trade, wage in by_trade.items():

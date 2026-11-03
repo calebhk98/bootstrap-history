@@ -18,6 +18,7 @@ from sim.ui.proto.render_screens_market import NO_TRADE_CAUSE, price_note
 def memory_with(prices, cleared=(), quotes=None):
     memory = MarketMemory(prices=dict(prices), wages={"labour|a": 0.5}, rates={"coin": 0.0})
     memory.cleared_prices = {key: prices[key] for key in cleared}
+    memory.trade_age = {key: 0 for key in cleared}
     memory.quote_kinds = dict(quotes or {})
     return memory
 

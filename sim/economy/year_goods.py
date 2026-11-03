@@ -14,7 +14,6 @@ from . import (currency, mint_price, land_bid_year, carriage_fleet_book, carriag
 from . import goods_respend, goods_respend_year, households_cohort
 from .household_work_year import basket_key, cohort_basket
 from .market_memory import market_key
-from .offered_price import offered_price
 from .market_memory_asks import memory_reference_volume, note_bids, note_offers, price_after_resumed_trade, wanted_at
 from .market_memory_asks import REPRESENTATIVE_TRADE_SHARE
 from .market_memory_offers import price_after_thin_trade, price_toward_quote
@@ -56,7 +55,7 @@ def cohort_orders(setup, record, view, ledger: YearLedger, order_book: OrderBook
         income = ledger.wages_in.get(cohort.agent_id, 0.0) + record.capital_markets.property_income.get(cohort.agent_id, 0.0)
         cash = record.book.balance(cohort.agent_id, money)
         tool_bids = tool_wear.tool_bids(
-            cohort.agent_id, cohort.tile, lambda good: view.area_of(good, cohort.tile), lambda good: offered_price(view, good, view.area_of(good, cohort.tile)),
+            cohort.agent_id, cohort.tile, lambda good: view.area_of(good, cohort.tile), lambda good: view.offered_price(good, view.area_of(good, cohort.tile)),
             lambda good: view.stock(cohort.agent_id, good, cohort.tile), setup.recipes, ledger.own_plot_hours.get(cohort.agent_id, {}),
             setup.specs, cash)
         add_orders(order_book, AgentOrders(bids=tuple(tool_bids)))
@@ -132,7 +131,7 @@ def state_orders(setup, record, view, area_map, order_book: OrderBook, keep) -> 
         if surplus <= 0.0 or good not in area_map.goods():
             continue
         area = area_map.area_of(good, tile)
-        expected = view.price(good, area)
+        expected = view.offered_price(good, area)      # what a buyer can see to buy at, not a bid ceiling or a cost quote
         if expected is None:
             continue
         spoilage = setup.specs[good].spoilage_per_year if good in setup.specs else 0.0
@@ -192,7 +191,6 @@ def clear_goods(setup, record, view, area_map, order_book: OrderBook, plans, led
                 for shortfall in done_settlement.shortfalls:
                     ledger.unpaid[shortfall.agent] = ledger.unpaid.get(shortfall.agent, 0.0) + shortfall.unpaid_amount
             ledger.note_clearing(result)
-            ledger.bids_by_market[(good, area)] = bids
             idle_years = note_bids(record.memory, key, bids, offers) + note_offers(record.memory, key, bids, offers)
             left_markets[(good, area)] = goods_respend_year.LeftMarket(
                 bids, result, goods_respend.offers_left(offers, goods_respend_year.sold_by_seller(result)),
@@ -201,6 +199,8 @@ def clear_goods(setup, record, view, area_map, order_book: OrderBook, plans, led
                 record.goods.curves[key] = market_curves.summarize(bids, offers)
     goods_respend_year.respend(setup, record, view, ledger, left_markets,
                                lambda cohort: cohort_basket(setup, record, cohort))
+    for market_id, market in left_markets.items():
+        ledger.bids_by_market[market_id] = market.all_bids     # demand over the same rounds as the traded quantity
     _remember_markets(setup, record, left_markets)
     _record_year_markets(record, ledger, left_markets)
 

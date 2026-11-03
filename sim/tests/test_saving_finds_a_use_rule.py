@@ -5,6 +5,7 @@ import dataclasses
 import unittest
 from types import SimpleNamespace
 
+from sim.tests.economy_view_defaults import ViewDefaults
 from sim.book import Book, Transfer
 from sim.economy import equity, households
 from sim.economy.types import GoodSpec
@@ -24,7 +25,7 @@ SPECS = {name: GoodSpec(name, 1.0, 0.0, 0.0, name) for name in ("grain", "beads"
 BASKET = households.make_basket(NEED_DATA, {})
 
 
-class OwningView:
+class OwningView(ViewDefaults):
     """What `goods_orders` reads of the market, with every agent owning `worth` of the firms."""
     year = 1
 

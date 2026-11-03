@@ -150,7 +150,7 @@ def entry_plans(recipes: Mapping[str, Recipe], view: MarketView,
                 planned = entry_practice.planned_recipe(planned, crews_of(recipe_id), share_runs)
             yearly_return = _return_at(planned, recipe_id, demand.anchor_tile, view, rent)
             market_rate = view.interest_rate(currency)
-            if market_rate is not None and yearly_return > market_rate:
+            if market_rate is not None and yearly_return is not None and yearly_return > market_rate:
                 ranked.append((-yearly_return, recipe_id))
         remaining = demand.quantity
         for negative_return, recipe_id in sorted(ranked):
@@ -174,7 +174,7 @@ def entry_plans(recipes: Mapping[str, Recipe], view: MarketView,
     return plans
 
 
-def _return_at(recipe: Recipe, recipe_id: str, tile: TileId, view: MarketView, rent: float = 0.0) -> float:
+def _return_at(recipe: Recipe, recipe_id: str, tile: TileId, view: MarketView, rent: float = 0.0) -> Optional[float]:
     probe = Producer("probe", "probe", recipe_id, tile, 1.0)
     outputs = expected_output_prices(probe, recipe, view) or {}
     return unit_cost.return_on_capital(recipe, outputs, live_input_prices(probe, recipe, view),

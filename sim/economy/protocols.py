@@ -53,7 +53,21 @@ class MarketView(Protocol):
 
     def cleared_price(self, good: GoodId, area: AreaId) -> Optional[float]:
         """The price the market cleared at last year, as paid, not as remembered (the remembered price moves
-        part of the way when little traded). A view may omit it; buyers then plan from the remembered price."""
+        part of the way when little traded); None when nothing traded."""
+
+    def offered_price(self, good: GoodId, area: AreaId) -> Optional[float]:
+        """What a buyer can buy at: a price the market traded at or an ask still posted; None where nothing is on
+        offer (a bid ceiling, a cost quote or a price remembered from an old trade)."""
+
+    def price_kind(self, good: GoodId, area: AreaId) -> Optional[str]:
+        """What `price` is: PRICE_SMOOTHED_TRADE, or the kind of quote or estimate; None when the market has no price."""
+
+    def prices_across(self, good: GoodId, areas) -> list:
+        """`price(good, area.area_id)` for each of `areas` (the good's areas), in order."""
+
+    def present_prices_at(self, names: tuple, tile: TileId, wages: bool = False) -> Mapping[str, float]:
+        """`price` (or `wage` when `wages`) of each of `names` (goods or trades) in its area on `tile`, those with a
+        figure only."""
 
     def usual_price(self, good: GoodId, area: AreaId) -> Optional[float]:
         """A slow average of the clearing price, which holders of durable goods compare today's with.
@@ -135,4 +149,3 @@ class YearInputs:
     standing_bids: Tuple[Bid, ...] = ()                     # demand settled outside the book (the founder's draws): entry reads it as bids, nothing clears
     state_capacity: float = 1.0                             # share of what the state assesses its officials collect this year (0..1); follows the officials (taxes.assess)
     working_people_by_tile: Mapping[TileId, float] = field(default_factory=dict)   # demography's working-age people on each tile; a tile it names sets its cohorts' working people (the working-age share follows demography)
-    working_hours_per_year: Optional[float] = None          # hours one person gives this year (the workforce view: lit works lengthen the day); None keeps the setup's

@@ -7,6 +7,7 @@ QUICK_TOPIC = True
 
 import unittest
 
+from sim.tests.economy_view_defaults import ViewDefaults
 from sim.economy import producers
 from sim.economy.replaced import replaced
 from sim.economy.types import Recipe
@@ -16,7 +17,7 @@ MIDDLE_PRICE = 0.5          # a run's labour costs 5 at the wage below, its outp
 WAGE = 1.0
 
 
-class PricesView:
+class PricesView(ViewDefaults):
     year = 3
 
     def __init__(self, price):

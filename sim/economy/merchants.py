@@ -229,7 +229,6 @@ def candidate_routes(merchant, view, carriage, area_map, held_stock, specs, inte
     them alone: each such row is the row the full search gives.
     A good's rows are shared with any caller that sees the same prices at the same rate."""
     parts = []
-    prices_across = getattr(view, "prices_across", None)
     expected_by_good: dict = {}
     for (good, area_id), price in merchant.expected_prices.items():
         if price is not None:
@@ -251,10 +250,7 @@ def candidate_routes(merchant, view, carriage, area_map, held_stock, specs, inte
         if len(areas) < 2:
             continue
         spec = specs[good]
-        if prices_across is None:
-            seen = [view.price(good, area.area_id) for area in areas]
-        else:
-            seen = prices_across(good, areas)
+        seen = view.prices_across(good, areas)
         expected = expected_by_good.get(good, {})
         # an expectation stands in for last year's price where the merchant has one; without one it sees
         # last year's price only where the news has had time to reach it, and nothing of a farther market
