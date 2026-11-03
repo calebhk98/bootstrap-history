@@ -108,6 +108,16 @@ attribute_status=$?
 echo "attributes read from an adapter object that its class lacks (tools/check_attribute_calls.py): $(printf '%s\n' "$attribute_output" | grep -c .)"
 printf '%s\n' "$attribute_output" | grep . | tail -5 | sed 's/^/  /'
 
+constructor_output="$(python3 tools/check_constructor_calls.py --stats 2>&1)"
+constructor_status=$?
+echo "constructor calls and PARTS entries that do not fit their class (tools/check_constructor_calls.py): $(printf '%s\n' "$constructor_output" | grep -vc '^checked ') ($(printf '%s\n' "$constructor_output" | grep '^checked '))"
+printf '%s\n' "$constructor_output" | grep -v '^checked ' | grep . | tail -5 | sed 's/^/  /'
+
+class_name_output="$(python3 tools/check_class_names.py 2>&1)"
+class_name_status=$?
+echo "class names that mean two classes in one package (tools/check_class_names.py): $(printf '%s\n' "$class_name_output" | grep -c .)"
+printf '%s\n' "$class_name_output" | grep . | tail -5 | sed 's/^/  /'
+
 # Checks that fail the run when above zero; the other counts above are a backlog and stay informational.
 failed_checks=()
 [ "$mixin_count" -gt 0 ] && failed_checks+=("mixin classes in MRO")
@@ -121,6 +131,8 @@ failed_checks=()
 [ "$parts_status" -ne 0 ] && failed_checks+=("part structure and private reaches (tools/check_parts.py)")
 [ "$attribute_status" -ne 0 ] && failed_checks+=("adapter attributes (tools/check_attribute_calls.py)")
 [ "$owner_status" -ne 0 ] && failed_checks+=("record part writers (tools/check_record_owners.py)")
+[ "$constructor_status" -ne 0 ] && failed_checks+=("constructor calls (tools/check_constructor_calls.py)")
+[ "$class_name_status" -ne 0 ] && failed_checks+=("class names (tools/check_class_names.py)")
 
 if [ "${#failed_checks[@]}" -eq 0 ]; then
   echo "failing checks: none"
