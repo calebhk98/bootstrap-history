@@ -41,6 +41,12 @@ class LenderCapacity(unittest.TestCase):
         [standing] = credit_lines.lender_standings(record, "coin")
         self.assertEqual((standing.kind, standing.capacity, standing.offer), ("bank", 60.0, 500.0))
 
+    def test_a_banks_loans_struck_are_not_taken_off_the_cash_that_already_paid_them_out(self):
+        # offered 500, lent 40 of it (its cash is already down to 60): it can lend the 60 it holds, not 60 less 40
+        record = record_with({"bank:0": 500.0}, {"bank:0": 0.06}, lent={"bank:0": 40.0}, bank_ids=("bank:0",), cohort_ids=(), balances={"bank:0": 60.0})
+        [standing] = credit_lines.lender_standings(record, "coin")
+        self.assertEqual(standing.capacity, 60.0)
+
     def test_a_capacity_is_never_below_nothing(self):
         record = record_with({"cohort:a": 10.0}, {"cohort:a": 0.05}, lent={"cohort:a": 50.0}, balances={"cohort:a": 10.0})
         [standing] = credit_lines.lender_standings(record, "coin")

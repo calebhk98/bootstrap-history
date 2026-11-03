@@ -146,7 +146,7 @@ deposit and reports what it extracted so geography can deplete.
 
 **Producers pay out and shed.** A producer pays its owners the cash above next year's production spending, commitments, plant to
 rebuild and a buffer of its running costs (`firm_finance.cash_to_keep`, `excess_cash`, `payout`). Land rent is a cost of its year
-(`year_ledger.note_rent`), and a producer whose remembered earnings after every cost are negative closes that share of its capacity, no
+(`year_ledger.note_paid_outside_markets`), and a producer whose remembered earnings after every cost are negative closes that share of its capacity, no
 more than a year's change in output (`producer_losses.shed_share`).
 
 **Producers leave.** A producer whose year did not cover its costs and plant charge counts a loss year;
@@ -240,9 +240,9 @@ the actors. The decision for who may owe what, and to whom:
 
 ## One money per labour hour (`Complaints/closed/115`)
 
-What an hour of work is worth in the game's coin is one figure: the agent economy's wage for the unskilled trade. It
-reaches the labour package by one chain: `labour_wage_schedule.wage_schedule` reads `world.economy.unskilled_wage`, which
-is `agent_unskilled_wage`, which is `PriceReads.unskilled_wage_per_hour`. That figure and every other trade's wage come
+What an hour of work is worth in the game's coin is one figure: the agent economy's wage for the unskilled trade at the
+base tile. It reaches the labour package through `labour_wage_schedule.wage_schedule`, which reads `agent_wage_at` for the
+unskilled trade (the markets view of `PriceReads.wage_per_hour_at`). That figure and every other trade's wage come
 from one rule (`sim/economy/trade_wages.py`), for the home country and a partner alike: the wage the trade's labour market
 paid (the labour core's area wage; the core clears a (trade, area) only where it has workers or bids, so a trade nobody works or hires in an area has none there; a country's figure for a trade is the mean of its areas' wages weighted by hours hired, else by the people working the trade there, else plain); else, only for a trade the memory holds no wage for in any area (before the first clearing, or a trade admitted after it), the opening wage of the trade times `opening_wage_level`; else, for a trade hired or worked somewhere but not in this scope, the unskilled wage of the same scope times one
 plus the trade's training premium; and where the scope has no unskilled wage either, the opening unskilled wage times

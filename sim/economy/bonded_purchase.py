@@ -14,7 +14,8 @@ def settle(book, currency: str, lots: Sequence,
            ) -> Tuple[Dict[Tuple[str, str], float], float, List[dict], Dict[Tuple[str, str], Dict[str, float]]]:
     """Charge the employers named in the lots for the bonded bought. Returns ({(tile, trade): people}, money paid, the lots as paid
     [{origin, destination, trade, people, ask, carriage}: money per lot, scaled to what was paid], and the people
-    each employer holds {(tile, trade): {employer: people}})."""
+    each employer holds {(tile, trade): {employer: people}}: an employer holds the people its payment bought, not the share it was
+    named for)."""
     bought: Dict[Tuple[str, str], float] = {}
     paid_total = 0.0
     paid_lots: List[dict] = []
@@ -30,13 +31,11 @@ def settle(book, currency: str, lots: Sequence,
         price = sum(lot.people * lot.price for lot in group)
         transfers = []
         owned = held.setdefault(key, {})
-        for lot in group:
-            for employer, share in lot.payers:
-                owned[employer] = owned.get(employer, 0.0) + lot.people * share
         for employer, share in _payers(group):
             amount = min(price * share, max(0.0, book.balance(employer, currency)))
             if amount > 0.0:
                 transfers.append(Transfer(employer, EDGE_EXCHANGE, currency, amount, "bonded purchase"))
+                owned[employer] = people * amount / price     # held in the share of the price it paid
         book.transfer_many(transfers)
         paid = sum(transfer.amount for transfer in transfers)
         paid_total += paid

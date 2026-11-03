@@ -27,6 +27,12 @@ OWN_PLAN_RELEASE_SHARE_PER_YEAR = declare(
 Option = Tuple[float, str, GoodId, float]      # (hours per need unit, recipe id, good, need units per unit)
 
 
+def is_own_plot_recipe(recipe_id: str, recipe: Recipe, land_per_run: Mapping[str, float]) -> bool:
+    """Whether a household can run the recipe on its own plot: it works land and buys nothing on the market but the tools
+    its workers wear."""
+    return land_per_run.get(recipe_id, 0.0) > 0.0 and all(good in recipe.tool_wear for good in recipe.inputs)
+
+
 def own_production_options(recipes: Mapping[str, Recipe], land_per_run: Mapping[str, float],
                            basket: Basket) -> Dict[str, List[Option]]:
     """For each need, the recipes whose output serves it that buy nothing on the market but the tools their
@@ -37,7 +43,7 @@ def own_production_options(recipes: Mapping[str, Recipe], land_per_run: Mapping[
         rows = []
         for recipe_id, recipe in sorted(recipes.items()):
             hours = math.fsum(recipe.labour_hours.values())
-            if any(good not in recipe.tool_wear for good in recipe.inputs) or land_per_run.get(recipe_id, 0.0) <= 0.0 or hours <= 0.0:
+            if not is_own_plot_recipe(recipe_id, recipe, land_per_run) or hours <= 0.0:
                 continue
             for good, effect in need.goods:
                 made = recipe.outputs.get(good, 0.0)

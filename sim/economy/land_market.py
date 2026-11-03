@@ -27,7 +27,7 @@ from typing import Dict, List, Mapping, Optional, Sequence
 from sim.constants import declare
 
 from . import producer_table
-from . import land_priority, ownership, titles, titles_ground, unit_cost
+from . import land_priority, land_rents, ownership, titles, titles_ground, unit_cost
 from .land_lease import posted_rents
 from .producers import expected_output_prices, live_input_prices, live_wages
 from .types import AgentId, CurrencyId, TileId, Transfer
@@ -259,17 +259,23 @@ def settle_year(setup, record, view, wanted_runs: Mapping[AgentId, float],
     """Set next year's rent (`post_rents`) and book the rent: producers pay the tile's owner, shared by
     ownership.spread. Tenants pay their lessors the posted rent cut to `tenancy_ask` (land_lease_year.asks) where given.
     Returns the payments made (to cohorts), for the year's property income. The rent producers paid is noted
-    in `ledger` as a cost of their year."""
+    in `ledger` as a cost of their year, as are the tenants' payments (a steward's pay as wages)."""
     result, demands = post_rents(setup, record, view, wanted_runs, own_plot_hectares, own_value_by_tile)
     arable = {tile_id: titles_ground.arable_hectares(record, tile_id, tile) for tile_id, tile in setup.tiles.items()}
     money = setup.currency_id
     owners = {tile: ownership.owner_cohort(record, tile) for tile in result.rent_per_hectare_by_tile}
     cash = {demand.agent_id: record.book.balance(demand.agent_id, money) for demand in demands}
-    payments = ownership.spread(record, rent_postings(result, demands, owners, money, cash))
+    postings = rent_postings(result, demands, owners, money, cash)
+    record.land.rent_paid = land_rents.booked_by_tile(postings, record.producers)
+    payments = ownership.spread(record, postings)
     record.book.transfer_many(payments)
     if ledger is not None:
-        ledger.note_rent(payments)
+        ledger.note_paid_outside_markets(payments)
     tenant_payments = titles.settle_tenancies(record, money, arable, land_tax_share_of_rent=land_tax_share_of_rent,
                                                    ask_by_tile=tenancy_ask)
     record.book.transfer_many(tenant_payments)
-    return payments + [payment for payment in tenant_payments if payment.purpose != "steward_pay"]    # stewards' pay is a wage, not property income
+    steward_pay = [payment for payment in tenant_payments if payment.purpose == "steward_pay"]    # a wage, not property income
+    if ledger is not None:
+        ledger.note_paid_outside_markets(payment for payment in tenant_payments if payment.purpose != "steward_pay")
+        ledger.note_wages_outside_markets(steward_pay)
+    return payments + [payment for payment in tenant_payments if payment.purpose != "steward_pay"]

@@ -110,6 +110,12 @@ check("the book still sums to nothing", abs(book.total("coin")) < 1e-9, book.tot
 book = Book()
 book.transfer(Transfer(EDGE_MINT, "forge", "coin", 12.0, "opening"))
 lots = [BondedLot("work@t1", "smith", "work@t2", 4.0, 10.0, 2.0, payers=(("forge", 1.0),))]
-_, paid, paid_lots, _ = bonded_purchase.settle(book, "coin", lots)
+_, paid, paid_lots, held = bonded_purchase.settle(book, "coin", lots)
 check("an employer short of cash pays what it has and the owners are paid that share",
       abs(paid - 12.0) < 1e-9 and abs(paid_lots[0]["ask"] - 10.0) < 1e-9, (paid, paid_lots))
+check("an employer short of cash holds only the people its payment bought", abs(held[("t1", "smith")]["forge"] - 1.0) < 1e-9, held)
+book = Book()
+book.transfer(Transfer(EDGE_MINT, "forge", "coin", 100.0, "opening"))
+lots = [BondedLot("work@t1", "smith", "work@t2", 4.0, 10.0, 2.0, payers=(("forge", 0.5), ("mill", 0.5)))]
+_, _paid, _lots, held = bonded_purchase.settle(book, "coin", lots)
+check("an employer with no cash holds none of the people it was named for", abs(held[("t1", "smith")]["forge"] - 2.0) < 1e-9 and "mill" not in held[("t1", "smith")], held)

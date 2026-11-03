@@ -11,7 +11,7 @@ from sim.economy import household_grinding, household_work_year, households, hou
 from sim.world.need_basket import make_basket
 from sim.economy.households_cohort import Cohort
 from sim.economy.market_memory import market_key
-from sim.economy.setup import labour_area
+from sim.economy.setup import SetupTrade, labour_area
 from sim.economy.types import LabourOffer
 
 DATA = {"days_per_year": 100, "tasks": {
@@ -43,6 +43,8 @@ class View(ViewDefaults):
 
 def setup():
     return types.SimpleNamespace(
+        opening_wages={"labourer": 1.0, "servant": 1.0}, unskilled_trade="labourer", currency_id="coin",
+        trades={"labourer": SetupTrade("labourer"), "servant": SetupTrade("servant")},
         household_work=DATA, working_hours_per_year=1000.0, servant_trade="servant", hunger_need="food", fuel_need="warmth", work_need="household_work",
         ready_to_eat=frozenset(), milled_as=household_grinding.milled_as_map(NEED_DATA),
         basket_for=lambda tile: make_basket(NEED_DATA, {}))
@@ -53,7 +55,7 @@ def plan(prices, wage_per_hour):
     worker = Cohort(agent_id="c", tile="t1", income_class=0, people=100.0, working_people=50.0, ownership_share=0.0)
     rec = types.SimpleNamespace(cohorts={"c": worker}, labour=types.SimpleNamespace(sold_share_expected={market_key("labourer", area): 1.0}), land=types.SimpleNamespace(titles={"t1": {"c": 1.0}}, tenancies={}))
     offers = [LabourOffer("c", "labourer", area, 500.0, wage_per_hour)]
-    return household_work_year.cohort_plan(setup(), rec, View({("labourer", area): wage_per_hour}, prices), worker, offers, 0.0)
+    return household_work_year.cohort_plan(setup(), rec, View({("labourer", area): wage_per_hour, ("servant", area): 1e6}, prices), worker, offers)
 
 
 class GrindingChoiceTests(unittest.TestCase):
@@ -61,7 +63,7 @@ class GrindingChoiceTests(unittest.TestCase):
         # by hand: wheat 1.0 plus 5 hours at 1.0 each per unit, 6.0; flour 2.0 is cheaper
         hired, own, milled = plan({"wheat_kg": 1.0, "flour_kg": 2.0}, 1.0)
         self.assertEqual(milled, ("wheat_kg",))
-        self.assertEqual(hired, 0.0)
+        self.assertAlmostEqual(hired, 0.0)
         self.assertAlmostEqual(own, 100.0 * WATER_AND_FUEL_HOURS)
 
     def test_a_household_whose_hours_are_cheaper_than_the_milling_grinds_by_hand(self):

@@ -8,7 +8,7 @@ from typing import Dict, Iterable, Mapping
 
 from sim.labour.api import MarketState, TradeSpec, opening_labour_market, seed_hours, trade_specs
 
-from . import mint, mint_labour, opening_placement, practice
+from . import households_own, mint, mint_labour, opening_placement, practice
 from .market_memory import market_key
 from .setup import labour_area
 
@@ -32,7 +32,7 @@ def plot_trade(setup) -> str:
     most of. Empty when none do."""
     hours: Dict[str, float] = {}
     for recipe_id, recipe in setup.recipes.items():
-        if any(good not in recipe.tool_wear for good in recipe.inputs) or setup.land_per_run.get(recipe_id, 0.0) <= 0.0:
+        if not households_own.is_own_plot_recipe(recipe_id, recipe, setup.land_per_run):
             continue
         for trade, trade_hours in recipe.labour_hours.items():
             hours[trade] = hours.get(trade, 0.0) + trade_hours

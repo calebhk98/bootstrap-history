@@ -66,10 +66,10 @@ def lender_standings(record, currency: CurrencyId) -> List[LenderStanding]:
     standings = []
     for lender, offered in record.credit.offered_by_lender.items():
         bank = banks_by_id.get(lender)
-        capacity = reserved_offer(offered, bank is not None)
-        if bank is not None:
+        capacity = reserved_offer(offered, bank is not None) - record.credit.lent_by_lender.get(lender, 0.0)
+        if bank is not None:    # its cash is already down by what it lent, which the offer less the loans counts too
             capacity = min(capacity, banks.free_cash(record, bank, currency))
-        capacity = max(0.0, capacity - record.credit.lent_by_lender.get(lender, 0.0))
+        capacity = max(0.0, capacity)
         standings.append(LenderStanding(lender, "cohort" if lender in record.cohorts else "bank" if bank is not None else "fund",
                                         offered, capacity, record.book.balance(lender, currency), record.credit.ask_by_lender[lender]))
     return sorted(standings, key=lambda each: (each.ask, each.lender))

@@ -206,8 +206,10 @@ class Economy:
         held_placed = bondage_hours.place_held(
             record.unfree.bonded_held, lambda area, trade: people_by_trade(record.labour.workforce, area).get(trade, 0.0), everyone, labour_bids,
             setup.working_hours_per_year, context.ask_floor_per_worker_year, labour_area)
-        record.book.transfer_many([Transfer(employer, cohort, money, amount, "keep of bonded") for employer, cohort, amount
-                                   in bondage_hours.payable_keep(held_placed.keep, lambda employer: record.book.balance(employer, money))])
+        keep = [Transfer(employer, cohort, money, amount, "keep of bonded") for employer, cohort, amount
+                in bondage_hours.payable_keep(held_placed.keep, lambda employer: record.book.balance(employer, money))]
+        record.book.transfer_many(keep)
+        ledger.note_paid_outside_markets(keep)
         placed = bondage_hours.place(record.unfree.bondage, held_placed.offers, held_placed.bids,
                                      bondage_hours.works_of_producers(record), bondage.BONDED_HOURS_OWED_SHARE)
         everyone, labour_bids = placed.offers, placed.bids
@@ -260,16 +262,14 @@ class Economy:
         interest = self._service_loans(view.year)
         bonded = bondage.service(record, money, ledger.wages_in, placed.value_placed, placed.cash_share)
         record.book.transfer_many(bonded)
-        for payment in bonded:
+        ledger.note_paid_outside_markets(bonded)
+        for payment in keep + bonded:
             interest[payment.payee] = interest.get(payment.payee, 0.0) + payment.amount
         titles_inheritance.divide_estates(record)
         dispatch_merchants(setup, record, self.carriage, ledger, self.area_map)
         money_taxes(setup, record, view, ledger)
         self._build_plant(plant_runs)
-        close_view = CreditView(record.memory, record.book, self.area_map, money, setup,
-                                labour_area, loans=lambda: record.credit.loans, equity=self._equity_read,
-                                loss_rates=lambda: record.credit.loss_rates,
-                                pooled=record.credit.contracts.deposit_value)
+        close_view = self.view()
         received = dict(interest)
         for payment in rent:
             received[payment.payee] = received.get(payment.payee, 0.0) + payment.amount
@@ -342,23 +342,23 @@ class Economy:
         """(own-plot plan hours, household work hours) each cohort keeps back whatever the wage: the plan at the tile's
         usual fertility (it plants before it knows the harvest), and the household work it does itself
         (household_work_year.py)."""
-        plan, held, options = {}, self._hectares_held(), self.own_plot_options()
+        plan, held, options = {}, self.hectares_held(), self.own_plot_options()
         for cohort_id, cohort in sorted(self.record.cohorts.items()):
             tile = self.setup.tiles.get(cohort.tile)
             plan[cohort_id] = hours_for_own_plan(cohort, options, tile.fertility if tile else 0.0,
                                                  self.setup.recipes, self.setup.land_per_run, held.get(cohort_id, 0.0))
-        self._work_hours = household_work_year.decide(self.setup, self.record, view, everyone, outside_option or {})
+        self._work_hours = household_work_year.decide(self.setup, self.record, view, everyone)
         return plan, self._work_hours
 
     def _hour_supply(self, everyone, view, outside_option) -> HourSupply:
         """The hours households sell as a schedule against the wage (labour_supply.py)."""
         plan, work = self._fixed_home_hours(everyone, view, outside_option)
         plot = household_hours_year.plot_schedules(self.setup, self.record, view, everyone, self.own_plot_options(),
-                                                   self._hectares_held())
+                                                   self.hectares_held())
         faced = {(offer.trade, offer.area): trade_wages.faced_wage(view.wage(offer.trade, offer.area), offer.reservation_wage) for offer in everyone}
         return HourSupply(everyone, plan, work, plot, faced)
 
-    def _hectares_held(self) -> Dict[str, float]:
+    def hectares_held(self) -> Dict[str, float]:
         return titles_plots.hectares_held(self.setup, self.record)
 
     def _grow_own(self, offers, ledger: YearLedger, harvest_factor: float = 1.0,
@@ -368,7 +368,7 @@ class Economy:
         options = self.own_plot_options()
         kept = kept or {}
         self._own_hectares = {}
-        held = self._hectares_held()
+        held = self.hectares_held()
         offered: Dict[str, float] = {}
         for offer in offers:
             offered[offer.worker] = offered.get(offer.worker, 0.0) + offer.hours

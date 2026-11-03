@@ -9,7 +9,7 @@ from typing import Dict, List, Sequence, Tuple
 from sim.labour.api import people_in, run_labour_year
 from sim.world.need_basket import subsistence_cost_per_person
 
-from . import households, households_work, settlement
+from . import household_work_year, households, households_work, settlement
 from .labour_ask_floor import mean_floor_per_hour
 from .labour_bids import sloped_bids
 from .labour_state import core_trades, mirror_wages, people_by_trade
@@ -20,11 +20,18 @@ from .year_ledger import YearLedger
 
 
 def subsistence_cost_by_tile(setup, record, view) -> Dict[str, float]:
-    """Money a person needs a year for the floors of every need, at last year's prices on each tile."""
-    costs = {}
-    for tile in sorted({cohort.tile for cohort in record.cohorts.values()}):
-        costs[tile] = subsistence_cost_per_person(households.need_prices(setup.basket_for(tile), view, tile))
-    return costs
+    """Money a person needs a year for the floors of every need, at last year's prices on each tile: each cohort's own
+    basket (its hearth's cooking fuel, its hired household work, ready-to-eat food where it has no hearth) at its tile's
+    prices, averaged over the tile's people."""
+    cost_sum: Dict[str, float] = {}
+    people: Dict[str, float] = {}
+    for cohort in sorted(record.cohorts.values(), key=lambda each: each.agent_id):
+        cost = subsistence_cost_per_person(household_work_year.priced_basket(setup, record, view, cohort))
+        cost_sum[cohort.tile] = cost_sum.get(cohort.tile, 0.0) + cost * cohort.people
+        people[cohort.tile] = people.get(cohort.tile, 0.0) + cohort.people
+    return {tile: (cost_sum[tile] / people[tile] if people[tile] > 0.0 else
+                   subsistence_cost_per_person(households.need_prices(setup.basket_for(tile), view, tile)))
+            for tile in sorted(cost_sum)}
 
 
 def outside_option_by_tile(setup, record, view) -> Dict[str, float]:

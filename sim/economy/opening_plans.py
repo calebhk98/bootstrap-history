@@ -60,8 +60,7 @@ def household_plans(setup, record, area_map, room_by_tile: Optional[Mapping[Tile
         rows: Dict[str, list] = {}
         tiles_of: Dict[str, set] = {}
         for _cohort_id, cohort in sorted(record.cohorts.items()):
-            fallback = outside.get(cohort.tile, 0.0) / max(setup.working_hours_per_year, 1e-9)
-            value, needed, price, _milled = household_work_year.work_terms(setup, record, view, cohort, offers, fallback)
+            value, needed, price, _milled = household_work_year.work_terms(setup, record, view, cohort, offers)
             market = _service_market(setup, area_map, cohort.tile)
             margins[_cohort_id] = value - price
             rows.setdefault(market, []).append((value, needed, price))
@@ -71,7 +70,7 @@ def household_plans(setup, record, area_map, room_by_tile: Optional[Mapping[Tile
                 market_rows, math.fsum(room_by_tile.get(tile, 0.0) for tile in tiles_of[market]))
             if floor > 0.0:
                 floors.update({tile: floor for tile in tiles_of[market]})
-    return HouseholdPlans(household_work_year.plans(setup, record, view, offers, outside, floors), floors, margins)
+    return HouseholdPlans(household_work_year.plans(setup, record, view, offers, floors), floors, margins)
 
 
 def _service_market(setup, area_map, tile: TileId) -> str:

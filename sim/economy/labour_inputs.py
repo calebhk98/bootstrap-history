@@ -57,5 +57,6 @@ def labour_context(setup, record, view, carriage, inputs, own_plot_options=None,
             None if setup.flight is None else setup.flight.expected_penalty_of_leaving),
         value_of_life_years_of_income=VALUE_OF_LIFE_YEARS_OF_INCOME,
         bondage_allowed=frozenset(labour_area(tile) for tile in inputs.bondage_tiles),
+        schools=tuple(inputs.schools),
         bonded_for_sale={labour_area(tile): dict(by_trade)
                          for tile, by_trade in (inputs.bonded_for_sale or {}).items()})

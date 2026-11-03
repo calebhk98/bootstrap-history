@@ -15,7 +15,7 @@ from sim.world.need_basket import PricedNeed, subsistence_cost_per_person
 from sim.world.shared_constants import LABOUR_OUTPUT_ELASTICITY
 
 from .households_basket import need_prices
-from . import titles_plots
+from . import household_work_year, land_bid, titles_plots
 from .households_own import Option
 
 
@@ -120,9 +120,9 @@ def hectares_per_hour_by_recipe(recipes, land_per_run: Mapping[str, float]) -> D
     """Land one hour of each recipe's work takes at the recipe's own intensity."""
     per_hour: Dict[str, float] = {}
     for recipe_id, recipe in recipes.items():
-        hours = math.fsum(recipe.labour_hours.values())
-        if hours > 0.0 and land_per_run.get(recipe_id, 0.0) > 0.0:
-            per_hour[recipe_id] = land_per_run[recipe_id] / hours
+        hours_per_hectare = land_bid.hours_per_hectare(recipe, land_per_run.get(recipe_id, 0.0))
+        if hours_per_hectare > 0.0:
+            per_hour[recipe_id] = 1.0 / hours_per_hectare
     return per_hour
 
 
@@ -136,14 +136,13 @@ def ask_floor_by_tile(setup, record, view, options: Mapping[str, Sequence[Option
         cohorts = [cohort for cohort in record.cohorts.values() if cohort.tile == tile and cohort.working_people > 0.0]
         tile_data = setup.tiles.get(tile)
         fertility = tile_data.fertility if tile_data else 0.0
-        priced = need_prices(setup.basket_for(tile), view, tile)
         working = sum(cohort.working_people for cohort in cohorts)
         if working <= 0.0:
-            floors[tile] = wage_floor_per_worker_year(priced, options, fertility, setup.working_hours_per_year, 1.0,
+            floors[tile] = wage_floor_per_worker_year(need_prices(setup.basket_for(tile), view, tile), options, fertility, setup.working_hours_per_year, 1.0,
                                                       hectares_per_hour, 0.0)
             continue
         floors[tile] = sum(cohort.working_people * wage_floor_per_worker_year(
-            priced, options, fertility, setup.working_hours_per_year, cohort.people / cohort.working_people,
+            household_work_year.priced_basket(setup, record, view, cohort), options, fertility, setup.working_hours_per_year, cohort.people / cohort.working_people,
             hectares_per_hour, held.get(cohort.agent_id, 0.0) / cohort.working_people) for cohort in cohorts) / working
     return floors
 

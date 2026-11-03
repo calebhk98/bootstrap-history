@@ -70,12 +70,14 @@ class HouseholdBorrowingTests(unittest.TestCase):
         who = cohort(people=10.0, last_year_income=10000.0)
         record = record_with({who.agent_id: self.floor_cost(10.0) * 2.0})
         record.cohorts[who.agent_id] = who
+        record.land.titles = {who.tile: {who.agent_id: 1.0}}    # it holds land, so it has a hearth
         self.assertEqual(lending.household_requests(setup_for(record), record, View(), ledger(), {}), [])
 
     def test_a_household_without_cash_asks_through_the_year_loop(self):
         who = cohort(people=10.0, last_year_income=10000.0)
         record = record_with({who.agent_id: 100.0})
         record.cohorts[who.agent_id] = who
+        record.land.titles = {who.tile: {who.agent_id: 1.0}}    # it holds land, so it has a hearth
         requests = lending.household_requests(setup_for(record), record, View(), ledger(), {})
         self.assertEqual(len(requests), 1)
         self.assertAlmostEqual(requests[0].amount, self.floor_cost(10.0) - 100.0)
@@ -93,6 +95,7 @@ class HouseholdBorrowingTests(unittest.TestCase):
         who = cohort(people=10.0, last_year_income=10000.0)
         record = record_with({who.agent_id: 100.0, "rich": 10000.0})
         record.cohorts[who.agent_id] = who
+        record.land.titles = {who.tile: {who.agent_id: 1.0}}    # it holds land, so it has a hearth
         order_book = {}
         loans = [loan("loan:1", "rich", who.agent_id, 400.0)]
         lending.bid_household_loans(setup_for(record), record, View(), ledger(), loans, order_book, {})

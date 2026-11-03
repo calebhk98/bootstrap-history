@@ -31,6 +31,7 @@ class CreditRecord(OwnedRecord):
     losses_seen: Dict[AgentId, float] = field(default_factory=dict)      # credit_losses as of the last year's close
     expansion_runs: Dict[AgentId, float] = field(default_factory=dict)   # capacity a loan request would build
     worn_runs: Dict[AgentId, float] = field(default_factory=dict)        # plant that wore out last year, to rebuild
+    lenders_met: bool = False                                            # a lending has opened (open_lending), possibly with no savings on offer
     funds_offered: float = 0.0                                           # savings on offer at the last lending, home currency
     lowest_ask_offered: Optional[float] = None                           # the lowest rate any lender asked at the last lending; None before one
     offered_by_lender: Dict[AgentId, float] = field(default_factory=dict)  # each lender's savings on offer at the last lending
@@ -138,6 +139,7 @@ class CreditRecord(OwnedRecord):
     def open_lending(self, offers: Sequence[FundsOffer], currency: CurrencyId) -> None:
         """A lending begins: the savings on offer in `currency` (in all, by lender, and the lowest ask among them), and
         nothing lent or granted yet. A lender with several offers is on offer for their sum at the lowest of their asks."""
+        self.lenders_met = True
         self.offered_by_lender, self.ask_by_lender = {}, {}
         for offer in offers:
             if offer.currency != currency or offer.amount <= 0.0:

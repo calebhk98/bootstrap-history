@@ -36,7 +36,7 @@ from .state_wage_ceiling import WAGE_CEILING_MULTIPLE
 from .types import (EDGE_CARGO, EDGE_CONSUMPTION, EDGE_EXCHANGE, EDGE_EXTERNAL, EDGE_LEGACY, EDGE_MINT, EDGE_PRODUCTION, EDGE_WEAR, Bid,
                     GoodsMove, LabourBid, LabourOffer, Offer, SiteLimit, Transfer, external_edge)
 from .year_accounts import YearAccounts
-from . import baseline_checks, spin_up_sensitivity
+from . import spin_up_sensitivity
 from .unit_cost import variable_cost_per_run
 from .titles_value import title_wealth
 from .debt_relief import indebted_tiles as record_indebted_tiles
@@ -49,7 +49,7 @@ from sim.world import capital_market
 
 __all__ = [
     "FIXTURE_STAPLE", "FIXTURE_UNSKILLED_TRADE", "fixture_small_setup", "fixture_stationary_setup",
-    "YearAccounts", "baseline_checks", "spin_up_sensitivity",
+    "YearAccounts", "spin_up_sensitivity",
     "carriage_wear", "crop_sites", "unit_cost", "diagnostics", "household_grinding", "households", "households_work", "need_roles", "taxes", "tile_costs", "currency_from_coin_standard", "Economy",
     "price_response", "prices_at", "offered_units", "watch_tiles",
     "shown_prices", "Producer", "expected_output_prices", "live_input_prices", "live_wages", "AgentOrders",
@@ -63,6 +63,12 @@ __all__ = [
     "land_rent_paid_by_tile", "land_rent_at_tile", "DEPOSIT_BANKING", "POOLED_FUNDS", "INSURANCE_UNDERWRITING", "RISK_POOLING", "BOND_MARKET", "SHARE_TRADING", "country_figures", "carried_book", "idle_hours_by_trade", "output_by_tile",
     "person_equivalent_unemployment", "labour_market_rows",
     "actor_fundable_amount", "risk_premium", "lender_listing", "note_pool_posting",
+    "found_bank_from_outside", "people_by_trade", "people_by_tile_and_trade", "hours_paid_by_employer", "add_workers", "hours_offered_in_area_of",
+    "all_producers", "carried_last_year", "backing_marginal_cost", "set_improvements", "begin_spin_up", "trim_workforce_to_expected_hours",
+    "rename_agent", "coin_per_unit", "currency_id", "backing_good", "home_country", "economy_countries", "country_of_tile", "economy_tiles",
+    "capital_tile", "port_tile", "tile_in_economy", "recipes_of", "good_specs", "recipe_allowed_at", "opening_prices_of", "unskilled_trade",
+    "economy_trades", "opening_rate", "working_hours_per_year", "import_duty_share", "opening_wage_level", "priced_trade_wage", "country_trade_wage",
+    "trade_wage_at", "hunger_goods", "health_figures", "crop_site_inputs",
 ]
 
 
@@ -128,17 +134,17 @@ def people_by_tile_and_trade(economy):
 
 def land_rent_per_hectare(economy, country=None):
     """Mean rent per hectare-year producers paid last year over the tiles of `country` where land was let
-    (the home country's when the economy holds several; zero where none was)."""
+    (the home country's when the economy holds several); None where none was let."""
     scope = country_figures.home_when_shared(economy, country)
     tiles = country_figures.country_tiles(economy, scope)
     rents = [rent for tile, rent in economy.record.land.land_rent.items() if rent > 0.0 and tile in tiles]
-    return sum(rents) / len(rents) if rents else 0.0
+    return sum(rents) / len(rents) if rents else None
 
 
 def land_rent_at_tile(economy, tile, country=None):
     """Rent per hectare-year the land market let land at on one tile last year; the mean over the tiles of `country`
-    (the home country's when none is named) where land was let where none was let on this tile (zero where none was let
-    anywhere)."""
+    (the home country's when none is named) where land was let where none was let on this tile; None where none was let
+    anywhere."""
     rent = economy.record.land.land_rent.get(tile, 0.0)
     return rent if rent > 0.0 else land_rent_per_hectare(economy, country)
 
@@ -150,7 +156,7 @@ def output_by_tile(economy):
 
 def land_rent_paid_by_tile(economy):
     """Rent producers paid on each tile where land was let last year, in the economy's units."""
-    return land_rents.rent_paid_by_tile(economy.setup, economy.record)
+    return land_rents.rent_paid_by_tile(economy.record)
 
 
 def idle_hours_by_trade(economy, country=None):
@@ -211,10 +217,10 @@ def interest_rate(economy):
 def credit_room(economy, borrower_id):
     """What lenders will still advance `borrower_id`. A borrower whose credit line was in the last clearing
     (credit_lines.py) has what the clearing granted it; any other, the share of the savings on offer that
-    lenders put out less what the other borrowers took. None before lenders have met (no savings were
-    offered yet)."""
+    lenders put out less what the other borrowers took. None only before lenders have met; lenders that met with no savings
+    on offer leave no room, 0.0."""
     record = economy.record
-    if record.credit.funds_offered <= 0.0:
+    if not record.credit.lenders_met:
         return None
     if borrower_id in record.credit.credit_granted:
         return record.credit.credit_granted[borrower_id]
@@ -260,7 +266,7 @@ def cohort_land_rents(economy, tiles=None, country=None):
     """(people, rent received last year) of every household cohort in the order of `cohort_incomes`, in the
     economy's units: the rent paid on each tile (only those in `tiles` when given) goes to the tile's cohorts
     by what each owns (`land_rents.rent_received_by_cohort`)."""
-    received = land_rents.rent_received_by_cohort(economy.setup, economy.record, tiles)
+    received = land_rents.rent_received_by_cohort(economy.record, tiles)
     return [(cohort.people, received.get(cohort.agent_id, 0.0)) for cohort in _ranked_cohorts(economy, country)]
 
 
@@ -621,10 +627,13 @@ def crop_site_inputs(economy):
 def actor_fundable_amount(economy, amount, existing_debt, collateral_value, arrears):
     """The most of a draw of `amount` an actor that already owes `existing_debt` is lent, by the same rule as every borrower
     in the clearing (credit_lines.actor_fundable) at the lowest rate any lender asked at the last lending. Economy units.
-    None before lenders have met."""
-    ask = economy.record.credit.lowest_ask_offered
-    if ask is None:
+    None only before lenders have met; lenders that met with no savings on offer fund nothing, 0.0."""
+    credit = economy.record.credit
+    if not credit.lenders_met:
         return None
+    ask = credit.lowest_ask_offered
+    if ask is None:
+        return 0.0
     rate = interest_rate(economy)
     return _actor_fundable(amount, existing_debt, collateral_value, arrears, economy.setup.opening_rate if rate is None else rate, ask)
 

@@ -18,6 +18,7 @@ MINT_ALLOY_AND_FUEL_NOT_BOUGHT = declare(
     "MINT_ALLOY_AND_FUEL_NOT_BOUGHT", 0.0, kind="temporary_heuristic",
     unit="share of the recipe's alloy and fuel inputs the mint buys",
     source=None, confidence="D",
+    retire="the mint bidding for its recipe's alloy metal and fuel in the goods markets like any buyer",
     why="The mint pays the recipe's labour and takes in the fine metal, but does not yet buy the base "
         "metal it alloys or the charcoal it melts with: they are a small part of the coin's value. "
         "Bid for them in the goods markets like any buyer.")

@@ -26,7 +26,9 @@ Every movement of money or goods is a `Transfer` or `GoodsMove` booked through `
 An agent's purse never goes below zero except an edge account's (types.EDGE_*).
 """
 from dataclasses import dataclass, field
-from typing import Any, Mapping, Optional, Protocol, Sequence, Tuple
+from typing import Any, Mapping, Optional, Protocol, Tuple
+
+from sim.labour.api import School
 
 from .types import (AgentId, AreaId, Bid, CurrencyId, FundsOffer, GoodId, LabourBid, LabourOffer,
                     LoanRequest, Offer, SiteLimit, TileId, TradeId)
@@ -147,6 +149,7 @@ class EconomyYearInputs:
     institutions: Tuple[str, ...] = ()                      # the credit institutions the society holds (banks.DEPOSIT_BANKING): without one its households found none
     durable_users: Tuple[AgentId, ...] = ()                 # outside actors' asset accounts whose durables are in use
     bondage_tiles: Tuple[TileId, ...] = ()                  # tiles whose society recognises bondage: bonded people may be bought there (Complaint 644)
+    schools: Tuple[School, ...] = ()                        # trade schools the engine's seats hold, by trade and area: the labour core trains through them
     bonded_for_sale: Mapping[TileId, Mapping[str, float]] = None   # bonded people of a trade on offer per tile; None is none
     credit_asks: Tuple[LoanRequest, ...] = ()               # credit lines the engine's seats ask for: they join the year's clearing and are granted a room (credit_lines.py)
     standing_bids: Tuple[Bid, ...] = ()                     # demand settled outside the book (the founder's draws): entry reads it as bids, nothing clears

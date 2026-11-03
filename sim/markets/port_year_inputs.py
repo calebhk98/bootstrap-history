@@ -4,6 +4,7 @@ Each figure is read from the game through the port's world (the weather, the peo
 or from the port's rule modules (port_land, port_flight, port_bondage, port_institutions, port_sites, port_levy)."""
 from sim.economy import api as economy_api
 from sim.economy.api import EconomyYearInputs
+from sim.labour import api as labour_api
 from .unit_mass import tonnes_per_unit
 
 from . import port_actors, port_bondage, port_flight, port_institutions, port_land, port_levy, port_sites
@@ -47,8 +48,22 @@ class YearInputsBuilder:
                                               for buyer in sorted(sim.scenario.actors.actors)),
                           bondage_tiles=port_bondage.bondage_tiles(sim, economy),
                           bonded_for_sale=port_bondage.bonded_for_sale(sim, economy),
+                          schools=self.seat_schools(),
                           standing_bids=self.seats_standing_bids(), credit_asks=self.credit_asks(),
                           site_limits=tuple(port_sites.site_limits(sim, recipe_outputs(economy), economy_api.economy_tiles(economy))))
+
+    def seat_schools(self):
+        """The trade schools of every playing seat, each in the labour area of the seat's base tile: what the labour core trains
+        through (`labour.api.schools_of_actor`)."""
+        sim = self._world
+        schools = []
+        for seat_id in sim.state.seats_playing():
+            with sim.scenario.act_as(seat_id):
+                seats = sim.labour.trade_schools()
+                tile = self._agent.tile_in_economy(sim.labour.base_tile())
+            if seats:
+                schools.extend(labour_api.schools_of_actor(seat_id, economy_api.labour_area(tile), seats))
+        return tuple(schools)
 
     def credit_asks(self):
         """Each playing seat's credit line, as a request for the year's clearing: the line its name and earning

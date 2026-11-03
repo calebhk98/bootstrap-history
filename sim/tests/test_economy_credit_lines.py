@@ -74,7 +74,7 @@ class SeatRequestsAmongOthersTests(unittest.TestCase):
 
 class RoomTests(unittest.TestCase):
     def economy(self, **record):
-        fields = dict(funds_offered=100.0, lent_by_borrower={}, credit_granted={})
+        fields = dict(lenders_met=True, funds_offered=100.0, lent_by_borrower={}, credit_granted={})
         fields.update(record)
         return types.SimpleNamespace(record=types.SimpleNamespace(credit=types.SimpleNamespace(**fields)))
 

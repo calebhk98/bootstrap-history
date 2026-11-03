@@ -55,6 +55,10 @@ class OpenLending(unittest.TestCase):
         record.open_lending([], "coin")
         self.assertIsNone(record.lowest_ask_offered)
         self.assertEqual(record.funds_offered, 0.0)
+        self.assertTrue(record.lenders_met)
+
+    def test_a_record_no_lending_has_opened_has_not_met(self):
+        self.assertFalse(CreditRecord().lenders_met)
 
 
 def economy_over(credit, balances=None, cohorts=(), banks=(), coin_per_unit=2.0):
@@ -75,6 +79,11 @@ class EconomyAnswers(unittest.TestCase):
 
     def test_before_lenders_have_met_there_is_no_answer(self):
         self.assertIsNone(api.actor_fundable_amount(economy_over(CreditRecord()), 10.0, 0.0, 1000.0, 0.0))
+
+    def test_lenders_that_met_with_no_funds_fund_nothing_not_an_unknown_amount(self):
+        credit = CreditRecord()
+        credit.open_lending([], "coin")
+        self.assertEqual(api.actor_fundable_amount(economy_over(credit), 10.0, 0.0, 1000.0, 0.0), 0.0)
 
     def test_once_they_have_met_a_small_draw_is_funded_whole(self):
         self.assertEqual(api.actor_fundable_amount(self.met(), 10.0, 0.0, 1000.0, 0.0), 10.0)

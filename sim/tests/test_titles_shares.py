@@ -1,5 +1,4 @@
-"""`titles.shares` reads the record's titles; it falls back on the cohorts' ownership shares only for a record with no
-titles at all yet, never for a tile whose holders have all let go of it."""
+"""`titles.shares` reads the record's titles: a tile they do not name, or whose holders have all let go of it, has no holder."""
 QUICK_TOPIC = True
 
 import types
@@ -13,9 +12,14 @@ def record_with(titles_by_tile):
     return types.SimpleNamespace(land=types.SimpleNamespace(titles=titles_by_tile), cohorts={"c": cohort})
 
 
-class SharesFallbackTests(unittest.TestCase):
-    def test_a_record_with_no_titles_yet_reads_the_ownership_shares(self):
-        self.assertEqual(titles.shares(record_with({}), "t"), {"c": 1.0})
+class SharesTests(unittest.TestCase):
+    def test_a_record_with_no_titles_names_no_holder_whatever_the_ownership_shares(self):
+        self.assertEqual(titles.shares(record_with({}), "t"), {})
+
+    def test_the_held_titles_of_an_unnamed_tile_are_empty_and_kept(self):
+        record = record_with({})
+        self.assertEqual(titles.held_shares(record, "t"), {})
+        self.assertEqual(record.land.titles, {"t": {}})
 
     def test_a_tile_whose_holders_all_released_it_has_no_holder(self):
         self.assertEqual(titles.shares(record_with({"t": {}, "u": {"x": 1.0}}), "t"), {})

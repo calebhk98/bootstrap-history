@@ -95,12 +95,11 @@ class Supply:
     def market_supply(self, trade):
         """Hours a year of this trade the labour core offers, as a read-only view: the hours its households offered in the
         base tile's labour area at the last clearing (`_hours_offered_in_reach`; the literate trades: the literacy ceiling's
-        people over a working year), less the firms' and governments' staff, plus the places of the trade schools, and never more
+        people over a working year), less the firms' and governments' staff, and never more
         than every person who exists works. A trade only the founder teaches has the people taught."""
         if not self.trades.trade_available(trade):
             return 0.0
         hours_per_person = person_year_hours(self._world)
-        school_hours = (self._world.workforce.trade_schools or {}).get(trade, 0.0) * hours_per_person
         if trade in self._world.trades.trades_absent:
             return max(0.0, self._taught_trade_people(trade) - self._world.actors.actor_staff_fte(trade)) * hours_per_person
         staff_hours = self._world.actors.actor_staff_fte(trade) * hours_per_person
@@ -108,7 +107,7 @@ class Supply:
             offered_hours = self.literate_capacity(trade) * hours_per_person
         else:
             offered_hours = self._hours_offered_in_reach(trade)
-        hours = max(0.0, offered_hours - staff_hours) + school_hours
+        hours = max(0.0, offered_hours - staff_hours)
         return trade_supply_rules.supply_hours(hours, self.people_who_exist(trade), hours_per_person)
 
     def market_hours_offered(self):

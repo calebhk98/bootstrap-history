@@ -160,8 +160,3 @@ def _priced_basket(view, key, basket, priced_by_tile):
         priced_by_tile[key] = need_prices(basket, view, key[0])
     return priced_by_tile[key]
 
-
-def _priced(setup, view, tile, priced_by_tile):
-    if tile not in priced_by_tile:
-        priced_by_tile[tile] = need_prices(setup.basket_for(tile), view, tile)
-    return priced_by_tile[tile]

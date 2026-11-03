@@ -79,11 +79,6 @@ class PriceReads:
     def rate(self):
         return self.answers()[1]
 
-    def unskilled_wage_per_hour(self):
-        """The home labour markets' wage for an hour of the trade anyone can take up, in coin (the engine's unit)."""
-        economy = self._agent.economy()
-        return self.wage_per_hour(economy_api.unskilled_trade(economy))
-
     def wage_per_hour_at(self, trade, tile):
         """The wage per hour, in coin, a bid for the trade on `tile` is funded at (sim/economy/trade_wages.py): the wage of the tile's own
         labour area, else the one wage rule."""

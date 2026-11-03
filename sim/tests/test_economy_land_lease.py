@@ -79,5 +79,11 @@ class LeaseTests(unittest.TestCase):
         self.assertGreater(sum(each.amount for each in paid), 0.0)
 
 
+class PostedRentOrderTests(unittest.TestCase):
+    def test_posted_rents_come_back_in_sorted_tile_order(self):
+        posted = land_lease.posted_rents({"b": 1.0, "z": 1.0, "a": 1.0}, {"m": 2.0, "c": 2.0})
+        self.assertEqual(list(posted), sorted(posted))
+
+
 if __name__ == "__main__":
     unittest.main()

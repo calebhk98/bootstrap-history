@@ -135,17 +135,17 @@ def clear_with_cause(requests: Sequence[LoanRequest], offers: Sequence[FundsOffe
     offers = [offer for offer in offers if offer.currency == currency and offer.amount > 0]
     if not offers:
         return LoanClearing([], last_rate, list(requests), NO_OFFERS)      # borrowers' bids alone are not a price
-    asked_amount = {}
+    asked_amount: Dict[int, float] = {}    # position in `requests` -> the amount asked, for a request cut to what its collateral bears
     limited: Dict[AgentId, str] = {}
     lowest_offered = min(offer.minimum_rate for offer in offers)
     cut = []
-    for request in requests:
+    for position, request in enumerate(requests):
         # a request the premium on its whole amount prices out is funded for the most its collateral bears
         taken = credit_cap.fundable_amount(request.amount, existing_debt_by_borrower.get(request.borrower, 0.0),
                                            request.collateral_value, arrears_by_borrower.get(request.borrower, 0.0),
                                            request.maximum_rate, max(0.0, lowest_offered), risk_premium)
         if 0.0 < taken < request.amount:
-            asked_amount[(request.borrower, request.purpose, taken)] = request.amount
+            asked_amount[position] = request.amount
             limited[request.borrower] = credit_cap.COLLATERAL_BOUND
             request = replaced(request, amount=taken)
         cut.append(request)
@@ -234,7 +234,7 @@ def clear_with_cause(requests: Sequence[LoanRequest], offers: Sequence[FundsOffe
             granted[index] += piece
     unmet = []
     for index, request in enumerate(requests):
-        left = asked_amount.get((request.borrower, request.purpose, request.amount), request.amount) - granted.get(index, 0.0)
+        left = asked_amount.get(index, request.amount) - granted.get(index, 0.0)
         if left > 1e-9:
             unmet.append(replaced(request, amount=left))
     return LoanClearing(loans, base_rate, unmet, limited=limited)

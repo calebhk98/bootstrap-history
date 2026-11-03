@@ -24,13 +24,6 @@ class AgentLabourViews(AgentViewPart):
 		parts = self._answering()
 		return None if parts is None else economy_api.working_hours_per_year(self._economy().agent.economy())
 
-	def agent_unskilled_wage(self):
-		"""Money one hour of the unskilled trade is paid in the agent economy; None until the game's money is priced at it."""
-		if not self._economy().world.money_from_economy():
-			return None
-		parts = self._answering()
-		return None if parts is None else parts.prices.unskilled_wage_per_hour()
-
 	def agent_people_by_trade(self):
 		economy = self._economy()
 		return None if economy.opening else economy.parts.producers.people_by_trade()

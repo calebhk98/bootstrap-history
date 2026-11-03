@@ -11,7 +11,7 @@ import math
 from typing import Dict, Iterable, Mapping, Set, Tuple
 
 from . import producer_table
-from . import land_market, opening_income, opening_runs, ownership, unit_cost
+from . import land_market, land_rents, opening_income, opening_runs, ownership, unit_cost
 from .replaced import replaced
 from .types import AgentId, GoodId, Recipe
 
@@ -115,7 +115,9 @@ def settle(setup, record, view, plot_hectares_by_tile: Mapping[str, float]) -> D
                                              producer.land_rent_per_run)
         producer_table.put_producer(record.producers, replaced(producer, capacity_runs=producer.capacity_runs * before / after))
     owners = {tile: ownership.owner_cohort(record, tile) for tile in result.rent_per_hectare_by_tile}
-    paid = ownership.spread(record, land_market.rent_postings(result, demands, owners, setup.currency_id))
+    postings = land_market.rent_postings(result, demands, owners, setup.currency_id)
+    record.land.rent_paid = land_rents.booked_by_tile(postings, record.producers)
+    paid = ownership.spread(record, postings)
     received: Dict[AgentId, float] = {}
     for payment in paid:
         received[payment.payee] = received.get(payment.payee, 0.0) + payment.amount

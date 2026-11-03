@@ -58,5 +58,20 @@ class EconomyApiTests(unittest.TestCase):
         self.assertEqual(api.traded_volumes(economy), {"grain": 5.0, "ore": 5.0})
 
 
+class LandRentWhereNoneIsLetTests(unittest.TestCase):
+    def economy(self, land_rent):
+        setup = types.SimpleNamespace(tiles={"a": None, "b": None}, countries=lambda: ("home",), civ_id="home")
+        return types.SimpleNamespace(setup=setup, record=types.SimpleNamespace(land=types.SimpleNamespace(land_rent=land_rent)))
+
+    def test_the_mean_rent_is_none_where_no_land_was_let(self):
+        self.assertIsNone(api.land_rent_per_hectare(self.economy({"a": 0.0})))
+
+    def test_a_tile_where_none_was_let_takes_the_mean_of_the_land_let_elsewhere(self):
+        self.assertAlmostEqual(api.land_rent_at_tile(self.economy({"a": 4.0, "b": 0.0}), "b"), 4.0)
+
+    def test_a_tile_rent_is_none_where_no_land_was_let_anywhere(self):
+        self.assertIsNone(api.land_rent_at_tile(self.economy({}), "a"))
+
+
 if __name__ == "__main__":
     unittest.main()

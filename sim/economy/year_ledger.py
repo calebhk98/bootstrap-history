@@ -73,11 +73,18 @@ class YearLedger:
                     taken = (posting.giver, posting.tile)
                     self.pending_mint_takes[taken] = self.pending_mint_takes.get(taken, 0.0) + posting.quantity
 
-    def note_rent(self, postings: Iterable[Transfer]) -> None:
-        """Rent paid out: a cost of the payer's year, though it is not paid in a market (it takes nothing from
-        the payee's receipts)."""
+    def note_paid_outside_markets(self, postings: Iterable[Transfer]) -> None:
+        """Money paid out in no market (rent, a bonded household's payments, the keep of bonded people): a cost of the payer's
+        year, though it takes nothing from the payee's receipts."""
         for posting in postings:
             self.money_out[posting.payer] = self.money_out.get(posting.payer, 0.0) + posting.amount
+
+    def note_wages_outside_markets(self, postings: Iterable[Transfer]) -> None:
+        """Pay for work that was not bought in the labour market (a steward's pay): the payer's cost, the payee's wages."""
+        postings = list(postings)
+        self.note_paid_outside_markets(postings)
+        for posting in postings:
+            self.wages_in[posting.payee] = self.wages_in.get(posting.payee, 0.0) + posting.amount
 
     def note_plant_purchases(self, postings: Iterable[object], good: GoodId, plant_goods: Dict[AgentId, Iterable[GoodId]]) -> None:
         """Money producers paid, in the clearing of `good`, for goods their own plant is built from: what they paid the sellers. A seller paid

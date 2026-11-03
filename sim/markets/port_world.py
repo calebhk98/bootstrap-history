@@ -95,6 +95,10 @@ class LabourReads:
 	def employed_by_trade(self):
 		return self._needs.employed_by_trade()
 
+	def trade_schools(self):
+		"""{trade: seats} of the trade schools the acting seat has founded."""
+		return self._needs.trade_schools()
+
 
 class PortWorld:
 

@@ -27,9 +27,7 @@ def seed(record) -> None:
 
 def shares(record, tile: TileId) -> Dict[AgentId, float]:
     """Holder -> share of the tile's land (below one in total when part of it is abandoned)."""
-    if record.land.titles:
-        return dict(record.land.titles.get(tile, {}))
-    return {cohort.agent_id: cohort.ownership_share for cohort in record.cohorts.values() if cohort.tile == tile}
+    return dict(record.land.titles.get(tile, {}))
 
 
 def split_among_holders(record, tile: TileId, amount: float) -> Dict[AgentId, float]:
@@ -57,9 +55,7 @@ def free_share(record, holder: AgentId, tile: TileId) -> float:
 
 
 def held_shares(record, tile: TileId) -> Dict[AgentId, float]:
-    if tile not in record.land.titles:
-        record.land.titles[tile] = shares(record, tile)
-    return record.land.titles[tile]
+    return record.land.titles.setdefault(tile, {})
 
 
 def forgive_rent_arrears(land, tile: TileId) -> float:

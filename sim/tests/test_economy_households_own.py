@@ -114,5 +114,17 @@ class LandHeldTests(unittest.TestCase):
         self.assertEqual(titles_worked.worked_share(record, "t", "stranger"), 0.0)
 
 
+class OwnPlotRecipeTests(unittest.TestCase):
+    def test_a_land_recipe_buying_only_its_tools_is_an_own_plot_recipe(self):
+        recipe = Recipe("plough_grain", {"grain": 10.0}, {"hoe": 0.1}, {"hand": 4.0}, tool_wear={"hoe": 0.1})
+        self.assertTrue(households_own.is_own_plot_recipe("plough_grain", recipe, {"plough_grain": 2.0}))
+
+    def test_a_recipe_buying_seed_or_working_no_land_is_not(self):
+        seeded = Recipe("grain", {"grain": 10.0}, {"seed": 1.0}, {"hand": 4.0})
+        landless = Recipe("smith", {"nail": 10.0}, {}, {"hand": 4.0})
+        self.assertFalse(households_own.is_own_plot_recipe("grain", seeded, {"grain": 2.0}))
+        self.assertFalse(households_own.is_own_plot_recipe("smith", landless, {"grain": 2.0}))
+
+
 if __name__ == "__main__":
     unittest.main()
