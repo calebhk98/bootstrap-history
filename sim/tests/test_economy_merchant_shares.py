@@ -48,12 +48,12 @@ def total_bid(orders):
 class OneMerchantAcrossSourcesTests(unittest.TestCase):
     def test_bids_from_every_source_together_stay_within_the_destinations_share(self):
         carriage, area_map = world()
-        orders = merchants.orders(merchant(), View(), carriage, area_map, 1e6, {}, SPECS, 0.0, storage_per_kg_year=0.0)
+        orders = merchants.orders(merchant(), View(), carriage, area_map, 1e6, {}, SPECS, 0.0)
         self.assertLessEqual(total_bid(orders), merchants.MERCHANT_MARKET_SHARE * DESTINATION_VOLUME + 1e-9)
 
     def test_the_whole_share_is_still_bid_when_cash_allows(self):
         carriage, area_map = world()
-        orders = merchants.orders(merchant(), View(), carriage, area_map, 1e6, {}, SPECS, 0.0, storage_per_kg_year=0.0)
+        orders = merchants.orders(merchant(), View(), carriage, area_map, 1e6, {}, SPECS, 0.0)
         self.assertAlmostEqual(total_bid(orders), merchants.MERCHANT_MARKET_SHARE * DESTINATION_VOLUME)
 
     def test_a_loan_request_does_not_count_the_same_room_once_per_source(self):
@@ -72,7 +72,7 @@ class SourceTests(unittest.TestCase):
         who = merchant()
         source = area_map.area_of("salt", "a")
         who.expected_volumes[("salt", source)] = 2.0     # the area sold two units last year; the destination takes thirty
-        orders = merchants.orders(who, View(), carriage, area_map, 1e6, {}, SPECS, 0.0, storage_per_kg_year=0.0)
+        orders = merchants.orders(who, View(), carriage, area_map, 1e6, {}, SPECS, 0.0)
         from_source = sum(bid.flexible_quantity for bid in orders.bids if bid.area == source)
         self.assertLessEqual(from_source, 2.0 + 1e-9)
 
@@ -83,7 +83,7 @@ class SourceTests(unittest.TestCase):
         who.expected_volumes[("salt", area_map.area_of("salt", "a"))] = 2.0        # ...has little to sell
         who.expected_volumes[("salt", area_map.area_of("salt", "b"))] = 1000.0
         who.expected_volumes[("salt", area_map.area_of("salt", "c"))] = 1000.0
-        orders = merchants.orders(who, View(), carriage, area_map, 1e6, {}, SPECS, 0.0, storage_per_kg_year=0.0)
+        orders = merchants.orders(who, View(), carriage, area_map, 1e6, {}, SPECS, 0.0)
         self.assertAlmostEqual(total_bid(orders), merchants.MERCHANT_MARKET_SHARE * DESTINATION_VOLUME)
         self.assertGreater(len({bid.area for bid in orders.bids}), 1)
 
@@ -94,15 +94,15 @@ class RivalMerchantsTests(unittest.TestCase):
         shares = merchants.RouteShares()
         placed = 0.0
         for name in ("m1", "m2", "m3", "m4", "m5", "m6", "m7", "m8", "m9"):
-            placed += total_bid(merchants.orders(merchant(name), View(), carriage, area_map, 1e6, {}, SPECS, 0.0, shares, storage_per_kg_year=0.0))
+            placed += total_bid(merchants.orders(merchant(name), View(), carriage, area_map, 1e6, {}, SPECS, 0.0, shares))
         from sim.economy import merchants_shares
         self.assertLessEqual(placed, merchants_shares.MERCHANT_GROUP_SHARE * DESTINATION_VOLUME + 1e-9)
 
     def test_a_late_merchant_gets_what_the_earlier_ones_left(self):
         carriage, area_map = world()
         shares = merchants.RouteShares()
-        first = total_bid(merchants.orders(merchant("m1"), View(), carriage, area_map, 1e6, {}, SPECS, 0.0, shares, storage_per_kg_year=0.0))
-        second = total_bid(merchants.orders(merchant("m2"), View(), carriage, area_map, 1e6, {}, SPECS, 0.0, shares, storage_per_kg_year=0.0))
+        first = total_bid(merchants.orders(merchant("m1"), View(), carriage, area_map, 1e6, {}, SPECS, 0.0, shares))
+        second = total_bid(merchants.orders(merchant("m2"), View(), carriage, area_map, 1e6, {}, SPECS, 0.0, shares))
         self.assertAlmostEqual(first, merchants.MERCHANT_MARKET_SHARE * DESTINATION_VOLUME)
         self.assertGreater(second, 0.0)
 

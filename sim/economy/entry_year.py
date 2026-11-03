@@ -7,7 +7,7 @@ import math
 from typing import Dict, Tuple
 
 from . import producer_table
-from . import credit, entry_practice, location, ownership, practice, sites, unit_cost
+from . import credit, entry_practice, location, ownership, practice, producer_exit, sites, unit_cost
 from .entry_backed import unfilled_at_cost
 from .entry_margin import margin_entry_plans
 from .entry_spare import idle_runs
@@ -19,7 +19,7 @@ from .producers import Producer, expected_output_prices, live_input_prices, live
 from .producers_close import working_capital_target
 from .market_memory import market_key
 from .setup import recipe_tile_key
-from .types import GoodsMove, LoanRequest, Transfer
+from .types import LoanRequest, Transfer
 from .replaced import replaced
 from .rates import own_rate
 
@@ -117,10 +117,10 @@ def restake_owners(setup, record, view) -> None:
         if shortfall <= 0.0:
             continue
         recipe = setup.recipes[producer.recipe_id]
-        earning = unit_cost.return_on_capital(recipe, expected_output_prices(producer, recipe, view) or {},
-                                              live_input_prices(producer, recipe, view),
-                                              live_wages(producer, recipe, view),
-                                              producer.land_rent_per_run)
+        earning = unit_cost.return_after_recovery(recipe, expected_output_prices(producer, recipe, view) or {},
+                                                  live_input_prices(producer, recipe, view),
+                                                  live_wages(producer, recipe, view), rate,
+                                                  producer.land_rent_per_run)
         pays = earning is not None and earning > rate
         if producer.owner not in budget:
             budget[producer.owner] = ENTRANT_OWNER_STAKE_SHARE * max(0.0, record.book.balance(producer.owner, money))
@@ -131,22 +131,16 @@ def restake_owners(setup, record, view) -> None:
 
 
 def close_idle_producers(setup, record) -> int:
-    """Close producers with nothing left to do (entry.producers_to_close): their cash and any goods they
-    still hold go to their owner."""
+    """Close producers with nothing left to do (entry.producers_to_close) by the one exit (producer_exit.exit_producer): their
+    cash is paid out as a dividend, shared with the holders of their shares and spread over their owner's tile, and any goods
+    they still hold go to their owner."""
     money = setup.currency_id
     debtors = {loan.borrower for loan in record.credit.loans}
     closing = producers_to_close(record.producers, set(record.credit.expansion_runs), debtors)
     for producer_id in closing:
-        owner = record.producers[producer_id].owner
         cash = record.book.balance(producer_id, money)
-        if cash > 0.0:
-            record.book.transfer(Transfer(producer_id, owner, money, cash, "a closed producer's cash"))
-        moves = [GoodsMove(producer_id, owner, good, tile, quantity, "a closed producer's stock")
-                 for good, tiles in sorted(record.book.holdings(producer_id)["goods"].items())
-                 for tile, quantity in sorted(tiles.items()) if quantity > 0.0]
-        if moves:
-            record.book.move_many(moves)
-        producer_table.remove_producer(record.producers, producer_id)
+        payout = [Transfer(producer_id, record.producers[producer_id].owner, money, cash, "dividend")] if cash > 0.0 else []
+        producer_exit.exit_producer(record, producer_id, payout)
     return len(closing)
 
 

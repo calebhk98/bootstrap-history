@@ -79,14 +79,6 @@ def service_price_per_hour(setup, view, tile, wage_price: float) -> float:
     return min(prices) if prices else wage_price
 
 
-def cohort_split(setup, record, view, cohort: Cohort, offers: Sequence[LabourOffer],
-                 servant_price_fallback_per_hour: float) -> Tuple[float, float]:
-    """(hours hired, hours done itself) for one cohort: an hour of its own labour at the wage it faces against the
-    servant's price (the servant trade's wage last year, else the fallback)."""
-    hired, own, _milled = cohort_plan(setup, record, view, cohort, offers, servant_price_fallback_per_hour)
-    return hired, own
-
-
 def expected_shares(setup, record, offers: Sequence[LabourOffer]) -> Dict[Tuple[str, str], float]:
     """{(trade, area): share of the offered hours its producers' planned runs hire}: the opening's own sizing of labour
     demand (labour_state.producers_hours_needed) over the hours households offer."""

@@ -75,10 +75,12 @@ def with_rates(forms: Sequence[TaxForm], rates: Sequence[Tuple[str, float]]) -> 
 
 
 def assess(forms: Sequence[TaxForm], facts: YearFacts, state_agent_id: AgentId, prices: Mapping[GoodId, float],
-           state_capacity: float = 1.0, hiding: Hiding = None) -> Tuple[List[Transfer], List[GoodsMove], List[Assessment]]:
+           state_capacity: float = 1.0, hiding: Hiding = None,
+           cash_left: Optional[Dict[AgentId, float]] = None) -> Tuple[List[Transfer], List[GoodsMove], List[Assessment]]:
     if not 0.0 <= state_capacity <= 1.0:
         raise ValueError("state_capacity must lie in 0..1, got %r" % state_capacity)
-    cash_left: Dict[AgentId, float] = dict(facts.cash)
+    if cash_left is None:      # a caller that assesses in several calls shares one dict, so a payer is never asked for more than it holds
+        cash_left = dict(facts.cash)
     held_left: Dict[Tuple[AgentId, GoodId], float] = {}
     transfers: List[Transfer] = []
     moves: List[GoodsMove] = []

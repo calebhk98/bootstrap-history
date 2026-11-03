@@ -9,6 +9,7 @@ import random
 import unittest
 
 from sim.economy import demand_search, goods_market, unsold_search
+from sim.economy.goods_market_fills import sold_by_seller_tile
 from sim.economy.types import Bid, Offer
 
 GOOD, AREA = "grain", "area"
@@ -63,7 +64,7 @@ class FloorShortcutTests(unittest.TestCase):
             if not floors:
                 continue
             result = goods_market.clear(bids, offers, GOOD, AREA, "coin", last_price, buyers)
-            if not unsold_search._unsold(unsold_search._sold_by_offer(result, offers), offers, list(floors)):
+            if not unsold_search._unsold(sold_by_seller_tile(result.fills), offers, list(floors)):
                 continue
             searched += 1
             skipped += unsold_search.unsold_above_the_floor(buyers, offers, floors)

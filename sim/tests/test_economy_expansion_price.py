@@ -37,6 +37,10 @@ class PriceShareTests(unittest.TestCase):
         self.assertEqual(expansion_price.share_after_addition([], GOOD, AREA, 100.0, 10.0), 1.0)
         self.assertEqual(expansion_price.share_after_addition(buyers(), GOOD, AREA, 0.0, 10.0), 1.0)
 
+    def test_buyers_with_no_price_scale_and_a_free_offer_show_no_price_instead_of_raising(self):
+        floor_only = [Bid("buyer", GOOD, AREA, TILE, 5.0, 0.0, 0.0, 1.0, 100.0)]
+        self.assertIsNone(expansion_price.price_with_supply(floor_only, GOOD, AREA, 3.0))
+
     def test_the_producers_market_is_found_by_its_tile(self):
         share = expansion_price.price_share_of({(GOOD, AREA): buyers()}, {(GOOD, AREA): 100.0},
                                                lambda good, tile: AREA, TILE)

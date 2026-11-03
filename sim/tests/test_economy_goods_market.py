@@ -8,7 +8,8 @@ import unittest
 
 import numpy
 
-from sim.economy.goods_market import _pairing, _without_washed, clear_at_one_price as clear, quantity_at, ration
+from sim.economy.goods_market_fills import without_washed
+from sim.economy.goods_market import _pairing, clear_at_one_price as clear, quantity_at, ration
 from sim.economy.types import Bid, Fill, Offer
 from sim.tests import economy_reference_clearing as reference
 
@@ -50,7 +51,7 @@ class MintResaleWashTests(unittest.TestCase):
         self.assertEqual(sum(pairing.quantity), 5.0)
         fills = [Fill("edge:mint", "metal", "a", "t0", 4.0, 5.0, "buy"), Fill("house", "metal", "a", "t1", 2.0, 5.0, "buy"),
                  Fill("edge:mint", "metal", "a", "t0", 3.0, 5.0, "sell"), Fill("mine", "metal", "a", "t2", 3.0, 4.0, "sell")]
-        kept = _without_washed(fills, washed)
+        kept = without_washed(fills, washed)
         self.assertEqual(sum(fill.quantity for fill in kept if fill.side == "sell"), 5.0)
         self.assertEqual(sum(fill.quantity for fill in kept if fill.side == "buy"), 5.0)
 

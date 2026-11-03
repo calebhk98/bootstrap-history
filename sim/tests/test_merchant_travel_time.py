@@ -14,7 +14,6 @@ from sim.economy.merchants import Merchant
 from sim.economy.record import EconomyRecord
 from sim.economy.market_memory import MarketMemory
 from sim.economy.types import CurrencySpec
-from sim.economy.store_return import STORE_STORAGE_COST_PER_KG_YEAR
 from sim.economy.types import EDGE_PRODUCTION, EDGE_SPOILAGE, Fill, GoodsMove, GoodSpec
 from sim.tests.test_economy_merchants import SPECS, View
 from sim.tests.test_economy_tile_costs import star_tiles, unit_cost_table
@@ -102,7 +101,7 @@ class TravelTimeTests(unittest.TestCase):
         _c, _m, area_a, area_b = world_apart(NEAR_KM)
         who.expected_prices = {("salt", area_a): 2.0, ("salt", area_b): 5.0}
         who.expected_volumes = {("salt", area_b): 100.0}
-        orders = merchants.orders(who, View({}), carriage, area_map, 1e6, {}, SPECS, 0.0, storage_per_kg_year=0.0)
+        orders = merchants.orders(who, View({}), carriage, area_map, 1e6, {}, SPECS, 0.0)
         self.assertEqual(orders.bids, ())
 
 
@@ -112,7 +111,7 @@ class FinancingTests(unittest.TestCase):
         who = Merchant("m1", "a", "owner", 100.0)
         who.expected_prices = {("salt", area_a): 2.0, ("salt", area_b): 3.7}
         who.expected_volumes = {("salt", area_b): 100.0}
-        return merchants.orders(who, View({}), carriage, area_map, 1000.0, {}, SPECS, 0.2, storage_per_kg_year=0.0).bids
+        return merchants.orders(who, View({}), carriage, area_map, 1000.0, {}, SPECS, 0.2).bids
 
     def test_a_trade_that_pays_for_one_year_of_interest_does_not_pay_for_two(self):
         self.assertEqual(len(self.bids(NEAR_KM)), 1)
@@ -121,28 +120,6 @@ class FinancingTests(unittest.TestCase):
     def test_years_held_follow_the_days(self):
         self.assertEqual([merchants_transit.years_held(days) for days in (0.0, 30.0, 365.0, 366.0, 800.0)],
                          [1, 1, 1, 2, 3])
-
-
-class StorageAtStagesTests(unittest.TestCase):
-    """Complaints/628: a haul held beyond the first year pays the storage of each extra year at its stages."""
-    DURABLE = GoodSpec("bar", 1.0, 0.0, 0.0, "material")      # one kilogram a unit, never spoils
-
-    def test_storage_is_charged_in_todays_money(self):
-        self.assertAlmostEqual(merchants_transit.storage_per_unit(self.DURABLE, 3, 0.5), 2 * 0.5)
-
-    def test_a_direct_haul_pays_no_storage_beyond_the_year_every_merchant_holds(self):
-        self.assertEqual(merchants_transit.storage_per_unit(self.DURABLE, 1, STORE_STORAGE_COST_PER_KG_YEAR), 0.0)
-
-    def test_storage_follows_the_kilograms_of_a_unit(self):
-        heavy = GoodSpec("ore", 10.0, 0.0, 0.0, "material")
-        self.assertAlmostEqual(merchants_transit.storage_per_unit(heavy, 3, STORE_STORAGE_COST_PER_KG_YEAR),
-                               10.0 * merchants_transit.storage_per_unit(self.DURABLE, 3, STORE_STORAGE_COST_PER_KG_YEAR))
-
-    def test_the_break_even_price_falls_with_the_storage_of_a_longer_haul(self):
-        near = merchants._break_even_price(self.DURABLE, 5.0, 0.0, 0.0, STORE_STORAGE_COST_PER_KG_YEAR, 1)
-        far = merchants._break_even_price(self.DURABLE, 5.0, 0.0, 0.0, STORE_STORAGE_COST_PER_KG_YEAR, 3)
-        self.assertAlmostEqual((near - far) * (1.0 + merchants.MERCHANT_MARGIN_SHARE),
-                               2 * STORE_STORAGE_COST_PER_KG_YEAR * self.DURABLE.unit_mass_kg)
 
 
 class SaveTests(unittest.TestCase):
@@ -196,16 +173,16 @@ class InformationLagTests(unittest.TestCase):
 
     def test_a_merchant_does_not_read_the_distant_market_this_year(self):
         carriage, area_map, area_a, area_b = world_apart(FAR_KM)
-        light = {"salt": GoodSpec("salt", 50.0, 0.0, 0.0, "food")}      # a unit light enough that its storage on the way is small beside the price gap
+        light = {"salt": GoodSpec("salt", 50.0, 0.0, 0.0, "food")}      # a unit light enough that carriage is small beside the price gap
         who = Merchant("m1", "a", "owner", 100.0)
         who.expected_volumes = {("salt", area_b): 100.0}
         view = View({("salt", area_a): 2.0, ("salt", area_b): 9.0})       # the far market is dear today
-        lagged = merchants.orders(who, view, carriage, area_map, 1000.0, {}, light, 0.0, storage_per_kg_year=0.0)
+        lagged = merchants.orders(who, view, carriage, area_map, 1000.0, {}, light, 0.0)
         self.assertEqual(lagged.bids, ())                                 # nothing known of it yet: no trade
         who.expected_prices = {("salt", area_a): 2.0, ("salt", area_b): 2.1}   # the news that has arrived says it is cheap
-        self.assertEqual(merchants.orders(who, view, carriage, area_map, 1000.0, {}, light, 0.0, storage_per_kg_year=0.0).bids, ())
+        self.assertEqual(merchants.orders(who, view, carriage, area_map, 1000.0, {}, light, 0.0).bids, ())
         who.expected_prices = {("salt", area_a): 2.0, ("salt", area_b): 9.0}
-        self.assertEqual(len(merchants.orders(who, view, carriage, area_map, 1000.0, {}, light, 0.0, storage_per_kg_year=0.0).bids), 1)
+        self.assertEqual(len(merchants.orders(who, view, carriage, area_map, 1000.0, {}, light, 0.0).bids), 1)
 
 
 if __name__ == "__main__":

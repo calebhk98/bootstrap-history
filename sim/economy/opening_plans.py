@@ -13,6 +13,7 @@ from typing import Callable, Dict, Mapping, Optional, Tuple
 
 from . import household_work_year, households_work, labour_state, year_labour
 from .households_cohort import Cohort
+from .opening_placement import hours_per_worker_in
 from .market_memory import MarketMemory, YearView, market_key
 from .setup import labour_area
 from .types import AgentId, TileId
@@ -33,8 +34,8 @@ class HouseholdPlans:
 def hands_left_by_tile(setup, record) -> Dict[TileId, float]:
     """Hours a year each tile's workers sell beyond what its producers hire for the runs they expect to sell."""
     hired = labour_state.producers_hours_needed(setup, record)
-    sold = record.labour.opening_sold_hours_per_worker or setup.working_hours_per_year
-    return {tile: max(0.0, people * setup.working_share * sold
+    sold = record.labour.sold_hours_per_worker(setup.working_hours_per_year)     # as the opening staffed them, by area
+    return {tile: max(0.0, people * setup.working_share * hours_per_worker_in(labour_area(tile), sold, setup.working_hours_per_year)
                       - math.fsum(hired.get(labour_area(tile), {}).values()))
             for tile, people in setup.opening_population_by_tile.items()}
 

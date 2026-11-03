@@ -209,7 +209,7 @@ class OneWageTests(unittest.TestCase):
             wages.update({market_key(fixture.LABOURER, labour_area(tile)): wage_elsewhere
                           for tile in fixture.tiles() if tile != fixture.TOWN})
         carried = {fixture.TOWN: {fixture.FARMS: 10.0}}
-        record = type("Record", (), {"memory": type("Memory", (), {"wages": wages, "opening_wage_level": lambda self, money: 1.0})(),
+        record = type("Record", (), {"memory": type("Memory", (), {"wages": wages, "holds_wage_for": lambda self, trade: any(key.startswith(trade + "|") for key in self.wages), "opening_wage_level": lambda self, money: 1.0})(),
                                      "cohorts": {}, "merchants": {},
                                      "carriage": type("Carriage", (), {"carried": carried, "area_imbalance": 1.0})()})()
         table = setup.carriage_table()
@@ -286,7 +286,7 @@ class WageLoanTests(unittest.TestCase):
         who = Merchant("m1", "town", "owner", 100.0)
         who.carriage_hours_wanted = {market_key(fixture.LABOURER, "town"): 100.0}
         who.carriage_money_wanted = {market_key(fixture.LABOURER, "town"): 100.0}
-        memory = type("Memory", (), {"wages": {market_key(fixture.LABOURER, labour_area("town")): 0.5}, "opening_wage_level": lambda self, money: 1.0})()
+        memory = type("Memory", (), {"wages": {market_key(fixture.LABOURER, labour_area("town")): 0.5}, "holds_wage_for": lambda self, trade: any(key.startswith(trade + "|") for key in self.wages), "opening_wage_level": lambda self, money: 1.0})()
         cohorts = {"town": type("Cohort", (), {"tile": "town"})()}
         return type("Record", (), {"merchants": {"m1": who}, "book": book, "memory": memory, "cohorts": cohorts})()
 

@@ -54,7 +54,7 @@ def two_country_economy():
                  producer("producer:north_farm", "north_farms", "farm", 5.0, land_rent_per_run=2.0)]
     record = SimpleNamespace(cohorts={each.agent_id: each for each in cohorts}, producers={each.agent_id: each for each in producers}, memory=memory, goods=SimpleNamespace(volumes={}),
                            labour=labour_record({wage_key("labourer", "town"): 1000.0, wage_key("labourer", "farms"): 3000.0, wage_key("labourer", "north_farms"): 100.0},
-                                                {wage_key("labourer", "town"): 10.0, wage_key("miner", "hills"): 0.0}, workforce=workforce), carriage=SimpleNamespace(carried_goods={}), land=SimpleNamespace(land_rent={}))
+                                                {wage_key("labourer", "town"): 10.0, wage_key("miner", "hills"): 0.0}, workforce=workforce), carriage=SimpleNamespace(carried_goods={}), land=SimpleNamespace(land_rent={}, titles={}))
     area_map = SimpleNamespace(goods=lambda: ("grain",),
                                areas=lambda good: tuple(SimpleNamespace(area_id=area_id, tiles=tiles) for area_id, tiles in GRAIN_AREAS.items()),
                                tile_sets=lambda good: {area_id: set(tiles) for area_id, tiles in GRAIN_AREAS.items()})

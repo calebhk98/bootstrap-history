@@ -1,7 +1,7 @@
 """On-the-job learning of a producer's crew: the hours a run needs fall with the runs its crew has made.
 
 The recipe's booked hours are the hours of a competent crew. A producer's record keeps the cumulative runs its crew has
-made per trade (`Producer.practice`); `hours_multiplier` turns that into the share by which its hours exceed the
+made per trade (`Producer.crew_runs`); `hours_multiplier` turns that into the share by which its hours exceed the
 booked ones, on Wright's curve (`sim.labour.learning_curve`) down to the physical floor, so hours never go below the
 recipe's. A trade with no entry is an established crew, at the floor: the opening's producers are existing workshops.
 
@@ -41,7 +41,7 @@ _practised: Dict[Tuple[int, Tuple[Tuple[str, float], ...]], tuple] = {}
 
 
 def established_units() -> float:
-    """Runs at which a crew is at the floor: the units of a trade with no entry in `Producer.practice`."""
+    """Runs at which a crew is at the floor: the units of a trade with no entry in `Producer.crew_runs`."""
     return learning_curve.cumulative_for_proficiency(1.0, SOURCE_TASK_FLOOR_FRACTION)
 
 

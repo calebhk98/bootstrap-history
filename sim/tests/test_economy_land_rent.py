@@ -23,15 +23,15 @@ class UnitCostRentTests(unittest.TestCase):
         revenue = {"grain": 1.0}
         self.assertEqual(unit_cost.return_on_capital(FARM, revenue, self.prices, self.wages),
                          unit_cost.return_on_capital(FARM, revenue, self.prices, self.wages, rent=0.0))
-        self.assertEqual(unit_cost.expected_margin(FARM, revenue, self.prices, self.wages, 0.05),
-                         unit_cost.expected_margin(FARM, revenue, self.prices, self.wages, 0.05, rent=0.0))
+        self.assertEqual(unit_cost.variable_cost_per_run(FARM, self.prices, self.wages),
+                         unit_cost.variable_cost_per_run(FARM, self.prices, self.wages, rent=0.0))
 
-    def test_rent_lowers_the_return_and_the_margin(self):
+    def test_rent_lowers_the_return(self):
         revenue = {"grain": 2.0}
         self.assertLess(unit_cost.return_on_capital(FARM, revenue, self.prices, self.wages, rent=2.0),
                         unit_cost.return_on_capital(FARM, revenue, self.prices, self.wages))
-        self.assertAlmostEqual(unit_cost.expected_margin(FARM, revenue, self.prices, self.wages, 0.05, rent=2.0),
-                               unit_cost.expected_margin(FARM, revenue, self.prices, self.wages, 0.05) - 2.0)
+        self.assertLess(unit_cost.return_after_recovery(FARM, revenue, self.prices, self.wages, 0.05, rent=2.0),
+                        unit_cost.return_after_recovery(FARM, revenue, self.prices, self.wages, 0.05))
 
 
 class PlanRentTests(unittest.TestCase):

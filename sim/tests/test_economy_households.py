@@ -260,7 +260,7 @@ class CloseTests(unittest.TestCase):
         new, _ = households.close_year(cohort(), {"grain": 20000.0}, view, SPECS, BASKET,
                                        income_received=100.0, spent=90.0)
         self.assertGreater(new.expected_inflation, 0.0)
-        self.assertEqual((new.last_year_income, new.last_year_spending), (100.0, 90.0))
+        self.assertEqual(new.last_year_income, 100.0)
 
     # wanted cash is the resting holding of the spending rule (households_buffer_stock), not a multiple of spending
     def test_wanted_cash_is_the_resting_holding_of_the_spending_rule(self):

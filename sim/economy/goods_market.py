@@ -31,7 +31,7 @@ from sim.constants import declare
 
 from sim.book import ROUNDING_SHARE
 from .goods_market_demand import DemandSchedule
-from .goods_market_fills import buyer_fills, make_fill, seller_fills, without_edge_self_trades
+from .goods_market_fills import buyer_fills, make_fill, seller_fills, without_edge_self_trades, without_washed
 from .goods_market_logit import allocate
 from .goods_market_ration import ration
 from .goods_market_solve import solve_price
@@ -170,7 +170,7 @@ def clear(bids: Sequence[Bid], offers: Sequence[Offer], good: GoodId, area: Area
     fills.extend(make_fill(offer.seller, good, area, offer.tile, amount, ask, "sell")
                  for offer, amount, ask in zip(ordered, allocation.sold, asks) if amount > 0.0)
     pairing, washed = _pairing(bids, ordered, asks, allocation.flow)
-    fills = _without_washed(fills, washed)
+    fills = without_washed(fills, washed)
     wash = math.fsum(washed.values())
     sales = [fill for fill in fills if fill.side == "sell"]
     traded = math.fsum(fill.quantity for fill in sales)
@@ -198,20 +198,6 @@ def _pairing(bids: Sequence[Bid], ordered: Sequence[Offer], asks: Sequence[float
             kept.append(pair)
     return (Pairing(buyers, sellers, tuple(asks), tuple(buyer_index[pair] for pair in kept),
                     tuple(seller_index[pair] for pair in kept), tuple(quantity[pair] for pair in kept)), washed)
-
-
-def _without_washed(fills: List[Fill], washed: Dict[str, float]) -> List[Fill]:
-    """The fills less each edge's washed quantity on both its buy and its sell side, so they agree with the pairing."""
-    left = {(agent, side): quantity for agent, quantity in washed.items() for side in ("buy", "sell")}
-    result = []
-    for fill in fills:
-        take = min(fill.quantity, left.get((fill.agent, fill.side), 0.0))
-        if take > 0.0:
-            left[(fill.agent, fill.side)] -= take
-        if fill.quantity - take > ROUNDING_SHARE * fill.quantity:     # a residue of float dust is no fill
-            result.append(fill if take == 0.0 else make_fill(fill.agent, fill.good, fill.area, fill.tile,
-                                                             fill.quantity - take, fill.price, fill.side))
-    return result
 
 
 def _asks(buyers: Buyers, ordered: Sequence[Offer]) -> List[float]:
@@ -288,9 +274,12 @@ def crossing(buyers: Buyers, offers: List[Offer], with_wants: bool = True):
         return price, None, supply, None
 
     levels, running = [], 0.0
+    floor = _smallest_price(effective, last_price)    # the solver searches in log price: a level at zero would have no log
+    if floor is None:      # demand with no price scale at all and sellers at zero: no price is set by it
+        return held_price, None, 0.0, None
     for reservation, group in groupby(zip(effective, offers), key=_FIRST):
         running += math.fsum(offer.quantity for _, offer in group)
-        levels.append((reservation, running))
+        levels.append((max(reservation, floor), running))
     price = solve_price(levels, schedule.total_at, demand_at_first,
                         schedule.uncapped_at if schedule.distinct_schedules() * CHEAP_PASSES_PER_BID <= len(buyers.bids)
                         else None, schedule.solutions)
@@ -301,6 +290,15 @@ def crossing(buyers: Buyers, offers: List[Offer], with_wants: bool = True):
                 if reservation <= price]
     supply = math.fsum(offer.quantity for _, offer in eligible)
     return price, eligible, supply, schedule.each_at(price) if with_wants else None
+
+
+def _smallest_price(reservations: Sequence[float], last_price: Optional[float]) -> Optional[float]:
+    """The price a level at zero is searched from: the lowest positive reservation, else the last price; None when
+    the book has neither. Only the search uses it; a zero reservation still sells at any price."""
+    positive = [reservation for reservation in reservations if reservation > 0.0]
+    if positive:
+        return min(positive)
+    return last_price if last_price is not None and last_price > 0.0 else None
 
 
 def at_a_ceiling(price: float, schedule, levels, lowest: float) -> float:

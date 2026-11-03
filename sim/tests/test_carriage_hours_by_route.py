@@ -108,7 +108,7 @@ class AreaWageTests(unittest.TestCase):
         def scale(town_wage, farms_wage):
             wages = {market_key(fixture.LABOURER, labour_area(fixture.TOWN)): town_wage,
                      market_key(fixture.LABOURER, labour_area(fixture.FARMS)): farms_wage}
-            record = type("Record", (), {"memory": type("Memory", (), {"wages": wages, "price_levels": {}, "opening_wage_level": lambda self, money: 1.0})(),
+            record = type("Record", (), {"memory": type("Memory", (), {"wages": wages, "price_levels": {}, "holds_wage_for": lambda self, trade: any(key.startswith(trade + "|") for key in self.wages), "opening_wage_level": lambda self, money: 1.0})(),
                                          "cohorts": {}, "merchants": {},
                                          "carriage": type("Carriage", (), {"carried": carried, "area_imbalance": 1.0})()})()
             return carriage_hours.wage_scale(setup, record, table)
@@ -124,7 +124,7 @@ class AreaWageTests(unittest.TestCase):
 
         def scale(wage, level):
             wages = {market_key(fixture.LABOURER, labour_area(tile)): wage for tile in (fixture.TOWN, fixture.FARMS)}
-            record = type("Record", (), {"memory": type("Memory", (), {"wages": wages, "price_levels": {}, "opening_wage_level": lambda self, money: level})(),
+            record = type("Record", (), {"memory": type("Memory", (), {"wages": wages, "price_levels": {}, "holds_wage_for": lambda self, trade: any(key.startswith(trade + "|") for key in self.wages), "opening_wage_level": lambda self, money: level})(),
                                          "cohorts": {}, "merchants": {},
                                          "carriage": type("Carriage", (), {"carried": carried, "area_imbalance": 1.0})()})()
             return carriage_hours.wage_scale(setup, record, setup.carriage_table())

@@ -28,6 +28,9 @@ class View(ViewDefaults):
     def wage(self, trade, area):
         return self.wage_per_hour
 
+    def wage_held_anywhere(self, trade):
+        return True
+
     def price(self, good, area):
         return 5.0 if good == "grain" else None
 

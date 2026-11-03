@@ -13,6 +13,8 @@ from . import (currency, mint_price, land_bid_year, carriage_fleet_book, carriag
                state_budget, state_store, taxes, tool_wear, unsold_search)
 from . import goods_respend, goods_respend_year, households_cohort
 from .home_scope import on_home_tile
+from .goods_market_fills import sold_by_seller_tile
+from .inventory import held_stock, holding_reservation
 from .household_work_year import basket_key, cohort_basket
 from .market_memory import market_key
 from .market_memory_asks import memory_reference_volume, note_bids, note_offers, price_after_resumed_trade, wanted_at
@@ -21,7 +23,6 @@ from .market_memory_offers import price_after_thin_trade, price_toward_quote
 from .notional import making_costs
 from .protocols import AgentOrders
 from .recipes import input_depth_order
-from . import store_return
 from .taxes_bases import YearFacts
 from .types import Bid, GoodsMove, Offer
 from .entry import unmet_quantity, wanted_in_round
@@ -103,7 +104,6 @@ def less_what_it_grew(orders: AgentOrders, cohort, basket, grown_units) -> Agent
 def merchant_orders(setup, record, view, area_map, carriage, order_book: OrderBook) -> None:
     money = setup.currency_id
     rate = own_rate(view, money)
-    storage = store_return.storage_cost_per_kg_year(view.opening_wage_level(money))
     shares = merchants.RouteShares()
     ordered = sorted(record.merchants.values(), key=lambda each: each.agent_id)
     carrier_bids, carrier_budget = (carriage_fleet_book.bids(setup, record, view, area_map,
@@ -112,9 +112,9 @@ def merchant_orders(setup, record, view, area_map, carriage, order_book: OrderBo
     add_orders(order_book, AgentOrders(bids=tuple(carrier_bids)))     # replacements for the carriers last year's shipments wore
     first = view.year % len(ordered) if ordered else 0          # who sizes first rotates, so no merchant always gets first pick
     for merchant in ordered[first:] + ordered[:first]:
-        held = _held_stock(record.book, merchant.agent_id)
+        held = held_stock(record.book, merchant.agent_id)
         orders = merchants.orders(merchant, view, carriage, area_map, record.book.balance(merchant.agent_id, money) - carrier_budget.get(merchant.agent_id, 0.0),
-                                  held, setup.specs, rate, shares, storage_per_kg_year=storage)
+                                  held, setup.specs, rate, shares)
         add_orders(order_book, orders)
 
 
@@ -126,9 +126,8 @@ def state_orders(setup, record, view, area_map, order_book: OrderBook, keep) -> 
         order_book.setdefault((bid.good, bid.area), ([], []))[0].append(bid)
     add_orders(order_book, AgentOrders(offers=tuple(store_offers)))
     rate = own_rate(view, setup.currency_id)
-    from .inventory import holding_reservation
     offers = []
-    for (good, tile), quantity in sorted(_held_stock(record.book, setup.state_agent).items()):
+    for (good, tile), quantity in sorted(held_stock(record.book, setup.state_agent).items()):
         surplus = quantity - keep.get(good, 0.0) - (kept.get(good, 0.0) if tile == setup.capital_tile else 0.0)
         if surplus <= 0.0 or good not in area_map.goods():
             continue
@@ -140,15 +139,6 @@ def state_orders(setup, record, view, area_map, order_book: OrderBook, keep) -> 
         offers.append(Offer(setup.state_agent, good, area, tile, surplus,
                             holding_reservation(expected, rate, spoilage, 0.0)))
     add_orders(order_book, AgentOrders(offers=tuple(offers)))
-
-
-def _held_stock(book, agent) -> Dict[Tuple[str, str], float]:
-    held = {}
-    for good, tiles in book.holdings(agent)["goods"].items():
-        for tile, quantity in tiles.items():
-            if quantity > 0.0:
-                held[(good, tile)] = quantity
-    return held
 
 
 def clear_goods(setup, record, view, area_map, order_book: OrderBook, plans, ledger: YearLedger,
@@ -196,7 +186,7 @@ def clear_goods(setup, record, view, area_map, order_book: OrderBook, plans, led
             ledger.note_clearing(result, delivered)
             idle_years = note_bids(record.memory, key, bids, offers) + note_offers(record.memory, key, bids, offers)
             left_markets[(good, area)] = goods_respend_year.LeftMarket(
-                bids, result, goods_respend.offers_left(offers, goods_respend_year.sold_by_seller(result)),
+                bids, result, goods_respend.offers_left(offers, sold_by_seller_tile(result.fills)),
                 record.memory.prices.get(key), delivered, wanted_in_round(bids, offers, result), idle_years, bought)
             if area in kept:
                 record.goods.curves[key] = market_curves.summarize(bids, offers)

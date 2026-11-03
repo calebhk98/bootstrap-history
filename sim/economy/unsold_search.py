@@ -19,18 +19,10 @@ from sim.book import ROUNDING_SHARE
 from . import demand_search, goods_market, inventory, seller_offers, titles_value
 from .ask_adjust import band_edge
 from .demand_search import SEARCH_PRECISION
+from .goods_market_fills import sold_by_seller_tile
 from .types import Offer
 
 UNSOLD_BOUND_MARGIN = 1e-12    # float noise of two sums of the same demand, not a model number
-
-
-def _sold_by_offer(result, offers: Sequence[Offer]) -> dict:
-    sold = {}
-    for fill in result.fills:
-        if fill.side == "sell":
-            key = (fill.agent, fill.tile)
-            sold[key] = sold.get(key, 0.0) + fill.quantity
-    return sold
 
 
 def _unsold(sold: dict, offers: Sequence[Offer], indices: Sequence[int]) -> List[int]:
@@ -135,7 +127,7 @@ def clear_with_search(setup, record, view, bids, original: Sequence[Offer], offe
     buyers = goods_market.Buyers(bids, last_price)       # the same bids meet every trial book
     result = goods_market.clear(bids, offers, good, area, currency, last_price, buyers)
     floors = _floors(setup, record, view, offers, original, costs if costs is not None else {})
-    if floors and _unsold(_sold_by_offer(result, offers), offers, list(floors)):
+    if floors and _unsold(sold_by_seller_tile(result.fills), offers, list(floors)):
         floors = _salvage_floors(floors, offers, buyers)
         if floors:
             offers, result = search_asks(bids, offers, floors, buyers, good, area, currency, last_price)

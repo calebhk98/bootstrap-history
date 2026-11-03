@@ -13,7 +13,7 @@ GOODS = ("salt", "fish")
 
 
 def routes(who, carriage, area_map, rate, specs=SPECS, view=None):
-    return merchants.candidate_routes(who, view or View({}), carriage, area_map, {}, specs, rate, 0.0)
+    return merchants.candidate_routes(who, view or View({}), carriage, area_map, {}, specs, rate)
 
 
 def fresh_routes(who, rate, specs=SPECS, view=None):
@@ -98,17 +98,17 @@ class HeldStockSearchTests(unittest.TestCase):
 
     def test_the_partial_rows_are_rows_of_the_full_search(self):
         held = {("salt", "a"): 5.0}
-        full = merchants.candidate_routes(self.who, View({}), self.carriage, self.area_map, held, SPECS, 0.05, 0.0)
-        partial = merchants.candidate_routes(self.who, View({}), self.carriage, self.area_map, held, SPECS, 0.05, 0.0,
+        full = merchants.candidate_routes(self.who, View({}), self.carriage, self.area_map, held, SPECS, 0.05)
+        partial = merchants.candidate_routes(self.who, View({}), self.carriage, self.area_map, held, SPECS, 0.05,
                                               merchants.held_by_good(held))
         self.assertTrue(partial)
         self.assertEqual(partial, [row for row in full if row[1] == "salt" and "a" in row[2].tiles])
 
     def test_no_cash_still_sends_held_stock_along_the_route(self):
         held = {("salt", "a"): 5.0}
-        with_cash = merchants.orders(self.who, View({}), self.carriage, self.area_map, 1000.0, held, SPECS, 0.05, storage_per_kg_year=0.0)
+        with_cash = merchants.orders(self.who, View({}), self.carriage, self.area_map, 1000.0, held, SPECS, 0.05)
         destinations_with_cash = [leg[:2] for leg in self.who.routes[("salt", "a")]]
-        without_cash = merchants.orders(self.who, View({}), self.carriage, self.area_map, 0.0, held, SPECS, 0.05, storage_per_kg_year=0.0)
+        without_cash = merchants.orders(self.who, View({}), self.carriage, self.area_map, 0.0, held, SPECS, 0.05)
         self.assertTrue(with_cash.bids)
         self.assertEqual(without_cash.bids, ())
         self.assertEqual([leg[:2] for leg in self.who.routes[("salt", "a")]], destinations_with_cash)

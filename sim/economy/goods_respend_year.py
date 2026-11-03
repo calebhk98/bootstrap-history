@@ -10,13 +10,14 @@ from sim.constants import declare
 from . import goods_market, market_quote, settlement
 from .entry import wanted_in_round
 from .goods_market import quantity_at
+from .goods_market_fills import sold_by_seller_tile
 from .goods_respend import bids_adding_demand, need_of_good, offers_left, rationed_money, respend_bids
 from .types import Bid, GoodsMove
 
 Market = Tuple[str, str]
 
 RESPEND_APPORTIONED_WANTED_SHARE = declare(
-    "RESPEND_RESPEND_APPORTIONED_WANTED_SHARE", 1.0, kind="temporary_heuristic",
+    "RESPEND_APPORTIONED_WANTED_SHARE", 1.0, kind="temporary_heuristic",
     unit="share of the round's wanted counted for the bids that add demand",
     source=None, confidence="D",
     why="A respend round's clearing gives the demand of all its bids together; the part that is new demand is taken "
@@ -48,14 +49,6 @@ class LeftMarket:
     def unsold(self) -> float:
         """What the last round to clear this market left on offer."""
         return max(0.0, self.last_offered - self.last_delivered)
-
-
-def sold_by_seller(result) -> Dict[tuple, float]:
-    sold: Dict[tuple, float] = {}
-    for fill in result.fills:
-        if fill.side == "sell":
-            sold[(fill.agent, fill.tile)] = sold.get((fill.agent, fill.tile), 0.0) + fill.quantity
-    return sold
 
 
 def rationed_in(bids, taken, households, fallback_price, need_by_buyer) -> Dict[str, Dict[str, float]]:
@@ -132,7 +125,7 @@ def respend(setup, record, view, ledger, markets: Dict[Market, LeftMarket], bask
             market.delivered += moved
             market.last_offered = result.offered_at_price
             market.last_delivered = moved
-            market.offers = offers_left(market.offers, sold_by_seller(result))
+            market.offers = offers_left(market.offers, sold_by_seller_tile(result.fills))
             spent_any = spent_any or result.quantity > 0.0
             fallback = market_quote.lowest_unfilled_ask(market.offers)
             for buyer, by_need in rationed_in(bids, bought, households, fallback, need_by_buyer).items():

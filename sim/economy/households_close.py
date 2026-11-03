@@ -65,7 +65,7 @@ def close_year(cohort: Cohort, received_by_good: Mapping[GoodId, float], view: M
             households_buffer_stock.mean_net_income(income_received, cohort.last_year_income),
             share_wealth, view.claims(cohort.agent_id, money))
     return renewed(cohort, expected_inflation=expected, last_basket_price_level=level, cash_target=target,
-                   share_wealth=share_wealth, last_year_income=income_received, last_year_spending=spent,
+                   share_wealth=share_wealth, last_year_income=income_received,
                    expected_spending=durable_stock.update_expected_spending(cohort.expected_spending, spent, cohort.planned_spending),
                    planned_spending=0.0,
                    expected_floor_cost=durable_stock.update_expected_spending(cohort.expected_floor_cost, floor_cost),

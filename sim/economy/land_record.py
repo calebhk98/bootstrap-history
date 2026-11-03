@@ -16,5 +16,5 @@ class LandRecord(OwnedRecord):
     cleared_hectares: Dict[TileId, float] = field(default_factory=dict)   # tile -> ground cleared and taken up, added to its cropland (titles_ground.py)
 
     OWNERS = ("land_record", "titles", "titles_flight", "titles_ground", "land_market")
-    AGENT_KEYED = ("titles",)
+    AGENT_KEYED = ("titles", "tenancies")
     SAVED_SORTED = ("titles", "tenancies", "cleared_hectares")

@@ -14,6 +14,7 @@ Standalone: the economy records and the carriage table.
 import math
 from typing import Dict, List, Mapping, Optional, Sequence, Tuple
 
+from sim.unit_conversions import KILOGRAMS_PER_TONNE
 from sim.book import DeliveredMove
 from .market_memory import KEY_SEPARATOR as MARKET_KEY_SEPARATOR
 from .merchants import Merchant
@@ -117,7 +118,7 @@ def exposure(wear: Wear, moves: Sequence[DeliveredMove], specs) -> Tuple[Dict[Go
     units: Dict[GoodId, float] = {}
     days: Dict[str, float] = {}
     for move in moves:
-        tonnes = move.quantity * specs[move.good].unit_mass_kg / 1000.0
+        tonnes = move.quantity * specs[move.good].unit_mass_kg / KILOGRAMS_PER_TONNE
         for good, per_tonne in wear.units_per_tonne(move.tile, move.receiver_tile).items():
             units[good] = units.get(good, 0.0) + tonnes * per_tonne
         for mode, per_tonne in wear.team_days_per_tonne(move.tile, move.receiver_tile).items():

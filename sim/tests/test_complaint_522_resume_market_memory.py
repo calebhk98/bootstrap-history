@@ -7,6 +7,7 @@ QUICK_TOPIC = True
 import types
 import unittest
 
+from sim.economy.goods_record import GoodsRecord
 from sim.economy.economy import Economy
 from sim.economy.market_areas_follow import follow
 from sim.economy.market_memory import MarketMemory, market_key
@@ -95,7 +96,8 @@ class FollowCarriesTheMemory(unittest.TestCase):
                               currency_of_area={"old:a": "coin", "old:b": "coin"})
         record = types.SimpleNamespace(memory=memory, merchants={},
                                        goods=types.SimpleNamespace(volumes={market_key("grain", "old:a"): 7.0},
-                                                                   unsold={}, unmet={}, margin_years={}, curves={}))
+                                                                   unsold={}, unmet={}, margin_years={}, curves={},
+                                                                   MARKET_KEYED=GoodsRecord.MARKET_KEYED))
         follow(record, old, new)
         self.assertEqual(memory.prices, {market_key("grain", "new:x"): 3.0})
         self.assertEqual(record.goods.volumes, {market_key("grain", "new:x"): 7.0})
@@ -106,7 +108,8 @@ class FollowCarriesTheMemory(unittest.TestCase):
         new = Partition({"grain": {"new:x": "town"}})
         memory = MarketMemory(prices={market_key("labourer", "old:a"): 1.0})
         record = types.SimpleNamespace(memory=memory, merchants={},
-                                       goods=types.SimpleNamespace(volumes={}, unsold={}, unmet={}, margin_years={}, curves={}))
+                                       goods=types.SimpleNamespace(volumes={}, unsold={}, unmet={}, margin_years={}, curves={},
+                                                                   MARKET_KEYED=GoodsRecord.MARKET_KEYED))
         follow(record, old, new)
         self.assertEqual(memory.prices, {market_key("labourer", "old:a"): 1.0})
 

@@ -147,16 +147,16 @@ def expected_price(merchant: Merchant, view: MarketView, good: GoodId, area: Are
 
 def orders(merchant: Merchant, view: MarketView, carriage: CarriageTable, area_map: AreaMap, cash: float,
            held_stock: Mapping[Tuple[GoodId, TileId], float], specs: Mapping[GoodId, GoodSpec],
-           interest_rate: float, shares: Optional[RouteShares] = None, *, storage_per_kg_year: float) -> AgentOrders:
+           interest_rate: float, shares: Optional[RouteShares] = None) -> AgentOrders:
     """The merchant's offers and bids for the year. Sets `merchant.routes`. `shares` is what rival
-    merchants have already committed this year; this merchant adds its own to it. `storage_per_kg_year` is what housing a kilogram a year costs in today's money."""
+    merchants have already committed this year; this merchant adds its own to it."""
     shares = shares if shares is not None else RouteShares()
     own = RouteShares()
     merchant.routes = {}
     held_index = held_by_good(held_stock)
     remaining = max(0.0, cash) * (1.0 - BUDGET_SAFETY_SHARE)     # a hair kept back: borrowed cash is all spent
     # with nothing to spend only the stock already held can use a route
-    candidates = candidate_routes(merchant, view, carriage, area_map, held_stock, specs, interest_rate, storage_per_kg_year,
+    candidates = candidate_routes(merchant, view, carriage, area_map, held_stock, specs, interest_rate,
                                    None if remaining > 0.0 else held_index)
     held_sorted: Dict[GoodId, list] = {}
     # stock already held where a route out pays is carried along every paying route, by what each destination takes
@@ -213,7 +213,7 @@ def _holding_offers(merchant, view, area_map, held_stock, specs, interest_rate) 
     return offers
 
 
-def candidate_routes(merchant, view, carriage, area_map, held_stock, specs, interest_rate, storage_per_kg_year, only_held=None):
+def candidate_routes(merchant, view, carriage, area_map, held_stock, specs, interest_rate, only_held=None):
     """Rows (rank, good, source, destination, price here, outlay per unit, most it pays), one per
     profitable (good, source area) at its best destination, best net gap per unit of outlay first.
     With `only_held` (`held_by_good` of stock) the rows of the goods held, from the source areas holding
@@ -250,12 +250,12 @@ def candidate_routes(merchant, view, carriage, area_map, held_stock, specs, inte
                 for area, price in zip(areas, seen)]
         if only_held is not None:
             parts.append(_good_routes(good, spec, areas, {area.area_id: price for area, price in zip(areas, seen)},
-                                      carriage, interest_rate, storage_per_kg_year, _areas_holding(area_map, good, only_held[good])))
+                                      carriage, interest_rate, _areas_holding(area_map, good, only_held[good])))
             continue
         parts.append(merchants_route_memo.routes_for_good(
-            carriage, good, areas, spec, tuple(seen), interest_rate, storage_per_kg_year,
+            carriage, good, areas, spec, tuple(seen), interest_rate,
             lambda: _good_routes(good, spec, areas, {area.area_id: price for area, price in zip(areas, seen)},
-                                 carriage, interest_rate, storage_per_kg_year)))
+                                 carriage, interest_rate)))
     def by_rank(rows):
         return sorted(rows, key=lambda row: (row[0], row[1], row[2].area_id, row[3].area_id))
 
@@ -275,7 +275,7 @@ def _areas_holding(area_map, good, held) -> set:
     return found
 
 
-def _good_routes(good, spec, areas, prices, carriage, interest_rate, storage_per_kg_year, source_ids=None) -> list:
+def _good_routes(good, spec, areas, prices, carriage, interest_rate, source_ids=None) -> list:
     """The unsorted rows of `candidate_routes` for one good, given its price in each area: one for every
     (source, destination) whose haul pays; with `source_ids` only the rows of those source areas."""
     rows = []
@@ -307,7 +307,6 @@ def _good_routes(good, spec, areas, prices, carriage, interest_rate, storage_per
     dearest_first = sorted([(-price, area.area_id, price, price * keep, price * spoilage, area.anchor_tile, area)
                             for area, price in priced if not price * keep - cheapest_floor <= 0.0])
     dearest_kept = dearest_first[0][3]
-    storage_a_year = None                # one extra year's storage, made when a haul first needs it
     for source, price_here in priced:
         if source_ids is not None and source.area_id not in source_ids:
             continue
@@ -341,24 +340,21 @@ def _good_routes(good, spec, areas, prices, carriage, interest_rate, storage_per
                 if held_years is None:
                     held_years = years_between(carriage, source_tile, anchor_tile)
                 if held_years > 1:
-                    if storage_a_year is None:
-                        storage_a_year = merchants_transit.storage_per_unit(spec, 2, storage_per_kg_year)
-                    net -= (interest_here + storage_a_year) * (held_years - 1) + price_there * (
+                    net -= interest_here * (held_years - 1) + price_there * (
                         merchants_transit.lost_share(spec.spoilage_per_year, held_years) - spoilage)
                 if net > 0.0:
                     carriage_per_unit = per_tonne * unit_mass / KILOGRAMS_PER_TONNE
                     outlay = price_here + carriage_per_unit
                     rows.append((-net / outlay, good, source, destination, price_here, outlay,
-                                 _break_even_price(spec, price_there, carriage_per_unit, interest_rate, storage_per_kg_year, held_years)))
+                                 _break_even_price(spec, price_there, carriage_per_unit, interest_rate, held_years)))
     return rows
 
 
 def _break_even_price(spec: GoodSpec, price_there: float, carriage_per_unit: float, interest_rate: float,
-                      storage_per_kg_year: float, years: int = 1) -> float:
+                      years: int = 1) -> float:
     """The source price at which the gap just covers carriage, interest, spoilage and margin
     (the net gap of `_good_routes` solved for the price here): above it the trade loses money."""
     kept = price_there * (1.0 - merchants_transit.lost_share(spec.spoilage_per_year, years)) - carriage_per_unit
-    kept -= merchants_transit.storage_per_unit(spec, years, storage_per_kg_year)
     return max(0.0, kept) / (1.0 + max(0.0, interest_rate) * years + MERCHANT_MARGIN_SHARE)
 
 
@@ -525,7 +521,7 @@ def close_year(merchant: Merchant, prices: Mapping[Tuple[GoodId, AreaId], float]
         if lag is None:
             continue
         news = value if lag <= 0 else merchants_transit.heard(merchant, key, value, lag)
-        if news is not None:           # `_expect`, inline: this runs for every market every year
+        if news is not None:           # the expectation moves inline: this runs for every market every year
             old = expected_prices.get(key)
             expected_prices[key] = news if old is None else old + speed * (news - old)
     expected_volumes = merchant.expected_volumes

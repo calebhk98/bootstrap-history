@@ -112,12 +112,16 @@ cohort_a = SimpleNamespace(agent_id="household:a:0", tile="a", ownership_share=1
 cohort_b = SimpleNamespace(agent_id="household:a:1", tile="a", ownership_share=3.0)
 cohort_c = SimpleNamespace(agent_id="household:b:0", tile="b", ownership_share=1.0)
 rent_record = SimpleNamespace(producers={
-	"p1": producer("a", "farm", 2.0, 10.0), "p2": producer("b", "farm", 1.0, 5.0)}, cohorts={cohort.agent_id: cohort for cohort in (cohort_a, cohort_b, cohort_c)}, land=SimpleNamespace(land_rent={"a": 10.0, "b": 5.0}))
+	"p1": producer("a", "farm", 2.0, 10.0), "p2": producer("b", "farm", 1.0, 5.0)}, cohorts={cohort.agent_id: cohort for cohort in (cohort_a, cohort_b, cohort_c)}, land=SimpleNamespace(land_rent={"a": 10.0, "b": 5.0}, titles={}))
 received = land_rents.rent_received_by_cohort(SimpleNamespace(land_per_run={"farm": 1.0}), rent_record)
 check("the rent paid on a tile is shared among its cohorts by what each owns",
       received == {"household:a:0": 5.0, "household:a:1": 15.0, "household:b:0": 5.0}, received)
 only_b = land_rents.rent_received_by_cohort(SimpleNamespace(land_per_run={"farm": 1.0}), rent_record, frozenset({"b"}))
 check("limited to tiles, only those tiles' cohorts receive rent", only_b == {"household:b:0": 5.0}, only_b)
+rent_record.land.titles = {"a": {"household:a:1": 0.25, "state": 0.75}}
+by_title = land_rents.rent_received_by_cohort(SimpleNamespace(land_per_run={"farm": 1.0}), rent_record, frozenset({"a"}))
+check("rent goes to the live title holders, not to the cohorts' ownership shares",
+      by_title == {"household:a:1": 5.0, "state": 15.0}, by_title)
 
 from sim.actors.world_revenue import Revenue
 from sim.tests.world_stand_in import fake_needs

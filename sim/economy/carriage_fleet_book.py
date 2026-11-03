@@ -5,6 +5,8 @@ held carriers by service life is booked with every other durable (year_close.wea
 import math
 from typing import Dict, List, Mapping, Optional, Sequence, Tuple
 
+from sim.unit_conversions import KILOGRAMS_PER_TONNE
+
 from . import carriage_fleet, carriage_wear, merchants_legs
 from .carriage_fleet import FleetLimit
 from .merchants import MERCHANT_BID_ELASTICITY
@@ -50,7 +52,7 @@ def wear_needed(merchant, held_stock: Mapping[Tuple[GoodId, str], float], specs,
         for destination, _area, quantity in merchants_legs.split(legs, held):
             if destination == tile or quantity <= 0.0:
                 continue
-            tonnes = quantity * specs[good].unit_mass_kg / 1000.0
+            tonnes = quantity * specs[good].unit_mass_kg / KILOGRAMS_PER_TONNE
             for carrier, units in wear.units_per_tonne(tile, destination).items():
                 if carrier in goods:
                     needed[carrier] = needed.get(carrier, 0.0) + tonnes * units
@@ -131,7 +133,7 @@ def endow(setup, record, carriage, prices: Mapping[GoodId, float], final_by_tile
         for good, quantity in demand.items():
             totals[good] = totals.get(good, 0.0) + quantity
     priced = {good: quantity for good, quantity in totals.items() if good in setup.specs and good in prices}    # a good with no price has no value to count
-    tonnes = math.fsum(quantity * setup.specs[good].unit_mass_kg / 1000.0 for good, quantity in priced.items())
+    tonnes = math.fsum(quantity * setup.specs[good].unit_mass_kg / KILOGRAMS_PER_TONNE for good, quantity in priced.items())
     value = math.fsum(quantity * prices[good] for good, quantity in priced.items())
     if tonnes <= 0.0:
         return

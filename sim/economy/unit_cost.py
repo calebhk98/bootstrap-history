@@ -60,14 +60,6 @@ def revenue_per_run(recipe: Recipe, expected_output_prices: Prices) -> float:
                      if expected_output_prices.get(good) is not None)
 
 
-def expected_margin(recipe: Recipe, expected_output_prices: Prices, input_prices: Prices,
-                    wages: Wages, interest_rate: float, rent: float = 0.0) -> float:
-    """Revenue over every output, less variable cost and the capital charge, per run."""
-    return (revenue_per_run(recipe, expected_output_prices)
-            - variable_cost_per_run(recipe, input_prices, wages, rent)
-            - capital_charge_per_run(recipe, input_prices, wages, interest_rate))
-
-
 def return_on_capital(recipe: Recipe, expected_output_prices: Prices, input_prices: Prices,
                       wages: Wages, rent: float = 0.0) -> Optional[float]:
     """Yearly operating surplus (revenue less variable cost) per run, over the capital a run of yearly
@@ -87,7 +79,7 @@ def return_after_recovery(recipe: Recipe, expected_output_prices: Prices, input_
                           wages: Wages, interest_rate: float, rent: float = 0.0) -> Optional[float]:
     """`return_on_capital` after the plant's wear: the surplus less the part of the capital charge that repays the plant
     itself (the charge less the interest on it), over the same capital employed. It exceeds `interest_rate` exactly when
-    the run's margin (`expected_margin`) covers interest on its working capital, so a newcomer or an expansion is judged
+    the run's margin (revenue less variable cost and the capital charge) covers interest on its working capital, so a newcomer or an expansion is judged
     by the charge that `close_year` later makes. None where `return_on_capital` is."""
     gross = return_on_capital(recipe, expected_output_prices, input_prices, wages, rent)
     if gross is None:

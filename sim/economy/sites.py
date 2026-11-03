@@ -51,6 +51,11 @@ def is_sited(recipe: Recipe, by_recipe: Mapping[str, Mapping[TileId, SiteLimit]]
     return recipe.site_bound and bool(by_recipe.get(recipe.recipe_id))
 
 
+def runs_anywhere(recipe: Recipe, by_recipe: Mapping[str, Mapping[TileId, SiteLimit]]) -> bool:
+    """True where the recipe is site-bound with no declared limit and `UNSITED_EXTRACTION_ANYWHERE` lets it run on any tile."""
+    return UNSITED_EXTRACTION_ANYWHERE and recipe.site_bound and not by_recipe.get(recipe.recipe_id)
+
+
 def allowed_tiles(recipe: Recipe, by_recipe: Mapping[str, Mapping[TileId, SiteLimit]],
                   tiles: Sequence[TileId]) -> Tuple[TileId, ...]:
     """The tiles the recipe may run on: those with a limit when it is sited, else all of them."""

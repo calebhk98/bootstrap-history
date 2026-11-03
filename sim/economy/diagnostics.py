@@ -15,6 +15,8 @@ import math
 import statistics
 from typing import Dict, Iterable, Mapping, Optional, Sequence
 
+from . import unit_cost
+
 
 def volatility(series: Sequence[float]) -> float:
     changes = [math.log(after / before) for before, after in zip(series, series[1:])
@@ -58,9 +60,10 @@ def labour_cost_per_unit(setup, wages: Mapping[str, float], good: str) -> Option
     costs = []
     for recipe in setup.recipes.values():
         made = recipe.outputs.get(good, 0.0)
-        if made <= 0.0 or any(trade not in wages for trade in recipe.labour_hours):
+        run_cost = unit_cost.labour_cost_per_run(recipe, wages)      # infinite when a trade has no wage
+        if made <= 0.0 or not math.isfinite(run_cost):
             continue
-        costs.append(math.fsum(hours * wages[trade] for trade, hours in recipe.labour_hours.items()) / made)
+        costs.append(run_cost / made)
     return min(costs) if costs else None
 
 

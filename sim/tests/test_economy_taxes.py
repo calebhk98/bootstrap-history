@@ -179,5 +179,20 @@ class RefusalAndDeterminismTests(unittest.TestCase):
         self.assertEqual(first, second)
 
 
+class SharedPurseTests(unittest.TestCase):
+    def test_a_payer_liable_to_two_assess_calls_pays_from_one_purse(self):
+        forms = (TaxForm("poll", "adult_labour_years", 1.0), TaxForm("duty", "imports_value", 1.0))
+        facts = facts_with(working_people={"peasants": 10.0}, wage_per_labour_year={"peasants": 10.0},
+                           imports_paid={("peasants", "silk"): 100.0}, cash={"peasants": 120.0})
+        book = Book()
+        book.transfer(Transfer(EDGE_MINT, "peasants", "coin", 120.0, "opening"))
+        cash_left = dict(facts.cash)
+        for form in forms:
+            transfers, _moves, _assessments = assess([form], facts, STATE, PRICES, cash_left=cash_left)
+            book.transfer_many(transfers)     # raises InsufficientFunds if the second call spends the same cash again
+        self.assertAlmostEqual(book.balance("peasants", "coin"), 0.0)
+        self.assertAlmostEqual(book.balance(STATE, "coin"), 120.0)
+
+
 if __name__ == "__main__":
     unittest.main()

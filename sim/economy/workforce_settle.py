@@ -45,7 +45,7 @@ def trim_to_expected_hours(setup, record, view) -> None:
     wanted = hours_kept(seeded_hours(setup, producers_hours_needed(setup, record)),
                         expected_hours(setup, record, view), state_hours(setup, record, view),
                         carriage_plan_hours(setup, record))
-    hours_per_worker = record.labour.opening_sold_hours_by_area or record.labour.opening_sold_hours_per_worker or setup.working_hours_per_year     # as the opening staffed them
+    hours_per_worker = record.labour.sold_hours_per_worker(setup.working_hours_per_year)     # as the opening staffed them
     trim_people(record.labour.workforce, wanted, fallback, hours_per_worker, setup.working_hours_per_year)
     send_idle_to_plots(record.labour.workforce, wanted, fallback, plot_trade(setup), hours_per_worker, setup.working_hours_per_year)
 

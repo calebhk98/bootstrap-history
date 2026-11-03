@@ -17,7 +17,7 @@ def stand_in(wages, hired, idle, workers=None):
     workforce = MarketState()
     for (trade, tile), people in (workers or {}).items():
         workforce.workers.setdefault(labour_area(tile), {})[trade] = [people]
-    record = types.SimpleNamespace(memory=types.SimpleNamespace(wages=wages), labour=labour_record(hired, idle, workforce=workforce))
+    record = types.SimpleNamespace(memory=types.SimpleNamespace(wages=wages, holds_wage_for=lambda trade: any(key.startswith(trade + "|") for key in wages)), labour=labour_record(hired, idle, workforce=workforce))
     return types.SimpleNamespace(setup=setup, record=record)
 
 

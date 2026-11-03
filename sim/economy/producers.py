@@ -559,7 +559,8 @@ def offers(producer: Producer, recipe: Recipe, view: MarketView, stock_by_good: 
         if reference is None:
             continue
         spoilage = specs[good].spoilage_per_year if good in specs else 0.0
-        reservation = inventory.holding_reservation(reference, interest_rate, spoilage, STORAGE_COST_PER_UNIT)
+        storage = STORAGE_COST_PER_UNIT * view.opening_wage_level(view.currency_of(view.area_of(good, producer.tile)))   # declared in opening-year money
+        reservation = inventory.holding_reservation(reference, interest_rate, spoilage, storage)
         rows.append((good, quantity, reservation))
     stock_value = sum(quantity * max(reservation, 0.0) for _good, quantity, reservation in rows)
     cash_shortfall = shortfall_at_working_scale(producer, recipe, view, cash_shortfall, expected)

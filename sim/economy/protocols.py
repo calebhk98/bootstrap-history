@@ -76,6 +76,9 @@ class MarketView(Protocol):
     def wage(self, trade: TradeId, area: AreaId) -> Optional[float]:
         """Last year's wage per hour."""
 
+    def wage_held_anywhere(self, trade: TradeId) -> bool:
+        """Whether any labour area has a remembered wage for the trade (`trade_wages` prices a trade none has on its opening wage)."""
+
     def interest_rate(self, currency: CurrencyId) -> Optional[float]:
         """Last year's base lending rate."""
 

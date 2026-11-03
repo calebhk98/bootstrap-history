@@ -86,7 +86,7 @@ class HouseholdWealthTests(unittest.TestCase):
         class Lender(View):
             def claims(self, agent, currency):
                 return claims
-        orders = households.goods_orders(cohort(people=10.0, last_year_spending=5000.0, last_year_income=5000.0),
+        orders = households.goods_orders(cohort(people=10.0, last_year_income=5000.0),
                                          Lender(), cash=CASH, income_this_year=5000.0, basket=BASKET, specs=SPECS)
         return sum(bid.flexible_quantity * bid.reference_price for bid in orders.bids)
 

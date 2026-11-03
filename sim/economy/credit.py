@@ -14,7 +14,7 @@ from typing import Dict, List, Mapping, Optional, Sequence, Tuple
 from sim.constants import declare
 
 from . import bank_credit_risk, credit_cap, credit_rate
-from .labour import Entry, allocate_in_order, sticky_move
+from .order_book import Entry, allocate_in_order, sticky_move
 from .types import AgentId, CurrencyId, FundsOffer, Loan, LoanRequest, Transfer
 from .replaced import replaced
 

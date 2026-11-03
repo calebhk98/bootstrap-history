@@ -5,7 +5,7 @@ QUICK_TOPIC = True
 import math
 import unittest
 
-from sim.economy import entry, location
+from sim.economy import entry, location, unit_cost
 from sim.economy.types import Recipe
 from sim.tests import economy_fixture as fixture
 from sim.tests.test_economy_producers import View
@@ -30,19 +30,36 @@ class CostTests(unittest.TestCase):
     specs = fixture.specs()
 
     def test_wage_and_carriage_and_yield_make_the_cost(self):
-        near = location.cost_per_run(self.recipe, {"miner": 1.0}, {}, 0.0, 0.0, 1.0)
-        far = location.cost_per_run(self.recipe, {"miner": 1.0}, {}, 0.0, 2.0, 1.0, tonnes=1.0)
-        poor = location.cost_per_run(self.recipe, {"miner": 1.0}, {}, 0.0, 0.0, 0.5)
+        variable = unit_cost.variable_cost_per_run(self.recipe, {}, {"miner": 1.0})
+        near = location.assembled_cost(variable, 0.0, 1.0, 0.0, 0.0)
+        far = location.assembled_cost(variable, 2.0, 1.0, 1.0, 0.0)
+        poor = location.assembled_cost(variable, 0.0, 0.5, 0.0, 0.0)
         self.assertEqual((near, far, poor), (10.0, 12.0, 20.0))
 
     def test_rent_adds(self):
-        self.assertEqual(location.cost_per_run(self.recipe, {"miner": 1.0}, {}, 3.0, 0.0, 1.0), 13.0)
+        variable = unit_cost.variable_cost_per_run(self.recipe, {}, {"miner": 1.0}, 3.0)
+        self.assertEqual(location.assembled_cost(variable, 0.0, 1.0, 0.0, 0.0), 13.0)
 
     def test_carriage_is_for_the_output_mass(self):
         self.assertEqual(location.output_tonnes(self.recipe, self.specs), 1.0)
 
     def test_an_unpriced_trade_is_infinite(self):
-        self.assertTrue(math.isinf(location.cost_per_run(self.recipe, {}, {}, 0.0, 0.0, 1.0)))
+        variable = unit_cost.variable_cost_per_run(self.recipe, {}, {})
+        self.assertTrue(math.isinf(location.assembled_cost(variable, 0.0, 1.0, 0.0, 0.0)))
+
+
+class ClaimSiteTests(unittest.TestCase):
+    def test_a_pick_takes_headroom_and_hands_and_drops_what_was_read_for_its_tile(self):
+        capacity, committed = {("dig", "t1"): 2.0}, {"t1": 10.0}
+        parts = {("dig", "t1", 1.0): ("stale",), ("smelt", "t1", 1.0): ("stale",), ("dig", "t2", 1.0): ("kept",)}
+        location.claim_site(capacity, committed, parts, "dig", "t1", 3.0, 4.0)
+        self.assertEqual((capacity, committed), ({("dig", "t1"): 5.0}, {"t1": 22.0}))
+        self.assertEqual(parts, {("dig", "t2", 1.0): ("kept",)})
+
+    def test_a_pick_on_a_tile_with_nothing_booked_starts_its_books(self):
+        capacity, committed = {}, {}
+        location.claim_site(capacity, committed, {}, "dig", "t9", 1.5, 2.0)
+        self.assertEqual((capacity, committed), ({("dig", "t9"): 1.5}, {"t9": 3.0}))
 
 
 class ChooseTests(unittest.TestCase):

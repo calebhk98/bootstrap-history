@@ -18,7 +18,7 @@ from .notional import recently_traded_goods
 from .setup import labour_area
 from .taxes_bases import YearFacts
 from .types import is_edge
-from .year_goods import _held_stock
+from .inventory import held_stock
 from .year_ledger import YearLedger
 from .replaced import replaced
 from .rates import own_rate
@@ -61,12 +61,13 @@ def money_taxes(setup, record, view, ledger: YearLedger) -> None:
     if forms:
         facts = tax_facts(setup, record, view, ledger)
         owed_to_state = [form for form in forms if form.name not in farmed]
+        cash_left = dict(facts.cash)       # shared by every assess call below: a payer liable to two forms pays from one purse
         transfers, _moves, assessments = taxes.assess(owed_to_state, facts, setup.state_agent, {}, ledger.state_capacity,
-                                                       setup.hiding)
+                                                       setup.hiding, cash_left)
         for form in forms:
             if form.name in farmed:
                 farmed_transfers, _farmed_moves, farmed_assessments = taxes.assess(
-                    [form], facts, farmed[form.name]["farmer"], {}, tax_farming.TAX_FARMER_REACH, setup.hiding)
+                    [form], facts, farmed[form.name]["farmer"], {}, tax_farming.TAX_FARMER_REACH, setup.hiding, cash_left)
                 record.book.transfer_many(farmed_transfers)
                 ledger.note_postings(farmed_transfers)
                 assessments = assessments + farmed_assessments
@@ -166,7 +167,7 @@ def close_agents(setup, record, view, ledger: YearLedger, area_map, carriage,
     interest_rate = own_rate(view, money)
     for merchant in sorted(record.merchants.values(), key=lambda each: each.agent_id):
         transfers = merchants.close_year(merchant, prices, volumes, record.book.balance(merchant.agent_id, money),
-                                         _held_stock(record.book, merchant.agent_id), area_map.area_of, money,
+                                         held_stock(record.book, merchant.agent_id), area_map.area_of, money,
                                          interest_rate, ordered,
                                          _news_lag_of(carriage, merchant.home_tile, anchors))
         paid = ownership.spread(record, transfers, cohorts_by_tile)
@@ -315,8 +316,3 @@ def rebase_basket_price_level(setup, record) -> None:
     households_cohort.rebase_price_level(record.cohorts)
 
 
-def check_money(record) -> float:
-    """Largest residual share across currencies and goods: zero when everything has a counterparty."""
-    report = record.book.check_conservation(1e-9)
-    shares = list(report.money.values()) + list(report.goods.values())
-    return max((abs(share) for share in shares), default=0.0) if shares else 0.0

@@ -224,7 +224,7 @@ def _store_goods(setup, view, area_map, priced_goods) -> set:
     staple = households_store.staple_price_per_kg(households.need_prices(setup.basket_for(tile), view, tile), setup.specs)
     quoted = {good: view.price(good, area_map.area_of(good, tile)) for good in priced_goods}
     prices = {good: price for good, price in quoted.items() if price is not None}    # a good with no price is not a candidate
-    return set(households_store.store_candidates(setup.specs, prices, staple, money_level=1.0))   # the opening's money is opening-year money if math.isfinite(staple) else set()
+    return set(households_store.store_candidates(setup.specs, prices, staple, money_level=1.0))   # the opening's money is opening-year money
 
 
 def _opening_memory(setup, area_map, priced_goods) -> MarketMemory:

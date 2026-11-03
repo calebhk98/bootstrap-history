@@ -16,9 +16,21 @@ def people_before(labour) -> Dict[str, float]:
 
 
 def mean_year_income(workforce, hours_per_worker_year: float) -> Dict[str, float]:
-    """A year's hours at the mean of the wages each area's trades last settled at."""
-    return {area: hours_per_worker_year * sum(wages.values()) / len(wages)
-            for area, wages in sorted(workforce.wages.items()) if wages}
+    """A year's hours at the mean of the wages each area's trades last settled at, weighted by the people working each
+    trade there (the plain mean where nobody works any of them, so a trade nobody works does not set the area's income)."""
+    income: Dict[str, float] = {}
+    for area, wages in sorted(workforce.wages.items()):
+        if not wages:
+            continue
+        trades = sorted(wages)
+        people = [math.fsum(workforce.workers.get(area, {}).get(trade, ())) for trade in trades]
+        total = math.fsum(people)
+        if total > 0.0:
+            mean = math.fsum(wages[trade] * count for trade, count in zip(trades, people)) / total
+        else:
+            mean = math.fsum(wages[trade] for trade in trades) / len(trades)
+        income[area] = hours_per_worker_year * mean
+    return income
 
 
 def settle(setup, record, inputs, report, before, context, carriage) -> Dict[str, float]:

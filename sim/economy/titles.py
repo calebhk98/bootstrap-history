@@ -32,6 +32,16 @@ def shares(record, tile: TileId) -> Dict[AgentId, float]:
     return {cohort.agent_id: cohort.ownership_share for cohort in record.cohorts.values() if cohort.tile == tile}
 
 
+def split_among_holders(record, tile: TileId, amount: float) -> Dict[AgentId, float]:
+    """`amount` shared among the tile's title holders by share (the part of the land that is abandoned has no holder and
+    is shared out among the rest); empty when the tile has no holder."""
+    held = shares(record, tile)
+    total = sum(held.values())
+    if total <= 0.0:
+        return {}
+    return {holder: amount * share / total for holder, share in sorted(held.items()) if share > 0.0}
+
+
 def holding(record, tile: TileId, holder: AgentId) -> float:
     return shares(record, tile).get(holder, 0.0)
 

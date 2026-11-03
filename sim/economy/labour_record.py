@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 from typing import Dict
 
 from sim.labour.api import MarketState, add_people, market_state_from_plain, market_state_to_plain
+from sim.rekey import rekey
 
 from .market_memory import KEY_SEPARATOR
 from .record_parts import OwnedRecord
@@ -23,6 +24,18 @@ class LabourRecord(OwnedRecord):
     AGENT_KEYED = ("hours_paid_by_employer",)
     ENCODERS = {"workforce": market_state_to_plain}
     DECODERS = {"workforce": market_state_from_plain}
+
+    def sold_hours_per_worker(self, default: float):
+        """The hours a working person was seeded to sell a year: the figure per labour area, else the one figure, else
+        `default` (a whole working year). A float or a mapping (opening_placement.HoursPerWorker)."""
+        return self.opening_sold_hours_by_area or self.opening_sold_hours_per_worker or default
+
+    def rename_agent(self, old: AgentId, new: AgentId) -> None:
+        """`old` becomes `new` as an employer in the core's hired hours as well as in the stores keyed by an agent id."""
+        super().rename_agent(old, new)
+        for trades in self.workforce.hired_hours.values():
+            for hired in trades.values():
+                rekey(hired, old, new)
 
     def hours_cleared_in(self, market_key: str) -> float:
         """Hours the core's last clearing hired in the labour market `market_key` (trade, area), all employers: before

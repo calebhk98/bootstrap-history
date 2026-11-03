@@ -1,11 +1,14 @@
 """The one rule for the wage per hour a trade is priced at, wherever a bid, a quote or a crew needs it:
-the wage its labour market paid (the memory holds only wages above zero, `labour_state.mirror_wages`, so a wage that
-is there is positive; the core gives every trade a wage in every labour area each year, hired or not, falling toward
-what the trade's workers would accept and never below their unskilled option), else, only for a trade the core holds no
-wage for (before the economy's first clearing), the wage the economy opened with for the trade scaled to today's money
-(`MarketMemory.opening_wage_level`: an opening-year nominal wage is out of date after inflation and after the
-spin-up's rebase), else the unskilled wage of the same scope plus the trade's training premium, else the opening
-unskilled wage in today's money plus the premium.
+1. the wage the labour core recorded for the trade in the scope (the memory holds only wages above zero,
+   `labour_state.mirror_wages`, so one that is there is positive; the core clears a (trade, area) only when it has workers
+   or bids, so a trade nobody works or hires in an area has no recorded wage there);
+2. else, only for a trade the memory holds no wage for in any area (before the economy's first clearing, or a trade admitted
+   after it), the wage the economy opened with for the trade scaled to today's money (`MarketMemory.opening_wage_level`: an
+   opening-year nominal wage is out of date after inflation and after the spin-up's rebase);
+3. else, for a trade the memory holds a wage for elsewhere, the scope's unskilled wage plus the trade's training premium,
+   or, where the scope has no unskilled wage, the opening unskilled wage in today's money plus the premium.
+A trade that is hired somewhere and not here is therefore priced from here, on this area's unskilled wage, never on a frozen
+opening wage.
 
 The rule answers for every scope, home or partner: the opening unskilled wage exists and is positive by construction
 (sim/markets/port_setup.py adds the unskilled trade to the labour trades and refuses an opening with no positive quote
@@ -14,8 +17,8 @@ for it), so after the economy opens no trade is without a wage. A trade id the s
 The unskilled wage is of the scope the caller asks about: one labour area (`wage_in_area`, `wage_in_view`) or the
 country's figure (sim/economy/api.py `country_trade_wage`): the mean of the core's area wages over the country's areas,
 weighted by hours hired there last year, else (a trade nobody hired in the country) by the people working it in each area,
-else plainly. A never-hired trade therefore has the same wage nationally as in `wage_in_area`; the opening wage never
-overrides a wage the core holds.
+else plainly. A trade with no recorded wage in the country is priced by rule 2 or 3 on the country's unskilled wage; the
+opening wage never overrides a wage the memory holds for the trade anywhere.
 
 Households differ on purpose: a household is a seller, and what it faces in a market with no recorded wage is its own
 reservation wage (`faced_wage`), the least it will work for, not the wage an employer would be billed. A tax or land
@@ -45,16 +48,16 @@ def trade_premium(setup, trade) -> float:
 
 
 def priced_trade_wage(setup, trade: str, paid: Optional[float], unskilled: Optional[float],
-                      opening_wage_level: float) -> float:
+                      opening_wage_level: float, held_anywhere: bool) -> float:
     """The wage per hour of `trade` given what its market paid (None if nothing), the unskilled wage of the same
-    scope (None if none) and the level the opening wages are scaled by (`MarketMemory.opening_wage_level`). Raises
-    KeyError for a trade the setup has no spec for."""
+    scope (None if none), the level the opening wages are scaled by (`MarketMemory.opening_wage_level`) and whether the
+    memory holds a wage for the trade in any area. Raises KeyError for a trade the setup has no spec for."""
     if trade not in setup.trades:
         raise KeyError(f"unknown trade {trade!r}: the setup's trades are {sorted(setup.trades)}")
     if paid is not None:
         return paid
     opening = setup.opening_wages.get(trade)
-    if opening is not None:
+    if opening is not None and not held_anywhere:
         return opening * opening_wage_level
     if unskilled is None:
         unskilled = setup.opening_wages[setup.unskilled_trade] * opening_wage_level
@@ -65,13 +68,13 @@ def wage_in_area(setup, memory, trade: str, area: str) -> float:
     """The wage per hour of `trade` in a labour area, on the area's unskilled wage and the memory's price level."""
     return priced_trade_wage(setup, trade, memory.wages.get(market_key(trade, area)),
                              memory.wages.get(market_key(setup.unskilled_trade, area)),
-                             memory.opening_wage_level(setup.currency_id))
+                             memory.opening_wage_level(setup.currency_id), memory.holds_wage_for(trade))
 
 
 def wage_in_view(setup, view, trade: str, area: str) -> float:
     """`wage_in_area` read through a market view."""
     return priced_trade_wage(setup, trade, view.wage(trade, area), view.wage(setup.unskilled_trade, area),
-                             view.opening_wage_level(setup.currency_id))
+                             view.opening_wage_level(setup.currency_id), view.wage_held_anywhere(trade))
 
 
 def faced_wage(recorded: Optional[float], reservation: float) -> float:

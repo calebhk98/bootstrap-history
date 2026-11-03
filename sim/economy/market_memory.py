@@ -54,6 +54,8 @@ def market_key(first: str, area: AreaId) -> str:
 class MarketMemory:
     """Last year's outcomes, saved with the game."""
     OWNERS: ClassVar[Tuple[str, ...]] = ("market_memory",)   # the sim/economy modules allowed to write this (tools/check_record_owners.py)
+    GOODS_MARKET_KEYED: ClassVar[Tuple[str, ...]] = ("prices", "usual_prices", "volume_weights", "trade_age", "years_without_bids",
+                                                     "years_without_offers", "cleared_prices", "quote_kinds")   # the stores keyed by market_key(good, area): they move when the areas are redrawn
     year: int = 0
     prices: Dict[str, float] = field(default_factory=dict)              # market_key(good, area)
     wages: Dict[str, float] = field(default_factory=dict)               # market_key(trade, area)
@@ -123,6 +125,12 @@ class MarketMemory:
         self.opening_wage_levels[money] = self.opening_wage_level(money)
         self.basket_price_levels[money] = 1.0
         self.price_levels[money] = 1.0
+
+    def holds_wage_for(self, trade: TradeId) -> bool:
+        """Whether the memory holds a wage for the trade in any labour area (a trade the core has never cleared, such as one
+        admitted after the opening, has none)."""
+        prefix = trade + KEY_SEPARATOR
+        return any(key.startswith(prefix) for key in self.wages)
 
     def opening_wage_level(self, money: CurrencyId) -> float:
         """Today's money per opening-year money for a wage the setup holds: the level before the last rebase times the
@@ -285,6 +293,10 @@ class YearView:
 
     def wage(self, trade: TradeId, area: AreaId) -> Optional[float]:
         return self._memory.wages.get(trade + KEY_SEPARATOR + area)
+
+    def wage_held_anywhere(self, trade: TradeId) -> bool:
+        """Whether the memory holds a wage for the trade in any area (`MarketMemory.holds_wage_for`)."""
+        return self._memory.holds_wage_for(trade)
 
     def interest_rate(self, currency: CurrencyId) -> Optional[float]:
         """Last year's base lending rate; None for a currency the memory holds no rate for (a plan that needs

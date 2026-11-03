@@ -50,6 +50,9 @@ class FakeView:
     def wage(self, trade, area):
         return 2.0
 
+    def wage_held_anywhere(self, trade):
+        return True
+
     def basket_price_level(self, money):
         return 1.0
 

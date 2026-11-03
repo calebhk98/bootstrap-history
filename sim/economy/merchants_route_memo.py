@@ -15,7 +15,7 @@ _memos: "weakref.WeakKeyDictionary" = weakref.WeakKeyDictionary()
 
 
 def routes_for_good(carriage, good, areas, spec, prices: tuple, interest_rate: float,
-                    storage_per_kg_year: float, search: Callable[[], List]) -> List:
+                    search: Callable[[], List]) -> List:
     """The rows `search()` returns, reused when the same question was asked of this carriage table before.
     The rows are shared between callers, who must not change them."""
     try:
@@ -23,12 +23,12 @@ def routes_for_good(carriage, good, areas, spec, prices: tuple, interest_rate: f
     except TypeError:                                  # a carriage that cannot be weakly held is not memoised
         return search()
     slots = memo.setdefault(good, [])
-    for slot_areas, slot_spec, slot_prices, slot_rate, slot_storage, slot_scale, rows in slots:
-        if slot_areas is areas and slot_spec == spec and slot_rate == interest_rate and slot_storage == storage_per_kg_year and slot_prices == prices \
+    for slot_areas, slot_spec, slot_prices, slot_rate, slot_scale, rows in slots:
+        if slot_areas is areas and slot_spec == spec and slot_rate == interest_rate and slot_prices == prices \
                 and slot_scale == carriage.scale:
             return rows
     rows = search()
-    slots.append((areas, spec, prices, interest_rate, storage_per_kg_year, carriage.scale, rows))
+    slots.append((areas, spec, prices, interest_rate, carriage.scale, rows))
     del slots[:-SLOTS_PER_GOOD]
     return rows
 

@@ -69,7 +69,8 @@ class EntrySitingByOwnRentTests(unittest.TestCase):
                                       trades={trade: types.SimpleNamespace(training_years=0.0) for trade in recipe.labour_hours},
                                       working_hours_per_year=2000.0)
         record = types.SimpleNamespace(labour=types.SimpleNamespace(workforce=None))
-        view = types.SimpleNamespace(wage=lambda trade, area: None, opening_wage_level=lambda currency: 1.0)
+        view = types.SimpleNamespace(wage=lambda trade, area: None, opening_wage_level=lambda currency: 1.0,
+                                    wage_held_anywhere=lambda trade: False)
         with mock.patch.object(location, "site_rent_per_run", lambda *_args: rent_of_the_entrants_use[tile]), \
                 mock.patch.object(location, "live_input_prices", lambda *_args: {}), \
                 mock.patch.object(location.location_inputs, "input_haul_cost", lambda *_args: 0.0), \

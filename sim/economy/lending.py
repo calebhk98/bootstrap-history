@@ -16,7 +16,7 @@ from .household_work_year import basket_key, cohort_basket
 from .producers_working_capital import WORKING_CAPITAL_PURPOSE
 from .types import FundsOffer
 from .households_basket import need_prices
-from .year_goods import _held_stock
+from .inventory import held_stock
 from .rates import own_rate
 
 
@@ -135,7 +135,7 @@ def merchant_requests(setup, record, view, area_map, carriage) -> List:
     for merchant_id, merchant in sorted(record.merchants.items()):
         asked = merchants_credit.credit_request(
             merchant, view, carriage, area_map, record.book.balance(merchant_id, money),
-            _held_stock(record.book, merchant_id), setup.specs, rate, debts.get(merchant_id, 0.0), money)
+            held_stock(record.book, merchant_id), setup.specs, rate, debts.get(merchant_id, 0.0), money)
         if asked is not None:
             requests.append(asked)
     return requests

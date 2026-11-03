@@ -14,7 +14,7 @@ SPARE_HOURS = 1e18        # more hours than any plot takes, to ask how many it c
 
 def wage_faced_per_hour(view, offers: Sequence[LabourOffer]) -> float:
     """The wage per hour a cohort's offers face: last year's clearing wage in each market, else the reservation wage,
-    averaged over the hours offered (the same reading household work takes, household_work_year.cohort_split)."""
+    averaged over the hours offered (the same reading household work takes, household_work_year.cohort_plan)."""
     rows = [(offer.hours, trade_wages.faced_wage(view.wage(offer.trade, offer.area), offer.reservation_wage)) for offer in offers if offer.hours > 0.0]
     total = sum(hours for hours, _wage in rows)
     return sum(hours * wage for hours, wage in rows) / total if total > 0.0 else 0.0

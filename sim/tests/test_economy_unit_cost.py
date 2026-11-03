@@ -31,11 +31,11 @@ class UnitCostTests(unittest.TestCase):
         low = unit_cost.capital_charge_per_run(SMELT, PRICES, WAGES, 0.02)
         self.assertGreater(unit_cost.capital_charge_per_run(SMELT, PRICES, WAGES, 0.10), low)
 
-    def test_margin_counts_every_joint_output(self):
-        both = unit_cost.expected_margin(SMELT, {"metal": 4.0, "silver": 30.0}, PRICES, WAGES, 0.0)
-        metal_only = unit_cost.expected_margin(SMELT, {"metal": 4.0}, PRICES, WAGES, 0.0)
+    def test_revenue_counts_every_joint_output(self):
+        both = unit_cost.revenue_per_run(SMELT, {"metal": 4.0, "silver": 30.0})
+        metal_only = unit_cost.revenue_per_run(SMELT, {"metal": 4.0})
         self.assertAlmostEqual(both - metal_only, 30.0)
-        self.assertAlmostEqual(metal_only, 40.0 - 35.0 - 240.0 / 20.0)
+        self.assertAlmostEqual(metal_only, 40.0)
 
     def test_return_on_capital_is_surplus_over_plant_plus_working_capital(self):
         got = unit_cost.return_on_capital(SMELT, {"metal": 10.0, "silver": 10.0}, PRICES, WAGES)
@@ -46,7 +46,8 @@ class UnitCostTests(unittest.TestCase):
         outputs = {"metal": 10.0, "silver": 10.0}
         employed = 240.0 + 35.0
         got = unit_cost.return_after_recovery(SMELT, outputs, PRICES, WAGES, rate)
-        margin = unit_cost.expected_margin(SMELT, outputs, PRICES, WAGES, rate)
+        margin = (unit_cost.revenue_per_run(SMELT, outputs) - unit_cost.variable_cost_per_run(SMELT, PRICES, WAGES)
+                  - unit_cost.capital_charge_per_run(SMELT, PRICES, WAGES, rate))
         self.assertAlmostEqual(got - rate, (margin - rate * 35.0) / employed)
 
     def test_the_wear_of_a_short_lived_plant_lowers_the_return_after_recovery(self):

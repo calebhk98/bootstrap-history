@@ -66,7 +66,7 @@ class SplitTests(unittest.TestCase):
         rec = record({"t1": {"rich": 1.0}}, cohorts=[rich])
         offers = [LabourOffer("rich", "smith", area, 500.0, 1.0)]
         view = View({("smith", area): 3.0, ("servant", area): 1.0})
-        hired, own = household_work_year.cohort_split(setup(), rec, view, rich, offers, 0.0)
+        hired, own, _milled = household_work_year.cohort_plan(setup(), rec, view, rich, offers, 0.0)
         self.assertGreater(hired, 0.99 * households_work.hours_needed(100.0, DATA))
         self.assertAlmostEqual(hired + own, households_work.hours_needed(100.0, DATA))
 
@@ -75,7 +75,7 @@ class SplitTests(unittest.TestCase):
         rec = record({"t1": {"poor": 1.0}}, cohorts=[poor])
         offers = [LabourOffer("poor", "labourer", area, 500.0, 0.5)]
         view = View({("labourer", area): 0.8, ("servant", area): 1.0})
-        hired, own = household_work_year.cohort_split(setup(), rec, view, poor, offers, 0.0)
+        hired, own, _milled = household_work_year.cohort_plan(setup(), rec, view, poor, offers, 0.0)
         self.assertLess(hired, 0.1 * households_work.hours_needed(100.0, DATA))
         self.assertAlmostEqual(hired + own, households_work.hours_needed(100.0, DATA))
 
@@ -85,7 +85,7 @@ class SplitTests(unittest.TestCase):
         rec = record({"t1": {"worker": 1.0}}, cohorts=[worker])
         offers = [LabourOffer("worker", "smith", area, 500.0, 1.0)]
         view = View({("smith", area): 3.0, ("servant", area): 1.0}, {"domestic_service_hour": 8.0})
-        hired, own = household_work_year.cohort_split(setup(), rec, view, worker, offers, 0.0)
+        hired, own, _milled = household_work_year.cohort_plan(setup(), rec, view, worker, offers, 0.0)
         self.assertLess(hired, 0.01 * households_work.hours_needed(100.0, DATA))
         self.assertAlmostEqual(hired + own, households_work.hours_needed(100.0, DATA))
 
@@ -94,21 +94,21 @@ class SplitTests(unittest.TestCase):
         rec = record({"t1": {"worker": 1.0}}, cohorts=[worker])
         offers = [LabourOffer("worker", "smith", area, 500.0, 1.0)]
         view = View({("smith", area): 3.0, ("servant", area): 5.0}, {"domestic_service_hour": 2.0})
-        hired, _own = household_work_year.cohort_split(setup(), rec, view, worker, offers, 0.0)
+        hired, _own, _milled = household_work_year.cohort_plan(setup(), rec, view, worker, offers, 0.0)
         self.assertGreater(hired, 0.99 * households_work.hours_needed(100.0, DATA))
 
     def test_the_servants_price_falls_back_when_no_servant_has_been_paid(self):
         worker, area = cohort("worker"), labour_area("t1")
         rec = record({"t1": {"worker": 1.0}}, cohorts=[worker])
         offers = [LabourOffer("worker", "labourer", area, 500.0, 0.5)]
-        hired, _own = household_work_year.cohort_split(setup(), rec, View({("labourer", area): 2.0}), worker, offers, 1.0)
+        hired, _own, _milled = household_work_year.cohort_plan(setup(), rec, View({("labourer", area): 2.0}), worker, offers, 1.0)
         self.assertGreater(hired, 0.0)
 
     def test_a_landless_cohort_does_no_cooking_of_its_own(self):
         landless, area = cohort("landless"), labour_area("t1")
         rec = record({"t1": {}}, cohorts=[landless])
         offers = [LabourOffer("landless", "labourer", area, 500.0, 0.5)]
-        _hired, own = household_work_year.cohort_split(setup(), rec, View({("labourer", area): 0.1, ("servant", area): 1.0}),
+        _hired, own, _milled = household_work_year.cohort_plan(setup(), rec, View({("labourer", area): 0.1, ("servant", area): 1.0}),
                                                        landless, offers, 0.0)
         self.assertAlmostEqual(own, households_work.hours_needed(100.0, DATA, has_hearth=False))
 
@@ -145,7 +145,7 @@ class FullCostOfServiceTests(unittest.TestCase):
         plan.household_work = dict(DATA, supervision_hours_per_hired_hour=supervision)
         offers = [LabourOffer("worker", "smith", area, 500.0, 0.1)]
         view = View({("smith", area): wage, ("servant", area): 1.0}, {"domestic_service_hour": price})
-        hired, _own = household_work_year.cohort_split(plan, rec, view, worker, offers, 0.0)
+        hired, _own, _milled = household_work_year.cohort_plan(plan, rec, view, worker, offers, 0.0)
         return hired
 
     def test_a_household_whose_freed_hours_would_go_unsold_does_not_hire(self):

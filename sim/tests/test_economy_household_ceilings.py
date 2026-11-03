@@ -2,7 +2,6 @@
 
 QUICK_TOPIC = True
 
-import dataclasses
 import unittest
 
 from sim.tests.economy_view_defaults import ViewDefaults
@@ -53,8 +52,7 @@ class View(ViewDefaults):
 
 def orders_for(income_per_person, people=100000.0, gold_price=500.0):
     income = income_per_person * people
-    cohort = dataclasses.replace(households.Cohort("household:t:0", "t", 0, people, people / 2, 0.3),
-                                 last_year_spending=income)
+    cohort = households.Cohort("household:t:0", "t", 0, people, people / 2, 0.3)
     view = View({"grain": 1.0, "beads": 2.0, "gold_leaf": gold_price})
     return households.goods_orders(cohort, view, income, income, BASKET, SPECS), people
 

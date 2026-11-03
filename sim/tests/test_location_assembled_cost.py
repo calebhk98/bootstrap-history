@@ -1,8 +1,7 @@
-"""A run's cost on a tile read in parts (variable cost once, carriage per demand) equals `cost_per_run`."""
+"""A run's cost on a tile read in parts (variable cost once, carriage per demand) equals the sum of its parts at the yield."""
 
 QUICK_TOPIC = True
 
-import math
 import unittest
 
 from sim.economy import location, unit_cost
@@ -16,8 +15,7 @@ class AssembledCostTests(unittest.TestCase):
         variable = unit_cost.variable_cost_per_run(recipe, prices, wages, 0.5)
         for carriage, factor, tonnes, haul in ((0.3, 0.8, 0.002, 1.5), (0.0, 1.0, 0.0, 0.0), (9.0, 1.3, 0.1, 0.25)):
             self.assertEqual(location.assembled_cost(variable, carriage, factor, tonnes, haul),
-                             location.cost_per_run(recipe, wages, prices, 0.5, carriage, factor, tonnes, haul))
-        self.assertEqual(location.cost_per_run(recipe, wages, prices, 0.5, 1.0, 0.0), math.inf)
+                             (variable + (carriage * tonnes if tonnes > 0.0 else 0.0) + haul) / factor)
 
 
 if __name__ == "__main__":

@@ -1,9 +1,5 @@
-"""What a worker asks, and the order-book helpers other markets share.
-
-The labour market itself is the labour core's (`sim.labour.api`; sim/economy/year_labour.py hands it the
-year). `clearing_point` and `allocate_in_order` clear the credit market; `sticky_move` is the move of a
-remembered price toward its target.
-"""
+"""Order-book helpers the credit market shares: where a queue of sellers meets a queue of buyers, how a total is shared among
+them, and the move of a remembered price toward its target. Plain functions over the figures handed in."""
 import math
 from typing import Dict, List, Optional, Sequence, Tuple
 

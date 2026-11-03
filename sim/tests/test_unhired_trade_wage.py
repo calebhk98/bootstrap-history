@@ -28,7 +28,8 @@ def economy_with_unhired_scribe(scribe_wage=None):
     if scribe_wage is not None:
         wages["%s|work@%s" % (SCRIBE, TOWN)] = scribe_wage
     record = types.SimpleNamespace(
-        memory=types.SimpleNamespace(wages=wages, opening_wage_level=lambda currency: 1.0),
+        memory=types.SimpleNamespace(wages=wages, opening_wage_level=lambda currency: 1.0,
+                                     holds_wage_for=lambda trade: any(key.startswith(trade + "|") for key in wages)),
         labour=labour_record({"%s|work@%s" % (LABOURER, TOWN): 900.0},
                              {"%s|work@%s" % (LABOURER, TOWN): 100.0, "%s|work@%s" % (SCRIBE, TOWN): 50.0}))
     return types.SimpleNamespace(setup=setup, record=record)

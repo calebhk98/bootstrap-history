@@ -2,7 +2,7 @@
 from typing import Optional, Sequence
 
 from .credit import RATE_ADJUSTMENT_SHARE_PER_YEAR
-from .labour import sticky_move
+from .order_book import sticky_move
 from .types import FundsOffer
 
 

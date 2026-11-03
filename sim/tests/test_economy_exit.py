@@ -162,5 +162,22 @@ class ExitBooksTests(unittest.TestCase):
         self.assertEqual(record.credit.credit_losses, {})
 
 
+class CloseIdleProducersTests(unittest.TestCase):
+    def test_a_closed_producer_leaves_by_the_one_exit_so_its_shares_and_ledgers_are_forgotten_too(self):
+        from sim.economy import entry_year
+        record = types.SimpleNamespace(
+            book=StubBook(30.0, {ORE: {HILLS: 2.0}}), credit=CreditRecord(), capital_markets=CapitalMarketsRecord(),
+            producers={"sliver": farmer(agent_id="sliver", owner="owner", capacity_runs=0.0)})
+        record.capital_markets.shares["sliver"] = {"holder": 0.5}
+        record.credit.expansion_runs.clear()
+        setup = types.SimpleNamespace(currency_id="coin")
+        with mock.patch.object(producer_exit.ownership, "spread", lambda _record, payments: payments):
+            self.assertEqual(entry_year.close_idle_producers(setup, record), 1)
+        self.assertNotIn("sliver", record.producers)
+        self.assertNotIn("sliver", record.capital_markets.shares)
+        self.assertEqual([(each.payee, each.amount, each.purpose) for each in record.book.transfers], [("owner", 30.0, "dividend")])
+        self.assertEqual([(move.receiver, move.quantity) for move in record.book.moves], [("owner", 2.0)])
+
+
 if __name__ == "__main__":
     unittest.main()

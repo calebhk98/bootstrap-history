@@ -8,8 +8,8 @@ import unittest
 from unittest import mock
 
 importlib.import_module("sim.economy.api")     # loads the package in its own import order
-from sim.economy import goods_market, home_scope, state_budget, year_accounts
-from sim.economy.goods_market_fills import make_fill
+from sim.economy import home_scope, state_budget, year_accounts
+from sim.economy.goods_market_fills import make_fill, without_washed
 from sim.markets import port_late
 from sim.resources.costs import MineCosts
 
@@ -84,11 +84,11 @@ class UnpricedMineCost(unittest.TestCase):
 class WashedResidue(unittest.TestCase):
     def test_float_dust_left_after_the_washed_quantity_is_not_a_fill(self):
         fill = make_fill("edge", "grain", "area", "tile", 1.0 + 1e-15, 2.0, "buy")
-        self.assertEqual(goods_market._without_washed([fill], {"edge": 1.0}), [])
+        self.assertEqual(without_washed([fill], {"edge": 1.0}), [])
 
     def test_a_real_remainder_survives_at_its_price(self):
         fill = make_fill("edge", "grain", "area", "tile", 3.0, 2.0, "sell")
-        kept = goods_market._without_washed([fill], {"edge": 1.0})
+        kept = without_washed([fill], {"edge": 1.0})
         self.assertEqual([(each.quantity, each.price) for each in kept], [(2.0, 2.0)])
 
 

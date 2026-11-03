@@ -4,7 +4,7 @@ from sim.unit_conversions import KILOGRAMS_PER_TONNE
 
 from . import carried_book, carriage_fleet_book, carriage_hours, carriage_wear, merchants, merchants_transit, route_dues
 from .market_memory import market_key
-from .year_goods import _held_stock
+from .inventory import held_stock
 from .year_ledger import YearLedger
 
 
@@ -39,7 +39,7 @@ def dispatch_merchants(setup, record, carriage, ledger: YearLedger, area_map) ->
             carriage_fleet_book.keep(merchant, record.book, carrier_goods)
             own_capacity[merchant.agent_id] = carriage_fleet_book.own_capacity(record.book, merchant.agent_id, lives)
         needed = {merchant.agent_id: carriage_fleet_book.wear_needed(
-            merchant, _held_stock(record.book, merchant.agent_id), setup.specs, wear, lives) for merchant in record.merchants.values()}
+            merchant, held_stock(record.book, merchant.agent_id), setup.specs, wear, lives) for merchant in record.merchants.values()}
         hired, lent = carriage_fleet_book.share_idle(own_capacity, needed)
     populated = {cohort.tile for cohort in record.cohorts.values()}
     for merchant in sorted(record.merchants.values(), key=lambda each: each.agent_id):
@@ -64,7 +64,7 @@ def dispatch_merchants(setup, record, carriage, ledger: YearLedger, area_map) ->
                                     lambda key, each=merchant: carriage_hours.crew_wage(setup, record, each, key, populated),
                                     area_map.area_of)
         done = merchants.dispatch(merchant, fills, carriage, setup.specs, money,
-                                  record.book.balance(merchant.agent_id, money), _held_stock(record.book, merchant.agent_id),
+                                  record.book.balance(merchant.agent_id, money), held_stock(record.book, merchant.agent_id),
                                   carrier_of=carriers.get, crew=hire,
                                   carrier_money=None if wear is None else (
                                       lambda source, destination, each=merchant: carriage_wear.money_per_tonne(

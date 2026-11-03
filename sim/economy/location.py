@@ -60,16 +60,6 @@ def output_tonnes(recipe: Recipe, specs: Mapping[str, GoodSpec]) -> float:
                      if good in specs and specs[good].portable) / KILOGRAMS_PER_TONNE
 
 
-def cost_per_run(recipe: Recipe, wages: Mapping[str, float], input_prices: Mapping[str, float], rent: float,
-                 carriage_per_tonne: float, yield_factor: float, tonnes: float = 0.0, input_haul: float = 0.0) -> float:
-    """Variable cost, carriage of a run's output (`tonnes`) to the anchor and of its inputs in (`input_haul`,
-    money per run), over the yield."""
-    if yield_factor <= 0.0:
-        return math.inf
-    return assembled_cost(unit_cost.variable_cost_per_run(recipe, input_prices, wages, rent), carriage_per_tonne,
-                          yield_factor, tonnes, input_haul)
-
-
 def assembled_cost(variable: float, carriage_per_tonne: float, yield_factor: float, tonnes: float,
                    input_haul: float) -> float:
     """A run's variable cost plus the carriage of its output and inputs, over the yield (which is positive)."""
@@ -117,7 +107,7 @@ def opening_split(setup, recipe: Recipe, area: MarketArea, runs: float) -> Dict[
                    if tile in placed)
     if not suited:
         return {}
-    if sites.UNSITED_EXTRACTION_ANYWHERE and recipe.site_bound and not by_recipe.get(recipe.recipe_id):
+    if sites.runs_anywhere(recipe, by_recipe):
         if area.anchor_tile in suited:
             return {area.anchor_tile: runs}
         return split_runs(runs, {tile: population.get(tile, 0.0) for tile in suited}, {})
@@ -165,9 +155,11 @@ def entry_siting(setup, record, view, area_map, carriage) -> Siting:
     def siting(recipe_id, demand, runs):
         recipe = setup.recipes[recipe_id]
         area = area_map.market_area_of(demand.good, demand.anchor_tile)
-        if recipe.site_bound and not by_recipe.get(recipe_id) and headroom_with_land(
+        if sites.runs_anywhere(recipe, by_recipe) and headroom_with_land(
                 1.0, setup.land_per_run.get(recipe_id, 0.0) > 0.0, demand.anchor_tile in short_of_land) > 0.0 and sites.climate_allows(
                 recipe, setup.tiles.get(demand.anchor_tile)) and setup.recipe_allowed(recipe_id, demand.anchor_tile):
+            claim_site(capacity, committed, tile_parts, recipe_id, demand.anchor_tile, runs,
+                       math.fsum(entry_practice.first_year_recipe(recipe, crews_of(recipe_id)).labour_hours.values()))
             return demand.anchor_tile, runs
         tonnes = output_tonnes(recipe, setup.specs)
         if recipe_id not in supplies:
@@ -188,8 +180,24 @@ def entry_siting(setup, record, view, area_map, carriage) -> Siting:
                 variable, carriage.cost_per_tonne(tile, demand.anchor_tile), factor, tonnes, input_haul)
             candidates.append(Candidate(tile, cost, staffable, headroom))
         picked = choose(candidates, runs, demand.anchor_tile)
-        return None if picked is None else (picked[0].tile, picked[1])
+        if picked is None:
+            return None
+        claim_site(capacity, committed, tile_parts, recipe_id, picked[0].tile, picked[1],
+                   math.fsum(entry_practice.first_year_recipe(recipe, crews_of(recipe_id)).labour_hours.values()))
+        return picked[0].tile, picked[1]
     return siting
+
+
+def claim_site(capacity: Dict[Tuple[str, TileId], float], committed: Dict[TileId, float],
+               tile_parts: Dict[Tuple[str, TileId, float], tuple], recipe_id: str, tile: TileId, runs: float,
+               hours_per_run: float) -> None:
+    """Book a pick: `runs` of the recipe now stand on `tile` and use its hands, so the plans sited after it see less
+    headroom and fewer idle hours there. What was read for the tile (`tile_parts`) no longer holds and is dropped."""
+    key = (recipe_id, tile)
+    capacity[key] = capacity.get(key, 0.0) + runs
+    committed[tile] = committed.get(tile, 0.0) + runs * hours_per_run
+    for part_key in [part_key for part_key in tile_parts if part_key[1] == tile]:
+        del tile_parts[part_key]
 
 
 def _tile_part(setup, record, view, carriage, recipe, by_recipe, supplies, capacity, committed, tile, first_year=None):

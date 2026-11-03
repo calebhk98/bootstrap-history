@@ -32,10 +32,9 @@ from .protocols import EconomyYearInputs
 from .record import EconomyRecord
 from .setup import EconomySetup, area_tile, labour_area
 from .types import Bid, EDGE_CONSUMPTION, GoodsMove, Transfer
-from .national_prices import national_wages
+from .national_prices import national_prices, national_wages
 from .merchants_dispatch import dispatch_merchants
-from .year_close import (check_money, close_agents, money_taxes, national_prices,
-                         remember_basket_price_level, wear_and_spoilage)
+from .year_close import close_agents, money_taxes, remember_basket_price_level, wear_and_spoilage
 from .year_goods import add_orders, clear_goods, cohort_orders, merchant_orders, state_orders
 from .labour_supply import HourSupply
 from .labour_state import people_by_trade
@@ -62,8 +61,6 @@ class YearOutcome:
     hired_hours: float = 0.0
     wage_floor_per_hour: float = 0.0               # the lowest a worker's ask could fall to (labour_ask_floor.py)
     extraction: Dict[Tuple[str, str], float] = field(default_factory=dict)   # runs worked per (recipe, tile) on a site
-    conservation_residual: float = 0.0
-    state_cash: float = 0.0
     money_audit: Optional[MoneyAudit] = None       # where money entered and left this year
     bonded_bought: Dict[Tuple[str, str], float] = field(default_factory=dict)   # (tile, trade): bonded people bought this year
     bonded_paid: float = 0.0                       # money the buyers paid for them over the exchange edge
@@ -97,6 +94,7 @@ class Economy:
         self.carriage = carriage
         self.watched_tiles: Tuple[str, ...] = ()   # tiles whose market books are kept beside the port's and the capital's; not saved
         self._own_hectares: Dict[str, float] = {}   # land households' own plots took this year, by tile
+        self._year_plot_options: Optional[Dict[str, list]] = None   # own_plot_options, built once for the year being run
         self._work_hours: Dict[str, float] = {}     # household work each cohort keeps back this year; set when the year plans it
 
     def change_setup(self, **changes: Any) -> None:
@@ -155,7 +153,10 @@ class Economy:
 
     def step(self, inputs: EconomyYearInputs) -> YearOutcome:
         with collection_paused():
-            return self._run_year(inputs)
+            try:
+                return self._run_year(inputs)
+            finally:
+                self._year_plot_options = None
 
     def _run_year(self, inputs: EconomyYearInputs) -> YearOutcome:
         changes: Dict[str, Any] = {}
@@ -166,6 +167,7 @@ class Economy:
         if changes:
             self.change_setup(**changes)
         setup, record = self.setup, self.record
+        self._year_plot_options = own_production_options(setup.recipes, setup.land_per_run, setup.basket)
         record.sort_in_saved_order()
         self.follow_flows()
         self.carriage.set_scale(carriage_hours.wage_scale(setup, record, self.carriage))   # the carriers' labour at the year's wage
@@ -330,6 +332,9 @@ class Economy:
                 producer_table.put_producer(self.record.producers, replaced(producer, yield_factor=factor))
 
     def own_plot_options(self):
+        """The recipes a household can grow its need from itself; built once for a year being run."""
+        if self._year_plot_options is not None:
+            return self._year_plot_options
         setup = self.setup
         return own_production_options(setup.recipes, setup.land_per_run, setup.basket)
 
@@ -536,7 +541,6 @@ class Economy:
                            money_supply=record.book.money_supply(money), hunger_by_tile=hunger,
                            output=dict(sorted(output.items())), idle_hours=idle, vacant_hours=vacant, hired_hours=hired,
                            wage_floor_per_hour=ledger.wage_floor_per_hour, extraction=extraction,
-                           conservation_residual=check_money(record), money_audit=year_report(record),
-                           state_cash=record.book.balance(setup.state_agent, money),
+                           money_audit=year_report(record),
                            migrated_by_tile=dict(ledger.migrated_by_tile), bonded_bought=dict(ledger.bonded_bought), bonded_paid=ledger.bonded_paid, bonded_lots=list(ledger.bonded_lots),
                            accounts=build_accounts(setup, record, ledger, stocks_at_start, prices, mean_wages))

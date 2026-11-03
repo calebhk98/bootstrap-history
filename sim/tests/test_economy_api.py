@@ -47,12 +47,6 @@ class EconomyApiTests(unittest.TestCase):
         self.assertEqual(api.interest_rate(economy), 0.07)
         self.assertIsNone(api.interest_rate(stand_in(memory=types.SimpleNamespace(rates={}))))
 
-    def test_external_trade_net_reads_the_external_edge(self):
-        self.assertEqual(api.external_trade_net(stand_in()), ("net", api.EDGE_EXTERNAL, "coin"))
-
-    def test_external_trade_volume_reads_the_external_edge(self):
-        self.assertEqual(api.external_trade_volume(stand_in()), ("volume", api.EDGE_EXTERNAL, "coin"))
-
     def test_account_balance_reads_the_currency_balance(self):
         self.assertEqual(api.account_balance(stand_in(), "agent"), ("balance", "agent", "coin"))
 

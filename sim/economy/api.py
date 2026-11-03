@@ -20,7 +20,7 @@ from .credit_lines import line_request as credit_line_request, actor_fundable as
 from .credit import risk_premium
 from .currency import currency_from_coin_standard
 from .economy import Economy
-from .market_memory import market_key
+from .market_memory import KEY_SEPARATOR, market_key
 from .opening_rate import against_history, opening_market_rate, solved_opening_rate
 from .metal_stock import COIN_WEAR_PER_YEAR
 from .notional import shown_prices, shown_prices_with_kinds
@@ -57,15 +57,13 @@ __all__ = [
     "goods_specs", "EDGE_EXTERNAL", "EDGE_LEGACY", "EDGE_CARGO", "EDGE_CONSUMPTION", "EDGE_PRODUCTION", "EDGE_EXCHANGE", "WAGE_CEILING_MULTIPLE", "external_edge", "Bid", "GoodsMove", "LabourBid", "LabourOffer", "Offer", "Transfer",
     "variable_cost_per_run", "rebase_basket_price_level", "trade_premium", "premium_for_training_years", "HOUSEHOLD_TIME_PREFERENCE", "title_wealth",
     "traded_volumes", "country_traded_volumes", "country_opening_basket", "market_record", "opening_quantities", "opening_prices_in_hours", "opening_price_in_current_money", "wages_by_trade_weighted", "interest_rate", "producers_of",
-    "external_trade_net", "external_trade_volume", "account_balance", "account_holdings",
+    "account_balance", "account_holdings",
     "credit_room", "credit_line_request", "economy_from_record", "blank_economy", "export_record", "economy_book", "economy_contracts", "finish_spin_up", "note_spin_up_result", "spin_up_state", "money_year_figures","shown_prices_of","shown_price_kinds_of",
     "settle_agent_takings", "route_dues_account", "tile_holders", "indebted_tiles", "fugitive_share_by_tile", "title_holdings", "money_revenue_forms", "admit_recipes", "move_goods", "post_transfers", "cohort_incomes", "cohort_land_rents", "land_rent_per_hectare",
     "land_rent_paid_by_tile", "land_rent_at_tile", "DEPOSIT_BANKING", "POOLED_FUNDS", "INSURANCE_UNDERWRITING", "RISK_POOLING", "BOND_MARKET", "SHARE_TRADING", "country_figures", "carried_book", "idle_hours_by_trade", "output_by_tile",
     "person_equivalent_unemployment", "labour_market_rows",
     "actor_fundable_amount", "risk_premium", "lender_listing", "note_pool_posting",
 ]
-
-from .market_memory import KEY_SEPARATOR as _KEY_SEPARATOR
 
 
 def found_bank_from_outside(economy, founder, capital_units, year, edge):
@@ -97,7 +95,7 @@ def market_record(economy, good):
     totals = {"sold": 0.0, "unsold": 0.0, "unmet": 0.0}
     for name, figures in (("sold", record.goods.volumes), ("unsold", record.goods.unsold), ("unmet", record.goods.unmet)):
         for key, quantity in figures.items():
-            if key.split(_KEY_SEPARATOR, 1)[0] == good:
+            if key.split(KEY_SEPARATOR, 1)[0] == good:
                 totals[name] += quantity
     return totals
 
@@ -179,7 +177,7 @@ def labour_market_rows(economy):
     plot = labour_state.plot_trade(economy.setup)
     rows = []
     for key in sorted(record.labour.hours_idle):
-        trade, area = key.split(_KEY_SEPARATOR, 1)
+        trade, area = key.split(KEY_SEPARATOR, 1)
         if trade == plot:
             continue
         people = math.fsum(record.labour.workforce.workers.get(area, {}).get(trade, ()))
@@ -242,16 +240,6 @@ def producers_of(economy, country=None):
         return dict(economy.record.producers)
     tiles = country_figures.country_tiles(economy, scope)
     return {producer_id: producer for producer_id, producer in economy.record.producers.items() if producer.tile in tiles}
-
-
-def external_trade_net(economy):
-    """Money paid in over the external edge: exports less imports."""
-    return economy.record.book.edge_net(EDGE_EXTERNAL, economy.setup.currency_id)
-
-
-def external_trade_volume(economy):
-    """Money moved either way over the external edge: exports plus imports."""
-    return economy.record.book.edge_volume(EDGE_EXTERNAL, economy.setup.currency_id)
 
 
 def _ranked_cohorts(economy, country=None):
@@ -594,7 +582,8 @@ def opening_wage_level(economy):
 def priced_trade_wage(economy, trade, paid, unskilled):
     """The wage per hour of a trade by the one rule (`trade_wages`), in the economy's units, for any scope: the caller
     names what that scope paid for the trade and for the unskilled trade (None where nothing)."""
-    return trade_wages.priced_trade_wage(economy.setup, trade, paid, unskilled, opening_wage_level(economy))
+    return trade_wages.priced_trade_wage(economy.setup, trade, paid, unskilled, opening_wage_level(economy),
+                                         economy.record.memory.holds_wage_for(trade))
 
 
 def country_trade_wage(economy, trade, country=None):

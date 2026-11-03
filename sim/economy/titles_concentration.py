@@ -5,7 +5,7 @@ never an input to the model.
 `LAND_GINI_SOURCED` is the table of measured land Ginis by setting and denominator, from
 Complaints/reports/research-household-wealth-and-land-concentration.md section 2.1 (each row names the source that
 report opened). The band a check uses for a denominator is the hull of the rows with that denominator (`band`).
-Han China and the Mexica have no land figure in anything opened: no band, a check skips them. No opened source
+A setting with no land figure in anything opened has no band, and a check skips it. No opened source
 gives a land top-decile share, so the top decile is printed, never checked.
 """
 from typing import Dict, List, Mapping, NamedTuple, Optional, Sequence, Tuple

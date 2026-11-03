@@ -20,6 +20,7 @@ class GoodsRecord(OwnedRecord):
     output_by_tile: Dict[TileId, Dict[str, float]] = field(default_factory=dict)   # tile -> good -> units the home producers made last year
 
     OWNERS = ("goods_record", "year_goods", "entry_margin")
+    MARKET_KEYED = ("volumes", "unsold", "unmet", "margin_years", "curves")    # the stores keyed by market_key(good, area): they move when the areas are redrawn
 
     def reset_output(self) -> None:
         self.output_by_tile = {}
