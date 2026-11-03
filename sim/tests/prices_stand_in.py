@@ -11,6 +11,14 @@ from sim.prices.module import Prices
 from sim.tests import module_harness
 
 
+class _OpeningSchedule:
+    """The opening wage schedule a stand-in civilisation opens on: no trade wages, an hour worth one unit of money."""
+    money_per_labour_hour = 1.0
+
+    def document(self):
+        return {"wage_rates_denarii_per_hour": {}, "money_per_labour_hour": self.money_per_labour_hour}
+
+
 def build(views: Optional[Dict[str, Any]] = None, **overrides: Any) -> Prices:
     """A Prices module whose reads are plain values; keyword arguments (or `views`) override a view by name."""
     plain: Dict[str, Any] = {
@@ -20,7 +28,8 @@ def build(views: Optional[Dict[str, Any]] = None, **overrides: Any) -> Prices:
         "money_per_labour_hour": 1.0, "labour_quote": lambda trade: 1.0, "farm_land_hectares": 0.0,
         "household_prices": {}, "material_seller": lambda material: None, "agent_wage": lambda trade: None,
         "agent_land_rent": None, "is_venture": lambda node_id: False, "concern_baskets_now": lambda node_id: None,
-        "venture_ramp": lambda node_id: 1.0, "material_pool": lambda material: (material, material)}
+        "venture_ramp": lambda node_id: 1.0, "material_pool": lambda material: (material, material),
+        "wage_schedule_for": lambda civilisation: _OpeningSchedule()}
     plain.update(views or {})
     plain.update(overrides)
     return module_harness.build(Prices, views=plain, module_id="prices")

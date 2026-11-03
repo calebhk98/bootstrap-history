@@ -1,7 +1,7 @@
 """Rent in the price solver's recipe costing, on synthetic entries (no data, no game)."""
 import unittest
 
-from sim.prices import solve_prices
+from sim.prices import solve_prices_core
 
 QUICK_TOPIC = True
 
@@ -17,9 +17,9 @@ class RentIsZeroByDefaultTests(unittest.TestCase):
         entry = {"outputs": {"thing_kg": 1000.0}, "inputs": {},
                 "labour_hours": {"labourer": 10.0}}
         with_table, without_table = (
-            solve_prices.recipe_cost_and_allocation(
+            solve_prices_core.recipe_cost_and_allocation(
                 "thing_kg", entry, {}, {"labourer": 1.0}),
-            solve_prices.recipe_cost_and_allocation(
+            solve_prices_core.recipe_cost_and_allocation(
                 "thing_kg", entry, {}, {"labourer": 1.0},
                 rent_hours_per_kg_by_material=None))
         self.assertEqual(with_table, without_table)
@@ -29,7 +29,7 @@ class RentIsZeroByDefaultTests(unittest.TestCase):
     def test_an_empty_rent_table_also_means_zero_rent(self):
         entry = {"outputs": {"thing_kg": 1000.0}, "inputs": {},
                 "labour_hours": {"labourer": 10.0}}
-        total_cost, _prices = solve_prices.recipe_cost_and_allocation(
+        total_cost, _prices = solve_prices_core.recipe_cost_and_allocation(
             "thing_kg", entry, {}, {"labourer": 1.0},
             rent_hours_per_kg_by_material={})
         self.assertEqual(total_cost, 10.0)
@@ -41,7 +41,7 @@ class RentIsZeroByDefaultTests(unittest.TestCase):
         # other material in the same solve now carries a real rent.
         entry = {"outputs": {"stone_kg": 1000.0}, "inputs": {},
                 "labour_hours": {"labourer": 4.0}}
-        total_cost, _prices = solve_prices.recipe_cost_and_allocation(
+        total_cost, _prices = solve_prices_core.recipe_cost_and_allocation(
             "stone_kg", entry, {}, {"labourer": 1.0},
             rent_hours_per_kg_by_material={"iron_ore_kg": 5.0})
         self.assertEqual(total_cost, 4.0)
@@ -55,7 +55,7 @@ class RentIsAddedCorrectlyTests(unittest.TestCase):
     def test_rent_is_added_per_kg_of_the_named_output(self):
         entry = {"outputs": {"ore_kg": 1000.0}, "inputs": {},
                 "labour_hours": {"miner": 20.0}}
-        total_cost, output_prices = solve_prices.recipe_cost_and_allocation(
+        total_cost, output_prices = solve_prices_core.recipe_cost_and_allocation(
             "ore_kg", entry, {}, {"miner": 1.0},
             rent_hours_per_kg_by_material={"ore_kg": 0.25})
         # 20 h labour + 0.25 h/kg * 1000 kg rent = 270 h for the batch.
@@ -69,7 +69,7 @@ class RentIsAddedCorrectlyTests(unittest.TestCase):
         # function already keeps for inputs, labour and energy.
         entry = {"outputs": {"ore_a_kg": 1000.0, "ore_b_kg": 10.0},
                 "inputs": {}, "labour_hours": {"miner": 20.0}}
-        total_cost, _prices = solve_prices.recipe_cost_and_allocation(
+        total_cost, _prices = solve_prices_core.recipe_cost_and_allocation(
             "ore_a_kg", entry, {"ore_a_kg": 1.0, "ore_b_kg": 1.0},
             {"miner": 1.0},
             rent_hours_per_kg_by_material={"ore_a_kg": 0.1, "ore_b_kg": 2.0})

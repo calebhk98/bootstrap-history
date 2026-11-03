@@ -23,7 +23,7 @@ Land-limited materials state land_hectare_years and the solver charges rent for 
 """
 import unittest
 
-from sim.prices import solve_prices
+from sim.prices import solve_prices_core, rent_standin, engine_seam
 from sim.tests.price_solver_helpers import engine_solve_converges, solver_context
 
 
@@ -43,26 +43,41 @@ class LandRentReferencePriceStaysZeroRentTests(unittest.TestCase):
                        "labour_hours": {"labourer": 100.0},
                        "land_hectare_years": 1000.0}
         entries = {"wheat_kg": wheat_entry}
-        rent = solve_prices.land_rent_hours_per_hectare(
-            entries, {"labourer": 1.0}, civilization_id="rome_100ad")
+        rent = rent_standin.land_rent_hours_per_hectare(
+            entries, {"labourer": 1.0}, civilization=engine_seam.load_civ("rome_100ad"))
         # This only asserts the function runs and returns SOMETHING (real
-        # sim/world/land.py data behind civilization_id="rome_100ad") -
+        # sim/world/land.py data behind Rome's record) -
         # the real guard is the next test, which checks the VALUE does not
         # move when land_hectare_years changes.
         self.assertIsInstance(rent, dict)
 
+    def test_a_record_without_the_fields_the_margin_reads_is_an_error_not_free_land(self):
+        entries = {"wheat_kg": {"outputs": {"wheat_kg": 500.0}, "inputs": {}, "labour_hours": {"labourer": 100.0}}}
+        record = dict(engine_seam.load_civ("rome_100ad"), staple="wheat_kg")
+        del record["population"]
+        with self.assertRaises(KeyError):
+            rent_standin.land_rent_hours_per_hectare(entries, {"labourer": 1.0}, record)
+
+    def test_the_reference_crop_is_the_civilisations_staple(self):
+        grain = {"outputs": {"barley_kg": 500.0}, "inputs": {}, "labour_hours": {"labourer": 100.0}}
+        record = dict(engine_seam.load_civ("rome_100ad"), staple="barley_kg")
+        rent = rent_standin.land_rent_hours_per_hectare({"barley_kg": grain}, {"labourer": 1.0}, record)
+        self.assertGreater(rent["hectare_land"], 0.0)
+        self.assertEqual(rent_standin.land_rent_hours_per_hectare({"barley_kg": grain}, {"labourer": 1.0},
+                                                                   dict(record, staple="wheat_kg")), {})
+
     def test_reference_price_is_unaffected_by_the_size_of_land_hectare_years(self):
         wage_by_trade = {"labourer": 1.0}
-        small = solve_prices.land_rent_hours_per_hectare(
+        small = rent_standin.land_rent_hours_per_hectare(
             {"wheat_kg": {"outputs": {"wheat_kg": 500.0}, "inputs": {},
                          "labour_hours": {"labourer": 100.0},
                          "land_hectare_years": 1.0}},
-            wage_by_trade, civilization_id="rome_100ad")
-        large = solve_prices.land_rent_hours_per_hectare(
+            wage_by_trade, civilization=engine_seam.load_civ("rome_100ad"))
+        large = rent_standin.land_rent_hours_per_hectare(
             {"wheat_kg": {"outputs": {"wheat_kg": 500.0}, "inputs": {},
                          "labour_hours": {"labourer": 100.0},
                          "land_hectare_years": 1e6}},
-            wage_by_trade, civilization_id="rome_100ad")
+            wage_by_trade, civilization=engine_seam.load_civ("rome_100ad"))
         self.assertEqual(small, large)
 
     def test_the_real_wheat_entry_still_produces_a_positive_rome_rent(self):
@@ -71,13 +86,13 @@ class LandRentReferencePriceStaysZeroRentTests(unittest.TestCase):
         # and can change), only the structural property that Rome's own
         # multi-region territory still earns a positive rent now that
         # wheat_kg itself consumes hectare_land.
-        production_entries, duplicates = solve_prices.load_production()
+        production_entries, duplicates = engine_seam.load_production()
         self.assertEqual(duplicates, [])
         self.assertIn("land_hectare_years", production_entries["wheat_kg"])
         wage_by_trade = {trade: 1.0 for entry in production_entries.values()
                          for trade in (entry.get("labour_hours") or {})}   # every trade a recipe names is paid the same here
-        rent = solve_prices.land_rent_hours_per_hectare(
-            production_entries, wage_by_trade, civilization_id="rome_100ad")
+        rent = rent_standin.land_rent_hours_per_hectare(
+            production_entries, wage_by_trade, civilization=engine_seam.load_civ("rome_100ad"))
         self.assertIn("hectare_land", rent)
         self.assertGreater(rent["hectare_land"], 0.0)
 
@@ -102,11 +117,11 @@ class TheFiveCivilizationsSeparateTests(unittest.TestCase):
     def _solved_wheat_price(self, civilization_id):
         available, wage_by_trade, producers_of, rent = solver_context(
             civilization_id)
-        rent.update(solve_prices.land_rent_hours_per_hectare(
-            available, wage_by_trade, civilization_id=civilization_id))
-        resolvable = solve_prices.compute_resolvable_materials(
+        rent.update(rent_standin.land_rent_hours_per_hectare(
+            available, wage_by_trade, engine_seam.load_civ(civilization_id)))
+        resolvable = solve_prices_core.compute_resolvable_materials(
             available, producers_of, rent_hours_per_kg_by_material=rent)
-        prices, _iters, _residual, _chosen = solve_prices.solve(
+        prices, _iters, _residual, _chosen = solve_prices_core.solve(
             available, producers_of, resolvable, wage_by_trade,
             rent_hours_per_kg_by_material=rent)
         return prices["wheat_kg"], rent.get("hectare_land", 0.0)
@@ -143,7 +158,7 @@ class WhichMaterialsCarryLandTests(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.production_entries, _duplicates = solve_prices.load_production()
+        cls.production_entries, _duplicates = engine_seam.load_production()
 
     def test_the_primary_grown_and_land_limited_materials_all_carry_it(self):
         expected = {
@@ -198,41 +213,41 @@ class WiringDoesNotBreakTheSolveTests(unittest.TestCase):
         # "not a derived number" means. Checked in BOTH directions (with-land and without-land) so a
         # material is excluded only when the mechanism itself says its price carries no independent
         # meaning, never merely because it happens to have moved.
-        production_entries, _duplicates = solve_prices.load_production()
+        production_entries, _duplicates = engine_seam.load_production()
         stripped_entries = {
             recipe_id: {key: value for key, value in entry.items()
                        if key != "land_hectare_years"}
             for recipe_id, entry in production_entries.items()}
         from sim import simulator
         _tree, prices_json, _nodes, _wages, _goods = simulator.load()
-        wage_by_trade = solve_prices.wage_ratios_by_trade(prices_json)
+        wage_by_trade = solve_prices_core.wage_ratios_by_trade(prices_json)
 
-        producers_of = solve_prices.build_producers_index(production_entries)
-        rent = solve_prices.rent_hours_per_kg_by_ore_material(
+        producers_of = solve_prices_core.build_producers_index(production_entries)
+        rent = rent_standin.rent_hours_per_kg_by_ore_material(
             production_entries, wage_by_trade)
-        rent.update(solve_prices.land_rent_hours_per_hectare(
-            production_entries, wage_by_trade))
-        resolvable_with_land = solve_prices.compute_resolvable_materials(
+        rent.update(rent_standin.land_rent_hours_per_hectare(
+            production_entries, wage_by_trade, engine_seam.load_civ(None)))
+        resolvable_with_land = solve_prices_core.compute_resolvable_materials(
             production_entries, producers_of, rent_hours_per_kg_by_material=rent)
-        prices_with_land, _iters, _residual, chosen_with_land = solve_prices.solve(
+        prices_with_land, _iters, _residual, chosen_with_land = solve_prices_core.solve(
             production_entries, producers_of, resolvable_with_land, wage_by_trade,
             rent_hours_per_kg_by_material=rent)
-        by_mass_with_land = solve_prices.minor_joint_byproducts_split_by_mass(
+        by_mass_with_land = solve_prices_core.minor_joint_byproducts_split_by_mass(
             production_entries, chosen_with_land, prices_with_land, wage_by_trade,
             rent_hours_per_kg_by_material=rent)
 
-        producers_of_stripped = solve_prices.build_producers_index(stripped_entries)
-        rent_stripped = solve_prices.rent_hours_per_kg_by_ore_material(
+        producers_of_stripped = solve_prices_core.build_producers_index(stripped_entries)
+        rent_stripped = rent_standin.rent_hours_per_kg_by_ore_material(
             stripped_entries, wage_by_trade)
-        rent_stripped.update(solve_prices.land_rent_hours_per_hectare(
-            stripped_entries, wage_by_trade))
-        resolvable_without_land = solve_prices.compute_resolvable_materials(
+        rent_stripped.update(rent_standin.land_rent_hours_per_hectare(
+            stripped_entries, wage_by_trade, engine_seam.load_civ(None)))
+        resolvable_without_land = solve_prices_core.compute_resolvable_materials(
             stripped_entries, producers_of_stripped,
             rent_hours_per_kg_by_material=rent_stripped)
-        prices_without_land, _iters2, _residual2, chosen_without_land = solve_prices.solve(
+        prices_without_land, _iters2, _residual2, chosen_without_land = solve_prices_core.solve(
             stripped_entries, producers_of_stripped, resolvable_without_land,
             wage_by_trade, rent_hours_per_kg_by_material=rent_stripped)
-        by_mass_without_land = solve_prices.minor_joint_byproducts_split_by_mass(
+        by_mass_without_land = solve_prices_core.minor_joint_byproducts_split_by_mass(
             stripped_entries, chosen_without_land, prices_without_land, wage_by_trade,
             rent_hours_per_kg_by_material=rent_stripped)
 
@@ -259,7 +274,7 @@ class NoRomanAreaUnitInDataTests(unittest.TestCase):
             self.assertNotIn("iugera", text, path)
 
     def test_a_hectare_year_crop_states_one_hectare_year(self):
-        production_entries, _duplicates = solve_prices.load_production()
+        production_entries, _duplicates = engine_seam.load_production()
         self.assertAlmostEqual(
             production_entries["wheat_hoe_kg"]["land_hectare_years"], 1.0, places=3)
 

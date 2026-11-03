@@ -9,8 +9,8 @@ energy it sells, the way the solver charged the goods it makes.
 """
 from typing import Any, Callable, Dict, Iterable, Mapping, Optional, Tuple
 
-from sim.prices import solve_prices
 from sim.world import plant_baskets
+from sim.prices import solve_prices_core
 from sim.prices.solve_prices_core import CAPABILITY_CAP_FIELDS, capability_required_grades, recipe_cost_and_allocation
 from sim.prices.identity_cache import IdentityCache
 
@@ -94,7 +94,7 @@ def grade_bands(entries: Mapping[str, Any], available: Mapping[str, Any], prices
     unreachable = set()
     for carrier, required_values in capability_required_grades(entries).items():
         for required in required_values:
-            found = solve_prices.capability_price_for_requirement(
+            found = solve_prices_core.capability_price_for_requirement(
                 carrier, required, available, prices_in_labour_hours, wage_by_trade, interest_rate=interest_rate)
             if found is None:
                 unreachable.add((carrier, required))
@@ -112,7 +112,7 @@ def graded(held_technology_ids, prices_json: Dict[str, Any], goods: Mapping[str,
     entries = price_solver.default_production_entries()
     solved = price_solver.solved_prices(held_technology_ids, prices_json, civilization_id=civilization_id,
                                         interest_rate=interest_rate, civilization=civilization)
-    ratios = solve_prices.wage_ratios_by_trade(prices_json)
+    ratios = solve_prices_core.wage_ratios_by_trade(prices_json)
     key = (solved.gate_nodes_held, solved.civilization_id, tuple(sorted(ratios.items())),
            prices_json["money_per_labour_hour"], solved.interest_rate,
            price_solver.territory_fingerprint(civilization))
@@ -123,7 +123,7 @@ def graded(held_technology_ids, prices_json: Dict[str, Any], goods: Mapping[str,
     wage_by_trade = price_solver.solver_wage_ratios(entries, ratios)
     money_per_hour = prices_json["money_per_labour_hour"]
     hour_prices = {material: price / money_per_hour for material, price in goods.items()}
-    available, _unreached, _unclassified = solve_prices.techniques_available_to(entries, solved.gate_nodes_held)
+    available, _unreached, _unclassified = solve_prices_core.techniques_available_to(entries, solved.gate_nodes_held)
     bands, hour_bands, unreachable = grade_bands(entries, available, solved.prices_in_labour_hours, wage_by_trade,
                                                  money_per_hour, solved.interest_rate)
     # Keyed by address; the entry itself is kept and confirmed with `is`, so a recycled address cannot match.

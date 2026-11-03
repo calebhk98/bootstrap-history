@@ -24,7 +24,7 @@ Pins rent_hours_per_kg_by_ore_material and the iron blast-furnace/bloomery fallb
 import unittest
 from unittest import mock
 
-from sim.prices import solve_prices
+from sim.prices import solve_prices_core, rent_standin, engine_seam
 from sim.tests.price_solver_helpers import engine_solve_converges
 from sim import simulator
 from sim.world import deposits
@@ -56,7 +56,7 @@ class RentHoursPerKgByOreMaterialTests(unittest.TestCase):
         # via a real table entry (copper) with find_marginal_deposit
         # patched to return a price far below copper_ore_kg's own labour-
         # only cost.
-        entries = dict(solve_prices.load_production()[0])  # real data
+        entries = dict(engine_seam.load_production()[0])  # real data
         wage_by_trade = {"miner": 1.0, "furnaceman": 1.0, "labourer": 1.0,
                          "smith": 1.0}
         cheap_outcome = deposits.MarginalOutcome(
@@ -67,7 +67,7 @@ class RentHoursPerKgByOreMaterialTests(unittest.TestCase):
             unmet_demand_tonnes_per_year=0.0)
         with mock.patch.object(deposits, "find_marginal_deposit",
                                return_value=cheap_outcome):
-            rent = solve_prices.rent_hours_per_kg_by_ore_material(
+            rent = rent_standin.rent_hours_per_kg_by_ore_material(
                 entries, wage_by_trade)
         self.assertIn("copper_ore_kg", rent)
         self.assertEqual(rent["copper_ore_kg"], 0.0)
@@ -79,7 +79,7 @@ class RentHoursPerKgByOreMaterialTests(unittest.TestCase):
         # entirely rather than assigned an invented number.
         entries = self._minimal_entries()
         del entries["test_metal_kg"]
-        rent = solve_prices.rent_hours_per_kg_by_ore_material(
+        rent = rent_standin.rent_hours_per_kg_by_ore_material(
             {"iron_ore_kg": entries["test_ore_kg"]},  # only the ore, no smelter
             {"miner": 1.0})
         self.assertEqual(rent, {})
@@ -89,11 +89,11 @@ class RentHoursPerKgByOreMaterialTests(unittest.TestCase):
         # data/world/geography/deposits/ancient.json - no book-price comparison, no pinned
         # numbers (both files are owned elsewhere and can change), only the
         # structural properties this mechanism promises.
-        production_entries, duplicates = solve_prices.load_production()
+        production_entries, duplicates = engine_seam.load_production()
         self.assertEqual(duplicates, [])
         _tree, prices_json, _nodes, _wages, _goods = simulator.load()
-        wage_by_trade = solve_prices.wage_ratios_by_trade(prices_json)
-        rent = solve_prices.rent_hours_per_kg_by_ore_material(
+        wage_by_trade = solve_prices_core.wage_ratios_by_trade(prices_json)
+        rent = rent_standin.rent_hours_per_kg_by_ore_material(
             production_entries, wage_by_trade)
 
         # All six named ores resolve in the ungated (full) solve - none of
@@ -136,9 +136,9 @@ class IronFallsBackToTheAvailableSmeltingRouteTests(unittest.TestCase):
         # ever gave Rome the blast furnace, this test would start failing
         # here (not silently) and say so, rather than the fallback path
         # quietly going untested.
-        production_entries, _duplicates = solve_prices.load_production()
-        reached = solve_prices.load_starting_technologies("rome_100ad")
-        available, _unreached, _unclassified = solve_prices.techniques_available_to(
+        production_entries, _duplicates = engine_seam.load_production()
+        reached = engine_seam.load_civ("rome_100ad")["starting_techs"]
+        available, _unreached, _unclassified = solve_prices_core.techniques_available_to(
             production_entries, reached)
         self.assertNotIn("pig_iron_kg", available,
                          "rome_100ad now holds the blast furnace - the "
@@ -147,13 +147,13 @@ class IronFallsBackToTheAvailableSmeltingRouteTests(unittest.TestCase):
         self.assertIn("iron_bloom_kg", available)
 
     def test_iron_ore_still_gets_a_rent_entry_under_the_roman_gate(self):
-        production_entries, _duplicates = solve_prices.load_production()
-        reached = solve_prices.load_starting_technologies("rome_100ad")
-        available, _unreached, _unclassified = solve_prices.techniques_available_to(
+        production_entries, _duplicates = engine_seam.load_production()
+        reached = engine_seam.load_civ("rome_100ad")["starting_techs"]
+        available, _unreached, _unclassified = solve_prices_core.techniques_available_to(
             production_entries, reached)
         _tree, prices_json, _nodes, _wages, _goods = simulator.load()
-        wage_by_trade = solve_prices.wage_ratios_by_trade(prices_json)
-        rent = solve_prices.rent_hours_per_kg_by_ore_material(available, wage_by_trade)
+        wage_by_trade = solve_prices_core.wage_ratios_by_trade(prices_json)
+        rent = rent_standin.rent_hours_per_kg_by_ore_material(available, wage_by_trade)
         self.assertIn("iron_ore_kg", rent)
         self.assertGreaterEqual(rent["iron_ore_kg"], 0.0)
 
@@ -174,22 +174,22 @@ class WiringDoesNotBreakTheSolveTests(unittest.TestCase):
         # term must never make anything cheaper. Runs the solve twice - once
         # with the rent table this file now builds, once with it forced
         # empty - and compares every resolvable material's price.
-        production_entries, _duplicates = solve_prices.load_production()
+        production_entries, _duplicates = engine_seam.load_production()
         _tree, prices_json, _nodes, _wages, _goods = simulator.load()
-        wage_by_trade = solve_prices.wage_ratios_by_trade(prices_json)
-        producers_of = solve_prices.build_producers_index(production_entries)
-        rent = solve_prices.rent_hours_per_kg_by_ore_material(
+        wage_by_trade = solve_prices_core.wage_ratios_by_trade(prices_json)
+        producers_of = solve_prices_core.build_producers_index(production_entries)
+        rent = rent_standin.rent_hours_per_kg_by_ore_material(
             production_entries, wage_by_trade)
 
-        resolvable_with_rent = solve_prices.compute_resolvable_materials(
+        resolvable_with_rent = solve_prices_core.compute_resolvable_materials(
             production_entries, producers_of, rent_hours_per_kg_by_material=rent)
-        prices_with_rent, _iters, _residual, _chosen = solve_prices.solve(
+        prices_with_rent, _iters, _residual, _chosen = solve_prices_core.solve(
             production_entries, producers_of, resolvable_with_rent, wage_by_trade,
             rent_hours_per_kg_by_material=rent)
 
-        resolvable_without_rent = solve_prices.compute_resolvable_materials(
+        resolvable_without_rent = solve_prices_core.compute_resolvable_materials(
             production_entries, producers_of)
-        prices_without_rent, _iters2, _residual2, _chosen2 = solve_prices.solve(
+        prices_without_rent, _iters2, _residual2, _chosen2 = solve_prices_core.solve(
             production_entries, producers_of, resolvable_without_rent, wage_by_trade)
 
         self.assertEqual(resolvable_with_rent, resolvable_without_rent)

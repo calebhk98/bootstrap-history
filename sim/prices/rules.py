@@ -83,11 +83,6 @@ def entry_keys_held_for(node_id: str, production: Mapping[str, Any], held: Itera
     return keys
 
 
-def goods_in_coin(goods: Mapping[str, float], document_money_per_hour: float, money_per_hour: float) -> Dict[str, float]:
-    """A price table in the money of a wage document, in a coin worth `money_per_hour` to an hour of work."""
-    return {material: price / document_money_per_hour * money_per_hour for material, price in goods.items()}
-
-
 def solved_materials(provenance: Mapping[str, str]) -> FrozenSet[str]:
     """The materials made with the techniques held; the rest are priced only as if some technique were held."""
     return frozenset(material for material, source in provenance.items() if source == "solved")

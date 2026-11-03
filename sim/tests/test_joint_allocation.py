@@ -10,7 +10,7 @@ import unittest
 import warnings
 
 from sim import simulator
-from sim.prices import rent_standin, solve_prices, joint_allocation
+from sim.prices import rent_standin, joint_allocation, solve_prices_core, engine_seam
 
 
 def joint_entry():
@@ -127,12 +127,12 @@ class SoleRouteReferenceTests(unittest.TestCase):
         entries = {"smelt": joint_entry(), "direct": {
             "outputs": {"gem_kg": 1.0}, "inputs": {},
             "labour_hours": {"labourer": 20.0}}}
-        producers = solve_prices.build_producers_index(entries)
-        prices, iterations, _residual, _chosen = solve_prices.solve(
+        producers = solve_prices_core.build_producers_index(entries)
+        prices, iterations, _residual, _chosen = solve_prices_core.solve(
             entries, producers, {"main_kg", "gem_kg"}, {"labourer": 1.0})
         self.assertLessEqual(prices["gem_kg"], 20.0)
         self.assertGreater(prices["gem_kg"], 10.0)
-        self.assertLess(iterations, solve_prices.MAXIMUM_ITERATIONS)
+        self.assertLess(iterations, solve_prices_core.MAXIMUM_ITERATIONS)
         recovered = prices["main_kg"] * 1000.0 + prices["gem_kg"] * 1.0
         self.assertAlmostEqual(recovered, 100.0, places=4)
 
@@ -140,8 +140,8 @@ class SoleRouteReferenceTests(unittest.TestCase):
         entries = {"smelt": joint_entry(), "direct": {
             "outputs": {"gem_kg": 1.0}, "inputs": {},
             "labour_hours": {"labourer": 20.0}}}
-        producers = solve_prices.build_producers_index(entries)
-        prices, _i, _r, _c = solve_prices.solve(
+        producers = solve_prices_core.build_producers_index(entries)
+        prices, _i, _r, _c = solve_prices_core.solve(
             entries, producers, {"main_kg", "gem_kg"}, {"labourer": 1.0},
             reference_price_by_material={"gem_kg": 0.001})
         # gem is cheapest by the direct route (20) or the joint one; with a tiny reference the joint one is cheap
@@ -149,8 +149,8 @@ class SoleRouteReferenceTests(unittest.TestCase):
 
     def test_with_no_direct_route_the_joint_outputs_are_priced_alike_per_kilogram(self):
         entries = {"smelt": joint_entry()}
-        producers = solve_prices.build_producers_index(entries)
-        prices, _i, _r, _c = solve_prices.solve(entries, producers, {"main_kg", "gem_kg"}, {"labourer": 1.0})
+        producers = solve_prices_core.build_producers_index(entries)
+        prices, _i, _r, _c = solve_prices_core.solve(entries, producers, {"main_kg", "gem_kg"}, {"labourer": 1.0})
         self.assertAlmostEqual(prices["gem_kg"], prices["main_kg"])
 
 
@@ -165,16 +165,16 @@ def solve_ungated():
 
 
 def _solve_ungated_once():
-    entries, _duplicates = solve_prices.load_production()
+    entries, _duplicates = engine_seam.load_production()
     _tree, prices_json, _nodes, _wages, _goods = simulator.load()
-    wages = solve_prices.wage_ratios_by_trade(prices_json)
-    producers = solve_prices.build_producers_index(entries)
+    wages = solve_prices_core.wage_ratios_by_trade(prices_json)
+    producers = solve_prices_core.build_producers_index(entries)
     rent = rent_standin.rent_hours_per_kg_by_ore_material(entries, wages)
-    resolvable = solve_prices.compute_resolvable_materials(
+    resolvable = solve_prices_core.compute_resolvable_materials(
         entries, producers, rent_hours_per_kg_by_material=rent)
-    prices, iterations, residual, chosen = solve_prices.solve(
+    prices, iterations, residual, chosen = solve_prices_core.solve(
         entries, producers, resolvable, wages, rent_hours_per_kg_by_material=rent)
-    by_mass = solve_prices.minor_joint_byproducts_split_by_mass(
+    by_mass = solve_prices_core.minor_joint_byproducts_split_by_mass(
         entries, chosen, prices, wages, rent_hours_per_kg_by_material=rent)
     return SolvedRun(prices, by_mass, iterations, residual, chosen, entries)
 
@@ -198,19 +198,19 @@ class RealDataJointSmeltTests(unittest.TestCase):
         cls.prices = cls.solved.prices
 
     def test_solver_converges_without_oscillating(self):
-        self.assertLess(self.solved.iterations, solve_prices.MAXIMUM_ITERATIONS)
-        self.assertLess(self.solved.residual, solve_prices.CONVERGENCE_TOLERANCE)
+        self.assertLess(self.solved.iterations, solve_prices_core.MAXIMUM_ITERATIONS)
+        self.assertLess(self.solved.residual, solve_prices_core.CONVERGENCE_TOLERANCE)
 
     def test_every_joint_recipe_recovers_its_batch_cost_exactly(self):
         _tree, prices_json, _nodes, _wages, _goods = simulator.load()
-        wages = solve_prices.wage_ratios_by_trade(prices_json)
+        wages = solve_prices_core.wage_ratios_by_trade(prices_json)
         rent = rent_standin.rent_hours_per_kg_by_ore_material(self.solved.entries, wages)
         checked = 0
         for material, recipe_id in self.solved.chosen.items():
             entry = self.solved.entries[recipe_id]
             if len(entry.get("outputs") or {}) < 2 or material not in entry["outputs"]:
                 continue
-            costed = solve_prices.recipe_cost_and_allocation(
+            costed = solve_prices_core.recipe_cost_and_allocation(
                 recipe_id, entry, self.prices, wages, rent_hours_per_kg_by_material=rent)
             if costed is None:
                 continue

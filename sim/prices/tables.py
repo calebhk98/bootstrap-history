@@ -15,7 +15,7 @@ from typing import Dict, Optional, Tuple
 
 from sim.assembly.api import Part
 
-from . import engine_seam, rules
+from . import rules
 from . import prices as price_solver
 
 
@@ -52,14 +52,14 @@ class Tables(Part):
             return cached[2]
         granted = granted_now
         civ = self.needs.civilisation()
-        civilisation = dict(civilization_id=civ.get("id"), civilization=civ, farmed_hectares=farmed, interest_rate=rate)
+        document = self.parts.calculated_views.opening_schedule(civ).document()
         incumbent = self._incumbent_table_cache
         if incumbent is None or incumbent[0] != (granted, farmed, rate):
             incumbent = self._incumbent_table_cache = (
-                (granted, farmed, rate), *engine_seam.calculated_goods_table(granted, **civilisation))
+                (granted, farmed, rate), *price_solver.goods_in_hours(granted, document, civ, farmed, rate))
         hours, basis = incumbent[1], incumbent[2]
         if in_use != granted:
-            run_hours, run_basis = engine_seam.calculated_goods_table(in_use, **civilisation)
+            run_hours, run_basis = price_solver.goods_in_hours(in_use, document, civ, farmed, rate)
             tables = rules.merge_by_reach(hours, basis, run_hours, run_basis)
         else:
             tables = (dict(hours), dict(basis))

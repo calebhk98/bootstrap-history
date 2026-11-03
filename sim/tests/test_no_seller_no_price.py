@@ -13,7 +13,7 @@ import types
 import unittest
 from unittest import mock
 
-from sim.prices import prices as engine_prices, solve_prices
+from sim.prices import prices as engine_prices, solve_prices_core
 from sim.markets.goods_offers import GoodsOffers, HOME_SELLER
 from sim.projects.api import START_CHECKS
 from sim.tests import materials_stand_in
@@ -174,21 +174,21 @@ class AlternativeEnergyCycleTests(unittest.TestCase):
     }
 
     def test_the_loop_resolves_and_the_solve_converges_well_inside_the_iteration_limit(self):
-        producers = solve_prices.build_producers_index(self.ENTRIES)
-        resolvable = solve_prices.compute_resolvable_materials(self.ENTRIES, producers)
+        producers = solve_prices_core.build_producers_index(self.ENTRIES)
+        resolvable = solve_prices_core.compute_resolvable_materials(self.ENTRIES, producers)
         self.assertIn("photovoltaic_panel_m2", resolvable)
-        prices, iterations, residual, chosen = solve_prices.solve(
+        prices, iterations, residual, chosen = solve_prices_core.solve(
             self.ENTRIES, producers, resolvable, {"labourer": 1.0}, interest_rate=0.05)
-        self.assertLess(residual, solve_prices.CONVERGENCE_TOLERANCE)
-        self.assertLess(iterations, solve_prices.MAXIMUM_ITERATIONS // 10)
+        self.assertLess(residual, solve_prices_core.CONVERGENCE_TOLERANCE)
+        self.assertLess(iterations, solve_prices_core.MAXIMUM_ITERATIONS // 10)
         self.assertEqual(chosen["electricity_generated_mj"], "photovoltaic")
         self.assertTrue(all(math.isfinite(price) and price > 0.0 for price in prices.values()))
 
     def test_without_the_panel_technique_the_dynamo_is_chosen(self):
         entries = {key: entry for key, entry in self.ENTRIES.items() if key != "photovoltaic"}
-        producers = solve_prices.build_producers_index(entries)
-        resolvable = solve_prices.compute_resolvable_materials(entries, producers)
-        _prices, _iterations, _residual, chosen = solve_prices.solve(
+        producers = solve_prices_core.build_producers_index(entries)
+        resolvable = solve_prices_core.compute_resolvable_materials(entries, producers)
+        _prices, _iterations, _residual, chosen = solve_prices_core.solve(
             entries, producers, resolvable, {"labourer": 1.0}, interest_rate=0.05)
         self.assertEqual(chosen["electricity_generated_mj"], "dynamo")
 

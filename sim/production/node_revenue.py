@@ -108,14 +108,14 @@ def for_civilisation(nodes: Mapping[str, dict], civ: Mapping[str, Any], schedule
     """Copies of `nodes` with revenue and upkeep derived at this civilisation's prices and wages, in its
     coin, for the techniques held (default: its starting techniques). Cached on what the figures depend
     on: the civilisation, the gate technologies held, its wages and the nodes."""
-    from sim.prices.api import prices as price_solver, solve_prices
+    from sim.prices.api import prices as price_solver, solve_prices_core
     civilization_id = civ["id"]
     held = list(civ["starting_techs"] if held_techs is None else held_techs)
     held_gates = frozenset(price_solver.all_gate_nodes()) & frozenset(held)
     document = schedule.document()
     rate = schedule.money_per_labour_hour
     key = (civilization_id, held_gates,
-           tuple(sorted(solve_prices.wage_ratios_by_trade(document).items())), rate, _what_nodes_state(nodes),
+           tuple(sorted(solve_prices_core.wage_ratios_by_trade(document).items())), rate, _what_nodes_state(nodes),
            float(civ["starting_interest_rate"]), price_solver.territory_fingerprint(civ))
     cached = _DERIVED_FOR_CIVILISATION.get(key)
     if cached is None:

@@ -14,8 +14,6 @@ from typing import Any, Callable, Dict, FrozenSet, Iterable, Mapping, Optional, 
 from sim.prices import disposal_cost, solve_prices_core as core, solve_prices_round
 from sim.prices import prices as price_engine
 
-LAND_MATERIAL = "hectare_land"
-
 Techniques = Union[FrozenSet[str], Iterable[str], str]
 
 
@@ -42,7 +40,7 @@ class _Prices:
 
     def get(self, material: str, default: Optional[float] = None) -> Optional[float]:
         price = self.input_price_of(material)
-        if price is None and material == LAND_MATERIAL:
+        if price is None and material == core.LAND_MATERIAL:
             price = self.rent_of(material) if self.rent_of is not None else 0.0
         return default if price is None else price
 

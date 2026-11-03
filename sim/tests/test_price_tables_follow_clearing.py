@@ -8,7 +8,6 @@ from unittest import mock
 
 from sim.prices import prices
 
-from sim.engine import data
 from sim.tests import prices_stand_in
 
 GRANTED = frozenset({"fire"})
@@ -24,11 +23,11 @@ def module_with(hectares):
 def farmed_hectares_given_to_the_solver(hectares):
     asked = []
 
-    def solver(granted, **keywords):
-        asked.append(keywords["farmed_hectares"])
+    def solver(granted, document, civilization, farmed_hectares, interest_rate):
+        asked.append(farmed_hectares)
         return {"hectare_land": 1.0}, {"hectare_land": "derived"}
 
-    with mock.patch.object(data, "calculated_goods_table", solver):
+    with mock.patch.object(prices, "goods_in_hours", solver):
         module_with(hectares).price_tables()
     return asked
 

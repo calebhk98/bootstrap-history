@@ -1,7 +1,7 @@
 """Land cost in the price solver's recipe costing, on synthetic entries (no data, no game)."""
 import unittest
 
-from sim.prices import solve_prices
+from sim.prices import solve_prices_core
 
 QUICK_TOPIC = True
 
@@ -16,7 +16,7 @@ class LandCostIsZeroByDefaultTests(unittest.TestCase):
     def test_no_land_hectare_years_means_no_land_cost(self):
         entry = {"outputs": {"thing_kg": 1000.0}, "inputs": {},
                 "labour_hours": {"labourer": 10.0}}
-        total_cost, _prices = solve_prices.recipe_cost_and_allocation(
+        total_cost, _prices = solve_prices_core.recipe_cost_and_allocation(
             "thing_kg", entry, {}, {"labourer": 1.0})
         self.assertEqual(total_cost, 10.0)
 
@@ -27,7 +27,7 @@ class LandCostIsZeroByDefaultTests(unittest.TestCase):
         # stated-but-zero land_hectare_years must not return None - the
         # `if land_hectare_years:` guard in recipe_cost_and_allocation exists
         # exactly for this, mirroring rent's own "0.0 rent" convention.
-        total_cost, _prices = solve_prices.recipe_cost_and_allocation(
+        total_cost, _prices = solve_prices_core.recipe_cost_and_allocation(
             "thing_kg", entry, {}, {"labourer": 1.0})
         self.assertEqual(total_cost, 10.0)
 
@@ -38,7 +38,7 @@ class LandCostIsZeroByDefaultTests(unittest.TestCase):
         # silently treat the missing price as zero.
         entry = {"outputs": {"crop_kg": 500.0}, "inputs": {},
                 "labour_hours": {"labourer": 10.0}, "land_hectare_years": 4.0}
-        result = solve_prices.recipe_cost_and_allocation(
+        result = solve_prices_core.recipe_cost_and_allocation(
             "crop_kg", entry, {}, {"labourer": 1.0})
         self.assertIsNone(result)
 
@@ -51,7 +51,7 @@ class LandCostIsAddedCorrectlyTests(unittest.TestCase):
     def test_land_cost_is_land_hectare_years_times_hectare_lands_price(self):
         entry = {"outputs": {"crop_kg": 500.0}, "inputs": {},
                 "labour_hours": {"labourer": 10.0}, "land_hectare_years": 4.0}
-        total_cost, output_prices = solve_prices.recipe_cost_and_allocation(
+        total_cost, output_prices = solve_prices_core.recipe_cost_and_allocation(
             "crop_kg", entry, {"hectare_land": 2.5}, {"labourer": 1.0})
         # 10 h labour + 4 hectare-yrs * 2.5 h/hectare-yr = 20 h for the batch.
         self.assertEqual(total_cost, 10.0 + 4.0 * 2.5)
@@ -64,7 +64,7 @@ class LandCostIsAddedCorrectlyTests(unittest.TestCase):
         # recipe's own `basis`, exactly like labour_hours already is.
         entry = {"outputs": {"crop_kg": 1000.0}, "inputs": {},
                 "labour_hours": {"labourer": 10.0}, "land_hectare_years": 4.0}
-        total_cost, _prices = solve_prices.recipe_cost_and_allocation(
+        total_cost, _prices = solve_prices_core.recipe_cost_and_allocation(
             "crop_kg", entry, {"hectare_land": 2.5}, {"labourer": 1.0})
         self.assertEqual(total_cost, 10.0 + 4.0 * 2.5)
 
@@ -75,7 +75,7 @@ class LandCostIsAddedCorrectlyTests(unittest.TestCase):
         # exclusive).
         entry = {"outputs": {"odd_kg": 100.0}, "inputs": {},
                 "labour_hours": {"labourer": 5.0}, "land_hectare_years": 1.0}
-        total_cost, _prices = solve_prices.recipe_cost_and_allocation(
+        total_cost, _prices = solve_prices_core.recipe_cost_and_allocation(
             "odd_kg", entry, {"hectare_land": 3.0}, {"labourer": 1.0},
             rent_hours_per_kg_by_material={"odd_kg": 0.1})
         # 5 h labour + 1.0 * 3.0 land + 0.1 h/kg * 100 kg rent = 18 h.
@@ -91,19 +91,19 @@ class DependencyAndAnchorTests(unittest.TestCase):
 
     def test_dependency_materials_includes_hectare_land_when_stated(self):
         entry = {"inputs": {"seed_kg": 1.0}, "land_hectare_years": 4.0}
-        self.assertEqual(solve_prices._dependency_materials(entry),
+        self.assertEqual(solve_prices_core._dependency_materials(entry),
                         {"seed_kg", "hectare_land"})
 
     def test_dependency_materials_omits_hectare_land_when_absent_or_zero(self):
-        self.assertEqual(solve_prices._dependency_materials({"inputs": {}}), set())
+        self.assertEqual(solve_prices_core._dependency_materials({"inputs": {}}), set())
         self.assertEqual(
-            solve_prices._dependency_materials({"inputs": {}, "land_hectare_years": 0.0}),
+            solve_prices_core._dependency_materials({"inputs": {}, "land_hectare_years": 0.0}),
             set())
 
     def test_has_external_anchor_true_when_land_is_resolved(self):
         entry = {"land_hectare_years": 4.0}
-        self.assertTrue(solve_prices._has_external_anchor(entry, {"hectare_land"}))
+        self.assertTrue(solve_prices_core._has_external_anchor(entry, {"hectare_land"}))
 
     def test_has_external_anchor_false_when_land_is_not_yet_resolved(self):
         entry = {"land_hectare_years": 4.0}
-        self.assertFalse(solve_prices._has_external_anchor(entry, set()))
+        self.assertFalse(solve_prices_core._has_external_anchor(entry, set()))

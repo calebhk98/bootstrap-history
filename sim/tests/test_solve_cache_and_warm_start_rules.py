@@ -67,7 +67,10 @@ STARTING_RATE = 0.05
 CATALOGUE = {}
 
 
-def solve_json(production_entries, gate_nodes_held, civilization_id, document_ratios, admitted, interest_rate, civilization,
+CIVILISATION = {"id": "stand_in", "starting_interest_rate": STARTING_RATE, "home_regions": []}
+
+
+def solve_json(production_entries, gate_nodes_held, document_ratios, civilization, admitted, interest_rate,
               farmed_hectares, in_game, initial_prices, rent):
     solve_json.calls.append({"rate": interest_rate, "initial": initial_prices, "in_game": in_game})
     return {"prices_in_labour_hours": {"iron": 10.0 * interest_rate + (1.0 if initial_prices else 0.0)},
@@ -80,10 +83,9 @@ def price_at(rate, entries=CATALOGUE):
     prices.reset_caches_for_tests()
     with mock.patch.object(prices, "_DEFAULT_PRODUCTION_ENTRIES", CATALOGUE), \
             mock.patch.object(prices, "_solve_to_json", side_effect=solve_json), \
-            mock.patch.object(prices.solve_prices, "load_starting_interest_rate", return_value=STARTING_RATE), \
             mock.patch.object(prices.solve_cache, "solve_key", return_value="key"), \
             mock.patch.object(prices.solve_cache, "cached_json", side_effect=lambda key, compute: compute()):
-        result = prices.solved_prices_at_wages([], {"labourer": 1.0}, entries, civilization_id="rome_100ad", interest_rate=rate)
+        result = prices.solved_prices_at_wages([], {"labourer": 1.0}, entries, civilization=CIVILISATION, interest_rate=rate)
     prices.reset_caches_for_tests()
     return result, solve_json.calls
 

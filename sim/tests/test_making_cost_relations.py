@@ -8,7 +8,7 @@ QUICK_TOPIC = True
 
 import unittest
 
-from sim.prices import prices as price_engine
+from sim.prices import prices as price_engine, solve_prices_core
 from sim.prices.long_run_costs import long_run_costs
 from sim.prices.making_cost import cost_of_making
 
@@ -183,7 +183,7 @@ class RealDataTests(unittest.TestCase):
         cls.civilization = load_civ("rome_100ad")
         cls.held = frozenset(cls.civilization["starting_techs"])
         _tree, cls.wage_document, _nodes, _wages, _goods = simulator.load()
-        ratios = price_engine.solve_prices.wage_ratios_by_trade(cls.wage_document)
+        ratios = solve_prices_core.wage_ratios_by_trade(cls.wage_document)
         cls.wage_of = staticmethod(lambda trade: ratios.get(trade, 1.0))
         cls.rate = float(cls.civilization["starting_interest_rate"])
         cls.table = long_run_costs(cls.held, cls.wage_of, cls.rate, None, civilization=cls.civilization)

@@ -5,7 +5,7 @@ only the caching and wiring are called."""
 from types import SimpleNamespace
 from unittest import mock
 
-from sim.prices import prices as price_solver, solve_prices
+from sim.prices import prices as price_solver, solve_prices_core
 
 from sim.engine import node_rederive
 from sim.production import node_revenue
@@ -52,7 +52,7 @@ with mock.patch.dict(node_revenue._DERIVED_FOR_CIVILISATION, clear=True), \
         mock.patch.object(node_revenue, "derivation_calls", []) as calls, \
         mock.patch.object(price_solver, "all_gate_nodes", return_value={GATE, OTHER_GATE}), \
         mock.patch.object(price_solver, "territory_fingerprint", return_value="land"), \
-        mock.patch.object(solve_prices, "wage_ratios_by_trade", return_value={"labourer": 1.0}), \
+        mock.patch.object(solve_prices_core, "wage_ratios_by_trade", return_value={"labourer": 1.0}), \
         mock.patch.object(price_solver, "priced_goods_table", return_value=({"grain": 1.0}, {})) as priced, \
         mock.patch.object(node_revenue.energy_prices, "graded", return_value=None), \
         mock.patch.object(node_revenue, "apply_revenue", side_effect=_stamp):
