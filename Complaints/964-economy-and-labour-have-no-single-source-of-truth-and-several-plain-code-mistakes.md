@@ -219,3 +219,8 @@ Left, for the next run to settle:
   for its declared names only. `Actor(Reviewable, Borrower)` keeps two overridable-default bases.
 - Two runtime breaks this round were found only by reading (a reader called methods its object lacked); a static
   check of `self.<part>.<method>()` against the part's class would catch these without a run.
+- `python3 sim/simulator.py spin-up-trace --civ rome_100ad --years 20` on commit 70a6d6b printed nothing and was
+  stopped by a two-hour timeout (exit 124) while building the opening from cold (the port split changed the spin-up
+  cache keys). Slow or stuck is not known; the next run should dump the stack periodically
+  (`python3 -X faulthandler -c "import faulthandler,sys; faulthandler.dump_traceback_later(300, repeat=True); ..."` or
+  an equivalent wrapper) to show where the opening spends its time.
