@@ -1,6 +1,6 @@
 # Sim decomposition, revisited
 
-Note: this is a record of past analysis. Many files it names have since moved or gone: `sim/engine/economy*.py` and `solve_prices.py` live in `sim/markets/`, `sim/finance/` and `sim/prices/`, `demographic_recovery.py` is `sim/demography/recovery.py`, `foreign_economies.py` is `sim/content/foreign_economies.py`, and `sim/world/farm_year.py`, `sim/agents/route_dues_pay.py` and `sim/agents/household.py` are deleted. The mixins it counts are gone (`Sim` has no base classes); the current shape is `sim/ARCHITECTURE.md`.
+Note: this is a record of past analysis. Many files it names have since moved or gone: `sim/engine/economy*.py` and `solve_prices.py` live in `sim/markets/`, `sim/finance/` and `sim/prices/`, `demographic_recovery.py` is `sim/demography/recovery.py`, `foreign_economies.py` is `sim/content/foreign_economies.py`, and `sim/world/farm_year.py`, `sim/agents/route_dues_pay.py` and `sim/agents/household.py` are deleted. `sim/engine/agents_port*.py` is the actors module (`sim/actors/`). The mixins it counts are gone (`Sim` has no base classes); the current shape is `sim/ARCHITECTURE.md`.
 
 **Status:** analysis, requested by the stakeholder specifically to reopen a
 question `sim/ARCHITECTURE.md` and `CLAUDE.md` both call settled. Reopening

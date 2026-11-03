@@ -1,5 +1,7 @@
 # Plan: per-actor state, then partner countries as economies
 
+Note: the stage lists name engine files as they were when the plan was written. The engine's `agents_port*.py` is now the actors module (`sim/actors/`), `fog.py` is the knowledge module (`sim/knowledge/`), `society_diffusion.py`, `society_adoption.py` and `society_disclosure.py` are the diffusion module (`sim/diffusion/`), `goods_market_api.py` and most of `economy_port*.py` are in `sim/markets/` and `sim/economy/`, and `core_properties.py` is gone. Re-find a name with `grep` before relying on where it lives.
+
 **Status:** built; the stage statuses below say what each stage holds and what was not run. Written 2026-10-06 as a design; the end rule for several seats is the owner's decision of 2026-10-09 (a founder's death ends that seat only).
 **Covers:** Complaint 382 step 3 (per-actor household, project and knowledge state, so a second player can exist), Complaint 382 step 4 and Complaint 407 (partner countries as economies with their own labour market and output).
 **Comes after:** 382 step 1 (every money posting names a counterparty), 382 step 2 (households as cohort actors) and 428 (the labour core sets the agent economy's wages). Those are in flight; this plan says where it must wait for each.

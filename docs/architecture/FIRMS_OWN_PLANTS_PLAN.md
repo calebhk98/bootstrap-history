@@ -1,5 +1,7 @@
 # Firms own plants: one business object for every owner
 
+Note: file and function names in this plan are those of the time it was written. The engine's `agents_port*.py` is now the actors module (`sim/actors/`: `concern_takings`, `entry_gross` and `ramp` are in `world_concerns.py`), `economy_port*` is mostly `sim/markets/port*.py`, and `Sim` has no mixins. Re-find a name with `grep` before relying on where it lives.
+
 **Status:** plan, nothing built (2026-10-14). Answers `Complaints/510-most-tree-nodes-charge-upkeep-and-make-nothing.md`
 and `Complaints/514-the-founders-ventures-and-firms-concerns-are-two-implementations.md`. Sequel to
 `ONE_PRICE_OWNER_PLAN.md` (507), whose stage order this plan depends on (section 5).
