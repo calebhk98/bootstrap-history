@@ -8,6 +8,7 @@ the held-skill and candidate-set caches that `revenue` and `upkeep` share.
 
 The caches are the module's own per seat (`memos`); the engine's household hooks drop them by sending the commands in commands.py.
 Needs: the views of READS_BY_OWNER in module_spec.py."""
+from sim.assembly.api import Part
 from sim.world import plant_figures
 
 from sim.workforce.api import SetWageHoursSold
@@ -20,7 +21,7 @@ from .constants import (RAMP_SHARE_AT_FULL_DEPTH, REVENUE_CEILING_LABOUR_HOURS_P
 from .revenue_ledger import assemble_ledger
 
 
-class Revenue:
+class Revenue(Part):
 
 	def venture_ramp(self, node_id):
 		"""How much of its full takings a concern is making, 0..1.
@@ -35,7 +36,7 @@ class Revenue:
 			started = self.needs.done_year().get(node_id, year)
 		age = year - started
 		# An established industry (anyone's worker-years running it) finds its custom sooner.
-		return plant_figures.ramp(age, self.needs.game_setting["revenue_ramp_years"], self.industry_depth(node_id),
+		return plant_figures.ramp(age, self.needs.game_setting["revenue_ramp_years"], self.parts.depth.industry_depth(node_id),
 		                          RAMP_SHARE_AT_FULL_DEPTH)
 
 	def revenue_capacity(self):
@@ -83,7 +84,7 @@ class Revenue:
 			needs.state_funding(),
 			needs.home_price_level(),
 		)
-		memos = self.memos()
+		memos = self.parts.views.memos()
 		if memos.revenue_key != key:
 			memos.revenue_value = self._compute_revenue_uncached()
 			memos.revenue_key = key
@@ -93,7 +94,7 @@ class Revenue:
 		"""The part of `revenue` the engine credits as an estimate: everything but the concerns the clearing pays
 		(book_sales.py). The year's ledger credits this; those concerns are credited by the clearing."""
 		self.revenue()
-		return self.memos().revenue_value[0]
+		return self.parts.views.memos().revenue_value[0]
 
 	def concern_revenue(self, node_id):
 		"""What one open concern earns in a year before the output factor: the figure the screens quote."""
@@ -120,7 +121,7 @@ class Revenue:
 			node = nodes[node_id]
 			# a held skill earns through the founder's own hours (founder_wage_income), not through the node
 			if node["rev"] and not practice:
-				if self.concern_sells_on_book(node_id):
+				if self.parts.book_sales.concern_sells_on_book(node_id):
 					book_forecast += self.concern_revenue(node_id)    # last year's sale record, as the clearing paid it
 				else:
 					total_revenue += self.concern_revenue(node_id)
@@ -130,7 +131,7 @@ class Revenue:
 		total_revenue += self.workshop_output()
 		total_revenue += self.founder_wage_income()
 		gross = total_revenue
-		ceiling = self.priced(REVENUE_CEILING_LABOUR_HOURS_PER_POP_SCALE) * needs.pop_scale() \
+		ceiling = self.parts.concern_market.priced(REVENUE_CEILING_LABOUR_HOURS_PER_POP_SCALE) * needs.pop_scale() \
 			* needs.real_output_per_head() * needs.price_index()
 		gross = rules.saturated_revenue(gross, ceiling)
 		return (gross + needs.state_funding()) * needs.output_factor(), book_forecast * needs.output_factor()
@@ -163,7 +164,7 @@ class Revenue:
 		would drift in its last bits, since float addition is not associative and the order nodes enter or leave is not the
 		order `done_in_order` walks them in.
 		"""
-		memos = self.memos()
+		memos = self.parts.views.memos()
 		cached = memos.capability_factor
 		if cached is not None:
 			return cached
@@ -171,7 +172,7 @@ class Revenue:
 		nodes = self.needs.tree_nodes()
 		granted = self.needs.techniques_granted()
 		operating = self.needs.operating()
-		for node_id in self.done_in_order():
+		for node_id in self.parts.views.done_in_order():
 			if node_id in granted or node_id in operating:
 				continue
 			node = nodes[node_id]
@@ -190,7 +191,7 @@ class Revenue:
 		nodes = needs.tree_nodes()
 		granted = needs.techniques_granted()
 		operating = needs.operating()
-		for node_id in self.done_in_order():
+		for node_id in self.parts.views.done_in_order():
 			if node_id in granted or node_id not in operating:
 				continue
 			if not nodes[node_id]["rev"]:
@@ -268,7 +269,7 @@ class Revenue:
 		"""The granted skills you actually practise, as a set, computed once: the answer never changes unless the granted
 		set does, which happens at setup and never again. (`revenue` once called `_practisable` per done node per call.)"""
 		granted = self.needs.techniques_granted()
-		memos = self.memos()
+		memos = self.parts.views.memos()
 		cache = memos.practice
 		if cache is None or cache[0] != len(granted):
 			cache = (len(granted), frozenset(node_id for node_id in granted if self._practisable(node_id)))
@@ -286,10 +287,10 @@ class Revenue:
 		Strong references and `is`, not bare id() integers: a freed object's address is handed straight to the next same-sized
 		allocation, so two different objects compare equal by id() often enough to replay a stale answer.
 		"""
-		seq = self.done_in_order()
+		seq = self.parts.views.done_in_order()
 		practice_set = self._practice_set()
 		operating_version = self.needs.operating_version()
-		memos = self.memos()
+		memos = self.parts.views.memos()
 		cached = memos.candidates
 		if (cached is not None and cached[0] is seq
 		        and cached[1] is practice_set and cached[2] == operating_version):

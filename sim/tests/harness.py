@@ -267,7 +267,7 @@ def ready_for_entry(game, money=None):
 
 def economy_port(game):
     """The markets module's port over the agent economy, for tests that reach into it."""
-    return game.assembly.modules["markets"].economy
+    return game.assembly.modules["markets"].parts.market_objects.economy
 
 
 def noted_sale_tonnes(game, material, seller=None):

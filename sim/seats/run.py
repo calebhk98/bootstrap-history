@@ -2,6 +2,7 @@
 from typing import Any, Dict, List, Optional
 
 from sim.assembly.api import AddSeat
+from sim.assembly.api import Part
 from sim.ledger.api import OpenPurse
 from sim.projects.api import WatchActive
 from sim.refusal import Refusal
@@ -13,7 +14,7 @@ from .commands import JoinCastSeats, JoinSeat, SetSeatHolder
 from .state import COUNTRY_SEAT, SeatsSeat
 
 
-class Run:
+class Run(Part):
 
     def _slots(self) -> Dict[str, SeatsSeat]:
         """This module's state for every seat, in joining order."""

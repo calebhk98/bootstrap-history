@@ -5,6 +5,7 @@ Nothing here reads the price of what the mine raises; a material no deposit data
 itself."""
 from typing import Any, Dict, Optional, Tuple
 
+from sim.assembly.api import Part
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 from sim.world import deposits as deposit_model, mine_technique
 
@@ -15,10 +16,14 @@ from .constants import (GENERIC_MINE_DEPTH_CLASS, GENERIC_MINE_HARDNESS_CLASS, M
 from .labour_profile import mine_labour_hours_per_tonne
 
 
-class MineCosts:
+class MineCosts(Part):
     """Needs: deposit_catalogue, wage, material_price, price_index, money_per_labour_hour, revenue_estimate, effect_best,
     effect_terms, running, running_stamp, inspection_reach, mineral_scale, acting_balance, purchase_budget, affordable_units,
     afford_means."""
+
+    def __init__(self, module):
+        super().__init__(module)
+        self._works_effects = None       # (running stamp, effects of the running mining techniques) while what runs is unchanged
 
     def works_materials(self):
         return self.needs.deposit_catalogue()["works_priced_materials"]
@@ -87,7 +92,7 @@ class MineCosts:
     def operating_cost_of(self, working: Dict[str, Any]) -> float:
         """What this working costs to run this year, whether or not its output is used."""
         return (working["capacity"] * self.mine_opex(working["material"]) * self.needs.price_index()
-                * self.cost_scale_of(working))
+                * self.parts.workings.cost_scale_of(working))
 
     def mine_operating_cost(self) -> float:
         """The workings' running costs together, charged every year they stand."""
@@ -118,14 +123,14 @@ class MineCosts:
         if capex is None:
             return None
         tonnes = max(0.0, float(tonnes_per_year))
-        scale = self.cost_scale_for_material(material)
+        scale = self.parts.workings.cost_scale_for_material(material)
         price_index = self.needs.price_index()
         sink = tonnes * capex * price_index * scale
         opex = self.operating_cost_new(material, tonnes)
         ceiling = self.mine_land_ceiling(material)
-        room = max(0.0, ceiling - self.mine_capacity().get(material, 0.0) - self.seat.mine_pending.get(material, 0.0))
-        depletion = self.mine_depletion(material)
-        deposit_room = self.mine_room_in_deposits(material)
+        room = max(0.0, ceiling - self.parts.workings.mine_capacity().get(material, 0.0) - self.seat.mine_pending.get(material, 0.0))
+        depletion = self.parts.workings.mine_depletion(material)
+        deposit_room = self.parts.deposits.mine_room_in_deposits(material)
         if deposit_room is not None:
             room = min(room, deposit_room)
         note = ("The yearly cost is charged whether or not you use the "
@@ -148,6 +153,6 @@ class MineCosts:
                 "room_left_before_geology_stops_you": round(room, 1),
                 "deposits_you_have_found": [
                     {"id": row["id"], "tile": row["tile_id"], "room_t_per_year": round(row["room_tonnes_per_year"], 1),
-                     "left_t": round(row["remaining_tonnes"])} for row in self.found_deposits(material)],
+                     "left_t": round(row["remaining_tonnes"])} for row in self.parts.deposits.found_deposits(material)],
                 "current_yield_is_this_fraction_of_day_one": round(depletion, 3),
                 "note": note}

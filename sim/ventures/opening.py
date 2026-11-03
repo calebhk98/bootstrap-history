@@ -3,6 +3,7 @@
 The automatic counterparts (closing what staffing can no longer cover, reopening it, opening what plainly pays) are the
 projects module's."""
 from sim.agents.api import edges
+from sim.assembly.api import Part
 from sim.ledger.api import PayEdge
 from sim.reporting.api import NoteConcernChange
 from sim.refusal import LogLine, Refusal
@@ -11,7 +12,7 @@ from .channels import INSTITUTION_UNITS_CHANGES
 from .net_loss import flags_net_loss
 
 
-class Opening:
+class Opening(Part):
 	def open_venture(self, node_id, pay=True, units=None):
 		"""Start actually running something you have worked out how to do.
 
@@ -48,7 +49,7 @@ class Opening:
 				return self._expand_institution(node_id, float(units), pay)
 			return False, "you are already running that"
 		scalable = node_id in scalable_institutions
-		fee, unit_count = self.opening_fee(node_id, units)
+		fee, unit_count = self.parts.quotes.opening_fee(node_id, units)
 		refusal = needs.open_refusal(node_id, unit_count)
 		if refusal:
 			return False, refusal
@@ -71,8 +72,8 @@ class Opening:
 			self.bump_seat(INSTITUTION_UNITS_CHANGES)
 		node = needs.tree_nodes()[node_id]
 		needs.send(NoteConcernChange("opening", node_id, "opened", node["rev"], node["up"]))
-		earns = self.venture_real_earnings(node_id, unit_count, fully_ramped=True)
-		upkeep = self.venture_upkeep_quote(node_id, unit_count)
+		earns = self.parts.quotes.venture_real_earnings(node_id, unit_count, fully_ramped=True)
+		upkeep = self.parts.quotes.venture_upkeep_quote(node_id, unit_count)
 		costs = upkeep["now"]
 		# A reopened concern keeps its original start, so it only mentions a ramp it is still climbing.
 		still_ramping = needs.venture_ramp[node_id] < 1.0
@@ -115,8 +116,8 @@ class Opening:
 			               % (node_id, ceiling))
 		add_units = min(add_units, room)
 		node = needs.tree_nodes()[node_id]
-		scholars_free, craftsmen_free = self.venture_staff_free()
-		need_scholars, need_craftsmen = self.venture_hands(node_id)
+		scholars_free, craftsmen_free = self.parts.crew.venture_staff_free()
+		need_scholars, need_craftsmen = self.parts.crew.venture_hands(node_id)
 		need_scholars, need_craftsmen = need_scholars * add_units, need_craftsmen * add_units
 		if need_scholars > scholars_free + 0.01 or need_craftsmen > craftsmen_free + 0.01:
 			return False, Refusal("supervisors_missing", "nobody free to keep an eye on the extra %.2f units "

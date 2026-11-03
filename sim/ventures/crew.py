@@ -2,12 +2,13 @@
 import collections
 
 from sim.agents.api import business_crew_rule
+from sim.assembly.api import Part
 from sim.projects.api import constants as project_constants
 
 from . import constants
 
 
-class Crew:
+class Crew(Part):
 	def crew_figures(self, node_id):
 		"""The plant's own data for the one crew rule (sim/agents/business_crew_rule.py)."""
 		needs = self.needs
@@ -39,7 +40,7 @@ class Crew:
 		needs = self.needs
 		nodes = needs.tree_nodes()
 		used = collections.defaultdict(float)
-		for node_id in sorted(self.operating()):
+		for node_id in sorted(self.parts.business.operating()):
 			if node_id == excluding or node_id not in nodes:
 				continue
 			trade, fte = self.venture_foreman(node_id)
@@ -61,7 +62,7 @@ class Crew:
 		close."""
 		nodes = self.needs.tree_nodes()
 		rows = []
-		for node_id in sorted(self.operating()):
+		for node_id in sorted(self.parts.business.operating()):
 			if node_id not in nodes:
 				continue
 			scholars, craftsmen = self.venture_hands(node_id)
@@ -75,7 +76,7 @@ class Crew:
 		# SORTED: this sums floats over a set and the total gates `open` with a hard comparison, so the order must be fixed
 		nodes = self.needs.tree_nodes()
 		scholars_used = craftsmen_used = 0.0
-		for node_id in sorted(self.operating()):
+		for node_id in sorted(self.parts.business.operating()):
 			if node_id not in nodes:
 				continue
 			scholars, craftsmen = self.venture_hands(node_id)

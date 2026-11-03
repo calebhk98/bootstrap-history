@@ -1,13 +1,14 @@
 """One seat hearing of what another has built (the rule is sight_rules.py)."""
 from typing import Set
 
+from sim.assembly.api import Part
 from sim.geography.api import distance_between_places
 from sim.knowledge.api import RevealNodes
 
 from .sight_rules import nodes_heard_of
 
 
-class Sight:
+class Sight(Part):
 
     def hear_of_other_seats(self, seat_id: str = None) -> Set[str]:
         """The acting seat reveals what other seats have built that it can see enough of; returns what it heard of."""

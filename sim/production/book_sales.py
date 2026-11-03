@@ -4,24 +4,25 @@ A concern whose goods the economy trades is paid what the year's clearing pays f
 (sim/markets/port_year.py `_settle_seats`), like a firm's plant; the engine's estimate (`revenue`) covers only the rest.
 The offer and the inputs bought are one rule here, read by the clearing, the estimate and the forecast alike.
 Needs: the views of READS_BY_OWNER in module_spec.py."""
+from sim.assembly.api import Part
 from sim.prices.api import rules as price_rules
 
 from . import concern_sales
 
 
-class BookSales:
+class BookSales(Part):
 
 	def concern_book_scale(self, node_id):
 		"""The share of the concern's full-staffing year it runs now: its ramp, size and the hazard and war factor."""
-		units = self.institution_units(node_id) if node_id in self.needs.capability_sets()[1] else 1.0
-		return self.venture_ramp(node_id) * units * self.needs.output_factor()
+		units = self.parts.capability.institution_units(node_id) if node_id in self.needs.capability_sets()[1] else 1.0
+		return self.parts.revenue.venture_ramp(node_id) * units * self.needs.output_factor()
 
 	def concern_book_offer(self, node_id):
 		"""{material: units} the concern puts in this year's clearing; empty for a concern the engine's estimate covers
 		(not running as the acting seat's own, makes nothing from output, or nothing it makes is traded)."""
-		if node_id not in self.needs.operating() or node_id in self.needs.techniques_granted() or not self.is_venture(node_id):
+		if node_id not in self.needs.operating() or node_id in self.needs.techniques_granted() or not self.parts.capability.is_venture(node_id):
 			return {}
-		baskets = self.concern_baskets_now(node_id)
+		baskets = self.parts.volume.concern_baskets_now(node_id)
 		if baskets is None:
 			return {}
 		trades_good = self.needs.agent_trades_good
@@ -35,7 +36,7 @@ class BookSales:
 		"""What the concern's year of inputs costs at the economy's prices, charged to the seat because the clearing
 		pays the gross of its sales (the estimate was net of them); an input the economy shows no price for is left out."""
 		needs = self.needs
-		baskets = self.concern_baskets_now(node_id)
+		baskets = self.parts.volume.concern_baskets_now(node_id)
 		if baskets is None:
 			return 0.0
 

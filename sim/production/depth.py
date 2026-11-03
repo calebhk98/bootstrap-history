@@ -15,6 +15,7 @@ per unit, plant repair and input supply. The stock is the acting seat's (`Produc
 Needs: the views of READS_BY_OWNER in module_spec.py."""
 from contextlib import contextmanager
 
+from sim.assembly.api import Part
 from sim.labour.api import add_tenure, fade_tenure, outflow_shares, tenure_by_trade, tenure_held
 from sim.prices.api import prices as price_solver
 from sim.world.demography_turnover import working_age_turnover
@@ -23,7 +24,7 @@ from . import rules
 from .industry_depth_rules import firm_worker_years, opening_seed, society_worker_years
 
 
-class Depth:
+class Depth(Part):
 
 	def industry_tenure(self):
 		"""The society's tenure, {trade: {technique: worker-years}} (labour core record)."""
@@ -68,7 +69,7 @@ class Depth:
 
 	def add_industry_years(self, node_id, worker_years):
 		"""Put worker-years of running a technique into the stock, split by the hours each trade works in the concern."""
-		weights = self.tenure_weights(node_id)
+		weights = self.parts.learning.tenure_weights(node_id)
 		total = sum(weights.values())
 		if total <= 0.0:
 			return
@@ -92,7 +93,7 @@ class Depth:
 		seat.industry_seeded = True
 		opening = self.opening_worker_years_by_node() or {}
 		fade = self.tenure_leavers_share()
-		for node_id, (rate, stock) in opening_seed(granted, self.is_concern_node, opening,
+		for node_id, (rate, stock) in opening_seed(granted, self.parts.capability.is_concern_node, opening,
 		                                           self.founding_worker_years, fade).items():
 			seat.industry_opening_rate[node_id] = rate
 			self.add_industry_years(node_id, stock)
@@ -139,7 +140,7 @@ class Depth:
 	def concern_worker_years_this_year(self):
 		"""Worker-years each technique's operating concerns employed this year, the founder's and the firms'."""
 		granted = self.needs.techniques_granted()
-		years = society_worker_years(granted | self.needs.operating(), self.is_concern_node, granted,
+		years = society_worker_years(granted | self.needs.operating(), self.parts.capability.is_concern_node, granted,
 		                             self.seat.industry_opening_rate, self.founding_worker_years)
 		for node_id, capacity, staffed_share in self.needs.firm_concern_holdings():
 			years[node_id] = years.get(node_id, 0.0) + firm_worker_years(self.founding_worker_years(node_id), capacity, staffed_share)

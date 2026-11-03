@@ -1,3 +1,4 @@
+from sim.assembly.api import Part
 """The techniques some producer in the society actually runs.
 
 A technology that is held (researched, copied) but run by no producer changes no cost and no supply, so it
@@ -12,7 +13,7 @@ in the others'.
 Needs: the views of READS_BY_OWNER in module_spec.py."""
 
 
-class Techniques:
+class Techniques(Part):
 	_techniques_in_use_cache = None   # (epoch, nodes, held, operating) of the last answer; set by techniques_in_use
 
 	def techniques_epoch(self):

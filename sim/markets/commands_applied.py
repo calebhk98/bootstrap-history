@@ -1,32 +1,33 @@
 """The commands the markets module applies."""
 from sim.assembly.api import RepriceTree
+from sim.assembly.api import Part
 from sim.economy import api as economy_api
 from sim.ledger.api import RescaleHouseholdMoney
 
 
-class Applying:
+class Applying(Part):
 
 	def reset_draws(self, command):
-		self.goods_market.reset_draws()
+		self.parts.market_objects.goods_market.reset_draws()
 
 	def note_draw(self, command):
-		self.goods_market.note_draw(command.commodity, command.tonnes)
+		self.parts.market_objects.goods_market.note_draw(command.commodity, command.tonnes)
 
 	def forget_actor_orders(self, command):
-		self.economy.forget_actor_orders(command.actor_id)
+		self.parts.market_objects.economy.forget_actor_orders(command.actor_id)
 
 	def note_actor_sale(self, command):
-		self.economy.note_actor_sale(command.seller_id, command.material, command.tonnes, command.from_concerns)
+		self.parts.market_objects.economy.note_actor_sale(command.seller_id, command.material, command.tonnes, command.from_concerns)
 
 	def note_actor_purchase(self, command):
-		self.economy.note_actor_purchase(command.buyer_id, command.commodity, command.tonnes, command.budget)
+		self.parts.market_objects.economy.note_actor_purchase(command.buyer_id, command.commodity, command.tonnes, command.budget)
 
 	def move_goods(self, command):
 		move = economy_api.GoodsMove(command.giver, command.receiver, command.good, command.tile, command.quantity, command.purpose)
-		economy_api.move_goods(self.economy.agent.economy(), [move])
+		economy_api.move_goods(self.parts.market_objects.economy.agent.economy(), [move])
 
 	def rename_market_seat(self, command):
-		self.economy.parts.rename_agent(command.from_id, command.to_id)
+		self.parts.market_objects.economy.parts.rename_agent(command.from_id, command.to_id)
 
 	def mark_money_priced_at_economy(self, command):
 		self.world.money_from_economy = True
@@ -42,14 +43,14 @@ class Applying:
 		self.needs.send(RepriceTree())
 
 	def buy_material(self, command):
-		return self.goods_market.post_order("buy", command.material, command.tonnes, command.limit_per_tonne, command.project,
+		return self.parts.market_objects.goods_market.post_order("buy", command.material, command.tonnes, command.limit_per_tonne, command.project,
 		                                    command.cost_factor, command.limit_includes_carriage)
 
 	def sell_material(self, command):
-		return self.goods_market.post_order("sell", command.material, command.tonnes, command.limit_per_tonne)
+		return self.parts.market_objects.goods_market.post_order("sell", command.material, command.tonnes, command.limit_per_tonne)
 
 	def found_bank_from_outside(self, command):
-		agent = self.economy.agent
+		agent = self.parts.market_objects.economy.agent
 		if not agent.opened():
 			return None
 		economy = agent.economy()

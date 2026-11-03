@@ -2,13 +2,14 @@
 working for what is dug, and a plain statement for what nothing the seat owns supplies."""
 from typing import Any, Dict, Optional
 
+from sim.assembly.api import Part
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 
 from . import sizing
 from .constants import NITRE_SHORTAGE_SAFETY_BUFFER, NITRE_YIELD_T_PER_M2
 
 
-class Remedies:
+class Remedies(Part):
     """Needs: material_demand, charcoal_per_hectare, material_shortfall, material_market_tonnes, goods_stock,
     material_unsupplied_sentence, price_index, area_text, mass_rate_text, mass_per_area_text, money_text."""
 
@@ -25,7 +26,7 @@ class Remedies:
             shortfall_t = needs.material_shortfall(binding)
         if binding == "saltpetre":
             return self.saltpetre_remedy(shortfall_t)
-        if binding in self.works_materials():
+        if binding in self.parts.mine_costs.works_materials():
             return self.dig_remedy(binding, shortfall_t)
         return {"text": (
             needs.material_unsupplied_sentence[binding]
@@ -42,7 +43,7 @@ class Remedies:
             "coppice would cover it ('buy forest %d', roughly %s"
             "). Ask the price first with 'quote forest %d'."
             % (needs.area_text(hectares_needed, grouped=True), hectares_needed,
-               needs.money_text(hectares_needed * self.forest_base_cost() * needs.price_index(), True), hectares_needed)),
+               needs.money_text(hectares_needed * self.parts.woodland.forest_base_cost() * needs.price_index(), True), hectares_needed)),
             "commands": ["quote forest %d" % hectares_needed, "buy forest %d" % hectares_needed]}
 
     def saltpetre_remedy(self, shortfall_t: float) -> Dict[str, Any]:
@@ -60,7 +61,7 @@ class Remedies:
             "per year (about %s)."
             % (needs.mass_rate_text(deficit, digits=2, short=False), square_meters,
                needs.mass_per_area_text(NITRE_YIELD_T_PER_M2, digits=4),
-               needs.money_text(square_meters * self.nitre_base_cost() * needs.price_index(), True))),
+               needs.money_text(square_meters * self.parts.woodland.nitre_base_cost() * needs.price_index(), True))),
             "commands": ["buy nitre %d" % square_meters]}
 
     def dig_remedy(self, binding: str, shortfall_t: float) -> Dict[str, Any]:
@@ -74,7 +75,7 @@ class Remedies:
         else:
             sinking_text = ""
         tonnes_short = sizing.mine_size_tonnes(shortfall_t)
-        has_working = self.mine_capacity().get(binding, 0.0) > 0.0
+        has_working = self.parts.workings.mine_capacity().get(binding, 0.0) > 0.0
         return {"text": sinking_text + (
             "The market will not sell you enough %s, so you have to dig "
             "it: %s. 'quote mine %s %d' for the price, then 'buy mine "

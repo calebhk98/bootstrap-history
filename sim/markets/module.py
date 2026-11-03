@@ -12,43 +12,20 @@ from .agent_views import AgentViews
 from .category_views import Categories
 from .clearing import Clearing
 from .commands_applied import Applying
-from .household_views import HouseholdNeeds
-from .goods_market import GoodsMarket
 from .goods_views import GoodsViews
-from .port import EconomyPort
-from .port_world import PortWorld
+from .household_views import HouseholdNeeds
+from .market_objects import MarketObjects
 
 
-class Markets(Clearing, Categories, HouseholdNeeds, Absorption, GoodsViews, AgentViews, Applying, Module):
+class Markets(Module):
 
-	def setup(self):
-		self._caches = {}                  # (seat id, name) -> a remembered figure; never saved
-		self._needs_served_by_mods = {}    # installed mod ids -> material -> the needs it serves; data, frozen for the game
-		self._climate_baskets = {}         # civilisation id -> (its household basket with the tiles' climate floors, the model); frozen for the game
-		self._partner_demand = {}          # civilisation id -> tonnes a year its households buy; data, frozen for the game
-		self._nodes_by_category = None     # category -> node ids, in the tree's order; the tree does not change after load
-		self.reads = PortWorld(self.needs, self)
-		self.economy = EconomyPort(self.reads)       # opens the agent economy when first asked, or on the opening command
-		self.goods_market = GoodsMarket(self.reads)
-
-	# ---- what the acting seat remembers ----
-
-	def _seat_cache(self, name):
-		return self._caches.get((self.clock.acting_seat, name))
-
-	def _set_seat_cache(self, name, value):
-		self._caches[(self.clock.acting_seat, name)] = value
-
-	def _seat_dict(self, name):
-		key = (self.clock.acting_seat, name)
-		remembered = self._caches.get(key)
-		if remembered is None:
-			remembered = self._caches[key] = {}
-		return remembered
-
-	def agent_economy_store(self):
-		"""The agent economy's record, where the traders' cargo legs are kept; the port and the foreign trade module write it in place."""
-		return self.world.agent_economy
-
-	def money_from_economy(self):
-		return self.world.money_from_economy
+	PARTS = {
+		"market_objects": MarketObjects,
+		"clearing": Clearing,
+		"categories": Categories,
+		"household_needs": HouseholdNeeds,
+		"absorption": Absorption,
+		"goods_views": GoodsViews,
+		"agent_views": AgentViews,
+		"applying": Applying,
+	}

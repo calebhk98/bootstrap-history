@@ -4,13 +4,14 @@ Prices and traded volumes belong to the agent economy (sim/economy, through the 
 orders together. This module keeps what the founder's running works drew from the market and reports a market's sales from the
 economy's record.
 """
+from sim.assembly.api import Part
 from sim.demography.api import RecordFoodEaten, rules as demography_rules
 from sim.foreign_trade.api import ResetActorTradeTallies
 from sim.land.api import FinishWays
 from sim.reporting.api import CloseRealOutput
 
 
-class Clearing:
+class Clearing(Part):
 
 	# ---- the year's flows ----
 
@@ -30,10 +31,10 @@ class Clearing:
 		unsold and left unmet last year, split into the acting seat's own sales in that clearing (it sells through the same markets, so the
 		market's total holds them) and everyone else's. None while the economy opens or when the commodity has no priced material."""
 		commodity = self.needs.material_pool[material][0]
-		record = self.economy.agent_market_record(commodity)
+		record = self.parts.market_objects.economy.agent_market_record(commodity)
 		if record is None:
 			return None
-		displaced = min(record["sold"], self.economy.seat_traded_tonnes(self.goods_market.acting_party_id, "sold").get(commodity, 0.0))
+		displaced = min(record["sold"], self.parts.market_objects.economy.seat_traded_tonnes(self.parts.market_objects.goods_market.acting_party_id, "sold").get(commodity, 0.0))
 		return {
 			"material": commodity,
 			"society_sales_tonnes": record["sold"] - displaced,
@@ -47,7 +48,7 @@ class Clearing:
 	def step_market(self, seats=None):
 		"""Close the year: the agent economy's year runs, then the actors' trade tallies reset."""
 		self.needs.send(FinishWays())
-		economy = self.economy
+		economy = self.parts.market_objects.economy
 		outcome = economy.run_agent_year()
 		accounts = outcome.accounts
 		if accounts is None:

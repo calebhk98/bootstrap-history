@@ -1,13 +1,29 @@
-"""What the module remembers for one seat between calls. None of it is saved: each is a table that holds while what it was
-worked out from is unchanged, or the demand the last throttle saw."""
+"""The materials module's views that read the seat's saved reading and the commodity a material is held under."""
 from typing import Any, Optional, Tuple
 
+from sim.assembly.api import Part
 
-class Readings:
-    def __init__(self) -> None:
-        self.annual: Optional[Tuple[Any, Any]] = None          # (project versions, the year's demand) for the unchanged projects
-        self.held: Any = None                                  # the demand the last throttle saw (the object, not a copy)
-        self.by_tag: Optional[Tuple[Any, Any]] = None          # (demand it groups, the grouping)
-        self.by_commodity: Optional[Tuple[Any, Any]] = None    # (demand it groups, the grouping by commodity)
-        self.throttle_sig: Any = None                          # what the last throttle reading was worked out from
-        self.throttle_cache: Optional[Tuple[float, Optional[str]]] = None   # and what it answered
+
+class Readings(Part):
+
+    def binding(self) -> Optional[str]:
+        """The pool that limited the seat's work in the last reading, or None."""
+        return self.seat.binding
+
+    def last_throttle(self) -> float:
+        """The share of planned work the last reading let run."""
+        return self.seat.throttle
+
+    def shortages(self) -> Any:
+        """Readings in which each pool bound the pace (the live counter)."""
+        return self.seat.shortages
+
+    def material_commodity(self, material: str) -> str:
+        """The commodity key a material is held under in the tonnes ledger."""
+        return self.parts.supply.material_pool(material)[0]
+
+    def national_output(self, commodity: str) -> Tuple[float, float]:
+        """(tonnes a year the whole society produces of a commodity, the population that figure is stated for)."""
+        default = self.needs.default_population()
+        reference = default if commodity in self.needs.empire_output() else float(self.needs.civilisation().get("population") or default)
+        return self.parts.supply.national_output_tonnes(commodity), reference
