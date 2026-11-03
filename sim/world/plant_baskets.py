@@ -14,6 +14,9 @@ from typing import Any, Dict, List, Mapping, NamedTuple, Optional, Tuple
 
 from sim.unit_conversions import HOURS_PER_PERSON_YEAR
 
+# The energy carriers: the recipe fields that draw one, each the material of the same name that the energy techniques
+# (thermal_mj_charcoal, mechanical_mj_waterwheel, ...) output. The one owner of the tuple; the price engine, labour and
+# economy import it from here.
 ENERGY_CARRIERS = ("thermal_mj", "mechanical_mj", "electrical_mj")
 
 

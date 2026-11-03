@@ -8,6 +8,7 @@ from .request_rules import source_trade_unusable, teaching_fee, teaching_hours_r
 from .room_advice import hire_room_refusal
 from .staff_moves import crosses_literacy_wall
 from sim.ledger.api import PayEdge
+from .market import trades as market_trades
 from sim.world.demand import production_data
 
 
@@ -65,7 +66,7 @@ class Training:
                                                         person_year_hours(self._world))
 
     def _full_years(self, trade):
-        return float(trade_data.registry_of(self._world).get(trade, {}).get("training_years", 0.0) or 0.0)
+        return market_trades.training_years_by_trade(trade_data.registry_of(self._world)).get(trade, 0.0)
 
     def source_trade_for(self, trade):
         """The trade stated as the teacher in the registry, else the practised trade whose tasks cover the most of

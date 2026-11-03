@@ -25,11 +25,8 @@ class Hands:
         return self._hands_with_commissioned(self._world.workforce.scholars, lambda trade: trade == scholar)
 
     def wage_fallback_trade(self):
-        """The trade a founder with no work sells his hours in: the scholar trade once he has a scholar's hands to spare, else
-        the trade the registry says a scholar is taught from."""
-        if self.effective_scholars() >= 1:
-            return trade_data.scholar_trade()
-        return trade_data.taught_from(trade_data.registry_of(self._world), trade_data.scholar_trade())
+        """The trade a founder with no work sells his hours in: the scholar trade."""
+        return trade_data.scholar_trade()
 
     def _hands_with_commissioned(self, staff, counts_trade):
         """Staff on the payroll, the founder while alive, and a person for every full year of commissioned hours in the

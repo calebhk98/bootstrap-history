@@ -46,7 +46,7 @@ def carriage_money(amount: float, kg_per_unit: float, money_per_tonne: float) ->
 def is_credit(purpose: Any) -> bool:
     """Whether a payment's purpose is a claim on a debtor (interest, a loan), which moves no coin."""
     labels = purpose.keys() if hasattr(purpose, "keys") else (purpose,)
-    return all(label in CREDIT_PURPOSES for label in labels)
+    return bool(labels) and all(label in CREDIT_PURPOSES for label in labels)
 
 
 def abroad(parties: Iterable[Any], home_country: Optional[str]) -> bool:

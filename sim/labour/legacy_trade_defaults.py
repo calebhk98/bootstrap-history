@@ -3,14 +3,6 @@ craftsmen, the bonded, an army under arms) rather than facts about a trade. Per-
 teacher, tools, staffing resource, fatality risk) are read from the registry in data/world/trades.json.
 This file is the only labour module that names trades.
 """
-from sim.constants import declare
-
-TAUGHT_FROM_DEFAULT = declare(
-    "TAUGHT_FROM_DEFAULT", "smith", kind="temporary_heuristic", unit="trade id", source=None, confidence="D",
-    retire="Complaints/964: every trade states its teacher in the registry (taught_from)",
-    why="The trade a trade that names no teacher is taught from; a stand-in for the nearest practised trade by task "
-        "overlap, which train_check already prefers where the registry states none.")
-
 # Trades that stand for a role the household's own bookkeeping counts: scholars (research and literacy
 # capacity), generic craftsmen, and the bonded who are counted apart from hired staff.
 SCHOLAR_TRADE = "scholar"

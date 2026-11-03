@@ -14,7 +14,7 @@ from .commands import (BuildHousing, CloseHoursYear, GrantStaff, NoteTradeSpread
 from .commands_people import (BuySlaves, CommissionHours, FireStaff, FoundTradeSchool, HireStaff, Manumit, MoveBase, TrainStaff,
                               WorkForWages)
 from .commands_hours import (AllocateHours, BleedStaff, CancelWork, DisperseDependants, DrawTradeHours, LoseCrew, OrderWork, ReleaseHours,
-                             ResetTradeHours, SetReserve, SpendDirectorHours, WatchStaff)
+                             ResetTradeHours, SetReserve, WatchStaff)
 from .commands_bondage import AutoBuyPeople, AutoManumit, ChargeLivingCost, FadeMarketPressure, NoteBuyRefusal
 from .state import STAFF, WorkforceSeat, WorkforceSociety
 from .module import Workforce
@@ -25,14 +25,14 @@ READS_BY_OWNER = {
     "ventures": ("operating", "venture_foreman", "venture_foremen_used", "venture_staff_free", "coverage", "coverage_share"),
     "seats": ("founder", "acting_country", "seat_list", "goal", "goal_closure"),
     "ledger": ("acting_balance",),
-    "polity": ("standing", "rep_factor"),
+    "polity": ("rep_factor",),
     "reporting": ("last_market_price_ratio", "real_output_per_head"),
-    "markets": ("agent_prices", "agent_wage_at", "agent_hours_offered_at", "agent_working_hours", "agent_people_by_trade", "agent_people_by_tile_and_trade", "agent_country", "agent_trades"),
+    "markets": ("agent_wage_at", "agent_hours_offered_at", "agent_working_hours", "agent_people_by_trade", "agent_people_by_tile_and_trade", "agent_trades"),
     "demography": ("population", "pop_scale", "people_by_tile", "urban_fraction"),
     "agriculture": ("farm_land",),
-    "land": ("home_tiles_held", "home_tiles_held_version", "built_ways", "held_techniques"),
+    "land": ("home_tiles_held", "built_ways", "held_techniques"),
     "knowledge": ("techniques_held", "techniques_granted", "done_year", "tree_nodes", "visibility", "tree_closure"),
-    "mechanics": ("mechanic", "effect_factor", "effect_holds", "effect_sum", "effect_terms", "effect_value", "labour_productivity_sources",
+    "mechanics": ("mechanic", "effect_holds", "effect_sum", "effect_terms", "effect_value", "labour_productivity_sources",
                   "room_sources", "staff_capacity_sources", "running_mechanics"),
     "diffusion": ("literacy", "research_productivity", "staff_hire_advice", "staff_sources"),
     "production": ("concern_market", "running", "institution_units", "upkeep", "revenue_estimate", "is_venture", "held_trade"),
@@ -152,7 +152,7 @@ MODULE_SPECS = (ModuleSpec(
              (ReleaseStaff, "release_staff"), (TakeWageFallback, "take_wage_fallback"),
              (CloseHoursYear, "close_hours_year"),
              (AllocateHours, "allocate_hours"), (ReleaseHours, "release_hours"), (OrderWork, "order_work"), (CancelWork, "cancel_work"),
-             (DrawTradeHours, "draw_trade_hours"), (ResetTradeHours, "reset_trade_hours"), (SpendDirectorHours, "spend_director_hours"),
+             (DrawTradeHours, "draw_trade_hours"), (ResetTradeHours, "reset_trade_hours"),
              (SetReserve, "set_reserve"),
              (BleedStaff, "bleed_staff"), (DisperseDependants, "disperse_dependants"), (LoseCrew, "lose_crew"), (WatchStaff, "watch_staff"),
              (BuildHousing, "build_housing"), (ChargeLivingCost, "charge_living_cost"), (AutoBuyPeople, "auto_buy_people"),

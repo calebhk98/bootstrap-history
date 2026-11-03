@@ -1,8 +1,7 @@
 """What the labour package knows about a trade, read from the registry where it can be.
 
 The registry reaches labour as the world's `trade_registry`: each trade's fields as a plain mapping.
-A trade that does not state a field gets the generic answer (not literate, no tools, the default
-teacher), so a mod's trade works without code. The role constants that remain are in
+A trade that does not state a field gets the generic answer (not literate, no tools), so a mod's trade works without code. The role constants that remain are in
 legacy_trade_defaults.py.
 """
 from typing import Any, Dict, FrozenSet, Mapping, Tuple
@@ -23,10 +22,6 @@ def registry_of(world) -> Mapping[str, Mapping[str, Any]]:
 
 def literate_trades(registry: Mapping[str, Mapping[str, Any]], trade_ids) -> FrozenSet[str]:
     return frozenset(trade for trade in trade_ids if registry.get(trade, {}).get("literate", False))
-
-
-def taught_from(registry: Mapping[str, Mapping[str, Any]], trade: str) -> str:
-    return registry.get(trade, {}).get("taught_from", legacy_trade_defaults.TAUGHT_FROM_DEFAULT)
 
 
 def tool_basket(registry: Mapping[str, Mapping[str, Any]], trade: str) -> Tuple[str, ...]:

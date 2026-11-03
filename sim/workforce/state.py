@@ -71,7 +71,6 @@ class WorkforceSeat:
     wage_work_last_year: Optional[Dict[str, float]] = None
     hours_this_year: Optional[Dict[str, float]] = None
     trade_hours_used: Dict[str, float] = field(default_factory=dict)
-    director_hours_spent_founder: float = 0.0
     # ---- pay ----
     wages_paid: Optional[float] = None    # what the last clearing charged the seat for its staff and one-year orders; None before one
     said_deputies: int = 0

@@ -10,7 +10,7 @@ from sim.ledger.api import NoteSpend, pay_edge_or_log
 from sim.materials.api import ApplyThrottle, ReorderProjectMaterials
 from sim.refusal import Refusal
 from sim.reporting.api import RecordEvent
-from sim.workforce.api import ResetTradeHours, SpendDirectorHours
+from sim.workforce.api import ResetTradeHours
 
 from . import funding as project_funding, materials_wait, start_rules
 from .arrears_hours_line import arrears_hours_line
@@ -184,7 +184,6 @@ class ProgressPhase(Part):
 		# cannot be refunded work you never did.
 		spent_hours = min(per, project_state["ph_left"])
 		project_state["ph_left"] = max(0.0, project_state["ph_left"] - per)
-		needs.send(SpendDirectorHours(per if needs.founder()["alive"] else 0))
 		# Hours OFFERED this year vs hours that actually did anything. `refunded` tracks the difference: hours credited
 		# back to ph_left below because a trade or the money to pay for it fell short. This must stay visible to the
 		# player: showing only the net hours left reads as confusing when half a year's hours come back with no

@@ -21,8 +21,6 @@ check("an override sees the extra fields flat", trade_fields(trade)["literate"] 
 registry = {"wright": {"literate": True, "taught_from": "weaver", "tool_basket": ["timber", "iron"], "staff_resource": "crew"},
             "plain": {}}
 check("a mod's trade can say it is literate", trade_data.literate_trades(registry, ["wright", "plain", "absent"]) == {"wright"})
-check("a mod's trade names its teacher", trade_data.taught_from(registry, "wright") == "weaver")
-check("a trade naming none is taught from the default", trade_data.taught_from(registry, "plain") == trade_data.taught_from({}, "x"))
 check("a mod's trade names its tools", trade_data.tool_basket(registry, "wright") == ("timber", "iron")
       and trade_data.tool_basket(registry, "plain") == ())
 check("a staffing resource is filled by the trade that names it, else by the same name",
