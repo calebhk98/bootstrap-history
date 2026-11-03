@@ -1,5 +1,5 @@
-"""Complaint 478: a technique the society gains after the opening adds the production entries it allows, their
-trades' wages and the price of a good that had none, to the economy's opening values."""
+"""Complaint 478: a technique the society gains after the opening adds the production entries it allows, the
+price of a good that had none, to the economy's opening values; the wages stay the opening's."""
 QUICK_TOPIC = True
 
 import types
@@ -51,11 +51,10 @@ class OpeningWithTechniques(unittest.TestCase):
         self.assertIsNone(port_late.opening_with_techniques(
             stand_in_society(), opening(), frozenset(), PRODUCTION, 1.0))
 
-    def test_a_held_node_adds_its_recipe_its_trade_wage_and_the_price_of_the_good_it_makes(self):
+    def test_a_held_node_adds_its_recipe_and_the_price_of_the_good_it_makes(self):
         grown = port_late.opening_with_techniques(
             stand_in_society(), opening(), frozenset({"kiln_node"}), PRODUCTION, 1.0)
         self.assertEqual(grown["recipes"], ["cement_kg", "mortar_kg"])
-        self.assertEqual(grown["wages"]["kilnman"], 5.0)
         self.assertIn("cement_kg", grown["prices"])
         self.assertGreater(grown["prices"]["cement_kg"], 0.0)
         self.assertNotIn("cement_kg", opening()["prices"])
@@ -67,10 +66,10 @@ class OpeningWithTechniques(unittest.TestCase):
             stand_in_society(), base, frozenset({"kiln_node"}), PRODUCTION, 1.0)
         self.assertEqual(grown["prices"]["cement_kg"], 9.0)
 
-    def test_a_new_trades_wage_is_stored_in_opening_year_money(self):
+    def test_a_new_trade_gets_no_opening_wage_so_the_one_wage_rule_prices_it(self):
         grown = port_late.opening_with_techniques(
             stand_in_society(), opening(), frozenset({"kiln_node"}), PRODUCTION, 2.0)
-        self.assertEqual(grown["wages"], {"labourer": 2.0, "kilnman": 2.5})
+        self.assertEqual(grown["wages"], {"labourer": 2.0})
 
     def test_the_new_good_costs_its_inputs_and_crew_at_live_input_prices_per_unit(self):
         cost = port_late.late_goods_costs(
