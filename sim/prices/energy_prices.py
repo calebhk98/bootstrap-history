@@ -42,7 +42,13 @@ class EnergyPrices:
         for carrier, (_reached_field, needed_field, _floor) in CAPABILITY_CAP_FIELDS.items():
             if entry.get(carrier) and (carrier, entry.get(needed_field)) in self.unreachable:
                 return False
-        return True
+        return all(self._has_price(carrier) for carrier in ENERGY_CARRIERS
+                   if entry.get(carrier) or carrier in entry["outputs"])
+
+    def _has_price(self, carrier: str) -> bool:
+        """True when the pool prices the carrier; a carrier nothing prices has no cost to charge, so an entry
+        that uses it cannot be weighed."""
+        return carrier in self.pool
 
     def bought(self, carrier: str, entry: Mapping[str, Any]) -> float:
         """The price the entry pays: the band of its own stated requirement, else the pool price."""
@@ -51,7 +57,7 @@ class EnergyPrices:
             required = entry.get(capped[1])
             if required is not None and (carrier, required) in self.bands:
                 return self.bands[(carrier, required)]
-        return self.pool.get(carrier, 0.0)
+        return self.pool[carrier]
 
     def sold(self, carrier: str, entry: Mapping[str, Any]) -> float:
         """The price a producer earns: the highest band its stated reach clears, else the pool price,
@@ -70,7 +76,7 @@ class EnergyPrices:
                            if name == carrier and required <= reached]
                 if cleared:
                     return self.bands[(carrier, max(cleared))]
-        return self.pool.get(carrier, 0.0)
+        return self.pool[carrier]
 
 
 def pool_only(goods: Mapping[str, float]) -> EnergyPrices:

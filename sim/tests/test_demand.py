@@ -232,7 +232,7 @@ class DerivedDemandTests(unittest.TestCase):
         # anything else".
         production = demand.production_data()
         entry = production["lead_kg"]
-        self.assertEqual(demand._dominant_output_key(entry), "lead_kg")
+        self.assertEqual(demand.dominant_output_key(entry), "lead_kg")
 
     def test_zinc_electrolytic_dominant_output_is_zinc_not_the_trace_byproducts(self):
         # The sharpest case in the data: an entry named after a PROCESS
@@ -242,7 +242,7 @@ class DerivedDemandTests(unittest.TestCase):
         production = demand.production_data()
         entry = production["zinc_electrolytic_kg"]
         self.assertNotIn("zinc_electrolytic_kg", entry["outputs"])
-        self.assertEqual(demand._dominant_output_key(entry), "zinc_kg")
+        self.assertEqual(demand.dominant_output_key(entry), "zinc_kg")
 
     def test_input_coefficients_scale_linearly_with_output_level(self):
         coefficients = demand.input_coefficients_per_unit_output("lead_kg")

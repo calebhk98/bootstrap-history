@@ -38,15 +38,15 @@ class SolverTests(unittest.TestCase):
 
     def test_the_plant_is_priced_from_the_first_build_the_society_can_make(self):
         wages = {"smith": 1.0}
-        with_iron = core._capital_cost_hours_per_unit([capital()], {"iron": 2.0, "stone": 1.0, "wood": 1.0}, wages)
+        with_iron = core.capital_cost_hours_per_unit([capital()], {"iron": 2.0, "stone": 1.0, "wood": 1.0}, wages)
         self.assertAlmostEqual(with_iron, (10.0 * 2.0 + 100.0) / 20 / 100.0)
-        without_iron = core._capital_cost_hours_per_unit([capital()], {"stone": 1.0, "wood": 1.0}, wages)
+        without_iron = core.capital_cost_hours_per_unit([capital()], {"stone": 1.0, "wood": 1.0}, wages)
         self.assertAlmostEqual(without_iron, (50.0 * 1.0 + 150.0) / 10 / 100.0)
-        wood_only = core._capital_cost_hours_per_unit([capital()], {"wood": 1.0}, wages)
+        wood_only = core.capital_cost_hours_per_unit([capital()], {"wood": 1.0}, wages)
         self.assertAlmostEqual(wood_only, (40.0 + 120.0) / 20 / 100.0)     # a build keeps the part's life unless it states one
 
     def test_a_plant_none_of_whose_builds_is_possible_has_no_cost(self):
-        self.assertIsNone(core._capital_cost_hours_per_unit([capital()], {"clay": 1.0}, {"smith": 1.0}))
+        self.assertIsNone(core.capital_cost_hours_per_unit([capital()], {"clay": 1.0}, {"smith": 1.0}))
 
     def test_a_good_resolves_when_an_alternative_build_is_makeable(self):
         producers = {"wood": ["wood"], "charcoal": ["charcoal"]}

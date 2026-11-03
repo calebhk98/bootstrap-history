@@ -35,14 +35,16 @@ def staff_places_hours_cost(node: Mapping, wages: Mapping[str, float], money_per
 
 
 def programme_spending_hours(node: Mapping, goods: Mapping[str, float], wages: Mapping[str, float],
-                             money_per_labour_hour: float) -> float:
+                             money_per_labour_hour: float) -> Optional[float]:
     """Labour hours a year a programme costs to keep running, priced from what it buys: the hours of each trade it
     employs (`annual_labour_hours`) at wages and the materials it consumes (`annual_consumables`) at solved prices.
-    The actor that opens the node pays this each year."""
+    The actor that opens the node pays this each year.
+    None when a consumable has no price."""
+    consumed = plant_figures.priced_total(node.get("annual_consumables") or {}, goods)
+    if consumed is None:
+        return None
     bought = sum(wages[trade] * hours for trade, hours in (node.get("annual_labour_hours") or {}).items())
-    bought += sum(goods.get(material, 0.0) * quantity
-                  for material, quantity in (node.get("annual_consumables") or {}).items())
-    return bought / money_per_labour_hour
+    return (bought + consumed) / money_per_labour_hour
 
 
 def is_programme(node: Mapping) -> bool:
