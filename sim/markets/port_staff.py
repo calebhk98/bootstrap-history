@@ -53,14 +53,14 @@ def employer_bids(economy, employer_id, wanted, tile, affordable_coin):
     wage before the market has one), the bid's maximum wage being the ceiling over that wage. When the places at the wage cost more
     than `affordable_coin` the hours are scaled down together to what it buys; the account is funded with the ceiling bill of
     those hours or all the employer can afford, whichever is less."""
-    view, setup = economy.view(), economy.setup   # the trades and opening wages: no economy_api function yet
+    view, trades = economy.view(), economy_api.economy_trades(economy)
     account = staff_account(employer_id)
     asked = []
     for trade, people in sorted(wanted.items()):
-        if people <= 0.0 or trade not in setup.trades:
+        if people <= 0.0 or trade not in trades:
             continue
         area = view.area_of(trade, tile)
-        wage = view.wage(trade, area) or setup.opening_wages.get(trade)
+        wage = view.wage(trade, area) or economy_api.opening_wage(economy, trade)
         if wage and wage > 0.0:
             asked.append((trade, area, people * economy_api.working_hours_per_year(economy), wage))
     affordable_units = max(0.0, affordable_coin) / economy_api.coin_per_unit(economy)
@@ -84,10 +84,10 @@ def seat_staff_bids(sim, economy, seat_id, tile):
 def work_offers(economy, seat_id, offered, tile):
     """(offers, hours not offered by trade): the hours of a trade a seat offers of its own, as offers for its work account at no
     reservation wage (it sells at the market's); an hour of a trade the economy lacks is not offered, and is returned."""
-    view, setup = economy.view(), economy.setup   # the trades and opening wages: no economy_api function yet
+    view, trades = economy.view(), economy_api.economy_trades(economy)
     offers = tuple(LabourOffer(work_account(seat_id), trade, view.area_of(trade, tile), hours, 0.0)
-                   for trade, hours in sorted(offered.items()) if hours > 0.0 and trade in setup.trades)
-    dropped = {trade: hours for trade, hours in sorted(offered.items()) if hours > 0.0 and trade not in setup.trades}
+                   for trade, hours in sorted(offered.items()) if hours > 0.0 and trade in trades)
+    dropped = {trade: hours for trade, hours in sorted(offered.items()) if hours > 0.0 and trade not in trades}
     return offers, dropped
 
 
@@ -109,9 +109,9 @@ def place_newcomers(sim, economy, tile):
     newcomers = sim.labour.newcomers()
     if not newcomers:
         return
-    lacking = {}
+    lacking, trades = {}, economy_api.economy_trades(economy)
     for trade, people in sorted(newcomers.items()):
-        if trade in economy.setup.trades:
+        if trade in trades:
             economy_api.add_workers(economy, tile, trade, people)
         elif people > 0.0:
             lacking[trade] = float(people)

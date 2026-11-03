@@ -161,7 +161,7 @@ class AgentEconomyReads:
         """The trades the agent economy holds; None until it opens."""
         if self._needs.agent_unskilled_wage() is None:
             return None
-        return frozenset(self._needs.agent_economy_setup().trades)
+        return self._needs.agent_trades()
 
     def agent_country(self, country):
         return self._needs.agent_country[country]

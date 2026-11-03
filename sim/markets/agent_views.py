@@ -3,6 +3,7 @@ economy opens asks `EconomyPort.answering()` for the parts and reads the part th
 from sim.assembly.api import Part
 
 from . import port_money
+from sim.economy import api as economy_api
 
 
 class AgentViews(Part):
@@ -215,9 +216,16 @@ class AgentViews(Part):
 		loaded and not yet stepped, since the outcome is not saved (the health figures are: agent_health)."""
 		return self.parts.market_objects.economy.parts.year.last_outcome
 
-	def agent_economy_setup(self):
-		"""The setup the running agent economy was opened with."""
-		return self.parts.market_objects.economy.agent.economy().setup
+	def agent_trades(self):
+		"""The trades the running agent economy's labour core has markets for."""
+		return economy_api.economy_trades(self.parts.market_objects.economy.agent.economy())
+
+	def agent_opening_figures(self):
+		"""What the running agent economy opened with that the opening checks compare: its unskilled trade, interest rate
+		and coin metal."""
+		economy = self.parts.market_objects.economy.agent.economy()
+		return {"unskilled_trade": economy_api.unskilled_trade(economy), "opening_rate": economy_api.opening_rate(economy),
+		        "backing_good": economy_api.backing_good(economy)}
 
 	def agent_stale_goods(self):
 		"""The goods whose markets did not clear lately: their shown price is what they would cost to make, not a trade."""
