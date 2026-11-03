@@ -36,8 +36,7 @@ class SeatConcerns:
         world, agent = self._world, self._agent
         economy = agent.economy()
         area_map = economy.area_map
-        base_tile = world.labour.base_tile()
-        tile = base_tile if base_tile in economy_api.economy_tiles(economy) else economy_api.capital_tile(economy)
+        tile = agent.tile_in_economy(world.labour.base_tile())
         view = economy.view()
         moves, offers = [], []
         offered = offered_by_seat.setdefault(seat_id, (tile, {}))[1]
