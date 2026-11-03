@@ -154,10 +154,10 @@ investor = sim.actors.add("stratum:home:rich", ActorRecord(kind="stratum", strat
 reply = sim.seat_offer("stratum:home:rich", {"shares": {FIRST_SEAT_ID: 0.2}}, {"money": 50.0})
 check("the founder offers shares in itself", reply["ok"], reply)
 exchange_commands.answer_offers(investor, finder, world)
-check("an investor that finds them worth more than the price takes them", investor.record.holdings.get(FIRST_SEAT_ID) == 0.2
-      or investor.record.offers == [], (investor.record.holdings, investor.record.offers))
+check("an investor that finds them worth more than the price takes them", investor.record.shares_held.get(FIRST_SEAT_ID) == 0.2
+      or investor.record.offers == [], (investor.record.shares_held, investor.record.offers))
 firm.record.issued = 0.3
-investor.record.holdings["firm:1"] = 0.3
+investor.record.shares_held["firm:1"] = 0.3
 reply = sim.seat_offer("stratum:home:rich", {"money": 10.0}, {"shares": {"firm:1": 0.1}})
 check("the founder offers to buy shares from a holder", reply["ok"], reply)
 check("the seat can list its holdings and equity issued", "shares_issued" in sim.dealings_listing())

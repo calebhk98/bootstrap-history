@@ -27,7 +27,7 @@ def clean_shares(shares: Any) -> Dict[str, float]:
 
 def held_in(actors: Iterable[Any], issuer_id: str) -> float:
 	"""Share of `issuer_id`'s equity held by `actors`."""
-	return sum(actor.record.holdings.get(issuer_id, 0.0) for actor in actors)
+	return sum(actor.record.shares_held.get(issuer_id, 0.0) for actor in actors)
 
 
 def holds_problem(holder: Any, shares: Dict[str, float]) -> str:
@@ -36,7 +36,7 @@ def holds_problem(holder: Any, shares: Dict[str, float]) -> str:
 		if issuer_id == holder.actor_id:
 			if share > 1.0 - holder.record.issued + EPSILON:
 				return "has not that much equity left to issue"
-		elif share > holder.record.holdings.get(issuer_id, 0.0) + EPSILON:
+		elif share > holder.record.shares_held.get(issuer_id, 0.0) + EPSILON:
 			return "holds too little of " + issuer_id
 	return ""
 
@@ -55,15 +55,15 @@ def hand_over(source: Any, target: Any, shares: Dict[str, float]) -> None:
 		if issuer_id == source.actor_id:
 			source.record.issued += share
 		else:
-			left = source.record.holdings.get(issuer_id, 0.0) - share
+			left = source.record.shares_held.get(issuer_id, 0.0) - share
 			if left > EPSILON:
-				source.record.holdings[issuer_id] = left
+				source.record.shares_held[issuer_id] = left
 			else:
-				source.record.holdings.pop(issuer_id, None)
+				source.record.shares_held.pop(issuer_id, None)
 		if issuer_id == target.actor_id:
 			target.record.issued = max(0.0, target.record.issued - share)
 		else:
-			target.record.holdings[issuer_id] = target.record.holdings.get(issuer_id, 0.0) + share
+			target.record.shares_held[issuer_id] = target.record.shares_held.get(issuer_id, 0.0) + share
 
 
 def shares_worth(shares: Dict[str, float], find_actor: Any) -> float:
@@ -101,7 +101,7 @@ def pay_dividends(registry: Any, world: Any) -> float:
 		if pool <= 0.0:
 			continue
 		for holder_id in sorted(holders):
-			share = holders[holder_id].record.holdings.get(issuer_id, 0.0)
+			share = holders[holder_id].record.shares_held.get(issuer_id, 0.0)
 			if share > 0.0 and holder_id != issuer_id:
 				ledger.transfer(issuer, holders[holder_id], pool * share, "dividend")
 				paid += pool * share

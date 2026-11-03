@@ -21,8 +21,8 @@ slot = SeatsSeat()
 party = host.party(FIRST_SEAT_ID, dealings=slot, business=Business())
 check("the party is named by the seat id", party.actor_id == FIRST_SEAT_ID, party.actor_id)
 check("its patents and shares are copies of the seat's stored ones, not the seat's own dictionaries",
-      party.record.patents == slot.patents and party.record.holdings == slot.shares_held
-      and party.record.patents is not slot.patents and party.record.holdings is not slot.shares_held, None)
+      party.record.patents == slot.patents and party.record.shares_held == slot.shares_held
+      and party.record.patents is not slot.patents and party.record.shares_held is not slot.shares_held, None)
 
 
 class Target:
@@ -43,7 +43,7 @@ check("the live patent is found among the seat and other actors",
 patent.hand_over(party, target, {"patent": ["lathe"]})
 check("selling the patent moves it off the seat", "lathe" not in slot.patents and "lathe" in target.record.patents, None)
 
-target.record.holdings["firm:2"] = 0.4
+target.record.shares_held["firm:2"] = 0.4
 joint_stock.hand_over(target, party, {"firm:2": 0.25})
 check("shares bought by the seat are held on the seat", abs(slot.shares_held["firm:2"] - 0.25) < 1e-9, slot.shares_held)
 party.record.issued = 0.2
@@ -91,7 +91,7 @@ class Shareholder:
     actor_id = "firm:7"
 
     def __init__(self):
-        self.record = ActorRecord(kind="firm", holdings={FIRST_SEAT_ID: 0.2})
+        self.record = ActorRecord(kind="firm", shares_held={FIRST_SEAT_ID: 0.2})
         self.money = 0.0
 
     payments = property(lambda self: self)   # a stand-in party pays through itself

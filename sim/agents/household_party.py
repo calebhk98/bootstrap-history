@@ -62,11 +62,11 @@ class SeatRecord(ActorRecord):
 		self._store("patents", value)
 
 	@property
-	def holdings(self) -> Any:
+	def shares_held(self) -> Any:
 		return self._dealing("shares_held") if self.ports is not None else {}
 
-	@holdings.setter
-	def holdings(self, value: Any) -> None:
+	@shares_held.setter
+	def shares_held(self, value: Any) -> None:
 		self._store("shares_held", value)
 
 	@property

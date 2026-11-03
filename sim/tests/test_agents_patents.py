@@ -110,12 +110,12 @@ check("it cannot issue more than it owns", raises(lambda: exchange.make_offer(fi
 offer = exchange.make_offer(firm, rich, {"shares": {"firm:1": 0.3}}, {"money": 200.0}, world)
 exchange.accept(rich, offer["id"], registry.get, world)
 check("an issue moves money to the firm and shares to the buyer",
-	  firm.money == 700.0 and rich.money == 800.0 and abs(rich.record.holdings["firm:1"] - 0.3) < 1e-9
-	  and abs(firm.record.issued - 0.3) < 1e-9, (firm.money, rich.money, rich.record.holdings, firm.record.issued))
+	  firm.money == 700.0 and rich.money == 800.0 and abs(rich.record.shares_held["firm:1"] - 0.3) < 1e-9
+	  and abs(firm.record.issued - 0.3) < 1e-9, (firm.money, rich.money, rich.record.shares_held, firm.record.issued))
 check("issuing more than remains is refused", raises(lambda: exchange.make_offer(firm, rich, {"shares": {"firm:1": 0.8}}, {}, world)))
 offer = exchange.make_offer(rich, founder, {"shares": {"firm:1": 0.1}}, {"money": 60.0}, world)
 exchange.accept(founder, offer["id"], registry.get, world)
-check("shares trade between holders", abs(rich.record.holdings["firm:1"] - 0.2) < 1e-9 and abs(founder.record.holdings["firm:1"] - 0.1) < 1e-9)
+check("shares trade between holders", abs(rich.record.shares_held["firm:1"] - 0.2) < 1e-9 and abs(founder.record.shares_held["firm:1"] - 0.1) < 1e-9)
 check("trading does not change what the firm has issued", abs(firm.record.issued - 0.3) < 1e-9)
 check("issued matches the holdings", abs(joint_stock.held_in(registry.actors.values(), "firm:1") - firm.record.issued) < 1e-9)
 
@@ -145,8 +145,8 @@ exchange.make_offer(rich, founder, {"shares": {"firm:1": 0.1}}, {"money": 1.0}, 
 exchange.make_offer(rich, founder, {"shares": {"firm:1": 0.1}}, {"money": 900.0}, world)
 exchange_commands.answer_offers(founder, registry.get, world)
 check("an AI actor takes cheap shares and refuses dear ones",
-	  abs(founder.record.holdings["firm:1"] - 0.2) < 1e-9 and founder.record.offers == [],
-	  (founder.record.holdings, founder.record.offers))
+	  abs(founder.record.shares_held["firm:1"] - 0.2) < 1e-9 and founder.record.offers == [],
+	  (founder.record.shares_held, founder.record.offers))
 
 # ---- the commands -----------------------------------------------------------------------------------
 world = make_world()
