@@ -265,6 +265,22 @@ def note_actor_unposted(sim, actor_id, cause):
             {"cause": cause}, seat=actor_id))
 
 
+def bids_paid(bids_for, budgets, pay):
+    """(bids, units, refusal) for an employer's wage bill: the bids that `bids_for(budget)` makes for the first budget whose
+    payment `pay(units)` is not refused, the later budgets being smaller, so a refused employer hires fewer hours. The refusal
+    is the last one met (None when none was), and no bids when no budget could be paid."""
+    refusal = None
+    for budget in budgets:
+        bids, units = bids_for(budget)
+        if not bids:
+            break
+        answer = pay(units)
+        if not isinstance(answer, Refusal):
+            return bids, units, None
+        refusal = answer
+    return [], 0.0, refusal
+
+
 def post_actors(sim, economy, tile_of_actor):
     """({account: AgentOrders}, [ids of the actors that posted]) for the year: the firms', states' and players' places become
     bids like a seat's; each posting actor's money goes into its staff account."""
@@ -272,13 +288,13 @@ def post_actors(sim, economy, tile_of_actor):
     for actor_id, actor in sorted(sim.scenario.actors.actors.items()):
         if actor.record.exited_year is not None or not actor.record.staff_wanted:
             continue
-        bids, units = employer_bids(economy, actor_id, actor.record.staff_wanted, tile_of_actor(actor_id), max(0.0, actor.money))
+        tile, net, in_hand = tile_of_actor(actor_id), max(0.0, actor.money), actor.purses.purse(actor_id)
+        budgets = [net] + ([in_hand] if in_hand < net else [])   # a payment refused on the net is retried on the coin in hand
+        bids, units, refusal = bids_paid(
+            lambda budget: employer_bids(economy, actor_id, actor.record.staff_wanted, tile, budget), budgets,
+            lambda units: sim.send(PayExchange(actor_id, units * economy_api.coin_per_unit(economy), "wages offered in the labour market")))
         if not bids:
-            note_actor_unposted(sim, actor_id, unposted_cause(economy, actor.record.staff_wanted))
-            continue
-        paid = sim.send(PayExchange(actor_id, units * economy_api.coin_per_unit(economy), "wages offered in the labour market"))
-        if isinstance(paid, Refusal):
-            note_actor_unposted(sim, actor_id, paid.cause)
+            note_actor_unposted(sim, actor_id, unposted_cause(economy, actor.record.staff_wanted) if refusal is None else refusal.cause)
             continue
         economy_api.post_transfers(economy, [Transfer(EDGE_EXCHANGE, staff_account(actor_id), economy_api.currency_id(economy), units, "wages offered")])
         orders[staff_account(actor_id)] = AgentOrders(labour_bids=tuple(bids))

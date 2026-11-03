@@ -41,8 +41,8 @@ class Recording(ForeignTrade):
         self.lifts.append((partner, flow_tonnes))
 
 
-def trade_module(trader_in_cast=True):
-    answers = {} if trader_in_cast else {NoteTraderMargin: Refusal("no_such_actor", "none")}
+def trade_module(trader_in_cast=True, answers=None):
+    answers = dict(answers or {}) if trader_in_cast else {NoteTraderMargin: Refusal("no_such_actor", "none")}
     return module_harness.build(Recording, world=ForeignTradeWorld(), answers=answers, views={
         "home_unit_price": lambda material: 2.0,
         "civilisation_record": lambda partner: {"coin_standard": {"material": "silver_kg", "kg_per_unit": 1.0}}})
@@ -83,6 +83,15 @@ class CargoSettlement(unittest.TestCase):
         self.assertEqual(module_harness.sent(module), [   # fetched less than booked at the decision
             NoteTraderMargin(TRADER, 120.0 - 160.0), PayEdgeFrom(TRADER, edges.EDGE_MARKET, 160.0 - 120.0, SETTLEMENT)])
         self.assertEqual(module.cargo_legs(), [])
+
+    def test_a_loss_the_trader_cannot_pay_is_logged_and_settlement_goes_on(self):
+        module = trade_module(answers={PayEdgeFrom: Refusal("cannot_pay", "short")})
+        landing(module)
+        (leg,) = module.cargo_legs()
+        settle(module, {leg["id"]: {"tonnes": 8.0, "money": 120.0}})
+        event = module_harness.sent(module)[-1]
+        self.assertEqual((event.kind, event.facts["actor"], event.facts["amount"], event.facts["cause"]), ("unpaid_charge", TRADER, 40.0, "cannot_pay"))
+        self.assertEqual((module.settled, module.cargo_legs()), ([(PARTNER, 10.0, 100.0)], []))
 
     def test_a_taking_cargo_the_book_part_filled_is_paid_for_by_the_partner_only_in_part(self):
         module = trade_module()

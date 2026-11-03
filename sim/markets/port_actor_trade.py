@@ -5,7 +5,8 @@ port_actors.py turns them into orders and settles them. This object notes them, 
 they fetched back into the actors' coin."""
 from sim.actors import api as actors_api
 from sim.economy import api as economy_api
-from sim.ledger.api import PayExchange, ReceiveFromExchange
+from sim.ledger.api import UNPAID_CHARGE_KIND, PayExchange, ReceiveFromExchange
+from sim.reporting.api import RecordEvent
 from sim.prices.api import prices as price_solver
 from sim.world.material_units import tonnes_per_unit
 
@@ -72,8 +73,13 @@ class ActorTrade:
         purchase_orders, funding = port_actors.purchase_orders(
             economy, purchases, tonnes_per_unit, agent.actor_tile, world.economy.materials_in, coin)
         economy_api.move_goods(economy, moves)
-        for buyer, coin_spent, _units in funding:
-            world.send(PayExchange(buyer, coin_spent, "market purchases"))
+        purchase_orders, funding, refused = port_actors.keep_paid_purchases(
+            purchase_orders, funding, lambda buyer, coin_spent: world.send(PayExchange(buyer, coin_spent, "market purchases")))
+        for buyer, coin_spent, refusal in refused:   # a purchase the buyer cannot pay for is not bid for
+            world.send(RecordEvent.of(UNPAID_CHARGE_KIND, "%s could not pay for its market purchases: %s" % (buyer, refusal),
+                                      actor=buyer, amount=coin_spent, purpose="market purchases", cause=refusal.cause))
+        unfunded = {buyer for buyer, _coin, _refusal in refused} - {buyer for buyer, _coin, _units in funding}
+        purchases = [purchase for purchase in purchases if purchase["buyer"] not in unfunded]   # no account was funded for them
         port_actors.fund(economy, funding)
         orders.update(sale_orders)
         orders.update(purchase_orders)

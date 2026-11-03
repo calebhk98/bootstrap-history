@@ -9,6 +9,7 @@ import unittest
 from unittest import mock
 
 from sim.markets import port_actors as actors_port
+from sim.refusal import Refusal
 
 GRAIN, FARMS, COIN = "grain_kg", "farms", "coin"
 
@@ -86,6 +87,28 @@ class PurchaseOrdersTests(unittest.TestCase):
         purchases = [{"buyer": "state:a", "commodity": "grain", "tonnes": 6.0, "budget": 40.0}]
         self.assertEqual(actors_port.purchase_orders(stand_in_economy(), purchases, per_unit, tile_of,
                                                      lambda commodity: ["other"], 4.0), ({}, []))
+
+
+class PaidPurchasesTests(unittest.TestCase):
+    def bid(self, name, budget=10.0):
+        return actors_port.Bid(actors_port.buy_account(name), GRAIN, "area:farms", FARMS, 0.0, 1.0, budget, 0.0, budget)
+
+    def test_a_refused_purchase_is_dropped_with_its_bid_and_not_funded(self):
+        orders = {actors_port.buy_account("a"): actors_port.AgentOrders(bids=(self.bid("a", 10.0), self.bid("a", 20.0))),
+                  actors_port.buy_account("b"): actors_port.AgentOrders(bids=(self.bid("b", 30.0),))}
+        funding = [("a", 10.0, 1.0), ("a", 20.0, 2.0), ("b", 30.0, 3.0)]
+        answers = iter([Refusal("cannot_pay", "short"), None, None])
+        kept_orders, kept_funding, refused = actors_port.keep_paid_purchases(orders, funding, lambda buyer, coin: next(answers))
+        self.assertEqual(kept_funding, [("a", 20.0, 2.0), ("b", 30.0, 3.0)])
+        self.assertEqual([bid.budget for bid in kept_orders[actors_port.buy_account("a")].bids], [20.0])
+        self.assertEqual([bid.budget for bid in kept_orders[actors_port.buy_account("b")].bids], [30.0])
+        self.assertEqual([(buyer, coin, refusal.cause) for buyer, coin, refusal in refused], [("a", 10.0, "cannot_pay")])
+
+    def test_a_buyer_whose_every_purchase_is_refused_has_no_order(self):
+        orders = {actors_port.buy_account("a"): actors_port.AgentOrders(bids=(self.bid("a"),))}
+        kept_orders, kept_funding, refused = actors_port.keep_paid_purchases(
+            orders, [("a", 10.0, 1.0)], lambda buyer, coin: Refusal("cannot_pay", "short"))
+        self.assertEqual((kept_orders, kept_funding, len(refused)), ({}, [], 1))
 
 
 class FundTests(unittest.TestCase):

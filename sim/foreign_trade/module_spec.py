@@ -5,6 +5,7 @@ place (the cast of actors, the map handle)."""
 from sim.actors.api import NoteTraderMargin
 from sim.assembly.api import KEYED, QUOTE, ModuleSpec, ViewSpec
 from sim.ledger.api import PayActorFromEdge, PayEdgeFrom
+from sim.reporting.api import RecordEvent
 
 from .commands import (CloseMarketsTo, ResetActorTradeTallies, NoteActorHomeTrade, NoteActorTrade, NoteCargoLeg, RecordStockTaken,
                        SettleFlow, SettleTraderCargo)
@@ -65,5 +66,5 @@ MODULE_SPECS = (ModuleSpec(
              (NoteActorHomeTrade, "apply_note_actor_home_trade"), (NoteCargoLeg, "apply_note_cargo_leg"),
              (SettleTraderCargo, "apply_settle_trader_cargo"), (ResetActorTradeTallies, "apply_reset_actor_trade_tallies")),
     reads=tuple(name for names in READS_BY_OWNER.values() for name in names),
-    sends=(PayActorFromEdge, PayEdgeFrom, NoteTraderMargin),
+    sends=(PayActorFromEdge, PayEdgeFrom, NoteTraderMargin, RecordEvent),
 ),)

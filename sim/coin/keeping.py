@@ -7,7 +7,9 @@ country's pay."""
 from sim.agents.api import edges
 from sim.assembly.api import Part
 from sim.labour.api import wage_provider
-from sim.ledger.api import PayEdgeFrom
+from sim.ledger.api import UNPAID_CHARGE_KIND, PayEdgeFrom
+from sim.refusal import Refusal
+from sim.reporting.api import RecordEvent
 from sim.world import coin_metal
 
 from . import rules
@@ -17,7 +19,7 @@ from .constants import COIN_GUARD_HOURS_PER_TONNE_YEAR, KEEPING_CAUSE, KEEPING_P
 class Keeping(Part):
     """The views of the hoard and its keeping cost, and the command `ChargeKeeping` (needs: civilisation,
     money_per_labour_hour, acting_balance, credit_limit, partner_coin_standard, partner_route_cost, cast,
-    actor_world; sends PayEdgeFrom)."""
+    actor_world; sends PayEdgeFrom, RecordEvent)."""
 
     def coin_kg_per_unit(self):
         return wage_provider.coin_standard(self.needs.civilisation())["kg_per_unit"]
@@ -68,4 +70,7 @@ class Keeping(Part):
                 cost *= registry.countries.world_for(actor, world).labour.pay_per_person_year(keeping_trade) / home_pay
             if cost > 0.0:
                 guards = edges.EDGE_COIN_GUARDS if at_home else "%s:%s" % (edges.EDGE_COIN_GUARDS, country)
-                self.needs.send(PayEdgeFrom(actor_id, guards, cost, KEEPING_CAUSE))
+                refusal = self.needs.send(PayEdgeFrom(actor_id, guards, cost, KEEPING_CAUSE))
+                if isinstance(refusal, Refusal):   # the actor cannot pay it: this year's keeping goes unpaid
+                    self.needs.send(RecordEvent.of(UNPAID_CHARGE_KIND, "%s could not pay %s: %s" % (actor_id, KEEPING_CAUSE, refusal),
+                                                   actor=actor_id, edge=guards, amount=cost, purpose=KEEPING_CAUSE, cause=refusal.cause))

@@ -9,6 +9,7 @@ from typing import Optional
 from sim.agents.api import edges, joint_stock
 from sim.assembly.api import Part
 from sim.labour.api import wage_provider
+from sim.refusal import Refusal
 from sim.actors.api import DrawDownActorStore, HoldEdgeGoods
 from sim.demography.api import TakeFromGranary
 from sim.ledger.api import STORE_ACTOR, STORE_GRANARY, STORE_STOCK, DrawDownStock, PayEdge, PayEdgeFrom
@@ -16,6 +17,12 @@ from sim.ledger.api import STORE_ACTOR, STORE_GRANARY, STORE_STOCK, DrawDownStoc
 from . import exposure as exposures
 from . import theft_exposure
 from .constants import COIN_GUARD_HOURS_PER_TONNE_YEAR, GUARDED_KINDS, THEFT_CAUSE
+
+
+def takeable_money(wanted, exposed_purse, coin_held):
+    """The money thieves can take: what they want, never more than the exposed purse or the coin the holder holds in hand
+    (a theft takes coin, it never draws the holder's credit)."""
+    return max(0.0, min(wanted, exposed_purse, coin_held))
 
 
 class Theft(Part):
@@ -41,21 +48,19 @@ class Theft(Part):
         return self.needs.visible_scale(self.needs.headcount(), self.needs.acting_balance(), self.needs.eminence())
 
     def steal_from(self, holder: Optional[str], exposure, strength, guard_hours_per_tonne_year, visible_scale, state_reach,
-                   protection, cause=THEFT_CAUSE):
+                   protection, cause=THEFT_CAUSE, coin_held=None):
         """Thieves take a theft of this strength from what the holder keeps: money to the thieves' edge, goods out of
         its stock to the edge's goods. `holder` is an actor's id, or None for the acting household. Returns the money
-        taken, never more than the purse."""
+        taken, never more than the purse or the `coin_held` in hand (None: the purse)."""
         shares = theft_exposure.theft_shares_by_kind(exposure.values, strength, guard_hours_per_tonne_year,
                                                      visible_scale, state_reach, protection)
         wanted = sum(max(0.0, value) * shares[kind] for kind, value in exposure.values.items()
                      if kind not in ("goods", "land"))
-        taken = min(wanted, exposure.purse)
+        taken = takeable_money(wanted, exposure.purse, exposure.purse if coin_held is None else coin_held)
         if taken > 0.0:
-            if holder is None:
-                if self.needs.send(PayEdge(edges.EDGE_THIEVES, taken, cause)):   # the purse cannot be taken from: no theft happened, no goods go
-                    return 0.0
-            else:
-                self.needs.send(PayEdgeFrom(holder, edges.EDGE_THIEVES, taken, cause))
+            payment = PayEdge(edges.EDGE_THIEVES, taken, cause) if holder is None else PayEdgeFrom(holder, edges.EDGE_THIEVES, taken, cause)
+            if isinstance(self.needs.send(payment), Refusal):   # the purse cannot be taken from: no theft happened, no goods go
+                return 0.0
         for lot in exposure.lots:
             tonnes = min(lot.tonnes, lot.tonnes * shares.get("goods", 0.0))
             if tonnes > 0.0:
@@ -92,7 +97,7 @@ class Theft(Part):
             scale = self.needs.visible_scale(sum(actor.workforce.values()), actor.money, actor.stance.prominence())
             self.steal_from(actor_id, exposure, theft_exposure.THEFT_SHARE_PER_YEAR_AT_FULL_EXPOSURE,
                             {kind: COIN_GUARD_HOURS_PER_TONNE_YEAR for kind in GUARDED_KINDS}, scale,
-                            self.needs.order_reach(), 0.0)
+                            self.needs.order_reach(), 0.0, coin_held=actor.purses.purse(actor_id))
 
     def charge_household_theft(self, command):
         """The household loses its expected theft; its guarding counts for the share of the keeping cost its purse could
