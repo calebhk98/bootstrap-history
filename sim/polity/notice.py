@@ -6,7 +6,7 @@ military supply, press an office on a household, or threaten confiscation. Every
 another purpose, combined freshly for the question; nothing is stored. The state's reach (0..1) is the first factor: a state
 with few officials or long roads caps the product so low that no threshold is crossed.
 
-Needs: danger_lines, base_annual_wage, headcount, acting_balance, labour_state_weights, techniques_held,
+Needs: danger_lines, base_annual_wage, unskilled_trade, headcount, acting_balance, labour_state_weights, techniques_held,
 techniques_granted, tree_nodes, effect_best, civilisation, mass_text."""
 from sim.agents.api import demand_answer
 from sim.assembly.api import Part
@@ -70,7 +70,7 @@ class Notice(Part):
 		"""household_scale's rule for any taxpayer: what an observer can count of its staff, its wealth and (for a person) its
 		prominence, and a surcharge for having defied the state (what is hidden is not counted in `wealth`)."""
 		return rules.visible_scale(headcount, wealth, eminence, demand_answer.notice_surcharge(defiance),
-		                           self.needs.danger_lines()["eminence"], self.needs.base_annual_wage["labourer"])
+		                           self.needs.danger_lines()["eminence"], self.needs.base_annual_wage[self.needs.unskilled_trade()])
 
 	# ---- the state's notice and its levies ----
 

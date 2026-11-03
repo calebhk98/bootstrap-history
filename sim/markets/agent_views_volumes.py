@@ -70,6 +70,6 @@ class AgentVolumeViews(AgentViewPart):
 		return None if parts is None else parts.households.traded_volumes(country)
 
 	def agent_country(self, country):
-		"""What the agent economy answers for a partner country in it, or None (not in it, or no wage yet)."""
+		"""What the agent economy answers for a partner country in it, or None (home, or a country not in the economy)."""
 		parts = self._answering()
 		return None if parts is None else parts.households.country(country)

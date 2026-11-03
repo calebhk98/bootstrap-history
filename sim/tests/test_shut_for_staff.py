@@ -24,6 +24,7 @@ def stub_game(missing_by_node, operating=("forge",)):
     return Game(
         done=set(NODES), operating=set(operating), staffing_held_totals=lambda: {},
         is_venture=lambda node_id: node_id != "school",
+        trade_registry=lambda: {"artisan": {"staff_resource": "craftsmen"}, "scholar": {"staff_resource": "scholars"}, "smith": {}},
         staffing_missing_to_open=lambda node_id, held: missing_by_node.get(node_id, {}))
 
 

@@ -210,6 +210,7 @@ class OneWageTests(unittest.TestCase):
                           for tile in fixture.tiles() if tile != fixture.TOWN})
         carried = {fixture.TOWN: {fixture.FARMS: 10.0}}
         record = type("Record", (), {"memory": type("Memory", (), {"wages": wages, "opening_wage_level": lambda self, money: 1.0})(),
+                                     "cohorts": {}, "merchants": {},
                                      "carriage": type("Carriage", (), {"carried": carried, "area_imbalance": 1.0})()})()
         table = setup.carriage_table()
         scale = carriage_hours.wage_scale(setup, record, table)

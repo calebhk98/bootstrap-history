@@ -3,6 +3,7 @@
 import sim.engine.ui_port as ui_port
 import math
 
+from sim.labour.api import generic_craft_trade
 from sim.refusal import cause_of
 from sim.engine.ui_port import closure, critical_path, topo_order
 
@@ -183,16 +184,16 @@ def _score_components(sim, nodes, reveal_tree_total):
     # "wu zhu cash", "hacksilver by weight", "cacao bean and cotton cloth",
     # each with its own wage level) - comparing raw capital across civilisations
     # would be comparing different units with the same name. Deflating by
-    # one ordinary worker-year IN THIS CIVILISATION'S OWN MONEY (an
-    # unskilled worker's annual wage as the labour market quotes it: the cleared wage
-    # of the economy) turns capital into a currency-free "years of an
+    # one ordinary worker-year IN THIS CIVILISATION'S OWN MONEY (a
+    # generic craftsman's annual wage as the labour market quotes it, the figure the anchor
+    # was calibrated on: the cleared wage of the economy) turns capital into a currency-free "years of an
     # ordinary worker's wage this fortune could buy", which is comparable
     # across civilisations. Log-scaled for the same reason as workforce,
     # against the same methodology: a round anchor ten times the
     # calibration save's 4.41 million worker-years, rounded to a clean
     # figure (50 million), not that save's own number.
     ECONOMY_ANCHOR_WORKER_YEARS = 50_000_000.0
-    reference_wage = sim.view("labour_market")().quote_annual(sim.view("unskilled_trade")())
+    reference_wage = sim.view("labour_market")().quote_annual(generic_craft_trade())
     worker_years = max(0.0, sim.view("acting_balance")()) / reference_wage
     econ_norm = min(1.0, math.log1p(worker_years)
                     / math.log1p(ECONOMY_ANCHOR_WORKER_YEARS))

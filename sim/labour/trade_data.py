@@ -97,6 +97,10 @@ def generic_craft_trade() -> str:
     return legacy_trade_defaults.GENERIC_CRAFT_TRADE
 
 
+def bonded_pseudo_trade() -> str:
+    return legacy_trade_defaults.BONDED_PSEUDO_TRADE
+
+
 def is_generic_staff(trade: str) -> bool:
     return trade in legacy_trade_defaults.GENERIC_STAFF_TRADES
 

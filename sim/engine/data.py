@@ -46,7 +46,7 @@ UNPRICED_MATERIAL_PRICE = declare(
     why="A node's material bill is read by project costs and screens as a number; until they carry an unknown "
         "bill, a material the price solver cannot resolve counts as free and the bill is a lower bound.")
 from sim.production.api import node_revenue
-from sim.labour.api import wage_provider
+from sim.labour.api import trade_of_role, wage_provider
 from .default_civilisation import default_civilisation_id
 from sim.workforce.api import build_schedule
 from sim.content.api import (
@@ -193,10 +193,10 @@ def schedule_of_civilisation(civ: JSONDict) -> wage_provider.wages.WageSchedule:
 
 
 def kit_capital(kit_id: str, civ: JSONDict) -> float:
-    """Opening money of a kit for a civilisation: its labourer-years times the
-    civilisation's opening annual labourer wage."""
+    """Opening money of a kit for a civilisation: its unskilled-worker-years times the
+    civilisation's opening annual unskilled wage."""
     schedule = build_schedule(_TRADE_REGISTRY, civ)
-    return scenario_rules.kit_capital(STARTING_KITS[kit_id], schedule.annual_wage("labourer"))
+    return scenario_rules.kit_capital(STARTING_KITS[kit_id], schedule.annual_wage(trade_of_role(_TRADE_REGISTRY, "unskilled")))
 
 
 def _variant_base(base_id: str, chain: tuple) -> JSONDict:
