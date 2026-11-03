@@ -1,11 +1,6 @@
 """Numbers the workforce module declares."""
 from sim.constants import declare
 
-BASE_WORKING_DAY_HOURS = declare(
-    "BASE_WORKING_DAY_HOURS", 10.0, kind="engineering_estimate", unit="hours per working day",
-    source="The ten-hour day behind HOURS_PER_PERSON_YEAR in sim/unit_conversions.py.", confidence="B",
-    why="The day that extra lit hours are added to; the working year grows in the same proportion.")
-
 # Years between one automatic teaching of a trade and the next. Long
 # enough that restoring a lost trade is an event rather than a habit.
 RETEACH_EVERY = declare(

@@ -2,9 +2,9 @@
 from sim.assembly.api import Part
 from sim.labour.api import STATE_WEIGHTS, wage_provider
 from sim.unit_conversions import HOURS_PER_PERSON_YEAR
+from sim.world.farm_labour import hours_per_working_day
 
 from . import rules
-from .constants import BASE_WORKING_DAY_HOURS
 
 
 class Views(Part):
@@ -167,4 +167,4 @@ class Views(Part):
 		"""Hours one person gives in a year: the convention, stretched by the lit hours added to the day."""
 		if not self.needs.mechanic["working_day"]:
 			return HOURS_PER_PERSON_YEAR
-		return rules.working_hours_per_year(HOURS_PER_PERSON_YEAR, self.extra_lit_hours_per_day(), BASE_WORKING_DAY_HOURS)
+		return rules.working_hours_per_year(HOURS_PER_PERSON_YEAR, self.extra_lit_hours_per_day(), hours_per_working_day())
