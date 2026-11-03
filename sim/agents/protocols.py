@@ -126,7 +126,7 @@ class SeatsPart(Protocol):
 		...
 
 	def founder_review(self) -> Any:
-		"""The founder's seat as the owner of a reviewed business (what `FounderReview` asks)."""
+		"""The founder's seat as the owner of a reviewed business (the hooks of `Reviewable`, answered by the seat)."""
 		...
 
 

@@ -4,8 +4,9 @@ QUICK_TOPIC = True
 
 import json
 import unittest
+from types import SimpleNamespace
 
-from sim.agents.api import Business, FounderReview, Plant
+from sim.agents.api import Business, Plant
 from sim.engine.state import deserialize_state, serialize_state
 from sim.invalidating import ActiveProjectState
 from sim.production.api import RefreshOperatingCaches
@@ -140,17 +141,18 @@ class VenturesCommands(unittest.TestCase):
         plant = module.seat.business.reading.plant_of("mill")
         self.assertEqual((plant.margin, plant.loss_years), (-1.0, 2))
 
-    def test_the_review_is_run_on_the_seats_business_as_the_founder_answers_it_and_the_actors_world_under_the_rules_named(self):
-        module = ventures_host.build(actor_world="world")
-        module.seat.business.review = lambda owner, world, rules: (owner, world, rules)
-        owner, world, rules = module.apply_review_concerns(ReviewConcerns(("staff",)))
-        self.assertEqual((isinstance(owner, FounderReview), world, rules), (True, "world", ("staff",)))
+    def test_the_review_is_run_on_the_seats_business_with_the_seats_own_review_under_the_rules_named(self):
+        seat_review = object()
+        module = ventures_host.build(actor_world=SimpleNamespace(seats=SimpleNamespace(founder_review=lambda: seat_review)))
+        module.seat.business.reviews.review = lambda owner, rules: (owner, rules)
+        owner, rules = module.apply_review_concerns(ReviewConcerns(("staff",)))
+        self.assertEqual((owner, rules), (seat_review, ("staff",)))
 
-    def test_the_reopening_review_is_run_on_the_seats_business_as_the_founder_answers_it_and_the_actors_world(self):
-        module = ventures_host.build(actor_world="world")
-        module.seat.business.review_reopening = lambda owner, world: [owner, world]
-        owner, world = module.apply_review_reopening(ReviewReopening())
-        self.assertEqual((isinstance(owner, FounderReview), world), (True, "world"))
+    def test_the_reopening_review_is_run_on_the_seats_business_with_the_seats_own_review(self):
+        seat_review = object()
+        module = ventures_host.build(actor_world=SimpleNamespace(seats=SimpleNamespace(founder_review=lambda: seat_review)))
+        module.seat.business.reviews.review_reopening = lambda owner: [owner]
+        self.assertEqual(module.apply_review_reopening(ReviewReopening()), [seat_review])
 
     def test_a_watched_business_tells_production_and_moves_the_operating_version_when_a_plant_opens(self):
         module = self.module()

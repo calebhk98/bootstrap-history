@@ -21,7 +21,7 @@ class Business:
 	plants: List[Plant] = field(default_factory=list)
 
 	def __post_init__(self) -> None:
-		self._by_key: Dict[str, Plant] = {plant.entry_key: plant for plant in self.plants}
+		self.plant_by_entry: Dict[str, Plant] = {plant.entry_key: plant for plant in self.plants}
 		# told after the set of plants changes (not saved; the registry sets it)
 		self.watch: Optional[Callable[[], None]] = None
 		self._views: Dict[str, Any] = {}
@@ -35,7 +35,7 @@ class Business:
 		"""A business already running a plant of each entry."""
 		return cls(plants=[Plant(entry_key=key, opened_year=opened_year) for key in entry_keys])
 
-	def _changed(self) -> None:
+	def note_plants_changed(self) -> None:
 		if self.watch is not None:
 			self.watch()
 

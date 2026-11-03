@@ -49,7 +49,7 @@ class Owner(business_review.Reviewable):
     def __init__(self, business):
         self.business = business
 
-    def reopens_staffed_plant(self, entry_key, world):
+    def reopens_staffed_plant(self, entry_key):
         return True
 
 
@@ -57,4 +57,4 @@ plants = Business.running(["short_of_staff", "shut_by_player", "running"], opene
 plants.lifecycle.mothball("short_of_staff", 5, business_review.STAFF_SHORT)
 plants.lifecycle.mothball("shut_by_player", 5, "player")
 check("only the plants the staffing rule shut come back, and only when the owner can staff them; one shut on purpose never does",
-      business_review.reopen(plants, Owner(plants), None) == ["short_of_staff"], business_review.reopen(plants, Owner(plants), None))
+      business_review.reopen(plants, Owner(plants)) == ["short_of_staff"], business_review.reopen(plants, Owner(plants)))

@@ -37,5 +37,5 @@ left goes back to the founder who put it up, and any debt still unpaid is writte
 	if founder is not None and "founder_household" in firm.record.plan:
 		household_wealth.release(founder, int(firm.record.plan["founder_household"]), float(firm.record.plan.get("stake", 0.0)))
 	firm.write_off_debt()  # what it still owes is lost to its lenders: nothing is left to repay it from
-	firm.business.reviews.seize_all(firm.review, world)  # the creditors take the plant; what the firm has learned stays with it
+	firm.business.reviews.seize_all(firm.review)  # the creditors take the plant; what the firm has learned stays with it
 	firm.record.exited_year = world.setting.year
