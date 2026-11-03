@@ -120,7 +120,7 @@ printf '%s\n' "$class_name_output" | grep . | tail -5 | sed 's/^/  /'
 
 getattr_output="$(python3 tools/check_getattr_names.py 2>&1)"
 getattr_status=$?
-echo "getattr/hasattr/setattr probes of a name nothing defines (tools/check_getattr_names.py): $(printf '%s\n' "$getattr_output" | grep -c .)"
+echo "literal getattr/hasattr/setattr probes not on the optional list and not on a class that defines the name (tools/check_getattr_names.py): $(printf '%s\n' "$getattr_output" | grep -c .)"
 printf '%s\n' "$getattr_output" | grep . | tail -5 | sed 's/^/  /'
 
 # Checks that fail the run when above zero; the other counts above are a backlog and stay informational.
@@ -138,7 +138,7 @@ failed_checks=()
 [ "$owner_status" -ne 0 ] && failed_checks+=("record part writers (tools/check_record_owners.py)")
 [ "$constructor_status" -ne 0 ] && failed_checks+=("constructor calls (tools/check_constructor_calls.py)")
 [ "$class_name_status" -ne 0 ] && failed_checks+=("class names (tools/check_class_names.py)")
-[ "$getattr_status" -ne 0 ] && failed_checks+=("getattr probes of undefined names (tools/check_getattr_names.py)")
+[ "$getattr_status" -ne 0 ] && failed_checks+=("literal getattr probes (tools/check_getattr_names.py)")
 
 if [ "${#failed_checks[@]}" -eq 0 ]; then
   echo "failing checks: none"
