@@ -146,6 +146,7 @@ def clear_at_one_price(bids: Sequence[Bid], offers: Sequence[Offer], good: GoodI
     fills.extend(seller_fills(seller_quantities, good, area, price))
     fills, wash = without_edge_self_trades(fills)
     traded -= wash
+    wanted -= wash      # the washed quantity was neither wanted by a real buyer nor left unmet
     unmet = math.fsum([max(0.0, bid.floor_quantity - quantity) for bid, quantity in zip(bids, served)])
     return ClearingResult(good, area, currency, price, traded, wanted, supply, unmet, tuple(fills))
 
@@ -178,7 +179,7 @@ def clear(bids: Sequence[Bid], offers: Sequence[Offer], good: GoodId, area: Area
     if not traded > 0.0:
         return _empty(good, area, currency, _held_price(buyers, asks), bids, supply, offers)
     mean = math.fsum(fill.quantity * fill.price for fill in sales) / traded
-    return ClearingResult(good, area, currency, mean, traded, allocation.requested, supply, unmet, tuple(fills))
+    return ClearingResult(good, area, currency, mean, traded, allocation.requested - wash, supply, unmet, tuple(fills))
 
 
 def _asks(buyers: Buyers, ordered: Sequence[Offer]) -> List[float]:
