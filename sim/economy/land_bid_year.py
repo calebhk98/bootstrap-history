@@ -4,7 +4,7 @@ become its title. The rules are in land_bid.py."""
 import dataclasses
 from typing import Dict, List, Mapping
 
-from . import land_bid, land_market, sites, titles_ground, titles_value, titles_worked
+from . import land_bid, land_market, sites, titles_ground, titles_value, titles_worked, trade_wages
 from .households_own import Option, plot_hectares
 from .protocols import AgentOrders
 from .setup import labour_area
@@ -14,10 +14,8 @@ from .types import EDGE_CONSUMPTION, Bid, GoodsMove
 def best_margin(setup, view, cohort, options: Mapping[str, List[Option]], tile_spec):
     """(crop margin per hectare, hours a hectare takes, recipe id) of the recipe, of those the cohort grows its needs
     with, that nets most at the prices and the wage it sees. The margin is net of the wage, so a rising wage lowers it. A recipe
-    with an unpriced output is left out, and with no wage there is no margin."""
-    wage = view.wage(setup.servant_trade, labour_area(cohort.tile))
-    if wage is None:
-        return (0.0, 0.0, "")
+    with an unpriced output is left out."""
+    wage = trade_wages.wage_in_view(setup, view, setup.servant_trade, labour_area(cohort.tile))
     rows = []
     for recipe_id in sorted({rows_of_need[0][1] for rows_of_need in options.values() if rows_of_need}):   # the recipe it grows each need with
         recipe, land = setup.recipes[recipe_id], setup.land_per_run.get(recipe_id, 0.0)

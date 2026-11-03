@@ -216,7 +216,7 @@ def _without_washed(fills: List[Fill], washed: Dict[str, float]) -> List[Fill]:
         take = min(fill.quantity, left.get((fill.agent, fill.side), 0.0))
         if take > 0.0:
             left[(fill.agent, fill.side)] -= take
-        if fill.quantity - take > 0.0:
+        if fill.quantity - take > ROUNDING_SHARE * fill.quantity:     # a residue of float dust is no fill
             result.append(fill if take == 0.0 else make_fill(fill.agent, fill.good, fill.area, fill.tile,
                                                              fill.quantity - take, fill.price, fill.side))
     return result

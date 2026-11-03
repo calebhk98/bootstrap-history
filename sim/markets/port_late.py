@@ -17,15 +17,19 @@ def techniques_held(sim):
     return sim.production.techniques_granted() | frozenset(sim.production.techniques_in_use())
 
 
-def late_goods_costs(sim, prices, goods, held_nodes, production):
-    """{good: money per unit} the cost of making each good that has no price yet, at the economy's live input
-    prices (the opening's where the economy has none) and live wages, the cheapest way the held techniques allow."""
+def late_goods_costs(sim, prices, goods, held_nodes, production, wage_level=1.0):
+    """{good: opening-year money per unit} the cost of making each good that has no price yet, at the economy's live
+    input prices (the opening's, scaled to today's money, where the economy has none) and live wages, the cheapest way
+    the held techniques allow. `wage_level` is today's money per opening-year money."""
     live = sim.economy.agent_prices() or {}
     wages = {}
 
     def input_price_of(material):
-        price = live.get(material) or prices.get(material)
-        return price if price and price > 0.0 else None
+        price = live.get(material)
+        if price and price > 0.0:
+            return price
+        opening = prices.get(material)      # opening-year money: scaled to today's
+        return opening * wage_level if opening and opening > 0.0 else None
 
     def wage_of(trade):
         if trade not in wages:
@@ -40,7 +44,7 @@ def late_goods_costs(sim, prices, goods, held_nodes, production):
         made = cost_of_making(good, held_nodes, input_price_of, wage_of, rate, production=production,
                               civilization=sim.scenario.civ)
         if made is not None and made.unit_cost > 0.0:
-            found[good] = made.unit_cost
+            found[good] = made.unit_cost / wage_level
     return found
 
 
@@ -59,7 +63,7 @@ def opening_with_techniques(sim, opening, held_nodes, production, wage_level):
         touched.update(entry.get("outputs") or {}, entry.get("inputs") or {})
         trades.update(entry.get("labour_hours") or {})
     prices = dict(opening["prices"])
-    prices.update(late_goods_costs(sim, prices, sorted(touched), held_nodes, production))
+    prices.update(late_goods_costs(sim, prices, sorted(touched), held_nodes, production, wage_level))
     wages = {**opening["wages"],
              **opening_wages(sim, trades - set(opening["wages"]), wage_level)}
     grown = dict(opening)

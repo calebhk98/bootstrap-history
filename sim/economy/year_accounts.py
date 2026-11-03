@@ -216,9 +216,18 @@ def _tiles(cohorts: List[CohortAccount]) -> List[TileAccount]:
     return rows
 
 
+def opening_wage_at_index_base(setup, record, trade: str) -> Optional[float]:
+    """The setup's opening wage of `trade` in the money the index base prices stand in: the base is the prices when the
+    spin-up was rebased, so the opening-year wage is scaled by the level the rebase kept (one before any rebase)."""
+    wage = setup.opening_wages.get(trade)
+    if wage is None:
+        return None
+    return wage * record.memory.opening_wage_levels.get(setup.currency_id, 1.0)
+
+
 def _real_wages(setup, record, prices, wages) -> Dict[str, RealWage]:
     people = math.fsum(setup.opening_population_by_tile.values())
     now = basket_cost_per_head(record.goods, prices, people)
     then = basket_cost_per_head(record.goods, record.goods.index_base_prices or setup.opening_prices, people)
-    return {trade: RealWage(trade, wage, setup.opening_wages.get(trade), now, then, setup.working_hours_per_year)
+    return {trade: RealWage(trade, wage, opening_wage_at_index_base(setup, record, trade), now, then, setup.working_hours_per_year)
             for trade, wage in sorted(wages.items())}
