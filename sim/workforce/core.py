@@ -13,7 +13,8 @@ class Core(Part):
 		self._buy_refusals = {}      # seat id -> why its last purchase of people was refused, for the screen that asked; never saved
 
 	def setup(self):
-		self.labour = Labour(WorkforceWorld(self.needs, self.module, self.parts))
+		self.reads = WorkforceWorld(self.needs, self.module, self.parts)   # what labour reads of the game
+		self.labour = Labour(self.reads)
 
 	def staff_scale(self):
 		"""The affordability scale `staff_capacity` last worked out for the acting seat (all of the ceiling before the first)."""

@@ -137,7 +137,7 @@ class Views(Part):
 
 	def trade_registry(self):
 		"""{trade id: {family, training_years, ...the trade's extra fields}}."""
-		return self.world.trade_registry
+		return self.parts.core.reads.trades.trade_registry
 
 	# ---- the farm ----
 
