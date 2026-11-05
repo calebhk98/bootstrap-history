@@ -79,6 +79,19 @@ class LeaseTests(unittest.TestCase):
         self.assertGreater(sum(each.amount for each in paid), 0.0)
 
 
+class TenancyAskOrderTests(unittest.TestCase):
+    def test_the_tenancy_ask_is_built_after_this_years_rent_is_posted(self):
+        setup, record = economy_with(100.0)
+        settle(setup, record, 300.0)
+        seen = []
+        record.land.land_rent = {"t": 7.0}
+        land_market.settle_year(setup, record, view(), {"producer:t": 5.0},
+                                tenancy_ask=lambda: seen.append(dict(record.land.land_rent)) or {})
+        self.assertEqual(len(seen), 1)
+        self.assertNotEqual(seen[0]["t"], 7.0)
+        self.assertAlmostEqual(seen[0]["t"], record.land.land_rent["t"])
+
+
 class PostedRentOrderTests(unittest.TestCase):
     def test_posted_rents_come_back_in_sorted_tile_order(self):
         posted = land_lease.posted_rents({"b": 1.0, "z": 1.0, "a": 1.0}, {"m": 2.0, "c": 2.0})

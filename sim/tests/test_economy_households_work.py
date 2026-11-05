@@ -6,6 +6,7 @@ import json
 import os
 import unittest
 
+from sim.content import views
 from sim.economy import households_work
 from sim.world.need_basket import make_basket
 from sim.world import need_basket
@@ -31,7 +32,7 @@ class HoursTests(unittest.TestCase):
         self.assertAlmostEqual(households_work.hours_per_person_per_year(DATA, has_hearth=False), 50.0)
 
     def test_the_needs_file_satiation_equals_the_hours_of_the_data_file(self):
-        data = households_work.load_household_work()
+        data = views.household_work_data(os.path.join(ROOT, "no_mods"))
         with open(os.path.join(ROOT, "data", "world", "needs.json"), encoding="utf-8") as handle:
             need = json.load(handle)["needs"]["household_work"]
         self.assertAlmostEqual(need["satiation_per_capita_per_year"], households_work.hours_per_person_per_year(data))

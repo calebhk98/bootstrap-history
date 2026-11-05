@@ -6,7 +6,7 @@ import unittest
 
 from sim.economy import credit
 from sim.engine.opening_checks import rate_against_history
-from sim.economy.opening_rate import against_history, solved_opening_rate
+from sim.economy.opening_rate import solved_opening_rate
 from sim.economy.types import LoanRequest
 from sim.tests import finance_host
 
@@ -32,11 +32,6 @@ class MarketRateBeforeCredit(unittest.TestCase):
     def test_the_finance_market_rate_is_the_solved_rate_not_the_typed_one(self):
         module = finance_host.build(civilisation={"starting_interest_rate": 0.31})
         self.assertAlmostEqual(module.market_rate(), 0.05)
-
-
-class AgainstHistory(unittest.TestCase):
-    def test_the_solved_rate_is_reported_beside_the_historical_one(self):
-        self.assertEqual(against_history(0.05, 0.20), {"solved": 0.05, "historical": 0.20, "ratio": 0.25})
 
 
 class RateAgainstHistory(unittest.TestCase):

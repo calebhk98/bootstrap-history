@@ -41,6 +41,9 @@ class Content(Module):
 	def household_need_data(self) -> Dict[str, Dict[str, Any]]:
 		return views.household_need_data(self.mods_directory())
 
+	def household_work_data(self) -> Dict[str, Any]:
+		return views.household_work_data(self.mods_directory())
+
 	def declared_actor_kinds(self) -> Dict[str, Any]:
 		return views.declared_actor_kinds(self.mods_directory())
 

@@ -253,7 +253,7 @@ def build_setup(sim, opening=None, production=None):
                       for recipe_id in recipes if production[recipe_id].get("land_hectare_years")},
         yield_factor_by_recipe_tile=cropland_yields(production, recipes, tiles),
         basket_by_tile=baskets_by_tile(basket, need_data, sim.map.tile_climates(all_tile_ids), all_tile_ids), coin_per_unit=unit,
-        household_work=households_work.load_household_work(), ready_to_eat=households_work.ready_to_eat_goods(need_data),
+        household_work=sim.household_work_data(), ready_to_eat=households_work.ready_to_eat_goods(need_data),
         milled_as=household_grinding.milled_as_map(need_data),
         recipes_by_country=recipes_by_country(str(civ["id"]), opening["recipes"], partners),
         tile_owners=sim.farm.tile_owner_map(),

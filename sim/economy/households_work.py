@@ -1,28 +1,17 @@
 """Household work as a need: cooking, water and fuel, cleaning, grinding and childcare take hours every household
-spends (data/world/household_work.json). A household meets them with its own hours or hires them, the same choice
+spends (the content module's `household_work_data`, from data/world/household_work.json with mods applied). A household meets them with its own hours or hires them, the same choice
 as own-plot growing (households_own.py): hours it hires are the domestic servant's (the `household_work` need,
 met by the `domestic_service_hour` good), the rest are its own and come out of the hours it could sell. Cooking
 needs a hearth and fuel; a household without a hearth buys cooked food instead, which is what cooks and eating
 houses supply. Everything here is a plain function of the cohort's figures.
 """
 import dataclasses
-import json
-import os
-from typing import Any, Dict, Mapping
+from typing import Any, Mapping
 
 from sim.constants import declare
 
 from sim.world.need_basket import Basket
 from .price_setting import LOGIT_INTENSITY, choice_shares
-
-_DATA_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "data", "world", "household_work.json")
-
-
-def load_household_work(path: str = _DATA_PATH) -> Dict[str, Any]:
-    """The household-work data file (tasks and the figures behind them)."""
-    with open(path, encoding="utf-8") as handle:
-        return json.load(handle)
-
 
 def hours_per_person_per_year(data: Mapping[str, Any], has_hearth: bool = True, ground_share: float = 1.0,
                               only_grinding: bool = False) -> float:
