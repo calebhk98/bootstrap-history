@@ -9,6 +9,7 @@ from sim.tests.economy_view_defaults import ViewDefaults
 from sim.economy import goods_market, merchants, settlement
 from sim.book import Book
 from sim.economy.market_areas import AreaMap
+from sim.economy import merchants_transit
 from sim.economy.merchants import Merchant
 from sim.tests.test_economy_tile_costs import unit_cost_table
 from sim.economy.types import EDGE_MINT, EDGE_PRODUCTION, Bid, GoodsMove, GoodSpec, Offer, TileSpec, Transfer
@@ -186,6 +187,22 @@ class DispatchAndCloseTests(unittest.TestCase):
     def test_a_loss_shrinks_the_capital(self):
         who = merchant()
         merchants.close_year(who, {}, {}, 90.0, {}, lambda good, tile: "x", "coin", 0.05)
+        self.assertAlmostEqual(who.capital_base, 90.0)
+
+    def test_stock_at_a_market_with_no_learned_price_is_not_a_loss(self):
+        who = merchant()
+        merchants.close_year(who, {}, {}, 90.0, {("salt", "t1"): 5.0}, lambda good, tile: "x", "coin", 0.05)
+        self.assertAlmostEqual(who.capital_base, 100.0)
+
+    def test_in_transit_stock_with_no_learned_price_is_not_a_loss(self):
+        who = merchant()
+        who.in_transit.append(merchants_transit.Shipment("salt", 5.0, "t1", 2))
+        merchants.close_year(who, {}, {}, 90.0, {}, lambda good, tile: "x", "coin", 0.05)
+        self.assertAlmostEqual(who.capital_base, 100.0)
+
+    def test_priced_stock_still_counts_toward_wealth(self):
+        who = merchant(prices={("salt", "x"): 2.0})
+        merchants.close_year(who, {}, {}, 80.0, {("salt", "t1"): 5.0}, lambda good, tile: "x", "coin", 0.05)
         self.assertAlmostEqual(who.capital_base, 90.0)
 
 

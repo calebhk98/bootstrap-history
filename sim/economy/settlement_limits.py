@@ -8,9 +8,6 @@ from typing import Dict, List, Sequence, Tuple
 
 from .types import AgentId, Fill, is_edge
 
-CANNOT_PAY = "cannot_pay"
-CANNOT_DELIVER = "cannot_deliver"
-
 Pairs = Tuple[List[int], List[int], List[float]]
 
 
@@ -46,33 +43,15 @@ def pair_fills(buys: Sequence[Fill], sells: Sequence[Fill]) -> Pairs:
     return buyer_indices, seller_indices, amounts
 
 
-def limit_by_stock(held: Dict[Tuple[AgentId, str], float], keys: List[Tuple[AgentId, str]],
-                   amounts: List[float], unsettled: Dict[Tuple[AgentId, str], float]) -> None:
+def limit_by_stock(held: Dict[Tuple[AgentId, str], float], keys: List[Tuple[AgentId, str]], amounts: List[float]) -> None:
     """Scale each seller's pairs (`keys`: the seller's agent and tile per pair) down to what it holds on its tile (`held`)."""
-    scales = _scales(keys, amounts, held, [1.0] * len(amounts), lambda key: key[0])
-    for key in sorted(scales):
-        wanted, scale = scales[key]
-        unsettled[(key[0], CANNOT_DELIVER)] = unsettled.get((key[0], CANNOT_DELIVER), 0.0) + wanted * (1.0 - scale)
-    _apply(keys, amounts, scales)
+    _apply(keys, amounts, _scales(keys, amounts, held, [1.0] * len(amounts), lambda key: key[0]))
 
 
-def limit_by_purse(balances: Dict[AgentId, float], payers: List[AgentId], amounts: List[float], unit_prices: List[float],
-                   unsettled: Dict[Tuple[AgentId, str], float]) -> Dict[AgentId, float]:
-    """Scale each payer's pairs down to what it can pay, each pair at its own unit price (non-negative); returns the
-    money left unpaid per payer."""
-    scales = _scales(payers, amounts, balances, unit_prices, lambda payer: payer)
-    unpaid: Dict[AgentId, float] = {}
-    for payer in sorted(scales):
-        owed, _scale = scales[payer]
-        unpaid[payer] = owed - max(balances[payer], 0.0)
-    lost = {payer: 0.0 for payer in scales}
-    for payer, amount in zip(payers, amounts):
-        if payer in scales:
-            lost[payer] += amount * (1.0 - scales[payer][1])
-    for payer in sorted(lost):
-        unsettled[(payer, CANNOT_PAY)] = unsettled.get((payer, CANNOT_PAY), 0.0) + lost[payer]
-    _apply(payers, amounts, scales)
-    return unpaid
+def limit_by_purse(balances: Dict[AgentId, float], payers: List[AgentId], amounts: List[float],
+                   unit_prices: List[float]) -> None:
+    """Scale each payer's pairs down to what it can pay, each pair at its own unit price (non-negative)."""
+    _apply(payers, amounts, _scales(payers, amounts, balances, unit_prices, lambda payer: payer))
 
 
 def _scales(keys, amounts: List[float], capacity: dict, unit_prices: List[float], agent_of) -> dict:

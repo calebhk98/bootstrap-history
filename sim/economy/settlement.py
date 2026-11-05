@@ -3,35 +3,20 @@
 A clearing that records who bought from whom (`ClearingResult.pairing`) is settled pair by pair, each at its seller's
 ask; a labour result has its aggregate fills walked in order of (agent, tile) and matched greedily. When a payer cannot
 cover what it owes, or a seller no longer holds what it sold, the affected pairs settle for the part that can be met: the
-undelivered quantity stays with the seller and the unpaid money stays with the payer, and the gap is returned as a
-`Shortfall`. A negative price (a waste someone is paid to take) reverses who pays.
+undelivered quantity stays with the seller and the unpaid money stays with the payer. A negative price (a waste someone is paid to take) reverses who pays.
 """
 from dataclasses import dataclass, field
 from operator import attrgetter
 from typing import Dict, List, Optional, Sequence, Tuple
 
 from sim.book import Book, DeliveredMove
-from .settlement_limits import CANNOT_PAY, limit_by_purse, limit_by_stock, pair_fills
+from .settlement_limits import limit_by_purse, limit_by_stock, pair_fills
 from .types import (AgentId, ClearingResult, CurrencyId, Fill, LabourResult, Pairing, Transfer, is_edge)
-
-@dataclass(frozen=True)
-class Shortfall:
-    agent: AgentId
-    item: str                       # the good, or for labour the trade
-    kind: str                       # CANNOT_PAY or CANNOT_DELIVER
-    unsettled_quantity: float       # quantity (or hours) that did not change hands because of this agent
-    unpaid_amount: float            # money owed and not paid; 0 for CANNOT_DELIVER
-
 
 @dataclass
 class Settlement:
     postings: List[object] = field(default_factory=list)       # the Transfers and GoodsMoves applied
-    shortfalls: List[Shortfall] = field(default_factory=list)
     buyer_money: Dict[AgentId, float] = field(default_factory=dict)   # buyer -> money it paid (negative: paid to take)
-
-    @property
-    def complete(self) -> bool:
-        return not self.shortfalls
 
     def bought_by_buyer(self) -> Dict[AgentId, Tuple[float, float]]:
         """Of a goods settlement, buyer -> (units it received, money it paid net of any it was paid to take). Only the buyer
@@ -53,7 +38,7 @@ def settle_goods(book: Book, result: ClearingResult) -> Settlement:
 
 
 def settle_labour(book: Book, result: LabourResult) -> Settlement:
-    """Wages employer to worker; hours not paid for are reported as unsettled."""
+    """Wages employer to worker; hours the employer cannot pay for are not settled."""
     return _settle(book, result.fills, result.currency, result.trade,
                    "wages for %s" % result.trade, delivers_goods=False)
 
@@ -71,16 +56,15 @@ def _settle(book: Book, fills: Sequence[Fill], currency: CurrencyId, item: str,
     buyer_keys = [pairing.buyers[index] for index in pairing.buyer_index]
     seller_keys = [pairing.sellers[index] for index in pairing.seller_index]
     amounts = list(pairing.quantity)
-    unsettled: Dict[Tuple[AgentId, str], float] = {}
     remaining_stock = {key: book.stock(key[0], item, key[1]) for key in set(seller_keys)}
     if delivers_goods:
-        limit_by_stock(remaining_stock, seller_keys, amounts, unsettled)
+        limit_by_stock(remaining_stock, seller_keys, amounts)
     pair_prices = [pairing.asks[index] for index in pairing.seller_index]
     payers = [buyer[0] if price >= 0.0 else seller[0] for buyer, seller, price in zip(buyer_keys, seller_keys, pair_prices)]
     payees = [seller[0] if price >= 0.0 else buyer[0] for buyer, seller, price in zip(buyer_keys, seller_keys, pair_prices)]
     unit_prices = [abs(price) for price in pair_prices]
     remaining_cash = {payer: book.balance(payer, currency) for payer in set(payers)}
-    unpaid = limit_by_purse(remaining_cash, payers, amounts, unit_prices, unsettled)
+    limit_by_purse(remaining_cash, payers, amounts, unit_prices)
     transfers, moves = [], []
     buyer_money: Dict[AgentId, float] = {}
     edge_payers = {payer for payer in remaining_cash if is_edge(payer)}
@@ -104,7 +88,6 @@ def _settle(book: Book, fills: Sequence[Fill], currency: CurrencyId, item: str,
     book.post(transfers, moves)
     settlement.postings = transfers + moves
     settlement.buyer_money = buyer_money
-    settlement.shortfalls.extend(_shortfalls(item, unsettled, unpaid))
     return settlement
 
 
@@ -118,9 +101,3 @@ def _paired_by_walking(fills: Sequence[Fill]) -> Pairing:
     return Pairing(tuple((fill.agent, fill.tile) for fill in buys), tuple((fill.agent, fill.tile) for fill in sells),
                    tuple(fill.price for fill in sells), tuple(buyer_index), tuple(seller_index), tuple(quantity))
 
-
-def _shortfalls(item: str, unsettled: Dict[Tuple[AgentId, str], float], unpaid: Dict[AgentId, float]) -> List[Shortfall]:
-    records = []
-    for (agent, kind), lost in sorted(unsettled.items()):
-        records.append(Shortfall(agent, item, kind, lost, unpaid.get(agent, 0.0) if kind == CANNOT_PAY else 0.0))
-    return records
