@@ -96,7 +96,7 @@ into another, and a test checks that people are conserved.
 
 Training takes years, so a trade whose employers bid far above the cost of training a substitute pays a scarcity
 wage this year. `scarcity.py` bounds it: no training needed means the long-run cost (`clearing.trained_substitute_wage`,
-the unskilled wage times the training premium); otherwise the hours-weighted worth of the bids (one stray bid with few
+the unskilled wage, times the chance a switcher is hired at it (`unskilled_chance.hire_chance`), times the training premium); otherwise the hours-weighted worth of the bids (one stray bid with few
 hours does not set it), and where trained hands can be fetched, `ImportCosts.supply` gives the bound and the share of the hours wanted that can come at it.
 The ceiling is the mean of the bid worth and the bound-capped worth weighted by that share (`short_run_ceiling`), so it follows the hours
 that can be fetched instead of switching on once they cover the whole shortage. Fetching counts
