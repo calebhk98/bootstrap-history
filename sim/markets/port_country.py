@@ -8,7 +8,7 @@ from typing import Dict, Optional
 
 from .unit_mass import tonnes_per_unit
 from sim.economy.api import (carried_book, cohort_land_rents, country_figures, land_rent_at_tile, coin_per_unit,
-                             country_trade_wage, working_hours_per_year)
+                             country_trade_wage, home_country, working_hours_per_year)
 
 
 def trade_book_in_coin(economy, country: str) -> Dict[str, Dict[str, float]]:
@@ -17,6 +17,15 @@ def trade_book_in_coin(economy, country: str) -> Dict[str, Dict[str, float]]:
     coin = coin_per_unit(economy)
     return {good: {key: value * coin if key.endswith("_value") else value for key, value in entry.items()}
             for good, entry in country_figures.trade_book(economy, country).items()}
+
+
+def home_answers(port):
+    """The home country's part of the open agent economy, or None while the economy is not open or opens now (it is never
+    opened here: the engine's own figures answer until it is)."""
+    if port.opening or not port.agent.opened():
+        return None
+    economy = port.agent.economy()
+    return CountryAnswers(economy, home_country(economy))
 
 
 class CountryAnswers:

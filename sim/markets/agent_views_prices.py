@@ -52,7 +52,7 @@ class AgentPriceViews(AgentViewPart):
 		return self.parts.market_objects.economy.fleet_goods(holder_id)
 
 	def economy_output_value(self):
-		return port_money.output_value(self._economy().world)
+		return port_money.output_value(self._economy())
 
 	def coin_stock_value(self):
-		return port_money.coin_stock_value(self._economy().world)
+		return port_money.coin_stock_value(self._economy())

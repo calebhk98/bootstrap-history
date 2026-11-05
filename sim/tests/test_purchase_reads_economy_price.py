@@ -129,7 +129,7 @@ coin = {"material": COIN_METAL, "kg_per_unit": 0.0035}
 world = SimpleNamespace(scenario=SimpleNamespace(civ={"coin_standard": coin}), goods_market=market, finance=SimpleNamespace(coin_stock_units=lambda: 2000.0))
 expected_stock = 2000.0 * coin["kg_per_unit"] * metal_price
 check("the coin the society holds is counted at that price",
-      abs(port_money.coin_stock_value(world) - expected_stock) <= 1e-9 * expected_stock, (port_money.coin_stock_value(world), expected_stock))
+      abs(port_money.coin_stock_value_of(None, world) - expected_stock) <= 1e-9 * expected_stock, (port_money.coin_stock_value_of(None, world), expected_stock))
 def trade_over(goods_market):
     return module_harness.build(ForeignTrade, views={"civilisation_record": load_civ,
                                                      "home_unit_price": goods_market.offers.home_unit_price})

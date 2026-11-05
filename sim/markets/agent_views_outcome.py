@@ -24,8 +24,9 @@ class AgentOutcomeViews(AgentViewPart):
 		return self._economy().agent.spin_up_result()
 
 	def agent_health(self, metals=(), staple=None):
-		"""The agent economy's health figures over the years this game has played (port_health.py)."""
-		return health_report(self._economy().agent, metals, staple)
+		"""The agent economy's health figures over the years this game has played (port_health.py); None while it opens."""
+		parts = self._answering()
+		return None if parts is None else health_report(self._economy().agent, metals, staple)
 
 	def agent_last_outcome(self):
 		"""The agent economy's outcome for the last year this process ran (its accounts, wages and prices); None on a game
@@ -34,20 +35,26 @@ class AgentOutcomeViews(AgentViewPart):
 
 	def agent_opening_figures(self):
 		"""What the running agent economy opened with that the opening checks compare: its unskilled trade, interest rate
-		and coin metal."""
-		economy = self.parts.market_objects.economy.agent.economy()
+		and coin metal; None while it opens."""
+		if self._answering() is None:
+			return None
+		economy = self._economy().agent.economy()
 		return {"unskilled_trade": economy_api.unskilled_trade(economy), "opening_rate": economy_api.opening_rate(economy),
 		        "backing_good": economy_api.backing_good(economy)}
 
 	def agent_stale_goods(self):
-		"""The goods whose markets did not clear lately: their shown price is what they would cost to make, not a trade."""
-		return self.parts.market_objects.economy.parts.prices.stale_goods()
+		"""The goods whose markets did not clear lately: their shown price is what they would cost to make, not a trade; None while the economy opens."""
+		parts = self._answering()
+		return None if parts is None else parts.prices.stale_goods()
 
 	def agent_traded_staple(self):
-		"""The staple good households buy most of whose market cleared lately; None when none did."""
-		return staple_good(self.parts.market_objects.economy.agent, self.agent_stale_goods())
+		"""The staple good households buy most of whose market cleared lately; None when none did or while the economy opens."""
+		stale = self.agent_stale_goods()
+		return None if stale is None else staple_good(self._economy().agent, stale)
 
 	def agent_opening_setup(self):
-		"""The setup of the opening this game saved."""
-		world = self.parts.market_objects.economy.world
+		"""The setup of the opening this game saved; None while the economy opens."""
+		if self._answering() is None:
+			return None
+		world = self._economy().world
 		return build_setup(world, world.agent_record()["opening"])
