@@ -40,7 +40,7 @@ def smith_clearing(report):
 
 
 def ceiling_of(state, year_inputs):
-    return clearing.trained_substitute_wage(state.wages, year_inputs, "vale", "smith")
+    return clearing.trained_substitute_wage(state.wages, year_inputs, "vale", "smith", 1.0)
 
 
 def years(state, year_inputs, count):

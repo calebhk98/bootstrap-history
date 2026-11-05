@@ -47,7 +47,7 @@ def settle(held, year_inputs, years=40):
 
 
 def long_run_cap(held, year_inputs):
-    return clearing.trained_substitute_wage(held.wages, year_inputs, "vale", "healer")
+    return clearing.trained_substitute_wage(held.wages, year_inputs, "vale", "healer", 1.0)
 
 
 class TodaysWageClearsAgainstBids(unittest.TestCase):

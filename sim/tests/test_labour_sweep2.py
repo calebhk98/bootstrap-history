@@ -7,7 +7,7 @@ import types
 import unittest
 
 from sim.labour.labour_capacity import Capacity
-from sim.labour.market import clearing, expectations, reservation, trades
+from sim.labour.market import clearing, expectations, reservation, trades, unskilled_chance
 from sim.labour.market.records import EmployerHoursBid, MarketState, YearInputs
 from sim.labour.request_rules import source_trade_unusable
 from sim.labour.staff_book import StaffBook
@@ -24,17 +24,38 @@ def inputs(subsistence=None, bids=()):
 
 class StartOfYearWages(unittest.TestCase):
     def test_the_unskilled_option_is_the_start_wage_given_and_none_for_the_unskilled_trade_itself(self):
-        self.assertEqual(clearing.unskilled_option({"vale": {"digger": 2.5}}, inputs(), "vale", "aaa"), 2.5)
-        self.assertIsNone(clearing.unskilled_option({"vale": {"digger": 2.5}}, inputs(), "vale", "digger"))
+        self.assertEqual(clearing.unskilled_option({"vale": {"digger": 2.5}}, inputs(), "vale", "aaa", 1.0), 2.5)
+        self.assertIsNone(clearing.unskilled_option({"vale": {"digger": 2.5}}, inputs(), "vale", "digger", 1.0))
 
     def test_an_area_that_paid_no_unskilled_wage_has_no_option_not_a_zero_one(self):
-        self.assertIsNone(clearing.unskilled_option({}, inputs(), "vale", "aaa"))
+        self.assertIsNone(clearing.unskilled_option({}, inputs(), "vale", "aaa", 1.0))
 
     def test_the_substitute_wage_is_the_start_unskilled_wage_times_the_premium_and_none_with_no_figure_at_all(self):
-        with_wage = clearing.trained_substitute_wage({"vale": {"digger": 3.0}}, inputs(), "vale", "aaa")
-        none_known = clearing.trained_substitute_wage({}, inputs({}), "vale", "aaa")
+        with_wage = clearing.trained_substitute_wage({"vale": {"digger": 3.0}}, inputs(), "vale", "aaa", 1.0)
+        none_known = clearing.trained_substitute_wage({}, inputs({}), "vale", "aaa", 1.0)
         self.assertGreater(with_wage, 3.0)
         self.assertIsNone(none_known)
+
+    def test_a_thin_unskilled_market_gives_an_option_well_below_its_wage(self):
+        thin = unskilled_chance.hire_chance(hours_wanted=9.5e7, hours_offered=24.0, hours_competing=2.1e8)
+        option = clearing.unskilled_option({"vale": {"digger": 26.5}}, inputs(), "vale", "aaa", thin)
+        self.assertLess(option, 0.5 * 26.5)
+        self.assertGreater(option, 0.0)
+
+    def test_a_fully_supplied_unskilled_market_gives_exactly_its_wage(self):
+        full = unskilled_chance.hire_chance(hours_wanted=1000.0, hours_offered=5000.0, hours_competing=2.1e8)
+        self.assertEqual(full, 1.0)
+        self.assertEqual(clearing.unskilled_option({"vale": {"digger": 2.5}}, inputs(), "vale", "aaa", full), 2.5)
+
+    def test_the_chance_is_the_hours_wanted_over_all_the_hours_that_seek_them(self):
+        self.assertEqual(unskilled_chance.hire_chance(hours_wanted=300.0, hours_offered=100.0, hours_competing=500.0), 0.5)
+        self.assertEqual(unskilled_chance.hire_chance(hours_wanted=300.0, hours_offered=100.0, hours_competing=0.0), 1.0)
+        self.assertEqual(unskilled_chance.hire_chance(hours_wanted=300.0, hours_offered=100.0, hours_competing=50.0), 1.0)
+
+    def test_the_substitute_wage_is_cut_by_the_same_chance(self):
+        sure = clearing.trained_substitute_wage({"vale": {"digger": 3.0}}, inputs(), "vale", "aaa", 1.0)
+        unlikely = clearing.trained_substitute_wage({"vale": {"digger": 3.0}}, inputs(), "vale", "aaa", 0.1)
+        self.assertLess(unlikely, sure)
 
     def test_two_skilled_trades_cleared_in_either_name_order_see_the_same_unskilled_wage(self):
         state = MarketState(workers={"vale": {"digger": [50.0, 0, 0, 0, 0], "aaa": [10.0, 0, 0, 0, 0], "zzz": [10.0, 0, 0, 0, 0]}})

@@ -10,6 +10,8 @@ from .fetch_wage import fetch_wage
 from .premium import annuity_factor
 from .records import MarketState, YearInputs
 from .reservation import reservation_wage
+from .trades import fallback_trade
+from .unskilled_chance import hire_chance
 
 
 class ImportCosts:
@@ -48,6 +50,15 @@ class ImportCosts:
         if sold is None:
             sold = self._sold[key] = self.inputs.hours_sold(trade, area, self.everyone(area, trade), wage)
         return sold
+
+    def unskilled_hire_chance(self, area: str, trade: str) -> float:
+        """The chance a worker of `trade` who takes up the unskilled trade is hired at the wage it paid at the start of
+        the year, from the year's hours wanted of it (the bids) and the hours its hands sell at that wage."""
+        fallback = fallback_trade(self.inputs.trades)
+        paid = self.wages.get(area, {}).get(fallback)
+        if paid is None or trade == fallback:
+            return 1.0
+        return hire_chance(self.wanted.get((area, fallback), 0.0), self.hours_at(area, fallback, paid), self.everyone(area, trade))
 
     def everyone(self, area: str, trade: str) -> float:
         """All the hours the trade's workers in an area have, whatever they are paid: no wage sells more."""

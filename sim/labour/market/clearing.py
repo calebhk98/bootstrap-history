@@ -45,28 +45,34 @@ def ask_floor(inputs: YearInputs, area: str, base_reservation: float) -> float:
     return base_reservation if stated is None else stated / max(inputs.hours_per_worker_year, 1e-12)
 
 
-def unskilled_option(start_wages: Dict[str, Dict[str, float]], inputs: YearInputs, area: str, trade: str) -> Optional[float]:
-    """What a skilled worker can always earn instead: the unskilled wage the area paid at the start of the year (not
-    the live one, which the year's clearings rewrite in the order they run), taken straight up with no retraining,
-    so no trade quotes below it. None for the unskilled trade itself and where the area paid none."""
+def unskilled_option(start_wages: Dict[str, Dict[str, float]], inputs: YearInputs, area: str, trade: str,
+                     chance_hired: float) -> Optional[float]:
+    """What a skilled worker can expect instead: the unskilled wage the area paid at the start of the year (not
+    the live one, which the year's clearings rewrite in the order they run) times the chance he is hired at it
+    (`hire_chance`), taken straight up with no retraining, so no trade quotes below it. A wage paid on a handful of
+    hours is not an option for a trade of millions. None for the unskilled trade itself and where the area paid none."""
     fallback = fallback_trade(inputs.trades)
     if trade == fallback:
         return None
-    return start_wages.get(area, {}).get(fallback)
+    wage = start_wages.get(area, {}).get(fallback)
+    return None if wage is None else wage * chance_hired
 
 
-def trained_substitute_wage(start_wages: Dict[str, Dict[str, float]], inputs: YearInputs, area: str, trade: str) -> Optional[float]:
+def trained_substitute_wage(start_wages: Dict[str, Dict[str, float]], inputs: YearInputs, area: str, trade: str,
+                            chance_hired: float) -> Optional[float]:
     """The most an hour of a trade can command where hands are few: what it takes to train a substitute. A
     person who trains goes the trade's training years unpaid, so the trade pays the unskilled wage times the
     training premium (premium.training_premium: the multiple that leaves a trainee indifferent) and the risk
     of the work priced as in the reservation wage. A trade needing no training is capped at the unskilled
     wage itself (hands move in at once). Unlimited only for the unskilled trade itself. The unskilled wage is the start
-    of the year's; None where the area has neither it nor an outside option to stand in."""
+    of the year's, times the chance a switcher is hired at it as in `unskilled_option`; None where the area has
+    neither it nor an outside option to stand in."""
     spec = inputs.trades[trade]
     fallback = fallback_trade(inputs.trades)
     if trade == fallback:
         return math.inf
-    known = [wage for wage in (start_wages.get(area, {}).get(fallback), reservation_wage(inputs, area, 0.0)) if wage is not None]
+    unskilled_wage = unskilled_option(start_wages, inputs, area, trade, chance_hired)
+    known = [wage for wage in (unskilled_wage, reservation_wage(inputs, area, 0.0)) if wage is not None]
     if not known:
         return None
     unskilled = max(known)
@@ -251,10 +257,11 @@ def clear_one(state: MarketState, inputs: YearInputs, trade: str, area: str, bid
     if base_reservation is None:
         return None
     lowest = ask_floor(inputs, area, base_reservation)
-    option = unskilled_option(import_costs.wages, inputs, area, trade)
+    chance_hired = import_costs.unskilled_hire_chance(area, trade)
+    option = unskilled_option(import_costs.wages, inputs, area, trade, chance_hired)
     reservation = max(base_reservation * asks.scale_of(state, area, trade), lowest, 0.0 if option is None else option)
     last = state.wages.get(area, {}).get(trade)
-    substitute = trained_substitute_wage(import_costs.wages, inputs, area, trade)
+    substitute = trained_substitute_wage(import_costs.wages, inputs, area, trade, chance_hired)
     long_run = reservation if substitute is None else max(substitute, reservation)
     supply = import_costs.supply(area, trade) if bids else None
     imported, fetched_share = supply if supply is not None else (None, 0.0)
