@@ -107,19 +107,23 @@ class LoanClearing:
 def clear(requests: Sequence[LoanRequest], offers: Sequence[FundsOffer], currency: CurrencyId,
           last_rate: Optional[float], existing_debt_by_borrower: Mapping[AgentId, float],
           arrears_by_borrower: Optional[Mapping[AgentId, float]] = None, year: int = 0,
-          rate_ceiling: Optional[float] = None, expected_inflation: float = 0.0,
+          rate_ceiling: Optional[float] = None, expected_inflation: float = 0.0, clearing: str = "year",
           ) -> Tuple[List[Loan], Optional[float], List[LoanRequest]]:
     """`clear_with_cause` without the cause."""
     result = clear_with_cause(requests, offers, currency, last_rate, existing_debt_by_borrower, arrears_by_borrower,
-                              year, rate_ceiling, expected_inflation)
+                              year, rate_ceiling, expected_inflation, clearing)
     return result.loans, result.rate, result.unmet
 
 
 def clear_with_cause(requests: Sequence[LoanRequest], offers: Sequence[FundsOffer], currency: CurrencyId,
                      last_rate: Optional[float], existing_debt_by_borrower: Mapping[AgentId, float],
                      arrears_by_borrower: Optional[Mapping[AgentId, float]] = None, year: int = 0,
-                     rate_ceiling: Optional[float] = None, expected_inflation: float = 0.0) -> LoanClearing:
+                     rate_ceiling: Optional[float] = None, expected_inflation: float = 0.0,
+                     clearing: str = "year") -> LoanClearing:
     """Match funds with requests. Returns the new loans, the base rate, the requests left unmet and a cause.
+
+    A loan's id names the currency, the year and the `clearing` it came from, so two clearings that carry one year (the
+    year's own and the next year's working capital) never give two loans one id.
 
     A request left unmet is returned with `amount` reduced to what it did not get. Each loan carries the
     base rate plus its borrower's premium; `disbursements(loans)` gives the money to move. `rate_ceiling`
@@ -223,7 +227,7 @@ def clear_with_cause(requests: Sequence[LoanRequest], offers: Sequence[FundsOffe
                     continue
                 entry[2] -= piece_at_risk
             loans.append(Loan(
-                contract_id="loan:%s:%d:%d" % (currency, year, len(loans)), lender=entry[0],
+                contract_id="loan:%s:%d:%s:%d" % (currency, year, clearing, len(loans)), lender=entry[0],
                 borrower=request.borrower, currency=currency, principal=piece,
                 rate=base_rate + premiums[index], years_left=request.years,
                 collateral_value=request.collateral_value * piece / request.amount, issued_year=year,

@@ -88,6 +88,7 @@ def lend_working_capital(setup, record, view) -> None:
     loans, _rate, _unmet = credit.clear(
         asked, offers, money, record.memory.rates.get(money), credit_claims.principal_by_borrower(record.credit.loans),
         credit_claims.arrears_history(record.credit.loans, record.credit.remembered_defaults), year=view.year - 1,
+        clearing="working_capital",
         rate_ceiling=capital_market.RATE_CEILING_SHARE * setup.opening_rate,
         expected_inflation=expected_inflation_of(record))
     record.book.transfer_many(credit.disbursements(loans))
