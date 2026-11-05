@@ -8,11 +8,13 @@ class AgentLabourViews(AgentViewPart):
 
 	def agent_wage_at(self, trade, tile):
 		"""The wage per hour in coin a bid for the trade on `tile` is funded at (sim/economy/trade_wages.py), or None until the game's
-		money is priced at the economy (the first ask opens it). The one wage rule always gives a wage, for any country."""
-		parts = self._answering()
-		if parts is None or not self._economy().world.money_from_economy():
+		money is priced at the economy (the first ask opens it). The one wage rule always gives a wage, for any country.
+		Before the money is priced the answer is None without opening the economy: opening it prices the money from this
+		very wage, so asking first would open it again."""
+		if not self._economy().world.money_from_economy():
 			return None
-		return parts.prices.wage_per_hour_at(trade, tile)
+		parts = self._answering()
+		return None if parts is None else parts.prices.wage_per_hour_at(trade, tile)
 
 	def agent_hours_offered_at(self, trade, tile):
 		"""Hours of the trade the households of `tile`'s labour area offered at the last clearing; None while the economy opens or before one."""
