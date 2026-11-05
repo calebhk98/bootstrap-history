@@ -1,6 +1,6 @@
 """Real output wired to the economy (Complaints 101, 112, 354, 640): the reporting module reads the economy's opening
 basket (`Reporting.base_basket`), closes a year's output per head against it (`Reporting.close_real_output`), and the
-society's output is that valued in money less the share under arms (`port_money.output_value`,
+society's output is that valued in money less the share under arms (`port_money.output_value`; `port_money.opening_output_value` while the economy opens,
 `output_rules.share_producing`). The arithmetic is test_real_output_measure."""
 QUICK_TOPIC = True
 
@@ -56,7 +56,7 @@ check("a population that falls without a technique lowers output with the people
 world = SimpleNamespace(finance=SimpleNamespace(real_output_hours=lambda: 40.0), labour=SimpleNamespace(money_per_labour_hour=lambda: 3.0),
                         scenario=SimpleNamespace(output_factor=0.5))
 check("output value is the real output in labour hours, in this civilisation's money, times the output factor",
-      port_money.output_value(world) == 60.0, port_money.output_value(world))
+      port_money.opening_output_value(world) == 60.0, port_money.opening_output_value(world))
 check("the share producing is the working people not under arms",
       output_rules.share_producing(1000.0, 250.0) == 0.75 and output_rules.share_producing(1000.0, 0.0) == 1.0)
 check("...never below nothing when more are under arms than work", output_rules.share_producing(100.0, 400.0) == 0.0)
