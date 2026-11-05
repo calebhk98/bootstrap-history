@@ -511,7 +511,8 @@ def close_year(merchant: Merchant, prices: Mapping[Tuple[GoodId, AreaId], float]
                interest_rate: float, ordered: Optional[Tuple[Sequence, Sequence]] = None,
                lag_years: Callable[[GoodId, AreaId], Optional[int]] = lambda good, area: 0) -> Tuple[Transfer, ...]:
     """Update expectations from this year's clearing prices and volumes (by (good, area)), then settle
-    the year's profit (wealth, cash plus stock at expected prices, above the capital base). While
+    the year's profit (wealth, cash plus priced stock at expected prices, above the capital base; stock with no learned price
+    is left out, and while any is held a shortfall is not booked as a loss). While
     trading earns more on its capital than the interest rate, the owner takes a share and the rest
     becomes capital; otherwise the owner takes all of it. A loss shrinks the capital. `ordered` is the
     sorted items of `prices` and of `volumes`, for a caller closing many merchants on the same year.
@@ -532,14 +533,19 @@ def close_year(merchant: Merchant, prices: Mapping[Tuple[GoodId, AreaId], float]
     for key, value in ordered[1]:
         old = expected_volumes.get(key)
         expected_volumes[key] = value if old is None else old + speed * (value - old)
-    stock_value = math.fsum(quantity * merchant.expected_prices.get((good, area_of(good, tile)), 0.0)
-                            for (good, tile), quantity in held_stock.items() if quantity > 0.0)
-    stock_value += math.fsum(each.quantity * merchant.expected_prices.get((each.good, area_of(each.good, each.destination_tile)), 0.0)
-                             for each in merchant.in_transit)
+    # stock is valued at the expected price of its destination area; stock with no learned price there is left out
+    # of wealth (the record holds no cost basis), and then a shortfall below the capital base is not taken as a loss
+    held_stock_areas = [(good, area_of(good, tile), quantity) for (good, tile), quantity in held_stock.items() if quantity > 0.0]
+    held_stock_areas += [(each.good, area_of(each.good, each.destination_tile), each.quantity) for each in merchant.in_transit]
+    expected_prices = merchant.expected_prices
+    stock_value = math.fsum(quantity * expected_prices[(good, area)] for good, area, quantity in held_stock_areas
+                            if (good, area) in expected_prices)
+    has_unpriced_stock = any((good, area) not in expected_prices for good, area, _quantity in held_stock_areas)
     wealth = cash + stock_value
     profit = wealth - merchant.capital_base
     if profit <= 0.0:
-        merchant.capital_base = max(0.0, wealth)
+        if not has_unpriced_stock:
+            merchant.capital_base = max(0.0, wealth)
         return ()
     earns_more = merchant.capital_base > 0.0 and profit / merchant.capital_base > interest_rate
     payout = min(max(0.0, cash), (MERCHANT_PROFIT_PAYOUT_SHARE if earns_more else 1.0) * profit)

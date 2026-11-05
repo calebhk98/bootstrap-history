@@ -14,7 +14,7 @@ from sim.economy.types import EDGE_CONSUMPTION, EDGE_PRODUCTION, GoodsMove
 from sim.economy.year_close import held_only, learned_prices, national_prices
 from sim.economy import market_quote
 from sim.economy.types import QUOTE_BEST_UNFILLED_BID, QUOTE_COST_COVERING
-from sim.economy.year_goods import price_after_trade, remembered_price
+from sim.economy.year_goods import price_after_trade, price_floor, remembered_price, PRICE_MEMORY_FLOOR_SHARE
 
 
 def bid(maximum_price):
@@ -104,3 +104,15 @@ class ConsumptionTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class PriceFloorTests(unittest.TestCase):
+    def test_the_floor_is_a_sliver_of_the_opening_price_in_todays_money(self):
+        setup = types.SimpleNamespace(opening_prices={"timber": 2.0}, currency_id="coin")
+        memory = types.SimpleNamespace(opening_wage_level=lambda currency_id: 3.0)
+        self.assertAlmostEqual(price_floor(setup, memory, "timber", 9.0), 6.0 * PRICE_MEMORY_FLOOR_SHARE)
+
+    def test_a_good_with_no_opening_price_floors_at_a_sliver_of_the_signal(self):
+        setup = types.SimpleNamespace(opening_prices={}, currency_id="coin")
+        memory = types.SimpleNamespace(opening_wage_level=lambda currency_id: 3.0)
+        self.assertAlmostEqual(price_floor(setup, memory, "timber", 9.0), 9.0 * PRICE_MEMORY_FLOOR_SHARE)

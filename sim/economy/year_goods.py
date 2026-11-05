@@ -29,6 +29,7 @@ from .types import Bid, GoodsMove, Offer
 from .entry import unmet_quantity, wanted_in_round
 from .year_ledger import YearLedger
 from .rates import own_rate
+from .setup import opening_price_today
 
 OrderBook = Dict[Tuple[str, str], Tuple[List[Bid], List[Offer]]]
 # A good sold only at a token price would otherwise be remembered at a thousandth of last year's price
@@ -232,14 +233,20 @@ def _remember_markets(setup, record, left_markets, ledger: YearLedger) -> None:
         if quote_kind is not None:
             memory.set_quote_kind(key, quote_kind)
         if signal is not None and signal > 0.0:
-            floor = setup.opening_prices.get(good, signal) * PRICE_MEMORY_FLOOR_SHARE
-            memory.set_price(key, max(signal, floor))
+            memory.set_price(key, max(signal, price_floor(setup, memory, good, signal)))
             memory.note_usual_price(key)
         memory.note_cleared(key, price, delivered)
         if delivered > 0.0:
             memory.drop_quote_kind(key)
             traded.add(key)
     memory.note_trading(traded)
+
+
+def price_floor(setup, memory, good, signal: float) -> float:
+    """The least a remembered price may fall to: a sliver of the good's opening price in today's money (of the signal itself
+    for a good with no opening price)."""
+    opening = opening_price_today(setup, memory, good)
+    return (signal if opening is None else opening) * PRICE_MEMORY_FLOOR_SHARE
 
 
 def _record_year_markets(record, ledger: YearLedger, left_markets) -> None:
