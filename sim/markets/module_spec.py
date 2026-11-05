@@ -25,7 +25,7 @@ READS_BY_OWNER = {
 	"core": ("year", "civilisation", "game_config", "output_factor", "installed_mod_ids",
 	         "household_need_data",
 	         "price_index"),
-	"content": ("spoilage_rates", "service_life_years"),
+	"content": ("spoilage_rates", "service_life_years", "household_work_data"),
 	"seats": ("seat_list",),
 	"assembly": ("registered_seats",),
 	"stores": ("store_book",),

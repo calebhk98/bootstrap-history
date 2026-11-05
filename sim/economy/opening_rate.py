@@ -1,6 +1,6 @@
 """The rate the opening solves for credit: lenders' lowest asks against what borrowers can pay, cleared as the credit market clears.
 
-The civilisation's typed `starting_interest_rate` is a historical reference (`against_history`), not an input.
+The civilisation's typed `starting_interest_rate` is a historical reference (checked in sim/engine/opening_checks.py), not an input.
 """
 from dataclasses import dataclass
 from typing import Optional, Sequence, Tuple
@@ -42,9 +42,3 @@ def opening_market_rate() -> float:
     time preference and the expected inflation they open with; the resting opening gives them no spare cash and no
     borrower has asked yet, so it is their lowest ask."""
     return solved_opening_rate([("households", HOUSEHOLD_TIME_PREFERENCE, OPENING_EXPECTED_INFLATION, 0.0)], []).rate
-
-
-def against_history(solved_rate: float, historical_rate: float) -> dict:
-    """The solved rate beside the civilisation's typed historical one, for the opening's checks."""
-    return {"solved": solved_rate, "historical": historical_rate,
-            "ratio": solved_rate / historical_rate if historical_rate > 0.0 else None}

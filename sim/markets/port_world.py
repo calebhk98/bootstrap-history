@@ -123,6 +123,10 @@ class PortWorld:
 		"""{"needs", "goods"} of the base game with the installed mods applied."""
 		return self._needs.household_need_data()
 
+	def household_work_data(self):
+		"""The hours of household work by task, with the installed mods applied."""
+		return self._needs.household_work_data()
+
 	def bound_kernels(self):
 		"""The module's kernels as the assembly bound them: a mod's replacement, else the reference."""
 		return dict(self._owner.kernels)

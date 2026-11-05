@@ -17,6 +17,7 @@ MODULE_SPECS = (ModuleSpec(
 		ViewSpec("installed_mod_ids", "installed_mod_ids", **_FILES),
 		ViewSpec("map_overlays", "map_overlays", **_FILES),
 		ViewSpec("household_need_data", "household_need_data", **_FILES),
+		ViewSpec("household_work_data", "household_work_data", **_FILES),
 		ViewSpec("declared_actor_kinds", "declared_actor_kinds", **_FILES),
 		ViewSpec("base_store_declarations", "base_store_declarations", **_FILES),
 		ViewSpec("data_store_declarations", "data_store_declarations", **_FILES),

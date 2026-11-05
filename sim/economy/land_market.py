@@ -22,7 +22,7 @@ total is unchanged.
 """
 import math
 from dataclasses import dataclass, field
-from typing import Dict, List, Mapping, Optional, Sequence
+from typing import Callable, Dict, List, Mapping, Optional, Sequence
 
 from sim.constants import declare
 
@@ -254,10 +254,11 @@ def post_rents(setup, record, view, wanted_runs: Mapping[AgentId, float],
 def settle_year(setup, record, view, wanted_runs: Mapping[AgentId, float],
                 own_plot_hectares: Optional[Mapping[TileId, float]] = None,
                 land_tax_share_of_rent: float = 0.0,
-                tenancy_ask: Optional[Mapping[TileId, float]] = None, ledger=None,
+                tenancy_ask: Optional[Callable[[], Mapping[TileId, float]]] = None, ledger=None,
                 own_value_by_tile: Optional[Mapping[TileId, float]] = None) -> List[Transfer]:
     """Set next year's rent (`post_rents`) and book the rent: producers pay the tile's owner, shared by
-    ownership.spread. Tenants pay their lessors the posted rent cut to `tenancy_ask` (land_lease_year.asks) where given.
+    ownership.spread. Tenants pay their lessors the posted rent cut to the ask `tenancy_ask()` returns
+    (land_lease_year.asks), called once this year's rent is posted so the asks read it, where given.
     Returns the payments made (to cohorts), for the year's property income. The rent producers paid is noted
     in `ledger` as a cost of their year, as are the tenants' payments (a steward's pay as wages)."""
     result, demands = post_rents(setup, record, view, wanted_runs, own_plot_hectares, own_value_by_tile)
@@ -272,7 +273,7 @@ def settle_year(setup, record, view, wanted_runs: Mapping[AgentId, float],
     if ledger is not None:
         ledger.note_paid_outside_markets(payments)
     tenant_payments = titles.settle_tenancies(record, money, arable, land_tax_share_of_rent=land_tax_share_of_rent,
-                                                   ask_by_tile=tenancy_ask)
+                                                   ask_by_tile=tenancy_ask() if tenancy_ask is not None else None)
     record.book.transfer_many(tenant_payments)
     steward_pay = [payment for payment in tenant_payments if payment.purpose == "steward_pay"]    # a wage, not property income
     if ledger is not None:

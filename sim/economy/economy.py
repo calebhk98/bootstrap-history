@@ -20,7 +20,7 @@ from .mint_labour import close_year as close_mint_year, mint_agent
 from .money_audit import MoneyAudit, year_report
 from .flow_rates import flow_imbalance
 from .entry_year import close_idle_producers, open_entrants, restake_owners
-from . import capital_year, household_hours_year, household_work_year, land_bid_year, land_lease_year
+from . import capital_year, household_hours_year, household_work_year, land_bid_year, land_lease_year, lend_requests
 from .households_own import (hours_for_own_plan, own_production, own_production_options, plot_hectares)
 from . import flight_step, households_cohort, trade_wages
 from .labour_inputs import labour_context
@@ -219,7 +219,7 @@ class Economy:
             record.book, money, labour_report.bonded_lots)
         bondage_hours.hold(record.unfree.bonded_held, bought_held)
         bondage_hours.deliver(ledger.hours_hired, placed)
-        bondage_hours.deliver_held(ledger.hours_hired, held_placed)
+        bondage_hours.deliver(ledger.hours_hired, held_placed)
         record.labour.set_hours_paid_by_employer({agent: dict(trades) for agent, trades in sorted(ledger.hours_hired.items())})   # what seats' staff books read
         capital_year.insure(setup, record, view, inputs.harvest_factor, view.year, inputs.institutions)     # cover is bought and the weather settles it
         self._grow_own(offers, ledger, inputs.harvest_factor, kept)
@@ -252,7 +252,7 @@ class Economy:
         rent = land_market.settle_year(setup, record, view,
                                        {producer_id: plan.wanted_runs for producer_id, plan in plans.items()},
                                        self._own_hectares, inputs.land_tax_share_of_rent,
-                                       land_lease_year.asks(setup, record, view, self.own_plot_options()), ledger,
+                                       lambda: land_lease_year.asks(setup, record, view, self.own_plot_options()), ledger,
                                        land_lease_year.own_plot_returns(setup, record, view, self.own_plot_options()))
         interest = self._service_loans(view.year)
         bonded = bondage.service(record, money, ledger.wages_in, placed.value_placed, placed.cash_share)
@@ -431,13 +431,14 @@ class Economy:
                                     record.capital_markets.capital.share_buy_orders)
         merchants_credit.stake(record.merchants, {loan.borrower: loan.principal for loan in loans})
         lending.bid_household_loans(setup, record, view, ledger, loans, order_book, priced_by_tile)
-        asked = {request.borrower: request.amount for request in requests}
-        worth = {}
-        for request in requests:
+
+        def plant_worth_of(request):
             producer = record.producers.get(request.borrower)
-            if producer is not None:
-                worth[request.borrower] = plant_worth_ratio(request.maximum_rate, rate,
-                                                            setup.recipes[producer.recipe_id].plant_life_years)
+            if producer is None:
+                return None
+            return plant_worth_ratio(request.maximum_rate, rate, setup.recipes[producer.recipe_id].plant_life_years)
+
+        asked, worth = lend_requests.asked_and_worth(requests, plant_worth_of)
         plant_runs: Dict[str, float] = {}
         for borrower, principal in [(loan.borrower, loan.principal) for loan in loans] + sorted(raised.items()):
             producer = record.producers.get(borrower)
