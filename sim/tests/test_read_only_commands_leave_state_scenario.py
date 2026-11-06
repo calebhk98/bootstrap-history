@@ -22,7 +22,7 @@ CHANGES_STATE = {
     "start", "stop", "rush", "mothball", "restore", "open", "policy", "offer", "accept", "decline", "disclose",
     "exclude", "include", "finish", "answer", "withdraw", "bribe", "allocate", "hire", "fire", "train",
     "commission", "move_base", "pursue", "bounty", "buy", "sell", "close", "note", "join", "keep", "reserve",
-    "build_way", "save", "step", "quit", "load", "set_relation", "lever", "handover", "army", "found",
+    "build_way", "save", "step", "quit", "load", "set_relation", "lever", "handover", "army", "found", "cancel_orders",
 }
 
 game = unopened_sim()
