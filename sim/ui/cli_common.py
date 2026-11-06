@@ -203,6 +203,12 @@ def _wrap(text, width=None, indent="   "):
     return "\n".join(lines)
 
 
+def _resuming_a_save(args):
+    """Whether the sitting resumes a save, so the Sim need not open its own economy (the save holds it)."""
+    session = getattr(args, "session", None)
+    return bool(session and not _is_claimed_slot(session) and os.path.exists(session))
+
+
 def _is_claimed_slot(path):
     """A session file that exists but holds nothing yet.
 

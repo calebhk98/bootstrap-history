@@ -20,7 +20,7 @@ from sim.engine.ui_port import settings, units
 from sim.ui.proto import step_progress
 
 # Session helpers shared with cli_interactive.py live in cli_common.py.
-from .cli_common import _civ_for_session, _goal_for_session, _is_claimed_slot, _pick_session_filename
+from .cli_common import _civ_for_session, _goal_for_session, _is_claimed_slot, _pick_session_filename, _resuming_a_save
 from sim.engine import ui_port
 from sim.engine.ui_port import DetRNG, EconomyNotOpened, load_strategy
 
@@ -56,7 +56,7 @@ def cmd_agent(args):
     from sim.engine.ui_port import normal_seed
     seed = normal_seed(args.seed)
     session = getattr(args, "session", None)
-    resuming = bool(session and os.path.exists(session) and not _is_claimed_slot(session))
+    resuming = _resuming_a_save(args)
 
     def build(defer_economy):
         # a game that is about to load a save leaves its own economy unopened: the save holds it

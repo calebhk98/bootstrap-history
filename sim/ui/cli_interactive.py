@@ -63,7 +63,7 @@ from .sitting import Sitting
 from .cli_common import (ENDLESS_HORIZON_YEARS, HORIZON_MODES,
                   _apply_display_prefs, _civ_for_session, _goal_for_session,
                   _is_claimed_slot, _is_endless_horizon, _pick_session_filename,
-                  _resolve_horizon, _wrap)
+                  _resolve_horizon, _resuming_a_save, _wrap)
 from sim.engine.ui_port import load_strategy
 
 # Save/load browsing and the civilisation list live in
@@ -204,12 +204,6 @@ def _play_init(args, sitting):
         return 1
     session, fresh = result
     return sim, nodes, session, app_cfg, fresh, kit
-
-
-def _resuming_a_save(args):
-    """Whether the sitting resumes a save, so the Sim need not open its own economy (the save holds it)."""
-    session = getattr(args, "session", None)
-    return bool(session and not _is_claimed_slot(session) and os.path.exists(session))
 
 
 def _play_build_sim(args, defer_economy=False):
