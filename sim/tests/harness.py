@@ -240,7 +240,7 @@ def concern_needing_craftsmen_to_supervise():
         node = NODES[candidate_id]
         if probe.view("is_venture")[candidate_id] and node["art"] > 0 and not (node.get("lab") or {}).get("artisan"):
             scholars, craftsmen = probe.view("venture_hands")[candidate_id]
-            if (scholars <= probe.assembly.modules["workforce"].labour.hands.effective_scholars() and cover < craftsmen <= 5.5
+            if (scholars <= probe.assembly.modules["workforce"].parts.core.labour.hands.effective_scholars() and cover < craftsmen <= 5.5
                     and probe.view("venture_foreman")[candidate_id][0] is None):
                 fits.append((probe.view("venture_capex")[candidate_id], candidate_id))
     if not fits:
