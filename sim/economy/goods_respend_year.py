@@ -11,7 +11,8 @@ from . import goods_market, market_quote, settlement
 from .entry import wanted_in_round
 from .goods_market import quantity_at
 from .goods_market_fills import sold_by_seller_tile
-from .goods_respend import bids_adding_demand, need_of_good, offers_left, rationed_money, respend_bids
+from .goods_respend import (bids_adding_demand, last_round_negligible, need_of_good, offers_left, rationed_money,
+                            respend_bids)
 from .types import Bid, GoodsMove
 
 Market = Tuple[str, str]
@@ -77,11 +78,21 @@ def respend(setup, record, view, ledger, markets: Dict[Market, LeftMarket], bask
     """Clear the households' leftover bids against the stock left in `markets`, in rounds, and settle them."""
     households = record.cohorts
     baskets: Dict[str, object] = {}
+    needs: Dict[str, Dict[str, str]] = {}
+    areas: Dict[str, Dict[str, str]] = {}
 
     def need_by_buyer(buyer):
-        if buyer not in baskets:
+        if buyer not in needs:
             baskets[buyer] = basket_of(households[buyer])
-        return need_of_good(baskets[buyer])
+            needs[buyer] = need_of_good(baskets[buyer])
+        return needs[buyer]
+
+    def areas_of(buyer):
+        """good -> the market area this buyer's tile buys it in, for the goods its basket names."""
+        if buyer not in areas:
+            tile = households[buyer].tile
+            areas[buyer] = {good: view.area_of(good, tile) for good in need_by_buyer(buyer)}
+        return areas[buyer]
 
     rationed: Dict[str, Dict[str, float]] = {}
     for key, market in sorted(markets.items()):
@@ -91,16 +102,21 @@ def respend(setup, record, view, ledger, markets: Dict[Market, LeftMarket], bask
                                           need_by_buyer).items():
             for need_id, amount in by_need.items():
                 rationed.setdefault(buyer, {})[need_id] = rationed.get(buyer, {}).get(need_id, 0.0) + amount
+    paid_so_far = 0.0
     for _round in range(len(markets) + 1):
         new_bids: Dict[Market, List[Bid]] = {}
+        lowest_asks: Dict[Market, object] = {}
         for buyer in sorted(rationed):
             cohort = households[buyer]
-            need_by_buyer(buyer)
+            basket_areas = areas_of(buyer)
             basket = baskets[buyer]
             asks = {}
-            for good in need_by_buyer(buyer):
-                ask = markets.get((good, view.area_of(good, cohort.tile)))
-                if ask is not None and (price := market_quote.lowest_unfilled_ask(ask.offers)) is not None:
+            for good, area in basket_areas.items():
+                key = (good, area)
+                if key not in lowest_asks:
+                    ask = markets.get(key)
+                    lowest_asks[key] = None if ask is None else market_quote.lowest_unfilled_ask(ask.offers)
+                if (price := lowest_asks[key]) is not None:
                     asks[good] = price
             by_need = rationed[buyer]
             cash = record.book.balance(buyer, setup.currency_id)
@@ -109,10 +125,10 @@ def respend(setup, record, view, ledger, markets: Dict[Market, LeftMarket], bask
                 by_need = {need_id: amount * cash / total for need_id, amount in by_need.items()}
             elif cash <= 0.0:
                 continue
-            for bid in respend_bids(buyer, cohort.tile, basket, by_need, asks, lambda good: view.area_of(good, cohort.tile)):
+            for bid in respend_bids(buyer, cohort.tile, basket, by_need, asks, basket_areas.__getitem__):
                 new_bids.setdefault((bid.good, bid.area), []).append(bid)
         rationed = {}
-        spent_any = False
+        paid_this_round = 0.0
         for key in sorted(new_bids):
             market = markets[key]
             bids = new_bids[key]
@@ -126,12 +142,13 @@ def respend(setup, record, view, ledger, markets: Dict[Market, LeftMarket], bask
             market.last_offered = result.offered_at_price
             market.last_delivered = moved
             market.offers = offers_left(market.offers, sold_by_seller_tile(result.fills))
-            spent_any = spent_any or result.quantity > 0.0
+            paid_this_round += math.fsum(money for _units, money in bought.values())
             fallback = market_quote.lowest_unfilled_ask(market.offers)
             for buyer, by_need in rationed_in(bids, bought, households, fallback, need_by_buyer).items():
                 for need_id, amount in by_need.items():
                     rationed.setdefault(buyer, {})[need_id] = rationed.get(buyer, {}).get(need_id, 0.0) + amount
-        if not spent_any or not rationed:
+        paid_so_far += paid_this_round
+        if last_round_negligible(paid_this_round, paid_so_far) or not rationed:
             break
 
 

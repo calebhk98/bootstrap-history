@@ -6,12 +6,27 @@ account). The functions here are the rules; goods_respend_year.py runs them on a
 import math
 from typing import Dict, List, Mapping, Sequence
 
+from sim.constants import declare
 from sim.world import need_basket
 
 from .goods_market import quantity_at
 from .types import Bid, Offer
 
 RESPEND_PRIORITY = 1       # the leftover is surplus spending: it queues behind the first-round bids
+RESPEND_NEGLIGIBLE_ROUND_SHARE = declare(
+    "RESPEND_NEGLIGIBLE_ROUND_SHARE", 1e-6, kind="temporary_heuristic",
+    unit="share of the money the year's respend rounds have paid", source=None, confidence="D",
+    why="A respend round that pays less than this share of what the year's rounds have paid so far is the last: the "
+        "rounds after the first few pay a falling fraction of the round before, mostly in one market whose sellers "
+        "sell a little more each round, and running them to the bound costs a large part of a big economy's year. "
+        "The money left is kept by the cohort, as money no offered good takes already is.",
+    retire="Complaints/497: the respend rounds' limit computed in closed form, or bids that fill in one round")
+
+
+def last_round_negligible(paid_this_round: float, paid_so_far: float) -> bool:
+    """Whether a respend round that paid `paid_this_round` is the last, given `paid_so_far` by all the year's respend
+    rounds including this one: it paid nothing, or a negligible share of that (RESPEND_NEGLIGIBLE_ROUND_SHARE)."""
+    return paid_this_round <= 0.0 or paid_this_round < RESPEND_NEGLIGIBLE_ROUND_SHARE * paid_so_far
 
 
 def rationed_money(bids: Sequence[Bid], taken: float, spent: float, price: float) -> float:

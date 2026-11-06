@@ -5,7 +5,8 @@ QUICK_TOPIC = True
 import math
 import unittest
 
-from sim.economy.goods_respend import offers_left, rationed_money, respend_bids
+from sim.economy.goods_respend import (RESPEND_NEGLIGIBLE_ROUND_SHARE, last_round_negligible, offers_left,
+                                       rationed_money, respend_bids)
 from sim.economy.types import Bid, Offer
 from sim.world.need_basket import Basket, NeedSpec
 
@@ -76,6 +77,20 @@ class OffersLeftTests(unittest.TestCase):
         offers = [Offer("a", "rice", "area", "t", 10.0, 1.0), Offer("b", "rice", "area", "t", 5.0, 2.0)]
         left = offers_left(offers, {("a", "t"): 10.0, ("b", "t"): 2.0})
         self.assertEqual([(each.seller, each.quantity) for each in left], [("b", 3.0)])
+
+
+class LastRoundNegligibleTests(unittest.TestCase):
+    def test_a_round_that_moved_a_share_of_the_money_is_not_the_last(self):
+        self.assertFalse(last_round_negligible(10.0, 1000.0))
+
+    def test_a_round_that_moved_almost_nothing_against_the_year_is_the_last(self):
+        self.assertTrue(last_round_negligible(RESPEND_NEGLIGIBLE_ROUND_SHARE * 1000.0 / 2.0, 1000.0))
+
+    def test_a_round_that_moved_nothing_is_the_last(self):
+        self.assertTrue(last_round_negligible(0.0, 0.0))
+
+    def test_the_first_round_that_moved_money_is_not_the_last(self):
+        self.assertFalse(last_round_negligible(5.0, 5.0))
 
 
 if __name__ == "__main__":

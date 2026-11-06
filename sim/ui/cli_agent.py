@@ -22,7 +22,7 @@ from sim.ui.proto import step_progress
 # Session helpers shared with cli_interactive.py live in cli_common.py.
 from .cli_common import _civ_for_session, _goal_for_session, _is_claimed_slot, _pick_session_filename
 from sim.engine import ui_port
-from sim.engine.ui_port import DetRNG, load_strategy
+from sim.engine.ui_port import DetRNG, EconomyNotOpened, load_strategy
 
 
 # ----------------------------------------------------------------------------
@@ -55,21 +55,33 @@ def cmd_agent(args):
            "immortal": not getattr(args, "mortal", False)}
     from sim.engine.ui_port import normal_seed
     seed = normal_seed(args.seed)
-    sim = Sim(nodes, order,
-            DetRNG(seed) if getattr(args, "deterministic", False) else random.Random(seed),
-            events=not args.no_events,
-            cfg=cfg, civ=load_civ(_civ_for_session(args)), bounty_set=set(), manual=True)
-    sim.seed = seed
-    sim.session_seat = getattr(args, "seat", None)
-    ui_port.begin_game(sim, goal, sim.view("game_config")()["start_year"] + args.horizon, bool(getattr(args, "fog", False)),
-                       bool(getattr(args, "fuzzy_estimates", False)))
+    session = getattr(args, "session", None)
+    resuming = bool(session and os.path.exists(session) and not _is_claimed_slot(session))
+
+    def build(defer_economy):
+        # a game that is about to load a save leaves its own economy unopened: the save holds it
+        built = Sim(nodes, order,
+                    DetRNG(seed) if getattr(args, "deterministic", False) else random.Random(seed),
+                    events=not args.no_events,
+                    cfg=cfg, civ=load_civ(_civ_for_session(args)), bounty_set=set(), manual=True,
+                    defer_economy=defer_economy)
+        built.seed = seed
+        built.session_seat = getattr(args, "seat", None)
+        ui_port.begin_game(built, goal, built.view("game_config")()["start_year"] + args.horizon,
+                           bool(getattr(args, "fog", False)), bool(getattr(args, "fuzzy_estimates", False)))
+        return built
+
+    sim = build(resuming)
     pretty = bool(getattr(args, "pretty", False))
 
-    session = getattr(args, "session", None)
     checkpoint_source = None
-    if session and os.path.exists(session) and not _is_claimed_slot(session):
+    if resuming:
         try:
-            load_state(sim, session)
+            try:
+                load_state(sim, session)
+            except EconomyNotOpened:
+                sim = build(False)     # the save cannot stand in for the economy's opening; build the game the long way
+                load_state(sim, session)
         except Exception as error:
             sys.stdout.write(json.dumps(
                 {"ok": False, "error": "could not read the save file %r: %s" % (session, error)}
