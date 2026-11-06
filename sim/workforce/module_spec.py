@@ -169,5 +169,5 @@ MODULE_SPECS = (ModuleSpec(
     ),
     reads=tuple(name for names in READS_BY_OWNER.values() for name in names),
     sends=(BuildHousing, PayEdge, NoteSpend, RecordEvent, RecordAutomation, RecordAutomationSkip, GainReputation, ScaleFamiliarity, ScaleProtection,
-           RememberGoalClosure),
+           RememberGoalClosure, PostHoursOnce),
 ),)
