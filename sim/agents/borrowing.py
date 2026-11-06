@@ -1,10 +1,12 @@
 """How any actor borrows: one rule for a firm, a state and (through the same pure functions) the founder.
 
-An actor's debt is its purse below zero. What it will be lent is the smaller of what its standing earning
-can carry at the market rate and what lenders still hold after everyone else's loans. What it pays is the
-market rate plus a premium for the share of that ceiling it has used, less a discount for its standing.
+An actor's debt is its purse below zero. What it will be lent is the economy's own rule for every borrower
+(`draw_limit`): what its standing earning can carry at the market rate is its collateral, lenders price the debt
+against it (the economy's risk premium) and lend while that price stays under what a borrower pays and over what a
+lender asks, within what lenders still hold after everyone else's loans. What it pays is the market rate plus that
+premium, less a discount for its standing.
 """
-from typing import Any, Tuple
+from typing import Any, Optional, Tuple
 
 from sim.constants import declare
 from sim.world import capital_market
@@ -16,13 +18,21 @@ from .purses import DEBT_FLOOR
 STANDING_DISCOUNT_CAP = declare(
 	"STANDING_DISCOUNT_CAP", 0.03, kind="temporary_heuristic",
 	unit="fraction off the annual rate (maximum)", source=None, confidence="D",
-	why="The most a fully trusted borrower's standing can cheapen its credit; the same ceiling the "
-		"founder's reputation has. Stands in for lenders' knowledge of a borrower.")
+	retire="Complaints/106: lenders price a borrower from the record they hold of it, not a capped discount",
+	why="The most a fully trusted borrower's standing, or the founder's reputation, can cheapen its credit: the one "
+		"ceiling every borrower's rate uses (`rate_with_discount`). Stands in for lenders' knowledge of a borrower.")
 TRACK_RECORD_YEARS = declare(
 	"TRACK_RECORD_YEARS", 10.0, kind="temporary_heuristic",
 	unit="years", source=None, confidence="D",
+	retire="Complaints/106: lenders price a borrower from the record they hold of it, not a capped discount",
 	why="Years of existence after which lenders trust a firm's record in full; its standing grows "
 		"linearly until then. Stands in for lenders learning a borrower's reliability.")
+
+
+def rate_with_discount(market_rate: float, premium: Optional[float], discount: float) -> float:
+	"""The rate on a loan: the market rate plus the economy's risk premium (none: no premium) less the borrower's discount for
+	its standing, the premium never taken under nothing."""
+	return market_rate + max(0.0, (0.0 if premium is None else premium) - max(0.0, discount))
 
 
 class Borrower:
@@ -43,16 +53,54 @@ class Borrower:
 		return STANDING_DISCOUNT_CAP * max(0.0, min(1.0, self.credit_standing(world)))
 
 	def credit_ceiling(self, world: Any) -> float:
-		"""The most this actor may owe in all: what its earning can carry at the market rate, and no
-		more than lenders hold after the others' loans."""
+		"""The most this actor may owe in all before lenders price it, which is also the security it shows them: the debt its
+		standing earning can carry at the market rate, and no more than lenders hold after the others' loans. `draw_limit`
+		is what it may draw."""
 		carried = capital_market.serviceable_debt(
-			self.credit_earning(world), max(world.market_rate(), world.starting_rate()), world.debt_service_share_of_surplus())
-		room = world.credit_headroom(self.identity())  # type: ignore[attr-defined]
+			self.credit_earning(world), max(world.credit.market_rate(), world.credit.starting_rate()), world.credit.debt_service_share_of_surplus())
+		room = world.credit.credit_headroom(self.identity())  # type: ignore[attr-defined]
 		return carried if room is None else min(carried, room)
 
+	def rule_limit(self, world: Any, amount: float) -> float:
+		"""The most of a draw of `amount` the economy's rule lends the actor on top of what it owes: within its ceiling (what its
+		earning can carry, and what lenders still hold), and cut by the one rule for every borrower (`credit_cap.fundable_amount`
+		at the economy's risk premium and its lowest lender ask, the ceiling being the security shown). Nothing with no ceiling.
+		The whole of what the ceiling allows where the credit market has not yet met; `draw_limit` then adds what the lenders can
+		supply."""
+		debt = self.debt()
+		ceiling = self.credit_ceiling(world)
+		price = self.cash_per_face()
+		wanted = max(0.0, min(amount / price, ceiling - debt))   # the debt and the ceiling are at face
+		if wanted <= 0.0:
+			return 0.0
+		fundable = world.credit.fundable_amount(wanted, debt, ceiling, self.arrears_book.interest_arrears)
+		return (wanted if fundable is None else fundable) * price
+
+	def cash_per_face(self) -> float:
+		"""The cash a unit of new debt raises: the price per face of a bond when the actor sells bonds, else one."""
+		bonds = self.purses.bonds  # type: ignore[attr-defined]
+		return bonds.price_per_face(self.account_id) if bonds.issues(self.account_id) else 1.0  # type: ignore[attr-defined]
+
+	def draw_limit(self, world: Any, amount: float) -> float:
+		"""The most of a draw of `amount` the actor is lent now: the rule's limit (`rule_limit`) and what the pool holds and the
+		economy's lenders can supply for a draw that size, which is the very gate the draw itself passes (`Purses.drawable`), so
+		a draw this approves is not refused."""
+		allowed = self.rule_limit(world, amount)
+		return self.purses.drawable(self.account_id, allowed) if allowed > 0.0 else 0.0  # type: ignore[attr-defined]
+
 	def spare_credit(self, world: Any) -> float:
-		"""What the actor may still borrow: its ceiling less what it already owes."""
-		return max(0.0, self.credit_ceiling(world) - self.debt())
+		"""What the actor may still borrow: its ceiling less what it owes, as far as lenders lend it."""
+		return self.draw_limit(world, max(0.0, self.credit_ceiling(world) - self.debt()))
+
+	def payable_now(self, world: Any, amount: float) -> float:
+		"""The most of `amount` the actor can pay now: what the purses say it can (`Purses.payable`: its purse, the deposit it can
+		take back and what the lenders still hold, counted once), and no more than its purse and deposit plus what the economy's
+		rule (`rule_limit`) lends it beyond them."""
+		purses = self.purses  # type: ignore[attr-defined]
+		held = max(0.0, purses.purse(self.account_id)) + purses.takeable(self.account_id)
+		if held >= amount:
+			return amount
+		return min(purses.payable(self.account_id, amount), held + self.rule_limit(world, amount - held))
 
 	# Whether the actor pays for copies on credit; a firm does, a state and a household keep to their purse.
 	borrows_for_copies = False
@@ -63,15 +111,16 @@ class Borrower:
 		return purse + self.spare_credit(world) if self.borrows_for_copies else purse
 
 	def rate_on_loan(self, world: Any, amount: float) -> float:
-		"""The rate on `amount` borrowed on top of what the actor owes, by the share of the ceiling it then uses."""
-		ceiling = self.credit_ceiling(world)
-		used = (self.debt() + amount) / ceiling if ceiling > 0.0 else 1.0
-		return capital_market.borrower_rate(world.market_rate(), self.standing_discount(world), used)
+		"""The rate on `amount` borrowed on top of what the actor owes: the market rate plus the economy's risk premium on the
+		debt then owed, less the discount for its standing (never under the market rate)."""
+		market_rate = world.credit.market_rate()
+		premium = world.credit.risk_premium(self.debt() + amount, self.credit_ceiling(world), self.arrears_book.interest_arrears)
+		return rate_with_discount(market_rate, premium, self.standing_discount(world))
 
 	def may_issue_bonds(self, world: Any) -> bool:
 		"""Whether the actor's society holds a technology declaring the `bond_market` mechanic, in the actor's own
 		knowledge or in what its society already knows."""
-		return any(self.knows(node_id, world) for node_id in world.nodes_with_mechanic("bond_market"))  # type: ignore[attr-defined]
+		return any(self.knows(node_id, world) for node_id in world.credit.nodes_with_mechanic("bond_market"))  # type: ignore[attr-defined]
 
 	def prepare_bonds(self, world: Any) -> None:
 		"""The year's bond terms and redemptions for an actor that is not a state: where its society holds the bond
@@ -80,18 +129,14 @@ class Borrower:
 		term are repaid."""
 		bonds = self.purses.bonds  # type: ignore[attr-defined]
 		if self.may_issue_bonds(world):
-			bonds.set_terms(self.account_id, world.market_rate(), self.borrowing_rate(world))  # type: ignore[attr-defined]
+			bonds.set_terms(self.account_id, world.credit.market_rate(), self.borrowing_rate(world))  # type: ignore[attr-defined]
 		else:
 			bonds.terms.pop(self.account_id, None)  # type: ignore[attr-defined]
 		self.purses.redeem_bonds(self.account_id)  # type: ignore[attr-defined]
 
 	def borrowing_rate(self, world: Any) -> float:
-		debt = self.debt()
-		used = 0.0
-		if debt > 0.0:
-			ceiling = self.credit_ceiling(world)
-			used = debt / ceiling if ceiling > 0.0 else 1.0
-		return capital_market.borrower_rate(world.market_rate(), self.standing_discount(world), used)
+		"""The rate on the debt it owes now."""
+		return self.rate_on_loan(world, 0.0)
 
 	@property
 	def arrears_book(self) -> Any:
@@ -103,8 +148,8 @@ class Borrower:
 		return self.settle_interest(world)[0]
 
 	def settle_interest(self, world: Any) -> Tuple[float, float]:
-		"""(owed, paid) interest for the year. It is paid to the lenders by drawing on the facility while the
-		debt is under the ceiling; the rest becomes arrears, paid first from any cash the actor later holds.
+		"""(owed, paid) interest for the year. It is paid to the lenders from the purse first, then by drawing on the facility
+		while the debt is under the limit lenders set; the rest becomes arrears, paid first from any cash the actor later holds.
 		Arrears that last too long are a default. The one rule for every borrower: a firm, a state, a trader,
 		the founder's household."""
 		record = self.arrears_book
@@ -113,10 +158,9 @@ class Borrower:
 		bonds = self.purses.bonds  # type: ignore[attr-defined]
 		floating = max(0.0, debt - bonds.debt(self.account_id))  # type: ignore[attr-defined]
 		owed = (floating * self.borrowing_rate(world) if floating > 0.0 else 0.0) + bonds.coupons_due(self.account_id)  # type: ignore[attr-defined]
-		paid, unpaid = borrowing_arrears.settle_year(owed, self.spare_credit(world))
-		if paid > 0.0:
-			world.pay_interest(self, paid, "interest")
-		record.interest_arrears += unpaid
+		asked, unpaid = borrowing_arrears.settle_year(owed, self.payable_now(world, owed))
+		paid = world.credit.pay_interest(self, asked, "interest") if asked > 0.0 else 0.0   # what the lenders really took
+		record.interest_arrears += unpaid + (asked - paid)
 		# A debt over its ceiling owes the excess as principal due (a margin call); unpaid, it is arrears at any rate.
 		margin_call = max(0.0, debt - self.credit_ceiling(world))
 		in_arrears = record.interest_arrears > DEBT_FLOOR or margin_call > DEBT_FLOOR
@@ -128,10 +172,10 @@ class Borrower:
 	def pay_arrears_from_purse(self) -> None:
 		"""Interest left unpaid in earlier years is paid from whatever cash the actor now holds."""
 		record = self.arrears_book
-		paid = min(record.interest_arrears, max(0.0, self.money))  # type: ignore[attr-defined]
+		wanted = min(record.interest_arrears, max(0.0, self.money))  # type: ignore[attr-defined]
+		paid = self.purses.pay_arrears(self.account_id, wanted) if wanted > DEBT_FLOOR else 0.0  # type: ignore[attr-defined]
 		if paid > DEBT_FLOOR:
-			self.purses.pay_arrears(self.account_id, paid)  # type: ignore[attr-defined]
-			self.note_outlay("interest arrears", paid)  # type: ignore[attr-defined]
+			self.payments.note_outlay("interest arrears", paid)  # type: ignore[attr-defined]
 			record.interest_arrears -= paid
 
 	def write_off_debt(self) -> None:
@@ -140,7 +184,7 @@ class Borrower:
 		self.purses.write_off(self.account_id)  # type: ignore[attr-defined]
 		forgiven = self.money - before  # type: ignore[attr-defined]
 		if forgiven > DEBT_FLOOR:
-			self.note_income("debt forgiven", forgiven)  # type: ignore[attr-defined]
+			self.payments.note_income("debt forgiven", forgiven)  # type: ignore[attr-defined]
 
 	def default(self, world: Any) -> None:
 		"""The lenders write the claim off, the pool bearing the loss; an actor that can close overrides this to

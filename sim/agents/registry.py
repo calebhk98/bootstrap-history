@@ -1,48 +1,19 @@
 """The set of actors other than the founder's household, and their yearly turn."""
-from bisect import bisect_left, insort
-from itertools import accumulate
-from typing import Any, Dict, List, Optional, Set
+from bisect import insort
+from typing import Any, Dict, List, Optional
 
 from .records import ActorRecord, ActorsState
 
 from .base import RecordedActor
-from .concern_totals import ConcernTotals
 from .entry_round import NicheEntry
 from .extensions import ActorExtensions
-from . import adoption, awareness, patent_index, research, taxpayer_income
-from .firm import Firm
-from .government import Government
+from . import adoption, awareness, patent_index, research
 from .group import InterestGroup
 from .policy import make_policy
+from .registry_concerns import RegistryConcerns
+from .registry_countries import RegistryCountries
+from .registry_staff import RegistryStaff
 from .tuning import ENTREPRENEURIAL_CAPITAL_SHARE
-
-
-class _ConcernWatch:
-	"""Keeps one firm's entries in the registry's `node -> firm ids` index
-	current whenever its business opens or closes a plant. Holds only plain data,
-	so a state holding a watched business still copies."""
-
-	def __init__(self, firm_id: str, holders: Dict[str, Set[str]], version: List[int],
-				 totals: ConcernTotals, record: Any, concern_set_version: List[int]) -> None:
-		self.firm_id = firm_id
-		self.holders = holders
-		self.version = version
-		self.concern_set_version = concern_set_version
-		self.totals = totals
-		self.record = record
-		self.known: Set[str] = set()
-
-	def __call__(self) -> None:
-		current = set(self.record.business.entry_keys())
-		if current != self.known:
-			self.version[0] += 1
-			self.concern_set_version[0] += 1
-		for node_id in self.known - current:
-			self.holders[node_id].discard(self.firm_id)
-		for node_id in current - self.known:
-			self.holders.setdefault(node_id, set()).add(self.firm_id)
-		self.known = current
-		self.totals.sync(self.firm_id, self.record)
 
 
 class ActorRegistry:
@@ -56,31 +27,17 @@ class ActorRegistry:
 		self.extensions = extensions
 		self.actors: Dict[str, RecordedActor] = {}
 		self.world: Any = None
-		# which firms hold each concern (kept current by _ConcernWatch), and the ids in order
-		self._holders: Dict[str, Set[str]] = {}
-		self._ordered_ids: Optional[List[str]] = None
+		self.ordered_ids: Optional[List[str]] = None
+		self.patent_index = patent_index.PatentIndex()
 		# of_kind answers, in id order: a new actor joins its kind's list, a replaced actor drops them all
 		self._by_kind: Dict[str, List[Any]] = {}
 		self._by_kind_count = 0
-		self._staff: Optional[Dict[str, float]] = None
-		# per trade, every actor's staff in id order and the running left-to-right sum of it, kept
-		# current by re-summing from the one actor whose staff changed (see `_staff_total`)
-		self._columns: Dict[str, Any] = {}
-		self._column_position: Dict[str, int] = {}
-		self._changed_actors: Set[str] = set()
-		self._columns_synced = False
-		self._acting: Optional[RecordedActor] = None
-		self._staff_basis: Dict[str, float] = {}
 		self._bans: Optional[Dict[str, str]] = None
-		# bumped whenever any firm's concerns change, so market caches keyed on it stay honest
-		self.version: List[int] = [0]
-		# bumped only when the set of concerns a firm runs changes, not when a concern's size does
-		self.concern_set_version: List[int] = [0]
-		self._totals = ConcernTotals()
-		# country -> the world its actors see this year (rebuilt every `advance`)
-		self._scoped: Dict[str, Any] = {}
-		# node -> (year, cost): what researching it cost when last worked out (see ActorWorld.research_cost)
-		self._research_costs: Dict[str, Any] = {}
+		# node -> (year, cost): what researching it cost when last worked out (see ActorWorld.research.research_cost)
+		self.research_costs: Dict[str, Any] = {}
+		self.staff = RegistryStaff(self)
+		self.concerns = RegistryConcerns(self)
+		self.countries = RegistryCountries(self)
 		for actor_id in sorted(state.records):
 			self._wrap(actor_id)
 
@@ -88,12 +45,7 @@ class ActorRegistry:
 		record = self.state.records[actor_id]
 		previous = self.actors.get(actor_id)
 		if previous is not None:
-			watch = previous.record.business.watch
-			if isinstance(watch, _ConcernWatch):
-				watch.known = set()
-				self._totals.forget(actor_id)
-				for holding in self._holders.values():
-					holding.discard(actor_id)
+			self.concerns.forget(actor_id, previous)
 		if record.kind not in self.extensions.kinds:
 			owner = record.kind.partition(":")[0] if ":" in record.kind else ""
 			raise ValueError("actor %s is of kind %r, which is not registered%s" % (
@@ -101,147 +53,20 @@ class ActorRegistry:
 				if owner else ""))
 		actor = self.extensions.kinds[record.kind](actor_id, record, make_policy(record.policy_kind, self.extensions.policies))
 		actor.attach(self.state.purses)
-		if hasattr(type(actor), "rivals_of"):
-			# an actor that runs concerns in the shared market: it counts its rivals and is counted as one
-			actor.rivals_of = self.rivals_of
-			if hasattr(type(actor), "on_capacity_change"):
-				actor.on_capacity_change = self.note_capacity_change
-			if hasattr(type(actor), "find_actor"):
-				actor.find_actor = self.get
-			if hasattr(type(actor), "command_table"):
-				actor.command_table = self.extensions.commands
-			watch = _ConcernWatch(actor_id, self._holders, self.version, self._totals, record, self.concern_set_version)
-			record.business.watch = watch
-			watch()
+		self.concerns.hook(actor)
 		patent_index.track(record, previous is not None)
 		self.actors[actor_id] = actor
-		prior_order = self._ordered_ids
-		self._ordered_ids = None
+		prior_order = self.ordered_ids
+		self.ordered_ids = None
 		if previous is None and self._by_kind_count == len(self.actors) - 1:
 			if actor.kind in self._by_kind:
 				insort(self._by_kind[actor.kind], actor, key=lambda each: each.actor_id)
 			self._by_kind_count = len(self.actors)
 		else:
 			self._by_kind = {}
-		if previous is None and self._columns and prior_order is not None and len(prior_order) == len(self.actors) - 1:
-			self._insert_into_columns(actor_id, prior_order)
-		else:
-			self.refresh_staff()
+		self.staff.actor_added(actor_id, prior_order, previous is None)
 		self._bans = None
 		return actor
-
-	def note_capacity_change(self, firm_id: str) -> None:
-		"""A firm has changed the size it runs a concern at: the totals take its new sizes."""
-		self.version[0] += 1
-		self._totals.sync(firm_id, self.actors[firm_id].record)
-
-	def capacity_in(self, node_id: str) -> float:
-		"""Founding sizes of one concern that every active firm runs, summed."""
-		return self._totals.size_by_node.get(node_id, 0.0)
-
-	def concerns_in(self, category: str, nodes: Dict[str, Any]) -> float:
-		"""Founding sizes of concerns of goods category `category` that actors operate, summed over operators."""
-		return self._totals.size_of_category(category, nodes)
-
-	def refresh_staff(self) -> None:
-		"""Forget the staffing and demand tallies so the next read counts every actor again."""
-		self._staff = None
-		self._columns = {}
-		self._changed_actors = set()
-		self._columns_synced = False
-
-	def _staff_total(self, trade: str) -> float:
-		"""People of one trade across every actor, summed left to right in actor-id order, as
-		`staff_by_trade` sums them, but as of the same moments: the actors' staff as read at the
-		first count after a change, the acting actor's as it stood then."""
-		acting = self._acting
-		if not self._columns_synced:
-			if acting is not None:
-				self._staff_basis = dict(acting.workforce)
-			changed = self._changed_actors
-			if acting is not None:
-				changed = changed | {acting.actor_id}
-			for actor_id in changed:
-				self._resum_actor(actor_id)
-			self._changed_actors = set()
-			self._columns_synced = True
-		column = self._columns.get(trade)
-		if column is None:
-			if self._ordered_ids is None:
-				self._ordered_ids = sorted(self.actors)
-			self._current_positions()
-			values = [self.actors[actor_id].record.workforce.get(trade, 0.0) for actor_id in self._ordered_ids]
-			if acting is not None:
-				values[self._column_position[acting.actor_id]] = self._staff_basis.get(trade, 0.0)
-			column = self._columns[trade] = (values, list(accumulate(values, initial=0.0)))
-		return column[1][-1]
-
-	def _current_positions(self) -> None:
-		"""Make `_column_position` match the actor-id order."""
-		if self._ordered_ids is None:
-			self._ordered_ids = sorted(self.actors)
-		if len(self._column_position) != len(self._ordered_ids):
-			self._column_position = {actor_id: place for place, actor_id in enumerate(self._ordered_ids)}
-
-	def _insert_into_columns(self, actor_id: str, order: List[str]) -> None:
-		"""Add one new actor to the id order and to every counted trade's column, re-summing
-		from its place; the next count then re-reads the acting actor's staff."""
-		place = bisect_left(order, actor_id)
-		order.insert(place, actor_id)
-		self._ordered_ids = order
-		self._column_position = {}
-		staff = self.actors[actor_id].record.workforce
-		for trade, (values, running) in self._columns.items():
-			values.insert(place, staff.get(trade, 0.0))
-			running[place + 1:] = list(accumulate(values[place:], initial=running[place]))[1:]
-		self._staff = None
-		self._columns_synced = False
-
-	def _resum_actor(self, actor_id: str) -> None:
-		"""Bring every counted trade's column up to the actor's present staff."""
-		actor = self.actors.get(actor_id)
-		self._current_positions()
-		place = self._column_position.get(actor_id)
-		if actor is None or place is None:
-			self._columns = {}
-			return
-		staff = actor.record.workforce
-		for trade, (values, running) in self._columns.items():
-			people = staff.get(trade, 0.0)
-			if people != values[place]:
-				values[place] = people
-				running[place + 1:] = list(accumulate(values[place:], initial=running[place]))[1:]
-
-	def staff_by_trade(self) -> Dict[str, float]:
-		"""People of each trade every recorded actor employs, in full-time equivalents."""
-		if self._staff is None:
-			totals: Dict[str, float] = {}
-			if self._ordered_ids is None:
-				self._ordered_ids = sorted(self.actors)
-			for actor_id in self._ordered_ids:
-				for trade, people in self.actors[actor_id].record.workforce.items():
-					totals[trade] = totals.get(trade, 0.0) + people
-			self._staff = totals
-			if self._acting is not None:
-				self._staff_basis = dict(self._acting.workforce)
-		return self._staff
-
-	def staff_fte(self, trade: str, excluding: Optional[str] = None) -> float:
-		"""People of one trade the actors employ, leaving out one actor's own staff."""
-		total = self._staff_total(trade)
-		if excluding is not None and excluding in self.actors:
-			total -= self.actors[excluding].workforce.get(trade, 0.0)
-		return max(0.0, total)
-
-	def staff_fte_in_country(self, trade: str, country: str, excluding: Optional[str] = None) -> float:
-		"""People of one trade the actors of one country employ, leaving out one actor's own staff."""
-		total = sum(actor.workforce.get(trade, 0.0) for actor_id, actor in sorted(self.actors.items())
-					if actor_id != excluding and self.country_of(actor) == country)
-		return max(0.0, total)
-
-	def home_staff_fte(self, trade: str, excluding: Optional[str] = None) -> float:
-		"""People of one trade the home country's actors employ (an actor with no country is home)."""
-		return self.staff_fte_in_country(trade, self.state.home_country, excluding)
 
 	def add(self, actor_id: str, record: ActorRecord) -> RecordedActor:
 		self.state.records[actor_id] = record
@@ -251,119 +76,28 @@ class ActorRegistry:
 		return self.actors.get(actor_id)
 
 	def of_kind(self, kind: str) -> List[RecordedActor]:
-		if self._ordered_ids is None:
-			self._ordered_ids = sorted(self.actors)
+		if self.ordered_ids is None:
+			self.ordered_ids = sorted(self.actors)
 		if self._by_kind_count != len(self.actors):
 			self._by_kind, self._by_kind_count = {}, len(self.actors)
 		if kind not in self._by_kind:
-			self._by_kind[kind] = [self.actors[actor_id] for actor_id in self._ordered_ids
+			self._by_kind[kind] = [self.actors[actor_id] for actor_id in self.ordered_ids
 								   if self.actors[actor_id].kind == kind]
 		return list(self._by_kind[kind])
 
-	def ensure_government(self, civ_id: str, name: str = "") -> Government:
-		actor_id = "government:" + civ_id
-		existing = self.actors.get(actor_id)
-		if existing is not None:
-			return existing  # type: ignore[return-value]
-		return self.add(actor_id, ActorRecord(kind="government", name=name or actor_id))  # type: ignore[return-value]
-
-	def government(self, civ_id: str) -> Government:
-		return self.ensure_government(civ_id)
-
-	def country_of(self, actor: Any) -> str:
-		"""The country an actor answers to: its own, else the home country."""
-		record = getattr(actor, "record", None)
-		country = None if record is None else record.country
-		return country or self.state.home_country
-
-	def country_of_tile(self, tile: str) -> Optional[str]:
-		"""The country whose profile holds a tile; None when none does."""
-		owners = self.__dict__.get("_tile_owners")
-		if owners is None:
-			owners = self.__dict__["_tile_owners"] = taxpayer_income.tile_owners(self.state.countries)
-		return owners.get(tile)
-
-	def government_of(self, country: Optional[str]) -> Optional[Government]:
-		"""The government of a country (the home country for None), if it has one."""
-		return self.actors.get("government:" + str(country or self.state.home_country))  # type: ignore[return-value]
-
-	def world_for(self, actor: Any, world: Any) -> Any:
-		"""The world an actor sees: the shared one for the home country, else its country's scope."""
-		return self.world_of_country(self.country_of(actor), world)
-
-	def world_of_country(self, country: Optional[str], world: Any) -> Any:
-		"""The world a country's actors see: the shared one for the home country, else the country's scope."""
-		scope = self.extensions.world_scope
-		if scope is None or not country or country == self.state.home_country or country not in self.state.countries:
-			return world
-		scoped = self._scoped.get(country)
-		if scoped is None:
-			scoped = scope(world, self.state.countries[country], self)
-			self._scoped[country] = scoped
-		return scoped
-
-	def home_actors(self, kind: str) -> List[RecordedActor]:
-		"""The actors of a kind that answer to the home country, in id order."""
-		return [actor for actor in self.of_kind(kind) if self.country_of(actor) == self.state.home_country]
-
-	def market_operators(self) -> List[RecordedActor]:
-		"""Every actor still in business that runs concerns in the shared market: firms and players."""
-		return [actor for actor in (self.actors[actor_id] for actor_id in self._sorted_ids())
-				if hasattr(type(actor), "rivals_of") and actor.record.exited_year is None]
-
-	def _sorted_ids(self) -> List[str]:
-		if self._ordered_ids is None:
-			self._ordered_ids = sorted(self.actors)
-		return self._ordered_ids
-
-	def proven_concerns(self, world: Any) -> List[str]:
-		"""Concerns some player has shown to pay, the founder's and every player actor's, in id order."""
-		proven = set(world.proven_concerns())
-		for actor in self.actors.values():
-			shown = getattr(actor, "proven_concerns", None)
-			if shown is not None and actor.record.exited_year is None:
-				proven.update(shown(world))
-		return sorted(proven)
-
-	def active_firms(self) -> List[Firm]:
-		return [firm for firm in self.of_kind("firm") if firm.record.exited_year is None]  # type: ignore[misc]
+	def sorted_ids(self) -> List[str]:
+		if self.ordered_ids is None:
+			self.ordered_ids = sorted(self.actors)
+		return self.ordered_ids
 
 	def purse_lenders(self) -> List[RecordedActor]:
 		"""Actors in play whose class sets `lends_from_purse`, in id order: the credit market offers their purses to borrowers."""
 		return [self.actors[actor_id] for actor_id in sorted(self.actors)
-				if getattr(self.actors[actor_id], "lends_from_purse", False) and self.actors[actor_id].record.exited_year is None]
+				if self.actors[actor_id].lends_from_purse and self.actors[actor_id].record.exited_year is None]
 
 	def patent_holders(self, node_id: str) -> List[RecordedActor]:
 		"""The actors whose patents name the node (see patent_index.py); each may have let it expire."""
-		return list(patent_index.holders_of(self, node_id))
-
-	def concerns_of_active_firms(self) -> Set[str]:
-		"""Every concern some firm that has not exited runs, read from the holder index."""
-		actors = self.actors
-		return {node_id for node_id, holders in self._holders.items()
-				if any(actors[actor_id].kind == "firm" and actors[actor_id].record.exited_year is None
-					   for actor_id in holders)}
-
-	def concern_nodes(self) -> List[str]:
-		"""Every concern some actor in business runs."""
-		return [node_id for node_id, holders in self._holders.items() if holders]
-
-	def operators_of(self, node_id: str) -> List[RecordedActor]:
-		"""Actors in business that run a concern, in id order."""
-		return [self.actors[actor_id] for actor_id in sorted(self._holders.get(node_id, ()))
-				if self.actors[actor_id].record.exited_year is None]
-
-	def rivals_of(self, node_id: str, asking_id: str) -> float:
-		"""Founding sizes of the concern that other operators run in its market, the founder's included."""
-		operators = self._holders.get(node_id, ())
-		count = self.capacity_in(node_id)
-		if asking_id in operators:
-			count -= self.actors[asking_id].capacity_of(node_id)
-		founder_operates = self.world is not None and self.world.is_public(node_id)
-		return count + (1 if founder_operates else 0)
-
-	def _workforces(self) -> Dict[str, Dict[str, float]]:
-		return {actor_id: dict(actor.workforce) for actor_id, actor in self.actors.items()}
+		return list(self.patent_index.holders_of(self.actors, node_id))
 
 	def _seat_in_id_order(self) -> None:
 		"""Hold the actors and their records in id order, as a load builds them, so a sweep over either matches a loaded game."""
@@ -375,42 +109,30 @@ class ActorRegistry:
 
 	def advance(self, world: Any) -> None:
 		self.world = world
-		self._scoped = {}
+		self.countries.new_year()
 		self._seat_in_id_order()
 		first = True
-		before = self._workforces()
+		before = self.staff.workforces()
 		for actor_id in sorted(self.actors):
 			actor = self.actors[actor_id]
-			world.market_forget(actor_id)
+			world.market.market_forget(actor_id)
 			if actor.record.exited_year is not None:
 				continue
-			# the tally is a count of everyone's staff as of the acting actor's staff in `_staff_basis`
-			self._acting, self._staff_basis = actor, dict(actor.workforce)
-			seen = self.world_for(actor, world)
+			self.staff.begin_turn(actor)
+			seen = self.countries.world_for(actor, world)
 			actor.advance(seen)
 			actor.sell_output(seen)
-			# it stays when the acting actor's staff is what the count saw; the first actor of a
-			# year always recounts, since anything between years is unseen
-			if first:
-				self.refresh_staff()
-			elif actor.workforce != self._staff_basis:
-				self._staff = None
-				self._changed_actors.add(actor.actor_id)
-				self._columns_synced = False
+			self.staff.end_turn(actor, first)
 			first = False
-		self._acting = None
+		self.staff.stop_turns()
 		researchers = [actor for actor in self.actors.values() if actor.researches and actor.record.exited_year is None]
 		awareness.spread(researchers, world)
 		research.diffuse(researchers, world)
 		for actor in sorted(researchers, key=lambda each: each.identity()):
-			adoption.advance_actor(actor, self.world_for(actor, world))
+			adoption.advance_actor(actor, self.countries.world_for(actor, world))
 		for _name, spawner in list(self.extensions.spawners):
 			spawner(self, world)
-		# entry and group formation change staff after the last count; whatever reads before the next
-		# year's first actor (the founder's own turn) sees what is there, as a reloaded game does.
-		# A year in which no actor's staff differs from the year's start leaves the tally standing.
-		if self._workforces() != before:
-			self.refresh_staff()
+		self.staff.end_year(before)
 		self._bans = None
 
 	def consider_entry(self, world: Any) -> List[str]:
@@ -419,19 +141,19 @@ class ActorRegistry:
 		carries, more than the capital it ties up would earn at the market's rate."""
 		self.world = world
 		founded = []
-		pool = [world.society_output() * ENTREPRENEURIAL_CAPITAL_SHARE]
+		pool = [world.revenue.society_output() * ENTREPRENEURIAL_CAPITAL_SHARE]
 		waiting: Dict[str, int] = {}
-		for firm in self.active_firms():
+		for firm in self.concerns.active_firms():
 			target = firm.record.target
 			if target is not None and target not in firm.concerns:
-				key = world.market_key(target)
+				key = world.market.market_key(target)
 				waiting[key] = waiting.get(key, 0) + 1
 		strata_exist = bool(self.of_kind("stratum"))
-		for node_id in self.proven_concerns(world):
-			key = world.market_key(node_id)
+		for node_id in self.concerns.proven_concerns(world):
+			key = world.market.market_key(node_id)
 			niche = NicheEntry(self, world, node_id, pool, strata_exist)
 			while True:
-				firm_id = niche.found(self.rivals_of(node_id, ""), waiting.get(key, 0))
+				firm_id = niche.found(self.concerns.rivals_of(node_id, ""), waiting.get(key, 0))
 				if firm_id is None:
 					break
 				waiting[key] = waiting.get(key, 0) + 1
@@ -444,9 +166,9 @@ class ActorRegistry:
 		formed: List[str] = []
 		home = self.state.home_country
 		for country in [home] + sorted(set(self.state.countries) - {home}):
-			if country != home and self.government_of(country) is None:
+			if country != home and self.countries.government_of(country) is None:
 				continue
-			formed.extend(self._organise_groups(self.world_of_country(country, world), country))
+			formed.extend(self._organise_groups(self.countries.world_of_country(country, world), country))
 		return formed
 
 	def _organise_groups(self, world: Any, country: str) -> List[str]:
@@ -454,8 +176,8 @@ class ActorRegistry:
 		from .group_tuning import GROUP_ORGANISING_WEIGHT
 		home = country == self.state.home_country
 		formed = []
-		for key, sector in sorted(world.sectors().items()):
-			if sector.lost_income / world.scope_revenue(sector.scope) < GROUP_ORGANISING_WEIGHT:
+		for key, sector in sorted(world.groups.sectors().items()):
+			if sector.lost_income / world.groups.scope_revenue(sector.scope) < GROUP_ORGANISING_WEIGHT:
 				continue
 			group_id = "group:" + key if home else "group:%s:%s" % (country, key)
 			existing = self.actors.get(group_id)
@@ -463,7 +185,7 @@ class ActorRegistry:
 				continue
 			if existing is None:
 				existing = self.add(group_id, ActorRecord(**InterestGroup.founded_by(sector, None if home else country),
-														  founded_year=world.year))
+														  founded_year=world.setting.year))
 			else:
 				existing.record.exited_year = None
 			existing.record.lost_income = 0.0
@@ -475,6 +197,6 @@ class ActorRegistry:
 		"""Commodity -> name of the interest group whose demand to forbid the techniques that
 		make it the state is meeting this year."""
 		if self._bans is None:
-			self._bans = {group.record.subject: group.record.name for group in self.home_actors("interest_group")
+			self._bans = {group.record.subject: group.record.name for group in self.countries.home_actors("interest_group")
 						  if group.record.exited_year is None and group.record.demands and not group.record.technique}
 		return self._bans

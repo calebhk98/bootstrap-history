@@ -15,32 +15,32 @@ def unlicensed(entry: Any, actor_id: str) -> bool:
 
 def expected_damages(world: Any, actor_id: str, node_id: str, margin: float) -> float:
 	"""What an unlicensed `actor_id` (empty for an entrant yet to exist) expects to pay a year to the holder: the state's reach times the margin it makes."""
-	entry = world.patent_entry(node_id)
+	entry = world.disclosure.patent_entry(node_id)
 	if not unlicensed(entry, actor_id):
 		return 0.0
-	return float(world.state_reach()) * max(0.0, margin)
+	return float(world.taxpayers.state_reach()) * max(0.0, margin)
 
 
 def holder_actor(registry: Any, world: Any, holder_id: str) -> Any:
 	"""The actor holding a patent: one in the registry, else a seat."""
-	return registry.get(holder_id) or world.seat_parties().get(holder_id)
+	return registry.get(holder_id) or world.seats.seat_parties().get(holder_id)
 
 
 def patented_nodes(registry: Any, world: Any) -> set:
 	"""Every node some actor or seat holds a patent on."""
-	holders = list(registry.actors.values()) + list(world.seat_parties().values())
+	holders = list(registry.actors.values()) + list(world.seats.seat_parties().values())
 	return {node_id for holder in holders for node_id in holder.record.patents}
 
 
 def operators_of(registry: Any, world: Any, node_id: str) -> list:
 	"""Who runs a concern: the actors in business, and the seats that run it themselves."""
-	seats = world.seat_parties()
-	return registry.operators_of(node_id) + [seats[seat_id] for seat_id in sorted(seats) if node_id in seats[seat_id].concerns]
+	seats = world.seats.seat_parties()
+	return registry.concerns.operators_of(node_id) + [seats[seat_id] for seat_id in sorted(seats) if node_id in seats[seat_id].concerns]
 
 
 def margin_of(operator: Any, world: Any) -> float:
 	"""What an operator earns from one of its concerns in a year, on average."""
-	total = world.seat_margin(operator.actor_id) if operator.kind == "household" else operator.record.last_margin
+	total = world.seats.seat_margin(operator.actor_id) if operator.kind == "household" else operator.record.last_margin
 	return max(0.0, total) / max(1, len(operator.concerns))
 
 
@@ -49,7 +49,7 @@ def enforce_patents(registry: Any, world: Any) -> float:
 	pays its margin on the concern to the holder, never more than its purse; the total paid."""
 	paid = 0.0
 	for node_id in sorted(patented_nodes(registry, world)):
-		entry = world.patent_entry(node_id)
+		entry = world.disclosure.patent_entry(node_id)
 		if entry is None:
 			continue
 		holder = holder_actor(registry, world, entry["holder"])
@@ -58,8 +58,8 @@ def enforce_patents(registry: Any, world: Any) -> float:
 		for operator in operators_of(registry, world, node_id):
 			if not unlicensed(entry, operator.actor_id):
 				continue
-			draw = world.rng_for(world.year, "enforcement", operator.actor_id, node_id).random()
-			if draw >= world.state_reach():
+			draw = world.setting.rng_for(world.setting.year, "enforcement", operator.actor_id, node_id).random()
+			if draw >= world.taxpayers.state_reach():
 				continue
 			damages = min(max(0.0, operator.money), margin_of(operator, world))
 			ledger.transfer(operator, holder, damages, "damages")

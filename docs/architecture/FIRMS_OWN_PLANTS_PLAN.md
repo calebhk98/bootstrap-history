@@ -1,5 +1,7 @@
 # Firms own plants: one business object for every owner
 
+Note: file and function names in this plan are those of the time it was written. The engine's `agents_port*.py` is now the actors module (`sim/actors/`: `concern_takings`, `entry_gross` and `ramp` are in `world_concerns.py`), `economy_port*` is mostly `sim/markets/port*.py`, and `Sim` has no mixins. Re-find a name with `grep` before relying on where it lives.
+
 **Status:** plan, nothing built (2026-10-14). Answers `Complaints/510-most-tree-nodes-charge-upkeep-and-make-nothing.md`
 and `Complaints/514-the-founders-ventures-and-firms-concerns-are-two-implementations.md`. Sequel to
 `ONE_PRICE_OWNER_PLAN.md` (507), whose stage order this plan depends on (section 5).
@@ -239,7 +241,7 @@ still name the world-view methods, which stage 3c replaces. Proof: `test_busines
 
 **Stage 2: the plant kernel in `sim/world/`.** Move `node_output` baskets, `node_upkeep` plant wear, `plant_crew` and the
 capital arithmetic into `sim/world/plant_figures.py`, taking prices and wages as arguments. `node_revenue` becomes a caller,
-so node figures are unchanged. Owns: `sim/world/plant_figures.py`, `sim/engine/node_output.py`, `node_upkeep.py`,
+so node figures are unchanged. Owns: `sim/world/plant_figures.py`, `sim/production/node_output.py`, `node_upkeep.py`,
 `node_capital.py`, `plant_crew.py`, `energy_prices.py` (move only). Parallel with stage 1 (different directories). Proof:
 fingerprint unchanged; new `test_plant_figures.py` (relationships: crew hours scale with output; output is the smaller of
 plant capacity and crew hours; upkeep rises with plant capital and falls to consumables alone with none; takings are linear

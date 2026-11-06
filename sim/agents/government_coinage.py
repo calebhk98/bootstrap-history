@@ -19,22 +19,29 @@ def debasement_decision(government: Any, world: Any, shortfall: Any = None) -> f
 	coin recovers metal on the part of the stock struck again, so the cut that covers the shortfall
 	is the shortfall over that part's worth, never past the ceiling.
 	"""
-	if world.coin_regime() != STRUCK_COIN:
+	if world.revenue.coin_regime() != STRUCK_COIN:
 		return 0.0
 	if shortfall is None:   # unless the state's fiscal response sized it, the whole unfunded need
 		shortfall = sum(government.record.unfunded.values())
-	struck_again = world.coin_stock_value() * COIN_RESTRIKE_SHARE_PER_YEAR
+	stock_value = world.revenue.coin_stock_value()
+	if stock_value is None:   # a coin metal with no price has no worth to restrike: no debasement
+		return 0.0
+	struck_again = stock_value * COIN_RESTRIKE_SHARE_PER_YEAR
 	if shortfall <= 0.0 or struck_again <= 0.0:
 		return 0.0
 	return min(DEBASEMENT_SHARE_CEILING, shortfall / struck_again)
 
 
-class CoinageMixin:
-	"""Mixed into `Government`."""
+class Coinage:
+	"""A state's coin: the decision to strike lighter coin, on the government that owns the record."""
 
-	def decide_debasement(self, world: Any) -> float:
-		"""Choose and record this year's cut; call after the standing need is paid."""
-		share = debasement_decision(self, world)
-		self.record.coin_cut_share = share  # type: ignore[attr-defined]
-		self.record.coin_metal_kept *= 1.0 - share  # type: ignore[attr-defined]
+	def __init__(self, government: Any) -> None:
+		self.government = government
+
+	def decide_debasement(self, world: Any, shortfall: Any = None) -> float:
+		"""Choose and record this year's cut; call after the standing need is paid. `shortfall` is the part of it the state's
+		fiscal response chose to cover by debasing (`Fiscal.meet_shortfall`); left out, the whole unfunded need."""
+		share = debasement_decision(self.government, world, shortfall)
+		self.government.record.coin_cut_share = share
+		self.government.record.coin_metal_kept *= 1.0 - share
 		return share

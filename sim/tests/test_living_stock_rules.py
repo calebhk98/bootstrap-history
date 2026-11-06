@@ -4,7 +4,6 @@ it reads; each test calls one method of it (or one rule) and reads what it answe
 test_living_stock_scenario and test_living_stock_trade_scenario."""
 QUICK_TOPIC = True
 
-import types
 import unittest
 from unittest import mock
 
@@ -21,7 +20,7 @@ from sim.living_stock import yearly
 from sim.refusal import Refusal, cause_of
 from sim.tests import finance_host, module_harness
 from sim.ui.proto import stock_purchases
-from sim.world.material_units import tonnes_per_unit
+from sim.markets.unit_mass import tonnes_per_unit, unit_mass_kg
 from sim.tests.ui_stand_in import Game
 
 EGGS, HERD = "eggs_kg", "herd_kg"
@@ -30,7 +29,7 @@ EGGS, HERD = "eggs_kg", "herd_kg"
 def _module(tonnes=None, nodes=None, civ=None, **views):
     """The module with `tonnes` held by commodity key (a material is its own key here), a node table and a civilisation."""
     tonnes = tonnes or {}
-    plain = {"material_commodity": lambda material: material, "goods_stock": lambda key: tonnes.get(key, 0.0),
+    plain = {"unit_mass_kg": unit_mass_kg, "material_commodity": lambda material: material, "goods_stock": lambda key: tonnes.get(key, 0.0),
              "tree": (nodes or {}).get, "civilisation": civ or {}}
     plain.update(views)
     return module_harness.build(LivingStock, views=plain, world=LivingStockWorld())
@@ -128,7 +127,7 @@ class PartnerRefusal(unittest.TestCase):
         self.assertEqual(cause_of(self.refusal(self.stand_in([], gate=gate))), "partner_not_reached")
 
     def test_markets_shut_to_the_buyer_refuse_with_the_reopening_year(self):
-        government = Game(markets_closed_until=lambda party, year: 130, decision_policy=None,
+        government = Game(markets=Game(markets_closed_until=lambda party, year: 130), decision_policy=None,
                                            record=Game(state_monopolies=set()))
         self.assertEqual(cause_of(self.refusal(self.stand_in([], government))), "partner_market_shut")
 
@@ -220,6 +219,8 @@ class BuyCommand(unittest.TestCase):
 class _Capital:
     """A game as the purchase screen reads it: a purse, a quote view, a held view and a send that charges the quote."""
 
+    civ = {"id": "testland"}      # the civilisation record the money text reads its units from
+
     def __init__(self, purse, quote, sent, answer=True):
         self.purse, self.quote, self.sent, self.answer = purse, quote, sent, answer
 
@@ -256,8 +257,10 @@ class YearsTurn(unittest.TestCase):
     def turn(self, held):
         tonnes = {material: units * tonnes_per_unit(material) for material, units in held.items()}
         module = _module(tonnes, stock_land={"place": None, "pasture_kg": 0.0},
-                         endemic_stock_loss=lambda place, species: 0.0, nursery_room_units=lambda *arguments: None)
-        with mock.patch.object(yearly, "stock_rates", lambda: self.RATES):
+                         endemic_stock_loss=lambda place, species: 0.0, nursery_room_units=lambda *arguments: None,
+                         hours_hired_once=lambda purpose: {})
+        with mock.patch.object(yearly, "stock_rates", lambda: self.RATES), \
+                mock.patch.object(yearly, "stock_entry", lambda material: None):   # growth takes no hired labour
             module.step_living_stock("founder")
         changes = {}
         for sent in module_harness.sent(module):

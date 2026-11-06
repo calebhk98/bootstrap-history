@@ -8,7 +8,6 @@ institution.
 
 QUICK_TOPIC = True
 
-import json
 import os
 import unittest
 

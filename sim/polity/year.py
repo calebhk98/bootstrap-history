@@ -8,8 +8,9 @@ Needs: standing_floor, techniques_held, tree_nodes, year, danger_lines, acting_b
 founder, automation, events_enabled, game_random, patrons_lost_to_eminence, money_text, send (PayEdge, ForgetTechnique, EndRun,
 RecordEvent)."""
 from sim.agents.api import edges
+from sim.assembly.api import Part
 from sim.knowledge.api import ForgetTechnique
-from sim.ledger.api import PayEdge
+from sim.ledger.api import pay_edge_or_log
 from sim.reporting.api import RecordEvent
 from sim.seats.api import EndRun
 from sim.unit_conversions import PERCENT_SCALE
@@ -17,7 +18,7 @@ from sim.unit_conversions import PERCENT_SCALE
 from . import constants, eminence_warning, rules
 
 
-class Year:
+class Year(Part):
 
 	def step_begin_seat_year(self, seat_id):
 		"""The phase `begin_seat_year`: where scandal stood when the player last looked. `state` prints the chance of being
@@ -52,22 +53,25 @@ class Year:
 			needs.send(RecordEvent.of("eminence_warning", "YOU ARE BECOMING CONSPICUOUS: eminence %.0f against a danger line of %.0f. "
 			                          "This is the one thing no patron and no bribe protects you from, and it grows with reputation "
 			                          "and visible wealth. A wide, dispersed institution is what survives you" % (seat.eminence, danger)))
-		self.update_protection()
+		self.parts.protection.update_protection()
 		# the state notices you, after protection so this year's patronage and office standing are what requisition bargains
 		# against, and before scandal and eminence so two unrelated draws are not resolved in one breath
-		self.state_pressure(year)
-		self.pay_concern_levies(year)
+		self.parts.pressure.state_pressure(year)
+		self.parts.transfers.pay_concern_levies(year)
 		seat.scandal *= constants.SCANDAL_DECAY_RATE
 		# eminence accumulates in a separate pool because bribery does not touch it: you cannot buy an emperor's judgement
-		seat.eminence = seat.eminence * constants.EMINENCE_DECAY_RATE + self.prominence_hazard()
+		seat.eminence = seat.eminence * constants.EMINENCE_DECAY_RATE + self.parts.eminence.prominence_hazard()
 		# you can buy your way out of trouble, and a sane player does
 		capital = needs.acting_balance()
-		if (seat.scandal > constants.AUTO_BRIBE_SCANDAL_THRESHOLD and capital > self.priced(constants.AUTO_BRIBE_CAPITAL_THRESHOLD_LABOUR_HOURS)
+		spend = 0.0
+		if (seat.scandal > constants.AUTO_BRIBE_SCANDAL_THRESHOLD and capital > self.parts.eminence.priced(constants.AUTO_BRIBE_CAPITAL_THRESHOLD_LABOUR_HOURS)
 				and needs.founder()["policy"].get("auto_bribe", not needs.automation()["manual"])):
-			spend = min(capital * constants.AUTO_BRIBE_CAPITAL_SHARE, seat.scandal * self.priced(constants.AUTO_BRIBE_COST_LABOUR_HOURS_PER_SCANDAL_POINT))
-			needs.send(PayEdge(edges.EDGE_OFFICIALS, spend, "bribes"))
+			spend = min(capital * constants.AUTO_BRIBE_CAPITAL_SHARE, seat.scandal * self.parts.eminence.priced(constants.AUTO_BRIBE_COST_LABOUR_HOURS_PER_SCANDAL_POINT))
+			if pay_edge_or_log(needs.send, edges.EDGE_OFFICIALS, spend, "bribes") is not None:   # unpaid, no one is bought
+				spend = 0.0
+		if spend > 0.0:
 			seat.bribes_ytd = constants.BRIBES_YTD_DECAY * seat.bribes_ytd + spend
-			seat.scandal -= (spend / self.priced(constants.BRIBE_SCANDAL_REDUCTION_LABOUR_HOURS_PER_POINT) * weights["bribability"])
+			seat.scandal -= (spend / self.parts.eminence.priced(constants.BRIBE_SCANDAL_REDUCTION_LABOUR_HOURS_PER_POINT) * weights["bribability"])
 		else:
 			seat.bribes_ytd *= constants.BRIBES_YTD_DECAY
 		seat.scandal = max(0.0, seat.scandal)
@@ -108,7 +112,7 @@ class Year:
 		roll = dice.random()
 		if roll < constants.EMINENCE_OUTCOME_CONFISCATION_SHARE:
 			# a demand the household answers like any other (comply, refuse, negotiate, conceal)
-			_answer, _demanded, take = self.answer_confiscation(constants.EMINENCE_CONFISCATION_CAPITAL_LOSS,
+			_answer, _demanded, take = self.parts.demands.answer_confiscation(constants.EMINENCE_CONFISCATION_CAPITAL_LOSS,
 			                                                    "confiscation by the state")
 			if take > 0.0:
 				seat.reputation = max(0.0, seat.reputation - constants.EMINENCE_CONFISCATION_REPUTATION_LOSS)

@@ -101,7 +101,7 @@ MILITARY_EQUIPMENT_ERA_CAMPAIGN_TEMPO_ENGAGEMENTS_PER_YEAR = declare(
         "tempo model of its own (see its module docstring's WHERE THIS "
         "MODEL IS WRONG (d) and daily_supply_requirement_kg()'s "
         "engagements_per_day parameter) and takes one as a plain "
-        "argument for exactly that reason; this is society.py's own "
+        "argument for exactly that reason; this is the polity module's own "
         "placeholder for 'a modest campaigning season', standing in "
         "for the campaign-calendar mechanism (marches, sieges, battles "
         "at different intensities) that would derive a real figure. "
@@ -199,7 +199,7 @@ WITHDRAW_MIN_EMINENCE_FRACTION = declare(
         "founder enough for withdrawing to buy anything - so the "
         "action is refused rather than silently wasting standing. "
         "Chosen to match the other half-danger-line thresholds this "
-        "file uses (e.g. YOU ARE BECOMING CONSPICUOUS in core.py), not "
+        "file uses (e.g. YOU ARE BECOMING CONSPICUOUS in sim/polity/year.py), not "
         "derived from a model of what makes someone worth withdrawing "
         "from.")
 WITHDRAW_REPUTATION_RETENTION = declare(
@@ -227,7 +227,7 @@ EMINENCE_HAZARD_SCALE = declare(
     source=None, confidence="D",
     why="How much eminence above the danger line it takes to add a "
         "full 100% to this year's chance of a prominence event - the "
-        "same denominator core.py's step() uses when it actually rolls "
+        "same denominator the eminence phase (sim/polity/eminence.py) uses when it actually rolls "
         "the dice, kept as one shared constant so the number quoted "
         "here can never disagree with the one that fires. Tuned so "
         "the risk climbs noticeably but not instantly past the line, "
@@ -237,8 +237,8 @@ EMINENCE_OUTCOME_CONFISCATION_SHARE = declare(
     unit="dimensionless (share of prominence events)", source=None,
     confidence="D",
     why="Of the events prominence causes, the share that are property "
-        "confiscation and forced retirement - shared with core.py's "
-        "step(), which rolls against this same split. Invented "
+        "confiscation and forced retirement - shared with the eminence phase "
+        "(sim/polity/eminence.py), which rolls against this same split. Invented "
         "proportions, not measured against any attested rate of each "
         "outcome for a fallen Roman grandee.")
 EMINENCE_OUTCOME_PATRON_LOST_SHARE = declare(
@@ -246,8 +246,8 @@ EMINENCE_OUTCOME_PATRON_LOST_SHARE = declare(
     unit="dimensionless (share of prominence events)", source=None,
     confidence="D",
     why="Of the events prominence causes, the share that are a patron "
-        "destroyed in someone else's quarrel - shared with core.py's "
-        "step(). Invented, not measured.")
+        "destroyed in someone else's quarrel - shared with the eminence phase "
+        "(sim/polity/eminence.py). Invented, not measured.")
 EMINENCE_OUTCOME_RUN_ENDS_SHARE = declare(
     "EMINENCE_OUTCOME_RUN_ENDS_SHARE", 0.20, kind="temporary_heuristic",
     unit="dimensionless (share of prominence events)", source=None,
@@ -255,7 +255,7 @@ EMINENCE_OUTCOME_RUN_ENDS_SHARE = declare(
     why="Of the events prominence causes, the share that end the run "
         "outright - the remainder after EMINENCE_OUTCOME_CONFISCATION_"
         "SHARE and EMINENCE_OUTCOME_PATRON_LOST_SHARE, shared with "
-        "core.py's step(). Invented, not measured.")
+        "the eminence phase (sim/polity/eminence.py). Invented, not measured.")
 EMINENCE_HAZARD_BASE_SCALE = declare(
     "EMINENCE_HAZARD_BASE_SCALE", 2.2, kind="temporary_heuristic",
     unit="dimensionless", source=None, confidence="D",
@@ -295,8 +295,8 @@ EMINENCE_REPUTATION_SCALE = declare(
     "EMINENCE_REPUTATION_SCALE", 100.0, kind="temporary_heuristic",
     unit="reputation points", source=None, confidence="D",
     why="Reference reputation this hazard treats as '1.0 famous' - "
-        "reputation's own scale is itself invented (see STANDING_* in "
-        "economy.py), so this normalisation is a heuristic layered on "
+        "reputation's own scale is itself invented (see the standing figures "
+        "in this module), so this normalisation is a heuristic layered on "
         "a heuristic.")
 EMINENCE_WEALTH_VISIBLE_THRESHOLD_LABOUR_HOURS = declare(
     "EMINENCE_WEALTH_VISIBLE_THRESHOLD_LABOUR_HOURS", 5040000.0, kind="temporary_heuristic",
@@ -566,7 +566,7 @@ EMINENCE_DECAY_RATE = declare(
     unit="dimensionless (fraction kept per year, before this year's "
          "hazard is added)", source=None, confidence="D",
     why="How much of last year's eminence survives before adding this "
-        "year's prominence_hazard() - see society.py's eminence_report "
+        "year's prominence_hazard() - see eminence_report (sim/polity/eminence.py) "
         "and prominence_hazard, which both reference this same rate "
         "(as self.EMINENCE_DECAY_RATE) so the reported settling value "
         "can never disagree with what actually accumulates here. "
@@ -632,7 +632,7 @@ EMINENCE_CONFISCATION_CAPITAL_LOSS = declare(
     unit="dimensionless (fraction of capital)", source=None,
     confidence="D",
     why="Fraction of capital the eminence-driven confiscation outcome "
-        "takes - distinct from society.py's state-notice-driven "
+        "takes - distinct from the state-notice-driven "
         "CONFISCATION_CAPITAL_LOSS, this is the court's jealousy of a "
         "great man, unbribable by design (see prominence_hazard's own "
         "docstring). Tuned, not measured.")

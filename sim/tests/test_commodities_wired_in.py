@@ -7,20 +7,6 @@ from .harness import *  # noqa: F401,F403
 from sim.materials import constants as material_constants
 from sim.tests import materials_stand_in
 
-# --- supply_override actually overrides, rather than being silently ignored alongside commodities.json's own (much
-# larger) national estimate.
-override_led = COMMOD.CommodityLedger(supply_override={"copper": 10.0})
-tiny = override_led.propagate_demand("copper_wire", 100.0)
-check("supply_override replaces the national estimate, not just adds to it: "
-      "10 t/yr of copper cannot deliver 100 t/yr of wire",
-      tiny["met_fraction"] < 0.2, tiny["met_fraction"])
-plain_led = COMMOD.CommodityLedger()
-plenty = plain_led.propagate_demand("copper_wire", 100.0)
-check("...while the SAME call with no override still reads commodities.json's "
-      "own (much larger) national figure, exactly as before",
-      plenty["met_fraction"] > tiny["met_fraction"],
-      (plenty["met_fraction"], tiny["met_fraction"]))
-
 # --- the aggregation: material keys drawing on the SAME supply are summed before being compared to it, not checked one at
 # a time against the whole supply each time (_demand_by_supply_tag).
 grouper = materials_stand_in.build()

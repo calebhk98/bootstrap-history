@@ -29,14 +29,14 @@ check("a window older than the record is refused by name, saying how far back th
       and _error["earliest_year"] == 100, _error)
 
 # --- the deltas are one subtraction per tracked figure.
-_snapshot = {"price_index": 1.0, "wage_index": 1.0, "literacy_general": 0.1, "literacy_elite": 0.5, "capital": 100.0,
+_snapshot = {"price_index": 1.0, "wage_per_hour": 1.0, "literacy_general": 0.1, "literacy_elite": 0.5, "capital": 100.0,
              "revenue": 10.0, "credit_limit": 50.0, "employees_total": 3.0, "scholars": 1.0,
              "artisans": 2.0, "operating_count": 4, "done_earned": 10, "scandal": 0.0, "reputation": 1.0, "eminence": 0.5}
 _later = dict(_snapshot, price_index=1.25, capital=160.0, revenue=5.0, done_earned=13)
 _moved = _changes_moved(_snapshot, _later)
 check("the moved figures are the later snapshot less the earlier",
       _moved["price_index"] == 0.25 and _moved["capital"] == 60.0 and _moved["revenue"] == -5.0
-      and _moved["technologies_completed"] == 3 and _moved["wage_index"] == 0.0, _moved)
+      and _moved["technologies_completed"] == 3 and _moved["wage_per_hour"] == 0.0, _moved)
 
 # --- the typed front end reaches all three, the same way it reaches everything else a player can type.
 check("'capacity' types straight through", _PT2("capacity") == ({"cmd": "capacity"}, None), _PT2("capacity"))

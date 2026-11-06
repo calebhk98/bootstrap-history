@@ -1,18 +1,13 @@
-"""A concern's volume, takings and the household's real income, called with entries, prices and baskets built here
+"""A concern's volume, takings called with entries, prices and baskets built here
 (Complaint 640): the volume and value ratios against the opening, the held-technique choice, takings as the product
-of their factors, and the real-income ratio's reading of the basket."""
+of their factors."""
 QUICK_TOPIC = True
 
 import unittest
-from sim.tests import market_stand_in
-from types import SimpleNamespace
 
 from sim.agents import supply
 from sim.production import volume_rules as concern_volume
 from sim.production.concern_earnings import takings_at
-from sim.markets.api import MEAN_INCOME_HOURS_PER_CAPITA
-from sim.markets.module import Markets
-from sim.tests import module_harness
 
 OPENING_PRICES = {"lime": 3.0, "limestone": 1.0}
 STAFF = 4.0
@@ -104,39 +99,6 @@ class MarketOutputTests(unittest.TestCase):
     def test_it_is_scaled_by_ramp_and_by_the_share_of_staff_found(self):
         node = {"annual_output_t": 0.0}
         self.assertAlmostEqual(supply.concern_output_tonnes(node, "kiln", "lime", 0.5, 0.5, derived_tonnes=10.0), 2.5)
-
-
-class RealIncomeTests(unittest.TestCase):
-    """household_real_income_ratio reads the basket, today's household prices, money per hour and the wage ratio."""
-
-    def ratio(self, now_prices, wage_ratio=1.0, per_hour=1.0):
-        basket = {"units": {"grain": 10.0, "cloth": 2.0}, "prices": {"grain": 1.0, "cloth": 5.0}}
-        game = market_stand_in.markets_over(goods_market=SimpleNamespace(household_cost_prices=lambda: now_prices),
-                                            money_per_labour_hour=per_hour)
-        game.static_book_basket = lambda: basket
-        game.household_income_hours_per_capita = lambda: MEAN_INCOME_HOURS_PER_CAPITA * wage_ratio
-        return game.household_real_income_ratio()
-
-    def test_at_the_opening_prices_and_wage_it_is_one(self):
-        self.assertAlmostEqual(self.ratio({"grain": 1.0, "cloth": 5.0}), 1.0)
-
-    def test_cheaper_goods_raise_what_an_income_buys(self):
-        self.assertGreater(self.ratio({"grain": 0.8, "cloth": 4.0}), 1.0)
-
-    def test_dearer_goods_lower_it(self):
-        self.assertLess(self.ratio({"grain": 1.5, "cloth": 5.0}), 1.0)
-
-    def test_a_higher_wage_raises_it_in_proportion(self):
-        self.assertAlmostEqual(self.ratio({"grain": 1.0, "cloth": 5.0}, wage_ratio=1.2), 1.2)
-
-    def test_a_good_nobody_prices_is_left_out_of_both_costs(self):
-        self.assertAlmostEqual(self.ratio({"grain": 1.0}), 1.0)
-
-    def test_with_nothing_priced_it_is_one(self):
-        self.assertEqual(self.ratio({}), 1.0)
-
-    def test_prices_are_taken_into_hours_by_money_per_hour(self):
-        self.assertAlmostEqual(self.ratio({"grain": 2.0, "cloth": 10.0}, per_hour=2.0), 1.0)
 
 
 if __name__ == "__main__":

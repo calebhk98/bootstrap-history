@@ -20,32 +20,38 @@ No third-party dependencies. Python 3.8+.
 Design notes and the full protocol: sim/PROTOCOL.md
 """
 
-import functools, json, math, os, sys
+import json, os, sys
 sys.setrecursionlimit(20000)
 import collections
-from typing import Any, cast, Dict, FrozenSet, Iterable, List, Optional, Set, Tuple, TypedDict
+from typing import Any, Dict, FrozenSet, Iterable, List, Optional, Tuple, TypedDict
 from sim.prices.api import identity_cache
-from sim.scenario.api import money_short, money_word, rules as scenario_rules  # noqa: F401 - the coin's words are the scenario module's
+from sim.scenario.api import money_word, rules as scenario_rules  # noqa: F401 - the coin's words are the scenario module's
 IdentityCache = identity_cache.IdentityCache
-from sim.geography.api import haversine_km, load_geography
-from sim.content.api import ModError, get_ordered_mods, load_mod_tree
+from sim.content.api import get_ordered_mods, load_mod_tree
 from sim.content.api import MissingVariantBase
 from sim.content.api import load_win_condition_labels
 from sim.seats.api import describe_win_condition
 
 from .mod_world_data import load_starting_kits
-from sim.content.api import merge_mod_map
 from sim.content.api import (apply_mod_civilization, check_all_civilizations, check_starting_techs,
                        is_hidden, mod_civ_ids)
 from sim.prices.api import energy_prices
+from sim.constants import declare
 from . import copy_visibility_defaults, money_units
+
+UNPRICED_MATERIAL_PRICE = declare(
+    "UNPRICED_MATERIAL_PRICE", 0.0, kind="temporary_heuristic", unit="money per unit of the material",
+    source=None, confidence="D", retire="Complaint 964",
+    why="A node's material bill is read by project costs and screens as a number; until they carry an unknown "
+        "bill, a material the price solver cannot resolve counts as free and the bill is a lower bound.")
 from sim.production.api import node_revenue
-from sim.labour.api import wage_provider
+from sim.labour.api import trade_of_role, wage_provider
 from .default_civilisation import default_civilisation_id
-from sim.workforce.api import build_schedule
-from sim.content.api import (family_of_trade, load_base_tree, load_mod_tree_nodes, load_production_catalog,
-                             load_tech_effects, load_trade_registry, trade_notes, trade_registry, trades_absent,
-                             validate_mod_material_paths)
+from sim.workforce.api import opening_schedule
+from sim.content.api import (
+    family_of_trade, load_base_tree, load_production_catalog, load_tech_effects, load_trade_registry, trade_notes,
+    trade_registry, trades_absent, validate_mod_material_paths,
+)
 
 # TYPE ALIASES FOR THE JSON THIS MODULE LOADS. Every one of these is a
 # dictionary read straight from a JSON file (branches,
@@ -92,7 +98,7 @@ class SimulationDefaults(TypedDict):
     """`DEFAULTS`, below - the run-configuration knobs every `Sim` starts
     from before a civilization file or a CLI flag overrides any of them.
     Fixed at exactly these thirteen keys (read individually by name at
-    every call site in cli.py, cli_interactive.py and core.py), unlike the
+    every call site in cli.py, cli_interactive.py and the engine root), unlike the
     `cfg` dict callers build FROM it, which also carries whatever a
     civilization file or the command line adds and stays a plain mapping
     for that reason."""
@@ -105,7 +111,6 @@ class SimulationDefaults(TypedDict):
     founder_arrival_age: int
     founder_hours_per_year: int
     director_hours_per_year: int
-    hired_hours_cap_base: int
     revenue_ramp_years: int
     suspicion_danger: float
     eminence_danger: float
@@ -139,10 +144,22 @@ TRADE_NOTES: Dict[str, str] = trade_notes(TRADE_REGISTRY)
 TRADES_ABSENT: FrozenSet[str] = trades_absent(TRADE_REGISTRY)
 TRADE_FAMILY: Dict[str, str] = {trade_id: trade.family for trade_id, trade in TRADE_REGISTRY.items()}
 
+
+def schedule_of_civilisation(civ: JSONDict) -> wage_provider.wages.WageSchedule:
+    """The opening wage schedule of a civilisation record the caller holds (it may exist only in
+    memory), over this module's trade registry; the one builder of tools' schedules, remembered by the record's
+    whole content so a variant is never served another's schedule."""
+    return opening_schedule(_TRADE_REGISTRY, civ)
+
+
+def unskilled_numeraire() -> str:
+    """The trade whose hour every wage here is stated against: this module's trade registry's unskilled one."""
+    return trade_of_role(_TRADE_REGISTRY, "unskilled")
+
+
 # Starting wages: the labour-market schedule before any year has passed.
 # Sim carries the live schedule; these serve tools and validation.
-_STARTING_SCHEDULE = build_schedule(
-    _TRADE_REGISTRY, wage_provider.reference_civilisation())
+_STARTING_SCHEDULE = schedule_of_civilisation(wage_provider.reference_civilisation())
 WAGES: Dict[str, float] = _STARTING_SCHEDULE.wages_per_hour()
 ANNUAL_WAGE: Dict[str, float] = {
     trade: _STARTING_SCHEDULE.annual_wage(trade) for trade in WAGES}
@@ -165,32 +182,18 @@ def money_unit_note(civ: Optional[JSONDict]) -> str:
             "market, so they will not match surviving price records." % money_word(civ))
 
 
-@functools.lru_cache(maxsize=None)
 def starting_schedule(civilization_id: Optional[str] = None) -> wage_provider.wages.WageSchedule:
     """The opening wage schedule of a civilisation (the default one if none)."""
     if civilization_id is None:
         return _STARTING_SCHEDULE
-    return build_schedule(_TRADE_REGISTRY, load_civ(civilization_id))
-
-
-_HELD_CIVILISATION_SCHEDULES: Dict[str, wage_provider.wages.WageSchedule] = {}
-
-
-def schedule_of_civilisation(civ: JSONDict) -> wage_provider.wages.WageSchedule:
-    """The opening wage schedule of a civilisation record the caller holds (it may exist only in
-    memory), remembered by its whole content so a variant is never served another's schedule."""
-    key = json.dumps(civ, sort_keys=True, default=str)
-    schedule = _HELD_CIVILISATION_SCHEDULES.get(key)
-    if schedule is None:
-        schedule = _HELD_CIVILISATION_SCHEDULES[key] = build_schedule(_TRADE_REGISTRY, civ)
-    return schedule
+    return schedule_of_civilisation(load_civ(civilization_id))
 
 
 def kit_capital(kit_id: str, civ: JSONDict) -> float:
-    """Opening money of a kit for a civilisation: its labourer-years times the
-    civilisation's opening annual labourer wage."""
-    schedule = build_schedule(_TRADE_REGISTRY, civ)
-    return scenario_rules.kit_capital(STARTING_KITS[kit_id], schedule.annual_wage("labourer"))
+    """Opening money of a kit for a civilisation: its unskilled-worker-years times the
+    civilisation's opening annual unskilled wage."""
+    schedule = schedule_of_civilisation(civ)
+    return scenario_rules.kit_capital(STARTING_KITS[kit_id], schedule.annual_wage(unskilled_numeraire()))
 
 
 def _variant_base(base_id: str, chain: tuple) -> JSONDict:
@@ -237,7 +240,7 @@ def load_civ(name: Optional[str] = None, _chain: tuple = ()) -> JSONDict:
                          % (civ.get("id", name), ", ".join(duplicates)))
     check_starting_techs(civ, get_ordered_mods(MODDIR))
     wage_provider.validate_coin_standard(civ)
-    for field in ("starting_interest_rate", "starting_tax_share"):
+    for field in ("starting_interest_rate", "starting_tax_share", "wage_index", "price_index"):
         if not isinstance(civ.get(field), (int, float)) or isinstance(civ.get(field), bool):
             raise ValueError("civilization %r must declare a numeric %s"
                              % (civ.get("id", name), field))
@@ -315,7 +318,7 @@ def load(held_technology_ids: Optional[Iterable[str]] = None,
         held_technology_ids = load_civ(civilization_id)["starting_techs"]
     from sim.prices.api import prices as price_solver
     goods, _provenance = price_solver.priced_goods_table(
-        held_technology_ids, document, civilization_id=civilization_id)
+        held_technology_ids, document, civilization_id=civilization_id, unskilled_trade=unskilled_numeraire())
     production = load_production_catalog(ROOT, MODDIR)
     load_trade_registry(ROOT, production, MODDIR, nodes=nodes.values())
     validate_mod_material_paths(nodes.values(), production, manifests)
@@ -324,11 +327,12 @@ def load(held_technology_ids: Optional[Iterable[str]] = None,
     for node in nodes.values():
         if not has_luck_component(node):
             node["risk"] = 0.0
-        # TRANSITIONAL: a material the price solver cannot resolve counts as free, so the cost is a lower bound.
-        node["_material_hours"] = sum(goods.get(material, 0.0) * quantity
+        # a material the price solver cannot resolve is charged UNPRICED_MATERIAL_PRICE, so the cost is a lower bound
+        node["_material_hours"] = sum(goods.get(material, UNPRICED_MATERIAL_PRICE) * quantity
                                       for material, quantity in node["mat"].items()) / rate
         node["_hired_hours"] = sum(node["lab"].values())
-    energy = energy_prices.graded(held_technology_ids, document, goods, civilization_id)
+    energy = energy_prices.graded(held_technology_ids, document, goods, civilization_id,
+                                  unskilled_trade=unskilled_numeraire())
     node_revenue.apply_revenue(nodes.values(), goods, wages, rate, energy)
     for node in nodes.values():
         node["_derived_for"] = civilization_id or default_civilisation_id()
@@ -352,7 +356,7 @@ def goods_provenance(held_technology_ids: Iterable[str] = (),
                 else starting_schedule(civilization_id))
     _goods, provenance = price_solver.priced_goods_table(
         held_technology_ids, schedule.document(),
-        civilization_id=civilization_id, civilization=civilization)
+        civilization_id=civilization_id, civilization=civilization, unskilled_trade=unskilled_numeraire())
     return provenance
 
 
@@ -368,36 +372,20 @@ def calculated_goods_prices(held_technology_ids: Iterable[str] = (),
                 else starting_schedule(civilization_id))
     document = schedule.document()
     goods, _provenance = price_solver.priced_goods_table(
-        held_technology_ids, document, civilization_id=civilization_id, civilization=civilization)
+        held_technology_ids, document, civilization_id=civilization_id, civilization=civilization,
+        unskilled_trade=unskilled_numeraire())
     if money_per_labour_hour is not None:
         goods = {material: _in_coin(price, document, money_per_labour_hour)
                  for material, price in goods.items()}
     return goods
 
 
-def calculated_goods_table(held_technology_ids: Iterable[str] = (),
-                           civilization_id: Optional[str] = None,
-                           civilization: Optional[JSONDict] = None,
-                           farmed_hectares: Optional[float] = None,
-                           interest_rate: Optional[float] = None
-                           ) -> Tuple[Dict[str, float], Dict[str, str]]:
-    """(labour-hour price, provenance) of every material the solver prices, from one solve."""
-    from sim.prices.api import prices as price_solver
-    schedule = (schedule_of_civilisation(civilization) if civilization is not None
-                else starting_schedule(civilization_id))
-    document = schedule.document()
-    goods, provenance = price_solver.priced_goods_table(
-        held_technology_ids, document, civilization_id=civilization_id, civilization=civilization,
-        farmed_hectares=farmed_hectares, interest_rate=interest_rate)
-    return ({material: _in_coin(price, document, 1.0) for material, price in goods.items()}, provenance)
-
-
 def nodes_in_civ_money(nodes: Dict[str, JSONDict], civ: JSONDict) -> Dict[str, JSONDict]:
     """The tree with every money field in the civilisation's coin."""
-    schedule = build_schedule(_TRADE_REGISTRY, civ)
+    schedule = schedule_of_civilisation(civ)
     first = next(iter(nodes.values()), None)
     if first is not None and civ.get("id") and first.get("_derived_for") != civ["id"]:
-        nodes = node_revenue.for_civilisation(nodes, civ, schedule)
+        nodes = node_revenue.for_civilisation(nodes, civ, schedule, unskilled_trade=unskilled_numeraire())
         money_units.price_nodes(nodes.values(), schedule.wages_per_hour(), schedule.money_per_labour_hour)
         return nodes
     return money_units.rebased_nodes(
@@ -431,7 +419,7 @@ def descendants(nodes: Nodes) -> Tuple[Dict[str, int], Dict[str, int]]:
     # that happens to have the same number of keys", which in a suite that
     # builds small synthetic node dicts by the hundred is not narrow at all.
     #
-    # This exact hazard, in the sibling cache in economy.py, is what made the
+    # This exact hazard, in a sibling cache in the old economy code, is what made the
     # simulation non-deterministic - see
     # Complaints/closed/27-nondeterministic-simulation.md. Holding `nodes` itself in
     # the entry keeps that dict alive for as long as the entry can be compared
@@ -498,8 +486,8 @@ def is_downstream(nodes: Nodes, node_id: str, target: str) -> bool:
 # build, the same as `junction_transistor` always was; a THRESHOLD-shaped
 # goal (raise literacy past some level, cut epidemic mortality by some
 # fraction) is a checkpoint node carrying a `win_condition` field instead of
-# a normal cost - see projects.py's start_reason (which refuses to let
-# anyone "start" one by hand) and core.py's per-year check (which completes
+# a normal cost - see start_check in sim/projects/start_checks.py (which refuses to let
+# anyone "start" one by hand) and the projects module's per-year check (sim/projects/completion.py, which completes
 # it itself the moment the live measurement crosses the target). Either way
 # `closure()`, `critical_path()`, `topo_order()` and `Sim.run()` take one
 # node id and never need to know which kind it is; that is the whole point
@@ -564,7 +552,7 @@ def resolve_goal(tree: JSONDict, nodes: Nodes, name: Optional[str]) -> str:
 
 
 # A node's `win_condition` names a metric Sim knows how to read (see
-# core.py's _win_condition_value, the only other place this table is read),
+# `win_condition_value` in sim/seats/goals.py, the only other place this table is read),
 # and this is the one place that turns it into a sentence a player can read
 # - used when `start_reason` refuses to let anyone start one by hand, and
 # anywhere else that explains what a threshold goal actually is. Each
@@ -613,16 +601,6 @@ DEFAULTS: SimulationDefaults = dict(
     # pay. A modern 40-hour week over 52 weeks with no holiday at all is 2,080.
     founder_hours_per_year=2000,
     director_hours_per_year=1800,
-    # THIS BASELINE APPLIES ONLY TO SCARCE OR LITERACY-BOUND TRADES (see
-    # labour.py's market_supply), not to every trade alike: common, urban
-    # trades read a realistically-sized town's worth of their own
-    # (labour.py's TOWN_POPULATION_REFERENCE and TRADE_DENSITY, cited
-    # there), never a fraction of this single number. A fixed fraction of
-    # one number shared by smith, scholar and millwright alike would make
-    # hiring five blacksmiths read as a claim about the Roman Empire's
-    # entire smithing capacity, which is absurd for a trade a real town
-    # supports in real depth.
-    hired_hours_cap_base=25000,
     revenue_ramp_years=3,
     suspicion_danger=25.0,
     eminence_danger=26.0,

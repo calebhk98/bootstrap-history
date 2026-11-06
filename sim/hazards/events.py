@@ -6,13 +6,15 @@ The log is dated records of what changed in the world and why, shared by every s
 Needs: year, military_leverage, acting_seat."""
 from typing import Any, Dict, List, Optional
 
+from sim.assembly.api import Part
+
 from . import constants, rules, world_data
 from .commands import RecordWorldEvent, RecoverOutput
 from .state import OUTPUT, WORLD_EVENTS
 from .window import kinds_in_progress
 
 
-class Events:
+class Events(Part):
 
 	def record_world_event(self, command: RecordWorldEvent) -> Dict[str, Any]:
 		"""Append one record dated to the game's current year; answers it."""
@@ -53,4 +55,4 @@ class Events:
 	def disaster(self) -> Optional[Dict[str, Any]]:
 		"""This year's dated hazards by name, and what the acting seat's log said of them; None when none struck or the
 		acting seat was not in the year's shocks."""
-		return (self.disaster_this_year or {}).get(self.needs.acting_seat())
+		return (self.parts.shocks.disaster_this_year or {}).get(self.needs.acting_seat())

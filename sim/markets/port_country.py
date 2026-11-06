@@ -4,40 +4,43 @@ The wage, the output, the cost of living and the prices are read from the countr
 economy (sim/economy/country_figures.py); a figure it has no record of is None and the caller keeps its
 labelled estimate."""
 import math
-from typing import Callable, Dict, Optional
+from typing import Dict, Optional
 
-from sim.world.material_units import tonnes_per_unit
-from sim.economy.api import carried_book, cohort_land_rents, country_figures, land_rent_at_tile, trade_premium
+from .unit_mass import tonnes_per_unit
+from sim.economy.api import (carried_book, cohort_land_rents, country_figures, land_rent_at_tile, coin_per_unit,
+                             country_trade_wage, home_country, working_hours_per_year)
+
+
+def trade_book_in_coin(economy, country: str) -> Dict[str, Dict[str, float]]:
+    """What crossed the country's border last year by good: tonnes each way, and money each way in coin (imports at the price
+    where they landed, exports at the price where they left)."""
+    coin = coin_per_unit(economy)
+    return {good: {key: value * coin if key.endswith("_value") else value for key, value in entry.items()}
+            for good, entry in country_figures.trade_book(economy, country).items()}
+
+
+def home_answers(port):
+    """The home country's part of the open agent economy, or None while the economy is not open or opens now (it is never
+    opened here: the engine's own figures answer until it is)."""
+    if port.opening or not port.agent.opened():
+        return None
+    economy = port.agent.economy()
+    return CountryAnswers(economy, home_country(economy))
 
 
 class CountryAnswers:
     """The questions foreign governments, strata and firms ask about their country, answered from its tiles."""
 
-    def __init__(self, economy, country: str, off_map_trade: Callable[[str], float]) -> None:
-        """`off_map_trade(direction)` is the money's worth ("in" or "out") the country's tiles traded last year with
-        partners off the map (country_trade_years.py)."""
+    def __init__(self, economy, country: str) -> None:
         self._economy = economy
         self._country = country
-        self._off_map_trade = off_map_trade
-        setup = economy.setup
-        self._coin = setup.coin_per_unit
-        self._hours = setup.working_hours_per_year
-        self._wages = {trade: wage * self._coin
-                       for trade, wage in country_figures.wages_per_hour(economy, country).items()}
+        self._coin = coin_per_unit(economy)
+        self._hours = working_hours_per_year(economy)
 
-    def has_labour_market(self) -> bool:
-        return bool(self._wages)
-
-    def pay_per_person_year(self, trade: str) -> Optional[float]:
-        """What a person-year of a trade pays in the country's labour markets; a trade nobody hired is paid what
-        its training adds to the unskilled wage, as at home. None while the country's markets have no wage."""
-        setup = self._economy.setup
-        if trade in self._wages:
-            return self._wages[trade] * self._hours
-        unskilled = self._wages.get(setup.unskilled_trade)
-        if unskilled is None:
-            return None
-        return unskilled * (1.0 + trade_premium(setup, trade)) * self._hours
+    def pay_per_person_year(self, trade: str) -> float:
+        """What a person-year of a trade pays in the country's labour markets; a trade nobody hired is at the core's area wages, and one with none by the
+        one rule (sim/economy/trade_wages.py) on the country's unskilled wage."""
+        return country_trade_wage(self._economy, trade, self._country) * self._coin * self._hours
 
     def society_output(self) -> Optional[float]:
         output = country_figures.output_value(self._economy, self._country)
@@ -54,7 +57,8 @@ class CountryAnswers:
         """Money for a tonne of a material at the price its market areas touching the country quote; None when
         none of them trades it."""
         price = country_figures.prices(self._economy, self._country).get(material)
-        return None if price is None else price * self._coin / tonnes_per_unit(material)
+        per_unit = tonnes_per_unit(material)
+        return None if price is None or per_unit is None else price * self._coin / per_unit
 
     def price_per_unit(self, material: str) -> Optional[float]:
         """Money for one unit of a material at the price its market areas touching the country quote; None when none
@@ -66,26 +70,25 @@ class CountryAnswers:
         """The standard of the money the one economy uses."""
         return country_figures.currency(self._economy).regime
 
-    def coin_stock_value(self) -> float:
+    def coin_stock_value(self) -> Optional[float]:
         """Money's worth of the backing metal in the money held on the country's tiles, at the country's price of
-        that metal (none for fiat money, which has no metal)."""
+        that metal; None for fiat money (no metal) and while the metal has no price."""
         spec = country_figures.currency(self._economy)
         price = country_figures.prices(self._economy, self._country).get(spec.backing_good) if spec.backing_good else None
         if price is None:
-            return 0.0
+            return None
         held = country_figures.money_held(self._economy, self._country)
         return held * spec.backing_per_unit * price * self._coin
 
     def trade_book(self) -> Dict[str, Dict[str, float]]:
         """The goods that crossed the country's border last year: tonnes and money each way, by good (imports at the
         price where they landed, exports at the price where they left)."""
-        return {good: {key: value * self._coin if key.endswith("_value") else value for key, value in entry.items()}
-                for good, entry in country_figures.trade_book(self._economy, self._country).items()}
+        return trade_book_in_coin(self._economy, self._country)
 
     def trade_value(self, direction: str) -> float:
         """Money's worth of the goods imported ("in") or exported ("out") last year: what the merchants carried across the
-        border, and what crossed the external edge (trade with partners off the map)."""
-        return carried_book.trade_value(self.trade_book(), direction) + self._off_map_trade(direction)
+        border."""
+        return carried_book.trade_value(self.trade_book(), direction)
 
     def people_of_trade(self, trade: str) -> float:
         """Working people of a trade in the labour markets of the country's tiles (nobody for a trade none practise)."""
@@ -107,7 +110,7 @@ class CountryAnswers:
         economy = self._economy
         own_tiles = country_figures.country_tiles(economy, self._country)
         rent = land_rent_at_tile(economy, tile if tile in own_tiles else None, self._country)
-        return rent * self._coin if rent > 0.0 else None
+        return rent * self._coin if rent is not None and rent > 0.0 else None
 
     def land_rent_curve(self, tiles=None):
         """(people, rent received in coin) of the country's household cohorts, poorest first: the rent paid on its

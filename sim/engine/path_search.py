@@ -6,34 +6,32 @@ THE OWNER'S OWN DIAGNOSIS, TAKEN LITERALLY. `planner.py` computes one
 structural ordering by critical-path method and stops; this module is what
 "solve the deterministic problem first" actually looks like. `run
 --no-events` already turns off dated shocks, but a project's own risk of
-FAILING outright is a separate roll in `projects.py:_complete`
+FAILING outright is a separate roll in `_complete` in sim/projects/completion.py
 (`self.rng.random() < n["risk"]`) that fires whether or not events are on -
 so a fully dice-free trial needs a seeded rng whose `random()` always returns
 1.0, never below any probability threshold anywhere in the engine (a
-project's failure risk, the 3.5% yearly attrition roll, the 25% manumission
-roll, the fractional-headcount rounding in `_stochastic_round`). See
+project's failure risk, the yearly attrition roll, the manumission
+roll, the fractional-headcount rounding in `stochastic_round`). See
 `DetRNG` in `sim/ui/cli.py` - shared from there because `--deterministic` on
 `run`/`compare`/`play`/`agent` needs the exact same rng, for the exact same
-reason. Nothing in `core.py`, `projects.py`, `labour.py`, `society.py` or
-`economy.py` is edited to get this - the same rules run, against a
+reason. No engine or module code is edited to get this - the same rules run, against a
 different sequence of "how did that roll come out".
 
 THE FIRST QUESTION - DOES THE CURRENT PLAN EVEN GET THERE WITH THE DICE
 OFF? - turns out to have a real, specific answer, not a shrug: no, and not
 because of money or the generic scholar/artisan pools, both of which end up
-abundant (tens of millions of denarii, hundreds of scholars and artisans).
+abundant (`diagnose_capital_trap` reads them off a live Sim).
 It stalls on a small, fixed set of NAMED CRAFT TRADES the tree calls
 `TRADES_ABSENT` - chemist, electrician, engineer, machinist, optician -
-which do not exist in this civilisation at all until you personally teach
-them (`labour.py:trade_available`), and which grow ONLY through
-`step()`'s once-a-year, two-people-at-a-time auto-teach (core.py, "4a2"),
-gated further by a 25-year per-trade cooldown. Once a trade's headcount is
-above zero, `market_supply(t) <= 0.0` - the sole trigger auto-teach uses to
-decide a trade is worth training more of - is simply never true again unless
+which do not exist in this civilisation at all until someone teaches
+them (`trade_available` in sim/labour/labour_trades.py). This note is a dated finding about the rules as they were
+when it was written (the trade-formation rules are in sim/labour/trade_formation.py); re-measure before relying on it.
+Once a trade's headcount is above zero, `market_supply(t) <= 0.0` - the trigger the old auto-teach used
+to decide a trade is worth training more of - is simply never true again unless
 every last person of that trade dies out, so in a deathless, failure-free
 world a trade that got taught once, early, for two people, STAYS at two
 people for the rest of the run, however many projects are starved for it.
-That is not a bug this module can fix (core.py/labour.py are not this
+That is not a bug this module can fix (the engine and the labour package are not this
 module's to edit); it is a fact about how the given rules grow named-trade
 labour, and the only lever a strategy ORDER has over it is which nodes get
 to spend that frozen, tiny pool of hours, and in what sequence.
@@ -41,8 +39,8 @@ to spend that frozen, tiny pool of hours, and in what sequence.
 THE BINDING CONSTRAINT, MEASURED: on Rome's planned order, three nodes -
 `steam_atmospheric`, `interchangeable_parts`, `spectroscope` - go active
 early, need machinist/chemist/engineer hours nothing else in the run can
-supply, and never finish. Fifty-six of the tree's other 168 closure nodes sit
-downstream of those three and can never even start. And the planner's own
+supply, and never finish. The rest of the goal's closure that sits
+downstream of those three can never even start (`diagnose_scarce_trades` counts it). And the planner's own
 `pick_side_branches` - which ranks candidates purely by return on capital,
 with no idea the tree has any scarce labour at all - hands the household
 several more nodes (locomotives, TNT, dynamite, double-acting engines) that
@@ -51,27 +49,24 @@ they compete with the spine for it throughout the run. Ranking those
 candidates by how soon they can even legally start instead looks like an
 obvious fix and is NOT one - tried and measured (see `pick_side_branches`'s
 own docstring and PATH_SEARCH.md), it left Rome roughly unchanged and cost
-Han 124 years, or cost Rome the goal entirely within 1,200 years once
+Han years, or cost Rome the goal entirely within the horizon once
 reworked to stop doing that to Han. Reverted; recorded so nobody re-walks
 into it.
 
 A SECOND, LARGER CONSTRAINT, MEASURED THE SAME WAY (against the real
 rome_434_goal_startable.json / rome_380_corpus_bug.json fixtures - a player
-three times stronger than this order): the planned order's dice-free trial
-sits at capital -4,789, zero scholars, zero artisans and 30/168 of the
-closure done at year 434 AD, against the fixture's +607,402,406 / 162 / 491
-/ 167/168 at the SAME calendar year - and stays that poor, essentially
-unchanged, for roughly 850 MORE years (see PATH_SEARCH.md). Every one of the
-eight institutions `planner.pick_staffing` already names - the same ones
-that train the scholars and artisans `staff_capacity()` gates almost
-everything else on - was founded by that player 322 to 800+ years before
-this order manages it. `diagnose_capital_trap` reads this off a live Sim
-the same way `diagnose_scarce_trades` already does; `grow_supply` (move 3
-below) is what tries to do something about it.
+far stronger than this order): the planned order's dice-free trial sits in
+debt with no scholars or artisans and little of the closure done at the
+fixture's calendar year, and stays that poor for centuries (see
+PATH_SEARCH.md; `diagnose_capital_trap` reads the state off a live Sim).
+The eight institutions `planner.pick_staffing` already names - the ones that
+train the scholars and artisans `staff_capacity()` gates almost everything
+else on - were founded by that player long before this order manages it.
+`grow_supply` (move 3 below) is what tries to do something about it.
 
 THE SEARCH. Three moves, applied to the CPM order `planner.backward_plan`
 already computes, chosen because they attack these specific, measured
-constraints rather than guessing at the space of all 168! orderings:
+constraints rather than guessing at the space of all orderings:
 
   1. PULL every side branch that draws on a currently-scarce trade OUT of
      the interleaved order entirely, to the very end (after the spine, after
@@ -117,7 +112,7 @@ particular constraint at all (PATH_SEARCH.md). Still chosen over a
 from-scratch metaheuristic (random-restart hill-climbing over raw orderings,
 simulated annealing, ...) because the constraints here are not diffuse -
 they are five named trades and eight named institutions, provably - and
-searching blindly over 168! orderings to rediscover a fact already visible
+searching blindly over all orderings to rediscover a fact already visible
 in `s.active`/`s.capital` would be slower and no more honest than reading it
 off the Sim directly.
 """
@@ -187,7 +182,7 @@ def diagnose_scarce_trades(sim, nodes, outstanding, backlog_ratio=6.0):
         if len(contested) < 2:
             continue
         backlog = sum(nodes[node_id]["lab"][trade] for node_id in contested)
-        supply = max(1.0, sim.labour.hours_you_can_call_on(trade))
+        supply = max(1.0, sim.view("hours_you_can_call_on")[trade])
         if backlog / supply > backlog_ratio:
             scarce[trade] = {"contested": contested, "backlog": backlog,
                          "supply_per_year": supply,
@@ -212,23 +207,20 @@ def stuck_active(sim, need):
 
 def diagnose_capital_trap(sim, need, min_closure_frac=0.9):
     """Is this dice-free household caught in the insolvency cycle
-    `engine/projects.py` (`enforce_credit_limit`/`auto_open_ventures`) itself
-    documents as a known risk - "half the credit line is the line: below it
-    you can still open your way out, above it you are digging" - rather than
-    genuinely progressing?
+    (credit limit enforced by `enforce_credit_limit` in sim/finance/insolvency.py,
+    ventures opened by `auto_open_ventures` in sim/projects/auto_open.py)
+    rather than genuinely progressing?
 
     MEASURED, AGAINST THE 434 AD FIXTURE, NOT GUESSED. Rome's planned order,
-    run dice-free to year 434, sits at capital -4,789, zero scholars, zero
-    artisans, 30/168 of the closure done; the fixture (a real, far stronger
-    playthrough) is at +607,402,406, 162 scholars, 491 artisans, 167/168 at
-    the SAME calendar year. Traced further, the planned order's own capital
-    stays negative and its scholars/artisans stay at exactly 0.00 for roughly
-    850 more years (see PATH_SEARCH.md): a run in this state is not merely
-    slow, it is not accumulating either of the two things - money or trained
-    people - that everything else in the engine gates on. Both being still
-    at (approximately) zero this deep into a run, with most of the goal's
-    own closure still undone, is the read-off-the-Sim signature of that
-    trap, not a structural guess about WHY it is trapped.
+    run dice-free to that year, sits in debt with no scholars or artisans and
+    little of the closure done, where the fixture (a real, far stronger
+    playthrough) is rich, staffed and nearly done. The planned order stays in
+    that state for centuries (see PATH_SEARCH.md): a run in this state is not
+    merely slow, it is not accumulating either of the two things - money or
+    trained people - that everything else in the engine gates on. Both being
+    still at (approximately) zero this deep into a run, with most of the
+    goal's own closure still undone, is the read-off-the-Sim signature of
+    that trap, not a structural guess about WHY it is trapped.
 
     NOT "capital < 0" ALONE - a household that is merely poor early on, on
     its way to being rich later (Han's own dice-free trial dips negative for
@@ -329,13 +321,12 @@ def grow_supply(nodes, goal, need, baseline_sim, cur_order, cur_extras, civ, hor
     Pulling a side branch to the end (move 1) or resequencing a tied slack
     band (move 2) both only change WHICH of the goal's own closure or the
     named side branches goes first; neither can add anything NEW. The
-    player behind rome_434_goal_startable.json reached 434 AD with 607
-    million denarii, 636 employees and 167/168 of the closure done -
-    against this order's -4,789, zero, zero and 30/168 at the identical
-    calendar year (see PATH_SEARCH.md) - and every one of the eight
-    institutions `planner.pick_staffing` already NAMES (it schedules none
-    of them - see its own docstring) was founded by that player 322 to 800+
-    years before this order manages it. That is growth this move can
+    player behind rome_434_goal_startable.json reached 434 AD rich, staffed
+    and nearly done with the closure, against this order's debt and empty
+    staff at the identical calendar year (see PATH_SEARCH.md), and every one
+    of the eight institutions `planner.pick_staffing` already NAMES (it
+    schedules none of them - see its own docstring) was founded by that
+    player long before this order manages it. That is growth this move can
     actually try: found an institution, and see whether the household it
     produces is genuinely better off, not assume it either way.
 

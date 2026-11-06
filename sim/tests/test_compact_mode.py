@@ -24,11 +24,6 @@ The compact agent output mode keeps reason-carrying prose; the mode-off path is 
 """
 QUICK_TOPIC = True
 
-import json
-import os
-import subprocess
-import sys
-import types
 
 from .harness import *  # noqa: F401,F403
 
@@ -45,6 +40,7 @@ from sim.ui.proto.compact import compact_why as _compact_why
 from sim.ui.proto.compact import compact_state as _compact_state
 from sim.ui.proto.compact import compact_stuck as _compact_stuck
 from sim.tests.ui_stand_in import Game
+from sim.tests.interface_fixture import shipped_declared
 
 
 # --- the three commands that already had their own hand-rolled 'json' scan
@@ -153,10 +149,7 @@ check("_split_json_flag leaves an ordinary line untouched",
 
 # ===========================================================================
 # PART 2: the enricher itself, on synthetic replies - so this is exercised
-# whether or not the live engine currently runs end to end (six other
-# agents are mid-edit on society.py/labour.py/economy.py/constants.py in
-# this same checkout as this is written; see PART 3's own comment on why
-# that cannot affect this file's verdict either way).
+# whether or not the live engine currently runs end to end.
 # ===========================================================================
 
 # --- errors pass through completely untouched - a compact reply is never
@@ -275,7 +268,7 @@ from sim.ui.proto import help as _help_module
 # feature has to actually be discoverable from inside the game, or a
 # player typing 'help commands' - the one place this game's own help
 # system tells a newcomer to look - would never learn either word exists.
-_help_commands = _help_module._topic_commands(Game(fog=False))["commands"]
+_help_commands = _help_module._topic_commands(Game(interface_declared=shipped_declared, fog=False))["commands"]
 check("'help commands' documents the new json/compact words, so a player "
       "typing 'help' can actually discover them",
       any("compact" in key or "json" in key for key in _help_commands),

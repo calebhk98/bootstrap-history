@@ -9,6 +9,8 @@ in the same order using only the price lookups that move. The results are identi
 import collections
 
 from sim.world import capital_builds
+from sim.world.land import LAND_MATERIAL
+from sim.world.plant_baskets import ENERGY_CARRIERS
 from sim.prices import solve_prices_core as core
 from sim.world.capital_market import stand_yearly_share
 
@@ -28,7 +30,7 @@ class RecipePlan:
         self.single_output = next(iter(outputs)) if len(outputs) == 1 else None
         self.single_quantity = outputs[self.single_output] if len(outputs) == 1 else None
         self.batch_output_quantity = max(outputs.values()) if outputs else 1.0
-        self.labour_cost_hours = core._labour_cost_hours(entry.get("labour_hours") or {}, wage_by_trade)
+        self.labour_cost_hours = core.batch_labour_cost_hours(entry.get("labour_hours") or {}, wage_by_trade)
         self.rent_hours = core._extraction_rent_cost_hours(outputs, rent_by_kg)
         self.land_hectare_years = entry.get("land_hectare_years") or 0.0
         # per capital good, its builds in preference order: (materials, labour cost, yearly share), and its output
@@ -40,11 +42,11 @@ class RecipePlan:
              capital_good["annual_output_at_basis"])
             for capital_good in (entry.get("capital") or []))
         self.energy = tuple(
-            (energy_key, entry.get(energy_key)) for energy_key in core.ENERGY_CARRIER_FIELDS
+            (energy_key, entry.get(energy_key)) for energy_key in ENERGY_CARRIERS
             if entry.get(energy_key) or 0.0)
         self.holding_years = float(entry.get("holding_years") or 0.0)
         self.output_meets_floor = {
-            material: core._meets_capability_floor(material, entry, floor_by_carrier) for material in outputs}
+            material: core.meets_capability_floor(material, entry, floor_by_carrier) for material in outputs}
 
 
 def plan_cost(plan, prices, wage_by_trade, band_price_by_carrier, interest_rate, disposal_costs,
@@ -62,7 +64,7 @@ def plan_cost(plan, prices, wage_by_trade, band_price_by_carrier, interest_rate,
         material_cost_hours += quantity_per_batch * input_price
 
     if plan.land_hectare_years:
-        land_price = prices.get("hectare_land")
+        land_price = prices.get(LAND_MATERIAL)
         if land_price is None:
             return None
         land_cost_hours = plan.land_hectare_years * land_price
@@ -85,7 +87,7 @@ def plan_cost(plan, prices, wage_by_trade, band_price_by_carrier, interest_rate,
 
     energy_cost_hours = 0.0
     for energy_key, energy_quantity_per_batch in plan.energy:
-        energy_price = core._capability_graded_price(
+        energy_price = core.capability_graded_price(
             energy_key, plan.entry, prices, band_price_by_carrier)
         if energy_price is None:
             return None
@@ -98,7 +100,7 @@ def plan_cost(plan, prices, wage_by_trade, band_price_by_carrier, interest_rate,
 
     if plan.single_output is not None:
         return total_process_cost_hours, {plan.single_output: total_process_cost_hours / plan.single_quantity}
-    output_prices = core._allocate_output_prices(
+    output_prices = core.allocate_output_prices(
         plan.outputs, prices, total_process_cost_hours, reference_price_by_material, interest_rate,
         disposal_costs)
     return total_process_cost_hours, output_prices
@@ -161,7 +163,7 @@ def band_suppliers(required_grades_by_carrier, production_entries):
 
 
 def band_prices(required_grades_by_carrier, suppliers_by_carrier, prices, wage_by_trade,
-                rent_hours_per_kg_by_material, interest_rate):
+                rent_hours_per_kg_by_material, interest_rate, dump_minimum_distance_kilometres=0.0):
     """{carrier: {required_value: (price, recipe_id) or None}}: as `capability_price_for_requirement` for each
     required value, costing each supplying recipe once per round however many requirements it can clear."""
     bands = {}
@@ -177,7 +179,8 @@ def band_prices(required_grades_by_carrier, suppliers_by_carrier, prices, wage_b
                     result = core.recipe_cost_and_allocation(
                         recipe_id, entry, prices, wage_by_trade,
                         rent_hours_per_kg_by_material=rent_hours_per_kg_by_material,
-                        interest_rate=interest_rate)
+                        interest_rate=interest_rate,
+                        dump_minimum_distance_kilometres=dump_minimum_distance_kilometres)
                     price_by_recipe[recipe_id] = None if result is None else result[1][carrier]
                 price = price_by_recipe[recipe_id]
                 if price is None:

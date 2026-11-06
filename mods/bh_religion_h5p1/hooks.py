@@ -28,13 +28,13 @@ def register(api):
 			terms = self.terms()
 			toll_share = float(terms.get("mill_share_of_grain", 0.0)) * float(terms.get("toll_rate", 0.0))
 			if toll_share > 0.0 and terms.get("milled_need"):
-				lines[MILLING] = toll_share * world.tithable_sales_value(str(terms["milled_need"]))
+				lines[MILLING] = toll_share * world.stakes.tithable_sales_value(str(terms["milled_need"]))
 			return lines
 
 		def invest_surplus(self, world):
 			share = float(self.terms().get("land_share_of_surplus", 0.0))
-			rent = world.land_rent_per_hectare()
-			rate = max(world.market_rate(), world.starting_rate())
+			rent = world.stakes.land_rent_per_hectare()
+			rate = max(world.credit.market_rate(), world.credit.starting_rate())
 			surplus = max(0.0, self.money - self.stipends_due(world))
 			if share <= 0.0 or rent <= 0.0 or rate <= 0.0 or surplus <= 0.0:
 				return
@@ -43,7 +43,7 @@ def register(api):
 			spend = min(share * surplus, max(0.0, room) * price)
 			if spend <= 0.0:
 				return
-			ledger.transfer(self, world.edge(edges.EDGE_LANDOWNERS), spend, LAND_PURCHASE)
+			ledger.transfer(self, world.setting.edge(edges.EDGE_LANDOWNERS), spend, LAND_PURCHASE)
 			self.record.endowment_hectares += spend / price
 
 		def advance(self, world):

@@ -39,8 +39,8 @@ class CountryRulesTests(unittest.TestCase):
     def test_a_countrys_literacy_is_read_from_its_own_strata(self):
         registry = SimpleNamespace(state=SimpleNamespace(home_country="rome"),
                                    of_kind=lambda kind: [stratum(None, 10.0, 0.2), stratum("gaul", 10.0, 0.6)])
-        self.assertAlmostEqual(country_rules.country_literacy(registry, None).get("literacy_general"), 0.2)
-        self.assertAlmostEqual(country_rules.country_literacy(registry, "gaul").get("literacy_general"), 0.6)
+        self.assertAlmostEqual(country_rules.country_literacy(registry, None, str).get("literacy_general"), 0.2)
+        self.assertAlmostEqual(country_rules.country_literacy(registry, "gaul", str).get("literacy_general"), 0.6)
 
     def test_teachers_are_the_active_actors_and_what_each_holds(self):
         def actor(identity, knowledge, exited_year=None):

@@ -4,7 +4,6 @@ reports each line's kind and facts. Handlers and the reply are called on a hand-
 QUICK_TOPIC = True
 
 import unittest
-from types import SimpleNamespace
 
 from sim.refusal import LogLine
 from sim.ui.proto.dispatch_labour import _cmd_fire, _cmd_hire
@@ -34,11 +33,12 @@ class StandInLabour:
 
 
 def stand_in_game():
-    game = Game(log=[], year=100, employees={}, capital=0.0, wages_prepaid=0.0, fog=False,
+    game = Game(log=[], year=100, employees={}, capital=0.0, fog=False,
                            founder_alive=True, forgotten={}, nodes={}, acting_seat="founder", state=Game(interface={}))
     game.labour = StandInLabour(game)
     game.staff = {"employees": game.employees}
-    game.pay_book = {"prepaid": game.wages_prepaid}
+    game.pay_book = {"paid_in_clearing": 0.0}
+    game.staff_wanted = {}
     orders = {"HireStaff": "hire", "FireStaff": "fire"}
     game.send = lambda command: (getattr(game.labour, orders[type(command).__name__])(command.trade, command.count)
                                  if type(command).__name__ in orders

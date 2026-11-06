@@ -37,13 +37,27 @@ def send(host, command):
 
 def workforce_command(household, command):
     """The workforce module's own handler applies a workforce command to the household object standing in for its seat."""
+    import dataclasses
+    from sim.labour import legacy_trade_defaults
+    from sim.labour.trade_data import generic_craft_trade, scholar_trade
     from sim.tests import module_harness
     from sim.workforce.module import Workforce
     from sim.workforce.module_spec import MODULE_SPECS
+    from sim.workforce.state import WorkforceSeat
     handlers = dict(MODULE_SPECS[0].applies)
     if type(command) not in handlers:
         raise AssertionError("the stand-in does not apply %s" % type(command).__name__)
-    return getattr(module_harness.build(Workforce, seat=household), handlers[type(command)])(command)
+    # the household's fields become a workforce seat (shared containers stay shared; craft and scholar people go on the staff book) and its scalar fields are read back
+    seat = WorkforceSeat(**{field.name: getattr(household, field.name) for field in dataclasses.fields(WorkforceSeat) if hasattr(household, field.name)})
+    if not seat.employees:
+        seat.employees = {trade: float(count) for trade, count in ((generic_craft_trade(), seat.artisans), (scholar_trade(), seat.scholars)) if count}
+    families = {"trade_family": lambda trade: "scholar" if trade == scholar_trade() else legacy_trade_defaults.CRAFT_FAMILY}
+    module = module_harness.build(Workforce, seat=seat, views=families)
+    answer = getattr(module, handlers[type(command)])(command)
+    for field in dataclasses.fields(WorkforceSeat):
+        if hasattr(household, field.name):
+            setattr(household, field.name, getattr(seat, field.name))
+    return answer
 
 
 def bound(host):

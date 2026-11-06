@@ -12,7 +12,7 @@ from typing import Optional, Sequence, Tuple
 
 from sim.constants import declare
 
-from .labour import clearing_point
+from .order_book import clearing_point
 
 MATERIAL_LENDER_SHARE = declare(
     "MATERIAL_LENDER_SHARE", 0.01, kind="temporary_heuristic",

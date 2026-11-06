@@ -6,6 +6,8 @@ QUICK_TOPIC = True
 import types
 import unittest
 
+from sim.economy.credit_record import CreditRecord
+from sim.economy.land_record import LandRecord
 from sim.economy import land_market, land_bid_year, land_lease_year, titles, titles_worked
 from sim.economy.households_cohort import Cohort
 from sim.economy.types import GoodSpec, GoodsMove, Recipe, TileSpec, Transfer
@@ -38,14 +40,12 @@ def world(rent=20.0):
     clear = Recipe("clear", {GROUND: 1.0}, {}, {})
     recipes = {"grow_grain": GRAIN_RECIPE, "clear": clear, "farm": Recipe("farm", {"grain": 10.0}, {}, {"hand": 4.0})}
     setup = types.SimpleNamespace(
-        tiles={TILE: tile}, recipes=recipes, land_per_run={**LAND, "farm": 2.0}, servant_trade="servant", working_hours_per_year=2000.0,
+        tiles={TILE: tile}, recipes=recipes, land_per_run={**LAND, "farm": 2.0}, servant_trade="servant", unskilled_trade="labourer", opening_wages={},
+        trades={"servant": types.SimpleNamespace(training_years=0.0), "hand": types.SimpleNamespace(training_years=0.0)}, working_hours_per_year=2000.0,
         specs={GROUND: GoodSpec(GROUND, float("inf"), 0.0, 0.0, "")}, opening_rate=0.05, currency_id="coin",
         basket_for=lambda tile_id: BASKET)
-    from sim.economy.accounts import Book
-    record = types.SimpleNamespace(
-        cohorts={POOR: Cohort(POOR, TILE, 0, 10.0, 10.0, 0.0), LANDLORD: Cohort(LANDLORD, TILE, 2, 0.0, 0.0, 1.0)},
-        titles={TILE: {LANDLORD: 1.0}}, tenancies={}, loans=[], land_rent={TILE: rent}, cleared_hectares={},
-        producers={CLEARER: Producer(CLEARER, LANDLORD, "clear", TILE, 10.0)}, book=Book())
+    from sim.book import Book
+    record = types.SimpleNamespace(cohorts={POOR: Cohort(POOR, TILE, 0, 10.0, 10.0, 0.0), LANDLORD: Cohort(LANDLORD, TILE, 2, 0.0, 0.0, 1.0)}, producers={CLEARER: Producer(CLEARER, LANDLORD, "clear", TILE, 10.0)}, book=Book(), land=LandRecord(titles={TILE: {LANDLORD: 1.0}}, land_rent={TILE: rent}), credit=CreditRecord())
     return setup, record, own_production_options(recipes, LAND, BASKET)
 
 
@@ -87,14 +87,14 @@ class ActorBidTests(unittest.TestCase):
 class TitleAndLetTests(unittest.TestCase):
     def test_ground_any_actor_bought_becomes_its_title_and_a_rent_only_holder_lets_it_to_a_landless_cohort(self):
         setup, record, options = world()
-        record.titles[TILE] = {LANDLORD: 1.0}
+        record.land.titles[TILE] = {LANDLORD: 1.0}
         record.book.move_many([GoodsMove("edge:production", STATE, GROUND, TILE, 6.0, "bought")])
         record.book.move_many([GoodsMove("edge:production", CLEARER, GROUND, TILE, 4.0, "cleared")])
         titled = land_bid_year.take_up_bought(setup, record)
         self.assertAlmostEqual(titled[STATE], 6.0)
         self.assertAlmostEqual(record.book.stock(CLEARER, GROUND, TILE), 4.0)       # the clearer's stock is not a purchase
         self.assertGreater(titles.holding(record, TILE, STATE), 0.0)
-        record.titles[TILE] = {STATE: record.titles[TILE][STATE]}                  # the rest of the land is not on offer
+        record.land.titles[TILE] = {STATE: record.land.titles[TILE][STATE]}                  # the rest of the land is not on offer
         leases = land_lease_year.lease_in_market(setup, record, BuyerView(0.2, tools=100.0), options)
         self.assertEqual([(lease.tenant, lease.lessor) for lease in leases], [(POOR, STATE)])
         self.assertGreater(titles_worked.worked_share(record, TILE, POOR), 0.0)

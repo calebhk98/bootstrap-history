@@ -14,7 +14,7 @@ from typing import Dict, List, Mapping, Optional, Sequence, Tuple
 from sim.constants import declare
 
 from . import bank_credit_risk, credit_cap, credit_rate
-from .labour import Entry, allocate_in_order, sticky_move
+from .order_book import Entry, allocate_in_order, sticky_move
 from .types import AgentId, CurrencyId, FundsOffer, Loan, LoanRequest, Transfer
 from .replaced import replaced
 
@@ -95,7 +95,7 @@ NO_BORROWER_AT_ASK = "no_borrower_at_ask"      # no request can pay what the che
 
 
 @dataclass(frozen=True)
-class Clearing:
+class LoanClearing:
     loans: List[Loan]
     rate: Optional[float]                # the base rate the loans were struck at; where nothing cleared, the rate held
                                          # from the last clearing (None when there was none), never a bid or an ask
@@ -107,19 +107,23 @@ class Clearing:
 def clear(requests: Sequence[LoanRequest], offers: Sequence[FundsOffer], currency: CurrencyId,
           last_rate: Optional[float], existing_debt_by_borrower: Mapping[AgentId, float],
           arrears_by_borrower: Optional[Mapping[AgentId, float]] = None, year: int = 0,
-          rate_ceiling: Optional[float] = None, expected_inflation: float = 0.0,
+          rate_ceiling: Optional[float] = None, expected_inflation: float = 0.0, clearing: str = "year",
           ) -> Tuple[List[Loan], Optional[float], List[LoanRequest]]:
     """`clear_with_cause` without the cause."""
     result = clear_with_cause(requests, offers, currency, last_rate, existing_debt_by_borrower, arrears_by_borrower,
-                              year, rate_ceiling, expected_inflation)
+                              year, rate_ceiling, expected_inflation, clearing)
     return result.loans, result.rate, result.unmet
 
 
 def clear_with_cause(requests: Sequence[LoanRequest], offers: Sequence[FundsOffer], currency: CurrencyId,
                      last_rate: Optional[float], existing_debt_by_borrower: Mapping[AgentId, float],
                      arrears_by_borrower: Optional[Mapping[AgentId, float]] = None, year: int = 0,
-                     rate_ceiling: Optional[float] = None, expected_inflation: float = 0.0) -> Clearing:
+                     rate_ceiling: Optional[float] = None, expected_inflation: float = 0.0,
+                     clearing: str = "year") -> LoanClearing:
     """Match funds with requests. Returns the new loans, the base rate, the requests left unmet and a cause.
+
+    A loan's id names the currency, the year and the `clearing` it came from, so two clearings that carry one year (the
+    year's own and the next year's working capital) never give two loans one id.
 
     A request left unmet is returned with `amount` reduced to what it did not get. Each loan carries the
     base rate plus its borrower's premium; `disbursements(loans)` gives the money to move. `rate_ceiling`
@@ -134,18 +138,18 @@ def clear_with_cause(requests: Sequence[LoanRequest], offers: Sequence[FundsOffe
                       key=lambda r: (r.borrower, r.purpose, r.amount, r.maximum_rate))
     offers = [offer for offer in offers if offer.currency == currency and offer.amount > 0]
     if not offers:
-        return Clearing([], last_rate, list(requests), NO_OFFERS)      # borrowers' bids alone are not a price
-    asked_amount = {}
+        return LoanClearing([], last_rate, list(requests), NO_OFFERS)      # borrowers' bids alone are not a price
+    asked_amount: Dict[int, float] = {}    # position in `requests` -> the amount asked, for a request cut to what its collateral bears
     limited: Dict[AgentId, str] = {}
     lowest_offered = min(offer.minimum_rate for offer in offers)
     cut = []
-    for request in requests:
+    for position, request in enumerate(requests):
         # a request the premium on its whole amount prices out is funded for the most its collateral bears
         taken = credit_cap.fundable_amount(request.amount, existing_debt_by_borrower.get(request.borrower, 0.0),
                                            request.collateral_value, arrears_by_borrower.get(request.borrower, 0.0),
                                            request.maximum_rate, max(0.0, lowest_offered), risk_premium)
         if 0.0 < taken < request.amount:
-            asked_amount[(request.borrower, request.purpose, taken)] = request.amount
+            asked_amount[position] = request.amount
             limited[request.borrower] = credit_cap.COLLATERAL_BOUND
             request = replaced(request, amount=taken)
         cut.append(request)
@@ -166,7 +170,7 @@ def clear_with_cause(requests: Sequence[LoanRequest], offers: Sequence[FundsOffe
                                           [(ceiling, request.amount) for ceiling, request, can in zip(ceilings, requests, able)
                                            if can])
     if not any(able):       # lenders alone are not a price either
-        return Clearing([], last_rate, list(requests), NO_BORROWER_AT_ASK)
+        return LoanClearing([], last_rate, list(requests), NO_BORROWER_AT_ASK)
     base_rate = sticky_move(last_rate, target, RATE_ADJUSTMENT_SHARE_PER_YEAR)
     if lowest_ask is not None and base_rate < lowest_ask <= max(ceilings, default=-math.inf):
         # a sticky rate below every lender's ask would lend nothing while a borrower would pay it
@@ -184,7 +188,7 @@ def clear_with_cause(requests: Sequence[LoanRequest], offers: Sequence[FundsOffe
         if lowest_ask is not None and lowest_ask > nominal_ceiling:
             # no lender accepts the bound: hold the rate, lend nothing, say why
             held = last_rate if last_rate is not None else lowest_ask
-            return Clearing([], max(0.0, held), list(requests), NO_OFFER_AT_RATE)
+            return LoanClearing([], max(0.0, held), list(requests), NO_OFFER_AT_RATE)
         base_rate = nominal_ceiling
     base_rate = max(0.0, base_rate)
     lending =[offer for offer in offers if offer.minimum_rate <= base_rate]
@@ -223,7 +227,7 @@ def clear_with_cause(requests: Sequence[LoanRequest], offers: Sequence[FundsOffe
                     continue
                 entry[2] -= piece_at_risk
             loans.append(Loan(
-                contract_id="loan:%s:%d:%d" % (currency, year, len(loans)), lender=entry[0],
+                contract_id="loan:%s:%d:%s:%d" % (currency, year, clearing, len(loans)), lender=entry[0],
                 borrower=request.borrower, currency=currency, principal=piece,
                 rate=base_rate + premiums[index], years_left=request.years,
                 collateral_value=request.collateral_value * piece / request.amount, issued_year=year,
@@ -234,10 +238,10 @@ def clear_with_cause(requests: Sequence[LoanRequest], offers: Sequence[FundsOffe
             granted[index] += piece
     unmet = []
     for index, request in enumerate(requests):
-        left = asked_amount.get((request.borrower, request.purpose, request.amount), request.amount) - granted.get(index, 0.0)
+        left = asked_amount.get(index, request.amount) - granted.get(index, 0.0)
         if left > 1e-9:
             unmet.append(replaced(request, amount=left))
-    return Clearing(loans, base_rate, unmet, limited=limited)
+    return LoanClearing(loans, base_rate, unmet, limited=limited)
 
 
 def disbursements(loans: Sequence[Loan]) -> List[Transfer]:
@@ -253,6 +257,12 @@ class Receipt:
     interest: float = 0.0
     principal: float = 0.0
     arrears: float = 0.0
+
+
+def installment_of(loan: Loan) -> float:
+    """The principal a loan returns at the year's end: an even share over the years left, all of it in the last year. The one
+    rule firms, banks and the yearly service all read."""
+    return loan.principal if loan.years_left <= 1.0 else loan.principal / loan.years_left
 
 
 def service(loans: Sequence[Loan], cash_by_borrower: Mapping[AgentId, float], year: int,
@@ -278,7 +288,7 @@ def service_split(loans: Sequence[Loan], cash_by_borrower: Mapping[AgentId, floa
     defaults: List[Default] = []
     receipts: Dict[AgentId, Receipt] = {}
     for loan in sorted(loans, key=lambda l: l.loan_id):
-        installment = loan.principal if loan.years_left <= 1.0 else loan.principal / loan.years_left
+        installment = installment_of(loan)
         interest = loan.principal * loan.rate
         arrears_interest = min(loan.arrears, loan.arrears_interest)
         arrears_principal = loan.arrears - arrears_interest

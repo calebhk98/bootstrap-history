@@ -12,7 +12,6 @@ from sim.actors import seat_exchange
 from sim.actors.api import ALREADY_ABLE, GRANTED, NO_LICENSEE, TERMS_REFUSED, GrantLicence
 from sim.actors.module import Actors
 from sim.actors.seat_parties import Ports
-from sim.knowledge.api import ReceiveTechniques
 from sim.refusal import Refusal
 from sim.agents.api import Plant
 from sim.seats.api import SeatsSeat, SetDealing
@@ -98,7 +97,7 @@ class TheOwnersKeepTheirRecords(unittest.TestCase):
     def test_the_seats_module_publishes_a_copy_of_a_named_seats_stored_dealings(self):
         slots = {"founder": SeatsSeat(), "second": SeatsSeat(patents={"loom": {"granted": 1}})}
         module = module_harness.build(Seats, module_id="seats")
-        module._slots = lambda: slots
+        module.slots = lambda: slots
         published = module.seat_dealings("second")
         published["patents"]["loom"]["granted"] = 2
         self.assertEqual(published["shares_issued"], 0.0)
@@ -107,7 +106,7 @@ class TheOwnersKeepTheirRecords(unittest.TestCase):
     def test_set_dealing_replaces_one_stored_field_of_the_named_seat_with_a_copy(self):
         slots = {"founder": SeatsSeat(), "second": SeatsSeat()}
         module = module_harness.build(Seats, module_id="seats")
-        module._slots = lambda: slots
+        module.slots = lambda: slots
         offers = [{"id": "offer:1"}]
         module.set_dealing(SetDealing("second", "offers", offers))
         offers[0]["id"] = "changed"
@@ -115,7 +114,7 @@ class TheOwnersKeepTheirRecords(unittest.TestCase):
 
     def test_set_dealing_refuses_a_field_that_is_not_a_dealing(self):
         module = module_harness.build(Seats, module_id="seats")
-        module._slots = lambda: {"founder": SeatsSeat()}
+        module.slots = lambda: {"founder": SeatsSeat()}
         with self.assertRaises(KeyError):
             module.set_dealing(SetDealing("founder", "goal", "x"))
 
@@ -127,7 +126,7 @@ class TheOwnersKeepTheirRecords(unittest.TestCase):
 
     def test_a_released_plant_leaves_the_named_seats_business_dated_when_it_had_no_year(self):
         module, seats = self.ventures()
-        seats["second"].business.open_plant("mill", None)
+        seats["second"].business.lifecycle.open_plant("mill", None)
         plant = module.apply_release_plant(ReleasePlant("second", "mill", 140))
         self.assertEqual((plant.entry_key, plant.opened_year, set(seats["second"].business.operating())), ("mill", 140, set()))
 
@@ -139,8 +138,8 @@ class TheOwnersKeepTheirRecords(unittest.TestCase):
         module, seats = self.ventures()
         plant = Plant(entry_key="mill", opened_year=90, size=3.0)
         module.apply_adopt_plant(AdoptPlant("second", plant))
-        self.assertEqual((set(seats["second"].business.operating()), seats["second"].business.size_of("mill"),
-                          seats["second"].business.opened_year_of("mill", 0)), ({"mill"}, 3.0, 90))
+        self.assertEqual((set(seats["second"].business.operating()), seats["second"].business.reading.size_of("mill"),
+                          seats["second"].business.reading.opened_year_of("mill", 0)), ({"mill"}, 3.0, 90))
         self.assertEqual(set(seats["founder"].business.operating()), set())
 
 

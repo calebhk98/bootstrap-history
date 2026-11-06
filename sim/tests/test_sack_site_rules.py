@@ -9,7 +9,7 @@ import unittest
 
 from sim.reporting.api import RecordEvent
 from sim.tests import hazards_host, module_harness
-from sim.workforce.api import LoseStaff
+from sim.workforce.api import LoseStaff, rules as workforce_rules
 from sim.workforce.module import Workforce
 
 
@@ -31,7 +31,16 @@ class SackedHousehold:
         self.household = types.SimpleNamespace(artisans=20.0, scholars=10.0, directors_extra=5.0, capital=1000.0,
                                                employees={"smith": 40.0, "scribe": 30.0, "mason": 20.0})
         workforce = module_harness.build(Workforce, seat=self.household, views={"acting_balance": lambda: self.household.capital, "game_random": self.dice})
-        workforce.labour = types.SimpleNamespace(staff_snapshot=lambda: {}, log_staff_reduction=lambda cause, before: None)
+        household = self.household
+
+        def lose_share(survival_share):    # the labour core's pools keep fractions of every trade's people
+            household.artisans = workforce_rules.surviving_people(household.artisans, survival_share)
+            household.scholars = workforce_rules.surviving_people(household.scholars, survival_share)
+            for trade in household.employees:
+                household.employees[trade] = workforce_rules.surviving_people(household.employees[trade], survival_share)
+        workforce.parts.core.labour = types.SimpleNamespace(
+            ledger=types.SimpleNamespace(staff_snapshot=lambda: {}, log_staff_reduction=lambda cause, before: None),
+            pools=types.SimpleNamespace(lose_share=lose_share))
         self.module = hazards_host.build(
             game_random=self.dice, acting_balance=lambda: self.household.capital, corpus_hedge=(corpus_chance, 0.5, "corpus_written"),
             answers={LoseStaff: workforce.lose_staff})

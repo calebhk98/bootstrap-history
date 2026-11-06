@@ -3,7 +3,6 @@
 Staff are whole people; the scholar wall; the fog ratchet; the credit forecast and failure quote; the planner's
 closure and ordering; typed-line spellings. The rules are called on the numbers and stand-ins each check states; the
 agent loop's save before its reply and the start credit forecast are in test_agent_save_before_reply."""
-import math
 from types import SimpleNamespace
 from sim.tests.ui_stand_in import Game
 
@@ -17,78 +16,53 @@ from sim.tests import module_harness
 from sim.tests import materials_stand_in
 from sim.resources.sizing import nitre_bed_yearly_spend
 from sim.diffusion.rules import staff_sources
-from sim.labour.labour_bondage import BondageMixin
-from sim.labour.labour_capacity import CapacityMixin
-from sim.labour.labour_training import TrainingMixin
-from sim.labour.staff_pay_rules import roll_trade
+from sim.labour.labour_hiring import Hiring
+from sim.labour.labour_pools import StaffPools
+from sim.labour.labour_refusals import literate_wall_refusal
+from sim.labour.labour_supply import Supply
+from sim.labour.labour_training import Training
 from sim.labour.staff_targets import scholar_target
 from sim.ui.proto import credit_forecast
-from sim.world import demography
 
 QUICK_TOPIC = True
 
 # =============================================================================
-# PEOPLE ARE WHOLE. Attrition is a per-person roll (`roll_trade`), so a headcount of whole people only ever loses
-# whole people; hire() and train() refuse a fractional `n` outright.
+# PEOPLE ARE WHOLE. hire() and train() refuse a fractional `n` outright.
 # =============================================================================
 
-DEATH_RATE = demography.BASELINE_ANNUAL_MORTALITY_RATE_WORKING_AGE
-draws = random.Random(1)
-headcount, whole_every_year, never_grew = 500, True, True
-for _year in range(150):
-    died, left, survivors = roll_trade(headcount, 0.0, DEATH_RATE, draws.random)
-    whole_every_year = whole_every_year and isinstance(survivors, int) and survivors == headcount - died - left
-    never_grew = never_grew and survivors <= headcount
-    headcount = survivors
-check("a whole headcount never picks up a fraction of a person, year after year of pure attrition",
-      whole_every_year, headcount)
-check("...and with nobody hiring the headcount only ever falls, never climbs on its own", never_grew, headcount)
-
-# UNBIASED: the realised loss, averaged over many people and many independent seeds, should land on the working-age
-# mortality rate (pay is at the market, so nobody takes a better offer).
-lost = 0
-for seed in range(1, 31):
-    lost += roll_trade(2000, 0.0, DEATH_RATE, random.Random(seed).random)[0]
-check("whole-person attrition averages the working-age mortality rate, over many people and many seeds",
-      abs(lost / (30 * 2000.0) - DEATH_RATE) < 0.003, (lost / (30 * 2000.0), DEATH_RATE))
-
 # HIRE AND TRAIN LAND WHOLE PEOPLE.
-roster = SimpleNamespace(_world=SimpleNamespace(wages={"smith": 1.0, "machinist": 1.0}))
-refused_hire = TrainingMixin.hire_check(roster, "smith", 2.5)[2]
-refused_train = TrainingMixin.train_check(roster, "machinist", 1.5)[1]
+roster = SimpleNamespace(_world=SimpleNamespace(trades=SimpleNamespace(wages={"smith": 1.0, "machinist": 1.0})))
+refused_hire = Hiring.hire_check(roster, "smith", 2.5)[2]
+refused_train = Training.train_check(roster, "machinist", 1.5)[1]
 check("hire refuses a fractional number of people", cause_of(refused_hire) == "count_not_whole", refused_hire)
 check("...and so does train", cause_of(refused_train) == "count_not_whole", refused_train)
 check("a whole number is not refused for being fractional",
-      cause_of(TrainingMixin.train_check(roster, "machinist", 0)[1]) == "count_not_positive")
+      cause_of(Training.train_check(roster, "machinist", 0)[1]) == "count_not_positive")
 
 # =============================================================================
 # THE SCHOLAR WALL. A literate trade's headcount ceiling is a floor plus the market's reach scaled by literacy; for
-# scholars the institutions' own capacity is added; nobody can be hired who does not exist.
+# scholars the institutions' own capacity is added.
 # =============================================================================
 
 
-def wall_of(trade, institutional=0.0, literacy=1.0, exist=1e9, absent=()):
+def wall_of(trade, institutional=0.0, literacy=1.0):
     stand_in = SimpleNamespace(
-        LITERATE_TRADES=frozenset({"scholar", "scribe"}), LITERATE_CAPACITY_FLOOR=1.5, POP_SCALE_FLOOR_SHARE=0.5,
-        POP_SCALE_VARIABLE_SHARE=0.5, SCHOLAR_MARKET_SHARE=0.35, local_market_share=lambda: 1.0,
-        literacy_factor=lambda trade: literacy, staff_capacity=lambda: (institutional, 0.0, 0.0),
-        people_who_exist=lambda trade: exist,
-        _world=SimpleNamespace(cfg={"hired_hours_cap_base": 20_000.0}, pop_scale=1.0, HOURS_PER_PERSON_YEAR=2000.0,
-                               trades_absent=set(absent)))
-    return CapacityMixin.literate_capacity(stand_in, trade)
+        LITERATE_CAPACITY_FLOOR=1.5,
+        trades=SimpleNamespace(LITERATE_TRADES=frozenset({"scholar", "scribe"}), literacy_factor=lambda trade: literacy),
+        capacity=SimpleNamespace(staff_capacity=lambda: (institutional, 0.0, 0.0)),
+        _people_of_trade_in_reach=lambda trade: 35.0)
+    return Supply.literate_capacity(stand_in, trade)
 
 
-reach = 20_000.0 * 1.0 * (0.5 + 0.5) * 0.35 / 2000.0
+reach = 35.0
 check("the market-reach ceiling for a fresh household is the floor plus its reach scaled by literacy",
       abs(wall_of("scholar") - (1.5 + reach)) < 1e-9, wall_of("scholar"))
 check("a trade that does not read has no literacy wall", wall_of("smith") == float("inf"))
-check("a trade nobody can be found in cannot be had past the people who exist",
-      wall_of("scribe", exist=2.0) == 2.0)
 check("building the institutions that train scholars outright widens the wall by what they hold, for scholars alone",
       abs(wall_of("scholar", institutional=20.0) - wall_of("scholar") - 20.0) < 1e-9
       and wall_of("scribe", institutional=20.0) == wall_of("scribe"))
 check("teaching the society to read widens the wall", wall_of("scribe", literacy=1.0) > wall_of("scribe", literacy=0.5))
-wall_refusal = CapacityMixin._literate_wall_refusal(SimpleNamespace(), "scholar", 5.9, 0.0)
+wall_refusal = literate_wall_refusal("scholar", 5.9, 0.0)
 check("the refusal at the wall names the households' reach and literacy, and says how many can be taken",
       cause_of(wall_refusal) == "literacy_wall"
       and "reach" in str(wall_refusal) and "literacy" in str(wall_refusal)    # presentation: the refusal's wording
@@ -102,14 +76,15 @@ check("...though it asks for more when the wall is open, so the check above meas
 # ONLY `scholar` COUNTS AS A TRAINED SCHOLAR, though the market groups scribes with them.
 pools = SimpleNamespace(
     _world=SimpleNamespace(workforce=SimpleNamespace(
-        freedmen=0.0, slaves=0.0, training=[], granted_staff={"scholars": 1.0}, scholars=0.0, artisans=0.0)),
-    employed_by_trade=lambda: {"scribe": 3.0, "scholar": 2.0, "smith": 4.0},
-    is_craft_trade=lambda trade: trade == "smith", employed=lambda trade: {"scribe": 3.0, "scholar": 2.0}.get(trade, 0.0),
-    WORKER_EQUIVALENT_UNTRAINED=1.0, FREEDMAN_ARTISAN_PRODUCTIVITY=1.0, TRAINED_SLAVE_ARTISAN_PRODUCTIVITY=1.0)
-BondageMixin._resync_pools(pools)
+        freedmen=0.0, slaves=0.0, training=[], scholars=0.0, artisans=0.0)),
+    book=SimpleNamespace(employed_by_trade=lambda: {"scribe": 3.0, "scholar": 2.0, "smith": 4.0},
+                         employed=lambda trade: {"scribe": 3.0, "scholar": 2.0}.get(trade, 0.0)),
+    trades=SimpleNamespace(is_craft_trade=lambda trade: trade == "smith"),
+    FREEDMAN_ARTISAN_PRODUCTIVITY=1.0, TRAINED_SLAVE_ARTISAN_PRODUCTIVITY=1.0)
+StaffPools.resync_pools(pools)
 household = pools._world.workforce
-check("hiring scribes does not inflate the trained-scholar headcount; scholars and what an institution granted count",
-      household.scholars == 2.0 + 1.0 and household.artisans == 4.0, (household.scholars, household.artisans))
+check("hiring scribes does not inflate the trained-scholar headcount; only scholars on the books count",
+      household.scholars == 2.0 and household.artisans == 4.0, (household.scholars, household.artisans))
 
 
 class Advice:

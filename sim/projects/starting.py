@@ -3,14 +3,15 @@
 `start_project` is the PLAYER-CHOSEN start. It applies the same legality test as the optimizer's loop and, if it
 passes, takes the shared research path (sim/agents/research.py, every actor's start) with this seat as the researcher.
 In `--manual` mode the optimizer's loop is switched off, so this is then the only way anything starts."""
+from sim.assembly.api import Part
 from sim.ledger.api import NoteSpend
 from sim.polity.api import RecordBribe
 from typing import Any, Dict, Optional, Tuple
 
 from sim.agents.api import CommandRejected, edges, research
-from sim.ledger.api import PayEdge
+from sim.ledger.api import pay_edge_or_log
 
-from . import bribe_rules, constants, funding, instantaneous, record_rules, start_rules
+from . import bribe_rules, constants, funding, instantaneous, materials_wait, record_rules, start_rules
 from .commands import Bribe, PostBounty, PutProjectFirst, StartProject, StopProject
 from sim.materials.api import SettleProjectMaterials
 from sim.reporting.api import RecordEvent
@@ -20,15 +21,15 @@ from .researcher import SeatResearcher
 BOUNTY_CRAFT_CATEGORIES = ("glass_optics", "metallurgy", "precision", "power", "agriculture", "information", "instruments")
 
 
-class Starting:
-	def _setup_starting(self) -> None:
-		self.last_materials_paid = 0.0           # money the last start spent on materials now (not saved)
+class Starting(Part):
+	def setup(self) -> None:
+		self.last_materials_paid = 0.0           # money of the material orders the last start posted (not saved)
 
 	# ---- registering a project ----------------------------------------------------------------------------------
 
 	def initialize_project(self, node_id: str, *, ph_left: Optional[float] = None, spent: float = 0.0,
 	                       cost_left: Optional[float] = None, include_labour: bool = True,
-	                       bill: Optional[float] = None) -> Dict[str, Any]:
+	                       bill: Optional[float] = None, awaiting: Optional[list] = None) -> Dict[str, Any]:
 		"""Create and register one consistently-shaped active project."""
 		node = self.needs.tree[node_id]
 		if node is None:
@@ -39,10 +40,12 @@ class Starting:
 		own_output_claim = None
 		if cost_left is None:
 			own_output_claim = self.needs.own_output_claim(node_id)
-			bill, _materials_paid_now = self.needs.send(SettleProjectMaterials(node_id))
+			bill, _materials_ordered, awaiting = self.needs.send(SettleProjectMaterials(node_id))
 			cost_left = bill
-		record = record_rules.new_record(node, self.rebuild_work_factor(node_id), ph_left, spent, cost_left,
+		record = record_rules.new_record(node, self.parts.rebuild.rebuild_work_factor(node_id), ph_left, spent, cost_left,
 		                                 include_labour, bill, own_output_claim)
+		if awaiting:
+			materials_wait.record_orders(record, awaiting)      # the project waits for these orders to be filled at the clearing
 		active[node_id] = record
 		return record
 
@@ -52,10 +55,10 @@ class Starting:
 		capability that needs no year."""
 		needs = self.needs
 		node = needs.tree[node_id]
-		# Materials due now are bought (and banked as stock) first; what is left is the bill paid in instalments.
-		bill, materials_paid_now = needs.send(SettleProjectMaterials(node_id))
+		# Materials due now are ordered for the year's clearing; what is left is the bill paid in instalments.
+		bill, materials_ordered, awaiting = needs.send(SettleProjectMaterials(node_id))
 		if precaution:
-			bill += self.precaution_extra_cost(node_id, bill)
+			bill += self.parts.precaution.precaution_extra_cost(node_id, bill)
 		price = bill
 		paid_towards = self.seat.paid_towards
 		paid_now = funding.paid_credit(price, paid_towards.get(node_id, 0.0))
@@ -69,23 +72,24 @@ class Starting:
 		# lab_left STARTS FULL, SET HERE, not lazily the first time the year's labour is drawn: a lazy start reads a
 		# project already most of the way through its founder-hours and wrongly concludes the hired-labour total is
 		# nearly done too.
-		self.initialize_project(node_id, spent=paid_now, cost_left=price, bill=bill)
-		self.last_materials_paid = materials_paid_now
+		self.initialize_project(node_id, spent=paid_now, cost_left=price, bill=bill, awaiting=awaiting)
+		self.last_materials_paid = materials_ordered
 		if precaution:
 			record = self.seat.active[node_id]
 			record["precaution"] = True
-			record["ph_left"] += self.precaution_extra_hours(node_id)
+			record["ph_left"] += self.parts.precaution.precaution_extra_hours(node_id)
 		# A genuinely instantaneous capability should not need an otherwise empty annual turn merely to trip the
-		# completion check. Anything with money, labour, risk, or a calendar floor stays on the normal path.
-		if instantaneous.is_instantaneous(node["ph"], self.calendar_floor(node_id), price, node["lab"], self.effective_risk(node_id)):
-			self._complete(node_id)
+		# completion check. Anything with money, labour, risk, a calendar floor, or a material order (posted or
+		# refused, the refused ones stay on the record with their cause) stays on the normal path.
+		if not awaiting and instantaneous.is_instantaneous(node["ph"], self.parts.risk.calendar_floor(node_id), price, node["lab"], self.parts.risk.effective_risk(node_id)):
+			self.parts.completion.complete(node_id)
 			return "done"
 		if paid_now > 0.5:
 			needs.send(RecordEvent("project_restarted", "%s begun again; the %s already "
 			                       "paid on it before comes off the bill"
 			                       % (node_id, needs.money_text(paid_now, True))))
 		# A thing you just chose to work on should get first call on your own hours.
-		self.apply_put_project_first(PutProjectFirst(node_id))
+		self.parts.project_order.apply_put_project_first(PutProjectFirst(node_id))
 		return "begun"
 
 	# ---- the commands -------------------------------------------------------------------------------------------
@@ -94,7 +98,7 @@ class Starting:
 		refusal = self.needs.start_refusal(command.node_id)       # the quote the player was shown, adjusters included
 		if refusal:
 			return False, refusal
-		if command.precaution and self.precaution_spec(command.node_id) is None:
+		if command.precaution and self.parts.precaution.precaution_spec(command.node_id) is None:
 			return False, "%s offers no pilot plant or redundant team to pay for." % self.needs.tree[command.node_id]["name"]
 		try:
 			research.begin(SeatResearcher(self, command.precaution), command.node_id, self.needs.actor_world())
@@ -140,7 +144,8 @@ class Starting:
 		price = needs.bounty_price(command.node_id)
 		if price > needs.acting_balance():
 			return False
-		needs.send(PayEdge(edges.EDGE_WORKERS, price, "bounties posted"))
+		if pay_edge_or_log(needs.send, edges.EDGE_WORKERS, price, "bounties posted") is not None:
+			return False
 		needs.send(NoteSpend(price))
 		self.seat.bounties_paid += 1
 		# The prize pays for all the work: no poster hours, no hired trades.
@@ -167,7 +172,9 @@ class Starting:
 			return False, self._bribe_refusal_text(refusal, amount, capital)
 		plan = bribe_rules.plan(amount, standing["scandal"], standing["bribes_year_to_date"], income, weight,
 		                        constants.BRIBE_MEMORY_DECAY, constants.BRIBE_PROTECTION_CAP, constants.BRIBE_INCOME_SHARE, per_point)
-		needs.send(PayEdge(edges.EDGE_OFFICIALS, plan.paid, "bribes"))
+		refused = pay_edge_or_log(needs.send, edges.EDGE_OFFICIALS, plan.paid, "bribes")
+		if refused is not None:
+			return False, refused
 		needs.send(RecordBribe(plan.scandal, plan.bribes_year_to_date))
 		return True, self._bribe_text(standing, needs.standing(), plan)
 

@@ -7,6 +7,7 @@ a save. A fight and a tile taken are in `contest.py`."""
 from typing import Dict, List
 
 from sim.agents.api import army_raising
+from sim.assembly.api import Part
 from sim.world import campaign_contest, campaign_supply, campaign_year_rules, military_logistics
 from sim.world.army_record import Army
 
@@ -14,7 +15,7 @@ from . import rules
 from .armies import ARMIES
 
 
-class CampaignYear:
+class CampaignYear(Part):
 	"""The phase `campaigns`. Reads: civilisation, home_modes, country_world, route_between, reach_from, tile_owner,
 	tile_owner_map, tile_facts, played_countries, has_state; the module's own armies and captives."""
 
@@ -24,14 +25,14 @@ class CampaignYear:
 		return campaign_contest.Site(tile, facts["food_kcal_per_year"], self.world.drawn.get(tile, 0.0),
 		                             facts["working_age_endemic_loss"], facts["ruggedness"])
 
-	def _draw_down(self, tile: str, kcal: float) -> None:
+	def draw_down(self, tile: str, kcal: float) -> None:
 		drawn = self.world.drawn
 		drawn[tile] = drawn.get(tile, 0.0) + kcal
 
 	def campaign_modes(self, owner: str) -> List[str]:
 		if owner == str(self.needs.civilisation()["id"]):
 			return list(self.needs.home_modes())
-		return list(self.needs.country_world[owner].collection_modes())
+		return list(self.needs.country_world[owner].collection.collection_modes())
 
 	def campaign_column(self, army: Army, modes: List[str]) -> tuple:
 		"""(kg of grain a day the army's column brings, tile it comes from): the nearest tile of the owner's within the
@@ -51,19 +52,19 @@ class CampaignYear:
 		per_day, source = self.campaign_column(army, modes)
 		before = site.drawn_kcal
 		result = campaign_contest.camp(army, days, site, per_day, pay_years)
-		self._draw_down(army.tile, site.drawn_kcal - before)
+		self.draw_down(army.tile, site.drawn_kcal - before)
 		if source is not None and result["taken_carriage_kg"] > 0.0:
-			self._draw_down(source, campaign_supply.kcal_of(result["taken_carriage_kg"]))
+			self.draw_down(source, campaign_supply.kcal_of(result["taken_carriage_kg"]))
 		campaign_year_rules.book_losses(army, result, lost)
 
 	def _pay_years(self, army: Army) -> float:
 		world = self.needs.country_world[army.owner]
-		record = world.government().record
-		owed = army_raising.pay_owed_share(record.arrears.get("army", 0.0), self.owner_force(army.owner), army.soldiers)
+		record = world.setting.government().record
+		owed = army_raising.pay_owed_share(record.arrears.get("army", 0.0), self.parts.armies.owner_force(army.owner), army.soldiers)
 		army.pay_owed = owed
-		return army_raising.pay_owed_years(owed, army.soldiers, float(world.pay_per_person_year("soldier")))
+		return army_raising.pay_owed_years(owed, army.soldiers, float(world.labour.pay_per_person_year(world.labour.trade_of_role("soldier"))))
 
-	def _reference_equipment(self, owner: str) -> float:
+	def reference_equipment(self, owner: str) -> float:
 		"""The equipment burden of the reference soldier, whose quality is 1: the plain iron kit of the logistics model."""
 		return military_logistics.annual_iron_and_ammunition_burden_kg_per_soldier()
 
@@ -85,12 +86,12 @@ class CampaignYear:
 		self.world.armies = {army_id: army.to_dict() for army_id, army in sorted(survivors.items())}
 		self.bump(ARMIES)
 		for owner, killed in sorted(lost.items()):
-			self.strike_from_force(owner, killed)
+			self.parts.armies.strike_from_force(owner, killed)
 		self._keep_within_force(sorted({army.owner for army in survivors.values()}))
-		self._consolidate_conquests()
+		self.parts.contest.consolidate_conquests()
 
 	def _keep_within_force(self, owners: List[str]) -> None:
-		forces = {owner: self.owner_force(owner) for owner in owners}
+		forces = {owner: self.parts.armies.owner_force(owner) for owner in owners}
 		self.world.armies = rules.keep_within_force(self.world.armies, owners, forces)
 		self.bump(ARMIES)
 
@@ -102,8 +103,8 @@ class CampaignYear:
 		for owner in sorted(set(by_tile.values()) - played):
 			if not self.needs.has_state[owner]:
 				continue   # a seat's colony: no state of its own to decide
-			for tile, soldiers in army_raising.defence_musters(owner, by_tile, records, self.free_soldiers(owner)):
-				made = self.raise_army(owner, soldiers, tile)
+			for tile, soldiers in army_raising.defence_musters(owner, by_tile, records, self.parts.armies.free_soldiers(owner)):
+				made = self.parts.armies.raise_army(owner, soldiers, tile)
 				if isinstance(made, Army):
 					armies[made.army_id], records[made.army_id] = made, made.to_dict()
 			for army_id, tile in army_raising.defence_orders(owner, by_tile, records):
@@ -111,7 +112,7 @@ class CampaignYear:
 
 	def _campaign_army(self, army: Army, armies: Dict[str, Army], lost: Dict[str, float], references: Dict) -> None:
 		owner = army.owner
-		reference = references.setdefault(owner, self._reference_equipment(owner))
+		reference = references.setdefault(owner, self.reference_equipment(owner))
 		modes = self.campaign_modes(owner)
 		pay_years = self._pay_years(army)
 		days_left = campaign_supply.CAMPAIGN_SEASON_DAYS
@@ -133,7 +134,7 @@ class CampaignYear:
 					army.target, army.progress_days = None, 0.0
 		occupier = self.needs.tile_owner[army.tile]
 		if occupier is not None and occupier != owner and army.soldiers >= 1.0:
-			self._contest(army, armies, occupier, days_left, modes, pay_years, lost, reference)
+			self.parts.contest.contest(army, armies, occupier, days_left, modes, pay_years, lost, reference)
 		elif occupier != owner and days_left > 0.0 and army.soldiers >= 1.0:
 			self._camp(army, days_left, modes, pay_years, lost)   # in the wild it lives off the land
 		elif moved and army.soldiers >= 1.0:

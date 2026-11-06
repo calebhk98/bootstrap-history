@@ -1,10 +1,11 @@
-"""What the port reads of the map, each from a view the land module publishes. Mixed into `PortWorld`."""
+"""What the port reads of the map, each from a view the land module publishes. `PortWorld.map` holds it."""
 
 
 class MapReads:
 	"""One member per land view the port asks."""
 
-	_needs: object
+	def __init__(self, needs):
+		self._needs = needs
 
 	@property
 	def economy_map(self):

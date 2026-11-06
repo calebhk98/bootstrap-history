@@ -7,7 +7,7 @@ propagate through normal rules rather than get a bespoke "modern weapons win"
 branch: a rifle is an object with an ammunition and maintenance requirement,
 exactly like a sword and shield are, and the war it changes is decided by
 what that requirement does to food, fodder, iron and labour - things the rest
-of this simulation already knows how to produce (sim/world/agriculture.py's
+of this simulation already knows how to produce (sim/world/agriculture_core.py's
 grain, a metals-production chain this module does not touch but assumes
 exists). Nothing here is fought or won; this module only answers what an
 army of a given size, marching at a given rate, armed with a given weapon,
@@ -18,47 +18,24 @@ early-modern warfare was actually bounded by, which is why campaigns hugged
 rivers and coasts and sieges starved besiegers as often as the besieged.
 
 BUILT STANDALONE; NOW WIRED IN. The engine's army records (sim/campaigns/armies.py) feed the ration, the pack
-animal's load and fodder and the equipment burden to the campaign rules in this package; the paragraph below describes
-the first, single crossing and is otherwise still true of this file's imports.
-
-BUILT STANDALONE; FIRST CROSSING. Nothing here imports
-from sim/engine/, sim/world/agriculture.py or sim/geography/transport.py, and
-that remains true - this module still has no engine dependency in this
-direction, for the reason below. But sim/engine/society.py now imports
-THIS module (military_equipment_burden_kg_per_soldier_per_year(), which
-calls annual_iron_and_ammunition_burden_kg_per_soldier() below), the one
-crossing chosen out of the candidates the task that wired this in laid out
-- see society.py's own comment at that call site for which two candidates
-were rejected and why (in short: the engine has no army size, location or
-campaign to hang a supply-range or campaign-feasibility check on, so
-neither of those two ran through "normal rules" without inventing the very
-state CLAUDE.md SS3.1 says not to invent; the cost of fielding and feeding
-a soldier is the one figure this module produces from nothing but its own
-declared constants). Editing this module can therefore now change what
-society.py reports - see that function's own docstring before changing
-IRON_KG_PER_EQUIPPED_SOLDIER, ANNUAL_EQUIPMENT_REPLACEMENT_FRACTION or
-either Firearm's numbers.
-
-STILL STANDALONE FROM sim/world/agriculture.py AND sim/geography/transport.py,
-FOR THE SAME REASON AS BEFORE. Other agents are editing sim/engine/core.py,
-sim/engine/economy.py, sim/world/agriculture.py, sim/geography/transport.py
-and sim/constants.py concurrently with this crossing's
-construction; a module that does not import those paths cannot be broken
-by their edits or break their tests, whichever lands first. society.py
-importing this module is a one-way dependency this module does not return
-- nothing above imports sim.engine of any kind. Where this module needs a
-number agriculture.py already owns (the
+animal's load and fodder and the equipment burden to the campaign rules in this package. Nothing here imports
+from sim/engine/, sim/world/agriculture_core.py or sim/geography/transport.py. The polity module's
+military_equipment_burden_kg_per_soldier_per_year (sim/polity/notice.py) calls
+annual_iron_and_ammunition_burden_kg_per_soldier() below, so editing this module can change what that
+figure reports; see that function's docstring before changing IRON_KG_PER_EQUIPPED_SOLDIER,
+ANNUAL_EQUIPMENT_REPLACEMENT_FRACTION or either Firearm's numbers. Where this module needs a
+number agriculture_core.py already owns (the
 energy content of grain, a human's baseline caloric need), it redeclares
 that number under its own name rather than importing it - the same choice
-agriculture.py made relative to demography.py, and for the identical reason:
+agriculture_core.py made relative to demography.py, and for the identical reason:
 see WHEAT_ENERGY_KCAL_PER_KG's declaration there and GRAIN_ENERGY_KCAL_PER_KG
-here. Where this module needs a number that belongs to agriculture.py's own
+here. Where this module needs a number that belongs to agriculture_core.py's own
 domain and varies by place and technique - the agricultural surplus per
 square kilometre a foraging army could live off - it is a PARAMETER passed
 into this module's functions, never a constant declared here: see
 sustainable_foraging_army_size()'s own docstring.
 
-ONE ANIMAL, ONE ENGAGEMENT. Like agriculture.py's "one crop", this module
+ONE ANIMAL, ONE ENGAGEMENT. Like agriculture_core.py's "one crop", this module
 picks one representative pack/draught animal (a mule-sized equid, the
 standard baggage-train animal of both the Roman impedimenta and early-modern
 armies) rather than modelling oxen, camels and horse-drawn wagons
@@ -70,7 +47,7 @@ IS WRONG below for what they cost.
 SHAPE.
     Ration          a soldier's daily energy need at campaign exertion
                      (marching under load, not sedentary), turned into
-                     kilograms of grain the same way agriculture.py turns a
+                     kilograms of grain the same way agriculture_core.py turns a
                      population's energy need into kilograms of wheat, and
                      into litres of water using a documented desert-heat
                      multiplier on a temperate-climate baseline.
@@ -168,7 +145,7 @@ from sim.unit_conversions import GRAMS_PER_KILOGRAM
 # ============================================================================
 # A soldier on campaign is not a sedentary person: marching under load for
 # hours a day costs substantially more energy than the subsistence figure
-# agriculture.py and demography.py both use for an ordinary civilian. The
+# agriculture_core.py and demography.py both use for an ordinary civilian. The
 # baseline below is redeclared, deliberately, rather than imported from
 # either module - see the module docstring's STANDALONE section.
 
@@ -177,11 +154,11 @@ SEDENTARY_ENERGY_REQUIREMENT_KCAL_PER_DAY = declare(
     kind="biological_parameter",
     unit="kcal/adult/day",
     source="FAO minimum dietary energy requirement, adult average - the "
-           "same figure sim/world/agriculture.py's HUMAN_ENERGY_REQUIREMENT_"
+           "same figure sim/world/agriculture_core.py's HUMAN_ENERGY_REQUIREMENT_"
            "KCAL_PER_ADULT_DAY and sim/world/demography.py's SUBSISTENCE_"
            "CALORIES_PER_ADULT_EQUIVALENT_DAY both use. Declared again here "
            "under its own name rather than imported, for the same reason "
-           "agriculture.py gives for not importing demography.py's copy: "
+           "agriculture_core.py gives for not importing demography.py's copy: "
            "this module is built and tested standalone.",
     confidence="B",
     why="The baseline this module scales up by the marching activity "
@@ -215,7 +192,7 @@ GRAIN_ENERGY_KCAL_PER_KG = declare(
     kind="biological_parameter",
     unit="kcal/kg",
     source="Standard food-composition figures for whole wheat grain, "
-           "matching sim/world/agriculture.py's WHEAT_ENERGY_KCAL_PER_KG "
+           "matching sim/world/agriculture_core.py's WHEAT_ENERGY_KCAL_PER_KG "
            "exactly - declared again here under its own name rather than "
            "imported, for the reason given in this module's docstring.",
     confidence="A",
@@ -260,7 +237,7 @@ def soldier_campaign_energy_requirement_kcal_per_day() -> float:
     """A soldier's energy need at campaign exertion: the sedentary baseline
     scaled by the marching activity-level multiplier. Not a `declare()` of
     its own - arithmetic on two already-declared numbers, the same
-    convention agriculture.py uses for GROSS_YIELD_AT_REFERENCE_LABOUR_KG_
+    convention agriculture_core.py uses for GROSS_YIELD_AT_REFERENCE_LABOUR_KG_
     PER_HA."""
     return (SEDENTARY_ENERGY_REQUIREMENT_KCAL_PER_DAY
             * MARCHING_PHYSICAL_ACTIVITY_LEVEL_MULTIPLIER)
@@ -280,7 +257,7 @@ def ration_kg_grain_per_day() -> float:
     likely reasons for it, in the order this module would bet on:
 
       (a) A REAL DIET WAS NOT 100% GRAIN CALORIES. The same single-staple
-          simplification agriculture.py names for civilian diets applies
+          simplification agriculture_core.py names for civilian diets applies
           here more sharply, because a Roman ration in the field is
           independently documented to include wine, bacon or lard, and
           sour wine or vinegar (posca) alongside the grain allowance -
@@ -540,7 +517,7 @@ def sustainable_foraging_army_size(
     granaries of one square kilometre, the accumulated result of a growing
     season) that an agriculture/geography domain would supply, varying by
     place and by season. This module deliberately does not import
-    sim/world/agriculture.py to get one (see the module docstring's
+    sim/world/agriculture_core.py to get one (see the module docstring's
     STANDALONE section) - it takes it as a plain argument, exactly as this
     project's task instructs, so wiring the two together later is the
     caller's job, not an import this module should not have.
@@ -784,10 +761,9 @@ def annual_iron_and_ammunition_burden_kg_per_soldier(
     `engagements_per_year` engagements a year.
 
     WHY THIS EXISTS, AND WHY IT TAKES A TEMPO AS A PARAMETER RATHER THAN
-    DECLARING ONE. sim/engine/society.py is the first caller outside this
-    module's own tests, wiring this module in per the task that asked for
-    it (see sim/engine/society.py's own MILITARY_EQUIPMENT_ERA_CAMPAIGN_
-    TEMPO_ENGAGEMENTS_PER_YEAR for what it passes and why). This function
+    DECLARING ONE. sim/polity/notice.py calls this through the
+    equipment burden (see MILITARY_EQUIPMENT_ERA_CAMPAIGN_TEMPO_ENGAGEMENTS_PER_YEAR
+    in sim/polity/constants.py for what it passes). This function
     exists so that caller does not have to reach past this module's public
     functions to combine IRON_KG_PER_EQUIPPED_SOLDIER-derived upkeep with
     ammunition_mass_kg_per_soldier_per_engagement() by hand. It does NOT

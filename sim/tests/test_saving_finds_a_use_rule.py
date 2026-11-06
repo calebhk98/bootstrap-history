@@ -5,7 +5,9 @@ import dataclasses
 import unittest
 from types import SimpleNamespace
 
+from sim.tests.economy_view_defaults import ViewDefaults
 from sim.book import Book, Transfer
+from sim.world import need_basket
 from sim.economy import equity, households
 from sim.economy.types import GoodSpec
 
@@ -21,10 +23,10 @@ NEED_DATA = {
     "goods": {"grain": {"satisfies": {"food": 1.0}}, "beads": {"satisfies": {"adornment": 1.0}}},
 }
 SPECS = {name: GoodSpec(name, 1.0, 0.0, 0.0, name) for name in ("grain", "beads")}
-BASKET = households.make_basket(NEED_DATA, {})
+BASKET = need_basket.make_basket(NEED_DATA, {})
 
 
-class OwningView:
+class OwningView(ViewDefaults):
     """What `goods_orders` reads of the market, with every agent owning `worth` of the firms."""
     year = 1
 
@@ -33,6 +35,9 @@ class OwningView:
 
     def price(self, good, area):
         return {"grain": 1.0, "beads": 2.0}.get(good)
+
+    def usual_price(self, good, area):
+        return None
 
     def interest_rate(self, currency):
         return 0.05
@@ -70,10 +75,8 @@ class EquityTests(unittest.TestCase):
         book.transfer(Transfer("edge:mint", "producer:two", MONEY, 300.0, "opening"))
         cohorts = {each.agent_id: each for each in (cohort_of(0, 0.1), cohort_of(1, 0.2), cohort_of(2, 0.7))}
         no_plant = SimpleNamespace(plant_life_years=0.0)
-        record = SimpleNamespace(
-            cohorts=cohorts, loans=[], shares={}, book=book, capital=SimpleNamespace(share_price_factor=1.0),
-            producers={"producer:one": SimpleNamespace(owner="household:t:2", capacity_runs=1.0, recipe_id="farm"),
-                       "producer:two": SimpleNamespace(owner="household:t:0", capacity_runs=1.0, recipe_id="farm")})
+        record = SimpleNamespace(cohorts=cohorts, book=book, producers={"producer:one": SimpleNamespace(agent_id="producer:one", owner="household:t:2", capacity_runs=1.0, recipe_id="farm"),
+                       "producer:two": SimpleNamespace(agent_id="producer:two", owner="household:t:0", capacity_runs=1.0, recipe_id="farm")}, credit=SimpleNamespace(loans=[]), capital_markets=SimpleNamespace(shares={}, capital=SimpleNamespace(share_price_factor=1.0)))
         setup = SimpleNamespace(currency_id=MONEY, recipes={"farm": no_plant})
         held = equity.holdings(setup, record, None)
         total = 900.0 + 300.0

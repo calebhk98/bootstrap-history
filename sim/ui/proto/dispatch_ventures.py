@@ -25,6 +25,7 @@ from .quantity_units import read_quantity
 from .start_refusal import refusal_fields
 from .staffing_ceiling import trades_beyond_ceiling
 from sim.engine.ui_port import money_text, plain_number
+from sim.workforce.api import REPLACE_ONLY
 from sim.ui.memory import load_state, save_state
 from .util import _flag
 from .start_bill import bill_parts
@@ -100,7 +101,7 @@ def _cmd_start(sim, nodes, cmd, ended):
     # it left once your own OTHER active work is already drawing on it
     # - "the first workshop/lab sat at 60% until I stopped adding new
     # work for a year", from a player who could not see this coming
-    # until it had already happened. trade_demand_vs_supply (projects.py)
+    # until it had already happened. trade_demand_vs_supply (sim/projects/progress_hours.py)
     # is the CURRENT portfolio's own demand, before this project is
     # added; trade_draw_plan(node_id, None) is this project's own full want,
     # since it has not started and so owes the whole thing. Same two
@@ -137,7 +138,7 @@ def _cmd_start(sim, nodes, cmd, ended):
            # SAID AT THE MOMENT OF COMMITMENT, not only on `why` beforehand
            # or `available` in passing - this is the screen the player is
            # actually looking at when the risk becomes theirs. See
-           # expected_calendar_years (projects.py): the true expected
+           # expected_calendar_years (sim/projects/risk.py): the true expected
            # total, retries included, computed through the same retry
            # rule _complete applies on every failure, not a plain
            # geometric series on the bare risk field.
@@ -233,11 +234,11 @@ def _cmd_start(sim, nodes, cmd, ended):
     # everyone else already in hand: two or three
     # foundations, each priced honestly on its own screen, can together
     # ask for more than the household currently holds. This is that
-    # aggregate: committed_spend() (economy.py) is the exact same sum
+    # aggregate: committed_cost() (sim/projects/applied.py) is the exact same sum
     # `money`'s "still_owed_on_work_in_hand" already prints, read here
     # instead of re-totalled, and funding_capacity() is the identical
     # number the un-manual director's own start heuristic already uses
-    # to avoid over-committing itself (step(), core.py) - given here as
+    # to avoid over-committing itself (sim/finance/credit_line.py) - given here as
     # the real ceiling, not a second formula that could drift from it.
     _stacked = stacked_commitment(sim.view("committed_cost")(), sim.view("acting_balance")(), len(sim.view("active_projects")()), sim.view("funding_capacity"))
     if _stacked:
@@ -465,7 +466,6 @@ def _cmd_rush(sim, nodes, cmd, ended):
     #
     # Committing a couple of years of everyone's attention is a decision a
     # player might reasonably make. Committing four centuries of it is not.
-    _hours_room = max(0.0, sim.view("hours_available")["director_pool"] - sim.view("hours_available")["director_committed"])
     _HORIZON_YEARS = 2.0
     _budget = sim.view("hours_available")["director_pool"] * _HORIZON_YEARS
     # budget fixed up front from the shared purchase rule, so the reserve holds as projects start
@@ -532,7 +532,7 @@ def _cmd_mothball(sim, nodes, cmd, ended):
     if not mothballed:
         return {"ok": False, "error": msg}
     # mothball_work does not log either - a deliberate shutdown reads no
-    # differently from one the creditors forced on you (see economy.py's
+    # differently from one the creditors forced on you (see the finance module's
     # own, separate log lines for THAT case) unless the player's own
     # choice gets a line of its own too.
     sim.send(RecordEvent.of("work_mothballed", "mothballed: %s (%s)"
@@ -542,7 +542,7 @@ def _cmd_mothball(sim, nodes, cmd, ended):
     # institutions for the capital back and lost two multi-year
     # stretches to it silently - the upkeep saving was the only thing
     # this reply ever mentioned. `mothball` takes effect before this
-    # runs, so `s.CAPABILITY_INSTITUTIONS` already tells the truth about
+    # runs, so the `capability_sets` view already tells the truth about
     # what just stopped.
     if _mb_id in sim.view("capability_sets")()[0]:
         out["but"] = (
@@ -591,7 +591,7 @@ def _cmd_open(sim, nodes, cmd, ended):
                          % (node_id, (". did you mean: " + ", ".join(near))
                             if near else "")}
     # UNITS: HOW A PLAYER FOUNDS A SECOND SCHOOL. See
-    # ProjectsMixin.open_venture / _expand_institution (projects.py). A
+    # open_venture / _expand_institution (sim/ventures/opening.py). A
     # call with no "units" field behaves exactly as it always has.
     _units = cmd.get("units")
     if _units is not None and not isinstance(_units, (int, float)):
@@ -763,7 +763,7 @@ def _cmd_policy(sim, nodes, cmd, ended):
             if key not in sim.view("founder")()["policy"]:
                 return {"ok": False, "error": "no such policy: %s. They are: %s"
                         % (key, ", ".join(sorted(sim.view("founder")()["policy"])))}
-            sim.view("founder")()["policy"][key] = "replace" if key == "auto_hire" and str(val).lower() == "replace" else _flag(val)
+            sim.view("founder")()["policy"][key] = REPLACE_ONLY if key == "auto_hire" and str(val).lower() == REPLACE_ONLY else _flag(val)
             changed[key] = sim.view("founder")()["policy"][key]
     # WHICH OF THESE CAN ACTUALLY ACT TODAY: negative capital silently
     # disables both hiring and opening even while the switches read ON,

@@ -8,7 +8,7 @@ from types import SimpleNamespace
 from .harness import check
 
 from sim.agents import taxpayer_income
-from sim.agents.api import ActorRecord, ActorRegistry, ActorsState, CastEntry, CountryProfile, CountryWorld, Firm, seed_cast
+from sim.agents.api import ActorRecord, ActorRegistry, ActorsState, CastEntry, CountryProfile, CountryWorld, seed_cast
 from sim.agents.business import Business
 from sim.agents.business_plant import MOTHBALLED, Plant
 
@@ -60,10 +60,10 @@ def country_world():
 
 
 world, registry = country_world()
-check("the registry says whose a tile is", registry.country_of_tile("far_tile") == "far" and registry.country_of_tile("home_tile") == "home"
-	  and registry.country_of_tile("sea") is None)
+check("the registry says whose a tile is", registry.countries.country_of_tile("far_tile") == "far" and registry.countries.country_of_tile("home_tile") == "home"
+	  and registry.countries.country_of_tile("sea") is None)
 traveller = registry.add("firm:1", ActorRecord(kind="firm", name="traveller", last_margin=8.0, founded_year=100))
 traveller.business.plants.extend([Plant(entry_key="mill", opened_year=100, tile="home_tile", takings=1.0),
 								   Plant(entry_key="forge", opened_year=100, tile="far_tile", takings=3.0)])
-incomes = [income for _scale, income in world.visible_taxpayers()]
+incomes = [income for _scale, income in world.taxpayers.visible_taxpayers()]
 check("a foreign state's visible taxpayers include a home firm for the part its plants earn on the state's tiles", incomes == [6.0], incomes)

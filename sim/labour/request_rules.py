@@ -8,7 +8,7 @@ from sim.refusal import Refusal
 
 def train_request_refusal(trade_known, trade, count, find_source, source_absent):
     """(source trade, refusal) of a request to teach `count` people `trade`: the first of an unknown trade, a count that is
-    not positive or not whole, no source trade (`find_source()` is asked only once the count passes), or a source trade
+    not positive or not whole, a source that is not text, no source trade (`find_source()` is asked only once the count passes), or a source trade
     that does not exist here (`source_absent(source)`). The source is the one named, lowered, when there is no refusal."""
     if not trade_known:
         return None, Refusal("no_such_trade", "no such trade: %s" % trade)
@@ -17,12 +17,20 @@ def train_request_refusal(trade_known, trade, count, find_source, source_absent)
     if abs(count - round(count)) > 1e-6:
         return None, Refusal("count_not_whole", "you teach whole people, not %g of one. Teach %d or %d."
                              % (count, math.floor(count), math.ceil(count)))
-    source = (find_source() or "").strip().lower()
+    named = find_source()
+    if named is not None and not isinstance(named, str):
+        return None, Refusal("source_trade_not_text", "the trade to teach from is a trade id, not %r" % (named,))
+    source = (named or "").strip().lower()
     if not source:
         return None, Refusal("no_source_trade", "there is no trade here to teach %ss from" % trade)
     if source_absent(source):
         return None, Refusal("source_trade_absent", "you cannot teach from %ss; there are none" % source)
     return source, None
+
+
+def source_trade_unusable(source, known_trades, absent_trades, created_trades):
+    """Whether a trade named as the teacher cannot teach: no such trade, or none of it here (and none taught into being)."""
+    return source not in known_trades or (source in absent_trades and source not in created_trades)
 
 
 def teaching_hours_refusal(hours, uncommitted_pool, count, trade):

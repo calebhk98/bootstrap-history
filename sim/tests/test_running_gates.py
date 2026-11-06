@@ -14,6 +14,7 @@ from sim.agents.api import Business
 from sim.reporting.api import RecordEvent
 from sim.tests import module_harness, production_host, projects_host
 from sim.knowledge import rules as knowledge_rules
+from sim.projects import closure_reasons
 
 GRID, LAMP, TRAM = "grid", "lamp", "tram"
 
@@ -122,15 +123,15 @@ class LapseTests(unittest.TestCase):
 
     def test_closing_the_work_closes_what_depends_on_it_down_the_chain(self):
         host = _host()
-        host.close_work(GRID, host.CLOSED_BY_CHOICE)
+        host.close_work(GRID, closure_reasons.CLOSED_BY_CHOICE)
         self.assertEqual(host.business.operating(), set())
-        self.assertEqual(host.closure_of(LAMP)["reason"], host.CLOSED_GATE_LAPSED)
-        self.assertEqual(host.closure_of(TRAM)["reason"], host.CLOSED_GATE_LAPSED)
-        self.assertEqual(host.closure_of(GRID)["reason"], host.CLOSED_BY_CHOICE)
+        self.assertEqual(host.closure_of(LAMP)["reason"], closure_reasons.CLOSED_GATE_LAPSED)
+        self.assertEqual(host.closure_of(TRAM)["reason"], closure_reasons.CLOSED_GATE_LAPSED)
+        self.assertEqual(host.closure_of(GRID)["reason"], closure_reasons.CLOSED_BY_CHOICE)
 
     def test_closing_a_dependent_leaves_its_work_running(self):
         host = _host()
-        host.close_work(TRAM, host.CLOSED_BY_CHOICE)
+        host.close_work(TRAM, closure_reasons.CLOSED_BY_CHOICE)
         self.assertEqual(host.business.operating(), {GRID, LAMP})
 
     def test_the_yearly_check_closes_a_dependent_whose_work_was_forgotten(self):
@@ -142,7 +143,7 @@ class LapseTests(unittest.TestCase):
 
     def test_the_closure_is_logged_for_the_player(self):
         host = _host()
-        host.close_work(GRID, host.CLOSED_BY_CHOICE)
+        host.close_work(GRID, closure_reasons.CLOSED_BY_CHOICE)
         events = [command for command in module_harness.sent(host.module) if isinstance(command, RecordEvent)]
         self.assertTrue(any(event.kind == "work_closed_gate_lapsed" and event.facts["work"] == LAMP for event in events))
 

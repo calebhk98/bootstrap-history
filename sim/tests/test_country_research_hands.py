@@ -4,10 +4,11 @@ country the start gate refuses with a cause. The rules are called on stand-ins."
 
 QUICK_TOPIC = True
 
+from sim.tests.agents_fake_world import flat_world
 from .harness import check
 
 from sim.agents import research_gate
-from sim.agents.api import ActorRecord, ActorRegistry, ActorsState, CastEntry, CountryProfile, CountryWorld, seed_cast
+from sim.agents.api import ActorRegistry, ActorsState, CastEntry, CountryProfile, CountryWorld, seed_cast
 from sim.agents.no_country_economy import NoCountryEconomy
 
 from .country_state_world import StateWorld
@@ -44,7 +45,7 @@ def build(shared):
 	registry = ActorRegistry(ActorsState(home_country="home"))
 	entry = CastEntry(actor_id="government:far", country="far", kind="government", money=1.0, params={})
 	seed_cast(registry, "home", [entry], {"home": CountryProfile(country="home"), "far": CountryProfile(country="far", population=24000.0)})
-	registry.staff_fte_in_country = lambda trade, country, actor_id: EMPLOYED_ELSEWHERE.get(trade, 0.0)
+	registry.staff.staff_fte_in_country = lambda trade, country, actor_id: EMPLOYED_ELSEWHERE.get(trade, 0.0)
 	return CountryWorld(shared, registry.state.countries["far"], registry), registry
 
 
@@ -52,16 +53,16 @@ world, registry = build(Shared())
 actor = registry.actors["government:far"]
 actor.workforce.update({"mason": 3.0})
 check("scholar hands are the scholars the country's labour markets hold, plus the actor's own staff in the trade",
-	  world.research_hands(actor, "scholar") == PEOPLE["scholar"], world.research_hands(actor, "scholar"))
+	  world.research.research_hands(actor, "scholar") == PEOPLE["scholar"], world.research.research_hands(actor, "scholar"))
 check("craft hands are the markets' people in the craft trades less the other employers', plus the actor's staff",
-	  world.research_hands(actor, "craft") == 3.0 + PEOPLE["mason"] + (PEOPLE["smith"] - EMPLOYED_ELSEWHERE["smith"]),
-	  world.research_hands(actor, "craft"))
-check("the founder's pool is not counted", world.research_hands(actor, "craft") < HOME_POOL)
+	  world.research.research_hands(actor, "craft") == 3.0 + PEOPLE["mason"] + (PEOPLE["smith"] - EMPLOYED_ELSEWHERE["smith"]),
+	  world.research.research_hands(actor, "craft"))
+check("the founder's pool is not counted", world.research.research_hands(actor, "craft") < HOME_POOL)
 
 no_part_world, no_part_registry = build(NoPart())
 no_part_actor = no_part_registry.actors["government:far"]
 try:
-	no_part_world.research_hands(no_part_actor, "scholar")
+	no_part_world.research.research_hands(no_part_actor, "scholar")
 	raised = None
 except NoCountryEconomy as error:
 	raised = error.country
@@ -70,6 +71,7 @@ check("a country the economy has no part for refuses for its hands, naming the c
 node = {"sch": 2, "art": 0, "pre": []}
 
 
+@flat_world
 class GateWorld(NoPart):
 	def __init__(self):
 		super().__init__()

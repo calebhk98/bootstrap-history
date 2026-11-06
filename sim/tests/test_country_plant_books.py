@@ -3,6 +3,7 @@ The rule is called on built inputs; a figure the country keeps no record of make
 
 QUICK_TOPIC = True
 
+from sim.tests.agents_fake_world import flat_world
 from .harness import check
 
 from sim.agents.api import ActorRegistry, ActorsState, CastEntry, CountryProfile, CountryWorld, seed_cast
@@ -20,14 +21,13 @@ CREW_PAY = 2.0 * PAY["mason"] + 3.0 * PAY["labourer"]
 
 
 def pay(trade):
-	return PAY.get(trade)
+	return PAY[trade]
 
 
 # ---- the rule, on built inputs -------------------------------------------------------------------
 wages = wage_bill_at(STAFF, 2.0, SPAN, pay)
 check("wages are each trade's people times a person-year of its pay in the country, lifted by the span of the size",
 	  wages == SPAN * CREW_PAY, wages)
-check("a crew with a trade the country pays nothing for has no wage bill (None)", wage_bill_at({"astronomer": 1.0}, 1.0, 1.0, pay) is None)
 books = books_at_country_prices(BOOK_TAKINGS, BOOK_UPKEEP, STAFF, 2.0, SPAN, COUNTRY_COST_SCALE, 1.25, pay, False, 0.0, 1.0)
 # a lone operator's takings are its size's share of the market it fills: the figure per founding size
 check("takings and upkeep are the tree's book figures at the country's cost scale, the size and the country's market factor",
@@ -36,8 +36,6 @@ check("a concern with no market model splits its takings with its rivals",
 	  books_at_country_prices(BOOK_TAKINGS, BOOK_UPKEEP, STAFF, 1.0, 1.0, 1.0, 1.0, pay, False, 1.0, 1.0).takings == BOOK_TAKINGS / 2.0)
 check("a goods category shares the home society's demand, which has no country record (None)",
 	  books_at_country_prices(BOOK_TAKINGS, BOOK_UPKEEP, STAFF, 1.0, 1.0, 1.0, 1.0, pay, True, 0.0, 1.0) is None)
-check("a plant with a trade nobody pays for in the country has no books (None)",
-	  books_at_country_prices(BOOK_TAKINGS, BOOK_UPKEEP, {"astronomer": 1.0}, 1.0, 1.0, 1.0, 1.0, pay, False, 0.0, 1.0) is None)
 
 
 # ---- the country's world reads them from its own economy, not the home world --------------------
@@ -95,7 +93,7 @@ def country_world(profile, shared):
 
 profile = CountryProfile(country="far", population=24000.0)
 profile.price_index = COUNTRY_COST_SCALE
-read = country_world(profile, HomeShared()).plant_books("kiln", 90, 0.0, 2.0)
+read = country_world(profile, HomeShared()).enterprises.plant_books("kiln", 90, 0.0, 2.0)
 check("a country's plant is booked at the country's pay, prices and cost scale",
 	  read == PlantBooks(BOOK_TAKINGS * COUNTRY_COST_SCALE * 1.5, BOOK_UPKEEP * COUNTRY_COST_SCALE * 2.0, SPAN * CREW_PAY), read)
 check("...and none of it is the home economy's figure", read is not None and all(figure != home for figure, home in zip(read, HOME_BOOKS)))
@@ -104,7 +102,7 @@ check("the home economy's books are its own concern figures", home_books(HomeSha
 shared_in_category = HomeShared()
 shared_in_category.in_category = True
 check("a country's plant in a goods category has no books (None), not the home demand's",
-	  country_world(profile, shared_in_category).plant_books("kiln", 90, 0.0, 2.0) is None)
+	  country_world(profile, shared_in_category).enterprises.plant_books("kiln", 90, 0.0, 2.0) is None)
 
 
 class NoPart(HomeShared):
@@ -113,7 +111,7 @@ class NoPart(HomeShared):
 
 
 check("a country the economy has no part for has no books (None), not the home figures",
-	  country_world(profile, NoPart()).plant_books("kiln", 90, 0.0, 2.0) is None)
+	  country_world(profile, NoPart()).enterprises.plant_books("kiln", 90, 0.0, 2.0) is None)
 
 
 # ---- the country's plant finds its crew in the country's own labour markets (Complaint 649) ------
@@ -128,6 +126,7 @@ class CrewAnswers(Answers):
 		return {"mason": 9.0}.get(trade, 0.0)
 
 
+@flat_world
 class CrewShared(HomeShared):
 	def country_economy(self, country):
 		return CrewAnswers()
@@ -136,20 +135,20 @@ class CrewShared(HomeShared):
 		return 999.0    # the founder's pool: a country's plant must not read it
 
 
-class CrewRegistry(ActorRegistry):
-	def staff_fte_in_country(self, trade, country, excluding=None):
-		return 4.0 if (trade, country) == ("mason", "far") else 0.0
+def crew_staff_fte_in_country(trade, country, excluding=None):
+	return 4.0 if (trade, country) == ("mason", "far") else 0.0
 
 
 def crew_world(shared):
-	registry = CrewRegistry(ActorsState(home_country="home"))
+	registry = ActorRegistry(ActorsState(home_country="home"))
+	registry.staff.staff_fte_in_country = crew_staff_fte_in_country
 	entry = CastEntry(actor_id="government:far", country="far", kind="government", money=1.0e6, params={})
 	seed_cast(registry, "home", [entry], {"home": CountryProfile(country="home"), "far": profile})
 	return CountryWorld(shared, registry.state.countries["far"], registry)
 
 
 check("a country's plant finds the people its own markets hold less its other employers' staff, not the founder's pool",
-	  crew_world(CrewShared()).free_fte("mason", "firm:far") == 5.0, crew_world(CrewShared()).free_fte("mason", "firm:far"))
-check("a trade nobody in the country practises has no one to hire", crew_world(CrewShared()).free_fte("smith", "firm:far") == 0.0)
+	  crew_world(CrewShared()).labour.free_fte("mason", "firm:far") == 5.0, crew_world(CrewShared()).labour.free_fte("mason", "firm:far"))
+check("a trade nobody in the country practises has no one to hire", crew_world(CrewShared()).labour.free_fte("smith", "firm:far") == 0.0)
 check("a country the economy has no part for has no crew to hire (None), not the founder's pool",
-	  crew_world(NoPart()).free_fte("mason", "firm:far") is None)
+	  crew_world(NoPart()).labour.free_fte("mason", "firm:far") is None)

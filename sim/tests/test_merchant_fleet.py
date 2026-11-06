@@ -5,10 +5,10 @@ QUICK_TOPIC = True
 import types
 import unittest
 
-from sim.economy import carriage_fleet, carriage_fleet_book, carriage_wear, inventory, merchants
-from sim.economy.accounts import Book
+from sim.economy import carriage_fleet_book, carriage_wear, inventory, merchants, merchants_legs
+from sim.book import Book
 from sim.economy.carriage_fleet import FleetLimit
-from sim.economy.types import EDGE_PRODUCTION, Fill, GoodsMove, GoodSpec
+from sim.economy.types import EDGE_PRODUCTION, GoodsMove, GoodSpec
 from sim.tests.test_economy_merchants import SPECS, merchant, plan, world
 
 CART = "cart"
@@ -24,15 +24,13 @@ def ship(limit, held=10.0):
     carriage, _area_map, area_a, _area_b = world()
     who = merchant()
     plan(who, 2.0, 5.0)
-    fills = (Fill("m1", "salt", area_a["salt"], "a", held, 2.0, "buy"),)
-    return merchants.dispatch(who, fills, carriage, SPECS, "coin", 1000.0, {("salt", "a"): held}, fleet=limit)
+    return merchants.dispatch(who, carriage, SPECS, "coin", 1000.0, {("salt", "a"): held}, fleet=limit)
 
 
 class DispatchIsBoundByTheFleet(unittest.TestCase):
     def test_a_merchant_with_no_fleet_ships_nothing(self):
         done = ship(fleet_of({CART: 0.0}))
         self.assertEqual(done.moves, ())
-        self.assertAlmostEqual(done.stranded[0][2], 10.0)
 
     def test_a_merchant_with_no_fleet_ships_only_what_it_hires(self):
         wear = types.SimpleNamespace(units_per_tonne=lambda _source, _destination: {CART: WEAR_PER_TONNE})
@@ -41,8 +39,8 @@ class DispatchIsBoundByTheFleet(unittest.TestCase):
         self.assertAlmostEqual(done.moves[0].quantity, 0.4 / WEAR_PER_TONNE)     # tonnes the hired wear bears
 
     def test_capacity_follows_the_carriers_held(self):
-        small = ship(fleet_of(carriage_fleet.capacity_of({CART: 3.0}, {CART: CART_LIFE})), held=100.0)
-        large = ship(fleet_of(carriage_fleet.capacity_of({CART: 6.0}, {CART: CART_LIFE})), held=100.0)
+        small = ship(fleet_of({CART: 3.0 / CART_LIFE}), held=100.0)
+        large = ship(fleet_of({CART: 6.0 / CART_LIFE}), held=100.0)
         self.assertAlmostEqual(small.moves[0].quantity, 3.0 / CART_LIFE / WEAR_PER_TONNE)
         self.assertAlmostEqual(large.moves[0].quantity, 2.0 * small.moves[0].quantity)
 
@@ -59,6 +57,21 @@ class DispatchIsBoundByTheFleet(unittest.TestCase):
     def test_a_carrier_good_that_is_not_held_does_not_limit(self):
         limit = FleetLimit(lambda _source, _destination: {"feed": 5.0}, {CART: 0.0})
         self.assertAlmostEqual(ship(limit).moves[0].quantity, 10.0)
+
+
+class WearFollowsWhatIsCarried(unittest.TestCase):
+    def test_wear_a_route_could_not_use_for_want_of_crew_is_left_to_the_next_route(self):
+        carriage, _area_map, _area_a, _area_b = world()
+        specs = {"brick": GoodSpec("brick", 1000.0, 0.0, 0.0, "material"), "feather": GoodSpec("feather", 1.0, 0.0, 0.0, "material")}
+        who = merchant()
+        who.routes = {(good, "a"): merchants_legs.from_weights({("b", "area"): 1.0}) for good in specs}
+        held = {("brick", "a"): 10.0, ("feather", "a"): 400.0}
+        crew = merchants.CrewHire(lambda _source, _destination: (("hand@a", 1.0),), {"hand@a": 5.0}, {}, lambda _key: 1.0,
+                                  lambda _good, tile: "area_" + tile)      # half the hours the bricks need were hired
+        done = merchants.dispatch(who, carriage, specs, "coin", 1e6, held, crew=crew, fleet=fleet_of({CART: 1.0}))
+        carried = {move.good: move.quantity for move in done.moves}
+        self.assertAlmostEqual(carried["brick"], 5.0)
+        self.assertGreater(carried["feather"], 0.0)      # the five bricks left behind wore no carts
 
 
 class FleetInTheBook(unittest.TestCase):
@@ -114,15 +127,6 @@ class HiringIdleFleets(unittest.TestCase):
     def test_rent_is_never_above_the_lessees_cash(self):
         pay = carriage_fleet_book.rent_transfers("b", {CART: 1.5}, {CART: 1.0}, {CART: 0.0}, {CART: {"a": 1.5}}, {CART: 100.0}, "coin", 30.0)
         self.assertAlmostEqual(pay[0].amount, 30.0)
-
-
-class OpeningEndowment(unittest.TestCase):
-    def test_merchants_open_with_carriers_sized_to_their_capital(self):
-        from sim.economy.opening import open_economy
-        from sim.tests.test_carriage_wear import CART as GAME_CART, carrying_setup
-        record, _areas, _carriage = open_economy(carrying_setup())
-        held = [carriage_fleet_book.held(record.book, each, [GAME_CART])[GAME_CART] for each in record.merchants]
-        self.assertTrue(held and all(units > 0.0 for units in held))
 
 
 if __name__ == "__main__":

@@ -5,7 +5,6 @@ rebuild factors. Each is called on a stand-in game with the factors written out;
 breakdown names the rebuild factor too, so while a lost node is rebuilt its factors still multiply out to its total."""
 QUICK_TOPIC = True
 
-import types
 import unittest
 
 from sim.tests import materials_stand_in
@@ -24,7 +23,6 @@ class Game(FactViews):
         self.year = 100
         self.done, self.active, self.paid_towards = set(), {}, {}
         self.money_real = 1.0
-        self.geography = types.SimpleNamespace(material_cost_factor=lambda node_id: 1.25)
         self.project_cost_without_materials = materials_stand_in.build(
             tree_nodes={"clock": NODE}, cost_money_factor=1.5, civ_cost_factor=lambda node_id: 0.8,
             rebuild_work_factor=lambda node_id: rebuild).project_cost_without_materials
@@ -40,6 +38,9 @@ class Game(FactViews):
 
     def opposition_factor(self, node_id):
         return 1.1
+
+    def material_cost_factor(self, node_id):
+        return 1.25
 
     def project_material_bill(self, node_id):
         return {"cost_of_missing": 20.0, "rows": []}

@@ -9,7 +9,7 @@ from .harness import check
 
 from sim.agents.api import ActorRecord
 from sim.agents.policy import Option
-from sim.agents.trader import route_key, route_terms
+from sim.agents.trader_routes import route_key, route_terms
 from sim.agents.trader_entry import candidate_routes
 from sim.agents.tuning import ENTREPRENEURIAL_CAPITAL_SHARE
 from sim.agents.tuning_trader import TRADER_DEPTH_SHARE, TRADER_RISK_SHARE
@@ -46,16 +46,16 @@ def random_world(place_count, seed):
 
 def exhaustive_candidates(world):
 	"""Every triple priced, as the entry scan did before it pruned."""
-	capital_limit = world.society_output() * ENTREPRENEURIAL_CAPITAL_SHARE
-	rate = world.market_rate()
+	capital_limit = world.revenue.society_output() * ENTREPRENEURIAL_CAPITAL_SHARE
+	rate = world.credit.market_rate()
 	found = []
-	for material in sorted(world.trade_materials()):
-		for source in sorted(world.trade_places(None)):
-			for destination in sorted(world.trade_places(source)):
+	for material in sorted(world.trade.trade_materials()):
+		for source in sorted(world.trade.trade_places(None)):
+			for destination in sorted(world.trade.trade_places(source)):
 				terms = route_terms(world, source, destination, material) if source != destination else None
 				if terms is None or terms["gain"] <= 0.0:
 					continue
-				tonnes = min(world.market_depth(material, destination) * TRADER_DEPTH_SHARE,
+				tonnes = min(world.trade.market_depth(material, destination) * TRADER_DEPTH_SHARE,
 							 capital_limit / terms["outlay"])
 				if tonnes <= 0.0:
 					continue
@@ -70,19 +70,19 @@ def exhaustive_candidates(world):
 def exhaustive_options(trader, world):
 	"""Every triple priced, as the trader's scan did before it pruned."""
 	budget = trader.cargo_budget(world)
-	rate = max(world.market_rate(), 0.0)
+	rate = max(world.credit.market_rate(), 0.0)
 	options = []
 	places = trader.places(world)
 	planned = {}
-	for material in sorted(world.trade_materials()):
+	for material in sorted(world.trade.trade_materials()):
 		for source in places:
 			for destination in places:
 				terms = route_terms(world, source, destination, material) if source != destination else None
 				if terms is None or terms["gain"] <= 0.0:
 					continue
 				arriving = planned.get((material, destination), 0.0)
-				depth = world.market_depth(material, destination)
-				room = max(0.0, depth * TRADER_DEPTH_SHARE - world.delivered_this_year(material, destination) - arriving)
+				depth = world.trade.market_depth(material, destination)
+				room = max(0.0, depth * TRADER_DEPTH_SHARE - world.trade.delivered_this_year(material, destination) - arriving)
 				tonnes = min(room, budget / terms["outlay"])
 				if tonnes <= 0.0:
 					continue

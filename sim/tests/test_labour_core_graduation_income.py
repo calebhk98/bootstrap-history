@@ -5,7 +5,7 @@ QUICK_TOPIC = True
 import unittest
 
 from sim.labour.market import expectations, trades
-from sim.labour.market.records import Clearing, MarketState, YearInputs
+from sim.labour.market.records import LabourClearing, MarketState, YearInputs
 
 AREA = "plain"
 HOURS = 1000.0
@@ -20,10 +20,9 @@ def _inputs():
 
 
 def _clearing(wanted_hours, offered_hours=HOURS, wage=1.0):
-    return {(AREA, "carver"): Clearing(
+    return {(AREA, "carver"): LabourClearing(
         trade="carver", area=AREA, wage=wage, hours_offered=offered_hours, hours_wanted=wanted_hours,
-        hours_hired=min(offered_hours, wanted_hours), hired_by_employer={}, paid_by_employer={},
-        average_wage=wage, target_wage=wage)}
+        hours_hired=min(offered_hours, wanted_hours), hired_by_employer={}, target_wage=wage)}
 
 
 class GraduationIncomeTests(unittest.TestCase):

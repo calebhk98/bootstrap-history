@@ -33,10 +33,10 @@ class PriceBook:
 
 class Market(GoodsPricing):
     def __init__(self, economy, traded=True):
-        self._sim = SimpleNamespace(economy=economy)
+        super().__init__(SimpleNamespace(economy=economy), None)
         self.traded = traded
 
-    def _economy_good(self, material):
+    def economy_good(self, material):
         return GOOD if self.traded else None
 
     def price_at_tile_per_tonne(self, material):
@@ -44,6 +44,11 @@ class Market(GoodsPricing):
 
 
 class SaleClimbTests(unittest.TestCase):
+    def test_a_buy_of_nothing_after_some_bought_is_read_at_what_was_bought_up_to_what_is_offered(self):
+        book = PriceBook(fall_per_tonne=0.0, offered=4.0)
+        Market(book)._climb("iron", 3.0, 0.0)
+        self.assertEqual(book.calls, [(0.0, 3.0)])
+
     def test_a_sale_is_paid_less_per_tonne_the_more_is_sold(self):
         market = Market(PriceBook(fall_per_tonne=0.01))
         _money, small = market.sale_proceeds("iron", 1.0)

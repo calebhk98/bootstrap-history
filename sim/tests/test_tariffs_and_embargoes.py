@@ -7,15 +7,15 @@ QUICK_TOPIC = True
 
 import contextlib
 import math
-import types
+from types import SimpleNamespace
 import unittest
 
 from sim.agents import relations
-from sim.agents.trader import route_terms
-from sim.economy.tariffs import duty_transfers
+from sim.agents.trader_routes import route_terms
+from sim.economy.tariffs import carried_duty_transfers
 from sim.economy.types import EDGE_EXTERNAL
 from sim.markets import trade_duty
-from sim.actors.world_trade import TradeView
+from sim.actors.world_trade import Trade
 from sim.tests.store_stand_in import base_book
 from sim.engine.state import FounderState, HouseholdState, SimulationState
 from sim.engine.state_seat import bind_seat, seat_from_template
@@ -23,8 +23,8 @@ from sim.ui.proto import command_registry
 import sim.ui.proto.dispatch  # noqa: F401  (registers every command)
 from sim.ui.proto.seat_address import run_as_seat
 
-from .test_no_seller_no_price import _Offers, _fake_sim
 from .world_stand_in import fake_needs
+from sim.tests.interface_fixture import shipped_declared
 from sim.tests.ui_stand_in import FactViews
 from .seat_views_stand_in import give_seats_slots
 
@@ -39,76 +39,60 @@ def _border_terms(sim):
                                         relations.embargoes(sim.stores, destination, source))
 
 
-def _priced_game():
-    sim = _fake_sim(home_prices={}, partner_makes={"cassia_kg"}, partner_prices={"cassia_kg": 50.0})
-    sim.stores, sim.civ = _stores(), {"id": "rome"}
-    sim.border_terms = _border_terms(sim)
-    return sim
+class ALandedCargoPaysItsTariffOnce(unittest.TestCase):
+
+    def test_the_year_close_takes_no_tariff_from_the_sales_of_a_landed_cargo(self):
+        """The trader's cargo leg pays the duty at landing (foreign_trade/cargo.py); the year close adds none on the sales."""
+        from unittest import mock
+        from sim.book import Book
+        from sim.economy.tax_record import TaxRecord
+        from sim.economy.types import EDGE_MINT, Transfer
+        from sim.economy.year_close import money_taxes
+        from sim.economy.year_ledger import YearLedger
+        book = Book()
+        book.transfer(Transfer(EDGE_MINT, "leg:1", "coin", 1000.0, "opening"))
+        ledger = YearLedger(import_accounts=frozenset({"leg:1"}))
+        ledger.note_postings([Transfer("house", "leg:1", "coin", 80.0, "sale of cassia_kg")], "sales")
+        setup = SimpleNamespace(tax_forms=(), state_agent="state:rome", currency_id="coin", carried_tariff={},
+                                import_duty_share={"cassia_kg": 0.2})
+        record = SimpleNamespace(book=book, taxes=TaxRecord())
+        with mock.patch("sim.economy.year_close.state_budget.close_year") as close_year:
+            money_taxes(setup, record, None, ledger)
+        self.assertEqual(book.balance("state:rome", "coin"), 0.0)
+        self.assertEqual(close_year.call_args.args[3], 0.0)
 
 
-class TariffOnLandedPrice(unittest.TestCase):
+class TheStateCollectsOnCarriedGoods(unittest.TestCase):
+    CARRIED = {("merchant:a", "north"): 100.0, ("merchant:b", "north"): 40.0, ("merchant:a", "east"): 10.0, ("merchant:c", "south"): 50.0}
+    TARIFFS = {"north": 0.25, "east": 1.0}
 
-    def test_a_tariff_adds_its_share_of_the_partners_cost_to_the_landed_price(self):
-        sim = _priced_game()
-        offers = _Offers(sim)
-        before = offers.landed_price("cassia_kg", "partner", offers.route)
-        relations.set_side(sim.stores, "rome", "partner", tariff=0.2)
-        after = offers.landed_price("cassia_kg", "partner", offers.route)
-        self.assertAlmostEqual(after - before, 0.2 * 50.0)
-        self.assertAlmostEqual(offers.landed_price("cassia_kg", "partner", offers.route, with_duty=False), before)
+    def duty(self, balances):
+        return carried_duty_transfers(self.CARRIED, self.TARIFFS, lambda payer: balances.get(payer, 0.0), "state:rome", "denarius")
 
-    def test_the_partners_tariff_on_us_does_not_raise_what_we_pay(self):
-        sim = _priced_game()
-        offers = _Offers(sim)
-        before = offers.landed_price("cassia_kg", "partner", offers.route)
-        relations.set_side(sim.stores, "partner", "rome", tariff=0.5)
-        self.assertAlmostEqual(offers.landed_price("cassia_kg", "partner", offers.route), before)
+    def test_a_carrier_pays_the_tariff_toward_the_source_on_the_value_it_carried_from_there_to_the_state(self):
+        balances = {"merchant:a": 1000.0, "merchant:b": 1000.0, "merchant:c": 1000.0}
+        self.assertEqual([(each.payer, each.payee, each.amount) for each in self.duty(balances)],
+                         [("merchant:a", "state:rome", 25.0 + 10.0), ("merchant:b", "state:rome", 10.0)])    # south has no tariff
 
-    def test_an_embargo_leaves_no_cross_border_offer(self):
-        sim = _priced_game()
-        offers = _Offers(sim)
-        self.assertEqual(offers.offered_by("cassia_kg"), "partner")
-        relations.set_side(sim.stores, "rome", "partner", embargo=True)
-        self.assertIsNone(offers.landed_price("cassia_kg", "partner", offers.route))
-        self.assertIsNone(offers.offered_by("cassia_kg"))
-        self.assertIsNone(offers.unit_price("cassia_kg"))
+    def test_a_carrier_pays_no_more_than_it_holds(self):
+        [transfer] = self.duty({"merchant:a": 12.0})
+        self.assertEqual((transfer.payer, transfer.amount), ("merchant:a", 12.0))
 
-    def test_a_change_mid_game_is_seen_without_a_stale_price(self):
-        sim = _priced_game()
-        offers = _Offers(sim)
-        open_price = offers.household_prices()["cassia_kg"]
-        relations.set_side(sim.stores, "rome", "partner", tariff=0.2)
-        taxed_price = offers.household_prices()["cassia_kg"]
-        self.assertAlmostEqual(taxed_price - open_price, 10.0)
-        relations.set_side(sim.stores, "rome", "partner", tariff=None)
-        self.assertAlmostEqual(offers.household_prices()["cassia_kg"], open_price)
-        relations.set_side(sim.stores, "rome", "partner", embargo=True)
-        self.assertNotIn("cassia_kg", offers.household_prices())
-        relations.set_side(sim.stores, "rome", "partner", embargo=False)
-        self.assertAlmostEqual(offers.household_prices()["cassia_kg"], open_price)
+    def test_a_carrier_that_holds_nothing_pays_nothing(self):
+        self.assertEqual(self.duty({}), [])
 
-
-class TheStateCollects(unittest.TestCase):
-
-    def test_the_duty_inside_what_was_paid_goes_from_the_border_to_the_treasury(self):
-        transfers = duty_transfers({"cassia_kg": 0.25}, {("merchant", "cassia_kg"): 80.0, ("house", "cassia_kg"): 20.0,
-                                                         ("merchant", "wheat_kg"): 40.0}, "state:rome", "denarius")
-        self.assertEqual([(each.payer, each.payee, each.amount) for each in transfers],
-                         [(EDGE_EXTERNAL, "state:rome", 25.0)])
-
-    def test_a_good_with_no_tariff_carries_no_duty(self):
-        self.assertEqual(duty_transfers({}, {("merchant", "wheat_kg"): 40.0}, "state:rome", "denarius"), [])
+    def test_the_state_does_not_pay_itself(self):
+        self.assertEqual(carried_duty_transfers({("state:rome", "north"): 100.0}, self.TARIFFS, lambda payer: 50.0, "state:rome", "denarius"), [])
 
 
 class LedgerTalliesTheBorder(unittest.TestCase):
 
-    def test_only_money_paid_straight_to_the_border_carries_the_tariff(self):
+    def test_money_paid_to_the_border_and_to_an_import_account_both_count_as_imports(self):
         from sim.economy.types import Transfer
         from sim.economy.year_ledger import YearLedger
         ledger = YearLedger(import_accounts=frozenset({"importer"}))
         ledger.note_postings([Transfer("house", EDGE_EXTERNAL, "coin", 30.0, "sale of silk"),
                               Transfer("house", "importer", "coin", 12.0, "sale of silk")], "sales")
-        self.assertEqual(ledger.border_imports_paid, {("house", "silk"): 30.0})
         self.assertEqual(sum(ledger.imports_paid.values()), 42.0)
 
 
@@ -117,6 +101,7 @@ class _Sim:
 
     def __init__(self, prices):
         self.stores, self.civ = _stores(), {"id": "rome"}
+        self.scenario = SimpleNamespace(civ=self.civ)
         self.prices = prices
 
     def border_terms(self, destination, source):
@@ -129,12 +114,15 @@ class _Sim:
         return {"freight_per_tonne": 3.0}
 
 
-class _View(TradeView):
+class _View(Trade):
+    """The trade part over a stand-in world that is also its own `trade` part, as the traders' route rules ask a world."""
+
     def __init__(self, sim):
-        self._sim = sim
-        self.needs = fake_needs(
+        super().__init__(SimpleNamespace(needs=fake_needs(
             civilisation=sim.civ, foreign_economies=sim.foreign_economies, partner_facts=sim._foreign_economy_facts,
-            border_duty_per_tonne=lambda source, destination, price: trade_duty.duty_per_tonne(sim, source, destination, price))
+            border_duty_per_tonne=lambda source, destination, price: trade_duty.duty_per_tonne(sim, source, destination, price))))
+        self._sim = sim
+        self.trade = self
 
     def price_at(self, material, place):
         return self._sim.prices[place]
@@ -161,7 +149,7 @@ class MerchantsSeeTheCharge(unittest.TestCase):
 
     def test_trade_diverts_to_the_untaxed_source(self):
         world = self.view
-        gains = lambda source: world.price_at("cassia_kg", "rome") - world.price_at("cassia_kg", source) - world.freight_between(source, "rome", "cassia_kg", 1.0)   # noqa: E731
+        gains = lambda source: world.trade.price_at("cassia_kg", "rome") - world.trade.price_at("cassia_kg", source) - world.trade.freight_between(source, "rome", "cassia_kg", 1.0)   # noqa: E731
         self.assertGreater(gains("han"), gains("parthia"))
         relations.set_side(self.sim.stores, "rome", "han", tariff=0.5)
         self.assertLess(gains("han"), gains("parthia"))
@@ -204,6 +192,7 @@ class Game(FactViews):
         self.year = 100
         self.civ = {"id": "rome"}
         self.saved_stores = {}
+        self.interface_declared = shipped_declared   # the shipped commands, as the interface module declares them
 
     @property
     def stores(self):

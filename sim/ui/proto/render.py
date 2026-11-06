@@ -18,8 +18,7 @@ from .render_screen_step import render_step
 from .render_screen_available import render_available, _RESTS_SHORT, _cost_marker, _available_row
 from .render_screen_why import render_why
 from .render_screens_economy import (
-    render_capacity, render_materials, render_portfolio, render_economy,
-    render_changes, render_money, render_mines, render_labour,
+    render_capacity, render_portfolio, render_economy, render_changes, render_money, render_mines, render_labour,
     render_population, render_ventures,
 )
 from .render_screens_status import (

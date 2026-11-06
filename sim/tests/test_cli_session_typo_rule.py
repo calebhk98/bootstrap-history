@@ -8,13 +8,14 @@ import types
 import unittest
 
 from sim.ui import cli_interactive
+from sim.ui.sitting import Sitting
 
 
 class SessionTypoRule(unittest.TestCase):
     def test_a_missing_session_with_no_civ_refuses_and_writes_nothing(self):
         with tempfile.TemporaryDirectory() as folder:
             path = os.path.join(folder, "newgame.json")
-            result = cli_interactive._play_resolve_session(types.SimpleNamespace(civ=None), None, path)
+            result = cli_interactive._play_resolve_session(types.SimpleNamespace(civ=None), None, path, Sitting())
             self.assertEqual(1, result)
             self.assertFalse(os.path.exists(path))
 

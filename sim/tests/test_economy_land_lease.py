@@ -5,8 +5,9 @@ QUICK_TOPIC = True
 import unittest
 from types import SimpleNamespace
 
-from sim.economy import land_market
-from sim.economy.accounts import Book
+from sim.economy.land_record import LandRecord
+from sim.economy import land_lease, land_market
+from sim.book import Book
 from sim.economy.households_cohort import cohort_id, cohorts_for_tile
 from sim.economy.producers import Producer
 from sim.economy.types import EDGE_MINT, Recipe, TileSpec, Transfer
@@ -21,8 +22,7 @@ def economy_with(hectares):
     book = Book()
     producer = Producer("producer:t", cohort_id("t", 2), "wheat", "t", 100.0, expected_prices={"grain": 1.0})
     book.transfer(Transfer(EDGE_MINT, "producer:t", "coin", 1e9, "opening"))
-    record = SimpleNamespace(producers={"producer:t": producer}, book=book,
-                             cohorts={each.agent_id: each for each in cohorts}, land_rent={})
+    record = SimpleNamespace(producers={"producer:t": producer}, book=book, cohorts={each.agent_id: each for each in cohorts}, land=LandRecord())
     setup = SimpleNamespace(tiles=tiles, recipes={"wheat": WHEAT}, land_per_run={"wheat": 1.0}, currency_id="coin")
     return setup, record
 
@@ -38,7 +38,7 @@ def cleared_rent(setup, record, runs):
 
 def settle(setup, record, runs):
     land_market.settle_year(setup, record, view(), {"producer:t": runs})
-    return record.land_rent["t"]
+    return record.land.land_rent["t"]
 
 
 class LeaseTests(unittest.TestCase):
@@ -54,13 +54,13 @@ class LeaseTests(unittest.TestCase):
         posted = settle(setup, record, 5.0)
         self.assertGreater(posted, low_cleared)
         self.assertLess(posted, high)
-        self.assertAlmostEqual(posted, high + land_market.LAND_RENT_ADJUSTMENT_SHARE * (low_cleared - high))
+        self.assertAlmostEqual(posted, high + land_lease.LAND_RENT_ADJUSTMENT_SHARE * (low_cleared - high))
 
     def test_a_tile_nobody_asks_land_on_decays_instead_of_dropping_to_zero(self):
         setup, record = economy_with(100.0)
         high = settle(setup, record, 300.0)
         land_market.settle_year(setup, record, view(), {})
-        self.assertAlmostEqual(record.land_rent["t"], high * (1.0 - land_market.LAND_RENT_ADJUSTMENT_SHARE))
+        self.assertAlmostEqual(record.land.land_rent["t"], high * (1.0 - land_lease.LAND_RENT_ADJUSTMENT_SHARE))
 
     def test_alternating_demand_swings_rent_less_than_it_swings_what_land_clears_at(self):
         setup, record = economy_with(100.0)
@@ -74,9 +74,28 @@ class LeaseTests(unittest.TestCase):
         settle(setup, record, 300.0)
         before = record.book.balance("producer:t", "coin")
         paid = land_market.settle_year(setup, record, view(), {"producer:t": 5.0})
-        self.assertAlmostEqual(record.producers["producer:t"].land_rent_per_run, record.land_rent["t"])
+        self.assertAlmostEqual(record.producers["producer:t"].land_rent_per_run, record.land.land_rent["t"])
         self.assertAlmostEqual(sum(each.amount for each in paid), before - record.book.balance("producer:t", "coin"))
         self.assertGreater(sum(each.amount for each in paid), 0.0)
+
+
+class TenancyAskOrderTests(unittest.TestCase):
+    def test_the_tenancy_ask_is_built_after_this_years_rent_is_posted(self):
+        setup, record = economy_with(100.0)
+        settle(setup, record, 300.0)
+        seen = []
+        record.land.land_rent = {"t": 7.0}
+        land_market.settle_year(setup, record, view(), {"producer:t": 5.0},
+                                tenancy_ask=lambda: seen.append(dict(record.land.land_rent)) or {})
+        self.assertEqual(len(seen), 1)
+        self.assertNotEqual(seen[0]["t"], 7.0)
+        self.assertAlmostEqual(seen[0]["t"], record.land.land_rent["t"])
+
+
+class PostedRentOrderTests(unittest.TestCase):
+    def test_posted_rents_come_back_in_sorted_tile_order(self):
+        posted = land_lease.posted_rents({"b": 1.0, "z": 1.0, "a": 1.0}, {"m": 2.0, "c": 2.0})
+        self.assertEqual(list(posted), sorted(posted))
 
 
 if __name__ == "__main__":

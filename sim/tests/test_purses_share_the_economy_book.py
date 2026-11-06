@@ -55,7 +55,7 @@ class SharedBook(unittest.TestCase):
 
     def test_a_loaded_purses_record_joins_the_economys_book_again(self):
         record = {"book": {"money": {"edge:mint": {COIN: -130.0}, "firm:b": {COIN: 130.0}}, "goods": {},
-                           "gross_money": {COIN: 130.0}, "gross_goods": {}, "money_by_purpose": {}, "goods_by_purpose": {},
+                           "gross_money": {COIN: 130.0}, "gross_goods": {}, "goods_by_purpose": {},
                            "edge_money_volume": {}, "edge_money_net": {}, "edge_goods_volume": {}, "edge_goods_net": {},
                            "supply_at_start": {}},
                   "facilities": [{"contract_id": "facility:firm:a:pool:credit", "lender": POOL, "borrower": "firm:a",

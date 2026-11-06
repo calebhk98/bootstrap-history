@@ -4,6 +4,7 @@ reaches a technique through its substitutes. Small fixtures, no whole game."""
 
 QUICK_TOPIC = True
 
+from sim.tests.agents_fake_world import flat_world
 from types import SimpleNamespace
 
 from .harness import check
@@ -31,7 +32,7 @@ class StakeWorld(FakeWorld):
         self.technique = None
         self.rent_per_hectare = 2.0
         self.tithable = 1000.0
-        self.revenue = 10000.0
+        self.state_income = 10000.0
         self.strata = []
         self.said = []
 
@@ -76,7 +77,7 @@ class StakeWorld(FakeWorld):
         return self.strata
 
     def state_revenue(self):
-        return self.revenue
+        return self.state_income
 
     def state_reach(self):
         return 0.5
@@ -219,7 +220,7 @@ government.record.unfunded = {"administration": 0.0, "army": 0.0}
 group_servants.remember_servants(government, world)
 check("a state that pays its way has no unhappy servants", Sector.of_servants(government, world) == [])
 government.record.unfunded = {"administration": 2500.0, "army": 90000.0}
-world.revenue = 5000.0
+world.state_income = 5000.0
 found = by_key(Sector.of_servants(government, world))
 check("office-holders whose salaries go unpaid and whose fees fall form a group",
       ("office_holders", "administration") in found, list(found))
@@ -278,6 +279,7 @@ check("a state in deficit compensates instead", not state_response(0.9, 0.9, Tru
 check("a church cannot obtain a prohibition, only be made good", not state_response(0.9, 0.9, False, "clergy", 100.0, 1000.0)["ban"])
 
 
+@flat_world
 class GroupWorld(StakeWorld):
     def __init__(self):
         super().__init__()
@@ -337,15 +339,16 @@ check("a line that states no sums is written as it is", rendered("plain", lambda
 from sim.economy.api import country_figures
 from sim.economy.setup import labour_area
 from sim.economy.market_memory import market_key
+from sim.tests.labour_record_stand_in import labour_record
 
 economy = SimpleNamespace(setup=SimpleNamespace(tiles=["t1", "t2"]),
-                          record=SimpleNamespace(hours_idle={market_key("weaver", labour_area("t1")): 30.0, market_key("weaver", labour_area("t2")): 10.0},
-                                                 hours_hired={market_key("weaver", labour_area("t1")): 70.0, market_key("weaver", labour_area("t2")): 90.0}))
+                          record=SimpleNamespace(labour=labour_record({market_key("weaver", labour_area("t1")): 70.0, market_key("weaver", labour_area("t2")): 90.0},
+                                                               {market_key("weaver", labour_area("t1")): 30.0, market_key("weaver", labour_area("t2")): 10.0})))
 idle = country_figures.idle_hours_by_trade(economy, None)
 check("the idle hours of a trade are summed over its markets, with the hours offered", idle == {"weaver": (40.0, 200.0)}, idle)
 
-from sim.economy.record import EconomyRecord
-check("the record keeps the idle hours through a save", "hours_idle" in EconomyRecord.__dataclass_fields__)
+from sim.economy.labour_record import LabourRecord
+check("the record keeps the idle hours through a save", "hours_idle" in LabourRecord.__dataclass_fields__)
 
 # ---- a civilisation's data founds its church and academy ---------------------------------------------------------------------------------
 import glob

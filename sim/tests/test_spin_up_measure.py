@@ -7,17 +7,23 @@ import types
 import unittest
 from unittest import mock
 
-from sim.markets import port_year, spin_up_gap
+from sim.markets import spin_up, spin_up_gap, spin_up_run
 from sim.book import Book, GoodsMove
 from sim.economy import year_close
 from sim.economy.spin_up_state import spin_up_state as year_state_of   # a pure read of a record, not a builder
 from sim.economy.households_cohort import Cohort
+from sim.economy.goods_record import GoodsRecord
+from sim.economy.market_memory import MarketMemory
 
-FULL_GAME = {key: value for key, value in os.environ.items() if key != port_year.SPIN_UP_YEARS_ENV}
-TOLERANCE = port_year.SPIN_UP_TOLERANCE
+FULL_GAME = {key: value for key, value in os.environ.items() if key != spin_up.SPIN_UP_YEARS_ENV}
+TOLERANCE = spin_up_run.SPIN_UP_TOLERANCE
 
 
 class ChangeGapTests(unittest.TestCase):
+    def test_a_watched_price_that_vanishes_is_a_whole_change(self):
+        self.assertEqual(spin_up_gap.price_gap({}, {"grain": 1.0}), 1.0)
+        self.assertEqual(spin_up_gap.price_gap({}, {}), 0.0)
+
     def test_a_price_is_measured_by_its_relative_change(self):
         self.assertAlmostEqual(spin_up_gap.change_gap(1.5, 1.0), 0.5)
 
@@ -69,19 +75,19 @@ class FinalResultTests(unittest.TestCase):
 
     def test_the_result_is_settled_only_when_the_final_window_is(self):
         steady = [_state() for _year in range(4)]
-        result = port_year.AgentEconomy.final_result(self.first, steady, 22)
+        result = spin_up_run.final_result(self.first, steady, 22)
         self.assertTrue(result["settled"])
         self.assertEqual(result["years"], 22)
         self.assertEqual(result["measured_years"], 4)
         self.assertEqual(result["first_stage"], self.first)
         self.assertEqual(result["final"]["real_output"], 100.0)
         moving = steady[:3] + [_state(real_output=200.0)]
-        result = port_year.AgentEconomy.final_result(self.first, moving, 22)
+        result = spin_up_run.final_result(self.first, moving, 22)
         self.assertFalse(result["settled"])
         self.assertAlmostEqual(result["gap"], 1.0)
 
     def test_a_final_state_with_too_few_years_to_compare_is_not_settled(self):
-        result = port_year.AgentEconomy.final_result(self.first, [_state()], 8)
+        result = spin_up_run.final_result(self.first, [_state()], 8)
         self.assertFalse(result["settled"])
         self.assertEqual(result["measured_years"], 1)
 
@@ -97,7 +103,7 @@ class StopRuleTests(unittest.TestCase):
             return types.SimpleNamespace(basket_price_level=1.0, prices={"wheat_kg": 1.0})
         economy.step = step
         with mock.patch.dict(os.environ, FULL_GAME, clear=True):
-            result = port_year.AgentEconomy._settle(economy, object(), ["wheat_kg"])
+            result = spin_up_run.settle(economy, object(), ["wheat_kg"])
         self.assertTrue(result["settled"])
 
 
@@ -105,21 +111,20 @@ class OrderTests(unittest.TestCase):
     def test_the_recorded_result_is_measured_after_the_workforce_is_trimmed_and_trimmed_again_before_play(self):
         calls = []
         window = [_state() for _year in range(4)]
-        agent = port_year.AgentEconomy.__new__(port_year.AgentEconomy)
-        agent._economy = types.SimpleNamespace(setup=types.SimpleNamespace(opening_prices={}, working_share=0.5))
-        api = port_year.economy_api
+        economy = types.SimpleNamespace(setup=types.SimpleNamespace(opening_prices={}, working_share=0.5))
+        api = spin_up_run.economy_api
         first = {"settled": True, "years": 3, "gap": 0.0}
         with mock.patch.object(api, "opening_quantities", lambda economy: {}), \
-                mock.patch.object(port_year.port_sites, "crop_yields", lambda economy: {}), \
+                mock.patch.object(spin_up_run.port_sites, "crop_yields", lambda economy: {}), \
                 mock.patch.object(api, "trim_workforce_to_expected_hours", lambda economy: calls.append("trim")), \
                 mock.patch.object(api, "finish_spin_up", lambda economy: calls.append("finish")), \
                 mock.patch.object(api, "note_spin_up_result",
                                   lambda economy, result: calls.append(("note", result))), \
-                mock.patch.object(port_year.AgentEconomy, "_settle",
-                                  staticmethod(lambda economy, inputs, watched: calls.append("settle") or first)), \
-                mock.patch.object(port_year.AgentEconomy, "_settle_trimmed",
-                                  staticmethod(lambda economy, inputs, watched: calls.append("trimmed") or window)):
-            agent._spin_up()
+                mock.patch.object(spin_up_run, "settle",
+                                  lambda economy, inputs, watched: calls.append("settle") or first), \
+                mock.patch.object(spin_up_run, "settle_trimmed",
+                                  lambda economy, inputs, watched: calls.append("trimmed") or window):
+            spin_up_run.spin_up(economy)
         self.assertEqual(calls[:5], ["settle", "trim", "trimmed", "trim", "finish"])
         self.assertEqual(calls[5][1]["measured_years"], 4)
         self.assertEqual(calls[5][1]["first_stage"], first)
@@ -144,14 +149,14 @@ class StateTests(unittest.TestCase):
 class RebaseTests(unittest.TestCase):
     def test_rebasing_keeps_what_households_and_the_market_expect_of_inflation(self):
         money = "coin"
-        memory = types.SimpleNamespace(
-            prices={"wheat_kg|area": 1.5}, volume_weights={}, quote_kinds={}, basket_price_levels={money: 1.8},
-            price_levels={money: 1.7}, expected_inflation={money: 0.07})
+        memory = MarketMemory(
+            prices={"wheat_kg|area": 1.5}, basket_price_levels={money: 1.8}, price_levels={money: 1.7}, expected_inflation={money: 0.07})
         cohorts = {"household:a": Cohort("household:a", "farms", 0, 10.0, 5.0, 0.2, expected_inflation=0.07,
                                          last_basket_price_level=1.8)}
-        record = types.SimpleNamespace(memory=memory, volumes={"wheat_kg|area": 10.0}, cohorts=cohorts, index_base_prices={})
+        record = types.SimpleNamespace(memory=memory, cohorts=cohorts,
+                                       goods=GoodsRecord(volumes={"wheat_kg|area": 10.0}))
         year_close.rebase_basket_price_level(types.SimpleNamespace(currency_id=money), record)
-        self.assertEqual(record.index_base_prices, {"wheat_kg": 1.5})
+        self.assertEqual(record.goods.index_base_prices, {"wheat_kg": 1.5})
         self.assertEqual(memory.basket_price_levels[money], 1.0)
         self.assertEqual(memory.expected_inflation[money], 0.07)
         for cohort in record.cohorts.values():

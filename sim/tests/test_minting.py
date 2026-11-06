@@ -48,12 +48,5 @@ class Minting(unittest.TestCase):
             with self.assertRaises(ValueError):
                 wage_provider.validate_coin_standard(_civ(fineness=bad))
 
-    def test_a_coin_weighs_its_fine_metal_over_its_fineness(self):
-        self.assertAlmostEqual(
-            wage_provider.coin_gross_kg_per_unit(_civ(fineness=0.8)["coin_standard"]),
-            0.0027 / 0.8, places=12)
-        self.assertEqual(wage_provider.coin_gross_kg_per_unit(_civ()["coin_standard"]), 0.0027)
-
-
 if __name__ == "__main__":
     unittest.main()

@@ -70,6 +70,15 @@ class ContentViewTests(unittest.TestCase):
         self.assertEqual(set(loaded["needs"]) - set(base["needs"]), {FIRST + ":cheer"})
         self.assertEqual(loaded["goods"], base["goods"])
 
+    def test_household_work_data_merges_the_mods_figures_over_the_base(self):
+        base = views.household_work_data(os.path.join(self.directory, "absent"))
+        write_mod(self.directory, FIRST)
+        write_data(self.directory, FIRST, os.path.join("data", "world", "household_work.json"),
+                   {"days_per_year": base["days_per_year"] + 1})
+        loaded = views.household_work_data(self.directory)
+        self.assertEqual(loaded["days_per_year"], base["days_per_year"] + 1)
+        self.assertEqual(loaded["tasks"], base["tasks"])
+
     def test_declared_actor_kinds_are_the_mods_kinds(self):
         write_mod(self.directory, FIRST)
         declaration = {"needs": {"food": 1.0}, "birth_rate": 0.04, "death_rate": 0.02, "famine_death_rate": 0.3,

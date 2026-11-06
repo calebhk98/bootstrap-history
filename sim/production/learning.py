@@ -4,44 +4,51 @@
 Delivery time comes from geography alone: the days a haul takes from the nearest tile that makes an input to
 the concern's tile. The agent economy carries no lead time per recipe, so nothing is counted twice.
 Needs: the views of READS_BY_OWNER in module_spec.py."""
+from sim.assembly.api import Part
 from sim.geography.api import route, usable_modes
 from sim.prices.api import prices as price_solver
 from sim.unit_conversions import CIVIL_DAYS_PER_YEAR
+from sim.world.plant_figures import priced_total
 
 from .industry_learning import (input_availability, learning_multiplier, learning_value_ratio,
                                 repair_hours_by_trade, running_availability, work_hours_by_trade)
 from .rules import mastery_worker_years
 
 
-class Learning:
+class Learning(Part):
 
 	def tenure_weights(self, node_id):
 		"""Hours a year each trade works in the concern (running and repairing it); the founding staff when
 		the concern's output is not worked out from production data. Worker-years are split by these."""
-		baskets = self.concern_baskets_now(node_id)
+		baskets = self.parts.volume.concern_baskets_now(node_id)
 		if baskets is not None:
 			weights = work_hours_by_trade(baskets.labour_hours, repair_hours_by_trade(baskets.plant))
 			if sum(weights.values()) > 0.0:
 				return weights
-		return self.founding_staff_by_trade(node_id)
+		return self.parts.depth.founding_staff_by_trade(node_id)
 
 	def concern_learning_ratio(self, node_id):
 		"""Share of its stated takings a concern makes, given scrap and unit labour along the experience
 		curve, repairs its tenured trades can do and the inputs its suppliers deliver; one without baskets."""
-		baskets = self.concern_baskets_now(node_id)
+		baskets = self.parts.volume.concern_baskets_now(node_id)
 		if baskets is None:
 			return 1.0
-		held = self.techniques_in_use()
-		prices = self.needs.done_memo("concern_prices_held", held, lambda: self._concern_prices_in_hours(held))
-		founding = self.founding_worker_years(node_id)
-		multiplier = learning_multiplier(self.industry_experience(node_id), founding, mastery_worker_years(founding))
-		purchases = {material: quantity * prices.get(material, 0.0) for material, quantity in baskets.purchases.items()}
-		purchases_value = sum(purchases.values()) + sum(basket["value"] for basket in baskets.energy_bought.values())
-		net = (sum(quantity * prices.get(material, 0.0) for material, quantity in baskets.outputs.items())
-		       + sum(basket["value"] for basket in baskets.energy_sold.values()) - purchases_value)
-		ratio = learning_value_ratio(net, purchases_value, sum(baskets.labour_hours.values()), multiplier)
+		held = self.parts.techniques.techniques_in_use()
+		prices = self.needs.done_memo("concern_prices_held", held, lambda: self.parts.volume.concern_prices_in_hours(held))
+		founding = self.parts.depth.founding_worker_years(node_id)
+		multiplier = learning_multiplier(self.parts.depth.industry_experience(node_id), founding, mastery_worker_years(founding))
+		# an input or output with no price has no value to weigh: the value share stays at one and the input
+		# is left out of the supply weights
+		purchases = {material: quantity * prices[material]
+		             for material, quantity in baskets.purchases.items() if prices.get(material) is not None}
+		sold = priced_total(baskets.outputs, prices)
+		ratio = 1.0
+		if sold is not None and len(purchases) == len(baskets.purchases):
+			purchases_value = sum(purchases.values()) + sum(basket["value"] for basket in baskets.energy_bought.values())
+			net = sold + sum(basket["value"] for basket in baskets.energy_sold.values()) - purchases_value
+			ratio = learning_value_ratio(net, purchases_value, sum(baskets.labour_hours.values()), multiplier)
 		repairs = repair_hours_by_trade(baskets.plant)
-		ratio *= running_availability(baskets.labour_hours, repairs, self.industry_tenure_by_trade(node_id))
+		ratio *= running_availability(baskets.labour_hours, repairs, self.parts.depth.industry_tenure_by_trade(node_id))
 		return ratio * self.concern_input_availability(node_id, purchases)
 
 	def concern_input_availability(self, node_id, purchases_value):
@@ -65,7 +72,7 @@ class Learning:
 			if not found:
 				continue
 			# a technique that needs no technology is established wherever it is run
-			depth[material] = max((self.industry_depth(gate(recipe)) if gate(recipe) else 1.0
+			depth[material] = max((self.parts.depth.industry_depth(gate(recipe)) if gate(recipe) else 1.0
 			                       for _tile, recipe in found), default=0.0)
 			days = needs.producers_memo("input_days", (year, material, base_tile), lambda: self.days_from_producers(found))
 			lead[material] = None if days is None else days / CIVIL_DAYS_PER_YEAR

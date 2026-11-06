@@ -14,9 +14,11 @@ Standalone: the economy records and the carriage table.
 import math
 from typing import Dict, List, Mapping, Optional, Sequence, Tuple
 
-from .accounts import DeliveredMove
+from sim.unit_conversions import KILOGRAMS_PER_TONNE
+from sim.book import DeliveredMove
 from .market_memory import KEY_SEPARATOR as MARKET_KEY_SEPARATOR
 from .merchants import Merchant
+from .setup import opening_price_today
 from .types import EDGE_CONSUMPTION, GoodId, GoodsMove, TileId
 
 CARRIER_ACCOUNT_PREFIX = "carriers:"
@@ -70,18 +72,18 @@ def table(teams: Mapping[str, Mapping], uses: Mapping[GoodId, Mapping], lives: M
 
 
 class Wear:
-    """The carrier units and team-days a tonne wears on any haul of a carriage table, at the return-trip
+    """The carrier units a tonne wears on any haul of a carriage table, at the return-trip
     emptiness `imbalance` leaves (the carriers' empty legs home wear them too)."""
 
     def __init__(self, setup, carriage, imbalance: float):
         self.setup, self.carriage, self.imbalance = setup, carriage, imbalance
-        self._rows: Dict[Tuple[TileId, TileId], Tuple[Dict[GoodId, float], Dict[str, float]]] = {}
+        self._rows: Dict[Tuple[TileId, TileId], Dict[GoodId, float]] = {}
 
-    def _worn(self, source: TileId, destination: TileId):
+    def units_per_tonne(self, source: TileId, destination: TileId) -> Dict[GoodId, float]:
+        """{carrier good: units worn} carrying one tonne from `source` to `destination`."""
         found = self._rows.get((source, destination))
         if found is None:
             units: Dict[GoodId, float] = {}
-            days: Dict[str, float] = {}
             haul = self.carriage.haul(source, destination)
             geography_days = dict(haul.team_days_by_mode)
             tonne_km_by_mode = dict(haul.km_by_mode)
@@ -91,19 +93,10 @@ class Wear:
                     continue
                 # the days are geography's, at each leg's pace; the carriers' empty legs home work them too
                 worked = geography_days.get(mode, tonne_km_by_mode[mode] / per_day) * (1.0 + self.imbalance)
-                days[mode] = days.get(mode, 0.0) + worked
                 for good, per_tonne_km in rows:
                     units[good] = units.get(good, 0.0) + worked * per_tonne_km * per_day
-            found = self._rows[(source, destination)] = (units, days)
+            found = self._rows[(source, destination)] = units
         return found
-
-    def units_per_tonne(self, source: TileId, destination: TileId) -> Dict[GoodId, float]:
-        """{carrier good: units worn} carrying one tonne from `source` to `destination`."""
-        return self._worn(source, destination)[0]
-
-    def team_days_per_tonne(self, source: TileId, destination: TileId) -> Dict[str, float]:
-        """{mode: team-days worked} carrying one tonne from `source` to `destination`."""
-        return self._worn(source, destination)[1]
 
 
 def wears(setup) -> bool:
@@ -111,17 +104,14 @@ def wears(setup) -> bool:
     return bool(setup.carriage_carriers)
 
 
-def exposure(wear: Wear, moves: Sequence[DeliveredMove], specs) -> Tuple[Dict[GoodId, float], Dict[str, float]]:
-    """({carrier good: units worn}, {mode: team-days}) by the shipments `moves` carried."""
+def exposure(wear: Wear, moves: Sequence[DeliveredMove], specs) -> Dict[GoodId, float]:
+    """{carrier good: units worn} by the shipments `moves` carried."""
     units: Dict[GoodId, float] = {}
-    days: Dict[str, float] = {}
     for move in moves:
-        tonnes = move.quantity * specs[move.good].unit_mass_kg / 1000.0
+        tonnes = move.quantity * specs[move.good].unit_mass_kg / KILOGRAMS_PER_TONNE
         for good, per_tonne in wear.units_per_tonne(move.tile, move.receiver_tile).items():
             units[good] = units.get(good, 0.0) + tonnes * per_tonne
-        for mode, per_tonne in wear.team_days_per_tonne(move.tile, move.receiver_tile).items():
-            days[mode] = days.get(mode, 0.0) + tonnes * per_tonne
-    return units, days
+    return units
 
 
 def carrier_goods(setup) -> List[GoodId]:
@@ -152,18 +142,33 @@ def settle(merchant: Merchant, book, goods: Sequence[GoodId], units_worn: Mappin
     return moves + worn
 
 
-def last_prices(setup, record) -> Dict[GoodId, float]:
-    """Each carrier good's price last year, averaged over the areas that cleared it, else the opening's."""
+def _weighted_mean(rows: Sequence[Tuple[float, float]]) -> float:
+    """The mean of (price, weight) rows by weight; the plain mean when no row has a weight."""
+    total = math.fsum(weight for _price, weight in rows)
+    if total <= 0.0:
+        return math.fsum(price for price, _weight in rows) / len(rows)
+    return math.fsum(price * weight for price, weight in rows) / total
+
+
+def last_prices(setup, memory, weights: Mapping[str, float]) -> Dict[GoodId, float]:
+    """Each carrier good's price last year, the mean over the areas that cleared it (quotes are no one's payment)
+    weighted by what each usually trades (`weights`, by market key; equal where none is known), else the opening's;
+    a good with neither is left out."""
     wanted = set(carrier_goods(setup))
-    seen: Dict[GoodId, List[float]] = {}
-    for key, price in sorted(record.memory.prices.items()):
+    seen: Dict[GoodId, List[Tuple[float, float]]] = {}
+    for key, price in sorted(memory.cleared_prices.items()):
         good = key.split(MARKET_KEY_SEPARATOR, 1)[0]
         if good in wanted and price > 0.0:
-            seen.setdefault(good, []).append(price)
-    return {good: math.fsum(seen[good]) / len(seen[good]) if good in seen else setup.opening_prices.get(good, 0.0)
-            for good in wanted}
+            seen.setdefault(good, []).append((price, weights.get(key, 0.0)))
+    prices = {good: _weighted_mean(seen[good]) if good in seen else opening_price_today(setup, memory, good)
+              for good in wanted}
+    return {good: price for good, price in prices.items() if price is not None}
 
 
-def money_per_tonne(prices: Mapping[GoodId, float], wear: Wear, source: TileId, destination: TileId) -> float:
-    """What the carriers a tonne wears on this haul cost at `prices` (`last_prices`)."""
-    return math.fsum(units * prices.get(good, 0.0) for good, units in wear.units_per_tonne(source, destination).items())
+def money_per_tonne(prices: Mapping[GoodId, float], wear: Wear, source: TileId, destination: TileId) -> Optional[float]:
+    """What the carriers a tonne wears on this haul cost at `prices` (`last_prices`); None when a carrier worn has no
+    price."""
+    worn = wear.units_per_tonne(source, destination)
+    if any(good not in prices for good, units in worn.items() if units > 0.0):
+        return None
+    return math.fsum(units * prices[good] for good, units in worn.items() if units > 0.0)

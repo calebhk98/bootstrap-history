@@ -9,7 +9,7 @@ Nothing it publishes is cached: the agents' shared arrears rule writes `interest
 through the household's `arrears_book`, and every answer reads the economy, the actors' book and the household directly."""
 from sim.assembly.api import QUOTE, ModuleSpec, PhaseHook, ViewSpec
 from sim.actors.api import SetLenderOffers, SettleLenderInterest
-from sim.ledger.api import NoteHolderBooking, NoteSeatCash, SettleWithEdge, WithdrawHouseholdMoney
+from sim.ledger.api import NoteHolderBooking, NoteSeatCash, WriteOffHouseholdDebt, WithdrawHouseholdMoney
 from sim.markets.api import FoundBankFromOutside
 from sim.polity.api import SetReputation
 from sim.projects.api import HaltActiveProjects, ReviewVentures
@@ -22,10 +22,10 @@ from .module import Finance
 from .state import FinanceSeat
 
 READS_BY_OWNER = {
-	"workforce": ("staff", "money_per_labour_hour", "labour_market", "wage_bill", "household_dependant_people", "hours_for_sale",
+	"workforce": ("staff", "money_per_labour_hour", "labour_market", "wage_bill", "wages_charged_last_year", "household_dependant_people", "hours_for_sale",
 	              "best_wage_trade", "work_for_wages_dry_run", "standing_job_pay"),
 	"actors": ("cast", "cast_state", "state_treasury", "actor_world", "lender_offers_made", "cash_and_deposit", "loans_out", "debt_owed"),
-	"markets": ("sale_quote", "agent_rate", "agent_credit_room", "agent_economy_opened", "household_bill_per_person"),
+	"markets": ("sale_quote", "agent_rate", "agent_credit_room", "agent_fundable_amount", "agent_risk_premium", "agent_lender_listing", "agent_economy_opened", "household_bill_per_person"),
 	"resources": ("forest_hectares", "mine_operating_cost", "mine_capacity", "mine_workings", "mine_working_cost"),
 	"production": ("held_trade", "revenue_capacity", "revenue_estimate", "upkeep"),
 	"scenario": ("year", "civilisation", "game_config", "money_text"),
@@ -47,12 +47,14 @@ MODULE_SPECS = (ModuleSpec(
 	publishes=(
 		ViewSpec("market_rate", "market_rate", **_LIVE),
 		ViewSpec("credit_room", "credit_room", kind=QUOTE),
-		ViewSpec("state_lending", "state_lending", **_LIVE),
+		ViewSpec("fundable_amount", "fundable_amount", kind=QUOTE),
+		ViewSpec("risk_premium", "risk_premium", kind=QUOTE),
 		ViewSpec("households_loanable_funds", "households_loanable_funds", **_LIVE),
 		ViewSpec("lent_share", "lent_share", **_LIVE),
 		ViewSpec("capital_market_report", "capital_market_report", **_SEAT),
 		ViewSpec("debt_status", "debt_status", **_SEAT),
 		ViewSpec("debt_interest_rate", "debt_interest_rate", **_SEAT),
+		ViewSpec("household_rate_on_loan", "household_rate_on_loan", kind=QUOTE, seat_scoped=True),
 		ViewSpec("debt_service_share_of_surplus", "debt_service_share_of_surplus", **_LIVE),
 		ViewSpec("credit_limit", "credit_limit", kind=QUOTE, seat_scoped=True),
 		ViewSpec("credit_line_sought", "credit_line_sought", kind=QUOTE, seat_scoped=True),
@@ -77,7 +79,7 @@ MODULE_SPECS = (ModuleSpec(
 		ViewSpec("purchase_remedies_text", "purchase_remedies_text", kind=QUOTE, seat_scoped=True),
 	),
 	applies=(
-		(commands.RefreshLenderOffers, "refresh_lender_offers"), (commands.DefaultOnDebt, "apply_default_on_debt"),
+		(commands.RefreshLenderOffers, "refresh_lender_offers"),
 		(commands.ChargeInterest, "apply_charge_interest"), (commands.ShedLossMakers, "apply_shed_loss_makers"),
 		(commands.WarnNearLimit, "apply_warn_near_limit"), (commands.EnforceCreditLimit, "apply_enforce_credit_limit"),
 		(commands.JudgeInsolvency, "judge_insolvency"), (commands.ServeBondageYear, "serve_bondage_year"),
@@ -85,7 +87,7 @@ MODULE_SPECS = (ModuleSpec(
 	),
 	phases=(PhaseHook("credit_limit", "step_credit_limit"),),
 	reads=tuple(name for names in READS_BY_OWNER.values() for name in names),
-	sends=(RecordEvent, SetReputation, SettleWithEdge, WithdrawHouseholdMoney, MothballMines, BleedStaff, DisperseDependants, Manumit,
+	sends=(RecordEvent, SetReputation, WriteOffHouseholdDebt, WithdrawHouseholdMoney, MothballMines, BleedStaff, DisperseDependants, Manumit,
 	       HaltActiveProjects, ReviewVentures, NoteSeatCash, NoteHolderBooking, SetLenderOffers, SettleLenderInterest,
 	       FoundBankFromOutside),
 ),)

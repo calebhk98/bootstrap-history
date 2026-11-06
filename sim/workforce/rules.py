@@ -4,17 +4,10 @@ import math
 HANDS_TOLERANCE = 1e-9      # a shortfall of hands below this is arithmetic noise, not a person missing
 
 
-def surviving_people(dice, headcount: float, survival_share: float) -> float:
-	"""How many of `headcount` people survive a shock: each is rolled one by one against `survival_share`, so headcounts
-	stay whole. `dice` is the game's random source."""
-	people = int(round(headcount))
-	return float(sum(1 for _ in range(people) if dice.random() >= 1.0 - survival_share))
-
-
-def wage_index_of(base_index, scarcity_elasticity, population_scale, unshocked_scale):
-	"""The base index raised in proportion to the shortfall of the population scale below its unshocked trend."""
-	shortfall = max(0.0, 1.0 - population_scale / unshocked_scale)
-	return base_index * (1.0 + scarcity_elasticity * shortfall)
+def surviving_people(headcount: float, survival_share: float) -> float:
+	"""How many of `headcount` people survive a shock: the share of them, fractions kept (a staff is full-time equivalents,
+	hours over the working year, not whole persons)."""
+	return headcount * survival_share
 
 
 def wage_materials_of(staple, trade_registry):
@@ -63,11 +56,11 @@ def dependant_people(kin_and_retainers, freedmen, slaves):
 	return kin_and_retainers + freedmen + slaves
 
 
-def living_cost_charged(living_cost, dependants_beyond_means, wages_prepaid):
-	"""The living cost to pay this year: the whole cost less the dependants the income cannot carry, less the wages already
-	paid in advance (never below zero for the advance: an advance larger than the cost nets it to zero)."""
+def living_cost_charged(living_cost, dependants_beyond_means, wages_paid_in_clearing):
+	"""The living cost the household pays itself this year: the whole cost less the dependants the income cannot carry, less
+	the staff wages the labour core's clearing pays from the household's purse (never below zero)."""
 	carried = living_cost - dependants_beyond_means
-	return carried - min(carried, wages_prepaid)
+	return carried - min(carried, wages_paid_in_clearing)
 
 
 def market_pressure_after_a_year(pressure, kept_share, flat_fade):
@@ -90,5 +83,5 @@ def people_to_free(slaves, share_divisor):
 
 
 def opening_wage_index(civilisation):
-	"""The wage index the civilisation opens on (the index is measured against it); one when the file names none."""
-	return float(civilisation.get("wage_index", 1.0))
+	"""The wage index the civilisation opens on (the index is measured against it); its file states it."""
+	return float(civilisation["wage_index"])

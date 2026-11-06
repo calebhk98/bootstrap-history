@@ -24,20 +24,20 @@ def served_tonnes(registry: Any) -> Dict[Tuple[str, str], float]:
 def candidate_routes(registry: Any, world: Any) -> List[Tuple[float, str, Dict[str, Any]]]:
 	"""(yearly gain, key, route) for each route that pays an entrant, best first. The cargo is what
 	the pooled capital buys, within the buyers' depth no trader already serves."""
-	capital_limit = world.society_output() * ENTREPRENEURIAL_CAPITAL_SHARE
-	capital_rate = world.market_rate()
+	capital_limit = world.revenue.society_output() * ENTREPRENEURIAL_CAPITAL_SHARE
+	capital_rate = world.credit.market_rate()
 	served = served_tonnes(registry)
 	found = []
-	for material in sorted(world.trade_materials()):
-		sources = sorted(world.trade_places(None))
+	for material in sorted(world.trade.trade_materials()):
+		sources = sorted(world.trade.trade_places(None))
 		for source, destination, terms in gaining_routes(
-				world, material, sources, lambda place: sorted(world.trade_places(place))):
+				world, material, sources, lambda place: sorted(world.trade.trade_places(place))):
 			key = route_key(material, source, destination)
 			tonnes = capital_limit / terms["outlay"]
 			if price_answers(world, material, destination):
 				tonnes = paying_tonnes(world, source, destination, material, terms, tonnes, capital_rate)
 			else:
-				unserved = world.market_depth(material, destination) * TRADER_DEPTH_SHARE - served.get((material, destination), 0.0)
+				unserved = world.trade.market_depth(material, destination) * TRADER_DEPTH_SHARE - served.get((material, destination), 0.0)
 				tonnes = min(unserved, tonnes)
 			if tonnes <= 0.0:
 				continue
@@ -68,8 +68,8 @@ def trader_entry(registry: Any, world: Any) -> List[str]:
 			number += 1
 		trader_id = "trader:%d" % number
 		trader = registry.add(trader_id, ActorRecord(
-			kind="trader", name=trader_id, location=route["source"], founded_year=world.year,
-			country=world.country_of_place(route["source"])))
+			kind="trader", name=trader_id, location=route["source"], founded_year=world.setting.year,
+			country=world.trade.country_of_place(route["source"])))
 		ledger.transfer(registry.state.edge(EDGE_POOLED_CAPITAL), trader, route["capital"], EDGE_POOLED_CAPITAL)
 		founded.append(trader_id)
 	return founded

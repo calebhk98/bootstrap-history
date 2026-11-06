@@ -9,8 +9,7 @@ economy's coin, converted by `coin_per_unit`.
 """
 from sim.economy import api as economy_api
 from sim.economy.api import EDGE_CARGO, AgentOrders, Bid, GoodsMove, Offer, Transfer, external_edge
-
-LANDING, TAKING = "in", "out"
+from sim.foreign_trade.api import LANDING, TAKING
 
 
 def _enters_book(economy, leg):
@@ -31,12 +30,15 @@ def border_accounts(economy, legs):
 def cargo_orders(economy, legs, tonnes_per_unit):
     """(goods moves, {account: orders}, money transfers) that put the legs' cargo in the book this year."""
     moves, orders, fundings = [], {}, []
-    tile, coin = economy.setup.port_tile, economy.setup.coin_per_unit
+    tile, coin = economy_api.port_tile(economy), economy_api.coin_per_unit(economy)
     for leg in sorted(legs, key=lambda each: each["id"]):
         if not _enters_book(economy, leg):
             continue
         good, account = leg["material"], leg["id"]
-        units = leg["tonnes"] / tonnes_per_unit(good)
+        per_unit = tonnes_per_unit(good)
+        if per_unit is None:
+            continue
+        units = leg["tonnes"] / per_unit
         area = economy.area_map.area_of(good, tile)
         if leg["kind"] == LANDING:
             moves.append(GoodsMove(external_edge(leg["partner"]), account, good, tile, units, "cargo landed"))
@@ -44,7 +46,7 @@ def cargo_orders(economy, legs, tonnes_per_unit):
             continue
         budget = leg["paid"] / coin
         worth_per_unit = (leg["received"] - leg.get("carriage", 0.0)) / coin / units
-        fundings.append(Transfer(EDGE_CARGO, account, economy.setup.currency_id, budget, "cargo funds"))
+        fundings.append(Transfer(EDGE_CARGO, account, economy_api.currency_id(economy), budget, "cargo funds"))
         # a merchant's order is for a fixed quantity (elasticity zero), at most what the cargo will fetch abroad
         orders[account] = AgentOrders(bids=(Bid(account, good, area, tile, 0.0, units, budget / units, 0.0, budget,
                                                 maximum_price=worth_per_unit),))
@@ -55,21 +57,24 @@ def close_cargo_accounts(economy, legs, tonnes_per_unit):
     """Close each booked leg's account after the clear; {leg id: {"tonnes": tonnes the market took from a landing
     cargo or sold to a taking one, "money": a landing cargo's proceeds or a taking cargo's unspent funds}}."""
     results, moves, transfers = {}, [], []
-    coin, currency = economy.setup.coin_per_unit, economy.setup.currency_id
+    coin, currency = economy_api.coin_per_unit(economy), economy_api.currency_id(economy)
     for leg in sorted(legs, key=lambda each: each["id"]):
         if not _enters_book(economy, leg):
             continue
         good, account, edge = leg["material"], leg["id"], external_edge(leg["partner"])
+        per_unit = tonnes_per_unit(good)
+        if per_unit is None:
+            continue
         held = economy_api.account_holdings(economy, account)["goods"].get(good, {})
         money = max(0.0, economy_api.account_balance(economy, account))
-        units = leg["tonnes"] / tonnes_per_unit(good)
+        units = leg["tonnes"] / per_unit
         held_units = sum(held.values())
         moves.extend(GoodsMove(account, edge, good, tile, quantity, "cargo returned" if leg["kind"] == LANDING
                                else "cargo taken") for tile, quantity in sorted(held.items()) if quantity > 0.0)
         if money > 0.0:
             transfers.append(Transfer(account, EDGE_CARGO, currency, money, "cargo takings"))
         moved_units = units - held_units if leg["kind"] == LANDING else held_units
-        results[account] = {"tonnes": max(0.0, moved_units) * tonnes_per_unit(good), "money": money * coin}
+        results[account] = {"tonnes": max(0.0, moved_units) * per_unit, "money": money * coin}
     economy_api.move_goods(economy, moves)
     economy_api.post_transfers(economy, transfers)
     return results

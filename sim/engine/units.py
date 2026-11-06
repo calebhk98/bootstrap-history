@@ -115,7 +115,7 @@ def unit_context(sim: Any) -> Dict[str, float]:
     """The per-game numbers some units need; none for no game."""
     if sim is None:
         return {}
-    return {"hours_per_coin": 1.0 / sim.labour.money_per_labour_hour()}
+    return {"hours_per_coin": 1.0 / sim.view("money_per_labour_hour")()}
 
 
 def field_rule(reg: Registry, field: str, parent: Optional[str] = None) -> Optional[Dict[str, Any]]:
@@ -172,12 +172,17 @@ def available_units(reg: Registry, dimension: str, civ_id: Optional[str]) -> Lis
             and (not spec.get("civilisations") or civ_id in spec["civilisations"])]
 
 
+def civ_of(sim: Any) -> Optional[Mapping[str, Any]]:
+    """The game's civilisation record; None when `sim` is None: a figure formatted without a game has no civilisation."""
+    return None if sim is None else sim.civ
+
+
 def _format(dimension: str, base_value: float, sim: Any, preference: Optional[str]) -> Optional[Tuple[float, str, str]]:
     chosen = (chosen_units() if preference is None else {dimension: preference}).get(dimension)
     reg = registry()
     if not chosen or chosen not in reg["units"]:
         return None
-    civ = getattr(sim, "civ", None)   # sim is None when a tool formats a figure without a game
+    civ = civ_of(sim)
     name, symbol = unit_label(reg["units"][chosen], civ)
     return from_base(reg, chosen, base_value, unit_context(sim)), name, symbol
 
@@ -207,7 +212,7 @@ def _format_compound(rule: Mapping[str, Any], value: float, sim: Any):
     """(value, name, symbol) of a quantity per another dimension (money per mass), each part in its chosen unit."""
     reg = registry()
     context = unit_context(sim)
-    civ = getattr(sim, "civ", None)   # sim is None when a tool formats a figure without a game
+    civ = civ_of(sim)
     parts = []
     for dimension, native in ((rule["dimension"], rule["native"]), (rule["per_dimension"], rule["per_native"])):
         chosen = chosen_units().get(dimension)

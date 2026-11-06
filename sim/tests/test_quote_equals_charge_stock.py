@@ -1,9 +1,8 @@
 """Stock bought from a partner is charged what it was quoted. The quote handlers (`quote_living_stock`, `quote_smuggled_stock`) and the
 settlements (`BuyStock`, `SmuggleStock`, applied by the living-stock module) read one terms dict, so the figure the quote shows is the figure the
-buyer pays, caught or not. The module is built by the harness, the screen runs on a stand-in game; the dispatcher-wide table is test_quote_matches_charge_scenario."""
+buyer pays, caught or not. The module is built by the harness, the screen runs on a stand-in game."""
 QUICK_TOPIC = True
 
-from types import SimpleNamespace
 from unittest import mock
 
 from .harness import check
@@ -14,10 +13,10 @@ from sim.ledger.api import ChangeStock, PayEdge
 from sim.living_stock.api import BuyStock, SmuggleStock
 from sim.living_stock.module import LivingStock
 from sim.polity.api import RaiseScandal
+from sim.markets.unit_mass import unit_mass_kg
 from sim.refusal import Refusal
 from sim.tests import module_harness
 from sim.ui.proto import stock_purchases
-from sim.tests.ui_stand_in import Game
 
 MATERIAL = "ramie_stock_kg"
 COST = 123.456
@@ -30,7 +29,7 @@ def terms(**more):
 
 def stock_module(can_pay=True, has_government=False):
     return module_harness.build(LivingStock, views={
-        "can_pay": lambda cost: can_pay, "material_commodity": lambda material: material, "year": 100,
+        "can_pay": lambda cost: can_pay, "unit_mass_kg": unit_mass_kg, "material_commodity": lambda material: material, "year": 100,
         "acting_balance": 500.0, "partner": lambda partner: {"has_government": has_government, "civ": {}, "stock_taken": {}}})
 
 
@@ -92,28 +91,3 @@ check("a taker who cannot pay the carrying is refused and charged nothing",
       and module_harness.sent(broke) == [])
 quoted = stock_purchases.quote_smuggled_stock(Screen(terms()), {"material": MATERIAL}, 100.0)
 check("the smuggling quote shows the terms' cost and chance of capture", quoted["to_buy_it"] == round(COST, 1) and quoted["chance_caught"] == 0.25, quoted)
-
-
-# --- stock sold at the market: the receipt is the figure the cash-raising refusal quoted
-class Seller:
-    party_id = "seller"
-
-    def __init__(self):
-        self.received, self.handed = [], []
-
-    def hand_over(self, key, tonnes):
-        self.handed.append((key, tonnes))
-
-    def receive(self, money, purpose):
-        self.received.append((money, purpose))
-
-
-from sim.markets.goods_market import GoodsMarket  # noqa: E402
-
-market = Game(quote_sell=lambda material, tonnes, seller=None: ("iron_stock", 25.0, 750.0), note_sale=lambda *args: None)
-seller = Seller()
-sold = GoodsMarket.sell(market, seller, "iron", 40.0)
-check("a sale hands over what the market took and is paid what the sale quote said",
-      sold == 25.0 and seller.handed == [("iron_stock", 25.0)] and seller.received == [(750.0, "materials sold")], (sold, seller.handed, seller.received))
-nothing = Game(quote_sell=lambda material, tonnes, seller=None: (None, 0.0, 0.0))
-check("a sale the market will not take pays nothing", GoodsMarket.sell(nothing, Seller(), "iron", 40.0) == 0.0)

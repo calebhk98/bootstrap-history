@@ -13,8 +13,7 @@ from typing import Any, Callable, Dict, FrozenSet, Iterable, Mapping, Optional, 
 
 from sim.prices import disposal_cost, solve_prices_core as core, solve_prices_round
 from sim.prices import prices as price_engine
-
-LAND_MATERIAL = "hectare_land"
+from sim.world.land import LAND_MATERIAL
 
 Techniques = Union[FrozenSet[str], Iterable[str], str]
 
@@ -56,17 +55,33 @@ class _Prices:
         return self.get(material) is not None
 
 
-class _Function:
-    """A mapping read through a function, for the lookups the cost arithmetic does by key."""
+class _Wages:
+    """The wage of each trade read through a function; a trade it has no wage for raises KeyError, so a recipe that
+    needs that trade has no cost rather than a free one."""
 
-    def __init__(self, function: Callable[[str], float]):
+    def __init__(self, function: Callable[[str], Optional[float]]):
+        self.function = function
+
+    def get(self, key: str, default: Optional[float] = None) -> Optional[float]:
+        wage = self.function(key)
+        return default if wage is None else wage
+
+    def __getitem__(self, key: str) -> float:
+        wage = self.function(key)
+        if wage is None:
+            raise KeyError(key)
+        return wage
+
+
+class _Rents:
+    """The rent of a good or of land through a function; a good it names none for pays none."""
+
+    def __init__(self, function: Callable[[str], Optional[float]]):
         self.function = function
 
     def get(self, key: str, default: float = 0.0) -> float:
-        value = self.function(key)
-        return default if value is None else value
-
-    __getitem__ = get
+        rent = self.function(key)
+        return default if rent is None else rent
 
 
 @dataclass
@@ -96,7 +111,7 @@ def _catalogue(production: Mapping[str, Any], techniques: Techniques) -> _Catalo
     if entries is None:
         entries, _unreached, _unclassified = core.techniques_available_to(production, gates)
     required = core.capability_required_grades(entries)
-    built = _Catalogue(entries, core.build_producers_index(entries), core.capability_floor_by_carrier(entries),
+    built = _Catalogue(entries, core.build_producers_index(entries), core.capability_floor_by_carrier(),
                        required, solve_prices_round.band_suppliers(required, entries))
     _CATALOGUES[key] = (production, built)
     return built
@@ -105,7 +120,7 @@ def _catalogue(production: Mapping[str, Any], techniques: Techniques) -> _Catalo
 def cost_of_making(good: str,
                    techniques: Techniques,
                    input_price_of: Callable[[str], Optional[float]],
-                   wage_of: Callable[[str], float],
+                   wage_of: Callable[[str], Optional[float]],
                    rate: float,
                    rent_of: Optional[Callable[[str], float]] = None,
                    reference_price_of: Optional[Callable[[str], Optional[float]]] = None,
@@ -115,8 +130,9 @@ def cost_of_making(good: str,
     """The cheapest cost of one unit of `good`, or None when nothing the techniques allow can make it or an
     input has no price.
 
-    `techniques` is the held gate nodes, or one recipe id to cost that recipe alone. `rent_of(key)` is money
-    per unit of an extracted good (and per hectare-year of land); None charges none. `reference_price_of(good)`
+    `techniques` is the held gate nodes, or one recipe id to cost that recipe alone. `wage_of(trade)` is money an
+    hour, None where the trade has no wage (a recipe needing it has no cost). `rent_of(key)` is money per unit
+    of an extracted good (and per hectare-year of land); None charges none. `reference_price_of(good)`
     is what a joint run's outputs are worth, to split the run's cost by value; an output it gives none for is
     valued at what its cheapest sole-output route costs now, else by mass (sim/prices/joint_allocation.py).
     `include_plant` False is the running cost of a plant already built. `civilization` supplies the state's
@@ -125,19 +141,22 @@ def cost_of_making(good: str,
     production = production if production is not None else price_engine.default_production_entries()
     catalogue = _catalogue(production, techniques)
     prices = _Prices(input_price_of, rent_of)
-    wages = _Function(wage_of)
-    rents = _Function(rent_of) if rent_of is not None else {}
+    wages = _Wages(wage_of)
+    rents = _Rents(rent_of) if rent_of is not None else {}
     dump_distance = price_engine.waste_dump_minimum_distance(civilization)
-    bands = solve_prices_round.band_prices(
-        catalogue.required_grades, catalogue.suppliers, prices, wages, rents, rate)
+    try:
+        bands = solve_prices_round.band_prices(
+            catalogue.required_grades, catalogue.suppliers, prices, wages, rents, rate, dump_distance)
+    except KeyError:     # a supplier of a graded carrier needs a trade with no wage: no grade of it has a price
+        bands = {carrier: {} for carrier in catalogue.required_grades}
 
     def bill(recipe_id: str) -> Optional[Dict[str, Any]]:
-        return _bill(recipe_id, catalogue.available[recipe_id], prices, wages, rents, rate, bands, include_plant)
+        return _bill(recipe_id, catalogue.available[recipe_id], prices, wages, rents, rate, bands, include_plant, dump_distance)
 
     best = None
     for recipe_id in catalogue.producers_of.get(good, ()):
         entry = catalogue.available[recipe_id]
-        if not core._meets_capability_floor(good, entry, catalogue.floor_by_carrier):
+        if not core.meets_capability_floor(good, entry, catalogue.floor_by_carrier):
             continue
         if civilization is not None and not price_engine.climate_allows_entry(entry, civilization):
             continue
@@ -150,8 +169,8 @@ def cost_of_making(good: str,
             references = _references(outputs, reference_price_of, catalogue, bill)
         disposal_costs = (disposal_cost.disposal_cost_by_material(outputs, prices, rate, dump_distance)
                           if len(outputs) > 1 else None)
-        unit_cost = core._allocate_output_prices(
-            outputs, prices, costed["total"], references, rate, disposal_costs)[good]
+        unit_cost = core.allocate_output_prices(
+            outputs, prices, costed["total"], references, rate, disposal_costs, dump_distance)[good]
         if best is None or unit_cost < best[0]:
             best = (unit_cost, recipe_id, costed)
     if best is None:
@@ -184,18 +203,26 @@ def _references(outputs: Mapping[str, float], reference_price_of, catalogue: _Ca
     return references
 
 
-def _bill(recipe_id: str, entry: Mapping[str, Any], prices: _Prices, wages: _Function, rents, rate: float,
-          bands, include_plant: bool) -> Optional[Dict[str, Any]]:
+def _bill(recipe_id: str, entry: Mapping[str, Any], prices: _Prices, wages: _Wages, rents, rate: float,
+          bands, include_plant: bool, dump_distance: float) -> Optional[Dict[str, Any]]:
     """The cost of one batch of a recipe by source, or None when an input has no price."""
+    try:
+        return _bill_priced(entry, prices, wages, rents, rate, bands, include_plant, dump_distance)
+    except KeyError:     # a trade of the recipe or its plant has no wage
+        return None
+
+
+def _bill_priced(entry: Mapping[str, Any], prices: _Prices, wages: _Wages, rents, rate: float, bands,
+                 include_plant: bool, dump_distance: float) -> Optional[Dict[str, Any]]:
     inputs = entry.get("inputs") or {}
     waste_costs = None
     if any(prices.get(material, 0.0) < 0.0 for material in inputs):
-        waste_costs = disposal_cost.disposal_cost_by_material(inputs, prices, rate)
-    material_cost = core._material_cost_hours(inputs, prices, waste_costs)
-    land_cost = core._land_cost_hours(entry, prices)
-    capital_cost = core._capital_cost_hours_per_unit(
+        waste_costs = disposal_cost.disposal_cost_by_material(inputs, prices, rate, dump_distance)
+    material_cost = core.batch_material_cost_hours(inputs, prices, waste_costs)
+    land_cost = core.batch_land_cost_hours(entry, prices)
+    capital_cost = core.capital_cost_hours_per_unit(
         (entry.get("capital") or []) if include_plant else [], prices, wages, rate)
-    energy_cost = core._energy_cost_hours(entry, prices, bands)
+    energy_cost = core.batch_energy_cost_hours(entry, prices, bands)
     if None in (material_cost, land_cost, capital_cost, energy_cost):
         return None
     outputs = entry.get("outputs") or {}

@@ -3,10 +3,10 @@ and what the cash could not repay becomes the lenders' loss."""
 import math
 from typing import Dict, List, Tuple
 
-from sim.contracts import TERM_LOAN
 
-from . import credit_claims, ownership
-from .accounts import ROUNDING_SHARE
+from . import producer_table
+from . import bondage_hours, credit_claims, ownership
+from sim.book import ROUNDING_SHARE
 from .credit import Default
 from .types import GoodsMove, Transfer
 
@@ -16,7 +16,7 @@ def exit_producer(record, producer_id: str, payout: List[Transfer]) -> List[Tran
     as ownership shares dividends); move the goods held to the owner; write off the unpaid debt as
     defaults and remove the producer. Returns the dividend payments made."""
     producer = record.producers[producer_id]
-    owed = [loan for loan in record.loans if loan.borrower == producer_id]
+    owed = [loan for loan in record.credit.loans if loan.borrower == producer_id]
     repayments, unpaid = _repay(record, producer_id, owed)
     record.book.transfer_many(repayments)
     repaid = math.fsum(transfer.amount for transfer in repayments)
@@ -31,14 +31,13 @@ def exit_producer(record, producer_id: str, payout: List[Transfer]) -> List[Tran
     defaults = [Default(loan.loan_id, loan.lender, loan.borrower, loan.currency, unpaid[loan.loan_id])
                 for loan in owed if unpaid[loan.loan_id] > 0.0]
     for lender, lost in credit_claims.losses_by_lender(defaults).items():
-        record.credit_losses[lender] = record.credit_losses.get(lender, 0.0) + lost
-    record.remembered_defaults = credit_claims.remember_defaults(record.remembered_defaults, defaults)
-    record.contracts.default(producer_id, TERM_LOAN)
-    record.worn_runs.pop(producer_id, None)
-    record.expansion_runs.pop(producer_id, None)
-    record.shares.pop(producer_id, None)
-    record.last_dividends.pop(producer_id, None)
-    del record.producers[producer_id]
+        record.credit.add_loss(lender, lost)
+    record.credit.remember(defaults)
+    record.credit.default_term_loans(producer_id)
+    record.credit.forget_producer(producer_id)
+    record.capital_markets.forget_producer(producer_id)
+    bondage_hours.release(record.unfree.bonded_held, producer_id)
+    producer_table.remove_producer(record.producers, producer_id)
     return paid
 
 

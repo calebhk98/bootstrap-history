@@ -1,10 +1,20 @@
 """The household need model as the module's views: the units households want, the basket the actors' budgets read, and the
 tonnes a year the home and the partner economies' households buy (rules in household_needs.py)."""
+from sim.assembly.api import Part
+
 from . import household_needs, need_substitutes
 from .constants import MEAN_INCOME_HOURS_PER_CAPITA
 
 
-class HouseholdNeeds:
+class HouseholdNeeds(Part):
+
+	def __init__(self, module):
+		super().__init__(module)
+		self._needs_served_by_mods = {}    # installed mod ids -> material -> the needs it serves; data, frozen for the game
+		self._climate_baskets = {}         # civilisation id -> (its household basket with the tiles' climate floors, the model); frozen for the game
+
+	def opening_population(self):
+		return float(self.needs.civilisation().get("population", self.needs.default_population()))
 
 	def _household_model(self):
 		return household_needs.household_model(self.needs.installed_mod_ids(), self.needs.household_need_data)
@@ -36,13 +46,6 @@ class HouseholdNeeds:
 		"""Whether the needs data names the material as serving some household need."""
 		return need_substitutes.serves_a_need(self._needs_served(), material)
 
-	def household_demand_units(self, prices_in_hours, population, income_per_capita):
-		"""{material: units a year} households (and what they buy through recipes) want at these labour-hour prices, with the
-		warmth, clothing and shelter floors the civilisation's tiles' climate sets."""
-		base, _final = self._household_model()
-		basket = self._civilisation_basket(base)
-		return household_needs.demand_by_material(base, prices_in_hours, population, income_per_capita, basket)
-
 	def household_basket(self):
 		"""The household need basket of the civilisation: the installed content's needs with the floors its tiles' climate sets."""
 		base, _final = self._household_model()
@@ -52,31 +55,18 @@ class HouseholdNeeds:
 		"""{material: tonnes a year} the home households buy at these prices (labour hours a unit), scaled to the opening's people."""
 		base, final = self._household_model()
 		population = self.opening_population()
-		units = household_needs.demand_by_material(base, prices_in_hours, population, MEAN_INCOME_HOURS_PER_CAPITA)
+		units = household_needs.demand_by_material(base, prices_in_hours, population, MEAN_INCOME_HOURS_PER_CAPITA,
+		                                           self._civilisation_basket(base))
 		return household_needs.budget_scaled_final_tonnes(units, prices_in_hours, population, final)
 
-	def partner_household_demand(self, civilization_id):
-		"""{material: tonnes a year} a civilisation's households buy at its own solved prices (remembered for the game)."""
-		answer = self._partner_demand.get(civilization_id)
-		if answer is None:
-			own = self.needs.partner_own_economy[civilization_id]
-			per_hour = own["money_per_labour_hour"]
-			prices_in_hours = {material: price / per_hour for material, price in own["prices_in_own_coin"].items() if price > 0.0}
-			population = float(self.needs.civilisation_record[civilization_id].get("population") or 0.0)
-			base, final = self._household_model()
-			units = household_needs.demand_by_material(base, prices_in_hours, population, MEAN_INCOME_HOURS_PER_CAPITA)
-			answer = self._partner_demand[civilization_id] = household_needs.budget_scaled_final_tonnes(
-				units, prices_in_hours, population, final)
-		return answer
-
-	def household_need_floors_per_person(self):
+	def _household_need_floors_per_person(self):
 		"""What one person's floor of each need costs a year on the seat's tile: the economy's prices and the tile's climate
 		floors (the need basket). While the economy opens, the same basket on the goods market."""
-		floors = self.economy.agent_need_floor_costs_at()
+		floors = self.parts.market_objects.economy.agent_need_floor_costs_at()
 		if floors:
 			return dict(floors)
-		return self.needs.actor_world().need_floor_costs_per_person_year()
+		return self.needs.actor_world().people.need_floor_costs_per_person_year()
 
 	def household_bill_per_person(self):
 		"""One person's yearly bill for every need's floor: the figure the founder and an economy household pay."""
-		return sum(self.household_need_floors_per_person().values())
+		return sum(self._household_need_floors_per_person().values())

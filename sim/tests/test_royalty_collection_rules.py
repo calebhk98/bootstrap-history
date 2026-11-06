@@ -8,7 +8,7 @@ from types import SimpleNamespace
 from sim.agents.api import ledger
 from sim.ledger.api import PayActor
 from sim.agents.licence import collect_patent_royalty, royalty_due
-from sim.actors.world_disclosure import DisclosureView
+from sim.actors.world_disclosure import Disclosure
 from sim.tests.world_stand_in import fake_needs
 from sim.seats.api import seat_royalties_due, seat_royalties_paid
 from sim.tests.harness import check
@@ -21,6 +21,8 @@ class Party:
 		self.actor_id = actor_id
 		self.money = money
 		self.record = SimpleNamespace(patents=patents or {}, royalty_owed=royalty_owed or {})
+
+	payments = property(lambda self: self)   # a stand-in party pays through itself
 
 	def debit(self, amount, purpose):
 		self.money -= amount
@@ -67,38 +69,38 @@ check("royalty_due: a licence with no royalty owes nothing", royalty_due(2000.0,
 
 # ---- collect_patent_royalty
 holder, firm = holder_with(110), firm_owing(0.1)
-paid = collect_patent_royalty(SimpleNamespace(year=100), finder(holder), firm, "loom", 2000.0)
+paid = collect_patent_royalty(SimpleNamespace(setting=SimpleNamespace(year=100)), finder(holder), firm, "loom", 2000.0)
 check("collect_patent_royalty: the licensee pays the holder the agreed share of takings",
       paid == 200.0 and holder.money == 300.0 and firm.money == 800.0, (paid, holder.money, firm.money))
 holder, firm = holder_with(110), firm_owing(0.1, money=20.0)
-paid = collect_patent_royalty(SimpleNamespace(year=100), finder(holder), firm, "loom", 2000.0)
+paid = collect_patent_royalty(SimpleNamespace(setting=SimpleNamespace(year=100)), finder(holder), firm, "loom", 2000.0)
 check("collect_patent_royalty: never more than the licensee's purse", paid == 20.0 and holder.money == 120.0 and firm.money == 0.0,
       (paid, holder.money, firm.money))
 holder, firm = holder_with(110), firm_owing(0.1, money=-5.0)
-paid = collect_patent_royalty(SimpleNamespace(year=100), finder(holder), firm, "loom", 2000.0)
+paid = collect_patent_royalty(SimpleNamespace(setting=SimpleNamespace(year=100)), finder(holder), firm, "loom", 2000.0)
 check("collect_patent_royalty: a licensee in debt pays nothing", paid == 0.0 and holder.money == 100.0 and firm.money == -5.0,
       (paid, holder.money, firm.money))
 holder, firm = holder_with(110), firm_owing(0.1)
-paid = collect_patent_royalty(SimpleNamespace(year=100), finder(holder), firm, "loom", 0.0)
+paid = collect_patent_royalty(SimpleNamespace(setting=SimpleNamespace(year=100)), finder(holder), firm, "loom", 0.0)
 check("collect_patent_royalty: no takings, no royalty", paid == 0.0 and holder.money == 100.0 and firm.money == 1000.0, paid)
 holder, firm = holder_with(110), firm_owing(0.1)
-paid = collect_patent_royalty(SimpleNamespace(year=111), finder(holder), firm, "loom", 2000.0)
+paid = collect_patent_royalty(SimpleNamespace(setting=SimpleNamespace(year=111)), finder(holder), firm, "loom", 2000.0)
 check("collect_patent_royalty: nothing once the patent has expired", paid == 0.0 and holder.money == 100.0, paid)
 holder, firm = holder_with(110), firm_owing(0.1)
-paid = collect_patent_royalty(SimpleNamespace(year=110), finder(holder), firm, "loom", 2000.0)
+paid = collect_patent_royalty(SimpleNamespace(setting=SimpleNamespace(year=110)), finder(holder), firm, "loom", 2000.0)
 check("collect_patent_royalty: the patent's last year still pays", paid == 200.0, paid)
 holder, firm = holder_with(110), Party("firm:3", 1000.0)
-paid = collect_patent_royalty(SimpleNamespace(year=100), finder(holder), firm, "loom", 2000.0)
+paid = collect_patent_royalty(SimpleNamespace(setting=SimpleNamespace(year=100)), finder(holder), firm, "loom", 2000.0)
 check("collect_patent_royalty: a firm that owes no royalty pays nothing", paid == 0.0 and holder.money == 100.0, paid)
 firm = firm_owing(0.1, holder="firm:9")
-paid = collect_patent_royalty(SimpleNamespace(year=100), finder(holder_with(110)), firm, "loom", 2000.0)
+paid = collect_patent_royalty(SimpleNamespace(setting=SimpleNamespace(year=100)), finder(holder_with(110)), firm, "loom", 2000.0)
 check("collect_patent_royalty: no holder found, nothing is paid", paid == 0.0 and firm.money == 1000.0, paid)
 holder = Party("firm:1", 100.0)
 firm = firm_owing(0.1)
-paid = collect_patent_royalty(SimpleNamespace(year=100), finder(holder), firm, "loom", 2000.0)
+paid = collect_patent_royalty(SimpleNamespace(setting=SimpleNamespace(year=100)), finder(holder), firm, "loom", 2000.0)
 check("collect_patent_royalty: a holder that no longer holds the patent is paid nothing", paid == 0.0 and holder.money == 100.0, paid)
 holder, firm = holder_with(110), firm_owing(0.1)
-paid = collect_patent_royalty(SimpleNamespace(year=100), finder(holder), firm, "wheel", 2000.0)
+paid = collect_patent_royalty(SimpleNamespace(setting=SimpleNamespace(year=100)), finder(holder), firm, "wheel", 2000.0)
 check("collect_patent_royalty: a royalty on one invention is not owed on another", paid == 0.0 and holder.money == 100.0, paid)
 
 # ---- seat_royalties_due
@@ -130,36 +132,38 @@ check("seat_royalties_paid: an empty purse pays nobody", seat_royalties_paid([("
 check("seat_royalties_paid: a licensee in debt pays nobody", seat_royalties_paid([("alpha", 100.0)], -5.0) == [])
 
 
-# ---- DisclosureView.collect_royalty: seats and the patent holder together, through the ledger
+# ---- Disclosure.collect_royalty: seats and the patent holder together, through the ledger
 def view_over(seats, parties, firm, year=100):
 	"""The view over written-out seats; the ledger's answer to `PayActor` is the ledger's own transfer from `firm` to the seat's party."""
 	seat_parties = {seat_id: Party(seat_id, 0.0) for seat_id in seats}
 	needs = fake_needs({PayActor: lambda command: ledger.transfer(firm, seat_parties[command.payee], command.amount, command.purpose)},
 	                   legacy_seats=seats, techniques_by_seat=lambda: seats,
 	                   disclosures={seat_id: held.disclosed for seat_id, held in seats.items()})
-	return SimpleNamespace(needs=needs, _holder=finder(*parties), year=year), seat_parties
+	part = Disclosure(SimpleNamespace(needs=needs, setting=SimpleNamespace(year=year)))
+	part._holder_of = finder(*parties)
+	return part, seat_parties
 
 
 firm, holder = firm_owing(0.1), holder_with(110)
 view, seat_parties = view_over({"alpha": seat(["loom"], [], {"firm:2": {"royalty": 0.2}})}, [holder], firm)
-paid = DisclosureView.collect_royalty(view, firm, "loom", 1000.0)
+paid = view.collect_royalty(firm, "loom", 1000.0)
 check("collect_royalty: the seat and the patent holder are each paid their share, and the firm pays both",
       paid == 300.0 and seat_parties["alpha"].money == 200.0 and holder.money == 200.0 and firm.money == 700.0,
       (paid, seat_parties["alpha"].money, holder.money, firm.money))
 firm = Party("firm:2", 1000.0)
 view, seat_parties = view_over({"alpha": seat(["loom"])}, [], firm)
-paid = DisclosureView.collect_royalty(view, firm, "loom", 1000.0)
+paid = view.collect_royalty(firm, "loom", 1000.0)
 check("collect_royalty: with no licence and no patent nobody is paid", paid == 0.0 and seat_parties["alpha"].money == 0.0 and firm.money == 1000.0, paid)
 firm = Party("firm:2", 1000.0)
 view, seat_parties = view_over({}, [], firm)
-check("collect_royalty: with no seats and no holder there is nothing to collect", DisclosureView.collect_royalty(view, firm, "loom", 1000.0) == 0.0 and firm.money == 1000.0)
+check("collect_royalty: with no seats and no holder there is nothing to collect", view.collect_royalty(firm, "loom", 1000.0) == 0.0 and firm.money == 1000.0)
 firm = firm_owing(0.1)
 view, _ = view_over({}, [holder_with(110)], firm)
-check("collect_royalty: a patent holder alone is paid", DisclosureView.collect_royalty(view, firm, "loom", 1000.0) == 100.0 and firm.money == 900.0)
+check("collect_royalty: a patent holder alone is paid", view.collect_royalty(firm, "loom", 1000.0) == 100.0 and firm.money == 900.0)
 firm = Party("firm:2", 150.0)
 two_seats = {"alpha": seat(["loom"], [], {"firm:2": {"royalty": 0.1}}), "beta": seat(["loom"], [], {"firm:2": {"royalty": 0.25}})}
 view, seat_parties = view_over(two_seats, [], firm)
-paid = DisclosureView.collect_royalty(view, firm, "loom", 1000.0)
+paid = view.collect_royalty(firm, "loom", 1000.0)
 check("collect_royalty: a firm short of money pays the seats only what its purse holds and never goes below zero",
       paid == 150.0 and seat_parties["alpha"].money == 100.0 and seat_parties["beta"].money == 50.0 and firm.money == 0.0,
       (paid, seat_parties["alpha"].money, seat_parties["beta"].money, firm.money))

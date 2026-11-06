@@ -66,10 +66,11 @@ check("the book shows opening plus causes equal to closing",
 # --- the cash figure reads its causes from the ledger: explain_figure on a written-out year
 from sim.ui import figures as figure_registry
 from sim.ui import figures_headline  # noqa: F401  (registers the cash figure)
+from sim.tests.interface_fixture import shipped_declared
 from sim.tests.ui_stand_in import Game
 
 this_year = {"venture revenue": 500.0, "living costs": -200.0}
-this_year_game = Game(year=101, view=lambda name: {"acting_balance": lambda: 1300.0, "cash_causes_since": lambda year: dict(this_year)}[name])
+this_year_game = Game(year=101, interface_declared=shipped_declared, view=lambda name: {"acting_balance": lambda: 1300.0, "cash_causes_since": lambda year: dict(this_year)}[name])
 last_year = [{"year": 100, "figures": {"cash": {"value": 1000.0, "components": {}, "flows": {}, "drivers": {}}}}]
 explained = figure_registry.explain_figure(this_year_game, "cash", last_year)
 check("the cash figure's change is this year's movement of the purse", explained["change"] == 300.0, explained)

@@ -28,7 +28,7 @@ from sim.ledger.module_spec import MODULE_SPECS
 from sim.seats.dealings import DEALING_FIELDS, Dealings
 from sim.seats.api import SetDealing
 from sim.ventures.api import AdoptPlant, ReleasePlant
-from sim.ventures.module import Ventures
+from sim.ventures.plants import Plants
 from sim.tests import module_harness
 
 
@@ -67,7 +67,7 @@ class MoneyHost:
             staff=lambda: {"employees": self.employees}, techniques_held=lambda: self.known,
             seat_dealings=_Keyed(lambda seat_id: {name: plain(getattr(self.dealings[seat_id], name)) for name in DEALING_FIELDS}),
             operating=lambda: self.businesses[self.state.acting_seat].operating(),
-            venture_opened_year=lambda node_id, default: self.businesses[self.state.acting_seat].opened_year_of(node_id, default),
+            venture_opened_year=lambda node_id, default: self.businesses[self.state.acting_seat].holdings.opened_year_of(node_id, default),
             venture_size=_Keyed(lambda node_id: self.businesses[self.state.acting_seat].size_of(node_id)))
         self._act(self.state.acting_seat)
         self.send(RestorePurse(capital))
@@ -119,8 +119,8 @@ class MoneyHost:
                 self.on_receive(command.node_ids, command.granted)
             return None
         if isinstance(command, SetDealing):
-            return Dealings.set_dealing(SimpleNamespace(_slots=lambda: self.dealings), command)
+            return Dealings.set_dealing(SimpleNamespace(parts=SimpleNamespace(run=SimpleNamespace(slots=lambda: self.dealings))), command)
         if isinstance(command, (ReleasePlant, AdoptPlant)):
             owner = SimpleNamespace(seat_of=lambda seat_id: SimpleNamespace(business=self.businesses[seat_id]))
-            return (Ventures.apply_release_plant if isinstance(command, ReleasePlant) else Ventures.apply_adopt_plant)(owner, command)
+            return (Plants.apply_release_plant if isinstance(command, ReleasePlant) else Plants.apply_adopt_plant)(owner, command)
         return self._handlers[type(command)](command)

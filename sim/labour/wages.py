@@ -1,20 +1,20 @@
-"""Wages from the labour market: a money value for one labour hour, a training
-premium and a tightness adjustment, held above a subsistence floor.
+"""The opening wage schedule: a money value for one labour hour and a training
+premium, held above a subsistence floor.
 
-    wage(trade) = max(floor, money_per_labour_hour * premium(trade) * tightness_factor(trade))
+    wage(trade) = max(floor, money_per_labour_hour * premium(trade))
 
 The money value of a labour hour is anchored outside this module (to the
 civilisation's coin). The floor is what one working hour must earn to keep a
 worker and the people who depend on that worker fed: the basket's cost in
 labour hours per hour worked, times the money value of an hour. The premium
-repays the years a trade takes to learn. The tightness factor moves a little
-each year toward the trades whose need exceeds their hours and away from those
-with slack.
+repays the years a trade takes to learn. Once the economy has opened its
+labour markets set the wages and this schedule is only the fallback.
 
 Nothing here knows about any civilisation or actor: a `WageSchedule` is built
 from plain numbers, so any actor that owns a workforce can own one.
 """
-from typing import Any, Dict, Iterable, Mapping, Optional
+import copy
+from typing import Any, Dict, Iterable, Mapping
 
 from sim.constants import declare
 from sim.unit_conversions import HOURS_PER_PERSON_YEAR
@@ -36,38 +36,6 @@ NON_FOOD_SUBSISTENCE_MARKUP = declare(
         "worker must earn. Chosen before any wage was compared; to be "
         "replaced by a subsistence basket priced through the same solver.")
 
-TIGHTNESS_ADJUSTMENT_RATE_PER_YEAR = declare(
-    "TIGHTNESS_ADJUSTMENT_RATE_PER_YEAR", 0.05, kind="temporary_heuristic",
-    unit="fractional wage change per year per unit of relative gap",
-    source=None, confidence="D",
-    why="How fast a wage follows the gap between the hours a trade needs and "
-        "the hours it has. Gradual, in the manner of Lengnick and EURACE "
-        "wage-setting; not fitted to any observed wage path.")
-
-TIGHTNESS_GAP_LIMIT = declare(
-    "TIGHTNESS_GAP_LIMIT", 1.0, kind="temporary_heuristic",
-    unit="relative gap (need/have - 1)", source=None, confidence="D",
-    why="Largest relative gap that moves a wage in one year, so an absent "
-        "trade or a collapse in hours cannot jump a wage.")
-
-TIGHTNESS_REVERSION_RATE_PER_YEAR = declare(
-    "TIGHTNESS_REVERSION_RATE_PER_YEAR", 0.03, kind="temporary_heuristic",
-    unit="fraction of the distance back to 1.0 per year", source=None,
-    confidence="D",
-    why="Without it a scarcity premium never leaves once the gap closes. "
-        "Stands in for the bargaining that fades when workers are no "
-        "longer hard to find; not fitted to any observed wage path.")
-
-MIN_TIGHTNESS_FACTOR = declare(
-    "MIN_TIGHTNESS_FACTOR", 0.5, kind="temporary_heuristic",
-    unit="multiple of the untightened wage", source=None, confidence="D",
-    why="Slack cannot push a trade's premium below this share of itself.")
-
-MAX_TIGHTNESS_FACTOR = declare(
-    "MAX_TIGHTNESS_FACTOR", 3.0, kind="temporary_heuristic",
-    unit="multiple of the untightened wage", source=None, confidence="D",
-    why="Scarcity cannot push a trade's wage above this multiple of itself.")
-
 
 def training_premium(training_years: float, discount_rate: float,
                      career_years: float = CAREER_YEARS) -> float:
@@ -87,56 +55,22 @@ def subsistence_wage_per_hour(food_kg_per_person_year: float,
     return yearly_need / hours_per_year
 
 
-def training_years_with_family_default(registry_training: Mapping[str, Optional[float]],
-                                       family_of: Mapping[str, str]) -> Dict[str, float]:
-    """Years per trade; a trade that states none takes its family's median."""
-    known_by_family: Dict[str, list] = {}
-    for trade, years in registry_training.items():
-        if years is not None:
-            known_by_family.setdefault(family_of.get(trade, ""), []).append(years)
-    resolved = {}
-    for trade, years in registry_training.items():
-        if years is None:
-            family_years = sorted(known_by_family.get(family_of.get(trade, ""), [0.0]))
-            years = family_years[len(family_years) // 2]
-        resolved[trade] = float(years)
-    return resolved
-
-
-def adjusted_tightness_factor(factor: float, hours_required: float,
-                              hours_have: float) -> float:
-    """One year's move of a trade's tightness factor."""
-    if hours_have <= 0.0:
-        if hours_required <= 0.0:
-            return factor
-        gap = TIGHTNESS_GAP_LIMIT
-    else:
-        gap = hours_required / hours_have - 1.0
-    gap = max(-TIGHTNESS_GAP_LIMIT, min(TIGHTNESS_GAP_LIMIT, gap))
-    moved = factor * (1.0 + TIGHTNESS_ADJUSTMENT_RATE_PER_YEAR * gap)
-    moved += (1.0 - moved) * TIGHTNESS_REVERSION_RATE_PER_YEAR
-    return max(MIN_TIGHTNESS_FACTOR, min(MAX_TIGHTNESS_FACTOR, moved))
-
-
 class WageSchedule(object):
     """Wages per hour for every trade of one labour market.
 
     `money_per_labour_hour` is what an hour of the unskilled numeraire trade
     is worth in money; `subsistence_hours_per_hour` is the basket's cost in
-    such hours per hour worked. `tightness_factors` is the only state and is
-    owned by the caller so it can live in a save; a trade missing from it is
-    at 1.0.
+    such hours per hour worked. The schedule is immutable once built;
+    `priced_at` answers the same schedule at another money value.
     """
 
     def __init__(self, training_years: Mapping[str, float], money_per_labour_hour: float,
                  subsistence_hours_per_hour: float, discount_rate: float,
-                 tightness_factors: Optional[Dict[str, float]] = None,
                  career_years: float = CAREER_YEARS,
                  hours_per_year: float = HOURS_PER_PERSON_YEAR) -> None:
         self.money_per_labour_hour = money_per_labour_hour
         self.subsistence_hours_per_hour = subsistence_hours_per_hour
         self.hours_per_year = hours_per_year
-        self.tightness_factors = tightness_factors if tightness_factors is not None else {}
         self.training_years = dict(training_years)
         self._premium = {trade: training_premium(years, discount_rate, career_years)
                          for trade, years in training_years.items()}
@@ -152,8 +86,7 @@ class WageSchedule(object):
         return self._premium.get(trade, 1.0)
 
     def wage_per_hour(self, trade: str) -> float:
-        wage = (self.money_per_labour_hour * self.premium(trade)
-                * self.tightness_factors.get(trade, 1.0))
+        wage = self.money_per_labour_hour * self.premium(trade)
         # Anyone can fall back to unskilled work, so nothing pays below the floor.
         return max(self.floor_per_hour, wage)
 
@@ -163,14 +96,11 @@ class WageSchedule(object):
     def wages_per_hour(self) -> Dict[str, float]:
         return {trade: self.wage_per_hour(trade) for trade in sorted(self._premium)}
 
-    def step(self, hours_required_by_trade: Mapping[str, float],
-             hours_by_trade: Mapping[str, float]) -> None:
-        """Advance every trade's tightness factor one year."""
-        for trade in sorted(self._premium):
-            self.tightness_factors[trade] = adjusted_tightness_factor(
-                self.tightness_factors.get(trade, 1.0),
-                hours_required_by_trade.get(trade, 0.0),
-                hours_by_trade.get(trade, 0.0))
+    def priced_at(self, money_per_labour_hour: float) -> "WageSchedule":
+        """This schedule with an hour of the unskilled trade worth `money_per_labour_hour`; this one is unchanged."""
+        priced = copy.copy(self)
+        priced.money_per_labour_hour = money_per_labour_hour
+        return priced
 
     def document(self) -> Dict[str, Any]:
         """The wage table in the shape the price solver reads, with the money
@@ -180,7 +110,7 @@ class WageSchedule(object):
                 "money_per_labour_hour": self.money_per_labour_hour}
 
     def ratio_document(self) -> Dict[str, Any]:
-        """The same shape in numeraire units, before any floor or tightness:
+        """The same shape in numeraire units, before any floor:
         the training premium alone, with one labour hour worth one unit."""
         return {"wage_rates_denarii_per_hour":
                 {trade: {"rate": premium} for trade, premium in sorted(self._premium.items())},

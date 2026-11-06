@@ -1,5 +1,6 @@
 """The headline figures a player asks "why did this change?" about.
 
+from . import figures_world  # noqa: E402,F401  (registers the society figures beside these)
 Each reads the engine function that produces the number; nothing is
 recomputed here. Registration is the whole of adding a figure; the ones that only read state
 paths are declared in data/ui/figures.json (`figures_data.py`).
@@ -31,7 +32,7 @@ def _recurring_net(sim):
             "mine running costs": -sim.view("mine_operating_cost")(),
             "interest on arrears": -interest,
         },
-        "drivers": {"price_index": sim.view("price_index")(), "wage_index": sim.view("wage_index")()},
+        "drivers": {"price_index": sim.view("price_index")(), "wage_per_hour": sim.view("money_per_labour_hour")()},
     }
 
 
@@ -64,4 +65,3 @@ def _hazard(sim):
         return {"value": sim.view("hazard_figure")(kind, hazard), "drivers": drivers}
     return {"value": None}
 
-from . import figures_world  # noqa: E402,F401  (registers the society figures beside these)

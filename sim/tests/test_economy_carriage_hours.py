@@ -8,7 +8,6 @@ import unittest
 from sim.economy import carriage_hours, merchants
 from sim.economy.merchants import CrewHire, Merchant
 from sim.economy.market_memory import market_key
-from sim.economy.types import Fill
 from sim.tests import economy_fixture as fixture
 from sim.tests.test_economy_merchants import SPECS, merchant, plan, world
 
@@ -35,24 +34,6 @@ def crew_ledger():
 
 
 class CarriageHireTests(unittest.TestCase):
-    def test_hired_reports_the_hours_and_the_average_pay_of_the_merchants_carriers(self):
-        found = carriage_hours.hired(crew_ledger(), "m1", [fixture.LABOURER])
-        self.assertAlmostEqual(found["hours"], 40.0)
-        self.assertAlmostEqual(found["wage"], (30.0 * 1.0 + 10.0 * 2.0) / 40.0)
-
-    def test_hired_counts_only_the_trades_asked_for(self):
-        found = carriage_hours.hired(crew_ledger(), "m1", ["smith"])
-        self.assertEqual((found["hours"], found["wage"]), (7.0, 9.0))
-
-    def test_a_merchant_that_hired_nobody_is_paid_no_wage(self):
-        self.assertEqual(carriage_hours.hired(crew_ledger(), "nobody", [fixture.LABOURER]), {"hours": 0.0, "wage": 0.0})
-
-    def test_the_hired_index_sums_each_employers_purchases_by_trade_and_area(self):
-        index = carriage_hours.hired_index(crew_ledger())
-        self.assertEqual(index[("m1", fixture.LABOURER, "work@town")], (40.0, 50.0))
-        self.assertEqual(index[("farm", fixture.LABOURER, "work@town")], (100.0, 100.0))
-        self.assertNotIn(("family", fixture.LABOURER, "work@town"), index)
-
     def test_keys_that_share_a_labour_market_share_the_hours_hired_in_proportion_to_their_hours(self):
         who = Merchant("m1", "town", "owner", 1.0)
         who.carriage_hours_wanted = {market_key(fixture.LABOURER, "hills"): 30.0, market_key(fixture.LABOURER, "town"): 10.0}
@@ -74,19 +55,12 @@ class EntrantInAHeldMarketTests(unittest.TestCase):
         self.assertGreater(result.hired_by_employer.get("merchant", 0.0), 0.0)
         self.assertLessEqual(sum(result.hired_by_employer.values()), 1000.0 + 1e-6)
 
-    def test_the_same_merchant_paying_a_premium_takes_hours_from_the_incumbent(self):
-        from sim.tests.test_labour_core_clearing import bid, make_state, run
-        state = make_state(people=10.0, wage=1.0)
-        state.hired_hours = {"vale": {"digger": {"farm": 1000.0}}}
-        result = run(state, [bid("farm", 2000.0), bid("merchant", 50.0, premium=0.5)])
-        self.assertGreater(result.hired_by_employer.get("merchant", 0.0), 0.0)
-
 
 def hours_hired_by_farm(merchant_bid_hours):
     """Hours the farm is hired for in a labour market of scarce supply, when a merchant also bids `merchant_bid_hours`
     for its carriers at a higher wage; the bids go through the year's labour clearing together."""
     import types
-    from sim.economy.accounts import Book
+    from sim.book import Book
     from sim.economy.market_memory import MarketMemory
     from sim.economy.types import EDGE_MINT, LabourBid, LabourOffer, Transfer
     from sim.economy.year_labour import clear_labour
@@ -97,8 +71,9 @@ def hours_hired_by_farm(merchant_bid_hours):
     for employer in ("farm", "merchant"):
         book.transfer(Transfer(EDGE_MINT, employer, "coin", 1e9, "opening"))
     area = "labour:t1"
-    record = types.SimpleNamespace(book=book, memory=MarketMemory(), producers={}, sold_share_expected={},
-                                   workforce=MarketState(workers={area: {"plough": split_evenly(0.05)}}))
+    record = types.SimpleNamespace(book=book, memory=MarketMemory(), producers={},
+                                   labour=types.SimpleNamespace(sold_share_expected={},
+                                                                workforce=MarketState(workers={area: {"plough": split_evenly(0.05)}})))
     setup = types.SimpleNamespace(currency_id="coin", trades={}, unskilled_trade="plough")
     bids = [LabourBid("farm", "plough", area, 100.0, 5.0)]
     if merchant_bid_hours:
@@ -130,8 +105,7 @@ class ShortfallTests(unittest.TestCase):
         carriage, _m, area_a, _b = world()
         who = merchant()
         plan(who, 2.0, 5.0)
-        fills = (Fill("m1", "salt", area_a["salt"], "a", 10.0, 2.0, "buy"),)
-        return merchants.dispatch(who, fills, carriage, SPECS, "coin", 100.0, {("salt", "a"): 10.0},
+        return merchants.dispatch(who, carriage, SPECS, "coin", 100.0, {("salt", "a"): 10.0},
                                   crew=hire(hired_hours))
 
     def test_carriers_enough_for_every_unit_carry_all_of_it_and_the_fee_less_their_wages_is_left_to_pay(self):
@@ -142,7 +116,6 @@ class ShortfallTests(unittest.TestCase):
     def test_half_the_carriers_carry_half_the_goods(self):
         result = self.ship(2.5)
         self.assertAlmostEqual(result.moves[0].quantity, 5.0)
-        self.assertAlmostEqual(result.stranded[0][2], 5.0)
 
     def test_no_carriers_carry_nothing(self):
         result = self.ship(0.0)
@@ -152,7 +125,7 @@ class ShortfallTests(unittest.TestCase):
         carriage, _m, _a, _b = world(("salt", "fish"))
         who = merchant()
         who.routes = {("salt", "a"): (("b", "x", 1.0),), ("fish", "a"): (("b", "x", 1.0),)}
-        result = merchants.dispatch(who, (), carriage, SPECS, "coin", 100.0,
+        result = merchants.dispatch(who, carriage, SPECS, "coin", 100.0,
                                     {("salt", "a"): 10.0, ("fish", "a"): 4.0},
                                     crew=hire(3.5))
         carried = {move.good: move.quantity for move in result.moves}
@@ -174,7 +147,7 @@ class CrewWorthTests(unittest.TestCase):
         plan(who, price_at_source, price_at_destination)
         who.routes = {("salt", "a"): (("b", area_b["salt"], 1.0),)}
         crew = hire(100.0, market_wage=market_wage, area_of=lambda _good, tile: area_a["salt"] if tile == "a" else "elsewhere")
-        return merchants.dispatch(who, (), carriage, SPECS, "coin", 100.0, {("salt", "a"): 10.0}, crew=crew)
+        return merchants.dispatch(who, carriage, SPECS, "coin", 100.0, {("salt", "a"): 10.0}, crew=crew)
 
     def test_a_wide_spread_is_worth_the_gain_over_the_hours(self):
         key = market_key(fixture.LABOURER, "a")
@@ -233,8 +206,9 @@ class OneWageTests(unittest.TestCase):
             wages.update({market_key(fixture.LABOURER, labour_area(tile)): wage_elsewhere
                           for tile in fixture.tiles() if tile != fixture.TOWN})
         carried = {fixture.TOWN: {fixture.FARMS: 10.0}}
-        record = type("Record", (), {"memory": type("Memory", (), {"wages": wages})(), "carried": carried,
-                                     "area_imbalance": 1.0})()
+        record = type("Record", (), {"memory": type("Memory", (), {"wages": wages, "holds_wage_for": lambda self, trade: any(key.startswith(trade + "|") for key in self.wages), "opening_wage_level": lambda self, money: 1.0})(),
+                                     "cohorts": {}, "merchants": {},
+                                     "carriage": type("Carriage", (), {"carried": carried, "area_imbalance": 1.0})()})()
         table = setup.carriage_table()
         scale = carriage_hours.wage_scale(setup, record, table)
         base = setup.carriage_table().cost_per_tonne(fixture.TOWN, fixture.FARMS)
@@ -299,7 +273,7 @@ class WageLoanTests(unittest.TestCase):
     """Carriers are paid at the labour market, before lenders meet, so a merchant short of cash borrows its wage bill."""
 
     def record(self, cash):
-        from sim.economy.accounts import Book
+        from sim.book import Book
         from sim.economy.market_memory import market_key
         from sim.economy.setup import labour_area
         from sim.economy.types import EDGE_MINT, Transfer
@@ -309,7 +283,7 @@ class WageLoanTests(unittest.TestCase):
         who = Merchant("m1", "town", "owner", 100.0)
         who.carriage_hours_wanted = {market_key(fixture.LABOURER, "town"): 100.0}
         who.carriage_money_wanted = {market_key(fixture.LABOURER, "town"): 100.0}
-        memory = type("Memory", (), {"wages": {market_key(fixture.LABOURER, labour_area("town")): 0.5}})()
+        memory = type("Memory", (), {"wages": {market_key(fixture.LABOURER, labour_area("town")): 0.5}, "holds_wage_for": lambda self, trade: any(key.startswith(trade + "|") for key in self.wages), "opening_wage_level": lambda self, money: 1.0})()
         cohorts = {"town": type("Cohort", (), {"tile": "town"})()}
         return type("Record", (), {"merchants": {"m1": who}, "book": book, "memory": memory, "cohorts": cohorts})()
 

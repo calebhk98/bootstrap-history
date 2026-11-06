@@ -1,5 +1,9 @@
 # Reference economy models: Capitalism Lab, Eurace@Unibi, Econ-ARK HARK, Caiani et al. 2016
 
+> **Checked against the code (2026-11):** the Eurace credit-rate formula first given in section 2 ("Credit") is the 2011 manual's. The C
+> code (`Credit/Bank_Credit_Functions.c`) sets interest = `ECB_INTEREST_RATE * (1 + BANK_LAMBDA * bankruptcy_prob + U(0,1))`, capped at
+> 0.25, with bankruptcy probability `1 - exp(-0.10 * (d + c) / e)`. Section 2 now states the C formula.
+
 Research report for issue #61 (make the opening a steady state), Complaint 473 and its relatives
 (606, 607, 641, 642, 643, 655, 497). It adds to, and does not replace,
 `Complaints/reports/research-agent-based-economy-design.md` (Lengnick, Caiani, Wiese, Peters) and
@@ -100,9 +104,10 @@ days and monthly planning.
 - **Credit.** The central bank base rate is a constant in the model (user manual 7.1.2: "The ECB base interest rate is a
   constant in the model"). Banks pay deposits at base rate times one minus a markdown, and lend to a firm at the base
   rate plus a firm-specific markup. In `Bank decide credit conditions` the bank computes a bankruptcy probability from
-  the firm's debt plus request over equity, `1 - exp(-(debt + request)/equity)`, caps credit by the bank's excess value
+  the firm's debt plus request over equity, `1 - exp(-0.10 * (debt + request)/equity)`, caps credit by the bank's excess value
   at risk (alpha times equity minus value at risk) and by excess liquidity over a reserve ratio, and charges
-  `MIN_INTEREST + BANK_GAMMA * new_value_at_risk * 0.01 * random(0,1)`. A bank already in debt to the central bank
+  `ECB_INTEREST_RATE * (1 + BANK_LAMBDA * bankruptcy_probability + U(0,1))`, capped at 0.25
+  (`Credit/Bank_Credit_Functions.c`). The `MIN_INTEREST + BANK_GAMMA * ...` formula is the 2011 manual's, not this code's. A bank already in debt to the central bank
   does not lend. Firms accept loans lowest rate first.
 
 ### Price and wage setting
@@ -142,13 +147,16 @@ days and monthly planning.
   bank and government deposits plus bank reserves equal fiat money plus credit money) and Chapter 11 lists 33 tested
   rules: balance sheet identities (assets equal liabilities plus equity per agent type), cross-agent identities (bank
   loans equal firm debts; household money equals household deposits; bonds equal holdings), and the monetary
-  conservation rule. The manual says these were "successfully tested".
+  conservation rule. The manual says these were "successfully tested", but its own run of them fails the fiat and credit
+  money conservation rules (32 and 33) at iteration 800 and puts a difference in rule 20 down to statistical error
+  ("Why certain rules fail", user manual Chapter 11).
 - Household consumption (user manual 3.3.2, OPENED): `CONSUMPTION_BUDGET = MEAN_NET_INCOME + CARROL_CONSUMPTION_PARAMETER *
   PAYMENT_ACCOUNT + TRADING_ACTIVITY * CARROL_CONSUMPTION_PARAMETER * (asset_wealth - WEALTH_INCOME_RATIO_TARGET *
   MEAN_NET_INCOME)`. The manual (10.1.3) names it "the constant from buffer stock saving theory", a target wealth to
   income ratio and a target savings rate. That is a Carroll-type rule: income plus a small fraction of the excess over target
-  wealth. The manual says the initial values are a payment account equal to 15 monthly wages and index assets worth 10 monthly
-  wages (the numbers are the authors' choices, not sourced from data in that chapter).
+  wealth. The manual's prose says the initial values are a payment account equal to 15 monthly wages and index assets worth 10
+  monthly wages, but its own table of initial values gives mean net income 1.5, payment account 15 and wealth 25: the payment
+  account is 10 monthly incomes and wealth 16.67 (the numbers are the authors' choices, not sourced from data in that chapter).
 - External validation against data for the 2011 manual: NO SOURCE FOUND in what I opened. The papers cited probably
   contain it; I did not read them.
 
@@ -439,7 +447,7 @@ and re-measure with `python3 sim/simulator.py spin-up-trace`. Run the fingerprin
 - Eurace: I did not read the two Dawid et al. papers (the repository copy served a bot check; the search result is SNIPPET
   ONLY). The user manual is the 2011 version; the code is later (2014 to 2016), and the manual and code can differ. The
   price grid range constants were not traced to their definition.
-- Eurace's `its/0_after_2k_transient.xml.tar.bz2` was not opened; any claim about what it holds is a guess from its name.
+- Eurace's `its/0_after_2k_transient.xml.tar.bz2` was not opened when this report was written; any claim here about what it holds is a guess from its name. It has since been opened (by a later review); read that review's account of the state it holds in preference to anything this report says about it.
 - HARK: I read the consumption-saving module headers, the stable-point code, the steady-state method and `Market.solve`; I
   did not run any of them, and I did not check which of the project's dependency rules apply.
 - Caiani: a PDF to text conversion garbles some equation symbols; the structure of 3.7 (markup up when inventories

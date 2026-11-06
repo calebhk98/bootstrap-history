@@ -14,6 +14,9 @@ from typing import Any, Dict, List, Mapping, NamedTuple, Optional, Tuple
 
 from sim.unit_conversions import HOURS_PER_PERSON_YEAR
 
+# The energy carriers: the recipe fields that draw one, each the material of the same name that the energy techniques
+# (thermal_mj_charcoal, mechanical_mj_waterwheel, ...) output. The one owner of the tuple; the price engine, labour and
+# economy import it from here.
 ENERGY_CARRIERS = ("thermal_mj", "mechanical_mj", "electrical_mj")
 
 
@@ -64,12 +67,27 @@ def _hours_per_unit(entry: Mapping[str, Any]) -> float:
     return hours / entry["outputs"][_dominant_output(entry)]
 
 
+def priced_total(quantities: Mapping[str, float], goods: Mapping[str, float]) -> Optional[float]:
+    """What the quantities are worth at the prices in `goods`; None when any of them has no price (an unpriced
+    good is unknown, not free)."""
+    total = 0.0
+    for material, quantity in quantities.items():
+        price = goods.get(material)
+        if price is None:
+            return None
+        total += quantity * price
+    return total
+
+
 def net_per_batch(entry: Mapping[str, Any], goods: Mapping[str, float],
-                   energy: Any) -> float:
-    sold = sum(quantity * goods[material] for material, quantity in entry["outputs"].items()
-               if material not in ENERGY_CARRIERS)
+                   energy: Any) -> Optional[float]:
+    """What a batch sells for less what it buys; None when an output or an input has no price."""
+    sold = priced_total({material: quantity for material, quantity in entry["outputs"].items()
+                         if material not in ENERGY_CARRIERS}, goods)
+    bought = priced_total(_purchases_per_batch(entry), goods)
+    if sold is None or bought is None:
+        return None
     sold += sum(value for _quantity, value in _energy_sold_per_batch(entry, energy).values())
-    bought = sum(quantity * goods.get(material, 0.0) for material, quantity in _purchases_per_batch(entry).items())
     bought += sum(value for _quantity, value in _energy_bought_per_batch(entry, energy).values())
     return sold - bought
 
@@ -87,7 +105,10 @@ def _best_entry_per_line(entries: List[Dict[str, Any]], goods: Mapping[str, floa
             continue            # gathered from a deposit or a by-product stream: set by that source, not by staff
         key = frozenset(entry["outputs"])
         hours = sum((entry.get("labour_hours") or {}).values()) or 1.0
-        score = net_per_batch(entry, goods, energy) / hours
+        net = net_per_batch(entry, goods, energy)
+        if net is None:
+            continue            # a technique with an unpriced input cannot be weighed against the others
+        score = net / hours
         if key not in lines or score > lines[key][0]:
             lines[key] = (score, entry)
     return [lines[key][1] for key in sorted(lines, key=sorted)]
@@ -95,11 +116,15 @@ def _best_entry_per_line(entries: List[Dict[str, Any]], goods: Mapping[str, floa
 
 def _covers_its_staff(entry: Mapping[str, Any], goods: Mapping[str, float], energy: Any,
                       wages: Optional[Mapping[str, float]]) -> bool:
-    """True when a batch adds at least what the hours it asks cost at these wages (always, without wages)."""
+    """True when a batch adds at least what the hours it asks cost at these wages (always, without wages). A trade
+    with no wage leaves the staff cost unknown, so the batch is not shown to cover it."""
     if wages is None:
         return True
-    staff = sum(wages.get(trade, 0.0) * hours for trade, hours in (entry.get("labour_hours") or {}).items())
-    return net_per_batch(entry, goods, energy) >= staff * (1.0 - 1e-9)     # a price at cost adds exactly its staff
+    staff = priced_total(entry.get("labour_hours") or {}, wages)
+    if staff is None:
+        return False
+    net = net_per_batch(entry, goods, energy)
+    return net is not None and net >= staff * (1.0 - 1e-9)     # a price at cost adds exactly its staff
 
 
 def line_capacities(lines: List[Dict[str, Any]], staff_people: float, declared_output_t: float

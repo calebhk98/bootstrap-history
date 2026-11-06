@@ -10,7 +10,7 @@ from sim.constants import REGISTRY
 import sim.workforce.constants  # noqa: F401  (declares the workforce prices in labour hours)
 from sim.resources.labour_profile import mine_labour_hours_per_tonne
 from sim.engine.money_units import PricedInLabourHours
-from sim.labour.labour_bondage import BondageMixin
+from sim.labour.labour_bondage import Bondage
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 from sim.world import deposits
 
@@ -50,15 +50,15 @@ class PhysicalConstantsAreInHours(unittest.TestCase):
             COST_HOURS = 12.0
 
             def __init__(self, coin_per_hour):
-                self.labour = SimpleNamespace(money_per_labour_hour=lambda: coin_per_hour)
+                self.view = lambda name: (lambda: coin_per_hour)
 
         self.assertAlmostEqual(Holder(0.5).COST, 6.0)
         self.assertAlmostEqual(Holder(4.0).COST, 48.0)
         self.assertEqual(Holder.COST, 12.0)
 
     def test_the_base_price_of_a_person_is_hours_times_the_coin_per_hour(self):
-        host = SimpleNamespace(SLAVE_BASE_PRICE_LABOUR_HOURS=300.0, money_per_labour_hour=lambda: 0.25)
-        self.assertAlmostEqual(BondageMixin.SLAVE_BASE_PRICE.fget(host), 75.0)
+        host = SimpleNamespace(SLAVE_BASE_PRICE_LABOUR_HOURS=300.0, schedule=SimpleNamespace(money_per_labour_hour=lambda: 0.25))
+        self.assertAlmostEqual(Bondage.SLAVE_BASE_PRICE.fget(host), 75.0)
 
     def test_no_curated_mining_opex_remains(self):
         self.assertFalse([name for name in REGISTRY if name.startswith("MINE_OPEX_PER_T_")])

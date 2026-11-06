@@ -25,7 +25,7 @@ def _stuck_work_in_hand(sim, nodes):
         # founder hours back, so this can say "waiting on your hours"
         # for a project that is really stuck on money, on the exact
         # screen a player checks first when something is stalled.
-        # why_underfunded, already computed onto st by core.py, is
+        # why_underfunded, already computed onto st by the projects module's progress phase, is
         # the real reason - carry it per project, not just the string
         # above.
         if progress.get("why_underfunded"):

@@ -5,18 +5,19 @@ labour and bill follow from that, whether the household can afford the bill, the
 check. Every random draw the stages make (completion rolls the dice once per attempt) runs once, in this order, for each
 project."""
 from sim.agents.api import edges
-from sim.ledger.api import NoteSpend, PayEdge
-from sim.materials.api import ApplyThrottle
+from sim.assembly.api import Part
+from sim.ledger.api import NoteSpend, pay_edge_or_log
+from sim.materials.api import ApplyThrottle, ReorderProjectMaterials
 from sim.refusal import Refusal
 from sim.reporting.api import RecordEvent
-from sim.workforce.api import ResetTradeHours, SpendDirectorHours
+from sim.workforce.api import ResetTradeHours
 
-from . import funding as project_funding, start_rules
+from . import funding as project_funding, materials_wait, start_rules
 from .arrears_hours_line import arrears_hours_line
 from .hour_offer import hours_offered, unmet_directive_cause
 
 
-class ProgressPhase:
+class ProgressPhase(Part):
 	def apply_advance_projects(self, command):
 		"""The year's progress step for the acting seat: (hours left in the pool, the same before wage work, the hours
 		the projects effectively used)."""
@@ -40,6 +41,8 @@ class ProgressPhase:
 		# bookkeeping and completion check. Every dice-touching call these stages make runs exactly once, in exactly this
 		# order, for exactly this project: the stages are called unconditionally in sequence, and only the two early
 		# returns below skip any of them.
+		if self._project_progress_materials_gate(node_id, project_state):
+			return remaining, hired_left, 0.0
 		if self._project_progress_trade_gate(node_id, project_state, node):
 			return remaining, hired_left, 0.0
 		remaining, per, spent_hours, _dir_hours = self._project_progress_offer_hours(
@@ -54,6 +57,57 @@ class ProgressPhase:
 			node_id, project_state, money, refunded, spent_hours, _dir_hours, directed_hours_unused,
 			_afford_context=_afford_context)
 		return remaining, hired_left, project_state["hours_effective_this_year"]
+
+	def _project_progress_materials_gate(self, node_id, project_state):
+		# Stage 0: a project started with materials on order waits until the year's clearing has run, then until the materials
+		# are in stock. The bill is charged for what the clearing bought, at what it cost; what an order left unbought (it filled
+		# short, or was refused with a cause) is ordered again at the next clearing and the project stays held, with the cause on
+		# its record. Only the project's own orders hold it, not a player's own buy of the same good. True when it is held.
+		on_order = project_state.get("materials_on_order")
+		if not on_order:
+			materials_wait.clear_orders(project_state)
+			return False
+		needs = self.needs
+		if any(order.get("project") == node_id for order in needs.seat_goods_orders()):
+			return self._hold_for_materials(project_state, "awaiting_materials")
+		results = [result for result in needs.seat_goods_traded().get("orders", ())
+		           if result.get("project") == node_id and result["side"] == "buy"]
+		add_back, shortfalls = materials_wait.reconcile(on_order, results)
+		if not shortfalls:
+			self._charge_materials_bill(project_state, add_back)
+			materials_wait.clear_orders(project_state)
+			return False
+		ordered, entries = needs.send(ReorderProjectMaterials(
+			node_id, tuple((shortfall["material"], shortfall["tonnes"]) for shortfall in shortfalls)))
+		self._charge_materials_bill(project_state, add_back - ordered)
+		materials_wait.set_on_order(project_state, materials_wait.kept_after_reorder(entries))
+		project_state["materials_short"] = [
+			{"material": shortfall["material"], "short_tonnes": round(shortfall["tonnes"], 3), "cause": shortfall["cause"]}
+			for shortfall in shortfalls]
+		project_state["years_held_for_materials"] = project_state.get("years_held_for_materials", 0) + 1
+		# a hold for want of a price or of money lifts by itself only when that changes: say why every year, and how to end it
+		needs.send(RecordEvent.of(
+			"project_held_for_materials",
+			"%s is held for materials: %s. 'stop %s' cancels it and keeps what was paid."
+			% (node_id, "; ".join("%s short %.3g t (%s)" % (short["material"], short["short_tonnes"], short["cause"])
+			                      for short in project_state["materials_short"]), node_id),
+			project=node_id, shortfalls=list(project_state["materials_short"]),
+			years_held=project_state["years_held_for_materials"]))
+		return self._hold_for_materials(project_state, "materials_short")
+
+	@staticmethod
+	def _charge_materials_bill(project_state, change):
+		# The bill fell by the quote of each order when the project started; it rises by what the clearing did not buy.
+		project_state["cost_left"] = project_state["cost_left"] + change
+		if "bill" in project_state:
+			project_state["bill"] = project_state["bill"] + change
+
+	@staticmethod
+	def _hold_for_materials(project_state, cause):
+		project_state["held_cause"] = cause
+		project_state["hours_offered_this_year"] = 0.0
+		project_state["hours_effective_this_year"] = 0.0
+		return True
 
 	def _project_progress_trade_gate(self, node_id, project_state, node):
 		# Stage 1: is there anybody to do the work. Returns True when the project is stalled or just halted this year, in
@@ -120,7 +174,7 @@ class ProgressPhase:
 		# one out of the share the player asked for it to have.
 		needs = self.needs
 		_dir_hours = needs.hour_commitments()["allocations"].get(node_id)
-		_pace_cap = self.project_hour_pace(node_id)
+		_pace_cap = self.parts.progress_hours.project_hour_pace(node_id)
 		_project_throttle = needs.send(ApplyThrottle(node_id))
 		per = hours_offered(remaining, _pace_cap, _dir_hours, _project_throttle)
 		remaining -= per
@@ -130,7 +184,6 @@ class ProgressPhase:
 		# cannot be refunded work you never did.
 		spent_hours = min(per, project_state["ph_left"])
 		project_state["ph_left"] = max(0.0, project_state["ph_left"] - per)
-		needs.send(SpendDirectorHours(per if needs.founder()["alive"] else 0))
 		# Hours OFFERED this year vs hours that actually did anything. `refunded` tracks the difference: hours credited
 		# back to ph_left below because a trade or the money to pay for it fell short. This must stay visible to the
 		# player: showing only the net hours left reads as confusing when half a year's hours come back with no
@@ -178,7 +231,7 @@ class ProgressPhase:
 			project_state["cost_left"] = max(0.0, needs.project_cost(node_id) - project_state["spent"])
 		# LABOUR BY TRADE, HOURS A TOTAL AND A CEILING: what binds is the scarcest trade this project actually needs
 		# (see lab_year_draw); this call site only has to act on what it returns.
-		hired_hours, worst, frac, _abandon = self.lab_year_draw(node_id, project_state, frac, hired_left)
+		hired_hours, worst, frac, _abandon = self.parts.progress_hours.lab_year_draw(node_id, project_state, frac, hired_left)
 		if _abandon:
 			needs.send(RecordEvent.of("project_abandoned", "ABANDONED %s: %s" % (node_id, _abandon)))
 			self.seat.active.pop(node_id, None)
@@ -253,7 +306,14 @@ class ProgressPhase:
 		# Stage 5: spend the money, record the hours actually done, the second place a standing allocation can go
 		# unhonoured, and the completion check. Nothing to return - project_state carries every result.
 		needs = self.needs
-		needs.send(PayEdge(edges.EDGE_SUPPLIERS, money, "project payments"))
+		if pay_edge_or_log(needs.send, edges.EDGE_SUPPLIERS, money, "project payments") is not None:
+			# the bill stays owed in full and the project waits on money; hours not paid for do not count as worked
+			money = 0.0
+			unpaid_hours = max(0.0, spent_hours - refunded)
+			project_state["ph_left"] += unpaid_hours
+			refunded += unpaid_hours
+			project_state["underfunded_this_year"] = True
+			project_state["why_underfunded"] = "the year's payment was refused"
 		needs.send(NoteSpend(money))
 		project_state["spent"] += money
 		project_state["cost_left"] = max(0.0, project_state["cost_left"] - money)
@@ -272,13 +332,13 @@ class ProgressPhase:
 			if _inner_gap > 1.0 and project_state.get("why_underfunded") and needs.acting_balance() >= 0:
 				directed_hours_unused.append((node_id, round(_inner_gap, 0), project_state["why_underfunded"]))
 			elif _inner_gap > 1.0 and project_state.get("short_of_trade"):
-				directed_hours_unused.append((node_id, round(_inner_gap, 0), self.trade_shortfall_note(project_state)))
+				directed_hours_unused.append((node_id, round(_inner_gap, 0), self.parts.progress_hours.trade_shortfall_note(project_state)))
 		# Count it HERE, after the hired-hours scaling and the affordability clamp, not before them: accumulating the
 		# notional figure instead would make the year's project spend disagree with the actual capital movement.
-		self.spent_this_year += money
+		self.parts.applied.spent_this_year += money
 		# calendar_floor, NOT a second copy of this formula - expected_calendar_years needs the identical figure to
 		# project retries honestly.
-		floor = self.calendar_floor(node_id)
+		floor = self.parts.risk.calendar_floor(node_id)
 		# THE BILL HAS TO BE PAID. Hours done and years elapsed are not enough; if the money never arrived, the thing was
 		# never built.
 		# HALF AN HOUR IS NOTHING LEFT TO DO: the give-back hands back a fraction of what was offered, so on a throttled
@@ -287,9 +347,9 @@ class ProgressPhase:
 		if project_state["ph_left"] < 0.5:
 			project_state["ph_left"] = 0.0
 		if project_state["ph_left"] <= 0 and project_state["yrs"] >= floor:
-			self.settle_cost_tail(node_id, project_state)
+			self.parts.cost_tail.settle_cost_tail(node_id, project_state)
 		if project_state["ph_left"] <= 0 and project_state["yrs"] >= floor and project_state["cost_left"] <= 0.5:
-			self._complete(node_id)
+			self.parts.completion.complete(node_id)
 			if _afford_context is not None:
 				_afford_context["revenue"] = needs.revenue_estimate()
 				_afford_context["upkeep"] = needs.upkeep()
@@ -301,7 +361,7 @@ class ProgressPhase:
 		#    gives every project equal attention finishes nothing, which is a real failure mode but not the one we are
 		#    trying to model here.
 		needs = self.needs
-		active_sorted = self.hour_priority_queue()
+		active_sorted = self.parts.hour_queue.hour_priority_queue()
 		remaining = pool
 		needs.send(ResetTradeHours())
 		# Summed as the loop runs, not re-read from the active record afterwards, because a project that completes THIS
@@ -340,7 +400,7 @@ class ProgressPhase:
 			needs.send(RecordEvent.from_line(arrears_hours_line(_arrears_hours_lost, needs.plain_number)))  # plain line: arrears_hours_line builds the LogLine and its kind
 		# A STANDING ALLOCATION THE PLAYER GAVE, AND DID NOT GET - SAID, NOT LEFT FOR THEM TO NOTICE. Sorted by id for a
 		# deterministic order across runs with the same seed - several projects can be cut short in the same year.
-		self.report_unused_directed_hours(_directed_hours_unused)
+		self.parts.allocation_notes.report_unused_directed_hours(_directed_hours_unused)
 		# Snapshot BEFORE 5b spends more of `remaining` on wage work: otherwise offered_to_projects below double-counts
 		# wage hours as though they had been offered to projects too, since 5b draws from the same pool.
 		remaining_after_projects = remaining

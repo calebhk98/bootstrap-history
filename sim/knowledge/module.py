@@ -4,7 +4,7 @@ What a seat holds (`done`, `granted`, `done_year`), has heard of (`revealed`) an
 changed only by its commands and published as plain data. The tree is the module's too (replaced by `ReplaceTree`, never saved: a game is rebuilt over the same data); the
 fog switch is the scenario's `fog_of_war`."""
 
-from typing import Any, Dict, FrozenSet, Optional, Tuple
+from typing import Any, Dict, FrozenSet
 
 from sim.assembly.api import Module
 

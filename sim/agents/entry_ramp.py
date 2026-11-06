@@ -7,7 +7,7 @@ def ramp_shortfall(world: Any, node_id: str, gross: float, costs: float) -> Tupl
 	takings are `gross` and whose yearly costs are `costs`."""
 	foregone, balance, deepest, age = 0.0, 0.0, 0.0, 0
 	while True:
-		ramp = world.ramp(world.year - age, node_id)
+		ramp = world.concerns.ramp(world.setting.year - age, node_id)
 		foregone += gross * (1.0 - ramp)
 		balance += gross * ramp - costs
 		deepest = max(deepest, -balance)

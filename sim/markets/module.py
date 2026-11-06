@@ -8,56 +8,32 @@ to these two for callers not yet in a module."""
 from sim.assembly.api import Module
 
 from .absorption import Absorption
-from .agent_views import AgentViews
+from .agent_views_labour import AgentLabourViews
+from .agent_views_land import AgentLandViews
+from .agent_views_outcome import AgentOutcomeViews
+from .agent_views_prices import AgentPriceViews
+from .agent_views_volumes import AgentVolumeViews
 from .category_views import Categories
-from .clearing import Clearing
+from .clearing import MarketClearing
 from .commands_applied import Applying
-from .demand import Demand
-from .household_views import HouseholdNeeds
-from .goods_market import GoodsMarket
 from .goods_views import GoodsViews
-from .port import EconomyPort
-from .port_world import PortWorld
-
-# the remembered figures a seat switch drops (the clearing's and the household demand's are keyed on what they read)
-_DROPPED_ON_RESET = ("goods_cat_state", "goods_category_ratios", "income_factor", "goods_mkt_op_factor")
+from .household_views import HouseholdNeeds
+from .market_objects import MarketObjects
 
 
-class Markets(Clearing, Categories, Demand, HouseholdNeeds, Absorption, GoodsViews, AgentViews, Applying, Module):
+class Markets(Module):
 
-	def setup(self):
-		self._caches = {}                  # (seat id, name) -> a remembered figure; never saved
-		self._needs_served_by_mods = {}    # installed mod ids -> material -> the needs it serves; data, frozen for the game
-		self._climate_baskets = {}         # civilisation id -> (its household basket with the tiles' climate floors, the model); frozen for the game
-		self._partner_demand = {}          # civilisation id -> tonnes a year its households buy; data, frozen for the game
-		self._nodes_by_category = None     # category -> node ids, in the tree's order; the tree does not change after load
-		self.reads = PortWorld(self.needs, self)
-		self.economy = EconomyPort(self.reads)       # opens the agent economy when first asked, or on the opening command
-		self.goods_market = GoodsMarket(self.reads)
-
-	# ---- what the acting seat remembers ----
-
-	def _seat_cache(self, name):
-		return self._caches.get((self.clock.acting_seat, name))
-
-	def _set_seat_cache(self, name, value):
-		self._caches[(self.clock.acting_seat, name)] = value
-
-	def _seat_dict(self, name):
-		key = (self.clock.acting_seat, name)
-		remembered = self._caches.get(key)
-		if remembered is None:
-			remembered = self._caches[key] = {}
-		return remembered
-
-	def seat_bound(self):
-		"""The acting seat's remembered goods-category figures are dropped."""
-		for name in _DROPPED_ON_RESET:
-			self._caches.pop((self.clock.acting_seat, name), None)
-
-	def legacy_agent_economy(self):
-		"""The agent economy's record, where the traders' cargo legs are kept; the port and the foreign trade module write it in place."""
-		return self.world.agent_economy
-
-	def money_from_economy(self):
-		return self.world.money_from_economy
+	PARTS = {
+		"market_objects": MarketObjects,
+		"clearing": MarketClearing,
+		"categories": Categories,
+		"household_needs": HouseholdNeeds,
+		"absorption": Absorption,
+		"goods_views": GoodsViews,
+		"agent_price_views": AgentPriceViews,
+		"agent_labour_views": AgentLabourViews,
+		"agent_land_views": AgentLandViews,
+		"agent_volume_views": AgentVolumeViews,
+		"agent_outcome_views": AgentOutcomeViews,
+		"applying": Applying,
+	}

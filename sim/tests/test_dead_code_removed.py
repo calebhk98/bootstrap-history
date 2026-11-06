@@ -1,5 +1,6 @@
 """Complaint 186: names that had no live caller stay deleted.
 
+import sim.ui.cli  # noqa: F401  (loads cli_analysis in the order the app does)
 Each name was checked by grep across sim, data, mods and tools; none is
 reached by getattr, a dispatch table or a mod hook.
 
@@ -10,7 +11,6 @@ QUICK_TOPIC = True
 
 import importlib
 
-import sim.ui.cli  # noqa: F401  (loads cli_analysis in the order the app does)
 import unittest
 
 # (module, dotted attribute path) that must no longer exist.

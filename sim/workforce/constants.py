@@ -1,31 +1,6 @@
 """Numbers the workforce module declares."""
 from sim.constants import declare
 
-BASE_WORKING_DAY_HOURS = declare(
-    "BASE_WORKING_DAY_HOURS", 10.0, kind="engineering_estimate", unit="hours per working day",
-    source="The ten-hour day behind HOURS_PER_PERSON_YEAR in sim/unit_conversions.py.", confidence="B",
-    why="The day that extra lit hours are added to; the working year grows in the same proportion.")
-
-WAGE_SCARCITY_ELASTICITY = declare(
-    "WAGE_SCARCITY_ELASTICITY", 0.9, kind="hardcoded_outcome",
-    unit="dimensionless (wage premium per unit of population shortfall)",
-    source="Phelps Brown and Hopkins' English real-wage index shows "
-           "roughly a doubling across the century after 1348.",
-    confidence="C",
-    why="How much scarcer labour raises its own price - see the wage_index view: at this elasticity, a Black-Death-sized "
-        "shortfall reproduces roughly the cited real-wage doubling over "
-        "the timescale sim/world/demography.py's own vital rates take "
-        "to close it. FLAGGED AS A CLAUDE.md SS3.1/3.2 RISK: chosen "
-        "specifically to land in the range that reproduces a known "
-        "historical wage-index outcome (Phelps Brown and Hopkins), "
-        "rather than derived from labour supply and demand "
-        "fundamentals - the same shape as economy.py's DEBT_BASE_RATE, "
-        "a real attested figure standing in for a market mechanism "
-        "this project has not built. It is not fitted to the series "
-        "numerically, but it was picked because it lands near the "
-        "answer, which is the thing SS3.2 asks a baseline to reach "
-        "independently rather than by construction.")
-
 # Years between one automatic teaching of a trade and the next. Long
 # enough that restoring a lost trade is an event rather than a habit.
 RETEACH_EVERY = declare(
@@ -92,15 +67,6 @@ TRADE_REPLACEMENT_TARGET_HEADCOUNT = declare(
         "founder has ever taught, once attrition has thinned it - "
         "enough that a taught trade cannot silently vanish from a "
         "single death. Round number, not measured.")
-TRADE_REPLACEMENT_AFFORDABILITY_YEARS = declare(
-    "TRADE_REPLACEMENT_AFFORDABILITY_YEARS", 6, kind="temporary_heuristic",
-    unit="years of that trade's annual wage", source=None,
-    confidence="D",
-    why="How much spare capital (in years of the trade's own wage) "
-        "the household must hold before auto_hire replaces a lost "
-        "taught worker - a buffer so this does not spend the "
-        "household into arrears over one specialist. Tuned, not "
-        "measured.")
 
 WAGE_FALLBACK_MIN_HOURS = declare(
     "WAGE_FALLBACK_MIN_HOURS", 100.0, kind="temporary_heuristic",
@@ -186,3 +152,27 @@ MARKET_PRESSURE_ANNUAL_FADE = declare(
         "MARKET_PRESSURE_DECAY's proportional fade, so a small "
         "residual pressure reaches exactly zero rather than decaying "
         "forever. Tuned, not measured.")
+
+PROJECT_IN_HAND_SCORE = declare(
+    "PROJECT_IN_HAND_SCORE", 500, kind="temporary_heuristic", unit="ranking score (dimensionless)",
+    source=None, confidence="D",
+    why="The least score the teaching pass gives a trade a project in hand waits on, so it outranks every trade "
+        "nothing yet waits on. An ordering device, not a measured quantity.")
+CAPITAL_SHARE_FOR_PROJECT_IN_HAND = declare(
+    "CAPITAL_SHARE_FOR_PROJECT_IN_HAND", 0.10, kind="temporary_heuristic", unit="dimensionless (share of capital)",
+    source=None, confidence="D",
+    why="The share of capital a trade a project in hand waits on may be paid from, beyond the year's spare income. Tuned.")
+SPARE_SHARE_FOR_SPECULATIVE_TRADE = declare(
+    "SPARE_SHARE_FOR_SPECULATIVE_TRADE", 0.5, kind="temporary_heuristic", unit="dimensionless (share of spare income)",
+    source=None, confidence="D",
+    why="The share of the year's spare income a trade nothing yet waits on may be paid from. Tuned.")
+TEACHING_PASS_HEADCOUNT = declare(
+    "TEACHING_PASS_HEADCOUNT", 2, kind="temporary_heuristic", unit="people taught per pass",
+    source=None, confidence="D",
+    why="People taught a lost trade in one automatic pass, and the years of their keep the household must afford "
+        "first (one year each). Small enough to restore a trade, not a workforce.")
+ARTISAN_FLOOR_SHARE_OF_CRAFT = declare(
+    "ARTISAN_FLOOR_SHARE_OF_CRAFT", 0.25, kind="temporary_heuristic", unit="dimensionless (share of the craft headcount)",
+    source=None, confidence="D",
+    why="The share of the craft headcount that stays generic artisans however many taught specialists cover it, so "
+        "specialists cannot squeeze the generic artisans away. Tuned.")

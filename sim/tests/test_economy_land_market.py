@@ -7,8 +7,9 @@ import math
 import unittest
 from types import SimpleNamespace
 
-from sim.economy import land_market
-from sim.economy.accounts import Book
+from sim.economy.land_record import LandRecord
+from sim.economy import land_market, titles
+from sim.book import Book
 from sim.economy.households_cohort import cohort_id, cohorts_for_tile
 from sim.economy.land_market import LandDemand, clear_land, rent_postings
 from sim.economy.producers import Producer
@@ -124,8 +125,8 @@ def economy_of(arable_by_tile, runs_by_tile):
         producers[producer_id] = Producer(producer_id, cohort_id(tile, 2), "wheat", tile, runs_by_tile[tile],
                                           expected_prices={"grain": 1.0})
         book.transfer(Transfer(EDGE_MINT, producer_id, "coin", 1e6, "opening"))
-    record = SimpleNamespace(producers=producers, book=book, cohorts={each.agent_id: each for each in cohorts},
-                             land_rent={})
+    record = SimpleNamespace(producers=producers, book=book, cohorts={each.agent_id: each for each in cohorts}, land=LandRecord())
+    titles.seed(record)
     setup = SimpleNamespace(tiles=tiles, recipes={"wheat": WHEAT}, land_per_run=LAND_PER_RUN, currency_id="coin")
     return setup, record
 
@@ -136,12 +137,12 @@ class SettleYearTests(unittest.TestCase):
         view = View({"grain": 1.0}, {"hand": 0.5})
         wanted = {pid: producer.capacity_runs for pid, producer in record.producers.items()}
         paid = land_market.settle_year(setup, record, view, wanted)
-        self.assertAlmostEqual(record.land_rent["rich"], 0.0)
-        self.assertGreater(record.land_rent["short"], 0.0)
-        self.assertEqual(record.producers["producer:rich"].land_run_cap, -1.0)
+        self.assertAlmostEqual(record.land.land_rent["rich"], 0.0)
+        self.assertGreater(record.land.land_rent["short"], 0.0)
+        self.assertIsNone(record.producers["producer:rich"].land_run_cap)
         self.assertAlmostEqual(record.producers["producer:short"].land_run_cap, 100.0)
-        self.assertAlmostEqual(record.producers["producer:short"].land_rent_per_run, record.land_rent["short"])
-        self.assertAlmostEqual(sum(each.amount for each in paid), 100.0 * record.land_rent["short"])
+        self.assertAlmostEqual(record.producers["producer:short"].land_rent_per_run, record.land.land_rent["short"])
+        self.assertAlmostEqual(sum(each.amount for each in paid), 100.0 * record.land.land_rent["short"])
         # the rent reaches every cohort of the short tile by ownership share, none of the rich tile's
         self.assertEqual({each.payee.split(":")[1] for each in paid}, {"short"})
         self.assertEqual(len({each.payee for each in paid}), 3)
@@ -153,7 +154,7 @@ class SettleYearTests(unittest.TestCase):
         record.producers["producer:poor"] = replaced(record.producers["producer:poor"], yield_factor=0.5)
         view = View({"grain": 1.0}, {"hand": 0.5})
         land_market.settle_year(setup, record, view, {pid: 300.0 for pid in record.producers})
-        self.assertGreater(record.land_rent["good"], record.land_rent["poor"])
+        self.assertGreater(record.land.land_rent["good"], record.land.land_rent["poor"])
 
     def test_the_cap_does_not_shrink_what_the_producer_wants_next_year(self):
         setup, record = economy_of({"short": 100.0}, {"short": 300.0})
@@ -164,7 +165,7 @@ class SettleYearTests(unittest.TestCase):
 
     def test_rent_stays_zero_until_settled(self):
         setup, record = economy_of({"short": 100.0}, {"short": 300.0})
-        self.assertEqual(record.land_rent, {})
+        self.assertEqual(record.land.land_rent, {})
         self.assertEqual(record.producers["producer:short"].land_rent_per_run, 0.0)
         self.assertTrue(math.isfinite(record.producers["producer:short"].capacity_runs))
 

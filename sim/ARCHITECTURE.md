@@ -2,9 +2,8 @@
 
 Read this first to find where code lives and what is safe to change. It describes the engine as it is; it
 carries no numbers, because they go stale. Anything that would be a number names the command that measures it
-(section 7). The design and its reasons are `docs/architecture/MODULE_REGISTRY_PLAN.md`; per-module detail
-(views, commands, state, callers) is in `docs/architecture/catalogue/`, which was written during the move and
-lags the code, so re-measure before acting on it.
+(section 7). The design and its reasons are `docs/architecture/MODULE_REGISTRY_PLAN.md`; a module's views, commands and
+state are in its `module_spec.py` and `state.py`.
 
 ## 1. The shape
 
@@ -17,7 +16,7 @@ engine bridge (`sim/engine/bridge*.py`) is the thin remainder of reads that stil
 in section 7 report how many are left.
 
 Code that is not yet in a module still calls `Sim` methods that forward to views and commands
-(`sim/engine/forward_*.py`, and the properties `core.py` states through `root_facts.py`). Those forwarders are the leftover of the old mixin design and
+(the properties `core.py` states through `root_facts.py`). Those forwarders are the leftover of the old mixin design and
 are being removed; the measure is command 1.
 
 ## 2. The assembly (`sim/assembly/`)
@@ -36,6 +35,19 @@ are being removed; the measure is command 1.
 
 The engine chooses the modules in `sim/engine/game_assembly.py`: any `sim/<package>/module_spec.py` lists its
 specs in `MODULE_SPECS`. Which module reads and sends what is printed by command 2.
+
+**A module class is composed, not inherited.** Every implementation derives from `Module` alone and holds its behaviour as
+**parts**: `PARTS = {"name": PartClass}` (`Part` in `module.py`). The assembly builds the parts when it instantiates the module,
+hands them `needs` when it wires the module, and runs each part's `setup()` and then the module's. A part keeps the state it
+owns (set in `__init__`), reads the module's `world`, `seat`, `needs`, `clock` and `kernel(...)` under the same names, and
+reaches a sibling as `self.parts.<name>`, never through the module class. A declared view, command handler, phase or provision
+name (`ViewSpec.compute`, `applies`, `PhaseHook.method`, `Provision.method`) resolves to a method of the module class if it has
+one, else to the one part of `PARTS` that has it (two parts having it is an `AssemblyError`). The assembly generates the
+one-line method on the module class for such a name (`_with_part_methods`), so a mod's layer over the module can still
+override it and reach the part with `super()`; the binding itself takes the part's bound method (`bound_method`). Only
+declared names are reachable this way: a layer cannot override what parts call on each other, so a mod's override never reaches a part-to-part call inside the module. A declared name may not be one the `Module` or `Part` bases define (`setup`, `bump`, `kernel`, ...); a layer method that is neither declared nor an existing method of the module is an `AssemblyError`. Data a mod's layer replaces
+(`Projects.START_CHECKS`) stays an attribute of the module class and is read by the part as `self.module.START_CHECKS`. A module
+class keeps its own methods only for lifecycle (`setup`) or for a name no part owns.
 
 ## 3. The modules
 
@@ -93,8 +105,14 @@ is handed: the views and commands it declared with `api.reads(...)` and `api.sen
 
 Run from the repository root.
 
-1. `bash tools/done_check.sh` prints the migration's counts: `Sim`'s bases and mixins left, the module graph
-   summary, undeclared reads, and writes outside the owners of money.
+1. `bash tools/done_check.sh` prints the migration's counts and exits 1 when a gating one is above zero (it prints
+   `failing checks:` and names them). The failing checks are: mixin classes left in the `Sim` MRO and in `sim/labour`;
+   classes composed by inheritance (`tools/check_class_bases.py`, all of `sim/` but the tests); module reads and sends not
+   declared in their spec (`tools/check_module_reads.py`); UI views and commands missing from a built game
+   (`tools/check_ui_views.py`); direct capital/money writes outside their owners; string reads of `legacy_*` views; walled-package
+   import breaks (`tools/check_package_walls.py`, `docs/architecture/PACKAGE_WALLS.md`); economy record parts written by a
+   non-owner (`tools/check_record_owners.py`); part structure and private reaches into a part (`tools/check_parts.py`); and
+   attributes read from an adapter object that its class lacks (`tools/check_attribute_calls.py`). Each can be run alone.
 2. `python3 tools/measure/module_graph.py --modules` prints, per module, the views it reads, the commands it
    sends and how many modules depend on it; without `--modules` only the totals.
 3. `python3 tools/check_module_reads.py` lists every view read or command sent that the module's spec does not
@@ -111,7 +129,7 @@ Run from the repository root.
 
 ## 8. Before you change state
 
-1. Find the owner module of the fact (`sim/<module>/module_spec.py`, or the catalogue file) and change it there.
+1. Find the owner module of the fact (`sim/<module>/module_spec.py`) and change it there.
 2. List its readers: grep the view's name, and run command 2. A change to a view's shape is a change to every
    reader.
 3. Another module's fact is changed by sending its command, never by writing the field; add the command to the
@@ -122,10 +140,17 @@ Run from the repository root.
 
 ## 9. Known structural problems
 
-- Two owners of prices and traded volumes, the solver and the agent economy:
-  `Complaints/507-prices-and-traded-volumes-have-two-owners.md`.
-- Temporary heuristics grow faster than they are retired:
-  `Complaints/509-temporary-heuristics-grow-faster-than-they-are-retired.md`.
-- Tree nodes are both knowledge and concerns:
-  `Complaints/510-most-tree-nodes-charge-upkeep-and-make-nothing.md`.
-- The forwarders on `Sim` and the mixin fakes in tests are not gone: command 1.
+Each is a complaint; read its `**Status:**` line first (`grep -m1 '^\*\*Status' Complaints/NNN-*.md Complaints/closed/NNN-*.md`; a closed complaint is under `Complaints/closed/`).
+
+- What the economy and labour re-audit left (whole-record functions, missing prices read as zero in a few places, and
+  other items its list names): `Complaints/964`; labour's part is `Complaints/556`. A seat's goods orders wait for the
+  year's clearing (`sim/markets/port_goods_orders.py`).
+- Two owners of prices and traded volumes, the solver and the agent economy: `Complaints/507`
+  (`docs/architecture/ONE_PRICE_OWNER_PLAN.md`).
+- Temporary heuristics: `Complaints/closed/509` is closed; `python3 sim/constants.py --burndown` lists those still to retire.
+- Tree nodes are both knowledge and concerns, and the founder's ventures and firms' concerns are two
+  implementations: `Complaints/510`, `Complaints/514`.
+- A seat's party writes through other modules' records: `Complaints/931`. Mod code still receives live objects:
+  `Complaints/955`.
+- Writes of money and goods outside the ledger's owners are counted by command 1 (`book/ledger transfer calls outside
+  owners`); the count is not zero.

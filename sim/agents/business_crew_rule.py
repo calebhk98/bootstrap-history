@@ -8,8 +8,11 @@ from typing import Callable, Dict, Mapping, Optional, Tuple
 
 from sim.world import plant_figures
 
-# Trades that are generic labour: a foreman is never drawn from them.
-GENERIC_TRADES = ("artisan", "labourer", "slave")
+
+def generic_trades(figures: "CrewFigures") -> frozenset:
+	"""Trades that are generic labour (the labour package's one rule): a foreman is never drawn from them."""
+	from sim.labour.api import generic_staff_trades   # imported where used: the labour package reads actors too
+	return generic_staff_trades(figures.unskilled_trade())
 
 
 @dataclass(frozen=True)
@@ -24,7 +27,7 @@ class CrewFigures:
 	supervision_share: float
 	hands_per_revenue: Callable[[], float]   # asked only when the plant's revenue sets its crew
 	foreman_share: float
-	unskilled_trade: Callable[[], str]   # asked only when a plant states no hours
+	unskilled_trade: Callable[[], str]   # asked when a plant states no hours and when the generic trades are named
 	is_capability_institution: bool = False
 	stated_people: Optional[float] = None
 	revenue_basis: Optional[str] = None
@@ -80,11 +83,13 @@ def crew_by_trade(figures: CrewFigures) -> Dict[str, float]:
 def foreman(figures: CrewFigures) -> Tuple[Optional[str], float]:
 	"""(skilled trade, FTE) that supervises the plant, or (None, 0): the largest skilled share of its build crew.
 	A plant built by generic artisans alone, or a capability institution, has none."""
+	from sim.labour.api import generic_craft_trade   # imported where used: the labour package reads actors too
 	if (figures.is_capability_institution or figures.revenue <= 0
-			or figures.build_hours_by_trade.get("artisan", 0) <= 0):
+			or figures.build_hours_by_trade.get(generic_craft_trade(), 0) <= 0):
 		return None, 0.0
+	generic = generic_trades(figures)
 	skilled = [(hours, trade) for trade, hours in figures.build_hours_by_trade.items()
-			   if trade not in GENERIC_TRADES and hours > 0]
+			   if trade not in generic and hours > 0]
 	if not skilled:
 		return None, 0.0
 	_hours, trade = max(skilled, key=lambda row: (row[0], row[1]))
@@ -94,8 +99,9 @@ def foreman(figures: CrewFigures) -> Tuple[Optional[str], float]:
 def staff_by_trade(figures: CrewFigures, scholars: float) -> Dict[str, float]:
 	"""{trade: people} one plant needs of the shared pool: its crew, the scholars it ties up, its foreman and its
 	garrison. `scholars` is `hands(...)[0]`."""
+	from sim.labour.api import scholar_trade   # imported where used: the labour package reads actors too
 	staff = dict(crew_by_trade(figures))
-	staff["scholar"] = scholars
+	staff[scholar_trade()] = scholars
 	foreman_trade, foreman_fte = foreman(figures)
 	if foreman_trade:
 		staff[foreman_trade] = staff.get(foreman_trade, 0.0) + foreman_fte

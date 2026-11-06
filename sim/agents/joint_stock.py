@@ -27,7 +27,7 @@ def clean_shares(shares: Any) -> Dict[str, float]:
 
 def held_in(actors: Iterable[Any], issuer_id: str) -> float:
 	"""Share of `issuer_id`'s equity held by `actors`."""
-	return sum(actor.record.holdings.get(issuer_id, 0.0) for actor in actors)
+	return sum(actor.record.shares_held.get(issuer_id, 0.0) for actor in actors)
 
 
 def holds_problem(holder: Any, shares: Dict[str, float]) -> str:
@@ -36,7 +36,7 @@ def holds_problem(holder: Any, shares: Dict[str, float]) -> str:
 		if issuer_id == holder.actor_id:
 			if share > 1.0 - holder.record.issued + EPSILON:
 				return "has not that much equity left to issue"
-		elif share > holder.record.holdings.get(issuer_id, 0.0) + EPSILON:
+		elif share > holder.record.shares_held.get(issuer_id, 0.0) + EPSILON:
 			return "holds too little of " + issuer_id
 	return ""
 
@@ -55,15 +55,15 @@ def hand_over(source: Any, target: Any, shares: Dict[str, float]) -> None:
 		if issuer_id == source.actor_id:
 			source.record.issued += share
 		else:
-			left = source.record.holdings.get(issuer_id, 0.0) - share
+			left = source.record.shares_held.get(issuer_id, 0.0) - share
 			if left > EPSILON:
-				source.record.holdings[issuer_id] = left
+				source.record.shares_held[issuer_id] = left
 			else:
-				source.record.holdings.pop(issuer_id, None)
+				source.record.shares_held.pop(issuer_id, None)
 		if issuer_id == target.actor_id:
 			target.record.issued = max(0.0, target.record.issued - share)
 		else:
-			target.record.holdings[issuer_id] = target.record.holdings.get(issuer_id, 0.0) + share
+			target.record.shares_held[issuer_id] = target.record.shares_held.get(issuer_id, 0.0) + share
 
 
 def shares_worth(shares: Dict[str, float], find_actor: Any) -> float:
@@ -84,23 +84,9 @@ def issuers_among(registry: Any, world: Any) -> List[Any]:
 		issuer = registry.actors[issuer_id]
 		if issuer.record.exited_year is None and issuer.record.issued > 0.0:
 			found.append((issuer_id, issuer, issuer.record.last_margin))
-	for seat_id, party in sorted(world.seat_parties().items()):
+	for seat_id, party in sorted(world.seats.seat_parties().items()):
 		if party.record.issued > 0.0:
-			found.append((seat_id, party, world.seat_margin(seat_id)))
-	return found
-
-
-def issuers_among(registry: Any, world: Any) -> List[Any]:
-	"""(issuer id, issuer, margin its dividends come from) for every actor in business that has outside
-	shareholders: those in the registry, and the seats (a seat's margin is what its concerns earn over upkeep)."""
-	found = []
-	for issuer_id in sorted(registry.actors):
-		issuer = registry.actors[issuer_id]
-		if issuer.record.exited_year is None and issuer.record.issued > 0.0:
-			found.append((issuer_id, issuer, issuer.record.last_margin))
-	for seat_id, party in sorted(world.seat_parties().items()):
-		if party.record.issued > 0.0:
-			found.append((seat_id, party, world.seat_margin(seat_id)))
+			found.append((seat_id, party, world.seats.seat_margin(seat_id)))
 	return found
 
 
@@ -109,13 +95,13 @@ def pay_dividends(registry: Any, world: Any) -> float:
 	by share, never more than its purse; returns the total paid."""
 	paid = 0.0
 	holders = dict(registry.actors)
-	holders.update(world.seat_parties())
+	holders.update(world.seats.seat_parties())
 	for issuer_id, issuer, margin in issuers_among(registry, world):
 		pool = min(DIVIDEND_PAYOUT_SHARE * max(0.0, margin), max(0.0, issuer.money))
 		if pool <= 0.0:
 			continue
 		for holder_id in sorted(holders):
-			share = holders[holder_id].record.holdings.get(issuer_id, 0.0)
+			share = holders[holder_id].record.shares_held.get(issuer_id, 0.0)
 			if share > 0.0 and holder_id != issuer_id:
 				ledger.transfer(issuer, holders[holder_id], pool * share, "dividend")
 				paid += pool * share

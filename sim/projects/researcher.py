@@ -31,7 +31,7 @@ class SeatResearcher:
 
 	def copy_budget(self, world: Any) -> float:
 		"""Cash and credit not already owed on work in hand."""
-		return max(0.0, self._needs.acting_balance()) + self._needs.credit_limit() - self._projects._owed_on_work_in_hand()
+		return max(0.0, self._needs.acting_balance()) + self._needs.credit_limit() - self._projects.parts.start_checks.owed_on_work_in_hand()
 
 	def research_price(self, costs: Dict[str, Any], node_id: str, world: Any) -> float:
 		"""What the seat still owes on the node: the shared bill less what it already paid towards it."""

@@ -7,6 +7,7 @@ its own.
 A view given as a plain value is that value; as a function it is called with the view's arguments; a keyed view is a dict or a
 function of the key. Defaults are the quiet answers: no work built, an empty purse, a state that reaches everyone, nothing
 organised against the household. The commands the module sent are in `module_harness.sent(module)`. Dice are `random.Random`."""
+from sim.tests.agents_fake_world import flat_namespace
 import random
 from contextlib import contextmanager
 from types import SimpleNamespace
@@ -33,7 +34,7 @@ def _government(unfunded: Optional[Dict[str, float]] = None):
 
 
 def defaults(seed: int) -> Dict[str, Any]:
-	world = SimpleNamespace(government=lambda: _government(), collectible_share=lambda: 1.0, order_share=lambda: 1.0,
+	world = flat_namespace(government=lambda: _government(), collectible_share=lambda: 1.0, order_share=lambda: 1.0,
 	                        inspection_share=lambda: 1.0, forest_share=lambda: 1.0)
 	return {
 		"year": 100, "civilisation": {"id": "rome", "starting_tax_share": 0.1}, "events_enabled": True,
@@ -52,7 +53,7 @@ def defaults(seed: int) -> Dict[str, Any]:
 		"techniques_held": set(), "techniques_granted": set(), "tree": lambda node_id: None, "tree_nodes": {},
 		"running": lambda node_id: False, "revenue_estimate": 0.0, "concern_revenue": lambda node_id: 0.0, "operating": set(),
 		"standing_floor": 0.0, "rep_factor": 1.0, "techniques_version": 0, "operating_version": 0,
-		"headcount": 0.0, "base_annual_wage": lambda trade: 1.0, "labour_state_weights": {}, "money_per_labour_hour": 1.0,
+		"headcount": 0.0, "base_annual_wage": lambda trade: 1.0, "unskilled_trade": "labourer", "labour_state_weights": {}, "money_per_labour_hour": 1.0,
 		"seat_list": {"joined": ["founder"], "playing": ["founder"]}, "seat_country": lambda seat_id: None, "founder": {"alive": True, "policy": {}},
 		"population_total": 1.0e6, "pop_scale": 1.0, "material_pool": lambda material: (material,),
 		"material_substitutes": lambda material: frozenset(), "real_output_per_head": 1.0, "output_factor": 1.0,

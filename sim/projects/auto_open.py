@@ -2,6 +2,7 @@
 household's capability depends on even at a loss it can carry.
 
 Default ON for the optimizer and OFF for a player, like every other automation in this game."""
+from sim.assembly.api import Part
 from sim.finance.api import deep_in_arrears, opens_in_deep_arrears, payback_years
 from sim.reporting.api import RecordEvent
 from sim.ventures.api import OpenVenture
@@ -12,7 +13,7 @@ from .constants import (AUTO_EXPAND_MIN_OCCUPANCY, AUTO_EXPAND_MIN_ROOM_UNITS, A
                         STARTER_FOUNDING_MIN_UNITS)
 
 
-class AutoOpen:
+class AutoOpen(Part):
 	def auto_open_ventures(self):
 		"""Open what plainly pays for itself, best margin first, within the staff and the money available. Default ON for
 		the optimizer and OFF for a player, like every other automation in this game."""
@@ -34,7 +35,7 @@ class AutoOpen:
 		self._auto_open_log_blocked(blocked, opened)
 		return opened
 
-	def _open_venture(self, node_id, units=None):
+	def open_venture(self, node_id, units=None):
 		"""(did it open, the reply): the ventures' `open`, asked through its command."""
 		return self.needs.send(OpenVenture(node_id, units))
 
@@ -50,7 +51,7 @@ class AutoOpen:
 		operating = needs.operating()
 		return sorted((node_id for node_id in sorted(needs.techniques_held())
 		               if needs.is_venture[node_id] and node_id not in operating
-		               and not self.exclusion_reason(node_id)
+		               and not self.parts.exclusions.exclusion_reason(node_id)
 		               and nodes[node_id]["rev"] > nodes[node_id]["up"]),
 		              key=lambda k: -((nodes[k]["rev"] - nodes[k]["up"]) / max(1.0, needs.venture_capex[k])))
 
@@ -87,7 +88,7 @@ class AutoOpen:
 			(node_id for node_id in sorted(needs.techniques_held())
 			 if node_id in capability
 			 and node_id not in operating and needs.is_venture[node_id]
-			 and not self.exclusion_reason(node_id)
+			 and not self.parts.exclusions.exclusion_reason(node_id)
 			 and nodes[node_id]["rev"] <= nodes[node_id]["up"]),
 			key=lambda k: (nodes[k]["up"] - nodes[k]["rev"], needs.venture_capex[k], k))
 
@@ -120,7 +121,7 @@ class AutoOpen:
 		for node_id in caps:
 			_bleed = needs.institution_upkeep(node_id, None, False) - nodes[node_id]["rev"]
 			if _bleed <= _bleed_room:
-				did_open, _message = self._open_venture(node_id)
+				did_open, _message = self.open_venture(node_id)
 				if did_open:
 					opened.append(node_id)
 					_surplus -= _bleed
@@ -135,7 +136,7 @@ class AutoOpen:
 			starter = max(0.0, min(1.0, _bleed_room / _bleed))
 			if starter < STARTER_FOUNDING_MIN_UNITS:
 				continue
-			did_open, _message = self._open_venture(node_id, starter)
+			did_open, _message = self.open_venture(node_id, starter)
 			if did_open:
 				opened.append(node_id)
 				_spent = _bleed * starter
@@ -173,7 +174,7 @@ class AutoOpen:
 				step = min(1.0, room) if per_unit <= 0 else max(0.0, min(1.0, room, afford_room / per_unit))
 				if step < AUTO_EXPAND_MIN_STEP_UNITS:
 					continue
-				did_open, _message = self._open_venture(node_id, step)
+				did_open, _message = self.open_venture(node_id, step)
 				if did_open:
 					opened.append(node_id)
 					_spent = max(0.0, per_unit) * step
@@ -211,7 +212,7 @@ class AutoOpen:
 						                     "quicker against what you can raise"
 						                     % (_payback, PAYBACK_LIMIT_YEARS)))
 					continue
-			did_open, why = self._open_venture(node_id)
+			did_open, why = self.open_venture(node_id)
 			if did_open:
 				opened.append(node_id)
 			elif blocked is None:

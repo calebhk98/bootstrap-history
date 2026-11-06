@@ -1,5 +1,5 @@
 """The bill a `start` reply states and the debt the surplus can carry. `settle_project_materials` splits the whole bill into the
-materials paid now and the instalments left (so they add up to the cost quoted before starting) and `bill_parts` rounds them for
+materials ordered and the instalments left (so they add up to the cost quoted before starting) and `bill_parts` rounds them for
 the reply; `sustainable_debt` and `debt_service_forecast` price a debt against the recurring surplus (the credit forecast of a
 `start` and the `money` screen read them). Each is called on the finance module (or a stand-in) carrying only what it reads."""
 
@@ -21,20 +21,20 @@ class Materials:
         self.bought = []
         module = materials_stand_in.build(project_cost_now=lambda node_id: whole)
         module.up_front_materials_money = lambda node_id: up_front
-        module.buy_project_materials = lambda node_id: self.bought.append(node_id) or delivered
+        module.order_project_materials = lambda node_id: self.bought.append(node_id) or (delivered, ["lead"] if delivered else [])
         self.settle_project_materials = lambda node_id: module.settle_project_materials(SettleProjectMaterials(node_id))
 
 
 everything = Materials(1000.0, 300.0, 300.0)
-instalments, paid_now = everything.settle_project_materials("mill")
-check("the materials bought are paid now and the rest of the bill is left in instalments", (paid_now, instalments) == (300.0, 700.0))
+instalments, paid_now, _awaited = everything.settle_project_materials("mill")
+check("the materials ordered are the part paid at the clearing and the rest of the bill is left in instalments", (paid_now, instalments) == (300.0, 700.0))
 partial = Materials(1000.0, 300.0, 120.0)
-instalments, paid_now = partial.settle_project_materials("mill")
+instalments, paid_now, _awaited = partial.settle_project_materials("mill")
 check("when the market delivers only part, only that part is paid now and the instalments take up the rest",
       (paid_now, instalments) == (120.0, 880.0) and instalments + paid_now == 1000.0)
 none_needed = Materials(1000.0, 0.0, 0.0)
 check("with no material to buy up front nothing is bought and the whole bill is instalments",
-      none_needed.settle_project_materials("mill") == (1000.0, 0.0) and none_needed.bought == [])
+      none_needed.settle_project_materials("mill") == (1000.0, 0.0, []) and none_needed.bought == [])
 
 check("the whole bill is the sum of the two rounded parts, so the printed figures add up",
       bill_parts(700.04, 299.96) == (1000.0, 300.0, 700.0) and bill_parts(0.26, 0.26) == (0.6, 0.3, 0.3))

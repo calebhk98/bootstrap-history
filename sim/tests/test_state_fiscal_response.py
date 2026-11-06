@@ -80,6 +80,9 @@ class Lender(Government):
 	def credit_ceiling(self, world):
 		return BORROWING_CEILING
 
+	def draw_limit(self, world, amount):
+		return min(amount, BORROWING_CEILING)
+
 	def rate_on_loan(self, world, amount):
 		return 0.08
 
@@ -103,7 +106,7 @@ def short_state(policy_kind=None, policy=None, borrows=True, coin_form=False):
 
 def decide(state, world):
 	"""The share paid and the choice recorded, the way the year's standing need puts the question."""
-	share = state.meet_shortfall(lines(), world)
+	share = state.fiscal.meet_shortfall(lines(), world)
 	return share, dict(state.record.fiscal_response)
 
 
@@ -168,7 +171,7 @@ check("borrowing leaves less unpaid: the share paid is the purse plus the loan o
 for name, response_kind in (("arrears", "arrears"), ("cut_lines", "cut")):
 	state, world = short_state(policy=CallbackPolicy(lambda actor, decision, name=name: [name]), borrows=False)
 	share, choice = decide(state, world)
-	arrears.owe(state.record, lines(), share, state.deferred_fraction(lines(), share))
+	arrears.owe(state.record, lines(), share, state.fiscal.deferred_fraction(lines(), share))
 	if name == "arrears":
 		check("deferring pay books the pay it did not pay as owed", abs(arrears.total(state.record) - 600.0 - 300.0) < 1e-6
 			  and state.record.arrears["army"] == 600.0, state.record.arrears)

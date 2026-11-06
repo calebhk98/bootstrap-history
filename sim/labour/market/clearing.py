@@ -5,12 +5,12 @@ from typing import Callable, Dict, List, Optional, Sequence, Set, Tuple
 from sim.constants import declare
 
 from . import asks, layoffs
-from .asks import VACANCY_SHARE_THRESHOLD, WAGE_UPDATE_PER_ROUND  # noqa: F401  (declared beside the rounds that use them)
 from .applications import hire_through_rounds
 from .import_cost import ImportCosts
 from .premium import training_premium
+from .reservation import reservation_wage
 from .trades import fallback_trade
-from .records import Bid, Clearing, MarketState, YearInputs
+from .records import EmployerHoursBid, LabourClearing, MarketState, YearInputs
 from .scarcity import short_run_ceiling
 
 WAGE_SHARE_CLOSED_PER_YEAR = declare(
@@ -18,27 +18,14 @@ WAGE_SHARE_CLOSED_PER_YEAR = declare(
     source=None, confidence="D",
     why="How much of the gap between last year's new-hire wage and a higher clearing point closes in a year (an offer "
         "only rises, as Eurace's WAGE_OFFER does, Firm_update_wage_offer in Labour/Firm_Employer_Functions.c). A lower "
-        "clearing point is reached at once for new hires: held hours keep their contract (contracted_wage) and the ask "
-        "falls by asks.py, so the downward stickiness lives there. The speed is not fitted.")
-
-MATCHING_EFFICIENCY_PER_YEAR = declare(
-    "MATCHING_EFFICIENCY_PER_YEAR", 2.0, kind="temporary_heuristic", unit="per year",
-    source=None, confidence="D",
-    why="Rate at which vacancies and searchers meet. Used only by the founder's recruitable estimate in "
-        "labour_market_api.py; the clearing itself hires by applications.py. Set so a slack market fills nearly all of "
-        "a vacancy in a year while a tight one fills part; not fitted.")
+        "clearing point is reached at once, and the ask falls by asks.py, so the downward stickiness lives there. "
+        "Every hour of the trade in the area is paid the one wage. The speed is not fitted.")
 
 FIRM_LABOUR_SUPPLY_ELASTICITY = declare(
     "FIRM_LABOUR_SUPPLY_ELASTICITY", 2.0, kind="temporary_heuristic", unit="elasticity of recruits to pay",
     source=None, confidence="C",
     why="How strongly an employer's pay over its rivals' raises how fast it recruits; the monopsony "
         "literature puts the firm-level elasticity of labour supply at a few.")
-
-MATCHING_SEARCHER_ELASTICITY = declare(
-    "MATCHING_SEARCHER_ELASTICITY", 0.5, kind="temporary_heuristic", unit="elasticity of fill to searchers per vacancy",
-    source=None, confidence="C",
-    why="How much more of a vacancy fills when more searchers chase it; matching-function estimates put the "
-        "elasticity of hires to searchers near one half.")
 
 ON_THE_JOB_SEARCH_SHARE = declare(
     "ON_THE_JOB_SEARCH_SHARE", 0.1, kind="temporary_heuristic", unit="share of a lower payer's hours per year",
@@ -50,43 +37,50 @@ ON_THE_JOB_SEARCH_SHARE = declare(
 SUPPLY_SOLVE_STEPS = 60      # a numerical bound: the bisection for the wage a rising supply meets a step of demand at
 
 
-def reservation_wage(inputs: YearInputs, area: str, risk: float) -> float:
-    """What an hour must pay: the outside option per hour plus the priced risk of the trade."""
-    floor = inputs.subsistence_per_worker_year.get(area, 0.0) / max(inputs.hours_per_worker_year, 1e-12)
-    return floor * (1.0 + risk * inputs.value_of_life_years_of_income)
+def ask_floor(inputs: YearInputs, area: str, base_reservation: float) -> float:
+    """The lowest wage an ask falls to: the area's stated floor (what the household needs less its own plot), or,
+    where none is stated, the reservation wage itself (an area with no stated floor gives no reason to sell under what
+    an hour must pay)."""
+    stated = inputs.ask_floor_per_worker_year.get(area)
+    return base_reservation if stated is None else stated / max(inputs.hours_per_worker_year, 1e-12)
 
 
-def unskilled_option(state: MarketState, inputs: YearInputs, area: str, trade: str) -> float:
-    """What a skilled worker can always earn instead: the unskilled wage the area paid last year, taken
-    straight up with no retraining, so no trade quotes below it."""
+def unskilled_option(start_wages: Dict[str, Dict[str, float]], inputs: YearInputs, area: str, trade: str) -> Optional[float]:
+    """What a skilled worker can always earn instead: the unskilled wage the area paid at the start of the year (not
+    the live one, which the year's clearings rewrite in the order they run), taken straight up with no retraining,
+    so no trade quotes below it. None for the unskilled trade itself and where the area paid none."""
     fallback = fallback_trade(inputs.trades)
     if trade == fallback:
-        return 0.0
-    return state.wages.get(area, {}).get(fallback) or 0.0
+        return None
+    return start_wages.get(area, {}).get(fallback)
 
 
-def trained_substitute_wage(state: MarketState, inputs: YearInputs, area: str, trade: str) -> float:
+def trained_substitute_wage(start_wages: Dict[str, Dict[str, float]], inputs: YearInputs, area: str, trade: str) -> Optional[float]:
     """The most an hour of a trade can command where hands are few: what it takes to train a substitute. A
     person who trains goes the trade's training years unpaid, so the trade pays the unskilled wage times the
     training premium (premium.training_premium: the multiple that leaves a trainee indifferent) and the risk
     of the work priced as in the reservation wage. A trade needing no training is capped at the unskilled
-    wage itself (hands move in at once). Unlimited only for the unskilled trade itself."""
+    wage itself (hands move in at once). Unlimited only for the unskilled trade itself. The unskilled wage is the start
+    of the year's; None where the area has neither it nor an outside option to stand in."""
     spec = inputs.trades[trade]
     fallback = fallback_trade(inputs.trades)
     if trade == fallback:
         return math.inf
-    unskilled = max(state.wages.get(area, {}).get(fallback) or 0.0, reservation_wage(inputs, area, 0.0))
+    known = [wage for wage in (start_wages.get(area, {}).get(fallback), reservation_wage(inputs, area, 0.0)) if wage is not None]
+    if not known:
+        return None
+    unskilled = max(known)
     premium = training_premium(spec.training_years, inputs.discount_rate, inputs.career_years)
     return unskilled * premium * (1.0 + spec.fatality_risk_per_year * inputs.value_of_life_years_of_income)
 
 
-def clearing_target(reservation: float, offered: float, bids: Sequence[Bid]) -> float:
+def clearing_target(reservation: float, offered: float, bids: Sequence[EmployerHoursBid]) -> float:
     """Price where the offered hours (all at `reservation`) meet bids taken highest maximum first."""
     return target_for_demand(reservation, offered, [(bid.maximum_wage, bid.hours) for bid in bids])
 
 
 def target_for_demand(reservation: float, offered: float, demand: Sequence[Tuple[float, float]]) -> float:
-    """`clearing_target` over (maximum wage, hours) pairs, the form a Clearing keeps its demand in."""
+    """`clearing_target` over (maximum wage, hours) pairs, the form a LabourClearing keeps its demand in."""
     live = sorted(((cap, hours) for cap, hours in demand if cap >= reservation), reverse=True)
     taken = 0.0
     for index, (cap, hours) in enumerate(live):
@@ -98,7 +92,7 @@ def target_for_demand(reservation: float, offered: float, demand: Sequence[Tuple
     return reservation
 
 
-def supply_target(reservation: float, supply: Callable[[float], float], bids: Sequence[Bid]) -> float:
+def supply_target(reservation: float, supply: Callable[[float], float], bids: Sequence[EmployerHoursBid]) -> float:
     """The lowest wage at which the hours sold (`supply`, rising in the wage) cover the hours employers want at it
     (bids taken highest maximum first): the reservation wage where they do already. Within a step of demand it is
     the wage the supply reaches that step's hours at, so a small excess of hours moves the wage a little, where hours
@@ -125,7 +119,7 @@ def supply_target(reservation: float, supply: Callable[[float], float], bids: Se
     return reservation
 
 
-def pressure(last: float, reservation: float, offered: float, bids: Sequence[Bid]) -> float:
+def pressure(last: float, reservation: float, offered: float, bids: Sequence[EmployerHoursBid]) -> float:
     """How far the market is from balance at last year's wage: the share of the offered hours that employers
     leave unwanted or want beyond them, capped at one. The target jumps from the ask to the bids' maxima as
     wanted hours cross the offered ones, so a step that closed a fixed share of the gap would swing the wage
@@ -138,12 +132,12 @@ def pressure(last: float, reservation: float, offered: float, bids: Sequence[Bid
 def share_closed(last: float, goal: float) -> float:
     """The share of the gap to `goal` that closes in a year for the wage new hires clear at: a rise is gradual
     (`WAGE_SHARE_CLOSED_PER_YEAR`, an offer only rises step by step); a fall is the whole gap, since the workers' own ask
-    (asks.py) already falls gradually and held hours do not follow it down (contracted_wage)."""
+    (asks.py) already falls gradually."""
     return WAGE_SHARE_CLOSED_PER_YEAR if goal > last else 1.0
 
 
-def market_wage(last: Optional[float], reservation: float, offered: float, bids: Sequence[Bid]) -> float:
-    """The wage new hires clear at (not the wage of hours already held)."""
+def market_wage(last: Optional[float], reservation: float, offered: float, bids: Sequence[EmployerHoursBid]) -> float:
+    """The wage the market clears at, before the year's rounds of offers."""
     if offered <= 0.0:
         return last if last is not None else max((bid.maximum_wage for bid in bids), default=reservation)
     if not bids:    # hours on offer and nobody wanting them: new hires would clear at the ask
@@ -167,61 +161,19 @@ def on_the_job_loss_share(paid: float, rival_paid: float) -> float:
     return min(1.0, ON_THE_JOB_SEARCH_SHARE * premium_factor(rival_paid, paid))
 
 
-def standing(maximum_wage: float, pay_premium: float) -> float:
-    """How strongly an employer draws hours: the most an hour is worth to it, raised by the premium it offers.
-    Employers are ranked, and hours move between them, by this and not by the wage paid, which the ceiling caps
-    (Complaint 667). Stands in for the entrant's own means of drawing hours (advertising, a signing cost) that no
-    mechanism yet supplies; the incumbent's edge is the matching friction and `ON_THE_JOB_SEARCH_SHARE` alone."""
-    return maximum_wage * (1.0 + pay_premium)
-
-
-def eligible_bids(bids: Sequence[Bid], wage: float, contracts: Optional[Dict[str, float]] = None
-                  ) -> Tuple[Dict[str, float], Dict[str, float], Dict[str, float], Dict[str, float]]:
-    """Per employer: hours wanted at the market wage (for new hires), the wage paid them, the standing, and the hours
-    wanted for hours already held. A held hour keeps its contract (`contracts`, the wage last year's hours were hired at),
-    so a bid is still wanted for them while its maximum covers the lower of the contract and the market wage: a raised
-    market wage lays off no one whose contract the employer can still pay (Eurace lays off by need alone,
-    Firm_set_labour_market_actions in Labour/Firm_Employer_Functions.c, never by the offer rising)."""
-    contracts = contracts or {}
+def eligible_bids(bids: Sequence[EmployerHoursBid], wage: float) -> Tuple[Dict[str, float], Dict[str, float], Dict[str, float]]:
+    """Per employer: hours wanted at the market wage, the wage it starts offering at, and its rank (its highest maximum
+    wage). An employer whose maximum is under the wage wants none, held hours included."""
     wanted: Dict[str, float] = {}
     paid: Dict[str, float] = {}
     ranks: Dict[str, float] = {}
-    wanted_to_keep: Dict[str, float] = {}
     for bid in sorted(bids, key=lambda each: (each.employer, each.maximum_wage, each.hours)):
-        if bid.maximum_wage >= min(wage, contracts.get(bid.employer, wage)):
-            wanted_to_keep[bid.employer] = wanted_to_keep.get(bid.employer, 0.0) + bid.hours
-            ranks[bid.employer] = max(ranks.get(bid.employer, 0.0), standing(bid.maximum_wage, bid.pay_premium))
         if bid.maximum_wage < wage:
             continue
         wanted[bid.employer] = wanted.get(bid.employer, 0.0) + bid.hours
-        paid[bid.employer] = max(paid.get(bid.employer, 0.0),
-                                 min(bid.maximum_wage, wage * (1.0 + bid.pay_premium)))
-    return wanted, paid, ranks, wanted_to_keep
-
-
-def contracted_wage(contract: Optional[float], market: float, best_maximum: float) -> float:
-    """The wage an employer pays an hour it already held: the wage the hour was hired at, however the market wage has
-    moved since (Eurace fixes a worker's wage at the offer when hired, Firm_hire_workers / Household_receive_wage in
-    Labour/), so long as the employer can still pay it: no more than its best maximum. With no contract, the market wage."""
-    return min(market if contract is None else contract, best_maximum)
-
-
-def pay_by_employer(kept: Dict[str, float], hired: Dict[str, float], contracts: Dict[str, float],
-                    new_paid: Dict[str, float], market: float, best_maximum: Dict[str, float]
-                    ) -> Tuple[Dict[str, float], float]:
-    """(the wage an hour paid, per employer; the hours-weighted mean over everyone hired). An employer's kept hours are
-    paid their contract, the rest of its hours the wage the new hires cleared at (`new_paid`). The mean is the trade's
-    reported market wage; with no one hired it is the wage new hires would clear at (`market`)."""
-    paid: Dict[str, float] = {}
-    bill = 0.0
-    for employer, hours in sorted(hired.items()):
-        held = min(kept.get(employer, 0.0), hours)
-        held_pay = contracted_wage(contracts.get(employer), market, best_maximum.get(employer, math.inf))
-        wage_paid = (held * held_pay + (hours - held) * new_paid.get(employer, market)) / hours if hours > 0.0 else market
-        paid[employer] = wage_paid
-        bill += hours * wage_paid
-    total = sum(hired.values())
-    return paid, (bill / total if total > 0.0 else market)
+        paid[bid.employer] = wage
+        ranks[bid.employer] = max(ranks.get(bid.employer, 0.0), bid.maximum_wage)
+    return wanted, paid, ranks
 
 
 def retain(wanted: Dict[str, float], previous: Dict[str, float], offered: float) -> Dict[str, float]:
@@ -242,7 +194,7 @@ def pay_groups(ranks: Dict[str, float], employers: Sequence[str]) -> List[List[s
 
 
 def poach(hired: Dict[str, float], wanted: Dict[str, float], paid: Dict[str, float]) -> None:
-    """Short employers (`paid` here is the standing) draw hours off strictly lower ones, in proportion to what each can give."""
+    """Short employers (`paid` here is the rank, the highest maximum wage) draw hours off strictly lower ones, in proportion to what each can give."""
     for group in pay_groups(paid, list(wanted)):
         for employer in group:
             short = wanted[employer] - hired[employer]
@@ -276,7 +228,7 @@ def _wage_with_supply(last, reservation, ceiling, supply, bids):
     return wage, (wage if last is not None and wage < last else moved(wage))     # a wage that fell has taken the whole move
 
 
-def offer_ceilings(bids: Sequence[Bid], wage: float, paid: Dict[str, float], market_ceiling: float) -> Dict[str, float]:
+def offer_ceilings(bids: Sequence[EmployerHoursBid], wage: float, paid: Dict[str, float], market_ceiling: float) -> Dict[str, float]:
     """The most each employer offers in the year's rounds: what its least valuable wanted hour (the lowest tranche
     whose maximum covers the wage) is worth to it, no more than the market's ceiling (`short_run_ceiling`) and the clearing point (past it the hours wanted fall away), and never
     under the offer it starts at."""
@@ -287,24 +239,28 @@ def offer_ceilings(bids: Sequence[Bid], wage: float, paid: Dict[str, float], mar
     return {employer: max(min(cap, market_ceiling), paid.get(employer, 0.0)) for employer, cap in lowest.items()}
 
 
-def clear_one(state: MarketState, inputs: YearInputs, trade: str, area: str, bids: Sequence[Bid],
-              import_costs: Optional[ImportCosts] = None) -> Clearing:
+def clear_one(state: MarketState, inputs: YearInputs, trade: str, area: str, bids: Sequence[EmployerHoursBid],
+              import_costs: Optional[ImportCosts] = None) -> Optional[LabourClearing]:
+    """The market of a trade in an area for the year; None where the area has no stated outside option to hold one on."""
+    import_costs = import_costs or ImportCosts(state, inputs)
     spec = inputs.trades[trade]
     workers = sum(state.workers.get(area, {}).get(trade, []))
     full = workers * inputs.hours_per_worker_year
-    share_at = inputs.hours_share_at.get((trade, area))
+    sold_at = inputs.sold_schedule(trade, area)
     base_reservation = reservation_wage(inputs, area, spec.fatality_risk_per_year)
-    lowest = inputs.ask_floor_per_worker_year.get(area, 0.0) / max(inputs.hours_per_worker_year, 1e-12)
-    reservation = max(base_reservation * asks.scale_of(state, area, trade), lowest, unskilled_option(state, inputs, area, trade))
-    last = state.entry_wages.get(area, {}).get(trade)
-    if last is None:
-        last = state.wages.get(area, {}).get(trade)
-    long_run = max(trained_substitute_wage(state, inputs, area, trade), reservation)
-    supply = (import_costs or ImportCosts(state, inputs)).supply(area, trade) if bids else None
+    if base_reservation is None:
+        return None
+    lowest = ask_floor(inputs, area, base_reservation)
+    option = unskilled_option(import_costs.wages, inputs, area, trade)
+    reservation = max(base_reservation * asks.scale_of(state, area, trade), lowest, 0.0 if option is None else option)
+    last = state.wages.get(area, {}).get(trade)
+    substitute = trained_substitute_wage(import_costs.wages, inputs, area, trade)
+    long_run = reservation if substitute is None else max(substitute, reservation)
+    supply = import_costs.supply(area, trade) if bids else None
     imported, fetched_share = supply if supply is not None else (None, 0.0)
     # this year's wage may pass the long-run cost (trainees take years to arrive); what entrants expect stays at it
     ceiling = short_run_ceiling(long_run, reservation, spec.training_years, bids, imported, fetched_share)
-    if share_at is None or full <= 0.0:
+    if sold_at is None:
         offered = full
         wage = min(market_wage(last, reservation, offered, bids), ceiling)
         goal = clearing_target(reservation, offered, bids) if offered > 0.0 and bids else wage
@@ -315,51 +271,40 @@ def clear_one(state: MarketState, inputs: YearInputs, trade: str, area: str, bid
         target = (wage + pressure(wage, reservation, offered, bids) * (min(clearing_target(reservation, offered, bids), ceiling) - wage)
                   if offered > 0.0 and bids and not fell else wage)
     else:
-        wage, target = _wage_with_supply(last, reservation, ceiling, lambda wage_now: full * share_at(wage_now), bids)
-        goal = supply_target(reservation, lambda wage_now: full * share_at(wage_now), bids) if bids else wage
-        offered = full * share_at(wage)
+        wage, target = _wage_with_supply(last, reservation, ceiling, sold_at, bids)
+        goal = supply_target(reservation, sold_at, bids) if bids else wage
+        offered = sold_at(wage)
     target = min(target, long_run) if target is not None else None
-    contracts = state.contract_wages.get(area, {}).get(trade, {})
-    wanted, paid, ranks, wanted_to_keep = eligible_bids(bids, wage, contracts)
+    wanted, paid, ranks = eligible_bids(bids, wage)
     previous = state.hired_hours.get(area, {}).get(trade, {})
-    kept = retain(wanted_to_keep, previous, offered) if offered > 0.0 else {}
+    kept = retain(wanted, previous, offered) if offered > 0.0 else {}
     hired = {employer: kept.get(employer, 0.0) for employer in ranks} if offered > 0.0 else {employer: 0.0 for employer in wanted}
     wanted = {employer: wanted.get(employer, 0.0) for employer in hired}
-    best_maximum: Dict[str, float] = {}
-    for bid in bids:
-        best_maximum[bid.employer] = max(best_maximum.get(bid.employer, 0.0), bid.maximum_wage)
     if offered > 0.0:
-        held_pay = {employer: contracted_wage(contracts.get(employer), wage, best_maximum.get(employer, math.inf))
-                    for employer in hired}
         # searchers apply to employers' offers round by round (applications.py); the unretained hours start as the pool
-        taken = hire_through_rounds(hired, kept, wanted, paid, held_pay, max(0.0, offered - sum(hired.values())),
+        taken = hire_through_rounds(hired, kept, wanted, paid, max(0.0, offered - sum(hired.values())),
                                     reservation, lowest, ceilings=offer_ceilings(bids, wage, paid, min(ceiling, goal)))
-        # the new-hire wage is what the hours taken on were paid, the offers having risen round by round
+        # the wage is what the hours taken on were paid, the offers having risen round by round; every hour of the trade
+        # in the area, held or new, is paid it
         new_hours = sum(taken.values())
         if new_hours > 0.0:
             wage = sum(hours * paid[employer] for employer, hours in taken.items()) / new_hours
-        before = dict(hired)
+        if sold_at is not None:
+            offered = sold_at(wage)    # the hours sold are those the market settles at
         poach(hired, wanted, ranks)
-        # hours an employer lost to a better payer leave the kept and the new alike
-        kept = {employer: hours * min(1.0, hired[employer] / before[employer]) if before.get(employer, 0.0) > 0.0 else 0.0
-                for employer, hours in kept.items()}
     hired = {employer: hours for employer, hours in hired.items() if hours > 0.0}
-    paid_each, reported = pay_by_employer(kept, hired, contracts, paid, wage, best_maximum)
-    state.entry_wages.setdefault(area, {})[trade] = wage
-    state.wages.setdefault(area, {})[trade] = reported
-    state.contract_wages.setdefault(area, {})[trade] = dict(paid_each)
+    state.wages.setdefault(area, {})[trade] = wage
     asks.record(state, area, trade, offered, sum(wanted.values()), wage, base_reservation, lowest)
     state.hired_hours.setdefault(area, {})[trade] = dict(hired)
     total = sum(hired.values())
-    average = sum(hours * paid_each[employer] for employer, hours in hired.items()) / total if total > 0.0 else wage
-    return Clearing(trade=trade, area=area, wage=reported, hours_offered=offered, hours_wanted=sum(wanted.values()),
-                    hours_hired=total, hired_by_employer=hired, paid_by_employer=dict(paid_each), average_wage=average,
-                    target_wage=target, new_hire_wage=wage, hours_held=full,
+    return LabourClearing(trade=trade, area=area, wage=wage, hours_offered=offered, hours_wanted=sum(wanted.values()),
+                    hours_hired=total, hired_by_employer=hired,
+                    target_wage=target, hours_held=full,
                     demand=tuple((bid.maximum_wage, bid.hours) for bid in bids))
 
 
-def clear_all(state: MarketState, inputs: YearInputs) -> List[Clearing]:
-    bids_by_market: Dict[Tuple[str, str], List[Bid]] = {}
+def clear_all(state: MarketState, inputs: YearInputs) -> List[LabourClearing]:
+    bids_by_market: Dict[Tuple[str, str], List[EmployerHoursBid]] = {}
     for bid in inputs.bids:
         if bid.hours > 0.0 and bid.trade in inputs.trades:
             bids_by_market.setdefault((bid.trade, bid.area), []).append(bid)
@@ -368,5 +313,6 @@ def clear_all(state: MarketState, inputs: YearInputs) -> List[Clearing]:
         markets.update((trade, area) for trade, bands in by_trade.items()
                        if sum(bands) > 0.0 and trade in inputs.trades)
     import_costs = ImportCosts(state, inputs)
-    return [clear_one(state, inputs, trade, area, bids_by_market.get((trade, area), []), import_costs)
-            for trade, area in sorted(markets)]
+    held = (clear_one(state, inputs, trade, area, bids_by_market.get((trade, area), []), import_costs)
+            for trade, area in sorted(markets))
+    return [clearing for clearing in held if clearing is not None]

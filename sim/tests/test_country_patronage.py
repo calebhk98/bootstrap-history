@@ -11,7 +11,7 @@ from .harness import check
 from sim.agents import patronage
 from sim.agents.api import ActorRegistry, ActorsState, CastEntry, CountryProfile, CountryWorld, seed_cast
 from sim.agents.no_country_economy import NoCountryEconomy
-from sim.actors.world_patronage import PatronageView
+from sim.actors.world_patronage import Patronage
 from sim.tests import polity_host
 
 from .country_state_world import StateWorld
@@ -65,20 +65,20 @@ def build(shared):
 	entry = CastEntry(actor_id="government:far", country="far", kind="government", money=1.0e6, params={})
 	seed_cast(registry, "home", [entry], {"home": CountryProfile(country="home"), "far": CountryProfile(country="far", population=24000.0)})
 	world = CountryWorld(shared, registry.state.countries["far"], registry)
-	world.state_reach = lambda: REACH
+	world.taxpayers.state_reach = lambda: REACH
 	return world, registry
 
 
 world, registry = build(Shared())
 expected = patronage.ask_of_country(TERMS, BASE_PAY / HOURS, OUTPUT_PER_HEAD, REACH, Shared.clients)
-check("a country's patron ask is its clients' at its own pay, reach and real output per head", abs(world.patron_ask() - expected) < 1e-9 and expected > 0.0, world.patron_ask())
+check("a country's patron ask is its clients' at its own pay, reach and real output per head", abs(world.patronage.patron_ask() - expected) < 1e-9 and expected > 0.0, world.patronage.patron_ask())
 
 
 class NoClients(Shared):
 	clients = []
 
 
-check("a country none of whose seats runs the mechanic is asked for nothing", build(NoClients())[0].patron_ask() == 0.0)
+check("a country none of whose seats runs the mechanic is asked for nothing", build(NoClients())[0].patronage.patron_ask() == 0.0)
 
 
 class NoOutput(Shared):
@@ -91,7 +91,7 @@ class NoPart(Shared):
 
 def refuses(shared):
 	try:
-		build(shared)[0].patron_ask()
+		build(shared)[0].patronage.patron_ask()
 	except NoCountryEconomy as error:
 		return error.country
 	return None
@@ -116,8 +116,9 @@ check("a state that left need unpaid funds nobody", unpaid[1].actors["government
 # ---- the module's side ---------------------------------------------------------------------------------------
 TERMS = {"base_hours": 100.0, "exponent": 0.4, "governance_scale": 25.0}
 
-view = PatronageView()
-view.needs = fake_needs(state_funding_terms=lambda: TERMS, pop_scale_for=lambda people: max(0.05, people / 1000.0),
+holder = SimpleNamespace(needs=None)
+view = Patronage(holder)
+holder.needs = fake_needs(state_funding_terms=lambda: TERMS, pop_scale_for=lambda people: max(0.05, people / 1000.0),
 						patron_clients=lambda country: [("a", 3.0, 1.1), ("b", 0.0, 1.0)])
 check("the funding terms are the polity's figures and the size of the country as the demography module scales it",
 	  view.state_funding_terms(500.0) == dict(TERMS, population_scale=0.5))
@@ -140,7 +141,7 @@ class FakeEconomy:
 
 
 def output_per_head(economy, opening_people, people):
-	view.needs = fake_needs(country_opening_basket=lambda country: economy.agent_opening_basket(country),
+	holder.needs = fake_needs(country_opening_basket=lambda country: economy.agent_opening_basket(country),
 							country_volume_baseline=lambda country: economy.agent_volume_baseline(country),
 							country_traded_volumes=lambda country: economy.agent_traded_volumes(country))
 	return view.country_output_per_head("far", opening_people, people)

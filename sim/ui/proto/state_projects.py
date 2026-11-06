@@ -32,6 +32,11 @@ def _agent_state_active_projects(sim, nodes):
                      **({"will_be_abandoned_in_years": 4 - _at_risk,
                          "because_nobody_here_can": progress.get("blocked_on_trades")}
                         if _at_risk else {}),
+                     # a project started with materials on order waits for the year's clearing to deliver them
+                     **({"held_cause": progress["held_cause"], "awaiting_materials": progress.get("awaiting_materials"),
+                         "materials_short": progress.get("materials_short")}
+                        if progress.get("held_cause") else {}),
+                     **({"materials_refused": progress["materials_refused"]} if progress.get("materials_refused") else {}),
                      # Say which of the three things a project is actually
                      # waiting for.
                      # WORKED OUT NOW, not read off what last year happened
@@ -50,7 +55,7 @@ def _agent_state_active_projects(sim, nodes):
                      "hours_offered_this_year": progress.get("hours_offered_this_year", 0.0),
                      "hours_effective_this_year": progress.get("hours_effective_this_year", 0.0),
                      # WHY THIS MUCH, READ BACK FROM THE ALLOCATOR ITSELF.
-                     # core.py's step() (5. progress) writes these four onto
+                     # the projects module's progress phase (sim/projects/progress_phase.py) writes these four onto
                      # the same st dict as it decides each project's share of
                      # the pool; `portfolio` and _waiting_on's own "your
                      # hours" sentence both read them from here, so the share
@@ -74,7 +79,7 @@ def _agent_state_active_projects(sim, nodes):
                      # SAME PLACE AS THE FOUR ABOVE - None when nothing was
                      # ever directed here, which keeps an undirected
                      # project's reply byte-for-byte what it always was.
-                     # See `allocate` and core.py step()'s own comment on
+                     # See sim/projects/progress_hours.py on
                      # hour_allocations.
                      "hours_directed_this_year": progress.get("hours_directed_this_year"),
                      # THE LIVE RISK: what the dice use now, after any failed
@@ -108,7 +113,7 @@ def _agent_state_headline_money(sim, end_year):
         # under one label would read a growing payroll as a spiralling
         # cost of living to anyone watching only `state`, one of the four
         # screens the welcome text calls essential.
-        "living_cost": round(sim.view("living_cost")() - sim.view("wage_bill")(), 1),
+        "living_cost": round(sim.view("living_cost")() - sim.view("wages_charged_last_year")(), 1),
         "wage_bill": round(sim.view("wage_bill")(), 1),
         "mine_operating_cost": round(sim.view("mine_operating_cost")(), 1),
     }
@@ -141,7 +146,7 @@ def _agent_state_operations(sim, nodes):
         # staff ceiling - and so never showed up in shut_concerns above. This
         # is `state`, the screen a player actually rereads every year, which
         # is exactly where the corpus bug's lesson said a DONE/OPERATING
-        # split has to be loud: see ProjectsMixin.capability_gaps.
+        # split has to be loud: see capability_gaps (sim/production/capability.py).
         "critical_capabilities_not_operating": sim.view("capability_gaps")() or None,
         # Which people each shut, profitable concern is short of.
         "shut_for_want_of_staff": shut_for_want_of_staff(sim, nodes),
@@ -178,18 +183,18 @@ def _agent_state_spend_and_net(sim):
         # the same, or it double-bills the first year by the whole wage
         # bill, in the one year the player is most likely to look.
         "wages_you_have_already_paid_this_year": round(
-            sim.view("pay_book")()["prepaid"], 1) or None,
+            sim.view("pay_book")()["paid_in_clearing"], 1) or None,
         "net_after_project_spend": round(sim.view("revenue_estimate")() - sim.view("upkeep")()
                                          - sim.view("recurring_living_cost")(sim.view("revenue_estimate")(), sim.view("upkeep")())
                                          + min(sim.view("recurring_living_cost")(sim.view("revenue_estimate")(), sim.view("upkeep")()),
-                                               sim.view("pay_book")()["prepaid"])
+                                               sim.view("pay_book")()["paid_in_clearing"])
                                          - sim.view("mine_operating_cost")()
                                          - max(0.0, -sim.view("acting_balance")()) * sim.view("debt_interest_rate")()
                                          - known(sim.view("spend_last_year")(), 0.0), 1),
         # THE STANDING FIGURE HAS TO READ THE STANDING REVENUE: this counts
         # "the STANDING flows only" per the comment on shut_concerns above -
         # the household's ordinary-year position, not this particular
-        # year's - so it must read revenue_capacity() (economy.py), not
+        # year's - so it must read revenue_capacity() (sim/production/revenue.py), not
         # plain revenue(), which dips for a year whenever `work` sells
         # founder-hours. revenue_capacity() exists for exactly this - it
         # is what credit_limit() already reads, with the identical
@@ -202,12 +207,8 @@ def _agent_state_spend_and_net(sim):
 
 
 def training_in_hand(sim):
-    """The people being taught, as `state` lists them and `stuck` names them. Rows are
-    [capacity, ready_year] for people bought and trained, and [0, ready_year, trade, count]
-    for a trade being taught, so read by index."""
-    return [{"artisan_capacity": round(row[0], 2), "ready_year": row[1],
-             "trade": (row[2] if len(row) > 2 else None),
-             "people": (row[3] if len(row) > 3 else None)}
+    """The people being taught, as `state` lists them and `stuck` names them; trade None is people bought."""
+    return [{"ready_year": row.ready_year, "trade": row.trade, "people": row.people}
             for row in sim.view("training_queue")()]
 
 
@@ -217,10 +218,6 @@ def _agent_state_training_and_hours(sim, active, full):
     loud warning when hours are about to go to waste.
     """
     return {
-        # Rows are [capacity, ready_year] for people bought and trained, and
-        # [0, ready_year, trade, count] for a trade being taught, so read by
-        # index. Unpacking two names off a four-wide row killed `state` outright
-        # the moment anybody used `train`.
         "training_pending": training_in_hand(sim),
         # LESS WHAT YOU HAVE ALREADY SOLD: the pool is the pool, but what is
         # FREE is the pool less the hours already spent on wage work, or

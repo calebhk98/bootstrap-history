@@ -1,14 +1,39 @@
 """The actors' purse book as lenders use it: who offers what, what is lent out and owed, and the year's sharing of interest."""
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
-from sim.agents.api import EDGE_SAVERS, payroll
+from sim.assembly.api import Part
+
+from .line_claim import with_own_claim
 
 
-class Lending:
-	"""Mixed into `Actors`."""
+class Lending(Part):
 
-	needs: Any
-	world: Any
+	def connect_purses(self) -> None:
+		"""The purses ask this module what an account may be lent and who lends to the pool (never saved, set whenever the
+		registry is built over a state)."""
+		purses = self.world.purses
+		purses.limit = self.draw_limit
+		purses.lenders_for = self.lenders_for_draw
+
+	def draw_limit(self, account: str, amount: float) -> float:
+		"""The most of a draw of `amount` the account may be lent: its actor's or seat household's own limit; all of it for an account
+		no borrower stands behind (an edge, the pool), which the lenders' supply still bounds."""
+		return self.parts.cast.actor_world().credit.limit(account, amount)
+
+	def lenders_for_draw(self, account: str, amount: float) -> Optional[Tuple[str, float, List[Tuple[str, float, float, float]]]]:
+		"""(the economy's unit, coin per unit, [(lender, capacity, balance, ask)] cheapest first) of the lenders whose ask is no
+		more than the rate the account would pay on a draw of `amount` (`Credit.rate_ceiling`: the market rate for the pool refilling a
+		depositor's take-back); None before lenders have met or while the economy opens."""
+		answered, listing = self.needs.agent_lender_listing()
+		if not answered or not listing["lenders"]:
+			return None
+		ceiling = self.parts.cast.actor_world().credit.rate_ceiling(account, amount)
+		rows = listing["lenders"]
+		if account in self.needs.seat_list()["households"]:   # its granted line was counted against the lenders: it draws on it
+			room = self.needs.credit_room(account)
+			rows = with_own_claim(rows, 0.0 if room is None else room / listing["coin_per_unit"])
+		lenders = [row for row in rows if row[4] <= ceiling]
+		return listing["currency"], listing["coin_per_unit"], [(row[0], row[2], row[3], row[4]) for row in lenders]
 
 	def lender_offers_made(self) -> Dict[str, float]:
 		"""The funds each lender account offers this year, by account, in the order the pool keeps them."""
@@ -33,17 +58,12 @@ class Lending:
 	def settle_lender_interest(self, command: Any = None) -> None:
 		received = self.world.purses.settle_interest()
 		for lender, amount in received.items():
-			if lender == EDGE_SAVERS:
-				continue
-			party = self._lender_party(lender)
+			party = self._lender_party(lender)   # the economy's lenders were paid in units in the book: no actor behind them
 			if party is not None:
-				party.note_income("interest_on_lending", amount)
-		savers = received.get(EDGE_SAVERS, 0.0)
-		if savers > 0.0:
-			payroll.pay_savers(self.cast(), self.edge(EDGE_SAVERS), savers)
+				party.payments.note_income("interest_on_lending", amount)
 
 	def _lender_party(self, account: str) -> Any:
 		"""The actor behind a lender's account, or None for an edge."""
 		if account in self.needs.seat_list()["joined"]:
-			return self.seat_party(account)   # type: ignore[attr-defined]
-		return self.cast().actors.get(account)
+			return self.parts.seat_parties.seat_party(account) 
+		return self.parts.cast.cast().actors.get(account)

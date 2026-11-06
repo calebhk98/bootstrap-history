@@ -21,7 +21,7 @@ def terms_problem(licensee: Any, fee: float, royalty: float, node_id: Any = None
 		return Refusal("licensee_cannot_pay", "the licensee cannot pay the fee", fee=fee, treasury=licensee.money)
 	if node_id is not None and world is not None and licensee.kind in VALUING_KINDS:
 		worth = licensee.imitation_worth(node_id, world)
-		stream = royalty * world.entry_gross(node_id, 0.0, 1.0) * VALUE_HORIZON_YEARS if royalty > 0.0 else 0.0
+		stream = royalty * world.concerns.entry_gross(node_id, 0.0, 1.0) * VALUE_HORIZON_YEARS if royalty > 0.0 else 0.0
 		if fee + stream > worth:
 			return Refusal("fee_above_value", "the licensee values the know-how below these terms",
 						   fee=fee, royalty_stream=stream, worth=worth)
@@ -30,14 +30,15 @@ def terms_problem(licensee: Any, fee: float, royalty: float, node_id: Any = None
 
 def grant(licensor: Any, licensee: Any, node_id: str, fee: float, world: Any) -> bool:
 	"""The licensee pays `fee` to the licensor and can make `node_id` at once. False, and nothing
-	moves, when there is nothing the licensee still lacks or when someone else holds the patent."""
-	entry = world.patent_entry(node_id)
-	if entry is not None and entry["holder"] != getattr(licensor, "actor_id", None):
+	moves, when there is nothing the licensee still lacks, when someone else holds the patent or when it cannot pay the fee."""
+	entry = world.disclosure.patent_entry(node_id)
+	if entry is not None and entry["holder"] != licensor.actor_id:
 		return False
 	chain = imitation.missing_chain(node_id, world, licensee)
 	if not chain:
 		return False
-	ledger.transfer(licensee, licensor, fee, "licence")
+	if not ledger.pay_in_full(licensee, licensor, fee, "licence"):
+		return False
 	licensee.accept_licence(node_id, chain, world)
 	patent.note_licence(licensor, licensee, node_id)
 	return True
@@ -55,10 +56,10 @@ def royalty_due(takings: float, record: Dict[str, Any]) -> float:
 def collect_patent_royalty(world: Any, find_holder: Any, firm: Any, node_id: str, takings: float) -> float:
 	"""A firm licensed under a patent pays the holder the royalty agreed on its takings from the concern, never
 	more than its purse, while the patent lives; the amount paid. `find_holder(id)` gives the holder actor."""
-	owed = getattr(getattr(firm, "record", None), "royalty_owed", {}).get(node_id)
+	owed = firm.record.royalty_owed.get(node_id)
 	holder = find_holder(owed["holder"]) if owed else None
 	entry = holder.record.patents.get(node_id) if holder is not None else None
-	if entry is None or not patent.live(entry, world.year):
+	if entry is None or not patent.live(entry, world.setting.year):
 		return 0.0
 	due = min(royalty_due(takings, {"royalty": owed["rate"]}), max(0.0, firm.money))
 	ledger.transfer(firm, holder, due, "licence")

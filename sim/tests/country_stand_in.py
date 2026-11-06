@@ -6,6 +6,7 @@ from types import SimpleNamespace
 
 from sim.economy.market_memory import MarketMemory, market_key
 from sim.economy.setup import labour_area
+from sim.tests.labour_record_stand_in import labour_record
 from sim.labour.market.records import MarketState
 
 HOME, NORTH = "home", "north"
@@ -51,12 +52,11 @@ def two_country_economy():
                cohort("household:north_farms", "north_farms", 40.0, 30.0), cohort("household:north_port", "north_port", 10.0, 20.0)]
     producers = [producer("producer:mine", "hills", "mine", 4.0), producer("producer:farm", "farms", "farm", 6.0, land_rent_per_run=1.0),
                  producer("producer:north_farm", "north_farms", "farm", 5.0, land_rent_per_run=2.0)]
-    record = SimpleNamespace(
-        cohorts={each.agent_id: each for each in cohorts}, producers={each.agent_id: each for each in producers}, memory=memory,
-        workforce=workforce, volumes={}, hours_hired={wage_key("labourer", "town"): 1000.0, wage_key("labourer", "farms"): 3000.0,
-                                                      wage_key("labourer", "north_farms"): 100.0},
-        hours_idle={wage_key("labourer", "town"): 10.0, wage_key("miner", "hills"): 0.0},
-        carried_goods={}, land_rent={})
+    record = SimpleNamespace(cohorts={each.agent_id: each for each in cohorts}, producers={each.agent_id: each for each in producers}, memory=memory, goods=SimpleNamespace(volumes={}),
+                           labour=labour_record({wage_key("labourer", "town"): 1000.0, wage_key("labourer", "farms"): 3000.0, wage_key("labourer", "north_farms"): 100.0},
+                                                {wage_key("labourer", "town"): 10.0, wage_key("miner", "hills"): 0.0}, workforce=workforce), carriage=SimpleNamespace(carried_goods={}), land=SimpleNamespace(land_rent={}, rent_paid={"farms": 6.0, "north_farms": 10.0},
+                                                                                      titles={each.tile: {each.agent_id: 1.0} for each in cohorts}))
     area_map = SimpleNamespace(goods=lambda: ("grain",),
-                               areas=lambda good: tuple(SimpleNamespace(area_id=area_id, tiles=tiles) for area_id, tiles in GRAIN_AREAS.items()))
+                               areas=lambda good: tuple(SimpleNamespace(area_id=area_id, tiles=tiles) for area_id, tiles in GRAIN_AREAS.items()),
+                               tile_sets=lambda good: {area_id: set(tiles) for area_id, tiles in GRAIN_AREAS.items()})
     return SimpleNamespace(setup=setup, record=record, area_map=area_map)

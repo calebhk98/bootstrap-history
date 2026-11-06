@@ -1,10 +1,11 @@
 """Telling the world when the payroll changes: the seat's employees report each change, and the staff channel moves."""
+from sim.assembly.api import Part
 from sim.invalidating import _InvalidatingDict
 
 from .state import STAFF
 
 
-class StaffWatch:
+class StaffWatch(Part):
 
     def staff_changed(self):
         """Something on the acting seat's payroll changed."""
@@ -15,7 +16,9 @@ class StaffWatch:
 
     def _watch_payroll(self, seat_id):
         seat = self.seat_of(seat_id)
-        seat.employees = _InvalidatingDict(seat.employees or {}, on_change=self.staff_changed)
+        watched = seat.employees
+        if not (isinstance(watched, _InvalidatingDict) and watched.on_change == self.staff_changed):   # wrapped once per seat
+            seat.employees = _InvalidatingDict(watched or {}, on_change=self.staff_changed)
         self.bump_seat(STAFF, seat_id)
 
     def seat_bound(self):

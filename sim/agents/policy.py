@@ -84,7 +84,7 @@ class ExportPolicy(ValuePolicy):
 	def choose(self, actor: Any, decision: Decision) -> List[Option]:
 		if decision.kind != EXPORT_DECISION:
 			return super().choose(actor, decision)
-		kept_back = getattr(getattr(actor, "record", None), "state_monopolies", None) or ()
+		kept_back = actor.record.state_monopolies
 		offered = [option for option in decision.options if option.subject not in kept_back]
 		return super().choose(actor, Decision(decision.kind, offered, decision.budget))
 
@@ -95,7 +95,7 @@ def exports_allowed(actor: Any, materials: Iterable[str]) -> List[str]:
 	a good back keeps it from leaving."""
 	decision = Decision(EXPORT_DECISION, [Option(subject=material, worth=1.0, cost=0.0)
 										  for material in sorted(set(materials))], float("inf"))
-	policy = getattr(actor, "decision_policy", None) or ExportPolicy()
+	policy = actor.decision_policy
 	return sorted(option.subject for option in policy.choose(actor, decision))
 
 

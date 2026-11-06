@@ -18,7 +18,7 @@ MODULE_SPECS = (ModuleSpec(
 	publishes=(
 		ViewSpec("year", "year", channels=(YEAR,)),
 		ViewSpec("fog_of_war", "fog_of_war", **_LIVE),
-		ViewSpec("legacy_fuzzy_estimates", "fuzzy_estimates", **_LIVE),
+		ViewSpec("fuzzy_estimates", "fuzzy_estimates", **_LIVE),
 		ViewSpec("fuzzy_salt", "fuzzy_salt", **_LIVE),
 		ViewSpec("events_enabled", "events_enabled", **_LIVE),
 		ViewSpec("automation", "automation", **_LIVE),

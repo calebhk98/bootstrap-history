@@ -30,11 +30,12 @@ class _Carriers(Freight):
         return "feed"
 
 
-def freight_game(rate=0.1, implementation=_Carriers):
+def freight_game(rate=0.1, implementation=_Carriers, **more_views):
     return module_harness.build(implementation, views={
-        "wage": lambda trade: SEA_WAGE if trade == "sailor" else LAND_WAGE, "market_rate": lambda: rate,
+        "trade_registry": lambda: {"labourer": {"fallback": True}, "sailor": {"role": "sailor"}, "merchant": {"role": "merchant"}},
+        "labour_quote": lambda trade: SEA_WAGE if trade == "sailor" else LAND_WAGE, "market_rate": lambda: rate,
         "carriage_facts": lambda: {"walking_modes": ["drove"], "loss_per_day": {}, "dues_hours_per_tonne": {}},
-        "modes_carrying": lambda cargo: ["cart", "sail"], "material_price": lambda material: 0.5})
+        "modes_carrying": lambda cargo: ["cart", "sail"], "material_price": lambda material: 0.5, **more_views})
 
 
 def mode_costs(game, **kwargs):
@@ -56,6 +57,10 @@ class FreightModeCostTests(unittest.TestCase):
         costs = mode_costs(freight_game(), imbalance=0.0)
         self.assertGreater(costs["sail"], costs["cart"])
 
+    def test_the_carriers_hour_is_the_labour_markets_quote_the_setup_prices_it_at(self):
+        schedule = freight_game(wage=lambda trade: 1000.0 * LAND_WAGE)      # the wage schedule's figure, which is not read
+        self.assertEqual(mode_costs(schedule, imbalance=0.0), mode_costs(freight_game(), imbalance=0.0))
+
     def test_only_the_modes_asked_for_are_priced(self):
         self.assertEqual(sorted(mode_costs(freight_game(), imbalance=0.0, modes=("cart",))), ["cart"])
 
@@ -69,10 +74,10 @@ class FlowImbalanceTests(unittest.TestCase):
         return rules.foreign_flow_imbalance(book.values())
 
     def test_flows_that_match_are_balanced(self):
-        self.assertEqual(self.imbalance({"iron": {"trade_tonnes": 10.0}, "cloth": {"trade_tonnes": -10.0}}), 0.0)
+        self.assertEqual(self.imbalance({"iron": {"out_tonnes": 10.0}, "cloth": {"in_tonnes": 10.0}}), 0.0)
 
     def test_flow_one_way_is_fully_one_sided(self):
-        self.assertEqual(self.imbalance({"iron": {"trade_tonnes": 10.0}}), 1.0)
+        self.assertEqual(self.imbalance({"iron": {"out_tonnes": 10.0}}), 1.0)
 
     def test_no_book_is_fully_one_sided(self):
         self.assertEqual(self.imbalance({}), 1.0)

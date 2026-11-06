@@ -1,7 +1,7 @@
 """A seat as a party to an exchange.
 
-An exchange handles an actor with `actor_id`, `money`, `concerns`, `knows`, `learn`, `credit`, `debit`,
-`opened_year_of`, `capacity_of` and a `record` (stores, offers, opened year, margins, patents, shares). The
+An exchange handles an actor with `actor_id`, `money`, `concerns`, `knows`, `learn`,
+`holdings` (`opened_year_of`, `capacity_of`, ...), `payments` (`credit`, `debit`, `note_income`, `note_outlay`) and a `record` (stores, offers, opened year, margins, patents, shares). The
 seat keeps that state in the modules that own it, so this adapter maps the names onto it through `ports`, the
 views and commands of the owners (see `SeatPorts`): the purse, the staff, the know-how, the plants, and the patents,
 shares and offers. It holds no record of any of them. The seat's id is the party's `actor_id`.
@@ -62,11 +62,11 @@ class SeatRecord(ActorRecord):
 		self._store("patents", value)
 
 	@property
-	def holdings(self) -> Any:
+	def shares_held(self) -> Any:
 		return self._dealing("shares_held") if self.ports is not None else {}
 
-	@holdings.setter
-	def holdings(self, value: Any) -> None:
+	@shares_held.setter
+	def shares_held(self, value: Any) -> None:
 		self._store("shares_held", value)
 
 	@property
@@ -94,6 +94,59 @@ class SeatRecord(ActorRecord):
 		self._store("offer_serial", value)
 
 
+class HouseholdHoldings:
+	"""The seat's plants as the exchange reads them (`party.holdings`), through the seat's ports. Only the members the exchange needs are here; `staffed_share` is firm-only (a
+	seat's crew is the founder's staff, not a plant's), and its callers are firm code."""
+
+	def __init__(self, ports: SeatPorts, margins: Dict[str, float]) -> None:
+		self.ports = ports
+		self.margins = margins
+
+	def opened_year_of(self, node_id: str, default: int) -> int:
+		with self.ports.acting():
+			return self.ports.opened_year(node_id, default)
+
+	def capacity_of(self, node_id: str) -> float:
+		with self.ports.acting():
+			return self.ports.plant_size(node_id)
+
+	def margin_of(self, node_id: str) -> Any:
+		return self.margins.get(node_id)
+
+	def concern_count(self) -> int:
+		return 0  # a seat's record keeps no concerns of its own: the household's operating set is the founder's
+
+	def release_plant(self, node_id: str, world: Any) -> Plant:
+		with self.ports.acting():
+			plant = self.ports.release_plant(node_id, world.setting.year)
+		if plant is None:
+			raise KeyError("the business runs no plant of " + node_id)
+		return plant
+
+	def receive_plant(self, plant: Plant, world: Any) -> None:
+		with self.ports.acting():
+			self.ports.adopt_plant(plant)
+
+
+class HouseholdPayments:
+	"""The seat's money moves (`party.payments`): each is a command to the owner of the seat's cash book."""
+
+	def __init__(self, ports: SeatPorts) -> None:
+		self.ports = ports
+
+	def note_income(self, purpose: Any, amount: float) -> None:
+		self.ports.note_cash(1.0, amount, purpose)
+
+	def note_outlay(self, purpose: Any, amount: float) -> None:
+		self.ports.note_cash(-1.0, amount, purpose)
+
+	def credit(self, amount: float, purpose: Any) -> None:
+		self.ports.credit(amount, purpose)
+
+	def debit(self, amount: float, purpose: Any) -> None:
+		self.ports.debit(amount, purpose)
+
+
 class HouseholdParty:
 	"""Gives a seat the surface an exchange needs; holds no state of its own beyond a transient record."""
 
@@ -106,6 +159,8 @@ class HouseholdParty:
 		self._margins = dict(margins or {})
 		self.record = SeatRecord(kind="household")
 		self.record.ports = ports
+		self.holdings = HouseholdHoldings(ports, self._margins)
+		self.payments = HouseholdPayments(ports)
 
 	@property
 	def money(self) -> float:
@@ -135,7 +190,11 @@ class HouseholdParty:
 
 	def knows(self, node_id: str, world: Any) -> bool:
 		with self._ports.acting():
-			return node_id in self._ports.knowledge() or node_id in world.baseline_knowledge()
+			return node_id in self._ports.knowledge() or node_id in world.knowledge.baseline_knowledge()
+
+	def imitation_worth(self, node_id: str, world: Any) -> float:
+		"""A seat's worth of an invention is the player's to judge, as a player actor's is: nothing here."""
+		return 0.0
 
 	def learn(self, chain: Any, world: Any) -> None:
 		with self._ports.acting():
@@ -154,40 +213,3 @@ class HouseholdParty:
 	@property
 	def account_id(self) -> str:
 		return self.actor_id
-
-	def note_income(self, purpose: Any, amount: float) -> None:
-		self._ports.note_cash(1.0, amount, purpose)
-
-	def note_outlay(self, purpose: Any, amount: float) -> None:
-		self._ports.note_cash(-1.0, amount, purpose)
-
-	def credit(self, amount: float, purpose: Any) -> None:
-		self._ports.credit(amount, purpose)
-
-	def debit(self, amount: float, purpose: Any) -> None:
-		self._ports.debit(amount, purpose)
-
-	def opened_year_of(self, node_id: str, default: int) -> int:
-		with self._ports.acting():
-			return self._ports.opened_year(node_id, default)
-
-	def capacity_of(self, node_id: str) -> float:
-		with self._ports.acting():
-			return self._ports.plant_size(node_id)
-
-	def margin_of(self, node_id: str) -> Any:
-		return self._margins.get(node_id)
-
-	def concern_count(self) -> int:
-		return 0  # a seat's record keeps no concerns of its own: the household's operating set is the founder's
-
-	def release_plant(self, node_id: str, world: Any) -> Plant:
-		with self._ports.acting():
-			plant = self._ports.release_plant(node_id, world.year)
-		if plant is None:
-			raise KeyError("the business runs no plant of " + node_id)
-		return plant
-
-	def receive_plant(self, plant: Plant, world: Any) -> None:
-		with self._ports.acting():
-			self._ports.adopt_plant(plant)

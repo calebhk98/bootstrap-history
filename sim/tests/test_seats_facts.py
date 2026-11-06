@@ -3,7 +3,6 @@ Each is a method of the module over written-out views and a plain seat state."""
 QUICK_TOPIC = True
 
 import unittest
-from types import SimpleNamespace
 
 from sim.seats import founder_rules
 from sim.seats.api import ForgetGoalClosure, RememberGoalClosure

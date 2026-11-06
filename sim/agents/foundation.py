@@ -24,7 +24,7 @@ PATRONAGE = "patronage"
 
 def mean_literacy(world: Any) -> float:
 	"""The members-weighted literacy of the country's bodies of people (0 for none)."""
-	return CountryLiteracy(world.country_strata()).get("literacy_general")
+	return CountryLiteracy(world.people.country_strata()).get("literacy_general")
 
 
 class Foundation(RecordedActor):
@@ -45,16 +45,16 @@ class Foundation(RecordedActor):
 	def stipends_due(self, world: Any) -> float:
 		"""What its people are owed this year at the going pay of their trade."""
 		record = self.record
-		return record.members * world.pay_per_person_year(record.stipend_trade) if record.stipend_trade else 0.0
+		return record.members * world.labour.pay_per_person_year(record.stipend_trade) if record.stipend_trade else 0.0
 
 	def collections(self, world: Any) -> Dict[str, float]:
 		"""This year's income by source: endowment rent, tithe, patronage."""
 		record = self.record
 		lines: Dict[str, float] = {}
 		if record.endowment_hectares > 0.0:
-			lines[ENDOWMENT] = record.endowment_hectares * world.land_rent_per_hectare()
+			lines[ENDOWMENT] = record.endowment_hectares * world.stakes.land_rent_per_hectare()
 		if record.tithe_rate > 0.0 and record.tithe_need:
-			lines[TITHES] = record.tithe_rate * world.tithable_sales_value(record.tithe_need)
+			lines[TITHES] = record.tithe_rate * world.stakes.tithable_sales_value(record.tithe_need)
 		if record.patronage_rate > 0.0:
 			# patrons pay for what few can do: the share of the stipends they cover falls as literacy spreads
 			# (TEMPORARY HEURISTIC, CLAUDE.md 4.4, until patrons are actors with purses of their own)
@@ -67,11 +67,11 @@ class Foundation(RecordedActor):
 		record.revenue_by_form = lines
 		income = sum(lines.values())
 		if income > 0.0:
-			ledger.transfer(world.edge(EDGE_ECONOMY), self, income, "collections")
+			ledger.transfer(world.setting.edge(EDGE_ECONOMY), self, income, "collections")
 		due = self.stipends_due(world)
 		paid = min(due, max(0.0, self.money))
 		if paid > 0.0:
-			ledger.transfer(self, world.edge(EDGE_ECONOMY), paid, "stipends")
+			ledger.transfer(self, world.setting.edge(EDGE_ECONOMY), paid, "stipends")
 		record.need = {"stipends": due}
 		record.unfunded = {"stipends": due - paid}
 

@@ -15,7 +15,7 @@ from sim.freight.module import Freight
 from sim.freight.route import Leg, Route
 from sim.geography import freight_cost, provisions, sea_freight, transport
 from sim.tests import land_views, module_harness
-from sim.world import market, merchant_house, merchant_terms
+from sim.world import merchant_house, merchant_terms
 
 CART = transport.draught_freight_physical_inputs(transport.OX, 2, transport.CART, transport.DIRT_TRACK)
 
@@ -53,12 +53,14 @@ class CrewChoiceTests(unittest.TestCase):
 FREIGHT_LAND_VIEWS = ("carriage_facts", "mode_carrier", "modes_carrying")
 
 
-def _economy(grain_price=1.0):
+def _economy(grain_price=1.0, staple="wheat_kg", other_prices=None):
     """The freight module over a price table, a flat wage, the market rate and the real map."""
-    prices = {"wheat_kg": grain_price, "wood_kg": 0.5, "coal_kg": 0.4, "iron_bar_kg": 8.0, "ox": 4000.0, "mule": 3000.0}
+    prices = {staple: grain_price, **(other_prices or {}), "wood_kg": 0.5, "coal_kg": 0.4, "iron_bar_kg": 8.0, "ox": 4000.0, "mule": 3000.0}
     return module_harness.build(Freight, views={
-        "material_prices": lambda: prices, "material_price": lambda tag: prices.get(tag), "wage": lambda trade: 2.0,
-        "market_rate": lambda: 0.05, **land_views.of({}, FREIGHT_LAND_VIEWS)})
+        "material_prices": lambda: prices, "material_price": lambda tag: prices.get(tag), "trade_registry": lambda: {"labourer": {"fallback": True}, "sailor": {"role": "sailor"}, "merchant": {"role": "merchant"}},
+            "labour_quote": lambda trade: 2.0,
+        "market_rate": lambda: 0.05, "civilisation": lambda: {"id": "t", "staple": staple},
+        **land_views.of({}, FREIGHT_LAND_VIEWS)})
 
 
 class EngineCrewTests(unittest.TestCase):
@@ -68,6 +70,11 @@ class EngineCrewTests(unittest.TestCase):
         rig = sea_freight.crew_to_sail(sea_freight.MERCHANT_HULL_CARGO_TONNES)
         self.assertGreaterEqual(cheap.sea_crew(), rig)
         self.assertGreater(dear.sea_crew(), cheap.sea_crew())
+
+    def test_the_feed_is_priced_at_the_civilisations_staple_not_at_wheat(self):
+        rice_civ = _economy(0.001, staple="rice_kg", other_prices={"wheat_kg": 100.0})
+        self.assertEqual(rice_civ.sea_crew(), _economy(0.001).sea_crew())
+        self.assertEqual(rice_civ.carrier_feed_material("cart"), "rice_kg")
 
     def test_the_carrier_model_and_the_loss_rate_use_the_chosen_crew(self):
         economy = _economy(100.0)
@@ -216,9 +223,8 @@ class MarkupTests(unittest.TestCase):
                            merchant_terms.competition_markup_share(3, 0.2))
 
     def test_an_unknown_response_falls_back_to_the_markets_default_elasticity(self):
-        from sim.world import market
         self.assertAlmostEqual(merchant_terms.price_flexibility_or_default(None),
-                               1.0 / market.DEFAULT_DEMAND_PRICE_ELASTICITY)
+                               1.0 / merchant_terms.DEFAULT_DEMAND_PRICE_ELASTICITY)
         self.assertEqual(merchant_terms.price_flexibility_or_default(0.3), 0.3)
 
 
@@ -283,8 +289,7 @@ class WaitTests(unittest.TestCase):
 class _Traders(Freight):
     """The cycle of a route as the module reads it, with its fleet and its market given."""
 
-    def __init__(self, carriers=10.0):
-        self.carriers = carriers
+    carriers = 10.0
 
     def route_carriers(self, civilization_id, route):
         return self.carriers
@@ -296,18 +301,25 @@ class _Traders(Freight):
         return 100.0
 
 
+def _traders(carriers):
+    """The freight module with its parts wired, its fleet and houses given."""
+    module = module_harness.build(_Traders)
+    module.carriers = carriers
+    return module
+
+
 class CycleTests(unittest.TestCase):
 
     def test_a_route_with_sea_legs_waits_for_the_season_and_one_without_does_not(self):
         sea = Route((Leg("a", "b", "sail", 1000.0, 1.0, 10.0),))
         land = Route((Leg("a", "b", "cart", 1000.0, 1.0, 10.0),))
-        traders = _Traders(1.0e9)
+        traders = _traders(1.0e9)
         self.assertGreater(traders.trader_cycle_years(sea), traders.trader_cycle_years(land))
         self.assertAlmostEqual(traders.trader_cycle_years(land), 10.0 / 365.0, places=6)
 
     def test_selling_into_a_thin_market_lengthens_the_cycle(self):
         land = Route((Leg("a", "b", "cart", 1000.0, 1.0, 10.0),))
-        traders = _Traders(1.0e9)
+        traders = _traders(1.0e9)
         thick = traders.trader_cycle_years(land, destination_demand_tonnes=1.0e9)
         thin = traders.trader_cycle_years(land, destination_demand_tonnes=100.0)
         self.assertGreater(thin, thick)
@@ -331,12 +343,6 @@ class CapitalTests(unittest.TestCase):
     def test_what_merchants_use_beyond_their_own_is_borrowed(self):
         self.assertEqual(merchant_house.borrowing(250.0, 100.0), 150.0)
         self.assertEqual(merchant_house.borrowing(50.0, 100.0), 0.0)
-
-
-def conditions(demand=1000.0, capacity=500.0):
-    return market.MarketConditions(
-        household_demand_at_anchor_tonnes=demand, committed_demand_tonnes=0.0,
-        society_capacity_tonnes=capacity, actor_supply_tonnes=0.0, founder_sales_tonnes=0.0, stock_tonnes=0.0)
 
 
 if __name__ == "__main__":

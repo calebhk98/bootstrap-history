@@ -4,14 +4,14 @@ Each declared name answers from a view; any other name is read off the `Sim` as 
 # name -> (view, key): `view()` or, with a key, `view()[key]`
 ROOTS = {
     "capital": ("acting_balance", None), "year": ("year", None), "cfg": ("game_config", None), "civ": ("civilisation", None),
-    "end_year": ("horizon_end_year", None), "price_index": ("price_index", None), "wage_index": ("wage_index", None),
+    "end_year": ("horizon_end_year", None), "price_index": ("price_index", None), "wage_per_hour": ("money_per_labour_hour", None),
     "population": ("population", None), "pop_scale": ("pop_scale", None), "money_real": ("money_real", None),
     "done": ("techniques_held", None), "granted": ("techniques_granted", None), "revealed": ("techniques_revealed", None),
     "forgotten": ("techniques_forgotten", None), "done_year": ("done_year", None), "active": ("active_projects", None),
     "operating": ("operating", None), "mothballed": ("mothballed", None), "bountied": ("bountied", None),
     "bounties_paid": ("bounties_paid", None), "failed_attempts": ("failed_attempts", None),
     "paid_towards": ("paid_towards", None), "shut_for_staff": ("shut_for_staff", None),
-    "fog": ("fog_of_war", None), "fuzzy_estimates": ("legacy_fuzzy_estimates", None),
+    "fog": ("fog_of_war", None), "fuzzy_estimates": ("fuzzy_estimates", None),
     "goal": ("goal", "node"), "goal_year": ("goal", "year"), "policy": ("founder", "policy"),
     "dead_reason": ("founder", "dead_reason"), "founder_alive": ("founder", "alive"), "life_left": ("founder", "life_left"),
     "reputation": ("standing", "reputation"), "scandal": ("standing", "scandal"), "protection": ("standing", "protection"),

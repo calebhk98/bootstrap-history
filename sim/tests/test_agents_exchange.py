@@ -26,9 +26,9 @@ class ExchangeWorld(FakeWorld):
 def make_world():
 	world = ExchangeWorld()
 	world.baseline = {"base"}
-	world.nodes["base"] = make_node("base")
-	world.nodes["mill"] = make_node("mill", ["base"])
-	world.nodes["forge"] = make_node("forge", ["base"])
+	world.setting.nodes["base"] = make_node("base")
+	world.setting.nodes["mill"] = make_node("mill", ["base"])
+	world.setting.nodes["forge"] = make_node("forge", ["base"])
 	world.prices = {"grain": 10.0, "iron": 50.0}
 	return world
 
@@ -95,7 +95,7 @@ check("a node the giver does not know cannot be offered",
 # ---- a concern moves with its opened year and size ----------------------------------------
 a.concerns.add("forge")
 a.knowledge.add("forge")
-a.business.adopt(Plant("forge", opened_year=60, size=2.5, margin=12.0))
+a.business.lifecycle.adopt(Plant("forge", opened_year=60, size=2.5, margin=12.0))
 offer = exchange.make_offer(a, b, {"concern": "forge"}, {"money": 50.0}, world)
 check("a buyer who cannot know the concern is refused",
 	  cause_of(rejection(lambda: exchange.accept(b, offer["id"], registry.get, world))) == "taker_cannot_make"
@@ -105,8 +105,8 @@ offer = exchange.make_offer(a, b, {"concern": "forge", "knowledge": ["forge"]}, 
 exchange.accept(b, offer["id"], registry.get, world)
 check("a concern arrives with the knowledge to run it", "forge" in b.concerns and "forge" not in a.concerns)
 check("the concern keeps its opened year and size",
-	  b.opened_year_of("forge", 0) == 60 and b.capacity_of("forge") == 2.5 and a.business.plant_of("forge") is None)
-check("the seller's margin record goes with it", a.business.margin_of("forge") is None)
+	  b.holdings.opened_year_of("forge", 0) == 60 and b.holdings.capacity_of("forge") == 2.5 and a.business.reading.plant_of("forge") is None)
+check("the seller's margin record goes with it", a.business.reading.margin_of("forge") is None)
 a.knowledge.discard("forge")
 b.concerns.discard("mill")
 a.concerns.add("mill")
@@ -117,13 +117,13 @@ check("a buyer that already knows the node can take the concern", "mill" in b.co
 # ---- acceptance re-validates --------------------------------------------------------------
 b.money, a.money = 1000.0, 1000.0
 offer = exchange.make_offer(a, b, {"stores": {"grain": 10.0}}, {"money": 800.0}, world)
-b.debit(900.0, "spent")
+b.payments.debit(900.0, "spent")
 snapshot = (a.money, b.money, dict(a.record.stores), dict(b.record.stores))
 reason = raises(lambda: exchange.accept(b, offer["id"], registry.get, world))
 check("an offer the receiver can no longer pay is rejected", reason is not None, reason)
 check("a rejected acceptance moves nothing",
 	  snapshot == (a.money, b.money, dict(a.record.stores), dict(b.record.stores)))
-b.credit(900.0, "found")
+b.payments.credit(900.0, "found")
 a.record.stores["grain"] = 0.0
 reason = raises(lambda: exchange.accept(b, offer["id"], registry.get, world))
 check("an offer the giver can no longer give is rejected, money unmoved", reason is not None and b.money == 1000.0, reason)
@@ -133,9 +133,9 @@ check("a payer never goes below zero", min(a.money, b.money) >= 0.0)
 b.record.offers.clear()
 a.record.stores["grain"] = 50.0
 offer = exchange.make_offer(a, b, {"stores": {"grain": 1.0}}, {}, world)
-check("a live offer is kept", exchange.expire_offers(b, world.year) == [] and len(b.record.offers) == 1)
+check("a live offer is kept", exchange.expire_offers(b, world.setting.year) == [] and len(b.record.offers) == 1)
 world.year = offer["expires"] + 1
-check("an expired offer vanishes", exchange.expire_offers(b, world.year) == [offer["id"]] and b.record.offers == [])
+check("an expired offer vanishes", exchange.expire_offers(b, world.setting.year) == [offer["id"]] and b.record.offers == [])
 world.year = 100
 offer = exchange.make_offer(a, b, {"stores": {"grain": 1.0}}, {}, world)
 exchange.decline(b, offer["id"])
@@ -165,7 +165,7 @@ check("a human receiver is not answered for", len(robot.record.offers) == 1)
 robot.record.controller = "ai"
 robot.record.offers.clear()
 robot.concerns.add("forge")
-robot.business.note_margin("forge", 10.0)
+robot.business.tally.note_margin("forge", 10.0)
 human.concerns.add("mill")
 human.knowledge.update({"mill"})
 robot.knowledge.add("mill")

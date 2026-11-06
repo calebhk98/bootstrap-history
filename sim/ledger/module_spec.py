@@ -2,7 +2,7 @@
 from sim.assembly.api import KEYED, LIST, QUOTE, ExtensionPoint, ModuleSpec, ViewSpec
 
 from .commands import (BankStock, ChangeStock, CloseCashPeriod, CreditSeat, DebitSeat, DrawDownStock, NoteSeatCash, NoteSpend, OpenCashBook, OpenPurse, PayActor, PayActorFromEdge, PayActorFromHousehold, PayEdge, PayEdgeFrom, PayExchange, PayWages,
-                       NoteHolderBooking, ReceiveFromEdge, ReceiveFromExchange, RescaleHouseholdMoney, RestorePurse, SettleWithEdge, TakeFromHouseholdPurse, WithdrawHouseholdMoney)
+                       NoteHolderBooking, ReceiveFromEdge, ReceiveFromExchange, RescaleHouseholdMoney, RestorePurse, WriteOffHouseholdDebt, TakeFromHouseholdPurse, WithdrawHouseholdMoney)
 from .ledger import MONEY, STOCK, Ledger
 from .state import LedgerSeat, LedgerWorld
 
@@ -26,7 +26,7 @@ MODULE_SPECS = (ModuleSpec(
 	extension_points=(ExtensionPoint("transfer_surcharge", LIST),),   # (payer, payee, amount, purpose) -> (edge, amount, cause) or None
 	applies=((PayEdge, "pay_edge"), (PayEdgeFrom, "pay_edge_from"), (PayActorFromEdge, "pay_actor_from_edge"), (PayActor, "pay_actor"),
 	         (PayActorFromHousehold, "pay_actor_from_household"), (TakeFromHouseholdPurse, "take_from_household_purse"),
-	         (SettleWithEdge, "settle_with_edge"), (RescaleHouseholdMoney, "rescale_household_money"), (RestorePurse, "restore_purse"),
+	         (WriteOffHouseholdDebt, "write_off_household_debt"), (RescaleHouseholdMoney, "rescale_household_money"), (RestorePurse, "restore_purse"),
 	         (NoteHolderBooking, "note_holder_booking"),
 	         (WithdrawHouseholdMoney, "withdraw_household_money"), (DrawDownStock, "draw_down_stock"), (PayExchange, "pay_exchange"), (ReceiveFromExchange, "receive_from_exchange"), (ReceiveFromEdge, "receive_from_edge"), (PayWages, "pay_wages"),
 	         (ChangeStock, "change_stock"), (BankStock, "bank_stock"), (CreditSeat, "credit_seat"), (DebitSeat, "debit_seat"),

@@ -6,15 +6,13 @@ QUICK_TOPIC = True
 from types import SimpleNamespace
 
 from .harness import check
-from sim.refusal import cause_of, facts_of
 from sim.diffusion.rules import staff_hire_advice
 from sim.projects.api import staff_gate
 craftsmen_gate_text, scholar_gate_text = staff_gate.craftsmen_gate_text, staff_gate.scholar_gate_text
-from sim.labour.buy_cap import over_room_refusal
 from sim.labour.founder_hours import hours_committed, hours_free, hours_pool
 from sim.labour.hands import contracted_hours_of, hands_available
 from sim.labour.hours_sale_warning import sale_at_a_loss_note
-from sim.labour.labour_job import StandingJobMixin
+from sim.labour.labour_wages import Wages
 from sim.labour.staff_advice import staff_remedies
 
 # --- the pool
@@ -34,30 +32,23 @@ check("selling every free hour leaves nothing to spend on projects",
 # --- the standing job sells the hours not spoken for, so a sale takes its pay from the job
 def standing_job(sold):
     labour = SimpleNamespace(
-        _world=SimpleNamespace(founder_alive=True),
-        director_pool=lambda: 2000.0, director_hours_committed=lambda: sold,
+        _world=SimpleNamespace(standing=SimpleNamespace(founder_alive=True)),
+        hours=SimpleNamespace(director_pool=lambda: 2000.0, director_hours_committed=lambda counting_offers=True: sold),
         wage_for_hours=lambda trade, hours: hours * 0.5)
-    labour.hours_for_sale = lambda: StandingJobMixin.hours_for_sale(labour)
-    return StandingJobMixin.standing_job_pay(labour, "labourer")
+    labour.hours_for_sale = lambda counting_offers=True: Wages.hours_for_sale(labour, counting_offers)
+    return Wages.standing_job_pay(labour, "labourer")
 
 
 check("selling every hour on request takes the whole standing job", standing_job(2000.0) == 0.0)
 check("selling half the hours takes half the standing job", standing_job(1000.0) == 0.5 * standing_job(0.0))
 check("a trade nobody holds earns the job nothing",
-      StandingJobMixin.standing_job_pay(SimpleNamespace(), None) == 0.0)
+      Wages.standing_job_pay(SimpleNamespace(), None) == 0.0)
 
 # --- the cost note of a sale
 # presentation: the sentence and its money format
 note = sale_at_a_loss_note(66.0, 259.0, lambda amount: "%d d" % amount)
 check("a sale that displaces a better-paid job says what it cost", note and "cost you 193 d" in note, note)
 check("a sale that pays at least what it displaced carries no note", sale_at_a_loss_note(259.0, 259.0, str) is None)
-
-# --- the cap on buying people is the room hire enforces
-check("buying within the room is not refused", over_room_refusal(3, 3.0, lambda: "advice") is None)
-refusal = over_room_refusal(7, 6.4, lambda: "hire fewer")
-check("buying beyond the room is refused as a household_room refusal stating the room and the people asked for",
-      refusal and cause_of(refusal) == "household_room" and facts_of(refusal) == {"room": 6.4, "people": 7}, refusal)
-check("a negative room reads as none", facts_of(over_room_refusal(1, -2.0, lambda: ""))["room"] == 0.0)
 
 # --- the staffing gates
 HOURS_PER_YEAR = 2000.0

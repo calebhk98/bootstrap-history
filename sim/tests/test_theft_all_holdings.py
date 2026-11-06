@@ -4,6 +4,7 @@ never destroyed. The coin module sends the ledger's commands for both (`DrawDown
 
 QUICK_TOPIC = True
 
+from sim.tests.agents_fake_world import flat_namespace
 import types
 import unittest
 
@@ -16,6 +17,8 @@ from sim.demography.api import TakeFromGranary
 from sim.coin.exposure import Exposure, GoodsLot, split_purse
 from sim.coin.module import Coin
 from sim.ledger.api import STORE_ACTOR, STORE_GRANARY, STORE_STOCK, DrawDownStock, PayEdge, PayEdgeFrom
+from sim.coin.theft import guard_hours_by_kind, takeable_money
+from sim.refusal import Refusal
 from sim.tests import module_harness
 
 CALM = dict(guard_hours_per_tonne_year={"coin": 0.0}, visible_scale=0.5, state_reach=0.0, protection=0.0)
@@ -103,6 +106,30 @@ class StolenGoodsLeaveTheStock(unittest.TestCase):
         self.assertEqual(theft_exposure.share_taken("land", EVENT, **CALM), 0.0)
 
 
+class TheftNeverDrawsCredit(unittest.TestCase):
+
+    def test_the_money_takeable_is_the_least_of_wanted_the_exposed_purse_and_the_coin_held(self):
+        self.assertEqual(takeable_money(50.0, 100.0, 30.0), 30.0)
+        self.assertEqual(takeable_money(50.0, 20.0, 30.0), 20.0)
+        self.assertEqual(takeable_money(10.0, 100.0, 30.0), 10.0)
+
+    def test_nothing_is_takeable_from_an_empty_or_negative_purse(self):
+        self.assertEqual(takeable_money(50.0, 100.0, 0.0), 0.0)
+        self.assertEqual(takeable_money(50.0, -5.0, 30.0), 0.0)
+
+    def test_an_actor_holding_less_coin_than_its_net_loses_at_most_the_coin(self):
+        module = thief()
+        taken = module.steal_from("firm:1", Exposure(values={"coin": 100.0}, lots=[], purse=100.0), 1.0, coin_held=10.0, **CALM)
+        self.assertLessEqual(taken, 10.0)
+        self.assertEqual(module_harness.sent(module), [PayEdgeFrom("firm:1", EDGE_THIEVES, taken, "theft")])
+
+    def test_a_refused_payment_is_no_theft_and_no_goods_go(self):
+        module = module_harness.build(Coin, answers={PayEdgeFrom: Refusal("cannot_pay", "short")})
+        taken = module.steal_from("firm:1", exposure_of(100.0, coin=100.0, goods_tonnes=10.0), EVENT, **CALM)
+        self.assertEqual(taken, 0.0)
+        self.assertEqual(goods_sent(module), {})
+
+
 class WhatAnActorKeeps(unittest.TestCase):
 
     def test_lent_funds_are_loans_and_the_rest_is_coin(self):
@@ -125,16 +152,24 @@ class WhatAnActorKeeps(unittest.TestCase):
 
     def test_every_actor_of_a_year_shares_one_reading_of_the_lent_share(self):
         reads = []
-        record = types.SimpleNamespace(exited_year=None, stratum=None, country=None, stores={}, holdings={})
-        actors = {name: types.SimpleNamespace(record=record, money=100.0, workforce={}, prominence=lambda: 0.0)
+        record = types.SimpleNamespace(exited_year=None, stratum=None, country=None, stores={}, holdings={}, shares_held={})
+        actors = {name: types.SimpleNamespace(record=record, money=100.0, purses=types.SimpleNamespace(purse=lambda _id: 100.0), workforce={}, stance=types.SimpleNamespace(prominence=lambda: 0.0))
                   for name in ("a", "b", "c")}
         registry = types.SimpleNamespace(actors=actors, state=types.SimpleNamespace(home_country="home"), get=lambda _id: None)
         module = module_harness.build(Coin, views={
-            "cast": registry, "actor_world": types.SimpleNamespace(material_price=lambda m: 1.0),
+            "cast": registry, "actor_world": flat_namespace(material_price=lambda m: 1.0),
             "lent_share": lambda: reads.append(1) or 0.25, "visible_scale": lambda *call: 0.5, "order_reach": 0.0})
         module.charge_actors_theft(ChargeActorsTheft())
         self.assertEqual(len(reads), 1)
         self.assertEqual([command.actor for command in module_harness.sent(module)], ["a", "b", "c"])
+
+
+class GuardCredit(unittest.TestCase):
+    def test_guarding_counts_for_the_share_of_the_keeping_cost_paid(self):
+        full, half, none = guard_hours_by_kind(1.0), guard_hours_by_kind(0.5), guard_hours_by_kind(0.0)
+        for kind in full:
+            self.assertAlmostEqual(half[kind], 0.5 * full[kind])
+            self.assertEqual(none[kind], 0.0)
 
 
 def household_module(farm_hectares=10.0, order_reach=0.0):

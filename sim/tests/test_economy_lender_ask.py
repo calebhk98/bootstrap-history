@@ -8,9 +8,9 @@ import types
 import unittest
 from unittest import mock
 
-from sim.economy import bank_spread, banks, credit, credit_claims, lender_ask, loss_memory
-from sim.economy.credit_view import CreditView, loss_rate_of
-from sim.economy.households_orders import HOUSEHOLD_TIME_PREFERENCE
+from sim.economy import bank_spread, banks, credit, lender_ask, loss_memory
+from sim.economy.credit_view import CreditView
+from sim.economy.household_time_preference import HOUSEHOLD_TIME_PREFERENCE
 from sim.economy.market_memory import MarketMemory
 from sim.economy.types import FundsOffer, Loan, LoanRequest
 
@@ -28,18 +28,6 @@ class LowestAskTests(unittest.TestCase):
         clean = lender_ask.lowest_ask(0.05, 0.0, expected_loss_rate=lender_ask.loss_rate(0.0))
         burnt = lender_ask.lowest_ask(0.05, 0.0, expected_loss_rate=lender_ask.loss_rate(0.1))
         self.assertAlmostEqual(burnt - clean, 0.1)
-
-    def test_land_with_a_higher_yield_raises_the_floor(self):
-        low = lender_ask.lowest_ask(0.05, 0.0, land_yield_available=lender_ask.land_yield(3.0, 100.0))
-        high = lender_ask.lowest_ask(0.05, 0.0, land_yield_available=lender_ask.land_yield(9.0, 100.0))
-        self.assertAlmostEqual(low, 0.05)
-        self.assertAlmostEqual(high, 0.09)
-
-    def test_land_with_no_price_is_no_alternative(self):
-        self.assertEqual(lender_ask.land_yield(9.0, None), 0.0)
-
-    def test_public_debt_raises_the_floor(self):
-        self.assertAlmostEqual(lender_ask.lowest_ask(0.05, 0.0, public_yield_available=0.08), 0.08)
 
 
 class GlutTests(unittest.TestCase):
@@ -76,19 +64,19 @@ class BankSpreadTests(unittest.TestCase):
     def test_a_standing_bank_asks_its_depositors_rate_plus_the_spread_of_its_record(self):
         deposits = [Loan("deposit-a", "a", "bank", "coin", 300.0, rate=0.03, years_left=1e9, issued_year=0),
                     Loan("deposit-b", "b", "bank", "coin", 100.0, rate=0.07, years_left=1e9, issued_year=0)]
-        record = types.SimpleNamespace(loans=deposits)
+        record = types.SimpleNamespace(credit=types.SimpleNamespace(loans=deposits))
         with mock.patch.object(banks, "spread_of", lambda *_args: 0.02):
             ask = banks.ask_of(record, types.SimpleNamespace(agent_id="bank"), "coin")
         self.assertAlmostEqual(ask, (300.0 * 0.03 + 100.0 * 0.07) / 400.0 + 0.02)
 
     def test_a_bank_asks_the_rate_of_the_funds_pledged_to_it_in_place_of_its_standing_deposits(self):
-        record = types.SimpleNamespace(loans=[Loan("deposit", "a", "bank", "coin", 300.0, rate=0.03, years_left=1e9, issued_year=0)])
+        record = types.SimpleNamespace(credit=types.SimpleNamespace(loans=[Loan("deposit", "a", "bank", "coin", 300.0, rate=0.03, years_left=1e9, issued_year=0)]))
         pledged = [FundsOffer("c", "coin", 100.0, 0.05)]
         with mock.patch.object(banks, "spread_of", lambda *_args: 0.0):
             self.assertAlmostEqual(banks.ask_of(record, types.SimpleNamespace(agent_id="bank"), "coin", pledged), 0.05)
 
     def test_a_banks_spread_is_that_of_its_loss_record_its_loans_and_its_capital(self):
-        record = types.SimpleNamespace(loss_rates={"bank": 0.1})
+        record = types.SimpleNamespace(credit=types.SimpleNamespace(loss_rates={"bank": 0.1}))
         asked = []
         with mock.patch.object(banks, "loans_out", lambda _record, bank_id: 900.0), \
                 mock.patch.object(banks, "capital_of", lambda _record, bank_id, money: 50.0), \
@@ -146,13 +134,13 @@ class AgingTests(unittest.TestCase):
         self.assertLess(rate, 1.1 * floor)
 
     def test_age_reads_the_record_and_leaves_the_loss_stock_alone(self):
-        record = types.SimpleNamespace(credit_losses={"lender": 100.0}, losses_seen={}, loss_rates={}, loans=[])
+        record = types.SimpleNamespace(credit=types.SimpleNamespace(credit_losses={"lender": 100.0}, losses_seen={}, loss_rates={}, loans=[]))
         loss_memory.age(record, "coin")
-        first = record.loss_rates["lender"]
+        first = record.credit.loss_rates["lender"]
         loss_memory.age(record, "coin")
-        self.assertEqual(record.credit_losses["lender"], 100.0)
+        self.assertEqual(record.credit.credit_losses["lender"], 100.0)
         self.assertGreater(first, 0.0)
-        self.assertLess(record.loss_rates["lender"], first)
+        self.assertLess(record.credit.loss_rates["lender"], first)
 
 
 class _Areas:
@@ -163,9 +151,8 @@ class _Areas:
 class ViewTests(unittest.TestCase):
     def test_the_view_reads_a_lenders_loss_rate_from_its_record(self):
         loans = [Loan("l", "saver", "borrower", "coin", 900.0, rate=0.05, years_left=3.0, issued_year=0)]
-        view = CreditView(MarketMemory(), None, _Areas(), "coin", loans=lambda: loans, loss_rates=lambda: {"saver": 0.1})
+        view = CreditView(MarketMemory(), None, _Areas(), "coin", None, loans=lambda: loans, loss_rates=lambda: {"saver": 0.1})
         self.assertAlmostEqual(view.loss_rate("saver", "coin"), 0.1)
-        self.assertEqual(loss_rate_of(object(), "saver", "coin"), 0.0)
 
 
 if __name__ == "__main__":

@@ -1,18 +1,24 @@
-"""`PopulationMixin.population_report` gives one row per trade in the wage table and names the civilisation, on a stand-in `self`."""
+"""`PopulationReport.population_report` gives one row per trade in the wage table and names the civilisation, on a stand-in `self`."""
 QUICK_TOPIC = True
 
 from types import SimpleNamespace
 
 from .harness import check
 
-from sim.labour.labour_population import PopulationMixin
+from sim.labour.labour_population_report import PopulationReport
 
 
-class Labour(PopulationMixin):
+class Labour:
     def __init__(self, wages):
-        self._world = SimpleNamespace(civ={"id": "rome_100ad", "short_name": "Rome", "population": 1000.0},
-                                      population=SimpleNamespace(total=900.0), urban_fraction=lambda: 0.2, wages=wages,
-                                      plain_number=lambda number: "%d" % number)
+        self._world = SimpleNamespace(scenario=SimpleNamespace(civ={"id": "rome_100ad", "short_name": "Rome", "population": 1000.0}),
+                                      people=SimpleNamespace(population=SimpleNamespace(total=900.0), urban_fraction=lambda: 0.2),
+                                      trades=SimpleNamespace(wages=wages),
+                                      game=SimpleNamespace(plain_number=lambda number: "%d" % number))
+        self.report = PopulationReport(self._world, book=self, settlement=self, supply=self, trades=self)
+        self.report._density_is_placeholder = self._density_is_placeholder
+
+    def population_report(self):
+        return self.report.population_report()
 
     def home_town_population_estimate(self):
         return 100.0

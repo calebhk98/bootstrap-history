@@ -2,7 +2,6 @@
 (`dispatch_ventures._cmd_policy`). Called on a stand-in game holding the default policy."""
 QUICK_TOPIC = True
 
-import types
 import unittest
 from sim.tests import workforce_stand_in
 

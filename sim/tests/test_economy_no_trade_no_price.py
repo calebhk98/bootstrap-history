@@ -64,8 +64,9 @@ class ClearingTests(unittest.TestCase):
 
 class ReaderTests(unittest.TestCase):
     def record(self, prices, quotes, weights):
-        memory = MarketMemory(prices=prices, quote_kinds=quotes, volume_weights=weights)
-        return types.SimpleNamespace(memory=memory, volumes={})
+        memory = MarketMemory(prices=prices, quote_kinds=quotes, volume_weights=weights,
+                              trade_age={key: 0 for key in prices if key not in quotes})
+        return types.SimpleNamespace(memory=memory, goods=types.SimpleNamespace(volumes={}))
 
     def test_the_price_index_follows_the_areas_that_traded(self):
         record = self.record({"grain|a": 2.0, "grain|b": 90.0}, {"grain|b": QUOTE_LOWEST_UNFILLED_ASK},
@@ -79,8 +80,8 @@ class ReaderTests(unittest.TestCase):
     def test_a_view_says_when_its_price_is_a_quote(self):
         memory = MarketMemory(prices={"grain|a": 3.0}, quote_kinds={"grain|a": QUOTE_BEST_UNFILLED_BID},
                               cleared_prices={})
-        view = YearView(memory, None, types.SimpleNamespace(goods=lambda: ["grain"]), "coin")
-        self.assertEqual(view.quote_kind("grain", "a"), QUOTE_BEST_UNFILLED_BID)
+        view = YearView(memory, None, types.SimpleNamespace(goods=lambda: ["grain"]), "coin", None)
+        self.assertEqual(view.price_kind("grain", "a"), QUOTE_BEST_UNFILLED_BID)
         self.assertIsNone(view.cleared_price("grain", "a"))
 
 

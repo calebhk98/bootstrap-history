@@ -8,6 +8,7 @@ import math
 import types
 import unittest
 
+from sim.tests.economy_view_defaults import ViewDefaults
 from sim.economy import ask_adjust, seller_offers
 from sim.economy.producers import Producer
 from sim.economy.types import Bid, Offer, Recipe
@@ -16,7 +17,7 @@ GOOD, AREA, TILE = "alloy", "area", "tile"
 COST = 2.0 * 3.0 + 4.0 * 0.5      # two of metal at three, four hours at half
 
 
-class View:
+class View(ViewDefaults):
     year = 3
 
     def interest_rate(self, currency):
@@ -42,8 +43,8 @@ def game(*sellers, substitution=1.0):
     recipe = Recipe("melt", {GOOD: 1.0}, {"metal": 2.0}, {"labour": 4.0})
     producers = {name: Producer(name, "lord", "melt", TILE, 10.0) for name in sellers}
     basket = types.SimpleNamespace(substitution=substitution)
-    setup = types.SimpleNamespace(specs={}, recipes={"melt": recipe}, basket_for=lambda tile: basket)
-    return setup, types.SimpleNamespace(producers=producers, memory=types.SimpleNamespace(volume_weights={GOOD + "|" + AREA: 100.0}), unmet={})
+    setup = types.SimpleNamespace(specs={}, currency_id="coin", recipes={"melt": recipe}, basket_for=lambda tile: basket)
+    return setup, types.SimpleNamespace(producers=producers, memory=types.SimpleNamespace(volume_weights={GOOD + "|" + AREA: 100.0}), goods=types.SimpleNamespace(unmet={}))
 
 
 def floor_buyer(quantity=100.0):

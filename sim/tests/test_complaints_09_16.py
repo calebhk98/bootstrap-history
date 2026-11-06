@@ -4,7 +4,6 @@ credit forecast calls its figures, and the help index. The same in a real game i
 (The money_blocked and money_unfunded waiting causes are held by test_project_pacing and test_scheduling_legibility.)"""
 QUICK_TOPIC = True
 
-import types
 import unittest
 
 from sim.projects.api import instantaneous
@@ -14,6 +13,7 @@ from sim.resources.sizing import nitre_bed_square_metres, nitre_deficit_tonnes
 from sim.ui.proto import credit_forecast
 from sim.ui.proto.help import _agent_help
 from sim.tests.ui_stand_in import Game
+from sim.tests.interface_fixture import shipped_declared
 
 LAB = "_g"
 
@@ -92,7 +92,7 @@ class CreditForecastLabels(unittest.TestCase):
 
 class CapacityHelp(unittest.TestCase):
     def test_capacity_is_in_the_command_index_and_distinguishes_flow_from_stock(self):
-        commands = _agent_help(Game(fog=None), "commands")["commands"]
+        commands = _agent_help(Game(fog=None, interface_declared=shipped_declared), "commands")["commands"]
         self.assertIn("capacity", commands)
         # presentation: the help text tells the player flow from durable stock
         for word in ("throughput", "stock", "materials"):

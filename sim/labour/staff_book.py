@@ -1,16 +1,15 @@
-"""Who is hired by whom: the one book of the founder's staff, and the views of every employer's staff
-against the people the country supplies.
+"""The one book of the founder's staff: who is hired, who is posted for, who arrives, and the reservations
+of every employer against the people the labour core holds.
 
-The founder's household keeps its staff as a trade-to-head-count map (the workforce module's `employees`); only this
-mixin reads or writes it from labour, and code outside labour asks `sim.labour`. Firms and states keep
-their own staff in the agent registry; `reserved_people` adds both so one trade's reservations read from
-one place. Complaint 556.
-"""
-from . import core_reservations
+The founder's household keeps its staff as a trade-to-head-count map (the workforce module's `employees`); only
+this part reads or writes it from labour. Firms and states keep their own staff in the agent registry;
+`reserved_people` adds both so one trade's reservations read from one place. Complaint 556."""
+from .labour_wage_schedule import person_year_hours
 
 
-class StaffBookMixin:
-    """Methods of Labour: the founder's payroll and the reservations against supply."""
+class StaffBook:
+    def __init__(self, world):
+        self._world = world
 
     def employed(self, trade):
         """People of one trade on the founder's books."""
@@ -24,9 +23,40 @@ class StaffBookMixin:
         """Everyone on the founder's books."""
         return sum(self._world.workforce.employees.values())
 
+    def staff_posting(self):
+        """{trade: people} the founder's household has posted in the labour core: the places its staff are hired into."""
+        return dict(self._world.workforce.staff_wanted)
+
+    def once_posting(self):
+        """{purpose: {trade: hours}} the founder's household asks the labour core for this year only."""
+        return {purpose: dict(orders) for purpose, orders in self._world.workforce.hours_wanted_once.items() if orders}
+
+    def wage_work_offered(self):
+        """{trade: hours} the founder offers of its own in the labour core this year; paid what the clearing hires of them."""
+        return {trade: hours for trade, hours in self._world.workforce.hours_offered_for_wages.items() if hours > 0.0}
+
+    def newcomers(self):
+        """{trade: people} trained or granted since the last clearing who are not yet in the labour core."""
+        return {trade: people for trade, people in self._world.workforce.newcomers.items() if people > 0.0}
+
+    def add_newcomers(self, trade, people):
+        """Take `people` more of a trade onto the founder's books and queue them for the labour core, where they are hired like anyone."""
+        if people <= 0.0:
+            return
+        self.add_employed(trade, people)
+        newcomers = self._world.workforce.newcomers
+        newcomers[trade] = newcomers.get(trade, 0.0) + people
+
     def set_employed(self, trade, people):
         """Put the founder's head count of a trade at `people`; a count of nothing leaves the trade off the books."""
-        employees = self._world.workforce.employees
+        workforce = self._world.workforce
+        employees = workforce.employees
+        if people != employees.get(trade, 0.0):    # a change made outside the clearing moves the standing bid with it
+            wanted = max(0.0, workforce.staff_wanted.get(trade, 0.0) + people - employees.get(trade, 0.0))
+            if wanted:
+                workforce.staff_wanted[trade] = wanted
+            else:
+                workforce.staff_wanted.pop(trade, None)
         if people:
             employees[trade] = people
         else:
@@ -37,48 +67,40 @@ class StaffBookMixin:
         self.set_employed(trade, self.employed(trade) + people)
 
     def reserved_people(self, trade):
-        """People of a trade already given to an employer: the founder's staff, and the firms' and states' staff
-        (the army counted whole)."""
-        return self.employed(trade) + self._world.actors_staff_nationwide(trade)
+        """People of a trade already given to an employer: the founder's staff, and the home country's firms' and
+        states' staff (the army counted whole)."""
+        return self.employed(trade) + self._world.actors.actor_staff_fte(trade)
 
     def reserved_hours(self, trade):
         """Hours a year reserved by employers for a trade."""
-        return self.reserved_people(trade) * self._world.HOURS_PER_PERSON_YEAR
-
-    def supplied_people(self, trade):
-        """People of a trade the country supplies, the ceiling every reservation is held under."""
-        return self.people_who_exist(trade)
-
-    def unreserved_people(self, trade):
-        """What is left of a trade's supply after every employer's reservation."""
-        return max(0.0, self.supplied_people(trade) - self.reserved_people(trade))
+        return self.reserved_people(trade) * person_year_hours(self._world)
 
     def core_people_by_trade(self):
         """Working people by trade in the agent economy's labour core; None while it opens."""
         return self._world.economy.agent_people_by_trade()
 
-    def core_people_by_tile_and_trade(self):
-        """The labour core's working people by tile, then trade; None while the economy opens."""
-        return self._world.economy.agent_people_by_tile_and_trade()
+    def headcount(self):
+        workforce = self._world.workforce
+        return self.employed_total() + workforce.slaves + workforce.freedmen
 
-    def hires_by_tile_and_trade(self):
-        """The founder's staff by the tile they work from (the household's base tile) and trade."""
-        staff = self.employed_by_trade()
-        return {self.base_tile(): staff} if staff else {}
+    def employed_or_posted(self, trade):
+        """People of a trade on the books, or the places posted for it when those are more (a hire adds to the larger)."""
+        return max(self.employed(trade), self._world.workforce.staff_wanted.get(trade, 0.0))
 
-    def free_core_people_by_tile(self):
-        """The core's people by tile and trade with the founder's hires taken out, so a person hired by the founder
-        is not also counted as available to another employer; None while the economy opens."""
-        core = self.core_people_by_tile_and_trade()
-        return None if core is None else core_reservations.free_people(core, self.hires_by_tile_and_trade())
+    def trade_headcount_pending(self, trade):
+        """People already on the books in this trade, plus people already
+        being taught into it who are not ready yet - what a fresh hire or a
+        fresh training run would be added ON TOP OF."""
+        workforce = self._world.workforce
+        pending = sum(row.people for row in workforce.training if row.trade == trade)
+        return self.employed_or_posted(trade) + pending
 
-    def free_core_people(self, trade):
-        """People of a trade the core holds that no hire of the founder's has taken; None while the economy opens."""
-        free = self.free_core_people_by_tile()
-        return None if free is None else sum(by_trade.get(trade, 0.0) for by_trade in free.values())
+    def in_training_total(self):
+        """People being taught a trade who are not on the books yet (people bought and still learning are already counted
+        as slaves)."""
+        return sum(row.people for row in self._world.workforce.training if row.trade)
 
-    def reservations_over_core(self):
-        """(tile, trade, people hired, people the core holds there) for every hire of the founder's the core's people
-        at that tile and trade do not cover; empty while the economy opens."""
-        core = self.core_people_by_tile_and_trade()
-        return [] if core is None else core_reservations.over_reserved(core, self.hires_by_tile_and_trade())
+    def staff_posted(self):
+        """People wanted in the labour core for the household beyond those it hired at the last clearing."""
+        workforce = self._world.workforce
+        return sum(max(0.0, wanted - workforce.employees.get(name, 0.0)) for name, wanted in workforce.staff_wanted.items())

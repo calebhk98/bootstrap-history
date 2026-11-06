@@ -15,7 +15,7 @@ discipline sim/tests/test_deposits.py's own ExtractionCostMechanicsTests
 docstring states for ore data), and EXACT ARITHMETIC wherever the input is
 a small, hand-built synthetic fixture this file controls itself.
 
-sim/labour/labour_market.py: what the recipe graph asks of each trade, and how fast the farm hours move.
+sim/labour/labour_market.py: what the recipe graph asks of each trade, and 
 """
 
 QUICK_TOPIC = True
@@ -23,6 +23,7 @@ QUICK_TOPIC = True
 import unittest
 
 from sim.labour import labour_market
+from sim.world.demand import production_data
 
 
 def _entry(outputs, labour_hours=None, capital=None):
@@ -97,49 +98,6 @@ class LabourHoursCoefficientsTests(unittest.TestCase):
                 "broken", production)
 
 
-class LabourHoursRequiredByTradeTests(unittest.TestCase):
-
-    def setUp(self):
-        self.production = {
-            "wheat_kg": _entry({"wheat_kg": 577.5}, {"labourer": 150.0}),
-            "iron_bar_kg": _entry({"iron_bar_kg": 1000.0},
-                                  {"furnaceman": 80.0, "smith": 120.0}),
-        }
-
-    def test_aggregates_across_recipes_that_share_a_trade(self):
-        production = {
-            "a": _entry({"a_kg": 1.0}, {"labourer": 2.0}),
-            "b": _entry({"b_kg": 1.0}, {"labourer": 3.0}),
-        }
-        hours_by_trade, _ = labour_market.labour_hours_required_by_trade(
-            {"a": 10.0, "b": 10.0}, production)
-        self.assertAlmostEqual(hours_by_trade["labourer"], 20.0 + 30.0)
-
-    def test_breakdown_names_which_recipe_contributed_how_much(self):
-        hours_by_trade, contributors = labour_market.labour_hours_required_by_trade(
-            {"wheat_kg": 577.5, "iron_bar_kg": 1000.0}, self.production)
-        self.assertAlmostEqual(hours_by_trade["labourer"], 150.0)
-        self.assertAlmostEqual(hours_by_trade["smith"], 120.0)
-        self.assertAlmostEqual(contributors["smith"]["iron_bar_kg"], 120.0)
-
-    def test_a_recipe_not_in_production_is_silently_skipped(self):
-        hours_by_trade, _ = labour_market.labour_hours_required_by_trade(
-            {"no_such_recipe": 1000.0}, self.production)
-        self.assertEqual(hours_by_trade, {})
-
-    def test_a_zero_output_level_contributes_nothing(self):
-        hours_by_trade, _ = labour_market.labour_hours_required_by_trade(
-            {"wheat_kg": 0.0}, self.production)
-        self.assertEqual(hours_by_trade, {})
-
-    def test_output_level_scales_linearly(self):
-        hours_at_1x, _ = labour_market.labour_hours_required_by_trade(
-            {"wheat_kg": 577.5}, self.production)
-        hours_at_3x, _ = labour_market.labour_hours_required_by_trade(
-            {"wheat_kg": 3 * 577.5}, self.production)
-        self.assertAlmostEqual(hours_at_3x["labourer"], 3 * hours_at_1x["labourer"])
-
-
 class RealProductionDataSmokeTests(unittest.TestCase):
     """A light touch of the real data/production/*.json files - enough to
     prove the loader and the aggregation work against the genuine schema,
@@ -148,7 +106,7 @@ class RealProductionDataSmokeTests(unittest.TestCase):
     data/production/_SCHEMA.md and CLAUDE.md section 4)."""
 
     def test_wheat_kg_is_present_and_booked_to_the_farmer(self):
-        production = labour_market.production_data()
+        production = production_data()
         self.assertIn("wheat_kg", production)
         coefficients = labour_market.labour_hours_coefficients_per_unit_output(
             "wheat_kg", production)
@@ -156,118 +114,11 @@ class RealProductionDataSmokeTests(unittest.TestCase):
         self.assertGreater(coefficients["farmer"], 0.0)
 
     def test_iron_bar_kg_needs_both_furnaceman_and_smith(self):
-        production = labour_market.production_data()
+        production = production_data()
         coefficients = labour_market.labour_hours_coefficients_per_unit_output(
             "iron_bar_kg", production)
         self.assertIn("furnaceman", coefficients)
         self.assertIn("smith", coefficients)
-
-    def test_labour_hours_required_by_trade_runs_over_real_data(self):
-        production = labour_market.production_data()
-        hours_by_trade, _ = labour_market.labour_hours_required_by_trade(
-            {"wheat_kg": 1_000_000.0, "iron_bar_kg": 10_000.0}, production)
-        self.assertGreater(hours_by_trade.get("farmer", 0.0), 0.0)
-        self.assertGreater(hours_by_trade.get("smith", 0.0), 0.0)
-
-
-# ============================================================================
-# THE BRIDGE TO A MARGINAL PRODUCT
-# ============================================================================
-
-class AdditionalHoursToCloseAShortfallTests(unittest.TestCase):
-
-    def test_is_the_plain_inverse_of_the_marginal_product(self):
-        self.assertAlmostEqual(
-            labour_market.additional_hours_to_close_a_shortfall(100.0, 2.0), 50.0)
-
-    def test_zero_marginal_product_raises_rather_than_dividing_by_zero(self):
-        with self.assertRaises(ValueError):
-            labour_market.additional_hours_to_close_a_shortfall(100.0, 0.0)
-
-    def test_negative_marginal_product_also_raises(self):
-        with self.assertRaises(ValueError):
-            labour_market.additional_hours_to_close_a_shortfall(100.0, -1.0)
-
-
-# ============================================================================
-# THE ALLOCATION: Workforce.step
-# ============================================================================
-
-class GapResponsiveMobilityRateTests(unittest.TestCase):
-    """Direct, hand-checkable coverage of the two pure functions THE
-    FRICTION section's rate schedule is built from - see labour_market.py's
-    own `relative_gap_size` and `gap_responsive_mobility_rate`."""
-
-    def testrelative_gap_size_is_the_plain_ratio_when_basis_is_positive(self):
-        self.assertAlmostEqual(labour_market.relative_gap_size(-50.0, 100.0), 0.5)
-        self.assertAlmostEqual(labour_market.relative_gap_size(300.0, 100.0), 3.0)
-
-    def testrelative_gap_size_is_zero_when_there_is_no_gap(self):
-        self.assertEqual(labour_market.relative_gap_size(0.0, 0.0), 0.0)
-        self.assertEqual(labour_market.relative_gap_size(0.0, 500.0), 0.0)
-
-    def testrelative_gap_size_is_infinite_when_basis_is_zero_and_a_gap_exists(self):
-        self.assertEqual(labour_market.relative_gap_size(50.0, 0.0), float("inf"))
-
-    def test_zero_relative_gap_returns_exactly_the_base_rate(self):
-        self.assertAlmostEqual(
-            labour_market.gap_responsive_mobility_rate(0.05, 0.0), 0.05)
-
-    def test_rate_rises_monotonically_with_relative_gap_up_to_the_ceiling(self):
-        rate_at_small_gap = labour_market.gap_responsive_mobility_rate(0.05, 0.1)
-        rate_at_large_gap = labour_market.gap_responsive_mobility_rate(0.05, 10.0)
-        ceiling = labour_market.OCCUPATIONAL_MOBILITY_RATE_CEILING_PER_YEAR
-        self.assertGreater(rate_at_large_gap, rate_at_small_gap)
-        self.assertLessEqual(rate_at_large_gap, ceiling)
-        self.assertAlmostEqual(rate_at_large_gap, ceiling)
-
-    def test_infinite_relative_gap_returns_exactly_the_ceiling(self):
-        self.assertAlmostEqual(
-            labour_market.gap_responsive_mobility_rate(0.05, float("inf")),
-            labour_market.OCCUPATIONAL_MOBILITY_RATE_CEILING_PER_YEAR)
-
-
-class OccupationalMobilityRateTests(unittest.TestCase):
-
-    def test_is_a_plausible_fraction_strictly_between_zero_and_one(self):
-        self.assertGreater(labour_market.OCCUPATIONAL_MOBILITY_RATE_PER_YEAR, 0.0)
-        self.assertLess(labour_market.OCCUPATIONAL_MOBILITY_RATE_PER_YEAR, 1.0)
-
-    def test_is_declared_as_a_labelled_temporary_heuristic(self):
-        from sim import constants
-        entry = constants.REGISTRY["OCCUPATIONAL_MOBILITY_RATE_PER_YEAR"]
-        self.assertEqual(entry["kind"], "temporary_heuristic")
-        self.assertTrue(entry["why"])
-        self.assertTrue(entry["source"])
-
-
-class MobilityFrictionConstantsTests(unittest.TestCase):
-    """The three constants THE FRICTION section added alongside the
-    original steady-state rate, each labelled per CLAUDE.md SS3.4."""
-
-    def test_gap_response_gain_is_positive_and_labelled(self):
-        from sim import constants
-        self.assertGreater(labour_market.OCCUPATIONAL_MOBILITY_GAP_RESPONSE_GAIN, 0.0)
-        entry = constants.REGISTRY["OCCUPATIONAL_MOBILITY_GAP_RESPONSE_GAIN"]
-        self.assertEqual(entry["kind"], "temporary_heuristic")
-        self.assertTrue(entry["why"])
-
-    def test_rate_ceiling_is_above_the_steady_state_rate_and_below_one(self):
-        from sim import constants
-        self.assertGreater(labour_market.OCCUPATIONAL_MOBILITY_RATE_CEILING_PER_YEAR,
-                           labour_market.OCCUPATIONAL_MOBILITY_RATE_PER_YEAR)
-        self.assertLess(labour_market.OCCUPATIONAL_MOBILITY_RATE_CEILING_PER_YEAR, 1.0)
-        entry = constants.REGISTRY["OCCUPATIONAL_MOBILITY_RATE_CEILING_PER_YEAR"]
-        self.assertEqual(entry["kind"], "temporary_heuristic")
-        self.assertTrue(entry["why"])
-
-    def test_walkable_seed_share_is_a_small_positive_fraction(self):
-        from sim import constants
-        self.assertGreater(labour_market.WALKABLE_TRADE_SEED_SHARE_OF_ECONOMY_HOURS, 0.0)
-        self.assertLess(labour_market.WALKABLE_TRADE_SEED_SHARE_OF_ECONOMY_HOURS, 1.0)
-        entry = constants.REGISTRY["WALKABLE_TRADE_SEED_SHARE_OF_ECONOMY_HOURS"]
-        self.assertEqual(entry["kind"], "temporary_heuristic")
-        self.assertTrue(entry["why"])
 
 
 if __name__ == "__main__":

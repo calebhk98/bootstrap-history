@@ -3,7 +3,6 @@
 QUICK_TOPIC = True
 
 import unittest
-from types import SimpleNamespace
 
 from sim.workforce.rules import price_of_labour_hours
 from sim.labour.room_advice import hire_room_refusal, room_advice, sources_to_build, sources_to_reopen

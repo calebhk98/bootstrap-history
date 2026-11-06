@@ -1,11 +1,11 @@
 """Whether a tile has ground left for a newcomer (the land market caps a producer's runs at the ground it is granted)."""
-from typing import Iterable, Set, Tuple
+from typing import Iterable, Optional, Set, Tuple
 
 
-def land_short_tiles(rows: Iterable[Tuple[str, float, bool]]) -> Set[str]:
-    """Tiles where a producer whose recipe takes land was granted less than it asked (`land_run_cap` at or above zero):
+def land_short_tiles(rows: Iterable[Tuple[str, Optional[float], bool]]) -> Set[str]:
+    """Tiles where a producer whose recipe takes land was granted less than it asked (`land_run_cap` is stated):
     rows are (tile, land_run_cap, recipe takes land). All of such a tile's ground is spoken for."""
-    return {tile for tile, cap, takes_land in rows if takes_land and cap >= 0.0}
+    return {tile for tile, cap, takes_land in rows if takes_land and cap is not None}
 
 
 def headroom_with_land(headroom_runs: float, takes_land: bool, tile_is_land_short: bool) -> float:

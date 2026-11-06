@@ -1,12 +1,13 @@
 """Captives of war join the winner's bonded people (Complaint 648). The hooks are called from the campaign phase when a
 battle is decided and when a tile is taken; the rules are the agents' (`captives_from_losses`, `captives_from_conquest`)."""
 from sim.agents.api import captives_from_conquest, captives_from_losses
+from sim.assembly.api import Part
 from sim.demography.api import AddCaptives
 from sim.geography.api import settlement
 from sim.hazards.api import RecordWorldEvent
 
 
-class Captives:
+class Captives(Part):
 	"""Reads: tiles_owned_by, has_state, country_world. Sends AddCaptives, RecordWorldEvent."""
 
 	def _add_captives(self, winner: str, loser: str, people: float, tile: str, cause: str) -> float:
@@ -24,5 +25,5 @@ class Captives:
 		owned = self.needs.tiles_owned_by[loser]
 		if tile not in owned or not self.needs.has_state[loser]:
 			return 0.0
-		people = float(self.needs.country_world[loser].population_total()) * settlement.population_share(owned, tile)
+		people = float(self.needs.country_world[loser].people.population_total()) * settlement.population_share(owned, tile)
 		return self._add_captives(winner, loser, captives_from_conquest(people), tile, "conquest")

@@ -3,12 +3,12 @@
 Every read is a view of an owner that has not moved yet, published by the engine bridge (sim/engine/bridge_*.py) under the name the owner will publish, except the `legacy_*` ones:
 raw state used in place. No view of the module is cached: the stock, the projects and the market behind them are written outside any command of the owners."""
 from sim.assembly.api import KEYED, QUOTE, ModuleSpec, PhaseHook, ViewSpec
-from sim.ledger.api import BankStock, ChangeStock, PayEdge
-from sim.markets.api import NoteDraw, NotePurchase, ResetDraws
+from sim.ledger.api import BankStock
+from sim.markets.api import BuyMaterial, NoteDraw, ResetDraws
 from sim.reporting.api import RecordEvent
 
 from .channels import READING
-from .commands import ApplyThrottle, CaptureReadings, RestoreReadings, SettleProjectMaterials
+from .commands import ApplyThrottle, CaptureReadings, ReorderProjectMaterials, RestoreReadings, SettleProjectMaterials
 from .module import Materials
 from .state import MaterialsSeat
 
@@ -17,10 +17,9 @@ READS_BY_OWNER = {
                   "techniques_version", "operating", "default_population", "pop_scale"),
     "mechanics": ("mechanic", "effect_best", "running_stamp", "running"),
     "ledger": ("goods_stock", "held_goods", "goods_stock_opening"),
-    "markets": ("goods_quote", "can_be_bought", "purchase_quote", "partner_import_tonnes", "agent_producer_capacity",
-                "material_freight_factor"),
-    "prices": ("material_prices", "material_commodity_map", "commodity_record", "commodity_country_output", "price_epoch",
-               "producers_stamp"),
+    "markets": ("goods_quote", "can_be_bought", "purchase_quote", "agent_producer_capacity",
+                "material_freight_factor", "unit_mass_kg"),
+    "prices": ("material_prices", "material_commodity_map", "commodity_record", "commodity_country_output", "done_memo"),
     "resources": ("empire_output", "mine_capacity", "mine_depletion", "forest_hectares", "nitre_beds", "found_deposits", "mine_works_materials",
                   "shortage_remedy_plan"),
     "land": ("tiles_listed_by", "forest_increment", "mineral_scale", "material_cost_factor"),
@@ -48,7 +47,6 @@ MODULE_SPECS = (ModuleSpec(
         ViewSpec("own_supply_by_commodity", "own_supply_by_commodity", kind=QUOTE, **_LIVE),
         ViewSpec("material_own_supply", "own_material_supply", kind=KEYED, seat_scoped=True, **_LIVE),
         ViewSpec("material_market_tonnes", "market_tonnes", kind=KEYED, seat_scoped=True, **_LIVE),
-        ViewSpec("society_output", "society_output_tonnes", kind=KEYED, **_LIVE),
         ViewSpec("national_output", "national_output", kind=KEYED, **_LIVE),
         ViewSpec("own_production_tags", "own_production_tags", seat_scoped=True, **_LIVE),
         ViewSpec("material_shortfall", "material_shortfall", kind=QUOTE, seat_scoped=True, **_LIVE),
@@ -79,9 +77,10 @@ MODULE_SPECS = (ModuleSpec(
         ViewSpec("start_gate_material_seller", "start_gate_material_seller", kind=QUOTE, seat_scoped=True, **_LIVE),
     ),
     applies=((ApplyThrottle, "apply_throttle"), (SettleProjectMaterials, "settle_project_materials"),
+             (ReorderProjectMaterials, "reorder_project_materials"),
              (RestoreReadings, "restore_readings"),
              (CaptureReadings, "capture_readings")),
     reads=tuple(name for names in READS_BY_OWNER.values() for name in names),
-    sends=(BankStock, ChangeStock, PayEdge, ResetDraws, NoteDraw, NotePurchase, RecordEvent),
+    sends=(BankStock, BuyMaterial, ResetDraws, NoteDraw, RecordEvent),
     phases=(PhaseHook("material_shortage_notes", "step_shortage_notes"),),
 ),)

@@ -8,7 +8,8 @@ def spin_up_state(setup, record, outcome):
     held = 0.0
     for agent in record.producers:
         for good, by_tile in record.book.holdings(agent)["goods"].items():
-            held += weight.get(good, 0.0) * sum(by_tile.values())
-    return {"real_output": sum(weight.get(good, 0.0) * quantity for good, quantity in outcome.output.items()),
+            if good in weight:      # a good with no opening price is left out of the value
+                held += weight[good] * sum(by_tile.values())
+    return {"real_output": sum(weight[good] * quantity for good, quantity in outcome.output.items() if good in weight),
             "hired_hours": outcome.hired_hours, "idle_hours": outcome.idle_hours, "inventory_value": held,
             "unmet_need": sum(outcome.hunger_by_tile.values())}

@@ -4,7 +4,7 @@ The stock is {tile: share of the native pool left}; a tile with no entry is nati
 and its draught herd come in as arguments, so this module reads nothing from the simulation. The pool arithmetic is
 sim/geography/soil_nutrients.py.
 """
-from typing import Dict, Iterable, Optional
+from typing import Dict, Iterable
 
 from sim.geography.queries import crop_site
 from sim.geography.tile_holdings import tiles_held

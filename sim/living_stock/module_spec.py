@@ -3,7 +3,7 @@ from sim.assembly.api import KEYED, QUOTE, TABLE, ModuleSpec, PhaseHook, ViewSpe
 from sim.foreign_trade.api import CloseMarketsTo, RecordStockTaken, SettleFlow
 from sim.ledger.api import ChangeStock, PayEdge
 from sim.polity.api import RaiseScandal
-from sim.workforce.api import PressLabour
+from sim.workforce.api import PostHoursOnce
 
 from .commands import BuyStock, ChangeHeld, GrantOpeningHerds, GrantOpeningStock, SmuggleStock
 from .holding import HERDS
@@ -26,10 +26,10 @@ MODULE_SPECS = (ModuleSpec(
     ),
     applies=((ChangeHeld, "change_held"), (GrantOpeningStock, "grant_opening_stock"),
              (GrantOpeningHerds, "grant_opening_herds"), (BuyStock, "buy_stock"), (SmuggleStock, "smuggle_stock")),
-    reads=("goods_stock", "acting_balance", "material_commodity", "tree", "civilisation", "year", "stock_land",
-           "endemic_stock_loss", "nursery_room_units", "producer_capacities", "labour_quote", "can_pay", "partners",
+    reads=("goods_stock", "unit_mass_kg", "acting_balance", "material_commodity", "tree", "civilisation", "year", "stock_land",
+           "endemic_stock_loss", "nursery_room_units", "producer_capacities", "hours_hired_once", "can_pay", "partners",
            "partner", "partner_refusal", "partner_gate", "partner_landed_price", "partner_carry",
            "partner_catch_chance"),
-    sends=(ChangeStock, PayEdge, PressLabour, SettleFlow, RecordStockTaken, CloseMarketsTo, RaiseScandal),
+    sends=(ChangeStock, PayEdge, PostHoursOnce, SettleFlow, RecordStockTaken, CloseMarketsTo, RaiseScandal),
     phases=(PhaseHook("living_stock", "step_living_stock"),),
 ),)

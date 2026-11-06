@@ -2,12 +2,19 @@
 
 Needs: techniques_in_use, techniques_granted, tree, year. A reader sends `NoteFirstRuns` with the techniques in use
 before it asks for `techniques_spread`, so a technique is stamped with the year it was first seen."""
-from typing import Any, FrozenSet
+from typing import Any, FrozenSet, Optional
+
+from sim.assembly.api import Part
 
 from . import technique_spread
 
 
-class Techniques:
+class Techniques(Part):
+
+    def __init__(self, module):
+        super().__init__(module)
+        self._noted: Optional[tuple] = None      # (techniques in use, year) last stamped
+        self._spread: Optional[tuple] = None     # the last answer of techniques_spread and what it was computed from
 
     def note_first_runs(self, command: Any) -> None:
         """Stamp each technique in use that has no first-run year yet. The opening's techniques were copied before the

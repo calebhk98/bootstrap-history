@@ -15,16 +15,9 @@ def check_simulation_invariants(state):
     for key, value in demographics.items():
         assert math.isfinite(value) and value >= 0.0, \
             "invalid demographic %s=%r" % (key, value)
-    economy = state.economy
-    for key, value in (state.seats[state.acting_seat].modules["ledger"]._material_stock_ledger or {}).items():
+    for key, value in (state.seats[state.acting_seat].modules["ledger"].material_stock_ledger or {}).items():
         assert math.isfinite(value) and value >= -1e-9, \
             "negative or non-finite physical stockpile %s=%r" % (key, value)
-    granary_kg = state.seats[state.acting_seat].modules["demography"].farm_stock_kg
-    assert math.isfinite(granary_kg) and granary_kg >= -1e-9, \
-        "negative or non-finite physical stockpile grain=%r" % granary_kg
-    for key, value in (getattr(economy, "commodity_prices", None) or {}).items():
-        assert math.isfinite(value) and value >= 0.0, \
-            "negative or non-finite commodity price %s=%r" % (key, value)
     allocated_fte = 0.0
     for project_id, project in state.seats[state.acting_seat].modules["projects"].active.items():
         status = project.get("status")
@@ -54,16 +47,24 @@ def check_tile_owner_invariants(sim):
     return True
 
 
+def check_price_invariants(sim):
+    """Assert every price the agent economy quotes is finite and not negative (a good with no price is absent or None)."""
+    for good, price in (sim.view("agent_prices")() or {}).items():
+        assert price is None or (math.isfinite(price) and price >= 0.0), \
+            "negative or non-finite commodity price %s=%r" % (good, price)
+    return True
+
+
 def check_labour_market_invariants(sim):
     """Assert the labour market never holds more people than exist."""
     nation = sim.view("population")().total
-    town = sim.labour.home_town_population_estimate()
+    town = sim.view("home_town_population_estimate")()
     assert town <= nation + 1e-6, \
         "home town of %.1f people exceeds the nation of %.1f" % (town, nation)
     employees = sim.view("staff")()["employees"]
-    for trade in sim.labour.available_trades():
-        reachable = sim.labour.reachable_trade_population(trade)
-        people = sim.labour.people_who_exist(trade)
+    for trade in sim.view("available_trades")():
+        reachable = sim.view("reachable_trade_population")[trade]
+        people = sim.view("people_who_exist")[trade]
         assert reachable <= people + 1e-6, \
             "reachable %s %.2f exceed the %.2f people in that trade" % (trade, reachable, people)
         assert reachable <= nation + 1e-6, \
@@ -81,11 +82,9 @@ def check_technique_invariants(sim):
     registry = sim.view("cast")()
     world = sim.view("actor_world")()
     for actor in registry.actors.values():
-        business = getattr(actor.record, "business", None)
-        if business is None:
-            continue
-        scope = registry.world_for(actor, world)
-        for entry_key in business.entry_keys():
+        business = actor.record.business
+        scope = registry.countries.world_for(actor, world)
+        for entry_key in business.reading.entry_keys():
             held = actor.knows(entry_key, scope) or entry_key in actor.record.royalty_owed
             assert held, "%s runs %s without holding the technique" % (actor.actor_id, entry_key)
     return True
@@ -93,15 +92,14 @@ def check_technique_invariants(sim):
 
 def check_capacity_invariants(sim):
     """Assert counts stay within production limits: a plant's size is finite and not negative, the share of its
-    crew found lies in 0..1, no actor's workforce is negative or larger than the people of its country, and each
-    commodity's society capacity is finite and not negative."""
+    crew found lies in 0..1, no actor's workforce is negative or larger than the people of its country."""
     from .mod_effects import people_of
     registry = sim.view("cast")()
     people = {country: people_of(sim, country) for country in sim.view("countries_in_game")()}
     home = sim.civ["id"]
     for actor in registry.actors.values():
-        business = getattr(actor.record, "business", None)
-        for plant in (business.plants if business is not None else ()):
+        business = actor.record.business
+        for plant in business.plants:
             assert math.isfinite(plant.size) and plant.size >= 0.0, \
                 "%s plant %s has size %r" % (actor.actor_id, plant.entry_key, plant.size)
             assert 0.0 <= plant.crew_found <= 1.0 + 1e-9, \
@@ -112,9 +110,6 @@ def check_capacity_invariants(sim):
         if country in people and people[country] > 0.0:
             assert staff <= people[country] + 1e-6, \
                 "%s employs %.1f, more than the %.1f people of %s" % (actor.actor_id, staff, people[country], country)
-    for commodity, book in (sim.state.modules["markets"].market_book or {}).items():
-        capacity = book.get("capacity_tonnes", 0.0)
-        assert math.isfinite(capacity) and capacity >= -1e-9, "commodity %s has capacity %r" % (commodity, capacity)
     return True
 
 
@@ -123,4 +118,5 @@ def check_yearly_invariants(sim):
     ownership, techniques held, and production limits."""
     check_tile_owner_invariants(sim)
     check_technique_invariants(sim)
+    check_price_invariants(sim)
     return check_capacity_invariants(sim)

@@ -5,6 +5,7 @@ A working is its own record (material, rated capacity, the year it came on strea
 and the deposit it names); the capacity of a material is always summed from the list, never held beside it."""
 from typing import Any, Dict, List
 
+from sim.assembly.api import Part
 from sim.reporting.api import RecordEvent
 
 from . import rules
@@ -12,7 +13,7 @@ from .channels import MINES
 from .constants import DEPLETION_FLOOR, DEPLETION_HALF_LIFE_YRS, MINING_COST_SCALE_CEILING, MINING_COST_SCALE_FLOOR
 
 
-class Workings:
+class Workings(Part):
     """Needs: year. Sends RecordEvent."""
 
     def changed_mines(self) -> None:
@@ -53,7 +54,7 @@ class Workings:
 
     def yield_of(self, working: Dict[str, Any]) -> float:
         """Tonnes a year this working raises: its capacity after its own depletion, bounded by its deposit."""
-        remaining = self.deposit_remaining_tonnes(working["material"], working["deposit"]) if working.get("deposit") else None
+        remaining = self.parts.deposits.deposit_remaining_tonnes(working["material"], working["deposit"]) if working.get("deposit") else None
         return rules.working_yield(working["capacity"], self.depletion_of(working), remaining)
 
     def mine_yield(self, material: str) -> float:
@@ -69,7 +70,7 @@ class Workings:
     def working_report(self, working: Dict[str, Any]) -> Dict[str, Any]:
         """{depletion, yield_tonnes, operating_cost, note} of one working, from its own figures."""
         depletion = self.depletion_of(working)
-        return {"depletion": depletion, "yield_tonnes": self.yield_of(working), "operating_cost": self.operating_cost_of(working),
+        return {"depletion": depletion, "yield_tonnes": self.yield_of(working), "operating_cost": self.parts.mine_costs.operating_cost_of(working),
                 "note": rules.depletion_note(depletion)}
 
     def commission_mines(self) -> None:
@@ -88,9 +89,9 @@ class Workings:
         for working in self.seat.mines:
             material = working["material"]
             if material not in ceilings:
-                ceilings[material] = self.mine_land_ceiling(material)
+                ceilings[material] = self.parts.mine_costs.mine_land_ceiling(material)
             if working.get("deposit"):
-                self.draw(working["deposit"], self.yield_of(working))
+                self.parts.deposits.draw(working["deposit"], self.yield_of(working))
             working["intensity_yrs"] = rules.next_intensity(working.get("intensity_yrs", 0.0), working["capacity"], ceilings[material])
         self.close_worked_out()
         self.changed_mines()
@@ -99,7 +100,7 @@ class Workings:
         kept = []
         for working in self.seat.mines or ():
             deposit_id = working.get("deposit")
-            if deposit_id and self.deposit_remaining_tonnes(working["material"], deposit_id) <= 0.0:
+            if deposit_id and self.parts.deposits.deposit_remaining_tonnes(working["material"], deposit_id) <= 0.0:
                 self.needs.send(RecordEvent.of("workings_exhausted", "the %s workings at %s are worked out and close"
                                                % (working["material"], deposit_id)))
             else:

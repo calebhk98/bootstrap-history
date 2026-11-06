@@ -8,7 +8,9 @@ import unittest
 
 from sim.agents.api import ActorRecord, ActorsState
 from sim.agents.firm import Firm
-from sim.agents.purses import COIN, EDGE_SAVERS, POOL, Purses
+from sim.agents.purses import POOL, Purses
+
+from .pool_lenders import lend_from_savers
 
 
 def market(lender_count, borrower_count, cash=100.0, savers=1e6):
@@ -19,7 +21,8 @@ def market(lender_count, borrower_count, cash=100.0, savers=1e6):
     borrowers = [Firm("firm:borrower%d" % index, ActorRecord(kind="firm")) for index in range(borrower_count)]
     for actor in lenders + borrowers:
         actor.attach(purses)
-    purses.set_offers({EDGE_SAVERS: savers, **{lender.account_id: cash for lender in lenders}})
+    purses.set_offers({lender.account_id: cash for lender in lenders})
+    lend_from_savers(purses, savers)
     return state, lenders, borrowers
 
 
@@ -78,7 +81,7 @@ class PooledLending(unittest.TestCase):
         purses.cover(borrowers[1].account_id, 60.0)
         purses.write_off(borrowers[0].account_id)
         claims = purses.contracts.total_deposits()
-        assets = purses.purse(POOL) + purses.lent() - purses.contracts.exposure(None, COIN, "term_loan")
+        assets = purses.purse(POOL) + purses.lent() - sum(contract.principal for contract in purses.contracts.term_loans)
         self.assertAlmostEqual(claims, assets)
 
     def test_a_deposit_is_taken_back_before_a_facility_is_drawn(self):

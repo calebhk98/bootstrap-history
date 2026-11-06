@@ -85,17 +85,17 @@ startable_turn_one = [node_id for node_id in _ANACHRONISMS if rome.view("start_c
 check("no anachronistic doctrine is startable turn one, even with its prerequisites held",
       not startable_turn_one, str(startable_turn_one))
 
-ok_hire, hire_error = rome.view("legacy_labour")().hire("engineer", 1)
+ok_hire, hire_error = rome.assembly.modules["workforce"].parts.core.labour.hiring.hire("engineer", 1)
 check("a trade this society does not have cannot be hired",
       not ok_hire and cause_of(hire_error) == "trade_absent",
       "hire engineer -> %s / %s" % (ok_hire, hire_error))
 rome.capital = 20000.0
-ok_train, _ = rome.view("legacy_labour")().train("machinist", 2)
+ok_train, _ = rome.assembly.modules["workforce"].parts.core.labour.training.train("machinist", 2)
 check("you can teach a trade into existence",
-      ok_train and "machinist" in rome.view("trade_spread")()["created"] and not rome.view("legacy_labour")().trade_available("chemist"),
+      ok_train and "machinist" in rome.view("trade_spread")()["created"] and not rome.assembly.modules["workforce"].parts.core.labour.trades.trade_available("chemist"),
       "trained %s created %r" % (ok_train, sorted(rome.view("trade_spread")()["created"])))
 # a finished work can be shut to stop its upkeep without forgetting how it worked
-rome.view("legacy_labour")().hire("artisan", 2)
+rome.assembly.modules["workforce"].parts.core.labour.hiring.hire("artisan", 2)
 rome.send(LearnTechnique("fin_restaurant"))
 # Upkeep follows what you RUN, not what you know, so open the doors first.
 _ok_open, _why_open = rome.send(OpenVenture("fin_restaurant", None))
@@ -109,19 +109,18 @@ check("shutting a concern down does not make you forget how it worked",
       "done %s operating %s" % ("fin_restaurant" in rome.done, "fin_restaurant" in rome.operating))
 
 rome.capital = 5000.0
-capital_before_commission = rome.capital
 employees_before_commission = dict(rome.view("staff")()["employees"])
-ok_job, _ = rome.view("legacy_labour")().commission("smith", 200)
+ok_job, _ = rome.assembly.modules["workforce"].parts.core.labour.commissions.commission("smith", 200)
 check("you can buy a job without employing anybody",
-      ok_job and rome.view("staff")()["employees"] == employees_before_commission and rome.capital < capital_before_commission,
+      ok_job and rome.view("staff")()["employees"] == employees_before_commission and rome.view("hours_reserved")["smith"] >= 200,
       "ok %s employees %r" % (ok_job, rome.view("staff")()["employees"]))
 
 
 # buying people then freeing them must not mint labour or skip the training lag
 artisans_before = rome.view("staff")()["artisans"]
 rome.capital = 200000.0
-rome.view("legacy_labour")().buy_slaves(10)
-rome.view("legacy_labour")().manumit(10)
+rome.assembly.modules["workforce"].parts.core.labour.bondage.buy_slaves(10)
+rome.assembly.modules["workforce"].parts.core.labour.bondage.manumit(10)
 check("freeing untrained people does not skip the training lag",
       rome.view("staff")()["artisans"] - artisans_before < 0.01, "instant gain %.2f" % (rome.view("staff")()["artisans"] - artisans_before))
 
@@ -131,7 +130,7 @@ def spend(slices, per):
     run_it(spend_sim, "workshop_first", "freedman_staff")
     starting_capital = spend_sim.capital
     for _ in range(slices):
-        spend_sim.view("legacy_labour")().buy_slaves(per)
+        spend_sim.assembly.modules["workforce"].parts.core.labour.bondage.buy_slaves(per)
     return starting_capital - spend_sim.capital
 
 

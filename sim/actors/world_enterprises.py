@@ -1,15 +1,28 @@
-"""What a state's own plants ask of the world: the inputs a plant uses up in a year."""
+"""What a state's own plants ask of the world: the inputs a plant uses up in a year, and the tree's book figures."""
 import math
 from typing import Any, Callable, Dict, Optional
 
-from sim.agents.api import business_plant_books
+from sim.agents.api import business_plant_books, supply
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 
 
-class EnterpriseView:
-	"""Read-only questions behind a state's plants; mixed into `ActorWorld`."""
+class Enterprises:
+	"""Read-only questions behind a state's plants. `world` is the root that hands out the parts."""
 
-	needs: Any
+	def __init__(self, world: Any) -> None:
+		self.world = world
+
+	@property
+	def needs(self) -> Any:
+		return self.world.needs
+
+	def concerns_making(self, material: str) -> Any:
+		"""The nodes whose concerns put `material` on the market."""
+		return supply.nodes_making(material)
+
+	def materials_made_by(self, node_id: str) -> Any:
+		"""The materials a concern puts on the market."""
+		return supply.materials_made_by(node_id)
 
 	def concern_inputs(self, node_id: str) -> Dict[str, float]:
 		"""Tonnes of each material a concern of the node uses up in a year at its founding size, from its production
@@ -27,7 +40,7 @@ class EnterpriseView:
 	# ---- the tree's figures a plant in another country is booked from (agents/business_plant_books.py)
 	def book_takings(self, node_id: str, opened_year: int) -> float:
 		"""Yearly takings of one founding size of a concern at its ramp, in the tree's book coin: no cost scale, no hazard factor."""
-		return float(self.needs.concern_takings(node_id, self.ramp(opened_year, node_id), with_output_factor=False, cost_scale=1.0))  # type: ignore[attr-defined]
+		return float(self.needs.concern_takings(node_id, self.world.concerns.ramp(opened_year, node_id), with_output_factor=False, cost_scale=1.0))
 
 	def book_takings_at_full_ramp(self, node_id: str) -> float:
 		"""Yearly takings of one founding size of a concern once ramped up, in the tree's book coin."""
@@ -47,8 +60,8 @@ class EnterpriseView:
 
 	def in_goods_category(self, node_id: str) -> bool:
 		"""Whether the concern sells into a goods category, whose demand the home society's households set."""
-		return self.nodes[node_id].get("cat") in self.goods_category_names  # type: ignore[attr-defined,no-any-return]
+		return self.world.setting.nodes[node_id].get("cat") in self.world.groups.goods_category_names  # type: ignore[no-any-return]
 
 	def plant_books(self, node_id: str, opened_year: int, rivals: float, size: float) -> Any:
 		"""Takings, upkeep and wages of a plant in the home economy."""
-		return business_plant_books.home_books(self, node_id, opened_year, rivals, size)
+		return business_plant_books.home_books(self.world, node_id, opened_year, rivals, size)

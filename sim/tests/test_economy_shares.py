@@ -76,6 +76,9 @@ class Book:
     def balance(self, agent, currency):
         return self.balances.get(agent, 0.0)
 
+    def holdings(self, agent):
+        return {"goods": {}}
+
 
 def cohort(agent_id, tile, ownership_share=1.0):
     return Cohort(agent_id, tile, 0, 100.0, 50.0, ownership_share)
@@ -85,9 +88,7 @@ def stand_in_record(balances=None):
     producers = {PRODUCER: Producer(PRODUCER, OWNER, "grow", "town", 4.0)}
     cohorts = {agent: cohort(agent, "farms") for agent in SAVERS}
     cohorts[OWNER] = cohort(OWNER, "town")
-    return types.SimpleNamespace(
-        book=Book(balances), producers=producers, cohorts=cohorts, shares={}, last_dividends={PRODUCER: 10.0},
-        loans=[], remembered_defaults={}, capital=types.SimpleNamespace(funds={}, share_price_factor=1.0))
+    return types.SimpleNamespace(book=Book(balances), producers=producers, cohorts=cohorts, capital_markets=types.SimpleNamespace(shares={}, last_dividends={PRODUCER: 10.0}, capital=types.SimpleNamespace(funds={}, share_price_factor=1.0)), credit=types.SimpleNamespace(loans=[], remembered_defaults={}))
 
 
 def unmet(amount=100.0, yearly_return=0.2):
@@ -107,7 +108,7 @@ class RaiseEquityTests(unittest.TestCase):
         self.assertAlmostEqual(raised[PRODUCER], 100.0)
         self.assertAlmostEqual(sum(transfer.amount for transfer in self.record.book.transfers if transfer.payee == PRODUCER), 100.0)
         self.assertEqual(sorted(transfer.payer for transfer in self.record.book.transfers), SAVERS)
-        held = self.record.shares[PRODUCER]
+        held = self.record.capital_markets.shares[PRODUCER]
         self.assertEqual(sorted(held), SAVERS)
         expected_dividend = 10.0 + 100.0 * 0.2
         self.assertAlmostEqual(sum(held.values()) * equity_value(
@@ -116,16 +117,16 @@ class RaiseEquityTests(unittest.TestCase):
     def test_a_request_for_anything_but_plant_is_not_offered_as_shares(self):
         request = LoanRequest(PRODUCER, MONEY, 100.0, 0.2, 1.0, 100.0, "working capital")
         self.assertEqual(shares.raise_equity(self.record, MONEY, [request], offers(), [], RATE, 0.0), {})
-        self.assertNotIn(PRODUCER, self.record.shares)
+        self.assertNotIn(PRODUCER, self.record.capital_markets.shares)
 
     def test_savers_who_lent_their_funds_have_less_to_buy_with(self):
         lent = [types.SimpleNamespace(lender=saver, principal=1000.0) for saver in SAVERS]
         self.assertEqual(shares.raise_equity(self.record, MONEY, unmet(), offers(), lent, RATE, 0.0), {})
 
     def test_a_second_issue_dilutes_the_first_holders(self):
-        self.record.shares[PRODUCER] = {SAVERS[0]: 0.2, SAVERS[1]: 0.2}
+        self.record.capital_markets.shares[PRODUCER] = {SAVERS[0]: 0.2, SAVERS[1]: 0.2}
         shares.raise_equity(self.record, MONEY, unmet(), [FundsOffer(SAVERS[0], MONEY, 1000.0, 0.01)], [], RATE, 0.0)
-        after = self.record.shares[PRODUCER]
+        after = self.record.capital_markets.shares[PRODUCER]
         self.assertLess(after[SAVERS[1]], 0.2)
         self.assertLessEqual(sum(after.values()), 1.0)
 
@@ -133,7 +134,7 @@ class RaiseEquityTests(unittest.TestCase):
 class DividendTests(unittest.TestCase):
     def test_the_dividend_is_paid_to_the_holders_by_share_and_the_rest_to_the_owners_tile(self):
         record = stand_in_record()
-        record.shares[PRODUCER] = {SAVERS[0]: 0.25, SAVERS[1]: 0.15}
+        record.capital_markets.shares[PRODUCER] = {SAVERS[0]: 0.25, SAVERS[1]: 0.15}
         paid = ownership.spread(record, [Transfer(PRODUCER, OWNER, MONEY, 200.0, "dividend")])
         by_payee = {}
         for transfer in paid:
@@ -153,7 +154,7 @@ class HoldingsTests(unittest.TestCase):
     def test_households_count_the_shares_they_hold_as_part_of_the_producers_worth_not_the_owner_tiles(self):
         record = stand_in_record({PRODUCER: 1000.0})
         before = self.holdings(record)
-        record.shares[PRODUCER] = {SAVERS[0]: 0.25}
+        record.capital_markets.shares[PRODUCER] = {SAVERS[0]: 0.25}
         after = self.holdings(record)
         gained = after[SAVERS[0]] - before.get(SAVERS[0], 0.0)
         self.assertAlmostEqual(gained, 250.0)
@@ -164,10 +165,10 @@ class HoldingsTests(unittest.TestCase):
 class PruneTests(unittest.TestCase):
     def test_a_closed_producers_shares_are_dropped(self):
         record = stand_in_record()
-        record.shares[PRODUCER] = {SAVERS[0]: 0.25}
+        record.capital_markets.shares[PRODUCER] = {SAVERS[0]: 0.25}
         del record.producers[PRODUCER]
         shares.prune(record)
-        self.assertEqual((record.shares, record.last_dividends), ({}, {}))
+        self.assertEqual((record.capital_markets.shares, record.capital_markets.last_dividends), ({}, {}))
 
 
 class IssuesForTests(unittest.TestCase):

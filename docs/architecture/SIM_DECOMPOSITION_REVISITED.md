@@ -1,5 +1,7 @@
 # Sim decomposition, revisited
 
+Note: this is a record of past analysis. Many files it names have since moved or gone: `sim/engine/economy*.py` and `solve_prices.py` live in `sim/markets/`, `sim/finance/` and `sim/prices/`, `demographic_recovery.py` is `sim/demography/recovery.py`, `foreign_economies.py` is `sim/content/foreign_economies.py`, and `sim/world/farm_year.py`, `sim/agents/route_dues_pay.py` and `sim/agents/household.py` are deleted. `sim/engine/agents_port*.py` is the actors module (`sim/actors/`). The mixins it counts are gone (`Sim` has no base classes); the current shape is `sim/ARCHITECTURE.md`.
+
 **Status:** analysis, requested by the stakeholder specifically to reopen a
 question `sim/ARCHITECTURE.md` and `CLAUDE.md` both call settled. Reopening
 it openly is sanctioned by the stakeholder; pretending the prior decision
@@ -177,7 +179,7 @@ and easy to lose track of mid-edit; the same rename split across two
 Two more independent, dated observations from documents already in this
 tree confirm this is routine rather than a one-off: `docs/architecture/
 WIRING_MILESTONE_4.md` was written "while four other agents edited
-`sim/world/deposits.py`, `sim/engine/solve_prices.py`, a rename-proving script
+`sim/world/deposits.py`, `sim/prices/solve_prices.py`, a rename-proving script
 and `sim/engine/economy.py` concurrently in the same checkout," to the point
 that its author had to read every cited file's content from a fixed anchor
 commit rather than the live working tree, specifically because the working
@@ -573,7 +575,7 @@ package function reads no `self` at all and the mixin keeps only the glue that f
   `geography`). Proof: identical sha256 over forty simulated years of `grant_opening_herds`, `endemic_keeping` and the
   held stock (two herd sizes alternating, one far beyond the pasture, the wild stock cut part-way) on base and branch.
 - `RegionalPeopleMixin` (`sim/engine/regional_people.py`): the migration rule between regions moved to
-  `sim/labour/regional_migration.py` (`sim.labour.api.moves_between_regions`); the calories each region is fed moved to
+  `sim/labour/regional_migration.py` (`sim.labour.api.migrant_pairs`); the calories each region is fed moved to
   `sim/world/regional_population.py` (`kcal_per_day_by_region`); the people by tile, the tiles' population shares and the
   borders moved to `sim/geography/settlement.py` (`people_by_tile`, `population_shares`, `borders_among`, the last
   through `Geography.borders_among`). The year's epidemic inputs are now one call,

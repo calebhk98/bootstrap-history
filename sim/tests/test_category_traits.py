@@ -57,12 +57,12 @@ class ModAddsCategory(unittest.TestCase):
     def test_new_category_trait_takes_effect_in_engine(self):
         nodes = {"x": {"cat": "test_cat_k3f9:rites", "traits": []}}
         self.assertTrue(category_traits.has_trait(self.catalogue, "test_cat_k3f9:rites", "never_abandoned"))
-        self.assertTrue(self.production(nodes)._practisable("x"))
+        self.assertTrue(self.production(nodes).practisable("x"))
         self.assertEqual([], category_traits.categories_without_traits(self.catalogue, nodes.values()))
 
     def test_override_of_existing_category(self):
         nodes = {"x": {"cat": "dentistry"}}
-        self.assertFalse(self.production(nodes)._practisable("x"))
+        self.assertFalse(self.production(nodes).practisable("x"))
 
     def test_new_diffusion_trait_is_last_and_usable(self):
         names = tuple(category_traits.diffusion_traits(self.catalogue))

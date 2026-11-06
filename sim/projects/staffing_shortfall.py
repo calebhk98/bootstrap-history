@@ -1,13 +1,15 @@
 """The yearly staffing check: which concerns a real shortfall of people forces shut."""
 from collections import defaultdict
 
+from sim.assembly.api import Part
+
 from .constants import FOUNDER_IS_WORTH, STAFFING_CLOSURE_SLACK
 from .staffing_choice import (HAND_RESOURCES, closures_for_shortfall, flagged_claims, flagged_concerns, missing_when_opened,
                               people_to_hire_for, shortfalls_beyond, staffing_allowances)
 
 
-class StaffingShortfall:
-	def _staffing_draw_of(self, node_id, foreman_units=None):
+class StaffingShortfall(Part):
+	def staffing_draw_of(self, node_id, foreman_units=None):
 		"""What one concern holds of each resource, whether or not it is running.
 
 		`foreman_units` is the size the foreman share is scaled by; it defaults to the size the concern runs at now."""
@@ -27,7 +29,7 @@ class StaffingShortfall:
 
 		Resources are "scholars", "craftsmen", and a foreman trade name; the amounts are the ones `open_venture` weighs."""
 		nodes = self.needs.tree_nodes()
-		return {node_id: self._staffing_draw_of(node_id)
+		return {node_id: self.staffing_draw_of(node_id)
 		        for node_id in sorted(self.needs.operating()) if node_id in nodes}
 
 	def staffing_held_totals(self):
@@ -44,8 +46,8 @@ class StaffingShortfall:
 		Uses the same allowances and shortfall test that decide which running concerns must close, so what it names is
 		what would shut it again. Pass `staffing_held_totals()` to price many concerns against one walk."""
 		return missing_when_opened(self.staffing_held_totals() if held_totals is None else held_totals,
-		                           self._staffing_draw_of(node_id, self.needs.reopen_units[node_id]),
-		                           lambda totals: self._staffing_shortfalls(totals, strict=True))
+		                           self.staffing_draw_of(node_id, self.needs.reopen_units[node_id]),
+		                           lambda totals: self.staffing_shortfalls(totals, strict=True))
 
 	def _staffing_allowances(self, trades, strict=False):
 		"""How much of each resource the household carries before a concern must close.
@@ -57,7 +59,7 @@ class StaffingShortfall:
 		return staffing_allowances(trades, needs.effective_scholars(), staff["artisans"] + own,
 		                           staff["employees"], STAFFING_CLOSURE_SLACK, strict)
 
-	def _staffing_shortfalls(self, totals, strict=False):
+	def staffing_shortfalls(self, totals, strict=False):
 		"""Resource -> amount held beyond what the household carries (short ones only)."""
 		return shortfalls_beyond(totals, self._staffing_allowances(
 			[resource for resource in totals if resource not in HAND_RESOURCES], strict))
@@ -71,7 +73,7 @@ class StaffingShortfall:
 		nodes = self.needs.tree_nodes()
 		net_value = {node_id: nodes[node_id]["rev"] - nodes[node_id]["up"] for node_id in draws}
 		# A concern flagged with `keep <id> staffed` is protected: it closes only after every unflagged one.
-		return closures_for_shortfall(draws, net_value, self.seat.keep_staffed, self._staffing_shortfalls)
+		return closures_for_shortfall(draws, net_value, self.seat.keep_staffed, self.staffing_shortfalls)
 
 	def keep_staffed_hires(self):
 		"""Resource -> whole people to hire so the flagged concerns stay staffed (`keep <id> staffed`).
@@ -81,11 +83,11 @@ class StaffingShortfall:
 		needs = self.needs
 		operating = needs.operating()
 		concerns = flagged_concerns(self.seat.keep_staffed, needs.techniques_held(), needs.tree_nodes(), operating,
-		                            self.staff_closure_age)
+		                            self.parts.closures.staff_closure_age)
 		if not concerns:
 			return {}
 		claimed, totals = flagged_claims(
 			concerns, operating,
-			lambda node_id, shut: self._staffing_draw_of(node_id, needs.reopen_units[node_id] if shut else None),
+			lambda node_id, shut: self.staffing_draw_of(node_id, needs.reopen_units[node_id] if shut else None),
 			self.staffing_held_totals())
-		return people_to_hire_for(claimed, self._staffing_shortfalls(totals, strict=True))
+		return people_to_hire_for(claimed, self.staffing_shortfalls(totals, strict=True))

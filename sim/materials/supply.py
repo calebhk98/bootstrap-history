@@ -3,17 +3,24 @@ brings, and what that does to the price. All of it in tonnes a year."""
 import collections
 from typing import Any, Dict, List, Optional, Set, Tuple
 
+from sim.assembly.api import Part
+
 from . import capacity, rules
 from .constants import (FIREWOOD_PER_CHARCOAL_MASS_RATIO, GENERIC_MARKET_SHARE_LEDGER_FALLBACK, MARKET_SHARE,
                         MATERIAL_CHECKS, MATERIAL_PRICE_DEMAND_SHARE_CAP, MATERIAL_PRICE_PRESSURE_SCALE)
 
 
-class Supply:
+class Supply(Part):
     """Needs: civilisation, tiles_listed_by, forest_increment, commodity_record, commodity_country_output, material_commodity_map,
     material_prices, mine_works_materials, empire_output, pop_scale, mineral_scale, found_deposits, agent_producer_capacity,
-    price_epoch, producers_stamp, running_stamp, effect_best, mechanic, running, forest_hectares,
-    nitre_beds, mine_capacity, mine_depletion, partner_import_tonnes, can_be_bought, goods_stock,
+    done_memo, running_stamp, effect_best, mechanic, running, forest_hectares,
+    nitre_beds, mine_capacity, mine_depletion, can_be_bought, goods_stock,
     held_goods, goods_quote, tree_nodes, visibility, material_freight_factor."""
+
+    def __init__(self, module):
+        super().__init__(module)
+        self._running_tables: Optional[Tuple] = None   # (projects, stamp, tree, tables) while what is built and run is unchanged
+        self._coppice: Optional[Tuple] = None       # (tiles held, mean stem wood increment of them)
 
     # ---- the catalogue of what a material is ----
 
@@ -44,20 +51,6 @@ class Supply:
 
     # ---- memos that hold while what is built and run is unchanged ----
 
-    def done_memo(self, name: str, key: Any, compute: Any) -> Any:
-        """`compute()` remembered per (name, key) while the techniques held, the techniques in use, the price level and the
-        economy's producers are unchanged."""
-        done = self.needs.techniques_held()
-        stamp = (self.needs.price_epoch(), len(done), self.needs.producers_stamp())
-        memo = self._done_memo
-        if memo is None or memo[0] != stamp or memo[1] is not done:
-            memo = self._done_memo = (stamp, done, {})
-        table = memo[2]
-        entry = (name, key)
-        if entry not in table:
-            table[entry] = compute()
-        return table[entry]
-
     def running_kept(self, name: str) -> Dict[Any, Any]:
         """A dict for derived values that depend only on which nodes are built, granted and operating; it starts empty
         whenever that changes."""
@@ -75,7 +68,7 @@ class Supply:
         return 0.0 if tonnes is None else tonnes
 
     def generic_national_output(self, commodity: str) -> float:
-        return self.done_memo("national_output", commodity, lambda: self.generic_national_output_uncached(commodity))
+        return self.needs.done_memo("national_output", commodity, lambda: self.generic_national_output_uncached(commodity))
 
     def generic_national_output_uncached(self, commodity: str) -> float:
         """Tonnes a year the society can bring to market of a material with no curated figure: a commodity the catalogue
@@ -101,12 +94,8 @@ class Supply:
             return 1.0
         return self.needs.pop_scale() if commodity == "charcoal" else self.needs.mineral_scale[commodity]
 
-    def society_output_tonnes(self, commodity: str) -> float:
-        """What the society's own producers can bring to market a year: the national output scaled to the territory held."""
-        return self.national_output_tonnes(commodity) * self.output_scale(commodity)
-
     def generic_market_share(self, commodity: str) -> float:
-        return self.done_memo("market_share", commodity, lambda: self.generic_market_share_uncached(commodity))
+        return self.needs.done_memo("market_share", commodity, lambda: self.generic_market_share_uncached(commodity))
 
     def generic_market_share_uncached(self, commodity: str) -> float:
         """The fraction of the society's output an ordinary buyer can reach for a material the tracked table has no
@@ -114,11 +103,6 @@ class Supply:
         if self.commodity_known(commodity):
             return float(self.needs.commodity_record[commodity].get("market_share", GENERIC_MARKET_SHARE_LEDGER_FALLBACK))
         return capacity.DEFAULT_MARKET_SHARE_OF_CAPACITY
-
-    def import_tonnes(self, commodity: str) -> float:
-        """Tonnes a year a trading partner can still bring of `commodity`; zero when the home society is its seller or no
-        one is."""
-        return self.needs.partner_import_tonnes[commodity]
 
     def own_material_supply(self, tag: str) -> float:
         """Tonnes a year of a tracked pool the seat supplies itself, not bought from anyone: mines it sank, woodland it
@@ -157,8 +141,7 @@ class Supply:
             sea_routes = self.needs.mechanic["supplies_material_by_sea_route"]
             routes = kept[commodity] = sum(
                 1 for node_id in sea_routes if commodity in sea_routes[node_id]["materials"] and self.needs.running[node_id])
-        return rules.market_tonnes(national, share, commodity == "charcoal", standing_factor, scale, routes,
-                                   self.import_tonnes(commodity))
+        return rules.market_tonnes(national, share, commodity == "charcoal", standing_factor, scale, routes)
 
     def own_production_tags(self) -> Set[Tuple[str, str]]:
         """(commodity, tag) for every material the seat produces itself, whether or not anything demands it this year."""
@@ -176,13 +159,13 @@ class Supply:
         """What buying more of this commodity costs beyond the flat catalogue price: how hard the seat's demand leans on the
         market's standing offer, less what its own supply covers, times what the freight from the nearest source adds."""
         market = self.market_tonnes(commodity)
-        demands = [(need, self.own_material_supply(tag)) for tag, need in self.demand_by_commodity().get(commodity, ())]
+        demands = [(need, self.own_material_supply(tag)) for tag, need in self.parts.demand.demand_by_commodity().get(commodity, ())]
         worst = rules.scarcity_factor(demands, market, MATERIAL_PRICE_DEMAND_SHARE_CAP, MATERIAL_PRICE_PRESSURE_SCALE)
         return worst * self.needs.material_freight_factor[commodity]
 
     def material_market_summary(self) -> Optional[str]:
         """The line on every raw material carrying a price premium because the seat's own demand leans on the market, or None."""
-        demand = self.cached_demand()
+        demand = self.parts.demand.cached_demand()
         if not demand:
             return None
         rows, seen = [], set()
@@ -202,7 +185,7 @@ class Supply:
         """Tonnes a year of `material` demand that neither the seat's own workings nor the market cover: the one shortfall
         figure the capacity rows and the remedy text both use."""
         if by_tag is None:
-            by_tag = self.demand_by_supply_tag(self.annual_material_demand())
+            by_tag = self.demand_by_supply_tag(self.parts.demand.annual_material_demand())
         need, own = rules.demand_and_own_supply(by_tag, self.own_material_supply).get(material, (0.0, 0.0))
         if need <= 0.0:
             return 0.0
@@ -229,8 +212,7 @@ class Supply:
         tree that would make it."""
         commodity, tag = self.material_pool(material)
         route = rules.supply_route(self.needs.goods_stock[commodity], self.own_material_supply(tag),
-                                   self.market_tonnes(commodity), self.import_tonnes(commodity),
-                                   self.needs.can_be_bought[material])
+                                   self.market_tonnes(commodity), self.needs.can_be_bought[material])
         return {"route": route, "makers": self.makers_of(material)}
 
     def material_unsupplied_sentence(self, material: str) -> str:
@@ -242,7 +224,7 @@ class Supply:
 
     def materials_report(self) -> List[Dict[str, Any]]:
         """Stocks, annual flows, demand and current trade values of every tracked commodity."""
-        demand = self.demand_by_commodity()
+        demand = self.parts.demand.demand_by_commodity()
         materials = set(self.needs.held_goods()) | {pair[0] for pair in MATERIAL_CHECKS.values()}
         materials |= {commodity for commodity in self.needs.mine_capacity()}
         rows = []

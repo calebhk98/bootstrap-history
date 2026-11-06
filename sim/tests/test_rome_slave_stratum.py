@@ -6,12 +6,12 @@ QUICK_TOPIC = True
 
 from .harness import *  # noqa: F401,F403
 
-from sim.agents import ledger
-from sim.agents.api import ActorsState, ActorRegistry, profile_from_civilisation, seed_strata, stratum_id
+from sim.agents.api import ActorsState, ActorRegistry, profile_from_civilisation, seed_strata
 from sim.agents.strata_seed import follow_population
-from sim.agents.stratum_year import settle_keep, true_up_keep, grow, EDGE_ECONOMY
+from sim.agents.stratum_year import settle_keep, true_up_keep, grow
 
-from .agents_fake_world import FakeWorld
+from .agents_fake_world import FakeWorld, flat_world
+from .pool_lenders import lend_from_savers
 
 civ = S.load_civ("rome_100ad")
 declared = civ["cast"]["strata"]
@@ -26,16 +26,17 @@ check("the declared owner of the bonded is a declared stratum",
       declared_bonded[0]["owner"] in {entry["name"] for entry in declared}, declared_bonded)
 
 
+@flat_world
 class CostedWorld(FakeWorld):
     """A world that counts a fixed number of people and prices a person-year of keep."""
 
     def __init__(self, people, keep_cost):
         super().__init__()
-        self.people = people
+        self.counted_people = people
         self.keep_cost = keep_cost
 
     def population_total(self):
-        return self.people
+        return self.counted_people
 
     def subsistence_cost_per_person_year(self):
         return self.keep_cost
@@ -48,7 +49,8 @@ def founded_registry(people):
     profile.population = people
     state.countries[civ["id"]] = profile
     registry = ActorRegistry(state)
-    seed_strata(registry, CostedWorld(people, 1.0))
+    lend_from_savers(state.purses, 1e12)
+    seed_strata(registry, CostedWorld(people, 1.0).trade_of_role)
     return registry
 
 

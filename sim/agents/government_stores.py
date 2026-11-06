@@ -17,13 +17,16 @@ from .edges import EDGE_TAXPAYERS
 from .revenue_bases import earned_income
 
 
-class StoresMixin:
-	"""Mixed into `Government`."""
+class Stores:
+	"""A state's revenue and goods held, on the government that owns the record and the purse."""
+
+	def __init__(self, government: Any) -> None:
+		self.government = government
 
 	def receive_revenue(self, world: Any) -> None:
 		"""Take this year's revenue: coin into the purse, goods into the stores, and note both by form."""
-		record = self.record  # type: ignore[attr-defined]
-		assessments = world.revenue_assessments()
+		record = self.government.record
+		assessments = world.revenue.revenue_assessments()
 		record.revenue_by_form = {assessed.form: assessed.money for assessed in assessments}
 		collected = self.collect_from_payers(assessments)
 		record.revenue_by_form.update(collected)
@@ -40,7 +43,7 @@ class StoresMixin:
 			if assessed.in_labour:
 				record.corvee_due[assessed.labour_to] = record.corvee_due.get(assessed.labour_to, 0.0) + (1.0 - assessed.commute) * assessed.hours
 		unmodelled = sum(assessed.coin_money for assessed in assessments)
-		ledger.transfer(world.edge(EDGE_TAXPAYERS), self, unmodelled, "taxation")
+		ledger.transfer(world.setting.edge(EDGE_TAXPAYERS), self.government, unmodelled, "taxation")
 
 	def collect_from_payers(self, assessments: List[Any]) -> Dict[str, float]:
 		"""Take each payer's share of the forms that fall on actors, from the purse it holds; the income
@@ -52,24 +55,24 @@ class StoresMixin:
 			for payer, amount in assessed.payers:
 				paid = min(amount, max(0.0, payer.money))
 				if paid > 0.0:
-					ledger.transfer(payer, self, paid, "taxation")
+					ledger.transfer(payer, self.government, paid, "taxation")
 					taken[assessed.form] += paid
 				if assessed.basis == "stratum_income":  # only earned income is assessed once; rent is a different base
 					touched[payer.actor_id] = payer
 		for actor_id, payer in touched.items():
-			self.record.income_assessed[actor_id] = earned_income(payer)  # type: ignore[attr-defined]
+			self.government.record.income_assessed[actor_id] = earned_income(payer)
 		return {form: money for form, money in taken.items() if any(a.form == form and a.payers for a in assessments)}
 
 	def draw_stores(self, lines: List[Line], world: Any) -> List[Line]:
 		"""The lines as they stand once the stores have supplied what they can of each good; what is
 		drawn leaves the stores, and the line buys only the rest."""
-		stores = self.record.stores  # type: ignore[attr-defined]
+		stores = self.government.record.stores
 		drawn_lines = []
 		for line in lines:
 			materials, cost, unbuyable = dict(line.materials), line.material_cost, dict(line.unbuyable)
 			price_per_tonne = line.material_cost / sum(line.materials.values()) if line.materials else 0.0
 			for material in sorted(stores):
-				commodity = world.commodity_of(material)
+				commodity = world.quotes.commodity_of(material)
 				take = min(stores[material], unbuyable.get(commodity, 0.0))   # what nobody sells is met from the stores first
 				if take > 0.0:
 					unbuyable[commodity] -= take

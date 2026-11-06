@@ -10,8 +10,8 @@ import math
 from typing import Dict, Optional, Set, Tuple
 
 from . import country_figures, market_curves
-from .market_memory import market_key
-from .notional import RECENT_TRADE_YEARS, shown_prices
+from .market_memory import RECENT_TRADE_YEARS, market_key
+from .notional import shown_prices
 
 
 def _area_on(economy, good: str, tile: str) -> Optional[str]:
@@ -33,7 +33,7 @@ def prices_at(economy, tile: str) -> Tuple[Dict[str, float], Set[str]]:
     for good, price in shown.items():
         area = None if good in stale else _area_on(economy, good, tile)
         key = None if area is None else market_key(good, area)
-        local = memory.prices.get(key) if key is not None and memory.trade_age.get(key, math.inf) <= RECENT_TRADE_YEARS else None
+        local = memory.prices.get(key) if key is not None and memory.traded_within(key, RECENT_TRADE_YEARS) else None
         national = nationwide.get(good)
         prices[good] = price * local / national if local and national and local > 0.0 and national > 0.0 else price
     return prices, stale
@@ -43,7 +43,7 @@ def offered_units(economy, good: str, tile: str) -> Optional[float]:
     """Units the sellers in the tile's market area for the good held at its last clearing; None when the area
     has no book for it."""
     area = _area_on(economy, good, tile)
-    curve = None if area is None else economy.record.curves.get(market_key(good, area))
+    curve = None if area is None else economy.record.goods.curves.get(market_key(good, area))
     if curve is None:
         return None
     return math.fsum(quantity for _price, quantity in curve["offers"])
@@ -54,7 +54,7 @@ def price_response_at(economy, good: str, tile: str, landed_units: float, taken_
     `taken_units` more are bought; None when the area's book traded nothing, infinite when more is taken than
     the sellers hold."""
     area = _area_on(economy, good, tile)
-    curve = None if area is None else economy.record.curves.get(market_key(good, area))
+    curve = None if area is None else economy.record.goods.curves.get(market_key(good, area))
     if curve is None:
         return None
     return market_curves.price_response(curve, good, economy.record.memory.prices.get(market_key(good, area)),

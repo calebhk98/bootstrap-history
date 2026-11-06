@@ -16,7 +16,7 @@ def add_seat(sim, seat_id: str, seat: SeatState) -> None:
 	if seat_id in sim.state.seats:
 		raise ValueError("seat %r already exists" % (seat_id,))
 	sim.state.seats[seat_id] = seat
-	if getattr(sim, "assembly", None) is not None:   # a test host built without a game has none
+	if sim.assembly is not None:   # a host built without a game has none
 		game_assembly.give_seat_slots(sim.assembly, seat)
 		sim.send(WatchActive(seat_id))
 		sim.send(WatchBusiness(seat_id))

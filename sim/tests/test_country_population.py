@@ -60,7 +60,7 @@ check("a foreign country's population changes over a run with no hand assignment
 check("its cohorts are the three age bands of one Population", set(far.cohorts) == {"children", "working_age", "elderly"}, far.cohorts)
 check("its strata sum to the people counted there", abs(foreign_members(registry) - grown) < 1e-6 * grown, (foreign_members(registry), grown))
 check("CountryWorld answers the people counted, not the seeded figure",
-	  CountryWorld(PopulationWorld(), far, registry).population_total() == grown)
+	  CountryWorld(PopulationWorld(), far, registry).people.population_total() == grown)
 check("the home country's strata follow the world's count as before",
 	  abs(sum(actor.record.members for actor in registry.of_kind("stratum") if actor.record.country is None) - 1000.0) < 1e-6)
 

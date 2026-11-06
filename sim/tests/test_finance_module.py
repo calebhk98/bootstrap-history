@@ -4,18 +4,19 @@ call are tested where they are (test_credit_freeze_rules, test_affordability_and
 
 QUICK_TOPIC = True
 
+from sim.tests.agents_fake_world import flat_namespace
 import unittest
 from types import SimpleNamespace
 
 from sim.actors.api import SetLenderOffers, SettleLenderInterest
-from sim.agents.api import EDGE_SAVERS
-from sim.agents.api import edges
 from sim.finance.commands import NoteLenderPosting
 from sim.finance.constants import (DEBT_BONDAGE_DEFAULT_TERM_YEARS, INSOLVENCY_ARTISAN_FLOOR, INSOLVENCY_YEARS_BEFORE_BLEED)
 from sim.finance.state import FinanceSeat
+from sim.labour import trade_data
 from sim.agents.api import Purses
-from sim.ledger.api import NoteHolderBooking, NoteSeatCash, SettleWithEdge
+from sim.ledger.api import NoteHolderBooking, NoteSeatCash, WriteOffHouseholdDebt
 from sim.reporting.api import RecordEvent
+from sim.tests.pool_lenders import lend_from_savers
 from sim.tests import finance_host, module_harness
 
 
@@ -58,10 +59,18 @@ class ChargeInterest(unittest.TestCase):
 class SettleInterest(unittest.TestCase):
     """The year's interest on the acting seat's debt, by the one rule every borrower follows, over a real book."""
 
+    @staticmethod
+    def pay_interest(payer, owed, purpose):
+        """The credit part's payment: the interest the pool took, entered as the payer's outlay."""
+        paid = sum(payer.purses.pay_interest(payer.account_id, owed).values())
+        payer.payments.note_outlay(purpose, paid)
+        return paid
+
     def module(self, debt, ceiling=1000.0, rate=0.1):
         purses = Purses()
+        lend_from_savers(purses, 1e6)
         purses.set_net("founder", -debt, "opening")
-        world = SimpleNamespace(pay_interest=lambda payer, owed, purpose: payer.note_outlay(purpose, sum(payer.purses.pay_interest(payer.account_id, owed).values())))
+        world = flat_namespace(pay_interest=self.pay_interest)
         module = finance_host.build(seat=FinanceSeat(), cast_state=SimpleNamespace(purses=purses), actor_world=world,
                                     acting_balance=lambda: purses.net("founder"))
         module.credit_limit = lambda *arguments: ceiling
@@ -84,7 +93,7 @@ class SettleInterest(unittest.TestCase):
     def test_a_default_after_the_run_of_years_clears_the_arrears_and_asks_the_owner(self):
         module, _purses = self.module(990.0, ceiling=1000.0)
         defaults = []
-        module.default_on_debt = lambda year: defaults.append(year)
+        module.default_on_debt = lambda year: defaults.append(year) or True
         for _year in range(40):
             module.settle_interest()
             if defaults:
@@ -92,9 +101,19 @@ class SettleInterest(unittest.TestCase):
         self.assertEqual((len(defaults), module.seat.interest_arrears, module.seat.arrears_years), (1, 0.0, 0))
 
 
+    def test_a_household_still_within_its_line_has_not_defaulted_and_its_arrears_stay_owed(self):
+        module, _purses = self.module(990.0, ceiling=1000.0)
+        module.default_on_debt = lambda year: False
+        for _year in range(40):
+            module.settle_interest()
+        self.assertGreater(module.seat.interest_arrears, 0.0)
+
+
 class JudgeInsolvency(unittest.TestCase):
     def module(self, capital, revenue, years=0, artisans=10.0, scholars=5.0):
-        household = SimpleNamespace(capital=capital, artisans=artisans, scholars=scholars, slaves=0, freedmen=0)
+        # the staff are people on the books by trade; the craft and scholar pools are counted from them
+        household = SimpleNamespace(capital=capital, artisans=artisans, scholars=scholars, slaves=0, freedmen=0, training=[], staff_wanted={},
+                                    employees={trade_data.generic_craft_trade(): artisans, trade_data.scholar_trade(): scholars})
         module = finance_host.build(seat=FinanceSeat(insolvent_years=years), household=household, revenue_estimate=revenue)
         module.recurring_living_cost = lambda revenue, upkeep: 0.0
         return module, household
@@ -134,15 +153,15 @@ class EnterDebtBondage(unittest.TestCase):
     def test_a_society_with_debt_bondage_puts_the_debtor_into_service_for_the_term(self):
         module = self.module({"debt_bondage": True, "bondage_years": 8.0})
         self.assertTrue(module.enter_debt_bondage(100))
-        settled = [(command.edge, command.balance) for command in module_harness.sent(module) if isinstance(command, SettleWithEdge)]
+        settled = [command.amount for command in module_harness.sent(module) if isinstance(command, WriteOffHouseholdDebt)]
         self.assertEqual((module.seat.bondage_years_left, module.seat.bondage_debt), (8.0, 700.0))
-        self.assertEqual(settled, [(edges.EDGE_CREDITORS, 0.0)])
+        self.assertEqual(settled, [700.0])
         self.assertEqual([event.kind for event in events(module)], ["debt_bondage"])
 
     def test_a_society_without_it_does_not(self):
         module = self.module({"debt_bondage": False})
         self.assertFalse(module.enter_debt_bondage(100))
-        self.assertEqual((module.seat.bondage_years_left, [c for c in module_harness.sent(module) if isinstance(c, SettleWithEdge)]), (0.0, []))
+        self.assertEqual((module.seat.bondage_years_left, [c for c in module_harness.sent(module) if isinstance(c, WriteOffHouseholdDebt)]), (0.0, []))
 
     def test_a_debtor_already_in_service_is_not_put_in_again(self):
         module = self.module({"debt_bondage": True}, years_left=3.0)
@@ -158,24 +177,24 @@ class LendersMeeting(unittest.TestCase):
         return [command for command in module_harness.sent(module) if isinstance(command, kind)]
 
     def test_the_year_shares_the_pools_interest_before_it_fixes_who_offers_what(self):
-        world = SimpleNamespace(household_saving=lambda: 3.0)
+        world = flat_namespace()
         government = SimpleNamespace(actor_id="state", money=1000.0, record=SimpleNamespace(need={"army": 400.0}),
                                      cannot_meet_own_need=lambda: False)
-        module = finance_host.build(state_treasury=government, actor_world=world)
+        module = finance_host.build(state_treasury=government, actor_world=world,
+                                    cast=SimpleNamespace(concerns=SimpleNamespace(active_firms=lambda: []), purse_lenders=lambda: []))
         module.refresh_lender_offers()
         kinds = [type(command) for command in module_harness.sent(module)]
         self.assertEqual(kinds, [SettleLenderInterest, SetLenderOffers])
         offers = dict(self.sent(module, SetLenderOffers)[0].offers)
-        self.assertEqual(offers[EDGE_SAVERS], 30.0)
         self.assertGreater(offers["state"], 0.0)
 
     def test_a_firm_and_a_purse_lender_offer_what_they_hold_in_purse_and_deposit(self):
         firm, abbey = SimpleNamespace(actor_id="firm:1"), SimpleNamespace(actor_id="abbey")
-        module = finance_host.build(cast=SimpleNamespace(actors={}, active_firms=lambda: [firm], purse_lenders=lambda: [abbey]),
+        module = finance_host.build(cast=SimpleNamespace(actors={}, concerns=SimpleNamespace(active_firms=lambda: [firm]), purse_lenders=lambda: [abbey]),
                                     cash_and_deposit={"firm:1": 40.0, "abbey": 9.5}.get,
                                     state_treasury=SimpleNamespace(actor_id="state"))
-        offers = module.lender_offers({"households": 6.0, "state": 2.0})
-        self.assertEqual(offers, {EDGE_SAVERS: 6.0, "state": 2.0, "firm:1": 40.0, "abbey": 9.5})
+        offers = module.lender_offers({"state": 2.0})
+        self.assertEqual(offers, {"state": 2.0, "firm:1": 40.0, "abbey": 9.5})
 
 
 class LenderPosting(unittest.TestCase):

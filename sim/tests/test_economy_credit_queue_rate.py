@@ -6,7 +6,7 @@ QUICK_TOPIC = True
 import unittest
 
 from sim.economy import credit_rate
-from sim.economy.labour import clearing_point
+from sim.economy.order_book import clearing_point
 
 
 class QueueRateTests(unittest.TestCase):

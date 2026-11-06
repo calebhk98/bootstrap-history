@@ -38,12 +38,12 @@ class UnitDimension(unittest.TestCase):
     def test_counted_goods_have_a_stated_mass_not_a_guess(self):
         production = demand.production_data()
         for good in ("papyrus_sheet", "arsenic", "hops", "mat_sugar", "mat_animal_gut", "mat_potash"):
-            self.assertEqual(good_mass.unit_mass_and_source(good, production)[1], good_mass.SOURCE_STATED, good)
+            self.assertEqual(good_mass.unit_mass(good, production), production[good]["unit_mass_kg"], good)
 
     def test_energy_and_area_dimensions_cannot_be_carried(self):
         production = demand.production_data()
         for good in ("thermal_mj", "electrical_mj", "mechanical_mj", "hectare_land"):
-            self.assertEqual(good_mass.unit_mass_and_source(good, production)[1], good_mass.SOURCE_IMMOBILE, good)
+            self.assertEqual(good_mass.unit_mass(good, production), good_mass.IMMOBILE_MASS_KG, good)
 
 
 if __name__ == "__main__":

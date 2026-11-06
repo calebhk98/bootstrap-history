@@ -4,22 +4,22 @@ QUICK_TOPIC = True
 
 from .harness import *  # noqa: F401,F403
 from sim.economy import bonded_purchase, outlay_room
-from sim.economy.accounts import Book
+from sim.book import Book
 from sim.economy.producers import Plan
 from sim.economy.state_budget import StateBudget
 from sim.economy.types import Bid, EDGE_MINT, Transfer
 from sim.labour.market import formation as core_formation
 from sim.labour.market.bonded_worth import BondedLot
-from sim.labour.market.records import Bid as CoreBid, Clearing, MarketState, YearInputs, YearReport
+from sim.labour.market.records import EmployerHoursBid, LabourClearing, MarketState, YearInputs, YearReport
 
 HOURS = 2000.0
 FLOOR = 100.0
 
 
 def market(trade, vacant_by_employer, wage=1.0):
-    bids = [CoreBid(employer, trade, "dale", hours, wage) for employer, hours in sorted(vacant_by_employer.items())]
-    clearing = Clearing(trade=trade, area="dale", wage=wage, hours_offered=0.0, hours_wanted=sum(vacant_by_employer.values()),
-                        hours_hired=0.0, hired_by_employer={}, paid_by_employer={}, average_wage=wage)
+    bids = [EmployerHoursBid(employer, trade, "dale", hours, wage) for employer, hours in sorted(vacant_by_employer.items())]
+    clearing = LabourClearing(trade=trade, area="dale", wage=wage, hours_offered=0.0, hours_wanted=sum(vacant_by_employer.values()),
+                        hours_hired=0.0, hired_by_employer={})
     return bids, clearing
 
 

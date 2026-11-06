@@ -5,8 +5,9 @@ Needs: acting_balance, standing, money_text, civilisation, revenue_estimate,
 upkeep, mine_operating_cost, game_config, labour_market, money_per_labour_hour."""
 from typing import Any
 
-from sim.agents.api import business_review, edges
-from sim.ledger.api import SettleWithEdge
+from sim.agents.api import business_review
+from sim.assembly.api import Part
+from sim.ledger.api import WriteOffHouseholdDebt
 from sim.polity.api import SetReputation
 from sim.reporting.api import RecordEvent
 from sim.resources.api import MothballMines
@@ -24,30 +25,31 @@ from .credit_freeze import settlement_freeze, settlement_owed
 from sim.projects.api import HaltActiveProjects, ReviewVentures
 
 
-class Insolvency:
+class Insolvency(Part):
 
 	def enforce_credit_limit(self, year: int) -> None:
 		"""Nobody lends past the limit, so past the limit you simply stop: the founder's own responses to exhausted credit, which
 		come before any default. Default itself is the shared arrears rule (`charge_interest`, then `default_on_debt`)."""
 		self.answer_exhausted_credit(year)
 
-	def default_on_debt(self, year: int) -> None:
+	def default_on_debt(self, year: int) -> bool:
 		"""The lenders default the founder's debt after too many years of arrears: first the responses to exhausted credit, then
 		entry into service for a civilisation that had it, otherwise a settlement that writes most of the debt off. The household
-		is left poor rather than impossibly indebted, which is a position it can work out of."""
+		is left poor rather than impossibly indebted, which is a position it can work out of. Whether it defaulted: a household
+		still within its line has not, and the arrears stay owed."""
 		self.answer_exhausted_credit(year)
-		limit = self.credit_limit()
+		limit = self.parts.credit_line.credit_limit()
 		if self.needs.acting_balance() >= -limit:
-			return
-		if self.enter_debt_bondage(year):
-			return
-		self.settle_insolvency(year, limit)
+			return False
+		if not self.enter_debt_bondage(year):
+			self.settle_insolvency(year, limit)
+		return True
 
 	def answer_exhausted_credit(self, year: int) -> None:
 		"""Past the limit, in this order: stop paying for new work, let go of what cannot be maintained, and shed the household
 		that can no longer be fed."""
 		needs = self.needs
-		limit = self.credit_limit()
+		limit = self.parts.credit_line.credit_limit()
 		if needs.acting_balance() >= -limit:
 			return
 		# stop everything in progress: it cannot be funded
@@ -104,7 +106,7 @@ class Insolvency:
 		if term > 0.0 and not seat.bondage_years_left:
 			seat.bondage_years_left = term
 			seat.bondage_debt = -needs.acting_balance()
-			needs.send(SettleWithEdge(edges.EDGE_CREDITORS, 0.0, "debt taken into bondage"))
+			needs.send(WriteOffHouseholdDebt(seat.bondage_debt, "debt taken into bondage"))
 			needs.send(RecordEvent.of("debt_bondage", "BONDAGE: you cannot pay, and you enter service for "
 				"your debt. For about %d years most of your hours "
 				"belong to someone else. It is not the end: it is "
@@ -121,9 +123,9 @@ class Insolvency:
 		# the balance left is measured against the line that stands once the name has been marked down, so it never starts outside it
 		reputation_before = needs.standing()["reputation"]
 		needs.send(SetReputation(max(0.0, reputation_before - SETTLEMENT_REPUTATION_HIT)))
-		owed = settlement_owed(limit, self.credit_limit(), SETTLEMENT_CAPITAL_RETAINED_FRACTION)
+		owed = settlement_owed(limit, self.parts.credit_line.credit_limit(), SETTLEMENT_CAPITAL_RETAINED_FRACTION)
 		needs.send(SetReputation(reputation_before))
-		needs.send(SettleWithEdge(edges.EDGE_CREDITORS, -owed, "debts written off in settlement"))
+		needs.send(WriteOffHouseholdDebt(max(0.0, -needs.acting_balance() - owed), "debts written off in settlement"))
 		# the number announced has to be the number applied
 		reputation_hit = reputation_hit_taken(SETTLEMENT_REPUTATION_HIT, needs.standing()["reputation"])
 		needs.send(SetReputation(max(0.0, needs.standing()["reputation"] - SETTLEMENT_REPUTATION_HIT)))
@@ -152,13 +154,13 @@ class Insolvency:
 		seat = self.seat
 		capital = needs.acting_balance()
 		if capital < 0:
-			net = (needs.revenue_estimate() - needs.upkeep() - self.recurring_living_cost(needs.revenue_estimate(), needs.upkeep())
+			net = (needs.revenue_estimate() - needs.upkeep() - self.parts.debt_service.recurring_living_cost(needs.revenue_estimate(), needs.upkeep())
 			       - needs.mine_operating_cost())
 			if net > 0:
 				seat.insolvent_years = 0
 			else:
 				seat.insolvent_years = seat.insolvent_years + 1
-			floor = -max(self.priced(INSOLVENCY_FLOOR_MIN_LABOUR_HOURS), needs.revenue_estimate() * INSOLVENCY_FLOOR_REVENUE_MULTIPLE)
+			floor = -max(self.parts.credit_line.priced(INSOLVENCY_FLOOR_MIN_LABOUR_HOURS), needs.revenue_estimate() * INSOLVENCY_FLOOR_REVENUE_MULTIPLE)
 			if capital < floor and seat.insolvent_years >= INSOLVENCY_YEARS_BEFORE_BLEED:
 				bleed = min(INSOLVENCY_BLEED_CAP, INSOLVENCY_BLEED_RATE * seat.insolvent_years)
 				needs.send(BleedStaff(bleed, INSOLVENCY_ARTISAN_FLOOR, INSOLVENCY_SCHOLAR_FLOOR, INSOLVENCY_SCHOLAR_BLEED_DISCOUNT))
@@ -175,7 +177,7 @@ class Insolvency:
 		seat = self.seat
 		if seat.bondage_years_left > 0:
 			repayment = rules.bondage_repayment(needs.game_config()["founder_hours_per_year"], BONDAGE_LABOUR_SHARE,
-			                                    BONDAGE_WAGE_MARKUP, needs.labour_market().quote("labourer"))
+			                                    BONDAGE_WAGE_MARKUP, needs.labour_market().quote_unskilled())
 			seat.bondage_years_left, seat.bondage_debt, served = rules.serve_bondage_year(
 				seat.bondage_years_left, seat.bondage_debt, repayment)
 			if served:

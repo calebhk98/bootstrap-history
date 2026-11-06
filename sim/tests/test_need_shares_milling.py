@@ -6,14 +6,15 @@ import unittest
 
 from sim.content.catalog import load_production_catalog
 from sim.prices.solve_prices_core import techniques_available_to
-from unittest import mock
 
 from sim.labour import workforce_carriage, workforce_spinup
-from sim.labour.labour_population import PopulationMixin
+from sim.labour.labour_supply import Supply
 
 QUICK_TOPIC = True
 
+from sim.world import need_demand
 _ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+_NEEDS = need_demand.load_needs(_ROOT)
 _PRODUCTION = load_production_catalog(_ROOT)
 
 
@@ -26,7 +27,7 @@ def _shares(civ_id, extra=()):
     civ = _json("data", "civilizations", civ_id + ".json")
     reached = set(civ["starting_techs"]) | set(extra)
     return workforce_spinup.need_shares_by_trade(
-        _PRODUCTION, reached, techniques_available_to, workforce_carriage.carriage_for(reached), civ)
+        _PRODUCTION, reached, techniques_available_to, workforce_carriage.carriage_for(reached), civ, needs=_NEEDS)
 
 
 class MillingNeedTests(unittest.TestCase):
@@ -57,7 +58,7 @@ class DemandCoversTransportAndBuildingTests(unittest.TestCase):
     def test_rome_sailors_carters_and_plumbers_are_sized_by_need_not_the_floor(self):
         shares = _shares("rome_100ad")
         for trade in ("sailor", "carter", "plumber", "mason", "carpenter"):
-            self.assertGreater(shares.get(trade, 0.0), PopulationMixin.NO_DEMAND_TRADE_SHARE, trade)
+            self.assertGreater(shares.get(trade, 0.0), Supply.NO_DEMAND_TRADE_SHARE, trade)
 
     def test_a_need_s_budget_follows_its_surplus_budget_share_not_an_equal_split(self):
         def recipe(output, trade):
@@ -66,9 +67,8 @@ class DemandCoversTransportAndBuildingTests(unittest.TestCase):
         production = {"zz_a": recipe("zz_a", "zz_trade_a"), "zz_b": recipe("zz_b", "zz_trade_b")}
         needs = {"needs": {"zz_need_a": {"surplus_budget_share": 0.9}, "zz_need_b": {"surplus_budget_share": 0.1}},
                  "goods": {"zz_a": {"satisfies": {"zz_need_a": 1.0}}, "zz_b": {"satisfies": {"zz_need_b": 1.0}}}}
-        with mock.patch.object(workforce_spinup, "_needs", return_value=needs):
-            shares = workforce_spinup.need_shares_by_trade(production, set(), techniques_available_to,
-                                                           workforce_carriage.Carriage())
+        shares = workforce_spinup.need_shares_by_trade(production, set(), techniques_available_to,
+                                                       workforce_carriage.Carriage(), needs=needs)
         self.assertAlmostEqual(shares["zz_trade_a"], 0.9)
         self.assertAlmostEqual(shares["zz_trade_b"], 0.1)
 

@@ -4,15 +4,16 @@ called beside a copy of the plain one on random built inputs; no game."""
 QUICK_TOPIC = True
 
 import random
+import types
 import unittest
 
 from sim.economy import household_hours_year, households_hours_offered
 from sim.economy.labour_supply import HourSupply
 from sim.economy.types import LabourOffer
-from sim.labour.market import bonded_room, formation_bonded
-from sim.labour.market.bonded_worth import carriage_from, cheapest_carriage
+from sim.labour.market import bonded_room, formation_bonded, trades
+from sim.labour.market.carriage import carriage_from
 from sim.labour.market.import_cost import ImportCosts
-from sim.labour.market.records import Bid, Clearing, MarketState, Route, YearInputs, YearReport
+from sim.labour.market.records import EmployerHoursBid, LabourClearing, MarketState, Route, YearInputs, YearReport
 
 
 def plain_sold(held, offer, wage):
@@ -57,19 +58,19 @@ class ThePlotScheduleIsThePlainCall(unittest.TestCase):
                 self.assertEqual(schedule(wage), households_hours_offered.plot_hours_kept(per_worker, wage, marginal, usable) * workers)
 
 
-class TheGroupedSharesAreTheMarketsShares(unittest.TestCase):
+class TheGroupedSchedulesAreTheMarketsSchedules(unittest.TestCase):
 
-    def test_shares_for_every_market_equal_share_at_each(self):
+    def test_schedules_for_every_market_equal_hours_at_each(self):
         rng = random.Random(9)
         offers = [LabourOffer("w%d" % rng.randrange(5), rng.choice(["a", "b"]), rng.choice(["vale", "hill", "dale"]),
                               rng.choice([0.0, rng.uniform(10, 900)]), 0.1) for _ in range(30)]
         held = HourSupply(offers=offers, plan_hours={}, work_hours={}, plot_hours_at={})
-        shares = held.shares()
-        self.assertEqual(sorted(shares), sorted({(offer.trade, offer.area) for offer in offers}))
-        for market, share in shares.items():
-            plain = held.share_at(*market)
+        schedules = held.schedules()
+        self.assertEqual(sorted(schedules), sorted({(offer.trade, offer.area) for offer in offers}))
+        for market, schedule in schedules.items():
+            plain = held.hours_at(*market)
             for wage in (0.0, 0.3, 1.0, 9.0):
-                self.assertEqual(share(wage), plain(wage))
+                self.assertEqual(schedule(wage), plain(wage))
 
 
 class ImportCostsKeepTheirValues(unittest.TestCase):
@@ -89,12 +90,12 @@ class ImportCostsKeepTheirValues(unittest.TestCase):
                       for area in areas}
             state = MarketState(workers={area: {"digger": [rng.uniform(0, 40), rng.uniform(0, 40)]} for area in areas})
             state.wages = {area: {"digger": rng.uniform(0.5, 3.0)} for area in areas if rng.random() < 0.9}
-            bids = [Bid("e%d" % i, "digger", rng.choice(areas), rng.uniform(100, 6000), rng.uniform(1, 8)) for i in range(7)]
-            shares = {("digger", area): (lambda wage, base=rng.uniform(0.3, 1.0): min(1.0, base * (0.5 + wage / 6.0)))
-                      for area in areas if rng.random() < 0.6}
-            inputs = YearInputs(trades={}, bids=bids, subsistence_per_worker_year={area: 100.0 for area in areas},
+            bids = [EmployerHoursBid("e%d" % i, "digger", rng.choice(areas), rng.uniform(100, 6000), rng.uniform(1, 8)) for i in range(7)]
+            sold = {("digger", area): (lambda wage, base=rng.uniform(0.3, 1.0): 80.0 * min(1.0, base * (0.5 + wage / 6.0)))
+                    for area in areas if rng.random() < 0.6}
+            inputs = YearInputs(trades=trades.trade_specs({"digger": {"family": "earth", "training_years": 0}}), bids=bids, subsistence_per_worker_year={area: 100.0 for area in areas},
                                 hours_per_worker_year=100.0, discount_rate=0.03, career_years=30.0, routes=routes,
-                                hours_share_at=shares)
+                                hours_sold_at=sold)
             fast, plain = ImportCosts(state, inputs), self.Plain(state, inputs)
             for area in areas:
                 self.assertEqual(fast.wage(area, "digger"), plain.wage(area, "digger"))
@@ -105,11 +106,11 @@ class BondedPurchaseReadsKeepTheirValues(unittest.TestCase):
     def test_buyers_read_from_the_grouped_bids_are_those_read_from_all_of_them(self):
         rng = random.Random(3)
         for _round in range(40):
-            bids = [Bid("e%d" % rng.randrange(6), rng.choice(["x", "y"]), rng.choice(["p", "q"]), rng.choice([0.0, rng.uniform(1, 500)]),
+            bids = [EmployerHoursBid("e%d" % rng.randrange(6), rng.choice(["x", "y"]), rng.choice(["p", "q"]), rng.choice([0.0, rng.uniform(1, 500)]),
                         2.0) for _ in range(20)]
             hired = {"e%d" % i: rng.uniform(0, 300) for i in range(6) if rng.random() < 0.5}
-            clearing = Clearing(trade="x", area="p", wage=1.0, hours_offered=0.0, hours_wanted=0.0, hours_hired=0.0,
-                                hired_by_employer=hired, paid_by_employer={}, average_wage=1.0, target_wage=rng.uniform(0, 2))
+            clearing = LabourClearing(trade="x", area="p", wage=1.0, hours_offered=0.0, hours_wanted=0.0, hours_hired=0.0,
+                                hired_by_employer=hired, target_wage=rng.uniform(0, 2))
             room = {"e%d" % i: rng.uniform(-5, 50) for i in range(6) if rng.random() < 0.5}
             hours = {}
             for bid in bids:
@@ -126,13 +127,13 @@ class BondedPurchaseReadsKeepTheirValues(unittest.TestCase):
 
     def test_purchases_sharing_a_memo_equal_purchases_each_with_their_own(self):
         routes = {"p": [Route("q", 40.0)], "q": [Route("r", 25.0), Route("p", 40.0)], "r": [Route("p", 90.0)]}
-        bids = [Bid("forge", "fitter", area, 50000.0, 3.0) for area in ("p", "q", "r")]
+        bids = [EmployerHoursBid("forge", "fitter", area, 50000.0, 3.0) for area in ("p", "q", "r")]
         inputs = YearInputs(trades={}, bids=bids, subsistence_per_worker_year={}, hours_per_worker_year=2000.0,
                             discount_rate=0.05, career_years=40.0, routes=routes, bondage_allowed=frozenset({"p", "q", "r"}),
                             bonded_for_sale={area: {"fitter": 30.0} for area in ("p", "q", "r")},
                             ask_floor_per_worker_year={area: 100.0 for area in ("p", "q", "r")}, outlay_room={"forge": 1.0e9})
-        index = {(area, "fitter"): Clearing(trade="fitter", area=area, wage=1.0, hours_offered=0.0, hours_wanted=50000.0,
-                                            hours_hired=0.0, hired_by_employer={}, paid_by_employer={}, average_wage=1.0,
+        index = {(area, "fitter"): LabourClearing(trade="fitter", area=area, wage=1.0, hours_offered=0.0, hours_wanted=50000.0,
+                                            hours_hired=0.0, hired_by_employer={},
                                             target_wage=3.0) for area in ("p", "q", "r")}
 
         def run(shared):
@@ -145,18 +146,19 @@ class BondedPurchaseReadsKeepTheirValues(unittest.TestCase):
 
         self.assertTrue(run(True)[0])
         self.assertEqual(run(True), run(False))
-        self.assertEqual(cheapest_carriage(routes, "p", "r"), 65.0)
+        self.assertEqual(carriage_from(routes, "p")["r"], 65.0)
 
-    def test_one_search_from_an_origin_gives_the_carriage_to_every_destination(self):
+    def test_the_import_cap_reaches_the_areas_the_carriage_search_does_at_the_same_cost(self):
         rng = random.Random(21)
         for _round in range(30):
             areas = ["a%d" % i for i in range(9)]
             routes = {area: [Route(other, rng.choice([0.0, rng.uniform(-5, 80)])) for other in areas if rng.random() < 0.3]
                       for area in areas if rng.random() < 0.9}
+            costs = ImportCosts.__new__(ImportCosts)
+            costs.inputs, costs._reach = types.SimpleNamespace(routes=routes), {}
             for origin in areas:
                 tree = carriage_from(routes, origin)
-                for destination in areas:
-                    self.assertEqual(tree.get(destination), cheapest_carriage(routes, origin, destination))
+                self.assertEqual(costs.reach(origin), sorted((cost, other) for other, cost in tree.items() if other != origin))
 
 
 if __name__ == "__main__":

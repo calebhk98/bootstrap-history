@@ -11,7 +11,7 @@ import types
 import unittest
 
 from sim.economy import carriage_fleet_book, carriage_wear
-from sim.economy.accounts import Book, DeliveredMove
+from sim.book import Book, DeliveredMove
 from sim.economy.merchants import Merchant
 from sim.economy.types import EDGE_PRODUCTION, GoodsMove, GoodSpec, Recipe
 from sim.geography.api import carriage_rates
@@ -140,7 +140,7 @@ class CarriersInTheBook(unittest.TestCase):
         merchant.carrier_wear = {}
         merchant.carrier_fleet_wanted = {CART: 5.5 / 10.0}
         record = types.SimpleNamespace(book=self.book_holding(kept=5.0), merchants={"m1": merchant})
-        view = types.SimpleNamespace(price=lambda good, area: 400.0)
+        view = types.SimpleNamespace(offered_price=lambda good, area: 400.0)
         area_map = types.SimpleNamespace(goods=lambda: [CART], area_of=lambda good, tile: "area:" + tile)
         bids, budget = carriage_fleet_book.bids(setup, record, view, area_map)
         self.assertEqual([(bid.buyer, bid.good, bid.tile) for bid in bids], [("m1", CART, merchant.home_tile)])
@@ -153,17 +153,13 @@ class ExposureOfShipments(unittest.TestCase):
         setup = carrying_setup()
         carriage = setup.carriage_table()
         wear = carriage_wear.Wear(setup, carriage, 0.0)
-        tonne_km = sum(dict(carriage.haul(fixture.TOWN, fixture.FARMS).km_by_mode).values())
         spec = setup.specs[fixture.ORE]
         tonnes = 10.0
         move = DeliveredMove("m1", "m1", fixture.ORE, fixture.TOWN, tonnes * 1000.0 / spec.unit_mass_kg, "x", fixture.FARMS)
-        units, days = carriage_wear.exposure(wear, [move], setup.specs)
+        units = carriage_wear.exposure(wear, [move], setup.specs)
         team_days = dict(carriage.haul(fixture.TOWN, fixture.FARMS).team_days_by_mode)["cart"]
         # the team works the days geography's rate says on the ground crossed, and wears its units by the day
         self.assertAlmostEqual(units[CART], tonnes * team_days * CART_TONNE_KM_PER_TEAM_DAY * WEAR_PER_TONNE_KM, places=9)
-        # the days follow geography's rate on the ground the haul crosses (its class pace), not a typed figure
-        self.assertAlmostEqual(days["cart"], tonnes * dict(carriage.haul(fixture.TOWN, fixture.FARMS).team_days_by_mode)["cart"], places=9)
-        self.assertGreater(days["cart"], tonnes * tonne_km / CART_TONNE_KM_PER_TEAM_DAY)
 
 
 if __name__ == "__main__":

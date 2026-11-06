@@ -5,18 +5,21 @@ from typing import Dict, Optional
 import dataclasses
 
 from . import aptitude, bonded_room, bonded_worth
-from .records import Clearing, MarketState, YearInputs, YearReport
+from .carriage import carriage_from
+from .records import LabourClearing, MarketState, YearInputs, YearReport
 
 
 def _practised_wage(index: Dict, area: str, trade: str) -> Optional[float]:
     clearing = index.get((area, trade))
     if clearing is None or clearing.hours_hired <= 0.0:
         return None
-    return clearing.average_wage
+    return clearing.wage
 
 
-def _floor_per_hour(inputs: YearInputs, area: str) -> float:
-    return inputs.ask_floor_per_worker_year.get(area, 0.0) / max(inputs.hours_per_worker_year, 1e-12)
+def _floor_per_hour(inputs: YearInputs, area: str) -> Optional[float]:
+    """The area's stated wage floor per hour; None where no floor is stated."""
+    stated = inputs.ask_floor_per_worker_year.get(area)
+    return None if stated is None else stated / max(inputs.hours_per_worker_year, 1e-12)
 
 
 def _training_years(inputs: YearInputs, trade: str) -> float:
@@ -28,17 +31,12 @@ def worth_in(inputs: YearInputs, index: Dict, area: str, trade: str, trade_wage:
     """Present value of a trained person's hours in `area` over a career; None when neither the trade's wage nor the
     area's wage floor is known there, so no price can be named."""
     floor = _floor_per_hour(inputs, area)
-    if floor <= 0.0 and (trade_wage is None or trade_wage <= 0.0):
+    if (floor is None or floor <= 0.0) and (trade_wage is None or trade_wage <= 0.0):
         return None
+    floor = floor if floor is not None else 0.0      # no stated floor bounds the trained wage from below by nothing
     wage = bonded_worth.trained_wage_per_hour(trade_wage, floor, _training_years(inputs, trade),
                                               inputs.discount_rate, inputs.career_years)
     return bonded_worth.worth_of_hours(wage, inputs.hours_per_worker_year, inputs.career_years, inputs.discount_rate)
-
-
-def untrained_worth_in(inputs: YearInputs, area: str) -> float:
-    """Present value of an untrained person's hours: the area's wage floor over a career."""
-    return bonded_worth.worth_of_hours(_floor_per_hour(inputs, area), inputs.hours_per_worker_year,
-                                       inputs.career_years, inputs.discount_rate)
 
 
 def buy(state: MarketState, inputs: YearInputs, index: Dict, area: str, trade: str, wanted: float,
@@ -54,7 +52,7 @@ def buy(state: MarketState, inputs: YearInputs, index: Dict, area: str, trade: s
         memo = {}
     if wanted <= 0.0 or area not in inputs.bondage_allowed:
         return 0.0
-    clearing: Optional[Clearing] = index.get((area, trade))
+    clearing: Optional[LabourClearing] = index.get((area, trade))
     bid = worth_in(inputs, index, area, trade, clearing.heading_wage if clearing is not None else None)
     if bid is None:
         return 0.0
@@ -66,7 +64,7 @@ def buy(state: MarketState, inputs: YearInputs, index: Dict, area: str, trade: s
             ask[origin] = price
             moves = memo.setdefault("carriage", {})
             if origin not in moves:
-                moves[origin] = bonded_worth.carriage_from(inputs.routes, origin)
+                moves[origin] = carriage_from(inputs.routes, origin)
             carriage[origin] = moves[origin].get(area)
     if "bid_hours" not in memo:
         memo["bid_hours"] = bonded_room.hours_by_market(inputs.bids)

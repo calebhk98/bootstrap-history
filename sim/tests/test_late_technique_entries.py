@@ -1,5 +1,5 @@
-"""Complaint 478: a technique the society gains after the opening adds the production entries it allows, their
-trades' wages and the price of a good that had none, to the economy's opening values."""
+"""Complaint 478: a technique the society gains after the opening adds the production entries it allows, the
+price of a good that had none, to the economy's opening values; the wages stay the opening's."""
 QUICK_TOPIC = True
 
 import types
@@ -7,8 +7,9 @@ import unittest
 from unittest import mock
 
 from sim.markets import port_late
-from sim.markets import port_year
-from sim.markets.port_year import AgentEconomy
+from sim.markets import agent_economy
+from sim.markets.agent_economy import AgentEconomy
+from sim.markets.year_figures import YearFigures
 from sim.markets.port_setup import allowed_entries
 
 PRODUCTION = {
@@ -20,12 +21,19 @@ PRODUCTION = {
                     "requires_node": "kiln_node"},
 }
 WAGES = {"labourer": 2.0, "kilnman": 5.0}
+LAND_RENT = 7.0
+UNKNOWN_TRADE = {"brick_kg": {"outputs": {"brick_kg": 1000.0}, "labour_hours": {"mason": 10.0}, "unit_dimension": "mass",
+                              "requires_node": "kiln_node"}}
+GROWN = {"flax_kg": {"outputs": {"flax_kg": 1000.0}, "labour_hours": {"labourer": 10.0}, "land_hectare_years": 2.0,
+                     "unit_dimension": "mass", "requires_node": "flax_node"}}
 
 
-def stand_in_society(live_prices=None):
-    economy = types.SimpleNamespace(agent_prices=lambda: live_prices, base_rate=lambda: 0.0,
+def stand_in_society(live_prices=None, land_rent=LAND_RENT):
+    economy = types.SimpleNamespace(agent_prices=lambda: live_prices, agent_land_rent_per_hectare=lambda: land_rent,
                                     labour=types.SimpleNamespace(quote=lambda trade: WAGES.get(trade, 0.0)))
-    return types.SimpleNamespace(economy=economy, civ={"id": "testland"})
+    registry = {"labourer": {"fallback": True}, "kilnman": {}}      # the trades the labour side knows; the unskilled one is the fallback
+    return types.SimpleNamespace(economy=economy, scenario=types.SimpleNamespace(held_civ={"id": "testland"}), finance=types.SimpleNamespace(market_rate=lambda: 0.0),
+                                 state=types.SimpleNamespace(trade_registry=registry))
 
 
 def opening():
@@ -41,13 +49,12 @@ class AllowedEntries(unittest.TestCase):
 class OpeningWithTechniques(unittest.TestCase):
     def test_nothing_new_allowed_adds_nothing(self):
         self.assertIsNone(port_late.opening_with_techniques(
-            stand_in_society(), opening(), frozenset(), PRODUCTION))
+            stand_in_society(), opening(), frozenset(), PRODUCTION, 1.0))
 
-    def test_a_held_node_adds_its_recipe_its_trade_wage_and_the_price_of_the_good_it_makes(self):
+    def test_a_held_node_adds_its_recipe_and_the_price_of_the_good_it_makes(self):
         grown = port_late.opening_with_techniques(
-            stand_in_society(), opening(), frozenset({"kiln_node"}), PRODUCTION)
+            stand_in_society(), opening(), frozenset({"kiln_node"}), PRODUCTION, 1.0)
         self.assertEqual(grown["recipes"], ["cement_kg", "mortar_kg"])
-        self.assertEqual(grown["wages"]["kilnman"], 5.0)
         self.assertIn("cement_kg", grown["prices"])
         self.assertGreater(grown["prices"]["cement_kg"], 0.0)
         self.assertNotIn("cement_kg", opening()["prices"])
@@ -56,8 +63,13 @@ class OpeningWithTechniques(unittest.TestCase):
         base = opening()
         base["prices"]["cement_kg"] = 9.0
         grown = port_late.opening_with_techniques(
-            stand_in_society(), base, frozenset({"kiln_node"}), PRODUCTION)
+            stand_in_society(), base, frozenset({"kiln_node"}), PRODUCTION, 1.0)
         self.assertEqual(grown["prices"]["cement_kg"], 9.0)
+
+    def test_a_new_trade_gets_no_opening_wage_so_the_one_wage_rule_prices_it(self):
+        grown = port_late.opening_with_techniques(
+            stand_in_society(), opening(), frozenset({"kiln_node"}), PRODUCTION, 2.0)
+        self.assertEqual(grown["wages"], {"labourer": 2.0})
 
     def test_the_new_good_costs_its_inputs_and_crew_at_live_input_prices_per_unit(self):
         cost = port_late.late_goods_costs(
@@ -69,6 +81,19 @@ class OpeningWithTechniques(unittest.TestCase):
             stand_in_society(None), {"lime_kg": 1.0}, ["cement_kg"], frozenset({"kiln_node"}), PRODUCTION)
         self.assertAlmostEqual(cost["cement_kg"], (1000.0 * 1.0 + 20.0 * 5.0) / 1000.0)
 
+    def test_a_late_good_pays_the_land_rent_of_the_hectare_years_it_occupies(self):
+        cost = port_late.late_goods_costs(
+            stand_in_society(), {}, ["flax_kg"], frozenset({"flax_node"}), GROWN)
+        self.assertAlmostEqual(cost["flax_kg"], (10.0 * 2.0 + 2.0 * LAND_RENT) / 1000.0)
+
+    def test_a_late_good_on_land_has_no_cost_while_the_land_market_has_no_rent(self):
+        self.assertEqual(port_late.late_goods_costs(
+            stand_in_society(land_rent=None), {}, ["flax_kg"], frozenset({"flax_node"}), GROWN), {})
+
+    def test_a_good_needing_a_trade_the_game_does_not_know_has_no_cost_not_a_free_one(self):
+        self.assertEqual(port_late.late_goods_costs(
+            stand_in_society(), {}, ["brick_kg"], frozenset({"kiln_node"}), UNKNOWN_TRADE), {})
+
     def test_a_good_whose_input_has_no_price_gets_none(self):
         self.assertEqual(port_late.late_goods_costs(
             stand_in_society(), {}, ["cement_kg"], frozenset({"kiln_node"}), PRODUCTION), {})
@@ -79,25 +104,24 @@ class AdmitTechniquesWiring(unittest.TestCase):
 
     def port(self, admitted, in_use):
         society = stand_in_society()
-        society.techniques_granted = lambda: frozenset({"a"})
-        society.techniques_in_use = lambda: in_use
-        return types.SimpleNamespace(_sim=society, _techniques_admitted=admitted, stored={"opening": opening()},
-                                     _record_stale=False)
+        society.production = types.SimpleNamespace(techniques_granted=lambda: frozenset({"a"}), techniques_in_use=lambda: in_use)
+        economy = types.SimpleNamespace(record=types.SimpleNamespace(memory=types.SimpleNamespace(opening_wage_level=lambda money: 1.0)),
+                                        setup=types.SimpleNamespace(currency_id="coin"))
+        return types.SimpleNamespace(_world=society, _economy=economy, figures=YearFigures(),
+                                     stored={"opening": opening(), "techniques_admitted": admitted})
 
     def test_held_nodes_unchanged_since_the_last_look_leave_the_opening_alone(self):
-        port = self.port(frozenset({"a", "b"}), {"b"})
-        with mock.patch.object(port_year.price_solver, "default_production_entries", lambda: PRODUCTION):
+        port = self.port(["a", "b"], {"b"})
+        with mock.patch.object(agent_economy.price_solver, "default_production_entries", lambda: PRODUCTION):
             AgentEconomy.admit_techniques(port)
         self.assertEqual(port.stored["opening"], opening())
-        self.assertFalse(port._record_stale)
 
     def test_held_nodes_that_allow_no_new_entry_are_remembered_and_change_nothing(self):
-        port = self.port(frozenset(), {"b"})
-        with mock.patch.object(port_year.price_solver, "default_production_entries", lambda: PRODUCTION):
+        port = self.port(None, {"b"})
+        with mock.patch.object(agent_economy.price_solver, "default_production_entries", lambda: PRODUCTION):
             AgentEconomy.admit_techniques(port)
-        self.assertEqual(port._techniques_admitted, frozenset({"a", "b"}))
+        self.assertEqual(port.stored["techniques_admitted"], ["a", "b"])
         self.assertEqual(port.stored["opening"], opening())
-        self.assertFalse(port._record_stale)
 
 
 if __name__ == "__main__":

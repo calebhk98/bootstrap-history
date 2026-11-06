@@ -6,9 +6,11 @@ QUICK_TOPIC = True
 import math
 import unittest
 
+import numpy
+
 from sim.economy.goods_market import clear
 from sim.economy.goods_market_demand import DemandSchedule
-from sim.economy.goods_market_logit import allocate
+from sim.economy.goods_market_logit import _affordable, allocate
 from sim.economy.price_setting import logit_share
 from sim.economy.types import Bid, Offer
 
@@ -59,12 +61,10 @@ class LogitAllocationTests(unittest.TestCase):
         result = run([floor_bid(10.0)], [offer("a", 1.0, 1.0), offer("b", 100.0, 1.0)])
         self.assertAlmostEqual(sold(result)["a"], 1.0)
         self.assertAlmostEqual(sold(result)["b"], 9.0)
-        self.assertAlmostEqual(result.unmet_floor, 0.0)
 
     def test_demand_beyond_all_stock_goes_unmet(self):
         result = run([floor_bid(10.0)], [offer("a", 1.0, 1.0), offer("b", 2.0, 1.0)])
         self.assertAlmostEqual(result.quantity, 3.0)
-        self.assertAlmostEqual(result.unmet_floor, 7.0)
 
     def test_no_offers_means_no_price(self):
         result = run([floor_bid(6.0)], [])
@@ -116,6 +116,49 @@ class FinalPassTests(unittest.TestCase):
         offers = [offer("a", 1.0, 1.0), offer("b", 4.0, 1.0), offer("c", 100.0, 1.2)]
         allocation = allocate(bids, offers, [1.0, 1.0, 1.2], DemandSchedule(bids))
         self.assertAlmostEqual(allocation.cost[0], allocation.sold[0] + allocation.sold[1] + 1.2 * allocation.sold[2])
+
+    def test_a_free_or_paid_to_take_ask_is_affordable_whatever_budget_is_left(self):
+        units = _affordable(numpy.array([0.0, 2.0, -1.0]), numpy.array([0.0, 4.0]))
+        self.assertEqual(units.tolist(), [[math.inf, math.inf], [0.0, 2.0], [math.inf, math.inf]])
+
+    def test_a_negative_ask_makes_no_negative_request_or_sale(self):
+        bids = [floor_bid(10.0)]
+        offers = [offer("a", 1.0, -1.0), offer("b", 100.0, 1.0)]
+        allocation = allocate(bids, offers, [-1.0, 1.0], DemandSchedule(bids))
+        self.assertTrue(all(amount >= 0.0 for amount in allocation.sold))
+        self.assertAlmostEqual(allocation.sold[0], 1.0)
+        self.assertAlmostEqual(allocation.sold[1], 9.0)
+        self.assertTrue((allocation.flow >= 0.0).all())
+
+    def test_the_flow_is_what_each_offer_sold_to_each_bid(self):
+        bids = [floor_bid(5.0, "x"), floor_bid(5.0, "y")]
+        offers = [offer("a", 4.0, 1.0), offer("b", 100.0, 3.0)]
+        allocation = allocate(bids, offers, [1.0, 3.0], DemandSchedule(bids))
+        self.assertAlmostEqual(allocation.flow[0].sum(), allocation.sold[0])
+        self.assertAlmostEqual(allocation.flow[1].sum(), allocation.sold[1])
+        self.assertAlmostEqual(allocation.flow[:, 0].sum(), allocation.quantity[0])
+        self.assertAlmostEqual(allocation.flow[:, 1].sum(), allocation.quantity[1])
+
+
+class PairingTests(unittest.TestCase):
+    def test_a_buyer_with_a_ceiling_is_paired_only_with_sellers_asking_under_it(self):
+        bids = [floor_bid(5.0, "x"), floor_bid(5.0, "y", maximum_price=3.0)]
+        result = run(bids, [offer("cheap", 5.0, 2.0), offer("dear", 5.0, 8.0)])
+        pairing = result.pairing
+        by_pair = {(pairing.buyers[b][0], pairing.sellers[s][0]): q
+                   for b, s, q in zip(pairing.buyer_index, pairing.seller_index, pairing.quantity)}
+        self.assertNotIn(("y", "dear"), by_pair)
+        self.assertAlmostEqual(by_pair[("y", "cheap")], bought(result)["y"])
+
+    def test_each_buyers_pairs_cost_what_its_fill_says(self):
+        bids = [floor_bid(5.0, "x"), floor_bid(5.0, "y")]
+        result = run(bids, [offer("cheap", 5.0, 2.0), offer("dear", 5.0, 8.0)])
+        pairing = result.pairing
+        for fill in result.fills:
+            if fill.side == "buy":
+                cost = sum(pairing.asks[s] * q for b, s, q in zip(pairing.buyer_index, pairing.seller_index, pairing.quantity)
+                           if pairing.buyers[b][0] == fill.agent)
+                self.assertAlmostEqual(cost, fill.quantity * fill.price)
 
 
 if __name__ == "__main__":

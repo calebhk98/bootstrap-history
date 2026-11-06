@@ -4,7 +4,6 @@ in test_losable_nodes."""
 QUICK_TOPIC = True
 
 import unittest
-from types import SimpleNamespace
 from unittest import mock
 
 from sim.seats import founder_rules

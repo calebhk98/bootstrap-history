@@ -13,6 +13,12 @@ from types import SimpleNamespace
 from .seat_views_stand_in import seat_views
 
 
+def shipped_declared():
+    """The commands and figures of a game over the repository's mods (`interface_declared`), made once."""
+    from .interface_fixture import shipped_declared as declared
+    return declared()
+
+
 class _Answer:
     def __init__(self, value):
         self.value = value
@@ -79,11 +85,11 @@ METHOD_OF_VIEW = {
     "diffusion_report": "world_diffusion_report", "disease_burden": "_disease_burden",
     "effect_terms": "_effect_terms", "electricity_demand": "_electricity_demand_kw",
     "farm_land_price": "farm_price_per_hectare", "generation_breakdown": "generation_breakdown_kw",
-    "generation_by_tier": "installed_generation_kw_by_tier", "goods_category_ratios": "_goods_category_ratios",
+    "generation_by_tier": "installed_generation_kw_by_tier",
     "held_goods": "_material_stock", "material_demand": "annual_material_demand",
     "material_shortfall": "material_shortfall_t", "own_production_tags": "_own_production_tags",
     "own_supply_by_commodity": "demand_and_own_supply_by_material", "partners": "partner_countries",
-    "practice_set": "_practice_set", "prerequisite_message": "missing_prereq_message",
+    "practice_set": "practice_set", "prerequisite_message": "missing_prereq_message",
     "purchase_quote": "material_purchase_cost", "resource_throttle": "peek_resource_throttle",
     "revenue_estimate": "revenue", "schooling_flow": "_schooling_flow", "start_check": "start_reason",
     "visibility": "is_visible", "visible_to_player": "_visible_to_player",
@@ -92,8 +98,7 @@ METHOD_OF_VIEW = {
 FACT_OF_VIEW = {
     "cast": "actors", "demographic_flows": "_last_demographic_step", "event_log": "log",
     "hours_per_person_year": "HOURS_PER_PERSON_YEAR", "last_start": "materials_paid_at_last_start",
-    "legacy_economy": "economy", "legacy_labour": "labour",
-    "legacy_geography": "geography", "material_checks": "MATERIAL_CHECKS",
+    "material_checks": "MATERIAL_CHECKS",
     "mine_works_materials": "MINE_OPEX_MATERIALS", "staff_capacity_sources": "STAFF_CAPACITY_SOURCES",
     "techniques_forgotten": "forgotten",
 }
@@ -110,11 +115,11 @@ METHOD_OF_COMMAND = {
     "ApplyTechEffects": "apply_tech_effects", "AutoOpenVentures": "auto_open_ventures", "Bribe": "bribe",
     "BuildHousing": "build_worker_housing", "BuildWay": "build_way", "BuyMaterial": "buy_material_stock",
     "CarryOutTransfers": "carry_out_transfers", "CloseLapsedDependents": "close_lapsed_dependents",
-    "ClosePartnerBooks": "close_partner_books", "CloseUnstaffedVentures": "close_unstaffed_ventures",
+    "ResetActorTradeTallies": "reset_actor_trade_tallies", "CloseUnstaffedVentures": "close_unstaffed_ventures",
     "DisbandArmy": "disband_army", "Disclose": "disclose", "DrawDeposit": "draw_deposit", "EndRun": "_catastrophe",
     "FoundBank": "seat_found_bank", "HandOverSeat": "hand_over_seat", "LoseCapital": "lose_capital",
     "MakeOffer": "seat_offer", "MothballWork": "mothball_work", "NoteActorHomeTrade": "note_actor_home_trade",
-    "NoteActorTrade": "note_actor_trade", "NoteCargoLeg": "note_cargo_leg", "OpenMarketBook": "_open_market_book",
+    "NoteActorTrade": "note_actor_trade", "NoteCargoLeg": "note_cargo_leg",
     "OpenVenture": "open_venture", "OrderArmy": "order_army", "PostBounty": "post_bounty", "RaiseArmy": "raise_army",
     "RecallArmy": "recall_army", "ReopenRestaffedVentures": "reopen_restaffed_ventures",
     "RestoreWork": "restore_work", "RollOut": "roll_out", "SellConcern": "sell_concern",
@@ -127,7 +132,7 @@ METHOD_OF_COMMAND = {
 ATTRIBUTE_OF_VIEW = {
     "acting_balance": "capital", "techniques_held": "done", "techniques_granted": "granted", "active_projects": "active",
     "fog_of_war": "fog", "tree_nodes": "nodes", "game_config": "cfg", "civilisation": "civ",
-    "legacy_fuzzy_estimates": "fuzzy_estimates", "techniques_revealed": "revealed", "techniques_forgotten": "forgotten",
+    "fuzzy_estimates": "fuzzy_estimates", "techniques_revealed": "revealed", "techniques_forgotten": "forgotten",
     "horizon_end_year": "end_year", "acting_seat": "acting_seat",
 }
 SEAT_VIEWS = frozenset({"registered_seats", "seat_list", "seat_country", "seat_kind", "seat_holder", "ended_seats"})
@@ -155,7 +160,7 @@ RECORDS = {
 
 # views and commands the labour model once answered, by the method of the stand-in `labour` object that does
 LABOUR_METHOD_OF_VIEW = {
-    "wage_bill": "wage_bill", "headcount": "headcount", "effective_scholars": "effective_scholars", "staff_advice": "staff_advice",
+    "wage_bill": "wage_bill", "wages_charged_last_year": "wage_bill", "headcount": "headcount", "effective_scholars": "effective_scholars", "staff_advice": "staff_advice",
     "base_tile": "base_tile", "farm_share_of_hours": "farm_share_of_hours", "settlement_tiles": "settlement_tiles",
     "household_room": "household_room", "supervision_room": "supervision_room", "supervision_room_from": "supervision_room_from",
     "room_advice": "room_advice", "wage_work_this_year": "wage_work_this_year", "sole_supervisors": "sole_supervisors",
@@ -165,7 +170,9 @@ LABOUR_METHOD_OF_VIEW = {
     "train_check": "train_check", "trainee_wage_bill": "trainee_wage_bill", "work_for_wages_dry_run": "work_for_wages_dry_run",
     "hours_you_can_call_on": "hours_you_can_call_on", "literacy_capacity": "literate_capacity", "market_supply": "market_supply",
     "trade_available": "trade_available", "base_annual_wage": "base_annual_wage", "wage": "wage_per_hour",
-    "market_supply_split": "market_supply_split", "hours_reserved": "hours_reserved",
+    "hours_reserved": "hours_reserved", "available_trades": "available_trades",
+    "reachable_trade_population": "reachable_trade_population", "people_who_exist": "people_who_exist",
+    "money_per_labour_hour": "money_per_labour_hour",
     "trade_headcount_pending": "trade_headcount_pending", "literacy_factor": "literacy_factor",
     "relocation_quote": "relocation_quote", "slave_quote": "slave_quote",
 }
@@ -180,9 +187,9 @@ LABOUR_METHOD_OF_COMMAND = {"HireStaff": "hire", "FireStaff": "fire", "TrainStaf
 def ui_state(**memory):
     """The `state` of a stand-in game holding the interface's saved memory (read it back through `ui_port`)."""
     record = SimpleNamespace(
-        holdings=SimpleNamespace(_dashboard_history=memory.get("dashboard_history")),
-        founder=SimpleNamespace(_founder_death_aged=memory.get("founder_death_aged"), _founder_death_year=memory.get("founder_death_year")),
-        seat_progress=SimpleNamespace(_said_command_index=memory.get("said_command_index"), _said_parallelism=memory.get("said_parallelism")))
+        holdings=SimpleNamespace(dashboard_history=memory.get("dashboard_history")),
+        founder=SimpleNamespace(death_aged=memory.get("founder_death_aged"), death_year=memory.get("founder_death_year")),
+        seat_progress=SimpleNamespace(said_command_index=memory.get("said_command_index"), said_parallelism=memory.get("said_parallelism")))
     return SimpleNamespace(acting_record=record, acting_seat="founder")
 
 
@@ -242,6 +249,8 @@ class FactViews:
         if hasattr(self, name):
             held = getattr(self, name)
             return _Answer(held)
+        if name == "interface_declared":
+            return _Answer(shipped_declared)
         raise KeyError("the stand-in game was given no view %r (nor an attribute of that name)" % name)
 
     def send(self, command):

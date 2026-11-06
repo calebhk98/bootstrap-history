@@ -8,21 +8,31 @@ import unittest
 from unittest import mock
 
 from sim.economy import economy, producers, unit_cost
-from sim.economy.accounts import Book
+from sim.book import Book
 from sim.economy.economy import Economy
 from sim.economy.households_cohort import Cohort
-from sim.labour.api import MarketState
+from sim.economy.labour_record import LabourRecord
 from sim.economy.types import EDGE_ISSUE, EDGE_PRODUCTION, GoodsMove, Transfer
 
 RECIPE = pytypes.SimpleNamespace(plant_goods={"iron": 2.0, "wood": 10.0}, plant_life_years=20.0)
 
 
+class Credit:
+    """The credit record's worn plant and the owner method that hands it over once."""
+
+    def __init__(self, worn_runs):
+        self.worn_runs = worn_runs
+
+    def take_rebuilds(self):
+        worn, self.worn_runs = self.worn_runs, {}
+        return worn
+
+
 def economy_of():
     """An Economy with only the pieces the plant methods read."""
     self = object.__new__(Economy)
-    self.setup = pytypes.SimpleNamespace(recipes={"recipe": RECIPE}, currency_id="coin")
-    self.record = pytypes.SimpleNamespace(book=Book(), producers={"mill": producers.Producer("mill", "owner", "recipe", "t1", 1.0)},
-                                          cohorts={}, workforce=MarketState(), worn_runs={"mill": 1.0})
+    self.setup = pytypes.SimpleNamespace(recipes={"recipe": RECIPE}, currency_id="coin", unskilled_trade="labourer")
+    self.record = pytypes.SimpleNamespace(book=Book(), producers={"mill": producers.Producer("mill", "owner", "recipe", "t1", 1.0)}, cohorts={}, labour=LabourRecord(), credit=Credit({"mill": 1.0}))
     self.area_map = pytypes.SimpleNamespace(goods=lambda: ("iron", "wood"))
     return self
 
@@ -74,9 +84,9 @@ class FollowTests(unittest.TestCase):
         mill = following.record.producers["mill"]
         self.assertEqual((mill.yield_factor, mill.years_of_loss), (0.5, 2))
         following.record.cohorts["c"] = Cohort("c", "t1", 0, 10.0, 5.0, 1.0)
-        following._follow_population(pytypes.SimpleNamespace(population_by_tile={"t1": 20.0}))
+        following._follow_population(pytypes.SimpleNamespace(population_by_tile={"t1": 20.0}, working_people_by_tile={"t1": 8.0}))
         cohort = following.record.cohorts["c"]
-        self.assertEqual((cohort.people, cohort.working_people), (20.0, 10.0))
+        self.assertEqual((cohort.people, cohort.working_people), (20.0, 8.0))
 
 
 if __name__ == "__main__":

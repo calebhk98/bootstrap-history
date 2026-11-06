@@ -6,12 +6,12 @@ QUICK_TOPIC = True
 import types
 import unittest
 
+from sim.tests.economy_view_defaults import ViewDefaults
 from sim.economy import household_work_year, households_work
-from sim.economy.households_basket import make_basket
+from sim.world.need_basket import make_basket
 from sim.economy.households_cohort import Cohort
-from sim.economy.households_own import withhold_hours
 from sim.economy.market_memory import market_key
-from sim.economy.setup import labour_area
+from sim.economy.setup import SetupTrade, labour_area
 from sim.economy.types import LabourOffer
 from sim.world import need_basket
 
@@ -28,12 +28,15 @@ NEED_DATA = {"needs": {"food": {"surplus_budget_share": 0.5, "subsistence_per_ca
                        "wood_kg": {"satisfies": {"warmth": 15.0}}}}
 
 
-class View:
+class View(ViewDefaults):
     def __init__(self, wages, prices=None):
         self.wages = wages
         self.prices = prices or {}
 
     def price(self, good, area):
+        return self.prices.get(good)
+
+    def price_of_good(self, good):
         return self.prices.get(good)
 
     def area_of(self, good, tile):
@@ -50,15 +53,16 @@ def cohort(name, tile="t1", people=100.0):
 
 def setup():
     return types.SimpleNamespace(
-        household_work=DATA, working_hours_per_year=1000.0, servant_trade="servant", hunger_need="food", fuel_need="warmth",
+        opening_wages={"labourer": 1.0, "servant": 1.0}, unskilled_trade="labourer", currency_id="coin",
+        trades={"labourer": SetupTrade("labourer"), "servant": SetupTrade("servant")},
+        household_work=DATA, working_hours_per_year=1000.0, servant_trade="servant", hunger_need="food", fuel_need="warmth", work_need="household_work",
         ready_to_eat=households_work.ready_to_eat_goods(NEED_DATA), milled_as={},
         basket_for=lambda tile: make_basket(NEED_DATA, {}))
 
 
 def record(titles=None, tenancies=None, cohorts=()):
     expected = {market_key(trade, labour_area("t1")): 1.0 for trade in ("smith", "labourer", "servant")}
-    return types.SimpleNamespace(titles=titles or {}, tenancies=tenancies or {}, sold_share_expected=expected,
-                                 cohorts={each.agent_id: each for each in cohorts})
+    return types.SimpleNamespace(labour=types.SimpleNamespace(sold_share_expected=expected), cohorts={each.agent_id: each for each in cohorts}, land=types.SimpleNamespace(titles=titles or {}, tenancies=tenancies or {}))
 
 
 class SplitTests(unittest.TestCase):
@@ -67,7 +71,7 @@ class SplitTests(unittest.TestCase):
         rec = record({"t1": {"rich": 1.0}}, cohorts=[rich])
         offers = [LabourOffer("rich", "smith", area, 500.0, 1.0)]
         view = View({("smith", area): 3.0, ("servant", area): 1.0})
-        hired, own = household_work_year.cohort_split(setup(), rec, view, rich, offers, 0.0)
+        hired, own, _milled = household_work_year.cohort_plan(setup(), rec, view, rich, offers)
         self.assertGreater(hired, 0.99 * households_work.hours_needed(100.0, DATA))
         self.assertAlmostEqual(hired + own, households_work.hours_needed(100.0, DATA))
 
@@ -76,7 +80,7 @@ class SplitTests(unittest.TestCase):
         rec = record({"t1": {"poor": 1.0}}, cohorts=[poor])
         offers = [LabourOffer("poor", "labourer", area, 500.0, 0.5)]
         view = View({("labourer", area): 0.8, ("servant", area): 1.0})
-        hired, own = household_work_year.cohort_split(setup(), rec, view, poor, offers, 0.0)
+        hired, own, _milled = household_work_year.cohort_plan(setup(), rec, view, poor, offers)
         self.assertLess(hired, 0.1 * households_work.hours_needed(100.0, DATA))
         self.assertAlmostEqual(hired + own, households_work.hours_needed(100.0, DATA))
 
@@ -86,7 +90,7 @@ class SplitTests(unittest.TestCase):
         rec = record({"t1": {"worker": 1.0}}, cohorts=[worker])
         offers = [LabourOffer("worker", "smith", area, 500.0, 1.0)]
         view = View({("smith", area): 3.0, ("servant", area): 1.0}, {"domestic_service_hour": 8.0})
-        hired, own = household_work_year.cohort_split(setup(), rec, view, worker, offers, 0.0)
+        hired, own, _milled = household_work_year.cohort_plan(setup(), rec, view, worker, offers)
         self.assertLess(hired, 0.01 * households_work.hours_needed(100.0, DATA))
         self.assertAlmostEqual(hired + own, households_work.hours_needed(100.0, DATA))
 
@@ -95,39 +99,36 @@ class SplitTests(unittest.TestCase):
         rec = record({"t1": {"worker": 1.0}}, cohorts=[worker])
         offers = [LabourOffer("worker", "smith", area, 500.0, 1.0)]
         view = View({("smith", area): 3.0, ("servant", area): 5.0}, {"domestic_service_hour": 2.0})
-        hired, _own = household_work_year.cohort_split(setup(), rec, view, worker, offers, 0.0)
+        hired, _own, _milled = household_work_year.cohort_plan(setup(), rec, view, worker, offers)
         self.assertGreater(hired, 0.99 * households_work.hours_needed(100.0, DATA))
 
-    def test_the_servants_price_falls_back_when_no_servant_has_been_paid(self):
+    def test_a_servant_nobody_has_paid_is_priced_at_the_unskilled_wage_not_the_workers_reservation(self):
         worker, area = cohort("worker"), labour_area("t1")
         rec = record({"t1": {"worker": 1.0}}, cohorts=[worker])
         offers = [LabourOffer("worker", "labourer", area, 500.0, 0.5)]
-        hired, _own = household_work_year.cohort_split(setup(), rec, View({("labourer", area): 2.0}), worker, offers, 1.0)
-        self.assertGreater(hired, 0.0)
+        _value, _needed, price, _milled = household_work_year.work_terms(setup(), rec, View({("labourer", area): 2.0}), worker, offers)
+        self.assertAlmostEqual(price, 2.0)
 
     def test_a_landless_cohort_does_no_cooking_of_its_own(self):
         landless, area = cohort("landless"), labour_area("t1")
         rec = record({"t1": {}}, cohorts=[landless])
         offers = [LabourOffer("landless", "labourer", area, 500.0, 0.5)]
-        _hired, own = household_work_year.cohort_split(setup(), rec, View({("labourer", area): 0.1, ("servant", area): 1.0}),
-                                                       landless, offers, 0.0)
+        _hired, own, _milled = household_work_year.cohort_plan(setup(), rec, View({("labourer", area): 0.1, ("servant", area): 1.0}),
+                                                       landless, offers)
         self.assertAlmostEqual(own, households_work.hours_needed(100.0, DATA, has_hearth=False))
 
     def test_own_household_work_hours_reduce_the_hours_offered(self):
         poor, area = cohort("poor"), labour_area("t1")
         offers = [LabourOffer("poor", "labourer", area, 500.0, 0.5)]
         rec = record({"t1": {"poor": 1.0}}, cohorts=[poor])
-        own = household_work_year.decide(setup(), rec, View({("labourer", area): 0.8, ("servant", area): 1.0}), offers, {})
-        cut, kept = withhold_hours(offers, own)
-        self.assertGreater(kept["poor"], 0.0)
-        self.assertAlmostEqual(kept["poor"], min(own["poor"], 500.0))
-        self.assertAlmostEqual(sum(offer.hours for offer in cut), 500.0 - kept["poor"])
+        own = household_work_year.decide(setup(), rec, View({("labourer", area): 0.8, ("servant", area): 1.0}), offers)
+        self.assertGreater(own["poor"], 0.0)
 
     def test_hired_hours_become_the_cohorts_floor_of_the_need(self):
         rich, area = cohort("rich"), labour_area("t1")
         rec = record({"t1": {"rich": 1.0}}, cohorts=[rich])
         offers = [LabourOffer("rich", "smith", area, 500.0, 1.0)]
-        household_work_year.decide(setup(), rec, View({("smith", area): 3.0, ("servant", area): 1.0}), offers, {})
+        household_work_year.decide(setup(), rec, View({("smith", area): 3.0, ("servant", area): 1.0}), offers)
         hired_cohort = rec.cohorts["rich"]
         self.assertGreater(hired_cohort.hired_work_per_person, 0.99 * households_work.hours_per_person_per_year(DATA))
         spec = next(need for need in household_work_year.cohort_basket(setup(), rec, hired_cohort).needs
@@ -144,12 +145,12 @@ class FullCostOfServiceTests(unittest.TestCase):
         rec = record({"t1": {"worker": 1.0}}, cohorts=[worker])
         if sold is not None:
             key = market_key("smith", area)
-            rec.sold_share_expected[key] = sold
+            rec.labour.sold_share_expected[key] = sold
         plan = setup()
         plan.household_work = dict(DATA, supervision_hours_per_hired_hour=supervision)
         offers = [LabourOffer("worker", "smith", area, 500.0, 0.1)]
         view = View({("smith", area): wage, ("servant", area): 1.0}, {"domestic_service_hour": price})
-        hired, _own = household_work_year.cohort_split(plan, rec, view, worker, offers, 0.0)
+        hired, _own, _milled = household_work_year.cohort_plan(plan, rec, view, worker, offers)
         return hired
 
     def test_a_household_whose_freed_hours_would_go_unsold_does_not_hire(self):
@@ -183,15 +184,15 @@ class FullCostOfServiceTests(unittest.TestCase):
 
 class ExpectedSoldShareTests(unittest.TestCase):
     def test_the_share_held_in_the_record_wins_over_the_openings_expectation(self):
-        rec = types.SimpleNamespace(sold_share_expected={market_key("smith", "a1"): 0.3})
+        rec = types.SimpleNamespace(labour=types.SimpleNamespace(sold_share_expected={market_key("smith", "a1"): 0.3}))
         self.assertAlmostEqual(household_work_year.sold_share_at(rec, "smith", "a1", 0.9), 0.3)
 
     def test_a_market_with_no_year_behind_it_takes_the_openings_expectation(self):
-        rec = types.SimpleNamespace(sold_share_expected={})
+        rec = types.SimpleNamespace(labour=types.SimpleNamespace(sold_share_expected={}))
         self.assertAlmostEqual(household_work_year.sold_share_at(rec, "smith", "a1", 0.6), 0.6)
 
     def test_a_record_lacks_history_for_a_market_it_holds_no_share_for(self):
-        rec = types.SimpleNamespace(sold_share_expected={market_key("smith", "a1"): 0.3})
+        rec = types.SimpleNamespace(labour=types.SimpleNamespace(sold_share_expected={market_key("smith", "a1"): 0.3}))
         held = LabourOffer("w", "smith", "a1", 10.0, 1.0)
         new = LabourOffer("w", "smith", "a2", 10.0, 1.0)
         self.assertFalse(household_work_year.lacks_history(rec, [held]))
@@ -232,6 +233,19 @@ class CookingFuelTests(unittest.TestCase):
         landless = cohort("landless")
         rec = record({"t1": {}}, cohorts=[landless])
         self.assertAlmostEqual(self._warmth_floor(household_work_year.cohort_basket(setup(), rec, landless)), 300.0)
+
+
+class SubsistenceCostTests(unittest.TestCase):
+    def test_the_wage_floor_counts_the_cooking_fuel_of_a_cohort_with_a_hearth(self):
+        from sim.economy import year_labour
+        from sim.world.need_basket import subsistence_cost_per_person
+        owner = cohort("owner", "t1")
+        rec = record({"t1": {"owner": 1.0}}, cohorts=[owner])
+        view = View({}, {"wheat_kg": 1.0, "cooked_meal_kg": 1.0, "domestic_service_hour": 1.0, "wood_kg": 2.0})
+        plain = subsistence_cost_per_person(need_basket.need_prices(setup().basket_for("t1"), view.price_of_good))
+        fuel = households_work.cooking_fuel_per_person_per_year(DATA, True)
+        cost = year_labour.subsistence_cost_by_tile(setup(), rec, view)["t1"]
+        self.assertAlmostEqual(cost - plain, fuel * 2.0 / 15.0)    # wood serves warmth at 15 per kg
 
 
 if __name__ == "__main__":

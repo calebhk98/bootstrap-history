@@ -6,7 +6,7 @@ QUICK_TOPIC = True
 
 import unittest
 
-from sim.prices import solve_prices
+from sim.prices import solve_prices_core, engine_seam
 
 
 class CapabilityFloorByCarrierTests(unittest.TestCase):
@@ -18,35 +18,9 @@ class CapabilityFloorByCarrierTests(unittest.TestCase):
     """
 
     def test_the_default_floor_applies_with_no_active_consumer(self):
-        floor = solve_prices.capability_floor_by_carrier({})
+        floor = solve_prices_core.capability_floor_by_carrier()
         self.assertEqual(floor["thermal_mj"],
-                        solve_prices.THERMAL_MJ_MINIMUM_USABLE_TEMPERATURE_C)
-
-    def test_a_consumers_stated_need_no_longer_raises_the_shared_floor(self):
-        # This is the exact scenario the old test suite's
-        # "an_active_consumer_can_raise_the_floor_above_the_default" test
-        # pinned as CORRECT - it was pinning the bug. A consumer's own
-        # requirement is now graded separately (see
-        # PerConsumerGradingTests below); it must not touch the shared
-        # floor every OTHER, unlabelled consumer reads.
-        entries = {
-            "hot_process": {"outputs": {"widget_kg": 1.0}, "inputs": {},
-                            "labour_hours": {}, "thermal_mj": 5.0,
-                            "temperature_needed_c": 2000.0},
-        }
-        floor = solve_prices.capability_floor_by_carrier(entries)
-        self.assertEqual(floor["thermal_mj"],
-                        solve_prices.THERMAL_MJ_MINIMUM_USABLE_TEMPERATURE_C)
-
-    def test_a_stated_need_below_the_default_does_not_lower_it_either(self):
-        entries = {
-            "mild_process": {"outputs": {"widget_kg": 1.0}, "inputs": {},
-                             "labour_hours": {}, "thermal_mj": 5.0,
-                             "temperature_needed_c": 150.0},
-        }
-        floor = solve_prices.capability_floor_by_carrier(entries)
-        self.assertEqual(floor["thermal_mj"],
-                        solve_prices.THERMAL_MJ_MINIMUM_USABLE_TEMPERATURE_C)
+                        solve_prices_core.THERMAL_MJ_MINIMUM_USABLE_TEMPERATURE_C)
 
 
 class CapabilityRequiredGradesTests(unittest.TestCase):
@@ -56,9 +30,9 @@ class CapabilityRequiredGradesTests(unittest.TestCase):
     """
 
     def test_the_default_floor_is_always_present_even_with_no_consumers(self):
-        grades = solve_prices.capability_required_grades({})
+        grades = solve_prices_core.capability_required_grades({})
         self.assertEqual(grades["thermal_mj"],
-                        (solve_prices.THERMAL_MJ_MINIMUM_USABLE_TEMPERATURE_C,))
+                        (solve_prices_core.THERMAL_MJ_MINIMUM_USABLE_TEMPERATURE_C,))
 
     def test_every_distinct_active_requirement_is_its_own_grade(self):
         entries = {
@@ -69,28 +43,28 @@ class CapabilityRequiredGradesTests(unittest.TestCase):
                             "labour_hours": {}, "thermal_mj": 5.0,
                             "temperature_needed_c": 2500.0},
         }
-        grades = solve_prices.capability_required_grades(entries)
+        grades = solve_prices_core.capability_required_grades(entries)
         self.assertEqual(
             grades["thermal_mj"],
-            (solve_prices.THERMAL_MJ_MINIMUM_USABLE_TEMPERATURE_C, 1000.0, 2500.0))
+            (solve_prices_core.THERMAL_MJ_MINIMUM_USABLE_TEMPERATURE_C, 1000.0, 2500.0))
 
     def test_a_consumer_that_does_not_draw_the_carrier_is_ignored(self):
         entries = {
             "irrelevant": {"outputs": {"widget_kg": 1.0}, "inputs": {},
                           "labour_hours": {}, "temperature_needed_c": 5000.0},
         }
-        grades = solve_prices.capability_required_grades(entries)
+        grades = solve_prices_core.capability_required_grades(entries)
         self.assertEqual(grades["thermal_mj"],
-                        (solve_prices.THERMAL_MJ_MINIMUM_USABLE_TEMPERATURE_C,))
+                        (solve_prices_core.THERMAL_MJ_MINIMUM_USABLE_TEMPERATURE_C,))
 
     def test_a_consumer_with_no_stated_need_adds_no_grade(self):
         entries = {
             "unannotated": {"outputs": {"widget_kg": 1.0}, "inputs": {},
                            "labour_hours": {}, "thermal_mj": 5.0},
         }
-        grades = solve_prices.capability_required_grades(entries)
+        grades = solve_prices_core.capability_required_grades(entries)
         self.assertEqual(grades["thermal_mj"],
-                        (solve_prices.THERMAL_MJ_MINIMUM_USABLE_TEMPERATURE_C,))
+                        (solve_prices_core.THERMAL_MJ_MINIMUM_USABLE_TEMPERATURE_C,))
 
 
 class PerConsumerGradingTests(unittest.TestCase):
@@ -122,9 +96,9 @@ class PerConsumerGradingTests(unittest.TestCase):
 
     def _solve(self, entries):
         wage_by_trade = {"labourer": 1.0}
-        producers_of = solve_prices.build_producers_index(entries)
-        resolvable = solve_prices.compute_resolvable_materials(entries, producers_of)
-        return solve_prices.solve(entries, producers_of, resolvable, wage_by_trade)
+        producers_of = solve_prices_core.build_producers_index(entries)
+        resolvable = solve_prices_core.compute_resolvable_materials(entries, producers_of)
+        return solve_prices_core.solve(entries, producers_of, resolvable, wage_by_trade)
 
     def test_a_low_temperature_process_can_use_a_low_temperature_source_while_a_high_temperature_one_exists(self):
         # Both requirements are graded AT ONCE, in the same solved
@@ -144,9 +118,9 @@ class PerConsumerGradingTests(unittest.TestCase):
         }
         prices, _iters, _residual, _chosen = self._solve(entries)
 
-        low_price = solve_prices.capability_price_for_requirement(
+        low_price = solve_prices_core.capability_price_for_requirement(
             "thermal_mj", 100.0, entries, prices, {"labourer": 1.0})
-        high_price = solve_prices.capability_price_for_requirement(
+        high_price = solve_prices_core.capability_price_for_requirement(
             "thermal_mj", 1000.0, entries, prices, {"labourer": 1.0})
 
         self.assertEqual(low_price[1], "friction")
@@ -198,7 +172,7 @@ class PerConsumerGradingTests(unittest.TestCase):
             "temperature_needed_c": 1000.0, "requires_node": None,
         }
         prices, _iters, _residual, _chosen = self._solve(entries)
-        hot_price = solve_prices.capability_price_for_requirement(
+        hot_price = solve_prices_core.capability_price_for_requirement(
             "thermal_mj", 1000.0, entries, prices, {"labourer": 1.0})
         self.assertEqual(hot_price[1], "real_fuel")
 
@@ -208,7 +182,7 @@ class PerConsumerGradingTests(unittest.TestCase):
         # requirement", never a silent fall-back to real_fuel's 1100 C
         # reach pretending it is hotter than it is.
         entries = self._entries()
-        result = solve_prices.capability_price_for_requirement(
+        result = solve_prices_core.capability_price_for_requirement(
             "thermal_mj", 5000.0, entries,
             {"mechanical_mj": 1.0, "thermal_mj": 1.0}, {"labourer": 1.0})
         self.assertIsNone(result)
@@ -243,9 +217,9 @@ class SyntheticFrictionScenarioTests(unittest.TestCase):
 
     def _thermal_choice(self, entries):
         wage_by_trade = {"labourer": 1.0}
-        producers_of = solve_prices.build_producers_index(entries)
-        resolvable = solve_prices.compute_resolvable_materials(entries, producers_of)
-        _prices, _iters, _residual, chosen = solve_prices.solve(
+        producers_of = solve_prices_core.build_producers_index(entries)
+        resolvable = solve_prices_core.compute_resolvable_materials(entries, producers_of)
+        _prices, _iters, _residual, chosen = solve_prices_core.solve(
             entries, producers_of, resolvable, wage_by_trade)
         return chosen["thermal_mj"]
 
@@ -261,17 +235,17 @@ class SyntheticFrictionScenarioTests(unittest.TestCase):
 
 class RealHeatSourceReachTests(unittest.TestCase):
     def test_thermal_mj_friction_cannot_clear_the_universal_floor(self):
-        production_entries, _duplicates = solve_prices.load_production()
+        production_entries, _duplicates = engine_seam.load_production()
         friction = production_entries["thermal_mj_friction"]
         self.assertLess(friction["temperature_reached_c"],
-                        solve_prices.THERMAL_MJ_MINIMUM_USABLE_TEMPERATURE_C)
+                        solve_prices_core.THERMAL_MJ_MINIMUM_USABLE_TEMPERATURE_C)
 
     def test_charcoal_and_coal_clear_the_universal_floor(self):
-        production_entries, _duplicates = solve_prices.load_production()
+        production_entries, _duplicates = engine_seam.load_production()
         for recipe_id in ("thermal_mj_charcoal", "thermal_mj_coal"):
             self.assertGreaterEqual(
                 production_entries[recipe_id]["temperature_reached_c"],
-                solve_prices.THERMAL_MJ_MINIMUM_USABLE_TEMPERATURE_C)
+                solve_prices_core.THERMAL_MJ_MINIMUM_USABLE_TEMPERATURE_C)
 
 
 if __name__ == "__main__":

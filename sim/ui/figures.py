@@ -31,12 +31,8 @@ def shipped_figures():
 
 
 def figures_of(sim):
-    """The figures of the game `sim`: the shipped ones and its mods'. A host with no interface module has the shipped ones."""
-    try:
-        declared = sim.view("interface_declared")
-    except (AttributeError, KeyError):
-        return FIGURES
-    return declared().figures
+    """The figures of the game `sim`: the shipped ones and its mods'."""
+    return sim.view("interface_declared")().figures
 
 
 def figure(name, label, unit="", digits=DEFAULT_DIGITS, since=None):

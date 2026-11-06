@@ -1,4 +1,4 @@
-"""Labour-core clearing over plain records: wages, premiums, recruitment friction, poaching."""
+"""Labour-core clearing over plain records: wages, recruitment friction, poaching."""
 
 QUICK_TOPIC = True
 
@@ -6,7 +6,7 @@ import copy
 import unittest
 
 from sim.labour.market import aptitude, clearing, trades
-from sim.labour.market.records import Bid, MarketState, YearInputs
+from sim.labour.market.records import EmployerHoursBid, MarketState, YearInputs
 
 SPECS = trades.trade_specs({"digger": {"family": "earth", "training_years": 0},
                             "healer": {"family": "care", "training_years": 5}})
@@ -26,8 +26,8 @@ def make_state(people=10.0, wage=None):
     return state
 
 
-def bid(employer, hours, maximum=3.0, premium=0.0, trade="digger"):
-    return Bid(employer, trade, "vale", hours, maximum, premium)
+def bid(employer, hours, maximum=3.0, trade="digger"):
+    return EmployerHoursBid(employer, trade, "vale", hours, maximum)
 
 
 def run(state, bids):
@@ -38,7 +38,7 @@ class WageMovement(unittest.TestCase):
     def test_excess_demand_raises_wage_toward_target(self):
         state = make_state(wage=1.0)
         target = clearing.clearing_target(1.0, 1000.0, [bid("a", 2000.0)])
-        wages = [run(state, [bid("a", 2000.0)]).new_hire_wage for _ in range(4)]     # hours already held keep their contract
+        wages = [run(state, [bid("a", 2000.0)]).wage for _ in range(4)]     # hours already held keep their contract
         # unfilled vacancies raise the offer round by round (labour_eurace_applications); the wage is the mean paid, so it nears the target from below
         self.assertTrue(wages[0] < wages[1] <= wages[2] <= wages[3] <= target + 1e-9)
         self.assertGreater(wages[0], 1.0)
@@ -51,26 +51,27 @@ class WageMovement(unittest.TestCase):
 
     def test_no_bids_hires_nothing_and_the_quote_drifts_down_to_the_ask(self):
         state = make_state(wage=2.5)
-        results = [run(state, []) for _ in range(3)]
+        inputs = make_inputs([])
+        inputs.ask_floor_per_worker_year["vale"] = 0.0     # a stated floor of nothing lets the ask fall
+        results = [clearing.clear_one(state, inputs, "digger", "vale", []) for _ in range(3)]
         wages = [result.wage for result in results]
         self.assertEqual([result.hours_hired for result in results], [0.0, 0.0, 0.0])
         self.assertTrue(2.5 > wages[0] > wages[1] > wages[2] > 0.0)
         self.assertEqual(state.wages["vale"]["digger"], wages[-1])
 
 
-class PremiumAndFriction(unittest.TestCase):
-    def test_premium_payer_fills_first_and_pays_more(self):
-        result = run(make_state(wage=1.0), [bid("plain", 800.0), bid("rich", 800.0, premium=0.5)])
+class RankAndFriction(unittest.TestCase):
+    def test_the_higher_maximum_fills_first(self):
+        result = run(make_state(wage=1.0), [bid("plain", 800.0), bid("rich", 800.0, maximum=4.5)])
         self.assertGreater(result.hired_by_employer["rich"], result.hired_by_employer["plain"])
-        self.assertGreater(result.paid_by_employer["rich"], result.paid_by_employer["plain"])
 
     def test_large_new_bid_fills_within_the_year_by_rounds_of_applications(self):
         # Eurace applications and acceptances (applications.py): a slack market fills a whole vacancy in the year's rounds
         first = run(make_state(people=10.0, wage=1.0), [bid("big", 1000.0)]).hired_by_employer["big"]
         self.assertAlmostEqual(first, 1000.0, places=3)
 
-    def test_premium_wins_more_of_scarce_hours_than_a_rival_wanting_as_many(self):
-        result = run(make_state(people=10.0, wage=1.0), [bid("plain", 800.0), bid("paying", 800.0, premium=0.5)])
+    def test_the_higher_maximum_wins_more_of_scarce_hours_than_a_rival_wanting_as_many(self):
+        result = run(make_state(people=10.0, wage=1.0), [bid("plain", 800.0), bid("paying", 800.0, maximum=4.5)])
         self.assertGreater(result.hired_by_employer["paying"], result.hired_by_employer["plain"])
 
 
@@ -78,7 +79,7 @@ class Poaching(unittest.TestCase):
     def test_hours_move_from_low_payer_to_high_payer(self):
         state = make_state(people=10.0, wage=1.0)
         state.hired_hours = {"vale": {"digger": {"low": 1000.0}}}
-        result = run(state, [bid("low", 1000.0), bid("high", 500.0, premium=0.5)])
+        result = run(state, [bid("low", 1000.0), bid("high", 500.0, maximum=4.5)])
         self.assertGreater(result.hired_by_employer.get("high", 0.0), 0.0)
         self.assertLess(result.hired_by_employer["low"], 1000.0)
 
@@ -87,7 +88,7 @@ class Conservation(unittest.TestCase):
     def test_never_hires_more_than_offered_or_wanted(self):
         state = make_state(people=5.0, wage=1.0)
         state.hired_hours = {"vale": {"digger": {"a": 300.0, "b": 400.0}}}
-        bids = [bid("a", 600.0), bid("b", 600.0, premium=0.2), bid("c", 600.0, premium=0.4)]
+        bids = [bid("a", 600.0), bid("b", 600.0, maximum=3.6), bid("c", 600.0, maximum=4.2)]
         for _ in range(3):
             result = run(state, bids)
             self.assertLessEqual(result.hours_hired, result.hours_offered + 1e-9)
@@ -96,7 +97,7 @@ class Conservation(unittest.TestCase):
                 self.assertLessEqual(hours, 600.0 + 1e-9)
 
     def test_deterministic(self):
-        bids = [bid("a", 700.0), bid("b", 700.0, premium=0.3), bid("c", 700.0)]
+        bids = [bid("a", 700.0), bid("b", 700.0, maximum=3.9), bid("c", 700.0)]
         first_state, second_state = make_state(wage=1.0), copy.deepcopy(make_state(wage=1.0))
         self.assertEqual(run(first_state, bids), run(second_state, bids))
 
@@ -112,7 +113,7 @@ class ManyTranchesTests(unittest.TestCase):
         specs = trades.trade_specs({"digger": {"family": "toil", "training_years": 0},
                                     "carver": {"family": "craft", "training_years": 3}})
         state = MarketState(workers={"vale": {"carver": aptitude.split_evenly(31.0)}})
-        bids = [Bid("employer%d" % index, "carver", "vale", 6.0 * 2000.0 / 1.0, 3.0 * (1.3 - 0.15 * index))
+        bids = [EmployerHoursBid("employer%d" % index, "carver", "vale", 6.0 * 2000.0 / 1.0, 3.0 * (1.3 - 0.15 * index))
                 for index in range(5)]
         year_inputs = YearInputs(trades=specs, bids=bids, subsistence_per_worker_year={"vale": 1600.0},
                                          hours_per_worker_year=2000.0, discount_rate=0.05, career_years=30.0)
@@ -120,6 +121,23 @@ class ManyTranchesTests(unittest.TestCase):
             for result in clearing.clear_all(state, year_inputs):
                 self.assertIsInstance(result.hours_hired, float)
                 self.assertLessEqual(result.hours_hired, result.hours_offered + 1e-6)
+
+
+class AskFloorTests(unittest.TestCase):
+    def test_with_no_stated_floor_hours_are_not_sold_under_the_reservation_wage(self):
+        # 1000 hours offered; employers want 700 above the reservation (one per hour) and 300 only at a wage under it
+        state = make_state(wage=1.0)
+        bids = [bid("a", 700.0, maximum=3.0), bid("b", 300.0, maximum=0.3)]
+        inputs = make_inputs(bids)
+        for _year in range(30):
+            result = clearing.clear_one(state, inputs, "digger", "vale", bids)
+            self.assertGreaterEqual(result.wage, 1.0 - 1e-9)
+
+    def test_an_ask_floor_is_the_stated_one_where_given_and_the_reservation_otherwise(self):
+        inputs = make_inputs([])
+        self.assertAlmostEqual(clearing.ask_floor(inputs, "vale", 1.0), 1.0)
+        inputs.ask_floor_per_worker_year["vale"] = 40.0
+        self.assertAlmostEqual(clearing.ask_floor(inputs, "vale", 1.0), 0.4)
 
 
 if __name__ == "__main__":

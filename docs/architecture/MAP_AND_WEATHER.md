@@ -152,21 +152,21 @@ that reason.
 grep -rn "land_tiles" sim/ --include=*.py | grep -v test
 -> only sim/engine/core.py (comments and the weather-cell builder)
 
-grep -n "land_tiles" sim/world/land.py sim/engine/solve_prices.py
+grep -n "land_tiles" sim/world/land.py sim/prices/solve_prices.py
 -> no matches in either file
 ```
 
 | Mechanism | File | Reads | Confirmed by |
 |---|---|---|---|
 | Land rent (extensive + intensive margin) | `sim/world/land.py` | `regions` only | grep, zero `land_tiles` hits |
-| Price solver's land-rent wiring | `sim/engine/solve_prices.py` | `regions`, via `land.py` | grep for `land_tiles` (none), `from sim.world import land` at line 779 |
+| Price solver's land-rent wiring | `sim/prices/solve_prices.py` | `regions`, via `land.py` | grep for `land_tiles` (none), `from sim.world import land` at line 779 |
 | Mineral deposit locations and rent | `sim/world/deposits.py` | `regions` (`geography["regions"].get(region)`, lines 825, 957) | direct read |
-| Forest/coppice land ceiling | `sim/engine/economy_mining.py` `home_land_area_km2`/`forest_land_ceiling` | `regions`, summed by `land_area_km2` (NOT region count) | direct read, see 1.3 |
+| Forest/coppice land ceiling | `sim/resources/workings.py` `home_land_area_km2`/`forest_land_ceiling` | `regions`, summed by `land_area_km2` (NOT region count) | direct read, see 1.3 |
 | Home centroid, region-name lookups | `sim/geography/geography.py` | `regions` (`self._regions`) | direct read |
-| Freight distance between civilisations | `sim/engine/economy_freight.py` | `regions` centroids (`self._regions[region_id]["lat"/"lon"]`) | direct read |
+| Freight distance between civilisations | `sim/freight/haul.py` | `regions` centroids (`self._regions[region_id]["lat"/"lon"]`) | direct read |
 | Growing-season weather pooling | `sim/engine/core.py` `_compute_farm_weather_cells` | `land_tiles` directly (falls back to a region's own centroid only for an unmapped region) | direct read, quoted in 1.3 |
 
-One line in the table needs a caveat: `sim/engine/economy_mining.py`'s
+One line in the table needs a caveat: `sim/resources/workings.py`'s
 `home_land_area_km2` sums `land_area_km2` across a civilisation's held
 regions - it does NOT count regions the way the old weather code and the old
 forest-ceiling code once did. Its own docstring says so explicitly ("not
@@ -588,9 +588,9 @@ reading the function (it sorts, then does one linear pass; no nested loop
 over parcels at all). Measured directly:
 
 ```
-time python3 sim/engine/solve_prices.py --civ rome_100ad > /dev/null
+time python3 sim/prices/solve_prices.py --civ rome_100ad > /dev/null
 -> real 0m0.220s
-time python3 sim/engine/solve_prices.py > /dev/null
+time python3 sim/prices/solve_prices.py > /dev/null
 -> real 0m0.247s
 ```
 
@@ -610,8 +610,8 @@ confirmed by reading `cli_agent.py`: `sim = Sim(...)` at the top of
 open pipe amortise this cost over the whole session. But the test harness's
 own session-resuming pattern, and CLAUDE.md §3.5's description ("with
 `--session` every single command is a save followed by a load"), both show
-a session being reopened by a FRESH subprocess - confirmed in
-`sim/tests/test_five_things_winner.py`, two separate `subprocess.run([...,
+a session being reopened by a FRESH subprocess - confirmed by a
+test that ran two separate `subprocess.run([...,
 "--session", _sess_session])` calls sharing one save file, each one a new
 process, a new `Sim()`, a new factorisation. Whether the weather setup cost
 is paid once per game or once per exchange depends entirely on whether
@@ -825,7 +825,7 @@ a tile-keyed version, feeding `find_margin_of_cultivation` many small
 parcels instead of 7-to-21 large ones. Cheap computationally (section 3.4:
 O(n log n), confirmed by reading the sort-and-walk function) even at 10,000
 tiles. **This WILL change `iugerum_land`'s price, and every price that
-depends on land rent through `sim/engine/solve_prices.py` - which per Complaints/
+depends on land rent through `sim/prices/solve_prices.py` - which per Complaints/
 32 and 43 is not a side channel, it is close to the center of the price
 system.** Call this out explicitly when shipped; do not present it as a
 neutral refactor.

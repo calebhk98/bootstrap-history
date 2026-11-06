@@ -8,23 +8,18 @@ Rules, each called on inputs built from geography's tiles or by the test, with n
    civilisations and for a mod civilisation of one region; the civilisations differ.
 2. A civilisation naming no known region holds no tile and is refused (`require_territory`).
 3. `agriculture.gross_harvest_kg` responds to land quality; `farmland_for_population` never passes the arable ceiling.
-4. `labour_allocation.farm_workers_needed`: poorer soil calls for more hands, and the hands are capped by the farm's
-   area plus what is clearable.
-
-How the farm takes its quality from the ladder is test_farm_area_rule."""
+"""
 QUICK_TOPIC = True
 
 import unittest
 
 from sim.land.rules import require_territory
 from sim.geography.api import crop_site, tiles_held, tiles_of_regions
-from sim.labour import labour_allocation
 from sim.tests.harness import S
-from sim.world import agriculture, farming_technique, land
+from sim.world import agriculture, land
 
 OPEN_FIELD_SHARE = 1.0 - agriculture.DEFAULT_ROTATION.fallow_share_of_holding
 CIVILISATIONS = ("rome_100ad", "han_china_100ad", "norse_900ad")
-TECHNIQUE = farming_technique.DEFAULT_TECHNIQUE
 
 
 def sites_of(tile_ids):
@@ -96,31 +91,6 @@ class FarmLandQualityTests(unittest.TestCase):
     def test_a_small_population_is_fed_on_less_than_the_ceiling(self):
         sized = agriculture.farmland_for_population(1000.0, arable_hectares_ceiling=1.0e9)
         self.assertLess(sized.hectares, 1.0e9)
-
-
-class FarmWorkersNeededTests(unittest.TestCase):
-    """Soil only changes yield; the labour market pulls workers to the farm."""
-
-    def needed(self, gross_per_hour, shortfall_kg=1.0e6, land_hectares=1.0e6, clearable_hectares=0.0):
-        return labour_allocation.farm_workers_needed(
-            100.0, 100.0, shortfall_kg, gross_per_hour, land_hectares,
-            clearable_hectares=clearable_hectares, technique=TECHNIQUE)
-
-    def gross_per_hour_at(self, quality):
-        seed_per_hour = (TECHNIQUE.crop.planting_material_kg_per_ha / farming_technique.hours_per_hectare(TECHNIQUE))
-        return (seed_per_hour + 4.0 * quality) * agriculture.LABOUR_OUTPUT_ELASTICITY
-
-    def test_poorer_soil_pulls_more_workers_onto_the_farm(self):
-        self.assertGreater(self.needed(self.gross_per_hour_at(0.5)), self.needed(self.gross_per_hour_at(1.0)))
-
-    def test_workers_are_capped_by_farm_area_plus_what_is_clearable(self):
-        per_worker = agriculture.hectares_cropped_per_farm_worker(TECHNIQUE.crop, TECHNIQUE.toolkit)
-        farm, clearable = 5000.0, 2000.0
-        cap = farm / per_worker + (clearable * agriculture.CLEARING_LABOUR_HOURS_PER_HECTARE
-                                   / labour_allocation.HOURS_PER_FARM_WORKER_YEAR)
-        needed = self.needed(self.gross_per_hour_at(0.5), shortfall_kg=1.0e12, land_hectares=farm,
-                             clearable_hectares=clearable)
-        self.assertAlmostEqual(needed, cap, places=6)
 
 
 if __name__ == "__main__":

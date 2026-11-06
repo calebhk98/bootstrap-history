@@ -240,7 +240,7 @@ def rederive_soils(path):
     """Rewrite every tile's arable_fraction, fertility_quality_multiplier and heavy_soil_share in the tile grid at `path`
     from the map's layers. Needs no network: run it after any change to sim/geography/soil_derivation.py or
     data/world/geography/parameters/soil.json."""
-    from sim.geography import soil_derivation
+    from sim.geography.api import soil_derivation
     world_map = geography_api.open_map()
     with open(path, encoding="utf-8") as handle:
         grid = json.load(handle)
@@ -592,15 +592,8 @@ def build_land_tiles_section(tiles):
             "is the OUTPUT of (Complaints/45: 'the generating rule is the "
             "deliverable, not the tiles'). Each tile is a roughly-%.0f-km2 "
             "piece of real land (smaller at a coastline, per rule 1/2), never "
-            "hand-judged. This key sits ALONGSIDE the file's existing `regions` "
-            "key, which this script does not touch: sim/world/land.py and "
-            "sim/engine/economy.py (both out of this task's ownership) still "
-            "read `regions`/`home_regions` exactly as before, and every civ file "
-            "still works unmodified. `region_to_tiles` below is the mapping a "
-            "later pass would use to move data/civilizations/*.json's own "
-            "`home_regions` from old region ids onto lists of these tile ids - "
-            "see this task's own report for exactly what that change would be "
-            "and why it is not made here."
+            "hand-judged. "
+            "This key sits ALONGSIDE the file's existing `regions` key, which this script does not touch and which sim/geography/regions.py and sim/world/land.py read. `region_to_tiles` below maps old region ids to lists of these tile ids."
         ),
         "generation_rule_summary": (
             "Equal-area %.0f km2 grid cells (EPSG:6933) intersected with "

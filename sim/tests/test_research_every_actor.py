@@ -43,10 +43,10 @@ def actors(money=5000.0):
 
 
 def years_to_learn(actor, world, node_id):
-	actor.start_research(node_id, world)
+	actor.copying.start_research(node_id, world)
 	for year in range(1, 20):
-		actor.work_on_research(world)
-		world.year += 1
+		actor.copying.work_on_research(world)
+		world.setting.year += 1
 		if node_id in actor.knowledge:
 			return year
 	return None
@@ -67,14 +67,14 @@ check("the plan is the same function for every actor",
 for name, actor in actors().items():
 	world = ResearchWorld()
 	try:
-		actor.start_research("deep", world)
+		actor.copying.start_research("deep", world)
 		refused = False
 	except Exception as reason:
 		refused = "tech" in str(reason)
 	check("%s cannot research past a prerequisite it lacks" % name, refused and not actor.works, name)
 	poor = actors(money=1.0)[name]
 	try:
-		poor.start_research("tech", world)
+		poor.copying.start_research("tech", world)
 		refused = False
 	except Exception:
 		refused = True
@@ -88,8 +88,8 @@ check("a less literate country researches more slowly", slow is not None and fas
 # ---- research and copying do not mistake each other's work --------------------------------
 firm = actors()["firm"]
 world = ResearchWorld()
-firm.start_research("tech", world)
-check("a research project is not advanced as a copy", firm.work_on_copies(world) == [] and firm.works["tech"]["progress"] == 0.0)
+firm.copying.start_research("tech", world)
+check("a research project is not advanced as a copy", firm.copying.work_on_copies(world) == [] and firm.works["tech"]["progress"] == 0.0)
 
 # ---- diffusion between actors --------------------------------------------------------------
 world = ResearchWorld()

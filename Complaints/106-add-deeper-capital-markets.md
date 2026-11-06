@@ -28,7 +28,7 @@ addition to the roadmap, not a duplicate.
 
 ## What already exists
 
-`sim/engine/economy_credit.py` (the `CreditMixin`) is the entire live capital
+The engine-side capital market (`sim/finance/capital_market.py`, `sim/finance/bank.py`) and the agent economy's pooled credit (below) are the live capital
 mechanism: a household credit line with an interest rate and an affordability
 ceiling. There is no banking sector, no bond market, no equity instrument and
 no independent capital pool that a firm other than the founder's own
@@ -61,7 +61,7 @@ even though nothing formally blocks starting this first.
 
 ## Agent economy (current)
 
-The agent economy has pooled credit with household lenders (`sim/economy/credit.py`, `credit_claims.py`, `lending.py`). What exists, what is missing and the heuristics needed are in `Complaints/reports/agent-economy-capital-markets.md`. Complaint 307 no longer applies there (the state offers no funds); the retired engine loan market (`sim/engine/economy_capital_market.py`) is not described here.
+The agent economy has pooled credit with household lenders (`sim/economy/credit.py`, `credit_claims.py`, `lending.py`). What exists, what is missing and the heuristics needed are in `Complaints/reports/agent-economy-capital-markets.md`. Complaint 307 no longer applies there (the state offers no funds); the engine loan market that file once held (`economy_capital_market.py`, deleted) is not described here.
 
 Priority: lower than the work that makes the opening settle (473); it is picked up when that allows. Banks must not exist before a society holds a banking institution; that is already built (step 2 below gates on the `deposit_banking` node).
 
@@ -85,7 +85,7 @@ Priority: lower than the work that makes the opening settle (473); it is picked 
 
 - **Banks (step 2).** A bank is an agent id with a purse (`sim/economy/banks.py`, `bank_service.py`); a society
   founds banks only once it holds a node declaring `deposit_banking` (`fin_deposit_bank`;
-  `sim/engine/economy_port_institutions.py` hands the economy the names), and its richest household founds one
+  `sim/markets/port_institutions.py` hands the economy the names), and its richest household founds one
   when none stands (any agent may call `banks.found`). Households pledge their offered funds to the bank; the
   bank offers its free cash plus the pledges less a reserve, asking its depositors' rates plus a margin, and takes
   a deposit only for the loans it makes (the pool's way: interest is paid on no more than was lent), then returns
@@ -152,9 +152,9 @@ Priority: lower than the work that makes the opening settle (473); it is picked 
   sells bonds for the cash it lacks at the going rate as coupon and its own borrowing rate as the yield, as a state does;
   `Firm.act` calls it. Test: `--only firm_bonds`.
 
-- **Found a bank (step 9).** `found bank <amount>` (`sim/ui/proto/dispatch_bank.py`, `sim/engine/seat_bank.py`): a seat
+- **Found a bank (step 9).** `found bank <amount>` (`sim/ui/proto/dispatch_bank.py`, `sim/finance/bank.py`): a seat
   that knows a node declaring `deposit_banking` puts its money into a bank of the economy; its earnings above the capital
-  go back to it. Test: `--only seat_bank`, `--only seat_bank`.
+  go back to it. Test: `--only seat_bank`.
 
 ## Remainder
 

@@ -7,6 +7,7 @@ from sim.ui import figures_headline  # noqa: F401  (registers the headline figur
 from sim.engine.ui_port import CloseCashPeriod, CloseCausePeriod, plain_number
 from sim.ui.figures import figure_snapshot
 
+from .wage_figures import wage_origin
 from .state import _agent_state
 from .event_kinds import is_notable
 from .refusal_cause import event_codes
@@ -72,9 +73,9 @@ def _agent_values(sim):
 # THE INDUSTRIAL DASHBOARD. A player who had already won the game asked for
 # one command that answers "what physical capability does my society
 # currently have, not just what I know how to build" - tonnages and
-# kilowatts, not tech names. Every figure below reads a function economy.py
-# (or this file) already computes for some OTHER purpose: resource_throttle's
-# own supply-vs-demand arithmetic, mine_yield_t, hours_you_can_call_on,
+# kilowatts, not tech names. Every figure below reads a function the owner modules (or this file)
+# already compute for some OTHER purpose: the throttle quote's
+# own supply-vs-demand arithmetic (sim/materials/throttle.py), mine_yield, hours_you_can_call_on,
 # _agent_state's own per-project accounting. Nothing here is a second copy of
 # a number computed somewhere else - see _power_status's own note for the one
 # place that would have needed one and does not get it: the tree narrates
@@ -87,8 +88,8 @@ def _material_capacity_rows(sim):
     """Capacity, demand and surplus/shortfall for every material currently in
     demand, or in which you have sunk your own capacity even if nothing
     currently needs it - the same own-supply-plus-market arithmetic
-    resource_throttle() already runs to find the ONE worst-binding material
-    (see economy.py's _own_material_supply/_material_market_tonnes), laid
+    the throttle quote (sim/materials/throttle.py) already runs to find the ONE worst-binding material
+    (see own_material_supply in sim/materials/supply.py), laid
     out for every material instead of only the worst.
     """
     demand = sim.view("material_demand")()
@@ -232,12 +233,11 @@ def _power_status(sim, nodes):
     and - once electrification has actually begun for THIS player - which
     visible projects are waiting on workshop-scale power versus the grid.
 
-    REAL FIGURES NOW, not only a capability gate: economy.py's
-    generation_breakdown_kw()/_electricity_demand_kw() (see that file's own
-    long comment on where every number in them came from, and where the
-    tree's own notes were too vague to give one) turn the ladder's names -
+    REAL FIGURES NOW, not only a capability gate: sim/materials/electricity.py's
+    generation_breakdown_kw()/electricity_demand_kw() (see sim/materials/constants.py for
+    where the numbers in them came from) turn the ladder's names -
     "kW scale", "tens of kW", "hundreds of kW", "MW scale" - into tracked
-    watts, the same way resource_throttle() already tracks iron and copper.
+    watts, the same way the throttle quote already tracks iron and copper.
     This screen reads those functions; it computes nothing of its own.
 
     FOG: a rung is named only once it is visible (built, active, or
@@ -245,7 +245,7 @@ def _power_status(sim, nodes):
     rung, since is_visible already governs which rungs qualify. The
     generation/demand FIGURES are safe to show even so: both functions sum
     only over self.done/self.active, and is_visible(node_id) is unconditionally
-    true for anything in either set (fog.py's own definition) - a number is
+    true for anything in either set (`visibility` in sim/knowledge/module.py) - a number is
     never built from a node the player has not already built or started
     themselves. The workshop-versus-grid split on projects goes further: it
     distinguishes the two scales for a project only once the player has
@@ -302,7 +302,7 @@ def _mine_rows_for_material(sim, material, workings, want):
             else -1)):
         # ACTUAL yield, not the nominal tonnage sunk: THIS working's own
         # depletion (the easy ore going, aged from its own commissioning
-        # year - see economy.py's class comment above _workings_of) and
+        # year - see Workings in sim/resources/workings.py) and
         # current mining technology both move this away from rated
         # capacity, and a player whose coal yield has halved over eighty
         # years has to be able to see that here, not just infer it from a
@@ -333,7 +333,7 @@ def _mine_rows_for_material(sim, material, workings, want):
             "rated_capacity_t_per_yr": round(working["capacity"], 2),
             "actual_output_t_per_yr": round(actual, 2),
             "material_demand_t_per_yr": round(want, 2),
-            "costs_you_a_year": round(report["operating_cost"], 1),
+            "costs_you_a_year": (None if report["operating_cost"] is None else round(report["operating_cost"], 1)),   # None: unknown (the material is unpriced)
             "utilization": ("%d%%" % round(100.0 * util))
                            if actual > 0 else "-",
             # WHETHER IT IS ACTUALLY SUPPLYING ANYTHING, as a plain flag,
@@ -498,7 +498,7 @@ def _portfolio_rows(nodes, active_out):
             "founder_hours_left": entry.get("founder_hours_left"),
             "founder_hours_total": entry.get("founder_hours_total"),
             # READ, NOT RECOMPUTED. These four come straight off the same
-            # st dict step()'s own allocator loop wrote them to (core.py,
+            # st dict step()'s own allocator loop wrote them to (sim/projects/progress_phase.py,
             # "pool_total_this_year" and neighbours) - the actual share this
             # project got this year, and why, never a second guess at it
             # that could end up disagreeing with what was actually applied.
@@ -567,7 +567,7 @@ def _spare_capacity(sim, state_out):
         # invisible. Rome alone begins with fin_societas and so oversees ten
         # people in its first year where the other four civilisations oversee
         # six, and nothing told a Roman player why or told a Norse player what
-        # they were missing. supervision_room_from (labour.py) walks the same
+        # they were missing. supervision_room_from (sim/labour/labour_capacity.py) walks the same
         # sources supervision_room sums, so this cannot drift from the figure
         # it explains.
         "people_you_can_oversee": round(sim.view("supervision_room")(), 1),
@@ -581,7 +581,7 @@ def _spare_capacity(sim, state_out):
 
 
 def _trade_demand_rows(sim):
-    """trade_demand_vs_supply (projects.py), with the family a player
+    """trade_demand_vs_supply (sim/projects/progress_hours.py), with the family a player
     actually hires by attached and sorted worst-first - the aggregate
     picture a player needs BEFORE committing to one more project that
     shares a trade already oversubscribed: a project advancing very
@@ -616,7 +616,7 @@ def _agent_portfolio(sim, nodes, cmd=None):
     separate times in one run: what every active project is actually
     getting this year, why, and whether the portfolio as a whole is asking
     its trades for more than they can give - all of it read back from the
-    allocator's own bookkeeping (core.py step(), projects.py trade_draw_
+    allocator's own bookkeeping (sim/projects/progress_phase.py, progress_hours.py trade_draw_
     plan/trade_demand_vs_supply), never recomputed here.
     """
     state_out = _agent_state(sim, nodes)
@@ -692,7 +692,7 @@ def _dashboard_snapshot(sim):
     return {
         "year": sim.view("year")(),
         "price_index": round(sim.view("price_index")(), 4),
-        "wage_index": round(sim.view("wage_index")(), 4),
+        "wage_per_hour": round(sim.view("money_per_labour_hour")(), 4),
         "literacy_general": round(float(sim.view("literacy")("literacy_general")), 4),
         "literacy_elite": round(float(sim.view("literacy")("literacy_elite")), 4),
         "capital": round(sim.view("acting_balance")(), 1),
@@ -739,14 +739,14 @@ def _agent_economy(sim, cmd=None):
             if base is not None:
                 moved["last_%d_years" % n_yrs] = {
                     "price_index": round(now["price_index"] - base["price_index"], 4),
-                    "wage_index": round(now["wage_index"] - base["wage_index"], 4),
+                    "wage_per_hour": round(now["wage_per_hour"] - base["wage_per_hour"], 4),
                     "literacy_general": round(
                         now["literacy_general"] - base["literacy_general"], 4)}
     out = {
         "ok": True,
         "price_index": round(sim.view("price_index")(), 4),
-        "wage_index": round(sim.view("wage_index")(), 4),
-        "cost_of_living_a_year": round(sim.view("living_cost")() - sim.view("wage_bill")(), 1),
+        "wage_per_hour": round(sim.view("money_per_labour_hour")(), 4),
+        "cost_of_living_a_year": round(sim.view("living_cost")() - sim.view("wages_charged_last_year")(), 1),
         "literacy": {"general": round(float(sim.view("literacy")("literacy_general")), 3),
                      "elite": round(float(sim.view("literacy")("literacy_elite")), 3)},
         "household_places_used_of_all": "%.1f of %.1f" % (
@@ -775,11 +775,7 @@ def _agent_economy(sim, cmd=None):
         # a second version of a wage this file already prints elsewhere.
         out["wages_by_trade"] = [
             {"trade": trade, "a_year_of_one": round(sim.view("labour_market")().quote_annual(trade), 0),
-             "wage_foundation": {
-                 "base_for_skill_and_difficulty": round(sim.view("base_annual_wage")[trade], 2),
-                 **{factor_key: round(value, 3) for factor_key, value in sim.view("labour_market")().cost_factors(trade).items()},
-                 "demographic_scarcity": round(sim.view("wage_index")(), 3),
-                 "local_trade_scarcity": round(sim.view("labour_market")().price_factor(trade), 3)}}
+             **wage_origin(sim, trade)}
             for trade in sorted(WAGES) if sim.view("trade_available")[trade]]
     return out
 
@@ -840,7 +836,7 @@ def _changes_moved(baseline, now):
     subtraction per tracked figure, nothing conditional about any of them."""
     return {
         "price_index": round(now["price_index"] - baseline["price_index"], 4),
-        "wage_index": round(now["wage_index"] - baseline["wage_index"], 4),
+        "wage_per_hour": round(now["wage_per_hour"] - baseline["wage_per_hour"], 4),
         "literacy_general": round(
             now["literacy_general"] - baseline["literacy_general"], 4),
         "literacy_elite": round(

@@ -2,19 +2,17 @@
 gives no craft supervision. (Complaints/583 closed the old text; this calls the two on a built trade table.)"""
 QUICK_TOPIC = True
 
-import types
 import unittest
 
-from sim.labour.labour_capacity import CapacityMixin
+from sim.labour.labour_trades import Trades
 from sim.ui.proto.dispatch_ventures import _non_craft_labour_names
 from sim.tests.ui_stand_in import Game
 
 FAMILIES = {"labourer": "labour", "porter": "labour", "smith": "craft", "chemist": "scholar"}
 
 
-class _Labour(CapacityMixin):
-    def __init__(self):
-        self._world = Game(wages={trade: 1.0 for trade in FAMILIES}, trade_family=FAMILIES.get)
+def _Labour():
+    return Trades(Game(trades=Game(wages={trade: 1.0 for trade in FAMILIES}, trade_family=FAMILIES.get)))
 
 
 class CraftHelpTests(unittest.TestCase):

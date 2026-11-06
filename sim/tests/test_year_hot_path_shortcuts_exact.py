@@ -35,7 +35,7 @@ class CountryPeopleTests(unittest.TestCase):
                 trade: [generator.uniform(0.0, 50.0) for _band in range(5)]
                 for trade in generator.sample(["farmer", "smith", "weaver", "miner"], generator.randint(1, 4))}
         economy = SimpleNamespace(setup=SimpleNamespace(tiles={tile: None for tile in tiles}),
-                                  record=SimpleNamespace(workforce=state))
+                                  record=SimpleNamespace(labour=SimpleNamespace(workforce=state)))
         expected = {}
         for tile in sorted(tiles):
             for trade, people in labour_state.people_by_trade(state, labour_area(tile)).items():

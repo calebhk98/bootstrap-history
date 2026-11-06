@@ -7,9 +7,10 @@ QUICK_TOPIC = True
 import types
 import unittest
 
-from sim.economy.accounts import Book
+from sim.book import Book
+from sim.economy.carriage_record import CarriageRecord
 from sim.economy.economy import Economy
-from sim.economy.market_areas_follow import follow, old_areas_by_new
+from sim.economy.market_areas_follow import _moved_expectations, follow, old_areas_by_new
 from sim.economy.market_memory import KEY_SEPARATOR, MarketMemory, market_key
 from sim.economy.record import EconomyRecord
 from sim.economy.types import CurrencySpec
@@ -60,6 +61,12 @@ class FollowTests(unittest.TestCase):
         self.assertEqual(record.memory.prices, {market_key(GOOD, "a:one"): 2.0})
         self.assertEqual(record.memory.usual_prices, {market_key(GOOD, "a:one"): 2.0})
 
+    def test_the_kind_of_a_remembered_quote_moves_with_its_price(self):
+        record = record_remembering({"a:town": 1.0, "a:farms": 2.0, "a:hills": 3.0})
+        record.memory.quote_kinds = {market_key(GOOD, "a:farms"): "asking", market_key(GOOD, "a:town"): "bid"}
+        follow(record, SPLIT, JOINED)
+        self.assertEqual(record.memory.quote_kinds, {market_key(GOOD, "a:one"): "asking"})
+
     def test_every_remembered_market_names_an_area_that_exists(self):
         record = record_remembering({"a:town": 1.0, "a:farms": 2.0, "a:hills": 3.0})
         record.memory.prices[market_key("labourer", "wage_area")] = 9.0
@@ -86,10 +93,19 @@ class FollowTests(unittest.TestCase):
         self.assertEqual(merchant.expected_volumes, {})
 
 
+class MovedExpectationsTests(unittest.TestCase):
+    def test_a_history_copied_to_several_new_areas_is_a_list_for_each(self):
+        history = [1.0, 2.0]
+        moved = _moved_expectations({(GOOD, "a:one"): history}, {GOOD: {"a:x": "a:one", "a:y": "a:one"}})
+        moved[(GOOD, "a:x")].append(3.0)
+        self.assertEqual(moved[(GOOD, "a:y")], [1.0, 2.0])
+        self.assertEqual(history, [1.0, 2.0])
+
+
 class SetImprovementsTests(unittest.TestCase):
-    def economy(self, improvements):
+    def economy(self, ways):
         rebuilt = []
-        return types.SimpleNamespace(improvements=improvements, record=types.SimpleNamespace(ways={}),
+        return types.SimpleNamespace(record=types.SimpleNamespace(carriage=CarriageRecord(ways=ways)),
                                      _rebuild_carriage=lambda: rebuilt.append(True) or True, rebuilt=rebuilt)
 
     def test_unchanged_ways_leave_the_areas_alone(self):
@@ -102,8 +118,7 @@ class SetImprovementsTests(unittest.TestCase):
         economy = self.economy({})
         change = Economy.set_improvements
         self.assertTrue(change(economy, {"a|b": {"road": True}}))
-        self.assertEqual(economy.improvements, {"a|b": {"road": True}})
-        self.assertEqual(economy.record.ways, {"a|b": {"road": True}})
+        self.assertEqual(economy.record.carriage.ways, {"a|b": {"road": True}})
         self.assertEqual(economy.rebuilt, [True])
 
 

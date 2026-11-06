@@ -491,7 +491,6 @@ def _run_topics_parallel(run_now, harness, jobs):
                            seconds_before, jobs)
     work.sort(key=lambda slugs: -sum(seconds_before.get(slug, 0.0) for slug in slugs))
     serial_work = [[slug] for slug in run_now if slug in serial]
-    topic_costs = []
     outcomes = {}
     progress = {"done": 0, "total": len(run_now), "lock": threading.Lock()}
     with tempfile.TemporaryDirectory(prefix="rome_suite_") as result_dir:

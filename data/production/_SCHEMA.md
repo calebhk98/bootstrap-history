@@ -26,12 +26,12 @@ Once every material has inputs and a yield, the price of each is the cost of wha
 | `outputs` | {material_key: quantity}. Usually one key. More than one means genuine joint production - smelting galena yields lead AND silver, and pretending otherwise misprices both. |
 | `inputs` | {material_key: quantity} consumed to produce that output. Keys must be material keys the tree already uses, or new ones you also define an entry for. A material with no inputs is EXTRACTED rather than made: say so in extracted_from. |
 | `labour_hours` | {trade: hours} to produce one basis unit. Trades must exist in `data/world/trades.json` (or a mod's equivalent); wage calibration is not trade identity. |
-| `thermal_mj` | Process HEAT not already accounted for by a fuel listed in `inputs` - obtainable by burning an ordinary solid fuel, OR by converting mechanical or electrical energy into heat. Priced by `sim/engine/solve_prices.py` through the thermal energy market in `data/production/70_energy.json` (charcoal, coal, electrical resistance/arc, or mechanical friction - whichever is cheaper AND CAPABLE ENOUGH at solved prices; see `temperature_needed_c`/`temperature_reached_c` immediately below - friction is real but essentially never wins, see ENERGY in that file's module docstring). Usually 0 for pre-industrial processes, where the fuel IS the energy. STILL ONE NAMED CARRIER, but no longer one shared PRICE: PER-CONSUMER GRADING (Complaints/43, continued) now solves a separate price for every distinct `temperature_needed_c` this era's entries actually state, so a cool use and a hot use of the same `thermal_mj` field get the cheapest technique that clears EACH one's own requirement, at the same time, rather than one technique chosen for the era's single hottest requirement - see TEMPERATURE in `sim/engine/solve_prices.py`'s module docstring for the full mechanism and why a materials-per-band split was rejected in favour of this. |
-| `temperature_reached_c` | Optional, on a TECHNIQUE that supplies `thermal_mj` (or, in the future, another capped carrier) - the sustained temperature (Celsius) that technique can physically deliver, a real physical fact with a stated basis (CLAUDE.md 3.1), never tuned to make it win or lose. Prefer the tech tree's own `cap_heat_0700`/`1100`/`1300`/`1600`/`2000`/`3000` rungs as reference values over an invented number - see the worked entries in `data/production/70_energy.json`. Omit for anything that is not itself an energy-carrier-supplying technique. See CAPABILITY_CAP_FIELDS in `sim/engine/solve_prices.py`'s module docstring for the mechanism this feeds. |
-| `temperature_needed_c` | Optional, on a recipe (of ANY kind, not only an energy-carrier technique) that draws a nonzero `thermal_mj` - the temperature its own process genuinely needs. Omitting it is not the same as stating a low number: an entry with no stated requirement pays the shared pool's ordinary price (the cheapest technique clearing only the universal default floor, `sim/engine/solve_prices.py`'s `THERMAL_MJ_MINIMUM_USABLE_TEMPERATURE_C`), exactly as before this field existed. An entry that DOES state a requirement is graded SEPARATELY from that shared pool and from every other entry's own stated requirement (see PER-CONSUMER GRADING in `thermal_mj`'s own description above) - stating a high requirement here no longer raises what any other entry, including the generic pool, has to pay. See WHEN TO ADD A TEMPERATURE REQUIREMENT below for which entries are worth annotating first. |
-| `mechanical_mj` | Shaft work not already accounted for by `inputs` - a turning axle, nothing else. Priced through the same file's mechanical energy market (a water wheel's amortised build, human muscle, a heat engine converting thermal energy, or a motor converting electrical energy - whichever is cheaper). Electricity is NOT automatically shaft work (see ENERGY in `sim/engine/solve_prices.py`'s module docstring, and THE ALUMINIUM DEFECT there for the bug this used to be) - a process that specifically needs a CURRENT, not a shaft, belongs in `electrical_mj` instead even where the current happens to come from a dynamo today. |
+| `thermal_mj` | Process HEAT not already accounted for by a fuel listed in `inputs` - obtainable by burning an ordinary solid fuel, OR by converting mechanical or electrical energy into heat. Priced by `sim/prices/solve_prices.py` through the thermal energy market in `data/production/70_energy.json` (charcoal, coal, electrical resistance/arc, or mechanical friction - whichever is cheaper AND CAPABLE ENOUGH at solved prices; see `temperature_needed_c`/`temperature_reached_c` immediately below - friction is real but essentially never wins, see ENERGY in that file's module docstring). Usually 0 for pre-industrial processes, where the fuel IS the energy. STILL ONE NAMED CARRIER, but no longer one shared PRICE: PER-CONSUMER GRADING (Complaints/43, continued) now solves a separate price for every distinct `temperature_needed_c` this era's entries actually state, so a cool use and a hot use of the same `thermal_mj` field get the cheapest technique that clears EACH one's own requirement, at the same time, rather than one technique chosen for the era's single hottest requirement - see TEMPERATURE in `sim/prices/solve_prices.py`'s module docstring for the full mechanism and why a materials-per-band split was rejected in favour of this. |
+| `temperature_reached_c` | Optional, on a TECHNIQUE that supplies `thermal_mj` (or, in the future, another capped carrier) - the sustained temperature (Celsius) that technique can physically deliver, a real physical fact with a stated basis (CLAUDE.md 3.1), never tuned to make it win or lose. Prefer the tech tree's own `cap_heat_0700`/`1100`/`1300`/`1600`/`2000`/`3000` rungs as reference values over an invented number - see the worked entries in `data/production/70_energy.json`. Omit for anything that is not itself an energy-carrier-supplying technique. See CAPABILITY_CAP_FIELDS in `sim/prices/solve_prices.py`'s module docstring for the mechanism this feeds. |
+| `temperature_needed_c` | Optional, on a recipe (of ANY kind, not only an energy-carrier technique) that draws a nonzero `thermal_mj` - the temperature its own process genuinely needs. Omitting it is not the same as stating a low number: an entry with no stated requirement pays the shared pool's ordinary price (the cheapest technique clearing only the universal default floor, `sim/prices/solve_prices.py`'s `THERMAL_MJ_MINIMUM_USABLE_TEMPERATURE_C`), exactly as before this field existed. An entry that DOES state a requirement is graded SEPARATELY from that shared pool and from every other entry's own stated requirement (see PER-CONSUMER GRADING in `thermal_mj`'s own description above) - stating a high requirement here no longer raises what any other entry, including the generic pool, has to pay. See WHEN TO ADD A TEMPERATURE REQUIREMENT below for which entries are worth annotating first. |
+| `mechanical_mj` | Shaft work not already accounted for by `inputs` - a turning axle, nothing else. Priced through the same file's mechanical energy market (a water wheel's amortised build, human muscle, a heat engine converting thermal energy, or a motor converting electrical energy - whichever is cheaper). Electricity is NOT automatically shaft work (see ENERGY in `sim/prices/solve_prices.py`'s module docstring, and THE ALUMINIUM DEFECT there for the bug this used to be) - a process that specifically needs a CURRENT, not a shaft, belongs in `electrical_mj` instead even where the current happens to come from a dynamo today. |
 | `electrical_mj` | Electrical energy not already accounted for by `inputs` - a current, or heat/work reached only because electricity supplies it (electrolysis; arc or resistance heating, which alone reaches temperatures no fuel here does; a motor). Priced through the same file's electrical energy market (a water wheel through a dynamo, a heat engine through a dynamo, or a photovoltaic panel with no shaft at all - whichever is cheaper). Use this, not `mechanical_mj`, for any process whose PHYSICAL requirement is electricity itself, so the choice-of-technique mechanism can pick photovoltaic over hydro-plus-dynamo once that route is actually cheaper, rather than that choice being foreclosed by which field an entry happened to use. |
-| `energy_mj` | The residual: process heat or work needing a technology none of the three energy markets above can supply. Left deliberately uncosted - see ENERGY in `sim/engine/solve_prices.py`'s module docstring for why. Do not reach for this field first; it should be rare. As of this round nothing in this directory uses it - `quartz_tube_kg`, the last entry that did, now draws on `electrical_mj` directly (arc/resistance heating genuinely reaches its 1700-2000 C; see that entry's own yield_basis and TEMPERATURE in the solver's module docstring for why it does not go through the shared `thermal_mj` pool instead). |
+| `energy_mj` | The residual: process heat or work needing a technology none of the three energy markets above can supply. Left deliberately uncosted - see ENERGY in `sim/prices/solve_prices.py`'s module docstring for why. Do not reach for this field first; it should be rare. As of this round nothing in this directory uses it - `quartz_tube_kg`, the last entry that did, now draws on `electrical_mj` directly (arc/resistance heating genuinely reaches its 1700-2000 C; see that entry's own yield_basis and TEMPERATURE in the solver's module docstring for why it does not go through the shared `thermal_mj` pool instead). |
 | `extracted_from` | For materials nature supplies: 'ore deposit', 'forest', 'quarry', 'arable land', 'seawater'. These earn a rent set by the worst source still worth working, rather than a cost of production. Omit for manufactured materials. |
 | `unit_mass_kg` | Optional. Kilograms of ONE unit of the entry's own output good, for goods whose id carries no mass unit (a dressed block, a thousand bricks, a sheet). Freight reads it (`sim/economy/good_mass.py`); absent, the mass is inferred from the id, an animal weight or the consumed inputs and labelled as a guess. Must be a positive number, and the entry must output its own key. |
 | `unit_dimension` | Required. What one unit of the entry's primary output (its own key, else its first output) measures: `mass`, `volume`, `energy`, `area`, `length` or `count` (pieces, sheets, animals, machines). Must agree with a unit token the id spells (`_kg`, `_m3`, `_mj`, `hectare_`, ...). Energy and area cannot be carried; a `count` or unsuffixed `mass` good should state `unit_mass_kg`. Checked by `validate_production.check_unit_dimension`. |
@@ -40,15 +40,15 @@ Once every material has inputs and a yield, the price of each is the cost of wha
 | `naval_crew` | Optional {trade: people per vessel}. Marks a counted capital asset the state can buy for its navy, with these operating trades. Ship construction labour stays in `labour_hours`. See `sim/agents/NAVY.md`. |
 | `carriage_km` | Optional. Kilometres a unit of this recipe's dominant output travels between where it is made and where it is used, when that differs from the reach its value pays for (`sim/geography/carriage_reach.py`); water drawn at the point of use states zero, since the walk is already in its labour hours. Absent means the reach of its value. |
 | `land_hectare_years` | Optional. For a material whose real constraint is GROUND rather than a process (a crop, a fleece, a felled tree) - how many hectare-years of `hectare_land` this recipe's WHOLE BATCH ties up, priced against `hectare_land`'s own solved rent exactly like an ordinary `inputs` entry. See LAND below for the unit, the mechanism, and which materials got it. |
-| `grown_in_climate_classes` | Optional. A list of Koppen-Geiger classes in which this crop is grown. A civilisation whose home regions' tiles (`data/world/geography.json`, `land_tiles`) hold none of them does not make it: the good stays priced (as `mature`) but is not `solved` for that civilisation, so a trade partner whose territory has one can offer it (`sim/engine/crop_climate.py`). Absent means it grows anywhere. Whether a civilisation knows the crop is the separate gate `requires_node`. |
-| `service` | Optional. `true` for an entry that moves or holds matter without making any (hauling, tipping, holding ground): it may consume only labour or `land_hectare_years`. The disposal sink in `99_waste_disposal.json` is made of services (`sim/engine/disposal_cost.py`). |
+| `grown_in_climate_classes` | Optional. A list of Koppen-Geiger classes in which this crop is grown. A civilisation whose home regions' tiles (`data/world/geography.json`, `land_tiles`) hold none of them does not make it: the good stays priced (as `mature`) but is not `solved` for that civilisation, so a trade partner whose territory has one can offer it (`sim/geography/crop_climate.py`). Absent means it grows anywhere. Whether a civilisation knows the crop is the separate gate `requires_node`. |
+| `service` | Optional. `true` for an entry that moves or holds matter without making any (hauling, tipping, holding ground): it may consume only labour or `land_hectare_years`. The disposal sink in `99_waste_disposal.json` is made of services (`sim/prices/disposal_cost.py`). |
 | `basis` | The quantity the whole entry is quoted per. Say it in words. |
 | `yield_basis` | WHY these numbers, in physical terms. This is the most important field in the entry. An entry whose yield_basis does not survive a metallurgist reading it is a guess wearing a lab coat. |
 | `capital` | Optional. A list of the fixed capital goods this process runs IN rather than consumes making one batch - a furnace, a mill, a chamber, a pan. See CAPITAL below. Omit entirely for a process where capital is not worth separating from labour - see WHICH MATERIALS GOT CAPITAL below for which and why. |
 | `actor` | Optional. `"mint"` marks an entry run by a mint, not by firms: a coin standard names it (`mint_recipe`) and the mint spends its labour hours per kilogram of coin (`sim/economy/mint_labour.py`). Firms never run it; the price solver still prices it. |
 | `requires_node` | WHEN this technique becomes available: the id of the tech-tree node that has to be reached before anyone can run it, or `null` for a technique that needs no technology at all. See WHEN A TECHNIQUE BECOMES AVAILABLE below. Omitting the field is not the same as `null` - it means nobody has classified this entry, and a gated solve drops it. |
 | `holding_years` | Optional. Years the inputs of one batch are paid for before its output sells (ripening, curing, a year in the pits); the solver charges the market rate on the inputs for that long (`recipe_cost_and_allocation`). Default none. Needs `holding_basis` (at least 50 characters) naming what keeps the stock tied up. |
-| `operated_by` | Optional. A list of tech-tree node ids whose concern runs this technique, apart from `requires_node` (when anyone may run it). A node named here earns its revenue from what its staff and plant turn out of this entry (`sim/engine/node_output.py`) instead of a typed figure. Name a node only when it really is the operation that makes this good; the node's name can mislead (`cn_mortar` is the weapon). Checked by `validate_production.check_operated_by`. |
+| `operated_by` | Optional. A list of tech-tree node ids whose concern runs this technique, apart from `requires_node` (when anyone may run it). A node named here earns its revenue from what its staff and plant turn out of this entry (`sim/production/node_output.py`) instead of a typed figure. Name a node only when it really is the operation that makes this good; the node's name can mislead (`cn_mortar` is the weapon). Checked by `validate_production.check_operated_by`. |
 | `conf` | A well attested, B probable, C the author's estimate. Be honest; C is fine and common. |
 
 ## WHEN A TECHNIQUE BECOMES AVAILABLE
@@ -118,7 +118,7 @@ a new field's name. A furnace priced in bricks is a furnace whose cost falls
 when bricks get cheaper, and a lump-sum "cap_cost_denarii" field would not do
 that - it would just be `prices.json` again, one field over.
 
-A capital item may also carry `build_alternatives`: an ordered list of other ways to build the same part, tried after the item's own bill. Each is `{build_materials, build_labour_hours, service_life_years (the item's own when omitted), alternative_basis, conf, retire}`. The plant is built the first way whose materials the society can make, and is priced from that way (the extra build hours or shorter life the alternative costs show in its own figures). The solver, `makeable_prices` and the economy's plant (`sim/engine/capital_builds.py`, `sim/economy/plant_builds.py`) all read it, so a society that cannot make the preferred material (iron fittings) still builds the plant from stone, wood or what it has. `alternative_basis` is held to the same 50-character floor as `capital_basis`; a figure not read from a source is labelled conf D with a `retire` field.
+A capital item may also carry `build_alternatives`: an ordered list of other ways to build the same part, tried after the item's own bill. Each is `{build_materials, build_labour_hours, service_life_years (the item's own when omitted), alternative_basis, conf, retire}`. The plant is built the first way whose materials the society can make, and is priced from that way (the extra build hours or shorter life the alternative costs show in its own figures). The solver, `makeable_prices` and the economy's plant (`sim/world/capital_builds.py`, `sim/economy/plant_builds.py`) all read it, so a society that cannot make the preferred material (iron fittings) still builds the plant from stone, wood or what it has. `alternative_basis` is held to the same 50-character floor as `capital_basis`; a figure not read from a source is labelled conf D with a `retire` field.
 
 A capital item may also carry `establishment_years`: the years after the build bill is spent before the capital first yields (a vine or an olive tree bearing nothing for its first years). It must be below `service_life_years`, which counts from planting. The bill is spent evenly over those years, so interest runs on each part only from when it is spent (`sim/world/capital_market.py` `establishment_carry_factor`), and the carried bill is repaid over the bearing years alone (`stand_yearly_share`). Omit it for capital that yields at once. Land held through the barren years is a `hectare_land` entry in `build_materials`.
 
@@ -150,7 +150,7 @@ floor by the validator: say where the build bill, the service life and the
 annual output come from, in terms a millwright or a mason would recognise,
 not in terms a banker would.
 
-**This is now wired in.** `sim/engine/solve_prices.py` reads `capital` and adds the
+**This is now wired in.** `sim/prices/solve_prices.py` reads `capital` and adds the
 amortisation formula above to a recipe's cost alongside its ordinary inputs,
 labour and rent - see the CAPITAL section of that file's module docstring
 and `recipe_cost_and_allocation`. It was deliberately never hand-added to
@@ -159,7 +159,7 @@ material flow rather than naming it. Two of the entries above are genuine
 recipe cycles once this is read - `iron_bar_kg`'s own hammer fittings are
 800 kg of `iron_bar_kg`, and `pig_iron_kg`'s hearth lining is 3,000 kg of
 `iron_bar_kg` while `iron_bar_kg` is made from `pig_iron_kg` - and both
-resolve correctly because `sim/engine/solve_prices.py`'s resolvability pass now
+resolve correctly because `sim/prices/solve_prices.py`'s resolvability pass now
 tests cycles for productiveness instead of refusing every one outright; see
 Complaints/31 and Complaints/32.
 
@@ -226,7 +226,7 @@ figure (a mean annual increment, a stocking density, a stated ha-years
 figure) it came from - see each entry's own LAND paragraph rather than
 re-deriving it here.
 
-HOW IT IS PRICED. `sim/engine/solve_prices.py`'s `recipe_cost_and_allocation`
+HOW IT IS PRICED. `sim/prices/solve_prices.py`'s `recipe_cost_and_allocation`
 multiplies `land_hectare_years` by `hectare_land`'s own solved price (set,
 as it always was, by `land_rent_hours_per_hectare` from `sim/world/land.py`'s
 Ricardian margin for the civilisation being solved) and adds the result to
@@ -279,7 +279,7 @@ implied) a land requirement in physical terms.
   by use). These already have their OWN rent mechanism, `sim/world/
   deposits.py`'s marginal-deposit supply curve for the six named ores, or
   price at zero rent pending one - see RENT ON EXTRACTED MATERIALS in
-  `sim/engine/solve_prices.py`'s module docstring. Mixing the two mechanisms would
+  `sim/prices/solve_prices.py`'s module docstring. Mixing the two mechanisms would
   misprice both.
 - Every MANUFACTURED, downstream material that consumes one of the entries
   above (`leather_kg`, `thread_kg`, `fabric_kg`, `cloth_kg`, `paper_kg`,
@@ -315,7 +315,7 @@ and (this round's fix) a shaft is not the only way to get a current either.
 All three are priced, not looked up: see `data/production/70_energy.json`,
 which defines each carrier as a MATERIAL with several TECHNIQUES for
 supplying it, exactly like `salt_kg` has a solar-pan technique and a
-brine-boiling one - `sim/engine/solve_prices.py` picks whichever technique is
+brine-boiling one - `sim/prices/solve_prices.py` picks whichever technique is
 cheaper at the solved prices, so the choice of fuel, motive power or
 generating route is an OUTPUT of the solve, never a fact stated in advance.
 
@@ -337,7 +337,7 @@ reached_c`/`temperature_needed_c` gave the choice-of-technique mechanism a
 way to rule it out on physical grounds rather than on cost alone). A
 recipe that needs one carrier can therefore end up paying for a DIFFERENT
 one under the hood, through whichever chain of conversions is cheapest AND
-capable enough - see ENERGY in `sim/engine/solve_prices.py`'s module docstring
+capable enough - see ENERGY in `sim/prices/solve_prices.py`'s module docstring
 for the physics of each link (calorific values, furnace and conversion
 efficiencies, a water wheel's typical kilowatts from
 `data/world/resources.json`) and for what is deliberately NOT modelled
@@ -359,7 +359,7 @@ split, and no rewrite of any consuming entry outside this round's ownership
 distinct `temperature_needed_c` this era's own entries state, so a cool
 job and a hot job sharing the same carrier name each get the cheapest
 technique that clears THEIR OWN requirement, at the same time. See
-TEMPERATURE in `sim/engine/solve_prices.py`'s module docstring for the mechanism
+TEMPERATURE in `sim/prices/solve_prices.py`'s module docstring for the mechanism
 in full and why a materials-per-band split was considered and rejected.
 
 USE `electrical_mj`, NOT `mechanical_mj`, FOR A GENUINELY ELECTRICAL NEED.
@@ -368,7 +368,7 @@ The previous version of this schema described `mechanical_mj` as including
 source of its own" - reasoning that is right for a waterwheel-and-dynamo
 civilisation and wrong in general, since a photovoltaic cell or a fuel cell
 makes electricity with no shaft anywhere in the chain (see THE ALUMINIUM
-DEFECT in `sim/engine/solve_prices.py`'s module docstring for the full story and
+DEFECT in `sim/prices/solve_prices.py`'s module docstring for the full story and
 `aluminium_kg`'s own yield_basis for the fix). A process that needs
 electrolysis current, or heat/work that is available ONLY because
 electricity supplies it (arc heating reaching a temperature no fuel here
@@ -384,7 +384,7 @@ round nothing in this directory uses it: `quartz_tube_kg`, the one entry
 that used to (its 1700-2000 C need is hotter than any charcoal or coal fire
 reaches), now draws on `electrical_mj` directly, because resistance/arc
 heating genuinely reaches that temperature - see that entry's own
-`yield_basis`, and TEMPERATURE in `sim/engine/solve_prices.py`'s module docstring
+`yield_basis`, and TEMPERATURE in `sim/prices/solve_prices.py`'s module docstring
 for why it draws on `electrical_mj` directly rather than through the shared,
 temperature-blind `thermal_mj` pool (routing it through that pool would let
 it silently pay coal's price while claiming coal's ~1000-1200 C fire can do
@@ -394,7 +394,7 @@ what only the arc route can - the very mistake TEMPERATURE warns about).
 
 `temperature_needed_c` exists so a specific recipe can say its own process
 genuinely needs more heat than the shared `thermal_mj` pool's default floor
-(`sim/engine/solve_prices.py`'s `THERMAL_MJ_MINIMUM_USABLE_TEMPERATURE_C`) already
+(`sim/prices/solve_prices.py`'s `THERMAL_MJ_MINIMUM_USABLE_TEMPERATURE_C`) already
 guarantees - see CAPABILITY_CAP_FIELDS in that file's module docstring for
 the mechanism this feeds and Complaints/43 for the defect it closes. Stating
 one here grades THIS recipe's own price separately from everything else
@@ -481,7 +481,7 @@ consumption count and are left for the next pass rather than guessed at here.
 
 ## WHAT THIS SCHEMA DOES NOT MODEL, AND THE SIZE OF THE HOLE
 
-Found by building `sim/engine/solve_prices.py` and reading the answer, which is the
+Found by building `sim/prices/solve_prices.py` and reading the answer, which is the
 only way these things get found.
 
 The solver computes, for every material, the cost of its inputs plus the cost
@@ -490,9 +490,9 @@ structural rather than a matter of precision:
 
 | missing | status |
 |---|---|
-| **capital** | field exists now (see CAPITAL above), populated for the ~13 materials where it plausibly dominates, and read by `sim/engine/solve_prices.py` |
+| **capital** | field exists now (see CAPITAL above), populated for the ~13 materials where it plausibly dominates, and read by `sim/prices/solve_prices.py` |
 | rent | `extracted_from` marks it. **Priced now for two of its three routes.** Ore: `sim/world/deposits.py`'s marginal-deposit supply curve prices `cassiterite_kg` and `galena_kg` (the other four named ores still solve to zero rent this era - Complaints/32). Land: `land_hectare_years` (see LAND above) now lets a GROWN or land-limited material pay `sim/world/land.py`'s Ricardian rent on `hectare_land` through the ordinary price solve - Complaints/48. Every OTHER extracted material (quarry, salt pan, gold's placer-and-amalgamation step, most metals) still solves at exactly zero rent, unconditionally |
-| energy | **priced now, as three connected carriers.** `thermal_mj`, `mechanical_mj` and `electrical_mj` are all read by `sim/engine/solve_prices.py` through the energy market in `data/production/70_energy.json`, linked by conversion techniques (heat engine, dynamo, motor, resistance/arc, friction, photovoltaic - see ENERGY in that file's module docstring); `energy_mj` remains for the rare case none of the three carriers reaches, currently used by no entry in this directory. TEMPERATURE within `thermal_mj` is now graded PER CONSUMER (Complaints/43, continued) - every thermal_mj-supplying technique states what it can reach, and every distinct requirement this era's own consumers actually state gets its OWN separately solved price, rather than one shared floor across every consumer of the carrier; the carrier stays ONE NAME (no `thermal_mj_below_X` split - that would need every other consuming entry, most outside this directory's per-file ownership, rewritten to name a band), which is a considered trade-off rather than a deferred gap; see TEMPERATURE in the solver's module docstring for the mechanism and the trade-off in full |
+| energy | **priced now, as three connected carriers.** `thermal_mj`, `mechanical_mj` and `electrical_mj` are all read by `sim/prices/solve_prices.py` through the energy market in `data/production/70_energy.json`, linked by conversion techniques (heat engine, dynamo, motor, resistance/arc, friction, photovoltaic - see ENERGY in that file's module docstring); `energy_mj` remains for the rare case none of the three carriers reaches, currently used by no entry in this directory. TEMPERATURE within `thermal_mj` is now graded PER CONSUMER (Complaints/43, continued) - every thermal_mj-supplying technique states what it can reach, and every distinct requirement this era's own consumers actually state gets its OWN separately solved price, rather than one shared floor across every consumer of the carrier; the carrier stays ONE NAME (no `thermal_mj_below_X` split - that would need every other consuming entry, most outside this directory's per-file ownership, rewritten to name a band), which is a considered trade-off rather than a deferred gap; see TEMPERATURE in the solver's module docstring for the mechanism and the trade-off in full |
 | transport | not modelled anywhere |
 | margin, risk, failed batches | not modelled anywhere |
 

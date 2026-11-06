@@ -12,11 +12,11 @@ from dataclasses import dataclass
 from typing import Callable, Dict, List, Mapping, Optional, Sequence, Tuple
 
 from .entrant_rent import site_rent_per_run
-from . import crop_sites, entry_practice, labour_state, location_inputs, practice, sites, unit_cost
+from . import crop_sites, entry_practice, labour_state, location_inputs, practice, sites, trade_wages, unit_cost
 from .location_land import headroom_with_land, land_short_tiles
 from .market_areas import MarketArea
 from .producers import Producer, live_input_prices
-from .setup import labour_area
+from .setup import labour_area, recipe_tile_key
 from .types import GoodSpec, Recipe, TileId
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 
@@ -58,16 +58,6 @@ def output_tonnes(recipe: Recipe, specs: Mapping[str, GoodSpec]) -> float:
     """Mass of one run's output to carry; a good with nothing to carry adds none."""
     return math.fsum(quantity * specs[good].unit_mass_kg for good, quantity in recipe.outputs.items()
                      if good in specs and specs[good].portable) / KILOGRAMS_PER_TONNE
-
-
-def cost_per_run(recipe: Recipe, wages: Mapping[str, float], input_prices: Mapping[str, float], rent: float,
-                 carriage_per_tonne: float, yield_factor: float, tonnes: float = 0.0, input_haul: float = 0.0) -> float:
-    """Variable cost, carriage of a run's output (`tonnes`) to the anchor and of its inputs in (`input_haul`,
-    money per run), over the yield."""
-    if yield_factor <= 0.0:
-        return math.inf
-    return assembled_cost(unit_cost.variable_cost_per_run(recipe, input_prices, wages, rent), carriage_per_tonne,
-                          yield_factor, tonnes, input_haul)
 
 
 def assembled_cost(variable: float, carriage_per_tonne: float, yield_factor: float, tonnes: float,
@@ -117,7 +107,7 @@ def opening_split(setup, recipe: Recipe, area: MarketArea, runs: float) -> Dict[
                    if tile in placed)
     if not suited:
         return {}
-    if recipe.site_bound and not by_recipe.get(recipe.recipe_id):
+    if sites.runs_anywhere(recipe, by_recipe):
         if area.anchor_tile in suited:
             return {area.anchor_tile: runs}
         return split_runs(runs, {tile: population.get(tile, 0.0) for tile in suited}, {})
@@ -139,7 +129,7 @@ def _placed_tiles(setup, recipe: Recipe) -> frozenset:
     first year's plan applies), over every tile it can run on, not one area's (crop_sites.sites)."""
     every = sites.suited_tiles(recipe, setup.tiles, sorted(setup.tiles), setup.recipe_allowed)
     return frozenset(crop_sites.sites(
-        {tile: setup.yield_factor_by_recipe_tile.get(recipe.recipe_id + "@" + tile, 1.0) for tile in every},
+        {tile: setup.yield_factor_by_recipe_tile.get(recipe_tile_key(recipe.recipe_id, tile), 1.0) for tile in every},
         recipe, setup.opening_prices, setup.opening_wages))
 
 
@@ -156,7 +146,7 @@ def entry_siting(setup, record, view, area_map, carriage) -> Siting:
     crews_of = entry_practice.crews_of_recipe(record.producers)
     for producer in sites.in_id_order(record.producers):
         key = (producer.recipe_id, producer.tile)
-        capacity[key] = capacity.get(key, 0.0) + producer.capacity_runs + record.expansion_runs.get(producer.agent_id, 0.0)
+        capacity[key] = capacity.get(key, 0.0) + producer.capacity_runs + record.credit.expansion_runs.get(producer.agent_id, 0.0)
         recipe = setup.recipes[producer.recipe_id]
         working = producer.capacity_runs if producer.last_runs < 0.0 else producer.last_runs
         committed[producer.tile] = committed.get(producer.tile, 0.0) + working * math.fsum(
@@ -165,9 +155,11 @@ def entry_siting(setup, record, view, area_map, carriage) -> Siting:
     def siting(recipe_id, demand, runs):
         recipe = setup.recipes[recipe_id]
         area = area_map.market_area_of(demand.good, demand.anchor_tile)
-        if recipe.site_bound and not by_recipe.get(recipe_id) and headroom_with_land(
+        if sites.runs_anywhere(recipe, by_recipe) and headroom_with_land(
                 1.0, setup.land_per_run.get(recipe_id, 0.0) > 0.0, demand.anchor_tile in short_of_land) > 0.0 and sites.climate_allows(
                 recipe, setup.tiles.get(demand.anchor_tile)) and setup.recipe_allowed(recipe_id, demand.anchor_tile):
+            claim_site(capacity, committed, tile_parts, recipe_id, demand.anchor_tile, runs,
+                       math.fsum(entry_practice.first_year_recipe(recipe, crews_of(recipe_id)).labour_hours.values()))
             return demand.anchor_tile, runs
         tonnes = output_tonnes(recipe, setup.specs)
         if recipe_id not in supplies:
@@ -188,8 +180,24 @@ def entry_siting(setup, record, view, area_map, carriage) -> Siting:
                 variable, carriage.cost_per_tonne(tile, demand.anchor_tile), factor, tonnes, input_haul)
             candidates.append(Candidate(tile, cost, staffable, headroom))
         picked = choose(candidates, runs, demand.anchor_tile)
-        return None if picked is None else (picked[0].tile, picked[1])
+        if picked is None:
+            return None
+        claim_site(capacity, committed, tile_parts, recipe_id, picked[0].tile, picked[1],
+                   math.fsum(entry_practice.first_year_recipe(recipe, crews_of(recipe_id)).labour_hours.values()))
+        return picked[0].tile, picked[1]
     return siting
+
+
+def claim_site(capacity: Dict[Tuple[str, TileId], float], committed: Dict[TileId, float],
+               tile_parts: Dict[Tuple[str, TileId, float], tuple], recipe_id: str, tile: TileId, runs: float,
+               hours_per_run: float) -> None:
+    """Book a pick: `runs` of the recipe now stand on `tile` and use its hands, so the plans sited after it see less
+    headroom and fewer idle hours there. What was read for the tile (`tile_parts`) no longer holds and is dropped."""
+    key = (recipe_id, tile)
+    capacity[key] = capacity.get(key, 0.0) + runs
+    committed[tile] = committed.get(tile, 0.0) + runs * hours_per_run
+    for part_key in [part_key for part_key in tile_parts if part_key[1] == tile]:
+        del tile_parts[part_key]
 
 
 def _tile_part(setup, record, view, carriage, recipe, by_recipe, supplies, capacity, committed, tile, first_year=None):
@@ -198,20 +206,16 @@ def _tile_part(setup, record, view, carriage, recipe, by_recipe, supplies, capac
     The runs its idle hands can staff are at `first_year`'s hours (the recipe at its newcomer's first-year practice; the booked recipe without)."""
     probe = Producer("probe", "probe", recipe.recipe_id, tile, 1.0)
     factor = sites.yield_at(recipe, tile, by_recipe, setup.yield_factor_by_recipe_tile.get(
-        recipe.recipe_id + "@" + tile, 1.0))
+        recipe_tile_key(recipe.recipe_id, tile), 1.0))
     variable = None
     if factor > 0.0:
-        wages = {trade: _wage(setup, view, trade, tile) for trade in recipe.labour_hours}
+        wages = {trade: trade_wages.wage_in_view(setup, view, trade, labour_area(tile)) for trade in recipe.labour_hours}
         variable = unit_cost.variable_cost_per_run(
             recipe, live_input_prices(probe, recipe, view), wages,
             site_rent_per_run(setup, record, view, recipe.recipe_id, tile, factor))
     input_haul = location_inputs.input_haul_cost(recipe, setup.specs, carriage, supplies, tile)
-    spare = spare_hours(labour_state.people_by_trade(record.workforce, labour_area(tile)), setup.working_hours_per_year,
+    spare = spare_hours(labour_state.people_by_trade(record.labour.workforce, labour_area(tile)), setup.working_hours_per_year,
                         committed.get(tile, 0.0))
     return (variable, factor, input_haul, staffable_runs(recipe if first_year is None else first_year, spare),
             sites.headroom_runs(recipe, tile, by_recipe, capacity.get((recipe.recipe_id, tile), 0.0)))
 
-
-def _wage(setup, view, trade, tile) -> float:
-    wage = view.wage(trade, labour_area(tile))
-    return setup.opening_wages.get(trade, math.inf) if wage is None else wage

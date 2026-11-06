@@ -4,6 +4,7 @@ the state. Each test builds the module with `module_harness` and plain views for
 The rules it calls are in test_campaigns_rules, test_campaign_year_rules and test_stability_rules."""
 QUICK_TOPIC = True
 
+from sim.tests.agents_fake_world import flat_namespace
 import unittest
 from types import SimpleNamespace
 from unittest import mock
@@ -38,8 +39,8 @@ def army(soldiers=1000.0, owner=OWNER, tile=HOME, army_id="a1", food=0.0, target
 
 def country_world(force=1000.0, equipment=12.5, arrears=0.0, wage=10.0, population=1000.0):
     government = SimpleNamespace(record=SimpleNamespace(army=force, arrears={"army": arrears}))
-    return SimpleNamespace(equipment_kg_per_soldier=lambda: equipment, soldiers_under_arms=lambda: force,
-                           government=lambda: government, pay_per_person_year=lambda kind: wage,
+    return flat_namespace(equipment_kg_per_soldier=lambda: equipment, soldiers_under_arms=lambda: force,
+                           government=lambda: government, pay_per_person_year=lambda kind: wage, trade_of_role=lambda role: role,
                            population_total=lambda: population, rng_for=lambda *key: SimpleNamespace(random=lambda: 0.25))
 
 
@@ -265,7 +266,7 @@ class TakeAndHoldTests(unittest.TestCase):
         module, _ = build(owners=owners, extra={"year": year, "store": lambda name: {"default": None, "values": controls or {}}})
         module.world.held_since = held_since
         module.world.armies = armies
-        module._consolidate_conquests()
+        module.consolidate_conquests()
         return module
 
     def test_a_tile_held_with_an_army_on_it_rises_in_control_and_one_left_empty_does_not(self):
@@ -298,7 +299,7 @@ class Recording(Campaigns):
     def _keep_within_force(self, owners):
         self.calls.append(("keep", owners))
 
-    def _consolidate_conquests(self):
+    def consolidate_conquests(self):
         self.calls.append(("consolidate",))
 
 
@@ -331,7 +332,7 @@ class StepCampaignsTests(unittest.TestCase):
 
 class MarchingRecording(Campaigns):
 
-    def _reference_equipment(self, owner):
+    def reference_equipment(self, owner):
         self.calls.append(("reference", owner))
         return 1.0
 
@@ -346,7 +347,7 @@ class MarchingRecording(Campaigns):
     def _camp(self, host, days, modes, pay_years, lost):
         self.calls.append(("camp", host.tile, days, pay_years))
 
-    def _contest(self, host, armies, defender, days_left, modes, pay_years, lost, reference):
+    def contest(self, host, armies, defender, days_left, modes, pay_years, lost, reference):
         self.calls.append(("contest", host.tile, defender, days_left))
 
 
@@ -449,7 +450,7 @@ class RisingTests(unittest.TestCase):
     def rise(self, kind, on_seat=False, cause="unrest", challenger="faction_a"):
         module, _ = build()
         record = SimpleNamespace(succession_challenger=challenger)
-        world = SimpleNamespace(rng_for=lambda *key: SimpleNamespace(random=lambda: 0.25))
+        world = flat_namespace(rng_for=lambda *key: SimpleNamespace(random=lambda: 0.25))
         with mock.patch.object(stability.revolt, "resolve", return_value=outcome(kind)) as resolve, \
                 mock.patch.object(stability.ruler, "opening_age", return_value=21):
             result = module._rising(OWNER, world, record, "tile_a", 12.4, 2.0, SimpleNamespace(soldiers=40.0), 3.0, on_seat, 100, cause)
@@ -504,7 +505,7 @@ class DisputedAccessionTests(unittest.TestCase):
         module, _ = build(Accession)
         module.fought = []
         record = SimpleNamespace(succession_challenger="faction_a")
-        world = SimpleNamespace(faction_backing=lambda: backing)
+        world = flat_namespace(faction_backing=lambda: backing)
         with mock.patch.object(stability.battle, "terrain_factor", return_value=1.0), \
                 mock.patch.object(stability.unrest, "rising_soldiers", return_value=90.0) as soldiers, \
                 mock.patch.object(stability.unrest, "rising_strength", return_value=5.0):

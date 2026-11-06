@@ -39,16 +39,16 @@ def step_country(profile: CountryProfile, world: Any = None, circulating_elsewhe
 		_seed_cohorts(profile)
 	people = demography.Population(seed=_seed_of(profile.country), **profile.cohorts)
 	farm_years = int(profile.farm.get("years", 0))
-	weather_stream = (world.rng_for("farm", profile.country, farm_years) if world is not None
+	weather_stream = (world.setting.rng_for("farm", profile.country, farm_years) if world is not None
 					  else random.Random(repr((profile.country, farm_years))))
 	food_kcal_per_day = harvest_year(profile, people, weather_stream, weather_multiplier)
 	epidemic_deaths = None
 	if world is not None and (profile.disease_records or profile.disease_arrivals or circulating_elsewhere
 							  or profile.extra.get("disease_exposure")):
-		seed_text = "disease:%s:%d" % (profile.country, world.rng_for("disease", profile.country).getrandbits(32))
+		seed_text = "disease:%s:%d" % (profile.country, world.setting.rng_for("disease", profile.country).getrandbits(32))
 		epidemic_deaths = disease_deaths(
 			profile, {band: float(profile.cohorts[band]) for band in BANDS},
-			people.nutrition_ratio(food_kcal_per_day), world.year, seed_text, circulating_elsewhere)
+			people.nutrition_ratio(food_kcal_per_day), world.setting.year, seed_text, circulating_elsewhere)
 	flows = people.step(food_kcal_per_day, jitter=False, epidemic_deaths=epidemic_deaths)
 	profile.cohorts = {band: getattr(people, band) for band in BANDS}
 	return flows

@@ -1,6 +1,7 @@
 """The coin module's rules as plain functions of plain values: keeping, carriage and the revaluation of a coin metal."""
 from typing import Any, Dict, Iterable, Mapping, Optional
 
+from sim.unit_conversions import KILOGRAMS_PER_TONNE
 from sim.world import coin_metal
 
 from .constants import CREDIT_PURPOSES, KEEPING_BASIS
@@ -38,21 +39,22 @@ def keeping_due(keeping_owed: float, capital: float, credit_limit: float, revenu
 
 def carriage_money(amount: float, kg_per_unit: float, money_per_tonne: float) -> float:
     """Carriage on `amount` of coin: its mass times the haul's price per tonne, never more than is moved."""
-    tonnes = max(0.0, amount) * kg_per_unit / 1000.0
+    tonnes = max(0.0, amount) * kg_per_unit / KILOGRAMS_PER_TONNE
     return min(max(0.0, amount), tonnes * max(0.0, money_per_tonne))
 
 
 def is_credit(purpose: Any) -> bool:
     """Whether a payment's purpose is a claim on a debtor (interest, a loan), which moves no coin."""
     labels = purpose.keys() if hasattr(purpose, "keys") else (purpose,)
-    return all(label in CREDIT_PURPOSES for label in labels)
+    return bool(labels) and all(label in CREDIT_PURPOSES for label in labels)
 
 
 def abroad(parties: Iterable[Any], home_country: Optional[str]) -> bool:
-    """Whether any party stands in another country than home (a party with no record or no country is at home)."""
+    """Whether any party stands in another country than home (a party with no record or no country is at home).
+    A party with a record is an actor or a seat; its record's country is None for the home country, else the country's id."""
     for party in parties:
         record = getattr(party, "record", None)
-        if record is not None and getattr(record, "country", None) not in (None, home_country):
+        if record is not None and record.country not in (None, home_country):
             return True
     return False
 

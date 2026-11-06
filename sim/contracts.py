@@ -17,7 +17,6 @@ from sim.rekey import rename_text
 
 FACILITY = "facility"
 TERM_LOAN = "term_loan"
-STATE_DEBT = "state_debt"
 DEPOSIT = "deposit"
 
 
@@ -37,6 +36,7 @@ class Contract:
     kind: str = TERM_LOAN
     collateral_tile: str = ""         # the tile whose land title the loan pledges (empty: none)
     collateral_share: float = 0.0     # the share of that tile's land pledged
+    unit_value: float = 1.0           # a deposit placed across the exchange: what one coin of its principal is worth in the lender's own unit
 
     @property
     def loan_id(self) -> str:
@@ -56,9 +56,11 @@ class Contracts:
 
     # ---- reads ------------------------------------------------------------------------------
     def all(self) -> Iterable[Contract]:
-        for held in self.facilities.values():
-            yield from held.values()
-        yield from self.deposits.values()
+        for _borrower, held in sorted(self.facilities.items()):
+            for _lender, contract in sorted(held.items()):
+                yield contract
+        for _depositor, contract in sorted(self.deposits.items()):
+            yield contract
         yield from self.term_loans
 
     def debt(self, borrower: str, currency: Optional[str] = None) -> float:
@@ -66,7 +68,7 @@ class Contracts:
         total = 0.0
         held = self.facilities.get(borrower)
         if held:
-            total += sum(contract.principal + contract.arrears for contract in held.values()
+            total += sum(contract.principal + contract.arrears for _lender, contract in sorted(held.items())
                          if currency is None or contract.currency == currency)
         return total + self._term_debt(currency).get(borrower, 0.0)
 
@@ -84,12 +86,11 @@ class Contracts:
             self._term_debts[currency] = owed
         return self._term_debts[currency]
 
-    def exposure(self, lender: Optional[str] = None, currency: Optional[str] = None, kind: Optional[str] = None) -> float:
+    def exposure(self, lender: Optional[str] = None, currency: Optional[str] = None) -> float:
         """The principal the lender (every lender when none is named) has out."""
         return sum(contract.principal for contract in self.all()
                    if (lender is None or contract.lender == lender)
-                   and (currency is None or contract.currency == currency)
-                   and (kind is None or contract.kind == kind))
+                   and (currency is None or contract.currency == currency))
 
     def facility_of(self, borrower: str) -> Dict[str, float]:
         """lender -> principal it has drawn out on the borrower's facility."""
@@ -103,12 +104,6 @@ class Contracts:
             held[lender] = Contract("facility:%s:%s" % (borrower, lender), lender, borrower, currency, amount, kind=FACILITY)
         else:
             contract.principal += amount
-
-    def set_facility(self, borrower: str, principals: Dict[str, float], currency: str) -> None:
-        """Replace the borrower's facility by `principals` (lender -> principal)."""
-        self.facilities.pop(borrower, None)
-        for lender, principal in principals.items():
-            self.draw(borrower, lender, currency, principal)
 
     def repay_facility(self, borrower: str, lender: str, amount: float) -> None:
         self.facilities[borrower][lender].principal -= amount
@@ -126,16 +121,23 @@ class Contracts:
                 del held[lender]
 
     # ---- deposits ---------------------------------------------------------------------------
-    def deposit(self, depositor: str, pool: str, currency: str, amount: float) -> None:
+    def deposit(self, depositor: str, pool: str, currency: str, amount: float, unit_value: float = 1.0) -> None:
         contract = self.deposits.get(depositor)
         if contract is None:
-            self.deposits[depositor] = Contract("deposit:%s" % depositor, depositor, pool, currency, amount, kind=DEPOSIT)
+            self.deposits[depositor] = Contract("deposit:%s" % depositor, depositor, pool, currency, amount, kind=DEPOSIT, unit_value=unit_value)
         else:
+            value = contract.principal * contract.unit_value + amount * unit_value   # the lender's own unit: what the old and the new are worth
             contract.principal += amount
+            contract.unit_value = value / contract.principal if contract.principal > 0.0 else unit_value
 
     def deposit_of(self, depositor: str) -> float:
         contract = self.deposits.get(depositor)
         return contract.principal if contract is not None else 0.0
+
+    def deposit_value(self, depositor: str) -> float:
+        """What the pool owes the depositor, in the depositor's own unit (an economy lender's asset)."""
+        contract = self.deposits.get(depositor)
+        return contract.principal * contract.unit_value if contract is not None else 0.0
 
     def total_deposits(self) -> float:
         return sum(contract.principal for contract in self.deposits.values())
@@ -152,6 +154,19 @@ class Contracts:
             contract.principal *= factor
 
     # ---- defaults ---------------------------------------------------------------------------
+    def forgive_facility(self, borrower: str, amount: float) -> float:
+        """The lenders drop `amount` of the borrower's facility principal, the larger drawings first; answers what was dropped (no more
+        than the facility). No money moves."""
+        held = self.facilities.get(borrower) or {}
+        left = max(0.0, amount)
+        for lender in sorted(held, key=lambda who: (-held[who].principal, who)):
+            part = min(left, held[lender].principal)
+            held[lender].principal -= part
+            left -= part
+        if held and sum(contract.principal for contract in held.values()) <= 0.0:
+            del self.facilities[borrower]
+        return max(0.0, amount) - left
+
     def default(self, borrower: str, kind: Optional[str] = None) -> List[Contract]:
         """The borrower closes owing: its contracts of `kind` (all kinds when none) end and are returned. No
         money moves: each lender's claim and the borrower's debt go together, so the loss is booked once."""
@@ -186,7 +201,10 @@ class Contracts:
         deposits: Dict[str, Contract] = {}
         for contract in self.deposits.values():
             if contract.lender in deposits:
-                deposits[contract.lender].principal += contract.principal
+                joined = deposits[contract.lender]
+                value = joined.principal * joined.unit_value + contract.principal * contract.unit_value
+                joined.principal += contract.principal
+                joined.unit_value = value / joined.principal if joined.principal > 0.0 else joined.unit_value
             else:
                 deposits[contract.lender] = contract
         self.deposits = deposits
@@ -197,7 +215,7 @@ class Contracts:
     def adopt(self, other: "Contracts") -> None:
         """Take over the facilities and deposits held by `other` (a purses' own registry before it joins the economy's)."""
         for depositor, contract in other.deposits.items():
-            self.deposit(depositor, contract.borrower, contract.currency, contract.principal)
+            self.deposit(depositor, contract.borrower, contract.currency, contract.principal, contract.unit_value)
         for borrower, held in other.facilities.items():
             mine = self.facilities.setdefault(borrower, {})
             for lender, contract in held.items():

@@ -8,6 +8,7 @@ from sim.agents import revenue
 from sim.agents.api import Government, Stratum, stratum_id
 from sim.agents.records import ActorRecord
 from sim.economy import land_rents
+from sim.economy.types import Transfer
 from sim.tests.agents_fake_world import FakeWorld
 
 QUICK_TOPIC = True
@@ -65,15 +66,13 @@ def producer(tile, recipe, runs, rent_per_run=0.0):
 
 
 # ---- rent paid on land let, per tile, from the economy's records ---------------------------------
-setup = SimpleNamespace(land_per_run={"farm": 2.0, "mine": 0.0})
-record = SimpleNamespace(land_rent={"a": 10.0, "b": 4.0, "c": 7.0}, producers={
-	"p1": producer("a", "farm", 5.0, 20.0), "p2": producer("a", "farm", 1.0, 20.0), "p3": producer("b", "farm", -1.0, 8.0),
-	"p4": producer("c", "mine", 9.0, 14.0)})
-paid = land_rents.rent_paid_by_tile(setup, record)
-check("rent paid on a tile is what its producers pay a run times the runs they worked last year",
-      paid == {"a": 10.0 * 2.0 * 6.0}, paid)
-check("a tile where nothing was let pays no rent, and a recipe that takes no land is none",
-      "b" not in paid and "c" not in paid, paid)
+record = SimpleNamespace(land=SimpleNamespace(rent_paid={"b": 3.0, "a": 120.0}))
+paid = land_rents.rent_paid_by_tile(record)
+check("rent paid on a tile is what the land market booked producers paying there last year", paid == {"a": 120.0, "b": 3.0}, paid)
+booked = land_rents.booked_by_tile([Transfer("p1", "o", "gold", 70.0, "rent"), Transfer("p2", "o", "gold", 50.0, "rent"),
+                                    Transfer("p3", "o", "gold", 0.0, "rent"), Transfer("x", "o", "gold", 9.0, "rent")],
+                                   {"p1": producer("a", "farm", 5.0), "p2": producer("a", "farm", 1.0), "p3": producer("b", "farm", 1.0)})
+check("booked rent sums by the payer's tile, leaving out nothing paid and agents that are no producers", booked == {"a": 120.0}, booked)
 
 # ---- the basis ------------------------------------------------------------------------------------
 LAND_RENT = {"form": "rent_levy", "basis": "land_rent", "rate": 0.25}
@@ -96,7 +95,7 @@ rich, middling = owner("rich", 1000.0), owner("middling", 5.0)
 world = LandWorld({"a": 120.0, "b": 80.0}, [(rich, 150.0), (middling, 50.0)])
 world.forms = [dict(LAND_RENT, rate=0.1)]
 before = world.state.money + rich.money + middling.money
-world.state.receive_revenue(world)
+world.state.stores.receive_revenue(world)
 check("the state received a share of each owner's rent", abs(world.state.money - (15.0 + 5.0)) < 1e-9, world.state.money)
 check("owners lost what the state gained", abs(rich.money - 985.0) < 1e-9 and abs(middling.money) < 1e-9,
       (rich.money, middling.money))
@@ -111,16 +110,19 @@ check("a form can name the owners it falls on", revenue.assess(world)[0].money =
 cohort_a = SimpleNamespace(agent_id="household:a:0", tile="a", ownership_share=1.0)
 cohort_b = SimpleNamespace(agent_id="household:a:1", tile="a", ownership_share=3.0)
 cohort_c = SimpleNamespace(agent_id="household:b:0", tile="b", ownership_share=1.0)
-rent_record = SimpleNamespace(land_rent={"a": 10.0, "b": 5.0}, producers={
-	"p1": producer("a", "farm", 2.0, 10.0), "p2": producer("b", "farm", 1.0, 5.0)},
-	cohorts={cohort.agent_id: cohort for cohort in (cohort_a, cohort_b, cohort_c)})
-received = land_rents.rent_received_by_cohort(SimpleNamespace(land_per_run={"farm": 1.0}), rent_record)
+rent_record = SimpleNamespace(cohorts={cohort.agent_id: cohort for cohort in (cohort_a, cohort_b, cohort_c)}, land=SimpleNamespace(land_rent={"a": 10.0, "b": 5.0}, rent_paid={"a": 20.0, "b": 5.0},
+                                                                                          titles={"a": {"household:a:0": 0.25, "household:a:1": 0.75}, "b": {"household:b:0": 1.0}}))
+received = land_rents.rent_received_by_cohort(rent_record)
 check("the rent paid on a tile is shared among its cohorts by what each owns",
       received == {"household:a:0": 5.0, "household:a:1": 15.0, "household:b:0": 5.0}, received)
-only_b = land_rents.rent_received_by_cohort(SimpleNamespace(land_per_run={"farm": 1.0}), rent_record, frozenset({"b"}))
+only_b = land_rents.rent_received_by_cohort(rent_record, frozenset({"b"}))
 check("limited to tiles, only those tiles' cohorts receive rent", only_b == {"household:b:0": 5.0}, only_b)
+rent_record.land.titles = {"a": {"household:a:1": 0.25, "state": 0.75}}
+by_title = land_rents.rent_received_by_cohort(rent_record, frozenset({"a"}))
+check("rent goes to the live title holders, not to the cohorts' ownership shares",
+      by_title == {"household:a:1": 5.0, "state": 15.0}, by_title)
 
-from sim.actors.world_revenue import RevenueView
+from sim.actors.world_revenue import Revenue
 from sim.tests.world_stand_in import fake_needs
 
 
@@ -132,15 +134,16 @@ class StubSim:
 		self.registry = SimpleNamespace(of_kind=lambda kind: strata)
 
 
-class StubView(RevenueView):
-	def __init__(self, sim):
-		self.needs, self.registry = sim.needs, sim.registry
-
-	def pay_per_person_year(self, trade):
-		return 1.0
-
+class StubRevenue(Revenue):
 	def society_output(self):
 		return 0.0
+
+
+def StubView(sim):
+	"""The revenue part over a world that pays one a person-year and makes nothing."""
+	world = SimpleNamespace(needs=sim.needs, registry=sim.registry, labour=SimpleNamespace(pay_per_person_year=lambda trade: 1.0))
+	world.revenue = StubRevenue(world)
+	return world.revenue
 
 
 poor = owner("poor", 0.0)

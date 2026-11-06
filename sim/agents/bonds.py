@@ -11,6 +11,7 @@ from dataclasses import dataclass, asdict
 from typing import Any, Dict, List, Mapping, Optional, Tuple
 
 from sim.constants import declare
+from sim.world import capital_market
 
 BOND_TERM_YEARS = declare(
 	"BOND_TERM_YEARS", 10.0, kind="temporary_heuristic",
@@ -26,10 +27,7 @@ def bond_price(face: float, coupon_rate: float, years: float, yield_rate: float)
 	a bond is worth its face; a higher yield (a dearer market, a worse record) cuts the price."""
 	if face <= 0.0:
 		return 0.0
-	years = max(1, int(round(years)))
-	growth = 1.0 + max(-0.99, yield_rate)
-	coupons = sum(coupon_rate * face / growth ** year for year in range(1, years + 1))
-	return coupons + face / growth ** years
+	return capital_market.bullet_value(coupon_rate * face, face, years, yield_rate)
 
 
 @dataclass
@@ -80,20 +78,25 @@ class BondBook:
 		return sum(bond.face * bond.coupon for bond in self.held.get(issuer, ()))
 
 	def age(self, issuer: str) -> float:
-		"""A year passes: bonds at their term fall due and are returned; their face is what the issuer must repay."""
+		"""A year passes: bonds at their term fall due; the face of all that are due, this year's and any left unpaid, is what the
+		issuer must repay. They stay on the book as its debt until `retire_due`."""
 		due = 0.0
-		kept = []
 		for bond in self.held.get(issuer, ()):
 			bond.years_left -= 1.0
 			if bond.years_left <= EPSILON:
 				due += bond.face
-			else:
-				kept.append(bond)
+		return due
+
+	def retire_due(self, issuer: str) -> float:
+		"""The bonds that have fallen due are repaid: they leave the book. Answers their discount (face less what the market paid),
+		the market's return on them."""
+		due = [bond for bond in self.held.get(issuer, ()) if bond.years_left <= EPSILON]
+		kept = [bond for bond in self.held.get(issuer, ()) if bond.years_left > EPSILON]
 		if kept:
 			self.held[issuer] = kept
 		else:
 			self.held.pop(issuer, None)
-		return due
+		return sum(bond.face - bond.paid for bond in due)
 
 	def write_off(self, issuer: str) -> float:
 		"""The issuer defaults: its bonds end and the market loses what it paid for them."""

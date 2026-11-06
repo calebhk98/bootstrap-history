@@ -1,6 +1,6 @@
 """Shares in producers, on the economy's record: who holds what part of each producer and what the dividends are.
 
-`record.shares[producer][holder]` is the part of the producer's whole equity a holder bought; what no one bought
+`record.capital_markets.shares[producer][holder]` is the part of the producer's whole equity a holder bought; what no one bought
 is the owner's, and goes to the owner's tile as before (`ownership.spread`). A dividend is split by these parts
 (`split_dividend`). A producer whose expansion lenders would not fully fund sells shares for the rest
 (`raise_equity`): the buyers are the households with savings left after the year's lending, the price is the
@@ -21,14 +21,14 @@ SHARE_DIVIDEND_PURPOSE = "dividend on shares"    # paid to the holder itself; no
 EPSILON = 1e-9
 
 
-def outside_share(record, producer_id: AgentId) -> float:
+def outside_share(capital_markets, producer_id: AgentId) -> float:
     """The part of the producer's equity held by buyers of its shares."""
-    return sum((record.shares.get(producer_id) or {}).values())
+    return sum((capital_markets.shares.get(producer_id) or {}).values())
 
 
-def note_dividend(record, producer_id: AgentId, payout: Sequence[Transfer]) -> None:
+def note_dividend(capital_markets, producer_id: AgentId, payout: Sequence[Transfer]) -> None:
     """Remember the dividend a producer paid at its year's close; the expectation the next buyer prices on."""
-    record.last_dividends[producer_id] = sum(transfer.amount for transfer in payout if transfer.purpose == "dividend")
+    capital_markets.last_dividends[producer_id] = sum(transfer.amount for transfer in payout if transfer.purpose == "dividend")
 
 
 def split_dividend(record, payment: Transfer) -> List[Transfer]:
@@ -36,29 +36,29 @@ def split_dividend(record, payment: Transfer) -> List[Transfer]:
     to the owner's tile by the caller). Other payments pass through."""
     if payment.purpose != "dividend":
         return [payment]
-    held = record.shares.get(payment.payer)
+    held = record.capital_markets.shares.get(payment.payer)
     if not held or payment.payer not in record.producers:
         return [payment]
     paid = [Transfer(payment.payer, holder, payment.currency, payment.amount * share, SHARE_DIVIDEND_PURPOSE)
-            for holder, share in sorted(held.items()) if share > EPSILON and (holder in record.cohorts or holder in record.capital.funds)]
+            for holder, share in sorted(held.items()) if share > EPSILON and (holder in record.cohorts or holder in record.capital_markets.capital.funds)]
     rest = payment.amount - sum(transfer.amount for transfer in paid)
     if rest > EPSILON:
         paid.append(Transfer(payment.payer, payment.payee, payment.currency, rest, payment.purpose))
     return paid
 
 
-def whole_value(record, producer_id: AgentId, rate: float, rate_floor: float) -> float:
+def whole_value(capital_markets, producer_id: AgentId, rate: float, rate_floor: float) -> float:
     """What the producer's whole equity is worth: the present value of the dividend it paid last."""
-    return share_market.equity_value(record.last_dividends.get(producer_id, 0.0), rate, rate_floor)
+    return share_market.equity_value(capital_markets.last_dividends.get(producer_id, 0.0), rate, rate_floor)
 
 
 def prune(record) -> None:
     """Drop the shares of producers that have closed."""
-    for producer_id in [each for each in record.shares if each not in record.producers]:
-        del record.shares[producer_id]
-        record.last_dividends.pop(producer_id, None)
-    for producer_id in [each for each in record.last_dividends if each not in record.producers]:
-        del record.last_dividends[producer_id]
+    for producer_id in [each for each in record.capital_markets.shares if each not in record.producers]:
+        del record.capital_markets.shares[producer_id]
+        record.capital_markets.last_dividends.pop(producer_id, None)
+    for producer_id in [each for each in record.capital_markets.last_dividends if each not in record.producers]:
+        del record.capital_markets.last_dividends[producer_id]
 
 
 def issues_for(record, requests: Sequence[LoanRequest], market_rate: float) -> List[ShareIssue]:
@@ -66,8 +66,8 @@ def issues_for(record, requests: Sequence[LoanRequest], market_rate: float) -> L
     shares cost: the money it lacks, the dividend expected once that money is plant (the dividend it pays now plus
     what the money earns), the part still unsold, and the premium a lender would charge it, which a buyer of its
     shares, who ranks behind its lenders, asks at least."""
-    debts = credit_claims.principal_by_borrower(record.loans)
-    arrears = credit_claims.arrears_history(record.loans, record.remembered_defaults)
+    debts = credit_claims.principal_by_borrower(record.credit.loans)
+    arrears = credit_claims.arrears_history(record.credit.loans, record.credit.remembered_defaults)
     issues = []
     for request in sorted(requests, key=lambda each: each.borrower):
         if request.purpose != EXPAND_PURPOSE or request.borrower not in record.producers or request.amount <= 0.0:
@@ -76,9 +76,9 @@ def issues_for(record, requests: Sequence[LoanRequest], market_rate: float) -> L
                                       arrears.get(request.borrower, 0.0))
         if request.maximum_rate <= market_rate + premium:
             continue
-        expected = record.last_dividends.get(request.borrower, 0.0) + request.amount * request.maximum_rate
+        expected = record.capital_markets.last_dividends.get(request.borrower, 0.0) + request.amount * request.maximum_rate
         issues.append(ShareIssue(request.borrower, request.amount, expected,
-                                 max(0.0, 1.0 - outside_share(record, request.borrower)), premium))
+                                 max(0.0, 1.0 - outside_share(record.capital_markets, request.borrower)), premium))
     return issues
 
 
@@ -108,7 +108,7 @@ def apply(record, fills: Sequence[ShareFill], currency: str) -> Dict[AgentId, fl
         sold[fill.issuer] = sold.get(fill.issuer, 0.0) + fill.share
     record.book.transfer_many([Transfer(fill.buyer, fill.issuer, currency, fill.paid, SHARE_PURPOSE) for fill in fills])
     for issuer, part in sorted(sold.items()):
-        held = record.shares.setdefault(issuer, {})
+        held = record.capital_markets.shares.setdefault(issuer, {})
         for holder in held:
             held[holder] *= 1.0 - part
         for fill in fills:
@@ -142,5 +142,5 @@ def rate_floor_of(setup) -> float:
 def held_value(record, holder: AgentId, rate: float, rate_floor: float) -> float:
     """What a holder's shares are worth at the market: its part of each producer's equity at the present value of
     that producer's dividends."""
-    return sum(held[holder] * whole_value(record, producer_id, rate, rate_floor)
-               for producer_id, held in record.shares.items() if holder in held and producer_id in record.producers)
+    return sum(held[holder] * whole_value(record.capital_markets, producer_id, rate, rate_floor)
+               for producer_id, held in record.capital_markets.shares.items() if holder in held and producer_id in record.producers)

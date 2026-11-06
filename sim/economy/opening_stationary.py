@@ -10,8 +10,8 @@ are the cost-price dual (`unit_cost`). From the runs come the flows that a year 
 - the wage the labour market clears at when more hours are offered than demanded (the survival wage, which
   `labour_ask_floor` sets), against the wage the cost table states.
 
-Nothing here reads a game; the opening calls it with its own final demand, and a test calls it with the small
-fixture's. The opening does not yet seed its producers or its wage from it (Complaint 473).
+Nothing here reads a game; the fixture setups (fixture_setups.py) call it with their final demand. The opening does
+not seed its producers or its wage from it (Complaint 473).
 """
 import math
 from dataclasses import dataclass
@@ -52,7 +52,10 @@ def solve(final_by_tile: Mapping[TileId, Mapping[GoodId, float]], recipes: Mappi
     for recipe_id, count in runs.items():
         for trade, per_run in recipes[recipe_id].labour_hours.items():
             hours[trade] = hours.get(trade, 0.0) + count * per_run
-    wage_bill = math.fsum(hours[trade] * wages.get(trade, 0.0) for trade in hours)
+    unpaid = sorted(trade for trade in hours if trade not in wages)
+    if unpaid:
+        raise ValueError(f"the stationary flows need a wage for every trade the runs use; none for {unpaid}")
+    wage_bill = math.fsum(hours[trade] * wages[trade] for trade in hours)
     input_cost = math.fsum(count * (unit_cost.input_cost_per_run(recipes[recipe_id], prices)
                                     + _plant_wear_cost(recipes[recipe_id], prices))
                            for recipe_id, count in runs.items())
@@ -66,23 +69,8 @@ def solve(final_by_tile: Mapping[TileId, Mapping[GoodId, float]], recipes: Mappi
 def _plant_wear_cost(recipe: Recipe, prices: Mapping[GoodId, float]) -> float:
     if recipe.plant_life_years <= 0.0:
         return 0.0
-    return math.fsum(quantity * prices.get(good, 0.0) for good, quantity in recipe.plant_goods.items()) / recipe.plant_life_years
-
-
-def hours_offered_over_demanded(hours_by_trade: Mapping[str, float], hours_offered: float,
-                                trade: str) -> Optional[float]:
-    """How many times the hours offered cover the hours the stationary runs hire in `trade`; None where
-    nothing hires it. Above one the labour market clears at the workers' ask floor, not at the stated wage."""
-    demanded = hours_by_trade.get(trade, 0.0)
-    return hours_offered / demanded if demanded > 0.0 else None
-
-
-def survival_wage_per_hour(floor_cost_per_person: float, people_per_worker: float, hours_per_worker_year: float) -> float:
-    """The least wage a worker's year of hours is sold for when the plot grows nothing: what his people's floors
-    cost, spread over the hours (the survival side of `labour_ask_floor.wage_floor_per_worker_year`)."""
-    if hours_per_worker_year <= 0.0:
-        return math.inf
-    return floor_cost_per_person * people_per_worker / hours_per_worker_year
+    return math.fsum(quantity * prices[good] for good, quantity in recipe.plant_goods.items()
+                     if prices.get(good) is not None) / recipe.plant_life_years
 
 
 def hours_that_clear_at(demanded_hours: float, workers: float, slack_share: float,

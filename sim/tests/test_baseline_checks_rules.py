@@ -1,12 +1,10 @@
 """Complaint 554, Complaint 640: the rules of the baseline checks, called on built yearly accounts: feasibility names
-each way a year's books can overdraw, and food_eaten_over_need reads the last year's tiles. The statistic of the
-settling report is in test_series_settling_rule."""
+each way a year's books can overdraw, and food_eaten_over_need reads the last year's tiles."""
 QUICK_TOPIC = True
 
 import unittest
 
-from sim.economy.baseline_checks import feasibility, food_eaten_over_need
-from sim.economy.settling import SERIES, settling_report
+from sim.tests.baseline_checks import feasibility, food_eaten_over_need
 from sim.economy.year_accounts import GoodAccount, TileAccount, YearAccounts
 
 
@@ -50,14 +48,6 @@ class FoodEatenTests(unittest.TestCase):
 
     def test_no_years_give_no_tiles(self):
         self.assertEqual(food_eaten_over_need([]), {})
-
-
-class SettlingReportTests(unittest.TestCase):
-    def test_the_report_names_the_four_series_in_order_with_finite_statistics(self):
-        rows = [{"price_level": 1.0, "wage": 2.0, "money_supply": 100.0, "rate": 0.05} for _year in range(40)]
-        report = settling_report(rows)
-        self.assertEqual([item.name for item in report], [name for name, _ratio in SERIES])
-        self.assertTrue(all(item.settled for item in report))
 
 
 if __name__ == "__main__":

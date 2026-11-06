@@ -4,7 +4,7 @@ import dataclasses
 from typing import Container
 
 from .recipes import fold_plant
-from .types import GoodId, PlantBuild, PlantPart, Recipe
+from .types import GoodId, PlantPart, Recipe
 
 
 def chosen_build(part: PlantPart, available: Container[GoodId]):

@@ -1,6 +1,7 @@
 """The yearly staff phase's hiring rules, on values given: whether a household may take on people and how it moves
 by whole people toward a target. (Who is let go when the payroll cannot be met is `payroll_trim`, the replacement of a
 taught trade `staff_replacement`, the scholar target `sim/labour/staff_targets.py`.)"""
+from .constants import ARTISAN_FLOOR_SHARE_OF_CRAFT
 
 
 def has_room_to_hire(capital, credit_limit, credit_room_share):
@@ -32,9 +33,9 @@ def craft_headcount(desired_artisans, freedmen, slaves, slave_craft_credit):
 
 
 def artisan_goal(craft, specialists, artisans_held, closed_shortfall):
-    """The artisans automatic hiring aims at: the craft headcount less what taught specialists already cover (never under a
-    quarter of it, so specialists cannot squeeze the generic artisans away), or what is held plus the hands shut concerns lack."""
-    return max(craft * 0.25, craft - specialists, artisans_held + closed_shortfall)
+    """The artisans automatic hiring aims at: the craft headcount less what taught specialists already cover (never under a floor share
+    of it, so specialists cannot squeeze the generic artisans away), or what is held plus the hands shut concerns lack."""
+    return max(craft * ARTISAN_FLOOR_SHARE_OF_CRAFT, craft - specialists, artisans_held + closed_shortfall)
 
 
 def scholar_goal(desired_scholars, scholars_held, closed_shortfall):
@@ -46,8 +47,3 @@ def directors_next(directors, capacity, approach_rate, attrition_rate):
     """Deputies directing work next year: they approach what the institutions allow and are lost at the attrition rate,
     never below nothing."""
     return max(0.0, directors + ((capacity - directors) * approach_rate - directors * attrition_rate))
-
-
-def can_afford_replacement(capital, annual_wage, years_of_wage):
-    """Whether the household holds more than the wage of a replacement for the years it must be able to carry him."""
-    return capital > annual_wage * years_of_wage

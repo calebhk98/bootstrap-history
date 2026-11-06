@@ -6,10 +6,9 @@ from typing import Dict, List, Mapping, Optional, Tuple
 
 from sim.constants import declare
 
-from .households_orders import HOUSEHOLD_TIME_PREFERENCE
+from .household_time_preference import HOUSEHOLD_TIME_PREFERENCE
 from .inventory import holding_reservation
-from .offered_price import offered_price
-from .store_return import (STORE_SERVICE_UNLIMITED, STORE_STORAGE_COST_PER_KG_YEAR, carrying_return,
+from .store_return import (STORE_SERVICE_UNLIMITED, carrying_return, storage_cost_per_kg_year,
                            service_values_per_year, split_by_return)
 from .types import Bid, GoodId, GoodSpec, Offer
 
@@ -49,21 +48,22 @@ STORE_PRIORITY = 2          # after the need tiers (floors, then surplus)
 def store_candidates(specs: Mapping[GoodId, GoodSpec], prices: Mapping[GoodId, float],
                      staple_price_per_kg: float,
                      usual_prices: Optional[Mapping[GoodId, float]] = None,
-                     service_values: Optional[Mapping[GoodId, float]] = None) -> Dict[GoodId, float]:
+                     service_values: Optional[Mapping[GoodId, float]] = None, *, money_level: float) -> Dict[GoodId, float]:
     """Goods fit to hold as wealth, each with its share of the holding (sums to one; empty if none).
     The shares follow each good's expected carrying return (`store_return`), so a good whose price is
     high against its usual price draws less and the stock, not the year's flow, settles the price.
-    `service_values` is what a unit saves a year by serving a need (`store_return.service_values_per_year`)."""
+    `service_values` is what a unit saves a year by serving a need (`store_return.service_values_per_year`);
+    `money_level` carries the storage cost to today's money (the memory's `opening_wage_level`)."""
     returns = {}
     for good, spec in specs.items():
-        price = prices.get(good, 0.0)
-        if (spec.service_life_years <= 0.0 or spec.spoilage_per_year > STORE_MAX_SPOILAGE
+        price = prices.get(good)
+        if (price is None or spec.service_life_years <= 0.0 or spec.spoilage_per_year > STORE_MAX_SPOILAGE
                 or not math.isfinite(spec.unit_mass_kg) or spec.unit_mass_kg <= 0.0 or price <= 0.0):
             continue
         if price / spec.unit_mass_kg < STORE_MIN_DENSITY_MULTIPLE * staple_price_per_kg:
             continue
         service = STORE_SERVICE_UNLIMITED * (service_values or {}).get(good, 0.0)
-        returns[good] = carrying_return(spec, price, (usual_prices or {}).get(good), service)
+        returns[good] = carrying_return(spec, price, (usual_prices or {}).get(good), service, money_level=money_level)
     return split_by_return(returns)
 
 
@@ -103,28 +103,28 @@ def store_holding(cohort, view, specs: Mapping[GoodId, GoodSpec], priced,
     return weights, prices, {good: view.stock(cohort.agent_id, good, cohort.tile) for good in weights}
 
 
+def _money_level(view, tile, goods) -> float:
+    """The memory's opening wage level in the currency the tile's markets trade in (1.0 with no goods)."""
+    first = next(iter(goods), None)
+    return 1.0 if first is None else view.opening_wage_level(view.currency_of(view.area_of(first, tile)))
+
+
 def _store_weights(tile, view, specs: Mapping[GoodId, GoodSpec], priced) -> Tuple[Dict[GoodId, float], Dict[GoodId, float]]:
     """(weights, last prices) of the store goods at a tile."""
     staple = staple_price_per_kg(priced, specs)
     if not math.isfinite(staple):
         return {}, {}
     prices, usual_prices = {}, {}
-    if hasattr(view, "price_rows"):
-        for good, price, usual in view.price_rows(specs, tile):
-            if price:
-                prices[good] = price
-                if usual:
-                    usual_prices[good] = usual
-    else:
-        for good in specs:
-            area = view.area_of(good, tile)
-            price = offered_price(view, good, area)
-            if price:
-                prices[good] = price
-                usual = getattr(view, "usual_price", None)      # a view that keeps no price memory has none
-                if usual is not None and usual(good, area):
-                    usual_prices[good] = usual(good, area)
-    weights = store_candidates(specs, prices, staple, usual_prices, service_values_per_year(priced, specs))
+    money_level = _money_level(view, tile, specs)
+    for good in specs:
+        area = view.area_of(good, tile)
+        price = view.offered_price(good, area)
+        if price:
+            prices[good] = price
+            usual = view.usual_price(good, area)
+            if usual:
+                usual_prices[good] = usual
+    weights = store_candidates(specs, prices, staple, usual_prices, service_values_per_year(priced, specs), money_level=money_level)
     return weights, {good: prices[good] for good in weights}
 
 
@@ -156,6 +156,8 @@ def store_offers(cohort, view, specs, weights, prices, held, wealth_above_buffer
     if held_value <= 0.0:
         return []
     rate = view.interest_rate(view.currency_of(view.area_of(next(iter(weights)), cohort.tile)))
+    if rate is None:
+        return []
     target = store_value_target(wealth_above_buffer, cohort.expected_inflation, real_rate)
     excess = max(0.0, held_value - target * (1.0 + STORE_REBALANCE_BAND))
     shortfall = max(0.0, floor_cost - cash)
@@ -171,6 +173,6 @@ def store_offers(cohort, view, specs, weights, prices, held, wealth_above_buffer
             offers.append(Offer(cohort.agent_id, good, area, cohort.tile, urgent, low))
         if patient > 0.0:
             reservation = holding_reservation(prices[good], rate, spec.spoilage_per_year,
-                                              STORE_STORAGE_COST_PER_KG_YEAR * spec.unit_mass_kg)
+                                              storage_cost_per_kg_year(_money_level(view, cohort.tile, weights)) * spec.unit_mass_kg)
             offers.append(Offer(cohort.agent_id, good, area, cohort.tile, patient, reservation))
     return offers

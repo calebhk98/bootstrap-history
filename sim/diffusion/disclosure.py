@@ -5,13 +5,15 @@ GainReputation."""
 from typing import Any, Dict, List, Optional
 
 from sim.actors.api import ALREADY_ABLE, NO_LICENSEE, TERMS_REFUSED, GrantLicence
+from sim.assembly.api import Part
 from sim.polity.api import GainReputation
 from sim.rekey import rekey
 
 from . import rules
+from .tree_record import tree_node
 
 
-class Disclosure:
+class Disclosure(Part):
 
     def slot_of(self, seat_id: Optional[str]) -> Any:
         """The state of `seat_id`, or of the acting seat when none is named."""
@@ -28,7 +30,7 @@ class Disclosure:
 
     def copy_difficulty(self, node_id: str) -> float:
         """How hard the know-how is to copy from sight."""
-        return rules.copy_difficulty_of(self.tree_node(node_id))
+        return rules.copy_difficulty_of(tree_node(self.needs, node_id))
 
     def _record(self, node_id: str) -> Dict[str, Any]:
         records = self.seat.disclosures
@@ -78,7 +80,7 @@ class Disclosure:
         others = [seat_id for seat_id in self.needs.seat_list()["playing"] if seat_id != acting]
         registry = self.needs.cast()
         return [actor.identity() for kind in ("firm", "government") for actor in registry.of_kind(kind)
-                if getattr(actor.record, "exited_year", None) is None] + others
+                if actor.record.exited_year is None] + others
 
     def disclosure_listing(self) -> List[Dict[str, Any]]:
         """Every invention of yours with what you have chosen for it."""

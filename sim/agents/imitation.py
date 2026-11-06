@@ -15,7 +15,7 @@ from .tuning_player import PLAYER_VISIBLE_EXPOSURE
 def in_sight(location: Optional[str], node_id: str, world: Any) -> bool:
 	"""Whether an observer at `location` sees enough of an invention to copy it: secrecy, the know-how's own
 	opacity and the distance to the makers all count (fog of war for actors, as for a seat)."""
-	return float(world.exposure(node_id, location)) >= PLAYER_VISIBLE_EXPOSURE
+	return float(world.knowledge.exposure(node_id, location)) >= PLAYER_VISIBLE_EXPOSURE
 
 
 def missing_chain(node_id: str, world: Any, actor: Any) -> Optional[List[str]]:
@@ -24,7 +24,7 @@ def missing_chain(node_id: str, world: Any, actor: Any) -> Optional[List[str]]:
 	None if a prerequisite is neither known to the actor nor demonstrated by
 	the founder, so there is nothing to copy it from.
 	"""
-	demonstrated = world.demonstrated()
+	demonstrated = world.knowledge.demonstrated()
 	chain: List[str] = []
 	seen = set()
 
@@ -36,7 +36,7 @@ def missing_chain(node_id: str, world: Any, actor: Any) -> Optional[List[str]]:
 			return True
 		if current not in demonstrated:
 			return False
-		for prerequisite in world.nodes[current].get("pre") or ():
+		for prerequisite in world.setting.nodes[current].get("pre") or ():
 			if not visit(prerequisite):
 				return False
 		chain.append(current)
@@ -56,13 +56,13 @@ def copy_plan(actor: Any, chain: List[str], world: Any) -> Dict[str, Any]:
 	pioneer_cost = 0.0
 	years = 0.0
 	for step in chain:
-		node = world.nodes[step]
+		node = world.setting.nodes[step]
 		for trade, amount in (node.get("lab") or {}).items():
 			hours[trade] = hours.get(trade, 0.0) + amount * COPY_EFFORT_SHARE
-		pioneer_cost += world.copy_cost(step)
+		pioneer_cost += world.concerns.copy_cost(step)
 		years = max(years, float(copy_years(node)))
-	base_labour = sum(amount * world.labour_market.quote(trade, 0.0, actor) for trade, amount in hours.items())
-	premium = sum(amount * world.labour_market.quote(trade, 0.0, actor) * HIRING_PREMIUM
+	base_labour = sum(amount * world.labour.labour_market.quote(trade) for trade, amount in hours.items())
+	premium = sum(amount * world.labour.labour_market.quote(trade) * HIRING_PREMIUM
 				  for trade, amount in hours.items() if actor.workforce.get(trade, 0.0) <= 0)
 	other_money = max(0.0, pioneer_cost * COPY_EFFORT_SHARE - base_labour)
 	return {
@@ -78,7 +78,7 @@ def copy_chance(chain: List[str], world: Any) -> float:
 	"""Probability the copy succeeds: every step must."""
 	chance = 1.0
 	for step in chain:
-		chance *= 1.0 - min(1.0, world.copy_risk(step) * COPY_RISK_SHARE)
+		chance *= 1.0 - min(1.0, world.concerns.copy_risk(step) * COPY_RISK_SHARE)
 	return chance
 
 
@@ -90,7 +90,8 @@ def start_work(node_id: str, chain: List[str], plan: Dict[str, Any], year: int) 
 
 
 def work_year(actor: Any, node_id: str, work: Dict[str, Any], world: Any, productivity: float = 1.0) -> bool:
-	"""Advance one copy by a year, paying wages and money for what is done.
+	"""Advance one copy by a year. The copy's hours are places posted to the labour market (hired and paid by its clearing);
+	the `money` paid here is the non-labour cost of copying (materials, fees), not wages.
 
 	Returns True when the work has reached completion. Money that falls short
 	slows the work proportionally; nothing is forgiven.
@@ -103,10 +104,13 @@ def work_year(actor: Any, node_id: str, work: Dict[str, Any], world: Any, produc
 	else:
 		affordable = 1.0
 	done = want * affordable
-	ledger.transfer(actor, world.edge(EDGE_WORKERS), done * (work["money"] + work["labour_cost"]), "copying")
-	for trade, amount in work["hours"].items():
-		actor.workforce[trade] = actor.workforce.get(trade, 0.0) + (
-			amount * done / world.hours_per_person_year)
+	owed = done * work["money"]
+	paid = ledger.pay_up_to(actor, world.setting.edge(EDGE_WORKERS), owed, "copying")
+	if owed > 0.0 and paid < owed:   # the lenders held back: the work goes as far as what was paid
+		done *= paid / owed
+		affordable = min(affordable, paid / owed)
+	for trade, amount in work["hours"].items():   # the copy's labour is hired in the labour market, paid there
+		actor.staff_wanted[trade] = actor.staff_wanted.get(trade, 0.0) + amount * done / world.labour.hours_per_person_year
 	if affordable < 1.0:
 		work["stalled"] += 1.0
 	work["progress"] += done

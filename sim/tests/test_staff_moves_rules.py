@@ -3,6 +3,7 @@ called on values built here, no game."""
 QUICK_TOPIC = True
 
 from .harness import *  # noqa: F401,F403
+from sim.workforce.api import TrainingRow
 from sim.labour.staff_moves import (FOUNDER_DEAD, HOURS_NOT_POSITIVE, HOURS_SHORT, NO_SUCH_TRADE, TRADE_ABSENT,
                                     apprentices_of, commission_spare_hours, crosses_literacy_wall, dismiss,
                                     wage_work_blocker, whole_people_under_wall)
@@ -19,7 +20,7 @@ check("a wall already passed allows nobody, not a negative count", whole_people_
 check("a float shortfall of a hair does not lose a whole person", whole_people_under_wall(6.0, 2.0 + 1e-12) == 4)
 
 # --- letting people go
-training = [[0.0, 120, "machinist", 3.0], [0.0, 121, "smith", 2.0], [0.0, 122, "machinist", 1.0]]
+training = [TrainingRow("machinist", 3.0, 120), TrainingRow("smith", 2.0, 121), TrainingRow("machinist", 1.0, 122)]
 check("apprentices of a trade are summed over its records", apprentices_of(training, "machinist") == 4.0)
 check("a trade nobody is teaching has none", apprentices_of(training, "chemist") == 0.0)
 gone, left, stopped, still, unmet = dismiss(5.0, training, "smith", 2)
@@ -27,16 +28,16 @@ check("staff are let go before anyone is stopped being taught",
       (gone, left, stopped, unmet) == (2.0, 3.0, 0.0, 0.0) and still is training, (gone, left, stopped, unmet))
 gone, left, stopped, still, unmet = dismiss(0.0, training, "machinist", 3)
 check("dismissing a trade you only teach cancels the apprenticeship, earliest record first",
-      (gone, left, stopped, unmet) == (0.0, 0.0, 3.0, 0.0) and [r for r in still if r[2] == "machinist"] == [[0.0, 122, "machinist", 1.0]],
+      (gone, left, stopped, unmet) == (0.0, 0.0, 3.0, 0.0) and [r for r in still if r.trade == "machinist"] == [TrainingRow("machinist", 1.0, 122)],
       still)
-check("...and other trades' records are untouched", [r for r in still if r[2] == "smith"] == [[0.0, 121, "smith", 2.0]], still)
-check("...and the original records are not altered", training[0][3] == 3.0, training)
+check("...and other trades' records are untouched", [r for r in still if r.trade == "smith"] == [TrainingRow("smith", 2.0, 121)], still)
+check("...and the original records are not altered", training[0].people == 3.0, training)
 gone, left, stopped, still, unmet = dismiss(2.0, training, "machinist", 5)
 check("staff go first and the rest of the count stops apprentices",
       (gone, left, stopped, unmet) == (2.0, 0.0, 3.0, 0.0), (gone, left, stopped, unmet))
 gone, left, stopped, still, unmet = dismiss(0.0, training, "machinist", 9)
 check("a count beyond everyone employed and taught is left unmet and stops every apprentice",
-      (gone, stopped, unmet) == (0.0, 4.0, 5.0) and not [r for r in still if r[2] == "machinist"], (gone, stopped, unmet))
+      (gone, stopped, unmet) == (0.0, 4.0, 5.0) and not [r for r in still if r.trade == "machinist"], (gone, stopped, unmet))
 gone, left, stopped, still, unmet = dismiss(5.0, [], "smith", 2.5)
 check("a fraction of a person asked for is rounded up to a whole one", gone == 3.0 and left == 2.0, (gone, left))
 gone, left, stopped, still, unmet = dismiss(2.0, [], "smith", 2.5)
@@ -47,9 +48,9 @@ gone, left, _, _, _ = dismiss(3.0000000001, [], "smith", 3)
 check("a trace of a person under a billionth is let go with the rest", left == 0.0, left)
 gone, left, stopped, still, unmet = dismiss(0.0, training, "chemist", 1)
 check("nobody employed and nobody taught: nothing goes", (gone, stopped, unmet) == (0.0, 0.0, 1.0) and still is training)
-short_record = [[0.0, 120]]
-check("a record too short to name a trade is kept and ignored",
-      dismiss(0.0, short_record + training, "machinist", 1)[3][0] == [0.0, 120])
+bought_row = [TrainingRow(None, 5.0, 120)]
+check("a row of people bought names no trade, is kept and never stopped",
+      dismiss(0.0, bought_row + training, "machinist", 1)[3][0] == bought_row[0])
 
 # --- commissioning
 check("the hours a trade can spare are its market supply less what is already commissioned",

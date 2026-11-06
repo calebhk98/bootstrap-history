@@ -34,7 +34,7 @@ def credit_request(merchant, view, carriage, area_map, cash: float, held_stock, 
     limit = MERCHANT_LEVERAGE_LIMIT * equity - debt
     if limit <= 0.0:
         return None
-    candidates = merchants._candidate_routes(merchant, view, carriage, area_map, held_stock, specs, interest_rate)
+    candidates = merchants.candidate_routes(merchant, view, carriage, area_map, held_stock, specs, interest_rate)
     remaining = max(0.0, cash)
     wanted, gain = 0.0, 0.0
     own, group = merchants.RouteShares(), merchants.RouteShares()

@@ -1,10 +1,16 @@
 """Where pathogens come from: the outside sources the civilisation names, the routes that reach them and the draw of
 who arrives."""
+from sim.assembly.api import Part
+
 from . import nation, nation_tuning as tuning, metapopulation as spread
 from .technology_effects import technology_scales
 
 
-class Contact:
+class Contact(Part):
+
+    def __init__(self, module):
+        super().__init__(module)
+        self._entry_cache = {}      # (tiles held, modes, source tiles) -> days to each held tile; never saved
 
     def contact_sources(self):
         """The outside sources the civilisation says the pathogens come from (see `nation.contact_sources`)."""
@@ -21,7 +27,7 @@ class Contact:
         """{held tile: fewest days} from the nearest of the source's tiles, over the modes the nation's
         technologies open plus those the outsiders bring; empty when no route joins them. Kept until the tiles
         held or the modes change."""
-        held = tuple(self.held_tiles())
+        held = tuple(self.parts.people.held_tiles())
         modes = tuple(sorted(set(self.needs.home_modes()) | set(source["carrier_modes"])))
         cache = self._entry_cache
         key = (held, modes, source["tiles"])

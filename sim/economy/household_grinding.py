@@ -4,7 +4,7 @@ fall only on the food it grinds itself. Plain functions of the priced food need.
 import dataclasses
 from typing import Any, Dict, Iterable, Mapping, Sequence, Tuple
 
-from .households_basket import Basket
+from sim.world.need_basket import Basket
 
 PricedRow = Tuple[str, float, float, float]    # (good, price, need units one unit gives, share of spending)
 
@@ -43,7 +43,7 @@ def ground_share(rows: Sequence[PricedRow], milled_as: Mapping[str, str], bought
     return sum(share for good, share in shares.items() if good in milled_as and good not in skipped)
 
 
-def without_goods(basket: Basket, goods: Iterable[str], food_need: str = "food") -> Basket:
+def without_goods(basket: Basket, goods: Iterable[str], food_need: str) -> Basket:
     """The basket with the named goods dropped from the food need. The need keeps its goods when dropping
     them would leave it with nothing to buy."""
     dropped = set(goods)

@@ -75,7 +75,7 @@ Related: 473 (the spin-up does not settle, so a longer spin-up cannot replace sh
 
 - Partner civilisation records read once per game (`partner_civ`; `load_civ` was called thousands of times a year).
 - Route graph compiled once per set of modes and improvements; defender search remembered.
-- Carrier models (`engine/foreign_routes.py`) kept between price changes.
+- Carrier models (`sim/geography/routes_carriers.py`) kept between price changes.
 - Merchant route search: trip years kept per pair, tighter destination loop.
 - Merchants with no cash search only for the stock they hold; book totals read without per-agent sorting.
 - Round 2: route search skips what cannot pay; the year became flat, merchants its largest part.
@@ -146,7 +146,7 @@ market with nothing unsold is a third of the cost at most, under 0.05 s).
 ## numpy tried, not adopted (owner asked for a measurement, 2026-10-21)
 
 Branch `numpy-speed-probe` (kept, not merged) vectorises the merchants' route search, the largest single phase of a
-warm Rome year, over a cached carriage-cost matrix per good; `sim/tests/test_merchant_routes_array.py` holds it equal
+warm Rome year, over a cached carriage-cost matrix per good; `test_merchant_routes_array.py` (on that branch only) holds it equal
 to the scalar search exactly. The phase got only about a tenth faster: the scalar search is already pruned and
 memoised, and what is left is building output rows and numpy's per-call cost on small arrays. Whole warm years on the
 old and new trees, alternated, are inside each other's noise with identical price digests. Measure: step

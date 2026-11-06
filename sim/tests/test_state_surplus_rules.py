@@ -9,6 +9,7 @@ from unittest import mock
 
 from sim.agents import ledger, state_works
 from sim.agents.api import Government, Stratum, stratum_id
+from sim.agents.government_granary import Granary
 from sim.agents.edges import EDGE_BUILDERS
 from sim.agents.purses import Purses
 from sim.agents.records import ActorRecord
@@ -19,6 +20,7 @@ from sim.finance.constants import LENDABLE_RESERVE_SHARE
 from .agents_fake_world import FakeWorld
 
 WAGE = 1000.0
+from .pool_lenders import lend_from_savers
 
 
 class StateWorld(FakeWorld):
@@ -44,9 +46,6 @@ class StateWorld(FakeWorld):
     def national_people(self, trade):
         return 1.0e9
 
-    def local_staff(self, trade, people):
-        return people
-
 
 def standing_need_lines(total):
     from sim.agents import budget
@@ -55,10 +54,10 @@ def standing_need_lines(total):
 
 def surplus_spent(world, gaps):
     """Run the state's surplus spending with the granary and the works wanted fixed by the test."""
-    with mock.patch.object(Government, "restock_granary", return_value=0.0), \
+    with mock.patch.object(Granary, "restock_granary", return_value=0.0), \
             mock.patch.object(state_works, "gaps", return_value=gaps), \
             mock.patch.object(state_works, "held", return_value={"capital_buildings": 0.0}):
-        world.state.build_works(standing_need_lines(100.0), world)
+        world.state.surplus.build_works(standing_need_lines(100.0), world)
 
 
 class SurplusSpending(unittest.TestCase):
@@ -76,7 +75,7 @@ class SurplusSpending(unittest.TestCase):
         paid = gap * MASONRY_PERSON_YEARS_PER_M2 * WAGE
         self.assertAlmostEqual(world.state.record.outlays["building " + work.name], paid)
         self.assertAlmostEqual(world.state.money, 1.0e9 - paid)
-        self.assertAlmostEqual(world.edge(EDGE_BUILDERS).balance(), paid)
+        self.assertAlmostEqual(world.setting.edge(EDGE_BUILDERS).balance(), paid)
 
     def test_nothing_is_spent_while_the_reserve_is_below_its_ceiling(self):
         need = 100.0
@@ -139,6 +138,7 @@ class LendingThroughThePool(unittest.TestCase):
 
     def test_a_state_that_offers_nothing_earns_nothing(self):
         purses = Purses()
+        lend_from_savers(purses, 1e6)
         purses.set_net("state", 1000.0, "opening")
         purses.set_net("firm", 0.0, "opening")
         purses.set_offers({})

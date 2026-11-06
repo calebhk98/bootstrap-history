@@ -1,10 +1,9 @@
 """Complaint 161: the risk shown is the risk rolled. `risk_rules.attempt_fails` is the roll: a draw just under the risk
-fails and one just over does not. The projects module's `_complete` takes the risk from `effective_risk`, the function `why`
+fails and one just over does not. The projects module's `complete` takes the risk from `effective_risk`, the function `why`
 quotes, on a first attempt and a later one, and makes one draw per attempt."""
 QUICK_TOPIC = True
 
 import unittest
-from types import SimpleNamespace
 
 from sim.projects.risk_rules import attempt_fails
 from sim.tests import projects_host
@@ -50,7 +49,7 @@ class CompleteRollsTheShownRiskTests(unittest.TestCase):
     def complete_failing(self, failed_attempts):
         game = RollSim(draw=0.0, risk_by_attempt=self.RISKS)
         game.seat.failed_attempts[NODE_ID] = failed_attempts
-        game._complete(NODE_ID)
+        game.complete(NODE_ID)
         return game
 
     def test_the_risk_the_attempt_is_rolled_against_is_the_one_effective_risk_quotes(self):

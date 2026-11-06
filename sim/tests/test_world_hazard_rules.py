@@ -21,7 +21,7 @@ HOME, PARTNER = "rome", "han"
 
 def stratum(country, members, food_shortfall=0.0, name="stratum"):
     record = types.SimpleNamespace(kind="stratum", country=country, members=members, shortfall={"food": food_shortfall},
-                                   workforce={}, business=None, royalty_owed={})
+                                   workforce={}, business=Business(), royalty_owed={})
     return types.SimpleNamespace(actor_id="%s_%s" % (country, name), record=record)
 
 
@@ -29,12 +29,11 @@ def game(strata=(), actors=(), home_people=1000.0):
     everyone = list(strata) + list(actors)
     cast = types.SimpleNamespace(of_kind=lambda kind: [each for each in everyone if each.record.kind == kind],
                                  actors={each.actor_id: each for each in everyone},
-                                 world_for=lambda actor, world: None)
+                                 countries=types.SimpleNamespace(world_for=lambda actor, world: None))
     sim = types.SimpleNamespace(
         state=types.SimpleNamespace(
             scenario=types.SimpleNamespace(year=100),
             economy=types.SimpleNamespace(world_events=[]),
-            modules={"markets": types.SimpleNamespace(market_book={})},
             seats={"first": types.SimpleNamespace(household=types.SimpleNamespace(log=[]))}),
         civ={"id": HOME}, events=True, population=types.SimpleNamespace(total=home_people),
         actors=cast,

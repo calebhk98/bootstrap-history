@@ -8,12 +8,15 @@ from .harness import check
 
 from sim.agents.api import ActorRecord, Business, ActorRegistry, ActorsState
 from sim.agents import firm_exit
-from sim.agents.purses import COIN, EDGE_OUTSIDE, EDGE_SAVERS
+from sim.agents.purses import COIN, EDGE_OUTSIDE
 from sim.agents.stratum import Stratum  # noqa: F401  (registers the kind)
 from sim.agents.tuning import EXIT_LOSS_YEARS
 from sim.book import Transfer
 
 from .agents_fake_world import FakeWorld, make_node
+from .pool_lenders import lend_from_savers
+
+CREDITOR = "lender:creditor"   # the lender whose claim the closing firm's cash repays
 
 
 class NoGrowthWorld(FakeWorld):
@@ -26,11 +29,13 @@ class NoGrowthWorld(FakeWorld):
 def indebted_firm(debt, revenue):
 	"""A firm running a concern past its ramp that owes `debt`, in a world where the concern earns `revenue` less costs."""
 	world = NoGrowthWorld(year=50)
-	world.nodes["shop"] = make_node("shop", hours=100.0, revenue=revenue, upkeep=1000.0)
+	world.setting.nodes["shop"] = make_node("shop", hours=100.0, revenue=revenue, upkeep=1000.0)
 	world.demonstrated_nodes = {"shop"}
 	registry = ActorRegistry(ActorsState(home_country="home"))
 	firm = registry.add("firm:1", ActorRecord(kind="firm", founded_year=0, business=Business.running(["shop"], opened_year=0)))
+	lend_from_savers(registry.state.purses, 1e12)
 	firm.money = -debt
+	firm.record.workforce["labourer"] = 100.0 / world.hours_per_person_year   # the crew the labour core hired at the last clearing
 	return world, registry, firm
 
 
@@ -38,7 +43,8 @@ def years_until_closed(world, firm, limit=3 * EXIT_LOSS_YEARS + 10):
 	for _ in range(limit):
 		if firm.record.exited_year is not None:
 			break
-		world.year += 1
+		world.setting.year += 1
+		firm.record.staff_wanted.clear()   # the labour core's clearing takes last year's places
 		firm.act(world)
 	return firm
 
@@ -50,7 +56,7 @@ years_until_closed(world, firm)
 check("a firm whose interest outruns its margin closes", firm.record.exited_year is not None,
 	(firm.record.last_margin, firm.debt(), owed_at_start))
 check("what a closed firm owed is written off: no lender holds a claim on it",
-	firm.debt() == 0.0 and not registry.state.purses.claims.get(firm.account_id), registry.state.purses.claims)
+	firm.debt() == 0.0 and not registry.state.purses.contracts.facility_of(firm.account_id), registry.state.purses.contracts.facilities)
 check("a closed firm runs nothing and owes nothing", not firm.concerns and firm.money == 0.0, firm.money)
 
 # the same margin with a debt its margin carries stays open and pays the interest
@@ -74,16 +80,16 @@ def closing_with(cash, owed):
 	purses = registry.state.purses
 	if cash > 0.0:
 		purses.book.transfer(Transfer(EDGE_OUTSIDE, firm.account_id, COIN, cash, "fixture"))
-	purses.contracts.set_facility(firm.account_id, {EDGE_SAVERS: owed}, COIN)
+	purses.contracts.draw(firm.account_id, CREDITOR, COIN, owed)
 	return world, registry, firm, backer
 
 
 def close_and_measure(cash, owed):
 	world, registry, firm, backer = closing_with(cash, owed)
 	purses = registry.state.purses
-	savers_before = purses.purse(EDGE_SAVERS)
+	savers_before = purses.purse(CREDITOR)
 	firm_exit.close_firm(firm, world)
-	return (purses.purse(EDGE_SAVERS) - savers_before, backer.money, purses.debt(firm.account_id), purses.purse(firm.account_id))
+	return (purses.purse(CREDITOR) - savers_before, backer.money, purses.debt(firm.account_id), purses.purse(firm.account_id))
 
 
 recovered, to_backer, still_owed, left = close_and_measure(cash=150.0, owed=100.0)
@@ -104,7 +110,7 @@ check("a firm closing in debt pays its backer nothing, in either direction",
 # the creditors take the business, not what the firm has learned
 world, registry, firm, backer = closing_with(0.0, 100.0)
 firm.learn(["shop"], world)
-taken = firm.business.seize_all(firm, world) if firm.business.plants else []
+taken = firm.business.reviews.seize_all(firm.review) if firm.business.plants else []
 check("seizing a firm's business takes every plant, for the creditors' reason",
 	[(closure.entry_key, closure.reason) for closure in taken] == [("shop", "creditor_seizure")] and not firm.business.plants, taken)
 check("what the firm learned stays with it", firm.knows("shop", world), firm.knowledge)

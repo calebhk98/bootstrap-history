@@ -5,7 +5,6 @@ project is offered and why a directive can go unmet (`hour_offer`), and the `all
 household. The allocator's callers, the standing work order and a save are in test_allocate_wiring."""
 
 QUICK_TOPIC = True
-from types import SimpleNamespace
 from sim.tests import workforce_stand_in
 
 from .harness import *  # noqa: F401,F403

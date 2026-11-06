@@ -2,6 +2,7 @@
 
 effective_risk answers how likely THIS attempt is to fail, given how many times it already has; calendar_floor and
 expected_calendar_years answer how many years, at best and on average across retries, an attempt takes."""
+from sim.assembly.api import Part
 from sim.production.api import depth_risk_multiplier
 
 from .completion_schedule import (calendar_floor_years, earliest_completion_years, expected_years_to_succeed,
@@ -13,8 +14,8 @@ from .retry_calendar import retry_calendar_retain
 from .risk_rules import control_relief_multiplier, effective_risk_of
 
 
-class Risk:
-	def _retry_calendar_retain(self, node_id, attempt_index=None):
+class Risk(Part):
+	def retry_calendar_retain(self, node_id, attempt_index=None):
 		# The real failure count still drives every actual retry; `attempt_index` only lets a projection ask about a
 		# hypothetical one.
 		if attempt_index is None:
@@ -33,25 +34,25 @@ class Risk:
 		earned it and whatever a bought precaution relieves. `precaution` None reads the running project's own choice;
 		True or False quotes the node as if it were bought or not. Equal to the bare node risk the first time anything is
 		tried, with no controller built."""
-		bought = self.precaution_chosen(node_id) if precaution is None else precaution
+		bought = self.parts.precaution.precaution_chosen(node_id) if precaution is None else precaution
 		# Running the technique and failing at it are one stock of experience.
 		learned = depth_risk_multiplier(self.needs.industry_depth[node_id])
 		return effective_risk_of(self.needs.tree_nodes()[node_id]["risk"], learned, self._control_relief_multiplier(node_id),
-		                         self.precaution_relief(node_id, bought))
+		                         self.parts.precaution.precaution_relief(node_id, bought))
 
 	def calendar_floor(self, node_id):
 		"""Calendar years THIS attempt needs to elapse before a completion roll can fire at all - the SAME formula the
-		year uses to gate `_complete`, not a second copy of it. Diffusion-limited nodes (yrs >= 5) shrink as reputation
+		year uses to gate `complete`, not a second copy of it. Diffusion-limited nodes (yrs >= 5) shrink as reputation
 		grows: a civilisation that already does a hundred complicated things does not start the social diffusion of the
 		hundred-and-first from zero credibility."""
 		return calendar_floor_years(
-			self.needs.tree_nodes()[node_id]["yrs"], self.needs.standing()["reputation"], self.rebuild_work_factor(node_id),
+			self.needs.tree_nodes()[node_id]["yrs"], self.needs.standing()["reputation"], self.parts.rebuild.rebuild_work_factor(node_id),
 			DIFFUSION_LIMITED_YEARS_THRESHOLD, CALENDAR_FLOOR_MIN_YEARS, CALENDAR_FLOOR_REPUTATION_SCALE)
 
 	def payment_schedule_years(self, node_id):
 		"""Years the bill takes to pay in full: it is paid in equal yearly instalments over the node's nominal years,
 		which reputation never shortens."""
-		return payment_schedule_years(self.needs.tree_nodes()[node_id]["yrs"], self.rebuild_work_factor(node_id))
+		return payment_schedule_years(self.needs.tree_nodes()[node_id]["yrs"], self.parts.rebuild.rebuild_work_factor(node_id))
 
 	def earliest_completion_years(self, node_id):
 		"""The soonest the project can finish, with no failure: the longer of the calendar floor and the payment
@@ -97,7 +98,7 @@ class Risk:
 		try:
 			return expected_years_to_succeed(
 				floor, _active.get("yrs", 0.0) if _active is not None else None, initial_failed_attempts,
-				lambda attempt_index: self._retry_calendar_retain(node_id, attempt_index), risk_after,
+				lambda attempt_index: self.retry_calendar_retain(node_id, attempt_index), risk_after,
 				_max_extra_attempts)
 		finally:
 			if _had_key:

@@ -43,13 +43,13 @@ class Arrear:
 class Assessment:
     form: str
     basis: str
-    base_value: float                # money's worth of the whole base
-    due_value: float                 # money's worth the state's officials could assess
-    collected_value: float           # money's worth that reached the state (goods at the year's price)
-    evaded_value: float              # money's worth the state's officials did not reach
+    base_value: Optional[float]      # money's worth of the whole base; None for an in-kind form whose good has no price
+    due_value: Optional[float]       # money's worth the state's officials could assess; None when unpriced
+    collected_value: Optional[float]   # money's worth that reached the state (goods at the year's price); None when unpriced
+    evaded_value: Optional[float]    # money's worth the state's officials did not reach; None when unpriced
     collected_quantity: float        # goods collected in kind; zero for a money form
     arrears: Tuple[Arrear, ...]
-    concealed_value: float = 0.0     # money's worth of tax on the part of the base the payers kept off the rolls
+    concealed_value: Optional[float] = 0.0   # money's worth of tax on the part of the base the payers kept off the rolls; None when unpriced
 
 
 # (rate, share of payers the officials reach) -> share of its base a payer hides; None: nothing is hidden
@@ -75,10 +75,13 @@ def with_rates(forms: Sequence[TaxForm], rates: Sequence[Tuple[str, float]]) -> 
 
 
 def assess(forms: Sequence[TaxForm], facts: YearFacts, state_agent_id: AgentId, prices: Mapping[GoodId, float],
-           state_capacity: float = 1.0, hiding: Hiding = None) -> Tuple[List[Transfer], List[GoodsMove], List[Assessment]]:
+           state_capacity: float = 1.0, hiding: Hiding = None,
+           cash_left: Optional[Dict[AgentId, float]] = None,
+           exempt: FrozenSet[AgentId] = frozenset()) -> Tuple[List[Transfer], List[GoodsMove], List[Assessment]]:
     if not 0.0 <= state_capacity <= 1.0:
         raise ValueError("state_capacity must lie in 0..1, got %r" % state_capacity)
-    cash_left: Dict[AgentId, float] = dict(facts.cash)
+    if cash_left is None:      # a caller that assesses in several calls shares one dict, so a payer is never asked for more than it holds
+        cash_left = dict(facts.cash)
     held_left: Dict[Tuple[AgentId, GoodId], float] = {}
     transfers: List[Transfer] = []
     moves: List[GoodsMove] = []
@@ -88,19 +91,20 @@ def assess(forms: Sequence[TaxForm], facts: YearFacts, state_agent_id: AgentId, 
         bases = measure(form.basis, form, facts, prices)
         if form.paid_in:
             assessments.append(_collect_in_kind(form, bases, facts, state_agent_id, prices, state_capacity,
-                                                held_left, moves, hidden))
+                                                held_left, moves, hidden, exempt))
         else:
             assessments.append(_collect_money(form, bases, facts, state_agent_id, state_capacity, cash_left,
-                                              transfers, hidden))
+                                              transfers, hidden, exempt))
     return transfers, moves, assessments
 
 
 def _collect_money(form, bases: Mapping[AgentId, Base], facts: YearFacts, state_agent_id, state_capacity,
-                   cash_left: Dict[AgentId, float], transfers: List[Transfer], hidden: float = 0.0) -> Assessment:
+                   cash_left: Dict[AgentId, float], transfers: List[Transfer], hidden: float = 0.0,
+                   exempt: FrozenSet[AgentId] = frozenset()) -> Assessment:
     base_total = due_total = collected_total = 0.0
     arrears = []
     for payer, base in sorted(bases.items()):
-        if payer == state_agent_id:
+        if payer == state_agent_id or payer in exempt:
             continue
         due = form.rate * base.value * (1.0 - hidden) * state_capacity
         available = 0.0 if is_edge(payer) else max(0.0, cash_left.get(payer, 0.0))
@@ -120,12 +124,12 @@ def _collect_money(form, bases: Mapping[AgentId, Base], facts: YearFacts, state_
 
 def _collect_in_kind(form, bases: Mapping[AgentId, Base], facts: YearFacts, state_agent_id, prices, state_capacity,
                      held_left: Dict[Tuple[AgentId, GoodId], float], moves: List[GoodsMove],
-                     hidden: float = 0.0) -> Assessment:
-    price = prices.get(form.paid_in, 0.0)
+                     hidden: float = 0.0, exempt: FrozenSet[AgentId] = frozenset()) -> Assessment:
+    price = prices.get(form.paid_in)
     base_total = due_total = collected_quantity = 0.0
     arrears = []
     for payer, base in sorted(bases.items()):
-        if payer == state_agent_id:
+        if payer == state_agent_id or payer in exempt:
             continue
         due = form.rate * base.quantity * (1.0 - hidden) * state_capacity
         key = (payer, base.good)
@@ -137,9 +141,12 @@ def _collect_in_kind(form, bases: Mapping[AgentId, Base], facts: YearFacts, stat
             held_left[key] -= paid
         if due - paid > 0.0:
             arrears.append(Arrear(payer, form.name, due - paid, base.good))
-        base_total += base.value
-        due_total += due * price
+        if price is not None:
+            base_total += base.quantity * price
+        due_total += due
         collected_quantity += paid
-    return Assessment(form.name, form.basis, base_total, due_total, collected_quantity * price,
+    if price is None:      # the quantities stand; their worth in money is not known
+        return Assessment(form.name, form.basis, None, None, None, None, collected_quantity, tuple(arrears), None)
+    return Assessment(form.name, form.basis, base_total, due_total * price, collected_quantity * price,
                       form.rate * base_total * (1.0 - hidden) * (1.0 - state_capacity), collected_quantity, tuple(arrears),
                       form.rate * base_total * hidden)

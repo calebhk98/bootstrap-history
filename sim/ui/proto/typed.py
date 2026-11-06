@@ -4,9 +4,9 @@ import json
 
 from . import available_args, command_registry
 from sim.engine.ui_port import units
+from sim.workforce.api import REPLACE_ONLY
 from sim.refusal import Refusal
 from .buy_targets import canonical_target
-from .dispatch import KNOWN_COMMANDS
 from .nodes import NODE_IDS, NODE_IDS_LOWER
 from .help import example_node_id
 from .render_screen_state_views import SECTIONS
@@ -544,7 +544,7 @@ def _parse_open_or_named_tech(command, rest, words, nums, want_json):
     if command == "open" and nums:
         # A TRAILING NUMBER IS UNITS, NOT PART OF THE NAME. 'open
         # school_founded 2' founds a second school - see
-        # ProjectsMixin._expand_institution. No id is only digits, so a
+        # _expand_institution (sim/ventures/opening.py). No id is only digits, so a
         # number anywhere in the line is unambiguously this, not a stray word
         # of a multi-word name.
         want = " ".join(words)
@@ -586,6 +586,12 @@ def _parse_open_or_named_tech(command, rest, words, nums, want_json):
         want = NODE_IDS_LOWER.get(want.lower(), want)
     return ({"cmd": command, "id": want, "full": True} if full
             else {"cmd": command, "id": want}), None
+
+
+def _parse_cancel_orders(command, rest, words, nums, want_json):
+    if len(words) != 2 or words[0].lower() not in ("buy", "sell"):
+        return None, "cancel_orders needs a side and a material ('cancel_orders sell iron')."
+    return {"cmd": "cancel_orders", "side": words[0].lower(), "material": words[1].lower()}, None
 
 
 def _parse_withdraw(command, rest, words, nums, want_json):
@@ -827,8 +833,8 @@ def _parse_policy(command, rest, words, nums, want_json):
         return None, ("to change one, say which and whether, e.g. "
                       "'policy auto_hire off'. Bare 'policy' lists them.")
     val = rest[1].lower()
-    if val == "replace" and rest[0].lower() == "auto_hire":
-        return {"cmd": "policy", "set": {"auto_hire": "replace"}}, None
+    if val == REPLACE_ONLY and rest[0].lower() == "auto_hire":
+        return {"cmd": "policy", "set": {"auto_hire": REPLACE_ONLY}}, None
     if val in ("on", "true", "yes", "y", "1"):
         flag = True
     elif val in ("off", "false", "no", "n", "0"):
@@ -906,6 +912,7 @@ _COMMAND_PARSERS = {
     "ventures": _parse_ventures,
     "market": _parse_market,
     "sell": _parse_sell,
+    "cancel_orders": _parse_cancel_orders,
     "risk": _parse_risk,
     "rush": _parse_rush,
     "state": _parse_state,

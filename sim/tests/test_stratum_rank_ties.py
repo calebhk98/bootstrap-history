@@ -24,10 +24,7 @@ class BondedStand:
 
 class FlatPayWorld:
 	def __init__(self, pay):
-		self.pay = pay
-
-	def pay_per_person_year(self, trade):
-		return self.pay
+		self.labour = SimpleNamespace(pay_per_person_year=lambda trade: pay)
 
 
 world = FlatPayWorld(PAY)

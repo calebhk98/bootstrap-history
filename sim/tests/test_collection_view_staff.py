@@ -15,22 +15,14 @@ PAY = 10.0
 
 
 class OneTileWorld(CollectionView):
-    hours_per_person_year = 2000.0
+    """The collection part over a stand-in world whose readers are written out."""
 
     def __init__(self, unfunded=None):
-        self.record = SimpleNamespace(unfunded=dict(unfunded or {}), hold_by_tile={})
-
-    def government(self):
-        return SimpleNamespace(record=self.record)
-
-    def pay_per_person_year(self, trade):
-        return PAY
-
-    def population_total(self):
-        return PEOPLE
-
-    def literacy(self, name):
-        return 0.0
+        record = SimpleNamespace(unfunded=dict(unfunded or {}), hold_by_tile={})
+        super().__init__(SimpleNamespace(
+            setting=SimpleNamespace(government=lambda: SimpleNamespace(record=record)),
+            labour=SimpleNamespace(trade_of_role=lambda role: "scribe", pay_per_person_year=lambda trade: PAY, hours_per_person_year=2000.0),
+            people=SimpleNamespace(population_total=lambda: PEOPLE, literacy=lambda name: 0.0)))
 
     def collection_people_by_tile(self):
         return {"seat": PEOPLE}

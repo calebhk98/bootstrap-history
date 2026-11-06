@@ -82,11 +82,11 @@ def bounty_possible(category: str, craft_categories: Sequence[str], prerequisite
     return False
 
 
-def trade_wait_years(supply_now: float, year: int, training_rows: Sequence[Sequence[Any]], trade: str) -> Optional[float]:
+def trade_wait_years(supply_now: float, year: int, training_rows: Sequence[Any], trade: str) -> Optional[float]:
     """0 when hands exist now; else years until the soonest trainees join; None when nobody is on the way."""
     if supply_now > 0.0:
         return 0.0
-    waits = [max(0.0, row[1] - year) for row in training_rows if len(row) > 3 and row[2] == trade and row[3] > 0]
+    waits = [max(0.0, row.ready_year - year) for row in training_rows if row.trade == trade and row.people > 0]
     return min(waits) if waits else None
 
 

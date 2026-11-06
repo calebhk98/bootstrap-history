@@ -7,11 +7,11 @@ import unittest
 from sim.invalidating import _InvalidatingDict
 from sim.knowledge.api import KnowledgeSeat
 from sim.knowledge.module import HELD_CHANGES, Knowledge
-from sim.markets.module import Markets
 from sim.materials.module import Materials
 from sim.production.caches import SeatMemos
 from sim.production.module import Production
-from sim.projects.projects import ACTIVE_CHANGES, Projects
+from sim.projects.channels import ACTIVE_CHANGES
+from sim.projects.projects import Projects
 from sim.projects.state import ProjectsSeat
 from sim.tests import module_harness
 from sim.ventures.channels import OPERATING_CHANGES
@@ -28,14 +28,7 @@ class SeatBoundHooks(unittest.TestCase):
         module._memos = {"a": SeatMemos(), "b": SeatMemos()}
         module.clock.act_as("a")
         module.seat_bound()
-        self.assertEqual(module._memos, {})
-
-    def test_markets_drops_the_acting_seats_goods_category_figures_and_no_other_seats(self):
-        module = module_harness.build(Markets)
-        module._caches = {("a", "goods_cat_state"): 1, ("a", "income_factor"): 2, ("a", "kept"): 3, ("b", "income_factor"): 4}
-        module.clock.act_as("a")
-        module.seat_bound()
-        self.assertEqual(module._caches, {("a", "kept"): 3, ("b", "income_factor"): 4})
+        self.assertEqual(module.parts.views._memos, {})
 
     def test_materials_drops_the_acting_seats_remembered_demand(self):
         module = module_harness.build(Materials)
@@ -59,7 +52,7 @@ class SeatBoundHooks(unittest.TestCase):
         module.clock.act_as("a")
         before = module.clock.counter(module.module_id, OPERATING_CHANGES, True)
         module.seat_bound()
-        self.assertEqual(module.seat.business.watch, module.operating_changed)
+        self.assertEqual(module.seat.business.watch, module.parts.plants.operating_changed)
         self.assertNotEqual(module.clock.counter(module.module_id, OPERATING_CHANGES, True), before)
 
     def test_projects_wraps_the_acting_seats_projects_in_hand_and_counts_the_change(self):

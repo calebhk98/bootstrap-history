@@ -6,13 +6,12 @@ shows a topic page. Commands declare their own text with @command (see
 command_registry.py); topics register with @help_topic below.
 """
 
-import json
 
 from sim.engine.ui_port import money_unit_note
 from sim.resources.api import base_mine_catalog_hint
 from . import command_registry
 from .nodes import NODE_IDS
-from .help_commands import JSON_MODE_NOTE, _command_text, commands_page, full_listing
+from .help_commands import _command_text, commands_page, full_listing
 
 TOPICS = {}          # topic name -> builder(sim) returning the page dict
 TOPIC_ALIASES = {}   # other word -> topic name
@@ -211,7 +210,7 @@ def _topic_economy(sim):
             "buy school": "buy school smith 2 makes two more smiths' worth "
                                 "of annual labour locally available",
             "materials": "materials shows durable stock and flow; buy material "
-                         "iron 10 or sell iron 5 trades tonnes at current prices",
+                         "iron 10 or sell iron 5 orders tonnes at the year's clearing",
             "buy mine": '{"cmd":"buy","what":"mine","material":"coal","n":500} '
                         "tonnes a year of your own workings; it takes years "
                         "to sink, and it costs to keep standing whether or "
@@ -301,7 +300,6 @@ def _topic_stuck(sim):
 
 @help_topic('log', aliases=['history', 'diary'])
 def _topic_log(sim):
-    fog = sim.view("fog_of_war")()
     return {"log": (
         "Your own history, in the order it happened: what you started, "
         "what finished, what failed and why, a concern opening or "

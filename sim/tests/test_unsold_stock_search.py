@@ -8,7 +8,8 @@ import math
 import types
 import unittest
 
-from sim.economy import goods_market, seller_offers, unsold_search
+from sim.tests.economy_view_defaults import ViewDefaults, setup_of
+from sim.economy import demand_search, goods_market, seller_offers, unsold_search
 from sim.economy.producers import Producer
 from sim.economy.types import Bid, Offer, Recipe
 
@@ -16,7 +17,8 @@ GOOD, AREA, TILE = "alloy", "area", "tile"
 COST = 2.0 * 3.0 + 4.0 * 0.5      # two of metal at three, four hours at half
 
 
-class View:
+class View(ViewDefaults):
+    setup = setup_of("labour")
     def interest_rate(self, currency):
         return 0.0
 
@@ -42,8 +44,8 @@ def game(*sellers, workshops=1):
     recipe = Recipe("melt", {GOOD: 1.0}, {"metal": 2.0}, {"labour": 4.0})
     producers = {name: Producer(name, "lord", "melt", TILE, 10.0, workshops=workshops) for name in sellers}
     basket = types.SimpleNamespace(substitution=1.0)
-    setup = types.SimpleNamespace(specs={}, recipes={"melt": recipe}, basket_for=lambda tile: basket)
-    return setup, types.SimpleNamespace(producers=producers, memory=types.SimpleNamespace(volume_weights={GOOD + "|" + AREA: 100.0}), unmet={})
+    setup = types.SimpleNamespace(specs={}, currency_id="coin", recipes={"melt": recipe}, basket_for=lambda tile: basket)
+    return setup, types.SimpleNamespace(producers=producers, memory=types.SimpleNamespace(volume_weights={GOOD + "|" + AREA: 100.0}), goods=types.SimpleNamespace(unmet={}))
 
 
 def buyer(quantity, maximum_price):
@@ -143,7 +145,7 @@ class UnsoldStockSearchTests(unittest.TestCase):
         """How many market crossings one search makes for sellers asking `asks` under `view`."""
         offers = [offer("a", 100.0, ask) for ask in asks]
         setup, record = game("a")
-        counted, original = [0], goods_market._crossing
+        counted, original = [0], goods_market.crossing
 
         def counting(*arguments, **keywords):
             counted[0] += 1
@@ -151,11 +153,11 @@ class UnsoldStockSearchTests(unittest.TestCase):
                 raise RuntimeError("search did not converge")
             return original(*arguments, **keywords)
 
-        goods_market._crossing = counting
+        goods_market.crossing = counting
         try:
             unsold_search.clear_with_search(setup, record, view, bids, offers, offers, GOOD, AREA, "coin", 100.0)
         finally:
-            goods_market._crossing = original
+            goods_market.crossing = original
         return counted[0]
 
     def test_the_search_is_bounded_by_its_precision_when_a_unit_costs_nothing_to_make(self):
@@ -167,7 +169,7 @@ class UnsoldStockSearchTests(unittest.TestCase):
                 return 0.0
 
         # the bracket is [0, ask] and halves each trial: about log2(1 / precision) trials plus the fixed few
-        bound = math.ceil(math.log2(1.0 / unsold_search.SEARCH_PRECISION)) + 6
+        bound = math.ceil(math.log2(1.0 / demand_search.SEARCH_PRECISION)) + 6
         self.assertLessEqual(self.crossings_for(Free(), [], [150.0]), bound)
 
     def test_the_search_is_bounded_when_the_floor_is_far_below_the_ask(self):
@@ -180,7 +182,7 @@ class UnsoldStockSearchTests(unittest.TestCase):
 
         # the log of the ratio of ask to floor halves each trial, so the count grows with its log, not the ratio
         ratio = math.log(150.0 / 4e-274)
-        bound = math.ceil(math.log2(ratio / unsold_search.SEARCH_PRECISION)) + 6
+        bound = math.ceil(math.log2(ratio / demand_search.SEARCH_PRECISION)) + 6
         self.assertLessEqual(self.crossings_for(Nearly(), [], [150.0]), bound)
 
 

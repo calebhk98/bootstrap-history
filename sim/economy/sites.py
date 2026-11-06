@@ -1,7 +1,7 @@
 """Limits a site imposes on a recipe, handed in from outside; the economy models no deposit.
 
 Geography owns deposits. It declares, per (recipe, tile), how many runs a year the site allows and at
-what yield (`SiteLimit`), at the opening in the setup and each year in `YearInputs`; the economy keeps
+what yield (`SiteLimit`), at the opening in the setup and each year in `EconomyYearInputs`; the economy keeps
 producers inside those limits and reports what it worked (`extraction_by_tile`) so geography can deplete.
 A site-bound recipe with any declared limit runs only on tiles that have one.
 """
@@ -11,6 +11,7 @@ from typing import Dict, Iterable, Mapping, Sequence, Tuple
 
 from sim.constants import declare
 
+from . import producer_table
 from .types import Recipe, SiteLimit, TileId
 
 UNSITED_EXTRACTION_ANYWHERE = declare(
@@ -27,7 +28,7 @@ def climate_allows(recipe: Recipe, tile_spec) -> bool:
     """Whether the tile's climate is one the recipe can be worked in (data names the climates; a recipe
     naming none, or a tile whose climate is not known, is allowed)."""
     classes = recipe.climate_classes
-    climate = getattr(tile_spec, "climate_class", "") if tile_spec is not None else ""
+    climate = tile_spec.climate_class if tile_spec is not None else ""
     return not classes or not climate or climate in classes
 
 
@@ -48,6 +49,11 @@ def limits_by_recipe(limits: Iterable[SiteLimit]) -> LimitsByRecipe:
 def is_sited(recipe: Recipe, by_recipe: Mapping[str, Mapping[TileId, SiteLimit]]) -> bool:
     """True where the recipe is site-bound and has a declared limit somewhere."""
     return recipe.site_bound and bool(by_recipe.get(recipe.recipe_id))
+
+
+def runs_anywhere(recipe: Recipe, by_recipe: Mapping[str, Mapping[TileId, SiteLimit]]) -> bool:
+    """True where the recipe is site-bound with no declared limit and `UNSITED_EXTRACTION_ANYWHERE` lets it run on any tile."""
+    return UNSITED_EXTRACTION_ANYWHERE and recipe.site_bound and not by_recipe.get(recipe.recipe_id)
 
 
 def allowed_tiles(recipe: Recipe, by_recipe: Mapping[str, Mapping[TileId, SiteLimit]],
@@ -73,11 +79,9 @@ def yield_at(recipe: Recipe, tile: TileId, by_recipe: Mapping[str, Mapping[TileI
     return default if limit is None else limit.yield_factor
 
 
-def apply_site_limits(record, setup, limits: Sequence[SiteLimit] = ()) -> None:
-    """Hold sited producers to their limits: capacity capped (nil off a site), plant still to come cut to
-    the room left, yield following the limit. Non-empty `limits` replace the setup's; empty keeps the last."""
-    if limits:
-        setup.site_limits = tuple(limits)
+def apply_site_limits(record, setup) -> None:
+    """Hold sited producers to the setup's limits: capacity capped (nil off a site), plant still to come cut to
+    the room left, yield following the limit."""
     by_recipe = limits_by_recipe(setup.site_limits)
     for producer_id, producer in sorted(record.producers.items()):
         recipe = setup.recipes.get(producer.recipe_id)
@@ -85,15 +89,12 @@ def apply_site_limits(record, setup, limits: Sequence[SiteLimit] = ()) -> None:
             continue
         limit = by_recipe[recipe.recipe_id].get(producer.tile)
         capacity = min(producer.capacity_runs, limit.capacity_runs_per_year) if limit else 0.0
-        record.producers[producer_id] = dataclasses.replace(
-            producer, capacity_runs=capacity, yield_factor=limit.yield_factor if limit else producer.yield_factor)
-        coming = record.expansion_runs.get(producer_id, 0.0)
+        producer_table.put_producer(record.producers, dataclasses.replace(
+            producer, capacity_runs=capacity, yield_factor=limit.yield_factor if limit else producer.yield_factor))
+        coming = record.credit.expansion_runs.get(producer_id, 0.0)
         if coming > 0.0:
             room = max(0.0, (limit.capacity_runs_per_year if limit else 0.0) - capacity)
-            if room > 0.0:
-                record.expansion_runs[producer_id] = min(coming, room)
-            else:
-                del record.expansion_runs[producer_id]
+            record.credit.trim_expansion(producer_id, room)
 
 
 def in_id_order(producers):

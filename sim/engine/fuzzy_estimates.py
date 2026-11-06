@@ -30,7 +30,7 @@ ESTIMATE_NOTE = ("Figures marked ~ are estimates, not measurements: you do not "
 
 
 def enabled(sim):
-    return bool(sim.view("legacy_fuzzy_estimates")())
+    return bool(sim.view("fuzzy_estimates")())
 
 
 def salt(sim):

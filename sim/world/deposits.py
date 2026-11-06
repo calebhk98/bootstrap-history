@@ -21,7 +21,7 @@ depends on how much is demanded - the marginal deposit is only "marginal"
 relative to some quantity that has to be supplied - and this project does
 not have a demand system yet. So every function below that needs a quantity
 takes it as an explicit argument (`quantity_demanded_tonnes_per_year`),
-exactly as sim/world/agriculture.py takes weather as a parameter and
+exactly as sim/world/agriculture_core.py takes weather as a parameter and
 sim/world/demography.py takes food as one. The day a real demand system
 exists, it plugs into that parameter and nothing in this module changes.
 Until then, the demonstrations here and in sim/tests/test_deposits.py use
@@ -31,9 +31,7 @@ because it is the only quantity this project already has for these metals.
 
 STANDALONE ON PURPOSE, LIKE ITS SIBLINGS. Nothing here imports sim/engine/
 or any other sim/world/ module - see sim/world/__init__.py for why a module
-built this way survives other agents editing sim/engine/economy.py and
-sim/prices/solve_prices.py concurrently with this
-file's construction. It reads two data files that already exist
+built this way stays testable without a `Sim`. It reads two data files that already exist
 (the map folder (data/world/geography/), data/world/resources.json) and one new one this
 task adds (the geography deposit catalogue), as plain JSON - that is data, not an
 import of another module's code, and cannot be broken by or break any of
@@ -1322,7 +1320,7 @@ def find_marginal_deposit(
 class DepositState(object):
     """A deposit plus how much of it is left - the mutable running stock
     Complaints/32's "depletion" requirement needs, in the same spirit as
-    sim/world/agriculture.py's `Storage`: the physical facts (`deposit`)
+    sim/world/agriculture_storage.py's `Storage`: the physical facts (`deposit`)
     stay fixed, only the stock moves.
 
     Also tracks `initial_reserve_tonnes_metal` (the reserve this state

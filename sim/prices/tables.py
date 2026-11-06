@@ -11,13 +11,22 @@ retire: ONE_PRICE_OWNER_PLAN.md stage 5.
 
 Money is the labour hour times what an hour is worth, which follows the one coin stock, so every price here, traded or
 not, moves with money against goods."""
-from typing import Any, Dict, Optional, Tuple
+from typing import Dict, Optional, Tuple
 
-from . import engine_seam, rules
+from sim.assembly.api import Part
+
+from . import rules
 from . import prices as price_solver
 
 
-class Tables:
+class Tables(Part):
+
+    def __init__(self, module):
+        super().__init__(module)
+        self._reading_market_rate = False                    # set while the market rate is asked for: it may need these prices
+        self._price_tables_cache: Optional[Tuple] = None     # (granted, in use, tables, (farmed, rate, tiles held)), compared by value
+        self._incumbent_table_cache: Optional[Tuple] = None  # ((granted, farmed, rate, tiles held), hours, basis)
+        self._material_prices_cache: Optional[Tuple] = None  # (hours table, money per hour, prices)
 
     def banded_market_rate(self) -> float:
         """The live market rate, banded: the rate the solver charges plants and stock. Asking the market for its rate may
@@ -34,28 +43,29 @@ class Tables:
     def price_tables(self) -> Tuple[Dict[str, float], Dict[str, str]]:
         """(labour-hour price of each good, provenance of each), for the incumbents' techniques plus the baseline for
         goods only a producer's own technique reaches."""
-        granted_now = self.needs.techniques_granted()
-        in_use = self.needs.techniques_in_use()
+        granted_now = frozenset(self.needs.techniques_granted())
+        in_use = frozenset(self.needs.techniques_in_use())
         farmed = price_solver.band_farmed_hectares(self.needs.farm_land_hectares())
         rate = self.banded_market_rate()
+        civ = self.parts.calculated_views.held_civilisation()
+        ground = tuple(civ["home_tiles"])
         cached = self._price_tables_cache
-        if (cached is not None and cached[0] is granted_now and cached[1] is in_use
-                and cached[3] == len(granted_now) and cached[4] == (farmed, rate)):
+        if cached is not None and cached[:2] == (granted_now, in_use) and cached[3] == (farmed, rate, ground):
             return cached[2]
-        granted = frozenset(granted_now)
-        civ = self.needs.civilisation()
-        civilisation = dict(civilization_id=civ.get("id"), civilization=civ, farmed_hectares=farmed, interest_rate=rate)
+        granted = granted_now
+        document = self.parts.calculated_views.opening_schedule(self.needs.civilisation()).document()
+        unskilled = self.needs.unskilled_trade()
         incumbent = self._incumbent_table_cache
-        if incumbent is None or incumbent[0] != (granted, farmed, rate):
+        if incumbent is None or incumbent[0] != (granted, farmed, rate, ground):
             incumbent = self._incumbent_table_cache = (
-                (granted, farmed, rate), *engine_seam.calculated_goods_table(granted, **civilisation))
+                (granted, farmed, rate, ground), *price_solver.goods_in_hours(granted, document, civ, farmed, rate, unskilled_trade=unskilled))
         hours, basis = incumbent[1], incumbent[2]
         if in_use != granted:
-            run_hours, run_basis = engine_seam.calculated_goods_table(in_use, **civilisation)
+            run_hours, run_basis = price_solver.goods_in_hours(in_use, document, civ, farmed, rate, unskilled_trade=unskilled)
             tables = rules.merge_by_reach(hours, basis, run_hours, run_basis)
         else:
             tables = (dict(hours), dict(basis))
-        self._price_tables_cache = (granted_now, in_use, tables, len(granted_now), (farmed, rate))
+        self._price_tables_cache = (granted_now, in_use, tables, (farmed, rate, ground))
         return tables
 
     def material_prices(self) -> Dict[str, float]:
@@ -75,7 +85,7 @@ class Tables:
         from the calculator-backed table; None if it cannot be priced at all. A cost: what a buyer pays is the goods
         market's price."""
         prices = self.material_prices()
-        key = rules.priced_key(tag, prices, self.commodity_record(tag))
+        key = rules.priced_key(tag, prices, self.parts.memos.commodity_record(tag))
         return None if key is None else prices[key]
 
     def material_price_basis(self, material: str) -> Optional[str]:
@@ -84,4 +94,4 @@ class Tables:
 
     def price_index(self) -> float:
         """The civilisation's price level for capital goods and land against the labour hour."""
-        return float(self.needs.civilisation().get("price_index", 1.0))
+        return float(self.needs.civilisation()["price_index"])

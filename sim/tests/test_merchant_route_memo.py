@@ -13,7 +13,7 @@ GOODS = ("salt", "fish")
 
 
 def routes(who, carriage, area_map, rate, specs=SPECS, view=None):
-    return merchants._candidate_routes(who, view or View({}), carriage, area_map, {}, specs, rate)
+    return merchants.candidate_routes(who, view or View({}), carriage, area_map, {}, specs, rate)
 
 
 def fresh_routes(who, rate, specs=SPECS, view=None):
@@ -98,8 +98,8 @@ class HeldStockSearchTests(unittest.TestCase):
 
     def test_the_partial_rows_are_rows_of_the_full_search(self):
         held = {("salt", "a"): 5.0}
-        full = merchants._candidate_routes(self.who, View({}), self.carriage, self.area_map, held, SPECS, 0.05)
-        partial = merchants._candidate_routes(self.who, View({}), self.carriage, self.area_map, held, SPECS, 0.05,
+        full = merchants.candidate_routes(self.who, View({}), self.carriage, self.area_map, held, SPECS, 0.05)
+        partial = merchants.candidate_routes(self.who, View({}), self.carriage, self.area_map, held, SPECS, 0.05,
                                               merchants.held_by_good(held))
         self.assertTrue(partial)
         self.assertEqual(partial, [row for row in full if row[1] == "salt" and "a" in row[2].tiles])

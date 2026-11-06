@@ -1,22 +1,30 @@
 """What the seat's work draws: the tonnes a year its projects and finished installations need, and the tables that hold
 while they are unchanged."""
 import collections
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Optional, Tuple
+
+from sim.assembly.api import Part
 
 from . import rules
-from .readings import Readings
+from .seat_readings import SeatReadings
 
 
-class Demand:
+class Demand(Part):
     """Needs: active_project_ids, active_projects_version, techniques_version, tree_nodes, techniques_held."""
 
+    def __init__(self, module):
+        super().__init__(module)
+        self._readings: Dict[Any, Any] = {}        # seat id -> what is remembered for that seat (demand tables, last reading)
+        self._annual_keys: Optional[Tuple] = None   # (active projects, done version) the last annual demand was worked out for
+        self._standing: Optional[Tuple] = None      # (done version, done set, what the finished installations keep drawing)
+
     @property
-    def readings(self) -> Readings:
+    def readings(self) -> SeatReadings:
         """What is remembered for the acting seat."""
         seat_id = self.clock.acting_seat
         readings = self._readings.get(seat_id)
         if readings is None:
-            readings = self._readings[seat_id] = Readings()
+            readings = self._readings[seat_id] = SeatReadings()
         return readings
 
     def chosen_fuel(self, node_id: str) -> str:
@@ -79,7 +87,7 @@ class Demand:
         cached = self.readings.by_tag
         if cached is not None and cached[0] is demand:
             return cached[1]
-        by_tag = self.demand_by_supply_tag(demand)
+        by_tag = self.parts.supply.demand_by_supply_tag(demand)
         self.readings.by_tag = (demand, by_tag)
         return by_tag
 

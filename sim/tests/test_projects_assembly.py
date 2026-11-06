@@ -39,7 +39,7 @@ class ProjectsInTheShippedSet(unittest.TestCase):
         assembly = assemble(shipped_specs(), [Operations("mymod", layers={"projects": (WithoutArrears,)})])
         projects = assembly.modules["projects"]
         self.assertNotIn("arrears", [check.cause for check in projects.START_CHECKS])
-        self.assertNotIn("arrears", projects._own_checks)
+        self.assertNotIn("arrears", projects.parts.start_checks.own_checks)
         self.assertEqual(len(projects.START_CHECKS), len(START_CHECKS) - 1)
 
     def test_the_shipped_module_still_has_every_check(self):

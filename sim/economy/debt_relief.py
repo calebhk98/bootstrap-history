@@ -3,10 +3,11 @@
 Every term loan whose borrower is a cohort of the tile is cancelled and the lender books the loss (principal
 and arrears) as it would a default, except that no title is taken: the borrowers keep their land. Rent
 arrears of tenants on the tile are forgiven too. The state's choice reaches the economy as the tiles in
-`YearInputs.debt_relief_tiles`.
+`EconomyYearInputs.debt_relief_tiles`.
 """
 from typing import Dict, Iterable
 
+from . import titles
 from .types import TileId
 
 
@@ -18,22 +19,20 @@ def forgive(record, tiles: Iterable[TileId]) -> Dict[str, float]:
     if not relieved:
         return written_off
     kept = []
-    for loan in record.loans:
+    for loan in record.credit.loans:
         if loan.borrower not in borrowers:
             kept.append(loan)
             continue
         written_off["principal"] += loan.principal
         written_off["arrears"] += loan.arrears
-        record.credit_losses[loan.lender] = record.credit_losses.get(loan.lender, 0.0) + loan.principal + loan.arrears
-    record.loans = kept
+        record.credit.add_loss(loan.lender, loan.principal + loan.arrears)
+    record.credit.loans = kept
     for tile in relieved:
-        for row in getattr(record, "tenancies", {}).get(tile, ()):
-            written_off["rent_arrears"] += row["arrears"]
-            row["arrears"] = 0.0
+        written_off["rent_arrears"] += titles.forgive_rent_arrears(record.land, tile)
     return written_off
 
 
 def indebted_tiles(record) -> list:
     """Tiles where a household cohort owes a term loan, sorted: the tiles a state could relieve."""
     tile_of = {cohort.agent_id: cohort.tile for cohort in record.cohorts.values()}
-    return sorted({tile_of[loan.borrower] for loan in record.loans if loan.borrower in tile_of})
+    return sorted({tile_of[loan.borrower] for loan in record.credit.loans if loan.borrower in tile_of})

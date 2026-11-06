@@ -1,10 +1,9 @@
-"""Complaints 81, 83 and 127: what a finished or failed project logs, by kind and facts. The projects module's `_complete`, `failure_severity`,
+"""Complaints 81, 83 and 127: what a finished or failed project logs, by kind and facts. The projects module's `complete`, `failure_severity`,
 `opening_shortfall` and `goal_effect_lines` run over plain values carrying only what they read; the severity, shortfall and goal
 movement rules are test_completion_messaging."""
 
 QUICK_TOPIC = True
 
-from collections import Counter
 from types import SimpleNamespace
 
 from .harness import check
@@ -80,7 +79,7 @@ class Finishing:
 
 
 def complete(game):
-    game.module._complete(NODE)
+    game.module.complete(NODE)
     return game
 
 

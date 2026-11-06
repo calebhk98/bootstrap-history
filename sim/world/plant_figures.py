@@ -11,7 +11,7 @@ from typing import Dict, Iterable, Mapping, Optional, Tuple
 
 from sim.constants import declare
 
-from .plant_baskets import (ENERGY_CARRIERS, Baskets, line_capacities, net_per_batch,  # noqa: F401  (kernel surface)
+from .plant_baskets import (ENERGY_CARRIERS, Baskets, line_capacities, net_per_batch, priced_total,  # noqa: F401  (kernel surface)
                             yearly_baskets)
 
 PLANT_MAINTENANCE_SHARE_PER_YEAR = {
@@ -68,12 +68,15 @@ def crew_is_fallback(derived_hours: float, stated_people: Optional[float]) -> bo
 
 # ---------------------------------------------------------------- takings
 
-def takings(baskets: Baskets, goods: Mapping[str, float]) -> float:
+def takings(baskets: Baskets, goods: Mapping[str, float]) -> Optional[float]:
     """Money a year the baskets sell for less what they buy (outputs and energy sold, inputs and energy bought, at
-    the prices passed), never negative. Linear in the prices of what it sells."""
-    sold = sum(quantity * goods[material] for material, quantity in baskets.outputs.items())
+    the prices passed), never negative. Linear in the prices of what it sells. None when any good in the baskets
+    has no price."""
+    sold = priced_total(baskets.outputs, goods)
+    bought = priced_total(baskets.purchases, goods)
+    if sold is None or bought is None:
+        return None
     sold += sum(basket["value"] for basket in baskets.energy_sold.values())
-    bought = sum(quantity * goods.get(material, 0.0) for material, quantity in baskets.purchases.items())
     bought += sum(basket["value"] for basket in baskets.energy_bought.values())
     return max(0.0, sold - bought)
 
@@ -96,35 +99,50 @@ def staff_hours_cost(labour_hours_by_trade: Mapping[str, float], wages: Mapping[
 
 
 def _capital_build_hours(capital: Mapping, goods: Mapping[str, float], wages: Mapping[str, float],
-                         money_per_labour_hour: float) -> float:
-    money = sum(goods.get(material, 0.0) * quantity
-                for material, quantity in (capital.get("build_materials") or {}).items())
+                         money_per_labour_hour: float) -> Optional[float]:
+    """Build bill of one capital good in labour hours; None when a material of it has no price."""
+    money = priced_total(capital.get("build_materials") or {}, goods)
+    if money is None:
+        return None
     money += sum(wages[trade] * hours for trade, hours in (capital.get("build_labour_hours") or {}).items())
     return money / money_per_labour_hour
 
 
 def plant_build_hours(plant: Iterable[Tuple[Mapping, float]], goods: Mapping[str, float],
-                      wages: Mapping[str, float], money_per_labour_hour: float) -> float:
+                      wages: Mapping[str, float], money_per_labour_hour: float) -> Optional[float]:
     """Labour hours it takes to build one of each capital good the lines run in: its materials at solved
-    prices and its labour at wages (the build bill each production entry states)."""
-    return sum(_capital_build_hours(capital, goods, wages, money_per_labour_hour) for capital, _used in plant)
+    prices and its labour at wages (the build bill each production entry states). None when a material of
+    any of them has no price."""
+    bills = [_capital_build_hours(capital, goods, wages, money_per_labour_hour) for capital, _used in plant]
+    return None if any(bill is None for bill in bills) else sum(bills)
 
 
 def plant_wear_hours(plant: Iterable[Tuple[Mapping, float]], goods: Mapping[str, float],
-                     wages: Mapping[str, float], money_per_labour_hour: float) -> float:
+                     wages: Mapping[str, float], money_per_labour_hour: float) -> Optional[float]:
     """Labour hours a year the plant wears out at the share of its capacity the lines use: its build
-    bill over its service life, which the solved price of what it makes charges per unit."""
-    return sum(_capital_build_hours(capital, goods, wages, money_per_labour_hour)
-               / capital["service_life_years"] * used for capital, used in plant if capital.get("service_life_years"))
+    bill over its service life, which the solved price of what it makes charges per unit. None when a build
+    bill has no price."""
+    wear = 0.0
+    for capital, used in plant:
+        if not capital.get("service_life_years"):
+            continue
+        bill = _capital_build_hours(capital, goods, wages, money_per_labour_hour)
+        if bill is None:
+            return None
+        wear += bill / capital["service_life_years"] * used
+    return wear
 
 
 def upkeep_parts(kind: Optional[str], baskets: Baskets, goods: Mapping[str, float], wages: Mapping[str, float],
-                 money_per_labour_hour: float) -> Dict[str, float]:
+                 money_per_labour_hour: float) -> Optional[Dict[str, float]]:
     """A plant's yearly upkeep in labour hours: its crew's pay (`staff`) and the wear and maintenance of its
-    capital (`plant`), with the build and wear hours the plant part comes from."""
+    capital (`plant`), with the build and wear hours the plant part comes from. None when the plant's build
+    bill has an unpriced material."""
     staff = staff_hours_cost(baskets.labour_hours, wages, money_per_labour_hour)
     build_hours = plant_build_hours(baskets.plant, goods, wages, money_per_labour_hour)
     wear_hours = plant_wear_hours(baskets.plant, goods, wages, money_per_labour_hour)
+    if build_hours is None or wear_hours is None:
+        return None
     plant = maintenance_hours(kind, build_hours, wear_hours)
     return {"staff": staff, "plant": plant, "plant_build_hours": build_hours, "plant_wear_hours": wear_hours}
 

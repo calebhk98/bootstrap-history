@@ -2,7 +2,6 @@
 when hours were last allocated (Complaint 640: the projects module over plain values)."""
 QUICK_TOPIC = True
 
-import types
 import unittest
 
 from .harness import *  # noqa: F401,F403

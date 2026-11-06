@@ -104,10 +104,9 @@ def project_needs(node: Mapping[str, Any], uses_coke: bool) -> collections.Count
 
 
 def market_tonnes(national_tonnes: float, share: float, is_charcoal: bool, standing_factor: Optional[float],
-                  output_scale: float, sea_routes: int, import_tonnes: float) -> float:
+                  output_scale: float, sea_routes: int) -> float:
     """Tonnes a year of a commodity the market sells the seat: the national output's share, widened by standing (not for
-    charcoal, which no standing makes travel), scaled to the territory held, plus a sea route's tonnage and what a
-    trading partner brings."""
+    charcoal, which no standing makes travel), scaled to the territory held, plus a sea route's tonnage."""
     if not is_charcoal:
         if standing_factor is not None:
             share *= standing_factor
@@ -115,7 +114,7 @@ def market_tonnes(national_tonnes: float, share: float, is_charcoal: bool, stand
     market = national_tonnes * share * output_scale
     for _route in range(sea_routes):
         market += SALTPETRE_TRADE_ROUTE_TONNES_PER_YR
-    return market + import_tonnes
+    return market
 
 
 def demand_by_tag(demand: Mapping[str, float], tag_of_material: Callable[[str], Tuple[str, str]]) -> collections.Counter:
@@ -436,21 +435,18 @@ def bill_parts(bill: Mapping[str, Any]) -> Tuple[float, float]:
 
 ROUTE_HELD = "held"
 ROUTE_MARKET = "market"
-ROUTE_IMPORTED = "imported"
 ROUTE_MAKEABLE = "makeable"
 ROUTE_UNAVAILABLE = "unavailable"
 
 
-def supply_route(stock_tonnes: float, own_tonnes: float, market_tonnes_: float, import_tonnes: float,
+def supply_route(stock_tonnes: float, own_tonnes: float, market_tonnes_: float,
                  can_be_bought: bool) -> str:
-    """How the seat gets a material today: held, from the market, imported, makeable (priced but no producer runs it) or
+    """How the seat gets a material today: held, from the market, makeable (priced but no producer runs it) or
     unavailable."""
     if stock_tonnes > 0.0 or own_tonnes > 0.0:
         return ROUTE_HELD
-    if market_tonnes_ - import_tonnes > 0.0:
+    if market_tonnes_ > 0.0:
         return ROUTE_MARKET
-    if import_tonnes > 0.0:
-        return ROUTE_IMPORTED
     if can_be_bought:
         return ROUTE_MAKEABLE
     return ROUTE_UNAVAILABLE

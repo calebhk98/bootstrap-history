@@ -20,10 +20,10 @@ class AvailableReplyTest(unittest.TestCase):
         rows = reply.get("available") or []
         self.assertIsNotNone(reply.get("you_could_raise_for_a_project"))
         self.assertTrue(any(row.get("needs_staff") for row in rows))
-        labour = self.game.view("legacy_labour")()
+        labour = self.game.assembly.modules["workforce"].parts.core.labour
         for row in rows:
             node = NODES[row["id"]]
-            short = node["art"] > labour.craft_hands_available() + 1e-9 or node["sch"] > labour.effective_scholars() + 1e-9
+            short = node["art"] > labour.hands.craft_hands_available() + 1e-9 or node["sch"] > labour.hands.effective_scholars() + 1e-9
             self.assertEqual(bool(row.get("short_of_staff")), short, row["id"])
 
     def test_a_search_that_matches_nothing_says_so(self):

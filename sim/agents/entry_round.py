@@ -28,7 +28,7 @@ class NicheEntry:
 		self.carried = firm_entry.carrying_cost(world, node_id, tile=self.tile)
 		yearly = business_books.yearly_costs(world, node_id)
 		self.costs: Optional[float] = None if yearly is None or self.carried is None else sum(yearly) + self.carried
-		probe = Firm("probe", ActorRecord(kind="firm", founded_year=world.year))
+		probe = Firm("probe", ActorRecord(kind="firm", founded_year=world.setting.year))
 		self.seen = imitation.in_sight(self.tile, node_id, world)
 		self.chain = imitation.missing_chain(node_id, world, probe) if self.seen else None
 		self.plan = imitation.copy_plan(probe, self.chain, world) if self.chain else None
@@ -39,7 +39,8 @@ class NicheEntry:
 		if self.plan is None or self.costs is None:   # no plan, or costs the country keeps no record of: no entry
 			return None
 		gross = firm_entry.expected_entry_gross(registry, world, node_id, rivals, waiting + 1)
-		probe = Firm("probe", ActorRecord(kind="firm", founded_year=world.year))
+		probe = Firm("probe", ActorRecord(kind="firm", founded_year=world.setting.year))
+		probe.attach(registry.state.purses)   # asks the same lenders the entrant would
 		expected = gross - self.costs - firm_entry.expected_levy(world, probe, gross)
 		expected -= enforcement.expected_damages(world, "", node_id, expected)
 		if expected <= 0:
@@ -55,7 +56,7 @@ class NicheEntry:
 			return None  # the pooled savings are spent: lenders back no entrant who puts up too little
 		if borrowed > probe.spare_credit(world):
 			return None
-		stake_cost = capital_cost(pooled, borrowed, world.market_rate(),
+		stake_cost = capital_cost(pooled, borrowed, world.credit.market_rate(),
 								  probe.rate_on_loan(world, borrowed) if borrowed > 0.0 else 0.0)
 		if (expected * VALUE_HORIZON_YEARS - foregone) * chance <= self.plan["total"] or expected * chance <= stake_cost:
 			return None
@@ -64,8 +65,8 @@ class NicheEntry:
 			serial += 1
 		firm_id = "firm:%d" % serial
 		firm = registry.add(firm_id, ActorRecord(
-			kind="firm", name=firm_id, target=node_id, last_margin=expected, founded_year=world.year,
-			location=self.tile, aware={node_id: world.year}))   # it was founded into a concern it has seen prove out
+			kind="firm", name=firm_id, target=node_id, last_margin=expected, founded_year=world.setting.year,
+			location=self.tile, aware={node_id: world.setting.year}))   # it was founded into a concern it has seen prove out
 		if founder is not None:
 			firm_entry.fund_from(founder, firm, pooled)
 		else:

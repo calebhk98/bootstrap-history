@@ -8,7 +8,7 @@ no work of the creditor wants stay in the market, where the creditor takes its s
 (bondage.service). The credited hours come off the debt at the reservation wage, the value of the hour to the cohort.
 """
 import dataclasses
-from typing import Callable, Dict, List, Mapping, Optional, Sequence, Tuple
+from typing import Callable, Dict, List, Mapping, Optional, Sequence, Tuple, Union
 
 from . import titles
 from .types import AgentId, LabourBid, LabourOffer
@@ -66,8 +66,8 @@ def place(bonds: Mapping[AgentId, Mapping], offers: Sequence[LabourOffer], bids:
     return Placement(new_offers, new_bids, hired, placed_hours, placed_value, cash_share)
 
 
-def deliver(hours_hired: Dict[AgentId, Dict[str, float]], placement: Placement) -> None:
-    """Book the hours worked for creditors as hired hours of the creditors' works."""
+def deliver(hours_hired: Dict[AgentId, Dict[str, float]], placement: Union[Placement, "HeldPlacement"]) -> None:
+    """Book the hours a placement hired (worked for creditors, or by held bonded people) as hired hours of the employers."""
     for employer, by_trade in placement.hired.items():
         rows = hours_hired.setdefault(employer, {})
         for trade, hours in by_trade.items():
@@ -79,20 +79,23 @@ def works_of_producers(record) -> Callable[[AgentId], Optional[AgentId]]:
     return lambda employer: record.producers[employer].owner if employer in record.producers else employer
 
 
-def deliver_held(hours_hired: Dict[AgentId, Dict[str, float]], placement: "HeldPlacement") -> None:
-    """Book the hours worked by held bonded people as hired hours of their holders."""
-    for employer, by_trade in placement.hired.items():
-        rows = hours_hired.setdefault(employer, {})
-        for trade, hours in by_trade.items():
-            rows[trade] = rows.get(trade, 0.0) + hours
-
-
 def hold(held: Dict[str, Dict[str, Dict[AgentId, float]]], bought: Mapping[Tuple[str, str], Mapping[AgentId, float]]) -> None:
     """Record the bought bonded people each employer holds, by tile and trade (bonded_purchase.settle)."""
     for (tile, trade), by_employer in sorted(bought.items()):
         rows = held.setdefault(tile, {}).setdefault(trade, {})
         for employer, people in sorted(by_employer.items()):
             rows[employer] = rows.get(employer, 0.0) + people
+
+
+def release(held: Dict[str, Dict[str, Dict[AgentId, float]]], employer: AgentId) -> None:
+    """Drop the bought bonded people `employer` holds (it left the economy), and the tile and trade rows that leaves empty."""
+    for tile in list(held):
+        for trade in list(held[tile]):
+            held[tile][trade].pop(employer, None)
+            if not held[tile][trade]:
+                del held[tile][trade]
+        if not held[tile]:
+            del held[tile]
 
 
 @dataclasses.dataclass

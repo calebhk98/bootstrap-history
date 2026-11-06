@@ -1,5 +1,6 @@
 """Complaint 657: a higher rate on what actors earn makes them keep more of it off the rolls, and the more of the
 payers the state's officials reach, the less. Each test builds the inputs and calls the rule."""
+from sim.tests.agents_fake_world import flat_namespace
 import unittest
 from types import SimpleNamespace
 
@@ -72,12 +73,12 @@ class AssessmentOfPayersTests(unittest.TestCase):
 class RateRaiseMenuTests(unittest.TestCase):
 	def world(self, reach):
 		now = assessed(0.1, reach)
-		return SimpleNamespace(revenue_assessments=lambda: [now])
+		return flat_namespace(revenue_assessments=lambda: [now])
 
 	def test_the_menu_counts_the_base_a_raise_drives_into_hiding(self):
 		hiding_world, open_world = self.world(0.4), self.world(1.0)
 		raised = fiscal_response.rate_raise_yield(hiding_world)
-		naive = 0.4 * (fiscal_response.new_rate_of(0.1) - 0.1) * hiding_world.revenue_assessments()[0].base
+		naive = 0.4 * (fiscal_response.new_rate_of(0.1) - 0.1) * hiding_world.revenue.revenue_assessments()[0].base
 		self.assertGreater(raised, 0.0)
 		self.assertLess(raised, naive)
 		self.assertAlmostEqual(fiscal_response.rate_raise_yield(open_world),
@@ -85,7 +86,7 @@ class RateRaiseMenuTests(unittest.TestCase):
 
 	def test_a_form_on_a_base_nobody_hides_yields_the_extra_rate_on_the_base(self):
 		plain = revenue.Assessment("wealth", "coin_stock", 20000.0, 0.01, 200.0, collectible=1.0)
-		world = SimpleNamespace(revenue_assessments=lambda: [plain])
+		world = flat_namespace(revenue_assessments=lambda: [plain])
 		self.assertAlmostEqual(fiscal_response.rate_raise_yield(world), 20000.0 * 0.01 * fiscal_response.RATE_RAISE_STEP)
 
 

@@ -5,9 +5,7 @@ test_fuzzy_estimates_saved_rule."""
 QUICK_TOPIC = True
 
 import copy
-import random
 import unittest
-from types import SimpleNamespace
 
 from sim.engine import fuzzy_estimates as fuzzy
 from sim.tests import scenario_stand_in

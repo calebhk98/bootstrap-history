@@ -8,9 +8,9 @@ the held-skill and candidate-set caches that `revenue` and `upkeep` share.
 
 The caches are the module's own per seat (`memos`); the engine's household hooks drop them by sending the commands in commands.py.
 Needs: the views of READS_BY_OWNER in module_spec.py."""
+from sim.assembly.api import Part
+from sim.labour.api import generic_craft_trade, scholar_trade
 from sim.world import plant_figures
-
-from sim.workforce.api import SetWageHoursSold
 
 from . import rules
 from .bondage_workshop_rules import workshop_craft_wages, workshop_output_value
@@ -20,7 +20,7 @@ from .constants import (RAMP_SHARE_AT_FULL_DEPTH, REVENUE_CEILING_LABOUR_HOURS_P
 from .revenue_ledger import assemble_ledger
 
 
-class Revenue:
+class Revenue(Part):
 
 	def venture_ramp(self, node_id):
 		"""How much of its full takings a concern is making, 0..1.
@@ -35,18 +35,15 @@ class Revenue:
 			started = self.needs.done_year().get(node_id, year)
 		age = year - started
 		# An established industry (anyone's worker-years running it) finds its custom sooner.
-		return plant_figures.ramp(age, self.needs.game_setting["revenue_ramp_years"], self.industry_depth(node_id),
+		return plant_figures.ramp(age, self.needs.game_setting["revenue_ramp_years"], self.parts.depth.industry_depth(node_id),
 		                          RAMP_SHARE_AT_FULL_DEPTH)
 
 	def revenue_capacity(self):
 		"""What you would earn in an ordinary year, with your own hands on your own work, none of this year's hours sold on
 		request. Used where a swing in ONE year should not count - a lender does not cut your line because you took a job this year."""
-		_sold = self.needs.hour_commitments()["wage_hours"]
-		self.needs.send(SetWageHoursSold(0.0))
-		try:
+		if not self.needs.hour_commitments()["wage_hours"]:
 			return self.revenue()
-		finally:
-			self.needs.send(SetWageHoursSold(_sold))
+		return sum(self._compute_revenue_uncached(counting_offers=False))
 
 	def revenue(self):
 		"""Total annual revenue across all active concerns, workshops, and state funding.
@@ -83,7 +80,7 @@ class Revenue:
 			needs.state_funding(),
 			needs.home_price_level(),
 		)
-		memos = self.memos()
+		memos = self.parts.views.memos()
 		if memos.revenue_key != key:
 			memos.revenue_value = self._compute_revenue_uncached()
 			memos.revenue_key = key
@@ -93,24 +90,25 @@ class Revenue:
 		"""The part of `revenue` the engine credits as an estimate: everything but the concerns the clearing pays
 		(book_sales.py). The year's ledger credits this; those concerns are credited by the clearing."""
 		self.revenue()
-		return self.memos().revenue_value[0]
+		return self.parts.views.memos().revenue_value[0]
 
 	def concern_revenue(self, node_id):
 		"""What one open concern earns in a year before the output factor: the figure the screens quote."""
 		return self.needs.venture_real_earnings(node_id, None, False, False)
 
-	def _compute_revenue_uncached(self):
-		"""(the estimate, the forecast of the concerns the clearing pays), both after the output factor."""
+	def _compute_revenue_uncached(self, counting_offers=True):
+		"""(the estimate, the forecast of the concerns the clearing pays), both after the output factor; with `counting_offers`
+		False, the standing job is sold without this year's hours offered for wages taken out."""
 		needs = self.needs
 		total_revenue = 0.0
 		book_forecast = 0.0
-		practice_set = self._practice_set()
+		practice_set = self.practice_set()
 		nodes = needs.tree_nodes()
 		granted = needs.techniques_granted()
 		operating = needs.operating()
 		# Scan only what could possibly pay: a node that is neither operating nor practised is skipped below, and was already
-		# skipped for the whole rest of `done`, which only grows (see _revenue_upkeep_candidates).
-		for node_id in self._revenue_upkeep_candidates():
+		# skipped for the whole rest of `done`, which only grows (see revenue_upkeep_candidates).
+		for node_id in self.revenue_upkeep_candidates():
 			practice = node_id in practice_set
 			if node_id in granted and not practice:
 				continue          # the society's, not yours
@@ -120,7 +118,7 @@ class Revenue:
 			node = nodes[node_id]
 			# a held skill earns through the founder's own hours (founder_wage_income), not through the node
 			if node["rev"] and not practice:
-				if self.concern_sells_on_book(node_id):
+				if self.parts.book_sales.concern_sells_on_book(node_id):
 					book_forecast += self.concern_revenue(node_id)    # last year's sale record, as the clearing paid it
 				else:
 					total_revenue += self.concern_revenue(node_id)
@@ -128,9 +126,9 @@ class Revenue:
 		# quickly, so its income buys the next one. A saturating curve caps that without ever making a venture worthless.
 		# What your own workshop sells: a payroll without credited output is pure cost, and it needs somewhere to work.
 		total_revenue += self.workshop_output()
-		total_revenue += self.founder_wage_income()
+		total_revenue += self.founder_wage_income(counting_offers)
 		gross = total_revenue
-		ceiling = self.priced(REVENUE_CEILING_LABOUR_HOURS_PER_POP_SCALE) * needs.pop_scale() \
+		ceiling = self.parts.concern_market.priced(REVENUE_CEILING_LABOUR_HOURS_PER_POP_SCALE) * needs.pop_scale() \
 			* needs.real_output_per_head() * needs.price_index()
 		gross = rules.saturated_revenue(gross, ceiling)
 		return (gross + needs.state_funding()) * needs.output_factor(), book_forecast * needs.output_factor()
@@ -144,7 +142,7 @@ class Revenue:
 		annual_wage = needs.market_annual_wage
 		wage = workshop_craft_wages(
 			staff["employees"], lambda trade: needs.trade_family[trade] == "craft", lambda trade: annual_wage[trade],
-			staff["freedmen"] + staff["slaves"] * SLAVE_LABOUR_PRODUCTIVITY_SHARE, annual_wage["artisan"])
+			staff["freedmen"] + staff["slaves"] * SLAVE_LABOUR_PRODUCTIVITY_SHARE, annual_wage[generic_craft_trade()])
 		mark = WORKSHOP_WAGE_MARKUP_BASE
 		mark = needs.effect_sum("workshop_markup", mark)
 		# Knowing how to do a thing earns nothing on its own; it makes the workshop you staff and pay for more productive,
@@ -163,7 +161,7 @@ class Revenue:
 		would drift in its last bits, since float addition is not associative and the order nodes enter or leave is not the
 		order `done_in_order` walks them in.
 		"""
-		memos = self.memos()
+		memos = self.parts.views.memos()
 		cached = memos.capability_factor
 		if cached is not None:
 			return cached
@@ -171,7 +169,7 @@ class Revenue:
 		nodes = self.needs.tree_nodes()
 		granted = self.needs.techniques_granted()
 		operating = self.needs.operating()
-		for node_id in self.done_in_order():
+		for node_id in self.parts.views.done_in_order():
 			if node_id in granted or node_id in operating:
 				continue
 			node = nodes[node_id]
@@ -190,7 +188,7 @@ class Revenue:
 		nodes = needs.tree_nodes()
 		granted = needs.techniques_granted()
 		operating = needs.operating()
-		for node_id in self.done_in_order():
+		for node_id in self.parts.views.done_in_order():
 			if node_id in granted or node_id not in operating:
 				continue
 			if not nodes[node_id]["rev"]:
@@ -204,17 +202,18 @@ class Revenue:
 	def held_trade(self):
 		"""The trade the founder sells hours in: scholar when a skill the founder holds asks for
 		scholars, else artisan; None when the founder holds no skill."""
-		held = self._practice_set()
+		held = self.practice_set()
 		if not held:
 			return None
 		nodes = self.needs.tree_nodes()
-		return "scholar" if any(nodes[node_id]["sch"] > 0 for node_id in held) else "artisan"
+		return scholar_trade() if any(nodes[node_id]["sch"] > 0 for node_id in held) else generic_craft_trade()
 
-	def founder_wage_income(self):
+	def founder_wage_income(self, counting_offers=True):
 		"""Yearly pay of the founder's standing job: the hours not spoken for, sold in the held trade at
-		that trade's market wage (labour_job.py). One person's hours sell once however many skills the
+		that trade's market wage (`standing_job_pay`, sim/labour/labour_wages.py). One person's hours sell once however many skills the
 		founder holds, and a dead founder sells none."""
-		return self.needs.standing_job_pay[self.held_trade()]
+		pay = self.needs.standing_job_pay if counting_offers else self.needs.capacity_job_pay
+		return pay[self.held_trade()]
 
 	def revenue_sources(self):
 		"""Where the money actually comes from, itemised.
@@ -232,7 +231,7 @@ class Revenue:
 	# A granted node whose category is flagged practisable is a skill the founder holds and works with their own hands; the held
 	# skills choose the trade the founder's hours are sold in (held_trade). A granted fleet of merchant ships is owned by other
 	# people, so shipping is not one.
-	def _practisable(self, node_id):
+	def practisable(self, node_id):
 		"""Is this granted node a skill the founder holds and works with their own hands?"""
 		return self.needs.category_trait(self.needs.tree_nodes()[node_id].get("cat"), "practisable")
 
@@ -264,32 +263,32 @@ class Revenue:
 		           " and %d more" % (len(young) - 6) if len(young) > 6 else "",
 		           young[0][1] * 100, needs.game_setting["revenue_ramp_years"]))
 
-	def _practice_set(self):
+	def practice_set(self):
 		"""The granted skills you actually practise, as a set, computed once: the answer never changes unless the granted
-		set does, which happens at setup and never again. (`revenue` once called `_practisable` per done node per call.)"""
+		set does, which happens at setup and never again. (`revenue` once called `practisable` per done node per call.)"""
 		granted = self.needs.techniques_granted()
-		memos = self.memos()
+		memos = self.parts.views.memos()
 		cache = memos.practice
 		if cache is None or cache[0] != len(granted):
-			cache = (len(granted), frozenset(node_id for node_id in granted if self._practisable(node_id)))
+			cache = (len(granted), frozenset(node_id for node_id in granted if self.practisable(node_id)))
 			memos.practice = cache
 		return cache[1]
 
-	def _revenue_upkeep_candidates(self):
+	def revenue_upkeep_candidates(self):
 		"""Every node in `done` that revenue() or upkeep() could possibly charge or pay for - operating, or in your practice
 		set - in done_in_order()'s own tree order. Neither can do anything with a node that is neither, and scanning the whole
 		of `done` (most of the tree by the late game) to throw almost all of it away is wasted work.
 
 		Cached on three signals: the identity of done_in_order()'s cached list (a NEW list exactly when `done` changes; a length
 		check is not safe, since a year that finishes one thing and abandons another leaves the length unchanged), the
-		`operating` version counter, and the identity of `_practice_set`'s frozenset (new exactly when the granted set grows).
+		`operating` version counter, and the identity of `practice_set`'s frozenset (new exactly when the granted set grows).
 		Strong references and `is`, not bare id() integers: a freed object's address is handed straight to the next same-sized
 		allocation, so two different objects compare equal by id() often enough to replay a stale answer.
 		"""
-		seq = self.done_in_order()
-		practice_set = self._practice_set()
+		seq = self.parts.views.done_in_order()
+		practice_set = self.practice_set()
 		operating_version = self.needs.operating_version()
-		memos = self.memos()
+		memos = self.parts.views.memos()
 		cached = memos.candidates
 		if (cached is not None and cached[0] is seq
 		        and cached[1] is practice_set and cached[2] == operating_version):

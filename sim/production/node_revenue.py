@@ -15,7 +15,6 @@ re-derives them for the civilisation playing, cached on what they depend on.
 """
 from typing import Any, Dict, Iterable, List, Mapping, Optional, Tuple
 
-from sim.constants import declare
 
 from sim.world import plant_figures
 
@@ -37,7 +36,7 @@ def apply_revenue(nodes: Iterable[dict], goods: Mapping[str, float],
                   wages: Mapping[str, float], money_per_labour_hour: float,
                   energy: Optional[energy_prices.EnergyPrices] = None) -> None:
     """Set each node's `cap_hours`, `rev_hours`, `up_hours` and their bases."""
-    from sim.labour.api import production_data
+    from sim.world.demand import production_data
     production = production_data()
     energy = energy or energy_prices.pool_only(goods)
     for node in nodes:
@@ -68,9 +67,10 @@ def _apply_unlisted_upkeep(node: dict, goods: Mapping[str, float], wages: Mappin
     else:
         build_bill = (sum(wages[trade] * hours for trade, hours in node["lab"].items()) / money_per_labour_hour
                       + node.get("_material_hours", 0.0) + node["cap_hours"])
-        if node_upkeep.is_programme(node):
-            node["up_hours"] = (node_upkeep.programme_spending_hours(node, goods, wages, money_per_labour_hour)
-                                + node_upkeep.maintenance_hours(node, build_bill))
+        spending = (node_upkeep.programme_spending_hours(node, goods, wages, money_per_labour_hour)
+                    if node_upkeep.is_programme(node) else None)     # None: no programme, or a consumable unpriced
+        if spending is not None:
+            node["up_hours"] = spending + node_upkeep.maintenance_hours(node, build_bill)
             basis = "programme"
         elif node.get("kind") == "SCIENCE":
             node["up_hours"] = node_upkeep.staff_places_hours_cost(node, wages, money_per_labour_hour)
@@ -84,13 +84,18 @@ def _apply_unlisted_upkeep(node: dict, goods: Mapping[str, float], wages: Mappin
 
 def _apply_output(node: dict, baskets: node_output.Baskets, goods: Mapping[str, float],
                   wages: Mapping[str, float], money_per_labour_hour: float) -> float:
-    """Derive the node's revenue and upkeep from its baskets; returns the build hours of its plant."""
+    """Derive the node's revenue and upkeep from its baskets; returns the build hours of its plant. A node whose
+    baskets hold a good with no price, or whose plant has a material with no price, is left unset (it earns
+    nothing derivable and takes the unlisted upkeep path, with no plant hours)."""
+    takings = plant_figures.takings(baskets, goods)
+    parts = plant_figures.upkeep_parts(node.get("kind"), baskets, goods, wages, money_per_labour_hour)
+    if takings is None or parts is None:
+        return 0.0
     node["_output_per_year"], node["_purchases_per_year"] = baskets.outputs, baskets.purchases
     node["_energy_sold_per_year"], node["_energy_bought_per_year"] = baskets.energy_sold, baskets.energy_bought
     node["_labour_hours_per_year"] = baskets.labour_hours
-    node["rev_hours"] = plant_figures.takings(baskets, goods) / money_per_labour_hour
+    node["rev_hours"] = takings / money_per_labour_hour
     node["_revenue_basis"] = "output"
-    parts = plant_figures.upkeep_parts(node.get("kind"), baskets, goods, wages, money_per_labour_hour)
     build_hours = parts["plant_build_hours"]
     node["_upkeep_hours_parts"] = parts
     node["up_hours"] = parts["staff"] + parts["plant"]
@@ -99,27 +104,29 @@ def _apply_output(node: dict, baskets: node_output.Baskets, goods: Mapping[str, 
 
 
 def for_civilisation(nodes: Mapping[str, dict], civ: Mapping[str, Any], schedule: Any,
-                     held_techs: Optional[Iterable[str]] = None) -> Dict[str, dict]:
+                     held_techs: Optional[Iterable[str]] = None, unskilled_trade: Optional[str] = None) -> Dict[str, dict]:
     """Copies of `nodes` with revenue and upkeep derived at this civilisation's prices and wages, in its
     coin, for the techniques held (default: its starting techniques). Cached on what the figures depend
-    on: the civilisation, the gate technologies held, its wages and the nodes."""
-    from sim.prices.api import prices as price_solver, solve_prices
+    on: the civilisation (its people, ground and staple), the gate technologies held, its wages, the trade whose hour is
+    the wage unit (`unskilled_trade`: the live registry's, else the committed one's) and the nodes."""
+    from sim.prices.api import prices as price_solver, solve_prices_core
     civilization_id = civ["id"]
     held = list(civ["starting_techs"] if held_techs is None else held_techs)
     held_gates = frozenset(price_solver.all_gate_nodes()) & frozenset(held)
     document = schedule.document()
     rate = schedule.money_per_labour_hour
     key = (civilization_id, held_gates,
-           tuple(sorted(solve_prices.wage_ratios_by_trade(document).items())), rate, _what_nodes_state(nodes),
-           float(civ["starting_interest_rate"]), price_solver.territory_fingerprint(civ))
+           tuple(sorted(solve_prices_core.wage_ratios_by_trade(document, unskilled_trade).items())), rate,
+           _what_nodes_state(nodes),
+           float(civ["starting_interest_rate"]), price_solver.territory_fingerprint(civ), unskilled_trade)
     cached = _DERIVED_FOR_CIVILISATION.get(key)
     if cached is None:
         derivation_calls.append(key)
         interest_rate = float(civ["starting_interest_rate"])
         goods, _provenance = price_solver.priced_goods_table(
-            held, document, civilization_id=civilization_id, civilization=civ)
+            held, document, civilization_id=civilization_id, civilization=civ, unskilled_trade=unskilled_trade)
         energy = energy_prices.graded(held, document, goods, civilization_id, interest_rate,
-                                      civilization=civ)
+                                      civilization=civ, unskilled_trade=unskilled_trade)
         copies = {node_id: dict(node) for node_id, node in nodes.items()}
         apply_revenue(copies.values(), goods, schedule.wages_per_hour(), rate, energy)
         cached = {node_id: {field: node[field] for field in DERIVED_FIELDS if field in node}

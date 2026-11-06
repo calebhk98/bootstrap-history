@@ -2,9 +2,8 @@
 capital and energy cost terms, choice of technique, and the damped
 fixed-point `solve` loop itself.
 
-sim/prices/solve_prices.py is the thin composition point every import
-names, and ITS module docstring - not this file's - is what every "see the
-module docstring" comment below actually means:
+sim/prices/solve_prices.py holds no code; ITS module docstring - not this file's - is what every
+"see the module docstring" comment below actually means:
 that essay is the design reasoning for the whole tool (rent, energy,
 capital, land, cycles, era gates, choice of technique), and splitting it
 apart by function would break every one of those cross references for no
@@ -14,19 +13,21 @@ ore and land rent mechanisms, `recipe_cost_and_allocation`, and `solve`
 itself.
 """
 import collections
-import json
 import math
 import os
 import sys
-import warnings
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO_ROOT = os.path.dirname(os.path.dirname(HERE))
 if REPO_ROOT not in sys.path:
     sys.path.insert(0, REPO_ROOT)
+from sim.labour.api import trade_of_role
+from sim.prices import engine_seam
 from sim.world import capital_builds
+from sim.world.land import LAND_MATERIAL
+from sim.world.plant_baskets import ENERGY_CARRIERS
 from sim.prices import disposal_cost  # noqa: E402
-from sim.prices.joint_allocation import allocate_joint_cost, outputs_split_by_mass  # noqa: E402
+from sim.prices.joint_allocation import allocate_joint_cost  # noqa: E402
 from sim.prices.price_change import relative_price_change  # noqa: E402
 from sim.world.capital_market import stand_yearly_share  # noqa: E402  (CAPITAL)
 # DAMPING_FACTOR, MAXIMUM_ITERATIONS, CONVERGENCE_TOLERANCE, INITIAL_PRICE_
@@ -43,14 +44,35 @@ from sim.algorithm_parameters import (           # noqa: E402  (see sys.path abo
     INITIAL_PRICE_GUESS_HOURS, GROWTH_BOUND_HOURS)
 
 
-NUMERAIRE_TRADE = "labourer"
 
-# The three energy carriers (see ENERGY in this module's docstring). Named
-# once here rather than spelled out at each of the three call sites that
-# would otherwise hand-write the tuple, so that adding a carrier cannot
-# silently miss one of them - a real risk a bare tuple repeated three times
-# invites.
-ENERGY_CARRIER_FIELDS = ("thermal_mj", "mechanical_mj", "electrical_mj")
+# {id of a production catalogue: (the catalogue, its numeraire trade)}; the catalogue is kept so the id stays its own
+_NUMERAIRE_BY_CATALOGUE = {}
+
+
+def forget_numeraires() -> None:
+    """Drop the numeraire trades remembered per catalogue (a test's synthetic catalogues come and go)."""
+    _NUMERAIRE_BY_CATALOGUE.clear()
+
+
+def numeraire_trade(production_entries=None, registry=None):
+    """The trade whose hour is the unit every wage is stated in: the trade registry's unskilled one, the same trade
+    the economy's labour markets fall back to (`sim.labour.api.trade_of_role`). `registry` is a live one (trade id
+    to its fields); without it the registry is read for `production_entries` (the committed catalogue's when none)."""
+    if registry is None:
+        entries = engine_seam.load_production()[0] if production_entries is None else production_entries
+        cached = _NUMERAIRE_BY_CATALOGUE.get(id(entries))
+        if cached is not None and cached[0] is entries:
+            return cached[1]
+        loaded = engine_seam.load_trade_registry(REPO_ROOT, entries, nodes=engine_seam.load_mod_tree_nodes(REPO_ROOT))
+        registry = {trade_id: {"family": trade.family, "training_years": trade.training_years, **trade.extra}
+                    for trade_id, trade in loaded.items()}
+        trade = trade_of_role(registry, "unskilled")
+        _NUMERAIRE_BY_CATALOGUE[id(entries)] = (entries, trade)
+        return trade
+    return trade_of_role(registry, "unskilled")
+
+
+# The energy carriers (see ENERGY in this module's docstring) are named once, in sim/world/plant_baskets.py.
 
 # PHYSICAL CAPABILITY CAPS (Complaints/43 - see TEMPERATURE in this
 # module's own docstring for the full defect and the reasoning behind the
@@ -79,7 +101,7 @@ THERMAL_MJ_MINIMUM_USABLE_TEMPERATURE_C = 700.0
 # `capability_price_for_requirement` below, and TEMPERATURE in the module
 # docstring for why grading is PER CONSUMER rather than one shared floor).
 # Keyed by carrier rather than hand-written at each call site for the same
-# reason ENERGY_CARRIER_FIELDS above is: so a second physical dimension -
+# reason ENERGY_CARRIERS above is: so a second physical dimension -
 # torque, pressure, whatever a future stakeholder names next - slots in as
 # one more entry here, read by the same functions, rather than a second,
 # parallel, hand-rolled comparison. See the module docstring's TEMPERATURE
@@ -90,7 +112,7 @@ CAPABILITY_CAP_FIELDS = {
 }
 
 
-def capability_floor_by_carrier(production_entries):
+def capability_floor_by_carrier():
     """{carrier_material: the carrier's own UNIVERSAL default floor} - one
     entry per carrier named in CAPABILITY_CAP_FIELDS.
 
@@ -108,11 +130,6 @@ def capability_floor_by_carrier(production_entries):
     (THERMAL_MJ_MINIMUM_USABLE_TEMPERATURE_C's own citation) - which
     decides `thermal_mj`'s own ordinary pool price, the one every consumer
     with no stated requirement of its own pays.
-
-    `production_entries` is kept as a parameter, though unused, so every
-    existing call site (and `_meets_capability_floor` below, which takes
-    this function's own return value) can keep calling this function the
-    same way regardless of what it computes internally.
     """
     return {carrier: default_floor
             for carrier, (_reached_field, _needed_field, default_floor)
@@ -150,7 +167,8 @@ def capability_required_grades(production_entries):
 
 def capability_price_for_requirement(carrier, required_value, production_entries,
                                      current_prices, wage_by_trade,
-                                     rent_hours_per_kg_by_material=None, interest_rate=0.0):
+                                     rent_hours_per_kg_by_material=None, interest_rate=0.0,
+                                     dump_minimum_distance_kilometres=0.0):
     """(price, recipe_id) for the CHEAPEST technique that both supplies
     `carrier` and clears `required_value` on the physical dimension
     CAPABILITY_CAP_FIELDS grades it by, costed at this round's own
@@ -170,7 +188,7 @@ def capability_price_for_requirement(carrier, required_value, production_entries
 
     A candidate technique that states no reach at all on this dimension
     is treated as unconstrained (it clears every requirement) - the same
-    "no stated value, no new behaviour" rule `_meets_capability_floor`
+    "no stated value, no new behaviour" rule `meets_capability_floor`
     already applies; today every PRIMARY thermal_mj technique states one,
     so this only matters for a future carrier or a future technique added
     without one.
@@ -200,7 +218,8 @@ def capability_price_for_requirement(carrier, required_value, production_entries
             continue
         result = recipe_cost_and_allocation(
             recipe_id, entry, current_prices, wage_by_trade,
-            rent_hours_per_kg_by_material=rent_hours_per_kg_by_material, interest_rate=interest_rate)
+            rent_hours_per_kg_by_material=rent_hours_per_kg_by_material, interest_rate=interest_rate,
+            dump_minimum_distance_kilometres=dump_minimum_distance_kilometres)
         if result is None:
             continue
         _total_cost, output_prices = result
@@ -210,7 +229,7 @@ def capability_price_for_requirement(carrier, required_value, production_entries
     return best
 
 
-def _capability_graded_price(carrier, entry, current_prices,
+def capability_graded_price(carrier, entry, current_prices,
                              capability_band_price_by_carrier):
     """The price a SPECIFIC consuming `entry` pays for `carrier` this
     round - PER-CONSUMER GRADING (see TEMPERATURE in the module
@@ -246,7 +265,7 @@ def _capability_graded_price(carrier, entry, current_prices,
     return current_prices.get(carrier)
 
 
-def _meets_capability_floor(material, entry, floor_by_carrier):
+def meets_capability_floor(material, entry, floor_by_carrier):
     """True unless `material` is a capability-capped carrier (see
     CAPABILITY_CAP_FIELDS) and `entry`'s own stated reach on that
     dimension falls short of `floor_by_carrier[material]`. An entry that
@@ -290,55 +309,22 @@ def _meets_capability_floor(material, entry, floor_by_carrier):
 # for why algorithmic and computational parameters get their own file.
 
 
-def wage_ratios_by_trade(prices_json):
+def wage_ratios_by_trade(prices_json, unskilled_trade=None):
     """{trade: hours of unskilled labour one hour of this trade is worth}.
 
     The wage document is money per hour per trade, with no notion of
     unskilled labour as a unit. Dividing every rate
-    by the unskilled (`labourer`) rate turns it into what the design doc
-    calls the numeraire: `wage_of("labourer")` is 1.0 by construction, and
-    every other trade is stated as how many labourer-hours it is worth,
+    by the unskilled trade's rate (`unskilled_trade`, default `numeraire_trade()`) turns it into what the design doc
+    calls the numeraire: the unskilled wage is 1.0 by construction, and
+    every other trade is stated as how many unskilled hours it is worth,
     which is a ratio the denarii happen to cancel out of.
     """
     wage_table = prices_json["wage_rates_denarii_per_hour"]
-    unskilled_rate = wage_table[NUMERAIRE_TRADE]["rate"]
+    unskilled_rate = wage_table[unskilled_trade or numeraire_trade()]["rate"]
     return {trade: entry["rate"] / unskilled_rate
             for trade, entry in wage_table.items()
             if not trade.startswith("_")}
 
-
-def load_starting_interest_rate(civilization_id):
-    """The yearly rate on loans the civilization starts at (an initial condition, as its starting
-    technologies are): the market rate its plant must earn over depreciation, until a market has met."""
-    path = os.path.join(REPO_ROOT, "data", "civilizations", "%s.json" % civilization_id)
-    if os.path.exists(path):
-        with open(path) as handle:
-            return float(json.load(handle)["starting_interest_rate"])
-    from sim.prices.engine_seam import load_civ        # a civilisation a mod defines is not a file of its own
-    return float(load_civ(civilization_id)["starting_interest_rate"])
-
-
-def load_starting_technologies(civilization_id):
-    """The set of tech-tree node ids a civilization begins the game holding.
-
-    This is read straight from `data/civilizations/<id>.json`'s
-    `starting_techs`, which is an INITIAL CONDITION - what this society has
-    already worked out by the year it starts in - and so is exactly the kind
-    of input CLAUDE.md section 3.1 allows. It is not a schedule of when
-    techniques were invented; there is no such table here and there must not
-    be one.
-    """
-    path = os.path.join(REPO_ROOT, "data", "civilizations",
-                        "%s.json" % civilization_id)
-    if not os.path.exists(path):
-        available = sorted(name[:-len(".json")]
-                           for name in os.listdir(os.path.dirname(path))
-                           if name.endswith(".json") and not name.startswith("_"))
-        raise FileNotFoundError(
-            "no civilization %r - have: %s" % (civilization_id, ", ".join(available)))
-    with open(path) as handle:
-        civilization = json.load(handle)
-    return set(civilization.get("starting_techs") or [])
 
 
 def techniques_available_to(production_entries, reached_nodes):
@@ -410,11 +396,11 @@ def _dependency_materials(entry, resolved=frozenset()):
     dependencies = set((entry.get("inputs") or {}).keys())
     for capital_good in (entry.get("capital") or []):
         dependencies.update(capital_builds.materials_needed(capital_good, resolved))
-    for energy_key in ENERGY_CARRIER_FIELDS:
+    for energy_key in ENERGY_CARRIERS:
         if entry.get(energy_key):
             dependencies.add(energy_key)
     if entry.get("land_hectare_years"):
-        dependencies.add("hectare_land")
+        dependencies.add(LAND_MATERIAL)
     return dependencies
 
 
@@ -573,7 +559,7 @@ def _has_external_anchor(entry, resolved_so_far):
         if any(material in resolved_so_far
                for way in capital_builds.builds(capital_good) for material in way[0]):
             return True
-    if entry.get("land_hectare_years") and "hectare_land" in resolved_so_far:
+    if entry.get("land_hectare_years") and LAND_MATERIAL in resolved_so_far:
         return True
     return False
 
@@ -747,7 +733,7 @@ def compute_resolvable_materials(production_entries, producers_of, diagnostics=N
     return resolvable
 
 
-def _material_cost_hours(inputs, current_prices, disposal_costs=None):
+def batch_material_cost_hours(inputs, current_prices, disposal_costs=None):
     """Sum of `quantity_per_batch * input_price` over one recipe's `inputs`,
     or None the instant an input has no price yet - the same "propagate the
     failure" rule every cost component `recipe_cost_and_allocation` sums
@@ -767,7 +753,7 @@ def _material_cost_hours(inputs, current_prices, disposal_costs=None):
     return material_cost_hours
 
 
-def _labour_cost_hours(labour_hours, wage_by_trade):
+def batch_labour_cost_hours(labour_hours, wage_by_trade):
     """Sum of `hours_per_batch * wage_by_trade[trade]` over one recipe's
     `labour_hours`. Every trade a recipe names is assumed to already be in
     `wage_by_trade` (a missing one is a data bug, not a "no price yet"
@@ -792,7 +778,7 @@ def _extraction_rent_cost_hours(outputs, rent_by_kg):
               for output_material, output_quantity in outputs.items())
 
 
-def _land_cost_hours(entry, current_prices):
+def batch_land_cost_hours(entry, current_prices):
     # LAND (Complaints/48 - see RENT ON GROWN AND LAND-LIMITED MATERIALS in
     # the module docstring). `land_hectare_years` is a BATCH-level quantity,
     # exactly like `inputs` and `labour_hours` above, of hectare-years this
@@ -809,13 +795,13 @@ def _land_cost_hours(entry, current_prices):
     land_hectare_years = entry.get("land_hectare_years") or 0.0
     if not land_hectare_years:
         return 0.0
-    land_price = current_prices.get("hectare_land")
+    land_price = current_prices.get(LAND_MATERIAL)
     if land_price is None:
         return None
     return land_hectare_years * land_price
 
 
-def _capital_cost_hours_per_unit(capital_goods, current_prices, wage_by_trade, interest_rate=0.0):
+def capital_cost_hours_per_unit(capital_goods, current_prices, wage_by_trade, interest_rate=0.0):
     # Each plant repays its build bill over its service life with interest at the market rate on what is
     # unpaid (`capital_recovery_factor`); at a nil rate that is the build bill over the life.
     capital_cost_hours = 0.0
@@ -837,7 +823,7 @@ def _capital_cost_hours_per_unit(capital_goods, current_prices, wage_by_trade, i
     return capital_cost_hours
 
 
-def _energy_cost_hours(entry, current_prices, capability_band_price_by_carrier):
+def batch_energy_cost_hours(entry, current_prices, capability_band_price_by_carrier):
     # ENERGY (Complaints/32's third gap, now closed for all THREE carriers -
     # THERMAL, MECHANICAL and ELECTRICAL - see ENERGY in the module
     # docstring). All three are BATCH-level quantities, exactly like
@@ -847,14 +833,14 @@ def _energy_cost_hours(entry, current_prices, capability_band_price_by_carrier):
     # these terms gets multiplied by batch_output_quantity. PER-CONSUMER
     # GRADING (Complaints/43, continued - see TEMPERATURE in the module
     # docstring): the price paid is not always `current_prices[energy_key]`
-    # any more - `_capability_graded_price` returns THIS recipe's own
+    # any more - `capability_graded_price` returns THIS recipe's own
     # graded price when it states its own requirement, and falls back to
     # the same flat lookup as before otherwise.
     energy_cost_hours = 0.0
-    for energy_key in ENERGY_CARRIER_FIELDS:
+    for energy_key in ENERGY_CARRIERS:
         energy_quantity_per_batch = entry.get(energy_key) or 0.0
         if energy_quantity_per_batch:
-            energy_price = _capability_graded_price(
+            energy_price = capability_graded_price(
                 energy_key, entry, current_prices, capability_band_price_by_carrier)
             if energy_price is None:
                 return None
@@ -862,10 +848,12 @@ def _energy_cost_hours(entry, current_prices, capability_band_price_by_carrier):
     return energy_cost_hours
 
 
-def _allocate_output_prices(outputs, current_prices, total_process_cost_hours,
-                            reference_price_by_material=None, interest_rate=0.0, disposal_costs=None):
+def allocate_output_prices(outputs, current_prices, total_process_cost_hours,
+                            reference_price_by_material=None, interest_rate=0.0, disposal_costs=None,
+                            dump_minimum_distance_kilometres=0.0):
     if len(outputs) > 1 and disposal_costs is None:
-        disposal_costs = disposal_cost.disposal_cost_by_material(outputs, current_prices, interest_rate)
+        disposal_costs = disposal_cost.disposal_cost_by_material(
+            outputs, current_prices, interest_rate, dump_minimum_distance_kilometres)
     return allocate_joint_cost(outputs, total_process_cost_hours, reference_price_by_material, disposal_costs,
                                disposal_cost.waste_materials())
 
@@ -874,7 +862,8 @@ def recipe_cost_and_allocation(recipe_id, entry, current_prices, wage_by_trade,
                                rent_hours_per_kg_by_material=None,
                                capability_band_price_by_carrier=None,
                                reference_price_by_material=None,
-                               interest_rate=0.0, include_capital=True, disposal_costs=None):
+                               interest_rate=0.0, include_capital=True, disposal_costs=None,
+                               dump_minimum_distance_kilometres=0.0):
     """Cost one recipe's whole batch, then split it across its outputs.
 
     Returns (total_process_cost_hours, {output_material: price_per_unit}),
@@ -888,7 +877,7 @@ def recipe_cost_and_allocation(recipe_id, entry, current_prices, wage_by_trade,
     `capability_band_price_by_carrier` is {carrier: {required_value:
     (price, recipe_id)}}, built once per round by `solve` from
     `capability_required_grades` and `capability_price_for_requirement` -
-    see TEMPERATURE in the module docstring and `_capability_graded_price`
+    see TEMPERATURE in the module docstring and `capability_graded_price`
     below for PER-CONSUMER GRADING, the mechanism this feeds. Omitted or
     None, every energy carrier this recipe draws on prices at
     `current_prices`'s own flat value for it, exactly the old behaviour -
@@ -939,26 +928,27 @@ def recipe_cost_and_allocation(recipe_id, entry, current_prices, wage_by_trade,
     waste_input_costs = disposal_costs
     if waste_input_costs is None and any(
             current_prices.get(material, 0.0) < 0.0 for material in inputs):
-        waste_input_costs = disposal_cost.disposal_cost_by_material(inputs, current_prices, interest_rate)
-    material_cost_hours = _material_cost_hours(inputs, current_prices, waste_input_costs)
+        waste_input_costs = disposal_cost.disposal_cost_by_material(
+            inputs, current_prices, interest_rate, dump_minimum_distance_kilometres)
+    material_cost_hours = batch_material_cost_hours(inputs, current_prices, waste_input_costs)
     if material_cost_hours is None:
         return None
 
-    labour_cost_hours = _labour_cost_hours(labour_hours, wage_by_trade)
+    labour_cost_hours = batch_labour_cost_hours(labour_hours, wage_by_trade)
 
     rent_by_kg = rent_hours_per_kg_by_material or {}
     rent_hours = _extraction_rent_cost_hours(outputs, rent_by_kg)
 
-    land_cost_hours = _land_cost_hours(entry, current_prices)
+    land_cost_hours = batch_land_cost_hours(entry, current_prices)
     if land_cost_hours is None:
         return None
 
-    capital_cost_hours = _capital_cost_hours_per_unit(
+    capital_cost_hours = capital_cost_hours_per_unit(
         (entry.get("capital") or []) if include_capital else [], current_prices, wage_by_trade, interest_rate)
     if capital_cost_hours is None:
         return None
 
-    energy_cost_hours = _energy_cost_hours(entry, current_prices, capability_band_price_by_carrier)
+    energy_cost_hours = batch_energy_cost_hours(entry, current_prices, capability_band_price_by_carrier)
     if energy_cost_hours is None:
         return None
 
@@ -971,9 +961,9 @@ def recipe_cost_and_allocation(recipe_id, entry, current_prices, wage_by_trade,
         0.0, material_cost_hours + labour_cost_hours + rent_hours + land_cost_hours
         + capital_cost_hours * batch_output_quantity + energy_cost_hours + inventory_cost_hours)
 
-    output_prices = _allocate_output_prices(
+    output_prices = allocate_output_prices(
         outputs, current_prices, total_process_cost_hours, reference_price_by_material, interest_rate,
-        disposal_costs)
+        disposal_costs, dump_minimum_distance_kilometres)
 
     return total_process_cost_hours, output_prices
 
@@ -1045,7 +1035,7 @@ def solve(production_entries, producers_of, resolvable_materials, wage_by_trade,
     requirement pays its own graded price rather than the flat pool
     price. Choice of technique for the carrier MATERIAL itself (`thermal_
     mj`'s own entry in `resolvable_materials`, what an unlabelled consumer
-    pays) still uses `_meets_capability_floor` against the plain
+    pays) still uses `meets_capability_floor` against the plain
     `floor_by_carrier` - the universal default only, exactly as before
     this mechanism existed, and now correctly UNAFFECTED by any other
     consumer's own higher requirement (see TEMPERATURE for why that used
@@ -1056,7 +1046,7 @@ def solve(production_entries, producers_of, resolvable_materials, wage_by_trade,
     prices = {material: start.get(material, INITIAL_PRICE_GUESS_HOURS) for material in resolvable_materials}
     chosen_recipe_by_material = {}
     recipe_ids_in_order = sorted(production_entries)  # stable order; see above
-    floor_by_carrier = capability_floor_by_carrier(production_entries)
+    floor_by_carrier = capability_floor_by_carrier()
     required_grades_by_carrier = capability_required_grades(production_entries)
 
     final_residual = float("inf")
@@ -1072,7 +1062,7 @@ def solve(production_entries, producers_of, resolvable_materials, wage_by_trade,
 
         band_price_by_carrier = solve_prices_round.band_prices(
             required_grades_by_carrier, suppliers_by_carrier, prices, wage_by_trade,
-            rent_hours_per_kg_by_material, interest_rate)
+            rent_hours_per_kg_by_material, interest_rate, dump_minimum_distance_kilometres)
 
         # What waste costs to dispose of this round: no output is priced below minus it.
         disposal_costs = disposal_cost.disposal_cost_by_material(
@@ -1089,42 +1079,3 @@ def solve(production_entries, producers_of, resolvable_materials, wage_by_trade,
             break
 
     return prices, iterations_run, final_residual, chosen_recipe_by_material
-
-
-def minor_joint_byproducts_split_by_mass(production_entries, chosen_recipe_by_material,
-                                         prices, wage_by_trade, share_threshold=0.5,
-                                         rent_hours_per_kg_by_material=None, interest_rate=0.0,
-                                         reference_price_by_material=None):
-    """{material: value_share} for every material whose CONVERGED, CHOSEN
-    recipe is a joint-production recipe in which this material holds under
-    `share_threshold` of the batch's value and was split by mass.
-
-    A joint output is valued at a reference price when the caller gave one or when a sole-output route
-    makes it (what making it alone costs); a recorded waste with neither is worth nothing; any other is
-    valued by mass (the labelled fallback of sim/prices/joint_allocation.py). Those prices are a real lower bound on cost, not a real relative
-    price, and every caller that prints one must be able to say so next to it.
-    """
-    direct = {material for entry in production_entries.values()
-              if len(entry.get("outputs") or {}) == 1 for material in entry["outputs"]}
-    references = set(reference_price_by_material or ()) | direct
-    flagged = {}
-    for material, recipe_id in chosen_recipe_by_material.items():
-        entry = production_entries[recipe_id]
-        outputs = entry.get("outputs") or {}
-        if material not in outputs_split_by_mass(outputs, references, disposal_cost.waste_materials()):
-            continue
-        result = recipe_cost_and_allocation(
-            recipe_id, entry, prices, wage_by_trade,
-            rent_hours_per_kg_by_material=rent_hours_per_kg_by_material, interest_rate=interest_rate)
-        if result is None:
-            continue
-        total_process_cost, _output_prices = result
-        if total_process_cost <= 0:
-            continue
-        value_share = (outputs[material] * prices[material]) / total_process_cost
-        if value_share < share_threshold:
-            flagged[material] = value_share
-    if flagged:
-        warnings.warn("joint byproducts priced by mass, with no reference price: %s"
-                      % ", ".join(sorted(flagged)))
-    return flagged

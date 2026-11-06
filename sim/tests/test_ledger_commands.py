@@ -7,22 +7,23 @@ import unittest
 from types import SimpleNamespace
 from unittest import mock
 
-from sim.agents.api import EDGE_EXCHANGE, EDGE_OUTSIDE, PURSE_CURRENCY, ActorRegistry, ActorsState, DUES_CAUSE
+from sim.agents.api import EDGE_EXCHANGE, EDGE_OUTSIDE, PURSE_CURRENCY, ActorRegistry, ActorsState
 from sim.engine.state import ActorRecord, deserialize_state, serialize_state
 from sim.ledger.api import (CloseCashPeriod, CreditSeat, DebitSeat, NoteHolderBooking, NoteSeatCash, NoteSpend, OpenCashBook, OpenPurse,
                             BankStock, ChangeStock, DrawDownStock, LedgerSeat, LedgerWorld, PayActor, PayActorFromHousehold, PayEdge, PayExchange,
-                            ReceiveFromEdge, ReceiveFromExchange, RescaleHouseholdMoney, RestorePurse, SettleWithEdge, TakeFromHouseholdPurse,
+                            ReceiveFromEdge, ReceiveFromExchange, RescaleHouseholdMoney, RestorePurse, TakeFromHouseholdPurse,
                             WithdrawHouseholdMoney)
 from sim.ledger.ledger import Ledger
 from sim.refusal import Refusal
 from sim.tests import module_harness
+from sim.tests.pool_lenders import lend_from_savers
 
 SEAT = "founder"
 
 
 def society(household_money):
     registry = ActorRegistry(ActorsState(home_country="rome_100ad"))
-    treasury = registry.ensure_government("rome_100ad")
+    treasury = registry.countries.ensure_government("rome_100ad")
     household = registry.add("household", ActorRecord(kind="firm", money=household_money))
     return registry, treasury, household
 
@@ -58,11 +59,18 @@ class PayActorFromHouseholdCommand(unittest.TestCase):
         module.pay_actor_from_household(PayActorFromHousehold(treasury.actor_id, 300.0, {"requisition": 200.0, "office": 100.0}))
         self.assertEqual(module.seat.cash_flow, {"requisition": -200.0, "office": -100.0})
 
-    def test_a_household_that_cannot_cover_it_is_paid_into_debt(self):
-        module, _registry, treasury = seat_ledger(100.0)
+    def test_a_household_that_cannot_cover_it_is_paid_into_debt_when_lenders_hold_the_funds(self):
+        module, registry, treasury = seat_ledger(100.0)
+        lend_from_savers(registry.state.purses, 1e6)
         module.pay_actor_from_household(PayActorFromHousehold(treasury.actor_id, 300.0, "confiscation"))
         self.assertEqual(module.acting_balance(), -200.0)
         self.assertEqual(treasury.money, 300.0)
+
+    def test_a_household_that_cannot_cover_it_and_finds_no_lender_is_refused_and_nothing_moves(self):
+        module, _registry, treasury = seat_ledger(100.0)
+        answer = module.pay_actor_from_household(PayActorFromHousehold(treasury.actor_id, 300.0, "confiscation"))
+        self.assertIsInstance(answer, Refusal)
+        self.assertEqual((module.acting_balance(), treasury.money), (100.0, 0.0))
 
     def test_an_actor_the_cast_does_not_hold_is_refused_and_nothing_moves(self):
         module, _registry, _treasury = seat_ledger(100.0)
@@ -119,7 +127,8 @@ class PayActorCommand(unittest.TestCase):
         opened = []
         registry = SimpleNamespace(
             get=lambda actor_id: SimpleNamespace(actor_id=actor_id) if actor_id.split(":")[-1] in governments or actor_id == "trader" else None,
-            ensure_government=lambda country: opened.append(country) or SimpleNamespace(actor_id="government:" + country))
+            countries=SimpleNamespace(
+                ensure_government=lambda country: opened.append(country) or SimpleNamespace(actor_id="government:" + country)))
         module = ledger_over(cast=registry, seat_list={"joined": ["seat1"]}, cast_state=SimpleNamespace(purses=object()))
         module.seat_slot_of = lambda seat_id: LedgerSeat()
         return module, opened
@@ -127,21 +136,21 @@ class PayActorCommand(unittest.TestCase):
     def pay(self, module, payee):
         paid = []
         with mock.patch("sim.ledger.ledger.ledger.transfer", lambda payer, to, amount, cause: paid.append((payer.actor_id, to.actor_id, amount, cause))):
-            module.pay_actor(PayActor("trader", payee, 4.0, DUES_CAUSE))
+            module.pay_actor(PayActor("trader", payee, 4.0, "route dues"))
         return paid
 
     def test_a_seat_is_paid_as_a_party_in_the_book_under_its_own_id(self):
         module, _opened = self.module()
-        self.assertEqual(self.pay(module, "seat1"), [("trader", "seat1", 4.0, DUES_CAUSE)])
+        self.assertEqual(self.pay(module, "seat1"), [("trader", "seat1", 4.0, "route dues")])
 
     def test_a_government_the_cast_holds_is_paid_without_opening_another(self):
         module, opened = self.module(governments=("rome",))
-        self.assertEqual(self.pay(module, "government:rome"), [("trader", "government:rome", 4.0, DUES_CAUSE)])
+        self.assertEqual(self.pay(module, "government:rome"), [("trader", "government:rome", 4.0, "route dues")])
         self.assertEqual(opened, [])
 
     def test_a_government_the_cast_lacks_is_opened_for_the_payment(self):
         module, opened = self.module()
-        self.assertEqual(self.pay(module, "government:carthage"), [("trader", "government:carthage", 4.0, DUES_CAUSE)])
+        self.assertEqual(self.pay(module, "government:carthage"), [("trader", "government:carthage", 4.0, "route dues")])
         self.assertEqual(opened, ["carthage"])
 
 
@@ -157,14 +166,6 @@ class ExchangeCommands(unittest.TestCase):
         ledger_over(cast=registry).receive_from_exchange(ReceiveFromExchange(firm.actor_id, 75.0, "market sales"))
         self.assertEqual(firm.money, 575.0)
         self.assertEqual(firm.record.income, {"market sales": 75.0})
-
-
-class SettleWithEdgeCommand(unittest.TestCase):
-    def test_the_household_is_brought_to_the_balance_by_moving_the_difference_over_the_edge(self):
-        module, registry, _treasury = seat_ledger(-300.0)
-        edge = registry.state.edge("edge:creditors")
-        module.settle_with_edge(SettleWithEdge("edge:creditors", -50.0, "debts written off in settlement"))
-        self.assertEqual((module.acting_balance(), edge.balance()), (-50.0, -250.0))
 
 
 class RescaleHouseholdMoneyCommand(unittest.TestCase):
@@ -200,30 +201,30 @@ class TonnesLedgerState(unittest.TestCase):
     """The seat's tonnes ledger and the capacity pool are the ledger's own state."""
 
     def module(self, stock=None):
-        return module_harness.build(Ledger, views={"year": 100}, seat=LedgerSeat(_material_stock_ledger=stock), world=LedgerWorld(), module_id="ledger")
+        return module_harness.build(Ledger, views={"year": 100}, seat=LedgerSeat(material_stock_ledger=stock), world=LedgerWorld(), module_id="ledger")
 
     def test_a_change_is_counted_in_the_stock_and_in_the_years_opening_snapshot(self):
         module = self.module({"iron": 2.0})
         module.change_stock(ChangeStock("iron", 3.0))
-        self.assertEqual(module.seat._material_stock_ledger["iron"], 5.0)
-        self.assertEqual(module.seat._material_stock_opening, {"year": 100, "tonnes": {"iron": 5.0}})
+        self.assertEqual(module.seat.material_stock_ledger["iron"], 5.0)
+        self.assertEqual(module.seat.material_stock_opening, {"year": 100, "tonnes": {"iron": 5.0}})
 
     def test_the_first_change_of_a_new_year_counts_once_in_the_opening_stock(self):
         module = self.module({"iron": 2.0})
-        module.seat._material_stock_opening = {"year": 99, "tonnes": {"iron": 1.0}}
+        module.seat.material_stock_opening = {"year": 99, "tonnes": {"iron": 1.0}}
         module.change_stock(ChangeStock("iron", 3.0))
-        self.assertEqual(module.seat._material_stock_opening, {"year": 100, "tonnes": {"iron": 5.0}})
+        self.assertEqual(module.seat.material_stock_opening, {"year": 100, "tonnes": {"iron": 5.0}})
 
     def test_the_first_change_of_the_year_snapshots_the_stock_before_it(self):
         module = self.module({"iron": 2.0})
         module.bank_stock(BankStock((("iron", 4.0),)))
-        self.assertEqual(module.seat._material_stock_opening["tonnes"], {"iron": 2.0})
-        self.assertEqual(module.seat._material_stock_ledger["iron"], 4.0)
+        self.assertEqual(module.seat.material_stock_opening["tonnes"], {"iron": 2.0})
+        self.assertEqual(module.seat.material_stock_ledger["iron"], 4.0)
 
     def test_drawing_down_never_takes_the_stock_below_zero(self):
         module = self.module({"grain": 1.0})
         module.draw_down_stock(DrawDownStock("grain", 5.0))
-        self.assertEqual(module.seat._material_stock_ledger["grain"], 0.0)
+        self.assertEqual(module.seat.material_stock_ledger["grain"], 0.0)
 
     def test_capacity_keys_are_swept_out_of_the_ledger_into_the_worlds_pool(self):
         module = self.module({"iron": 1.0, "scholar_hours": 40.0})
@@ -234,8 +235,8 @@ class TonnesLedgerState(unittest.TestCase):
 class NoteHolderBookingCommand(unittest.TestCase):
     def booked(self, holder, signed):
         entries = []
-        lender = SimpleNamespace(note_income=lambda label, amount: entries.append(("actor in", label, amount)),
-                                 note_outlay=lambda label, amount: entries.append(("actor out", label, amount)))
+        lender = SimpleNamespace(payments=SimpleNamespace(note_income=lambda label, amount: entries.append(("actor in", label, amount)),
+                                                          note_outlay=lambda label, amount: entries.append(("actor out", label, amount))))
         module, _registry, _treasury = seat_ledger(seats=("seat:a",))
         module.needs.cast = lambda: SimpleNamespace(actors={"abbey": lender})
         module.note_holder_booking(NoteHolderBooking(holder, signed, "loan"))
@@ -249,7 +250,7 @@ class NoteHolderBookingCommand(unittest.TestCase):
         self.assertEqual(self.booked("abbey", -2.0), ([("actor out", "loan", 2.0)], {}))
 
     def test_an_edge_or_an_unknown_holder_keeps_no_books(self):
-        self.assertEqual(self.booked("edge:savers", 5.0), ([], {}))
+        self.assertEqual(self.booked("edge:exchange", 5.0), ([], {}))
 
 
 class SeatMoneyCommands(unittest.TestCase):

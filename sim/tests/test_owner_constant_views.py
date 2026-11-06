@@ -3,8 +3,6 @@ QUICK_TOPIC = True
 
 import unittest
 
-from sim.markets import categories
-from sim.markets.goods_views import GoodsViews
 from sim.polity import constants as polity_constants
 from sim.production import constants as production_constants
 from sim.projects import constants as projects_constants
@@ -12,9 +10,6 @@ from sim.tests import polity_host, production_host, projects_host
 
 
 class OwnerConstantViews(unittest.TestCase):
-    def test_markets_answer_the_goods_categories(self):
-        self.assertIs(GoodsViews().goods_categories(), categories.GOODS_CATEGORIES)
-
     def test_projects_answer_the_substitute_quality_discount(self):
         self.assertEqual(projects_host.build().substitute_quality_discount(), projects_constants.PURCHASABLE_SUBSTITUTE_QUALITY_DISCOUNT)
 

@@ -1,6 +1,8 @@
 """Pay a state owes its army and officials and has not paid: kept as a debt, settled first from later revenue."""
 from typing import Any, Dict, List
 
+from sim.book import InsufficientFunds
+
 from .budget_line import Line
 
 # the lines whose people are owed their pay when the year's purse does not cover it
@@ -33,8 +35,11 @@ def settle(government: Any, world: Any) -> Dict[str, float]:
 	paid: Dict[str, float] = {}
 	for name, amount in sorted(record.arrears.items()):
 		if amount > 0.0:
+			try:
+				world.labour.pay_wages(government, amount * covered, name)
+			except InsufficientFunds:   # the purse's money is a deposit the lenders cannot return: the line stays owed
+				continue
 			paid[name] = amount * covered
-			world.pay_wages(government, paid[name], name)
 			record.arrears[name] = amount - paid[name]
 	record.arrears = {name: amount for name, amount in record.arrears.items() if amount > 1e-9}
 	record.arrears_paid = paid

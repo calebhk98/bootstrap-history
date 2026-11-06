@@ -9,10 +9,11 @@ from types import SimpleNamespace
 
 from sim.agents.api import COIN_RESTRIKE_SHARE_PER_YEAR
 from sim.economy import currency
-from sim.economy.accounts import Book
+from sim.book import Book
 from sim.economy.economy import Economy
 from sim.economy.types import EDGE_MINT, Transfer
-from sim.markets.port_year import AgentEconomy
+from sim.markets.port_year import YearRun
+from sim.markets.year_figures import YearFigures
 
 
 spec = currency.currency_from_coin_standard("realm", {"regime": "struck_coin", "material": "silver_kg",
@@ -70,10 +71,11 @@ class Recorder:
         self.calls.append((cut, restrike_share))
 
 
-port = SimpleNamespace(_sim=SimpleNamespace(state_treasury=lambda: SimpleNamespace(record=SimpleNamespace(coin_cut_share=0.15))),
-                       _floor_costs={"stale": 1.0})
+port = SimpleNamespace(_world=SimpleNamespace(finance=SimpleNamespace(state_treasury=lambda: SimpleNamespace(record=SimpleNamespace(coin_cut_share=0.15)))),
+                       _agent=SimpleNamespace(figures=YearFigures()))
+port._agent.figures.floor_costs = {"stale": 1.0}
 recorder = Recorder()
-AgentEconomy._strike_state_coin(port, recorder)
+YearRun.strike_state_coin(port, recorder)
 check("the year strikes the cut the home state decided on, at the restrike share",
       recorder.calls == [(0.15, COIN_RESTRIKE_SHARE_PER_YEAR)], recorder.calls)
-check("a recoinage clears the cached floor costs", port._floor_costs == {})
+check("a recoinage clears the cached floor costs", port._agent.figures.floor_costs == {})

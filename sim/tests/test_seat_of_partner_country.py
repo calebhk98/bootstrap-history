@@ -10,8 +10,9 @@ from unittest import mock
 from .harness import check
 
 from sim.actors.module import Actors
-from sim.markets import port_year
-from sim.markets.port_year import AgentEconomy
+from sim.markets import reads_prices
+from sim.markets.reads_prices import PriceReads
+from sim.markets.year_figures import YearFigures
 from sim.seats.module import Seats
 from sim.seats.state import SeatsSeat
 from . import module_harness
@@ -20,7 +21,6 @@ COIN_PER_UNIT = 2.0
 HOME, NORTH = "home", "north"
 LABOURER = "labourer"
 # what the economy's own readers return for a market scope: the home country's, then the north's
-WAGES = {None: {LABOURER: 10.0}, NORTH: {LABOURER: 15.0}}
 PRICES = {None: {"grain": 3.0}, NORTH: {"grain": 5.0, "salt": 7.0}}
 
 
@@ -32,40 +32,28 @@ STORED = Stored(on=True)
 
 
 class FakeSim:
-    civ = {"id": HOME}
+    scenario = SimpleNamespace(civ={"id": HOME})
 
     def agent_record(self):
         return STORED
 
 
 def seat_economy():
-    """An `AgentEconomy` over a stand-in economy whose figures `answers` reads through the economy's readers."""
-    agent = AgentEconomy.__new__(AgentEconomy)
-    agent._sim = FakeSim()
-    agent._economy = SimpleNamespace(setup=SimpleNamespace(coin_per_unit=COIN_PER_UNIT, countries=lambda: [HOME, NORTH],
-                                                           unskilled_trade=LABOURER, civ_id=HOME))
-    agent._answers = None
-    agent._country_answers = {}
-    agent._stale = set()
-    agent._built_from = STORED
-    agent.economy = lambda: agent._economy
-    return agent
+    """`PriceReads` over a stand-in economy whose figures `answers` reads through the economy's readers."""
+    economy = SimpleNamespace(setup=SimpleNamespace(coin_per_unit=COIN_PER_UNIT, countries=lambda: [HOME, NORTH],
+                                                    unskilled_trade=LABOURER, civ_id=HOME))
+    core = SimpleNamespace(figures=YearFigures(), economy=lambda: economy, current=lambda: True, stored=STORED)
+    return PriceReads(core, FakeSim())
 
 
 def answers_over_readers(call):
     """`call(agent)` with the economy's readers replaced by the figures above."""
-    readers = {"wages_by_trade_weighted": lambda economy, country=None: WAGES[country],
-               "shown_prices_of": lambda economy, country=None: (PRICES[country], set()),
+    readers = {"shown_prices_of": lambda economy, country=None: (PRICES[country], set()),
                "interest_rate": lambda economy: 0.05}
-    with mock.patch.multiple(port_year.economy_api, **readers):
+    with mock.patch.multiple(reads_prices.economy_api, **readers):
         return call(seat_economy())
 
 
-home_wage = answers_over_readers(lambda agent: agent.wage_per_hour(LABOURER))
-north_wage = answers_over_readers(lambda agent: agent.wage_per_hour(LABOURER, NORTH))
-check("a home seat is paid the home labour markets' wage", home_wage == WAGES[None][LABOURER] * COIN_PER_UNIT, home_wage)
-check("a partner country's seat is paid that country's own wage, in the same coin",
-      north_wage == WAGES[NORTH][LABOURER] * COIN_PER_UNIT, (home_wage, north_wage))
 home_prices = answers_over_readers(lambda agent: agent.answers()[0])
 north_prices = answers_over_readers(lambda agent: agent.answers(NORTH)[0])
 check("a partner country's seat buys at the prices of the markets its tiles trade in",
@@ -73,17 +61,8 @@ check("a partner country's seat buys at the prices of the markets its tiles trad
 check("the home answers are the home markets' prices", home_prices == {"grain": 3.0 * COIN_PER_UNIT}, home_prices)
 
 
-def after_naming_the_north(agent):
-    agent.answers(NORTH)
-    return agent.wage_per_hour(LABOURER)
-
-
-check("the home answers are not moved by the other country's wages",
-      answers_over_readers(after_naming_the_north) == home_wage, None)
-
-
 def elsewhere(agent):
-    return agent.answers("elsewhere") is agent.answers() and agent.wage_per_hour(LABOURER, "elsewhere") == agent.wage_per_hour(LABOURER)
+    return agent.answers("elsewhere") is agent.answers()
 
 
 check("a country the economy does not hold is answered as the home country", answers_over_readers(elsewhere), None)
@@ -107,6 +86,7 @@ check("a seat of another country names it", seats_module("han").acting_country()
 class Registry:
     def __init__(self):
         self.asked = []
+        self.countries = self   # the registry's country part answers the government questions
 
     def government_of(self, country):
         self.asked.append(country)

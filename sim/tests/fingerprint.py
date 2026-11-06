@@ -27,7 +27,6 @@ REPO_ROOT = os.path.dirname(os.path.dirname(HERE))
 if REPO_ROOT not in sys.path:
 	sys.path.insert(0, REPO_ROOT)
 from sim import simulator as S
-from sim.engine.saveload import SAVE_FIELDS
 
 TREE, PRICES, NODES, WAGES, GOODS = S.load()
 GOAL = TREE["meta"]["goal_node"]
@@ -42,23 +41,23 @@ BASELINE_FIELDS = (
     "nitre_bed_m2", "mine_pending", "mine_ready", "mines",
     "mine_tranches", "market_pressure", "slaves", "freedmen",
     "manumitted_total", "goal_year", "dead_reason", "insolvent_years",
-    "bribes_ytd", "living_cost_paid", "mine_cost_paid", "spend_last_year",
+    "bribes_ytd", "mine_cost_paid", "spend_last_year",
     "output_factor", "output_per_head", "throttle", "binding", "bountied",
     "stalled", "life_left", "founder_alive", "revealed", "last_settlement",
     "employees", "trades_created", "policy", "businesses",
     "forgotten", "last_taught", "paid_towards",
     "contract_hours", "hour_allocations", "work_trade",
-    "commissioned", "wages_paid", "bondage_years_left", "bondage_debt",
+    "wages_paid", "bondage_years_left", "bondage_debt",
     "money_real", "credit_frozen_until", "interest_paid",
     "wage_hours_this_year", "teaching_hours_this_year", "trade_hours_used",
-    "total_spend", "director_hours_spent_founder", "bounties_paid",
-    "atrocity", "gov", "wages_earned", "last_patron_death",
+    "total_spend", "bounties_paid",
+    "atrocity", "gov", "last_patron_death",
     "_said_debasement", "_said_autoopen", "_said_output", "_said_scandal",
     "_said_parallelism", "_said_command_index", "_said_deputies",
     "_said_near_limit",
     "pop_children", "pop_working_age", "pop_elderly", "farm_stock_kg",
-    "_material_stock_ledger", "farm_hectares", "worker_housing_places",
-    "trade_schools", "last_withdrawal", "wages_prepaid", "granted_staff",
+    "material_stock_ledger", "farm_hectares", "worker_housing_places",
+    "trade_schools", "last_withdrawal",
     "hours_this_year", "_founder_death_aged", "_founder_death_year",
     "trade_introduced_year", "trades_endemic",
     "_dashboard_history", "failed_attempts", "shortages"

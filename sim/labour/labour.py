@@ -1,92 +1,76 @@
 """People: hiring them, teaching them, buying them, paying them.
 
-`Labour` is the labour of one simulation (`sim.labour`). It reads the rest of the simulation through
-the world it is given (the workforce module's `WorkforceWorld`, sim/workforce/world.py) and holds nothing of the
-engine itself.
+`Labour` is the set of parts that make up the labour of one simulation. It holds no rule and no state of its own:
+each part owns one concern and is built here with the world it reads (the workforce module's `WorkforceWorld`,
+sim/workforce/world.py) and the other parts it asks, passed in explicitly.
 
-This file is a pure composition point: one file holding all of a household's labour mechanics
-becomes a file nobody can edit without colliding with everyone else touching them, so the methods
-live in sibling modules, grouped by subject, and this file composes them into the single `Labour`:
-
-    labour_capacity.py       literacy, institutional (staff_capacity) and supervisory
-                             (supervision_room) ceilings on how many people this household may hire,
-                             teach, own or direct, plus the founder's own hour budget the rest
-                             spends (CapacityMixin)
-    labour_population.py     the local labour market itself - depth, price response to recent hiring,
-                             and the population estimates the 'population' command shows
-                             (PopulationMixin)
-    labour_settlement.py     the base tile, the town there, and moving it (SettlementMixin)
-    labour_wages.py          what staff actually cost every year, and what it costs to be one
-                             yourself (WagesMixin)
-    labour_training.py       hiring, firing, teaching, commissioning, and what a technology does to
-                             an hour once bought (TrainingMixin)
-    labour_bondage.py        buying people, freeing them, and the pool bookkeeping that keeps
-                             trained/granted staff honest (BondageMixin)
-    labour_staff_pay.py      what staff are paid against the market, and why they take better offers (StaffPayMixin)
-    labour_staff_ledger.py   who left the payroll and why, which specialists nothing uses (StaffLedgerMixin)
-    labour_staff_controls.py concerns to keep staffed and a reserve of spare hands (StaffControlsMixin)
-    labour_allocation.py     the farm workforce and the labour market's split of the rest
-                             (LabourAllocationMixin)
-
-No method appears in more than one of them; see each module's own docstring for exactly which
-methods it holds and why they sit together.
+    book         the founder's staff and the reservations against the labour core's people     (staff_book.py)
+    hours        the founder's own hour pool and what is spoken for                           (labour_hours.py)
+    trades       literate and craft trades, the literacy to fill them, presence here           (labour_trades.py)
+    schedule     the opening wage schedule priced at the present level                        (labour_wage_schedule.py)
+    settlement   the base tile, its town, and how far a hire travels                          (labour_settlement.py)
+    market       the one labour market every employer asks                                    (labour_market_api.py)
+    pools        the `art`/`sch` pools rebuilt from the books, and grants of trained people    (labour_pools.py)
+    capacity     institutional and supervisory ceilings, and the room left                    (labour_capacity.py)
+    supply       how many people of a trade exist, are in reach, and offer hours              (labour_supply.py)
+    report       the 'population' command's figures                                           (labour_population_report.py)
+    hands        the hands and hours a project can draw on                                    (labour_hands.py)
+    advice       what to tell a player who hit a wall on people                               (labour_advice.py)
+    hiring       hire and fire                                                                (labour_hiring.py)
+    training     teaching trades into existence                                               (labour_training.py)
+    commissions  buying a job rather than a person                                            (labour_commissions.py)
+    wages        the wage bill, the founder's own hours sold, the standing job                (labour_wages.py)
+    relocation   moving the base                                                              (labour_relocation.py)
+    bondage      buying and freeing people                                                    (labour_bondage.py)
+    ledger       who left the payroll and why                                                 (labour_staff_ledger.py)
+    controls     staffing policies: keep concerns staffed, hold a reserve                     (labour_staff_controls.py)
+    allocation   the society's labour need by trade and its farming technique                 (labour_allocation.py)
 """
-from .labour_capacity import CapacityMixin
-from .labour_population import PopulationMixin
-from .labour_settlement import SettlementMixin
-from .labour_wages import WagesMixin
-from .labour_training import TrainingMixin
-from .labour_bondage import BondageMixin
-from .labour_staff_ledger import StaffLedgerMixin
-from .labour_staff_pay import StaffPayMixin
-from .labour_staff_controls import StaffControlsMixin
-from .labour_allocation import LabourAllocationMixin
-from .labour_job import StandingJobMixin
-from .staff_book import StaffBookMixin
+from .labour_advice import Advice
+from .labour_allocation import Allocation
+from .labour_bondage import Bondage
+from .labour_capacity import Capacity
+from .labour_commissions import Commissions
+from .labour_hands import Hands
+from .labour_hiring import Hiring
+from .labour_hours import FounderHours
+from .labour_market_api import LabourMarket
+from .labour_pools import StaffPools
+from .labour_population_report import PopulationReport
+from .labour_relocation import Relocation
+from .labour_settlement import Settlement
+from .labour_staff_controls import StaffControls
+from .labour_staff_ledger import StaffLedger
+from .labour_supply import Supply
+from .labour_trades import Trades
+from .labour_training import Training
+from .labour_wage_schedule import WageScheduleReader
+from .labour_wages import Wages
+from .staff_book import StaffBook
 
 
-class Labour(CapacityMixin, PopulationMixin, SettlementMixin, WagesMixin, TrainingMixin, BondageMixin,
-             StaffLedgerMixin, StaffPayMixin, StaffControlsMixin, LabourAllocationMixin, StandingJobMixin, StaffBookMixin):
-    """Questions and transactions about labour, for one simulation. `world` is what labour reads of it."""
+class Labour:
+    """The parts of one simulation's labour. `world` is what they read of it."""
 
     def __init__(self, world):
-        self._world = world
-
-    @property
-    def market(self):
-        """The labour market every employer asks (labour_market_api.LabourMarket)."""
-        return self.labour_market
-
-    def allocate_farm_workforce(self, adult_equivalent_population):
-        return self._allocate_farm_workforce(adult_equivalent_population)
-
-    def apply_land_clearing(self):
-        return self._apply_land_clearing()
-
-    def farming_technique(self):
-        """The crop, rotation and toolkit this society farms with."""
-        return self._farming_technique()
-
-    def grant_staff(self, scholars=0.0, artisans=0.0):
-        return self._grant_staff(scholars, artisans)
-
-    def opening_wage_schedule(self):
-        return self._opening_wage_schedule()
-
-    def resync_pools(self):
-        return self._resync_pools()
-
-    def room_advice(self):
-        return self._room_advice()
-
-    def set_farm_area(self, hectares):
-        return self._set_farm_area(hectares)
-
-    def staff_advice(self, kind, deficit=None):
-        return self._staff_advice(kind, deficit)
-
-    def stochastic_round(self, x):
-        return self._stochastic_round(x)
-
-    def trade_headcount_pending(self, trade):
-        return self._trade_headcount_pending(trade)
+        self.book = StaffBook(world)
+        self.hours = FounderHours(world)
+        self.trades = Trades(world)
+        self.settlement = Settlement(world)
+        self.schedule = WageScheduleReader(world, self.settlement)
+        self.market = LabourMarket(world, self.schedule, self.settlement, self.book)
+        self.pools = StaffPools(world, self.book, self.trades)
+        self.capacity = Capacity(world, self.book, self.market, self.schedule, self.trades)
+        self.supply = Supply(world, self.book, self.capacity, self.settlement, self.trades)
+        self.report = PopulationReport(world, self.book, self.settlement, self.supply, self.trades)
+        self.hands = Hands(world, self.supply, self.trades)
+        self.advice = Advice(world, self.capacity, self.hands)
+        self.hiring = Hiring(world, self.advice, self.book, self.capacity, self.market, self.pools, self.supply, self.trades)
+        self.training = Training(world, self.advice, self.book, self.capacity, self.hours, self.market, self.supply, self.trades)
+        self.commissions = Commissions(world, self.hands, self.market, self.schedule, self.supply, self.trades)
+        self.wages = Wages(world, self.book, self.hours, self.market, self.trades)
+        self.relocation = Relocation(world, self.book, self.hours, self.market, self.pools, self.settlement)
+        self.bondage = Bondage(world, self.advice, self.capacity, self.pools, self.schedule)
+        self.ledger = StaffLedger(world, self.book, self.market)
+        self.controls = StaffControls(world, self.book, self.capacity, self.hiring, self.market)
+        self.allocation = Allocation(world, self.schedule)

@@ -8,10 +8,11 @@ from .harness import check
 
 from sim.agents.api import ActorRecord, Business, ActorRegistry, ActorsState
 from sim.agents import borrowing_arrears
-from sim.agents.purses import COIN, POOL
 from sim.agents.stratum import Stratum  # noqa: F401  (registers the kind)
+from sim.agents.purses import POOL
 
 from .agents_fake_world import FakeWorld
+from .pool_lenders import lend_from_savers
 
 
 def firm_owing(debt, margin):
@@ -19,6 +20,7 @@ def firm_owing(debt, margin):
 	world = FakeWorld(year=50)
 	registry = ActorRegistry(ActorsState(home_country="home"))
 	firm = registry.add("firm:1", ActorRecord(kind="firm", founded_year=0, last_margin=margin, business=Business()))
+	lend_from_savers(registry.state.purses, 1e12)
 	firm.money = -debt
 	return world, registry, firm
 
@@ -31,7 +33,7 @@ highest = 0.0
 excess = 0.0
 years = 0
 while firm.record.exited_year is None and years < 100:
-	world.year += 1
+	world.setting.year += 1
 	years += 1
 	year_interest = firm.debt() * firm.borrowing_rate(world)
 	firm.act(world)
@@ -41,7 +43,7 @@ check("debt stays within the ceiling plus a year's interest", excess <= 1e-6, (h
 check("a firm with no income and a facility defaults in bounded years", firm.record.exited_year is not None, (years, firm.debt()))
 check("it takes the years of arrears, no fewer",
 	years >= borrowing_arrears.ARREARS_YEARS_BEFORE_DEFAULT, years)
-check("the claim is written off through the pool: nothing is owed", firm.debt() == 0.0 and not purses.claims.get(firm.account_id))
+check("the claim is written off through the pool: nothing is owed", firm.debt() == 0.0 and not purses.contracts.facility_of(firm.account_id))
 check("the pool's books balance after the default", purses.book.check_conservation(1e-9).ok)
 check("the pool holds no negative balance", purses.purse(POOL) >= -1e-9, purses.purse(POOL))
 
@@ -56,7 +58,7 @@ check("the unpaid interest is arrears", firm.record.interest_arrears > 0.0 and f
 # a borrower paying its interest is untouched
 world, registry, firm = firm_owing(debt=5.0, margin=1.0e6)
 for _ in range(10):
-	world.year += 1
+	world.setting.year += 1
 	firm.pay_interest(world)
 check("a firm that can pay its interest has no arrears and does not default",
 	firm.record.interest_arrears == 0.0 and firm.record.arrears_years == 0 and firm.record.exited_year is None, firm.record.arrears_years)

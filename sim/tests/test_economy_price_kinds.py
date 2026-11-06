@@ -6,8 +6,9 @@ QUICK_TOPIC = True
 import types
 import unittest
 
+from sim.economy.labour_record import LabourRecord
 from sim.economy import notional, types as economy_types
-from sim.economy.market_memory import PRICE_TRADED, MarketMemory
+from sim.economy.market_memory import PRICE_SMOOTHED_TRADE, MarketMemory
 from sim.economy.notional import KIND_MAKING_COST_ESTIMATE, KIND_REMEMBERED, shown_prices_with_kinds
 from sim.economy.types import QUOTE_BEST_UNFILLED_BID, QUOTE_OPENING_ESTIMATE, Recipe
 from sim.markets.port_actors import standing_price
@@ -17,6 +18,7 @@ from sim.ui.proto.render_screens_market import NO_TRADE_CAUSE, price_note
 def memory_with(prices, cleared=(), quotes=None):
     memory = MarketMemory(prices=dict(prices), wages={"labour|a": 0.5}, rates={"coin": 0.0})
     memory.cleared_prices = {key: prices[key] for key in cleared}
+    memory.trade_age = {key: 0 for key in cleared}
     memory.quote_kinds = dict(quotes or {})
     return memory
 
@@ -24,7 +26,7 @@ def memory_with(prices, cleared=(), quotes=None):
 class MemoryNamesWhatAPriceIsTests(unittest.TestCase):
     def test_a_price_a_market_cleared_at_is_traded(self):
         memory = memory_with({"grain|a": 3.0}, cleared=["grain|a"])
-        self.assertEqual(memory.price_kind("grain|a"), PRICE_TRADED)
+        self.assertEqual(memory.price_kind("grain|a"), PRICE_SMOOTHED_TRADE)
 
     def test_a_price_nothing_traded_at_is_its_quote_kind(self):
         memory = memory_with({"grain|a": 3.0}, quotes={"grain|a": QUOTE_BEST_UNFILLED_BID})
@@ -39,28 +41,29 @@ class MemoryNamesWhatAPriceIsTests(unittest.TestCase):
     def test_a_good_is_traded_when_any_of_its_markets_traded(self):
         memory = memory_with({"grain|a": 3.0, "grain|b": 4.0}, cleared=["grain|b"],
                              quotes={"grain|a": QUOTE_BEST_UNFILLED_BID})
-        self.assertEqual(memory.price_kinds_by_good(), {"grain": PRICE_TRADED})
+        self.assertEqual(memory.price_kinds_by_good(), {"grain": PRICE_SMOOTHED_TRADE})
 
     def test_a_good_none_of_whose_markets_traded_is_never_shown_as_traded(self):
         memory = memory_with({"grain|a": 3.0, "grain|b": 4.0}, quotes={"grain|b": QUOTE_BEST_UNFILLED_BID})
-        self.assertNotEqual(memory.price_kinds_by_good()["grain"], PRICE_TRADED)
+        self.assertNotEqual(memory.price_kinds_by_good()["grain"], PRICE_SMOOTHED_TRADE)
 
 
 def shown_game():
     """Grain traded last year; metal did not, and its remembered price is a quote."""
     memory = memory_with({"grain|a": 3.0, "metal|a": 50.0}, cleared=["grain|a"],
                          quotes={"metal|a": QUOTE_BEST_UNFILLED_BID})
-    memory.trade_age = {"grain|a": 1, "metal|a": 99}
-    record = types.SimpleNamespace(memory=memory, volumes={}, opening_basket={}, index_base_prices={})
+    memory.trade_age = {"grain|a": 0, "metal|a": 99}
+    record = types.SimpleNamespace(memory=memory, labour=LabourRecord(), goods=types.SimpleNamespace(volumes={}, opening_basket={}, index_base_prices={}))
     recipes = {"smelt": Recipe("smelt", {"metal": 1.0}, {}, {"labour": 2.0})}
-    setup = types.SimpleNamespace(recipes=recipes, opening_prices={}, currency_id="coin", unskilled_trade="labour")
+    setup = types.SimpleNamespace(recipes=recipes, opening_prices={}, currency_id="coin", unskilled_trade="labour",
+                              opening_wages={"labour": 1.0}, trades={"labour": types.SimpleNamespace(training_years=0.0)})
     return setup, record
 
 
 class ShownPricesCarryTheirKindTests(unittest.TestCase):
     def test_a_traded_good_is_shown_as_traded(self):
         _prices, _stale, kinds = shown_prices_with_kinds(*shown_game())
-        self.assertEqual(kinds["grain"], PRICE_TRADED)
+        self.assertEqual(kinds["grain"], PRICE_SMOOTHED_TRADE)
 
     def test_an_untraded_good_somebody_makes_is_shown_as_its_making_cost(self):
         prices, stale, kinds = shown_prices_with_kinds(*shown_game())
@@ -100,7 +103,7 @@ class PlayerSeesNoTradeWithItsCauseTests(unittest.TestCase):
         self.assertTrue(note.startswith("no trade"), note)
 
     def test_a_traded_price_carries_no_such_note(self):
-        self.assertEqual(price_note({"price_kind": PRICE_TRADED, "price_basis": "solved"}), "")
+        self.assertEqual(price_note({"price_kind": PRICE_SMOOTHED_TRADE, "price_basis": "solved"}), "")
 
     def test_every_quote_and_estimate_kind_has_a_cause(self):
         kinds = {getattr(economy_types, name) for name in dir(economy_types) if name.startswith("QUOTE_")}

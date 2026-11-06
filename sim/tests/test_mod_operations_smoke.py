@@ -101,8 +101,8 @@ class Layered:
         answer = super().store(name)
         return dict(answer, layered_by=MOD, shipped_keys=sorted(answer))
 
-    def helper(self):
-        return 1   # not part of the module's declared methods: `validate` labels the layer unstable
+    def declared(self):
+        return super().declared()   # a method the module has but its spec does not declare: `validate` labels the layer unstable
 
 
 def register(api):
@@ -350,7 +350,7 @@ class ExtendModuleTests(OperationCase):
         self.assertEqual(game.view("store")[BASE_STORE]["values"], {"tile_2": 7})
 
     def test_a_method_outside_the_modules_declared_ones_is_labelled_unstable(self):
-        self.assertEqual(self.modded.assembly.unstable, {"stores": [(LAYER, "helper")]})
+        self.assertEqual(self.modded.assembly.unstable, {"stores": [(LAYER, "declared")]})
         for plain in self.plain_games():
             self.assertEqual(plain.assembly.unstable, {})
 
@@ -407,7 +407,7 @@ class ProvideTests(OperationCase):
     MODS = {GIVER: (PROVIDE, ())}
 
     def spawner_names(self, game):
-        return [name for name, _spawner in game.assembly.modules["actors"].extensions().spawners]
+        return [name for name, _spawner in game.assembly.modules["actors"].parts.cast.extensions().spawners]
 
     def test_the_mods_answer_joins_the_points_after_the_shipped_ones(self):
         names = self.spawner_names(self.modded)
@@ -415,9 +415,9 @@ class ProvideTests(OperationCase):
         self.assertEqual(names[:-1], self.spawner_names(self.before))
 
     def test_the_mods_hours_are_charged_in_its_game_only(self):
-        self.assertEqual(self.modded.labour._world.director_overhead_hours(), 50.0)
+        self.assertEqual(self.modded.assembly.modules["workforce"].parts.core.labour.hours._world.directors.overhead_hours(), 50.0)
         for plain in self.plain_games():
-            self.assertEqual(plain.labour._world.director_overhead_hours(), 0.0)
+            self.assertEqual(plain.assembly.modules["workforce"].parts.core.labour.hours._world.directors.overhead_hours(), 0.0)
 
     def test_the_games_without_the_mod_have_one_provider_fewer(self):
         for point in ("actor_spawners", "director_overhead"):
@@ -471,7 +471,7 @@ class WithdrawTests(OperationCase):
     MODS = {GIVER: (WITHDRAW, ())}
 
     def spawner_names(self, game):
-        return [name for name, _spawner in game.assembly.modules["actors"].extensions().spawners]
+        return [name for name, _spawner in game.assembly.modules["actors"].parts.cast.extensions().spawners]
 
     def test_the_shipped_provision_is_gone_and_the_mods_own_answer_remains(self):
         self.assertEqual(self.spawner_names(self.modded), [GIVER + ":only"])

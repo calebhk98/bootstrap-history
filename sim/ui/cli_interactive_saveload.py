@@ -26,14 +26,14 @@ reason for being split is gone and they belong back together, not wired
 with a workaround.
 """
 
-import json, os
+import os
 
 from sim.engine.ui_port import CIVDIR, civilization_ids, closure, load, load_civ
 from sim.engine.ui_port import settings
 from .memory import merge_session_meta
 from .protocol import load_state, save_state
 
-from .cli import _pick_session_filename, _wrap
+from .cli_common import _pick_session_filename, _wrap
 from sim.engine import ui_port
 
 
@@ -125,7 +125,7 @@ def _ingame_save_milestone(sim, session):
               "saving after every command as before)" % session)
 
 
-def _ingame_load(cfg, sim, session, args):
+def _ingame_load(cfg, sim, session, sitting):
     """'load', typed bare mid-game: switch this running game to a different
     save in the managed directory, without going back to the main menu.
     Returns the session path to use from here on - unchanged if nothing was
@@ -178,7 +178,7 @@ def _ingame_load(cfg, sim, session, args):
     # (after this session later ends on its own) skip announcing THAT ending
     # because some earlier game's flag was still set. Either way, a load is
     # a new look at a position this process has not narrated yet.
-    args._said_end = False
+    sitting.said_end = False
     # A CHECKPOINT SWITCHED TO IS STILL A CHECKPOINT - same guarantee as a
     # checkpoint named on the command line (see cmd_play's own comment on
     # `checkpoint_source`, right above the equivalent check there): switching

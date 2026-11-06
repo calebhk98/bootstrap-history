@@ -24,7 +24,7 @@ def posted_rents(previous: Mapping[TileId, float], cleared: Mapping[TileId, floa
     otherwise the posted rent closes `share` of the gap to the clearing rent (a tile nobody asked for
     land on clears at zero)."""
     posted: Dict[TileId, float] = {}
-    for tile in set(previous) | set(cleared):
+    for tile in sorted(set(previous) | set(cleared)):
         target = max(0.0, cleared.get(tile, 0.0))
         posted[tile] = target if tile not in previous else previous[tile] + share * (target - previous[tile])
     return posted

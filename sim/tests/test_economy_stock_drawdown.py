@@ -7,6 +7,7 @@ QUICK_TOPIC = True
 import math
 import unittest
 
+from sim.tests.economy_view_defaults import ViewDefaults
 from sim.economy import inventory, producers
 from sim.economy.types import Recipe
 
@@ -15,7 +16,7 @@ EXPECTED_SALES = 5.0        # runs a year
 TARGET_RUNS = inventory.target_stock(EXPECTED_SALES)
 
 
-class View:
+class View(ViewDefaults):
     year = 3
 
     def __init__(self, stock_runs):
@@ -84,7 +85,6 @@ class StockDrawdownTests(unittest.TestCase):
         # stock four runs over target against five sold a year: the old gate (sales less the whole excess) planned one run
         who = farmer(last_runs=5.0)
         plan = producers.plan(who, FARM, View(TARGET_RUNS + 4.0), 1e6)
-        self.assertGreater(plan.expected_margin_per_run, 0.0)
         self.assertAlmostEqual(plan.runs, EXPECTED_SALES - 4.0 / producers.STOCK_CLEARING_YEARS)
         self.assertGreater(plan.runs, EXPECTED_SALES - 4.0)
 

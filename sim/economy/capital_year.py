@@ -11,8 +11,9 @@ from sim.constants import declare
 from . import bank_runs, funds as fund_pools, insurance, lending, portfolio_year, secondary_trade
 from .funds import POOLED_FUNDS
 from .insurance import HARVEST, INSURANCE_UNDERWRITING, RISK_POOLING
-from .secondary_trade import Shortfall
+from .secondary_trade import CashShortfall
 from .types import AgentId, FundsOffer
+from .rates import own_rate
 
 INSURER_FOUNDING_SHARE_OF_CASH = declare(
     "INSURER_FOUNDING_SHARE_OF_CASH", 0.5, kind="temporary_heuristic",
@@ -24,19 +25,19 @@ INSURER_FOUNDING_SHARE_OF_CASH = declare(
 
 def holds_a_claim(record) -> bool:
     """Whether any household holds shares or a loan it could sell."""
-    if any(holders for holders in record.shares.values()):
+    if any(holders for holders in record.capital_markets.shares.values()):
         return True
-    return any(loan.lender in record.cohorts and secondary_trade.tradable(record, loan) for loan in record.loans)
+    return any(loan.lender in record.cohorts and secondary_trade.tradable(record, loan) for loan in record.credit.loans)
 
 
-def holds_units(record) -> bool:
-    return any(fund.units for fund in record.capital.funds.values())
+def holds_units(capital_markets) -> bool:
+    return any(fund.units for fund in capital_markets.capital.funds.values())
 
 
-def shortfalls(setup, record, view, ledger) -> Dict[AgentId, Shortfall]:
+def shortfalls(setup, record, view, ledger) -> Dict[AgentId, CashShortfall]:
     """What each household short of cash for its floors would borrow, and the most it would pay to."""
     requests = lending.household_requests(setup, record, view, ledger, {})
-    return {request.borrower: Shortfall(request.amount, request.maximum_rate)
+    return {request.borrower: CashShortfall(request.amount, request.maximum_rate)
             for request in requests if request.borrower in record.cohorts}
 
 
@@ -45,14 +46,14 @@ def before_lending(setup, record, view, ledger, funds: Sequence[FundsOffer], yea
     """The offers savers bring to the year's lending, after the funds' redemptions, secondary trading and the
     withdrawals from banks. A household short of cash redeems fund units first (at their worth), then sells claims."""
     money = setup.currency_id
-    rate = view.interest_rate(money)
+    rate = own_rate(view, money)
     funds = list(funds)
     trading = any(name in institutions for name in (secondary_trade.SHARE_TRADING, secondary_trade.BOND_MARKET))
     pooling = POOLED_FUNDS in institutions
     if pooling and not fund_pools.standing(record) and record.cohorts:
         fund_pools.found(record, max(sorted(record.cohorts), key=lambda cohort_id: record.book.balance(cohort_id, money)), year)
-    short: Dict[AgentId, Shortfall] = {}
-    if (pooling and holds_units(record)) or (trading and holds_a_claim(record)):
+    short: Dict[AgentId, CashShortfall] = {}
+    if (pooling and holds_units(record.capital_markets)) or (trading and holds_a_claim(record)):
         short = shortfalls(setup, record, view, ledger)
     if pooling and short:
         funds, short = _redeem_units(setup, record, funds, short, rate, institutions)
@@ -60,9 +61,9 @@ def before_lending(setup, record, view, ledger, funds: Sequence[FundsOffer], yea
         funds = funds + [offer for offer in (fund_pools.offer_of(setup, record, fund, rate) for fund in fund_pools.standing(record))
                          if offer is not None]
     funds = portfolio_year.run(setup, record, view, funds, institutions)       # households buy or sell shares to their portfolio fraction
-    if trading and (holds_a_claim(record) or any(offer.lender in record.capital.funds for offer in funds)):
+    if trading and (holds_a_claim(record) or any(offer.lender in record.capital_markets.capital.funds for offer in funds)):
         funds, _trades = secondary_trade.run(setup, record, funds, short, rate, institutions)
-    if not record.banks:
+    if not record.capital_markets.banks:
         return funds
     return bank_runs.run(setup, record, funds, year, institutions, rate)
 
@@ -77,7 +78,7 @@ def _redeem_units(setup, record, funds, short, rate, institutions):
                 before = record.book.balance(holder, money)
                 funds = fund_pools.redeem_for_cash(setup, record, fund, holder, remaining[holder].amount, funds, rate, institutions)
                 got = record.book.balance(holder, money) - before
-                remaining[holder] = Shortfall(max(0.0, remaining[holder].amount - got), shortfall.borrowing_rate)
+                remaining[holder] = CashShortfall(max(0.0, remaining[holder].amount - got), shortfall.borrowing_rate)
     return funds, {holder: shortfall for holder, shortfall in remaining.items() if shortfall.amount > 0.0}
 
 
@@ -93,7 +94,7 @@ def invest_idle(setup, record, view, funds: Sequence[FundsOffer], kept: Dict[Age
     if POOLED_FUNDS not in institutions or not fund_pools.standing(record):
         return
     money = setup.currency_id
-    rate = view.interest_rate(money)
+    rate = own_rate(view, money)
     yields = {fund.agent_id: fund_pools.yield_of(setup, record, fund, rate) for fund in fund_pools.standing(record)}
     for offer in sorted(funds, key=lambda each: each.lender):
         if offer.lender not in kept:
@@ -109,7 +110,7 @@ def invest_idle(setup, record, view, funds: Sequence[FundsOffer], kept: Dict[Age
         paying = [(yields[fund.agent_id], fund.agent_id) for fund in fund_pools.standing(record)
                   if yields[fund.agent_id] is not None and yields[fund.agent_id] >= offer.minimum_rate and fund.units]
         if paying:
-            fund_pools.subscribe(setup, record, record.capital.funds[max(paying)[1]], offer.lender, idle, rate)
+            fund_pools.subscribe(setup, record, record.capital_markets.capital.funds[max(paying)[1]], offer.lender, idle, rate)
 
 
 def note_exposure(setup, record, view, area_map, ledger, harvest_factor: float, institutions: Sequence[str]) -> None:
@@ -129,7 +130,7 @@ def note_exposure(setup, record, view, area_map, ledger, harvest_factor: float, 
                 value += quantity * price
         if value > 0.0:
             exposed[cohort_id] = {HARVEST: value / harvest_factor}
-    record.capital.exposure = exposed
+    record.capital_markets.capital.exposure = exposed
 
 
 def insure(setup, record, view, harvest_factor: float, year: int, institutions: Sequence[str]) -> None:
@@ -137,8 +138,8 @@ def insure(setup, record, view, harvest_factor: float, year: int, institutions: 
     a company or a mutual their society knows how to run, premiums are paid, and the year's weather settles the
     claims. The year then joins the record, so it prices the next year's cover and not this one's."""
     money = setup.currency_id
-    state = record.capital
-    rate = view.interest_rate(money)
+    state = record.capital_markets.capital
+    rate = own_rate(view, money)
     company_open, mutual_open = INSURANCE_UNDERWRITING in institutions, RISK_POOLING in institutions
     if (company_open or mutual_open) and state.exposure:
         _arrange_cover(record, money, rate, year, company_open, mutual_open)
@@ -149,7 +150,7 @@ def insure(setup, record, view, harvest_factor: float, year: int, institutions: 
 
 
 def _arrange_cover(record, money: str, rate: float, year: int, company_open: bool, mutual_open: bool) -> None:
-    state = record.capital
+    state = record.capital_markets.capital
     if HARVEST not in state.hazards:
         return
     price = insurance.premium_rate(state, HARVEST, rate)

@@ -7,7 +7,7 @@ import types
 import unittest
 from unittest import mock
 
-from sim.economy import entry_trial
+from sim.economy import entry_trial, unit_cost
 from sim.economy.producers import Producer
 from sim.economy.types import Bid, Recipe
 
@@ -22,13 +22,13 @@ def bid(floor, budget, flexible=0.0):
 class FullCostTests(unittest.TestCase):
     def test_cost_shares_a_joint_run_by_value_and_counts_the_plant(self):
         prices = {"metal": 9.0, "slag": 0.1}
-        cost = entry_trial.full_cost_per_unit(SMELT, "metal", prices, {"ore": 0.5, "stone": 1.0}, {"smith": 2.0}, 0.0)
+        cost = unit_cost.full_cost_per_unit(SMELT, "metal", prices, {"ore": 0.5, "stone": 1.0}, {"smith": 2.0}, 0.0)
         run_cost = 100.0 * 0.5 + 5.0 * 2.0 + 2.0 * 1.0 / 10.0
         share = 90.0 / (90.0 + 9.0)
         self.assertAlmostEqual(cost, run_cost * share / 10.0)
 
     def test_an_input_with_no_price_cannot_be_costed(self):
-        self.assertTrue(math.isinf(entry_trial.full_cost_per_unit(SMELT, "metal", {"metal": 9.0}, {}, {"smith": 2.0}, 0.0)))
+        self.assertTrue(math.isinf(unit_cost.full_cost_per_unit(SMELT, "metal", {"metal": 9.0}, {}, {"smith": 2.0}, 0.0)))
 
 
 class DemandAtTests(unittest.TestCase):
@@ -72,10 +72,12 @@ def market(makers=False, price=None):
     """(setup, record, view, area_map) for a metal market of one area and one tile; `makers` puts a smelter there."""
     setup = types.SimpleNamespace(recipes={MAKE: MAKE_RECIPE})
     producers = {"smelter": Producer("smelter", "owner", MAKE, ANCHOR, 3.0)} if makers else {}
-    record = types.SimpleNamespace(producers=producers, expansion_runs={})
+    record = types.SimpleNamespace(producers=producers, credit=types.SimpleNamespace(expansion_runs={}))
     area = types.SimpleNamespace(area_id="area", anchor_tile=ANCHOR, tiles=(ANCHOR,))
     area_map = types.SimpleNamespace(goods=lambda: [GOOD], areas=lambda good: [area])
-    return setup, record, types.SimpleNamespace(price=lambda good, area_id: price), area_map
+    return setup, record, types.SimpleNamespace(price=lambda good, area_id: price, offered_price=lambda good, area_id: price,
+                                              present_prices_at=lambda names, tile: {}, price_kind=lambda good, area_id: None,
+                                              cleared_price=lambda good, area_id: None), area_map
 
 
 def trial_plans(bids, makers=False, siting=None, cost=80.0):

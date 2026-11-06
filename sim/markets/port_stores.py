@@ -11,13 +11,13 @@ def opening_store_values(sim, tile_ids, start_year):
     """{good: {"workings": [[kg a year, years worked, years since the last output], ...], "gap": reason or ""}}
     for the good each mined resource yields."""
     stores = {}
-    catalogue = sim.deposit_catalogue()
+    catalogue = sim.map.deposit_catalogue()
     for resource_id, goods in sorted(catalogue["demand_goods"].items()):
         if len(goods) != 1:
             for good in goods:
                 stores[good] = {"workings": [], "gap": "%s yields several goods; none is chosen to hold its stock" % resource_id}
             continue
-        mined = sim.deposits_worked_before(tile_ids, resource_id, start_year, historical_rates(catalogue["metals"], resource_id))
+        mined = sim.map.deposits_worked_before(tile_ids, resource_id, start_year, historical_rates(catalogue["metals"], resource_id))
         workings = [[each["output_per_year"], each["years_worked"], each["years_since_last_output"]] for each in mined["workings"]]
         if mined["unit"] != "kg":
             workings, gap = [], "%s is counted in %s, not kilograms" % (resource_id, mined["unit"])

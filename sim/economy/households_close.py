@@ -7,8 +7,8 @@ with what the cohort got of it; the shortfall is recorded for demography to read
 from typing import Dict, List, Mapping, Tuple
 
 from . import currency, durable_stock, households_buffer_stock, opening_resting
-from .credit_view import claims_of, equity_of
-from .households_basket import Basket, need_prices, subsistence_cost_per_person
+from sim.world.need_basket import Basket, subsistence_cost_per_person
+from .households_basket import need_prices
 from .households_cohort import Cohort, renewed
 from .households_own import next_own_plan
 from .protocols import MarketView
@@ -55,17 +55,17 @@ def close_year(cohort: Cohort, received_by_good: Mapping[GoodId, float], view: M
     if first_good is not None:
         money = view.currency_of(view.area_of(first_good, cohort.tile))
         level = view.basket_price_level(money)
-        observed = getattr(view, "observed_inflation", lambda _money: None)(money)
+        observed = view.observed_inflation(money)
         if observed is None:
             observed = level / cohort.last_basket_price_level - 1.0
         expected = currency.update_expected_inflation(cohort.expected_inflation, observed)
         # the cash the spending rule rests at: the one figure for cash wanted (mint, lending and the opening read it)
-        share_wealth = equity_of(view, cohort.agent_id)
+        share_wealth = view.equity(cohort.agent_id)
         target = opening_resting.resting_household_purse(
             households_buffer_stock.mean_net_income(income_received, cohort.last_year_income),
-            share_wealth, claims_of(view, cohort.agent_id, money))
+            share_wealth, view.claims(cohort.agent_id, money))
     return renewed(cohort, expected_inflation=expected, last_basket_price_level=level, cash_target=target,
-                   share_wealth=share_wealth, last_year_income=income_received, last_year_spending=spent,
+                   share_wealth=share_wealth, last_year_income=income_received,
                    expected_spending=durable_stock.update_expected_spending(cohort.expected_spending, spent, cohort.planned_spending),
                    planned_spending=0.0,
                    expected_floor_cost=durable_stock.update_expected_spending(cohort.expected_floor_cost, floor_cost),

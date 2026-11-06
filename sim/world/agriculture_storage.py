@@ -2,50 +2,27 @@
 physically hold, and `Storage.step`'s full sow-grow-harvest-eat-spoil-retain
 cycle for one year.
 
-This module holds the STORAGE subject of `sim/world/agriculture.py`'s
-farming domain - see that file's own docstring, "THIS FILE IS A COMPOSITION
-POINT", for the other two subject files and why the constants and tables
-stay in that file instead: `annual_food_demand_kg_per_person` and
-`granary_capacity_kg` (what a population needs and what its granary can
-hold), `YearFlows` (the exact accounting of one year's grain), `Storage`
-itself (the running stock and the one-year cycle that moves it - sow, grow,
-harvest, eat, spoil, retain next year's seed, bank the rest), and
-`stock_to_carry_forward_kg` (the one-line fix a caller that persists
-`Storage` across years needs, or it double-charges seed every year - see
-that function's own docstring for the incident this exists because of).
+This module holds the STORAGE subject of the farming domain (see
+`sim/world/agriculture.py`, the facade, for the other subject files):
+`annual_food_demand_kg_per_person` and `granary_capacity_kg` (what a
+population needs and what its granary can hold), `YearFlows` (the exact
+accounting of one year's grain), `Storage` itself (the running stock and the
+one-year cycle that moves it - sow, grow, harvest, eat, spoil, retain next
+year's seed, bank the rest), and `stock_to_carry_forward_kg` (the fix a
+caller that persists `Storage` across years needs, or it double-charges seed
+every year - see that function's own docstring).
 
-STANDALONE THE SAME WAY THE PARENT MODULE IS. Nothing here imports from
-`sim/engine/`; the only imports besides the standard library are from
-`sim.world.agriculture` (the declared constants and the Crop/Soil/Rotation/
-Toolkit/StorageTechnique tables `Storage.step` takes as optional arguments)
-and `sim.world.agriculture_yield` (the harvest itself: `gross_harvest_kg`
-and `marginal_product_of_labour_kg_per_hour`, which `Storage.step` calls to
-turn this year's sowing into this year's harvest and this year's marginal
-product). See `sim/world/agriculture.py`'s own STANDALONE ON PURPOSE section
-for why that matters and to whom.
-
-`draw_weather_multiplier` ITSELF IS CALLED THROUGH THE `agriculture` MODULE
-OBJECT, NOT IMPORTED BY NAME LIKE THE OTHER TWO, BECAUSE A NAME IMPORT WOULD
-BREAK MONKEYPATCHING. `sim/tests/test_agriculture.py`'s bad-year test
-monkeypatches `agriculture.draw_weather_multiplier` directly (there is no
-seed that reliably produces a bad enough year on demand, so the test
-replaces the draw instead of hunting for one) and expects `Storage.step` to
-draw through the patched function. A `from .agriculture_yield import
-draw_weather_multiplier` here would copy the ORIGINAL function object into
-this module's own globals at import time, permanently, so patching
-`agriculture.draw_weather_multiplier` afterward would not reach
-`Storage.step` at all - the "green tests do not mean unchanged behaviour"
-trap CLAUDE.md SS6 warns about, which is exactly what the one test built to
-catch it exists to catch. Looking the name up on the module at call time,
-below, keeps monkeypatching `agriculture.draw_weather_multiplier` working.
+Standalone like the rest of the farming domain: nothing here imports from
+`sim/engine/`. The constants and tables come from `sim.world.agriculture_core`
+and the harvest from `sim.world.agriculture_yield`. A caller that wants a
+particular year's weather passes `weather_multiplier` to `Storage.step`.
 """
 import collections
 import random
 from dataclasses import dataclass
 from typing import Optional
 
-from . import agriculture
-from .agriculture import (
+from .agriculture_core import (
     DAYS_PER_YEAR,
     DEFAULT_CROP,
     DEFAULT_ROTATION,
@@ -63,6 +40,7 @@ from .agriculture import (
 )
 from .agriculture_yield import (
     Land,
+    draw_weather_multiplier,
     gross_harvest_kg,
     marginal_product_of_labour_kg_per_hour,
 )
@@ -97,7 +75,7 @@ def granary_capacity_kg(
     term inside `Storage.step`'s own one-year accounting - see
     GRANARY_CAPACITY_YEARS_OF_DEMAND's own declaration for why the cap lives
     here, as a plain function callers apply to whatever they carry forward,
-    rather than inside `Storage` itself. A caller (sim/engine/core.py) that
+    rather than inside `Storage` itself. A caller (`sim/agents/country_farm.py`) that
     ignores this entirely just gets an uncapped granary - nothing in
     `Storage.step` enforces it - so applying it is the caller's choice, the
     same way applying `storage_technique` at all is.
@@ -197,8 +175,8 @@ class Storage(object):
 
         `weather_multiplier` defaults to `None`, meaning "draw one from
         `self._random` the way this method always has" (step 2 below). A
-        caller that passes a number instead (sim/engine/core.py's
-        `_pooled_farm_weather_multiplier`, Complaints/46-one-weather-draw-
+        caller that passes a number instead (`pooled_weather_multiplier` in
+        sim/markets/port_world_reads.py, Complaints/46-one-weather-draw-
         for-a-continent.md) gets that number used AS this year's weather
         multiplier verbatim, and `self._random`/`draw_weather_multiplier`
         are not touched at all - this is what lets a caller that already
@@ -295,10 +273,7 @@ class Storage(object):
         self.stock_kg -= seed_sown_kg
 
         if weather_multiplier is None:
-            # Through the `agriculture` module object, not a bare name - see
-            # this file's own top-of-file comment on why: a monkeypatched
-            # `agriculture.draw_weather_multiplier` has to reach this call.
-            weather_multiplier = agriculture.draw_weather_multiplier(
+            weather_multiplier = draw_weather_multiplier(
                 self._random, soil.weather_stdev_fraction)
         harvest_kg = gross_harvest_kg(land, labour_hours, technique_multiplier,
                                       weather_multiplier, crop, toolkit, rotation,

@@ -6,10 +6,12 @@ QUICK_TOPIC = True
 import unittest
 
 from sim.agents.api import ActorRecord, ActorsState
+from sim.agents.borrowing import rate_with_discount
 from sim.agents.firm import Firm
 from sim.world import capital_market
 
 from .agents_fake_world import FakeWorld
+from .pool_lenders import lend_from_savers, lend_through
 
 START = 0.12
 
@@ -22,22 +24,6 @@ def firm(state, name, money=0.0, founded_year=100, last_margin=1.0e6):
 
 
 class RateFunctions(unittest.TestCase):
-    def test_a_borrower_with_no_arrears_and_no_standing_pays_the_market_rate(self):
-        self.assertAlmostEqual(capital_market.borrower_rate(START, 0.0, 0.0), START)
-
-    def test_standing_removes_premium(self):
-        self.assertLess(capital_market.borrower_rate(START, 0.02, 1.0), capital_market.borrower_rate(START, 0.0, 1.0))
-
-    def test_no_discount_takes_a_rate_below_the_market_rate(self):
-        for discount in (0.0, 0.03, 0.5, 10.0):
-            for used in (0.0, 0.3, 1.0, 5.0):
-                self.assertGreaterEqual(capital_market.borrower_rate(START, discount, used), START - 1e-15)
-
-    def test_arrears_make_money_dearer_up_to_the_ceiling_and_no_further(self):
-        self.assertLess(START, capital_market.borrower_rate(START, 0.0, 0.5))
-        self.assertLess(capital_market.borrower_rate(START, 0.0, 0.5), capital_market.borrower_rate(START, 0.0, 1.0))
-        self.assertEqual(capital_market.borrower_rate(START, 0.0, 3.0), capital_market.borrower_rate(START, 0.0, 1.0))
-
     def test_what_is_left_to_lend_is_never_negative(self):
         self.assertEqual(capital_market.headroom(100.0, 30.0), 70.0)
         self.assertEqual(capital_market.headroom(100.0, 130.0), 0.0)
@@ -47,12 +33,22 @@ class RateFunctions(unittest.TestCase):
         self.assertEqual(capital_market.serviceable_debt(100.0, 0.0, 0.5), 0.0)
 
 
+class RateWithDiscount(unittest.TestCase):
+    def test_the_discount_comes_off_the_premium_only(self):
+        self.assertAlmostEqual(rate_with_discount(0.10, 0.04, 0.01), 0.13)
+        self.assertAlmostEqual(rate_with_discount(0.10, 0.04, 0.09), 0.10)
+
+    def test_no_premium_answered_is_no_premium(self):
+        self.assertAlmostEqual(rate_with_discount(0.10, None, 0.01), 0.10)
+
+
 class ActorsBorrowByOneMethod(unittest.TestCase):
     def setUp(self):
         self.state = ActorsState()
         self.world = FakeWorld()
         self.world.edge_book = self.state
         self.world.rate = START
+        lend_from_savers(self.state.purses, 1e12)
 
     def test_two_firms_with_the_same_record_and_no_debt_borrow_at_the_same_rate(self):
         first, second = firm(self.state, "a"), firm(self.state, "b")
@@ -84,8 +80,89 @@ class ActorsBorrowByOneMethod(unittest.TestCase):
         self.assertAlmostEqual(debtor.money, -1.0e5 - owed)
         self.assertGreater(self.world.interest_paid, 0.0)
 
+    def test_interest_the_lenders_refuse_is_reported_unpaid_and_carried_as_arrears_once(self):
+        debtor = firm(self.state, "e", money=-1.0e5)
+        self.world.pay_interest = lambda payer, owed, purpose="interest": 0.0   # the lenders took none of it
+        owed, paid = debtor.settle_interest(self.world)
+        self.assertGreater(owed, 0.0)
+        self.assertEqual(paid, 0.0)
+        self.assertAlmostEqual(debtor.record.interest_arrears, owed)
+
+    def test_a_firm_holding_cash_beside_a_bond_pays_the_coupon_from_its_purse_and_does_not_fall_into_arrears(self):
+        issuer = firm(self.state, "g", money=500.0)
+        self.state.purses.bonds.set_terms(issuer.account_id, 0.05, 0.05)
+        self.state.purses.bonds.sell(issuer.account_id, 100.0)   # a bond owed, its cash not in the purse: coupon 5 a year
+        self.world.credit_headroom = lambda actor_id: 0.0        # no credit room at all
+        owed, paid = issuer.settle_interest(self.world)
+        self.assertAlmostEqual(owed, 5.0)
+        self.assertAlmostEqual(paid, 5.0)
+        self.assertEqual(issuer.record.interest_arrears, 0.0)
+
+    def test_what_a_firm_can_pay_counts_the_lenders_that_refill_its_deposit_only_once(self):
+        purses = self.state.purses
+        depositor = firm(self.state, "depositor", money=30.0)
+        lend_through(purses, {"cohort:a": (10.0, 0.05)}, coin_per_unit=2.0)   # 20 coin on offer
+        purses.set_offers({depositor.account_id: 30.0})                       # the whole purse is placed as a deposit
+        purses.transfer("other", "elsewhere", 30.0, "test")                   # another account draws the pool empty
+        self.assertAlmostEqual(depositor.payable_now(self.world, 100.0), purses.payable(depositor.account_id, 100.0))
+        self.assertAlmostEqual(depositor.payable_now(self.world, 100.0), 20.0)   # the same 20 coin cannot refill the deposit and be drawn on again
+
     def test_a_firm_with_no_debt_pays_nothing(self):
         self.assertEqual(firm(self.state, "f", money=500.0).pay_interest(self.world), 0.0)
+
+
+class DrawLimit(unittest.TestCase):
+    """Borrower.rule_limit: one rule for every borrower, the economy's (design D1); draw_limit adds what the lenders can supply."""
+    def setUp(self):
+        self.state = ActorsState()
+        self.world = FakeWorld()
+        self.world.edge_book = self.state
+        self.world.rate = START
+        lend_from_savers(self.state.purses, 1e12)
+        self.actor = firm(self.state, "a")
+        self.ceiling = self.actor.credit_ceiling(self.world)
+
+    def test_a_draw_inside_the_ceiling_is_the_whole_draw_while_the_market_has_not_met(self):
+        self.assertEqual(self.actor.rule_limit(self.world, 0.5 * self.ceiling), 0.5 * self.ceiling)
+
+    def test_a_draw_past_the_ceiling_is_cut_to_what_the_ceiling_leaves(self):
+        self.actor.money = -0.25 * self.ceiling
+        self.assertAlmostEqual(self.actor.rule_limit(self.world, 10.0 * self.ceiling), 0.75 * self.ceiling)
+
+    def test_the_economys_fundable_amount_cuts_the_draw_further(self):
+        asked = []
+        self.world.fundable_amount = lambda amount, debt, collateral, arrears: asked.append((amount, debt, collateral, arrears)) or 7.0
+        self.assertEqual(self.actor.rule_limit(self.world, 0.5 * self.ceiling), 7.0)
+        self.assertEqual(asked, [(0.5 * self.ceiling, 0.0, self.ceiling, 0.0)])
+
+    def test_a_bond_issuers_draw_in_cash_adds_its_face_up_to_the_ceiling_and_no_more(self):
+        bonds = self.state.purses.bonds
+        issuer = self.actor.account_id
+        bonds.set_terms(issuer, START, 2.0 * START)   # sold under face: a unit of cash is more than a unit of face
+        self.actor.money = -0.5 * self.ceiling        # a bond for that cash: its face is more
+        owed = self.actor.debt()
+        cash = self.actor.rule_limit(self.world, 10.0 * self.ceiling)
+        self.assertGreater(cash, 0.0)
+        self.assertAlmostEqual(owed + cash / bonds.price_per_face(issuer), self.ceiling, places=3)
+
+    def test_the_draw_limit_is_the_rules_limit_cut_to_what_the_lenders_can_supply(self):
+        lend_through(self.state.purses, {"cohort:small": (30.0, 0.05)}, coin_per_unit=1.0)   # replaces the lenders: 30 coin on offer
+        self.assertEqual(self.actor.rule_limit(self.world, 100.0), 100.0)
+        self.assertAlmostEqual(self.actor.draw_limit(self.world, 100.0), 30.0)
+
+    def test_an_actor_with_nothing_to_show_lenders_draws_nothing(self):
+        self.assertEqual(firm(self.state, "b", last_margin=0.0).rule_limit(self.world, 100.0), 0.0)
+
+    def test_the_rate_on_a_draw_is_the_market_rate_plus_the_economys_premium(self):
+        self.world.risk_premium = lambda debt_after, collateral, arrears: 0.04
+        free_of_standing = firm(self.state, "c", founded_year=self.world.year)
+        free_of_standing.credit_standing = lambda world: 0.0
+        self.assertAlmostEqual(free_of_standing.rate_on_loan(self.world, 10.0), START + 0.04)
+
+    def test_standing_takes_only_premium_off_the_rate(self):
+        self.world.risk_premium = lambda debt_after, collateral, arrears: 0.0
+        self.actor.credit_standing = lambda world: 1.0
+        self.assertAlmostEqual(self.actor.rate_on_loan(self.world, 10.0), START)
 
 
 if __name__ == "__main__":

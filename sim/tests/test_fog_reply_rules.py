@@ -6,7 +6,6 @@ QUICK_TOPIC = True
 
 import json
 import unittest
-from types import SimpleNamespace
 from unittest import mock
 
 from sim.refusal import cause_of

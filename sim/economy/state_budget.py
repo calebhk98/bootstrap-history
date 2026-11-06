@@ -3,12 +3,14 @@ for hours in the labour market and for goods in the goods markets like anyone el
 shortfall by the policy's order (state_finance.py). Goods already in its stores are used before it buys."""
 import math
 from dataclasses import dataclass, field
-from typing import Dict, List, Tuple
+from typing import ClassVar, Dict, List, Tuple
 
 from sim.constants import declare
 
-from . import currency, households_basket, state_finance
+from . import currency, households_basket, state_finance, trade_wages
+from .home_scope import home_cohorts
 from .setup import labour_area
+from .state_wage_ceiling import WAGE_CEILING_MULTIPLE
 from .types import Bid, EDGE_CONSUMPTION, GoodsMove, LabourBid
 
 STATE_MAX_SHARE_OF_TILE_HOURS = declare(
@@ -17,16 +19,11 @@ STATE_MAX_SHARE_OF_TILE_HOURS = declare(
     source=None, confidence="D",
     why="Stands in for the size of the state's establishment (how many soldiers and officials it can "
         "house, drill and supervise), which the engine does not yet supply.")
-STATE_WAGE_CEILING_MULTIPLE = declare(
-    "STATE_WAGE_CEILING_MULTIPLE", 1.5, kind="temporary_heuristic",
-    unit="multiple of last year's wage the state will bid",
-    source=None, confidence="D",
-    why="How far above last year's wage the state is willing to go to fill its posts; the labour market "
-        "moves the wage only part of the way anyway.")
 
 
 @dataclass
 class StateBudget:
+    OWNERS: ClassVar[Tuple[str, ...]] = ("state_budget",)   # the sim/economy modules allowed to write this (tools/check_record_owners.py)
     revenue: float = 0.0                 # money the state took in last year (taxes and sales)
     wage_budget: float = 0.0             # this year's plan
     goods_budget: float = 0.0
@@ -37,8 +34,12 @@ class StateBudget:
     held_back: float = 0.0               # cash the plan keeps off its lines: the reserve and the unplanned cash
     need_wanted: Dict[str, float] = field(default_factory=dict)   # goods the lines bid for, so the rest bought is store
     expected_inflation: float = 0.0      # what the treasury expects of prices, as households do
-    last_price_level: float = 0.0        # the basket price level when it last updated that expectation
+    last_price_level: float = 0.0        # the chained price level (across rebases) when it last updated that expectation
     real_programme: bool = False         # a stated real spending target: its goods are bought as quantities, not as a sum
+
+    def cut_goods_budget(self, amount: float) -> None:
+        """The goods line falls by `amount`."""
+        self.goods_budget -= amount
 
 
 def plan_year(setup, record, view, labour_bids: List[LabourBid]) -> None:
@@ -54,7 +55,7 @@ def plan_year(setup, record, view, labour_bids: List[LabourBid]) -> None:
     budget.held_back = reserve + budget.unplanned_cash
     if policy.real_spending_target > 0.0:
         # a stated programme is paid from every coin on hand first, then financed
-        planned = policy.real_spending_target * view.chained_price_level(money)
+        planned = policy.real_spending_target * view.opening_wage_level(money)   # the target is in opening-year money; the level survives the rebase
         budget.real_programme = True
         spendable = min(cash, planned)
     deficit = max(0.0, planned - spendable)
@@ -92,24 +93,22 @@ def _trades(setup):
 
 
 def wage_labour_bids(setup, record, view, wage_budget: float) -> List[LabourBid]:
+    """The home state's bids for hours, spread over the home cohorts' tiles and the trades it hires."""
     if wage_budget <= 0.0:
         return []
     working: Dict[str, float] = {}
-    for cohort in record.cohorts.values():
+    for cohort in home_cohorts(setup, record):
         working[cohort.tile] = working.get(cohort.tile, 0.0) + cohort.working_people
     total_working = math.fsum(working.values())
     if total_working <= 0.0:
         return []
     trades = _trades(setup)
-    level = view.chained_price_level(setup.currency_id)
     bids = []
     for trade in trades:
         for tile, people in sorted(working.items()):
             area = labour_area(tile)
-            wage = view.wage(trade, area) or setup.opening_wages.get(trade, 0.0) * level
-            if wage <= 0.0:
-                continue
-            ceiling = wage * STATE_WAGE_CEILING_MULTIPLE
+            wage = trade_wages.wage_in_view(setup, view, trade, area)
+            ceiling = wage * WAGE_CEILING_MULTIPLE
             hours = min(wage_budget / len(trades) * people / total_working / ceiling,
                         people * setup.working_hours_per_year * STATE_MAX_SHARE_OF_TILE_HOURS)
             if hours > 0.0:
@@ -173,7 +172,8 @@ def close_year(setup, record, ledger, tax_received: float) -> None:
             moves.append(GoodsMove(state, EDGE_CONSUMPTION, good, tile, used, "state purchases used"))
     record.book.move_many(moves)
     record.state_budget.revenue = tax_received + ledger.sales_in.get(state, 0.0)
-    level = record.memory.price_levels.get(setup.currency_id)
+    memory = record.memory   # the level that survives a rebase: opening-year money per money now
+    level = memory.opening_wage_level(setup.currency_id) if memory.price_levels.get(setup.currency_id) else None
     budget = record.state_budget
     if level and budget.last_price_level > 0.0:
         budget.expected_inflation = currency.update_expected_inflation(budget.expected_inflation,

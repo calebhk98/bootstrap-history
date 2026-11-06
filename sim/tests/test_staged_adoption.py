@@ -2,6 +2,7 @@
 
 QUICK_TOPIC = True
 
+from sim.tests.agents_fake_world import flat_world
 from .harness import check
 
 from sim.agents import adoption, awareness, government_levers, research_gate
@@ -12,6 +13,7 @@ from sim.agents.research import diffuse
 from .test_research_every_actor import ResearchWorld
 
 
+@flat_world
 class ContactWorld(ResearchWorld):
 	"""A stand-in world with a settable contact volume and margin, and a treasury the levers are read from."""
 
@@ -97,7 +99,7 @@ def run(world, actor, years):
 	events = []
 	for _ in range(years):
 		events += adoption.advance_actor(actor, world)
-		world.year += 1
+		world.setting.year += 1
 	return events
 
 

@@ -12,8 +12,8 @@ from unittest import mock
 from sim.agents.business import Business
 from sim.agents.business_closing import release_plant
 from sim.agents.business_plant import MOTHBALLED, OPERATING, Plant
-from sim.actors import world as actors_world
-from sim.actors.world import ActorWorld
+from sim.actors import world_concerns
+from sim.actors.world_concerns import Concerns
 from sim.ventures import crew, quotes
 from sim.production import revenue as production_revenue
 from sim.ledger.api import PayEdge
@@ -29,7 +29,7 @@ class PlantKeepsItsStateTests(unittest.TestCase):
     def test_mothballing_keeps_the_same_plant_with_its_size_and_age(self):
         plant = Plant(entry_key=NODE, size=2.5, opened_year=92)
         business = Business(plants=[plant])
-        returned = business.mothball(NODE, 100, "by_choice")
+        returned = business.lifecycle.mothball(NODE, 100, "by_choice")
         self.assertIs(returned, plant)
         self.assertEqual((plant.state, plant.since_year, plant.reason, plant.size, plant.opened_year),
                          (MOTHBALLED, 100, "by_choice", 2.5, 92))
@@ -37,7 +37,7 @@ class PlantKeepsItsStateTests(unittest.TestCase):
     def test_restoring_returns_the_same_plant_operating_with_no_reason(self):
         plant = Plant(entry_key=NODE, size=2.5, opened_year=92, state=MOTHBALLED, since_year=100, reason="by_choice")
         business = Business(plants=[plant])
-        self.assertIs(business.restore(NODE), plant)
+        self.assertIs(business.lifecycle.restore(NODE), plant)
         self.assertEqual((plant.state, plant.since_year, plant.reason, plant.size, plant.opened_year),
                          (OPERATING, None, "", 2.5, 92))
 
@@ -45,13 +45,13 @@ class PlantKeepsItsStateTests(unittest.TestCase):
 class ReleasePlantTests(unittest.TestCase):
     def test_a_released_plant_leaves_with_its_size_and_age_and_the_business_forgets_it(self):
         business = Business(plants=[Plant(entry_key=NODE, size=1.0, opened_year=92)])
-        plant = release_plant(business, NODE, SimpleNamespace(year=100))
+        plant = release_plant(business, NODE, SimpleNamespace(setting=SimpleNamespace(year=100)))
         self.assertEqual((plant.size, plant.opened_year), (1.0, 92))
-        self.assertIsNone(business.plant_of(NODE))
+        self.assertIsNone(business.reading.plant_of(NODE))
 
     def test_a_plant_with_no_recorded_opening_is_dated_to_now(self):
         business = Business(plants=[Plant(entry_key=NODE)])
-        self.assertEqual(release_plant(business, NODE, SimpleNamespace(year=100)).opened_year, 100)
+        self.assertEqual(release_plant(business, NODE, SimpleNamespace(setting=SimpleNamespace(year=100))).opened_year, 100)
 
     def test_releasing_a_plant_the_business_does_not_run_is_an_error(self):
         with self.assertRaises(KeyError):
@@ -65,7 +65,7 @@ class ClosingTests(unittest.TestCase):
         dependents_closed_in = []
         module.close_lapsed_dependents = dependents_closed_in.append
         module.close_work(NODE, "by_choice")
-        self.assertEqual((business.state_of(NODE), business.plant_of(NODE).reason, dependents_closed_in),
+        self.assertEqual((business.reading.state_of(NODE), business.reading.plant_of(NODE).reason, dependents_closed_in),
                          (MOTHBALLED, "by_choice", [100]))
 
     def test_close_work_for_staff_is_remembered_and_cascade_can_be_turned_off(self):
@@ -73,7 +73,7 @@ class ClosingTests(unittest.TestCase):
         projects = SimpleNamespace(business=business)
         module = projects_host.build(projects_record=projects, year=100, tree_nodes={NODE: {"rev": 0.0, "up": 0.0}})
         module.close_lapsed_dependents = lambda year: self.fail("cascade was off")
-        module.close_work(NODE, module.CLOSED_FOR_STAFF, cascade=False)
+        module.close_work(NODE, module.parts.closures.CLOSED_FOR_STAFF, cascade=False)
         self.assertEqual(module.seat.ever_closed_for_staff, {NODE})
 
 
@@ -90,12 +90,12 @@ class RestoreWorkTests(unittest.TestCase):
 
     def test_restoring_a_concern_pays_the_fee_and_puts_the_same_plant_back_to_work(self):
         ok, paid, business = self.restore(venture=True)
-        plant = business.plant_of(NODE)
+        plant = business.reading.plant_of(NODE)
         self.assertEqual((ok, paid, plant.state, plant.reason, plant.size, plant.opened_year), (True, [5.0], OPERATING, "", 2.0, 92))
 
     def test_restoring_a_work_that_is_not_a_concern_leaves_no_plant(self):
         ok, paid, business = self.restore(venture=False)
-        self.assertEqual((ok, paid, business.plant_of(NODE)), (True, [5.0], None))
+        self.assertEqual((ok, paid, business.reading.plant_of(NODE)), (True, [5.0], None))
 
 
 class QuoteWiringTests(unittest.TestCase):
@@ -164,19 +164,20 @@ class FirmSideTests(unittest.TestCase):
     def test_a_firms_takings_go_through_the_same_size_arithmetic_as_the_founders(self):
         seen = {}
         needs = fake_needs(concern_takings=lambda node_id, ramp: 100.0, node_output_market_factor=lambda node: 0.9)
-        world = SimpleNamespace(nodes={NODE: {"cat": "other"}}, needs=needs, goods_category_names=set(),
-                                ramp=lambda opened_year, node_id=None: 0.5)
-        with mock.patch.object(actors_world.business_books, "takings_of_size",
+        world = SimpleNamespace(setting=SimpleNamespace(nodes={NODE: {"cat": "other"}}), needs=needs)
+        part = Concerns(world)
+        part.ramp = lambda opened_year, node_id=None: 0.5
+        with mock.patch.object(world_concerns.business_books, "takings_of_size",
                                lambda takings, size, market: seen.update(takings=takings, size=size, market=market) or takings * size):
-            result = ActorWorld.concern_takings(world, NODE, 90, rivals=1.0, capacity=2.0)
+            result = part.concern_takings(NODE, 90, rivals=1.0, capacity=2.0)
         self.assertEqual(seen, {"takings": 100.0, "size": 2.0, "market": 0.9})
         self.assertEqual(result, 200.0 / 3.0)
 
     def test_a_firms_crew_and_upkeep_are_the_engines_for_that_concern(self):
         needs = fake_needs(concern_staff=lambda node_id: {"smith": 2.0}, concern_upkeep=lambda node_id, capacity: 7.0 * capacity)
         world = SimpleNamespace(needs=needs)
-        self.assertEqual(ActorWorld.concern_staff(world, NODE), {"smith": 2.0})
-        self.assertEqual(ActorWorld.upkeep(world, NODE, 2.0), 14.0)
+        self.assertEqual(Concerns(world).concern_staff(NODE), {"smith": 2.0})
+        self.assertEqual(Concerns(world).upkeep(NODE, 2.0), 14.0)
 
 
 if __name__ == "__main__":

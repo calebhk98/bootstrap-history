@@ -27,7 +27,7 @@ def defaults() -> Dict[str, Any]:
 		"year": 100, "civilisation": {"id": "rome", "starting_interest_rate": 0.1, "starting_tax_share": 0.0},
 		"game_config": {"founder_hours_per_year": 3000.0},
 		"money_text": lambda amount, grouped=False, short=False: "%d money" % round(amount), "price_index": 1.0,
-		"cast": SimpleNamespace(actors={}, active_firms=lambda: [], purse_lenders=lambda: []),
+		"cast": SimpleNamespace(actors={}, concerns=SimpleNamespace(active_firms=lambda: []), purse_lenders=lambda: []),
 		"state_treasury": SimpleNamespace(actor_id="state"), "actor_world": SimpleNamespace(), "lender_offers_made": {},
 		"cash_and_deposit": lambda account: 0.0, "loans_out": lambda lender=None: 0.0, "debt_owed": lambda account: 0.0,
 		"cast_state": SimpleNamespace(purses=Purses()), "acting_balance": 0.0,
@@ -35,14 +35,15 @@ def defaults() -> Dict[str, Any]:
 		"standing_job_pay": lambda trade: 0.0,
 		"effect_sum": lambda channel, start=0.0: start, "effect_values": lambda channel: [], "mechanic": {},
 		"standing": {"reputation": 0.0}, "forest_hectares": 0.0, "mine_operating_cost": 0.0,
-		"money_per_labour_hour": 1.0, "labour_market": SimpleNamespace(quote=lambda trade: 1.0, quote_annual=lambda trade: 1.0), "wage_bill": 0.0,
+		"money_per_labour_hour": 1.0, "labour_market": SimpleNamespace(quote=lambda trade: 1.0, quote_unskilled=lambda: 1.0, quote_annual=lambda trade: 1.0), "wage_bill": 0.0, "wages_charged_last_year": 0.0,
 		"household_bill_per_person": 0.0, "household_dependant_people": 0.0, "held_trade": lambda: None,
 		"revenue_capacity": 0.0, "revenue_estimate": 0.0, "upkeep": 0.0, "operating": set(),
 		"held_goods": lambda: [], "goods_stock": {}, "material_commodity": lambda material: material, "sale_quote": lambda material, tonnes: (None, 0.0, 0.0),
 		"techniques_held": lambda: set(), "techniques_granted": lambda: set(), "venture_real_upkeep": lambda node_id: 0.0,
 		"mine_capacity": lambda: {}, "mine_workings": lambda: [], "mine_working_cost": lambda working: 0.0,
 		"committed_cost": 0.0, "tree_nodes": {},
-		"agent_rate": lambda: None, "agent_credit_room": lambda borrower_id: (False, None), "agent_economy_opened": False,
+		"agent_rate": lambda: None, "agent_credit_room": lambda borrower_id: (False, None),
+		"agent_fundable_amount": lambda amount, debt, collateral, arrears: (False, None), "agent_risk_premium": lambda debt, collateral, arrears: (False, None), "agent_economy_opened": False,
 	}
 
 

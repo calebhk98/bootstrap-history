@@ -4,6 +4,7 @@ each declared enterprise (`entries_for`), counting the good it makes as its mono
 
 QUICK_TOPIC = True
 
+from sim.tests.agents_fake_world import flat_world
 from types import SimpleNamespace
 
 from .harness import check, NODES
@@ -29,6 +30,7 @@ check("Han declares a state enterprise", bool(han.get("state_enterprises")), han
 
 
 # ---- the state opens a plant of each declared enterprise
+@flat_world
 class World:
     def __init__(self, makes):
         self.makes = makes
@@ -45,7 +47,7 @@ class World:
 
 def state(enterprises=(), monopolies=(), operating=()):
     return SimpleNamespace(record=SimpleNamespace(state_enterprises=set(enterprises), state_monopolies=set(monopolies)),
-                           business=SimpleNamespace(entry_keys=lambda: list(operating)), knows=lambda entry_key, world: True)
+                           business=SimpleNamespace(reading=SimpleNamespace(entry_keys=lambda: list(operating))), knows=lambda entry_key, world: True)
 
 
 world = World({"blast_furnace": ["cast_iron_kg"], "salt_works": ["salt_kg"]})

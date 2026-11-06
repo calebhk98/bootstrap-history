@@ -54,8 +54,8 @@ def _pools(sim):
 
 
 def _trainees(sim):
-    return [{"trade": record[2], "count": record[3], "ready_in_year": record[1]}
-            for record in sim.view("training_queue")() if len(record) > 3]
+    return [{"trade": row.trade, "count": row.people, "ready_in_year": row.ready_year}
+            for row in sim.view("training_queue")() if row.trade]
 
 
 def _recent_change(sim):

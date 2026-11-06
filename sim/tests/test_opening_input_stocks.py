@@ -11,7 +11,7 @@ import types
 import unittest
 
 from sim.economy import opening
-from sim.economy.accounts import Book
+from sim.book import Book
 from sim.economy.producers import Producer
 from sim.economy.types import Recipe
 from sim.tests import economy_fixture as fixture

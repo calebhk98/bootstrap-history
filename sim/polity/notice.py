@@ -6,16 +6,17 @@ military supply, press an office on a household, or threaten confiscation. Every
 another purpose, combined freshly for the question; nothing is stored. The state's reach (0..1) is the first factor: a state
 with few officials or long roads caps the product so low that no threshold is crossed.
 
-Needs: danger_lines, base_annual_wage, headcount, acting_balance, labour_state_weights, techniques_held,
+Needs: danger_lines, base_annual_wage, unskilled_trade, headcount, acting_balance, labour_state_weights, techniques_held,
 techniques_granted, tree_nodes, effect_best, civilisation, mass_text."""
 from sim.agents.api import demand_answer
+from sim.assembly.api import Part
 from sim.world import military_logistics
 
 from . import constants, rules, state_notice_rules
 from .military_rules import leverage_of
 
 
-class Notice:
+class Notice(Part):
 
 	# ---- what the state cares about, and how alarming a technique is ----
 
@@ -69,13 +70,13 @@ class Notice:
 		"""household_scale's rule for any taxpayer: what an observer can count of its staff, its wealth and (for a person) its
 		prominence, and a surcharge for having defied the state (what is hidden is not counted in `wealth`)."""
 		return rules.visible_scale(headcount, wealth, eminence, demand_answer.notice_surcharge(defiance),
-		                           self.needs.danger_lines()["eminence"], self.needs.base_annual_wage["labourer"])
+		                           self.needs.danger_lines()["eminence"], self.needs.base_annual_wage[self.needs.unskilled_trade()])
 
 	# ---- the state's notice and its levies ----
 
 	def state_notice(self):
 		"""0..1: state_reach times household_scale: the single gate every pressure checks before it does anything."""
-		return self.state_reach() * self.household_scale()
+		return self.parts.reach.state_reach() * self.household_scale()
 
 	def _notice_over(self, threshold):
 		"""0..1: how far past `threshold` the state's notice stands, as a share of the remaining distance to full notice."""
@@ -84,7 +85,7 @@ class Notice:
 	def notice_over(self, scale, capacity=None):
 		"""How far past the notice line a taxpayer of this visible scale stands. `capacity` is the state's (this one's when
 		not given)."""
-		notice = (self.state_reach() if capacity is None else capacity) * scale
+		notice = (self.parts.reach.state_reach() if capacity is None else capacity) * scale
 		return state_notice_rules.share_past(notice, constants.STATE_NOTICE_THRESHOLD)
 
 	def levy_shares(self, scale, protection=0.0, state=None):
@@ -92,7 +93,7 @@ class Notice:
 		rule for the founder's household, a firm or any other actor. `state` is (capacity, tax share, requisition rate, office
 		rate) of another country's state; the founder's own state when not given."""
 		if state is None:
-			capacity, tax_share = self.state_reach(), float(self.needs.civilisation()["starting_tax_share"])
+			capacity, tax_share = self.parts.reach.state_reach(), float(self.needs.civilisation()["starting_tax_share"])
 			requisition_rate, office_rate = self.state_levy_rates()
 		else:
 			capacity, tax_share, requisition_rate, office_rate = state
@@ -115,7 +116,7 @@ class Notice:
 		why = []
 		if self.seat.protection > 0:
 			why.append("bargained down by standing and patronage (protection %d%%)" % round(self.seat.protection * 100))
-		why.extend(self.group_levy_reasons())
+		why.extend(self.parts.groups.group_levy_reasons())
 		return max(0.0, share), why
 
 	def office_report(self):
@@ -165,7 +166,7 @@ class Notice:
 		off_share, off_name = self.office_report()
 		conf_p, conf_why = self.confiscation_risk()
 		state_pressure_cfg = self.needs.civilisation().get("state_pressure") or {}
-		groups = self.interest_groups()
+		groups = self.parts.groups.interest_groups()
 		if req_share <= 0.0005 and off_share <= 0.0005 and conf_p <= 0.0 and not self.military_demand_eligible() and not groups:
 			return None
 		out = {"now": round(notice, 3), "noticed_above": constants.STATE_NOTICE_THRESHOLD,

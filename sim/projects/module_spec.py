@@ -1,26 +1,27 @@
 """The projects module's spec (sim/assembly).
 
-Every read is a view of the module that owns it, grouped by the owner each is catalogued under (docs/architecture/catalogue). Every view the module publishes is uncached: the projects in hand change
+Every read is a view of the module that owns it, grouped by the owner module that publishes it (READS_BY_OWNER). Every view the module publishes is uncached: the projects in hand change
 under their own watch (any field of a record), so no channel can say when the answer moved."""
 from sim.assembly.api import FIRST, KEYED, QUOTE, ExtensionPoint, ModuleSpec, PhaseHook, ViewSpec
 from sim.diffusion.api import ApplyTechEffects
 from sim.knowledge.api import LearnTechnique, RevealFrom
-from sim.ledger.api import NoteSpend, PayEdge, ReceiveFromEdge
+from sim.ledger.api import NoteSpend, PayEdge, WriteOffHouseholdDebt
 from sim.living_stock.api import ChangeHeld
-from sim.materials.api import ApplyThrottle, SettleProjectMaterials
+from sim.materials.api import ApplyThrottle, ReorderProjectMaterials, SettleProjectMaterials
 from sim.polity.api import AddGovernance, AddScandal, CarryOutTransfers, GainReputation, RecordBribe
 from sim.production.api import LearnFromFailure
 from sim.reporting.api import NoteConcernChange, RecordAutomation, RecordAutomationSkip, RecordEvent
 from sim.seats.api import RecordGoalReached
 from sim.ventures.api import (ClearMothball, CloseConcern, ForgetClosureReason, MothballConcern, NoteConcernYear, OpenVenture, RestoreConcern,
                               ReviewConcerns, ReviewReopening)
-from sim.workforce.api import DrawTradeHours, GrantStaff, LoseCrew, ReleaseHours, ResetTradeHours, SpendDirectorHours
+from sim.workforce.api import DrawTradeHours, GrantStaff, LoseCrew, ReleaseHours, ResetTradeHours
 
 from .commands import (AdvanceProjects, AutoOpenVentures, Bribe, CloseLapsedDependents, CloseSpendYear, CloseUnstaffedVentures, CloseWork,
                        CompleteProject, Exclude, HaltActiveProjects, Include, KeepStaffed, MothballWork, NoteVentureYear, NoteYearSpend, PostBounty, PutProjectFirst, ReopenRestaffedVentures, ReorderProjects, ResetProjectProgress,
                        RestoreProjectOrder, RestoreWork, ReviewVentures, StartProject, StopProject, WatchActive)
 from .project_order import ORDER
-from .projects import ACTIVE, ACTIVE_CHANGES, START, Projects
+from .channels import ACTIVE, ACTIVE_CHANGES, START
+from .projects import Projects
 from .state import ProjectsSeat, ProjectsWorld
 
 READS_BY_OWNER = {
@@ -45,6 +46,7 @@ READS_BY_OWNER = {
 	"living_stock": ("stock_status", "stock_held"),
 	"defence_stores": ("venture_garrison",),
 	"ledger": ("acting_balance", "goods_stock"),
+	"markets": ("seat_goods_orders", "seat_goods_traded"),
 	"scenario": ("money_text", "automation", "society_name", "year", "horizon_end_year", "project_limits", "game_config", "game_random",
 	             "fog_of_war", "plain_number"),
 	"seats": ("win_condition_text", "win_condition_value", "acting_seat", "founder", "goal", "automatic_policy"),
@@ -126,11 +128,11 @@ MODULE_SPECS = (ModuleSpec(
 	         (RestoreProjectOrder, "apply_restore_project_order"), (Exclude, "apply_exclude"), (Include, "apply_include"), (KeepStaffed, "apply_keep_staffed"),
 	         (WatchActive, "apply_watch_active")),
 	reads=tuple(name for names in READS_BY_OWNER.values() for name in names),
-	sends=(PayEdge, NoteSpend, ReceiveFromEdge, RecordBribe, RecordEvent, NoteConcernChange, RecordAutomation, RecordAutomationSkip, SettleProjectMaterials,
+	sends=(PayEdge, NoteSpend, WriteOffHouseholdDebt, RecordBribe, RecordEvent, NoteConcernChange, RecordAutomation, RecordAutomationSkip, SettleProjectMaterials, ReorderProjectMaterials,
 	       ClearMothball, CloseConcern, ForgetClosureReason, MothballConcern, NoteConcernYear, RestoreConcern, ReviewConcerns,
 	       ReviewReopening, OpenVenture, ReleaseHours, LearnTechnique, RevealFrom, ChangeHeld,
 	       CarryOutTransfers, ApplyTechEffects, GainReputation, AddScandal, AddGovernance, GrantStaff, RecordGoalReached, LoseCrew,
-	       LearnFromFailure, ApplyThrottle, DrawTradeHours, ResetTradeHours, SpendDirectorHours),
+	       LearnFromFailure, ApplyThrottle, DrawTradeHours, ResetTradeHours),
 	phases=(PhaseHook("start_projects", "start_projects_hook"),),
 	extension_points=(ExtensionPoint("extra_start_checks", FIRST),),
 ),)

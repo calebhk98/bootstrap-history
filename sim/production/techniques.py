@@ -1,10 +1,11 @@
+from sim.assembly.api import Part
 """The techniques some producer in the society actually runs.
 
 A technology that is held (researched, copied) but run by no producer changes no cost and no supply, so it
 changes no price. The set is the techniques the society started with, the nodes the founder operates, and
 the nodes any firm's concerns run. It decides which entries a concern may run (volume.py) and the
 baseline for a good no incumbent makes (sim/prices/tables.py); it does not set a price: each producer offers at
-the cost of its own entry (sim/prices/cost_books.py) and the market clears the offers.
+the cost of its own entry (sim/prices/making_cost.py) and the market clears the offers.
 
 A concern in the same line of business as a producer reaches the producer's technique only after the copying
 time (the diffusion module's `techniques_spread`), so a new technique shows first in its adopter's volume and later
@@ -12,7 +13,7 @@ in the others'.
 Needs: the views of READS_BY_OWNER in module_spec.py."""
 
 
-class Techniques:
+class Techniques(Part):
 	_techniques_in_use_cache = None   # (epoch, nodes, held, operating) of the last answer; set by techniques_in_use
 
 	def techniques_epoch(self):

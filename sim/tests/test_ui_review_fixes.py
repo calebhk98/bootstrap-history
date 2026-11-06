@@ -18,7 +18,6 @@ from sim.ui.proto.portfolio_scale import page_rows
 from sim.ui.proto.state_log import _agent_log_filter_rows, _is_failure_line, _log_scrub
 
 from .harness import check
-from sim.refusal import LogLine, cause_of
 
 
 class Stub(StandIn):
@@ -60,7 +59,7 @@ check("this year's rush gets the cap minus the standing draw", command["max_annu
 state["caps"]["max_annual_draw"] = 150.0
 check("a cap used up by standing draw starts nothing", programme._year_rush(running, state)[0] is None)
 
-owner = Stub(nodes={"n": {"cat": "farming"}}, fog=False, year=100)
+owner = Stub(nodes={"n": {"cat": "farming"}}, fog=False, year=100, civ={"id": "stub"})
 _cmd_programme(owner, None, {"action": "set", "target": "farming", "max_total_cost": 500.0}, None)
 memory.remembered(owner, "programme").update(committed=120.0, started_ids=["n"])
 _cmd_programme(owner, None, {"action": "set", "target": "farming", "max_total_cost": 500.0}, None)

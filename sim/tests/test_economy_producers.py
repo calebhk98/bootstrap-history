@@ -4,6 +4,7 @@ QUICK_TOPIC = True
 
 import unittest
 
+from sim.tests.economy_view_defaults import ViewDefaults
 from sim.economy import plant_investment, producers, producers_close
 from sim.economy.types import EDGE_CONSUMPTION, EDGE_PRODUCTION, GoodSpec, Recipe
 
@@ -12,7 +13,7 @@ SMELT = Recipe("smelt", {"metal": 10.0, "silver": 1.0}, {"ore": 4.0}, {"smith": 
                {"stone": 10.0}, {}, 10.0)
 
 
-class View:
+class View(ViewDefaults):
     year = 3
 
     def __init__(self, prices=None, wages=None, rate=0.05, cash=0.0, stock=None):

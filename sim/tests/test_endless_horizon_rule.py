@@ -9,7 +9,7 @@ import unittest
 
 from sim.tests.harness import GOAL, NODES
 from sim.tests.score_game import ScoreGame
-from sim.ui import cli
+from sim.ui import cli, cli_common
 from sim.ui.proto.state_waiting import _agent_end_reason
 
 STANDARD_HORIZON_YEARS = 500
@@ -25,7 +25,7 @@ def game_at_end_year(horizon_years):
 
 class EndlessHorizonTests(unittest.TestCase):
 	def test_an_endless_game_is_still_running_where_the_standard_horizon_has_ended_the_run(self):
-		self.assertIsNone(_agent_end_reason(game_at_end_year(cli.ENDLESS_HORIZON_YEARS)))
+		self.assertIsNone(_agent_end_reason(game_at_end_year(cli_common.ENDLESS_HORIZON_YEARS)))
 		self.assertIsNotNone(_agent_end_reason(game_at_end_year(STANDARD_HORIZON_YEARS)))
 
 	def test_the_horizon_flag_of_every_command_defaults_to_the_standard_horizon(self):

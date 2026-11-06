@@ -1,5 +1,5 @@
 {
- "_note": "A region is a label over tiles. Its anchor point, coast and distance from anyone are not stored: they are derived from its tiles (sim/geography/regions.py) and from the fastest route over the tile graph (sim/geography/reach_bands.py). Mineral output is not stored here: it sits on the deposits (data/world/geography/deposits/), read per tile by sim/world/mineral_shares.py.",
+ "_note": "A region is a label over tiles. Its anchor point, coast and distance from anyone are not stored: they are derived from its tiles (sim/geography/regions.py) and from the fastest route over the tile graph (sim/geography/reach_bands.py). Mineral output is not stored here: it sits on the deposits (data/world/geography/deposits/), read per tile by sim/geography/mineral_shares.py.",
  "entries": [
   {
    "id": "italia",

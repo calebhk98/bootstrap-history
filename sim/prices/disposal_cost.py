@@ -17,9 +17,6 @@ from sim.constants import declare
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 from sim.world import demand
 
-HANDLING_SERVICE = "waste_handling_job"
-HAULAGE_SERVICE = "waste_haulage_tkm"
-GROUND_SERVICE = "dump_ground_m2"
 WASTE_HEAPS_FILE = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
                                 "data", "world", "waste_heaps.json")
 
@@ -52,9 +49,19 @@ def default_heap():
 
 
 @functools.lru_cache(maxsize=1)
-def _heap_table():
+def _heap_file():
     with open(WASTE_HEAPS_FILE) as handle:
-        return json.load(handle)["materials"]
+        return json.load(handle)
+
+
+def _heap_table():
+    return _heap_file()["materials"]
+
+
+def sink_services():
+    """(handling, haulage, ground) service material ids that disposal is priced from, as the data names them by role."""
+    services = _heap_file()["services"]
+    return services["handling"], services["haulage"], services["ground"]
 
 
 def waste_materials():
@@ -94,7 +101,8 @@ def disposal_cost_by_material(materials: Iterable[str], prices, interest_rate=0.
 
     Empty when the solve prices none of the sink services: with no way to dispose of waste there is no cost
     to charge for it."""
-    if not all(service in prices for service in (HANDLING_SERVICE, HAULAGE_SERVICE, GROUND_SERVICE)):
+    handling, haulage, ground = sink_services()
+    if not all(service in prices for service in (handling, haulage, ground)):
         return {}
     distance = max(DISPOSAL_FREE_LAND_DISTANCE_KILOMETRES, minimum_dump_distance_kilometres)
     costs = {}
@@ -104,8 +112,8 @@ def disposal_cost_by_material(materials: Iterable[str], prices, interest_rate=0.
             continue
         bulk_density, heap_height = heap_of(material)
         costs[material] = kilograms * disposal_cost_hours_per_kilogram(
-            max(prices[HANDLING_SERVICE], 0.0), max(prices[HAULAGE_SERVICE], 0.0),
-            max(prices[GROUND_SERVICE], 0.0), interest_rate, distance, bulk_density, heap_height)
+            max(prices[handling], 0.0), max(prices[haulage], 0.0),
+            max(prices[ground], 0.0), interest_rate, distance, bulk_density, heap_height)
     return costs
 
 
@@ -113,9 +121,3 @@ def joint_output_materials(production_entries):
     """Materials some joint recipe makes alongside another output: the ones that can be a waste."""
     return sorted({material for entry in production_entries.values()
                    if len(entry.get("outputs") or {}) > 1 for material in entry["outputs"]})
-
-
-def disposal_price_floor(materials, prices, interest_rate=0.0, minimum_dump_distance_kilometres=0.0):
-    """{material: lowest price the solve may give it}, minus its disposal cost."""
-    return {material: -cost for material, cost in disposal_cost_by_material(
-        materials, prices, interest_rate, minimum_dump_distance_kilometres).items()}

@@ -8,10 +8,9 @@ import json
 import unittest
 
 from sim.knowledge.api import KnowledgeSeat
-from sim.markets.demand_key import demand_key, population_of_key
 from sim.reporting.api import ReportingSeat
 from sim.materials.state import MaterialsSeat
-from sim.engine.state import HouseholdState, deserialize_state, serialize_state
+from sim.engine.state import deserialize_state, serialize_state
 from sim.refusal import LogLine, Refusal, cause_of, choices_of, facts_of
 
 
@@ -86,30 +85,6 @@ class LogRoundTripTests(unittest.TestCase):
         self.assertEqual(sorted(map(repr, coded_values(again, [], set()))),
                          sorted(map(repr, coded_values(household, [], set()))))
         self.assertEqual(len(coded_values(again, [], set())), 2)
-
-
-class DemandKeyTests(unittest.TestCase):
-    OPENING = 1_000_000.0
-
-    def test_a_population_that_moved_less_than_the_rounding_step_has_the_same_key(self):
-        before = demand_key(500_000.0, self.OPENING, 10.0)
-        after = demand_key(500_000.0 * 1.0003, self.OPENING, 10.0)
-        self.assertEqual(before, after)
-
-    def test_an_income_that_moved_less_than_the_rounding_step_has_the_same_key(self):
-        self.assertEqual(demand_key(500_000.0, self.OPENING, 10.0001), demand_key(500_000.0, self.OPENING, 10.0003))
-
-    def test_a_population_that_moved_more_than_a_step_has_another_key(self):
-        self.assertNotEqual(demand_key(500_000.0, self.OPENING, 10.0), demand_key(500_000.0 * 1.01, self.OPENING, 10.0))
-
-    def test_the_answer_is_computed_from_the_key_so_it_is_the_same_whenever_it_is_asked(self):
-        first = demand_key(500_000.0, self.OPENING, 10.0)
-        second = demand_key(500_000.0 * 1.0003, self.OPENING, 10.0)
-        self.assertEqual(population_of_key(first, self.OPENING), population_of_key(second, self.OPENING))
-
-    def test_the_key_stands_for_a_population_within_a_step_of_the_real_one(self):
-        key = demand_key(512_345.0, self.OPENING, 10.0)
-        self.assertLess(abs(population_of_key(key, self.OPENING) - 512_345.0), 0.001 * self.OPENING)
 
 
 if __name__ == "__main__":

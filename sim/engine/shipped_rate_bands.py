@@ -4,7 +4,8 @@ A game solves its prices at the band holding the live market rate (prices.band_i
 year that meets a new band pays for a cold solve. The solves the opening makes at the starting rate are
 replayed here at the bands round it, so `openings` can ship them under the keys the game will compute.
 """
-from typing import Any, Callable, Dict, List, Tuple
+import contextlib
+from typing import Any, Dict, List, Tuple
 
 from sim.world import capital_market
 
@@ -50,21 +51,19 @@ def _rate_of(call: SolveCall, starting_rate: float) -> float:
 
 
 class SolveRecorder:
-    """Wraps prices.solved_prices_at_wages for a block and keeps the calls made at the starting rate."""
+    """Keeps the calls prices.solved_prices_at_wages gets inside a block (`prices.recording_solves`), and
+    answers those made at the starting rate."""
 
     def __init__(self) -> None:
         self.calls: List[SolveCall] = []
-        self._original: Callable = prices.solved_prices_at_wages
+        self._recording: contextlib.AbstractContextManager = prices.recording_solves()
 
     def __enter__(self) -> "SolveRecorder":
-        def recording(*arguments, **keywords):
-            self.calls.append((arguments, keywords))
-            return self._original(*arguments, **keywords)
-        prices.solved_prices_at_wages = recording
+        self.calls = self._recording.__enter__()
         return self
 
-    def __exit__(self, *_exc) -> None:
-        prices.solved_prices_at_wages = self._original
+    def __exit__(self, *exception) -> None:
+        self._recording.__exit__(*exception)
 
     def at_starting_rate(self, starting_rate: float) -> List[SolveCall]:
         return [call for call in self.calls if _rate_of(call, starting_rate) == starting_rate

@@ -40,6 +40,14 @@ class ClearTests(unittest.TestCase):
         self.assertEqual(result.limited, {"firm": credit_cap.COLLATERAL_BOUND})
         self.assertAlmostEqual(sum(request.amount for request in result.unmet), 1000.0 - lent, places=6)
 
+    def test_two_requests_of_one_borrower_cut_to_the_same_amount_each_leave_their_own_unmet_remainder(self):
+        requests = [LoanRequest("firm", "coin", 1000.0, 0.09, 1.0, 100.0, "working capital"),
+                    LoanRequest("firm", "coin", 3000.0, 0.09, 1.0, 100.0, "working capital")]
+        offers = [FundsOffer("saver", "coin", 100000.0, 0.05)]
+        result = credit.clear_with_cause(requests, offers, "coin", 0.05, {})
+        lent = sum(loan.principal for loan in result.loans)
+        self.assertAlmostEqual(sum(request.amount for request in result.unmet), 4000.0 - lent, places=6)
+
 
 if __name__ == "__main__":
     unittest.main()

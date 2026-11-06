@@ -11,10 +11,10 @@ merchant that owns the carriers.
 import math
 from typing import Dict, List, Optional, Tuple
 
-from . import credit
+from . import credit, trade_wages
 from .market_memory import KEY_SEPARATOR as MARKET_KEY_SEPARATOR, market_key
 from .merchants import Merchant
-from .producers_close import WORKING_CAPITAL_PURPOSE
+from .producers_working_capital import WORKING_CAPITAL_PURPOSE
 from .setup import labour_area
 from .types import LabourBid, LoanRequest
 
@@ -76,9 +76,9 @@ class Crew:
         return found
 
 
-def crew_for(setup, record, carriage) -> Optional[Crew]:
+def crew_for(setup, carriage_record, carriage) -> Optional[Crew]:
     """The year's crew over `carriage`, or None when the setup's modes name no crew hours."""
-    return Crew(setup, carriage, record.area_imbalance) if hires(setup) else None
+    return Crew(setup, carriage, carriage_record.area_imbalance) if hires(setup) else None
 
 
 def wage_scale(setup, record, carriage) -> float:
@@ -86,13 +86,23 @@ def wage_scale(setup, record, carriage) -> float:
     labour part (each hauled route's crew hours, handling included, over both legs of the round trip the
     emptiness of the returns leaves, at that wage) follows the wage of the area the goods left instead, as last
     year's labour market cleared it. The routes are last year's carried flows, so the mix of modes is the one
-    used. The rest of a fee (feed, carts, animals) keeps its price. 1 where the wages are the one priced, or
-    nothing is known of either; never below 0."""
-    carried = getattr(record, "carried", None)
+    used. The multiplier is the change in the labour part over the whole fee, so the table's fee as a whole moves
+    by the labour change, spread over all its parts; route dues are paid apart from it (route_dues.py). Carriers are priced in the area they
+    are hired in (`hiring_area`: the first merchant, by id, that wanted carriage from the tile gives it its home where nobody lives).
+    The rates and `carriage_wage` are opening-year money, so the whole table is carried to today's money by the memory's
+    `opening_wage_level` and the labour part then follows the wage against `carriage_wage` at that level. 1 where nothing has
+    changed since the opening or nothing is carried; never below 0."""
+    carried = record.carriage.carried
     if not carried or setup.carriage_wage <= 0.0 or not hires(setup):
-        return 1.0
-    crew = Crew(setup, carriage, record.area_imbalance)
-    wages = record.memory.wages
+        return record.memory.opening_wage_level(setup.currency_id)
+    crew = Crew(setup, carriage, record.carriage.area_imbalance)
+    populated = {cohort.tile for cohort in record.cohorts.values()}
+    hired_in: Dict[str, str] = {}
+    for merchant in sorted(record.merchants.values(), key=lambda each: each.agent_id):
+        for key in sorted(merchant.carriage_hours_wanted or {}):
+            tile = _split(key)[1]
+            hired_in.setdefault(tile, hiring_area(record, merchant, tile, populated))
+    level = record.memory.opening_wage_level(setup.currency_id)
     money = 0.0
     labour_change = 0.0
     for source, row in sorted(carried.items()):
@@ -102,10 +112,9 @@ def wage_scale(setup, record, carriage) -> float:
                 continue
             money += tonnes * cost
             for trade, hours in crew.hours_by_trade(source, destination).items():
-                wage = wages.get(market_key(trade, labour_area(source)), 0.0)
-                if wage > 0.0:
-                    labour_change += tonnes * hours * (wage - setup.carriage_wage)
-    return max(0.0, 1.0 + labour_change / money) if money > 0.0 else 1.0     # a fee never pays the shipper
+                wage = trade_wages.wage_in_area(setup, record.memory, trade, hired_in.get(source) or labour_area(source))
+                labour_change += tonnes * hours * (wage - setup.carriage_wage * level)
+    return max(0.0, level + labour_change / money) if money > 0.0 else level     # a fee never pays the shipper
 
 
 def planned(merchant: Merchant) -> bool:
@@ -144,25 +153,14 @@ def bids(setup, record) -> List[LabourBid]:
     return found
 
 
-def last_wage(record, key: str) -> float:
-    """What an hour of the crew `key` (trade and tile it is hired at) was last paid in its labour market, 0 when unknown."""
+def crew_wage(setup, record, merchant: Merchant, key: str, populated) -> float:
+    """The wage an hour of the crew `key` is priced at (`trade_wages.wage_in_area` of the area the merchant hires it in)."""
     trade, tile = _split(key)
-    return record.memory.wages.get(market_key(trade, labour_area(tile)), 0.0)
+    return trade_wages.wage_in_area(setup, record.memory, trade, hiring_area(record, merchant, tile, populated))
 
 
-def hired_index(ledger) -> Dict[Tuple[str, str, str], Tuple[float, float]]:
-    """{(employer, trade, area): (hours bought, money paid)} over the year's labour markets."""
-    found: Dict[Tuple[str, str, str], Tuple[float, float]] = {}
-    for result in ledger.labour_results:
-        for fill in result.fills:
-            if fill.side == "buy":
-                bought, paid = found.get((fill.agent, result.trade, result.area), (0.0, 0.0))
-                found[(fill.agent, result.trade, result.area)] = (bought + fill.quantity, paid + fill.quantity * fill.price)
-    return found
-
-
-def engaged(record, merchant: Merchant, index) -> Tuple[Dict[str, float], Dict[str, float]]:
-    """({crew key: hours hired}, {crew key: average wage}) for the merchant's plan, from `hired_index`. Keys
+def engaged(record, merchant: Merchant, index) -> Tuple[Dict[str, float], Dict[str, Optional[float]]]:
+    """({crew key: hours hired}, {crew key: average wage, None where nothing was hired}) for the merchant's plan, from `YearLedger.hours_hired_by_market` (hours the employer paid for, not hours matched). Keys
     that share a labour market (goods leaving unpopulated tiles are bid for at home) share what was hired in
     proportion to their hours."""
     populated = {cohort.tile for cohort in record.cohorts.values()}
@@ -174,28 +172,13 @@ def engaged(record, merchant: Merchant, index) -> Tuple[Dict[str, float], Dict[s
         market_of[key] = (trade, hiring_area(record, merchant, tile, populated))
         markets[market_of[key]] = markets.get(market_of[key], 0.0) + hours
     hours_by_key: Dict[str, float] = {}
-    wage_by_key: Dict[str, float] = {}
+    wage_by_key: Dict[str, Optional[float]] = {}
     for key, hours in plan.items():
         trade, area = market_of[key]
         bought, paid = index.get((merchant.agent_id, trade, area), (0.0, 0.0))
         hours_by_key[key] = bought * hours / markets[market_of[key]] if markets[market_of[key]] > 0.0 else 0.0
-        wage_by_key[key] = paid / bought if bought > 0.0 else 0.0
+        wage_by_key[key] = paid / bought if bought > 0.0 else None
     return hours_by_key, wage_by_key
-
-
-def hired(ledger, merchant_id: str, trades) -> Dict[str, float]:
-    """{"hours": hours this merchant's carriers worked, "wage": their average pay an hour}, over `trades`."""
-    hours = sum(ledger.hours_hired.get(merchant_id, {}).get(trade, 0.0) for trade in trades)
-    paid = 0.0
-    quantity = 0.0
-    for result in ledger.labour_results:
-        if result.trade not in trades:
-            continue
-        for fill in result.fills:
-            if fill.agent == merchant_id and fill.side == "buy":
-                paid += fill.quantity * fill.price
-                quantity += fill.quantity
-    return {"hours": hours, "wage": paid / quantity if quantity > 0.0 else 0.0}
 
 
 def wage_loans(setup, record, hired_last_year=None, supply_last_year=None) -> List[LoanRequest]:
@@ -229,7 +212,8 @@ def wage_loans(setup, record, hired_last_year=None, supply_last_year=None) -> Li
                 share = 1.0
             else:
                 share = min(1.0, available / wanted_in_market[market]) if wanted_in_market[market] > 0.0 else 0.0
-            bill += wanted * share * record.memory.wages.get(market_key(trade, areas[key]), 0.0)
+            wage = trade_wages.wage_in_area(setup, record.memory, trade, areas[key])
+            bill += wanted * share * wage
             worth += merchant.carriage_money_wanted.get(key, 0.0) * share
         short = bill - max(0.0, record.book.balance(merchant.agent_id, money))
         if short > 0.0 and bill > 0.0 and worth > bill:

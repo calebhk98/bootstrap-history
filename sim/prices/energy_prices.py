@@ -3,14 +3,14 @@
 The goods table prices a carrier (`thermal_mj`, `mechanical_mj`, `electrical_mj`) once, at
 the cheapest technique that clears the carrier's universal floor. An entry that states the
 temperature it needs pays the cheapest technique that reaches that temperature instead
-(`sim/engine/solve_prices_core.py`, per-consumer grading). This module recomputes those graded
+(`sim/prices/solve_prices_core.py`, per-consumer grading). This module recomputes those graded
 prices from the finished solve so a node's revenue values the energy it buys, and the
 energy it sells, the way the solver charged the goods it makes.
 """
 from typing import Any, Callable, Dict, Iterable, Mapping, Optional, Tuple
 
-from sim.prices import solve_prices
 from sim.world import plant_baskets
+from sim.prices import prices as price_solver, solve_prices_core
 from sim.prices.solve_prices_core import CAPABILITY_CAP_FIELDS, capability_required_grades, recipe_cost_and_allocation
 from sim.prices.identity_cache import IdentityCache
 
@@ -42,7 +42,13 @@ class EnergyPrices:
         for carrier, (_reached_field, needed_field, _floor) in CAPABILITY_CAP_FIELDS.items():
             if entry.get(carrier) and (carrier, entry.get(needed_field)) in self.unreachable:
                 return False
-        return True
+        return all(self._has_price(carrier) for carrier in ENERGY_CARRIERS
+                   if entry.get(carrier) or carrier in entry["outputs"])
+
+    def _has_price(self, carrier: str) -> bool:
+        """True when the pool prices the carrier; a carrier nothing prices has no cost to charge, so an entry
+        that uses it cannot be weighed."""
+        return carrier in self.pool
 
     def bought(self, carrier: str, entry: Mapping[str, Any]) -> float:
         """The price the entry pays: the band of its own stated requirement, else the pool price."""
@@ -51,7 +57,7 @@ class EnergyPrices:
             required = entry.get(capped[1])
             if required is not None and (carrier, required) in self.bands:
                 return self.bands[(carrier, required)]
-        return self.pool.get(carrier, 0.0)
+        return self.pool[carrier]
 
     def sold(self, carrier: str, entry: Mapping[str, Any]) -> float:
         """The price a producer earns: the highest band its stated reach clears, else the pool price,
@@ -70,7 +76,7 @@ class EnergyPrices:
                            if name == carrier and required <= reached]
                 if cleared:
                     return self.bands[(carrier, max(cleared))]
-        return self.pool.get(carrier, 0.0)
+        return self.pool[carrier]
 
 
 def pool_only(goods: Mapping[str, float]) -> EnergyPrices:
@@ -79,7 +85,8 @@ def pool_only(goods: Mapping[str, float]) -> EnergyPrices:
 
 
 def grade_bands(entries: Mapping[str, Any], available: Mapping[str, Any], prices_in_labour_hours: Mapping[str, float],
-                wage_by_trade: Mapping[str, float], money_per_hour: float, interest_rate: float):
+                wage_by_trade: Mapping[str, float], money_per_hour: float, interest_rate: float,
+                dump_minimum_distance_kilometres: float = 0.0):
     """(money per megajoule of each stated grade, the same in labour hours with its technique, the grades
     nothing in `available` supplies). A grade no held technique reaches has no band: it is unavailable,
     not priced at a technique the society does not hold."""
@@ -88,8 +95,9 @@ def grade_bands(entries: Mapping[str, Any], available: Mapping[str, Any], prices
     unreachable = set()
     for carrier, required_values in capability_required_grades(entries).items():
         for required in required_values:
-            found = solve_prices.capability_price_for_requirement(
-                carrier, required, available, prices_in_labour_hours, wage_by_trade, interest_rate=interest_rate)
+            found = solve_prices_core.capability_price_for_requirement(
+                carrier, required, available, prices_in_labour_hours, wage_by_trade, interest_rate=interest_rate,
+                dump_minimum_distance_kilometres=dump_minimum_distance_kilometres)
             if found is None:
                 unreachable.add((carrier, required))
                 continue
@@ -100,16 +108,18 @@ def grade_bands(entries: Mapping[str, Any], available: Mapping[str, Any], prices
 
 def graded(held_technology_ids, prices_json: Dict[str, Any], goods: Mapping[str, float],
            civilization_id: Optional[str] = None, interest_rate: Optional[float] = None,
-           civilization: Optional[Mapping[str, Any]] = None) -> EnergyPrices:
-    """The graded carrier prices of a society holding these technologies, in the coin of `prices_json`."""
-    from . import prices as price_solver
+           civilization: Optional[Mapping[str, Any]] = None, unskilled_trade: Optional[str] = None) -> EnergyPrices:
+    """The graded carrier prices of a society holding these technologies, in the coin of `prices_json`; the wages are
+    stated against `unskilled_trade`'s hour (the committed registry's when none)."""
     entries = price_solver.default_production_entries()
     solved = price_solver.solved_prices(held_technology_ids, prices_json, civilization_id=civilization_id,
-                                        interest_rate=interest_rate, civilization=civilization)
-    ratios = solve_prices.wage_ratios_by_trade(prices_json)
-    key = (solved.gate_nodes_held, solved.civilization_id, tuple(sorted(ratios.items())),
+                                        interest_rate=interest_rate, civilization=civilization,
+                                        unskilled_trade=unskilled_trade)
+    ratios = solve_prices_core.wage_ratios_by_trade(prices_json, unskilled_trade)
+    dump_distance = price_solver.waste_dump_minimum_distance(civilization)
+    key = (dump_distance, solved.gate_nodes_held, solved.civilization_id, tuple(sorted(ratios.items())),
            prices_json["money_per_labour_hour"], solved.interest_rate,
-           price_solver.territory_fingerprint(civilization))
+           price_solver.territory_fingerprint(civilization), tuple(sorted(goods.items())))
     cached = _CACHE.get(key)
     pool = {carrier: goods[carrier] for carrier in ENERGY_CARRIERS if carrier in goods}
     if cached is not None and cached[0] is entries:
@@ -117,9 +127,9 @@ def graded(held_technology_ids, prices_json: Dict[str, Any], goods: Mapping[str,
     wage_by_trade = price_solver.solver_wage_ratios(entries, ratios)
     money_per_hour = prices_json["money_per_labour_hour"]
     hour_prices = {material: price / money_per_hour for material, price in goods.items()}
-    available, _unreached, _unclassified = solve_prices.techniques_available_to(entries, solved.gate_nodes_held)
+    available, _unreached, _unclassified = solve_prices_core.techniques_available_to(entries, solved.gate_nodes_held)
     bands, hour_bands, unreachable = grade_bands(entries, available, solved.prices_in_labour_hours, wage_by_trade,
-                                                 money_per_hour, solved.interest_rate)
+                                                 money_per_hour, solved.interest_rate, dump_distance)
     # Keyed by address; the entry itself is kept and confirmed with `is`, so a recycled address cannot match.
     own = IdentityCache()
 
@@ -129,7 +139,8 @@ def graded(held_technology_ids, prices_json: Dict[str, Any], goods: Mapping[str,
             return hit
         result = recipe_cost_and_allocation("node-entry", entry, hour_prices, wage_by_trade,
                                             capability_band_price_by_carrier=hour_bands,
-                                            interest_rate=solved.interest_rate)
+                                            interest_rate=solved.interest_rate,
+                                            dump_minimum_distance_kilometres=dump_distance)
         cost = {} if result is None else {
             material: price * money_per_hour for material, price in result[1].items()}
         own.put(entry, cost)

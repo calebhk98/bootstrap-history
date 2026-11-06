@@ -5,13 +5,14 @@ catalogue lists), a tile that holds a deposit of that resource gets a limit: the
 room allows (their working rate, less what the seat's own mines name on them), in ore. A tile whose deposits
 are worked out keeps a limit of nothing, so the recipe does not fall back to running anywhere. What the firms
 raise is read back each year and drawn from the tile's deposits, the same ledger the seat's mines draw on
-(`the seat record's `holdings.deposit_drawn``, sim/engine/mine_deposits.py).
+(the seat record's `holdings.deposit_drawn`, sim/resources/deposits.py).
 
 Recipes that fell standing timber are limited by the tile's stock instead (port_timber.py).
 
 Recipes for resources the catalogue lists no ore for (coal, salt, quarries) declare no limit and keep the
 economy's labelled fallback (`UNSITED_EXTRACTION_ANYWHERE`).
 """
+from sim.constants import declare
 from sim.economy import api as economy_api
 from sim.economy.api import SiteLimit, recipe_tile_key
 from sim.geography.api import ore_tonnes_per_tonne
@@ -19,12 +20,16 @@ from sim.unit_conversions import KILOGRAMS_PER_TONNE
 
 from . import port_timber
 
-SITE_YIELD_FACTOR = 1.0   # an ore recipe's output per run is ore, whatever its grade
+SITE_YIELD_FACTOR = declare(
+    "SITE_YIELD_FACTOR", 1.0, kind="engineering_estimate", unit="output per run over the recipe's stated output", source=None,
+    confidence="B",
+    why="An ore recipe's output per run is ore, whatever its grade (the grade is in the ore's recovery, not in the run), so a "
+        "mine site's yield factor does not scale the run.")
 
 
 def _ore_recipes(sim, outputs_by_recipe):
     """{recipe id: (resource id, ore kg a run)} for the recipes whose output is a catalogue resource's ore."""
-    ore_of = {ore: resource for resource, by_ore in sim.deposit_catalogue()["ore_goods"].items() for ore in by_ore}
+    ore_of = {ore: resource for resource, by_ore in sim.map.deposit_catalogue()["ore_goods"].items() for ore in by_ore}
     return {recipe_id: (ore_of[recipe_id], outputs[recipe_id]) for recipe_id, outputs in sorted(outputs_by_recipe.items())
             if recipe_id in ore_of and outputs.get(recipe_id, 0.0) > 0.0}
 
@@ -32,7 +37,7 @@ def _ore_recipes(sim, outputs_by_recipe):
 def _worked_by_firms(sim, resource_id, tile_ids):
     """The deposits of a resource the economy's firms work: those the seat has found, and the catalogue's on
     the partner economies' tiles among `tile_ids`."""
-    return sim.found_deposits(resource_id) + sim.partner_deposits(resource_id, tile_ids)
+    return sim.foreign.found_deposits(resource_id) + sim.foreign.partner_deposits(resource_id, tile_ids)
 
 
 def site_limits(sim, outputs_by_recipe, tile_ids=()):
@@ -65,7 +70,7 @@ def deplete(sim, extraction, outputs_by_recipe):
                           key=lambda row: (-row["remaining_tonnes"], row["id"])):
             take = min(ore_tonnes / ore_tonnes_per_tonne(row), row["remaining_tonnes"])
             if take > 0.0:
-                sim.draw_deposit(row["id"], take)
+                sim.foreign.draw_deposit(row["id"], take)
                 ore_tonnes -= take * ore_tonnes_per_tonne(row)
             if ore_tonnes <= 1e-12:
                 break
@@ -74,14 +79,13 @@ def deplete(sim, extraction, outputs_by_recipe):
 def crop_yields(economy, weather=1.0, weather_by_tile=None):
     """{producer id: yield factor} for the producers whose recipe takes land: the weather of the producer's own tile
     (`weather_by_tile`, else the pooled `weather`) times the tile's soil, climate and water for a recipe that crops
-    (setup.yield_factor_by_recipe_tile), the weather alone for pasture and forest."""
-    setup = economy.setup
-    site_yield = setup.yield_factor_by_recipe_tile
+    (the economy's site yield factors), the weather alone for pasture and forest."""
+    site_yield, land_per_run = economy_api.crop_site_inputs(economy)
     weather_by_tile = weather_by_tile or {}
     return {producer_id: weather_by_tile.get(producer.tile, weather)
             * site_yield.get(recipe_tile_key(producer.recipe_id, producer.tile), 1.0)
             for producer_id, producer in economy_api.producers_of(economy).items()
-            if setup.land_per_run.get(producer.recipe_id, 0.0) > 0.0}
+            if land_per_run.get(producer.recipe_id, 0.0) > 0.0}
 
 
 def harmed_yields(yields, harm_by_tile, producers):

@@ -8,7 +8,6 @@ import unittest
 from types import SimpleNamespace
 
 from sim.agents.registry import ActorRegistry
-from sim.agents.api import EDGE_SAVERS
 from sim.content.api import foreign_economy_records as foreign_records
 from sim.engine.data import MODDIR
 from sim.finance.module import Finance
@@ -41,19 +40,19 @@ class Lenders(unittest.TestCase):
         return module_harness.build(Finance, views={
             "state_treasury": SimpleNamespace(actor_id="state"),
             "cash_and_deposit": lambda account: purses.purse(account) + purses.deposit(account),
-            "cast": SimpleNamespace(active_firms=lambda: firms, purse_lenders=lambda: lenders)})
+            "cast": SimpleNamespace(concerns=SimpleNamespace(active_firms=lambda: firms), purse_lenders=lambda: lenders)})
 
     def test_a_lending_actors_purse_is_offered_as_a_firms_is(self):
         purses = Purses({"abbey": 700.0, "firm": 50.0}, {"abbey": 30.0})
         market = self.lenders_market(purses, [SimpleNamespace(actor_id="firm")], [actor("abbey", True)])
-        offers = market.lender_offers({"households": 5.0, "state": 9.0})
+        offers = market.lender_offers({"state": 9.0})
         self.assertEqual(offers["abbey"], 730.0)
         self.assertEqual(offers["firm"], 50.0)
         self.assertEqual(offers["state"], 9.0)
 
     def test_no_lending_actor_changes_no_offer(self):
-        offers = self.lenders_market(Purses({}, {}), [], []).lender_offers({"households": 1.0, "state": 2.0})
-        self.assertEqual(offers, {EDGE_SAVERS: 1.0, "state": 2.0})
+        offers = self.lenders_market(Purses({}, {}), [], []).lender_offers({"state": 2.0})
+        self.assertEqual(offers, {"state": 2.0})
 
 
 class VariantPartners(unittest.TestCase):

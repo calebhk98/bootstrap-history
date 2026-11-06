@@ -10,11 +10,6 @@ def load_production() -> Any:
     return loaded()
 
 
-def materials_the_tree_consumes(nodes: Dict[str, Any]) -> Any:
-    from sim.engine.validate_production import materials_the_tree_consumes as counted
-    return counted(nodes)
-
-
 def load_mod_tree_nodes(root: str) -> Any:
     from sim.content.api import load_mod_tree_nodes as loaded
     return loaded(root)
@@ -44,9 +39,3 @@ def shipped_opening(namespace: str, key: str) -> Any:
 def source_files(root: str, modules: Any, cache_directory: Optional[str] = None) -> List[str]:
     from sim.engine import source_closure
     return source_closure.source_files(root, modules, cache_directory=cache_directory)
-
-
-def calculated_goods_table(held_technology_ids: Any = (), **civilisation: Any) -> Any:
-    """(labour-hour price, provenance) of every material the solver prices, in the civilisation's money."""
-    from sim.engine.data import calculated_goods_table as table
-    return table(held_technology_ids, **civilisation)

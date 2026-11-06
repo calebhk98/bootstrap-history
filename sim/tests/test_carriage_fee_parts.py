@@ -8,8 +8,8 @@ import types
 import unittest
 
 from sim.economy import carriage_fleet_book, carriage_wear, merchants
-from sim.economy.accounts import Book
-from sim.economy.types import Fill, GoodSpec
+from sim.book import Book
+from sim.economy.types import GoodSpec
 from sim.tests import test_economy_merchants as basic
 
 FEED_GOOD = "grain"
@@ -42,8 +42,7 @@ class WhatIsLeftOfAFee(unittest.TestCase):
         carriage, _map, area_a, _b = basic.world()
         who = basic.merchant()
         basic.plan(who, 2.0, 5.0)
-        fills = (Fill("m1", "salt", area_a["salt"], "a", 10.0, 2.0, "buy"),)
-        return merchants.dispatch(who, fills, carriage, basic.SPECS, "coin", cash, {("salt", "a"): 10.0},
+        return merchants.dispatch(who, carriage, basic.SPECS, "coin", cash, {("salt", "a"): 10.0},
                                   carrier_of={"a": "the poorest of a"}.get, **kwargs)
 
     def test_without_a_decomposed_fee_the_poorest_are_paid_as_before(self):
@@ -61,7 +60,6 @@ class WhatIsLeftOfAFee(unittest.TestCase):
     def test_the_margin_is_not_a_cash_need_so_a_poor_merchant_still_ships(self):
         result = self.dispatch(cash=0.0, carrier_money=lambda source, destination: 0.4, margin_kept=True)
         self.assertAlmostEqual(result.moves[0].quantity, 10.0)
-        self.assertEqual(result.stranded, ())
 
 
 class MerchantsBidForFeed(unittest.TestCase):
@@ -75,7 +73,7 @@ class MerchantsBidForFeed(unittest.TestCase):
         record = types.SimpleNamespace(book=Book(), merchants={"m1": basic.merchant()})
         record.merchants["m1"].carrier_wear = {FEED_GOOD: 3.0}
         record.merchants["m1"].carrier_fleet_wanted = {}
-        view = types.SimpleNamespace(price=lambda good, area: price)
+        view = types.SimpleNamespace(offered_price=lambda good, area: price)
         area_map = types.SimpleNamespace(goods=lambda: [FEED_GOOD], area_of=lambda good, tile: "area:" + tile)
         return setup, record, view, area_map
 
@@ -84,9 +82,9 @@ class MerchantsBidForFeed(unittest.TestCase):
         self.assertEqual([(bid.buyer, bid.good, bid.floor_quantity, bid.area) for bid in bids], [("m1", FEED_GOOD, 3.0, "area:a")])
         self.assertAlmostEqual(budget["m1"], 12.0)
 
-    def test_a_feed_with_no_price_yet_is_bid_for_at_the_opening_price(self):
-        _bids, budget = carriage_fleet_book.bids(*self.inputs(price=None))
-        self.assertAlmostEqual(budget["m1"], 6.0)
+    def test_a_feed_with_no_price_yet_is_not_bid_for_and_sets_nothing_aside(self):
+        bids, budget = carriage_fleet_book.bids(*self.inputs(price=None))
+        self.assertEqual((bids, budget), ([], {}))
 
     def test_a_merchant_with_no_cash_sets_nothing_aside_and_bids_for_nothing(self):
         bids, budget = carriage_fleet_book.bids(*self.inputs(price=4.0), merchants_cash={"m1": 0.0})

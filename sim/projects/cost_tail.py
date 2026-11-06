@@ -4,12 +4,13 @@ Prices move after a bill is frozen and instalments round, so a finished project 
 Making it wait a whole extra year for that is a bookkeeping artefact, so the sliver is paid at the final scheduled
 payment."""
 from sim.agents.api import edges
-from sim.ledger.api import NoteSpend, PayEdge
+from sim.assembly.api import Part
+from sim.ledger.api import NoteSpend, pay_edge_or_log
 
 from .constants import COST_TAIL_SETTLE_SHARE
 
 
-class CostTail:
+class CostTail(Part):
 	def settle_cost_tail(self, node_id, project_state):
 		"""Pay a rounding-sized remainder of the bill now. Returns the amount."""
 		tail = project_state["cost_left"]
@@ -17,7 +18,8 @@ class CostTail:
 			return 0.0
 		if tail > COST_TAIL_SETTLE_SHARE * self.needs.project_cost(node_id):
 			return 0.0
-		self.needs.send(PayEdge(edges.EDGE_SUPPLIERS, tail, "project payments"))
+		if pay_edge_or_log(self.needs.send, edges.EDGE_SUPPLIERS, tail, "project payments") is not None:
+			return 0.0   # the sliver stays owed
 		self.needs.send(NoteSpend(tail))
 		project_state["spent"] += tail
 		project_state["cost_left"] = 0.0

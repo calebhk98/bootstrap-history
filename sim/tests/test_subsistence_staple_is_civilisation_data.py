@@ -30,11 +30,19 @@ def _scaled_labour(entries, material, factor):
 
 class StapleIsData(unittest.TestCase):
 
-    def test_staple_is_read_from_the_civilisation_and_defaults_to_wheat(self):
+    def test_staple_is_read_from_the_civilisation(self):
         self.assertEqual(wage_provider.staple_material(data.load_civ("rome_100ad")), "wheat_kg")
         self.assertEqual(wage_provider.staple_material(data.load_civ("han_china_100ad")), "millet_kg")
         self.assertEqual(wage_provider.staple_material(data.load_civ("mexica_1500")), "maize_kg")
-        self.assertEqual(wage_provider.staple_material({"id": "mod"}), "wheat_kg")
+        self.assertEqual(wage_provider.staple_material({"id": "mod", "staple": "rice_kg"}), "rice_kg")
+
+    def test_every_shipped_civilisation_names_its_staple(self):
+        for civ_id in ("england_1300", "norse_900ad", "rome_100ad", "han_china_100ad", "mexica_1500"):
+            self.assertTrue(wage_provider.staple_material(data.load_civ(civ_id)), civ_id)
+
+    def test_a_civilisation_without_a_staple_is_an_error(self):
+        with self.assertRaises(ValueError):
+            wage_provider.staple_material({"id": "mod"})
 
     def test_a_staple_that_is_not_a_good_is_rejected(self):
         with self.assertRaises(ValueError):

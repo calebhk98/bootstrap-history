@@ -4,10 +4,10 @@
 
 **Done.** The state's budget keeps a `guards`, an `inspectors` and a `foresters` line (`sim/agents/order.py`), staff hired in the
 labour market and paid like the administration line. What they reach follows the 620 time rule over the road from the
-seat (`CollectionView.order_share`, `inspection_share` in `sim/agents/collection_world.py`; `Sim.order_reach()` and
-`Sim.inspection_reach()` in `sim/engine/legitimacy.py`). Theft and plunder order (`theft_charge.py`) read the guards
+seat (`CollectionView.order_share`, `inspection_share` in `sim/agents/collection_world.py`; `order_reach` and
+`inspection_reach` in `sim/polity/reach.py`). Theft and plunder order (`sim/coin/theft.py`, `sim/coin/theft_exposure.py`) read the guards
 employed, and the mine land ceiling (`mine_land_ceiling`) reads the inspectors employed. The forest ceiling (`forest_land_ceiling`) reads the foresters employed (`CollectionView.forest_share`,
-`Sim.forest_reach()`). Country states keep the same
+`forest_reach` in `sim/polity/reach.py`). Country states keep the same
 lines. Tests: `sim/tests/test_state_guards_and_inspectors.py`.
 
 **Still open.**

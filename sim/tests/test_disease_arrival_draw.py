@@ -1,6 +1,6 @@
 """The yearly arrival draw (Complaint 490), on the stand-in sim (`disease_stand_in.StandInSim`, no game): called with nothing
 under way, the draw reaches the Mexica nation within four centuries in every seed once the outsiders bring ships, and never
-without a carrier. It calls `Disease.introductions` alone, so no epidemic is run."""
+without a carrier. It calls `Contact.introductions` alone, so no epidemic is run."""
 
 QUICK_TOPIC = True
 

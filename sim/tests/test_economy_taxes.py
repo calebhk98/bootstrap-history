@@ -6,8 +6,9 @@ import json
 import os
 import unittest
 
-from sim.economy.accounts import Book
+from sim.book import Book
 from sim.economy.taxes import TaxForm, YearFacts, assess, forms_from_civ_data
+from sim.economy.taxes_bases import taxable_cash
 from sim.economy.types import EDGE_MINT, EDGE_PRODUCTION, GoodsMove, Transfer
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -177,6 +178,33 @@ class RefusalAndDeterminismTests(unittest.TestCase):
         reversed_output = dict(reversed(list(facts_with().output.items())))
         second = assess(FORMS, facts_with(output=reversed_output), STATE, PRICES)
         self.assertEqual(first, second)
+
+
+class SharedPurseTests(unittest.TestCase):
+    def test_a_payer_liable_to_two_assess_calls_pays_from_one_purse(self):
+        forms = (TaxForm("poll", "adult_labour_years", 1.0), TaxForm("duty", "imports_value", 1.0))
+        facts = facts_with(working_people={"peasants": 10.0}, wage_per_labour_year={"peasants": 10.0},
+                           imports_paid={("peasants", "silk"): 100.0}, cash={"peasants": 120.0})
+        book = Book()
+        book.transfer(Transfer(EDGE_MINT, "peasants", "coin", 120.0, "opening"))
+        cash_left = dict(facts.cash)
+        for form in forms:
+            transfers, _moves, _assessments = assess([form], facts, STATE, PRICES, cash_left=cash_left)
+            book.transfer_many(transfers)     # raises InsufficientFunds if the second call spends the same cash again
+        self.assertAlmostEqual(book.balance("peasants", "coin"), 0.0)
+        self.assertAlmostEqual(book.balance(STATE, "coin"), 120.0)
+
+
+class TaxableCash(unittest.TestCase):
+    def test_only_the_taxpayers_cash_is_the_coin_stock_base(self):
+        balances = {"cohort:a": 50.0, "producer:b": 30.0, "merchant:c": 20.0, "bank:d": 900.0, "fund:e": 700.0, EDGE_MINT: 5.0}
+        self.assertEqual(taxable_cash(balances, ["cohort:a", "producer:b", "merchant:c", EDGE_MINT]),
+                         {"cohort:a": 50.0, "producer:b": 30.0, "merchant:c": 20.0})
+
+    def test_the_coin_stock_base_leaves_out_who_is_not_a_taxpayer(self):
+        from sim.economy.taxes_bases import coin_stock
+        facts = YearFacts(currency="coin", cash={"cohort:a": 50.0, "bank:d": 900.0}, taxpayers=frozenset({"cohort:a"}))
+        self.assertEqual({agent: base.value for agent, base in coin_stock(None, facts, {}).items()}, {"cohort:a": 50.0})
 
 
 if __name__ == "__main__":

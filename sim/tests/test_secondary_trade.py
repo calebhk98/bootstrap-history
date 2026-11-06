@@ -9,8 +9,9 @@ import unittest
 from types import SimpleNamespace
 
 from sim.economy import credit, credit_claims, secondary_trade
+from sim.economy.credit_record import CreditRecord
 from sim.book import Book
-from sim.economy.secondary_trade import BOND_MARKET, SHARE_TRADING, Shortfall
+from sim.economy.secondary_trade import BOND_MARKET, SHARE_TRADING, CashShortfall
 from sim.economy.types import FundsOffer, Loan, Transfer
 
 MARKET_RATE = 0.05
@@ -26,10 +27,7 @@ class TradeFixture(unittest.TestCase):
             book.transfer(Transfer("edge:mint", agent, self.money, 1000.0, "opening"))
         self.holder, self.saver, self.other = "household:a", "household:b", "household:c"
         self.producer_id = "producer:one"
-        self.record = SimpleNamespace(
-            book=book, cohorts={self.holder: None, self.saver: None, self.other: None}, capital=SimpleNamespace(funds={}),
-            loans=[], remembered_defaults={}, banks={}, producers={self.producer_id: None},
-            last_dividends={self.producer_id: 20.0}, shares={self.producer_id: {self.holder: 0.3}})
+        self.record = SimpleNamespace(book=book, cohorts={self.holder: None, self.saver: None, self.other: None}, producers={self.producer_id: None}, capital_markets=SimpleNamespace(capital=SimpleNamespace(funds={}), banks={}, last_dividends={self.producer_id: 20.0}, shares={self.producer_id: {self.holder: 0.3}}), credit=CreditRecord())
 
     def balance(self, agent):
         return self.record.book.balance(agent, self.money)
@@ -48,7 +46,7 @@ class Shares(TradeFixture):
         before_holder, before_saver = self.balance(self.holder), self.balance(self.saver)
         offers, trades = self.run_trade()
         self.assertEqual(len(trades), 1)
-        held = self.record.shares[self.producer_id]
+        held = self.record.capital_markets.shares[self.producer_id]
         self.assertNotIn(self.holder, held)
         self.assertAlmostEqual(held[self.saver], 0.3)
         paid = trades[0].quantity * trades[0].price
@@ -67,7 +65,7 @@ class Shares(TradeFixture):
     def test_a_saver_who_asks_more_than_the_holder_buys_nothing(self):
         _offers, trades = self.run_trade(offers=self.offers(rate=0.09))
         self.assertEqual(trades, [])
-        self.assertEqual(self.record.shares[self.producer_id], {self.holder: 0.3})
+        self.assertEqual(self.record.capital_markets.shares[self.producer_id], {self.holder: 0.3})
 
     def test_a_dearer_market_rate_lowers_the_price_a_saver_pays(self):
         cheap = secondary_trade.share_value(self.record, self.producer_id, 0.03, 0.0)
@@ -75,7 +73,7 @@ class Shares(TradeFixture):
         self.assertGreater(cheap, dear)
 
     def test_a_holder_short_of_cash_sells_for_less_than_it_values_the_share(self):
-        shortfall = {self.holder: Shortfall(amount=20.0, borrowing_rate=0.25)}
+        shortfall = {self.holder: CashShortfall(amount=20.0, borrowing_rate=0.25)}
         asks, _bids = secondary_trade.asks_and_bids(self.setup, self.record, self.offers(), shortfall, MARKET_RATE, 0.0, BOTH)
         asks = sorted(asks, key=lambda ask: ask.reserve)
         ordinary = secondary_trade.share_value(self.record, self.producer_id, MARKET_RATE, 0.0)
@@ -83,7 +81,7 @@ class Shares(TradeFixture):
         self.assertAlmostEqual(asks[0].quantity * asks[0].reserve, 20.0)
 
     def test_a_short_holder_gets_the_cash_it_needs_when_a_saver_will_pay(self):
-        shortfall = {self.holder: Shortfall(amount=30.0, borrowing_rate=0.25)}
+        shortfall = {self.holder: CashShortfall(amount=30.0, borrowing_rate=0.25)}
         before = self.balance(self.holder)
         _offers, trades = self.run_trade(short=shortfall)
         self.assertTrue(trades)
@@ -94,22 +92,22 @@ class Shares(TradeFixture):
         remaining, trades = self.run_trade(offers=offers, institutions=())
         self.assertEqual(trades, [])
         self.assertEqual(remaining, offers)
-        self.assertEqual(self.record.shares[self.producer_id], {self.holder: 0.3})
+        self.assertEqual(self.record.capital_markets.shares[self.producer_id], {self.holder: 0.3})
 
     def test_the_bond_institution_alone_does_not_trade_shares(self):
         _remaining, trades = self.run_trade(institutions=(BOND_MARKET,))
         self.assertEqual(trades, [])
 
     def test_a_buyer_spends_no_more_than_it_offered(self):
-        self.record.shares[self.producer_id] = {self.holder: 0.3, self.other: 0.5}
+        self.record.capital_markets.shares[self.producer_id] = {self.holder: 0.3, self.other: 0.5}
         offers, _trades = self.run_trade(offers=self.offers(amount=100.0))
         self.assertGreaterEqual(offers[0].amount, -1e-9)
 
     def test_the_result_is_the_same_when_the_holders_are_listed_in_another_order(self):
-        self.record.shares[self.producer_id] = {self.holder: 0.2, self.other: 0.1}
+        self.record.capital_markets.shares[self.producer_id] = {self.holder: 0.2, self.other: 0.1}
         first = self.run_trade()[1]
         self.setUp()
-        self.record.shares[self.producer_id] = {self.other: 0.1, self.holder: 0.2}
+        self.record.capital_markets.shares[self.producer_id] = {self.other: 0.1, self.holder: 0.2}
         second = self.run_trade()[1]
         self.assertEqual(first, second)
 
@@ -117,7 +115,7 @@ class Shares(TradeFixture):
 class Loans(TradeFixture):
     def setUp(self):
         super().setUp()
-        self.record.shares = {}
+        self.record.capital_markets.shares = {}
 
     def make_loan(self, lender=None, borrower=None, principal=200.0, rate=0.05, years=5.0):
         """A loan to the producer; `rate` is the base rate it was struck at, and the premium the producer's own
@@ -125,7 +123,7 @@ class Loans(TradeFixture):
         loan = Loan("loan:0:7", lender or self.holder, borrower or self.producer_id, self.money, principal,
                     rate=rate + credit.risk_premium(principal, 0.0, 0.0),
                     years_left=years, issued_year=0)
-        self.record.loans.append(loan)
+        self.record.credit.loans.append(loan)
         return loan
 
     def test_a_bond_at_the_savers_rate_is_worth_its_face_to_that_saver(self):
@@ -159,7 +157,7 @@ class Loans(TradeFixture):
 
     def test_a_lender_short_of_cash_sells_below_the_face_to_savers_who_ask_more_than_the_coupon(self):
         self.make_loan(rate=0.05)
-        shortfall = {self.holder: Shortfall(amount=50.0, borrowing_rate=0.2)}
+        shortfall = {self.holder: CashShortfall(amount=50.0, borrowing_rate=0.2)}
         _offers, trades = self.run_trade(offers=self.offers(amount=1000.0, rate=0.07), short=shortfall)
         self.assertTrue(trades)
         self.assertLess(trades[0].price, 1.0)
@@ -170,9 +168,9 @@ class Loans(TradeFixture):
         bought = sum(trade.quantity for trade in trades)
         self.assertGreater(bought, 0.0)
         self.assertLess(bought, 200.0)
-        mine = [each for each in self.record.loans if each.lender == self.saver]
+        mine = [each for each in self.record.credit.loans if each.lender == self.saver]
         self.assertAlmostEqual(sum(each.principal for each in mine) + loan.principal, 200.0)
-        self.assertAlmostEqual(sum(credit_claims.claims_by_lender(self.record.loans, self.money).values()), 200.0)
+        self.assertAlmostEqual(sum(credit_claims.claims_by_lender(self.record.credit.loans, self.money).values()), 200.0)
 
     def test_a_household_s_own_debt_is_not_traded(self):
         loan = self.make_loan(borrower=self.other)
@@ -188,7 +186,7 @@ class Loans(TradeFixture):
     def test_after_the_sale_the_claim_is_the_buyers_and_not_the_sellers(self):
         self.make_loan()
         self.run_trade(offers=self.offers(amount=1000.0, rate=0.03))
-        held = credit_claims.claims_by_lender(self.record.loans, self.money)
+        held = credit_claims.claims_by_lender(self.record.credit.loans, self.money)
         self.assertIn(self.saver, held)
         self.assertNotIn(self.holder, held)
 

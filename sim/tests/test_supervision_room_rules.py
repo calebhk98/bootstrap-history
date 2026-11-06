@@ -8,23 +8,23 @@ from types import SimpleNamespace
 
 from .harness import check
 
-from sim.labour.labour_capacity import CapacityMixin
+from sim.labour.labour_capacity import Capacity
 
 PARTNERSHIP = ("fin_societas", {"flat": 4.0, "words": "a legally recognised partnership", "gate": "has"})
 BRANCHES = ("fin_chain_store", {"per_unit": 2.5, "words": "branches in other towns"})
 
 
-class Labour(CapacityMixin):
-    """Only what the supervision rules read: the household, and the effects that hold."""
-
-    def __init__(self, directors_extra=0.0, housing=0.0, held=(), units=1.0):
-        terms = [PARTNERSHIP, BRANCHES]
-        holds = lambda key, spec: key in held
-        value = lambda key, spec: spec["flat"] if "flat" in spec else spec["per_unit"] * units
-        self._world = SimpleNamespace(
-            workforce=SimpleNamespace(directors_extra=directors_extra, worker_housing_places=housing),
+def Labour(directors_extra=0.0, housing=0.0, held=(), units=1.0):
+    """The capacity part over only what the supervision rules read: the household, and the effects that hold."""
+    terms = [PARTNERSHIP, BRANCHES]
+    holds = lambda key, spec: key in held
+    value = lambda key, spec: spec["flat"] if "flat" in spec else spec["per_unit"] * units
+    world = SimpleNamespace(
+        workforce=SimpleNamespace(directors_extra=directors_extra, worker_housing_places=housing),
+        knowledge=SimpleNamespace(
             effect_terms=lambda channel: terms, effect_holds=holds, effect_value=value,
-            effect_sum=lambda channel, start=0.0: start + sum(value(key, spec) for key, spec in terms if holds(key, spec)))
+            effect_sum=lambda channel, start=0.0: start + sum(value(key, spec) for key, spec in terms if holds(key, spec))))
+    return Capacity(world, book=None, market=None, schedule=None, trades=None)
 
 
 def total_of_rows(labour):
@@ -32,13 +32,13 @@ def total_of_rows(labour):
 
 
 bare = Labour()
-check("a person alone oversees the declared share", bare.supervision_room() == CapacityMixin.SUPERVISION_ROOM_SELF, bare.supervision_room())
+check("a person alone oversees the declared share", bare.supervision_room() == Capacity.SUPERVISION_ROOM_SELF, bare.supervision_room())
 check("deputies add their declared share each", Labour(directors_extra=2.0).supervision_room()
-      == CapacityMixin.SUPERVISION_ROOM_SELF + 2.0 * CapacityMixin.SUPERVISION_ROOM_PER_DIRECTOR_EXTRA, None)
-check("worker housing adds its places", Labour(housing=5.0).supervision_room() == CapacityMixin.SUPERVISION_ROOM_SELF + 5.0, None)
+      == Capacity.SUPERVISION_ROOM_SELF + 2.0 * Capacity.SUPERVISION_ROOM_PER_DIRECTOR_EXTRA, None)
+check("worker housing adds its places", Labour(housing=5.0).supervision_room() == Capacity.SUPERVISION_ROOM_SELF + 5.0, None)
 check("a switched-on effect adds its value", Labour(held=("fin_societas",)).supervision_room()
-      == CapacityMixin.SUPERVISION_ROOM_SELF + 4.0, None)
-check("an effect that does not hold adds nothing", Labour(held=()).supervision_room() == CapacityMixin.SUPERVISION_ROOM_SELF, None)
+      == Capacity.SUPERVISION_ROOM_SELF + 4.0, None)
+check("an effect that does not hold adds nothing", Labour(held=()).supervision_room() == Capacity.SUPERVISION_ROOM_SELF, None)
 
 rows = Labour(held=("fin_societas",)).supervision_room_from()
 check("a held effect is named in the breakdown with what it is", any(row["source"] == "fin_societas" and row["people"] == 4.0

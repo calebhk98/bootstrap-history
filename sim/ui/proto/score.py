@@ -3,6 +3,7 @@
 import sim.engine.ui_port as ui_port
 import math
 
+from sim.labour.api import generic_craft_trade
 from sim.refusal import cause_of
 from sim.engine.ui_port import closure, critical_path, topo_order
 
@@ -143,8 +144,8 @@ def _score_components(sim, nodes, reveal_tree_total):
                          "from you; this resolves once the run ends")}
 
     # LITERACY (15%) - general and elite literacy against the CEILING each
-    # already has in this engine (SocietyMixin.literacy_ceiling_general/
-    # _elite, society.py): the cap comes from the farm share of hours and
+    # already has in this engine (literacy_ceiling in
+    # sim/diffusion/literacy.py): the cap comes from the farm share of hours and
     # the share unable to read, so "literacy" here means how much of what
     # is reachable has been reached. Weighted equally between the two
     # populations the engine tracks separately.
@@ -163,7 +164,7 @@ def _score_components(sim, nodes, reveal_tree_total):
                         "normalized": lit_norm}
 
     # WORKFORCE (15%) - headcount(), the same aggregate final_report already
-    # reports as "people" (employees plus slaves plus freedmen; labour.py).
+    # reports as "people" (employees plus slaves plus freedmen; the workforce module).
     # Population has no mechanical ceiling this engine states outright the
     # way literacy does, so this is the one honest anchor available: a
     # log scale (a second thousand employees is not as meaningful as the
@@ -181,20 +182,18 @@ def _score_components(sim, nodes, reveal_tree_total):
     # ECONOMY (10%) - capital, but never as a bare denarius figure: each
     # civilisation's currency is a different scale (civs/*.json: "denarius",
     # "wu zhu cash", "hacksilver by weight", "cacao bean and cotton cloth",
-    # each with its own wage_index/price_index multiplier on the shared wage
-    # table) - comparing raw capital across civilisations
+    # each with its own wage level) - comparing raw capital across civilisations
     # would be comparing different units with the same name. Deflating by
-    # one ordinary worker-year IN THIS CIVILISATION'S OWN MONEY (an
-    # artisan's annual wage, scaled by this civ's live price_index and
-    # wage_index - the same two multipliers economy.py and labour.py price
-    # everything else with) turns capital into a currency-free "years of an
+    # one ordinary worker-year IN THIS CIVILISATION'S OWN MONEY (a
+    # generic craftsman's annual wage as the labour market quotes it, the figure the anchor
+    # was calibrated on: the cleared wage of the economy) turns capital into a currency-free "years of an
     # ordinary worker's wage this fortune could buy", which is comparable
     # across civilisations. Log-scaled for the same reason as workforce,
     # against the same methodology: a round anchor ten times the
     # calibration save's 4.41 million worker-years, rounded to a clean
     # figure (50 million), not that save's own number.
     ECONOMY_ANCHOR_WORKER_YEARS = 50_000_000.0
-    reference_wage = max(1e-6, sim.view("labour_market")().in_current_money(sim.view("base_annual_wage")["artisan"]))
+    reference_wage = sim.view("labour_market")().quote_annual(generic_craft_trade())
     worker_years = max(0.0, sim.view("acting_balance")()) / reference_wage
     econ_norm = min(1.0, math.log1p(worker_years)
                     / math.log1p(ECONOMY_ANCHOR_WORKER_YEARS))
@@ -205,7 +204,7 @@ def _score_components(sim, nodes, reveal_tree_total):
                                       round(worker_years, 1)},
                        "normalized": econ_norm}
 
-    # INSTITUTIONS (10%) - every CAPABILITY_INSTITUTIONS node (projects.py:
+    # INSTITUTIONS (10%) - every capability-institution node (the first set of the `capability_sets` view, sim/mechanics/rules.py:
     # the fixed roster every running()/auto-open rule in the engine already
     # checks against), scored by institution_units()/institution_unit_ceiling()
     # for the five that scale (workshop, school, academy, collegium,
@@ -221,13 +220,13 @@ def _score_components(sim, nodes, reveal_tree_total):
     # a real, already-saved field read against a real threshold, none of
     # them invented for this screen:
     #   - corpus_preserved: 1 - forgotten / (done + forgotten). `forgotten`
-    #     (society.py's _shocks, set nowhere else) is every technology a
+    #     (the `techniques_forgotten` view) is every technology a
     #     sacking actually destroyed; this is the share of everything ever
     #     completed that still stands.
     #   - solvent_share: 1 - insolvent_years / years elapsed. insolvent_years
-    #     is a running count economy.py already keeps.
+    #     is a running count in the `debt_status` view (sim/finance/applied.py).
     #   - staffing_share: 1 - (distinct years close_unstaffed_ventures fired)
-    #     / years elapsed. shut_for_staff (projects.py) is {node: year};
+    #     / years elapsed. shut_for_staff (sim/projects/applied.py) is {node: year};
     #     distinct years, not count of concerns, because closing four
     #     concerns in one bad year is one bad year, not four.
     #   - scandal_margin: 1 - scandal / suspicion_danger, the exact ratio
@@ -266,7 +265,7 @@ def _score_components(sim, nodes, reveal_tree_total):
     # signal (how close you sit to being confiscated or denounced for being
     # too visible - see `prominence`/eminence_report), the opposite of a
     # score you want to maximise, where reputation (0..100 by construction;
-    # projects.py clamps it at 100) is this engine's own plain measure of
+    # the projects module clamps it at 100) is this engine's own plain measure of
     # standing.
     rep = max(0.0, min(100.0, sim.view("standing")()["reputation"]))
     out["standing"] = {"counts": "your reputation, 0 to 100 (not eminence, which is a danger)",
@@ -284,7 +283,7 @@ def _score_achievements(sim, nodes):
     """Won-run achievements, each a plain condition on a field the engine
     already saves across sittings (SAVE_FIELDS, this file) - so each one is
     true of the WHOLE run, not just whatever is in memory right now. None of
-    these reads failed_attempts: that counter is real (projects.py) but is
+    these reads failed_attempts: that counter is real (sim/projects/state.py) but is
     NOT in SAVE_FIELDS, so it silently resets to empty every time a session
     is resumed from disk - the normal way this game is played (cli.py
     autosaves after every command). An achievement built on it would read

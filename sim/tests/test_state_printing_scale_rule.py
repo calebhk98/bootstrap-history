@@ -6,7 +6,7 @@ import unittest
 from types import SimpleNamespace
 
 from sim.economy import state_budget
-from sim.economy.accounts import Book
+from sim.book import Book
 from sim.economy.state_policy import StatePolicy
 from sim.economy.types import CurrencySpec, EDGE_MINT, Transfer
 
@@ -21,11 +21,10 @@ def planned_by(real_spending_target):
     book = Book()
     book.transfer(Transfer(EDGE_MINT, "holder", COIN, OPENING_SUPPLY, "opening"))
     book.transfer(Transfer(EDGE_MINT, STATE, COIN, REVENUE, "opening"))
-    record = SimpleNamespace(book=book, currency=CurrencySpec(COIN, "fiat", None, 0.0, STATE, 0.0), cohorts={}, loans=[],
-                             loan_requests=[], state_budget=state_budget.StateBudget(revenue=REVENUE))
-    setup = SimpleNamespace(currency_id=COIN, state_agent=STATE, trades=(), unskilled_trade="labour",
+    record = SimpleNamespace(book=book, currency=CurrencySpec(COIN, "fiat", None, 0.0, STATE, 0.0), cohorts={}, state_budget=state_budget.StateBudget(revenue=REVENUE), credit=SimpleNamespace(loans=[], loan_requests=[]))
+    setup = SimpleNamespace(currency_id=COIN, state_agent=STATE, countries=lambda: ["home"], trades=(), unskilled_trade="labour",
                             state_policy=StatePolicy(financing_order=("issue",), real_spending_target=real_spending_target))
-    view = SimpleNamespace(chained_price_level=lambda money: 1.0, interest_rate=lambda money: 0.05)
+    view = SimpleNamespace(chained_price_level=lambda money: 1.0, opening_wage_level=lambda money: 1.0, interest_rate=lambda money: 0.05)
     state_budget.plan_year(setup, record, view, [])
     return record.state_budget, book.money_supply(COIN)
 

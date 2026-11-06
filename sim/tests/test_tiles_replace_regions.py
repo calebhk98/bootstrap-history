@@ -11,7 +11,7 @@ import json
 import os
 import unittest
 
-from sim.geography.api import load_geography, regions_of_tiles, tiles_held
+from sim.geography.api import load_geography, tiles_held
 
 from sim.tests import land_host
 from sim.world import deposits
@@ -115,7 +115,7 @@ class NoModuleReadsRegionLabelsForTileDataTests(unittest.TestCase):
         return civilisation
 
     def test_farm_land_and_weather_cells_follow_the_tiles_held(self):
-        from types import SimpleNamespace
+        pass
         from sim.agriculture import rules
         from sim.agriculture.constants import FARM_WEATHER_POOLED_CELL_CAP
         from sim.tests import land_host

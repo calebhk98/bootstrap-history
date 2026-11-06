@@ -5,7 +5,6 @@ QUICK_TOPIC = True
 
 import types
 import unittest
-from unittest import mock
 
 from sim.economy import api as economy_api
 from sim.markets import port_institutions
@@ -21,9 +20,9 @@ class Government:
 
 
 def game(government, nodes_by_mechanic):
-    return Game(actors=types.SimpleNamespace(government_of=lambda actor: government),
-                                 nodes_with_mechanic=lambda mechanic: nodes_by_mechanic.get(mechanic, []),
-                                 actor_world=lambda: None)
+    return Game(scenario=types.SimpleNamespace(actors=types.SimpleNamespace(countries=types.SimpleNamespace(government_of=lambda actor: government))),
+                                 production=types.SimpleNamespace(nodes_with_mechanic=lambda mechanic: nodes_by_mechanic.get(mechanic, [])),
+                                 state=types.SimpleNamespace(actor_world=lambda: None))
 
 
 class Held(unittest.TestCase):

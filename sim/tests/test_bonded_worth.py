@@ -2,14 +2,14 @@
 bonded in the economy's hours. Each rule is called on built inputs; no game."""
 QUICK_TOPIC = True
 
-import math
 
 from .harness import *  # noqa: F401,F403
 
 from sim.economy import bondage_hours
 from sim.economy.types import LabourBid, LabourOffer
 from sim.labour.market import bonded_worth
-from sim.labour.market.expectations import annuity_factor
+from sim.labour.market.carriage import carriage_from
+from sim.labour.market.premium import annuity_factor
 from sim.labour.market.records import Route
 
 RATE, CAREER, HOURS = 0.05, 30.0, 2000.0
@@ -37,9 +37,9 @@ check("a practised wage below the premium wage does not price the person under i
 
 # carriage: the cheapest way along the routes, several hops
 routes = {"a": [Route("b", 2.0), Route("c", 10.0)], "b": [Route("c", 3.0)], "c": []}
-check("no move costs nothing", bonded_worth.cheapest_carriage(routes, "a", "a") == 0.0)
-check("carriage takes the cheaper way over several hops", bonded_worth.cheapest_carriage(routes, "a", "c") == 5.0)
-check("no way in is no carriage", bonded_worth.cheapest_carriage(routes, "c", "a") is None)
+check("no move costs nothing", carriage_from(routes, "a")["a"] == 0.0)
+check("carriage takes the cheaper way over several hops", carriage_from(routes, "a")["c"] == 5.0)
+check("no way in is no carriage", "a" not in carriage_from(routes, "c"))
 
 # lots: cheapest landed price first, never above the bid, drawn from what is for sale
 for_sale = {"a": 10.0, "b": 10.0, "far": 10.0}

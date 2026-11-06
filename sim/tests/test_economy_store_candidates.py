@@ -19,7 +19,7 @@ class StoreCandidateTests(unittest.TestCase):
     def test_the_denser_of_two_equal_goods_gets_more_weight(self):
         specs = {"dense": spec("dense", mass=1.0), "bulky": spec("bulky", mass=5.0)}
         prices = {"dense": 500.0, "bulky": 500.0}
-        weights = store_candidates(specs, prices, STAPLE_PRICE_PER_KG)
+        weights = store_candidates(specs, prices, STAPLE_PRICE_PER_KG, money_level=1.0)
         self.assertGreater(weights["dense"], weights["bulky"])
 
     def test_unfit_goods_are_left_out(self):
@@ -27,16 +27,16 @@ class StoreCandidateTests(unittest.TestCase):
                  "massless": spec("massless", mass=math.inf), "used_up": spec("used_up", life=0.0),
                  "cheap": spec("cheap")}
         prices = {"fit": 500.0, "spoils": 500.0, "massless": 500.0, "used_up": 500.0, "cheap": 1.0}
-        self.assertEqual(list(store_candidates(specs, prices, STAPLE_PRICE_PER_KG)), ["fit"])
+        self.assertEqual(list(store_candidates(specs, prices, STAPLE_PRICE_PER_KG, money_level=1.0)), ["fit"])
 
     def test_weights_sum_to_one(self):
         specs = {"a": spec("a"), "b": spec("b", life=10.0), "c": spec("c", mass=2.0)}
         prices = {"a": 500.0, "b": 400.0, "c": 900.0}
-        self.assertAlmostEqual(sum(store_candidates(specs, prices, STAPLE_PRICE_PER_KG).values()), 1.0)
+        self.assertAlmostEqual(sum(store_candidates(specs, prices, STAPLE_PRICE_PER_KG, money_level=1.0).values()), 1.0)
 
     def test_no_candidates_gives_an_empty_dict(self):
-        self.assertEqual(store_candidates({"a": spec("a", life=0.0)}, {"a": 500.0}, STAPLE_PRICE_PER_KG), {})
-        self.assertEqual(store_candidates({}, {}, STAPLE_PRICE_PER_KG), {})
+        self.assertEqual(store_candidates({"a": spec("a", life=0.0)}, {"a": 500.0}, STAPLE_PRICE_PER_KG, money_level=1.0), {})
+        self.assertEqual(store_candidates({}, {}, STAPLE_PRICE_PER_KG, money_level=1.0), {})
 
 
 if __name__ == "__main__":

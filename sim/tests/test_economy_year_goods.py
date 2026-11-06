@@ -6,14 +6,15 @@ QUICK_TOPIC = True
 import types
 import unittest
 
+from sim.economy.clearing_totals import market_totals
 from sim.economy.market_memory import MarketMemory
 from sim.economy.types import Bid, Offer
-from sim.economy.accounts import Book
+from sim.book import Book
 from sim.economy.types import EDGE_CONSUMPTION, EDGE_PRODUCTION, GoodsMove
 from sim.economy.year_close import held_only, learned_prices, national_prices
 from sim.economy import market_quote
 from sim.economy.types import QUOTE_BEST_UNFILLED_BID, QUOTE_COST_COVERING
-from sim.economy.year_goods import price_after_trade, remembered_price
+from sim.economy.year_goods import price_after_trade, price_floor, remembered_price, PRICE_MEMORY_FLOOR_SHARE
 
 
 def bid(maximum_price):
@@ -70,8 +71,8 @@ class PriceAfterTradeTests(unittest.TestCase):
 class NationalPriceTests(unittest.TestCase):
     def test_areas_are_weighted_by_what_they_usually_trade_not_this_year_alone(self):
         # an area that trades only in alternate years must not swing the national price each year
-        memory = MarketMemory(prices={"tin|a": 1.0, "tin|b": 10.0}, volume_weights={"tin|a": 70.0, "tin|b": 30.0})
-        record = types.SimpleNamespace(memory=memory, volumes={"tin|a": 0.0, "tin|b": 100.0})
+        memory = MarketMemory(prices={"tin|a": 1.0, "tin|b": 10.0}, volume_weights={"tin|a": 70.0, "tin|b": 30.0}, trade_age={"tin|a": 1, "tin|b": 0})
+        record = types.SimpleNamespace(memory=memory, goods=types.SimpleNamespace(volumes={"tin|a": 0.0, "tin|b": 100.0}))
         self.assertAlmostEqual(national_prices(record)["tin"], 0.7 * 1.0 + 0.3 * 10.0)
 
     def test_a_market_that_stops_trading_keeps_part_of_its_weight(self):
@@ -87,7 +88,7 @@ class LearnedPriceTests(unittest.TestCase):
         # the clearing result of a dry market carries last year's price; the memory carries the signal
         clearing = types.SimpleNamespace(good="tin", area="a", price=20.0, quantity=0.0)
         memory = MarketMemory(prices={"tin|a": 3.0})
-        prices, volumes = learned_prices([clearing], memory)
+        prices, volumes = learned_prices(market_totals([clearing], {}), memory)
         self.assertEqual(prices[("tin", "a")], 3.0)
         self.assertEqual(volumes[("tin", "a")], 0.0)
 
@@ -103,3 +104,15 @@ class ConsumptionTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class PriceFloorTests(unittest.TestCase):
+    def test_the_floor_is_a_sliver_of_the_opening_price_in_todays_money(self):
+        setup = types.SimpleNamespace(opening_prices={"timber": 2.0}, currency_id="coin")
+        memory = types.SimpleNamespace(opening_wage_level=lambda currency_id: 3.0)
+        self.assertAlmostEqual(price_floor(setup, memory, "timber", 9.0), 6.0 * PRICE_MEMORY_FLOOR_SHARE)
+
+    def test_a_good_with_no_opening_price_floors_at_a_sliver_of_the_signal(self):
+        setup = types.SimpleNamespace(opening_prices={}, currency_id="coin")
+        memory = types.SimpleNamespace(opening_wage_level=lambda currency_id: 3.0)
+        self.assertAlmostEqual(price_floor(setup, memory, "timber", 9.0), 9.0 * PRICE_MEMORY_FLOOR_SHARE)

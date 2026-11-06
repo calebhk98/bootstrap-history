@@ -8,7 +8,7 @@ from sim.assembly.api import Command
 @dataclass(frozen=True)
 class PayEdge(Command):
 	"""The acting seat's household pays a named edge (a counterparty the simulation does not model as an actor).
-	Never refused for lack of money: a household may go negative, and the credit limit is applied later."""
+	A household draws on its facility when short; refused with the cause `cannot_pay` when the facility cannot cover it."""
 	edge: str
 	amount: float
 	purpose: Any                  # a label, or {label: share of the amount}
@@ -163,10 +163,10 @@ class TakeFromHouseholdPurse(Command):
 
 
 @dataclass(frozen=True)
-class SettleWithEdge(Command):
-	"""The acting seat's household is brought to `balance` by moving the difference to or from a named edge."""
-	edge: str
-	balance: float
+class WriteOffHouseholdDebt(Command):
+	"""The lenders drop up to `amount` of the acting seat's household debt, the pool's lenders bearing the loss (the one default
+	rule `Purses.write_off`); no edge pays it."""
+	amount: float
 	purpose: Any
 
 

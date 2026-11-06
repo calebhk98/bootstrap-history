@@ -38,9 +38,3 @@ def totals_of_pairs(pairs: List[Tuple[str, str, float]]) -> Tuple[Dict[str, floa
         arriving[destination] = arriving.get(destination, 0.0) + moved
     return leaving, arriving
 
-
-def moves_between_regions(regions: Mapping[str, Population], eaten_over_need: Mapping[str, float],
-                          borders: Mapping[str, List[str]], distance_km: Callable[[str, str], float]
-                          ) -> Tuple[Dict[str, float], Dict[str, float]]:
-    """({region: working-age people leaving}, {region: arriving}) this year, summed from `migrant_pairs`."""
-    return totals_of_pairs(migrant_pairs(regions, eaten_over_need, borders, distance_km))

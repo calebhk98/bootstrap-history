@@ -38,9 +38,10 @@ from sim.engine.data import *            # noqa: F401,F403
 from sim.engine.data import (ANNUAL_WAGE, CIVDIR, DEFAULTS,
                          RESFILE, STARTING_KITS, STRATS, TECH_EFFECTS,
                          TRADES_ABSENT, TRADE_FAMILY, TRADE_NOTES, WAGES,
-                         haversine_km, load, load_civ,
-                         load_geography, load_resources,
+                         load, load_civ, load_resources,
                          trade_family, goal_catalog, goal_lookup, resolve_goal)      # noqa: F401
+from sim.geography.api import haversine_km, load_geography  # noqa: F401
+from sim.scenario.api import money_short  # noqa: F401
 from sim.knowledge.api import closure, critical_path, hard_pre, topo_order  # noqa: F401
 from sim.engine.core import Sim                                  # noqa: F401
 from sim.ui.api import (_agent_available, _agent_dispatch,  # noqa: F401

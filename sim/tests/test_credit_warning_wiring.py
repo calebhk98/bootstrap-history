@@ -4,7 +4,6 @@ test_credit_warning_rules."""
 
 QUICK_TOPIC = True
 
-from sim.tests import workforce_stand_in
 from types import SimpleNamespace
 
 from .harness import check
@@ -27,11 +26,17 @@ class Owing:
         self.manumitted = []
         answers = {
             ReviewVentures: lambda command: [SimpleNamespace(entry_key=key) for key in closures],
-            Manumit: lambda command: self.manumitted.append(command.people),
+            Manumit: self.manumit,
             # the projects module's own rule over the stand-in record
             HaltActiveProjects: lambda command: halt_active_projects(self.projects.active, self.projects.paid_towards, self.projects.bountied) if self.projects.active else ([], 0.0)}
         self.module = finance_host.build(answers=answers, household=self.household)
         self.module.credit_limit = lambda revenue=None, upkeep=None, capital=None: LIMIT
+
+    def manumit(self, command):
+        """The workforce module's manumission: the slaves become freedmen, whom a dispersal then sends away."""
+        self.manumitted.append(command.people)
+        self.household.slaves -= command.people
+        self.household.freedmen += command.people
 
     @property
     def events(self):

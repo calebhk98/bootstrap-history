@@ -122,7 +122,7 @@ class OwnPlots:
             schedule = household_hours_year.cohort_plot_schedule(
                 setup, cohort, cohort.working_people * setup.working_hours_per_year, priced, self.options, held,
                 self.hectares_per_hour)
-            wage = setup.opening_wages.get(setup.unskilled_trade, 0.0)
+            wage = setup.opening_wages[setup.unskilled_trade]     # the unskilled opening wage is there and positive (sim/markets/port_setup.py)
             self.kept_at_home[cohort.agent_id] = (plan, schedule(wage) if schedule is not None else 0.0)
         plan, plot = self.kept_at_home[cohort.agent_id]
         return sold_hours(cohort.working_people * setup.working_hours_per_year, plan, plot, own_work)
@@ -138,11 +138,3 @@ class OwnPlots:
             tile = cohorts[agent_id].tile
             total[tile] = total.get(tile, 0.0) + self.hectares[agent_id]
         return total
-
-    def grown_totals(self) -> Dict[GoodId, float]:
-        """Goods the cohorts grow in all, at the last ask."""
-        total: Dict[GoodId, float] = {}
-        for grown in self.grown.values():
-            for good, quantity in grown.items():
-                total[good] = total.get(good, 0.0) + quantity
-        return dict(sorted(total.items()))

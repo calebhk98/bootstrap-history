@@ -1,7 +1,7 @@
 """Tax farming: a state lets the right to collect a money form of revenue for a year to the best bidder.
 
-The state names the forms to farm (`YearInputs.farmed_forms`, its choice through its decision policy). Any
-actor holding cash may bid: it expects the form's base of last year taxed at its own reach, discounted at the
+The state names the forms to farm (`EconomyYearInputs.farmed_forms`, its choice through its decision policy). Any
+agent of the economy (a household cohort, a producer, a merchant) may bid: it expects the form's base of last year taxed at its own reach, discounted at the
 market rate for waiting a year, and offers no more than it holds. The highest bid at or above what the state
 expects to collect itself, discounted the same way, wins. The farmer pays the state its price at once, then
 collects the form from the payers through the ordinary assessment (taxes.py) at its own reach; the surplus
@@ -34,14 +34,15 @@ def reserve_price(state_take: float, interest_rate: float) -> float:
 
 def bids(record, form, interest_rate: float, state_agent: AgentId, currency: str,
          reach: float = TAX_FARMER_REACH) -> List[Tuple[float, float, AgentId]]:
-    """(price, cash, bidder) for every actor holding cash, best first: the price is what the bidder expects
-    to take, discounted a year, and no more than its cash. Empty without a year of history to expect from."""
-    history = record.tax_history.get(form.name)
+    """(price, cash, bidder) for every agent of the economy holding cash, best first: the price is what the bidder expects
+    to take, discounted a year, and no more than its cash. A bank's or fund's cash is its depositors' and an escrow account's is
+    the payee's, so neither bids. Empty without a year of history to expect from."""
+    history = record.taxes.tax_history.get(form.name)
     if not history or history["base"] <= 0.0:
         return []
     worth = expected_take(form.rate, history["base"], reach) / (1.0 + max(0.0, interest_rate))
     offers = []
-    for agent in sorted(record.book.agents()):
+    for agent in sorted(set(record.cohorts) | set(record.producers) | set(record.merchants)):
         cash = record.book.balance(agent, currency)
         if is_edge(agent) or agent == state_agent or cash <= 0.0:
             continue
@@ -51,13 +52,13 @@ def bids(record, form, interest_rate: float, state_agent: AgentId, currency: str
 
 def run_auctions(setup, record, form_names: Sequence[str], interest_rate: float) -> Dict[str, dict]:
     """Strike this year's leases for the named money forms. The winner pays the state at once. Returns the
-    leases struck (form -> farmer and price), which also stand in `record.tax_farms` until the year's
+    leases struck (form -> farmer and price), which also stand in `record.taxes.tax_farms` until the year's
     collection (year_close.money_taxes)."""
-    record.tax_farms = {}
+    record.taxes.tax_farms = {}
     forms = {form.name: form for form in setup.tax_forms if not form.paid_in}
     for name in sorted(set(form_names)):
         form = forms.get(name)
-        history = record.tax_history.get(name)
+        history = record.taxes.tax_history.get(name)
         if form is None or not history:
             continue
         offers = bids(record, form, interest_rate, setup.state_agent, setup.currency_id)
@@ -67,15 +68,15 @@ def run_auctions(setup, record, form_names: Sequence[str], interest_rate: float)
         if price <= 0.0 or price < reserve_price(history["state_take"], interest_rate):
             continue
         record.book.transfer(Transfer(farmer, setup.state_agent, setup.currency_id, price, "tax_farm:" + name))
-        record.tax_farms[name] = {"farmer": farmer, "price": price}
-    return dict(record.tax_farms)
+        record.taxes.tax_farms[name] = {"farmer": farmer, "price": price}
+    return dict(record.taxes.tax_farms)
 
 
-def remember_year(record, assessments, farmed_names: Sequence[str], state_capacity: float,
+def remember_year(taxes, assessments, farmed_names: Sequence[str], state_capacity: float,
                   reach: float = TAX_FARMER_REACH) -> None:
     """Keep each form's base and what the state would have collected at its own reach, for next year's bids
     and reserve. A farmed form's take is scaled from the farmer's reach back to the state's."""
     for assessment in assessments:
         farmed = assessment.form in farmed_names
         state_take = assessment.collected_value * (state_capacity / reach if farmed and reach > 0.0 else 1.0)
-        record.tax_history[assessment.form] = {"base": assessment.base_value, "state_take": state_take}
+        taxes.tax_history[assessment.form] = {"base": assessment.base_value, "state_take": state_take}

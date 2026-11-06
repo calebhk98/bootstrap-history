@@ -1,3 +1,5 @@
+Note: this is a record of a past reading of the code; it names engine files and mixins that have since moved or gone (`Sim` has no base classes). Re-find a name with `grep -rn <name> sim`.
+
 <!-- Written by a code-reading agent that did not see the playtest notes or Complaints/; it edited nothing. -->
 # Code inventory of simulated systems (bootstrap-history/sim)
 

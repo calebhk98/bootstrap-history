@@ -122,8 +122,8 @@ def render_demography(out):
                         _fmt_num(last["nutrition_ratio"])))
     else:
         lines.append("last year's births and deaths: none simulated yet in this session")
-    lines.append("disease burden %s of the pre-industrial level; wage index %s"
-                 % (_fmt_num(out["disease_burden"]), _fmt_num(out["wage_index"])))
+    lines.append("disease burden %s of the pre-industrial level; wage per hour %s"
+                 % (_fmt_num(out["disease_burden"]), _fmt_num(out["wage_per_hour"])))
     for event in out.get("epidemics_under_way") or []:
         lines.append("under way: %s, %s infected, about %s deaths forecast this year" % (
             event["name"], _fmt_num(event["infected"]), _fmt_num(event["expected_deaths"])))
@@ -180,7 +180,7 @@ def _baseline_lines(baseline):
 def render_divergence(out):
     lines = ["DIVERGENCE: %s years since %s" % (out["years_elapsed"], out["start_year"]),
              _pair_line("population", out["population"]),
-             _pair_line("wage index", out["wage_index"]),
+             _pair_line("wage per hour", out["wage_per_hour"]),
              _pair_line("price index", out["price_index"]),
              _pair_line("general literacy", out["literacy_general"]),
              _pair_line("elite literacy", out["literacy_elite"])]

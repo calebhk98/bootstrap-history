@@ -3,15 +3,17 @@
 Needs: money_text, acting_balance (and what `cash_remedies` reads)."""
 from typing import Any
 
+from sim.assembly.api import Part
+
 from . import purchase_rules
 from .constants import SPENDING_DRAW_SHARE_ORDINARY
 
 
-class Purchases:
+class Purchases(Part):
 
 	def purchase_budget(self) -> float:
 		"""Most the acting seat can spend on one outright purchase right now."""
-		return self.spending_power(purchase_rules.BUDGET_KIND)
+		return self.parts.credit_line.spending_power(purchase_rules.BUDGET_KIND)
 
 	def can_pay(self, cost: float) -> bool:
 		"""Whether the acting seat's purchase budget covers `cost`."""
@@ -26,7 +28,7 @@ class Purchases:
 
 	def purchase_remedies_text(self) -> str:
 		"""The commands that raise cash or cut costs, or an empty string."""
-		return purchase_rules.remedies_sentence(self.cash_remedies())
+		return purchase_rules.remedies_sentence(self.parts.cash_remedies.cash_remedies())
 
 	def purchase_refusal(self, what: str, cost: float) -> Any:
 		"""The refusal that states the purchase rule, the budget and the amount short."""
@@ -36,4 +38,4 @@ class Purchases:
 		return purchase_rules.cash_short(
 			what, cost, budget, SPENDING_DRAW_SHARE_ORDINARY, needs.money_text(needs.acting_balance(), grouped=True),
 			needs.money_text(cost, grouped=True), needs.money_text(budget, grouped=True), needs.money_text(short, grouped=True),
-			needs.money_text(self.credit_limit(), grouped=True), self.purchase_remedies_text())
+			needs.money_text(self.parts.credit_line.credit_limit(), grouped=True), self.purchase_remedies_text())

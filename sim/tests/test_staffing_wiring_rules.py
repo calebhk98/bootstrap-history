@@ -11,7 +11,6 @@ from sim.ventures.api import ReviewReopening
 from sim.projects import constants
 from sim.reporting.api import RecordEvent
 from sim.tests import module_harness, production_host, projects_host
-from sim.workforce.api import SetWageHoursSold
 from sim.refusal import facts_of
 
 
@@ -24,7 +23,7 @@ def Closing(closed_keys):
     module.recorded = []
     module.STAFFING_REMEDIES = ()
     module.concerns_to_close_for_staffing = lambda: ["a"] if closed_keys else []
-    module._staffing_shortfalls = lambda held: {"craftsmen": 1.0}
+    module.staffing_shortfalls = lambda held: {"craftsmen": 1.0}
     module.staffing_held_totals = lambda: {}
     module.review_ventures = lambda rules, year: [types.SimpleNamespace(entry_key=key) for key in closed_keys]
     module.record_staffing_closures = lambda count, shortfalls: module.recorded.append(count)
@@ -120,19 +119,17 @@ class RestoreWork(unittest.TestCase):
 
 
 class StandingRevenue:
-    """The production module over a household whose hours sold on request are read and set as the workforce module would."""
+    """The production module over a household whose hours offered for wages are read as the workforce module would."""
 
-    def __init__(self):
-        self.hours = 700.0
-        self.seen = []
-        self.module = production_host.build(
-            hour_commitments=lambda: {"wage_hours": self.hours},
-            answers={SetWageHoursSold: lambda command: setattr(self, "hours", command.hours)})
-        self.module.revenue = self.revenue
+    def __init__(self, hours):
+        self.counting = []
+        self.module = production_host.build(hour_commitments=lambda: {"wage_hours": hours})
+        self.module.revenue = lambda: 1000.0
+        self.module._compute_revenue_uncached = self.compute
 
-    def revenue(self):
-        self.seen.append(self.hours)
-        return 1000.0
+    def compute(self, counting_offers=True):
+        self.counting.append(counting_offers)
+        return (900.0, 100.0)
 
     def revenue_capacity(self):
         return self.module.revenue_capacity()
@@ -140,15 +137,15 @@ class StandingRevenue:
 
 class RevenueCapacity(unittest.TestCase):
 
-    def test_revenue_is_read_as_if_no_hours_had_been_sold_this_year(self):
-        game = StandingRevenue()
+    def test_revenue_is_computed_without_the_hours_offered_this_year(self):
+        game = StandingRevenue(700.0)
         self.assertEqual(game.revenue_capacity(), 1000.0)
-        self.assertEqual(game.seen, [0.0])
+        self.assertEqual(game.counting, [False])
 
-    def test_the_hours_sold_are_put_back_afterwards(self):
-        game = StandingRevenue()
-        game.revenue_capacity()
-        self.assertEqual(game.hours, 700.0)
+    def test_with_no_hours_offered_the_revenue_stands(self):
+        game = StandingRevenue(0.0)
+        self.assertEqual(game.revenue_capacity(), 1000.0)
+        self.assertEqual(game.counting, [])
 
 
 if __name__ == "__main__":

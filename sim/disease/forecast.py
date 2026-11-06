@@ -1,10 +1,19 @@
 """What the model expects of the coming year, and what the diseases take from a tile in a year."""
+from sim.assembly.api import Part
+
 from . import metapopulation as spread, nation, rules
 from .epidemics import pathogens
 from .technology_effects import working_age_death_share
 
 
-class Forecast:
+class Forecast(Part):
+
+    def __init__(self, module):
+        super().__init__(module)
+        self._forecast = None       # the forecast, kept until the next disease year
+
+    def forget(self):
+        self._forecast = None
 
     def epidemic_forecast(self, food_kcal_per_day=None):
         """The model's own forecast of the coming year from the infections now and the contact between tiles,
@@ -16,14 +25,14 @@ class Forecast:
             return self._forecast
         state = self.world
         year = self.needs.year()
-        people = self.people_by_tile()
+        people = self.parts.people.people_by_tile()
         by_pathogen, by_tile = [], {}
         if state.records:
             nutrition_ratio = (self.needs.nutrition_ratio(food_kcal_per_day) if food_kcal_per_day is not None else 1.0)
-            fatality_by_pathogen, transmission = self.technology_scales(sorted(state.records))
+            fatality_by_pathogen, transmission = self.parts.contact.technology_scales(sorted(state.records))
             forecast = spread.forecast_year(
-                pathogens(), state.records, people, self.contacts(people), self.crowding_by_tile(people),
-                self.fatality_scale_by_band(nutrition_ratio), self.seed_text(), year,
+                pathogens(), state.records, people, self.parts.people.contacts(people), self.parts.people.crowding_by_tile(people),
+                self.parts.people.fatality_scale_by_band(nutrition_ratio), self.parts.contact.seed_text(), year,
                 fatality_factor=fatality_by_pathogen, transmission_scale=transmission)
             for pathogen_id, row in forecast.items():
                 killed = sum(sum(bands.values()) for bands in row["expected_deaths_by_tile"].values())
@@ -34,7 +43,7 @@ class Forecast:
                         by_tile.setdefault(tile, {}).setdefault(band, 0.0)
                         by_tile[tile][band] += count
         expected = spread.deaths_by_band(by_tile)
-        chances = nation.arrival_chances(self.contact_sources(), year, self.contact_weight)
+        chances = nation.arrival_chances(self.parts.contact.contact_sources(), year, self.parts.contact.contact_weight)
         result = {"expected_deaths": round(sum(expected.values())),
                   "expected_working_age_share": working_age_death_share(expected, float(self.needs.working_age())),
                   "by_pathogen": by_pathogen, "expected_deaths_by_tile": by_tile,
@@ -50,12 +59,12 @@ class Forecast:
         endemic = self.needs.endemic_people_loss([tile]).get("working_age", 0.0)
         forecast = self.epidemic_forecast()
         return rules.regional_loss(endemic, forecast["expected_deaths_by_tile"], forecast["expected_working_age_share"],
-                                   self.people_by_tile(), tile)
+                                   self.parts.people.people_by_tile(), tile)
 
     def frontier_disease_loss(self):
         """The mean `regional_disease_loss` over the tiles held that border a tile not held: where a campaign
         in the field meets the country's neighbours."""
-        held = self.held_tiles()
+        held = self.parts.people.held_tiles()
         frontier = rules.frontier_tiles(held, self.needs.borders_among(sorted(set(held))))
         if not frontier:
             return 0.0

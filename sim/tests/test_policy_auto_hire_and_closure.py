@@ -7,14 +7,12 @@ QUICK_TOPIC = True
 
 import unittest
 from sim.tests import workforce_stand_in
-from types import SimpleNamespace
 
 from sim.agents import business_review
 from sim.agents.api import Business
 from sim.constants import REGISTRY
 from sim.engine import data as engine_data
 from sim.hazards.window import hazards_not_yet_past
-from sim.workforce.payroll_trim import payroll_means, staff_to_let_go
 from sim.projects.review import SeatReview
 from sim.engine.seat_defaults import default_policy
 from sim.tests import polity_host
@@ -37,23 +35,23 @@ class _Owner(business_review.Reviewable):
         self.spared, self.margins, self.cuts, self.presses = set(spared), margins or {}, cuts, presses
         self.shut_plants, self.seized = [], []
 
-    def cuts_losses_now(self, world):
+    def cuts_losses_now(self):
         return self.cuts and bool([key for key in self.business.operating() if self.margins.get(key, 0.0) < 0.0])
 
-    def spares_plant(self, entry_key, world):
+    def spares_plant(self, entry_key):
         return entry_key in self.spared
 
-    def standing_margin(self, entry_key, world):
+    def standing_margin(self, entry_key):
         return self.margins.get(entry_key, 0.0)
 
-    def creditors_press(self, world):
+    def creditors_press(self):
         return self.presses and bool([key for key in self.business.operating() if self.margins.get(key, 0.0) < 0.0])
 
-    def shut(self, entry_key, reason, world):
+    def shut(self, entry_key, reason):
         self.shut_plants.append((entry_key, reason))
-        self.business.mothball(entry_key, 100, reason)
+        self.business.lifecycle.mothball(entry_key, 100, reason)
 
-    def receive_seizure(self, entry_key, proceeds, world):
+    def receive_seizure(self, entry_key, proceeds):
         self.seized.append(entry_key)
 
 
@@ -63,20 +61,20 @@ class BusinessReviewSparesAndLeavesAlone(unittest.TestCase):
     def _review(self, rules, spared=(), shut=()):
         business = Business.running(["shop", "school", "theory"])
         for entry_key in shut:
-            business.mothball(entry_key, 99, "by_choice")
+            business.lifecycle.mothball(entry_key, 99, "by_choice")
         owner = _Owner(business, spared=spared, margins={"shop": -5.0, "school": -1.0, "theory": -9.0})
-        closed = business.review(owner, None, rules)
+        closed = business.reviews.review(owner, rules)
         return business, owner, closed
 
     def test_a_loss_making_plant_that_is_not_spared_is_shut_and_a_spared_one_is_kept(self):
         business, owner, closed = self._review((business_review.LOSS_MAKING,), spared={"theory"})
         self.assertEqual({entry_key for entry_key, _reason in owner.shut_plants}, {"shop", "school"})
-        self.assertEqual(business.state_of("theory"), "operating")
+        self.assertEqual(business.reading.state_of("theory"), "operating")
 
     def test_the_creditors_take_the_worst_loss_makers_but_not_what_is_spared(self):
         business, owner, closed = self._review((business_review.CREDITOR_SEIZURE,), spared={"theory"})
         self.assertNotIn("theory", owner.seized)
-        self.assertEqual(business.state_of("theory"), "operating")
+        self.assertEqual(business.reading.state_of("theory"), "operating")
         self.assertEqual(owner.seized[0], "shop")
         self.assertTrue(all(reason == business_review.CREDITOR_SEIZURE for _key, reason in closed))
 
@@ -149,45 +147,6 @@ class LogNamesWhatClosed(unittest.TestCase):
 
     def test_creditors_who_took_nothing_say_nothing(self):
         self.assertEqual(self._owing([]), [])
-
-
-class PayrollLetGo(unittest.TestCase):
-    """A household that cannot pay its people lets go only the part of the payroll its means do not cover."""
-
-    WAGES = {"smith": 100.0, "labourer": 20.0}
-
-    def _cuts(self, payroll, means, employees):
-        return staff_to_let_go(payroll, means, employees, lambda trade: self.WAGES.get(trade, 0.0))
-
-    def test_the_means_are_the_takings_after_other_costs_plus_what_a_lender_will_still_advance(self):
-        self.assertEqual(payroll_means(1000.0, 800.0, 50.0, 300.0), 200.0 + 350.0)
-        self.assertEqual(payroll_means(1000.0, 800.0, -100.0, 300.0), 200.0 + 200.0)       # arrears use up the line
-        self.assertEqual(payroll_means(1000.0, 800.0, -900.0, 300.0), 200.0)                # past the line adds nothing
-
-    def test_nobody_goes_while_the_means_cover_the_payroll(self):
-        self.assertEqual(self._cuts(500.0, 500.0, {"smith": 5.0}), {})
-        self.assertEqual(self._cuts(500.0, 900.0, {"smith": 5.0}), {})
-
-    def test_an_unaffordable_payroll_is_trimmed_to_what_can_be_paid_not_emptied(self):
-        cuts = self._cuts(500.0, 300.0, {"smith": 5.0})
-        self.assertEqual(cuts, {"smith": 2})          # 200 short is two smiths
-        self.assertLess(sum(cuts.values()), 5.0)
-
-    def test_the_dearest_trade_goes_first_and_whole_people_are_let_go(self):
-        cuts = self._cuts(1000.0, 880.0, {"smith": 5.0, "labourer": 20.0})
-        self.assertEqual(cuts, {"smith": 2})          # 120 short: two smiths (200) rather than six labourers
-        short_by_a_little = self._cuts(1000.0, 999.0, {"smith": 5.0, "labourer": 20.0})
-        self.assertEqual(short_by_a_little, {"smith": 1})   # rounded up to a whole person
-
-    def test_with_no_money_left_to_borrow_the_whole_staff_can_go(self):
-        cuts = self._cuts(600.0, 0.0, {"smith": 5.0, "labourer": 5.0})
-        self.assertEqual(cuts, {"smith": 5.0, "labourer": 5.0})
-
-    def test_nobody_is_cut_beyond_the_staff_held(self):
-        self.assertEqual(self._cuts(1000.0, 0.0, {"smith": 2.0}), {"smith": 2.0})
-
-    def test_a_trade_with_no_wage_is_skipped(self):
-        self.assertEqual(self._cuts(100.0, 0.0, {"ghost": 3.0, "labourer": 5.0}), {"labourer": 5.0})
 
 
 class PolicyDefaults(unittest.TestCase):

@@ -13,7 +13,8 @@ from typing import Callable, Dict, Mapping, Optional, Tuple
 
 from . import household_work_year, households_work, labour_state, year_labour
 from .households_cohort import Cohort
-from .market_memory import YearView, market_key
+from .opening_placement import hours_per_worker_in
+from .market_memory import MarketMemory, YearView, market_key
 from .setup import labour_area
 from .types import AgentId, TileId
 
@@ -33,15 +34,15 @@ class HouseholdPlans:
 def hands_left_by_tile(setup, record) -> Dict[TileId, float]:
     """Hours a year each tile's workers sell beyond what its producers hire for the runs they expect to sell."""
     hired = labour_state.producers_hours_needed(setup, record)
-    sold = record.opening_sold_hours_per_worker or setup.working_hours_per_year
-    return {tile: max(0.0, people * setup.working_share * sold
+    sold = record.labour.sold_hours_per_worker(setup.working_hours_per_year)     # as the opening staffed them, by area
+    return {tile: max(0.0, people * setup.working_share * hours_per_worker_in(labour_area(tile), sold, setup.working_hours_per_year)
                       - math.fsum(hired.get(labour_area(tile), {}).values()))
             for tile, people in setup.opening_population_by_tile.items()}
 
 
 def service_goods(setup, tile: TileId) -> Dict[str, float]:
     """{good: hours of household work one unit does} for the goods that serve the tile's household-work need."""
-    return {good: effect for need in setup.basket_for(tile).needs if need.need_id == household_work_year.WORK_NEED
+    return {good: effect for need in setup.basket_for(tile).needs if need.need_id == setup.work_need
             for good, effect in need.goods if effect > 0.0}
 
 
@@ -50,7 +51,7 @@ def household_plans(setup, record, area_map, room_by_tile: Optional[Mapping[Tile
     the hours of hired work a tile's hands leave room for (None: no limit). Hours hired are bought in the market area
     of the service, so the households of an area whose servants the hands of its tiles together cannot supply find
     hiring dearer: the area posts the price at which hiring fits."""
-    view = YearView(record.memory, record.book, area_map, setup.currency_id, labour_area)
+    view = YearView(record.memory, record.book, area_map, setup.currency_id, setup, labour_area)
     outside = year_labour.outside_option_by_tile(setup, record, view)
     offers = year_labour.labour_offers(setup, record, view, outside)
     floors: Dict[TileId, float] = {}
@@ -59,8 +60,7 @@ def household_plans(setup, record, area_map, room_by_tile: Optional[Mapping[Tile
         rows: Dict[str, list] = {}
         tiles_of: Dict[str, set] = {}
         for _cohort_id, cohort in sorted(record.cohorts.items()):
-            fallback = outside.get(cohort.tile, 0.0) / max(setup.working_hours_per_year, 1e-9)
-            value, needed, price, _milled = household_work_year.work_terms(setup, record, view, cohort, offers, fallback)
+            value, needed, price, _milled = household_work_year.work_terms(setup, record, view, cohort, offers)
             market = _service_market(setup, area_map, cohort.tile)
             margins[_cohort_id] = value - price
             rows.setdefault(market, []).append((value, needed, price))
@@ -70,7 +70,7 @@ def household_plans(setup, record, area_map, room_by_tile: Optional[Mapping[Tile
                 market_rows, math.fsum(room_by_tile.get(tile, 0.0) for tile in tiles_of[market]))
             if floor > 0.0:
                 floors.update({tile: floor for tile in tiles_of[market]})
-    return HouseholdPlans(household_work_year.plans(setup, record, view, offers, outside, floors), floors, margins)
+    return HouseholdPlans(household_work_year.plans(setup, record, view, offers, floors), floors, margins)
 
 
 def _service_market(setup, area_map, tile: TileId) -> str:
@@ -79,13 +79,13 @@ def _service_market(setup, area_map, tile: TileId) -> str:
     return area_map.area_of(goods[0], tile) if goods else tile
 
 
-def post_service_prices(memory, area_map, setup, floors: Mapping[TileId, float]) -> None:
+def post_service_prices(memory: MarketMemory, area_map, setup, floors: Mapping[TileId, float]) -> None:
     """The service goods' price in each tile whose households found hiring dearer: what an hour hired costs there."""
     for tile, floor in sorted(floors.items()):
         for good, effect in service_goods(setup, tile).items():
             key = market_key(good, area_map.area_of(good, tile))
             if key in memory.prices and memory.prices[key] < floor * effect:
-                memory.prices[key] = floor * effect
+                memory.set_price(key, floor * effect)
                 memory.note_usual_price(key)
 
 

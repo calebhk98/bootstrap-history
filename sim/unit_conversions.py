@@ -92,16 +92,13 @@ HOW A CONSUMER USES ONE OF THESE. Imported fully qualified, `from
 sim.unit_conversions import KILOGRAMS_PER_TONNE`, from EVERY caller -
 sim/world/ and sim/engine/ files alike - never the bare `from
 unit_conversions import ...` spelling sim/engine/ files use for sibling
-engine modules. This mirrors sim/engine/core.py's own documented choice to
-import sim/world/shared_constants.py fully qualified rather than bare (see
-that file's own "Imported FULLY QUALIFIED" comment): a bare import from
+engine modules. The same holds for sim/world/shared_constants.py: a bare import from
 sim/engine/ would load this file a SECOND time under a different
 sys.modules key (`unit_conversions` vs `sim.unit_conversions`), and while
 `declare()`'s own dedup keeps that safe (same name, same value, no error),
 it would still mean every conversion below gets declared twice into the
 registry for no reason. One spelling, one module object, one declaration
-each - the same discipline core.py already established for
-shared_constants.py, extended here rather than repeated a third way.
+each - the same discipline shared_constants.py follows.
 
 CONVERTING kg <-> g <-> TONNES: EACH DIRECTION KEEPS ITS OWN LITERAL, ON
 PURPOSE. KILOGRAMS_PER_TONNE (1000.0) and GRAMS_PER_KILOGRAM (1000.0) share
@@ -136,7 +133,7 @@ import sys
 # Guarded, idempotent, and needed only for `python3 sim/unit_conversions.py`
 # itself - run directly, only sim/ (this file's own directory) lands on
 # sys.path for free, not the repository root `from sim.constants import
-# declare` needs. Every OTHER entry point that reaches this file (core.py,
+# declare` needs. Every OTHER entry point that reaches this file (the engine,
 # commodities.py, and the rest) has already put the repository root on
 # sys.path by the time it imports this module - see this file's own HOW A
 # CONSUMER USES ONE OF THESE section - so this guard is a no-op for them.
@@ -264,7 +261,7 @@ PERCENT_SCALE = declare(
         "(multiply a fraction to display it, or divide a stored percentage "
         "back to the fraction arithmetic actually needs) a given call site "
         "requires. Genuinely the same operation whether the fraction feeds "
-        "a further computation (sim/engine/core.py's wage-shortfall "
-        "recovery) or only a printed message - see this module's own "
+        "a further computation (a rate fed into another "
+        "rule) or only a printed message - see this module's own "
         "docstring for why a display-only use is still a unit conversion, "
         "not a presentation parameter.")

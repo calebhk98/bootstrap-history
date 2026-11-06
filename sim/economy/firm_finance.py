@@ -11,6 +11,7 @@ from typing import Iterable, NamedTuple, Sequence, Tuple
 
 from sim.constants import declare
 
+from . import credit
 from .replaced import replaced
 
 HISTORY_YEARS = declare(
@@ -125,11 +126,6 @@ def insolvent(equity: float) -> bool:
     return equity < 0.0
 
 
-def installment_of(loan) -> float:
-    """The principal a loan returns at the year's end (credit.service_split's rule)."""
-    return loan.principal if loan.years_left <= 1.0 else loan.principal / loan.years_left
-
-
 def interest_due(loans: Iterable, borrower: str) -> float:
     """Eurace@Unibi, Firm_compute_financial_payments: interest on the loans standing."""
     return sum(loan.principal * loan.rate for loan in loans if loan.borrower == borrower)
@@ -137,17 +133,19 @@ def interest_due(loans: Iterable, borrower: str) -> float:
 
 def financial_commitments(loans: Iterable, borrower: str) -> float:
     """Eurace@Unibi, Firm_compute_financial_payments: interest plus installments on the loans standing."""
-    return sum(loan.principal * loan.rate + installment_of(loan) for loan in loans if loan.borrower == borrower)
+    return sum(loan.principal * loan.rate + credit.installment_of(loan) for loan in loans if loan.borrower == borrower)
 
 
-def write_off_ratio(debt: float, assets: float, illiquid: bool) -> float:
+def write_off_ratio(debt: float, capital_and_cash: float, illiquid: bool) -> float:
     """Eurace@Unibi, Firm_bankruptcy_rescale_loans: the share of every loan written off so that the debt falls to
-    the rescaling factor times the assets; an illiquid firm whose assets would let the debt rise takes the factor
-    times the debt instead. The whole write-off falls in the one idle year (its months of idle period are our one
-    step)."""
+    the rescaling factor times the firm's capital stock plus cash (`TOTAL_ASSETS = TOTAL_VALUE_CAPITAL_STOCK +
+    PAYMENT_ACCOUNT`, Financial_Management/Firm_Financial_Management_Functions.c; the stock held is not counted);
+    an illiquid firm whose capital and cash would let the debt rise takes the factor
+    times the debt instead. Eurace spreads the write-off over the idle months and lands near, not exactly on, the
+    target; here the whole write-off falls in the one idle year, so the debt lands on the target."""
     if debt <= ARREARS_EPSILON:
         return 0.0
-    target = DEBT_RESCALING_FACTOR * assets
+    target = DEBT_RESCALING_FACTOR * capital_and_cash
     if illiquid and target > debt:
         target = DEBT_RESCALING_FACTOR * debt
     return min(1.0, max(0.0, (debt - target) / debt))

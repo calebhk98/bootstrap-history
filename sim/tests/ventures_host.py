@@ -6,6 +6,7 @@ gives its own.
 
 A view given as a plain value is that value; as a function, it is called with the view's arguments. A keyed view is given as a dict or a
 function of the key. Defaults are the quiet answers (nothing known, nothing running, nobody employed)."""
+from sim.tests.agents_fake_world import flat_namespace
 import types
 from typing import Any, Dict
 
@@ -38,7 +39,7 @@ def defaults() -> Dict[str, Any]:
 		"hours_per_person_year": 2000.0, "money_per_labour_hour": 1.0, "unskilled_trade": "labourer",
 		"mechanic": lambda name: {}, "founder": {"alive": False, "life_left": 0.0, "dead_reason": None, "policy": {}},
 		"concern_sale_terms": lambda node_id: {"ok": False, "error": "no buyer"},
-		"actor_world": types.SimpleNamespace(concern_margin=lambda node_id: 0.0),
+		"actor_world": flat_namespace(concern_margin=lambda node_id: 0.0),
 		"cast": types.SimpleNamespace(of_kind=lambda kind: [], get=lambda actor_id: None),
 		"spending_power": lambda kind="buy": 0.0, "acting_balance": 0.0, "price_index": 1.0, "population_total": 1000.0, "year": 100,
 		"game_config": {"revenue_ramp_years": 3}, "money_text": lambda amount, grouped=False, short=False: "%d money" % round(amount),
@@ -56,11 +57,11 @@ def build(answers: Dict[type, Any] = None, seat: VenturesSeat = None, **views: A
 		seat.businesses = [record.business]
 	opened = set(every_view.pop("operating")) if "operating" in views else set(getattr(record, "operating", None) or ())
 	for key in sorted(opened):
-		if seat.business.plant_of(key) is None:
-			seat.business.open_plant(key, None)
+		if seat.business.reading.plant_of(key) is None:
+			seat.business.lifecycle.open_plant(key, None)
 	for key in sorted(getattr(record, "mothballed", None) or ()):
-		if seat.business.plant_of(key) is None:
-			seat.business.mothball(key, None, "")
+		if seat.business.reading.plant_of(key) is None:
+			seat.business.lifecycle.mothball(key, None, "")
 	if "techniques_held" not in views and hasattr(record, "done"):
 		every_view["techniques_held"] = record.done
 	if "techniques_granted" not in views and hasattr(record, "granted"):

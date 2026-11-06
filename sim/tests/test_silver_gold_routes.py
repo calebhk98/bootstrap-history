@@ -179,12 +179,13 @@ class GoldFromDeposits(unittest.TestCase):
             ore["labour_hours"]["miner"] / deposits.vein_hours_per_tonne_ore(deposit), 1.0, delta=0.05)
 
     def test_gold_is_priced_by_the_marginal_gold_deposit(self):
-        from sim.prices.prices import solved_prices
+        from sim.prices.prices import solved_prices, trades_used
         import os
         root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
         with open(os.path.join(root, "data", "civilizations", "rome_100ad.json")) as handle:
             techs = json.load(handle)["starting_techs"]
-        prices_json = {"wage_rates_denarii_per_hour": {"labourer": {"rate": 1.0}},
+        # the wage document owns every wage: each trade the recipes use is paid the unskilled hour's rate
+        prices_json = {"wage_rates_denarii_per_hour": {trade: {"rate": 1.0} for trade in ["labourer"] + trades_used(_default_production_entries())},
                        "money_per_labour_hour": 1.0}
         prices = solved_prices(techs, prices_json, civilization_id="rome_100ad").prices_in_labour_hours
         pool = deposits.load_deposits("gold")

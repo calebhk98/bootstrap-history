@@ -19,20 +19,11 @@ class Book:
 
 
 class SalesOfAJointRecipeTests(unittest.TestCase):
-    def test_a_farm_that_sold_all_its_grain_expects_to_go_on_selling_it(self):
-        farm = producers.Producer("farm1", "owner", "farm", "tile", capacity_runs=100.0, expected_sales=100.0)
-        ledger = YearLedger()
-        ledger.sold[("farm1", "grain")] = 100.0 * 900.0       # every run's grain sold
-        ledger.output[("farm1", "grain")] = 100.0 * 900.0
-        ledger.output[("farm1", "straw")] = 100.0 * 1500.0     # the straw found no buyer
-        after = year_close._with_sales(farm, FARM, ledger, Book(), lambda good, tile: "area", {})
-        self.assertAlmostEqual(after.expected_sales, 100.0)
-
     def test_runs_sold_are_the_value_sold_over_the_value_of_a_run(self):
         ledger = YearLedger()
         ledger.sold[("farm1", "grain")] = 50.0 * 900.0       # half the grain, the straw unsold
         farm = producers.Producer("farm1", "owner", "farm", "tile", capacity_runs=100.0, expected_sales=100.0)
-        runs = year_close.runs_sold(farm, FARM, ledger, Book(), lambda good, tile: "area", {},
+        runs = year_close.runs_sold(farm, FARM, ledger, Book(), lambda good, tile: "area",
                                     {"grain": 1.0, "straw": 0.001})
         self.assertAlmostEqual(runs, 50.0 * 900.0 / (900.0 + 1.5), places=6)
 
@@ -40,7 +31,7 @@ class SalesOfAJointRecipeTests(unittest.TestCase):
         ledger = YearLedger()
         ledger.sold[("farm1", "grain")] = 30.0 * 900.0
         farm = producers.Producer("farm1", "owner", "farm", "tile", capacity_runs=100.0, expected_sales=100.0)
-        self.assertAlmostEqual(year_close.runs_sold(farm, FARM, ledger, Book(), lambda good, tile: "area", {}, {}), 30.0)
+        self.assertAlmostEqual(year_close.runs_sold(farm, FARM, ledger, Book(), lambda good, tile: "area", {}), 30.0)
 
     def test_the_paying_output_is_the_one_with_most_value_not_most_weight(self):
         self.assertEqual(producers.paying_output(FARM, {"grain": 1.0, "straw": 0.001}), "grain")

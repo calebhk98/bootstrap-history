@@ -1,7 +1,6 @@
 """Opening stocks of durable stores of wealth: the output of past mining that loss has not yet taken,
 held by households in proportion to their income. The workings come from the deposits (the port
 reads them from geography); nothing here names a good."""
-from typing import Mapping, Tuple
 
 from .metal_stock import METAL_GOODS_LOSS_PER_YEAR
 from .types import EDGE_PRODUCTION, GoodsMove
@@ -20,8 +19,7 @@ def retained_output(per_year: float, years_worked: float, years_since_last: floa
 
 def seed_opening_stores(setup, record, store_goods, loss_per_year: float = METAL_GOODS_LOSS_PER_YEAR) -> None:
     """Give households the opening stock of each of `store_goods` (the goods fit to hold as wealth)
-    that the setup has workings for. A good with no workings (`setup.opening_store_gaps` says why)
-    opens empty."""
+    that the setup has workings for. A good with no workings opens empty."""
     total_income = sum(cohort.last_year_income for cohort in record.cohorts.values())
     moves = []
     for good, workings in sorted(setup.opening_store_output.items()):

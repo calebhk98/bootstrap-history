@@ -9,7 +9,6 @@ or whose garrison is not present counts for the part that is. Small fixtures, no
 QUICK_TOPIC = True
 
 import collections
-import random
 import unittest
 
 from types import SimpleNamespace
@@ -20,7 +19,7 @@ from sim.mechanics.module import Mechanics
 from sim.living_stock.api import ChangeHeld
 from sim.tests import module_harness
 from sim.tests import hazards_host, projects_host, ventures_host
-from sim.workforce.module import Workforce
+from sim.tests import workforce_stand_in
 
 POWDER_KG = "gunpowder_kg"
 WORKS, GUNS, WALL = "powder_works", "gun", "wall"
@@ -219,30 +218,25 @@ class HazardLabelsFollowTheMechanics(unittest.TestCase):
 
 
 class _Survivors:
-    """The people of a household and the dice that decide who lives (the workforce module's survive_staff)."""
+    """The people of a household and the dice that decide who lives (the pools' lose_share)."""
 
     def __init__(self, seed):
-        self.rng = random.Random(seed)
         self.state = SimpleNamespace(household=SimpleNamespace(
-            scholars=7.0, artisans=9.0, employees={"carpenter": 3.0, "smith": 5.0}))
+            slaves=0, freedmen=0, training=[], staff_wanted={}, employees={"carpenter": 3.0, "smith": 5.0}))
 
     def apply_staff_survival(self, survival_share):
-        workforce = module_harness.build(Workforce, seat=self.state.household, views={"acting_balance": lambda: self.state.household.capital, "game_random": self.rng})
-        workforce.survive_staff(survival_share)
+        workforce_stand_in.lose_share(self.state.household, survival_share)
 
 
-class PeopleStayWhole(unittest.TestCase):
+class StaffScalesByTheShare(unittest.TestCase):
 
-    def test_a_shock_leaves_whole_people_and_never_more_than_before(self):
+    def test_a_shock_scales_every_count_by_the_share_and_keeps_fractions(self):
         for seed in range(6):
-            for survival_share in (0.9, 0.5, 0.1, 0.0):
+            for survival_share in (0.9, 0.5, 0.1):
                 host = _Survivors(seed)
                 host.apply_staff_survival(survival_share)
                 household = host.state.household
-                counts = [household.scholars, household.artisans] + list(household.employees.values())
-                self.assertEqual(counts, [float(round(count)) for count in counts], (seed, survival_share, counts))
-                self.assertLessEqual(household.scholars, 7.0)
-                self.assertLessEqual(household.artisans, 9.0)
+                self.assertAlmostEqual(household.employees["smith"], 5.0 * survival_share)
 
     def test_a_trade_that_loses_everyone_leaves_the_books(self):
         host = _Survivors(1)
@@ -252,7 +246,7 @@ class PeopleStayWhole(unittest.TestCase):
     def test_everyone_survives_a_share_of_one(self):
         host = _Survivors(1)
         host.apply_staff_survival(1.0)
-        self.assertEqual((host.state.household.scholars, host.state.household.artisans), (7.0, 9.0))
+        self.assertEqual(host.state.household.employees, {"carpenter": 3.0, "smith": 5.0})
 
 
 class TheMagazineRunsDry(unittest.TestCase):
@@ -325,8 +319,8 @@ class _Staffed(_Host):
     def staffing_open_refusal(self, node_id, unit_count=1.0, with_advice=True):
         return self.projects_module.staffing_open_refusal(node_id, unit_count, with_advice)
 
-    def _staffing_draw_of(self, node_id, foreman_units=None):
-        return self.projects_module._staffing_draw_of(node_id, foreman_units)
+    def staffing_draw_of(self, node_id, foreman_units=None):
+        return self.projects_module.staffing_draw_of(node_id, foreman_units)
 
     def concerns_to_close_for_staffing(self):
         return self.projects_module.concerns_to_close_for_staffing()
@@ -336,7 +330,7 @@ class AGarrisonIsStaffedLikeAForeman(unittest.TestCase):
 
     def test_an_open_concern_draws_its_garrison_from_the_labour_market(self):
         host = _Staffed(soldiers=5.0)
-        self.assertEqual(host._staffing_draw_of(WALL)["soldier"], 20.0)
+        self.assertEqual(host.staffing_draw_of(WALL)["soldier"], 20.0)
         self.assertEqual(host.venture_foremen_used()["soldier"], 20.0)
 
     def test_opening_is_refused_while_the_garrison_is_not_free(self):

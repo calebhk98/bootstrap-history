@@ -18,17 +18,18 @@ def service_deposits(record, money: str, year: int) -> Dict[AgentId, float]:
     """Pay every bank's depositors their interest and what is due; book the defaults and the founder's dividend.
     Returns the interest each depositor received."""
     received: Dict[AgentId, float] = {}
-    for bank_id, bank in sorted(record.banks.items()):
+    for bank_id, bank in sorted(record.capital_markets.banks.items()):
+        banks.note_dividend(bank, 0.0)
         deposits = [loan for loan in banks.deposits_of(record, bank_id) if loan.issued_year < year]
         if deposits:
             kept, defaults, interest = _pay(record, bank_id, deposits, money, year)
             for lender, amount in interest.items():
                 received[lender] = received.get(lender, 0.0) + amount
-            untouched = [loan for loan in record.loans if loan.borrower != bank_id or loan.issued_year >= year]
-            record.loans = untouched + kept
+            untouched = [loan for loan in record.credit.loans if loan.borrower != bank_id or loan.issued_year >= year]
+            record.credit.loans = untouched + kept
             for lender, lost in credit_claims.losses_by_lender(defaults).items():
-                record.credit_losses[lender] = record.credit_losses.get(lender, 0.0) + lost
-            record.remembered_defaults = credit_claims.remember_defaults(record.remembered_defaults, defaults)
+                record.credit.add_loss(lender, lost)
+            record.credit.remember(defaults)
             if defaults and bank.failed_year < 0:
                 banks.fail(record, bank, year, money)
         if bank.failed_year < 0:
@@ -70,13 +71,12 @@ def _return_idle(record, bank, money: str) -> None:
                                for loan in deposits])
     for loan in deposits:
         loan.principal -= paid * loan.principal / owed
-    record.loans = [loan for loan in record.loans
+    record.credit.loans = [loan for loan in record.credit.loans
                     if loan.borrower != bank.agent_id or loan.principal > EPSILON or loan.arrears > EPSILON]
 
 
 def _due(loan: Loan) -> float:
-    installment = loan.principal if loan.years_left <= 1.0 else loan.principal / loan.years_left
-    return loan.arrears + loan.principal * loan.rate + installment
+    return loan.arrears + loan.principal * loan.rate + credit.installment_of(loan)
 
 
 def _pay_founder(record, bank, money: str) -> None:
@@ -90,3 +90,4 @@ def _pay_founder(record, bank, money: str) -> None:
     paid = min(surplus, cash)
     if paid > 0.0:
         record.book.transfer_many(ownership.spread(record, [Transfer(bank.agent_id, bank.founder, money, paid, "dividend")]))
+        banks.note_dividend(bank, paid)

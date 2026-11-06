@@ -6,9 +6,9 @@ QUICK_TOPIC = True
 import types
 import unittest
 
-from sim.economy.households_basket import Basket, NeedSpec, need_prices
+from sim.world.need_basket import Basket, NeedSpec
+from sim.economy.households_basket import need_prices
 from sim.economy.market_memory import PRICE_REMEMBERED, MarketMemory, YearView
-from sim.economy.offered_price import offered_price
 from sim.economy.types import (QUOTE_BEST_UNFILLED_BID, QUOTE_COST_COVERING, QUOTE_LOWEST_UNFILLED_ASK,
                                QUOTE_OPENING_ESTIMATE)
 
@@ -17,6 +17,7 @@ def memory_with(price, cleared=False, quote=None, ever_traded=False):
     memory = MarketMemory(prices={"stone|a": price})
     if cleared:
         memory.cleared_prices["stone|a"] = price
+        memory.trade_age["stone|a"] = 0
     if quote:
         memory.quote_kinds["stone|a"] = quote
     if ever_traded:
@@ -57,11 +58,8 @@ class MemoryKindTests(unittest.TestCase):
 
 class ViewOfferedPriceTests(unittest.TestCase):
     def test_the_view_reads_the_memorys_offered_price(self):
-        view = YearView(memory_with(3.0, ever_traded=True), None, types.SimpleNamespace(goods=lambda: ()), "coin")
+        view = YearView(memory_with(3.0, ever_traded=True), None, types.SimpleNamespace(goods=lambda: ()), "coin", None)
         self.assertIsNone(view.offered_price("stone", "a"))
-
-    def test_a_view_without_the_method_gives_its_price(self):
-        self.assertEqual(offered_price(types.SimpleNamespace(price=lambda good, area: 2.0), "stone", "a"), 2.0)
 
 
 class HouseholdBasketTests(unittest.TestCase):

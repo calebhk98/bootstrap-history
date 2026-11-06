@@ -6,6 +6,7 @@ QUICK_TOPIC = True
 
 import unittest
 
+from sim.tests.economy_view_defaults import ViewDefaults
 from sim.economy import producers
 from sim.economy.market_memory import MarketMemory
 from sim.economy.types import Recipe
@@ -14,7 +15,7 @@ FARM = Recipe("farm", {"grain": 10.0}, {"seed": 2.0}, {"hand": 5.0})
 BREAK_EVEN_SEED_PRICE = (20.0 - 5.0) / 2.0          # a run earns 20, wages 5, two seed a run
 
 
-class View:
+class View(ViewDefaults):
     year = 3
 
     def __init__(self, prices, cleared=None):

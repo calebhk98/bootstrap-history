@@ -7,7 +7,7 @@ import dataclasses
 import unittest
 
 from sim.labour.market import clearing, trades
-from sim.labour.market.records import Bid, MarketState, YearInputs
+from sim.labour.market.records import EmployerHoursBid, MarketState, YearInputs
 
 SPECS = trades.trade_specs({"digger": {"family": "earth", "training_years": 0}})
 HOURS, PEOPLE = 100.0, 10.0       # a thousand hours a year; reservation wage one an hour (subsistence 100 over 100 hours)
@@ -15,13 +15,15 @@ ELASTICITY = 2.0
 
 
 def bids(hours, maximum=2.0):
-    return [Bid("a", "digger", "vale", hours, maximum, 0.0)]
+    return [EmployerHoursBid("a", "digger", "vale", hours, maximum)]
 
 
 def inputs(hours, supply=None):
+    """`supply` is the share of the workers' thousand hours sold at a wage."""
     base = YearInputs(trades=SPECS, bids=bids(hours), subsistence_per_worker_year={"vale": 100.0},
                       hours_per_worker_year=HOURS, discount_rate=0.03, career_years=30.0)
-    return dataclasses.replace(base, hours_share_at={("digger", "vale"): supply} if supply else {})
+    return dataclasses.replace(base, hours_sold_at=(
+        {("digger", "vale"): lambda wage: HOURS * PEOPLE * supply(wage)} if supply else None))
 
 
 def supply_through(wage, share):
@@ -37,21 +39,21 @@ def cleared(demand_hours, supply=None, last=1.5):
 class SupplyTargetTests(unittest.TestCase):
     def test_the_target_is_the_wage_the_supply_meets_the_demand_at(self):
         supply = lambda wage: 1000.0 * min(1.0, 0.5 * wage ** 2)      # 500 hours at wage one, rising
-        bid = Bid("a", "digger", "vale", 800.0, 2.0, 0.0)
+        bid = EmployerHoursBid("a", "digger", "vale", 800.0, 2.0)
         target = clearing.supply_target(1.0, supply, [bid])
         self.assertAlmostEqual(supply(target), 800.0, places=3)
 
     def test_where_supply_covers_demand_at_the_reservation_wage_the_target_is_the_reservation_wage(self):
-        bid = Bid("a", "digger", "vale", 400.0, 2.0, 0.0)
+        bid = EmployerHoursBid("a", "digger", "vale", 400.0, 2.0)
         self.assertEqual(clearing.supply_target(1.0, lambda wage: 500.0, [bid]), 1.0)
 
     def test_a_demand_the_supply_never_meets_ends_at_the_highest_maximum_wage(self):
-        bid = Bid("a", "digger", "vale", 5000.0, 2.0, 0.0)
+        bid = EmployerHoursBid("a", "digger", "vale", 5000.0, 2.0)
         self.assertEqual(clearing.supply_target(1.0, lambda wage: 500.0, [bid]), 2.0)
 
     def test_the_target_never_falls_as_demand_grows(self):
         supply = lambda wage: 1000.0 * min(1.0, 0.5 * wage ** 2)
-        targets = [clearing.supply_target(1.0, supply, [Bid("a", "digger", "vale", hours, 3.0, 0.0)])
+        targets = [clearing.supply_target(1.0, supply, [EmployerHoursBid("a", "digger", "vale", hours, 3.0)])
                    for hours in (100.0, 300.0, 500.0, 700.0, 900.0)]
         self.assertEqual(targets, sorted(targets))
 

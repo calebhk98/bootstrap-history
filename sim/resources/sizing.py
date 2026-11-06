@@ -45,7 +45,10 @@ AUTO_MINE_SPEND_SHARE_OF_CAPITAL = 0.25     # of capital the automatic mining po
 
 
 def auto_mine_affordable_tonnes(capital, capex_per_tonne):
-    """Tonnes a year of new working a share of the purse sinks at the mine's capital cost per tonne."""
+    """Tonnes a year of new working a share of the purse sinks at the mine's capital cost per tonne; 0.0 tonnes when
+    nothing prices the material (cannot size, so mine nothing: this is a quantity of work, not a price)."""
+    if capex_per_tonne is None:
+        return 0.0
     return capital * AUTO_MINE_SPEND_SHARE_OF_CAPITAL / max(1.0, capex_per_tonne)
 
 

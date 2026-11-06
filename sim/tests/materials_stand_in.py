@@ -11,6 +11,7 @@ from types import SimpleNamespace
 from typing import Any, Dict, List, Optional
 
 from sim.ledger.api import rules as ledger_rules
+from sim.markets.unit_mass import unit_mass_kg
 from sim.materials.module import Materials
 from sim.materials.state import MaterialsSeat
 from sim.tests import land_views, module_harness
@@ -33,12 +34,12 @@ def build(seat: Optional[MaterialsSeat] = None, views: Optional[Dict[str, Any]] 
         "mechanic": collections.defaultdict(dict), "effect_best": lambda channel: None, "running_stamp": (None, (), None),
         "running": lambda node_id: False, "goods_stock": lambda commodity: 0.0,
         "held_goods": ledger_rules.StockLedger(), "goods_stock_opening": {}, "goods_quote": lambda material: None,
-        "can_be_bought": lambda material: False,
+        "can_be_bought": lambda material: False, "unit_mass_kg": unit_mass_kg,
         "purchase_quote": lambda material, tonnes, already=0.0: None if tonnes < 0 else (tonnes, 1.0),
-        "partner_import_tonnes": lambda material: 0.0, "agent_producer_capacity": lambda material: None,
+        "agent_producer_capacity": lambda material: None,
         "material_freight_factor": lambda commodity: 1.0, "material_prices": {}, "material_commodity_map": {},
         "commodity_record": lambda commodity: {}, "commodity_country_output": lambda commodity: 0.0,
-        "price_epoch": (), "producers_stamp": (),
+        "done_memo": lambda name, key, compute: compute(),
         "mine_capacity": {}, "mine_depletion": lambda material: 1.0, "forest_hectares": 0.0,
         "nitre_beds": {"square_metres": 0.0, "tonnes_per_square_metre": 0.0}, "found_deposits": lambda material: [],
         "mine_works_materials": (), "shortage_remedy_plan": lambda binding, shortfall=None: {"text": "buy some"},

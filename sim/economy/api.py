@@ -8,60 +8,69 @@ WALL = "two-way"  # nothing here reaches sim/engine/; the markets module's port 
 
 import math
 
-from . import carried_book, carriage_wear, crop_sites, unit_cost, country_figures, diagnostics, late_recipes, opening_metal, household_grinding, households, households_work, labour_state, land_rents, market_curves, prices_at as tile_prices, taxes, tile_costs, workforce_settle, workforce_version
+from . import route_dues, carried_book, carriage_wear, national_prices, crop_sites, unit_cost, country_figures, diagnostics, late_recipes, opening_metal, household_grinding, households, households_work, need_roles, labour_state, land_rents, market_curves, prices_at as tile_prices, taxes, tile_costs, workforce_settle
 from .bank_founding import found_from_outside
 from .diagnostics import person_equivalent_unemployment
 from .fixture_setups import GRAIN as FIXTURE_STAPLE, LABOURER as FIXTURE_UNSKILLED_TRADE, small_setup as fixture_small_setup, stationary_setup as fixture_stationary_setup
+from . import banks
 from .banks import DEPOSIT_BANKING
 from .funds import POOLED_FUNDS
 from .insurance import INSURANCE_UNDERWRITING, RISK_POOLING
 from .secondary_trade import BOND_MARKET, SHARE_TRADING
-from .credit_lines import line_request as credit_line_request
+from .credit_lines import line_request as credit_line_request, actor_fundable as _actor_fundable, lender_standings as _lender_standings
+from .credit import risk_premium
 from .currency import currency_from_coin_standard
 from .economy import Economy
-from .foreign import external_orders
-from .market_memory import market_key
-from .opening_rate import against_history, opening_market_rate, solved_opening_rate
+from .market_memory import KEY_SEPARATOR, market_key
+from .opening_rate import opening_market_rate
 from .metal_stock import COIN_WEAR_PER_YEAR
 from .notional import shown_prices, shown_prices_with_kinds
 from .producers import Producer, expected_output_prices, live_input_prices, live_wages
-from .protocols import AgentOrders, YearInputs
+from .protocols import AgentOrders, EconomyYearInputs
 from .recipes import recipes_from_production_data
-from . import plant_builds
+from . import plant_builds, pool_deposits, trade_wages
 from .tool_wear import with_tool_wear
 from .record import EconomyRecord
-from .setup import EconomySetup, TradeSpec, goods_specs, recipe_tile_key
+from .setup import EconomySetup, SetupTrade, goods_specs, recipe_tile_key
+from .setup import area_tile, labour_area, opening_price_today
+from .state_wage_ceiling import WAGE_CEILING_MULTIPLE
 from .types import (EDGE_CARGO, EDGE_CONSUMPTION, EDGE_EXCHANGE, EDGE_EXTERNAL, EDGE_LEGACY, EDGE_MINT, EDGE_PRODUCTION, EDGE_WEAR, Bid,
-                    GoodsMove, Offer, SiteLimit, Transfer, external_edge)
+                    GoodsMove, LabourBid, LabourOffer, Offer, SiteLimit, Transfer, external_edge)
 from .year_accounts import YearAccounts
-from . import baseline_checks, settling, spin_up_sensitivity
+from . import spin_up_sensitivity
 from .unit_cost import variable_cost_per_run
 from .titles_value import title_wealth
 from .debt_relief import indebted_tiles as record_indebted_tiles
 from .titles_moves import holdings as record_title_holdings
 from .spin_up_state import spin_up_state as year_spin_up_state
 from .year_close import rebase_basket_price_level
-from .year_labour import trade_premium
+from .household_time_preference import HOUSEHOLD_TIME_PREFERENCE
+from .trade_wages import premium_for_training_years, trade_premium
 from sim.world import capital_market
 
 __all__ = [
     "FIXTURE_STAPLE", "FIXTURE_UNSKILLED_TRADE", "fixture_small_setup", "fixture_stationary_setup",
-    "YearAccounts", "baseline_checks", "settling", "spin_up_sensitivity",
-    "carriage_wear", "crop_sites", "unit_cost", "diagnostics", "household_grinding", "households", "households_work", "taxes", "tile_costs", "currency_from_coin_standard", "Economy", "external_orders",
+    "YearAccounts", "spin_up_sensitivity",
+    "carriage_wear", "crop_sites", "unit_cost", "diagnostics", "household_grinding", "households", "households_work", "need_roles", "taxes", "tile_costs", "currency_from_coin_standard", "Economy",
     "price_response", "prices_at", "offered_units", "watch_tiles",
     "shown_prices", "Producer", "expected_output_prices", "live_input_prices", "live_wages", "AgentOrders",
-    "YearInputs", "recipe_tile_key", "recipes_from_production_data", "plant_builds", "with_tool_wear", "EconomyRecord", "EconomySetup", "TradeSpec", "SiteLimit",
-    "goods_specs", "EDGE_EXTERNAL", "EDGE_LEGACY", "EDGE_CARGO", "EDGE_CONSUMPTION", "EDGE_PRODUCTION", "EDGE_EXCHANGE", "external_edge", "Bid", "GoodsMove", "Offer", "Transfer",
-    "variable_cost_per_run", "rebase_basket_price_level", "trade_premium", "title_wealth",
-    "traded_volumes", "country_traded_volumes", "country_opening_basket", "market_record", "opening_quantities", "opening_prices_in_hours", "wages_by_trade", "wages_by_trade_weighted", "interest_rate", "producers_of",
-    "external_trade_net", "external_trade_volume", "account_balance", "account_holdings",
-    "credit_room", "credit_line_request", "economy_from_record", "blank_economy", "export_record", "economy_book", "economy_contracts", "finish_spin_up", "note_spin_up_result", "spin_up_state", "money_year_figures","shown_prices_of","shown_price_kinds_of",
-    "settle_agent_takings", "indebted_tiles", "fugitive_share_by_tile", "title_holdings", "money_revenue_forms", "admit_recipes", "move_goods", "post_transfers", "cohort_incomes", "cohort_land_rents", "land_rent_per_hectare",
+    "EconomyYearInputs", "recipe_tile_key", "recipes_from_production_data", "plant_builds", "with_tool_wear", "EconomyRecord", "EconomySetup", "SetupTrade", "SiteLimit",
+    "goods_specs", "EDGE_EXTERNAL", "EDGE_LEGACY", "EDGE_CARGO", "EDGE_CONSUMPTION", "EDGE_PRODUCTION", "EDGE_EXCHANGE", "WAGE_CEILING_MULTIPLE", "external_edge", "Bid", "GoodsMove", "LabourBid", "LabourOffer", "Offer", "Transfer",
+    "variable_cost_per_run", "rebase_basket_price_level", "trade_premium", "premium_for_training_years", "HOUSEHOLD_TIME_PREFERENCE", "title_wealth",
+    "traded_volumes", "country_traded_volumes", "country_opening_basket", "market_record", "opening_quantities", "opening_prices_in_hours", "opening_price_in_current_money", "wages_by_trade_weighted", "interest_rate", "producers_of",
+    "account_balance", "account_holdings",
+    "credit_room", "credit_line_request", "economy_from_record", "blank_economy", "export_record", "economy_book", "bank_dividends_to", "economy_contracts", "finish_spin_up", "note_spin_up_result", "spin_up_state", "money_year_figures","shown_prices_of","shown_price_kinds_of",
+    "settle_agent_takings", "route_dues_account", "tile_holders", "indebted_tiles", "fugitive_share_by_tile", "title_holdings", "money_revenue_forms", "admit_recipes", "move_goods", "post_transfers", "cohort_incomes", "cohort_land_rents", "land_rent_per_hectare",
     "land_rent_paid_by_tile", "land_rent_at_tile", "DEPOSIT_BANKING", "POOLED_FUNDS", "INSURANCE_UNDERWRITING", "RISK_POOLING", "BOND_MARKET", "SHARE_TRADING", "country_figures", "carried_book", "idle_hours_by_trade", "output_by_tile",
     "person_equivalent_unemployment", "labour_market_rows",
+    "actor_fundable_amount", "risk_premium", "lender_listing", "note_pool_posting",
+    "found_bank_from_outside", "people_by_trade", "people_by_tile_and_trade", "hours_paid_by_employer", "add_workers", "hours_offered_in_area_of",
+    "all_producers", "carried_last_year", "backing_marginal_cost", "set_improvements", "begin_spin_up", "trim_workforce_to_expected_hours",
+    "rename_agent", "coin_per_unit", "currency_id", "backing_good", "home_country", "economy_countries", "country_of_tile", "economy_tiles",
+    "capital_tile", "port_tile", "tile_in_economy", "recipes_of", "good_specs", "recipe_allowed_at", "opening_prices_of", "unskilled_trade",
+    "economy_trades", "opening_rate", "opening_market_rate", "labour_area", "COIN_WEAR_PER_YEAR", "working_hours_per_year", "opening_wage_level", "priced_trade_wage", "country_trade_wage",
+    "trade_wage_at", "hunger_goods", "health_figures", "crop_site_inputs",
 ]
-
-_KEY_SEPARATOR = "|"
 
 
 def found_bank_from_outside(economy, founder, capital_units, year, edge):
@@ -72,11 +81,7 @@ def found_bank_from_outside(economy, founder, capital_units, year, edge):
 
 def traded_volumes(economy):
     """Last year's traded quantity of each good, summed over its markets."""
-    totals = {}
-    for key, volume in economy.record.volumes.items():
-        good = key.split(_KEY_SEPARATOR, 1)[0]
-        totals[good] = totals.get(good, 0.0) + volume
-    return totals
+    return country_figures.traded_volumes(economy, None)
 
 
 def country_traded_volumes(economy, country=None):
@@ -91,86 +96,84 @@ def country_opening_basket(economy, country=None):
 
 def market_record(economy, good):
     """What the markets of one good did last year, summed over its areas, in the good's units: `sold` (traded),
-    `unsold` (what sellers would have sold at the year's price and did not) and `unmet` (what buyers wanted at
-    it beyond what was sold)."""
+    `unsold` (what sellers offered at the price their buyers faced beyond what was delivered) and `unmet` (what
+    buyers asked for at the asks they faced beyond what was delivered), all after the year's second round of buying."""
     record = economy.record
     totals = {"sold": 0.0, "unsold": 0.0, "unmet": 0.0}
-    for name, figures in (("sold", record.volumes), ("unsold", record.unsold), ("unmet", record.unmet)):
+    for name, figures in (("sold", record.goods.volumes), ("unsold", record.goods.unsold), ("unmet", record.goods.unmet)):
         for key, quantity in figures.items():
-            if key.split(_KEY_SEPARATOR, 1)[0] == good:
+            if key.split(KEY_SEPARATOR, 1)[0] == good:
                 totals[name] += quantity
     return totals
 
 
 def opening_quantities(economy):
     """Quantity of each good in the opening basket."""
-    return dict(economy.record.opening_basket)
+    return dict(economy.record.goods.opening_basket)
 
 
 def opening_prices_in_hours(economy):
     """Opening price of each good in hours of the unskilled trade's opening wage: the weights a basket is valued at."""
-    wage = economy.setup.opening_wages.get(economy.setup.unskilled_trade, 0.0)
-    if not wage > 0.0:
-        return {}
+    wage = economy.setup.opening_wages[economy.setup.unskilled_trade]     # always there and positive: sim/markets/port_setup.py
     return {good: price / wage for good, price in sorted(economy.setup.opening_prices.items()) if price > 0.0}
 
 
 def people_by_trade(economy, country=None):
     """Working people by trade across the labour areas of `country` (the home country when the economy holds
     several and none is named; every area when it holds one), as the labour core's state holds them."""
-    def sum_people():
-        scope = country_figures.home_when_shared(economy, country)
-        if scope is None:
-            return labour_state.people_by_trade_everywhere(economy.record.workforce)
-        return country_figures.people_by_trade(economy, scope)
-    return workforce_version.cached(economy.record.workforce, ("people_by_trade", country), sum_people)
+    scope = country_figures.home_when_shared(economy, country)
+    if scope is None:
+        return labour_state.people_by_trade_everywhere(economy.record.labour.workforce)
+    return country_figures.people_by_trade(economy, scope)
 
 
 def people_by_tile_and_trade(economy):
     """Working people of the labour core by tile and trade, over every labour area (trainees are not counted)."""
-    return {labour_state.area_tile(area): labour_state.people_by_trade(economy.record.workforce, area)
-            for area in sorted(economy.record.workforce.workers)}
-
-
-def wages_by_trade(economy):
-    """Last year's wages per hour, as a list of market wages for each trade."""
-    rows = {}
-    for key, wage in economy.record.memory.wages.items():
-        rows.setdefault(key.split(_KEY_SEPARATOR, 1)[0], []).append(wage)
-    return rows
+    return {area_tile(area): labour_state.people_by_trade(economy.record.labour.workforce, area)
+            for area in sorted(economy.record.labour.workforce.workers)}
 
 
 def land_rent_per_hectare(economy, country=None):
     """Mean rent per hectare-year producers paid last year over the tiles of `country` where land was let
-    (the home country's when the economy holds several; zero where none was)."""
+    (the home country's when the economy holds several); None where none was let."""
     scope = country_figures.home_when_shared(economy, country)
     tiles = country_figures.country_tiles(economy, scope)
-    rents = [rent for tile, rent in economy.record.land_rent.items() if rent > 0.0 and tile in tiles]
-    return sum(rents) / len(rents) if rents else 0.0
+    rents = [rent for tile, rent in economy.record.land.land_rent.items() if rent > 0.0 and tile in tiles]
+    return sum(rents) / len(rents) if rents else None
 
 
 def land_rent_at_tile(economy, tile, country=None):
-    """Rent per hectare-year the land market let land at on one tile last year; the mean over the tiles of `country`
-    (the home country's when none is named) where land was let where none was let on this tile (zero where none was let
-    anywhere)."""
-    rent = economy.record.land_rent.get(tile, 0.0)
+    """Rent per hectare-year the land market let land at on one tile last year; where none was let on this tile, the
+    mean over the tiles of `country` (the home country's when none is named) where land was let; None where none was let
+    anywhere."""
+    rent = economy.record.land.land_rent.get(tile, 0.0)
     return rent if rent > 0.0 else land_rent_per_hectare(economy, country)
 
 
 def output_by_tile(economy):
     """What the producers made last year, tile -> good -> units, as a sorted copy."""
-    return {tile: dict(sorted(row.items())) for tile, row in sorted(economy.record.output_by_tile.items())}
+    return {tile: dict(sorted(row.items())) for tile, row in sorted(economy.record.goods.output_by_tile.items())}
 
 
 def land_rent_paid_by_tile(economy):
     """Rent producers paid on each tile where land was let last year, in the economy's units."""
-    return land_rents.rent_paid_by_tile(economy.setup, economy.record)
+    return land_rents.rent_paid_by_tile(economy.record)
 
 
 def idle_hours_by_trade(economy, country=None):
     """(hours offered and not hired, hours offered) of each trade in the labour markets of `country` (the home
     country's when the economy holds several) in the last clearing: the jobs the labour core did not find."""
     return country_figures.idle_hours_by_trade(economy, country_figures.home_when_shared(economy, country))
+
+
+def hours_paid_by_employer(economy, employer):
+    """{trade: hours} the last labour clearing hired for `employer` (paid hours, bonded included); empty before one."""
+    return dict(economy.record.labour.hours_paid_by_employer.get(employer, {}))
+
+
+def add_workers(economy, tile, trade, people):
+    """`people` more workers of `trade` in the labour core, on `tile`'s labour area: they are hired at the clearing like anyone."""
+    economy.record.labour.add_workers(labour_area(tile), trade, people)
 
 
 def labour_market_rows(economy):
@@ -180,35 +183,31 @@ def labour_market_rows(economy):
     record = economy.record
     plot = labour_state.plot_trade(economy.setup)
     rows = []
-    for key in sorted(record.hours_idle):
-        trade, area = key.split(_KEY_SEPARATOR, 1)
+    for key in sorted(record.labour.hours_idle):
+        trade, area = key.split(KEY_SEPARATOR, 1)
         if trade == plot:
             continue
-        people = math.fsum(record.workforce.workers.get(area, {}).get(trade, ()))
-        hired = record.hours_hired.get(key, 0.0)
-        rows.append((people, hired + record.hours_idle[key], hired))
+        people = math.fsum(record.labour.workforce.workers.get(area, {}).get(trade, ()))
+        hired = record.labour.hours_cleared_in(key)
+        rows.append((people, hired + record.labour.hours_idle[key], hired))
     return rows
 
 
+def hours_offered_in_area_of(economy, trade, tile):
+    """Hours of `trade` the households of `tile`'s labour area offered at the last clearing (hired plus left idle, after
+    the hours they keep for plot and home work); None before a clearing."""
+    labour = economy.record.labour
+    if not labour.hours_idle:
+        return None
+    key = market_key(trade, economy.view().area_of(trade, tile))
+    return labour.hours_cleared_in(key) + labour.hours_idle.get(key, 0.0)
+
+
 def wages_by_trade_weighted(economy, country=None):
-    """Last year's wage per hour of each trade: the remembered wage of each of its labour markets weighted
-    by the hours hired there last year. A trade that hired no hours is left out (its remembered wages are
-    opening seeds, not clearings), except the unskilled trade, whose wage prices the rest. Of `country`'s
-    markets (the home country's when the economy holds several)."""
-    scope = country_figures.home_when_shared(economy, country)
-    if scope is not None:
-        wages = country_figures.wages_per_hour(economy, scope)
-    else:
-        rows = {}
-        for key, wage in economy.record.memory.wages.items():
-            rows.setdefault(key.split(_KEY_SEPARATOR, 1)[0], []).append((wage, economy.record.hours_hired.get(key, 0.0)))
-        wages = {trade: (sum(wage * hours for wage, hours in pairs) / sum(hours for _wage, hours in pairs)
-                         if sum(hours for _wage, hours in pairs) > 0.0 else sum(wage for wage, _hours in pairs) / len(pairs))
-                 for trade, pairs in rows.items()}
-    idle_and_offered = country_figures.idle_hours_by_trade(economy, scope)
-    unskilled = economy.setup.unskilled_trade
-    return {trade: wage for trade, wage in wages.items()
-            if trade == unskilled or idle_and_offered.get(trade, (0.0, 0.0))[1] > idle_and_offered.get(trade, (0.0, 0.0))[0]}
+    """The wage per hour of each trade the labour core holds a wage for, over `country`'s labour areas (the home
+    country's when the economy holds several): `country_figures.wages_per_hour`, hours-hired weights, else people.
+    A trade nobody hired is in it at the core's wage, not at an opening wage."""
+    return country_figures.wages_per_hour(economy, country_figures.home_when_shared(economy, country))
 
 
 def interest_rate(economy):
@@ -219,15 +218,15 @@ def interest_rate(economy):
 def credit_room(economy, borrower_id):
     """What lenders will still advance `borrower_id`. A borrower whose credit line was in the last clearing
     (credit_lines.py) has what the clearing granted it; any other, the share of the savings on offer that
-    lenders put out less what the other borrowers took. None before lenders have met (no savings were
-    offered yet)."""
+    lenders put out less what the other borrowers took. None only before lenders have met; lenders that met with no savings
+    on offer leave no room, 0.0."""
     record = economy.record
-    if record.funds_offered <= 0.0:
+    if not record.credit.lenders_met:
         return None
-    if borrower_id in record.credit_granted:
-        return record.credit_granted[borrower_id]
-    others = sum(lent for borrower, lent in record.lent_by_borrower.items() if borrower != borrower_id)
-    return capital_market.headroom(capital_market.lendable_capacity(record.funds_offered), others)
+    if borrower_id in record.credit.credit_granted:
+        return record.credit.credit_granted[borrower_id]
+    others = sum(lent for borrower, lent in record.credit.lent_by_borrower.items() if borrower != borrower_id)
+    return capital_market.headroom(capital_market.lendable_capacity(record.credit.funds_offered), others)
 
 
 def all_producers(economy):
@@ -237,7 +236,7 @@ def all_producers(economy):
 
 def carried_last_year(economy):
     """Tonnes the merchants carried last year, origin tile -> destination tile, as a sorted copy."""
-    return {key: dict(row) for key, row in sorted(economy.record.carried.items())}
+    return {key: dict(row) for key, row in sorted(economy.record.carriage.carried.items())}
 
 
 def producers_of(economy, country=None):
@@ -248,16 +247,6 @@ def producers_of(economy, country=None):
         return dict(economy.record.producers)
     tiles = country_figures.country_tiles(economy, scope)
     return {producer_id: producer for producer_id, producer in economy.record.producers.items() if producer.tile in tiles}
-
-
-def external_trade_net(economy):
-    """Money paid in over the external edge: exports less imports."""
-    return economy.record.book.edge_net(EDGE_EXTERNAL, economy.setup.currency_id)
-
-
-def external_trade_volume(economy):
-    """Money moved either way over the external edge: exports plus imports."""
-    return economy.record.book.edge_volume(EDGE_EXTERNAL, economy.setup.currency_id)
 
 
 def _ranked_cohorts(economy, country=None):
@@ -278,7 +267,7 @@ def cohort_land_rents(economy, tiles=None, country=None):
     """(people, rent received last year) of every household cohort in the order of `cohort_incomes`, in the
     economy's units: the rent paid on each tile (only those in `tiles` when given) goes to the tile's cohorts
     by what each owns (`land_rents.rent_received_by_cohort`)."""
-    received = land_rents.rent_received_by_cohort(economy.setup, economy.record, tiles)
+    received = land_rents.rent_received_by_cohort(economy.record, tiles)
     return [(cohort.people, received.get(cohort.agent_id, 0.0)) for cohort in _ranked_cohorts(economy, country)]
 
 
@@ -311,35 +300,14 @@ def price_response(economy, good, landed_units, taken_units, tile=None):
     if tile is not None:
         return tile_prices.price_response_at(economy, good, tile, landed_units, taken_units)
     area = market_curves.port_area(economy.area_map, economy.setup.port_tile, good)
-    curve = economy.record.curves.get(market_key(good, area)) if area is not None else None
+    curve = economy.record.goods.curves.get(market_key(good, area)) if area is not None else None
     if curve is None:
         return None
     memory = economy.record.memory
     factor = market_curves.price_response(curve, good, memory.prices.get(market_key(good, area)), landed_units, taken_units)
     if factor is None or not math.isfinite(factor):
         return factor
-    return 1.0 + _port_share(economy, good, area) * (factor - 1.0)
-
-
-def _port_share(economy, good, area):
-    """The port area's share of a good's usual traded value, which weighs a move at the port into the national
-    price. Kept per economy until its next year, when prices and weights change."""
-    cache = economy.__dict__.setdefault("_port_shares", {})
-    key = (economy.record.memory.prices is not None and id(economy.record.memory.prices), good, area)
-    if key not in cache:
-        memory = economy.record.memory
-        weights = memory.volume_weights or economy.record.volumes
-        total = 0.0
-        port_value = 0.0
-        port_key = market_key(good, area)
-        for market, price in memory.prices.items():
-            if market.split(_KEY_SEPARATOR, 1)[0] == good:
-                value = price * weights.get(market, 0.0)
-                total += value
-                if market == port_key:
-                    port_value = value
-        cache[key] = port_value / total if total > 0.0 else 1.0
-    return cache[key]
+    return 1.0 + national_prices.port_share(economy.record, good, market_key(good, area)) * (factor - 1.0)
 
 
 def account_balance(economy, agent_id):
@@ -389,12 +357,18 @@ def export_record(economy, skip_currencies=()):
 
 def economy_contracts(economy):
     """The contract registry: the economy's term loans and, once the actors' purses adopt it, their facilities."""
-    return economy.record.contracts
+    return economy.record.credit.contracts
 
 
 def economy_book(economy):
     """The double-entry book the economy's agents keep their money and goods in."""
     return economy.record.book
+
+
+def bank_dividends_to(economy, owner_id):
+    """What the banks `owner_id` founded paid it as a dividend at the last year end, when it keeps its money outside the
+    economy's households (a seat); zero for a household's dividend, which its tile's cohorts hold."""
+    return banks.dividends_paid_to(economy.record, owner_id)
 
 
 def begin_spin_up(economy):
@@ -404,10 +378,12 @@ def begin_spin_up(economy):
 
 def finish_spin_up(economy):
     """Closes the hidden spin-up years: the price level is rebased to one (expectations of inflation are kept)
-    and the clock returns to zero."""
+    and the clock returns to zero. Route dues the hidden years collected pay no one: they return over the exchange edge."""
+    for holder in tile_holders(economy):
+        settle_agent_takings(economy, route_dues_account(holder), EDGE_EXCHANGE)
     rebase_basket_price_level(economy.setup, economy.record)
     economy.record.settling = False
-    economy.record.memory.year = 0
+    economy.record.memory.reset_year()
 
 
 def money_year_figures(economy, outcome):
@@ -448,7 +424,7 @@ def shown_prices_of(economy, country=None):
 
 
 def shown_price_kinds_of(economy, country=None):
-    """What each shown price is, by good: PRICE_TRADED, a quote kind (QUOTE_*) or an estimate (`notional.KIND_*`).
+    """What each shown price is, by good: PRICE_SMOOTHED_TRADE, a quote kind (QUOTE_*) or an estimate (`notional.KIND_*`).
     Same scope as `shown_prices_of`."""
     scope = country_figures.home_when_shared(economy, country)
     market = None if scope is None else country_figures.prices(economy, scope)
@@ -477,10 +453,9 @@ def title_holdings(economy, tiles):
 
 def fugitive_share_by_tile(economy):
     """{tile: share of the people who belonged to it that are away, having fled the state's take} (flight_year.py)."""
-    from .setup import area_tile
-    workforce = economy.record.workforce
+    workforce = economy.record.labour.workforce
     shares = {}
-    for area, row in sorted(economy.record.fugitives.items()):
+    for area, row in sorted(economy.record.unfree.fugitives.items()):
         present = sum(sum(bands) for bands in workforce.workers.get(area, {}).values())
         if row["people"] > 0.0:
             shares[area_tile(area)] = row["people"] / (present + row["people"])
@@ -509,3 +484,171 @@ def rename_agent(economy, old, new):
     """`old` becomes `new` throughout the economy's records: money, goods, debts and claims, titles and shares are
     added to what `new` already holds; no posting is made, so no total moves."""
     economy.record.rename_agent(old, new)
+
+
+# ---- What the markets port asks of the economy's setup (sim/markets/port*.py) ----
+# Plain facts of the economy's setup, answered here so the port holds no `economy.setup.<field>`.
+
+def coin_per_unit(economy):
+    """Money (the game's coin) worth one economy unit."""
+    return economy.setup.coin_per_unit
+
+
+def currency_id(economy):
+    return economy.setup.currency_id
+
+
+def backing_good(economy):
+    """The good that backs the money, or None for fiat money."""
+    return economy.setup.currency.backing_good
+
+
+def home_country(economy):
+    return economy.setup.civ_id
+
+
+def economy_countries(economy):
+    """Every country with tiles in this economy (the home country among them)."""
+    return economy.setup.countries()
+
+
+def country_of_tile(economy, tile):
+    return economy.setup.country_of(tile)
+
+
+def route_dues_account(holder):
+    """The account the route dues owed to a holder collect in (settle it with `settle_agent_takings`)."""
+    return route_dues.account(holder)
+
+
+def tile_holders(economy):
+    """Every holder of tiles in the economy (the countries and seats their dues are paid to), sorted."""
+    return sorted(economy.setup.countries())
+
+
+def economy_tiles(economy):
+    return economy.setup.tiles
+
+
+def capital_tile(economy):
+    return economy.setup.capital_tile
+
+
+def port_tile(economy):
+    return economy.setup.port_tile
+
+
+def tile_in_economy(economy, tile):
+    """`tile` when the economy has it, else its capital tile."""
+    return tile if tile in economy.setup.tiles else economy.setup.capital_tile
+
+
+def recipes_of(economy):
+    """{recipe id: recipe} the economy runs."""
+    return economy.setup.recipes
+
+
+def good_specs(economy):
+    """{good: spec} of the goods the economy knows."""
+    return economy.setup.specs
+
+
+def recipe_allowed_at(economy, recipe_id, tile):
+    return economy.setup.recipe_allowed(recipe_id, tile)
+
+
+def opening_prices_of(economy):
+    return economy.setup.opening_prices
+
+
+def opening_price_in_current_money(economy, good):
+    """The opening price of a good in today's money; None when the setup holds none."""
+    return opening_price_today(economy.setup, economy.record.memory, good)
+
+
+def unskilled_trade(economy):
+    return economy.setup.unskilled_trade
+
+
+def economy_trades(economy):
+    """The trades the labour core has markets for."""
+    return frozenset(economy.setup.trades)
+
+
+def opening_rate(economy):
+    return economy.setup.opening_rate
+
+
+def working_hours_per_year(economy):
+    return economy.setup.working_hours_per_year
+
+
+def opening_wage_level(economy):
+    """Today's money per opening-year money for the wages the setup opened with (`MarketMemory.opening_wage_level`)."""
+    return economy.record.memory.opening_wage_level(economy.setup.currency_id)
+
+
+def priced_trade_wage(economy, trade, paid, unskilled):
+    """The wage per hour of a trade by the one rule (`trade_wages`), in the economy's units, for any scope: the caller
+    names what that scope paid for the trade and for the unskilled trade (None where nothing)."""
+    return trade_wages.priced_trade_wage(economy.setup, trade, paid, unskilled, opening_wage_level(economy),
+                                         economy.record.memory.holds_wage_for(trade))
+
+
+def country_trade_wage(economy, trade, country=None):
+    """The wage per hour of a trade in a country (the home country's when none is named) by the one rule, on the
+    wages its labour areas hold (`wages_by_trade_weighted`); the opening wage stands in only for a trade the core
+    holds no wage for in any of them."""
+    wages = wages_by_trade_weighted(economy, country)
+    return priced_trade_wage(economy, trade, wages.get(trade), wages.get(economy.setup.unskilled_trade))
+
+
+def trade_wage_at(economy, trade, tile):
+    """The wage per hour a bid for `trade` on `tile` is funded at: the area's last wage, else the one wage rule
+    (`trade_wages.wage_in_area`)."""
+    view = economy.view()
+    return trade_wages.wage_in_area(economy.setup, economy.record.memory, trade, view.area_of(trade, tile))
+
+
+def hunger_goods(economy):
+    """The goods the hunger need's basket buys, or () when the basket has no such need."""
+    setup = economy.setup
+    need = next((spec for spec in setup.basket.needs if spec.need_id == setup.hunger_need), None)
+    return () if need is None else tuple(good for good, _effect in need.goods)
+
+
+def health_figures(economy, outcomes, staple, metals):
+    """The health figures (sim/economy/diagnostics.py) over the yearly outcomes kept."""
+    return diagnostics.summary(outcomes, economy.setup, staple, metals)
+
+
+def crop_site_inputs(economy):
+    """(yield factor by recipe and tile, land a run takes by recipe) for the producers that crop land."""
+    return economy.setup.yield_factor_by_recipe_tile, economy.setup.land_per_run
+
+
+def actor_fundable_amount(economy, amount, existing_debt, collateral_value, arrears):
+    """The most of a draw of `amount` an actor that already owes `existing_debt` is lent, by the same rule as every borrower
+    in the clearing (credit_lines.actor_fundable) at the lowest rate any lender asked at the last lending. Economy units.
+    None only before lenders have met; lenders that met with no savings on offer fund nothing, 0.0."""
+    credit = economy.record.credit
+    if not credit.lenders_met:
+        return None
+    ask = credit.lowest_ask_offered
+    if ask is None:
+        return 0.0
+    rate = interest_rate(economy)
+    return _actor_fundable(amount, existing_debt, collateral_value, arrears, economy.setup.opening_rate if rate is None else rate, ask)
+
+
+def lender_listing(economy):
+    """{"currency", "coin_per_unit", "lenders"}: the lenders of the last lending, cheapest ask first, each with its kind
+    (cohort, bank, fund), what it offered, what its account holds and its ask, in the economy's units."""
+    currency = economy.setup.currency_id
+    return {"currency": currency, "coin_per_unit": economy.setup.coin_per_unit,
+            "lenders": _lender_standings(economy.record, currency)}
+
+
+def note_pool_posting(economy, lender, units):
+    """The actors' pool paid `lender` interest (positive) or took a default's loss from its deposit (negative), in the economy's unit."""
+    pool_deposits.note_pool_posting(economy.record, lender, units)

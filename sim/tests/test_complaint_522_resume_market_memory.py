@@ -7,6 +7,7 @@ QUICK_TOPIC = True
 import types
 import unittest
 
+from sim.economy.goods_record import GoodsRecord
 from sim.economy.economy import Economy
 from sim.economy.market_areas_follow import follow
 from sim.economy.market_memory import MarketMemory, market_key
@@ -32,8 +33,7 @@ class Setup:
 class ResumeTests(unittest.TestCase):
     def test_the_resume_partitions_for_the_emptiness_the_record_saved_not_the_one_its_ledger_implies(self):
         setup = Setup()
-        record = types.SimpleNamespace(ways={"road": {"road": True}}, area_imbalance=0.75,
-                                       carried={"town": {"farms": 10.0}, "farms": {"town": 10.0}})
+        record = types.SimpleNamespace(carriage=types.SimpleNamespace(ways={"road": {"road": True}}, area_imbalance=0.75, carried={"town": {"farms": 10.0}, "farms": {"town": 10.0}}))
         economy = types.SimpleNamespace()
         Economy.__init__(economy, setup, record)
         self.assertEqual(setup.carriage_asked, [({"road": {"road": True}}, 0.75)])
@@ -42,16 +42,23 @@ class ResumeTests(unittest.TestCase):
         self.assertIs(economy.area_map, setup.map)
 
 
+class Carriage(types.SimpleNamespace):
+    """The carriage record's owner method for the emptiness the areas are partitioned for."""
+
+    def set_area_imbalance(self, imbalance):
+        self.area_imbalance = imbalance
+
+
 class FollowFlows(unittest.TestCase):
     def economy(self, saved_imbalance, carried):
         rebuilt = []
-        return types.SimpleNamespace(record=types.SimpleNamespace(area_imbalance=saved_imbalance, carried=carried),
+        return types.SimpleNamespace(record=types.SimpleNamespace(carriage=Carriage(area_imbalance=saved_imbalance, carried=carried)),
                                      _rebuild_carriage=lambda: rebuilt.append(True) or True, rebuilt=rebuilt)
 
     def test_opposite_flows_change_the_emptiness_and_the_areas_are_partitioned_again(self):
         economy = self.economy(1.0, {"town": {"farms": 10.0}, "farms": {"town": 10.0}})
         self.assertTrue(Economy.follow_flows(economy))
-        self.assertLess(economy.record.area_imbalance, 1.0)
+        self.assertLess(economy.record.carriage.area_imbalance, 1.0)
         self.assertEqual(economy.rebuilt, [True])
 
     def test_flows_that_leave_the_emptiness_where_it_was_leave_the_areas_alone(self):
@@ -87,18 +94,22 @@ class FollowCarriesTheMemory(unittest.TestCase):
         new = Partition({"grain": {"new:x": "town"}})
         memory = MarketMemory(prices={market_key("grain", "old:a"): 3.0, market_key("grain", "old:b"): 5.0},
                               currency_of_area={"old:a": "coin", "old:b": "coin"})
-        record = types.SimpleNamespace(memory=memory, merchants={}, volumes={market_key("grain", "old:a"): 7.0},
-                                       unsold={}, unmet={}, margin_years={}, curves={})
+        record = types.SimpleNamespace(memory=memory, merchants={},
+                                       goods=types.SimpleNamespace(volumes={market_key("grain", "old:a"): 7.0},
+                                                                   unsold={}, unmet={}, margin_years={}, curves={},
+                                                                   MARKET_KEYED=GoodsRecord.MARKET_KEYED))
         follow(record, old, new)
         self.assertEqual(memory.prices, {market_key("grain", "new:x"): 3.0})
-        self.assertEqual(record.volumes, {market_key("grain", "new:x"): 7.0})
+        self.assertEqual(record.goods.volumes, {market_key("grain", "new:x"): 7.0})
         self.assertEqual(memory.currency_of_area, {"new:x": "coin"})
 
     def test_a_market_that_is_not_a_goods_stays_where_it_is(self):
         old = Partition({"grain": {"old:a": "town"}})
         new = Partition({"grain": {"new:x": "town"}})
         memory = MarketMemory(prices={market_key("labourer", "old:a"): 1.0})
-        record = types.SimpleNamespace(memory=memory, merchants={}, volumes={}, unsold={}, unmet={}, margin_years={}, curves={})
+        record = types.SimpleNamespace(memory=memory, merchants={},
+                                       goods=types.SimpleNamespace(volumes={}, unsold={}, unmet={}, margin_years={}, curves={},
+                                                                   MARKET_KEYED=GoodsRecord.MARKET_KEYED))
         follow(record, old, new)
         self.assertEqual(memory.prices, {market_key("labourer", "old:a"): 1.0})
 

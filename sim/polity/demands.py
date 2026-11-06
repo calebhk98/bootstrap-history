@@ -6,15 +6,17 @@ draws no random number, so complying leaves the game's stream as it was.
 Needs: game_random, state_treasury, acting_balance,
 transfer_listening, send (PayEdge, TakeFromHouseholdPurse, RecordEvent)."""
 from sim.agents.api import demand_answer, edges
+from sim.assembly.api import Part
 from sim.hazards.api import capital_lost
-from sim.ledger.api import PayEdge, TakeFromHouseholdPurse
+from sim.ledger.api import TakeFromHouseholdPurse, pay_edge_or_log
+from sim.refusal import Refusal
 from sim.reporting.api import RecordEvent
 
 from . import state_demand
 from .state_demand import PAYS_IN_FULL
 
 
-class Demands:
+class Demands(Part):
 
 	def answer_state_demand(self, amount):
 		"""What the household pays on a demand of `amount` given how it has chosen to answer. A refusal marks the household in
@@ -22,9 +24,10 @@ class Demands:
 		seat = self.seat
 		stance = seat.demand_stance
 		draw = self.needs.game_random().random() if stance not in PAYS_IN_FULL else 1.0
-		answer = demand_answer.settle_demand(stance, amount, self.state_reach(), seat.protection, draw, seat.service_offer)
-		if answer["service"] > 0.0:
-			self.needs.send(PayEdge(edges.EDGE_STATE_SPENDING, answer["service"], "service to the state"))
+		answer = demand_answer.settle_demand(stance, amount, self.parts.reach.state_reach(), seat.protection, draw, seat.service_offer)
+		if answer["service"] > 0.0 and pay_edge_or_log(self.needs.send, edges.EDGE_STATE_SPENDING, answer["service"], "service to the state") is not None:
+			# the service was not rendered, so the offer fails and the state's whole demand stands
+			answer = demand_answer.settle_demand(demand_answer.COMPLY, amount, self.parts.reach.state_reach(), seat.protection, 1.0)
 		if answer["refused"]:
 			seat.defiance = demand_answer.defiance_after_refusal(seat.defiance)
 			seat.scandal += demand_answer.blame_for_refusal(True)
@@ -35,7 +38,8 @@ class Demands:
 		lost = capital_lost(self.needs.acting_balance(), fraction)
 		if lost <= 0.0:
 			return 0.0
-		self.needs.send(TakeFromHouseholdPurse(taker_id, lost, cause))
+		if isinstance(self.needs.send(TakeFromHouseholdPurse(taker_id, lost, cause)), Refusal):
+			return 0.0   # the household could not cover it: nothing was taken
 		return lost
 
 	def answer_confiscation(self, fraction, cause):
@@ -68,13 +72,14 @@ class Demands:
 		settled = {"concealed": 0.0, "cost": 0.0, "seized": 0.0, "found": 0.0}
 		if seat.demand_stance == demand_answer.CONCEAL or seat.concealed > 0.0:
 			draw = self.needs.game_random().random()
-			settled = demand_answer.settle_concealment(seat.demand_stance, max(0.0, self.needs.acting_balance()), self.state_reach(),
+			settled = demand_answer.settle_concealment(seat.demand_stance, max(0.0, self.needs.acting_balance()), self.parts.reach.state_reach(),
 			                                           seat.protection, draw)
-			if settled["cost"] > 0.0:
-				self.needs.send(PayEdge(edges.EDGE_OFFICIALS, settled["cost"], "concealing wealth"))
+			if settled["cost"] > 0.0 and pay_edge_or_log(self.needs.send, edges.EDGE_OFFICIALS, settled["cost"], "concealing wealth") is not None:
+				settled = dict(settled, cost=0.0, concealed=0.0)   # no one is paid to keep it hidden: nothing stays hidden
 			if settled["seized"] > 0.0:
-				self.needs.send(TakeFromHouseholdPurse(self.needs.state_treasury().actor_id, settled["seized"], "wealth found hidden"))
-				self.needs.send(RecordEvent.of("hidden_wealth_found", "The state found wealth you had hidden and took it with a penalty"))
+				taken = self.needs.send(TakeFromHouseholdPurse(self.needs.state_treasury().actor_id, settled["seized"], "wealth found hidden"))
+				if not isinstance(taken, Refusal):
+					self.needs.send(RecordEvent.of("hidden_wealth_found", "The state found wealth you had hidden and took it with a penalty"))
 			seat.concealed = settled["concealed"]
 		if seat.defiance > 0.0:
 			seat.defiance = demand_answer.defiance_fading(seat.defiance)
@@ -87,4 +92,4 @@ class Demands:
 		seat = self.seat
 		seat.demand_stance = stance
 		seat.service_offer = max(0.0, float(service))
-		return state_demand.describe_stance(stance, self.state_reach(), seat.protection, seat.service_offer)
+		return state_demand.describe_stance(stance, self.parts.reach.state_reach(), seat.protection, seat.service_offer)

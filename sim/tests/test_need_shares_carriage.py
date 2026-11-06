@@ -11,7 +11,9 @@ from sim.labour import workforce_carriage, workforce_spinup
 
 QUICK_TOPIC = True
 
+from sim.world import need_demand
 _ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+_NEEDS = need_demand.load_needs(_ROOT)
 _PRODUCTION = load_production_catalog(_ROOT)
 
 
@@ -26,7 +28,7 @@ def _carriage(trade, crew_hours_per_tonne_km, cost_hours_per_tonne_km=2.0):
 
 def _shares(reached, carriage=None):
     return workforce_spinup.need_shares_by_trade(
-        _PRODUCTION, set(reached), techniques_available_to, carriage)
+        _PRODUCTION, set(reached), techniques_available_to, carriage, needs=_NEEDS)
 
 
 class CarriageEntersTheNeedTests(unittest.TestCase):
@@ -78,7 +80,7 @@ class BuildingServicesTests(unittest.TestCase):
     def test_laying_walls_adds_to_the_masons_and_carpenters_need(self):
         reached = _civ("rome_100ad")["starting_techs"]
         without = workforce_spinup.need_shares_by_trade(
-            self._without_services(), set(reached), techniques_available_to)
+            self._without_services(), set(reached), techniques_available_to, needs=_NEEDS)
         with_services = _shares(reached)
         self.assertGreater(with_services["mason"], without["mason"])
 

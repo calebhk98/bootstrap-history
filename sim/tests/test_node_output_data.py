@@ -12,7 +12,7 @@ import unittest
 
 from sim.engine import data, validate_node_money
 from sim.production import node_output
-from sim.labour.labour_market import production_data
+from sim.world.demand import production_data
 
 class NodeOutputData(unittest.TestCase):
 

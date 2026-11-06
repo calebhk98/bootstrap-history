@@ -11,8 +11,8 @@ class LedgerWorld:
 
 @dataclass
 class LedgerSeat:
-	_material_stock_ledger: Optional[Dict[str, float]] = None    # tonnes by commodity key; made on first use (a StockLedger)
-	_material_stock_opening: Optional[Dict[str, Any]] = None     # {"year", "tonnes"}: the stock as this year's accounting began
+	material_stock_ledger: Optional[Dict[str, float]] = None    # tonnes by commodity key; made on first use (a StockLedger)
+	material_stock_opening: Optional[Dict[str, Any]] = None     # {"year", "tonnes"}: the stock as this year's accounting began
 	# the cash book (sim/ledger/cash_book.py): the open period's entries by cause, cash at its start, and the last few closed years
 	cash_flow: Dict[str, float] = field(default_factory=dict)
 	cash_mark: Optional[float] = None

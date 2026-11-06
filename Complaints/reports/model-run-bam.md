@@ -1,5 +1,8 @@
 # Model run: BAM (Delli Gatti et al. 2011), via the `bamengine` Python package
 
+> **Checked against the code (2026-11):** the labour core now pays one market wage per (trade, area); every hour hired is paid it and no employer holds a contract wage of its own (`sim/labour/market/DESIGN.md`, "Clearing"; `contracted_wage` and `contract_wages` no longer exist). Where this report describes per-employer contract wages it describes an earlier build.
+
+
 ## Source and licence
 
 - Implementation: BAM Engine, `https://github.com/kganitis/bam-engine` (PyPI `bamengine`), commit
@@ -10,9 +13,9 @@
 - Other implementation: NetLogo, `github.com/alexplatasl/BAMmodel` (not read; the package's own paper says it deviates
   on several metrics).
 
-## Run status: NOT RUN
+## Run status: first attempt refused; run later (see "Measured run" at the end)
 
-The measured unemployment series the brief asks for does not exist. The one attempt to run the package (`python3 -I`
+Before the later run, the measured unemployment series the brief asks for does not exist. The one attempt to run the package (`python3 -I`
 on a runner script that put the package's `src/` on `sys.path` and stepped 1000 periods) was refused by the session's
 permission classifier ("Code from External"). I did not retry or route around it. Everything below is from reading
 the code, with file and line; none of it is observed behaviour. To run it, approve:
@@ -107,8 +110,8 @@ Alike in kind:
 
 BAM rules with no counterpart in ours:
 1. Fixed-length contracts (`theta`): every BAM worker is released after 8 quarters. Ours dismisses a random share of
-   each employer's workers per search round and keeps `contracted_wage` per employer for the year; there is no
-   contract length or tenure counter.
+   each employer's workers per search round and pays every hour hired the trade's one market wage; there is no
+   contract length, tenure counter or per-employer contract wage.
 2. Loyalty to the previous employer (l.286): nothing like it in `applications.py`.
 3. Wasted applications: BAM's default sends some applications to firms without vacancies. Ours applies only to
    employers whose offer is at or above the searcher's ask.
@@ -125,7 +128,7 @@ Where ours differs:
   producer whose margin is negative returns `Plan(0.0)` and bids for nothing at once, which is closer to BAM's
   ghost-firm exit than to BAM's gradual change.
 - Wage response: BAM's offers respond only to a firm's own open vacancies and never to unemployment; ours has a
-  market wage that falls to the clearing point at once, with hired workers kept at their contract wage.
+  market wage that falls to the clearing point at once and is paid to retained hours and new hires alike.
 
 ## Caveat
 

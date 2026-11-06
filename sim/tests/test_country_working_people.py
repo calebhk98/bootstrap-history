@@ -16,14 +16,14 @@ from .country_state_world import StateWorld
 
 economy = two_country_economy()
 
-north = CountryAnswers(economy, NORTH, off_map_trade=lambda direction: 0.0)
-home = CountryAnswers(economy, HOME, off_map_trade=lambda direction: 0.0)
+north = CountryAnswers(economy, NORTH)
+home = CountryAnswers(economy, HOME)
 north_by_trade = country_figures.people_by_trade(economy, NORTH)
 check("a country's working people are the people its labour markets hold, over every trade",
 	  abs(north.working_people() - sum(north_by_trade.values())) < 1e-6 and north.working_people() > north_by_trade["labourer"] - 1e-9,
 	  (north.working_people(), north_by_trade))
 check("...and not the other country's", abs(home.working_people() - north.working_people()) > 1.0, (home.working_people(), north.working_people()))
-check("a country whose tiles hold no labour markets has none to count (None)", CountryAnswers(economy, "nowhere", off_map_trade=lambda direction: 0.0).working_people() is None)
+check("a country whose tiles hold no labour markets has none to count (None)", CountryAnswers(economy, "nowhere").working_people() is None)
 
 
 MARKET_PEOPLE = 5400.0
@@ -59,7 +59,7 @@ def country_world(shared):
 
 def refuses(world, trade):
 	try:
-		world.national_people(trade)
+		world.labour.national_people(trade)
 	except NoCountryEconomy as error:
 		return error.country
 	return None
@@ -67,8 +67,8 @@ def refuses(world, trade):
 
 world = country_world(Shared())
 check("unskilled labour is the working people the country's labour markets hold, not its profile's working age",
-	  world.national_people("labourer") == MARKET_PEOPLE != PROFILE_WORKING_AGE, world.national_people("labourer"))
-check("a skilled trade is the people its markets hold in the trade", world.national_people("scribe") == 7.0)
+	  world.labour.national_people("labourer") == MARKET_PEOPLE != PROFILE_WORKING_AGE, world.labour.national_people("labourer"))
+check("a skilled trade is the people its markets hold in the trade", world.labour.national_people("scribe") == 7.0)
 
 
 class Empty(Shared):

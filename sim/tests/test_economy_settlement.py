@@ -1,23 +1,23 @@
-"""Settlement: clearing results become postings; unpaid and undelivered parts are reported, not crashed on."""
+"""Settlement: clearing results become postings; unpaid and undelivered parts settle for what can be met."""
 
 QUICK_TOPIC = True
 
 import random
 import unittest
 
-from sim.economy.accounts import Book, InsufficientFunds
-from sim.economy.settlement import CANNOT_DELIVER, CANNOT_PAY, book_legacy, settle_goods, settle_labour
-from sim.economy.types import (EDGE_LEGACY, EDGE_MINT, EDGE_PRODUCTION, ClearingResult, Fill, GoodsMove, LabourResult,
-                               Transfer)
+from sim.book import Book, InsufficientFunds
+from sim.economy.settlement import Settlement, settle_goods, settle_labour
+from sim.economy.types import (EDGE_MINT, EDGE_PRODUCTION, ClearingResult, Fill, GoodsMove, LabourResult,
+                               Pairing, Transfer)
 
 
 def fill(agent, side, quantity, price, tile="t1", good="grain"):
     return Fill(agent, good, "area", tile, quantity, price, side)
 
 
-def result(fills, price=2.0, good="grain"):
+def result(fills, price=2.0, good="grain", pairing=None):
     return ClearingResult(good, "area", "coin", price, sum(f.quantity for f in fills if f.side == "buy"),
-                          0.0, 0.0, 0.0, tuple(fills))
+                          0.0, 0.0, tuple(fills), pairing=pairing)
 
 
 def world(purses, stocks):
@@ -36,13 +36,11 @@ def money_postings(outcome):
 class GoodsSettlementTests(unittest.TestCase):
     def test_one_buyer_one_seller(self):
         book = world({"buyer": 100.0}, {("seller", "t1"): 10.0})
-        outcome = settle_goods(book, result([fill("buyer", "buy", 10.0, 2.0, "t2"), fill("seller", "sell", 10.0, 2.0)]))
-        self.assertTrue(outcome.complete)
+        settle_goods(book, result([fill("buyer", "buy", 10.0, 2.0, "t2"), fill("seller", "sell", 10.0, 2.0)]))
         self.assertAlmostEqual(book.balance("seller", "coin"), 20.0)
         self.assertAlmostEqual(book.balance("buyer", "coin"), 80.0)
         self.assertAlmostEqual(book.stock("buyer", "grain", "t2"), 10.0)
         self.assertAlmostEqual(book.stock("seller", "grain", "t1"), 0.0)
-        self.assertIn("sale of grain", book.money_flow("coin"))
 
     def test_each_fill_total_matches_what_the_fill_says(self):
         book = world({"b1": 100.0, "b2": 100.0}, {("s1", "t1"): 6.0, ("s2", "t3"): 4.0})
@@ -56,6 +54,15 @@ class GoodsSettlementTests(unittest.TestCase):
         self.assertAlmostEqual(book.stock("b1", "grain", "t2"), 7.0)
         self.assertAlmostEqual(book.stock("b2", "grain", "t4"), 3.0)
         self.assertAlmostEqual(book.stock("s2", "grain", "t3"), 0.0)
+
+    def test_each_seller_is_paid_its_own_price_and_the_buyer_pays_the_sum(self):
+        book = world({"buyer": 100.0}, {("cheap", "t1"): 5.0, ("dear", "t1"): 5.0})
+        fills = [fill("buyer", "buy", 10.0, 5.0, "t2"), fill("cheap", "sell", 5.0, 2.0), fill("dear", "sell", 5.0, 8.0)]
+        settle_goods(book, result(fills, price=5.0))
+        self.assertAlmostEqual(book.balance("cheap", "coin"), 10.0)
+        self.assertAlmostEqual(book.balance("dear", "coin"), 40.0)
+        self.assertAlmostEqual(book.balance("buyer", "coin"), 50.0)
+        self.assertLess(abs(book.total("coin")), 1e-9)
 
     def test_buyers_and_sellers_are_matched_in_order(self):
         book = world({"b1": 100.0, "b2": 100.0}, {("s1", "t1"): 6.0, ("s2", "t1"): 4.0})
@@ -82,11 +89,10 @@ class GoodsSettlementTests(unittest.TestCase):
 
     def test_unequal_totals_settle_the_smaller_side(self):
         book = world({"buyer": 100.0}, {("s1", "t1"): 4.0, ("s2", "t1"): 4.0})
-        outcome = settle_goods(book, result([fill("buyer", "buy", 5.0, 1.0), fill("s1", "sell", 4.0, 1.0),
+        settle_goods(book, result([fill("buyer", "buy", 5.0, 1.0), fill("s1", "sell", 4.0, 1.0),
                                              fill("s2", "sell", 4.0, 1.0)], price=1.0))
         self.assertAlmostEqual(book.stock("buyer", "grain", "t1"), 5.0)
         self.assertAlmostEqual(book.balance("buyer", "coin"), 95.0)
-        self.assertTrue(outcome.complete)
 
     def test_a_buyer_who_cannot_pay_gets_only_what_it_can_pay_for(self):
         book = world({"buyer": 10.0}, {("seller", "t1"): 10.0})
@@ -94,18 +100,14 @@ class GoodsSettlementTests(unittest.TestCase):
         self.assertAlmostEqual(book.stock("buyer", "grain", "t1"), 5.0)
         self.assertAlmostEqual(book.stock("seller", "grain", "t1"), 5.0)
         self.assertGreaterEqual(book.balance("buyer", "coin"), 0.0)
-        self.assertEqual(len(outcome.shortfalls), 1)
-        shortfall = outcome.shortfalls[0]
-        self.assertEqual((shortfall.agent, shortfall.kind), ("buyer", CANNOT_PAY))
-        self.assertAlmostEqual(shortfall.unsettled_quantity, 5.0)
-        self.assertAlmostEqual(shortfall.unpaid_amount, 10.0)
+        self.assertAlmostEqual(outcome.buyer_money["buyer"], 10.0)
 
     def test_a_seller_short_of_goods_delivers_what_it_has(self):
         book = world({"buyer": 100.0}, {("seller", "t1"): 4.0})
         outcome = settle_goods(book, result([fill("buyer", "buy", 10.0, 2.0), fill("seller", "sell", 10.0, 2.0)]))
         self.assertAlmostEqual(book.stock("buyer", "grain", "t1"), 4.0)
         self.assertAlmostEqual(book.balance("buyer", "coin"), 92.0)
-        self.assertEqual([(item.agent, item.kind) for item in outcome.shortfalls], [("seller", CANNOT_DELIVER)])
+        self.assertAlmostEqual(outcome.buyer_money["buyer"], 8.0)
 
     def test_a_negative_price_makes_the_seller_pay_the_taker(self):
         book = world({"seller": 100.0}, {("seller", "t1"): 10.0})
@@ -115,6 +117,41 @@ class GoodsSettlementTests(unittest.TestCase):
         self.assertAlmostEqual(book.balance("seller", "coin"), 90.0)
         self.assertAlmostEqual(book.stock("buyer", "grain", "t2"), 10.0)
 
+    def test_each_buyer_pays_the_asks_of_the_sellers_it_was_paired_with(self):
+        # both buyers are paired half and half with an ask of 2 and an ask of 8, so each pays 25 whatever the sort order
+        book = world({"h1": 1000.0, "h2": 1000.0}, {("cheap", "t1"): 5.0, ("dear", "t1"): 5.0})
+        pairing = Pairing((("h1", "t1"), ("h2", "t1")), (("cheap", "t1"), ("dear", "t1")), (2.0, 8.0),
+                          (0, 0, 1, 1), (0, 1, 0, 1), (2.5, 2.5, 2.5, 2.5))
+        fills = [fill("h1", "buy", 5.0, 5.0), fill("h2", "buy", 5.0, 5.0), fill("cheap", "sell", 5.0, 2.0),
+                 fill("dear", "sell", 5.0, 8.0)]
+        settle_goods(book, result(fills, price=5.0, pairing=pairing))
+        self.assertAlmostEqual(book.balance("h1", "coin"), 975.0)
+        self.assertAlmostEqual(book.balance("h2", "coin"), 975.0)
+        self.assertAlmostEqual(book.balance("cheap", "coin"), 10.0)
+        self.assertAlmostEqual(book.balance("dear", "coin"), 40.0)
+
+    def test_a_buyer_with_a_ceiling_never_pays_above_it(self):
+        # h2 (ceiling 3) is paired only with the ask of 2
+        book = world({"h1": 1000.0, "h2": 1000.0}, {("cheap", "t1"): 5.0, ("dear", "t1"): 5.0})
+        pairing = Pairing((("h1", "t1"), ("h2", "t1")), (("cheap", "t1"), ("dear", "t1")), (2.0, 8.0),
+                          (0, 0, 1), (0, 1, 0), (2.5, 2.5, 2.5))
+        fills = [fill("h1", "buy", 5.0, 5.0), fill("h2", "buy", 2.5, 2.0), fill("cheap", "sell", 5.0, 2.0),
+                 fill("dear", "sell", 2.5, 8.0)]
+        settle_goods(book, result(fills, price=4.0, pairing=pairing))
+        self.assertAlmostEqual(book.balance("h2", "coin"), 995.0)
+        self.assertAlmostEqual(book.stock("h2", "grain", "t1"), 2.5)
+        self.assertAlmostEqual(book.balance("h1", "coin"), 975.0)
+
+    def test_a_buyer_short_of_money_pays_in_proportion_across_its_pairs(self):
+        book = world({"h1": 25.0}, {("cheap", "t1"): 5.0, ("dear", "t1"): 5.0})
+        pairing = Pairing((("h1", "t1"),), (("cheap", "t1"), ("dear", "t1")), (2.0, 8.0), (0, 0), (0, 1), (5.0, 5.0))
+        fills = [fill("h1", "buy", 10.0, 5.0), fill("cheap", "sell", 5.0, 2.0), fill("dear", "sell", 5.0, 8.0)]
+        settle_goods(book, result(fills, price=5.0, pairing=pairing))
+        self.assertAlmostEqual(book.balance("h1", "coin"), 0.0)
+        self.assertAlmostEqual(book.balance("cheap", "coin") + book.balance("dear", "coin"), 25.0)
+        self.assertAlmostEqual(book.balance("cheap", "coin"), 5.0)
+        self.assertAlmostEqual(book.balance("dear", "coin"), 20.0)
+
     def test_an_empty_result_settles_nothing(self):
         self.assertEqual(settle_goods(world({}, {}), result([])).postings, [])
 
@@ -123,10 +160,21 @@ class GoodsSettlementTests(unittest.TestCase):
         book = world({"buyer": 1.0}, {("s1", "t1"): 1.0, ("s2", "t1"): 1.0, ("s3", "t1"): 1.0})
         fills = [fill("buyer", "buy", 3.0, third), fill("s1", "sell", 1.0, third),
                  fill("s2", "sell", 1.0, third), fill("s3", "sell", 1.0, third)]
-        outcome = settle_goods(book, result(fills, price=third))
+        settle_goods(book, result(fills, price=third))
         self.assertGreaterEqual(book.balance("buyer", "coin"), 0.0)
         self.assertAlmostEqual(book.stock("buyer", "grain", "t1"), 3.0)
-        self.assertTrue(outcome.complete)
+
+
+class BoughtByBuyerTests(unittest.TestCase):
+    def test_money_a_buyer_receives_as_a_seller_is_not_netted_out_of_what_it_paid(self):
+        settlement = Settlement(postings=[GoodsMove("farm", "house", "grain", "t1", 2.0, "sale of grain")],
+                                buyer_money={"house": 6.0})
+        self.assertEqual(settlement.bought_by_buyer(), {"house": (2.0, 6.0)})
+
+    def test_money_paid_to_take_a_negative_priced_good_nets_against_the_buyer_s_payments(self):
+        settlement = Settlement(postings=[GoodsMove("farm", "house", "waste", "t1", 2.0, "sale of waste")],
+                                buyer_money={"house": -1.5})
+        self.assertEqual(settlement.bought_by_buyer(), {"house": (2.0, -1.5)})
 
 
 class LabourSettlementTests(unittest.TestCase):
@@ -137,31 +185,14 @@ class LabourSettlementTests(unittest.TestCase):
 
     def test_wages_flow_from_employer_to_worker(self):
         book = world({"farm": 100.0}, {})
-        outcome = settle_labour(book, self.labour_result())
-        self.assertTrue(outcome.complete)
+        settle_labour(book, self.labour_result())
         self.assertAlmostEqual(book.balance("household", "coin"), 20.0)
-        self.assertAlmostEqual(book.money_flow("coin")["wages for ploughing"], 20.0)
 
     def test_an_employer_who_cannot_pay_pays_for_fewer_hours(self):
         book = world({"farm": 10.0}, {})
         outcome = settle_labour(book, self.labour_result())
         self.assertAlmostEqual(book.balance("household", "coin"), 10.0)
-        self.assertAlmostEqual(outcome.shortfalls[0].unsettled_quantity, 20.0)
-
-
-class LegacyTests(unittest.TestCase):
-    def test_a_legacy_posting_is_booked_against_the_legacy_edge(self):
-        book = Book()
-        book_legacy(book, "alice", "coin", 10.0, "engine grant")
-        self.assertEqual(book.balance("alice", "coin"), 10.0)
-        self.assertEqual(book.balance(EDGE_LEGACY, "coin"), -10.0)
-        book_legacy(book, "alice", "coin", -4.0, "engine charge")
-        self.assertEqual(book.balance("alice", "coin"), 6.0)
-        self.assertEqual(book.total("coin"), 0.0)
-
-    def test_a_legacy_charge_cannot_overdraw_an_agent(self):
-        with self.assertRaises(InsufficientFunds):
-            book_legacy(Book(), "alice", "coin", -4.0, "engine charge")
+        self.assertAlmostEqual(outcome.buyer_money["farm"], 10.0)
 
 
 class RandomisedTests(unittest.TestCase):

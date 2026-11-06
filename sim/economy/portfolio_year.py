@@ -15,6 +15,7 @@ from typing import Dict, List, Mapping, Sequence
 
 from . import equity, household_portfolio, secondary_trade
 from .types import AgentId, FundsOffer, Transfer
+from .rates import own_rate
 
 PORTFOLIO_SALE_PURPOSE = "portfolio sale"
 EPSILON = 1e-9
@@ -39,8 +40,8 @@ def apply_matches(record, currency: str, matched: Mapping[AgentId, float], wealt
         for buyer, spent in sorted(buyers.items()):
             payments.append(Transfer(buyer, seller, currency, sold * spent / bought, PORTFOLIO_SALE_PURPOSE))
     record.book.transfer_many(payments)
-    for producer_id in sorted(record.shares):
-        held = record.shares[producer_id]
+    for producer_id in sorted(record.capital_markets.shares):
+        held = record.capital_markets.shares[producer_id]
         pool = 0.0
         for seller, sold in sorted(sellers.items()):
             if seller in held:
@@ -55,23 +56,23 @@ def apply_matches(record, currency: str, matched: Mapping[AgentId, float], wealt
 
 def run(setup, record, view, funds: Sequence[FundsOffer], institutions: Sequence[str]) -> List[FundsOffer]:
     """The year's portfolio trading. Returns the offers with what each buyer spent taken off; leaves each saver's
-    unfilled buy order in `record.capital.share_buy_orders` for the producers' new issues."""
+    unfilled buy order in `record.capital_markets.capital.share_buy_orders` for the producers' new issues."""
     money = setup.currency_id
-    state = record.capital
+    state = record.capital_markets.capital
     state.share_buy_orders = {}
     savings = {offer.lender: offer.amount for offer in funds if offer.currency == money and offer.lender in record.cohorts
                and offer.amount > EPSILON}
     worths = equity.producer_worths(setup, record, view)
     factor = state.share_price_factor
     prices = {producer_id: factor * worth for producer_id, worth in worths.items() if worth > 0.0}
-    expected = household_portfolio.expected_yield(record.last_dividends, prices)
-    fraction = None if expected is None else household_portfolio.fraction_to_invest(view.interest_rate(money), expected)
+    expected = household_portfolio.expected_yield(record.capital_markets.last_dividends, prices)
+    fraction = None if expected is None else household_portfolio.fraction_to_invest(own_rate(view, money), expected)
     if fraction is None:
         return list(funds)
     trading = secondary_trade.SHARE_TRADING in institutions
     wealth = {holder: household_portfolio.share_wealth(
-        {producer_id: held[holder] for producer_id, held in record.shares.items() if holder in held}, worths, factor)
-        for holder in sorted({holder for held in record.shares.values() for holder in held if holder in record.cohorts})}
+        {producer_id: held[holder] for producer_id, held in record.capital_markets.shares.items() if holder in held}, worths, factor)
+        for holder in sorted({holder for held in record.capital_markets.shares.values() for holder in held if holder in record.cohorts})}
     orders = orders_of(fraction, savings, wealth)
     if not trading:
         orders = {trader: max(0.0, value) for trader, value in orders.items()}

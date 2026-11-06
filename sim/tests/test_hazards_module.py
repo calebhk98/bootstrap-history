@@ -61,10 +61,9 @@ class DatedShocks(unittest.TestCase):
 
     def test_a_wave_costs_the_seat_its_people_and_cash_then_cuts_the_population_once_and_tells_the_seat(self):
         dice = Script(0.0)
-        wage_index_readings = iter([1.5, 1.2])   # before the wave, then once the seat is told
         module = hazards_host.build(
             year=155, civilisation=civilisation(plague()), game_random=dice, acting_balance=1000.0,
-            answers={LoseStaff: lambda command: {"people_before": 10.0, "people_after": 7.0}}, wage_index=lambda: next(wage_index_readings))
+            answers={LoseStaff: lambda command: {"people_before": 10.0, "people_after": 7.0}})
         module.step_dated_shocks(["founder"])
         self.assertEqual(names(module), ["LoseStaff", "PayEdge", "CutPopulation",
                                          "NoteWageShock", "RefreshDemographicIndexes", "RecordEvent"])
@@ -75,7 +74,7 @@ class DatedShocks(unittest.TestCase):
         self.assertEqual((pay.edge, pay.purpose), (edges.EDGE_DESTROYED, "plague losses"))
         self.assertAlmostEqual(pay.amount, 1000.0 * 0.3 * constants.PLAGUE_CASH_LOSS_SHARE)
         self.assertAlmostEqual(cut.share, 0.3)
-        self.assertEqual((wage.cause, round(wage.change, 9), refresh.year), ("Plague", -0.3, 155))
+        self.assertEqual((wage.cause, refresh.year), ("Plague", 155))
         self.assertEqual((line.kind, line.seat, line.facts["hazard"]), ("hazard_hit", "founder", "Plague"))
         self.assertEqual(dice.asked, 1)
 

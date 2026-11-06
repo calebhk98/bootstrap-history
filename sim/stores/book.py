@@ -23,7 +23,10 @@ class StoreView:
     def __getattr__(self, key: str) -> Any:
         if key.startswith("_") or key in ("spec", "values"):
             raise AttributeError(key)
-        return self.values.get(key, self.spec.default)
+        try:
+            return self.values.get(store_key(self.spec, key), self.spec.default)
+        except ModError as error:
+            raise AttributeError(str(error))
 
     def items(self) -> List[Tuple[str, Any]]:
         return sorted(self.values.items())

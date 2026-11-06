@@ -46,13 +46,11 @@ def start_refusal(way, place, quote, known, standing, being_built):
 def pending_way(year, quote):
     """The record of a way paid for and being built."""
     return {"due": year + quote["years"], "trade": quote["trade"], "crew_hours": quote["crew_hours"],
-            "engineered": quote["engineered"], "pressed": year}
+            "engineered": quote["engineered"]}
 
 
 def open_ways(pending, built_ways, year):
-    """Open, in place, the ways whose build time has passed, in key then way order; the crews of those still building lean on
-    their trade again once a year. Answers the labour calls to make, in order: ("release" or "press", trade, hours)."""
-    calls = []
+    """Open, in place, the ways whose build time has passed, in key then way order."""
     for key in sorted(pending):
         for way in sorted(pending[key]):
             build = pending[key][way]
@@ -61,11 +59,6 @@ def open_ways(pending, built_ways, year):
                 built[way] = True
                 if build["engineered"]:
                     built["engineered"] = True
-                calls.append(("release", build["trade"], build["crew_hours"]))
                 del pending[key][way]
-            elif build["pressed"] < year:
-                calls.append(("press", build["trade"], build["crew_hours"]))
-                build["pressed"] = year
         if not pending[key]:
             del pending[key]
-    return calls

@@ -23,4 +23,4 @@ def site_rent_per_run(setup, record, view, recipe_id: str, tile: TileId, yield_f
     recipe = setup.recipes[recipe_id]
     probe = Producer("probe", "probe", recipe_id, tile, 1.0)
     revenue = unit_cost.revenue_per_run(recipe, expected_output_prices(probe, recipe, view)) * yield_factor
-    return rent_per_run(record.land_rent, record.land_mean_value, tile, setup.land_per_run.get(recipe_id, 0.0), revenue)
+    return rent_per_run(record.land.land_rent, record.land.land_mean_value, tile, setup.land_per_run.get(recipe_id, 0.0), revenue)

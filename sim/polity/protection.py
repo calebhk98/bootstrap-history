@@ -2,12 +2,13 @@
 
 Needs: effect_values, effect_sum, running_mechanics, revenue_estimate, standing_floor, founder, year,
 danger_lines, send (RecordEvent)."""
+from sim.assembly.api import Part
 from sim.reporting.api import RecordEvent
 
 from . import constants, eminence_rules, rules
 
 
-class Protection:
+class Protection(Part):
 
 	def update_protection(self):
 		"""Standing, office and money all protect: wealth buys advocates, priesthoods, magistracies and, in a society with a
@@ -20,11 +21,11 @@ class Protection:
 		# an armourer is protected differently from a philosopher, and only when somebody wants what he makes: gated on having
 		# a patron at all
 		if needs.running_mechanics("patron"):
-			protection += constants.MILITARY_USEFULNESS_PROTECTION * weights["patronage_weight"] * self.military_leverage()
+			protection += constants.MILITARY_USEFULNESS_PROTECTION * weights["patronage_weight"] * self.parts.notice.military_leverage()
 		works_protection = needs.effect_sum("protection", protection)
 		# both a burden and a shield: once the household is large enough for the state to press a civic office on it, the
 		# office costs money every year and is itself standing
-		pressed_office = self.state_notice() > constants.STATE_NOTICE_THRESHOLD
+		pressed_office = self.parts.notice.state_notice() > constants.STATE_NOTICE_THRESHOLD
 		income = max(1.0, needs.revenue_estimate())
 		self.seat.protection = rules.protection_total(works_protection, pressed_office, self.seat.reputation,
 		                                              self.seat.bribes_ytd, income, weights["bribability"])

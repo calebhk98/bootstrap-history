@@ -13,7 +13,7 @@ import os
 import unittest
 from unittest import mock
 
-from sim.disease.module import Disease
+from sim.disease.contact import Contact
 from sim.tests.disease_stand_in import ROOT, SEEDS, StandInSim, civilisation, mexica_with_source, world_map
 
 PLAGUE_HAZARD_NAMES = ("Antonine plague", "Plague of Cyprian", "The Justinianic plague", "Recurrent plague", "Black Death",
@@ -57,7 +57,7 @@ class DeathsComeFromTheModelTest(unittest.TestCase):
         pathogen_id = sorted(civilisation("rome_100ad")["disease_exposure"]["outside_contact"][0]["pathogens"])[0]
         handed, sim_start = 0, sim.year
         # The epidemic arrives in the first year, so a few years show the hand-off without waiting for a draw.
-        with mock.patch.object(Disease, "introductions",
+        with mock.patch.object(Contact, "introductions",
                                lambda module, records, year: [pathogen_id] if year == sim_start else []):
             for _ in range(5):
                 handed += sum(sim.disease_year(sim.food, sim.year).values())

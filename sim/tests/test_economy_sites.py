@@ -6,8 +6,8 @@ import unittest
 from dataclasses import replace
 from types import SimpleNamespace
 
+from sim.economy.credit_record import CreditRecord
 from sim.economy import location, opening, sites
-from sim.economy.opening import open_economy
 from sim.economy.producers import Producer
 from sim.economy.recipes import recipe_from_entry
 from sim.economy.types import MarketArea, Recipe, SiteLimit
@@ -50,31 +50,22 @@ class RulesTests(unittest.TestCase):
 
 class ApplyTests(unittest.TestCase):
     def _record(self, producers):
-        return SimpleNamespace(producers={producer.agent_id: producer for producer in producers}, expansion_runs={})
+        return SimpleNamespace(producers={producer.agent_id: producer for producer in producers}, credit=CreditRecord())
 
     def test_capacity_is_capped_and_yield_follows_the_limit(self):
-        setup = fixture.small_setup(recipes={"dig": _bound()})
+        setup = fixture.small_setup(recipes={"dig": _bound()}, site_limits=(SiteLimit("dig", "hills", 5.0, 0.5),))
         record = self._record([Producer("p1", "o", "dig", "hills", 9.0), Producer("p2", "o", "dig", "town", 4.0)])
-        sites.apply_site_limits(record, setup, (SiteLimit("dig", "hills", 5.0, 0.5),))
+        sites.apply_site_limits(record, setup)
         self.assertEqual(record.producers["p1"].capacity_runs, 5.0)
         self.assertEqual(record.producers["p1"].yield_factor, 0.5)
         self.assertEqual(record.producers["p2"].capacity_runs, 0.0)
 
-    def test_empty_limits_keep_the_last_declared(self):
-        setup = fixture.small_setup(recipes={"dig": _bound()}, site_limits=(SiteLimit("dig", "hills", 5.0),))
-        record = self._record([Producer("p1", "o", "dig", "hills", 9.0)])
-        sites.apply_site_limits(record, setup, ())
-        self.assertEqual(record.producers["p1"].capacity_runs, 5.0)
-        sites.apply_site_limits(record, setup, (SiteLimit("dig", "hills", 2.0),))
-        self.assertEqual(record.producers["p1"].capacity_runs, 2.0)
-        self.assertEqual(setup.site_limits, (SiteLimit("dig", "hills", 2.0),))
-
     def test_planned_plant_growth_is_cut_to_the_headroom(self):
-        setup = fixture.small_setup(recipes={"dig": _bound()})
+        setup = fixture.small_setup(recipes={"dig": _bound()}, site_limits=(SiteLimit("dig", "hills", 5.0),))
         record = self._record([Producer("p1", "o", "dig", "hills", 4.0)])
-        record.expansion_runs["p1"] = 3.0
-        sites.apply_site_limits(record, setup, (SiteLimit("dig", "hills", 5.0),))
-        self.assertEqual(record.expansion_runs["p1"], 1.0)
+        record.credit.expansion_runs["p1"] = 3.0
+        sites.apply_site_limits(record, setup)
+        self.assertEqual(record.credit.expansion_runs["p1"], 1.0)
 
     def test_extraction_by_tile_reports_runs_worked_by_site_bound_recipes(self):
         setup = fixture.small_setup(recipes={"dig": _bound(), "farm": _free()})
@@ -83,24 +74,6 @@ class ApplyTests(unittest.TestCase):
                                replace(Producer("p3", "o", "farm", "town", 9.0), last_runs=7.0),
                                Producer("p4", "o", "dig", "town", 9.0)])
         self.assertEqual(sites.extraction_by_tile(record, setup), {("dig", "hills"): 5.0, ("dig", "town"): 0.0})
-
-
-class OpeningSitesTests(unittest.TestCase):
-    def _setup(self, limits):
-        recipes = fixture.recipes()
-        recipes[fixture.MINE] = replace(recipes[fixture.MINE], site_bound=True)
-        return fixture.small_setup(recipes=recipes, site_limits=limits)
-
-    def test_without_limits_extraction_stays_where_it_was(self):
-        record, _areas, _carriage = open_economy(self._setup(()))
-        mines = [p for p in record.producers.values() if p.recipe_id == fixture.MINE]
-        self.assertEqual([p.tile for p in mines], [fixture.TOWN])
-        self.assertGreater(mines[0].capacity_runs, 0.0)
-
-    def test_the_opening_counts_the_limit_not_the_anchor(self):
-        record, _areas, _carriage = open_economy(self._setup((SiteLimit(fixture.MINE, fixture.HILLS, 5000.0),)))
-        self.assertEqual({p.tile for p in record.producers.values() if p.recipe_id == fixture.MINE},
-                         {fixture.HILLS})
 
 
 class OpeningSplitTests(unittest.TestCase):

@@ -9,11 +9,13 @@ player-facing report built on `running`: which completed institutions are silent
 not: a school with nobody paid to keep it open trains no scholars, a workshop whose doors are shut houses nobody. `running` is `has`
 for everything that has no doors to shut, and for a concern the test that its doors are open.
 Needs: the views of READS_BY_OWNER in module_spec.py."""
+from sim.assembly.api import Part
+
 from . import rules
 from .constants import INSTITUTION_EXPANSION_CONVEXITY
 
 
-class Capability:
+class Capability(Part):
 
 	def is_venture(self, node_id):
 		"""Is this something you could run as a going concern, as opposed to a
@@ -30,7 +32,7 @@ class Capability:
 		benefit it is not collecting right now (the capability nodes' `lost_benefit`, plague_preparedness aside).
 
 		fin_university is the one entry needing its own gate in the table: its sole running()-gated effect
-		(update_protection, society.py) is an `or` with school_founded, so closing it costs nothing while
+		(`update_protection`, sim/polity/protection.py) is an `or` with school_founded, so closing it costs nothing while
 		school_founded is still open, and warning anyway would be a false alarm.
 		"""
 		nodes = self.needs.tree_nodes()

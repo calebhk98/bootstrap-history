@@ -10,7 +10,7 @@ from dataclasses import dataclass, field
 from typing import Mapping, Optional, Tuple
 
 from sim.contracts import Contract
-from sim.book import (EDGE_PREFIX, AgentId, CurrencyId, GoodId, GoodsMove, TileId, Transfer,  # noqa: F401
+from sim.book import (EDGE_EXCHANGE, EDGE_PREFIX, AgentId, CurrencyId, GoodId, GoodsMove, TileId, Transfer,  # noqa: F401
                       is_edge)
 
 HECTARES_PER_SQUARE_KILOMETRE = 100.0   # unit conversion from a tile's area in km2 to hectares
@@ -27,10 +27,8 @@ EDGE_EXTERNAL = "edge:external"          # foreign economies not modelled as age
 EDGE_PRODUCTION = "edge:production"      # goods made: the counterparty of output
 EDGE_CONSUMPTION = "edge:consumption"    # goods used up by households, inputs used in production
 EDGE_SPOILAGE = "edge:spoilage"          # goods lost while held
-EDGE_DEFAULT = "edge:default"            # debt written off
 EDGE_LEGACY = "edge:legacy"              # engine postings that do not yet name a counterparty
 EDGE_CARGO = "edge:cargo"                # money between a trader's purse and its cargo account
-EDGE_EXCHANGE = "edge:exchange"          # the actors' coin turned into the economy's unit and back (agents/purses.py names the other side)
 
 
 def is_external_edge(account: AgentId) -> bool:
@@ -229,17 +227,29 @@ class Quote:
 
 
 @dataclass(frozen=True)
+class Pairing:
+    """The trades of a clearing buyer by seller: a pair is a quantity one buyer bought from one seller at that seller's
+    ask. `buyers` and `sellers` are (agent, tile) per bid and per offer; the pair lists are parallel."""
+    buyers: Tuple[Tuple[AgentId, TileId], ...]
+    sellers: Tuple[Tuple[AgentId, TileId], ...]
+    asks: Tuple[float, ...]              # per seller
+    buyer_index: Tuple[int, ...]         # per pair
+    seller_index: Tuple[int, ...]        # per pair
+    quantity: Tuple[float, ...]          # per pair
+
+
+@dataclass(frozen=True)
 class ClearingResult:
     good: GoodId
     area: AreaId
     currency: CurrencyId
-    price: float                     # the crossing the solver worked from; a price traded at only when quantity > 0
+    price: Optional[float]           # the crossing the solver worked from; a price traded at only when quantity > 0; None with no price held and no ask
     quantity: float
     demand_at_price: float
     offered_at_price: float
-    unmet_floor: float               # floor quantity buyers could not get or pay for
     fills: Tuple[Fill, ...]
     quote: Optional[Quote] = None    # set when nothing traded
+    pairing: Optional["Pairing"] = None    # who bought from whom at which ask; None where only fills say (one-price clearings)
 
     @property
     def traded_price(self) -> Optional[float]:

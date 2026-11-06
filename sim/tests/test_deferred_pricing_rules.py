@@ -15,18 +15,20 @@ def tree():
 
 
 def game(labour_figure):
-    schedule = types.SimpleNamespace(money_per_labour_hour=None, wages_per_hour=lambda: {"farmer": 0.5})
+    schedule = types.SimpleNamespace(
+        money_per_labour_hour=None, wages_per_hour=lambda: {"farmer": 0.5},
+        priced_at=lambda figure: types.SimpleNamespace(money_per_labour_hour=figure, wages_per_hour=lambda: {"farmer": 0.5}))
     changes = []
     world = types.SimpleNamespace(
         nodes=tree(), start_civ={}, state=types.SimpleNamespace(economy=types.SimpleNamespace(nodes_money_per_labour_hour=None)),
-        labour=types.SimpleNamespace(money_per_labour_hour=lambda: labour_figure), changes=changes,
-        view=lambda name: (lambda: {}), _done_changed=lambda: changes.append("done"), _operating_changed=lambda: changes.append("operating"))
+        changes=changes,
+        view=lambda name: (lambda: labour_figure) if name == "money_per_labour_hour" else (lambda: {}), _done_changed=lambda: changes.append("done"), _operating_changed=lambda: changes.append("operating"))
     return world, schedule
 
 
 class RepriceTreeTest(unittest.TestCase):
     def reprice(self, world, schedule, figure=None):
-        with mock.patch.object(opening_money, "build_schedule", lambda registry, civ: schedule):
+        with mock.patch.object(opening_money, "opening_schedule", lambda sim: schedule):
             opening_money.reprice_tree(world, figure)
 
     def test_the_saved_figure_prices_the_tree_and_is_kept(self):

@@ -61,14 +61,14 @@ def form_tiles(declared: Any, world: Any) -> Optional[FrozenSet[str]]:
 		return None
 	if declared["basis"] not in TILE_BASES:
 		raise ValueError("form %r names tiles but its basis %r is national" % (declared["form"], declared["basis"]))
-	chosen = set(listed) if listed is not None else set(world.held_tiles())
+	chosen = set(listed) if listed is not None else set(world.revenue.held_tiles())
 	return frozenset(chosen - set(excepted or ()))
 
 
 def assess(world: Any) -> List[Assessment]:
 	"""Every declared form assessed on this year's base, in the order the civilisation lists them."""
 	assessments = []
-	for declared in world.revenue_forms():
+	for declared in world.revenue.revenue_forms():
 		if declared["basis"] == revenue_labour.BASIS:
 			assessments.append(labour_due(declared, world))
 			continue
@@ -79,11 +79,13 @@ def assess(world: Any) -> List[Assessment]:
 			base = measure(world, tiles, material)
 		else:
 			base = measure(world) if tiles is None else measure(world, tiles)
+		if base is None:   # a base the world cannot measure this year (an unpriced coin metal) is not assessed
+			continue
 		rate = float(declared["rate"])
 		if material and material != base.material:
 			raise ValueError("form %r is paid in %r but its basis %r yields %r"
 							 % (declared["form"], material, declared["basis"], base.material))
-		collectible = world.collectible_share(tiles)
+		collectible = world.collection.collectible_share(tiles)
 		kept = authority.kept_on(world, tiles)
 		if base.payers:
 			assessments.append(leaked(taxed_actors(declared, base, collectible), kept))
@@ -123,7 +125,7 @@ def labour_due(declared: Any, world: Any) -> Assessment:
 	"""Labour owed: the base is a year of the liable people's work at the going wage, the rate the share of a working
 	year the days come to, so the money's worth is what the state would pay for the labour."""
 	levy = revenue_labour.levy_of(declared, world)
-	share_of_year = (float(declared["rate"]) * revenue_labour.HOURS_PER_WORKING_DAY) / world.hours_per_person_year
-	base = levy.people * world.pay_per_person_year("labourer")
+	share_of_year = (float(declared["rate"]) * revenue_labour.HOURS_PER_WORKING_DAY) / world.labour.hours_per_person_year
+	base = levy.people * world.labour.pay_per_person_year(world.labour.trade_of_role("unskilled"))
 	return Assessment(declared["form"], declared["basis"], base, share_of_year, share_of_year * base,
 					  person_days=levy.person_days, labour_to=levy.destination, commute=levy.commute)

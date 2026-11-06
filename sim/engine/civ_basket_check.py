@@ -11,7 +11,7 @@ Used by `simulator.py validate`, and importable for tests.
 """
 from types import SimpleNamespace
 
-from sim.agents.api import exports_allowed
+from sim.agents.api import ExportPolicy, exports_allowed
 
 from .civ_start_check import UNREVIEWED, MINIMUM_REASON_LENGTH, _producers
 
@@ -24,7 +24,7 @@ def _sells_abroad(partner, good):
     """Whether the partner's state, at its start, lets the good leave: its export policy answers from the
     monopolies its data gives it."""
     state = SimpleNamespace(record=SimpleNamespace(state_monopolies=set(partner.get("state_monopolies") or ())),
-                            decision_policy=None)
+                            decision_policy=ExportPolicy())
     return bool(exports_allowed(state, [good]))
 
 

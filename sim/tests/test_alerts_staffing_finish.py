@@ -6,7 +6,7 @@ from types import SimpleNamespace
 
 from .harness import *  # noqa: F401,F403
 from sim.projects.api import BLOCKER_KINDS, START_CHECKS
-from sim.labour.labour_staff_ledger import StaffLedgerMixin
+from sim.labour.labour_staff_ledger import StaffLedger
 from sim.refusal import cause_of
 from sim.ui.proto.step_alerts import step_alerts, alert_severity
 from sim.ui.proto.step_stops import severe_stop_reason
@@ -54,11 +54,11 @@ check("a newly blocked project stops the step",
 def departures(cause, counts, stops=()):
     log = []
     ledger = SimpleNamespace(_world=SimpleNamespace(
-        concerns_to_close_for_staffing=lambda: list(stops), stopped_yearly_value=lambda node_ids: 0.0,
+        ventures=SimpleNamespace(concerns_to_close_for_staffing=lambda: list(stops), stopped_yearly_value=lambda node_ids: 0.0),
         state=SimpleNamespace(household=SimpleNamespace(log=log), scenario=SimpleNamespace(year=100))))
     event_stand_in.stood_in(ledger._world)
-    ledger.yearly_value_of = lambda node_ids: ledger._world.stopped_yearly_value(node_ids)
-    StaffLedgerMixin.log_staff_lost(ledger, cause, counts)
+    ledger.yearly_value_of = lambda node_ids: ledger._world.ventures.stopped_yearly_value(node_ids)
+    StaffLedger.log_staff_lost(ledger, cause, counts)
     return [message for _, message in log]
 
 

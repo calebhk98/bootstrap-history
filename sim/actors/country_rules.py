@@ -1,5 +1,5 @@
 """What the cast answers about countries and their treasuries: plain functions of the registry or of written-out inputs."""
-from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple
+from typing import Any, Callable, Dict, List, Mapping, Optional, Sequence, Tuple
 
 from sim.agents.api import GOVERNMENT_PREFIX, CountryLiteracy, seed_strata
 from sim.coin.api import visibility_factor
@@ -31,11 +31,11 @@ def treasury_account(holder: str, joined_seats: Sequence[str], government_id: Op
 	return government_id if government_id is not None else GOVERNMENT_PREFIX + str(holder)
 
 
-def country_literacy(registry: Any, country: Optional[str]) -> CountryLiteracy:
+def country_literacy(registry: Any, country: Optional[str], trade_of_role: Callable[[str], str]) -> CountryLiteracy:
 	"""The reading shares of `country` (the home country when None), owned by the country's strata; the strata are founded
 	first when the cast holds none."""
 	if not registry.of_kind("stratum"):
-		seed_strata(registry, None)
+		seed_strata(registry, trade_of_role)
 	home = registry.state.home_country
 	country = country or home
 	return CountryLiteracy(actor for actor in registry.of_kind("stratum") if (actor.record.country or home) == country)
@@ -44,7 +44,7 @@ def country_literacy(registry: Any, country: Optional[str]) -> CountryLiteracy:
 def partner_catch_chance(registry: Any, world: Any, civilization_id: str, share_of_holding: float) -> float:
 	"""Chance the partner's state finds out a taking of this share of what it holds: its reach (what its paid officials collect of
 	what is due over its roads) against how visible the bite is."""
-	reach = float(registry.world_for(registry.get(GOVERNMENT_PREFIX + civilization_id), world).state_reach())
+	reach = float(registry.countries.world_for(registry.get(GOVERNMENT_PREFIX + civilization_id), world).taxpayers.state_reach())
 	return stock_dynamics.catch_chance(reach, visibility_factor(share_of_holding))
 
 

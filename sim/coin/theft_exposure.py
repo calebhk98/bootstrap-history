@@ -16,10 +16,6 @@ PORTABILITY = {
         "THEFT_PORTABILITY_COIN", 1.0, kind="temporary_heuristic", unit="dimensionless (0..1)", source=None,
         confidence="D", why="Coin is value in the form a thief spends without being asked who he took it from. "
         "The reference the other kinds are scaled against; not measured."),
-    "precious_metal": declare(
-        "THEFT_PORTABILITY_PRECIOUS_METAL", 0.9, kind="temporary_heuristic", unit="dimensionless (0..1)",
-        source=None, confidence="D", why="Bullion and plate are dense and sell anywhere, but a fence must melt or "
-        "weigh them first. Not measured."),
     "goods": declare(
         "THEFT_PORTABILITY_GOODS", 0.25, kind="temporary_heuristic", unit="dimensionless (0..1)", source=None,
         confidence="D", why="Bulk goods need carts and a buyer for each load, so a thief gets little per unit of "
@@ -38,7 +34,7 @@ PORTABILITY = {
         "event (confiscation, sack). Not measured."),
 }
 # Kinds a guard can watch because they are carried or stored; a claim or a field is not guarded by a watch.
-GUARDABLE_KINDS = ("coin", "precious_metal", "goods")
+GUARDABLE_KINDS = ("coin", "goods")
 
 THEFT_SHARE_PER_YEAR_AT_FULL_EXPOSURE = declare(
     "THEFT_SHARE_PER_YEAR_AT_FULL_EXPOSURE", 0.03, kind="temporary_heuristic",

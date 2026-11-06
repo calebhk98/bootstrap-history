@@ -1,11 +1,10 @@
 """The founder's seat as the owner of a reviewed business: how its plants are shut, spared and seized.
 
-`Business.review` (sim/agents/business_review.py) decides which plants close and why; this answers what is particular to
+`Business.reviews.review` (sim/agents/business_review.py) decides which plants close and why; this answers what is particular to
 the founder's seat: the supervision pool, the policy that lets losses be shed, the credit line, and the way a shut plant is
 mothballed rather than forgotten."""
-from sim.agents.api import edges
 from sim.finance.api import constants as finance_constants
-from sim.ledger.api import ReceiveFromEdge
+from sim.ledger.api import WriteOffHouseholdDebt
 
 
 class SeatReview:
@@ -17,18 +16,18 @@ class SeatReview:
 		self._year = module.needs.year() if year is None else year
 
 	def staff_closures(self):
-		return self._module.concerns_to_close_for_staffing()
+		return self._module.parts.staffing_shortfall.concerns_to_close_for_staffing()
 
 	def reopening_order(self, entry_keys):
 		"""Staff closures still worth reopening (known, in the tree), best earning for the hands they tie up first."""
 		needs, world = self._module.needs, self._world
 		done, nodes = needs.techniques_held(), needs.tree_nodes()
 		reopenable = [node_id for node_id in entry_keys if node_id in done and node_id in nodes]
-		return sorted(reopenable, key=lambda node_id: -(world.concern_margin(node_id)
-		                                                / max(0.01, sum(world.concern_staff(node_id).values()))))
+		return sorted(reopenable, key=lambda node_id: -(world.concerns.concern_margin(node_id)
+		                                                / max(0.01, sum(world.concerns.concern_staff(node_id).values()))))
 
 	def reopens_staffed_plant(self, entry_key):
-		did_open, _message = self._module._open_venture(entry_key)
+		did_open, _message = self._module.parts.auto_open.open_venture(entry_key)
 		return did_open
 
 	def sheds_losses(self):
@@ -49,18 +48,18 @@ class SeatReview:
 		return entry_key in self._module.needs.capability_sets()[0]
 
 	def standing_margin(self, entry_key):
-		return self._world.concern_margin(entry_key)
+		return self._world.concerns.concern_margin(entry_key)
 
 	def creditors_press(self):
 		needs = self._module.needs
 		return needs.acting_balance() < -needs.credit_limit(None, None, None)
 
 	def shut(self, entry_key, reason):
-		self._module.close_work(entry_key, reason, self._year)
+		self._module.parts.closures.close_work(entry_key, reason, self._year)
 
 	def proceeds_of_seizure(self, entry_key):
 		size = self._module.needs.venture_size[entry_key]
-		return self._world.upkeep(entry_key, size) * finance_constants.CREDITOR_SEIZURE_VALUE_MULTIPLE
+		return self._world.concerns.upkeep(entry_key, size) * finance_constants.CREDITOR_SEIZURE_VALUE_MULTIPLE
 
 	def receive_seizure(self, entry_key, proceeds):
-		self._module.needs.send(ReceiveFromEdge(edges.EDGE_CREDITORS, proceeds, "concern seized by creditors"))
+		self._module.needs.send(WriteOffHouseholdDebt(proceeds, "concern seized by creditors"))

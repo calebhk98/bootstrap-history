@@ -21,10 +21,14 @@ class StubBook:
         return ("holdings", agent)
 
 
+GOODS_FIELDS = ("opening_basket", "volumes", "unsold", "unmet")
+
+
 def stand_in(**record_fields):
-    setup = types.SimpleNamespace(currency_id="coin", civ_id="home", unskilled_trade="labourer",
+    setup = types.SimpleNamespace(currency_id="coin", civ_id="home", unskilled_trade="labourer", tiles={},
                                   countries=lambda: ("home",))
-    return types.SimpleNamespace(setup=setup, record=types.SimpleNamespace(book=StubBook(), **record_fields))
+    return types.SimpleNamespace(setup=setup, record=types.SimpleNamespace(book=StubBook(), goods=types.SimpleNamespace(**{name: value for name, value in record_fields.items() if name in GOODS_FIELDS}),
+                                                                  **{name: value for name, value in record_fields.items() if name not in GOODS_FIELDS}))
 
 
 class EconomyApiTests(unittest.TestCase):
@@ -43,12 +47,6 @@ class EconomyApiTests(unittest.TestCase):
         self.assertEqual(api.interest_rate(economy), 0.07)
         self.assertIsNone(api.interest_rate(stand_in(memory=types.SimpleNamespace(rates={}))))
 
-    def test_external_trade_net_reads_the_external_edge(self):
-        self.assertEqual(api.external_trade_net(stand_in()), ("net", api.EDGE_EXTERNAL, "coin"))
-
-    def test_external_trade_volume_reads_the_external_edge(self):
-        self.assertEqual(api.external_trade_volume(stand_in()), ("volume", api.EDGE_EXTERNAL, "coin"))
-
     def test_account_balance_reads_the_currency_balance(self):
         self.assertEqual(api.account_balance(stand_in(), "agent"), ("balance", "agent", "coin"))
 
@@ -59,9 +57,20 @@ class EconomyApiTests(unittest.TestCase):
         economy = stand_in(volumes={"grain|north": 2.0, "grain|south": 3.0, "ore|north": 5.0})
         self.assertEqual(api.traded_volumes(economy), {"grain": 5.0, "ore": 5.0})
 
-    def test_wages_by_trade_lists_each_trades_market_wages(self):
-        economy = stand_in(memory=types.SimpleNamespace(wages={"smith|north": 2.0, "smith|south": 3.0, "miner|north": 1.0}))
-        self.assertEqual(api.wages_by_trade(economy), {"smith": [2.0, 3.0], "miner": [1.0]})
+
+class LandRentWhereNoneIsLetTests(unittest.TestCase):
+    def economy(self, land_rent):
+        setup = types.SimpleNamespace(tiles={"a": None, "b": None}, countries=lambda: ("home",), civ_id="home")
+        return types.SimpleNamespace(setup=setup, record=types.SimpleNamespace(land=types.SimpleNamespace(land_rent=land_rent)))
+
+    def test_the_mean_rent_is_none_where_no_land_was_let(self):
+        self.assertIsNone(api.land_rent_per_hectare(self.economy({"a": 0.0})))
+
+    def test_a_tile_where_none_was_let_takes_the_mean_of_the_land_let_elsewhere(self):
+        self.assertAlmostEqual(api.land_rent_at_tile(self.economy({"a": 4.0, "b": 0.0}), "b"), 4.0)
+
+    def test_a_tile_rent_is_none_where_no_land_was_let_anywhere(self):
+        self.assertIsNone(api.land_rent_at_tile(self.economy({}), "a"))
 
 
 if __name__ == "__main__":

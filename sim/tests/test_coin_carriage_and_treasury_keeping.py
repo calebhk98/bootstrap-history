@@ -5,10 +5,11 @@ the coin module's `charge_keeping` command handler over plain actors; the househ
 test_coin_keeping_charged."""
 QUICK_TOPIC = True
 
+from sim.tests.agents_fake_world import flat_namespace
+import sim.engine.core  # noqa: F401  (loads the engine in its import order)
 import types
 import unittest
 
-import sim.engine.core  # noqa: F401  (loads the engine in its import order)
 from sim.agents.edges import EDGE_COIN_GUARDS
 from sim.coin.commands import ChargeKeeping
 from sim.coin.constants import COIN_GUARD_HOURS_PER_TONNE_YEAR, KEEPING_CAUSE
@@ -16,6 +17,7 @@ from sim.coin.module import Coin
 from sim.foreign_trade.module import ForeignTrade
 from sim.foreign_trade.state import ForeignTradeWorld
 from sim.ledger.api import PayEdgeFrom
+from sim.refusal import Refusal
 from sim.tests import module_harness
 from sim.world import coin_metal
 
@@ -99,7 +101,7 @@ class KeepingByAnyActor(unittest.TestCase):
     def charged(self, **actors):
         """What each named actor is charged by one `ChargeKeeping`: {actor id: (edge, money, cause)}."""
         registry = types.SimpleNamespace(actors=actors, state=types.SimpleNamespace(home_country="home"))
-        world = types.SimpleNamespace(pay_per_person_year=lambda trade: 100.0)
+        world = flat_namespace(labour=types.SimpleNamespace(trade_of_role=lambda role: "guard", pay_per_person_year=lambda trade: 100.0))
         module = module_harness.build(Coin, views={"civilisation": HOME_COIN, "money_per_labour_hour": MONEY_PER_HOUR,
                                                    "cast": registry, "actor_world": world})
         module.charge_keeping(ChargeKeeping())
@@ -113,6 +115,42 @@ class KeepingByAnyActor(unittest.TestCase):
         self.assertEqual(paid["state"], (EDGE_COIN_GUARDS, expected, KEEPING_CAUSE))
         self.assertEqual(paid["firm"], paid["state"])
         self.assertEqual(KEEPING_CAUSE, EDGE_COIN_GUARDS)
+
+    def test_a_foreign_actors_coin_is_weighed_by_its_own_countrys_standard(self):
+        record = types.SimpleNamespace(country="partner", exited_year=None, money=1.0e8, stratum=None)
+        foreign = types.SimpleNamespace(money=1.0e8, record=record)
+        pay = types.SimpleNamespace(trade_of_role=lambda role: "guard", pay_per_person_year=lambda trade: 100.0)
+        registry = types.SimpleNamespace(
+            actors={"foreigner": foreign}, state=types.SimpleNamespace(home_country="home"),
+            countries=types.SimpleNamespace(world_for=lambda actor, world: types.SimpleNamespace(labour=pay)))
+        partner_kg_per_unit = 0.5 * KG_PER_UNIT
+        module = module_harness.build(Coin, views={
+            "civilisation": HOME_COIN, "money_per_labour_hour": MONEY_PER_HOUR, "cast": registry,
+            "actor_world": flat_namespace(labour=pay), "partner_coin_standard": {"partner": {"kg_per_unit": partner_kg_per_unit}}})
+        module.charge_keeping(ChargeKeeping())
+        (charge,) = module_harness.sent(module)
+        expected = coin_metal.keeping_cost_per_year(1.0e8, partner_kg_per_unit, COIN_GUARD_HOURS_PER_TONNE_YEAR, MONEY_PER_HOUR)
+        self.assertAlmostEqual(charge.amount, expected)
+
+    def test_a_refused_keeping_charge_is_skipped_and_logged_with_its_cause(self):
+        registry = types.SimpleNamespace(actors={"state": self.actor(1.0e8)}, state=types.SimpleNamespace(home_country="home"))
+        module = module_harness.build(
+            Coin, views={"civilisation": HOME_COIN, "money_per_labour_hour": MONEY_PER_HOUR, "cast": registry,
+                         "actor_world": flat_namespace(labour=types.SimpleNamespace(trade_of_role=lambda role: "guard", pay_per_person_year=lambda trade: 100.0))},
+            answers={PayEdgeFrom: Refusal("cannot_pay", "short")})
+        module.charge_keeping(ChargeKeeping())
+        (charge, event) = module_harness.sent(module)
+        self.assertIsInstance(charge, PayEdgeFrom)
+        self.assertEqual((event.kind, event.facts["actor"], event.facts["cause"]), ("unpaid_charge", "state", "cannot_pay"))
+
+    def test_an_actor_whose_keeping_was_refused_is_noted_as_having_paid_none_of_it(self):
+        registry = types.SimpleNamespace(actors={"state": self.actor(1.0e8)}, state=types.SimpleNamespace(home_country="home"))
+        module = module_harness.build(
+            Coin, views={"civilisation": HOME_COIN, "money_per_labour_hour": MONEY_PER_HOUR, "cast": registry,
+                         "actor_world": flat_namespace(labour=types.SimpleNamespace(trade_of_role=lambda role: "guard", pay_per_person_year=lambda trade: 100.0))},
+            answers={PayEdgeFrom: Refusal("cannot_pay", "short")})
+        module.charge_keeping(ChargeKeeping())
+        self.assertEqual(module.parts.keeping.keeping_paid_share, {"state": 0.0})
 
     def test_a_larger_treasury_is_charged_more(self):
         paid = self.charged(poor=self.actor(1.0e3), rich=self.actor(1.0e8))

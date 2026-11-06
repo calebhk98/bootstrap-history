@@ -4,7 +4,6 @@ legitimate step is in the scenarios."""
 QUICK_TOPIC = True
 
 import unittest
-from types import SimpleNamespace
 
 from sim.ui.proto.dispatch import _cmd_step
 from sim.tests.ui_stand_in import Game

@@ -8,7 +8,7 @@ import copy
 
 from sim.geography.api import settlement
 from sim.world import demand, need_basket, need_demand
-from sim.world.material_units import tonnes_per_unit
+from .unit_mass import tonnes_per_unit
 
 from .constants import MEAN_INCOME_HOURS_PER_CAPITA
 
@@ -58,9 +58,11 @@ def budget_scaled_final_tonnes(units, prices_in_hours, population, final_goods):
 	"""{material: tonnes a year} households buy for themselves of the `units` a year the model gives at these prices (labour
 	hours a unit), scaled down uniformly when the spending exceeds the income they have. Goods bought as inputs to other goods are
 	left out: the model's levels for those are not credible."""
-	spending = sum(quantity * prices_in_hours.get(material, 0.0)
-	               for material, quantity in units.items())
+	# a material with no price is left out of the spending: it cannot be valued, so it does not shrink the scale (the scale
+	# is then that of the priced materials' spending against the income)
+	spending = sum(quantity * prices_in_hours[material] for material, quantity in units.items()
+	               if prices_in_hours.get(material) is not None)
 	income = population * MEAN_INCOME_HOURS_PER_CAPITA
 	scale = min(1.0, income / spending) if spending > 0.0 else 1.0
-	return {material: quantity * scale * tonnes_per_unit(material)
-	        for material, quantity in units.items() if material in final_goods}
+	return {material: quantity * scale * per_unit for material, quantity in units.items() if material in final_goods
+	        for per_unit in [tonnes_per_unit(material)] if per_unit is not None}

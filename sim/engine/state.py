@@ -1,5 +1,6 @@
 """Authoritative simulation state definitions and explicit subsystem state owners.
 
+from sim.engine import state_seat  # noqa: E402,F401  (registers SeatState, which needs the classes above)
 Every persistent mutable field in the simulation belongs to one authoritative
 state owner defined in this module. Transient caches, version counters, derived
 values, and invalidation plumbing remain non-persistent implementation details.
@@ -9,8 +10,7 @@ import contextlib
 import dataclasses
 from dataclasses import InitVar, dataclass, field
 from typing import (
-	TYPE_CHECKING, Any, Callable, DefaultDict, Dict, List,
-	Optional, Set, Tuple, Union, get_args, get_origin, get_type_hints,
+    TYPE_CHECKING, Any, DefaultDict, Dict, List, Optional, Set, Tuple, Union, get_args, get_origin, get_type_hints,
 )
 
 from sim.agents.api import ActorRecord, ActorsState, Business  # noqa: F401
@@ -42,6 +42,22 @@ class FounderState:
 	"""What the interface remembers of the founder's death (the founder's life and policy are the seats module's)."""
 	_founder_death_aged: Optional[int] = None
 	_founder_death_year: Optional[int] = None
+
+	@property
+	def death_aged(self) -> Optional[int]:
+		return self._founder_death_aged   # None until recorded
+
+	@death_aged.setter
+	def death_aged(self, aged: Optional[int]) -> None:
+		self._founder_death_aged = aged
+
+	@property
+	def death_year(self) -> Optional[int]:
+		return self._founder_death_year   # None until recorded
+
+	@death_year.setter
+	def death_year(self, year: Optional[int]) -> None:
+		self._founder_death_year = year
 
 
 @dataclass
@@ -163,8 +179,7 @@ def serialize_state(obj: Any) -> Any:
 			val = getattr(obj, f.name)
 			out[f.name] = serialize_state(val)
 		return out
-	from sim.invalidating import _InvalidatingSet
-	if isinstance(obj, (set, _InvalidatingSet)):
+	if isinstance(obj, set):
 		return {"__set__": sorted(serialize_state(x) for x in obj)}
 	if isinstance(obj, (dict, _InvalidatingDict, collections.defaultdict, collections.Counter)):
 		return {str(k): serialize_state(v) for k, v in obj.items() if not str(k).startswith("_on_change")}
@@ -231,7 +246,7 @@ def _deserialize_typed(val: Any, target_type: Any) -> Any:
 			hints = {}
 			try:
 				hints = get_type_hints(ActiveProjectState)
-			except Exception:
+			except NameError:   # an annotation names a type not importable here: fields keep their declared annotation
 				hints = {}
 			reconstructed = {}
 			for f in dataclasses.fields(ActiveProjectState):
@@ -251,7 +266,7 @@ def _deserialize_typed(val: Any, target_type: Any) -> Any:
 		hints = {}
 		try:
 			hints = get_type_hints(target_type)
-		except Exception:
+		except NameError:   # an annotation names a type not importable here: fields keep their declared annotation
 			hints = {}
 		field_kwargs = {}
 		for f in dataclasses.fields(target_type):
@@ -332,4 +347,3 @@ def deserialize_state(blob: Any, target_type: Optional[type] = None) -> Any:
 	return _deserialize_typed(blob, target_type)
 
 
-from sim.engine import state_seat  # noqa: E402,F401  (registers SeatState, which needs the classes above)

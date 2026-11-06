@@ -31,12 +31,6 @@ class StationaryQuantitiesTests(unittest.TestCase):
         flows = self.flows()
         self.assertAlmostEqual(flows.income / flows.final_value, 1.0, places=6)
 
-    def test_hours_offered_are_counted_against_the_hours_the_runs_hire(self):
-        flows = self.flows()
-        demanded = flows.hours_by_trade[fixture.LABOURER]
-        self.assertAlmostEqual(opening_stationary.hours_offered_over_demanded(flows.hours_by_trade, 7.0 * demanded, fixture.LABOURER), 7.0)
-        self.assertIsNone(opening_stationary.hours_offered_over_demanded(flows.hours_by_trade, 100.0, "nobody_hires_this"))
-
 
 class ObservedInflationTests(unittest.TestCase):
     def test_a_year_reads_inflation_as_a_median_of_the_goods_never_below_the_lowest_nor_above_the_highest(self):

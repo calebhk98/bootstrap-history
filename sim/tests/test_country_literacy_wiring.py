@@ -12,7 +12,7 @@ from sim.agents.country_view import CountryWorld
 from sim.diffusion.module import Diffusion
 from sim.actors import country_rules
 from sim.tests import module_harness
-from sim.labour.labour_training import TrainingMixin
+from sim.labour.labour_hands import Hands
 
 
 def stratum(country, members, literacy, propertied=False):
@@ -32,7 +32,7 @@ class Society:
 
 
 def literacy_of(country=None, field="literacy_general"):
-    return country_rules.country_literacy(Society().actors, country).get(field)
+    return country_rules.country_literacy(Society().actors, country, str).get(field)
 
 
 check("the home country's literacy is read from the home strata, whether named or not", abs(literacy_of() - 0.18) < 1e-12
@@ -68,17 +68,22 @@ check("research productivity is capped", Reading(10.0).research_productivity(Non
 check("no letters, no research", Reading(0.0).research_productivity(None) == 0.0, None)
 
 asked = []
-view = CountryWorld(SimpleNamespace(research_productivity=lambda country: asked.append(country) or 0.8), SimpleNamespace(country="other"),
+view = CountryWorld(SimpleNamespace(people=SimpleNamespace(research_productivity=lambda country: asked.append(country) or 0.8)), SimpleNamespace(country="other"),
                     SimpleNamespace(of_kind=lambda kind: list(STRATA), state=SimpleNamespace(home_country="home")))
-check("a foreign player's research runs at its own country's productivity", view.research_productivity() == 0.8 and asked == ["other"], asked)
-check("a foreign player reads the literacy of its own country's strata", abs(view.literacy("literacy_elite") - 0.6) < 1e-12, view.literacy("literacy_elite"))
+check("a foreign player's research runs at its own country's productivity", view.people.research_productivity() == 0.8 and asked == ["other"], asked)
+check("a foreign player reads the literacy of its own country's strata", abs(view.people.literacy("literacy_elite") - 0.6) < 1e-12, view.people.literacy("literacy_elite"))
 
 
 # ---- the hours a project can call on
-class Labour(TrainingMixin):
+class Labour:
     def __init__(self, supply, contract, productivity):
         self.supply, self.productivity = supply, productivity
         self._world = SimpleNamespace(workforce=SimpleNamespace(contract_hours={"scholar": contract}))
+        self.hands = Hands(self._world, supply=self, trades=None)
+        self.hands.labour_productivity = self.labour_productivity
+
+    def hours_you_can_call_on(self, trade):
+        return self.hands.hours_you_can_call_on(trade)
 
     def market_supply(self, trade):
         return self.supply

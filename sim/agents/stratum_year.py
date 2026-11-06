@@ -37,15 +37,15 @@ def income_parts(stratum: Any, world: Any) -> Dict[str, float]:
 	trade = plan.get("trade")
 	if trade:
 		working = float(plan.get("work_share", STRATUM_WORKING_SHARE))
-		wages = stratum.record.members * working * world.pay_per_person_year(trade)
+		wages = stratum.record.members * working * world.labour.pay_per_person_year(trade)
 		if plan.get("own_plot"):
 			# people with land earn at least what keeps those they support fed, from their own plot when
 			# no employer pays that much: the classical floor under wages the agent economy also uses
-			wages = max(wages, stratum.record.members * world.subsistence_cost_per_person_year())
+			wages = max(wages, stratum.record.members * world.people.subsistence_cost_per_person_year())
 		parts[WAGES] = wages
 	property_share = float(plan.get("property_share") or 0.0)
 	if property_share > 0.0:
-		parts[PROPERTY] = world.society_output() * property_share
+		parts[PROPERTY] = world.revenue.society_output() * property_share
 	return parts
 
 
@@ -61,14 +61,14 @@ def bonded_product(stratum: Any, world: Any) -> float:
 	if not trade:
 		return 0.0
 	working = float(plan.get("work_share", STRATUM_WORKING_SHARE))
-	return stratum.record.members * working * world.pay_per_person_year(trade)
+	return stratum.record.members * working * world.labour.pay_per_person_year(trade)
 
 
 def pay_tier(stratum: Any, need: float, spendable: float, world: Any) -> float:
 	"""Buy what can be bought of one tier from `spendable`; the money leaves the modelled actors."""
 	paid = max(0.0, min(need, spendable))
 	if paid > 0.0:
-		ledger.transfer(stratum, world.edge(EDGE_ECONOMY), paid, EDGE_ECONOMY)
+		ledger.transfer(stratum, world.setting.edge(EDGE_ECONOMY), paid, EDGE_ECONOMY)
 	return paid
 
 
@@ -78,7 +78,7 @@ def unmet(need: float, paid: float) -> float:
 
 def run_year(stratum: Any, world: Any) -> None:
 	record = stratum.record
-	observed: Dict[str, Any] = world.observed_stratum(record.country, record.stratum) or {}
+	observed: Dict[str, Any] = world.people.observed_stratum(record.country, record.stratum) or {}
 	previous_members = record.members
 	if observed.get("members") is not None:
 		record.members = float(observed["members"])
@@ -89,10 +89,10 @@ def run_year(stratum: Any, world: Any) -> None:
 	income = 0.0 if stratum.is_bonded() else (
 		float(observed["income"]) if observed.get("income") is not None else own_income(stratum, world))
 	if income > 0.0:
-		ledger.transfer(world.edge(EDGE_ECONOMY), stratum, income, EDGE_ECONOMY)
+		ledger.transfer(world.setting.edge(EDGE_ECONOMY), stratum, income, EDGE_ECONOMY)
 	resources = income + record.allowance
 	record.allowance = 0.0
-	floor_costs = world.need_floor_costs_per_person_year()
+	floor_costs = world.people.need_floor_costs_per_person_year()
 	needs = {need_id: members * floor_costs[need_id]
 			 for need_id in sorted(floor_costs, key=lambda need_id: (need_id != FOOD_NEED, need_id))}
 	buffer = 0.0 if stratum.is_bonded() else STRATUM_SAVINGS_BUFFER_YEARS * sum(needs.values())
@@ -113,7 +113,7 @@ def school(stratum: Any, surplus: float, food_bill: float, buffer: float, world:
 	record = stratum.record
 	spend = min(STRATUM_EDUCATION_SHARE * surplus, max(0.0, stratum.money - buffer))
 	if spend > 0.0:
-		ledger.transfer(stratum, world.edge(EDGE_ECONOMY), spend, EDGE_ECONOMY)
+		ledger.transfer(stratum, world.setting.edge(EDGE_ECONOMY), spend, EDGE_ECONOMY)
 	effort = spend / food_bill if food_bill > 0.0 else 0.0
 	funded = 1.0 - math.exp(-effort / EDUCATION_EFFORT_SCALE)
 	gain = LITERACY_GAIN_RATE * max(0.0, LITERACY_CEILING - record.literacy) * funded
@@ -179,9 +179,8 @@ def settle_keep(registry: Any, world: Any) -> None:
 		if actor.record.labour_product > 0.0:
 			ledger.transfer(registry.state.edge(EDGE_ECONOMY), owner, actor.record.labour_product, EDGE_ECONOMY)
 			actor.record.labour_product = 0.0
-		cost = actor.record.members * registry.world_for(actor, world).subsistence_cost_per_person_year()
-		ledger.transfer(owner, actor, cost, "keep of bonded")
-		actor.record.allowance += cost
+		cost = actor.record.members * registry.countries.world_for(actor, world).people.subsistence_cost_per_person_year()
+		actor.record.allowance += ledger.pay_up_to(owner, actor, cost, "keep of bonded")   # a keeper pays what it can
 
 
 def true_up_keep(registry: Any, world: Any) -> None:
@@ -194,11 +193,10 @@ def true_up_keep(registry: Any, world: Any) -> None:
 		owner = registry.actors.get(actor.neighbour_id(str(actor.record.plan.get("owner") or "")))
 		if owner is None or owner is actor:
 			continue
-		cost = actor.record.members * registry.world_for(actor, world).subsistence_cost_per_person_year()
+		cost = actor.record.members * registry.countries.world_for(actor, world).people.subsistence_cost_per_person_year()
 		shortfall = cost - actor.record.allowance
 		if shortfall > 0.0:
-			ledger.transfer(owner, actor, shortfall, "keep of bonded")
-			actor.record.allowance += shortfall
+			actor.record.allowance += ledger.pay_up_to(owner, actor, shortfall, "keep of bonded")
 
 
 def settle_strata(registry: Any, world: Any) -> None:

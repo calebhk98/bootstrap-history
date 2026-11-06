@@ -4,7 +4,6 @@
 QUICK_TOPIC = True
 
 import unittest
-from types import SimpleNamespace
 
 from sim.tests.harness import NODES, ORDER
 from sim.ui.proto.render_screen_state import render_state

@@ -10,10 +10,10 @@ share of a licensed concern's takings the licensee pays the holder every year, o
 import math
 from typing import Any, Callable, Dict, List
 
-from sim.refusal import Refusal, cause_of
+from sim.refusal import Refusal, cause_of, facts_of
 
 from . import joint_stock, ledger, patent
-from .player_commands import CommandRejected
+from .player_commands import CommandRejected, number_of
 from .tuning_exchange import OFFER_LIFETIME_YEARS
 
 SIDE_KEYS = ("money", "stores", "knowledge", "concern", "patent", "licence", "shares", "royalty")
@@ -27,7 +27,7 @@ def clean_side(side: Any) -> Dict[str, Any]:
 	if unknown:
 		raise CommandRejected("unknown things in an offer: " + ", ".join(map(str, unknown)))
 	clean: Dict[str, Any] = {}
-	amount = float(side.get("money") or 0.0)
+	amount = number_of(side.get("money") or 0.0, "money")
 	if not math.isfinite(amount) or amount < 0:
 		raise CommandRejected("money must be a positive amount")
 	if amount > 0:
@@ -35,7 +35,7 @@ def clean_side(side: Any) -> Dict[str, Any]:
 	stores = side.get("stores") or {}
 	if not isinstance(stores, dict):
 		raise CommandRejected("stores are {material: tonnes}")
-	kept = {str(material): float(tonnes) for material, tonnes in stores.items()}
+	kept = {str(material): number_of(tonnes, "tonnes") for material, tonnes in stores.items()}
 	if any(not math.isfinite(tonnes) or tonnes < 0 for tonnes in kept.values()):
 		raise CommandRejected("tonnes must be positive")
 	kept = {material: tonnes for material, tonnes in kept.items() if tonnes > 0}
@@ -59,7 +59,7 @@ def clean_side(side: Any) -> Dict[str, Any]:
 	royalty = side.get("royalty") or {}
 	if not isinstance(royalty, dict):
 		raise CommandRejected("royalty is {node id: share of takings}")
-	rates = {str(node): float(rate) for node, rate in royalty.items()}
+	rates = {str(node): number_of(rate, "a royalty rate") for node, rate in royalty.items()}
 	if any(node not in clean.get("licence", ()) for node in rates):
 		raise CommandRejected("a royalty goes with a licence for the same node")
 	if any(not math.isfinite(rate) or not 0.0 <= rate < 1.0 for rate in rates.values()):
@@ -118,7 +118,7 @@ def problem(giver: Any, receiver: Any, give: Dict[str, Any], take: Dict[str, Any
 		reason = receives_problem(taker, incoming, world)
 		if reason:
 			return Refusal(cause_of(reason) or "deal_problem", "%s %s" % (taker.actor_id, reason),
-						   taker=taker.actor_id, **getattr(reason, "facts", {}))
+						   taker=taker.actor_id, **facts_of(reason))
 	return ""
 
 
@@ -134,8 +134,8 @@ def make_offer(giver: Any, receiver: Any, give: Dict[str, Any], take: Dict[str, 
 		raise CommandRejected(reason)
 	giver.record.offer_serial += 1
 	offer = {"id": "%s#%d" % (giver.actor_id, giver.record.offer_serial), "from": giver.actor_id,
-			 "to": receiver.actor_id, "give": give, "take": take, "year": world.year,
-			 "expires": world.year + int(OFFER_LIFETIME_YEARS)}
+			 "to": receiver.actor_id, "give": give, "take": take, "year": world.setting.year,
+			 "expires": world.setting.year + int(OFFER_LIFETIME_YEARS)}
 	receiver.record.offers.append(offer)
 	return offer
 
@@ -148,7 +148,7 @@ def find_offer(receiver: Any, offer_id: Any) -> Dict[str, Any]:
 
 
 def move_concern(source: Any, target: Any, node_id: str, world: Any) -> None:
-	target.receive_plant(source.release_plant(node_id, world), world)
+	target.holdings.receive_plant(source.holdings.release_plant(node_id, world), world)
 
 
 def hand_over(source: Any, target: Any, side: Dict[str, Any], world: Any) -> None:
@@ -172,7 +172,7 @@ def accept(receiver: Any, offer_id: Any, find_actor: Callable[[str], Any], world
 	giver = find_actor(offer["from"])
 	if giver is None:
 		raise CommandRejected("the offerer is gone")
-	if world.year > offer["expires"]:
+	if world.setting.year > offer["expires"]:
 		raise CommandRejected("the offer has expired")
 	reason = problem(giver, receiver, offer["give"], offer["take"], world)
 	if reason:

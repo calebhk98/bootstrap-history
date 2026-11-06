@@ -6,27 +6,65 @@ dictionaries a test fills in. A test that needs a member this does not have subc
 own file, so tests owning different mechanisms never edit this one together.
 """
 import random
+from types import SimpleNamespace
 from typing import Any, Dict, List, Optional, Set, Tuple
 
 from sim.agents import business_plant_books, ledger
+from sim.agents.narrowed_world import world_surface
 from sim.agents.records import ActorsState
+from sim.economy import api as economy_api
+
+
+class FakePart:
+	"""One part of a fake world: asks the fake world for the member of that name, so a test fills in or overrides the flat
+	member on `FakeWorld` (or its subclass) and the actors reach it as `world.<part>.<member>`. Setting a member sets it
+	on the fake world."""
+
+	def __init__(self, world: Any) -> None:
+		self.__dict__["_world"] = world
+
+	def __getattr__(self, name: str) -> Any:
+		if name in ("frontier_disease_loss", "fugitive_share") and not hasattr(self.__dict__["_world"], name):
+			return lambda: None      # a world that does not follow its regions' disease or its people's flight
+		return getattr(self.__dict__["_world"], name)
+
+	def __setattr__(self, name: str, value: Any) -> None:
+		setattr(self.__dict__["_world"], name, value)
+
+
+def flat_world(cls: Any) -> Any:
+	"""Class decorator for a test's own stand-in world that answers the members of the protocol directly: each part of the
+	world is a `FakePart` over an instance, so the actors reach its methods as `world.<part>.<method>`."""
+	parts = frozenset(world_surface())
+	inherited = getattr(cls, "__getattr__", None)
+
+	def part_or_missing(self: Any, name: str) -> Any:
+		if name in parts:
+			return FakePart(self)
+		if inherited is not None:
+			return inherited(self, name)
+		raise AttributeError(name)
+	cls.__getattr__ = part_or_missing
+	return cls
+
+
+def flat_namespace(**members: Any) -> Any:
+	"""A stand-in world of plain members (`SimpleNamespace(**members)`) whose parts answer them, as `flat_world` does a class."""
+	world = SimpleNamespace(**{"frontier_disease_loss": lambda: None, "fugitive_share": lambda: None, **members})
+	for part in world_surface():
+		if part not in members:
+			setattr(world, part, FakePart(world))
+	return world
 
 
 class FakeLabourMarket:
-	"""Every trade is paid one flat wage per hour; hiring and release are only counted."""
+	"""Every trade is paid one flat wage per hour."""
 
 	def __init__(self, wage_per_hour: float = 1.0) -> None:
 		self.wage_per_hour = wage_per_hour
-		self.hired: Dict[str, float] = {}
 
-	def quote(self, trade: str, hours: float, actor: Any = None) -> float:
+	def quote(self, trade: str) -> float:
 		return self.wage_per_hour
-
-	def hire(self, actor: Any, trade: str, hours: float) -> None:
-		self.hired[trade] = self.hired.get(trade, 0.0) + hours
-
-	def release(self, actor: Any, trade: str, hours: float) -> None:
-		self.hired[trade] = self.hired.get(trade, 0.0) - hours
 
 
 class FakeGovernment:
@@ -55,6 +93,9 @@ class FakeWorld:
 
 	hours_per_person_year = 2000.0
 
+	def staple_material(self) -> str:
+		return "wheat_kg"
+
 	def __init__(self, year: int = 100, seed: int = 1) -> None:
 		self.year = year
 		self.seed = seed
@@ -81,6 +122,24 @@ class FakeWorld:
 		# trade family -> people that can be put on research; node -> materials no one sells
 		self.hands: Dict[str, float] = {}
 		self.unsold: Dict[str, List[str]] = {}
+		# the parts of the world protocol, each answered by the flat member of this class
+		for part in world_surface():
+			setattr(self, part, FakePart(self))
+
+	ROLE_TRADES = {"unskilled": "labourer", "soldier": "soldier", "clerk": "scribe", "builder": "mason", "sailor": "sailor",
+	               "merchant": "merchant"}
+
+	def frontier_disease_loss(self) -> None:
+		return None
+
+	def fugitive_share(self) -> None:
+		return None
+
+	def trade_of_role(self, role: str) -> str:
+		return self.ROLE_TRADES[role]
+
+	def equipment_material(self) -> str:
+		return "iron_bar_kg"
 
 	def state_hands(self) -> Any:
 		return None
@@ -209,11 +268,21 @@ class FakeWorld:
 	def credit_headroom(self, actor_id: str) -> Optional[float]:
 		return None
 
-	def pay_interest(self, payer: Any, owed: float, purpose: Any = "interest") -> None:
-		"""Interest goes to the lenders the payer's purses name; the fixture keeps the total paid."""
+	def fundable_amount(self, amount: float, existing_debt: float, collateral_value: float, arrears: float) -> Optional[float]:
+		return None
+
+	def risk_premium(self, debt_after: float, collateral_value: float, arrears: float) -> Optional[float]:
+		return economy_api.risk_premium(debt_after, collateral_value, arrears)
+
+	def limit(self, actor_id: str, amount: float) -> float:
+		return amount
+
+	def pay_interest(self, payer: Any, owed: float, purpose: Any = "interest") -> float:
+		"""Interest goes to the lenders the payer's purses name; the fixture keeps the total paid and answers it."""
 		payer.purses.pay_interest(payer.account_id, owed)
-		payer.note_outlay(purpose, owed)
+		payer.payments.note_outlay(purpose, owed)
 		self.interest_paid += owed
+		return owed
 
 	def collect_royalty(self, actor: Any, node_id: str, takings: float) -> float:
 		return 0.0
@@ -227,7 +296,7 @@ class FakeWorld:
 				for trade, hours in (self.nodes[node_id].get("lab") or {}).items()}
 
 	def hourly_pay(self, trade: str) -> Optional[float]:
-		return float(self.labour_market.quote(trade, 0.0))
+		return float(self.labour_market.quote(trade))
 
 	def plant_costs(self, node_id: str) -> Optional[Tuple[float, float]]:
 		return self.upkeep(node_id), self.concern_wage_bill(node_id)

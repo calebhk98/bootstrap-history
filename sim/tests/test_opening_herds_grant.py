@@ -10,7 +10,7 @@ from sim.living_stock.api import GrantOpeningHerds
 from sim.living_stock.module import LivingStock
 from sim.living_stock.state import LivingStockWorld
 from sim.tests import module_harness
-from sim.world.material_units import tonnes_per_unit
+from sim.markets.unit_mass import tonnes_per_unit, unit_mass_kg
 
 QUICK_TOPIC = True
 
@@ -26,7 +26,7 @@ def setUpModule():
 def stand_in(capacities, carried_kg, keeping=lambda material: 1.0):
     module = module_harness.build(LivingStock, world=LivingStockWorld(), views={
         "producer_capacities": lambda: capacities, "stock_land": {"place": "tile", "pasture_kg": carried_kg},
-        "material_commodity": lambda material: material})
+        "material_commodity": lambda material: material, "unit_mass_kg": unit_mass_kg})
     module.endemic_keeping = keeping
     return module
 

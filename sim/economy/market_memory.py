@@ -4,17 +4,17 @@ Prices, wages and rates are last year's outcomes; holdings are now. An agent pla
 sees nothing of this year's clearing, which is where the economy's lags come from.
 """
 from dataclasses import dataclass, field
-from typing import Dict, Optional
+from typing import ClassVar, Dict, Optional, Tuple
 
 from sim.constants import declare
 
-from .accounts import Book
+from sim.book import Book
 from .currency import update_expected_inflation
 from .types import QUOTE_LOWEST_UNFILLED_ASK, QUOTE_OPENING_ESTIMATE, AgentId, AreaId, CurrencyId, GoodId, TileId, TradeId
 
 KEY_SEPARATOR = "|"
 PRICE_LEVEL_FLOOR_RATIO = 1e-9   # a year in which the median price fell to nothing still leaves a positive level to chain from
-PRICE_TRADED = "traded"     # the kind of a price a market cleared at; any other kind is a quote or an estimate
+PRICE_SMOOTHED_TRADE = "smoothed_trade"     # the kind of the price remembered for a market that traded: the old price moved toward the clearing price; any other kind is a quote or an estimate
 PRICE_REMEMBERED = "remembered_price"   # a price from a trade of some earlier year that nothing since has replaced or quoted
 
 OPENING_EXPECTED_INFLATION = declare(
@@ -22,6 +22,13 @@ OPENING_EXPECTED_INFLATION = declare(
     unit="share per year", source=None, confidence="C",
     why="At the opening nobody has seen prices move, so the expectation agents start from is no "
         "change; adaptive expectations then follow what the price level does.")
+
+RECENT_TRADE_YEARS = declare(
+    "RECENT_TRADE_YEARS", 2, kind="temporary_heuristic",
+    unit="years since a market last cleared", source=None, confidence="D",
+    why="A good's price counts as a market price, and counts in the price index, only while one of its "
+        "markets cleared within this many years. A thin market trades in alternate years, so one year "
+        "would drop it too eagerly; how long a gap makes a price stale has no measured basis.")
 
 VOLUME_WEIGHT_SPEED = declare(
     "VOLUME_WEIGHT_SPEED", 0.3, kind="temporary_heuristic",
@@ -46,6 +53,9 @@ def market_key(first: str, area: AreaId) -> str:
 @dataclass
 class MarketMemory:
     """Last year's outcomes, saved with the game."""
+    OWNERS: ClassVar[Tuple[str, ...]] = ("market_memory",)   # the sim/economy modules allowed to write this (tools/check_record_owners.py)
+    GOODS_MARKET_KEYED: ClassVar[Tuple[str, ...]] = ("prices", "usual_prices", "volume_weights", "trade_age", "years_without_bids",
+                                                     "years_without_offers", "cleared_prices", "quote_kinds")   # the stores keyed by market_key(good, area): they move when the areas are redrawn
     year: int = 0
     prices: Dict[str, float] = field(default_factory=dict)              # market_key(good, area)
     wages: Dict[str, float] = field(default_factory=dict)               # market_key(trade, area)
@@ -53,6 +63,7 @@ class MarketMemory:
     basket_price_levels: Dict[CurrencyId, float] = field(default_factory=dict)
     expected_inflation: Dict[CurrencyId, float] = field(default_factory=dict)
     price_levels: Dict[CurrencyId, float] = field(default_factory=dict)   # the opening's level (1.0) chained by each year's observed inflation (the weighted median): what real figures are turned nominal with
+    opening_wage_levels: Dict[CurrencyId, float] = field(default_factory=dict)   # the price level the setup's opening wages stand at: the product of the chained levels each rebase reset (absent: 1.0)
     observed_inflation: Dict[CurrencyId, float] = field(default_factory=dict)   # last year's, the weighted median of price changes
     last_year_prices: Dict[str, float] = field(default_factory=dict)    # good: national price the year before, for that median
     currency_of_area: Dict[AreaId, CurrencyId] = field(default_factory=dict)
@@ -64,11 +75,73 @@ class MarketMemory:
     cleared_prices: Dict[str, float] = field(default_factory=dict)      # market_key(good, area); absent: nothing traded last year
     quote_kinds: Dict[str, str] = field(default_factory=dict)           # market_key(good, area); what `prices` holds when nothing traded
 
+    def advance_year(self) -> None:
+        self.year += 1
+
+    def reset_year(self) -> None:
+        self.year = 0
+
+    def set_rate(self, money: CurrencyId, rate: float) -> None:
+        self.rates[money] = rate
+
+    def set_price(self, key: str, price: float) -> None:
+        self.prices[key] = price
+
+    def count_year_without_bids(self, key: str) -> int:
+        """A market with offers had nobody bidding this year; returns the years it had gone before."""
+        before = self.years_without_bids.get(key, 0)
+        self.years_without_bids[key] = before + 1
+        return before
+
+    def end_years_without_bids(self, key: str) -> int:
+        """Bids came (or there was nothing to bid on); returns the years without that had gone before."""
+        return self.years_without_bids.pop(key, 0)
+
+    def count_year_without_offers(self, key: str) -> int:
+        """A market with bids had no seller this year; returns the years it had gone before."""
+        before = self.years_without_offers.get(key, 0)
+        self.years_without_offers[key] = before + 1
+        return before
+
+    def end_years_without_offers(self, key: str) -> int:
+        """Sellers came (or nobody was bidding); returns the years without that had gone before."""
+        return self.years_without_offers.pop(key, 0)
+
+    def set_quote_kind(self, key: str, kind: str) -> None:
+        self.quote_kinds[key] = kind
+
+    def drop_quote_kind(self, key: str) -> None:
+        self.quote_kinds.pop(key, None)
+
+    def set_area_currencies(self, currency_of_area: Dict[AreaId, CurrencyId]) -> None:
+        self.currency_of_area = currency_of_area
+
+    def set_last_year_prices(self, prices: Dict[str, float]) -> None:
+        self.last_year_prices = dict(prices)
+
+    def rebase_price_levels(self, money: CurrencyId) -> None:
+        """The price level of `money` is one, both the basket's and the chained one. The setup's opening wages stay in
+        opening-year money, so the chained level being reset moves into `opening_wage_levels`."""
+        self.opening_wage_levels[money] = self.opening_wage_level(money)
+        self.basket_price_levels[money] = 1.0
+        self.price_levels[money] = 1.0
+
+    def holds_wage_for(self, trade: TradeId) -> bool:
+        """Whether the memory holds a wage for the trade in any labour area (a trade the core has never cleared, such as one
+        admitted after the opening, has none)."""
+        prefix = trade + KEY_SEPARATOR
+        return any(key.startswith(prefix) for key in self.wages)
+
+    def opening_wage_level(self, money: CurrencyId) -> float:
+        """Today's money per opening-year money for a wage the setup holds: the level before the last rebase times the
+        chained level since."""
+        return self.opening_wage_levels.get(money, 1.0) * self.price_levels.get(money, 1.0)
+
     def price_kind(self, key: str) -> Optional[str]:
-        """What the price remembered for a market is: PRICE_TRADED when it traded last year, else the quote's
+        """What the price remembered for a market is: PRICE_SMOOTHED_TRADE when it traded last year, else the quote's
         kind, else the opening estimate no clearing has replaced; None when the market has no price."""
-        if key in self.cleared_prices:
-            return PRICE_TRADED
+        if self.traded_within(key, 0):
+            return PRICE_SMOOTHED_TRADE
         if key not in self.prices:
             return None
         if key in self.quote_kinds:
@@ -78,8 +151,10 @@ class MarketMemory:
     def offered_price(self, key: str) -> Optional[float]:
         """What a buyer can see to buy at: a price the market traded at, an ask still posted, or the opening's own
         estimate before any clearing; None for a bid ceiling, a cost quote or a price remembered from an old trade
-        (nothing is on offer at those)."""
-        if self.price_kind(key) in (PRICE_TRADED, QUOTE_LOWEST_UNFILLED_ASK, QUOTE_OPENING_ESTIMATE):
+        (nothing is on offer at those). Eurace's consumers see the mall's current prices and the quality of the goods
+        (the logit weighs both; Cons_Goods/Household_Consumer_Functions.c), nothing remembered (Complaint 642); this
+        model has the price only."""
+        if self.price_kind(key) in (PRICE_SMOOTHED_TRADE, QUOTE_LOWEST_UNFILLED_ASK, QUOTE_OPENING_ESTIMATE):
             return self.prices.get(key)
         return None
 
@@ -90,13 +165,13 @@ class MarketMemory:
         for key in sorted(self.prices):
             good = key.split(KEY_SEPARATOR, 1)[0]
             kind = self.price_kind(key)
-            if kinds.get(good) != PRICE_TRADED and (kind == PRICE_TRADED or good not in kinds):
+            if kinds.get(good) != PRICE_SMOOTHED_TRADE and (kind == PRICE_SMOOTHED_TRADE or good not in kinds):
                 kinds[good] = kind
         return kinds
 
-    def note_cleared(self, key: str, price: float, quantity: float) -> None:
+    def note_cleared(self, key: str, price: Optional[float], quantity: float) -> None:
         """Keep the price a market cleared at when it traded; forget it when it did not."""
-        if quantity > 0.0 and price > 0.0:
+        if quantity > 0.0 and price is not None and price > 0.0:
             self.cleared_prices[key] = price
         else:
             self.cleared_prices.pop(key, None)
@@ -109,8 +184,11 @@ class MarketMemory:
         usual = self.usual_prices.get(key)
         self.usual_prices[key] = price if usual is None else usual + USUAL_PRICE_SPEED * (price - usual)
 
-    def years_since_trade(self, key: str) -> Optional[int]:
-        return self.trade_age.get(key)
+    def traded_within(self, key: str, years: int) -> bool:
+        """The one meaning of "traded": the market cleared at most `years` years ago (0: last year). A market that
+        never cleared, whatever estimate or quote its price is, has not traded."""
+        age = self.trade_age.get(key)
+        return age is not None and age <= years
 
     def note_trading(self, traded_keys) -> None:
         """A year ends: the markets that cleared are current, the rest are a year older. A market that
@@ -143,9 +221,10 @@ class MarketMemory:
 class YearView:
     """`protocols.MarketView` over the memory, the book and the area map, for one year's planning."""
 
-    def __init__(self, memory: MarketMemory, book: Book, area_map, currency: CurrencyId,
+    def __init__(self, memory: MarketMemory, book: Book, area_map, currency: CurrencyId, setup,
                  labour_area_of=None) -> None:
         self.year = memory.year + 1
+        self.setup = setup     # the trades and opening wages the wage rule (`trade_wages`) prices a trade from
         self._memory = memory
         self._book = book
         self._area_map = area_map
@@ -153,8 +232,7 @@ class YearView:
         self._labour_area_of = labour_area_of
         self._goods = set(area_map.goods())
         self._keys_of_good: Dict[str, tuple] = {}
-        self._keys_at_tile: Dict[str, tuple] = {}
-        self._keys_of_names: Dict[tuple, tuple] = {}     # (id of a names tuple, wages) -> (names, tile -> market keys)
+        self._keys_of_names: Dict[int, tuple] = {}     # id of a names tuple -> (names, tile -> market keys)
         self._area_by_tile: Dict[str, Dict[TileId, AreaId]] = {}    # name -> tile -> its area; the area map does not change
 
     def prices_across(self, good: GoodId, areas) -> list:
@@ -165,18 +243,11 @@ class YearView:
         prices = self._memory.prices
         return list(map(prices.get, keys[1]))
 
-    def price_rows(self, goods, tile: TileId) -> list:
-        """(good, offered price, usual price) for each of `goods` in the market area it trades in on `tile`."""
-        keys = self._keys_at_tile.get(tile)
-        if keys is None or keys[0] is not goods:
-            keys = self._keys_at_tile[tile] = (goods, [(good, good + KEY_SEPARATOR + self.area_of(good, tile))
-                                                        for good in goods])
-        usual_prices, offered = self._memory.usual_prices, self._memory.offered_price
-        return [(good, offered(key), usual_prices.get(key)) for good, key in keys[1]]
-
     def price(self, good: GoodId, area: AreaId) -> Optional[float]:
-        """The planning price: last year's traded price, or, where nothing traded, the quote (`quote_kind`
-        says which). A reader that needs a price both sides agreed to uses `cleared_price`."""
+        """The planning price: the remembered price, last year's trade blended with the older price in proportion to
+        the trade's share of the market's usual volume (`year_goods.remembered_price`), or, where nothing traded,
+        the quote (`price_kind` says which); None where the market has no price. A reader that needs the price
+        both sides agreed to last year uses `cleared_price`."""
         return self._memory.prices.get(good + KEY_SEPARATOR + area)
 
     def offered_price(self, good: GoodId, area: AreaId) -> Optional[float]:
@@ -184,30 +255,24 @@ class YearView:
         where nothing is on offer. A buyer reads this, never `price`."""
         return self._memory.offered_price(good + KEY_SEPARATOR + area)
 
-    def present_prices_at(self, names: tuple, tile: TileId, wages: bool = False) -> Dict[str, float]:
-        """`price` (or `wage` when `wages`) of each of `names` (goods or trades, one tuple kept by the caller) in its
-        area on `tile`, those with a figure only, in order: the keys are built once per names tuple and tile."""
-        kept = self._keys_of_names.get((id(names), wages))
+    def present_prices_at(self, names: tuple, tile: TileId) -> Dict[str, float]:
+        """`price` of each of `names` (goods, one tuple kept by the caller) in its area on `tile`, those with a
+        price only, in order: the keys are built once per names tuple and tile."""
+        kept = self._keys_of_names.get(id(names))
         if kept is None or kept[0] is not names:
-            kept = self._keys_of_names[(id(names), wages)] = (names, {})
+            kept = self._keys_of_names[id(names)] = (names, {})
         keys = kept[1].get(tile)
         if keys is None:
             keys = kept[1][tile] = tuple(name + KEY_SEPARATOR + self.area_of(name, tile) for name in names)
-        table = self._memory.wages if wages else self._memory.prices
         found = {}
         for name, key in zip(names, keys):
-            figure = table.get(key)
+            figure = self._memory.prices.get(key)
             if figure is not None:
                 found[name] = figure
         return found
 
-    def quote_kind(self, good: GoodId, area: AreaId) -> Optional[str]:
-        """What `price` is when nothing traded last year (a QUOTE_* kind); None when it is a traded price or
-        the opening estimate no market has replaced (`price_kind` names those too)."""
-        return self._memory.quote_kinds.get(good + KEY_SEPARATOR + area)
-
     def price_kind(self, good: GoodId, area: AreaId) -> Optional[str]:
-        """PRICE_TRADED, or the kind of quote or estimate `price` is; None when the market has no price."""
+        """PRICE_SMOOTHED_TRADE, or the kind of quote or estimate `price` is; None when the market has no price."""
         return self._memory.price_kind(good + KEY_SEPARATOR + area)
 
     def cleared_price(self, good: GoodId, area: AreaId) -> Optional[float]:
@@ -221,8 +286,14 @@ class YearView:
     def wage(self, trade: TradeId, area: AreaId) -> Optional[float]:
         return self._memory.wages.get(trade + KEY_SEPARATOR + area)
 
-    def interest_rate(self, currency: CurrencyId) -> float:
-        return self._memory.rates.get(currency, 0.0)
+    def wage_held_anywhere(self, trade: TradeId) -> bool:
+        """Whether the memory holds a wage for the trade in any area (`MarketMemory.holds_wage_for`)."""
+        return self._memory.holds_wage_for(trade)
+
+    def interest_rate(self, currency: CurrencyId) -> Optional[float]:
+        """Last year's base lending rate; None for a currency the memory holds no rate for (a plan that needs
+        a rate is then not made; the economy's own currency always has one: `rates.own_rate`)."""
+        return self._memory.rates.get(currency)
 
     def area_of(self, good_or_trade: str, tile: TileId) -> AreaId:
         """A good's market area on this tile; a trade's labour area when the key is not a good."""
@@ -241,14 +312,23 @@ class YearView:
     def basket_price_level(self, currency: CurrencyId) -> float:
         return self._memory.basket_price_levels.get(currency, 1.0)
 
-    def chained_price_level(self, currency: CurrencyId) -> float:
-        return self._memory.price_levels.get(currency, 1.0)
-
-    def expected_inflation(self, currency: CurrencyId) -> float:
-        return self._memory.expected_inflation.get(currency, OPENING_EXPECTED_INFLATION)
+    def opening_wage_level(self, currency: CurrencyId) -> float:
+        return self._memory.opening_wage_level(currency)
 
     def observed_inflation(self, currency: CurrencyId) -> Optional[float]:
         return self._memory.observed_inflation.get(currency)
+
+    def equity(self, agent: AgentId) -> float:
+        """What the agent owns of the firms: nothing counted in a view that has no firms (`CreditView` has them)."""
+        return 0.0
+
+    def claims(self, agent: AgentId, currency: CurrencyId) -> float:
+        """What the agent expects to collect on loans it has made: nothing counted in a view that has no loans."""
+        return 0.0
+
+    def loss_rate(self, agent: AgentId, currency: CurrencyId) -> float:
+        """The loss the agent expects per year of credit exposure: none in a view that has no loans."""
+        return 0.0
 
     def cash(self, agent: AgentId, currency: CurrencyId) -> float:
         return self._book.balance(agent, currency)

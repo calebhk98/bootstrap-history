@@ -4,7 +4,7 @@ QUICK_TOPIC = True
 
 from .harness import check
 
-from sim.finance.constants import CREDIT_LINE_EARNING_MULTIPLE, CREDIT_SURPLUS_YEARS_MULTIPLE
+from sim.finance.constants import CREDIT_LINE_EARNING_MULTIPLE, DEBT_SERVICE_SHARE_OF_SURPLUS
 from sim.economy.api import opening_market_rate
 from sim.mechanics import rules
 from sim.tests import finance_host
@@ -43,4 +43,4 @@ seat = limit_of({"mod_x:bank": {"flat": 150.0}}, acting_seat="second_seat")
 check("the effect widens the limit for any seat, not the founder's alone", seat == flat, (seat, flat))
 capped = limit_of({"mod_x:bank": {"flat": 1.0e9}})
 check("a wide effect stays bounded by what income can service",
-      abs(capped - (FLOOR + (EARNING - FLOOR * STARTING_RATE) * CREDIT_SURPLUS_YEARS_MULTIPLE)) < 1e-9, capped)
+      abs(capped - (FLOOR + (EARNING - FLOOR * STARTING_RATE) * DEBT_SERVICE_SHARE_OF_SURPLUS / STARTING_RATE)) < 1e-9, capped)

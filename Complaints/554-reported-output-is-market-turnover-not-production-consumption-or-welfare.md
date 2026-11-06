@@ -4,18 +4,18 @@
 
 Found by an outside reviewer reading the repository; checked against the code.
 
-- `sim/engine/real_output.py` values the quantity markets sell at fixed opening prices. A household that
+- `sim/reporting/output.py` values the quantity markets sell at fixed opening prices. A household that
   stops growing its food and buys the same amount raises real output without eating better; one that
   goes back to its plot lowers it.
-- The live economy reaches it partly: the agent-volume bridge in `sim/engine/economy_port_year.py`
-  tracks goods from techniques introduced after the opening.
+- The live economy reaches it partly: the volume baseline and traded volumes (`sim/reporting/output.py`, fed by the economy's `traded_volumes`)
+  track goods from techniques introduced after the opening.
 - No report separates physical production, intermediate use, final consumption, investment,
   inventories and self-consumption, or shows food adequacy and purchasing power by cohort.
 
 ## What exists
 
 - `sim/economy/year_accounts.py` builds `YearOutcome.accounts` each year from the year's own book flows, the
-  agents' stocks at the start and end, and the ledger (not from `real_output.py`): per good, production (and the
+  agents' stocks at the start and end, and the ledger (not from `sim/reporting/output.py`): per good, production (and the
   part households grew for themselves), intermediate use, final consumption split bought and grown, household
   durable wear, state use, plant built, spoilage, other edges (border, mint), stock change, the quantity the
   markets cleared, and `residual()`, which is zero when the flows explain the stock change. Plant that wore out

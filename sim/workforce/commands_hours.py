@@ -43,25 +43,6 @@ class ResetTradeHours(Command):
 
 
 @dataclass(frozen=True)
-class SpendDirectorHours(Command):
-    """The acting seat's founder has directed work for `hours` more this year."""
-    hours: float
-
-
-@dataclass(frozen=True)
-class SettleLivingCost(Command):
-    """The year's living cost, `amount` of it, was billed: the wages paid in advance are used up and the bill is added to what the
-    seat has paid for living."""
-    amount: float
-
-
-@dataclass(frozen=True)
-class SetWageHoursSold(Command):
-    """The hours the acting seat has sold for wages this year are `hours` (a figure being tried, then put back)."""
-    hours: float
-
-
-@dataclass(frozen=True)
 class BleedStaff(Command):
     """People the acting seat cannot pay leave: artisans fall by the share `bleed` (not below `artisan_floor`), scholars by
     `bleed` times `scholar_discount` (not below `scholar_floor`)."""

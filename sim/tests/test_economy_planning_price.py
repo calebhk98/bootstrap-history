@@ -5,8 +5,9 @@ QUICK_TOPIC = True
 
 import unittest
 
+from sim.tests.economy_view_defaults import ViewDefaults
 from sim.economy import ask_adjust, planning_price, producers
-from sim.economy.market_memory import PRICE_TRADED
+from sim.economy.market_memory import PRICE_SMOOTHED_TRADE
 from sim.economy.types import QUOTE_BEST_UNFILLED_BID, QUOTE_COST_COVERING, QUOTE_LOWEST_UNFILLED_ASK, Recipe
 
 MEAL = Recipe("meal", {"meal": 1000.0}, {"flour": 300.0}, {"cook": 40.0})
@@ -15,7 +16,7 @@ UNIT_COST = (300.0 * FLOUR_PRICE + 40.0 * COOK_WAGE) / 1000.0
 INPUT_SHARE = 300.0 * FLOUR_PRICE / (300.0 * FLOUR_PRICE + 40.0 * COOK_WAGE)
 
 
-class View:
+class View(ViewDefaults):
     year = 3
 
     def __init__(self, price, kind):
@@ -25,7 +26,7 @@ class View:
         return {"meal": self.meal_price, "flour": FLOUR_PRICE}.get(good)
 
     def price_kind(self, good, area):
-        return self.kind if good == "meal" else PRICE_TRADED
+        return self.kind if good == "meal" else PRICE_SMOOTHED_TRADE
 
     def wage(self, trade, area):
         return COOK_WAGE
@@ -72,7 +73,7 @@ class HeldToBandTests(unittest.TestCase):
         self.assertTrue(planning_price.is_bare_quote(View(5.0, QUOTE_BEST_UNFILLED_BID), "meal", "area"))
         self.assertTrue(planning_price.is_bare_quote(View(5.0, QUOTE_LOWEST_UNFILLED_ASK), "meal", "area"))
         self.assertFalse(planning_price.is_bare_quote(View(5.0, QUOTE_COST_COVERING), "meal", "area"))
-        self.assertFalse(planning_price.is_bare_quote(View(5.0, PRICE_TRADED), "meal", "area"))
+        self.assertFalse(planning_price.is_bare_quote(View(5.0, PRICE_SMOOTHED_TRADE), "meal", "area"))
 
 
 class NextExpectationsTests(unittest.TestCase):
@@ -87,7 +88,7 @@ class NextExpectationsTests(unittest.TestCase):
 
     def test_the_same_figure_as_a_traded_price_moves_the_expectation_further(self):
         quoted = producers.next_expectations(maker(UNIT_COST), MEAL, View(700.0, QUOTE_BEST_UNFILLED_BID))["meal"]
-        traded = producers.next_expectations(maker(UNIT_COST), MEAL, View(700.0, PRICE_TRADED))["meal"]
+        traded = producers.next_expectations(maker(UNIT_COST), MEAL, View(700.0, PRICE_SMOOTHED_TRADE))["meal"]
         self.assertGreater(traded, 10.0 * quoted)
 
 

@@ -42,7 +42,8 @@ def kept_areas(area_map, port_tile: str, tiles, good: str) -> set:
 
 def summarize(bids: Sequence[Bid], offers: Sequence[Offer]) -> Dict[str, List[List[float]]]:
     """The market's own book as plain rows: bids [floor, flexible, reference, elasticity, budget, ceiling]
-    and offers [reservation, quantity]."""
+    and offers [reservation, quantity]. Built from the year's first round (the full supply and the households' whole
+    budgets), not the respend rounds that follow: a hypothetical cargo is weighed against the market as it opened."""
     merged: Dict[Tuple[float, float, Optional[float]], List[float]] = {}
     for bid in bids:
         if bid.buyer == EDGE_EXTERNAL or bid.budget <= 0.0:
@@ -62,16 +63,6 @@ def summarize(bids: Sequence[Bid], offers: Sequence[Offer]) -> Dict[str, List[Li
                      for (reference, elasticity, ceiling), (floor, flexible, budget) in sorted(
                          merged.items(), key=lambda item: (item[0][0], item[0][1], -1.0 if item[0][2] is None else item[0][2]))],
             "offers": [[price, quantity] for price, quantity in sorted(by_price.items())]}
-
-
-def bids_of(curve: Dict[str, List[List[float]]], good: str) -> List[Bid]:
-    """The summarised buyers' schedules as bids on the summary's own area."""
-    return _bids(curve, good)
-
-
-def offers_of(curve: Dict[str, List[List[float]]], good: str) -> List[Offer]:
-    """The summarised sellers' reservations as offers on the summary's own area."""
-    return _offers(curve, good)
 
 
 def _bids(curve: Dict[str, List[List[float]]], good: str) -> List[Bid]:

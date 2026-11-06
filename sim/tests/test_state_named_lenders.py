@@ -81,7 +81,7 @@ check("a state that has defaulted pays a higher rate on the same debt", marked_r
 check("the premium comes from the size of the loss the record holds", state.record.remembered_default_loss > 0.0,
 	  state.record.remembered_default_loss)
 for _ in range(60):
-	state.fade_default_record()
+	state.credit_record.fade_default_record()
 check("the premium fades over the years", abs(state.borrowing_rate(world) - clean_rate) < 1e-3,
 	  (state.borrowing_rate(world), clean_rate))
 

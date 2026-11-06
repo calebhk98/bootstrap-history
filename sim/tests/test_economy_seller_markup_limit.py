@@ -8,6 +8,7 @@ QUICK_TOPIC = True
 import types
 import unittest
 
+from sim.tests.economy_view_defaults import ViewDefaults
 from sim.economy import seller_offers, unsold_search
 from sim.economy.producers import Producer
 from sim.economy.types import Bid, Offer, Recipe
@@ -18,7 +19,7 @@ MARKUP = SUBSTITUTION / (SUBSTITUTION - 1.0)
 RUN_COST_PER_UNIT = 2.0 * 3.0 + 4.0 * 0.5     # two of metal at three, four hours at half
 
 
-class View:
+class View(ViewDefaults):
     def interest_rate(self, currency):
         return 0.0
 
@@ -44,8 +45,8 @@ def game(substitution=SUBSTITUTION):
     recipe = Recipe("melt", {GOOD: 1.0}, {"metal": 2.0}, {"labour": 4.0})
     producer = Producer(SELLER, "lord", "melt", TILE, 10.0)
     basket = types.SimpleNamespace(substitution=substitution)
-    setup = types.SimpleNamespace(specs={}, recipes={"melt": recipe}, basket_for=lambda tile: basket)
-    record = types.SimpleNamespace(producers={SELLER: producer}, memory=types.SimpleNamespace(volume_weights={GOOD + "|" + AREA: 100.0}), unmet={})
+    setup = types.SimpleNamespace(specs={}, currency_id="coin", recipes={"melt": recipe}, basket_for=lambda tile: basket)
+    record = types.SimpleNamespace(producers={SELLER: producer}, memory=types.SimpleNamespace(volume_weights={GOOD + "|" + AREA: 100.0}), goods=types.SimpleNamespace(unmet={}))
     return setup, record
 
 

@@ -6,10 +6,12 @@ from .harness import *  # noqa: F401,F403
 
 from sim.agents import concern_scan
 from sim.agents.business import Business
+from sim.tests.agents_fake_world import flat_world
 
 FIELDS = {"node", "owner", "size", "sells", "takings", "upkeep", "wages", "carried", "costs", "margin", "pays"}
 
 
+@flat_world
 class FakeWorld:
     """One plant per unit of size: takings 10, upkeep 2, wages 3, rent 1, no manager; only "pays" sells in the book."""
     year = 0
@@ -50,13 +52,13 @@ check("a row names the owner of the business it was read from", by_node["pays"][
 check("a row says whether the plant's goods sell in the book",
       by_node["pays"]["sells"] and not by_node["loses"]["sells"], by_node)
 
-business.set_size("pays", 2.0)
+business.tally.set_size("pays", 2.0)
 doubled = concern_scan.scan_business(business, FakeRegistry(), FakeWorld())
 doubled_by_node = {row["node"]: row for row in doubled}
 check("a plant twice the founding size takes and costs twice the figures",
       doubled_by_node["pays"]["takings"] == 20.0 and doubled_by_node["pays"]["costs"] == 12.0, doubled_by_node["pays"])
 
-business.mothball("loses", 0, "test")
+business.lifecycle.mothball("loses", 0, "test")
 check("a mothballed plant is not scanned",
       [row["node"] for row in concern_scan.scan_business(business, FakeRegistry(), FakeWorld())] == ["pays"])
 

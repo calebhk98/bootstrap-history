@@ -1,11 +1,11 @@
 """Patents: an exclusive right to an invention, held by an actor for a term, that it can sell or licence.
 
 The right is plain data on the holder's record: `patents[node_id] = {"granted", "expires", "licensees"}`.
-A state grants it only where it knows the institution (`world.state_grants_patents`), and anyone else who
-would run the concern needs the holder's licence. `world.patent_entry(node_id)` is the live right as
+A state grants it only where it knows the institution (`world.disclosure.state_grants_patents`), and anyone else who
+would run the concern needs the holder's licence. `world.disclosure.patent_entry(node_id)` is the live right as
 `{"holder", "expires", "licensees"}`, or None.
 """
-from typing import Any, Dict, Iterable, List, Optional
+from typing import Any, Dict, Iterable, Optional
 
 from .player_commands import CommandRejected
 from .tuning_patent import PATENT_TERM_YEARS
@@ -26,13 +26,13 @@ def entry_among(actors: Iterable[Any], node_id: str, year: int) -> Optional[Dict
 
 
 def holder_of(world: Any, node_id: str) -> Optional[str]:
-	entry = world.patent_entry(node_id)
+	entry = world.disclosure.patent_entry(node_id)
 	return entry["holder"] if entry is not None else None
 
 
 def blocked_reason(world: Any, actor: Any, node_id: str) -> str:
 	"""Why `actor` may not practise `node_id` for want of a licence, or an empty string."""
-	entry = world.patent_entry(node_id)
+	entry = world.disclosure.patent_entry(node_id)
 	if entry is None or entry["holder"] == actor.actor_id or actor.actor_id in entry["licensees"]:
 		return ""
 	return "%s holds the patent on %s and has not licensed it" % (entry["holder"], node_id)
@@ -40,18 +40,18 @@ def blocked_reason(world: Any, actor: Any, node_id: str) -> str:
 
 def apply(actor: Any, node_id: str, world: Any) -> str:
 	"""Ask the state for an exclusive right to an invention the actor holds; refuses with the reason."""
-	if node_id not in world.nodes:
+	if node_id not in world.setting.nodes:
 		raise CommandRejected("no such node")
-	if not world.state_grants_patents(actor):
+	if not world.disclosure.state_grants_patents(actor):
 		raise CommandRejected("no state here knows how to grant a patent")
-	if node_id in world.baseline_knowledge() or not actor.knows(node_id, world):
+	if node_id in world.knowledge.baseline_knowledge() or not actor.knows(node_id, world):
 		raise CommandRejected("you can patent only an invention you hold")
-	if world.disclosure_mode(node_id) == "publish":
+	if world.disclosure.disclosure_mode(node_id) == "publish":
 		raise CommandRejected("it is already published")
 	holder = holder_of(world, node_id)
 	if holder is not None:
 		raise CommandRejected("%s already holds the patent on %s" % (holder, node_id))
-	entry = {"granted": world.year, "expires": world.year + int(PATENT_TERM_YEARS), "licensees": []}
+	entry = {"granted": world.setting.year, "expires": world.setting.year + int(PATENT_TERM_YEARS), "licensees": []}
 	actor.record.patents[node_id] = entry
 	return "patented %s until year %d" % (node_id, entry["expires"])
 
@@ -61,7 +61,7 @@ def holds_problem(holder: Any, side: Dict[str, Any], world: Any) -> str:
 	for key in ("patent", "licence"):
 		for node_id in side.get(key, ()):
 			entry = holder.record.patents.get(node_id)
-			if entry is None or not live(entry, world.year):
+			if entry is None or not live(entry, world.setting.year):
 				return "does not hold a live patent on " + node_id
 	return ""
 
@@ -83,7 +83,7 @@ def hand_over(source: Any, target: Any, side: Dict[str, Any]) -> None:
 
 def note_licence(licensor: Any, licensee: Any, node_id: str) -> None:
 	"""A licence from the holder lets the licensee practise the patented invention."""
-	entry = getattr(getattr(licensor, "record", None), "patents", {}).get(node_id)
+	entry = licensor.record.patents.get(node_id)
 	if entry is not None and licensee.actor_id not in entry["licensees"]:
 		entry["licensees"].append(licensee.actor_id)
 

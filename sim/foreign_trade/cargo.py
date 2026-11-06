@@ -6,19 +6,21 @@ where the book took none of it. Settling trues the trader's purse up from the bo
 tally on what really crossed.
 A leg is a plain dict kept in the module's world state (`cargo`, leg id -> leg), so a save carries it.
 
-(needs: home_unit_price; sends PayActorFromEdge, PayEdgeFrom, NoteTraderMargin)"""
+(needs: home_unit_price; sends PayActorFromEdge, PayEdgeFrom, NoteTraderMargin, RecordEvent)"""
 from typing import Any, Dict, List
 
 from sim.agents.api import GOVERNMENT_PREFIX, edges
 from sim.actors.api import NoteTraderMargin
-from sim.ledger.api import PayActorFromEdge, PayEdgeFrom
+from sim.assembly.api import Part
+from sim.ledger.api import UNPAID_CHARGE_KIND, PayActorFromEdge, PayEdgeFrom
 from sim.refusal import Refusal
+from sim.reporting.api import RecordEvent
 
 from . import rules
 from .constants import SETTLEMENT
 
 
-class Cargo:
+class Cargo(Part):
 
     def cargo_legs(self) -> List[Dict[str, Any]]:
         """The legs noted since the last settlement, in a stable order."""
@@ -40,10 +42,10 @@ class Cargo:
 
     def _pay_partner(self, partner: str, tonnes_signed: float, value: float) -> None:
         """Settle one side of a cargo with a partner in coin, and count it against the route's carriers."""
-        per_coin = self.money_per_partner_coin(partner)
+        per_coin = self.parts.payments.money_per_partner_coin(partner)
         if per_coin and value > 0.0:
-            self.settle_flow(partner, tonnes_signed, value, per_coin)
-        self.record_lift(partner, self.partner_facts(partner)["route"], tonnes_signed, 0.0)
+            self.parts.payments.settle_flow(partner, tonnes_signed, value, per_coin)
+        self.parts.payments.record_lift(partner, self.parts.economies.partner_facts(partner)["route"], tonnes_signed, 0.0)
 
     def apply_settle_trader_cargo(self, command: Any) -> None:
         """Settle every noted leg. `results` is what the book gave each leg that entered it ({leg id: {"tonnes", "money"}}); a
@@ -73,5 +75,8 @@ class Cargo:
         if delta > 0.0:
             self.needs.send(PayActorFromEdge(edges.EDGE_MARKET, trader_id, delta, SETTLEMENT))
         else:
-            self.needs.send(PayEdgeFrom(trader_id, edges.EDGE_MARKET, -delta, SETTLEMENT))
+            refusal = self.needs.send(PayEdgeFrom(trader_id, edges.EDGE_MARKET, -delta, SETTLEMENT))
+            if isinstance(refusal, Refusal):   # a loss beyond what the trader can pay stays unpaid: no money is made up for it
+                self.needs.send(RecordEvent.of(UNPAID_CHARGE_KIND, "%s could not pay its cargo loss: %s" % (trader_id, refusal),
+                                               actor=trader_id, edge=edges.EDGE_MARKET, amount=-delta, purpose=SETTLEMENT, cause=refusal.cause))
 

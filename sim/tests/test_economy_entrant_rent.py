@@ -51,11 +51,11 @@ class EntrantRentRuleTests(unittest.TestCase):
         recipe = fixture.recipes()[fixture.FARM]
         setup = types.SimpleNamespace(recipes={fixture.FARM: recipe}, land_per_run={fixture.FARM: LAND_PER_RUN})
         grain_value = recipe.outputs[fixture.GRAIN] * 0.1 / LAND_PER_RUN
-        record = types.SimpleNamespace(land_rent={fixture.FARMS: 50.0}, land_mean_value={fixture.FARMS: grain_value})
+        record = types.SimpleNamespace(land=types.SimpleNamespace(land_rent={fixture.FARMS: 50.0}, land_mean_value={fixture.FARMS: grain_value}))
         with mock.patch.object(entrant_rent, "expected_output_prices", lambda producer, _recipe, _view: {fixture.GRAIN: 0.1}):
             self.assertAlmostEqual(entrant_rent.site_rent_per_run(setup, record, None, fixture.FARM, fixture.FARMS),
                                    50.0 * LAND_PER_RUN)
-            record.land_mean_value = {fixture.FARMS: 4.0 * grain_value}
+            record.land.land_mean_value = {fixture.FARMS: 4.0 * grain_value}
             self.assertAlmostEqual(entrant_rent.site_rent_per_run(setup, record, None, fixture.FARM, fixture.FARMS),
                                    50.0 * LAND_PER_RUN / 4.0)
 
@@ -65,9 +65,12 @@ class EntrySitingByOwnRentTests(unittest.TestCase):
         """The variable cost per run `entry_siting` prices a grain run at on `tile`, the site rent being what the entrant's own use pays."""
         recipe = fixture.recipes()[fixture.FARM]
         setup = types.SimpleNamespace(opening_wages={fixture.LABOURER: 1.0}, yield_factor_by_recipe_tile={}, specs={},
+                                      unskilled_trade=fixture.LABOURER, currency_id="coin",
+                                      trades={trade: types.SimpleNamespace(training_years=0.0) for trade in recipe.labour_hours},
                                       working_hours_per_year=2000.0)
-        record = types.SimpleNamespace(workforce=None)
-        view = types.SimpleNamespace(wage=lambda trade, area: None)
+        record = types.SimpleNamespace(labour=types.SimpleNamespace(workforce=None))
+        view = types.SimpleNamespace(wage=lambda trade, area: None, opening_wage_level=lambda currency: 1.0,
+                                    wage_held_anywhere=lambda trade: False)
         with mock.patch.object(location, "site_rent_per_run", lambda *_args: rent_of_the_entrants_use[tile]), \
                 mock.patch.object(location, "live_input_prices", lambda *_args: {}), \
                 mock.patch.object(location.location_inputs, "input_haul_cost", lambda *_args: 0.0), \

@@ -3,6 +3,7 @@ the state of a country (its army, its tiles' unrest, its risings, its ruler).
 
 Needs: country_world."""
 from sim.agents.api import army_raising
+from sim.assembly.api import Part
 from sim.refusal import Refusal
 
 from . import constants
@@ -10,7 +11,7 @@ from .state import STANDING, VALUES
 from .value_weight import VALUE_WEIGHT_CEILING, VALUE_WEIGHT_FLOOR, shifted
 
 
-class Appliers:
+class Appliers(Part):
 
 	# ---- the acting seat's standing ----
 
@@ -27,7 +28,7 @@ class Appliers:
 	def record_bribe(self, command):
 		self.seat.bribes_ytd = command.bribes_year_to_date
 		self.seat.scandal = command.scandal
-		self.update_protection()
+		self.parts.protection.update_protection()
 
 	def scale_protection(self, command):
 		self.seat.protection *= command.share
@@ -49,23 +50,23 @@ class Appliers:
 		self.seat.gov += command.amount
 
 	def answer_state_demands(self, command):
-		return self.set_household_stance(command.stance, command.service)
+		return self.parts.demands.set_household_stance(command.stance, command.service)
 
 	def withdraw_command(self, command):
-		return self.withdraw_from_public_life()
+		return self.parts.protection.withdraw_from_public_life()
 
 	def settle_command(self, command):
-		return self.settle_with_state(command.target, command.amount)
+		return self.parts.transfers.settle_with_state(command.target, command.amount)
 
 	def transfers_command(self, command):
-		self.carry_out_transfers(command.node_id)
+		self.parts.transfers.carry_out_transfers(command.node_id)
 
 	def renew_command(self, command):
-		self.renew_standing()
+		self.parts.year.renew_standing()
 		self.bump(STANDING)
 
 	def close_year_command(self, command):
-		self.close_standing_year()
+		self.parts.year.close_standing_year()
 
 	# ---- the society's value weights ----
 
@@ -85,11 +86,11 @@ class Appliers:
 	# ---- the records of a country's state ----
 
 	def _government_record(self, owner):
-		return self.needs.country_world[owner].government().record
+		return self.needs.country_world[owner].setting.government().record
 
 	def strike_from_force(self, command):
 		world = self.needs.country_world[command.owner]
-		world.government().record.army = army_raising.struck_from_force(float(world.soldiers_under_arms()), command.killed)
+		world.setting.government().record.army = army_raising.struck_from_force(float(world.army.soldiers_under_arms()), command.killed)
 
 	def set_land_taken_memory(self, command):
 		self._government_record(command.owner).land_taken_by_tile = command.by_tile

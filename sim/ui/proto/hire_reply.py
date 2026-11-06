@@ -1,15 +1,11 @@
-"""The reply of `hire`: how many were taken on of how many asked, and why fewer when fewer."""
+"""The reply of `hire`: the places posted in the labour market and the staff the last clearing found."""
 
 
-def hire_reply(hired_count, asked, trade, you_now_employ, annual_wage_bill, paid_now, from_next_year_per_year, capital,
-               outcome):
-    """`outcome` is what the hire returned: a refusal carrying a cause when the search found fewer than asked."""
-    reply = {"ok": True, "hired": hired_count, "trade": trade, "n": hired_count, "asked": asked,
-             "you_now_employ": round(you_now_employ, 2),
-             "annual_wage_bill": round(annual_wage_bill, 1),
-             "paid_now": round(paid_now, 1),
-             "from_next_year_per_year": round(from_next_year_per_year, 1),
-             "capital": round(capital, 1)}
-    if hired_count < asked:
-        reply["cause"] = getattr(outcome, "cause", "search_found_fewer")
-    return reply
+def hire_reply(posted, trade, you_now_employ, places_posted_in_all, annual_wage_bill, outcome):
+    """`outcome` is what the hire returned (the text of what was posted)."""
+    return {"ok": True, "posted": posted, "trade": trade, "n": posted,
+            "you_now_employ": round(you_now_employ, 2),
+            "places_posted_in_all": round(places_posted_in_all, 2),
+            "annual_wage_bill": round(annual_wage_bill, 1),
+            "what_happened": outcome,
+            "note": "the labour market fills the places at the year's clearing and pays them from your purse at its wage"}

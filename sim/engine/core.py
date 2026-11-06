@@ -1,11 +1,9 @@
 """The simulation itself: what one year does, and the loop over years."""
-import copy, os, sys
+import copy
 
-from sim.constants import declare
-from sim.demography.api import OpenPopulation, rules as demography_rules
+from sim.demography.api import OpenPopulation
 from sim.workforce.api import WatchStaff
 from sim.living_stock.api import GrantOpeningHerds, GrantOpeningStock
-from sim.engine.state import SimulationState
 from sim.assembly.api import notify_seat_bound
 from .data import (DEFAULTS, kit_capital, load_civ,
                    nodes_in_civ_money)
@@ -18,9 +16,9 @@ from .farm_territory_refresh import refresh_farm_territory
 from sim.world import land
 
 
-from sim.land.api import rules as land_rules
+from sim.land.api import OpenGeography, rules as land_rules
 from sim.knowledge.api import LearnTechnique, StartDoneYearRecord, declared_starting_techs
-from . import change_hooks, node_rederive, seat_registry, year_steps
+from . import change_hooks, node_rederive, seat_registry
 from .year_run import run_year
 from sim.knowledge.api import ReplaceTree
 from sim.seats.api import JoinCastSeats, SetFounderLife, SetGoal, SetPolicy
@@ -100,13 +98,10 @@ class Sim:
         # set after the build by whoever front-ends the game (and `seed` again by a load); None while a game has none
         self.seed = None
         self.session_seat = None
-        self._stack_cautions = {}   # per seat: whether it was told of the stack caution
-        self._founder_death_cache = None   # the founder's death read off the log by the UI, once it is found
-        # MANUAL MODE: the optimizer in step() 4b never starts anything on its
-        # own. The only projects that ever become active are ones something
-        # called start_project() on, i.e. a human or an agent choosing them.
-        # See the comment on step() 4b and on start_project() for why this
-        # exists: without it, "choosing" a node in `play` was cosmetic.
+        self.stack_cautions = {}   # per seat: whether it was told of the stack caution
+        self.founder_death_cache = None   # the founder's death read off the log by the UI, once it is found
+        # MANUAL MODE: the optimizer in the projects module's start phase (sim/projects/start_phase.py) never starts
+        # anything on its own; only projects a human or an agent chose become active.
         self.send(SetValueWeights(tuple(self.civ["values"].items())))
         # A civilization brings its own date, its own price level and its own
         # capacity to fund things. Norse Scandinavia does not start in 100 AD.
@@ -120,12 +115,9 @@ class Sim:
         land_rules.require_territory(self.civ, held_tiles)
         territory = land.territory_cropland(self.view("farm_sites")())
         self.send(SetFarmTerritory(territory.ladder, territory.cropped_hectares))
-        self.labour.set_farm_area(self._agriculture.farmland_for_population(
-            demography_rules.adult_equivalents(self.view("population")()), ladder=self.view("farm_ladder")()).hectares)
         self.send(RecordOpeningFarm())
         # the weather cells and their correlation are fixed for the life of a run: built now, from the territory as it opens
         self.view("farm_weather_cells")()
-        # the granary starts empty (an initial condition) and carries over between years (demography's farm year)
         self.send(SetYear(self.cfg["start_year"]))
         config = self.cfg
         # The opening purse is at this society's prices: the kits are stated in labourer-years, and revenue and living costs convert
@@ -150,14 +142,6 @@ class Sim:
         #
         for name, value in default_policy(manual, self.mods_dir).items():
             self.send(SetPolicy(name, value))
-        # World-level "last time I said X" trackers; household ones live on HouseholdState.
-        # THE FOLLOWING EIGHT FIELDS ARE BIOGRAPHICAL TO ONE MORTAL PERSON, not
-        # to a household in general, and stay on `Sim` for exactly that reason
-        # - see household.py's module docstring for the full argument. Moving
-        # them would mean deciding, right now, with no second example to
-        # design against, what death, personal hours or a patron mean for a
-        # firm or a government; that is a real design question and this
-        # extraction does not answer it by default.
         # founder remaining lifespan, elite male already aged 35
         life = self.view("founder_life_terms")()
         self.send(SetFounderLife(1e9 if life["immortal"]
@@ -167,7 +151,7 @@ class Sim:
         # existence somewhere does not mean an unlimited quantity of it is
         # available.
         # --- GEOGRAPHY: where things are, FOR THE CIVILIZATION IN PLAY (computed once; see sim/geography/)
-        self.view("legacy_geography")().open(self.view("geography_data")())
+        self.send(OpenGeography(self.view("geography_data")()))
         # Whatever this civilization already has is free and already done, and it
         # is GRANTED, not earned: it must never count in done_earned as though
         # the founder had built it, and it must never be "forgotten" in a
@@ -194,7 +178,7 @@ class Sim:
         # a game about to load a save leaves it: the save holds the seats and the economy's record
         self._economy_deferred = bool(defer_economy)
         if not defer_economy:
-            self.view("legacy_economy")().open_agent()
+            self.view("open_agent_economy")()
             self.send(GrantOpeningHerds())
             self._done_changed()
             joined = self.send(JoinCastSeats())
@@ -210,7 +194,6 @@ class Sim:
         game_assembly.attach(self)   # the modules read the state as loaded from here on
         cleared = self.view("farm_holdings")()["cleared_hectares"]
         if cleared is not None:
-            self.labour.set_farm_area(cleared)
             refresh_farm_territory(self)
 
         # Sync civ live state and metadata
@@ -289,11 +272,6 @@ class Sim:
 
     def _operating_changed(self):
         change_hooks.operating_changed(self)
-
-    @property
-    def labour(self):
-        """The workforce module's labour implementation (tests and mods still call its members)."""
-        return self.assembly.modules["workforce"].labour
 
     def step(self):
         """Advance every seat one year (the order and what runs once or per seat: year_run.py)."""

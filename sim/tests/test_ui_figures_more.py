@@ -7,6 +7,7 @@ import unittest
 from types import SimpleNamespace
 from unittest import mock
 
+from sim.tests.interface_fixture import shipped_declared
 from sim.tests.ui_stand_in import StandIn
 from sim.ui import figures as figure_registry
 from sim.ui import figures_world  # noqa: F401  (registers the figures)
@@ -23,11 +24,11 @@ class _Game(StandIn):
     def __init__(self):
         self.employees = {"smith": 2, "weaver": 1}
         super().__init__(
-            wage_index=1.25, pop_scale=0.9, price_index=1.1, material_throttle=0.8, year=100,
+            money_per_labour_hour=1.25, pop_scale=0.9, price_index=1.1, material_throttle=0.8, year=100,
             staff=lambda: {"employees": self.employees},
             eminence_report={"now": 3.0, "settles_at_if_nothing_changes": 5.0, "chance_of_ruin_this_year": 0.01},
             state_notice=0.25, state_reach=0.4, household_scale=1.5, hazard_figure=lambda kind, hazard: 0.2,
-            techniques_held={"a", "b", "c"}, techniques_granted={"a"}, active_projects={"x": {}}, civilisation={"hazards": []})
+            interface_declared=shipped_declared, techniques_held={"a", "b", "c"}, techniques_granted={"a"}, active_projects={"x": {}}, civilisation={"hazards": []})
 
 
 class FigureTests(unittest.TestCase):
@@ -35,7 +36,7 @@ class FigureTests(unittest.TestCase):
     def test_the_new_figures_are_registered(self):
         self.assertTrue(set(NEW_FIGURES) <= set(figure_registry.FIGURES))
 
-    def test_the_wage_figure_is_the_engines_wage_index_with_its_drivers(self):
+    def test_the_wage_figure_is_the_engines_wage_per_hour_with_its_drivers(self):
         reading = figure_registry.read_figure(_Game(), "wages")
         self.assertAlmostEqual(reading["value"], 1.25, places=4)
         self.assertEqual(set(reading["drivers"]), {"population_scale", "price_index"})

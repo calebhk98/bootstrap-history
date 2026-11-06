@@ -1,5 +1,10 @@
 """Solve for the price of every material from physical structure, not a book.
 
+THIS MODULE HOLDS NO CODE: it is the design write-up of the price solver. The functions it names live in
+`solve_prices_core.py` (the solve, the recipe costing and the capability grading), `solve_prices_round.py` (one round's
+plans), `rent_standin.py` (the rent stand-ins) and `disposal_cost.py` (the cost of getting rid of a waste); the engine's
+one call into them is `prices.py`. Where the text below says "this script", it means those modules together.
+
 READ-ONLY. This module computes prices; `sim/prices/prices.py` is the engine's
 one call into it, and every price in play comes from there.
 
@@ -21,13 +26,11 @@ provider (`sim/labour/wages.py`) supplies the wage ratios. Nothing here is a
 lookup of a finished price - only of the physical recipe and the relative
 wage, which is what the mechanism is allowed to take as given.
 
-NUMERAIRE: one hour of UNSKILLED labour, per the design doc's Part 2.1. The
-`labourer` trade is the unskilled one - it is the cheapest trade in the wage
-table, and entries in data/production/ that need generic unskilled effort
-(spinning thread, moving ore) already book it to `labourer` rather than to a
-craft. Every wage is expressed as a ratio against `labourer`'s rate, so
-`wage_of("labourer") == 1.0` by construction and every price this script
-prints is "how many hours of unskilled labour", never denarii.
+NUMERAIRE: one hour of UNSKILLED labour, per the design doc's Part 2.1. The trade registry's unskilled
+trade (`numeraire_trade()`, the fallback trade the economy's labour markets use) is the unskilled one; entries
+in data/production/ that need generic unskilled effort (spinning thread, moving ore) book it rather than a
+craft. Every wage is expressed as a ratio against that trade's rate, so its wage is 1.0 by construction and
+every price this script prints is "how many hours of unskilled labour", never denarii.
 
 RENT ON EXTRACTED MATERIALS (Complaints/32, fixed this round for six of
 seven metals). Extracted materials (ore at the pit head, timber in the
@@ -224,7 +227,7 @@ instructions from CLAUDE.md name as the point of the exercise.
                     build, using the `capital` mechanism below, at the
                     typical output data/world/resources.json's water_power
                     constraint gives), mechanical_mj_human_muscle (a
-                    labourer's own sustained output, from that same file's
+                    worker's own sustained output, from that same file's
                     human_power constraint), mechanical_mj_motor (electrical
                     energy through a motor - see CONVERSIONS) or one of the
                     three mechanical_mj_heat_engine_* techniques (thermal
@@ -498,7 +501,7 @@ shaft's angular speed, both already physical facts this file or
 `data/world/resources.json` states), and give whichever recipe needs a
 torque floor its own `torque_needed_nm`. Nothing else changes:
 `capability_required_grades`, `capability_price_for_requirement` and
-`_meets_capability_floor` all key off `CAPABILITY_CAP_FIELDS` rather than
+`meets_capability_floor` all key off `CAPABILITY_CAP_FIELDS` rather than
 naming `thermal_mj` or `temperature_reached_c` anywhere in their own
 bodies, so a torque-needing forge press and a temperature-needing kiln
 would be graded side by side, on two independent dimensions of the SAME
@@ -608,13 +611,9 @@ it - the solver picks the technique a rational producer would pick at current
 prices, and because prices move as the solve iterates, technique choice
 iterates alongside it exactly as the design doc's Part 2.1 says it must.
 
-JOINT BYPRODUCTS WITH NO REFERENCE PRICE ARE NOT REALLY PRICED, AND THIS
-SCRIPT SAYS SO. An output the caller gave no reference price for and no
-sole-output route makes (platinum, germanium, indium, coal tar) is split by mass:
-one process and two goods is one equation short. `minor_joint_byproducts_split_by_mass`
-finds them by checking, on the converged recipe for each material, whether it is a
-joint recipe where this material holds under half the batch's value and was split
-by mass. Flagged materials print with a `(*)`: a real lower bound on cost, not a
+JOINT BYPRODUCTS WITH NO REFERENCE PRICE ARE NOT REALLY PRICED. An output the caller gave no reference price for and
+no sole-output route makes (platinum, germanium, indium, coal tar) is split by mass: one process and two goods is one
+equation short (`joint_allocation.outputs_split_by_mass` names them). That price is a real lower bound on cost, not a
 real relative price.
 
 CYCLES ARE EXPECTED BY THE ITERATION, AND NOW ACCEPTED BY THE PASS IN FRONT
@@ -686,30 +685,9 @@ hide something:
     tree's own prerequisite structure and the civilisation's own starting
     set, both of which are initial conditions rather than results.
 
-HOW EXPENSIVE IS THIS, ACTUALLY - MEASURED, BECAUSE IT DECIDES THE WIRING.
-The question that matters for putting this in the engine is not how long one
-solve takes but how OFTEN one is needed, and the answer is: far less often
-than "every turn", because almost nothing in the tree is a gate.
-
-    full ungated solve      0.673 s   1076 iterations   183 materials
-    gated solve (rome)      0.371 s   1076 iterations   107 materials
-    distinct nodes used as a gate   82 of 2864 in the tree, 2.9%
-
-Only 82 nodes can change the answer. Unlocking a node has about a 97% chance
-of not being a gate at all, so a year in which a hundred nodes complete will
-usually need NO re-solve, and can need at most as many as there are newly
-unlocked gates. Over an entire game the number of distinct solves is bounded
-by 82 and in practice is far below it.
-
-So the engine should key a cached price vector on the set of GATE nodes held
-- not on the full technology set, which changes constantly and would defeat
-the cache - and re-solve only when that set changes. Under that scheme the
-per-turn cost is a set comparison, and the 0.37 s is paid a few dozen times
-across a whole game rather than once a turn.
-
-The 1076 iterations are a separate matter and are not currently a problem.
-Damping is 0.5 against a 1e-10 tolerance, which is conservative; if the solve
-ever does become hot, that is the knob, not the architecture.
+HOW OFTEN A SOLVE IS NEEDED. Almost nothing in the tree is a gate, so unlocking a node almost never changes the
+answer. The engine keys a cached price vector on the set of GATE nodes held (not the full technology set) and
+re-solves only when that set changes; the per-turn cost is a set comparison.
 
 WHAT A GATED SOLVE COSTS. Fewer techniques means fewer materials have any
 path to a price at all, so a gated run resolves strictly fewer materials
@@ -717,56 +695,3 @@ than an ungated one and reports the difference. That is the correct answer
 rather than a regression: a material no Roman could make does not have a
 Roman price, and printing one for it was the bug.
 """
-import os
-import sys
-
-HERE = os.path.dirname(os.path.abspath(__file__))
-REPO_ROOT = os.path.dirname(os.path.dirname(HERE))
-if REPO_ROOT not in sys.path:
-    sys.path.insert(0, REPO_ROOT)
-from sim.prices.engine_seam import load_production, materials_the_tree_consumes  # noqa: E402
-
-# The price algebra lives in sim/engine/solve_prices_core.py; this module
-# re-exports it so `solve_prices.<name>` call sites and the mechanism essay
-# above stay in one place.
-from sim.prices.solve_prices_core import (                  # noqa: E402
-    CAPABILITY_CAP_FIELDS,
-    CONVERGENCE_TOLERANCE,
-    DAMPING_FACTOR,
-    ENERGY_CARRIER_FIELDS,
-    GROWTH_BOUND_HOURS,
-    INITIAL_PRICE_GUESS_HOURS,
-    MAXIMUM_ITERATIONS,
-    NUMERAIRE_TRADE,
-    THERMAL_MJ_MINIMUM_USABLE_TEMPERATURE_C,
-    _build_material_dependency_graph,
-    _capability_graded_price,
-    _component_is_productive,
-    _dependency_materials,
-    _entries_relevant_to_component,
-    _grow_resolvable_by_topological_pass,
-    _has_external_anchor,
-    _meets_capability_floor,
-    _pending_entries,
-    _strongly_connected_components,
-    build_producers_index,
-    capability_floor_by_carrier,
-    capability_price_for_requirement,
-    capability_required_grades,
-    compute_resolvable_materials,
-    load_starting_interest_rate,
-    load_starting_technologies,
-    minor_joint_byproducts_split_by_mass,
-    recipe_cost_and_allocation,
-    solve,
-    techniques_available_to,
-    wage_ratios_by_trade,
-)
-
-# The rent the opening carries when a caller supplies none (a temporary stand-in, Complaints/507); the solver
-# itself charges only the rent it is handed.
-from sim.prices.rent_standin import (                       # noqa: E402,F401
-    DEFAULT_LAND_CIVILIZATION,
-    land_rent_hours_per_hectare,
-    rent_hours_per_kg_by_ore_material,
-)

@@ -2,10 +2,10 @@
 
 A basis is a function (form, facts, prices) -> {payer: Base}; the registry maps each basis name a civilisation's
 data uses to its function. Adding a basis is one function and one registry line; no civilisation, form or
-good id appears here. The names match the bases the engine's `sim/engine/actors/revenue_bases.py` reads.
+good id appears here. The names match the bases `sim/agents/revenue_bases.py` reads.
 """
 from dataclasses import dataclass, field
-from typing import Callable, Dict, Mapping, Optional, Tuple
+from typing import Callable, Dict, FrozenSet, Iterable, Mapping, Optional, Tuple
 
 from .types import AgentId, CurrencyId, GoodId, TileId, is_edge
 
@@ -17,20 +17,28 @@ class YearFacts:
     output: Mapping[Tuple[AgentId, GoodId], float] = field(default_factory=dict)     # grown or made by (producer, good)
     producer_tile: Mapping[AgentId, TileId] = field(default_factory=dict)            # where a producer's output lies
     working_people: Mapping[AgentId, float] = field(default_factory=dict)            # by household cohort, soldiers under arms excluded
-    wage_per_labour_year: Mapping[AgentId, float] = field(default_factory=dict)      # by cohort: money for one working person-year
+    wage_per_labour_year: Mapping[AgentId, float] = field(default_factory=dict)      # by cohort with a wage remembered: money for one working person-year
     imports_paid: Mapping[Tuple[AgentId, GoodId], float] = field(default_factory=dict)    # money paid to EDGE_EXTERNAL
     exports_received: Mapping[Tuple[AgentId, GoodId], float] = field(default_factory=dict)  # money received from EDGE_EXTERNAL
     cash: Mapping[AgentId, float] = field(default_factory=dict)                      # money held at the year's close
     sales: Mapping[Tuple[AgentId, GoodId], float] = field(default_factory=dict)      # money received by (seller, good)
     held_goods: Optional[Mapping[Tuple[AgentId, GoodId], float]] = None              # stock held; None: output is assumed held
+    taxpayers: Optional[FrozenSet[AgentId]] = None    # whose money is a stock of wealth (households, producers, merchants); None: every holder
 
 
 @dataclass(frozen=True)
 class Base:
-    value: float                     # money's worth of the base
+    value: Optional[float]           # money's worth of the base; None for a good with no price (the quantity still stands)
     quantity: float = 0.0            # physical amount where the base is a good, so a share can be paid in kind
     good: GoodId = ""
     tile: TileId = ""
+
+
+def taxable_cash(balances: Mapping[AgentId, float], taxpayers: Iterable[AgentId]) -> Dict[AgentId, float]:
+    """The cash the coin stock is assessed on: what the taxpayers hold (the households, producers and merchants), not a bank's
+    or fund's or insurer's holding of other people's money, nor a cargo or carriage account, nor an edge."""
+    liable = set(taxpayers)
+    return {agent: amount for agent, amount in balances.items() if agent in liable and not is_edge(agent)}
 
 
 def _sum_by_agent(pairs: Mapping[Tuple[AgentId, GoodId], float]) -> Dict[AgentId, float]:
@@ -44,19 +52,21 @@ def harvest(form, facts: YearFacts, prices: Mapping[GoodId, float]) -> Dict[Agen
     """Each grower's output of the good the form is paid in: a share of what was grown is taken in kind."""
     if not form.paid_in:
         raise ValueError("form %r on basis 'harvest' must name the good it is paid in (paid_in)" % form.name)
-    price = prices.get(form.paid_in, 0.0)
+    price = prices.get(form.paid_in)
     bases = {}
     for (producer, good), quantity in sorted(facts.output.items()):
         tile = facts.producer_tile.get(producer, "")
         if good == form.paid_in and quantity > 0.0 and form.covers(tile):
-            bases[producer] = Base(quantity * price, quantity, good, tile)
+            bases[producer] = Base(None if price is None else quantity * price, quantity, good, tile)
     return bases
 
 
 def adult_labour_years(form, facts: YearFacts, prices: Mapping[GoodId, float]) -> Dict[AgentId, Base]:
-    """Each cohort's working people, each worth a year of labour at the cohort's wage."""
-    return {cohort: Base(people * facts.wage_per_labour_year.get(cohort, 0.0))
-            for cohort, people in sorted(facts.working_people.items()) if people > 0.0}
+    """Each cohort's working people, each worth a year of labour at the cohort's wage; a cohort with no wage remembered
+    has no base to measure and is not assessed."""
+    return {cohort: Base(people * facts.wage_per_labour_year[cohort])
+            for cohort, people in sorted(facts.working_people.items())
+            if people > 0.0 and cohort in facts.wage_per_labour_year}
 
 
 def imports_value(form, facts: YearFacts, prices: Mapping[GoodId, float]) -> Dict[AgentId, Base]:
@@ -72,9 +82,10 @@ def sales_value(form, facts: YearFacts, prices: Mapping[GoodId, float]) -> Dict[
 
 
 def coin_stock(form, facts: YearFacts, prices: Mapping[GoodId, float]) -> Dict[AgentId, Base]:
-    """Money held by each agent: the wealth the economy models as a stock. Edge accounts hold none that is taxable."""
-    return {agent: Base(amount) for agent, amount in sorted(facts.cash.items())
-            if amount > 0.0 and not is_edge(agent)}
+    """Money held by each taxpayer: the wealth the economy models as a stock. A bank's, fund's or insurer's holding of
+    other people's money, a cargo or carriage account and an edge hold none that is taxable."""
+    held = facts.cash if facts.taxpayers is None else taxable_cash(facts.cash, facts.taxpayers)
+    return {agent: Base(amount) for agent, amount in sorted(held.items()) if amount > 0.0 and not is_edge(agent)}
 
 
 BASES: Dict[str, Callable] = {

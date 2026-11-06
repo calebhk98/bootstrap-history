@@ -6,9 +6,10 @@ own log); population, output, the coin and the society's values change once, at 
 order of the calls below; save/load and the equivalence check depend on it.
 
 Needs: civilisation, year, seat_list, game_random, act_as, events_enabled,
-techniques_held, wage_index, money_text, money_real, event_log."""
+techniques_held, money_text, money_real, event_log."""
 from typing import Any, Dict, List, Optional
 
+from sim.assembly.api import Part
 from sim.demography.api import CutPopulation, RefreshDemographicIndexes
 from sim.polity.api import ShiftValueWeight
 from sim.refusal import LogLine, Refusal
@@ -24,7 +25,11 @@ from .state import OUTPUT
 from .toll import staff_loss_toll
 
 
-class Shocks:
+class Shocks(Part):
+
+	def __init__(self, module):
+		super().__init__(module)
+		self.disaster_this_year = None
 
 	def step_dated_shocks(self, seats: Optional[List[str]]) -> None:
 		"""The phase `dated_shocks`: the world is hit once, each seat in `seats` meets the year's hazards with its own works."""
@@ -69,7 +74,7 @@ class Shocks:
 			self.staff_loss_seats(met, year)
 			for seat_id in met:
 				with self.needs.act_as(seat_id):
-					self.sack_chance(met[seat_id], year)
+					self.parts.sack.sack_chance(met[seat_id], year)
 			self.output_factor_seats(met, year)
 			self.real_erosion_seats(met, year)
 			self.values_seats(met, year, hazard_start, hazard_end)
@@ -86,7 +91,7 @@ class Shocks:
 		met = all(tech_id in held for tech_id in needed)
 		if year == hazard_start:
 			key = hazard.get("name", "hazard")
-			if self.say_once(SayOnce(key)):
+			if self.parts.events.say_once(SayOnce(key)):
 				text = condition.get("met_message" if met else "unmet_message")
 				if text:
 					self.needs.send(RecordEvent.of("hazard_condition_met" if met else "hazard_condition_unmet", text, hazard=key))
@@ -95,10 +100,10 @@ class Shocks:
 	def apply_event_causes(self, hazard: Dict[str, Any], year: int, hazard_start: int) -> Optional[Dict[str, Any]]:
 		"""The event as its stated causes leave it this year, or None when they do not hold. Told once, the year the window
 		opens, when the causes fail."""
-		kept, report = self.effective_hazard(hazard)
+		kept, report = self.parts.causes.effective_hazard(hazard)
 		if report["failed"] and year == hazard_start:
 			key = "causes:" + hazard.get("name", "hazard")
-			if self.say_once(SayOnce(key)):
+			if self.parts.events.say_once(SayOnce(key)):
 				self.needs.send(RecordEvent.of("hazard_condition_failed", "%s: %s, so it %s" % (
 					hazard.get("name", "hazard"), rules.failed_causes_words(report),
 					"does not come" if kept is None else "comes weaker")))
@@ -119,12 +124,11 @@ class Shocks:
 		world_hazard = mildest_hazard(met.values())
 		raw = min(report["raw"] for report in reports.values())
 		if world_hazard is not None and "staff_loss" in world_hazard:
-			raw = self.staff_loss_exposure(world_hazard["staff_loss"])["before_defences"]
-		wage_index_before = self.needs.wage_index()
+			raw = self.parts.relief.staff_loss_exposure(world_hazard["staff_loss"])["before_defences"]
 		self.needs.send(CutPopulation(raw))
 		for seat_id in reports:
 			with self.needs.act_as(seat_id):
-				self.needs.send(NoteWageShock(met[seat_id].get("name", "a plague"), self.needs.wage_index() - wage_index_before))
+				self.needs.send(NoteWageShock(met[seat_id].get("name", "a plague")))
 		# refresh population and wage screens now, not at year end
 		self.needs.send(RefreshDemographicIndexes(year))
 		for seat_id, report in reports.items():
@@ -135,14 +139,14 @@ class Shocks:
 		historical = hazard["staff_loss"]
 		# national prevalence after the country's own medicine; the household's own mitigations cut its risk only where the
 		# nation has not adopted them
-		exposure = self.staff_loss_exposure(historical)
+		exposure = self.parts.relief.staff_loss_exposure(historical)
 		loss = exposure["loss"]
 		people_before = self.needs.send(LoseStaff(hazard.get("name", "a plague"), 1 - loss, 1 - loss))["people_before"]
-		cash = self.lose_capital(loss * constants.PLAGUE_CASH_LOSS_SHARE, "plague losses")   # the trade that stopped takes cash with it
+		cash = self.parts.random_events.lose_capital(loss * constants.PLAGUE_CASH_LOSS_SHARE, "plague losses")   # the trade that stopped takes cash with it
 		return {"historical": historical, "raw": exposure["before_defences"], "med_relief": exposure["national_relief"],
 		        "relief": exposure["relief"], "why": exposure["why"], "lapsed_hedges": exposure["lapsed_hedges"], "loss": loss,
 		        "cash": cash, "people_before": people_before,
-		        "sources": self.national_public_health_sources()}   # read under this seat, so its line names its own works
+		        "sources": self.parts.relief.national_public_health_sources()}   # read under this seat, so its line names its own works
 
 	def staff_loss_message(self, hazard: Dict[str, Any], report: Dict[str, Any], raw: float) -> LogLine:
 		"""The log line for one seat; `raw` is the national toll the world took."""
@@ -174,7 +178,7 @@ class Shocks:
 		for seat_id, hazard in met.items():
 			if "output_factor" in hazard:
 				with self.needs.act_as(seat_id):
-					relief, why, lapsed = self.hazard_relief_detail("output_factor")
+					relief, why, lapsed = self.parts.relief.hazard_relief_detail("output_factor")
 				floors[seat_id] = rules.output_floor(hazard["output_factor"], relief)
 				reasons[seat_id] = (why, lapsed)
 		if not floors:
@@ -207,10 +211,10 @@ class Shocks:
 		lines = {}
 		for seat_id, hazard in holders.items():
 			with self.needs.act_as(seat_id):
-				relief, why, lapsed = self.hazard_relief_detail("real_erosion")
+				relief, why, lapsed = self.parts.relief.hazard_relief_detail("real_erosion")
 				bite = hazard["real_erosion"] * constants.REAL_EROSION_CASH_LOSS_SHARE * relief
 				had = max(0.0, self.needs.acting_balance())
-				self.lose_capital(bite, "debasement and real erosion")
+				self.parts.random_events.lose_capital(bite, "debasement and real erosion")
 				lines[seat_id] = (hazard, why, had - max(0.0, self.needs.acting_balance()), lapsed)
 		said = self.world.said_debasement
 		if not said or year - said >= 15:

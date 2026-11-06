@@ -1,7 +1,7 @@
 """Foreign trade's rules as plain functions of their inputs."""
 from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence, Tuple
 
-from sim.world import balance_of_payments, market
+from sim.world import balance_of_payments
 
 from .constants import (BOUGHT, LANDED, LANDED_COST, LANDING, LEDGER_FIELDS, SOLD, TAKEN, TAKING, THROUGH,
                         TRADE_YEARS_KEPT)
@@ -15,11 +15,6 @@ def partner_countries(records: Iterable[Mapping[str, Any]], year: int, own: Opti
     return sorted(record["civilization"] for record in records
                   if record.get("enabled", False) and record["civilization"] not in (own, replaced)
                   and record["from_year"] <= year <= record["until_year"])
-
-
-def agent_economy_ids(records: Iterable[Mapping[str, Any]]) -> set:
-    """Ids of the economies whose tiles, people and producers are in the agent economy itself."""
-    return {record["civilization"] for record in records if record.get("agent_economy", False)}
 
 
 # ---- the partner's ledger ----
@@ -117,24 +112,6 @@ def book_lift(ledger: Dict[str, float], flow_tonnes: float, unmet_tonnes: float)
     ledger["lift_unmet"] += unmet_tonnes
 
 
-# ---- what a partner makes and wants ----
-
-def opening_of_commodity(wanted: float, made: float, tracked_mineral: bool, national_output: float, mineral_share: float,
-                         in_balance: float) -> Tuple[float, float]:
-    """(capacity tonnes, demand tonnes) a foreign economy opens a commodity with. A mined commodity is its regions' share
-    of the national output and its own demand; one nothing can make has no capacity."""
-    if tracked_mineral:
-        output = national_output * mineral_share
-        return output, (output if output > 0.0 else wanted)
-    return made * in_balance, wanted
-
-
-def input_only_supply(national_output: float, partner_population: float, reference_population: float, share: float) -> float:
-    """Tonnes a year of a good bought only as an input that a partner holding every technique, input and deposit makes:
-    the stated national output scaled by its population."""
-    return national_output * (partner_population / reference_population) * share
-
-
 # ---- the actors' tallies ----
 
 def note_actor_trade(tally: Dict[str, Dict[str, Dict[str, float]]], partner: str, material: str, tonnes: float,
@@ -173,63 +150,6 @@ def landed_cost(paid: float, carriage: float, market_rate: float) -> float:
     """What a cargo costs its carrier on landing: the purchase, a year's return on it (the carrier's margin) and the
     carriage with its dues."""
     return paid * (1.0 + market_rate) + carriage
-
-
-def partner_price(price_in_home_money: Optional[float], price_level: float, price_ratio: float) -> Optional[float]:
-    """A partner's price of a material in home money: its solved cost, at its coin's price level and the price its own
-    market has reached; None when the partner prices nothing of it."""
-    if not price_in_home_money:
-        return None
-    return price_in_home_money * price_level * price_ratio
-
-
-def import_offers(cargo_by_material: Mapping[str, Mapping[str, float]], commodity_of: Mapping[str, str],
-                  tonnes_each: Mapping[str, float], base_prices: Mapping[str, float], price_level: float
-                  ) -> Tuple[Dict[str, List[Any]], Dict[str, float]]:
-    """The cargo landed at a partner as offers at its landed cost, a ratio to the partner's long-run cost of the material;
-    cargo with no landed cost noted is a price taker (returned as plain tonnes)."""
-    offers: Dict[str, List[Any]] = {}
-    price_taking: Dict[str, float] = {}
-    for material, flow in cargo_by_material.items():
-        commodity = commodity_of[material]
-        base = base_prices.get(material)
-        base = base / tonnes_each[material] if base and tonnes_each[material] else None   # per tonne, as the cargo is costed
-        tonnes = flow[SOLD]
-        if base and tonnes > 0.0 and flow.get(LANDED_COST, 0.0) > 0.0:
-            ratio = flow[LANDED_COST] / tonnes / (base * price_level)
-            offers.setdefault(commodity, []).append(market.Offer(tonnes, ratio))
-        else:
-            price_taking[commodity] = price_taking.get(commodity, 0.0) + tonnes
-    return offers, price_taking
-
-
-def clear_partner(entry: Mapping[str, float], floor_ratio: float, ceiling_ratio: float, sold: float, bought: float,
-                  imports: Sequence[Any] = ()) -> Any:
-    """The partner's market for a commodity cleared on `sold` tonnes landed there at no ask, `imports` landed at their
-    landed cost, and `bought` taken from it."""
-    return market.clear_market(market.MarketConditions(
-        household_demand_at_anchor_tonnes=entry["reference_tonnes"], committed_demand_tonnes=0.0,
-        society_capacity_tonnes=entry["capacity_tonnes"], actor_supply_tonnes=sold,
-        founder_sales_tonnes=0.0, stock_tonnes=entry["stock_tonnes"], actor_demand_tonnes=bought, imports=tuple(imports),
-        floor_ratio=floor_ratio, ceiling_ratio=ceiling_ratio))
-
-
-def price_response(entry: Mapping[str, float], outcome_price_ratio: float) -> float:
-    """Factor on a partner's price once the cargo is cleared in its book."""
-    return outcome_price_ratio / entry["price_ratio"]
-
-
-def close_entry(entry: Dict[str, float], outcome: Any, sold: float, bought: float) -> None:
-    """A partner's book entry after its year: capacity follows the price, stock and price follow the clearing."""
-    entry["capacity_tonnes"] = market.adjusted_capacity(entry["capacity_tonnes"], outcome.price_ratio)
-    entry["stock_tonnes"] = market.stock_after_year(outcome)
-    entry["price_ratio"] = outcome.price_ratio
-    entry["trade_tonnes"] = sold - bought
-
-
-def new_entry(demand: float, capacity: float) -> Dict[str, float]:
-    return {"reference_tonnes": demand, "capacity_tonnes": capacity,
-            "stock_tonnes": 0.0, "price_ratio": 1.0, "trade_tonnes": 0.0}
 
 
 # ---- the traders' cargo ----

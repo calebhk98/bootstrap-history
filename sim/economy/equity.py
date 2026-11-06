@@ -1,7 +1,7 @@
 """What the households own of the firms: the net worth of each producer, shared by ownership share.
 
 A producer's dividends reach its owner's tile and are split across the tile's cohorts by ownership share
-(`ownership.spread`); the claim on its net worth (cash and plant at what it would cost to build now, less
+(`ownership.spread`); the claim on its net worth (cash, plant at what it would cost to build now and stock, less
 what it owes) is split the same way. Where a producer has sold shares (shares.py) the holders of its shares own
 their part of that worth and the owner's tile the rest.
 `holdings` is the one read of it; the market view answers `equity` from it, so a household counts what it
@@ -22,27 +22,43 @@ def plant_value(producer, recipe, view) -> float:
         recipe, producers.live_input_prices(producer, recipe, view), producers.live_wages(producer, recipe, view))
 
 
-def firm_equity(producer, recipe, cash: float, debt: float, view) -> float:
-    """Cash plus plant at replacement cost less debt; negative when the firm owes more than it holds (Eurace@Unibi,
-    Financial_Management, Firm_compute_balance_sheet: equity is assets less debt)."""
-    return cash + plant_value(producer, recipe, view) - debt
+def inventory_value(record, producer, view) -> float:
+    """The goods the producer holds, at the prices it sees (Eurace@Unibi counts the inventory in its assets)."""
+    total = 0.0
+    for good, tiles in record.book.holdings(producer.agent_id)["goods"].items():
+        price = view.price(good, view.area_of(good, producer.tile))
+        if price is not None and price > 0.0:
+            total += price * sum(quantity for quantity in tiles.values() if quantity > 0.0)
+    return total
 
 
-def firm_net_worth(producer, recipe, cash: float, debt: float, view) -> float:
+def firm_assets(producer, recipe, cash: float, stock: float, view) -> float:
+    """Cash, plant at replacement cost and the stock held (Eurace@Unibi, Financial_Management,
+    Firm_compute_balance_sheet: the assets include the inventory)."""
+    return cash + plant_value(producer, recipe, view) + stock
+
+
+def firm_equity(producer, recipe, cash: float, debt: float, stock: float, view) -> float:
+    """Assets less debt; negative when the firm owes more than it holds (Firm_compute_balance_sheet: equity is
+    assets less debt)."""
+    return firm_assets(producer, recipe, cash, stock, view) - debt
+
+
+def firm_net_worth(producer, recipe, cash: float, debt: float, stock: float, view) -> float:
     """The equity floored at zero: a firm's owners cannot lose more than they put in."""
-    return max(0.0, firm_equity(producer, recipe, cash, debt, view))
+    return max(0.0, firm_equity(producer, recipe, cash, debt, stock, view))
 
 
 def producer_worths(setup, record, view) -> Dict[AgentId, float]:
     """The net worth of each producer a household owns and that has plant."""
     money = setup.currency_id
-    debts = credit_claims.debts_by_borrower(record.loans, money)
+    debts = credit_claims.debts_by_borrower(record.credit.loans, money)
     worths: Dict[AgentId, float] = {}
     for producer_id, producer in sorted(record.producers.items()):
         if record.cohorts.get(producer.owner) is None or producer.capacity_runs <= 0.0:
             continue
         worths[producer_id] = firm_net_worth(producer, setup.recipes[producer.recipe_id], record.book.balance(producer_id, money),
-                                             debts.get(producer_id, 0.0), view)
+                                             debts.get(producer_id, 0.0), inventory_value(record, producer, view), view)
     return worths
 
 
@@ -52,11 +68,11 @@ def holdings(setup, record, view) -> Dict[AgentId, float]:
     cohorts_of_tile: Dict[str, list] = {}
     for cohort in sorted(record.cohorts.values(), key=lambda each: each.agent_id):
         cohorts_of_tile.setdefault(cohort.tile, []).append(cohort)
-    factor = record.capital.share_price_factor
+    factor = record.capital_markets.capital.share_price_factor
     held: Dict[AgentId, float] = {}
     for producer_id, worth in producer_worths(setup, record, view).items():
         owner = record.cohorts[record.producers[producer_id].owner]
-        outside = record.shares.get(producer_id)
+        outside = record.capital_markets.shares.get(producer_id)
         if outside:                      # what holders of its shares own is theirs, not the owner tile's
             for holder, part in outside.items():
                 held[holder] = held.get(holder, 0.0) + part * worth * factor

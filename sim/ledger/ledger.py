@@ -7,6 +7,7 @@ from typing import Any, Optional
 
 from sim.agents.api import EDGE_EXCHANGE, GOVERNMENT_PREFIX, edges, ledger
 from sim.assembly.api import Module
+from sim.book import InsufficientFunds
 from sim.refusal import Refusal
 
 from . import cash_book, rules
@@ -27,14 +28,27 @@ class Ledger(Module):
 		seat_id = self.clock.acting_seat if seat_id is None else seat_id
 		return SeatAccount(self.seat_of(seat_id), self.needs.cast_state().purses, seat_id)
 
-	def pay_edge(self, command: Any) -> None:
-		ledger.transfer(self.account(), self.edge(command.edge), command.amount, command.purpose)
-		self.bump_seat(MONEY)
+	@staticmethod
+	def try_transfer(payer: Any, payee: Any, amount: float, purpose: Any) -> Optional[Refusal]:
+		"""The payment, or a `cannot_pay` refusal when the payer cannot cover it (nothing moved, nothing entered in any book)."""
+		try:
+			ledger.transfer(payer, payee, amount, purpose)
+		except InsufficientFunds as error:
+			return Refusal("cannot_pay", str(error), amount=amount)
+		return None
 
-	def pay_edge_from(self, command: Any) -> None:
+	def pay_edge(self, command: Any) -> Optional[Refusal]:
+		refusal = self.try_transfer(self.account(), self.edge(command.edge), command.amount, command.purpose)
+		if refusal is None:
+			self.bump_seat(MONEY)
+		return refusal
+
+	def pay_edge_from(self, command: Any) -> Optional[Refusal]:
 		actor = self.needs.cast().actors[command.actor]
-		ledger.transfer(actor, self.edge(command.edge), command.amount, command.purpose)
-		self.bump(MONEY)
+		refusal = self.try_transfer(actor, self.edge(command.edge), command.amount, command.purpose)
+		if refusal is None:
+			self.bump(MONEY)
+		return refusal
 
 	def pay_actor_from_edge(self, command: Any) -> Any:
 		payee = self.needs.cast().get(command.payee)
@@ -44,35 +58,44 @@ class Ledger(Module):
 		self.bump(MONEY)
 		return None
 
-	def pay_actor(self, command: Any) -> None:
+	def pay_actor(self, command: Any) -> Optional[Refusal]:
 		payer = self.needs.cast().get(command.payer)
 		if command.payee in self.needs.seat_list()["joined"]:
 			payee = self.account(command.payee)
 		else:
 			cast = self.needs.cast()
-			payee = cast.get(command.payee) or cast.ensure_government(command.payee[len(GOVERNMENT_PREFIX):])
-		ledger.transfer(payer, payee, command.amount, command.purpose)
-		self.bump(MONEY)
+			payee = cast.get(command.payee) or cast.countries.ensure_government(command.payee[len(GOVERNMENT_PREFIX):])
+		refusal = self.try_transfer(payer, payee, command.amount, command.purpose)
+		if refusal is None:
+			self.bump(MONEY)
+		return refusal
 
 	def pay_actor_from_household(self, command: Any) -> Any:
 		payee = self.needs.cast().get(command.payee)
 		if payee is None:
 			return Refusal("no_such_actor", "the cast holds no actor %s" % command.payee)
-		ledger.transfer(self.account(), payee, command.amount, command.purpose)
-		self.bump_seat(MONEY)
-		return None
+		refusal = self.try_transfer(self.account(), payee, command.amount, command.purpose)
+		if refusal is None:
+			self.bump_seat(MONEY)
+		return refusal
 
 	def take_from_household_purse(self, command: Any) -> Any:
 		taker = self.needs.cast().get(command.taker)
 		if taker is None:
 			return Refusal("no_such_actor", "the cast holds no actor %s" % command.taker)
-		ledger.transfer(self.account(), taker, command.amount, command.purpose)
-		self.bump_seat(MONEY)
-		return None
+		refusal = self.try_transfer(self.account(), taker, command.amount, command.purpose)
+		if refusal is None:
+			self.bump_seat(MONEY)
+		return refusal
 
-	def settle_with_edge(self, command: Any) -> None:
-		ledger.settle(self.account(), self.edge(command.edge), command.balance, command.purpose)
-		self.bump_seat(MONEY)
+	def write_off_household_debt(self, command: Any) -> None:
+		account = self.account()
+		purses = self.needs.cast_state().purses
+		forgiven = min(max(0.0, command.amount), purses.debt(account.account_id))
+		if forgiven > 0.0:
+			purses.write_off(account.account_id, forgiven)
+			account.payments.note_income(command.purpose, forgiven)
+			self.bump_seat(MONEY)
 
 	def rescale_household_money(self, command: Any) -> None:
 		account = self.account()
@@ -99,16 +122,16 @@ class Ledger(Module):
 		cash_book.close_period(self.seat, self.account().capital, self.needs.year())
 
 	def credit_seat(self, command: Any) -> None:
-		self.account(command.seat).credit(command.amount, command.purpose)
+		self.account(command.seat).payments.credit(command.amount, command.purpose)
 		self.bump_seat(MONEY, command.seat)
 
 	def debit_seat(self, command: Any) -> None:
-		self.account(command.seat).debit(command.amount, command.purpose)
+		self.account(command.seat).payments.debit(command.amount, command.purpose)
 		self.bump_seat(MONEY, command.seat)
 
 	def note_seat_cash(self, command: Any) -> None:
 		account = self.account(command.seat)
-		(account.note_income if command.direction > 0.0 else account.note_outlay)(command.purpose, command.amount)
+		(account.payments.note_income if command.direction > 0.0 else account.payments.note_outlay)(command.purpose, command.amount)
 		self.bump_seat(MONEY, command.seat)
 
 	def note_spend(self, command: Any) -> None:
@@ -123,43 +146,54 @@ class Ledger(Module):
 
 	def _note_booking(self, holder: Any, command: Any) -> None:
 		if holder is not None:
-			(holder.note_income if command.signed > 0.0 else holder.note_outlay)(command.label, abs(command.signed))
+			(holder.payments.note_income if command.signed > 0.0 else holder.payments.note_outlay)(command.label, abs(command.signed))
 
-	def withdraw_household_money(self, command: Any) -> None:
-		ledger.transfer(self.account(), self.edge(EDGE_EXCHANGE), command.amount, BANK_CAPITAL_LABEL)
-		self.bump_seat(MONEY)
+	def withdraw_household_money(self, command: Any) -> Optional[Refusal]:
+		refusal = self.try_transfer(self.account(), self.edge(EDGE_EXCHANGE), command.amount, BANK_CAPITAL_LABEL)
+		if refusal is None:
+			self.bump_seat(MONEY)
+		return refusal
 
-	def pay_exchange(self, command: Any) -> None:
+	def pay_exchange(self, command: Any) -> Optional[Refusal]:
 		cast = self.needs.cast()
-		cast.state.purses.transfer(command.actor, EDGE_EXCHANGE, command.coin, "exchange")
-		cast.actors[command.actor].note_outlay(command.label, command.coin)
+		try:
+			cast.state.purses.transfer(command.actor, EDGE_EXCHANGE, command.coin, "exchange")
+		except InsufficientFunds as error:
+			return Refusal("cannot_pay", str(error), amount=command.coin)
+		cast.actors[command.actor].payments.note_outlay(command.label, command.coin)
 		self.bump(MONEY)
+		return None
 
 	def receive_from_exchange(self, command: Any) -> None:
 		cast = self.needs.cast()
 		cast.state.purses.transfer(EDGE_EXCHANGE, command.actor, command.coin, "exchange")
-		cast.actors[command.actor].note_income(command.label, command.coin)
+		cast.actors[command.actor].payments.note_income(command.label, command.coin)
 		self.bump(MONEY)
 
 	def receive_from_edge(self, command: Any) -> None:
 		ledger.transfer(self.edge(command.edge), self.account(), command.amount, command.purpose)
 		self.bump_seat(MONEY)
 
-	def pay_wages(self, command: Any) -> None:
+	def pay_wages(self, command: Any) -> Optional[Refusal]:
+		"""The seat's wages to the people, all or none: a `cannot_pay` refusal, with nothing moved, when it cannot cover them."""
 		registry = self.needs.cast()
-		rules.pay_wages(registry, self.account(), command.amount, command.purpose, self.edge(edges.EDGE_WORKERS))
+		try:
+			rules.pay_wages(registry, self.account(), command.amount, command.purpose, self.edge(edges.EDGE_WORKERS))
+		except InsufficientFunds as error:
+			return Refusal("cannot_pay", str(error), amount=command.amount)
 		self.bump_seat(MONEY)
+		return None
 
 	def stock_ledger(self) -> Any:
 		"""The seat's tonnes ledger, made on first use, with the capacity keys swept into the world's capacity pool."""
-		self.seat._material_stock_ledger = rules.settled_stock(self.seat._material_stock_ledger, self.world.capacity_pool)
-		return self.seat._material_stock_ledger
+		self.seat.material_stock_ledger = rules.settled_stock(self.seat.material_stock_ledger, self.world.capacity_pool)
+		return self.seat.material_stock_ledger
 
 	def opening_stock(self) -> Any:
 		"""The tonnes as the year's accounting began; the snapshot is taken here if this year has none."""
-		self.seat._material_stock_opening = rules.year_opening_record(
-			self.seat._material_stock_opening, self.needs.year(), self.stock_ledger())
-		return self.seat._material_stock_opening["tonnes"]
+		self.seat.material_stock_opening = rules.year_opening_record(
+			self.seat.material_stock_opening, self.needs.year(), self.stock_ledger())
+		return self.seat.material_stock_opening["tonnes"]
 
 	def change_stock(self, command: Any) -> None:
 		stock = self.stock_ledger()
@@ -184,7 +218,7 @@ class Ledger(Module):
 	def goods_stock_opening(self) -> Any:
 		"""The acting seat's tonnes by commodity key as they stood when this year's accounting began, as the books stand now:
 		read it, never write it. Nothing is recorded by asking."""
-		return rules.year_opening_record(self.seat._material_stock_opening, self.needs.year(), self.held_goods())["tonnes"]
+		return rules.year_opening_record(self.seat.material_stock_opening, self.needs.year(), self.held_goods())["tonnes"]
 
 	def goods_stock(self, commodity: str) -> float:
 		return self.stock_ledger().get(commodity, 0.0)
@@ -222,4 +256,4 @@ class Ledger(Module):
 		for charge in self.needs.transfer_surcharge(payer, payee, amount, purpose):
 			if charge is not None:
 				edge_name, charged, cause = charge
-				ledger.transfer(payer, self.edge(edge_name), charged, cause)
+				ledger.pay_up_to(payer, self.edge(edge_name), charged, cause)   # a payer short of the charge pays what it can

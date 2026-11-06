@@ -1,14 +1,22 @@
 """What a country's state asks of the engine when it funds the clients of its own: the seats it patronises, the terms of the
-funding and the country's real output per head (mixed into `ActorWorld`; the home state's ask is `Sim.patron_funding_ask`)."""
+funding and the country's real output per head (the home state's ask is `Sim.patron_funding_ask`)."""
 from typing import Any, Dict, List, Optional, Tuple
 
 from sim.reporting.api import output_rules
 
 
-class PatronageView:
-	"""Read-only questions behind a country's patronage."""
+class Patronage:
+	"""Read-only questions behind a country's patronage. `world` is the root that hands out the parts."""
 
-	needs: Any
+	def __init__(self, world: Any) -> None:
+		self.world = world
+
+	@property
+	def needs(self) -> Any:
+		return self.world.needs
+
+	def patron_ask(self) -> float:
+		return self.needs.patron_funding_ask()
 
 	def patron_clients(self, country: str) -> List[Tuple[float, float]]:
 		"""(governance, reputation factor) of the playing seats of `country` whose techniques run the `state_funding` mechanic."""

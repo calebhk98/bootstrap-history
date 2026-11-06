@@ -7,7 +7,7 @@ QUICK_TOPIC = True
 import unittest
 
 from sim.labour.market import clearing, trades
-from sim.labour.market.records import Bid, MarketState, Route, YearInputs
+from sim.labour.market.records import EmployerHoursBid, MarketState, Route, YearInputs
 
 SPECS = trades.trade_specs({"digger": {"family": "earth", "training_years": 0}})
 HOURS = 100.0
@@ -33,7 +33,7 @@ def state(neighbour_workers=ENOUGH_HANDS):
 
 
 def swamped_bids():
-    return [Bid("works", "digger", "vale", 1.0e6, GREAT_BID)]     # a thousand times the hours offered
+    return [EmployerHoursBid("works", "digger", "vale", 1.0e6, GREAT_BID)]     # a thousand times the hours offered
 
 
 def vale_wage(held, routes):
@@ -78,7 +78,7 @@ class ImportCostTests(unittest.TestCase):
 
     def test_a_neighbour_whose_own_employers_want_all_its_hands_has_none_to_import(self):
         # both areas swamped: neither can fetch from the other, so the wage follows the bids in each
-        bids = swamped_bids() + [Bid("works", "digger", "dale", 1.0e6, GREAT_BID)]
+        bids = swamped_bids() + [EmployerHoursBid("works", "digger", "dale", 1.0e6, GREAT_BID)]
         routes = {"vale": [Route("dale", MOVING_COST)], "dale": [Route("vale", MOVING_COST)]}
         held = state(neighbour_workers=FEW_HANDS)
         for _year in range(YEARS):

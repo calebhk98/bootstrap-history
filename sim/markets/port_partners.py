@@ -10,7 +10,7 @@ from sim.world import census as census_module, demand
 
 from .port_setup import allowed_entries
 
-SPREAD_BY_FOOD_CAPACITY = declare(
+PARTNER_POPULATION_SPREAD_BY_FOOD_CAPACITY = declare(
     "PARTNER_POPULATION_SPREAD_BY_FOOD_CAPACITY", 1.0, kind="temporary_heuristic",
     unit="share of a census-less partner's population placed by food capacity", source=None, confidence="D",
     retire="a sourced census per partner (data/world/census)",
@@ -24,8 +24,8 @@ def partner_opening(sim, partner_id):
     """What the setup takes from one partner at the opening: its tiles (those the home country does not
     hold), the people on each, the recipes its techniques allow and its goods priced where the home has none."""
     civ = sim.civilisation_record(partner_id)
-    home_tiles = set(sim.tiles_held_by(sim.civ))
-    tile_ids = [tile for tile in sim.tiles_held_by(civ) if tile not in home_tiles]
+    home_tiles = set(sim.map.tiles_held_by(sim.scenario.civ))
+    tile_ids = [tile for tile in sim.map.tiles_held_by(civ) if tile not in home_tiles]
     people, farthest, source = _people_by_tile(sim, civ, tile_ids)
     production = demand.production_data()
     return {"tiles": tile_ids, "population_by_tile": people, "population_source": source,
@@ -38,17 +38,17 @@ def _people_by_tile(sim, civ, tile_ids):
     census_id = civ.get("population_census")
     if census_id and tile_ids:
         entries = census_module.load_census(census_id)["entries"]
-        located = {tile: (sim.tile_description(tile)["lat"], sim.tile_description(tile)["lon"]) for tile in tile_ids}
+        located = {tile: (sim.map.tile_description(tile)["lat"], sim.map.tile_description(tile)["lon"]) for tile in tile_ids}
         people, farthest = census_module.place_on_nearest_tile(entries, located, haversine_km)
         return {tile: people.get(tile, 0.0) for tile in tile_ids}, farthest, census_id
-    total = float(civ.get("population") or 0.0) * SPREAD_BY_FOOD_CAPACITY
+    total = float(civ.get("population") or 0.0) * PARTNER_POPULATION_SPREAD_BY_FOOD_CAPACITY
     return ({tile: total * settlement.population_share(tile_ids, tile) for tile in tile_ids}, 0.0,
             POPULATION_BY_FOOD_CAPACITY)
 
 
 def _partner_prices(sim, partner_id):
     """The partner's solved prices in home money, for the goods only it can price."""
-    facts = sim._foreign_economy_facts(partner_id)
-    home = sim.economy.material_prices()
+    facts = sim.foreign.foreign_economy_facts(partner_id)
+    home = sim.materials.prices()
     return {good: price for good, price in facts["prices_in_home_money"].items()
             if price > 0.0 and not home.get(good)}

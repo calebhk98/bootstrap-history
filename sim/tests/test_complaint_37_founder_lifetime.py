@@ -7,7 +7,8 @@ QUICK_TOPIC = True
 from .harness import check
 
 from sim.engine.data import DEFAULTS
-from sim.ui.cli import _founder_lifetime_hours, _sweep_point_cfg
+from sim.ui.cli import _sweep_point_cfg
+from sim.ui.cli_common import _founder_lifetime_hours
 from sim.ui.founder_budget import founder_budget, path_is_feasible_alone
 
 check("the budget is hours a year times working years, read from the defaults it is given",

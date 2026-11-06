@@ -5,9 +5,7 @@ Rules, each called on inputs the test builds:
 
 1. `land.territory_cropland` and `land.ladder_quality`: the ladder is best ground first, sums to the ceiling, and the
    mean quality falls as worse ground is brought in.
-2. `labour_allocation.hours_spent_clearing`, `cleared_hectares`, `quality_of_area`: clearing is paid in the hands beyond
-   what the farm can crop, never passes the arable ceiling, and the new ground is no better than the old.
-3. `land.margin_outcome_for_civilization` and `prices.band_farmed_hectares`: rent reads the farmed area.
+2. `land.margin_outcome_for_civilization` and `prices.band_farmed_hectares`: rent reads the farmed area.
 
 The farm's area and quality, and its clearing, are test_farm_area_rule; the price tables following the area are
 test_price_tables_follow_clearing."""
@@ -20,11 +18,9 @@ import unittest
 from sim.geography.api import crop_site, tiles_held
 from sim.geography.food_crops import CropSite
 from sim.world import demography
-from sim.labour import labour_allocation
 from sim.world import agriculture, agriculture_labour, farming_technique, land
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-HOURS = labour_allocation.HOURS_PER_FARM_WORKER_YEAR
 TECHNIQUE = farming_technique.DEFAULT_TECHNIQUE
 
 # tile -> (cropped hectares, yield factor); the third tile is unfarmable
@@ -63,44 +59,6 @@ class LadderTests(unittest.TestCase):
         territory = land.territory_cropland({"dune": SITES["dune"]})
         self.assertEqual(territory.ladder, [])
         self.assertEqual(territory.cropped_hectares, 0.0)
-
-
-class ClearingRuleTests(unittest.TestCase):
-    def test_labour_cost_is_a_declared_labelled_parameter(self):
-        self.assertGreater(agriculture.CLEARING_LABOUR_HOURS_PER_HECTARE, 0.0)
-
-    def test_hands_the_farm_can_crop_do_not_clear(self):
-        crop_limit_fte = 1000.0 / agriculture.hectares_cropped_per_farm_worker(TECHNIQUE.crop, TECHNIQUE.toolkit)
-        self.assertEqual(labour_allocation.hours_spent_clearing(crop_limit_fte, 1000.0, TECHNIQUE), 0.0)
-        self.assertEqual(labour_allocation.hours_spent_clearing(0.5 * crop_limit_fte, 1000.0, TECHNIQUE), 0.0)
-
-    def test_hands_beyond_what_the_farm_can_crop_spend_their_year_clearing(self):
-        crop_limit_fte = 1000.0 / agriculture.hectares_cropped_per_farm_worker(TECHNIQUE.crop, TECHNIQUE.toolkit)
-        hours = labour_allocation.hours_spent_clearing(crop_limit_fte + 7.0, 1000.0, TECHNIQUE)
-        self.assertAlmostEqual(hours, 7.0 * HOURS)
-
-    def test_clearing_is_paid_in_the_hours_it_takes(self):
-        hours = 10.0 * agriculture.CLEARING_LABOUR_HOURS_PER_HECTARE
-        self.assertAlmostEqual(labour_allocation.cleared_hectares(hours, 1000.0, 5000.0), 10.0)
-
-    def test_area_never_passes_the_arable_ceiling(self):
-        cleared = labour_allocation.cleared_hectares(1e12, 1000.0, 2300.0)
-        self.assertAlmostEqual(cleared, 1300.0)
-        self.assertEqual(labour_allocation.cleared_hectares(1e12, 2300.0, 2300.0), 0.0)
-        self.assertEqual(labour_allocation.cleared_hectares(1e12, 2400.0, 2300.0), 0.0)
-
-    def test_without_a_ceiling_there_is_nothing_to_clear(self):
-        self.assertEqual(labour_allocation.cleared_hectares(1e12, 1000.0, None), 0.0)
-
-    def test_new_ground_is_no_better_than_the_ground_already_farmed(self):
-        ladder = land.territory_cropland(SITES).ladder
-        before = labour_allocation.quality_of_area(ladder, 800.0)
-        after = labour_allocation.quality_of_area(ladder, 800.0 + labour_allocation.cleared_hectares(1e12, 800.0, 2300.0))
-        self.assertLess(after, before)
-        self.assertAlmostEqual(after, land.ladder_quality(ladder, 2300.0), places=9)
-
-    def test_without_a_ladder_quality_is_the_reference_field(self):
-        self.assertEqual(labour_allocation.quality_of_area([], 500.0), 1.0)
 
 
 class OpeningAreaTests(unittest.TestCase):

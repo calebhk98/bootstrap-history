@@ -67,7 +67,8 @@ Paper studies the phase diagram of simple macro agent-based models, starting fro
 transition between a low-unemployment and a high-unemployment state, generically driven by an asymmetry between firms'
 hiring and firing rates; a bankruptcy threshold adds endogenous crises. The abstract does not mention "Mark-0"; I could not
 tell whether it means this paper's model or another (the Peters et al. paper, https://arxiv.org/abs/2205.00752, was opened
-and does not mention Mark-0 either: it calls its model unnamed; the earlier report cites it as "Mak(h)ro 0").
+and does not mention Mark-0 either: it names its model "Mak(h)ro 0", as the earlier report cites it, a different model from
+Gualdi's Mark-0).
 Mechanism that could matter: hiring versus firing asymmetry as the source of a bad state, tied to Complaint 473's
 unemployment and unsold-hours behaviour in the spin-up (the earlier design report item (d), hours unhired). The method
 (map the phase diagram of the parameters, then place the opening on the good side) is a way to show the opening is not a

@@ -9,6 +9,7 @@ import unittest
 from unittest import mock
 
 from sim.markets import port_actors as actors_port
+from sim.refusal import Refusal
 
 GRAIN, FARMS, COIN = "grain_kg", "farms", "coin"
 
@@ -67,6 +68,19 @@ class SaleOrdersTests(unittest.TestCase):
         self.assertEqual((offer.good, offer.area, offer.tile, offer.quantity, offer.reservation_price),
                          (GRAIN, "area:farms", FARMS, 4.0, 2.0))
 
+    def test_a_concern_with_no_known_cost_is_left_out_of_the_weighted_reservation(self):
+        sales = [{"seller": "firm:a", "material": GRAIN, "tonnes": 8.0, "concerns": [["n1", 6.0], ["n2", 2.0]]}]
+        costs = {"n1": None, "n2": 5.0}
+        _moves, orders = actors_port.sale_orders(stand_in_economy(), sales, per_unit, tile_of,
+                                                 lambda seller, node, material, tile: costs[node])
+        self.assertEqual(orders[actors_port.sale_account("firm:a")].offers[0].reservation_price, 5.0)
+
+    def test_a_sale_none_of_whose_concerns_has_a_known_cost_is_offered_with_no_floor(self):
+        sales = [{"seller": "firm:a", "material": GRAIN, "tonnes": 8.0, "concerns": [["n1", 6.0]]}]
+        _moves, orders = actors_port.sale_orders(stand_in_economy(), sales, per_unit, tile_of,
+                                                 lambda seller, node, material, tile: None)
+        self.assertEqual(orders[actors_port.sale_account("firm:a")].offers[0].reservation_price, 0.0)
+
     def test_a_good_the_economy_does_not_trade_is_not_offered(self):
         sales = [{"seller": "firm:a", "material": "unknown_kg", "tonnes": 10.0, "concerns": []}]
         self.assertEqual(actors_port.sale_orders(stand_in_economy(), sales, per_unit, tile_of,
@@ -88,6 +102,28 @@ class PurchaseOrdersTests(unittest.TestCase):
                                                      lambda commodity: ["other"], 4.0), ({}, []))
 
 
+class PaidPurchasesTests(unittest.TestCase):
+    def bid(self, name, budget=10.0):
+        return actors_port.Bid(actors_port.buy_account(name), GRAIN, "area:farms", FARMS, 0.0, 1.0, budget, 0.0, budget)
+
+    def test_a_refused_purchase_is_dropped_with_its_bid_and_not_funded(self):
+        orders = {actors_port.buy_account("a"): actors_port.AgentOrders(bids=(self.bid("a", 10.0), self.bid("a", 20.0))),
+                  actors_port.buy_account("b"): actors_port.AgentOrders(bids=(self.bid("b", 30.0),))}
+        funding = [("a", 10.0, 1.0), ("a", 20.0, 2.0), ("b", 30.0, 3.0)]
+        answers = iter([Refusal("cannot_pay", "short"), None, None])
+        kept_orders, kept_funding, refused = actors_port.keep_paid_purchases(orders, funding, lambda buyer, coin: next(answers))
+        self.assertEqual(kept_funding, [("a", 20.0, 2.0), ("b", 30.0, 3.0)])
+        self.assertEqual([bid.budget for bid in kept_orders[actors_port.buy_account("a")].bids], [20.0])
+        self.assertEqual([bid.budget for bid in kept_orders[actors_port.buy_account("b")].bids], [30.0])
+        self.assertEqual([(buyer, coin, refusal.cause) for buyer, coin, refusal in refused], [("a", 10.0, "cannot_pay")])
+
+    def test_a_buyer_whose_every_purchase_is_refused_has_no_order(self):
+        orders = {actors_port.buy_account("a"): actors_port.AgentOrders(bids=(self.bid("a"),))}
+        kept_orders, kept_funding, refused = actors_port.keep_paid_purchases(
+            orders, [("a", 10.0, 1.0)], lambda buyer, coin: Refusal("cannot_pay", "short"))
+        self.assertEqual((kept_orders, kept_funding, len(refused)), ({}, [], 1))
+
+
 class FundTests(unittest.TestCase):
     def test_each_bid_is_funded_from_the_exchange_edge_into_its_buy_account(self):
         posted = []
@@ -100,9 +136,9 @@ class FundTests(unittest.TestCase):
 class CloseTests(unittest.TestCase):
     def test_a_sale_account_returns_its_money_as_proceeds_and_its_unsold_goods_go_back_out(self):
         book = Book({"sale:firm:a": {GRAIN: {FARMS: 1.5}}}, {"sale:firm:a": 7.0})
-        (proceeds, refunds, bought, delivered), moves, transfers = closed(
+        (proceeds, refunds, delivered, unsold), moves, transfers = closed(
             [{"seller": "firm:a", "material": GRAIN, "tonnes": 4.0, "concerns": []}], [], book)
-        self.assertEqual((proceeds, refunds, bought, delivered), ({"firm:a": 7.0}, {}, {}, {}))
+        self.assertEqual((proceeds, refunds, delivered, unsold), ({"firm:a": 7.0}, {}, {}, {"firm:a": {GRAIN: 1.5}}))
         self.assertEqual([(move.giver, move.receiver, move.quantity) for move in moves],
                          [("sale:firm:a", "edge:legacy", 1.5)])
         self.assertEqual([(each.payer, each.payee, each.amount) for each in transfers],
@@ -110,10 +146,10 @@ class CloseTests(unittest.TestCase):
 
     def test_a_buy_account_returns_the_unspent_budget_and_reports_what_was_delivered(self):
         book = Book({"buy:state:a": {GRAIN: {FARMS: 3.0}}}, {"buy:state:a": 2.0})
-        (proceeds, refunds, bought, delivered), _moves, _transfers = closed(
+        (proceeds, refunds, delivered, unsold), _moves, _transfers = closed(
             [], [{"buyer": "state:a", "commodity": "grain", "tonnes": 6.0, "budget": 40.0}], book)
-        self.assertEqual((proceeds, refunds, bought, delivered),
-                         ({}, {"state:a": 2.0}, {"state:a": 3.0}, {"state:a": {GRAIN: 3.0}}))
+        self.assertEqual((proceeds, refunds, delivered, unsold),
+                         ({}, {"state:a": 2.0}, {"state:a": {GRAIN: 3.0}}, {}))
 
     def test_a_bought_capital_asset_with_a_service_life_is_kept_in_the_held_account(self):
         specs = {GRAIN: types.SimpleNamespace(capital_asset=True, service_life_years=10.0)}
@@ -122,6 +158,13 @@ class CloseTests(unittest.TestCase):
             [], [{"buyer": "state:a", "commodity": "grain", "tonnes": 6.0, "budget": 40.0}], book, specs)
         self.assertEqual([(move.giver, move.receiver, move.quantity) for move in moves],
                          [("buy:state:a", actors_port.held_account("state:a"), 3.0)])
+
+
+class TakeBackTests(unittest.TestCase):
+    def test_unsold_units_join_the_sellers_stores_in_tonnes_and_a_good_with_no_mass_is_left(self):
+        stores = {GRAIN: 1.0}
+        actors_port.take_back(stores, {GRAIN: 1.5, "ghost": 4.0}, lambda good: 2.0 if good == GRAIN else None)
+        self.assertEqual(stores, {GRAIN: 4.0})
 
 
 class NoteTests(unittest.TestCase):

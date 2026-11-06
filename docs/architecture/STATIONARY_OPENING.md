@@ -1,12 +1,15 @@
 # Stationary opening: calendar, constraints and remaining work
 
-Status: partial implementation for GitHub issue #61. The durable-stock boundary
-is implemented and tested (`sim/tests/test_durable_stationary_state.py`). The
-opening income is a root find for zero net saving (`sim/economy/opening_income.py`)
-and the stationary quantities of one repeated year are in
-`sim/economy/opening_stationary.py`; the coupled opening solver described below
-is not implemented. No shipped opening should be regenerated on the strength of
-the durable correction.
+Status: partial implementation. Built: the durable-stock boundary
+(`sim/tests/test_durable_stationary_state.py`); the opening income as a root find for zero net saving
+(`opening._settle_income`, `sim/economy/opening_income.py`); land rent settled at the opening
+(`opening_rent.py`); the stationary quantities of one repeated year as a plain function
+(`sim/economy/opening_stationary.py`, tested by `test_opening_stationary*.py`; the opening does not yet seed
+its producers or wage from it). Not built: the coupled opening solver described below.
+
+What is open, and its current state, is in the complaints (read each `**Status:**` line first):
+`Complaints/473` (the spin-up never settles), `Complaints/526` and `607` (the opening income leaks saving),
+`Complaints/608`, `960` (the opening wage), `961`, `962`, `963` (Rome's opening and its first years).
 
 ## The state to solve
 
@@ -66,8 +69,7 @@ ordinary yearly rule has no opening-mode dependence.
 Direct checks, including spoilage and the opening-to-orders connection:
 
 ```bash
-python3 -m unittest sim.tests.test_durable_stationary_state
-python3 -m unittest sim.tests.test_economy_durables_budget sim.tests.test_economy_households sim.tests.test_economy_service_lives
+python3 -m sim.tests --only durable_stationary_state,economy_durables_budget,economy_households,economy_service_lives
 ```
 
 This is conditional on unchanged service demand and affordable replacement.
@@ -86,10 +88,10 @@ until they stop moving: one full household solve, then each pass reopens the eco
 ## Why the current income iteration is insufficient
 
 `opening._settle_income` solves for a scalar income (a root find for zero net
-saving) against final demand while
+saving, with the own-plot hours share settled inside each trial income) against final demand while
 prices, wages and the rate are fixed. It runs before producers, their equity,
 cash, credit and stores are seeded, using `YearView`. Annual household decisions
-instead read `CreditView`. The two calls therefore face different balance
+instead read `CreditView` (`economy.py` builds it with `equity.holdings`). The two calls therefore face different balance
 sheets, even at the same proposed income. A scalar root can exist at
 subsistence without solving employment or the desired wealth distribution.
 
@@ -97,7 +99,8 @@ The opening now retains the cohort-specific hearth and household-work basket.
 That does not solve the hired/own hours split: the yearly decision
 still has to agree with the split assumed in opening production and demand.
 Likewise, land-valuing helpers are not evidence that land wealth is already
-included in household spending: `CreditView.equity` currently reads firms.
+included in household spending: `CreditView.equity` is `equity.holdings`, the net worth of producers (and their
+shares), not land.
 
 ## Solver implementation sequence
 
@@ -133,6 +136,7 @@ python3 sim/simulator.py spin-up-trace --civ england_1300 --years 60
 python3 sim/simulator.py spin-up-trace --civ mexica_1500 --years 60
 ```
 
-Apply `sim.economy.settling.settling_report` to each complete trace. Keep its
-existing thresholds. The results and full-suite failures belong in the issue
+Read the price level, wage, money supply and rate in each complete trace for
+whether each settles (flat over the closing window, neither trending nor
+cycling); no module judges it. The results and full-suite failures belong in the issue
 and PR measurement record; this design does not claim those validations pass.

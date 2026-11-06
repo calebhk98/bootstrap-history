@@ -23,7 +23,7 @@ def view():
 
 def plans(unmet, volumes, unfilled=None):
     """volumes: good -> traded last year; a good left out has no market. unfilled: quantity bids left unfilled."""
-    return entry.entry_plans({"boil_salt": SALT}, view(), market(unmet), None, None,
+    return entry.entry_plans({"boil_salt": SALT}, view(), market(unmet),
                              lambda good, tile: volumes.get(good), None,
                              None if unfilled is None else (lambda recipe_id, good, tile, output_per_year: unfilled))
 

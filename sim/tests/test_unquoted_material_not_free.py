@@ -12,13 +12,13 @@ from .harness import check
 from sim.agents import budget, budget_lines, budget_works, government_levers, state_enterprises
 from sim.agents.api import ActorRecord, Government
 from sim.agents.budget_line import Line
-from sim.actors.world_budget import BudgetView
+from sim.actors.world_quotes import Quotes
 from sim.tests.world_stand_in import fake_needs
 
 from .agents_fake_world import FakeWorld
 
-IRON = budget.EQUIPMENT_MATERIAL
-GRAIN = budget_lines.DOLE_MATERIAL
+IRON = "iron_bar_kg"
+GRAIN = "staple_kg"
 IRON_PRICE = 10.0
 GRAIN_PRICE = 4.0
 SHIP_PRICE = 10000.0
@@ -36,6 +36,9 @@ class Market(FakeWorld):
 	def commodity_of(self, material):
 		return material
 
+	def staple_material(self):
+		return GRAIN
+
 	def material_cost(self, material, tonnes):
 		return self.prices[material] * tonnes if material in self.prices else None
 
@@ -44,6 +47,9 @@ class Market(FakeWorld):
 
 	def government(self):
 		return self.state
+
+	def equipment_material(self):
+		return IRON
 
 	def equipment_kg_per_soldier(self):
 		return 20.0
@@ -78,12 +84,12 @@ class Shipyard(Market):
 
 # ---- the home market port: no quote is no price, not a free one -----------------------------------------------
 def port_with(quote):
-	return types.SimpleNamespace(needs=fake_needs(material_purchase_cost=lambda material, tonnes: quote))
+	return types.SimpleNamespace(needs=fake_needs(purchase_quote=lambda material, tonnes: quote))
 
 
-check("the home port prices a quoted material at the quote", BudgetView.material_cost(port_with((42.0, "home")), IRON, 3.0) == 42.0)
+check("the home port prices a quoted material at the quote", Quotes(port_with((42.0, "home"))).material_cost(IRON, 3.0) == 42.0)
 check("the home port answers not on sale (None) for a material nobody quotes",
-	  BudgetView.material_cost(port_with(None), IRON, 3.0) is None)
+	  Quotes(port_with(None)).material_cost(IRON, 3.0) is None)
 
 # ---- the army's equipment ----------------------------------------------------------------------------------------
 bare = Market({})
@@ -124,7 +130,7 @@ check("with no ship type on sale the navy's ships are unbuyable, not free",
 # ---- stores supply what the market will not ---------------------------------------------------------------------------------
 state = Government("government:home", ActorRecord(kind="government", money=1.0e6))
 state.record.stores = {GRAIN: 30.0}
-drawn = state.draw_stores([Line("dole", "requisition", unbuyable={GRAIN: 100.0})], bare)[0]
+drawn = state.stores.draw_stores([Line("dole", "requisition", unbuyable={GRAIN: 100.0})], bare)[0]
 check("what the stores hold meets unbuyable need first", drawn.unbuyable == {GRAIN: 70.0} and state.record.stores[GRAIN] == 0.0, drawn)
 
 # ---- the consequence: unmet goods are recorded and a state with any lends nothing ---------------------------------------------
@@ -153,5 +159,5 @@ check("a plant whose input is on sale and affordable runs in full", share == 1.0
 granary_world = Market({})
 granary_world.material_price = lambda material: 1.0
 granary_world.state.record.grain_price_reference = 5.0
-spent = granary_world.state.restock_granary(1.0e6, granary_world)
+spent = granary_world.state.granary.restock_granary(1.0e6, granary_world)
 check("a granary cannot restock with grain nobody sells", spent == 0.0 and granary_world.purchases == [], (spent, granary_world.purchases))

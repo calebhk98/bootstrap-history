@@ -28,7 +28,7 @@ def Shortfall(keep_staffed=()):
     """The projects module with what choosing closures reads."""
     module = projects_host.build(tree=NODES, seat=ProjectsSeat(keep_staffed=set(keep_staffed)))
     module._staffing_draws = lambda: {"mill": {"craftsmen": 3.0}, "forge": {"craftsmen": 2.0}}
-    module._staffing_shortfalls = lambda totals: {}
+    module.reading = module.staffing_shortfalls = lambda totals: {}
     return module
 
 
@@ -40,7 +40,7 @@ check("the closures are the rule's pick", picked == ["forge"])
 check("the rule is given the running concerns' draws and their revenue less running cost",
       draws == {"mill": {"craftsmen": 3.0}, "forge": {"craftsmen": 2.0}} and net_value == {"mill": 600.0, "forge": 50.0}, (draws, net_value))
 check("the concerns flagged to stay staffed and the game's own shortfall reading are handed in",
-      flagged == {"forge"} and shortfalls_of == game._staffing_shortfalls, (flagged, shortfalls_of))
+      flagged == {"forge"} and shortfalls_of is game.reading, (flagged, shortfalls_of))
 
 
 def Closer(planned, closures):
@@ -50,7 +50,7 @@ def Closer(planned, closures):
     module.recorded, module.review_asked = [], []
     module.concerns_to_close_for_staffing = lambda: planned
     module.staffing_held_totals = lambda: {"craftsmen": 9.0}
-    module._staffing_shortfalls = lambda totals: {"craftsmen": 2.0}
+    module.staffing_shortfalls = lambda totals: {"craftsmen": 2.0}
 
     def review_ventures(rules, year):
         module.review_asked.append((rules, year))
@@ -99,9 +99,9 @@ check("a starter founding of a scalable institution is charged at the size asked
 check("units asked of what is not scalable are ignored", Opener().opening_fee("mill", 3) == (800.0, 0.8))
 
 business = Business(plants=[Plant(entry_key="mill", opened_year=100, state=MOTHBALLED, since_year=105, reason="staff_short")])
-business.open_plant("mill", 115)
+business.lifecycle.open_plant("mill", 115)
 check("a plant reopened after a closure keeps its first opening year and its size, so the ramp does not restart",
-      business.opened_year_of("mill", None) == 100 and business.state_of("mill") == "operating" and business.size_of("mill") == 1.0)
+      business.reading.opened_year_of("mill", None) == 100 and business.reading.state_of("mill") == "operating" and business.reading.size_of("mill") == 1.0)
 running = Business(plants=[Plant(entry_key="mill", opened_year=100)])
-running.open_plant("mill", 120)
-check("a plant already running that is opened again is restarted from that year", running.opened_year_of("mill", None) == 120)
+running.lifecycle.open_plant("mill", 120)
+check("a plant already running that is opened again is restarted from that year", running.reading.opened_year_of("mill", None) == 120)

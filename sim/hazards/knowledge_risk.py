@@ -4,6 +4,7 @@ Needs: year, civilisation, techniques_held, techniques_forgotten, corpus_hedge, 
 capability_gaps, fog_of_war, epidemic_risk."""
 from typing import Any, Dict
 
+from sim.assembly.api import Part
 from sim.workforce.api import wave_exposure
 
 from . import constants
@@ -12,7 +13,7 @@ from .rules import weakened
 from .window import hazards_not_yet_past
 
 
-class KnowledgeRisk:
+class KnowledgeRisk(Part):
 
     def knowledge_risk(self, advice: bool = True, chronology: bool = True) -> Dict[str, Any]:
         """How exposed your finished work is to being forgotten, and to what.
@@ -47,7 +48,7 @@ class KnowledgeRisk:
         for hazard, year_start, year_end, in_progress in hazards_not_yet_past(
                 needs.civilisation(), year):
             # the chances shown are the ones the event's stated causes leave, as things stand today
-            effective, causes = self.effective_hazard(hazard)
+            effective, causes = self.parts.causes.effective_hazard(hazard)
             hazard = effective if effective is not None else weakened(hazard, 0.0)
             row = {"name": hazard.get("name", "hazard"),
                    "years": [year_start, year_end],
@@ -66,7 +67,7 @@ class KnowledgeRisk:
                 row["what_you_can_do"] = {}
                 for kind in ("staff_loss", "sack_chance", "output_factor", "real_erosion"):
                     if kind in hazard or (kind == "sack_chance" and hazard.get("sack_chance")):
-                        row["what_you_can_do"][kind] = self.hazard_advice(kind, hazard)
+                        row["what_you_can_do"][kind] = self.parts.advice.hazard_advice(kind, hazard)
                 add_timing_to_steps(row["what_you_can_do"], year, year_start, in_progress)
             if causes["checked"]:
                 row["causes_hold_now"] = not causes["failed"]
@@ -76,19 +77,19 @@ class KnowledgeRisk:
                     row["skipped_while_causes_fail"] = True
             if "sack_chance" in hazard:
                 row["sack_chance_after_what_you_have_built"] = round(
-                    self.hazard_figure("sack_chance", hazard), 4)
+                    self.parts.relief.hazard_figure("sack_chance", hazard), 4)
             if "output_factor" in hazard:
                 row["output_factor"] = hazard["output_factor"]
                 row["output_factor_after_what_you_have_built"] = round(
-                    self.hazard_figure("output_factor", hazard), 4)
+                    self.parts.relief.hazard_figure("output_factor", hazard), 4)
             if "staff_loss" in hazard:
-                exposure = self.staff_loss_exposure(hazard["staff_loss"])
+                exposure = self.parts.relief.staff_loss_exposure(hazard["staff_loss"])
                 row["staff_loss_before_what_you_have_built"] = round(exposure["before_defences"], 4)
                 row["staff_loss_after_what_you_have_built"] = round(exposure["loss"], 4)
                 if exposure["national_relief"] > 0.02:
                     row["national_public_health"] = {
                         "share_removed": round(exposure["national_relief"], 4),
-                        "from": self.national_public_health_sources()}
+                        "from": self.parts.relief.national_public_health_sources()}
                 row.update(wave_exposure(constants.STAFF_LOSS_HAZARD_ANNUAL_CHANCE,
                                          row["staff_loss_after_what_you_have_built"],
                                          year_start, year_end, year))
@@ -106,7 +107,7 @@ class KnowledgeRisk:
                              "sacks_a_site": row.get("sacks_a_site", False)}
                             for row in _compact]
         # Civs with no sack hazards: no loss risk to report. Get chronological timeline.
-        timeline = self.hazard_timeline() if chronology else None
+        timeline = self.parts.advice.hazard_timeline() if chronology else None
         can_be_sacked = any(entry.get("sacks_a_site") for entry in upcoming)
         if not can_be_sacked:
             return {
@@ -149,8 +150,8 @@ class KnowledgeRisk:
             "hedged_by": hedge if (not needs.fog_of_war()
                                    or needs.visibility(hedge or "", None)) else "nothing yet",
             "better_hedge_available": (
-                None if hedge == self.best_corpus_node() else
-                (self.best_corpus_node() if not needs.fog_of_war()
+                None if hedge == self.parts.sack.best_corpus_node() else
+                (self.parts.sack.best_corpus_node() if not needs.fog_of_war()
                  else "there is said to be a way to guard against this; "
                       "you have not found it yet")),
             "known_hazards_ahead": upcoming,

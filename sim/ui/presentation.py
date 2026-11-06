@@ -16,11 +16,10 @@ sentence of surrounding prose.
 
 WHAT DELIBERATELY DOES NOT BELONG HERE, EVEN THOUGH IT LOOKS LIKE THE SAME
 SHAPE OF NUMBER. This project's event log and CLI narration are full of
-small slice bounds inside otherwise hand-written sentences - `"; ".join(
-why[:3])` inside one specific denunciation message in sim/engine/
-society_hazards.py, `reopen[:2]` inside one specific "you can reopen these"
-sentence in sim/labour/labour_capacity.py, and dozens more like them across
-sim/engine/year_steps.py, sim/finance/insolvency.py, projects_staffing.py and
+small slice bounds inside otherwise hand-written sentences - `", ".join(
+sorted(node["lab"])[:3])` inside one specific failure message in
+sim/projects/failure_cause.py, and dozens more like them across
+sim/engine/year_steps.py, sim/finance/insolvency.py, sim/projects/ and
 others. Those were surveyed for this file and deliberately left where they
 are: each one is load-bearing for the GRAMMAR of the one sentence it sits
 inside (moving "3" out to a shared PLAYER_LOG_REASONS_SHOWN constant used by

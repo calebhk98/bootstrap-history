@@ -1,5 +1,6 @@
 """Complaint 657: the year's flight wiring. Each test builds the inputs and calls the rule the engine hands its numbers to:
 the take by tile, the penalty on each route, the tenants who leave, the fugitives and their return."""
+from sim.tests.agents_fake_world import flat_namespace
 import unittest
 from types import SimpleNamespace
 
@@ -8,7 +9,7 @@ from sim.agents import government_levers_tax
 from sim.agents.api import Government
 from sim.agents.records import ActorRecord
 from sim.economy import flight_routes, flight_year
-from sim.economy.protocols import YearInputs
+from sim.economy.protocols import EconomyYearInputs
 from sim.labour.api import MarketState, Route
 
 QUICK_TOPIC = True
@@ -65,7 +66,7 @@ class PenaltyOnTheRoutes(unittest.TestCase):
 		self.assertEqual(none_taken, self.ROUTES)
 
 	def test_the_inputs_carry_no_take_unless_the_engine_fills_it(self):
-		inputs = YearInputs(1, {}, 0.5, {}, {})
+		inputs = EconomyYearInputs(1, {}, 0.5, {}, {})
 		self.assertEqual((dict(inputs.taxed_share_by_tile), inputs.amnesty_share, inputs.immunity_years), ({}, 0.0, 0.0))
 
 
@@ -75,13 +76,10 @@ class Leavers(unittest.TestCase):
 		self.assertEqual(shares, {"x": 0.05})
 
 	def test_tenants_of_a_fleeing_area_leave_the_land_and_the_title_goes_back_to_no_holder(self):
-		record = SimpleNamespace(
-			cohorts={"serf": SimpleNamespace(agent_id="serf", tile="a"), "other": SimpleNamespace(agent_id="other", tile="b")},
-			titles={"t1": {"lord": 0.5}},
-			tenancies={"t1": [{"tenant": "serf", "lessor": "lord", "share": 0.5, "arrears": 0.0}]})
+		record = SimpleNamespace(cohorts={"serf": SimpleNamespace(agent_id="serf", tile="a"), "other": SimpleNamespace(agent_id="other", tile="b")}, land=SimpleNamespace(titles={"t1": {"lord": 0.5}}, tenancies={"t1": [{"tenant": "serf", "lessor": "lord", "share": 0.5, "arrears": 0.0}]}))
 		released = flight_year.tenants_flee(record, {"work@a": 1.0})
 		self.assertEqual(released, {"t1": 0.5})
-		self.assertEqual(record.titles["t1"], {})
+		self.assertEqual(record.land.titles["t1"], {})
 
 	def test_each_year_away_adds_the_take_to_what_a_fugitive_owes(self):
 		fugitives = {}
@@ -114,6 +112,9 @@ class WhatTheTakeAccountsFor(unittest.TestCase):
 
 	def test_an_area_the_state_takes_nothing_from_has_no_flight_to_account_for(self):
 		self.assertEqual(self.fraction(0.0), 0.0)
+
+	def test_a_take_of_the_whole_income_leaves_no_income_to_weigh_and_does_not_raise(self):
+		self.assertEqual(self.fraction(1.0), 0.0)
 
 
 class ReturnOfFugitives(unittest.TestCase):
@@ -170,7 +171,7 @@ def income_form(rate, reach, base=1000.0):
 
 class TheMenuNetsTheBaseLostToFlight(unittest.TestCase):
 	def world(self, reach, rate=0.2, away=0.0):
-		return SimpleNamespace(revenue_assessments=lambda: [income_form(rate, reach)], fugitive_share=lambda: away)
+		return flat_namespace(revenue_assessments=lambda: [income_form(rate, reach)], fugitive_share=lambda: away)
 
 	def test_a_raise_beyond_the_officials_reach_yields_less_than_the_extra_rate_on_the_base(self):
 		naive = (fiscal_response.new_rate_of(0.2) - 0.2) * 1000.0 * 0.4
@@ -206,7 +207,7 @@ class FlightOptionsInTheMenu(unittest.TestCase):
 	def state_and_world(self, away):
 		form = {"form": "levy", "basis": "harvest", "rate": 0.3}
 		state = Government("government:home", ActorRecord(kind="government", money=0.0, revenue_forms=[form]))
-		world = SimpleNamespace(revenue_assessments=lambda: [income_form(0.3, 0.4)], fugitive_share=lambda: away,
+		world = flat_namespace(revenue_assessments=lambda: [income_form(0.3, 0.4)], fugitive_share=lambda: away,
 								revenue_forms=lambda: [form])
 		return state, world
 
@@ -227,14 +228,14 @@ class FlightOptionsInTheMenu(unittest.TestCase):
 
 	def test_the_levers_a_choice_covered_money_with_are_set_the_way_a_player_sets_them(self):
 		state, world = self.state_and_world(0.3)
-		pulled = state.pull_tax_response_levers({fiscal_response.LIABILITY: 5.0, fiscal_response.AMNESTY: 5.0}, world)
+		pulled = state.fiscal.pull_tax_response_levers({fiscal_response.LIABILITY: 5.0, fiscal_response.AMNESTY: 5.0}, world)
 		self.assertEqual(pulled, {fiscal_response.LIABILITY: liability.COLLECTIVE, fiscal_response.AMNESTY: 1.0})
 		self.assertEqual(government_levers_tax.liability_rule(state.record), liability.COLLECTIVE)
 		self.assertEqual(government_levers_tax.amnesty_share(state.record), 1.0)
 
 	def test_a_choice_that_covered_nothing_with_them_sets_none(self):
 		state, world = self.state_and_world(0.3)
-		self.assertEqual(state.pull_tax_response_levers({fiscal_response.RATE: 5.0}, world), {})
+		self.assertEqual(state.fiscal.pull_tax_response_levers({fiscal_response.RATE: 5.0}, world), {})
 
 
 if __name__ == "__main__":

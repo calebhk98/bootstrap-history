@@ -199,16 +199,15 @@ def build_unopened(factory):
     from unittest import mock
     from sim.content import views as content_views
     from sim.markets.port import EconomyPort
-    every_record = content_views.foreign_economy_records
 
     def supported_records(directory=None):
-        return tuple(record for record in every_record(directory) if not record.get("agent_economy", False))
+        return ()   # every partner is a country of the agent economy, which stays unopened here
 
     # The opening cast may be seeded during construction, before the economy opens.
     with mock.patch.object(EconomyPort, "open_agent", lambda self: None), \
             mock.patch.object(content_views, "foreign_economy_records", supported_records):
         game = factory()
-    game.view("legacy_economy")()._opening = True
+    economy_port(game)._opening = True
     game.assembly.modules["foreign_trade"].needs.foreign_economy_records = lambda: supported_records(game.view("mods_directory")())   # the partners of the books only
     return game
 
@@ -217,7 +216,7 @@ def found_deposits_of(game, material):
     """Give the game the deposits of `material` that thorough prospecting of its held tiles would find, without
     paying for the search, so a test can open a mine (a mine names a deposit it has found)."""
     resources = game.assembly.modules["resources"]
-    resource_id = resources.mine_resource_id(material)
+    resource_id = resources.parts.deposits.mine_resource_id(material)
     if resource_id is None:
         return []
     seed = "tests"
@@ -241,7 +240,7 @@ def concern_needing_craftsmen_to_supervise():
         node = NODES[candidate_id]
         if probe.view("is_venture")[candidate_id] and node["art"] > 0 and not (node.get("lab") or {}).get("artisan"):
             scholars, craftsmen = probe.view("venture_hands")[candidate_id]
-            if (scholars <= probe.view("legacy_labour")().effective_scholars() and cover < craftsmen <= 5.5
+            if (scholars <= probe.assembly.modules["workforce"].parts.core.labour.hands.effective_scholars() and cover < craftsmen <= 5.5
                     and probe.view("venture_foreman")[candidate_id][0] is None):
                 fits.append((probe.view("venture_capex")[candidate_id], candidate_id))
     if not fits:
@@ -266,10 +265,15 @@ def ready_for_entry(game, money=None):
     return game
 
 
+def economy_port(game):
+    """The markets module's port over the agent economy, for tests that reach into it."""
+    return game.assembly.modules["markets"].parts.market_objects.economy
+
+
 def noted_sale_tonnes(game, material, seller=None):
     """Tonnes of `material` the actors (or just `seller`) have noted for the year's market: a sale enters the agent
     economy's book as an order when the year clears, so until then this is where it stands."""
-    return sum(sale["tonnes"] for sale in game.view("legacy_economy")().agent.stored.get("sales", [])
+    return sum(sale["tonnes"] for sale in economy_port(game).agent.stored.get("sales", [])
                if sale["material"] == material and (seller is None or sale["seller"] == seller))
 
 

@@ -2,9 +2,10 @@
 
 QUICK_TOPIC = True
 
-import dataclasses
 import unittest
 
+from sim.tests.economy_view_defaults import ViewDefaults
+from sim.world import need_basket
 from sim.economy import households
 from sim.economy.types import GoodSpec
 from sim.world.climate_needs import PERSONS_PER_HOUSEHOLD
@@ -21,10 +22,10 @@ NEED_DATA = {
     },
 }
 SPECS = {name: GoodSpec(name, 1.0, 0.0, 0.0, name) for name in ("grain", "beads", "gold_leaf")}
-BASKET = households.make_basket(NEED_DATA, {})
+BASKET = need_basket.make_basket(NEED_DATA, {})
 
 
-class View:
+class View(ViewDefaults):
     year = 1
 
     def __init__(self, prices):
@@ -32,6 +33,9 @@ class View:
 
     def price(self, good, area):
         return self.prices.get(good)
+
+    def usual_price(self, good, area):
+        return None
 
     def interest_rate(self, currency):
         return 0.05
@@ -48,8 +52,7 @@ class View:
 
 def orders_for(income_per_person, people=100000.0, gold_price=500.0):
     income = income_per_person * people
-    cohort = dataclasses.replace(households.Cohort("household:t:0", "t", 0, people, people / 2, 0.3),
-                                 last_year_spending=income)
+    cohort = households.Cohort("household:t:0", "t", 0, people, people / 2, 0.3)
     view = View({"grain": 1.0, "beads": 2.0, "gold_leaf": gold_price})
     return households.goods_orders(cohort, view, income, income, BASKET, SPECS), people
 

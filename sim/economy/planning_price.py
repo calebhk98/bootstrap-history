@@ -1,8 +1,7 @@
 """How far a quote, as against a price a market settled at, may pull a producer's expectation."""
-from typing import Mapping, Optional
+from typing import Optional
 
 from . import ask_adjust
-from .market_memory import PRICE_TRADED
 from .types import QUOTE_BEST_UNFILLED_BID, QUOTE_LOWEST_UNFILLED_ASK
 
 # A best unfilled bid is one buyer's ceiling (the largest maximum among the bids, not a price anyone paid) and a lowest
@@ -13,10 +12,8 @@ BARE_QUOTES = (QUOTE_BEST_UNFILLED_BID, QUOTE_LOWEST_UNFILLED_ASK)
 
 
 def is_bare_quote(view, good, area) -> bool:
-    """True when the market's price for `good` in `area` is a bid ceiling or an ask, not a price that traded. A view
-    that does not say what its prices are (`price_kind`) is taken to give prices."""
-    kind_of = getattr(view, "price_kind", None)
-    return kind_of is not None and kind_of(good, area) in BARE_QUOTES
+    """True when the market's price for `good` in `area` is a bid ceiling or an ask, not a price that traded."""
+    return view.price_kind(good, area) in BARE_QUOTES
 
 
 def held_to_band(expected: float, previous: Optional[float], unit_cost: Optional[float], input_share: float) -> float:

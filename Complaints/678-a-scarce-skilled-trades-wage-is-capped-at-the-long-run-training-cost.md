@@ -5,7 +5,7 @@
 `sim/labour/market/clearing.py` `clear_one` caps the year's wage of every trade at `trained_substitute_wage`: the unskilled
 wage times the training premium. That is where the wage settles in the long run, once trainees have had time to qualify. A
 trainee takes the trade's training years to arrive, though, so in the short run a trade whose employers bid far above the cap
-should pay a scarcity wage (a quasi-rent) that draws its own workers' extra hours (`hours_share_at`) and switchers, and that
+should pay a scarcity wage (a quasi-rent) that draws its own workers' extra hours (`hours_sold_at`) and switchers, and that
 entrants weigh against the long-run cap.
 
 Measured (473, Update 9): in Rome's opening, the furnacemen of `italy_02` are fully hired at a
@@ -52,7 +52,7 @@ set to zero the maxima are the same. (2) A substitute is the bound: hands fetche
 sold. Switchers and the unskilled at a discount have no data and train for years, so they are not a short-run substitute.
 (3) `maximum_wage` reads last year's wages and the expected price of the output; a bid does not read this year's wage.
 
-Fix: `ImportCosts.hours_at` / `wage` count the hours sold at a wage (`hours_share_at`) in the area and in each area hands
+Fix: `ImportCosts.hours_at` / `wage` count the hours sold at a wage (`hours_sold_at`) in the area and in each area hands
 come from, and find the lowest wage at which hours sold here plus hours fetched fill the bids (a bisection, since the
 hours sold rise with the wage); no cap when the workers on the spot sell enough at the going wage already. Rule tests:
 `HoursWorkersKeepBackAreNotHandsInHand` in `sim/tests/test_scarcity_wage_short_run.py` (the thin-trade-above-cap tests

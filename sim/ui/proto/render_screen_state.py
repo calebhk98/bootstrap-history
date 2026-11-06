@@ -1,7 +1,7 @@
 """The rest of the state screen (completed and events head, trailing notes) and render_state, the assembler of every state block."""
 
 from .render_screen_state_views import render_view
-from .util import _fmt_num, _wrap
+from .util import _wrap
 from .wave_summary import summary_line
 from .event_severity import event_marker, order_events
 

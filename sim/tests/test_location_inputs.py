@@ -7,7 +7,7 @@ import math
 import unittest
 from types import SimpleNamespace
 
-from sim.economy import entry_sizing, location, location_inputs
+from sim.economy import entry_sizing, location, location_inputs, unit_cost
 from sim.economy.producers import Producer
 from sim.economy.types import GoodSpec, MarketArea, Recipe
 
@@ -116,8 +116,9 @@ class MaterialOrientationTests(unittest.TestCase):
 
 class SitingCostTests(unittest.TestCase):
     def test_hauling_inputs_adds_to_a_runs_cost(self):
-        near = location.cost_per_run(SMELT, {"labourer": 1.0}, {ORE: 1.0, FUEL: 1.0}, 0.0, 0.0, 1.0, 1.0, 0.0)
-        far = location.cost_per_run(SMELT, {"labourer": 1.0}, {ORE: 1.0, FUEL: 1.0}, 0.0, 0.0, 1.0, 1.0, 50.0)
+        variable = unit_cost.variable_cost_per_run(SMELT, {ORE: 1.0, FUEL: 1.0}, {"labourer": 1.0})
+        near = location.assembled_cost(variable, 0.0, 1.0, 1.0, 0.0)
+        far = location.assembled_cost(variable, 0.0, 1.0, 1.0, 50.0)
         self.assertEqual(far - near, 50.0)
 
 

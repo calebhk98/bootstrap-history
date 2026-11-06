@@ -8,7 +8,11 @@ from .prices import Prices
 from .theft import Theft
 
 
-class Coin(Prices, Keeping, Carriage, Theft, Module):
-    def setup(self):
-        self._home_opening = None        # coin the society opened with, worked out on first use (never saved)
-        self._partner_openings = {}
+class Coin(Module):
+
+    PARTS = {
+        "prices": Prices,
+        "keeping": Keeping,
+        "carriage": Carriage,
+        "theft": Theft,
+    }

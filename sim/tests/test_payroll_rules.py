@@ -21,6 +21,8 @@ class Purse:
     def is_bonded(self):
         return self.bonded
 
+    payments = property(lambda self: self)   # a stand-in party pays through itself
+
     def debit(self, amount, purpose):
         self.money -= amount
 
@@ -40,6 +42,7 @@ class Registry:
 class World:
     def __init__(self):
         self.workers_edge = Purse()
+        self.setting = self   # the world's setting names the edge
 
     def edge(self, name):
         assert name == EDGE_WORKERS

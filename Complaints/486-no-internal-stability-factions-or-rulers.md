@@ -7,10 +7,10 @@
 - A ruler is a yearly dice roll, `ACCESSION_PROBABILITY_PER_YEAR` (`sim/agents/tuning_spending.py`), that
   makes a donative owed (`sim/agents/budget_works.py`). No ruler record, competence, or succession rule;
   `ForeignGovernment` has none at all.
-- Interest groups (`sim/agents/group.py`, `sim/engine/interest_groups.py`) are people who lost income to a
+- Interest groups (`sim/agents/group.py`, `sim/actors/world_groups.py`) are people who lost income to a
   technique. There are no standing factions (crown, army, temples, merchants, provincial governors) that
   contest spending, appointments or reforms.
-- Legitimacy is one scalar moved only by works (`sim/engine/legitimacy.py`).
+- Legitimacy is one scalar moved only by works (`sim/polity/reach.py`).
 
 Why it matters: the group wants "an averaged competent council" to be a setting they can turn off, and
 needs revolt risk from slaves and resentment from badly held provinces to come out of the model.
@@ -33,7 +33,7 @@ The heuristics `STARVATION_LOSS_PER_UNFED_DAY`, `DESERTION_PER_YEAR_OF_PAY_OWED`
   against those left). `unrest = 1 - exp(-pressure)`.
 - A rising forms on a tile when its armed, organised discontented would more likely than not beat the garrison (`unrest.rises`),
   so no frequency of revolt is typed. It fights through `battle.fight` (`sim/agents/revolt.py`); a won rising releases the tile
-  from the state, at the seat it replaces the ruler. The phase is `sim/engine/revolt_year.py`, `step_revolts`, after the campaigns.
+  from the state, at the seat it replaces the ruler. The phase is `step_revolts` in `sim/campaigns/stability.py`, after the campaigns.
 - Rulers (`sim/agents/ruler.py`, `Government.accede`): the ruler ages a year at a time and dies at the demography's baseline
   mortality of his age band; the heir is born a childbearing age before; the strongest faction backs him and the runner-up
   disputes the accession with a chance that rises as the two are evenly matched, settled at the seat as a rising.

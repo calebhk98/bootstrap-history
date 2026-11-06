@@ -1,6 +1,6 @@
 # The tile food model and the farm model disagree, and most soils, crops and tools are unused
 
-**Status:** partly done. The tile crop capacity, the farm model's land and quality and the economy's farm producers read one yield per tile; each tile's own weather, a hand-hoe toolkit and a tillage limit on heavy ground now reach it. What remains ("What is left") is the national farm path's readers, per-tile crops (rice, maize), separate land-class supplies and `land.py`'s rent margin.
+**Status:** partly done. The tile crop capacity, the farm model's land and quality and the economy's farm producers read one yield per tile; each tile's own weather, a hand-hoe toolkit and a tillage limit on heavy ground now reach it. The national farm path is deleted; what remains ("What is left") is per-tile crops (rice, maize), separate land-class supplies, `land.py`'s rent margin and irrigation as a work.
 
 Reference (an outside design note, not code-aware): carrying capacity is arable land times the
 planted share (fallow by rotation, none under flood silt) times gross yield (soil and crop) net of
@@ -69,10 +69,10 @@ Within the farm model:
   `food_crop_loss_fraction`, `food_crop_grain_kcal_per_tonne`. Seed is now kilograms per hectare sown, not a share of the
   harvest, so land that yields less than its seed nets nothing. Without a technique the tile view has no crop source.
   Technique-free views (`settlement`: where people live, what a colony can feed) use the default technique, set once in
-  `sim/engine/geography_port.py`.
+  the markets module's farm sites (`Sim.farm_sites()`).
 - Stage 2: the farm model's ladder and ceiling come from the same `crop_site` (`land.territory_cropland`; `territory_farmland`
   deleted). The ceiling is cropped hectares, quality is the yield factor, so soil, climate and river water vary the farm per
-  tile. `Sim.farm_sites()` (`sim/engine/food_supply.py`) is the seam tests replace.
+  tile. `Sim.farm_sites()` (`sim/agriculture/food.py`) is the seam tests replace.
 - Test: `sim/tests/test_one_food_model.py` checks every held tile's crop kcal against `agriculture.gross_harvest_kg` on the
   tile's own cropped hectares and yield factor, under the default, a better plough and a three-field rotation.
 - Effect on rome_100ad (`PYTHONPATH=. python3 -W ignore`, six years of `run_year`): the farm's quality at opening goes from
@@ -91,16 +91,16 @@ Within the farm model:
   `arable_fraction`, raw) and `fertility` (the yield factor of a cropped hectare; was soil only). `TileSpec.cropland_hectares` is the
   land market's supply, the title value's land and the tenancies' land (`land_market.arable_hectares` deleted;
   `tile_costs.tiles_from_geography`, the parsed-document path with a third reading of the land, deleted). The share comes from the
-  society's rotation in `economy_port_setup.build_setup`, as `Sim.farm_sites()` does, so the economy's cropland equals the farm
+  society's rotation in `build_setup` (`sim/markets/port_setup.py`), as `Sim.farm_sites()` does, so the economy's cropland equals the farm
   model's ceiling for the home tiles. Households' own plots and the shortfall hours read `tile.fertility`, so they now follow the
   tile's climate and water too (no change to `households_own.py`).
 - Farm producers: `setup.yield_factor_by_recipe_tile` (a seam that was never filled) holds the tile's yield factor for every recipe
   whose entry says `extracted_from: "arable land"` (pasture, forest and mines are not read through the crop yield). New entrants are
-  sited and costed on it (`location`, `entry_year`); each year `economy_port_sites.crop_yields` gives every land producer
+  sited and costed on it (`location`, `entry_year`); each year `crop_yields` (`sim/markets/port_sites.py`) gives every land producer
   weather times its tile's factor, and the hidden spin-up years apply the tile factor without weather. The opening itself is still
   sized at each recipe's own yield (national runs are quantity over output, in `opening_runs`), so its inputs-have-suppliers
   identity holds; the tile yield shows from the first hidden year.
-- Test: `sim/tests/test_economy_reads_tile_yield.py` (cropland equals geography's and the farm ceiling, the site yield is geography's
+- Test (`test_economy_reads_tile_yield.py` is no longer in `sim/tests/`; `test_economy_port_cropland_yields.py` and `test_economy_crop_yields.py` are the nearest; it covered: cropland equals geography's and the farm ceiling, the site yield is geography's
   factor, a producer on a better-watered tile yields more per run, the year's yield is weather times the tile factor);
   `test_economy_land_market.py` rent follows the yield factor. `test_economy_tile_costs`, `test_economy_market_areas` and
   `test_economy_reads_map_through_geography` changed to read `tiles_from_map` / cropland (subject kept); `test_spin_up_measure`
@@ -114,36 +114,24 @@ Within the farm model:
 
 ## What is left
 
-Each item names the code that holds it (re-measure before acting; `grep` the names).
+The national farm path (`run_farm_year`, `farm_land`, `_farm_ladder`) and the engine's farm allocation are deleted: the economy's
+farm producers and households' plots are the one food model, and `Sim.farm_sites()` (read by `sim/markets/port_cropland.py`
+`follow_farm_sites`) gives each tile's cropped share and yield factor to it. Still open (confirm each with grep):
 
-- **The national farm path still runs and has four readers.** `farm_land`, `_farm_ladder`, `_farm_arable_ceiling` and `run_farm_year`
-  (`sim/world/farm_year.py`) feed: the labour split (`sim/labour/labour_allocation.py`: `_expected_year_farm_need`,
-  `_food_balance_step`, `farm_share_of_hours`, the granary reserve at the baseline workforce); land clearing
-  (`cleared_hectares`, `_clearable_hectares`, `hours_spent_clearing`, same file); the state's grain revenue and granary exposure
-  (`sim/agents/country_farm.py`, `government_granary.py`, `agents_port_budget.py`); and the pre-first-year nutrition
-  (`sim/engine/demographic_recovery.py`). Deleting it needs those four to read the economy's farms (producers' hectares worked and
-  yield by tile, the economy's stores for the granary), and the labour split's food-balance iteration to read the economy's wage and
-  price instead of a national harvest. Not started: it is a design change to the labour package and the state's budget, not an edit.
-- **A crop per tile.** The farm model has one national `Crop` blended by adoption (`sim/world/farming_technique.py`), so `RICE`
-  (defined, unadopted) and a maize crop cannot be adopted without moving every tile to them. The economy already has `maize_kg`,
-  `millet_kg`, `wheat_kg` and `wheat_hoe_kg` recipes with a tile yield factor each; the missing piece is geography choosing, per tile,
-  the crop its water and warmth suit (an envelope per crop, as `food_crop_water_envelope` is for the reference grain) and
-  the farm model reading that crop's seed, fold and labour for the tile. No rice recipe exists in `data/production/`.
-- **Separate land-class supplies** (arable, pasture, woodland) per tile: the land market still pools them on one cropland supply.
-- **`land.py` rent margin** (`margin_outcome_for_civilization`, `cultivable_land_for_civilization`) is still the third ladder, read by
-  `sim/engine/rent_standin.py` for the price solver's stand-in rent and by about seven test topics. Moving it to `territory_cropland`
-  changes every civilisation's opening prices, so it is its own step.
-- **Irrigation as a work** that silts up or needs clearing labour: river strips are still free and permanent
-  (`food_irrigation_*` in `data/world/geography/parameters/food.json`). Silt now feeds the nitrogen stock, but a canal's upkeep does not exist.
-- Norse opening: a first version closed heavy ground to the ard outright and pinned the labour split (the best Swedish tile lost a fifth of its
-  ground). The arable share is the ground the reference ard ploughs (`soil_reference_tillage_capacity`), so the ard loses nothing, a heavier
-  toolkit opens heavy ground beyond it and a lighter one less (`food_crops._tillable_scale`); `test_norse_opening_scenario`. Norse is still poor in crops
-  (most tiles yield next to nothing); pasture, dairy and fishing are not read by the crop-only farm path.
+- **A crop per tile.** `RICE` and maize cannot be adopted per tile; geography does not choose, per tile, the crop its water and
+  warmth suit. The economy has `maize_kg`, `millet_kg`, `wheat_kg` and `wheat_hoe_kg` recipes with a tile yield factor each; no rice
+  recipe exists in `data/production/`.
+- **Separate land-class supplies** (arable, pasture, woodland) per tile: the land market pools them on one cropland supply.
+- **`land.py` rent margin** (`margin_outcome_for_civilization`, `cultivable_land_for_civilization`) as the third ladder, read by
+  `sim/prices/rent_standin.py`; moving it to `territory_cropland` changes every civilisation's opening prices.
+- **Irrigation as a work** that silts up or needs clearing labour: river strips are free and permanent (`food_irrigation_*` in
+  `data/world/geography/parameters/food.json`).
+- Pasture, dairy and fishing are not read by the crop-only farm path; Norse tiles yield little under crops.
 
 ## Done: tile weather, the hand hoe and tillage (this round)
 
 - Each land producer's yield takes its own tile's weather cell (`Sim.farm_weather_by_tile`, `sim/engine/core.py`; read by
-  `economy_port_sites.crop_yields`); a tile merged into a pooled cell, or with no cell, takes the pooled multiplier. The cells' own
+  `crop_yields` (`sim/markets/port_sites.py`)); a tile merged into a pooled cell, or with no cell, takes the pooled multiplier. The cells' own
   multipliers are `weather_pooling.cell_multipliers`; the pooled one is their weighted mean. Tests: `test_weather_cells`,
   `test_economy_crop_yields` (TileWeatherTests), `test_tile_weather_wiring`. The national path and demography still read the pooled draw.
 - A hand-hoe toolkit (`agriculture.HAND_HOE`, hours from `data/world/farm_labour.json` through `WHEAT_HOE_HOURS_PER_HECTARE`, the same
@@ -154,7 +142,7 @@ Each item names the code that holds it (re-measure before acting; `grep` the nam
 
 ## Done: the economy follows the rotation and the soil (item 3)
 
-- `sim/engine/economy_port_cropland.py` `follow_farm_sites` runs at the start of each agent-economy year: each held tile's
+- `sim/markets/port_cropland.py` `follow_farm_sites` runs at the start of each agent-economy year: each held tile's
   cropped share and fertility, and the yield of every crop recipe on it, are read again from `Sim.farm_sites()`
   (`tile_costs.following_site`). A rotation adopted mid-game reaches the land market's cropland, and the soil nitrogen stock
   reaches the farm producers' yield. The farm's own ceiling follows the rotation through `Sim.refresh_farm_territory` (Complaint 543).
@@ -168,7 +156,7 @@ Each item names the code that holds it (re-measure before acting; `grep` the nam
   Placement scales each area's runs to its own tiles' mean yield, gives every crop producer its tile's factor, puts none on a tile
   that yields nothing, and shares the runs of an area where the crop cannot grow over the areas where it can (wine was 11 percent
   short of its demand otherwise).
-- Test: `sim/tests/test_opening_crops_at_tile_yield.py`; `opening_inputs_have_suppliers` passes (the arithmetic mean left
+- Test: `test_opening_crops_at_tile_yield.py` is no longer in `sim/tests/`; `opening_inputs_have_suppliers` passes (the arithmetic mean left
   nightsoil 7 percent short, the harmonic mean over the tiles the crop grows on closes it).
 - Effect on rome_100ad (probe: open the economy, hidden years included): wheat price 0.0870 to 0.0911 (economy units), farm share
   of worker-years 0.1033 to 0.0867. `opening_floor_and_thin_trades` "household floors cost a small multiple of the food floor"
@@ -177,6 +165,6 @@ Each item names the code that holds it (re-measure before acting; `grep` the nam
 Measure the century of an unshocked Rome (mean nutrition ratio and the population left; the slow `agriculture_wiring_scenario` baseline validations removed in Complaint 640's pass, a century run that named no function) with `python3 sim/simulator.py baseline-ensemble`. The farm-year-to-people seam is rule-tested in test_demographic_recovery_wiring.
 
 Test migration (slow-test overhaul): `test_norse_opening_scenario` is deleted. The cause it guarded is the rule test
-`test_tillage_and_silt`, and the farm share of hours is `LabourAllocationMixin.farm_share_of_hours` (`test_farm_share_of_hours`). The
+`test_tillage_and_silt`, and the farm share of hours is `farm_share_of_hours` (`sim/labour/labour_allocation.py`) (`test_farm_share_of_hours`). The
 Norse opening's farm share against its ceiling is measured by `python3 sim/simulator.py economy-check --civs norse_900ad --years 1`
 (hunger and hired share) and `python3 sim/simulator.py opening-checks`. The crop-yield wiring is `test_opening_fixture_supply`.

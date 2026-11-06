@@ -1,14 +1,17 @@
 """help_registry: help is generated from the command registry, so no command can be missing from it."""
 from .harness import *  # noqa: F401,F403
 
-from types import SimpleNamespace
 from sim.ui.proto.help import _agent_help
 from sim.tests.ui_stand_in import Game
 
 QUICK_TOPIC = True
 
-# the pages read only what a stub game holds; the dispatch wiring of `help` is one line in the dispatcher
-_help_sim = Game(fog=False, civ={"name": "Testland"}, cfg={"start_year": 100, "horizon_years": 50},
+# the pages read only what a stub game holds; the dispatch wiring of `help` is one line in the dispatcher.
+# Its declared commands are the live registry, so a command this test registers is declared.
+from sim.interface.declarations import Declared as _Declared
+from sim.ui.proto import command_registry as _live_registry
+_live_declared = _Declared(commands=_live_registry.COMMANDS)
+_help_sim = Game(interface_declared=lambda: _live_declared, fog=False, civ={"name": "Testland"}, cfg={"start_year": 100, "horizon_years": 50},
                             nodes=NODES, goal=GOAL, end_year=150)
 
 

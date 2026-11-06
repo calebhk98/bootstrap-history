@@ -11,10 +11,9 @@ from sim.disease.api import HitSeatsWithEpidemic, RunEpidemicYear
 from sim.hazards.api import RecordWorldEvent
 from sim.land.api import AdvanceColonies
 from sim.reporting.api import RecordEvent
-from sim.workforce.api import AllocateFarmWorkforce, ApplyLandClearing, UpdateWages
 
-from .commands import (AddCaptives, ChangeFarmland, CutPopulation, KillPeople, NotePopulationChange, OpenPopulation,
-                       RecordFoodEaten, RefreshDemographicIndexes, SendSettlers, SetClearedFarmland, SetFarmHoursNeeded,
+from .commands import (AddCaptives, ChangeFarmland, CutPopulation, KillPeople, MovePeople, NotePopulationChange, OpenPopulation,
+                       RecordFoodEaten, RefreshDemographicIndexes, SendSettlers, SetClearedFarmland,
                        StepPopulation, TakeFromGranary)
 from .module import Demography
 from .state import DemographySeat, DemographyWorld
@@ -23,9 +22,8 @@ READS_BY_OWNER = {
     "core": ("civilisation", "year", "cast"),
     "land": ("home_tiles_held", "borders_among", "built_ways", "held_techniques"),
     "disease": ("disease_burden", "endemic_death_rates", "epidemic_deaths_by_tile"),
-    "workforce": ("farming_technique", "town_mortality_premium_by_tile", "wage_index", "wage_index_terms"),
+    "workforce": ("farming_technique", "town_mortality_premium_by_tile", "cleared_wage_change"),
     "defence_stores": ("relief_kcal_per_day",),
-    "agriculture": ("weather_seed", "harvest_weather", "farm_land", "farm_technique_this_year"),
     "hazards": ("country_strata",),
 }
 
@@ -58,15 +56,15 @@ MODULE_SPECS = (ModuleSpec(
     ),
     applies=((AddCaptives, "add_captives"), (CutPopulation, "cut_population"), (KillPeople, "kill_people"),
              (RefreshDemographicIndexes, "refresh_demographic_indexes"), (OpenPopulation, "open_population"),
-             (StepPopulation, "step_population"), (RecordFoodEaten, "record_food_eaten"), (SendSettlers, "send_settlers"),
+             (StepPopulation, "step_population"), (RecordFoodEaten, "record_food_eaten"), (MovePeople, "move_people"), (SendSettlers, "send_settlers"),
              (NotePopulationChange, "note_population_change"), (ChangeFarmland, "change_farmland"),
-             (SetClearedFarmland, "set_cleared_farmland"), (SetFarmHoursNeeded, "set_farm_hours_needed"),
+             (SetClearedFarmland, "set_cleared_farmland"),
              (TakeFromGranary, "take_from_granary")),
     # (year) -> {"deaths_by_band": {band: people}, "yield_factor_by_tile": {tile: factor}} (either key optional): harm that
     # activity does to people (added to the year's epidemic deaths) and to land (multiplies the yield of land-bound producers,
     # which the agriculture module reads from this point); the answers add and multiply, so a provider needs no knowledge of another
     extension_points=(ExtensionPoint("externality", LIST),),
     reads=tuple(name for names in READS_BY_OWNER.values() for name in names),
-    sends=(AdvanceColonies, AllocateFarmWorkforce, ApplyLandClearing, HitSeatsWithEpidemic, RecordEvent, RecordMigrantContact,
-           RecordWorldEvent, RunEpidemicYear, ScaleStrata, UpdateWages),
+    sends=(AdvanceColonies, HitSeatsWithEpidemic, RecordEvent, RecordMigrantContact,
+           RecordWorldEvent, RunEpidemicYear, ScaleStrata),
 ),)

@@ -2,6 +2,7 @@
 
 QUICK_TOPIC = True
 
+from sim.tests.agents_fake_world import flat_world
 from .harness import check
 
 from sim.agents.api import ActorRecord, ActorRegistry, ActorsState, RecordedActor, shipped_extensions
@@ -87,16 +88,16 @@ EXTENSIONS.kinds["observer"] = Observer
 bare = profile_from_civilisation({"id": "alpha"})
 check("a civilisation with almost nothing in it still gives a profile",
 	  bare.country == "alpha" and bare.name == "alpha" and bare.population == 0.0 and bare.location is None
-	  and bare.starting_techs == set() and bare.wage_index == 1.0 and bare.strata == [], bare)
+	  and bare.starting_techs == set() and bare.strata == [], bare)
 HOME = {"id": "alpha", "name": "Alpha", "population": 1_000_000, "urban_fraction": 0.1,
-		"starting_tax_share": 0.1, "wage_index": 1.0, "price_index": 1.0, "literacy_general": 0.2, "literacy_elite": 0.9,
+		"starting_tax_share": 0.1, "price_index": 1.0, "literacy_general": 0.2, "literacy_elite": 0.9,
 		"home_tiles": ["algeria_01"], "starting_techs": ["plough", "wheel"], "standing_army": 5000,
 		"values": {"w_military": 0.9},
 		"cast": {"strata": [{"name": "farmers", "share": 0.9}], "treasury": 50.0, "mood": "calm",
 				 "actors": [{"actor_id": "observer:1", "kind": "observer", "controller": "llm", "money": 20.0,
 							 "knowledge": ["wheel"]}]}}
 BETA = {"id": "beta", "name": "Beta", "population": 500_000, "starting_tax_share": 0.2,
-		"wage_index": 0.5, "home_tiles": ["algeria_02"], "starting_techs": ["loom"],
+		"home_tiles": ["algeria_02"], "starting_techs": ["loom"],
 		"state_revenue": [{"form": "poll_tax", "basis": "adult_labour_years", "rate": 0.2}], "cast": {"treasury": 10.0, "countries": [
 			{"id": "gamma", "name": "Gamma", "population": 100_000, "starting_techs": ["raft"], "home_tiles": ["algeria_03"]}]}}
 DELTA = {"id": "delta", "population": 200_000}
@@ -143,7 +144,7 @@ check("a foreign government's opening money is booked as an edge",
 check("a declared actor's fields reach its record",
 	  registry.actors["observer:1"].record.controller == "llm" and registry.actors["observer:1"].record.knowledge == {"wheel"}
 	  and registry.actors["observer:1"].money == 20.0)
-registry.actors["government:beta"].debit(3.0, "edge:test")
+registry.actors["government:beta"].payments.debit(3.0, "edge:test")
 check("seeding twice creates nothing and leaves existing actors alone",
 	  seed_cast(registry, home_country, entries, profiles) == [] and registry.actors["government:beta"].money == 7.0)
 loaded = deserialize_state(serialize_state(state), ActorsState)
@@ -158,60 +159,60 @@ check("an entry of a kind not yet registered waits in the roster",
 # ---- what a country sees ----------------------------------------------------------------
 world = ScenarioWorld()
 world.baseline = {"shared_tech"}
-world.nodes["wheel"] = make_node("wheel")
+world.setting.nodes["wheel"] = make_node("wheel")
 home_actor = registry.actors["government:alpha"]
 beta_actor = registry.actors["government:beta"]
 check("a country's scope is shipped", EXTENSIONS.world_scope is not None)
-check("a home actor sees the shared world", registry.world_for(home_actor, world) is world)
-beta_world = registry.world_for(beta_actor, world)
-check("a foreign actor sees its country's world", isinstance(beta_world, CountryWorld) and beta_world.civ_id == "beta")
+check("a home actor sees the shared world", registry.countries.world_for(home_actor, world) is world)
+beta_world = registry.countries.world_for(beta_actor, world)
+check("a foreign actor sees its country's world", isinstance(beta_world, CountryWorld) and beta_world.setting.civ_id == "beta")
 check("a foreign actor's baseline tree is its own country's techniques",
-	  beta_world.baseline_knowledge() == {"loom"} and beta_actor.knows("loom", beta_world)
+	  beta_world.knowledge.baseline_knowledge() == {"loom"} and beta_actor.knows("loom", beta_world)
 	  and not beta_actor.knows("shared_tech", beta_world))
 check("a home actor's baseline tree is the shared world's", home_actor.knows("shared_tech", world))
 check("a country answers for its own people and state",
-	  beta_world.population_total() == 500_000
-	  and beta_world.urban_population() == 0.0 and beta_world.tax_share() == 0.2)
+	  beta_world.people.population_total() == 500_000
+	  and beta_world.people.urban_population() == 0.0 and beta_world.taxpayers.tax_share() == 0.2)
 check("a country's wages are what its own labour markets pay, not the home pay scaled",
-	  beta_world.pay_per_person_year("labourer") == 50.0 and world.pay_per_person_year("labourer") == 100.0)
+	  beta_world.labour.pay_per_person_year("labourer") == 50.0 and world.labour.pay_per_person_year("labourer") == 100.0)
 try:
-	CountryWorld(world, profiles["alpha"], registry).pay_per_person_year("labourer")
+	CountryWorld(world, profiles["alpha"], registry).labour.pay_per_person_year("labourer")
 	raised = False
 except NoCountryEconomy:
 	raised = True
 check("a country with no economy of its own raises instead of answering with a home figure", raised)
 home_view = CountryWorld(world, profiles["alpha"], registry)
 check("a country with declared values weighs inventions by them",
-	  home_view.state_weights()["military"] == 0.9 and beta_world.state_weights() == {"military": 1.0})
+	  home_view.setting.state_weights()["military"] == 0.9 and beta_world.setting.state_weights() == {"military": 1.0})
 own_view = CountryWorld(world, profiles["beta"], registry)
-check("a country's government is its own actor in the registry", own_view.government() is beta_actor)
+check("a country's government is its own actor in the registry", own_view.setting.government() is beta_actor)
 beta_firm = registry.add("firm:beta", ActorRecord(kind="firm", country="beta", money=100.0))
 beta_purse = beta_actor.money
-taken = registry.world_for(beta_firm, world).government().collect(beta_firm, 100.0, beta_world)
+taken = registry.countries.world_for(beta_firm, world).setting.government().collect(beta_firm, 100.0, beta_world)
 check("a foreign state levies a firm of its own country at its tax share and reach, money moving across",
-	  abs(taken - 100.0 * 0.2 * beta_world.state_reach()) < 1e-9 and abs(beta_firm.money - (100.0 - taken)) < 1e-9
+	  abs(taken - 100.0 * 0.2 * beta_world.taxpayers.state_reach()) < 1e-9 and abs(beta_firm.money - (100.0 - taken)) < 1e-9
 	  and abs(beta_actor.money - (beta_purse + taken)) < 1e-9, (taken, beta_firm.money, beta_actor.money))
 world.rate = 0.07
-check("an arbitrary shared member passes straight through", beta_world.market_rate() == 0.07)
+check("an arbitrary shared member passes straight through", beta_world.credit.market_rate() == 0.07)
 check("shared attributes pass through as properties",
-	  beta_world.year == world.year and beta_world.hours_per_person_year == 2000.0 and beta_world.labour_market is world.labour_market)
-check("shared randomness passes through", beta_world.rng_for(1, "x").random() == world.rng_for(1, "x").random())
+	  beta_world.setting.year == world.setting.year and beta_world.labour.hours_per_person_year == 2000.0 and beta_world.labour.labour_market is world.labour.labour_market)
+check("shared randomness passes through", beta_world.setting.rng_for(1, "x").random() == world.setting.rng_for(1, "x").random())
 check("every member of the World protocol is answered by a country's world",
 	  all(hasattr(CountryWorld, name) for name in vars(World) if not name.startswith("_")))
 check("forwarding is explicit, not by __getattr__", "__getattr__" not in vars(CountryWorld))
 
 # ---- fog: the farther the country, the less it learns -------------------------------------
 world.distances = {"algeria_02": 100.0, "algeria_03": 4000.0}
-near = CountryWorld(world, profiles["beta"], registry).exposure("wheel", None)
-far = CountryWorld(world, profiles["gamma"], registry).exposure("wheel", None)
+near = CountryWorld(world, profiles["beta"], registry).knowledge.exposure("wheel", None)
+far = CountryWorld(world, profiles["gamma"], registry).knowledge.exposure("wheel", None)
 check("a nearer country gets more exposure than a farther one", 0.0 < far < near < 1.0, (near, far))
 check("an observer's own place counts when it is given",
-	  CountryWorld(world, profiles["beta"], registry).exposure("wheel", "algeria_03") == far)
+	  CountryWorld(world, profiles["beta"], registry).knowledge.exposure("wheel", "algeria_03") == far)
 
 # ---- a foreign government's year ----------------------------------------------------------
 world.demonstrated_nodes = {"wheel"}
-world.nodes["wheel"] = make_node("wheel", hours=100.0, years=1.0)
-world.nodes["wheel"]["gains"] = {"military": 1000.0}
+world.setting.nodes["wheel"] = make_node("wheel", hours=100.0, years=1.0)
+world.setting.nodes["wheel"]["gains"] = {"military": 1000.0}
 state2 = ActorsState()
 registry2 = ActorRegistry(state2, EXTENSIONS)
 seed_cast(registry2, "alpha", [entry for entry in entries if entry.actor_id == "government:beta"], profiles)
@@ -243,6 +244,7 @@ check("every actor's money other than the foreign government's is untouched", to
 	[actor for actor_id, actor in registry2.actors.items() if actor_id != "government:beta"]) == 0.0)
 
 # ---- review regressions: a foreign country lives on its own output and prices -------------------
+@flat_world
 class PricedWorld(ScenarioWorld):
 	def society_output(self):
 		return 1.0e9
@@ -255,7 +257,7 @@ priced = PricedWorld()
 beta_profile = registry.state.countries["beta"]
 beta_view = CountryWorld(priced, beta_profile, registry)
 check("a foreign country's output is what its own producers make, not the home output scaled",
-	  beta_view.society_output() == 1.0e6, beta_view.society_output())
+	  beta_view.revenue.society_output() == 1.0e6, beta_view.revenue.society_output())
 check("a foreign country's food costs its own floor, not the home one",
-	  beta_view.subsistence_cost_per_person_year() == 20.0 and beta_view.need_floor_costs_per_person_year() == {"food": 20.0})
-check("a country's techniques are read once and kept", beta_view.baseline_knowledge() is beta_view.baseline_knowledge())
+	  beta_view.people.subsistence_cost_per_person_year() == 20.0 and beta_view.people.need_floor_costs_per_person_year() == {"food": 20.0})
+check("a country's techniques are read once and kept", beta_view.knowledge.baseline_knowledge() is beta_view.knowledge.baseline_knowledge())

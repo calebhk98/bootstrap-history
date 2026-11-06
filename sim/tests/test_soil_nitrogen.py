@@ -7,7 +7,7 @@ QUICK_TOPIC = True
 
 import unittest
 
-from sim.geography.api import crop_site, open_map, tiles_held
+from sim.geography.api import crop_site, open_map
 from sim.geography.api import soil_nutrients
 
 WHEAT_KG_PER_HECTARE = 1000.0

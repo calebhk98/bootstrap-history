@@ -35,10 +35,8 @@ def spread(record, payments: Sequence[Transfer], by_tile: Optional[Dict[TileId, 
             result.append(payment)
             continue
         if payment.purpose == "rent":
-            held = titles.shares(record, owner.tile)         # rent goes to whoever holds the land
-            total = sum(held.values())
-            paid = [Transfer(payment.payer, holder, payment.currency, payment.amount * share / total, payment.purpose)
-                    for holder, share in sorted(held.items()) if share > 0.0] if total > 0.0 else []
+            paid = [Transfer(payment.payer, holder, payment.currency, amount, payment.purpose)       # rent goes to whoever holds the land
+                    for holder, amount in titles.split_among_holders(record, owner.tile, payment.amount).items()]
             result.extend(paid or [payment])
             continue
         tile_cohorts = by_tile.get(owner.tile) if by_tile is not None else None

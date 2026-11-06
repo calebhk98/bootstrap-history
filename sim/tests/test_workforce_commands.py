@@ -7,8 +7,8 @@ from types import SimpleNamespace
 
 from sim.tests import module_harness
 from sim.workforce import rules as workforce_rules
-from sim.workforce.api import LoseStaff, NoteTradeSpread, PressLabour, SetEmployed, TakeWageFallback
-from sim.workforce.api import AutoBuyPeople, AutoManumit, CloseHoursYear, FadeMarketPressure, NoteBuyRefusal, SettleLivingCost
+from sim.workforce.api import LoseStaff, NoteTradeSpread, SetEmployed, TakeWageFallback
+from sim.workforce.api import AutoBuyPeople, AutoManumit, CloseHoursYear, FadeMarketPressure, NoteBuyRefusal
 from sim.reporting.api import RecordEvent
 from sim.workforce.constants import AUTO_MANUMIT_ANNUAL_CHANCE, MARKET_PRESSURE_ANNUAL_FADE, MARKET_PRESSURE_DECAY, WAGE_FALLBACK_LIVING_COST_YEARS, WAGE_FALLBACK_MAX_HOURS, WAGE_FALLBACK_MIN_HOURS
 from sim.workforce.module import Workforce
@@ -17,24 +17,19 @@ from sim.workforce.state import WorkforceSeat
 
 class SurvivingPeople(unittest.TestCase):
     def test_everyone_survives_a_share_of_one_and_no_one_a_share_of_zero(self):
-        self.assertEqual(workforce_rules.surviving_people(random.Random(1), 40.0, 1.0), 40.0)
-        self.assertEqual(workforce_rules.surviving_people(random.Random(1), 40.0, 0.0), 0.0)
+        self.assertEqual(workforce_rules.surviving_people(40.0, 1.0), 40.0)
+        self.assertEqual(workforce_rules.surviving_people(40.0, 0.0), 0.0)
 
-    def test_the_headcount_is_whole_and_one_draw_is_made_per_person(self):
-        dice = random.Random(3)
-        kept = workforce_rules.surviving_people(dice, 12.4, 0.5)
-        self.assertEqual(kept, float(int(kept)))
-        mirror = random.Random(3)
-        for _ in range(12):
-            mirror.random()
-        self.assertEqual(dice.random(), mirror.random())
+    def test_the_headcount_scales_by_the_share_and_keeps_its_fraction(self):
+        self.assertAlmostEqual(workforce_rules.surviving_people(12.4, 0.5), 6.2)
 
 
 class Commands(unittest.TestCase):
     def test_a_loss_multiplies_the_deputies_by_their_share_and_answers_the_people_on_the_books_either_side(self):
         household = SimpleNamespace(directors_extra=4.0, scholars=2.0, artisans=3.0, employees={"smith": 5.0})
         workforce = module_harness.build(Workforce, seat=household, views={"game_random": random.Random(3)})
-        workforce.labour = SimpleNamespace(staff_snapshot=lambda: {}, log_staff_reduction=lambda cause, before: None)
+        workforce.parts.core.labour = SimpleNamespace(ledger=SimpleNamespace(staff_snapshot=lambda: {}, log_staff_reduction=lambda cause, before: None),
+                                                      pools=SimpleNamespace(lose_share=lambda survival_share: None))
         answer = workforce.lose_staff(LoseStaff("a sack", 1.0, 0.5))
         self.assertEqual((household.directors_extra, answer), (2.0, {"people_before": 10.0, "people_after": 10.0}))
 
@@ -42,7 +37,9 @@ class Commands(unittest.TestCase):
         asked = []
         household = SimpleNamespace(directors_extra=0.0, scholars=0.0, artisans=0.0, employees={"smith": 3.0})
         workforce = module_harness.build(Workforce, seat=household, views={"game_random": random.Random(3)})
-        workforce.labour = SimpleNamespace(staff_snapshot=lambda: {"smith": 3.0}, log_staff_reduction=lambda cause, before: asked.append((cause, before)))
+        workforce.parts.core.labour = SimpleNamespace(
+            ledger=SimpleNamespace(staff_snapshot=lambda: {"smith": 3.0}, log_staff_reduction=lambda cause, before: asked.append((cause, before))),
+            pools=SimpleNamespace(lose_share=lambda survival_share: None))
         workforce.lose_staff(LoseStaff("a sack", 1.0, 1.0))
         self.assertEqual(asked, [("a sack", {"smith": 3.0})])
 
@@ -57,17 +54,10 @@ class Commands(unittest.TestCase):
     def test_setting_the_staff_of_a_trade_resyncs_the_hour_pools_after(self):
         calls = []
         workforce = module_harness.build(Workforce)
-        workforce.labour = SimpleNamespace(set_employed=lambda trade, headcount: calls.append(("set", trade, headcount)),
-                                           resync_pools=lambda: calls.append(("resync",)))
+        workforce.parts.core.labour = SimpleNamespace(book=SimpleNamespace(set_employed=lambda trade, headcount: calls.append(("set", trade, headcount))),
+                                                      pools=SimpleNamespace(resync_pools=lambda: calls.append(("resync",))))
         workforce.set_employed(SetEmployed("smith", 3.0))
         self.assertEqual(calls, [("set", "smith", 3.0), ("resync",)])
-
-    def test_pressing_labour_presses_the_markets_trade(self):
-        pressed = []
-        workforce = module_harness.build(Workforce)
-        workforce.labour = SimpleNamespace(market=SimpleNamespace(press=lambda trade, hours: pressed.append((trade, hours))))
-        workforce.press_labour(PressLabour("smith", 500.0))
-        self.assertEqual(pressed, [("smith", 500.0)])
 
 
 class WageFallback(unittest.TestCase):
@@ -79,9 +69,10 @@ class WageFallback(unittest.TestCase):
         workforce = module_harness.build(Workforce, views={
             "acting_balance": lambda: household.capital, "automation": {"manual": manual}, "living_cost": lambda *args: 100.0,
             "active_projects": dict.fromkeys(active), "held_trade": lambda: held})
-        workforce.labour = SimpleNamespace(
-            effective_scholars=lambda: 2.0, work_for_wages=lambda trade, hours: sold.append((trade, hours)) or (1.0, None),
-            wage_for_hours=lambda trade, hours: pays[0] if trade == "scholar" else pays[1])
+        workforce.parts.core.labour = SimpleNamespace(
+            hands=SimpleNamespace(wage_fallback_trade=lambda: "scholar"),
+            wages=SimpleNamespace(work_for_wages=lambda trade, hours: sold.append((trade, hours)) or (1.0, None),
+                                  wage_for_hours=lambda trade, hours: pays[0] if trade == "scholar" else pays[1]))
         return workforce.take_wage_fallback(TakeWageFallback(remaining)), sold
 
     def test_idle_hours_are_sold_up_to_the_ceiling_and_leave_the_year_less_unspent(self):
@@ -107,8 +98,8 @@ class HoursYear(unittest.TestCase):
         household = SimpleNamespace(log=[], wage_hours_this_year=120.04, teaching_hours_this_year=30.0, relocation_hours_this_year=None,
                                     supervision_hours_this_year=7.0, contract_hours={"smith": 40.0}, hours_this_year=None)
         workforce = module_harness.build(Workforce, seat=household, views={"acting_balance": lambda: household.capital})
-        workforce.labour = SimpleNamespace(director_pool=lambda: 2000.04, close_wage_year=lambda: closed.append(dict(
-            kept=household.hours_this_year, wage=household.wage_hours_this_year)))
+        workforce.parts.core.labour = SimpleNamespace(hours=SimpleNamespace(director_pool=lambda: 2000.04), wages=SimpleNamespace(
+            close_wage_year=lambda: closed.append(dict(kept=household.hours_this_year, wage=household.wage_hours_this_year))))
         workforce.close_hours_year(CloseHoursYear(pool=1500.0, remaining=-3.0, remaining_after_projects=400.0, hours_effective_total=800.04))
         self.assertEqual(household.hours_this_year, {
             "available": 2000.0, "wage_work": 120.0, "teaching": 30.0, "moving": 0.0, "supervising": 7.0,
@@ -117,12 +108,6 @@ class HoursYear(unittest.TestCase):
         self.assertEqual((household.contract_hours, household.teaching_hours_this_year, household.relocation_hours_this_year,
                           household.supervision_hours_this_year), ({}, 0.0, 0.0, 0.0))
 
-
-class LivingCost(unittest.TestCase):
-    def test_settling_the_living_cost_uses_up_the_advance_and_adds_the_bill_to_what_was_paid(self):
-        seat = WorkforceSeat(wages_prepaid=20.0, living_cost_paid=100.0)
-        module_harness.build(Workforce, seat=seat, views={}).settle_living_cost(SettleLivingCost(50.0))
-        self.assertEqual((seat.wages_prepaid, seat.living_cost_paid), (0.0, 150.0))
 
 
 class StandingPolicyRules(unittest.TestCase):
@@ -154,8 +139,9 @@ class StandingPolicies(unittest.TestCase):
             "game_random": lambda: dice, "running_mechanics": lambda name: list(mechanics),
             "staffing_closed_hand_shortfall": lambda: (0.0, lacking)})
         workforce.staff = lambda: {"artisans": 3.0, "slaves": slaves}
-        workforce.labour = SimpleNamespace(SLAVE_BASE_PRICE=10.0, buy_slaves=lambda count: calls.append(("buy", count)) or count,
-                                           manumit=lambda count: calls.append(("free", count)) or count)
+        workforce.parts.core.labour = SimpleNamespace(bondage=SimpleNamespace(
+            SLAVE_BASE_PRICE=10.0, buy_slaves=lambda count: calls.append(("buy", count)) or count,
+            manumit=lambda count: calls.append(("free", count)) or count))
         return workforce, calls
 
     def test_the_policy_buys_people_when_on_and_records_it(self):

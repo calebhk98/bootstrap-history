@@ -7,6 +7,7 @@ import random
 from .harness import check
 
 from sim.agents.business import Business
+from sim.agents.business_parts import PlantReading
 from sim.agents.registry import ActorRegistry
 from sim.engine.state import ActorRecord, ActorsState
 
@@ -16,7 +17,7 @@ NODES = {"node_%d" % number: {"cat": "cat_%d" % (number % 3)} for number in rang
 class CountingSizes:
 	"""Counts how often a business's plant sizes are read."""
 	reads = 0
-	real = Business.sizes
+	real = PlantReading.sizes
 
 	@staticmethod
 	def counted(business):
@@ -33,9 +34,9 @@ def registry_of(count):
 
 def full_totals(registry):
 	totals, categories = {}, {}
-	for operator in registry.market_operators():
+	for operator in registry.concerns.market_operators():
 		for held in operator.concerns:
-			size = operator.capacity_of(held)
+			size = operator.holdings.capacity_of(held)
 			totals[held] = totals.get(held, 0.0) + size
 			category = NODES[held]["cat"]
 			categories[category] = categories.get(category, 0.0) + size
@@ -44,8 +45,8 @@ def full_totals(registry):
 
 def agrees(registry):
 	totals, categories = full_totals(registry)
-	return (all(abs(registry.capacity_in(node) - totals.get(node, 0.0)) < 1e-9 for node in NODES)
-			and all(abs(registry.concerns_in(category, NODES) - categories.get(category, 0.0)) < 1e-9
+	return (all(abs(registry.concerns.capacity_in(node) - totals.get(node, 0.0)) < 1e-9 for node in NODES)
+			and all(abs(registry.concerns.concerns_in(category, NODES) - categories.get(category, 0.0)) < 1e-9
 					for category in ("cat_0", "cat_1", "cat_2")))
 
 
@@ -61,8 +62,8 @@ for step in range(400):
 	elif action == "close":
 		firm.concerns.discard(node)
 	elif action == "grow" and node in firm.concerns:
-		firm.business.set_size(node, firm.capacity_of(node) * dice.uniform(1.0, 2.0))
-		registry.note_capacity_change(firm.actor_id)
+		firm.business.tally.set_size(node, firm.holdings.capacity_of(node) * dice.uniform(1.0, 2.0))
+		registry.concerns.note_capacity_change(firm.actor_id)
 	elif action == "exit":
 		firm.concerns.clear()
 		firm.record.exited_year = 1
@@ -76,16 +77,16 @@ check("totals equal a full recomputation after random entries, exits and capacit
 
 def reads_for_one_change(count):
 	registry = registry_of(count)
-	Business.sizes = CountingSizes.counted
+	PlantReading.sizes = CountingSizes.counted
 	try:
 		CountingSizes.reads = 0
-		registry.actors["firm:000"].business.set_size("node_0", 3.0)
-		registry.note_capacity_change("firm:000")
-		registry.capacity_in("node_0")
-		registry.concerns_in("cat_0", NODES)
+		registry.actors["firm:000"].business.tally.set_size("node_0", 3.0)
+		registry.concerns.note_capacity_change("firm:000")
+		registry.concerns.capacity_in("node_0")
+		registry.concerns.concerns_in("cat_0", NODES)
 		return CountingSizes.reads
 	finally:
-		Business.sizes = CountingSizes.real
+		PlantReading.sizes = CountingSizes.real
 
 
 small, large = reads_for_one_change(10), reads_for_one_change(400)

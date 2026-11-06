@@ -640,7 +640,7 @@
     "blast_furnace"
   ],
   "state_pressure": {
-    "_doc": "See rome_100ad.json's own state_pressure._doc for the shape this object takes and how society.py reads it.",
+    "_doc": "See rome_100ad.json's own state_pressure._doc for the shape this object takes and how sim/polity/notice.py reads it.",
     "requisition_name": "the salt and iron monopolies",
     "requisition_note": "Salt and iron were state monopolies since Emperor Wu's reign - the Discourses on Salt and Iron (81 BC) record the court debate over exactly this policy - and the corvee could be called on a household's own hands as readily as on its goods. An ironworks or a saltern good enough to notice is, in Han law, a business the state already claims a right to run.",
     "office_name": "a commandery post",

@@ -10,13 +10,13 @@ QUICK_TOPIC = True
 import unittest
 from unittest import mock
 
-from sim.prices import solve_prices
+from sim.prices import solve_prices_core
 from sim.prices import energy_prices, prices
 from . import prices_stand_in
 from sim.engine import data
-from sim.production import node_output, node_revenue
+from sim.production import node_revenue
 from sim.world import capital_market, plant_figures
-from sim.labour.labour_market import production_data
+from sim.world.demand import production_data
 
 # Entries that state a plant and gate a node, whose inputs at solved prices cost more than what they
 # make: a technique dearer than the one that sets the price, so it adds nothing a staff could be paid from.
@@ -36,12 +36,16 @@ def works_entry():
 
 
 def unit_price(rate):
-    _cost, prices = solve_prices.recipe_cost_and_allocation(
+    _cost, prices = solve_prices_core.recipe_cost_and_allocation(
         "widget_kg", works_entry(), {"ore_kg": 1.0}, WAGES, interest_rate=rate)
     return prices["widget_kg"]
 
 
 class CapitalRecoveryFactor(unittest.TestCase):
+
+    def test_a_tiny_rate_is_the_nil_rate_factor_not_a_rounding_artefact(self):
+        for rate in (1e-300, 1e-18, 1e-12):
+            self.assertAlmostEqual(capital_market.capital_recovery_factor(rate, 20.0), 1.0 / 20.0, places=9)
 
     def test_a_nil_rate_is_depreciation_alone(self):
         self.assertAlmostEqual(capital_market.capital_recovery_factor(0.0, 20.0), 1.0 / 20.0)
@@ -75,7 +79,7 @@ class SolvedPriceCarriesTheReturn(unittest.TestCase):
     def test_an_entry_with_no_plant_is_unmoved_by_the_rate(self):
         entry = works_entry()
         entry["capital"] = []
-        prices = [solve_prices.recipe_cost_and_allocation("widget_kg", entry, {"ore_kg": 1.0}, WAGES,
+        prices = [solve_prices_core.recipe_cost_and_allocation("widget_kg", entry, {"ore_kg": 1.0}, WAGES,
                                                           interest_rate=rate)[1]["widget_kg"]
                   for rate in (0.0, 0.3)]
         self.assertAlmostEqual(prices[0], prices[1])
@@ -89,7 +93,7 @@ class ConcernEarnsItsReturn(unittest.TestCase):
                 "art": 0.0, "annual_output_t": 0.0, "lab": {}, "cap_hours": 0.0, "_material_hours": 0.0}
         goods = {"ore_kg": 1.0, "widget_kg": unit_price(rate)}
         table = {"widget_works_entry": works_entry()}
-        with mock.patch("sim.labour.api.production_data", return_value=table):
+        with mock.patch("sim.world.demand.production_data", return_value=table):
             node_revenue.apply_revenue([node], goods, WAGES, 1.0, energy_prices.pool_only(goods))
         self.assertEqual(node["_revenue_basis"], "output")
         staff = node["_upkeep_hours_parts"]["staff"]
@@ -164,7 +168,7 @@ class InventoryAndLiveRate(unittest.TestCase):
         entry = works_entry()
         entry["capital"] = []
         entry["holding_years"] = holding_years
-        return solve_prices.recipe_cost_and_allocation(
+        return solve_prices_core.recipe_cost_and_allocation(
             "widget_kg", entry, {"ore_kg": 1.0}, WAGES, interest_rate=rate)[1]["widget_kg"]
 
     def test_inputs_held_for_a_year_cost_the_rate_on_what_was_laid_out(self):
@@ -207,7 +211,7 @@ class IncumbentTablesFollowTheLiveRate(unittest.TestCase):
     def test_the_solve_takes_the_banded_live_rate_and_repeats_only_when_a_band_moves(self):
         rates = [0.05]
         module = self.module(rates)
-        with mock.patch("sim.engine.data.calculated_goods_table", return_value=({}, {})) as solve:
+        with mock.patch.object(prices, "goods_in_hours", return_value=({}, {})) as solve:
             module.price_tables()
             rates[0] = 0.05 + prices.INTEREST_RATE_BAND * 0.2
             module.price_tables()
@@ -215,7 +219,7 @@ class IncumbentTablesFollowTheLiveRate(unittest.TestCase):
             rates[0] = 0.05 + prices.INTEREST_RATE_BAND * 4
             module.price_tables()
             self.assertEqual(solve.call_count, 2)
-            self.assertAlmostEqual(solve.call_args.kwargs["interest_rate"], 0.09)
+            self.assertAlmostEqual(solve.call_args.args[4], 0.09)
 
     def test_a_market_rate_that_needs_the_prices_answers_the_starting_rate_instead_of_recursing(self):
         module = self.module([0.2])

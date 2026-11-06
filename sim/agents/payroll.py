@@ -1,14 +1,17 @@
-"""Money that lands with households: the people's strata take wages, interest and the state's pay.
+"""Money that lands with households: the people's strata take wages and the state's pay.
 
-A body of people is a stratum actor with a purse. Wages, the state's pay and the interest lenders earn
+A body of people is a stratum actor with a purse. Wages and the state's pay
 are shared among the home country's free strata, so the money reaches the people who earn it and what
 they pay back (taxes, spending) is paid from their own purses. Where no stratum exists yet, the money
 goes to a named edge instead.
 """
 from typing import Any, List
 
+from sim.book import InsufficientFunds
+
 from . import ledger
 from .edges import EDGE_WORKERS
+from .purses import DEBT_FLOOR
 
 
 def free_strata(registry: Any) -> List[Any]:
@@ -33,21 +36,39 @@ def share_out(payer: Any, payees: List[Any], weights: List[float], amount: float
 	total = sum(weights)
 	if amount == 0.0 or total <= 0.0:
 		return
-	ledger.cover(payer, payees, amount)
+	give_back = ledger.cover(payer, payees, amount)
 	moved = 0.0
-	for index, payee in enumerate(payees):
-		part = amount - moved if index == len(payees) - 1 else amount * weights[index] / total
-		ledger.transfer(payer, payee, part, purpose)
-		moved += part
+	paid: List[Any] = []
+	charges: List[tuple] = []
+	with ledger.recording_charges(charges):
+		for index, payee in enumerate(payees):
+			part = amount - moved if index == len(payees) - 1 else amount * weights[index] / total
+			try:
+				ledger.transfer(payer, payee, part, purpose)
+			except InsufficientFunds:
+				_undo(payer, paid, charges, purpose, give_back)
+				raise
+			if part > DEBT_FLOOR:   # a part below the floor moves nothing, and the last payee takes it up
+				moved += part
+				paid.append((payee, part))
 
 
-def pay_savers(registry: Any, payer: Any, amount: float) -> None:
-	"""Interest the people earn as lenders: to the free strata in proportion to what they hold saved."""
-	savers = [stratum for stratum in free_strata(registry) if stratum.money > 0.0]
-	if savers:
-		share_out(payer, savers, [stratum.money for stratum in savers], amount, "interest_on_lending")
+def _undo(payer: Any, paid: List[Any], charges: List[tuple], purpose: Any, give_back: Any) -> None:
+	"""Take back what a failed share_out moved: each payment and each charge the transfer hook made for it, every one
+	attempted even if one is refused, then the draw made for the payments; the first refusal is raised afterwards."""
+	refusal = None
+	takes = [(payee, payer, part, purpose) for payee, part in reversed(paid)]
+	takes += [(charge_payee, charge_payer, charged, cause) for charge_payer, charge_payee, charged, cause in reversed(charges)]
+	for taker, giver, part, cause in takes:
+		try:
+			ledger.reverse(taker, giver, part, cause)
+		except InsufficientFunds as error:
+			refusal = refusal or error
+	give_back()
+	if refusal is not None:
+		raise refusal
 
 
 def pay_wages(registry: Any, payer: Any, amount: float, purpose: Any, world: Any) -> None:
 	"""Wages: to the people, or to the workers edge while there are no strata."""
-	pay_households(registry, payer, amount, purpose, world.edge(EDGE_WORKERS))
+	pay_households(registry, payer, amount, purpose, world.setting.edge(EDGE_WORKERS))

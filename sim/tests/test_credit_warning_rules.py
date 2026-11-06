@@ -2,7 +2,6 @@
 band (`near_limit`), the halt of work in hand (`halt_active_projects`) and the table that says which lines interrupt a
 multi-year step (`stops_a_step`). How a household's log and projects show them is test_credit_warning_wiring."""
 
-import types
 import unittest
 
 from sim.finance.affordability import NEAR_LIMIT_FROM, near_limit

@@ -26,7 +26,7 @@ class EconomyNotOpened(ValueError):
 
 def state_text(sim):
 	"""The whole game as JSON text, from the live sim.state."""
-	sim.view("legacy_economy")().flush_record()
+	sim.view("flush_agent_record")()
 	sim.state._civ = sim.civ.get("id")
 	sim.state._immortal = bool(sim.cfg.get("immortal", True))
 	sim.state._seed = sim.seed
@@ -35,7 +35,7 @@ def state_text(sim):
 	sim.send(CaptureReadings())      # the demand the last throttle saw is carried in the save
 
 	# the agent economy's record is most of the file and already plain JSON: the encoder takes it as it is
-	with verbatim(sim.view("legacy_agent_economy")().get("record")):
+	with verbatim(sim.view("agent_economy_store")().get("record")):
 		return state_json(serialize_state(sim.state))
 
 

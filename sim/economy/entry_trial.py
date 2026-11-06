@@ -21,6 +21,7 @@ from .entrant_rent import site_rent_per_run
 from .entry_sizing import ENTRY_SHARE_OF_UNTRADED_DEMAND
 from .producers import Producer, live_input_prices_at, live_wages_at
 from .types import AreaId, Bid, GoodId, Recipe
+from .rates import own_rate
 
 ENTRY_PRICE_MARGIN_SHARE = declare(
     "ENTRY_PRICE_MARGIN_SHARE", 0.25, kind="temporary_heuristic",
@@ -28,24 +29,6 @@ ENTRY_PRICE_MARGIN_SHARE = declare(
     why="A founder starting a workshop nobody runs yet asks more than cost to cover the risk of an untried "
         "market (Dixit 1989, Complaints/reports/economy-research-price-stability-and-entry.md). The "
         "margin should follow the sunk cost and the uncertainty; neither is derived yet.")
-
-
-def full_cost_per_unit(recipe: Recipe, good: GoodId, output_prices: Mapping[GoodId, float],
-                       input_prices: Mapping[GoodId, float], wages: Mapping[str, float], rate: float,
-                       rent: float = 0.0, yield_factor: float = 1.0) -> float:
-    """Variable cost and capital charge of a run, per unit of `good`; a joint run's cost is shared among
-    its outputs by value at `output_prices`. Infinite when a cost cannot be priced."""
-    made = recipe.outputs.get(good, 0.0) * yield_factor
-    if made <= 0.0:
-        return math.inf
-    run_cost = (unit_cost.variable_cost_per_run(recipe, input_prices, wages, rent)
-                + unit_cost.capital_charge_per_run(recipe, input_prices, wages, rate))
-    if not math.isfinite(run_cost):
-        return math.inf
-    revenue = unit_cost.revenue_per_run(recipe, output_prices)
-    own_value = recipe.outputs[good] * output_prices.get(good, 0.0)
-    share = own_value / revenue if revenue > 0.0 and own_value > 0.0 else 1.0
-    return run_cost * share / made
 
 
 def demand_at(bids: Sequence[Bid], price: float, price_now: float) -> float:
@@ -97,7 +80,7 @@ def trial_entry_plans(setup, record, view, area_map, bids_by_market: Mapping[Tup
         for good in setup.recipes[recipe_id].outputs:
             makers.setdefault(good, []).append(recipe_id)
     skip = set(planned)
-    capacity_terms = capacity_terms_by_good(record.producers, setup.recipes, record.expansion_runs)
+    capacity_terms = capacity_terms_by_good(record.producers, setup.recipes, record.credit.expansion_runs)
     plans = []
     for (good, area_id), bids in sorted(bids_by_market.items()):
         if (good, area_id) in skip or good not in makers or good not in area_map.goods():
@@ -138,7 +121,7 @@ def recipes_by_cost(setup, record, view, good, tile, recipe_ids,
     """(recipe, full cost per unit of `good`) for each recipe that can be costed, cheapest first. With `output_per_year`
     (units of `good` a newcomer would make a year) a recipe is costed at the hours its newcomer needs over the years it
     is judged on (entry_practice.py); without, at the booked hours."""
-    rate = view.interest_rate(setup.currency_id)
+    rate = own_rate(view, setup.currency_id)
     ranked = []
     for recipe_id in recipe_ids:
         recipe = setup.recipes[recipe_id]
@@ -148,8 +131,8 @@ def recipes_by_cost(setup, record, view, good, tile, recipe_ids,
         outputs = {each: view.price(each, view.area_of(each, tile)) for each in recipe.outputs}
         outputs = {each: price for each, price in outputs.items() if price is not None}
         rent = site_rent_per_run(setup, record, view, recipe_id, tile)
-        cost = full_cost_per_unit(recipe, good, outputs, live_input_prices_at(tile, recipe, view),
-                                  live_wages_at(tile, recipe, view), rate, rent)
+        cost = unit_cost.full_cost_per_unit(recipe, good, outputs, live_input_prices_at(tile, recipe, view),
+                                            live_wages_at(tile, recipe, view), rate, rent)
         if math.isfinite(cost) and cost > 0.0:
             ranked.append((recipe_id, cost))
     return sorted(ranked, key=lambda item: (item[1], item[0]))

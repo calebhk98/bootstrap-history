@@ -6,7 +6,7 @@ in test_population_per_region_smoke."""
 import unittest
 
 from sim.economy.year_accounts import CohortAccount, YearAccounts, _tiles
-from sim.labour.api import moves_between_regions
+from sim.labour.api import migrant_pairs, totals_of_pairs
 from sim.world import regional_population
 from sim.world.demography import Population
 
@@ -22,8 +22,8 @@ class TwoRegionsOfUnequalFoodTests(unittest.TestCase):
     def _year(self):
         kcal = {tile: regional_population.kcal_per_day_fed(region, self.eaten_over_need[tile])
                 for tile, region in self.regions.items()}
-        leaving, arriving = moves_between_regions(
-            self.regions, self.eaten_over_need, self.borders, lambda origin, destination: 50.0)
+        leaving, arriving = totals_of_pairs(migrant_pairs(
+            self.regions, self.eaten_over_need, self.borders, lambda origin, destination: 50.0))
         flows = regional_population.step_regions(self.regions, kcal, 1.0, {}, None, leaving, arriving)
         return flows, leaving, arriving
 

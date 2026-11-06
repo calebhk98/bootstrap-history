@@ -17,7 +17,8 @@ def hours_a_person_sells(area: str, hours_per_worker_year: Union[float, Mapping[
     """The hours a person of `area` sells: the area's figure in a mapping (the mapping's largest where it names none), or the one figure."""
     if not isinstance(hours_per_worker_year, Mapping):
         return hours_per_worker_year
-    return hours_per_worker_year.get(area) or max(hours_per_worker_year.values(), default=1.0)
+    stated = hours_per_worker_year.get(area)
+    return stated if stated is not None else max(hours_per_worker_year.values(), default=1.0)
 
 
 def opening_state(trades: Mapping[str, TradeSpec], working_people_by_area: Mapping[str, float],

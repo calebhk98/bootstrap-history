@@ -53,7 +53,7 @@ The cycle reaches the player. Over the first two decades the `money` screen's ma
 digits to the ceiling `bounded_rate` sets (four times the civilisation's `starting_interest_rate`,
 `sim/world/capital_market.py`), and stayed there for several years. Over the same years "funds lenders hold"
 fell to about a quarter of its year-104 figure. Funds lenders hold is built mostly from `household_saving()`
-(`sim/engine/economy_capital_market.py`), so household saving collapsed. The founder's borrowing is far too
+(`sim/finance/capital_market.py`, `sim/actors/world_credit.py` `household_saving`), so household saving collapsed. The founder's borrowing is far too
 small to move it. A founder who had borrowed at a normal rate to hire staff paid well over half the debt in
 interest each year and went insolvent. Wages (and with them the workshop's revenue, which is a markup on
 wages) fell through the same years. Reproduce by stepping a year at a time and reading `money`.
@@ -166,7 +166,7 @@ Not reproducible on the fixture: 545 (the fixture has no land per run, so househ
 the stock gate is not the first mover once the seed is gone (the gate binds in year 1 only on the seeded run).
 
 Orchestrator commands (minutes each, shared cores; not run here): `python3 sim/simulator.py spin-up-trace --civ rome_100ad --years 60`
-and the settling statistic over its rows (`sim.economy.settling.settling_report`, as `economy_port_trace.spin_up_trace` feeds it).
+and the settling statistic over its rows (`sim.economy.settling.settling_report`, as `port_trace.spin_up_trace` feeds it).
 
 ## Update 7: hours offered are a choice against the plot; the stationary fixture rests (branch opening-labour-supply-and-seed)
 
@@ -291,7 +291,7 @@ Leisure is limited to hours the plot could not still use (`HourSupply.parts`): w
 Output: `Complaints/reports/473-trace-9eb35921.txt`. The first four decades are calmer than at 72e81e68 (the price level near
 a hundred at year forty instead of nearer two hundred, hired hours steady), then the economy explodes after year forty: the
 price level, the wage and the rate run away together within a few years (the rate far above one, the wage thousands of
-times its opening). A per-good decomposition of years 35 to 52 is running (`decomp.py` probe, the same as for 72e81e68).
+times its opening). A per-good decomposition of years 35 to 52 is running (a `decomp.py` probe, not committed; the committed copy of the same kind is `Complaints/reports/473-decomposition-probe.py.txt`).
 
 Decomposition of the late runaway (years 35 to 51 at 9eb35921, `Complaints/reports/473-decomposition-9eb35921.txt`; the probe
 is `Complaints/reports/473-decomposition-probe.py.txt`, run from a checkout root with `FROM_YEAR=35 python3 <probe> 52`): wheat,
@@ -518,7 +518,7 @@ through" (ore_kg) fails before and after, as noted in Update 14.
 
 ### Update 16 (later): the 92 a kg was a remembered bid ceiling blended with a sliver of trade
 
-Traced with the spin-up uncached (probe not committed: `economy_port_year.SPIN_UP_CACHE_DIRECTORY` set to a temporary directory, wrapping `producers.plan`
+Traced with the spin-up uncached (probe not committed: `port_year.SPIN_UP_CACHE_DIRECTORY` set to a temporary directory, wrapping `producers.plan`
 and `unsold_search.clear_with_search` for wheat at france_05). The parent's 0.71 was a `cost_covering` quote on a market where nothing traded and the
 producer held no stock, not a price. With wheat running, the spin-up cobwebs: year 1 plans the plant's whole capacity at the opening estimate (238 million kg
 held after it), the price falls to 0.1, no one plans in year 4 (stock gone), a buyer's ceiling of 130 is remembered as a `best_unfilled_bid`, year 5 plans
@@ -549,7 +549,7 @@ the stationary runs times the spare share over the share that works (`opening._a
 nothing in the first plan read them.
 
 Fix (`producers.within_a_years_change`): a producer in its first year plans at most its `expected_sales` (the stationary runs) when it has one; with
-none it plans from its expectation as before. Tests: `sim/tests/test_economy_first_year_plans_from_stationary.py` (a stationary quantity below capacity is
+none it plans from its expectation as before. Tests (the file `test_economy_first_year_plans_from_stationary.py` is no longer in `sim/tests/`; `ls sim/tests | grep stationary` lists what is; it covered: a stationary quantity below capacity is
 planned; none plans from expectation; one above capacity does not lift the plant; after the first year the cap is gone).
 
 Measured with the spin-up uncached (`ROME_CACHE_DIR` empty; probe not committed, `economy_api.blank_economy` + `begin_spin_up` + `step`, Rome, years 1 to 6),
@@ -655,7 +655,7 @@ at the bound). The money-replacement solve is kept: the first solve gives the re
   that price in the service's market (`opening_plans.post_service_prices`), so year one's choice (`household_work_year.decide`) is the opening's. No producer
   is dropped to fit. The area, not the tile, is the market (the service's market areas span several tiles).
 
-Tests: `sim/tests/test_economy_opening_household_plans.py` (a solved opening's grain demand is what its households buy at its prices, flour price high and
+Tests (the file `test_economy_opening_household_plans.py` is no longer in `sim/tests/`; it covered: a solved opening's grain demand is what its households buy at its prices, flour price high and
 low; its cohorts hold what its households choose; the hired hours are service demand, servant hours in the producers and servants in the workforce; where
 hands are short the posted price rises, hiring falls and no other producer is dropped; the rationing rule; the placement order; the fixed point on built
 callables, including a cycle). The four checks on a built economy fail with the opening solved once as before.

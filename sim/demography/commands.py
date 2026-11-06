@@ -46,8 +46,7 @@ class OpenPopulation(Command):
 
 @dataclass(frozen=True)
 class StepPopulation(Command):
-    """The yearly step of `year`: the farm year (the farm workforce, the harvest, the granary), then each region's people fed
-    and stepped, the colonies, and the wage note. Answers None."""
+    """The yearly step of `year`: each region's people fed what their households ate and stepped, the colonies, and the wage note. Answers None."""
     year: int
 
 
@@ -57,6 +56,14 @@ class RecordFoodEaten(Command):
     hunger need) and each tile's, kept for the next yearly step."""
     national: Optional[float]
     by_tile: Dict[str, float]
+
+
+@dataclass(frozen=True)
+class MovePeople(Command):
+    """The labour market's wage-driven moves of the year just played: the net working-age people it sent to (positive) or
+    took from (negative) each tile. Demography keeps the request and applies it in its next yearly step, with its own
+    food-driven moves, so people are moved once and the economy follows demography's count."""
+    net_by_tile: Dict[str, float]
 
 
 @dataclass(frozen=True)
@@ -81,12 +88,6 @@ class ChangeFarmland(Command):
 class SetClearedFarmland(Command):
     """The acting seat records `hectares` as the area its farm has cleared."""
     hectares: float
-
-
-@dataclass(frozen=True)
-class SetFarmHoursNeeded(Command):
-    """The acting seat records `hours` as the labour hours its farm needs in a year."""
-    hours: float
 
 
 @dataclass(frozen=True)

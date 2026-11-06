@@ -82,9 +82,9 @@ def yearly_monetisation(setup, record) -> float:
     (Complaints/reports/economy-research-commodity-money.md)."""
     spec = record.currency
     supply = record.book.money_supply(spec.currency_id)
-    wanted = (math.fsum(cohort.cash_target for cohort in getattr(record, "cohorts", {}).values())
-              + math.fsum(producer.cash_target for producer in getattr(record, "producers", {}).values())
-              + math.fsum(merchant.capital_base for merchant in getattr(record, "merchants", {}).values()))
+    wanted = (math.fsum(cohort.cash_target for cohort in record.cohorts.values())
+              + math.fsum(producer.cash_target for producer in record.producers.values())
+              + math.fsum(merchant.capital_base for merchant in record.merchants.values()))
     loss = loss_share(setup, spec)
     return (max(0.0, wanted - supply) + loss * supply) / (1.0 - loss)       # the money struck wears too, before the year ends
 
@@ -95,7 +95,7 @@ def loss_share(setup, spec) -> float:
         return COIN_WEAR_PER_YEAR
     if spec.regime == "weighed_metal":
         return METAL_GOODS_LOSS_PER_YEAR
-    backing = getattr(setup, "specs", {}).get(spec.backing_good)
+    backing = setup.specs.get(spec.backing_good)
     return backing.spoilage_per_year if spec.regime == "commodity" and backing is not None else 0.0
 
 
@@ -119,7 +119,7 @@ def staff(setup, record, view, labour_bids) -> None:
         mint_labour.staff(setup, record, view, labour_bids, capacity_fine_kilograms(setup, record),
                           committed_cash=budget.wage_budget)
         funded = record.book.balance(agent, setup.currency_id) - before
-        budget.goods_budget -= mint_staffing.goods_budget_cut(balance, budget.wage_budget, budget.goods_budget, funded)
+        budget.cut_goods_budget(mint_staffing.goods_budget_cut(balance, budget.wage_budget, budget.goods_budget, funded))
 
 
 def mint_orders(setup, record, area_map, order_book, hours_hired=None) -> Dict[str, float]:

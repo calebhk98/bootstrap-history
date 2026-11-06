@@ -9,15 +9,16 @@ from typing import Dict, List, Mapping
 
 from sim.constants import declare
 
-from . import currency, mint_staffing
+from . import currency, mint_staffing, trade_wages
 from .setup import labour_area
-from .state_budget import STATE_WAGE_CEILING_MULTIPLE
+from .state_wage_ceiling import WAGE_CEILING_MULTIPLE
 from .types import LabourBid, Transfer
 
 MINT_ALLOY_AND_FUEL_NOT_BOUGHT = declare(
     "MINT_ALLOY_AND_FUEL_NOT_BOUGHT", 0.0, kind="temporary_heuristic",
     unit="share of the recipe's alloy and fuel inputs the mint buys",
     source=None, confidence="D",
+    retire="the mint bidding for its recipe's alloy metal and fuel in the goods markets like any buyer",
     why="The mint pays the recipe's labour and takes in the fine metal, but does not yet buy the base "
         "metal it alloys or the charcoal it melts with: they are a small part of the coin's value. "
         "Bid for them in the goods markets like any buyer.")
@@ -42,7 +43,7 @@ def capacity_hours(setup, spec, capacity_fine_kilograms: float) -> Dict[str, flo
 
 
 def _striking(setup, spec) -> bool:
-    return (getattr(setup, "mint_recipe", None) is not None and currency.has_mint(spec)
+    return (setup.mint_recipe is not None and currency.has_mint(spec)
             and spec.backing_per_unit > 0.0)
 
 
@@ -67,15 +68,13 @@ def staff(setup, record, view, labour_bids: List[LabourBid], capacity_fine_kilog
     if not _striking(setup, spec) or capacity_fine_kilograms <= 0.0:
         return
     agent, area = mint_agent(setup), labour_area(setup.capital_tile)
-    level = view.chained_price_level(setup.currency_id)
     bids = []
     per_trade = hours_per_fine_kilogram(setup.mint_recipe, spec)
     value = mint_staffing.hour_value(currency.mint_parity(spec), math.fsum(per_trade.values()))
     for trade, per_kilogram in sorted(per_trade.items()):
-        wage = view.wage(trade, area) or setup.opening_wages.get(trade, 0.0) * level
-        if wage > 0.0:
-            bids.append(LabourBid(agent, trade, area, capacity_fine_kilograms * per_kilogram,
-                                  max(wage * STATE_WAGE_CEILING_MULTIPLE, value)))
+        wage = trade_wages.wage_in_view(setup, view, trade, area)
+        bids.append(LabourBid(agent, trade, area, capacity_fine_kilograms * per_kilogram,
+                              max(wage * WAGE_CEILING_MULTIPLE, value)))
     wage_bill = math.fsum(bid.hours * bid.maximum_wage for bid in bids)
     funded = min(wage_bill, max(0.0, record.book.balance(setup.state_agent, setup.currency_id) - committed_cash))
     if funded > 0.0:

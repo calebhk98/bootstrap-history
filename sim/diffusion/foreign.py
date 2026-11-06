@@ -1,20 +1,27 @@
 """What is foreign to this society, what it must have before it can begin a thing, and what it finds dear to build.
 
 Needs: tree, civilisation, techniques_held, stock_holds_met."""
-from typing import Optional, Tuple
+from typing import Dict, Optional, Tuple
+
+from sim.assembly.api import Part
 
 from . import civ_cost
 from .institution_societies import belongs_to_other_society
+from .tree_record import tree_node
 
 
-class Foreign:
+class Foreign(Part):
+
+    def __init__(self, module):
+        super().__init__(module)
+        self._foreign_only_memo: Dict[str, bool] = {}
 
     def foreign_only(self, node_id: str) -> bool:
         """A legal or civic institution of a society that is not this one. The answer depends only on this
         civilisation and the node's own key and name, so it is kept for the life of the game."""
         value = self._foreign_only_memo.get(node_id)
         if value is None:
-            haystack = (node_id + " " + self.tree_node(node_id).get("name", "")).lower()
+            haystack = (node_id + " " + tree_node(self.needs, node_id).get("name", "")).lower()
             value = belongs_to_other_society(haystack, self.needs.civilisation(), "exclusive_markers")
             self._foreign_only_memo[node_id] = value
         return value
@@ -47,6 +54,6 @@ class Foreign:
         civilisation = self.needs.civilisation()
         if not civilisation.get("cost_multipliers"):
             return 1.0
-        node = self.tree_node(node_id)
+        node = tree_node(self.needs, node_id)
         return civ_cost.civ_cost_factor(civilisation.get("cost_multipliers"), civilisation.get("handicap_remedies"),
                                         self.needs.techniques_held(), node.get("cat"), node.get("traits") or ())

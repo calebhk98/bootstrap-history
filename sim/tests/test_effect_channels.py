@@ -1,16 +1,13 @@
 """The effect channels a work declares in its `mechanics` (Complaint 190's benefactions use them). Each method is called once on a
 stand-in `self` whose attributes are written out and whose collaborators are plain lambdas: the mechanics rules `effect_size`,
-`grouped_values`, `sum_in_order`, `factor_product`, and the module's `effect_holds`; the readers `standing_floor`, `goods_reach_factor`, the diffusion module's `schooling_flow`; and
+`grouped_values`, `sum_in_order`, `factor_product`, and the module's `effect_holds`; the readers `standing_floor`, the diffusion module's `schooling_flow`; and
 `institution_unit_cost`. No game is built. What the benefactions branch declares is test_complaint_190_benefactions."""
 import unittest
 from unittest import mock
-from types import SimpleNamespace
 
 from sim.diffusion.module import Diffusion
 from sim.production import capability
 from sim.mechanics import rules
-from sim.markets import categories
-from sim.markets.module import Markets
 from sim.mechanics.module import Mechanics
 from sim.polity.state import PolitySeat
 from sim.tests import module_harness, polity_host, production_host
@@ -112,21 +109,6 @@ class StandingFloor(unittest.TestCase):
 
     def test_scandal_lowers_it(self):
         self.assertLess(standing_module(0.0, scandal=3.0).standing_floor(), standing_module(0.0).standing_floor())
-
-
-class GoodsReach(unittest.TestCase):
-
-    def reach(self, factor, ceiling=3.0):
-        asked = []
-        game = module_harness.build(Markets, views={"effect_factor": lambda channel, start=1.0: asked.append(channel) or factor})
-        with mock.patch.object(categories, "REACH_CEILING", ceiling):
-            return game.goods_reach_factor(), asked
-
-    def test_it_asks_the_reach_channel_and_returns_the_factor(self):
-        self.assertEqual(self.reach(1.5), (1.5, ["reach"]))
-
-    def test_it_is_capped_at_the_ceiling(self):
-        self.assertEqual(self.reach(5.0, ceiling=3.0)[0], 3.0)
 
 
 def school_game(running, values, reaches=None):

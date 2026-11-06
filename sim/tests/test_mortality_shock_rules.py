@@ -1,4 +1,4 @@
-"""A mortality shock's size, its wage premium and its recovery, and how a staff-loss wave is classified and worded,
+"""A mortality shock's size and its recovery, and how a staff-loss wave is classified and worded,
 called with figures built here (Complaint 640). The cohort cut is held by test_cross_system_invariants; the scenarios
 that drive a hazard through a game are in test_demographics_and_plague."""
 QUICK_TOPIC = True
@@ -8,7 +8,6 @@ import unittest
 from sim.demography.api import rules as demography_rules
 from sim.hazards import rules
 from sim.hazards.staff_loss_words import defence_kind, national_toll_sentence, staff_clause
-from sim.workforce.rules import wage_index_of
 from sim.world.demography import Population
 
 CHILD, WORKING_AGE, ELDERLY = 1.6, 1.0, 1.4   # the vulnerability ratios (sim/world/demography.py)
@@ -46,21 +45,6 @@ class ExposureTests(unittest.TestCase):
             lost.append(1.0 - population.total / before)
         self.assertAlmostEqual(lost[0], 0.28)
         self.assertAlmostEqual(lost[1], 0.45)
-
-
-class WageTests(unittest.TestCase):
-    def test_wages_rise_by_the_scarcity_elasticity_times_the_shortfall_in_the_population_scale(self):
-        self.assertAlmostEqual(wage_index_of(1.0, 2.0, 0.55, 1.0), 1.0 + 2.0 * 0.45)
-
-    def test_no_shortfall_leaves_the_index_at_its_base(self):
-        self.assertEqual(wage_index_of(1.0, 2.0, 1.0, 1.0), 1.0)
-        self.assertEqual(wage_index_of(1.5, 2.0, 1.0, 1.0), 1.5)
-
-    def test_a_population_above_its_trend_does_not_pay_less(self):
-        self.assertEqual(wage_index_of(1.0, 2.0, 1.4, 1.0), 1.0)
-
-    def test_the_shortfall_is_read_against_the_unshocked_trend_not_against_one(self):
-        self.assertEqual(wage_index_of(1.0, 2.0, 1.2, 1.2), 1.0)
 
 
 class RecoveryTests(unittest.TestCase):

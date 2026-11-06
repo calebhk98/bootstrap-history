@@ -6,7 +6,7 @@ import types
 import unittest
 
 from sim.economy import taxes
-from sim.economy.accounts import Book
+from sim.book import Book
 from sim.economy.types import EDGE_EXTERNAL, EDGE_MINT, Transfer, external_edge
 from sim.economy.year_close import tax_facts
 from sim.economy.year_ledger import YearLedger
@@ -22,7 +22,7 @@ def facts_after(*postings, imports=(), exports=()):
         ledger.note_postings([transfer], "sales")
     setup = types.SimpleNamespace(currency_id="coin", working_hours_per_year=2000.0, unskilled_trade="labour",
                                   countries=lambda: ["home"])
-    record = types.SimpleNamespace(book=book, cohorts={})
+    record = types.SimpleNamespace(book=book, cohorts={}, producers={}, merchants={})
     return tax_facts(setup, record, types.SimpleNamespace(wage=lambda *_args: 0.0), ledger)
 
 

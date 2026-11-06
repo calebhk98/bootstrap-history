@@ -6,6 +6,7 @@ QUICK_TOPIC = True
 
 from .harness import check
 
+from sim.world import need_basket
 from sim.economy import households
 from sim.markets.port_setup import LITERACY_FIELDS, society_at_opening
 
@@ -16,7 +17,7 @@ NEED_DATA = {"needs": {
 
 
 def weights(civ_values):
-    return {need.need_id: (need.subsistence_per_person, need.budget_weight) for need in households.make_basket(NEED_DATA, {}, civ_values=civ_values).needs}
+    return {need.need_id: (need.subsistence_per_person, need.budget_weight) for need in need_basket.make_basket(NEED_DATA, {}, civ_values=civ_values).needs}
 
 
 opening = {"literacy": {"literacy_general": 0.1, "literacy_elite": 0.9}}

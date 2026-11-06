@@ -43,7 +43,6 @@ class MappingTests(unittest.TestCase):
         loaded = recipes.recipes_from_production_data(production_data())
         self.assertGreater(len(loaded), 250)
         self.assertTrue(all(isinstance(recipe, Recipe) and recipe.outputs for recipe in loaded.values()))
-        self.assertIn("land_hectare_years", recipes.unmapped_field_counts(production_data()))
 
 
 class DepthOrderTests(unittest.TestCase):

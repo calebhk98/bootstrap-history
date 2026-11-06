@@ -32,12 +32,12 @@ from `_save_listing` over there, so keeping it here would have made the
 save/load module import back from this one.
 """
 import sim.engine.ui_port as ui_port
-import gc, json, os, random, re, sys, time
+import gc, json, os, random, sys, time
 
 from sim.engine.ui_port import (
-    CIVDIR, civilization_ids, closure, critical_path, DEFAULTS, goal_catalog, selectable_goals,
-    load, load_civ, load_geography, money_short, money_unit_note, STARTING_KITS,
-    win_condition_describe)
+    CIVDIR, civilization_ids, closure, critical_path, DEFAULTS, selectable_goals, load, load_civ, load_geography,
+    money_short, money_unit_note, STARTING_KITS, win_condition_describe,
+)
 from sim.engine.ui_port import EconomyNotOpened, Sim
 from . import protocol as _protocol
 from sim.engine.ui_port import settings
@@ -57,16 +57,14 @@ from .protocol import (_agent_dispatch, _agent_end_reason, final_report,
 from sim.constants import declare
 from sim.seats.api import SetFounderLife
 
-# Session/session-file and display-preference helpers live in cli.py because
-# cli_agent.py needs the session helpers too, and _wrap/_apply_display_prefs
-# mutate a module-level _DISPLAY_WIDTH that only means what it says while it
-# stays beside the function that writes it - see cli.py's own comments on
-# both for the full reasoning.
+# Session and display-preference helpers shared with cli_agent.py live in cli_common.py.
 from .play_dice import dice_for_play
-from .cli import (ENDLESS_HORIZON_YEARS, HORIZON_MODES,
+from .sitting import Sitting
+from .cli_common import (ENDLESS_HORIZON_YEARS, HORIZON_MODES,
                   _apply_display_prefs, _civ_for_session, _goal_for_session,
                   _is_claimed_slot, _is_endless_horizon, _pick_session_filename,
-                  _resolve_horizon, _wrap, load_strategy)
+                  _resolve_horizon, _wrap)
+from sim.engine.ui_port import load_strategy
 
 # Save/load browsing and the civilisation list live in
 # cli_interactive_saveload.py - see this file's own docstring for why that
@@ -80,7 +78,7 @@ from .cli_interactive_saveload import (_ingame_load, _ingame_save_milestone,
 LINES_PUSHED_BACK = []
 
 
-def cmd_play(args):
+def cmd_play(args, carried_route_ids=()):
     """The game, typed, for a person at a keyboard.
 
     Parses a typed line into the SAME command the JSON protocol takes
@@ -99,15 +97,15 @@ def cmd_play(args):
     collecting = gc.isenabled()
     gc.disable()
     try:
-        return _play_sitting(args, collecting)
+        return _play_sitting(args, collecting, Sitting(carried_route_ids))
     finally:
         if collecting:
             gc.enable()
 
 
-def _play_sitting(args, collecting):
+def _play_sitting(args, collecting, sitting):
     """The body of `cmd_play`; `collecting` is whether cyclic collection was on before the sitting began."""
-    result = _play_init(args)
+    result = _play_init(args, sitting)
     if result == 1:
         return 1
     sim, nodes, session, app_cfg, fresh, kit = result
@@ -127,12 +125,12 @@ def _play_sitting(args, collecting):
 
     policy = SavePolicy(session, getattr(args, "save_interval", 0))
     try:
-        return _play_loop(sim, nodes, session, app_cfg, args, collecting, policy)
+        return _play_loop(sim, nodes, session, app_cfg, args, collecting, policy, sitting)
     finally:
         policy.flush(sim)
 
 
-def _play_loop(sim, nodes, session, app_cfg, args, collecting, policy):
+def _play_loop(sim, nodes, session, app_cfg, args, collecting, policy, sitting):
     """The typed-command loop of a sitting; `policy` decides when the session file is written."""
     commands_read = 0
     while True:
@@ -153,7 +151,7 @@ def _play_loop(sim, nodes, session, app_cfg, args, collecting, policy):
         if _word0 in SESSION_WORDS:
             policy.flush(sim)
         handled, session, should_exit, exit_value = _play_handle_session_command(
-            _word0, _tokens, sim, session, app_cfg, args)
+            _word0, _tokens, sim, session, app_cfg, args, sitting)
         if handled:
             if should_exit:
                 return exit_value
@@ -168,8 +166,8 @@ def _play_loop(sim, nodes, session, app_cfg, args, collecting, policy):
             break
         if cmd.get("cmd") == "quit":
             break
-        _play_report_end_if_new(sim, nodes, args)
-    return _play_finish(sim, nodes, args, session)
+        _play_report_end_if_new(sim, nodes, sitting)
+    return _play_finish(sim, nodes, sitting, session)
 
 
 DEFAULT_SEED_ENV = "ROME_DEFAULT_SEED"
@@ -187,7 +185,7 @@ def resolve_seed(asked):
     return random.SystemRandom().randrange(1, 2 ** 31)
 
 
-def _play_init(args):
+def _play_init(args, sitting):
     """Everything cmd_play needs before its loop can start. See
     _play_build_sim and _play_resolve_session for the two halves of this:
     building the Sim, then working out which save it resumes (if any).
@@ -197,11 +195,11 @@ def _play_init(args):
     straight through.
     """
     sim, nodes, session, app_cfg, kit, horizon = _play_build_sim(args, defer_economy=_resuming_a_save(args))
-    result = _play_resolve_session(args, sim, session)
+    result = _play_resolve_session(args, sim, session, sitting)
     if result is None:
         # the save could not stand in for the economy's opening; build the game the long way
         sim, nodes, session, app_cfg, kit, horizon = _play_build_sim(args)
-        result = _play_resolve_session(args, sim, session)
+        result = _play_resolve_session(args, sim, session, sitting)
     if result == 1:
         return 1
     session, fresh = result
@@ -272,9 +270,9 @@ def _play_build_sim(args, defer_economy=False):
     return sim, nodes, session, app_cfg, kit, horizon
 
 
-def _carry_known_routes(sim, args, nodes):
+def _carry_known_routes(sim, args, nodes, sitting):
     """Apply --known-routes (a file) or the wizard's carried ids to a fresh game."""
-    route_ids = list(getattr(args, "known_routes_ids", None) or [])
+    route_ids = list(sitting.carried_route_ids)
     route_file = getattr(args, "known_routes", None)
     if route_file:
         route_ids += replay.read_known_routes(route_file)
@@ -287,7 +285,7 @@ def _carry_known_routes(sim, args, nodes):
     print("   Carrying over %d known routes: the fog is lifted for them, nothing is given." % len(applied))
 
 
-def _play_resolve_session(args, sim, session):
+def _play_resolve_session(args, sim, session, sitting):
     """Resolve which save this sitting is actually playing: reject a
     --session path that does not exist and names no --civ (a typo, not an
     invitation to start fresh), load an existing save into sim, and fork a
@@ -337,7 +335,7 @@ def _play_resolve_session(args, sim, session):
         else:
             print("Resumed from %s: %d AD." % (session, sim.view("year")()))
     # after the load, so a resumed game keeps its carried routes (the load restores its own)
-    _carry_known_routes(sim, args, sim.view("tree_nodes")())
+    _carry_known_routes(sim, args, sim.view("tree_nodes")(), sitting)
 
     if (fresh or checkpoint_source) and session:
         # WRITE IT NOW, not after the first command. The menu tells the player
@@ -447,7 +445,7 @@ def _play_prompt(sim):
                  sim.view("standing")()["reputation"]))
 
 
-def _play_handle_session_command(_word0, _tokens, sim, session, app_cfg, args):
+def _play_handle_session_command(_word0, _tokens, sim, session, app_cfg, args, sitting):
     """The six commands cmd_play answers itself, before a line ever reaches
     parse_typed/_agent_dispatch: bare "options"/"settings", bare "saves",
     bare "save", bare "load", bare "menu" and bare "restart". Everything
@@ -485,7 +483,7 @@ def _play_handle_session_command(_word0, _tokens, sim, session, app_cfg, args):
         _ingame_save_milestone(sim, session)
         return True, session, False, None
     if _word0 == "load" and len(_tokens) == 1:
-        return True, _ingame_load(app_cfg, sim, session, args), False, None
+        return True, _ingame_load(app_cfg, sim, session, sitting), False, None
     if _word0 == "menu" and len(_tokens) == 1:
         # NOT A LOSS. This game has already been saved after every
         # command that reached this point (see "SAVE FIRST, THEN SPEAK"
@@ -604,10 +602,10 @@ def _play_run_one_command(sim, nodes, cmd, session, policy):
     return False
 
 
-def _play_report_end_if_new(sim, nodes, args):
+def _play_report_end_if_new(sim, nodes, sitting):
     """Print the scoreboard the first time this sitting notices the game
     has ended (horizon reached, goal won, or founder dead). Fires at most
-    once per sitting; args._said_end marks that it already has.
+    once per sitting; sitting.said_end marks that it already has.
     """
     # NOT A BREAK: ending the process the moment the horizon is reached
     # would drop a player back to the shell unable to read their own final
@@ -615,8 +613,8 @@ def _play_report_end_if_new(sim, nodes, args):
     # the game on once it has ended; what is left is looking at it, which
     # is the whole point of finishing.
     end = _agent_end_reason(sim)
-    if end and not getattr(args, "_said_end", False):
-        args._said_end = True
+    if end and not sitting.said_end:
+        sitting.said_end = True
         # THE SCOREBOARD, not one sentence. See protocol.final_report.
         print(render_final(final_report(sim, nodes)))
         print()
@@ -628,13 +626,13 @@ def _play_report_end_if_new(sim, nodes, args):
         print()
 
 
-def _play_finish(sim, nodes, args, session):
+def _play_finish(sim, nodes, sitting, session):
     """What cmd_play prints and returns once its loop has actually ended -
     'quit', or a piped reader hanging up. Shows the scoreboard if the game
     reached its end and this sitting has not already shown it, then the
     same closing lines cmd_play has always ended with.
     """
-    if _agent_end_reason(sim) and not getattr(args, "_said_end", False):
+    if _agent_end_reason(sim) and not sitting.said_end:
         print(render_final(final_report(sim, nodes)))
         print()
     print("Ended %d AD. %s" % (sim.view("year")(), _agent_end_reason(sim) or "stopped"))
@@ -649,11 +647,10 @@ def _play_finish(sim, nodes, args, session):
     return 0
 
 
-# THE SAME FLOOR core.py's Sim.__init__ APPLIES AT YEAR ZERO (see
-# _ingame_options below, "THE SAME DRAW core.py's Sim.__init__ makes"), kept
-# as its own declared name because core.py has not migrated its own copy to
-# declare() yet - two independent literals with the same value, not one
-# shared source, so a change to one will not reach the other.
+# The floor under the remaining-life draw made when mortality is switched on
+# in game (see _ingame_options below). The year-zero draw takes its floor from
+# the `founder_life_terms` view; this is a separate declared value, so a change
+# to one will not reach the other.
 INGAME_MORTALITY_MIN_REMAINING_LIFE_YEARS = declare(
     "INGAME_MORTALITY_MIN_REMAINING_LIFE_YEARS", 5, kind="temporary_heuristic",
     unit="years", source=None, confidence="D",
@@ -707,7 +704,7 @@ def _ingame_options(sim, session):
               % (sim.view("civilisation")().get("name", sim.view("civilisation")().get("id", "?")), sim.view("game_config")()["start_year"]))
         print("   fog of war   : %-3s                          (fixed for this game)"
               % ("on" if sim.view("fog_of_war")() else "off"))
-        print("   fuzzy estimates : %-3s" % ("on" if sim.view("legacy_fuzzy_estimates")() else "off"))
+        print("   fuzzy estimates : %-3s" % ("on" if sim.view("fuzzy_estimates")() else "off"))
         print("   mortality    : %s"
               % ("on - the founder ages, and can die of it" if mortal_on
                  else "off - the founder does not age"))
@@ -731,7 +728,7 @@ def _ingame_options(sim, session):
         if session:
             print("   3) move this save to a different file")
         print("   f) turn fuzzy estimates on from now on%s"
-              % ("  (already on)" if sim.view("legacy_fuzzy_estimates")() else ""))
+              % ("  (already on)" if sim.view("fuzzy_estimates")() else ""))
         print("   u) display units (%s)"
               % cli_units_options.summary_line(settings.load_config()))
         print("   b) back to the game")
@@ -791,13 +788,10 @@ def _ingame_options(sim, session):
                         "of a life without."))
             confirm = _ask("   Turn mortality on now? [y/N] ", ["y", "n"], "n")
             if confirm == "y":
-                # THE SAME DRAW core.py's Sim.__init__ makes for a mortal
-                # founder at year zero (self.life_left = ... rng.gauss(...)),
-                # made here instead because that constructor only ever runs
-                # once, at the start of the game, and this founder is
-                # choosing to become mortal partway through it. See core.py
-                # around "founder remaining lifespan" for the line this
-                # mirrors.
+                # The same kind of draw Sim.__init__ makes for a mortal
+                # founder at year zero (sim/engine/core.py, "founder remaining
+                # lifespan"), made here because that runs once at the start
+                # and this founder is becoming mortal partway through.
                 mean = sim.view("game_config")().get("founder_life_mean", DEFAULTS["founder_life_mean"])
                 std_dev = sim.view("game_config")().get("founder_life_sd", DEFAULTS["founder_life_sd"])
                 sim.view("game_config")()["immortal"] = False
@@ -810,7 +804,7 @@ def _ingame_options(sim, session):
             cli_units_options.edit_display_units(
                 settings.load_config(), sim.view("civilisation")().get("id"), input)
 
-        elif word in ("f", "fuzzy") and not sim.view("legacy_fuzzy_estimates")():
+        elif word in ("f", "fuzzy") and not sim.view("fuzzy_estimates")():
             # One-way like mortality, unlike fog: turning it on only hides
             # detail from now on, but turning it off would reveal exact
             # figures the player was told to treat as uncertain.
@@ -862,7 +856,7 @@ def _ingame_options(sim, session):
 
 
 # THE SAME DEFAULT sim/polity/constants.py DECLARES AS EMINENCE_DANGER_WEIGHT_DEFAULT
-# (0.5) - kept as its own name because this file has no Sim/SocietyMixin
+# (0.5) - kept as its own name because this file has no Sim
 # instance to read that constant from (cmd_civs works from the raw civ JSON
 # files directly, before any game has started), same shape as
 # INGAME_MORTALITY_MIN_REMAINING_LIFE_YEARS just above.
@@ -894,7 +888,6 @@ def cmd_civs(args):
         # Files starting with "_" are schema/reference data, not a playable
         # civilization (e.g. _TECH_EFFECTS.json), same convention this file
         # already uses everywhere else for "_"-prefixed keys and entries.
-        civ_filename = civilization_id + ".json"
         civ_data = load_civ(civilization_id)
         value = civ_data["values"]
         print("%-16s %s" % (civ_data["id"], _civ_title(civ_data)))
@@ -1036,8 +1029,7 @@ def _new_game(civs, cfg, known_routes=None):
     args.fuzzy_estimates = (fuzzy == "y")
     args.session = session
     args.manual = True
-    args.known_routes_ids = known_routes
-    return cmd_play(args)
+    return cmd_play(args, known_routes or ())
 
 
 

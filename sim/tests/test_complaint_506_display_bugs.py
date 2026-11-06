@@ -3,7 +3,6 @@ name, a list of known materials) called on values built here; the subject of mos
 QUICK_TOPIC = True
 
 import unittest
-from types import SimpleNamespace
 from unittest import mock
 
 from sim.agents.group import InterestGroup
@@ -117,6 +116,7 @@ class MarketReportTests(unittest.TestCase):
                                                         "rows": [{"material": only}] if only else []}
         with mock.patch.object(market_report, "priceable_materials", lambda sim: self.KNOWN), \
                 mock.patch.object(market_report, "material_rows", rows), \
+                mock.patch.object(market_report, "trade_rows", lambda sim: {"orders": [], "traded": {"bought": {}, "sold": {}}}), \
                 mock.patch.object(market_report, "wage_rows", lambda sim: [{"trade": "smith"}]):
             return market_report.market_report(None, **keywords)
 

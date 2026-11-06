@@ -17,24 +17,25 @@ import dataclasses
 import math
 from typing import List, Optional, Sequence, Tuple
 
-from . import entry_trial, price_setting
+from . import price_setting
 from . import unit_cost as run_cost
 from .ask_adjust import ASK_BAND_CEILING, band_edge
 from .market_memory import market_key
 from .producers import expected_output_prices, live_input_prices, live_wages
 from .types import Bid, Offer
+from .rates import own_rate
 
 
 def unit_cost(setup, record, view, offer: Offer) -> Optional[float]:
-    """What one unit of the offer's good costs its producer to make at today's prices (infinite when that
-    cannot be priced); None for a seller that is not a producer."""
+    """What one unit of the offer's good costs its producer to make at today's prices, its own yield and rent and the
+    live interest rate on its plant (infinite when that cannot be priced); None for a seller that is not a producer."""
     producer = record.producers.get(offer.seller)
     if producer is None:
         return None
     recipe = setup.recipes[producer.recipe_id]
-    return entry_trial.full_cost_per_unit(
+    return run_cost.full_cost_per_unit(
         recipe, offer.good, expected_output_prices(producer, recipe, view), live_input_prices(producer, recipe, view),
-        live_wages(producer, recipe, view), 0.0, producer.land_rent_per_run, producer.yield_factor)
+        live_wages(producer, recipe, view), own_rate(view, setup.currency_id), producer.land_rent_per_run, producer.yield_factor)
 
 
 def input_share_of_cost(setup, record, view, offer: Offer) -> float:
@@ -131,7 +132,7 @@ def strategic_offers(setup, record, view, bids: Sequence[Bid], offers: Sequence[
             producer = record.producers[offer.seller]
             recipe = setup.recipes[producer.recipe_id]
             asked = expected_ask(offer.reservation_price, expected_output_prices(producer, recipe, view).get(offer.good),
-                                 offer.quantity, producer.expected_sales * recipe.outputs.get(offer.good, 0.0))
+                                 offer.quantity, producer.expected_sales * producer.yield_factor * recipe.outputs.get(offer.good, 0.0))
             if asked != offer.reservation_price:
                 offers[index] = dataclasses.replace(offer, reservation_price=asked)
             continue
@@ -157,7 +158,7 @@ def market_size(record, offer: Offer) -> Optional[float]:
     usual = record.memory.volume_weights.get(key)
     if usual is None:
         return None
-    return usual + record.unmet.get(key, 0.0)
+    return usual + record.goods.unmet.get(key, 0.0)
 
 
 def rivals_of(record, offers: Sequence[Offer], index: int) -> List[Tuple[float, float]]:

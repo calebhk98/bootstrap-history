@@ -6,9 +6,9 @@ import types
 import unittest
 
 from sim.agents import policy_land
-from sim.agents.policy import CallbackPolicy
+from sim.agents.policy import CallbackPolicy, ValuePolicy
 from sim.economy import tax_farming
-from sim.economy.accounts import Book
+from sim.book import Book
 from sim.economy.market_memory import MarketMemory
 from sim.economy.record import EconomyRecord
 from sim.economy.taxes import TaxForm
@@ -16,14 +16,17 @@ from sim.economy.types import CurrencySpec, Transfer
 
 MONEY = "coin"
 STATE = "state:test"
+NOT_THE_ECONOMYS_AGENTS = ("staff:escrow", "bank:b")
 POLL = TaxForm("poll", "adult_labour_years", 0.05)
 
 
 def bidding_record(base=1000.0, state_take=40.0, cash=None):
     record = EconomyRecord(book=Book(), memory=MarketMemory(), currency=CurrencySpec(MONEY, "fiat", None, 0.0, None))
-    record.tax_history = {"poll": {"base": base, "state_take": state_take}}
+    record.taxes.tax_history = {"poll": {"base": base, "state_take": state_take}}
     for agent, amount in (cash or {"rich": 500.0, "poor": 5.0}).items():
         record.book.transfer(Transfer("edge:legacy", agent, MONEY, amount, "opening"))
+        if agent not in NOT_THE_ECONOMYS_AGENTS:
+            record.merchants[agent] = None   # the economy's own agents; only the names matter here
     return record
 
 
@@ -39,9 +42,13 @@ class BidTests(unittest.TestCase):
         self.assertAlmostEqual(offers[0][0], 0.05 * 1000.0 * tax_farming.TAX_FARMER_REACH / 1.1)
         self.assertEqual(offers[1][0], 5.0)
 
+    def test_an_escrow_account_or_a_banks_cash_does_not_bid(self):
+        record = bidding_record(cash={"staff:escrow": 900.0, "bank:b": 900.0, "rich": 500.0})
+        self.assertEqual([agent for _price, _cash, agent in tax_farming.bids(record, POLL, 0.1, STATE, MONEY)], ["rich"])
+
     def test_nobody_bids_without_a_year_of_history(self):
         record = bidding_record()
-        record.tax_history = {}
+        record.taxes.tax_history = {}
         self.assertEqual(tax_farming.bids(record, POLL, 0.1, STATE, MONEY), [])
 
     def test_the_best_bid_wins_and_pays_the_state_at_once(self):
@@ -70,19 +77,29 @@ class RememberYearTests(unittest.TestCase):
         return types.SimpleNamespace(form=form, base_value=base, collected_value=collected)
 
     def test_a_year_of_tax_leaves_the_forms_base_and_the_states_take_in_the_record(self):
-        record = types.SimpleNamespace(tax_history={})
-        tax_farming.remember_year(record, [self.assessment("poll", 1000.0, 40.0)], (), 0.5)
-        self.assertEqual(record.tax_history, {"poll": {"base": 1000.0, "state_take": 40.0}})
+        taxes = types.SimpleNamespace(tax_history={})
+        tax_farming.remember_year(taxes, [self.assessment("poll", 1000.0, 40.0)], (), 0.5)
+        self.assertEqual(taxes.tax_history, {"poll": {"base": 1000.0, "state_take": 40.0}})
 
     def test_a_farmed_forms_take_is_scaled_from_the_farmers_reach_back_to_the_states(self):
-        record = types.SimpleNamespace(tax_history={})
-        tax_farming.remember_year(record, [self.assessment("poll", 1000.0, 90.0)], ("poll",), 0.5, reach=0.9)
-        self.assertAlmostEqual(record.tax_history["poll"]["state_take"], 90.0 * 0.5 / 0.9)
+        taxes = types.SimpleNamespace(tax_history={})
+        tax_farming.remember_year(taxes, [self.assessment("poll", 1000.0, 90.0)], ("poll",), 0.5, reach=0.9)
+        self.assertAlmostEqual(taxes.tax_history["poll"]["state_take"], 90.0 * 0.5 / 0.9)
+
+
+class FarmedAssessTests(unittest.TestCase):
+    def test_the_state_is_not_taxed_for_the_farmer_when_it_is_named_exempt(self):
+        from sim.economy import taxes
+        from sim.economy.taxes_bases import YearFacts
+        facts = YearFacts(currency=MONEY, cash={STATE: 900.0, "farmer": 50.0, "rich": 100.0})
+        form = TaxForm("hoard", "coin_stock", 0.1)
+        transfers, _moves, _assessments = taxes.assess([form], facts, "farmer", {}, 1.0, None, None, frozenset({STATE}))
+        self.assertEqual([(each.payer, each.payee) for each in transfers], [("rich", "farmer")])
 
 
 class StateChoiceTests(unittest.TestCase):
     class State:
-        decision_policy = None
+        decision_policy = ValuePolicy()
 
     def test_a_state_with_the_default_policy_farms_nothing(self):
         self.assertEqual(policy_land.farmed_forms(self.State(), ["poll"]), [])

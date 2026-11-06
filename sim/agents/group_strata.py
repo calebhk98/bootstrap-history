@@ -93,7 +93,7 @@ def stratum_sectors(strata: List[Any], world: Any) -> List[Sector]:
 	rents fell, each by the fall measured; and, for the part of a stratum's fall in welfare those do not
 	explain, one sector of falling incomes. The people are its own."""
 	sectors = []
-	food_cost = world.subsistence_cost_per_person_year()
+	food_cost = world.people.subsistence_cost_per_person_year()
 	holders = property_holders(strata)
 	for stratum in strata:
 		record = stratum.record

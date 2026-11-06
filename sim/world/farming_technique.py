@@ -1,6 +1,6 @@
 """A society's farming technique, derived from the technologies it holds.
 
-Standalone like sim.world.agriculture: no engine imports. Each technology
+Standalone like sim.world.agriculture_core: no engine imports. Each technology
 that changes how food is grown points at an entry in the agriculture tables
 (rotation, toolkit, crop); a society's technique is those entries, each
 weighted by how much of the society has adopted the technology.
@@ -25,7 +25,7 @@ def entries_by_axis(declarations):
     """Group technology declarations into {axis: {node id: table entry}}.
 
     A declaration is {"axis": "rotation"|"toolkit"|"crop", "entry": <name of an
-    entry in sim.world.agriculture>}, taken from a node's `farming_technique`.
+    entry in sim.world.agriculture_core>}, taken from a node's `farming_technique`.
     """
     grouped = {"rotation": {}, "toolkit": {}, "crop": {}}
     for node_id, declaration in declarations.items():
@@ -56,7 +56,7 @@ def _blend(base, other, share):
     fields = {name: value + share * (getattr(other, name) - value)
               for name, value in base._asdict().items()
               if isinstance(value, (int, float))}
-    if share >= 0.5 and hasattr(other, "name"):
+    if share >= 0.5 and "name" in other._fields:
         fields["name"] = other.name   # the entry the society has mostly taken up
     return base._replace(**fields)
 

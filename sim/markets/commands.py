@@ -1,26 +1,18 @@
 """Commands to the owner of the goods market and the agent economy's orders (the markets module)."""
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Optional
 
 from sim.assembly.api import Command
 
 
 @dataclass(frozen=True)
 class ResetDraws(Command):
-    """Start a fresh count of what running works draw from the market's standing offer this year."""
+    """Start a fresh count of what the acting seat's running works draw from the market's standing offer this year."""
 
 
 @dataclass(frozen=True)
 class NoteDraw(Command):
-    """Running works used `tonnes` of a commodity the seat neither held nor made; nothing for tonnes that are not positive."""
-    commodity: str
-    tonnes: float
-
-
-@dataclass(frozen=True)
-class NotePurchase(Command):
-    """The acting seat bought `tonnes` of a commodity at the market this year (counted in the book; the money and the
-    goods move by the ledger's commands); nothing for tonnes that are not positive."""
+    """The acting seat's running works used `tonnes` of a commodity it neither held nor made; nothing for tonnes that are not positive."""
     commodity: str
     tonnes: float
 
@@ -63,11 +55,6 @@ class MoveGoods(Command):
 
 
 @dataclass(frozen=True)
-class OpenMarketBook(Command):
-	"""Every commodity the price table names gets its book entry, at the society's present output."""
-
-
-@dataclass(frozen=True)
 class RenameMarketSeat(Command):
 	"""A seat moved to another id: its place in the year's flows, the agent economy's books and the goods market's seat
 	parties follows."""
@@ -76,24 +63,34 @@ class RenameMarketSeat(Command):
 
 
 @dataclass(frozen=True)
-class MarkMoneyPricedAtEconomy(Command):
-	"""The game's money is now counted at the agent economy's unskilled wage."""
-
-
-@dataclass(frozen=True)
 class BuyMaterial(Command):
-	"""The acting seat buys `tonnes` of a material at the market (cut to what is offered and affordable); answers the tonnes
-	bought."""
+	"""The acting seat orders `tonnes` of a material at the year's clearing, paying the market no more than `limit_per_tonne` (the
+	quote's price when None); carriage to the seat is charged on top when the goods arrive, unless `limit_includes_carriage` says
+	the limit already counts it. `project` tags an order a project waits for; `cost_factor` is the project's opposition and
+	geography factor on the money. Answers the posted order, or a refusal; the goods arrive when the year clears."""
 	material: str
 	tonnes: float
+	limit_per_tonne: Optional[float] = None
+	project: Optional[str] = None
+	cost_factor: float = 1.0
+	limit_includes_carriage: bool = False
 
 
 @dataclass(frozen=True)
 class SellMaterial(Command):
-	"""The acting seat sells `tonnes` of its stock of a material at the market (cut to what is held and absorbed); answers
-	the tonnes sold."""
+	"""The acting seat offers `tonnes` of its stock of a material at the year's clearing, taking no less than `limit_per_tonne`
+	(the quote when None). Answers the posted order, or a refusal; the proceeds arrive when the year clears."""
 	material: str
 	tonnes: float
+	limit_per_tonne: Optional[float] = None
+
+
+@dataclass(frozen=True)
+class CancelMaterialOrders(Command):
+	"""The acting seat withdraws its posted orders to `side` ("buy" or "sell") a material before the year clears. Nothing was
+	paid or moved yet. Answers {"cancelled": count, "tonnes": total}, or a refusal when the seat has no such order."""
+	side: str
+	material: str
 
 
 @dataclass(frozen=True)

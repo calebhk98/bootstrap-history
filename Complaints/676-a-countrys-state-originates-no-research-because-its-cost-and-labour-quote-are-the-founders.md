@@ -6,7 +6,7 @@ Follow-up to Complaint 649. The hands a country's actor can put on research are 
 (`CountryCrewView.research_hands`), but `Government.researches` (`sim/agents/government.py`) is still true for the home state alone, so
 a country's state copies research it sees and does not originate it. Turning it on would price the work at home figures:
 
-- `research_cost` and `copy_cost` (`sim/engine/agents_port_research.py`, `agents_port.py`) walk the founder's materials and labour at
+- `research_cost` and `copy_cost` (`sim/actors/world_research.py`, `sim/actors/world.py`) walk the founder's materials and labour at
   home prices, and `research.plan` subtracts a labour bill priced by `world.labour_market.quote`, which a `CountryWorld` forwards to
   the home market (firms of a country already research on this path).
 - `Actor.copy_budget` is read in the founder's money.

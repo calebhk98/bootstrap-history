@@ -3,7 +3,6 @@ from an ordinary concern, and the first training of a new trade says hiring is a
 the dispatcher calls it. The membership rule (`CAPABILITY_INSTITUTIONS`) is data from the `capability` mechanic, tested in
 test_round8g_display."""
 import unittest
-from types import SimpleNamespace
 
 from sim.refusal import LogLine
 
@@ -24,7 +23,7 @@ def _ventures_stand_in(idle):
     return Game(
         CAPABILITY_INSTITUTIONS=frozenset({CAPABILITY}), FOUNDER_IS_WORTH=1.0, founder_alive=True, view=lambda name: (lambda: {"artisans": 2.0}),
         done=set(idle), operating=set(), labour=labour, policy={}, year=100, capital=1000.0,
-        state=Game(projects=Game(keep_staffed=set()), acting_record=Game(seat_progress=Game(_said_explanations=None))),
+        state=Game(projects=Game(keep_staffed=set()), acting_record=Game(seat_progress=Game(said_explanations=None))),
         is_venture=lambda node_id: True, venture_capex=lambda node_id: 100.0, venture_staff_free=lambda: (1.0, 1.0),
         venture_staff_used=lambda: (0.0, 0.0), venture_staff_who_is_watching_what=lambda: [],
         venture_forecast_basis=lambda node_id: "forecast", venture_sale_basis=lambda node_id: "sale",

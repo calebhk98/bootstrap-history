@@ -7,37 +7,54 @@ import types
 import unittest
 from sim.tests import workforce_stand_in
 
-from sim.refusal import cause_of, facts_of
-from sim.labour.labour_wage_ledger import WageLedgerMixin
+from sim.refusal import Refusal, cause_of, facts_of
+from sim.labour.labour_wages import Wages
 from sim.ui.proto.dispatch_labour import _cmd_work
 from sim.tests import event_stand_in
 from sim.tests.ui_stand_in import StandIn
 from sim.workforce.api import WorkForWages
+from sim.workforce.state import WorkforceSeat
 
 
 def household(**fields):
-    books = dict(wage_hours_this_year=0.0, wage_income_this_year=0.0, wages_earned=0.0, wage_work_last_year=None, log=[], capital=100.0)
-    books.update(fields)
-    return types.SimpleNamespace(**books)
+    hours = fields.pop("hours_offered", 0.0)
+    seat = WorkforceSeat(hours_offered_for_wages={"scribe": hours} if hours else {})
+    seat.log, seat.capital = [], 100.0
+    for name, value in fields.items():
+        setattr(seat, name, value)
+    return seat
 
 
-class Books(WageLedgerMixin):
-    """The household's books and the little of the world the ledger reads."""
+class Books:
+    """The wages part over the household's books and the little of the world the ledger reads."""
 
     def __init__(self, held=None, year=100):
         self.held = held or household()
         self._world = workforce_stand_in.World(
-            workforce=self.held, view=workforce_stand_in.view_of(self.held), year=year,
+            workforce=self.held,
             state=types.SimpleNamespace(household=self.held, scenario=types.SimpleNamespace(year=year)),
-            plain_number=lambda number: "%g" % number, money_text=lambda money, grouped=False, short=False: "%g" % money,
+            game=types.SimpleNamespace(year=year, plain_number=lambda number: "%g" % number, money_text=lambda money, grouped=False, short=False: "%g" % money),
             logged_events=lambda: len(self.held.log))
         event_stand_in.stood_in(self._world)
+        self.wages = Wages(self._world, book=None, hours=None, market=None, trades=None)
+        self.wages.work_for_wages = lambda trade, hours, commit=True: self.work_for_wages(trade, hours, commit)
 
-    def work_for_wages(self, trade, hours):
+    def wage_work_this_year(self):
+        return self.wages.wage_work_this_year()
+
+    def log_wage_work(self, trade, hours, pay):
+        return self.wages.log_wage_work(trade, hours, pay)
+
+    def close_wage_year(self):
+        return self.wages.close_wage_year()
+
+    def work_for_wages_dry_run(self, trade, hours):
+        return self.wages.work_for_wages_dry_run(trade, hours)
+
+    def work_for_wages(self, trade, hours, commit=True):
         self.held.capital += 30.0
-        self.held.wage_hours_this_year += hours
-        self.held.wage_income_this_year += 30.0
-        self.held.wages_earned += 30.0
+        offered = self.held.hours_offered_for_wages
+        offered[trade] = offered.get(trade, 0.0) + hours
         self.held.log.append((100, "sold"))
         return 30.0, None
 
@@ -46,9 +63,9 @@ class ThisYearsWageWork(unittest.TestCase):
     def test_no_hours_sold_gives_an_empty_summary(self):
         self.assertEqual(Books().wage_work_this_year(), {})
 
-    def test_the_summary_is_the_hours_sold_and_the_wage_income_and_nothing_displaced(self):
-        summary = Books(household(wage_hours_this_year=1500.0, wage_income_this_year=312.46)).wage_work_this_year()
-        self.assertEqual(summary, {"hours": 1500.0, "wage_income": 312.5})
+    def test_the_summary_is_the_hours_offered(self):
+        summary = Books(household(hours_offered=1500.0)).wage_work_this_year()
+        self.assertEqual(summary, {"hours": 1500.0})
 
     def test_a_sale_is_logged_as_wage_work_sold_with_its_trade_hours_and_pay(self):
         books = Books()
@@ -59,11 +76,11 @@ class ThisYearsWageWork(unittest.TestCase):
 
 
 class ClosingTheYear(unittest.TestCase):
-    def test_this_years_books_become_last_years_with_the_year_and_are_cleared(self):
-        books = Books(household(wage_hours_this_year=1000.0, wage_income_this_year=200.0), year=101)
+    def test_this_years_books_become_last_years_with_the_year(self):
+        books = Books(household(hours_offered=1000.0), year=101)
         books.close_wage_year()
-        self.assertEqual(books.held.wage_work_last_year, {"hours": 1000.0, "wage_income": 200.0, "year": 101})
-        self.assertEqual((books.held.wage_hours_this_year, books.held.wage_income_this_year), (0.0, 0.0))
+        self.assertEqual(books.held.wage_work_last_year, {"hours": 1000.0, "wage_income": 0.0, "year": 101})
+        self.assertEqual(books.held.wage_hours_this_year, 1000.0)     # the offers stay until the clearing spends them
 
     def test_a_year_with_no_wage_work_leaves_no_summary(self):
         books = Books(household(wage_work_last_year={"hours": 5.0}))
@@ -88,18 +105,18 @@ class WorkCommand(unittest.TestCase):
     def test_a_preview_states_the_wage_and_says_nothing_changed(self):
         reply = _cmd_work(self.game(), {}, {"cmd": "work", "trade": "scholar", "hours": 1500, "preview": True}, None)
         self.assertTrue(reply["preview"] and reply["nothing_changed"])
-        self.assertEqual(reply["earned"], 312.5)
+        self.assertEqual(reply["expected_pay"], 312.5)
 
     def test_the_work_reports_the_same_wage_the_preview_did(self):
         game = self.game()
         preview = _cmd_work(game, {}, {"cmd": "work", "trade": "scholar", "hours": 1500, "preview": True}, None)
         done = _cmd_work(game, {}, {"cmd": "work", "trade": "scholar", "hours": 1500}, None)
-        self.assertEqual(done["earned"], preview["earned"])
+        self.assertEqual(done["expected_pay"], preview["expected_pay"])
         self.assertNotIn("preview", done)
 
     def test_a_refused_sale_is_not_ok_and_earns_nothing(self):
         game = self.game()
-        game.answers[WorkForWages] = (0.0, "hours must be greater than zero")
+        game.answers[WorkForWages] = (0.0, Refusal("hours_not_positive", "hours must be greater than zero"))
         reply = _cmd_work(game, {}, {"cmd": "work", "trade": "scholar", "hours": 0}, None)
         self.assertIs(reply["ok"], False)
 

@@ -9,12 +9,12 @@ from sim.demography.api import StepPopulation
 from sim.finance.api import (ChargeInterest, EnforceCreditLimit, JudgeInsolvency, ServeBondageYear, ShedLossMakers,
                              WarnNearLimit)
 from sim.hazards.api import RecoverOutput
-from sim.ledger.api import PayEdge, PayWages, ReceiveFromEdge
-from sim.markets.api import OpenMarketBook
+from sim.ledger.api import UNPAID_CHARGE_KIND, PayWages, ReceiveFromEdge, pay_edge_or_log
 from sim.polity.api import CloseStandingYear, RenewStanding
 from sim.projects.api import (AdvanceProjects, AutoOpenVentures, CloseLapsedDependents, CloseSpendYear, CloseUnstaffedVentures, NoteVentureYear,
                               ReopenRestaffedVentures)
-from sim.reporting.api import RecordAutomation
+from sim.refusal import Refusal, cause_of
+from sim.reporting.api import RecordAutomation, RecordEvent
 from sim.resources.api import AutoMothballMines, NoteMineCostPaid
 from sim.workforce.api import (AutoBuyPeople, AutoManumit, ChargeLivingCost, CloseHoursYear, FadeMarketPressure,
                                TakeWageFallback)
@@ -43,26 +43,37 @@ def begin_world_year(sim):
 	"""What the society notes before the year starts."""
 	node_rederive.refresh_derived_nodes(sim)
 	refresh_farm_territory(sim)
-	sim.send(OpenMarketBook())   # every book entry opens at the year's start, so a read before the first step cannot open one at another state
+
+
+def pay_wages_or_log(send, amount, purpose):
+	"""Send the acting seat's wage payment: None when paid. A refusal is logged as an `unpaid_charge` event and comes back, so
+	the caller does not count the wages as paid."""
+	refusal = send(PayWages(amount, purpose))
+	if not isinstance(refusal, Refusal):
+		return None
+	send(RecordEvent.of(UNPAID_CHARGE_KIND, "could not pay %s: %s" % (purpose, refusal),
+	                    edge=edges.EDGE_WORKERS, amount=amount, purpose=str(purpose), cause=cause_of(refusal)))
+	return refusal
 
 
 def money_seat(sim):
 	"""The acting seat's takings, costs, credit and insolvency."""
-	view, send, state = sim.view, sim.send, sim.state
+	view, send = sim.view, sim.send
 	living_cost = view("living_cost")(None, None, None)
 	living_cost = send(ChargeLivingCost(living_cost, view("dependants_beyond_means")(
 		living_cost, view("revenue_estimate")(), view("upkeep")(), view("mine_operating_cost")())))
 	mine_cost = view("mine_operating_cost")()
-	send(NoteMineCostPaid(mine_cost))
 	revenue, upkeep = view("revenue_estimate")(), view("upkeep")()
 	keeping_owed, keeping = view("coin_keeping_due")(revenue, upkeep, living_cost, mine_cost)
-	# the concerns the clearing pays are credited when it clears (economy_port_year `_settle_seats`)
+	# the concerns the clearing pays are credited when it clears (sim/markets/port_seats.py `settle_seats`)
 	send(ReceiveFromEdge(edges.EDGE_CUSTOMERS, view("estimated_revenue")(), "venture revenue"))
-	send(PayEdge(edges.EDGE_SUPPLIERS, upkeep, "running costs of concerns"))
-	send(PayWages(living_cost, "living costs"))
-	send(PayEdge(edges.EDGE_SUPPLIERS, mine_cost, "mine running costs"))
-	send(PayEdge(edges.EDGE_COIN_GUARDS, keeping, "keeping coin under guard"))
-	send(ChargeHouseholdTheft(keeping, keeping_owed))
+	# a charge the seat cannot pay is logged with its cause (the credit steps below judge the seat); unguarded coin is not guarded
+	pay_edge_or_log(send, edges.EDGE_SUPPLIERS, upkeep, "running costs of concerns")
+	pay_wages_or_log(send, living_cost, "living costs")
+	if pay_edge_or_log(send, edges.EDGE_SUPPLIERS, mine_cost, "mine running costs") is None:
+		send(NoteMineCostPaid(mine_cost))
+	keeping_paid = keeping if pay_edge_or_log(send, edges.EDGE_COIN_GUARDS, keeping, "keeping coin under guard") is None else 0.0
+	send(ChargeHouseholdTheft(keeping_paid, keeping_owed))
 	send(AutoMothballMines())
 	# staff hired or taught this year get first claim on reclaiming what attrition shut, before anything is judged still short and closed again
 	year = sim.year

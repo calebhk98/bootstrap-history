@@ -108,7 +108,7 @@ heirs = state.seats["heir"].modules["seats"]
 party = HouseholdParty("heir", types.SimpleNamespace(dealing=lambda field: getattr(heirs, field), store_dealing=lambda field, value: None))
 check("HouseholdParty: the acting seat's actor is the heir, with the heir's patents and shares",
       party.actor_id == "heir" and party.record.patents == {"loom": {"granted": 1, "expires": 20, "licensees": ["third"]}}
-      and party.record.holdings == {"guild": 3.0}, party.actor_id)
+      and party.record.shares_held == {"guild": 3.0}, party.actor_id)
 
 # ---- the save of that state
 blob = saved(post_handover_state())

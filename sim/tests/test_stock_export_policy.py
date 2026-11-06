@@ -38,7 +38,8 @@ check("a draw inside the chance is caught and one outside is not",
 
 # ---- the export policy decides -------------------------------------------------------------
 def actor_with(monopolies, policy=None):
-    return SimpleNamespace(record=SimpleNamespace(state_monopolies=set(monopolies)), decision_policy=policy)
+    """A state as the cast makes it: it decides exports by the export policy unless a test gives it another."""
+    return SimpleNamespace(record=SimpleNamespace(state_monopolies=set(monopolies)), decision_policy=policy or ExportPolicy())
 
 
 check("a state with no monopoly sells what it is asked to",
@@ -65,16 +66,16 @@ state = registry.actors["government:far"]
 check("a country's state starts with the monopolies its data lists", state.record.state_monopolies == {"eggs"},
       state.record.state_monopolies)
 check("a state without any starts with none", registry.actors["government:alpha"].record.state_monopolies == set())
-check("the state decides through its own export policy", state.exports_allowed(["eggs", "silk"]) == ["silk"])
+check("the state decides through its own export policy", state.markets.exports_allowed(["eggs", "silk"]) == ["silk"])
 state.record.state_monopolies.discard("eggs")
-check("the decision follows the record, not the data it started from", state.exports_allowed(["eggs"]) == ["eggs"])
+check("the decision follows the record, not the data it started from", state.markets.exports_allowed(["eggs"]) == ["eggs"])
 
 # ---- shutting markets to a party -------------------------------------------------------------
-check("a state's markets are open to a party it has not shut out", state.markets_closed_until("thief", 100) == 0)
-state.close_markets_to("thief", 110)
-check("a shut market names the year it reopens", state.markets_closed_until("thief", 100) == 110)
-check("...and is open to another party", state.markets_closed_until("honest", 100) == 0)
-check("...and reopens in that year", state.markets_closed_until("thief", 110) == 0)
-state.close_markets_to("thief", 105)
-check("a later closure does not shorten an earlier one", state.markets_closed_until("thief", 100) == 110)
+check("a state's markets are open to a party it has not shut out", state.markets.markets_closed_until("thief", 100) == 0)
+state.markets.close_markets_to("thief", 110)
+check("a shut market names the year it reopens", state.markets.markets_closed_until("thief", 100) == 110)
+check("...and is open to another party", state.markets.markets_closed_until("honest", 100) == 0)
+check("...and reopens in that year", state.markets.markets_closed_until("thief", 110) == 0)
+state.markets.close_markets_to("thief", 105)
+check("a later closure does not shorten an earlier one", state.markets.markets_closed_until("thief", 100) == 110)
 check("a record that never had markets shut is a fresh record", ActorRecord().closed_markets == {} and ActorRecord().stock_taken == {})

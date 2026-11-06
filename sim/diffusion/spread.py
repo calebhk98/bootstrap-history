@@ -3,7 +3,9 @@ spread through the society.
 
 Needs: operating, tree, tree_nodes, done_year, venture_opened_year, year, corpus_diffusion_pace, literacy_references,
 diffusion_traits, seat_holders, built_by_any_seat, earliest_done_year, state_knowledge."""
-from typing import Any, Optional, Tuple
+from typing import Any, Dict, Optional, Tuple
+
+from sim.assembly.api import Part
 
 from . import constants, rules
 from .adoption_share import held_share
@@ -13,7 +15,11 @@ from .diffusion_rules import spread_share
 CATEGORIES = ("food", "medical", "information")
 
 
-class Spread:
+class Spread(Part):
+
+    def __init__(self, module):
+        super().__init__(module)
+        self._diffusible: Optional[Dict[str, Tuple[str, ...]]] = None   # category -> node ids, built on first ask
 
     # ---- the founder's own ventures ----
 
@@ -36,7 +42,7 @@ class Spread:
         corpus and with the country's general literacy."""
         return knowledge_half_life(
             constants.VENTURE_DIFFUSION_HALF_LIFE_YEARS, self.needs.corpus_diffusion_pace(),
-            float(self.literacy("literacy_general", country)), self.needs.literacy_references()["reference_general"],
+            float(self.parts.literacy.literacy("literacy_general", country)), self.needs.literacy_references()["reference_general"],
             constants.LITERACY_DIFFUSION_PACE_BASE, constants.LITERACY_DIFFUSION_PACE_SPAN,
             constants.LITERACY_DIFFUSION_PACE_CAP_RATIO, constants.DIFFUSION_PACE_FLOOR)
 
@@ -76,7 +82,7 @@ class Spread:
         if not self.needs.diffusion_traits()[category].get("text_paced"):
             return 1.0
         return rules.text_category_pace(
-            self.needs.corpus_diffusion_pace(), float(self.literacy("literacy_general")),
+            self.needs.corpus_diffusion_pace(), float(self.parts.literacy.literacy("literacy_general")),
             self.needs.literacy_references()["reference_general"], constants.LITERACY_DIFFUSION_PACE_BASE,
             constants.LITERACY_DIFFUSION_PACE_SPAN, constants.LITERACY_DIFFUSION_PACE_CAP_RATIO)
 
@@ -131,4 +137,4 @@ class Spread:
         doing to the country. Never silent in a state variable."""
         return rules.diffusion_report(self.diffusion_index("food"), self.diffusion_index("medical"),
                                       self.diffusion_index("military"), self.diffusion_index("information"),
-                                      lambda: self.diffusion_relief("medical"))
+                                      lambda: self.parts.relief.diffusion_relief("medical"))

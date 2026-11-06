@@ -5,8 +5,9 @@ standing, price_index, money_per_labour_hour, acting_balance, money_text."""
 from typing import List
 
 from sim.agents.api import edges
+from sim.assembly.api import Part
 from sim.coin.api import PlunderHousehold
-from sim.ledger.api import PayEdge
+from sim.ledger.api import pay_edge_or_log
 from sim.polity.api import RaiseScandal, ScaleProtection
 from sim.reporting.api import RecordEvent
 
@@ -15,7 +16,7 @@ from .capital_loss import capital_lost
 from .patron_death import patron_dies
 
 
-class RandomEvents:
+class RandomEvents(Part):
 
 	def step_random_events(self, seats: List[str]) -> None:
 		"""The phase `random_events`: each seat still in play meets its own patron's death, fire and banditry, on its own dice."""
@@ -52,17 +53,17 @@ class RandomEvents:
 		was = self.needs.standing()["protection"]
 		self.needs.send(ScaleProtection(constants.PATRON_DEATH_PROTECTION_RETENTION))
 		gift = constants.PATRON_DEATH_COURTING_GIFT_LABOUR_HOURS * self.needs.money_per_labour_hour() * self.needs.price_index()
-		courted = self.needs.founder()["policy"].get("auto_court_heir", not self.needs.automation()["manual"])
-		if courted:
-			self.needs.send(PayEdge(edges.EDGE_OFFICIALS, gift, "courting a patron's heir"))
+		wants_court = self.needs.founder()["policy"].get("auto_court_heir", not self.needs.automation()["manual"])
+		courted = wants_court and pay_edge_or_log(self.needs.send, edges.EDGE_OFFICIALS, gift, "courting a patron's heir") is None
 		protection_now = self.needs.standing()["protection"]
 		if courted:
 			text = ("your patron dies; auto_court_heir courts his heir afresh for %s. Protection falls from %d%% to %d%% and "
 			        "scandal rises by %d" % (self.needs.money_text(gift, grouped=True), was * 100, protection_now * 100,
 			                                 constants.PATRON_DEATH_SCANDAL))
 		else:
-			text = ("your patron dies. No money was spent because auto_court_heir is off; protection falls from %d%% to %d%% "
-			        "and scandal rises by %d" % (was * 100, protection_now * 100, constants.PATRON_DEATH_SCANDAL))
+			why = "auto_court_heir is off" if not wants_court else "you could not pay for it"
+			text = ("your patron dies. No money was spent because %s; protection falls from %d%% to %d%% "
+			        "and scandal rises by %d" % (why, was * 100, protection_now * 100, constants.PATRON_DEATH_SCANDAL))
 		self.needs.send(RecordEvent.of("patron_dies", text + constants.PATRON_DEATH_RECOVERY_NOTE))
 
 	def loss_words(self, had_before: float) -> str:
@@ -78,7 +79,8 @@ class RandomEvents:
 		lost = capital_lost(self.needs.acting_balance(), fraction)
 		if lost <= 0.0:
 			return 0.0
-		self.needs.send(PayEdge(edges.EDGE_DESTROYED, lost, cause))
+		if pay_edge_or_log(self.needs.send, edges.EDGE_DESTROYED, lost, cause) is not None:
+			return 0.0
 		return lost
 
 	def lose_capital_command(self, command) -> float:

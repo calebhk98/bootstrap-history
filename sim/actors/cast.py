@@ -4,17 +4,16 @@ from typing import Any, List, Optional, Tuple
 
 from sim.agents.api import (ActorExtensions, ActorRegistry, cast_from_civilisations, combine_extensions, seed_cast,
                             shipped_extensions)
+from sim.assembly.api import Part
 
 from .world import ActorWorld
 
 
-class Cast:
-	"""Mixed into `Actors`."""
-
-	needs: Any
-	world: Any
-	_registry: Optional[ActorRegistry] = None   # over the world slot; made again when a load replaces it
-	_extensions: Optional[ActorExtensions] = None   # what the game's providers answered; asked once per game
+class Cast(Part):
+	def __init__(self, module):
+		super().__init__(module)
+		self._registry = None   # never saved: rebuilt over the world slot on first use and after a load
+		self._extensions = None   # never saved: asked of the providers on first use
 
 	def extensions(self) -> ActorExtensions:
 		"""The kinds, founding rules, policies and commands the shipped game and its mods give the actors."""
@@ -49,19 +48,13 @@ class Cast:
 		if registry is None or registry.state is not state:
 			registry = ActorRegistry(state, self.extensions())
 			self._registry = registry
+			self.parts.lending.connect_purses()
 		return registry
 
 	def follow_tile_transfer(self, command: Any) -> None:
 		"""A foreign country's state reads its tiles from its profile: move the tile between the profiles of the countries that
 		lost and gained it."""
-		registry = self.cast()
-		for country, profile in (registry.state.countries or {}).items():
-			if country == command.previous and command.tile in profile.home_tiles:
-				profile.home_tiles.remove(command.tile)
-			if country == command.to_actor and command.tile not in profile.home_tiles:
-				profile.home_tiles.append(command.tile)
-				profile.home_tiles.sort()
-		registry.__dict__.pop("_tile_owners", None)
+		self.cast().countries.move_tile_between_countries(command.tile, command.previous, command.to_actor)
 
 	def cast_state(self) -> Any:
 		"""The cast's saved records, for readers that look at them without making the registry."""
@@ -104,16 +97,20 @@ class Cast:
 		self.seed_opening_cast()  # a bare record made first would keep the cast from giving it its place and kind
 		country = self.needs.acting_country()
 		if country is not None:
-			government = self.cast().government_of(country)
+			government = self.cast().countries.government_of(country)
 			if government is not None:
 				return government
 		civilisation = self.needs.civilisation()
-		return self.cast().ensure_government(str(civilisation.get("id")), civilisation.get("name", ""))
+		return self.cast().countries.ensure_government(str(civilisation.get("id")), civilisation.get("name", ""))
+
+	def _actor_world(self) -> ActorWorld:
+		parts = self.parts
+		return ActorWorld(self.needs, parts.cast, parts.seat_parties, parts.staff)
 
 	def actor_world(self) -> ActorWorld:
 		"""What the actors can see and price, with its own table of this turn's shared answers."""
-		return ActorWorld(self)
+		return self._actor_world()
 
 	def country_world(self, owner: str) -> Any:
 		"""The world the owner's state sees (the shared one for the home country, else its country's scope)."""
-		return self.cast().world_of_country(owner, ActorWorld(self))
+		return self.cast().countries.world_of_country(owner, self._actor_world())

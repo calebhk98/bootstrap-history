@@ -1,5 +1,7 @@
 # Sim as a composition root: modules that share views and commands, never each other
 
+Note: the measurements and file names below describe the engine when this was written. `sim/engine/labour_port.py`, `society_actors.py` and the mixin composite `Labour` are gone (`Sim` has no base classes; the labour package is behind `sim/workforce/`; the actors accessor is `sim/actors/`). The built shape is `sim/ARCHITECTURE.md`.
+
 **Status:** proposal, revised 2026-10-25 at `347e583` (first written the same day). Changes no code. Supersedes the
 recommendation in `SIM_DECOMPOSITION_REVISITED.md` section 7 (its stage 1 is built: the year is the phase registry in
 `sim/engine/year_phases.py`). Builds on `PACKAGE_WALLS.md`, the ownership map in Complaint 508 and the kernels in

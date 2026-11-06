@@ -1,17 +1,15 @@
 """The year's money phase as the workforce sees it: the living cost billed, the standing policies on buying and freeing people, and
 the fade of the pressure the household's buying puts on the people market."""
+from sim.assembly.api import Part
 from sim.reporting.api import RecordEvent
 
 from . import constants, rules
-from .commands_hours import SettleLivingCost
 
 
-class StandingBondage:
+class StandingBondage(Part):
 
 	def charge_living_cost(self, command):
-		charged = rules.living_cost_charged(command.living_cost, command.dependants_beyond_means, self.seat.wages_prepaid)
-		self.settle_living_cost(SettleLivingCost(charged))
-		return charged
+		return rules.living_cost_charged(command.living_cost, command.dependants_beyond_means, self.parts.fact_views.wages_charged_last_year())
 
 	def auto_buy_people(self, command):
 		# only when the optimizer is playing: buying people in manual mode with no command and no log line would hide the acquisition
@@ -19,18 +17,18 @@ class StandingBondage:
 			return
 		_scholars_lacking, craftsmen_lacking = self.needs.staffing_closed_hand_shortfall()      # people are bought as craftsmen
 		count = rules.people_to_buy(
-			self.needs.acting_balance(), self.labour.SLAVE_BASE_PRICE, craftsmen_lacking,
+			self.needs.acting_balance(), self.parts.core.labour.bondage.SLAVE_BASE_PRICE, craftsmen_lacking,
 			constants.AUTO_BUY_PEOPLE_CAPITAL_FLOOR_IN_PRICES, constants.AUTO_BUY_PEOPLE_CAPITAL_PER_PERSON_IN_PRICES)
 		if count and self.needs.running_mechanics("hosts_bought_people"):
-			got = self.labour.buy_slaves(count)
+			got = self.parts.core.labour.bondage.buy_slaves(count)
 			if got:
 				self.needs.send(RecordEvent.of("people_bought", "bought %d people for the workshop" % got))
 
 	def auto_manumit(self, command):
-		if not self.needs.founder()["policy"].get("auto_manumit", not self.needs.automation()["manual"]) or not self.staff()["slaves"]:
+		if not self.needs.founder()["policy"].get("auto_manumit", not self.needs.automation()["manual"]) or not self.parts.views_state.staff()["slaves"]:
 			return
 		if self.needs.game_random().random() < constants.AUTO_MANUMIT_ANNUAL_CHANCE:
-			freed = self.labour.manumit(rules.people_to_free(self.staff()["slaves"], constants.AUTO_MANUMIT_SHARE_DIVISOR))
+			freed = self.parts.core.labour.bondage.manumit(rules.people_to_free(self.parts.views_state.staff()["slaves"], constants.AUTO_MANUMIT_SHARE_DIVISOR))
 			if freed:
 				self.needs.send(RecordEvent.of("people_freed", "freed %d people" % freed))
 

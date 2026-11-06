@@ -25,12 +25,15 @@ class TheScheduleEqualsTheSplit(unittest.TestCase):
             for wage in (0.0, 0.05, 0.5, 1.0, 5.0, 100.0):
                 self.assertAlmostEqual(schedule(wage), held.split(offer, wage)[0], places=9)
 
-    def test_a_markets_share_is_its_offers_sold_hours_over_its_hours(self):
+    def test_a_markets_hours_are_its_offers_sold_hours(self):
         held = supply()
-        share = held.share_at("reaper", "vale")
+        hours = held.hours_at("reaper", "vale")
         for wage in (0.05, 1.0, 20.0):
             sold = sum(held.split(offer, wage)[0] for offer in held.offers if offer.area == "vale")
-            self.assertAlmostEqual(share(wage), sold / 1600.0, places=9)
+            self.assertAlmostEqual(hours(wage), sold, places=9)
+
+    def test_a_market_with_no_offer_has_no_schedule(self):
+        self.assertNotIn(("reaper", "ford"), supply().schedules())
 
 
 if __name__ == "__main__":

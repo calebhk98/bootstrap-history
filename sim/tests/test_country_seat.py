@@ -3,14 +3,13 @@ on a stand-in game, the addressing and refusal rules on built seats, the seat-ru
 
 QUICK_TOPIC = True
 
-import types
 
 from sim.knowledge.rules import SeatTechniques
 from sim.tests.ui_stand_in import FactViews
 from .harness import check
 
 from sim.engine.seat_move import move_seat_fields
-from sim.seats.api import SeatsSeat, handover_refusal, run_is_over, seats_playing
+from sim.seats.api import handover_refusal, run_is_over, seats_playing
 from sim.engine.state import SimulationState, deserialize_state, serialize_state
 from sim.engine.state_seat import COUNTRY_SEAT, FIRST_SEAT_ID, seat_from_template
 from sim.refusal import cause_of
@@ -18,6 +17,7 @@ from sim.ui.proto import command_registry
 import sim.ui.proto.dispatch  # noqa: F401  (registers every command)
 from sim.ui.proto.seat_address import country_seat_refusal, run_as_seat
 from sim.tests.ui_stand_in import Game
+from sim.tests.interface_fixture import shipped_declared
 
 HOME = "rome_100ad"
 GOVERNMENT = "gov_rome"
@@ -48,6 +48,7 @@ class JoinGame(FactViews):
         self.cfg = {"start_kit": "poor_scholar"}
         self.nodes = {"fire": {}}
         self.joined = []
+        self.interface_declared = shipped_declared
 
     dead_reasons = {}
 
@@ -106,7 +107,7 @@ check("a country seat takes no kit", refused["cause"] == "country_seat_has_no_ki
 
 # ---- which commands a country seat may run
 seats = {FIRST_SEAT_ID: household_seat(), "senate": country_seat()}
-stand_in = Game(state=Game(seats=seats))
+stand_in = Game(state=Game(seats=seats), interface_declared=shipped_declared)
 refused = country_seat_refusal(stand_in, "senate", {"cmd": "state"})
 check("a command that needs a household is refused for a country seat", refused["cause"] == "country_seat_has_no_household", refused)
 check("a command a country seat may run is not refused", country_seat_refusal(stand_in, "senate", {"cmd": "levers"}) is None, None)
@@ -118,6 +119,7 @@ class Runner(FactViews):
         self.state = Game(seats=seats)
         self.session_seat = None
         self.acted = []
+        self.interface_declared = shipped_declared
         self.playing = playing
 
     def seat_list(self):

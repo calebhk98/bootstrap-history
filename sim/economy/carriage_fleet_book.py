@@ -5,12 +5,19 @@ held carriers by service life is booked with every other durable (year_close.wea
 import math
 from typing import Dict, List, Mapping, Optional, Sequence, Tuple
 
+from sim.constants import declare
+from sim.unit_conversions import KILOGRAMS_PER_TONNE
+
 from . import carriage_fleet, carriage_wear, merchants_legs
 from .carriage_fleet import FleetLimit
 from .merchants import MERCHANT_BID_ELASTICITY
 from .types import AgentId, Bid, EDGE_PRODUCTION, GoodId, GoodsMove, Transfer
 
-FLEET_OPENING_TILES = 12     # populated tiles a merchant's opening hauls are averaged over, the most populous first
+FLEET_OPENING_TILES = declare(
+    "FLEET_OPENING_TILES", 12, kind="temporary_heuristic", unit="tiles", source=None, confidence="D",
+    retire="Complaints/closed/631-merchants-have-no-fleet-and-are-not-worn.md: a merchant's opening fleet is sized from the routes it will plan",
+    why="Populated tiles a merchant's opening hauls are averaged over, the most populous first, to size its opening "
+        "fleet; the fleet a merchant needs is not yet derived from the routes it will plan.")
 FLEET_OPENING_REASON = "opening stock of a durable in use"
 
 
@@ -50,7 +57,7 @@ def wear_needed(merchant, held_stock: Mapping[Tuple[GoodId, str], float], specs,
         for destination, _area, quantity in merchants_legs.split(legs, held):
             if destination == tile or quantity <= 0.0:
                 continue
-            tonnes = quantity * specs[good].unit_mass_kg / 1000.0
+            tonnes = quantity * specs[good].unit_mass_kg / KILOGRAMS_PER_TONNE
             for carrier, units in wear.units_per_tonne(tile, destination).items():
                 if carrier in goods:
                     needed[carrier] = needed.get(carrier, 0.0) + tonnes * units
@@ -88,10 +95,10 @@ def rent_transfers(lessee: AgentId, hired: Mapping[GoodId, float], used: Mapping
     for good, units in sorted(hired.items()):
         beyond = min(units, max(0.0, used.get(good, 0.0) - own.get(good, 0.0)))
         total = math.fsum(lent.get(good, {}).values())
-        if beyond <= 0.0 or total <= 0.0:
+        if beyond <= 0.0 or total <= 0.0 or good not in prices:    # a carrier with no price is not charged for
             continue
         for lessor, amount in lent[good].items():
-            owed[lessor] = owed.get(lessor, 0.0) + beyond * prices.get(good, 0.0) * amount / total
+            owed[lessor] = owed.get(lessor, 0.0) + beyond * prices[good] * amount / total
     sum_owed = math.fsum(owed.values())
     scale = min(1.0, max(0.0, cash) / sum_owed) if sum_owed > 0.0 else 0.0
     return [Transfer(lessee, lessor, currency, money * scale, "carriers hired") for lessor, money in sorted(owed.items())
@@ -130,11 +137,12 @@ def endow(setup, record, carriage, prices: Mapping[GoodId, float], final_by_tile
     for demand in final_by_tile.values():
         for good, quantity in demand.items():
             totals[good] = totals.get(good, 0.0) + quantity
-    tonnes = math.fsum(quantity * setup.specs[good].unit_mass_kg / 1000.0 for good, quantity in totals.items() if good in setup.specs)
-    value = math.fsum(quantity * prices.get(good, 0.0) for good, quantity in totals.items())
+    priced = {good: quantity for good, quantity in totals.items() if good in setup.specs and good in prices}    # a good with no price has no value to count
+    tonnes = math.fsum(quantity * setup.specs[good].unit_mass_kg / KILOGRAMS_PER_TONNE for good, quantity in priced.items())
+    value = math.fsum(quantity * prices[good] for good, quantity in priced.items())
     if tonnes <= 0.0:
         return
-    moves = opening_fleet(setup, record, carriage_wear.Wear(setup, carriage, record.area_imbalance), value / tonnes)
+    moves = opening_fleet(setup, record, carriage_wear.Wear(setup, carriage, record.carriage.area_imbalance), value / tonnes)
     if moves:
         record.book.move_many(moves)
 
@@ -161,8 +169,8 @@ def bids(setup, record, view, area_map, merchants_cash: Optional[Dict[str, float
             if units <= 0.0 or good not in area_map.goods():
                 continue
             area = area_map.area_of(good, merchant.home_tile)
-            price = view.price(good, area) or setup.opening_prices.get(good, 0.0)
-            if price <= 0.0 or not math.isfinite(price):
+            price = view.offered_price(good, area)
+            if price is None or price <= 0.0 or not math.isfinite(price):
                 continue
             money = min(units * price, max(0.0, (merchants_cash or {}).get(merchant.agent_id, math.inf)) - budget.get(merchant.agent_id, 0.0))
             if money <= 0.0:

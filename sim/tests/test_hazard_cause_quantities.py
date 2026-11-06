@@ -3,7 +3,10 @@ owners' views that feed it answer what the rule needs (Complaints/266)."""
 
 QUICK_TOPIC = True
 
+from sim.tests.agents_fake_world import flat_namespace
 from types import SimpleNamespace
+
+from sim.tests import module_harness
 
 from .harness import check
 
@@ -102,15 +105,15 @@ class Treasury:
 	record = Record()
 
 	def knows(self, node_id, world):
-		return node_id == "wheel" and world.army_wanted() == 50.0
+		return node_id == "wheel" and world.army.army_wanted() == 50.0
 
 
-class ActorsStub(CauseViews):
+class CastStub:
 	def state_treasury(self):
 		return Treasury()
 
 	def actor_world(self):
-		return SimpleNamespace(army_wanted=lambda: 50.0, soldiers_under_arms=lambda: 30.0)
+		return flat_namespace(army_wanted=lambda: 50.0, soldiers_under_arms=lambda: 30.0)
 
 	def cast(self):
 		def stratum(country=None, exited=None, welfare=1.0, reference=1.0, plan=None):
@@ -121,7 +124,7 @@ class ActorsStub(CauseViews):
 			stratum(country="abroad"), stratum(exited=90)])
 
 
-actors = ActorsStub()
+actors = module_harness.part(CauseViews, siblings={"cast": CastStub()})
 check("the state's books are summed over its lines", actors.state_budget_figures() == {"need": 100.0, "unfunded": 10.0, "coin_metal_kept": 0.9})
 check("the army figures are the wanted and kept force", actors.army_figures() == {"wanted": 50.0, "under_arms": 30.0})
 check("the state knows what its treasury knows", actors.state_knows("wheel") is True and actors.state_knows("loom") is False)
@@ -136,4 +139,4 @@ class LandStub(MapViews):
 	world_map = SimpleNamespace(tiles={"a": 1, "b": 2, "c": 3})
 
 
-check("the tiles a file lists are those on the map", LandStub().tiles_listed_by({"home_tiles": ["c", "a", "zz"]}) == ["a", "c"])
+check("the tiles a file lists are those on the map", module_harness.part(LandStub).tiles_listed_by({"home_tiles": ["c", "a", "zz"]}) == ["a", "c"])

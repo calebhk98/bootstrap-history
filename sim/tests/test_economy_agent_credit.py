@@ -120,12 +120,15 @@ class CreditRoomTests(unittest.TestCase):
     FUNDS = 1000.0
 
     def met(self, **changes):
-        record = dict(funds_offered=self.FUNDS, credit_granted={}, lent_by_borrower={"borrower:a": 100.0})
+        record = dict(lenders_met=True, funds_offered=self.FUNDS, credit_granted={}, lent_by_borrower={"borrower:a": 100.0})
         record.update(changes)
-        return types.SimpleNamespace(record=types.SimpleNamespace(**record))
+        return types.SimpleNamespace(record=types.SimpleNamespace(credit=types.SimpleNamespace(**record)))
 
     def test_there_is_no_room_figure_before_lenders_have_met(self):
-        self.assertIsNone(economy_api.credit_room(self.met(funds_offered=0.0), "borrower:a"))
+        self.assertIsNone(economy_api.credit_room(self.met(lenders_met=False, funds_offered=0.0), "borrower:a"))
+
+    def test_lenders_that_met_with_no_funds_leave_no_room_not_an_unknown_one(self):
+        self.assertEqual(economy_api.credit_room(self.met(funds_offered=0.0), "borrower:a"), 0.0)
 
     def test_room_is_what_lenders_will_lend_less_what_others_took_this_year(self):
         self.assertAlmostEqual(economy_api.credit_room(self.met(), "borrower:b"),

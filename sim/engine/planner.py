@@ -27,7 +27,7 @@ critical ones go first.
 WHAT THIS DELIBERATELY DOES NOT DO: it does not simulate concurrency, money,
 staff or trade availability while planning - `Sim.step()` already does all of
 that, live, every year, against whatever priority order it is handed (see
-core.py step() 4b: `order` is a PREFERENCE the greedy loop consults, not a
+the projects module's start phase, sim/projects/start_phase.py: `order` is a PREFERENCE the greedy loop consults, not a
 schedule it is bound to; anything not yet legal is simply skipped that year
 and reconsidered the next). So the planner's job is narrower and more honest
 than "solve the whole game": say which of the ~149 nodes the goal actually
@@ -38,7 +38,7 @@ duplicating logic that already exists and is already tested, badly.
 
 SIDE BRANCHES. The 149-node closure is EVERYTHING the goal needs and nothing
 else; it is not everything a household needs to survive on the way there.
-`step()` already has a reactive fallback for this (core.py, "EARN A LIVING
+The start phase already has a reactive fallback for this (sim/projects/start_phase.py, "EARN A LIVING
 FIRST") that switches to whatever pays best when revenue is thin - but that
 is a patch applied after the fact, not a plan. A few cheap, high-margin,
 short-payback revenue nodes woven into the order ahead of time give the
@@ -75,7 +75,7 @@ _REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__f
 if _REPO_ROOT not in sys.path:
     sys.path.insert(0, _REPO_ROOT)
 
-from sim.engine.data import STRATS, downstream_count, load, load_civ, resolve_goal
+from sim.engine.data import downstream_count, load, load_civ, resolve_goal
 from sim.knowledge.api import closure, hard_pre, topo_order
 from sim.engine.core import Sim
 from sim.engine.units_prose import money_text
@@ -93,7 +93,7 @@ def duration(node):
     all: the larger of its own calendar floor (`yrs`, which the schema itself
     says "labour cannot buy down") and what one director's hours alone would
     take (`ph`/2000, a founder's year - see DEFAULTS). This is exactly the
-    per-node term critical_path() in engine/data.py sums along the single
+    per-node term critical_path() in sim/knowledge/tree_paths.py sums along the single
     longest chain to one target; it is not exposed per-node there, so it is
     repeated here rather than reused, to get it for every node in the closure
     at once instead of one target at a time.
@@ -210,7 +210,7 @@ def pick_side_branches(nodes, need, sim, limit):
     competing with the spine for scarce trades centuries into a run, because
     that is the earliest any of them can possibly fire. Sorting candidates
     by `_closure_depth` (the size of the candidate's own unmet-prerequisite
-    closure - the same measure `_room_advice` in labour.py already sorts
+    closure - the same measure `room_advice` in sim/labour/room_advice.py already sorts
     "nearest first" by) instead of, or even only as a tiebreak after
     filtering out the deepest candidates from, the net/cost ranking looked
     like a strict improvement and is not one: tried head to head against
@@ -262,10 +262,10 @@ def pick_staffing(nodes, need, sim):
     "ran out of horizon", first blocked node quantum_solidstate_theory.
 
     The list is not repeated here. It is read from
-    `LabourMixin.STAFF_CAPACITY_SOURCES`, the same table `staff_capacity()`
+    `staff_capacity_sources` (sim/mechanics/rules.py), the same table `staff_capacity()`
     itself iterates, so the planner cannot drift out of step with the rule it
     is planning against - the failure mode that once put a second,
-    hand-maintained copy of a material list in core.py and cost a KeyError in
+    hand-maintained copy of a material list in the engine and cost a KeyError in
     a run forty years deep.
 
     Ordered by what each one costs, cheapest first: the school that makes the

@@ -50,14 +50,14 @@ class TownPremium(unittest.TestCase):
         self.labour = Town()
 
     def test_no_provider_gives_no_premium_anywhere(self):
-        self.assertEqual(self.labour.town_mortality_premium_by_tile(), {})
+        self.assertEqual(self.labour.settlement.town_mortality_premium_by_tile(), {})
 
     def test_a_town_premium_is_spread_over_the_tiles_people(self):
-        tile = self.labour.base_tile()
-        town = self.labour.home_town_population_estimate()
-        people = self.labour.settlement_tiles()[tile]
+        tile = self.labour.settlement.base_tile()
+        town = self.labour.settlement.home_town_population_estimate()
+        people = self.labour.settlement.settlement_tiles()[tile]
         self.labour.premiums.append(lambda where, size: 0.5 if where == tile else None)
-        found = self.labour.town_mortality_premium_by_tile()
+        found = self.labour.settlement.town_mortality_premium_by_tile()
         self.assertEqual(set(found), {tile})
         self.assertAlmostEqual(found[tile], 0.5 * town / people, places=9)
 

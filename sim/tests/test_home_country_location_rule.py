@@ -9,7 +9,7 @@ import unittest
 from types import SimpleNamespace
 
 from sim.agents.cast import cast_from_civilisations, profile_from_civilisation
-from sim.labour.labour_settlement import SettlementMixin
+from sim.labour.labour_settlement import Settlement
 
 TILES = ["algeria_01", "algeria_02", "algeria_03"]
 
@@ -34,9 +34,8 @@ class HomeLocationTests(unittest.TestCase):
         self.assertEqual([entry.location for entry in government], [profiles[home_country].location])
 
 
-class FounderBase(SettlementMixin):
-    def __init__(self, chosen):
-        self._world = SimpleNamespace(home_tiles_held=lambda: TILES, workforce=SimpleNamespace(base_tile=chosen))
+def FounderBase(chosen):
+    return Settlement(SimpleNamespace(people=SimpleNamespace(home_tiles_held=lambda: TILES), workforce=SimpleNamespace(base_tile=chosen)))
 
 
 class FounderBaseTileTests(unittest.TestCase):

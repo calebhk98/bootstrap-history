@@ -6,8 +6,7 @@ import types
 import unittest
 
 from sim.economy.types import TileSpec
-from sim.markets.port_cropland import follow_farm_sites
-from sim.tests.ui_stand_in import Game
+from sim.markets import port_cropland
 
 AREA_KM2 = 100.0
 HECTARES = AREA_KM2 * 100.0
@@ -27,8 +26,13 @@ def setup_of(*tiles):
                                  yield_factor_by_recipe_tile={"wheat@%s" % held.tile_id: held.fertility for held in tiles})
 
 
+def follow_farm_sites(game, setup):
+    """Apply what `port_cropland.follow_farm_sites` asks of the setup, as `Economy.change_setup` does."""
+    vars(setup).update(port_cropland.follow_farm_sites(game, setup.tiles, setup.yield_factor_by_recipe_tile))
+
+
 def game_with(sites):
-    return Game(farm_sites=lambda: sites)
+    return types.SimpleNamespace(farm=types.SimpleNamespace(sites=lambda: sites))
 
 
 class FollowFarmSites(unittest.TestCase):

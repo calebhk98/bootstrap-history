@@ -6,7 +6,7 @@ from .harness import *  # noqa: F401,F403
 
 from sim.foreign_trade.module import ForeignTrade
 from sim.tests import module_harness
-from sim.world.material_units import tonnes_per_unit
+from sim.markets.unit_mass import tonnes_per_unit
 
 QUICK_TOPIC = True
 
@@ -34,7 +34,8 @@ def buyer(named):
         "foreign_economy_records": [{"civilization": PARTNER, "enabled": True, "from_year": -1000, "until_year": 3000}],
         "year": 100, "civilisation": {"id": "rome_100ad"}, "material_route": lambda civ, material, route: ROUTE,
         "trader_cost_share": cost_share, "trader_agent_cost": lambda civilization_id, route: 5.0,
-        "partner_price_level": lambda civilization_id: 1.0})
+        "agent_country": lambda civilization_id: SimpleNamespace(
+            price_per_tonne=lambda material: 10.0 / tonnes_per_unit(material))})
 
 
 named = []

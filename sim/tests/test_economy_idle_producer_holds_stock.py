@@ -4,13 +4,14 @@ QUICK_TOPIC = True
 
 import unittest
 
+from sim.tests.economy_view_defaults import ViewDefaults
 from sim.economy import producers
 from sim.economy.types import Recipe
 
 SMELT = Recipe("smelt", {"metal": 10.0}, {"ore": 4.0}, {"smith": 1.0})
 
 
-class View:
+class View(ViewDefaults):
     year = 3
 
     def __init__(self, prices, wages=None):
@@ -60,8 +61,8 @@ class IdleProducerTests(unittest.TestCase):
         self.assertLess(pressed, 1.0 / 1.05)
 
     def test_a_run_that_cannot_be_priced_does_not_press_the_producer(self):
-        no_wage = View({"metal": 1.0, "ore": 0.01}, {})
-        self.assertAlmostEqual(reservation(no_wage, expected_prices={"metal": 1.0, "ore": 0.01}), 1.0 / 1.05)
+        no_ore_price = View({"metal": 1.0}, {"smith": 1.0})
+        self.assertAlmostEqual(reservation(no_ore_price, expected_prices={"metal": 1.0}), 1.0 / 1.05)
 
 
 if __name__ == "__main__":

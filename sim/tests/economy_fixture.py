@@ -15,15 +15,15 @@ from sim.economy.economy import Economy
 from sim.economy.fixture_setups import (
     FARM, FARMS, FOOD, GRAIN, HILLS, LABOURER, METAL, MINE, MINER, ORE, ORNAMENT, PLOT_LAND_PER_RUN, SMELT, SMITH,
     TOWN, basket, recipes, small_setup, specs, stationary_setup, tiles)
-from sim.economy.protocols import YearInputs
+from sim.economy.protocols import EconomyYearInputs
 from sim.economy.setup import EconomySetup
 from sim.economy.tile_costs import world_map_of
 from sim.economy.types import TileSpec
 
-def quiet_year(setup: EconomySetup, **changes) -> YearInputs:
+def quiet_year(setup: EconomySetup, **changes) -> EconomyYearInputs:
     """A year with the opening's people and no engine orders."""
-    inputs = YearInputs(year=0, population_by_tile={}, working_age_share=setup.working_share,
-                        yield_factor_by_producer={}, engine_orders={})
+    inputs = EconomyYearInputs(year=0, population_by_tile={},
+                        yield_factor_by_producer={}, engine_orders={}, state_capacity=0.5)
     return dataclasses.replace(inputs, **changes) if changes else inputs
 
 
@@ -69,13 +69,13 @@ def surplus_households():
     it can afford, a new drink) or about something that does not depend on how well off it is (where producers sit)
     states that it wants one."""
     with mock.patch.object(opening_income, "settled_income_per_head",
-                           lambda ceiling, _people, _demand_at: (ceiling, 0.0)):
+                           lambda ceiling, _people, _demand_at, _start=None: (ceiling, 0.0)):
         yield
 
 
 def households_with_a_surplus(test_case):
     """`surplus_households` for the length of `test_case`."""
     patch = mock.patch.object(opening_income, "settled_income_per_head",
-                              lambda ceiling, _people, _demand_at: (ceiling, 0.0))
+                              lambda ceiling, _people, _demand_at, _start=None: (ceiling, 0.0))
     patch.start()
     test_case.addCleanup(patch.stop)

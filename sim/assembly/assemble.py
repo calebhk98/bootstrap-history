@@ -6,7 +6,7 @@ from .errors import AssemblyError
 from .framework import FRAMEWORK_ID, framework_spec
 from .kernels import check_replacement
 from .mod_access import ModAccess, NeedsAccess
-from .module import Module
+from .module import Module, RESERVED_NAMES
 from .read_guard import GuardedView
 from .needs import Needs, Point
 from .operations import Applied, apply_all
@@ -75,7 +75,7 @@ class Assembly:
 			for hook in spec.phases:
 				if hook.name in handlers:
 					raise AssemblyError("modules %s and %s both run the phase %s" % (owners[hook.name], module_id, hook.name))
-				handlers[hook.name] = getattr(self.modules[module_id], hook.method)
+				handlers[hook.name] = bound_method(self.modules[module_id], hook.method)
 				owners[hook.name] = module_id
 		return handlers
 
@@ -206,14 +206,51 @@ def _check_view_cycles(assembly: Assembly) -> None:
 		walk(name, [])
 
 
+def _part_forwarder(part_name: str, method: str) -> Callable:
+	def forward(self, *arguments, **keywords):
+		return getattr(getattr(self.parts, part_name), method)(*arguments, **keywords)
+	forward.__name__ = method
+	forward.part_name = part_name
+	return forward
+
+
+def _with_part_methods(module_id: str, built: type, declared: Sequence[str]) -> type:
+	"""The implementation with, for each declared name it lacks, a method that calls the one part of `PARTS` that has it."""
+	added: Dict[str, Callable] = {}
+	clashes = sorted(name for name in declared if name in RESERVED_NAMES)
+	if clashes:
+		raise AssemblyError("module %s declares %s, which the Module and Part bases already define; rename the method" % (module_id, ", ".join(clashes)))
+	for name in sorted(declared):
+		if callable(getattr(built, name, None)):
+			continue
+		holders = [part_name for part_name, part_class in built.PARTS.items() if callable(getattr(part_class, name, None))]
+		if len(holders) > 1:
+			raise AssemblyError("module %s declares %s, which its parts %s all have" % (module_id, name, ", ".join(holders)))
+		if holders:
+			added[name] = _part_forwarder(holders[0], name)
+	return type(built.__name__, (built,), added) if added else built
+
+
+def bound_method(instance: Module, name: str) -> Callable:
+	"""The callable for a declared method name: a part's own bound method when the module's class only forwards to it."""
+	method = getattr(type(instance), name)
+	part_name = getattr(method, "part_name", None)
+	if part_name is None:
+		return getattr(instance, name)
+	return getattr(getattr(instance.parts, part_name), name)
+
+
 def _implementation(assembly: Assembly, module_id: str, spec: ModuleSpec) -> type:
 	if not (isinstance(spec.implementation, type) and issubclass(spec.implementation, Module)):
 		raise AssemblyError("module %s: its implementation must derive from sim.assembly.api.Module" % module_id)
-	built = spec.implementation
 	declared = set(declared_methods(spec))
+	built = _with_part_methods(module_id, spec.implementation, declared)
 	for mod_id, layer in assembly.applied.layers.get(module_id, []):
 		for name, value in vars(layer).items():
-			if callable(value) and not name.startswith("__") and name not in declared:
+			if callable(value) and not name.startswith("_") and name not in declared:
+				if not callable(getattr(built, name, None)):
+					raise AssemblyError("mod %s extends module %s with %s, which the module neither declares nor has; the layer would never be called" % (
+						mod_id, module_id, name))
 				assembly.unstable.setdefault(module_id, []).append((mod_id, name))
 		built = type("%s+%s" % (built.__name__, layer.__name__), (layer, built), {})
 	missing = [name for name in declared if not callable(getattr(built, name, None))]
@@ -228,14 +265,15 @@ def _instantiate(assembly: Assembly) -> None:
 		instance.module_id = module_id
 		instance.clock = assembly.clock
 		instance.kernels = {kernel.name: assembly.kernels[kernel.name] for kernel in spec.kernels}
+		instance.build_parts()
 		assembly.modules[module_id] = instance
 	for module_id, spec in assembly.applied.specs.items():
 		for view_spec in spec.publishes:
-			assembly.views[view_spec.name] = View(view_spec, module_id, getattr(assembly.modules[module_id], view_spec.compute), assembly.clock)
+			assembly.views[view_spec.name] = View(view_spec, module_id, bound_method(assembly.modules[module_id], view_spec.compute), assembly.clock)
 		for point_spec in spec.extension_points:
 			assembly.points[point_spec.name] = Point(point_spec.name, point_spec.combine)
 		for command, handler in spec.applies:
-			assembly.handlers[command] = getattr(assembly.modules[module_id], handler)
+			assembly.handlers[command] = bound_method(assembly.modules[module_id], handler)
 
 
 def _needs_for(assembly: Assembly, module_id: str, names: Sequence[str], optional: Sequence[str], sends: Sequence[type]) -> Needs:
@@ -259,7 +297,7 @@ def _bound(assembly: Assembly, mod_id: str, function: Any) -> Callable:
 def _wire(assembly: Assembly) -> None:
 	for module_id, spec in assembly.applied.specs.items():
 		own = [view.name for view in spec.publishes] + [point.name for point in spec.extension_points]
-		assembly.modules[module_id].needs = _needs_for(assembly, module_id, list(spec.reads) + own, spec.optional_reads, spec.sends)
+		assembly.modules[module_id].wire(_needs_for(assembly, module_id, list(spec.reads) + own, spec.optional_reads, spec.sends))
 	for name, view in assembly.views.items():
 		view.inputs = [assembly.views[input_name] for input_name in view.spec.inputs if input_name in assembly.views]
 		for mod_id, function, reads in assembly.applied.adjusters.get(name, []):
@@ -268,7 +306,7 @@ def _wire(assembly: Assembly) -> None:
 	for module_id, spec in assembly.applied.specs.items():
 		for provision in spec.provides:
 			if "%s.%s" % (module_id, provision.name) not in assembly.applied.withdrawn:
-				assembly.points[provision.point].providers.append(getattr(assembly.modules[module_id], provision.method))
+				assembly.points[provision.point].providers.append(bound_method(assembly.modules[module_id], provision.method))
 	for mod_id in assembly.applied.mods:
 		assembly.mod_access[mod_id] = ModAccess(assembly, mod_id, frozenset(assembly.applied.mod_reads.get(mod_id, ())),
 		                                        frozenset(assembly.applied.mod_sends.get(mod_id, ())))
@@ -295,5 +333,6 @@ def assemble(shipped: Sequence[ModuleSpec], operations: Sequence[Operations] = (
 	assembly.modules[FRAMEWORK_ID].assembly = assembly
 	_wire(assembly)
 	for module in assembly.modules.values():
+		module.setup_parts()
 		module.setup()
 	return assembly

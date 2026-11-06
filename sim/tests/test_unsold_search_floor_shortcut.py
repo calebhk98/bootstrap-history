@@ -8,7 +8,8 @@ import math
 import random
 import unittest
 
-from sim.economy import goods_market, unsold_search
+from sim.economy import demand_search, goods_market, unsold_search
+from sim.economy.goods_market_fills import sold_by_seller_tile
 from sim.economy.types import Bid, Offer
 
 GOOD, AREA = "grain", "area"
@@ -27,7 +28,7 @@ def search_without_the_shortcut(bids, offers, floors, buyers, last_price):
     best = trial(low)
     high = max(offers[index].reservation_price for index in searched)
     ceiling = high
-    while high - low > unsold_search.SEARCH_PRECISION * (high if low > 0.0 else ceiling):
+    while high - low > demand_search.SEARCH_PRECISION * (high if low > 0.0 else ceiling):
         middle = math.sqrt(low) * math.sqrt(high) if low > 0.0 else 0.5 * (low + high)
         attempt = trial(middle)
         if attempt[1]:
@@ -63,7 +64,7 @@ class FloorShortcutTests(unittest.TestCase):
             if not floors:
                 continue
             result = goods_market.clear(bids, offers, GOOD, AREA, "coin", last_price, buyers)
-            if not unsold_search._unsold(unsold_search._sold_by_offer(result, offers), offers, list(floors)):
+            if not unsold_search._unsold(sold_by_seller_tile(result.fills), offers, list(floors)):
                 continue
             searched += 1
             skipped += unsold_search.unsold_above_the_floor(buyers, offers, floors)

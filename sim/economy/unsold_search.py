@@ -18,19 +18,11 @@ from sim.book import ROUNDING_SHARE
 
 from . import demand_search, goods_market, inventory, seller_offers, titles_value
 from .ask_adjust import band_edge
+from .demand_search import SEARCH_PRECISION
+from .goods_market_fills import sold_by_seller_tile
 from .types import Offer
 
 UNSOLD_BOUND_MARGIN = 1e-12    # float noise of two sums of the same demand, not a model number
-SEARCH_PRECISION = 1e-4     # numerical tolerance of the bisection on the ask level, not a model number
-
-
-def _sold_by_offer(result, offers: Sequence[Offer]) -> dict:
-    sold = {}
-    for fill in result.fills:
-        if fill.side == "sell":
-            key = (fill.agent, fill.tile)
-            sold[key] = sold.get(key, 0.0) + fill.quantity
-    return sold
 
 
 def _unsold(sold: dict, offers: Sequence[Offer], indices: Sequence[int]) -> List[int]:
@@ -52,33 +44,39 @@ def _floors(setup, record, view, offers: Sequence[Offer], original: Sequence[Off
         cost = costs[key] if key in costs else seller_offers.unit_cost(setup, record, view, offer)
         if cost is None:
             continue
-        floor = max(seller_offers.unit_value(original[index], cost), _held_value(setup, record, view, original[index]))
+        held_value = _held_value(setup, record, view, original[index])
+        if held_value is None:
+            continue
+        floor = max(seller_offers.unit_value(original[index], cost), held_value)
         if offer.reservation_price > floor:
             floors[index] = floor
     return floors
 
 
-def _held_value(setup, record, view, offer: Offer) -> float:
+def _held_value(setup, record, view, offer: Offer) -> Optional[float]:
     """What the offer's last unit is worth to its producer kept for later sales (inventory.queued_holding_value):
-    a seller that expects buyers next year does not sell a storable good below that this year."""
+    a seller that expects buyers next year does not sell a storable good below that this year; None when no
+    rate is remembered for the offer's currency."""
     producer = record.producers[offer.seller]
     recipe = setup.recipes[producer.recipe_id]
     spec = setup.specs.get(offer.good)
     rate = view.interest_rate(view.currency_of(offer.area))
+    if rate is None:
+        return None
     if spec is not None and not spec.portable:
         # ground never queues behind the stock: every hectare yields its rent while held
-        return titles_value.hectare_value(record.land_rent.get(offer.tile, 0.0),
+        return titles_value.hectare_value(record.land.land_rent.get(offer.tile, 0.0),
                                           titles_value.capitalising_rate(rate, setup.opening_rate))
     return inventory.queued_holding_value(offer.reservation_price, offer.quantity,
-                                          producer.expected_sales * recipe.outputs.get(offer.good, 0.0), rate,
+                                          producer.expected_sales * producer.yield_factor * recipe.outputs.get(offer.good, 0.0), rate,
                                           spec.spoilage_per_year if spec is not None else 0.0)
 
 
-def flood_price(wanted, held: float, lowest: float, highest: float, points: int = 200) -> float:
+def flood_price(wanted, held: float, lowest: Optional[float], highest: float, points: int = 200) -> float:
     """The price in [lowest, highest] at which a seller holding `held` units that are worth nothing unsold earns most from
     the buyers (`wanted(price)` is the quantity they want there): price times the smaller of the stock and the want, the
     highest such price when several earn alike. Asking less than this sells no more and takes less."""
-    if not 0.0 < lowest < highest:
+    if lowest is None or not 0.0 < lowest < highest:
         return highest
     ratio = (highest / lowest) ** (1.0 / (points - 1))
     prices = [lowest * ratio ** step for step in range(points - 1)] + [highest]
@@ -116,7 +114,7 @@ def unsold_above_the_floor(buyers: goods_market.Buyers, offers: Sequence[Offer],
     keys = {(offers[index].seller, offers[index].tile) for index in floors}
     if len(keys) != len(floors):
         return False
-    wanted = buyers.schedule.total_at(max(next(iter(floors.values())), buyers.minimum_price))
+    wanted = buyers.schedule.total_at(buyers.at_least_minimum(next(iter(floors.values()))))
     held = math.fsum(offers[index].quantity for index in floors)
     return wanted * (1.0 + UNSOLD_BOUND_MARGIN) < held * (1.0 - ROUNDING_SHARE)
 
@@ -129,7 +127,7 @@ def clear_with_search(setup, record, view, bids, original: Sequence[Offer], offe
     buyers = goods_market.Buyers(bids, last_price)       # the same bids meet every trial book
     result = goods_market.clear(bids, offers, good, area, currency, last_price, buyers)
     floors = _floors(setup, record, view, offers, original, costs if costs is not None else {})
-    if floors and _unsold(_sold_by_offer(result, offers), offers, list(floors)):
+    if floors and _unsold(sold_by_seller_tile(result.fills), offers, list(floors)):
         floors = _salvage_floors(floors, offers, buyers)
         if floors:
             offers, result = search_asks(bids, offers, floors, buyers, good, area, currency, last_price)

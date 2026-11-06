@@ -2,57 +2,22 @@
 
 An employer (the founder's household, a firm, the state, an interest group)
 holds no wage arithmetic. It asks this market what an hour of a trade costs,
-hires through it, and releases through it. The wage formula, the scarcity
-premium and the record of recent hiring pressure live here and nowhere else;
-tests/test_one_labour_market.py fails when wage arithmetic appears elsewhere.
-
-The market reads the opening schedule (labour_wages.py: subsistence floor,
-training premium, tightness), the cost-of-living factors, the economy's price
-and wage indices, and the local supply a trade has (labour_population.py).
-The pressure record is stored on the household state so a save carries it.
+hires through the labour core (sim/markets/port_staff.py). The wage is the economy's
+wage for the trade, always a number (labour_wages.py reads it; the home country's rule gives every trade a wage, sim/economy/trade_wages.py);
+until the game's money is priced at the economy, the opening schedule with the cost-of-living factors and
+the price and wage indices, which only the opening needs.
 """
 import math
 
 from sim.constants import declare
 
-from . import trade_data
-from .wage_factors import annual_wage, housing_factor
-from .market.clearing import (FIRM_LABOUR_SUPPLY_ELASTICITY, MATCHING_EFFICIENCY_PER_YEAR,
-                              MATCHING_SEARCHER_ELASTICITY)
+from . import trade_data, wage_provider
+from .labour_wage_schedule import person_year_hours
+from .wage_factors import annual_wage, housing_factor, tools_factor, weighted_factor
 
 
 class LabourMarket:
-    """Quote, hire, release and read the pressure of one economy's labour."""
-
-    LABOUR_PRESSURE_DECAY_RATE = declare(
-        "LABOUR_PRESSURE_DECAY_RATE", 0.6, kind="temporary_heuristic",
-        unit="fraction of remembered pressure surviving per year",
-        source=None, confidence="D",
-        why="How fast a burst of recent hiring or commissioning stops "
-            "moving the price of a trade - the same rate this file's own "
-            "comment says market_pressure decays at for slaves (0.55, "
-            "'near enough'), reused for labour rather than fitted "
-            "independently. Mostly gone in three years; a real figure "
-            "would come from how fast a local labour market actually "
-            "recovers from a demand shock, which nothing here measures.")
-    LABOUR_PRESSURE_SHARE_CAP = declare(
-        "LABOUR_PRESSURE_SHARE_CAP", 1.5, kind="temporary_heuristic",
-        unit="dimensionless (pressure / market_supply)",
-        source=None, confidence="D",
-        why="Caps how much of the price-pressure curve a single burst of "
-            "hiring can reach, so leaning on a trade harder and harder does "
-            "not send its price to infinity. The curve shape (saturating, "
-            "not linear) is a real claim about markets; where exactly it "
-            "saturates is tuned.")
-    LABOUR_PRICE_PRESSURE_COEFFICIENT = declare(
-        "LABOUR_PRICE_PRESSURE_COEFFICIENT", 0.9, kind="temporary_heuristic",
-        unit="dimensionless", source=None, confidence="D",
-        why="How much a fully-leaned-on trade's price roughly doubles by: "
-            "at share=1.0 this term alone adds 0.9 to the multiplier. "
-            "material_price_factor uses the identical curve for the same "
-            "reason; the coefficient itself is tuned to feel like a real but "
-            "survivable premium, not fitted to an observed labour-market "
-            "price response.")
+    """Quote one economy's labour: the wage is the economy's, the same for every employer."""
 
     TOWN_SPARE_HOUSING_SHARE = declare(
         "TOWN_SPARE_HOUSING_SHARE", 0.02, kind="temporary_heuristic",
@@ -64,213 +29,132 @@ class LabourMarket:
             "staff without a premium and a mass hiring by many employers does not; a real figure "
             "would come from a dwelling stock and its vacancy, which nothing here models.")
 
-    def __init__(self, labour):
-        self._labour = labour
-        self._world = labour._world
-
-    # ---- pressure: what recent hiring has done to a trade's local price ----
-
-    def _records(self):
-        return self._world.workforce.labour_pressure_records
-
-    def standing_draw(self, trade):
-        """Hours a year of this trade that standing staff already take out of its pool: trades drawn
-        from the unskilled pool stay drawn while they serve, so they do not decay."""
-        world = self._world
-        if trade != trade_data.fallback_trade_of(world, self._labour.wage_schedule().training_years):
-            return 0.0
-        drawn = [name for name in world.wages if trade_data.drawn_from_unskilled_pool(name)]
-        return sum(world.actor_staff_fte(name) for name in drawn) * world.HOURS_PER_PERSON_YEAR
-
-    def recent_pressure(self, trade):
-        """Hours a year of this trade recently leaned on, decayed to this year."""
-        record = self._records().get(trade)
-        if not record:
-            return 0.0
-        hours, year = record
-        age = max(0.0, self._world.year - year)
-        return hours * (self.LABOUR_PRESSURE_DECAY_RATE ** age)
-
-    def pressure(self, trade):
-        """Recent pressure plus what the standing army takes from the unskilled pool."""
-        return self.recent_pressure(trade) + self.standing_draw(trade)
-
-    def pressure_signature(self):
-        """A cheap fingerprint of the pressure on every trade, for callers that cache a figure which
-        depends on the market's wages."""
-        return tuple(sorted(self._records().items()))
-
-    def pressured_trades(self):
-        """Trades anyone has leaned on, in a stable order."""
-        return sorted(self._records())
-
-    def press(self, trade, hours):
-        """Record demand for `hours` a year of a trade that is not a hire (teaching pulls a trade's
-        people off their bench, a commission buys their time)."""
-        self._records()[trade] = (self.recent_pressure(trade) + max(0.0, hours), self._world.year)
-
-    def clear_pressure(self):
-        self._records().clear()
-
-    def _price_factor_from(self, pressure, supply):
-        supply = max(1.0, supply)
-        share = min(self.LABOUR_PRESSURE_SHARE_CAP, pressure / supply)
-        return 1.0 + self.LABOUR_PRICE_PRESSURE_COEFFICIENT * share * share
-
-    def price_factor(self, trade):
-        """What hiring MORE of this trade costs beyond the wage table, from how hard it has recently
-        been leaned on against the people the local market has of it."""
-        return self._price_factor_from(self.pressure(trade), self._labour.market_supply(trade))
-
-    def price_factor_after(self, trade, people):
-        """The price factor the instant `people` more are on the books: the hire being weighed, not
-        the market as it stands. Adds them to the household's headcount of the trade to read the
-        supply they widen, then takes them off again."""
-        people = max(0.0, people)
-        if people <= 0:
-            return self.price_factor(trade)
-        before = self._labour.employed(trade)
-        self._labour.set_employed(trade, before + people)
-        try:
-            supply_after = self._labour.market_supply(trade)
-        finally:
-            self._labour.set_employed(trade, before)
-        pressure_after = self.pressure(trade) + people * self._world.HOURS_PER_PERSON_YEAR
-        return self._price_factor_from(pressure_after, supply_after)
+    def __init__(self, world, schedule, settlement, book):
+        self._world = world
+        self.schedule = schedule
+        self.settlement = settlement
+        self.book = book
 
     # ---- the wage ----
 
+    HOUSING_PRESSURE_START_OCCUPANCY = declare(
+        "HOUSING_PRESSURE_START_OCCUPANCY", 0.75, kind="temporary_heuristic",
+        unit="fraction of supervision_room occupied", source=None,
+        confidence="D",
+        why="Housing pressure on wages begins only once this share of the "
+            "household's real places are occupied - a household with room "
+            "to spare pays no housing premium at all. Tuned threshold, not "
+            "measured from any real housing-market crowding curve.")
+    HOUSING_PRESSURE_BAND = declare(
+        "HOUSING_PRESSURE_BAND", 0.25, kind="temporary_heuristic",
+        unit="fraction of supervision_room", source=None, confidence="D",
+        why="How much further occupancy has to rise, past "
+            "HOUSING_PRESSURE_START_OCCUPANCY, before the housing premium "
+            "reaches its full HOUSING_PRESSURE_MAX_MARKUP - i.e. it is "
+            "fully saturated at 1.0 (completely full). Tuned, not "
+            "measured.")
+    HOUSING_PRESSURE_MAX_MARKUP = declare(
+        "HOUSING_PRESSURE_MAX_MARKUP", 0.4, kind="temporary_heuristic",
+        unit="fraction added to the housing cost factor", source=None,
+        confidence="D",
+        why="The most a fully-crowded household's housing cost factor can "
+            "rise by. Tuned game balance, not a measured rent response to "
+            "crowding.")
+    WAGE_SHARE_FOOD = declare(
+        "WAGE_SHARE_FOOD", 0.45, kind="temporary_heuristic",
+        unit="fraction of the wage-cost weighting", source=None,
+        confidence="D",
+        why="Subsistence food's assumed share of what a wage has to cover, "
+            "used to blend the endogenous food/housing/tool price factors "
+            "with the flat skill/difficulty premium into one multiplier on "
+            "the historical wage table. The four shares (this, WAGE_SHARE_"
+            "HOUSING, WAGE_SHARE_TOOLS, WAGE_SHARE_SKILL_DIFFICULTY) are "
+            "tuned to sum to 1.0 and to leave the weighted factor at "
+            "almost exactly 1.0 under neutral starting prices (see this "
+            "function's own docstring); a real breakdown would need actual "
+            "household-budget shares for a pre-modern worker, which this "
+            "project does not have.")
+    WAGE_SHARE_HOUSING = declare(
+        "WAGE_SHARE_HOUSING", 0.20, kind="temporary_heuristic",
+        unit="fraction of the wage-cost weighting", source=None,
+        confidence="D", why="See WAGE_SHARE_FOOD.")
+    WAGE_SHARE_TOOLS = declare(
+        "WAGE_SHARE_TOOLS", 0.10, kind="temporary_heuristic",
+        unit="fraction of the wage-cost weighting", source=None,
+        confidence="D", why="See WAGE_SHARE_FOOD.")
+    WAGE_SHARE_SKILL_AND_DIFFICULTY = declare(
+        "WAGE_SHARE_SKILL_AND_DIFFICULTY", 0.25, kind="temporary_heuristic",
+        unit="fraction of the wage-cost weighting", source=None,
+        confidence="D",
+        why="The fixed share of a wage that is skill, training, hazard and "
+            "bargaining position - the part the historical wage table "
+            "itself carries and that this endogenous model does not try "
+            "to re-derive. See WAGE_SHARE_FOOD for the rest of the split.")
+
     def cost_factors(self, trade):
-        """The food, housing and tool multipliers behind a trade's wage, for a screen to show."""
-        return self._labour.wage_cost_factors(trade)
+        """Food, housing and trade-tool multipliers for a wage, and their weighted blend.
+
+        The labour-market schedule is the neutral benchmark; each factor scales it by how far live prices have moved:
+        the staple's and the tools' market ratio (price over the incumbents' cost) at the last year's close, the
+        tools' also by the demand pressure. The weighted factor is 1.0 only while prices sit at neutral; a society
+        that starts with inherited demand for a tool's inputs already carries a small departure."""
+        food = self._world.finance.last_market_price_ratio(wage_provider.staple_material(self._world.scenario.civ))
+        housing = self.town_housing_factor()
+        basket = trade_data.tool_basket(trade_data.registry_of(self._world), trade)
+        tools = tools_factor(basket, self._world.finance.material_price_factor, self._world.finance.last_market_price_ratio)
+        return {"food": food, "housing": housing, "tools": tools,
+                "skill_and_difficulty": 1.0,
+                "weighted": weighted_factor(self.WAGE_SHARE_FOOD, self.WAGE_SHARE_HOUSING, self.WAGE_SHARE_TOOLS,
+                                            self.WAGE_SHARE_SKILL_AND_DIFFICULTY, food, housing, tools)}
 
     def pay_scale(self):
         """What an hour pays against the opening schedule, at this economy's output per hour."""
-        return self._world.real_output_per_head() ** self._labour.LABOUR_PAY_SHARE_OF_OUTPUT_GAIN
-
-    def wage_index(self):
-        """The scarcity-driven index every wage in this society is scaled by."""
-        return self._world.wage_index
-
-    def wage_index_change(self, index_before):
-        """How far the wage index has moved from a reading taken earlier."""
-        return self._world.wage_index - index_before
-
-    def household_wage_ratio(self):
-        """What an hour of the unskilled numeraire pays now against the opening, before the price level and
-        the cost of living (the solver's prices carry those): the scarcity of hands against the working
-        population, times the share of output gain pay passes on."""
-        world = self._world
-        return world.wage_index / world.wage_index_base * self.pay_scale()
+        return self._world.finance.real_output_per_head() ** self.schedule.LABOUR_PAY_SHARE_OF_OUTPUT_GAIN
 
     def town_housing_room(self):
         """People the home town can house beyond those already there: the spare share of its
         dwellings plus the worker housing built in it."""
         world = self._world
-        return (self._labour.home_town_population_estimate() * self.TOWN_SPARE_HOUSING_SHARE
+        return (self.settlement.home_town_population_estimate() * self.TOWN_SPARE_HOUSING_SHARE
                 + max(0.0, world.workforce.worker_housing_places or 0.0))
 
     def town_workers(self):
-        """People every employer in the town has on its books: the founder's household and every
-        firm and government."""
-        return self._labour.headcount() + self._world.actor_staff_total()
+        """People every employer in the town has on its books: the founder's household and the home country's
+        firms and governments."""
+        return self.book.headcount() + math.fsum(self._world.actors.actor_staff_fte(trade)
+                                                 for trade in sorted(self._world.trades.wages))
 
     def town_housing_factor(self):
         """The housing multiplier on a wage. It reads how full the town's housing is from everyone
         employed in it, so it is the same for every employer hiring there."""
         return housing_factor(self.town_workers(), self.town_housing_room(),
-                              self._labour.HOUSING_PRESSURE_START_OCCUPANCY, self._labour.HOUSING_PRESSURE_BAND,
-                              self._labour.HOUSING_PRESSURE_MAX_MARKUP)
+                              self.HOUSING_PRESSURE_START_OCCUPANCY, self.HOUSING_PRESSURE_BAND,
+                              self.HOUSING_PRESSURE_MAX_MARKUP)
 
-    def _annual(self, trade, scarcity):
+    def _annual(self, trade) -> float:
+        """The economy's wage for the trade over a year; until the game's money is priced at the economy, the opening
+        schedule's with the cost-of-living factors, the price index and the wage index."""
         world = self._world
-        wage = world.economy.agent_wage_per_hour(trade)
+        wage = world.economy.agent_wage_at(trade, self.settlement.base_tile())
         if wage is not None:
-            return wage * world.HOURS_PER_PERSON_YEAR * scarcity
-        base = self._labour.base_annual_wage(trade)
-        factors = self._labour.wage_cost_factors(trade)
-        return annual_wage(base, factors["weighted"], world.price_index, world.wage_index, scarcity, self.pay_scale())
+            return wage * person_year_hours(world)
+        base = self.schedule.base_annual_wage(trade)
+        factors = self.cost_factors(trade)
+        return annual_wage(base, factors["weighted"], world.trades.wage_index, 1.0, self.pay_scale())
 
-    def quote_annual(self, trade, people=0.0, employer=None, pay_premium=0.0):
-        """Money one person-year of a trade costs `employer` now. `people` more taken on first move
-        the local scarcity premium to what it will be once they are on the books (zero: as it
-        stands). The rate does not depend on who asks; `employer` is accepted so a market that
-        one day prices one buyer differently has the buyer to hand."""
-        scarcity = self.price_factor_after(trade, people) if people else self.price_factor(trade)
-        return self._annual(trade, scarcity) * (1.0 + pay_premium)
+    def quote_annual(self, trade) -> float:
+        """Money one person-year of a trade costs now: the economy's wage for the trade, the same for every employer and
+        every number taken on (a hire is a standing bid in the labour core, sim/markets/port_staff.py)."""
+        return self._annual(trade)
 
-    def quote_annual_in(self, trade, country):
-        """Money one person-year of a trade costs in another country's labour markets, from the wages those
-        markets set (the agent economy's labour areas of that country); None while the country is not part of
-        the economy or its markets have no wage. The home country is `quote_annual`."""
-        answers = self._world.economy.agent_country(country)
-        return None if answers is None else answers.pay_per_person_year(trade)
+    def quote(self, trade) -> float:
+        """Money one hour of a trade costs now: the one wage of the trade."""
+        return self._annual(trade) / person_year_hours(self._world)
 
-    def unscarce_annual(self, trade):
-        """One person-year of a trade before the local scarcity premium (a screen's 'wage table' figure)."""
-        return self._annual(trade, 1.0)
+    def quote_unskilled(self) -> float:
+        """Money one hour of the unskilled trade (the one anyone can take up at once) costs now."""
+        return self.quote(trade_data.fallback_trade_of(self._world))
 
-    def quote(self, trade, hours=0.0, employer=None, pay_premium=0.0):
-        """Money one hour of a trade costs `employer` now, once `hours` a year more are taken on;
-        `pay_premium` is the fraction the employer pays over the market."""
-        world = self._world
-        people = hours / world.HOURS_PER_PERSON_YEAR
-        return self.quote_annual(trade, people, employer, pay_premium) / world.HOURS_PER_PERSON_YEAR
-
-    def recruitable(self, trade, people, pay_premium=0.0):
-        """How many of `people` an employer can expect to find this year in the local market: the
-        matching form of the market core, with searchers the local hours not already taken."""
-        people = max(0.0, people)
-        if people <= 0.0:
-            return 0.0
-        searchers = max(0.0, self._labour.market_supply(trade) - self.pressure(trade))
-        vacancies = people * self._world.HOURS_PER_PERSON_YEAR
-        rate = (MATCHING_EFFICIENCY_PER_YEAR * (1.0 + pay_premium) ** FIRM_LABOUR_SUPPLY_ELASTICITY
-                * (searchers / vacancies) ** MATCHING_SEARCHER_ELASTICITY)
-        return min(people, people * (1.0 - math.exp(-rate)))
-
-    def hire_cost(self, trade, people, pay_premium=0.0):
-        """The finder's fee for taking on `people` of a trade: the first year's wage at the table
-        rate, which is what payroll charges once they are in. The first person is found at the
-        going scarcity; each further one costs more because those before them have thinned the
-        pool, so the fee uses the mean of the scarcity now and after all but the last are taken."""
-        if people <= 0:
-            return 0.0
-        scarcity = 0.5 * (self.price_factor(trade) + self.price_factor_after(trade, people - 1.0))
-        return people * self.unscarce_annual(trade) * scarcity * (1.0 + pay_premium)
-
-    def whole_recruits(self, trade, people, pay_premium=0.0):
-        """Whole people of the `people` asked for that a search finds this year: the matching
-        outcome rounded to nearest, never fewer than one so a single hire is never refused for
-        search alone (its scarcity shows in the price)."""
-        if people <= 0:
-            return 0
-        found = self.recruitable(trade, people, pay_premium)
-        return int(min(people, max(1, math.floor(found + 0.5))))
-
-    def commission_cost(self, trade, hours, premium):
-        """What a one-off job of `hours` costs: the hour the market quotes, times a shop's `premium`."""
-        return hours * premium * self.quote(trade)
-
-    def in_current_money(self, schedule_amount):
-        """An amount at the opening schedule's prices, in today's money."""
-        world = self._world
-        return schedule_amount * world.wage_index * world.price_index
-
-    def hire(self, employer, trade, hours, pay_premium=0.0):
-        """Take on `hours` a year of a trade. Returns the rate an hour cost (premium included), and
-        records the pressure; a better payer draws from rivals rather than idle hands, so its
-        premium scales the pressure down."""
-        rate = self.quote(trade, 0.0, employer, pay_premium)
-        if pay_premium > 0.0:
-            hours = hours / (1.0 + pay_premium) ** FIRM_LABOUR_SUPPLY_ELASTICITY
-        self.press(trade, hours)
-        return rate
-
-    def release(self, employer, trade, hours):
-        """Give back `hours` a year of a trade: the pressure they put on its price eases."""
-        record = self._records().get(trade)
-        if not record:
-            return
-        remaining = max(0.0, self.recent_pressure(trade) - max(0.0, hours))
-        self._records()[trade] = (remaining, self._world.year)
+    def commission_cost(self, trade, hours) -> float:
+        """What a one-off job of `hours` costs: the hour the market quotes."""
+        return hours * self.quote(trade)

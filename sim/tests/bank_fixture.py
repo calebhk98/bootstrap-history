@@ -40,7 +40,7 @@ class BankFixture(unittest.TestCase):
                     issued_year=0)
         banks.draw_deposits(self.record, [loan], pledged, 0, self.money)
         self.record.book.transfer(Transfer(bank.agent_id, self.borrower, self.money, amount, "test loan"))
-        self.record.loans.append(loan)
+        self.record.credit.loans.append(loan)
         return loan
 
     def stand_a_bank_that_has_lent(self, amount=820.0):

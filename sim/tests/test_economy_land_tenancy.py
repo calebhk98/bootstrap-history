@@ -17,7 +17,7 @@ HECTARES = 100.0
 
 
 def margin_at(wage, fertility=1.0):
-    return land_bid.crop_margin_per_hectare(WHEAT, 1.0, fertility, PRICES, wage)
+    return land_bid.crop_margin_per_hectare(WHEAT, 1.0, fertility, PRICES, {"hand": wage})
 
 
 class RentFollowsLabourScarcityTests(unittest.TestCase):
@@ -42,9 +42,9 @@ class RentFollowsLabourScarcityTests(unittest.TestCase):
         paid = []
         for wage in (0.05, 0.19):
             _setup, record = make_world()
-            record.titles[TILE][PEASANT] -= 0.1
-            record.titles[TILE][LANDLORD] += 0.1
-            record.tenancies = {TILE: [{"tenant": PEASANT, "lessor": LANDLORD, "share": 0.1, "arrears": 0.0}]}
+            record.land.titles[TILE][PEASANT] -= 0.1
+            record.land.titles[TILE][LANDLORD] += 0.1
+            record.land.tenancies = {TILE: [{"tenant": PEASANT, "lessor": LANDLORD, "share": 0.1, "arrears": 0.0}]}
             record.book.transfer(Transfer("edge:harvest", PEASANT, MONEY, 1000.0, "harvest"))
             ask = land_tenancy.rent_ask(RENT_PER_HECTARE, margin_at(wage), 0.0)
             payments = titles.settle_tenancies(record, MONEY, {TILE: HECTARES}, ask_by_tile={TILE: ask})
@@ -54,9 +54,9 @@ class RentFollowsLabourScarcityTests(unittest.TestCase):
 
     def test_without_an_ask_the_posted_rent_is_paid(self):
         _setup, record = make_world()
-        record.titles[TILE][PEASANT] -= 0.1
-        record.titles[TILE][LANDLORD] += 0.1
-        record.tenancies = {TILE: [{"tenant": PEASANT, "lessor": LANDLORD, "share": 0.1, "arrears": 0.0}]}
+        record.land.titles[TILE][PEASANT] -= 0.1
+        record.land.titles[TILE][LANDLORD] += 0.1
+        record.land.tenancies = {TILE: [{"tenant": PEASANT, "lessor": LANDLORD, "share": 0.1, "arrears": 0.0}]}
         record.book.transfer(Transfer("edge:harvest", PEASANT, MONEY, 1000.0, "harvest"))
         payments = titles.settle_tenancies(record, MONEY, {TILE: HECTARES})
         self.assertAlmostEqual(sum(payment.amount for payment in payments), 0.1 * HECTARES * RENT_PER_HECTARE)
@@ -65,13 +65,13 @@ class RentFollowsLabourScarcityTests(unittest.TestCase):
 class LeasingInTheMarketTests(unittest.TestCase):
     def landless_world(self):
         setup, record = make_world()
-        record.titles[TILE][LANDLORD] += record.titles[TILE].pop(PEASANT)       # the peasant cohort has no land
+        record.land.titles[TILE][LANDLORD] += record.land.titles[TILE].pop(PEASANT)       # the peasant cohort has no land
         return setup, record
 
     def test_a_landless_cohort_leases_from_a_holder_with_no_hands_at_the_ask(self):
         _setup, record = self.landless_world()
         held = titles.holding(record, TILE, LANDLORD) * HECTARES
-        leases = land_tenancy.match([land_tenancy.Offer(PEASANT, TILE, 10.0, 4.0)],
+        leases = land_tenancy.match([land_tenancy.TenancyRequest(PEASANT, TILE, 10.0, 4.0)],
                                     [land_tenancy.Lot(LANDLORD, TILE, held)], {TILE: RENT_PER_HECTARE}, {TILE: 1.5})
         self.assertEqual([(lease.tenant, lease.lessor, lease.hectares, lease.rent_per_hectare) for lease in leases],
                          [(PEASANT, LANDLORD, 10.0, 1.5)])
@@ -97,12 +97,12 @@ class LeasingInTheMarketTests(unittest.TestCase):
                                0.1 * HECTARES * RENT_PER_HECTARE)
 
     def test_no_lease_when_the_tenant_cannot_bear_the_ask(self):
-        leases = land_tenancy.match([land_tenancy.Offer(PEASANT, TILE, 10.0, 0.5)],
+        leases = land_tenancy.match([land_tenancy.TenancyRequest(PEASANT, TILE, 10.0, 0.5)],
                                     [land_tenancy.Lot(LANDLORD, TILE, 50.0)], {TILE: 2.0}, {TILE: 1.5})
         self.assertEqual(leases, [])
 
     def test_the_tenant_that_bears_most_is_served_first_when_land_is_short(self):
-        leases = land_tenancy.match([land_tenancy.Offer("a", TILE, 8.0, 2.0), land_tenancy.Offer("b", TILE, 8.0, 3.0)],
+        leases = land_tenancy.match([land_tenancy.TenancyRequest("a", TILE, 8.0, 2.0), land_tenancy.TenancyRequest("b", TILE, 8.0, 3.0)],
                                     [land_tenancy.Lot(LANDLORD, TILE, 10.0)], {TILE: 1.0}, {TILE: 1.0})
         self.assertEqual([(lease.tenant, lease.hectares) for lease in leases], [("b", 8.0), ("a", 2.0)])
 
@@ -123,7 +123,7 @@ class LeasingInTheMarketTests(unittest.TestCase):
     def test_a_lease_survives_a_save_and_load(self):
         _setup, record = self.landless_world()
         titles.lease(record, TILE, PEASANT, LANDLORD, 0.1)
-        self.assertEqual(EconomyRecord.from_record(record.to_record()).tenancies, record.tenancies)
+        self.assertEqual(EconomyRecord.from_record(record.to_record()).land.tenancies, record.land.tenancies)
 
 
 class ToolsCheckTests(unittest.TestCase):

@@ -89,16 +89,16 @@ check("the state's purse receives what was taken", abs(state.money - enforced) <
 
 # ---- the command, for any actor the state presses ---------------------------------------------
 player = Player("player:b", ActorRecord(kind="player", controller="human"))
-check("an actor answers demands by complying until it says otherwise", player.demand_stance() == "comply")
+check("an actor answers demands by complying until it says otherwise", player.stance.demand_stance() == "comply")
 player.record.orders.append({"command": "answer_demand", "stance": "refuse"})
 run_orders(player, PressedWorld())
-check("the command sets the stance", player.demand_stance() == "refuse", player.record.journal)
+check("the command sets the stance", player.stance.demand_stance() == "refuse", player.record.journal)
 check("the journal gives the odds of the refusal",
       "chance" in player.record.journal[-1]["detail"] and player.record.journal[-1]["ok"], player.record.journal)
 player.record.orders.append({"command": "answer_demand", "stance": "pretend"})
 run_orders(player, PressedWorld())
 check("a stance not built yet is refused and the old one stands",
-      not player.record.journal[-1]["ok"] and player.demand_stance() == "refuse", player.record.journal[-1])
+      not player.record.journal[-1]["ok"] and player.stance.demand_stance() == "refuse", player.record.journal[-1])
 
 # ---- the founder's household answers the same way ---------------------------------------------
 import random

@@ -30,7 +30,6 @@ check("the two warnings differ: one names a calendar wait, the other no work in 
       free_hours_note([0.0], 5000.0) != free_hours_note([], 5000.0))
 
 # --- the notes reach the replies
-from types import SimpleNamespace
 
 from sim.ui.proto.parallelism_notes import KEY_CALENDAR_FLOOR, add_calendar_floor_note, free_hours_going_unused
 

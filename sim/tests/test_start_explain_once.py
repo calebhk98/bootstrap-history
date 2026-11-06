@@ -3,7 +3,6 @@ rule (`already_explained`) is called on a stub game holding a seat's progress re
 
 QUICK_TOPIC = True
 
-from types import SimpleNamespace
 
 from .harness import check
 
@@ -25,10 +24,10 @@ check("another topic is explained on its own", already_explained(game, "start_un
 check("`full` on a topic never shown still marks it shown",
       already_explained(game, "third", {"full": True}) is False and already_explained(game, "third", {}) is True)
 check("the record keeps the year each topic was first shown",
-      game.state.acting_record.seat_progress._said_explanations == {"start_price_fixed": 100, "start_untrained_trade": 100, "third": 100},
-      game.state.acting_record.seat_progress._said_explanations)
+      game.state.acting_record.seat_progress.said_explanations == {"start_price_fixed": 100, "start_untrained_trade": 100, "third": 100},
+      game.state.acting_record.seat_progress.said_explanations)
 later = stub_game(year=130)
-later.state.acting_record.seat_progress._said_explanations = {"start_price_fixed": 100}
+later.state.acting_record.seat_progress.said_explanations = {"start_price_fixed": 100}
 already_explained(later, "other", {})
 check("a topic first shown later is dated then, and the old one keeps its year",
-      later.state.acting_record.seat_progress._said_explanations == {"start_price_fixed": 100, "other": 130}, later.state.acting_record.seat_progress._said_explanations)
+      later.state.acting_record.seat_progress.said_explanations == {"start_price_fixed": 100, "other": 130}, later.state.acting_record.seat_progress.said_explanations)

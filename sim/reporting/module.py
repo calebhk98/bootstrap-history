@@ -7,5 +7,11 @@ from .output import Output
 from .price_ratios import PriceRatios
 
 
-class Reporting(Logging, Causes, Output, PriceRatios, Module):
-    pass
+class Reporting(Module):
+
+    PARTS = {
+        "logging": Logging,
+        "causes": Causes,
+        "output": Output,
+        "price_ratios": PriceRatios,
+    }

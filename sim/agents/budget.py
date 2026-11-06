@@ -15,34 +15,28 @@ from .budget_line import Line, goods
 from .tuning import ADMINISTRATIVE_SPAN, ARMY_ADJUSTMENT_RATE, LEVY_RATE_CEILING
 from .tuning_spending import THREAT_ARMY_RESPONSE
 
-# What an army wears out, as a material in the tree's own terms.
-EQUIPMENT_MATERIAL = "iron_bar_kg"
-
-# The trade the army is booked in (data/world/trades.json); its people come from the working age.
-SOLDIER_TRADE = "soldier"
-
-
 def army_line(world: Any, soldiers: float, conscripts: float = 0.0) -> List[Line]:
 	"""The force of `soldiers`, of whom `conscripts` serve a labour due and draw no pay; all of it wears equipment."""
 	if soldiers <= 0.0:
 		return []
 	paid = max(0.0, soldiers - conscripts)
-	tonnes = soldiers * world.equipment_kg_per_soldier() / 1000.0
-	return [Line("army", "requisition", {SOLDIER_TRADE: paid} if paid > 0.0 else {},
-				 paid * world.pay_per_person_year(SOLDIER_TRADE), **goods(world, EQUIPMENT_MATERIAL, tonnes))]
+	tonnes = soldiers * world.army.equipment_kg_per_soldier() / 1000.0
+	soldier = world.labour.trade_of_role("soldier")   # the trade the army is booked in (data/world/trades.json)
+	return [Line("army", "requisition", {soldier: paid} if paid > 0.0 else {},
+				 paid * world.labour.pay_per_person_year(soldier), **goods(world, world.army.equipment_material(), tonnes))]
 
 
 def officials_kept(world: Any) -> float:
 	"""Officials the state keeps on its rolls: its people over the number one official can keep on them."""
-	return world.population_total() / ADMINISTRATIVE_SPAN
+	return world.people.population_total() / ADMINISTRATIVE_SPAN
 
 
 def administration_line(world: Any) -> List[Line]:
 	officials = officials_kept(world)
 	if officials <= 0.0:
 		return []
-	return [Line("administration", "office", {"scribe": officials},
-				 officials * world.pay_per_person_year("scribe"))]
+	clerk = world.labour.trade_of_role("clerk")
+	return [Line("administration", "office", {clerk: officials}, officials * world.labour.pay_per_person_year(clerk))]
 
 
 def concession_lines(claims: Dict[str, float]) -> List[Line]:
@@ -88,7 +82,7 @@ def standing_lines(world: Any, soldiers: Optional[float] = None, conscripts: flo
 			+ budget_lines.dole_line(world) + budget_lines.navy_line(world) + budget_works.works_upkeep_lines(world)
 			+ budget_works.collection_line(world) + budget_works.campaign_line(world, soldiers)
 			+ budget_works.donative_line(world, max(0.0, soldiers - conscripts)))
-	record = world.government().record
+	record = world.setting.government().record
 	return government_levers.scaled(record, lines) + government_levers.lever_lines(record, world)
 
 
@@ -105,7 +99,7 @@ def army_goal(opening: float, pressure: float) -> float:
 
 def army_wanted(world: Any) -> float:
 	"""The force the state wants: the army lever its controller set, else what the world derives."""
-	return government_levers.army_target(world.government().record, world.army_wanted())
+	return government_levers.army_target(world.setting.government().record, world.army.army_wanted())
 
 
 def army_next_year(soldiers: float, wanted: float, funded: float) -> float:

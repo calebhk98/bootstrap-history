@@ -4,6 +4,7 @@ mod's `ModAccess`, never the registry, the player object or the world. Each test
 assembly, no game."""
 QUICK_TOPIC = True
 
+from sim.tests.agents_fake_world import flat_world
 import unittest
 from types import SimpleNamespace
 
@@ -21,7 +22,7 @@ class ShippedBase:
 	kind = "shipped"
 
 	def advance(self, world):
-		return ("shipped", world.edge("landowners"))
+		return ("shipped", world.setting.edge("landowners"))
 
 
 def mod_class(body_edge="thieves"):
@@ -30,19 +31,20 @@ def mod_class(body_edge="thieves"):
 		kind = MOD + ":holder"
 
 		def advance(self, world):
-			return ("mod", world.edge(body_edge), super().advance(world))
+			return ("mod", world.setting.edge(body_edge), super().advance(world))
 
 		def peek(self, world):
 			return world.registry
 
 		def named(self, *, world):
-			return world.year
+			return world.setting.year
 
 		def helper(self, count):
 			return count + 1
 	return Holder
 
 
+@flat_world
 class World:
 	registry = "the live registry"
 	year = 1300

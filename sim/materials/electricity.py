@@ -1,11 +1,17 @@
 """Electricity as a physical quantity: what the seat can generate and what its work in hand draws."""
 from typing import Any, Dict, Set, Tuple
 
+from sim.assembly.api import Part
+
 from . import rules
 
 
-class Electricity:
+class Electricity(Part):
     """Needs: mechanic, tree_nodes, active_projects, operating, hard_prerequisites."""
+
+    def __init__(self, module):
+        super().__init__(module)
+        self._load_ids: Any = None                  # nodes that need generated electricity; the tree does not change in a run
 
     def anchor_kw(self, tier: str) -> float:
         return self.needs.mechanic["power_tier"][tier]["anchor_kw"]

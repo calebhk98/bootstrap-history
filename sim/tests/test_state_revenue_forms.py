@@ -4,6 +4,7 @@ stand-in world that answers the bases from numbers built here; the year of a sta
 test_state_revenue_forms_scenario."""
 QUICK_TOPIC = True
 
+
 from types import SimpleNamespace
 
 from .harness import check, S
@@ -11,7 +12,7 @@ from .harness import check, S
 from sim.agents import revenue, revenue_labour
 from sim.agents.api import Government
 from sim.agents.records import ActorRecord
-from sim.actors.world_revenue import RevenueView
+from sim.actors.world_revenue import Revenue
 from sim.tests.world_stand_in import fake_needs
 
 from .agents_fake_world import FakeWorld
@@ -68,19 +69,13 @@ class BasesWorld(FakeWorld):
         return revenue.assess(self)
 
 
-class StateView(RevenueView):
-    """The revenue questions over a stand-in game: its declared forms, its government and the bases of BasesWorld."""
+class StateView(Revenue):
+    """The revenue part over a stand-in game: its declared forms, its government and the bases of BasesWorld."""
 
     def __init__(self, civ, forms_world):
-        self.needs = fake_needs(civilisation=civ)
+        government = Government("government:home", ActorRecord(kind="government", revenue_forms=list(civ.get("state_revenue") or ())))
+        super().__init__(SimpleNamespace(needs=fake_needs(civilisation=civ), setting=SimpleNamespace(government=lambda: government)))
         self._forms_world = forms_world
-        self._government = Government("government:home", ActorRecord(kind="government", revenue_forms=list(civ.get("state_revenue") or ())))
-
-    def government(self):
-        return self._government
-
-    def _once(self, key, compute):
-        return compute()
 
     def revenue_assessments(self):
         return revenue.assess(self._forms_world)
@@ -131,13 +126,13 @@ check("trade duties follow the trade that crossed the border",
 
 # ---- a lever on a rate (595) moves the form's yield -------------------------------------------------
 levered = StateView({"state_revenue": [POLL]}, BasesWorld([POLL]))
-levered.government().record.levers["revenue"] = {"poll_tax": {"rate": 0.04}}
+levered.world.setting.government().record.levers["revenue"] = {"poll_tax": {"rate": 0.04}}
 forms = levered.revenue_forms()
 check("the government's lever sets the rate of a declared form", [form["rate"] for form in forms] == [0.04], forms)
 
 # ---- the revenue by form is recorded, for the audit -------------------------------------------------
 state = Government("government:home", ActorRecord(kind="government"))
-state.receive_revenue(world)
+state.stores.receive_revenue(world)
 check("the revenue by form is recorded in money's worth, for the audit",
       all(abs(state.record.revenue_by_form[form] - money) < 1e-6 * money for form, money in expected.items()), state.record.revenue_by_form)
 check("a form paid in kind is booked as goods, not as coin taxation",

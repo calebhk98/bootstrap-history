@@ -8,7 +8,7 @@ an AI player also decides for itself.
 import math
 from typing import Any, Callable, Dict, List, Optional
 
-from . import business_books, ledger, research, research_choice
+from . import business_books, ledger, research_choice
 from .base import RecordedActor
 from .player_commands import CommandRejected, run_orders
 from .tuning_player import PLAYER_VISIBLE_EXPOSURE
@@ -33,36 +33,36 @@ class Player(RecordedActor):
 
 	# ---- concerns ---------------------------------------------------------
 	def begin_concern(self, node_id: str, world: Any) -> str:
-		if node_id not in world.nodes:
+		if node_id not in world.setting.nodes:
 			raise CommandRejected("no such node")
 		if not self.knows(node_id, world):
 			raise CommandRejected("not known")
 		if node_id in self.concerns:
 			raise CommandRejected("already open")
-		self.business.open_plant(node_id, world.year)
+		self.business.lifecycle.open_plant(node_id, world.setting.year)
 		return "opened"
 
 	def end_concern(self, node_id: str, world: Any) -> str:
 		if node_id not in self.concerns:
 			raise CommandRejected("not open")
-		self.business.close_plant(node_id)
+		self.business.lifecycle.close_plant(node_id)
 		return "closed"
 
 	def operate(self, world: Any) -> None:
 		for node_id in sorted(self.concerns):
 			rivals = self.rivals_of(node_id, self.actor_id) if self.rivals_of else 0.0
-			self.business.note_margin(node_id, business_books.operate(self.business, self, node_id, world, rivals))
+			self.business.tally.note_margin(node_id, business_books.operate(self.business, self, node_id, world, rivals))
 		self.record.last_margin = sum(plant.margin for plant in self.business.plants if plant.margin is not None)
 
 	def proven_concerns(self, world: Any) -> List[str]:
 		"""Concerns it runs at a profit where others could see them, for competitors to enter after."""
 		proven = []
 		for node_id in sorted(self.concerns):
-			if (self.margin_of(node_id) or 0.0) <= 0.0:
+			if (self.holdings.margin_of(node_id) or 0.0) <= 0.0:
 				continue
-			if world.year - self.opened_year_of(node_id, world.year) < world.proof_years(node_id):
+			if world.setting.year - self.holdings.opened_year_of(node_id, world.setting.year) < world.disclosure.proof_years(node_id):
 				continue
-			if world.is_public(node_id) or world.exposure(node_id, self.location()) >= PLAYER_VISIBLE_EXPOSURE:
+			if world.knowledge.is_public(node_id) or world.knowledge.exposure(node_id, self.location()) >= PLAYER_VISIBLE_EXPOSURE:
 				proven.append(node_id)
 		return proven
 
@@ -89,11 +89,11 @@ class Player(RecordedActor):
 	def decide(self, world: Any) -> None:
 		"""An AI player: shut what it expects to lose on, open what it knows pays, research what is worth it."""
 		for node_id in sorted(self.concerns):
-			if (self.margin_of(node_id) or 0.0) < 0 and self.expected_margin(node_id, world) <= 0:
-				self.business.close_plant(node_id)
+			if (self.holdings.margin_of(node_id) or 0.0) < 0 and self.expected_margin(node_id, world) <= 0:
+				self.business.lifecycle.close_plant(node_id)
 		for node_id in sorted(self.knowledge - self.concerns):
-			if node_id in world.nodes and self.expected_margin(node_id, world) > 0:
-				self.business.open_plant(node_id, world.year)
+			if node_id in world.setting.nodes and self.expected_margin(node_id, world) > 0:
+				self.business.lifecycle.open_plant(node_id, world.setting.year)
 		research_choice.decide(self, world)
 
 	def act(self, world: Any) -> None:
@@ -101,6 +101,5 @@ class Player(RecordedActor):
 		run_orders(self, world)
 		if self.record.controller == "ai":
 			self.decide(world)
-		self.workforce.clear()
-		self.work_on_research(world)
+		self.copying.work_on_research(world)
 		self.operate(world)

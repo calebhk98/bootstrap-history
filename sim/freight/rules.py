@@ -1,7 +1,7 @@
 """The freight module's rules as plain functions of plain values: what a leg costs once the carrier's food rides on it,
-how one-sided the flows are, who is owed the dues of a haul, and the markup a haul adds to a book price."""
+how one-sided the flows are, what the dues of a haul cost, and the markup a haul adds to a book price."""
 import dataclasses
-from typing import Any, Dict, Iterable, List, Mapping, Optional, Tuple
+from typing import Dict, Iterable, Mapping, Optional
 
 from sim.geography.api import cargo_cost, freight_cost, provisions, sea_freight
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
@@ -33,25 +33,12 @@ def handling_money_per_tonne(dues_hours: Mapping[str, float], wage: float, port_
     return costs
 
 
-def dues_payments(owed: Mapping[Any, float], limit: Optional[float]) -> List[Tuple[Any, float]]:
-    """[(holder, money)] the payer pays, holders in sorted order, scaled down so the total never exceeds `limit`;
-    a holder owed nothing is left out."""
-    total = sum(owed.values())
-    scale = 1.0 if limit is None or total <= limit else max(0.0, limit) / total
-    payments = []
-    for holder in sorted(owed):
-        amount = owed[holder] * scale
-        if amount > 0.0:
-            payments.append((holder, amount))
-    return payments
-
-
 def foreign_flow_imbalance(book_entries: Iterable[Mapping[str, float]]) -> float:
-    """How one-sided last year's trade with a partner was, from its book entries: 1 when nothing flowed back (or
-    nothing is known), 0 when tonnes in and out match."""
+    """How one-sided last year's trade with a partner was, from its trade book entries (in_tonnes, out_tonnes): 1 when
+    nothing flowed back (or nothing is known), 0 when tonnes in and out match."""
     entries = list(book_entries)
-    tonnes_out = sum(max(0.0, entry.get("trade_tonnes", 0.0)) for entry in entries)
-    tonnes_in = sum(max(0.0, -entry.get("trade_tonnes", 0.0)) for entry in entries)
+    tonnes_out = sum(entry.get("out_tonnes", 0.0) for entry in entries)
+    tonnes_in = sum(entry.get("in_tonnes", 0.0) for entry in entries)
     return freight_cost.imbalance_of_flows(tonnes_out, tonnes_in)
 
 
@@ -103,12 +90,16 @@ def route_with_provisions(route: Route, models: Mapping[str, tuple], handling: M
     return Route(tuple(legs))
 
 
-def cargo_loss_share(route: Optional[Route], daily_loss_by_mode: Mapping[str, float], hull_loss_per_thousand_km: float) -> float:
-    """Share of cargo lost on the route: the hull loss rate over its sea legs, and the daily loss of a herd over its
-    legs on the road."""
+def cargo_loss_share(route: Optional[Route], daily_loss_by_mode: Mapping[str, float],
+                     hull_loss_per_thousand_km: Optional[float]) -> float:
+    """Share of cargo lost on the route: the hull loss rate over its sea legs (None when the hull has no price, which
+    a route with sea legs must not meet), and the daily loss of a herd over its legs on the road."""
     if route is None:
         return 0.0
     sailed_km = sum(leg.distance_km for leg in route.legs if leg.mode == SEA_MODE)
+    if sailed_km > 0.0 and hull_loss_per_thousand_km is None:
+        raise ValueError("a route sails but the hull has no price to lose")
+    hull_loss_per_thousand_km = hull_loss_per_thousand_km or 0.0
     on_the_road = [cargo_cost.daily_loss_share(daily_loss_by_mode[leg.mode], leg.travel_days)
                    for leg in route.legs if leg.mode in daily_loss_by_mode]
     at_sea = cargo_cost.sea_loss_share(hull_loss_per_thousand_km, sailed_km)

@@ -19,7 +19,7 @@ _wk = _ask(_game_b, cmd="work", trade="scribe", hours=500)
 _ask(_game_b, cmd="start", id="units_standards")
 _mn = _ask(_game_b, cmd="money")
 check("work reports the wage and no separate practice cost",
-      _wk["earned"] > 0 and "it_cost_your_own_practice" not in _wk and "so_you_are_up" not in _wk, _wk)
+      _wk["expected_pay"] > 0 and "it_cost_your_own_practice" not in _wk and "so_you_are_up" not in _wk, _wk)
 _st2 = _ask(_game_b, cmd="state")
 check("`money` and `state` print the same net after the work in hand",
       _mn["net_after_project_spend"] == _st2["net_after_project_spend"],
@@ -83,11 +83,11 @@ check("...and its NEEDS column is the supervision the engine charges",
 # reported the game as having lost count of their household.
 s_cn = unopened_sim(capital=20000.0)
 _kn = next(node_id for node_id in sorted(NODES) if NODES[node_id]["art"] >= 2 and NODES[node_id]["sch"] == 0)
-s_cn.view("legacy_labour")().commission("mason", 4000.0)
+s_cn.assembly.modules["workforce"].parts.core.labour.commissions.commission("mason", 4000.0)
 _why_cn = S._node_explain(s_cn, NODES, _kn)
 check("`why` counts the same artisans `start` does: yourself and hours bought",
-      abs(_why_cn["you_have"]["artisans"] - round(s_cn.view("legacy_labour")().craft_hands_available(), 1)) < 0.05,
-      (_why_cn["you_have"], s_cn.view("legacy_labour")().craft_hands_available(), s_cn.view("staff")()["artisans"]))
+      abs(_why_cn["you_have"]["artisans"] - round(s_cn.assembly.modules["workforce"].parts.core.labour.hands.craft_hands_available(), 1)) < 0.05,
+      (_why_cn["you_have"], s_cn.assembly.modules["workforce"].parts.core.labour.hands.craft_hands_available(), s_cn.view("staff")()["artisans"]))
 check("...and says which people it is counting",
       "yourself" in str(_why_cn.get("you_have_counts")), _why_cn.get("you_have_counts"))
 check("...and it is more than the bare payroll, having bought a mason's year",

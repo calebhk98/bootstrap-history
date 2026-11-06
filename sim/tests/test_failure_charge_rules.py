@@ -4,7 +4,6 @@ failing costs the poster nothing and leaves the work to retry, and the coin guar
 credit line."""
 QUICK_TOPIC = True
 
-import collections
 import unittest
 from types import SimpleNamespace
 
@@ -97,7 +96,7 @@ class FailingSim:
         module.needs.send = self.send
         module.failure_severity = lambda node_id, lost, means: "major"
         module.rebuild_work_factor = lambda node_id: 0.5
-        module._retry_calendar_retain = lambda node_id, attempt_index=None: 0.25
+        module.retry_calendar_retain = lambda node_id, attempt_index=None: 0.25
         module.effective_risk = lambda node_id, precaution=None: 0.1
         module.lose_what_was_risked = lambda node_id: []
 

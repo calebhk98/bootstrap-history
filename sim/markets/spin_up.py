@@ -2,10 +2,10 @@
 them. Pure declarations and arithmetic, so the tools that read them need not load the port."""
 import os
 
+from sim import cache_root
 from sim.constants import declare
-from sim.prices.api import solve_cache
 
-SPIN_UP_CACHE_DIRECTORY = os.path.join(os.path.dirname(solve_cache.DEFAULT_CACHE_DIRECTORY), "agent_economy")
+SPIN_UP_CACHE_DIRECTORY = cache_root.cache_directory("agent_economy")
 SPIN_UP_TOLERANCE = declare(
     "SPIN_UP_TOLERANCE", 0.02, kind="temporary_heuristic",
     unit="largest yearly relative change of the price level and the main prices", source=None, confidence="D",

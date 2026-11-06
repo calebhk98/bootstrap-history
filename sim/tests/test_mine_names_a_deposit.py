@@ -7,7 +7,6 @@ import types
 import unittest
 
 from sim.geography import api as geography
-from sim.ledger.api import PayEdge
 from sim.refusal import Refusal
 from sim.reporting.api import RecordEvent
 from sim.resources.api import DrawDeposit, OpenMine, Prospect
@@ -30,6 +29,7 @@ class _Host:
         self.holdings = module.seat
         self.world_map, self.civ = geography.open_map(), resources_stand_in.rome()
         self.mine_refusal = None
+        self.map = self.foreign = self   # the port reads the catalogue from `map` and the deposits from `foreign`
 
     @property
     def paid(self):

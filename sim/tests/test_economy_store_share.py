@@ -4,7 +4,7 @@ QUICK_TOPIC = True
 
 import unittest
 
-from sim.economy.households_orders import HOUSEHOLD_TIME_PREFERENCE
+from sim.economy.household_time_preference import HOUSEHOLD_TIME_PREFERENCE
 from sim.economy.households_store import STORE_SAVINGS_SHARE, STORE_SHARE_LIMIT, store_value_target
 
 

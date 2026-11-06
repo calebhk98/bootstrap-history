@@ -3,7 +3,6 @@ a trade the society cannot field at that pace is a staffing shortage. Complaint 
 on the projects module over one project and one trade's supply, so no game is built."""
 QUICK_TOPIC = True
 
-import types
 import unittest
 
 from .harness import *  # noqa: F401,F403

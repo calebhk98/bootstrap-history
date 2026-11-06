@@ -4,6 +4,7 @@ expected damages come off what an entrant expects, and a holder who catches an i
 
 QUICK_TOPIC = True
 
+from sim.tests.agents_fake_world import flat_world
 from .harness import check
 
 from sim.agents.api import ActorRecord, ActorRegistry, ActorsState, Business
@@ -33,8 +34,8 @@ def make_world(capacity):
 	world = EnforcedWorld(year=100)
 	world.capacity = capacity
 	world.baseline = {"base"}
-	world.nodes["base"] = make_node("base")
-	world.nodes["mill"] = make_node("mill", ["base"], hours=100.0, revenue=2000.0)
+	world.setting.nodes["base"] = make_node("base")
+	world.setting.nodes["mill"] = make_node("mill", ["base"], hours=100.0, revenue=2000.0)
 	world.registry = ActorRegistry(ActorsState(home_country="home"))
 	return world
 
@@ -107,6 +108,8 @@ class SeatParty:
 		self.concerns = {"mill"}
 		self.money = 900.0
 
+	payments = property(lambda self: self)   # a stand-in party pays through itself
+
 	def debit(self, amount, purpose):
 		self.money -= amount
 
@@ -114,6 +117,7 @@ class SeatParty:
 		self.money += amount
 
 
+@flat_world
 class SeatWorld(EnforcedWorld):
 	def seat_parties(self):
 		return {"founder": self.seat}
@@ -124,7 +128,7 @@ class SeatWorld(EnforcedWorld):
 
 world, registry, holder, infringer, licensed = setup(1.0)
 seat_world = SeatWorld(year=100)
-seat_world.capacity, seat_world.registry, seat_world.nodes = 1.0, registry, world.nodes
+seat_world.capacity, seat_world.registry, seat_world.nodes = 1.0, registry, world.setting.nodes
 seat_world.seat = SeatParty()
 enforcement.enforce_patents(registry, seat_world)
 check("the founder pays the holder its margin on the concern", seat_world.seat.money == 600.0 and holder.money == 1800.0, (seat_world.seat.money, holder.money))

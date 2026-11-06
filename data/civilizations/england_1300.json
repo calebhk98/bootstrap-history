@@ -22,6 +22,7 @@
   },
   "currency": "sterling penny",
   "currency_words": {"long": "pence", "short": "pence"},
+  "staple": "wheat_kg",
   "coin_standard": {
     "regime": "struck_coin",
     "material": "silver_kg",
@@ -704,7 +705,7 @@
     "water_power_scale"
   ],
   "state_pressure": {
-    "_doc": "See rome_100ad.json's own state_pressure._doc for the shape this object takes and how society.py reads it.",
+    "_doc": "See rome_100ad.json's own state_pressure._doc for the shape this object takes and how sim/polity/notice.py reads it.",
     "requisition_name": "purveyance",
     "requisition_note": "Purveyance let the Crown take goods and transport for the royal household at a fixed, below-market price, enforced by royal officers with the power of distraint; it was a standing grievance from Magna Carta's clause 28 onward, and a household with a visible surplus was exactly who the purveyor called on first.",
     "office_name": "the shrievalty",

@@ -168,7 +168,7 @@ def _state_running(out):
         total = progress.get("founder_hours_total") or 0
         left = progress.get("founder_hours_left") or 0
         pct = 100.0 * (total - left) / total if total else 100.0
-        # Clamped, as a defence independent of core.py's own arithmetic: a
+        # Clamped, as a defence independent of the projects module's own arithmetic: a
         # negative or over-100% figure here would print an impossible
         # "your hours spent" percentage, so the display refuses to show
         # one either way.

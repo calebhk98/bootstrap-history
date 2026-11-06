@@ -4,7 +4,7 @@ become its title. The rules are in land_bid.py."""
 import dataclasses
 from typing import Dict, List, Mapping
 
-from . import land_bid, land_market, sites, titles_ground, titles_value, titles_worked
+from . import land_bid, land_market, sites, titles_ground, titles_value, titles_worked, trade_wages
 from .households_own import Option, plot_hectares
 from .protocols import AgentOrders
 from .setup import labour_area
@@ -13,23 +13,21 @@ from .types import EDGE_CONSUMPTION, Bid, GoodsMove
 
 def best_margin(setup, view, cohort, options: Mapping[str, List[Option]], tile_spec):
     """(crop margin per hectare, hours a hectare takes, recipe id) of the recipe, of those the cohort grows its needs
-    with, that nets most at the prices and the wage it sees. The margin is net of the wage, so a rising wage lowers it."""
-    wage = view.wage(setup.servant_trade, labour_area(cohort.tile)) or 0.0
+    with, that nets most at the prices and the wage it sees. The margin is net of the recipe's own trades' wages, so a rising wage lowers it. A recipe
+    with an unpriced output is left out."""
+    area = labour_area(cohort.tile)
     rows = []
     for recipe_id in sorted({rows_of_need[0][1] for rows_of_need in options.values() if rows_of_need}):   # the recipe it grows each need with
         recipe, land = setup.recipes[recipe_id], setup.land_per_run.get(recipe_id, 0.0)
         if not recipe.climate_classes or not sites.climate_allows(recipe, tile_spec):    # a crop grows in a climate; a mine's ground is its deposit
             continue
-        prices = {good: view.price(good, view.area_of(good, cohort.tile)) or 0.0 for good in recipe.outputs}
-        rows.append((land_bid.crop_margin_per_hectare(recipe, land, tile_spec.fertility, prices, wage),
+        wages = {trade: trade_wages.wage_in_view(setup, view, trade, area) for trade in recipe.labour_hours}
+        prices = {good: view.price(good, view.area_of(good, cohort.tile)) for good in recipe.outputs}
+        if None in prices.values():
+            continue
+        rows.append((land_bid.crop_margin_per_hectare(recipe, land, tile_spec.fertility, prices, wages),
                      land_bid.hours_per_hectare(recipe, land), recipe_id))
     return max(rows, default=(0.0, 0.0, ""))
-
-
-def _best_earning(setup, view, cohort, options: Mapping[str, List[Option]], tile_spec, rent: float):
-    """(earning per hectare, hours a hectare takes): the best crop margin, with the tile's rent as the floor."""
-    margin, hours, _recipe_id = best_margin(setup, view, cohort, options, tile_spec)
-    return land_bid.earning_per_hectare(margin, rent), hours
 
 
 def actor_bids(setup, record, view, buyer: str, tile_id: str, margin_per_hectare: float, hours_per_hectare: float,
@@ -47,8 +45,10 @@ def actor_bids(setup, record, view, buyer: str, tile_id: str, margin_per_hectare
             continue
         area = view.area_of(good, tile_id)
         rate = view.interest_rate(view.currency_of(area))
+        if rate is None:
+            continue
         bid = land_bid.hectare_bid(buyer, good, area, tile_id,
-                                   land_bid.earning_per_hectare(margin_per_hectare, record.land_rent.get(tile_id, 0.0)),
+                                   land_bid.earning_per_hectare(margin_per_hectare, record.land.land_rent.get(tile_id, 0.0)),
                                    view.price(good, area), titles_value.capitalising_rate(rate, setup.opening_rate),
                                    land_bid.workable_hectares(spare_hours, hours_per_hectare), cash)
         if bid is not None:

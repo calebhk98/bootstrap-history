@@ -415,7 +415,7 @@ def _agent_dispatch(sim, nodes, cmd):
 
 def _agent_reply(sim, nodes, cmd):
     _out = add_cause(_agent_dispatch_inner(sim, nodes, cmd))
-    if sim.view("legacy_fuzzy_estimates")() and isinstance(cmd, dict):
+    if sim.view("fuzzy_estimates")() and isinstance(cmd, dict):
         _entry = command_registry.table_of(sim).resolve(cmd.get("cmd") if isinstance(cmd.get("cmd"), str) else "")
         _out = fuzzy_estimates.fuzz_reply(sim, _entry["name"] if _entry else None, cmd, _out)
     _out = _localise_money(_out, money_word(sim.view("civilisation")()))

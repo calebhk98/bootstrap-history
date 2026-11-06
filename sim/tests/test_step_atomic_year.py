@@ -3,7 +3,6 @@ not ok; a step that kept some years and then failed says where it stopped. The f
 with the restore replaced (the restore is the save-load road, which has its own tests). The description of the failed
 year is test_complaint_587_atomic_year."""
 import unittest
-from types import SimpleNamespace
 from unittest import mock
 
 from sim.refusal import Refusal

@@ -1,6 +1,6 @@
 """Complaints 167, 164 and the auto_replace_foreman part of 180: idle specialists are surfaced with their wage bill, auto_hire
 replaces only the taught trades something draws on, every staff reduction is logged with its cause, and an open concern that
-hangs on one person is named. The rules are called on a stub over the real `StaffLedgerMixin` (no game) and on
+hangs on one person is named. The rules are called on a stub over the real `StaffLedger` and `StaffControls` (no game) and on
 `replacement_wanted`; that the lines name the people who left is test_staff_reduction_facts."""
 
 QUICK_TOPIC = True
@@ -9,32 +9,54 @@ from types import SimpleNamespace
 
 from .harness import check
 
+from sim.labour.api import generic_staff_trades
 from sim.engine.seat_defaults import default_policy
 from sim.workforce.staff_replacement import replacement_wanted
-from sim.labour.labour_staff_ledger import StaffLedgerMixin
+from sim.labour.labour_staff_controls import StaffControls
+from sim.labour.labour_staff_ledger import StaffLedger
 from sim.tests import event_stand_in
 
 TARGET = 3.0
+GENERIC = generic_staff_trades("labourer")
+REGISTRY = {"labourer": {"fallback": True}}
 
 
-class Ledger(StaffLedgerMixin):
-    """The mixin over a household with these `employees`, active projects and open concerns (concern -> foreman trade)."""
+class Ledger:
+    """The ledger and controls parts over a household with these `employees`, active projects and open concerns (concern -> foreman trade)."""
 
     def __init__(self, employees, active=None, foremen=None, taught=(), wages=None):
         self.employees = dict(employees)
         self.log = []
         self.hired = []
-        self.labour_market = SimpleNamespace(quote_annual=lambda trade: (wages or {}).get(trade, 100.0))
+        market = SimpleNamespace(quote_annual=lambda trade: (wages or {}).get(trade, 100.0))
         foremen = foremen or {}
         household = SimpleNamespace(trades_created=set(taught), log=self.log)
         projects = SimpleNamespace(active=active or {}, operating=set(foremen))
         self._world = SimpleNamespace(
+            trades=SimpleNamespace(trade_registry=REGISTRY),
             workforce=household, projects=projects, state=SimpleNamespace(household=household, scenario=SimpleNamespace(year=100)),
-            nodes={node_id: {"name": node_id.title(), "lab": {}} for node_id in set(foremen) | set(active or {})},
-            venture_foremen_used=lambda: {trade: 1.0 for trade in foremen.values()},
-            venture_foreman=lambda node_id: (foremen[node_id], 1.0),
-            concerns_to_close_for_staffing=lambda: [], stopped_yearly_value=lambda node_ids: 0.0)
+            scenario=SimpleNamespace(nodes={node_id: {"name": node_id.title(), "lab": {}} for node_id in set(foremen) | set(active or {})}),
+            ventures=SimpleNamespace(venture_foremen_used=lambda: {trade: 1.0 for trade in foremen.values()},
+                                    venture_foreman=lambda node_id: (foremen[node_id], 1.0),
+                                    concerns_to_close_for_staffing=lambda: [], stopped_yearly_value=lambda node_ids: 0.0))
         event_stand_in.stood_in(self._world)
+        self.ledger = StaffLedger(self._world, book=self, market=market)
+        self.controls = StaffControls(self._world, book=self, capacity=self, hiring=self, market=market)
+
+    def idle_specialists(self):
+        return self.ledger.idle_specialists()
+
+    def sole_supervisors(self):
+        return self.ledger.sole_supervisors()
+
+    def staff_snapshot(self):
+        return self.ledger.staff_snapshot()
+
+    def log_staff_reduction(self, cause, before):
+        return self.ledger.log_staff_reduction(cause, before)
+
+    def replace_lost_foremen(self):
+        return self.controls.replace_lost_foremen()
 
     def employed_by_trade(self):
         return dict(self.employees)
@@ -52,16 +74,16 @@ class Ledger(StaffLedgerMixin):
 
 
 # ---- 171: auto_hire tops up only a taught trade something draws on ----------------------------------------------------
-check("a taught trade nothing draws on is not topped up", replacement_wanted("machinist", 0.0, True, {}, TARGET) is None)
+check("a taught trade nothing draws on is not topped up", replacement_wanted("machinist", 0.0, True, {}, TARGET, GENERIC) is None)
 check("a taught trade an open concern draws on is raised to the target",
-      replacement_wanted("glassblower", 0.0, True, {"glassblower": ["open concern"]}, TARGET) == TARGET)
+      replacement_wanted("glassblower", 0.0, True, {"glassblower": ["open concern"]}, TARGET, GENERIC) == TARGET)
 check("a trade that is drawn on but was not taught is kept as it is, never grown",
-      replacement_wanted("smith", 2.0, False, {"smith": ["project p"]}, TARGET) == 2.0)
+      replacement_wanted("smith", 2.0, False, {"smith": ["project p"]}, TARGET, GENERIC) == 2.0)
 check("a taught trade already above the target is not cut back",
-      replacement_wanted("smith", 5.0, True, {"smith": ["project p"]}, TARGET) == 5.0)
+      replacement_wanted("smith", 5.0, True, {"smith": ["project p"]}, TARGET, GENERIC) == 5.0)
 check("the generic craftsmen and scholars are left to the staff target",
-      replacement_wanted("artisan", 0.0, True, {"artisan": ["project p"]}, TARGET) is None
-      and replacement_wanted("scholar", 0.0, True, {"scholar": ["project p"]}, TARGET) is None)
+      replacement_wanted("artisan", 0.0, True, {"artisan": ["project p"]}, TARGET, GENERIC) is None
+      and replacement_wanted("scholar", 0.0, True, {"scholar": ["project p"]}, TARGET, GENERIC) is None)
 
 # ---- 171: idle specialists are surfaced with their wage bill ----------------------------------------------------------
 idle = Ledger({"machinist": 2.0, "glassblower": 2.0, "artisan": 9.0, "potter": 0.3, "weaver": 1.0}, foremen={"mirror": "glassblower"},

@@ -15,6 +15,7 @@ Other documents are inputs or background and may lag the code.
 | `PM_ASSESSMENT.md` | What we actually think, with the codebase measured rather than described. Agrees with most of the review, disagrees with it on five specific points, and names the requirement conflict that had to be resolved before any phase plan meant anything. | Ours |
 | `ENDOGENOUS_COSTS_AND_DOMAINS.md` | The plan. How a price gets calculated rather than looked up, which domains produce prices and which only consume them, and the milestones. Supersedes `PM_ASSESSMENT.md` §3.5 and §5. | Ours |
 | `DESIGN_PRINCIPLES.md` | Standing decisions that are not defects: what the model should not be "fixed" into (no blanket research-to-manufacture delay, no revenue nerf to keep the founder poor). | Ours |
+| `CHANGE_CHECKLIST.md` | What every agent checks before reporting a code change: the mistakes that kept coming back in the economy and labour cleanup (callers left behind by a changed return, re-exports after a move, copied constants, content ids, partial cache keys, test stand-ins). | Ours |
 | `HOUSEHOLD_EXTRACTION.md` | Design for moving the founder's ~80 attributes onto their own object in `sim/agents/`, so a government, a firm or a second player can own things too. Includes the measured reason `__getattr__` forwarding is not an option. | Ours |
 | `ACTORS.md` | Actor base, policy interface, government and firm actors, imitation of inventions. Current behaviour. | Ours |
 | `ACTORS_NEXT.md` | What the government and firm actors produce that nothing reads, and the ordered increments that make the country a real player. | Ours |
@@ -34,15 +35,14 @@ Other documents are inputs or background and may lag the code.
 | `PACKAGE_WALLS.md` | The walled packages and modules: the rule (modules reach each other only through declared views and commands), each package's door and who hands it the game, and how to extend one. | Ours |
 | `MODULE_MIGRATION_TASKS.md` | The status and ordered task list of the module move that `MODULE_REGISTRY_PLAN.md` designs: which modules moved, what is left. | Ours |
 | `MODULE_MIGRATION_GUIDE.md` | The rules every move of a topic out of `Sim` into a module follows. | Ours |
-| `catalogue/` | One file per module: its views, commands, state and callers, written during the move; it lags the code. | Ours |
 | `ONE_PRICE_OWNER_PLAN.md` | Staged plan for Complaint 507: the agent economy owns prices and traded volumes; the solver becomes a cost-of-making calculator. Every reader of the solver, the calculator's signature, eight stages with proofs and files, risks. | Ours |
 | `STATE_OWNERSHIP_MAP.md` | Complaint 508's ownership table filled in: for each fact (money, goods, debt, people, land, plants, market outcomes, knowledge, indicators) today's owner, the grep commands that list its writers and readers, units, timing in the year, and where two places hold it. Records the market-report slice done and what is left of 507 stage 6. | Ours |
 | `FIRMS_OWN_PLANTS_PLAN.md` | Staged plan for Complaints 510 and 514: a tech node is knowledge only; a business is a firm, owned by any actor, that runs plants with their own crew and upkeep, through one object in `sim/agents/`. Every reader of node upkeep, revenue and staff, every business rule with its founder and agents implementations, the target object, staged work with proofs and files, order against 507. | Ours |
 | `Complaints/reports/research-reference-economy-models.md` | Capitalism Lab, Eurace@Unibi, HARK and Caiani et al. 2016 read against the opening, thin-market prices, the interest rate, unhired labour and year cost, with licences and a ranked recommendation for issue #61. Read it before redesigning the economy. | Ours, from external sources |
 
 Read them in that order. For the economy, `ENDOGENOUS_COSTS_AND_DOMAINS.md` is the live plan and
-`Complaints/119-delete-prices-json.md` is its concrete exit checklist for the
-legacy file (it is an issue, so it is tracked with the others);
+`Complaints/closed/119-delete-prices-json.md` records the deletion of the
+legacy price file (it is an issue, so it is tracked with the others);
 `PM_ASSESSMENT.md` is the reasoning that led to it; `STATE_OF_THE_PROJECT.md`
 is where its milestone table is kept current; the two external documents
 are inputs to all of them.

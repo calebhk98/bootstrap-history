@@ -1,11 +1,11 @@
 """What the installed mods of one directory contribute, as plain functions of that directory."""
-from typing import Any, Dict, FrozenSet, List, Mapping, Optional, Tuple
+from typing import Any, Dict, FrozenSet, List, Tuple
 
 from sim.default_civilisation import REPOSITORY_ROOT
 from sim.stores.api import StoreSpec
 
 from . import win_condition_labels as labels_data
-from . import actor_kinds_data, foreign_economies, mod_stores, need_data, tech_effects, trades
+from . import actor_kinds_data, foreign_economies, household_work_file, mod_stores, need_data, tech_effects, trades, world_rates
 from .catalog import Trade
 from .mods import get_ordered_mods
 
@@ -23,6 +23,11 @@ def map_overlays(directory: str) -> List[Tuple[str, str]]:
 def household_need_data(directory: str) -> Dict[str, Dict[str, Any]]:
 	"""{"needs", "goods"}: the base game's household needs and the goods that serve them, with each mod's of `directory`."""
 	return need_data.load_needs(REPOSITORY_ROOT, directory)
+
+
+def household_work_data(directory: str) -> Dict[str, Any]:
+	"""The hours of household work by task (data/world/household_work.json), with each mod's of `directory` merged over the base."""
+	return household_work_file.load_household_work(REPOSITORY_ROOT, directory)
 
 
 def declared_actor_kinds(directory: str) -> Dict[str, Any]:
@@ -63,3 +68,13 @@ def not_traded_materials(directory: str) -> FrozenSet[str]:
 def win_condition_labels(directory: str) -> Dict[str, str]:
     """Metric to the sentence template that says what a win condition on it asks for."""
     return labels_data.win_condition_labels(directory)
+
+
+def spoilage_rates(directory: str) -> Dict[str, float]:
+    """{good: continuous decay rate a year} of the goods that spoil, with the mods of `directory` applied. Read-only."""
+    return world_rates.spoilage_rates(directory)
+
+
+def service_life_years(directory: str) -> Dict[str, float]:
+    """{good: years a stock of it serves} of the goods that wear out, with the mods of `directory` applied. Read-only."""
+    return world_rates.service_life_years(directory)

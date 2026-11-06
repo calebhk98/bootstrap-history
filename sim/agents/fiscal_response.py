@@ -37,19 +37,19 @@ def menu(government: Any, world: Any, lines: Sequence[Any], gap: float) -> Decis
 	"""The responses open to `government` to cover `gap` of the money the standing `lines` need."""
 	need = sum(line.money for line in lines)
 	pay_need = sum(line.money for line in lines if line.name in arrears.PAY_LINES)
-	rate = world.market_rate()
+	rate = world.credit.market_rate()
 	options = [_option(CUT, gap, {"services_lost": 1.0})]
-	ceiling = government.credit_ceiling(world)
-	if ceiling > 0.0:
-		borrowed = min(gap, ceiling)
+	borrowed = government.draw_limit(world, gap)
+	if borrowed > 0.0:
 		options.append(_option(BORROW, borrowed, {"interest": government.rate_on_loan(world, borrowed)}))
 	carry = {"interest": rate, "unpaid_pay": need / pay_need if pay_need > 0.0 else 0.0}
 	if pay_need > 0.0:
 		options.append(_option(ARREARS, min(gap, pay_need), dict(carry)))
-	struck_again = world.coin_stock_value() * COIN_RESTRIKE_SHARE_PER_YEAR if world.coin_regime() == STRUCK_COIN else 0.0
+	stock_value = world.revenue.coin_stock_value() if world.revenue.coin_regime() == STRUCK_COIN else None
+	struck_again = 0.0 if stock_value is None else stock_value * COIN_RESTRIKE_SHARE_PER_YEAR   # no priced metal: no debasing
 	if struck_again > 0.0:
 		options.append(_option(DEBASE, struck_again * DEBASEMENT_SHARE_CEILING, dict(carry, coin_cut=need / struck_again)))
-	visible = sum(world.notice_over(scale) * income for scale, income in world.visible_taxpayers())
+	visible = sum(world.taxpayers.notice_over(scale) * income for scale, income in world.taxpayers.visible_taxpayers())
 	if visible > 0.0:
 		options.append(_option(LEVY, visible * LEVY_RATE_CEILING, dict(carry, income_taken=need / visible)))
 	kind_base = in_kind_base(government.record, world)
@@ -65,7 +65,7 @@ def menu(government: Any, world: Any, lines: Sequence[Any], gap: float) -> Decis
 def raisable_coin_forms(world: Any) -> List[Any]:
 	"""The assessments of the forms the state collects in coin on a base of money, at a rate above nothing: the
 	forms whose rate it can raise for money (not a labour due, not a form paid in kind)."""
-	return [assessed for assessed in world.revenue_assessments()
+	return [assessed for assessed in world.revenue.revenue_assessments()
 			if not assessed.in_kind and not assessed.in_labour and assessed.rate > 0.0 and assessed.base > 0.0]
 
 
@@ -155,7 +155,7 @@ def rate_cut_yield(world: Any) -> float:
 def in_kind_base(record: Any, world: Any) -> float:
 	"""Money's worth of the base the state's forms paid in kind were assessed on last year."""
 	base = 0.0
-	for form in world.revenue_forms():
+	for form in world.revenue.revenue_forms():
 		taken = record.revenue_in_kind.get(form["form"], 0.0)
 		if form.get("paid_in") and form["rate"] > 0.0:
 			base += taken / form["rate"]
@@ -241,7 +241,7 @@ def respond(government: Any, world: Any, lines: Sequence[Any], gap: float) -> Di
 	if gap <= _TINY:
 		return {}
 	decision = menu(government, world, lines, gap)
-	policy = getattr(government, "decision_policy", None)
+	policy = government.decision_policy
 	if isinstance(policy, FiscalPolicy):
 		return {option.subject: option.worth for option in policy.choose(government, decision)}
 	if isinstance(policy, CallbackPolicy):

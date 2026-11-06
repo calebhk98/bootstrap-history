@@ -1,28 +1,35 @@
 """What a project pays for materials: quantities in, current market price out.
 
 A node declares only physical quantities. The bill asks the market what the part the seat does not already hold would cost
-today, at the economy's price on the founder's tile plus carriage, the price climbing over the order, and lets the project
-pay that money at the start so the tonnes arrive in stock."""
+today, at the economy's price on the founder's tile plus carriage, the price climbing over the order, and posts the buy
+orders for it at the start; the tonnes arrive in stock at the year's clearing, and the project waits for them (sim/projects)."""
 import collections
+import math
 from typing import Any, Dict, Optional, Tuple
 
-from sim.agents.api import edges
-from sim.ledger.api import ChangeStock, PayEdge
-from sim.markets.api import NotePurchase
+from sim.assembly.api import Part
+from sim.markets.api import BuyMaterial
+from sim.refusal import Refusal
 from sim.projects.api import constants as project_constants
-from sim.world.material_units import tonnes_per_unit
+from sim.unit_conversions import KILOGRAMS_PER_TONNE
 
 from . import rules
 
 
-class ProjectBill:
-    """Needs: tree_nodes, active_projects, goods_stock, purchase_quote, shared_bill, opposition_factor,
+class ProjectBill(Part):
+    """Needs: tree_nodes, active_projects, goods_stock, purchase_quote, unit_mass_kg, shared_bill, opposition_factor,
     material_cost_factor, can_pay, purchase_refusal, project_cost, project_cost_now, cost_money_factor, civ_cost_factor,
-    rebuild_work_factor, failure_reset_share. Sends PayEdge, NotePurchase, ChangeStock."""
+    rebuild_work_factor, failure_reset_share. Sends BuyMaterial."""
+
+    def tonnes_per_unit(self, material: str) -> float:
+        """Tonnes in one unit of a material (the markets `unit_mass_kg` view). A unit with no mass, land, moves no tonnes: it
+        is not bought through the goods market, so it adds none to the bill."""
+        kilograms = self.needs.unit_mass_kg(material)
+        return kilograms / KILOGRAMS_PER_TONNE if math.isfinite(kilograms) else 0.0
 
     def project_material_needs(self, node_id: str) -> collections.Counter:
         """{material key: units} the project physically consumes, with the fuel substitution the throttle applies."""
-        return rules.project_needs(self.needs.tree_nodes()[node_id], self.uses_coke(node_id))
+        return rules.project_needs(self.needs.tree_nodes()[node_id], self.parts.demand.uses_coke(node_id))
 
     def project_material_bill(self, node_id: str) -> Dict[str, Any]:
         """Per material: needed, held (stock and own output over the build), missing, and the market cost of the missing
@@ -32,16 +39,16 @@ class ProjectBill:
     def compute_material_bill(self, node_id: str) -> Dict[str, Any]:
         needs = self.needs
         span = rules.build_span(needs.tree_nodes()[node_id])
-        return rules.material_bill(self.project_material_needs(node_id), span, tonnes_per_unit, self.material_pool,
+        return rules.material_bill(self.project_material_needs(node_id), span, self.tonnes_per_unit, self.parts.supply.material_pool,
                                    lambda commodity: needs.goods_stock[commodity],
                                    lambda tag: self.unclaimed_own_supply(tag, node_id), needs.purchase_quote,
-                                   self.market_tonnes, self.own_material_supply)
+                                   self.parts.supply.market_tonnes, self.parts.supply.own_material_supply)
 
     def unclaimed_own_supply(self, tag: str, node_id: str) -> float:
         """Yearly own output of a supply pool that no other running project has claimed."""
         claimed = sum(record.get("own_output_claim", {}).get(tag, 0.0)
                       for other, record in self.needs.active_projects().items() if other != node_id)
-        return rules.unclaimed(self.own_material_supply(tag), claimed)
+        return rules.unclaimed(self.parts.supply.own_material_supply(tag), claimed)
 
     def project_own_output_claim(self, node_id: str) -> Dict[str, float]:
         """{tag: tonnes a year} of the seat's own output this project draws, so the next project to start counts only what
@@ -50,7 +57,7 @@ class ProjectBill:
         claim: collections.Counter = collections.Counter()
         for row in self.project_material_bill(node_id)["rows"]:
             if row["held_from_own_output_tonnes"] > 0:
-                claim[self.material_pool(row["material"])[1]] += row["held_from_own_output_tonnes"] / span
+                claim[self.parts.supply.material_pool(row["material"])[1]] += row["held_from_own_output_tonnes"] / span
         return dict(claim)
 
     def project_material_parts(self, node_id: str) -> Tuple[float, float]:
@@ -65,39 +72,68 @@ class ProjectBill:
                 * needs.civ_cost_factor(node_id) * needs.rebuild_work_factor(node_id))
 
     def up_front_materials_money(self, node_id: str) -> float:
-        """Money the start would spend now on the materials the market can deliver, or zero when the start could not pay it."""
+        """Money the start would put in orders for the materials the market can deliver, or zero when the start could not pay it."""
         _total, up_front = self.project_material_parts(node_id)
         up_front *= self.needs.opposition_factor(node_id) * self.needs.material_cost_factor(node_id)
         if up_front <= 0 or not self.needs.can_pay(up_front):
             return 0.0
         return up_front
 
-    def settle_project_materials(self, command: Any) -> Tuple[float, float]:
-        """Buy the materials the market can deliver now (when the money can be raised): (what is left to pay in
-        instalments, the materials money paid now)."""
+    def settle_project_materials(self, command: Any) -> Tuple[float, float, list]:
+        """Order the materials the market can deliver (when the money can be raised) for the year's clearing: (what is left to
+        pay in instalments, the money of the orders posted at the full quote, one entry per order: {"material", "stock_key",
+        "tonnes", "quoted"}, or the same with "refused" (a cause) for an order the market refused). The project's bill falls by
+        the quoted money; the project settles it against what the clearing bought (sim/projects/materials_wait.py)."""
         node_id = command.node_id
         full = self.needs.project_cost_now(node_id)
         if self.up_front_materials_money(node_id) <= 0:
-            return full, 0.0
-        paid_now = self.buy_project_materials(node_id)
-        return full - paid_now, paid_now
+            return full, 0.0, []
+        ordered, awaited = self.order_project_materials(node_id)
+        return full - ordered, ordered, awaited
 
-    def buy_project_materials(self, node_id: str) -> float:
-        """Pay for what the market can deliver now of the missing materials and bank it as stock. Returns the money paid."""
+    def order_project_materials(self, node_id: str) -> Tuple[float, list]:
+        """Post a buy order, tagged with the project, for the part of each missing material the market can deliver, at the
+        quote as the limit. Returns (the money of the orders posted, with carriage and the geography and opposition factors,
+        the entries ordered or refused)."""
         needs = self.needs
         factor = needs.opposition_factor(node_id) * needs.material_cost_factor(node_id)
-        paid = 0.0
+        wanted = []
         for row in self.project_material_bill(node_id)["rows"]:
             tonnes = row["deliverable_now_tonnes"]
-            if tonnes <= 0 or not row["priced"]:
+            if tonnes > 0 and row["priced"]:
+                wanted.append((row["material"], tonnes, row["cost_of_deliverable"] / tonnes))
+        return self.post_project_orders(node_id, wanted, factor)
+
+    def post_project_orders(self, node_id: str, wanted: list, factor: float) -> Tuple[float, list]:
+        """Post (material, tonnes, quoted money per tonne with carriage) as the project's orders; (money quoted, entries)."""
+        ordered, entries = 0.0, []
+        for material, tonnes, per_tonne in wanted:
+            posted = self.needs.send(BuyMaterial(material, tonnes, per_tonne, node_id, factor, True))
+            stock_key = self.parts.supply.material_pool(material)[0]
+            if isinstance(posted, Refusal):
+                entries.append({"material": material, "stock_key": stock_key, "tonnes": tonnes, "quoted": 0.0,
+                                "refused": posted.cause, "refused_text": str(posted)})
                 continue
-            money = row["cost_of_deliverable"] * factor
-            commodity = self.material_pool(row["material"])[0]
-            needs.send(PayEdge(edges.EDGE_MARKET, money, "materials bought for projects"))
-            needs.send(NotePurchase(commodity, tonnes))
-            needs.send(ChangeStock(commodity, tonnes))
-            paid += money
-        return paid
+            ordered += posted["committed_money"]
+            entries.append({"material": material, "stock_key": stock_key, "tonnes": posted["tonnes"],
+                            "quoted": posted["committed_money"], "order_id": posted["order_id"]})
+        return ordered, entries
+
+    def reorder_project_materials(self, command: Any) -> Tuple[float, list]:
+        """Order again what the clearing left short for a project: `command.shortfalls` is ((material, tonnes), ...), each
+        priced at today's quote. Answers (the money quoted, the entries ordered or refused)."""
+        needs = self.needs
+        factor = needs.opposition_factor(command.node_id) * needs.material_cost_factor(command.node_id)
+        wanted, entries = [], []
+        for material, tonnes in command.shortfalls:
+            quoted = needs.purchase_quote(material, tonnes)
+            if quoted is None:
+                entries.append({"material": material, "stock_key": self.parts.supply.material_pool(material)[0], "tonnes": tonnes, "quoted": 0.0,
+                                "refused": "no_price", "refused_text": "%s has no price here, so it cannot be ordered." % material})
+            else:
+                wanted.append((material, tonnes, quoted[1]))
+        ordered, posted = self.post_project_orders(command.node_id, wanted, factor)
+        return ordered, entries + posted
 
     def failure_bill(self, node_id: str) -> float:
         """The money bill the player bears for this project: the frozen bill once it runs, else what a start today would

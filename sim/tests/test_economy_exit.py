@@ -6,7 +6,9 @@ import types
 import unittest
 from unittest import mock
 
-from sim.contracts import TERM_LOAN
+from sim.economy.capital_markets_record import CapitalMarketsRecord
+from sim.economy.credit_record import CreditRecord
+from sim.economy.unfree_record import UnfreeRecord
 from sim.economy import entry, producer_exit, producers, producers_close
 from sim.economy.types import Loan, Transfer
 from sim.tests.economy_fixture import HILLS, ORE
@@ -125,12 +127,11 @@ class StubBook:
 
 def exiting(cash, loans, goods=None):
     """A record holding one producer (owned by "owner") with `cash` and `goods`, owing `loans`; ownership.spread is the identity."""
-    defaulted = []
-    record = types.SimpleNamespace(
-        book=StubBook(cash, goods or {}), producers={"producer": types.SimpleNamespace(owner="owner")}, loans=loans,
-        credit_losses={}, remembered_defaults={}, worn_runs={}, expansion_runs={}, shares={}, last_dividends={},
-        contracts=types.SimpleNamespace(default=lambda borrower, kind: defaulted.append((borrower, kind))))
-    return record, defaulted
+    credit = CreditRecord()
+    credit.add_loans(list(loans))
+    record = types.SimpleNamespace(book=StubBook(cash, goods or {}), producers={"producer": types.SimpleNamespace(owner="owner")}, credit=credit, capital_markets=CapitalMarketsRecord(),
+                             unfree=UnfreeRecord())
+    return record
 
 
 def exit_with(record, payout):
@@ -143,24 +144,49 @@ def exit_with(record, payout):
 class ExitBooksTests(unittest.TestCase):
     def test_cash_goods_and_debt_of_an_exiting_producer(self):
         loan = Loan("loan-1", "lender", "producer", "coin", 100.0, 0.05, 5.0, 0.0, arrears=10.0)
-        record, defaulted = exiting(40.0, [loan], {ORE: {HILLS: 7.0}})
+        record = exiting(40.0, [loan], {ORE: {HILLS: 7.0}})
         spread = exit_with(record, [Transfer("producer", "owner", "coin", 40.0, "dividend")])
         self.assertEqual(spread, [])      # the cash all went to the lender
         self.assertEqual([(each.payee, each.amount) for each in record.book.transfers], [("lender", 40.0)])
         self.assertEqual([(move.receiver, move.quantity) for move in record.book.moves],
                          [("owner", 7.0)])
         self.assertNotIn("producer", record.producers)
-        self.assertEqual(defaulted, [("producer", TERM_LOAN)])
-        self.assertAlmostEqual(record.credit_losses["lender"], 110.0 - 40.0)
-        self.assertAlmostEqual(record.remembered_defaults["producer"], 110.0 - 40.0)
+        self.assertEqual(record.credit.loans, [])      # the loan is written off with the producer
+        self.assertAlmostEqual(record.credit.credit_losses["lender"], 110.0 - 40.0)
+        self.assertAlmostEqual(record.credit.remembered_defaults["producer"], 110.0 - 40.0)
 
     def test_lenders_are_repaid_before_the_owner(self):
         loan = Loan("loan-1", "lender", "producer", "coin", 50.0, 0.05, 5.0, 0.0)
-        record, _defaulted = exiting(100.0, [loan])
+        record = exiting(100.0, [loan])
         spread = exit_with(record, [Transfer("producer", "owner", "coin", 100.0, "dividend")])
         self.assertEqual([(each.payee, each.amount) for each in record.book.transfers[:1]], [("lender", 50.0)])
         self.assertEqual([(each.payee, each.amount) for each in spread], [("owner", 50.0)])
-        self.assertEqual(record.credit_losses, {})
+        self.assertEqual(record.credit.credit_losses, {})
+
+
+class ExitBondedTests(unittest.TestCase):
+    def test_an_exited_producer_leaves_no_bonded_people_for_a_later_producer_of_its_id(self):
+        record = exiting(0.0, [])
+        record.unfree.bonded_held = {"tile": {"smith": {"producer": 3.0, "other": 1.0}}, "gone": {"smith": {"producer": 2.0}}}
+        exit_with(record, [])
+        self.assertEqual(record.unfree.bonded_held, {"tile": {"smith": {"other": 1.0}}})
+
+
+class CloseIdleProducersTests(unittest.TestCase):
+    def test_a_closed_producer_leaves_by_the_one_exit_so_its_shares_and_ledgers_are_forgotten_too(self):
+        from sim.economy import entry_year
+        record = types.SimpleNamespace(
+            book=StubBook(30.0, {ORE: {HILLS: 2.0}}), credit=CreditRecord(), capital_markets=CapitalMarketsRecord(), unfree=UnfreeRecord(),
+            producers={"sliver": farmer(agent_id="sliver", owner="owner", capacity_runs=0.0)})
+        record.capital_markets.shares["sliver"] = {"holder": 0.5}
+        record.credit.expansion_runs.clear()
+        setup = types.SimpleNamespace(currency_id="coin")
+        with mock.patch.object(producer_exit.ownership, "spread", lambda _record, payments: payments):
+            self.assertEqual(entry_year.close_idle_producers(setup, record), 1)
+        self.assertNotIn("sliver", record.producers)
+        self.assertNotIn("sliver", record.capital_markets.shares)
+        self.assertEqual([(each.payee, each.amount, each.purpose) for each in record.book.transfers], [("owner", 30.0, "dividend")])
+        self.assertEqual([(move.receiver, move.quantity) for move in record.book.moves], [("owner", 2.0)])
 
 
 if __name__ == "__main__":

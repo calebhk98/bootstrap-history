@@ -5,13 +5,14 @@ information diffusion (its own `diffusion_index`), school_node, done_year, year.
 from typing import Dict, Optional
 
 from sim.actors.api import SchoolLiteracy
+from sim.assembly.api import Part
 from sim.reporting.api import RecordEvent
 
 from . import constants, literacy_rules, rules
 
 
 
-class Literacy:
+class Literacy(Part):
 
     def literacy(self, field: str, country: Optional[str] = None) -> float:
         return self.needs.country_literacy_figure(country, field)
@@ -51,7 +52,7 @@ class Literacy:
         if flow <= 0.0:
             return 0.0
         return literacy_rules.printing_boosted_flow(flow, constants.PRINTING_DIFFUSION_SCHOOLING_BOOST,
-                                                    self.diffusion_index("information"))
+                                                    self.parts.spread.diffusion_index("information"))
 
     def literacy_next_year(self) -> Dict[str, float]:
         """The next schooling year's reading shares, without changing any stratum."""

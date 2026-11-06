@@ -3,7 +3,7 @@ starting guess. Everything the solve calls resolvable has a chosen technique."""
 
 import unittest
 
-from sim.prices import solve_prices
+from sim.prices import solve_prices_core
 from sim.prices import prices as price_engine
 from sim.prices.solve_prices_reach import solve_priced_materials
 
@@ -22,8 +22,8 @@ class UnreachableMaterialTests(unittest.TestCase):
     def test_synthetic_material_no_technique_can_make_is_unpriced_with_its_dependents(self):
         entries = {"fire": FIRE, "hot": HOT, "uses_hot": USES_HOT, "plain": PLAIN}
         wages = {"labourer": 1.0}
-        producers = solve_prices.build_producers_index(entries)
-        resolvable = solve_prices.compute_resolvable_materials(entries, producers)
+        producers = solve_prices_core.build_producers_index(entries)
+        resolvable = solve_prices_core.compute_resolvable_materials(entries, producers)
         self.assertIn("hot_kg", resolvable)    # the resolvability pass cannot see the heat floor
         prices, _iterations, _residual, chosen, resolvable = solve_priced_materials(
             entries, producers, resolvable, wages)

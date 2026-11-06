@@ -21,10 +21,11 @@ def hectare_value(rent_per_hectare: float, rate: float) -> float:
 
 
 def share_value(arable_hectares: float, rent_per_hectare: float, share: float, rate: float) -> float:
-    return share * arable_hectares * rent_per_hectare / rate if rate > 0.0 else 0.0
+    """What the share of a tile's arable hectares is worth: its hectares at `hectare_value`."""
+    return share * arable_hectares * hectare_value(rent_per_hectare, rate)
 
 
 def title_wealth(tiles: Mapping[TileId, object], record, holder: AgentId, rate: float) -> float:
     """The capitalised rent of every title the holder has."""
-    return sum(share_value(titles_ground.arable_hectares(record, tile_id, tile), record.land_rent.get(tile_id, 0.0), titles.holding(record, tile_id, holder), rate)
+    return sum(share_value(titles_ground.arable_hectares(record, tile_id, tile), record.land.land_rent.get(tile_id, 0.0), titles.holding(record, tile_id, holder), rate)
                for tile_id, tile in sorted(tiles.items()))

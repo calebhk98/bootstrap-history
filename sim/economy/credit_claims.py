@@ -7,7 +7,7 @@ every agent the claims and the debts are the same loans, so credit creates no ne
 removes the claim and the debt together: the lender is poorer by what it expected to collect, the borrower
 is freed of it, and no money moves.
 """
-from typing import Dict, Iterable, Mapping, Sequence
+from typing import Dict, Iterable, Mapping
 
 from sim.constants import declare
 
@@ -53,13 +53,6 @@ def principal_by_borrower(loans: Iterable[Loan]) -> Dict[AgentId, float]:
     for loan in loans:
         owed[loan.borrower] = owed.get(loan.borrower, 0.0) + loan.principal
     return owed
-
-
-def wealth(book, loans: Sequence[Loan], agent: AgentId, currency: CurrencyId) -> float:
-    """Money in the book plus claims less debts."""
-    claims = claims_by_lender((loan for loan in loans if loan.lender == agent), currency).get(agent, 0.0)
-    debts = debts_by_borrower((loan for loan in loans if loan.borrower == agent), currency).get(agent, 0.0)
-    return book.balance(agent, currency) + claims - debts
 
 
 def arrears_history(loans: Iterable[Loan], remembered_losses: Mapping[AgentId, float]) -> Dict[AgentId, float]:

@@ -18,7 +18,7 @@ from . import economy as economy_module, producers, producers_close
 SPEED_GROUPS = {
     "producer_plans": ("OUTPUT_CHANGE_SHARE_PER_YEAR", "EXPECTATION_ADJUSTMENT_SHARE"),
     "ask_prices": ("GOODS_ASK_ADJUSTMENT_SHARE_PER_YEAR", "USUAL_PRICE_SPEED"),
-    "wages": ("TIGHTNESS_ADJUSTMENT_RATE_PER_YEAR", "TIGHTNESS_REVERSION_RATE_PER_YEAR"),
+    "wages": ("WAGE_SHARE_CLOSED_PER_YEAR", "ASK_ADJUSTMENT_SHARE_PER_YEAR"),   # the labour core's wage and ask speeds
     "interest_rate": ("RATE_ADJUSTMENT_SHARE_PER_YEAR",),
 }
 ALL_SPEEDS = tuple(name for names in SPEED_GROUPS.values() for name in names)

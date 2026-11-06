@@ -3,7 +3,6 @@ builds; the expected years against the earliest finish are test_expected_calenda
 QUICK_TOPIC = True
 
 import unittest
-from types import SimpleNamespace
 
 from sim.tests import projects_host
 from sim.projects.completion_schedule import calendar_floor_years, earliest_completion_years, payment_schedule_years

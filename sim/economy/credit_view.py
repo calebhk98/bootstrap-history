@@ -1,7 +1,6 @@
 """The market view with the credit market's holdings added: what an agent is owed and what it owns of firms.
 
-`claims_of(view, agent, currency)` and `equity_of(view, agent)` read them from any view and give zero from
-one that has no loans or firms.
+A plain `YearView` answers the same three questions (`equity`, `claims`, `loss_rate`) with zero: it has no loans or firms.
 """
 from typing import Callable, Mapping, Sequence
 
@@ -16,9 +15,11 @@ class CreditView(YearView):
 
     def __init__(self, *arguments, loans: Callable[[], Sequence[Loan]] = lambda: (),
                  equity: Callable[["CreditView"], Mapping[AgentId, float]] = lambda view: {},
-                 loss_rates: Callable[[], Mapping[AgentId, float]] = lambda: {}, **keywords) -> None:
+                 loss_rates: Callable[[], Mapping[AgentId, float]] = lambda: {},
+                 pooled: Callable[[AgentId], float] = lambda agent: 0.0, **keywords) -> None:
         super().__init__(*arguments, **keywords)
         self._loans = loans
+        self._pooled = pooled             # what the actors' pool owes an agent, in the economy's unit
         self._loss_rates = loss_rates
         self._equity_of_all = equity      # reads the view once, when first asked, and keeps the answer
         self._equity = None
@@ -26,7 +27,7 @@ class CreditView(YearView):
         self._claims: dict = {}           # currency -> claims_by_lender over those loans
 
     def claims(self, agent: AgentId, currency: CurrencyId) -> float:
-        """What the agent expects to collect on loans it has made."""
+        """What the agent expects to collect on loans it has made and from the actors' pool it has deposited with."""
         loans = self._loans()
         seen = self._claims_seen
         last = loans[-1] if loans else None
@@ -34,7 +35,7 @@ class CreditView(YearView):
             self._claims_seen, self._claims = (loans, len(loans), last), {}
         if currency not in self._claims:
             self._claims[currency] = claims_by_lender(loans, currency)
-        return self._claims[currency].get(agent, 0.0)
+        return self._claims[currency].get(agent, 0.0) + self._pooled(agent)
 
 
     def loss_rate(self, agent: AgentId, currency: CurrencyId) -> float:
@@ -47,17 +48,3 @@ class CreditView(YearView):
             self._equity = dict(self._equity_of_all(self))
         return self._equity.get(agent, 0.0)
 
-
-def equity_of(view, agent: AgentId) -> float:
-    reader = getattr(view, "equity", None)
-    return reader(agent) if reader is not None else 0.0
-
-
-def claims_of(view, agent: AgentId, currency: CurrencyId) -> float:
-    reader = getattr(view, "claims", None)
-    return reader(agent, currency) if reader is not None else 0.0
-
-
-def loss_rate_of(view, agent: AgentId, currency: CurrencyId) -> float:
-    reader = getattr(view, "loss_rate", None)
-    return reader(agent, currency) if reader is not None else 0.0

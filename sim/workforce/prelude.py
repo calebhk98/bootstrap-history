@@ -1,13 +1,15 @@
 """What the seat does about its people before it starts new projects: teach the trades the society has lost, and sell the
 hours a standing `work` order asks for. Runs as the `seat_prelude` phase."""
+from sim.assembly.api import Part
+from sim.refusal import Refusal
 from sim.reporting.api import RecordEvent
 
-from .constants import RETEACH_EVERY
-from .reteach_rules import PROJECT_IN_HAND_SCORE, past_cooldown, teaching_budget, trade_is_gone
+from .constants import PROJECT_IN_HAND_SCORE, RETEACH_EVERY, TEACHING_PASS_HEADCOUNT
+from .reteach_rules import past_cooldown, teaching_budget, trade_is_gone
 from .rules import work_order_shortfall
 
 
-class Prelude:
+class Prelude(Part):
 
 	def step_prelude(self, seat_id=None):
 		self.step_teach_trades()              # 4a. teach the trades this society does not have
@@ -50,13 +52,13 @@ class Prelude:
 			def _market_supply(trade):
 				value = _ms_memo.get(trade)
 				if value is None:
-					value = _ms_memo[trade] = self.labour.market_supply(trade)
+					value = _ms_memo[trade] = self.parts.core.labour.supply.market_supply(trade)
 				return value
 
 			def _trade_avail(trade):
 				value = _ta_memo.get(trade)
 				if value is None:
-					value = _ta_memo[trade] = self.labour.trade_available(trade)
+					value = _ta_memo[trade] = self.parts.core.labour.trades.trade_available(trade)
 				return value
 			# Anything already in hand that has lost its trade comes FIRST: those
 			# projects are burning a slot and will be halted if nobody turns up.
@@ -98,7 +100,7 @@ class Prelude:
 				value = _gone_memo.get(trade)
 				if value is None:
 					value = _gone_memo[trade] = trade_is_gone(
-						_trade_avail(trade), _market_supply(trade), self.labour.trade_headcount_pending(trade))
+						_trade_avail(trade), _market_supply(trade), self.parts.core.labour.book.trade_headcount_pending(trade))
 				return value
 			for node_id in self.needs.project_order():
 				if node_id in done_nodes or node_id in active_nodes:
@@ -135,12 +137,12 @@ class Prelude:
 			_tr_upkeep = self.needs.upkeep()
 			_spare_tr = _tr_rev - _tr_upkeep - self.needs.living_cost(_tr_rev, _tr_upkeep)
 			for trade_id, _score in sorted(want.items(), key=lambda kv: (-kv[1], kv[0]))[:1]:
-				_wages = 2.0 * self.labour.market.quote_annual(trade_id)
+				_wages = TEACHING_PASS_HEADCOUNT * self.parts.core.labour.market.quote_annual(trade_id)
 				_budget = teaching_budget(_score, _spare_tr, self.needs.acting_balance())
 				if _wages > _budget:
 					continue
 				_first = trade_id not in workforce.trades_created
-				taught, _msg = self.labour.train(trade_id, 2)
+				taught, _msg = self.parts.core.labour.training.train(trade_id, TEACHING_PASS_HEADCOUNT)
 				# THE COOLDOWN IS ON TEACHING, NOT ON TRYING. Recording the
 				# attempt meant a refusal - no room in the household, no hours
 				# left, nobody to teach from - burned the trade's whole
@@ -173,17 +175,13 @@ class Prelude:
 			_already = workforce.wage_hours_this_year
 			_want = work_order_shortfall(_wd, _already)
 			if _want > 0.5:
-				_room = max(0.0, self.labour.director_pool() - self.labour.director_hours_committed())
+				_room = max(0.0, self.parts.core.labour.hours.director_pool() - self.parts.core.labour.hours.director_hours_committed())
 				_take = min(_want, _room)
 				_got = 0.0
 				if _take > 0.5:
-					_pay, _werr = self.labour.work_for_wages(workforce.work_trade, _take)
-					# pay > 0 with an error is a WARNING (a bad trade, or
-					# starving an active project of its last hours), not a
-					# refusal - see work_for_wages's own docstring. The sale
-					# happened either way; only a genuine refusal (pay <= 0)
-					# means none of it landed.
-					if _pay > 0 or not _werr:
+					_, _werr = self.parts.core.labour.wages.work_for_wages(workforce.work_trade, _take)
+					# a refusal has a cause; any other answer is a warning on a sale that happened
+					if not isinstance(_werr, Refusal):
 						_got = _take
 				# SAY SO, THE SAME WAY AN UNHONOURED PROJECT DIRECTIVE DOES,
 				# BELOW. A standing instruction nobody is told failed is the

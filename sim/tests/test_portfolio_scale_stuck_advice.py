@@ -2,7 +2,6 @@
 The stuck reply of a game is test_player_available_smoke."""
 QUICK_TOPIC = True
 
-from types import SimpleNamespace
 
 from .harness import *  # noqa: F401,F403
 

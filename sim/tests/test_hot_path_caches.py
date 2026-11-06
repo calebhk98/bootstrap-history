@@ -7,6 +7,7 @@ output looked up the production catalog through a path-resolving call.
 """
 QUICK_TOPIC = True
 
+from sim.tests.agents_fake_world import flat_world
 import os
 
 from .harness import *  # noqa: F401,F403
@@ -45,6 +46,7 @@ check("a warm production lookup lists no directories",
 from sim.agents.base import Actor as _Actor
 
 
+@flat_world
 class _CountingWorld:
     year = 100
 
@@ -68,11 +70,11 @@ class _ManyConcerns(_Actor):
 
 
 _world = _CountingWorld(["node_07", "node_03"])
-_total = _ManyConcerns().output_of("steel", _world)
+_total = _ManyConcerns().output.output_of("steel", _world)
 check("an actor's supply asks only the concerns that make the material, in id order",
       _world.asked == ["node_03", "node_07"] and _total == 4.0, _world.asked)
 _world = _CountingWorld([])
-_ManyConcerns().output_of("steel", _world)
+_ManyConcerns().output.output_of("steel", _world)
 check("an actor with no concern making the material asks about none",
       _world.asked == [], _world.asked)
 
@@ -83,6 +85,7 @@ from sim.agents.api import Business as _Business
 from sim.engine.state import ActorRecord as _Record, ActorsState as _ActorsState
 
 
+@flat_world
 class _TonnesWorld:
     year = 100
 
@@ -136,12 +139,12 @@ _registry = _registry_of_firms(60)
 _world = _TonnesWorld(["steelworks"])
 # Firms now put their output into the one goods market themselves (`sell_output`); the market's
 # total is the flows they report, so there is no registry-wide supply walk left to index.
-_tonnes = {actor_id: actor.output_of("steel", _world) for actor_id, actor in _registry.actors.items()}
+_tonnes = {actor_id: actor.output.output_of("steel", _world) for actor_id, actor in _registry.actors.items()}
 check("only the actors holding a concern that makes the material report any of it",
       {actor_id for actor_id, tonnes in _tonnes.items() if tonnes > 0.0} == {"firm:017", "firm:042"}
       and abs(sum(_tonnes.values()) - 1.0) < 1e-12, _tonnes)
 check("...and an actor with no concern making the material asks the world about none of its concerns",
-      _registry.actors["firm:001"].output_of("steel", _world) == 0.0)
+      _registry.actors["firm:001"].output.output_of("steel", _world) == 0.0)
 
 
 # --- the staffing tally survives an actor's turn that left staff as it was found.
@@ -149,14 +152,14 @@ _registry = _registry_of_firms(10)
 _registry.consider_entry = lambda world: []
 for _actor in _registry.actors.values():
     _actor.advance = lambda world: None
-_registry.staff_by_trade()
+_registry.staff.staff_by_trade()
 _registry.advance(_TonnesWorld([]))
-_tally_after_idle_year = _registry._staff
-_registry.staff_by_trade()
-_registry.actors["firm:009"].advance = lambda world: _registry.staff_by_trade()
+_tally_after_idle_year = _registry.staff._staff
+_registry.staff.staff_by_trade()
+_registry.actors["firm:009"].advance = lambda world: _registry.staff.staff_by_trade()
 _registry.advance(_TonnesWorld([]))
 check("a year in which no actor's staff changed leaves the staffing tally standing after the first turn",
-      _tally_after_idle_year is None and _registry._staff is not None)
+      _tally_after_idle_year is None and _registry.staff._staff is not None)
 
 
 def _hire(world):
@@ -166,19 +169,19 @@ def _hire(world):
 _registry.actors["firm:003"].advance = _hire
 _registry.advance(_TonnesWorld([]))
 check("a year in which an actor took people on recounts the staffing",
-      _registry.staff_by_trade()["smith"] == 10 * 1.5 + 1.0, _registry._staff)
+      _registry.staff.staff_by_trade()["smith"] == 10 * 1.5 + 1.0, _registry.staff._staff)
 
 
 def _hire_count_and_leave(world):
     _registry.actors["firm:005"].workforce["smith"] += 2.0
-    _registry.staff_by_trade()
+    _registry.staff.staff_by_trade()
     _registry.actors["firm:005"].workforce["smith"] -= 2.0
 
 
 _registry.actors["firm:005"].advance = _hire_count_and_leave
 _registry.advance(_TonnesWorld([]))
 check("a count taken in the middle of a turn that then undid its hiring is not kept",
-      _registry.staff_by_trade()["smith"] == 10 * 1.5 + 2.0, _registry._staff)
+      _registry.staff.staff_by_trade()["smith"] == 10 * 1.5 + 2.0, _registry.staff._staff)
 
 
 # --- reading one trade's staff does not recount every actor's every trade.
@@ -195,28 +198,28 @@ _registry.consider_entry = lambda world: []
 for _actor in _registry.actors.values():
     _actor.record.workforce = _ItemsCounting(_actor.record.workforce)
     _actor.advance = lambda world: None
-_registry.refresh_staff()
+_registry.staff.refresh_staff()
 _ItemsCounting.walks = 0
-_staffed = [_registry.staff_fte("smith") for _ in range(5)]
+_staffed = [_registry.staff.staff_fte("smith") for _ in range(5)]
 check("one trade's staff is read without walking every actor's whole workforce",
       _ItemsCounting.walks == 0 and _staffed[0] == 30 * 1.5 and len(set(_staffed)) == 1,
       (_ItemsCounting.walks, _staffed[0]))
-check("...and a trade nobody employs reads as zero", _registry.staff_fte("scribe") == 0.0)
+check("...and a trade nobody employs reads as zero", _registry.staff.staff_fte("scribe") == 0.0)
 check("...and staff_fte leaves out the asked actor's own people",
-      _registry.staff_fte("smith", excluding="firm:004") == 29 * 1.5)
+      _registry.staff.staff_fte("smith", excluding="firm:004") == 29 * 1.5)
 
 
 def _hire_and_read(world):
     _registry.actors["firm:004"].workforce["smith"] += 2.0
     _registry.actors["firm:004"].workforce["scribe"] = 0.25
-    _registry.staff_fte("smith")
+    _registry.staff.staff_fte("smith")
 
 
 _registry.actors["firm:004"].advance = _hire_and_read
 _registry.advance(_TonnesWorld([]))
 check("...and the turn of an actor that took on people changes the next count by exactly that",
-      _registry.staff_fte("smith") == 30 * 1.5 + 2.0 and _registry.staff_fte("scribe") == 0.25
-      and _ItemsCounting.walks == 0, (_registry.staff_fte("smith"), _registry.staff_fte("scribe"), _ItemsCounting.walks))
+      _registry.staff.staff_fte("smith") == 30 * 1.5 + 2.0 and _registry.staff.staff_fte("scribe") == 0.25
+      and _ItemsCounting.walks == 0, (_registry.staff.staff_fte("smith"), _registry.staff.staff_fte("scribe"), _ItemsCounting.walks))
 
 
 # --- the kept per-trade sums equal a fresh left-to-right sum after hires, new firms and a year's turns.
@@ -238,8 +241,8 @@ def _fresh_sum(trade):
 def _random_turn(world):
     _chosen = _random.Random(_dice.random())
     for _ in range(_chosen.randrange(3)):
-        _registry._acting.workforce[_chosen.choice(_trades)] = _chosen.random() * 3.7
-    _registry.staff_fte(_chosen.choice(_trades))
+        _registry.staff._acting.workforce[_chosen.choice(_trades)] = _chosen.random() * 3.7
+    _registry.staff.staff_fte(_chosen.choice(_trades))
 
 
 for _actor in _registry.actors.values():
@@ -254,7 +257,7 @@ for _year in range(6):
             _registry.add(_new_id, _added)
             _registry.actors[_new_id].advance = _random_turn
     for _trade in _trades:
-        if _registry.staff_fte(_trade) != _fresh_sum(_trade):
+        if _registry.staff.staff_fte(_trade) != _fresh_sum(_trade):
             _mismatch.append((_year, _trade))
 check("the kept per-trade staff sums equal a fresh sum bit for bit after turns that hired and firms that were added",
       not _mismatch, _mismatch)
@@ -266,9 +269,9 @@ for _identifier, _actor in _registry.actors.items():
     _actor.concerns.clear()
     _actor.concerns.add("loom")
 _loom_nodes = {"loom": {"cat": "cloth"}, "forge": {"cat": "metal"}}
-_walked = _count_calls(_registry, "market_operators", lambda: [_registry.concerns_in("cloth", _loom_nodes) for _ in range(50)])
+_walked = _count_calls(_registry.concerns, "market_operators", lambda: [_registry.concerns.concerns_in("cloth", _loom_nodes) for _ in range(50)])
 check("concerns of a category are counted without walking the firms", _walked == 0, _walked)
-check("...and the count is right", _registry.concerns_in("cloth", _loom_nodes) == 20 and _registry.concerns_in("metal", _loom_nodes) == 0)
+check("...and the count is right", _registry.concerns.concerns_in("cloth", _loom_nodes) == 20 and _registry.concerns.concerns_in("metal", _loom_nodes) == 0)
 _registry.actors["firm:003"].concerns.add("forge")
 check("...and a firm taking on a concern is counted at once",
-      _registry.concerns_in("metal", _loom_nodes) == 1 and _registry.concerns_in("cloth", _loom_nodes) == 20)
+      _registry.concerns.concerns_in("metal", _loom_nodes) == 1 and _registry.concerns.concerns_in("cloth", _loom_nodes) == 20)

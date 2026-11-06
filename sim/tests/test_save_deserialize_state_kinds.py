@@ -17,16 +17,15 @@ from sim.polity.state import PolitySeat
 from sim.production.api import ProductionSeat
 from sim.projects.state import ProjectsSeat
 from sim.ventures.state import VenturesSeat
-from sim.workforce.api import WorkforceSeat
-from sim.engine.state import (ActiveProjectState, EconomyState, FounderState, HoldingsState,
-                              SimulationState, deserialize_state)
+from sim.workforce.api import TrainingRow, WorkforceSeat
+from sim.engine.state import ActiveProjectState, EconomyState, HoldingsState, SimulationState, deserialize_state
 from sim.foreign_trade.api import ForeignTradeWorld
 from sim.refusal import Refusal, cause_of
 from sim.reporting.api import ReportingSeat
 from sim.resources.api import ResourcesSeat
 from sim.tests.harness import check
 
-EMPTY_BOOK = {"money": {}, "goods": {}, "gross_money": {}, "gross_goods": {}, "money_by_purpose": {}, "goods_by_purpose": {},
+EMPTY_BOOK = {"money": {}, "goods": {}, "gross_money": {}, "gross_goods": {}, "goods_by_purpose": {},
               "edge_money_volume": {}, "edge_money_net": {}, "edge_goods_volume": {}, "edge_goods_net": {}, "supply_at_start": {}}
 
 # ---- what the blob is read as when no class is named
@@ -42,11 +41,11 @@ check("deserialize_state: a scalar is coerced to the class named", deserialize_s
 # ---- the household: None-means-never, defaults for what the save lacks, unknown and plumbing keys ignored
 household = deserialize_state({"cash_flow": {"wages": -12.5}, "cash_mark": None, "cash_periods": [{"year": 99, "net": 3.0}], "total_spend": 7,
                                "_on_change_hook": 1, "not_a_field": 9}, LedgerSeat)
-workforce = deserialize_state({"wages_earned": None, "trades_created": {"__set__": ["baker", "mason"]}, "trade_introduced_year": {"mason": 95},
-                               "employees": {"mason": 2}, "training": [["mason", 2]],
+workforce = deserialize_state({"wages_paid": None, "trades_created": {"__set__": ["baker", "mason"]}, "trade_introduced_year": {"mason": 95},
+                               "employees": {"mason": 2}, "training": [{"trade": "mason", "people": 2.0, "ready_year": 103}],
                                "unused_hours_reported": {"order:1": [40.0, "no_hands"]}, "_on_change_hook": 1, "not_a_field": 9}, WorkforceSeat)
 check("deserialize_state: a seat's cash book, None-means-never fields and zeros are as saved",
-      household.total_spend == 7.0 and workforce.wages_earned is None
+      household.total_spend == 7.0 and workforce.wages_paid is None
       and household.cash_mark is None, None)
 _debt = deserialize_state({"interest_paid": None, "last_settlement": -999, "insolvent_years": 0}, FinanceSeat)
 check("deserialize_state: a finance seat's None-means-never fields, negative defaults and zeros are as saved, and what the save lacks is the default",
@@ -58,11 +57,11 @@ check("deserialize_state: a polity seat's None-means-never fields and zeros are 
 check("deserialize_state: a seat's sets are sets, its dicts typed, its lists kept",
       workforce.trades_created == {"baker", "mason"} and type(workforce.trades_created) is set
       and workforce.trade_introduced_year == {"mason": 95} and workforce.employees == {"mason": 2.0}
-      and workforce.training == [["mason", 2]] and household.cash_flow == {"wages": -12.5}
+      and workforce.training == [TrainingRow("mason", 2.0, 103)] and household.cash_flow == {"wages": -12.5}
       and household.cash_periods == [{"year": 99, "net": 3.0}] and workforce.unused_hours_reported == {"order:1": [40.0, "no_hands"]}, None)
 _reporting = deserialize_state({"log": [[100, "built a mill"]]}, ReportingSeat)
 check("deserialize_state: a list of pairs annotated as tuples comes back as tuples", _reporting.log == [(100, "built a mill")] and type(_reporting.log[0]) is tuple, _reporting.log)
-check("deserialize_state: a field the save lacks takes its default", workforce.trades_endemic == set() and workforce.granted_staff is None and workforce.work_trade is None, None)
+check("deserialize_state: a field the save lacks takes its default", workforce.trades_endemic == set() and workforce.work_trade is None, None)
 check("deserialize_state: an unknown key and an `_on_change` key are not set", not hasattr(workforce, "not_a_field") and not hasattr(workforce, "_on_change_hook"))
 
 # ---- the retry counts, nested records and sets of the projects

@@ -25,6 +25,7 @@ from sim.geography.loading import load_geography
 from sim.geography.routes_cost_tree import least_cost_tree, settled_costs
 from sim.geography.routes_cost_tree_samples import samples as cost_tree_samples
 from sim.geography.route_dues import route_dues_by_holder, route_dues_levied
+from sim.geography import soil_derivation
 
 __all__ = ["Geography", "load_geography", "haversine_km", "distance_between_places", "place_coordinates", "MARKET_AREA_THRESHOLD_SHARE", "MEAN_DISTANCE_IN_DISC",
            "market_radius_km", "realm_span_km", "KOPPEN_TROPICAL_COLDEST_MONTH_MINIMUM_CELSIUS",

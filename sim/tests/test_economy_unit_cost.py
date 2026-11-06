@@ -21,6 +21,13 @@ class UnitCostTests(unittest.TestCase):
     def test_a_missing_price_makes_the_run_unaffordable(self):
         self.assertTrue(math.isinf(unit_cost.variable_cost_per_run(SMELT, {}, WAGES)))
 
+    def test_a_trade_with_no_opening_wage_makes_the_run_unpriceable_and_the_opening_ranking_leaves_it_out(self):
+        from sim.economy import opening_runs
+        late = Recipe("late", {"gear": 1.0}, {"ore": 1.0}, {"clockmaker": 2.0}, {}, {}, 10.0)
+        wages_without_it = {"smith": 3.0}
+        self.assertTrue(math.isinf(unit_cost.labour_cost_per_run(late, wages_without_it)))
+        self.assertEqual(opening_runs.unit_costs({"late": late}, {"ore": 1.0, "gear": 5.0}, wages_without_it, 0.05), {})
+
     def test_capital_charge_uses_the_recovery_factor_at_the_live_rate(self):
         value = 100.0 * 2.0 + 10.0 * 4.0
         factor = 0.05 / (1.0 - 1.05 ** -20.0)
@@ -31,15 +38,32 @@ class UnitCostTests(unittest.TestCase):
         low = unit_cost.capital_charge_per_run(SMELT, PRICES, WAGES, 0.02)
         self.assertGreater(unit_cost.capital_charge_per_run(SMELT, PRICES, WAGES, 0.10), low)
 
-    def test_margin_counts_every_joint_output(self):
-        both = unit_cost.expected_margin(SMELT, {"metal": 4.0, "silver": 30.0}, PRICES, WAGES, 0.0)
-        metal_only = unit_cost.expected_margin(SMELT, {"metal": 4.0}, PRICES, WAGES, 0.0)
+    def test_revenue_counts_every_joint_output(self):
+        both = unit_cost.revenue_per_run(SMELT, {"metal": 4.0, "silver": 30.0})
+        metal_only = unit_cost.revenue_per_run(SMELT, {"metal": 4.0})
         self.assertAlmostEqual(both - metal_only, 30.0)
-        self.assertAlmostEqual(metal_only, 40.0 - 35.0 - 240.0 / 20.0)
+        self.assertAlmostEqual(metal_only, 40.0)
 
     def test_return_on_capital_is_surplus_over_plant_plus_working_capital(self):
         got = unit_cost.return_on_capital(SMELT, {"metal": 10.0, "silver": 10.0}, PRICES, WAGES)
         self.assertAlmostEqual(got, (110.0 - 35.0) / (240.0 + 35.0))
+
+    def test_return_after_recovery_beats_the_rate_exactly_when_the_margin_covers_interest_on_working_capital(self):
+        rate = 0.05
+        outputs = {"metal": 10.0, "silver": 10.0}
+        employed = 240.0 + 35.0
+        got = unit_cost.return_after_recovery(SMELT, outputs, PRICES, WAGES, rate)
+        margin = (unit_cost.revenue_per_run(SMELT, outputs) - unit_cost.variable_cost_per_run(SMELT, PRICES, WAGES)
+                  - unit_cost.capital_charge_per_run(SMELT, PRICES, WAGES, rate))
+        self.assertAlmostEqual(got - rate, (margin - rate * 35.0) / employed)
+
+    def test_the_wear_of_a_short_lived_plant_lowers_the_return_after_recovery(self):
+        outputs = {"metal": 10.0, "silver": 10.0}
+        gross = unit_cost.return_on_capital(SMELT, outputs, PRICES, WAGES)
+        self.assertLess(unit_cost.return_after_recovery(SMELT, outputs, PRICES, WAGES, 0.05), gross)
+
+    def test_a_run_that_cannot_be_priced_has_no_return_after_recovery(self):
+        self.assertIsNone(unit_cost.return_after_recovery(SMELT, {"metal": 10.0}, {}, WAGES, 0.05))
 
 
 if __name__ == "__main__":

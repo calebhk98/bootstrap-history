@@ -213,7 +213,7 @@ to the game built over that mod set (`python3 -m sim.tests --slow --only mod_ope
 * `api.remove_module(module_id)`: refused while a remaining module reads one of its views or sends one of its commands; the
   error names the remover and every reader.
 * `api.extend_module(module_id, layer)`: a class laid over the implementation, so its methods override and `super()` reaches the
-  layer below. Layers stack in mod load order; a method outside the module's declared ones is labelled unstable.
+  layer below. Layers stack in mod load order; a method outside the module's declared ones is labelled unstable. A declared name that one of the module's parts owns is overridden the same way (`super()` reaches the part); what the parts call on each other is not reachable by a layer.
 * `api.adjust_view(view, function, reads=())`: `function(access, value, *key_or_arguments) -> value` over a published view;
   adjusters stack in mod load order.
 * `api.provide(point, function)` and `api.withdraw("<module_id>.<provision>")`: add an answer to an extension point, or take a
@@ -390,7 +390,7 @@ A mod can ship a map overlay in `mods/<id>/data/world/geography/` (tile edits in
 patches in `layers/`, new resources, deposits, route modes or a whole replacement map). It merges
 under the same add, override and remove rules as the rest of the mod system, new ids carry the mod's
 prefix, and `sim/geography/map_source.py` states the folder layout. The game opens the map once with
-every installed mod's overlay in load order (`sim/engine/geography_port.py`), and the agent economy's
+every installed mod's overlay in load order (the content module's `map_overlays` view, `sim/content/module.py`, feeds the land module's `OpenGeography` command), and the agent economy's
 tiles and carriage costs come from it. A mineral row may carry `mine_demand_goods`, the goods whose demand a mine of it supplies (the `mines` screen
 reads it; a material without it is its own demand good). A mechanic no data field or actor kind expresses is mod code. There is no price table: every price comes from
 production data, so a mod prices a good by giving it a production path.

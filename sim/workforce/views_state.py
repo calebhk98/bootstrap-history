@@ -1,7 +1,8 @@
 """The views of the acting seat's people, hours and pay books. Tables hold the live containers: read them, never write to them."""
+from sim.assembly.api import Part
 
 
-class ViewsState:
+class ViewsState(Part):
 
     def staff(self):
         """The acting seat's people: hired hands by trade, its scholars, artisans, deputy directors, slaves and freedmen, and the
@@ -11,6 +12,10 @@ class ViewsState:
                 "directors_extra": seat.directors_extra, "slaves": seat.slaves, "freedmen": seat.freedmen,
                 "manumitted_total": seat.manumitted_total, "reserve_craftsmen": seat.reserve_craftsmen,
                 "reserve_scholars": seat.reserve_scholars}
+
+    def staff_wanted(self):
+        """{trade: people} the acting seat has posted in the labour core: the standing bid its staff are hired through."""
+        return self.seat.staff_wanted
 
     def staff_on_all_books(self, trade):
         """People of `trade` on the payroll of every seat together."""
@@ -24,18 +29,14 @@ class ViewsState:
         """Where the acting seat's year of hours is promised and has gone."""
         seat = self.seat
         return {"allocations": seat.hour_allocations, "work_trade": seat.work_trade, "wage_hours": seat.wage_hours_this_year,
-                "wage_income": seat.wage_income_this_year, "teaching_hours": seat.teaching_hours_this_year,
-                "relocation_hours": seat.relocation_hours_this_year, "supervision_hours": seat.supervision_hours_this_year,
-                "contract_hours": seat.contract_hours, "commissioned": seat.commissioned, "last_year": seat.hours_this_year,
+                "teaching_hours": seat.teaching_hours_this_year, "last_year": seat.hours_this_year,
                 "wage_work_last_year": seat.wage_work_last_year, "trade_hours_used": seat.trade_hours_used,
-                "unused_reported": seat.unused_hours_reported, "last_taught": seat.last_taught,
-                "director_hours_spent": seat.director_hours_spent_founder}
+                "unused_reported": seat.unused_hours_reported}
 
     def pay_book(self):
-        """The acting seat's pay books: wages paid in advance, wages its own work earned, the pay last settled by trade."""
-        seat = self.seat
-        return {"prepaid": seat.wages_prepaid, "earned": seat.wages_earned, "paid": seat.wages_paid, "pay_held": seat.staff_pay_held,
-                "living_cost_paid": seat.living_cost_paid}
+        """The acting seat's pay book: what the last clearing charged it for its staff and one-year orders (the payroll at the
+        market wage before any clearing)."""
+        return {"paid_in_clearing": self.parts.fact_views.wages_charged_last_year()}
 
     def trade_schools(self):
         """{trade: training seats the acting seat has founded}."""

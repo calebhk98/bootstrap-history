@@ -5,7 +5,7 @@ QUICK_TOPIC = True
 import unittest
 
 from sim.assembly.api import FIRST, LIST, SUM, AssemblyError, ExtensionPoint, Module, ModuleSpec, Operations, Point, Provision, assemble
-from sim.tests.assembly_fixture import BASE, TOP, SetValue, build, changed
+from sim.tests.assembly_fixture import SetValue, build
 
 
 class Caller(Module):

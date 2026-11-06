@@ -6,7 +6,7 @@ QUICK_TOPIC = True
 from .harness import check
 
 from sim.agents.business_plant import Plant
-from sim.agents.api import ActorRecord, Firm, ledger
+from sim.agents.api import ActorRecord, Firm
 from sim.agents import firm_entry
 from sim.agents.player import Player
 from sim.agents.shipped import shipped_commands, shipped_kinds
@@ -35,12 +35,12 @@ class PlayerWorld(FakeWorld):
 def make_world(seed=1, risk=0.0):
 	world = PlayerWorld(seed)
 	world.baseline = {"base", "shop"}
-	world.nodes["base"] = make_node("base")
-	world.nodes["tech"] = make_node("tech", ["base"], hours=100.0, years=3.0, revenue=0.0)
-	world.nodes["tech"]["risk"] = risk
-	world.nodes["deep"] = make_node("deep", ["tech"], years=1.0)
-	world.nodes["shop"] = make_node("shop", ["base"], hours=100.0, years=1.0, revenue=500.0, upkeep=50.0)
-	world.nodes["mill"] = make_node("mill", ["base"], hours=100.0, years=2.0, revenue=2000.0, upkeep=100.0)
+	world.setting.nodes["base"] = make_node("base")
+	world.setting.nodes["tech"] = make_node("tech", ["base"], hours=100.0, years=3.0, revenue=0.0)
+	world.setting.nodes["tech"]["risk"] = risk
+	world.setting.nodes["deep"] = make_node("deep", ["tech"], years=1.0)
+	world.setting.nodes["shop"] = make_node("shop", ["base"], hours=100.0, years=1.0, revenue=500.0, upkeep=50.0)
+	world.setting.nodes["mill"] = make_node("mill", ["base"], hours=100.0, years=2.0, revenue=2000.0, upkeep=100.0)
 	return world
 
 
@@ -51,7 +51,7 @@ def make_player(actor_id="player:2", money=1000.0, controller="human", world=Non
 
 def year_on(player, world):
 	player.advance(world)
-	world.year += 1
+	world.setting.year += 1
 
 
 def last_entry(player):
@@ -101,16 +101,18 @@ check("a failure is counted", player.record.failed_copies.get("tech") == 1, play
 # ---- opening and closing a concern ---------------------------------------------------------
 world = make_world()
 player = make_player()
+player.record.workforce["labourer"] = 0.05      # the people the labour core hired for the concern (a hundred hours of a 2000 hour year)
 player.record.orders.append({"command": "open", "node": "shop"})
+player.record.workforce["labourer"] = 100.0 / world.labour.hours_per_person_year   # the crew the labour core hired at the last clearing
 year_on(player, world)
-check("open runs a concern and yields takings less upkeep and wages",
-	  "shop" in player.concerns and abs(player.money - (1000.0 + 500.0 - 50.0 - 100.0)) < 1e-6, player.money)
-check("the concern's margin is on the record", abs(player.business.margin_of("shop") - 350.0) < 1e-6, player.business.plants)
+check("open runs a concern and yields takings less upkeep (the clearing pays the crew)",
+	  "shop" in player.concerns and abs(player.money - (1000.0 + 500.0 - 50.0)) < 1e-6, player.money)
+check("the concern's margin is on the record", abs(player.business.reading.margin_of("shop") - 350.0) < 1e-6, player.business.plants)
 player.record.orders.append({"command": "close", "node": "shop"})
 before = player.money
 year_on(player, world)
 check("close stops the concern", "shop" not in player.concerns and abs(player.money - before) < 1e-6, player.money)
-check("close forgets the concern's margin", player.business.plant_of("shop") is None)
+check("close forgets the concern's margin", player.business.reading.plant_of("shop") is None)
 
 player = make_player()
 player.record.orders.append({"command": "open", "node": "deep"})
@@ -176,8 +178,9 @@ check("a human player with no orders does nothing",
 	  human.money == 1000.0 and not human.works and not human.concerns and not human.knowledge and not human.record.journal)
 
 world = make_world()
-world.nodes["dud"] = make_node("dud", ["base"], revenue=0.0)
+world.setting.nodes["dud"] = make_node("dud", ["base"], revenue=0.0)
 robot = make_player(money=5000.0, controller="ai")
+robot.record.workforce["labourer"] = 1.0
 for _year in range(6):
 	year_on(robot, world)
 check("an AI player researches and opens something profitable within a few years",
@@ -187,6 +190,7 @@ check("an AI player does not research what could never pay", "dud" not in robot.
 # ---- what competitors may enter after ------------------------------------------------------
 world = make_world()
 operator = make_player()
+operator.record.workforce["labourer"] = 1.0
 operator.record.orders.append({"command": "open", "node": "shop"})
 year_on(operator, world)
 world.public_nodes.add("shop")
@@ -195,24 +199,25 @@ world.public_nodes.clear()
 world.exposures["shop"] = 0.0
 check("a profitable concern nobody can see is not", operator.proven_concerns(world) == [])
 world.exposures["shop"] = 1.0
-operator.business.note_margin("shop", -1.0)
+operator.business.tally.note_margin("shop", -1.0)
 check("a concern running at a loss is not", operator.proven_concerns(world) == [])
 
 # ---- the firm runs through the same rule ----------------------------------------------------
 world = make_world()
 firm = Firm("firm:1", ActorRecord(kind="firm", money=1000.0, founded_year=90))
-firm.business.adopt(Plant("shop", opened_year=95))
+firm.business.lifecycle.adopt(Plant("shop", opened_year=95))
 firm.rivals_of = lambda node_id, asking_id: 1.0
+firm.record.workforce["labourer"] = 0.05
 firm.operate(world)
 managing = firm_entry.management_cost(world, "shop")
-check("a firm's year through the shared rule: takings less upkeep, wages and management",
-	  managing > 0.0 and abs(firm.money - (1000.0 + 250.0 - 50.0 - 100.0 - managing)) < 1e-6
+check("a firm's year through the shared rule: the purse gains takings less upkeep; the margin also counts the crew's wages and the managers' places posted to the labour market",
+	  managing > 0.0 and abs(firm.money - (1000.0 + 250.0 - 50.0)) < 1e-6
 	  and abs(firm.record.last_margin - (100.0 - managing)) < 1e-6, firm.money)
-check("a firm's staffing and loss years are kept", firm.staffed_share("shop") == 1.0 and firm.record.loss_years == 0)
-world.free_people["labourer"] = 0.0
+check("a firm's staffing and loss years are kept", firm.holdings.staffed_share("shop") == 1.0 and firm.record.loss_years == 0)
+firm.record.workforce.clear()
 firm.operate(world)
 check("a firm that finds no staff makes nothing and loses its upkeep",
-	  firm.staffed_share("shop") == 0.0 and firm.record.loss_years == 1 and abs(firm.record.last_margin + 50.0 + managing) < 1e-6, firm.record.last_margin)
+	  firm.holdings.staffed_share("shop") == 0.0 and firm.record.loss_years == 1 and abs(firm.record.last_margin + 50.0 + managing) < 1e-6, firm.record.last_margin)
 
 # ---- deterministic with the same seed -------------------------------------------------------
 def run(seed):

@@ -4,31 +4,38 @@ Needs: effect_values, standing, acting_balance, cast_state, actor_world, civilis
 ReviewVentures, RecordEvent)."""
 from typing import Any
 
-from sim.agents.api import SeatBorrower, business_review
+from sim.agents.api import STANDING_DISCOUNT_CAP, SeatBorrower, business_review, rate_with_discount
+from sim.assembly.api import Part
 from sim.ledger.api import NoteSeatCash
 from sim.reporting.api import RecordEvent
-from sim.world import capital_market
 
 from .affordability import near_limit
-from .constants import DEBT_RATE_REPUTATION_DISCOUNT_CAP, DEBT_RATE_REPUTATION_SCALE
+from .constants import DEBT_RATE_REPUTATION_SCALE
 from sim.projects.api import ReviewVentures
 
 
-class Arrears:
+class Arrears(Part):
 
 	def debt_interest_rate(self) -> float:
 		"""What arrears cost the seat a year. It starts from the civilisation's loanable-funds market rate (its own starting rate
-		until the market has met), plus a premium for the share of its credit limit it has used. A household with no standing
-		borrows from whoever will have it and pays for it: standing is what makes money cheap."""
+		until the market has met), plus the economy's risk premium for the debt it owes against its credit limit and the interest it
+		has left unpaid. A household with no standing borrows from whoever will have it and pays for it: standing is what makes
+		money cheap."""
+		return self.rate_on_debt(max(0.0, -self.needs.acting_balance()))
+
+	def household_rate_on_loan(self, amount: float) -> float:
+		"""What the seat would pay a year on a further draw of `amount`: the rate on the debt it would then owe."""
+		return self.rate_on_debt(max(0.0, -self.needs.acting_balance()) + amount)
+
+	def rate_on_debt(self, debt: float) -> float:
+		"""The market rate plus the economy's risk premium on `debt` against the credit limit, less the seat's standing discount."""
 		needs = self.needs
 		discount = sum(discount for _node_id, discount in needs.effect_values("debt_rate_discount"))
-		discount += min(DEBT_RATE_REPUTATION_DISCOUNT_CAP, max(0.0, needs.standing()["reputation"]) / DEBT_RATE_REPUTATION_SCALE)
-		used = 0.0
-		capital = needs.acting_balance()
-		if capital < 0:
-			limit = self.credit_limit()
-			used = -capital / limit if limit > 0 else 1.0
-		return capital_market.borrower_rate(self.market_rate(), discount, used)
+		discount += min(STANDING_DISCOUNT_CAP, max(0.0, needs.standing()["reputation"]) / DEBT_RATE_REPUTATION_SCALE)
+		premium = None
+		if debt > 0.0:
+			premium = self.parts.capital_market.risk_premium(debt, self.parts.credit_line.credit_limit(), self.seat.interest_arrears)
+		return rate_with_discount(self.parts.capital_market.market_rate(), premium, discount)
 
 	def settle_interest(self) -> Any:
 		"""The year's interest on the acting seat's debt by the one rule every borrower follows: (the interest owed, the part paid)."""
@@ -37,7 +44,7 @@ class Arrears:
 		borrower = SeatBorrower(
 			seat_id, needs.cast_state().purses, self.seat, balance=needs.acting_balance,
 			note_outlay=lambda purpose, amount: needs.send(NoteSeatCash(seat_id, -1.0, amount, purpose)),
-			ceiling=self.credit_limit, rate=self.debt_interest_rate, defaults=lambda: self.default_on_debt(needs.year()))
+			ceiling=self.parts.credit_line.credit_limit, rate=self.debt_interest_rate, defaults=lambda: self.parts.insolvency.default_on_debt(needs.year()))
 		return borrower.settle_interest(needs.actor_world())
 
 	def charge_interest(self, year: int) -> float:
@@ -62,7 +69,7 @@ class Arrears:
 		ambush. Everything that could still save a household (stop a project, close a loss-maker, let somebody go) has to be on
 		offer while there is time to act on it."""
 		needs = self.needs
-		limit = self.credit_limit()
+		limit = self.parts.credit_line.credit_limit()
 		seat = self.seat
 		capital = needs.acting_balance()
 		warn, seat.said_near_limit, used = near_limit(capital, limit, seat.said_near_limit)
@@ -78,7 +85,7 @@ class Arrears:
 
 	def shed_loss_makers(self, year: int) -> None:
 		"""Shut the plants that keep losing money; in arrears with a deficit, stop maintaining anything that costs more than it
-		returns (the loss rule of `Business.review`, the same for every owner). A ruined run once held works whose upkeep exceeded
+		returns (the loss rule of `Business.reviews.review`, the same for every owner). A ruined run once held works whose upkeep exceeded
 		their revenue, so net income sat near zero for ever: a household lets the loss-makers go the year it notices, and then its
 		income is its practice again, which is enough."""
 		shed = [closure.entry_key for closure in self.needs.send(ReviewVentures(tuple((business_review.LOSS_MAKING,)), year))]

@@ -75,8 +75,8 @@ clean_purses, clean = market({"household:a": 500.0})
 marked_purses, marked = market({"household:a": 500.0})
 world = CreditWorld()
 marked.record.remembered_default_loss = 400.0
-clean.set_bond_terms(world)
-marked.set_bond_terms(world)
+clean.credit_record.set_bond_terms(world)
+marked.credit_record.set_bond_terms(world)
 check("a state with a default on its record is asked a higher yield, same coupon",
 	  marked_purses.bonds.terms[marked.account_id][1] > clean_purses.bonds.terms[clean.account_id][1] + 1e-9
 	  and marked_purses.bonds.terms[marked.account_id][0] == clean_purses.bonds.terms[clean.account_id][0],

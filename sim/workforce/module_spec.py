@@ -1,53 +1,48 @@
 """The workforce module's spec (sim/assembly).
 
-Every read is a view of an owner that has not moved yet, published by the engine bridge (sim/engine/bridge_workforce.py and
-the other bridge files) under the name the owner will publish, or a view of a module that has moved. A view the module publishes
+Every read is a view of an owner that has not moved yet, published by the engine bridge (sim/engine/bridge_*.py) under the name the owner will publish, or a view of a module that has moved. A view the module publishes
 is uncached while labour writes the seat's people and hours in place (it keeps no count of its writes), so no channel can say
 when they changed; only the payroll reports its changes (the `staff` channel)."""
 from sim.assembly.api import KEYED, LIST, QUOTE, ExtensionPoint, ModuleSpec, PhaseHook, ViewSpec
-from sim.agriculture.api import SetFarmLand, SetFarmTechnique
-from sim.demography.api import SetClearedFarmland, SetFarmHoursNeeded
-from sim.ledger.api import NoteSpend, PayEdge, ReceiveFromEdge
+from sim.ledger.api import NoteSpend, PayEdge
 from sim.polity.api import GainReputation, ScaleFamiliarity, ScaleProtection
 from sim.seats.api import RememberGoalClosure
 from sim.reporting.api import RecordAutomation, RecordAutomationSkip, RecordEvent
 
-from .commands import (AllocateFarmWorkforce, ApplyLandClearing, BuildHousing, CloseHoursYear, GrantStaff, NoteTradeSpread, PressLabour,
-                       LoseStaff, ReleaseStaff, SetEmployed, TakeWageFallback, UpdateWages)
+from .commands import (BuildHousing, CloseHoursYear, GrantStaff, NoteTradeSpread,
+                       LoseStaff, NewcomersPlaced, NoteClearedWage, ReleaseStaff, SetEmployed, StaffArrived, HoursArrived, PostHoursOnce, TakeWageFallback, ClearingSettled)
 from .commands_people import (BuySlaves, CommissionHours, FireStaff, FoundTradeSchool, HireStaff, Manumit, MoveBase, TrainStaff,
                               WorkForWages)
 from .commands_hours import (AllocateHours, BleedStaff, CancelWork, DisperseDependants, DrawTradeHours, LoseCrew, OrderWork, ReleaseHours,
-                             ResetTradeHours, SetReserve, SetWageHoursSold, SettleLivingCost, SpendDirectorHours, WatchStaff)
+                             ResetTradeHours, SetReserve, WatchStaff)
 from .commands_bondage import AutoBuyPeople, AutoManumit, ChargeLivingCost, FadeMarketPressure, NoteBuyRefusal
 from .state import STAFF, WorkforceSeat, WorkforceSociety
 from .module import Workforce
 
 READS_BY_OWNER = {
     "scenario": ("year", "automation", "civilisation", "game_config", "plain_number", "money_text", "game_random"),
-    "content": ("trades_absent", "trade_notes", "trade_records", "trade_family"),
+    "content": ("trades_absent", "trade_notes", "trade_records", "trade_family", "household_need_data"),
     "ventures": ("operating", "venture_foreman", "venture_foremen_used", "venture_staff_free", "coverage", "coverage_share"),
     "seats": ("founder", "acting_country", "seat_list", "goal", "goal_closure"),
     "ledger": ("acting_balance",),
-    "polity": ("standing", "rep_factor"),
-    "reporting": ("event_log", "last_market_price_ratio", "real_output_per_head"),
-    "markets": ("agent_prices", "agent_wage", "agent_people_by_trade", "agent_people_by_tile_and_trade", "agent_country", "agent_unskilled_wage"),
-    "demography": ("population", "pop_scale", "people_by_tile", "urban_fraction", "farm_holdings"),
-    "agriculture": ("farm_land", "farm_technique_this_year", "farm_ladder", "farm_arable_ceiling"),
-    "land": ("home_tiles_held", "home_tiles_held_version", "built_ways", "held_techniques"),
+    "polity": ("rep_factor",),
+    "reporting": ("last_market_price_ratio", "real_output_per_head"),
+    "markets": ("agent_wage_at", "agent_hours_offered_at", "agent_working_hours", "agent_people_by_trade", "agent_people_by_tile_and_trade", "agent_trades"),
+    "demography": ("population", "pop_scale", "people_by_tile", "urban_fraction"),
+    "agriculture": ("farm_land",),
+    "land": ("home_tiles_held", "built_ways", "held_techniques"),
     "knowledge": ("techniques_held", "techniques_granted", "done_year", "tree_nodes", "visibility", "tree_closure"),
-    "mechanics": ("mechanic", "effect_factor", "effect_holds", "effect_sum", "effect_terms", "effect_value", "labour_productivity_sources",
+    "mechanics": ("mechanic", "effect_holds", "effect_sum", "effect_terms", "effect_value", "labour_productivity_sources",
                   "room_sources", "staff_capacity_sources", "running_mechanics"),
     "diffusion": ("literacy", "research_productivity", "staff_hire_advice", "staff_sources"),
     "production": ("concern_market", "running", "institution_units", "upkeep", "revenue_estimate", "is_venture", "held_trade"),
     "projects": ("active_projects", "project_order", "staffing_closed_hand_shortfall", "start_check", "exclusion_reason",
                  "active_hours_still_wanted", "keep_staffed_hires", "concerns_to_close_for_staffing"),
-    "sharing": ("shared_answer",),
     "materials": ("material_price_factor",),
     "finance": ("debt_status", "credit_limit", "living_cost", "spending_power", "can_pay", "purchase_refusal"),
-    "resources": ("mine_operating_cost",),
     "prices": ("price_index",),
     "coin": ("home_price_level",),
-    "actors": ("actor_staff", "actor_staff_nationwide", "actor_staff_total", "teaching_knowledge", "harvest_share_taken"),
+    "actors": ("actor_staff", "teaching_knowledge"),
 }
 
 _LIVE = dict(cached=False)
@@ -57,14 +52,14 @@ MODULE_SPECS = (ModuleSpec(
     "workforce", Workforce, channels=(STAFF,), world_state=WorkforceSociety, seat_state=WorkforceSeat,
     publishes=(
         ViewSpec("staff", "staff", **_SEAT),
+        ViewSpec("staff_wanted", "staff_wanted", **_SEAT),
         ViewSpec("staff_version", "staff_version", **_SEAT),
         ViewSpec("wage_bill", "wage_bill", **_SEAT),
+        ViewSpec("wages_charged_last_year", "wages_charged_last_year", **_SEAT),
         ViewSpec("unskilled_trade", "unskilled_trade", **_LIVE),
-        ViewSpec("starting_wages", "starting_wages", **_LIVE),
         ViewSpec("wage_schedule_for", "wage_schedule_for", kind=QUOTE, **_LIVE),
         ViewSpec("settlement_tiles", "settlement_tiles", **_LIVE),
         ViewSpec("labour_need_shares", "labour_need_shares", **_LIVE),
-        ViewSpec("opening_wage_index", "opening_wage_index", **_LIVE),
         ViewSpec("staff_on_all_books", "staff_on_all_books", kind=KEYED, **_LIVE),
         ViewSpec("training_queue", "training_queue", **_SEAT),
         ViewSpec("hour_commitments", "hour_commitments", **_SEAT),
@@ -93,14 +88,14 @@ MODULE_SPECS = (ModuleSpec(
         ViewSpec("opening_money_per_labour_hour", "opening_money_per_labour_hour", **_LIVE),
         ViewSpec("labour_state_weights", "labour_state_weights", **_LIVE),
         ViewSpec("town_mortality_premium_by_tile", "town_mortality_premium_by_tile", **_LIVE),
-        ViewSpec("wage_index_terms", "wage_index_terms", **_LIVE),
-        ViewSpec("wage_index", "wage_index", **_LIVE),
+        ViewSpec("cleared_wage_change", "cleared_wage_change", **_LIVE),
         ViewSpec("wage_materials", "wage_materials", **_LIVE),
         ViewSpec("trade_registry", "trade_registry", **_LIVE),
         ViewSpec("labour_market", "labour_market", **_LIVE),
         ViewSpec("wage_signature", "wage_signature", **_LIVE),
         ViewSpec("market_annual_wage", "market_annual_wage", kind=KEYED, **_LIVE),
         ViewSpec("standing_job_pay", "standing_job_pay", kind=KEYED, **_LIVE),
+        ViewSpec("capacity_job_pay", "capacity_job_pay", kind=KEYED, **_LIVE),
         ViewSpec("hours_for_sale", "hours_for_sale", **_SEAT),
         ViewSpec("best_wage_trade", "best_wage_trade", **_SEAT),
         ViewSpec("available_trades", "available_trades", **_LIVE),
@@ -108,10 +103,16 @@ MODULE_SPECS = (ModuleSpec(
         ViewSpec("taught_trade_people", "taught_trade_people", kind=KEYED, **_LIVE),
         ViewSpec("people_who_exist", "people_who_exist", kind=KEYED, **_LIVE),
         ViewSpec("reachable_trade_population", "reachable_trade_population", kind=KEYED, **_LIVE),
-        ViewSpec("local_market_share", "local_market_share", **_LIVE),
         ViewSpec("base_tile", "base_tile", **_SEAT),
         ViewSpec("last_buy_refusal", "last_buy_refusal", **_SEAT),
         ViewSpec("society_labour_hours", "society_labour_hours", **_LIVE),
+        ViewSpec("staff_posting", "staff_posting", **_SEAT),
+        ViewSpec("once_posting", "once_posting", **_SEAT),
+        ViewSpec("wage_work_offered", "wage_work_offered", **_SEAT),
+        ViewSpec("newcomers", "newcomers", **_SEAT),
+        ViewSpec("employed_by_trade", "employed_by_trade", **_SEAT),
+        ViewSpec("occupation_people_by_trade", "occupation_people_by_trade", **_LIVE),
+        ViewSpec("occupation_hours_by_trade", "occupation_hours_by_trade", **_LIVE),
         ViewSpec("farming_technique", "farming_technique", **_LIVE),
         ViewSpec("farm_land_hectares", "farm_land_hectares", **_LIVE),
         ViewSpec("hours_per_person_year", "hours_per_person_year", **_LIVE),
@@ -132,8 +133,8 @@ MODULE_SPECS = (ModuleSpec(
         ViewSpec("home_town_population_estimate", "home_town_population_estimate", **_SEAT),
         ViewSpec("literate_trades", "literate_trades", **_LIVE),
         ViewSpec("slave_base_price", "slave_base_price", **_LIVE),
-        ViewSpec("market_supply_split", "market_supply_split", kind=KEYED, **_SEAT),
         ViewSpec("hours_reserved", "hours_reserved", kind=KEYED, **_SEAT),
+        ViewSpec("hours_hired_once", "hours_hired_once", kind=QUOTE, **_SEAT),
         ViewSpec("trade_headcount_pending", "trade_headcount_pending", kind=KEYED, **_SEAT),
         ViewSpec("literacy_factor", "literacy_factor", kind=KEYED, **_SEAT),
         ViewSpec("relocation_quote", "relocation_quote", kind=KEYED, **_SEAT),
@@ -146,14 +147,13 @@ MODULE_SPECS = (ModuleSpec(
         # puts every book back after trying the sale: a quote that writes and restores (retire when wage work has a pure rule)
         ViewSpec("work_for_wages_dry_run", "work_for_wages_dry_run", kind=QUOTE, **_SEAT),
     ),
-    applies=((SetEmployed, "set_employed"), (NoteTradeSpread, "note_trade_spread"), (PressLabour, "press_labour"),
+    applies=((SetEmployed, "set_employed"), (StaffArrived, "staff_arrived"), (HoursArrived, "hours_arrived"), (ClearingSettled, "clearing_settled"), (NewcomersPlaced, "newcomers_placed"), (NoteClearedWage, "note_cleared_wage"), (PostHoursOnce, "post_hours_once"), (NoteTradeSpread, "note_trade_spread"),
              (LoseStaff, "lose_staff"), (GrantStaff, "grant_staff"),
-             (AllocateFarmWorkforce, "allocate_farm_workforce"), (ApplyLandClearing, "apply_land_clearing"),
-             (UpdateWages, "update_wages"), (ReleaseStaff, "release_staff"), (TakeWageFallback, "take_wage_fallback"),
+             (ReleaseStaff, "release_staff"), (TakeWageFallback, "take_wage_fallback"),
              (CloseHoursYear, "close_hours_year"),
              (AllocateHours, "allocate_hours"), (ReleaseHours, "release_hours"), (OrderWork, "order_work"), (CancelWork, "cancel_work"),
-             (DrawTradeHours, "draw_trade_hours"), (ResetTradeHours, "reset_trade_hours"), (SpendDirectorHours, "spend_director_hours"),
-             (SettleLivingCost, "settle_living_cost"), (SetWageHoursSold, "set_wage_hours_sold"), (SetReserve, "set_reserve"),
+             (DrawTradeHours, "draw_trade_hours"), (ResetTradeHours, "reset_trade_hours"),
+             (SetReserve, "set_reserve"),
              (BleedStaff, "bleed_staff"), (DisperseDependants, "disperse_dependants"), (LoseCrew, "lose_crew"), (WatchStaff, "watch_staff"),
              (BuildHousing, "build_housing"), (ChargeLivingCost, "charge_living_cost"), (AutoBuyPeople, "auto_buy_people"),
              (AutoManumit, "auto_manumit"), (FadeMarketPressure, "fade_market_pressure"), (NoteBuyRefusal, "note_buy_refusal"),
@@ -168,6 +168,6 @@ MODULE_SPECS = (ModuleSpec(
         ExtensionPoint("director_overhead", LIST),         # () -> hours a year already spoken for; the answers are added, each at least zero
     ),
     reads=tuple(name for names in READS_BY_OWNER.values() for name in names),
-    sends=(BuildHousing, PayEdge, NoteSpend, ReceiveFromEdge, RecordEvent, RecordAutomation, RecordAutomationSkip, GainReputation, ScaleFamiliarity, ScaleProtection,
-           SetClearedFarmland, SetFarmHoursNeeded, SetFarmLand, SetFarmTechnique, RememberGoalClosure),
+    sends=(BuildHousing, PayEdge, NoteSpend, RecordEvent, RecordAutomation, RecordAutomationSkip, GainReputation, ScaleFamiliarity, ScaleProtection,
+           RememberGoalClosure, PostHoursOnce),
 ),)

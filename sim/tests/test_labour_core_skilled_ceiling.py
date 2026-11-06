@@ -23,12 +23,11 @@ SMITHS = 500.0
 
 def inputs(smith_maximum, smiths_wanted=SMITHS * 20.0):
     # the diggers' bid is slack (below the diggers on hand) so their wage and the digger vacancy stay put
-    bids = [records.Bid("farm", "digger", "vale", DIGGERS * 0.5 * HOURS, 3.0),
-            records.Bid("works", "smith", "vale", smiths_wanted * HOURS, smith_maximum)]
+    bids = [records.EmployerHoursBid("farm", "digger", "vale", DIGGERS * 0.5 * HOURS, 3.0),
+            records.EmployerHoursBid("works", "smith", "vale", smiths_wanted * HOURS, smith_maximum)]
     return records.YearInputs(trades=trades.trade_specs(REGISTRY), bids=bids,
                               subsistence_per_worker_year={"vale": HOURS}, hours_per_worker_year=HOURS,
-                              discount_rate=DISCOUNT, career_years=CAREER,
-                              entrants={"vale": SMITHS}, attrition_share={"vale": 0.03})
+                              discount_rate=DISCOUNT, career_years=CAREER)
 
 
 def start():
@@ -41,7 +40,7 @@ def smith_clearing(report):
 
 
 def ceiling_of(state, year_inputs):
-    return clearing.trained_substitute_wage(state, year_inputs, "vale", "smith")
+    return clearing.trained_substitute_wage(state.wages, year_inputs, "vale", "smith")
 
 
 def years(state, year_inputs, count):
@@ -56,7 +55,7 @@ def trainees_of(state):
 
 
 class CeilingCapsTheExpectationNotTheHours(unittest.TestCase):
-    """The long-run ceiling bounds what entrants expect (the clearing's heading wage), not the hours hired; this
+    """The long-run ceiling bounds what switchers expect (the clearing's heading wage), not the hours hired; this
     year's wage may pass it (Complaint 678, test_scarcity_wage_short_run.py)."""
 
     def test_employers_far_above_the_ceiling_are_expected_to_pay_the_ceiling(self):
@@ -85,13 +84,6 @@ class CeilingCapsTheExpectationNotTheHours(unittest.TestCase):
 
 class NewHandsComeThroughTrainingPlaces(unittest.TestCase):
 
-    def test_a_vacancy_adds_trainees_not_smiths_in_the_year(self):
-        before = start()
-        after, report = year.run_year(before, inputs(smith_maximum=1e6))
-        self.assertLess(aptitude.band_total(after.workers["vale"]["smith"]),
-                        aptitude.band_total(before.workers["vale"]["smith"]))
-        self.assertGreater(trainees_of(after), 0.0)
-
     def test_trainees_never_exceed_the_places_the_incumbents_teach(self):
         state = start()
         for _year in range(15):
@@ -99,20 +91,16 @@ class NewHandsComeThroughTrainingPlaces(unittest.TestCase):
             places = training.APPRENTICES_PER_MASTER * aptitude.band_total(state.workers["vale"]["smith"])
             self.assertLessEqual(trainees_of(state), places * (1.0 + 1e-9))
 
-    def test_once_the_places_are_full_removing_the_ceiling_adds_no_trainees(self):
-        capped, _report = years(start(), inputs(smith_maximum=1e6), 10)
-        with mock.patch.object(clearing, "trained_substitute_wage", lambda *args, **kwargs: math.inf):
-            free, _report = years(start(), inputs(smith_maximum=1e6), 10)
-        full = training.APPRENTICES_PER_MASTER * aptitude.band_total(capped.workers["vale"]["smith"])
-        self.assertAlmostEqual(trainees_of(capped), full, delta=0.02 * full)
-        self.assertAlmostEqual(trainees_of(free), training.APPRENTICES_PER_MASTER * aptitude.band_total(free.workers["vale"]["smith"]),
-                               delta=0.02 * full)
-
-    def test_the_ceiling_alone_does_not_draw_diggers_into_the_trade(self):
-        state = start()
+    def test_the_ceiling_alone_draws_only_the_young_into_the_trade_and_a_higher_maximum_draws_no_more(self):
+        # the young who have just come of working age (a career's turnover of a trade's people) are the new hands; they
+        # enter through the trade's places like any trainee (switching.py), and an established digger does not move
+        state, other = start(), start()
         for _year in range(10):
             state, report = year.run_year(state, inputs(smith_maximum=1e6))
-            self.assertLessEqual(report.switched.get("vale", {}).get("smith", 0.0), 1e-9)
+            other, higher = year.run_year(other, inputs(smith_maximum=1e9))
+            switched = report.switched.get("vale", {}).get("smith", 0.0)
+            self.assertLessEqual(switched, DIGGERS / CAREER)
+            self.assertEqual(switched, higher.switched.get("vale", {}).get("smith", 0.0))
 
 
 class ExpectedIncomeIsContinuousAcrossBalance(unittest.TestCase):

@@ -9,10 +9,10 @@ import types as pytypes
 import unittest
 
 from sim.economy import currency, mint, mint_labour
-from sim.economy.accounts import Book
+from sim.book import Book
 from sim.tests.test_economy_mint import BullionAtParity
 from sim.economy.recipes import recipe_from_entry
-from sim.economy.types import EDGE_ISSUE, EDGE_MINT, EDGE_PRODUCTION, GoodsMove, Transfer
+from sim.economy.types import EDGE_ISSUE, Transfer
 
 DATA = os.path.join(os.path.dirname(__file__), "..", "..", "data")
 METAL = "silver_kg"
@@ -50,10 +50,16 @@ class FakeView:
     def wage(self, trade, area):
         return 2.0
 
+    def wage_held_anywhere(self, trade):
+        return True
+
     def basket_price_level(self, money):
         return 1.0
 
     chained_price_level = basket_price_level
+
+    def opening_wage_level(self, money):
+        return 1.0
 
 
 def world(spec, recipe="default"):
@@ -64,8 +70,11 @@ def world(spec, recipe="default"):
     setup = pytypes.SimpleNamespace(
         civ_id="realm", state_agent="state", currency_id="coin", capital_tile="t1",
         opening_population_by_tile={"t1": 3.0, "t2": 1.0}, tiles={"t1": 0, "t2": 0},
-        opening_wages={}, mint_recipe=_recipe() if recipe == "default" else recipe)
-    record = pytypes.SimpleNamespace(book=book, currency=spec, memory=pytypes.SimpleNamespace(prices=BullionAtParity()))
+        opening_wages={}, specs={}, mint_recipe=_recipe() if recipe == "default" else recipe)
+    setup.trades = {trade: None for trade in setup.mint_recipe.labour_hours} if recipe == "default" else {}   # the trades the recipe hires
+    setup.unskilled_trade = min(setup.trades, default=None)
+    record = pytypes.SimpleNamespace(book=book, currency=spec, memory=pytypes.SimpleNamespace(prices=BullionAtParity()),
+                                     cohorts={}, producers={}, merchants={})
     mint.seed_opening_metal(setup, record)
     return setup, record
 

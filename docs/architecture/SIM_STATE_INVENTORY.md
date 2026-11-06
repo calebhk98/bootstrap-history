@@ -1,5 +1,7 @@
 # Sim instance-state inventory
 
+Note: this is a record of a past measurement. The mixins it scopes the count to (`EconomyMixin`, `FogMixin`, `GeographyMixin`, `LabourMixin`, `ProjectsMixin`, `SocietyMixin`) are gone (`Sim` has no base classes), and state now lives in the owning module's `state.py`; the counts describe the checkout they were run on. Current ownership is `STATE_OWNERSHIP_MAP.md` and `sim/ARCHITECTURE.md`.
+
 **Status:** measured, input to `HOUSEHOLD_EXTRACTION.md`. Every number below
 was produced by the scripts described in "Method", run against this checkout
 of `sim/engine/`; nothing here is copied from `sim/ARCHITECTURE.md`'s "~157
@@ -155,7 +157,6 @@ total every count below is built from.
 | `_said_stack_caution` | lazy via getattr (sim/ui/proto/techtree.py:611) | no | 1 | 2 | INTERNAL (keyed off household (this household's own portfolio)) | whether a tech-stacking leverage caution has fired |
 | `_said_wage_cascade` | `__init__` (sim/engine/core.py:244) | no | 1 | 3 | INTERNAL (keyed off world (wage_index)) | last year a wage-cascade note fired |
 | `_spend_this_year` | `__init__` (sim/engine/core.py:242) | no | 1 | 5 | INTERNAL (keyed off household) | running tally this year, promoted to spend_last_year at year end |
-| `_staff_scale` | `__init__` (sim/engine/core.py:241) | no | 2 | 3 | INTERNAL (keyed off household) | pre-first-step default for staff_capacity(); overwritten every step |
 | `_stock_throttle_cache` | set outside `__init__`, no getattr guard (sim/engine/economy.py:3261, in `resource_throttle`) | no | 1 | 2 | INTERNAL (keyed off household) | memoised (throttle, binding) result for that signature |
 | `_stock_throttle_sig` | lazy via getattr (sim/engine/economy.py:3208) | no | 1 | 4 | INTERNAL (keyed off household (industrial/lab need, mines, forest_ha, nitre_bed_m2, stock)) | signature of the inputs the last throttle computation used |
 | `_wage_index_base` | `__init__` (sim/engine/core.py:57) | no | 1 | 3 | WORLD | wage_index's pre-shock baseline; same civ-wide scope as wage_index |
@@ -257,7 +258,7 @@ total every count below is built from.
 | `trade_schools` | lazy via getattr (sim/labour/labour.py:1060) | yes | 2 | 5 | HOUSEHOLD | owned trade-school capacity |
 | `trades_created` | `__init__` (sim/engine/core.py:109) | yes | 5 | 11 | HOUSEHOLD | trades the household has taught into existence (AMBIGUOUS - see summary: becomes a society-wide fact once taught) |
 | `trades_endemic` | `__init__` (sim/engine/core.py:118) | yes | 3 | 4 | HOUSEHOLD | which taught trades the society has since supplied on its own (companion to trades_created) |
-| `training` | `__init__` (sim/engine/core.py:93) | yes | 4 | 15 | HOUSEHOLD | [artisan_capacity, year_matures] pairs the household has queued |
+| `training` | `__init__` (sim/engine/core.py:93) | yes | 4 | 15 | HOUSEHOLD | TrainingRow records (trade or None for people bought, people, ready year) the household has queued |
 | `verbose` | `__init__` (sim/engine/core.py:42) | no | 1 | 1 | SCENARIO | CLI verbosity flag, set at construction |
 | `w` | `__init__` (sim/engine/core.py:51) | no | 5 | 23 | SCENARIO | alias for civ['values'], the scoring/weights table |
 | `wage_hours_this_year` | lazy via getattr (sim/engine/core.py:1185) | yes | 5 | 13 | HOUSEHOLD | hours the household has sold as wages this year (prevents double-selling) |

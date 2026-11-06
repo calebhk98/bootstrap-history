@@ -9,7 +9,7 @@ from sim.agents.api import Government
 from sim.agents.records import ActorRecord
 from sim.economy.titles_flight import tenant_flees
 from sim.labour.market.migration import migrate, move_shares
-from sim.labour.market.records import Clearing, MarketState, Route, YearInputs, YearReport
+from sim.labour.market.records import LabourClearing, MarketState, Route, YearInputs, YearReport
 from sim.refusal import Refusal
 
 QUICK_TOPIC = True
@@ -19,8 +19,8 @@ BANDS = 5
 
 def clearing(area, wage):
 	hours = 1000.0
-	return Clearing(trade="digger", area=area, wage=wage, hours_offered=hours, hours_wanted=hours, hours_hired=hours,
-					hired_by_employer={}, paid_by_employer={}, average_wage=wage)
+	return LabourClearing(trade="digger", area=area, wage=wage, hours_offered=hours, hours_wanted=hours, hours_hired=hours,
+					hired_by_employer={})
 
 
 def leavers_from_home(home_take=0.0, away_take=0.0, penalty=0.0):
@@ -121,22 +121,21 @@ class LiabilitySpiral(unittest.TestCase):
 
 
 def record_with_tenancy():
-	return SimpleNamespace(cohorts={}, titles={"t1": {"lord": 0.5}},
-						   tenancies={"t1": [{"tenant": "serf", "lessor": "lord", "share": 0.5, "arrears": 0.0}]})
+	return SimpleNamespace(cohorts={}, land=SimpleNamespace(titles={"t1": {"lord": 0.5}}, tenancies={"t1": [{"tenant": "serf", "lessor": "lord", "share": 0.5, "arrears": 0.0}]}))
 
 
 class LandLeftByFlight(unittest.TestCase):
 	def test_the_land_a_fleeing_tenant_worked_goes_back_to_no_holder(self):
 		record = record_with_tenancy()
 		self.assertEqual(tenant_flees(record, "serf", 1.0), {"t1": 0.5})
-		self.assertEqual(record.titles["t1"], {})
-		self.assertEqual(record.tenancies, {})
+		self.assertEqual(record.land.titles["t1"], {})
+		self.assertEqual(record.land.tenancies, {})
 
 	def test_a_part_of_the_household_leaving_releases_that_part(self):
 		record = record_with_tenancy()
 		tenant_flees(record, "serf", 0.4)
-		self.assertAlmostEqual(record.tenancies["t1"][0]["share"], 0.3)
-		self.assertAlmostEqual(record.titles["t1"]["lord"], 0.3)
+		self.assertAlmostEqual(record.land.tenancies["t1"][0]["share"], 0.3)
+		self.assertAlmostEqual(record.land.titles["t1"]["lord"], 0.3)
 
 
 class TaxResponseLevers(unittest.TestCase):

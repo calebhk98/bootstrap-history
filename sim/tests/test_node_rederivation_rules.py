@@ -5,7 +5,7 @@ only the caching and wiring are called."""
 from types import SimpleNamespace
 from unittest import mock
 
-from sim.prices import prices as price_solver, solve_prices
+from sim.prices import prices as price_solver, solve_prices_core
 
 from sim.engine import node_rederive
 from sim.production import node_revenue
@@ -35,6 +35,9 @@ class _Schedule:
     def wages_per_hour(self):
         return {"labourer": 1.0}
 
+    def priced_at(self, money_per_labour_hour):
+        return self
+
 
 def _derive(civ, nodes, held=None):
     return node_revenue.for_civilisation(nodes, civ, _Schedule(), held_techs=held)
@@ -52,7 +55,7 @@ with mock.patch.dict(node_revenue._DERIVED_FOR_CIVILISATION, clear=True), \
         mock.patch.object(node_revenue, "derivation_calls", []) as calls, \
         mock.patch.object(price_solver, "all_gate_nodes", return_value={GATE, OTHER_GATE}), \
         mock.patch.object(price_solver, "territory_fingerprint", return_value="land"), \
-        mock.patch.object(solve_prices, "wage_ratios_by_trade", return_value={"labourer": 1.0}), \
+        mock.patch.object(solve_prices_core, "wage_ratios_by_trade", return_value={"labourer": 1.0}), \
         mock.patch.object(price_solver, "priced_goods_table", return_value=({"grain": 1.0}, {})) as priced, \
         mock.patch.object(node_revenue.energy_prices, "graded", return_value=None), \
         mock.patch.object(node_revenue, "apply_revenue", side_effect=_stamp):
@@ -79,14 +82,14 @@ with mock.patch.dict(node_revenue._DERIVED_FOR_CIVILISATION, clear=True), \
 def _game(derived_gates, held):
     log = []
     game = SimpleNamespace(
-        _derived_gate_set=derived_gates, view=lambda name: (lambda: held), start_civ={"id": "testland"}, nodes={"old": {}},
+        _derived_gate_set=derived_gates, view=lambda name: (lambda *arguments: held), start_civ={"id": "testland"}, nodes={"old": {}},
         state=SimpleNamespace(economy=SimpleNamespace(nodes_money_per_labour_hour=None)),
         _done_changed=lambda: log.append("done"), _operating_changed=lambda: log.append("operating"), log=log)
     return game
 
 
 schedule = _Schedule()
-with mock.patch.object(node_rederive, "build_schedule", return_value=schedule), \
+with mock.patch.object(node_rederive.opening_money, "opening_schedule", return_value=schedule), \
         mock.patch.object(node_rederive.node_revenue, "for_civilisation", return_value={"n": {}}) as derive, \
         mock.patch.object(node_rederive.money_units, "price_nodes") as price, \
         mock.patch.object(node_rederive.opening_money, "priced_nodes", return_value={"new": {}}), \

@@ -16,7 +16,7 @@ def ledger_balances(actor, opening=0.0):
 
 # ---- a transfer between any two actors conserves money (actors built here, no game)
 registry = ActorRegistry(ActorsState(home_country="rome_100ad"))
-treasury = registry.ensure_government("rome_100ad")
+treasury = registry.countries.ensure_government("rome_100ad")
 payer = registry.add("firm:payer", ActorRecord(kind="firm", money=500.0))
 other = registry.add("firm:other", ActorRecord(kind="firm", money=2000.0))
 ledger.transfer(other, treasury, 40.0, "requisition")

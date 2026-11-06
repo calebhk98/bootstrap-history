@@ -1,7 +1,7 @@
 """What the capital markets beyond lending keep from year to year: hazard records, insurers and their policies, the
 exposure each holder has to a hazard, and the funds.
 
-One field of the economy's record (`record.capital`), so a new institution adds its state here and not to the record's
+One field of the economy's record (`record.capital_markets.capital`), so a new institution adds its state here and not to the record's
 own list of fields. Each part is a plain dataclass; the save is `plain(...)` and `from_plain` builds them back.
 """
 from dataclasses import dataclass, field

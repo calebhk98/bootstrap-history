@@ -116,7 +116,6 @@ import argparse
 import collections
 import os
 import sys
-import types
 
 # Root the imports at the REPOSITORY, not at sim/, so a module that calls
 # declare() can be reached by its full dotted name (sim.world.agriculture)
@@ -363,12 +362,10 @@ def _import_declaring_modules():
                    "sim.economy.flow_rates",
                    "sim.geography.droving",
                    "sim.economy.currency",
-                   "sim.economy.foreign",
                    "sim.economy.goods_market",
                    "sim.economy.households_cohort",
                    "sim.economy.households_orders",
                    "sim.economy.inventory",
-                   "sim.economy.labour",
                    "sim.economy.labour_bids",
                    "sim.economy.labour_inputs",
                    "sim.economy.market_areas",

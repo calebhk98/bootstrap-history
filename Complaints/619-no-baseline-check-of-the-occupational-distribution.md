@@ -8,7 +8,7 @@ Last: depends on 609 to 618.
 
 **What is wrong.** Nothing validates the distribution of trades in a run against the historical shape: most households on the land, textiles and building among the largest non-farm trades. The farm share and non-farm shares are different measures, so the gap is not a defect by itself.
 
-**Evidence.** `python3 -c "from sim.tests.harness import sim; print(sim(civ='rome_100ad').labour.farm_share_of_hours())"`; `lab.population_report()['trades']`.
+**Evidence.** `python3 -c "from sim.tests.harness import sim; g = sim(civ='rome_100ad'); print(g.view('farm_share_of_hours')())"`; `g.view('population_report')()['trades']`.
 
 **Why it matters.** DESIGN 4.2 asks for validation against distributions and relationships, not dated events.
 

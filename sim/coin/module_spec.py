@@ -1,10 +1,11 @@
 """The coin module's spec (sim/assembly).
 
 """
-from sim.assembly.api import KEYED, QUOTE, TABLE, ModuleSpec, PhaseHook, Provision, ViewSpec
+from sim.assembly.api import KEYED, QUOTE, ModuleSpec, PhaseHook, Provision, ViewSpec
 from sim.actors.api import DrawDownActorStore, HoldEdgeGoods
 from sim.demography.api import TakeFromGranary
 from sim.ledger.api import DrawDownStock, PayEdge, PayEdgeFrom
+from sim.reporting.api import RecordEvent
 
 from .commands import ChargeActorsTheft, ChargeHouseholdTheft, ChargeKeeping, PlunderHousehold
 from .module import Coin
@@ -15,7 +16,7 @@ READS_BY_OWNER = {
     "knowledge": ("civilisation",),
     "workforce": ("money_per_labour_hour", "opening_money_per_labour_hour", "headcount"),
     "markets": ("opening_population", "goods_quote"),
-    "foreign_trade": ("foreign_economies", "foreign_coin_home_units", "foreign_coin_partner_units", "partner_coin_standard",
+    "foreign_trade": ("foreign_coin_home_units", "foreign_coin_partner_units", "partner_coin_standard",
                       "partner_opening_facts", "partner_route_cost"),
     "reporting": ("coin_value_ratio",),
     "ledger": ("acting_balance", "held_goods", "cast"),
@@ -50,7 +51,7 @@ MODULE_SPECS = (ModuleSpec(
     applies=((ChargeKeeping, "charge_keeping"), (ChargeActorsTheft, "charge_actors_theft"),
              (ChargeHouseholdTheft, "charge_household_theft"), (PlunderHousehold, "plunder_household")),
     reads=tuple(name for names in READS_BY_OWNER.values() for name in names),
-    sends=(PayEdge, PayEdgeFrom, DrawDownStock, DrawDownActorStore, TakeFromGranary, HoldEdgeGoods),
+    sends=(PayEdge, PayEdgeFrom, RecordEvent, DrawDownStock, DrawDownActorStore, TakeFromGranary, HoldEdgeGoods),
     phases=(PhaseHook("coin_revaluation", "revalue_coin_metals"),),
     provides=(Provision("transfer_surcharge", "carriage_surcharge", "carriage"),),
 ),)

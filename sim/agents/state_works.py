@@ -10,51 +10,51 @@ from typing import Any, Callable, Dict, List, Tuple
 from .tuning_spending import (CAPITAL_MASONRY_M2_PER_URBAN_PERSON_PER_SPECTACLE_WEIGHT, FORTIFIED_SHARE_OF_FRONTIER_PER_UNIT_THREAT,
 							  WALL_MASONRY_EQUIVALENT_M2_PER_M, WATER_MASONRY_EQUIVALENT_M2_PER_URBAN_PERSON)
 
-MASON = "mason"
+BUILDER_ROLE = "builder"   # the trade role (data/world/trades.json) whose labour raises the works
 SPECTACLE_WEIGHT = "spectacle"   # the state's taste for monuments, among the weights it values gains by
 
 
 @dataclass(frozen=True)
 class Work:
 	name: str
-	trade: str
+	role: str
 	wanted: Callable[[Any], float]   # stock the state wants, from the world
 	opening_share: float             # share of the stock wanted that stands when the game opens
 
 
 def fortifications_wanted(world: Any) -> float:
 	"""Walls along the share of the land frontier a sack threatens; none without a threat."""
-	walled = min(1.0, FORTIFIED_SHARE_OF_FRONTIER_PER_UNIT_THREAT * world.threat_pressure())
-	return world.territory().frontier_km * 1000.0 * walled * WALL_MASONRY_EQUIVALENT_M2_PER_M
+	walled = min(1.0, FORTIFIED_SHARE_OF_FRONTIER_PER_UNIT_THREAT * world.army.threat_pressure())
+	return world.revenue.territory().frontier_km * 1000.0 * walled * WALL_MASONRY_EQUIVALENT_M2_PER_M
 
 
 def water_works_wanted(world: Any) -> float:
-	return world.urban_population() * WATER_MASONRY_EQUIVALENT_M2_PER_URBAN_PERSON
+	return world.people.urban_population() * WATER_MASONRY_EQUIVALENT_M2_PER_URBAN_PERSON
 
 
 def capital_buildings_wanted(world: Any) -> float:
 	"""Temples and monuments of the capital, wanted as far as the state values spectacle."""
-	return (world.urban_population() * CAPITAL_MASONRY_M2_PER_URBAN_PERSON_PER_SPECTACLE_WEIGHT
-			* max(0.0, world.state_weights().get(SPECTACLE_WEIGHT, 0.0)))
+	return (world.people.urban_population() * CAPITAL_MASONRY_M2_PER_URBAN_PERSON_PER_SPECTACLE_WEIGHT
+			* max(0.0, world.setting.state_weights().get(SPECTACLE_WEIGHT, 0.0)))
 
 
 # TEMPORARY HEURISTIC (CLAUDE.md 4.4): walls and water works stand at the opening in the measure the drivers want;
 # monuments are raised from a surplus only.
 WORKS = (
-	Work("fortifications", MASON, fortifications_wanted, 1.0),
-	Work("water_works", MASON, water_works_wanted, 1.0),
-	Work("capital_buildings", MASON, capital_buildings_wanted, 0.0),
+	Work("fortifications", BUILDER_ROLE, fortifications_wanted, 1.0),
+	Work("water_works", BUILDER_ROLE, water_works_wanted, 1.0),
+	Work("capital_buildings", BUILDER_ROLE, capital_buildings_wanted, 0.0),
 )
 
 
 def wanted_of(world: Any, work: Work) -> float:
 	"""The stock of a work the state wants: the stock its controller set, else the work's driver."""
-	return world.government().record.levers.get("works", {}).get(work.name, work.wanted(world))
+	return world.setting.government().record.levers.get("works", {}).get(work.name, work.wanted(world))
 
 
 def held(world: Any) -> Dict[str, float]:
 	"""The state's stock of each work, set at the opening to the share of what is wanted that stands then."""
-	stock = world.government().record.works_stock
+	stock = world.setting.government().record.works_stock
 	for work in WORKS:
 		if work.name not in stock:
 			stock[work.name] = work.opening_share * wanted_of(world, work)

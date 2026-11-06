@@ -5,6 +5,8 @@ expected loss at sea, and domestic freight that includes the carrier's capital a
 QUICK_TOPIC = True
 from .harness import *  # noqa: F401,F403
 
+from sim.content.api import spoilage_rates
+from sim.content.tree_source import NO_MODS_DIRECTORY
 from sim.world import trader_response
 from sim.geography import cargo_cost, freight_cost, transport
 from sim.freight.route import Leg, Route, domestic_cargo_cost_share
@@ -19,7 +21,7 @@ check("a dearer cargo pays proportionally more interest over the same voyage",
 check("a perishable cargo loses a share that grows with the days; an imperishable one loses none",
       0.0 < cargo_cost.spoilage_share(5.0, 0.01) < cargo_cost.spoilage_share(5.0, 0.2) < 1.0
       and cargo_cost.spoilage_share(0.0, 5.0) == 0.0, None)
-rates = cargo_cost.spoilage_rates()
+rates = spoilage_rates(NO_MODS_DIRECTORY)
 check("spoilage rates are data: milk spoils far faster than grain, metal not at all",
       rates["milk_kg"] > 50.0 * rates["wheat_kg"] > 0.0 and rates.get("iron_bar_kg", 0.0) == 0.0, rates)
 check("sea legs charge expected cargo loss by the distance sailed; land legs none",

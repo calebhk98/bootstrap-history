@@ -1,12 +1,13 @@
 """Complaint 613: foot carriage is the porter trade's work and port handling the dockworker trade's, both named by the
 route mode data, and both are in the transport occupation group."""
 
+import dataclasses
 import json
 import os
 import unittest
 
 from sim.economy import carriage_hours
-from sim.economy.setup import TradeSpec
+from sim.economy.setup import SetupTrade
 from sim.economy.tile_costs import Haul
 from sim.geography import api as geography
 from sim.labour.api import occupation_groups
@@ -26,9 +27,8 @@ def setup(handling_trade=DOCKWORKER):
         carriage_rates={"foot": FOOT_RATE, "sail": 0.02}, handling_rates={"sail": 3.0},
         carriage_crew={"foot": (PORTER, FOOT_HOURS), "sail": ("sailor", 0.02)},
         carriage_handling={"sail": PORT_HOURS})
-    built.trades.update({PORTER: TradeSpec(PORTER), DOCKWORKER: TradeSpec(DOCKWORKER)})
-    built.carriage_handling_trade = {"sail": handling_trade} if handling_trade else {}
-    return built
+    built.trades.update({PORTER: SetupTrade(PORTER), DOCKWORKER: SetupTrade(DOCKWORKER)})
+    return dataclasses.replace(built, carriage_handling_trade={"sail": handling_trade} if handling_trade else {})
 
 
 def hours(built, haul):

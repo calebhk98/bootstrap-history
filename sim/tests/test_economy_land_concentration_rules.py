@@ -7,7 +7,10 @@ QUICK_TOPIC = True
 import types
 import unittest
 
-from sim.economy import titles, titles_concentration, titles_inheritance
+from sim.economy.credit_record import CreditRecord
+from sim.economy.land_record import LandRecord
+from sim.economy import titles, titles_inheritance
+from sim.tests import titles_concentration
 
 TILE = "village"
 TILES = {TILE: types.SimpleNamespace(cropland_hectares=100.0)}
@@ -19,7 +22,7 @@ def village(held=None):
     cohorts = {"household:%d" % index: types.SimpleNamespace(agent_id="household:%d" % index, tile=TILE, ownership_share=0.1)
                for index in range(HOUSEHOLDS)}
     held = {holder: cohort.ownership_share for holder, cohort in cohorts.items()} if held is None else held
-    return types.SimpleNamespace(cohorts=cohorts, titles={TILE: dict(held)}, tenancies={}, loans=[])
+    return types.SimpleNamespace(cohorts=cohorts, land=LandRecord(titles={TILE: dict(held)}), credit=CreditRecord())
 
 
 def gini_of(held):

@@ -2,7 +2,7 @@
 
 It owns which mods directory the game is over (sent as `OpenContent` when the assembly is built) and publishes what the mods
 installed there contribute as data: their ids, the map overlays, the household needs, the actor kinds, the stores, the trade registry, the technology effects and the
-foreign economies. It reads no view. Not cached: the answers come from files, and the directory is the only input."""
+foreign economies, and the goods' spoilage rates and service lives. It reads no view. Not cached: the answers come from files, and the directory is the only input."""
 from sim.assembly.api import KEYED, ModuleSpec, ViewSpec
 
 from .commands import OpenContent
@@ -17,6 +17,7 @@ MODULE_SPECS = (ModuleSpec(
 		ViewSpec("installed_mod_ids", "installed_mod_ids", **_FILES),
 		ViewSpec("map_overlays", "map_overlays", **_FILES),
 		ViewSpec("household_need_data", "household_need_data", **_FILES),
+		ViewSpec("household_work_data", "household_work_data", **_FILES),
 		ViewSpec("declared_actor_kinds", "declared_actor_kinds", **_FILES),
 		ViewSpec("base_store_declarations", "base_store_declarations", **_FILES),
 		ViewSpec("data_store_declarations", "data_store_declarations", **_FILES),
@@ -28,6 +29,8 @@ MODULE_SPECS = (ModuleSpec(
 		ViewSpec("win_condition_labels", "win_condition_labels", **_FILES),
 		ViewSpec("foreign_economy_records", "foreign_economy_records", **_FILES),
 		ViewSpec("not_traded_materials", "not_traded_materials", **_FILES),
+		ViewSpec("spoilage_rates", "spoilage_rates", **_FILES),
+		ViewSpec("service_life_years", "service_life_years", **_FILES),
 	),
 	applies=((OpenContent, "open_content"),),
 ),)

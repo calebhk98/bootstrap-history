@@ -11,10 +11,8 @@ from typing import Any, Dict, Mapping
 
 from sim.default_civilisation import CIVILISATION_DIRECTORY, default_civilisation_id
 from sim.world import demography
-from sim.labour import wages
-
-# The staple of a civilisation that names none.
-DEFAULT_STAPLE_MATERIAL = "wheat_kg"
+from sim.labour import wages  # noqa: F401  (engine/data.py reads wage_provider.wages.WageSchedule)
+from sim.labour.market import trades as market_trades
 
 REFERENCE_POPULATION = 10000.0
 
@@ -29,15 +27,11 @@ def reference_civilisation() -> Dict[str, Any]:
         return json.load(handle)
 
 
-def reference_discount_rate() -> float:
-    return float(reference_civilisation()["starting_interest_rate"])
-
-
 def staple_material(civ: Mapping[str, Any]) -> str:
-    """The grain the civilisation's subsistence basket is priced in: its `staple`, else the default."""
-    staple = civ.get("staple", DEFAULT_STAPLE_MATERIAL)
+    """The grain the civilisation's subsistence basket is priced in: its `staple`. A civilisation without one is an error."""
+    staple = civ.get("staple")
     if not isinstance(staple, str) or not staple:
-        raise ValueError("civilization %r staple must be a material id" % civ.get("id", "?"))
+        raise ValueError("civilization %r must name its `staple` as a material id" % civ.get("id", "?"))
     return staple
 
 
@@ -66,11 +60,6 @@ def validate_coin_standard(civ: Mapping[str, Any]) -> None:
         raise ValueError("civilization %r coin_standard fineness must be a share above 0 and at most 1" % name)
 
 
-def coin_gross_kg_per_unit(standard: Mapping[str, Any]) -> float:
-    """Mass of one coin: the metal it stands for over its fineness (1 when none is stated)."""
-    return standard["kg_per_unit"] / standard.get("fineness", 1.0)
-
-
 def coin_standard(civ: Mapping[str, Any]) -> Dict[str, Any]:
     validate_coin_standard(civ)
     return civ["coin_standard"]
@@ -85,6 +74,5 @@ def people_fed_per_worker() -> float:
 
 
 def training_years_by_trade(registry: Mapping[str, Any]) -> Dict[str, float]:
-    return wages.training_years_with_family_default(
-        {trade_id: trade.training_years for trade_id, trade in registry.items()},
-        {trade_id: trade.family for trade_id, trade in registry.items()})
+    """Years of training per trade; a trade that states none takes its family's median (labour/market/trades.py)."""
+    return market_trades.training_years_by_trade(registry)

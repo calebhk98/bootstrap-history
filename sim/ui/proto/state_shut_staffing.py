@@ -2,8 +2,8 @@
 
 import math
 
-# Staffing resources that are not a trade name, mapped to the trade to hire.
-_HIRE_AS = {"scholars": "scholar", "craftsmen": "artisan"}
+from sim.labour.api import staff_resource_trade
+
 _MOST_LISTED = 5
 
 
@@ -12,6 +12,7 @@ def shut_for_want_of_staff(sim, nodes):
     or a foreman trade, biggest earners first; None when there are none."""
     rows = []
     held_totals = sim.view("staffing_held_totals")()
+    registry = sim.view("trade_registry")()
     for node_id in sorted(sim.view("techniques_held")()):
         if (not sim.view("is_venture")[node_id] or node_id in sim.view("operating")()
                 or nodes[node_id]["rev"] <= nodes[node_id]["up"]):
@@ -19,7 +20,7 @@ def shut_for_want_of_staff(sim, nodes):
         missing = sim.view("staffing_missing_to_open")(node_id, held_totals)
         if not missing:
             continue
-        fixes = ["hire %s %d" % (_HIRE_AS.get(resource, resource), max(1, math.ceil(amount - 0.005)))
+        fixes = ["hire %s %d" % (staff_resource_trade(registry, resource), max(1, math.ceil(amount - 0.005)))
                  for resource, amount in missing.items()]
         rows.append({"id": node_id, "name": nodes[node_id]["name"],
                      "would_earn_a_year": round(nodes[node_id]["rev"] - nodes[node_id]["up"]),

@@ -7,8 +7,8 @@ import unittest
 
 from sim.economy.households_cohort import Cohort
 from sim.economy import households_own, titles_worked
-from sim.economy.households_own import hours_for_own_plan, next_own_plan, withhold_hours
-from sim.economy.types import LabourOffer, Recipe
+from sim.economy.households_own import hours_for_own_plan, next_own_plan
+from sim.economy.types import Recipe
 
 OPTIONS = {"food": [(2.0, "grow_grain", "grain", 1.0)]}     # two hours a need unit at fertility one
 
@@ -59,19 +59,6 @@ class OwnPlanTests(unittest.TestCase):
         self.assertLess(plan.get("food", 0.0), 1.0)
 
 
-class WithholdTests(unittest.TestCase):
-    def test_offers_shrink_in_proportion_and_the_kept_hours_are_returned(self):
-        offers = [LabourOffer("w", "smith", "a", 60.0, 1.0), LabourOffer("w", "miner", "a", 40.0, 1.0)]
-        kept_offers, kept = withhold_hours(offers, {"w": 50.0})
-        self.assertEqual([offer.hours for offer in kept_offers], [30.0, 20.0])
-        self.assertEqual(kept, {"w": 50.0})
-
-    def test_it_cannot_keep_more_than_it_has(self):
-        kept_offers, kept = withhold_hours([LabourOffer("w", "smith", "a", 60.0, 1.0)], {"w": 500.0})
-        self.assertEqual([offer.hours for offer in kept_offers], [0.0])
-        self.assertEqual(kept, {"w": 60.0})
-
-
 class LandHeldTests(unittest.TestCase):
     """Own-plot growing is limited to land the cohort holds or leases (Complaint 551)."""
     RECIPES = {"grow_grain": Recipe("grow_grain", {"grain": 10.0}, {}, {"hand": 4.0})}
@@ -120,12 +107,23 @@ class LandHeldTests(unittest.TestCase):
         self.assertEqual(titles_worked.allocate_hectares({"a": 5.0}, 20.0), {"a": 5.0})
 
     def test_worked_share_is_title_less_let_out_plus_tenancy(self):
-        record = types.SimpleNamespace(cohorts={}, titles={"t": {"lord": 0.6, "other": 0.4}},
-                                       tenancies={"t": [{"tenant": "serf", "lessor": "lord", "share": 0.25,
-                                                         "arrears": 0.0}]})
+        record = types.SimpleNamespace(cohorts={}, land=types.SimpleNamespace(titles={"t": {"lord": 0.6, "other": 0.4}}, tenancies={"t": [{"tenant": "serf", "lessor": "lord", "share": 0.25,
+                                                         "arrears": 0.0}]}))
         self.assertAlmostEqual(titles_worked.worked_share(record, "t", "lord"), 0.35)
         self.assertAlmostEqual(titles_worked.worked_share(record, "t", "serf"), 0.25)
         self.assertEqual(titles_worked.worked_share(record, "t", "stranger"), 0.0)
+
+
+class OwnPlotRecipeTests(unittest.TestCase):
+    def test_a_land_recipe_buying_only_its_tools_is_an_own_plot_recipe(self):
+        recipe = Recipe("plough_grain", {"grain": 10.0}, {"hoe": 0.1}, {"hand": 4.0}, tool_wear={"hoe": 0.1})
+        self.assertTrue(households_own.is_own_plot_recipe("plough_grain", recipe, {"plough_grain": 2.0}))
+
+    def test_a_recipe_buying_seed_or_working_no_land_is_not(self):
+        seeded = Recipe("grain", {"grain": 10.0}, {"seed": 1.0}, {"hand": 4.0})
+        landless = Recipe("smith", {"nail": 10.0}, {}, {"hand": 4.0})
+        self.assertFalse(households_own.is_own_plot_recipe("grain", seeded, {"grain": 2.0}))
+        self.assertFalse(households_own.is_own_plot_recipe("smith", landless, {"grain": 2.0}))
 
 
 if __name__ == "__main__":

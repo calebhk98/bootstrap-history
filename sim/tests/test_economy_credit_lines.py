@@ -41,6 +41,11 @@ class ReserveTests(unittest.TestCase):
         self.assertLessEqual(sum(loan.principal for loan in loans), capital_market.lendable_capacity(100.0) + 1e-9)
 
 
+class LineCeiling(unittest.TestCase):
+    def test_a_line_pays_at_most_the_market_rate_plus_the_one_risk_premium_on_the_line(self):
+        self.assertAlmostEqual(credit_lines.line_ceiling(0.08, 30.0), 0.08 + credit.risk_premium(30.0, 30.0, 0.0))
+
+
 class SeatRequestsAmongOthersTests(unittest.TestCase):
     def clear(self, line_ceiling_rate):
         offers = credit_lines.hold_reserve([FundsOffer("saver", "coin", 100.0, 0.0)])
@@ -69,9 +74,9 @@ class SeatRequestsAmongOthersTests(unittest.TestCase):
 
 class RoomTests(unittest.TestCase):
     def economy(self, **record):
-        fields = dict(funds_offered=100.0, lent_by_borrower={}, credit_granted={})
+        fields = dict(lenders_met=True, funds_offered=100.0, lent_by_borrower={}, credit_granted={})
         fields.update(record)
-        return types.SimpleNamespace(record=types.SimpleNamespace(**fields))
+        return types.SimpleNamespace(record=types.SimpleNamespace(credit=types.SimpleNamespace(**fields)))
 
     def test_the_lines_grants_are_not_booked_as_loans(self):
         offers = credit_lines.hold_reserve([FundsOffer("saver", "coin", 100.0, 0.0)])

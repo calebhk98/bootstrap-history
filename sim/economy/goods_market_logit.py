@@ -31,13 +31,16 @@ from .types import Bid, Offer
 
 class Allocation:
     """What the logit choice gave: per bid, the quantity bought and what it cost at the asks; per offer, the quantity
-    sold; the round-1 requests in all (what buyers asked for at the asks before any seller ran out)."""
+    sold; the round-1 requests in all (what buyers asked for at the asks before any seller ran out); and `flow`, the
+    quantity each offer (row) sold to each bid (column) over all rounds."""
 
-    def __init__(self, quantity: List[float], cost: List[float], sold: List[float], requested: float):
+    def __init__(self, quantity: List[float], cost: List[float], sold: List[float], requested: float,
+                 flow: numpy.ndarray):
         self.quantity = quantity
         self.cost = cost
         self.sold = sold
         self.requested = requested
+        self.flow = flow
 
 
 def _weights(asks: numpy.ndarray, stocked: numpy.ndarray, ceilings: numpy.ndarray) -> Tuple[numpy.ndarray, numpy.ndarray]:
@@ -48,7 +51,10 @@ def _weights(asks: numpy.ndarray, stocked: numpy.ndarray, ceilings: numpy.ndarra
     weights = numpy.zeros(len(asks))
     if stocked.any():
         cheapest = asks[numpy.argmax(stocked)]
-        weights[stocked] = numpy.exp(-LOGIT_INTENSITY * numpy.log(asks[stocked] / cheapest))
+        if cheapest > 0.0:
+            weights[stocked] = numpy.exp(-LOGIT_INTENSITY * numpy.log(asks[stocked] / cheapest))
+        else:
+            weights[stocked] = (asks[stocked] <= cheapest).astype(float)    # free goods go first; there is no ratio to a free ask
     running = numpy.concatenate(([0.0], numpy.cumsum(weights)))
     sums = running[numpy.searchsorted(asks, ceilings, side="right")]
     return weights, numpy.where(sums > 0.0, sums, 1.0)
@@ -80,6 +86,14 @@ def _serve(requests: numpy.ndarray, left: numpy.ndarray, tiers: List[Tuple[int, 
     return served, after, short
 
 
+def _affordable(prices: numpy.ndarray, budgets_left: numpy.ndarray) -> numpy.ndarray:
+    """Per offer (row) and bid (column), what the bid's budget left buys at the offer's ask; a free or paid-to-take good
+    (ask at or below zero) costs the budget nothing, so any quantity is affordable."""
+    positive = prices > 0.0
+    units = budgets_left[None, :] / numpy.where(positive, prices, 1.0)[:, None]
+    return numpy.where(positive[:, None], units, numpy.inf)
+
+
 def allocate(bids: Sequence[Bid], offers: Sequence[Offer], asks: Sequence[float], schedule: DemandSchedule) -> Allocation:
     """Rounds of choice among `offers` (asking `asks`, ascending) by `bids` (in tier order, `schedule` their demand)."""
     prices = numpy.array(asks, dtype=float)
@@ -98,6 +112,7 @@ def allocate(bids: Sequence[Bid], offers: Sequence[Offer], asks: Sequence[float]
     requests = wants * weights[:, None] / sums[None, :]
     requested = float(requests.sum())
     served, left, short = _serve(requests, left, tiers)
+    flow = served.copy()
     taken = served.sum(axis=0)
     cost = prices @ served
     unmet = short.sum(axis=0)
@@ -110,12 +125,12 @@ def allocate(bids: Sequence[Bid], offers: Sequence[Offer], asks: Sequence[float]
         if not stocked.any() or not (unmet > 0.0).any():
             break
         weights, sums = _weights(prices, stocked, ceilings)
-        with numpy.errstate(all="ignore"):
-            again = numpy.minimum(unmet[None, :], numpy.maximum(0.0, budgets - cost)[None, :] / prices[:, None])
+        again = numpy.minimum(unmet[None, :], _affordable(prices, numpy.maximum(0.0, budgets - cost)))
         again = numpy.minimum(again, numpy.maximum(0.0, wants - taken[None, :]))
         again[:, unmet <= 0.0] = 0.0
         served, left, short = _serve(again * weights[:, None] / sums[None, :], left, tiers)
+        flow += served
         taken = taken + served.sum(axis=0)
         cost = cost + prices @ served
         unmet = short.sum(axis=0)
-    return Allocation(taken.tolist(), cost.tolist(), (quantities - left).tolist(), requested)
+    return Allocation(taken.tolist(), cost.tolist(), (quantities - left).tolist(), requested, flow)

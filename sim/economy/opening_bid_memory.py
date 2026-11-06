@@ -1,4 +1,4 @@
-"""What the opening's households' bids take from the market and the cohort's plan, and not from its income.
+"""What households' bids take from the market and the cohort's plan, and not from its income (the opening's settlement and the year's orders use it).
 
 The opening settles income by asking, many times over, what the households buy at an income. Between those asks the
 prices, the baskets and the stores' weights do not move; only the income does. A `BidMemory` kept for the asks

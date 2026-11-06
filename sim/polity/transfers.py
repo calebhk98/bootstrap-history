@@ -7,19 +7,27 @@ A node declares `mechanics.state_levy = {"share": s}`; while it is open the stat
 
 Needs: state_treasury, transfer_listening, acting_balance, cast, mechanic, tree,
 money_text, money_per_labour_hour, running_mechanics, operating, concern_revenue, output_factor, send (SayOnce, RecordEvent)."""
+from sim.assembly.api import Part
 from sim.hazards.api import SayOnce
-from sim.ledger.api import PayActorFromHousehold
+from sim.ledger.api import UNPAID_CHARGE_KIND, PayActorFromHousehold
+from sim.refusal import Refusal, cause_of
 from sim.reporting.api import RecordEvent
 
 from . import rules
 
 
-class Transfers:
+class Transfers(Part):
 
 	def pay_state(self, amount, purpose):
-		"""The household pays the state: the founder's loss is the treasury's gain."""
+		"""The household pays the state: the founder's loss is the treasury's gain. None when paid; a refusal (the household cannot
+		cover it) is logged as an `unpaid_charge` event with its cause and comes back, so the caller does not count it as paid."""
 		with self.needs.transfer_listening():
-			self.needs.send(PayActorFromHousehold(self.needs.state_treasury().actor_id, amount, purpose))
+			refusal = self.needs.send(PayActorFromHousehold(self.needs.state_treasury().actor_id, amount, purpose))
+		if not isinstance(refusal, Refusal):
+			return None
+		self.needs.send(RecordEvent.of(UNPAID_CHARGE_KIND, "could not pay the state: %s" % refusal,
+		                               edge="state", amount=amount, purpose=str(purpose), cause=cause_of(refusal)))
+		return refusal
 
 	def state_debt(self):
 		"""What the acting seat's state owes: its purse below zero."""
@@ -27,7 +35,7 @@ class Transfers:
 
 	def state_claims(self):
 		"""What the state has undertaken to make good to organised interest groups this year."""
-		return sum(group.record.claim for group in self.needs.cast().home_actors("interest_group")
+		return sum(group.record.claim for group in self.needs.cast().countries.home_actors("interest_group")
 		           if group.organised())
 
 	def transfer_size(self, spec):
@@ -41,8 +49,8 @@ class Transfers:
 	def pay_state_sum(self, wanted, purpose):
 		"""Pay the state up to `wanted` from the purse (never into debt); the sum paid."""
 		paid = min(max(0.0, wanted), max(0.0, self.needs.acting_balance()))
-		if paid > 0.0:
-			self.pay_state(paid, purpose)
+		if paid > 0.0 and self.pay_state(paid, purpose) is not None:
+			return 0.0
 		return paid
 
 	def settle_with_state(self, target, amount=None):
@@ -87,7 +95,8 @@ class Transfers:
 		"""Pay the state its share of each levied concern's takings; the household's loss is the treasury's gain. The log says so
 		the first year only."""
 		for node_id, owed in sorted(self.concern_levy_due().items()):
-			self.pay_state(owed, "levy on " + node_id)
+			if self.pay_state(owed, "levy on " + node_id) is not None:
+				continue
 			if self.needs.send(SayOnce("levy:" + node_id)):
 				self.needs.send(RecordEvent.of("concern_levy", "the state takes its share of %s: %s this year, and so on each year it is open"
 				                               % (self.needs.tree[node_id]["name"], self.needs.money_text(owed, grouped=True))))

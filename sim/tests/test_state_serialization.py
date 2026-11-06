@@ -7,7 +7,6 @@ import collections
 import os
 import random
 import tempfile
-import unittest
 
 from sim.agents.api import Business
 from sim.knowledge.api import KnowledgeSeat
@@ -110,7 +109,6 @@ check("Nested project state reconstruction", _ok, _detail)
 
 def _test_runtime_type_reconstruction():
 	"""Verify sets, Counters, defaultdicts, and invalidating collections have correct runtime types."""
-	from sim.invalidating import _InvalidatingDict, _InvalidatingSet
 	from sim.engine.state import (
 		ActiveProjectState,
 		EconomyState,
@@ -134,7 +132,7 @@ def _test_runtime_type_reconstruction():
 	)
 
 	blob = serialize_state(state)
-	restored = deserialize_state(blob)
+	deserialize_state(blob)
 
 	from sim.workforce.api import WorkforceSeat
 	staff = deserialize_state(serialize_state(WorkforceSeat(trades_created={"tailor", "weaver"}, employees={"weaver": 3.0})), WorkforceSeat)
@@ -142,7 +140,7 @@ def _test_runtime_type_reconstruction():
 		return False, f"trades_created is not set: {type(staff.trades_created)}"
 	from sim.ventures.state import VenturesSeat
 	ventures = deserialize_state(serialize_state(VenturesSeat(businesses=[Business.running(["spinning_wheel"], opened_year=90)])), VenturesSeat)
-	if "spinning_wheel" not in ventures.business.operating() or ventures.business.opened_year_of("spinning_wheel", 0) != 90:
+	if "spinning_wheel" not in ventures.business.operating() or ventures.business.reading.opened_year_of("spinning_wheel", 0) != 90:
 		return False, f"the business did not round trip: {ventures.business}"
 	from sim.projects.state import ProjectsSeat
 	counts = deserialize_state(serialize_state(ProjectsSeat(failed_attempts=collections.defaultdict(int, {"steam_engine": 2}))), ProjectsSeat)

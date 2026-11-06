@@ -1,0 +1,58 @@
+"""The opening wage schedule priced at the present level, and the wage of an hour of a trade read from it."""
+from sim.constants import declare
+
+from . import trade_data
+
+
+def person_year_hours(world):
+    """The hours a person-year counts: the running economy's working year once it is open, else the scenario's."""
+    hours = world.economy.agent_working_hours()
+    return hours if hours is not None else world.trades.HOURS_PER_PERSON_YEAR
+
+
+class WageScheduleReader:
+    def __init__(self, world, settlement):
+        self._world = world
+        self._settlement = settlement
+
+    def opening_wage_schedule(self):
+        """The civilisation's opening wage schedule: the workforce module's, which builds it once per record."""
+        return self._world.trades.build_wage_schedule(self._world.scenario.civ)
+
+    def wage_schedule(self):
+        """The opening schedule priced at the present level: an hour of the unskilled trade is worth what the
+        economy pays it at the base tile (the wage `quote_unskilled` and `wage_per_hour` read), or before the economy has
+        opened the opening's figure times the price level. Reading builds a priced copy and changes nothing."""
+        opening = self.opening_wage_schedule()
+        unskilled = trade_data.fallback_trade_of(self._world)
+        paid = self._world.economy.agent_wage_at(unskilled, self._settlement.base_tile())
+        return opening.priced_at(paid if paid is not None
+                                 else opening.money_per_labour_hour * self._world.finance.home_price_level())
+
+    def money_per_labour_hour(self):
+        """Money one hour of the unskilled numeraire trade is worth here."""
+        return self.wage_schedule().money_per_labour_hour
+
+    LABOUR_PAY_SHARE_OF_OUTPUT_GAIN = declare(
+        "LABOUR_PAY_SHARE_OF_OUTPUT_GAIN", 0.0, kind="temporary_heuristic",
+        unit="exponent on output_per_head (1 = pay rises as fast as output per hour)",
+        source=None, confidence="D",
+        why="How far pay per hour follows output per hour, for every employer alike (founder, "
+            "firms, state, households). Zero: the economy's labour markets are the only wage "
+            "mover. One is a labour market that pays an hour what it makes. Measured on Rome "
+            "seeds 1-3: at one or one half the founder's early research and hiring grow dearer "
+            "with the generic economy index and none of the three takes off in 100 years; at "
+            "zero all three do (Complaint 354). Replace by the clearing of aggregate demand for "
+            "hands against the working population, or by output per hour that comes from "
+            "diffused technology (Complaint 101).")
+
+    def wage_per_hour(self, trade) -> float:
+        """Money one hour of this trade is paid: the economy's wage under its one rule once the game's money is priced at
+        the economy (the first ask opens it), and before that the opening schedule's (training premium times the money
+        value of an unskilled hour)."""
+        wage = self._world.economy.agent_wage_at(trade, self._settlement.base_tile())
+        return self.wage_schedule().wage_per_hour(trade) if wage is None else wage
+
+    def base_annual_wage(self, trade) -> float:
+        """A year of the trade at `wage_per_hour`."""
+        return self.wage_per_hour(trade) * person_year_hours(self._world)

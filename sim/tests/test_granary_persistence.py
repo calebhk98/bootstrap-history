@@ -2,15 +2,13 @@
 
   1. `agriculture.stock_to_carry_forward_kg`: a caller that persists `Storage` across years must add `seed_retained_kg`
      back into `stock_after_kg`, or one season's seed is deducted twice a year and the granary starves the population.
-  2. `farm_year.carried_stock_kg`: the stock carried forward is capped at `agriculture.granary_capacity_kg`, because a granary
-     is a physical structure, not an unlimited ledger, and a debt in seed corn does not pass on as a negative stock.
-  3. The farm workforce share does not respond to famine: it is computed from crop, soil and technique constants only.
+  2. The farm workforce share does not respond to famine: it is computed from crop, soil and technique constants only.
 
 The century measurement of the granary is in Complaints/473 (test migration, rule-tests-07)."""
 import inspect
 import unittest
 
-from sim.world import agriculture, agriculture_storage, farm_year as farm_year_model
+from sim.world import agriculture, agriculture_storage
 
 QUICK_TOPIC = True
 
@@ -25,19 +23,6 @@ class CarryForwardTests(unittest.TestCase):
             carryover_kg=180.0, stock_before_kg=100.0, stock_after_kg=180.0, food_available_kcal_per_day=0.0,
             marginal_product_last_hour_kg_per_hour=0.0)
         self.assertAlmostEqual(agriculture.stock_to_carry_forward_kg(flows), 280.0, places=6)
-
-
-class GranaryCapacityTests(unittest.TestCase):
-    """The stock a farm year carries forward never exceeds what a granary of that year's demand can hold."""
-
-    def test_the_carried_stock_never_exceeds_capacity(self):
-        self.assertEqual(farm_year_model.carried_stock_kg(900.0, 500.0), 500.0)
-
-    def test_a_stock_within_capacity_is_carried_whole(self):
-        self.assertEqual(farm_year_model.carried_stock_kg(300.0, 500.0), 300.0)
-
-    def test_a_granary_never_holds_less_than_nothing(self):
-        self.assertEqual(farm_year_model.carried_stock_kg(-40.0, 500.0), 0.0)
 
 
 class FarmWorkforceShareIsFixedTests(unittest.TestCase):

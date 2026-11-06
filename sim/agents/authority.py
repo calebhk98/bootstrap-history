@@ -73,9 +73,9 @@ def after_leakage(amount: float, kept: float) -> float:
 
 def levy_reach(world: Any) -> float:
 	"""The share of a levy the state can compel across what it holds: its collection reach, held by its garrisons."""
-	return float(world.collectible_share(None))
+	return float(world.collection.collectible_share(None))
 
 
 def kept_on(world: Any, tiles: Optional[Iterable[str]]) -> float:
 	"""The share officials keep over `tiles`, as the world reads it."""
-	return float(world.corruption_share(tiles))
+	return float(world.collection.corruption_share(tiles))

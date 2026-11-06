@@ -1,14 +1,13 @@
-"""The land-Gini band is sourced for some civilisations only: none is given for Han China or the Mexica."""
+"""The land-Gini band is sourced for some settings only: a setting with no row has no band."""
 QUICK_TOPIC = True
 import unittest
 
-from sim.economy import titles_concentration
+from sim.tests import titles_concentration
 
 
 class NoLandBandTests(unittest.TestCase):
-    def test_han_china_and_the_mexica_have_no_band(self):
-        self.assertEqual(titles_concentration.NO_LAND_BAND, ("han_china", "mexica"))
-        self.assertIsNone(titles_concentration.band(titles_concentration.LANDHOLDERS_ONLY, ("han_china", "mexica")))
+    def test_a_setting_with_no_sourced_row_has_no_band(self):
+        self.assertIsNone(titles_concentration.band(titles_concentration.LANDHOLDERS_ONLY, ("no_such_setting",)))
 
 
 if __name__ == "__main__":

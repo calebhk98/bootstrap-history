@@ -3,7 +3,6 @@ is still the one the score uses. `commitments_report` is called on a stand-in ga
 watched and how it is saved are test_ui_goals_watch and test_interface_slot_in_save."""
 QUICK_TOPIC = True
 
-import types
 import unittest
 from unittest import mock
 

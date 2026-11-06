@@ -8,8 +8,8 @@ import types
 import unittest
 from unittest import mock
 
-from sim.economy import producers, producers_close, year_goods
-from sim.economy.accounts import Book
+from sim.economy import producers, producers_close, producers_working_capital, year_goods
+from sim.book import Book
 from sim.economy.market_memory import MarketMemory
 from sim.economy.types import EDGE_MINT, Bid, Fill, GoodsMove, LabourResult, Offer, Transfer
 from sim.economy.year_ledger import YearLedger
@@ -70,16 +70,17 @@ class DeliveredVolumeTests(unittest.TestCase):
         offers = [Offer("seller", "timber", "area", "t", 10.0, 1.0)]
         setup = types.SimpleNamespace(recipes={}, tax_forms=[], currency_id="coin", port_tile="t", capital_tile="t",
                                       opening_prices={}, state_agent="state")
-        record = types.SimpleNamespace(producers={}, cohorts={}, book=book, currency=CurrencySpec("coin", "fiat", None, 0.0, None), memory=MarketMemory(), curves={}, volumes={}, unsold={}, unmet={})
+        record = types.SimpleNamespace(producers={}, cohorts={}, book=book, currency=CurrencySpec("coin", "fiat", None, 0.0, None), memory=MarketMemory(),
+                                       goods=types.SimpleNamespace(curves={}, volumes={}, unsold={}, unmet={}))
         area_map = types.SimpleNamespace(area_of=lambda good, tile: "area", goods=lambda: {"timber"})
         ledger = YearLedger()
         with mock.patch.object(year_goods.seller_offers, "strategic_offers", lambda s, r, v, b, o, p, costs=None: list(o)), \
                 mock.patch.object(year_goods.market_curves, "kept_areas", lambda *args: set()):
             year_goods.clear_goods(setup, record, None, area_map, {("timber", "area"): (bids, offers)}, {}, ledger)
         delivered = 10.0 - book.stock("seller", "timber", "t")
-        self.assertGreater(ledger.unpaid.get("buyer", 0.0), 0.0)        # the buyer could not pay in full
+        self.assertLess(delivered, 10.0)        # the buyer could not pay in full
         self.assertLess(delivered, ledger.clearings[0].quantity)
-        self.assertAlmostEqual(record.volumes["timber|area"], delivered)
+        self.assertAlmostEqual(record.goods.volumes["timber|area"], delivered)
         self.assertAlmostEqual(record.memory.volume_weights["timber|area"], delivered)
 
 
@@ -89,7 +90,7 @@ class WorkingCapitalLoanTests(unittest.TestCase):
         result = producers_close.close_year(producer, FARM, 100.0, 70.0, farm_view(2.0, cash=14.0), worked_runs=10.0)
         request = result.loan_request
         self.assertIsNotNone(request)
-        self.assertEqual(request.purpose, producers_close.WORKING_CAPITAL_PURPOSE)
+        self.assertEqual(request.purpose, producers_working_capital.WORKING_CAPITAL_PURPOSE)
         self.assertEqual(request.years, 1.0)
         self.assertGreater(request.amount, 0.0)
         self.assertGreater(request.maximum_rate, 0.0)

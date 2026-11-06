@@ -193,7 +193,7 @@ HOURS_PER_YEAR = declare(
     confidence="A",
     why="Converts an average continuous kilowatt draw into an annual "
         "energy total (and back), the same role HOURS_PER_DAY plays in "
-        "sim/world/agriculture.py. Deliberately the plain 365-day "
+        "sim/world/agriculture_core.py. Deliberately the plain 365-day "
         "figure, not 365.25: this file has no use for leap-year "
         "precision at kilowatt-scale estimates.")
 

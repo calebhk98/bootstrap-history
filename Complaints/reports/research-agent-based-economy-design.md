@@ -1,5 +1,10 @@
 # ABM design research: price formation, settling, credit, entry, labour matching
 
+> **Checked against the code (2026-11):** the citations of our code below describe the code when this was written. `seller_pricing.py` (the
+> dominant-firm optimiser) and `ask_raise.py` (the 5 percent raise cap) were deleted; `sim/economy/ask_adjust.py` and
+> `sim/economy/price_setting.py` replaced them, and `seller_offers.py` and the other file:line citations have moved. Read the
+> findings about the models as research; re-find any claim about our code with grep before acting on it.
+
 Sourcing key. OPENED = I fetched and read the text this session (local copy in the scratchpad pdfs folder). SNIPPET = search result text only. NONE = no source found / page blocked. Nothing here is from memory. No game is evidence; game notes are labelled.
 
 ## 1. Mechanisms with sources
@@ -37,7 +42,7 @@ URL: https://arxiv.org/pdf/2409.18760
 ### 1.4 Peters et al. 2022, "Mak(h)ro 0" (arXiv 2205.00752) (OPENED)
 URL: https://arxiv.org/pdf/2205.00752
 
-- Firm rule (eq 1): if output is at or below demand and the price is at or above the average price, raise output; if below the average price, raise price; if output exceeds demand and the price is above average, cut price; if the price is at or below average, cut output. "The cost-covering price for each firm is based on wage and borrowing cost per unit and defines the minimum price." Prices and quantities move by a gamma times a U[0,1] draw.
+- Firm rule (eq 1). This bullet is the paper's rule (Peters et al. 2022). The Mark-0 cpp (`mark0_covid/mark0_covid.cpp`, the code the other reports cite) differs: it changes output on every gap between output and demand, and moves the price as well only on one condition: on excess demand it raises the price only when the firm's price is below the average (`mark0_covid.cpp` about lines 340-352), so "as well" is conditional, not one or the other. If it is the cpp a claim rests on, check the cpp, not this bullet. The rule as the paper gives it: if output is at or below demand and the price is at or above the average price, raise output; if below the average price, raise price; if output exceeds demand and the price is above average, cut price; if the price is at or below average, cut output. "The cost-covering price for each firm is based on wage and borrowing cost per unit and defines the minimum price." Prices and quantities move by a gamma times a U[0,1] draw.
 - Households pick a firm with a weight of average price over the firm's price, "to model incomplete price information", so households "usually will not be able to find the one with the lowest price". Loan rate to firms is the key rate plus a fixed standing facility spread plus an individual bank markup. Firm bankruptcy is a debt ratio rule; bankrupt firms are not reborn.
 
 ### 1.5 Lavoie 2007, Post-Keynesian SFC model (OPENED)

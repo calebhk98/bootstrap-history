@@ -5,7 +5,7 @@ QUICK_TOPIC = True
 import unittest
 
 from sim.economy import entry, producers, unit_cost
-from sim.economy.accounts import Book
+from sim.book import Book
 from sim.economy.market_memory import MarketMemory
 from sim.economy.record import EconomyRecord
 from sim.economy.types import CurrencySpec, Recipe
@@ -23,15 +23,15 @@ class UnitCostRentTests(unittest.TestCase):
         revenue = {"grain": 1.0}
         self.assertEqual(unit_cost.return_on_capital(FARM, revenue, self.prices, self.wages),
                          unit_cost.return_on_capital(FARM, revenue, self.prices, self.wages, rent=0.0))
-        self.assertEqual(unit_cost.expected_margin(FARM, revenue, self.prices, self.wages, 0.05),
-                         unit_cost.expected_margin(FARM, revenue, self.prices, self.wages, 0.05, rent=0.0))
+        self.assertEqual(unit_cost.variable_cost_per_run(FARM, self.prices, self.wages),
+                         unit_cost.variable_cost_per_run(FARM, self.prices, self.wages, rent=0.0))
 
-    def test_rent_lowers_the_return_and_the_margin(self):
+    def test_rent_lowers_the_return(self):
         revenue = {"grain": 2.0}
         self.assertLess(unit_cost.return_on_capital(FARM, revenue, self.prices, self.wages, rent=2.0),
                         unit_cost.return_on_capital(FARM, revenue, self.prices, self.wages))
-        self.assertAlmostEqual(unit_cost.expected_margin(FARM, revenue, self.prices, self.wages, 0.05, rent=2.0),
-                               unit_cost.expected_margin(FARM, revenue, self.prices, self.wages, 0.05) - 2.0)
+        self.assertLess(unit_cost.return_after_recovery(FARM, revenue, self.prices, self.wages, 0.05, rent=2.0),
+                        unit_cost.return_after_recovery(FARM, revenue, self.prices, self.wages, 0.05))
 
 
 class PlanRentTests(unittest.TestCase):
@@ -49,7 +49,7 @@ class PlanRentTests(unittest.TestCase):
     def test_without_rent_or_cap_the_plan_is_unchanged(self):
         view = farm_view(5.0)
         self.assertEqual(producers.plan(farmer(), FARM, view, 1000.0),
-                         producers.plan(farmer(land_rent_per_run=0.0, land_run_cap=-1.0), FARM, view, 1000.0))
+                         producers.plan(farmer(land_rent_per_run=0.0, land_run_cap=None), FARM, view, 1000.0))
 
 
 class EntryRentTests(unittest.TestCase):
@@ -58,7 +58,7 @@ class EntryRentTests(unittest.TestCase):
     def plans(self, rent_by_tile):
         view = View(prices={"salt": 1.0, "firewood": 0.1, "pan": 2.0}, wages={"hand": 0.2})
         unmet = {("salt", "area"): entry.UnmetDemand("salt", "area", "anchor", 100.0)}
-        return entry.entry_plans({"boil_salt": self.SALT}, view, unmet, rent_by_tile, {"boil_salt": 1.0})
+        return entry.entry_plans({"boil_salt": self.SALT}, view, unmet, rent_of=lambda recipe_id, tile: rent_by_tile.get(tile, 0.0))
 
     def test_entry_slows_where_land_is_dear(self):
         self.assertEqual(len(self.plans({})), 1)
@@ -72,8 +72,8 @@ class EntryRentTests(unittest.TestCase):
 class RecordTests(unittest.TestCase):
     def test_last_years_rent_round_trips_through_the_save(self):
         source = EconomyRecord(book=Book(), memory=MarketMemory(), currency=CurrencySpec("coin", "fiat", None, 0.0, None))
-        source.land_rent = {"t": 1.5}
-        self.assertEqual(EconomyRecord.from_record(source.to_record()).land_rent, {"t": 1.5})
+        source.land.land_rent = {"t": 1.5}
+        self.assertEqual(EconomyRecord.from_record(source.to_record()).land.land_rent, {"t": 1.5})
 
 
 if __name__ == "__main__":

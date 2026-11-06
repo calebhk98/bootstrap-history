@@ -2,6 +2,7 @@
 founder_rules.py). A run ends for a seat alone; the others keep playing."""
 from typing import Any, Dict, Optional
 
+from sim.assembly.api import Part
 from sim.knowledge.api import ForgetTechnique
 from sim.reporting.api import RecordEvent
 from sim.ventures.api import StopOperating
@@ -11,7 +12,7 @@ from .commands import EndRun, SetFounderLife, SetPolicy
 from .state import COUNTRY_SEAT
 
 
-class Founder:
+class Founder(Part):
 
     def founder(self) -> Dict[str, Any]:
         """The acting seat's founder: {alive, life_left, dead_reason (None while the seat plays), policy (the standing
@@ -43,7 +44,7 @@ class Founder:
 
     def dead_reasons(self) -> Dict[str, str]:
         """Why each ended seat's run ended, by seat id, in joining order."""
-        return {seat_id: self.seat_of(seat_id).dead_reason for seat_id in self.ended_seats()}
+        return {seat_id: self.seat_of(seat_id).dead_reason for seat_id in self.parts.run.ended_seats()}
 
     def set_founder_life(self, command: SetFounderLife) -> None:
         self.seat.founder_alive = True

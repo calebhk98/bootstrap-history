@@ -7,7 +7,6 @@ gate's countdown and its abandonment, `stop_project`'s kept money and the credit
 warning, and `project_hour_pace`. The crawl of a project short of a trade is test_project_crawl_rules; a start refused for the gross price of a nearly paid project is `cash_covers_start` below."""
 QUICK_TOPIC = True
 
-from types import SimpleNamespace
 
 from .harness import check
 
@@ -19,7 +18,7 @@ from sim.projects import progress_rules
 from sim.projects.start_rules import STALL_YEARS_BEFORE_ABANDONMENT
 from sim.reporting.api import RecordEvent
 from sim.labour.hours_sale_warning import starved_projects, starving_warning
-from sim.refusal import cause_of, facts_of
+from sim.refusal import cause_of
 from sim.ui.proto.state_waiting import _waiting_on
 from sim.ui.proto.techtree import _explain_cost
 from sim.tests import module_harness
@@ -167,7 +166,7 @@ check("a nearly paid project is not refused for its gross price",
 def explained(paid, done=(), active=()):
     game = LabourStub(
         project_material_bill=lambda node_id: {"cost_of_missing": 0.0, "rows": []}, civ_cost_factor=lambda node_id: 1.0,
-        geography=LabourStub(material_cost_factor=lambda node_id: 1.0), opposition_factor=lambda node_id: 1.0,
+        material_cost_factor=lambda node_id: 1.0, opposition_factor=lambda node_id: 1.0,
         rebuild_work_factor=lambda node_id: 1.0,
         cost_money_factor=lambda: 1.0, money_real=1.0, project_cost=lambda node_id: 1000.0, year=100,
         paid_towards={"p": paid} if paid else {}, done=set(done), active=set(active))

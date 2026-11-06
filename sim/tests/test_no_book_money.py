@@ -7,7 +7,6 @@ import unittest
 
 from sim.constants import REGISTRY
 import sim.engine.core  # noqa: F401  (declares the engine constants)
-from sim.prices import commodities
 from sim.engine import money_units
 QUICK_TOPIC = True
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -52,12 +51,6 @@ class NoBookMoney(unittest.TestCase):
         self.assertNotIn("denarii", text)
         for commodity in json.loads(text)["commodities"].values():
             self.assertIn("price_material", commodity)
-
-    def test_ledger_price_comes_from_the_solved_table(self):
-        ledger = commodities.CommodityLedger(price_hours_per_kg={"iron_bar_kg": 7.0})
-        self.assertEqual(ledger.base_price_hours_per_kg("iron"), 7.0)
-        self.assertEqual(ledger.price("iron", demand_t=1.0, supply_t=1.0), 7.0)
-        self.assertIsNone(ledger.base_price_hours_per_kg("wool"))
 
 
 if __name__ == "__main__":

@@ -1,7 +1,7 @@
 # How to move a topic out of `Sim` into a module
 
 The rules every migration task follows. The design is `MODULE_REGISTRY_PLAN.md` section 4; the order and the
-status are `MODULE_MIGRATION_TASKS.md`; the proposed views and commands per owner are in `catalogue/`. CLAUDE.md
+status are `MODULE_MIGRATION_TASKS.md`; an owner's views and commands are in its `module_spec.py`. CLAUDE.md
 applies throughout (names spelled out, short comments, a test calls one function).
 
 ## The shape of a module
@@ -18,7 +18,7 @@ applies throughout (names spelled out, short comments, a test calls one function
 
 - Every outside fact comes through `self.needs.<view>`: `view()` for a table, `view[key]` for a keyed view,
   `view(*arguments)` for a quote.
-- Use the view names in `catalogue/<owner>.md`. If the owner has not moved yet, publish the view from the engine
+- Use the view names the owner's `module_spec.py` publishes. If the owner has not moved yet, publish the view from the engine
   in `sim/engine/bridge_<your module>.py` with `@bridge_view` (never cached: legacy code writes the state behind
   it directly). When the owner moves, it publishes the same name and the bridge entry is deleted.
 - A view's name and shape are set by its first publisher. Before adding one, look for it:

@@ -2,6 +2,7 @@
 
 QUICK_TOPIC = True
 
+from .pool_lenders import lend_from_savers
 from .harness import check
 
 from sim.agents.api import ActorRecord, ActorRegistry, ActorsState, CountryProfile
@@ -49,6 +50,7 @@ def build(definitions, population=100000.0, **profile_fields):
 	state.countries["home"] = CountryProfile(country="home", population=population, strata=definitions,
 											 **profile_fields)
 	registry = ActorRegistry(state)
+	lend_from_savers(state.purses, 1e12)
 	strata_spawner(registry, StrataWorld())
 	return registry
 
@@ -68,7 +70,7 @@ check("members are share times population", abs(toilers.record.members - 70000.0
 check("literacy comes from the data", toilers.record.literacy == 0.1 and stratum(registry, "owners").record.literacy == 0.9)
 check("the home country's strata carry country None", toilers.record.country is None)
 check("a stratum starts with no research tree", not toilers.knowledge and not toilers.works)
-again = seed_strata(registry, StrataWorld())
+again = seed_strata(registry, StrataWorld().trade_of_role)
 check("seeding twice founds nothing more", again == [] and len(registry.of_kind("stratum")) == 2, again)
 check("the strata spawner is shipped", "strata" in [name for name, _spawner in shipped_spawners()])
 
@@ -76,7 +78,7 @@ state = ActorsState(home_country="home")
 state.countries["home"] = CountryProfile(country="home", population=1000.0, strata=DEFINITIONS)
 state.countries["far"] = CountryProfile(country="far", population=2000.0, strata=DEFINITIONS)
 registry_two = ActorRegistry(state)
-founded = seed_strata(registry_two, StrataWorld())
+founded = seed_strata(registry_two, StrataWorld().trade_of_role)
 far = stratum(registry_two, "toilers", "far")
 check("every country in the state gets its strata, foreign ones with their country",
 	  len(founded) == 4 and far.record.country == "far" and abs(far.record.members - 1400.0) < 1e-6, founded)
@@ -84,7 +86,7 @@ check("every country in the state gets its strata, foreign ones with their count
 # ---- a default derived from what the profile states ---------------------------------------
 profile = CountryProfile(country="home", population=1000000.0, urban_fraction=0.2, literacy_general=0.1,
 						 literacy_elite=0.9, extra={"debt_bondage": True})
-definitions = strata_definitions(profile)
+definitions = strata_definitions(profile, FakeWorld().trade_of_role)
 names = {entry["name"] for entry in definitions}
 check("the default has several bodies of people", len(definitions) >= 4, names)
 check("default shares add up to the whole population", abs(sum(entry["share"] for entry in definitions) - 1.0) < 1e-9,
@@ -92,14 +94,14 @@ check("default shares add up to the whole population", abs(sum(entry["share"] fo
 check("debt bondage in the profile gives a bonded stratum with an owner who exists",
 	  any(entry.get("bonded") and entry.get("owner") in names for entry in definitions))
 check("without bondage there is no bonded stratum",
-	  not any(entry.get("bonded") for entry in strata_definitions(CountryProfile(population=10.0, urban_fraction=0.1))))
+	  not any(entry.get("bonded") for entry in strata_definitions(CountryProfile(population=10.0, urban_fraction=0.1), FakeWorld().trade_of_role)))
 check("rises_to and falls_to name strata that exist",
 	  all(entry.get(key) in names for entry in definitions for key in ("rises_to", "falls_to") if entry.get(key)))
 check("the elite are as literate as the data says", max(entry["literacy"] for entry in definitions) == 0.9)
-check("a profile's own list is used as given", strata_definitions(CountryProfile(strata=DEFINITIONS)) == DEFINITIONS)
+check("a profile's own list is used as given", strata_definitions(CountryProfile(strata=DEFINITIONS), FakeWorld().trade_of_role) == DEFINITIONS)
 registry_default = ActorRegistry(ActorsState(home_country="home"))
 registry_default.state.countries["home"] = profile
-seed_strata(registry_default, StrataWorld())
+seed_strata(registry_default, StrataWorld().trade_of_role)
 check("a default-seeded country holds its whole population",
 	  abs(sum(actor.record.members for actor in registry_default.of_kind("stratum")) - 1000000.0) < 1e-3)
 
@@ -225,16 +227,16 @@ check("two runs from the same start agree exactly", run_once() == run_once())
 
 registry = build(DEFINITIONS)
 world = StrataWorld()
-world.nodes["plough"] = make_node("plough", revenue=100.0)
+world.setting.nodes["plough"] = make_node("plough", revenue=100.0)
 world.demonstrated_nodes.add("plough")
 world.public_nodes.add("plough")
 toilers = stratum(registry, "toilers")
-toilers.credit(1.0e9, "test")
+toilers.payments.credit(1.0e9, "test")
 for _year in range(3):
 	registry.advance(world)
 check("a stratum never researches or copies",
 	  not toilers.knowledge and not toilers.works and not toilers.workforce
-	  and toilers.imitation_candidates(world) == [] and toilers.consider_imitation(world) == [])
+	  and toilers.imitation_candidates(world) == [] and toilers.copying.consider_imitation(world) == [])
 
 # ---- people with land of their own eat from it when wages fall short ------------------------
 plot_world = StrataWorld()

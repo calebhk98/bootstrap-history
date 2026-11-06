@@ -6,7 +6,7 @@ import unittest
 
 from sim.diffusion.diffusion_curve import knowledge_half_life, leaked_share
 from sim.engine import validate_material_gating as _gating
-from sim.labour.api import Labour
+from sim.labour.labour_hands import Hands
 
 from .harness import check
 from .harness import NODES, ROOT
@@ -20,33 +20,32 @@ class _Stub:
 
     def __init__(self, sources, done=(), research=1.0):
         self._world = types.SimpleNamespace(
-            LABOUR_PRODUCTIVITY_SOURCES=tuple(sources),
             projects=types.SimpleNamespace(done=set(done)),
-            research_productivity=lambda: research)
+            knowledge=types.SimpleNamespace(LABOUR_PRODUCTIVITY_SOURCES=tuple(sources), research_productivity=lambda: research))
 
 
 class Productivity(unittest.TestCase):
     SOURCES = (("trip_hammer", "smith", 0.2), ("bellows", "smith", 0.1), ("plough", "farmer", 0.3))
 
     def test_nothing_built_is_an_hour_for_an_hour(self):
-        self.assertEqual(Labour.labour_productivity(_Stub(self.SOURCES), "smith"), 1.0)
+        self.assertEqual(Hands.labour_productivity(_Stub(self.SOURCES), "smith"), 1.0)
 
     def test_a_built_technique_raises_its_trade_only(self):
         stub = _Stub(self.SOURCES, done=("trip_hammer",))
-        self.assertAlmostEqual(Labour.labour_productivity(stub, "smith"), 1.2)
-        self.assertEqual(Labour.labour_productivity(stub, "carpenter"), 1.0)
+        self.assertAlmostEqual(Hands.labour_productivity(stub, "smith"), 1.2)
+        self.assertEqual(Hands.labour_productivity(stub, "carpenter"), 1.0)
 
     def test_techniques_add_up(self):
         stub = _Stub(self.SOURCES, done=("trip_hammer", "bellows"))
-        self.assertAlmostEqual(Labour.labour_productivity(stub, "smith"), 1.3)
+        self.assertAlmostEqual(Hands.labour_productivity(stub, "smith"), 1.3)
 
     def test_stacking_everything_stays_under_the_cap(self):
         stub = _Stub((("a", "smith", 0.4), ("b", "smith", 0.4), ("c", "smith", 0.4)), done=("a", "b", "c"))
-        self.assertEqual(Labour.labour_productivity(stub, "smith"), _Stub.LABOUR_PRODUCTIVITY_CAP)
+        self.assertEqual(Hands.labour_productivity(stub, "smith"), _Stub.LABOUR_PRODUCTIVITY_CAP)
 
     def test_an_unbuilt_source_adds_nothing(self):
         stub = _Stub(self.SOURCES, done=("plough",))
-        self.assertEqual(Labour.labour_productivity(stub, "smith"), 1.0)
+        self.assertEqual(Hands.labour_productivity(stub, "smith"), 1.0)
 
 
 class DiffusionCurve(unittest.TestCase):

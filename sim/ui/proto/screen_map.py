@@ -7,7 +7,6 @@ deposits from sim.world.deposits.
 """
 import functools
 
-from sim.engine import ui_port
 
 from sim.world import deposits as deposit_model
 from sim.geography.api import tile_names

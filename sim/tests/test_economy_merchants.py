@@ -5,12 +5,14 @@ QUICK_TOPIC = True
 
 import unittest
 
+from sim.tests.economy_view_defaults import ViewDefaults
 from sim.economy import goods_market, merchants, settlement
-from sim.economy.accounts import Book
+from sim.book import Book
 from sim.economy.market_areas import AreaMap
+from sim.economy import merchants_transit
 from sim.economy.merchants import Merchant
 from sim.tests.test_economy_tile_costs import unit_cost_table
-from sim.economy.types import EDGE_MINT, EDGE_PRODUCTION, Bid, Fill, GoodsMove, GoodSpec, Offer, TileSpec, Transfer
+from sim.economy.types import EDGE_MINT, EDGE_PRODUCTION, Bid, GoodsMove, GoodSpec, Offer, TileSpec, Transfer
 
 TILES = ("a", "b")
 TILE_SPECS = {"a": TileSpec("a", 40.0, 10.0, 1000.0, False, ("b",), 0.3, 1.0),
@@ -23,7 +25,7 @@ SPECS = {
 }
 
 
-class View:
+class View(ViewDefaults):
     year = 1
 
     def __init__(self, prices):
@@ -85,9 +87,7 @@ class GapTests(unittest.TestCase):
         bid = plan(merchant(), 2.0, 4.0, rate=0.05).bids[0]
         spec = SPECS["salt"]
         price_there = 4.0
-        net = price_there - bid.maximum_price - merchants.gap_cost_per_unit(
-            spec, bid.maximum_price, price_there, CARRIAGE_PER_UNIT, 0.05)
-        self.assertAlmostEqual(net, 0.0, places=9)
+        self.assertAlmostEqual(bid.maximum_price, merchants._break_even_price(spec, price_there, CARRIAGE_PER_UNIT, 0.05), places=9)
         self.assertGreater(bid.maximum_price, 2.0)
 
     def test_a_merchant_with_no_price_information_does_not_trade(self):
@@ -125,9 +125,8 @@ class DispatchAndCloseTests(unittest.TestCase):
     def test_bought_goods_are_carried_and_carriage_is_paid(self):
         carriage, area_map, area_a, _b = world()
         who = merchant()
-        orders = plan(who, 2.0, 5.0)
-        fills = (Fill("m1", "salt", area_a["salt"], "a", 10.0, 2.0, "buy"),)
-        result = merchants.dispatch(who, fills, carriage, SPECS, "coin", 100.0, {("salt", "a"): 10.0})
+        plan(who, 2.0, 5.0)
+        result = merchants.dispatch(who, carriage, SPECS, "coin", 100.0, {("salt", "a"): 10.0})
         self.assertEqual((result.moves[0].tile, result.moves[0].receiver_tile, result.moves[0].quantity), ("a", "b", 10.0))
         self.assertAlmostEqual(result.transfers[0].amount, 10.0 * CARRIAGE_PER_UNIT)
         self.assertEqual(result.transfers[0].payee, merchants.EDGE_CARRIAGE)
@@ -136,8 +135,7 @@ class DispatchAndCloseTests(unittest.TestCase):
         carriage, _m, area_a, _b = world()
         who = merchant()
         plan(who, 2.0, 5.0)
-        fills = (Fill("m1", "salt", area_a["salt"], "a", 10.0, 2.0, "buy"),)
-        result = merchants.dispatch(who, fills, carriage, SPECS, "coin", 100.0, {("salt", "a"): 10.0},
+        result = merchants.dispatch(who, carriage, SPECS, "coin", 100.0, {("salt", "a"): 10.0},
                                     carrier_of={"a": "carters of a"}.get)
         self.assertEqual(result.transfers[0].payee, "carters of a")
 
@@ -147,22 +145,19 @@ class DispatchAndCloseTests(unittest.TestCase):
         orders = plan(who, 2.0, 5.0, cash=0.0, held={("salt", "a"): 10.0})
         self.assertEqual([offer.tile for offer in orders.offers], [])
         carriage, _m, _a, _b = world()
-        result = merchants.dispatch(who, (), carriage, SPECS, "coin", 100.0, {("salt", "a"): 10.0})
+        result = merchants.dispatch(who, carriage, SPECS, "coin", 100.0, {("salt", "a"): 10.0})
         self.assertEqual((result.moves[0].tile, result.moves[0].receiver_tile, result.moves[0].quantity), ("a", "b", 10.0))
 
     def test_stock_best_sold_where_it_is_is_offered_there(self):
         orders = plan(merchant(), 5.0, 2.0, cash=0.0, held={("salt", "a"): 10.0})
         self.assertEqual([offer.tile for offer in orders.offers], ["a"])
 
-    def test_goods_it_cannot_pay_to_carry_are_stranded(self):
+    def test_goods_it_cannot_pay_to_carry_are_left_behind(self):
         carriage, _m, area_a, _b = world()
         who = merchant()
         plan(who, 2.0, 5.0)
-        fills = (Fill("m1", "salt", area_a["salt"], "a", 10.0, 2.0, "buy"),)
-        result = merchants.dispatch(who, fills, carriage, SPECS, "coin", 4.0, {("salt", "a"): 10.0})
+        result = merchants.dispatch(who, carriage, SPECS, "coin", 4.0, {("salt", "a"): 10.0})
         self.assertAlmostEqual(result.moves[0].quantity, 4.0)
-        self.assertEqual([(good, tile) for good, tile, _quantity in result.stranded], [("salt", "a")])
-        self.assertAlmostEqual(result.stranded[0][2], 6.0)
 
     def test_close_year_moves_expectations_and_pays_the_owner_half_the_profit(self):
         who = merchant(prices={("salt", "x"): 2.0})
@@ -192,6 +187,22 @@ class DispatchAndCloseTests(unittest.TestCase):
     def test_a_loss_shrinks_the_capital(self):
         who = merchant()
         merchants.close_year(who, {}, {}, 90.0, {}, lambda good, tile: "x", "coin", 0.05)
+        self.assertAlmostEqual(who.capital_base, 90.0)
+
+    def test_stock_at_a_market_with_no_learned_price_is_not_a_loss(self):
+        who = merchant()
+        merchants.close_year(who, {}, {}, 90.0, {("salt", "t1"): 5.0}, lambda good, tile: "x", "coin", 0.05)
+        self.assertAlmostEqual(who.capital_base, 100.0)
+
+    def test_in_transit_stock_with_no_learned_price_is_not_a_loss(self):
+        who = merchant()
+        who.in_transit.append(merchants_transit.Shipment("salt", 5.0, "t1", 2))
+        merchants.close_year(who, {}, {}, 90.0, {}, lambda good, tile: "x", "coin", 0.05)
+        self.assertAlmostEqual(who.capital_base, 100.0)
+
+    def test_priced_stock_still_counts_toward_wealth(self):
+        who = merchant(prices={("salt", "x"): 2.0})
+        merchants.close_year(who, {}, {}, 80.0, {("salt", "t1"): 5.0}, lambda good, tile: "x", "coin", 0.05)
         self.assertAlmostEqual(who.capital_base, 90.0)
 
 
@@ -240,7 +251,7 @@ def run_loop(count, years, capital=500.0):
         shipped = 0.0
         for who in crowd:
             held = {("salt", "a"): book.stock(who.agent_id, "salt", "a")}
-            outcome = merchants.dispatch(who, fills, carriage, SPECS, "coin", book.balance(who.agent_id, "coin"), held)
+            outcome = merchants.dispatch(who, carriage, SPECS, "coin", book.balance(who.agent_id, "coin"), held)
             book.post(outcome.transfers, outcome.moves)
             shipped += sum(move.quantity for move in outcome.moves)
         last = prices

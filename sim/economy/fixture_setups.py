@@ -6,8 +6,8 @@ import dataclasses
 from sim.economy import household_hours_year, opening_stationary, year_labour
 from sim.economy.economy import Economy
 from sim.world.need_demand import NEED_SUBSTITUTION_ELASTICITY
-from sim.economy.households_basket import Basket, NeedSpec
-from sim.economy.setup import EconomySetup, TradeSpec
+from sim.world.need_basket import Basket, NeedSpec
+from sim.economy.setup import EconomySetup, SetupTrade
 from sim.economy.tile_costs import world_map_of
 from sim.economy.types import CurrencySpec, GoodSpec, Recipe, TileSpec
 
@@ -64,11 +64,12 @@ def small_setup(**changes) -> EconomySetup:
         carriage_rates={"cart": 0.002, "pack": 0.004, "sail": 0.0005},
         handling_rates={"sail": 2.0 * wages[LABOURER]},
         specs=specs(), recipes=recipes(), basket=basket(),
-        trades={trade: TradeSpec(trade) for trade in wages},
-        tax_forms=(), state_capacity=0.5, working_hours_per_year=2000.0, working_share=0.5,
+        trades={trade: SetupTrade(trade) for trade in wages}, servant_trade=LABOURER,
+        tax_forms=(), working_hours_per_year=2000.0, working_share=0.5,
         gini=0.4, opening_population_by_tile={TOWN: 4000.0, FARMS: 3000.0, HILLS: 1000.0},
         opening_prices=prices, opening_wages=wages, opening_rate=0.06,
-        capital_tile=TOWN, port_tile=TOWN)
+        capital_tile=TOWN, port_tile=TOWN, unskilled_trade=LABOURER,
+        hunger_need=FOOD, fuel_need="warmth", work_need="household_work")   # the fixture basket has no fuel or work need: those two meet nothing
     return dataclasses.replace(setup, **changes) if changes else setup
 
 
@@ -84,13 +85,13 @@ def stationary_setup(slack_share: float = 0.0, **changes) -> EconomySetup:
     Every hour the plot and household work leave is offered (no leisure), so hours beyond the hours hired show as idle hours."""
     stated = small_setup(land_per_run={FARM: PLOT_LAND_PER_RUN})
     economy = Economy(stated)
-    flows = opening_stationary.solve({TOWN: economy.record.opening_demand}, stated.recipes, stated.opening_prices,
+    flows = opening_stationary.solve({TOWN: economy.record.goods.opening_demand}, stated.recipes, stated.opening_prices,
                                      stated.opening_wages, stated.opening_rate)
     workers = sum(stated.opening_population_by_tile.values()) * stated.working_share
     view = economy.view()
     offers = year_labour.labour_offers(stated, economy.record, view, year_labour.outside_option_by_tile(stated, economy.record, view))
-    kept = household_hours_year.decide(stated, economy.record, view, offers, economy._own_plot_options(),
-                                       economy._hectares_held())
+    kept = household_hours_year.decide(stated, economy.record, view, offers, economy.own_plot_options(),
+                                       economy.hectares_held())
     hours = opening_stationary.hours_that_clear_at(flows.hours_by_trade[LABOURER], workers, slack_share,
                                                    sum(kept.values()) / workers)
     return dataclasses.replace(stated, working_hours_per_year=hours, **changes)

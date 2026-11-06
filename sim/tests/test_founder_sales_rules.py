@@ -4,6 +4,7 @@ concern and reports; the actors module addresses the exchange to the seat. Each 
 only what it reads."""
 QUICK_TOPIC = True
 
+from sim.tests.agents_fake_world import flat_namespace
 import unittest
 from types import SimpleNamespace
 from unittest import mock
@@ -22,7 +23,7 @@ class SaleSetupTests(unittest.TestCase):
     def setup(self):
         module = module_harness.build(Actors, module_id="actors", world=SimpleNamespace(purses=None), views={
             "acting_seat": "seat:0", "seat_dealings": lambda seat_id: SeatsSeat()})
-        module.actor_world = lambda: SimpleNamespace(concern_margin=lambda node_id: 7.0)
+        module.actor_world = lambda: flat_namespace(concern_margin=lambda node_id: 7.0)
         module.cast = lambda: SimpleNamespace(
             of_kind=lambda kind: [SimpleNamespace(record=SimpleNamespace(exited_year=None), actor_id=kind + ":live"),
                                   SimpleNamespace(record=SimpleNamespace(exited_year=90), actor_id=kind + ":gone")],
@@ -31,7 +32,7 @@ class SaleSetupTests(unittest.TestCase):
 
     def test_the_seller_carries_the_concerns_margin_and_the_buyers_are_the_live_firms_and_players(self):
         party, buyers, find_actor, _world = self.setup()
-        self.assertEqual(party.margin_of(NODE), 7.0)
+        self.assertEqual(party.holdings.margin_of(NODE), 7.0)
         self.assertEqual([buyer.actor_id for buyer in buyers], ["firm:live", "player:live"])
         self.assertEqual((find_actor("seat:0"), find_actor("firm:live")), (party, "found firm:live"))
 

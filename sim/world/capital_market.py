@@ -5,6 +5,7 @@ demanded to funds held; the rate is the civilisation's starting rate (an initial
 how far that ratio has moved from its starting value; a borrower pays that rate plus a premium for its
 own arrears, less a discount for its own standing.
 """
+import math
 from typing import Optional
 
 from sim.constants import declare
@@ -25,11 +26,6 @@ RATE_CEILING_SHARE = declare(
     unit="multiple of the starting rate", source=None, confidence="D",
     why="The highest the market rate rises however scarce funds are; beyond it borrowers stop borrowing "
         "and lenders turn to the risks of lending to desperate borrowers, which are not modelled.")
-ARREARS_PREMIUM_AT_CEILING = declare(
-    "ARREARS_PREMIUM_AT_CEILING", 0.5, kind="temporary_heuristic",
-    unit="share of the market rate added at the credit ceiling", source=None, confidence="D",
-    why="What a borrower at the limit of what lenders will advance pays over the market rate, rising "
-        "in proportion to the share of the ceiling used. Stands in for a default-probability model.")
 LENDER_RESERVE_SHARE = declare(
     "LENDER_RESERVE_SHARE", 0.2, kind="temporary_heuristic",
     unit="share of the funds lenders hold", source=None, confidence="D",
@@ -61,9 +57,8 @@ def capital_recovery_factor(rate: float, life_years: float) -> float:
     still unpaid: one over the life when the rate is nil, the rate when the life is endless."""
     if life_years <= 0.0:
         raise ValueError("a plant needs a positive life")
-    if rate <= 0.0:
-        return 1.0 / life_years
-    return rate / (1.0 - (1.0 + rate) ** -life_years)
+    paid_off = -math.expm1(-life_years * math.log1p(rate)) if rate > 0.0 else 0.0     # the share of a unit repaid by one year's annuity of 1/rate
+    return rate / paid_off if paid_off > 0.0 else 1.0 / life_years     # a rate too small to register is nil
 
 
 def establishment_carry_factor(rate: float, establishment_years: float) -> float:
@@ -91,18 +86,17 @@ def stand_yearly_share(rate: float, life_years: float, establishment_years: floa
             * capital_recovery_factor(rate, bearing_years(life_years, establishment_years)))
 
 
-def borrower_rate(market_rate: float, standing_discount: float, share_of_ceiling_used: float) -> float:
-    """What one borrower pays: never less than the market rate (what the market itself pays savers), plus
-    the part of the arrears premium that its standing does not remove. A discount only removes premium."""
-    used = max(0.0, min(1.0, share_of_ceiling_used))
-    premium = market_rate * ARREARS_PREMIUM_AT_CEILING * used
-    return market_rate + max(0.0, premium - max(0.0, standing_discount))
-
-
 def perpetuity_value(yearly_income: float, rate: float, rate_floor: float = 1e-9) -> float:
     """What an income of `yearly_income` a year for good is worth now at `rate`: its present value. The rate is held
     at `rate_floor` so a nil rate does not make the income worth infinity."""
     return max(0.0, yearly_income) / max(rate, rate_floor)
+
+
+def bullet_value(coupon: float, redemption: float, years: float, rate: float) -> float:
+    """What a claim paying `coupon` a year for `years` whole years (at least one) and `redemption` at the end is worth now at `rate`."""
+    growth = 1.0 + max(-0.99, rate)
+    periods = max(1, int(round(years)))
+    return sum(coupon / growth ** period for period in range(1, periods + 1)) + redemption / growth ** periods
 
 
 def headroom(capacity: float, lent: float) -> float:

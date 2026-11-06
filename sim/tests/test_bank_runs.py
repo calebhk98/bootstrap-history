@@ -5,7 +5,7 @@ losing its capital. Rules on a bank built by hand."""
 
 QUICK_TOPIC = True
 
-from sim.economy import bank_runs, bank_service, banks, secondary_trade
+from sim.economy import bank_runs, bank_service, banks
 from sim.economy.secondary_trade import BOND_MARKET
 from sim.economy.types import EDGE_MINT, FundsOffer, Transfer
 from sim.tests import test_economy_banks as bank_fixtures
@@ -24,7 +24,7 @@ class RunFixture(bank_fixtures.BankFixture):
         self.supply = self.record.book.money_supply(self.money)
 
     def expect_losses(self, rate):
-        self.record.loss_rates[self.bank.agent_id] = rate
+        self.record.credit.loss_rates[self.bank.agent_id] = rate
 
     def savers(self, amount=2000.0, rate=0.04):
         return [FundsOffer(self.buyer, self.money, amount, rate)]
@@ -98,17 +98,17 @@ class PayingTheWithdrawals(RunFixture):
         self.assertLess(self.capital(), capital)                        # the loans went for less than they were worth to it
         self.assertLess(offers[0].amount, 2000.0)
         self.assertAlmostEqual(self.record.book.money_supply(self.money), self.supply)
-        sold = [loan for loan in self.record.loans if loan.lender == self.buyer]
+        sold = [loan for loan in self.record.credit.loans if loan.lender == self.buyer]
         self.assertTrue(sold)
 
     def test_the_price_the_bank_gets_falls_when_savers_ask_more(self):
         cheap_offers = self.run_bank(offers=self.savers(rate=0.04), institutions=(BOND_MARKET,))
         spent_cheap = 2000.0 - cheap_offers[0].amount
-        sold_cheap = sum(loan.principal for loan in self.record.loans if loan.lender == self.buyer)
+        sold_cheap = sum(loan.principal for loan in self.record.credit.loans if loan.lender == self.buyer)
         self.setUp()
         dear_offers = self.run_bank(offers=self.savers(rate=0.12), institutions=(BOND_MARKET,))
         spent_dear = 2000.0 - dear_offers[0].amount
-        sold_dear = sum(loan.principal for loan in self.record.loans if loan.lender == self.buyer)
+        sold_dear = sum(loan.principal for loan in self.record.credit.loans if loan.lender == self.buyer)
         self.assertGreater(spent_cheap / sold_cheap, spent_dear / sold_dear)
 
     def test_without_a_market_for_loans_the_bank_fails_and_pays_the_leaver_what_it_holds(self):
@@ -128,7 +128,7 @@ class PayingTheWithdrawals(RunFixture):
         for deposit in banks.deposits_of(self.record, self.bank.agent_id):
             self.assertEqual(deposit.years_left, 1.0)
         bank_service.service_deposits(self.record, self.money, 2)
-        lost = self.record.credit_losses.get(self.leaver.lender, 0.0) + self.record.credit_losses.get(self.stayer.lender, 0.0)
+        lost = self.record.credit.credit_losses.get(self.leaver.lender, 0.0) + self.record.credit.credit_losses.get(self.stayer.lender, 0.0)
         self.assertGreater(lost, 0.0)
 
     def test_the_founder_loses_the_capital_the_failed_bank_no_longer_holds(self):
@@ -140,10 +140,10 @@ class PayingTheWithdrawals(RunFixture):
     def test_a_bank_that_kept_every_deposit_in_reserve_pays_all_who_leave_and_sells_nothing(self):
         self.bank.reserve_share = 1.0
         self.record.book.transfer(Transfer(self.borrower, self.bank.agent_id, self.money, 820.0, "repaid in full"))
-        self.record.loans.remove(self.loan)
+        self.record.credit.loans.remove(self.loan)
         self.run_bank(institutions=(BOND_MARKET,))
         self.assertLess(self.bank.failed_year, 0)
-        self.assertEqual([loan for loan in self.record.loans if loan.lender == self.buyer], [])
+        self.assertEqual([loan for loan in self.record.credit.loans if loan.lender == self.buyer], [])
 
 
 class Saved(RunFixture):
@@ -151,7 +151,7 @@ class Saved(RunFixture):
         from sim.economy.record import EconomyRecord
         self.bank.owner_loss = 12.5
         loaded = EconomyRecord.from_record(self.record.to_record())
-        self.assertEqual(loaded.banks[self.bank.agent_id].owner_loss, 12.5)
+        self.assertEqual(loaded.capital_markets.banks[self.bank.agent_id].owner_loss, 12.5)
 
 
 if __name__ == "__main__":

@@ -59,7 +59,7 @@ class DeadEndCheckTests(unittest.TestCase):
         lives = read_json(os.path.join(ROOT, "data", "world", "service_lives.json"))["years"]
         trades = read_json(os.path.join(ROOT, "data", "world", "trades.json"))["trades"]
         nothing, _ = validate_dead_ends.dead_end_goods(
-            load_production_catalog(ROOT), load_needs(ROOT)["goods"], lives, trades, validate_dead_ends.state_goods())
+            load_production_catalog(ROOT), load_needs(ROOT)["goods"], lives, trades, ())
         self.assertNotIn("dye_kg", nothing)
         self.assertNotIn("iron_tools_kg", nothing)
 

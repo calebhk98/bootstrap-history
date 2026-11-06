@@ -19,11 +19,11 @@ def entries_for(government: Any, world: Any) -> List[str]:
 	its plants makes, the first known entry that makes the good and earns (an entry with no takings model, or none the state's country can read, is no business to open)."""
 	record = government.record
 	wanted = set(record.state_enterprises)
-	made = {material for entry_key in government.business.entry_keys() for material in world.materials_made_by(entry_key)}
+	made = {material for entry_key in government.business.reading.entry_keys() for material in world.enterprises.materials_made_by(entry_key)}
 	for material in sorted(record.state_monopolies):
-		if material in made or any(material in world.materials_made_by(entry_key) for entry_key in wanted):
+		if material in made or any(material in world.enterprises.materials_made_by(entry_key) for entry_key in wanted):
 			continue
-		makers = sorted(entry_key for entry_key in world.concerns_making(material) if government.knows(entry_key, world) and (world.concern_gross(entry_key) or 0.0) > 0.0)
+		makers = sorted(entry_key for entry_key in world.enterprises.concerns_making(material) if government.knows(entry_key, world) and (world.concerns.concern_gross(entry_key) or 0.0) > 0.0)
 		if makers:
 			wanted.add(makers[0])
 	return sorted(wanted)
@@ -33,8 +33,8 @@ def open_enterprises(government: Any, world: Any) -> List[str]:
 	"""Open a plant of each entry the state should run and does not yet; the entries opened."""
 	opened = []
 	for entry_key in entries_for(government, world):
-		if government.business.plant_of(entry_key) is None:
-			government.business.open_plant(entry_key, world.year)
+		if government.business.reading.plant_of(entry_key) is None:
+			government.business.lifecycle.open_plant(entry_key, world.setting.year)
 			opened.append(entry_key)
 	return opened
 
@@ -44,10 +44,11 @@ def run(government: Any, world: Any) -> float:
 	business = government.business
 	takings = margin = 0.0
 	for entry_key in sorted(business.operating()):
-		plant_margin = (business_books.operate(business, government, entry_key, world, 0.0)
-						- business_books.carry(business, government, entry_key, world))
-		business.note_year(entry_key, plant_margin)
-		takings += business.plant_of(entry_key).takings
+		operated = business_books.operate(business, government, entry_key, world, 0.0)
+		carried = business_books.carry(business, government, entry_key, world)
+		plant_margin = operated - (0.0 if carried is None else carried)    # no reading: nothing was paid
+		business.tally.note_year(entry_key, plant_margin)
+		takings += business.reading.plant_of(entry_key).takings
 		margin += plant_margin
 	government.record.enterprise_takings, government.record.enterprise_margin = takings, margin
 	return margin
@@ -63,12 +64,12 @@ def input_share(government: Any, entry_key: str, size: float, world: Any) -> flo
 	at the market's price. Inputs found are consumed (drawn from the stores, the rest bid for) and the share is what
 	the plant can make. TEMPORARY HEURISTIC (CLAUDE.md 4.4): the bid is taken as filled, as the market does not report
 	what a state's bid bought; retire: Complaint 492 (the state's bids read back from the book)."""
-	needs = {material: tonnes * size for material, tonnes in world.concern_inputs(entry_key).items() if tonnes * size > 0.0}
+	needs = {material: tonnes * size for material, tonnes in world.enterprises.concern_inputs(entry_key).items() if tonnes * size > 0.0}
 	if not needs:
 		return 1.0
 	stores = government.record.stores
 	shortfalls = {material: max(0.0, tonnes - stores.get(material, 0.0)) for material, tonnes in needs.items()}
-	quotes = {material: world.material_cost(material, tonnes) for material, tonnes in shortfalls.items()}
+	quotes = {material: world.quotes.material_cost(material, tonnes) for material, tonnes in shortfalls.items()}
 	cost = sum(quote for quote in quotes.values() if quote is not None)
 	affordable = 1.0 if cost <= 0.0 else min(1.0, max(0.0, government.money) / cost)
 	# a shortfall nobody sells cannot be bought at any price: the plant makes only what the stores cover of it
@@ -80,20 +81,20 @@ def input_share(government: Any, entry_key: str, size: float, world: Any) -> flo
 		drawn = min(used, stores.get(material, 0.0))
 		stores[material] = stores.get(material, 0.0) - drawn
 		if used - drawn > 1e-12:
-			bought_cost = world.material_cost(material, used - drawn)
+			bought_cost = world.quotes.material_cost(material, used - drawn)
 			if bought_cost is not None:
-				world.market_purchase(government.actor_id, world.commodity_of(material), used - drawn, bought_cost)
-		value += world.material_cost(material, used) or 0.0
-	if not world.sells_on_book(entry_key):
+				world.market.market_purchase(government.actor_id, world.quotes.commodity_of(material), used - drawn, bought_cost)
+		value += world.quotes.material_cost(material, used) or 0.0
+	if not world.market.sells_on_book(entry_key):
 		# takings here are net of the inputs at the market's price, which the state has now paid for itself
-		ledger.transfer(world.edge(EDGE_CUSTOMERS), government, value, "takings")
+		ledger.transfer(world.setting.edge(EDGE_CUSTOMERS), government, value, "takings")
 	return share
 
 
 def keep_for_own_use(government: Any, material: str, tonnes: float, world: Any) -> float:
 	"""Of `tonnes` a plant made, the tonnes the state keeps in its stores because its standing lines draw them; the
 	rest is for the market."""
-	wanted = government.record.material_need.get(world.commodity_of(material), 0.0)
+	wanted = government.record.material_need.get(world.quotes.commodity_of(material), 0.0)
 	kept = max(0.0, min(tonnes, wanted - government.record.stores.get(material, 0.0)))
 	if kept > 0.0:
 		government.record.stores[material] = government.record.stores.get(material, 0.0) + kept
@@ -102,12 +103,12 @@ def keep_for_own_use(government: Any, material: str, tonnes: float, world: Any) 
 
 def sell(government: Any, world: Any) -> None:
 	"""Put the plants' output to its use: kept for the state's lines first, the rest sold into the goods market."""
-	for material in sorted({made for entry_key in government.concerns for made in world.materials_made_by(entry_key)}):
-		by_concern: List[Tuple[str, float]] = government.output_by_concern(material, world)
+	for material in sorted({made for entry_key in government.concerns for made in world.enterprises.materials_made_by(entry_key)}):
+		by_concern: List[Tuple[str, float]] = government.output.output_by_concern(material, world)
 		total = sum(tonnes for _entry_key, tonnes in by_concern)
 		kept = keep_for_own_use(government, material, total, world)
 		share = 0.0 if total <= 0.0 else (total - kept) / total
-		world.market_sale(government.actor_id, material, total - kept, [(entry_key, tonnes * share) for entry_key, tonnes in by_concern])
+		world.market.market_sale(government.actor_id, material, total - kept, [(entry_key, tonnes * share) for entry_key, tonnes in by_concern])
 
 
 def needs_of(lines: List[Any]) -> Dict[str, float]:

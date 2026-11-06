@@ -2,198 +2,95 @@
 
 The founder, a firm, the state and the foreign traders deal with `Sim.goods_market`:
 
-    quote_buy / quote_sell     what an order would cost or fetch: the economy's price on the acting tile,
-                               carriage, and the climb the economy's own book gives the order
-                               (goods_pricing.py)
-    buy / sell                 an order from a party (anything with money and goods; a seat
-                               is a `SeatParty`), priced along the curve the order climbs
-    note_purchase / note_sale  tonnes a party bought or sold this year, counted in the same book
-    price / state              what screens read
+    quote_buy / quote_sell     what an order would cost or fetch: the economy's price on the acting tile, carriage, and the
+                               climb the economy's own book gives the order (goods_pricing.py)
+    post_order                 a seat's order for the year's clearing, at its price limit; nothing settles until then
+                               (port_goods_orders.py), as a seat's hires do
 
-A party is identified by a string. A seat is its seat id (`state.acting_seat` for the asking seat);
-a firm or the state is its actor id. A sale by a seat and by a firm are the same entry in the year's
-flows, so they move the clearing price the same way (`sim/world/market.py`); the posted price leaves
-out the asking seat's own orders only, which keep the marginal curves that move a bill as it is filled. The clearing itself
-is the markets module's clearing (sim/markets/clearing.py); who offers what is in goods_offers.py.
+A seat is identified by its seat id (`state.acting_seat` for the asking seat); a firm or the state by its actor id. A seat's
+orders and an actor's reach the same clearing, which sets the price. The asking seat's own orders keep the marginal curves
+that move a bill as it is filled. Who offers what is in goods_offers.py.
 """
-from sim.ledger.api import ChangeStock, PayEdge, ReceiveFromEdge
-from sim.world.producer_market import Offer
+from sim.refusal import Refusal
+from sim.rekey import rekey
 
+from . import port_goods_orders
 from .goods_offers import GoodsOffers
 from .goods_pricing import GoodsPricing
 from .rules import tonnes_sold
-from sim.agents.api import edges
-
-class SeatParty:
-    """One seat's money and stock, as a party to an order; every act runs as that seat."""
-
-    def __init__(self, sim, seat_id):
-        self._sim = sim
-        self.party_id = seat_id
-
-    def can_pay(self, money):
-        with self._sim.act_as(self.party_id):
-            return self._sim.can_pay(money)
-
-    def pay(self, money, purpose):
-        with self._sim.act_as(self.party_id):
-            self._sim.send(PayEdge(edges.EDGE_MARKET, money, purpose))
-
-    def receive(self, money, purpose):
-        with self._sim.act_as(self.party_id):
-            self._sim.send(ReceiveFromEdge(edges.EDGE_MARKET, money, purpose))
-
-    def held(self, key):
-        with self._sim.act_as(self.party_id):
-            return self._sim.material_stock_t(key)
-
-    def take_delivery(self, key, tonnes):
-        self._move_stock(key, tonnes)
-
-    def hand_over(self, key, tonnes):
-        self._move_stock(key, -tonnes)
-
-    def _move_stock(self, key, tonnes):
-        sim = self._sim
-        with sim.act_as(self.party_id):
-            sim.send(ChangeStock(key, tonnes))
 
 
-class GoodsMarket(GoodsPricing, GoodsOffers):
+class GoodsMarket:
+    """The goods market. Its concerns are parts, addressed as `goods_market.<part>.<method>`:
+
+        pricing   the price at the acting tile, carriage and the climb over an order   (goods_pricing.py)
+        offers    who sells what and the household price table                          (goods_offers.py)"""
 
     def __init__(self, sim):
         self._sim = sim
-        self._seat_parties = {}
+        self.offers = GoodsOffers(sim)
+        self.pricing = GoodsPricing(sim, self)
+
+    @property
+    def _stored(self):
+        """The record the seats' posted orders and the last clearing's trades are kept in."""
+        return self._sim.economy.agent.stored
 
     @property
     def acting_party_id(self):
         """The party id of the seat asking now."""
         return self._sim.state.acting_seat
 
-    def seat_party(self, seat_id):
-        """The party for one seat, the same object every time."""
-        party = self._seat_parties.get(seat_id)
-        if party is None:
-            party = self._seat_parties[seat_id] = SeatParty(self._sim, seat_id)
-        return party
-
-    def forget_seat_party(self, seat_id):
-        """A seat that left the game takes its party with it."""
-        self._seat_parties.pop(seat_id, None)
-
-    @property
-    def acting(self):
-        """The party for the seat asking now."""
-        return self.seat_party(self._sim.state.acting_seat)
-
-    # ---- the records: the one place they are written -------------------------------------
-
-    def note_sale(self, seller_id, commodity, tonnes, reservation_ratio=None):
-        """`seller_id` sold `tonnes` of a commodity into the market this year. A seller that names the
-        lowest price it takes (its cost, as a ratio to the market's reference) sells only at or above
-        it; one that names none takes whatever the market pays."""
-        if tonnes > 0:
-            flows = self._sim._market_flows()
-            sold = flows["sold"].setdefault(commodity, {})
-            before = sold.get(seller_id, 0.0)
-            sold[seller_id] = before + tonnes
-            reservations = flows.setdefault("reservation", {})
-            if reservation_ratio is not None:
-                held = reservations.setdefault(commodity, {})
-                held[seller_id] = (held.get(seller_id, reservation_ratio) * before
-                                   + reservation_ratio * tonnes) / (before + tonnes)
-            elif seller_id in reservations.get(commodity, {}):
-                del reservations[commodity][seller_id]
-
-    def note_purchase(self, buyer_id, commodity, tonnes):
-        """`buyer_id` bought `tonnes` of a commodity at the market this year."""
-        if tonnes > 0:
-            bought = self._sim._market_flows()["bought"].setdefault(commodity, {})
-            bought[buyer_id] = bought.get(buyer_id, 0.0) + tonnes
-
-    def forget(self, party_id):
-        """A party's entries from earlier years are over: it is about to deal again this year, or has
-        stopped. Its sales and purchases of this year are noted afterwards."""
-        flows = self._sim._market_flows()
-        for kind in ("sold", "bought", "reservation"):
-            flows.setdefault(kind, {})
-            for commodity in list(flows[kind]):
-                flows[kind][commodity].pop(party_id, None)
-                if not flows[kind][commodity]:
-                    del flows[kind][commodity]
+    # ---- the records ----
 
     def reset_draws(self):
-        """Start a fresh count of what running works draw from the market."""
-        self._sim._market_flows()["drawn"] = {}
+        """Start a fresh count of what the asking seat's running works draw from the market; other seats' counts stay."""
+        self._sim.market_flows()["drawn"][self.acting_party_id] = {}
 
     def note_draw(self, commodity, tonnes):
-        """Running works used `tonnes` the founder neither held nor made."""
+        """The asking seat's running works used `tonnes` it neither held nor made."""
         if tonnes > 0:
-            drawn = self._sim._market_flows()["drawn"]
+            drawn = self._sim.market_flows()["drawn"].setdefault(self.acting_party_id, {})
             drawn[commodity] = drawn.get(commodity, 0.0) + tonnes
 
-    def add_stock(self, material, tonnes):
-        """Goods appear in the society's hands (a windfall, a confiscation sold on): they join this
-        year's supply."""
-        sim = self._sim
-        entry = sim._market_entry(sim._material_tag(material)[0])
-        if entry is not None and tonnes > 0:
-            entry["stock_tonnes"] += tonnes
+    def rename_draws(self, old, new):
+        """A seat handed over: its draws this year are kept under the new id."""
+        rekey(self._sim.market_flows()["drawn"], old, new)
 
     # ---- reads ------------------------------------------------------------------------
 
-    @staticmethod
-    def _total(parties, party_id=None, except_party=None):
-        """Tonnes one party has, or every party's, or every party but `except_party`'s; summed in party
-        order so that a save and load cannot change the last digit."""
-        if party_id is not None:
-            return parties.get(party_id, 0.0)
-        return sum(tonnes for party, tonnes in sorted(parties.items()) if party != except_party)
+    def drawn_tonnes(self, commodity, seat_id=None):
+        """Tonnes of a commodity the seat's (the asking one by default) running works drew from the market this year."""
+        return self._sim.market_flows()["drawn"].get(seat_id or self.acting_party_id, {}).get(commodity, 0.0)
 
-    def sold_tonnes(self, commodity, seller_id=None):
-        """Tonnes sold this year: by one seller, or by all of them."""
-        return self._total(self._sim._market_flows()["sold"].get(commodity, {}), seller_id)
-
-    def bought_tonnes(self, commodity, buyer_id=None):
-        return self._total(self._sim._market_flows()["bought"].get(commodity, {}), buyer_id)
-
-    def drawn_tonnes(self, commodity):
-        return self._sim._market_flows()["drawn"].get(commodity, 0.0)
-
-    def others_offers(self, commodity):
-        """Offers of every seller but the asking seat that named the lowest price it takes: (tonnes, ratio)."""
-        flows = self._sim._market_flows()
-        sold = flows["sold"].get(commodity, {})
-        reservations = flows.get("reservation", {}).get(commodity, {})
-        return tuple(Offer(sold[party], reservations[party])
-                     for party in sorted(reservations) if party != self.acting_party_id and sold.get(party, 0.0) > 0.0)
-
-    def others_sold_tonnes(self, commodity):
-        """What every seller but the asking seat put on the market this year."""
-        return self._total(self._sim._market_flows()["sold"].get(commodity, {}), except_party=self.acting_party_id)
-
-    def others_bought_tonnes(self, commodity):
-        return self._total(self._sim._market_flows()["bought"].get(commodity, {}), except_party=self.acting_party_id)
+    def posted_tonnes(self, side, commodity, seat_id=None):
+        """Tonnes the seat (the asking one by default) has ordered to buy or sell of a commodity that the year's clearing has not
+        yet settled."""
+        return port_goods_orders.posted_tonnes(self._stored, seat_id or self.acting_party_id, side, commodity)
 
     def others_stamp(self):
-        """What every party but the asking seat has sold and bought this year, comparable for equality,
-        for caches whose answers read the posted price."""
-        flows = self._sim._market_flows()
+        """What every seat but the asking one has ordered, comparable for equality, for caches whose answers read the posted
+        price."""
         asking = self.acting_party_id
-        return tuple(
-            tuple(sorted((commodity, tuple(sorted((party, tonnes) for party, tonnes in parties.items()
-                                                  if party != asking)))
-                         for commodity, parties in flows[kind].items()))
-            for kind in ("sold", "bought"))
+        return tuple((seat, tuple((order["side"], order["stock_key"], order["tonnes"], order["limit_per_tonne"]) for order in orders))
+                     for seat, orders in sorted(port_goods_orders.posted_orders(self._stored).items()) if seat != asking)
+
+    def seat_orders(self):
+        """The asking seat's posted orders the year's clearing has not yet settled: [{"side", "material", "stock_key", "tonnes",
+        "limit_per_tonne", "carriage_per_tonne", "cost_factor", "project"}], in posting order."""
+        keys = ("side", "material", "stock_key", "tonnes", "limit_per_tonne", "carriage_per_tonne", "cost_factor", "project")
+        return [{key: order.get(key) for key in keys} for order in port_goods_orders.posted_orders(self._stored, self.acting_party_id)]
+
+    def seat_trades(self):
+        """What the last clearing bought and sold for the asking seat: {"bought": {stock key: tonnes}, "sold": {stock key: tonnes},
+        "orders": [one result per order handled, a refused one with its cause]}."""
+        trades = {side: port_goods_orders.traded_tonnes(self._stored, self.acting_party_id, side) for side in ("bought", "sold")}
+        trades["orders"] = port_goods_orders.order_results(self._stored, self.acting_party_id)
+        return trades
 
     def commodities_sold_by(self, seller_id):
-        """Commodities this seller has sold into the market this year."""
-        return sorted(commodity for commodity, sold in self._sim._market_flows()["sold"].items()
-                      if sold.get(seller_id, 0.0) > 0.0)
-
-    def state(self, material):
-        """The market for one material as of now."""
-        return self._sim.market_state(material)
+        """Commodities this seat sold into the last clearing."""
+        return sorted(port_goods_orders.traded_tonnes(self._stored, seller_id, "sold"))
 
     # ---- quotes -----------------------------------------------------------------------
 
@@ -204,40 +101,29 @@ class GoodsMarket(GoodsPricing, GoodsOffers):
         held technique makes it for, None when none does."""
         sim = self._sim
         material = str(material or "").strip().lower()
-        price = self.price_at_tile_per_tonne(material)
+        price = self.pricing.price_at_tile_per_tonne(material)
         if price is None:
             return None
-        emp_key = sim._material_tag(material)[0]
-        brought = self.import_tonnes_available(material)      # a partner's good: its supply and the carriers' lift
-        offered = None if brought is not None else sim.economy.agent_offered_tonnes(material)
-        proceeds = self.sale_proceeds(material, 0.0, self.sold_tonnes(emp_key, self.acting_party_id))
+        emp_key = sim.materials.tag(material)[0]
+        good = self.pricing.economy_good(material)
+        offered = None if good is None else sim.economy.agent_offered_tonnes(good)
+        proceeds = self.pricing.sale_proceeds(material, 0.0, self.posted_tonnes("sell", emp_key))
         if proceeds is None:
             return None
-        carriage = self._carriage_per_tonne(material, price)
+        carriage = self.pricing.carriage_per_tonne(material, price)
         return {"material": material, "stock_key": emp_key,
-                "buy_per_tonne": self.purchase_cost(material, 0.0)[1],
+                "buy_per_tonne": self.pricing.purchase_cost(material, 0.0)[1],
                 "sell_per_tonne": proceeds[1],
-                "price_at_tile_per_tonne": price, "price_kind": self.price_kind(material),
+                "price_at_tile_per_tonne": price, "price_kind": self.pricing.price_kind(material),
                 "carriage_per_tonne": carriage,
-                "making_cost_per_tonne": self.making_cost_per_tonne(material),
+                "making_cost_per_tonne": self.pricing.making_cost_per_tonne(material),
                 "market_available_tonnes_per_year": (
-                    brought if brought is not None else
-                    offered if offered is not None else sim._material_market_tonnes(emp_key))}
-
-    def price(self, material):
-        """Money to buy one tonne now, or None when the material has no price."""
-        quote = self.quote(material)
-        return None if quote is None else quote["buy_per_tonne"]
-
-    @staticmethod
-    def market_room_tonnes(quote, sold_so_far):
-        """Tonnes the market will still supply this year, given what the buyer has already taken from it."""
-        return max(0.0, quote["market_available_tonnes_per_year"] - sold_so_far)
+                    offered if offered is not None else sim.materials.market_tonnes(emp_key))}
 
     def _with_buyers(self, material, quote):
         """The quote with the tonnes the economy's buyers took and still wanted last year of the good the material is
-        traded as, None where the economy does not trade it or a partner supplies it."""
-        good = self._economy_good(material)
+        traded as, None where the economy does not trade it."""
+        good = self.pricing.economy_good(material)
         record = None if good is None else self._sim.economy.agent_good_market_record(good)
         return {**quote, "buyers_take_tonnes_per_year": None if record is None else record["sold"] + record["unmet"]}
 
@@ -249,70 +135,96 @@ class GoodsMarket(GoodsPricing, GoodsOffers):
         room = quote["market_available_tonnes_per_year"] if buyers_take is None else buyers_take
         return max(0.0, room - sold_so_far)
 
-    def sale_limits(self, material, seller=None):
-        """(held tonnes, market room tonnes) for a sale: the two figures `sell` cuts an order to."""
-        seller = seller or self.acting
+    def sale_limits(self, material):
+        """(held tonnes not yet ordered sold, market room tonnes) for a sale."""
         quote = self.quote(material)
         if not quote:
             return 0.0, 0.0
         key = quote["stock_key"]
-        return seller.held(key), self.sale_room_tonnes(self._with_buyers(material, quote), self.sold_tonnes(key, seller.party_id))
+        ordered = self.posted_tonnes("sell", key)
+        return (max(0.0, self._sim.materials.stock_t(key) - ordered),
+                self.sale_room_tonnes(self._with_buyers(material, quote), ordered))
 
-    def quote_sell(self, material, tonnes, seller=None):
-        """(stock key, tonnes the market takes now, money for them): the one figure `sell` pays
-        and refusals quote as a way to raise cash."""
-        seller = seller or self.acting
+    def quote_sell(self, material, tonnes):
+        """(stock key, tonnes the market takes now, money for them): what a sale at today's quote would fetch, for refusals
+        that quote a way to raise cash."""
         quote = self.quote(material)
         tonnes = float(tonnes)
         if not quote or tonnes <= 0:
             return None, 0.0, 0.0
         key = quote["stock_key"]
-        sold_so_far = self.sold_tonnes(key, seller.party_id)
-        sold = tonnes_sold(tonnes, seller.held(key), self.sale_room_tonnes(self._with_buyers(material, quote), sold_so_far))
+        held, room = self.sale_limits(material)
+        sold = tonnes_sold(tonnes, held, room)
         if sold <= 0:
             return key, 0.0, 0.0
-        proceeds = self.sale_proceeds(material, sold, sold_so_far)
+        proceeds = self.pricing.sale_proceeds(material, sold, self.posted_tonnes("sell", key))
         if proceeds is None:
             return None, 0.0, 0.0
         return key, sold, proceeds[0]
 
     # ---- orders -----------------------------------------------------------------------
 
-    def settle_purchase(self, buyer, key, tonnes, money, purpose="materials bought"):
-        """The one place a purchase happens: the buyer pays, the book counts it, the goods arrive."""
-        buyer.pay(money, purpose)
-        self.note_purchase(buyer.party_id, key, tonnes)
-        buyer.take_delivery(key, tonnes)
+    def cancel_orders(self, side, material):
+        """Withdraw the asking seat's own posted orders to `side` a material, which nothing has settled yet: {"cancelled": count,
+        "tonnes": total, "kept_for_projects": [project]}, or a refusal with a cause when it has none. An order a project placed
+        is kept (cause `belongs_to_project`): the project waits for its result, so stop the project instead."""
+        material = str(material or "").strip().lower()
+        count, tonnes, projects = port_goods_orders.cancel_orders(self._stored, self.acting_party_id, side, material)
+        if not count and projects:
+            return Refusal("belongs_to_project", "the order to %s %s belongs to %s; stop the project to end it." % (side, material, ", ".join(projects)),
+                           material=material, side=side, projects=projects)
+        if not count:
+            return Refusal("no_such_order", "no order to %s %s is posted." % (side, material), material=material, side=side)
+        return {"cancelled": count, "tonnes": tonnes, "side": side, "material": material, "kept_for_projects": projects}
 
-    def settle_import(self, buyer, key, tonnes, money, purpose):
-        """A purchase from a foreign seller: the buyer pays and the goods arrive. It is not counted in
-        the home book, since the tonnes never came out of the home supply."""
-        buyer.pay(money, purpose)
-        buyer.take_delivery(key, tonnes)
-
-    def buy(self, buyer, material, tonnes):
-        """Buy a material for a party: the order is cut to what the sellers offered, less what the buyer has
-        bought this year, and the price climbs as it is filled. Returns the tonnes bought."""
+    def post_order(self, side, material, tonnes, limit_per_tonne=None, project=None, cost_factor=1.0, limit_includes_carriage=False):
+        """Post the asking seat's order for the year's clearing: "buy" `tonnes` paying the market no more than `limit_per_tonne`,
+        or "sell" them (cut to the stock not already ordered sold) at no less; the quote's mean price over the order when no limit
+        is given. A buy's carriage to the seat's tile, and `cost_factor` (a project's opposition and geography) on the money, are
+        charged when the goods arrive; the reply states them. Refused with a cause when the good is not traded, when the seat
+        already has an order the other way in the same good (it would trade with itself), or when the seat's money, counting what
+        its other orders and its staff will draw, would not cover. The goods and the money move when the year clears."""
         quote = self.quote(material)
         tonnes = float(tonnes)
-        if not quote or tonnes <= 0:
-            return 0.0
-        tonnes = min(tonnes, self.market_room_tonnes(quote, self.bought_tonnes(quote["stock_key"], buyer.party_id)))
+        if not quote:
+            return Refusal("no_price", "%s has no price here, so it cannot be ordered." % material, material=material)
         if tonnes <= 0:
-            return 0.0
-        cost = self.purchase_cost(quote["material"], tonnes)[0]
-        if not buyer.can_pay(cost):
-            return 0.0
-        self.settle_purchase(buyer, quote["stock_key"], tonnes, cost)
-        return tonnes
-
-    def sell(self, seller, material, tonnes):
-        """Sell stock for a party: the order is cut to what the market absorbs in a year, and the
-        price falls as the year's sales add up. Returns the tonnes sold."""
-        key, sold, money = self.quote_sell(material, tonnes, seller)
-        if sold <= 0:
-            return 0.0
-        self.note_sale(seller.party_id, key, sold)
-        seller.hand_over(key, sold)
-        seller.receive(money, "materials sold")
-        return sold
+            return Refusal("no_quantity", "an order needs a quantity above zero.", material=material)
+        good = self.pricing.economy_good(material)
+        if good is None:
+            return Refusal("not_traded", "%s is not traded in the economy, so it cannot be ordered." % material, material=material)
+        key = quote["stock_key"]
+        buying = side == "buy"
+        economy = self._sim.economy
+        for other in port_goods_orders.posted_orders(self._stored, self.acting_party_id):
+            if other["side"] != side and other["good"] == good:
+                return Refusal("opposite_order_posted", "an order to %s %s is already posted this year; a seat does not trade with "
+                               "itself, so this order is refused (withdraw that one first with the cancel-orders command)." % (other["side"], material),
+                               material=material, posted_side=other["side"])
+        if not buying:
+            tonnes = min(tonnes, self.sale_limits(material)[0])
+            if tonnes <= 0:
+                return Refusal("not_enough_held", "no %s is held that is not already ordered sold." % material, material=material)
+        carriage = quote["carriage_per_tonne"] if buying else 0.0
+        mean = (self.pricing.purchase_cost(quote["material"], tonnes)[1] - carriage if buying
+                else self.pricing.sale_proceeds(quote["material"], tonnes, self.posted_tonnes("sell", key))[1])
+        limit = float(limit_per_tonne) if limit_per_tonne is not None else mean
+        if buying and limit_per_tonne is not None and limit_includes_carriage:
+            limit -= carriage
+        if limit <= 0:
+            return Refusal("no_limit", "an order needs a price limit above zero%s." % (" once carriage is counted" if buying else ""),
+                           material=material, limit_per_tonne=limit)
+        order = {"side": side, "material": quote["material"], "good": good, "stock_key": key, "tonnes": tonnes,
+                 "limit_per_tonne": limit, "carriage_per_tonne": carriage, "cost_factor": float(cost_factor), "project": project}
+        committed = None
+        if buying:
+            committed = port_goods_orders.reserve(order)[0]
+            if not self._sim.finance.can_pay(committed + economy.seat_committed_money(self.acting_party_id)):
+                return Refusal("cannot_pay", "the money for that order, at that limit and with carriage, is not in hand once the "
+                               "seat's other orders and its staff are counted.", material=material, asked_tonnes=tonnes,
+                               limit_per_tonne=limit, needs_money=committed)
+        order_id = port_goods_orders.add_order(self._stored, self.acting_party_id, order)
+        return {"posted": True, "order_id": order_id, "side": side, "material": quote["material"], "tonnes": tonnes, "limit_per_tonne": limit,
+                "carriage_per_tonne": carriage, "cost_factor": order["cost_factor"], "committed_money": committed,
+                "quote_per_tonne": (quote["buy_per_tonne"] - carriage if buying else quote["sell_per_tonne"]),
+                "quote_carriage_per_tonne": carriage}

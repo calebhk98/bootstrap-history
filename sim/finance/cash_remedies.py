@@ -4,15 +4,16 @@ Needs: money_text, held_goods, goods_stock, material_commodity, sale_quote, tech
 venture_real_upkeep, mine_capacity, mine_workings, mine_working_cost, staff."""
 from typing import List
 
+from sim.assembly.api import Part
 from sim.living_stock.api import stock_rates
 
 from . import remedy_rules
 
 
-class CashRemedies:
+class CashRemedies(Part):
 
 	def cash_remedies(self) -> List[str]:
-		"""Lines like "sell iron 40 (brings 1,200 now)", largest amount first."""
+		"""Lines like "sell iron 40 (the order pays about 1,200 when the year clears)", largest amount first."""
 		needs = self.needs
 		money_text = needs.money_text
 		found = []
@@ -29,7 +30,8 @@ class CashRemedies:
 				found.append(remedy_rules.mothball_remedy(node_id, needs.venture_real_upkeep(node_id), money_text))
 		workings = needs.mine_workings()
 		for material in sorted(needs.mine_capacity()):
-			saving = sum(needs.mine_working_cost(working) for working in workings if working.get("material") == material)
+			costs = [needs.mine_working_cost(working) for working in workings if working.get("material") == material]
+			saving = sum(cost for cost in costs if cost is not None)     # a working of an unpriced material has no cost to save
 			found.append(remedy_rules.mine_closing_remedy(material, saving, money_text))
 		for trade, people in sorted(needs.staff()["employees"].items()):
 			found.append(remedy_rules.firing_remedy(trade, people, needs.labour_market().quote_annual(trade), money_text))

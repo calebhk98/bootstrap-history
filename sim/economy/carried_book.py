@@ -4,7 +4,7 @@
 destination's price]}}}, all in the economy's unit, plain lists so the record saves as it is. A country's trade book
 is read off it: what came in from another country is worth what it fetched where it landed, what went out is worth
 what it fetched where it left. Plain functions over dicts; no economy is read here."""
-from typing import Callable, Dict, List, Mapping, Optional
+from typing import Callable, Dict, List, Mapping, Optional, Tuple
 
 CarriedGoods = Dict[str, Dict[str, Dict[str, List[float]]]]
 TONNES, AT_ORIGIN, AT_DESTINATION = 0, 1, 2
@@ -16,12 +16,26 @@ def note_carried(carried: CarriedGoods, good: str, origin: str, destination: str
     is valued at the other end's; with neither, the flow is kept at no value."""
     if origin == destination or tonnes <= 0.0 or units <= 0.0:
         return
-    at_origin = price_at_origin if price_at_origin is not None else price_at_destination
-    at_destination = price_at_destination if price_at_destination is not None else price_at_origin
+    at_origin, at_destination = _end_prices(price_at_origin, price_at_destination)
     row = carried.setdefault(good, {}).setdefault(origin, {}).setdefault(destination, [0.0, 0.0, 0.0])
     row[TONNES] += tonnes
-    row[AT_ORIGIN] += units * (at_origin or 0.0)
-    row[AT_DESTINATION] += units * (at_destination or 0.0)
+    row[AT_ORIGIN] += units * at_origin
+    row[AT_DESTINATION] += units * at_destination
+
+
+def _end_prices(price_at_origin: Optional[float], price_at_destination: Optional[float]) -> Tuple[float, float]:
+    """(price at the origin, price at the destination), an end whose market has no price taking the other end's; 0 with neither."""
+    at_origin = price_at_origin if price_at_origin is not None else price_at_destination
+    at_destination = price_at_destination if price_at_destination is not None else price_at_origin
+    return at_origin or 0.0, at_destination or 0.0
+
+
+def note_crossing(crossing: Dict[Tuple[str, str], float], carrier: str, source_country: str, units: float,
+                  price_at_origin: Optional[float], price_at_destination: Optional[float]) -> None:
+    """Add the value at the origin of `units` that `carrier` carried in from `source_country` (what a tariff toward that country is
+    charged on)."""
+    key = (carrier, source_country)
+    crossing[key] = crossing.get(key, 0.0) + units * _end_prices(price_at_origin, price_at_destination)[0]
 
 
 def trade_book(carried: Mapping[str, Mapping[str, Mapping[str, List[float]]]], country_of: Callable[[str], str],

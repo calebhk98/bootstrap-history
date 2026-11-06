@@ -6,16 +6,15 @@ action is held. Every reader of "which technologies do these people hold" asks `
 """
 from typing import Any, Iterable, Optional
 
+from sim.assembly.api import Part
 from sim.refusal import Refusal
 
 from . import action_results
 
 
-class Held:
+class Held(Part):
     """Mixed into `Land`."""
 
-    needs: Any
-    _caches: dict
 
     def held_techniques(self, include_starting: bool = True) -> frozenset:
         """The ids and result tokens held now: completed and granted nodes that are in service, the civilisation's starting ones
@@ -23,7 +22,7 @@ class Held:
         needs = self.needs
         key = (needs.techniques_version(), needs.operating_version(), self.built_ways_stamp())
         nodes = needs.tree_nodes()
-        cache = self._caches.setdefault("held_and_running", {})
+        cache = self.parts.ownership.caches.setdefault("held_and_running", {})
         cached = cache.get(include_starting)
         if cached is not None and cached[0] == key and cached[2] is nodes:
             return cached[1]

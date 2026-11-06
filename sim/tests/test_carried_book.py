@@ -7,7 +7,7 @@ import types
 import unittest
 
 from sim.economy import carried_book, country_figures
-from sim.economy.accounts import Book
+from sim.book import Book
 from sim.economy.market_memory import MarketMemory
 from sim.economy.types import CurrencySpec
 from sim.economy.record import EconomyRecord
@@ -21,6 +21,13 @@ class CarriedBookTests(unittest.TestCase):
         carried_book.note_carried(carried, "grain", "a1", "b1", units=10.0, tonnes=2.0, price_at_origin=3.0, price_at_destination=5.0)
         carried_book.note_carried(carried, "grain", "a1", "b1", units=5.0, tonnes=1.0, price_at_origin=3.0, price_at_destination=5.0)
         self.assertEqual(carried, {"grain": {"a1": {"b1": [3.0, 45.0, 75.0]}}})
+
+    def test_a_crossing_into_the_home_country_is_kept_by_carrier_and_source_at_the_value_at_the_origin(self):
+        crossing = {}
+        carried_book.note_crossing(crossing, "merchant:1", "north", 10.0, 3.0, 5.0)
+        carried_book.note_crossing(crossing, "merchant:1", "north", 5.0, None, 5.0)
+        carried_book.note_crossing(crossing, "merchant:2", "east", 1.0, 2.0, None)
+        self.assertEqual(crossing, {("merchant:1", "north"): 30.0 + 25.0, ("merchant:2", "east"): 2.0})
 
     def test_an_end_without_a_price_takes_the_other_ends(self):
         carried = {}
@@ -52,17 +59,17 @@ class CarriedBookTests(unittest.TestCase):
         carried_book.note_carried(carried_goods, "salt", "a1", "b1", 4.0, 1.0, 2.0, 6.0)
         carried_book.note_carried(carried_goods, "grain", "b1", "a2", 5.0, 1.5, 4.0, 3.0)
         record = EconomyRecord(book=Book(), memory=MarketMemory(), currency=CurrencySpec("coin", "fiat", None, 0.0, None))
-        record.carried_goods = carried_goods
-        record.carried = {"a1": {"b1": 3.0}, "b1": {"a2": 1.5}}
-        for origin, row in record.carried.items():
+        record.carriage.carried_goods = carried_goods
+        record.carriage.carried = {"a1": {"b1": 3.0}, "b1": {"a2": 1.5}}
+        for origin, row in record.carriage.carried.items():
             for destination, tonnes in row.items():
-                by_good = sum(by_origin.get(origin, {}).get(destination, [0.0])[0] for by_origin in record.carried_goods.values())
+                by_good = sum(by_origin.get(origin, {}).get(destination, [0.0])[0] for by_origin in record.carriage.carried_goods.values())
                 self.assertAlmostEqual(by_good, tonnes, places=9)
         again = EconomyRecord.from_record(record.to_record())
-        self.assertEqual(again.carried_goods, record.carried_goods)
+        self.assertEqual(again.carriage.carried_goods, record.carriage.carried_goods)
 
     def test_no_country_means_no_border(self):
-        economy = types.SimpleNamespace(record=types.SimpleNamespace(carried_goods={"grain": {"a1": {"b1": [2.0, 30.0, 50.0]}}}),
+        economy = types.SimpleNamespace(record=types.SimpleNamespace(carriage=types.SimpleNamespace(carried_goods={"grain": {"a1": {"b1": [2.0, 30.0, 50.0]}}})),
                                         setup=types.SimpleNamespace(country_of=COUNTRY_OF))
         self.assertEqual(country_figures.trade_book(economy, None), {})
         self.assertEqual(country_figures.trade_book(economy, "nowhere"), {})

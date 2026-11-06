@@ -1,12 +1,13 @@
 """What a concern costs to open and reopen, and what it really earns and costs: one figure for every screen."""
 from sim.agents.api import business_books
+from sim.assembly.api import Part
 from sim.production.api import concern_earnings
 from sim.projects.api import closure_grace, constants as project_constants
 
 from . import constants, rules
 
 
-class Quotes:
+class Quotes(Part):
 	def venture_capex(self, node_id):
 		"""What it costs to open the doors, over and above having worked out how. Stock, premises, the first year's
 		materials: a fraction of what the work itself cost, and never less than a year of its running cost, so that a thing
@@ -30,7 +31,7 @@ class Quotes:
 		"""How much of a scalable institution a reopening restores (one, for anything else)."""
 		if node_id not in self.needs.capability_sets()[1]:
 			return 1.0
-		return self.seat.business.size_of(node_id)
+		return self.seat.business.reading.size_of(node_id)
 
 	def reopen_fee(self, node_id, unit_count=1.0):
 		"""What bringing a shut concern back costs, for `open` and `restore` alike.
@@ -59,7 +60,7 @@ class Quotes:
 		otherwise. `fully_ramped` leaves the ramp out (what it reaches). `with_output_factor` False leaves out the hazard and
 		war factor, which `revenue` applies to its total."""
 		needs = self.needs
-		running = node_id in self.operating()
+		running = node_id in self.parts.plants.operating()
 		ramp = concern_earnings.quoted_ramp(running, fully_ramped, lambda: needs.venture_ramp[node_id])
 		units = concern_earnings.quoted_units(running, node_id in needs.capability_sets()[1], lambda: needs.institution_units[node_id], units)
 		market = needs.node_output_market_factor(needs.tree_nodes()[node_id], self.clock.acting_seat)

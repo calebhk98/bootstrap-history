@@ -24,22 +24,12 @@ def terms(world, destination, source):
 
 
 def home_country(world):
-    return world.civ.get("id")
+    return world.scenario.civ.get("id")
 
 
 def import_terms(world, partner):
     """What the home state holds toward goods from `partner`."""
     return terms(world, home_country(world), partner)
-
-
-def export_terms(world, partner):
-    """What `partner`'s state holds toward goods from the home country."""
-    return terms(world, partner, home_country(world))
-
-
-def signature(world, partners):
-    """The terms both ways with each partner: part of the key a cached price table is valid for."""
-    return tuple((import_terms(world, partner), export_terms(world, partner)) for partner in partners)
 
 
 def duty_per_tonne(world, source, destination, price_per_tonne):

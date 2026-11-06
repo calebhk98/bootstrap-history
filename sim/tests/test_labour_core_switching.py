@@ -6,7 +6,7 @@ import copy
 import unittest
 
 from sim.labour.market import aptitude, switching, trades
-from sim.labour.market.records import Clearing, MarketState, School, YearInputs, YearReport
+from sim.labour.market.records import LabourClearing, MarketState, School, YearInputs, YearReport
 
 AREA = "plain"
 HOURS = 1000.0
@@ -23,9 +23,9 @@ def _specs():
 
 
 def _clearings(wages):
-    return {(AREA, trade): Clearing(
+    return {(AREA, trade): LabourClearing(
         trade=trade, area=AREA, wage=wage, hours_offered=HOURS, hours_wanted=HOURS, hours_hired=HOURS,
-        hired_by_employer={}, paid_by_employer={}, average_wage=wage) for trade, wage in wages.items()}
+        hired_by_employer={}) for trade, wage in wages.items()}
 
 
 def _inputs(specs):
@@ -79,9 +79,9 @@ class SwitchingTests(unittest.TestCase):
         wages = {"digger": 0.5, "carver": 2.5, "cutter": 0.5, "healer": 0.5}
         _, working = _run({"digger": 1000.0}, wages)
         idle_clearings = _clearings(wages)
-        idle_clearings[(AREA, "digger")] = Clearing(
+        idle_clearings[(AREA, "digger")] = LabourClearing(
             trade="digger", area=AREA, wage=0.5, hours_offered=HOURS, hours_wanted=0.0, hours_hired=0.0,
-            hired_by_employer={}, paid_by_employer={}, average_wage=0.5)
+            hired_by_employer={})
         state = _state({"digger": 1000.0})
         report = YearReport()
         switching.switch_trades(state, _inputs(_specs()), idle_clearings, report)
@@ -131,9 +131,9 @@ class PipelineTests(unittest.TestCase):
             bands = aptitude.band_count()
             state.trainees = {AREA: {"carver": [[3.0, [trainees / bands] * bands, 0.0]]}}
         clearings = _clearings({"digger": 0.5, "cutter": 0.5, "healer": 0.5})
-        clearings[(AREA, "carver")] = Clearing(
+        clearings[(AREA, "carver")] = LabourClearing(
             trade="carver", area=AREA, wage=2.0, hours_offered=100.0 * HOURS, hours_wanted=300.0 * HOURS,
-            hours_hired=100.0 * HOURS, hired_by_employer={}, paid_by_employer={}, average_wage=2.0)
+            hours_hired=100.0 * HOURS, hired_by_employer={})
         report = YearReport()
         switching.switch_trades(state, _inputs(_specs()), clearings, report)
         return report.switched.get(AREA, {}).get("carver", 0.0)
@@ -149,9 +149,9 @@ class FrictionalVacancyTests(unittest.TestCase):
     def _switched(self, hired):
         state = _state({"digger": 1000.0, "carver": 400.0})
         clearings = _clearings({"digger": 0.5, "cutter": 0.5, "healer": 0.5})
-        clearings[(AREA, "carver")] = Clearing(
+        clearings[(AREA, "carver")] = LabourClearing(
             trade="carver", area=AREA, wage=1.0, hours_offered=400.0 * HOURS, hours_wanted=200.0 * HOURS,
-            hours_hired=hired * HOURS, hired_by_employer={}, paid_by_employer={}, average_wage=1.0)
+            hours_hired=hired * HOURS, hired_by_employer={})
         report = YearReport()
         switching.switch_trades(state, _inputs(_specs()), clearings, report)
         return report.switched.get(AREA, {}).get("carver", 0.0)

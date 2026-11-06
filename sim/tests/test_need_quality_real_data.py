@@ -3,7 +3,7 @@ cleaner goods as the buyer's quality reach rises. The rule on hand data is test_
 import json
 import os
 
-from sim.labour.api import production_data
+from sim.world.demand import production_data
 from sim.world import need_basket
 
 from .harness import *  # noqa: F401,F403

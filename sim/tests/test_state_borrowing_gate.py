@@ -15,6 +15,7 @@ from sim.agents.policy import CallbackPolicy
 from sim.mechanics.api import nodes_declaring
 
 from .agents_fake_world import FakeWorld
+from .pool_lenders import lend_from_savers
 
 DEBT_NODE = "fin_public_debt"
 NEED = 1000.0
@@ -37,7 +38,9 @@ class CreditWorld(FakeWorld):
 
 
 def a_state():
-    return Government("government:home", ActorRecord(kind="government", money=0.0))
+    state = Government("government:home", ActorRecord(kind="government", money=0.0))
+    lend_from_savers(state.purses, 1e12)   # the economy's lenders behind its pool
+    return state
 
 
 def short_lines():

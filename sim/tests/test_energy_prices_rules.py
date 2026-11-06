@@ -27,9 +27,9 @@ check("a producer sells no dearer than its own technique costs", cheap.sold("mec
 
 unreachable = energy_prices.EnergyPrices(POOL, BANDS, unreachable=[("thermal_mj", 1700.0)])
 check("an entry stating a grade no held technique supplies cannot run",
-      unreachable.can_run({"thermal_mj": 5.0, "temperature_needed_c": 1700.0}) is False)
+      unreachable.can_run({"thermal_mj": 5.0, "temperature_needed_c": 1700.0, "outputs": {}}) is False)
 check("an entry stating a grade that is supplied, or none, can run",
-      unreachable.can_run({"thermal_mj": 5.0, "temperature_needed_c": 800.0}) and unreachable.can_run({}))
+      unreachable.can_run({"thermal_mj": 5.0, "temperature_needed_c": 800.0, "outputs": {}}) and unreachable.can_run({"outputs": {}}))
 check("pool_only gives every consumer the pool price whatever it states",
       energy_prices.pool_only({"thermal_mj": 3.0, "wheat_kg": 1.0}).bought("thermal_mj", {"temperature_needed_c": 1500.0}) == 3.0)
 check("pool_only keeps the carriers and leaves out other goods", energy_prices.pool_only({"thermal_mj": 3.0, "wheat_kg": 1.0}).pool == {"thermal_mj": 3.0})

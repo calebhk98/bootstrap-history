@@ -1,5 +1,5 @@
 {
- "_comment": "Per-category traits read by the engine; the engine never names a category. A mod adds or overrides entries in its own data/category_traits.json. never_abandoned: knowledge that cannot be shed for upkeep. practisable: a granted node here is a skill the founder can practise for a fee. diffusion_traits: node traits that spread through society, in priority order (first match wins for a node carrying several); half_life_constant names a declared constant on the simulation, half_life_years gives the number directly; text_paced traits spread faster with literacy and a written corpus; government_held traits are known only once the state holds them.",
+ "_comment": "Per-category traits read by the engine; the engine never names a category. A mod adds or overrides entries in its own data/category_traits.json. never_abandoned: knowledge that cannot be shed for upkeep. shared_market: the concerns of nodes in this category sell into one market whose price the agent economy clears (the markets module's goods categories). practisable: a granted node here is a skill the founder can practise for a fee. diffusion_traits: node traits that spread through society, in priority order (first match wins for a node carrying several); half_life_constant names a declared constant on the simulation, half_life_years gives the number directly; text_paced traits spread faster with literacy and a written corpus; government_held traits are known only once the state holds them.",
  "categories": {
   "access": {},
   "accounting": {},
@@ -38,7 +38,7 @@
   "cleaning": {},
   "colour": {},
   "comfort": {},
-  "commerce": {},
+  "commerce": {"shared_market": true},
   "communications": {},
   "component": {},
   "composition": {},
@@ -76,7 +76,7 @@
   "excavation": {},
   "expedition": {},
   "explosives": {},
-  "fermentation": {},
+  "fermentation": {"shared_market": true},
   "fibres": {},
   "field_machinery": {},
   "finishes": {},
@@ -121,14 +121,14 @@
   "lab_technique": {},
   "laboratory": {},
   "labour": {},
-  "law": {},
+  "law": {"shared_market": true},
   "leather": {},
-  "leisure": {},
+  "leisure": {"shared_market": true},
   "lighting": {},
   "lithography": {},
   "livestock": {},
   "located_material": {},
-  "luxury": {},
+  "luxury": {"shared_market": true},
   "machine": {},
   "machine_tools": {},
   "machines": {},
@@ -141,7 +141,7 @@
    "never_abandoned": true
   },
   "measurement": {},
-  "media": {},
+  "media": {"shared_market": true},
   "media_base": {},
   "medicine": {
    "practisable": true
@@ -176,13 +176,13 @@
   "organisation": {},
   "organization": {},
   "paper": {},
-  "personal": {},
+  "personal": {"shared_market": true},
   "pests": {},
   "pharmaceutical": {},
   "pharmacology": {
    "practisable": true
   },
-  "photography": {},
+  "photography": {"shared_market": true},
   "physical_chemistry": {},
   "physics": {
    "never_abandoned": true
@@ -198,12 +198,12 @@
   "press": {},
   "prime_alternative": {},
   "prime_experimental": {},
-  "printing": {},
+  "printing": {"shared_market": true},
   "probability": {
    "never_abandoned": true
   },
   "processes": {},
-  "processing": {},
+  "processing": {"shared_market": true},
   "product": {},
   "public_health": {},
   "publishing": {},
@@ -228,8 +228,8 @@
   "smelting": {},
   "social": {},
   "soil": {},
-  "sound": {},
-  "spectacle": {},
+  "sound": {"shared_market": true},
+  "spectacle": {"shared_market": true},
   "spinning": {},
   "steam_auxiliary": {},
   "steam_boiler": {},
@@ -251,7 +251,7 @@
   "television": {},
   "testing": {},
   "textile_production": {},
-  "textiles": {},
+  "textiles": {"shared_market": true},
   "theory": {
    "never_abandoned": true
   },

@@ -6,30 +6,45 @@ QUICK_TOPIC = True
 import types
 
 from .harness import *  # noqa: F401,F403
-from sim.labour.labour_capacity import CapacityMixin
+from sim.labour.labour_advice import Advice
+from sim.labour.labour_capacity import Capacity
+from sim.labour.labour_supply import Supply
 from sim.refusal import facts_of
 
 
-class _StubLabour(CapacityMixin):
-    """Only what the capacity rules read."""
+class _StubLabour:
+    """The neighbours the capacity rules read (book, trades, settlement, capacity), with the supply, capacity and advice parts built over it."""
     LITERATE_TRADES = frozenset({"machinist", "scholar"})
-    LITERATE_CAPACITY_FLOOR = 2.0
 
     def __init__(self, literacy=1.0, institutional=0.0, supervision=0.0, headcount_now=0.0, room_places=0.0,
-                 existing=None, absent=(), done=(), operating=(), room_sources=()):
+                 posted=0.0, taught=0.0, absent=(), done=(), operating=(), room_sources=()):
         projects = types.SimpleNamespace(done=set(done), operating=set(operating))
+        nodes = {node_id: {} for node_id, _ in room_sources}
         self._world = types.SimpleNamespace(
-            cfg={"hired_hours_cap_base": 1000000.0}, pop_scale=1.0, HOURS_PER_PERSON_YEAR=2000.0,
-            trades_absent=set(absent), projects=projects,
-            ROOM_SOURCES=list(room_sources), nodes={node_id: {} for node_id, _ in room_sources},
-            is_venture=lambda node_id: True, is_visible=lambda node_id: True,
-            closure=lambda nodes, node_id: {node_id}, start_reason=lambda node_id, _why=True: (True, ""),
-            money_text=lambda amount, grouped=False: "%g" % amount, housing_price_per_place=lambda: 100.0)
+            projects=projects, game=types.SimpleNamespace(money_text=lambda amount, grouped=False: "%g" % amount),
+            people=types.SimpleNamespace(pop_scale=1.0),
+            trades=types.SimpleNamespace(HOURS_PER_PERSON_YEAR=2000.0, trades_absent=set(absent)),
+            scenario=types.SimpleNamespace(nodes=nodes, closure=lambda node_id: {node_id}),
+            knowledge=types.SimpleNamespace(ROOM_SOURCES=list(room_sources), is_venture=lambda node_id: True,
+                                            is_visible=lambda node_id: True, start_reason=lambda node_id, _why=True: (True, "")),
+            finance=types.SimpleNamespace(housing_price_per_place=lambda: 100.0))
         self.literacy, self.institutional, self.supervision = literacy, institutional, supervision
-        self.headcount_now, self.room_places, self.existing = headcount_now, room_places, existing
+        self.headcount_now, self.room_places, self.posted, self.taught = headcount_now, room_places, posted, taught
+        self.supply = Supply(self._world, book=self, capacity=self, settlement=self, trades=self)
+        self.supply._people_of_trade_in_reach = lambda trade: 10.0
+        self.capacity = Capacity(self._world, book=self, market=None, schedule=None, trades=self)
+        self.capacity.staff_capacity = self.staff_capacity
+        self.capacity.supervision_room = self.supervision_room
+        self.advice = Advice(self._world, capacity=self, hands=None)
 
-    def local_market_share(self):
-        return 1.0
+    def literate_capacity(self, trade):
+        return self.supply.literate_capacity(trade)
+
+    def household_room(self):
+        return self.capacity.household_room()
+
+    def _room_advice(self):
+        return self.advice.room_advice()
 
     def literacy_factor(self, trade):
         return self.literacy
@@ -43,8 +58,11 @@ class _StubLabour(CapacityMixin):
     def headcount(self):
         return self.headcount_now
 
-    def people_who_exist(self, trade):
-        return float("inf") if self.existing is None else self.existing
+    def staff_posted(self):
+        return self.posted
+
+    def in_training_total(self):
+        return self.taught
 
     def room_added_by(self, places):
         return places
@@ -54,29 +72,32 @@ class _StubLabour(CapacityMixin):
 _low = _StubLabour(literacy=0.2).literate_capacity("machinist")
 _high = _StubLabour(literacy=0.9).literate_capacity("machinist")
 check("teaching a society to read raises what it can staff", _high > _low, (_low, _high))
-_floor = _StubLabour.LITERATE_CAPACITY_FLOOR
+_floor = Supply.LITERATE_CAPACITY_FLOOR
 check("...in proportion to literacy above the floor, not without bound",
       abs((_StubLabour(literacy=0.6).literate_capacity("machinist") - _floor)
           - 2.0 * (_StubLabour(literacy=0.3).literate_capacity("machinist") - _floor)) < 1e-9)
 check("a trade that needs no letters is not capped by literacy at all",
       _StubLabour().literate_capacity("smith") == float("inf"))
 check("a floor of findable people stays when no one reads", _StubLabour(literacy=0.0).literate_capacity("machinist")
-      == _StubLabour.LITERATE_CAPACITY_FLOOR)
+      == Supply.LITERATE_CAPACITY_FLOOR)
 check("the floor is added to, not maxed with, the pool: reading still moves the ceiling",
       _StubLabour(literacy=0.01).literate_capacity("machinist") > _StubLabour(literacy=0.0).literate_capacity("machinist"))
 check("a scholar ceiling adds the institutions that train scholars outright",
       _StubLabour(institutional=7.0).literate_capacity("scholar") > _StubLabour().literate_capacity("scholar") + 6.9)
 check("only a scholar gets the institutional pool", _StubLabour(institutional=7.0).literate_capacity("machinist")
       == _StubLabour().literate_capacity("machinist"))
-check("the people who exist cap a present trade", _StubLabour(existing=1.5).literate_capacity("machinist") == 1.5)
-check("...but not a trade the world has none of yet (absent trades are taught in)",
-      _StubLabour(existing=0.0, absent={"machinist"}).literate_capacity("machinist") > 0.0)
 
 # --- household_room: one number for hire, buy and train.
 check("household room is the places plus the supervision, less the people held",
       _StubLabour(room_places=8.0, supervision=4.0, headcount_now=5.0).household_room() == 7.0)
 check("...and goes negative when more are held than there is room for",
       _StubLabour(room_places=3.0, supervision=0.0, headcount_now=5.0).household_room() == -2.0)
+
+check("...and the people already posted in the labour core take their room too, so no verb spends it twice",
+      _StubLabour(room_places=8.0, supervision=4.0, headcount_now=5.0, posted=3.0).household_room() == 4.0)
+
+check("...and so do the people being taught a trade, who are not on the books yet (Complaint 964, sweep 2 N2)",
+      _StubLabour(room_places=8.0, supervision=4.0, headcount_now=5.0, taught=5.0).household_room() == 2.0)
 
 # --- advice: what raises the room, with a shut source offered back as the cheap fix.
 _sources = [("school_founded", 5), ("workshop_first", 3)]

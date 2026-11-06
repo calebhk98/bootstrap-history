@@ -27,7 +27,7 @@ sector-specific diffusion (`Complaints/112`), the growth curve
 research and manufacture.
 
 Verify the claim with `python3 sim/simulator.py why <node>` (build staff,
-operating staff, floor, risk) and `sim/engine/economy_production.py`.
+operating staff, floor, risk) and `sim/production/`.
 
 ## Extreme late-game wealth is not, by itself, a bug
 

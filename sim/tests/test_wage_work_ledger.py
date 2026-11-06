@@ -3,9 +3,9 @@ and 171). Complaint 640: the remedy is called on a stub founder and the text is 
 books and the command are test_wage_work_books."""
 QUICK_TOPIC = True
 
+from sim.engine import purchase_rule  # noqa: F401  (first: the engine modules import each other in a fixed order)
 import unittest
 
-from sim.engine import purchase_rule  # noqa: F401  (first: the engine modules import each other in a fixed order)
 from sim.ui.proto.render_screens_economy import _money_wage_work_lines
 
 from sim.tests import resources_stand_in

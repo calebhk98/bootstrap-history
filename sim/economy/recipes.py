@@ -20,18 +20,16 @@ site, and its grade, come from outside as a `SiteLimit`. `grown_in_climate_class
 Not mapped, and why: `land_hectare_years` (a site's fertility is the producer's yield factor, so rent
 appears as profit); `energy_mj` (the uncosted
 residual); `requires_node`, `temperature_*` (gates the caller applies);
-the prose fields. `unmapped_field_counts` measures this.
+the prose fields.
 
 `input_depth_order` puts each good after the goods its recipes consume, for the year loop.
 """
-from collections import Counter
 from typing import Any, Dict, Iterable, List, Mapping, Optional, Set, Tuple
+
+from sim.world.plant_baskets import ENERGY_CARRIERS
 
 from .types import GoodId, PlantBuild, PlantPart, Recipe
 
-ENERGY_CARRIER_FIELDS = ("thermal_mj", "mechanical_mj", "electrical_mj")
-MAPPED_FIELDS = frozenset(("outputs", "inputs", "labour_hours", "capital", "extracted_from",
-                           "grown_in_climate_classes", "service") + ENERGY_CARRIER_FIELDS)
 
 
 def _basis_output(recipe_id: str, outputs: Mapping[GoodId, float]) -> float:
@@ -77,7 +75,7 @@ def fold_plant(chosen: Iterable[Any]):
 def recipe_from_entry(recipe_id: str, entry: Mapping[str, Any]) -> Recipe:
     outputs = {good: float(quantity) for good, quantity in entry["outputs"].items() if quantity > 0}
     inputs = {good: float(quantity) for good, quantity in (entry.get("inputs") or {}).items() if quantity > 0}
-    for carrier in ENERGY_CARRIER_FIELDS:
+    for carrier in ENERGY_CARRIERS:
         if entry.get(carrier, 0) > 0:
             inputs[carrier] = inputs.get(carrier, 0.0) + float(entry[carrier])
     labour = {trade: float(hours) for trade, hours in (entry.get("labour_hours") or {}).items() if hours > 0}
@@ -94,16 +92,6 @@ def recipes_from_production_data(data: Mapping[str, Mapping[str, Any]],
     """Recipes keyed by entry id, for the allowed ids (all entries when None); unknown ids are ignored."""
     wanted = sorted(data) if allowed_entry_ids is None else sorted(set(allowed_entry_ids) & set(data))
     return {entry_id: recipe_from_entry(entry_id, data[entry_id]) for entry_id in wanted}
-
-
-def unmapped_field_counts(data: Mapping[str, Mapping[str, Any]],
-                          allowed_entry_ids: Optional[Iterable[str]] = None) -> Dict[str, int]:
-    """How many allowed entries carry each field this module does not map."""
-    wanted = data if allowed_entry_ids is None else {key: data[key] for key in allowed_entry_ids if key in data}
-    counts: Counter = Counter()
-    for entry in wanted.values():
-        counts.update(field for field in entry if field not in MAPPED_FIELDS)
-    return dict(sorted(counts.items()))
 
 
 def _consumed_by(recipes: Mapping[str, Recipe]) -> Dict[GoodId, Set[GoodId]]:

@@ -19,7 +19,7 @@ def _agent_end_reason(sim):
     # for ever and the run carries on until the founder dies or the
     # horizon arrives.
     #
-    # `run` and `compare` are unaffected: Sim.run() in core.py stops at the goal
+    # `run` and `compare` are unaffected: Sim.run() (sim/engine/core.py) stops at the goal
     # on its own, which is what every measurement in this repository wants and
     # what keeps a dice-free trial cheap. This is the interactive path only.
     if sim.view("year")() >= end_year:
@@ -110,7 +110,7 @@ def _waiting_on(sim, nodes, node_id, progress, bill):
     node = nodes[node_id]
     frac = min(1.0, 1.0 / max(1.0, node["yrs"]))
     # WHAT IS LEFT OF EACH TRADE'S TOTAL, not the flat annual figure: see
-    # ProjectsMixin.lab_year_draw (projects.py), hired-labour hours are a
+    # lab_year_draw (sim/projects/progress_hours.py), hired-labour hours are a
     # total drawn down over the project's life, so near the end of a trade's
     # own balance the true ask is smaller than its nominal pace, and saying
     # "short" against the bigger, already-paid-down figure would name a
@@ -201,7 +201,7 @@ def _waiting_on(sim, nodes, node_id, progress, bill):
                        "time it takes (%g years) has about %d more year%s to run"
                        % (node["yrs"], years_left, "" if years_left == 1 else "s"))
     # MATERIALS. A shortage scales only projects consuming its supply pool -
-    # see core.py step() 5 - so a project with
+    # see the progress phase, sim/projects/progress_phase.py - so a project with
     # founder-hours still to spend and nobody short on trade or money can
     # still be making less of them than the pool alone would suggest, for a
     # reason that is neither staffing, money nor the calendar. Only said when

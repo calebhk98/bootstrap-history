@@ -1,36 +1,55 @@
 """Complaint 640: people bought arrive untrained: `buy_slaves` queues them in the household's training rows for the training lag
-and adds no artisan capacity that day, and `manumit` raises the capacity of trained people only (the untrained rise when they
-mature). Each method is called on a stand-in `self` carrying a household written out here."""
+and adds no artisan capacity that day, and `manumit` moves people from slaves to freedmen without touching the queue (the pools recount at the freedman
+productivity once the people are trained). Each method is called on a stand-in `self` carrying a household written out here."""
 QUICK_TOPIC = True
 
 import types
 import unittest
-from sim.tests import workforce_stand_in
 from unittest import mock
 
-from sim.labour import labour_bondage
-from sim.labour.labour_bondage import BondageMixin
+from sim.labour import labour_pools
+from sim.labour.labour_bondage import Bondage as BondagePart
+from sim.labour.labour_pools import StaffPools
 from sim.ledger.api import PayEdge
 from sim.polity.api import GainReputation
+from sim.refusal import Refusal
+from sim.workforce.api import TrainingRow
 
 YEAR = 100
 PRICE = 250.0
 
 
-class Bondage(BondageMixin):
-    """The household, holdings and money that buying and freeing people touch."""
+class Bondage:
+    """The bondage and pools parts over the household, holdings and money that buying and freeing people touch."""
 
     def __init__(self, cash=1000.0, room=100.0, employees=None):
         self.cash, self.room, self.paid, self.sent = cash, room, [], []
         self.staff = employees or {}
-        self.household = types.SimpleNamespace(slaves=0, freedmen=0, manumitted_total=0, artisans=0.0, scholars=0.0, training=[], granted_staff=None,
+        self.newcomers = []
+        self.household = types.SimpleNamespace(slaves=0, freedmen=0, manumitted_total=0, artisans=0.0, scholars=0.0, training=[],
                                                reputation=0.0, market_pressure=0.0)
         self.refusals = []
         self._world = types.SimpleNamespace(
-            workforce=self.household, view=workforce_stand_in.view_of(self.household), year=YEAR,
-            note_buy_refusal=self.refusals.append, can_pay=lambda price: price <= self.cash, EDGE_SLAVE_TRADERS="slave_traders",
+            workforce=self.household, game=types.SimpleNamespace(year=YEAR), commands=types.SimpleNamespace(note_buy_refusal=self.refusals.append), EDGE_SLAVE_TRADERS="slave_traders",
             send=self._send,
-            refusal_text=lambda what, price: "cannot afford %s" % what)
+            finance=types.SimpleNamespace(can_pay=lambda price: price <= self.cash,
+                                          refusal_text=lambda what, price: "cannot afford %s" % what))
+        self.pools = StaffPools(self._world, book=self, trades=self)
+        self.bondage = BondagePart(self._world, advice=self, capacity=self, pools=self.pools, schedule=None)
+        self.bondage.slave_quote = self.slave_quote
+        self.TRAINING_YEARS = BondagePart.TRAINING_YEARS
+
+    def buy_slaves(self, people):
+        return self.bondage.buy_slaves(people)
+
+    def manumit(self, people):
+        return self.bondage.manumit(people)
+
+    def _resync_pools(self):
+        return self.pools.resync_pools()
+
+    def _grant_staff(self, scholars=0.0, artisans=0.0):
+        return self.pools.grant_staff(scholars, artisans)
 
     def _send(self, command):
         if isinstance(command, PayEdge):
@@ -47,21 +66,26 @@ class Bondage(BondageMixin):
     def employed(self, trade):
         return self.employed_by_trade().get(trade, 0.0)
 
+    def add_newcomers(self, trade, people):
+        if people > 0.0:
+            self.staff[trade] = self.staff.get(trade, 0.0) + people
+            self.newcomers.append((trade, people))
+
     def is_craft_trade(self, trade):
         return trade != "scholar"
 
     def slave_quote(self, people):
         return PRICE
 
-    def _staff_advice(self, kind):
-        return "advice"
+    def room_advice(self):
+        return Refusal("room_advice", "advice", remedies=[])
 
 
 class BuySlaves(unittest.TestCase):
     def test_the_people_bought_queue_for_the_training_lag_at_the_untrained_worth(self):
         game = Bondage()
         self.assertEqual(game.buy_slaves(12), 12)
-        self.assertEqual(game.household.training, [[12 * game.WORKER_EQUIVALENT_UNTRAINED, YEAR + game.TRAINING_YEARS]])
+        self.assertEqual(game.household.training, [TrainingRow(None, 12.0, YEAR + game.TRAINING_YEARS)])
 
     def test_the_people_bought_add_no_artisan_capacity_the_day_they_arrive(self):
         game = Bondage()
@@ -94,23 +118,29 @@ class Manumit(unittest.TestCase):
         game = Bondage()
         game.household.slaves = count
         if not trained:
-            game.household.training = [[count * game.WORKER_EQUIVALENT_UNTRAINED, YEAR + 3.0]]
+            game.household.training = [TrainingRow(None, float(count), YEAR + 3.0)]
         return game, game.manumit(count)
 
-    def test_freeing_trained_people_raises_their_capacity_by_the_uplift_not_another_worker(self):
+    def test_freeing_trained_people_raises_their_capacity_from_the_slave_to_the_freedman_productivity(self):
         game, freed = self.freed(trained=True)
+        game.pools.resync_pools()
         self.assertEqual(freed, 4)
-        self.assertAlmostEqual(game.household.artisans, 4 * game.MANUMISSION_ARTISAN_UPLIFT)
+        self.assertAlmostEqual(game.household.artisans, 4 * game.pools.FREEDMAN_ARTISAN_PRODUCTIVITY)
 
     def test_freed_people_move_from_slaves_to_freedmen(self):
         game, _freed = self.freed()
         self.assertEqual((game.household.slaves, game.household.freedmen, game.household.manumitted_total), (0, 4, 4))
 
-    def test_freeing_people_still_in_training_adds_no_capacity_now_and_raises_what_they_will_be_worth(self):
+    def test_freeing_people_still_in_training_leaves_the_queue_alone_and_adds_no_capacity_now(self):
         game, _freed = self.freed(trained=False)
         self.assertEqual(game.household.artisans, 0.0)
-        worth = game.WORKER_EQUIVALENT_UNTRAINED + game.MANUMISSION_ARTISAN_UPLIFT
-        self.assertAlmostEqual(game.household.training[0][0], 4 * worth)
+        self.assertEqual(game.household.training, [TrainingRow(None, 4.0, YEAR + 3.0)])
+
+    def test_freed_people_still_learning_count_at_the_freedman_productivity_once_trained(self):
+        game, _freed = self.freed(trained=False)
+        game.household.training = []
+        game.pools.resync_pools()
+        self.assertAlmostEqual(game.household.artisans, 4 * game.pools.FREEDMAN_ARTISAN_PRODUCTIVITY)
 
     def test_freeing_people_gains_reputation_that_stops_at_the_ceiling(self):
         game, _freed = self.freed()
@@ -124,22 +154,21 @@ class Manumit(unittest.TestCase):
 
 class GrantsSurviveTheYearsResync(unittest.TestCase):
     def resynced(self, game):
-        with mock.patch.object(labour_bondage.trade_data, "scholar_trade", return_value="scholar"):
+        with mock.patch.object(labour_pools.trade_data, "scholar_trade", return_value="scholar"):
             game._resync_pools()
         return game.household
 
-    def test_a_grant_is_recorded_and_added_to_the_pools_at_once(self):
+    def test_a_grant_is_new_people_of_their_trades_for_the_labour_core(self):
         game = Bondage()
-        game._grant_staff(scholars=4)
-        self.assertEqual(game.household.granted_staff, {"scholars": 4, "artisans": 0.0})
-        self.assertEqual(game.household.scholars, 4)
+        game._grant_staff(scholars=4, artisans=1)
+        self.assertEqual(game.newcomers, [("scholar", 4), ("artisan", 1)])
 
-    def test_the_yearly_resync_adds_the_grant_back_instead_of_discarding_it(self):
+    def test_the_yearly_resync_counts_the_granted_people_on_the_books(self):
         game = Bondage()
         game._grant_staff(scholars=4)
         self.assertEqual(self.resynced(game).scholars, 4)
 
-    def test_the_pools_are_the_people_on_the_books_plus_the_grant(self):
+    def test_the_pools_are_the_people_on_the_books_including_the_grant(self):
         game = Bondage(employees={"scholar": 2.0, "smith": 3.0})
         game._grant_staff(scholars=4, artisans=1)
         household = self.resynced(game)
@@ -148,13 +177,13 @@ class GrantsSurviveTheYearsResync(unittest.TestCase):
     def test_people_bought_and_still_learning_are_not_counted_as_artisans(self):
         game = Bondage()
         game.household.slaves = 12
-        game.household.training = [[12 * game.WORKER_EQUIVALENT_UNTRAINED, YEAR + 3.0]]
+        game.household.training = [TrainingRow(None, 12.0, YEAR + 3.0)]
         self.assertAlmostEqual(self.resynced(game).artisans, 0.0)
 
     def test_people_bought_and_trained_count_at_the_slave_productivity(self):
         game = Bondage()
         game.household.slaves = 10
-        self.assertAlmostEqual(self.resynced(game).artisans, 10 * game.TRAINED_SLAVE_ARTISAN_PRODUCTIVITY)
+        self.assertAlmostEqual(self.resynced(game).artisans, 10 * game.pools.TRAINED_SLAVE_ARTISAN_PRODUCTIVITY)
 
 
 if __name__ == "__main__":

@@ -1,16 +1,21 @@
 """What interest groups can see of the stakes of workers out of a job, a church and an academy: the labour core's
-unhired hours, the technique that displaced them, the rent of land, and the sales of goods a tithe falls on.
-Mixed into `ActorWorld`."""
+unhired hours, the technique that displaced them, the rent of land, and the sales of goods a tithe falls on."""
 from typing import Any, Dict, Tuple
 
 from sim.agents.api import Sector
 
+from .world_groups import commodity_quote
 
-class StakeView:
-	"""Read-only questions behind the stakes the strata, foundations and the state's servants have."""
 
-	needs: Any
-	registry: Any
+class Stakes:
+	"""Read-only questions behind the stakes the strata, foundations and the state's servants have. `world` is the root that hands out the parts."""
+
+	def __init__(self, world: Any) -> None:
+		self.world = world
+
+	@property
+	def needs(self) -> Any:
+		return self.world.needs
 
 	def idle_hours_by_trade(self) -> Dict[str, Tuple[float, float]]:
 		"""(hours offered and not hired, hours offered) of each trade in the last clearing of the labour core."""
@@ -21,9 +26,9 @@ class StakeView:
 		running: Dict[str, int] = {}
 		for node_id in self.needs.operating():
 			running[node_id] = int(self.needs.venture_opened_year(node_id, 0))
-		for actor in self.registry.of_kind("firm"):
+		for actor in self.world.registry.of_kind("firm"):
 			for node_id in actor.concerns:
-				running[node_id] = max(running.get(node_id, 0), int(actor.opened_year_of(node_id, 0)))
+				running[node_id] = max(running.get(node_id, 0), int(actor.holdings.opened_year_of(node_id, 0)))
 		return running
 
 	def displacing_technique(self, trade: str) -> Any:
@@ -45,7 +50,7 @@ class StakeView:
 		total = 0.0
 		for commodity in sorted(commodities):
 			state = needs.market_state[commodity]
-			quote = self._commodity_quote(commodity)  # type: ignore[attr-defined]
+			quote = commodity_quote(needs, commodity)
 			if state is not None and quote is not None:
 				total += state["society_sales_tonnes"] * quote["buy_per_tonne"]
 		return total

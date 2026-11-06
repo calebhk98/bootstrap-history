@@ -52,7 +52,7 @@ class CloseYearTests(unittest.TestCase):
 class RentInRunningCostsTests(unittest.TestCase):
     def test_rent_paid_counts_in_the_payer_running_costs(self):
         ledger = YearLedger()
-        ledger.note_rent([Transfer("producer:a", "cohort:b", "gold", 30.0, "rent")])
+        ledger.note_paid_outside_markets([Transfer("producer:a", "cohort:b", "gold", 30.0, "rent")])
         self.assertAlmostEqual(ledger.running_costs("producer:a"), 30.0)
         self.assertEqual(ledger.running_costs("cohort:b"), 0.0)
 

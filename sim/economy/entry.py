@@ -14,12 +14,12 @@ from typing import Dict, List, Mapping, Optional, Sequence, Tuple
 
 from sim.constants import declare
 
-from . import entry_practice, unit_cost
+from . import entry_practice, market_quote, unit_cost
 from .entry_sizing import Traded, sized_runs
 from .goods_market import quantity_at
 from .producers import Producer, expected_output_prices, live_input_prices, live_wages
 from .protocols import MarketView
-from .types import AreaId, Bid, GoodId, Recipe, TileId
+from .types import AreaId, Bid, ClearingResult, GoodId, Offer, Recipe, TileId
 
 ENTRY_SHARE_OF_UNMET_DEMAND = declare(
     "ENTRY_SHARE_OF_UNMET_DEMAND", 0.5, kind="temporary_heuristic",
@@ -58,12 +58,22 @@ class EntryPlan:
     yearly_return: float
 
 
-def unmet_quantity(bids: Sequence[Bid], price: float, sold: float) -> float:
-    """What buyers wanted at the year's price beyond what was sold (zero when none was priced)."""
-    if price <= 0.0 or not math.isfinite(price):
+def wanted_in_round(bids: Sequence[Bid], offers: Sequence[Offer], result: ClearingResult) -> float:
+    """What a round's buyers asked for: at the asks they faced when it traded (`result.demand_at_price`); when it
+    traded nothing, at the lowest ask on offer, or with no ask at the highest ceiling any bid names (0 when none)."""
+    if result.quantity > 0.0:
+        return result.demand_at_price
+    price = market_quote.lowest_unfilled_ask(offers)
+    if price is None:
+        price = market_quote.best_unfilled_bid(bids)
+    if price is None:
         return 0.0
-    wanted = math.fsum(quantity_at(bid, price) for bid in bids)
-    return max(0.0, wanted - sold)
+    return math.fsum(quantity_at(bid, price) for bid in bids)
+
+
+def unmet_quantity(wanted: float, delivered: float) -> float:
+    """What buyers asked for beyond what was delivered, both counted over the same rounds."""
+    return max(0.0, wanted - delivered)
 
 
 def entrant_loan(plant_value: float, owner_stake: float) -> float:
@@ -104,22 +114,18 @@ def gap_beyond_spare(unmet: float, spare_output: float) -> float:
 
 def entry_plans(recipes: Mapping[str, Recipe], view: MarketView,
                 unmet: Mapping[Tuple[GoodId, AreaId], UnmetDemand],
-                rent_by_tile: Optional[Mapping[TileId, float]] = None,
-                land_per_run: Optional[Mapping[str, float]] = None,
                 traded: Optional[Traded] = None, siting=None, unfilled=None, rent_of=None,
                 crews_of: Optional[entry_practice.CrewsOf] = None) -> List[EntryPlan]:
     """New makers for each market with unmet demand: the known recipes making the good, best return on
-    capital at last year's prices first, each that beats the interest rate, each built for a share of what
-    the better ones leave of the gap (no limit on how many a year: the gap and the returns decide). Rent per
-    hectare last year on the tile, times the land a run takes, is part of a run's cost. With `traded`,
+    capital at last year's prices first, each that beats the interest rate after the plant's wear, each built for a share of what
+    the better ones leave of the gap (no limit on how many a year: the gap and the returns decide). With `traded`,
     the size is held to the trade the market and its suppliers' markets carried (entry_sizing.py), and
     a recipe whose size comes to nothing gives way to the next best. With `siting` (location.py) a newcomer
     goes to the tile that suits it, else to the market's anchor. With `unfilled` (entry_backed.py) the bids left
     unfilled at the recipe's full cost count with the trade. With `rent_of(recipe_id, tile)` a newcomer's rent is what its own use pays there
-    (entrant_rent.py), not the tile's mean rent. With `crews_of` (entry_practice.py) a recipe's return is judged on the hours
+    (entrant_rent.py); without it a run pays no rent. With `crews_of` (entry_practice.py) a recipe's return is judged on the hours
     its newcomer will need over the years it is judged on (starting at its peers' practice, learning on the runs it is built
     for), not the booked hours."""
-    rent_by_tile, land_per_run = rent_by_tile or {}, land_per_run or {}
     makers: Dict[GoodId, List[str]] = {}
     for recipe_id in sorted(recipes):
         for good in recipes[recipe_id].outputs:
@@ -132,14 +138,16 @@ def entry_plans(recipes: Mapping[str, Recipe], view: MarketView,
         currency = view.currency_of(demand.area)
         ranked = []
         for recipe_id in makers.get(demand.good, ()):
-            rent = rent_of(recipe_id, demand.anchor_tile) if rent_of is not None else \
-                rent_by_tile.get(demand.anchor_tile, 0.0) * land_per_run.get(recipe_id, 0.0)
+            rent = rent_of(recipe_id, demand.anchor_tile) if rent_of is not None else 0.0
             planned = recipes[recipe_id]
             if crews_of is not None:
                 share_runs = demand.quantity / planned.outputs[demand.good] * ENTRY_SHARE_OF_UNMET_DEMAND
                 planned = entry_practice.planned_recipe(planned, crews_of(recipe_id), share_runs)
-            yearly_return = _return_at(planned, recipe_id, demand.anchor_tile, view, rent)
-            if yearly_return > view.interest_rate(currency):
+            market_rate = view.interest_rate(currency)
+            if market_rate is None:
+                continue
+            yearly_return, after_recovery = _returns_at(planned, recipe_id, demand.anchor_tile, view, market_rate, rent)
+            if yearly_return is not None and after_recovery is not None and after_recovery > market_rate:
                 ranked.append((-yearly_return, recipe_id))
         remaining = demand.quantity
         for negative_return, recipe_id in sorted(ranked):
@@ -163,8 +171,12 @@ def entry_plans(recipes: Mapping[str, Recipe], view: MarketView,
     return plans
 
 
-def _return_at(recipe: Recipe, recipe_id: str, tile: TileId, view: MarketView, rent: float = 0.0) -> float:
+def _returns_at(recipe: Recipe, recipe_id: str, tile: TileId, view: MarketView, market_rate: float,
+                rent: float = 0.0) -> Tuple[Optional[float], Optional[float]]:
+    """A newcomer's yearly return on the recipe at the tile (gross, which the plant loan is priced from) and the same
+    after the plant's wear at `market_rate` (which it must beat to enter)."""
     probe = Producer("probe", "probe", recipe_id, tile, 1.0)
     outputs = expected_output_prices(probe, recipe, view) or {}
-    return unit_cost.return_on_capital(recipe, outputs, live_input_prices(probe, recipe, view),
-                                       live_wages(probe, recipe, view), rent)
+    inputs, wages = live_input_prices(probe, recipe, view), live_wages(probe, recipe, view)
+    return (unit_cost.return_on_capital(recipe, outputs, inputs, wages, rent),
+            unit_cost.return_after_recovery(recipe, outputs, inputs, wages, market_rate, rent))

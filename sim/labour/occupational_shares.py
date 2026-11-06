@@ -8,6 +8,7 @@ from typing import Dict, List, Mapping
 _PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
                      "data", "world", "occupation_groups.json")
 _cache: Dict[str, dict] = {}
+UNLISTED = "unlisted"   # the report's row for trades no group lists (a mod's trade): no band, so any hours in it read as outside
 
 
 def groups_data() -> dict:
@@ -47,8 +48,8 @@ def hours_by_trade(society_hours: Mapping[str, float], held_hours: Mapping[str, 
 def hours_by_trade_of_all_employers(labour, society_hours: Mapping[str, float]) -> Dict[str, float]:
     """`hours_by_trade` for a running game: what the founder, firms and states keep on staff, by trade."""
     data = groups_data()
-    held = {trade: labour.reserved_hours(trade) for group in data["groups"].values() for trade in group["trades"]}
-    return hours_by_trade(society_hours, held, frozenset(data["outside_society_trades"]), labour.unskilled_trade())
+    held = {trade: labour.book.reserved_hours(trade) for group in data["groups"].values() for trade in group["trades"]}
+    return hours_by_trade(society_hours, held, frozenset(data["outside_society_trades"]), labour.allocation.unskilled_trade())
 
 
 def people_by_trade_of_all_employers(labour):
@@ -57,21 +58,23 @@ def people_by_trade_of_all_employers(labour):
     the labour force by occupation, so a household that farms its own plot and spends the rest of its year on
     other work is counted in farming here, as a head count and not by the hours it spent in the field. None
     while the agent economy has not opened."""
-    core = labour.core_people_by_trade()
+    core = labour.book.core_people_by_trade()
     if core is None:
         return None
     data = groups_data()
-    held = {trade: labour.reserved_people(trade) for group in data["groups"].values() for trade in group["trades"]}
-    return hours_by_trade(core, held, frozenset(data["outside_society_trades"]), labour.unskilled_trade())
+    held = {trade: labour.book.reserved_people(trade) for group in data["groups"].values() for trade in group["trades"]}
+    return hours_by_trade(core, held, frozenset(data["outside_society_trades"]), labour.allocation.unskilled_trade())
 
 
 def shares_by_group(hours_by_trade: Mapping[str, float]) -> Dict[str, float]:
-    """Each group's share of all hours; a trade in no group raises, so the data cannot silently lag the registry."""
+    """Each group's share of all hours; hours of a trade in no group are the `UNLISTED` row (present only when there are
+    some), which the report shows as outside, so the data cannot silently lag the registry."""
     groups = groups_data()["groups"]
     group_for = group_of_trade(groups)
     totals = {group_id: 0.0 for group_id in groups}
     for trade, hours in hours_by_trade.items():
-        totals[group_for[trade]] += hours
+        group_id = group_for.get(trade, UNLISTED)
+        totals[group_id] = totals.get(group_id, 0.0) + hours
     everything = sum(totals.values())
     return {group_id: (total / everything if everything else 0.0) for group_id, total in totals.items()}
 
@@ -79,9 +82,11 @@ def shares_by_group(hours_by_trade: Mapping[str, float]) -> Dict[str, float]:
 def occupational_report(hours_by_trade: Mapping[str, float]) -> List[dict]:
     """One row per group: share, band, and whether the share is inside it."""
     shares = shares_by_group(hours_by_trade)
+    bands = {group_id: group["band"] for group_id, group in groups_data()["groups"].items()}
+    if UNLISTED in shares:
+        bands[UNLISTED] = (0.0, 0.0)
     rows = []
-    for group_id, group in groups_data()["groups"].items():
-        low, high = group["band"]
+    for group_id, (low, high) in bands.items():
         rows.append({"group": group_id, "share": shares[group_id], "low": low, "high": high,
                      "inside": low <= shares[group_id] <= high})
     return rows

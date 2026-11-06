@@ -9,9 +9,8 @@ holds, and applies the commands that address the exchange to a seat (seat_exchan
 from sim.assembly.api import FIRST, KEYED, LIST, QUOTE, ExtensionPoint, ModuleSpec, Provision, ViewSpec
 from sim.agents.api import ActorsState
 from sim.coin.api import ChargeActorsTheft, ChargeKeeping
-from sim.finance.api import DefaultOnDebt, RefreshLenderOffers
+from sim.finance.api import RefreshLenderOffers
 from sim.foreign_trade.api import NoteActorHomeTrade, NoteActorTrade, NoteCargoLeg
-from sim.freight.api import PayRouteDues
 from sim.knowledge.api import ReceiveTechniques
 from sim.ledger.api import CreditSeat, DebitSeat, NoteSeatCash, PayActor, RestorePurse
 from sim.markets.api import ForgetActorOrders, NoteActorPurchase, NoteActorSale
@@ -26,30 +25,29 @@ from . import commands
 from .module import Actors
 
 READS_BY_OWNER = {
-	"markets": ("unit_mass_kg", "goods_categories", "goods_category_factor", "goods_category_factor_with_entrants",
-	            "goods_category_price_ratio", "goods_category_state", "nodes_in_category", "market_state", "commodities_sold_by_acting_party",
-	            "economy_output_value", "coin_stock_value", "main_material_of", "material_trade_quote", "material_purchase_cost",
-	            "household_prices", "household_basket", "agent_trades_good", "agent_price_response", "agent_country", "agent_cohort_incomes",
+	"markets": ("unit_mass_kg", "goods_categories", "nodes_in_category", "market_state", "commodities_sold_by_acting_party",
+	            "economy_output_value", "coin_stock_value", "main_material_of", "goods_quote", "purchase_quote",
+	            "household_prices", "household_basket", "agent_trades_good", "agent_lender_listing", "agent_price_response", "agent_country", "agent_cohort_incomes",
 	            "agent_cohort_land_rents", "agent_need_floor_costs", "agent_land_rent_at", "agent_land_rent_paid_by_tile",
 	            "agent_land_rent_per_hectare", "agent_output_tonnes_by_tile", "agent_idle_hours_by_trade", "agent_fugitive_share_by_tile",
 	            "country_opening_basket", "country_volume_baseline", "country_traded_volumes", "fleet_goods", "goods_carried_last_year",
-	            "material_substitutes", "materials_serving", "partner_household_demand", "home_household_tonnes", "border_duty_per_tonne"),
-	"workforce": ("staff", "trade_available", "trade_population", "reachable_trade_population", "people_who_exist", "taught_trade_people",
-	              "available_trades", "is_craft_trade", "market_supply", "local_market_share", "base_tile", "labour_market",
+	            "material_substitutes", "materials_serving", "home_household_tonnes", "border_duty_per_tonne"),
+	"workforce": ("trade_registry", "farm_share_of_hours", "staff", "trade_available", "trade_population", "people_who_exist", "taught_trade_people",
+	              "available_trades", "is_craft_trade", "base_tile", "labour_market",
 	              "money_per_labour_hour", "hours_per_person_year", "staff_on_all_books"),
 	"production": ("is_venture", "revenue_estimate", "upkeep", "concern_takings", "concern_gross", "concern_upkeep",
 	               "node_output_market_factor", "concern_volume_ratio", "concern_baskets_now", "industry_depth", "industry_scale_ceiling",
 	               "ramp_share_at_full_depth", "basket_market_factor"),
 	"polity": ("state_funding_terms", "state_authority", "state_trait_weights", "visible_scale", "levy_shares", "notice_over",
 	           "patron_clients", "patron_funding_ask", "military_equipment_burden", "standing"),
-	"foreign_trade": ("partners", "foreign_economies", "partner_facts", "partner_book_entry", "partner_price_per_unit",
-	                  "partner_price_response", "actor_home_trade", "landed_cost", "trade_value_in_year"),
+	"foreign_trade": ("partners",
+	                  "actor_home_trade", "landed_cost", "trade_value_in_year"),
 	"diffusion": ("disclosure", "disclosures", "copy_difficulty", "knowledge_half_life_years", "literacy", "research_productivity",
 	              "diffusible_ids", "diffusion_index"),
 	"seats": ("acting_seat", "acting_country", "seat_list", "seat_country", "seats_holding_patent", "seat_place", "seat_dealings", "dealings_listing"),
-	"demography": ("pop_scale_for", "population_total", "working_age", "urban_fraction", "people_by_tile", "nutrition_ratio_last_year", "farm_holdings"),
+	"demography": ("pop_scale_for", "population_total", "working_age", "urban_fraction", "people_by_tile", "nutrition_ratio_last_year"),
 	"scenario": ("year", "civilisation", "game_setting", "opening_civilisation", "civilisation_record", "money_text", "mass_rate_text"),
-	"finance": ("credit_limit", "credit_room", "state_lending", "debt_interest_rate", "debt_service_share_of_surplus", "market_rate"),
+	"finance": ("credit_limit", "credit_room", "fundable_amount", "risk_premium", "household_rate_on_loan", "debt_service_share_of_surplus", "market_rate"),
 	"ventures": ("operating", "operating_by_seat", "venture_opened_year", "venture_size", "concern_staff"),
 	"knowledge": ("tree_nodes", "techniques_held", "techniques_granted", "techniques_by_seat"),
 	"projects": ("substitute_quality_discount", "project_cost", "effective_risk", "seat_review"),
@@ -88,7 +86,6 @@ MODULE_SPECS = (ModuleSpec(
 		ViewSpec("concerns_of_active_firms", "concerns_of_active_firms", **_LIVE),
 		ViewSpec("firm_concern_holdings", "firm_concern_holdings", **_LIVE),
 		ViewSpec("actor_staff", "actor_staff_fte", kind=KEYED, **_LIVE),
-		ViewSpec("actor_staff_nationwide", "actor_staff_nationwide", kind=KEYED, **_LIVE),
 		ViewSpec("actor_staff_total", "actor_staff_total", **_LIVE),
 		ViewSpec("country_strata", "country_strata", kind=KEYED, **_LIVE),
 		ViewSpec("has_state", "has_state", kind=KEYED, **_LIVE),
@@ -132,7 +129,7 @@ MODULE_SPECS = (ModuleSpec(
 		Provision("player_commands", "shipped_player_commands", "commands"),
 	),
 	reads=tuple(name for names in READS_BY_OWNER.values() for name in names),
-	sends=(ChargeKeeping, ChargeActorsTheft, RefreshLenderOffers, DefaultOnDebt, AccrueExperience, ForgetActorOrders, NoteActorSale,
-	       NoteActorPurchase, ReleaseStaff, NoteActorHomeTrade, NoteActorTrade, NoteCargoLeg, PayRouteDues, AddScandal, RecordEvent, PayActor,
+	sends=(ChargeKeeping, ChargeActorsTheft, RefreshLenderOffers, AccrueExperience, ForgetActorOrders, NoteActorSale,
+	       NoteActorPurchase, ReleaseStaff, NoteActorHomeTrade, NoteActorTrade, NoteCargoLeg, AddScandal, RecordEvent, PayActor,
 	       CreditSeat, DebitSeat, NoteSeatCash, RestorePurse, ReceiveTechniques, SetDealing, ReleasePlant, AdoptPlant),
 ),)

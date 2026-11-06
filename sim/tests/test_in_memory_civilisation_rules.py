@@ -6,7 +6,7 @@ QUICK_TOPIC = True
 import unittest
 from unittest import mock
 
-from sim.engine import data
+from sim.prices import prices as price_engine
 from sim.tests import prices_stand_in
 from sim.geography.api import tiles_held
 
@@ -22,18 +22,17 @@ def priced_module(civ):
 
 class PricedByItsOwnFields(unittest.TestCase):
 
-    def test_the_solver_is_given_the_civilisation_dict_itself_even_when_a_file_shares_its_id(self):
+    def test_the_solver_is_given_the_civilisation_record_itself_even_when_a_file_shares_its_id(self):
         civ = {"id": "rome_100ad", "starting_interest_rate": 0.31}
         seen = []
 
-        def table(held, **keywords):
-            seen.append(keywords)
+        def table(held, document, civilization, farmed_hectares, interest_rate, unskilled_trade):
+            seen.append(civilization)
             return {"grain": 3.0}, {"grain": "solved"}
 
-        with mock.patch.object(data, "calculated_goods_table", table):
+        with mock.patch.object(price_engine, "goods_in_hours", table):
             prices = priced_module(civ).material_prices()
-        self.assertIs(seen[0]["civilization"], civ)
-        self.assertEqual(seen[0]["civilization_id"], "rome_100ad")
+        self.assertEqual(seen[0], {**civ, "home_tiles": []})     # the record's content, with the tiles held now
         self.assertEqual(prices, {"grain": 6.0})
 
 

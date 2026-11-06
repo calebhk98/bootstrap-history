@@ -12,6 +12,7 @@ Nothing here reads an authored upkeep figure.
 """
 from typing import Mapping, Optional
 
+from sim.labour.api import generic_craft_trade, scholar_trade
 from sim.unit_conversions import HOURS_PER_PERSON_YEAR
 from sim.world import plant_figures
 
@@ -21,28 +22,28 @@ def maintenance_hours(node: Mapping, build_cost_hours: float, wear_hours: Option
     return plant_figures.maintenance_hours(node.get("kind"), build_cost_hours, wear_hours)
 
 
-# Staffing resources a node's `sch` and `art` places fill, paid at these trades' wages.
-SCHOLAR_STAFF_TRADE = "scholar"
-CRAFT_STAFF_TRADE = "artisan"
+# Staffing resources a node's `sch` and `art` places fill, paid at the scholar and generic craft trades' wages.
 
 
 def staff_places_hours_cost(node: Mapping, wages: Mapping[str, float], money_per_labour_hour: float) -> float:
     """Labour hours (of unskilled work) a year the node's named staff places are paid: `sch` scholars and
     `art` craftsmen, each working a year."""
-    paid = (float(node.get("sch") or 0.0) * wages[SCHOLAR_STAFF_TRADE]
-            + float(node.get("art") or 0.0) * wages[CRAFT_STAFF_TRADE])
+    paid = (float(node.get("sch") or 0.0) * wages[scholar_trade()]
+            + float(node.get("art") or 0.0) * wages[generic_craft_trade()])
     return paid * HOURS_PER_PERSON_YEAR / money_per_labour_hour
 
 
 def programme_spending_hours(node: Mapping, goods: Mapping[str, float], wages: Mapping[str, float],
-                             money_per_labour_hour: float) -> float:
+                             money_per_labour_hour: float) -> Optional[float]:
     """Labour hours a year a programme costs to keep running, priced from what it buys: the hours of each trade it
     employs (`annual_labour_hours`) at wages and the materials it consumes (`annual_consumables`) at solved prices.
-    The actor that opens the node pays this each year."""
+    The actor that opens the node pays this each year.
+    None when a consumable has no price."""
+    consumed = plant_figures.priced_total(node.get("annual_consumables") or {}, goods)
+    if consumed is None:
+        return None
     bought = sum(wages[trade] * hours for trade, hours in (node.get("annual_labour_hours") or {}).items())
-    bought += sum(goods.get(material, 0.0) * quantity
-                  for material, quantity in (node.get("annual_consumables") or {}).items())
-    return bought / money_per_labour_hour
+    return (bought + consumed) / money_per_labour_hour
 
 
 def is_programme(node: Mapping) -> bool:

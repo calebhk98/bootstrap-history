@@ -1,8 +1,8 @@
 # The staple price does not fall near satiation and a farm surplus has no outlet: need-sized hands remain the floor
 
-**Status:** partly fixed - intake rises to a sourced satiation level and farm effort follows the staple price against the wage; need-sized hands are still the floor, the staple price does not fall near satiation, and surplus beyond satiation is not sold, stored or fed to animals
+**Status:** partly - the farm allocation and `sim/labour/farm_intake.py` this complaint was about are deleted; farms and plots are the economy's. Open: the staple price does not fall near satiation, and surplus beyond satiation is not sold, stored or fed to animals
 
-Found closing 480. Originally `LabourAllocationMixin._allocate_farm_workforce` put just enough people on the land to meet
+Found closing 480. The engine's farm allocation (`_allocate_farm_workforce`, `farm_workers_needed`, `farm_intake`) has since been deleted with the national farm path (Complaint 537); what follows is the history of that mechanism, then what is left. It put just enough people on the land to meet
 the population's food need (`farm_workers_needed`): a better technique frees hands, a shortfall calls for hands
 and then for clearing. Nutrition therefore sits at need every year, and the fertility and mortality responses
 that read it never move. In a default Rome a food technology leaves population unchanged to the person over
@@ -38,7 +38,11 @@ biological limit and should be declared as one, with a source. The needs kernel 
 (`sim/world/need_basket.py`); farming effort should follow the food price against the wage elsewhere, so farmers
 leave farming when food is cheap and the price recovers.
 
-## Progress
+## What is left
+
+Farm work is chosen inside the economy now (households' own plots and farm producers against the staple price and the wage). Open: the staple's price near satiation, and an outlet for surplus past satiation (stored, sold, fed to animals). The pieces below that still exist: `satiation_per_capita_per_year` in `data/world/needs.json` and `limit_satiation` in `sim/world/need_basket.py`. Re-measure with `python3 sim/simulator.py economy-check --civs rome_100ad --years 30` before acting.
+
+## Progress (the deleted mechanism)
 
 - The food need declares `satiation_per_capita_per_year` in `data/world/needs.json`, a biological limit with a
   source (FAO food balance sheets, dietary energy supply in high-income countries), held equal to

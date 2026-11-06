@@ -2,7 +2,6 @@
 (the game is put back whatever the real run did) over a stand-in with the save and load replaced. No game is built. The caps
 and filters themselves are test_rush_fiscal_controls and test_rush_filters."""
 import unittest
-from types import SimpleNamespace
 from unittest import mock
 
 from sim.ui.proto import dispatch_ventures, rush_loop

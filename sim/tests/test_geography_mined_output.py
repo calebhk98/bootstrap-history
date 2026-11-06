@@ -5,7 +5,7 @@ QUICK_TOPIC = True
 import math
 import unittest
 
-from sim.geography import queries, resources_mined
+from sim.geography import queries
 from sim.tests.test_geography_resources import small_map
 
 

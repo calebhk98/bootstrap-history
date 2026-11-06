@@ -6,7 +6,7 @@ import random
 import unittest
 
 from sim.labour.market.migration import migrate
-from sim.labour.market.records import Clearing, MarketState, Route, YearInputs, YearReport
+from sim.labour.market.records import LabourClearing, MarketState, Route, YearInputs, YearReport
 
 BANDS = 5
 
@@ -26,8 +26,8 @@ def everyone(state):
 
 def clearing(area, trade, wage):
     hours = 1000.0
-    return Clearing(trade=trade, area=area, wage=wage, hours_offered=hours, hours_wanted=hours,
-                    hours_hired=hours, hired_by_employer={}, paid_by_employer={}, average_wage=wage)
+    return LabourClearing(trade=trade, area=area, wage=wage, hours_offered=hours, hours_wanted=hours,
+                    hours_hired=hours, hired_by_employer={})
 
 
 def world(vale_wage=1.0, port_wage=2.0, cost=0.0, trainees=False):

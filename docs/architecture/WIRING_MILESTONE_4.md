@@ -2,7 +2,7 @@
 
 **Status:** analysis, not a plan anyone has approved. Written against anchor
 commit `798a027` (branch `claude/youthful-goldberg-9ay3su`) while four other
-agents edited `sim/world/deposits.py`, `sim/engine/solve_prices.py`,
+agents edited `sim/world/deposits.py`, `sim/prices/solve_prices.py`,
 a rename-proving script and `sim/engine/economy.py` concurrently in the
 same checkout; every count below that touches those four files was taken by
 reading `798a027`'s own copy of them (`git show 798a027:<path>`), not the

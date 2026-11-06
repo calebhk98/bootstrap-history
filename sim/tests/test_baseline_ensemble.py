@@ -6,7 +6,6 @@ QUICK_TOPIC = True
 import json
 import os
 import tempfile
-from types import SimpleNamespace
 
 from .harness import check
 
@@ -19,7 +18,7 @@ def stub_runner(civilisation_id, seed, years):
 	"""A population that grows by `seed` a year, a technology each at fixed offsets; offset 0 is the opening."""
 	rows = []
 	for offset in range(years + 1):
-		rows.append({"year": 100 + offset, "population": 1000.0 + seed * offset, "wage_index": 1.0,
+		rows.append({"year": 100 + offset, "population": 1000.0 + seed * offset, "wage_per_hour": 1.0,
 					 "literacy_general": 0.1, "literacy_elite": 0.9, "territory_tiles": 10,
 					 "technologies": sorted(["opening_tech"] + (["early_tech"] if offset >= 2 else [])
 											+ (["late_tech"] if offset >= 3 * seed else []))})
@@ -63,7 +62,7 @@ with tempfile.TemporaryDirectory() as directory:
 		return Game(
 			literacy=lambda field: {"literacy_general": 0.1, "literacy_elite": 0.9}[field],
 			civ={"id": "fixture_civ", "literacy_general": 0.1, "literacy_elite": 0.9},
-			cfg={"start_year": 100}, year=year, wage_index=1.0, population=Game(total=1005.0),
+			cfg={"start_year": 100}, year=year, money_per_labour_hour=1.0, population=Game(total=1005.0),
 			world_map=None, nodes=nodes, done=set(built), granted=set(), tiles_now=10)
 
 	screen_divergence.tile_count = lambda sim: sim.tiles_now
@@ -98,8 +97,8 @@ with tempfile.TemporaryDirectory() as directory:
 from sim.ui.cli_baseline import cmd_baseline_ensemble
 
 with tempfile.TemporaryDirectory() as directory:
-	arguments = Game(civ="fixture_civ", seeds=3, years=4, jobs=1, directory=directory)
-	check("the subcommand plays the seeds and succeeds", cmd_baseline_ensemble(arguments, runner=stub_runner) == 0)
+	arguments = Game(civ="fixture_civ", seeds=3, years=4, jobs=1)
+	check("the subcommand plays the seeds and succeeds", cmd_baseline_ensemble(arguments, runner=stub_runner, directory=directory) == 0)
 	stored = baseline_ensemble.read_cache("fixture_civ", directory)
 	check("and leaves the cache the screen reads", stored is not None and stored["runs"] == 3 and stored["years"] == 4
 		and stored["seeds"] == [1, 2, 3])

@@ -22,7 +22,7 @@ def Opener(capital, credit_limit, nodes, done=()):
     def open_venture(node_id, units=None):
         module.offered.append(node_id)
         return True, ""
-    module._open_venture = open_venture
+    module.open_venture = open_venture
     return module
 
 
@@ -52,7 +52,7 @@ class OrdinaryConcerns(unittest.TestCase):
 
     def test_a_refusal_by_open_venture_is_the_one_reported(self):
         opener = Opener(0.0, 1000.0, NODES)
-        opener._open_venture = lambda node_id, units=None: (False, "no room")
+        opener.open_venture = lambda node_id, units=None: (False, "no room")
         opened, blocked = opener._auto_open_ordinary_ventures(["quick", "slow"], False)
         self.assertEqual((opened, blocked), ([], ("quick", "no room")))
 

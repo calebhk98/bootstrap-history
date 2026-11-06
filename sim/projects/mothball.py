@@ -1,7 +1,8 @@
 """Shutting a completed work down on purpose to stop paying its upkeep, and bringing it back."""
 from sim.agents.api import edges
+from sim.assembly.api import Part
 from sim.knowledge.api import LearnTechnique
-from sim.ledger.api import PayEdge
+from sim.ledger.api import pay_edge_or_log
 from sim.refusal import LogLine, Refusal
 
 from sim.ventures.api import CloseConcern, RestoreConcern
@@ -11,7 +12,7 @@ from .constants import STAFF_CLOSURE_GRACE
 from sim.reporting.api import NoteConcernChange
 
 
-class Mothball:
+class Mothball(Part):
 	def mothball_work(self, node_id):
 		"""Shut a completed work down to stop paying its upkeep.
 
@@ -49,7 +50,7 @@ class Mothball:
 		# (what you know). Conflating them would cost a closed loss-maker its place in the tree.
 		was_running = node_id in needs.operating()
 		earned = needs.venture_real_earnings(node_id) if was_running else 0.0
-		self.close_work(node_id, self.CLOSED_BY_CHOICE)
+		self.parts.closures.close_work(node_id, self.parts.closures.CLOSED_BY_CHOICE)
 		if not was_running:
 			return True, ("%s was not running, so there was nothing to stop "
 			              "paying for. You still know how to do it." % node_id)
@@ -81,13 +82,13 @@ class Mothball:
 			return False, ('you no longer know how to do that, so there is '
 			               'nothing to reopen: build it again with '
 			               '{"cmd":"start","id":"%s"}' % node_id)
-		gate_refusal = self.running_gate_refusal(node_id)
+		gate_refusal = self.parts.running_gates.running_gate_refusal(node_id)
 		if gate_refusal:
 			return False, gate_refusal
 		node = needs.tree_nodes()[node_id]
 		# `open` quotes the same price for a concern.
 		fee = needs.reopen_fee(node_id)
-		_age = self.staff_closure_age(node_id)
+		_age = self.parts.closures.staff_closure_age(node_id)
 		_in_grace = within_grace(_age, STAFF_CLOSURE_GRACE)
 		# SAY WHICH CASE THIS IS, not just a number: the closing message promises a discount inside the window, so a
 		# player billed the full price after it needs a line saying the window is gone.
@@ -103,7 +104,9 @@ class Mothball:
 		if any(prereq_id not in needs.techniques_held() for prereq_id in node["pre"]):
 			return False, ("you no longer have what it stands on: "
 			               + ", ".join(prereq_id for prereq_id in node["pre"] if prereq_id not in needs.techniques_held()))
-		needs.send(PayEdge(edges.EDGE_WORKERS, fee, "known technique restored"))
+		refused = pay_edge_or_log(needs.send, edges.EDGE_WORKERS, fee, "known technique restored")
+		if refused is not None:
+			return False, refused
 		needs.send(LearnTechnique(node_id))
 		# Back in service means back in OPERATION: restore is what a player types to reopen something they shut, so a
 		# concern goes back on the books; any other work just stops being shut.

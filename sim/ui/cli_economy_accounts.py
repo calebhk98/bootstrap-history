@@ -34,11 +34,11 @@ def format_accounts(accounts, quiet_below=0.0):
         lines.append("    %-20s eaten %10.5g  bought %10.5g  own plot %10.5g  share %6.3f  real income %8.4g" % (
             cohort.cohort, cohort.eaten_per_head, cohort.bought_per_head, cohort.own_plot_per_head,
             cohort.eaten_over_need, cohort.real_income_per_head))
-    lines.append("  real wage against the opening's basket")
+    lines.append("  real wage against the opening's basket (opening wage in the money of the index base prices)")
     for wage in accounts.real_wages.values():
-        lines.append("    %-20s wage %9.4g  opening wage %9.4g  index %8.4g  baskets per working year %8.4g" % (
-            wage.trade, wage.wage_per_hour, wage.wage_per_hour_opening, wage.real_wage_index,
-            wage.baskets_per_working_year))
+        opening = "-" if wage.wage_per_hour_opening is None else "%9.4g" % wage.wage_per_hour_opening     # a trade the opening paid no wage
+        lines.append("    %-20s wage %9.4g  opening wage %9s  index %8.4g  baskets per working year %8.4g" % (
+            wage.trade, wage.wage_per_hour, opening, wage.real_wage_index, wage.baskets_per_working_year))
     return "\n".join(lines)
 
 
@@ -58,7 +58,7 @@ def play_for_accounts(args):
     outcomes = []
     for _year in range(args.years):
         game.step()
-        outcomes.append(game.view("legacy_economy")().agent.outcomes[-1])
+        outcomes.append(game.view("agent_last_outcome")())
     return [outcome.accounts for outcome in outcomes]
 
 

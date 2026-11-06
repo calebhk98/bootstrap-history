@@ -1,9 +1,9 @@
 # Authority does not decay with distance: no garrison reach, no unrest-versus-garrison control, no revenue leakage
 
-**Status:** partly - reach, hold against a rising, collection, order and the levy reading authority, and corruption as the share officials keep are built; open: the remainders below
+**Status:** partly - reach, hold against a rising, collection, order and the levy reading authority, and corruption as the share officials keep are built; open: the remainders below; seen on reading: raised armies carry a tile (`tile` at sim/world/army_record.py:12, `sim/campaigns/armies.py`), so "no location" below holds only for the national headcount `record.army`
 
 - The army is a national headcount (`record.army`, `sim/agents/government.py`); `army_wanted` is the
-  civilisation's `standing_army` scaled by hazards (`sim/engine/agents_port_budget.py`). It has no
+  civilisation's `standing_army` scaled by hazards (`army_wanted` in `sim/actors/world_army.py`). It has no
   location, so it cannot project control anywhere.
 - Route search already gives the cost from any tile to any other (`sim/geography/routes_search.py`,
   `costs_from`, `reach`) and `territory.py` gives frontier and road length, but nothing reads them as

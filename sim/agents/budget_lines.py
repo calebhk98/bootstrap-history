@@ -13,55 +13,52 @@ from .tuning_spending import (COAST_KM_PER_SHIP, COURT_RETAINERS_PER_OFFICIAL,
 							  PUBLIC_BUILDING_LIFE_YEARS, PUBLIC_FLOOR_AREA_PER_URBAN_PERSON_M2,
 							  MAX_STATE_SHARE_OF_TRADE, ROAD_UPKEEP_PERSON_YEARS_PER_KM)
 
-# The staple the dole is paid in, as a material in the tree's own terms.
-DOLE_MATERIAL = "wheat_kg"
-
 
 def paid(world: Any, name: str, kind: str, people: Dict[str, float]) -> Line:
 	"""A line made only of people kept in trades, never more of a trade than the state can take."""
-	people = {trade: min(count, MAX_STATE_SHARE_OF_TRADE * world.national_people(trade)) if trade != "labourer" else count
+	people = {trade: min(count, MAX_STATE_SHARE_OF_TRADE * world.labour.national_people(trade)) if trade != world.labour.trade_of_role("unskilled") else count
 			  for trade, count in people.items()}
 	people = {trade: count for trade, count in people.items() if count > 0.0}
-	return Line(name, kind, people, sum(count * world.pay_per_person_year(trade) for trade, count in people.items()))
+	return Line(name, kind, people, sum(count * world.labour.pay_per_person_year(trade) for trade, count in people.items()))
 
 
 def roads_line(world: Any) -> List[Line]:
-	person_years = world.territory().road_km * ROAD_UPKEEP_PERSON_YEARS_PER_KM
-	return [paid(world, "roads", "requisition", {"labourer": person_years})] if person_years > 0.0 else []
+	person_years = world.revenue.territory().road_km * ROAD_UPKEEP_PERSON_YEARS_PER_KM
+	return [paid(world, "roads", "requisition", {world.labour.trade_of_role("unskilled"): person_years})] if person_years > 0.0 else []
 
 
 def public_buildings_line(world: Any) -> List[Line]:
-	stock_m2 = world.urban_population() * PUBLIC_FLOOR_AREA_PER_URBAN_PERSON_M2
+	stock_m2 = world.people.urban_population() * PUBLIC_FLOOR_AREA_PER_URBAN_PERSON_M2
 	masons = stock_m2 * MASONRY_PERSON_YEARS_PER_M2 / PUBLIC_BUILDING_LIFE_YEARS
-	return [paid(world, "public_buildings", "requisition", {"mason": masons})] if masons > 0.0 else []
+	return [paid(world, "public_buildings", "requisition", {world.labour.trade_of_role("builder"): masons})] if masons > 0.0 else []
 
 
 def court_line(world: Any, officials: float) -> List[Line]:
 	if officials <= 0.0:
 		return []
-	return [paid(world, "court", "office", {"labourer": officials * COURT_RETAINERS_PER_OFFICIAL})]
+	return [paid(world, "court", "office", {world.labour.trade_of_role("unskilled"): officials * COURT_RETAINERS_PER_OFFICIAL})]
 
 
 def dole_line(world: Any) -> List[Line]:
-	recipients = world.urban_population() * DOLE_SHARE_OF_URBAN_PEOPLE
-	tonnes = recipients * world.subsistence_kg_per_person_year() / 1000.0
+	recipients = world.people.urban_population() * DOLE_SHARE_OF_URBAN_PEOPLE
+	tonnes = recipients * world.people.subsistence_kg_per_person_year() / 1000.0
 	if tonnes <= 0.0:
 		return []
-	return [Line("dole", "requisition", {}, 0.0, **goods(world, DOLE_MATERIAL, tonnes))]
+	return [Line("dole", "requisition", {}, 0.0, **goods(world, world.quotes.staple_material(), tonnes))]
 
 
 def navy_line(world: Any) -> List[Line]:
-	ships = world.government().record.levers.get("navy", world.territory().coast_km / COAST_KM_PER_SHIP)
+	ships = world.setting.government().record.levers.get("navy", world.revenue.territory().coast_km / COAST_KM_PER_SHIP)
 	if ships <= 0.0:
 		return []
-	options = [good for good in world.fleet_goods()
-			   if good["life"] > 0.0 and all(world.trade_exists(trade) for trade in good["crew"])]
+	options = [good for good in world.army.fleet_goods()
+			   if good["life"] > 0.0 and all(world.labour.trade_exists(trade) for trade in good["crew"])]
 	if not options:
 		return []
 	def upkeep_of(option: Dict[str, Any]) -> Tuple[bool, float, str]:
 		"""A ship type nobody sells ranks after every one on sale; then the cheaper to keep."""
-		price = world.material_cost(option["material"], 0.001)
-		crew = sum(count * world.pay_per_person_year(trade) for trade, count in option["crew"].items())
+		price = world.quotes.material_cost(option["material"], 0.001)
+		crew = sum(count * world.labour.pay_per_person_year(trade) for trade, count in option["crew"].items())
 		return price is None, (0.0 if price is None else price) / option["life"] + crew, option["material"]
 
 	good = min(options, key=upkeep_of)

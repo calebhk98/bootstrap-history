@@ -5,10 +5,12 @@ tiles, the markets its tiles trade in, the producers working on its tiles. Nothi
 by a ratio. Money is in the economy's unit (the port converts to coin). A figure the country's tiles have
 no record of is None, so a caller can fall back to a labelled estimate."""
 import math
-from typing import Dict, Optional, Set
+from typing import Dict, List, Optional, Set, Tuple
 
 from . import carried_book, households
+from .home_scope import has_partners
 from .market_memory import KEY_SEPARATOR, YearView
+from .national_prices import national_prices, national_wages
 from .setup import LABOUR_AREA_PREFIX, labour_area
 from .types import TileId
 
@@ -24,7 +26,7 @@ def home_when_shared(economy, country: Optional[str]) -> Optional[str]:
     economy holds several; None (everything) when it holds only the home one."""
     if country is not None:
         return country
-    return economy.setup.civ_id if len(economy.setup.countries()) > 1 else None
+    return economy.setup.civ_id if has_partners(economy.setup) else None
 
 
 def population(economy, country: Optional[str]) -> float:
@@ -38,19 +40,9 @@ def _labour_key_in(key: str, tiles: Set[TileId]) -> bool:
 
 
 def wages_per_hour(economy, country: Optional[str]) -> Dict[str, float]:
-    """Last year's wage per hour of each trade in the country's labour markets, weighted by the hours hired
-    there (the plain mean for a trade that hired nowhere)."""
+    """The wage per hour of each trade over the country's labour areas (`national_prices.national_wages`)."""
     tiles = country_tiles(economy, country)
-    rows: Dict[str, list] = {}
-    for key, wage in economy.record.memory.wages.items():
-        if _labour_key_in(key, tiles):
-            rows.setdefault(key.split(KEY_SEPARATOR, 1)[0], []).append((wage, economy.record.hours_hired.get(key, 0.0)))
-    wages = {}
-    for trade, pairs in rows.items():
-        hours = math.fsum(weight for _wage, weight in pairs)
-        wages[trade] = (math.fsum(wage * weight for wage, weight in pairs) / hours if hours > 0.0
-                        else math.fsum(wage for wage, _weight in pairs) / len(pairs))
-    return dict(sorted(wages.items()))
+    return national_wages(economy.record, keep=lambda key: _labour_key_in(key, tiles))
 
 
 def idle_hours_by_trade(economy, country: Optional[str]) -> Dict[str, tuple]:
@@ -59,17 +51,17 @@ def idle_hours_by_trade(economy, country: Optional[str]) -> Dict[str, tuple]:
     tiles = country_tiles(economy, country)
     idle: Dict[str, float] = {}
     hired: Dict[str, float] = {}
-    for key, hours in economy.record.hours_idle.items():
+    for key, hours in economy.record.labour.hours_idle.items():
         if _labour_key_in(key, tiles):
             trade = key.split(KEY_SEPARATOR, 1)[0]
             idle[trade] = idle.get(trade, 0.0) + hours
-            hired[trade] = hired.get(trade, 0.0) + economy.record.hours_hired.get(key, 0.0)
+            hired[trade] = hired.get(trade, 0.0) + economy.record.labour.hours_cleared_in(key)
     return {trade: (idle[trade], idle[trade] + hired[trade]) for trade in sorted(idle)}
 
 
 def people_by_trade(economy, country: Optional[str]) -> Dict[str, float]:
     """Working people by trade in the country's labour markets."""
-    workers = economy.record.workforce.workers
+    workers = economy.record.labour.workforce.workers
     totals: Dict[str, float] = {}
     for tile in sorted(country_tiles(economy, country)):
         # each trade is added tile by tile in tile order; the order trades are met in within a tile does not matter
@@ -80,68 +72,32 @@ def people_by_trade(economy, country: Optional[str]) -> Dict[str, float]:
 
 def _area_tiles(economy, good: str) -> Dict[str, Set[TileId]]:
     """Each market area of the good with its tiles; kept on the area map, which does not change once built."""
-    area_map = economy.area_map
-    kept = area_map.__dict__.setdefault("_area_tile_sets", {})
-    if good not in kept:
-        kept[good] = {area.area_id: set(area.tiles) for area in area_map.areas(good)} if good in area_map.goods() else {}
-    return kept[good]
+    return economy.area_map.tile_sets(good)
 
 
 def prices(economy, country: Optional[str]) -> Dict[str, float]:
-    """Each good's price over the market areas that touch the country's tiles, weighted by what each trades
-    (this year's volume before any is remembered). The answer is kept with copies of the prices and weights it
-    was read from and reused only while both compare equal to the live ones."""
-    record = economy.record
-    live_prices = record.memory.prices
-    live_weights = record.memory.volume_weights or record.volumes
-    kept = economy.__dict__.setdefault("_country_price_memo", {})
-    entry = kept.get(country)
-    if entry is not None and entry[0] == live_prices and entry[1] == live_weights:
-        return dict(entry[2])
-    result = scan_prices(economy, country)
-    kept[country] = (dict(live_prices), dict(live_weights), result)
-    return dict(result)
-
-
-def scan_prices(economy, country: Optional[str]) -> Dict[str, float]:
-    """`prices` read afresh from the record's markets."""
+    """Each good's price over the market areas that touch the country's tiles (`national_prices.national_prices`;
+    every area for None)."""
+    if country is None:
+        return national_prices(economy.record)
     tiles = country_tiles(economy, country)
-    record = economy.record
-    weights = record.memory.volume_weights or record.volumes
-    totals: Dict[str, tuple] = {}
     areas_of: Dict[str, Dict[str, Set[TileId]]] = {}
-    for key, price in sorted(record.memory.prices.items()):
-        good, area = key.split(KEY_SEPARATOR, 1)
+
+    def touches(good: str, area: str) -> bool:
         by_area = areas_of.get(good)
         if by_area is None:
             by_area = areas_of[good] = _area_tiles(economy, good)
-        if area in by_area and not (by_area[area] & tiles):
-            continue
-        volume = weights.get(key, 0.0)
-        value, quantity, plain = totals.get(good, (0.0, 0.0, 0.0))
-        totals[good] = (value + price * volume, quantity + volume, plain or price)
-    return {good: (value / quantity if quantity > 0.0 else plain) for good, (value, quantity, plain) in sorted(totals.items())}
+        return area not in by_area or bool(by_area[area] & tiles)
+    return national_prices(economy.record, touches)
 
 
 def traded_volumes(economy, country: Optional[str]) -> Dict[str, float]:
     """Last year's traded quantity of each good over the market areas that touch the country's tiles (every
-    market for None). Reused while the volumes it read compare equal to the live ones."""
-    live = economy.record.volumes
-    kept = economy.__dict__.setdefault("_country_volume_memo", {})
-    entry = kept.get(country)
-    if entry is not None and entry[0] == live:
-        return dict(entry[1])
-    result = scan_volumes(economy, country)
-    kept[country] = (dict(live), result)
-    return dict(result)
-
-
-def scan_volumes(economy, country: Optional[str]) -> Dict[str, float]:
-    """`traded_volumes` read afresh from the record's volumes."""
+    market for None)."""
     tiles = country_tiles(economy, country)
     totals: Dict[str, float] = {}
     areas_of: Dict[str, Dict[str, Set[TileId]]] = {}
-    for key, volume in economy.record.volumes.items():
+    for key, volume in economy.record.goods.volumes.items():
         good, area = key.split(KEY_SEPARATOR, 1)
         if country is not None:
             by_area = areas_of.get(good)
@@ -158,11 +114,11 @@ def opening_basket(economy, country: Optional[str]) -> Dict[str, float]:
     out in proportion to the demand each country's households were seeded with (the whole basket for None)."""
     record = economy.record
     if country is None:
-        return dict(record.opening_basket)
-    wanted = record.opening_demand_by_country.get(country, {})
+        return dict(record.goods.opening_basket)
+    wanted = record.goods.opening_demand_by_country.get(country, {})
     basket = {}
-    for good, supplied in record.opening_basket.items():
-        total = record.opening_demand.get(good, 0.0)
+    for good, supplied in record.goods.opening_basket.items():
+        total = record.goods.opening_demand.get(good, 0.0)
         if total > 0.0 and wanted.get(good, 0.0) > 0.0:
             basket[good] = supplied * wanted[good] / total
     return basket
@@ -170,7 +126,7 @@ def opening_basket(economy, country: Optional[str]) -> Dict[str, float]:
 
 def _floor_view(economy):
     setup, record = economy.setup, economy.record
-    return YearView(record.memory, record.book, economy.area_map, setup.currency_id, labour_area)
+    return YearView(record.memory, record.book, economy.area_map, setup.currency_id, setup, labour_area)
 
 
 def _tile_floor_costs(economy, view, tile) -> Dict[str, float]:
@@ -203,12 +159,19 @@ def need_floor_costs_per_person_year(economy, country: Optional[str]) -> Dict[st
 
 
 def output_value(economy, country: Optional[str]) -> Optional[float]:
-    """What the country's producers make in a year at the country's prices: runs worked last year (capacity
-    before they have worked) times a run's outputs. None while no producer works on its tiles."""
+    """`output_value_and_unpriced` without the unpriced goods."""
+    return output_value_and_unpriced(economy, country)[0]
+
+
+def output_value_and_unpriced(economy, country: Optional[str]) -> Tuple[Optional[float], List[str]]:
+    """(what the country's producers make in a year at the country's prices, the goods they make that have no price
+    there, sorted). Runs worked last year (capacity before they have worked) times a run's outputs; an output with no
+    price is left out of the value and named in the list. The value is None while no producer works on its tiles."""
     tiles = country_tiles(economy, country)
     own_prices = prices(economy, country)
     total = 0.0
     seen = False
+    unpriced = set()
     for producer in economy.record.producers.values():
         if producer.tile not in tiles:
             continue
@@ -217,9 +180,10 @@ def output_value(economy, country: Optional[str]) -> Optional[float]:
             continue
         seen = True
         runs = producer.capacity_runs if producer.last_runs < 0.0 else producer.last_runs
-        total += runs * producer.yield_factor * math.fsum(quantity * own_prices.get(good, 0.0)
-                                                          for good, quantity in recipe.outputs.items())
-    return total if seen else None
+        unpriced.update(good for good in recipe.outputs if good not in own_prices)
+        total += runs * producer.yield_factor * math.fsum(quantity * own_prices[good]
+                                                          for good, quantity in recipe.outputs.items() if good in own_prices)
+    return (total if seen else None), sorted(unpriced)
 
 
 def currency(economy):
@@ -242,4 +206,4 @@ def trade_book(economy, country: Optional[str]) -> Dict[str, Dict[str, float]]:
     economy's unit; carried_book.trade_book). Empty for None, which has no border."""
     if country is None:
         return {}
-    return carried_book.trade_book(economy.record.carried_goods, economy.setup.country_of, country)
+    return carried_book.trade_book(economy.record.carriage.carried_goods, economy.setup.country_of, country)

@@ -1,23 +1,23 @@
 """The funds lenders offer, the market rate and what the state lends and owes.
 
 The rate and the room a borrower may still be lent are the agent economy's credit market's. What the module adds is who lends
-to the actors: once a year, before the actors act, the lenders' offers are fixed from what households save, what the state holds
-beyond its need and what each firm holds, and the interest the pool holds is shared among its depositors.
-Needs: civilisation, agent_rate, agent_credit_room, cast, state_treasury, actor_world, lender_offers_made, cash_and_deposit,
+to the actors: the economy's own lenders (cohorts' savings, banks, funds) lend to the pool at their asks when an actor draws
+(sim/agents/purses.py); once a year, before the actors act, the state's offer from what it holds beyond its need and each firm's
+offer from its cash are fixed, and the interest the pool holds is shared among its depositors.
+Needs: civilisation, agent_rate, agent_credit_room, agent_fundable_amount, agent_risk_premium, agent_lender_listing, cast, state_treasury, actor_world, lender_offers_made, cash_and_deposit,
 loans_out, debt_owed, send (SetLenderOffers, SettleLenderInterest, NoteHolderBooking)."""
 from typing import Any, Dict, Optional, Tuple
 
 from sim.actors.api import SetLenderOffers, SettleLenderInterest
-from sim.agents.api import EDGE_SAVERS
+from sim.assembly.api import Part
 from sim.economy.api import opening_market_rate
 from sim.ledger.api import NoteHolderBooking
 from sim.world import capital_market
 
 from . import rules
-from .constants import BACKGROUND_BORROWING_SHARE, LENDING_HORIZON_YEARS
 
 
-class CapitalMarket:
+class CapitalMarket(Part):
 
 	def market_rate(self) -> float:
 		"""The yearly market rate: the agent economy's credit market's, or the rate the opening solves while the economy opens."""
@@ -29,34 +29,57 @@ class CapitalMarket:
 		answered, room = self.needs.agent_credit_room(actor_id)
 		return room if answered else None
 
-	def market_funds(self, world: Any) -> Dict[str, float]:
-		"""Funds lenders hold, by source."""
+	def fundable_amount(self, amount: float, existing_debt: float, collateral_value: float, arrears: float) -> Optional[float]:
+		"""The most of a draw of `amount` the credit market lends an actor that owes `existing_debt` against `collateral_value`
+		(the one rule of the clearing, in coin); None before lenders have met or while the economy opens."""
+		answered, fundable = self.needs.agent_fundable_amount(amount, existing_debt, collateral_value, arrears)
+		return fundable if answered else None
+
+	def risk_premium(self, debt_after: float, collateral_value: float, arrears: float) -> Optional[float]:
+		"""The rate the credit market adds to the market rate for an actor owing `debt_after` against `collateral_value`; None
+		while the economy opens."""
+		answered, premium = self.needs.agent_risk_premium(debt_after, collateral_value, arrears)
+		return premium if answered else None
+
+	def market_funds(self) -> Dict[str, float]:
+		"""Funds the actors offer, by source: the state's lendable reserve (each firm's offer is its own cash, `lender_offers`)."""
 		government = self.needs.state_treasury()
-		firms = sum(max(0.0, firm.money) for firm in self.needs.cast().active_firms())
 		spare = rules.state_spare_reserve(government.money, sum(government.record.need.values()), government.cannot_meet_own_need())
-		return {
-			"households": LENDING_HORIZON_YEARS * world.household_saving(),
-			"firms": firms,
-			"state": rules.lendable_share_of_reserve(spare),
-		}
+		return {"state": rules.lendable_share_of_reserve(spare)}
 
 	def state_lending(self) -> Tuple[float, float]:
 		"""(what the state has out on loan, the yearly rate lenders earn): the claims the state holds in the actors' book, and
 		the market rate."""
 		return self.needs.loans_out(self.needs.state_treasury().actor_id), self.market_rate()
 
+	def economy_lending(self) -> Tuple[float, float]:
+		"""(what the economy's lenders offered at the last lending, what of it is out of their accounts now), in coin; nothing
+		before lenders have met."""
+		answered, listing = self.needs.agent_lender_listing()
+		if not answered:
+			return 0.0, 0.0
+		offered = sum(row[1] for row in listing["lenders"])
+		held = sum(min(row[1], row[3]) for row in listing["lenders"])
+		return offered * listing["coin_per_unit"], (offered - held) * listing["coin_per_unit"]
+
+	def economy_pooled(self) -> float:
+		"""What the economy's lenders have in the actors' pool, in coin."""
+		answered, listing = self.needs.agent_lender_listing()
+		return 0.0 if not answered else sum(self.needs.cash_and_deposit[row[0]] for row in listing["lenders"])
+
 	def households_loanable_funds(self) -> float:
-		"""Funds households put into the loanable pool at the last meeting of the capital market; none before it has met."""
-		return self.needs.lender_offers_made().get(EDGE_SAVERS, 0.0)
+		"""Funds the economy's lenders (the households' savings among them) put on offer at the last lending, in coin; none
+		before they have met."""
+		return self.economy_lending()[0]
 
 	def lender_offers(self, sources: Dict[str, float]) -> Dict[str, float]:
 		"""The funds each lender account offers this year, from the market's sources: the households' savings stand behind the
 		savers, the state's reserve behind its account, each firm's purse behind the firm's and the purse of any other actor whose
 		class sets `lends_from_purse` behind its own (a mod's institution, say). A player's seat is not a lender: its purse is
 		its own."""
-		offers = {EDGE_SAVERS: sources["households"], self.needs.state_treasury().actor_id: sources["state"]}
+		offers = {self.needs.state_treasury().actor_id: sources["state"]}
 		registry = self.needs.cast()
-		for firm in registry.active_firms():
+		for firm in registry.concerns.active_firms():
 			offers[firm.actor_id] = self.needs.cash_and_deposit[firm.actor_id]
 		for lender in registry.purse_lenders():
 			offers[lender.actor_id] = self.needs.cash_and_deposit[lender.actor_id]
@@ -65,7 +88,7 @@ class CapitalMarket:
 	def refresh_lender_offers(self, command: Any = None) -> None:
 		"""The year's meeting of lenders: the pool pays the interest it holds, then who offers what is fixed."""
 		self.settle_lender_interest()
-		offers = self.lender_offers(self.market_funds(self.needs.actor_world()))
+		offers = self.lender_offers(self.market_funds())
 		self.needs.send(SetLenderOffers(tuple(offers.items())))
 
 	def settle_lender_interest(self) -> None:
@@ -78,14 +101,15 @@ class CapitalMarket:
 		self.needs.send(NoteHolderBooking(command.account, command.signed, command.label))
 
 	def lent_share(self) -> float:
-		"""Share of lenders' funds out on loan: what the actors owe and the economy the simulation does not model actor by actor
-		borrows (a share of the households' savings), over the funds on offer."""
-		offers = self.needs.lender_offers_made()
-		supply = sum(offers.values())
+		"""Share of lenders' funds out on loan: what the economy's lenders have lent out of their offers (loans to its borrowers
+		and the funds they put in the actors' pool) and what the actors owe out of their own offers, over the funds on offer."""
+		actors_offered = sum(self.needs.lender_offers_made().values())
+		economy_offered, economy_lent = self.economy_lending()
+		supply = actors_offered + economy_offered
 		if supply <= 0.0:
 			return 0.0
-		background = BACKGROUND_BORROWING_SHARE * offers.get(EDGE_SAVERS, 0.0)
-		demanded = capital_market.utilisation(background + self.needs.loans_out(), supply)
+		actors_lent = min(actors_offered, max(0.0, self.needs.loans_out() - self.economy_pooled()))
+		demanded = capital_market.utilisation(economy_lent + actors_lent, supply)
 		return min(1.0 - capital_market.LENDER_RESERVE_SHARE, demanded)
 
 	def state_owes(self) -> float:
@@ -95,7 +119,7 @@ class CapitalMarket:
 
 	def capital_market_report(self) -> Dict[str, Any]:
 		"""The market as a player sees it: the rate, what lenders hold and will still advance the founder, and what the state owes."""
-		supply = sum(self.needs.lender_offers_made().values())
+		supply = sum(self.needs.lender_offers_made().values()) + self.economy_lending()[0]
 		if supply <= 0.0:
 			return {"market_rate": round(self.market_rate(), 4), "met": False, "the_state_owes": self.state_owes()}
 		room = self.credit_room(self.clock.acting_seat)

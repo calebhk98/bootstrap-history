@@ -1,6 +1,5 @@
 """Complaints 429, 443, 444: trade facts, fatality risks and goods' service lives are read from data. Stub registries use
-invented trade ids; the shipped trades and service-life files are read as data. That the port hands the economy the risk and
-the lives is test_game_port_and_portfolio_smoke."""
+invented trade ids; the shipped trades and service-life files are read as data."""
 QUICK_TOPIC = True
 
 import json
@@ -8,8 +7,8 @@ import os
 
 from .harness import *  # noqa: F401,F403
 
-from sim.economy import labour
-from sim.content.catalog import Trade, trade_fields, trade_from
+from sim.labour.api import reservation_wage_per_hour
+from sim.content.catalog import trade_fields, trade_from
 from sim.labour import trade_data
 
 DATA = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "data", "world")
@@ -22,8 +21,6 @@ check("an override sees the extra fields flat", trade_fields(trade)["literate"] 
 registry = {"wright": {"literate": True, "taught_from": "weaver", "tool_basket": ["timber", "iron"], "staff_resource": "crew"},
             "plain": {}}
 check("a mod's trade can say it is literate", trade_data.literate_trades(registry, ["wright", "plain", "absent"]) == {"wright"})
-check("a mod's trade names its teacher", trade_data.taught_from(registry, "wright") == "weaver")
-check("a trade naming none is taught from the default", trade_data.taught_from(registry, "plain") == trade_data.taught_from({}, "x"))
 check("a mod's trade names its tools", trade_data.tool_basket(registry, "wright") == ("timber", "iron")
       and trade_data.tool_basket(registry, "plain") == ())
 check("a staffing resource is filled by the trade that names it, else by the same name",
@@ -39,8 +36,8 @@ for name, spec in sorted(trades_file.items()):
           isinstance(risk, (int, float)) and 0.0 <= risk < 1.0 and spec.get("fatality_source") and spec.get("fatality_confidence"), spec)
 check("mining, seafaring and soldiering carry a risk",
       all(trades_file[name]["fatality_risk_per_year"] > 0.0 for name in ("miner", "sailor", "soldier")))
-dangerous_ask = labour.reservation_wage(100.0, 2000.0, trades_file["miner"]["fatality_risk_per_year"], 20.0)
-safe_ask = labour.reservation_wage(100.0, 2000.0, 0.0, 20.0)
+dangerous_ask = reservation_wage_per_hour(100.0, 2000.0, trades_file["miner"]["fatality_risk_per_year"], 20.0)
+safe_ask = reservation_wage_per_hour(100.0, 2000.0, 0.0, 20.0)
 check("a dangerous trade's offered wage exceeds a safe one with equal subsistence", dangerous_ask > safe_ask, (dangerous_ask, safe_ask))
 
 # 443: service lives are in data.

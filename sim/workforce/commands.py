@@ -1,15 +1,8 @@
 """Commands to the owner of the labour market and its people."""
 from dataclasses import dataclass
-from typing import Dict, Optional
+from typing import Any, Optional
 
 from sim.assembly.api import Command
-
-
-@dataclass(frozen=True)
-class PressLabour(Command):
-	"""Record demand for `hours` a year of a trade that is not a hire, which raises that trade's wage pressure."""
-	trade: str
-	hours: float
 
 
 @dataclass(frozen=True)
@@ -17,6 +10,29 @@ class SetEmployed(Command):
 	"""The acting seat's staff in `trade` become `headcount` full-time equivalents, and the hour pools follow."""
 	trade: str
 	headcount: float
+
+
+@dataclass(frozen=True)
+class StaffArrived(Command):
+	"""The acting seat's staff in `trade` are the `people` the labour core's clearing hired for it; the standing bid stays."""
+	trade: str
+	people: float
+
+
+@dataclass(frozen=True)
+class HoursArrived(Command):
+	"""The labour core's clearing filled the acting seat's one-year order of a purpose: `hours_by_trade` are the hours hired
+	(a commission's become its contract hours). The order is spent either way."""
+	purpose: str
+	hours_by_trade: Any
+
+
+@dataclass(frozen=True)
+class PostHoursOnce(Command):
+	"""The acting seat asks the labour core for `hours` more of `trade` this year only, for a purpose. Answers nothing."""
+	purpose: str
+	trade: str
+	hours: float
 
 
 @dataclass(frozen=True)
@@ -29,17 +45,36 @@ class NoteTradeSpread(Command):
 
 
 @dataclass(frozen=True)
+class ClearingSettled(Command):
+	"""The year's clearing charged the acting seat `wages_charged` for its staff and one-year orders and paid it `wage_work_pay`
+	for the hours of its own it offered in the labour market (both in money); the offers are spent."""
+	wages_charged: float
+	wage_work_pay: float
+
+
+@dataclass(frozen=True)
+class NewcomersPlaced(Command):
+	"""The acting seat's newly trained and granted people were put into the labour core; the list of them is spent."""
+
+
+@dataclass(frozen=True)
+class NoteClearedWage(Command):
+	"""The year's clearing set the unskilled hour's wage at `wage` (None: no market cleared one); the last reading becomes the one before."""
+	wage: Optional[float]
+
+
+@dataclass(frozen=True)
 class GrantStaff(Command):
-	"""An institution hands the acting seat people outright, on completion: recorded as a grant, so the yearly resync of
-	the pools from the payroll keeps them."""
+	"""An institution hands the acting seat people outright, on completion: they join the seat's staff and the labour core,
+	and are hired at the clearing like anyone."""
 	scholars: float = 0.0
 	artisans: float = 0.0
 
 
 @dataclass(frozen=True)
 class LoseStaff(Command):
-	"""A shock takes people from the acting seat: each person on its books survives with probability `survival_share`, rolled
-	one by one so headcounts stay whole (a trade left with nobody is dropped; draws from the game's dice), its pool of deputy
+	"""A shock takes people from the acting seat: the people on its books are scaled by `survival_share`, fractions kept
+	(a trade left with nobody is dropped), its pool of deputy
 	directors is multiplied by `deputies_share`, and its log says which trades fell and that `cause` is why. Answers
 	{"people_before": ..., "people_after": ...}, the scholars, artisans and hired people on the books either side."""
 	cause: str
@@ -53,23 +88,6 @@ class ReleaseStaff(Command):
 	seat_id: str
 	trade: str
 	people: float
-
-
-@dataclass(frozen=True)
-class AllocateFarmWorkforce(Command):
-	"""The society's farm workforce for a year is sized for a people of `adult_equivalent_population`, the year's farming
-	technique is chosen and the farm's hours needed are set. Answers the full-time equivalents on the farm."""
-	adult_equivalent_population: float
-
-
-@dataclass(frozen=True)
-class ApplyLandClearing(Command):
-	"""Hands beyond what the farm can crop spent the year clearing: the farm area grows by what they cleared."""
-
-
-@dataclass(frozen=True)
-class UpdateWages(Command):
-	"""One year of wage adjustment toward the trades that are short."""
 
 
 @dataclass(frozen=True)

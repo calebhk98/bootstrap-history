@@ -3,6 +3,7 @@
 The holding itself (hectares, granary stock, last harvest) is the demography module's seat state, read through its view
 `farm_holdings` and changed by its command `ChangeFarmland`."""
 from sim.agents.api import edges
+from sim.assembly.api import Part
 from sim.demography.api import ChangeFarmland
 from sim.ledger.api import PayEdge, ReceiveFromEdge
 from sim.refusal import Refusal
@@ -11,7 +12,7 @@ from . import rules
 from .constants import FARM_LABOUR_HOURS_PER_HA
 
 
-class Farm:
+class Farm(Part):
 
     def farm_land_price(self):
         """What one hectare of farmland costs now."""
@@ -25,7 +26,9 @@ class Farm:
             return Refusal(cause, "hectares must be greater than zero")
         if cause:
             return Refusal(cause, "cannot pay %.6g for %.6g hectares of farmland" % (cost, hectares))
-        self.needs.send(PayEdge(edges.EDGE_LANDOWNERS, cost, "farmland bought"))
+        refusal = self.needs.send(PayEdge(edges.EDGE_LANDOWNERS, cost, "farmland bought"))
+        if refusal:
+            return refusal
         self.needs.send(ChangeFarmland(hectares))
         return hectares
 

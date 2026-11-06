@@ -7,6 +7,7 @@ QUICK_TOPIC = True
 import types
 import unittest
 
+from sim.tests.economy_view_defaults import ViewDefaults
 from sim.economy import goods_market, seller_offers, unsold_search
 from sim.economy.producers import Producer
 from sim.economy.types import Bid, Offer, Recipe
@@ -17,7 +18,7 @@ TOTAL = 1000.0
 ASK = 1.0
 
 
-class View:
+class View(ViewDefaults):
     def interest_rate(self, currency):
         return 0.0
 
@@ -52,8 +53,8 @@ def deep_demand():
 def game(producers):
     recipe = Recipe("farm", {GOOD: 1.0}, {"seed": 1.0}, {"labour": 1.0})
     basket = types.SimpleNamespace(substitution=1.0)
-    setup = types.SimpleNamespace(specs={}, recipes={"farm": recipe}, basket_for=lambda tile: basket)
-    return setup, types.SimpleNamespace(producers={each.agent_id: each for each in producers}, memory=types.SimpleNamespace(volume_weights={GOOD + "|" + AREA: 100.0}), unmet={})
+    setup = types.SimpleNamespace(specs={}, currency_id="coin", recipes={"farm": recipe}, basket_for=lambda tile: basket)
+    return setup, types.SimpleNamespace(producers={each.agent_id: each for each in producers}, memory=types.SimpleNamespace(volume_weights={GOOD + "|" + AREA: 100.0}), goods=types.SimpleNamespace(unmet={}))
 
 
 def producer(name, workshops):

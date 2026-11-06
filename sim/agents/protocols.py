@@ -1,35 +1,141 @@
 """What an actor may ask of its world: documentation and typing only.
 
 Actors (`HouseholdParty`, `Firm`, `Government`, `InterestGroup`) never touch the simulation. They are
-handed an object that answers the questions below; the engine's own adapter,
-`sim/actors/world.py` (`ActorWorld`), is the one the running game supplies, and a test or a
-second scenario may supply another. Nothing here is imported at run time; it names the members the
-actors call, so a change to what an actor asks shows up as a change to this file.
+handed a `World`: a set of parts, one per concern, each answering the questions its protocol names
+(`world.<part>.<method>()`). The engine's own adapter, `sim/actors/world.py` (`ActorWorld`), is the one the
+running game supplies, a foreign country's actors are handed `CountryWorld` (sim/agents/country_view.py), and a test or a
+second scenario may supply another. Nothing here is imported at run time except by the mod surface
+(`narrowed_world.py`), and `Refusal` for the annotations; it names the members the actors call, so a change to what an
+actor asks shows up as a change to this file.
 """
 import random
-from typing import Any, Callable, Dict, FrozenSet, Iterable, List, Optional, Protocol, Set, Tuple
+from typing import Any, Callable, Dict, FrozenSet, Iterable, List, Optional, Protocol, Set, Tuple, Union
+
+from sim.refusal import Refusal
 
 from .revenue import Assessment
 from .sector import Sector
 
 
-class World(Protocol):
-	"""The questions an actor asks of the world it lives in."""
+class SettingPart(Protocol):
+	"""The year, the tree, the civilisation, edges, random streams, the government and distances."""
 
-	# ---- What a state asks when it budgets
+	@property
+	def year(self) -> int:
+		...
+
+	@property
+	def nodes(self) -> Dict[str, Any]:
+		...
+
+	@property
+	def civ_id(self) -> str:
+		...
 
 	def edge(self, name: str) -> Any:
 		"""The named edge a posting names when its other side is not an actor."""
 		...
 
+	def rng_for(self, *parts: Any) -> random.Random:
+		"""A random stream keyed by its inputs, so actors never disturb the world's own."""
+		...
+
+	def state_weights(self) -> Dict[str, float]:
+		...
+
+	def government(self) -> Any:
+		"""The government actor of the founder's civilisation."""
+		...
+
+	def distance_km(self, place_a: Optional[str], place_b: Optional[str]) -> float:
+		"""Kilometres between two places (tile or region ids); None is where the founder operates from."""
+		...
+
+
+class KnowledgePart(Protocol):
+	"""What the society knows and how far an onlooker sees an invention."""
+
+	def baseline_knowledge(self) -> Set[str]:
+		"""What the society already knows without the founder."""
+		...
+
+	def founder_inventions(self) -> List[str]:
+		"""Everything the founder has completed that the society did not have."""
+		...
+
+	def demonstrated(self) -> Set[str]:
+		...
+
+	def knowledge_half_life_years(self) -> float:
+		"""Years for half of the actors that could learn a node some actor holds to have learned it."""
+		...
+
+	def knowledge_visibility(self, node_id: str, distance_km: float) -> float:
+		"""0..1: how much of a node an actor holds shows to an onlooker `distance_km` away."""
+		...
+
+	def is_public(self, node_id: str) -> bool:
+		...
+
+	def exposure(self, node_id: str, location: Optional[str]) -> float:
+		"""How much of an invention an observer at `location` can learn, 0..1."""
+		...
+
+
+class DisclosurePart(Protocol):
+	"""How each invention was disclosed: secrets, licences, patents and royalties."""
+
+	def disclosure_mode(self, node_id: str) -> str:
+		...
+
+	def secret_exposure(self, node_id: str) -> float:
+		...
+
+	def base_visibility(self, node_id: str) -> float:
+		"""How much of an invention can be learned before distance counts, 0..1."""
+		...
+
+	def proof_years(self, node_id: str) -> float:
+		"""Years a concern must run at a profit before outsiders believe it."""
+		...
+
+	def collect_royalty(self, firm: Any, node_id: str, takings: float) -> float:
+		"""The founder's royalty on a licensed firm's takings; the amount paid."""
+		...
+
+	def state_grants_patents(self, actor: Any) -> bool:
+		"""Whether the state over an actor knows a technique declaring the patent mechanic."""
+		...
+
+	def patent_entry(self, node_id: str) -> Optional[Dict[str, Any]]:
+		"""The live patent on a node ({"holder", "expires", "licensees"}), else None."""
+		...
+
+
+class SeatsPart(Protocol):
+	"""The seats' staff and margins, and the founder's business review."""
+
+	def release_seat_staff(self, seat_id: str, trade: str, people: float) -> None:
+		"""People of a trade leave a seat's payroll (to found a rival, say)."""
+		...
+
+	def seat_margin(self, seat_id: str) -> float:
+		"""What a seat's concerns earn over their upkeep in a year; the margin its shareholders and an infringed holder draw on."""
+		...
+
+	def seat_parties(self) -> Dict[str, Any]:
+		"""Every seat as an actor by seat id (they hold patents and shares like any actor)."""
+		...
+
+	def founder_review(self) -> Any:
+		"""The founder's seat as the owner of a reviewed business (the hooks of `Reviewable`, answered by the seat)."""
+		...
+
+
+class PeoplePart(Protocol):
+	"""The country's people: how many, how literate, what a body of them costs to keep."""
+
 	def population_total(self) -> float:
-		...
-
-	def state_reach(self) -> float:
-		...
-
-	def territory(self) -> Any:
-		"""Frontier, coast and road length of the tiles the state holds."""
 		...
 
 	def urban_population(self) -> float:
@@ -38,16 +144,46 @@ class World(Protocol):
 	def subsistence_kg_per_person_year(self) -> float:
 		...
 
-	def national_people(self, trade: str) -> float:
-		"""People of a trade in the whole country; the working age for unskilled labour."""
+	def literacy(self, field: str) -> float:
 		...
 
-	def trade_exists(self, trade: str) -> bool:
+	def research_productivity(self, country=None) -> float:
 		...
 
-	def fleet_goods(self, holder_id: Optional[str] = None) -> List[Any]:
-		"""Available naval goods with their crews, service lives and the held units of a state (the founder's by default)."""
+	def country_strata(self) -> List[Any]:
+		"""The home country's bodies of people, in id order."""
 		...
+
+	def state_hands(self) -> Any:
+		"""The country's working-age people, farm hands and food ratio (headcount.Hands), or None when unmeasured."""
+		...
+
+	def observed_stratum(self, country: Optional[str], name: str) -> Optional[Dict[str, float]]:
+		"""Headcount and income ("members", "income") another model already keeps for a body of people."""
+		...
+
+	def need_floor_costs_per_person_year(self) -> Dict[str, float]:
+		"""Money for one person's floor of each need for a year, by need id, at the prices households pay
+		(the need-basket kernel, sim/world/need_basket.py)."""
+		...
+
+	def subsistence_cost_per_person_year(self) -> float:
+		"""Money for one person's food at subsistence for a year."""
+		...
+
+	def frontier_disease_loss(self) -> Optional[float]:
+		"""The share of working-age people the diseases of the frontier tiles take in a year, or None where the world does not
+		follow its regions' disease (a foreign country)."""
+		...
+
+	def country_economy(self, country: str) -> Any:
+		"""The economy's own answers for a country that is part of it (pay_per_person_year, society_output,
+		need_floor_costs_per_person_year), or None when the country is not (a country view then raises NoCountryEconomy)."""
+		...
+
+
+class ArmyPart(Protocol):
+	"""What a state asks about its army: threat, force, equipment and fleet."""
 
 	def threat_pressure(self) -> float:
 		...
@@ -55,27 +191,8 @@ class World(Protocol):
 	def army_wanted(self) -> float:
 		...
 
-	def state_hands(self) -> Any:
-		"""The country's working-age people, farm hands and food ratio (headcount.Hands), or None when unmeasured."""
-		...
-
 	def soldiers_under_arms(self) -> float:
 		"""Soldiers the state keeps now: what it paid for last year, else the force it wants."""
-		...
-
-	def patron_ask(self) -> float:
-		...
-
-	def patron_clients(self, country: str) -> List[Tuple[float, float]]:
-		"""(governance, reputation factor) of the playing seats of a country whose techniques run the funding mechanic."""
-		...
-
-	def state_funding_terms(self, people: float) -> Dict[str, float]:
-		"""The terms a state funds a client on, for a country of `people` (agents/patronage.py)."""
-		...
-
-	def country_output_per_head(self, country: str, opening_people: float, people: float) -> Optional[float]:
-		"""A country's real output per person over its opening's; None while the economy has no record of it."""
 		...
 
 	def equipment_kg_per_soldier(self) -> float:
@@ -89,18 +206,17 @@ class World(Protocol):
 		"""Iron and ammunition one equipped soldier uses a year when his army holds this share (0..1) of the military work."""
 		...
 
-	def pay_per_person_year(self, trade: str) -> float:
+	def equipment_material(self) -> str:
+		"""The material one soldier wears out, from the soldier trade's data."""
 		...
 
-	def commodity_of(self, material: str) -> str:
+	def fleet_goods(self, holder_id: Optional[str] = None) -> List[Any]:
+		"""Available naval goods with their crews, service lives and the held units of a state (the founder's by default)."""
 		...
 
-	def material_cost(self, material: str, tonnes: float) -> Optional[float]:
-		"""Money to buy this many tonnes of a material at the price the market quotes; None when no market sells it."""
-		...
 
-	def local_staff(self, trade: str, people: float) -> float:
-		...
+class TaxpayersPart(Protocol):
+	"""Who the state can see to tax and how far its officials reach."""
 
 	def notice_over(self, scale: float, capacity: Optional[float] = None) -> float:
 		"""How far past the notice line a taxpayer of this visible scale stands; `capacity` is another state's."""
@@ -114,7 +230,25 @@ class World(Protocol):
 		"""(visible scale, taxable income) of every actor the state can see: the founder and the firms."""
 		...
 
-	# ---- What a state asks when it assesses revenue
+	def visible_scale_of(self, actor: Any) -> float:
+		"""How large and visible any actor looks to the state: its staff, its wealth and its prominence."""
+		...
+
+	def levy_shares(self, scale: float, protection: float = 0.0, state: Any = None) -> Any:
+		"""(requisition, office) shares of income the state assesses at this visible scale; `state` is another
+		country's (capacity, tax share, requisition rate, office rate) in place of the founder's state's."""
+		...
+
+	def state_reach(self) -> float:
+		...
+
+
+class RevenuePart(Protocol):
+	"""A state's declared forms of revenue and the bases they read."""
+
+	def territory(self) -> Any:
+		"""Frontier, coast and road length of the tiles the state holds."""
+		...
 
 	def revenue_forms(self) -> List[Dict[str, Any]]:
 		"""The forms of revenue the civilisation's state raises, as its data declares them."""
@@ -134,16 +268,16 @@ class World(Protocol):
 		"""Tonnes of a material the country's producers made last year (only on `tiles` when given)."""
 		...
 
-	def material_price(self, material: str) -> float:
-		"""Money for one tonne of a material at the price the market quotes."""
-		...
-
 	def trade_value(self, direction: str) -> float:
 		"""Money's worth of goods imported ("in") or exported ("out") in the last completed year."""
 		...
 
-	def coin_stock_value(self) -> float:
+	def coin_stock_value(self) -> Optional[float]:
 		"""Money's worth of the coin this society holds, from its coin standard."""
+		...
+
+	def coin_regime(self) -> str:
+		"""The civilisation's coin standard regime: "struck_coin", "weighed_metal", "commodity" or "fiat"."""
 		...
 
 	def land_rent_paid_by_tile(self) -> Dict[str, float]:
@@ -155,45 +289,98 @@ class World(Protocol):
 		the rent went to; empty where it cannot."""
 		...
 
-	def held_tiles(self) -> List[str]:
-		"""The tiles the state holds."""
+	def fugitive_share(self) -> Optional[float]:
+		"""Share of the country's people who are away having fled the state's take, or None where the world does not follow
+		its people's flight (a foreign country)."""
 		...
 
-	def collectible_share(self, tiles: Optional[Iterable[str]] = None) -> float:
-		"""The share of what is due on `tiles` (all the state holds when none) that its officials reach, from their
-		number, their literacy and the road from the seat (collection.py)."""
+	def held_tiles(self) -> List[str]:
+		"""The tiles the state holds."""
 		...
 
 	def arable_share(self, tiles: FrozenSet[str]) -> float:
 		"""The share of the arable land the state holds that lies on `tiles`."""
 		...
 
-	# ---- Who is hurt, and what an interest group can see
+	def society_output(self) -> float:
+		...
+
+
+class CollectionPart(Protocol):
+	"""The share of what is due that the state's officials collect."""
+
+	def collectible_share(self, tiles: Optional[Iterable[str]] = None) -> float:
+		"""The share of what is due on `tiles` (all the state holds when none) that its officials reach, from their
+		number, their literacy and the road from the seat (collection.py)."""
+		...
+
+	def corruption_share(self, tiles: Optional[Iterable[str]] = None) -> float:
+		"""The share of what officials collect on `tiles` (all the state holds when none) that they keep."""
+		...
+
+
+class LabourPart(Protocol):
+	"""The one labour market, what a trade pays and the people free to hire."""
+
+	@property
+	def labour_market(self) -> Any:
+		"""The one labour market every employer asks: quote, hire, release, read the pressure."""
+		...
+
+	@property
+	def hours_per_person_year(self) -> float:
+		...
+
+	def hourly_pay(self, trade: str) -> float:
+		"""What an hour of a trade pays in the asking actor's country (the one rule, sim/economy/trade_wages.py)."""
+		...
+
+	def pay_per_person_year(self, trade: str) -> float:
+		"""What a person-year of a trade pays in the asking actor's country (the one rule, sim/economy/trade_wages.py)."""
+		...
+
+	def pay_wages(self, payer: Any, amount: float, purpose: Any) -> None:
+		"""Wages the home country's people are paid: they reach the strata's purses."""
+		...
+
+	def free_fte(self, trade: str, actor_id: Optional[str]) -> Optional[float]:
+		...
+
+	def national_people(self, trade: str) -> float:
+		"""People of a trade in the whole country; the working age for unskilled labour."""
+		...
+
+	def trade_exists(self, trade: str) -> bool:
+		...
+
+	def trade_of_role(self, role: str) -> str:
+		"""The trade that plays a role in the state's books (soldier, builder, clerk, unskilled), from the trade data."""
+		...
+
+
+class QuotesPart(Protocol):
+	"""What the goods market quotes and what the people live on."""
+
+	def commodity_of(self, material: str) -> str:
+		...
+
+	def material_cost(self, material: str, tonnes: float) -> Optional[float]:
+		"""Money to buy this many tonnes of a material at the price the market quotes; None when no market sells it."""
+		...
+
+	def material_price(self, material: str) -> Optional[float]:
+		"""Money for one tonne of a material at the price the market quotes; None when no market sells it."""
+		...
+
+	def staple_material(self) -> str:
+		"""The material the civilisation's people live on."""
+		...
+
+
+class GroupsPart(Protocol):
+	"""Who is hurt, and what an interest group can say and ask."""
 
 	def displaced_producers(self) -> List[Sector]:
-		...
-
-	def squeezed_employers(self) -> List[Sector]:
-		...
-
-	def idle_hours_by_trade(self) -> Dict[str, Tuple[float, float]]:
-		"""(hours offered and not hired, hours offered) of each trade in the labour core's last clearing; empty without an agent economy."""
-		...
-
-	def displacing_technique(self, trade: str) -> Optional[str]:
-		"""The running technique that most recently began doing its category's work with fewer hands of `trade`, or None."""
-		...
-
-	def technique_name(self, node_id: str) -> str:
-		"""A technique as the player reads it."""
-		...
-
-	def land_rent_per_hectare(self) -> float:
-		"""Mean rent per hectare-year the land market let land at last year, in coin; zero without an agent economy."""
-		...
-
-	def tithable_sales_value(self, need_id: str) -> float:
-		"""Money's worth of what the society's producers sold this year of the goods that serve one need."""
 		...
 
 	def sectors(self) -> Dict[str, Sector]:
@@ -204,8 +391,8 @@ class World(Protocol):
 		"""What the state has undertaken to make good to each organised group, by budget line name."""
 		...
 
-	def scope_revenue(self, scope: float) -> float:
-		"""The state's yearly revenue from a territory holding `scope` of the whole."""
+	def faction_backing(self) -> Dict[str, float]:
+		"""The weight each organised group can put behind a claimant to the throne, by group id."""
 		...
 
 	def founder_protection(self) -> float:
@@ -227,6 +414,10 @@ class World(Protocol):
 		"""A line in the founder's log, for a change in who is organised against him."""
 		...
 
+	def scope_revenue(self, scope: float) -> float:
+		"""The state's yearly revenue from a territory holding `scope` of the whole."""
+		...
+
 	def state_in_deficit(self) -> bool:
 		"""Whether the state could pay all it set out to last year."""
 		...
@@ -235,7 +426,52 @@ class World(Protocol):
 		"""What the state paid last year on a named line of its budget."""
 		...
 
-	# ---- The loanable-funds market and saving
+
+class StakesPart(Protocol):
+	"""The stakes of the unemployed, the church, the academy and the landlords."""
+
+	def idle_hours_by_trade(self) -> Dict[str, Tuple[float, float]]:
+		"""(hours offered and not hired, hours offered) of each trade in the labour core's last clearing; empty without an agent economy."""
+		...
+
+	def displacing_technique(self, trade: str) -> Optional[str]:
+		"""The running technique that most recently began doing its category's work with fewer hands of `trade`, or None."""
+		...
+
+	def technique_name(self, node_id: str) -> str:
+		"""A technique as the player reads it."""
+		...
+
+	def land_rent_per_hectare(self) -> float:
+		"""Mean rent per hectare-year the land market let land at last year, in coin; zero without an agent economy."""
+		...
+
+	def tithable_sales_value(self, need_id: str) -> float:
+		"""Money's worth of what the society's producers sold this year of the goods that serve one need."""
+		...
+
+
+class PatronagePart(Protocol):
+	"""What a state funds the clients of its own with."""
+
+	def patron_ask(self) -> float:
+		...
+
+	def patron_clients(self, country: str) -> List[Tuple[float, float]]:
+		"""(governance, reputation factor) of the playing seats of a country whose techniques run the funding mechanic."""
+		...
+
+	def state_funding_terms(self, people: float) -> Dict[str, float]:
+		"""The terms a state funds a client on, for a country of `people` (agents/patronage.py)."""
+		...
+
+	def country_output_per_head(self, country: str, opening_people: float, people: float) -> Optional[float]:
+		"""A country's real output per person over its opening's; None while the economy has no record of it."""
+		...
+
+
+class CreditPart(Protocol):
+	"""The loanable-funds market and saving."""
 
 	def debt_service_share_of_surplus(self) -> float:
 		...
@@ -250,6 +486,25 @@ class World(Protocol):
 		"""What lenders will still advance an actor beyond what others owe; None before the market has met."""
 		...
 
+	def fundable_amount(self, amount: float, existing_debt: float, collateral_value: float, arrears: float) -> Optional[float]:
+		"""The most of a draw of `amount` the credit market lends an actor that owes `existing_debt` against `collateral_value`
+		(one rule for every borrower); None before the market has met."""
+		...
+
+	def risk_premium(self, debt_after: float, collateral_value: float, arrears: float) -> Optional[float]:
+		"""The rate the credit market adds to the market rate for that debt against that collateral; None while the economy opens."""
+		...
+
+	def limit(self, actor_id: str, amount: float) -> float:
+		"""The most of a draw of `amount` the actor or seat household behind the account may be lent by the economy's rule (its `rule_limit`); the
+		whole of it for an account no one stands behind (the lenders' supply bounds the draw either way)."""
+		...
+
+	def rate_ceiling(self, account: str, amount: float) -> float:
+		"""The yearly rate the account would pay on a draw of `amount`, which no lender asking more may be asked to lend; the market
+		rate for an account nobody stands behind."""
+		...
+
 	def state_may_borrow(self, state: Any) -> bool:
 		...
 
@@ -257,54 +512,13 @@ class World(Protocol):
 		"""The tree nodes that declare a mechanic."""
 		...
 
-	def state_lending(self) -> Tuple[float, float]:
-		"""(what the state has out on loan, the yearly rate lenders earn) at the last meeting."""
+	def pay_interest(self, payer: Any, owed: float, purpose: str = "interest") -> float:
+		"""A borrower pays the interest on its debt to its lenders; what was paid (interest the lenders refuse is carried as arrears)."""
 		...
 
-	def founder_credit_limit(self) -> float:
-		"""The most the founder's household may owe in all."""
-		...
 
-	def founder_debt_rate(self) -> float:
-		"""The yearly rate the founder's household pays on what it owes."""
-		...
-
-	def founder_defaults(self) -> None:
-		"""The founder's household meets its lenders' default: it stops what it cannot fund, then settles or enters service."""
-		...
-
-	def founder_review(self) -> Any:
-		"""The founder's seat as the owner of a reviewed business (what `FounderReview` asks)."""
-		...
-
-	def pay_interest(self, payer: Any, owed: float, purpose: str = "interest") -> None:
-		"""A borrower pays the interest on its debt to its lenders."""
-		...
-
-	def household_saving(self) -> float:
-		...
-
-	# ---- Disclosure of inventions
-
-	def disclosure_mode(self, node_id: str) -> str:
-		...
-
-	def secret_exposure(self, node_id: str) -> float:
-		...
-
-	def base_visibility(self, node_id: str) -> float:
-		"""How much of an invention can be learned before distance counts, 0..1."""
-		...
-
-	def proof_years(self, node_id: str) -> float:
-		"""Years a concern must run at a profit before outsiders believe it."""
-		...
-
-	def collect_royalty(self, firm: Any, node_id: str, takings: float) -> float:
-		"""The founder's royalty on a licensed firm's takings; the amount paid."""
-		...
-
-	# ---- Growing a concern
+class CapacityPart(Protocol):
+	"""What it is worth to a firm to run a concern at a larger size."""
 
 	def span_factor(self, capacity: float) -> float:
 		"""Wages of a concern at `capacity` times its founding size, over one founding-size wage bill."""
@@ -321,99 +535,22 @@ class World(Protocol):
 		"""Money for `step` founding sizes more of a concern's plant, for an actor that already knows how."""
 		...
 
-	# ---- The simulated world's own state and the questions a concern asks
 
-	@property
-	def year(self) -> int:
+class SitePart(Protocol):
+	"""The land a concern occupies and what it costs."""
+
+	def site_hectares(self, node_id: str, capacity: float = 1.0) -> float:
+		"""Hectares a concern run at `capacity` times its founding size occupies."""
 		...
 
-	@property
-	def nodes(self) -> Dict[str, Any]:
+	def site_rent(self, node_id: str, capacity: float = 1.0, tile: Optional[str] = None) -> Optional[float]:
+		"""Yearly rent of the site a concern run at `capacity` times its founding size occupies, on `tile`; None when
+		the asking actor's country keeps no land rent."""
 		...
 
-	@property
-	def civ_id(self) -> str:
-		...
 
-	def baseline_knowledge(self) -> Set[str]:
-		"""What the society already knows without the founder."""
-		...
-
-	def founder_inventions(self) -> List[str]:
-		"""Everything the founder has completed that the society did not have."""
-		...
-
-	def demonstrated(self) -> Set[str]:
-		...
-
-	def is_public(self, node_id: str) -> bool:
-		...
-
-	def research_hands(self, actor: Any, family: str) -> float:
-		"""People of a trade family ("scholar", "craft") the actor can put on a piece of research: its staff
-		and the free people it could take on."""
-		...
-
-	def research_trades(self, family: str) -> List[str]:
-		"""The trades whose people are hands of a trade family."""
-		...
-
-	def unsold_materials(self, actor: Any, node_id: str) -> List[str]:
-		"""Materials the node buys that no one in reach sells, sorted."""
-		...
-
-	def research_cost(self, node_id: str, max_age_years: int) -> float:
-		"""Money to pioneer the node, labour included; a figure at most `max_age_years` old may be reused."""
-		...
-
-	def purchasable_substitute_discount(self) -> float:
-		"""Share of its stated quality a substitute bought off the market keeps."""
-		...
-
-	def knowledge_half_life_years(self) -> float:
-		"""Years for half of the actors that could learn a node some actor holds to have learned it."""
-		...
-
-	def knowledge_visibility(self, node_id: str, distance_km: float) -> float:
-		"""0..1: how much of a node an actor holds shows to an onlooker `distance_km` away."""
-		...
-
-	def contact_volume(self, place_a: Optional[str], place_b: Optional[str]) -> float:
-		"""How much news passes between two places in a year (neighbours, trade carried), 0 for none;
-		unit contact is what makes a technique known with the chance `awareness.hazard` gives."""
-		...
-
-	def exposure(self, node_id: str, location: Optional[str]) -> float:
-		"""How much of an invention an observer at `location` can learn, 0..1."""
-		...
-
-	def state_weights(self) -> Dict[str, float]:
-		...
-
-	def society_output(self) -> float:
-		...
-
-	def visible_scale_of(self, actor: Any) -> float:
-		"""How large and visible any actor looks to the state: its staff, its wealth and its prominence."""
-		...
-
-	def levy_shares(self, scale: float, protection: float = 0.0, state: Any = None) -> Any:
-		"""(requisition, office) shares of income the state assesses at this visible scale; `state` is another
-		country's (capacity, tax share, requisition rate, office rate) in place of the founder's state's."""
-		...
-
-	def government(self) -> Any:
-		"""The government actor of the founder's civilisation."""
-		...
-
-	@property
-	def labour_market(self) -> Any:
-		"""The one labour market every employer asks: quote, hire, release, read the pressure."""
-		...
-
-	@property
-	def hours_per_person_year(self) -> float:
-		...
+class ConcernsPart(Protocol):
+	"""A concern's crew, cost, takings, margin and ramp."""
 
 	def concern_staff(self, node_id: str) -> Dict[str, float]:
 		"""People of each trade running this concern ties up, by the founder's own rule."""
@@ -422,25 +559,9 @@ class World(Protocol):
 	def concern_wage_bill(self, node_id: str, capacity: float = 1.0) -> float:
 		...
 
-	def site_rent(self, node_id: str, capacity: float = 1.0, tile: Optional[str] = None) -> Optional[float]:
-		"""Yearly rent of the site a concern run at `capacity` times its founding size occupies, on `tile`; None when
-		the asking actor's country keeps no land rent."""
-		...
-
-	def site_hectares(self, node_id: str, capacity: float = 1.0) -> float:
-		"""Hectares a concern run at `capacity` times its founding size occupies."""
-		...
-
-	def hourly_pay(self, trade: str) -> Optional[float]:
-		"""What an hour of a trade pays in the asking actor's country; None when its labour markets pay nothing for it."""
-		...
-
 	def plant_costs(self, node_id: str) -> Optional[Tuple[float, float]]:
 		"""(upkeep, wage bill) of a plant of the concern at its founding size, in the asking actor's country; None when
 		that country keeps no record of a figure they need."""
-		...
-
-	def free_fte(self, trade: str, actor_id: Optional[str]) -> Optional[float]:
 		...
 
 	def copy_cost(self, node_id: str) -> float:
@@ -452,10 +573,6 @@ class World(Protocol):
 
 	def concern_gross(self, node_id: str) -> Optional[float]:
 		"""Yearly takings of the concern once it has ramped up, in the asking actor's country; None when it keeps no record."""
-		...
-
-	def market_key(self, node_id: str) -> str:
-		"""What a concern's operators share: a goods category is one market, any other concern its own."""
 		...
 
 	def entry_gross(self, node_id: str, rivals: float, entrants: float) -> float:
@@ -479,9 +596,18 @@ class World(Protocol):
 	def concern_takings(self, node_id: str, opened_year: int, rivals: float = 0.0, capacity: float = 1.0) -> float:
 		...
 
-	def plant_books(self, node_id: str, opened_year: int, rivals: float, size: float) -> Optional[Any]:
-		"""(takings, upkeep, wages) of a plant of the concern at `size` founding sizes, in the economy the asking actor's
-		country stands in; None when that country keeps no record of a figure they need."""
+	def concern_output_tonnes(self, node_id: str, material: str, opened_year: int, staffed: float) -> float:
+		...
+
+	def upkeep(self, node_id: str, capacity: float = 1.0) -> float:
+		...
+
+
+class EnterprisesPart(Protocol):
+	"""The figures a state's plants are booked from."""
+
+	def concern_inputs(self, node_id: str) -> Dict[str, float]:
+		"""Tonnes of each material a concern uses up in a year at its founding size."""
 		...
 
 	def book_takings(self, node_id: str, opened_year: int) -> float:
@@ -504,8 +630,9 @@ class World(Protocol):
 		"""Whether the concern sells into a goods category, whose demand the home society's households set."""
 		...
 
-	def concern_inputs(self, node_id: str) -> Dict[str, float]:
-		"""Tonnes of each material a concern uses up in a year at its founding size."""
+	def plant_books(self, node_id: str, opened_year: int, rivals: float, size: float) -> Optional[Any]:
+		"""(takings, upkeep, wages) of a plant of the concern at `size` founding sizes, in the economy the asking actor's
+		country stands in; None when that country keeps no record of a figure they need."""
 		...
 
 	def concerns_making(self, material: str) -> Any:
@@ -516,6 +643,14 @@ class World(Protocol):
 		"""The materials a concern puts on the market."""
 		...
 
+
+class MarketPart(Protocol):
+	"""Offering and bidding at the one goods market."""
+
+	def market_key(self, node_id: str) -> str:
+		"""What a concern's operators share: a goods category is one market, any other concern its own."""
+		...
+
 	def market_forget(self, actor_id: str) -> None:
 		"""An actor's sales and purchases noted for this year's market end; it deals afresh."""
 		...
@@ -523,25 +658,17 @@ class World(Protocol):
 	def market_sale(self, seller_id: str, material: str, tonnes: float, from_concerns: Any = None) -> None:
 		...
 
-	def sells_on_book(self, node_id: str) -> bool:
-		"""Whether a concern's output is sold in the agent economy's book, so its takings are the market's."""
-		...
-
 	def market_purchase(self, buyer_id: str, commodity: str, tonnes: float, budget: float = 0.0) -> None:
 		"""An actor buys `tonnes` of a commodity at the one goods market this year."""
 		...
 
-	def concern_output_tonnes(self, node_id: str, material: str, opened_year: int, staffed: float) -> float:
+	def sells_on_book(self, node_id: str) -> bool:
+		"""Whether a concern's output is sold in the agent economy's book, so its takings are the market's."""
 		...
 
-	def upkeep(self, node_id: str, capacity: float = 1.0) -> float:
-		...
 
-	def rng_for(self, *parts: Any) -> random.Random:
-		"""A random stream keyed by its inputs, so actors never disturb the world's own."""
-		...
-
-	# ---- What a trader asks (sim/actors/world_trade.py)
+class TradePart(Protocol):
+	"""What a trader asks: places with a market, prices, freight and cargo."""
 
 	def trade_places(self, location: Optional[str]) -> List[str]:
 		"""Places with a market a trader at `location` can reach; None for every place."""
@@ -565,13 +692,8 @@ class World(Protocol):
 		the year's cargo; None where the place's market does not answer."""
 		...
 
-	def freight_between(self, source: str, destination: str, material: str, tonnes: float) -> float:
-		"""Money to carry `tonnes` of a material from one place to another."""
-		...
-
-	def pay_route_dues(self, payer: Any, source: str, destination: str, material: str, tonnes: float) -> float:
-		"""The payer pays the tolls and port dues of carrying `tonnes` between two places to the treasuries of
-		whoever holds the tiles they are levied at; returns the money paid, which is part of the freight."""
+	def freight_between(self, source: str, destination: str, material: str, tonnes: float) -> Optional[float]:
+		"""Money to carry `tonnes` of a material from one place to another; None where the carriage cannot be priced."""
 		...
 
 	def market_depth(self, material: str, place: str) -> float:
@@ -582,84 +704,67 @@ class World(Protocol):
 		"""Tonnes every shipper has brought to a place so far this year, from any source."""
 		...
 
-	def ship(self, trader_id: str, material: str, tonnes: float, source: str, destination: str) -> Tuple[float, float]:
-		"""Buy at the source and sell at the destination: (money paid, money received)."""
+	def ship(self, trader_id: str, material: str, tonnes: float, source: str, destination: str) -> Union[Tuple[float, float], Refusal]:
+		"""Buy at the source and sell at the destination: (money paid, money received), or a refusal."""
 		...
 
 	def country_of_place(self, place: str) -> Optional[str]:
 		"""The country a place belongs to; None for the home country."""
 		...
 
-	# ---- What a country, a body of people and the cast ask (sim/actors/world_cast.py)
 
-	def distance_km(self, place_a: Optional[str], place_b: Optional[str]) -> float:
-		"""Kilometres between two places (tile or region ids); None is where the founder operates from."""
+class ResearchPart(Protocol):
+	"""What a researching actor asks: hands, sellers and substitutes."""
+
+	def research_trades(self, family: str) -> List[str]:
+		"""The trades whose people are hands of a trade family."""
 		...
 
-	def subsistence_cost_per_person_year(self) -> float:
-		"""Money for one person's food at subsistence for a year."""
+	def research_hands(self, actor: Any, family: str) -> float:
+		"""People of a trade family ("scholar", "craft") the actor can put on a piece of research: its staff
+		and the free people it could take on."""
 		...
 
-	def country_economy(self, country: str) -> Any:
-		"""The economy's own answers for a country that is part of it (pay_per_person_year, society_output,
-		need_floor_costs_per_person_year), or None when the country is not (a country view then raises NoCountryEconomy)."""
+	def unsold_materials(self, actor: Any, node_id: str) -> List[str]:
+		"""Materials the node buys that no one in reach sells, sorted."""
 		...
 
-	def need_floor_costs_per_person_year(self) -> Dict[str, float]:
-		"""Money for one person's floor of each need for a year, by need id, at the prices households pay
-		(the need-basket kernel, sim/world/need_basket.py)."""
+	def contact_volume(self, place_a: Optional[str], place_b: Optional[str]) -> float:
+		"""How much news passes between two places in a year (neighbours, trade carried), 0 for none;
+		unit contact is what makes a technique known with the chance `awareness.hazard` gives."""
 		...
 
-	def observed_stratum(self, country: Optional[str], name: str) -> Optional[Dict[str, float]]:
-		"""Headcount and income ("members", "income") another model already keeps for a body of people."""
+	def purchasable_substitute_discount(self) -> float:
+		"""Share of its stated quality a substitute bought off the market keeps."""
 		...
 
-	# ---- What a state asks about its coin (sim/actors/world_coinage.py)
-
-	def coin_regime(self) -> str:
-		"""The civilisation's coin standard regime: "struck_coin", "weighed_metal", "commodity" or "fiat"."""
+	def research_cost(self, node_id: str, max_age_years: int) -> float:
+		"""Money to pioneer the node, labour included; a figure at most `max_age_years` old may be reused."""
 		...
 
-	# ---- What patents ask (sim/actors/world_disclosure.py)
 
-	def state_grants_patents(self, actor: Any) -> bool:
-		"""Whether the state over an actor knows a technique declaring the patent mechanic."""
-		...
+class World(Protocol):
+	"""The parts of the world an actor asks; each answers the members of its protocol."""
 
-	def patent_entry(self, node_id: str) -> Optional[Dict[str, Any]]:
-		"""The live patent on a node ({"holder", "expires", "licensees"}), else None."""
-		...
-
-	def seat_parties(self) -> Dict[str, Any]:
-		"""Every seat as an actor by seat id (they hold patents and shares like any actor)."""
-		...
-
-	def seat_margin(self, seat_id: str) -> float:
-		"""What a seat's concerns earn over their upkeep in a year; the margin its shareholders and an infringed holder draw on."""
-		...
-
-	def release_seat_staff(self, seat_id: str, trade: str, people: float) -> None:
-		"""People of a trade leave a seat's payroll (to found a rival, say)."""
-		...
-
-	# ---- What the home state asks of its people (sim/actors/world_budget.py)
-
-	def literacy(self, field: str) -> float:
-		...
-
-	def research_productivity(self, country=None) -> float:
-		...
-
-	def country_strata(self) -> List[Any]:
-		"""The home country's bodies of people, in id order."""
-		...
-
-	# ---- Members a few actors reach for beyond the lists above (a foreign country's world answers its own)
-
-	def pay_wages(self, payer: Any, amount: float, purpose: Any) -> None:
-		"""Wages the home country's people are paid: they reach the strata's purses."""
-		...
-
-	def faction_backing(self) -> Dict[str, float]:
-		"""The weight each organised group can put behind a claimant to the throne, by group id."""
-		...
+	setting: SettingPart
+	knowledge: KnowledgePart
+	disclosure: DisclosurePart
+	seats: SeatsPart
+	people: PeoplePart
+	army: ArmyPart
+	taxpayers: TaxpayersPart
+	revenue: RevenuePart
+	collection: CollectionPart
+	labour: LabourPart
+	quotes: QuotesPart
+	groups: GroupsPart
+	stakes: StakesPart
+	patronage: PatronagePart
+	credit: CreditPart
+	capacity: CapacityPart
+	site: SitePart
+	concerns: ConcernsPart
+	enterprises: EnterprisesPart
+	market: MarketPart
+	trade: TradePart
+	research: ResearchPart

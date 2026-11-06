@@ -82,7 +82,7 @@ class InterestGroup(RecordedActor):
 		if not self.organised():
 			return
 		record = self.record
-		sector = world.sectors().get(self.sector_key())
+		sector = world.groups.sectors().get(self.sector_key())
 		# income still counted as lost: this year's loss, or last year's gross loss as it fades
 		fresh = 0.0 if sector is None else sector.lost_income
 		gross = max(fresh, (record.lost_income + record.received_last_year) * GRIEVANCE_RETENTION)
@@ -90,36 +90,36 @@ class InterestGroup(RecordedActor):
 			record.cause, record.members, record.blame_share = sector.cause, sector.members, sector.blame_share
 			record.technique = sector.technique
 			record.grievance = gross / sector.income_base if sector.income_base > 0 else 0.0
-		revenue = world.scope_revenue(1.0 if sector is None else sector.scope)
+		revenue = world.groups.scope_revenue(1.0 if sector is None else sector.scope)
 		# what the state paid it, averaged with last year's so a payment does not swing the next year's pull
-		paid = world.concession_paid(CONCESSION_PREFIX + self.actor_id)
-		ledger.transfer(world.edge(EDGE_STATE_SPENDING), self, paid, "compensation from the state")
+		paid = world.groups.concession_paid(CONCESSION_PREFIX + self.actor_id)
+		ledger.transfer(world.setting.edge(EDGE_STATE_SPENDING), self, paid, "compensation from the state")
 		record.received_last_year = 0.5 * (record.received_last_year + paid)
 		record.lost_income = max(0.0, gross - record.received_last_year)
 		if record.lost_income / revenue < GROUP_ORGANISING_WEIGHT * GROUP_DISBANDING_SHARE:
-			record.exited_year = world.year
+			record.exited_year = world.setting.year
 			record.strength = record.claim = 0.0
 			record.demands = []
-			world.say(LogLine("group_eased", "%s: no longer organised, the loss has eased (%s)" % (record.name, record.cause)))
+			world.groups.say(LogLine("group_eased", "%s: no longer organised, the loss has eased (%s)" % (record.name, record.cause)))
 			return
 		record.strength = pull_of(record.lost_income, revenue)
 		record.peak_strength = max(record.peak_strength, record.strength)
-		response = state_response(record.strength, world.state_reach(), world.state_in_deficit(),
+		response = state_response(record.strength, world.taxpayers.state_reach(), world.groups.state_in_deficit(),
 								  record.group_kind, record.lost_income, revenue)
 		record.claim = response["claim"]
 		record.demands = ([("ban the technique that does their work with fewer hands" if record.technique
 							else "ban the techniques that make " + record.subject)] if response["ban"] else [])
-		blame = blame_after_protection(response["blame"], world.founder_protection(), record.blame_share)
+		blame = blame_after_protection(response["blame"], world.groups.founder_protection(), record.blame_share)
 		if blame > 0.0:
 			record.petitions += 1
-			world.lodge_blame(blame, self.words(world), GROUP_LOG_INTERVAL_YEARS, record)
+			world.groups.lodge_blame(blame, self.words(world), GROUP_LOG_INTERVAL_YEARS, record)
 
 	def words(self, world: Any) -> LogLine:
 		"""The log line a petition produces: who, how many, caused by what, asking what. The sums are kept in
 		`facts["parts"]` so the log writes them in the unit the player chooses when the line is read."""
 		record = self.record
 		claims = record.claim > 0.5
-		pieces: List[Any] = ["INTEREST GROUP %s petitions the state: about %s people out of pocket " % (record.name, world.plain_number(record.members)),
+		pieces: List[Any] = ["INTEREST GROUP %s petitions the state: about %s people out of pocket " % (record.name, world.groups.plain_number(record.members)),
 							{"money": record.lost_income}, " a year because %s; they ask " % record.cause]
 		if claims:
 			pieces.extend(["to be made good (", {"money": record.claim}, " a year)"])
@@ -127,7 +127,7 @@ class InterestGroup(RecordedActor):
 		else:
 			pieces.append(" and ".join(record.demands) if record.demands else "to be heard")
 		pieces.append(self.blame_words(record.blame_share))
-		text = "".join(piece if isinstance(piece, str) else world.money_text(piece["money"], grouped=True) for piece in pieces)
+		text = "".join(piece if isinstance(piece, str) else world.groups.money_text(piece["money"], grouped=True) for piece in pieces)
 		return LogLine("group_petition", text, parts=pieces)
 
 	@staticmethod

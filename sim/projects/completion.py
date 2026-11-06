@@ -1,19 +1,20 @@
 """What finishing a piece of work actually does, and what a failed attempt costs.
 
-`_complete` rolls the dice on the project's live risk: a failed roll is `_fail_attempt` (the attempt is counted, part of
+`complete` rolls the dice on the project's live risk: a failed roll is `_fail_attempt` (the attempt is counted, part of
 the calendar banked, the loss charged and logged); a finished project leaves the record in hand, becomes a held technique,
 applies its effects, earns standing, and may hand over the staff an institution grants. The goal's road is read before
 and after so the log can say how finishing moved it."""
 from sim.agents.api import edges
+from sim.assembly.api import Part
 from sim.knowledge.api import LearnTechnique, RevealFrom
 from sim.diffusion.api import ApplyTechEffects
-from sim.ledger.api import PayEdge
+from sim.ledger.api import pay_edge_or_log
 from sim.living_stock.api import ChangeHeld
 from sim.polity.api import AddGovernance, AddScandal, CarryOutTransfers, GainReputation
 from sim.production.api import LearnFromFailure
 from sim.reporting.api import RecordEvent
 from sim.seats.api import RecordGoalReached
-from sim.workforce.api import GrantStaff, LoseCrew, ReleaseHours
+from sim.workforce.api import GrantStaff, LoseCrew, ReleaseHours, completion_grants_staff
 
 from . import failure_text, goal_rules
 from .completion_rules import road_line, severity_of_loss, staff_shortfall
@@ -25,8 +26,8 @@ from .permanent_benefit import permanent_parts
 from .risk_rules import attempt_fails
 
 
-class Completion:
-	def _setup_completion(self) -> None:
+class Completion(Part):
+	def setup(self) -> None:
 		self._goal_closures = {}                  # goal -> the nodes it needs (the tree does not change under a goal)
 
 	def reputation_gain_of(self, node):
@@ -48,10 +49,7 @@ class Completion:
 		goal = self.needs.goal()["node"]
 		cache = self._goal_closures
 		if goal not in cache:
-			try:
-				cache[goal] = set(self.needs.tree_closure(goal))
-			except Exception:
-				cache[goal] = set()
+			cache[goal] = set(self.needs.tree_closure(goal))
 		return cache[goal]
 
 	def failure_severity(self, node_id, lost, means):
@@ -71,14 +69,11 @@ class Completion:
 		condition = nodes[goal].get("win_condition")
 		done = needs.techniques_held()
 		if condition and goal not in done:
-			try:
-				metric = condition.get("metric") or "goal measure"
-				fraction = metric in goal_rules.FRACTION_METRICS
-				measures[metric.replace("_", " ")] = (needs.win_condition_value(condition), fraction)
-				for label, ceiling in goal_rules.GOAL_DETERMINANTS.get(metric, ()):
-					measures[label] = (float(needs.literacy_ceiling[ceiling]), True)
-			except (ValueError, AttributeError):
-				pass
+			metric = condition.get("metric") or "goal measure"
+			fraction = metric in goal_rules.FRACTION_METRICS
+			measures[metric.replace("_", " ")] = (needs.win_condition_value(condition), fraction)
+			for label, ceiling in goal_rules.GOAL_DETERMINANTS.get(metric, ()):
+				measures[label] = (float(needs.literacy_ceiling[ceiling]), True)
 		return goal_rules.snapshot(measures, len(road & done), len(road))
 
 	def goal_effect_lines(self, node_id, before):
@@ -100,10 +95,10 @@ class Completion:
 		free_scholars, free_craftsmen = self.needs.venture_staff_free()
 		return staff_shortfall(need_scholars, need_craftsmen, free_scholars, free_craftsmen)
 
-	def _complete(self, node_id):
+	def complete(self, node_id):
 		needs = self.needs
 		node = needs.tree_nodes()[node_id]
-		_risk_this_attempt = self.effective_risk(node_id)
+		_risk_this_attempt = self.parts.risk.effective_risk(node_id)
 		if attempt_fails(needs.game_random().random(), _risk_this_attempt):
 			self._fail_attempt(node_id, _risk_this_attempt)
 			return
@@ -128,15 +123,14 @@ class Completion:
 		needs.send(GainReputation(self.reputation_gain_of(node)))
 		needs.send(AddScandal(alarm))
 		needs.send(AddGovernance(needs.state_interest(node)))
-		# The staff an institution grants are recorded as a grant, NOT added to the payroll: the year resyncs the pools
-		# from the employees, so a bare addition would be overwritten the next time it runs.
+		# The staff an institution grants go on the staff book and are hired at the year's clearing at the market wage, so
+		# the wage bill pays them; the institution's upkeep (`institution_upkeep`) charges only its non-crew share.
 		#
 		# ONLY WITHOUT auto_hire: with it on - the optimizer's default, off for a player - the staff capacity already
 		# counts this same institution and the year's smoothing grows the pools toward that ceiling on its own; granting
 		# it a second time here as well would double-count every one of these three institutions against a tree
 		# calibrated to open up much more slowly.
-		hire_mode = needs.automatic_policy("auto_hire")
-		if not hire_mode or hire_mode == "replace":
+		if completion_grants_staff(needs.automatic_policy("auto_hire")):
 			grant = needs.mechanic["staff_grant"].get(node_id)
 			if grant:
 				needs.send(GrantStaff(**grant))
@@ -175,7 +169,7 @@ class Completion:
 		# A bounty's claimant redoes the work: the poster's prize holds and no hours or money fall on the poster.
 		self.seat.active[node_id]["ph_left"] = (
 			0.0 if claimed else
-			node["ph"] * self.rebuild_work_factor(node_id) * FAILURE_RESET_SHARE)
+			node["ph"] * self.parts.rebuild.rebuild_work_factor(node_id) * FAILURE_RESET_SHARE)
 		# THE CALENDAR CLOCK IS NOT WIPED: a failed attempt must not reset the multi-year diffusion clock to zero,
 		# restarting the whole process from nothing. Even ONE failed attempt already does real social groundwork
 		# (workshops retooled, a workforce that has seen it once, a regulator who already sat through the pitch), so the
@@ -183,20 +177,21 @@ class Completion:
 		# that has nothing to show after only one failure. What this banks keeps growing, with diminishing returns, as
 		# the failure count grows, and is capped well short of the whole clock (RETRY_CALENDAR_CAP) so a retried
 		# programme is only ever readier, never instantly ready.
-		_retain = self._retry_calendar_retain(node_id)
+		_retain = self.parts.risk.retry_calendar_retain(node_id)
 		self.seat.active[node_id]["yrs"] = _yrs_before * _retain
 		_lost = 0.0 if claimed else needs.failure_loss(node_id)
 		_severity = self.failure_severity(node_id, max(0.0, _lost), needs.funding_capacity())
 		# What the purse and the credit line left cannot bear is not forgiven: it is added to what the project still
 		# costs, paid through the gated instalments.
 		_borne = needs.bearable_part_of(_lost)
-		needs.send(PayEdge(edges.EDGE_DESTROYED, _borne, "failure losses"))
+		if pay_edge_or_log(needs.send, edges.EDGE_DESTROYED, _borne, "failure losses") is not None:
+			_borne = 0.0   # what could not be paid is added to what the project still costs
 		if not claimed:
 			for _loss_line in self.lose_what_was_risked(node_id):
 				needs.send(RecordEvent.of("failure_loss", "%s: %s" % (node["name"], _loss_line)))
 		self.seat.active[node_id]["cost_left"] = (self.seat.active[node_id].get("cost_left") or 0.0) + (_lost - _borne)
 		# A failure always announces itself; its size sets how loudly.
-		_next_risk = self.effective_risk(node_id)
+		_next_risk = self.parts.risk.effective_risk(node_id)
 		_banked = self.seat.active[node_id]["yrs"]
 		attempts = self.seat.failed_attempts[node_id]
 		if claimed:

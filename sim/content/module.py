@@ -41,6 +41,9 @@ class Content(Module):
 	def household_need_data(self) -> Dict[str, Dict[str, Any]]:
 		return views.household_need_data(self.mods_directory())
 
+	def household_work_data(self) -> Dict[str, Any]:
+		return views.household_work_data(self.mods_directory())
+
 	def declared_actor_kinds(self) -> Dict[str, Any]:
 		return views.declared_actor_kinds(self.mods_directory())
 
@@ -74,3 +77,9 @@ class Content(Module):
 
 	def not_traded_materials(self) -> FrozenSet[str]:
 		return views.not_traded_materials(self.directory)
+
+	def spoilage_rates(self) -> Dict[str, float]:
+		return views.spoilage_rates(self.directory)
+
+	def service_life_years(self) -> Dict[str, float]:
+		return views.service_life_years(self.directory)

@@ -4,7 +4,6 @@ handled port adds handling hours, and the hours are bid and paid at the area the
 QUICK_TOPIC = True
 
 import unittest
-from unittest import mock
 
 from sim.economy import carriage_hours, merchants
 from sim.economy.market_memory import market_key
@@ -97,7 +96,7 @@ class AreaWageTests(unittest.TestCase):
         crew = merchants.CrewHire(lambda source, _destination: (((key_a if source == "a" else key_b), 0.5),),
                                   {key_a: 100.0, key_b: 100.0}, {key_a: 0.4, key_b: 0.9},
                                   lambda _key: 1.0, lambda _good, tile: "area_" + tile)
-        result = merchants.dispatch(who, (), carriage, SPECS, "coin", 100.0, {("salt", "a"): 10.0}, crew=crew)
+        result = merchants.dispatch(who, carriage, SPECS, "coin", 100.0, {("salt", "a"): 10.0}, crew=crew)
         self.assertAlmostEqual(result.transfers[0].amount, 10.0 - 10.0 * 0.5 * 0.4)       # ten units, half an hour each, 0.4 an hour
 
     def test_the_wage_scale_follows_the_area_the_flow_leaves_and_not_a_wage_elsewhere(self):
@@ -109,13 +108,29 @@ class AreaWageTests(unittest.TestCase):
         def scale(town_wage, farms_wage):
             wages = {market_key(fixture.LABOURER, labour_area(fixture.TOWN)): town_wage,
                      market_key(fixture.LABOURER, labour_area(fixture.FARMS)): farms_wage}
-            record = type("Record", (), {"memory": type("Memory", (), {"wages": wages})(), "carried": carried,
-                                         "area_imbalance": 1.0})()
+            record = type("Record", (), {"memory": type("Memory", (), {"wages": wages, "price_levels": {}, "holds_wage_for": lambda self, trade: any(key.startswith(trade + "|") for key in self.wages), "opening_wage_level": lambda self, money: 1.0})(),
+                                         "cohorts": {}, "merchants": {},
+                                         "carriage": type("Carriage", (), {"carried": carried, "area_imbalance": 1.0})()})()
             return carriage_hours.wage_scale(setup, record, table)
         self.assertEqual(scale(1.0, 9.0), 1.0)
         self.assertEqual(scale(1.0, 0.1), 1.0)
         self.assertGreater(scale(2.0, 1.0), 1.0)
         self.assertLess(scale(0.5, 1.0), 1.0)
+
+    def test_after_inflation_the_table_is_priced_in_todays_money_and_a_wage_that_kept_pace_changes_only_its_unit(self):
+        setup = fixture.small_setup(carriage_rates={"cart": CART_RATE}, carriage_crew={"cart": (fixture.LABOURER, CART_HOURS)},
+                                    carriage_wage=1.0)
+        carried = {fixture.TOWN: {fixture.FARMS: 5.0}}
+
+        def scale(wage, level):
+            wages = {market_key(fixture.LABOURER, labour_area(tile)): wage for tile in (fixture.TOWN, fixture.FARMS)}
+            record = type("Record", (), {"memory": type("Memory", (), {"wages": wages, "price_levels": {}, "holds_wage_for": lambda self, trade: any(key.startswith(trade + "|") for key in self.wages), "opening_wage_level": lambda self, money: level})(),
+                                         "cohorts": {}, "merchants": {},
+                                         "carriage": type("Carriage", (), {"carried": carried, "area_imbalance": 1.0})()})()
+            return carriage_hours.wage_scale(setup, record, setup.carriage_table())
+        self.assertAlmostEqual(scale(2.0, 2.0), 2.0)
+        self.assertGreater(scale(3.0, 2.0), 2.0)
+        self.assertLess(scale(1.0, 2.0), 2.0)
 
     def test_hours_hired_in_a_shared_market_are_shared_by_the_hours_wanted(self):
         who = Merchant("m1", "town", "owner", 1.0)

@@ -4,16 +4,18 @@ is not tested through a game."""
 
 QUICK_TOPIC = True
 
+from sim.tests.agents_fake_world import flat_namespace
 import unittest
 from types import SimpleNamespace
 
 from sim.economy import api as economy_api
-from sim.economy.accounts import Book
+from sim.book import Book
 from sim.economy.types import EDGE_MINT, Transfer
 from sim.finance import bank_rules as seat_bank
 from sim.finance.commands import FoundBank
 from sim.ledger.api import WithdrawHouseholdMoney
 from sim.markets.api import FoundBankFromOutside
+from sim.refusal import Refusal
 from sim.markets.commands_applied import Applying
 from sim.tests import finance_host, module_harness
 from sim.ui.proto import command_registry
@@ -41,28 +43,29 @@ class Refusals(unittest.TestCase):
 class TheBank(unittest.TestCase):
     def test_the_capital_leaves_the_seats_money_once_the_economy_takes_it_in(self):
         module = finance_host.build(year=3, techniques_held=lambda: {"a_bank_node"}, acting_balance=5000.0,
-                                    actor_world=SimpleNamespace(baseline_knowledge=lambda: set()),
+                                    actor_world=flat_namespace(baseline_knowledge=lambda: set()),
                                     mechanic={seat_bank.BANKING_MECHANIC: {"a_bank_node": {}}},
                                     agent_economy_opened=True, answers={FoundBankFromOutside: "bank:1"})
         answer = module.found_bank(FoundBank(1000.0))
         self.assertTrue(answer["ok"])
         self.assertEqual(answer["bank"], "bank:1")
-        self.assertEqual(module_harness.sent(module), [FoundBankFromOutside(1000.0), WithdrawHouseholdMoney(1000.0)])
+        self.assertEqual(module_harness.sent(module), [WithdrawHouseholdMoney(1000.0), FoundBankFromOutside(1000.0)])
 
-    def test_a_capital_the_economy_turns_down_is_refused_and_the_money_stays(self):
+    def test_a_withdrawal_the_household_refuses_founds_no_bank(self):
         module = finance_host.build(year=3, techniques_held=lambda: {"a_bank_node"}, acting_balance=5000.0,
-                                    actor_world=SimpleNamespace(baseline_knowledge=lambda: set()),
+                                    actor_world=flat_namespace(baseline_knowledge=lambda: set()),
                                     mechanic={seat_bank.BANKING_MECHANIC: {"a_bank_node": {}}},
-                                    agent_economy_opened=True, answers={FoundBankFromOutside: None})
+                                    agent_economy_opened=True,
+                                    answers={WithdrawHouseholdMoney: Refusal("insufficient_funds", "The household holds less.")})
         answer = module.found_bank(FoundBank(1000.0))
         self.assertFalse(answer["ok"])
-        self.assertEqual(answer["cause"], "capital_not_positive")
-        self.assertEqual(module_harness.sent(module), [FoundBankFromOutside(1000.0)])
+        self.assertEqual(answer["cause"], "insufficient_funds")
+        self.assertEqual(module_harness.sent(module), [WithdrawHouseholdMoney(1000.0)])
 
 
 class TheEconomysBank(unittest.TestCase):
     def setUp(self):
-        self.record = SimpleNamespace(book=Book(), banks={})
+        self.record = SimpleNamespace(book=Book(), capital_markets=SimpleNamespace(banks={}))
         self.economy = SimpleNamespace(record=self.record, setup=SimpleNamespace(currency_id="coin", coin_per_unit=2.0))
         self.money = "coin"
         self.record.book.transfer(Transfer(EDGE_MINT, "holder", self.money, 7000.0, "opening"))
@@ -70,22 +73,24 @@ class TheEconomysBank(unittest.TestCase):
 
     def test_the_capital_comes_in_from_outside_and_is_the_banks_own_and_the_seat_is_its_founder(self):
         coin = self.economy.setup.coin_per_unit
-        stand_in = SimpleNamespace(economy=SimpleNamespace(agent=SimpleNamespace(opened=lambda: True, economy=lambda: self.economy)),
-                                   clock=SimpleNamespace(acting_seat="seat:player"), needs=SimpleNamespace(year=lambda: 3))
-        bank_id = Applying.found_bank_from_outside(stand_in, FoundBankFromOutside(500.0 * coin))
-        bank = self.record.banks[bank_id]
+        economy = SimpleNamespace(agent=SimpleNamespace(opened=lambda: True, economy=lambda: self.economy))
+        applying = module_harness.part(Applying, siblings={"market_objects": SimpleNamespace(economy=economy)}, views={"year": lambda: 3})
+        applying.clock.acting_seat = "seat:player"
+        bank_id = applying.found_bank_from_outside(FoundBankFromOutside(500.0 * coin))
+        bank = self.record.capital_markets.banks[bank_id]
         self.assertEqual(bank.founder, "seat:player")
         self.assertAlmostEqual(bank.paid_in, 500.0)
         self.assertAlmostEqual(self.record.book.balance(bank.agent_id, self.money), 500.0)
         self.assertAlmostEqual(self.record.book.money_supply(self.money) - self.supply, 500.0)
 
     def test_an_economy_not_yet_open_founds_no_bank(self):
-        stand_in = SimpleNamespace(economy=SimpleNamespace(agent=SimpleNamespace(opened=lambda: False)))
-        self.assertIsNone(Applying.found_bank_from_outside(stand_in, FoundBankFromOutside(100.0)))
+        economy = SimpleNamespace(agent=SimpleNamespace(opened=lambda: False))
+        applying = module_harness.part(Applying, siblings={"market_objects": SimpleNamespace(economy=economy)})
+        self.assertIsNone(applying.found_bank_from_outside(FoundBankFromOutside(100.0)))
 
     def test_no_capital_founds_no_bank(self):
         self.assertIsNone(economy_api.found_bank_from_outside(self.economy, "seat:player", 0.0, 0, economy_api.EDGE_EXCHANGE))
-        self.assertEqual(self.record.banks, {})
+        self.assertEqual(self.record.capital_markets.banks, {})
 
 
 class TheCommand(unittest.TestCase):
@@ -106,14 +111,14 @@ class TheCommand(unittest.TestCase):
 
     def test_a_society_that_already_knows_banking_lets_a_seat_found_one(self):
         module = finance_host.build(year=3, techniques_held=lambda: set(), acting_balance=5000.0,
-                                    actor_world=SimpleNamespace(baseline_knowledge=lambda: {"a_bank_node"}),
+                                    actor_world=flat_namespace(baseline_knowledge=lambda: {"a_bank_node"}),
                                     mechanic={seat_bank.BANKING_MECHANIC: {"a_bank_node": {}}},
                                     agent_economy_opened=True, answers={FoundBankFromOutside: "bank:2"})
         self.assertTrue(module.found_bank(FoundBank(1000.0))["ok"])
 
     def test_a_seat_that_knows_no_banking_is_refused_and_nothing_is_sent(self):
         module = finance_host.build(year=3, techniques_held=lambda: set(), acting_balance=5000.0,
-                                    actor_world=SimpleNamespace(baseline_knowledge=lambda: set()),
+                                    actor_world=flat_namespace(baseline_knowledge=lambda: set()),
                                     mechanic={seat_bank.BANKING_MECHANIC: {"a_bank_node": {}}}, agent_economy_opened=True)
         answer = module.found_bank(FoundBank(1000.0))
         self.assertFalse(answer["ok"])

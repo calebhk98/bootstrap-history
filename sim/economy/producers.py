@@ -22,7 +22,7 @@ from typing import Dict, List, Mapping, Optional, Tuple
 
 from sim.constants import declare
 
-from . import ask_adjust, inventory, practice, tool_fallback, unit_cost
+from . import ask_adjust, inventory, practice, tool_fallback, trade_wages, unit_cost
 from .labour_ceilings import joint_labour_ceilings
 from .planning_price import held_to_band, is_bare_quote
 from .protocols import MarketView
@@ -36,7 +36,10 @@ EXPECTATION_ADJUSTMENT_SHARE = declare(
     unit="share of last year's surprise folded into the expected price", source=None, confidence="D",
     why="A producer expects next year's price from its own past, moving part of the way to what it "
         "last saw; a share of one is the naive cobweb. Real producers use forward prices, stocks and "
-        "reports that the economy does not model. The share is a placeholder for that information.")
+        "reports that the economy does not model. The share is a placeholder for that information. This is the one "
+        "smoothing in time of the planning price: the memory price it reads (`year_goods.remembered_price`) moves in "
+        "proportion to the trade's share of the market's usual volume, which is a guard against a sliver of trade and "
+        "equals the clearing price when the market trades its usual volume.")
 REGRESSIVE_EXPECTATION_WEIGHT = declare(
     "REGRESSIVE_EXPECTATION_WEIGHT", 0.3, kind="temporary_heuristic",
     unit="share of the gap to the break-even price closed in a producer's expectation each year",
@@ -90,12 +93,12 @@ class Producer:
     expected_sales: float = 0.0             # runs' worth of output it expects to sell a year; 0 unknown
     last_runs: float = -1.0                 # runs it worked last year; below zero before its first year
     land_rent_per_run: float = 0.0          # rent on the land a run works, set yearly by the land market
-    land_run_cap: float = -1.0              # runs the land it was granted allows; below zero for no limit
+    land_run_cap: Optional[float] = None    # runs the land it was granted allows; None for no limit
     workshops: int = 1                      # independent workshops it stands for: each newcomer to its recipe and tile joins it
     net_earnings_history: Tuple[float, ...] = ()   # its last years' net earnings, oldest first (firm_finance.py)
     revenue_history: Tuple[float, ...] = ()        # its last years' revenue, oldest first
     idle_years: int = 0                     # years it stays idle after a bankruptcy: no runs, no dividend
-    staffed_runs: float = -1.0              # runs the hands it hired last year could have worked; below zero when unknown
+    staffed_runs: Optional[float] = None    # runs the hands it hired last year could have worked; None when unknown
     crew_runs: Mapping[str, float] = field(default_factory=dict)   # runs its crew has made, by trade (practice.py); a trade absent is an established crew
 
 
@@ -104,16 +107,17 @@ class Plan:
     runs: float
     labour_bids: Tuple[LabourBid, ...] = ()
     bids: Tuple[Bid, ...] = ()
-    expected_margin_per_run: float = 0.0    # before the capital charge; what an idle producer weighs
     wanted_runs: float = 0.0                # runs it wanted before the land it was granted capped them
     wage_line: float = 0.0                  # cash the plan sets for the planned runs' labour
 
 
 def expected_price(producer: Producer, good: GoodId, view: MarketView) -> Optional[float]:
-    """The producer's own expectation, else last year's clearing price, else None."""
+    """The producer's own expectation, else the price on offer in its market (a price the market traded at or an ask
+    still posted: never a bid ceiling or a cost quote, which say what buyers want or what a run costs and not what
+    the good will fetch), else None."""
     if good in producer.expected_prices:
         return producer.expected_prices[good]
-    return view.price(good, view.area_of(good, producer.tile))
+    return view.offered_price(good, view.area_of(good, producer.tile))
 
 
 def expected_output_prices(producer: Producer, recipe: Recipe, view: MarketView) -> Dict[GoodId, float]:
@@ -150,29 +154,17 @@ def live_input_prices(producer: Producer, recipe: Recipe, view: MarketView) -> D
 def live_input_prices_at(tile: TileId, recipe: Recipe, view: MarketView) -> Dict[GoodId, float]:
     """`live_input_prices` for a recipe worked on a tile, with no producer there yet."""
     goods = _priced_names(recipe)[0]
-    present_prices_at = getattr(view, "present_prices_at", None)
-    if present_prices_at is not None:
-        return present_prices_at(goods, tile)
-    prices = {}
-    for good in goods:
-        price = view.price(good, view.area_of(good, tile))
-        if price is not None:
-            prices[good] = price
-    return prices
+    return view.present_prices_at(goods, tile)
 
 
 def paid_input_prices(producer: Producer, recipe: Recipe, view: MarketView,
                       live: Dict[GoodId, float]) -> Dict[GoodId, float]:
     """`live` with each input the run uses up raised to the price it cleared at last year in the producer's
     market, where that is higher than the remembered price: a thin trade moves the remembered price only
-    slightly, and a buyer bidding from it is outbid every year. A view that does not report clearing prices
-    leaves `live` as it is."""
-    cleared_price = getattr(view, "cleared_price", None)
-    if cleared_price is None:
-        return live
+    slightly, and a buyer bidding from it is outbid every year."""
     paid = dict(live)
     for good in recipe.inputs:
-        cleared = cleared_price(good, view.area_of(good, producer.tile))
+        cleared = view.cleared_price(good, view.area_of(good, producer.tile))
         if cleared is not None and cleared > paid.get(good, math.inf):
             paid[good] = cleared
     return paid
@@ -201,17 +193,9 @@ def live_wages(producer: Producer, recipe: Recipe, view: MarketView) -> Dict[str
 
 
 def live_wages_at(tile: TileId, recipe: Recipe, view: MarketView) -> Dict[str, float]:
-    """`live_wages` for a recipe worked on a tile, with no producer there yet."""
-    trades = _priced_names(recipe)[1]
-    present_prices_at = getattr(view, "present_prices_at", None)
-    if present_prices_at is not None:
-        return present_prices_at(trades, tile, True)
-    wages = {}
-    for trade in trades:
-        wage = view.wage(trade, view.area_of(trade, tile))
-        if wage is not None:
-            wages[trade] = wage
-    return wages
+    """`live_wages` for a recipe worked on a tile, with no producer there yet: each trade at the one wage rule
+    (`trade_wages.wage_in_view`), so a trade the memory holds no wage for is priced, never left out."""
+    return {trade: trade_wages.wage_in_view(view.setup, view, trade, view.area_of(trade, tile)) for trade in _priced_names(recipe)[1]}
 
 
 def next_expectations(producer: Producer, recipe: Recipe, view: MarketView,
@@ -274,6 +258,8 @@ def _break_even_scale(producer, recipe, view, prices, live_inputs=None, wages=No
     wages = live_wages(producer, recipe, view) if wages is None else wages
     revenue = unit_cost.revenue_per_run(recipe, prices) * producer.yield_factor
     rate = view.interest_rate(view.currency_of(view.area_of(min(recipe.outputs), producer.tile)))
+    if rate is None:
+        return None, 0.0
     cost = unit_cost.variable_cost_per_run(recipe, inputs, wages, producer.land_rent_per_run) + unit_cost.capital_charge_per_run(
         recipe, inputs, wages, rate)
     if not (revenue > 0.0 and math.isfinite(cost) and cost > 0.0):
@@ -297,9 +283,8 @@ def plan(producer: Producer, recipe: Recipe, view: MarketView, cash: float) -> P
     labour_cost = unit_cost.labour_cost_per_run(recipe, wages)
     rent = producer.land_rent_per_run
     variable = input_cost + labour_cost + rent
-    margin = revenue - variable
     if producer.capacity_runs <= 0.0 or revenue <= 0.0 or not math.isfinite(variable):
-        return Plan(0.0, expected_margin_per_run=margin)
+        return Plan(0.0)
     # cash pays what the market asks now (as the cash target is struck); the lagging expectation only chooses runs
     paying_prices = {**inputs, **market_inputs}
     held_value = sum(min(view.stock(producer.agent_id, good, producer.tile), quantity * producer.capacity_runs)
@@ -311,11 +296,11 @@ def plan(producer: Producer, recipe: Recipe, view: MarketView, cash: float) -> P
                  runs_for_stock(producer, recipe, view, variable, outputs))
     runs = max(0.0, min(within_a_years_change(producer, chosen), affordable))
     wanted = runs
-    if producer.land_run_cap >= 0.0:
+    if producer.land_run_cap is not None:
         runs = min(runs, producer.land_run_cap)
     ratio = working_cost_ratio(revenue, variable)
     if runs <= 0.0 or ratio <= 0.0:
-        return Plan(0.0, expected_margin_per_run=margin, wanted_runs=wanted)
+        return Plan(0.0, wanted_runs=wanted)
     # the workplaces that work are the cheaper ones: what an hour or an input is worth is judged at their cost
     labour_bids = _labour_bids(producer, recipe, view, runs, revenue / ratio, input_cost + rent, wages)
     # an input is bid up to the price at which the run breaks even at the input prices seen now, not at the
@@ -323,7 +308,7 @@ def plan(producer: Producer, recipe: Recipe, view: MarketView, cash: float) -> P
     live_variable = unit_cost.input_cost_per_run(recipe, {**inputs, **market_inputs}) + labour_cost + rent
     bids = _input_bids(producer, recipe, view, runs, market_inputs, max(cash, 0.0) - runs * labour_cost,
                        revenue / ratio - live_variable, live_variable, wages)
-    return Plan(runs, tuple(labour_bids), tuple(bids), margin, wanted, runs * labour_cost)
+    return Plan(runs, tuple(labour_bids), tuple(bids), wanted, runs * labour_cost)
 
 
 def within_a_years_change(producer: Producer, runs: float) -> float:
@@ -332,7 +317,7 @@ def within_a_years_change(producer: Producer, runs: float) -> float:
     if producer.last_runs < 0.0:
         return runs
     step = OUTPUT_CHANGE_SHARE_PER_YEAR * producer.capacity_runs
-    anchor = change_anchor(producer.last_runs, min(producer.staffed_runs, producer.capacity_runs))
+    anchor = change_anchor(producer.last_runs, None if producer.staffed_runs is None else min(producer.staffed_runs, producer.capacity_runs))
     return max(anchor - step, min(anchor + step, runs))
 
 
@@ -411,25 +396,31 @@ def working_cost_ratio(revenue_per_run: float, variable_cost_per_run: float) -> 
 def paying_output(recipe: Recipe, prices: Mapping[GoodId, float]) -> GoodId:
     """The output that carries most of a run's value at `prices` (an unpriced output carries none); the first by
     name among ties, so a recipe with no prices at all is named by its first output."""
-    return max(sorted(recipe.outputs), key=lambda good: recipe.outputs[good] * prices.get(good, 0.0))
+    priced = [good for good in sorted(recipe.outputs) if prices.get(good) is not None]
+    if not priced:
+        return min(recipe.outputs)
+    return max(priced, key=lambda good: recipe.outputs[good] * prices[good])
 
 
 def _bound_by_stock(recipe: Recipe, piling: List[GoodId], output_prices: Mapping[GoodId, float]) -> List[GoodId]:
     """The piling outputs that still hold the run count back at `output_prices`: the paying output, and any whose
     value is not less than what a run makes of the rest. A minor output nobody buys is not what the run is for."""
-    value = {good: made * output_prices.get(good, 0.0) for good, made in recipe.outputs.items()}
+    value = {good: made * output_prices[good] for good, made in recipe.outputs.items()
+             if output_prices.get(good) is not None}
     paying = paying_output(recipe, output_prices)
     total = math.fsum(value.values())
-    return [good for good in piling if good == paying or value[good] >= total - value[good]]
+    return [good for good in piling if good == paying or (good in value and value[good] >= total - value[good])]
 
 
 def runs_for_stock(producer: Producer, recipe: Recipe, view: MarketView, run_cost: Optional[float] = None,
                    output_prices: Optional[Mapping[GoodId, float]] = None) -> float:
     """Runs a producer plans from expected demand and its stock, not from price: what it expects to sell plus the gap
     between its target stock (inventory.target_stock, the safety stock) and what it holds, closed over
-    STOCK_CLEARING_YEARS; a surplus is worked off the same way and a shortfall refilled. This is the production
-    quantity of Eurace@Unibi (Cons_Goods/Firm_Producer_Functions.c, Firm_calc_production_quantity: critical stock less
-    current stock), whose refill is whole in one period where this one is spread. The price only decides whether
+    STOCK_CLEARING_YEARS; a surplus is worked off the same way and a shortfall refilled. This differs from the production
+    quantity of Eurace@Unibi (Cons_Goods/Firm_Producer_Functions.c, Firm_calc_production_quantity), an (s,S) rule: zero
+    above a critical stock, the critical stock set from market share times the forecast plus a variance buffer, then
+    smoothed (that smoothing is inactive in the shipped Eurace parameters, whose lambda is 1.0, and is not applied
+    here). Here the gap is spread over STOCK_CLEARING_YEARS and a surplus is worked off, not stopped at. The price only decides whether
     runs pay at all (`plan`). Unlimited while it has no record of sales. With the run's cost and the outputs'
     prices, outputs that are piling up do not count while what a run makes of the others, at those prices, covers
     the cost: a joint recipe runs for the output that pays, and plans from the gaps of those others. With the prices
@@ -439,16 +430,18 @@ def runs_for_stock(producer: Producer, recipe: Recipe, view: MarketView, run_cos
         return math.inf
     sales = producer.expected_sales
     target = inventory.target_stock(sales)
-    gap = {good: target - view.stock(producer.agent_id, good, producer.tile) / made
-           for good, made in recipe.outputs.items() if made > 0.0}
+    gap = {good: target - view.stock(producer.agent_id, good, producer.tile) / (made * producer.yield_factor)
+           for good, made in recipe.outputs.items() if made * producer.yield_factor > 0.0}
+    if not gap:      # a plant that yields nothing has no stock to count in runs
+        return sales
     piling = [good for good, short in gap.items() if short < 0.0]
     counted = list(gap)
     if piling and output_prices is not None:
         bound = _bound_by_stock(recipe, piling, output_prices)
         counted = [good for good in gap if good not in piling or good in bound]
     if piling and run_cost is not None and output_prices is not None:
-        sells = math.fsum(made * output_prices.get(good, 0.0) for good, made in recipe.outputs.items()
-                          if good not in piling) * producer.yield_factor
+        sells = math.fsum(made * output_prices[good] for good, made in recipe.outputs.items()
+                          if good not in piling and output_prices.get(good) is not None) * producer.yield_factor
         if sells > 0.0 and sells >= run_cost:      # nothing else sold covers nothing: a costless run is not paid for by it
             counted = [good for good in gap if good not in piling]
     # the gap that binds is the smallest shortfall (or largest surplus): a joint run cannot make one output alone
@@ -461,7 +454,7 @@ def _labour_bids(producer, recipe, view, runs, revenue, input_cost, wages) -> Li
     ceilings = joint_labour_ceilings(recipe.labour_hours, wages, revenue - input_cost)
     return [LabourBid(producer.agent_id, trade, view.area_of(trade, producer.tile),
                       runs * recipe.labour_hours[trade], ceilings[trade])
-            for trade in sorted(recipe.labour_hours)]
+            for trade in sorted(recipe.labour_hours) if trade in ceilings]     # no ceilings: a run with no hours bids none
 
 
 def input_ceiling(price: float, margin_per_run: float, variable_cost_per_run: float,
@@ -548,8 +541,9 @@ def offers(producer: Producer, recipe: Recipe, view: MarketView, stock_by_good: 
            keep_back: Optional[Mapping[GoodId, float]] = None) -> List[Offer]:
     """Held output on each output's own market. The reservation is what carrying a unit to next year
     would net at the expected price, lowered when cash is short; what was spent making it does not
-    enter. A perishable's reservation falls to or below zero, so it sells at any price. `keep_back`
-    holds stock the producer needs as input for its own planned runs."""
+    enter. A good with no expected or remembered price is held at its variable cost per unit; with no cost
+    to read either it is not offered. A perishable's reservation falls to or below zero, so it sells at any
+    price. `keep_back` holds stock the producer needs as input for its own planned runs."""
     keep_back = keep_back or {}
     expected = expected_output_prices(producer, recipe, view)
     rows = []
@@ -557,15 +551,29 @@ def offers(producer: Producer, recipe: Recipe, view: MarketView, stock_by_good: 
         quantity = stock_by_good.get(good, 0.0) - keep_back.get(good, 0.0)
         if quantity <= 0.0:
             continue
+        reference = expected.get(good)
+        if reference is None:      # no expectation and no remembered price: what a unit costs to make stands in
+            reference = _variable_cost_per_unit(producer, recipe, view)
+        if reference is None:
+            continue
         spoilage = specs[good].spoilage_per_year if good in specs else 0.0
-        reservation = inventory.holding_reservation(expected.get(good, 0.0), interest_rate, spoilage,
-                                                    STORAGE_COST_PER_UNIT)
+        storage = STORAGE_COST_PER_UNIT * view.opening_wage_level(view.currency_of(view.area_of(good, producer.tile)))   # declared in opening-year money
+        reservation = inventory.holding_reservation(reference, interest_rate, spoilage, storage)
         rows.append((good, quantity, reservation))
     stock_value = sum(quantity * max(reservation, 0.0) for _good, quantity, reservation in rows)
     cash_shortfall = shortfall_at_working_scale(producer, recipe, view, cash_shortfall, expected)
     return [Offer(producer.agent_id, good, view.area_of(good, producer.tile), producer.tile, quantity,
                   inventory.distressed_reservation(reservation, cash_shortfall, stock_value))
             for good, quantity, reservation in rows]
+
+
+def _variable_cost_per_unit(producer: Producer, recipe: Recipe, view: MarketView) -> Optional[float]:
+    """A run's variable cost over the units it makes (every output counted alike); None when an input or wage
+    cannot be priced or the run makes nothing."""
+    units = math.fsum(recipe.outputs.values()) * producer.yield_factor
+    cost = unit_cost.variable_cost_per_run(recipe, expected_input_prices(producer, recipe, view),
+                                           live_wages(producer, recipe, view), producer.land_rent_per_run)
+    return cost / units if units > 0.0 and math.isfinite(cost) else None
 
 
 def with_capacity(producer: Producer, capacity_runs: float) -> Producer:

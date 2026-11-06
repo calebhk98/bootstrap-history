@@ -22,11 +22,13 @@ The year (`economy.Economy.step`), one civilisation's economy:
     6. close     each agent closes its year (consumes, records unmet need, updates expectations,
                  idles or exits); `inventory.carry` applies spoilage to every held stock
 
-Every movement of money or goods is a `Transfer` or `GoodsMove` booked through `accounts.Book`.
+Every movement of money or goods is a `Transfer` or `GoodsMove` booked through `book.Book`.
 An agent's purse never goes below zero except an edge account's (types.EDGE_*).
 """
 from dataclasses import dataclass, field
-from typing import Mapping, Optional, Protocol, Sequence, Tuple
+from typing import Any, Mapping, Optional, Protocol, Tuple
+
+from sim.labour.api import School
 
 from .types import (AgentId, AreaId, Bid, CurrencyId, FundsOffer, GoodId, LabourBid, LabourOffer,
                     LoanRequest, Offer, SiteLimit, TileId, TradeId)
@@ -39,7 +41,6 @@ class AgentOrders:
     offers: Tuple[Offer, ...] = ()
     labour_bids: Tuple[LabourBid, ...] = ()
     labour_offers: Tuple[LabourOffer, ...] = ()
-    loan_requests: Tuple[LoanRequest, ...] = ()
     funds_offers: Tuple[FundsOffer, ...] = ()
 
 
@@ -49,11 +50,27 @@ class MarketView(Protocol):
 
     def price(self, good: GoodId, area: AreaId) -> Optional[float]:
         """The planning price: last year's traded price or, where nothing traded, the market's quote (see
-        MarketView.quote_kind in market_memory.py); None if the market never posted anything."""
+        `price_kind`); None if the market never posted anything."""
 
     def cleared_price(self, good: GoodId, area: AreaId) -> Optional[float]:
         """The price the market cleared at last year, as paid, not as remembered (the remembered price moves
-        part of the way when little traded). A view may omit it; buyers then plan from the remembered price."""
+        part of the way when little traded); None when nothing traded."""
+
+    def offered_price(self, good: GoodId, area: AreaId) -> Optional[float]:
+        """What a buyer can buy at: a price the market traded at or an ask still posted; None where nothing is on
+        offer (a bid ceiling, a cost quote or a price remembered from an old trade)."""
+
+    def price_kind(self, good: GoodId, area: AreaId) -> Optional[str]:
+        """What `price` is: PRICE_SMOOTHED_TRADE, or the kind of quote or estimate; None when the market has no price."""
+
+    def prices_across(self, good: GoodId, areas) -> list:
+        """`price(good, area.area_id)` for each of `areas` (the good's areas), in order."""
+
+    setup: Any
+    """The trades and opening wages (`trade_wages.wage_in_view` prices a trade from them)."""
+
+    def present_prices_at(self, names: tuple, tile: TileId) -> Mapping[str, float]:
+        """`price` of each of `names` (goods) in its area on `tile`, those with a price only."""
 
     def usual_price(self, good: GoodId, area: AreaId) -> Optional[float]:
         """A slow average of the clearing price, which holders of durable goods compare today's with.
@@ -62,7 +79,10 @@ class MarketView(Protocol):
     def wage(self, trade: TradeId, area: AreaId) -> Optional[float]:
         """Last year's wage per hour."""
 
-    def interest_rate(self, currency: CurrencyId) -> float:
+    def wage_held_anywhere(self, trade: TradeId) -> bool:
+        """Whether any labour area has a remembered wage for the trade (`trade_wages` prices a trade none has on its opening wage)."""
+
+    def interest_rate(self, currency: CurrencyId) -> Optional[float]:
         """Last year's base lending rate."""
 
     def area_of(self, good: GoodId, tile: TileId) -> AreaId:
@@ -74,17 +94,11 @@ class MarketView(Protocol):
     def basket_price_level(self, currency: CurrencyId) -> float:
         """Last year's price level against the opening year (1.0 at the opening)."""
 
-    def chained_price_level(self, currency: CurrencyId) -> float:
-        """The level real figures (anchor wages, spending targets) are turned nominal with: the opening's 1.0 chained by
-        each year's observed inflation, the weighted median of the goods' price changes. Unlike `basket_price_level`
-        (a reported statistic) a few thin goods whose asks run away do not move it."""
-
-    def expected_inflation(self, currency: CurrencyId) -> float:
-        """Adaptive expectation of next year's rise in the price level, as a share."""
+    def opening_wage_level(self, currency: CurrencyId) -> float:
+        """Today's money per opening-year money for the wages the setup opened with (see `MarketMemory.opening_wage_level`)."""
 
     def observed_inflation(self, currency: CurrencyId) -> Optional[float]:
-        """Last year's rise in prices, the weighted median of the goods' changes; None before there is one. A view
-        may omit it; holders then read the change in the price level."""
+        """Last year's rise in prices, the weighted median of the goods' changes; None before there is one."""
 
     def cash(self, agent: AgentId, currency: CurrencyId) -> float:
         """The agent's money now."""
@@ -93,33 +107,27 @@ class MarketView(Protocol):
         """The agent's holding of a good on a tile now."""
 
     def equity(self, agent: AgentId) -> float:
-        """What the agent owns of the firms (net worth by ownership share), in money. A view may omit it
-        (`credit_view.equity_of` then reads zero)."""
+        """What the agent owns of the firms (net worth by ownership share), in money; zero where the view has no firms."""
 
+    def claims(self, agent: AgentId, currency: CurrencyId) -> float:
+        """What the agent expects to collect on loans it has made; zero where the view has no loans."""
 
-class Clearing(Protocol):
-    """goods_market.clear and labour.clear share this shape."""
-
-    def __call__(self, bids: Sequence, offers: Sequence, key: str, area: AreaId,
-                 currency: CurrencyId, last_price: Optional[float]) -> object:
-        """Clear one market for one year; deterministic in the order of its inputs."""
+    def loss_rate(self, agent: AgentId, currency: CurrencyId) -> float:
+        """The loss the agent expects per year of credit exposure; zero where the view has no loans."""
 
 
 @dataclass(frozen=True)
-class YearInputs:
+class EconomyYearInputs:
     """What the engine hands the economy each year, through the port. Physical facts only."""
     year: int
     population_by_tile: Mapping[TileId, float]
-    working_age_share: float
     yield_factor_by_producer: Mapping[AgentId, float]       # weather, depletion, technique: 1.0 is the opening
     engine_orders: Mapping[AgentId, AgentOrders]            # the founder, firms, the state: orders the engine decides
     legacy_transfers: Tuple = ()                            # one-sided engine postings, booked against EDGE_LEGACY
     harvest_factor: float = 1.0                             # this year's growing weather on households' own plots
     site_limits: Tuple[SiteLimit, ...] = ()                 # the sites' limits now; empty keeps the last declared
-    entrant_share: float = 0.0                              # share of working people a year coming of working age
     import_accounts: Tuple = ()                             # accounts that sell goods landed from abroad: their sales are imports
     export_accounts: Tuple = ()                             # accounts that buy goods for abroad: their purchases are exports
-    attrition_share: float = 0.0                            # share of working people a year dying or retiring
     labour_levy_hours_per_worker: float = 0.0               # hours of each working person's year the state takes (a corvee, conscripts)
     debt_relief_tiles: Tuple[TileId, ...] = ()              # tiles whose households' debts the state cancels this year (debt_relief.py)
     title_moves: Tuple[Tuple[TileId, str, str, float], ...] = ()    # (tile, giver, receiver, share) the state decrees: confiscation, land reform (titles_moves.py)
@@ -133,6 +141,9 @@ class YearInputs:
     institutions: Tuple[str, ...] = ()                      # the credit institutions the society holds (banks.DEPOSIT_BANKING): without one its households found none
     durable_users: Tuple[AgentId, ...] = ()                 # outside actors' asset accounts whose durables are in use
     bondage_tiles: Tuple[TileId, ...] = ()                  # tiles whose society recognises bondage: bonded people may be bought there (Complaint 644)
+    schools: Tuple[School, ...] = ()                        # trade schools the engine's seats hold, by trade and area: the labour core trains through them
     bonded_for_sale: Mapping[TileId, Mapping[str, float]] = None   # bonded people of a trade on offer per tile; None is none
     credit_asks: Tuple[LoanRequest, ...] = ()               # credit lines the engine's seats ask for: they join the year's clearing and are granted a room (credit_lines.py)
     standing_bids: Tuple[Bid, ...] = ()                     # demand settled outside the book (the founder's draws): entry reads it as bids, nothing clears
+    state_capacity: float = 1.0                             # share of what the state assesses its officials collect this year (0..1); follows the officials (taxes.assess)
+    working_people_by_tile: Mapping[TileId, float] = field(default_factory=dict)   # demography's working-age people on each tile; a tile it names sets its cohorts' working people (the working-age share follows demography)

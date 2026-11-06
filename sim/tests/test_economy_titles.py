@@ -7,7 +7,7 @@ import types
 import unittest
 
 from sim.economy import credit, credit_claims, lending, ownership, titles, titles_value
-from sim.economy.accounts import Book
+from sim.book import Book
 from sim.economy.households_cohort import cohort_id, cohorts_for_tile
 from sim.economy.households_credit import subsistence_request
 from sim.economy.market_memory import MarketMemory
@@ -32,7 +32,7 @@ def make_world():
     peasant = record.cohorts[PEASANT]
     record.cohorts[PEASANT] = type(peasant)(**{**vars(peasant), "last_year_income": NORMAL_INCOME})
     titles.seed(record)
-    record.land_rent = {TILE: RENT_PER_HECTARE}
+    record.land.land_rent = {TILE: RENT_PER_HECTARE}
     record.book.transfer(Transfer("edge:legacy", LANDLORD, MONEY, 100000.0, "opening"))
     return setup, record
 
@@ -42,15 +42,15 @@ def one_year(setup, record, year, income):
     floor, earns `income`, and then the year's loans are serviced."""
     cohort = record.cohorts[PEASANT]
     cash = record.book.balance(PEASANT, MONEY)
-    debts = credit_claims.debts_by_borrower(record.loans, MONEY)
+    debts = credit_claims.debts_by_borrower(record.credit.loans, MONEY)
     asked = subsistence_request(cohort, FLOOR_COST - cash, MONEY, RATE, debts.get(PEASANT, 0.0))
     if asked is not None:
         asked = lending._pledging_title(setup, record, cohort, asked, RATE)
         loans, rate, _unmet = credit.clear([asked], [FundsOffer(LANDLORD, MONEY, 50000.0, RATE)], MONEY, RATE,
-                                           debts, credit_claims.arrears_history(record.loans, record.remembered_defaults),
+                                           debts, credit_claims.arrears_history(record.credit.loans, record.credit.remembered_defaults),
                                            year=year)
         record.book.transfer_many(credit.disbursements(loans))
-        record.loans.extend(loans)
+        record.credit.loans.extend(loans)
     spend = min(FLOOR_COST, record.book.balance(PEASANT, MONEY))
     record.book.transfer(Transfer(PEASANT, "edge:market", MONEY, spend, "spending"))
     record.book.transfer(Transfer("edge:harvest", PEASANT, MONEY, income, "harvest"))
@@ -65,7 +65,7 @@ def years(setup, record, count, income):
 class SeedingTests(unittest.TestCase):
     def test_titles_start_as_the_cohorts_ownership_shares(self):
         _setup, record = make_world()
-        self.assertAlmostEqual(sum(record.titles[TILE].values()), 1.0)
+        self.assertAlmostEqual(sum(record.land.titles[TILE].values()), 1.0)
         for cohort in record.cohorts.values():
             self.assertAlmostEqual(titles.holding(record, TILE, cohort.agent_id), cohort.ownership_share)
 
@@ -73,7 +73,7 @@ class SeedingTests(unittest.TestCase):
         _setup, record = make_world()
         by_share = {payment.payee: payment.amount for payment in
                     ownership.spread(record, [Transfer("producer:a", LANDLORD, MONEY, 100.0, "rent")])}
-        record.titles[TILE][LANDLORD] += record.titles[TILE].pop(PEASANT)
+        record.land.titles[TILE][LANDLORD] += record.land.titles[TILE].pop(PEASANT)
         moved = {payment.payee: payment.amount for payment in
                  ownership.spread(record, [Transfer("producer:a", LANDLORD, MONEY, 100.0, "rent")])}
         self.assertNotIn(PEASANT, moved)
@@ -86,7 +86,7 @@ class ValueTests(unittest.TestCase):
         share = titles.holding(record, TILE, PEASANT)
         worth = titles_value.title_wealth(setup.tiles, record, PEASANT, RATE)
         self.assertAlmostEqual(worth, share * 100.0 * RENT_PER_HECTARE / RATE)
-        record.titles[TILE][LANDLORD] += record.titles[TILE].pop(PEASANT)
+        record.land.titles[TILE][LANDLORD] += record.land.titles[TILE].pop(PEASANT)
         self.assertEqual(titles_value.title_wealth(setup.tiles, record, PEASANT, RATE), 0.0)
         self.assertGreater(titles_value.title_wealth(setup.tiles, record, LANDLORD, RATE), worth)
 
@@ -94,18 +94,18 @@ class ValueTests(unittest.TestCase):
 class HarvestAndDefaultTests(unittest.TestCase):
     def test_a_good_run_leaves_titles_where_they_were(self):
         setup, record = make_world()
-        before = dict(record.titles[TILE])
+        before = dict(record.land.titles[TILE])
         years(setup, record, 8, income=NORMAL_INCOME)
-        self.assertEqual(record.titles[TILE], before)
-        self.assertEqual(record.tenancies, {})
+        self.assertEqual(record.land.titles[TILE], before)
+        self.assertEqual(record.land.tenancies, {})
 
     def test_bad_harvests_pass_the_borrowers_title_to_the_lender_and_the_family_stays_as_tenant(self):
         setup, record = make_world()
-        before = dict(record.titles[TILE])
+        before = dict(record.land.titles[TILE])
         years(setup, record, 8, income=0.1 * FLOOR_COST)
         self.assertLess(titles.holding(record, TILE, PEASANT), before[PEASANT])
         self.assertGreater(titles.holding(record, TILE, LANDLORD), before[LANDLORD])
-        self.assertAlmostEqual(sum(record.titles[TILE].values()), 1.0)
+        self.assertAlmostEqual(sum(record.land.titles[TILE].values()), 1.0)
         self.assertGreater(titles.tenant_share(record, TILE, PEASANT), 0.0)
         self.assertAlmostEqual(titles.tenant_share(record, TILE, PEASANT),
                                titles.holding(record, TILE, LANDLORD) - before[LANDLORD])
@@ -136,19 +136,19 @@ class HarvestAndDefaultTests(unittest.TestCase):
         setup, record = make_world()
         years(setup, record, 8, income=0.1 * FLOOR_COST)
         self.assertGreater(titles.tenant_share(record, TILE, PEASANT), 0.0)
-        covered = record.credit_losses.get(LANDLORD, 0.0)
+        covered = record.credit.credit_losses.get(LANDLORD, 0.0)
         setup2, bare = make_world()
-        bare.land_rent = {}                                    # land that earns nothing is no collateral
+        bare.land.land_rent = {}                                    # land that earns nothing is no collateral
         years(setup2, bare, 8, income=0.1 * FLOOR_COST)
-        self.assertLess(covered, bare.credit_losses[LANDLORD])
+        self.assertLess(covered, bare.credit.credit_losses[LANDLORD])
 
 
 class TenancyTests(unittest.TestCase):
     def tenant_world(self, share=0.1):
         setup, record = make_world()
-        record.titles[TILE][PEASANT] -= share
-        record.titles[TILE][LANDLORD] += share
-        record.tenancies = {TILE: [{"tenant": PEASANT, "lessor": LANDLORD, "share": share, "arrears": 0.0}]}
+        record.land.titles[TILE][PEASANT] -= share
+        record.land.titles[TILE][LANDLORD] += share
+        record.land.tenancies = {TILE: [{"tenant": PEASANT, "lessor": LANDLORD, "share": share, "arrears": 0.0}]}
         return setup, record
 
     def test_a_tenant_pays_its_lessor_the_rent_on_the_land_it_works(self):
@@ -158,18 +158,18 @@ class TenancyTests(unittest.TestCase):
         self.assertEqual([(payment.payer, payment.payee, payment.purpose) for payment in payments],
                          [(PEASANT, LANDLORD, "tenant_rent")])
         self.assertAlmostEqual(payments[0].amount, 0.1 * 100.0 * RENT_PER_HECTARE)
-        self.assertEqual(record.tenancies[TILE][0]["arrears"], 0.0)
+        self.assertEqual(record.land.tenancies[TILE][0]["arrears"], 0.0)
 
     def test_rent_it_cannot_pay_builds_arrears_and_a_year_behind_abandons_the_land(self):
         setup, record = self.tenant_world(0.1)
         landlord_before = titles.holding(record, TILE, LANDLORD)
         titles.settle_tenancies(record, MONEY, {TILE: 100.0})            # first short year: arrears, still a tenant
         self.assertEqual(titles.tenant_share(record, TILE, PEASANT), 0.1)
-        self.assertGreater(record.tenancies[TILE][0]["arrears"], 0.0)
+        self.assertGreater(record.land.tenancies[TILE][0]["arrears"], 0.0)
         titles.settle_tenancies(record, MONEY, {TILE: 100.0})            # second: more than a year's rent behind
-        self.assertEqual(record.tenancies, {})
+        self.assertEqual(record.land.tenancies, {})
         self.assertAlmostEqual(titles.holding(record, TILE, LANDLORD), landlord_before - 0.1)
-        self.assertAlmostEqual(sum(record.titles[TILE].values()), 0.9)    # the land has no holder now
+        self.assertAlmostEqual(sum(record.land.titles[TILE].values()), 0.9)    # the land has no holder now
         paid = ownership.spread(record, [Transfer("producer:a", LANDLORD, MONEY, 90.0, "rent")])
         self.assertAlmostEqual(sum(payment.amount for payment in paid), 90.0)   # rent still reaches the holders
 
@@ -179,11 +179,11 @@ class SaveTests(unittest.TestCase):
         setup, record = make_world()
         years(setup, record, 8, income=0.1 * FLOOR_COST)
         loaded = EconomyRecord.from_record(record.to_record())
-        self.assertEqual(loaded.titles, record.titles)
-        self.assertEqual(loaded.tenancies, record.tenancies)
-        self.assertEqual([(loan.collateral_tile, loan.collateral_share) for loan in loaded.loans],
-                         [(loan.collateral_tile, loan.collateral_share) for loan in record.loans])
-        self.assertGreater(len(loaded.tenancies[TILE]), 0)
+        self.assertEqual(loaded.land.titles, record.land.titles)
+        self.assertEqual(loaded.land.tenancies, record.land.tenancies)
+        self.assertEqual([(loan.collateral_tile, loan.collateral_share) for loan in loaded.credit.loans],
+                         [(loan.collateral_tile, loan.collateral_share) for loan in record.credit.loans])
+        self.assertGreater(len(loaded.land.tenancies[TILE]), 0)
 
 
 if __name__ == "__main__":

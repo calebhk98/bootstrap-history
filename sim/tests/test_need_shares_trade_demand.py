@@ -16,6 +16,7 @@ from sim.world import need_demand
 QUICK_TOPIC = True
 
 _ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+_NEEDS = need_demand.load_needs(_ROOT)
 _PRODUCTION = load_production_catalog(_ROOT)
 
 
@@ -32,7 +33,7 @@ def _shares(reached, production=None, carriage=None, civ_id=None):
     civ = _json("data", "civilizations", civ_id + ".json") if civ_id else {}
     return workforce_spinup.need_shares_by_trade(
         production or _PRODUCTION, set(reached), techniques_available_to,
-        carriage if carriage is not None else workforce_carriage.carriage_for(reached), civ)
+        carriage if carriage is not None else workforce_carriage.carriage_for(reached), civ, needs=_NEEDS)
 
 
 def _recipe(output, labour, inputs=None):
@@ -45,8 +46,7 @@ def _zz_carriage(span=None):
 
 
 def _synthetic_shares(production, needs, carriage=None):
-    with mock.patch.object(workforce_spinup, "_needs", return_value=needs):
-        return workforce_spinup.need_shares_by_trade(production, set(), techniques_available_to, carriage)
+    return workforce_spinup.need_shares_by_trade(production, set(), techniques_available_to, carriage, needs=needs)
 
 
 class LandCarriersTests(unittest.TestCase):
@@ -189,40 +189,11 @@ class TradesWithoutANamedNeedTests(unittest.TestCase):
         reached = _starting_techs("rome_100ad")
         civ = dict(_json("data", "civilizations", "rome_100ad.json"), literacy_general=0.0)
         lettered = workforce_spinup.need_shares_by_trade(
-            _PRODUCTION, set(reached), techniques_available_to, workforce_carriage.carriage_for(reached), civ)
+            _PRODUCTION, set(reached), techniques_available_to, workforce_carriage.carriage_for(reached), civ, needs=_NEEDS)
         self.assertEqual(lettered.get("scribe", 0.0), 0.0)
 
     def test_coin_replacement_is_demand_for_the_engravers_the_minting_recipe_charges(self):
         self.assertGreater(_PRODUCTION["struck_silver_coin_kg"]["labour_hours"]["engraver"], 0.0)
-
-
-class OpeningDurablesTests(unittest.TestCase):
-    """Households open holding the durables they keep in use, so the opening demand for a durable is its
-    replacement, not the whole stock built at once (which staffed the opening with millions of masons)."""
-    def setUp(self):
-        from sim.tests import economy_fixture
-        economy_fixture.households_with_a_surplus(self)
-
-
-    def _opening_demand(self, service_life):
-        from sim.economy import opening
-        from sim.tests import economy_fixture as fixture
-        setup = fixture.small_setup(specs=fixture.specs({fixture.GRAIN: service_life}))
-        record, _areas, _carriage = opening.open_economy(setup)
-        return record.opening_basket.get(fixture.GRAIN, 0.0), record
-
-    def test_a_durable_opens_at_its_replacement_flow_not_a_whole_life_s_stock(self):
-        used_up, _record = self._opening_demand(0.0)
-        durable, _record = self._opening_demand(30.0)
-        self.assertGreater(used_up, 0.0)
-        self.assertLess(durable, 3.0 * used_up)
-
-    def test_the_households_hold_the_stock_that_serves_the_flow(self):
-        from sim.tests import economy_fixture as fixture
-        _demand, record = self._opening_demand(30.0)
-        held = sum(record.book.holdings(cohort.agent_id)["goods"].get(fixture.GRAIN, {}).get(cohort.tile, 0.0)
-                   for cohort in record.cohorts.values())
-        self.assertGreater(held, 0.0)
 
 
 class OpeningPlacementTests(unittest.TestCase):
@@ -236,7 +207,7 @@ class OpeningPlacementTests(unittest.TestCase):
                    "dig": Recipe("dig", {"clay_kg": 1.0}, {}, {"labourer": 1.0}),
                    "wood": Recipe("wood", {"wood_kg": 1.0}, {}, {"labourer": 1.0}),
                    "kiln": Recipe("kiln", {"pot_kg": 0.5}, {"wood_kg": 1.0, "clay_kg": 1.0}, {"potter": 1.0})}
-        setup = type("Setup", (), {"opening_prices": {"pot_kg": 2.0, "clay_kg": 1.0, "wood_kg": 1.0}})()
+        setup = type("Setup", (), {"opening_prices": {"pot_kg": 2.0, "clay_kg": 1.0, "wood_kg": 1.0}, "site_limits": (), "specs": {}})()
         order = opening._placement_order({name: 1.0 for name in recipes}, recipes, setup)
         self.assertLess(order.index("pot"), order.index("dig"))
         self.assertLess(order.index("kiln"), order.index("dig"))
@@ -247,7 +218,7 @@ class OpeningPlacementTests(unittest.TestCase):
         from sim.economy.types import Recipe
         recipes = {"a": Recipe("a", {"a_kg": 1.0}, {"b_kg": 1.0}, {"x": 1.0}),
                    "b": Recipe("b", {"b_kg": 1.0}, {"a_kg": 1.0}, {"x": 1.0})}
-        setup = type("Setup", (), {"opening_prices": {"a_kg": 1.0, "b_kg": 1.0}})()
+        setup = type("Setup", (), {"opening_prices": {"a_kg": 1.0, "b_kg": 1.0}, "site_limits": (), "specs": {}})()
         self.assertEqual(sorted(opening._placement_order({"a": 1.0, "b": 1.0}, recipes, setup)), ["a", "b"])
 
 

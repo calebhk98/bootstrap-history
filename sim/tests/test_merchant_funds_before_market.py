@@ -3,30 +3,33 @@ pricing a landed good before lenders first meet cannot loop back through society
 
 QUICK_TOPIC = True
 
-import types
 import unittest
 
-from sim.agents.api import EDGE_SAVERS, Purses
 from sim.tests import finance_host
 
 
-def world_with(offers):
-    purses = Purses()
-    purses.set_offers(offers)
-
-    def output_must_not_be_read():
-        raise AssertionError("household saving read before lenders met")
-    return finance_host.build(lender_offers_made=lambda: dict(purses.offers),
-                              actor_world=types.SimpleNamespace(household_saving=output_must_not_be_read))
+def world_with(listing):
+    """The finance module over the economy's lender listing as the markets view answers it (`(answered, listing)`)."""
+    return finance_host.build(agent_lender_listing=lambda: listing)
 
 
 class FundsBeforeTheLendersMeet(unittest.TestCase):
 
-    def test_no_offers_means_no_pooled_funds_and_no_call_into_output(self):
-        self.assertEqual(world_with({}).households_loanable_funds(), 0.0)
+    def test_no_lenders_listed_means_no_pooled_funds(self):
+        self.assertEqual(world_with((False, None)).households_loanable_funds(), 0.0)
+        self.assertEqual(world_with((True, {"coin_per_unit": 2.0, "lenders": []})).households_loanable_funds(), 0.0)
 
-    def test_after_the_meeting_the_households_offer_is_read(self):
-        self.assertEqual(world_with({EDGE_SAVERS: 7.0, "state": 3.0}).households_loanable_funds(), 7.0)
+    def test_after_the_meeting_what_the_economys_lenders_offered_is_read_in_coin(self):
+        listing = {"coin_per_unit": 2.0, "lenders": [("cohort:a", 3.0, 3.0, 3.0, 0.05), ("bank:b", 4.0, 1.0, 1.0, 0.06)]}
+        self.assertEqual(world_with((True, listing)).households_loanable_funds(), 14.0)
+
+    def test_the_full_offer_is_read_not_the_capacity_the_years_loans_have_left(self):
+        listing = {"coin_per_unit": 2.0, "lenders": [("cohort:a", 10.0, 2.0, 10.0, 0.05)]}
+        self.assertEqual(world_with((True, listing)).households_loanable_funds(), 20.0)
+
+    def test_what_is_lent_is_the_offer_less_what_the_account_still_holds_of_it(self):
+        listing = {"coin_per_unit": 2.0, "lenders": [("cohort:a", 10.0, 2.0, 6.0, 0.05)]}
+        self.assertEqual(world_with((True, listing)).economy_lending(), (20.0, 8.0))
 
 
 if __name__ == "__main__":

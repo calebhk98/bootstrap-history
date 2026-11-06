@@ -21,18 +21,12 @@ LAND_FREIGHT_TEAM_SIZE = declare(
         "PAVED_ROAD or MUD, because transport.py's own docstring calls dirt track 'the ordinary, unimproved-road case "
         "most freight in this period actually moved over': the middle case, not either extreme.")
 
-SEA_CREW_WAGE_TRADE = "sailor"
 SEA_MODE = "sail"
 RAIL_MODE = "rail"
 CANAL_MODE = "canal"
 DOMESTIC_CART_MODE = "cart"
 # Vehicles and hulls are priced as their timber (their iron fittings are left out).
 FREIGHT_VEHICLE_MATERIAL = "wood_kg"
-# The existing book price and wage that turn transport.py's physical quantities (feed kilograms, driver hours) into
-# money. Plain strings: which existing number to read, not a number. Wheat is dearer per kilogram than real fodder, so
-# the feed cost is an upper bound.
-FREIGHT_FEED_PRICE_MATERIAL = "wheat_kg"
-FREIGHT_DRIVER_WAGE_TRADE = "labourer"
 # Hauled materials whose routes are kept, before the oldest are dropped.
 MATERIAL_ROUTES_KEPT = 512
 

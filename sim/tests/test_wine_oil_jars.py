@@ -5,7 +5,7 @@ QUICK_TOPIC = True
 import os
 import unittest
 
-from sim.prices import solve_prices
+from sim.prices import solve_prices_core
 from sim.content.catalog import load_production_catalog
 from sim.world import capital_market
 
@@ -58,9 +58,9 @@ class BarrenYears(unittest.TestCase):
         entry = _PRODUCTION["grapes_kg"]
         stand = entry["capital"][0]
         prices = {"hectare_land": 1.0}
-        cost = solve_prices.recipe_cost_and_allocation("grapes_kg", entry, prices, _WAGES, interest_rate=0.05)[0]
+        cost = solve_prices_core.recipe_cost_and_allocation("grapes_kg", entry, prices, _WAGES, interest_rate=0.05)[0]
         at_once = dict(entry, capital=[dict(stand, establishment_years=0.0)])
-        cost_at_once = solve_prices.recipe_cost_and_allocation(
+        cost_at_once = solve_prices_core.recipe_cost_and_allocation(
             "grapes_kg", at_once, prices, _WAGES, interest_rate=0.05)[0]
         self.assertGreater(cost, cost_at_once)
 
@@ -73,7 +73,7 @@ class BarrenYears(unittest.TestCase):
 class PressAndJars(unittest.TestCase):
 
     def cost(self, material, prices, wages=None):
-        return solve_prices.recipe_cost_and_allocation(
+        return solve_prices_core.recipe_cost_and_allocation(
             material, _PRODUCTION[material], prices, wages or _WAGES, interest_rate=0.05)[1][material]
 
     def base_prices(self):
@@ -138,9 +138,9 @@ class HoldingInterestRule(unittest.TestCase):
     def test_stock_held_is_charged_on_the_inputs_laid_out_not_on_the_labour_after(self):
         entry = {"outputs": {"cured_kg": 1.0}, "inputs": {"raw_kg": 10.0}, "labour_hours": {"labourer": 100.0},
                  "holding_years": 2.0}
-        held = solve_prices.recipe_cost_and_allocation(
+        held = solve_prices_core.recipe_cost_and_allocation(
             "cured_kg", entry, {"raw_kg": 1.0}, {"labourer": 1.0}, interest_rate=0.1)[0]
-        free = solve_prices.recipe_cost_and_allocation(
+        free = solve_prices_core.recipe_cost_and_allocation(
             "cured_kg", dict(entry, holding_years=0.0), {"raw_kg": 1.0}, {"labourer": 1.0}, interest_rate=0.1)[0]
         self.assertAlmostEqual(held - free, 10.0 * 0.1 * 2.0)
 

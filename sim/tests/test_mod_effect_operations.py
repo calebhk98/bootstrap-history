@@ -3,7 +3,6 @@ economy's book against a named edge, a death share is sent to the demography own
 through the game's own transfer with the cause, and the base game's hazards use kill_people. Each is called on a stand-in game with the
 collaborator replaced by a recorder; the argument rules are test_mod_effects."""
 from types import SimpleNamespace
-from unittest import mock
 
 from sim.agents.api import edges
 from sim.demography.api import KillPeople
@@ -13,11 +12,8 @@ from sim.engine.mod_effects import ModEffects
 from sim.content.api import ModError
 from sim.land.api import TransferTile
 from sim.ledger.api import PayActor, PayActorFromEdge, PayEdgeFrom
-from sim.refusal import cause_of
 
-from .bridge_send import attach_send
 from .harness import *  # noqa: F401,F403
-from sim.tests import event_stand_in
 from sim.tests.ui_stand_in import Game
 
 QUICK_TOPIC = True
@@ -36,6 +32,11 @@ effects.pay(money_game, "government:x", "government:y", 2.0, "a gift")
 check("pay_edge sends the ledger the actor, the named edge, the amount and the purpose", sent_money[0] == PayEdgeFrom("government:x", edges.EDGE_OFFICIALS, 10.0, "a bribe"), sent_money)
 check("receive_from_edge sends the payment the other way", sent_money[1] == PayActorFromEdge(edges.EDGE_OFFICIALS, "government:x", 4.0, "returned"), sent_money)
 check("pay sends the payer, the payee, the amount and the purpose", sent_money[2] == PayActor("government:x", "government:y", 2.0, "a gift"), sent_money)
+refusal_game = Game(actors=money_game.actors, send=lambda command: "a refusal")
+check("pay hands the refusal back to the mod when the payer cannot cover it",
+      effects.pay(refusal_game, "government:x", "government:y", 2.0, "a gift") == "a refusal")
+check("pay_edge hands the refusal back to the mod when the payer cannot cover it",
+      effects.pay_edge(refusal_game, "government:x", edges.EDGE_OFFICIALS, 2.0, "a bribe") == "a refusal")
 refused = []
 for edge, amount in ((edges.EDGE_OFFICIALS, -1.0), ("nowhere", 1.0)):
     try:

@@ -6,7 +6,6 @@ import unittest
 from types import SimpleNamespace
 
 from sim.projects.api import ResetProjectProgress
-from sim.reporting.api import RecordEvent
 from sim.tests import projects_host, ventures_host
 from sim.ventures.api import ShutForgotten
 
@@ -14,8 +13,8 @@ from sim.ventures.api import ShutForgotten
 class Writes(unittest.TestCase):
     def test_works_of_forgotten_techniques_are_no_longer_running_or_shut(self):
         module = ventures_host.build(operating={"b", "c", "a"}, projects_record=ventures_host.projects_record(mothballed={"x", "y"}))
-        module.seat.business.mothball("a", 1, "by_choice")
-        module.seat.business.mothball("z", 1, "by_choice")
+        module.seat.business.lifecycle.mothball("a", 1, "by_choice")
+        module.seat.business.lifecycle.mothball("z", 1, "by_choice")
         module.apply_shut_forgotten(ShutForgotten(("a", "b", "z")))
         self.assertEqual((module.operating(), module.mothballed()), ({"c"}, {"x", "y"}))
 

@@ -59,10 +59,10 @@ def margin_per_share(margin: float, weight: float) -> float:
 def observed_gap(actor: Any, node_id: str, world: Any) -> float:
 	"""Margin of the technique (the actor's own when it runs it, else what the economy shows) over the mean
 	margin of the actor's other concerns."""
-	own = actor.margin_of(node_id)
-	new_margin = (float(world.concern_margin(node_id)) if own is None
+	own = actor.holdings.margin_of(node_id)
+	new_margin = (float(world.concerns.concern_margin(node_id)) if own is None
 				  else margin_per_share(float(own), plant_weight(actor.adoption, node_id)))
-	others = [actor.margin_of(other) for other in sorted(actor.concerns) if other != node_id]
+	others = [actor.holdings.margin_of(other) for other in sorted(actor.concerns) if other != node_id]
 	others = [margin for margin in others if margin is not None]
 	return margin_gap(new_margin, sum(others) / len(others) if others else 0.0)
 
@@ -74,7 +74,7 @@ def trial_refusals(actor: Any, node_id: str, world: Any) -> List[str]:
 		causes.append("unaware")
 	if not actor.knows(node_id, world):
 		causes.append("skill_unknown")
-	if world.unsold_materials(actor, node_id):
+	if world.research.unsold_materials(actor, node_id):
 		causes.append("materials_unsold")
 	return causes
 
@@ -98,12 +98,11 @@ def advance_actor(actor: Any, world: Any) -> List[str]:
 	"""One year for one actor: begin trials, judge them, move shares; subsidies and mandates paid by its state.
 	Returns "stage:node" events in order."""
 	events = []
-	candidates = [node_id for node_id in sorted(actor.knowledge - world.baseline_knowledge()) if node_id in world.nodes]
+	candidates = [node_id for node_id in sorted(actor.knowledge - world.knowledge.baseline_knowledge()) if node_id in world.setting.nodes]
 	if not candidates:
 		return events
-	government = world.government()
-	record = getattr(government, "record", None)
-	levers: Dict[str, Any] = {} if record is None else record.levers
+	government = world.setting.government()
+	levers: Dict[str, Any] = government.record.levers
 	subsidies, mandates = levers.get(TRIAL_SUBSIDY) or {}, levers.get(TECH_MANDATE) or {}
 	for node_id in candidates:
 		gap = observed_gap(actor, node_id, world)
@@ -111,13 +110,13 @@ def advance_actor(actor: Any, world: Any) -> List[str]:
 		if entry is None:
 			wanted = node_id in subsidies or node_id in mandates or (gap > 0.0 and not displaces_nothing(actor, node_id))
 			if wanted and not trial_refusals(actor, node_id, world):
-				actor.adoption[node_id] = {"stage": TRYING, "share": PILOT_SHARE, "since": world.year}
+				actor.adoption[node_id] = {"stage": TRYING, "share": PILOT_SHARE, "since": world.setting.year}
 				events.append("trying:" + node_id)
 			continue
 		if entry["stage"] == TRYING:
 			if node_id in subsidies:
 				pay(government, actor, float(subsidies[node_id]), "trial subsidy")
-			if world.year - entry["since"] < TRIAL_YEARS:
+			if world.setting.year - entry["since"] < TRIAL_YEARS:
 				continue
 			if gap > 0.0 or node_id in mandates:
 				entry["stage"] = ADOPTED
@@ -129,7 +128,7 @@ def advance_actor(actor: Any, world: Any) -> List[str]:
 		entry["share"] = next_share(entry["share"], gap)
 		if node_id in mandates:
 			entry["share"] = max(entry["share"], float(mandates[node_id]))
-			own = actor.margin_of(node_id)
+			own = actor.holdings.margin_of(node_id)
 			if own is not None and own < 0.0:
 				pay(government, actor, -own, "mandate compensation")
 	return events

@@ -4,10 +4,10 @@ reads the same figure to tell the calendar's pace from a want of money. The rule
 test_affordability_and_credit; these are the callers, over stand-ins."""
 QUICK_TOPIC = True
 
-import types
 import unittest
 
-from sim.labour.labour_training import TrainingMixin
+from sim.labour.labour_commissions import Commissions
+from sim.labour.labour_refusals import cash_in_hand_refusal
 from sim.refusal import Refusal, cause_of
 from sim.ui.proto.state_waiting import _waiting_on
 from sim.tests.ui_stand_in import Game
@@ -19,10 +19,10 @@ class World:
     def __init__(self, power):
         self.power = power
         self.asked = []
-        self.wages = {"smith": 1.0}
-        self.trades_absent = {"smith"}
-        self.trade_notes = {}
-        self.workforce = Game(contract_hours={})
+        self.trades = Game(wages={"smith": 1.0}, trades_absent={"smith"}, trade_notes={})
+        self.economy = Game(agent_trades=lambda: None)      # the economy has not narrowed the trades it holds
+        self.finance = Game(spending_power=self.spending_power, refusal_text=self.refusal_text)
+        self.workforce = Game(contract_hours={}, hours_wanted_once={})
         self.state = Game(household=self.workforce,
                                            projects=Game(done=set(), active={}))
 
@@ -34,15 +34,21 @@ class World:
         return "cannot afford %s at %s" % (what, fee)
 
 
-class Gate(TrainingMixin):
-    LITERATE_TRADES = ()
+class Gate:
+    """The commissions part over a world, with the trades, supply and hands it asks written out."""
 
     def __init__(self, power, fee):
         self._world = World(power)
-        self.labour_market = Game(
-            price_factor=lambda trade: 1.0, whole_recruits=lambda trade, asked, premium: asked,
-            hire_cost=lambda trade, count, premium=0.0: fee)
         self.fee = fee
+        self.commissions = Commissions(self._world, hands=Game(hours_reserved=lambda trade: 0.0), market=None, schedule=None,
+                                       supply=self, trades=self)
+        self.commissions.commission_fee = self.commission_fee
+
+    def commission_check(self, trade, hours):
+        return self.commissions.commission_check(trade, hours)
+
+    def auto_commission_for_blocked(self):
+        return self.commissions.auto_commission_for_blocked()
 
     def trade_available(self, trade):
         return True
@@ -55,19 +61,6 @@ class Gate(TrainingMixin):
 
     def commission_fee(self, trade, hours):
         return self.fee
-
-
-class HireCheck(unittest.TestCase):
-    def test_a_fee_over_the_purchase_budget_is_refused_cash_short_and_the_gate_asked_for_a_purchase(self):
-        gate = Gate(power=99.0, fee=100.0)
-        count, fee, refusal = gate.hire_check("smith", 2)
-        self.assertEqual((count, fee), (None, None))
-        self.assertEqual(cause_of(refusal), "cash_short")
-        self.assertEqual(gate._world.asked, ["buy"])
-
-    def test_a_fee_the_budget_covers_goes_through_with_its_cost(self):
-        count, fee, refusal = Gate(power=100.0, fee=100.0).hire_check("smith", 2)
-        self.assertEqual((count, fee, refusal), (2.0, 100.0, None))
 
 
 class CommissionCheck(unittest.TestCase):
@@ -84,8 +77,8 @@ class CommissionCheck(unittest.TestCase):
 
 class CashInHandRefusal(unittest.TestCase):
     def test_it_is_a_cash_short_refusal(self):
-        self.assertIsInstance(Gate(0.0, 1.0)._cash_in_hand_refusal("a fee", 5.0), Refusal)
-        self.assertEqual(cause_of(Gate(0.0, 1.0)._cash_in_hand_refusal("a fee", 5.0)), "cash_short")
+        self.assertIsInstance(cash_in_hand_refusal(World(0.0), "a fee", 5.0), Refusal)
+        self.assertEqual(cause_of(cash_in_hand_refusal(World(0.0), "a fee", 5.0)), "cash_short")
 
 
 class AutoCommission(unittest.TestCase):

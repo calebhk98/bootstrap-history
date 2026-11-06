@@ -5,7 +5,7 @@ QUICK_TOPIC = True
 
 import unittest
 
-from sim.economy import durable_stock, households, households_orders, households_store
+from sim.economy import durable_stock, households_orders, households_store
 from sim.tests import economy_fixture as fixture
 from sim.tests.economy_store_view import BASKET, SPECS, TILE, View, cohort, metal_held
 

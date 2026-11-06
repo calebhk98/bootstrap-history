@@ -73,13 +73,13 @@ def _quote_hire(sim, nodes, cmd):
     count, fee, refusal = sim.view("hire_check")(trade, count)
     if refusal:
         return {"ok": False, "error": refusal}
-    per_year = sim.view("labour_market")().quote_annual(trade, count) * count
+    per_year = sim.view("labour_market")().quote_annual(trade) * count
     return {"ok": True, "what": "hire", "trade": trade, "people": count,
-            "paid_now": round(fee, 1),
+            "first_year_wages_at_stake": round(fee, 1),
             "from_next_year_per_year": round(per_year, 1),
             "you_have": round(sim.view("acting_balance")(), 1),
-            "note": "Hiring pays a finder's fee that is also the first year's "
-                    "wage, now; the same wage is due every year after."}
+            "note": "Hiring posts places in the labour market; it fills them at the "
+                    "year's clearing and pays the wage from your purse then, and every year after."}
 
 
 def _quote_commission(sim, nodes, cmd):
@@ -91,7 +91,7 @@ def _quote_commission(sim, nodes, cmd):
     if refusal:
         return {"ok": False, "error": refusal}
     return {"ok": True, "what": "commission", "trade": trade, "hours": hours,
-            "paid_now": round(fee, 1), "you_have": round(sim.view("acting_balance")(), 1),
+            "wage_at_clearing_about": round(fee, 1), "you_have": round(sim.view("acting_balance")(), 1),
             "note": COMMISSION_NOTE}
 
 
@@ -114,8 +114,8 @@ def _quote_train(sim, nodes, cmd):
                     "the wage bill rises by the figure above every year."}
 
 
-COMMISSION_NOTE = ("Commissioned hours are available to your projects this "
-                   "year only, and cannot supervise a concern.")
+COMMISSION_NOTE = ("Commissioning posts the hours to the labour market: they are hired and paid at the year's clearing, "
+                   "at its wage, and are available to your projects the year after, that year only. They cannot supervise a concern.")
 
 
 def _quote_open(sim, nodes, cmd):

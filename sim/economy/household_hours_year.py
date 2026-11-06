@@ -3,7 +3,7 @@
 hours kept are added to those the own-plot plan and the household work already keep back (`labour_supply.HourSupply`)."""
 from typing import Callable, Dict, Mapping, Sequence
 
-from . import households_hours_offered
+from . import households_hours_offered, trade_wages
 from .households_basket import need_prices
 from .households_own import Option, own_production
 from .labour_ask_floor import hectares_per_hour_by_recipe, plot_return_per_hour
@@ -14,8 +14,8 @@ SPARE_HOURS = 1e18        # more hours than any plot takes, to ask how many it c
 
 def wage_faced_per_hour(view, offers: Sequence[LabourOffer]) -> float:
     """The wage per hour a cohort's offers face: last year's clearing wage in each market, else the reservation wage,
-    averaged over the hours offered (the same reading household work takes, household_work_year.cohort_split)."""
-    rows = [(offer.hours, view.wage(offer.trade, offer.area) or offer.reservation_wage) for offer in offers if offer.hours > 0.0]
+    averaged over the hours offered (the same reading household work takes, household_work_year.cohort_plan)."""
+    rows = [(offer.hours, trade_wages.faced_wage(view.wage(offer.trade, offer.area), offer.reservation_wage)) for offer in offers if offer.hours > 0.0]
     total = sum(hours for hours, _wage in rows)
     return sum(hours * wage for hours, wage in rows) / total if total > 0.0 else 0.0
 
@@ -61,17 +61,9 @@ def plot_schedules(setup, record, view, offers: Sequence[LabourOffer], options: 
 
 
 def plot_schedule(per_worker_hours: float, marginal: float, usable_per_worker: float, workers: float) -> Callable[[float], float]:
-    """Hours a cohort keeps for its plot at a wage (`households_hours_offered.plot_hours_kept` times its workers),
-    with what does not depend on the wage worked out once: it is asked at many wages."""
-    if per_worker_hours <= 0.0 or usable_per_worker <= 0.0 or marginal <= 0.0:
-        return lambda wage_per_hour: 0.0 * workers
-    usable = min(per_worker_hours, usable_per_worker)
-    exponent = 1.0 / (1.0 - households_hours_offered.LABOUR_OUTPUT_ELASTICITY)
-
+    """Hours a cohort keeps for its plot at a wage: `households_hours_offered.plot_hours_kept` times its workers."""
     def kept(wage_per_hour: float) -> float:
-        if wage_per_hour <= 0.0:
-            return usable * workers
-        return min(usable, per_worker_hours * (marginal / wage_per_hour) ** exponent) * workers
+        return households_hours_offered.plot_hours_kept(per_worker_hours, wage_per_hour, marginal, usable_per_worker) * workers
     return kept
 
 

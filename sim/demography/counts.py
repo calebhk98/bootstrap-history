@@ -1,6 +1,7 @@
 """The nation's people by age: the opening, the counts others read, and what cuts them (a shock, a death, settlers)."""
 from sim.actors.api import ScaleStrata
 from sim.agents import api as agents_api
+from sim.assembly.api import Part
 from sim.hazards.api import RecordWorldEvent
 from sim.refusal import Refusal
 from sim.reporting.api import RecordEvent
@@ -12,14 +13,14 @@ from .constants import DEFAULT_POPULATION_100AD, POP_SCALE_FLOOR
 from .people import People
 
 
-class Counts:
+class Counts(Part):
 
-    def _bands(self):
+    def bands(self):
         """The three age bands as they stand."""
         world = self.world
         return People(world.pop_children, world.pop_working_age, world.pop_elderly)
 
-    def _store(self, children, working_age, elderly):
+    def store_bands(self, children, working_age, elderly):
         world = self.world
         world.pop_children = float(children)
         world.pop_working_age = float(working_age)
@@ -29,30 +30,30 @@ class Counts:
 
     def population(self):
         """The nation's people in the three age bands (`total`, `adult_equivalents`, `nutrition_ratio(food)`)."""
-        return self._bands()
+        return self.bands()
 
     def people_by_band(self):
         """{band: people} of the nation's three age bands."""
-        people = self._bands()
+        people = self.bands()
         return {band: float(getattr(people, band)) for band in ("children", "working_age", "elderly")}
 
     def nutrition_ratio(self, food_kcal_per_day):
         """How far the food (kcal per day) meets what the nation's people need: 1.0 is exactly enough."""
-        return self._bands().nutrition_ratio(food_kcal_per_day)
+        return self.bands().nutrition_ratio(food_kcal_per_day)
 
     def pop_scale_for(self, people):
         """`people` against the reference population, never below the floor."""
         return rules.pop_scale(people, DEFAULT_POPULATION_100AD, POP_SCALE_FLOOR)
 
     def population_total(self):
-        return self._bands().total
+        return self.bands().total
 
     def working_age(self):
         return self.world.pop_working_age
 
     def pop_scale(self):
         """The nation's people against the reference population, never below the floor."""
-        return rules.pop_scale(self._bands().total, DEFAULT_POPULATION_100AD, POP_SCALE_FLOOR)
+        return rules.pop_scale(self.bands().total, DEFAULT_POPULATION_100AD, POP_SCALE_FLOOR)
 
     def default_population(self):
         """The population the reference tables (national outputs of the tracked commodities) are stated for."""
@@ -74,7 +75,7 @@ class Counts:
         stationary = demography.Population.stationary(
             float(civilisation.get("population", DEFAULT_POPULATION_100AD)),
             seed=rules.population_seed(civilisation.get("id", "civ")))
-        self._store(stationary.children, stationary.working_age, stationary.elderly)
+        self.store_bands(stationary.children, stationary.working_age, stationary.elderly)
 
     def cut_population(self, command):
         """Cut the cohorts by `share` of the whole, unevenly by age, so the population-weighted loss is `share` exactly and two
@@ -83,14 +84,14 @@ class Counts:
         shortfall). Reusing it for disease and war deaths is a temporary heuristic: the direction (the young and the old die more)
         is general, the magnitudes are not sourced for these causes. It retires when a hazard is expressed in calories or
         carries its own age pattern (docs/architecture/WIRING_MILESTONE_4.md, section 1.3)."""
-        people = self._bands()
+        people = self.bands()
         rules.cut_cohorts(people, command.share, demography.STARVATION_VULNERABILITY_CHILD,
                           demography.STARVATION_VULNERABILITY_WORKING_AGE, demography.STARVATION_VULNERABILITY_ELDERLY)
-        self._store(people.children, people.working_age, people.elderly)
+        self.store_bands(people.children, people.working_age, people.elderly)
 
     def send_settlers(self, command):
-        people = self._bands()
-        self._store(people.children, people.working_age - command.people, people.elderly)
+        people = self.bands()
+        self.store_bands(people.children, people.working_age - command.people, people.elderly)
 
     def note_population_change(self, command):
         self.world.population_change_last_year = command.change
@@ -111,24 +112,23 @@ class Counts:
     def _people_of(self, country):
         """How many people the country holds: the home people, or a partner's strata."""
         if country == self.needs.civilisation()["id"]:
-            return float(self._bands().total)
+            return float(self.bands().total)
         return sum(stratum["members"] for stratum in self.needs.country_strata[country])
 
     def add_captives(self, command):
         return agents_api.add_captives(self.needs.cast(), command.winner, command.people)
 
     def refresh_demographic_indexes(self, command):
-        self._refresh_indexes(command.year)
+        self.refresh_indexes(command.year)
 
-    def _refresh_indexes(self, year):
-        """Say why the wage bill moved, if it moved enough to be worth saying: a shock's effects are visible at once, not a
-        step later."""
-        terms = self.needs.wage_index_terms()
-        premium, shortfall = rules.wage_cascade(self.needs.wage_index(), terms["base"], terms["elasticity"])
+    def refresh_indexes(self, year):
+        """Say why the wage bill moved, if it moved enough to be worth saying: the change in the wage the labour market
+        cleared at between its last two clearings, so a shock's effect on pay is visible once the market has seen it."""
+        change = self.needs.cleared_wage_change()
+        if change is None:
+            return
+        premium = change * PERCENT_SCALE
         if rules.wage_cascade_due(premium, year, self.world.said_wage_cascade):
             self.world.said_wage_cascade = year
-            self.needs.send(RecordEvent.in_year(year, "wage_cascade", "population still %d%% below trend: wages "
-                "(and anything billed in them) are running "
-                "%d%% above normal for here, and will ease "
-                "as the population does"
-                % (round(shortfall * PERCENT_SCALE), round(premium)), population_below_trend_percent=round(shortfall * PERCENT_SCALE), wage_premium_percent=round(premium)))
+            self.needs.send(RecordEvent.in_year(year, "wage_cascade", "wages (and anything billed in them) rose "
+                "%d%% at the last clearing of the labour market" % round(premium), wage_premium_percent=round(premium)))

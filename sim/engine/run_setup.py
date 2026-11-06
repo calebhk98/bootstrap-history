@@ -32,11 +32,11 @@ class DetRNG(random.Random):
 
     Every probability check anywhere in this engine is "< threshold" with
     threshold in (0, 1) - a project's own risk of failing outright
-    (engine/projects.py `_complete`), the 3.5% yearly attrition roll, the 25%
+    (`_complete` in sim/projects/completion.py), the yearly attrition roll, the
     manumission roll, the fractional-headcount rounding in
-    `labour.py:_stochastic_round`, and every dated hazard `society.py`'s
-    `_shocks` rolls for (staff loss, a sack, and their own "does it come to
-    nothing instead" counter-rolls) - so a draw of 1.0 is never below any of
+    `stochastic_round` (sim/labour/staff_moves.py), and every dated hazard
+    `Shocks.shocks` (sim/hazards/shocks.py) rolls for (staff loss, a sack, and
+    their own "does it come to nothing instead" counter-rolls) - so a draw of 1.0 is never below any of
     them: nothing fails, nobody dies, nothing is freed by luck, no hazard
     lands, every fraction rounds down. `randint`/`sample` are never reached in
     a run built this way (they sit behind `not self.founder_alive`, and a
@@ -48,7 +48,7 @@ class DetRNG(random.Random):
 
     NOT THE SAME THING AS `--no-events`, and deliberately independent of it.
     `--no-events` only silences DATED weather/plague/political hazards (this
-    engine's `self.events` flag gating `_shocks` in core.py) and, alone,
+    engine's `self.events` flag gating the hazards module's dated shocks) and, alone,
     still leaves project-failure risk, attrition, manumission and stochastic
     rounding drawing from an ordinary seeded rng every time - see that flag's
     own help text, which says exactly this. This class is the other half: it
@@ -71,7 +71,7 @@ def ensure_fixed_hash_seed(seed="0"):
     reproducible on its own - but CPython hashes strings differently in every
     process by default (`hash("machinist")` differs run to run unless
     `PYTHONHASHSEED` is fixed), and this engine has at least one documented
-    site (core.py's own comment on `rng.sample(losable, ...)`) where walking
+    site (sim/hazards/sack.py's `sample(losable, ...)`) where walking
     a bare, unsorted `set` of ids would depend on that hash order - so a
     --deterministic run whose output depended on iteration order over some
     other such set

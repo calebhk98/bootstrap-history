@@ -1,12 +1,10 @@
-"""The state the foreign-trade module owns: the partners' books, the lift ledgers and the actors' tallies."""
+"""The state the foreign-trade module owns: the lift ledgers and the actors' tallies."""
 from dataclasses import dataclass, field
 from typing import Any, Dict
 
 
 @dataclass
 class ForeignTradeWorld:
-    # partner id -> commodity -> its capacity, stock, reference demand, price ratio and last net trade (opened on first use)
-    market_book: Dict[str, Dict[str, Dict[str, float]]] = field(default_factory=dict)
     # partner id -> material -> tonnes actors carried to and from it this year, and what the tonnes to it cost to land
     actor_trade: Dict[str, Dict[str, Dict[str, float]]] = field(default_factory=dict)
     # material -> tonnes actors landed in the home market and took from it this year

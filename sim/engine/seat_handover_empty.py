@@ -34,7 +34,7 @@ def holdings_in_use(holdings) -> bool:
 
 def stock_in_use(ledger_seat) -> bool:
 	"""Whether the seat's tonnes ledger holds any tonnes: a lazily made ledger or snapshot with nothing in it does not."""
-	stock, opening = ledger_seat._material_stock_ledger, ledger_seat._material_stock_opening
+	stock, opening = ledger_seat.material_stock_ledger, ledger_seat.material_stock_opening
 	return any((opening or {}).get("tonnes", {}).values()) or (any(stock.values()) if stock else False)
 
 
@@ -51,15 +51,14 @@ def module_state_in_use(state) -> bool:
 def holds_that_would_be_lost(seat) -> List[str]:
 	"""What `seat` holds in the engine's state beyond cash, debts and known techniques, named for the player; empty for
 	an empty seat."""
-	household = seat.household
 	found = []
-	if seat.modules["projects"].active or len(seat.modules["ventures"].business.entry_keys()):
+	if seat.modules["projects"].active or len(seat.modules["ventures"].business.reading.entry_keys()):
 		found.append("works")
 	staff = seat.modules.get("workforce") or WorkforceSeat()
-	if any(getattr(staff, name, 0) for name in STAFF_FIELDS) or staff.employees:
+	if any(getattr(staff, name) for name in STAFF_FIELDS) or staff.employees:
 		found.append("staff")
 	finance = seat.modules.get("finance") or FinanceSeat()
-	if any(getattr(finance, name, 0) for name in OWED_FIELDS):
+	if any(getattr(finance, name) for name in OWED_FIELDS):
 		found.append("arrears or bondage")
 	if (holdings_in_use(seat.holdings) or stock_in_use(seat.modules.get("ledger") or LedgerSeat())
 			or module_state_in_use(seat.modules.get("resources") or ResourcesSeat())

@@ -1,5 +1,8 @@
 # Audit: what Rome's "unemployment" is made of
 
+> **Note (2026-11):** the figures below predate the A1/A2 fixes of Complaint 964 (the audit ran on an earlier build); they were not re-measured.
+
+
 Branch `rome-unemployment-audit`, from `claude/labor-market-economy-stability-ueffy1` (sim unchanged from dac4691).
 Saved opened Rome (`ROME_SPIN_UP_YEARS=3,2`), stepped 16 years with a probe that wraps `economy.clear_labour` and
 `Economy._grow_own` and records offers, bids, sold/kept hours, people and the core's clearings per (trade, area)

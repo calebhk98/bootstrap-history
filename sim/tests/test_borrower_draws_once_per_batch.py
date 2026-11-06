@@ -6,10 +6,12 @@ QUICK_TOPIC = True
 
 import unittest
 
-from sim.agents import ledger, payroll
+from sim.agents import payroll
 from sim.agents.api import ActorRecord, ActorsState
 from sim.agents.firm import Firm
-from sim.agents.purses import COIN, DEBT_FLOOR, EDGE_SAVERS
+from sim.agents.purses import COIN, DEBT_FLOOR
+
+from .pool_lenders import lend_from_savers
 
 
 def lenders_and_borrower(lender_count):
@@ -20,7 +22,8 @@ def lenders_and_borrower(lender_count):
     lenders = [Firm("firm:lender%d" % index, ActorRecord(kind="firm", money=100.0)) for index in range(lender_count)]
     for actor in [borrower] + lenders:
         actor.attach(purses)
-    purses.set_offers({EDGE_SAVERS: 1e6, **{lender.account_id: 100.0 for lender in lenders}})
+    purses.set_offers({lender.account_id: 100.0 for lender in lenders})
+    lend_from_savers(purses, 1e6)
     for lender in lenders:
         purses.contracts.draw(borrower.account_id, lender.account_id, COIN, 1.0)
     return state, borrower, lenders

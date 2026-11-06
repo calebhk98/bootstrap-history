@@ -7,8 +7,8 @@ QUICK_TOPIC = True
 from .harness import check
 
 from sim.agents.api import ActorRecord, ActorRegistry, ActorsState
-from sim.agents import firm_entry, firm_exit, household_wealth
 from sim.agents.stratum import Stratum  # noqa: F401  (registers the kind)
+from sim.agents import firm_exit, household_wealth
 
 from .agents_fake_world import FakeWorld, make_node, total_money
 
@@ -57,7 +57,7 @@ class EntryWorld(FakeWorld):
 
 
 world = EntryWorld()
-world.nodes["shop"] = make_node("shop", hours=100.0, revenue=60000.0, upkeep=1000.0)
+world.setting.nodes["shop"] = make_node("shop", hours=100.0, revenue=60000.0, upkeep=1000.0)
 world.demonstrated_nodes = {"shop"}
 world.proven = {"shop"}
 registry, stratum = make_stratum(members=1000.0, savings=1.0e9)

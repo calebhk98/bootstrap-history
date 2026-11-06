@@ -8,12 +8,12 @@
   },
   "reused_from": {
    "national_output_t_per_yr": "data/world/resources.json:empire_output_100ad, where an entry exists",
-   "price_material": "the solved price of the named material, in labour hours per kg (sim/engine/prices.py)",
-   "market_share": "sim/engine/economy.py:EconomyMixin.MARKET_SHARE, where an entry exists",
-   "mine_capex_opex": "sim/engine/economy.py:EconomyMixin.MINE_CAPEX_PER_T_YR / MINE_OPEX_PER_T",
+   "price_material": "the solved price of the named material, in labour hours per kg (sim/prices/)",
+   "market_share": "sim/materials/constants.py:MARKET_SHARE, where an entry exists",
+   "mine_capex_opex": "sim/resources/costs.py: mine_capex / mine_opex, which derive them from labour hours per tonne and wages",
    "regions / cost_multiplier": "data/world/geography.json: regions[*].minerals and located_materials"
   },
-  "not_integrated": "sim/engine/core.py's Sim class does not read this file. See COMMODITIES.md section 11 (hard problems) for the migration this would take."
+  "not_integrated": "The file is loaded by load_commodities in sim/prices/commodities.py. See COMMODITIES.md section 11 (hard problems) for what is not wired in."
  },
 
  "commodities": {

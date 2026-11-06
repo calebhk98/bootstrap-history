@@ -22,20 +22,20 @@ class TownShrinksWithNationTests(unittest.TestCase):
     def test_town_shrinks_with_the_nation_and_never_exceeds_it(self):
         world = stand_in_world()
         labour = Labour(world)
-        before = labour.home_town_population_estimate()
-        shrink(world.population, 5000)
-        after = labour.home_town_population_estimate()
+        before = labour.settlement.home_town_population_estimate()
+        shrink(world.people.population, 5000)
+        after = labour.settlement.home_town_population_estimate()
         self.assertLess(after, before * 0.25 * 0.5)
-        self.assertLessEqual(after, world.population.total)
+        self.assertLessEqual(after, world.people.population.total)
         for total in (500, 30, 3):
-            shrink(world.population, total)
-            self.assertLessEqual(labour.home_town_population_estimate(), total)
+            shrink(world.people.population, total)
+            self.assertLessEqual(labour.settlement.home_town_population_estimate(), total)
 
     def test_the_town_never_exceeds_the_nation_in_any_civilisation(self):
         for civ_id in ("rome_100ad", "norse_900ad", "mexica_1500", "han_china_100ad"):
             for total in (None, 5000, 200, 30):
                 world = stand_in_world(civ_id, total)
-                self.assertLessEqual(Labour(world).home_town_population_estimate(), world.population.total + 1e-6, (civ_id, total))
+                self.assertLessEqual(Labour(world).settlement.home_town_population_estimate(), world.people.population.total + 1e-6, (civ_id, total))
 
 
 class InvariantCheckerTests(unittest.TestCase):
@@ -68,18 +68,30 @@ class InvariantCheckerTests(unittest.TestCase):
             check_labour_market_invariants(self._game(staff=700.0, working_age=600.0))
 
 
+CORE_SHARE_OF_WORKING_AGE_PER_TRADE = 0.01      # of the working people, how many the opened labour core holds of each trade here
+
+
+def labour_with_core(world):
+    """Labour over a world whose labour core has opened: it holds a share of the working people in the base area in each trade."""
+    labour = Labour(world)
+    working = world.people.population.working_age
+    people = {trade: CORE_SHARE_OF_WORKING_AGE_PER_TRADE * working for trade in world.trades.wages}
+    world.economy.agent_people_by_tile_and_trade = lambda: {labour.settlement.base_tile(): people}
+    return labour
+
+
 class TooSmallToStaffTests(unittest.TestCase):
     """A project that needs more people than exist cannot be staffed; the same project in a full nation is not refused for people."""
 
     def test_tiny_nation_cannot_staff_a_factory(self):
-        shortfall = Labour(stand_in_world(total=200)).project_staffing_shortfall(NODES["fin_factory"])
+        shortfall = labour_with_core(stand_in_world(total=200)).supply.project_staffing_shortfall(NODES["fin_factory"])
         self.assertIsNotNone(shortfall)
         # presentation: the refusal says people do not exist in the country
         self.assertIn("exist", shortfall)
         self.assertIn("country", shortfall)
 
     def test_the_same_project_is_not_refused_for_people_in_a_full_nation(self):
-        self.assertIsNone(Labour(stand_in_world()).project_staffing_shortfall(NODES["fin_factory"]))
+        self.assertIsNone(labour_with_core(stand_in_world()).supply.project_staffing_shortfall(NODES["fin_factory"]))
 
 
 class MoveCommandParses(unittest.TestCase):

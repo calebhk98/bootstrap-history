@@ -1,9 +1,10 @@
 """A household rationed on a good spends what it did not spend on the goods that meet the same need, then on its
-other needs, before anything is saved (Eurace: "if the choice is rationed, the leftover budget goes to a second
-choice by the same logit"). The functions here are the rules; goods_respend_year.py runs them on a year's markets.
+other needs, before anything is saved. A rationed Eurace household sends the leftover to a second choice by the
+same logit; the leftover going on to other needs is this project's extension (in Eurace it stays in the payment
+account). The functions here are the rules; goods_respend_year.py runs them on a year's markets.
 """
 import math
-from typing import Dict, List, Mapping, Optional, Sequence
+from typing import Dict, List, Mapping, Sequence
 
 from sim.world import need_basket
 
@@ -61,6 +62,14 @@ def respend_bids(buyer: str, tile: str, basket: need_basket.Basket, rationed: Ma
             for good, amount in sorted(spend.items())]
 
 
+def bids_adding_demand(earlier: Sequence[Bid], bids: Sequence[Bid]) -> List[Bid]:
+    """The bids of a later round that add demand to a market: a buyer that already bid there in an earlier round wants
+    the same units again, the part it was rationed on, so only a buyer new to the market counts in full. The one rule
+    for what a market's demand is over its rounds (the stored bids, the wanted quantity and so the unmet quantity)."""
+    bidding = {bid.buyer for bid in earlier}
+    return [bid for bid in bids if bid.buyer not in bidding]
+
+
 def offers_left(offers: Sequence[Offer], sold: Mapping[tuple, float]) -> List[Offer]:
     """The offers with what sold (by (seller, tile)) taken off; offers with nothing left are dropped."""
     left = []
@@ -73,8 +82,3 @@ def offers_left(offers: Sequence[Offer], sold: Mapping[tuple, float]) -> List[Of
             left.append(Offer(offer.seller, offer.good, offer.area, offer.tile, offer.quantity - taken,
                               offer.reservation_price))
     return left
-
-
-def cheapest_ask(offers: Sequence[Offer]) -> Optional[float]:
-    asks = [offer.reservation_price for offer in offers if offer.quantity > 0.0 and offer.reservation_price > 0.0]
-    return min(asks) if asks else None

@@ -10,9 +10,10 @@ from .harness import check
 
 from sim.engine.data import load_civ
 from sim.tests import market_stand_in
-from sim.markets.port import EconomyPort
+from sim.markets import port_money
 from sim.markets.goods_market import GoodsMarket
-from sim.engine.material_units import tonnes_per_unit
+from sim.markets.goods_offers import GoodsOffers
+from sim.markets.unit_mass import tonnes_per_unit
 from sim.foreign_trade.module import ForeignTrade
 from sim.tests import module_harness
 
@@ -33,7 +34,7 @@ class _Economy:
         return self.paid
 
     def agent_price_kind(self, good):
-        return "traded" if good in self.paid else None
+        return "traded" if self.paid is not None and good in self.paid else None
 
     def acting_tile(self):
         return "tile"
@@ -45,6 +46,14 @@ class _Economy:
         return 1.0 + bought / OFFERED_TONNES - 0.5 * sold / OFFERED_TONNES / (1.0 + sold / OFFERED_TONNES)
 
 
+class _Offers(GoodsOffers):
+    def offered_by(self, material):
+        return "home" if material in self._sim.materials.prices() else None
+
+    def household_prices(self):
+        return {}
+
+
 class _Market(GoodsMarket):
     """The market on a stub sim; the table of who sells what is a home seller for every priced good."""
 
@@ -52,31 +61,21 @@ class _Market(GoodsMarket):
         self.economy = _Economy(paid)
         sim = SimpleNamespace(
             economy=self.economy, **market_stand_in.market_memory(), state=SimpleNamespace(acting_seat="seat"),
-            _material_prices=lambda: dict(cost_table if cost_table is not None else paid),
-            _priced_key=lambda material, prices: material if material in prices else None,
-            _material_tag=lambda material: (material, None),
-            material_carriage_per_tonne=lambda key, price: CARRIAGE,
-            _material_price_per_kg=lambda material: (cost_table if cost_table is not None else paid).get(material))
+            materials=SimpleNamespace(
+                prices=lambda: dict(cost_table if cost_table is not None else paid),
+                priced_key=lambda material, prices: material if material in prices else None,
+                tag=lambda material: (material, None),
+                price_per_unit=lambda material: (cost_table if cost_table is not None else paid).get(material)),
+            foreign=SimpleNamespace(material_carriage_per_tonne=lambda key, price: CARRIAGE))
         super().__init__(sim)
+        self.offers = _Offers(sim)
         self.bought = {}
 
-    def offered_by(self, material):
-        return "home" if material in self._sim._material_prices() else None
-
-    def household_prices(self):
-        return {}
-
-    def bought_tonnes(self, commodity, buyer_id=None):
-        return self.bought.get(commodity, 0.0)
-
-    def sold_tonnes(self, commodity, seller_id=None):
-        return 0.0
+    def posted_tonnes(self, side, commodity, seat_id=None):
+        return self.bought.get(commodity, 0.0) if side == "buy" else 0.0
 
     def drawn_tonnes(self, commodity):
         return 0.0
-
-    def import_tonnes_available(self, material, partner=None):
-        return None
 
 
 PAID = {WHEAT: 0.004, COIN_METAL: 0.9}
@@ -90,7 +89,7 @@ check("the founder's quote of the staple has the economy's price on the tile in 
 check("...and a tonne costs that price plus carriage, climbed by what the seat has bought this year",
       quote["buy_per_tonne"] >= quote["price_at_tile_per_tonne"] + quote["carriage_per_tonne"] - 1e-9
       and quote["carriage_per_tonne"] == CARRIAGE, quote)
-small = market.purchase_cost(WHEAT, 1e-6)[1]
+small = market.pricing.purchase_cost(WHEAT, 1e-6)[1]
 check("a very small order costs the quote", abs(small / quote["buy_per_tonne"] - 1.0) < 1e-3, (small, quote["buy_per_tonne"]))
 check("the cost of making is a cost: it is not what the quote asks",
       quote["making_cost_per_tonne"] is not None and abs(quote["buy_per_tonne"] - quote["making_cost_per_tonne"]) > 1e-9, quote)
@@ -98,40 +97,42 @@ priced_dearer = _Market(PAID, cost_table={WHEAT: 0.001, COIN_METAL: 0.9})
 check("the price is the economy's where it has a market, whatever the cost table says",
       abs(priced_dearer.quote(WHEAT)["price_at_tile_per_tonne"] - per_tonne) <= 1e-9 * per_tonne)
 costed_only = _Market({COIN_METAL: 0.9}, cost_table={WHEAT: 0.002, COIN_METAL: 0.9})
-check("a good the economy has no market for costs what the cost table says",
-      abs(costed_only.quote(WHEAT)["price_at_tile_per_tonne"] - 0.002 / tonnes_per_unit(WHEAT)) < 1e-9)
+check("a good the economy has no market for has no price, whatever the cost table says", costed_only.quote(WHEAT) is None)
+opening = _Market(None, cost_table={WHEAT: 0.002, COIN_METAL: 0.9})
+check("while the economy opens, the cost table's price answers",
+      abs(opening.quote(WHEAT)["price_at_tile_per_tonne"] - 0.002 / tonnes_per_unit(WHEAT)) < 1e-9)
 
 # a larger order costs more a tonne; a larger sale fetches less
-means = [market.purchase_cost(WHEAT, OFFERED_TONNES * share)[1] for share in (0.001, 0.05, 0.3, 0.99)]
+means = [market.pricing.purchase_cost(WHEAT, OFFERED_TONNES * share)[1] for share in (0.001, 0.05, 0.3, 0.99)]
 check("a larger order costs more a tonne", means == sorted(means) and means[-1] > means[0], means)
 earlier = _Market(PAID)
 earlier.bought[WHEAT] = 50.0
-check("tonnes the seat bought earlier in the year count toward the climb",
-      earlier.purchase_cost(WHEAT, 10.0)[1] > market.purchase_cost(WHEAT, 10.0)[1])
-sale_means = [market.sale_proceeds(WHEAT, OFFERED_TONNES * share)[1] for share in (0.01, 0.5, 5.0, 50.0)]
+check("tonnes the seat ordered earlier in the year count toward the climb",
+      earlier.pricing.purchase_cost(WHEAT, 10.0)[1] > market.pricing.purchase_cost(WHEAT, 10.0)[1])
+sale_means = [market.pricing.sale_proceeds(WHEAT, OFFERED_TONNES * share)[1] for share in (0.01, 0.5, 5.0, 50.0)]
 check("a sale fetches less a tonne the more is sold",
       sale_means == sorted(sale_means, reverse=True) and sale_means[-1] < sale_means[0], sale_means)
 check("...and buying then selling the same tonne never makes the founder money",
-      market.sale_proceeds(WHEAT, 1.0)[0] <= market.purchase_cost(WHEAT, 1.0)[0])
+      market.pricing.sale_proceeds(WHEAT, 1.0)[0] <= market.pricing.purchase_cost(WHEAT, 1.0)[0])
 
 # a good no seller offers has no price
 check("a good no seller offers has no price and cannot be bought",
-      market.quote("cobalt_kg") is None and market.purchase_cost("cobalt_kg", 1.0) is None
-      and market.sale_proceeds("cobalt_kg", 1.0) is None and not market.can_be_bought("cobalt_kg"))
+      market.quote("cobalt_kg") is None and market.pricing.purchase_cost("cobalt_kg", 1.0) is None
+      and market.pricing.sale_proceeds("cobalt_kg", 1.0) is None and not market.offers.can_be_bought("cobalt_kg"))
 
 # the coin metal is one number in the mint, in cargo and in the partners' payments
-metal_price = market.home_unit_price(COIN_METAL)
+metal_price = market.offers.home_unit_price(COIN_METAL)
 check("the coin metal is priced at the economy's price on the tile",
       metal_price is not None and abs(metal_price - PAID[COIN_METAL]) <= 1e-9 * metal_price, metal_price)
-check("a good no home seller offers has no home unit price", market.home_unit_price("cobalt_kg") is None)
+check("a good no home seller offers has no home unit price", market.offers.home_unit_price("cobalt_kg") is None)
 coin = {"material": COIN_METAL, "kg_per_unit": 0.0035}
-port = SimpleNamespace(_sim=SimpleNamespace(civ={"coin_standard": coin}, goods_market=market), coin_stock_units=lambda: 2000.0)
+world = SimpleNamespace(scenario=SimpleNamespace(civ={"coin_standard": coin}), goods_market=market, finance=SimpleNamespace(coin_stock_units=lambda: 2000.0))
 expected_stock = 2000.0 * coin["kg_per_unit"] * metal_price
 check("the coin the society holds is counted at that price",
-      abs(EconomyPort.coin_stock_value(port) - expected_stock) <= 1e-9 * expected_stock, (EconomyPort.coin_stock_value(port), expected_stock))
+      abs(port_money.coin_stock_value_of(None, world) - expected_stock) <= 1e-9 * expected_stock, (port_money.coin_stock_value_of(None, world), expected_stock))
 def trade_over(goods_market):
     return module_harness.build(ForeignTrade, views={"civilisation_record": load_civ,
-                                                     "home_unit_price": goods_market.home_unit_price})
+                                                     "home_unit_price": goods_market.offers.home_unit_price})
 
 
 for partner in ("han_china_100ad", "mexica_1500"):

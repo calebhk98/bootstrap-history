@@ -7,121 +7,11 @@ from dataclasses import dataclass, field
 from typing import Any, Callable, Dict, List, Optional
 
 
-class _InvalidatingSet(set):
-    """A set that calls `on_change` after every mutation, with no exceptions.
-
-    Backs `Sim.operating` (see the `operating` property on `EconomyMixin`
-    below) so that a cache keyed off operating's exact membership -
-    `capability_factor()`'s - cannot go stale, no matter which of the nine
-    call sites across core.py/projects.py/economy.py/society.py adds to or
-    discards from it, and without asking any of them to remember a second
-    line. The `done`/`_done_changed()` convention this project already has
-    relies on every one of ITS mutation sites remembering to call
-    `_done_changed()` by hand; that is a real convention and it has held,
-    but a second one just like it - one more rule written down at every call
-    site instead of enforced at one - is exactly the shape that has already
-    produced three drifted-apart bugs elsewhere in this codebase today. This
-    set makes the equivalent mistake impossible for `operating` specifically:
-    there is only one `.add`, only one `.discard`, and they are these. It is
-    the same reasoning that made `revealed` (engine/fog.py) a property rather
-    than a plain attribute, extended to a set instead of a ratchet.
-
-    Every mutating method a plain `set` exposes is overridden so that
-    swapping this in for `set()` changes nothing observable except that
-    `on_change` now fires. Non-mutating methods (`copy`, `union`, membership
-    tests, iteration, `len`) are inherited unchanged.
-    """
-
-    def __init__(self, iterable=(), on_change=None):
-        set.__init__(self, iterable)
-        self._on_change = on_change
-
-    def _fire(self):
-        if self._on_change is not None:
-            self._on_change()
-
-    def add(self, item):
-        if item not in self:
-            set.add(self, item)
-            self._fire()
-
-    def discard(self, item):
-        if item in self:
-            set.discard(self, item)
-            self._fire()
-
-    def remove(self, item):
-        set.remove(self, item)      # raises KeyError, same as a plain set
-        self._fire()
-
-    def pop(self):
-        item = set.pop(self)
-        self._fire()
-        return item
-
-    def clear(self):
-        if self:
-            set.clear(self)
-            self._fire()
-
-    def update(self, *others):
-        before = len(self)
-        set.update(self, *others)
-        if len(self) != before:
-            self._fire()
-
-    def difference_update(self, *others):
-        before = len(self)
-        set.difference_update(self, *others)
-        if len(self) != before:
-            self._fire()
-
-    def intersection_update(self, *others):
-        before = len(self)
-        set.intersection_update(self, *others)
-        if len(self) != before:
-            self._fire()
-
-    def symmetric_difference_update(self, other):
-        before = frozenset(self)
-        set.symmetric_difference_update(self, other)
-        if frozenset(self) != before:
-            self._fire()
-
-    def __ior__(self, other):
-        before = len(self)
-        result = set.__ior__(self, other)
-        if len(self) != before:
-            self._fire()
-        return result
-
-    def __iand__(self, other):
-        before = len(self)
-        result = set.__iand__(self, other)
-        if len(self) != before:
-            self._fire()
-        return result
-
-    def __isub__(self, other):
-        before = len(self)
-        result = set.__isub__(self, other)
-        if len(self) != before:
-            self._fire()
-        return result
-
-    def __ixor__(self, other):
-        before = frozenset(self)
-        result = set.__ixor__(self, other)
-        if frozenset(self) != before:
-            self._fire()
-        return result
-
-
 class _InvalidatingDict(dict):
     """A dictionary that calls `on_change` after every mutation.
 
-    Follows the exact pattern of _InvalidatingSet above. Used for
-    `self.household.active` and the workforce module's employees so that
+    Used for
+    `seat.active` (projects module) and `seat.employees` (workforce module) so that
     derived-state caches keyed on active project membership or workforce
     changes are reliably invalidated whenever keys or values mutate,
     without requiring scattered callers across the engine to remember
@@ -139,6 +29,11 @@ class _InvalidatingDict(dict):
         if args or kwargs:
             for key, value in dict(*args, **kwargs).items():
                 super().__setitem__(key, self._wrap_value(value))
+
+    @property
+    def on_change(self):
+        """The callback this container reports each change to, or None."""
+        return self._on_change
 
     def _fire(self):
         if self._on_change is not None:

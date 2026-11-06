@@ -52,11 +52,8 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(os.path.dirname(HERE))
 PRODUCTION_DIR = os.path.join(ROOT, "data", "production")
 
-# The three energy carriers (see ENERGY in sim/prices/solve_prices.py's module
-# docstring). Kept as a separate copy of the same tuple that file declares
-# as ENERGY_CARRIER_FIELDS, rather than imported from it, because
-# sim/prices/solve_prices.py imports FROM this module - importing the other way
-# too would be circular.
+# The energy carriers. Deliberately a copy of sim/world/plant_baskets.py's ENERGY_CARRIERS, not an import of it: this
+# validator is the engine's load-time gate and keeps no dependency on the world's plant arithmetic. Keep the two equal.
 ENERGY_CARRIER_FIELDS = ("thermal_mj", "mechanical_mj", "electrical_mj")
 
 

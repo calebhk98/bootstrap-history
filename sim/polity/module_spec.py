@@ -22,7 +22,7 @@ READS_BY_OWNER = {
 	"knowledge": ("techniques_held", "techniques_version", "techniques_granted", "tree", "tree_nodes"),
 	"production": ("running", "revenue_estimate", "concern_revenue"),
 	"ventures": ("operating", "operating_version"),
-	"workforce": ("headcount", "base_annual_wage", "labour_state_weights", "money_per_labour_hour"),
+	"workforce": ("headcount", "base_annual_wage", "unskilled_trade", "labour_state_weights", "money_per_labour_hour"),
 	"seats": ("seat_list", "seat_country", "founder", "game_random"),
 	"demography": ("population_total", "pop_scale"),
 	"materials": ("material_pool", "material_substitutes"),

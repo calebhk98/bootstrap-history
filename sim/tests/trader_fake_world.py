@@ -2,6 +2,7 @@
 from sim.agents.api import ActorRegistry, ActorsState
 
 from .agents_fake_world import FakeWorld
+from .pool_lenders import lend_from_savers
 
 
 class TradeWorld(FakeWorld):
@@ -29,9 +30,6 @@ class TradeWorld(FakeWorld):
 	def freight_between(self, source, destination, material, tonnes):
 		return self.freight_per_tonne * tonnes
 
-	def pay_route_dues(self, payer, source, destination, material, tonnes):
-		return 0.0
-
 	def market_depth(self, material, place):
 		return self.depth.get(place, {}).get(material, 0.0)
 
@@ -54,4 +52,7 @@ class TradeWorld(FakeWorld):
 
 
 def make_registry():
-	return ActorRegistry(ActorsState(home_country="home"))
+	"""A registry whose pool can borrow from one lender with funds enough for any test's trading."""
+	registry = ActorRegistry(ActorsState(home_country="home"))
+	lend_from_savers(registry.state.purses, 1e12)
+	return registry

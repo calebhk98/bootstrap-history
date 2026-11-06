@@ -33,49 +33,43 @@ class Labour:
 def make_world(taught=12.0, founder_staff=2.0, actor_staff=3.0):
     labour = Labour()
     labour.taught = taught
-    actors = types.SimpleNamespace(home_staff_fte=lambda trade, excluding=None: actor_staff if trade == TAUGHT else 0.0)
+    actors = types.SimpleNamespace(staff=types.SimpleNamespace(home_staff_fte=lambda trade, excluding=None: actor_staff if trade == TAUGHT else 0.0))
     needs = fake_needs(trade_available=labour.trade_available, people_who_exist=labour.people_who_exist,
                        taught_trade_people=labour.taught_trade_people, trades_absent=TRADES_ABSENT,
                        staff_on_all_books=lambda trade: {TAUGHT: founder_staff, "smith": 5.0}.get(trade, 0.0))
-    world = ActorWorld(types.SimpleNamespace(needs=needs, cast=lambda: actors))
-    world.labour = labour
+    world = ActorWorld(needs, types.SimpleNamespace(cast=lambda: actors))
+    world.fixture = labour   # the facts the stand-in game answers, kept to change them
     return world
 
 
 check("the trade the founder teaches is one nobody here practises", TAUGHT in TRADES_ABSENT, TAUGHT)
 check("the pool is what the founder taught, less the founder's staff and the other actors'",
-      make_world().free_fte(TAUGHT, "firm:1") == 12.0 - 2.0 - 3.0)
-check("a taught trade has a pool", make_world().free_fte(TAUGHT, "firm:1") is not None)
+      make_world().labour.free_fte(TAUGHT, "firm:1") == 12.0 - 2.0 - 3.0)
+check("a taught trade has a pool", make_world().labour.free_fte(TAUGHT, "firm:1") is not None)
 world = make_world()
-world.labour.available = False
-check("a trade that is not available stays without a pool", world.free_fte(TAUGHT, "firm:1") is None)
-check("when the founder and others hold all of it, none is free", make_world(taught=4.0).free_fte(TAUGHT, "firm:1") == 0.0)
-check("a trade people practise already is drawn from the whole country's people", make_world().free_fte("smith", "firm:1") == 1000.0 - 5.0 - 0.0)
+world.fixture.available = False
+check("a trade that is not available stays without a pool", world.labour.free_fte(TAUGHT, "firm:1") is None)
+check("when the founder and others hold all of it, none is free", make_world(taught=4.0).labour.free_fte(TAUGHT, "firm:1") == 0.0)
+check("a trade people practise already is drawn from the whole country's people", make_world().labour.free_fte("smith", "firm:1") == 1000.0 - 5.0 - 0.0)
 
 
 class Firm:
     actor_id = "firm:1"
-    workforce = {}
+    kind = "firm"
 
-    def __init__(self):
-        self.workforce = {}
-
-    def capacity_of(self, node_id):
-        return 1.0
+    def __init__(self, hired=0.0):
+        self.workforce = {TAUGHT: hired} if hired else {}
+        self.record = types.SimpleNamespace(staff_wanted={})
+        self.holdings = types.SimpleNamespace(capacity_of=lambda node_id: 1.0)
 
 
 class StaffWorld:
-    def __init__(self, free):
-        self.free = free
-
-    def concern_staff(self, node_id):
-        return {TAUGHT: 4.0}
-
-    def free_fte(self, trade, actor_id):
-        return self.free
+    concerns = types.SimpleNamespace(concern_staff=lambda node_id: {TAUGHT: 4.0})
 
 
 firm = Firm()
-check("a firm with no taught people to draw on finds none of its staff", business_crew.staff(Business(), firm, "mill", StaffWorld(0.0)) == 0.0)
-firm = Firm()
-check("a firm takes the share the pool covers", business_crew.staff(Business(), firm, "mill", StaffWorld(3.0)) == 0.75 and firm.workforce[TAUGHT] == 3.0)
+check("a firm with none of the taught people hired finds none of its staff, and posts the places",
+      business_crew.staff(Business(), firm, "mill", StaffWorld()) == 0.0 and firm.record.staff_wanted == {TAUGHT: 4.0}, firm.record.staff_wanted)
+firm = Firm(hired=3.0)
+check("a firm takes the share of its places the labour core has hired people for",
+      business_crew.staff(Business(), firm, "mill", StaffWorld()) == 0.75 and firm.record.staff_wanted == {TAUGHT: 4.0})

@@ -3,6 +3,7 @@ line built from a stand-in world that answers only what the line reads. No game.
 
 QUICK_TOPIC = True
 
+from sim.tests.agents_fake_world import flat_world
 import types
 import unittest
 
@@ -13,10 +14,17 @@ from sim.agents.tuning_spending import (COAST_KM_PER_SHIP, COURT_RETAINERS_PER_O
 WAGE = {"labourer": 10.0, "mason": 20.0, "sailor": 15.0, "trireme_wright": 25.0}
 
 
+@flat_world
 class StubWorld:
     def __init__(self, road_km=100.0, coast_km=500.0, urban=10000.0, fleet=(), levers=None, price=2.0, national=1.0e9):
         self._territory = types.SimpleNamespace(road_km=road_km, coast_km=coast_km)
         self.urban, self.fleet, self.levers, self.price, self.national = urban, list(fleet), levers or {}, price, national
+
+    def trade_of_role(self, role):
+        return {"unskilled": "labourer", "builder": "mason", "soldier": "soldier", "clerk": "scribe"}[role]
+
+    def staple_material(self):
+        return "staple_kg"
 
     def territory(self):
         return self._territory
@@ -87,7 +95,7 @@ class Dole(unittest.TestCase):
     def test_the_dole_is_grain_for_a_share_of_the_town_poor_at_the_market_price(self):
         line = budget_lines.dole_line(StubWorld(urban=10000.0))[0]
         tonnes = 10000.0 * DOLE_SHARE_OF_URBAN_PEOPLE * 200.0 / 1000.0
-        self.assertAlmostEqual(line.materials[budget_lines.DOLE_MATERIAL], tonnes)
+        self.assertAlmostEqual(line.materials["staple_kg"], tonnes)
         self.assertAlmostEqual(line.material_cost, tonnes * 2.0)
         self.assertEqual(line.labour, {})
 
@@ -98,7 +106,7 @@ class Dole(unittest.TestCase):
     def test_grain_nobody_sells_is_unbuyable_not_free(self):
         line = budget_lines.dole_line(StubWorld(price=None))[0]
         self.assertEqual(line.materials, {})
-        self.assertGreater(line.unbuyable[budget_lines.DOLE_MATERIAL], 0.0)
+        self.assertGreater(line.unbuyable["staple_kg"], 0.0)
 
     def test_no_town_poor_no_dole(self):
         self.assertEqual(budget_lines.dole_line(StubWorld(urban=0.0)), [])

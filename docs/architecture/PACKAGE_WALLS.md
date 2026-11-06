@@ -29,13 +29,13 @@ world object (the table below).
 `python3 tools/check_imports.py` finds imports of modules that do not exist. `python3 tools/check_module_reads.py`
 finds a module reading a view or sending a command that its spec does not declare. `python3 tools/measure/module_graph.py`
 prints the module dependency totals, including reads still answered by the engine bridge.
-Nothing checks the import rule above automatically: keep to it by review.
+`python3 tools/check_package_walls.py` checks the import rule above for `economy`, `agents`, `labour`, `geography` and `ui`, and `tools/done_check.sh` fails when it reports a break. `disease` and `content` are listed below but that checker does not cover them: keep to the rule there by review. `python3 tools/check_record_owners.py` is the companion check for who writes a record's parts.
 
 ## The surfaces
 
 | Package | Import door | Who hands it the game |
 |---|---|---|
-| `sim/economy/` | `sim/economy/api.py`, imported by the `markets` module (`sim/markets/port*.py`) and `sim/engine/economy_port_effects.py` | the `markets` module builds the agent economy and the goods market; they read the game through `PortWorld` (`sim/markets/port_world.py`) |
+| `sim/economy/` | `sim/economy/api.py`, imported by the `markets` module (its port files `sim/markets/port*.py`, its goods market and views) and `sim/engine/economy_port_effects.py`; the opening market rate and the household time preference constant are also read by `actors`, `finance` and `workforce` | the `markets` module builds the agent economy and the goods market; they read the game through `PortWorld` (`sim/markets/port_world.py`) |
 | `sim/labour/` | `sim/labour/api.py` | the `workforce` module (`sim/workforce/module.py`) holds the `Labour` this package implements; `WorkforceWorld` (`sim/workforce/world.py`) answers what labour reads of the game from the module's declared views |
 | `sim/geography/` | `sim/geography/api.py` | the `land` module (`sim/land/`) holds the `Geography` and answers its reads (`sim/land/map_views.py`) |
 | `sim/agents/` | `sim/agents/api.py` | the `actors` module (`sim/actors/`) is the actors' world (`sim/actors/world*.py`, `sim/agents/protocols.py` lists what actors ask of it) |
@@ -67,8 +67,8 @@ surface is missing a member.
 
 - **The engine bridge.** Reads a module still needs from the engine are published by `sim/engine/bridge*.py`;
   `python3 tools/measure/module_graph.py` prints how many remain (it counts reads answered by the bridge).
-- **Forwarders on `Sim`.** Engine, mod and test code that is not yet in a module still calls `Sim` methods
-  that forward to views (`sim/engine/forward_*.py`); `bash tools/done_check.sh` prints how many bases remain.
+- **Calls on `Sim`.** Engine, mod and test code that is not yet in a module still calls `Sim` methods that read views;
+  `bash tools/done_check.sh` prints the method count.
 - **Adapter breadth.** `WorkforceWorld`, `PortWorld` and the actors' world expose many members because the
   packages' code reached for many. Each member is a named dependency, so narrowing them is ordinary work
   inside one module.

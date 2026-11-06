@@ -8,10 +8,10 @@ commands in `CLAUDE.md` §5.
 ## 0. What we have, in one paragraph
 
 Prices are solved as a damped fixed point over the recipes in
-`data/production/` (`sim/engine/solve_prices_core.py`), in labour-hours with the
-`labourer` trade as numeraire, plus two rent mechanisms (ore deposits, arable
+`data/production/` (`sim/prices/solve_prices_core.py`), in labour-hours with the
+registry's unskilled trade as numeraire, plus two rent mechanisms (ore deposits, arable
 land). Joint outputs split the shared cost by value at reference prices (the
-caller's, else the sole-output route's, else mass: `sim/engine/joint_allocation.py`); the survey below
+caller's, else the sole-output route's, else mass: `sim/prices/joint_allocation.py`); the survey below
 was written when demand anchors set the split. Labour moves between trades
 through a gap-driven, skill-distance-weighted flow (`sim/labour/labour_market.py`,
 `sim/labour/labour_allocation.py`): NEED comes from planned output, HAVE from a
@@ -106,15 +106,17 @@ loop. Breaks: multi-sector but stylised, and convergence needs many agents.
 
 **Lengnick baseline.** Households and firms only. Monthly: firms adjust wage
 and price and headcount from their own inventory and vacancy signals;
-households search a small set of shops and jobs; runs a long burn-in to
-remove arbitrary starting conditions. Reproduces a Phillips curve, a
+households search a small set of shops and jobs; the paper runs a long burn-in to
+remove arbitrary starting conditions (the replication's `batch_run.py` sets `burn_in = 0`, so the replication does not). Reproduces a Phillips curve, a
 Beveridge curve and a right-skewed firm size distribution
 ([Lengnick 2013](https://www.sciencedirect.com/science/article/abs/pii/S0167268112002806),
 [working paper PDF](https://www.econstor.eu/bitstream/10419/45012/1/654079951.pdf),
 [summary](https://sim4edu.com/sims/20/description)).
-Gives: the minimal loop we need for wages and prices: a firm raises its wage
-when it has unfilled vacancies and lowers it when it is fully staffed with
-spare applicants; raises its price when its stock runs out and lowers it when
+Gives: the minimal loop we need for wages and prices: in the replication
+(`BaselineEconomy/firm.py`, `set_wage_rate`) a firm raises its wage by a random
+share up to a bound while it has an open position, and cuts it by a random
+share only once the position has stayed filled for `gamma` months running;
+there is no applicant count in the rule. A firm also raises its price when its stock runs out and lowers it when
 stock piles up. Every rule is local and uses only the firm's own state.
 Breaks: one consumption good and no intermediate goods.
 
@@ -122,11 +124,14 @@ Breaks: one consumption good and no intermediate goods.
 market and regions, run on a parallel framework
 ([Deissenberg et al.](https://www.sciencedirect.com/science/article/abs/pii/S0096300308003019),
 [Eurace@Unibi model](https://faculty.sites.iastate.edu/tesfatsi/archive/tesfatsi/eurace-unibi-model-2011-v1.pdf)).
-Wage is a weighted average of a common wage and a firm-specific term that
-depends on productivity and the tightness the firm has experienced; workers
-have general and specific skills and apply where their wage expectation is
-met ([wage-setting study](https://link.springer.com/chapter/10.1007/978-3-030-52970-3_9)).
-Gives: skill-specific matching and the tightness-to-wage rule, close to what
+In the Eurace@Unibi C code the firm's wage offer is multiplied by
+`(1 + WAGE_UPDATE)` each round in which its vacancies exceed `MIN_VACANCY`
+(`Labour/Firm_Employer_Functions.c`, `Firm_update_wage_offer`); nothing in that rule cuts it. Another
+Eurace version (the [wage-setting study](https://link.springer.com/chapter/10.1007/978-3-030-52970-3_9))
+sets the wage as a weighted average of a common wage and a firm-specific term;
+that is not the Unibi code. Workers have general and specific skills and apply
+where their wage expectation is met.
+Gives: skill-specific matching and a vacancy-driven raise, close to what
 we need for trades. Breaks: heavy, and it assumes a modern institutional set
 (banks, unions).
 
@@ -256,7 +261,7 @@ outputs covers the joint cost, with each output's price set by its own demand;
 if one output is in surplus its price falls to its disposal value (Marshall's
 joint supply; the same result as the von Neumann free-good rule in section 1).
 
-Relevance to our design: `engine/joint_allocation.py` already follows the economist's
+Relevance to our design: `prices/joint_allocation.py` already follows the economist's
 view (demand anchors set the split, standalone cost for outputs with no
 anchor). Its weak points are physical-units fallbacks (`mass_in_kg` treats
 non-gram units as kilograms) and the single hand-set income scale. The
@@ -295,16 +300,17 @@ solver produce the per-trade split.
 ## 8. Ranked recommendations, mapped to modules
 
 1. **Keep the labour-hour fixed point for prices; change how it treats joint
-   outputs and surpluses** (`engine/solve_prices_core.py`, `engine/joint_allocation.py`).
+   outputs and surpluses** (`prices/solve_prices_core.py`, `prices/joint_allocation.py`).
    Adopt von Neumann activity choice: a process runs only if it is not
    loss-making at the solved prices; an output in surplus prices to disposal
    value, including zero; do not clamp the solver into positive prices.
    Keep demand anchors for the split, but drop the mass fallback where
    a unit conversion exists. Rejected: SAM calibration (fails §3.1).
 2. **Wages from tightness, per trade** (`labour_market.py`, new wage field on
-   the workforce state). Use the Lengnick and EURACE local rule, which is
-   cheaper than full DMP: `wage_next = wage * (1 + adjustment_rate * (vacancies - unfilled_applicants) / employed)`,
-   with the floor set by the worker's outside option, the labour-hours to
+   the workforce state). Use a local rule of the Lengnick and EURACE kind, which is
+   cheaper than full DMP: raise the wage by `adjustment_rate` while vacancies stay open; cut it only after the
+   vacancy has stayed filled for a set number of periods (Lengnick's `gamma`). This is our own
+   combination, not either model's formula, and has no applicant term. The floor is the worker's outside option, the labour-hours to
    grow their own food. Feed the resulting relative wages back to the price
    solver as the trade weights it already accepts
    (`wage_ratios_by_trade`), so the solver and the market share one wage
@@ -320,7 +326,7 @@ solver produce the per-trade split.
    shares. This also answers §3.2: different seeds give an ensemble.
 4. **Close the loop with CGE-style closure and budget shares** (`demand.py`).
    Household income becomes the wage bill plus rents from the same run,
-   replacing the single household income constant in `engine/joint_allocation.py`.
+   replacing the single household income constant in `prices/joint_allocation.py`.
    Write the closure (numeraire, what is exogenous, subsistence floor) in one
    place so every domain reads the same one.
 5. **Decentralise clearing for multiple actors** (later, when countries become

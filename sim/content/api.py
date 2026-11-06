@@ -19,6 +19,7 @@ from .actor_kinds_data import load_kind_declarations
 from .catalog import (Trade, load_mod_tree_nodes, load_production_catalog, load_trade_registry, material_namespace,
                       reset_catalog_caches, trade_fields, trade_from, validate_mod_material_paths)
 from .foreign_economies import foreign_economy_document, foreign_economy_records, not_traded_materials
+from .world_rates import service_life_years, spoilage_rates
 from .tech_effects import load_tech_effects
 from .win_condition_labels import load_win_condition_labels
 from .trades import trade_family as family_of_trade, trade_notes, trade_registry, trades_absent

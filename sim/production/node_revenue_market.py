@@ -22,9 +22,9 @@ def basket_market_factor(sold: Mapping[str, float], bought: Mapping[str, float],
     long_run = this_year = 0.0
     for basket, sign in ((sold, 1.0), (bought, -1.0)):
         for material, quantity in basket.items():
-            cost = long_run_prices.get(material, 0.0)
-            if cost <= 0.0:
-                continue
+            cost = long_run_prices.get(material)
+            if cost is None or cost <= 0.0:
+                continue            # no long-run price: the material is left out of both sums
             paid = price_now(material)
             share = 1.0
             if sign > 0.0 and sale_outlook is not None:

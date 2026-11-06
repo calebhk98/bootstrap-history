@@ -9,6 +9,7 @@ from typing import Any, Dict, List, Optional
 
 from sim.agents.api import authority, collection, revolt, ruler, tax_burden, unrest
 from sim.agents.api import government_levers_tax
+from sim.assembly.api import Part
 from sim.hazards.api import RecordWorldEvent
 from sim.land.api import TransferTile
 from sim.polity.api import (CloseSuccessionDispute, RecordRising, RegisterPeople, ReplaceRuler, ResetStateUnrest,
@@ -21,7 +22,7 @@ from . import rules
 RISINGS_KEPT = 20
 
 
-class Stability:
+class Stability(Part):
 	"""The phase `revolts`. Reads: civilisation, countries, has_state, country_world, organised_factions, food_eaten,
 	year, tile_owner; the module's own garrisons and sites. Sends the state's commands (polity), TransferTile and
 	RecordWorldEvent."""
@@ -38,8 +39,8 @@ class Stability:
 
 	# ---- readings of a state's year
 	def _state_grievance(self, world: Any, record: Any) -> Optional[float]:
-		income = sum(world.notice_over(scale) * income for scale, income in world.visible_taxpayers())
-		return rules.state_grievance(income, float(world.pay_per_person_year("labourer")), float(world.hours_per_person_year),
+		income = sum(world.taxpayers.notice_over(scale) * income for scale, income in world.taxpayers.visible_taxpayers())
+		return rules.state_grievance(income, float(world.labour.pay_per_person_year(world.labour.trade_of_role("unskilled"))), float(world.labour.hours_per_person_year),
 		                             sum(record.corvee_hours.values()), sum(record.revenue_by_form.values()),
 		                             record.need.get("dole", 0.0), record.unfunded.get("dole", 0.0), sum(record.unfunded.values()))
 
@@ -53,15 +54,15 @@ class Stability:
 		field = sorted((Army.from_dict(record) for record in self.world.armies.values()
 		                if record["owner"] == owner and record["tile"] == tile and record["soldiers"] >= 1.0),
 		               key=lambda army: army.army_id)
-		garrison = self._garrison(owner, tile, {})
+		garrison = self.parts.contest.garrison(owner, tile, {})
 		side = field + ([garrison] if garrison.soldiers > 0.0 else [])
 		return campaign_contest.combine(side) if side else None
 
 	def _stability_of(self, owner: str) -> None:
 		world = self.needs.country_world[owner]
-		record = world.government().record
+		record = world.setting.government().record
 		year = int(self.needs.year())
-		people_by_tile = {tile: people for tile, people in sorted(world.collection_people_by_tile().items()) if people > 0.0}
+		people_by_tile = {tile: people for tile, people in sorted(world.collection.collection_people_by_tile().items()) if people > 0.0}
 		self.needs.send(SetLandTakenMemory(owner, unrest.fade_memory(record.land_taken_by_tile)))
 		if not people_by_tile:
 			return
@@ -78,7 +79,7 @@ class Stability:
 		rule = government_levers_tax.liability_rule(record)
 		rate = tax_burden.harvest_share_taken(world)
 		eaten = self.needs.food_eaten()
-		reference = self._reference_equipment(owner)
+		reference = self.parts.campaign_year.reference_equipment(owner)
 		seat = collection.seat_tile(people_by_tile)
 		self.needs.send(ResetStateUnrest(owner))
 		for tile, count in people_by_tile.items():
@@ -86,8 +87,8 @@ class Stability:
 			share = unrest.unrest(felt + record.land_taken_by_tile.get(tile, 0.0), unrest.hunger(eaten.get(tile)), burden)
 			soldiers = unrest.rising_soldiers(count, share, unrest.organisation(faction_members, people))
 			garrison = self._garrison_on(owner, tile)
-			site = self.campaign_site(tile)
-			terrain = battle.terrain_factor(site.ruggedness, self.tile_fortification(tile))
+			site = self.parts.campaign_year.campaign_site(tile)
+			terrain = battle.terrain_factor(site.ruggedness, self.parts.contest.tile_fortification(tile))
 			against = 0.0 if garrison is None else campaign_contest.strength_of(garrison, reference, terrain)
 			strength = unrest.rising_strength(soldiers, reference)
 			self.needs.send(SetTileReading(owner, tile, share, authority.hold(against, strength)))
@@ -99,14 +100,14 @@ class Stability:
 	# ---- a rising and what it changes
 	def _rising(self, owner: str, world: Any, record: Any, tile: str, soldiers: float, strength: float,
 	            garrison: Optional[Army], garrison_strength: float, on_seat: bool, year: int, cause: str) -> str:
-		draw = world.rng_for("revolt", tile, year).random()
+		draw = world.setting.rng_for("revolt", tile, year).random()
 		result = revolt.resolve(soldiers, strength, 0.0 if garrison is None else garrison.soldiers, garrison_strength, on_seat, draw)
 		self.needs.send(RecordWorldEvent("revolt", actors=(owner,), tiles=(tile,), cause=cause, facts=dict(
 			outcome=result.kind, rising_win_probability=result.rising_win_probability, rising_lost=result.rising_lost,
 			garrison_lost=result.garrison_lost)))
 		self.needs.send(RecordRising(owner, {"year": year, "tile": tile, "kind": result.kind, "soldiers": round(soldiers)},
 		                             RISINGS_KEPT))
-		self.strike_from_force(owner, result.garrison_lost)
+		self.parts.armies.strike_from_force(owner, result.garrison_lost)
 		if result.kind == revolt.TILE_LOST:
 			self.needs.send(TransferTile(tile, None, "revolt"))
 		elif result.kind == revolt.RULER_REPLACED:
@@ -118,14 +119,14 @@ class Stability:
 	                        faction_members: float, reference: float, year: int) -> None:
 		"""The runner-up faction takes arms at the seat against the garrison there, in proportion to its backing."""
 		challenger = record.succession_challenger
-		backing = world.faction_backing()
+		backing = world.groups.faction_backing()
 		total = sum(backing.values())
 		if seat is None or challenger not in backing or total <= 0.0:
 			self.needs.send(CloseSuccessionDispute(owner))
 			return
 		soldiers = unrest.rising_soldiers(people_by_tile[seat], backing[challenger] / total)
 		garrison = self._garrison_on(owner, seat)
-		terrain = battle.terrain_factor(self.campaign_site(seat).ruggedness, self.tile_fortification(seat))
+		terrain = battle.terrain_factor(self.parts.campaign_year.campaign_site(seat).ruggedness, self.parts.contest.tile_fortification(seat))
 		against = 0.0 if garrison is None else campaign_contest.strength_of(garrison, reference, terrain)
 		self._rising(owner, world, record, seat, soldiers, unrest.rising_strength(soldiers, reference), garrison, against,
 		             True, year, "disputed_accession")

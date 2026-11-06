@@ -8,15 +8,23 @@ from typing import Any, Callable
 from .borrowing import Borrower
 
 
+class SeatBorrowerPayments:
+	"""The only payment a seat's borrower notes itself: what it paid on its arrears, entered in the seat's cash book."""
+
+	def __init__(self, note_outlay: Callable[[Any, float], None]) -> None:
+		self.note_outlay = note_outlay
+
+
 class SeatBorrower(Borrower):
 	kind = "household"
 
 	def __init__(self, account_id: str, purses: Any, arrears: Any, *, balance: Callable[[], float], note_outlay: Callable[[Any, float], None],
-	             ceiling: Callable[[], float], rate: Callable[[], float], defaults: Callable[[], None]) -> None:
+	             ceiling: Callable[[], float], rate: Callable[[], float], defaults: Callable[[], bool]) -> None:
 		"""`balance()` is the seat's purse, `ceiling()` the most it may owe, `rate()` what it pays a year on its debt and
-		`defaults()` what the lenders' default does to the household."""
+		`defaults()` what the lenders' default does to the household (whether it defaulted: a household within its line has not)."""
 		self.account_id, self.purses, self._arrears = account_id, purses, arrears
-		self._balance, self._note_outlay = balance, note_outlay
+		self._balance = balance
+		self.payments = SeatBorrowerPayments(note_outlay)
 		self._ceiling, self._rate, self._defaults = ceiling, rate, defaults
 
 	@property
@@ -27,17 +35,20 @@ class SeatBorrower(Borrower):
 	def arrears_book(self) -> Any:
 		return self._arrears
 
-	def note_outlay(self, purpose: Any, amount: float) -> None:
-		self._note_outlay(purpose, amount)
-
 	def credit_ceiling(self, world: Any) -> float:
 		return self._ceiling()
+
+	def rule_limit(self, world: Any, amount: float) -> float:
+		"""The seat's line is the economy's rule applied in the clearing (`credit_lines`): its owner's ceiling is what the credit
+		clearing granted it, so no second cut by `fundable_amount` follows; the lenders' supply still bounds a draw."""
+		return max(0.0, min(amount, self._ceiling() - self.debt()))
 
 	def borrowing_rate(self, world: Any) -> float:
 		return self._rate()
 
 	def default(self, world: Any) -> None:
-		"""The lenders' default: the owner stops what it cannot fund, then the arrears are cleared."""
-		self._defaults()
-		self._arrears.interest_arrears = 0.0
-		self._arrears.arrears_years = 0
+		"""The lenders' default: the owner stops what it cannot fund, then the arrears are cleared. A household still within its
+		line is not in default, and its arrears stay owed."""
+		if self._defaults():
+			self._arrears.interest_arrears = 0.0
+			self._arrears.arrears_years = 0

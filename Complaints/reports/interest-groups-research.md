@@ -6,6 +6,8 @@ Source tags: **read** means the page was opened and the cited claim is in it; **
 
 ## 0. What exists today (measured by reading the code)
 
+*Present-day note: this section was read from the code when written. `sim/engine/agents_port_groups.py` and `sim/engine/interest_groups.py` no longer exist; the group sectors are now built in `sim/actors/world_groups.py` (`sectors`) and `sim/agents/country_groups.py`, and the group actor and reach rules are still `sim/agents/group.py`, `group_goods.py`, `group_strata.py` and `group_reach.py`. Re-read the code before relying on any row.*
+
 | Piece | Where | What it does |
 |---|---|---|
 | Group actor | `sim/agents/group.py` | `InterestGroup` reads a `Sector` (kind, subject, lost income, income base, members, scope, blame share), keeps a loss with decay, computes `pull_of(lost_income, territory_revenue)`, asks the state for a claim and, if the state is not in deficit and pull times capacity is high enough, a ban. Blame lands on the founder as scandal, less his protection. |

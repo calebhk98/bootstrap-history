@@ -74,23 +74,23 @@ check("a levy on income is the rate times what the bodies earned, never what the
 check("each payer is named, so the money moves between actors", len(assessed.payers) == 2, assessed.payers)
 state, rich, poor = world.state, world.strata[0], world.strata[1]
 before = state.money + sum(body.money for body in world.strata)
-state.receive_revenue(world)
+state.stores.receive_revenue(world)
 check("the state received what its payers lost", abs(state.money - 0.1 * 3.0e6) < 1e-6, state.money)
 check("no money appeared: the state's gain is the strata's loss",
       abs(state.money + sum(body.money for body in world.strata) - before) < 1e-6, state.money)
 check("the tax is booked as taxation on the state and the payers", state.record.income.get("taxation", 0.0) > 0.0
       and rich.record.outlays.get("taxation", 0.0) > 0.0, (state.record.income, rich.record.outlays))
-state.receive_revenue(world)
+state.stores.receive_revenue(world)
 check("income already assessed is not assessed again", abs(state.money - 0.1 * 3.0e6) < 1e-6, state.money)
 rich.record.income["edge:economy"] += 1.0e6
-state.receive_revenue(world)
+state.stores.receive_revenue(world)
 check("a year's new income is assessed", abs(state.money - (0.1 * 3.0e6 + 0.1 * 1.0e6)) < 1e-6, state.money)
 
 # a body that holds nothing pays nothing: no purse goes into debt to the state
 world = make_world()
 world.forms = [dict(LEVY, rate=1.0)]
 world.strata[1].money = 0.0
-world.state.receive_revenue(world)
+world.state.stores.receive_revenue(world)
 check("a levy is no more than the purse can pay", all(body.money >= 0.0 for body in world.strata)
       and world.strata[1].money == 0.0, [body.money for body in world.strata])
 
@@ -105,34 +105,34 @@ check("a form that names its payers takes from those bodies only",
 world = make_world(money=1.0e9)
 state, poor = world.state, world.strata[1]
 hunger = poor.record.members * (world.food_cost * 0.5 + world.housing_cost * 0.5)
-state.relieve_strata(1.0e9, world)
+state.surplus.relieve_strata(1.0e9, world)
 check("relief is paid to the body that reports its need unmet, to the extent of that need",
       abs(poor.money - (1.0e6 + hunger)) < 1e-6 and abs(state.money - (1.0e9 - hunger)) < 1e-6, (poor.money, state.money))
 check("a body that is not hungry is given nothing", world.strata[0].money == 5.0e6, world.strata[0].money)
 check("relief is booked as an outlay of the state", abs(state.record.outlays.get("relief", 0.0) - hunger) < 1e-6,
       state.record.outlays)
 world = make_world(money=1.0e9)
-world.state.relieve_strata(hunger / 4.0, world)
+world.state.surplus.relieve_strata(hunger / 4.0, world)
 check("relief is no more than the surplus", abs(world.state.record.outlays.get("relief", 0.0) - hunger / 4.0) < 1e-6,
       world.state.record.outlays)
 
 # ---- the home state taxes its own country's strata only, and reports the levy -------------------------
 from types import SimpleNamespace
-from sim.actors.world_budget import BudgetView
+from sim.actors.world_people import People
 
 
-class BudgetStubView(BudgetView):
-	def __init__(self, strata):
-		self.registry = SimpleNamespace(of_kind=lambda kind: strata)
+def people_over(strata):
+	"""The home world's people part over a registry holding these strata."""
+	return People(SimpleNamespace(needs=None, registry=SimpleNamespace(of_kind=lambda kind: strata)))
 
 
 home_body = make_stratum("rich", 1.0e3, 1.0e6, 5.0e6)
 foreign_body = make_stratum("rich", 1.0e3, 1.0e6, 5.0e6)
 foreign_body.record.country = "han"
 check("the home state's strata are the ones it taxes: the bodies of its own country, not a foreign one's",
-      BudgetStubView([home_body, foreign_body]).country_strata() == [home_body])
+      people_over([home_body, foreign_body]).country_strata() == [home_body])
 world = make_world()
 world.forms = [dict(LEVY, rate=0.01)]
-world.state.receive_revenue(world)
+world.state.stores.receive_revenue(world)
 check("the levy is a form of revenue the state reports", world.state.record.revenue_by_form.get("income_levy", 0.0) > 0.0,
       world.state.record.revenue_by_form)

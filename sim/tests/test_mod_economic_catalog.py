@@ -15,7 +15,6 @@ from sim.content.tree_source import load_base_tree
 from sim.prices import prices
 from sim.engine import data
 from sim.workforce import wage_schedule
-from sim.labour import wage_provider
 from sim.engine.validate_production import check
 from sim.world import demand
 from sim.labour import labour_market
@@ -68,7 +67,8 @@ class ModEconomicCatalogTests(unittest.TestCase):
     def test_new_material_chain_is_solved_and_visible_everywhere(self):
         production = load_production_catalog(str(self.root), str(self.root / "mods"))
         self.assertIn("test_acme_k3f9:ingot", material_namespace(production, self.nodes))
-        price_book = {"wage_rates_denarii_per_hour": {"labourer": {"rate": 1.0}},
+        # the wage document lists a wage for every trade the entries use; the solver invents none
+        price_book = {"wage_rates_denarii_per_hour": {"labourer": {"rate": 1.0}, "test_acme_k3f9:clockmaker": {"rate": 1.0}},
                       "money_per_labour_hour": 1.0}
         solved = prices.solved_prices([], price_book, production_entries=production)
         self.assertIn("test_acme_k3f9:ingot", solved.resolvable_materials)
@@ -79,8 +79,8 @@ class ModEconomicCatalogTests(unittest.TestCase):
                          sum(goods[m] * q for m, q in self.nodes[0]["mat"].items()))
         self.assertIs(production, load_production_catalog(str(self.root), str(self.root / "mods")))
         self.assertEqual(4, demand.derived_intermediate_demand("test_acme_k3f9:ore", {"test_acme_k3f9:ingot": 2}, production)[0])
-        need, _breakdown = labour_market.labour_hours_required_by_trade({"test_acme_k3f9:ingot": 2}, production)
-        self.assertEqual(2, need["test_acme_k3f9:clockmaker"])
+        coefficients = labour_market.labour_hours_coefficients_per_unit_output("test_acme_k3f9:ingot", production)
+        self.assertEqual(1, coefficients["test_acme_k3f9:clockmaker"])
         self.assertFalse(check(production, material_namespace(production),
                                set(load_trade_registry(str(self.root), production,
                                                        str(self.root / "mods")))))
@@ -98,7 +98,9 @@ class ModEconomicCatalogTests(unittest.TestCase):
         self.assertIn("no production recipe", message)
 
     def test_new_trade_identity_does_not_require_static_wage(self):
-        registry = load_trade_registry(str(self.root), mods_dir=str(self.root / "mods"))
+        # the base trades come from the repository (the schedule's solver prices every trade the base recipes use)
+        repo = Path(__file__).resolve().parents[2]
+        registry = load_trade_registry(str(repo), mods_dir=str(self.root / "mods"))
         self.assertIn("test_acme_k3f9:clockmaker", registry)
         self.assertTrue(registry["test_acme_k3f9:clockmaker"].initially_absent)
         self.assertIn("established", registry["test_acme_k3f9:clockmaker"].note)

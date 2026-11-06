@@ -1,4 +1,7 @@
-"""What one civilisation's economy is built from: the facts that do not change from year to year.
+"""What one civilisation's economy is built from: the facts it keeps from year to year.
+
+A setup is frozen: it is never edited in place. A change (a tax rate, a site limit, a recipe a technique allows,
+the tiles' yields) makes a new setup with `dataclasses.replace`, assigned in one place, `Economy.change_setup`.
 
 The markets module's port (sim/markets/port*.py) or a tool fills an `EconomySetup` from data and the engine's
 opening state; nothing in it is a model outcome except the opening prices and wages, which only seed
@@ -10,7 +13,7 @@ from typing import Any, Dict, Mapping, Optional, Tuple
 
 from sim.world import demand
 
-from .good_mass import unit_mass_and_source
+from .good_mass import unit_mass
 from .market_areas import AreaMap
 from .state_policy import StatePolicy
 from .tile_costs import CarriageTable, carriage_table
@@ -30,14 +33,14 @@ def area_tile(area: str) -> TileId:
 
 
 @dataclass(frozen=True)
-class TradeSpec:
+class SetupTrade:
     trade_id: TradeId
     training_years: float = 0.0
     fatality_risk_per_year: float = 0.0
     family: str = ""                  # trades that share skill: retraining within one is quicker
 
 
-@dataclass
+@dataclass(frozen=True)
 class EconomySetup:
     civ_id: str
     currency: CurrencySpec
@@ -47,40 +50,41 @@ class EconomySetup:
     handling_rates: Dict[str, float]               # money per tonne per leg by mode, at the opening
     specs: Dict[GoodId, GoodSpec]
     recipes: Dict[str, Recipe]
-    basket: Any                                    # households.Basket
-    trades: Dict[TradeId, TradeSpec]
+    basket: Any                                    # sim.world.need_basket.Basket
+    trades: Dict[TradeId, SetupTrade]
     tax_forms: Tuple[Any, ...]                     # taxes.TaxForm
-    state_capacity: float
     working_hours_per_year: float
     working_share: float
     gini: float
     opening_population_by_tile: Dict[TileId, float]
-    opening_prices: Dict[GoodId, float]            # money per unit, seeds expectations only
+    opening_prices: Dict[GoodId, float]            # money per unit in opening-year money, seeds expectations only; readers use opening_price_today
     opening_wages: Dict[TradeId, float]            # money per hour, seeds expectations only
     opening_rate: float
     capital_tile: TileId
     port_tile: TileId
-    unskilled_trade: TradeId = "labourer"
+    unskilled_trade: TradeId                       # the registry's unskilled (fallback) trade: its wage prices the rest; the port sets it
+    fuel_need: str  # the basket need fuel meets (need_roles.FUEL_ROLE); a hearth's cooking fuel is added to its floor
+    hunger_need: str  # the basket need whose unmet floor counts as hunger (need_roles.HUNGER_ROLE)
+    work_need: str  # the basket need met by hours of household work (need_roles.HOUSEHOLD_WORK_ROLE)
     hiding: Any = None  # (rate, reach) -> share of its base a payer hides; the port hands in the actor layer's rule, None: none
     flight: Any = None  # the actors' flight rules (expected_penalty_of_leaving, arrears_owed_by_fugitive, share_after_immunity), handed in by the port; None: no flight
     debt_bondage_years: float = 0.0               # term of service a landless household in default owes its creditor; 0: the society has no debt bondage (bondage.py)
-    import_duty_share: Dict[GoodId, float] = field(default_factory=dict)   # per good, the share of its landed price that is the state's tariff; the port sets it as the year's imports are offered
+    carried_tariff: Dict[str, float] = field(default_factory=dict)   # source country -> the share of the value at the source the home state charges on goods carried in from it; the port sets it each year (markets/port_duty.py)
     carriage_rates_balanced: Dict[str, float] = field(default_factory=dict)   # likewise with the opposite flow filling every return; none: same
     carriage_crew: Dict[str, Tuple[str, float]] = field(default_factory=dict)   # mode id (land, river, sea) -> (crew trade, crew hours per tonne-km), geography's; none: carriage hires no hours
     carriage_handling: Dict[str, float] = field(default_factory=dict)   # mode id -> hours of handling a tonne each time a haul changes to the mode, for the modes whose handling the rates price
+    route_dues: Dict[str, float] = field(default_factory=dict)   # mode id -> money per tonne of tolls or port dues each time a haul changes to the mode; included in handling_rates and paid to the holder of the tile (route_dues.py), not worked as crew hours
     carriage_handling_trade: Dict[str, str] = field(default_factory=dict)   # mode id -> the trade that works those handling hours (geography's `handling_trade`); a mode with none is handled by the unskilled trade
     carriage_carriers: Dict[str, Tuple[float, Tuple[Tuple[str, float], ...]]] = field(default_factory=dict)   # mode id -> (tonne-km a team moves a day, ((carrier good, units worn per tonne-km),)): what a tonne-km wears (carriage_wear); none: carriage wears nothing
     need_share_by_trade: Dict[str, float] = field(default_factory=dict)   # trade -> its share of the society's non-farm labour need (recipes and carriage), seeds the trades no producer's runs staff
     carriage_wage: float = 0.0     # the wage an hour (unskilled trade) the land carriage rates were priced at; 0: they follow no wage
-    fuel_need: str = "warmth"           # the basket need fuel meets; a hearth's cooking fuel is added to its floor
-    hunger_need: str = "food"           # the basket need whose unmet floor counts as hunger
     yield_factor_by_recipe_tile: Dict[str, float] = field(default_factory=dict)
     land_per_run: Dict[str, float] = field(default_factory=dict)      # hectare-years of land a run takes
     basket_by_tile: Dict[TileId, Any] = field(default_factory=dict)   # floors that follow the tile's climate
     household_work: Dict[str, Any] = field(default_factory=dict)      # hours of household work by task (data/world/household_work.json); empty: none is modelled
     ready_to_eat: frozenset = frozenset()                             # goods a household with no hearth can eat as bought
     milled_as: Dict[str, str] = field(default_factory=dict)           # per grain, the good it is milled into (needs.json); a household weighs grinding it against buying that
-    servant_trade: str = "domestic_servant"                           # the trade whose wage is the price of an hour of household work
+    servant_trade: Optional[TradeId] = None                           # the trade whose wage is the price of an hour of household work (the registry's household_work role); the port sets it, and it is required when household work is modelled (`household_work` non-empty): port_setup.py refuses the opening when no trade has the role
     state_policy: StatePolicy = field(default_factory=StatePolicy)   # how the state budgets and finances a deficit
     site_limits: Tuple[SiteLimit, ...] = ()     # where site-bound recipes can run, and how much (sites.py)
     mint_recipe: Optional[Recipe] = None   # how the mint strikes coin: the production entry the coin standard names
@@ -90,7 +94,6 @@ class EconomySetup:
     improvements: Dict[str, Dict[str, Any]] = field(default_factory=dict)   # built roads and track by edge key
     opening_store_output: Dict[GoodId, Tuple[Tuple[float, float, float], ...]] = field(default_factory=dict)
     # per durable good, its past workings (kg a year, years worked, years since the last output) from the deposits
-    opening_store_gaps: Dict[GoodId, str] = field(default_factory=dict)   # why a good has no workings, for audit
     # country -> the recipes its producers can run (what its society's techniques allow); empty: every recipe anywhere
     recipes_by_country: Dict[str, Tuple[str, ...]] = field(default_factory=dict)
     kernels: Dict[str, Any] = field(default_factory=dict)   # the markets module's bound kernels by name (markets/kernels.py); absent: the references
@@ -157,11 +160,26 @@ class EconomySetup:
         return self.currency.currency_id
 
 
+def opening_price_today(setup: "EconomySetup", memory: Any, good: GoodId) -> Optional[float]:
+    """The setup's opening price of a good in today's money (opening-year money times the memory's wage level); None when
+    the setup holds none."""
+    price = setup.opening_prices.get(good)
+    return None if price is None else price * memory.opening_wage_level(setup.currency_id)
+
+
+RECIPE_TILE_SEPARATOR = "@"
+
+
 def recipe_tile_key(recipe_id: str, tile: TileId) -> str:
-    return recipe_id + "@" + tile
+    return recipe_id + RECIPE_TILE_SEPARATOR + tile
 
 
-def goods_specs(goods: Mapping[GoodId, str], spoilage_rates: Mapping[GoodId, Mapping[str, Any]],
+def recipe_of_tile_key(key: str) -> str:
+    """The recipe id of a `recipe_tile_key`."""
+    return key.partition(RECIPE_TILE_SEPARATOR)[0]
+
+
+def goods_specs(goods: Mapping[GoodId, str], spoilage_rates: Mapping[GoodId, float],
                 service_lives: Optional[Mapping[GoodId, float]] = None) -> Dict[GoodId, GoodSpec]:
     """A `GoodSpec` per good (its unit mass from `good_mass`), the spoilage table and any stated
     service life. `goods` maps each good to a category label from data."""
@@ -169,8 +187,8 @@ def goods_specs(goods: Mapping[GoodId, str], spoilage_rates: Mapping[GoodId, Map
     production = demand.production_data()
     specs = {}
     for good, category in sorted(goods.items()):
-        mass, _source = unit_mass_and_source(good, production)
-        decay_rate = float((spoilage_rates.get(good) or {}).get("rate", 0.0))   # continuous, per year
+        mass = unit_mass(good, production)
+        decay_rate = float(spoilage_rates.get(good, 0.0))   # continuous, per year
         specs[good] = GoodSpec(good_id=good, unit_mass_kg=mass,
                                spoilage_per_year=1.0 - math.exp(-decay_rate),
                                service_life_years=float(service_lives.get(good, 0.0)),

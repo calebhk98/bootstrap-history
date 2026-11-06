@@ -1,7 +1,7 @@
 """The `market` screen's numbers: material prices and wages.
 
 Everything here is read from figures the engine already computes
-(material_trade_quote, annual_wage); nothing is new economics.
+(goods_quote, the labour market's quote_annual); nothing is new economics.
 """
 
 import difflib
@@ -70,8 +70,15 @@ def market_report(sim, offset=0, limit=DEFAULT_MATERIAL_PAGE, material=None):
         wanted = str(material).strip().lower()
         if wanted not in known:
             return unknown_material_reply(material, known)
-        return {"ok": True, "materials": material_rows(sim, 0, 1, only=wanted), "wages": []}
+        return {"ok": True, "materials": material_rows(sim, 0, 1, only=wanted), "wages": [], **trade_rows(sim)}
     return {"ok": True,
             "materials": material_rows(sim, max(0, offset), max(1, limit)),
-            "wages": wage_rows(sim)}
+            "wages": wage_rows(sim), **trade_rows(sim)}
+
+
+def trade_rows(sim):
+    """The acting seat's goods orders waiting for the year's clearing and what the last clearing bought and sold for it."""
+    traded = sim.view("seat_goods_traded")()
+    return {"orders": sim.view("seat_goods_orders")(), "traded": {side: dict(traded.get(side) or {}) for side in ("bought", "sold")},
+            "order_results": list(traded.get("orders") or ())}
 

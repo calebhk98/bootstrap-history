@@ -19,6 +19,7 @@ from sim.agents.firm import Firm
 from sim.agents.tuning import ENTRY_EQUITY_SHARE
 
 from .agents_fake_world import FakeWorld, make_node
+from .pool_lenders import lend_from_savers
 
 COPY_COST = 6000.0
 
@@ -39,8 +40,8 @@ class EntryWorld(FakeWorld):
 def make_world(rate=0.12):
 	world = EntryWorld()
 	world.rate = rate
-	world.nodes["shop"] = make_node("shop", hours=100.0, revenue=60000.0, upkeep=1000.0)
-	world.nodes["shop"]["cost"] = COPY_COST
+	world.setting.nodes["shop"] = make_node("shop", hours=100.0, revenue=60000.0, upkeep=1000.0)
+	world.setting.nodes["shop"]["cost"] = COPY_COST
 	world.demonstrated_nodes = {"shop"}
 	world.proven = {"shop"}
 	return world
@@ -72,7 +73,9 @@ class StakeSplitTests(unittest.TestCase):
 class EntryOnCreditTests(unittest.TestCase):
 	def entry(self, ceiling=None, rate=0.12):
 		"""(firms founded, stakes weighed, stakes put up) in one year of entry when no founder puts up more than `ceiling`."""
-		registry = ActorRegistry(ActorsState(home_country="home"))
+		state = ActorsState(home_country="home")
+		lend_from_savers(state.purses, 1e12)   # the economy's lenders behind the pool
+		registry = ActorRegistry(state)
 		registry.add("stratum:home:merchants", ActorRecord(
 			kind="stratum", stratum="merchants", members=100.0, money=1.0e9, literacy=0.5))
 		faced = []
@@ -124,6 +127,7 @@ class CopyBudgetTests(unittest.TestCase):
 		state = ActorsState(home_country="home")
 		firm = Firm("zz", ActorRecord(kind="firm", last_margin=last_margin, founded_year=100))
 		firm.attach(state.purses)
+		lend_from_savers(state.purses, 1e12)
 		return firm
 
 	def test_a_firm_with_no_money_may_still_budget_what_its_earning_lets_it_borrow(self):

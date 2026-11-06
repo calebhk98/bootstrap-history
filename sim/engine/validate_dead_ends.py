@@ -43,6 +43,7 @@ def consumed_goods(production: Mapping[str, Mapping[str, Any]], need_goods: Mapp
     for fields in trade_registry.values():
         consumed.update(fields.get("tool_basket") or ())
         consumed.update(fields.get("tool_stock_per_worker") or ())
+        consumed.update([fields["equipment_material"]] if fields.get("equipment_material") else ())
     return consumed
 
 
@@ -62,9 +63,3 @@ def report_lines(production, need_goods, service_lives, trade_registry, state_go
     lines = ["produced goods nothing consumes: %d; consumed only by tech-tree nodes: %d" % (len(nothing), len(only_nodes))]
     lines.append("  no consumer: " + (", ".join(nothing) or "(none)"))
     return lines
-
-
-def state_goods() -> Set[str]:
-    """The goods the state and army budget lines name in code (the dole and the army's equipment)."""
-    from sim.agents.api import DOLE_MATERIAL, EQUIPMENT_MATERIAL
-    return {DOLE_MATERIAL, EQUIPMENT_MATERIAL}

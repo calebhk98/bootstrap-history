@@ -1,10 +1,8 @@
-"""Other economies as participants in the home society's markets: who they are, what they sell and why they refuse.
+"""Other economies as participants in the home society's markets: who they are and why they refuse.
 
 An economy named in the foreign-economies data has its own solved long-run costs (its civilisation file's technologies, wage
-and coin), a population that sizes its market, and a place on the map. For each commodity it keeps a book like the society's
-(capacity, stock, price ratio) and clears it every year together with the home market, so imports cap a home shortage and
-exports lift the price abroad. Prices of both sides are compared in home money: a foreign price in its own coin is worth the
-coin's metal at the home price of that metal.
+and coin), a population that sizes its market, and a place on the map. Its prices and quantities are the agent economy's (its tiles are in it); the figures here are the civilisation file's, in
+home money: a foreign price in its own coin is worth the coin's metal at the home price of that metal.
 
 (needs: foreign_economy_records, civilisation, civilisation_record, partner_own_economy, year, acting_seat, techniques_held,
 material_prices, home_unit_price, household_prices, material_commodity, commodity_record, partner_gate_refusal,
@@ -12,31 +10,29 @@ cast, foreign_route, route_freight_per_tonne)"""
 from types import SimpleNamespace
 from typing import Any, Dict, List, Optional
 
-from sim.agents.api import GOVERNMENT_PREFIX, exports_allowed
+from sim.agents.api import GOVERNMENT_PREFIX, ExportPolicy, exports_allowed
+from sim.assembly.api import Part
 from sim.refusal import Refusal
 
 from . import rules
 
 
-class Economies:
+class Economies(Part):
+
+    def __init__(self, module):
+        super().__init__(module)
+        self._partner_civs = {}          # the civilisation files loaded so far (never saved)
+        self._facts_cache = {}           # acting seat -> partner -> (prices, facts, techniques known, coin price)
+        self._materials_cache = {}       # acting seat -> (household prices, commodity -> material keys)
 
     def partners(self) -> List[str]:
-        """Every economy enabled for this year, sorted by id: those trading by the partner books and those that are part of
-        the agent economy."""
+        """Every economy enabled for this year, sorted by id. Each is a country of the one agent economy."""
         civilisation = self.needs.civilisation()
         return rules.partner_countries(self.needs.foreign_economy_records(), self.needs.year(), civilisation.get("id"),
                                        civilisation.get("variant_of"))
 
     def partners_in_agent_economy(self) -> List[str]:
-        """The enabled economies whose tiles, people and producers are in the agent economy itself."""
-        inside = rules.agent_economy_ids(self.needs.foreign_economy_records())
-        return [partner for partner in self.partners() if partner in inside]
-
-    def foreign_economies(self) -> List[str]:
-        """Economies trading with this society this year by the partner books, sorted by id: the enabled ones that are not
-        themselves in the agent economy."""
-        inside = set(self.partners_in_agent_economy())
-        return [partner for partner in self.partners() if partner not in inside]
+        return self.partners()
 
     def partner_civ(self, civilization_id: str) -> Dict[str, Any]:
         """The civilisation `civilization_id` as its file gives it (mods applied, checked), loaded once and kept for the
@@ -81,9 +77,9 @@ class Economies:
         government = self.partner_government(civilization_id)
         if government is None:
             government = SimpleNamespace(record=SimpleNamespace(
-                state_monopolies=set(civilization.get("state_monopolies") or ())), decision_policy=None)
+                state_monopolies=set(civilization.get("state_monopolies") or ())), decision_policy=ExportPolicy())
         else:
-            reopens = government.markets_closed_until(self.needs.acting_seat(), self.needs.year())
+            reopens = government.markets.markets_closed_until(self.needs.acting_seat(), self.needs.year())
             if reopens:
                 return Refusal("partner_market_shut", "%s has shut its markets to you until %d" % (name, reopens))
         if material not in exports_allowed(government, [material]):

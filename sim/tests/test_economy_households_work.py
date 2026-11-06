@@ -6,8 +6,9 @@ import json
 import os
 import unittest
 
+from sim.content import views
 from sim.economy import households_work
-from sim.economy.households_basket import make_basket
+from sim.world.need_basket import make_basket
 from sim.world import need_basket
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..")
@@ -31,7 +32,7 @@ class HoursTests(unittest.TestCase):
         self.assertAlmostEqual(households_work.hours_per_person_per_year(DATA, has_hearth=False), 50.0)
 
     def test_the_needs_file_satiation_equals_the_hours_of_the_data_file(self):
-        data = households_work.load_household_work()
+        data = views.household_work_data(os.path.join(ROOT, "no_mods"))
         with open(os.path.join(ROOT, "data", "world", "needs.json"), encoding="utf-8") as handle:
             need = json.load(handle)["needs"]["household_work"]
         self.assertAlmostEqual(need["satiation_per_capita_per_year"], households_work.hours_per_person_per_year(data))
@@ -114,17 +115,13 @@ class CookedFoodTests(unittest.TestCase):
     def test_a_cohort_without_a_hearth_buys_cooked_food(self):
         basket = make_basket(NEED_DATA, {})
         ready = households_work.ready_to_eat_goods(NEED_DATA)
-        shares = self._shares(households_work.without_hearth_basket(basket, ready))
+        shares = self._shares(households_work.without_hearth_basket(basket, ready, "food"))
         self.assertEqual(set(shares), {"cooked_meal_kg"})
         self.assertIn("wheat_kg", self._shares(basket))
 
-    def test_the_whole_food_floor_is_bought_cooked_without_a_hearth(self):
-        self.assertAlmostEqual(households_work.cooked_food_units(20.0, 10.0, False), 200.0)
-        self.assertEqual(households_work.cooked_food_units(20.0, 10.0, True), 0.0)
-
     def test_a_basket_with_no_ready_food_is_left_whole(self):
         basket = make_basket(NEED_DATA, {})
-        self.assertEqual(households_work.without_hearth_basket(basket, frozenset()), basket)
+        self.assertEqual(households_work.without_hearth_basket(basket, frozenset(), "food"), basket)
 
 
 if __name__ == "__main__":

@@ -3,13 +3,12 @@ source that runs them. Part of the port."""
 import dataclasses
 import hashlib
 import json
-import os
 import types
 
 from sim.prices.api import solve_cache
 
-# The spin-up runs the port's year module and, through it, the economy package; the interface never loads.
-SPIN_UP_SOURCE_MODULES = ("sim.markets.port_year",)
+# The spin-up runs the port's spin_up_run module and, through it, the economy package; the interface never loads.
+SPIN_UP_SOURCE_MODULES = ("sim.markets.spin_up_run",)
 
 
 KEY_FLOAT_DIGITS = 12
@@ -20,8 +19,7 @@ def _plain(value, ancestors=()):
     An object's `_` attributes are memos built from the rest (the map's route rates) and are left out;
     a cycle through what is left is refused."""
     if isinstance(value, str):
-        inside = value.startswith(solve_cache._ROOT + os.sep)
-        return os.path.relpath(value, solve_cache._ROOT) if inside else value
+        return solve_cache.relative_to_checkout(value)
     if isinstance(value, float):
         return float("%.*g" % (KEY_FLOAT_DIGITS, value))    # a last-place difference (a coin's scale) is not a different setup
     if value is None or isinstance(value, (bool, int)):

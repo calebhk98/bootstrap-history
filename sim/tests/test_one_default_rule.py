@@ -25,7 +25,7 @@ def years_until_firm_defaults():
     firm = registry.add("firm:1", ActorRecord(kind="firm", founded_year=0, last_margin=10.0, business=Business()))
     firm.money = -5000.0
     for years in range(1, MAX_YEARS + 1):
-        world.year += 1
+        world.setting.year += 1
         firm.pay_interest(world)
         if firm.record.exited_year is not None:
             return years, firm
@@ -51,12 +51,24 @@ class NoBonds:
 class NoPurses:
 	bonds = NoBonds()
 
+	def drawable(self, account_id, amount):
+		return amount   # the lenders hold all the household asks
+
+	def payable(self, account_id, amount):
+		return amount   # the lenders hold all the household asks
+
+	def purse(self, account_id):
+		return 0.0
+
+	def takeable(self, account_id):
+		return 0.0
+
 
 def founder_borrower(money, world):
 	"""The founder's household reduced to what the shared rule reads: a purse, an arrears book, and a world that answers the
 	founder's ceiling, rate and way of defaulting. No engine."""
 	return SeatBorrower("founder", NoPurses(), FounderBook(), balance=lambda: money, note_outlay=lambda purpose, amount: None,
-	                    ceiling=world.founder_credit_limit, rate=world.founder_debt_rate, defaults=world.founder_defaults)
+	                    ceiling=world.credit.founder_credit_limit, rate=world.credit.founder_debt_rate, defaults=world.credit.founder_defaults)
 
 
 class FounderWorld(FakeWorld):
@@ -75,6 +87,7 @@ class FounderWorld(FakeWorld):
 
 	def founder_defaults(self):
 		self.defaults += 1
+		return True
 
 
 def years_until_founder_defaults():

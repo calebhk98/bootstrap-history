@@ -2,6 +2,7 @@
 
 from .command_registry import command
 from sim.engine import ui_port
+from sim.refusal import cause_of
 
 
 @command("build_way", group="money",
@@ -38,5 +39,5 @@ def _cmd_build_way(sim, nodes, cmd, ended):
                 "engineered": quote["engineered"]}
     built, message = sim.send(ui_port.BuildWay(tile_a, tile_b, way))
     if not built:
-        return {"ok": False, "error": str(message), "cause": getattr(message, "cause", None)}
+        return {"ok": False, "error": str(message), "cause": cause_of(message)}
     return {"ok": True, "built": message, "capital": round(sim.view("acting_balance")(), 1)}

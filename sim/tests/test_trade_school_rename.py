@@ -3,11 +3,11 @@ command is called on a stand-in game that records the school it is asked for, an
 stand-in labour world; no game is built."""
 QUICK_TOPIC = True
 
-import types
 from sim.tests import workforce_stand_in
 
 from .harness import *  # noqa: F401,F403
-from sim.labour.labour_population import PopulationMixin
+from sim.labour.labour_trades import Trades
+from sim.labour.labour_training import Training
 from sim.ui.proto.buy_targets import canonical_target
 from sim.ui.proto.dispatch_money import _BUY_HANDLERS, _buy_school, _cmd_buy
 from sim.ui.proto.typed import parse_typed
@@ -56,24 +56,25 @@ def labour_world(capital, trade_known=True, schools=None):
     household = Game(capital=capital, trade_schools=schools, trades_created=set())
     paid = []
     world = Game(
-        wages={"chemist": 1.0} if trade_known else {}, trades_absent=set(), workforce=household, view=workforce_stand_in.view_of(household), balance=capital,
-        trade_school_price_per_seat=lambda: SEAT_PRICE, EDGE_WORKERS="edge:workers",
+        trades=Game(wages={"chemist": 1.0} if trade_known else {}, trades_absent=set()), workforce=household,
+        view=workforce_stand_in.view_of(household), finance=Game(balance=capital, spending_power=lambda purpose: capital, trade_school_price_per_seat=lambda: SEAT_PRICE),
+        EDGE_WORKERS="edge:workers",
         send=lambda command: paid.append((command.edge, command.amount, command.purpose)))
-    return Game(_world=world, trade_available=lambda trade: PopulationMixin.trade_available(
-        Game(_world=world), trade)), household, paid
+    training = Training(world, advice=None, book=None, capacity=None, hours=None, market=None, supply=None, trades=Trades(world))
+    return training, household, paid
 
 
 labour, household, paid = labour_world(1000.0)
-founded, why = PopulationMixin.found_trade_school(labour, "chemist", 2)
+founded, why = labour.found_trade_school("chemist", 2)
 check("a school founded for a known trade adds its seats and pays for them",
       founded and why is None and household.trade_schools == {"chemist": 2.0} and paid == [("edge:workers", 2 * SEAT_PRICE, "trade schools")],
       (household.trade_schools, paid))
-PopulationMixin.found_trade_school(labour, "chemist", 1)
+labour.found_trade_school("chemist", 1)
 check("further seats add to the school", household.trade_schools == {"chemist": 3.0}, household.trade_schools)
 check("the trade then counts as one the household has", "chemist" in household.trades_created)
 labour, household, paid = labour_world(10.0)
-founded, why = PopulationMixin.found_trade_school(labour, "chemist", 2)
+founded, why = labour.found_trade_school("chemist", 2)
 check("seats the household cannot pay for are refused and change nothing", not founded and not paid and not household.trade_schools, (why, paid))
 labour, household, paid = labour_world(1000.0, trade_known=False)
-founded, why = PopulationMixin.found_trade_school(labour, "chemist", 2)
+founded, why = labour.found_trade_school("chemist", 2)
 check("a trade that does not exist cannot be taught by a school", not founded and not paid, why)

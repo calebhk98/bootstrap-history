@@ -25,9 +25,12 @@ SEARCH_ROUNDS_PER_YEAR = declare(
     "SEARCH_ROUNDS_PER_YEAR", 12, kind="temporary_heuristic", unit="rounds of search and wage revision per year",
     source=None, confidence="D",
     retire="Complaints/608: a wage method driven by the market\'s own state replaces this fixed fraction",
-    why="Eurace's labour loop (Labour/Firm_Employer_Functions.c, Firm_update_wage_offer; Household_Employee_Functions.c, "
-        "Household_read_application_rejection_update_wage_reservation) revises offers and reservations once a round "
-        "and its raise runs once a month; the yearly step compounds that many rounds. Not fitted.")
+    why="Eurace's labour loop (Labour/Firm_Employer_Functions.c, Household_Employee_Functions.c) runs two search rounds per "
+        "monthly cycle: the employer's raise (Firm_update_wage_offer) runs in the first round only (Firm_update_wage_offer_2 "
+        "has it commented out), the reservation cut (Household_read_application_rejection_update_wage_reservation and _2) "
+        "in both, and random redundancies (Firm_send_random_redundancies) once per cycle; each household searches only "
+        "with a probability per iteration (search_today), which is not ported. Here offers and cuts run every one of "
+        "SEARCH_ROUNDS_PER_YEAR rounds, not at Eurace's cadence. Not fitted.")
 
 RESERVATION_CUT_PER_ROUND = declare(
     "RESERVATION_CUT_PER_ROUND", 0.01, kind="temporary_heuristic", unit="share of the ask cut per failed search round",

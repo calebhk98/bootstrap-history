@@ -14,6 +14,9 @@ class ActorRecord:
 	name: str = ""
 	policy_kind: str = "value"
 	money: float = 0.0
+	# people by trade the actor hires: the places it posts this year (rebuilt each year) and the people the labour core
+	# hired for them at the last clearing (written only by the port, sim/markets/port_staff.py)
+	staff_wanted: Dict[str, float] = field(default_factory=dict)
 	workforce: Dict[str, float] = field(default_factory=dict)
 	knowledge: Set[str] = field(default_factory=set)
 	# node id -> year the actor learned it exists (awareness.py); node id -> {stage, share, since} (adoption.py);
@@ -181,7 +184,7 @@ class ActorRecord:
 	# rights the actor holds; actor id -> share it holds in that actor's equity; and the share of
 	# its own equity the actor has issued to others (the rest is its own)
 	patents: Dict[str, Dict[str, Any]] = field(default_factory=dict)
-	holdings: Dict[str, float] = field(default_factory=dict)
+	shares_held: Dict[str, float] = field(default_factory=dict)
 	issued: float = 0.0
 	# node id -> {"holder", "rate"}: the royalty on its takings from a concern the actor runs under a licence
 	royalty_owed: Dict[str, Dict[str, Any]] = field(default_factory=dict)
@@ -219,7 +222,6 @@ class CountryProfile:
 	population: float = 0.0
 	urban_fraction: float = 0.0
 	tax_share: float = 0.0
-	wage_index: float = 1.0
 	price_index: float = 1.0
 	literacy_general: float = 0.0
 	literacy_elite: float = 0.0

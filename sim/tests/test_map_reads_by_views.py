@@ -8,8 +8,6 @@ from unittest import mock
 
 from sim.disease.module import Disease
 from sim.disease.state import DiseaseWorld
-from sim.foreign_trade.module import ForeignTrade
-from sim.foreign_trade.state import ForeignTradeWorld
 from sim.freight import routes
 from sim.freight.module import Freight
 from sim.markets import household_needs
@@ -40,7 +38,8 @@ class FreightReadsTests(unittest.TestCase):
 
     def test_handling_is_charged_from_the_dues_hours_the_land_module_states(self):
         module = module_harness.build(Freight, views={
-            "wage": lambda trade: 2.0, "carriage_facts": lambda: {
+            "trade_registry": lambda: {"labourer": {"fallback": True}, "sailor": {"role": "sailor"}, "merchant": {"role": "merchant"}},
+            "labour_quote": lambda trade: 2.0, "carriage_facts": lambda: {
                 "walking_modes": [], "loss_per_day": {}, "dues_hours_per_tonne": {"cart": 3.0}}})
         self.assertEqual(module.freight_handling_costs()["cart"], 6.0)
 
@@ -95,16 +94,6 @@ class MaterialsReadsTests(unittest.TestCase):
         module = materials_stand_in.build(
             tiles_listed_by=lambda civilisation: ["t1"], forest_increment=lambda tiles: 8.0 if tuple(tiles) == ("t1",) else -1.0)
         self.assertEqual(module.charcoal_per_hectare(), 2.0)
-
-
-class ForeignTradeReadsTests(unittest.TestCase):
-    def test_the_mineral_share_of_a_partner_is_asked_of_the_tiles_its_file_lists(self):
-        asked = []
-        module = module_harness.build(ForeignTrade, world=ForeignTradeWorld(), views={
-            "civilisation_record": lambda partner_id: {"id": partner_id}, "tiles_listed_by": lambda civilisation: ["p1", "p2"],
-            "mineral_share_of_tiles": lambda tiles, commodity: asked.append((list(tiles), commodity)) or 0.25})
-        self.assertEqual(module._mineral_share("partner", "tin"), 0.25)
-        self.assertEqual(asked, [(["p1", "p2"], "tin")])
 
 
 class HouseholdBasketTests(unittest.TestCase):

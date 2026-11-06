@@ -20,9 +20,9 @@ class PreparedMarket:
 
     def __init__(self, bids: Sequence[Bid]):
         self.buyers = goods_market.Buyers(bids, None)
-        self.prices: Dict[Tuple[GoodId, AreaId, float], float] = {}
+        self.prices: Dict[Tuple[GoodId, AreaId, float], Optional[float]] = {}
 
-    def price_with_supply(self, good: GoodId, area: AreaId, quantity: float) -> float:
+    def price_with_supply(self, good: GoodId, area: AreaId, quantity: float) -> Optional[float]:
         key = (good, area, quantity)
         price = self.prices.get(key)
         if price is None:
@@ -31,14 +31,15 @@ class PreparedMarket:
 
 
 def price_with_supply(bids: Optional[Sequence[Bid]], good: GoodId, area: AreaId, quantity: float,
-                      buyers: Optional[goods_market.Buyers] = None) -> float:
-    """The price at which the buyers take exactly `quantity`, all of it offered at no reservation.
+                      buyers: Optional[goods_market.Buyers] = None) -> Optional[float]:
+    """The price at which the buyers take exactly `quantity`, all of it offered at no reservation; None when the book
+    shows no price.
     `buyers` is the market's bids prepared once, when the caller has them."""
     if buyers is None:
         buyers = goods_market.Buyers(bids, None)
     offer = Offer(SELLER, good, area, "", quantity, 0.0)
     # the crossing is the price `goods_market.clear` reports; the fills it would also build are not needed
-    return goods_market._crossing(buyers, goods_market.in_clearing_order([offer]), with_wants=False)[0]
+    return goods_market.crossing(buyers, goods_market.in_clearing_order([offer]), with_wants=False)[0]
 
 
 def share_after_addition(bids: Sequence[Bid], good: GoodId, area: AreaId, traded: float, added: float,
@@ -50,10 +51,10 @@ def share_after_addition(bids: Sequence[Bid], good: GoodId, area: AreaId, traded
     if prepared is None:
         prepared = PreparedMarket(bids)
     before = prepared.price_with_supply(good, area, traded)
-    if not before > 0.0:
+    if before is None or not before > 0.0:
         return 1.0
     after = prepared.price_with_supply(good, area, traded + added)
-    return max(0.0, min(1.0, after / before)) if math.isfinite(after) else 1.0
+    return max(0.0, min(1.0, after / before)) if after is not None and math.isfinite(after) else 1.0
 
 
 def price_share_of(bids_by_market: Mapping[Tuple[GoodId, AreaId], Sequence[Bid]],

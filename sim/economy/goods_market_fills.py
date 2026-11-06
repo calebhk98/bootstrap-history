@@ -3,7 +3,9 @@ dataclass is filled in directly when its fields are the ones expected; any other
 through its own constructor."""
 import math
 from dataclasses import fields
-from typing import Iterable, List, Tuple
+from typing import Dict, Iterable, List, Tuple
+
+from sim.book import ROUNDING_SHARE
 
 from .types import AreaId, Bid, Fill, GoodId, Offer, is_edge
 
@@ -37,6 +39,31 @@ def seller_fills(served: Iterable[Tuple[Offer, float]], good: GoodId, area: Area
             for offer, quantity in served if quantity > 0.0]
 
 
+def sold_by_seller_tile(fills: Iterable[Fill]) -> dict:
+    """(seller, tile) -> quantity the sell fills moved."""
+    sold: dict = {}
+    for fill in fills:
+        if fill.side == "sell":
+            key = (fill.agent, fill.tile)
+            sold[key] = sold.get(key, 0.0) + fill.quantity
+    return sold
+
+
+def without_washed(fills: List[Fill], washed: Dict[str, float]) -> List[Fill]:
+    """The fills less each edge's washed quantity on both its buy and its sell side, so they agree with the pairing; a
+    residue of float dust is no fill."""
+    left = {(agent, side): quantity for agent, quantity in washed.items() for side in ("buy", "sell")}
+    result = []
+    for fill in fills:
+        take = min(fill.quantity, left.get((fill.agent, fill.side), 0.0))
+        if take > 0.0:
+            left[(fill.agent, fill.side)] -= take
+        if fill.quantity - take > ROUNDING_SHARE * fill.quantity:
+            result.append(fill if take == 0.0 else make_fill(fill.agent, fill.good, fill.area, fill.tile,
+                                                             fill.quantity - take, fill.price, fill.side))
+    return result
+
+
 def without_edge_self_trades(fills: List[Fill]) -> Tuple[List[Fill], float]:
     """A book edge (the mint) quoting both ways at one price would buy its own stock: take the overlap of
     its buy and sell fills out of both, and return the quantity removed."""
@@ -49,13 +76,4 @@ def without_edge_self_trades(fills: List[Fill]) -> Tuple[List[Fill], float]:
     wash = {agent: quantity for agent, quantity in wash.items() if quantity > 0.0}
     if not wash:
         return fills, 0.0
-    left = {(agent, side): quantity for agent, quantity in wash.items() for side in ("buy", "sell")}
-    result = []
-    for fill in fills:
-        take = min(fill.quantity, left.get((fill.agent, fill.side), 0.0))
-        if take > 0.0:
-            left[(fill.agent, fill.side)] -= take
-        if fill.quantity - take > 0.0:
-            result.append(fill if take == 0.0 else make_fill(fill.agent, fill.good, fill.area, fill.tile,
-                                                             fill.quantity - take, fill.price, fill.side))
-    return result, math.fsum(wash.values())
+    return without_washed(fills, wash), math.fsum(wash.values())

@@ -195,7 +195,7 @@ class RealClosureTests(unittest.TestCase):
     def test_the_spin_up_closure_holds_the_economy_and_not_the_ui(self):
         files = source_closure.source_files(ROOT, port_key.SPIN_UP_SOURCE_MODULES)
         relative = {os.path.relpath(path, ROOT) for path in files}
-        self.assertIn(os.path.join("sim", "markets", "port_year.py"), relative)
+        self.assertIn(os.path.join("sim", "markets", "spin_up_run.py"), relative)
         self.assertIn(os.path.join("sim", "economy", "api.py"), relative)
         self.assertFalse([path for path in relative if path.startswith(os.path.join("sim", "ui") + os.sep)])
 

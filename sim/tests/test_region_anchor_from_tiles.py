@@ -3,7 +3,6 @@ hand-set in geography.json."""
 
 QUICK_TOPIC = True
 
-import json
 import math
 import os
 import unittest

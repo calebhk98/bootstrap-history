@@ -18,11 +18,13 @@ from sim.engine.core import Sim  # noqa: F401
 from sim.engine.critical_path_remaining import active_years_left, remaining_critical_path_years  # noqa: F401
 from sim.engine.data import (  # noqa: F401
     CIVDIR, civilization_ids, DEFAULTS, downstream_count, goal_catalog,
-    is_downstream, KNOWLEDGE_DIR, load, load_civ, node_names, load_geography, MODDIR, money_short,
+    is_downstream, KNOWLEDGE_DIR, load, load_civ, node_names, MODDIR,
     money_unit_note, money_word, resolve_goal, ROOT, selectable_goals, STARTING_KITS, STRATS,
     trade_family, TRADE_FAMILY, TRADE_NOTES, TRADES_ABSENT, WAGES,
     win_condition_describe)
 from sim.engine.default_civilisation import default_civilisation_id  # noqa: F401
+from sim.geography.api import load_geography  # noqa: F401
+from sim.scenario.api import money_short  # noqa: F401
 from sim.knowledge.api import check_category_traits, closure, critical_path, hard_pre, prerequisite_names, strip_self_play_advice, topo_order  # noqa: F401
 from sim.engine.mod_code import code_report, run_mod_code  # noqa: F401
 from sim.engine.game_assembly import build as build_assembly  # noqa: F401
@@ -30,7 +32,7 @@ from sim.engine.mod_code import allow as allow_mod_code  # noqa: F401
 from sim.hazards.api import hazards_not_yet_past  # noqa: F401
 from sim.prices.api import identity_cache, shared_ledger  # noqa: F401
 IdentityCache = identity_cache.IdentityCache  # noqa: F401
-from sim.labour.api import format_occupational_report, hours_by_trade_of_all_employers, occupational_report, people_by_trade_of_all_employers  # noqa: F401
+from sim.labour.api import format_occupational_report, occupational_report  # noqa: F401
 from sim.engine.knowledge_warning import knowledge_loss_warning, warning_lines  # noqa: F401
 from sim.projects.api import FAILED_PREFIX, MINOR_MARK, goal_movement, oversubscription_notes, permanent_parts  # noqa: F401
 from sim.projects.api import exclusion_rules
@@ -65,7 +67,7 @@ from sim.ledger.api import CloseCashPeriod  # noqa: F401
 from sim.reporting.api import NOTICE, WAGE, CloseCausePeriod  # noqa: F401
 from sim.agriculture.api import InvestFarm, SellFarm  # noqa: F401
 from sim.land.api import BuildWay, FoundColony  # noqa: F401
-from sim.markets.api import BuyMaterial, SellMaterial  # noqa: F401
+from sim.markets.api import BuyMaterial, CancelMaterialOrders, SellMaterial  # noqa: F401
 from sim.polity.api import SettleWithState, WithdrawFromPublicLife  # noqa: F401
 from sim.projects.api import (Bribe, MothballWork, PostBounty, ReorderProjects, RestoreProjectOrder, RestoreWork,  # noqa: F401
                               StartProject, StopProject)  # noqa: F401
@@ -79,12 +81,12 @@ from sim.workforce.api import (BuildHousing, BuySlaves, CommissionHours, FireSta
 
 # A new game's options, set once by the command line or the options screen before the first step.
 
-def begin_game(sim, goal, end_year, fog, fuzzy_estimates):
+def begin_game(sim, goal, end_year, fog, fuzzy_wanted):
     sim.send(SetGoal(goal))
     sim.send(StartDoneYearRecord())
     sim.send(SetEndYear(end_year))
     sim.send(SetFog(bool(fog)))
-    set_fuzzy_estimates(sim, fuzzy_estimates)
+    set_fuzzy_estimates(sim, fuzzy_wanted)
 
 
 def reset_done_years(sim):
@@ -141,10 +143,6 @@ def commodity_ledger(sim):
 
 def material_stock(sim):
     return sim.view("held_goods")()
-
-
-def goods_category_ratios(sim, category):
-    return sim.view("goods_category_ratios")(category, 0)
 
 
 def own_production_tags(sim):
@@ -210,44 +208,44 @@ def tech_effects(sim, node_id):
 
 
 def settings_meta_path(path):
-    return settings._meta_path(path)
+    return settings.meta_path(path)
 
 
 # Memory the UI keeps on the `Sim`: saved or read by the engine, so it stays there.
 
 def dashboard_history(sim):
     holdings = sim.state.acting_record.holdings
-    return None if holdings is None else holdings._dashboard_history   # None until recorded
+    return None if holdings is None else holdings.dashboard_history   # None until recorded
 
 
 def set_dashboard_history(sim, history):
     holdings = sim.state.acting_record.holdings
     if holdings is not None:
-        holdings._dashboard_history = history
+        holdings.dashboard_history = history
 
 
 def founder_death_aged(sim):
     founder = sim.state.acting_record.founder
-    return None if founder is None else founder._founder_death_aged   # None until recorded
+    return None if founder is None else founder.death_aged   # None until recorded
 
 
 def founder_death_year(sim):
     founder = sim.state.acting_record.founder
-    return None if founder is None else founder._founder_death_year   # None until recorded
+    return None if founder is None else founder.death_year   # None until recorded
 
 
 def set_founder_death(sim, aged, year):
     founder = sim.state.acting_record.founder
     if founder is not None:
-        founder._founder_death_aged, founder._founder_death_year = aged, year
+        founder.death_aged, founder.death_year = aged, year
 
 
 def founder_death_cache(sim):
-    return sim._founder_death_cache
+    return sim.founder_death_cache
 
 
 def set_founder_death_cache(sim, cache):
-    sim._founder_death_cache = cache
+    sim.founder_death_cache = cache
 
 
 def goal_closure(sim):
@@ -288,34 +286,34 @@ def set_last_buy_refusal(sim, refusal):
 
 def said_command_index(sim):
     progress = sim.state.acting_record.seat_progress
-    return bool(None if progress is None else progress._said_command_index)
+    return bool(None if progress is None else progress.said_command_index)
 
 
 def set_said_command_index(sim, said):
     progress = sim.state.acting_record.seat_progress
     if progress is not None:
-        progress._said_command_index = said
+        progress.said_command_index = said
 
 
 def said_stack_caution(sim):
-    return sim._stack_cautions.get(sim.state.acting_seat)
+    return sim.stack_cautions.get(sim.state.acting_seat)
 
 
 def set_said_stack_caution(sim, said):
-    sim._stack_cautions[sim.state.acting_seat] = said
+    sim.stack_cautions[sim.state.acting_seat] = said
 
 
 def said_parallelism(sim):
-    return sim.state.acting_record.seat_progress._said_parallelism
+    return sim.state.acting_record.seat_progress.said_parallelism
 
 
 def set_said_parallelism(sim, said):
-    sim.state.acting_record.seat_progress._said_parallelism = said
+    sim.state.acting_record.seat_progress.said_parallelism = said
 
 
 def said_explanations(seat_progress):
-    return seat_progress._said_explanations
+    return seat_progress.said_explanations
 
 
 def set_said_explanations(seat_progress, said):
-    seat_progress._said_explanations = said
+    seat_progress.said_explanations = said

@@ -8,15 +8,14 @@ labour market the hours that grow its own-plot plan (the shortfall, kept up and 
 the wage: money does not feed a family where nobody sells food. `plot_hectares` says how much land the
 plots take, for the land market to draw from the tile's arable area.
 """
-import dataclasses
 import math
-from typing import Dict, List, Mapping, Optional, Sequence, Tuple
+from typing import Dict, List, Mapping, Optional, Tuple
 
 from sim.constants import declare
 
-from .households_basket import Basket
+from sim.world.need_basket import Basket
 from .households_cohort import Cohort
-from .types import EDGE_PRODUCTION, AgentId, GoodId, GoodsMove, LabourOffer, Recipe
+from .types import EDGE_PRODUCTION, GoodId, GoodsMove, Recipe
 
 OWN_PLAN_RELEASE_SHARE_PER_YEAR = declare(
     "OWN_PLAN_RELEASE_SHARE_PER_YEAR", 0.2, kind="temporary_heuristic",
@@ -26,6 +25,12 @@ OWN_PLAN_RELEASE_SHARE_PER_YEAR = declare(
         "stands in for their expectations about supply.")
 
 Option = Tuple[float, str, GoodId, float]      # (hours per need unit, recipe id, good, need units per unit)
+
+
+def is_own_plot_recipe(recipe_id: str, recipe: Recipe, land_per_run: Mapping[str, float]) -> bool:
+    """Whether a household can run the recipe on its own plot: it works land and buys nothing on the market but the tools
+    its workers wear."""
+    return land_per_run.get(recipe_id, 0.0) > 0.0 and all(good in recipe.tool_wear for good in recipe.inputs)
 
 
 def own_production_options(recipes: Mapping[str, Recipe], land_per_run: Mapping[str, float],
@@ -38,7 +43,7 @@ def own_production_options(recipes: Mapping[str, Recipe], land_per_run: Mapping[
         rows = []
         for recipe_id, recipe in sorted(recipes.items()):
             hours = math.fsum(recipe.labour_hours.values())
-            if any(good not in recipe.tool_wear for good in recipe.inputs) or land_per_run.get(recipe_id, 0.0) <= 0.0 or hours <= 0.0:
+            if not is_own_plot_recipe(recipe_id, recipe, land_per_run) or hours <= 0.0:
                 continue
             for good, effect in need.goods:
                 made = recipe.outputs.get(good, 0.0)
@@ -141,17 +146,3 @@ def next_own_plan(plan: Mapping[str, float], unmet: Mapping[str, float], money_l
     needs = set(plan) | {need for need, units in unmet.items() if units > 0.0}
     nxt = {need: plan.get(need, 0.0) * kept + max(0.0, unmet.get(need, 0.0)) for need in sorted(needs)}
     return {need: units for need, units in nxt.items() if units > 1e-9}
-
-
-def withhold_hours(offers: Sequence[LabourOffer], hours_by_worker: Mapping[AgentId, float]
-                   ) -> Tuple[List[LabourOffer], Dict[AgentId, float]]:
-    """(offers with each worker's hours cut in proportion to what it keeps back, hours kept by worker)."""
-    offered: Dict[AgentId, float] = {}
-    for offer in offers:
-        offered[offer.worker] = offered.get(offer.worker, 0.0) + offer.hours
-    kept = {worker: min(hours, offered.get(worker, 0.0)) for worker, hours in hours_by_worker.items()
-            if hours > 0.0 and offered.get(worker, 0.0) > 0.0}
-    cut = [offer if offer.worker not in kept else
-           dataclasses.replace(offer, hours=offer.hours * (1.0 - kept[offer.worker] / offered[offer.worker]))
-           for offer in offers]
-    return cut, kept

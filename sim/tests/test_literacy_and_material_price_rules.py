@@ -3,31 +3,27 @@ stand-in with its inputs written out (Complaints 640; FINDINGS_ROUND2 sections Q
 test_literacy_market_pricing, the scarcity curve is test_material_freight, the wall is test_staff_moves_rules."""
 QUICK_TOPIC = True
 
-import collections
 import types
 import unittest
 from unittest import mock
 
 from sim.tests import resources_stand_in
 from sim.tests import materials_stand_in
-from sim.labour import labour_capacity
-from sim.labour.labour_capacity import CapacityMixin
+from sim.labour import labour_supply
+from sim.labour.labour_supply import Supply
 
 
-class _Society(CapacityMixin):
+class _Society:
+    """The trades and capacity neighbours of a supply part, with the reach and the literacy written out."""
     LITERATE_TRADES = ("scribe", "scholar")
-    LITERATE_CAPACITY_FLOOR = 1.5
-    POP_SCALE_FLOOR_SHARE = 0.5
-    POP_SCALE_VARIABLE_SHARE = 0.5
-    SCHOLAR_MARKET_SHARE = 0.4
 
-    def __init__(self, literacy, institutional=0.0, existing=1e9):
-        self._world = types.SimpleNamespace(
-            cfg={"hired_hours_cap_base": 1000.0}, pop_scale=1.0, HOURS_PER_PERSON_YEAR=10.0, trades_absent=())
-        self.literacy, self.institutional, self.existing = literacy, institutional, existing
+    def __init__(self, literacy, institutional=0.0):
+        self.literacy, self.institutional = literacy, institutional
+        self.supply = Supply(types.SimpleNamespace(), book=None, capacity=self, settlement=None, trades=self)
+        self.supply._people_of_trade_in_reach = lambda trade: 40.0
 
-    def local_market_share(self):
-        return 1.0
+    def literate_capacity(self, trade):
+        return self.supply.literate_capacity(trade)
 
     def literacy_factor(self, trade):
         return self.literacy
@@ -35,21 +31,17 @@ class _Society(CapacityMixin):
     def staff_capacity(self):
         return (self.institutional, 0.0)
 
-    def people_who_exist(self, trade):
-        return self.existing
-
 
 class LiterateCapacity(unittest.TestCase):
     def capacity(self, society, trade="scribe"):
-        with mock.patch.object(labour_capacity.trade_data, "scholar_trade", lambda: "scholar"):
+        with mock.patch.object(labour_supply.trade_data, "scholar_trade", lambda: "scholar"):
             return society.literate_capacity(trade)
 
     def test_a_trade_that_needs_no_letters_has_no_ceiling(self):
         self.assertEqual(self.capacity(_Society(0.5), "smith"), float("inf"))
 
     def test_the_ceiling_is_a_floor_of_findable_people_plus_a_literacy_scaled_pool(self):
-        pool = 1000.0 * 1.0 * (0.5 + 0.5) * 0.4 / 10.0
-        self.assertAlmostEqual(self.capacity(_Society(0.5)), 1.5 + pool * 0.5)
+        self.assertAlmostEqual(self.capacity(_Society(0.5)), 1.5 + 40.0 * 0.5)
 
     def test_more_literacy_widens_the_pool_but_never_removes_the_floor(self):
         low, high = self.capacity(_Society(0.0)), self.capacity(_Society(1.0))
@@ -59,10 +51,6 @@ class LiterateCapacity(unittest.TestCase):
     def test_scholars_add_the_institutional_pool_and_scribes_do_not(self):
         society = _Society(0.5, institutional=7.0)
         self.assertAlmostEqual(self.capacity(society, "scholar") - self.capacity(society, "scribe"), 7.0)
-
-    def test_the_ceiling_never_exceeds_the_people_who_exist(self):
-        self.assertEqual(self.capacity(_Society(1.0, existing=3.0)), 3.0)
-
 
 class _Market:
     """The materials module with the market's tonnes, the demands on the commodity and the own supply written out."""

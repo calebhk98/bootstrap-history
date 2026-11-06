@@ -1,6 +1,6 @@
-"""`CastView.need_floor_costs_per_person_year` and `subsistence_cost_per_person_year`: the strata's floor costs come from the
-economy's tile prices when it has them, else from the goods market's need basket, else from the dole. Each is called on a
-stand-in `self` carrying only what it reads."""
+"""`People.need_floor_costs_per_person_year` and `subsistence_cost_per_person_year`: the strata's floor costs come from the
+economy's tile prices when it has them, else from the goods market's need basket, else from the dole. Each is called on the part over a
+stand-in world carrying only what it reads."""
 
 QUICK_TOPIC = True
 
@@ -8,11 +8,14 @@ import types
 import unittest
 from unittest import mock
 
-from sim.agents.api import DOLE_MATERIAL, FOOD_NEED
-from sim.actors import world_cast
-from sim.actors.world_cast import CastView
+from sim.agents.api import FOOD_NEED
+from sim.actors import world_people
+from sim.actors.world_people import People
 
 from .world_stand_in import fake_needs
+
+
+STAPLE = "staple_kg"
 
 
 def stand_in(tile_costs, dole_cost=None):
@@ -22,32 +25,36 @@ def stand_in(tile_costs, dole_cost=None):
     def material_cost(material, tonnes):
         asked.append((material, tonnes))
         return dole_cost
-    return types.SimpleNamespace(needs=needs, subsistence_kg_per_person_year=lambda: 250.0, material_cost=material_cost,
-                                 asked=asked)
+    world = types.SimpleNamespace(needs=needs, quotes=types.SimpleNamespace(material_cost=material_cost, staple_material=lambda: STAPLE))
+    part = People(world)
+    part.subsistence_kg_per_person_year = lambda: 250.0
+    part.asked = asked
+    return part
 
 
 class NeedFloorCosts(unittest.TestCase):
     def test_the_economys_tile_costs_are_returned_as_they_are(self):
         tile_costs = {FOOD_NEED: 12.0, "shelter": 3.0}
-        self.assertEqual(CastView.need_floor_costs_per_person_year(stand_in(tile_costs)), tile_costs)
+        self.assertEqual(stand_in(tile_costs).need_floor_costs_per_person_year(), tile_costs)
 
     def test_with_no_tile_costs_and_no_priced_need_the_food_floor_is_the_dole(self):
         view = stand_in({}, dole_cost=9.0)
-        with mock.patch.object(world_cast.need_basket, "need_prices", return_value=[]):
-            costs = CastView.need_floor_costs_per_person_year(view)
+        with mock.patch.object(world_people.need_basket, "need_prices", return_value=[]):
+            costs = view.need_floor_costs_per_person_year()
         self.assertEqual(costs, {FOOD_NEED: 9.0})
-        self.assertEqual(view.asked, [(DOLE_MATERIAL, 0.25)])
+        self.assertEqual(view.asked, [(STAPLE, 0.25)])
 
     def test_an_unpriced_dole_leaves_the_floor_empty(self):
         view = stand_in({}, dole_cost=None)
-        with mock.patch.object(world_cast.need_basket, "need_prices", return_value=[]):
-            self.assertEqual(CastView.need_floor_costs_per_person_year(view), {})
+        with mock.patch.object(world_people.need_basket, "need_prices", return_value=[]):
+            self.assertEqual(view.need_floor_costs_per_person_year(), {})
 
 
 class SubsistenceCost(unittest.TestCase):
     def test_it_is_the_food_entry_of_the_floor_costs(self):
-        view = types.SimpleNamespace(need_floor_costs_per_person_year=lambda: {FOOD_NEED: 12.0, "shelter": 3.0})
-        self.assertEqual(CastView.subsistence_cost_per_person_year(view), 12.0)
+        view = People(types.SimpleNamespace(needs=None))
+        view.need_floor_costs_per_person_year = lambda: {FOOD_NEED: 12.0, "shelter": 3.0}
+        self.assertEqual(view.subsistence_cost_per_person_year(), 12.0)
 
 
 if __name__ == "__main__":

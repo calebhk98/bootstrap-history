@@ -2,13 +2,11 @@
 
 QUICK_TOPIC = True
 
-import types
 import unittest
 from unittest import mock
 
 from sim.labour import labour_staff_controls
-from sim.labour.labour_staff_controls import StaffControlsMixin
-from sim.projects.api import KeepStaffed
+from sim.labour.labour_staff_controls import StaffControls
 from sim.tests import projects_host
 from sim.ui.proto.dispatch_staff_controls import _cmd_keep
 from sim.tests.ui_stand_in import Game
@@ -43,10 +41,15 @@ class KeepCommand(unittest.TestCase):
             self.assertEqual(game.keep_staffed, set())
 
 
-class Household(StaffControlsMixin):
+class Household:
     def __init__(self, hires):
         self.hired = []
-        self._world = Game(keep_staffed_hires=lambda: hires)
+        self._world = Game(ventures=Game(keep_staffed_hires=lambda: hires))
+        self.controls = StaffControls(self._world, book=None, capacity=None, hiring=None, market=None)
+        self.controls.hire_to_cover = self.hire_to_cover
+
+    def keep_flagged_concerns_staffed(self):
+        return self.controls.keep_flagged_concerns_staffed()
 
     def hire_to_cover(self, trade, count, why, partial=False):
         self.hired.append((trade, count, why))

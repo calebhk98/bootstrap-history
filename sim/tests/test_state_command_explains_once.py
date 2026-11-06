@@ -3,7 +3,6 @@ called with its reply builder replaced by a recorder and a stand-in game; the on
 
 QUICK_TOPIC = True
 
-from types import SimpleNamespace
 import unittest
 from unittest import mock
 
@@ -20,7 +19,7 @@ def ask(game, reply, **command):
 
 
 def stand_in_game():
-    return Game(year=100, state=Game(acting_record=Game(seat_progress=Game(_said_explanations=None))))
+    return Game(year=100, state=Game(acting_record=Game(seat_progress=Game(said_explanations=None))))
 
 
 class StateExplainsShutConcernsOnce(unittest.TestCase):

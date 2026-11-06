@@ -2,6 +2,7 @@
 
 QUICK_TOPIC = True
 
+from sim.tests.agents_fake_world import flat_world
 import unittest
 
 from sim.agents import budget
@@ -12,12 +13,19 @@ WAGE = {"soldier": 10.0, "scribe": 30.0}
 PRICE_PER_TONNE = 200.0
 
 
+@flat_world
 class StubWorld:
     """What the line rules read of a world: wages, an equipment burden, a price for the iron, the head count."""
 
     def __init__(self, people=1.0e6, iron_on_sale=True):
-        self.people = people
+        self.head_count = people
         self.iron_on_sale = iron_on_sale
+
+    def trade_of_role(self, role):
+        return {"unskilled": "labourer", "builder": "mason", "soldier": "soldier", "clerk": "scribe"}[role]
+
+    def equipment_material(self):
+        return "iron_bar_kg"
 
     def equipment_kg_per_soldier(self):
         return 20.0
@@ -32,7 +40,7 @@ class StubWorld:
         return tonnes * PRICE_PER_TONNE if self.iron_on_sale else None
 
     def population_total(self):
-        return self.people
+        return self.head_count
 
 
 class StandingLines(unittest.TestCase):
@@ -98,9 +106,13 @@ class ArmyWanted(unittest.TestCase):
         self.assertEqual(budget.army_goal(-5.0, 0.1), 0.0)
 
 
+@flat_world
 class StubPeople:
     def __init__(self, working_age, soldiers):
         self.working_age, self.soldiers = working_age, soldiers
+
+    def trade_of_role(self, role):
+        return "labourer"
 
     def national_people(self, trade):
         return self.working_age
@@ -122,9 +134,13 @@ class PollTax(unittest.TestCase):
         self.assertEqual(revenue_bases.adult_labour_years(StubPeople(1000.0, 5000.0)).value, 0.0)
 
 
+@flat_world
 class StubHarvest:
     def __init__(self, tonnes):
         self.tonnes = tonnes
+
+    def staple_material(self):
+        return "wheat_kg"
 
     def harvest_tonnes(self):
         return self.tonnes
