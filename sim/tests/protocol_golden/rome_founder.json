@@ -34,18 +34,18 @@
      "in_full": "~prose~",
      "technologies_you_could_lose": 0
     },
-    "capital": 2262.2,
+    "capital": 2949.0,
     "chance_of_being_denounced_this_year": 0.0,
     "coin_hoard": {
      "basis": "~prose~",
-     "keeping_cost_per_year": 0.1,
+     "keeping_cost_per_year": 0.2,
      "metal": "silver_kg",
-     "tonnes": 0.006
+     "tonnes": 0.008
     },
     "concerns_you_run": 0,
-    "credit_limit": 3970.9,
+    "credit_limit": 9848.4,
     "critical_capabilities_not_operating": null,
-    "debt_interest_rate": 0.0635,
+    "debt_interest_rate": 0.0244,
     "debt_still_to_work_off": 0.0,
     "depends_on_one_person": null,
     "diffusion_index": 0.0,
@@ -68,7 +68,7 @@
     "founder_died_aged": null,
     "founder_died_in": null,
     "founder_hours_available": 2000.0,
-    "founder_hours_sold_for_wages_this_year": 0.0,
+    "founder_hours_sold_for_wages_this_year": 0,
     "founder_hours_spent_teaching_this_year": 0.0,
     "founder_usual_age_at_death": null,
     "free_hours_going_unused": "~prose~",
@@ -87,24 +87,23 @@
     "literacy": {
      "elite": 0.9,
      "elite_ceiling": 0.99,
-     "farm_share_of_working_hours": 0.357,
+     "farm_share_of_working_hours": 0.668,
      "general": 0.119,
-     "general_ceiling_now": 0.71,
+     "general_ceiling_now": 0.466,
      "schools_actually_teaching": false
     },
-    "living_cost": 355.2,
+    "living_cost": 398.4,
     "living_stock": {
-     "cattle_kg": 196430.431,
-     "goat_kg": 67512.369,
-     "pig_kg": 449081.196,
-     "sheep_kg": 474047454.107
+     "cattle_kg": 26735.097,
+     "goat_kg": 3924.515,
+     "sheep_kg": 472609509.407
     },
     "manual": true,
     "mine_capacity": {},
     "mine_operating_cost": 0,
     "mothballed": [],
-    "net_after_project_spend": 478.8,
-    "net_per_year": 478.8,
+    "net_after_project_spend": 747.2,
+    "net_per_year": 747.2,
     "ok": true,
     "on_the_road_to_the_goal_so_far": null,
     "project_spend_this_year": 0.0,
@@ -128,7 +127,7 @@
     "protection": 0.0,
     "reputation": 5.0,
     "resource_throttle": 1.0,
-    "revenue": 931.9,
+    "revenue": 1270.0,
     "scandal": 0.0,
     "scandal_danger": 25.0,
     "scandal_now": 0.0,
@@ -160,11 +159,11 @@
      "objective": "~prose~"
     },
     "supervision_close_to_the_edge": null,
-    "sustainable_debt": 3768.6,
+    "sustainable_debt": 15308.4,
     "throttle_binding": null,
     "trades_society_now_has_on_its_own": [],
     "trades_you_created": [],
-    "upkeep": 98.0,
+    "upkeep": 124.4,
     "wage_bill": 0,
     "wages_you_have_already_paid_this_year": null,
     "what_you_can_field": "~prose~",
@@ -214,7 +213,7 @@
      {
       "label": "~prose~",
       "name": "wages",
-      "unit": "index"
+      "unit": "~prose~"
      },
      {
       "label": "~prose~",
@@ -261,7 +260,7 @@
     "cmd": "economy"
    },
    "reply": {
-    "cost_of_living_a_year": 355.2,
+    "cost_of_living_a_year": 398.4,
     "household_places_used_of_all": "~prose~",
     "literacy": {
      "elite": 0.9,
@@ -271,10 +270,10 @@
     "more_detail": "~prose~",
     "ok": true,
     "price_index": 1.0,
-    "wage_index": 1.0,
+    "wage_per_hour": 0.3656,
     "what_moved_most": "~prose~",
     "where_the_money_comes_from": {
-     "_wages_for_your_own_work": 931.9
+     "_wages_for_your_own_work": 1270.0
     }
    }
   },
@@ -283,59 +282,63 @@
     "cmd": "money"
    },
    "reply": {
-    "capital": 2262.2,
+    "capital": 2949.0,
     "cash_book": {
      "causes": {},
-     "closing": 2262.2,
+     "closing": 2949.0,
      "earlier_years": [],
-     "opening": 2262.2,
+     "opening": 2949.0,
      "year": 100
     },
     "coin_hoard": {
      "basis": "~prose~",
-     "keeping_cost_per_year": 0.1,
+     "keeping_cost_per_year": 0.2,
      "metal": "silver_kg",
-     "tonnes": 0.006
+     "tonnes": 0.008
     },
-    "credit_limit": 3970.9,
+    "credit_limit": 9848.4,
     "funding": {
      "already_committed": 0,
-     "cash_on_hand": 2262.2,
-     "credit_available_now": 1985.5,
-     "surplus_allowance_over_years": 2393.8,
+     "cash_on_hand": 2949.0,
+     "credit_available_now": 4924.2,
+     "surplus_allowance_over_years": 3735.8,
      "surplus_years_counted": 5.0,
-     "sustainable_annual_surplus": 478.8
+     "sustainable_annual_surplus": 747.2
     },
     "interest_paid_in_total": 0.0,
-    "interest_rate_on_arrears": 0.0635,
+    "interest_rate_on_arrears": 0.0244,
     "loanable_funds_market": {
-     "market_rate": 0.0635,
-     "met": false,
+     "funds_lenders_hold": 40392862343.0,
+     "lenders_will_still_advance_you": 32254598012.8,
+     "market_rate": 0.0244,
+     "means": "~prose~",
+     "met": true,
+     "the_state_has_lent": 0,
      "the_state_owes": 0.0
     },
     "materials_costing_you_a_premium": "~prose~",
-    "net_after_project_spend": 478.8,
-    "net_per_year": 478.8,
+    "net_after_project_spend": 747.2,
+    "net_per_year": 747.2,
     "of_that_limit_you_have_used": "none",
     "ok": true,
-    "revenue": 931.9,
+    "revenue": 1270.0,
     "spent_on_projects_last_year": 0.0,
     "still_owed_on_work_in_hand": 0,
-    "sustainable_debt": 3768.6,
+    "sustainable_debt": 15308.4,
     "sustainable_debt_means": "~prose~",
     "what_it_costs_you": {
-     "_of_which_because_you_are_rich": 33.9,
+     "_of_which_because_you_are_rich": 44.2,
      "interest_on_arrears": 0.0,
-     "living_and_appearances": 355.2,
+     "living_and_appearances": 398.4,
      "mines_standing": 0,
      "of_which_already_paid_as_hiring_advances": null,
-     "upkeep_of_what_you_built": 98.0,
+     "upkeep_of_what_you_built": 124.4,
      "wages": 0
     },
     "where_the_money_comes_from": {
-     "_wages_for_your_own_work": 931.9
+     "_wages_for_your_own_work": 1270.0
     },
-    "you_could_actually_fund_up_to": 6641.4
+    "you_could_actually_fund_up_to": 11609.0
    }
   },
   {
@@ -348,10 +351,10 @@
     "years": [
      {
       "causes": [],
-      "closing": 2262.2,
+      "closing": 2949.0,
       "not_itemised": 0.0,
       "open_year": true,
-      "opening": 2262.2,
+      "opening": 2949.0,
       "year": 100
      }
     ]
@@ -543,7 +546,7 @@
       "years": 1.0
      },
      "startable_at_no_cash_cost": 1,
-     "startable_today": 123,
+     "startable_today": 120,
      "train_oversubscribed_trades": "none",
      "wage_work": "~prose~"
     },
@@ -574,41 +577,40 @@
     "trade_hours_demand_vs_supply": [],
     "waiting_to_start": [
      {
-      "count": 71,
+      "count": 63,
       "kind": "specialists",
       "projects": [
        "ag2_hydrometer",
        "mil_general_staff",
-       "tx2_flameproofing",
-       "chm_filter_press",
        "clock_mechanical_escapement",
-       "mfg_cutting_fluid"
+       "chm_filter_press",
+       "mfg_cutting_fluid",
+       "md2_local_anaesthesia"
       ],
       "what_it_means": "~prose~"
      },
      {
-      "count": 13,
+      "count": 24,
       "kind": "supply",
       "projects": [
        "mat_cryolite",
        "ag2_hopping",
+       "tx2_flameproofing",
        "ag2_terracing",
-       "fud_dog_pack",
-       "fud_turkey_flock",
+       "ag2_pyrethrum",
        "tx2_cashmere"
       ],
       "what_it_means": "~prose~"
      },
      {
-      "count": 10,
+      "count": 5,
       "kind": "money",
       "projects": [
-       "fin_postal_service",
-       "fin_racecourse",
-       "civ_canal_pound_lock",
+       "fin_theatre_business",
+       "fin_factory",
+       "fin_company_town",
        "mat_copper",
-       "fin_statistical_office",
-       "civ_sewer_separate"
+       "fin_toll_bridge"
       ],
       "what_it_means": "~prose~"
      },
@@ -619,8 +621,8 @@
        "hom_button",
        "ag2_layering",
        "tex_field_bleaching",
-       "hom_carpet_sweeper",
        "ag2_chaff_cutter",
+       "hom_carpet_sweeper",
        "hom_mangle_wringer"
       ],
       "what_it_means": "~prose~"
@@ -788,7 +790,7 @@
     "cmd": "stuck"
    },
    "reply": {
-    "and_could_pay_for": 113,
+    "and_could_pay_for": 115,
     "and_the_cheapest_thing_you_could_start_now": "arrival_orientation",
     "lever_figures": "~prose~",
     "ok": true,
@@ -800,7 +802,7 @@
       "why": "~prose~"
      }
     ],
-    "you_could_begin": 123
+    "you_could_begin": 120
    }
   },
   {
@@ -811,7 +813,7 @@
     "leverage_points": [
      {
       "figures": {
-       "general_ceiling": 0.71,
+       "general_ceiling": 0.466,
        "literacy_general": 0.119,
        "schooling_flow": 0.0
       },
@@ -829,9 +831,9 @@
      },
      {
       "figures": {
-       "credit_limit": 3970.9,
-       "recurring_net_per_year": 478.8,
-       "you_could_raise_now": 6233.1
+       "credit_limit": 9848.4,
+       "recurring_net_per_year": 747.2,
+       "you_could_raise_now": 12797.4
       },
       "lever": "finance",
       "why_it_matters": "~prose~"
@@ -885,7 +887,7 @@
     "ok": true,
     "still_being_sunk": {},
     "they_cost_you_a_year_in_all": 0,
-    "your_revenue_is": 931.9
+    "your_revenue_is": 1270.0
    }
   },
   {
@@ -899,7 +901,7 @@
      "ok": true,
      "still_being_sunk": {},
      "they_cost_you_a_year_in_all": 0,
-     "your_revenue_is": 931.9
+     "your_revenue_is": 1270.0
     },
     "note": "~prose~",
     "ok": true,
@@ -1148,39 +1150,21 @@
       "your_own_capacity_t_per_yr": 0.0
      },
      {
-      "capacity_t_per_yr": 3144.1,
+      "capacity_t_per_yr": 3552.2,
       "demand_t_per_yr": 0.6,
-      "market_capacity_t_per_yr": 3144.1,
+      "market_capacity_t_per_yr": 3552.2,
       "material": "sailcloth_kg",
       "shortfall_t_per_yr": 0.0,
-      "surplus_t_per_yr": 3143.5,
+      "surplus_t_per_yr": 3551.6,
       "your_own_capacity_t_per_yr": 0.0
      },
      {
-      "capacity_t_per_yr": 3756.9,
-      "demand_t_per_yr": 0.2,
-      "market_capacity_t_per_yr": 3756.9,
-      "material": "timber_m3",
-      "shortfall_t_per_yr": 0.0,
-      "surplus_t_per_yr": 3756.7,
-      "your_own_capacity_t_per_yr": 0.0
-     },
-     {
-      "capacity_t_per_yr": 4637.4,
+      "capacity_t_per_yr": 5253.6,
       "demand_t_per_yr": 0.0,
-      "market_capacity_t_per_yr": 4637.4,
-      "material": "brick_1000",
-      "shortfall_t_per_yr": 0.0,
-      "surplus_t_per_yr": 4637.4,
-      "your_own_capacity_t_per_yr": 0.0
-     },
-     {
-      "capacity_t_per_yr": 6032.9,
-      "demand_t_per_yr": 0.0,
-      "market_capacity_t_per_yr": 6032.9,
+      "market_capacity_t_per_yr": 5253.6,
       "material": "oak_bark_kg",
       "shortfall_t_per_yr": 0.0,
-      "surplus_t_per_yr": 6032.9,
+      "surplus_t_per_yr": 5253.6,
       "your_own_capacity_t_per_yr": 0.0
      },
      {
@@ -1193,57 +1177,75 @@
       "your_own_capacity_t_per_yr": 0.0
      },
      {
-      "capacity_t_per_yr": 33410.0,
+      "capacity_t_per_yr": 38297.6,
       "demand_t_per_yr": 0.0,
-      "market_capacity_t_per_yr": 33410.0,
+      "market_capacity_t_per_yr": 38297.6,
       "material": "wheat_kg",
       "shortfall_t_per_yr": 0.0,
-      "surplus_t_per_yr": 33410.0,
+      "surplus_t_per_yr": 38297.6,
       "your_own_capacity_t_per_yr": 0.0
      },
      {
-      "capacity_t_per_yr": 68467.0,
+      "capacity_t_per_yr": 58741.7,
       "demand_t_per_yr": 0.9,
-      "market_capacity_t_per_yr": 68467.0,
+      "market_capacity_t_per_yr": 58741.7,
       "material": "lime_kg",
       "shortfall_t_per_yr": 0.0,
-      "surplus_t_per_yr": 68466.0,
+      "surplus_t_per_yr": 58740.7,
       "your_own_capacity_t_per_yr": 0.0
      },
      {
-      "capacity_t_per_yr": 775297.0,
+      "capacity_t_per_yr": 663194.7,
       "demand_t_per_yr": 2.0,
-      "market_capacity_t_per_yr": 775297.0,
+      "market_capacity_t_per_yr": 663194.7,
       "material": "sand_quartz_kg",
       "shortfall_t_per_yr": 0.0,
-      "surplus_t_per_yr": 775295.0,
+      "surplus_t_per_yr": 663192.7,
       "your_own_capacity_t_per_yr": 0.0
      },
      {
-      "capacity_t_per_yr": 17511047.0,
-      "demand_t_per_yr": 7.1,
-      "market_capacity_t_per_yr": 17511047.0,
-      "material": "clay_kg",
+      "capacity_t_per_yr": 11510303.5,
+      "demand_t_per_yr": 0.0,
+      "market_capacity_t_per_yr": 11510303.5,
+      "material": "brick_1000",
       "shortfall_t_per_yr": 0.0,
-      "surplus_t_per_yr": 17511040.0,
+      "surplus_t_per_yr": 11510303.5,
       "your_own_capacity_t_per_yr": 0.0
      },
      {
-      "capacity_t_per_yr": 27928970.8,
+      "capacity_t_per_yr": 14627611.2,
       "demand_t_per_yr": 76.5,
-      "market_capacity_t_per_yr": 27928970.8,
+      "market_capacity_t_per_yr": 14627611.2,
       "material": "wood_kg",
       "shortfall_t_per_yr": 0.0,
-      "surplus_t_per_yr": 27928894.3,
+      "surplus_t_per_yr": 14627534.7,
       "your_own_capacity_t_per_yr": 0.0
      },
      {
-      "capacity_t_per_yr": 96185325.6,
+      "capacity_t_per_yr": 16040591.0,
+      "demand_t_per_yr": 7.1,
+      "market_capacity_t_per_yr": 16040591.0,
+      "material": "clay_kg",
+      "shortfall_t_per_yr": 0.0,
+      "surplus_t_per_yr": 16040584.0,
+      "your_own_capacity_t_per_yr": 0.0
+     },
+     {
+      "capacity_t_per_yr": 25829839.6,
+      "demand_t_per_yr": 0.2,
+      "market_capacity_t_per_yr": 25829839.6,
+      "material": "timber_m3",
+      "shortfall_t_per_yr": 0.0,
+      "surplus_t_per_yr": 25829839.4,
+      "your_own_capacity_t_per_yr": 0.0
+     },
+     {
+      "capacity_t_per_yr": 96200897.9,
       "demand_t_per_yr": 0.3,
-      "market_capacity_t_per_yr": 96185325.6,
+      "market_capacity_t_per_yr": 96200897.9,
       "material": "salt_kg",
       "shortfall_t_per_yr": 0.0,
-      "surplus_t_per_yr": 96185325.3,
+      "surplus_t_per_yr": 96200897.6,
       "your_own_capacity_t_per_yr": 0.0
      }
     ],
@@ -1260,30 +1262,30 @@
        "what_it_is": "~prose~"
       }
      ],
-     "credit_limit": 3970.9,
+     "credit_limit": 9848.4,
      "founder_hours_available": 2000.0,
      "free_hours_going_unused": "~prose~",
      "note": "~prose~",
      "people_you_can_oversee": 10.0,
      "spare_by_trade_family": [
       {
-       "spare_hours_this_year": 14671933.0,
-       "spare_people_equivalent": 7336.0,
+       "spare_hours_this_year": 99560854.0,
+       "spare_people_equivalent": 49780.4,
        "trade_family": "craft"
       },
       {
-       "spare_hours_this_year": 28601666.0,
-       "spare_people_equivalent": 14300.8,
+       "spare_hours_this_year": 1236520658.0,
+       "spare_people_equivalent": 618260.3,
        "trade_family": "labour"
       },
       {
-       "spare_hours_this_year": 26194.0,
-       "spare_people_equivalent": 13.1,
+       "spare_hours_this_year": 2382787.0,
+       "spare_people_equivalent": 1191.4,
        "trade_family": "scholar"
       }
      ],
-     "standing_net_per_year": 478.8,
-     "you_could_raise_right_now": 4247.6
+     "standing_net_per_year": 747.2,
+     "you_could_raise_right_now": 7873.2
     },
     "throttle_binding": null
    }
@@ -1296,124 +1298,124 @@
     "how_to_trade": "~prose~",
     "materials": [
      {
-      "buy_per_tonne": 3851.294072720059,
+      "buy_per_tonne": 1769.7688589709285,
       "carriage_per_tonne": 0.0,
       "current_demand_tonnes_per_year": 0,
-      "making_cost_per_tonne": 3093.4945058516873,
+      "making_cost_per_tonne": 4007.5695580325028,
       "market_available_tonnes_per_year": 0.0,
       "material": "cattle_kg",
       "own_production_tonnes_per_year": 0,
-      "price_at_tile_per_tonne": 3851.294072720059,
-      "price_kind": "opening_estimate",
-      "sell_per_tonne": 3851.294072720059,
+      "price_at_tile_per_tonne": 1769.7688589709285,
+      "price_kind": "smoothed_trade",
+      "sell_per_tonne": 1769.7688589709285,
       "stock_covers_years_at_current_demand": null,
       "stock_key": "cattle_kg",
-      "stock_on_hand_tonnes": 196.43043115730794
+      "stock_on_hand_tonnes": 26.73509714883694
      },
      {
-      "buy_per_tonne": 7.998635949711622,
+      "buy_per_tonne": 50.69938169860341,
       "carriage_per_tonne": 0.0,
       "current_demand_tonnes_per_year": 0,
-      "making_cost_per_tonne": 4.224460046119553,
-      "market_available_tonnes_per_year": 2618.5000000000005,
+      "making_cost_per_tonne": 5.259484343685699,
+      "market_available_tonnes_per_year": 1911929.3985824203,
       "material": "coal",
       "own_production_tonnes_per_year": 0,
-      "price_at_tile_per_tonne": 7.998635949711622,
-      "price_kind": "traded",
-      "sell_per_tonne": 7.998635949711622,
+      "price_at_tile_per_tonne": 50.69938169860341,
+      "price_kind": "smoothed_trade",
+      "sell_per_tonne": 50.69938169860341,
       "stock_covers_years_at_current_demand": null,
       "stock_key": "coal",
       "stock_on_hand_tonnes": 0.0
      },
      {
-      "buy_per_tonne": 1674.5077610874755,
+      "buy_per_tonne": 1576.2036300137286,
       "carriage_per_tonne": 0.0,
       "current_demand_tonnes_per_year": 0,
-      "making_cost_per_tonne": 1501.1487756390393,
-      "market_available_tonnes_per_year": 490.005,
+      "making_cost_per_tonne": 1936.683317530737,
+      "market_available_tonnes_per_year": 1073.671911328467,
       "material": "copper",
       "own_production_tonnes_per_year": 0,
-      "price_at_tile_per_tonne": 1674.5077610874755,
-      "price_kind": "traded",
-      "sell_per_tonne": 1674.5077610874755,
+      "price_at_tile_per_tonne": 1576.2036300137286,
+      "price_kind": "smoothed_trade",
+      "sell_per_tonne": 1576.2036300137286,
       "stock_covers_years_at_current_demand": null,
       "stock_key": "copper",
       "stock_on_hand_tonnes": 0.0
      },
      {
-      "buy_per_tonne": 2789.7122949380846,
+      "buy_per_tonne": 2281.811372305556,
       "carriage_per_tonne": 0.0,
       "current_demand_tonnes_per_year": 0,
-      "making_cost_per_tonne": 3919.402437724526,
+      "making_cost_per_tonne": 5043.323607444505,
       "market_available_tonnes_per_year": 0.0,
       "material": "goat_kg",
       "own_production_tonnes_per_year": 0,
-      "price_at_tile_per_tonne": 2789.7122949380846,
-      "price_kind": "opening_estimate",
-      "sell_per_tonne": 2789.7122949380846,
+      "price_at_tile_per_tonne": 2281.811372305556,
+      "price_kind": "smoothed_trade",
+      "sell_per_tonne": 2281.811372305556,
       "stock_covers_years_at_current_demand": null,
       "stock_key": "goat_kg",
-      "stock_on_hand_tonnes": 67.5123687266614
+      "stock_on_hand_tonnes": 3.9245149784773052
      },
      {
-      "buy_per_tonne": 4606251.931457523,
+      "buy_per_tonne": 5143399.344872376,
       "carriage_per_tonne": 0.0,
       "current_demand_tonnes_per_year": 0,
-      "making_cost_per_tonne": 3746677.7687780876,
-      "market_available_tonnes_per_year": 0.09,
+      "making_cost_per_tonne": 4866173.424040607,
+      "market_available_tonnes_per_year": 53.91084557944546,
       "material": "gold",
       "own_production_tonnes_per_year": 0,
-      "price_at_tile_per_tonne": 4606251.931457523,
-      "price_kind": "traded",
-      "sell_per_tonne": 4606251.931457523,
+      "price_at_tile_per_tonne": 5143399.344872376,
+      "price_kind": "thin_trade_blend",
+      "sell_per_tonne": 5143399.344872376,
       "stock_covers_years_at_current_demand": null,
       "stock_key": "gold",
       "stock_on_hand_tonnes": 0.0
      },
      {
-      "buy_per_tonne": 2050.3647606007376,
+      "buy_per_tonne": 1898.0672102003423,
       "carriage_per_tonne": 0.0,
       "current_demand_tonnes_per_year": 0.8405,
-      "making_cost_per_tonne": 1640.3790260461085,
-      "market_available_tonnes_per_year": 2707.1549999999993,
+      "making_cost_per_tonne": 2041.4706737136892,
+      "market_available_tonnes_per_year": 10610.356204603104,
       "material": "iron",
       "own_production_tonnes_per_year": 0,
-      "price_at_tile_per_tonne": 2050.3647606007376,
-      "price_kind": "traded",
-      "sell_per_tonne": 2050.3647606007376,
+      "price_at_tile_per_tonne": 1898.0672102003423,
+      "price_kind": "smoothed_trade",
+      "sell_per_tonne": 1898.0672102003423,
       "stock_covers_years_at_current_demand": 0.0,
       "stock_key": "iron",
       "stock_on_hand_tonnes": 0.0
      },
      {
-      "buy_per_tonne": 624.4607777900893,
+      "buy_per_tonne": 73.8315941332113,
       "carriage_per_tonne": 0.0,
       "current_demand_tonnes_per_year": 0,
-      "making_cost_per_tonne": 788.6837559133185,
+      "making_cost_per_tonne": 1009.130866318013,
       "market_available_tonnes_per_year": 0.0,
       "material": "pig_kg",
       "own_production_tonnes_per_year": 0,
-      "price_at_tile_per_tonne": 624.4607777900893,
-      "price_kind": "traded",
-      "sell_per_tonne": 624.4607777900893,
+      "price_at_tile_per_tonne": 73.8315941332113,
+      "price_kind": "making_cost_estimate",
+      "sell_per_tonne": 73.8315941332113,
       "stock_covers_years_at_current_demand": null,
       "stock_key": "pig_kg",
-      "stock_on_hand_tonnes": 449.081196347881
+      "stock_on_hand_tonnes": 0.0
      },
      {
-      "buy_per_tonne": 2504.66485902144,
+      "buy_per_tonne": 3904.4208732354255,
       "carriage_per_tonne": 0.0,
       "current_demand_tonnes_per_year": 0,
-      "making_cost_per_tonne": 5483.5224687436985,
-      "market_available_tonnes_per_year": 15.829639194134751,
+      "making_cost_per_tonne": 7045.591320787578,
+      "market_available_tonnes_per_year": 12.52347008156155,
       "material": "sheep_kg",
       "own_production_tonnes_per_year": 0,
-      "price_at_tile_per_tonne": 2504.66485902144,
-      "price_kind": "traded",
-      "sell_per_tonne": 2504.66485902144,
+      "price_at_tile_per_tonne": 3904.4208732354255,
+      "price_kind": "smoothed_trade",
+      "sell_per_tonne": 3904.4208732354255,
       "stock_covers_years_at_current_demand": null,
       "stock_key": "sheep_kg",
-      "stock_on_hand_tonnes": 474047.45410728414
+      "stock_on_hand_tonnes": 472609.5094072799
      }
     ],
     "ok": true,
@@ -1430,670 +1432,676 @@
      "offset": 0,
      "rows": [
       {
-       "buy_per_tonne": 1688.18,
-       "market_available_tonnes_per_year": 0.0,
-       "material": "acetic_acid_kg",
-       "own_supply": false,
-       "price_basis": "gated",
-       "price_kind": "making_cost_table",
-       "price_over_long_run_cost": 1.0,
-       "sell_per_tonne": 1688.18
-      },
-      {
-       "buy_per_tonne": 1986.14,
-       "market_available_tonnes_per_year": 0.0,
-       "material": "acetic_anhydride_kg",
-       "own_supply": false,
-       "price_basis": "gated",
-       "price_kind": "making_cost_table",
-       "price_over_long_run_cost": 1.0,
-       "sell_per_tonne": 1986.14
-      },
-      {
-       "buy_per_tonne": 48882.27,
-       "market_available_tonnes_per_year": 0.0,
-       "material": "acetylene_kg",
-       "own_supply": false,
-       "price_basis": "gated",
-       "price_kind": "making_cost_table",
-       "price_over_long_run_cost": 1.0,
-       "sell_per_tonne": 48882.27
-      },
-      {
-       "buy_per_tonne": 11046.48,
-       "market_available_tonnes_per_year": 0.0,
-       "material": "adipic_acid_kg",
-       "own_supply": false,
-       "price_basis": "gated",
-       "price_kind": "making_cost_table",
-       "price_over_long_run_cost": 1.0,
-       "sell_per_tonne": 11046.48
-      },
-      {
-       "buy_per_tonne": 1966.25,
+       "buy_per_tonne": 1688.2,
        "market_available_tonnes_per_year": 0.0,
        "material": "agar_or_gelatin_kg",
        "own_supply": false,
        "price_basis": "solved",
        "price_kind": "making_cost_estimate",
-       "price_over_long_run_cost": 0.937,
-       "sell_per_tonne": 1966.25
+       "price_over_long_run_cost": 0.617,
+       "sell_per_tonne": 1688.2
       },
       {
-       "buy_per_tonne": 16.1,
+       "buy_per_tonne": 13.41,
        "market_available_tonnes_per_year": 0.0,
        "material": "agate_kg",
        "own_supply": false,
        "price_basis": "solved",
        "price_kind": "making_cost_estimate",
-       "price_over_long_run_cost": 0.957,
-       "sell_per_tonne": 16.1
+       "price_over_long_run_cost": 0.612,
+       "sell_per_tonne": 13.41
       },
       {
-       "buy_per_tonne": 100.43,
+       "buy_per_tonne": 81.51,
        "market_available_tonnes_per_year": 0.0,
        "material": "alum_kg",
        "own_supply": false,
        "price_basis": "solved",
        "price_kind": "making_cost_estimate",
-       "price_over_long_run_cost": 1.021,
-       "sell_per_tonne": 100.43
+       "price_over_long_run_cost": 0.643,
+       "sell_per_tonne": 81.51
       },
       {
-       "buy_per_tonne": 68435.82,
-       "market_available_tonnes_per_year": 0.0,
-       "material": "aluminium_kg",
-       "own_supply": false,
-       "price_basis": "gated",
-       "price_kind": "making_cost_table",
-       "price_over_long_run_cost": 1.0,
-       "sell_per_tonne": 68435.82
-      },
-      {
-       "buy_per_tonne": 13750.72,
-       "market_available_tonnes_per_year": 0.0,
-       "material": "aluminium_soap_kg",
-       "own_supply": false,
-       "price_basis": "gated",
-       "price_kind": "making_cost_table",
-       "price_over_long_run_cost": 1.0,
-       "sell_per_tonne": 13750.72
-      },
-      {
-       "buy_per_tonne": 6.74,
+       "buy_per_tonne": 6.82,
        "market_available_tonnes_per_year": 0.0,
        "material": "aluminum_oxide_kg",
        "own_supply": false,
        "price_basis": "solved",
        "price_kind": "making_cost_estimate",
-       "price_over_long_run_cost": 0.965,
-       "sell_per_tonne": 6.74
+       "price_over_long_run_cost": 0.794,
+       "sell_per_tonne": 6.82
       },
       {
-       "buy_per_tonne": 5495.86,
-       "market_available_tonnes_per_year": 0.0,
-       "material": "ammonia_kg",
-       "own_supply": false,
-       "price_basis": "gated",
-       "price_kind": "making_cost_table",
-       "price_over_long_run_cost": 1.0,
-       "sell_per_tonne": 5495.86
-      },
-      {
-       "buy_per_tonne": 5819.82,
-       "market_available_tonnes_per_year": 0.0,
-       "material": "ammonium_nitrate_kg",
-       "own_supply": false,
-       "price_basis": "gated",
-       "price_kind": "making_cost_table",
-       "price_over_long_run_cost": 1.0,
-       "sell_per_tonne": 5819.82
-      },
-      {
-       "buy_per_tonne": 4582.24,
+       "buy_per_tonne": 336.51,
        "market_available_tonnes_per_year": 0.0,
        "material": "amphora_count",
        "own_supply": false,
        "price_basis": "solved",
-       "price_kind": "traded",
-       "price_over_long_run_cost": 0.863,
-       "sell_per_tonne": 4582.24
+       "price_kind": "smoothed_trade",
+       "price_over_long_run_cost": 0.842,
+       "sell_per_tonne": 336.51
       },
       {
-       "buy_per_tonne": 979.19,
-       "market_available_tonnes_per_year": 0.0,
-       "material": "angora_goat_kg",
-       "own_supply": false,
-       "price_basis": "gated",
-       "price_kind": "making_cost_table",
-       "price_over_long_run_cost": 1.0,
-       "sell_per_tonne": 979.19
-      },
-      {
-       "buy_per_tonne": 91.76,
-       "market_available_tonnes_per_year": 0.0,
-       "material": "antimony_kg",
-       "own_supply": false,
-       "price_basis": "gated",
-       "price_kind": "making_cost_table",
-       "price_over_long_run_cost": 1.0,
-       "sell_per_tonne": 91.76
-      },
-      {
-       "buy_per_tonne": 9395.76,
-       "market_available_tonnes_per_year": 0.0,
-       "material": "argon_or_h2_m3",
-       "own_supply": false,
-       "price_basis": "gated",
-       "price_kind": "making_cost_table",
-       "price_over_long_run_cost": 1.0,
-       "sell_per_tonne": 9395.76
-      },
-      {
-       "buy_per_tonne": 38.8,
+       "buy_per_tonne": 36.94,
        "market_available_tonnes_per_year": 0.0,
        "material": "arsenic",
        "own_supply": false,
        "price_basis": "solved",
        "price_kind": "making_cost_estimate",
-       "price_over_long_run_cost": 0.993,
-       "sell_per_tonne": 38.8
+       "price_over_long_run_cost": 0.783,
+       "sell_per_tonne": 36.94
       },
       {
-       "buy_per_tonne": 5.94,
+       "buy_per_tonne": 5.76,
        "market_available_tonnes_per_year": 0.0,
        "material": "arsenopyrite_kg",
        "own_supply": false,
        "price_basis": "solved",
        "price_kind": "making_cost_estimate",
-       "price_over_long_run_cost": 0.963,
-       "sell_per_tonne": 5.94
+       "price_over_long_run_cost": 0.751,
+       "sell_per_tonne": 5.76
       },
       {
-       "buy_per_tonne": 9.96,
+       "buy_per_tonne": 9.12,
        "market_available_tonnes_per_year": 0.0,
        "material": "asbestos_kg",
        "own_supply": false,
        "price_basis": "solved",
        "price_kind": "making_cost_estimate",
-       "price_over_long_run_cost": 0.961,
-       "sell_per_tonne": 9.96
+       "price_over_long_run_cost": 0.693,
+       "sell_per_tonne": 9.12
       },
       {
-       "buy_per_tonne": 3.68,
+       "buy_per_tonne": 3.72,
        "market_available_tonnes_per_year": 0.0,
        "material": "barite_kg",
        "own_supply": false,
        "price_basis": "solved",
        "price_kind": "making_cost_estimate",
-       "price_over_long_run_cost": 0.965,
-       "sell_per_tonne": 3.68
+       "price_over_long_run_cost": 0.794,
+       "sell_per_tonne": 3.72
       },
       {
-       "buy_per_tonne": 11203.35,
-       "market_available_tonnes_per_year": 0.0,
-       "material": "barium_kg",
-       "own_supply": false,
-       "price_basis": "gated",
-       "price_kind": "making_cost_table",
-       "price_over_long_run_cost": 1.0,
-       "sell_per_tonne": 11203.35
-      },
-      {
-       "buy_per_tonne": 3.06,
+       "buy_per_tonne": 3.1,
        "market_available_tonnes_per_year": 0.0,
        "material": "bauxite_kg",
        "own_supply": false,
        "price_basis": "solved",
        "price_kind": "making_cost_estimate",
-       "price_over_long_run_cost": 0.965,
-       "sell_per_tonne": 3.06
+       "price_over_long_run_cost": 0.794,
+       "sell_per_tonne": 3.1
       },
       {
-       "buy_per_tonne": 9941.42,
-       "market_available_tonnes_per_year": 1501.0,
+       "buy_per_tonne": 8144.18,
+       "market_available_tonnes_per_year": 1421.67,
        "material": "beeswax_kg",
        "own_supply": false,
        "price_basis": "solved",
-       "price_kind": "traded",
-       "price_over_long_run_cost": 1.772,
-       "sell_per_tonne": 9941.42
+       "price_kind": "smoothed_trade",
+       "price_over_long_run_cost": 1.114,
+       "sell_per_tonne": 8144.18
       },
       {
-       "buy_per_tonne": 1.61,
+       "buy_per_tonne": 1.34,
        "market_available_tonnes_per_year": 0.0,
        "material": "bentonite_kg",
        "own_supply": false,
        "price_basis": "solved",
        "price_kind": "making_cost_estimate",
-       "price_over_long_run_cost": 0.957,
-       "sell_per_tonne": 1.61
+       "price_over_long_run_cost": 0.612,
+       "sell_per_tonne": 1.34
       },
       {
-       "buy_per_tonne": 5.71,
-       "market_available_tonnes_per_year": 0.0,
-       "material": "beryl_kg",
-       "own_supply": false,
-       "price_basis": "gated",
-       "price_kind": "making_cost_table",
-       "price_over_long_run_cost": 1.0,
-       "sell_per_tonne": 5.71
-      },
-      {
-       "buy_per_tonne": 310790.82,
-       "market_available_tonnes_per_year": 0.0,
-       "material": "bismuth_kg",
-       "own_supply": false,
-       "price_basis": "gated",
-       "price_kind": "making_cost_table",
-       "price_over_long_run_cost": 1.0,
-       "sell_per_tonne": 310790.82
-      },
-      {
-       "buy_per_tonne": 2.15,
+       "buy_per_tonne": 1.79,
        "market_available_tonnes_per_year": 9.8,
        "material": "bitumen_kg",
        "own_supply": false,
        "price_basis": "solved",
        "price_kind": "making_cost_estimate",
-       "price_over_long_run_cost": 0.957,
-       "sell_per_tonne": 2.15
+       "price_over_long_run_cost": 0.612,
+       "sell_per_tonne": 1.79
       },
       {
-       "buy_per_tonne": 2514.13,
-       "market_available_tonnes_per_year": 0.0,
-       "material": "bleach_kg",
-       "own_supply": false,
-       "price_basis": "gated",
-       "price_kind": "making_cost_table",
-       "price_over_long_run_cost": 1.0,
-       "sell_per_tonne": 2514.13
-      },
-      {
-       "buy_per_tonne": 1333.57,
-       "market_available_tonnes_per_year": 0.0,
-       "material": "blue_vitriol_kg",
-       "own_supply": false,
-       "price_basis": "gated",
-       "price_kind": "making_cost_table",
-       "price_over_long_run_cost": 1.0,
-       "sell_per_tonne": 1333.57
-      },
-      {
-       "buy_per_tonne": 1018.18,
+       "buy_per_tonne": 913.07,
        "market_available_tonnes_per_year": 0.0,
        "material": "bone_ash_kg",
        "own_supply": false,
        "price_basis": "solved",
        "price_kind": "making_cost_estimate",
-       "price_over_long_run_cost": 1.021,
-       "sell_per_tonne": 1018.18
+       "price_over_long_run_cost": 0.764,
+       "sell_per_tonne": 913.07
       },
       {
-       "buy_per_tonne": 80.52,
+       "buy_per_tonne": 67.07,
        "market_available_tonnes_per_year": 0.0,
        "material": "bone_kg",
        "own_supply": false,
        "price_basis": "solved",
        "price_kind": "making_cost_estimate",
-       "price_over_long_run_cost": 0.957,
-       "sell_per_tonne": 80.52
+       "price_over_long_run_cost": 0.612,
+       "sell_per_tonne": 67.07
       },
       {
-       "buy_per_tonne": 389.1,
-       "market_available_tonnes_per_year": 0.0,
-       "material": "borax_kg",
-       "own_supply": false,
-       "price_basis": "gated",
-       "price_kind": "making_cost_table",
-       "price_over_long_run_cost": 1.0,
-       "sell_per_tonne": 389.1
-      },
-      {
-       "buy_per_tonne": 16.1,
+       "buy_per_tonne": 13.41,
        "market_available_tonnes_per_year": 0.0,
        "material": "boric_acid_kg",
        "own_supply": false,
        "price_basis": "solved",
        "price_kind": "making_cost_estimate",
-       "price_over_long_run_cost": 0.957,
-       "sell_per_tonne": 16.1
+       "price_over_long_run_cost": 0.612,
+       "sell_per_tonne": 13.41
       },
       {
        "buy_per_tonne": 0.0,
-       "market_available_tonnes_per_year": 0.0,
+       "market_available_tonnes_per_year": 42.27,
        "material": "bran_kg",
        "own_supply": false,
        "price_basis": "solved",
        "price_kind": "making_cost_estimate",
-       "price_over_long_run_cost": 1323.7,
+       "price_over_long_run_cost": 2550.785,
        "sell_per_tonne": 0.0
       },
       {
-       "buy_per_tonne": 1374.0,
-       "market_available_tonnes_per_year": 10574.76,
+       "buy_per_tonne": 1351.38,
+       "market_available_tonnes_per_year": 20399.55,
        "material": "brass_kg",
        "own_supply": false,
        "price_basis": "solved",
-       "price_kind": "traded",
-       "price_over_long_run_cost": 1.148,
-       "sell_per_tonne": 1374.0
+       "price_kind": "smoothed_trade",
+       "price_over_long_run_cost": 0.878,
+       "sell_per_tonne": 1351.38
       },
       {
-       "buy_per_tonne": 333.57,
-       "market_available_tonnes_per_year": 2110.36,
+       "buy_per_tonne": 271.41,
+       "market_available_tonnes_per_year": 3.81,
        "material": "bread_kg",
        "own_supply": false,
        "price_basis": "solved",
-       "price_kind": "traded",
-       "price_over_long_run_cost": 1.526,
-       "sell_per_tonne": 333.57
+       "price_kind": "thin_trade_blend",
+       "price_over_long_run_cost": 0.985,
+       "sell_per_tonne": 271.41
       },
       {
-       "buy_per_tonne": 37019.7,
-       "market_available_tonnes_per_year": 0.0,
+       "buy_per_tonne": 14.25,
+       "market_available_tonnes_per_year": 1037.95,
        "material": "brick_1000",
        "own_supply": false,
        "price_basis": "solved",
-       "price_kind": "traded",
-       "price_over_long_run_cost": 1.18,
-       "sell_per_tonne": 37019.7
+       "price_kind": "smoothed_trade",
+       "price_over_long_run_cost": 0.904,
+       "sell_per_tonne": 14.25
       },
       {
-       "buy_per_tonne": 83459.31,
+       "buy_per_tonne": 38.82,
        "market_available_tonnes_per_year": 0.0,
        "material": "brick_wall_m3",
        "own_supply": false,
        "price_basis": "solved",
        "price_kind": "thin_trade_blend",
-       "price_over_long_run_cost": 1.005,
-       "sell_per_tonne": 83459.31
+       "price_over_long_run_cost": 0.728,
+       "sell_per_tonne": 38.82
       },
       {
-       "buy_per_tonne": 134.21,
+       "buy_per_tonne": 111.79,
        "market_available_tonnes_per_year": 0.0,
        "material": "bristles_kg",
        "own_supply": false,
        "price_basis": "solved",
        "price_kind": "making_cost_estimate",
-       "price_over_long_run_cost": 0.957,
-       "sell_per_tonne": 134.21
+       "price_over_long_run_cost": 0.612,
+       "sell_per_tonne": 111.79
       },
       {
-       "buy_per_tonne": 1709.74,
-       "market_available_tonnes_per_year": 0.0,
+       "buy_per_tonne": 1657.38,
+       "market_available_tonnes_per_year": 25065.57,
        "material": "bronze_kg",
        "own_supply": false,
        "price_basis": "solved",
+       "price_kind": "smoothed_trade",
+       "price_over_long_run_cost": 0.877,
+       "sell_per_tonne": 1657.38
+      },
+      {
+       "buy_per_tonne": 4.44,
+       "market_available_tonnes_per_year": 341.97,
+       "material": "calamine_kg",
+       "own_supply": false,
+       "price_basis": "solved",
+       "price_kind": "smoothed_trade",
+       "price_over_long_run_cost": 0.774,
+       "sell_per_tonne": 4.44
+      },
+      {
+       "buy_per_tonne": 6.2,
+       "market_available_tonnes_per_year": 0.0,
+       "material": "calcite_kg",
+       "own_supply": false,
+       "price_basis": "solved",
+       "price_kind": "making_cost_estimate",
+       "price_over_long_run_cost": 0.794,
+       "sell_per_tonne": 6.2
+      },
+      {
+       "buy_per_tonne": 3095.95,
+       "market_available_tonnes_per_year": 46131.3,
+       "material": "canvas_kg",
+       "own_supply": false,
+       "price_basis": "solved",
+       "price_kind": "smoothed_trade",
+       "price_over_long_run_cost": 0.81,
+       "sell_per_tonne": 3095.95
+      },
+      {
+       "buy_per_tonne": 539.14,
+       "market_available_tonnes_per_year": 5974.25,
+       "material": "cart",
+       "own_supply": false,
+       "price_basis": "solved",
+       "price_kind": "smoothed_trade",
+       "price_over_long_run_cost": 0.761,
+       "sell_per_tonne": 539.14
+      },
+      {
+       "buy_per_tonne": 0.49,
+       "market_available_tonnes_per_year": 1103532.49,
+       "material": "cassiterite_kg",
+       "own_supply": false,
+       "price_basis": "solved",
+       "price_kind": "smoothed_trade",
+       "price_over_long_run_cost": 0.864,
+       "sell_per_tonne": 0.49
+      },
+      {
+       "buy_per_tonne": 604.47,
+       "market_available_tonnes_per_year": 2707.15,
+       "material": "cast_iron_kg",
+       "own_supply": false,
+       "price_basis": "gated",
        "price_kind": "thin_trade_blend",
-       "price_over_long_run_cost": 1.164,
-       "sell_per_tonne": 1709.74
+       "price_over_long_run_cost": 0.641,
+       "sell_per_tonne": 604.47
+      },
+      {
+       "buy_per_tonne": 1769.77,
+       "market_available_tonnes_per_year": 0.0,
+       "material": "cattle_kg",
+       "own_supply": false,
+       "price_basis": "solved",
+       "price_kind": "smoothed_trade",
+       "price_over_long_run_cost": 0.442,
+       "sell_per_tonne": 1769.77
+      },
+      {
+       "buy_per_tonne": 306.82,
+       "market_available_tonnes_per_year": 934.19,
+       "material": "ceramic_kg",
+       "own_supply": false,
+       "price_basis": "solved",
+       "price_kind": "smoothed_trade",
+       "price_over_long_run_cost": 0.791,
+       "sell_per_tonne": 306.82
+      },
+      {
+       "buy_per_tonne": 0.89,
+       "market_available_tonnes_per_year": 0.0,
+       "material": "chalk_kg",
+       "own_supply": false,
+       "price_basis": "solved",
+       "price_kind": "making_cost_estimate",
+       "price_over_long_run_cost": 0.612,
+       "sell_per_tonne": 0.89
+      },
+      {
+       "buy_per_tonne": 137.7,
+       "market_available_tonnes_per_year": 770369.33,
+       "material": "charcoal_kg",
+       "own_supply": false,
+       "price_basis": "solved",
+       "price_kind": "smoothed_trade",
+       "price_over_long_run_cost": 0.667,
+       "sell_per_tonne": 137.7
+      },
+      {
+       "buy_per_tonne": 984.67,
+       "market_available_tonnes_per_year": 0.0,
+       "material": "cheese_kg",
+       "own_supply": false,
+       "price_basis": "solved",
+       "price_kind": "thin_trade_blend",
+       "price_over_long_run_cost": 0.081,
+       "sell_per_tonne": 984.67
+      },
+      {
+       "buy_per_tonne": 4.65,
+       "market_available_tonnes_per_year": 0.0,
+       "material": "chromite_kg",
+       "own_supply": false,
+       "price_basis": "solved",
+       "price_kind": "making_cost_estimate",
+       "price_over_long_run_cost": 0.794,
+       "sell_per_tonne": 4.65
+      },
+      {
+       "buy_per_tonne": 2.94,
+       "market_available_tonnes_per_year": 0.0,
+       "material": "cinnabar_kg",
+       "own_supply": false,
+       "price_basis": "solved",
+       "price_kind": "making_cost_estimate",
+       "price_over_long_run_cost": 0.596,
+       "sell_per_tonne": 2.94
+      },
+      {
+       "buy_per_tonne": 3.76,
+       "market_available_tonnes_per_year": 47326.44,
+       "material": "clay_kg",
+       "own_supply": false,
+       "price_basis": "solved",
+       "price_kind": "smoothed_trade",
+       "price_over_long_run_cost": 1.713,
+       "sell_per_tonne": 3.76
+      },
+      {
+       "buy_per_tonne": 29189.19,
+       "market_available_tonnes_per_year": 184.35,
+       "material": "cloth",
+       "own_supply": false,
+       "price_basis": null,
+       "price_kind": "thin_trade_blend",
+       "price_over_long_run_cost": 0.908,
+       "sell_per_tonne": 29189.19
+      },
+      {
+       "buy_per_tonne": 32447.07,
+       "market_available_tonnes_per_year": 12000.0,
+       "material": "cloth_bag_kg",
+       "own_supply": false,
+       "price_basis": "solved",
+       "price_kind": "making_cost_estimate",
+       "price_over_long_run_cost": 0.904,
+       "sell_per_tonne": 32447.07
+      },
+      {
+       "buy_per_tonne": 29189.19,
+       "market_available_tonnes_per_year": 184.35,
+       "material": "cloth_kg",
+       "own_supply": false,
+       "price_basis": "solved",
+       "price_kind": "thin_trade_blend",
+       "price_over_long_run_cost": 0.908,
+       "sell_per_tonne": 29189.19
       }
      ],
-     "total": 358
+     "total": 224
     },
     "ok": true,
+    "order_results": [],
+    "orders": [],
+    "traded": {
+     "bought": {},
+     "sold": {}
+    },
     "wages": [
      {
-      "a_year_of_one": 840.0,
+      "a_year_of_one": 1590.0,
       "available_here": true,
       "trade": "artisan",
       "you_employ": 0.0
      },
      {
-      "a_year_of_one": 714.0,
+      "a_year_of_one": 2097.0,
       "available_here": true,
       "trade": "baker",
       "you_employ": 0.0
      },
      {
-      "a_year_of_one": 627.0,
+      "a_year_of_one": 1745.0,
       "available_here": true,
       "trade": "carpenter",
       "you_employ": 0.0
      },
      {
-      "a_year_of_one": 862.0,
+      "a_year_of_one": 1454.0,
       "available_here": true,
       "trade": "carter",
       "you_employ": 0.0
      },
      {
-      "a_year_of_one": 686.0,
+      "a_year_of_one": 1876.0,
       "available_here": true,
       "trade": "charcoal_burner",
       "you_employ": 0.0
      },
      {
-      "a_year_of_one": 909.0,
+      "a_year_of_one": 1270.0,
       "available_here": false,
       "trade": "chemist",
       "you_employ": 0.0
      },
      {
-      "a_year_of_one": 512.0,
+      "a_year_of_one": 1454.0,
       "available_here": true,
       "trade": "dockworker",
       "you_employ": 0.0
      },
      {
-      "a_year_of_one": 705.0,
+      "a_year_of_one": 1454.0,
       "available_here": true,
       "trade": "domestic_servant",
       "you_employ": 0.0
      },
      {
-      "a_year_of_one": 809.0,
+      "a_year_of_one": 1097.0,
       "available_here": false,
       "trade": "electrician",
       "you_employ": 0.0
      },
      {
-      "a_year_of_one": 909.0,
+      "a_year_of_one": 1270.0,
       "available_here": false,
       "trade": "engineer",
       "you_employ": 0.0
      },
      {
-      "a_year_of_one": 10350.0,
+      "a_year_of_one": 8213.0,
       "available_here": true,
       "trade": "engraver",
       "you_employ": 0.0
      },
      {
-      "a_year_of_one": 725.0,
+      "a_year_of_one": 1454.0,
       "available_here": true,
       "trade": "farmer",
       "you_employ": 0.0
      },
      {
-      "a_year_of_one": 781.0,
+      "a_year_of_one": 1454.0,
       "available_here": true,
       "trade": "fisher",
       "you_employ": 0.0
      },
      {
-      "a_year_of_one": 710.0,
+      "a_year_of_one": 2087.0,
       "available_here": true,
       "trade": "fuller",
       "you_employ": 0.0
      },
      {
-      "a_year_of_one": 672.0,
+      "a_year_of_one": 2862.0,
       "available_here": true,
       "trade": "furnaceman",
       "you_employ": 0.0
      },
      {
-      "a_year_of_one": 559.0,
+      "a_year_of_one": 1097.0,
       "available_here": true,
       "trade": "glassblower",
       "you_employ": 0.0
      },
      {
-      "a_year_of_one": 620.0,
+      "a_year_of_one": 4960.0,
       "available_here": true,
       "trade": "herder",
       "you_employ": 0.0
      },
      {
-      "a_year_of_one": 676.0,
+      "a_year_of_one": 891.0,
       "available_here": true,
       "trade": "hunter",
       "you_employ": 0.0
      },
      {
-      "a_year_of_one": 614.0,
+      "a_year_of_one": 1511.0,
       "available_here": true,
       "trade": "knapper",
       "you_employ": 0.0
      },
      {
-      "a_year_of_one": 561.0,
+      "a_year_of_one": 731.0,
       "available_here": true,
       "trade": "labourer",
       "you_employ": 0.0
      },
      {
-      "a_year_of_one": 896.0,
+      "a_year_of_one": 1621.0,
       "available_here": true,
       "trade": "leatherworker",
       "you_employ": 0.0
      },
      {
-      "a_year_of_one": 582.0,
+      "a_year_of_one": 1484.0,
       "available_here": true,
       "trade": "lime_burner",
       "you_employ": 0.0
      },
      {
-      "a_year_of_one": 809.0,
+      "a_year_of_one": 1097.0,
       "available_here": false,
       "trade": "machinist",
       "you_employ": 0.0
      },
      {
-      "a_year_of_one": 821.0,
+      "a_year_of_one": 2134.0,
       "available_here": true,
       "trade": "mason",
       "you_employ": 0.0
      },
      {
-      "a_year_of_one": 858.0,
+      "a_year_of_one": 1180.0,
       "available_here": true,
       "trade": "master",
       "you_employ": 0.0
      },
      {
-      "a_year_of_one": 664.0,
+      "a_year_of_one": 1500.0,
       "available_here": true,
       "trade": "merchant",
       "you_employ": 0.0
      },
      {
-      "a_year_of_one": 2016.0,
+      "a_year_of_one": 2681.0,
       "available_here": true,
       "trade": "miller",
       "you_employ": 0.0
      },
      {
-      "a_year_of_one": 763.0,
+      "a_year_of_one": 1022.0,
       "available_here": true,
       "trade": "millwright",
       "you_employ": 0.0
      },
      {
-      "a_year_of_one": 567.0,
+      "a_year_of_one": 2729.0,
       "available_here": true,
       "trade": "miner",
       "you_employ": 0.0
      },
      {
-      "a_year_of_one": 809.0,
+      "a_year_of_one": 1097.0,
       "available_here": false,
       "trade": "optician",
       "you_employ": 0.0
      },
      {
-      "a_year_of_one": 813.0,
+      "a_year_of_one": 2479.0,
       "available_here": true,
       "trade": "plumber",
       "you_employ": 0.0
      },
      {
-      "a_year_of_one": 561.0,
+      "a_year_of_one": 731.0,
       "available_here": true,
       "trade": "porter",
       "you_employ": 0.0
      },
      {
-      "a_year_of_one": 688.0,
+      "a_year_of_one": 1568.0,
       "available_here": true,
       "trade": "potter",
       "you_employ": 0.0
      },
      {
-      "a_year_of_one": 833.0,
+      "a_year_of_one": 1543.0,
       "available_here": true,
       "trade": "sailor",
       "you_employ": 0.0
      },
      {
-      "a_year_of_one": 596.0,
+      "a_year_of_one": 1469.0,
       "available_here": true,
       "trade": "salt_worker",
       "you_employ": 0.0
      },
      {
-      "a_year_of_one": 909.0,
+      "a_year_of_one": 1270.0,
       "available_here": true,
       "trade": "scholar",
       "you_employ": 0.0
      },
      {
-      "a_year_of_one": 579.0,
+      "a_year_of_one": 1592.0,
       "available_here": true,
       "trade": "scribe",
       "you_employ": 0.0
      },
      {
-      "a_year_of_one": 718.0,
+      "a_year_of_one": 24007.0,
       "available_here": true,
       "trade": "shipwright",
       "you_employ": 0.0
      },
      {
-      "a_year_of_one": 976.0,
+      "a_year_of_one": 1641.0,
       "available_here": true,
       "trade": "smith",
       "you_employ": 0.0
      },
      {
-      "a_year_of_one": 597.0,
+      "a_year_of_one": 780.0,
       "available_here": true,
       "trade": "soldier",
       "you_employ": 0.0
      },
      {
-      "a_year_of_one": 597.0,
+      "a_year_of_one": 1893.0,
       "available_here": true,
       "trade": "spinner",
       "you_employ": 0.0
      },
      {
-      "a_year_of_one": 631.0,
+      "a_year_of_one": 1548.0,
       "available_here": true,
       "trade": "tanner",
       "you_employ": 0.0
      },
      {
-      "a_year_of_one": 692.0,
+      "a_year_of_one": 2004.0,
       "available_here": true,
       "trade": "vine_and_olive_tender",
       "you_employ": 0.0
      },
      {
-      "a_year_of_one": 612.0,
+      "a_year_of_one": 1584.0,
       "available_here": true,
       "trade": "weaver",
       "you_employ": 0.0
@@ -2324,13 +2332,13 @@
     "components": {
      "economy": {
       "counts": "~prose~",
-      "normalized": 0.06989462886398569,
-      "raw": 2262.2,
+      "normalized": 0.05917147657670139,
+      "raw": 2949.0,
       "raw_detail": {
-       "worker_years_equivalent": 2.5
+       "worker_years_equivalent": 1.9
       },
       "weight": 0.1,
-      "weighted": 0.007
+      "weighted": 0.0059
      },
      "institutions": {
       "counted": [
@@ -2346,16 +2354,16 @@
      },
      "literacy": {
       "counts": "~prose~",
-      "normalized": 0.5385598865900454,
+      "normalized": 0.5825135101778549,
       "raw": 0.1192,
       "raw_detail": {
        "elite": 0.9,
        "elite_ceiling": 0.99,
        "general": 0.1192,
-       "general_ceiling": 0.7096
+       "general_ceiling": 0.4659
       },
       "weight": 0.15,
-      "weighted": 0.0808
+      "weighted": 0.0874
      },
      "resilience": {
       "counts": "~prose~",
@@ -2401,9 +2409,9 @@
     "goal_reached": false,
     "goal_year": null,
     "ok": true,
-    "points": 221,
+    "points": 226,
     "points_scale": "~prose~",
-    "total": 0.221
+    "total": 0.2265
    }
   },
   {
@@ -2748,7 +2756,7 @@
      "region": "~prose~",
      "terrain": "~prose~",
      "tile": "france_05",
-     "town_people": 50000
+     "town_people": 1991244
     }
    }
   },
@@ -2758,28 +2766,28 @@
    },
    "reply": {
     "effective_schooling_flow": 0.0,
-    "farm_share_of_hours": 0.3573,
+    "farm_share_of_hours": 0.6678,
     "literacy": {
      "elite": 0.9,
      "elite_ceiling": 0.99,
      "elite_next_year": 0.9,
      "general": 0.1192,
-     "general_ceiling": 0.7096,
+     "general_ceiling": 0.4659,
      "general_next_year": 0.1192,
      "share_of_ceiling_elite": 0.9091,
-     "share_of_ceiling_general": 0.168
+     "share_of_ceiling_general": 0.2559
     },
     "literacy_limited_by": "~prose~",
     "literate_trades": [
      {
       "literacy_factor": 1.0,
-      "most_you_can_ever_have": 5.88,
+      "most_you_can_ever_have": 47.76,
       "trade": "scholar",
       "you_employ": 0.0
      },
      {
       "literacy_factor": 0.9936,
-      "most_you_can_ever_have": 5.85,
+      "most_you_can_ever_have": 151.64,
       "trade": "scribe",
       "you_employ": 0.0
      }
@@ -2925,48 +2933,48 @@
     "reference_population_at_start": 65000000,
     "trades": [
      {
-      "estimated_in_the_country": 100.8,
+      "estimated_in_the_country": 394.7,
       "exists_here": true,
       "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "artisan",
-      "within_your_reach": 100.83,
+      "within_your_reach": 203.81,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 59023.4,
+      "estimated_in_the_country": 46256.4,
       "exists_here": true,
-      "is_placeholder": true,
+      "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "baker",
-      "within_your_reach": 1.16,
+      "within_your_reach": 1221.74,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 60651.1,
+      "estimated_in_the_country": 80158.8,
       "exists_here": true,
       "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "carpenter",
-      "within_your_reach": 515.61,
+      "within_your_reach": 2118.69,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 0.8,
+      "estimated_in_the_country": 0.3,
       "exists_here": true,
       "is_placeholder": true,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "carter",
-      "within_your_reach": 0.76,
+      "within_your_reach": 46.26,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 260556.1,
+      "estimated_in_the_country": 89872.6,
       "exists_here": true,
-      "is_placeholder": true,
+      "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "charcoal_burner",
-      "within_your_reach": 1161.47,
+      "within_your_reach": 1350.19,
       "you_employ": 0.0
      },
      {
@@ -2979,21 +2987,21 @@
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 6431.9,
+      "estimated_in_the_country": 5693.4,
       "exists_here": true,
-      "is_placeholder": true,
+      "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "dockworker",
-      "within_your_reach": 1161.47,
+      "within_your_reach": 0.15,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 109975.3,
+      "estimated_in_the_country": 142133.5,
       "exists_here": true,
-      "is_placeholder": true,
+      "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "domestic_servant",
-      "within_your_reach": 1161.47,
+      "within_your_reach": 2093.27,
       "you_employ": 0.0
      },
      {
@@ -3015,111 +3023,111 @@
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 1312.2,
+      "estimated_in_the_country": 1583.9,
       "exists_here": true,
-      "is_placeholder": true,
+      "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "engraver",
-      "within_your_reach": 1.16,
+      "within_your_reach": 722.73,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 20394091.5,
+      "estimated_in_the_country": 19928854.4,
       "exists_here": true,
-      "is_placeholder": true,
+      "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "farmer",
-      "within_your_reach": 1161.47,
+      "within_your_reach": 465424.1,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 505084.0,
+      "estimated_in_the_country": 241465.5,
       "exists_here": true,
-      "is_placeholder": true,
+      "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "fisher",
-      "within_your_reach": 1161.47,
+      "within_your_reach": 2012.75,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 12330.4,
+      "estimated_in_the_country": 13661.4,
       "exists_here": true,
       "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "fuller",
-      "within_your_reach": 936.57,
+      "within_your_reach": 656.34,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 1167983.0,
+      "estimated_in_the_country": 433294.3,
       "exists_here": true,
       "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "furnaceman",
-      "within_your_reach": 2348.41,
+      "within_your_reach": 7031.87,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 2662.8,
-      "exists_here": true,
-      "is_placeholder": false,
-      "share_of_the_reachable_pool_you_employ": 0.0,
-      "trade": "glassblower",
-      "within_your_reach": 26.24,
-      "you_employ": 0.0
-     },
-     {
-      "estimated_in_the_country": 102853.1,
+      "estimated_in_the_country": 1883.2,
       "exists_here": true,
       "is_placeholder": true,
       "share_of_the_reachable_pool_you_employ": 0.0,
-      "trade": "herder",
-      "within_your_reach": 1161.47,
+      "trade": "glassblower",
+      "within_your_reach": 46.26,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 181.2,
+      "estimated_in_the_country": 109815.2,
+      "exists_here": true,
+      "is_placeholder": false,
+      "share_of_the_reachable_pool_you_employ": 0.0,
+      "trade": "herder",
+      "within_your_reach": 3.82,
+      "you_employ": 0.0
+     },
+     {
+      "estimated_in_the_country": 0.0,
       "exists_here": true,
       "is_placeholder": true,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "hunter",
-      "within_your_reach": 181.19,
+      "within_your_reach": 46.26,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 142623.0,
+      "estimated_in_the_country": 227653.8,
       "exists_here": true,
       "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "knapper",
-      "within_your_reach": 31.1,
+      "within_your_reach": 334.46,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 4080201.6,
+      "estimated_in_the_country": 5624784.6,
       "exists_here": true,
-      "is_placeholder": true,
+      "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "labourer",
-      "within_your_reach": 1161.47,
+      "within_your_reach": 137665.42,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 20865.1,
+      "estimated_in_the_country": 6982.3,
       "exists_here": true,
       "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "leatherworker",
-      "within_your_reach": 156.44,
+      "within_your_reach": 243.6,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 549.8,
+      "estimated_in_the_country": 481.5,
       "exists_here": true,
       "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "lime_burner",
-      "within_your_reach": 10.64,
+      "within_your_reach": 0.03,
       "you_employ": 0.0
      },
      {
@@ -3132,57 +3140,57 @@
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 901071.4,
+      "estimated_in_the_country": 957350.9,
       "exists_here": true,
       "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "mason",
-      "within_your_reach": 168.43,
+      "within_your_reach": 11209.8,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 181.2,
+      "estimated_in_the_country": 0.0,
       "exists_here": true,
       "is_placeholder": true,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "master",
-      "within_your_reach": 1.16,
+      "within_your_reach": 46.26,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 31200.0,
+      "estimated_in_the_country": 53461.0,
       "exists_here": true,
-      "is_placeholder": true,
+      "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "merchant",
-      "within_your_reach": 4.38,
+      "within_your_reach": 991.99,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 11110.9,
+      "estimated_in_the_country": 6570.5,
       "exists_here": true,
       "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "miller",
-      "within_your_reach": 10.17,
+      "within_your_reach": 107.31,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 181.2,
+      "estimated_in_the_country": 0.0,
       "exists_here": true,
       "is_placeholder": true,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "millwright",
-      "within_your_reach": 1.16,
+      "within_your_reach": 46.26,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 696528.0,
+      "estimated_in_the_country": 570020.9,
       "exists_here": true,
-      "is_placeholder": true,
+      "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "miner",
-      "within_your_reach": 1161.47,
+      "within_your_reach": 7908.02,
       "you_employ": 0.0
      },
      {
@@ -3195,84 +3203,84 @@
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 1818.7,
+      "estimated_in_the_country": 2973.9,
       "exists_here": true,
       "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "plumber",
-      "within_your_reach": 27.27,
+      "within_your_reach": 51.45,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 181.2,
+      "estimated_in_the_country": 0.0,
       "exists_here": true,
       "is_placeholder": true,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "porter",
-      "within_your_reach": 181.19,
+      "within_your_reach": 46.26,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 202270.0,
+      "estimated_in_the_country": 226795.2,
       "exists_here": true,
       "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "potter",
-      "within_your_reach": 763.98,
+      "within_your_reach": 1453.02,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 33761.1,
+      "estimated_in_the_country": 54675.7,
       "exists_here": true,
-      "is_placeholder": true,
+      "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "sailor",
-      "within_your_reach": 1161.47,
+      "within_your_reach": 21.77,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 5566.0,
+      "estimated_in_the_country": 6623.5,
       "exists_here": true,
-      "is_placeholder": true,
+      "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "salt_worker",
-      "within_your_reach": 1161.47,
+      "within_your_reach": 5.73,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 117000.0,
+      "estimated_in_the_country": 0.0,
       "exists_here": true,
-      "is_placeholder": true,
+      "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "scholar",
-      "within_your_reach": 5.88,
+      "within_your_reach": 47.76,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 387504.0,
+      "estimated_in_the_country": 12751.5,
       "exists_here": true,
-      "is_placeholder": true,
+      "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "scribe",
-      "within_your_reach": 5.85,
+      "within_your_reach": 151.64,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 181.2,
+      "estimated_in_the_country": 0.0,
       "exists_here": true,
       "is_placeholder": true,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "shipwright",
-      "within_your_reach": 1.16,
+      "within_your_reach": 46.26,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 237581.8,
+      "estimated_in_the_country": 88693.3,
       "exists_here": true,
       "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "smith",
-      "within_your_reach": 540.93,
+      "within_your_reach": 1826.35,
       "you_employ": 0.0
      },
      {
@@ -3281,47 +3289,47 @@
       "is_placeholder": true,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "soldier",
-      "within_your_reach": 1161.47,
+      "within_your_reach": 46.26,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 462857.5,
+      "estimated_in_the_country": 425548.6,
       "exists_here": true,
       "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "spinner",
-      "within_your_reach": 583.18,
+      "within_your_reach": 5885.15,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 8115.6,
+      "estimated_in_the_country": 3315.7,
       "exists_here": true,
       "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "tanner",
-      "within_your_reach": 670.38,
+      "within_your_reach": 36.81,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 119889.8,
+      "estimated_in_the_country": 132674.8,
       "exists_here": true,
-      "is_placeholder": true,
+      "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "vine_and_olive_tender",
-      "within_your_reach": 1161.47,
+      "within_your_reach": 1590.09,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 366987.7,
+      "estimated_in_the_country": 346339.6,
       "exists_here": true,
       "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "weaver",
-      "within_your_reach": 439.99,
+      "within_your_reach": 16492.25,
       "you_employ": 0.0
      }
     ],
-    "wage_index": 1.0,
+    "wage_per_hour": 0.3656,
     "working_age_share": 0.4646
    }
   },
@@ -3336,53 +3344,53 @@
     "population_change_from_reference": 0.0,
     "reference_population_before_simulated_changes": 65000000,
     "the_town_you_actually_operate_in": {
-     "estimated_population": 50000,
+     "estimated_population": 1991244,
      "note": "~prose~"
     },
     "trades": [
      {
-      "estimated_in_the_country": 100.8,
+      "estimated_in_the_country": 394.7,
       "exists_here": true,
       "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "artisan",
-      "within_your_reach": 100.83,
+      "within_your_reach": 203.81,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 59023.4,
+      "estimated_in_the_country": 46256.4,
       "exists_here": true,
-      "is_placeholder": true,
+      "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "baker",
-      "within_your_reach": 1.16,
+      "within_your_reach": 1221.74,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 60651.1,
+      "estimated_in_the_country": 80158.8,
       "exists_here": true,
       "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "carpenter",
-      "within_your_reach": 515.61,
+      "within_your_reach": 2118.69,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 0.8,
+      "estimated_in_the_country": 0.3,
       "exists_here": true,
       "is_placeholder": true,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "carter",
-      "within_your_reach": 0.76,
+      "within_your_reach": 46.26,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 260556.1,
+      "estimated_in_the_country": 89872.6,
       "exists_here": true,
-      "is_placeholder": true,
+      "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "charcoal_burner",
-      "within_your_reach": 1161.47,
+      "within_your_reach": 1350.19,
       "you_employ": 0.0
      },
      {
@@ -3395,21 +3403,21 @@
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 6431.9,
+      "estimated_in_the_country": 5693.4,
       "exists_here": true,
-      "is_placeholder": true,
+      "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "dockworker",
-      "within_your_reach": 1161.47,
+      "within_your_reach": 0.15,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 109975.3,
+      "estimated_in_the_country": 142133.5,
       "exists_here": true,
-      "is_placeholder": true,
+      "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "domestic_servant",
-      "within_your_reach": 1161.47,
+      "within_your_reach": 2093.27,
       "you_employ": 0.0
      },
      {
@@ -3431,111 +3439,111 @@
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 1312.2,
+      "estimated_in_the_country": 1583.9,
       "exists_here": true,
-      "is_placeholder": true,
+      "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "engraver",
-      "within_your_reach": 1.16,
+      "within_your_reach": 722.73,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 20394091.5,
+      "estimated_in_the_country": 19928854.4,
       "exists_here": true,
-      "is_placeholder": true,
+      "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "farmer",
-      "within_your_reach": 1161.47,
+      "within_your_reach": 465424.1,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 505084.0,
+      "estimated_in_the_country": 241465.5,
       "exists_here": true,
-      "is_placeholder": true,
+      "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "fisher",
-      "within_your_reach": 1161.47,
+      "within_your_reach": 2012.75,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 12330.4,
+      "estimated_in_the_country": 13661.4,
       "exists_here": true,
       "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "fuller",
-      "within_your_reach": 936.57,
+      "within_your_reach": 656.34,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 1167983.0,
+      "estimated_in_the_country": 433294.3,
       "exists_here": true,
       "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "furnaceman",
-      "within_your_reach": 2348.41,
+      "within_your_reach": 7031.87,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 2662.8,
-      "exists_here": true,
-      "is_placeholder": false,
-      "share_of_the_reachable_pool_you_employ": 0.0,
-      "trade": "glassblower",
-      "within_your_reach": 26.24,
-      "you_employ": 0.0
-     },
-     {
-      "estimated_in_the_country": 102853.1,
+      "estimated_in_the_country": 1883.2,
       "exists_here": true,
       "is_placeholder": true,
       "share_of_the_reachable_pool_you_employ": 0.0,
-      "trade": "herder",
-      "within_your_reach": 1161.47,
+      "trade": "glassblower",
+      "within_your_reach": 46.26,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 181.2,
+      "estimated_in_the_country": 109815.2,
+      "exists_here": true,
+      "is_placeholder": false,
+      "share_of_the_reachable_pool_you_employ": 0.0,
+      "trade": "herder",
+      "within_your_reach": 3.82,
+      "you_employ": 0.0
+     },
+     {
+      "estimated_in_the_country": 0.0,
       "exists_here": true,
       "is_placeholder": true,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "hunter",
-      "within_your_reach": 181.19,
+      "within_your_reach": 46.26,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 142623.0,
+      "estimated_in_the_country": 227653.8,
       "exists_here": true,
       "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "knapper",
-      "within_your_reach": 31.1,
+      "within_your_reach": 334.46,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 4080201.6,
+      "estimated_in_the_country": 5624784.6,
       "exists_here": true,
-      "is_placeholder": true,
+      "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "labourer",
-      "within_your_reach": 1161.47,
+      "within_your_reach": 137665.42,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 20865.1,
+      "estimated_in_the_country": 6982.3,
       "exists_here": true,
       "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "leatherworker",
-      "within_your_reach": 156.44,
+      "within_your_reach": 243.6,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 549.8,
+      "estimated_in_the_country": 481.5,
       "exists_here": true,
       "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "lime_burner",
-      "within_your_reach": 10.64,
+      "within_your_reach": 0.03,
       "you_employ": 0.0
      },
      {
@@ -3548,57 +3556,57 @@
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 901071.4,
+      "estimated_in_the_country": 957350.9,
       "exists_here": true,
       "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "mason",
-      "within_your_reach": 168.43,
+      "within_your_reach": 11209.8,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 181.2,
+      "estimated_in_the_country": 0.0,
       "exists_here": true,
       "is_placeholder": true,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "master",
-      "within_your_reach": 1.16,
+      "within_your_reach": 46.26,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 31200.0,
+      "estimated_in_the_country": 53461.0,
       "exists_here": true,
-      "is_placeholder": true,
+      "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "merchant",
-      "within_your_reach": 4.38,
+      "within_your_reach": 991.99,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 11110.9,
+      "estimated_in_the_country": 6570.5,
       "exists_here": true,
       "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "miller",
-      "within_your_reach": 10.17,
+      "within_your_reach": 107.31,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 181.2,
+      "estimated_in_the_country": 0.0,
       "exists_here": true,
       "is_placeholder": true,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "millwright",
-      "within_your_reach": 1.16,
+      "within_your_reach": 46.26,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 696528.0,
+      "estimated_in_the_country": 570020.9,
       "exists_here": true,
-      "is_placeholder": true,
+      "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "miner",
-      "within_your_reach": 1161.47,
+      "within_your_reach": 7908.02,
       "you_employ": 0.0
      },
      {
@@ -3611,84 +3619,84 @@
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 1818.7,
+      "estimated_in_the_country": 2973.9,
       "exists_here": true,
       "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "plumber",
-      "within_your_reach": 27.27,
+      "within_your_reach": 51.45,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 181.2,
+      "estimated_in_the_country": 0.0,
       "exists_here": true,
       "is_placeholder": true,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "porter",
-      "within_your_reach": 181.19,
+      "within_your_reach": 46.26,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 202270.0,
+      "estimated_in_the_country": 226795.2,
       "exists_here": true,
       "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "potter",
-      "within_your_reach": 763.98,
+      "within_your_reach": 1453.02,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 33761.1,
+      "estimated_in_the_country": 54675.7,
       "exists_here": true,
-      "is_placeholder": true,
+      "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "sailor",
-      "within_your_reach": 1161.47,
+      "within_your_reach": 21.77,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 5566.0,
+      "estimated_in_the_country": 6623.5,
       "exists_here": true,
-      "is_placeholder": true,
+      "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "salt_worker",
-      "within_your_reach": 1161.47,
+      "within_your_reach": 5.73,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 117000.0,
+      "estimated_in_the_country": 0.0,
       "exists_here": true,
-      "is_placeholder": true,
+      "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "scholar",
-      "within_your_reach": 5.88,
+      "within_your_reach": 47.76,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 387504.0,
+      "estimated_in_the_country": 12751.5,
       "exists_here": true,
-      "is_placeholder": true,
+      "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "scribe",
-      "within_your_reach": 5.85,
+      "within_your_reach": 151.64,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 181.2,
+      "estimated_in_the_country": 0.0,
       "exists_here": true,
       "is_placeholder": true,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "shipwright",
-      "within_your_reach": 1.16,
+      "within_your_reach": 46.26,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 237581.8,
+      "estimated_in_the_country": 88693.3,
       "exists_here": true,
       "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "smith",
-      "within_your_reach": 540.93,
+      "within_your_reach": 1826.35,
       "you_employ": 0.0
      },
      {
@@ -3697,43 +3705,43 @@
       "is_placeholder": true,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "soldier",
-      "within_your_reach": 1161.47,
+      "within_your_reach": 46.26,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 462857.5,
+      "estimated_in_the_country": 425548.6,
       "exists_here": true,
       "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "spinner",
-      "within_your_reach": 583.18,
+      "within_your_reach": 5885.15,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 8115.6,
+      "estimated_in_the_country": 3315.7,
       "exists_here": true,
       "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "tanner",
-      "within_your_reach": 670.38,
+      "within_your_reach": 36.81,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 119889.8,
+      "estimated_in_the_country": 132674.8,
       "exists_here": true,
-      "is_placeholder": true,
+      "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "vine_and_olive_tender",
-      "within_your_reach": 1161.47,
+      "within_your_reach": 1590.09,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 366987.7,
+      "estimated_in_the_country": 346339.6,
       "exists_here": true,
       "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "weaver",
-      "within_your_reach": 439.99,
+      "within_your_reach": 16492.25,
       "you_employ": 0.0
      }
     ],
@@ -4114,9 +4122,9 @@
      "elite": 0.9,
      "elite_ceiling": 0.99,
      "general": 0.1192,
-     "general_ceiling": 0.7096,
+     "general_ceiling": 0.4659,
      "share_of_ceiling_elite": 0.9091,
-     "share_of_ceiling_general": 0.168
+     "share_of_ceiling_general": 0.2559
     },
     "ok": true,
     "reserve": {
@@ -4423,9 +4431,9 @@
       "north_africa"
      ]
     },
-    "wage_index": {
-     "now": 1.0,
-     "start": 1.0
+    "wage_per_hour": {
+     "now": 0.3656,
+     "start": 0.7739
     },
     "year": 100,
     "years_elapsed": 0
@@ -4441,7 +4449,7 @@
     "seats": [
      {
       "built": 0,
-      "capital": 2262.2,
+      "capital": 2949.0,
       "country": "rome_100ad",
       "ended": null,
       "seat": "founder",
@@ -4612,12 +4620,12 @@
     "founder_hours_free": 2000.0,
     "goal": "point_contact_transistor",
     "goal_reached": false,
-    "money": 2262.2,
+    "money": 2949.0,
     "nearest_goal_blocker": {
      "id": "identity_cover",
      "startable": true
     },
-    "net_per_year": 478.8,
+    "net_per_year": 747.2,
     "ok": true,
     "projects": [],
     "standing": {
@@ -4683,7 +4691,7 @@
      {
       "calendar_floor_years": 0.1,
       "cat": "navigation",
-      "cost": 23.7,
+      "cost": 29.0,
       "costs_per_year_after": 0.0,
       "costs_per_year_at_full_staffing": 0.0,
       "downstream_count": 0,
@@ -4708,9 +4716,9 @@
      {
       "calendar_floor_years": 0.5,
       "cat": "power",
-      "cost": 23.8,
-      "costs_per_year_after": 1.1,
-      "costs_per_year_at_full_staffing": 1.1,
+      "cost": 31.1,
+      "costs_per_year_after": 1.5,
+      "costs_per_year_at_full_staffing": 1.5,
       "downstream_count": 0,
       "earns_per_year": 0.0,
       "expected_calendar_years_with_retries": 1.11,
@@ -4719,7 +4727,7 @@
       "id": "pwr_oil_shale",
       "is_supply_or_capability": false,
       "name": "~prose~",
-      "net_per_year": -1.1,
+      "net_per_year": -1.5,
       "nominal_calendar_floor_before_reputation": 0.5,
       "note": "~prose~",
       "on_road_to_goal": false,
@@ -4731,7 +4739,7 @@
      {
       "calendar_floor_years": 0.1,
       "cat": "aviation",
-      "cost": 35.0,
+      "cost": 33.8,
       "costs_per_year_after": 0.0,
       "costs_per_year_at_full_staffing": 0.0,
       "downstream_count": 0,
@@ -4758,7 +4766,7 @@
      {
       "calendar_floor_years": 0.25,
       "cat": "personal",
-      "cost": 46.3,
+      "cost": 47.9,
       "costs_per_year_after": 1.9,
       "costs_per_year_at_full_staffing": 1.9,
       "downstream_count": 1,
@@ -4781,15 +4789,15 @@
       "sale_basis": "no_market_yet"
      }
     ],
-    "count": 123,
+    "count": 120,
     "more": "~prose~",
-    "of_everything_startable": 123,
+    "of_everything_startable": 120,
     "ok": true,
     "showing": "1-6",
     "sorted_by": "cost",
     "state": "startable",
     "to_sort_or_page_differently": "~prose~",
-    "you_could_raise_for_a_project": 6233.1
+    "you_could_raise_for_a_project": 12797.4
    }
   },
   {
@@ -4800,13 +4808,13 @@
    },
    "reply": {
     "blocked_note": "~prose~",
-    "count": 2553,
+    "count": 2556,
     "more": "~prose~",
     "ok": true,
     "rows": [
      {
       "cat": "plants",
-      "cost": 3253.7,
+      "cost": 4080.6,
       "hidden_missing": 0,
       "id": "ag2_botanic_garden",
       "missing": [],
@@ -4819,7 +4827,7 @@
      },
      {
       "cat": "field_machinery",
-      "cost": 166.7,
+      "cost": 158.7,
       "hidden_missing": 0,
       "id": "ag2_chaff_cutter",
       "missing": [],
@@ -4832,7 +4840,7 @@
      },
      {
       "cat": "processing",
-      "cost": 1121.8,
+      "cost": 1462.4,
       "hidden_missing": 0,
       "id": "ag2_cheese_families",
       "missing": [],
@@ -4856,7 +4864,7 @@
    "reply": {
     "causes": [],
     "change": null,
-    "current": 2262.2,
+    "current": 2949.0,
     "drivers": [],
     "label": "~prose~",
     "name": "cash",
@@ -4893,14 +4901,14 @@
     "chain_founder_hours": 0,
     "chain_size": 0,
     "chain_size_counting_what_you_have_built": 0,
-    "charge_to_open": 31.4,
+    "charge_to_open": 30.7,
     "confidence": "~prose~",
     "cost": {
      "as_of_year": 100,
-     "base_total": 209.2,
+     "base_total": 204.5,
      "capital": 0.0,
      "civ_domain_factor": 1.0,
-     "labour": 209.2,
+     "labour": 204.5,
      "material_distance_factor": 1.0,
      "materials": 0.0,
      "note": "~prose~",
@@ -4908,7 +4916,7 @@
      "price_index": 1.0,
      "purchasing_power_of_the_coin": 1.0,
      "rebuild_factor": 1.0,
-     "total": 209.2
+     "total": 204.5
     },
     "critical_path_years": 0.5,
     "critical_path_years_remaining": 0.5,
@@ -4918,7 +4926,7 @@
     "earliest_completion_year": 101.0,
     "earliest_completion_years": 1.0,
     "expected_calendar_years_with_retries": 1.03,
-    "failure_costs": 83.7,
+    "failure_costs": 81.8,
     "failure_costs_hours": 200.0,
     "forecast_basis": "market",
     "founder_hours": 500.0,
@@ -4976,8 +4984,8 @@
      "patron_local",
      "world_map"
     ],
-    "upkeep": 1.2554525618996557,
-    "upkeep_at_full_staffing": 6.277262809498278,
+    "upkeep": 1.2267565007093997,
+    "upkeep_at_full_staffing": 6.133782503546998,
     "you_have": {
      "artisans": 1.0,
      "scholars": 1.0
@@ -4997,7 +5005,7 @@
     "leverage_points": [
      {
       "figures": {
-       "general_ceiling": 0.71,
+       "general_ceiling": 0.466,
        "literacy_general": 0.119,
        "schooling_flow": 0.0
       },
@@ -5015,9 +5023,9 @@
      },
      {
       "figures": {
-       "credit_limit": 3970.9,
-       "recurring_net_per_year": 478.8,
-       "you_could_raise_now": 6233.1
+       "credit_limit": 9848.4,
+       "recurring_net_per_year": 747.2,
+       "you_could_raise_now": 12797.4
       },
       "lever": "finance",
       "why_it_matters": "~prose~"
@@ -5058,16 +5066,16 @@
      {
       "calendar_floor_years": 0.5,
       "cat": "foundation",
-      "cost": 209.2,
-      "costs_per_year_after": 1.3,
-      "costs_per_year_at_full_staffing": 6.3,
+      "cost": 204.5,
+      "costs_per_year_after": 1.2,
+      "costs_per_year_at_full_staffing": 6.1,
       "downstream_count": 2101,
       "earns_per_year": 0.0,
       "forecast_basis": "market",
       "founder_hours": 500.0,
       "id": "identity_cover",
       "name": "~prose~",
-      "net_per_year": -1.3,
+      "net_per_year": -1.2,
       "nominal_calendar_floor_before_reputation": 0.5,
       "pay_to_lower_the_risk": null,
       "risk": 0.05,
@@ -5288,6 +5296,7 @@
       "bribe": "~prose~",
       "build_way": "~prose~",
       "buy": "~prose~",
+      "cancel_orders": "~prose~",
       "capacity": "~prose~",
       "cashbook": "~prose~",
       "causes": "~prose~",
@@ -5409,6 +5418,7 @@
        "market",
        "buy",
        "sell",
+       "cancel_orders",
        "money",
        "quote",
        "close",
@@ -5570,6 +5580,10 @@
        "~prose~",
        "~prose~",
        "~prose~",
+       "~prose~",
+       "~prose~"
+      ],
+      "cancel_orders": [
        "~prose~",
        "~prose~"
       ],
@@ -6015,7 +6029,7 @@
    "reply": {
     "how": "~prose~",
     "ok": true,
-    "the_town_there": 50000,
+    "the_town_there": 1991244,
     "tiles": [
      {
       "days_on_the_road": 20,
@@ -6717,30 +6731,14 @@
     "cmd": "rush"
    },
    "reply": {
-    "count_not_started": 110,
-    "count_would_start": 13,
+    "count_not_started": 106,
+    "count_would_start": 14,
     "excluded": [],
     "filters": {},
     "how_to_confirm": "~prose~",
     "not_started": [
      {
       "id": "mat_copper",
-      "why": "~prose~"
-     },
-     {
-      "id": "tr_lateen_sail",
-      "why": "~prose~"
-     },
-     {
-      "id": "sea_skeleton_first",
-      "why": "~prose~"
-     },
-     {
-      "id": "sea_dry_compass_card",
-      "why": "~prose~"
-     },
-     {
-      "id": "sea_cross_staff",
       "why": "~prose~"
      },
      {
@@ -6753,6 +6751,14 @@
      },
      {
       "id": "fin_bill_exchange",
+      "why": "~prose~"
+     },
+     {
+      "id": "civ_cofferdam",
+      "why": "~prose~"
+     },
+     {
+      "id": "tex_horizontal_loom",
       "why": "~prose~"
      },
      {
@@ -6776,6 +6782,10 @@
       "why": "~prose~"
      },
      {
+      "id": "prc_straightedge",
+      "why": "~prose~"
+     },
+     {
       "id": "civ_truss_triangulated",
       "why": "~prose~"
      },
@@ -6792,11 +6802,11 @@
       "why": "~prose~"
      },
      {
-      "id": "fin_marine_insurance",
+      "id": "lnd_macadam",
       "why": "~prose~"
      },
      {
-      "id": "lnd_macadam",
+      "id": "fin_marine_insurance",
       "why": "~prose~"
      },
      {
@@ -6840,6 +6850,10 @@
       "why": "~prose~"
      },
      {
+      "id": "hom_toothbrush",
+      "why": "~prose~"
+     },
+     {
       "id": "fin_trademark",
       "why": "~prose~"
      },
@@ -6872,10 +6886,6 @@
       "why": "~prose~"
      },
      {
-      "id": "mat_antimony",
-      "why": "~prose~"
-     },
-     {
       "id": "mt2_annealing",
       "why": "~prose~"
      },
@@ -6900,10 +6910,6 @@
       "why": "~prose~"
      },
      {
-      "id": "sea_log_line",
-      "why": "~prose~"
-     },
-     {
       "id": "pwr_oil_shale",
       "why": "~prose~"
      },
@@ -6924,7 +6930,7 @@
       "why": "~prose~"
      },
      {
-      "id": "pwr_peat",
+      "id": "lnd_wheelbarrow",
       "why": "~prose~"
      },
      {
@@ -6932,11 +6938,15 @@
       "why": "~prose~"
      },
      {
-      "id": "lnd_wheelbarrow",
+      "id": "pwr_peat",
       "why": "~prose~"
      },
      {
       "id": "opt_anemometer",
+      "why": "~prose~"
+     },
+     {
+      "id": "hom_punkah_ceiling",
       "why": "~prose~"
      },
      {
@@ -6945,10 +6955,6 @@
      },
      {
       "id": "sea_buoy",
-      "why": "~prose~"
-     },
-     {
-      "id": "hom_punkah_ceiling",
       "why": "~prose~"
      },
      {
@@ -7012,19 +7018,19 @@
       "why": "~prose~"
      },
      {
-      "id": "fud_fowling",
-      "why": "~prose~"
-     },
-     {
-      "id": "fud_game_hunting",
-      "why": "~prose~"
-     },
-     {
       "id": "tx2_button_horn",
       "why": "~prose~"
      },
      {
       "id": "tx2_button_shell",
+      "why": "~prose~"
+     },
+     {
+      "id": "fud_fowling",
+      "why": "~prose~"
+     },
+     {
+      "id": "fud_game_hunting",
       "why": "~prose~"
      },
      {
@@ -7048,19 +7054,15 @@
       "why": "~prose~"
      },
      {
-      "id": "mt2_pelletising",
-      "why": "~prose~"
-     },
-     {
-      "id": "mfg_forge_weld",
-      "why": "~prose~"
-     },
-     {
       "id": "tr_bilge_pump",
       "why": "~prose~"
      },
      {
       "id": "met_investment_casting",
+      "why": "~prose~"
+     },
+     {
+      "id": "mt2_pelletising",
       "why": "~prose~"
      },
      {
@@ -7076,10 +7078,6 @@
       "why": "~prose~"
      },
      {
-      "id": "com_signal_flags",
-      "why": "~prose~"
-     },
-     {
       "id": "fud_heavy_mouldboard_plough_coulter",
       "why": "~prose~"
      },
@@ -7088,11 +7086,11 @@
       "why": "~prose~"
      },
      {
-      "id": "mt2_solder_lead_tin",
+      "id": "com_signal_flags",
       "why": "~prose~"
      },
      {
-      "id": "fud_silage_fermentation",
+      "id": "mt2_solder_lead_tin",
       "why": "~prose~"
      },
      {
@@ -7100,7 +7098,7 @@
       "why": "~prose~"
      },
      {
-      "id": "med_ligature_haemostasis",
+      "id": "fud_silage_fermentation",
       "why": "~prose~"
      },
      {
@@ -7108,7 +7106,7 @@
       "why": "~prose~"
      },
      {
-      "id": "fin_trade_union",
+      "id": "med_ligature_haemostasis",
       "why": "~prose~"
      },
      {
@@ -7116,7 +7114,15 @@
       "why": "~prose~"
      },
      {
+      "id": "fin_trade_union",
+      "why": "~prose~"
+     },
+     {
       "id": "if_quill",
+      "why": "~prose~"
+     },
+     {
+      "id": "fud_grain_storage_silos",
       "why": "~prose~"
      },
      {
@@ -7132,11 +7138,7 @@
       "why": "~prose~"
      },
      {
-      "id": "fud_grain_storage_silos",
-      "why": "~prose~"
-     },
-     {
-      "id": "kt_old_world_goods",
+      "id": "civ_canal_pound_lock",
       "why": "~prose~"
      },
      {
@@ -7144,11 +7146,7 @@
       "why": "~prose~"
      },
      {
-      "id": "civ_canal_pound_lock",
-      "why": "~prose~"
-     },
-     {
-      "id": "fin_statistical_office",
+      "id": "kt_old_world_goods",
       "why": "~prose~"
      },
      {
@@ -7168,78 +7166,78 @@
     "ok": true,
     "preview": true,
     "risk_exposure": {
-     "expected_failures": 0.9,
-     "riskiest": "scientific_method"
+     "expected_failures": 1.29,
+     "riskiest": "sea_skeleton_first"
     },
-    "total_annual_draw": 6067.8,
-    "total_cost": 6218.2,
-    "total_founder_hours": 2610.0,
+    "total_annual_draw": 15867.8,
+    "total_cost": 19004.5,
+    "total_founder_hours": 2880.0,
     "trade_bottlenecks": [],
     "would_start": [
      {
-      "annual_draw": 209.2,
-      "cost": 209.2,
+      "annual_draw": 204.5,
+      "cost": 204.5,
       "id": "identity_cover",
       "name": "~prose~"
      },
      {
-      "annual_draw": 723.6,
-      "cost": 723.6,
+      "annual_draw": 943.3,
+      "cost": 943.3,
       "id": "sc2_notation_positional",
       "name": "~prose~"
      },
      {
-      "annual_draw": 150.4,
-      "cost": 300.8,
+      "annual_draw": 147.0,
+      "cost": 293.9,
       "id": "scientific_method",
       "name": "~prose~"
      },
      {
-      "annual_draw": 2021.8,
-      "cost": 2003.7,
+      "annual_draw": 2446.8,
+      "cost": 2432.7,
       "id": "mt2_zinc_by_retort",
       "name": "~prose~"
      },
      {
-      "annual_draw": 686.7,
-      "cost": 686.7,
+      "annual_draw": 877.0,
+      "cost": 877.0,
       "id": "mt2_sintering_process",
       "name": "~prose~"
      },
      {
-      "annual_draw": 1787.7,
-      "cost": 1140.9,
+      "annual_draw": 1870.6,
+      "cost": 1290.5,
       "id": "horse_collar",
       "name": "~prose~"
      },
      {
-      "annual_draw": 143.5,
-      "cost": 133.4,
+      "annual_draw": 5962.8,
+      "cost": 702.6,
+      "id": "tr_lateen_sail",
+      "name": "~prose~"
+     },
+     {
+      "annual_draw": 255.1,
+      "cost": 130.3,
       "id": "sea_sternpost_rudder",
       "name": "~prose~"
      },
      {
-      "annual_draw": 68.3,
-      "cost": 68.3,
-      "id": "civ_cofferdam",
+      "annual_draw": 427.1,
+      "cost": 3191.8,
+      "id": "sea_skeleton_first",
       "name": "~prose~"
      },
      {
-      "annual_draw": 162.0,
-      "cost": 162.0,
-      "id": "tex_horizontal_loom",
+      "annual_draw": 1336.9,
+      "cost": 1334.9,
+      "id": "sea_dry_compass_card",
       "name": "~prose~"
      },
      {
-      "annual_draw": 68.3,
-      "cost": 68.3,
-      "id": "prc_straightedge",
-      "name": "~prose~"
-     },
-     {
-      "annual_draw": 46.2,
-      "cost": 46.2,
-      "id": "hom_toothbrush",
+      "annual_draw": 1367.5,
+      "cost": 1357.9,
+      "id": "sea_cross_staff",
       "name": "~prose~"
      },
      {
@@ -7252,6 +7250,12 @@
       "annual_draw": 0.1,
       "cost": 0.0,
       "id": "hom_eraser_breadcrumb",
+      "name": "~prose~"
+     },
+     {
+      "annual_draw": 29.0,
+      "cost": 20.3,
+      "id": "sea_log_line",
       "name": "~prose~"
      }
     ]
@@ -7307,11 +7311,11 @@
     "name": "~prose~",
     "nominal_calendar_floor_before_reputation": 0.25,
     "note": "~prose~",
-    "of_which_instalments_still_owed": 46.2,
-    "of_which_materials_paid_now": 0.2,
+    "of_which_instalments_still_owed": 47.7,
+    "of_which_materials_paid_now": 0.1,
     "ok": true,
     "started": "hom_toothbrush",
-    "the_bill_you_have_taken_on": 46.4
+    "the_bill_you_have_taken_on": 47.8
    }
   },
   {
@@ -7450,15 +7454,15 @@
     },
     "started": [
      {
-      "annual_draw": 209.2,
-      "cost": 209.2,
+      "annual_draw": 204.5,
+      "cost": 204.5,
       "id": "identity_cover",
       "name": "~prose~"
      }
     ],
     "this_is_an_approximation_not_optimal_play": "~prose~",
-    "total_annual_draw": 209.2,
-    "total_cost": 209.2,
+    "total_annual_draw": 204.5,
+    "total_cost": 204.5,
     "total_founder_hours": 500.0,
     "trade_bottlenecks": []
    }
@@ -7549,7 +7553,7 @@
     },
     "projects": [
      {
-      "annual_absorption": 209.2,
+      "annual_absorption": 204.5,
       "blocker_kind": "hours",
       "calendar_years_left": 0.5,
       "chance_of_failure": 0.05,
@@ -7568,15 +7572,15 @@
       "pool_active_count_this_year": 3,
       "pool_rank_this_year": 1,
       "pool_total_this_year": 2000.0,
-      "remaining_investment": 209.2,
-      "still_to_pay": 209.2,
+      "remaining_investment": 204.5,
+      "still_to_pay": 204.5,
       "waiting_on": "~prose~",
       "why_underfunded": null,
       "years_in_progress": 0.0,
       "years_to_finish_at_last_allocation": null
      },
      {
-      "annual_absorption": 46.2,
+      "annual_absorption": 47.7,
       "blocker_kind": "hours",
       "calendar_years_left": 0.2,
       "chance_of_failure": 0.02,
@@ -7595,8 +7599,8 @@
       "pool_active_count_this_year": 3,
       "pool_rank_this_year": 2,
       "pool_total_this_year": 2000.0,
-      "remaining_investment": 46.2,
-      "still_to_pay": 46.2,
+      "remaining_investment": 47.7,
+      "still_to_pay": 47.7,
       "waiting_on": "~prose~",
       "why_underfunded": null,
       "years_in_progress": 0.0,
@@ -7637,7 +7641,7 @@
       "projects_drawing_on_it": [
        "identity_cover"
       ],
-      "supply_hours_this_year": 8694.0,
+      "supply_hours_this_year": 303289.7,
       "trade": "scribe",
       "trade_family": "scholar"
      },
@@ -7647,48 +7651,47 @@
       "projects_drawing_on_it": [
        "hom_toothbrush"
       ],
-      "supply_hours_this_year": 201659.1,
+      "supply_hours_this_year": 407610.8,
       "trade": "artisan",
       "trade_family": "craft"
      }
     ],
     "waiting_to_start": [
      {
-      "count": 71,
+      "count": 63,
       "kind": "specialists",
       "projects": [
        "ag2_hydrometer",
        "mil_general_staff",
-       "tx2_flameproofing",
-       "chm_filter_press",
        "clock_mechanical_escapement",
-       "mfg_cutting_fluid"
+       "chm_filter_press",
+       "mfg_cutting_fluid",
+       "md2_local_anaesthesia"
       ],
       "what_it_means": "~prose~"
      },
      {
-      "count": 13,
+      "count": 24,
       "kind": "supply",
       "projects": [
        "mat_cryolite",
        "ag2_hopping",
+       "tx2_flameproofing",
        "ag2_terracing",
-       "fud_dog_pack",
-       "fud_turkey_flock",
+       "ag2_pyrethrum",
        "tx2_cashmere"
       ],
       "what_it_means": "~prose~"
      },
      {
-      "count": 10,
+      "count": 5,
       "kind": "money",
       "projects": [
-       "fin_postal_service",
-       "fin_racecourse",
-       "civ_canal_pound_lock",
+       "fin_theatre_business",
+       "fin_factory",
+       "fin_company_town",
        "mat_copper",
-       "fin_statistical_office",
-       "civ_sewer_separate"
+       "fin_toll_bridge"
       ],
       "what_it_means": "~prose~"
      },
@@ -7699,8 +7702,8 @@
        "hom_button",
        "ag2_layering",
        "tex_field_bleaching",
-       "hom_carpet_sweeper",
        "ag2_chaff_cutter",
+       "hom_carpet_sweeper",
        "hom_mangle_wringer"
       ],
       "what_it_means": "~prose~"
@@ -7727,15 +7730,15 @@
     "ok": true,
     "potential_uses": {
      "development_program": {
-      "cash_cost": 0.0,
+      "cash_cost": 0.1,
       "command": "~prose~",
       "directed_hours_per_year": 0.0,
       "id": "hom_eraser_breadcrumb",
       "name": "~prose~",
       "years": 1.0
      },
-     "startable_at_no_cash_cost": 1,
-     "startable_today": 120,
+     "startable_at_no_cash_cost": 0,
+     "startable_today": 117,
      "train_oversubscribed_trades": "none",
      "wage_work": "~prose~"
     },
@@ -7750,14 +7753,14 @@
     "what": "hire"
    },
    "reply": {
-    "from_next_year_per_year": 975.7,
+    "first_year_wages_at_stake": 1640.9,
+    "from_next_year_per_year": 1640.9,
     "note": "~prose~",
     "ok": true,
-    "paid_now": 975.7,
     "people": 1.0,
     "trade": "smith",
     "what": "hire",
-    "you_have": 2261.9
+    "you_have": 2949.0
    }
   },
   {
@@ -7767,16 +7770,15 @@
     "trade": "smith"
    },
    "reply": {
-    "annual_wage_bill": 975.7,
-    "asked": 1.0,
-    "capital": 1286.2,
-    "from_next_year_per_year": 975.7,
-    "hired": 1,
-    "n": 1,
+    "annual_wage_bill": 0,
+    "n": 1.0,
+    "note": "~prose~",
     "ok": true,
-    "paid_now": 975.7,
+    "places_posted_in_all": 1.0,
+    "posted": 1.0,
     "trade": "smith",
-    "you_now_employ": 1.0
+    "what_happened": "~prose~",
+    "you_now_employ": 0.0
    }
   },
   {
@@ -7798,11 +7800,11 @@
     "trade": "scribe"
    },
    "reply": {
-    "capital": -1504.1,
+    "capital": -3352.6,
     "ok": true,
-    "paid_now": 2790.3,
+    "paid_now": 6301.6,
     "training": "~prose~",
-    "wage_bill_added_per_year": 578.8,
+    "wage_bill_added_per_year": 1591.6,
     "your_hours_left_this_year": 1084.2
    }
   },
@@ -7813,7 +7815,6 @@
     "trade": "smith"
    },
    "reply": {
-    "cause": "cash_short",
     "error": "~prose~",
     "ok": false
    }
@@ -7826,28 +7827,19 @@
    "reply": {
     "ok": true,
     "trade": {
-     "a_year_of_one": 976.0,
-     "a_year_of_one_after_you_hire_one": 976.0,
+     "a_year_of_one": 1641.0,
      "exists_here": true,
-     "hours_available_to_you_in_all": 1083862.0,
-     "hours_the_market_can_supply": 1081862.0,
-     "hours_you_could_still_commission": 1083862.0,
+     "hours_available_to_you_in_all": 3652706.0,
+     "hours_the_labour_market_offers": 3652706.0,
+     "hours_you_could_still_commission": 3652706.0,
      "hours_you_have_commissioned": 0.0,
-     "hours_your_own_people_add": 2000.0,
      "kind": "craft",
      "note": "~prose~",
+     "places_posted_for_you": 1.0,
      "trade": "smith",
-     "wage_foundation": {
-      "base_for_skill_and_difficulty": 1046.21,
-      "food": 1.0,
-      "housing": 1.0,
-      "local_trade_scarcity": 1.0,
-      "skill_and_difficulty": 1.0,
-      "tools": 1.0,
-      "weighted": 1.0
-     },
-     "wage_per_hour": 0.523,
-     "you_employ": 1.0
+     "wage_from": "~prose~",
+     "wage_per_hour": 0.82,
+     "you_employ": 0.0
     }
    }
   },
@@ -7857,12 +7849,9 @@
     "trade": "smith"
    },
    "reply": {
-    "advance_note": "~prose~",
-    "advance_still_credited": 295.6,
-    "annual_wage_bill": 0,
-    "let_go": "smith",
-    "ok": true,
-    "what_happened": "~prose~"
+    "cause": "nobody_to_dismiss",
+    "error": "~prose~",
+    "ok": false
    }
   },
   {
@@ -7884,20 +7873,20 @@
    },
    "reply": {
     "afford_means": "~prose~",
-    "can_afford": false,
+    "can_afford": true,
     "category_rule": "~prose~",
     "eligible": false,
     "id": "hom_toothbrush",
     "ok": true,
-    "ordinary_build_cost": 46.2,
-    "paid_now": 115.5,
+    "ordinary_build_cost": 47.9,
+    "paid_now": 119.6,
     "price_multiplier": 2.5,
     "refusal": "~prose~",
     "what": "bounty",
     "what_a_failure_costs": "~prose~",
     "when_it_pays_out": "~prose~",
-    "you_could_raise": 0.0,
-    "you_have": -1504.1
+    "you_could_raise": 234.4,
+    "you_have": -3352.6
    }
   },
   {
@@ -7967,9 +7956,10 @@
     "what": "forest"
    },
    "reply": {
-    "cause": "cash_short",
-    "error": "~prose~",
-    "ok": false
+    "bought_ha": 0.01,
+    "capital": -3370.9,
+    "forest_ha": 0.0,
+    "ok": true
    }
   },
   {
@@ -8047,16 +8037,15 @@
     "cmd": "money"
    },
    "reply": {
-    "capital": -1504.1,
+    "capital": -3370.9,
     "cash_book": {
      "causes": {
-      "hiring fee and first year's wages": -975.7,
-      "materials bought for projects": -0.2,
-      "training fees": -2790.3
+      "forest bought": -18.3,
+      "training fees": -6301.6
      },
-     "closing": -1504.1,
+     "closing": -3370.9,
      "earlier_years": [],
-     "opening": 2262.2,
+     "opening": 2949.0,
      "year": 100
     },
     "coin_hoard": {
@@ -8065,45 +8054,49 @@
      "metal": "silver_kg",
      "tonnes": 0.0
     },
-    "credit_limit": 2247.0,
+    "credit_limit": 7174.0,
     "funding": {
-     "already_committed": 255.4,
+     "already_committed": 252.2,
      "cash_on_hand": 0.0,
-     "credit_available_now": 0.0,
-     "surplus_allowance_over_years": 8.3,
+     "credit_available_now": 216.1,
+     "surplus_allowance_over_years": 812.7,
      "surplus_years_counted": 5.0,
-     "sustainable_annual_surplus": 1.7
+     "sustainable_annual_surplus": 162.5
     },
     "interest_paid_in_total": 0.0,
-    "interest_rate_on_arrears": 0.0731,
+    "interest_rate_on_arrears": 0.0244,
     "loanable_funds_market": {
-     "market_rate": 0.0635,
-     "met": false,
+     "funds_lenders_hold": 40392862343.0,
+     "lenders_will_still_advance_you": 32254598012.8,
+     "market_rate": 0.0244,
+     "means": "~prose~",
+     "met": true,
+     "the_state_has_lent": 0,
      "the_state_owes": 0.0
     },
     "materials_costing_you_a_premium": "~prose~",
-    "net_after_project_spend": 297.3,
-    "net_per_year": 67.2,
+    "net_after_project_spend": 162.5,
+    "net_per_year": 162.5,
     "of_that_limit_you_have_used": "~prose~",
     "ok": true,
-    "revenue": 505.2,
+    "revenue": 688.6,
     "spent_on_projects_last_year": 0.0,
-    "still_owed_on_work_in_hand": 255.4,
-    "sustainable_debt": 1211.3,
+    "still_owed_on_work_in_hand": 252.2,
+    "sustainable_debt": 5015.6,
     "sustainable_debt_means": "~prose~",
     "what_it_costs_you": {
      "_of_which_because_you_are_rich": null,
-     "interest_on_arrears": 110.0,
-     "living_and_appearances": 295.6,
+     "interest_on_arrears": 82.3,
+     "living_and_appearances": 319.3,
      "mines_standing": 0,
-     "of_which_already_paid_as_hiring_advances": 230.1,
-     "upkeep_of_what_you_built": 98.0,
+     "of_which_already_paid_as_hiring_advances": null,
+     "upkeep_of_what_you_built": 124.4,
      "wages": 0
     },
     "where_the_money_comes_from": {
-     "_wages_for_your_own_work": 505.2
+     "_wages_for_your_own_work": 688.6
     },
-    "you_could_actually_fund_up_to": 8.3
+    "you_could_actually_fund_up_to": 1028.8
    }
   },
   {
@@ -8117,22 +8110,18 @@
      {
       "causes": [
        {
-        "amount": -2790.3,
+        "amount": -6301.6,
         "cause": "training fees"
        },
        {
-        "amount": -975.7,
-        "cause": "hiring fee and first year's wages"
-       },
-       {
-        "amount": -0.2,
-        "cause": "materials bought for projects"
+        "amount": -18.3,
+        "cause": "forest bought"
        }
       ],
-      "closing": -1504.1,
+      "closing": -3370.9,
       "not_itemised": 0.0,
       "open_year": true,
-      "opening": 2262.2,
+      "opening": 2949.0,
       "year": 100
      }
     ]
@@ -8148,15 +8137,15 @@
       "bountied": false,
       "chance_of_failure_before_any_attempt": 0.02,
       "chance_of_failure_now": 0.02,
-      "founder_hours_left": 375.8,
+      "founder_hours_left": 315.8,
       "founder_hours_total": 900.0,
       "hours_directed_this_year": null,
-      "hours_effective_this_year": 524.2,
-      "hours_offered_this_year": 524.2,
+      "hours_effective_this_year": 584.2,
+      "hours_offered_this_year": 584.2,
       "name": "~prose~",
-      "pool_active_count_this_year": 3,
-      "pool_rank_this_year": 3,
-      "pool_remaining_before_this_year": 524.2,
+      "pool_active_count_this_year": 2,
+      "pool_rank_this_year": 2,
+      "pool_remaining_before_this_year": 584.2,
       "pool_total_this_year": 2000.0,
       "spent": 0.0,
       "still_to_pay": 0.0,
@@ -8167,48 +8156,31 @@
       "years_in_progress": 1.0
      },
      "hom_toothbrush": {
+      "awaiting_materials": [
+       "wood_kg"
+      ],
       "bountied": false,
       "chance_of_failure_before_any_attempt": 0.02,
       "chance_of_failure_now": 0.02,
       "founder_hours_left": 60.0,
       "founder_hours_total": 60.0,
+      "held_cause": "awaiting_materials",
       "hours_directed_this_year": null,
       "hours_effective_this_year": 0.0,
-      "hours_offered_this_year": 60.0,
+      "hours_offered_this_year": 0.0,
+      "materials_short": null,
       "name": "~prose~",
-      "pool_active_count_this_year": 3,
-      "pool_rank_this_year": 2,
+      "pool_active_count_this_year": 2,
+      "pool_rank_this_year": 1,
       "pool_remaining_before_this_year": 584.2,
       "pool_total_this_year": 2000.0,
       "spent": 0.0,
-      "still_to_pay": 46.2,
-      "underfunded_this_year": true,
+      "still_to_pay": 47.7,
+      "underfunded_this_year": false,
       "waiting_on": "~prose~",
       "waiting_on_kind": "founder_hours",
-      "why_underfunded": "~prose~",
-      "years_in_progress": 1.0
-     },
-     "identity_cover": {
-      "bountied": false,
-      "chance_of_failure_before_any_attempt": 0.05,
-      "chance_of_failure_now": 0.05,
-      "founder_hours_left": 75.9,
-      "founder_hours_total": 500.0,
-      "hours_directed_this_year": null,
-      "hours_effective_this_year": 424.1,
-      "hours_offered_this_year": 500.0,
-      "name": "~prose~",
-      "pool_active_count_this_year": 3,
-      "pool_rank_this_year": 1,
-      "pool_remaining_before_this_year": 1084.2,
-      "pool_total_this_year": 2000.0,
-      "spent": 177.5,
-      "still_to_pay": 31.8,
-      "underfunded_this_year": true,
-      "waiting_on": "~prose~",
-      "waiting_on_kind": "founder_hours",
-      "why_underfunded": "~prose~",
-      "years_in_progress": 1.0
+      "why_underfunded": null,
+      "years_in_progress": 0.0
      }
     },
     "alerts": [],
@@ -8220,16 +8192,16 @@
      "~prose~",
      "~prose~"
     ],
-    "annual_wage_bill": 0,
-    "artisans": 0.0,
+    "annual_wage_bill": 1443.5,
+    "artisans": 1.0,
     "at_risk": {
      "happening_now": null,
      "hazards_still_ahead": 13,
      "hedged_by": null,
      "in_full": "~prose~",
-     "technologies_you_could_lose": 0
+     "technologies_you_could_lose": 1
     },
-    "capital": -1348.2,
+    "capital": -4856.8,
     "chance_of_being_denounced_this_year": 0.0,
     "coin_hoard": {
      "basis": "~prose~",
@@ -8237,35 +8209,53 @@
      "metal": "silver_kg",
      "tonnes": 0.0
     },
-    "completed": [],
+    "completed": [
+     {
+      "granted": false,
+      "id": "identity_cover",
+      "kind": "concern",
+      "name": "~prose~",
+      "year": 100
+     }
+    ],
     "concerns_you_run": 0,
-    "credit_limit": 3745.0,
-    "critical_capabilities_not_operating": null,
-    "debt_interest_rate": 0.0637,
+    "credit_limit": 10979.4,
+    "critical_capabilities_not_operating": [
+     {
+      "benefit_switched_off": "~prose~",
+      "fix": "~prose~",
+      "id": "identity_cover",
+      "warning": "~prose~"
+     }
+    ],
+    "debt_interest_rate": 0.0209,
     "debt_still_to_work_off": 0.0,
     "depends_on_one_person": null,
     "diffusion_index": 0.0,
     "directors_extra": 0.0,
-    "done_count": 240,
-    "done_earned": 0,
+    "done_count": 241,
+    "done_earned": 1,
     "done_granted": 240,
     "eminence": 0.0,
-    "employees": {},
-    "employees_total": 0,
+    "employees": {
+     "smith": 1.0
+    },
+    "employees_total": 1.0,
     "end_reason": null,
     "ended": false,
     "events": [
      {
-      "event_kind": "arrears_hours_lost",
-      "facts": {
-       "hours": 136.0,
-       "projects": [
-        "identity_cover",
-        "hom_toothbrush"
-       ]
-      },
+      "event_kind": "project_completed",
+      "facts": {},
       "message": "~prose~",
-      "severity": "economic_crisis",
+      "severity": "project_completion",
+      "year": 100
+     },
+     {
+      "event_kind": "goal_effect",
+      "facts": {},
+      "message": "~prose~",
+      "severity": "informational",
       "year": 100
      }
     ],
@@ -8279,7 +8269,7 @@
     "founder_died_aged": null,
     "founder_died_in": null,
     "founder_hours_available": 2000.0,
-    "founder_hours_sold_for_wages_this_year": 0.0,
+    "founder_hours_sold_for_wages_this_year": 0,
     "founder_hours_spent_teaching_this_year": 0.0,
     "founder_usual_age_at_death": null,
     "free_hours_going_unused": null,
@@ -8291,45 +8281,51 @@
     "horizon_year": 130,
     "hours_this_year": {
      "available": 2000.0,
-     "effective_on_projects": 948.3,
+     "effective_on_projects": 1084.2,
      "moving": 0.0,
      "offered_to_projects": 1084.2,
      "supervising": 0.0,
      "teaching": 915.8,
      "unused": 0.0,
-     "wage_work": 0.0
+     "wage_work": 0
     },
     "household_places_used_of_all": "~prose~",
-    "idle_specialists": null,
+    "idle_specialists": [
+     {
+      "count": 1.0,
+      "taught_by_you": false,
+      "trade": "smith",
+      "wage_bill_per_year": 1443.5
+     }
+    ],
     "in_bondage_for_debt": 0.0,
-    "in_training": 2,
-    "interest_on_arrears_this_year": 85.8,
-    "interest_paid_total": 73.9,
+    "in_training": 1.0,
+    "interest_on_arrears_this_year": 101.7,
+    "interest_paid_total": 76.3,
     "literacy": {
-     "elite": 0.882,
+     "elite": 0.898,
      "elite_ceiling": 0.99,
-     "farm_share_of_working_hours": 0.357,
-     "general": 0.118,
-     "general_ceiling_now": 0.709,
+     "farm_share_of_working_hours": 0.623,
+     "general": 0.121,
+     "general_ceiling_now": 0.501,
      "schools_actually_teaching": false
     },
-    "living_cost": 142.5,
+    "living_cost": 362.7,
     "living_stock": {
-     "cattle_kg": 229197.705,
-     "goat_kg": 94839.73,
-     "pig_kg": 882303.626,
-     "sheep_kg": 621376963.718
+     "cattle_kg": 31194.876,
+     "goat_kg": 5513.063,
+     "sheep_kg": 619492119.27
     },
     "lost": [],
     "manual": true,
     "mine_capacity": {},
     "mine_operating_cost": 0,
     "mothballed": [],
-    "net_after_project_spend": 413.3,
-    "net_per_year": 590.8,
+    "net_after_project_spend": 773.8,
+    "net_per_year": -471.6,
     "ok": true,
     "on_the_road_to_the_goal_so_far": null,
-    "project_spend_this_year": 177.5,
+    "project_spend_this_year": 204.5,
     "prominence": {
      "chance_of_ruin_this_year": 0.0,
      "chance_the_run_ENDS_this_year": 0.0,
@@ -8341,16 +8337,16 @@
      },
      "note": "~prose~",
      "now": 0.0,
-     "settles_at_if_nothing_changes": 0.0,
+     "settles_at_if_nothing_changes": 0.1,
      "the_one_lever": "~prose~",
      "what_would_change_it": [
       "~prose~"
      ]
     },
-    "protection": 0.029,
-    "reputation": 4.9,
+    "protection": 0.032,
+    "reputation": 5.6,
     "resource_throttle": 0.05,
-    "revenue": 917.1,
+    "revenue": 1428.7,
     "scandal": 0.0,
     "scandal_danger": 25.0,
     "scandal_now": 0.0,
@@ -8373,16 +8369,28 @@
      "deputy_hours_a_year": 0.0,
      "objective": "~prose~"
     },
+    "summary": {
+     "by_kind": {
+      "concern": 1
+     },
+     "completed": 1,
+     "failed": 0,
+     "goal": {
+      "measures": [],
+      "road_steps_gained": 1
+     },
+     "minor_failures": 0
+    },
     "supervision_close_to_the_edge": null,
-    "sustainable_debt": 5314.3,
+    "sustainable_debt": 0.0,
     "throttle_binding": "alum_kg",
     "trades_society_now_has_on_its_own": [],
     "trades_you_created": [
      "scribe"
     ],
-    "upkeep": 98.0,
-    "wage_bill": 0,
-    "wages_you_have_already_paid_this_year": null,
+    "upkeep": 124.4,
+    "wage_bill": 1443.5,
+    "wages_you_have_already_paid_this_year": 1449.9,
     "what_you_can_field": "~prose~",
     "where_your_hours_come_from": {
      "deputies_who_direct_work_for_you": 0.0,
@@ -8393,7 +8401,7 @@
     "year": 101,
     "years_left": 29,
     "years_until_scandal_crosses_the_line": null,
-    "you_know_how_to_run_but_have_not_opened": 0
+    "you_know_how_to_run_but_have_not_opened": 1
    }
   },
   {
@@ -8404,7 +8412,7 @@
    "reply": {
     "concerns": {
      "running": 0,
-     "shut": 0
+     "shut": 1
     },
     "danger": {
      "prominence": 0.0,
@@ -8416,12 +8424,12 @@
     "founder_hours_free": 2000.0,
     "goal": "point_contact_transistor",
     "goal_reached": false,
-    "money": -1348.2,
+    "money": -4856.8,
     "nearest_goal_blocker": {
      "id": "mat_copper",
      "startable": true
     },
-    "net_per_year": 590.8,
+    "net_per_year": -471.6,
     "ok": true,
     "projects": [
      {
@@ -8433,17 +8441,12 @@
       "blocker": "~prose~",
       "id": "hom_toothbrush",
       "name": "~prose~"
-     },
-     {
-      "blocker": "~prose~",
-      "id": "identity_cover",
-      "name": "~prose~"
      }
     ],
     "standing": {
      "eminence": 0.0,
-     "protection": 0.029,
-     "reputation": 4.9
+     "protection": 0.032,
+     "reputation": 5.6
     },
     "year": 101
    }
@@ -8466,7 +8469,9 @@
    },
    "reply": {
     "active": {},
-    "alerts": [],
+    "alerts": [
+     "~prose~"
+    ],
     "also_available": [
      "~prose~",
      "~prose~",
@@ -8475,8 +8480,8 @@
      "~prose~",
      "~prose~"
     ],
-    "annual_wage_bill": 0,
-    "artisans": 0.0,
+    "annual_wage_bill": 926.0,
+    "artisans": 0.46,
     "at_risk": {
      "happening_now": null,
      "hazards_still_ahead": 13,
@@ -8484,7 +8489,7 @@
      "in_full": "~prose~",
      "technologies_you_could_lose": 3
     },
-    "capital": -113.1,
+    "capital": -4836.3,
     "chance_of_being_denounced_this_year": 0.0,
     "coin_hoard": {
      "basis": "~prose~",
@@ -8506,17 +8511,10 @@
       "kind": "concern",
       "name": "~prose~",
       "year": 101
-     },
-     {
-      "granted": false,
-      "id": "identity_cover",
-      "kind": "concern",
-      "name": "~prose~",
-      "year": 101
      }
     ],
     "concerns_you_run": 0,
-    "credit_limit": 4264.8,
+    "credit_limit": 0.0,
     "critical_capabilities_not_operating": [
      {
       "benefit_switched_off": "~prose~",
@@ -8525,7 +8523,7 @@
       "warning": "~prose~"
      }
     ],
-    "debt_interest_rate": 0.0517,
+    "debt_interest_rate": 0.2495,
     "debt_still_to_work_off": 0.0,
     "depends_on_one_person": null,
     "diffusion_index": 0.0,
@@ -8534,8 +8532,11 @@
     "done_earned": 3,
     "done_granted": 240,
     "eminence": 0.01,
-    "employees": {},
-    "employees_total": 0,
+    "employees": {
+     "scribe": 0.1,
+     "smith": 0.46
+    },
+    "employees_total": 0.57,
     "end_reason": null,
     "ended": false,
     "events": [
@@ -8547,157 +8548,6 @@
       "year": 101
      },
      {
-      "event_kind": "wage_cascade",
-      "facts": {
-       "population_below_trend_percent": 1,
-       "wage_premium_percent": 1
-      },
-      "message": "~prose~",
-      "severity": "demographic_catastrophe",
-      "year": 101
-     },
-     {
-      "event_kind": "group_petition",
-      "facts": {
-       "parts": [
-        "~prose~",
-        {
-         "money": 631379.1934888125
-        },
-        "~prose~",
-        "~prose~",
-        {
-         "money": 54994.6499256126
-        },
-        "~prose~",
-        "~prose~"
-       ]
-      },
-      "message": "~prose~",
-      "severity": "informational",
-      "year": 101
-     },
-     {
-      "event_kind": "group_petition",
-      "facts": {
-       "parts": [
-        "~prose~",
-        {
-         "money": 115890825.55093372
-        },
-        "~prose~",
-        "~prose~",
-        {
-         "money": 112547143.07108241
-        },
-        "~prose~",
-        "~prose~"
-       ]
-      },
-      "message": "~prose~",
-      "severity": "informational",
-      "year": 101
-     },
-     {
-      "event_kind": "group_petition",
-      "facts": {
-       "parts": [
-        "~prose~",
-        {
-         "money": 26355440.150952727
-        },
-        "~prose~",
-        "~prose~",
-        {
-         "money": 25088502.084057786
-        },
-        "~prose~",
-        "~prose~"
-       ]
-      },
-      "message": "~prose~",
-      "severity": "informational",
-      "year": 101
-     },
-     {
-      "event_kind": "group_petition",
-      "facts": {
-       "parts": [
-        "~prose~",
-        {
-         "money": 97772841.76630992
-        },
-        "~prose~",
-        "~prose~",
-        {
-         "money": 94951857.01162365
-        },
-        "~prose~",
-        "~prose~",
-        "~prose~"
-       ]
-      },
-      "message": "~prose~",
-      "severity": "informational",
-      "year": 101
-     },
-     {
-      "event_kind": "group_petition",
-      "facts": {
-       "parts": [
-        "~prose~",
-        {
-         "money": 46737261.35154998
-        },
-        "~prose~",
-        "~prose~",
-        {
-         "money": 45345550.7936502
-        },
-        "~prose~",
-        "~prose~"
-       ]
-      },
-      "message": "~prose~",
-      "severity": "informational",
-      "year": 101
-     },
-     {
-      "event_kind": "group_petition",
-      "facts": {
-       "parts": [
-        "~prose~",
-        {
-         "money": 132035149.87390849
-        },
-        "~prose~",
-        "~prose~",
-        {
-         "money": 128225675.0618203
-        },
-        "~prose~",
-        "~prose~"
-       ]
-      },
-      "message": "~prose~",
-      "severity": "informational",
-      "year": 101
-     },
-     {
-      "event_kind": "project_completed",
-      "facts": {},
-      "message": "~prose~",
-      "severity": "project_completion",
-      "year": 101
-     },
-     {
-      "event_kind": "goal_effect",
-      "facts": {},
-      "message": "~prose~",
-      "severity": "informational",
-      "year": 101
-     },
-     {
       "event_kind": "project_completed",
       "facts": {},
       "message": "~prose~",
@@ -8710,32 +8560,10 @@
       "message": "~prose~",
       "severity": "project_completion",
       "year": 101
-     },
-     {
-      "event_kind": "group_petition",
-      "facts": {
-       "parts": [
-        "~prose~",
-        {
-         "money": 33656074.56851019
-        },
-        "~prose~",
-        "~prose~",
-        {
-         "money": 32816744.19936432
-        },
-        "~prose~",
-        "~prose~",
-        "~prose~"
-       ]
-      },
-      "message": "~prose~",
-      "severity": "informational",
-      "year": 102
      }
     ],
     "everything_at_once": "~prose~",
-    "familiarity": 0.33,
+    "familiarity": 0.316,
     "fog_of_war": false,
     "forest_ha": 0.0,
     "founder_age": null,
@@ -8744,7 +8572,7 @@
     "founder_died_aged": null,
     "founder_died_in": null,
     "founder_hours_available": 2000.0,
-    "founder_hours_sold_for_wages_this_year": 0.0,
+    "founder_hours_sold_for_wages_this_year": 0,
     "founder_hours_spent_teaching_this_year": 0.0,
     "founder_usual_age_at_death": null,
     "free_hours_going_unused": "~prose~",
@@ -8756,45 +8584,44 @@
     "horizon_year": 130,
     "hours_this_year": {
      "available": 2000.0,
-     "effective_on_projects": 0.0,
+     "effective_on_projects": 375.8,
      "moving": 0.0,
-     "offered_to_projects": 0.0,
+     "offered_to_projects": 960.0,
      "supervising": 0.0,
      "teaching": 0.0,
-     "unused": 2000.0,
+     "unused": 1040.0,
      "wage_work": 0.0
     },
     "household_places_used_of_all": "~prose~",
     "idle_specialists": null,
     "in_bondage_for_debt": 0.0,
-    "in_training": 1,
-    "interest_on_arrears_this_year": 5.9,
-    "interest_paid_total": 122.7,
+    "in_training": 0.8947368421052632,
+    "interest_on_arrears_this_year": 1206.8,
+    "interest_paid_total": 155.4,
     "literacy": {
-     "elite": 0.829,
+     "elite": 0.898,
      "elite_ceiling": 0.99,
-     "farm_share_of_working_hours": 0.363,
-     "general": 0.188,
-     "general_ceiling_now": 0.704,
+     "farm_share_of_working_hours": 0.579,
+     "general": 0.122,
+     "general_ceiling_now": 0.536,
      "schools_actually_teaching": false
     },
-    "living_cost": 136.3,
+    "living_cost": 337.4,
     "living_stock": {
-     "cattle_kg": 312019.43,
-     "goat_kg": 187142.583,
-     "pig_kg": 3405436.891,
-     "sheep_kg": 1067554842.788
+     "cattle_kg": 36390.436,
+     "goat_kg": 7742.878,
+     "sheep_kg": 811842205.507
     },
     "lost": [],
     "manual": true,
     "mine_capacity": {},
     "mine_operating_cost": 0,
     "mothballed": [],
-    "net_after_project_spend": 621.6,
-    "net_per_year": 621.6,
+    "net_after_project_spend": -309.0,
+    "net_per_year": -1193.8,
     "ok": true,
     "on_the_road_to_the_goal_so_far": null,
-    "project_spend_this_year": 0.0,
+    "project_spend_this_year": 47.8,
     "prominence": {
      "chance_of_ruin_this_year": 0.0,
      "chance_the_run_ENDS_this_year": 0.0,
@@ -8813,9 +8640,9 @@
      ]
     },
     "protection": 0.036,
-    "reputation": 6.7,
+    "reputation": 6.8,
     "resource_throttle": 0.05,
-    "revenue": 861.7,
+    "revenue": 1277.1,
     "scandal": 0.0,
     "scandal_danger": 25.0,
     "scandal_now": 0.0,
@@ -8827,7 +8654,7 @@
     "shut_concerns_would_earn_a_year": null,
     "shut_for_want_of_staff": null,
     "slaves": 0,
-    "staff_are_fractional_because": null,
+    "staff_are_fractional_because": "~prose~",
     "state_attention": {
      "confiscation_risk_above": 0.75,
      "interest_groups": [
@@ -8835,15 +8662,15 @@
       "~prose~",
       "~prose~",
       "~prose~",
-      "~prose~",
-      "~prose~",
       "~prose~"
      ],
      "noticed_above": 0.35,
-     "now": 0.0,
+     "now": 0.009,
      "what_helps": "~prose~"
     },
     "state_view": "short",
+    "stopped_early": "~prose~",
+    "stopped_kind": "year_failed",
     "stuck": null,
     "succession": {
      "deputies": 0.0,
@@ -8854,27 +8681,23 @@
     },
     "summary": {
      "by_kind": {
-      "concern": 2,
+      "concern": 1,
       "technology": 1
      },
-     "completed": 3,
+     "completed": 2,
      "failed": 0,
-     "goal": {
-      "measures": [],
-      "road_steps_gained": 1
-     },
      "minor_failures": 0
     },
     "supervision_close_to_the_edge": null,
-    "sustainable_debt": 6066.6,
+    "sustainable_debt": 26.1,
     "throttle_binding": "alum_kg",
     "trades_society_now_has_on_its_own": [],
     "trades_you_created": [
      "scribe"
     ],
-    "upkeep": 98.0,
-    "wage_bill": 0,
-    "wages_you_have_already_paid_this_year": null,
+    "upkeep": 124.4,
+    "wage_bill": 926.0,
+    "wages_you_have_already_paid_this_year": 932.6,
     "what_you_can_field": "~prose~",
     "where_your_hours_come_from": {
      "deputies_who_direct_work_for_you": 0.0,
@@ -8882,8 +8705,14 @@
      "you": 2000.0
     },
     "worth_knowing_early": null,
-    "year": 103,
-    "years_left": 27,
+    "year": 102,
+    "year_failed": {
+     "cause": "year_failed",
+     "exception_kind": "~prose~",
+     "year": 102,
+     "years_ran": 1
+    },
+    "years_left": 28,
     "years_until_scandal_crosses_the_line": null,
     "you_know_how_to_run_but_have_not_opened": 2
    }
@@ -8893,30 +8722,9 @@
     "cmd": "log"
    },
    "reply": {
-    "count": 22,
+    "count": 12,
     "entries": [
      {
-      "event_kind": "group_petition",
-      "facts": {
-       "parts": [
-        "~prose~",
-        {
-         "money": 33656074.56851019
-        },
-        "~prose~",
-        "~prose~",
-        {
-         "money": 32816744.19936432
-        },
-        "~prose~",
-        "~prose~",
-        "~prose~"
-       ]
-      },
-      "what": "~prose~",
-      "year": 102
-     },
-     {
       "event_kind": "project_completed",
       "facts": {},
       "what": "~prose~",
@@ -8925,148 +8733,6 @@
      {
       "event_kind": "project_completed",
       "facts": {},
-      "what": "~prose~",
-      "year": 101
-     },
-     {
-      "event_kind": "goal_effect",
-      "facts": {},
-      "what": "~prose~",
-      "year": 101
-     },
-     {
-      "event_kind": "project_completed",
-      "facts": {},
-      "what": "~prose~",
-      "year": 101
-     },
-     {
-      "event_kind": "group_petition",
-      "facts": {
-       "parts": [
-        "~prose~",
-        {
-         "money": 132035149.87390849
-        },
-        "~prose~",
-        "~prose~",
-        {
-         "money": 128225675.0618203
-        },
-        "~prose~",
-        "~prose~"
-       ]
-      },
-      "what": "~prose~",
-      "year": 101
-     },
-     {
-      "event_kind": "group_petition",
-      "facts": {
-       "parts": [
-        "~prose~",
-        {
-         "money": 46737261.35154998
-        },
-        "~prose~",
-        "~prose~",
-        {
-         "money": 45345550.7936502
-        },
-        "~prose~",
-        "~prose~"
-       ]
-      },
-      "what": "~prose~",
-      "year": 101
-     },
-     {
-      "event_kind": "group_petition",
-      "facts": {
-       "parts": [
-        "~prose~",
-        {
-         "money": 97772841.76630992
-        },
-        "~prose~",
-        "~prose~",
-        {
-         "money": 94951857.01162365
-        },
-        "~prose~",
-        "~prose~",
-        "~prose~"
-       ]
-      },
-      "what": "~prose~",
-      "year": 101
-     },
-     {
-      "event_kind": "group_petition",
-      "facts": {
-       "parts": [
-        "~prose~",
-        {
-         "money": 26355440.150952727
-        },
-        "~prose~",
-        "~prose~",
-        {
-         "money": 25088502.084057786
-        },
-        "~prose~",
-        "~prose~"
-       ]
-      },
-      "what": "~prose~",
-      "year": 101
-     },
-     {
-      "event_kind": "group_petition",
-      "facts": {
-       "parts": [
-        "~prose~",
-        {
-         "money": 115890825.55093372
-        },
-        "~prose~",
-        "~prose~",
-        {
-         "money": 112547143.07108241
-        },
-        "~prose~",
-        "~prose~"
-       ]
-      },
-      "what": "~prose~",
-      "year": 101
-     },
-     {
-      "event_kind": "group_petition",
-      "facts": {
-       "parts": [
-        "~prose~",
-        {
-         "money": 631379.1934888125
-        },
-        "~prose~",
-        "~prose~",
-        {
-         "money": 54994.6499256126
-        },
-        "~prose~",
-        "~prose~"
-       ]
-      },
-      "what": "~prose~",
-      "year": 101
-     },
-     {
-      "event_kind": "wage_cascade",
-      "facts": {
-       "population_below_trend_percent": 1,
-       "wage_premium_percent": 1
-      },
       "what": "~prose~",
       "year": 101
      },
@@ -9081,19 +8747,13 @@
       "year": 100
      },
      {
-      "event_kind": "arrears_hours_lost",
-      "facts": {
-       "hours": 136.0,
-       "projects": [
-        "identity_cover",
-        "hom_toothbrush"
-       ]
-      },
+      "event_kind": "goal_effect",
+      "facts": {},
       "what": "~prose~",
       "year": 100
      },
      {
-      "event_kind": "let_go_ordered",
+      "event_kind": "project_completed",
       "facts": {},
       "what": "~prose~",
       "year": 100
@@ -9121,9 +8781,20 @@
       "facts": {},
       "what": "~prose~",
       "year": 100
+     },
+     {
+      "event_kind": "project_started",
+      "facts": {},
+      "what": "~prose~",
+      "year": 100
+     },
+     {
+      "event_kind": "project_started",
+      "facts": {},
+      "what": "~prose~",
+      "year": 100
      }
     ],
-    "more": "~prose~",
     "ok": true,
     "showing": "~prose~",
     "to_filter_or_sort": "~prose~"
@@ -9138,7 +8809,7 @@
     "earliest_year": 100,
     "error": "~prose~",
     "ok": false,
-    "years_of_record": 3
+    "years_of_record": 2
    }
   },
   {
@@ -9150,8 +8821,8 @@
     "capabilities_you_know_how_to_run_but_have_not_opened": [
      {
       "capability": "~prose~",
-      "costs_a_year": 1.3,
-      "costs_a_year_at_full_staffing": 6.3,
+      "costs_a_year": 4.0,
+      "costs_a_year_at_full_staffing": 6.1,
       "earns_a_year": 0.0,
       "forecast_basis": "market",
       "id": "identity_cover",
@@ -9162,7 +8833,7 @@
       },
       "sale_basis": "no_market_yet",
       "specialist_foreman": null,
-      "to_open_it": 31.4
+      "to_open_it": 30.7
      }
     ],
     "held_in_all": {
@@ -9174,7 +8845,7 @@
     "ok": true,
     "one_of_each_of_those_is_you": true,
     "people_free_to_run_something_new": {
-     "craftsmen": 1.0,
+     "craftsmen": 1.46,
      "scholars": 1.0
     },
     "running": "nothing",
@@ -9234,7 +8905,7 @@
      ]
     },
     "you_have_in_all": {
-     "craftsmen": 1.0,
+     "craftsmen": 1.46,
      "scholars": 1.0
     },
     "you_know_how_but_have_not_opened": [
@@ -9251,7 +8922,7 @@
       },
       "sale_basis": "no_market_yet",
       "specialist_foreman": null,
-      "to_open_it": 6.9
+      "to_open_it": 7.2
      }
     ]
    }
@@ -9275,7 +8946,7 @@
    "reply": {
     "concerns": {
      "running": 0,
-     "shut": 0
+     "shut": 1
     },
     "danger": {
      "prominence": 0.0,
@@ -9287,12 +8958,12 @@
     "founder_hours_free": 2000.0,
     "goal": "point_contact_transistor",
     "goal_reached": false,
-    "money": -1348.2,
+    "money": -4856.8,
     "nearest_goal_blocker": {
      "id": "mat_copper",
      "startable": true
     },
-    "net_per_year": 590.8,
+    "net_per_year": -471.6,
     "ok": true,
     "projects": [
      {
@@ -9304,17 +8975,12 @@
       "blocker": "~prose~",
       "id": "hom_toothbrush",
       "name": "~prose~"
-     },
-     {
-      "blocker": "~prose~",
-      "id": "identity_cover",
-      "name": "~prose~"
      }
     ],
     "standing": {
      "eminence": 0.0,
-     "protection": 0.029,
-     "reputation": 4.9
+     "protection": 0.032,
+     "reputation": 5.6
     },
     "year": 101
    }
@@ -9326,7 +8992,9 @@
    },
    "reply": {
     "active": {},
-    "alerts": [],
+    "alerts": [
+     "~prose~"
+    ],
     "also_available": [
      "~prose~",
      "~prose~",
@@ -9335,8 +9003,8 @@
      "~prose~",
      "~prose~"
     ],
-    "annual_wage_bill": 0,
-    "artisans": 0.0,
+    "annual_wage_bill": 926.0,
+    "artisans": 0.46,
     "at_risk": {
      "happening_now": null,
      "hazards_still_ahead": 13,
@@ -9344,7 +9012,7 @@
      "in_full": "~prose~",
      "technologies_you_could_lose": 3
     },
-    "capital": -113.1,
+    "capital": -4836.3,
     "chance_of_being_denounced_this_year": 0.0,
     "coin_hoard": {
      "basis": "~prose~",
@@ -9366,17 +9034,10 @@
       "kind": "concern",
       "name": "~prose~",
       "year": 101
-     },
-     {
-      "granted": false,
-      "id": "identity_cover",
-      "kind": "concern",
-      "name": "~prose~",
-      "year": 101
      }
     ],
     "concerns_you_run": 0,
-    "credit_limit": 4264.8,
+    "credit_limit": 0.0,
     "critical_capabilities_not_operating": [
      {
       "benefit_switched_off": "~prose~",
@@ -9385,7 +9046,7 @@
       "warning": "~prose~"
      }
     ],
-    "debt_interest_rate": 0.0517,
+    "debt_interest_rate": 0.2495,
     "debt_still_to_work_off": 0.0,
     "depends_on_one_person": null,
     "diffusion_index": 0.0,
@@ -9394,8 +9055,11 @@
     "done_earned": 3,
     "done_granted": 240,
     "eminence": 0.01,
-    "employees": {},
-    "employees_total": 0,
+    "employees": {
+     "scribe": 0.1,
+     "smith": 0.46
+    },
+    "employees_total": 0.57,
     "end_reason": null,
     "ended": false,
     "events": [
@@ -9407,157 +9071,6 @@
       "year": 101
      },
      {
-      "event_kind": "wage_cascade",
-      "facts": {
-       "population_below_trend_percent": 1,
-       "wage_premium_percent": 1
-      },
-      "message": "~prose~",
-      "severity": "demographic_catastrophe",
-      "year": 101
-     },
-     {
-      "event_kind": "group_petition",
-      "facts": {
-       "parts": [
-        "~prose~",
-        {
-         "money": 631379.1934888125
-        },
-        "~prose~",
-        "~prose~",
-        {
-         "money": 54994.6499256126
-        },
-        "~prose~",
-        "~prose~"
-       ]
-      },
-      "message": "~prose~",
-      "severity": "informational",
-      "year": 101
-     },
-     {
-      "event_kind": "group_petition",
-      "facts": {
-       "parts": [
-        "~prose~",
-        {
-         "money": 115890825.55093372
-        },
-        "~prose~",
-        "~prose~",
-        {
-         "money": 112547143.07108241
-        },
-        "~prose~",
-        "~prose~"
-       ]
-      },
-      "message": "~prose~",
-      "severity": "informational",
-      "year": 101
-     },
-     {
-      "event_kind": "group_petition",
-      "facts": {
-       "parts": [
-        "~prose~",
-        {
-         "money": 26355440.150952727
-        },
-        "~prose~",
-        "~prose~",
-        {
-         "money": 25088502.084057786
-        },
-        "~prose~",
-        "~prose~"
-       ]
-      },
-      "message": "~prose~",
-      "severity": "informational",
-      "year": 101
-     },
-     {
-      "event_kind": "group_petition",
-      "facts": {
-       "parts": [
-        "~prose~",
-        {
-         "money": 97772841.76630992
-        },
-        "~prose~",
-        "~prose~",
-        {
-         "money": 94951857.01162365
-        },
-        "~prose~",
-        "~prose~",
-        "~prose~"
-       ]
-      },
-      "message": "~prose~",
-      "severity": "informational",
-      "year": 101
-     },
-     {
-      "event_kind": "group_petition",
-      "facts": {
-       "parts": [
-        "~prose~",
-        {
-         "money": 46737261.35154998
-        },
-        "~prose~",
-        "~prose~",
-        {
-         "money": 45345550.7936502
-        },
-        "~prose~",
-        "~prose~"
-       ]
-      },
-      "message": "~prose~",
-      "severity": "informational",
-      "year": 101
-     },
-     {
-      "event_kind": "group_petition",
-      "facts": {
-       "parts": [
-        "~prose~",
-        {
-         "money": 132035149.87390849
-        },
-        "~prose~",
-        "~prose~",
-        {
-         "money": 128225675.0618203
-        },
-        "~prose~",
-        "~prose~"
-       ]
-      },
-      "message": "~prose~",
-      "severity": "informational",
-      "year": 101
-     },
-     {
-      "event_kind": "project_completed",
-      "facts": {},
-      "message": "~prose~",
-      "severity": "project_completion",
-      "year": 101
-     },
-     {
-      "event_kind": "goal_effect",
-      "facts": {},
-      "message": "~prose~",
-      "severity": "informational",
-      "year": 101
-     },
-     {
       "event_kind": "project_completed",
       "facts": {},
       "message": "~prose~",
@@ -9570,32 +9083,10 @@
       "message": "~prose~",
       "severity": "project_completion",
       "year": 101
-     },
-     {
-      "event_kind": "group_petition",
-      "facts": {
-       "parts": [
-        "~prose~",
-        {
-         "money": 33656074.56851019
-        },
-        "~prose~",
-        "~prose~",
-        {
-         "money": 32816744.19936432
-        },
-        "~prose~",
-        "~prose~",
-        "~prose~"
-       ]
-      },
-      "message": "~prose~",
-      "severity": "informational",
-      "year": 102
      }
     ],
     "everything_at_once": "~prose~",
-    "familiarity": 0.33,
+    "familiarity": 0.316,
     "fog_of_war": false,
     "forest_ha": 0.0,
     "founder_age": null,
@@ -9604,7 +9095,7 @@
     "founder_died_aged": null,
     "founder_died_in": null,
     "founder_hours_available": 2000.0,
-    "founder_hours_sold_for_wages_this_year": 0.0,
+    "founder_hours_sold_for_wages_this_year": 0,
     "founder_hours_spent_teaching_this_year": 0.0,
     "founder_usual_age_at_death": null,
     "free_hours_going_unused": "~prose~",
@@ -9616,45 +9107,44 @@
     "horizon_year": 130,
     "hours_this_year": {
      "available": 2000.0,
-     "effective_on_projects": 0.0,
+     "effective_on_projects": 375.8,
      "moving": 0.0,
-     "offered_to_projects": 0.0,
+     "offered_to_projects": 960.0,
      "supervising": 0.0,
      "teaching": 0.0,
-     "unused": 2000.0,
+     "unused": 1040.0,
      "wage_work": 0.0
     },
     "household_places_used_of_all": "~prose~",
     "idle_specialists": null,
     "in_bondage_for_debt": 0.0,
-    "in_training": 1,
-    "interest_on_arrears_this_year": 5.9,
-    "interest_paid_total": 122.7,
+    "in_training": 0.8947368421052632,
+    "interest_on_arrears_this_year": 1206.8,
+    "interest_paid_total": 155.4,
     "literacy": {
-     "elite": 0.829,
+     "elite": 0.898,
      "elite_ceiling": 0.99,
-     "farm_share_of_working_hours": 0.363,
-     "general": 0.188,
-     "general_ceiling_now": 0.704,
+     "farm_share_of_working_hours": 0.579,
+     "general": 0.122,
+     "general_ceiling_now": 0.536,
      "schools_actually_teaching": false
     },
-    "living_cost": 136.3,
+    "living_cost": 337.4,
     "living_stock": {
-     "cattle_kg": 312019.43,
-     "goat_kg": 187142.583,
-     "pig_kg": 3405436.891,
-     "sheep_kg": 1067554842.788
+     "cattle_kg": 36390.436,
+     "goat_kg": 7742.878,
+     "sheep_kg": 811842205.507
     },
     "lost": [],
     "manual": true,
     "mine_capacity": {},
     "mine_operating_cost": 0,
     "mothballed": [],
-    "net_after_project_spend": 621.6,
-    "net_per_year": 621.6,
+    "net_after_project_spend": -309.0,
+    "net_per_year": -1193.8,
     "ok": true,
     "on_the_road_to_the_goal_so_far": null,
-    "project_spend_this_year": 0.0,
+    "project_spend_this_year": 47.8,
     "prominence": {
      "chance_of_ruin_this_year": 0.0,
      "chance_the_run_ENDS_this_year": 0.0,
@@ -9673,9 +9163,9 @@
      ]
     },
     "protection": 0.036,
-    "reputation": 6.7,
+    "reputation": 6.8,
     "resource_throttle": 0.05,
-    "revenue": 861.7,
+    "revenue": 1277.1,
     "scandal": 0.0,
     "scandal_danger": 25.0,
     "scandal_now": 0.0,
@@ -9687,7 +9177,7 @@
     "shut_concerns_would_earn_a_year": null,
     "shut_for_want_of_staff": null,
     "slaves": 0,
-    "staff_are_fractional_because": null,
+    "staff_are_fractional_because": "~prose~",
     "state_attention": {
      "confiscation_risk_above": 0.75,
      "interest_groups": [
@@ -9695,15 +9185,15 @@
       "~prose~",
       "~prose~",
       "~prose~",
-      "~prose~",
-      "~prose~",
       "~prose~"
      ],
      "noticed_above": 0.35,
-     "now": 0.0,
+     "now": 0.009,
      "what_helps": "~prose~"
     },
     "state_view": "short",
+    "stopped_early": "~prose~",
+    "stopped_kind": "year_failed",
     "stuck": null,
     "succession": {
      "deputies": 0.0,
@@ -9714,27 +9204,23 @@
     },
     "summary": {
      "by_kind": {
-      "concern": 2,
+      "concern": 1,
       "technology": 1
      },
-     "completed": 3,
+     "completed": 2,
      "failed": 0,
-     "goal": {
-      "measures": [],
-      "road_steps_gained": 1
-     },
      "minor_failures": 0
     },
     "supervision_close_to_the_edge": null,
-    "sustainable_debt": 6066.6,
+    "sustainable_debt": 26.1,
     "throttle_binding": "alum_kg",
     "trades_society_now_has_on_its_own": [],
     "trades_you_created": [
      "scribe"
     ],
-    "upkeep": 98.0,
-    "wage_bill": 0,
-    "wages_you_have_already_paid_this_year": null,
+    "upkeep": 124.4,
+    "wage_bill": 926.0,
+    "wages_you_have_already_paid_this_year": 932.6,
     "what_you_can_field": "~prose~",
     "where_your_hours_come_from": {
      "deputies_who_direct_work_for_you": 0.0,
@@ -9742,8 +9228,14 @@
      "you": 2000.0
     },
     "worth_knowing_early": null,
-    "year": 103,
-    "years_left": 27,
+    "year": 102,
+    "year_failed": {
+     "cause": "year_failed",
+     "exception_kind": "~prose~",
+     "year": 102,
+     "years_ran": 1
+    },
+    "years_left": 28,
     "years_until_scandal_crosses_the_line": null,
     "you_know_how_to_run_but_have_not_opened": 2
    }
@@ -9758,13 +9250,13 @@
      "economy": {
       "counts": "~prose~",
       "normalized": 0.0,
-      "raw": -113.1,
+      "raw": -4836.3,
       "raw_detail": {
        "worker_years_equivalent": 0.0
       },
       "since_last_score": {
-       "normalized_change": -0.0699,
-       "raw_before": 2262.2,
+       "normalized_change": -0.0592,
+       "raw_before": 2949.0,
        "year": 100
       },
       "weight": 0.1,
@@ -9791,53 +9283,53 @@
      },
      "literacy": {
       "counts": "~prose~",
-      "normalized": 0.5522966400973209,
-      "raw": 0.1881,
+      "normalized": 0.5679313293036885,
+      "raw": 0.1225,
       "raw_detail": {
-       "elite": 0.8289,
+       "elite": 0.8982,
        "elite_ceiling": 0.99,
-       "general": 0.1881,
-       "general_ceiling": 0.7037
+       "general": 0.1225,
+       "general_ceiling": 0.5359
       },
       "since_last_score": {
-       "normalized_change": 0.0137,
+       "normalized_change": -0.0146,
        "raw_before": 0.1192,
        "year": 100
       },
       "weight": 0.15,
-      "weighted": 0.0828
+      "weighted": 0.0852
      },
      "resilience": {
       "counts": "~prose~",
-      "normalized": 0.9999854439361645,
+      "normalized": 0.9,
       "of_total": 5,
-      "raw": 5,
+      "raw": 4,
       "raw_detail": {
        "corpus_kept": 1.0,
        "founder_alive": 1.0,
        "scandal_room": 1.0,
-       "years_solvent": 1.0,
+       "years_solvent": 0.5,
        "years_staffed": 1.0
       },
       "since_last_score": {
-       "normalized_change": -0.0,
+       "normalized_change": -0.1,
        "raw_before": 5,
        "year": 100
       },
       "weight": 0.1,
-      "weighted": 0.1
+      "weighted": 0.09
      },
      "standing": {
       "counts": "~prose~",
-      "normalized": 0.06686217101238659,
-      "raw": 6.7,
+      "normalized": 0.06842308838324887,
+      "raw": 6.8,
       "since_last_score": {
-       "normalized_change": 0.0169,
+       "normalized_change": 0.0184,
        "raw_before": 5.0,
        "year": 100
       },
       "weight": 0.05,
-      "weighted": 0.0033
+      "weighted": 0.0034
      },
      "technology_coverage": {
       "counts": "~prose~",
@@ -9854,15 +9346,15 @@
      },
      "workforce": {
       "counts": "~prose~",
-      "normalized": 0.0,
-      "raw": 0.0,
+      "normalized": 0.050654018997790665,
+      "raw": 0.6,
       "since_last_score": {
-       "normalized_change": 0.0,
+       "normalized_change": 0.0507,
        "raw_before": 0.0,
        "year": 100
       },
       "weight": 0.15,
-      "weighted": 0.0
+      "weighted": 0.0076
      }
     },
     "end_reason": null,
@@ -9873,7 +9365,7 @@
     "ok": true,
     "points": 217,
     "points_scale": "~prose~",
-    "total": 0.2172
+    "total": 0.2173
    }
   },
   {
