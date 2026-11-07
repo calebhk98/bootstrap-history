@@ -16,7 +16,11 @@ class OpeningGate:
         self.shipped: List[Tuple[str, str]] = []
 
     def __call__(self, game) -> None:
-        self.results = opening_checks_run.check_game(game)
+        # the trace and its key are read before the checks step the game: a stepped game's setup can differ, and its
+        # key would name a trace no fresh opening reads
+        namespace, key = opening_checks_run.trace_entry(game)
+        trace = opening_checks_run.opening_trace(game)
+        self.results = opening_checks_run.check_game(game, trace)
         print("\n".join(opening_checks_table.table({self.civ_id: self.results})), flush=True)
         failed = opening_checks_run.failures(self.results)
         if failed and not self.allow_failing:
@@ -25,6 +29,5 @@ class OpeningGate:
         if failed:
             print("%s: shipping an opening that fails %s; reason: %s"
                   % (self.civ_id, ", ".join(each.name for each in failed), self.allow_failing), flush=True)
-        namespace, key = opening_checks_run.trace_entry(game)
-        shipped_openings.write(namespace, key, opening_checks_run.opening_trace(game))
+        shipped_openings.write(namespace, key, trace)
         self.shipped.append((namespace, key))

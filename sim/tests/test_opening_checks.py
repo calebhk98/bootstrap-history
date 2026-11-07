@@ -105,6 +105,28 @@ class GateTests(unittest.TestCase):
         self._call(gate, patches)
         self.assertEqual(gate.shipped, [("ns", "k")])
 
+    def test_the_trace_shipped_is_the_one_read_before_the_checks_step_the_game(self):
+        # a stepped game's setup can differ, so its key and trace are taken first and the checks are handed that trace
+        state = {"stepped": False}
+        written = []
+
+        def check_game(game, trace=None):
+            state["stepped"] = True
+            return [opening_checks.CheckResult("c", 1.0, 2.0, "at most", True, {})]
+        gate = opening_checks_gate.OpeningGate("somewhere")
+        with mock.patch.object(opening_checks_gate.opening_checks_run, "check_game", side_effect=check_game) as checks, \
+                mock.patch.object(opening_checks_gate.opening_checks_run, "trace_entry",
+                                  side_effect=lambda game: ("ns", "after" if state["stepped"] else "before")), \
+                mock.patch.object(opening_checks_gate.opening_checks_run, "opening_trace",
+                                  side_effect=lambda game: ["stepped rows"] if state["stepped"] else ["opening rows"]), \
+                mock.patch.object(opening_checks_gate.shipped_openings, "write",
+                                  side_effect=lambda *arguments: written.append(arguments)), \
+                redirect_stdout(io.StringIO()):
+            gate(object())
+        self.assertEqual(written, [("ns", "before", ["opening rows"])])
+        self.assertEqual(checks.call_args[0][1], ["opening rows"])
+        self.assertEqual(gate.shipped, [("ns", "before")])
+
     def test_the_build_calls_the_gate_with_the_opened_game_before_writing(self):
         calls = []
         with mock.patch.object(shipped_openings_build, "Sim", return_value="game"), \
