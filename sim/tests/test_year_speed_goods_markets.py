@@ -20,7 +20,8 @@ from dataclasses import replace
 
 import numpy as np
 
-from sim.economy import goods_year_batch, seller_offers, unsold_search
+from sim.economy import goods_year_batch, year_goods, seller_offers, unsold_search
+from sim.economy.inventory import holding_reservation
 from sim.economy.market_memory import market_key
 from sim.economy.producers import expected_output_prices
 from sim.economy.types import Bid, Offer
@@ -139,6 +140,45 @@ class BatchedMarketsAreTheMarketsOneByOne(unittest.TestCase):
         self.assertTrue(all(count > 10 for count in moved.values()), moved)      # the cases reach every rule
         self.assertGreater(compared, 150)
         self.assertLess(skipped, 0.05 * (compared + skipped), (compared, skipped))
+
+
+class ProducersOfferWhatTheyHold(unittest.TestCase):
+
+    def test_quick_offers_are_the_producers_offers(self):
+        quick, lowered, taken = 0, 0, []
+        real = year_goods._quick_outputs
+        year_goods._quick_outputs = lambda *args: taken.append(real(*args)) or taken[-1]
+        self.addCleanup(setattr, year_goods, "_quick_outputs", real)
+        for seed in range(25):
+            setup, record, view, area_map = with_markets(seed)
+            ledger = economy_of(seed)[3]
+            pull = random.Random(seed)
+            for producer_id in sorted(record.producers):
+                if pull.random() < 0.6:      # a cash target the purse does not reach: offers are lowered to raise the difference
+                    record.producers[producer_id] = replace(record.producers[producer_id], cash_target=pull.uniform(100.0, 3000.0))
+            arrays = refreshed(YearArrays.build(setup, record, area_map, view), setup, record, view)
+            costs = OfferCosts.build(arrays, view.interest_rate(MONEY))
+            ids = sorted(record.producers)
+            plain, fast = {}, {}
+            year_goods._produce_and_offer(setup, record, view, ids, {}, [], plain, ledger)
+            year_goods._produce_and_offer(setup, record, view, ids, {}, [], fast, ledger, (arrays, costs))
+            self.assertEqual(sorted(plain), sorted(fast))
+            for market, (_bids, offers) in plain.items():
+                made = fast[market][1]
+                self.assertEqual(len(offers), len(made))
+                for old, new in zip(offers, made):
+                    self.assertEqual((old.seller, old.good, old.area, old.tile), (new.seller, new.good, new.area, new.tile))
+                    self.assertTrue(near(old.quantity, new.quantity) and near(old.reservation_price, new.reservation_price))
+                    quick += 1
+                    producer = record.producers[old.seller]
+                    price = expected_output_prices(producer, setup.recipes[producer.recipe_id], view).get(old.good)
+                    if price is not None:
+                        undistressed = holding_reservation(price, view.interest_rate(MONEY), setup.specs[old.good].spoilage_per_year, 0.0)
+                        lowered += old.reservation_price < 0.999 * undistressed
+        self.assertGreater(quick, 100)
+        self.assertGreater(sum(found is not None for found in taken), 40)      # the quick path ran, as well as the fallback
+        self.assertTrue(any(found is None for found in taken))
+        self.assertGreater(lowered, 20)
 
 
 if __name__ == "__main__":

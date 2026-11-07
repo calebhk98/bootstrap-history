@@ -11,7 +11,7 @@ from typing import Dict, List, Optional, Tuple
 
 from . import (currency, mint_price, land_bid_year, carriage_fleet_book, carriage_wear, households, market_curves, market_quote, merchants, producers, seller_cash, seller_offers, settlement,
                state_budget, state_store, taxes, tool_wear, unsold_search)
-from . import goods_respend, goods_respend_year, goods_year_batch, households_cohort, households_orders_pack
+from . import goods_respend, goods_respend_year, goods_year_batch, households_cohort, year_goods_offers, households_orders_pack
 from .home_scope import on_home_tile
 from .goods_market_fills import sold_by_seller_tile
 from .inventory import held_stock, holding_reservation
@@ -168,10 +168,11 @@ def clear_goods(setup, record, view, area_map, order_book: OrderBook, plans, led
     """Produce and clear every good in input-depth order. The book of each market area that holds the port, the
     capital or a watched tile is kept (market_curves.py). With the year's arrays, a good's markets that have bids and
     offers are re-priced, searched and cleared together (goods_year_batch.py)."""
-    costs = None
+    costs = offering = None
     if arrays is not None:
         arrays = refreshed(arrays, setup, record, view)
         costs = OfferCosts.build(arrays, own_rate(view, setup.currency_id))
+        offering = (arrays, costs) if year_goods_offers.usable() else None
     by_output: Dict[str, List[str]] = {}
     for producer_id, producer in sorted(record.producers.items()):
         for good in setup.recipes[producer.recipe_id].outputs:
@@ -187,7 +188,7 @@ def clear_goods(setup, record, view, area_map, order_book: OrderBook, plans, led
     for good in order:
         turn = [producer_id for producer_id in by_output.get(good, ()) if producer_id not in done]
         done.update(turn)
-        _produce_and_offer(setup, record, view, turn, plans, in_kind, order_book, ledger)
+        _produce_and_offer(setup, record, view, turn, plans, in_kind, order_book, ledger, offering)
         areas = sorted(area for item, area in order_book if item == good)
         kept = market_curves.kept_areas(area_map, setup.port_tile, (setup.capital_tile, *watched_tiles), good)
         cleared, batch, batch_slots = [], [], []
@@ -343,7 +344,7 @@ def remembered_price(old, cleared, quantity, usual_volume):
     return old + min(1.0, quantity / usual_volume) * (cleared - old)
 
 
-def _produce_and_offer(setup, record, view, producer_ids, plans, in_kind, order_book, ledger) -> None:
+def _produce_and_offer(setup, record, view, producer_ids, plans, in_kind, order_book, ledger, offering=None) -> None:
     """The producers whose turn it is make their output (their moves booked together), the state takes its tax in kind from
     what they made, and each offers what it holds. The producers do not touch one another's holdings, so booking in a batch
     is booking one at a time."""
@@ -363,6 +364,9 @@ def _produce_and_offer(setup, record, view, producer_ids, plans, in_kind, order_
     book.move_many(moves_made)
     _tax_in_kind(setup, record, made, in_kind, ledger)
     money = setup.currency_id
+    rate = own_rate(view, money) if producer_ids else None
+    pending = []           # (producer, its offers, or None for the quick ones below, those as (good, quantity, price, spoilage))
+    expected, spoilage, quantity, rows, shortfalls, pair_ptr = [], [], [], [], [], [0]
     for producer_id in producer_ids:
         producer = record.producers[producer_id]
         recipe = setup.recipes[producer.recipe_id]
@@ -370,8 +374,51 @@ def _produce_and_offer(setup, record, view, producer_ids, plans, in_kind, order_
         cash = book.balance(producer_id, money)
         shortfall = seller_cash.shortfall_to_raise(producer.cash_target, cash, ledger.running_costs(producer_id))
         keep = {good: recipe.inputs.get(good, 0.0) * producer.capacity_runs for good in recipe.outputs}
-        offers = producers.offers(producer, recipe, view, stock, shortfall, own_rate(view, money), setup.specs, keep)
+        held = _quick_outputs(setup, offering, producer, recipe, stock, keep) if offering is not None else None
+        if held is None:
+            pending.append((producer, producers.offers(producer, recipe, view, stock, shortfall, rate, setup.specs, keep), None))
+            continue
+        for _good, units, price, loss in held:
+            expected.append(price)
+            spoilage.append(loss)
+            quantity.append(units)
+        pair_ptr.append(len(expected))
+        rows.append(offering[0].producers.row[producer.agent_id])
+        shortfalls.append(shortfall)
+        pending.append((producer, None, held))
+    reservations = (year_goods_offers.reservations_for(offering[0], offering[1], rows, pair_ptr, expected, spoilage, quantity,
+                                                       shortfalls, rate).tolist() if rows else [])
+    taken = 0
+    for producer, offers, held in pending:
+        if held is not None:
+            offers = []
+            for good, quantity, _price, _loss in held:
+                offers.append(Offer(producer.agent_id, good, view.area_of(good, producer.tile), producer.tile, quantity,
+                                    reservations[taken]))
+                taken += 1
         add_orders(order_book, AgentOrders(offers=tuple(offers)))
+
+
+def _quick_outputs(setup, offering, producer, recipe, stock, keep):
+    """The (good, units to offer, price expected, spoilage) of a producer's outputs when `producers.offers` would offer
+    them at the reservation holding them gives (year_goods_offers.py); None when it would not: an output with no price
+    expected."""
+    arrays, costs = offering
+    row = arrays.producers.row.get(producer.agent_id)
+    if row is None:
+        return None
+    recipe_row = arrays.producers.recipe_row[row]
+    held = []
+    for good in sorted(recipe.outputs):
+        quantity = stock.get(good, 0.0) - keep.get(good, 0.0)
+        if quantity <= 0.0:
+            continue
+        price = costs.expected[row, costs.slot_of[recipe_row, arrays.matrices.goods.row[good]]]
+        if price != price:
+            return None
+        spec = setup.specs.get(good)
+        held.append((good, quantity, price, spec.spoilage_per_year if spec is not None else 0.0))
+    return held
 
 
 def _tax_in_kind(setup, record, producer_ids, forms, ledger) -> None:

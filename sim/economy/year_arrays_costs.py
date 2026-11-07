@@ -7,10 +7,13 @@ columns and each output slot of its recipe. A price or wage the memory does not 
 are those of the year start refreshed by `YearArrays.sync`; nothing here writes the records."""
 from dataclasses import dataclass, replace
 
+import math
+
 import numpy as np
 
 from sim.jit import njit
 
+from .producers import COST_SPREAD_WITHIN_PRODUCER
 from .setup import labour_area
 from .year_arrays_memory import MemoryArrays
 from .year_arrays_recipes import NO_SLOT
@@ -58,12 +61,45 @@ def bill_hours(hours, wage, tile):
 
 
 @njit(**KERNEL)
-def unit_costs(recipe_row, tile_row, yield_factor, rent, held_expected, slot_goods, inputs, outputs, plant_goods,
-               labour_hours, plant_labour_hours, plant_life, price, offered, wage, area_of, rate):
+def share_working(revenue, variable, spread):
+    """producers.share_working: the share of a producer's workplaces whose own cost the revenue covers."""
+    if variable <= 0.0:
+        return 1.0
+    if revenue <= 0.0:
+        return 0.0
+    ratio = revenue / variable
+    if not ratio > 0.0:
+        return 0.0
+    score = (np.log(ratio) + spread * spread / 2.0) / spread
+    return 0.5 * (1.0 + math.erf(score / math.sqrt(2.0)))
+
+
+@njit(**KERNEL)
+def expected_bill(quantities, held_expected, slot_of_recipe, price, area_of, tile):
+    """The bill of a run's inputs at the prices a plan costs them at: the producer's own expectation where it holds one for a
+    good that has a price, else the price (producers.expected_input_prices); infinite when a used good has no price."""
+    total = 0.0
+    for good in range(len(quantities)):
+        if quantities[good] > 0.0:
+            found = price_in(price, area_of, good, tile)
+            if np.isnan(found):
+                return np.inf
+            slot = slot_of_recipe[good]
+            if slot >= 0 and not np.isnan(held_expected[slot]):
+                found = held_expected[slot]
+            total += quantities[good] * found
+    return total
+
+
+@njit(**KERNEL)
+def unit_costs(recipe_row, tile_row, yield_factor, rent, held_expected, slot_goods, slot_of, inputs, outputs, plant_goods,
+               labour_hours, plant_labour_hours, plant_life, price, offered, wage, area_of, rate, spread):
     """(cost, input share of the run's variable cost, expected price) by producer row and recipe slot, for the slots that
-    are outputs of the producer's recipe (NaN elsewhere). The expected price is the producer's own, else the price on offer
-    in its market, NaN where neither."""
+    are outputs of the producer's recipe (NaN elsewhere); and by producer row the share of its plant a run pays at the prices it
+    plans with (producers.share_that_pays). The expected price is the producer's own, else the price on offer in its
+    market, NaN where neither."""
     producers, slots = held_expected.shape
+    pays = np.zeros(producers)
     cost = np.full((producers, slots), np.nan)
     share = np.zeros((producers, slots))
     expected = np.full((producers, slots), np.nan)
@@ -80,6 +116,8 @@ def unit_costs(recipe_row, tile_row, yield_factor, rent, held_expected, slot_goo
             charge = plant_value * recovery_factor(rate, plant_life[recipe])
         run_cost = variable + charge
         input_share = input_bill / variable if np.isfinite(variable) and variable > 0.0 else 0.0
+        planned = expected_bill(inputs[recipe], held_expected[row], slot_of[recipe], price, area_of, tile) \
+            + bill_hours(labour_hours[recipe], wage, tile) + rent[row]
         revenue = 0.0
         total_output = 0.0
         for slot in range(slots):
@@ -111,7 +149,8 @@ def unit_costs(recipe_row, tile_row, yield_factor, rent, held_expected, slot_goo
             else:
                 part = outputs[recipe, good] / total_output
             cost[row, slot] = run_cost * part / made
-    return cost, share, expected
+        pays[row] = share_working(revenue * yield_factor[row], planned, spread) if np.isfinite(planned) else 0.0
+    return cost, share, expected, pays
 
 
 def slot_table(matrices) -> np.ndarray:
@@ -130,16 +169,18 @@ class OfferCosts:
     input_share: np.ndarray
     expected: np.ndarray
     slot_of: np.ndarray        # recipe row by good column
+    pays: np.ndarray           # producer row: the share of its plant a run pays (producers.share_that_pays)
 
     @classmethod
     def build(cls, arrays, interest_rate: float) -> "OfferCosts":
         matrices, producers, memory = arrays.matrices, arrays.producers, arrays.memory
-        cost, share, expected = unit_costs(
+        slot_of = slot_table(matrices)
+        cost, share, expected, pays = unit_costs(
             producers.recipe_row, producers.tile_row, producers.yield_factor, producers.land_rent_per_run,
-            producers.expected_prices, matrices.slot_goods, matrices.inputs, matrices.outputs, matrices.plant_goods,
+            producers.expected_prices, matrices.slot_goods, slot_of, matrices.inputs, matrices.outputs, matrices.plant_goods,
             matrices.labour_hours, matrices.plant_labour_hours, matrices.plant_life_years, memory.price, memory.offered,
-            memory.wage, arrays.area_index.of_good_tile, float(interest_rate))
-        return cls(cost, share, expected, slot_table(matrices))
+            memory.wage, arrays.area_index.of_good_tile, float(interest_rate), COST_SPREAD_WITHIN_PRODUCER)
+        return cls(cost, share, expected, slot_of, pays)
 
 
 def refreshed(arrays, setup, record, view):
