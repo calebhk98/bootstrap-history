@@ -90,12 +90,13 @@ def lease_in_market(setup, record, view, options: Mapping[str, List[Option]]) ->
         wanted = land_tenancy.wanted_hectares(min(needed, workable), worked)
         if wanted > 0.0 and margin - outside[cohort.tile] > 0.0:
             offers.append(land_tenancy.TenancyRequest(cohort.agent_id, cohort.tile, wanted, margin - outside[cohort.tile]))
+    pledges = titles.pledges_by_title(record.credit)
     for tile_id in sorted(arable_by_tile):
         for holder, share in sorted(titles.shares(record, tile_id).items()):
             lettable = land_tenancy.lettable_hectares(share * arable_by_tile[tile_id],
                                                      titles.let_out_share(record, tile_id, holder) * arable_by_tile[tile_id],
                                                      capacity.get((tile_id, holder), 0.0))
-            lettable = min(lettable, titles.free_share(record, holder, tile_id) * arable_by_tile[tile_id]
+            lettable = min(lettable, titles.free_share(record, holder, tile_id, pledges) * arable_by_tile[tile_id]
                            - titles.let_out_share(record, tile_id, holder) * arable_by_tile[tile_id])
             if lettable > 0.0:
                 lots.append(land_tenancy.Lot(holder, tile_id, lettable))
