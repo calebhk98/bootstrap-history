@@ -92,7 +92,7 @@ def pack(setup, record, view, ledger, arrays: YearArrays) -> ClosePack:
     first = matrices.first_output[columns.recipe_row]
     area_column = arrays.area_index.of_good_tile[first, columns.tile_row]
     rate_of = np.where(area_column == NO_AREA, own_rate, memory.rate[np.maximum(area_column, 0)])
-    currencies: Dict[tuple, str] = {}
+    currencies: Dict[object, str] = {}
     currency_of_row = []
     balance = book.balance
     goods_of = book.goods_of
@@ -102,13 +102,16 @@ def pack(setup, record, view, ledger, arrays: YearArrays) -> ClosePack:
     held_start = [0]
     held_good, held_quantity = [], []
     goods_row = matrices.goods.row
-    first_list, recipe_list, tile_list = first.tolist(), columns.recipe_row.tolist(), columns.tile_row.tolist()
+    recipe_list, tile_list, area_list = columns.recipe_row.tolist(), columns.tile_row.tolist(), area_column.tolist()
+    area_ids = arrays.area_index.areas.ids
     for position, producer_id in enumerate(columns.ids):
         producer = columns.records[position]
-        key = (first_list[position], tile_list[position])
+        area = area_list[position]
+        key = area if area != NO_AREA else (recipe_list[position], tile_list[position])     # an area has one currency
         currency = currencies.get(key)
         if currency is None:
-            currency = currencies[key] = view.currency_of(view.area_of(min(setup.recipes[producer.recipe_id].outputs), producer.tile))
+            currency = currencies[key] = view.currency_of(
+                area_ids[area] if area != NO_AREA else view.area_of(min(setup.recipes[producer.recipe_id].outputs), producer.tile))
         currency_of_row.append(currency)
         cash_in_currency_list.append(balance(producer_id, currency))
         cash_in_money_list.append(balance(producer_id, money))
