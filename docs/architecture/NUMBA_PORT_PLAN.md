@@ -252,11 +252,12 @@ any rounding change does; the digest is the same on two runs and after a reload.
       cohort can afford exists or not by the last bit). Rome cold opening about 120 s after; Rome's household plans
       are discrete and its opening moves with last-digit changes (producer counts differ between kernel variants), so
       the Rome record before the port is compared below
-- [ ] Rome's opening changed by the port: old code 8189 producers and households' hired work summing to about 0.3, the
-      port 8170 and about 15 (one household from about zero to five hours a person). A one-ulp nudge of an opening price
-      leaves the old opening as it was, and the port with its demand kernel declined (`OpeningDemand.supported` false)
-      gives the old opening back, so a rule inside the demand kernel's path differs on Rome's inputs; being found
-      (`open_dump.py` and `open_compare.py` in the orchestrator's scratch folder)
+- [x] Rome's opening changed by the port (8170 producers against 8189, households' hired work about 15 against 0.3):
+      the packed settle reused the households' stock from before the durable stock was seeded, so durables that serve a
+      need and are also stores of wealth were counted as wealth; the old path's memo of orders (`own.uncut`) was stale the
+      same way when it was reused. After seeding, the orders are made again and the cohorts packed again from the stock
+      held (`OwnPlots.forget_orders`, `OpeningDemand.repacked`; `test_opening_seed_repack`). Rome's opening agrees with the
+      old code's (8189 producers, worst relative difference about 1e-14); England's is unchanged
 - [x] the rest of Rome's opening: the cost was repeated work, not loops. `household_plans` worked the producers' hours demand
       (`expected_shares`) once per cohort; it is worked once per call. `location.opening_split` re-derived the placed tiles of
       a recipe on every call; the placement reads are kept per setup. `crop_sites.sites` works a recipe's paying floor once.
