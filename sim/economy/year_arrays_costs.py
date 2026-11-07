@@ -192,6 +192,8 @@ def refreshed(arrays, setup, record, view):
         producers = arrays.producers.refresh(record.producers)
     except KeyError:
         return arrays.sync(setup, record, view)
+    if arrays.memory.is_current(record.memory):
+        return replace(arrays, producers=producers)
     wages = {}
 
     def wage_of(trade, tile):

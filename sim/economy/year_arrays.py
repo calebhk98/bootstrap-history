@@ -40,7 +40,9 @@ def wage_grid(setup, view, trades: Names, tiles: Names) -> np.ndarray:
     return grid
 
 
-def _memory_arrays(setup, matrices: RecipeMatrices, tiles: Names, area_index: AreaIndex, record, view) -> MemoryArrays:
+def _memory_arrays(setup, matrices: RecipeMatrices, tiles: Names, area_index: AreaIndex, record, view, previous=None) -> MemoryArrays:
+    if previous is not None and previous.is_current(record.memory):      # nothing was written since: the same answer
+        return previous
     from .trade_wages import wage_in_view
     return MemoryArrays.build(record.memory, matrices.goods, matrices.trades, tiles, area_index, setup.currency_id,
                               lambda trade, tile: wage_in_view(setup, view, trade, labour_area(tile)),
@@ -75,5 +77,5 @@ class YearArrays:
             cohorts = CohortColumns.build(record.cohorts, self.tiles)
         except KeyError:
             return YearArrays.build(setup, record, self.area_map, view)
-        memory = _memory_arrays(setup, self.matrices, self.tiles, self.area_index, record, view)
+        memory = _memory_arrays(setup, self.matrices, self.tiles, self.area_index, record, view, self.memory)
         return YearArrays(self.matrices, self.tiles, self.area_index, producers, cohorts, memory, self.area_map)

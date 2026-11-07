@@ -10,7 +10,7 @@ from typing import Dict, Mapping, Optional
 
 import numpy as np
 
-from .market_memory import KEY_SEPARATOR, MarketMemory
+from .market_memory import KEY_SEPARATOR, MarketMemory, written_stamp
 from .planning_price import BARE_QUOTES
 from .types import QUOTE_LOWEST_UNFILLED_ASK, QUOTE_OPENING_ESTIMATE
 from .year_arrays_recipes import Names
@@ -76,6 +76,11 @@ class MemoryArrays:
     bare_quote: np.ndarray   # good by area: whether the remembered price is a bid ceiling or an ask, not a trade
     rate: np.ndarray         # area: the base lending rate of the area's currency, NaN where none
     wage: np.ndarray         # trade by tile: the wage rule's wage
+    stamp: Optional[tuple] = None    # what the memory was when these were read (`is_current`)
+
+    def is_current(self, memory: MarketMemory) -> bool:
+        """Whether nothing has been written to this memory since these arrays were read."""
+        return self.stamp is not None and self.stamp == (id(memory), written_stamp())
 
     @classmethod
     def build(cls, memory: MarketMemory, goods: Names, trades: Names, tiles: Names, area_index: AreaIndex,
@@ -112,7 +117,7 @@ class MemoryArrays:
         wage = wage_grid if wage_grid is not None else np.array(
             [[wage_of(trade, tile) for tile in tiles.ids] for trade in trades.ids], dtype=np.float64).reshape(
             len(trades.ids), len(tiles.ids))
-        return cls(price, offered, cleared, bare, rate, wage)
+        return cls(price, offered, cleared, bare, rate, wage, (id(memory), written_stamp()))
 
 
 def at_tiles(grid: np.ndarray, area_of_good_tile: np.ndarray, good_row: int, tile_row: int) -> float:

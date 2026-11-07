@@ -24,6 +24,11 @@ def note_written() -> None:
     _writes[0] += 1
 
 
+def written_stamp() -> int:
+    """Changes with every write to the prices, wages, rates, quotes and trade ages a reader's copy comes from."""
+    return _writes[0]
+
+
 OPENING_EXPECTED_INFLATION = declare(
     "OPENING_EXPECTED_INFLATION", 0.0, kind="initial_condition",
     unit="share per year", source=None, confidence="C",
@@ -192,6 +197,7 @@ class MarketMemory:
             self.cleared_prices[key] = price
         else:
             self.cleared_prices.pop(key, None)
+        note_written()
 
     def note_usual_price(self, key: str) -> None:
         """Move the usual price of a market toward its remembered price (start at it when new)."""
