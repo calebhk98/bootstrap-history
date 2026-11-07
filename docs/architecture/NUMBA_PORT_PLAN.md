@@ -128,12 +128,22 @@ changes a field. The saved record format does not change.
       `settlement_batch_kernel.settle_markets`: purses and stocks carried from market to market, the book posted once per good;
       `test_year_speed_settlement_batch`). Second-year wall time of the settlement stage about 0.27 s to 0.14 s
       (a `perf_counter` wrapper around `settle_goods_many` in `year_goods.clear_goods`)
-- [ ] What is left: the cost itself over arrays (`unit_cost.full_cost_per_unit` per seller, dictionary prices in and out);
-      the markets of one good's areas cleared by one kernel call (a `ClearingResult` with its fills and pairing is still
-      built per market, because the ledger, the settlement and the markets' memory read them). Measured in the second
-      year (cProfile seconds, `year_goods.clear_goods` 3.5 in all): `unsold_search.clear_with_search` 0.9 over 4054
-      markets (floors, held values, salvage floors, the raise: Python per offer), `_produce_and_offer` 0.7,
-      `settlement.settle_goods` 0.5 (packs the pairing's tuples per market), `seller_offers.strategic_offers` 0.4
+- [x] The costs of every producer's outputs over the year arrays, once a year (`year_arrays_costs.OfferCosts`: cost,
+      input share, expected price, share of the plant a run pays; `test_year_speed_goods_markets`)
+- [x] A good's markets with offers re-priced, searched and cleared in one kernel call (`goods_year_kernel.decide_markets`,
+      packed by `goods_year_batch.clear_markets`; called from `year_goods.clear_goods` when it is given the year arrays):
+      the sellers' re-pricing, the floors, the salvage floors, the search down and the sold-out raise, each rule as in
+      `seller_offers.strategic_offers` and `unsold_search.clear_with_search`; the market is then cleared once with the answer.
+      On the Rome save every batched market of a year ends with the old path's reservations
+      (`python3 sim/simulator.py year-time` digest differs only in float noise). Markets with a book edge selling in them
+      or a good that is not portable (ground) still go through the old path
+- [x] The turn's producers' offers (`year_goods_offers.offer_reservations`): holding reservation and the distress by the cash
+      still to raise, one kernel call per good; a producer with an output that has no expected price goes through `producers.offers`
+- [ ] What is left: the second allocation inside the final `goods_market.clear` and the fills and pairing it builds per market
+      (the kernel could return its last allocation); `_produce_and_offer`'s `producers.produce` and `book.move_many`
+      (sim/book.py), `_remember_markets` and the per-market notes after the clear (`note_bids`, `note_offers`,
+      `offers_left`, `note_clearing`); the memory arrays are read again before the clear (`year_arrays_costs.refreshed`: the
+      wages move after the year start)
 - [ ] Checks: reproducible, compared, share measured (see item 4)
 
 ### 3. Households' respend (`goods_respend.py`, `goods_respend_year.py`)
