@@ -18,7 +18,7 @@ from sim.economy.labour_supply import HourSupply
 from sim.economy.types import LabourOffer
 from sim.labour.market import clearing, clearing_arrays, trades
 from sim.labour.market.import_cost import ImportCosts
-from sim.labour.market.records import EmployerHoursBid, MarketState, Route, YearInputs
+from sim.labour.market.records import EmployerHoursBid, MarketState, Route, YearInputs, copy_state
 
 TOLERANCE = 1e-9
 AREAS = ["a%d" % i for i in range(6)]
@@ -132,6 +132,27 @@ class MarketHeadsAgreeWithThePlainFunctions(unittest.TestCase):
 
     def test_hours_sold_follow_a_schedule(self):
         self.compare(True, 2)
+
+    def test_every_market_cleared_through_the_kernel_equals_the_plain_path(self):
+        """`clear_all` with the heads from the kernel and with the heads from the plain functions give the same clearings."""
+        rng = random.Random(9)
+        compared = 0
+        for _case in range(12):
+            state, inputs = random_case(rng, _case % 2 == 1)
+            fast = clearing.clear_all(copy_state(state), inputs)
+            real = clearing_arrays.kernel_applies
+            clearing_arrays.kernel_applies = lambda _inputs: False
+            try:
+                plain = clearing.clear_all(copy_state(state), inputs)
+            finally:
+                clearing_arrays.kernel_applies = real
+            self.assertEqual([(each.trade, each.area) for each in fast], [(each.trade, each.area) for each in plain])
+            for got, want in zip(fast, plain):
+                for name in ("wage", "hours_offered", "hours_wanted", "hours_hired", "target_wage", "hours_held"):
+                    self.assertTrue(same(getattr(got, name), getattr(want, name)) or abs(getattr(got, name) - getattr(want, name)) <= 1e-6 * max(1.0, abs(getattr(want, name))),
+                                    "%s of %s: kernel %r, plain %r" % (name, (want.trade, want.area), getattr(got, name), getattr(want, name)))
+                compared += 1
+        self.assertGreater(compared, 100)
 
     def test_a_replaced_fetch_search_is_called_through_the_plain_path(self):
         state, inputs = random_case(random.Random(3), True)

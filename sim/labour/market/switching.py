@@ -13,7 +13,6 @@ half a career ahead, the old trade's income to give up, and only a move worth mo
 the core's people equal to demography's by scaling every worker and trainee of a tile by one factor
 (`scale_people` in sim/economy/labour_state.py), so trainees in a cohort are not lost or created by it.
 """
-import math
 from typing import Dict, List, Mapping, Optional, Tuple
 
 import numpy as np

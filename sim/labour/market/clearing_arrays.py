@@ -4,12 +4,11 @@ Areas and trades become positions in sorted id order. The kernel stands in for t
 `import_cost.py` and `fetch_wage.py`, so it is used only where they would give its answer: the fetched-hands search is
 the reference one (a mod's replacement is called through the plain path), and the hours each market sells are given as
 packed matrices (`sold_hours_kernel`) or not at all."""
-from typing import Dict, List, Optional, Sequence, Tuple
+from typing import Dict, List, Sequence, Tuple
 
 import numpy as np
 
 from . import clearing_kernel as kernel
-from .carriage import carriage_from
 from .fetch_wage import fetch_wage as reference_fetch_wage
 from .premium import annuity_factor, training_premium
 from .records import EmployerHoursBid, MarketState, YearInputs, no_hours
