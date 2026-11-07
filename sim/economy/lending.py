@@ -15,7 +15,7 @@ from .household_time_preference import HOUSEHOLD_TIME_PREFERENCE
 from .household_work_year import basket_key, cohort_basket
 from .producers_working_capital import WORKING_CAPITAL_PURPOSE
 from .types import FundsOffer
-from .households_basket import need_prices
+from .households_basket import cohort_need_prices
 from .inventory import held_stock
 from .rates import own_rate
 
@@ -159,6 +159,6 @@ def bid_household_loans(setup, record, view, ledger, loans, order_book, priced_b
 
 def _priced_basket(view, key, basket, priced_by_tile):
     if key not in priced_by_tile:
-        priced_by_tile[key] = need_prices(basket, view, key[0])
+        priced_by_tile[key] = cohort_need_prices(basket, view, key[0], key)
     return priced_by_tile[key]
 

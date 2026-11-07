@@ -5,9 +5,10 @@ tiles, the markets its tiles trade in, the producers working on its tiles. Nothi
 by a ratio. Money is in the economy's unit (the port converts to coin). A figure the country's tiles have
 no record of is None, so a caller can fall back to a labelled estimate."""
 import math
+import weakref
 from typing import Dict, List, Optional, Set, Tuple
 
-from . import carried_book, households, quiet_year
+from . import carried_book, households_basket, quiet_year
 from .home_scope import has_partners
 from .market_memory import KEY_SEPARATOR, YearView
 from .national_prices import national_prices, national_wages
@@ -149,14 +150,31 @@ def opening_basket(economy, country: Optional[str]) -> Dict[str, float]:
     return basket
 
 
+_floor_views: "weakref.WeakKeyDictionary" = weakref.WeakKeyDictionary()
+
+
 def _floor_view(economy):
+    """The view the floor costs are read from, kept for the economy while its memory, book and area map are the same objects
+    and in the same year (its kept reads are dropped on every write to the memory, so a new view is not needed for that)."""
     setup, record = economy.setup, economy.record
-    return YearView(record.memory, record.book, economy.area_map, setup.currency_id, setup, labour_area)
+    inputs = (record.memory, record.book, economy.area_map, setup)
+    try:
+        kept = _floor_views.get(economy)
+    except TypeError:
+        kept = None
+    if kept is not None and kept[0] == record.memory.year and all(old is new for old, new in zip(kept[1], inputs)):
+        return kept[2]
+    view = YearView(record.memory, record.book, economy.area_map, setup.currency_id, setup, labour_area)
+    try:
+        _floor_views[economy] = (record.memory.year, inputs, view)
+    except TypeError:
+        pass
+    return view
 
 
 def _tile_floor_costs(economy, view, tile) -> Dict[str, float]:
     return {need.spec.need_id: need.price_index * need.spec.subsistence_per_person
-            for need in households.need_prices(economy.setup.basket_for(tile), view, tile)
+            for need in households_basket.tile_need_prices(economy.setup, view, tile)
             if need.spec.subsistence_per_person > 0.0}
 
 
