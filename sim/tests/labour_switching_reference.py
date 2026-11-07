@@ -1,15 +1,17 @@
 """The plain Python rules of switching's choice odds and planned moves, as they ran before the arrays kernel
 (`switching_kernel.plan_area`): kept so a test runs both on the same inputs. Not used by the game."""
+import math
+from operator import sub
 from typing import Dict, List, Mapping, Tuple
 
 import numpy as np
 
-from sim.labour.market import aptitude, expectations, switching_kernel
+from sim.labour.market import aptitude, expectations, switching_kernel, training
 from sim.labour.market.premium import annuity_factor
 from sim.labour.market.switching import (NEGLIGIBLE_MOVE_SHARE, PLAN_REUSE_TOLERANCE, REMAINING_CAREER_SHARE,
                                          SWITCHING_CONSIDERATION_SHARE_PER_YEAR, SWITCHING_TASTE_SCALE, Move,
-                                         RETRAINING_SHARE_WITHIN_FAMILY)
-from sim.labour.market.records import YearInputs
+                                         RETRAINING_SHARE_WITHIN_FAMILY, _move_order)
+from sim.labour.market.records import MarketState, YearInputs, YearReport
 from sim.labour.market.trades import fallback_trade
 
 
@@ -108,3 +110,46 @@ def _planned_moves(state, inputs, area, sources, destinations, income, baseline,
             for trade, row in rows.items():
                 moves.append((source, trade, row, 1.0 if is_young else _training_share(inputs, source, trade)))
     return moves
+
+
+def _carry_out(state: MarketState, inputs: YearInputs, report: YearReport, area: str,
+               moves: List[Move]) -> List[str]:
+    """Take the switchers out of their trades and into training. Sources moving to one target on the
+    same training length apply together, and the target's places are shared out between them in
+    proportion to the people each sends (band by band). Returns the trades that took trainees in."""
+    workers = state.workers[area]
+    net: Dict[str, float] = {}
+    groups: Dict[Tuple[str, float], List[Tuple[str, List[float]]]] = {}
+    for source, target, bands, share in sorted(moves, key=_move_order):
+        source_bands = workers[source]
+        taken = list(map(min, source_bands, bands))   # `have` unless the move asks for less
+        source_bands[:] = map(sub, source_bands, taken)
+        groups.setdefault((target, share), []).append((source, taken))
+    for (target, share), senders in groups.items():
+        if len(senders) == 1:
+            combined = senders[0][1]
+        else:
+            combined = [math.fsum(column) for column in zip(*[taken for _source, taken in senders])]
+        refused = training.enrol(state, inputs, area, target, combined, share)
+        anything_refused = any(refused)
+        for source, taken in senders:
+            moved = aptitude.band_total(taken)
+            if anything_refused:
+                if len(senders) == 1:
+                    returned = refused
+                else:
+                    returned = [back * mine / total if total > 0.0 else 0.0
+                                for back, mine, total in zip(refused, taken, combined)]
+                aptitude.add_bands(workers[source], returned)
+                moved -= aptitude.band_total(returned)
+            net[target] = net.get(target, 0.0) + moved
+            net[source] = net.get(source, 0.0) - moved
+    if net:
+        record = report.switched.setdefault(area, {})
+        for trade, change in net.items():
+            record[trade] = record.get(trade, 0.0) + change
+    return [target for target, _share in groups]
+
+
+def _move_order(move: Move):
+    return move[1], move[0], move[3]

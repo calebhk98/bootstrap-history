@@ -52,11 +52,13 @@ def buy(state: MarketState, inputs: YearInputs, index: Dict, area: str, trade: s
         memo = {}
     if wanted <= 0.0 or area not in inputs.bondage_allowed:
         return 0.0
+    offers = {origin: by_trade[trade] for origin, by_trade in pool.items() if by_trade.get(trade, 0.0) > 0.0}
+    if not offers:      # nobody sells the trade: nothing is bought and no one pays
+        return 0.0
     clearing: Optional[LabourClearing] = index.get((area, trade))
     bid = worth_in(inputs, index, area, trade, clearing.heading_wage if clearing is not None else None)
     if bid is None:
         return 0.0
-    offers = {origin: by_trade[trade] for origin, by_trade in pool.items() if by_trade.get(trade, 0.0) > 0.0}
     ask, carriage = {}, {}
     for origin in offers:
         price = worth_in(inputs, index, origin, trade, _practised_wage(index, origin, trade))

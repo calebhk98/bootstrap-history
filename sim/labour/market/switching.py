@@ -14,8 +14,7 @@ the core's people equal to demography's by scaling every worker and trainee of a
 (`scale_people` in sim/economy/labour_state.py), so trainees in a cohort are not lost or created by it.
 """
 import math
-from operator import sub
-from typing import Dict, List, Mapping, Tuple
+from typing import Dict, List, Mapping, Optional, Tuple
 
 import numpy as np
 
@@ -102,7 +101,7 @@ def switch_trades(state: MarketState, inputs: YearInputs, clearings: Mapping, re
                 later_income[trade] = expectations.income_at_graduation(state, inputs, clearings, area, trade,
                                                                         chances[trade])
             moves = _planned_moves(inputs, state.workers[area], plan, np.array([later_income[trade] for trade in destinations]))
-            stale = _carry_out(state, inputs, report, area, moves)
+            stale = _carry_out(state, inputs, report, area, plan, moves)
 
 
 class _DestinationArrays:
@@ -136,9 +135,21 @@ class _AreaPlan:
         self.considering = np.zeros((count_sources, 2))
 
 
-def _planned_moves(inputs, workers, plan: _AreaPlan, later_income) -> List[Move]:
-    """The moves of one round: for each source, the established workers then the young, the people of each ability band
-    sent to each destination the band picks (`switching_kernel.plan_area` works out the odds)."""
+class _Moves:
+    """The round's moves in the order they are carried out (by destination, source, training share), one row each: source and
+    destination positions, the share of the training years, and the people per band."""
+
+    def __init__(self, counts, sources, destinations, shares, rows):
+        self.counts, self.sources, self.destinations, self.shares, self.rows = counts, sources, destinations, shares, rows
+
+    def as_tuples(self, plan: "_AreaPlan") -> List[Move]:
+        return [(plan.sources[source], plan.destinations[destination], row, share) for source, destination, share, row in
+                zip(self.sources.tolist(), self.destinations.tolist(), self.shares.tolist(), self.rows.tolist())]
+
+
+def _planned_moves(inputs, workers, plan: _AreaPlan, later_income) -> Optional[_Moves]:
+    """The moves of one round (None where there are none): for each source, the established workers then the young, the
+    people of each ability band sent to each destination the band picks (`switching_kernel.plan_area` works out the odds)."""
     rounds = expectations.DECISION_ROUNDS_PER_YEAR
     counts = np.array([workers[source] for source in plan.sources])
     switching_kernel.plan_area(
@@ -147,35 +158,35 @@ def _planned_moves(inputs, workers, plan: _AreaPlan, later_income) -> List[Move]
         inputs.discount_rate, inputs.career_years, SWITCHING_CONSIDERATION_SHARE_PER_YEAR, REMAINING_CAREER_SHARE,
         PLAN_REUSE_TOLERANCE, SWITCHING_TASTE_SCALE, NEGLIGIBLE_MOVE_SHARE, plan.valid, plan.then, plan.targets, plan.shares,
         plan.moving, plan.active, plan.considering)
-    moves: List[Move] = []
-    for position, source in enumerate(plan.sources):
-        for young in (0, 1):
-            if not plan.active[position, young]:
-                continue
-            sending = plan.moving[position, young] & (counts[position] > 0.0)
-            if not sending.any():
-                continue
-            picked = sending[:, None] & (plan.shares[position, young] > 0.0)
-            amounts = (counts[position] * plan.considering[position, young] / rounds)[:, None] * plan.shares[position, young]
-            for column in np.flatnonzero(picked.any(axis=0)).tolist():
-                moves.append((source, plan.destinations[column], np.where(picked[:, column], amounts[:, column], 0.0).tolist(),
-                              1.0 if young == 1 else float(plan.training_share[position, column])))
-    return moves
+    sending = plan.moving & (counts > 0.0)[:, None, :] & plan.active[:, :, None]      # [source, young, band]
+    picked = sending[..., None] & (plan.shares > 0.0)                                  # [source, young, band, destination]
+    source, young, destination = np.nonzero(picked.any(axis=2))
+    if source.size == 0:
+        return None
+    amounts = np.where(picked, (counts[:, None, :] * plan.considering[:, :, None] / rounds)[..., None] * plan.shares, 0.0)
+    share = np.where(young == 1, 1.0, plan.training_share[source, destination])
+    order = np.lexsort((share, source, destination))      # stable: the established workers' move goes before the young's
+    return _Moves(counts, source[order], destination[order], share[order], amounts[source, young, :, destination][order])
 
 
-def _carry_out(state: MarketState, inputs: YearInputs, report: YearReport, area: str,
-               moves: List[Move]) -> List[str]:
+def _carry_out(state: MarketState, inputs: YearInputs, report: YearReport, area: str, plan: _AreaPlan,
+               moves: Optional[_Moves]) -> List[str]:
     """Take the switchers out of their trades and into training. Sources moving to one target on the
     same training length apply together, and the target's places are shared out between them in
     proportion to the people each sends (band by band). Returns the trades that took trainees in."""
+    if moves is None:
+        return []
     workers = state.workers[area]
+    have = moves.counts.copy()
+    taken_amounts = np.empty_like(moves.rows)
+    switching_kernel.take_moves(moves.sources, moves.rows, have, taken_amounts)      # `have` unless the move asks for less
+    for position in np.unique(moves.sources).tolist():
+        workers[plan.sources[position]][:] = have[position].tolist()
     net: Dict[str, float] = {}
     groups: Dict[Tuple[str, float], List[Tuple[str, List[float]]]] = {}
-    for source, target, bands, share in sorted(moves, key=_move_order):
-        source_bands = workers[source]
-        taken = list(map(min, source_bands, bands))   # `have` unless the move asks for less
-        source_bands[:] = map(sub, source_bands, taken)
-        groups.setdefault((target, share), []).append((source, taken))
+    for source, destination, share, taken in zip(moves.sources.tolist(), moves.destinations.tolist(), moves.shares.tolist(),
+                                                 taken_amounts.tolist()):
+        groups.setdefault((plan.destinations[destination], share), []).append((plan.sources[source], taken))
     for (target, share), senders in groups.items():
         if len(senders) == 1:
             combined = senders[0][1]

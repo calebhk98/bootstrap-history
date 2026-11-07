@@ -13,7 +13,7 @@ import unittest
 import numpy as np
 
 from sim.labour.market import aptitude, switching
-from sim.labour.market.records import MarketState, TradeSpec, YearInputs
+from sim.labour.market.records import MarketState, TradeSpec, YearInputs, YearReport, copy_state
 from sim.tests import labour_switching_reference as reference
 
 TOLERANCE = 1e-12
@@ -40,6 +40,21 @@ def moves_equal(test, got, expected):
 
 class PlannedMovesAgreeWithThePlainRules(unittest.TestCase):
 
+    def assert_states_close(self, left, right):
+        self.assertEqual({a: sorted(by) for a, by in left.workers.items()}, {a: sorted(by) for a, by in right.workers.items()})
+        for area, by_trade in left.workers.items():
+            for trade, bands in by_trade.items():
+                for one, other in zip(bands, right.workers[area][trade]):
+                    self.assertAlmostEqual(one, other, delta=1e-9 * max(1.0, abs(one)))
+        self.assertEqual({a: sorted(by) for a, by in left.trainees.items()}, {a: sorted(by) for a, by in right.trainees.items()})
+        for area, by_trade in left.trainees.items():
+            for trade, cohorts in by_trade.items():
+                self.assertEqual(len(cohorts), len(right.trainees[area][trade]))
+                for cohort, other in zip(cohorts, right.trainees[area][trade]):
+                    self.assertEqual((cohort[0], cohort[2]), (other[0], other[2]))
+                    for one, two in zip(cohort[1], other[1]):
+                        self.assertAlmostEqual(one, two, delta=1e-9 * max(1.0, abs(one)))
+
     def test_four_rounds_of_random_areas(self):
         rng = random.Random(21)
         rounds_compared = rounds_moving = 0
@@ -58,6 +73,7 @@ class PlannedMovesAgreeWithThePlainRules(unittest.TestCase):
             vacancies = {trade for trade in destinations if rng.random() < 0.3}
             later = {trade: rng.uniform(150.0, 1200.0) for trade in destinations}
             planned = {}
+            state_fast = copy_state(state)
             fixed = switching._DestinationArrays(
                 chances=np.array([chances[trade] for trade in destinations]), years=np.array([inputs.trades[trade].training_years for trade in destinations]),
                 families=[inputs.trades[trade].family for trade in destinations],
@@ -66,16 +82,22 @@ class PlannedMovesAgreeWithThePlainRules(unittest.TestCase):
             for _round in range(4):
                 expected = reference._planned_moves(state, inputs, "vale", sources, destinations, income, baseline, later, vacancies,
                                                     subsistence, chances, planned, idle)
-                got = switching._planned_moves(inputs, state.workers["vale"], plan, np.array([later[trade] for trade in destinations]))
+                found = switching._planned_moves(inputs, state_fast.workers["vale"], plan, np.array([later[trade] for trade in destinations]))
+                got = [] if found is None else found.as_tuples(plan)
                 moves_equal(self, got, expected)
                 rounds_compared += 1
                 rounds_moving += bool(expected)
+                # both ways of carrying the moves out leave the same people in training and at work
+                report_plain, report_fast = YearReport(), YearReport()
+                targets_plain = reference._carry_out(state, inputs, report_plain, "vale", expected)
+                targets_fast = switching._carry_out(state_fast, inputs, report_fast, "vale", plan, found)
+                self.assertEqual(targets_plain, targets_fast)
+                self.assert_states_close(state, state_fast)
+                self.assertEqual(sorted(report_plain.switched.get("vale", {})), sorted(report_fast.switched.get("vale", {})))
+                for trade, change in report_plain.switched.get("vale", {}).items():
+                    self.assertAlmostEqual(report_fast.switched["vale"][trade], change, delta=1e-9 * max(1.0, abs(change)))
                 for trade in destinations:      # enrolling moves some incomes a little, some a lot
                     later[trade] += rng.choice([0.0, 0.004 * subsistence, rng.uniform(-200.0, 200.0)])
-                for move in expected[:2]:       # and the sources that sent people hold fewer
-                    bands = state.workers["vale"][move[0]]
-                    for band, amount in enumerate(move[2]):
-                        bands[band] = max(0.0, bands[band] - amount)
         self.assertGreater(rounds_compared, 200)
         self.assertGreater(rounds_moving, 100)
 

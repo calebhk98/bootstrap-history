@@ -162,3 +162,17 @@ def plan_area(counts, income, idle, baseline, later, vacancies, chances, years, 
                 planned_moves[source, young_flag, band] = moves[band]
                 for slot in range(count):
                     planned_shares[source, young_flag, band, picked[slot]] = shares[band, slot]
+
+
+@njit
+def take_moves(sources, rows, have, taken):
+    """Carry out the moves in order: each takes from its source's bands what it asks for, no more than the source has left
+    (`have[source, band]` is updated). Fills `taken[move, band]`."""
+    for move in range(sources.shape[0]):
+        for band in range(have.shape[1]):
+            amount = rows[move, band]
+            left = have[sources[move], band]
+            if left < amount:
+                amount = left
+            taken[move, band] = amount
+            have[sources[move], band] = left - amount
