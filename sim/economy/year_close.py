@@ -21,6 +21,7 @@ from .types import is_edge
 from .inventory import held_stock
 from .year_ledger import YearLedger
 from .replaced import replaced
+from .producers import live_input_prices, live_wages
 from .rates import own_rate
 
 
@@ -118,6 +119,13 @@ def close_agents(setup, record, view, ledger: YearLedger, area_map, carriage,
     crews_of_recipe: Dict[str, list] = {}
     for each in record.producers.values():
         crews_of_recipe.setdefault(each.recipe_id, []).append(each.crew_runs)
+    live_prices: Dict[Tuple[str, str], tuple] = {}
+    pool_by_recipe_trade: Dict[Tuple[str, str], float] = {}     # the crews' practice is read before the loop, so one pool per recipe and trade
+
+    def pooled(recipe_id: str, trade: str) -> float:
+        if (recipe_id, trade) not in pool_by_recipe_trade:
+            pool_by_recipe_trade[(recipe_id, trade)] = practice.pool_units(crews_of_recipe[recipe_id], trade)
+        return pool_by_recipe_trade[(recipe_id, trade)]
     market_capacity = market_capacities(((each.tile, setup.recipes[each.recipe_id].outputs, each.capacity_runs * each.yield_factor)
                                          for each in record.producers.values() if each.idle_years <= 0), area_map.area_of)
     for producer_id, producer in sorted(record.producers.items()):
@@ -133,15 +141,19 @@ def close_agents(setup, record, view, ledger: YearLedger, area_map, carriage,
         price_share = expansion_price.price_share_of(ledger.bids_by_market, traded, area_map.area_of, producer.tile,
                                                    prepared_buyers)
         demand_runs = runs_sold(producer, recipe, ledger, record.book, area_map.area_of, prices_here, market_capacity)
+        if (producer.recipe_id, producer.tile) not in live_prices:     # last year's prices do not change inside the close
+            live_prices[(producer.recipe_id, producer.tile)] = (live_input_prices(producer, recipe, view), live_wages(producer, recipe, view))
+        inputs, wages = live_prices[(producer.recipe_id, producer.tile)]
         closed = producers_close.close_year(producer, recipe, revenue, costs, view, worked, price_share,
                                             [good for good in recipe.outputs if good in setup.specs and not setup.specs[good].portable],
                                             service_lives, firm_finance.interest_due(loans_of.get(producer_id, []), producer_id),
                                             demand_runs,
-                                            spoilage={good: setup.specs[good].spoilage_per_year for good in recipe.outputs if good in setup.specs})
+                                            spoilage={good: setup.specs[good].spoilage_per_year for good in recipe.outputs if good in setup.specs},
+                                            inputs=inputs, wages=wages)
         year = None
         if not closed.exited:       # the dividend, the financing check and bankruptcy follow Eurace@Unibi (firm_year.py)
             closed, _paid, year = firm_year.settle_year(setup, record, view, producer, closed, recipe, revenue, costs,
-                                                        loans_of.get(producer_id, []))
+                                                        loans_of.get(producer_id, []), inputs, wages)
         shares.note_dividend(record.capital_markets, producer_id, closed.transfers)
         if year is not None and year.write_off_ratio > 0.0:
             firm_year.write_off(record, producer_id, year.write_off_ratio)
@@ -164,7 +176,7 @@ def close_agents(setup, record, view, ledger: YearLedger, area_map, carriage,
             record.credit.plan_expansion(producer_id, closed.expansion_runs)
         producer_table.put_producer(record.producers, _with_practice(
             _with_sales(closed.producer, recipe, ledger, demand_runs, prices_here), producer.last_runs,
-            {trade: practice.pool_units(crews_of_recipe[producer.recipe_id], trade) for trade in producer.crew_runs}))
+            {trade: pooled(producer.recipe_id, trade) for trade in producer.crew_runs}))
     prices, volumes = learned_prices(ledger.market_totals(), record.memory)
     anchors = {(good, area.area_id): area.anchor_tile for good in area_map.goods() for area in area_map.areas(good)}
     ordered = (sorted(prices.items()), sorted(volumes.items()))
@@ -184,6 +196,7 @@ def close_agents(setup, record, view, ledger: YearLedger, area_map, carriage,
                                                             for result in ledger.labour_results}))
     for lender, interest in record.capital_markets.take_pool_income().items():     # the actors' pool paid this year
         property_income[lender] = property_income.get(lender, 0.0) + interest
+    offered_prices: Dict = {}      # the prices households are closed on do not change while they close
     for cohort_id, cohort in sorted(record.cohorts.items()):
         received = dict(ledger.received.get(cohort_id, {}))
         for good, quantity in ledger.grown.get(cohort_id, {}).items():
@@ -191,7 +204,7 @@ def close_agents(setup, record, view, ledger: YearLedger, area_map, carriage,
         income = ledger.wages_in.get(cohort_id, 0.0) + property_income.get(cohort_id, 0.0)
         spent = ledger.money_out.get(cohort_id, 0.0)
         closed, moves = households.close_year(cohort, received, view, setup.specs, cohort_basket(setup, record, cohort, buying=False),
-                                                   income, spent)
+                                                   income, spent, offered_prices)
         record.book.move_many(held_only(moves, record.book))
         households_cohort.put_cohort(record.cohorts, closed)
     record.capital_markets.set_property_income(property_income)
