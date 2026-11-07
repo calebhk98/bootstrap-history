@@ -160,7 +160,16 @@ any rounding change does; the digest is the same on two runs and after a reload.
 - [ ] Checks: reproducible, compared, share measured
 
 ### 8. The year outside the economy (`sim/agents/registry.advance`, the engine's other phases)
-- [ ] profile and port or cut what is left: actors and strata, the state, events
+- [x] profile: of a warm Rome year, every phase except the market's is small; the economy's step is the rest
+      (wrap each `year_phases.SHIPPED` handler and `Economy.step` with a timer: the outside is about a tenth)
+- [x] the town ceilings' route searches kept across years while the techniques held and the ways built are unchanged
+      (`urban.kept_carriage_costs`; `test_year_speed_urban_carriage`)
+- [x] a partner country's economy answers (pay, floors, output, idle hours, people) kept until the economy next steps
+      (`country_part.KeptAnswers`, `Economy.years_stepped`; `test_year_speed_kept_country_answers`)
+- [x] the price solver re-solves only when its wage ratios change (banded in its key; cached in memory and on disk): a
+      warm year makes no new solve, so nothing to cut there
+- [ ] what is left is spread thin (invariants' per-trade view reads, `port_year_inputs.build`, `port_sites.deplete`,
+      stratum advance, the home world's repeated floor and pay reads): each a few hundredths of a second
     - [x] national prices and wages read through a market layout built once per set of keys (`price_index.py`;
           `test_year_speed_national_prices`, equal to the old scan); the game unchanged by it
     - [ ] the price solver's re-solves within a year, the urban ceilings, the trade-wage lookups, the groups' and
