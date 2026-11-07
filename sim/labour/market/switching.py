@@ -179,16 +179,10 @@ def _carry_out(state: MarketState, inputs: YearInputs, report: YearReport, area:
     have = moves.counts.copy()
     taken_amounts = np.empty_like(moves.rows)
     switching_kernel.take_moves(moves.sources, moves.rows, have, taken_amounts)      # `have` unless the move asks for less
-    share_rank = np.unique(moves.shares, return_inverse=True)[1].reshape(-1)
-    key = moves.destinations * (int(share_rank.max()) + 1) + share_rank
-    _keys, first, group_of = np.unique(key, return_index=True, return_inverse=True)
-    group_of = group_of.reshape(-1)
-    group_count = first.shape[0]
-    rank_of_group = np.empty(group_count, np.int64)
-    rank_of_group[np.argsort(first, kind="stable")] = np.arange(group_count)      # groups in the order they first appear
-    members = np.argsort(rank_of_group[group_of], kind="stable")      # each group's moves in carrying-out order
-    group_starts = np.zeros(group_count + 1, np.int64)
-    np.cumsum(np.bincount(rank_of_group[group_of], minlength=group_count), out=group_starts[1:])
+    move_count = moves.sources.shape[0]
+    group_of, members, group_starts = np.empty(move_count, np.int64), np.empty(move_count, np.int64), np.zeros(move_count + 1, np.int64)
+    group_count = switching_kernel.group_moves(moves.destinations, moves.shares, group_of, members, group_starts)
+    group_starts = group_starts[:group_count + 1]
     group_destination, group_share = moves.destinations[members[group_starts[:-1]]], moves.shares[members[group_starts[:-1]]]
     destination_count, band_count = len(plan.destinations), have.shape[1]
     source_of_destination = np.full(destination_count, -1, np.int64)

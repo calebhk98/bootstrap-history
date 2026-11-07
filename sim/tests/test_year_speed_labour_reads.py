@@ -158,7 +158,10 @@ class BondedPurchaseReadsKeepTheirValues(unittest.TestCase):
                                                     discount_rate=0.05, career_years=40.0, routes=routes), {}
             for origin in areas:
                 tree = carriage_from(routes, origin)
-                self.assertEqual(costs.reach(origin), sorted((cost, other) for other, cost in tree.items() if other != origin))
+                reached = costs.reach(origin)      # the import cap's search adds a path's costs in another order: equal to a relative tolerance
+                self.assertEqual(sorted(other for _cost, other in reached), sorted(other for other in tree if other != origin))
+                for cost, other in reached:
+                    self.assertAlmostEqual(cost, tree[other], delta=1e-12 * max(1.0, abs(cost)))
 
 
 if __name__ == "__main__":
