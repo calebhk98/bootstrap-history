@@ -93,8 +93,13 @@ copied, never written). A phase's share: `cProfile` of `agent --session COPY` wi
 
 ### 6. Entry and closing (`entry*.py`, `location.py`, `practice.py`, `producers_close.py`, `firm_year.py`, `households_close.py`)
 - [ ] entry plans and siting
+    - [x] practice means over packed crews (`practice.py` kernels; `test_year_speed_practice_kernel`); each recipe's
+          entrant crew read once per entry year (`entry_practice.entrant_crew`)
+    - [ ] siting (`location.siting`), `entry_trial.recipes_by_cost`, `entry_backed.unfilled` over packed wage, price and rent tables
 - [ ] producers' and firms' close of the year
-- [ ] households' close
+    - [x] pooled practice, input prices and wages read once per recipe and tile and handed to each producer's close
+    - [ ] `producers_close.close_year`, `next_expectations`, `_pledgeable`, `firm_year.settle_year` over packed arrays
+- [ ] households' close (the offered prices read once per good and tile, `households_close._priced_needs`; the rest is Python)
 - [ ] Checks: reproducible, compared, share measured
 
 ### 7. The rest of the economy's year
