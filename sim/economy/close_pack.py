@@ -45,6 +45,7 @@ class ClosePack:
     unmet: np.ndarray
     spoilage: np.ndarray
     ground: np.ndarray
+    currencies: list
 
 
 def _fill_by_slot(target: np.ndarray, flows: Mapping, arrays: YearArrays) -> None:
@@ -87,6 +88,7 @@ def pack(setup, record, view, ledger, arrays: YearArrays) -> ClosePack:
     rate_of = np.where(area_column == NO_AREA, own_rate, memory.rate[np.maximum(area_column, 0)])
     currencies: Dict[tuple, str] = {}
     cash_in_currency = np.zeros(count)
+    currency_of_row = []
     cash_in_money = np.zeros(count)
     stock = np.zeros((count, matrices.good_slots))
     held_start = np.zeros(count + 1, dtype=np.int64)
@@ -98,6 +100,7 @@ def pack(setup, record, view, ledger, arrays: YearArrays) -> ClosePack:
         currency = currencies.get(key)
         if currency is None:
             currency = currencies[key] = view.currency_of(view.area_of(min(setup.recipes[producer.recipe_id].outputs), producer.tile))
+        currency_of_row.append(currency)
         cash_in_currency[position] = book.balance(producer_id, currency)
         cash_in_money[position] = book.balance(producer_id, money)
         for slot, column in enumerate(matrices.slot_goods[columns.recipe_row[position]]):
@@ -151,4 +154,4 @@ def pack(setup, record, view, ledger, arrays: YearArrays) -> ClosePack:
             ground[column] = not spec.portable
     return ClosePack(rate_of, cash_in_currency, cash_in_money, revenue, running, stock, sold, made, hours, interest, commitments,
                      arrears, debt, held_start, np.array(held_good, dtype=np.int64), np.array(held_quantity), clearing, unmet,
-                     spoilage, ground)
+                     spoilage, ground, currency_of_row)

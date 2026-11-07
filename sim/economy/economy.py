@@ -33,6 +33,7 @@ from .setup import EconomySetup, area_tile, labour_area
 from .types import Bid, EDGE_CONSUMPTION, GoodsMove, Transfer
 from .national_prices import national_prices, national_wages
 from .merchants_dispatch import dispatch_merchants
+from .year_arrays import YearArrays
 from .year_close import close_agents, money_taxes, remember_basket_price_level, wear_and_spoilage
 from .year_goods import add_orders, clear_goods, cohort_orders, merchant_orders, state_orders
 from .labour_supply import HourSupply
@@ -174,6 +175,7 @@ class Economy:
         self._follow_yields(inputs)
         sites.apply_site_limits(record, setup)
         view = self.view()
+        arrays = None
         money = setup.currency_id
         debt_relief.forgive(record, inputs.debt_relief_tiles)
         titles_moves.apply(record, inputs.title_moves)
@@ -268,7 +270,7 @@ class Economy:
         received = dict(interest)
         for payment in rent:
             received[payment.payee] = received.get(payment.payee, 0.0) + payment.amount
-        close_agents(setup, record, close_view, ledger, self.area_map, self.carriage, received)
+        close_agents(setup, record, close_view, ledger, self.area_map, self.carriage, arrays, received)
         open_entrants(setup, record, close_view, self.area_map, ledger.unmet_demand, self.carriage,
                       with_standing_bids(ledger.bids_by_market, inputs.standing_bids))
         restake_owners(setup, record, close_view)
