@@ -40,6 +40,31 @@ def unit_cost(setup, record, view, offer: Offer) -> Optional[float]:
         live_wages(producer, recipe, view), own_rate(view, setup.currency_id), producer.land_rent_per_run, producer.yield_factor)
 
 
+class UnitCosts(dict):
+    """(seller, tile) -> the offer's `unit_cost`, with `shares` the same keys -> its `input_share_of_cost`: the figures a
+    market's sellers worked out once, for the unsold search of the same market to read."""
+
+    def __init__(self):
+        super().__init__()
+        self.shares = {}
+
+
+def cost_figures(setup, record, view, offer: Offer) -> Tuple[Optional[float], float]:
+    """(`unit_cost`, `input_share_of_cost`) of the offer from one reading of the producer's prices and wages."""
+    producer = record.producers.get(offer.seller)
+    if producer is None:
+        return None, 0.0
+    recipe = setup.recipes[producer.recipe_id]
+    inputs = live_input_prices(producer, recipe, view)
+    wages = live_wages(producer, recipe, view)
+    cost = run_cost.full_cost_per_unit(
+        recipe, offer.good, expected_output_prices(producer, recipe, view), inputs, wages, own_rate(view, setup.currency_id),
+        producer.land_rent_per_run, producer.yield_factor)
+    variable = run_cost.variable_cost_per_run(recipe, inputs, wages, producer.land_rent_per_run)
+    share = run_cost.input_cost_per_run(recipe, inputs) / variable if math.isfinite(variable) and variable > 0.0 else 0.0
+    return cost, share
+
+
 def input_share_of_cost(setup, record, view, offer: Offer) -> float:
     """The share of a run's variable cost the producer pays for bought inputs (none for a seller that is not a
     producer or whose cost cannot be priced): the band above cost marks up only the rest (ask_adjust.band_edge)."""
@@ -115,15 +140,17 @@ def strategic_offers(setup, record, view, bids: Sequence[Bid], offers: Sequence[
         offer = offers[index]
         if offer.quantity <= 0.0:
             continue
-        cost = unit_cost(setup, record, view, offer)
+        cost, input_share = cost_figures(setup, record, view, offer)
         if costs is not None:
             costs[(offer.seller, offer.tile)] = cost
+            if isinstance(costs, UnitCosts):
+                costs.shares[(offer.seller, offer.tile)] = input_share
         if cost is None:
             continue
         if offer.reservation_price <= 0.0:       # a perishable or a distressed holder: it asks a price, never nothing
             producer = record.producers[offer.seller]
             recipe = setup.recipes[producer.recipe_id]
-            limit = (band_edge(cost, input_share_of_cost(setup, record, view, offer), ask_band_multiple(setup, offer))
+            limit = (band_edge(cost, input_share, ask_band_multiple(setup, offer))
                      if math.isfinite(cost) else math.inf)
             opened = opened_ask(offer.reservation_price, cost,
                                 expected_output_prices(producer, recipe, view).get(offer.good), limit)
@@ -143,7 +170,7 @@ def strategic_offers(setup, record, view, bids: Sequence[Bid], offers: Sequence[
         size = market_size(record, offer)
         if offer.reservation_price <= 0.0 or size is None:
             continue      # a seller that sells at any price, or a market with no sales to judge by, keeps its ask
-        limit = (band_edge(cost, input_share_of_cost(setup, record, view, offer), ask_band_multiple(setup, offer))
+        limit = (band_edge(cost, input_share, ask_band_multiple(setup, offer))
                  if math.isfinite(cost) else math.inf)
         pricing.append((index, value, size, max(limit, value)))
     if pricing:

@@ -90,6 +90,7 @@ class Economy:
         self.watched_tiles: Tuple[str, ...] = ()   # tiles whose market books are kept beside the port's and the capital's; not saved
         self._own_hectares: Dict[str, float] = {}   # land households' own plots took this year, by tile
         self._year_plot_options: Optional[Dict[str, list]] = None   # own_plot_options, built once for the year being run
+        self.years_stepped = 0   # years `step` has begun in this process; a reader that keeps a figure of the record until the next year compares it. Never saved
         self._work_hours: Dict[str, float] = {}     # household work each cohort keeps back this year; set when the year plans it
 
     def change_setup(self, **changes: Any) -> None:
@@ -147,6 +148,7 @@ class Economy:
         record.currency = currency.debase_by_cut(record.currency, supply, cut_share, restrike_share)
 
     def step(self, inputs: EconomyYearInputs) -> YearOutcome:
+        self.years_stepped += 1
         with collection_paused():
             try:
                 return self._run_year(inputs)

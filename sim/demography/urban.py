@@ -12,11 +12,32 @@ from sim.geography.api import parameter_value, route_costs, settlement, usable_m
 from sim.world import agriculture, urban_share
 
 
+def kept_carriage_costs(kept, sources, towns, modes, held, improvements, search=route_costs) -> Dict[str, Dict[str, float]]:
+    """{source tile: least carriage cost per tonne to each town}. A source's costs to a tile depend on the techniques held
+    and the ways built only (the towns just let the search stop early), so `kept` (a dict the caller owns) holds each
+    source's costs across years while those are unchanged, and a source is searched again only for towns it has not
+    covered."""
+    ways = tuple(sorted((way, tuple(sorted((edge, str(built)) for edge, built in edges.items())))
+                        for way, edges in improvements.items()))
+    key = (held, ways)
+    if kept.get("key") != key:
+        kept.clear()
+        kept["key"] = key
+    wanted = frozenset(towns)
+    for tile in sources:
+        covered, _costs = kept.get(tile, (frozenset(), None))
+        if not wanted <= covered:
+            within = sorted(wanted | covered)
+            kept[tile] = (frozenset(within), search([tile], modes, improvements, None, None, held, None, within))
+    return {tile: kept[tile][1] for tile in sources}
+
+
 class Urban(Part):
 
     def __init__(self, module):
         super().__init__(module)
         self._urban_ceilings_cache = {}        # (the year's inputs) -> {tile: people its town can feed}; never saved
+        self._carriage_cache = {}              # (held, ways built, towns) -> {tile: its carriage costs}; never saved
 
     def people_for_urban_share(self) -> Dict[str, float]:
         tracked = self.parts.regions.people_by_tile()
@@ -59,8 +80,7 @@ class Urban(Part):
                                  / kcal_per_worker)
         modes = usable_modes([held])
         towns = sorted(people)
-        carriage = {tile: route_costs([tile], modes, improvements, None, None, held, None, towns)
-                    for tile in towns if surplus[tile] > 0.0}
+        carriage = kept_carriage_costs(self._carriage_cache, [tile for tile in towns if surplus[tile] > 0.0], towns, modes, held, improvements)
         return urban_share.town_ceilings(surplus, carriage, tonne_hours)
 
     def urban_people_by_tile(self) -> Dict[str, float]:

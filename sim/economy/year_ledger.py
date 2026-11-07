@@ -67,6 +67,42 @@ class YearLedger:
                     taken = (posting.giver, posting.tile)
                     self.pending_mint_takes[taken] = self.pending_mint_takes.get(taken, 0.0) + posting.quantity
 
+    def note_settlement(self, settled, purpose_kind: str,
+                        plant_goods: Optional[Dict[AgentId, Iterable[GoodId]]] = None) -> None:
+        """`note_postings(settled.postings, purpose_kind)` from the settlement's per-agent sums: money paid out, wages or
+        sales received, the foreign-money figures, and for a sale the goods received and sold and what the mint took. With
+        `plant_goods`, also `note_plant_purchases` for the good sold."""
+        item = settled.item
+        foreign = settled.purpose[len(SALE_PREFIX):] if settled.purpose.startswith(SALE_PREFIX) else settled.purpose
+        wages, sales = purpose_kind == "wages", purpose_kind == "sales"
+        for agent, out, income, imported, exported, got, units_in, units_out in zip(
+                settled.agents, settled.paid, settled.received, settled.imports, settled.exports, settled.got_goods,
+                settled.goods_in, settled.goods_out):
+            if out > 0.0:
+                self.money_out[agent] = self.money_out.get(agent, 0.0) + out
+                if plant_goods is not None and got and item in plant_goods.get(agent, ()):
+                    self.plant_spend[agent] = self.plant_spend.get(agent, 0.0) + out
+            if imported > 0.0:
+                self.imports_paid[(agent, foreign)] = self.imports_paid.get((agent, foreign), 0.0) + imported
+            if exported > 0.0:
+                self.exports_received[(agent, foreign)] = self.exports_received.get((agent, foreign), 0.0) + exported
+            if income > 0.0:
+                if wages:
+                    self.wages_in[agent] = self.wages_in.get(agent, 0.0) + income
+                elif sales:
+                    self.sales_in[agent] = self.sales_in.get(agent, 0.0) + income
+            if sales:
+                if got:
+                    held = self.received.setdefault(agent, {})
+                    held[item] = held.get(item, 0.0) + units_in
+                if units_out > 0.0:
+                    key = (agent, item)
+                    self.sold[key] = self.sold.get(key, 0.0) + units_out
+        if sales:
+            for key, taken in zip(settled.keys, settled.key_to_mint):
+                if taken > 0.0:
+                    self.pending_mint_takes[key] = self.pending_mint_takes.get(key, 0.0) + taken
+
     def note_paid_outside_markets(self, postings: Iterable[Transfer]) -> None:
         """Money paid out in no market (rent, a bonded household's payments, the keep of bonded people): a cost of the payer's
         year, though it takes nothing from the payee's receipts."""
@@ -139,14 +175,22 @@ class YearLedger:
         """Hours count as hired and sold in proportion to the wages actually paid: hours an employer
         could not pay for are not delivered, so the workers keep them, and a settlement that paid nothing
         delivers no hours. A caller with no settlement passes `settled=False` and the fills count in full."""
-        self.labour_results.append(result)
-        postings = list(postings)
         paid_by: Dict[AgentId, float] = {}
         paid_to: Dict[AgentId, float] = {}
         for posting in postings:
             if isinstance(posting, Transfer):
                 paid_by[posting.payer] = paid_by.get(posting.payer, 0.0) + posting.amount
                 paid_to[posting.payee] = paid_to.get(posting.payee, 0.0) + posting.amount
+        self.note_hours(result, paid_by, paid_to, settled)
+
+    def note_labour_settled(self, result: LabourResult, done) -> None:
+        """`note_labour` of a labour settlement (`settlement.settle_labour`), from its per-agent sums."""
+        self.note_hours(result, done.paid_by, done.paid_to, True)
+
+    def note_hours(self, result: LabourResult, paid_by: Dict[AgentId, float], paid_to: Dict[AgentId, float],
+                   settled: bool) -> None:
+        """The hours of a labour result as hired and sold, given the wages paid by each employer and to each worker."""
+        self.labour_results.append(result)
         settled = settled and result.wage > 0.0
         for fill in result.fills:
             quantity = fill.quantity

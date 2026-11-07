@@ -146,8 +146,9 @@ def ask_limits(setup, record, view, offers: Sequence[Offer], indices: Sequence[i
         key = (offer.seller, offer.tile)
         cost = costs[key] if key in costs else seller_offers.unit_cost(setup, record, view, offer)
         if cost is not None and math.isfinite(cost):
-            limits[index] = band_edge(cost, seller_offers.input_share_of_cost(setup, record, view, offer),
-                                      seller_offers.ask_band_multiple(setup, offer))
+            shares = getattr(costs, "shares", {})
+            share = shares[key] if key in shares else seller_offers.input_share_of_cost(setup, record, view, offer)
+            limits[index] = band_edge(cost, share, seller_offers.ask_band_multiple(setup, offer))
     return limits
 
 
@@ -189,7 +190,7 @@ def _highest_selling_level(buyers: goods_market.Buyers, offers: Sequence[Offer],
     keys = numpy.array([key_ids.setdefault((offers[index].seller, offers[index].tile), len(key_ids)) for index in positions],
                        dtype=numpy.int64)
     minimum = buyers.minimum_price
-    schedule = buyers.schedule
+    schedule = buyers.arrays
     return float(goods_market_kernels.search_level(
         numpy.array([offers[index].reservation_price for index in positions], dtype=float),
         numpy.array([offers[index].quantity for index in positions], dtype=float),

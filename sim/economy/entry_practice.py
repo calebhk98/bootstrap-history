@@ -88,6 +88,10 @@ def first_year_recipe(recipe: Recipe, peers: Sequence[Mapping[str, float]]) -> R
     return practice.recipe_for(recipe, entrant_crew(recipe, peers))
 
 
+_planned: Dict[tuple, tuple] = {}     # (recipe id, planned hours) -> (recipe, the recipe at those hours): one object per recipe and hours
+_PLANNED_KEPT = 20000
+
+
 def planned_recipe(recipe: Recipe, peers: Sequence[Mapping[str, float]], runs_per_year: float,
                    years: int = LOSS_YEARS_BEFORE_EXIT) -> Recipe:
     """The recipe with each trade's hours the mean of an entrant's hours over `years` years of `runs_per_year` runs,
@@ -101,4 +105,11 @@ def planned_recipe(recipe: Recipe, peers: Sequence[Mapping[str, float]], runs_pe
         for trade in totals:
             totals[trade].append(hours[trade])
         crew = practice.crew_runs_after_year(crew, max(0.0, runs_per_year), 0.0, {})
-    return dataclasses.replace(recipe, labour_hours={trade: math.fsum(each) / len(each) for trade, each in totals.items()})
+    hours = {trade: math.fsum(each) / len(each) for trade, each in totals.items()}
+    key = (id(recipe), tuple(hours.items()))
+    kept = _planned.get(key)
+    if kept is None or kept[0] is not recipe:
+        if len(_planned) > _PLANNED_KEPT:
+            _planned.clear()
+        kept = _planned[key] = (recipe, dataclasses.replace(recipe, labour_hours=hours))
+    return kept[1]

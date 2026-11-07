@@ -10,7 +10,7 @@ from typing import Dict, Iterable, Mapping
 from sim.labour.api import MarketState, TradeSpec, opening_labour_market, seed_hours, trade_specs
 
 from . import households_own, mint, mint_labour, opening_placement, practice
-from .market_memory import market_key
+from .market_memory import market_key, note_written
 from .setup import area_tile, labour_area
 
 
@@ -140,6 +140,7 @@ def mirror_wages(wages: Dict[str, float], state: MarketState) -> None:
     market keys, for whoever reads a wage: a market the core holds no wage for is not quoted one. The only writer of
     `MarketMemory.wages`; the opening calls it with the seeds in a state of their own."""
     wages.clear()
+    note_written()
     for area, by_trade in state.wages.items():
         for trade, wage in by_trade.items():
             if wage > 0.0:

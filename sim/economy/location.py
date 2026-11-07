@@ -139,7 +139,9 @@ def entry_siting(setup, record, view, area_map, carriage) -> Siting:
     capacity: Dict[Tuple[str, TileId], float] = {}
     committed: Dict[TileId, float] = {}
     supplies: Dict[str, Mapping] = {}
+    supply_of_good: Dict[str, Mapping] = {}      # where each input good is made, read once for every recipe sited
     tile_parts: Dict[Tuple[str, TileId, float], tuple] = {}    # what a recipe's run on a tile costs apart from the output's carriage
+    reads: Dict[tuple, object] = {}      # input haul by (recipe, tile) and working people by tile: neither changes as sites are claimed
     fixed_goods = location_inputs.fixed_site_goods(setup.recipes, by_recipe)
     short_of_land = land_short_tiles((each.tile, each.land_run_cap, setup.land_per_run.get(each.recipe_id, 0.0) > 0.0)
                                      for each in record.producers.values())
@@ -163,7 +165,7 @@ def entry_siting(setup, record, view, area_map, carriage) -> Siting:
             return demand.anchor_tile, runs
         tonnes = output_tonnes(recipe, setup.specs)
         if recipe_id not in supplies:
-            supplies[recipe_id] = location_inputs.input_supplies(record, setup, recipe, fixed_goods)
+            supplies[recipe_id] = location_inputs.input_supplies(record, setup, recipe, fixed_goods, supply_of_good)
         candidates: List[Candidate] = []
         reachable = tuple(setup.tiles) if sites.is_sited(recipe, by_recipe) else tuple(sorted(
             set(area.tiles) | {tile for supply in supplies[recipe_id].values() for tile in supply}))
@@ -173,7 +175,7 @@ def entry_siting(setup, record, view, area_map, carriage) -> Siting:
             if fixed_part is None:
                 fixed_part = tile_parts[(recipe_id, tile, carriage.scale)] = _tile_part(
                     setup, record, view, carriage, recipe, by_recipe, supplies[recipe_id], capacity, committed, tile,
-                    entry_practice.first_year_recipe(recipe, crews_of(recipe_id)))
+                    entry_practice.first_year_recipe(recipe, crews_of(recipe_id)), reads)
             variable, factor, input_haul, staffable, headroom = fixed_part
             headroom = headroom_with_land(headroom, setup.land_per_run.get(recipe_id, 0.0) > 0.0, tile in short_of_land)
             cost = math.inf if factor <= 0.0 else assembled_cost(
@@ -200,7 +202,7 @@ def claim_site(capacity: Dict[Tuple[str, TileId], float], committed: Dict[TileId
         del tile_parts[part_key]
 
 
-def _tile_part(setup, record, view, carriage, recipe, by_recipe, supplies, capacity, committed, tile, first_year=None):
+def _tile_part(setup, record, view, carriage, recipe, by_recipe, supplies, capacity, committed, tile, first_year=None, reads=None):
     """(variable cost per run, yield factor, input haul per run, staffable runs, headroom runs) of `recipe` on
     `tile`: none of it depends on where the output goes, so one entry-siting call reads it once per recipe and tile.
     The runs its idle hands can staff are at `first_year`'s hours (the recipe at its newcomer's first-year practice; the booked recipe without)."""
@@ -213,9 +215,16 @@ def _tile_part(setup, record, view, carriage, recipe, by_recipe, supplies, capac
         variable = unit_cost.variable_cost_per_run(
             recipe, live_input_prices(probe, recipe, view), wages,
             site_rent_per_run(setup, record, view, recipe.recipe_id, tile, factor))
-    input_haul = location_inputs.input_haul_cost(recipe, setup.specs, carriage, supplies, tile)
-    spare = spare_hours(labour_state.people_by_trade(record.labour.workforce, labour_area(tile)), setup.working_hours_per_year,
-                        committed.get(tile, 0.0))
+    reads = {} if reads is None else reads
+    haul_key = ("haul", recipe.recipe_id, tile)
+    input_haul = reads.get(haul_key)
+    if input_haul is None:
+        input_haul = reads[haul_key] = location_inputs.input_haul_cost(recipe, setup.specs, carriage, supplies, tile, reads.setdefault(("hauls",), {}))
+    people_key = ("people", tile)
+    people = reads.get(people_key)
+    if people is None:
+        people = reads[people_key] = labour_state.people_by_trade(record.labour.workforce, labour_area(tile))
+    spare = spare_hours(people, setup.working_hours_per_year, committed.get(tile, 0.0))
     return (variable, factor, input_haul, staffable_runs(recipe if first_year is None else first_year, spare),
             sites.headroom_runs(recipe, tile, by_recipe, capacity.get((recipe.recipe_id, tile), 0.0)))
 
