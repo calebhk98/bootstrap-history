@@ -1156,6 +1156,8 @@ def main():
     subparser.add_argument("--reload-check", action="store_true",
                            help="also save and load the game after its first year and check the digest is the same")
     subparser.add_argument("--keep", default=None, metavar="PATH", help="write the stepped game here, to compare with another build's")
+    sub.add_parser("compile-kernels", help="compile every numba kernel the game uses into numba's cache, so a first game "
+                   "year does not spend a minute compiling (run once per environment; minutes on a cold cache)")
     subparser = sub.add_parser("spin-up-trace", help="run a civilisation's hidden spin-up for many years and print the "
                                "price level, the money stock and the mint's strikes by year; slow (minutes), or with "
                                "--fixture a hand-built economy in under a second")
@@ -1478,7 +1480,7 @@ def main():
             "search": cmd_search, "economy-check": cmd_economy_check,
             "mod-allow": cli_mods.cmd_mod_allow,
             "baseline-ensemble": cmd_baseline_ensemble, "openings": cmd_openings, "opening-checks": cmd_opening_checks,
-            "spin-up-trace": cmd_spin_up_trace, "year-time": cmd_year_time, "spin-up-sensitivity": cmd_spin_up_sensitivity}[args.cmd](args)
+            "spin-up-trace": cmd_spin_up_trace, "year-time": cmd_year_time, "compile-kernels": cmd_compile_kernels, "spin-up-sensitivity": cmd_spin_up_sensitivity}[args.cmd](args)
 
 
 from .cli_interactive import cmd_civs, cmd_menu, cmd_play
@@ -1490,4 +1492,5 @@ from .cli_openings import cmd_openings
 from .cli_opening_checks import cmd_opening_checks
 from .cli_spin_up_trace import cmd_spin_up_trace
 from .cli_year_time import cmd_year_time
+from .cli_compile_kernels import cmd_compile_kernels
 from .cli_spin_up_sensitivity import cmd_spin_up_sensitivity
