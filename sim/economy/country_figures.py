@@ -15,6 +15,19 @@ from .setup import LABOUR_AREA_PREFIX, labour_area
 from .types import TileId
 
 
+class _Identity:
+    """An object as a dictionary key by identity; holding it keeps its address from being reused while it is a key."""
+
+    def __init__(self, held) -> None:
+        self.held = held
+
+    def __hash__(self) -> int:
+        return id(self.held)
+
+    def __eq__(self, other) -> bool:
+        return isinstance(other, _Identity) and other.held is self.held
+
+
 def country_tiles(economy, country: Optional[str]) -> Set[TileId]:
     """The tiles of `country` (every tile for None)."""
     setup = economy.setup
@@ -42,7 +55,7 @@ def _labour_key_in(key: str, tiles: Set[TileId]) -> bool:
 def wages_per_hour(economy, country: Optional[str]) -> Dict[str, float]:
     """The wage per hour of each trade over the country's labour areas (`national_prices.national_wages`)."""
     tiles = country_tiles(economy, country)
-    return national_wages(economy.record, keep=lambda key: _labour_key_in(key, tiles))
+    return national_wages(economy.record, keep=lambda key: _labour_key_in(key, tiles), keep_token=frozenset(tiles))
 
 
 def idle_hours_by_trade(economy, country: Optional[str]) -> Dict[str, tuple]:
@@ -88,7 +101,7 @@ def prices(economy, country: Optional[str]) -> Dict[str, float]:
         if by_area is None:
             by_area = areas_of[good] = _area_tiles(economy, good)
         return area not in by_area or bool(by_area[area] & tiles)
-    return national_prices(economy.record, touches)
+    return national_prices(economy.record, touches, keep_token=(_Identity(economy.area_map), frozenset(tiles)))
 
 
 def traded_volumes(economy, country: Optional[str]) -> Dict[str, float]:

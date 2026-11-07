@@ -45,6 +45,9 @@ USUAL_PRICE_SPEED = declare(
         "'usually' is has no measured basis; a moving average over about a decade is the same idea.")
 
 
+_WAGE_KEY_OF_TRADE: Dict[str, str] = {}    # a wage key last found for each trade, to answer `holds_wage_for` without a scan; checked against the memory asked
+
+
 def market_key(first: str, area: AreaId) -> str:
     """One string key per (good or trade, area), so the memory saves as plain JSON."""
     return first + KEY_SEPARATOR + area
@@ -129,8 +132,15 @@ class MarketMemory:
     def holds_wage_for(self, trade: TradeId) -> bool:
         """Whether the memory holds a wage for the trade in any labour area (a trade the core has never cleared, such as one
         admitted after the opening, has none)."""
+        found = _WAGE_KEY_OF_TRADE.get(trade)
+        if found is not None and found in self.wages:     # a key seen for the trade, still held here: no scan
+            return True
         prefix = trade + KEY_SEPARATOR
-        return any(key.startswith(prefix) for key in self.wages)
+        for key in self.wages:
+            if key.startswith(prefix):
+                _WAGE_KEY_OF_TRADE[trade] = key
+                return True
+        return False
 
     def opening_wage_level(self, money: CurrencyId) -> float:
         """Today's money per opening-year money for a wage the setup holds: the level before the last rebase times the

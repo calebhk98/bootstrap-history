@@ -19,6 +19,13 @@ CrewsOf = Callable[[str], Sequence[Mapping[str, float]]]
 
 
 _shared: Dict[int, tuple] = {}     # id of a producers table -> (table, its crews_of) while `shared_crews` holds it
+_entrants: Dict[tuple, tuple] = {}  # (recipe id, the grouping and recipe of its peers) -> (recipe, peers, their entrant crew_runs) while `shared_crews` is open
+_open_blocks = [0]
+
+
+class _GroupedCrews(list):
+    """The crews `shared_crews` hands out for a recipe, carrying which grouping and recipe they are."""
+    group: tuple = ()
 
 
 def crews_of_recipe(producers: Mapping[str, object]) -> CrewsOf:
@@ -45,28 +52,47 @@ def shared_crews(producers: Mapping[str, object]):
             for _name, each in sorted(producers.items()):
                 grouped.setdefault(each.recipe_id, []).append(each.crew_runs)
             state["built"] = True
-        return list(grouped.get(recipe_id, ()))
+        handed = _GroupedCrews(grouped.get(recipe_id, ()))
+        handed.group = (id(grouped), recipe_id)
+        return handed
     outer = _shared.get(id(producers))
     _shared[id(producers)] = (producers, crews)
+    _open_blocks[0] += 1
     try:
         yield crews
     finally:
+        _open_blocks[0] -= 1
+        if _open_blocks[0] == 0:
+            _entrants.clear()
         if outer is None:
             del _shared[id(producers)]
         else:
             _shared[id(producers)] = outer
 
 
+def entrant_crew(recipe: Recipe, peers: Sequence[Mapping[str, float]]) -> Dict[str, float]:
+    """`practice.entrant_crew_runs`, read once per recipe and peers inside `shared_crews` (the peers' practice cannot
+    change there). The caller must not change the returned dict."""
+    group = getattr(peers, "group", ())
+    if not _open_blocks[0] or not group:
+        return practice.entrant_crew_runs(recipe, peers)
+    key = (id(recipe), group)
+    kept = _entrants.get(key)
+    if kept is None or kept[0] is not recipe:
+        kept = _entrants[key] = (recipe, list(peers), practice.entrant_crew_runs(recipe, peers))
+    return kept[2]
+
+
 def first_year_recipe(recipe: Recipe, peers: Sequence[Mapping[str, float]]) -> Recipe:
     """The recipe at the hours an entrant's crew needs in its first year."""
-    return practice.recipe_for(recipe, practice.entrant_crew_runs(recipe, peers))
+    return practice.recipe_for(recipe, entrant_crew(recipe, peers))
 
 
 def planned_recipe(recipe: Recipe, peers: Sequence[Mapping[str, float]], runs_per_year: float,
                    years: int = LOSS_YEARS_BEFORE_EXIT) -> Recipe:
     """The recipe with each trade's hours the mean of an entrant's hours over `years` years of `runs_per_year` runs,
     from the peers' mean practice; the recipe itself when it starts at the floor."""
-    crew = practice.entrant_crew_runs(recipe, peers)
+    crew = entrant_crew(recipe, peers)
     if not crew:
         return recipe
     totals = {trade: [] for trade in recipe.labour_hours}
