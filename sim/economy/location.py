@@ -164,8 +164,11 @@ def _placed_tiles(setup, recipe: Recipe) -> frozenset:
         recipe, setup.opening_prices, setup.opening_wages))
 
 
-def entry_siting(setup, record, view, area_map, carriage) -> Siting:
-    """The tile for a newcomer: see `choose`. Each call prices the recipe on every candidate tile."""
+def entry_siting(setup, record, view, area_map, carriage, costs=None) -> Siting:
+    """The tile for a newcomer: see `choose`. Each call prices the recipe on every candidate tile. With `costs`
+    (entry_tables.EntryTables) the same rule is read from the year's arrays."""
+    if costs is not None:
+        return costs.siting()
     by_recipe = sites.limits_by_recipe(setup.site_limits)
     capacity: Dict[Tuple[str, TileId], float] = {}
     committed: Dict[TileId, float] = {}

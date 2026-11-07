@@ -18,8 +18,7 @@ from typing import Dict, List, Mapping, Sequence, Set, Tuple
 from sim.constants import declare
 
 from .entry import EntryPlan, UnmetDemand
-from .entry_trial import (ENTRY_PRICE_MARGIN_SHARE, capacity_in_area, capacity_terms_by_good, demand_at,
-                          recipes_by_cost)
+from .entry_trial import ENTRY_PRICE_MARGIN_SHARE, demand_at, reachable_capacity, recipes_by_cost, recipes_by_cost_many
 from .market_memory import market_key
 from .producers import OUTPUT_CHANGE_SHARE_PER_YEAR
 from .producers_close import LOSS_YEARS_BEFORE_EXIT
@@ -52,23 +51,27 @@ def gap_at_entry_price(bids: Sequence[Bid], entry_price: float, price_now: float
 
 
 def margin_entry_plans(setup, record, view, area_map, bids_by_market: Mapping[Tuple[GoodId, AreaId], Sequence[Bid]],
-                       planned: Sequence[Tuple[GoodId, AreaId]] = (), siting=None) -> List[EntryPlan]:
+                       planned: Sequence[Tuple[GoodId, AreaId]] = (), siting=None, costs=None) -> List[EntryPlan]:
     """Newcomers for each market with makers whose expected price has stood above its entry price for
     long enough: every recipe whose entry price is under the expected price, cheapest first, shares the
-    year's growth. Keeps the market's streak in `record.goods.margin_years`; a market with no maker, no costable recipe, no price or no bids this year loses its streak."""
+    year's growth. Keeps the market's streak in `record.goods.margin_years`; a market with no maker, no costable recipe, no price or no bids this year loses its streak.
+    With `costs` (entry_tables.EntryTables) the recipes of all the markets are costed at once."""
     makers: Dict[GoodId, List[str]] = {}
     for recipe_id in sorted(setup.recipes):
         for good in setup.recipes[recipe_id].outputs:
             makers.setdefault(good, []).append(recipe_id)
     skip = set(planned)
-    capacity_terms = capacity_terms_by_good(record.producers, setup.recipes, record.credit.expansion_runs)
-    plans = []
-    counted: Set[str] = set()
+    capacity_in = reachable_capacity(record, setup, costs)
+    areas_of: Dict[GoodId, Dict[AreaId, object]] = {}
+    known_goods = set(area_map.goods())
+    weighed = []
     for (good, area_id), bids in sorted(bids_by_market.items()):
-        if good not in makers or good not in area_map.goods():
+        if good not in makers or good not in known_goods:
             continue
-        area = next((each for each in area_map.areas(good) if each.area_id == area_id), None)
-        capacity = capacity_in_area(capacity_terms, good, area.tiles) if area is not None else 0.0
+        if good not in areas_of:
+            areas_of[good] = {each.area_id: each for each in area_map.areas(good)}
+        area = areas_of[good].get(area_id)
+        capacity = capacity_in(good, area) if area is not None else 0.0
         key = market_key(good, area_id)
         if capacity <= 0.0:
             record.goods.margin_years.pop(key, None)
@@ -77,9 +80,13 @@ def margin_entry_plans(setup, record, view, area_map, bids_by_market: Mapping[Tu
         if price is None:
             record.goods.margin_years.pop(key, None)
             continue
+        weighed.append((good, area_id, bids, area, capacity, key, price))
+    ranked_all = recipes_by_cost_many(setup, record, view, [(good, area.anchor_tile, makers[good], MARGIN_ENTRY_GROWTH_SHARE * capacity)
+                                                           for good, _area_id, _bids, area, capacity, _key, _price in weighed], costs, recipes_by_cost)
+    plans = []
+    counted: Set[str] = set()
+    for (good, area_id, bids, area, capacity, key, price), ranked in zip(weighed, ranked_all):
         expected = record.memory.usual_prices.get(key, price)
-        ranked = recipes_by_cost(setup, record, view, good, area.anchor_tile, makers[good],
-                                 MARGIN_ENTRY_GROWTH_SHARE * capacity)
         if not ranked:
             record.goods.margin_years.pop(key, None)
             continue

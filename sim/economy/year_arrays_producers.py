@@ -11,6 +11,13 @@ import numpy as np
 from .year_arrays_recipes import NO_SLOT, Names, RecipeMatrices
 
 
+_MANY_ROWS = 64     # from this many rows a column is read in one pass
+_COPIED = ("capacity_runs", "yield_factor", "years_of_loss", "cash_target", "expected_sales", "last_runs", "land_rent_per_run",
+           "workshops", "idle_years")      # the columns that are a producer field of the same name
+_PER_ROW = ("recipe_row", "tile_row", "capacity_runs", "yield_factor", "years_of_loss", "cash_target", "expected_sales", "last_runs",
+            "land_rent_per_run", "land_run_cap", "workshops", "idle_years", "staffed_runs", "history_count", "expected_prices")
+
+
 @dataclass
 class ProducerColumns:
     ids: Tuple[str, ...]
@@ -37,20 +44,48 @@ class ProducerColumns:
     tiles: Names = field(repr=False, default=None)
 
     @classmethod
-    def build(cls, producers: Mapping[str, object], matrices: RecipeMatrices, tiles: Names) -> "ProducerColumns":
-        ids = tuple(sorted(producers))
+    def _empty(cls, ids: Tuple[str, ...], records: List[object], history_width: int, matrices: RecipeMatrices,
+               tiles: Names) -> "ProducerColumns":
         count = len(ids)
-        history_width = max(1, max((len(producers[each].net_earnings_history) for each in ids), default=0),
-                            max((len(producers[each].revenue_history) for each in ids), default=0))
-        columns = cls(
-            ids, {each: position for position, each in enumerate(ids)}, [producers[each] for each in ids],
+        return cls(
+            ids, {each: position for position, each in enumerate(ids)}, records,
             np.zeros(count, dtype=np.int64), np.zeros(count, dtype=np.int64), np.zeros(count), np.zeros(count),
             np.zeros(count, dtype=np.int64), np.zeros(count), np.zeros(count), np.zeros(count), np.zeros(count),
             np.full(count, np.nan), np.zeros(count, dtype=np.int64), np.zeros(count, dtype=np.int64), np.full(count, np.nan),
             np.zeros((count, history_width)), np.zeros((count, history_width)), np.zeros(count, dtype=np.int64),
             np.full((count, matrices.good_slots), np.nan), matrices, tiles)
-        for position in range(count):
-            columns._read(position)
+
+    @classmethod
+    def build(cls, producers: Mapping[str, object], matrices: RecipeMatrices, tiles: Names) -> "ProducerColumns":
+        ids = tuple(sorted(producers))
+        history_width = max(1, max((len(producers[each].net_earnings_history) for each in ids), default=0),
+                            max((len(producers[each].revenue_history) for each in ids), default=0))
+        columns = cls._empty(ids, [producers[each] for each in ids], history_width, matrices, tiles)
+        columns._read_many(list(range(len(ids))))
+        return columns
+
+    def _rebuilt(self, producers: Mapping[str, object]) -> "ProducerColumns":
+        """The columns for a changed set of ids: a row whose record is the very one this table holds is copied, the others
+        (entered or replaced) are read."""
+        ids = tuple(sorted(producers))
+        records = [producers[each] for each in ids]
+        kept_new, kept_old, fresh = [], [], []
+        for position, record in enumerate(records):
+            old = self.row.get(ids[position])
+            if old is not None and self.records[old] is record:
+                kept_new.append(position)
+                kept_old.append(old)
+            else:
+                fresh.append(position)
+        width = max(self.earnings_history.shape[1], 1, max((len(records[each].net_earnings_history) for each in fresh), default=0),
+                    max((len(records[each].revenue_history) for each in fresh), default=0))
+        columns = ProducerColumns._empty(ids, records, width, self.matrices, self.tiles)
+        kept_new, kept_old = np.array(kept_new, dtype=np.int64), np.array(kept_old, dtype=np.int64)
+        for name in _PER_ROW:
+            getattr(columns, name)[kept_new] = getattr(self, name)[kept_old]
+        for name in ("earnings_history", "revenue_history"):
+            getattr(columns, name)[kept_new, :self.earnings_history.shape[1]] = getattr(self, name)[kept_old]
+        columns._read_many(fresh)
         return columns
 
     def _read(self, position: int) -> None:
@@ -85,6 +120,47 @@ class ProducerColumns:
             if price is not None:
                 self.expected_prices[position, slot] = price
 
+    def _read_many(self, positions: List[int]) -> None:
+        """`_read` for each position, a column at a time when there are many (one pass over the records per column)."""
+        if len(positions) < _MANY_ROWS:
+            for position in positions:
+                self._read(position)
+            return
+        rows = np.array(positions, dtype=np.int64)
+        records = [self.records[position] for position in positions]
+        matrices = self.matrices
+        recipe_rows, tile_rows = matrices.recipes.row, self.tiles.row
+        self.recipe_row[rows] = recipe_rows_of = [recipe_rows[each.recipe_id] for each in records]
+        self.tile_row[rows] = [tile_rows[each.tile] for each in records]
+        for name in _COPIED:
+            getattr(self, name)[rows] = [getattr(each, name) for each in records]
+        self.land_run_cap[rows] = [np.nan if each.land_run_cap is None else each.land_run_cap for each in records]
+        self.staffed_runs[rows] = [np.nan if each.staffed_runs is None else each.staffed_runs for each in records]
+        self.history_count[rows] = [len(each.net_earnings_history) for each in records]
+        width = self.earnings_history.shape[1]
+        for column, attribute in ((self.earnings_history, "net_earnings_history"), (self.revenue_history, "revenue_history")):
+            column[rows] = 0.0
+            for position, each in zip(positions, records):
+                history = getattr(each, attribute)
+                if history:
+                    column[position, :len(history)] = history
+        self.expected_prices[rows] = np.nan
+        slot_goods = matrices.slot_goods
+        goods_ids = matrices.goods.ids
+        row_of, slot_of, price_of = [], [], []
+        for position, each, recipe in zip(positions, records, recipe_rows_of):
+            held = each.expected_prices
+            if held:
+                for slot, good_row in enumerate(slot_goods[recipe]):
+                    if good_row == NO_SLOT:
+                        break
+                    price = held.get(goods_ids[good_row])
+                    if price is not None:
+                        row_of.append(position)
+                        slot_of.append(slot)
+                        price_of.append(price)
+        self.expected_prices[row_of, slot_of] = price_of
+
     def stale_rows(self, producers: Mapping[str, object]) -> List[int]:
         """The rows whose record the table has replaced; None-like `[-1]` when the ids themselves changed."""
         if len(producers) != len(self.ids):
@@ -103,8 +179,8 @@ class ProducerColumns:
         entered or left."""
         stale = self.stale_rows(producers)
         if stale == [-1]:
-            return ProducerColumns.build(producers, self.matrices, self.tiles)
+            return self._rebuilt(producers)
         for position in stale:
             self.records[position] = producers[self.ids[position]]
-            self._read(position)
+        self._read_many(stale)
         return self
