@@ -20,6 +20,7 @@ from .taxes_bases import YearFacts
 from .types import is_edge
 from .inventory import held_stock
 from .year_ledger import YearLedger
+from .year_arrays import YearArrays
 from .year_close_producers import close_producers_of_year
 from .replaced import replaced
 from .producers import live_input_prices, live_wages
@@ -104,10 +105,10 @@ def wear_and_spoilage(setup, record, durable_users=()) -> None:
 
 
 def close_agents(setup, record, view, ledger: YearLedger, area_map, carriage, arrays,
-                 income_received: Mapping[str, float] = MappingProxyType({})) -> None:
+                 income_received: Mapping[str, float] = MappingProxyType({})) -> YearArrays:
     """Close every agent's year. `income_received` is the year's other property income by payee (interest, rent); it is
     added to the dividends and profits paid out here, so the households close on this year's property income and it is
-    what the record keeps."""
+    what the record keeps. Returns the year arrays as the close leaves them."""
     money = setup.currency_id
     property_income: Dict[str, float] = dict(income_received)
     cohorts_by_tile: Dict = {}           # the tiles' cohorts, unchanged until the households close below
@@ -120,7 +121,7 @@ def close_agents(setup, record, view, ledger: YearLedger, area_map, carriage, ar
         if (recipe_id, trade) not in pool_by_recipe_trade:
             pool_by_recipe_trade[(recipe_id, trade)] = practice.pool_units(crews_of_recipe[recipe_id], trade)
         return pool_by_recipe_trade[(recipe_id, trade)]
-    close_producers_of_year(setup, record, view, ledger, arrays, cohorts_by_tile, property_income, pooled)
+    arrays = close_producers_of_year(setup, record, view, ledger, arrays, cohorts_by_tile, property_income, pooled)
     prices, volumes = learned_prices(ledger.market_totals(), record.memory)
     anchors = {(good, area.area_id): area.anchor_tile for good in area_map.goods() for area in area_map.areas(good)}
     news = merchants_news.YearNews(prices, volumes, anchors)
@@ -156,6 +157,7 @@ def close_agents(setup, record, view, ledger: YearLedger, area_map, carriage, ar
         record.book.move_many(held_only(moves, record.book))
         households_cohort.put_cohort(record.cohorts, closed)
     record.capital_markets.set_property_income(property_income)
+    return arrays
 
 
 def learned_prices(totals, memory):
