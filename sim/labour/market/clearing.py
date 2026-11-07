@@ -5,7 +5,7 @@ from typing import Callable, Dict, List, Optional, Sequence, Set, Tuple
 
 from sim.constants import declare
 
-from . import asks, clearing_arrays, layoffs
+from . import asks, clearing_arrays, clearing_tail, layoffs
 from .applications import HireJob, hire_markets
 from .import_cost import ImportCosts
 from .premium import training_premium
@@ -382,14 +382,11 @@ def clear_all(state: MarketState, inputs: YearInputs) -> List[LabourClearing]:
                        if sum(bands) > 0.0 and trade in inputs.trades)
     import_costs = ImportCosts(state, inputs)
     ordered = sorted(markets)
-    heads: List[Optional[tuple]] = [None] * len(ordered)
     if ordered and clearing_arrays.kernel_applies(inputs):
-        found = clearing_arrays.run_heads(clearing_arrays.pack_heads(state, inputs, ordered, bids_by_market, import_costs, WAGE_SHARE_CLOSED_PER_YEAR))
-        heads = [tuple(row[1:]) if row[0] else False for row in found.tolist()]      # False: no stated outside option
-    prepared = [None if head is False else
-                _prepare(state, inputs, trade, area, bids_by_market.get((trade, area), []), import_costs,
-                         None if head is None else _kernel_head(head))
-                for (trade, area), head in zip(ordered, heads)]
+        packed = clearing_arrays.pack_heads(state, inputs, ordered, bids_by_market, import_costs, WAGE_SHARE_CLOSED_PER_YEAR)
+        return clearing_tail.clear_packed(state, packed, FIRM_LABOUR_SUPPLY_ELASTICITY,
+                                          ON_THE_JOB_SEARCH_SHARE)
+    prepared = [_prepare(state, inputs, trade, area, bids_by_market.get((trade, area), []), import_costs) for trade, area in ordered]
     pending = [each for each in prepared if each is not None]
     hire_markets([each.job for each in pending if each.job is not None])
     return [_finish(each) for each in pending]

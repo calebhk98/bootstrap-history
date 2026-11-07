@@ -129,8 +129,7 @@ def people_by_trade(economy, country=None):
 
 def people_by_tile_and_trade(economy):
     """Working people of the labour core by tile and trade, over every labour area (trainees are not counted)."""
-    return {area_tile(area): labour_state.people_by_trade(economy.record.labour.workforce, area)
-            for area in sorted(economy.record.labour.workforce.workers)}
+    return labour_state.PeopleByTile(economy.record.labour.workforce)
 
 
 def land_rent_per_hectare(economy, country=None):

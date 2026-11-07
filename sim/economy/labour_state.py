@@ -4,13 +4,14 @@ An area is a tile's labour area key (`labour_area`). Everything the core needs t
 comes from the setup's trade registry; the unskilled trade is the work anyone can take up at once.
 """
 import math
+from collections.abc import Mapping as MappingBase
 from typing import Dict, Iterable, Mapping
 
 from sim.labour.api import MarketState, TradeSpec, opening_labour_market, seed_hours, trade_specs
 
 from . import households_own, mint, mint_labour, opening_placement, practice
 from .market_memory import market_key
-from .setup import labour_area
+from .setup import area_tile, labour_area
 
 
 def core_trades(setup, extra_trades: Iterable[str] = ()) -> Dict[str, TradeSpec]:
@@ -93,6 +94,27 @@ def opening_workforce(setup, record, hours_per_worker=None) -> MarketState:
 def people_by_trade(state: MarketState, area: str) -> Dict[str, float]:
     """Working people in an area, by trade (trainees are not counted)."""
     return {trade: math.fsum(bands) for trade, bands in sorted(state.workers.get(area, {}).items())}
+
+
+class PeopleByTile(MappingBase):
+    """Working people by tile and trade over every labour area of the state, each tile's trades worked out (and kept) when the
+    tile is first read: a caller that wants one tile's people does not pay for the other tiles'."""
+
+    def __init__(self, state: MarketState):
+        self._state = state
+        self._area_of_tile = {area_tile(area): area for area in sorted(state.workers)}
+        self._read: Dict[str, Dict[str, float]] = {}
+
+    def __getitem__(self, tile):
+        if tile not in self._read:
+            self._read[tile] = people_by_trade(self._state, self._area_of_tile[tile])
+        return self._read[tile]
+
+    def __iter__(self):
+        return iter(self._area_of_tile)
+
+    def __len__(self):
+        return len(self._area_of_tile)
 
 
 def people_by_trade_everywhere(state: MarketState) -> Dict[str, float]:

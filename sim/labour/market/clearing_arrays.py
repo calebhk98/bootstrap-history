@@ -19,9 +19,13 @@ from .trades import fallback_trade
 class PackedHeads:
     """The kernel's arguments for one year, and the markets they hold."""
 
-    def __init__(self, arguments: tuple, markets: Sequence[Tuple[str, str]]):
+    def __init__(self, arguments: tuple, markets: Sequence[Tuple[str, str]], groups: Sequence[Sequence[EmployerHoursBid]]):
         self.arguments = arguments
         self.markets = markets
+        self.groups = groups        # each market's bids, in the order packed
+        (self.cells, self.offers, self.exponent, self.constant) = arguments[:4]
+        self.scale, self.market_area, self.market_trade = arguments[6], arguments[17], arguments[18]
+        self.bid_offsets, self.caps, self.bid_hours, self.heads = arguments[19], arguments[20], arguments[21], arguments[-1]
 
 
 def kernel_applies(inputs: YearInputs) -> bool:
@@ -129,7 +133,7 @@ def pack_heads(state: MarketState, inputs: YearInputs, markets: Sequence[Tuple[s
     arguments = (cells, offers, exponent, constant, subsistence, ask_floor, scale, risk, training_years, premium, fallback,
                  inputs.value_of_life_years_of_income, hours, career_hours, reach_other, reach_cost, reach_count, market_area,
                  market_trade, bid_offsets, caps, bid_hours, share_closed_per_year, heads)
-    return PackedHeads(arguments, markets)
+    return PackedHeads(arguments, markets, groups)
 
 
 def run_heads(packed: PackedHeads) -> np.ndarray:
