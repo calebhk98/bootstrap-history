@@ -51,7 +51,7 @@ def idle_hours_by_trade(economy, country: Optional[str]) -> Dict[str, tuple]:
     tiles = country_tiles(economy, country)
     idle: Dict[str, float] = {}
     hired: Dict[str, float] = {}
-    for key, hours in economy.record.labour.hours_idle.items():
+    for key, hours in sorted(economy.record.labour.hours_idle.items()):
         if _labour_key_in(key, tiles):
             trade = key.split(KEY_SEPARATOR, 1)[0]
             idle[trade] = idle.get(trade, 0.0) + hours
@@ -97,7 +97,7 @@ def traded_volumes(economy, country: Optional[str]) -> Dict[str, float]:
     tiles = country_tiles(economy, country)
     totals: Dict[str, float] = {}
     areas_of: Dict[str, Dict[str, Set[TileId]]] = {}
-    for key, volume in economy.record.goods.volumes.items():
+    for key, volume in sorted(economy.record.goods.volumes.items()):
         good, area = key.split(KEY_SEPARATOR, 1)
         if country is not None:
             by_area = areas_of.get(good)
@@ -169,8 +169,7 @@ def output_value_and_unpriced(economy, country: Optional[str]) -> Tuple[Optional
     price is left out of the value and named in the list. The value is None while no producer works on its tiles."""
     tiles = country_tiles(economy, country)
     own_prices = prices(economy, country)
-    total = 0.0
-    seen = False
+    values = []
     unpriced = set()
     for producer in economy.record.producers.values():
         if producer.tile not in tiles:
@@ -178,12 +177,12 @@ def output_value_and_unpriced(economy, country: Optional[str]) -> Tuple[Optional
         recipe = economy.setup.recipes.get(producer.recipe_id)
         if recipe is None:
             continue
-        seen = True
         runs = producer.capacity_runs if producer.last_runs < 0.0 else producer.last_runs
         unpriced.update(good for good in recipe.outputs if good not in own_prices)
-        total += runs * producer.yield_factor * math.fsum(quantity * own_prices[good]
-                                                          for good, quantity in recipe.outputs.items() if good in own_prices)
-    return (total if seen else None), sorted(unpriced)
+        values.append(runs * producer.yield_factor * math.fsum(quantity * own_prices[good]
+                                                               for good, quantity in recipe.outputs.items() if good in own_prices))
+    # fsum is exact, so the producers' order (creation order live, saved order after a load) cannot change the total
+    return (math.fsum(values) if values else None), sorted(unpriced)
 
 
 def currency(economy):
