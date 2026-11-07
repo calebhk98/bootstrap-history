@@ -328,5 +328,7 @@ read or post many. The saved format may change (no migration, CLAUDE.md 4.6); sa
 - [ ] A Rome year under one second, and every civilisation's year measured (`year-time` on a save of each)
 - [x] `openings --prune` rebuilt and committed; the full build of the five civilisations, three at a time, took about seven
       minutes (Rome about 400 s, Han about 180 s, the others under a minute each); a new Rome game on an empty cache opens in seconds
-- [ ] the slow suite green, or each red topic explained with the complaint that owns it
+- [x] the slow suite on cb2336bd (`python3 -m sim.tests --slow --jobs 3 --timing --topic-seconds 1500`, about 16 minutes):
+      14,768 checks, 3 failures, all `protocol_golden` (recorded figures such as a seat's capital moved with the port's
+      last-digit changes; keys and transcripts the same); re-recorded with `python3 -m sim.tests.test_protocol_golden --record`
 - [ ] Complaint 497 updated with the measured year; PR opened

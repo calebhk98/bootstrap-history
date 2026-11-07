@@ -32,9 +32,9 @@
     "founder_hours_free": 2000.0,
     "goal": null,
     "goal_reached": false,
-    "money": 218288.2,
+    "money": 219476.1,
     "nearest_goal_blocker": null,
-    "net_per_year": 83294.0,
+    "net_per_year": 84373.9,
     "ok": true,
     "projects": [],
     "standing": {
@@ -89,7 +89,7 @@
      },
      {
       "chance_of_failure": 0.0,
-      "cost": 913.7,
+      "cost": 918.7,
       "costs_per_year_after": 0.0,
       "costs_per_year_at_full_staffing": 0.0,
       "earns_per_year": 0.0,
@@ -109,7 +109,7 @@
      },
      {
       "chance_of_failure": 0.0,
-      "cost": 1816.1,
+      "cost": 1826.0,
       "costs_per_year_after": 0.0,
       "costs_per_year_at_full_staffing": 0.0,
       "earns_per_year": 0.0,
@@ -136,7 +136,7 @@
     "sorted_by": "cost",
     "state": "startable",
     "to_sort_or_page_differently": "~prose~",
-    "you_could_raise_for_a_project": 947270.4
+    "you_could_raise_for_a_project": 952425.3
    }
   },
   {
@@ -149,7 +149,7 @@
     "seats": [
      {
       "built": 0,
-      "capital": 218288.2,
+      "capital": 219476.1,
       "country": "han_china_100ad",
       "ended": null,
       "seat": "founder",
@@ -171,7 +171,7 @@
     "seats": [
      {
       "built": 0,
-      "capital": 218288.2,
+      "capital": 219476.1,
       "country": "han_china_100ad",
       "ended": null,
       "seat": "founder",
@@ -206,7 +206,7 @@
     "seats": [
      {
       "built": 0,
-      "capital": 218288.2,
+      "capital": 219476.1,
       "country": "han_china_100ad",
       "ended": null,
       "seat": "founder",
@@ -245,7 +245,7 @@
     "goal_reached": false,
     "money": 573736.7,
     "nearest_goal_blocker": null,
-    "net_per_year": 77962.3,
+    "net_per_year": 79059.9,
     "ok": true,
     "projects": [],
     "standing": {
@@ -301,7 +301,7 @@
      },
      {
       "chance_of_failure": 0.0,
-      "cost": 913.7,
+      "cost": 918.7,
       "costs_per_year_after": 0.0,
       "costs_per_year_at_full_staffing": 0.0,
       "earns_per_year": 0.0,
@@ -321,7 +321,7 @@
      },
      {
       "chance_of_failure": 0.0,
-      "cost": 1816.1,
+      "cost": 1826.0,
       "costs_per_year_after": 0.0,
       "costs_per_year_at_full_staffing": 0.0,
       "earns_per_year": 0.0,
@@ -348,7 +348,7 @@
     "sorted_by": "cost",
     "state": "startable",
     "to_sort_or_page_differently": "~prose~",
-    "you_could_raise_for_a_project": 1302718.9
+    "you_could_raise_for_a_project": 1306685.9
    }
   },
   {
@@ -504,54 +504,54 @@
     },
     "coin_hoard": {
      "basis": "~prose~",
-     "keeping_cost_per_year": 3726.5,
+     "keeping_cost_per_year": 3746.7,
      "metal": "bronze_kg",
      "tonnes": 1.721
     },
-    "credit_limit": 728982.2,
+    "credit_limit": 732949.2,
     "funding": {
      "already_committed": 0.0,
      "cash_on_hand": 573736.7,
-     "credit_available_now": 364491.1,
-     "surplus_allowance_over_years": 389811.3,
+     "credit_available_now": 366474.6,
+     "surplus_allowance_over_years": 395299.7,
      "surplus_years_counted": 5.0,
-     "sustainable_annual_surplus": 77962.3
+     "sustainable_annual_surplus": 79059.9
     },
     "interest_paid_in_total": 0.0,
-    "interest_rate_on_arrears": 0.0306,
+    "interest_rate_on_arrears": 0.0313,
     "loanable_funds_market": {
-     "funds_lenders_hold": 1516771954313.2,
-     "lenders_will_still_advance_you": 1207706328884.9,
-     "market_rate": 0.0306,
+     "funds_lenders_hold": 1503920517922.6,
+     "lenders_will_still_advance_you": 1199606646877.5,
+     "market_rate": 0.0313,
      "means": "~prose~",
      "met": true,
      "the_state_has_lent": 0,
      "the_state_owes": 0.0
     },
     "materials_costing_you_a_premium": "~prose~",
-    "net_after_project_spend": 77962.3,
-    "net_per_year": 77962.3,
+    "net_after_project_spend": 79059.9,
+    "net_per_year": 79059.9,
     "of_that_limit_you_have_used": "none",
     "ok": true,
-    "revenue": 125335.1,
+    "revenue": 126017.1,
     "spent_on_projects_last_year": 0.0,
     "still_owed_on_work_in_hand": 0.0,
-    "sustainable_debt": 1273889.1,
+    "sustainable_debt": 1263023.8,
     "sustainable_debt_means": "~prose~",
     "what_it_costs_you": {
      "_of_which_because_you_are_rich": 8606.1,
      "interest_on_arrears": 0.0,
-     "living_and_appearances": 47372.8,
+     "living_and_appearances": 46957.2,
      "mines_standing": 0,
      "of_which_already_paid_as_hiring_advances": null,
      "upkeep_of_what_you_built": 0.0,
      "wages": 0
     },
     "where_the_money_comes_from": {
-     "_wages_for_your_own_work": 125371.0,
-     "_what_the_market_will_not_absorb": -35.9
+     "_wages_for_your_own_work": 126053.2,
+     "_what_the_market_will_not_absorb": -36.1
     },
-    "you_could_actually_fund_up_to": 1328039.2
+    "you_could_actually_fund_up_to": 1335511.0
    }
   },
   {
@@ -565,404 +565,404 @@
      "offset": 0,
      "rows": [
       {
-       "buy_per_tonne": 182856.25,
+       "buy_per_tonne": 185453.44,
        "market_available_tonnes_per_year": 0.0,
        "material": "agar_or_gelatin_kg",
        "own_supply": false,
        "price_basis": "solved",
        "price_kind": "making_cost_estimate",
-       "price_over_long_run_cost": 0.718,
-       "sell_per_tonne": 182856.25
+       "price_over_long_run_cost": 0.724,
+       "sell_per_tonne": 185453.44
       },
       {
-       "buy_per_tonne": 1517.42,
+       "buy_per_tonne": 1540.02,
        "market_available_tonnes_per_year": 0.0,
        "material": "agate_kg",
        "own_supply": false,
        "price_basis": "solved",
        "price_kind": "making_cost_estimate",
-       "price_over_long_run_cost": 0.701,
-       "sell_per_tonne": 1517.42
+       "price_over_long_run_cost": 0.707,
+       "sell_per_tonne": 1540.02
       },
       {
-       "buy_per_tonne": 10867.73,
+       "buy_per_tonne": 10924.94,
        "market_available_tonnes_per_year": 0.0,
        "material": "alum_kg",
        "own_supply": false,
        "price_basis": "solved",
        "price_kind": "making_cost_estimate",
-       "price_over_long_run_cost": 1.781,
-       "sell_per_tonne": 10867.73
+       "price_over_long_run_cost": 1.78,
+       "sell_per_tonne": 10924.94
       },
       {
-       "buy_per_tonne": 696.16,
+       "buy_per_tonne": 712.11,
        "market_available_tonnes_per_year": 0.0,
        "material": "aluminum_oxide_kg",
        "own_supply": false,
        "price_basis": "solved",
        "price_kind": "making_cost_estimate",
-       "price_over_long_run_cost": 0.822,
-       "sell_per_tonne": 696.16
+       "price_over_long_run_cost": 0.836,
+       "sell_per_tonne": 712.11
       },
       {
-       "buy_per_tonne": 68764.3,
-       "market_available_tonnes_per_year": 104153.47,
+       "buy_per_tonne": 69152.87,
+       "market_available_tonnes_per_year": 103139.37,
        "material": "amphora_count",
        "own_supply": false,
        "price_basis": "solved",
        "price_kind": "smoothed_trade",
        "price_over_long_run_cost": 2.039,
-       "sell_per_tonne": 68764.3
+       "sell_per_tonne": 69152.87
       },
       {
-       "buy_per_tonne": 18123.7,
+       "buy_per_tonne": 18226.29,
        "market_available_tonnes_per_year": 0.0,
        "material": "arsenic",
        "own_supply": false,
        "price_basis": "solved",
        "price_kind": "making_cost_estimate",
-       "price_over_long_run_cost": 3.893,
-       "sell_per_tonne": 18123.7
+       "price_over_long_run_cost": 3.894,
+       "sell_per_tonne": 18226.29
       },
       {
-       "buy_per_tonne": 601.1,
+       "buy_per_tonne": 613.86,
        "market_available_tonnes_per_year": 0.0,
        "material": "arsenopyrite_kg",
        "own_supply": false,
        "price_basis": "solved",
        "price_kind": "making_cost_estimate",
-       "price_over_long_run_cost": 0.793,
-       "sell_per_tonne": 601.1
+       "price_over_long_run_cost": 0.806,
+       "sell_per_tonne": 613.86
       },
       {
-       "buy_per_tonne": 980.46,
+       "buy_per_tonne": 998.87,
        "market_available_tonnes_per_year": 0.0,
        "material": "asbestos_kg",
        "own_supply": false,
        "price_basis": "solved",
        "price_kind": "making_cost_estimate",
-       "price_over_long_run_cost": 0.755,
-       "sell_per_tonne": 980.46
+       "price_over_long_run_cost": 0.765,
+       "sell_per_tonne": 998.87
       },
       {
-       "buy_per_tonne": 379.72,
+       "buy_per_tonne": 388.42,
        "market_available_tonnes_per_year": 0.0,
        "material": "barite_kg",
        "own_supply": false,
        "price_basis": "solved",
        "price_kind": "making_cost_estimate",
-       "price_over_long_run_cost": 0.822,
-       "sell_per_tonne": 379.72
+       "price_over_long_run_cost": 0.836,
+       "sell_per_tonne": 388.42
       },
       {
-       "buy_per_tonne": 316.44,
+       "buy_per_tonne": 323.69,
        "market_available_tonnes_per_year": 0.0,
        "material": "bauxite_kg",
        "own_supply": false,
        "price_basis": "solved",
        "price_kind": "making_cost_estimate",
-       "price_over_long_run_cost": 0.822,
-       "sell_per_tonne": 316.44
+       "price_over_long_run_cost": 0.836,
+       "sell_per_tonne": 323.69
       },
       {
-       "buy_per_tonne": 1389001.73,
-       "market_available_tonnes_per_year": 780.91,
+       "buy_per_tonne": 1583519.95,
+       "market_available_tonnes_per_year": 787.43,
        "material": "beeswax_kg",
        "own_supply": false,
        "price_basis": "solved",
        "price_kind": "smoothed_trade",
-       "price_over_long_run_cost": 1.925,
-       "sell_per_tonne": 1389001.73
+       "price_over_long_run_cost": 2.182,
+       "sell_per_tonne": 1583519.95
       },
       {
-       "buy_per_tonne": 151.74,
+       "buy_per_tonne": 154.0,
        "market_available_tonnes_per_year": 0.0,
        "material": "bentonite_kg",
        "own_supply": false,
        "price_basis": "solved",
        "price_kind": "making_cost_estimate",
-       "price_over_long_run_cost": 0.701,
-       "sell_per_tonne": 151.74
+       "price_over_long_run_cost": 0.707,
+       "sell_per_tonne": 154.0
       },
       {
-       "buy_per_tonne": 202.32,
+       "buy_per_tonne": 205.34,
        "market_available_tonnes_per_year": 0.0,
        "material": "bitumen_kg",
        "own_supply": false,
        "price_basis": "solved",
        "price_kind": "making_cost_estimate",
-       "price_over_long_run_cost": 0.701,
-       "sell_per_tonne": 202.32
+       "price_over_long_run_cost": 0.707,
+       "sell_per_tonne": 205.34
       },
       {
-       "buy_per_tonne": 661926.01,
+       "buy_per_tonne": 664442.11,
        "market_available_tonnes_per_year": 0.0,
        "material": "bone_ash_kg",
        "own_supply": false,
        "price_basis": "solved",
        "price_kind": "making_cost_estimate",
-       "price_over_long_run_cost": 6.453,
-       "sell_per_tonne": 661926.01
+       "price_over_long_run_cost": 6.442,
+       "sell_per_tonne": 664442.11
       },
       {
-       "buy_per_tonne": 7587.08,
+       "buy_per_tonne": 7700.09,
        "market_available_tonnes_per_year": 0.0,
        "material": "bone_kg",
        "own_supply": false,
        "price_basis": "solved",
        "price_kind": "making_cost_estimate",
-       "price_over_long_run_cost": 0.701,
-       "sell_per_tonne": 7587.08
+       "price_over_long_run_cost": 0.707,
+       "sell_per_tonne": 7700.09
       },
       {
-       "buy_per_tonne": 1517.42,
+       "buy_per_tonne": 1540.02,
        "market_available_tonnes_per_year": 0.0,
        "material": "boric_acid_kg",
        "own_supply": false,
        "price_basis": "solved",
        "price_kind": "making_cost_estimate",
-       "price_over_long_run_cost": 0.701,
-       "sell_per_tonne": 1517.42
+       "price_over_long_run_cost": 0.707,
+       "sell_per_tonne": 1540.02
       },
       {
        "buy_per_tonne": 0.0,
-       "market_available_tonnes_per_year": 19.85,
+       "market_available_tonnes_per_year": 0.0,
        "material": "bran_kg",
        "own_supply": false,
        "price_basis": "solved",
        "price_kind": "making_cost_estimate",
-       "price_over_long_run_cost": 1.924,
+       "price_over_long_run_cost": 1.919,
        "sell_per_tonne": 0.0
       },
       {
-       "buy_per_tonne": 150742.29,
-       "market_available_tonnes_per_year": 538366.61,
+       "buy_per_tonne": 148356.15,
+       "market_available_tonnes_per_year": 530973.89,
        "material": "brass_kg",
        "own_supply": false,
        "price_basis": "solved",
        "price_kind": "smoothed_trade",
-       "price_over_long_run_cost": 1.468,
-       "sell_per_tonne": 150742.29
+       "price_over_long_run_cost": 1.437,
+       "sell_per_tonne": 148356.15
       },
       {
-       "buy_per_tonne": 45242.81,
-       "market_available_tonnes_per_year": 11922.11,
+       "buy_per_tonne": 45382.52,
+       "market_available_tonnes_per_year": 12175.27,
        "material": "bread_kg",
        "own_supply": false,
        "price_basis": "solved",
        "price_kind": "thin_trade_blend",
-       "price_over_long_run_cost": 1.909,
-       "sell_per_tonne": 45242.81
+       "price_over_long_run_cost": 1.905,
+       "sell_per_tonne": 45382.52
       },
       {
-       "buy_per_tonne": 2072.07,
-       "market_available_tonnes_per_year": 448.78,
+       "buy_per_tonne": 2009.46,
+       "market_available_tonnes_per_year": 463.04,
        "material": "brick_1000",
        "own_supply": false,
        "price_basis": "solved",
        "price_kind": "thin_trade_blend",
-       "price_over_long_run_cost": 2.612,
-       "sell_per_tonne": 2072.07
+       "price_over_long_run_cost": 2.519,
+       "sell_per_tonne": 2009.46
       },
       {
-       "buy_per_tonne": 7624.62,
-       "market_available_tonnes_per_year": 21.89,
+       "buy_per_tonne": 7588.27,
+       "market_available_tonnes_per_year": 21.81,
        "material": "brick_wall_m3",
        "own_supply": false,
        "price_basis": "solved",
        "price_kind": "thin_trade_blend",
-       "price_over_long_run_cost": 1.827,
-       "sell_per_tonne": 7624.62
+       "price_over_long_run_cost": 1.809,
+       "sell_per_tonne": 7588.27
       },
       {
-       "buy_per_tonne": 12645.13,
+       "buy_per_tonne": 12833.48,
        "market_available_tonnes_per_year": 0.0,
        "material": "bristles_kg",
        "own_supply": false,
        "price_basis": "solved",
        "price_kind": "making_cost_estimate",
-       "price_over_long_run_cost": 0.701,
-       "sell_per_tonne": 12645.13
+       "price_over_long_run_cost": 0.707,
+       "sell_per_tonne": 12833.48
       },
       {
-       "buy_per_tonne": 240400.74,
-       "market_available_tonnes_per_year": 821048.3,
+       "buy_per_tonne": 238370.31,
+       "market_available_tonnes_per_year": 811062.99,
        "material": "bronze_kg",
        "own_supply": false,
        "price_basis": "solved",
        "price_kind": "smoothed_trade",
-       "price_over_long_run_cost": 1.899,
-       "sell_per_tonne": 240400.74
+       "price_over_long_run_cost": 1.873,
+       "sell_per_tonne": 238370.31
       },
       {
-       "buy_per_tonne": 415.31,
+       "buy_per_tonne": 440.67,
        "market_available_tonnes_per_year": 22.71,
        "material": "calamine_kg",
        "own_supply": false,
        "price_basis": "solved",
        "price_kind": "smoothed_trade",
-       "price_over_long_run_cost": 0.735,
-       "sell_per_tonne": 415.31
+       "price_over_long_run_cost": 0.775,
+       "sell_per_tonne": 440.67
       },
       {
-       "buy_per_tonne": 632.87,
+       "buy_per_tonne": 647.37,
        "market_available_tonnes_per_year": 0.0,
        "material": "calcite_kg",
        "own_supply": false,
        "price_basis": "solved",
        "price_kind": "making_cost_estimate",
-       "price_over_long_run_cost": 0.822,
-       "sell_per_tonne": 632.87
+       "price_over_long_run_cost": 0.836,
+       "sell_per_tonne": 647.37
       },
       {
-       "buy_per_tonne": 427813.12,
-       "market_available_tonnes_per_year": 34521.52,
+       "buy_per_tonne": 372579.59,
+       "market_available_tonnes_per_year": 35006.53,
        "material": "canvas_kg",
        "own_supply": false,
        "price_basis": "solved",
        "price_kind": "smoothed_trade",
-       "price_over_long_run_cost": 1.201,
-       "sell_per_tonne": 427813.12
+       "price_over_long_run_cost": 1.04,
+       "sell_per_tonne": 372579.59
       },
       {
-       "buy_per_tonne": 102658.63,
-       "market_available_tonnes_per_year": 603.42,
+       "buy_per_tonne": 104335.3,
+       "market_available_tonnes_per_year": 890.7,
        "material": "cart",
        "own_supply": false,
        "price_basis": "solved",
        "price_kind": "smoothed_trade",
-       "price_over_long_run_cost": 1.857,
-       "sell_per_tonne": 102658.63
+       "price_over_long_run_cost": 1.877,
+       "sell_per_tonne": 104335.3
       },
       {
-       "buy_per_tonne": 89685.8,
+       "buy_per_tonne": 92157.87,
        "market_available_tonnes_per_year": 0.0,
        "material": "cassia_kg",
        "own_supply": false,
        "price_basis": "solved",
        "price_kind": "making_cost_estimate",
-       "price_over_long_run_cost": 0.906,
-       "sell_per_tonne": 89685.8
+       "price_over_long_run_cost": 0.926,
+       "sell_per_tonne": 92157.87
       },
       {
-       "buy_per_tonne": 37.94,
+       "buy_per_tonne": 38.5,
        "market_available_tonnes_per_year": 975.8,
        "material": "cassiterite_kg",
        "own_supply": false,
        "price_basis": "solved",
        "price_kind": "making_cost_estimate",
-       "price_over_long_run_cost": 0.676,
-       "sell_per_tonne": 37.94
+       "price_over_long_run_cost": 0.682,
+       "sell_per_tonne": 38.5
       },
       {
-       "buy_per_tonne": 36972.47,
-       "market_available_tonnes_per_year": 3151150.72,
+       "buy_per_tonne": 36286.88,
+       "market_available_tonnes_per_year": 3174117.46,
        "material": "cast_iron_kg",
        "own_supply": false,
        "price_basis": "solved",
        "price_kind": "smoothed_trade",
-       "price_over_long_run_cost": 1.38,
-       "sell_per_tonne": 36972.47
+       "price_over_long_run_cost": 1.347,
+       "sell_per_tonne": 36286.88
       },
       {
-       "buy_per_tonne": 150957.28,
+       "buy_per_tonne": 150843.54,
        "market_available_tonnes_per_year": 0.0,
        "material": "cattle_kg",
        "own_supply": false,
        "price_basis": "solved",
        "price_kind": "smoothed_trade",
-       "price_over_long_run_cost": 1.944,
-       "sell_per_tonne": 150957.28
+       "price_over_long_run_cost": 1.932,
+       "sell_per_tonne": 150843.54
       },
       {
-       "buy_per_tonne": 77305.36,
-       "market_available_tonnes_per_year": 549015.81,
+       "buy_per_tonne": 77370.9,
+       "market_available_tonnes_per_year": 551154.98,
        "material": "ceramic_kg",
        "own_supply": false,
        "price_basis": "solved",
        "price_kind": "smoothed_trade",
-       "price_over_long_run_cost": 2.375,
-       "sell_per_tonne": 77305.36
+       "price_over_long_run_cost": 2.364,
+       "sell_per_tonne": 77370.9
       },
       {
-       "buy_per_tonne": 101.16,
+       "buy_per_tonne": 102.67,
        "market_available_tonnes_per_year": 0.0,
        "material": "chalk_kg",
        "own_supply": false,
        "price_basis": "solved",
        "price_kind": "making_cost_estimate",
-       "price_over_long_run_cost": 0.701,
-       "sell_per_tonne": 101.16
+       "price_over_long_run_cost": 0.707,
+       "sell_per_tonne": 102.67
       },
       {
-       "buy_per_tonne": 8711.64,
+       "buy_per_tonne": 8715.65,
        "market_available_tonnes_per_year": 0.0,
        "material": "charcoal_kg",
        "own_supply": false,
        "price_basis": "solved",
        "price_kind": "smoothed_trade",
-       "price_over_long_run_cost": 1.703,
-       "sell_per_tonne": 8711.64
+       "price_over_long_run_cost": 1.695,
+       "sell_per_tonne": 8715.65
       },
       {
-       "buy_per_tonne": 367836.2,
+       "buy_per_tonne": 370937.28,
        "market_available_tonnes_per_year": 0.0,
        "material": "cheese_kg",
        "own_supply": false,
        "price_basis": "solved",
        "price_kind": "thin_trade_blend",
-       "price_over_long_run_cost": 0.96,
-       "sell_per_tonne": 367836.2
+       "price_over_long_run_cost": 0.963,
+       "sell_per_tonne": 370937.28
       },
       {
-       "buy_per_tonne": 474.65,
+       "buy_per_tonne": 485.53,
        "market_available_tonnes_per_year": 0.0,
        "material": "chromite_kg",
        "own_supply": false,
        "price_basis": "solved",
        "price_kind": "making_cost_estimate",
-       "price_over_long_run_cost": 0.822,
-       "sell_per_tonne": 474.65
+       "price_over_long_run_cost": 0.836,
+       "sell_per_tonne": 485.53
       },
       {
-       "buy_per_tonne": 300.61,
+       "buy_per_tonne": 307.5,
        "market_available_tonnes_per_year": 0.0,
        "material": "cinnabar_kg",
        "own_supply": false,
        "price_basis": "solved",
        "price_kind": "making_cost_estimate",
-       "price_over_long_run_cost": 0.616,
-       "sell_per_tonne": 300.61
+       "price_over_long_run_cost": 0.627,
+       "sell_per_tonne": 307.5
       },
       {
-       "buy_per_tonne": 768.44,
-       "market_available_tonnes_per_year": 2397.08,
+       "buy_per_tonne": 760.51,
+       "market_available_tonnes_per_year": 2410.31,
        "material": "clay_kg",
        "own_supply": false,
        "price_basis": "solved",
        "price_kind": "smoothed_trade",
-       "price_over_long_run_cost": 3.549,
-       "sell_per_tonne": 768.44
+       "price_over_long_run_cost": 3.494,
+       "sell_per_tonne": 760.51
       },
       {
-       "buy_per_tonne": 3145028.77,
+       "buy_per_tonne": 3130266.33,
        "market_available_tonnes_per_year": 10707.69,
        "material": "cloth",
        "own_supply": false,
        "price_basis": null,
        "price_kind": "smoothed_trade",
-       "price_over_long_run_cost": 2.425,
-       "sell_per_tonne": 3145028.77
+       "price_over_long_run_cost": 2.401,
+       "sell_per_tonne": 3130266.33
       },
       {
-       "buy_per_tonne": 3497467.03,
+       "buy_per_tonne": 3481793.41,
        "market_available_tonnes_per_year": 10707.69,
        "material": "cloth_bag_kg",
        "own_supply": false,
        "price_basis": "solved",
        "price_kind": "making_cost_estimate",
-       "price_over_long_run_cost": 2.362,
-       "sell_per_tonne": 3497467.03
+       "price_over_long_run_cost": 2.339,
+       "sell_per_tonne": 3481793.41
       }
      ],
      "total": 212
@@ -976,265 +976,265 @@
     },
     "wages": [
      {
-      "a_year_of_one": 156646.0,
+      "a_year_of_one": 155412.0,
       "available_here": true,
       "trade": "artisan",
       "you_employ": 0.0
      },
      {
-      "a_year_of_one": 222973.0,
+      "a_year_of_one": 221148.0,
       "available_here": true,
       "trade": "baker",
       "you_employ": 0.0
      },
      {
-      "a_year_of_one": 168142.0,
+      "a_year_of_one": 173667.0,
       "available_here": true,
       "trade": "carpenter",
       "you_employ": 0.0
      },
      {
-      "a_year_of_one": 222979.0,
+      "a_year_of_one": 226213.0,
       "available_here": true,
       "trade": "carter",
       "you_employ": 0.0
      },
      {
-      "a_year_of_one": 165414.0,
+      "a_year_of_one": 162501.0,
       "available_here": true,
       "trade": "charcoal_burner",
       "you_employ": 0.0
      },
      {
-      "a_year_of_one": 125371.0,
+      "a_year_of_one": 126053.0,
       "available_here": false,
       "trade": "chemist",
       "you_employ": 0.0
      },
      {
-      "a_year_of_one": 165414.0,
+      "a_year_of_one": 162501.0,
       "available_here": true,
       "trade": "dockworker",
       "you_employ": 0.0
      },
      {
-      "a_year_of_one": 165414.0,
+      "a_year_of_one": 162501.0,
       "available_here": true,
       "trade": "domestic_servant",
       "you_employ": 0.0
      },
      {
-      "a_year_of_one": 108298.0,
+      "a_year_of_one": 108887.0,
       "available_here": false,
       "trade": "electrician",
       "you_employ": 0.0
      },
      {
-      "a_year_of_one": 125371.0,
+      "a_year_of_one": 126053.0,
       "available_here": false,
       "trade": "engineer",
       "you_employ": 0.0
      },
      {
-      "a_year_of_one": 108298.0,
+      "a_year_of_one": 108887.0,
       "available_here": true,
       "trade": "engraver",
       "you_employ": 0.0
      },
      {
-      "a_year_of_one": 175117.0,
+      "a_year_of_one": 173535.0,
       "available_here": true,
       "trade": "farmer",
       "you_employ": 0.0
      },
      {
-      "a_year_of_one": 259001.0,
+      "a_year_of_one": 256862.0,
       "available_here": true,
       "trade": "fisher",
       "you_employ": 0.0
      },
      {
-      "a_year_of_one": 209275.0,
+      "a_year_of_one": 221299.0,
       "available_here": true,
       "trade": "fuller",
       "you_employ": 0.0
      },
      {
-      "a_year_of_one": 966279.0,
+      "a_year_of_one": 968728.0,
       "available_here": true,
       "trade": "furnaceman",
       "you_employ": 0.0
      },
      {
-      "a_year_of_one": 108298.0,
+      "a_year_of_one": 108887.0,
       "available_here": true,
       "trade": "glassblower",
       "you_employ": 0.0
      },
      {
-      "a_year_of_one": 167848.0,
+      "a_year_of_one": 165060.0,
       "available_here": true,
       "trade": "herder",
       "you_employ": 0.0
      },
      {
-      "a_year_of_one": 87934.0,
+      "a_year_of_one": 88412.0,
       "available_here": true,
       "trade": "hunter",
       "you_employ": 0.0
      },
      {
-      "a_year_of_one": 168892.0,
+      "a_year_of_one": 166390.0,
       "available_here": true,
       "trade": "knapper",
       "you_employ": 0.0
      },
      {
-      "a_year_of_one": 72167.0,
+      "a_year_of_one": 72560.0,
       "available_here": true,
       "trade": "labourer",
       "you_employ": 0.0
      },
      {
-      "a_year_of_one": 190322.0,
+      "a_year_of_one": 188398.0,
       "available_here": true,
       "trade": "leatherworker",
       "you_employ": 0.0
      },
      {
-      "a_year_of_one": 176823.0,
+      "a_year_of_one": 175635.0,
       "available_here": true,
       "trade": "lime_burner",
       "you_employ": 0.0
      },
      {
-      "a_year_of_one": 108298.0,
+      "a_year_of_one": 108887.0,
       "available_here": false,
       "trade": "machinist",
       "you_employ": 0.0
      },
      {
-      "a_year_of_one": 196338.0,
+      "a_year_of_one": 207823.0,
       "available_here": true,
       "trade": "mason",
       "you_employ": 0.0
      },
      {
-      "a_year_of_one": 116423.0,
+      "a_year_of_one": 117057.0,
       "available_here": true,
       "trade": "master",
       "you_employ": 0.0
      },
      {
-      "a_year_of_one": 94131.0,
+      "a_year_of_one": 94644.0,
       "available_here": true,
       "trade": "merchant",
       "you_employ": 0.0
      },
      {
-      "a_year_of_one": 508144.0,
+      "a_year_of_one": 513364.0,
       "available_here": true,
       "trade": "miller",
       "you_employ": 0.0
      },
      {
-      "a_year_of_one": 100895.0,
+      "a_year_of_one": 101445.0,
       "available_here": true,
       "trade": "millwright",
       "you_employ": 0.0
      },
      {
-      "a_year_of_one": 191015.0,
+      "a_year_of_one": 200842.0,
       "available_here": true,
       "trade": "miner",
       "you_employ": 0.0
      },
      {
-      "a_year_of_one": 108298.0,
+      "a_year_of_one": 108887.0,
       "available_here": false,
       "trade": "optician",
       "you_employ": 0.0
      },
      {
-      "a_year_of_one": 94131.0,
+      "a_year_of_one": 94644.0,
       "available_here": true,
       "trade": "plumber",
       "you_employ": 0.0
      },
      {
-      "a_year_of_one": 263669.0,
+      "a_year_of_one": 261590.0,
       "available_here": true,
       "trade": "porter",
       "you_employ": 0.0
      },
      {
-      "a_year_of_one": 175724.0,
+      "a_year_of_one": 173589.0,
       "available_here": true,
       "trade": "potter",
       "you_employ": 0.0
      },
      {
-      "a_year_of_one": 661509.0,
+      "a_year_of_one": 767899.0,
       "available_here": true,
       "trade": "sailor",
       "you_employ": 0.0
      },
      {
-      "a_year_of_one": 195850.0,
+      "a_year_of_one": 188274.0,
       "available_here": true,
       "trade": "salt_worker",
       "you_employ": 0.0
      },
      {
-      "a_year_of_one": 125371.0,
+      "a_year_of_one": 126053.0,
       "available_here": true,
       "trade": "scholar",
       "you_employ": 0.0
      },
      {
-      "a_year_of_one": 167758.0,
+      "a_year_of_one": 166438.0,
       "available_here": true,
       "trade": "scribe",
       "you_employ": 0.0
      },
      {
-      "a_year_of_one": 156646.0,
+      "a_year_of_one": 155412.0,
       "available_here": true,
       "trade": "shipwright",
       "you_employ": 0.0
      },
      {
-      "a_year_of_one": 183526.0,
+      "a_year_of_one": 180952.0,
       "available_here": true,
       "trade": "smith",
       "you_employ": 0.0
      },
      {
-      "a_year_of_one": 77001.0,
+      "a_year_of_one": 77420.0,
       "available_here": true,
       "trade": "soldier",
       "you_employ": 0.0
      },
      {
-      "a_year_of_one": 165414.0,
+      "a_year_of_one": 162501.0,
       "available_here": true,
       "trade": "spinner",
       "you_employ": 0.0
      },
      {
-      "a_year_of_one": 165414.0,
+      "a_year_of_one": 162501.0,
       "available_here": true,
       "trade": "tanner",
       "you_employ": 0.0
      },
      {
-      "a_year_of_one": 179251.0,
+      "a_year_of_one": 173799.0,
       "available_here": true,
       "trade": "vine_and_olive_tender",
       "you_employ": 0.0
      },
      {
-      "a_year_of_one": 193207.0,
+      "a_year_of_one": 196002.0,
       "available_here": true,
       "trade": "weaver",
       "you_employ": 0.0
@@ -1387,13 +1387,13 @@
      "in_full": "~prose~",
      "technologies_you_could_lose": 1
     },
-    "capital": 278756.3,
+    "capital": 287035.8,
     "chance_of_being_denounced_this_year": 0.0,
     "coin_hoard": {
      "basis": "~prose~",
-     "keeping_cost_per_year": 1478.4,
+     "keeping_cost_per_year": 1530.4,
      "metal": "bronze_kg",
-     "tonnes": 0.836
+     "tonnes": 0.861
     },
     "completed": [
      {
@@ -1405,9 +1405,9 @@
      }
     ],
     "concerns_you_run": 0,
-    "credit_limit": 632112.9,
+    "credit_limit": 635500.9,
     "critical_capabilities_not_operating": null,
-    "debt_interest_rate": 0.0379,
+    "debt_interest_rate": 0.0364,
     "debt_still_to_work_off": 0.0,
     "depends_on_one_person": null,
     "diffusion_index": 0.0,
@@ -1465,31 +1465,31 @@
     "interest_on_arrears_this_year": 0.0,
     "interest_paid_total": 0.0,
     "literacy": {
-     "elite": 0.944,
+     "elite": 0.95,
      "elite_ceiling": 0.99,
-     "farm_share_of_working_hours": 0.571,
+     "farm_share_of_working_hours": 0.576,
      "general": 0.07,
-     "general_ceiling_now": 0.542,
+     "general_ceiling_now": 0.539,
      "schools_actually_teaching": false
     },
-    "living_cost": 31886.8,
+    "living_cost": 32155.1,
     "living_stock": {
-     "cattle_kg": 33601.965,
-     "goat_kg": 7348.731,
-     "pig_kg": 98843.729,
-     "ramie_stock_kg": 2159.015,
-     "sheep_kg": 4836138642.152,
+     "cattle_kg": 33280.703,
+     "goat_kg": 7259.947,
+     "pig_kg": 97609.956,
+     "ramie_stock_kg": 2159.034,
+     "sheep_kg": 4831659211.795,
      "silkworm_eggs_kg": 0.125,
-     "sugar_cane_sett_kg": 149731.658,
-     "tea_plant_stock_kg": 854.61
+     "sugar_cane_sett_kg": 149733.041,
+     "tea_plant_stock_kg": 854.618
     },
     "lost": [],
     "manual": true,
     "mine_capacity": {},
     "mine_operating_cost": 0,
     "mothballed": [],
-    "net_after_project_spend": 80212.4,
-    "net_per_year": -40745.7,
+    "net_after_project_spend": 80539.5,
+    "net_per_year": -37470.8,
     "ok": true,
     "on_the_road_to_the_goal_so_far": 14,
     "project_spend_this_year": 0.0,
@@ -1513,7 +1513,7 @@
     "protection": 0.021,
     "reputation": 5.3,
     "resource_throttle": 0.05,
-    "revenue": 102340.1,
+    "revenue": 102885.2,
     "scandal": 0.0,
     "scandal_danger": 25.0,
     "scandal_now": 0.0,
@@ -1560,7 +1560,7 @@
     "trades_you_created": [],
     "upkeep": 0.0,
     "wage_bill": 0,
-    "wages_you_have_already_paid_this_year": 120958.2,
+    "wages_you_have_already_paid_this_year": 118010.3,
     "what_you_can_field": "~prose~",
     "where_your_hours_come_from": {
      "deputies_who_direct_work_for_you": 0.0,
@@ -1595,9 +1595,9 @@
     "founder_hours_free": 2000.0,
     "goal": null,
     "goal_reached": false,
-    "money": 732990.0,
+    "money": 737213.3,
     "nearest_goal_blocker": null,
-    "net_per_year": 59865.2,
+    "net_per_year": 60232.6,
     "ok": true,
     "projects": [],
     "standing": {
@@ -1618,7 +1618,7 @@
     "seats": [
      {
       "built": 1,
-      "capital": 278756.3,
+      "capital": 287035.8,
       "country": "han_china_100ad",
       "ended": null,
       "seat": "founder",
@@ -1692,19 +1692,19 @@
      "in_full": "~prose~",
      "technologies_you_could_lose": 1
     },
-    "capital": 301163.3,
+    "capital": 309538.7,
     "chance_of_being_denounced_this_year": 0.0,
     "coin_hoard": {
      "basis": "~prose~",
-     "keeping_cost_per_year": 1237.8,
+     "keeping_cost_per_year": 1268.5,
      "metal": "bronze_kg",
-     "tonnes": 0.903
+     "tonnes": 0.929
     },
     "completed": [],
     "concerns_you_run": 0,
-    "credit_limit": 0.0,
+    "credit_limit": 477390.7,
     "critical_capabilities_not_operating": null,
-    "debt_interest_rate": 0.0386,
+    "debt_interest_rate": 0.0384,
     "debt_still_to_work_off": 0.0,
     "depends_on_one_person": null,
     "diffusion_index": 0.0,
@@ -1754,30 +1754,30 @@
     "interest_on_arrears_this_year": 0.0,
     "interest_paid_total": 0.0,
     "literacy": {
-     "elite": 0.939,
+     "elite": 0.944,
      "elite_ceiling": 0.99,
-     "farm_share_of_working_hours": 0.547,
+     "farm_share_of_working_hours": 0.539,
      "general": 0.072,
-     "general_ceiling_now": 0.561,
+     "general_ceiling_now": 0.568,
      "schools_actually_teaching": false
     },
-    "living_cost": 29117.7,
+    "living_cost": 29325.6,
     "living_stock": {
-     "cattle_kg": 39188.113,
-     "goat_kg": 10318.284,
-     "pig_kg": 194102.217,
-     "ramie_stock_kg": 2589.141,
-     "sheep_kg": 6336074213.557,
+     "cattle_kg": 38813.537,
+     "goat_kg": 10193.648,
+     "pig_kg": 191679.89,
+     "ramie_stock_kg": 2589.171,
+     "sheep_kg": 6330220929.144,
      "silkworm_eggs_kg": 0.062,
-     "sugar_cane_sett_kg": 235361.9,
-     "tea_plant_stock_kg": 768.651
+     "sugar_cane_sett_kg": 235241.641,
+     "tea_plant_stock_kg": 768.66
     },
     "lost": [],
     "manual": true,
     "mine_capacity": {},
     "mine_operating_cost": 0,
     "mothballed": [],
-    "net_after_project_spend": 55864.3,
+    "net_after_project_spend": 56034.1,
     "net_per_year": 0.0,
     "ok": true,
     "on_the_road_to_the_goal_so_far": 14,
@@ -1802,7 +1802,7 @@
     "protection": 0.02,
     "reputation": 5.2,
     "resource_throttle": 0.05,
-    "revenue": 79307.2,
+    "revenue": 79074.4,
     "scandal": 0.0,
     "scandal_danger": 25.0,
     "scandal_now": 0.0,
@@ -1846,7 +1846,7 @@
     "trades_you_created": [],
     "upkeep": 0.0,
     "wage_bill": 0,
-    "wages_you_have_already_paid_this_year": 55864.3,
+    "wages_you_have_already_paid_this_year": 56034.1,
     "what_you_can_field": "~prose~",
     "where_your_hours_come_from": {
      "deputies_who_direct_work_for_you": 0.0,
@@ -1870,13 +1870,13 @@
     "components": {
      "economy": {
       "counts": "~prose~",
-      "normalized": 0.10559183393469107,
-      "raw": 790480.3,
+      "normalized": 0.10543897146409174,
+      "raw": 794989.3,
       "raw_detail": {
        "worker_years_equivalent": 5.5
       },
       "weight": 0.1,
-      "weighted": 0.0106
+      "weighted": 0.0105
      },
      "institutions": {
       "counted": [
@@ -1892,16 +1892,16 @@
      },
      "literacy": {
       "counts": "~prose~",
-      "normalized": 0.5383948594209285,
-      "raw": 0.0721,
+      "normalized": 0.5398458235829197,
+      "raw": 0.0718,
       "raw_detail": {
-       "elite": 0.9388,
+       "elite": 0.9437,
        "elite_ceiling": 0.99,
-       "general": 0.0721,
-       "general_ceiling": 0.5615
+       "general": 0.0718,
+       "general_ceiling": 0.5677
       },
       "weight": 0.15,
-      "weighted": 0.0808
+      "weighted": 0.081
      },
      "resilience": {
       "counts": "~prose~",
@@ -1997,10 +1997,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 56.53737933386099,
+       "garrison_lost": 56.62021793160891,
        "outcome": "tile_lost",
-       "rising_lost": 61.04677351720302,
-       "rising_win_probability": 0.646081663531993
+       "rising_lost": 61.13621928166507,
+       "rising_win_probability": 0.647655881184459
       },
       "kind": "revolt",
       "tiles": [
@@ -2030,10 +2030,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 7.081453509429402,
+       "garrison_lost": 7.048460075957289,
        "outcome": "put_down",
-       "rising_lost": 45.91430222577196,
-       "rising_win_probability": 0.663572871919725
+       "rising_lost": 45.700381386796245,
+       "rising_win_probability": 0.6585580213115922
       },
       "kind": "revolt",
       "tiles": [
@@ -2047,10 +2047,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 13.378463464610654,
+       "garrison_lost": 13.382360818911957,
        "outcome": "put_down",
-       "rising_lost": 86.66838388858807,
-       "rising_win_probability": 0.6574165878158919
+       "rising_lost": 86.69363173559451,
+       "rising_win_probability": 0.6577298014364289
       },
       "kind": "revolt",
       "tiles": [
@@ -2064,31 +2064,14 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 22.35262365277099,
-       "outcome": "put_down",
-       "rising_lost": 148.37517424684194,
-       "rising_win_probability": 0.6284309088606063
-      },
-      "kind": "revolt",
-      "tiles": [
-       "china_17"
-      ],
-      "year": 100
-     },
-     {
-      "actors": [
-       "han_china_100ad"
-      ],
-      "cause": "unrest",
-      "facts": {
-       "garrison_lost": 1798.768925675081,
+       "garrison_lost": 52.78016189550323,
        "outcome": "tile_lost",
-       "rising_lost": 1819.1323474751757,
-       "rising_win_probability": 0.5070950573996491
+       "rising_lost": 56.4667588869028,
+       "rising_win_probability": 0.6416092565504646
       },
       "kind": "revolt",
       "tiles": [
-       "china_20"
+       "china_16"
       ],
       "year": 100
      },
@@ -2104,7 +2087,7 @@
       },
       "kind": "tile_transfer",
       "tiles": [
-       "china_20"
+       "china_16"
       ],
       "year": 100
      },
@@ -2114,10 +2097,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 1116.9052873385215,
+       "garrison_lost": 1085.5653120604773,
        "outcome": "put_down",
-       "rising_lost": 6464.28060137706,
-       "rising_win_probability": 0.5543050807094771
+       "rising_lost": 6282.895128021253,
+       "rising_win_probability": 0.5618493334894591
       },
       "kind": "revolt",
       "tiles": [
@@ -2131,10 +2114,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 0.1242236075807479,
+       "garrison_lost": 0.12167220123989778,
        "outcome": "put_down",
-       "rising_lost": 0.790084798974817,
-       "rising_win_probability": 0.660524982611385
+       "rising_lost": 0.7738573893449429,
+       "rising_win_probability": 0.6762937293359546
       },
       "kind": "revolt",
       "tiles": [
@@ -2148,10 +2131,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 7.713251958233762,
+       "garrison_lost": 7.552525806968229,
        "outcome": "tile_lost",
-       "rising_lost": 7.585161853512188,
-       "rising_win_probability": 0.6741871570083119
+       "rising_lost": 7.427104800787529,
+       "rising_win_probability": 0.6895763967681678
       },
       "kind": "revolt",
       "tiles": [
@@ -2181,10 +2164,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 17.482517068410594,
+       "garrison_lost": 17.361049531718816,
        "outcome": "tile_lost",
-       "rising_lost": 16.913318838276297,
-       "rising_win_probability": 0.6602156921190576
+       "rising_lost": 16.795806058593094,
+       "rising_win_probability": 0.6907153288642197
       },
       "kind": "revolt",
       "tiles": [
@@ -2214,10 +2197,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 28.763205208666786,
+       "garrison_lost": 28.560366936529547,
        "outcome": "tile_lost",
-       "rising_lost": 28.10026144549304,
-       "rising_win_probability": 0.6558866360998513
+       "rising_lost": 27.902098256208042,
+       "rising_win_probability": 0.6863218304904294
       },
       "kind": "revolt",
       "tiles": [
@@ -2247,10 +2230,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 15.857553081355364,
+       "garrison_lost": 15.334467108731596,
        "outcome": "put_down",
-       "rising_lost": 97.99297766823474,
-       "rising_win_probability": 0.6668613104829948
+       "rising_lost": 94.7605273796618,
+       "rising_win_probability": 0.6689621597185876
       },
       "kind": "revolt",
       "tiles": [
@@ -2264,10 +2247,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 27.489929717265113,
+       "garrison_lost": 27.021403881677074,
        "outcome": "put_down",
-       "rising_lost": 176.7209767538471,
-       "rising_win_probability": 0.5372632306056344
+       "rising_lost": 173.70902495363828,
+       "rising_win_probability": 0.5563010241138922
       },
       "kind": "revolt",
       "tiles": [
@@ -2281,10 +2264,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 2.6897555758671414,
+       "garrison_lost": 2.6345614720963613,
        "outcome": "tile_lost",
-       "rising_lost": 2.795038233796525,
-       "rising_win_probability": 0.6499278962002966
+       "rising_lost": 2.737683717384852,
+       "rising_win_probability": 0.6657851062086836
       },
       "kind": "revolt",
       "tiles": [
@@ -2314,10 +2297,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 7.668924998601834,
+       "garrison_lost": 7.513320471356852,
        "outcome": "tile_lost",
-       "rising_lost": 8.083158903635798,
-       "rising_win_probability": 0.6414751821753548
+       "rising_lost": 7.919149460320652,
+       "rising_win_probability": 0.6575974733057147
       },
       "kind": "revolt",
       "tiles": [
@@ -2347,10 +2330,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 3.210213862042995,
+       "garrison_lost": 3.1447937464310516,
        "outcome": "tile_lost",
-       "rising_lost": 3.331681413579757,
-       "rising_win_probability": 0.6491068020875197
+       "rising_lost": 3.2637859422419564,
+       "rising_win_probability": 0.6651294289361838
       },
       "kind": "revolt",
       "tiles": [
@@ -2380,10 +2363,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 24.85336037613317,
+       "garrison_lost": 24.330763320897596,
        "outcome": "tile_lost",
-       "rising_lost": 26.123780286178697,
-       "rising_win_probability": 0.6434676912113166
+       "rising_lost": 25.574469833082432,
+       "rising_win_probability": 0.6587894248199871
       },
       "kind": "revolt",
       "tiles": [
@@ -2413,10 +2396,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 19.784574402306184,
+       "garrison_lost": 19.621848604612833,
        "outcome": "put_down",
-       "rising_lost": 128.86005696238897,
-       "rising_win_probability": 0.552281042572575
+       "rising_lost": 127.80019814846511,
+       "rising_win_probability": 0.5809776495984957
       },
       "kind": "revolt",
       "tiles": [
@@ -2430,10 +2413,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 39.43447133893155,
+       "garrison_lost": 39.58467336563254,
        "outcome": "put_down",
-       "rising_lost": 250.3967965386145,
-       "rising_win_probability": 0.5980986176473495
+       "rising_lost": 251.3505333339244,
+       "rising_win_probability": 0.6402694535029437
       },
       "kind": "revolt",
       "tiles": [
@@ -2447,10 +2430,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 0.33527652975902605,
+       "garrison_lost": 0.32835421896776656,
        "outcome": "tile_lost",
-       "rising_lost": 0.3479626687228812,
-       "rising_win_probability": 0.6513376416597687
+       "rising_lost": 0.3407784326584387,
+       "rising_win_probability": 0.667084326489292
       },
       "kind": "revolt",
       "tiles": [
@@ -2480,10 +2463,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 0.8567523290380907,
+       "garrison_lost": 0.8396875350515416,
        "outcome": "put_down",
-       "rising_lost": 5.336550524093194,
-       "rising_win_probability": 0.6670464823928834
+       "rising_lost": 5.230257103922736,
+       "rising_win_probability": 0.6835423347682357
       },
       "kind": "revolt",
       "tiles": [
@@ -2497,10 +2480,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 0.648421531618547,
+       "garrison_lost": 0.6346274791133253,
        "outcome": "put_down",
-       "rising_lost": 3.8195646014869356,
-       "rising_win_probability": 0.6935865298888292
+       "rising_lost": 3.7383099359787084,
+       "rising_win_probability": 0.7084613479540582
       },
       "kind": "revolt",
       "tiles": [
@@ -2514,10 +2497,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 21.135641228409376,
-       "outcome": "put_down",
-       "rising_lost": 125.07483891495426,
-       "rising_win_probability": 0.637125828599376
+       "garrison_lost": 51.88588624174617,
+       "outcome": "tile_lost",
+       "rising_lost": 49.12739608712169,
+       "rising_win_probability": 0.6557443748997477
       },
       "kind": "revolt",
       "tiles": [
@@ -2529,12 +2512,28 @@
       "actors": [
        "han_china_100ad"
       ],
+      "cause": "revolt",
+      "facts": {
+       "control": null,
+       "from_owner": "han_china_100ad",
+       "to_owner": null
+      },
+      "kind": "tile_transfer",
+      "tiles": [
+       "china_54"
+      ],
+      "year": 100
+     },
+     {
+      "actors": [
+       "han_china_100ad"
+      ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 60.50082241498763,
+       "garrison_lost": 59.407439400814674,
        "outcome": "tile_lost",
-       "rising_lost": 59.00529646765086,
-       "rising_win_probability": 0.50646585900778
+       "rising_lost": 57.93894089877208,
+       "rising_win_probability": 0.5230062633933903
       },
       "kind": "revolt",
       "tiles": [
@@ -2564,10 +2563,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 43.63229892835167,
+       "garrison_lost": 43.28462384424684,
        "outcome": "put_down",
-       "rising_lost": 268.59667888689603,
-       "rising_win_probability": 0.6359563954118
+       "rising_lost": 266.45642097668065,
+       "rising_win_probability": 0.6645519892932557
       },
       "kind": "revolt",
       "tiles": [
@@ -2581,10 +2580,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 48.037096050774565,
+       "garrison_lost": 47.09428114347343,
        "outcome": "tile_lost",
-       "rising_lost": 51.70178172887489,
-       "rising_win_probability": 0.634674633701363
+       "rising_lost": 50.68704073586212,
+       "rising_win_probability": 0.6505664034284028
       },
       "kind": "revolt",
       "tiles": [
@@ -2614,10 +2613,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 18.615329062321504,
+       "garrison_lost": 18.241798398734957,
        "outcome": "put_down",
-       "rising_lost": 119.26293182055831,
-       "rising_win_probability": 0.6559245451942729
+       "rising_lost": 116.8698308490381,
+       "rising_win_probability": 0.6713521317086271
       },
       "kind": "revolt",
       "tiles": [
@@ -2631,10 +2630,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 23.270883097720564,
+       "garrison_lost": 22.808218622926603,
        "outcome": "tile_lost",
-       "rising_lost": 24.06800727012867,
-       "rising_win_probability": 0.6524311471999804
+       "rising_lost": 23.589494619955037,
+       "rising_win_probability": 0.6680650421664414
       },
       "kind": "revolt",
       "tiles": [
@@ -2664,10 +2663,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 49.72152989838522,
+       "garrison_lost": 48.69523770348136,
        "outcome": "tile_lost",
-       "rising_lost": 45.85429979517747,
-       "rising_win_probability": 0.7005053845721798
+       "rising_lost": 44.90783032654392,
+       "rising_win_probability": 0.7150972131534227
       },
       "kind": "revolt",
       "tiles": [
@@ -2697,10 +2696,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 95.09034271410576,
+       "garrison_lost": 93.06920303621638,
        "outcome": "tile_lost",
-       "rising_lost": 84.23709940956383,
-       "rising_win_probability": 0.7186753168007607
+       "rising_lost": 82.44664478391526,
+       "rising_win_probability": 0.7324894182081849
       },
       "kind": "revolt",
       "tiles": [
@@ -2730,10 +2729,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 34.0531751446337,
+       "garrison_lost": 33.3447353314271,
        "outcome": "put_down",
-       "rising_lost": 200.11768510320456,
-       "rising_win_probability": 0.6933325056020231
+       "rising_lost": 195.95445113598404,
+       "rising_win_probability": 0.7079140433325833
       },
       "kind": "revolt",
       "tiles": [
@@ -2747,10 +2746,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 13.934647388875648,
+       "garrison_lost": 13.641440690840126,
        "outcome": "put_down",
-       "rising_lost": 79.50749766140771,
-       "rising_win_probability": 0.705808098514906
+       "rising_lost": 77.83453599917151,
+       "rising_win_probability": 0.720033902661575
       },
       "kind": "revolt",
       "tiles": [
@@ -2764,10 +2763,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 24.982135693492577,
+       "garrison_lost": 24.45937303987276,
        "outcome": "tile_lost",
-       "rising_lost": 23.134142094247927,
-       "rising_win_probability": 0.6998826146949487
+       "rising_lost": 22.650049554731496,
+       "rising_win_probability": 0.7142780935705895
       },
       "kind": "revolt",
       "tiles": [
@@ -2797,10 +2796,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 23.083448282848583,
+       "garrison_lost": 22.589830379175922,
        "outcome": "put_down",
-       "rising_lost": 126.33508857504962,
-       "rising_win_probability": 0.7226724120973244
+       "rising_lost": 123.63353112927359,
+       "rising_win_probability": 0.7363937748697155
       },
       "kind": "revolt",
       "tiles": [
@@ -2814,10 +2813,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 9.149592372482722,
+       "garrison_lost": 8.693317433399745,
        "outcome": "put_down",
-       "rising_lost": 63.391611788009115,
-       "rising_win_probability": 0.6003899003891567
+       "rising_lost": 60.23037764451501,
+       "rising_win_probability": 0.5829470818852721
       },
       "kind": "revolt",
       "tiles": [
@@ -2831,8 +2830,8 @@
       ],
       "cause": "food unmet",
       "facts": {
-       "food_shortfall": 0.18819610562511865,
-       "people": 57916115.13052401
+       "food_shortfall": 0.18671985956015974,
+       "people": 57916556.99754822
       },
       "kind": "famine",
       "tiles": [],
@@ -2844,10 +2843,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 1997.5558698200298,
+       "garrison_lost": 1772.0554285561775,
        "outcome": "tile_lost",
-       "rising_lost": 2111.020857174962,
-       "rising_win_probability": 0.6755352432690364
+       "rising_lost": 1872.7115602975548,
+       "rising_win_probability": 0.5940189687874984
       },
       "kind": "revolt",
       "tiles": [
@@ -2877,10 +2876,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 25.972371657947907,
+       "garrison_lost": 24.95428981029387,
        "outcome": "tile_lost",
-       "rising_lost": 26.943696126456533,
-       "rising_win_probability": 0.9301118310823203
+       "rising_lost": 25.887539673117878,
+       "rising_win_probability": 0.932839487802969
       },
       "kind": "revolt",
       "tiles": [
@@ -2910,10 +2909,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 48.70424393751575,
+       "garrison_lost": 46.83397180248238,
        "outcome": "tile_lost",
-       "rising_lost": 50.48254603223703,
-       "rising_win_probability": 0.9217231142601026
+       "rising_lost": 48.543986031782836,
+       "rising_win_probability": 0.9251401326423321
       },
       "kind": "revolt",
       "tiles": [
@@ -2943,43 +2942,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 77.14396281399524,
+       "garrison_lost": 81.59263767603598,
        "outcome": "tile_lost",
-       "rising_lost": 82.53232637714201,
-       "rising_win_probability": 0.9141246198654785
-      },
-      "kind": "revolt",
-      "tiles": [
-       "china_16"
-      ],
-      "year": 101
-     },
-     {
-      "actors": [
-       "han_china_100ad"
-      ],
-      "cause": "revolt",
-      "facts": {
-       "control": null,
-       "from_owner": "han_china_100ad",
-       "to_owner": null
-      },
-      "kind": "tile_transfer",
-      "tiles": [
-       "china_16"
-      ],
-      "year": 101
-     },
-     {
-      "actors": [
-       "han_china_100ad"
-      ],
-      "cause": "unrest",
-      "facts": {
-       "garrison_lost": 82.91546001999502,
-       "outcome": "tile_lost",
-       "rising_lost": 88.06193684882228,
-       "rising_win_probability": 0.9153952129526385
+       "rising_lost": 86.65700829041063,
+       "rising_win_probability": 0.9338036666349366
       },
       "kind": "revolt",
       "tiles": [
@@ -3009,10 +2975,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 4200.715582332526,
+       "garrison_lost": 4154.874953884537,
        "outcome": "tile_lost",
-       "rising_lost": 3889.9777173380658,
-       "rising_win_probability": 0.9013788689709578
+       "rising_lost": 3847.5280394875995,
+       "rising_win_probability": 0.9245952215056203
       },
       "kind": "revolt",
       "tiles": [
@@ -3042,10 +3008,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 0.5361113169914956,
+       "garrison_lost": 0.5050802113331299,
        "outcome": "tile_lost",
-       "rising_lost": 0.5455625195402819,
-       "rising_win_probability": 0.9876319397351077
+       "rising_lost": 0.5139843609554162,
+       "rising_win_probability": 0.9848404799894964
       },
       "kind": "revolt",
       "tiles": [
@@ -3075,10 +3041,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 57.177787616511594,
+       "garrison_lost": 55.61299224582779,
        "outcome": "tile_lost",
-       "rising_lost": 56.53353085463542,
-       "rising_win_probability": 0.9061478609577268
+       "rising_lost": 54.98636698108609,
+       "rising_win_probability": 0.9202607024586802
       },
       "kind": "revolt",
       "tiles": [
@@ -3108,10 +3074,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 110.3097187898677,
+       "garrison_lost": 104.5079853960617,
        "outcome": "tile_lost",
-       "rising_lost": 113.46142504100678,
-       "rising_win_probability": 0.8948747722786737
+       "rising_lost": 107.49392783594918,
+       "rising_win_probability": 0.8909773480090373
       },
       "kind": "revolt",
       "tiles": [
@@ -3141,10 +3107,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 57.475416560387536,
+       "garrison_lost": 58.626845513129844,
        "outcome": "tile_lost",
-       "rising_lost": 59.89543409977229,
-       "rising_win_probability": 0.5923288095694597
+       "rising_lost": 61.09534427157743,
+       "rising_win_probability": 0.6660038861369629
       },
       "kind": "revolt",
       "tiles": [
@@ -3174,10 +3140,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 58.123339107732384,
+       "garrison_lost": 55.01178603233689,
        "outcome": "tile_lost",
-       "rising_lost": 62.64535856580853,
-       "rising_win_probability": 0.9465659933127456
+       "rising_lost": 59.29172539371219,
+       "rising_win_probability": 0.9433030989568163
       },
       "kind": "revolt",
       "tiles": [
@@ -3207,10 +3173,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 151.38334694347898,
+       "garrison_lost": 145.61879624577284,
        "outcome": "tile_lost",
-       "rising_lost": 153.79805063705584,
-       "rising_win_probability": 0.9027652683289864
+       "rising_lost": 147.94155005092009,
+       "rising_win_probability": 0.9098340793630643
       },
       "kind": "revolt",
       "tiles": [
@@ -3240,10 +3206,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 3.2411900629719548,
+       "garrison_lost": 3.0924829647435317,
        "outcome": "tile_lost",
-       "rising_lost": 3.230202978012728,
-       "rising_win_probability": 0.9337125714679099
+       "rising_lost": 3.081999971642705,
+       "rising_win_probability": 0.9349325414697399
       },
       "kind": "revolt",
       "tiles": [
@@ -3273,10 +3239,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 2.595178860597371,
+       "garrison_lost": 2.4717087677111356,
        "outcome": "tile_lost",
-       "rising_lost": 2.445928230846278,
-       "rising_win_probability": 0.972618191318969
+       "rising_lost": 2.329558993087405,
+       "rising_win_probability": 0.9727313535940615
       },
       "kind": "revolt",
       "tiles": [
@@ -3306,43 +3272,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 60.2579937289323,
-       "outcome": "tile_lost",
-       "rising_lost": 57.05440418891314,
-       "rising_win_probability": 0.6535638512281702
-      },
-      "kind": "revolt",
-      "tiles": [
-       "china_54"
-      ],
-      "year": 101
-     },
-     {
-      "actors": [
-       "han_china_100ad"
-      ],
-      "cause": "revolt",
-      "facts": {
-       "control": null,
-       "from_owner": "han_china_100ad",
-       "to_owner": null
-      },
-      "kind": "tile_transfer",
-      "tiles": [
-       "china_54"
-      ],
-      "year": 101
-     },
-     {
-      "actors": [
-       "han_china_100ad"
-      ],
-      "cause": "unrest",
-      "facts": {
-       "garrison_lost": 58.94355187887405,
+       "garrison_lost": 53.815109782726694,
        "outcome": "put_down",
-       "rising_lost": 362.8514349532837,
-       "rising_win_probability": 0.8251944013831789
+       "rising_lost": 331.2811865657101,
+       "rising_win_probability": 0.7863323041581178
       },
       "kind": "revolt",
       "tiles": [
@@ -3356,10 +3289,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 26.336587240954515,
+       "garrison_lost": 24.725817953184283,
        "outcome": "put_down",
-       "rising_lost": 168.7307593644244,
-       "rising_win_probability": 0.8810533970602529
+       "rising_lost": 158.41103484583806,
+       "rising_win_probability": 0.8706811967360067
       },
       "kind": "revolt",
       "tiles": [
@@ -3373,10 +3306,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 125.89447074693243,
+       "garrison_lost": 119.96534408648932,
        "outcome": "tile_lost",
-       "rising_lost": 118.3735023646482,
-       "rising_win_probability": 0.93673098410847
+       "rising_lost": 112.79858327093284,
+       "rising_win_probability": 0.9377680874446683
       },
       "kind": "revolt",
       "tiles": [
@@ -3406,10 +3339,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 51.316647330332714,
+       "garrison_lost": 48.89239835391885,
        "outcome": "tile_lost",
-       "rising_lost": 46.84792493123197,
-       "rising_win_probability": 0.9402921170461197
+       "rising_lost": 44.6347828034819,
+       "rising_win_probability": 0.9412549556128476
       },
       "kind": "revolt",
       "tiles": [
@@ -3439,10 +3372,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 84.33781806696814,
+       "garrison_lost": 80.34926623580766,
        "outcome": "tile_lost",
-       "rising_lost": 73.85257582080456,
-       "rising_win_probability": 0.9445879783500783
+       "rising_lost": 70.35989800108567,
+       "rising_win_probability": 0.9455012633433102
       },
       "kind": "revolt",
       "tiles": [
@@ -3472,10 +3405,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 33.89837071514221,
+       "garrison_lost": 32.17994953861936,
        "outcome": "tile_lost",
-       "rising_lost": 37.577584122029606,
-       "rising_win_probability": 0.8767358071839665
+       "rising_lost": 35.67265137878657,
+       "rising_win_probability": 0.8752897589749123
       },
       "kind": "revolt",
       "tiles": [
@@ -3505,10 +3438,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 297.0336878717821,
+       "garrison_lost": 281.88710781657664,
        "outcome": "put_down",
-       "rising_lost": 1719.1333304907937,
-       "rising_win_probability": 0.6824207070529782
+       "rising_lost": 1631.4699048288167,
+       "rising_win_probability": 0.682650123409307
       },
       "kind": "revolt",
       "tiles": [
@@ -3522,10 +3455,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 2637.5760706717388,
+       "garrison_lost": 2496.824114486452,
        "outcome": "tile_lost",
-       "rising_lost": 2729.1282979181956,
-       "rising_win_probability": 0.6279577301531669
+       "rising_lost": 2583.49073664218,
+       "rising_win_probability": 0.6254194752157016
       },
       "kind": "revolt",
       "tiles": [
@@ -3555,10 +3488,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 2496.5211445019577,
+       "garrison_lost": 2364.098757421091,
        "outcome": "tile_lost",
-       "rising_lost": 2473.9045766423583,
-       "rising_win_probability": 0.6388546027709917
+       "rising_lost": 2342.681834879994,
+       "rising_win_probability": 0.6393208419060377
       },
       "kind": "revolt",
       "tiles": [
@@ -3588,10 +3521,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 2632.9434377378398,
+       "garrison_lost": 2495.272684896737,
        "outcome": "tile_lost",
-       "rising_lost": 2530.143255706641,
-       "rising_win_probability": 0.6669381941372621
+       "rising_lost": 2397.8476956059485,
+       "rising_win_probability": 0.6709274591844856
       },
       "kind": "revolt",
       "tiles": [
@@ -3621,10 +3554,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 2138.1472690753876,
+       "garrison_lost": 2018.653641233232,
        "outcome": "tile_lost",
-       "rising_lost": 2048.483028759323,
-       "rising_win_probability": 0.5987236984506137
+       "rising_lost": 1934.0004240202263,
+       "rising_win_probability": 0.6015834041105054
       },
       "kind": "revolt",
       "tiles": [
@@ -3654,10 +3587,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 225.7304896875356,
+       "garrison_lost": 213.35346924563558,
        "outcome": "put_down",
-       "rising_lost": 1374.7495988489006,
-       "rising_win_probability": 0.6150825903241952
+       "rising_lost": 1299.3707525486077,
+       "rising_win_probability": 0.6219105095604547
       },
       "kind": "revolt",
       "tiles": [
@@ -3671,10 +3604,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 2553.4153048457915,
+       "garrison_lost": 2387.123972526136,
        "outcome": "tile_lost",
-       "rising_lost": 2763.696565244858,
-       "rising_win_probability": 0.5315334080871394
+       "rising_lost": 2583.7106526165244,
+       "rising_win_probability": 0.5267550473098058
       },
       "kind": "revolt",
       "tiles": [
@@ -3704,10 +3637,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 1049.06806680431,
+       "garrison_lost": 993.4903434359287,
        "outcome": "put_down",
-       "rising_lost": 6472.973178154254,
-       "rising_win_probability": 0.5128047637393698
+       "rising_lost": 6130.046799923816,
+       "rising_win_probability": 0.5247675362110629
       },
       "kind": "revolt",
       "tiles": [
@@ -3721,10 +3654,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 2562.2414019703992,
+       "garrison_lost": 2445.3294680276067,
        "outcome": "tile_lost",
-       "rising_lost": 2553.5558378959227,
-       "rising_win_probability": 0.5115594383642565
+       "rising_lost": 2437.040215593616,
+       "rising_win_probability": 0.5311056711590264
       },
       "kind": "revolt",
       "tiles": [
@@ -3754,10 +3687,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 4184.086385772761,
+       "garrison_lost": 3687.6090245075447,
        "outcome": "tile_lost",
-       "rising_lost": 4040.258416261822,
-       "rising_win_probability": 0.8304897612373459
+       "rising_lost": 3560.847464290097,
+       "rising_win_probability": 0.7770072348984305
       },
       "kind": "revolt",
       "tiles": [
@@ -3787,14 +3720,47 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 347.17864186344264,
+       "garrison_lost": 3515.0116296653173,
+       "outcome": "tile_lost",
+       "rising_lost": 3342.9073258061867,
+       "rising_win_probability": 0.5478661089508939
+      },
+      "kind": "revolt",
+      "tiles": [
+       "china_19"
+      ],
+      "year": 102
+     },
+     {
+      "actors": [
+       "han_china_100ad"
+      ],
+      "cause": "revolt",
+      "facts": {
+       "control": null,
+       "from_owner": "han_china_100ad",
+       "to_owner": null
+      },
+      "kind": "tile_transfer",
+      "tiles": [
+       "china_19"
+      ],
+      "year": 102
+     },
+     {
+      "actors": [
+       "han_china_100ad"
+      ],
+      "cause": "unrest",
+      "facts": {
+       "garrison_lost": 1249.1467697368355,
        "outcome": "put_down",
-       "rising_lost": 2341.3559617605156,
-       "rising_win_probability": 0.5100955444026897
+       "rising_lost": 7895.550337015846,
+       "rising_win_probability": 0.5220467826750708
       },
       "kind": "revolt",
       "tiles": [
-       "china_18"
+       "china_20"
       ],
       "year": 102
      },
@@ -3804,43 +3770,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 3715.2115577237364,
+       "garrison_lost": 1128.2008857668363,
        "outcome": "tile_lost",
-       "rising_lost": 3533.3049337356024,
-       "rising_win_probability": 0.5308894029278844
-      },
-      "kind": "revolt",
-      "tiles": [
-       "china_19"
-      ],
-      "year": 102
-     },
-     {
-      "actors": [
-       "han_china_100ad"
-      ],
-      "cause": "revolt",
-      "facts": {
-       "control": null,
-       "from_owner": "han_china_100ad",
-       "to_owner": null
-      },
-      "kind": "tile_transfer",
-      "tiles": [
-       "china_19"
-      ],
-      "year": 102
-     },
-     {
-      "actors": [
-       "han_china_100ad"
-      ],
-      "cause": "unrest",
-      "facts": {
-       "garrison_lost": 1268.5964706220693,
-       "outcome": "tile_lost",
-       "rising_lost": 1168.2888427124171,
-       "rising_win_probability": 0.6128915404730371
+       "rising_lost": 1038.9943041015517,
+       "rising_win_probability": 0.579823218719862
       },
       "kind": "revolt",
       "tiles": [
@@ -3870,10 +3803,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 4089.28678027257,
+       "garrison_lost": 3810.3307326892177,
        "outcome": "ruler_replaced",
-       "rising_lost": 3615.790416241009,
-       "rising_win_probability": 0.5269649116564794
+       "rising_lost": 3369.134542588361,
+       "rising_win_probability": 0.5452100249180415
       },
       "kind": "revolt",
       "tiles": [
@@ -3887,10 +3820,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 1409.773315902985,
+       "garrison_lost": 1310.5765554390441,
        "outcome": "put_down",
-       "rising_lost": 7329.956351090673,
-       "rising_win_probability": 0.5323371282855842
+       "rising_lost": 6814.1940535864405,
+       "rising_win_probability": 0.5464322002345157
       },
       "kind": "revolt",
       "tiles": [
@@ -3904,10 +3837,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 21.160795928104456,
+       "garrison_lost": 19.166784525064518,
        "outcome": "tile_lost",
-       "rising_lost": 21.48634663469068,
-       "rising_win_probability": 0.9027343335083284
+       "rising_lost": 19.461658133142443,
+       "rising_win_probability": 0.8932715460952769
       },
       "kind": "revolt",
       "tiles": [
@@ -3937,10 +3870,43 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 948.8037565282523,
+       "garrison_lost": 351.519582185029,
+       "outcome": "tile_lost",
+       "rising_lost": 335.38425710112597,
+       "rising_win_probability": 0.5092754682865208
+      },
+      "kind": "revolt",
+      "tiles": [
+       "china_41"
+      ],
+      "year": 102
+     },
+     {
+      "actors": [
+       "han_china_100ad"
+      ],
+      "cause": "revolt",
+      "facts": {
+       "control": null,
+       "from_owner": "han_china_100ad",
+       "to_owner": null
+      },
+      "kind": "tile_transfer",
+      "tiles": [
+       "china_41"
+      ],
+      "year": 102
+     },
+     {
+      "actors": [
+       "han_china_100ad"
+      ],
+      "cause": "unrest",
+      "facts": {
+       "garrison_lost": 886.29960806568,
        "outcome": "put_down",
-       "rising_lost": 5150.2745347458995,
-       "rising_win_probability": 0.5018376607967863
+       "rising_lost": 4810.990966433871,
+       "rising_win_probability": 0.5114770938626858
       },
       "kind": "revolt",
       "tiles": [
@@ -3954,10 +3920,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 574.8987525813614,
+       "garrison_lost": 539.17806526792,
        "outcome": "tile_lost",
-       "rising_lost": 513.889089042115,
-       "rising_win_probability": 0.544044676609298
+       "rising_lost": 481.9591685456102,
+       "rising_win_probability": 0.5577846553631448
       },
       "kind": "revolt",
       "tiles": [
@@ -3987,10 +3953,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 206.43049863357655,
+       "garrison_lost": 187.87468043986772,
        "outcome": "tile_lost",
-       "rising_lost": 203.3229427401679,
-       "rising_win_probability": 0.6933433304711838
+       "rising_lost": 185.0464594439988,
+       "rising_win_probability": 0.6765049260613273
       },
       "kind": "revolt",
       "tiles": [
@@ -4020,10 +3986,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 90.61305558872614,
+       "garrison_lost": 81.7397190834734,
        "outcome": "tile_lost",
-       "rising_lost": 92.88498642856005,
-       "rising_win_probability": 0.7392881772314259
+       "rising_lost": 83.78916976603277,
+       "rising_win_probability": 0.7138616593479556
       },
       "kind": "revolt",
       "tiles": [
@@ -4053,10 +4019,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 130.57367534340628,
+       "garrison_lost": 121.2589103906987,
        "outcome": "tile_lost",
-       "rising_lost": 113.64214381536016,
-       "rising_win_probability": 0.5562654931081306
+       "rising_lost": 105.53522750487183,
+       "rising_win_probability": 0.5613277730059475
       },
       "kind": "revolt",
       "tiles": [
@@ -4086,8 +4052,8 @@
       ],
       "cause": "food unmet",
       "facts": {
-       "food_shortfall": 0.28391670315697726,
-       "people": 57349721.357764214
+       "food_shortfall": 0.28300767855349035,
+       "people": 57205823.185821176
       },
       "kind": "famine",
       "tiles": [],
@@ -4142,7 +4108,7 @@
         "op": "~prose~",
         "quantity": "food_supply_ratio",
         "threshold": 1.1,
-        "value": 1.1889,
+        "value": 1.2025,
         "why": "~prose~"
        }
       ],
@@ -4394,16 +4360,16 @@
      }
     ],
     "literacy_elite": {
-     "now": 0.9388,
+     "now": 0.9437,
      "start": 0.95
     },
     "literacy_general": {
-     "now": 0.0721,
+     "now": 0.0718,
      "start": 0.0673
     },
     "ok": true,
     "population": {
-     "now": 57350239,
+     "now": 57206374,
      "start": 58000000
     },
     "price_index": {
@@ -4429,7 +4395,7 @@
      ]
     },
     "wage_per_hour": {
-     "now": 22.8336,
+     "now": 22.767,
      "start": 94.8404
     },
     "year": 103,
@@ -4443,11 +4409,11 @@
    "reply": {
     "civilisation": "~prose~",
     "ok": true,
-    "population": 57350239,
-    "population_change_from_reference": -0.0112,
+    "population": 57206374,
+    "population_change_from_reference": -0.0137,
     "reference_population_before_simulated_changes": 58000000,
     "the_town_you_actually_operate_in": {
-     "estimated_population": 3376443,
+     "estimated_population": 3093384,
      "note": "~prose~"
     },
     "trades": [
@@ -4457,43 +4423,43 @@
       "is_placeholder": true,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "artisan",
-      "within_your_reach": 78.89,
+      "within_your_reach": 72.38,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 19153.1,
+      "estimated_in_the_country": 18521.0,
       "exists_here": true,
       "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "baker",
-      "within_your_reach": 259.51,
+      "within_your_reach": 200.14,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 19243.6,
+      "estimated_in_the_country": 19727.7,
       "exists_here": true,
       "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "carpenter",
-      "within_your_reach": 609.69,
+      "within_your_reach": 583.53,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 687.9,
+      "estimated_in_the_country": 747.7,
       "exists_here": true,
       "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "carter",
-      "within_your_reach": 1.01,
+      "within_your_reach": 2.44,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 58296.3,
+      "estimated_in_the_country": 55265.6,
       "exists_here": true,
       "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "charcoal_burner",
-      "within_your_reach": 1106.98,
+      "within_your_reach": 1054.0,
       "you_employ": 0.0
      },
      {
@@ -4506,21 +4472,21 @@
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 259824.6,
+      "estimated_in_the_country": 224701.6,
       "exists_here": true,
       "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "dockworker",
-      "within_your_reach": 21.86,
+      "within_your_reach": 7.05,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 1516142.7,
+      "estimated_in_the_country": 1380223.9,
       "exists_here": true,
       "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "domestic_servant",
-      "within_your_reach": 3273.33,
+      "within_your_reach": 2424.69,
       "you_employ": 0.0
      },
      {
@@ -4547,43 +4513,43 @@
       "is_placeholder": true,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "engraver",
-      "within_your_reach": 78.89,
+      "within_your_reach": 72.38,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 16437065.1,
+      "estimated_in_the_country": 15522952.4,
       "exists_here": true,
       "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "farmer",
-      "within_your_reach": 234993.58,
+      "within_your_reach": 223200.36,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 441788.5,
+      "estimated_in_the_country": 369840.4,
       "exists_here": true,
       "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "fisher",
-      "within_your_reach": 25056.12,
+      "within_your_reach": 23422.15,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 26551.4,
+      "estimated_in_the_country": 24626.1,
       "exists_here": true,
       "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "fuller",
-      "within_your_reach": 348.92,
+      "within_your_reach": 354.15,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 98383.7,
+      "estimated_in_the_country": 98857.8,
       "exists_here": true,
       "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "furnaceman",
-      "within_your_reach": 492.29,
+      "within_your_reach": 774.0,
       "you_employ": 0.0
      },
      {
@@ -4592,16 +4558,16 @@
       "is_placeholder": true,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "glassblower",
-      "within_your_reach": 78.89,
+      "within_your_reach": 72.38,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 18772.6,
+      "estimated_in_the_country": 26956.6,
       "exists_here": true,
       "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "herder",
-      "within_your_reach": 49.86,
+      "within_your_reach": 70.64,
       "you_employ": 0.0
      },
      {
@@ -4610,43 +4576,43 @@
       "is_placeholder": true,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "hunter",
-      "within_your_reach": 78.89,
+      "within_your_reach": 72.38,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 22792.7,
+      "estimated_in_the_country": 20670.6,
       "exists_here": true,
       "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "knapper",
-      "within_your_reach": 47.74,
+      "within_your_reach": 45.43,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 8358922.4,
+      "estimated_in_the_country": 8402646.3,
       "exists_here": true,
       "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "labourer",
-      "within_your_reach": 88134.71,
+      "within_your_reach": 82865.01,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 3977.4,
+      "estimated_in_the_country": 3878.1,
       "exists_here": true,
       "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "leatherworker",
-      "within_your_reach": 38.59,
+      "within_your_reach": 36.83,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 33.6,
+      "estimated_in_the_country": 32.9,
       "exists_here": true,
       "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "lime_burner",
-      "within_your_reach": 0.38,
+      "within_your_reach": 0.36,
       "you_employ": 0.0
      },
      {
@@ -4659,12 +4625,12 @@
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 365972.5,
+      "estimated_in_the_country": 343675.5,
       "exists_here": true,
       "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "mason",
-      "within_your_reach": 3941.04,
+      "within_your_reach": 3586.55,
       "you_employ": 0.0
      },
      {
@@ -4673,7 +4639,7 @@
       "is_placeholder": true,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "master",
-      "within_your_reach": 78.89,
+      "within_your_reach": 72.38,
       "you_employ": 0.0
      },
      {
@@ -4682,16 +4648,16 @@
       "is_placeholder": true,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "merchant",
-      "within_your_reach": 78.89,
+      "within_your_reach": 72.38,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 14520.0,
+      "estimated_in_the_country": 14009.5,
       "exists_here": true,
       "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "miller",
-      "within_your_reach": 48.43,
+      "within_your_reach": 96.73,
       "you_employ": 0.0
      },
      {
@@ -4700,16 +4666,16 @@
       "is_placeholder": true,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "millwright",
-      "within_your_reach": 78.89,
+      "within_your_reach": 72.38,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 301784.3,
+      "estimated_in_the_country": 271272.9,
       "exists_here": true,
       "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "miner",
-      "within_your_reach": 2536.08,
+      "within_your_reach": 2402.79,
       "you_employ": 0.0
      },
      {
@@ -4727,43 +4693,43 @@
       "is_placeholder": true,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "plumber",
-      "within_your_reach": 78.89,
+      "within_your_reach": 72.38,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 4539.3,
+      "estimated_in_the_country": 7058.8,
       "exists_here": true,
-      "is_placeholder": false,
+      "is_placeholder": true,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "porter",
-      "within_your_reach": 0.79,
+      "within_your_reach": 11.75,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 386347.5,
+      "estimated_in_the_country": 344721.0,
       "exists_here": true,
       "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "potter",
-      "within_your_reach": 905.03,
+      "within_your_reach": 855.03,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 50335.4,
+      "estimated_in_the_country": 29168.4,
       "exists_here": true,
       "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "sailor",
-      "within_your_reach": 13.79,
+      "within_your_reach": 23.5,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 11808.6,
+      "estimated_in_the_country": 10869.1,
       "exists_here": true,
       "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "salt_worker",
-      "within_your_reach": 127.06,
+      "within_your_reach": 119.04,
       "you_employ": 0.0
      },
      {
@@ -4772,7 +4738,7 @@
       "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "scholar",
-      "within_your_reach": 83.79,
+      "within_your_reach": 77.4,
       "you_employ": 0.0
      },
      {
@@ -4781,7 +4747,7 @@
       "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "scribe",
-      "within_your_reach": 48.92,
+      "within_your_reach": 44.82,
       "you_employ": 0.0
      },
      {
@@ -4790,66 +4756,66 @@
       "is_placeholder": true,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "shipwright",
-      "within_your_reach": 78.89,
+      "within_your_reach": 72.38,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 14066.9,
+      "estimated_in_the_country": 13758.0,
       "exists_here": true,
       "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "smith",
-      "within_your_reach": 127.48,
+      "within_your_reach": 196.57,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 26797919.8,
+      "estimated_in_the_country": 26772458.0,
       "exists_here": true,
       "is_placeholder": true,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "soldier",
-      "within_your_reach": 78.89,
+      "within_your_reach": 72.38,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 943241.4,
+      "estimated_in_the_country": 973961.5,
       "exists_here": true,
       "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "spinner",
-      "within_your_reach": 12879.5,
+      "within_your_reach": 13698.77,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 726.2,
+      "estimated_in_the_country": 715.5,
       "exists_here": true,
       "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "tanner",
-      "within_your_reach": 25.0,
+      "within_your_reach": 29.46,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 138042.0,
+      "estimated_in_the_country": 100054.9,
       "exists_here": true,
       "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "vine_and_olive_tender",
-      "within_your_reach": 345.16,
+      "within_your_reach": 348.69,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 511471.8,
+      "estimated_in_the_country": 497583.9,
       "exists_here": true,
       "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "weaver",
-      "within_your_reach": 8262.01,
+      "within_your_reach": 7827.19,
       "you_employ": 0.0
      }
     ],
     "urban_fraction": 0.1,
-    "urban_population_estimate": 5735024,
+    "urban_population_estimate": 5720637,
     "what_this_means": "~prose~"
    }
   },
@@ -4931,14 +4897,6 @@
       "name": "~prose~",
       "region": "~prose~",
       "terrain": "~prose~",
-      "tile": "china_20"
-     },
-     {
-      "beside": "~prose~",
-      "deposits": [],
-      "name": "~prose~",
-      "region": "~prose~",
-      "terrain": "~prose~",
       "tile": "china_21"
      },
      {
@@ -4956,11 +4914,19 @@
       "region": "~prose~",
       "terrain": "~prose~",
       "tile": "china_29"
+     },
+     {
+      "beside": "~prose~",
+      "deposits": [],
+      "name": "~prose~",
+      "region": "~prose~",
+      "terrain": "~prose~",
+      "tile": "china_35"
      }
     ],
-    "next_door_total": 31,
+    "next_door_total": 30,
     "ok": true,
-    "population": 57350239,
+    "population": 57206374,
     "regions": [
      "~prose~"
     ],
@@ -4969,7 +4935,7 @@
       "deposits": [],
       "is_your_base": true,
       "name": "~prose~",
-      "people": 6752886,
+      "people": 6186769,
       "region": "~prose~",
       "terrain": "~prose~",
       "tile": "china_32"
@@ -4978,7 +4944,7 @@
       "days_from_your_base": 24,
       "deposits": [],
       "name": "~prose~",
-      "people": 6180297,
+      "people": 5662181,
       "region": "~prose~",
       "terrain": "~prose~",
       "tile": "china_22"
@@ -4987,16 +4953,25 @@
       "days_from_your_base": 16,
       "deposits": [],
       "name": "~prose~",
-      "people": 5929175,
+      "people": 5432111,
       "region": "~prose~",
       "terrain": "~prose~",
       "tile": "china_33"
      },
      {
+      "days_from_your_base": 30,
+      "deposits": [],
+      "name": "~prose~",
+      "people": 5272819,
+      "region": "~prose~",
+      "terrain": "~prose~",
+      "tile": "china_20"
+     },
+     {
       "days_from_your_base": 15,
       "deposits": [],
       "name": "~prose~",
-      "people": 5590288,
+      "people": 5121634,
       "region": "~prose~",
       "terrain": "~prose~",
       "tile": "china_31"
@@ -5005,7 +4980,7 @@
       "days_from_your_base": 58,
       "deposits": [],
       "name": "~prose~",
-      "people": 5490908,
+      "people": 5030586,
       "region": "~prose~",
       "terrain": "~prose~",
       "tile": "china_09"
@@ -5014,7 +4989,7 @@
       "days_from_your_base": 24,
       "deposits": [],
       "name": "~prose~",
-      "people": 4145280,
+      "people": 3797767,
       "region": "~prose~",
       "terrain": "~prose~",
       "tile": "china_44"
@@ -5023,7 +4998,7 @@
       "days_from_your_base": 31,
       "deposits": [],
       "name": "~prose~",
-      "people": 4077531,
+      "people": 3735697,
       "region": "~prose~",
       "terrain": "~prose~",
       "tile": "china_30"
@@ -5032,7 +5007,7 @@
       "days_from_your_base": 28,
       "deposits": [],
       "name": "~prose~",
-      "people": 3368397,
+      "people": 3086013,
       "region": "~prose~",
       "terrain": "~prose~",
       "tile": "china_12"
@@ -5041,7 +5016,7 @@
       "days_from_your_base": 32,
       "deposits": [],
       "name": "~prose~",
-      "people": 2559929,
+      "people": 2345321,
       "region": "~prose~",
       "terrain": "~prose~",
       "tile": "china_57"
@@ -5050,7 +5025,7 @@
       "days_from_your_base": 17,
       "deposits": [],
       "name": "~prose~",
-      "people": 2390365,
+      "people": 2189973,
       "region": "~prose~",
       "terrain": "~prose~",
       "tile": "china_43"
@@ -5059,30 +5034,21 @@
       "days_from_your_base": 32,
       "deposits": [],
       "name": "~prose~",
-      "people": 2033494,
+      "people": 1863019,
       "region": "~prose~",
       "terrain": "~prose~",
       "tile": "china_42"
-     },
-     {
-      "days_from_your_base": 42,
-      "deposits": [],
-      "name": "~prose~",
-      "people": 1665456,
-      "region": "~prose~",
-      "terrain": "~prose~",
-      "tile": "china_01"
      }
     ],
     "tiles_held": 20,
     "towns_note": "~prose~",
     "you_are_based_at": {
      "name": "~prose~",
-     "people": 6752886,
+     "people": 6186769,
      "region": "~prose~",
      "terrain": "~prose~",
      "tile": "china_32",
-     "town_people": 3376443
+     "town_people": 3093384
     }
    }
   },
@@ -5095,7 +5061,7 @@
     "concerns_you_were_running": 0,
     "ended_in": 103,
     "failed_attempts": 0,
-    "money": 301163.3,
+    "money": 309538.7,
     "ok": true,
     "people": 0,
     "reached_it": false,
@@ -5105,8 +5071,8 @@
      "components": {
       "economy": {
        "counts": "~prose~",
-       "normalized": 0.0637422064610367,
-       "raw": 301163.3,
+       "normalized": 0.06445228597291305,
+       "raw": 309538.7,
        "raw_detail": {
         "worker_years_equivalent": 2.1
        },
@@ -5127,16 +5093,16 @@
       },
       "literacy": {
        "counts": "~prose~",
-       "normalized": 0.5383948594209285,
-       "raw": 0.0721,
+       "normalized": 0.5398458235829197,
+       "raw": 0.0718,
        "raw_detail": {
-        "elite": 0.9388,
+        "elite": 0.9437,
         "elite_ceiling": 0.99,
-        "general": 0.0721,
-        "general_ceiling": 0.5615
+        "general": 0.0718,
+        "general_ceiling": 0.5677
        },
        "weight": 0.15,
-       "weighted": 0.0808
+       "weighted": 0.081
       },
       "resilience": {
        "counts": "~prose~",
@@ -5183,7 +5149,7 @@
      "goal_year": null,
      "points": 207,
      "points_scale": "~prose~",
-     "total": 0.2066
+     "total": 0.2068
     },
     "still_to_build_when_it_ended": 149,
     "the_goal": "point_contact_transistor",
