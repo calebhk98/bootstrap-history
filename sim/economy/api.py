@@ -28,7 +28,7 @@ from .notional import shown_prices, shown_prices_with_kinds
 from .producers import Producer, expected_output_prices, live_input_prices, live_wages
 from .protocols import AgentOrders, EconomyYearInputs
 from .recipes import recipes_from_production_data
-from . import kept_wages, plant_builds, pool_deposits, trade_wages
+from . import kept_wages, plant_builds, pool_deposits, quiet_year, trade_wages
 from .tool_wear import with_tool_wear
 from .record import EconomyRecord
 from .setup import EconomySetup, SetupTrade, goods_specs, recipe_tile_key
@@ -413,21 +413,32 @@ def trim_workforce_to_expected_hours(economy):
     workforce_settle.trim_to_expected_hours(economy.setup, economy.record, economy.view())
 
 
+def settle_economy(economy):
+    """Its step has returned: figures read from its record are kept until it next steps (`quiet_year`)."""
+    quiet_year.settle(economy)
+
+
 def shown_prices_of(economy, country=None):
     """(prices, stale goods) the game is shown for this economy; see `notional.shown_prices`. Over the market
     areas touching `country` (the home country's when the economy holds several)."""
-    scope = country_figures.home_when_shared(economy, country)
-    if scope is None:
-        return shown_prices(economy.setup, economy.record)
-    return shown_prices(economy.setup, economy.record, country_figures.prices(economy, scope))
+    prices, stale, _kinds = _shown(economy, country)
+    return dict(prices), set(stale)
 
 
 def shown_price_kinds_of(economy, country=None):
     """What each shown price is, by good: PRICE_SMOOTHED_TRADE, a quote kind (QUOTE_*) or an estimate (`notional.KIND_*`).
     Same scope as `shown_prices_of`."""
+    return dict(_shown(economy, country)[2])
+
+
+def _shown(economy, country):
+    """`notional.shown_prices_with_kinds` for the scope, worked out once while the economy stands between steps."""
     scope = country_figures.home_when_shared(economy, country)
-    market = None if scope is None else country_figures.prices(economy, scope)
-    return shown_prices_with_kinds(economy.setup, economy.record, market)[2]
+
+    def compute():
+        market = None if scope is None else country_figures.prices(economy, scope)
+        return shown_prices_with_kinds(economy.setup, economy.record, market)
+    return quiet_year.kept(economy, ("shown", scope), compute)
 
 
 def move_goods(economy, moves):

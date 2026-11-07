@@ -56,6 +56,7 @@ class YearRun:
         orders.update(goods_orders)
         economy_api.watch_tiles(economy, self._seats.seat_tiles())
         outcome = economy.step(self._inputs.build(orders, port_cargo.border_accounts(economy, legs)))
+        economy_api.settle_economy(economy)
         agent.stored.pop("seat_orders", None)   # spent only once the step has run; a step that raises keeps the orders
         agent.figures.forget()
         port_bondage.settle_purchases(world, economy, outcome)
