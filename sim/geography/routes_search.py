@@ -9,27 +9,96 @@ Standalone: the route graph, compile and rates modules of this package.
 import heapq
 from typing import Any, Callable, Dict, Iterable, Mapping, Optional
 
+import numpy as np
+
 from sim.geography import routes_compile, routes_modes, routes_graph
 from sim.geography.map_source import WorldMap
+from sim import jit
 from sim.geography.routes_cost_tree import least_cost_tree
+from sim.geography.routes_tree_kernel import least_tree
 
 INFINITY = float("inf")
 
 
 def _origin_indexes(world_map: WorldMap, tiles: Iterable[str]) -> frozenset:
     chosen = frozenset(tiles)
-    unknown = sorted(chosen - set(world_map.tiles))
+    unknown = sorted(tile for tile in chosen if tile not in world_map.tiles)
     if unknown:
         raise ValueError("map %r has no tile %s" % (world_map.map_id, ", ".join(unknown)))
     return chosen
 
 
+class _Edges:
+    """The graph's edges in the kernel's arrays: per state its links, then its changes of mode on the tile."""
+
+    def __init__(self, compiled: routes_compile.Compiled):
+        count = len(compiled.mode_ids)
+        first, target, cost, days, source, how = [0], [], [], [], [], []
+        for state, state_links in enumerate(compiled.links):
+            tile, position = divmod(state, count)
+            for to_state, link_cost, link_days, link_km, rate in state_links:
+                target.append(to_state)
+                cost.append(link_cost)
+                days.append(link_days)
+                source.append(state)
+                how.append((link_km, rate, False))
+            for other in compiled.modes_at[tile]:
+                if other != position:
+                    target.append(tile * count + other)
+                    cost.append(compiled.handling[other][0])
+                    days.append(compiled.handling[other][1])
+                    source.append(state)
+                    how.append((0.0, None, True))
+            first.append(len(target))
+        self.first = np.array(first, dtype=np.int64)
+        self.target = np.array(target, dtype=np.int64)
+        self.cost = np.array(cost, dtype=np.float64)
+        self.days = np.array(days, dtype=np.float64)
+        self.source = source
+        self.how = how
+
+
+class _Previous:
+    """`previous[state]` of the plain search, built only for the states a route walks back through."""
+
+    def __init__(self, edges: _Edges, into: list):
+        self.edges = edges
+        self.into = into
+
+    def __getitem__(self, state):
+        edge = self.into[state]
+        if edge < 0:
+            return None
+        km, rate, is_transfer = self.edges.how[edge]
+        return (self.edges.source[edge], km, rate, is_transfer)
+
+
 def _tree(compiled: routes_compile.Compiled, origins: frozenset, by_days: bool):
-    """(cost, days, previous) per state, searching by cost or by days."""
+    """(cost, days, previous) per state, searching by cost or by days (the kernel when numba is on)."""
     key = (origins, by_days)
     cached = compiled.trees.get(key)
     if cached is not None:
         return cached
+    if not jit.ENABLED:
+        return _tree_plain(compiled, origins, by_days)
+    edges = compiled.trees.get("edges")
+    if edges is None:
+        edges = compiled.trees["edges"] = _Edges(compiled)
+    count = len(compiled.mode_ids)
+    starts = [(tile * count + position, *compiled.handling[position])
+              for tile in (compiled.tile_index[tile_id] for tile_id in sorted(origins))
+              for position in compiled.modes_at[tile]]
+    cost, days, into = least_tree(edges.first, edges.target, edges.cost, edges.days,
+                                  np.array([start[0] for start in starts], dtype=np.int64),
+                                  np.array([start[1] for start in starts], dtype=np.float64),
+                                  np.array([start[2] for start in starts], dtype=np.float64), by_days)
+    compiled.trees[key] = (cost.tolist(), days.tolist(), _Previous(edges, into.tolist()))
+    return compiled.trees[key]
+
+
+def _tree_plain(compiled: routes_compile.Compiled, origins: frozenset, by_days: bool):
+    """The search in plain Python: what the kernel must agree with, and the path without numba."""
+    key = (origins, by_days)
     count = len(compiled.mode_ids)
     size = len(compiled.links)
     cost, days = [INFINITY] * size, [INFINITY] * size
@@ -212,12 +281,11 @@ def costs_from(world_map: WorldMap, origin_tiles: Iterable[str], modes: Iterable
     cost = _cost_tree(compiled, origins, only, cost_tree)
     count = len(compiled.mode_ids)
     result: Dict[str, float] = {}
-    for tile_id, tile in compiled.tile_index.items():
-        if only is not None and tile_id not in only:
-            continue
-        cheapest = min(cost[tile * count:(tile + 1) * count], default=INFINITY)
-        if cheapest < INFINITY:
-            result[tile_id] = cheapest
+    cheapest = np.array(cost).reshape(-1, count).min(axis=1) if count else np.full(len(compiled.tile_ids), INFINITY)
+    for tile in np.flatnonzero(cheapest < INFINITY).tolist():
+        tile_id = compiled.tile_ids[tile]
+        if only is None or tile_id in only:
+            result[tile_id] = float(cheapest[tile])
     result.update({tile_id: 0.0 for tile_id in origins if only is None or tile_id in only})
     return result
 
@@ -233,12 +301,14 @@ def reach(world_map: WorldMap, origin_tiles: Iterable[str], modes: Iterable[str]
                                            improvements, mode_costs, handling_costs, held_nodes)
     _cost, days, _previous = _tree(compiled, origins, True)
     count = len(compiled.mode_ids)
-    result: Dict[str, float] = {}
-    for tile_id, tile in compiled.tile_index.items():
-        fewest = min((days[tile * count + position] for position in compiled.modes_at[tile]), default=INFINITY)
-        if fewest <= days_budget:
-            result[tile_id] = fewest
-    return result
+    mask = compiled.trees.get("mode_mask")
+    if mask is None:
+        mask = compiled.trees["mode_mask"] = np.zeros((len(compiled.tile_ids), count), dtype=bool)
+        for tile, positions in enumerate(compiled.modes_at):
+            mask[tile, list(positions)] = True
+    fewest = np.where(mask, np.array(days).reshape(-1, count), INFINITY).min(axis=1) if count \
+        else np.full(len(compiled.tile_ids), INFINITY)
+    return {compiled.tile_ids[tile]: float(fewest[tile]) for tile in np.flatnonzero(fewest <= days_budget).tolist()}
 
 
 usable_modes = routes_modes.usable_modes

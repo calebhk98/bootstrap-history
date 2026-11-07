@@ -13,7 +13,7 @@ from . import (currency, mint_price, land_bid_year, carriage_fleet_book, carriag
                state_budget, state_store, taxes, tool_wear, unsold_search)
 from . import goods_respend, goods_respend_year, goods_year_batch, households_cohort, year_goods_offers, households_orders_pack
 from .home_scope import on_home_tile
-from .goods_market_fills import sold_by_seller_tile
+from .goods_year_results import ArrayClearing, sold_by_result
 from .inventory import held_stock, holding_reservation
 from .household_work_year import basket_key, cohort_basket
 from .opening_bid_memory import BidMemory
@@ -170,6 +170,7 @@ def clear_goods(setup, record, view, area_map, order_book: OrderBook, plans, led
     capital or a watched tile is kept (market_curves.py). With the year's arrays, a good's markets that have bids and
     offers are re-priced, searched and cleared together (goods_year_batch.py)."""
     costs = offering = None
+    ledger.fill_watchers = frozenset(getattr(record, "merchants", ())) | {getattr(setup, "state_agent", None)}     # the readers of the buy fills
     if arrays is not None:
         arrays = refreshed(arrays, setup, record, view)
         costs = OfferCosts.build(arrays, own_rate(view, setup.currency_id))
@@ -223,7 +224,7 @@ def clear_goods(setup, record, view, area_map, order_book: OrderBook, plans, led
             ledger.note_clearing(result, delivered)
             idle_years = note_bids(record.memory, key, bids, offers) + note_offers(record.memory, key, bids, offers)
             left_markets[(good, area)] = goods_respend_year.LeftMarket(
-                bids, result, goods_respend.offers_left(offers, sold_by_seller_tile(result.fills)),
+                bids, result, _offers_left(offers, result),
                 record.memory.prices.get(key), delivered, wanted_in_round(bids, offers, result), idle_years, bought)
             if area in kept:
                 record.goods.curves[key] = market_curves.summarize(bids, offers)
@@ -233,6 +234,13 @@ def clear_goods(setup, record, view, area_map, order_book: OrderBook, plans, led
         ledger.bids_by_market[market_id] = market.all_bids     # demand over the same rounds as the traded quantity
     _remember_markets(setup, record, left_markets, ledger)
     _record_year_markets(record, ledger, left_markets)
+
+
+def _offers_left(offers, result) -> List[Offer]:
+    """The market's offers with what sold taken off (read from the arrays where the result holds them)."""
+    if isinstance(result, ArrayClearing):
+        return result.offers_left()
+    return goods_respend.offers_left(offers, sold_by_result(result))
 
 
 def _remember_markets(setup, record, left_markets, ledger: YearLedger) -> None:

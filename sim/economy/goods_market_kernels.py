@@ -52,6 +52,38 @@ def pack_demand(table):
 
 
 @njit(**KERNEL)
+def pack_demand_many(table, bid_ptr):
+    """`pack_demand` of each market's rows (`bid_ptr` cuts the table by market), joined: the columns for all bids, whether
+    each market has a ceiling, and the tier starts of each market joined, cut by the returned pointers."""
+    markets = len(bid_ptr) - 1
+    total = len(table)
+    floors = numpy.zeros(total)
+    flexibles = numpy.zeros(total)
+    budgets = numpy.zeros(total)
+    references = numpy.ones(total)
+    exponents = numpy.zeros(total)
+    capped = numpy.zeros(markets, dtype=numpy.bool_)
+    tier_ptr = numpy.zeros(markets + 1, dtype=numpy.int64)
+    tier_values = numpy.zeros(total + markets, dtype=numpy.int64)
+    used = 0
+    for market in range(markets):
+        first, last = bid_ptr[market], bid_ptr[market + 1]
+        market_floors, market_flexibles, market_budgets, market_references, market_exponents, ceiling, bounds = pack_demand(
+            table[first:last])
+        floors[first:last] = market_floors
+        flexibles[first:last] = market_flexibles
+        budgets[first:last] = market_budgets
+        references[first:last] = market_references
+        exponents[first:last] = market_exponents
+        capped[market] = ceiling
+        for position in range(len(bounds)):
+            tier_values[used] = bounds[position]
+            used += 1
+        tier_ptr[market + 1] = used
+    return floors, flexibles, budgets, references, exponents, capped, tier_ptr, tier_values[:used].copy()
+
+
+@njit(**KERNEL)
 def want_at(price, floor, flexible, budget, reference, exponent, maximum, capped):
     """One buyer's quantity at a price (goods_market.quantity_at, with the budget cap and the buyer's ceiling)."""
     if price <= 0.0:
