@@ -84,6 +84,7 @@ def form_trades(state: MarketState, inputs: YearInputs, clearings, report: YearR
             by_route[kind] = by_route.get(kind, 0.0) + sum(taken)
         formation_bonded.buy(state, inputs, index, area, trade, wanted - sum(people for _, _, people in takes), pool, report, unassigned, memo)
     first_formed = {(area, trade) for area, trade, _ in empty}
+    on_offer = {trade for by_trade in pool.values() for trade, people in by_trade.items() if people > 0.0}     # `buy` buys nothing of a trade nobody sells
     for (area, trade), clearing in sorted(index.items()):
-        if (area, trade) not in first_formed and clearing.vacant_hours > 0.0:
+        if (area, trade) not in first_formed and clearing.vacant_hours > 0.0 and trade in on_offer and area in inputs.bondage_allowed:
             formation_bonded.buy(state, inputs, index, area, trade, clearing.vacant_hours / hours_per_worker, pool, report, unassigned, memo)

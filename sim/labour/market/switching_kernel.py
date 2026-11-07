@@ -176,3 +176,114 @@ def take_moves(sources, rows, have, taken):
                 amount = left
             taken[move, band] = amount
             have[sources[move], band] = left - amount
+
+
+@njit
+def _incumbents(have, source_of_destination, added, destination):
+    """The people working a destination trade now: its row among the sources, and what direct entry has added."""
+    total = 0.0
+    row = source_of_destination[destination]
+    if row >= 0:
+        for band in range(have.shape[1]):
+            total += have[row, band]
+    for band in range(added.shape[1]):
+        total += added[destination, band]
+    return total
+
+
+@njit
+def enrol_groups(group_starts, members, group_destination, group_share, taken, move_source, have, source_of_destination, added,
+                 years_of_destination, apprentices_per_master, seats, school_bonus, enrolled, last_years, last_bonus, last_exists,
+                 admitted, kind, years, bonus, moved, changed):
+    """`training.enrol` for each group of moves, in order, with the refusals handed back to the senders (`switching._carry_out`).
+    Moves of one group are those `members[group_starts[g]:group_starts[g + 1]]` (rows of `taken[move, band]`), going to one
+    destination on one share of the training years. `have[source, band]` holds the people left at work and takes the refusals
+    back; direct entry (a trade needing no training) goes to the destination's row among the sources
+    (`source_of_destination`, -1 where it is not one) or to `added`. `enrolled`, `last_years`, `last_bonus` and `last_exists` stand
+    for the destinations' cohorts and change as groups enrol. Per group: `admitted[g]` the people admitted per band, `kind[g]` 0
+    nothing enrolled, 1 a new cohort, 2 added to the last cohort, 3 direct entry, with its `years` and `bonus`; per move `moved`
+    the people it sends net of those turned back; `changed[source]` marks the rows of `have` that moved."""
+    count_bands = taken.shape[1]
+    combined = np.empty(count_bands)
+    refused = np.empty(count_bands)
+    for group in range(group_starts.shape[0] - 1):
+        low = group_starts[group]
+        high = group_starts[group + 1]
+        destination = group_destination[group]
+        for band in range(count_bands):
+            total = 0.0
+            for member in range(low, high):
+                total += taken[members[member], band]
+            combined[band] = total
+            refused[band] = 0.0
+            admitted[group, band] = 0.0
+        for member in range(low, high):
+            moved[members[member]] = 0.0
+            for band in range(count_bands):
+                moved[members[member]] += taken[members[member], band]
+        kind[group] = 0
+        wanting = 0.0
+        for band in range(count_bands):
+            wanting += combined[band]
+        share = group_share[group] if group_share[group] > 0.0 else 0.0
+        group_years = years_of_destination[destination] * share
+        years[group] = group_years
+        bonus[group] = 0.0
+        if wanting <= 0.0:
+            for band in range(count_bands):
+                refused[band] = combined[band]
+        elif group_years <= 0.0:
+            kind[group] = 3
+            row = source_of_destination[destination]
+            for band in range(count_bands):
+                if row >= 0:
+                    have[row, band] += combined[band]
+                    changed[row] = True
+                else:
+                    added[destination, band] += combined[band]
+        else:
+            capacity = seats[destination] + _incumbents(have, source_of_destination, added, destination) * apprentices_per_master
+            room = capacity - enrolled[destination]
+            share_admitted = room / wanting if room > 0.0 else 0.0
+            if share_admitted > 1.0:
+                share_admitted = 1.0
+            if share_admitted <= 0.0:
+                for band in range(count_bands):
+                    refused[band] = combined[band]
+            else:
+                group_bonus = school_bonus[destination] * (seats[destination] / capacity) if capacity > 0.0 else 0.0
+                total_admitted = 0.0
+                for band in range(count_bands):
+                    if share_admitted >= 1.0:
+                        admitted[group, band] = combined[band]
+                    else:
+                        admitted[group, band] = combined[band] * share_admitted
+                        refused[band] = combined[band] - admitted[group, band]
+                    total_admitted += admitted[group, band]
+                enrolled[destination] += total_admitted
+                bonus[group] = group_bonus
+                if last_exists[destination] and last_years[destination] == group_years and last_bonus[destination] == group_bonus:
+                    kind[group] = 2
+                else:
+                    kind[group] = 1
+                    last_exists[destination] = True
+                    last_years[destination] = group_years
+                    last_bonus[destination] = group_bonus
+        anything = False
+        for band in range(count_bands):
+            if refused[band] != 0.0:
+                anything = True
+        if anything:
+            for member in range(low, high):
+                move = members[member]
+                row = move_source[move]
+                for band in range(count_bands):
+                    if high - low == 1:
+                        back = refused[band]
+                    elif combined[band] > 0.0:
+                        back = refused[band] * taken[move, band] / combined[band]
+                    else:
+                        back = 0.0
+                    have[row, band] += back
+                    moved[move] -= back
+                changed[row] = True

@@ -172,40 +172,63 @@ def _carry_out(state: MarketState, inputs: YearInputs, report: YearReport, area:
                moves: Optional[_Moves]) -> List[str]:
     """Take the switchers out of their trades and into training. Sources moving to one target on the
     same training length apply together, and the target's places are shared out between them in
-    proportion to the people each sends (band by band). Returns the trades that took trainees in."""
+    proportion to the people each sends (band by band; `switching_kernel.enrol_groups` is `training.enrol` for each group).
+    Returns the trades that took trainees in."""
     if moves is None:
         return []
     workers = state.workers[area]
     have = moves.counts.copy()
     taken_amounts = np.empty_like(moves.rows)
     switching_kernel.take_moves(moves.sources, moves.rows, have, taken_amounts)      # `have` unless the move asks for less
-    for position in np.unique(moves.sources).tolist():
-        workers[plan.sources[position]][:] = have[position].tolist()
-    moved = taken_amounts.sum(axis=1)
     share_rank = np.unique(moves.shares, return_inverse=True)[1].reshape(-1)
     key = moves.destinations * (int(share_rank.max()) + 1) + share_rank
     _keys, first, group_of = np.unique(key, return_index=True, return_inverse=True)
     group_of = group_of.reshape(-1)
-    members = np.argsort(group_of, kind="stable")      # each group's moves in carrying-out order
-    ends = np.cumsum(np.bincount(group_of))
-    starts = ends - np.bincount(group_of)
+    group_count = first.shape[0]
+    rank_of_group = np.empty(group_count, np.int64)
+    rank_of_group[np.argsort(first, kind="stable")] = np.arange(group_count)      # groups in the order they first appear
+    members = np.argsort(rank_of_group[group_of], kind="stable")      # each group's moves in carrying-out order
+    group_starts = np.zeros(group_count + 1, np.int64)
+    np.cumsum(np.bincount(rank_of_group[group_of], minlength=group_count), out=group_starts[1:])
+    group_destination, group_share = moves.destinations[members[group_starts[:-1]]], moves.shares[members[group_starts[:-1]]]
+    destination_count, band_count = len(plan.destinations), have.shape[1]
+    source_of_destination = np.full(destination_count, -1, np.int64)
+    for position, trade in enumerate(plan.sources):
+        destination = plan.fixed.position.get(trade, -1)
+        if destination >= 0:
+            source_of_destination[destination] = position
+    seats, school_bonus, enrolled = np.zeros(destination_count), np.zeros(destination_count), np.zeros(destination_count)
+    last_years, last_bonus = np.zeros(destination_count), np.zeros(destination_count)
+    last_exists = np.zeros(destination_count, np.bool_)
+    for destination in np.unique(group_destination).tolist():      # the cohorts and school seats of the destinations the groups go to
+        trade = plan.destinations[destination]
+        if inputs.schools:
+            seats[destination], school_bonus[destination] = training.school_places(inputs, area, trade)
+        enrolled[destination] = training.enrolled(state, area, trade)
+        cohorts = state.trainees.get(area, {}).get(trade)
+        if cohorts:
+            last_exists[destination], last_years[destination], last_bonus[destination] = True, cohorts[-1][0], cohorts[-1][2]
+    admitted = np.zeros((group_count, band_count))
+    kind, years, bonus = np.zeros(group_count, np.int64), np.zeros(group_count), np.zeros(group_count)
+    moved = np.zeros(moves.sources.shape[0])
+    added = np.zeros((destination_count, band_count))
+    changed = np.zeros(have.shape[0], np.bool_)
+    switching_kernel.enrol_groups(group_starts, members, group_destination, group_share, taken_amounts, moves.sources, have,
+                                  source_of_destination, added, plan.fixed.years, training.APPRENTICES_PER_MASTER, seats, school_bonus,
+                                  enrolled, last_years, last_bonus, last_exists, admitted, kind, years, bonus, moved, changed)
+    for position in set(np.unique(moves.sources).tolist()) | set(np.flatnonzero(changed).tolist()):
+        workers[plan.sources[position]][:] = have[position].tolist()
+    for destination in np.flatnonzero(added.any(axis=1)).tolist():
+        aptitude.add_bands(aptitude.bands_of(workers, plan.destinations[destination]), added[destination].tolist())
     targets: List[str] = []
-    for group in np.argsort(first, kind="stable").tolist():      # groups in the order they first appear
-        senders = members[starts[group]:ends[group]]
-        target, share = plan.destinations[int(moves.destinations[senders[0]])], float(moves.shares[senders[0]])
-        taken = taken_amounts[senders]
-        combined = taken[0] if len(senders) == 1 else taken.sum(axis=0)
-        refused = training.enrol(state, inputs, area, target, combined.tolist(), share)
+    kinds = kind.tolist()
+    for group in range(group_count):
+        target = plan.destinations[int(group_destination[group])]
         targets.append(target)
-        if any(refused):       # the places ran out: each sender takes back its share of those not admitted
-            for sender, mine in zip(senders.tolist(), taken.tolist()):
-                if len(senders) == 1:
-                    returned = refused
-                else:
-                    returned = [back * each / total if total > 0.0 else 0.0
-                                for back, each, total in zip(refused, mine, combined.tolist())]
-                aptitude.add_bands(workers[plan.sources[int(moves.sources[sender])]], returned)
-                moved[sender] -= aptitude.band_total(returned)
+        if kinds[group] == 1:
+            state.trainees.setdefault(area, {}).setdefault(target, []).append([float(years[group]), admitted[group].tolist(), float(bonus[group])])
+        elif kinds[group] == 2:
+            aptitude.add_bands(state.trainees[area][target][-1][1], admitted[group].tolist())
     net: Dict[str, float] = {}
     for names, positions in ((plan.destinations, moves.destinations), (plan.sources, moves.sources)):
         sign = 1.0 if names is plan.destinations else -1.0
