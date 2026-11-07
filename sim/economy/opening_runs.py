@@ -8,6 +8,8 @@ the rest is made by the next cheapest.
 import math
 from typing import Dict, List, Mapping, Optional, Tuple
 
+import numpy as np
+
 from . import producer_table
 from . import crop_sites, sites, tool_fallback, unit_cost
 from .producers import paying_output
@@ -276,29 +278,50 @@ def fit_to_supply(setup, record) -> None:
     supply the placed producers make: where their inputs (and plant wear) would take more, every user's capacity
     and expected sales are cut by the same share, so no processor opens larger than the ore its tiles can feed and
     no smelter larger than the charcoal the timber can burn. A user of the good that something unbound also makes
-    is not held."""
+    is not held. The producers' figures are packed once and the sweeps run on the arrays (`held_sales`)."""
     by_limits = sites.limits_by_recipe(setup.site_limits)
-    fixed = limited_goods(setup.recipes, by_limits)
-    for _sweep in range(2 * CEILING_SWEEPS):      # a chain of holds settles stage by stage
+    fixed = sorted(limited_goods(setup.recipes, by_limits))
+    producers = sorted(record.producers.items())
+    if not fixed or not producers:
+        return
+    sales = np.array([producer.expected_sales for _id, producer in producers])
+    capacity = np.array([producer.capacity_runs for _id, producer in producers])
+    yield_factor = np.array([producer.yield_factor for _id, producer in producers])
+    made = np.array([[setup.recipes[producer.recipe_id].outputs.get(good, 0.0) for _id, producer in producers] for good in fixed])
+    used = np.zeros((len(fixed), len(producers)))
+    for column, (_id, producer) in enumerate(producers):
+        recipe = setup.recipes[producer.recipe_id]
+        if sites.is_sited(recipe, by_limits):
+            continue
+        for row, good in enumerate(fixed):
+            used[row, column] = recipe.hard_inputs.get(good, 0.0)
+            if recipe.plant_life_years > 0.0:
+                used[row, column] += recipe.plant_goods.get(good, 0.0) / recipe.plant_life_years
+    factors = held_sales(sales, yield_factor, made, used)
+    for column, (_id, producer) in enumerate(producers):
+        if factors[column] != 1.0:
+            producer_table.put_producer(record.producers, replaced(
+                producer, capacity_runs=capacity[column] * factors[column], expected_sales=sales[column] * factors[column]))
+
+
+def held_sales(sales: np.ndarray, yield_factor: np.ndarray, made: np.ndarray, used: np.ndarray) -> np.ndarray:
+    """The share of its sales each producer is held to: `sales` are the runs worked, `made[good, producer]` what a run
+    of the producer supplies of a good (at its `yield_factor`) and `used[good, producer]` what it takes of it (zero for a producer not held by
+    that good). For each good in turn, where the users would take more than the producers supply, every user is cut by the
+    same share, and the sweeps repeat until none is cut (a chain of holds settles stage by stage)."""
+    factors = np.ones(sales.shape[0])
+    sales = sales.copy()
+    for _sweep in range(2 * CEILING_SWEEPS):
         held = False
-        for good in sorted(fixed):
-            supply = math.fsum(producer.expected_sales * producer.yield_factor * setup.recipes[producer.recipe_id].outputs.get(good, 0.0)
-                               for producer in record.producers.values())
-            users = []
-            for producer_id, producer in sorted(record.producers.items()):
-                recipe = setup.recipes[producer.recipe_id]
-                used = recipe.hard_inputs.get(good, 0.0)
-                if recipe.plant_life_years > 0.0:
-                    used += recipe.plant_goods.get(good, 0.0) / recipe.plant_life_years
-                if used > 0.0 and not sites.is_sited(recipe, by_limits):
-                    users.append((producer_id, producer, used))
-            wanted = math.fsum(producer.expected_sales * used for _id, producer, used in users)   # runs worked, not plant sized
+        for row in range(made.shape[0]):
+            supply = math.fsum((sales * yield_factor * made[row]).tolist())
+            users = used[row] > 0.0
+            wanted = math.fsum((sales[users] * used[row][users]).tolist())
             if wanted > supply * (1.0 + 1e-9) and wanted > 0.0:
                 factor = supply / wanted
-                for producer_id, producer, _used in users:
-                    producer_table.put_producer(record.producers, replaced(
-                        producer, capacity_runs=producer.capacity_runs * factor,
-                        expected_sales=producer.expected_sales * factor))
+                sales[users] *= factor
+                factors[users] *= factor
                 held = True
         if not held:
             break
+    return factors

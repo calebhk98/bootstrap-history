@@ -176,7 +176,12 @@ def producible_share(runs: Mapping[str, float], recipes: Mapping[str, object], h
     (`hands_hours`, a year): one when the runs' labour hours fit, else hands over hours needed. An income that
     asks for more than the hands can make is not an income the producers can pay out."""
     needed = math.fsum(count * math.fsum(recipes[recipe_id].labour_hours.values()) for recipe_id, count in runs.items())
-    return 1.0 if needed <= hands_hours or needed <= 0.0 else max(0.0, hands_hours) / needed
+    return producible_share_of_hours(needed, hands_hours)
+
+
+def producible_share_of_hours(needed_hours: float, hands_hours: float) -> float:
+    """`producible_share` for runs that need `needed_hours`."""
+    return 1.0 if needed_hours <= hands_hours or needed_hours <= 0.0 else max(0.0, hands_hours) / needed_hours
 
 
 def labour_share_of(runs: Mapping[str, float], recipes: Mapping[str, object], wages: Mapping[str, float],
@@ -184,6 +189,11 @@ def labour_share_of(runs: Mapping[str, float], recipes: Mapping[str, object], wa
     """Share of an output of `value` that the producers of `runs` pay their workers (the rest is rent and the
     plant's charge, which their owners receive); at most one."""
     bill = math.fsum(count * unit_cost.labour_cost_per_run(recipes[recipe_id], wages) for recipe_id, count in runs.items())
+    return labour_share_of_bill(bill, value)
+
+
+def labour_share_of_bill(bill: float, value: float) -> float:
+    """`labour_share_of` for runs whose workers are paid `bill`."""
     return min(1.0, bill / value) if value > 0.0 else 0.0
 
 

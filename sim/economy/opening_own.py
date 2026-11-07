@@ -19,7 +19,12 @@ PURSE_TOLERANCE = 1e-6      # relative to income
 def hired_share(runs: Mapping[str, float], recipes: Mapping[str, object], hands_hours: float) -> float:
     """The share of the working hours a year that producers of `runs` hire: one when they need all of them or more."""
     needed = math.fsum(count * math.fsum(recipes[recipe_id].labour_hours.values()) for recipe_id, count in runs.items())
-    return 0.0 if hands_hours <= 0.0 else min(1.0, needed / hands_hours)
+    return share_of_hands(needed, hands_hours)
+
+
+def share_of_hands(needed_hours: float, hands_hours: float) -> float:
+    """The share of `hands_hours` that `needed_hours` take: one when they need all of them or more."""
+    return 0.0 if hands_hours <= 0.0 else min(1.0, needed_hours / hands_hours)
 
 
 def idle_hours(hours: float, share_hired: float, own_work_hours: float) -> float:
@@ -57,7 +62,10 @@ class OwnPlots:
 
     def note_runs(self, runs: Mapping[str, float], hands_hours: float) -> float:
         """Take the hired share the runs imply; returns how far it moved."""
-        updated = hired_share(runs, self.setup.recipes, hands_hours)
+        return self.note_share(hired_share(runs, self.setup.recipes, hands_hours))
+
+    def note_share(self, updated: float) -> float:
+        """Take `updated` as the hired share; returns how far it moved."""
         moved = abs(updated - self.share_hired)
         self.share_hired = updated
         return moved
@@ -96,9 +104,17 @@ class OwnPlots:
 
     def _cut(self, record, cohort, orders, basket, priced):
         """(the orders with each floor cut by the share of it the cohort's plot grows, the budget that frees)."""
+        units = self.grow(record, cohort, priced)
+        cut = year_goods.less_what_it_grew(orders, cohort, basket, units)
+        return cut, math.fsum(bid.budget for bid in orders.bids) - math.fsum(bid.budget for bid in cut.bids)
+
+    def grow(self, record, cohort, priced, own_work=None):
+        """The need units the cohort's plot grows at the current share of hours hired; notes what it grew, the land it
+        takes and the hours it sells at the opening wage. `own_work` is `own_work_hours` when the caller holds it."""
         setup = self.setup
         tile = setup.tiles.get(cohort.tile)
-        own_work = self.own_work_hours(record, cohort, priced)
+        if own_work is None:
+            own_work = self.own_work_hours(record, cohort, priced)
         idle = idle_hours(cohort.working_people * setup.working_hours_per_year, self.share_hired, own_work)
         _moves, grown, units = households_own.own_production(
             cohort, idle, self.options, setup.recipes, tile.fertility if tile else 0.0, setup.basket_for(cohort.tile),
@@ -107,8 +123,7 @@ class OwnPlots:
         self.hectares[cohort.agent_id] = households_own.plot_hectares(
             units, self.options, setup.recipes, setup.land_per_run, tile.fertility if tile else 0.0)
         self.sold[cohort.agent_id] = self._sold_hours(cohort, priced, own_work)
-        cut = year_goods.less_what_it_grew(orders, cohort, basket, units)
-        return cut, math.fsum(bid.budget for bid in orders.bids) - math.fsum(bid.budget for bid in cut.bids)
+        return units
 
     def _sold_hours(self, cohort, priced, own_work: float) -> float:
         """The hours the cohort sells at the opening wage when the year runs (labour_supply.HourSupply): the hours its
