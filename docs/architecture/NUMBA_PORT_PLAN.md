@@ -65,11 +65,16 @@ phase reads the fields of every producer and cohort through Python objects. The 
 producers', cohorts' and market memory's numeric fields as columns indexed by row, with the id-to-row maps. They are
 kept in step when producers enter or exit, read by every kernel, and written back to the records only where a phase
 changes a field. The saved record format does not change.
-- [ ] `sim/economy/year_arrays.py`: producers (recipe, tile, runs, capacity, crew, expectations by recipe good), cohorts
+- [x] `sim/economy/year_arrays.py`: producers (recipe, tile, runs, capacity, crew, expectations by recipe good), cohorts
       (tile, people, cash, basket), market memory (prices, wages, quotes by good or trade and area), the recipes' input and
       output matrices
-- [ ] built in `Economy._run_year`, refreshed by entry and exit, checked against the records in a test
-- [ ] the first phase moved onto it: the year's close (`producers_close.close_year`, `firm_year.settle_year`, `households_close`)
+- [x] built in `Economy._run_year`, refreshed by `sync` (replaced rows re-read; a rebuild when producers enter or leave),
+      checked against the records in `test_year_arrays`
+- [ ] the first phase moved onto it: the year's close
+    - [x] the producers' close as one kernel (`close_kernel.py`, `close_pack.py`, `close_run.py`, `year_close_producers.py`;
+          `test_year_speed_close` beside the old close on random economies, and on every producer of a real Rome close)
+    - [ ] the households' close and the equity built for it (`households_close`, `equity.producer_worths`, `credit_view.equity`)
+    - [ ] the per-producer tail: dividends (`spread`, `transfer_many`), `write_off`, loan asks
 - [ ] every other ported phase reads from it instead of packing its own
 
 ### 1. Labour clearing (`sim/labour/market/`)
@@ -188,7 +193,7 @@ any rounding change does; the digest is the same on two runs and after a reload.
           year's price and wage tables packed per (good or trade, tile) once and the requests as index arrays)
 - [ ] producers' and firms' close of the year
     - [x] pooled practice, input prices and wages read once per recipe and tile and handed to each producer's close
-    - [ ] `producers_close.close_year`, `next_expectations`, `_pledgeable`, `firm_year.settle_year` over packed arrays
+    - [x] `producers_close.close_year`, `next_expectations`, `_pledgeable`, `firm_year.settle_year` in one kernel (item 0b)
 - [ ] households' close (the offered prices read once per good and tile, `households_close._priced_needs`; the rest is Python)
 - [ ] Checks: reproducible, compared, share measured
 
@@ -229,7 +234,7 @@ any rounding change does; the digest is the same on two runs and after a reload.
       (the sums the old code made with `math.fsum` are exact in the kernel, which matters: a bid at the edge of what a
       cohort can afford exists or not by the last bit). Rome cold opening about 120 s after; Rome's household plans
       are discrete and its opening moves with last-digit changes (producer counts differ between kernel variants), so
-      the Rome record before the port is still to be compared (an old-code Rome opening takes about twenty minutes)
+      the Rome record before the port is compared below
 - [x] the rest of Rome's opening: the cost was repeated work, not loops. `household_plans` worked the producers' hours demand
       (`expected_shares`) once per cohort; it is worked once per call. `location.opening_split` re-derived the placed tiles of
       a recipe on every call; the placement reads are kept per setup. `crop_sites.sites` works a recipe's paying floor once.
