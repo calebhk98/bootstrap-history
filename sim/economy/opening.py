@@ -162,13 +162,15 @@ def _open(setup: EconomySetup, replacement: float, plans=None, start=None) -> Tu
     own.share_hired = start.share_hired or 0.0
     packed = _settle_income(setup, record, view, priced_goods, replacement, own, start)
     start.share_hired = own.share_hired
-    # the demand after the settle is asked of the packed cohorts, who hold the stock they held when the income was settled
-    # (the old path reads the orders of the last ask again at the same income); only a settle that did not end at the
-    # incomes the cohorts hold asks the old path, with the orders of the last ask left for it
-    after_settle = packed if packed is not None and packed.asked_at_incomes_now(record) else None
-    if packed is not None and after_settle is None:
+    # the households hold their serving stock when the demand after the settle is asked (a durable in use is not wealth to
+    # store), so the packed cohorts are packed again once the seed has moved stock; their last purse is kept, their orders
+    # (made without the stock) are not
+    if _seed_durable_stocks(setup, record, view, packed):
+        own.forget_orders()
+        packed = packed.repacked() if packed is not None else None
+    after_settle = packed if packed is not None and packed.supported and packed.asked_at_incomes_now(record) else None
+    if packed is not None:
         packed.remember_orders(record)
-    _seed_durable_stocks(setup, record, view, packed)
     final_by_tile = (_final_demand_packed(setup, record, replacement, after_settle) if after_settle is not None
                      else _final_demand(setup, record, view, replacement, own=own))
     for country in setup.countries():
@@ -335,7 +337,7 @@ def _opening_bids(setup, record, view, memory=None, stationary_durables=True, ow
                 yield cohort, bid, price
 
 
-def _seed_durable_stocks(setup, record, view, packed=None) -> None:
+def _seed_durable_stocks(setup, record, view, packed=None) -> bool:
     """Households open at the planning date, holding their serving stock after year-end losses.
     Their first purchases replace those losses, as in a later year with the same desired flow. `packed` (the settled
     cohorts, when the settle packed them) gives the bids of the durables that serve needs."""
@@ -356,6 +358,7 @@ def _seed_durable_stocks(setup, record, view, packed=None) -> None:
                                    "opening stock of a durable in use"))
     if moves:
         record.book.move_many(moves)
+    return bool(moves)
 
 
 def _final_demand(setup, record, view, replacement=0.0, memory=None, own=None) -> Dict[TileId, Dict[GoodId, float]]:
@@ -558,6 +561,7 @@ def _stock_producers_with_inputs(setup, record) -> None:
                      for good, quantity in opening_resting.resting_output_stock(runs, recipe.outputs).items())
     if moves:
         record.book.move_many(moves)
+    return bool(moves)
 
 
 _placing: Dict[int, tuple] = {}     # id(record) -> (tiles with people, richest class by tile) while its producers are placed
