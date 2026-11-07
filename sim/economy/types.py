@@ -149,6 +149,21 @@ class Recipe:
         rest = {good: quantity - self.tool_wear.get(good, 0.0) for good, quantity in self.inputs.items()}
         return {good: quantity for good, quantity in rest.items() if quantity > 1e-12 * max(1.0, self.inputs[good])}
 
+    @cached_property
+    def hard_inputs_sorted(self) -> Tuple[Tuple[GoodId, float], ...]:
+        """`hard_inputs` as (good, per run) pairs in good order, sorted once."""
+        return tuple(sorted(self.hard_inputs.items()))
+
+    @cached_property
+    def outputs_sorted(self) -> Tuple[Tuple[GoodId, float], ...]:
+        """`outputs` as (good, per run) pairs in good order, sorted once."""
+        return tuple(sorted(self.outputs.items()))
+
+    @cached_property
+    def tool_wear_sorted(self) -> Tuple[Tuple[GoodId, float], ...]:
+        """`tool_wear` as (good, per run) pairs in good order, sorted once."""
+        return tuple(sorted(self.tool_wear.items()))
+
 
 @dataclass(frozen=True)
 class SiteLimit:

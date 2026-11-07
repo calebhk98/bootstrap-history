@@ -170,3 +170,24 @@ def input_depth_order(recipes: Mapping[str, Recipe]) -> List[GoodId]:
     order inside it, so the order is the same on every run. Cycle members then draw on stock."""
     depth = input_depth(recipes)
     return sorted(depth, key=lambda good: (depth[good], good))
+
+
+_makers_kept: Dict[int, Tuple[Mapping[str, Recipe], int, Dict[GoodId, List[Recipe]]]] = {}
+_MAKERS_KEPT_MOST = 8
+
+
+def recipes_making(recipes: Mapping[str, Recipe], good: GoodId) -> List[Recipe]:
+    """The recipes of `recipes` that yield `good`, in the order `recipes` holds them. The index over all goods is built
+    once per recipes mapping (a setup replaces its mapping when a recipe is admitted, never edits it in place; the entry
+    holds the mapping itself, so an id is never read for another mapping, and its length is checked)."""
+    kept = _makers_kept.get(id(recipes))
+    if kept is None or kept[0] is not recipes or kept[1] != len(recipes):
+        index: Dict[GoodId, List[Recipe]] = {}
+        for recipe in recipes.values():
+            for output, quantity in recipe.outputs.items():
+                if quantity > 0.0:
+                    index.setdefault(output, []).append(recipe)
+        if len(_makers_kept) >= _MAKERS_KEPT_MOST:
+            _makers_kept.clear()
+        kept = _makers_kept[id(recipes)] = (recipes, len(recipes), index)
+    return kept[2].get(good, [])

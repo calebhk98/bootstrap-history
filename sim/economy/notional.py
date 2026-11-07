@@ -15,7 +15,7 @@ from sim.constants import declare
 from . import trade_wages, unit_cost
 from .market_memory import KEY_SEPARATOR, PRICE_REMEMBERED, PRICE_SMOOTHED_TRADE, RECENT_TRADE_YEARS, MarketMemory
 from .national_prices import national_prices, national_wages, usual_volumes
-from .recipes import input_depth_order
+from .recipes import input_depth_order, recipes_making
 
 KIND_MAKING_COST_ESTIMATE = "making_cost_estimate"   # what the cheapest recipe costs at today's prices; nothing traded lately
 KIND_THIN_TRADE_BLEND = "thin_trade_blend"           # a market price blended toward making cost; the market trades a sliver
@@ -31,7 +31,7 @@ THIN_MARKET_SHARE_OF_OPENING_DEMAND = declare(
 
 def recently_traded_goods(memory: MarketMemory) -> Set[str]:
     """Goods with a market that cleared within RECENT_TRADE_YEARS."""
-    return {key.split(KEY_SEPARATOR, 1)[0] for key in memory.trade_age if memory.traded_within(key, RECENT_TRADE_YEARS)}
+    return memory.goods_traded_within(RECENT_TRADE_YEARS)
 
 
 def _estimated_prices(setup, record, market, thin: bool, wages: Optional[Dict[str, float]] = None) -> Dict[str, float]:
@@ -104,7 +104,7 @@ def cheapest_cost(setup, good, live, wages, rate):
     (`unit_cost.full_cost_per_unit`; no maker or site is named, so yield 1 and no rent); None when no recipe making it
     can be priced."""
     best = min((unit_cost.full_cost_per_unit(recipe, good, live, live, wages, rate)
-                for recipe in setup.recipes.values() if recipe.outputs.get(good, 0.0) > 0.0), default=math.inf)
+                for recipe in recipes_making(setup.recipes, good)), default=math.inf)
     return best if math.isfinite(best) and best > 0.0 else None
 
 

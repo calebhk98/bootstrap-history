@@ -526,14 +526,14 @@ def produce(producer: Producer, recipe: Recipe, inputs_held: Mapping[GoodId, flo
         return 0.0, moves
     if extra_hours:
         draws, extra_hours = tool_fallback.draws(recipe, inputs_held, limit)
-    for good, per_run in sorted(recipe.hard_inputs.items()):
+    for good, per_run in recipe.hard_inputs_sorted:
         used = min(limit * per_run, inputs_held.get(good, 0.0))   # never more than held, to the last bit
         moves.append(GoodsMove(producer.agent_id, EDGE_CONSUMPTION, good, producer.tile, used, "input"))
     for good, used in sorted(draws.items()):
         if used > 0.0:
             moves.append(GoodsMove(producer.agent_id, EDGE_CONSUMPTION, good, producer.tile, used, "input"))
     achieved = limit * producer.yield_factor
-    for good, per_run in sorted(recipe.outputs.items()):
+    for good, per_run in recipe.outputs_sorted:
         if achieved * per_run > 0.0:
             moves.append(GoodsMove(EDGE_PRODUCTION, producer.agent_id, good, producer.tile,
                                    achieved * per_run, "output"))

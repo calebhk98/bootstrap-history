@@ -84,7 +84,8 @@ def national_wages(record, keep: Optional[Callable[[str], bool]] = None, keep_to
     nobody works or hires anywhere has no entry, and a reader that prices a recipe adds it by the one wage rule,
     `notional.costing_wages`; this is the figure reported as the year's wages). Weighted by the hours hired in each market last year; for a trade that hired nowhere, by the people
     working it there (the wage is what those workers would accept); with no people either, the plain mean.
-    `keep_token` names what `keep` accepts, so the answer is kept between calls (equal tokens, equal `keep`)."""
+    `keep_token` names what `keep` accepts, so the mask of kept markets is kept between calls (equal tokens, equal `keep`); the
+    figures are worked out on every call, since the hours hired and the workers are written by many owners."""
     memory = record.memory
     layout = price_index.layout_of(tuple(memory.wages))
     if not layout.keys:
@@ -92,13 +93,14 @@ def national_wages(record, keep: Optional[Callable[[str], bool]] = None, keep_to
     kept = layout.kept_keys(keep, keep_token).tolist()
     wage_list = np.array(list(memory.wages.values()), dtype=float)[layout.positions].tolist()
     workers = record.labour.workforce.workers
+    hours_cleared_by = record.labour.hours_cleared_by
     rows: Dict[str, List[Tuple[float, float, float]]] = {}
     start = 0
     for trade, end in zip(layout.goods, layout.ends):
         for place in range(start, end):
             if kept[place]:
                 people = math.fsum(workers.get(layout.areas[place], {}).get(trade, ()))
-                rows.setdefault(trade, []).append((wage_list[place], record.labour.hours_cleared_in(layout.keys_grouped[place]), people))
+                rows.setdefault(trade, []).append((wage_list[place], hours_cleared_by(trade, layout.areas[place]), people))
         start = end
     wages = {}
     for trade, entries in rows.items():

@@ -64,6 +64,7 @@ def random_record(rng):
              for key in keys if rng.random() < 0.5}
     labour = types.SimpleNamespace(
         workforce=types.SimpleNamespace(workers=workers),
+        hours_cleared_by=lambda trade, area: math.fsum(hired.get(area, {}).get(trade, {}).values()),
         hours_cleared_in=lambda key: math.fsum(hired.get(key.split(KEY_SEPARATOR)[1], {}).get(key.split(KEY_SEPARATOR)[0], {}).values()))
     return types.SimpleNamespace(memory=memory, goods=types.SimpleNamespace(volumes={}), labour=labour)
 
