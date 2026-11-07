@@ -21,5 +21,8 @@ def declared_signatures():
         "sim.economy.merchants_kernel.search_good": [(
             array(number, 1), array(number, 2), array(integer, 2), array(integer, 1), array(flag, 1),
             number, number, number, number, number)],
+        "sim.geography.routes_tree_kernel.least_tree": [(
+            array(integer, 1), array(integer, 1), array(number, 1), array(number, 1), array(integer, 1),
+            array(number, 1), array(number, 1), flag)],
         "sim.labour.market.sold_hours_kernel.sold_hours": [(number, array(number, 2), number)],
     }
