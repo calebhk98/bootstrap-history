@@ -89,6 +89,8 @@ changes a field. The saved record format does not change.
           ceilings, hiring arrays, the wage paid, poaching and the asks; `test_year_speed_labour_tail`)
     - [x] `pack_heads`' bid sums over arrays (`np.add.at`, `np.maximum.at` in bid order); the employer columns by `attrgetter`;
           `clearing._kernel_head` and `_prepare`'s unused `head` argument removed (the heads test converts the kernel's row itself)
+    - [x] the carriage search of every origin in one pass over a cost matrix (`carriage.carriage_table`, used by
+          `YearInputs.carriage_from`; `test_year_speed_labour_carriage`): about 0.015 s to 0.004 s of a year
     - [ ] what is left of the clearing is the write-back of one `LabourClearing` and its state entries per market (the saved
           record format) and `import_cost.reach`, one route search per area
 - [ ] Trade switching (`switching.switch_trades`, `_odds`, `_planned_moves`)
@@ -98,6 +100,7 @@ changes a field. The saved record format does not change.
     - [x] the carry-out and the refusal path (`switching_kernel.enrol_groups`)
     - [x] the round's moves collected in one kernel (`switching_kernel.collect_moves`) instead of numpy glue in `_planned_moves`
           (`test_year_speed_labour_plans`)
+    - [x] the carry-out's grouping of moves in one kernel (`switching_kernel.group_moves`; `test_year_speed_labour_groups`)
     - [ ] expected incomes at graduation (`expected_income`, `income_at_graduation`): still one Python call per destination and
           round; `graduates_coming` is one `math.sumprod` per cohort. A kernel needs the area's clearings and trainees packed once
     - [x] migration: `migration.move_shares` without dictionaries (`test_year_speed_labour_finish`); `migrate` itself is still
@@ -232,7 +235,10 @@ any rounding change does; the digest is the same on two runs and after a reload.
     - [x] the memory arrays are kept until the memory is next written to (`MemoryArrays.is_current`; `market_memory.written_stamp`)
           instead of read again by each `sync` and `refreshed`
     - [x] land leases read the loans' pledges once (`titles.pledges_by_title`; `test_year_speed_titles`)
-    - [ ] left: `_hour_supply` (`household_work_year.plans`, one `cohort_plan` per cohort; `plot_schedules`' `need_prices`),
+    - [x] `_hour_supply`: priced needs and the prices on a tile kept per read (`priced_reads.kept_need_prices`, shared by
+          `household_work_year` and `plot_schedules`), the cheapest service price kept per tile; `HourSupply.settle` without
+          `dataclasses.replace`. Wall time of `_hour_supply` in the second year about 0.057 s to 0.035 s (a `perf_counter` wrapper)
+    - [ ] left: `household_work_year.plans` (one `cohort_plan` per cohort, about 0.02 s),
           `year_accounts.build`, `land_market.settle_year`, `outside_option_by_tile`, `_grow_own`
 - [ ] Checks: reproducible, compared, share measured
 
