@@ -1,6 +1,8 @@
 # Numba port of the economy's year
 
-**Status:** in progress on branch `speed-year-step-and-openings`. One PR when every item below is ticked.
+**Status:** stopped at about 3.5 to 3.7 s a warm Rome year (see Measured); the branch `speed-year-step-and-openings` goes
+to a PR at that point by the owner's decision. What is left, and the redesign the one-second goal needs, is carried by
+Complaint 968; the unticked items below are its starting list.
 
 **Measured** (`year-time --session SAVE --years 2 --reload-check` on the shared Rome save; seconds of the two years):
 - before the port: about 23 and 20
@@ -305,9 +307,12 @@ keyed by agent, good and tile) and the market memory (prices, wages and quotes k
 the cost is reaching the records. Both become arrays indexed by integer ids (agents, goods, tiles, areas, trades
 numbered once), with their present methods kept for callers that read one value, and array methods for the phases that
 read or post many. The saved format may change (no migration, CLAUDE.md 4.6); save and load must round-trip.
-- [ ] the book (`sim/book.py`): balances by (agent, currency), stocks by (agent, good, tile), gross and edge records as arrays;
+- [x] the book (`sim/book.py`, `book_batch.py`, `book_record.py`, `book_types.py`): balances by (agent, currency), stocks by
+      (agent, good, tile) in flat slots, `rows_of` / `balances_of` / `stocks_of`; the game unchanged and no faster yet (the
+      packs still read one value at a time); the rest of the line:
       batched posting (`post_settled`, `move_many`, `transfer_many`) straight into them; the phases' packs read them
-- [ ] the market memory (`market_memory.py`): prices, offered and cleared prices, quote kinds, trade ages, wages and rates
+- [ ] the market memory (`market_memory.py`) - built on branch `port-memory-arrays` and NOT merged: single reads through
+      numpy are slower than dict reads and the year was no faster; it pays only once the readers read in blocks (Complaint 968):
       as arrays by (good, area) and (trade, area); `YearView` reads them; the year arrays' memory part becomes a view of them
 - [ ] string market keys (`market_key`, `KEY_SEPARATOR` splits) replaced by id pairs on the hot paths
 - [ ] Checks: reproducible, compared, the year measured

@@ -1,6 +1,6 @@
 # A game year is still too slow to play a whole game
 
-**Status:** partly - round 11 (below) cut the households' respend loop, the entry crews read and the hiring loop, and the openings build's repeated work; a Rome year is still many times the target, and Rome's opening solve is most of a cold game build
+**Status:** partly - the numba port (round 12, `docs/architecture/NUMBA_PORT_PLAN.md`) took a warm Rome year from about 20 s to about 3.5 s; the redesign the one-second target needs is Complaint 968
 
 A playtester found a new Rome game took a quarter of an hour of hidden spin-up before the first prompt and
 the better part of a minute per in-game year, so a whole game would take hours of stepping. The target is a
@@ -276,3 +276,11 @@ Left: Rome's two opening solves (`opening._with_covering_prices`: the households
 reopens twice, once only to size the mint's metal) are the largest fixed cost of a cold game and of the build; Complaint
 967 (the test runner opens every civilisation before any slow topic); the rest of a warm Rome year is flat across labour,
 goods clearing and entry.
+
+## Round 12: the economy's year ported to numba (branch `speed-year-step-and-openings`)
+
+The year's phases run as numba kernels through `sim/jit.py` (the plan, `docs/architecture/NUMBA_PORT_PLAN.md`, lists each
+item, its kernels and tests, and what is left). `python3 sim/simulator.py year-time --session SAVE --years 4` on a Rome
+save: warm years about 3.5 to 4.5 s, typically about 3.7, against about 20 s before the port. The opening solve is a kernel
+too (Rome's cold opening solve about 50 s, from about ten minutes). `simulator.py compile-kernels` compiles every kernel
+ahead of play. Why it stops at a few seconds and what would reach one second: Complaint 968.
