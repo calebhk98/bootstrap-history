@@ -56,9 +56,10 @@ def settled(producer, survivor, revenue: float, running_costs: float, interest: 
 
 
 def settle_year(setup, record, view, producer, closed, recipe, revenue: float, running_costs: float,
-                loans: List) -> Tuple[object, Tuple[Transfer, ...], FirmYear]:
+                loans: List, inputs=None, wages=None) -> Tuple[object, Tuple[Transfer, ...], FirmYear]:
     """The producer's close with its finances settled: (the `YearClose` to keep, the dividend as transfers, the
-    outcome). `loans` are the producer's own. The caller applies a write-off with `write_off`."""
+    outcome). `loans` are the producer's own. The caller applies a write-off with `write_off`. `inputs` and `wages` are
+    `live_input_prices` and `live_wages` when the caller has them already."""
     money = setup.currency_id
     survivor = closed.producer
     cash = max(0.0, record.book.balance(producer.agent_id, money))
@@ -66,12 +67,13 @@ def settle_year(setup, record, view, producer, closed, recipe, revenue: float, r
     stock = equity.inventory_value(record, producer, view)
     assets = equity.firm_assets(survivor, recipe, cash, stock, view)
     capital_and_cash = equity.firm_assets(survivor, recipe, cash, 0.0, view)
+    inputs = live_input_prices(producer, recipe, view) if inputs is None else inputs
+    wages = live_wages(producer, recipe, view) if wages is None else wages
     wear = 0.0
     if recipe.plant_life_years > 0.0 and producer.capacity_runs > 0.0:
-        per_run = unit_cost.plant_value_per_run(recipe, live_input_prices(producer, recipe, view), live_wages(producer, recipe, view))
+        per_run = unit_cost.plant_value_per_run(recipe, inputs, wages)
         wear = producer.capacity_runs / recipe.plant_life_years * per_run
-    replacement = closed.replacement_runs * unit_cost.plant_value_per_run(
-        recipe, live_input_prices(producer, recipe, view), live_wages(producer, recipe, view))
+    replacement = closed.replacement_runs * unit_cost.plant_value_per_run(recipe, inputs, wages)
     kept = finance.cash_to_keep(survivor.cash_target, finance.financial_commitments(loans, producer.agent_id), replacement, running_costs)
     year = settled(producer, survivor, revenue, running_costs, finance.interest_due(loans, producer.agent_id),
                    wear, finance.financial_commitments(loans, producer.agent_id), sum(loan.arrears for loan in loans),
