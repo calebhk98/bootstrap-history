@@ -101,7 +101,11 @@ copied, never written). A phase's share: `cProfile` of `agent --session COPY` wi
 - [ ] entry plans and siting
     - [x] practice means over packed crews (`practice.py` kernels; `test_year_speed_practice_kernel`); each recipe's
           entrant crew read once per entry year (`entry_practice.entrant_crew`)
+    - [x] reads kept per view and per siting call (the memory's wage, price on offer and price kind by tile, the input haul and
+          hands of a recipe and tile, one planned recipe per hours; `test_year_speed_producer_reads`); the game unchanged by them
     - [ ] siting (`location.siting`), `entry_trial.recipes_by_cost`, `entry_backed.unfilled` over packed wage, price and rent tables
+          (what is left is per-request Python: `planned_recipe`, `input_haul_cost`, `full_cost_per_unit`; a kernel needs the
+          year's price and wage tables packed per (good or trade, tile) once and the requests as index arrays)
 - [ ] producers' and firms' close of the year
     - [x] pooled practice, input prices and wages read once per recipe and tile and handed to each producer's close
     - [ ] `producers_close.close_year`, `next_expectations`, `_pledgeable`, `firm_year.settle_year` over packed arrays
@@ -109,6 +113,8 @@ copied, never written). A phase's share: `cProfile` of `agent --session COPY` wi
 - [ ] Checks: reproducible, compared, share measured
 
 ### 7. The rest of the economy's year
+- [x] `live_wages_at` and `present_prices_at` read once per trade and tile until the memory is written to (`YearView.wages_at`),
+      land sellers indexed once a year (`land_bid.owners_of_sellers`): `firm_land_bids` from about 0.3 s to 0.02 s of a year
 - [ ] producers' plans (`producers.plan`), cohorts' orders (`year_goods.cohort_orders`), produce and offer
 - [ ] hour supply, outside option, labour context, land bids and leases, wear and spoilage, the outcome
 - [ ] Checks: reproducible, compared, share measured

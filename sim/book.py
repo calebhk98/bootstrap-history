@@ -330,12 +330,16 @@ class Book:
 
     def holdings(self, agent: AgentId) -> dict:
         money = {currency: value for currency, value in sorted(self._money.get(agent, {}).items()) if value != 0.0}
+        return {"money": money, "goods": self.goods_held(agent)}
+
+    def goods_held(self, agent: AgentId) -> Dict[GoodId, Dict[str, float]]:
+        """What the agent holds of each good, by tile: goods and tiles in name order, nothing at zero."""
         goods = {}
         for good, by_tile in sorted(self._goods.get(agent, {}).items()):
             tiles = {tile: value for tile, value in sorted(by_tile.items()) if value != 0.0}
             if tiles:
                 goods[good] = tiles
-        return {"money": money, "goods": goods}
+        return goods
 
     def goods_totals(self) -> Dict[GoodId, float]:
         """Quantity held of each good by the agents (edge accounts excluded), goods in name order."""

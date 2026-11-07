@@ -17,6 +17,13 @@ PRICE_LEVEL_FLOOR_RATIO = 1e-9   # a year in which the median price fell to noth
 PRICE_SMOOTHED_TRADE = "smoothed_trade"     # the kind of the price remembered for a market that traded: the old price moved toward the clearing price; any other kind is a quote or an estimate
 PRICE_REMEMBERED = "remembered_price"   # a price from a trade of some earlier year that nothing since has replaced or quoted
 
+_writes = [0]      # bumped by each write to the prices, wages, rates and price levels a view's cached reads come from
+
+
+def note_written() -> None:
+    _writes[0] += 1
+
+
 OPENING_EXPECTED_INFLATION = declare(
     "OPENING_EXPECTED_INFLATION", 0.0, kind="initial_condition",
     unit="share per year", source=None, confidence="C",
@@ -45,7 +52,6 @@ USUAL_PRICE_SPEED = declare(
         "'usually' is has no measured basis; a moving average over about a decade is the same idea.")
 
 
-_WAGE_KEY_OF_TRADE: Dict[str, str] = {}    # a wage key last found for each trade, to answer `holds_wage_for` without a scan; checked against the memory asked
 
 
 def market_key(first: str, area: AreaId) -> str:
@@ -86,9 +92,11 @@ class MarketMemory:
 
     def set_rate(self, money: CurrencyId, rate: float) -> None:
         self.rates[money] = rate
+        note_written()
 
     def set_price(self, key: str, price: float) -> None:
         self.prices[key] = price
+        note_written()
 
     def count_year_without_bids(self, key: str) -> int:
         """A market with offers had nobody bidding this year; returns the years it had gone before."""
@@ -112,9 +120,11 @@ class MarketMemory:
 
     def set_quote_kind(self, key: str, kind: str) -> None:
         self.quote_kinds[key] = kind
+        note_written()
 
     def drop_quote_kind(self, key: str) -> None:
         self.quote_kinds.pop(key, None)
+        note_written()
 
     def set_area_currencies(self, currency_of_area: Dict[AreaId, CurrencyId]) -> None:
         self.currency_of_area = currency_of_area
@@ -128,19 +138,16 @@ class MarketMemory:
         self.opening_wage_levels[money] = self.opening_wage_level(money)
         self.basket_price_levels[money] = 1.0
         self.price_levels[money] = 1.0
+        note_written()
 
     def holds_wage_for(self, trade: TradeId) -> bool:
         """Whether the memory holds a wage for the trade in any labour area (a trade the core has never cleared, such as one
         admitted after the opening, has none)."""
-        found = _WAGE_KEY_OF_TRADE.get(trade)
-        if found is not None and found in self.wages:     # a key seen for the trade, still held here: no scan
-            return True
-        prefix = trade + KEY_SEPARATOR
-        for key in self.wages:
-            if key.startswith(prefix):
-                _WAGE_KEY_OF_TRADE[trade] = key
-                return True
-        return False
+        stamp = (_writes[0], len(self.wages))
+        kept = self.__dict__.get("_wage_trades")     # not a field: a read kept until the wages are written to
+        if kept is None or kept[0] != stamp:
+            kept = self.__dict__["_wage_trades"] = (stamp, frozenset(key.split(KEY_SEPARATOR, 1)[0] for key in self.wages))
+        return trade in kept[1]
 
     def opening_wage_level(self, money: CurrencyId) -> float:
         """Today's money per opening-year money for a wage the setup holds: the level before the last rebase times the
@@ -207,6 +214,7 @@ class MarketMemory:
             self.trade_age[key] += 1
         for key in traded_keys:
             self.trade_age[key] = 0
+        note_written()
 
     def note_volume(self, key: str, quantity: float) -> None:
         """Move a market's usual volume toward what it traded this year."""
@@ -226,6 +234,7 @@ class MarketMemory:
             before = self.price_levels.get(currency, 1.0)
             self.price_levels[currency] = before * max(PRICE_LEVEL_FLOOR_RATIO, 1.0 + observed_inflation)
         self.basket_price_levels[currency] = level
+        note_written()
 
 
 class YearView:
@@ -244,6 +253,10 @@ class YearView:
         self._keys_of_good: Dict[str, tuple] = {}
         self._keys_of_names: Dict[int, tuple] = {}     # id of a names tuple -> (names, tile -> market keys)
         self._area_by_tile: Dict[str, Dict[TileId, AreaId]] = {}    # name -> tile -> its area; the area map does not change
+        self._stamp = _writes[0]
+        self._reads: Dict[tuple, object] = {}     # reads of the memory kept until the next write to it
+        self._offered: Dict[str, Optional[float]] = {}
+        self._kinds: Dict[str, Optional[str]] = {}
 
     def prices_across(self, good: GoodId, areas) -> list:
         """`price(good, area.area_id)` for each of `areas` (the good's areas), in order."""
@@ -263,7 +276,14 @@ class YearView:
     def offered_price(self, good: GoodId, area: AreaId) -> Optional[float]:
         """What a buyer can buy at: the traded price or an ask still posted (`MarketMemory.offered_price`); None
         where nothing is on offer. A buyer reads this, never `price`."""
-        return self._memory.offered_price(good + KEY_SEPARATOR + area)
+        if self._stamp != _writes[0]:
+            self._current()
+        key = good + KEY_SEPARATOR + area
+        try:
+            return self._offered[key]
+        except KeyError:
+            found = self._offered[key] = self._memory.offered_price(key)
+            return found
 
     def present_prices_at(self, names: tuple, tile: TileId) -> Dict[str, float]:
         """`price` of each of `names` (goods, one tuple kept by the caller) in its area on `tile`, those with a
@@ -274,16 +294,28 @@ class YearView:
         keys = kept[1].get(tile)
         if keys is None:
             keys = kept[1][tile] = tuple(name + KEY_SEPARATOR + self.area_of(name, tile) for name in names)
-        found = {}
-        for name, key in zip(names, keys):
-            figure = self._memory.prices.get(key)
-            if figure is not None:
-                found[name] = figure
-        return found
+        reads = self._current()
+        read_key = ("present", id(names), tile)
+        kept_found = reads.get(read_key)
+        if kept_found is None or kept_found[0] is not names:
+            found = {}
+            for name, key in zip(names, keys):
+                figure = self._memory.prices.get(key)
+                if figure is not None:
+                    found[name] = figure
+            kept_found = reads[read_key] = (names, found)
+        return dict(kept_found[1])
 
     def price_kind(self, good: GoodId, area: AreaId) -> Optional[str]:
         """PRICE_SMOOTHED_TRADE, or the kind of quote or estimate `price` is; None when the market has no price."""
-        return self._memory.price_kind(good + KEY_SEPARATOR + area)
+        if self._stamp != _writes[0]:
+            self._current()
+        key = good + KEY_SEPARATOR + area
+        try:
+            return self._kinds[key]
+        except KeyError:
+            found = self._kinds[key] = self._memory.price_kind(key)
+            return found
 
     def cleared_price(self, good: GoodId, area: AreaId) -> Optional[float]:
         """The price the market cleared at last year; None when nothing traded in it."""
@@ -299,6 +331,33 @@ class YearView:
     def wage_held_anywhere(self, trade: TradeId) -> bool:
         """Whether the memory holds a wage for the trade in any area (`MarketMemory.holds_wage_for`)."""
         return self._memory.holds_wage_for(trade)
+
+    def _current(self) -> Dict[tuple, object]:
+        """The cached reads, dropped when the memory has been written to since they were made."""
+        if self._stamp != _writes[0]:
+            self._stamp = _writes[0]
+            self._reads = {}
+            self._offered = {}
+            self._kinds = {}
+        return self._reads
+
+    def wages_at(self, trades: tuple, tile: TileId) -> Dict[str, float]:
+        """The one wage rule (`trade_wages.wage_in_view`) for each of `trades` in its labour area on `tile`; read once per
+        trades tuple (kept by the caller) and tile until the memory is written to."""
+        from .trade_wages import wage_in_view
+        reads = self._current()
+        key = ("wages", id(trades), tile)
+        kept = reads.get(key)
+        if kept is None or kept[0] is not trades:
+            found = {}
+            for trade in trades:
+                area = self.area_of(trade, tile)
+                wage = reads.get(("wage", trade, area))
+                if wage is None:
+                    wage = reads[("wage", trade, area)] = wage_in_view(self.setup, self, trade, area)
+                found[trade] = wage
+            kept = reads[key] = (trades, found)
+        return dict(kept[1])
 
     def interest_rate(self, currency: CurrencyId) -> Optional[float]:
         """Last year's base lending rate; None for a currency the memory holds no rate for (a plan that needs

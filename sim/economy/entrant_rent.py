@@ -20,6 +20,8 @@ def rent_per_run(rent_by_tile: Mapping[TileId, float], mean_value_by_tile: Mappi
 
 def site_rent_per_run(setup, record, view, recipe_id: str, tile: TileId, yield_factor: float = 1.0) -> float:
     """Rent on a run of `recipe_id` on `tile` at the output prices a newcomer there expects, as the market now sees them."""
+    if setup.land_per_run.get(recipe_id, 0.0) <= 0.0:
+        return 0.0
     recipe = setup.recipes[recipe_id]
     probe = Producer("probe", "probe", recipe_id, tile, 1.0)
     revenue = unit_cost.revenue_per_run(recipe, expected_output_prices(probe, recipe, view)) * yield_factor
