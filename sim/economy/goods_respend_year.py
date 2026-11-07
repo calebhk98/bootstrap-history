@@ -81,17 +81,26 @@ def respend(setup, record, view, ledger, markets: Dict[Market, LeftMarket], bask
     needs: Dict[str, Dict[str, str]] = {}
     areas: Dict[str, Dict[str, str]] = {}
 
+    need_of_basket: Dict[int, Dict[str, str]] = {}      # households of one basket share its need of each good
+    areas_of_tile: Dict[tuple, Dict[str, str]] = {}      # and, on one tile, the area each good is bought in
+
     def need_by_buyer(buyer):
         if buyer not in needs:
-            baskets[buyer] = basket_of(households[buyer])
-            needs[buyer] = need_of_good(baskets[buyer])
+            baskets[buyer] = basket = basket_of(households[buyer])
+            if id(basket) not in need_of_basket:
+                need_of_basket[id(basket)] = need_of_good(basket)
+            needs[buyer] = need_of_basket[id(basket)]
         return needs[buyer]
 
     def areas_of(buyer):
         """good -> the market area this buyer's tile buys it in, for the goods its basket names."""
         if buyer not in areas:
+            goods = need_by_buyer(buyer)
             tile = households[buyer].tile
-            areas[buyer] = {good: view.area_of(good, tile) for good in need_by_buyer(buyer)}
+            key = (tile, id(baskets[buyer]))
+            if key not in areas_of_tile:
+                areas_of_tile[key] = {good: view.area_of(good, tile) for good in goods}
+            areas[buyer] = areas_of_tile[key]
         return areas[buyer]
 
     rationed: Dict[str, Dict[str, float]] = {}
@@ -107,18 +116,21 @@ def respend(setup, record, view, ledger, markets: Dict[Market, LeftMarket], bask
     for _round in range(len(markets) + 1):
         new_bids: Dict[Market, List[Bid]] = {}
         lowest_asks: Dict[Market, object] = {}
+        asks_of_areas: Dict[int, Dict[str, float]] = {}      # the cheapest asks still offered, shared by buyers of one area map
         for buyer in sorted(rationed):
             cohort = households[buyer]
             basket_areas = areas_of(buyer)
             basket = baskets[buyer]
-            asks = {}
-            for good, area in basket_areas.items():
-                key = (good, area)
-                if key not in lowest_asks:
-                    ask = markets.get(key)
-                    lowest_asks[key] = None if ask is None else market_quote.lowest_unfilled_ask(ask.offers)
-                if (price := lowest_asks[key]) is not None:
-                    asks[good] = price
+            asks = asks_of_areas.get(id(basket_areas))
+            if asks is None:
+                asks = asks_of_areas[id(basket_areas)] = {}
+                for good, area in basket_areas.items():
+                    key = (good, area)
+                    if key not in lowest_asks:
+                        ask = markets.get(key)
+                        lowest_asks[key] = None if ask is None else market_quote.lowest_unfilled_ask(ask.offers)
+                    if (price := lowest_asks[key]) is not None:
+                        asks[good] = price
             by_need = rationed[buyer]
             cash = record.book.balance(buyer, setup.currency_id)
             total = sum(by_need.values())

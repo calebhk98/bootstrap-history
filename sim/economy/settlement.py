@@ -145,15 +145,16 @@ def _settle(book: Book, fills: Sequence[Fill], currency: CurrencyId, item: str,
     quantity = numpy.fromiter(pairing.quantity, dtype=float, count=count)
     asks = numpy.fromiter(pairing.asks, dtype=float, count=len(pairing.asks))
     table = _Keys()
+    used_buyers = sorted(set(pairing.buyer_index))
     bid_key = numpy.full(len(pairing.buyers), -1, dtype=numpy.int64)
-    for index in numpy.unique(buyer_index).tolist():
+    for index in used_buyers:
         bid_key[index] = table.add(pairing.buyers[index])
     offer_key = numpy.full(len(pairing.sellers), -1, dtype=numpy.int64)
-    for index in numpy.unique(seller_index).tolist():
+    for index in sorted(set(pairing.seller_index)):
         offer_key[index] = table.add(pairing.sellers[index])
     buyer_key, seller_key = bid_key[buyer_index], offer_key[seller_index]
     receipt_key = buyer_key
-    if delivers_goods and not all(pairing.buyers[index][1] for index in numpy.unique(buyer_index).tolist()):
+    if delivers_goods and not all(pairing.buyers[index][1] for index in used_buyers):
         # a buyer with no tile takes delivery where the seller holds the goods
         receipt_key = numpy.array([buyer_key[pair] if pairing.buyers[buyer_index[pair]][1] else
                                    table.add((pairing.buyers[buyer_index[pair]][0], pairing.sellers[seller_index[pair]][1]))
@@ -162,7 +163,8 @@ def _settle(book: Book, fills: Sequence[Fill], currency: CurrencyId, item: str,
     key_agent = numpy.array([table.agent_number[agent] for agent, _tile in keys], dtype=numpy.int64)
     key_stock = numpy.zeros(len(keys))
     if delivers_goods:
-        for number in numpy.unique(seller_key).tolist():
+        for index in sorted(set(pairing.seller_index)):
+            number = int(offer_key[index])
             key_stock[number] = book.stock(keys[number][0], item, keys[number][1])
     agent_cash = numpy.array([book.balance(agent, currency) for agent in agents])
     agent_edge = numpy.array([is_edge(agent) for agent in agents], dtype=numpy.bool_)
