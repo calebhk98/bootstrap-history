@@ -1,7 +1,12 @@
 """`year-time`: step a saved game for some years, print each year's wall seconds and a digest of the game after them,
 and with `--reload-check` also save and load the game after its first year and check the digest is the same. The save
 named is copied and never written. This is how a change to the economy's speed is measured and its game checked
-reproducible (docs/architecture/NUMBA_PORT_PLAN.md)."""
+reproducible (docs/architecture/NUMBA_PORT_PLAN.md).
+
+`--count-instructions` adds a load-independent measure (year_time_instructions.py): the user-space instructions the process
+executes, counted under valgrind's cachegrind with PYTHONHASHSEED=0. It counts instructions only (a numpy vector op by its
+machine instructions): not cache misses, not kernel or system-call time. Its first stepped year includes loading cached
+kernels and is reported apart from the warm years. Wall time on a quiet machine remains the final check for the speed goal."""
 import hashlib
 import json
 import os
@@ -11,6 +16,8 @@ import tempfile
 import time
 
 from sim.engine.ui_port import Sim, load, load_civ
+from sim.refusal import Refusal
+from . import year_time_instructions
 from .protocol import civ_of_save, load_state, save_state
 
 
@@ -66,5 +73,12 @@ def cmd_year_time(args):
             _again, reloaded = stepped(start, nodes, args.years, directory, "reloaded", reload_after=1)
             report["reload_digest"] = reloaded
             report["reproducible_after_reload"] = reloaded == digest
+    if args.count_instructions:
+        counted = year_time_instructions.count_instructions(args.session, args.years)
+        if isinstance(counted, Refusal):
+            report["refused"] = {"cause": counted.cause, "text": str(counted)}
+            print(json.dumps(report))
+            return 1
+        report.update(counted)
     print(json.dumps(report))
     return 0 if not args.reload_check or report["reproducible_after_reload"] else 1
