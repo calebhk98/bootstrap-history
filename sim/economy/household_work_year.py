@@ -8,6 +8,7 @@ from . import household_grinding, households_work, labour_state, titles_worked, 
 from . import households_cohort
 from .households_cohort import Cohort
 from .market_memory import market_key
+from .households_basket import cohort_need_prices
 from .priced_reads import kept_need_prices, kept_reads
 from .setup import labour_area
 from .types import AgentId, LabourOffer
@@ -23,8 +24,12 @@ def has_hearth(record, cohort: Cohort) -> bool:
 
 def food_basket(setup, record, cohort: Cohort):
     """The tile's basket, with food only as ready to eat when the cohort has no hearth."""
-    basket = setup.basket_for(cohort.tile)
-    if not has_hearth(record, cohort):
+    return _food_basket(setup, cohort.tile, has_hearth(record, cohort))
+
+
+def _food_basket(setup, tile, hearth: bool):
+    basket = setup.basket_for(tile)
+    if not hearth:
         basket = households_work.without_hearth_basket(basket, setup.ready_to_eat, setup.hunger_need)
     return basket
 
@@ -36,7 +41,7 @@ def grinding_plan(setup, record, view, cohort: Cohort, hour_value: float) -> Tup
     if not setup.milled_as:
         return (), 1.0
     hearth = has_hearth(record, cohort)
-    food = next((need for need in kept_need_prices(view, lambda: food_basket(setup, record, cohort), cohort.tile, ("food", hearth))
+    food = next((need for need in kept_need_prices(view, lambda: _food_basket(setup, cohort.tile, hearth), cohort.tile, ("food", hearth))
                  if need.spec.need_id == setup.hunger_need), None)
     if food is None:
         return (), 1.0
@@ -50,16 +55,46 @@ def cohort_basket(setup, record, cohort: Cohort, buying: bool = True):
     """The basket of a cohort: the tile's, with food bought only as ready to eat when it has no hearth (else cooking fuel on its warmth floor), and
     this year's hired household work as the floor of that need. `buying` leaves out the grains it buys milled, which
     it does not bid for; the basket that counts what it ate (`buying` False) keeps them, since a grain it grew on
-    its own plot is eaten whatever it buys."""
-    basket = food_basket(setup, record, cohort)
-    if buying and cohort.milled_grains:
-        basket = household_grinding.without_goods(basket, cohort.milled_grains, setup.hunger_need)
-    if has_hearth(record, cohort):
+    its own plot is eaten whatever it buys. Cohorts of one `basket_key` share one basket object (frozen, never changed)."""
+    return _kept_basket(setup, basket_signature(record, cohort, buying))
+
+
+def basket_signature(record, cohort: Cohort, buying: bool = True) -> tuple:
+    """(tile, hearth, hired household work, grains left out of the food need): what `cohort_basket` is built from, so two
+    cohorts, or the two uses of one, with an equal signature have the very same basket."""
+    return (cohort.tile, has_hearth(record, cohort), cohort.hired_work_per_person, tuple(cohort.milled_grains) if buying else ())
+
+
+_kept_baskets: Dict[tuple, object] = {}
+_kept_for_setup: list = [None]
+KEPT_BASKETS_LIMIT = 4096     # a bound on the memory, not a model figure: the hired work of past years leaves keys behind
+
+
+def _kept_basket(setup, key: tuple):
+    """`built_basket` for the key, built once per setup (the memory is dropped when another setup asks)."""
+    if _kept_for_setup[0] is not setup:
+        _kept_for_setup[0] = setup
+        _kept_baskets.clear()
+    found = _kept_baskets.get(key)
+    if found is None:
+        if len(_kept_baskets) >= KEPT_BASKETS_LIMIT:
+            _kept_baskets.clear()
+        found = _kept_baskets[key] = built_basket(setup, *key)
+    return found
+
+
+def built_basket(setup, tile, hearth: bool, hired_work_per_person: float, milled_grains: Tuple[str, ...]):
+    """The basket of a cohort on `tile` with or without a hearth, with `hired_work_per_person` as the household-work floor
+    and `milled_grains` left out of the food need (what `cohort_basket` shares by key)."""
+    basket = _food_basket(setup, tile, hearth)
+    if milled_grains:
+        basket = household_grinding.without_goods(basket, milled_grains, setup.hunger_need)
+    if hearth:
         basket = households_work.with_cooking_fuel(
             basket, households_work.cooking_fuel_per_person_per_year(setup.household_work), setup.fuel_need)
-    if cohort.hired_work_per_person > 0.0:
+    if hired_work_per_person > 0.0:
         basket = dataclasses.replace(basket, needs=tuple(
-            dataclasses.replace(need, subsistence_per_person=cohort.hired_work_per_person)
+            dataclasses.replace(need, subsistence_per_person=hired_work_per_person)
             if need.need_id == setup.work_need else need for need in basket.needs))
     return basket
 
@@ -68,7 +103,7 @@ def priced_basket(setup, record, view, cohort: Cohort):
     """The cohort's basket at its tile's prices: what the cohort counts as eaten (`cohort_basket` with `buying` False), the
     one basket the wage floor and the outside option are worked from. Cohorts with the same tile, hearth, hired work and
     milled grains share one priced basket until the memory is next written to (the list is shared, never changed)."""
-    return kept_need_prices(view, lambda: cohort_basket(setup, record, cohort, buying=False), cohort.tile, ("priced_basket", basket_key(record, cohort)))
+    return cohort_need_prices(cohort_basket(setup, record, cohort, buying=False), view, cohort.tile, basket_signature(record, cohort, False))
 
 
 def service_price_per_hour(setup, view, tile, wage_price: float) -> float:
@@ -188,4 +223,4 @@ def decide(setup, record, view, offers: Sequence[LabourOffer]) -> Dict[AgentId, 
 
 def basket_key(record, cohort: Cohort):
     """What distinguishes one cohort's basket from another's on the same tile, for caching priced needs."""
-    return (cohort.tile, has_hearth(record, cohort), cohort.hired_work_per_person, tuple(cohort.milled_grains))
+    return basket_signature(record, cohort)

@@ -128,7 +128,7 @@ def goods_bids(setup, record, view, area_map, order_book, kept=None) -> None:
         return
     tile = setup.capital_tile
     basket = setup.basket_for(tile)
-    priced = households_basket.need_prices(basket, view, tile)
+    priced = households_basket.tile_need_prices(setup, view, tile)
     weight_total = math.fsum(need.spec.budget_weight for need in priced)
     if weight_total <= 0.0:
         return

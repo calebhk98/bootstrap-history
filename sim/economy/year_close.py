@@ -10,8 +10,10 @@ from .expected_sales import demand_seen, market_capacities
 from . import (practice, firm_finance, firm_year, tax_farming, merchants_news, carriage_hours, carriage_wear, currency, expansion_price, households, inventory, merchants, metal_stock, ownership, producer_exit, shares,
                producers, producers_close, state_budget, tariffs, taxes, trade_wages)
 from .home_scope import has_partners, home_cohorts, on_home_tile
+from . import household_work_year
 from .household_work_year import basket_key, cohort_basket
-from . import households_cohort, households_close
+from sim.world.need_basket import subsistence_cost_per_person
+from . import households_cohort
 from .market_memory import market_key
 from .national_prices import national_prices, traded_spending_weights, usual_volumes
 from .notional import recently_traded_goods
@@ -150,8 +152,8 @@ def close_agents(setup, record, view, ledger: YearLedger, area_map, carriage, ar
         spent = ledger.money_out.get(cohort_id, 0.0)
         key = basket_key(record, cohort)       # cohorts of one tile, hearth, hired work and milled grains share a basket and its floor cost
         if key not in baskets:
-            basket = cohort_basket(setup, record, cohort, buying=False)
-            baskets[key] = (basket, households_close.floor_cost_per_person(basket, view, cohort.tile, offered_prices))
+            baskets[key] = (cohort_basket(setup, record, cohort, buying=False),
+                            subsistence_cost_per_person(household_work_year.priced_basket(setup, record, view, cohort)))
         basket, floor_cost = baskets[key]
         closed, moves = households.close_year(cohort, received, view, setup.specs, basket, income, spent, offered_prices, floor_cost)
         record.book.move_many(held_only(moves, record.book))

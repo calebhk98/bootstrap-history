@@ -6,7 +6,7 @@ of one settlement holds the basket of each cohort, the priced needs of each bask
 (basket, tile), so each is worked out once. It must not outlive a change of prices or of the cohorts' plans."""
 from typing import Dict, Tuple
 
-from . import households
+from .households_basket import cohort_need_prices
 from .household_work_year import basket_key, cohort_basket
 
 
@@ -26,7 +26,7 @@ class BidMemory:
         key = basket_key(record, cohort)
         found = self._priced.get(key)
         if found is None:
-            found = self._priced[key] = households.need_prices(basket, view, cohort.tile)
+            found = self._priced[key] = cohort_need_prices(basket, view, cohort.tile, key)
         return found
 
     def stores(self, record, cohort) -> dict:

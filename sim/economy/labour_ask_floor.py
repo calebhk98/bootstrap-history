@@ -14,7 +14,7 @@ from typing import Dict, Mapping, Optional, Sequence
 from sim.world.need_basket import PricedNeed, subsistence_cost_per_person
 from sim.world.shared_constants import LABOUR_OUTPUT_ELASTICITY
 
-from .households_basket import need_prices
+from .households_basket import tile_need_prices
 from . import household_work_year, land_bid, titles_plots
 from .households_own import Option
 
@@ -138,7 +138,7 @@ def ask_floor_by_tile(setup, record, view, options: Mapping[str, Sequence[Option
         fertility = tile_data.fertility if tile_data else 0.0
         working = sum(cohort.working_people for cohort in cohorts)
         if working <= 0.0:
-            floors[tile] = wage_floor_per_worker_year(need_prices(setup.basket_for(tile), view, tile), options, fertility, setup.working_hours_per_year, 1.0,
+            floors[tile] = wage_floor_per_worker_year(tile_need_prices(setup, view, tile), options, fertility, setup.working_hours_per_year, 1.0,
                                                       hectares_per_hour, 0.0)
             continue
         floors[tile] = sum(cohort.working_people * wage_floor_per_worker_year(

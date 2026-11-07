@@ -17,7 +17,7 @@ def kept_reads(view, key, compute):
 
 def kept_need_prices(view, basket_of, tile, key):
     """`households_basket.need_prices(basket_of(), view, tile)` for the basket the caller names by `key` (with the tile; `basket_of` is only called on a miss): the priced list
-    is kept like any read, and the price of a good on a tile (the offered price in the area it is bought in) is read once for every
+    is kept like any read (so is each priced need, by need and tile), and the price of a good on a tile (the offered price in the area it is bought in) is read once for every
     basket priced there. A view without kept reads prices the basket every time."""
     from sim.world import need_basket
     current = getattr(view, "_current", None)
@@ -40,5 +40,16 @@ def kept_need_prices(view, basket_of, tile, key):
         except KeyError:
             found = prices[good] = view.offered_price(good, view.area_of(good, tile))
             return found
-    found = reads[full_key] = list(need_basket.need_prices(basket_of(), price_of))
+    basket = basket_of()
+    exponent = 1.0 - basket.substitution
+    found = []
+    for spec in basket.needs:     # a need priced on this tile is shared by every basket that holds the same need
+        need_key = ("priced_need", tile, spec, exponent)
+        try:
+            need = reads[need_key]
+        except KeyError:
+            need = reads[need_key] = need_basket.priced_need(spec, exponent, price_of)
+        if need is not None:
+            found.append(need)
+    reads[full_key] = found
     return found

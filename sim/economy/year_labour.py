@@ -9,7 +9,7 @@ from typing import Dict, List, Sequence, Tuple
 from sim.labour.api import people_in, run_labour_year
 from sim.world.need_basket import subsistence_cost_per_person
 
-from . import household_work_year, households, households_work, settlement
+from . import household_work_year, households, households_basket, households_work, settlement
 from .labour_ask_floor import mean_floor_per_hour
 from .labour_bids import sloped_bids
 from .labour_state import core_trades, mirror_wages, people_by_trade
@@ -30,7 +30,7 @@ def subsistence_cost_by_tile(setup, record, view) -> Dict[str, float]:
         cost_sum[cohort.tile] = cost_sum.get(cohort.tile, 0.0) + cost * cohort.people
         people[cohort.tile] = people.get(cohort.tile, 0.0) + cohort.people
     return {tile: (cost_sum[tile] / people[tile] if people[tile] > 0.0 else
-                   subsistence_cost_per_person(households.need_prices(setup.basket_for(tile), view, tile)))
+                   subsistence_cost_per_person(households_basket.tile_need_prices(setup, view, tile)))
             for tile in sorted(cost_sum)}
 
 

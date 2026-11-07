@@ -24,7 +24,7 @@ def orders(setup, record, view) -> Tuple[List[Bid], List[Offer], Dict[str, float
     stock is what the state's other lines must leave alone."""
     budget, state, tile = record.state_budget, setup.state_agent, setup.capital_tile
     basket = setup.basket_for(tile)
-    priced = households_basket.need_prices(basket, view, tile)
+    priced = households_basket.tile_need_prices(setup, view, tile)
     holder = Treasury(state, tile, budget.expected_inflation)
     weights, prices, held = households_store.store_holding(holder, view, setup.specs, priced)
     if not weights:
