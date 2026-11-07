@@ -170,7 +170,7 @@ def clear_goods(setup, record, view, area_map, order_book: OrderBook, plans, led
     capital or a watched tile is kept (market_curves.py). With the year's arrays, a good's markets that have bids and
     offers are re-priced, searched and cleared together (goods_year_batch.py)."""
     costs = offering = None
-    ledger.fill_watchers = frozenset(record.merchants) | {setup.state_agent}     # the readers of the buy fills
+    ledger.fill_watchers = frozenset(getattr(record, "merchants", ())) | {getattr(setup, "state_agent", None)}     # the readers of the buy fills
     if arrays is not None:
         arrays = refreshed(arrays, setup, record, view)
         costs = OfferCosts.build(arrays, own_rate(view, setup.currency_id))
