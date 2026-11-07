@@ -31,7 +31,7 @@ from typing import Callable, Dict, List, Mapping, Optional, Sequence, Tuple
 
 from sim.constants import declare
 
-from . import carriage_fleet, inventory, route_dues, merchants_legs, merchants_nearest, merchants_route_memo, merchants_transit
+from . import carriage_fleet, inventory, route_dues, merchants_legs, merchants_route_memo, merchants_search, merchants_transit
 from sim.book import DeliveredMove
 from .households_orders import BUDGET_SAFETY_SHARE
 from .market_areas import AreaMap
@@ -233,14 +233,6 @@ def candidate_routes(merchant, view, carriage, area_map, held_stock, specs, inte
             if by_area is None:
                 by_area = expected_by_good[good] = {}
             by_area[area_id] = price
-    news_current_at: Dict[TileId, bool] = {}     # whether last year's price at a tile has reached the merchant's home
-
-    def news_current(tile: TileId) -> bool:
-        current = news_current_at.get(tile)
-        if current is None:
-            current = news_current_at[tile] = merchants_transit.news_lag(carriage, merchant.home_tile, tile) == 0
-        return current
-
     for good in sorted(set(specs) & set(area_map.goods()) if only_held is None
                        else set(specs) & set(area_map.goods()) & set(only_held)):
         areas = area_map.areas(good)
@@ -251,9 +243,10 @@ def candidate_routes(merchant, view, carriage, area_map, held_stock, specs, inte
         expected = expected_by_good.get(good, {})
         # an expectation stands in for last year's price where the merchant has one; without one it sees
         # last year's price only where the news has had time to reach it, and nothing of a farther market
+        current = merchants_search.news_current_flags(good, areas, carriage, merchant.home_tile)
         seen = [expected[area.area_id] if area.area_id in expected
-                else (price if news_current(area.anchor_tile) else None)
-                for area, price in zip(areas, seen)]
+                else (price if reached else None)
+                for area, price, reached in zip(areas, seen, current)]
         if only_held is not None:
             parts.append(_good_routes(good, spec, areas, {area.area_id: price for area, price in zip(areas, seen)},
                                       carriage, interest_rate, _areas_holding(area_map, good, only_held[good])))
@@ -284,76 +277,8 @@ def _areas_holding(area_map, good, held) -> set:
 def _good_routes(good, spec, areas, prices, carriage, interest_rate, source_ids=None) -> list:
     """The unsorted rows of `candidate_routes` for one good, given its price in each area: one for every
     (source, destination) whose haul pays; with `source_ids` only the rows of those source areas."""
-    rows = []
-    years_between = merchants_transit.years_between
-    kept_years = merchants_transit.years_kept_for(carriage)    # years_between's memo for this table; None when it keeps none
-    interest = max(0.0, interest_rate)
-    spoilage = min(1.0, max(0.0, spec.spoilage_per_year))
-    keep = 1.0 - spoilage
-    unit_mass = spec.unit_mass_kg
-    priced = []
-    dearest = None                       # the dearest price, as max() picks it
-    cheapest = None                      # the cheapest positive price
-    get_price = prices.get
-    for area in areas:
-        price = get_price(area.area_id)
-        if price:
-            priced.append((area, price))
-            if dearest is None or price > dearest:
-                dearest = price
-            if price > 0.0 and (cheapest is None or price < cheapest):
-                cheapest = price
-    if cheapest is None:
-        return rows
-    cheapest_floor = cheapest * (1.0 + interest + MERCHANT_MARGIN_SHARE)
-    if dearest * keep - cheapest_floor <= 0.0:
-        return rows      # even the dearest destination, kept after spoilage, cannot cover the cheapest source's floor cost
-    # (minus price there, area id, price there, price there kept after spoilage, its spoilage cost, anchor tile, area),
-    # dearest first; a destination whose kept price cannot cover the cheapest floor cost ends every source's scan, so it is left out
-    dearest_first = sorted([(-price, area.area_id, price, price * keep, price * spoilage, area.anchor_tile, area)
-                            for area, price in priced if not price * keep - cheapest_floor <= 0.0])
-    dearest_kept = dearest_first[0][3]
-    for source, price_here in priced:
-        if source_ids is not None and source.area_id not in source_ids:
-            continue
-        if price_here <= 0.0:
-            continue
-        floor_cost = price_here * (1.0 + interest + MERCHANT_MARGIN_SHARE)
-        if dearest_kept - floor_cost <= 0.0:
-            continue                                       # no destination, however near, covers this source's floor cost
-        interest_here = price_here * interest              # the terms of the net gap, hoisted
-        margin_here = MERCHANT_MARGIN_SHARE * price_here
-        source_tile = source.anchor_tile
-        costs_here = carriage.costs_from(source_tile)
-        cost_to_get = costs_here.get
-        nearest = merchants_nearest.nearest_carriage(carriage, good, areas, source, costs_here)
-        if nearest == math.inf:
-            continue                                       # no other area is reachable, and the source's own nets a loss
-        nearest_money = nearest * unit_mass / KILOGRAMS_PER_TONNE
-        for _minus, _area_id, price_there, kept_there, spoilage_there, anchor_tile, destination in dearest_first:
-            # carriage only adds cost, so no cheaper destination can pay
-            if kept_there - floor_cost <= 0.0:
-                break
-            # nor can a destination whose price, less the carriage of the nearest other area, cannot (the slack covers rounding)
-            if kept_there - floor_cost - nearest_money + 1e-9 * (price_there + price_here + nearest_money) <= 0.0:
-                break
-            # the source's own area nets a loss (equal prices, positive margin) and an unreachable tile nets -inf
-            per_tonne = cost_to_get(anchor_tile, math.inf)
-            net = price_there - price_here - (per_tonne * unit_mass / KILOGRAMS_PER_TONNE
-                                              + interest_here + spoilage_there + margin_here)
-            if net > 0.0:       # a haul held more years pays interest and spoilage for each
-                held_years = kept_years.get((source_tile, anchor_tile)) if kept_years is not None else None
-                if held_years is None:
-                    held_years = years_between(carriage, source_tile, anchor_tile)
-                if held_years > 1:
-                    net -= interest_here * (held_years - 1) + price_there * (
-                        merchants_transit.lost_share(spec.spoilage_per_year, held_years) - spoilage)
-                if net > 0.0:
-                    carriage_per_unit = per_tonne * unit_mass / KILOGRAMS_PER_TONNE
-                    outlay = price_here + carriage_per_unit
-                    rows.append((-net / outlay, good, source, destination, price_here, outlay,
-                                 _break_even_price(spec, price_there, carriage_per_unit, interest_rate, held_years)))
-    return rows
+    return merchants_search.good_routes(good, spec, areas, prices, carriage, interest_rate, MERCHANT_MARGIN_SHARE,
+                                        source_ids)
 
 
 def _break_even_price(spec: GoodSpec, price_there: float, carriage_per_unit: float, interest_rate: float,
