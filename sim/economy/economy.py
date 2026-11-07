@@ -33,7 +33,7 @@ from .setup import EconomySetup, area_tile, labour_area
 from .types import Bid, EDGE_CONSUMPTION, GoodsMove, Transfer
 from .national_prices import national_prices, national_wages
 from .merchants_dispatch import dispatch_merchants
-from .year_arrays import YearArrays
+from .year_arrays import YearArrays, same_source, source_of
 from .year_close import close_agents, money_taxes, remember_basket_price_level, wear_and_spoilage
 from .year_goods import add_orders, clear_goods, cohort_orders, merchant_orders, state_orders
 from .labour_supply import HourSupply
@@ -93,6 +93,7 @@ class Economy:
         self._year_plot_options: Optional[Dict[str, list]] = None   # own_plot_options, built once for the year being run
         self.years_stepped = 0   # years `step` has begun in this process; a reader that keeps a figure of the record until the next year compares it. Never saved
         self._work_hours: Dict[str, float] = {}     # household work each cohort keeps back this year; set when the year plans it
+        self._year_arrays: Optional[YearArrays] = None   # the year arrays as the last phase left them: the next year starts from them (`YearArrays.carried`), the equity is built over them. Never saved
 
     def change_setup(self, **changes: Any) -> None:
         """The one place the setup changes: a new setup with these fields replaced (the old one is never edited in place)."""
@@ -135,7 +136,10 @@ class Economy:
                           pooled=self.record.credit.contracts.deposit_value)
 
     def _equity_read(self, view) -> Dict[str, float]:
-        return equity.holdings(self.setup, self.record, view)
+        arrays = self._year_arrays
+        if arrays is not None and not (arrays.area_map is self.area_map and same_source(arrays.source, source_of(self.setup))):
+            arrays = None      # built for another setup or area map: read the producers one by one
+        return equity.holdings(self.setup, self.record, view, arrays)
 
     def strike_lighter_coin(self, cut_share: float, restrike_share: float) -> None:
         """The issuer recoins the part of the stock that comes to the mint at `cut_share` less metal (a struck
@@ -177,7 +181,7 @@ class Economy:
         self._follow_yields(inputs)
         sites.apply_site_limits(record, setup)
         view = self.view()
-        arrays = YearArrays.build(setup, record, self.area_map, view)
+        arrays = self._year_arrays = YearArrays.carried(self._year_arrays, setup, record, self.area_map, view)
         money = setup.currency_id
         debt_relief.forgive(record, inputs.debt_relief_tiles)
         titles_moves.apply(record, inputs.title_moves)
@@ -270,10 +274,11 @@ class Economy:
         received = dict(interest)
         for payment in rent:
             received[payment.payee] = received.get(payment.payee, 0.0) + payment.amount
-        arrays = close_agents(setup, record, close_view, ledger, self.area_map, self.carriage, arrays, received)
+        arrays = self._year_arrays = close_agents(setup, record, close_view, ledger, self.area_map, self.carriage, arrays, received)
+        arrays = self._year_arrays = arrays.sync(setup, record, close_view)      # the memory is read once for entry and the restake
         open_entrants(setup, record, close_view, self.area_map, ledger.unmet_demand, self.carriage,
                       with_standing_bids(ledger.bids_by_market, inputs.standing_bids), arrays)
-        restake_owners(setup, record, close_view)
+        restake_owners(setup, record, close_view, arrays)
         extraction = sites.extraction_by_tile(record, setup)
         close_idle_producers(setup, record)
         wear_and_spoilage(setup, record, inputs.durable_users)

@@ -58,11 +58,20 @@ def firm_assets(producer, recipe, cash: float, stock: float, view) -> float:
     return cash + plant_value(producer, recipe, view) + stock
 
 
-def producer_worths(setup, record, view) -> Dict[AgentId, float]:
+def producer_worths(setup, record, view, arrays=None) -> Dict[AgentId, float]:
     """The net worth of each producer a household owns and that has plant. A view that keeps them (`CreditView.kept_worths`)
-    builds them once, for the households' equity and the portfolio trading alike; the result is read only."""
+    builds them once, for the households' equity and the portfolio trading alike; the result is read only. With the year's
+    `arrays` they are built in one kernel (year_arrays_worths.py), else producer by producer."""
     kept = getattr(view, "kept_worths", None)
-    return _built_worths(setup, record, view) if kept is None else kept(lambda: _built_worths(setup, record, view))
+    if arrays is not None:
+        from .year_arrays_worths import worths_from_arrays
+
+        def build():
+            return worths_from_arrays(setup, record, view, arrays)
+    else:
+        def build():
+            return _built_worths(setup, record, view)
+    return build() if kept is None else kept(build)
 
 
 def _built_worths(setup, record, view) -> Dict[AgentId, float]:
@@ -85,7 +94,7 @@ def _built_worths(setup, record, view) -> Dict[AgentId, float]:
     return worths
 
 
-def holdings(setup, record, view) -> Dict[AgentId, float]:
+def holdings(setup, record, view, arrays=None) -> Dict[AgentId, float]:
     """Each cohort's share of the net worth of the producers its tile's owners hold. What holders of a producer's
     shares own is valued at the share index price (household_portfolio.py), the price their portfolio orders trade at."""
     shares_of_tile: Dict[str, Tuple[float, list]] = {}      # tile -> (sum of ownership shares, [(cohort id, share)])
@@ -96,7 +105,7 @@ def holdings(setup, record, view) -> Dict[AgentId, float]:
     factor = record.capital_markets.capital.share_price_factor
     outside_shares = record.capital_markets.shares
     held: Dict[AgentId, float] = {}
-    for producer_id, worth in producer_worths(setup, record, view).items():
+    for producer_id, worth in producer_worths(setup, record, view, arrays).items():
         owner = record.cohorts[record.producers[producer_id].owner]
         outside = outside_shares.get(producer_id)
         if outside:                      # what holders of its shares own is theirs, not the owner tile's

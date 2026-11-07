@@ -23,6 +23,7 @@ class AreaIndex:
     areas: Names
     of_good_tile: np.ndarray        # good by tile: the area's column, NO_AREA where the good has no market there
     located: Dict[str, int] = field(default_factory=dict, compare=False, repr=False)    # a memory key -> its good row times the area count plus its area column, -1 where it names none the arrays hold
+    stores: Dict[str, tuple] = field(default_factory=dict, compare=False, repr=False)   # a store's name -> (its keys, their rows, their columns) as last read
 
     @classmethod
     def build(cls, area_map, goods: Names, tiles: Names) -> "AreaIndex":
@@ -42,7 +43,7 @@ class AreaIndex:
                     tile_row = tiles.row.get(tile)
                     if tile_row is not None:
                         grid[good_row, tile_row] = column
-        return cls(areas, grid, {})
+        return cls(areas, grid, {}, {})
 
 
 _KIND_OFFERED, _KIND_BARE, _KIND_OTHER = 1, 2, 4
@@ -50,10 +51,13 @@ _KIND_BITS = {None: 0, QUOTE_LOWEST_UNFILLED_ASK: _KIND_OFFERED | _KIND_BARE, QU
               **{kind: _KIND_BARE for kind in BARE_QUOTES if kind != QUOTE_LOWEST_UNFILLED_ASK}}
 
 
-def _located(area_index: AreaIndex, store: Mapping[str, float], goods: Names):
+def _located(area_index: AreaIndex, store: Mapping[str, float], goods: Names, name: str):
     """(the store's keys, the good row and area column of each, -1 where the key names no good or area the arrays hold). Where a
-    key falls is worked out once and kept."""
+    key falls is worked out once and kept, and the answer for the store `name` is kept while its keys are the same."""
     keys = tuple(store)
+    last = area_index.stores.get(name)
+    if last is not None and last[0] == keys:
+        return last
     kept = area_index.located
     areas = area_index.areas
     width = max(1, len(areas.ids))
@@ -65,7 +69,18 @@ def _located(area_index: AreaIndex, store: Mapping[str, float], goods: Names):
             good_row, area_column = goods.row.get(good), areas.row.get(area)
             code = kept[key] = -1 if good_row is None or area_column is None else good_row * width + area_column
         codes[position] = code
-    return keys, np.where(codes >= 0, codes // width, -1), np.where(codes >= 0, codes % width, -1)
+    answer = area_index.stores[name] = (keys, np.where(codes >= 0, codes // width, -1), np.where(codes >= 0, codes % width, -1))
+    return answer
+
+
+def price_grid(memory: MarketMemory, goods: Names, area_index: AreaIndex) -> np.ndarray:
+    """The remembered prices alone (`MemoryArrays.price`), for a reader that needs no other part of the memory."""
+    price = np.full((len(goods.ids), len(area_index.areas.ids)), np.nan)
+    keys, rows, columns = _located(area_index, memory.prices, goods, "prices")
+    found = rows >= 0
+    values = np.fromiter(memory.prices.values(), dtype=np.float64, count=len(keys))
+    price[rows[found], columns[found]] = values[found]
+    return price
 
 
 @dataclass(frozen=True)
@@ -92,7 +107,7 @@ class MemoryArrays:
         price, cleared = np.full(shape, np.nan), np.full(shape, np.nan)
         offered, bare = np.full(shape, np.nan), np.zeros(shape, dtype=bool)
 
-        keys, rows, columns = _located(area_index, memory.prices, goods)
+        keys, rows, columns = _located(area_index, memory.prices, goods, "prices")
         found = rows >= 0
         values = np.fromiter(memory.prices.values(), dtype=np.float64, count=len(keys))
         price[rows[found], columns[found]] = values[found]
@@ -105,7 +120,7 @@ class MemoryArrays:
         offered[rows[offered_mask], columns[offered_mask]] = values[offered_mask]
         bare_mask = found & ~current & (bits != 0) & ((bits & _KIND_BARE) > 0)
         bare[rows[bare_mask], columns[bare_mask]] = True
-        keys, rows, columns = _located(area_index, memory.cleared_prices, goods)
+        keys, rows, columns = _located(area_index, memory.cleared_prices, goods, "cleared_prices")
         found = rows >= 0
         values = np.fromiter(memory.cleared_prices.values(), dtype=np.float64, count=len(keys))
         cleared[rows[found], columns[found]] = values[found]

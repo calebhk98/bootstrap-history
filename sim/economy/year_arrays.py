@@ -49,6 +49,21 @@ def _memory_arrays(setup, matrices: RecipeMatrices, tiles: Names, area_index: Ar
                               wage_grid(setup, view, matrices.trades, tiles))
 
 
+def _held(collection) -> tuple:
+    return tuple(collection.items()) if hasattr(collection, "items") else tuple((each, each) for each in collection)
+
+
+def source_of(setup) -> tuple:
+    """What the recipe matrices are built from: the setup's recipes and goods specs, as (name, record) pairs (the tile names are compared apart)."""
+    return tuple(_held(getattr(setup, name, ())) for name in ("recipes", "specs"))
+
+
+def same_source(first: tuple, second: tuple) -> bool:
+    """Whether two `source_of` answers hold the very same records under the same names."""
+    return len(first) == len(second) and all(
+        len(old) == len(new) and all(a[0] == b[0] and a[1] is b[1] for a, b in zip(old, new)) for old, new in zip(first, second))
+
+
 @dataclass
 class YearArrays:
     matrices: RecipeMatrices
@@ -58,6 +73,7 @@ class YearArrays:
     cohorts: CohortColumns
     memory: MemoryArrays
     area_map: object
+    source: tuple = ()               # `source_of(setup)` when the matrices were built (`carried` checks it)
 
     @classmethod
     def build(cls, setup, record, area_map, view) -> "YearArrays":
@@ -67,7 +83,17 @@ class YearArrays:
         area_index = AreaIndex.build(area_map, matrices.goods, tiles)
         return cls(matrices, tiles, area_index, ProducerColumns.build(record.producers, matrices, tiles),
                    CohortColumns.build(record.cohorts, tiles), _memory_arrays(setup, matrices, tiles, area_index, record, view),
-                   area_map)
+                   area_map, source_of(setup))
+
+    @classmethod
+    def carried(cls, previous, setup, record, area_map, view) -> "YearArrays":
+        """The arrays of the year that closed, brought in step with the record now: what is built from the setup's recipes, goods and
+        tiles and from the area map is kept while those are the same records, the producers and cohorts are read where they changed,
+        the memory read again if anything was written to it (`MemoryArrays.is_current`). Anything else changed: `build`."""
+        if (previous is None or previous.area_map is not area_map or not same_source(previous.source, source_of(setup))
+                or tiles_of(record, setup).ids != previous.tiles.ids):
+            return cls.build(setup, record, area_map, view)
+        return previous.sync(setup, record, view)
 
     def sync(self, setup, record, view) -> "YearArrays":
         """The arrays in step with the record now: producers replaced, entered or left; cohorts and the memory read again.
@@ -78,4 +104,4 @@ class YearArrays:
         except KeyError:
             return YearArrays.build(setup, record, self.area_map, view)
         memory = _memory_arrays(setup, self.matrices, self.tiles, self.area_index, record, view, self.memory)
-        return YearArrays(self.matrices, self.tiles, self.area_index, producers, cohorts, memory, self.area_map)
+        return YearArrays(self.matrices, self.tiles, self.area_index, producers, cohorts, memory, self.area_map, self.source)

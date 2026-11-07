@@ -187,21 +187,14 @@ def refreshed(arrays, setup, record, view):
     """`arrays` in step with the records now, for a phase that reads only the producers and the market memory: producers
     replaced, entered or left re-read, the memory read again with each wage worked out once per trade and labour area
     (the wage rule reads the area, not the tile). A tile no array knows rebuilds the lot (`YearArrays.sync`)."""
-    from .trade_wages import wage_in_view
     try:
         producers = arrays.producers.refresh(record.producers)
     except KeyError:
         return arrays.sync(setup, record, view)
     if arrays.memory.is_current(record.memory):
         return replace(arrays, producers=producers)
-    wages = {}
-
-    def wage_of(trade, tile):
-        area = labour_area(tile)
-        found = wages.get((trade, area))
-        if found is None:
-            found = wages[(trade, area)] = wage_in_view(setup, view, trade, area)
-        return found
+    from .year_arrays import wage_grid
     memory = MemoryArrays.build(record.memory, arrays.matrices.goods, arrays.matrices.trades, arrays.tiles,
-                                arrays.area_index, setup.currency_id, wage_of)
+                                arrays.area_index, setup.currency_id, None,
+                                wage_grid(setup, view, arrays.matrices.trades, arrays.tiles))
     return replace(arrays, producers=producers, memory=memory)
