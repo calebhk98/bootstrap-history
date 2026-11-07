@@ -52,7 +52,7 @@ class OwnPlots:
         self.held = titles_plots.hectares_held(setup, record)
         self.share_hired = 0.0
         self.grown: Dict[str, Dict[GoodId, float]] = {}     # cohort -> goods grown at the last ask
-        self.uncut: Dict[str, Tuple[float, object]] = {}   # cohort -> (income, orders before the cut): the asks of one income share them
+        self.uncut: Dict[str, Tuple[float, object, float]] = {}   # cohort -> (income, orders before the cut or None, purse): the asks of one income share them
         self.extra: Dict[str, float] = {}   # cohort -> spending beyond its income that its purse allows (what its plot frees)
         self.in_kind = 0.0      # budget the cuts freed that the rule cannot spend on the market, since it was last zeroed
         self.hectares: Dict[str, float] = {}    # cohort -> hectare-years its plot takes, at the last ask
@@ -81,6 +81,11 @@ class OwnPlots:
         needed = households_work.hours_needed(cohort.people, setup.household_work, has_hearth(record, cohort), ground)
         return households_work.own_hours(needed, cohort.hired_work_per_person * cohort.people)
 
+    def forget_orders(self) -> None:
+        """Drop the orders held for each income (their purse stays): they were made without the stock the cohorts hold now."""
+        for agent_id, (income, _orders, purse) in list(self.uncut.items()):
+            self.uncut[agent_id] = (income, None, purse)
+
     def resting_orders(self, record, cohort, income, basket, priced, make):
         """The cohort's orders as a year-one household with this income would make them, after its plot: `make(cash)` gives
         its orders (before the cut) holding `cash`. The floors its plot grows are cut after the budget is set, so the
@@ -90,7 +95,7 @@ class OwnPlots:
         held = self.uncut.get(cohort.agent_id)
         purse = held[2] if held is not None and held[0] == income else 0.0
         for _pass in range(PURSE_PASSES):
-            if held is None or held[0] != income or held[2] != purse:
+            if held is None or held[1] is None or held[0] != income or held[2] != purse:
                 held = self.uncut[cohort.agent_id] = (income, make(income + purse), purse)
             cut, freed = self._cut(record, cohort, held[1], basket, priced)
             extra = min(freed, households_orders.WEALTH_DRAWDOWN_LIMIT * income)

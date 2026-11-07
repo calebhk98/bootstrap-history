@@ -13,7 +13,7 @@ import numpy as np
 from sim.world import need_basket
 from sim.world.climate_needs import PERSONS_PER_HOUSEHOLD
 
-from . import households, households_buffer_stock, households_orders, households_store, opening_demand_kernel as kernel, opening_own
+from . import households_buffer_stock, households_orders, households_store, opening_demand_kernel as kernel, opening_own
 from .household_time_preference import HOUSEHOLD_TIME_PREFERENCE
 
 
@@ -270,16 +270,18 @@ class OpeningDemand:
                     found.append((record.cohorts[cohort.agent_id], self.goods[self.row_ints[row, kernel.RI_GOOD]], float(quantity[row])))
         return found
 
+    def repacked(self) -> "OpeningDemand":
+        """The same cohorts packed again from the stock they hold now, asking from the purse the last ask ended at."""
+        fresh = OpeningDemand(list(zip(self.cohorts, self.baskets, self.priced, self.stores)), self.view, self.specs, self.own,
+                              self.replacement, self.backing_good, self.capital_tile, self.stationary)
+        fresh.memo[:] = self.memo
+        fresh._own_work = self._own_work
+        return fresh
+
     def remember_orders(self, record) -> None:
-        """Leave in `own` the uncut orders of the last ask, as the old path keeps them (`OwnPlots.uncut`): the
-        rule that spends the purse reads them again at the same income."""
+        """Leave in `own` the purse of the last ask (`OwnPlots.uncut`) for the old path to search from, without the orders
+        made at it: they are made again from the stock the cohorts hold when they are asked."""
         for position, cohort in enumerate(self.cohorts):
             has, income, purse = self.memo[position]
-            if has <= 0.0:
-                continue
-            current = record.cohorts[cohort.agent_id]
-            basket, priced = self.baskets[position], self.priced[position]
-            orders = households.goods_orders(current, self.view, income + purse, income, basket, self.specs, priced,
-                                             shared_store=self.stores[position], stationary_durables=self.stationary)
-            self.own.uncut[cohort.agent_id] = (float(income), orders, float(purse))
-
+            if has > 0.0:
+                self.own.uncut[cohort.agent_id] = (float(income), None, float(purse))
