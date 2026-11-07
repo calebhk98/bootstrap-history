@@ -9,7 +9,7 @@ hectare an actor takes up, bought or drawn from its own clearer's stock, is adde
 becomes that actor's title (titles_ground.add_ground); no other holder gives up a hectare.
 """
 import math
-from typing import Mapping, Optional, Sequence, Tuple
+from typing import Dict, Mapping, Optional, Sequence, Tuple
 
 from . import titles_ground, titles_value, unit_cost
 from .types import AgentId, AreaId, Bid, GoodId, Recipe, TileId, TradeId
@@ -71,7 +71,25 @@ def own_use(stock: float, hectares_needed: float, hectares_held: float) -> float
     return max(0.0, min(stock, hectares_needed - hectares_held))
 
 
+_seller_indexes: Dict[int, tuple] = {}      # id of a producers table -> (table, stamp, (good, tile) -> owners)
+
+
+def _seller_index(record, recipes: Mapping[str, Recipe]) -> Dict[Tuple[GoodId, TileId], set]:
+    """The owners of the producers that make each good on each tile, built once a year per producers table (producers are
+    added and handed to new owners only when the year closes)."""
+    producers = record.producers
+    stamp = (len(producers), getattr(getattr(record, "memory", None), "year", None), id(recipes))
+    kept = _seller_indexes.get(id(producers))
+    if kept is None or kept[0] is not producers or kept[1] != stamp:
+        index: Dict[Tuple[GoodId, TileId], set] = {}
+        for producer in producers.values():
+            for good in recipes[producer.recipe_id].outputs:
+                index.setdefault((good, producer.tile), set()).add(producer.owner)
+        _seller_indexes.clear()
+        kept = _seller_indexes[id(producers)] = (producers, stamp, index)
+    return kept[2]
+
+
 def owners_of_sellers(record, recipes: Mapping[str, Recipe], good: GoodId, tile: TileId) -> Sequence[AgentId]:
     """The owners of the producers that make `good` on `tile`: whose land a sold hectare is."""
-    return sorted({producer.owner for producer in record.producers.values()
-                   if producer.tile == tile and good in recipes[producer.recipe_id].outputs})
+    return sorted(_seller_index(record, recipes).get((good, tile), ()))
