@@ -92,35 +92,51 @@ def pack(setup, record, view, ledger, arrays: YearArrays) -> ClosePack:
     first = matrices.first_output[columns.recipe_row]
     area_column = arrays.area_index.of_good_tile[first, columns.tile_row]
     rate_of = np.where(area_column == NO_AREA, own_rate, memory.rate[np.maximum(area_column, 0)])
-    currencies: Dict[tuple, str] = {}
-    cash_in_currency = np.zeros(count)
+    currencies: Dict[object, str] = {}
     currency_of_row = []
-    cash_in_money = np.zeros(count)
-    stock = np.zeros((count, matrices.good_slots))
-    held_start = np.zeros(count + 1, dtype=np.int64)
+    balance = book.balance
+    goods_of = book.goods_of
+    cash_in_currency_list, cash_in_money_list = [], []
+    slots_of_row = [[(slot, matrices.goods.ids[column]) for slot, column in enumerate(row) if column >= 0] for row in matrices.slot_goods]
+    stock_rows, stock_slots, stock_values = [], [], []
+    held_start = [0]
     held_good, held_quantity = [], []
     goods_row = matrices.goods.row
+    recipe_list, tile_list, area_list = columns.recipe_row.tolist(), columns.tile_row.tolist(), area_column.tolist()
+    area_ids = arrays.area_index.areas.ids
     for position, producer_id in enumerate(columns.ids):
         producer = columns.records[position]
-        key = (int(first[position]), int(columns.tile_row[position]))
+        area = area_list[position]
+        key = area if area != NO_AREA else (recipe_list[position], tile_list[position])     # an area has one currency
         currency = currencies.get(key)
         if currency is None:
-            currency = currencies[key] = view.currency_of(view.area_of(min(setup.recipes[producer.recipe_id].outputs), producer.tile))
+            currency = currencies[key] = view.currency_of(
+                area_ids[area] if area != NO_AREA else view.area_of(min(setup.recipes[producer.recipe_id].outputs), producer.tile))
         currency_of_row.append(currency)
-        cash_in_currency[position] = book.balance(producer_id, currency)
-        cash_in_money[position] = book.balance(producer_id, money)
-        held = book.goods_of(producer_id)
-        for slot, column in enumerate(matrices.slot_goods[columns.recipe_row[position]]):
-            if column < 0:
-                break
-            stock[position, slot] = held.get(matrices.goods.ids[column], {}).get(producer.tile, 0.0)
-        for good in sorted(held):        # goods in name order, whatever order the book holds them in
-            column = goods_row.get(good)
-            tiles = held[good]
-            if column is not None and any(value != 0.0 for value in tiles.values()):
-                held_good.append(column)
-                held_quantity.append(math.fsum(value for value in tiles.values() if value > 0.0))
-        held_start[position + 1] = len(held_good)
+        cash_in_currency_list.append(balance(producer_id, currency))
+        cash_in_money_list.append(balance(producer_id, money))
+        held = goods_of(producer_id)
+        if held:
+            tile = producer.tile
+            for slot, good in slots_of_row[recipe_list[position]]:
+                by_tile = held.get(good)
+                if by_tile:
+                    quantity = by_tile.get(tile)
+                    if quantity:
+                        stock_rows.append(position)
+                        stock_slots.append(slot)
+                        stock_values.append(quantity)
+            for good in sorted(held):        # goods in name order, whatever order the book holds them in
+                column = goods_row.get(good)
+                tiles = held[good]
+                if column is not None and any(value != 0.0 for value in tiles.values()):
+                    held_good.append(column)
+                    held_quantity.append(math.fsum(value for value in tiles.values() if value > 0.0))
+        held_start.append(len(held_good))
+    cash_in_currency, cash_in_money = np.array(cash_in_currency_list), np.array(cash_in_money_list)
+    held_start = np.array(held_start, dtype=np.int64)
+    stock = np.zeros((count, matrices.good_slots))
+    stock[stock_rows, stock_slots] = stock_values
     revenue = np.array([ledger.sales_in.get(each, 0.0) for each in columns.ids])
     running = np.array([ledger.running_costs(each) for each in columns.ids])
     sold = np.zeros_like(stock)

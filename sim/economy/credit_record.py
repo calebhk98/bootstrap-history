@@ -106,6 +106,10 @@ class CreditRecord(OwnedRecord):
         """The borrower's term loans leave the contracts as defaulted (the losses are booked by the caller)."""
         self.contracts.default(borrower, TERM_LOAN)
 
+    def default_term_loans_of(self, borrowers) -> None:
+        """`default_term_loans` for every borrower in `borrowers` at once."""
+        self.contracts.default_many(set(borrowers), TERM_LOAN)
+
     def ask_for_loan(self, request: LoanRequest) -> None:
         """A request that waits for the next lending."""
         self.loan_requests.append(request)

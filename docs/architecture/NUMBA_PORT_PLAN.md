@@ -73,7 +73,12 @@ changes a field. The saved record format does not change.
 - [ ] the first phase moved onto it: the year's close
     - [x] the producers' close as one kernel (`close_kernel.py`, `close_pack.py`, `close_run.py`, `year_close_producers.py`;
           `test_year_speed_close` beside the old close on random economies, and on every producer of a real Rome close)
-    - [ ] the households' close and the equity built for it (`households_close`, `equity.producer_worths`, `credit_view.equity`)
+    - [ ] the households' close and the equity built for it (`households_close`, `equity.producer_worths`, `credit_view.equity`):
+          the households' own part is small (312 cohorts); the cost is the producers' net worths (`equity._built_worths`, one
+          `plant_value_per_run` per recipe and tile and one `inventory_value` per producer), built once per view
+    - [x] the close hands its producer columns to entry (`year_arrays_closed.columns_after_close`, from the kernel's answer;
+          `test_year_speed_close_arrays`): the `sync` in `open_entrants` finds no row to read again (about 0.09 cProfile s of a warm year)
+    - [x] the close's pack reads rows as lists and one currency per area (`close_pack.pack`)
     - [ ] the per-producer tail: dividends (`spread`, `transfer_many`), `write_off`, loan asks
 - [ ] every other ported phase reads from it instead of packing its own
 
@@ -211,10 +216,12 @@ any rounding change does; the digest is the same on two runs and after a reload.
           prices, wages, recipe matrices and carriage as arrays; the plans on the shared Rome save are the old plans (every
           plan, runs equal to 1e-6). The rules stay in `entry.py`, `entry_margin.py`, `entry_trial.py`, `location.py`
           with the costing behind a `costs` argument (the old Python path stays as the reference when it is None)
+    - [x] the apply loop reads each recipe's crews once (`open_entrants`), `restake_owners` reads the live prices and wages once per
+          recipe and tile, and the exits of a close end their term loans in one pass over the contracts (`producer_exit.ExitBatch`,
+          `Contracts.default_many`; `close_idle_producers` from about 0.13 to a few hundredths of a cProfile second)
     - [ ] what is left of entry is Python per request: the greedy loops of `entry_plans`, `margin_entry_plans` and
           `trial_entry_plans` (a kernel call per unfilled-demand costing and per siting, the sized runs, the bids' schedules),
-          the apply loop in `open_entrants` (a producer, a stake and a loan each), and the year arrays' own `sync` (a
-          rebuild of the memory and the producer rows the close replaced, about a fifth of the entry that is left)
+          the apply loop in `open_entrants` (a producer, a stake and a loan each; about 0.06 cProfile s)
 - [ ] producers' and firms' close of the year
     - [x] pooled practice, input prices and wages read once per recipe and tile and handed to each producer's close
     - [x] `producers_close.close_year`, `next_expectations`, `_pledgeable`, `firm_year.settle_year` in one kernel (item 0b)
@@ -292,9 +299,10 @@ any rounding change does; the digest is the same on two runs and after a reload.
 - [x] `python3 sim/simulator.py compile-kernels` compiles every registered kernel (`sim/jit.REGISTRY`) ahead of play, for
       an environment's setup script (with the `NUMBA_CACHE_DIR` the game will use): about two minutes on an empty cache,
       and a Rome year on that cache compiles nothing (`test_compile_kernels_declared`, slow `test_compile_kernels_smoke`)
-- [ ] a process's first year on a warm cache is still several seconds slower than its second (loading the cached kernels and
-      warming Python): every one-command-per-process sitting pays it; measure and cut it (`year-time` first against
-      second year on a warm cache)
+- [ ] a process's first year on a warm cache is slower than its second: the first year's route searches are a kernel
+      (`routes_tree_kernel.least_tree`; `test_kernel_route_tree`), cutting the gap from about 4 s to about 2 s; left: loading
+      the cached kernels, building the route graphs, the cost trees. A one-command sitting (`agent --session`, `state`)
+      costs about 3.5 s: imports, the save's parse and build, the reply, the save written again
 - [ ] A Rome year under one second, and every civilisation's year measured (`year-time` on a save of each)
 - [ ] `openings --prune` rebuilt and committed; the full build timed
 - [ ] the slow suite green, or each red topic explained with the complaint that owns it

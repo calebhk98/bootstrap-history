@@ -77,6 +77,10 @@ def open_entrants(setup, record, view, area_map, unmet_by_market: Dict[Tuple[str
     started = 0
     by_limits = sites.limits_by_recipe(setup.site_limits)
     plans = year_plans(setup, record, view, area_map, unmet_by_market, carriage, bids_by_market, arrays)
+    peers_of_recipe: Dict[str, list] = {}       # each recipe's producers' crews, a newcomer's included once it starts
+    if plans:
+        for each in record.producers.values():
+            peers_of_recipe.setdefault(each.recipe_id, []).append(each.crew_runs)
     for plan in plans:
         recipe = setup.recipes[plan.recipe_id]
         key = recipe_tile_key(plan.recipe_id, plan.tile)
@@ -84,14 +88,14 @@ def open_entrants(setup, record, view, area_map, unmet_by_market: Dict[Tuple[str
         builds_plant = recipe.plant_life_years > 0.0 and bool(recipe.plant_goods)
         # each producer stands for the tile's workshops of one recipe: newcomers join its capacity and its workshop count
         producer = record.producers.get(producer_id)
+        plan_is_new = producer is None
         if producer is None:
             owner = ownership.owner_cohort(record, plan.tile)
             if owner is None:
                 continue
             producer = Producer(agent_id=producer_id, owner=owner, recipe_id=plan.recipe_id, tile=plan.tile,
                                 capacity_runs=0.0, expected_sales=plan.runs,
-                                crew_runs=practice.entrant_crew_runs(recipe, [each.crew_runs for each in record.producers.values()
-                                                                              if each.recipe_id == plan.recipe_id]),
+                                crew_runs=practice.entrant_crew_runs(recipe, peers_of_recipe.get(plan.recipe_id, ())),
                                 yield_factor=sites.yield_at(recipe, plan.tile, by_limits,
                                                             setup.yield_factor_by_recipe_tile.get(key, 1.0)))
         elif record.credit.expansion_runs.get(producer_id, 0.0) > 0.0:     # a working-capital loan builds no plant
@@ -99,6 +103,8 @@ def open_entrants(setup, record, view, area_map, unmet_by_market: Dict[Tuple[str
         if not builds_plant:
             producer = replaced(producer, capacity_runs=producer.capacity_runs + plan.runs,
                                 workshops=producer.workshops + 1)
+        if plan_is_new:
+            peers_of_recipe.setdefault(plan.recipe_id, []).append(producer.crew_runs)
         producer_table.put_producer(record.producers, producer)
         started += 1
         inputs, wages = live_input_prices(producer, recipe, view), live_wages(producer, recipe, view)
@@ -142,6 +148,7 @@ def restake_owners(setup, record, view) -> None:
     rate = own_rate(view, money)
     # an owner risks at most the stake share of its cash a year, across all the producers it owns
     budget = {}
+    reads: Dict[Tuple[str, str], tuple] = {}      # (recipe, tile) -> the live input prices and wages every producer there reads
     for producer_id, producer in sorted(record.producers.items()):
         if producer.capacity_runs <= 0.0:
             continue
@@ -149,9 +156,11 @@ def restake_owners(setup, record, view) -> None:
         if shortfall <= 0.0:
             continue
         recipe = setup.recipes[producer.recipe_id]
-        earning = unit_cost.return_after_recovery(recipe, expected_output_prices(producer, recipe, view) or {},
-                                                  live_input_prices(producer, recipe, view),
-                                                  live_wages(producer, recipe, view), rate,
+        key = (producer.recipe_id, producer.tile)
+        if key not in reads:
+            reads[key] = (live_input_prices(producer, recipe, view), live_wages(producer, recipe, view))
+        inputs, wages = reads[key]
+        earning = unit_cost.return_after_recovery(recipe, expected_output_prices(producer, recipe, view) or {}, inputs, wages, rate,
                                                   producer.land_rent_per_run)
         pays = earning is not None and earning > rate
         if producer.owner not in budget:
@@ -169,10 +178,12 @@ def close_idle_producers(setup, record) -> int:
     money = setup.currency_id
     debtors = {loan.borrower for loan in record.credit.loans}
     closing = producers_to_close(record.producers, set(record.credit.expansion_runs), debtors)
+    exits = producer_exit.ExitBatch(record)
     for producer_id in closing:
         cash = record.book.balance(producer_id, money)
         payout = [Transfer(producer_id, record.producers[producer_id].owner, money, cash, "dividend")] if cash > 0.0 else []
-        producer_exit.exit_producer(record, producer_id, payout)
+        exits.exit(producer_id, payout)
+    exits.finish()
     return len(closing)
 
 

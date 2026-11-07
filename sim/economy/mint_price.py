@@ -8,12 +8,16 @@ when other prices fall, metal at the mint is worth more than it costs to make, s
 """
 from typing import Dict, List, Optional, Tuple
 
+from .goods_year_results import ArrayClearing
 from .types import ClearingResult, Transfer, EDGE_MINT, is_edge
 
 
 def _taken_by_mint(result: ClearingResult) -> List[Tuple[str, str, float, float]]:
     """(seller, tile, quantity, ask) for each non-edge seller the mint bought from, as the result's pairing says. A year's
     goods result that traded carries one; one that did not trade has nothing taken."""
+    if isinstance(result, ArrayClearing):
+        return [(seller, tile, quantity, ask) for seller, tile, quantity, ask in result.taken_by(EDGE_MINT)
+                if not is_edge(seller)]
     pairing = result.pairing
     if pairing is None:
         return []
@@ -51,7 +55,8 @@ def received_price(mint_price: float, result: ClearingResult, settled: Optional[
     the units the non-edge sellers sold (less the mint's units that did not settle, when `settled` is given). Called for results that traded only
     (`year_goods._received_price` skips a clearing with no quantity)."""
     paid = sum(top_ups(mint_price, result, settled).values())
-    sold = sum(fill.quantity for fill in result.fills if fill.side == "sell" and fill.quantity > 0.0 and not is_edge(fill.agent))
+    sold = (result.sold_by_producers() if isinstance(result, ArrayClearing) else
+            sum(fill.quantity for fill in result.fills if fill.side == "sell" and fill.quantity > 0.0 and not is_edge(fill.agent)))
     if settled is not None:
         sold -= sum(quantity for _seller, _tile, quantity, _ask in _taken_by_mint(result)) - \
             sum(quantity for _seller, quantity, _ask in _settled_takes(result, settled))

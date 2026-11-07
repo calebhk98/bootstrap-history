@@ -7,6 +7,7 @@ from dataclasses import dataclass, field
 from typing import Dict, Iterable, List, Optional, Tuple
 
 from .clearing_totals import MarketKey, market_totals
+from .goods_year_results import ArrayClearing
 from .types import AgentId, ClearingResult, Fill, GoodId, GoodsMove, LabourResult, Transfer, EDGE_MINT, is_external_edge
 
 SALE_PREFIX = "sale of "    # settlement's purpose for a goods sale
@@ -27,6 +28,7 @@ class YearLedger:
     own_plot_hours: Dict[AgentId, Dict[str, float]] = field(default_factory=dict)   # hours worked on its own plot, by recipe
     grown_units: Dict[AgentId, Dict[str, float]] = field(default_factory=dict)    # need units of that
     buy_fills: Dict[AgentId, List[Fill]] = field(default_factory=dict)
+    fill_watchers: Optional[frozenset] = None   # the buyers whose buy fills are kept (merchants and the state read them); None: all
     sold: Dict[Tuple[AgentId, GoodId], float] = field(default_factory=dict)
     output: Dict[Tuple[AgentId, GoodId], float] = field(default_factory=dict)
     clearings: List[ClearingResult] = field(default_factory=list)
@@ -174,8 +176,13 @@ class YearLedger:
         self.totals_cache = None
         market = (result.good, result.area)
         self.delivered_by_market[market] = self.delivered_by_market.get(market, 0.0) + delivered
+        watchers = self.fill_watchers
+        if watchers is not None and isinstance(result, ArrayClearing):
+            for agent, fills in result.bought_by(watchers).items():
+                self.buy_fills.setdefault(agent, []).extend(fills)
+            return
         for fill in result.fills:
-            if fill.side == "buy":
+            if fill.side == "buy" and (watchers is None or fill.agent in watchers):
                 self.buy_fills.setdefault(fill.agent, []).append(fill)
 
     def settled_to_mint(self, result: ClearingResult) -> Optional[Dict[Tuple[AgentId, str], float]]:
