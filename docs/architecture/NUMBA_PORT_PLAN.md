@@ -8,6 +8,7 @@
 - with labour's heads and switching, entry's practice and the national prices: about 15 and 11 (machine loaded)
 - with settlement, the ledger and the producers' read caches: about 13 and 9
 - with the labour tail, the urban ceilings and the partner countries' kept figures: about 12 and 8
+- with the respend rounds in one kernel: about 11 and 7.5
 
 **Goal.** A Rome year under one second (three at most; a game is five hundred years), with the game unchanged in its
 rules and reproducible: the same save stepped on the same machine gives the same game, straight or saved and loaded in
@@ -34,7 +35,9 @@ binary to build, ship or merge.
 - **Tests.** Each ported rule keeps a copy of its old Python path in its test, run beside the kernel on random built
   inputs, agreeing within a stated relative tolerance (a kernel sums in a different order). Rule tests that called the
   old functions still call the phase's public functions.
-- **Checks before a phase is ticked.** The quick tier is green; `year-time --reload-check` on the shared Rome save is
+- **Checks before a phase is ticked.** The quick tier is green, also with `ROME_NO_JIT=1` (the plain-Python path) and with
+  `NUMBA_BOUNDSCHECK=1` and a fresh `NUMBA_CACHE_DIR` (numba does not check array bounds, so a write past an array's end
+  goes unseen in a compiled run); `year-time --reload-check` on the shared Rome save is
   reproducible; the game after two years is compared with the one before the port (`--keep` and a field-by-field
   compare: which modules moved and by how much, explained in the item); the phase's measured share of the year is
   written in its item with the command.
