@@ -10,7 +10,7 @@ from typing import Any, Dict, Mapping, Optional, Tuple
 from sim.world import capital_market
 
 from .rates import own_rate
-from . import producer_table
+from . import plan_year, producer_table
 from . import outlay_room, taxes, bondage, bondage_hours, bonded_purchase, banks, carriage_hours, credit, credit_idle_rate, credit_lines, debt_relief, credit_claims, currency, equity, land_market, lending, merchants_credit, producers, shares, sites, state_budget, tax_farming, titles_inheritance, titles_moves, titles_plots, unit_cost
 from .credit_view import CreditView
 from .market_areas_follow import follow
@@ -183,9 +183,7 @@ class Economy:
         titles_moves.apply(record, inputs.title_moves)
         tax_farming.run_auctions(setup, record, inputs.farmed_forms, record.memory.rates[setup.currency_id])
         lending.lend_working_capital(setup, record, view)
-        plans = {producer_id: producers.plan(producer, setup.recipes[producer.recipe_id], view,
-                                             record.book.balance(producer_id, money))
-                 for producer_id, producer in sorted(record.producers.items())}
+        plans = plan_year.plans_of(setup, record, view, arrays, money)
         labour_bids = [bid for plan in plans.values() for bid in plan.labour_bids]
         for orders in inputs.engine_orders.values():
             labour_bids.extend(orders.labour_bids)
