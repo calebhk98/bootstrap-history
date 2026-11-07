@@ -21,6 +21,7 @@ from .credit_lines import line_request as credit_line_request, actor_fundable as
 from .credit import risk_premium
 from .currency import currency_from_coin_standard
 from .economy import Economy
+from . import market_memory as market_memory_module
 from .market_memory import KEY_SEPARATOR, market_key
 from .opening_rate import opening_market_rate
 from .metal_stock import COIN_WEAR_PER_YEAR
@@ -171,8 +172,10 @@ def hours_paid_by_employer(economy, employer):
 
 
 def add_workers(economy, tile, trade, people):
-    """`people` more workers of `trade` in the labour core, on `tile`'s labour area: they are hired at the clearing like anyone."""
+    """`people` more workers of `trade` in the labour core, on `tile`'s labour area: they are hired at the clearing like anyone.
+    Worker-weighted wages and the figures kept between steps read the workforce, so the memory's write stamp moves."""
     economy.record.labour.add_workers(labour_area(tile), trade, people)
+    market_memory_module.note_written()
 
 
 def labour_market_rows(economy):
