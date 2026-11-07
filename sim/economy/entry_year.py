@@ -6,8 +6,10 @@ cash back into paying producers that ran out of it."""
 import math
 from typing import Dict, List, Tuple
 
+import numpy as np
+
 from . import producer_table
-from . import credit, entry_practice, location, ownership, practice, producer_exit, sites, unit_cost
+from . import credit, entry_kernels, entry_practice, location, ownership, practice, producer_exit, sites, unit_cost
 from .entry_backed import unfilled_at_cost
 from .entry_margin import margin_entry_plans
 from .entry_spare import idle_runs
@@ -21,6 +23,7 @@ from .producers_close import working_capital_target
 from .market_memory import market_key
 from .setup import recipe_tile_key
 from .types import LoanRequest, Transfer
+from .year_arrays_costs import refreshed
 from .replaced import replaced
 from .rates import own_rate
 
@@ -142,10 +145,13 @@ def _traded_volume(record, view, area_map):
     return traded
 
 
-def restake_owners(setup, record, view) -> None:
-    """Owners put working cash back into producers whose runs pay but that ran out of it."""
+def restake_owners(setup, record, view, arrays=None) -> None:
+    """Owners put working cash back into producers whose runs pay but that ran out of it. Over the year `arrays` the stakes are
+    worked out in one kernel (`entry_kernels.restake_amounts`); without them, producer by producer."""
     money = setup.currency_id
     rate = own_rate(view, money)
+    if arrays is not None and _restake_over_arrays(setup, record, view, arrays, money, rate):
+        return
     # an owner risks at most the stake share of its cash a year, across all the producers it owns
     budget = {}
     reads: Dict[Tuple[str, str], tuple] = {}      # (recipe, tile) -> the live input prices and wages every producer there reads
@@ -169,6 +175,34 @@ def restake_owners(setup, record, view) -> None:
         if amount > 0.0:
             budget[producer.owner] -= amount
             record.book.transfer(Transfer(producer.owner, producer_id, money, amount, "owner's stake"))
+
+
+def _restake_over_arrays(setup, record, view, arrays, money: str, rate: float) -> bool:
+    """`restake_owners` over the arrays brought in step with the records and the memory now. False (nothing done) where an owner is
+    itself a producer, whose cash a stake would change before its own turn."""
+    arrays = refreshed(arrays, setup, record, view)
+    columns, matrices, memory = arrays.producers, arrays.matrices, arrays.memory
+    balance = record.book.balance
+    ids = columns.ids
+    cash = np.fromiter((balance(each, money) for each in ids), dtype=np.float64, count=len(ids))
+    shortfall = np.where(columns.capacity_runs > 0.0, columns.cash_target - cash, 0.0)
+    wanting = np.nonzero(shortfall > 0.0)[0]
+    owners = sorted({columns.records[row].owner for row in wanting})
+    if any(owner in record.producers for owner in owners):
+        return False
+    owner_row = {owner: position for position, owner in enumerate(owners)}
+    owner_of = np.zeros(len(ids), dtype=np.int64)
+    for row in wanting:
+        owner_of[row] = owner_row[columns.records[row].owner]
+    owner_cash = np.array([balance(owner, money) for owner in owners], dtype=np.float64)
+    amounts = entry_kernels.restake_amounts(
+        columns.recipe_row, columns.tile_row, shortfall, columns.land_rent_per_run, columns.expected_prices, owner_of, owner_cash,
+        matrices.slot_goods, matrices.inputs, matrices.outputs, matrices.plant_goods, matrices.labour_hours,
+        matrices.plant_labour_hours, matrices.plant_life_years, memory.price, memory.offered, memory.wage,
+        arrays.area_index.of_good_tile, float(rate), ENTRANT_OWNER_STAKE_SHARE)
+    for row in np.nonzero(amounts > 0.0)[0]:
+        record.book.transfer(Transfer(columns.records[row].owner, ids[row], money, float(amounts[row]), "owner's stake"))
+    return True
 
 
 def close_idle_producers(setup, record) -> int:

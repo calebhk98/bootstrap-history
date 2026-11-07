@@ -21,6 +21,7 @@ import numpy as np
 from sim.jit import njit
 
 from .close_kernel_cost import capital_charge
+from .year_arrays_costs import KERNEL, bill_goods, bill_hours, price_in, recovery_factor
 
 NO_SLOT = -1
 
@@ -322,3 +323,61 @@ def site_choice(r, anchor, candidates, runs, tonnes_out, tables, tonnes, supply_
     capacity[r, tile] += taken
     committed[tile] += taken * hours_per_run
     return tile, taken
+
+
+@njit(**KERNEL)
+def pays_after_recovery(recipe, tile, rent, held_expected, slot_goods, inputs, outputs, plant_goods, labour_hours, plant_labour_hours,
+                        plant_life, price, offered, wage, area_of, rate):
+    """Whether `unit_cost.return_after_recovery` of a run of the recipe on the tile beats `rate`: the surplus (revenue at the
+    producer's expected prices, else the price on offer in its market, less the variable cost) less the part of the plant's
+    capital charge that repays the plant, over the capital a run employs (its plant and its variable cost). A run that cannot be
+    priced, or employs nothing, does not pay."""
+    variable = bill_goods(inputs[recipe], price, area_of, tile) + bill_hours(labour_hours[recipe], wage, tile) + rent
+    plant = bill_goods(plant_goods[recipe], price, area_of, tile) + bill_hours(plant_labour_hours[recipe], wage, tile)
+    employed = plant + variable
+    if not np.isfinite(employed) or employed <= 0.0:
+        return False
+    revenue = 0.0
+    for slot in range(slot_goods.shape[1]):
+        good = slot_goods[recipe, slot]
+        if good == NO_SLOT:
+            break
+        if outputs[recipe, good] > 0.0:
+            found = held_expected[slot]
+            if np.isnan(found):
+                found = price_in(offered, area_of, good, tile)
+            if not np.isnan(found):
+                revenue += outputs[recipe, good] * found
+    if plant == 0.0:
+        charge = 0.0
+    elif plant_life[recipe] <= 0.0:
+        charge = plant
+    else:
+        charge = plant * recovery_factor(rate, plant_life[recipe])
+    return (revenue - variable) / employed - (charge - rate * plant) / employed > rate
+
+
+@njit(**KERNEL)
+def restake_amounts(recipe_row, tile_row, shortfall, rent, held_expected, owner_of, owner_cash, slot_goods, inputs, outputs,
+                    plant_goods, labour_hours, plant_labour_hours, plant_life, price, offered, wage, area_of, rate, stake_share):
+    """What each producer row is restaked with (zero for the rows without a shortfall, `shortfall` <= 0), in row order:
+    `entry.restake` (the shortfall, from the stake share of the owner's cash now, only where the run pays after recovery), not
+    above the owner's budget, which is the stake share of the cash it held when its first producer came up and is spent down.
+    `owner_cash` (by owner) is spent as the stakes are made, and is written to."""
+    amounts = np.zeros(len(shortfall))
+    budget = np.full(len(owner_cash), np.nan)
+    for row in range(len(shortfall)):
+        if not shortfall[row] > 0.0:
+            continue
+        owner = owner_of[row]
+        if np.isnan(budget[owner]):
+            budget[owner] = stake_share * max(0.0, owner_cash[owner])
+        if not pays_after_recovery(recipe_row[row], tile_row[row], rent[row], held_expected[row], slot_goods, inputs, outputs,
+                                   plant_goods, labour_hours, plant_labour_hours, plant_life, price, offered, wage, area_of, rate):
+            continue
+        amount = min(min(shortfall[row], stake_share * max(0.0, owner_cash[owner])), budget[owner])
+        if amount > 0.0:
+            budget[owner] -= amount
+            owner_cash[owner] -= amount
+            amounts[row] = amount
+    return amounts
