@@ -4,7 +4,7 @@ Prices, wages and rates are last year's outcomes; holdings are now. An agent pla
 sees nothing of this year's clearing, which is where the economy's lags come from.
 """
 from dataclasses import dataclass, field
-from typing import ClassVar, Dict, Optional, Tuple
+from typing import ClassVar, Dict, Optional, Set, Tuple
 
 from sim.constants import declare
 
@@ -180,9 +180,23 @@ class MarketMemory:
             return self.prices.get(key)
         return None
 
+    def _kept_read(self, name: str, compute):
+        """`compute()` once per `name` until the memory is written to: the stamp is the write count and the identity and size
+        of the stores a trade or a price kind is read from (an area redraw replaces them whole)."""
+        stamp = (_writes[0], id(self.prices), len(self.prices), id(self.trade_age), len(self.trade_age),
+                 id(self.quote_kinds), len(self.quote_kinds))
+        kept = self.__dict__.setdefault("_kept_reads", {})     # not a field: reads kept until the stores are written to
+        entry = kept.get(name)
+        if entry is None or entry[0] != stamp:
+            entry = kept[name] = (stamp, compute())
+        return entry[1]
+
     def price_kinds_by_good(self) -> Dict[str, str]:
         """The kind each good's price has across its markets: traded when any market of it traded last year,
         else the first quote kind in market order (so a price no one traded at is never shown as a trade)."""
+        return dict(self._kept_read("price_kinds", self._worked_out_price_kinds))
+
+    def _worked_out_price_kinds(self) -> Dict[str, str]:
         kinds: Dict[str, str] = {}
         for key in sorted(self.prices):
             good = key.split(KEY_SEPARATOR, 1)[0]
@@ -190,6 +204,11 @@ class MarketMemory:
             if kinds.get(good) != PRICE_SMOOTHED_TRADE and (kind == PRICE_SMOOTHED_TRADE or good not in kinds):
                 kinds[good] = kind
         return kinds
+
+    def goods_traded_within(self, years: int) -> Set[str]:
+        """Goods with a market that cleared at most `years` years ago."""
+        return set(self._kept_read(("traded_goods", years), lambda: frozenset(
+            key.split(KEY_SEPARATOR, 1)[0] for key in self.trade_age if self.traded_within(key, years))))
 
     def note_cleared(self, key: str, price: Optional[float], quantity: float) -> None:
         """Keep the price a market cleared at when it traded; forget it when it did not."""

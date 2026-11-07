@@ -48,7 +48,7 @@ class LiveWagesAt(unittest.TestCase):
 class CostingWages(unittest.TestCase):
     def record(self, wages):
         return types.SimpleNamespace(memory=MarketMemory(wages=wages), labour=types.SimpleNamespace(
-            workforce=types.SimpleNamespace(workers={}), hours_cleared_in=lambda key: 0.0))
+            workforce=types.SimpleNamespace(workers={}), hours_cleared_by=lambda trade, area: 0.0))
 
     def test_a_trade_no_area_cleared_is_costed_on_its_opening_wage(self):
         wages = notional.costing_wages(setup(opening_smith=4.0), self.record({"labourer|north": 2.0}))

@@ -41,6 +41,10 @@ class LabourRecord(OwnedRecord):
         """Hours the core's last clearing hired in the labour market `market_key` (trade, area), all employers: before
         payment and without bonded hours, so with `hours_idle` they make up the hours offered."""
         trade, area = market_key.split(KEY_SEPARATOR, 1)
+        return self.hours_cleared_by(trade, area)
+
+    def hours_cleared_by(self, trade: str, area: str) -> float:
+        """`hours_cleared_in` for a market already split into its trade and labour area."""
         return math.fsum(self.workforce.hired_hours.get(area, {}).get(trade, {}).values())
 
     def set_hours_paid_by_employer(self, hours: Dict[AgentId, Dict[TradeId, float]]) -> None:

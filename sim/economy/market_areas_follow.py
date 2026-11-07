@@ -10,6 +10,7 @@ Reads only the area map and the market memory.
 from typing import Any, Dict, Mapping, Tuple
 
 from .market_areas import AreaMap
+from . import market_memory
 from .market_memory import KEY_SEPARATOR, market_key
 from . import merchants
 from .merchants import Merchant
@@ -79,5 +80,6 @@ def follow(record: EconomyRecord, old: AreaMap, new: AreaMap) -> None:
             if old_id in memory.currency_of_area:
                 currency_of_area[new_id] = memory.currency_of_area[old_id]
     memory.set_area_currencies(currency_of_area)
+    market_memory.note_written()     # the stores above were replaced whole
     for merchant in record.merchants.values():
         _merchant_follows(merchant, follows, new)
