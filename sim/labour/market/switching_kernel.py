@@ -165,6 +165,35 @@ def plan_area(counts, income, idle, baseline, later, vacancies, chances, years, 
 
 
 @njit
+def collect_moves(counts, considering, active, moving, planned_shares, training_share, rounds, moves_source, moves_destination,
+                  moves_share, moves_rows):
+    """The round's moves in the order they are carried out (by destination, then source, then the established workers before
+    the young; the established share of the training years is never above the young's one): a row for each (source,
+    young, destination) where some band of an active source with people sends people there. Fills the move arrays (as long as
+    every possible move) and returns how many moves there are."""
+    count_sources, count_bands, count_destinations = counts.shape[0], counts.shape[1], training_share.shape[1]
+    found = 0
+    for destination in range(count_destinations):
+        for source in range(count_sources):
+            for young in range(2):
+                if not active[source, young]:
+                    continue
+                picked = False
+                for band in range(count_bands):
+                    if moving[source, young, band] and counts[source, band] > 0.0 and planned_shares[source, young, band, destination] > 0.0:
+                        picked = True
+                        moves_rows[found, band] = counts[source, band] * considering[source, young] / rounds * planned_shares[source, young, band, destination]
+                    else:
+                        moves_rows[found, band] = 0.0
+                if picked:
+                    moves_source[found] = source
+                    moves_destination[found] = destination
+                    moves_share[found] = 1.0 if young == 1 else training_share[source, destination]
+                    found += 1
+    return found
+
+
+@njit
 def take_moves(sources, rows, have, taken):
     """Carry out the moves in order: each takes from its source's bands what it asks for, no more than the source has left
     (`have[source, band]` is updated). Fills `taken[move, band]`."""

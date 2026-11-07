@@ -79,16 +79,32 @@ changes a field. The saved record format does not change.
           mod's fetch search or an unpacked schedule)
     - [x] the per-market tail (`clearing_tail_kernel.py`, `clearing_tail.py`: employers left by the wage, retention,
           ceilings, hiring arrays, the wage paid, poaching and the asks; `test_year_speed_labour_tail`)
-    - [ ] `pack_heads`' per-state loops and the per-market write-back
+    - [x] `pack_heads`' bid sums over arrays (`np.add.at`, `np.maximum.at` in bid order); the employer columns by `attrgetter`;
+          `clearing._kernel_head` and `_prepare`'s unused `head` argument removed (the heads test converts the kernel's row itself)
+    - [ ] what is left of the clearing is the write-back of one `LabourClearing` and its state entries per market (the saved
+          record format) and `import_cost.reach`, one route search per area
 - [ ] Trade switching (`switching.switch_trades`, `_odds`, `_planned_moves`)
     - [x] the per-band logit (`switching_kernel.band_shares`; `test_year_speed_labour_switching`)
     - [x] targets, gains, costs, plan reuse and moves for every source of an area (`switching_kernel.plan_area`,
           `take_moves`; `test_year_speed_labour_plans`)
     - [x] the carry-out and the refusal path (`switching_kernel.enrol_groups`)
-    - [ ] expected incomes at graduation (`expected_income`, `income_at_graduation`)
-- [ ] Trade formation (`formation.form_trades`): early return where no origin sells, origin asks kept for the year; the
-      per-market purchase and carriage searches are Python
-- [ ] Checks: reproducible, compared, share measured
+    - [x] the round's moves collected in one kernel (`switching_kernel.collect_moves`) instead of numpy glue in `_planned_moves`
+          (`test_year_speed_labour_plans`)
+    - [ ] expected incomes at graduation (`expected_income`, `income_at_graduation`): still one Python call per destination and
+          round; `graduates_coming` is one `math.sumprod` per cohort. A kernel needs the area's clearings and trainees packed once
+    - [x] migration: `migration.move_shares` without dictionaries (`test_year_speed_labour_finish`); `migrate` itself is still
+          Python per origin, trade and route
+- [x] Trade formation (`formation.form_trades`): early return where no origin sells, origin asks kept for the year; the
+      carriage search is made once per origin for the year and shared with the import cap (`YearInputs.carriage_from`), the
+      routes' destinations are indexed once; the per-market purchase is Python
+- [x] Labour path reads: the priced basket of a cohort kept per (tile, hearth, hired work, milled grains) until the market memory is
+      next written to (`household_work_year.priced_basket`, `priced_reads.kept_reads`); a trade's wage on a tile kept the same
+      way (`kept_wages`, `api.trade_wage_at`, which `labour_wages.wage_signature` reads 28 times a year)
+- [x] Checks: reproducible, compared, share measured. `year-time --years 2 --reload-check` on the shared Rome save: digest the
+      same after a reload; the game after two years against the base's moves in the last digits only (`save_compare.py`).
+      Share: `clear_labour` is about 1.8 of 22 cProfile seconds of the second year (`prof_second.py`, callees of
+      `Economy._run_year`), 1.9 before this step; the labour year is about a twelfth of a Rome year, so the rest of the
+      time is in the other items
 
 ### 2. Goods clearing (`sim/economy/goods_market*.py`, `unsold_search.py`, `seller_offers.py`, `price_setting.py`, `demand_search.py`, `market_quote.py`)
 - [x] The market clear: the logit allocation, rationing and redirect rounds, buyers' requests and trades

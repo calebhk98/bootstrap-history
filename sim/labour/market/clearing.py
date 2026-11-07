@@ -303,12 +303,11 @@ def _plain_head(state: MarketState, inputs: YearInputs, trade: str, area: str, b
 
 
 def _prepare(state: MarketState, inputs: YearInputs, trade: str, area: str, bids: Sequence[EmployerHoursBid],
-             import_costs: ImportCosts, head: Optional[tuple] = None) -> Optional[_Pending]:
+             import_costs: ImportCosts) -> Optional[_Pending]:
     """The market of a trade in an area up to its hiring rounds (the wage before them, the hours kept, the pool and the
     offers' ceilings); None where the area has no stated outside option to hold one on. Reads this market's own entries of
-    the state and the year's start wages only, so markets can be prepared in any order. `head` is the wage and the figures
-    behind it where a kernel has worked them out for every market (`_plain_head`)."""
-    head = _plain_head(state, inputs, trade, area, bids, import_costs) if head is None else head
+    the state and the year's start wages only, so markets can be prepared in any order."""
+    head = _plain_head(state, inputs, trade, area, bids, import_costs)
     if head is None:
         return None
     wage, target, goal, offered, reservation, base_reservation, lowest, ceiling, full = head
@@ -325,12 +324,6 @@ def _prepare(state: MarketState, inputs: YearInputs, trade: str, area: str, bids
                       ceilings=offer_ceilings(bids, wage, paid, min(ceiling, goal)))
     return _Pending(state, trade, area, bids, wage, paid, ranks, hired, wanted, offered, sold_at, target, full,
                     base_reservation, lowest, job)
-
-
-def _kernel_head(row: tuple) -> tuple:
-    """A kernel row (wage, target, goal, offered, reservation, base, lowest, ceiling, full) with NaN target as none."""
-    wage, target, goal, offered, reservation, base, lowest, ceiling, full = row
-    return wage, None if target != target else target, goal, offered, reservation, base, lowest, ceiling, full
 
 
 def _finish(pending: _Pending) -> LabourClearing:

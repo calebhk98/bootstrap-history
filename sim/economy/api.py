@@ -28,7 +28,7 @@ from .notional import shown_prices, shown_prices_with_kinds
 from .producers import Producer, expected_output_prices, live_input_prices, live_wages
 from .protocols import AgentOrders, EconomyYearInputs
 from .recipes import recipes_from_production_data
-from . import plant_builds, pool_deposits, trade_wages
+from . import kept_wages, plant_builds, pool_deposits, trade_wages
 from .tool_wear import with_tool_wear
 from .record import EconomyRecord
 from .setup import EconomySetup, SetupTrade, goods_specs, recipe_tile_key
@@ -605,8 +605,11 @@ def country_trade_wage(economy, trade, country=None):
 def trade_wage_at(economy, trade, tile):
     """The wage per hour a bid for `trade` on `tile` is funded at: the area's last wage, else the one wage rule
     (`trade_wages.wage_in_area`)."""
-    view = economy.view()
-    return trade_wages.wage_in_area(economy.setup, economy.record.memory, trade, view.area_of(trade, tile))
+    memory = economy.record.memory
+
+    def compute():
+        return trade_wages.wage_in_area(economy.setup, memory, trade, economy.view().area_of(trade, tile))
+    return kept_wages.kept(memory, ("trade_wage", trade, tile), compute)
 
 
 def hunger_goods(economy):

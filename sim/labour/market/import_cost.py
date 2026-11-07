@@ -5,7 +5,6 @@ beyond that they come, not stay. Only the hours workers sell at a wage count, he
 import math
 from typing import Dict, List, Optional, Sequence, Tuple
 
-from .carriage import carriage_from
 from .fetch_wage import fetch_wage
 from .premium import annuity_factor
 from .records import MarketState, YearInputs
@@ -52,7 +51,7 @@ class ImportCosts:
         """(cheapest moving cost over the routes, area) for every other area reachable from `area`, nearest
         first. The route out of an area is taken to cost the same coming back."""
         if area not in self._reach:
-            best = carriage_from(self.inputs.routes, area)
+            best = self.inputs.carriage_from(area)
             self._reach[area] = sorted((cost, other) for other, cost in best.items() if other != area)
         return self._reach[area]
 

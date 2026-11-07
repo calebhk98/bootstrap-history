@@ -9,6 +9,7 @@ from .households_basket import need_prices
 from . import households_cohort
 from .households_cohort import Cohort
 from .market_memory import market_key
+from .priced_reads import kept_reads
 from .setup import labour_area
 from .types import AgentId, LabourOffer
 
@@ -35,7 +36,9 @@ def grinding_plan(setup, record, view, cohort: Cohort, hour_value: float) -> Tup
     marked as milled, or no priced food, the whole sourced load is its own."""
     if not setup.milled_as:
         return (), 1.0
-    food = next((need for need in need_prices(food_basket(setup, record, cohort), view, cohort.tile)
+    hearth = has_hearth(record, cohort)
+    food = next((need for need in kept_reads(view, ("food_needs", cohort.tile, hearth),
+                                             lambda: need_prices(food_basket(setup, record, cohort), view, cohort.tile))
                  if need.spec.need_id == setup.hunger_need), None)
     if food is None:
         return (), 1.0
@@ -65,8 +68,10 @@ def cohort_basket(setup, record, cohort: Cohort, buying: bool = True):
 
 def priced_basket(setup, record, view, cohort: Cohort):
     """The cohort's basket at its tile's prices: what the cohort counts as eaten (`cohort_basket` with `buying` False), the
-    one basket the wage floor and the outside option are worked from."""
-    return need_prices(cohort_basket(setup, record, cohort, buying=False), view, cohort.tile)
+    one basket the wage floor and the outside option are worked from. Cohorts with the same tile, hearth, hired work and
+    milled grains share one priced basket until the memory is next written to (the list is shared, never changed)."""
+    return kept_reads(view, ("priced_basket", basket_key(record, cohort)),
+                      lambda: need_prices(cohort_basket(setup, record, cohort, buying=False), view, cohort.tile))
 
 
 def service_price_per_hour(setup, view, tile, wage_price: float) -> float:

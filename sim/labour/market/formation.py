@@ -63,10 +63,11 @@ def form_trades(state: MarketState, inputs: YearInputs, clearings, report: YearR
         wanted = clearing.vacant_hours / hours_per_worker
         if wanted > 0.0 and _held(state, area, trade) <= 0.0:
             empty.append((area, trade, wanted))
+    leads_to = {origin: {route.destination for route in routes} for origin, routes in sorted(inputs.routes.items())}
     for area, trade, wanted in empty:
         spare: Dict[str, float] = {}
-        for origin in sorted(inputs.routes):
-            if origin == area or not any(route.destination == area for route in inputs.routes[origin]):
+        for origin, reached in leads_to.items():
+            if origin == area or area not in reached:
                 continue
             held = sum(state.workers.get(origin, {}).get(trade, ()))
             if held <= 0.0:

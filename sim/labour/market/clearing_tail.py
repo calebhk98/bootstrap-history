@@ -2,6 +2,8 @@
 their jobs (`clearing_tail_kernel.fill_slots`), the hiring rounds of all markets (`hiring_kernel.hire_markets`) and the finish
 (`finish_markets`); then the state and the clearings written back market by market. The plain functions of `clearing.py`
 (`_prepare`, `_finish`) stay for a caller whose fetched-hands search or hours schedule the kernels do not stand in for."""
+from itertools import chain
+from operator import attrgetter
 from typing import List
 
 import numpy as np
@@ -13,7 +15,7 @@ from .records import LabourClearing, MarketState
 
 def _employer_columns(packed, state: MarketState):
     """The employer of every bid (a position in sorted id order), the hours that employer held in the market last year, and the ids."""
-    flat = [bid.employer for each in packed.groups for bid in each]
+    flat = list(map(attrgetter("employer"), chain.from_iterable(packed.groups)))
     names = sorted(set(flat))
     position = {name: index for index, name in enumerate(names)}
     previous: List[float] = []

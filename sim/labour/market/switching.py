@@ -157,15 +157,14 @@ def _planned_moves(inputs, workers, plan: _AreaPlan, later_income) -> Optional[_
         inputs.discount_rate, inputs.career_years, SWITCHING_CONSIDERATION_SHARE_PER_YEAR, REMAINING_CAREER_SHARE,
         PLAN_REUSE_TOLERANCE, SWITCHING_TASTE_SCALE, NEGLIGIBLE_MOVE_SHARE, plan.valid, plan.then, plan.targets, plan.shares,
         plan.moving, plan.active, plan.considering)
-    sending = plan.moving & (counts > 0.0)[:, None, :] & plan.active[:, :, None]      # [source, young, band]
-    picked = sending[..., None] & (plan.shares > 0.0)                                  # [source, young, band, destination]
-    source, young, destination = np.nonzero(picked.any(axis=2))
-    if source.size == 0:
+    possible = counts.shape[0] * 2 * len(plan.destinations)
+    moves_source, moves_destination = np.empty(possible, np.int64), np.empty(possible, np.int64)
+    moves_share, moves_rows = np.empty(possible), np.empty((possible, counts.shape[1]))
+    found = switching_kernel.collect_moves(counts, plan.considering, plan.active, plan.moving, plan.shares, plan.training_share, rounds,
+                                           moves_source, moves_destination, moves_share, moves_rows)
+    if found == 0:
         return None
-    amounts = np.where(picked, (counts[:, None, :] * plan.considering[:, :, None] / rounds)[..., None] * plan.shares, 0.0)
-    share = np.where(young == 1, 1.0, plan.training_share[source, destination])
-    order = np.lexsort((share, source, destination))      # stable: the established workers' move goes before the young's
-    return _Moves(counts, source[order], destination[order], share[order], amounts[source, young, :, destination][order])
+    return _Moves(counts, moves_source[:found], moves_destination[:found], moves_share[:found], moves_rows[:found])
 
 
 def _carry_out(state: MarketState, inputs: YearInputs, report: YearReport, area: str, plan: _AreaPlan,

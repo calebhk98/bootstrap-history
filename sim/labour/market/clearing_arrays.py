@@ -4,6 +4,8 @@ Areas and trades become positions in sorted id order. The kernel stands in for t
 `import_cost.py` and `fetch_wage.py`, so it is used only where they would give its answer: the fetched-hands search is
 the reference one (a mod's replacement is called through the plain path), and the hours each market sells are given as
 packed matrices (`sold_hours_kernel`) or not at all."""
+from itertools import chain
+from operator import attrgetter
 from typing import Dict, List, Sequence, Tuple
 
 import numpy as np
@@ -65,7 +67,7 @@ def pack_heads(state: MarketState, inputs: YearInputs, markets: Sequence[Tuple[s
     trade_index = {trade: position for position, trade in enumerate(trades)}
     names = set(state.workers) | set(state.wages) | set(state.asks) | set(inputs.subsistence_per_worker_year) | set(inputs.routes)
     names.update(area for _trade, area in markets)
-    names.update(bid.area for bid in inputs.bids)
+    names.update(map(attrgetter("area"), inputs.bids))
     names.update(route.destination for routes in inputs.routes.values() for route in routes)
     if inputs.hours_sold_at is not None:
         names.update(area for _trade, area in inputs.hours_sold_at)
@@ -82,11 +84,12 @@ def pack_heads(state: MarketState, inputs: YearInputs, markets: Sequence[Tuple[s
         for trade, wage in by_trade.items():
             if trade in trade_index:
                 cells[kernel.WAGE, area_index[area], trade_index[trade]] = wage
-    for bid in inputs.bids:
-        if bid.trade in trade_index:
-            position = (area_index[bid.area], trade_index[bid.trade])
-            cells[kernel.WANTED][position] += max(bid.hours, 0.0)
-            cells[kernel.MOST][position] = max(cells[kernel.MOST][position], bid.maximum_wage)
+    placed = [bid for bid in inputs.bids if bid.trade in trade_index]      # each bid added to its market's cell in bid order
+    if placed:
+        bid_cell = (np.array([area_index[area] for area in map(attrgetter("area"), placed)], np.int64),
+                    np.array([trade_index[trade] for trade in map(attrgetter("trade"), placed)], np.int64))
+        np.add.at(cells[kernel.WANTED], bid_cell, np.maximum(np.fromiter(map(attrgetter("hours"), placed), np.float64, len(placed)), 0.0))
+        np.maximum.at(cells[kernel.MOST], bid_cell, np.fromiter(map(attrgetter("maximum_wage"), placed), np.float64, len(placed)))
     constant = inputs.hours_sold_at is None
     if constant:
         offers, exponent = np.zeros((OFFER_ROWS, 0)), 1.0
@@ -126,8 +129,9 @@ def pack_heads(state: MarketState, inputs: YearInputs, markets: Sequence[Tuple[s
     groups = [bids_by_market.get(market, ()) for market in markets]
     bid_offsets = np.zeros(len(markets) + 1, np.int64)
     np.cumsum([len(each) for each in groups], out=bid_offsets[1:])
-    caps = np.array([bid.maximum_wage for each in groups for bid in each], np.float64)
-    bid_hours = np.array([bid.hours for each in groups for bid in each], np.float64)
+    packed_bids = list(chain.from_iterable(groups))
+    caps = np.fromiter(map(attrgetter("maximum_wage"), packed_bids), np.float64, len(packed_bids))
+    bid_hours = np.fromiter(map(attrgetter("hours"), packed_bids), np.float64, len(packed_bids))
     fallback = trade_index[fallback_trade(inputs.trades)]
     heads = np.zeros((len(markets), kernel.HEAD_FIELDS))
     arguments = (cells, offers, exponent, constant, subsistence, ask_floor, scale, risk, training_years, premium, fallback,
