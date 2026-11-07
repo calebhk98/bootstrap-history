@@ -140,13 +140,21 @@ def hire_through_rounds(hired: Dict[str, float], kept: Dict[str, float], wanted:
         vacancies = {employer: max(0.0, wanted[employer] - hired[employer]) for employer in wanted}
         groups = capped_asks(groups, vacancies, offers)
         reach, units = _round(groups, vacancies, offers)
+        priced = {count: ([(employer, share, offers[employer]) for employer, share in unit.items()], sum(unit.values()))
+                  for count, unit in units.items()}
         for group, count in zip(groups, reach):
-            unit = units[count]
-            for employer, share in unit.items():
-                hired[employer] += group.hours * share
-                taken[employer] = taken.get(employer, 0.0) + group.hours * share
-                paid_sum[employer] = paid_sum.get(employer, 0.0) + group.hours * share * offers[employer]
-            group.hours -= group.hours * sum(unit.values())
+            lines, share_total = priced[count]
+            group_hours = group.hours
+            for employer, share, offer in lines:
+                amount = group_hours * share
+                hired[employer] += amount
+                if employer in taken:
+                    taken[employer] += amount
+                    paid_sum[employer] += amount * offer
+                else:
+                    taken[employer] = 0.0 + amount
+                    paid_sum[employer] = 0.0 + amount * offer
+            group.hours = group_hours - group_hours * share_total
         groups = [Searchers(group.hours, lowered_ask(group.ask, floor)) for group in groups if group.hours > 1e-9]
         if ceilings is not None:
             for employer in wanted:
