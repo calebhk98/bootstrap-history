@@ -184,6 +184,55 @@ class Book:
         for move in moves:
             self._record_goods(move)
 
+    def post_settled(self, currency: CurrencyId, purpose: str, item: GoodId, agents: Sequence[AgentId],
+                     paid: Sequence[float], received: Sequence[float], keys: Sequence[Tuple[AgentId, TileId]],
+                     given: Sequence[float], taken: Sequence[float]) -> None:
+        """Apply a market's settlement summed: each agent's money paid and received, each (agent, tile)'s `item` given and
+        taken. The same entries, totals and edge records as posting every pair, with no object per pair; an overdraft
+        beyond rounding that the batch makes or deepens is refused, with nothing applied."""
+        purses = self._money
+        money_after = []
+        for agent, out, income in zip(agents, paid, received):
+            if out == 0.0 and income == 0.0:
+                continue
+            purse = purses.get(agent)
+            start = purse.get(currency, 0.0) if purse else 0.0
+            value = start - out + income
+            if (value < min(0.0, start) - max(ROUNDING_SHARE * (out + income), UNDERFLOW)
+                    and not agent.startswith(EDGE_PREFIX)):
+                raise InsufficientFunds("%s would hold %.6g %s after the batch" % (agent, value, currency))
+            money_after.append((agent, value))
+        goods_after = []
+        for (agent, tile), out, income in zip(keys, given, taken):
+            if out == 0.0 and income == 0.0:
+                continue
+            start = self.stock(agent, item, tile)
+            value = start - out + income
+            if (value < min(0.0, start) - max(ROUNDING_SHARE * (out + income), UNDERFLOW)
+                    and not agent.startswith(EDGE_PREFIX)):
+                raise InsufficientGoods("%s would hold %.6g %s on %s after the batch" % (agent, value, item, tile))
+            goods_after.append((agent, tile, value))
+        for agent, value in money_after:
+            purse = purses.get(agent)
+            if purse is None:
+                purse = purses[agent] = {}
+            purse[currency] = value
+        for agent, tile, value in goods_after:
+            self._set_stock(agent, item, tile, value)
+        gross = self._gross_money
+        gross[currency] = gross.get(currency, 0.0) + math.fsum(paid)
+        for agent, out, income in zip(agents, paid, received):
+            if agent.startswith(EDGE_PREFIX) and (out != 0.0 or income != 0.0):
+                self._record_edge_money(agent, currency, out + income, out - income)
+        moved = math.fsum(given)
+        if moved > 0.0:
+            self._gross_goods[item] = self._gross_goods.get(item, 0.0) + moved
+            by_purpose = _nested(self._goods_by_purpose, item)
+            by_purpose[purpose] = by_purpose.get(purpose, 0.0) + moved
+        for (agent, _tile), out, income in zip(keys, given, taken):
+            if agent.startswith(EDGE_PREFIX) and (out != 0.0 or income != 0.0):
+                self._record_edge_goods(agent, item, out + income, out - income)
+
     def _money_after(self, transfers: Sequence[Transfer]) -> Dict[Tuple[AgentId, CurrencyId], float]:
         after: Dict[Tuple[AgentId, CurrencyId], float] = {}
         before: Dict[Tuple[AgentId, CurrencyId], float] = {}

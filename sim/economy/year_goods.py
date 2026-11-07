@@ -25,7 +25,7 @@ from .notional import making_costs
 from .protocols import AgentOrders
 from .recipes import input_depth_order
 from .taxes_bases import YearFacts
-from .types import Bid, GoodsMove, Offer
+from .types import Bid, Offer
 from .entry import unmet_quantity, wanted_in_round
 from .year_ledger import YearLedger
 from .rates import own_rate
@@ -180,11 +180,11 @@ def clear_goods(setup, record, view, area_map, order_book: OrderBook, plans, led
                                                              unit_costs)
             delivered, bought = 0.0, {}
             if result.quantity > 0.0:
-                done_settlement = settlement.settle_goods(record.book, result)
+                done_settlement = settlement.settle_goods(record.book, result, ledger.import_accounts,
+                                                          ledger.export_accounts)
                 bought = done_settlement.bought_by_buyer()
-                delivered = sum(move.quantity for move in done_settlement.postings if isinstance(move, GoodsMove))
-                ledger.note_postings(done_settlement.postings, "sales")
-                ledger.note_plant_purchases(done_settlement.postings, good, plant_goods)
+                delivered = done_settlement.delivered
+                ledger.note_settlement(done_settlement, "sales", plant_goods)
             ledger.note_clearing(result, delivered)
             idle_years = note_bids(record.memory, key, bids, offers) + note_offers(record.memory, key, bids, offers)
             left_markets[(good, area)] = goods_respend_year.LeftMarket(

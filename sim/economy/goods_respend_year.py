@@ -13,7 +13,7 @@ from .goods_market import quantity_at
 from .goods_market_fills import sold_by_seller_tile
 from .goods_respend import (bids_adding_demand, last_round_negligible, need_of_good, offers_left, rationed_money,
                             respend_bids)
-from .types import Bid, GoodsMove
+from .types import Bid
 
 Market = Tuple[str, str]
 
@@ -174,9 +174,9 @@ def _settle(record, ledger, result) -> Tuple[float, Dict[str, Tuple[float, float
     """Settle a round's result and return the goods it delivered and what each buyer received and paid."""
     delivered, bought = 0.0, {}
     if result.quantity > 0.0:
-        done = settlement.settle_goods(record.book, result)
+        done = settlement.settle_goods(record.book, result, ledger.import_accounts, ledger.export_accounts)
         bought = done.bought_by_buyer()
-        delivered = sum(move.quantity for move in done.postings if isinstance(move, GoodsMove))
-        ledger.note_postings(done.postings, "sales")
+        delivered = done.delivered
+        ledger.note_settlement(done, "sales")
     ledger.note_clearing(result, delivered)
     return delivered, bought
