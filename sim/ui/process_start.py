@@ -25,8 +25,9 @@ def loaded():
         gc.enable()
 
 
-def finish(argv=None):
-    """Called when the script's command has returned: flush the streams and leave without tearing the heap down."""
+def finish(argv=None, status=0):
+    """Called when the script's command has returned `status` (its exit code; None is success): flush the streams and
+    leave without tearing the heap down."""
     if not is_game_process(argv):
         return
     for stream in (sys.stdout, sys.stderr):
@@ -34,4 +35,4 @@ def finish(argv=None):
             stream.flush()
         except (OSError, ValueError):
             pass
-    os._exit(0)
+    os._exit(status if isinstance(status, int) else 0)

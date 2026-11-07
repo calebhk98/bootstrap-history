@@ -63,6 +63,7 @@ from sim.ui.api import (_agent_available, _agent_dispatch,  # noqa: F401
 
 
 if __name__ == "__main__":
-    main()
+    status = main()
     from sim.ui import process_start
-    process_start.finish()
+    process_start.finish(status=status)
+    sys.exit(status if isinstance(status, int) else 0)

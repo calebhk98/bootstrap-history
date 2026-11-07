@@ -114,6 +114,18 @@ def final_result(first_stage, final_states, years):
     "first_stage" (the stop rule's own result)}."""
     gaps = window_gaps(final_states)
     gap = 1.0 if gaps is None else max(gaps.values())
-    return {"settled": gaps is not None and gap < SPIN_UP_TOLERANCE, "years": years, "gap": gap,
-            "gaps": gaps or {}, "measured_years": len(final_states),
-            "final": dict(final_states[-1]) if final_states else {}, "first_stage": dict(first_stage)}
+    return plain({"settled": gaps is not None and gap < SPIN_UP_TOLERANCE, "years": years, "gap": gap,
+                  "gaps": gaps or {}, "measured_years": len(final_states),
+                  "final": dict(final_states[-1]) if final_states else {}, "first_stage": dict(first_stage)})
+
+
+def plain(value):
+    """`value` with numpy scalars made Python numbers and booleans: the result is saved as JSON, which takes neither a
+    numpy boolean nor a numpy integer (the measured quantities come from kernels)."""
+    if isinstance(value, dict):
+        return {key: plain(item) for key, item in value.items()}
+    if isinstance(value, (list, tuple)):
+        return type(value)(plain(item) for item in value)
+    if hasattr(value, "item") and type(value).__module__ == "numpy":
+        return value.item()
+    return value
