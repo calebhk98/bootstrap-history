@@ -118,15 +118,28 @@ changes a field. The saved record format does not change.
       tuples built with `attrgetter`; fills built without a list per bid
 - [ ] What is left: the cost itself over arrays (`unit_cost.full_cost_per_unit` per seller, dictionary prices in and out);
       the markets of one good's areas cleared by one kernel call (a `ClearingResult` with its fills and pairing is still
-      built per market, because the ledger, the settlement and the markets' memory read them)
+      built per market, because the ledger, the settlement and the markets' memory read them). Measured in the second
+      year (cProfile seconds, `year_goods.clear_goods` 3.5 in all): `unsold_search.clear_with_search` 0.9 over 4054
+      markets (floors, held values, salvage floors, the raise: Python per offer), `_produce_and_offer` 0.7,
+      `settlement.settle_goods` 0.5 (packs the pairing's tuples per market), `seller_offers.strategic_offers` 0.4
 - [ ] Checks: reproducible, compared, share measured (see item 4)
 
 ### 3. Households' respend (`goods_respend.py`, `goods_respend_year.py`)
 - [x] shared across households: the need of each good, the area each good is bought in, the cheapest asks, the priced
       needs of one basket at one set of asks (`goods_respend.priced_needs`)
-- [ ] rounds over every rationed cohort and market in one kernel (the bids' pricing `need_basket.priced_need`, the money
-      each buyer was rationed of, and the round's markets cleared together are still Python per buyer and per market)
-- [ ] Checks: reproducible, compared, share measured (see item 4)
+- [x] rounds over every rationed cohort and market in one kernel (`goods_respend_kernel.respend_rounds`; the baskets
+      flattened and the records packed by `goods_respend_pack.py`, the answer written back by `goods_respend_unpack.py`):
+      the money each buyer was rationed of, the bids' pricing (`goods_respend_basket_kernel`: `need_basket.priced_need`,
+      `price_ceilings`, `respend_bids`), each round's clears of the touched markets and their settlement against the
+      purses and stocks as they stand, and the round stop rule. A round's result carries no fills and no pairing (only
+      households bid in these rounds); the book is posted once per good and the ledger noted once per respend
+      (`YearLedger.note_summed_sales`). `test_year_speed_respend` runs the old rounds (`sim/tests/respend_reference.py`)
+      beside it
+- [x] Checks: reproducible after a reload; compared with the old rounds on the same base (last digits, then a diverging
+      game: the kernel sums left to right, a purse or stock is start less out plus in per round as the book makes it, and
+      a buyer left a quantity at rounding noise goes on to bid or not); share measured: respend 2.4 of 19.8 cProfile seconds
+      of the second year before, 0.5 of 17.9 after (`python3 <scratchpad>/prof_second.py SAVE OUT.prof`, callees of
+      `year_goods.clear_goods`; pack 0.27, kernel 0.06, write back 0.16)
 
 ### 4. Settlement and the year's ledger (`settlement.py`, `year_ledger.py`, `sim/book.py`)
 - [x] goods and labour settlement of a market in one kernel over its pairs (`settlement_kernel.settle_pairs`): stock and
