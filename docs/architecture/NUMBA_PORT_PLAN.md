@@ -299,9 +299,10 @@ any rounding change does; the digest is the same on two runs and after a reload.
 - [x] `python3 sim/simulator.py compile-kernels` compiles every registered kernel (`sim/jit.REGISTRY`) ahead of play, for
       an environment's setup script (with the `NUMBA_CACHE_DIR` the game will use): about two minutes on an empty cache,
       and a Rome year on that cache compiles nothing (`test_compile_kernels_declared`, slow `test_compile_kernels_smoke`)
-- [ ] a process's first year on a warm cache is still several seconds slower than its second (loading the cached kernels and
-      warming Python): every one-command-per-process sitting pays it; measure and cut it (`year-time` first against
-      second year on a warm cache)
+- [ ] a process's first year on a warm cache is slower than its second: the first year's route searches are a kernel
+      (`routes_tree_kernel.least_tree`; `test_kernel_route_tree`), cutting the gap from about 4 s to about 2 s; left: loading
+      the cached kernels, building the route graphs, the cost trees. A one-command sitting (`agent --session`, `state`)
+      costs about 3.5 s: imports, the save's parse and build, the reply, the save written again
 - [ ] A Rome year under one second, and every civilisation's year measured (`year-time` on a save of each)
 - [ ] `openings --prune` rebuilt and committed; the full build timed
 - [ ] the slow suite green, or each red topic explained with the complaint that owns it

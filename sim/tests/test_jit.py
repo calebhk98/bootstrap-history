@@ -25,14 +25,14 @@ class JitTests(unittest.TestCase):
         self.assertEqual(jit.njit(_total)(values), _total(values))
 
     def test_without_numba_the_function_is_returned_unchanged(self):
-        with mock.patch.dict(os.environ, {jit.NO_JIT_ENV: "1"}):
-            plain = importlib.reload(jit)
-            try:
+        # the variable is put back as it was (a run with ROME_NO_JIT set must stay without numba after this test)
+        try:
+            with mock.patch.dict(os.environ, {jit.NO_JIT_ENV: "1"}):
+                plain = importlib.reload(jit)
                 self.assertFalse(plain.ENABLED)
                 self.assertIs(plain.njit(_total), _total)
-            finally:
-                os.environ.pop(jit.NO_JIT_ENV, None)
-                importlib.reload(jit)
+        finally:
+            importlib.reload(jit)
 
 
 if __name__ == "__main__":
