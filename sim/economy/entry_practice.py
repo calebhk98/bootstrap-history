@@ -5,9 +5,10 @@ exits (LOSS_YEARS_BEFORE_EXIT, producers_close.py): the hours it plans on are th
 first year that loses and later years that pay enter when the years together pay, as exit would not close them
 before then.
 """
+import contextlib
 import dataclasses
 import math
-from typing import Callable, List, Mapping, Sequence
+from typing import Callable, Dict, List, Mapping, Sequence
 
 from . import practice
 from .producers_close import LOSS_YEARS_BEFORE_EXIT
@@ -17,11 +18,43 @@ from .types import Recipe
 CrewsOf = Callable[[str], Sequence[Mapping[str, float]]]
 
 
+_shared: Dict[int, tuple] = {}     # id of a producers table -> (table, its crews_of) while `shared_crews` holds it
+
+
 def crews_of_recipe(producers: Mapping[str, object]) -> CrewsOf:
-    """The crews of each recipe's producers in `producers` (a record's producers)."""
+    """The crews of each recipe's producers in `producers` (a record's producers), in producer id order. Inside
+    `shared_crews` of the same table the one grouping is read; otherwise the table is read on each call."""
+    held = _shared.get(id(producers))
+    if held is not None and held[0] is producers:
+        return held[1]
+
     def crews(recipe_id: str) -> List[Mapping[str, float]]:
         return [each.crew_runs for _name, each in sorted(producers.items()) if each.recipe_id == recipe_id]
     return crews
+
+
+@contextlib.contextmanager
+def shared_crews(producers: Mapping[str, object]):
+    """Group `producers` by recipe once, on first use, for every `crews_of_recipe` of the table inside the block. The
+    table must not gain, lose or replace a producer inside the block."""
+    grouped: Dict[str, List[Mapping[str, float]]] = {}
+    state = {"built": False}
+
+    def crews(recipe_id: str) -> List[Mapping[str, float]]:
+        if not state["built"]:
+            for _name, each in sorted(producers.items()):
+                grouped.setdefault(each.recipe_id, []).append(each.crew_runs)
+            state["built"] = True
+        return list(grouped.get(recipe_id, ()))
+    outer = _shared.get(id(producers))
+    _shared[id(producers)] = (producers, crews)
+    try:
+        yield crews
+    finally:
+        if outer is None:
+            del _shared[id(producers)]
+        else:
+            _shared[id(producers)] = outer
 
 
 def first_year_recipe(recipe: Recipe, peers: Sequence[Mapping[str, float]]) -> Recipe:
