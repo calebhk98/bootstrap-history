@@ -111,6 +111,6 @@ class HourSupply:
             market = (offer.trade, offer.area)
             wage = wage_by_market.get(market, self.faced_wage.get(market, offer.reservation_wage))
             sold, _at_home = self.split(offer, wage)
-            self.sold.append(dataclasses.replace(offer, hours=sold))
+            self.sold.append(LabourOffer(offer.worker, offer.trade, offer.area, sold, offer.reservation_wage))
             self.kept[offer.worker] = self.kept.get(offer.worker, 0.0) + (offer.hours - sold)
         return self.sold
