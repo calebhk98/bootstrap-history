@@ -218,7 +218,18 @@ any rounding change does; the digest is the same on two runs and after a reload.
 - [x] `live_wages_at` and `present_prices_at` read once per trade and tile until the memory is written to (`YearView.wages_at`),
       land sellers indexed once a year (`land_bid.owners_of_sellers`): `firm_land_bids` from about 0.3 s to 0.02 s of a year
 - [ ] producers' plans (`producers.plan`), cohorts' orders (`year_goods.cohort_orders`), produce and offer
+    - [x] every producer's plan in one kernel over the year arrays (`plan_kernel.plan_rows`, packed and unpacked by
+          `plan_year.plans_of`; `test_year_speed_plans` against `producers.plan` on random economies). A recipe with tool
+          fallbacks or wear, or a crew whose practice stretches the recipe, still goes through `producers.plan`
+    - [ ] cohorts' orders, produce and offer
 - [ ] hour supply, outside option, labour context, land bids and leases, wear and spoilage, the outcome
+    - [x] `bondage_hours.place_held` indexes bids and offers once (`test_year_speed_bondage`)
+    - [x] `wear_and_spoilage` reads only the goods that spoil or wear (`test_year_speed_wear`)
+    - [x] the memory arrays are kept until the memory is next written to (`MemoryArrays.is_current`; `market_memory.written_stamp`)
+          instead of read again by each `sync` and `refreshed`
+    - [x] land leases read the loans' pledges once (`titles.pledges_by_title`; `test_year_speed_titles`)
+    - [ ] left: `_hour_supply` (`household_work_year.plans`, one `cohort_plan` per cohort; `plot_schedules`' `need_prices`),
+          `year_accounts.build`, `land_market.settle_year`, `outside_option_by_tile`, `_grow_own`
 - [ ] Checks: reproducible, compared, share measured
 
 ### 8. The year outside the economy (`sim/agents/registry.advance`, the engine's other phases)
