@@ -117,9 +117,9 @@ def nudged(markets, factor):
 
 
 def snapshot(book):
-    return {"money": {agent: dict(purse) for agent, purse in book._money.items()},
-            "goods": {agent: {good: dict(tiles) for good, tiles in by_good.items()} for agent, by_good in book._goods.items()},
-            "gross_money": dict(book._gross_money), "gross_goods": dict(book._gross_goods)}
+    record = book.to_record()
+    return {"money": record["money"], "goods": record["goods"], "gross_money": record["gross_money"],
+            "gross_goods": record["gross_goods"]}
 
 
 def largest(value):

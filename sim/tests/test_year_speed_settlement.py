@@ -46,11 +46,11 @@ def random_pairing(rng, agents):
 
 
 def snapshot(book):
-    return {"money": {agent: dict(purse) for agent, purse in book._money.items()},
-            "goods": {agent: {good: dict(tiles) for good, tiles in by_good.items()} for agent, by_good in book._goods.items()},
-            "gross_money": dict(book._gross_money), "gross_goods": dict(book._gross_goods),
-            "edge_money": (book._edge_money_volume, book._edge_money_net),
-            "edge_goods": (book._edge_goods_volume, book._edge_goods_net)}
+    record = book.to_record()
+    return {"money": record["money"], "goods": record["goods"], "gross_money": record["gross_money"],
+            "gross_goods": record["gross_goods"],
+            "edge_money": (record["edge_money_volume"], record["edge_money_net"]),
+            "edge_goods": (record["edge_goods_volume"], record["edge_goods_net"])}
 
 
 def close(left, right, path=""):
