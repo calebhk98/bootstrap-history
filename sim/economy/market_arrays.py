@@ -19,6 +19,18 @@ FLOAT, INTEGER, TEXT = "float", "integer", "text"
 _DTYPE = {FLOAT: np.float64, INTEGER: np.int64, TEXT: np.int32}
 
 
+_SPLIT: Dict[str, Tuple[str, str]] = {}      # market key -> (first part, area), each key split once per process
+
+
+def split_key(key: str) -> Tuple[str, str]:
+    """(good or trade, area) of a market key, `key.split(KEY_SEPARATOR, 1)` kept: a key is split once, not on every pass over a store."""
+    found = _SPLIT.get(key)
+    if found is None:
+        first, _separator, area = key.partition(KEY_SEPARATOR)
+        found = _SPLIT[key] = (first, area)
+    return found
+
+
 class MarketIds:
     """The numbering of the goods (or trades) and of the areas a set of stores shares."""
 

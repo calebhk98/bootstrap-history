@@ -16,7 +16,7 @@ from typing import Dict, List, Mapping, Optional, Sequence, Tuple
 
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 from sim.book import DeliveredMove
-from .market_memory import KEY_SEPARATOR as MARKET_KEY_SEPARATOR
+from .market_arrays import split_key
 from .merchants import Merchant
 from .setup import opening_price_today
 from .types import EDGE_CONSUMPTION, GoodId, GoodsMove, TileId
@@ -157,7 +157,7 @@ def last_prices(setup, memory, weights: Mapping[str, float]) -> Dict[GoodId, flo
     wanted = set(carrier_goods(setup))
     seen: Dict[GoodId, List[Tuple[float, float]]] = {}
     for key, price in sorted(memory.cleared_prices.items()):
-        good = key.split(MARKET_KEY_SEPARATOR, 1)[0]
+        good = split_key(key)[0]
         if good in wanted and price > 0.0:
             seen.setdefault(good, []).append((price, weights.get(key, 0.0)))
     prices = {good: _weighted_mean(seen[good]) if good in seen else opening_price_today(setup, memory, good)

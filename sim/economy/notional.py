@@ -8,12 +8,15 @@ from the memory's prices, not these; the engine's agents are shown these (`price
 `making_costs` steers the price a thin or empty market remembers.
 """
 import math
+
+import numpy as np
 from typing import Dict, Optional, Set, Tuple
 
 from sim.constants import declare
 
 from . import trade_wages, unit_cost
-from .market_memory import KEY_SEPARATOR, PRICE_REMEMBERED, PRICE_SMOOTHED_TRADE, RECENT_TRADE_YEARS, MarketMemory
+from .market_arrays import split_key
+from .market_memory import PRICE_REMEMBERED, PRICE_SMOOTHED_TRADE, RECENT_TRADE_YEARS, MarketMemory
 from .national_prices import national_prices, national_wages, usual_volumes
 from .recipes import input_depth_order
 
@@ -31,7 +34,10 @@ THIN_MARKET_SHARE_OF_OPENING_DEMAND = declare(
 
 def recently_traded_goods(memory: MarketMemory) -> Set[str]:
     """Goods with a market that cleared within RECENT_TRADE_YEARS."""
-    return {key.split(KEY_SEPARATOR, 1)[0] for key in memory.trade_age if memory.traded_within(key, RECENT_TRADE_YEARS)}
+    _keys, rows, columns = memory.trade_age.positions()
+    ages = memory.trade_age.at(rows, columns)
+    names = memory.numbering("goods").first_names
+    return {names[row] for row in np.unique(rows[ages <= RECENT_TRADE_YEARS]).tolist()}
 
 
 def _estimated_prices(setup, record, market, thin: bool, wages: Optional[Dict[str, float]] = None) -> Dict[str, float]:
@@ -69,7 +75,7 @@ def _traded_volumes(record) -> Dict[str, float]:
     it traded last year, so a market that has dried up does not stand for the good on its remembered volume."""
     traded: Dict[str, float] = {}
     for key, usual in usual_volumes(record).items():
-        good = key.split(KEY_SEPARATOR, 1)[0]
+        good = split_key(key)[0]
         traded[good] = traded.get(good, 0.0) + min(usual, record.goods.volumes.get(key, 0.0))
     return traded
 

@@ -6,7 +6,8 @@ from typing import Callable, Dict, Hashable, List, Mapping, Optional, Set, Tuple
 import numpy as np
 
 from . import price_index
-from .market_memory import KEY_SEPARATOR, RECENT_TRADE_YEARS
+from .market_arrays import split_key
+from .market_memory import RECENT_TRADE_YEARS
 
 
 def usual_volumes(record) -> Mapping[str, float]:
@@ -22,7 +23,7 @@ def _markets_by_good(record, keep: Optional[Callable[[str, str], bool]]) -> Dict
     memory = record.memory
     by_good: Dict[str, List[Tuple[str, float, bool, float]]] = {}
     for key, price in sorted(memory.prices.items()):
-        good, area = key.split(KEY_SEPARATOR, 1)
+        good, area = split_key(key)
         if keep is None or keep(good, area):
             by_good.setdefault(good, []).append((key, price, memory.traded_within(key, RECENT_TRADE_YEARS), weights.get(key, 0.0)))
     return by_good
@@ -117,7 +118,7 @@ def traded_spending_weights(volumes: Mapping[str, float], prices: Mapping[str, f
     without a price or a volume carries no weight."""
     quantity: Dict[str, float] = {}
     for key, volume in volumes.items():
-        good = key.split(KEY_SEPARATOR, 1)[0]
+        good = split_key(key)[0]
         if good in goods and volume > 0.0:
             quantity[good] = quantity.get(good, 0.0) + volume
     return {good: amount * prices[good] for good, amount in sorted(quantity.items()) if prices.get(good, 0.0) > 0.0}

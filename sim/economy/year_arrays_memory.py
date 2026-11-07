@@ -2,15 +2,16 @@
 index of each (good, tile) pair's area.
 
 `AreaIndex` says which area each tile is in for each good (the area map does not change inside a year). `MemoryArrays`
-holds what the memory remembers, read once with `build`; an array is read with `at_tiles`, which turns (good, tile) into
-the (good, area) cell. The memory is read through its stores' keys exactly as `MarketMemory.price_kind` and
-`offered_price` read them (`test_year_arrays` checks the two against each other)."""
-from dataclasses import dataclass, field
-from typing import Dict, Mapping, Optional
+holds what the memory remembers, read with `build` straight from the memory's own (good by area) arrays
+(`market_arrays.MarketStore.gather`: this year's order of goods and areas laid over the memory's numbering, no key is
+split); an array is read with `at_tiles`, which turns (good, tile) into the (good, area) cell. The kinds are read exactly
+as `MarketMemory.price_kind` and `offered_price` read them (`test_year_arrays` checks the two against each other)."""
+from dataclasses import dataclass
+from typing import Dict, Optional
 
 import numpy as np
 
-from .market_memory import KEY_SEPARATOR, MarketMemory, written_stamp
+from .market_memory import MarketMemory, written_stamp
 from .planning_price import BARE_QUOTES
 from .types import QUOTE_LOWEST_UNFILLED_ASK, QUOTE_OPENING_ESTIMATE
 from .year_arrays_recipes import Names
@@ -22,8 +23,6 @@ NO_AREA = -1
 class AreaIndex:
     areas: Names
     of_good_tile: np.ndarray        # good by tile: the area's column, NO_AREA where the good has no market there
-    located: Dict[str, int] = field(default_factory=dict, compare=False, repr=False)    # a memory key -> its good row times the area count plus its area column, -1 where it names none the arrays hold
-    stores: Dict[str, tuple] = field(default_factory=dict, compare=False, repr=False)   # a store's name -> (its keys, their rows, their columns) as last read
 
     @classmethod
     def build(cls, area_map, goods: Names, tiles: Names) -> "AreaIndex":
@@ -43,7 +42,7 @@ class AreaIndex:
                     tile_row = tiles.row.get(tile)
                     if tile_row is not None:
                         grid[good_row, tile_row] = column
-        return cls(areas, grid, {}, {})
+        return cls(areas, grid)
 
 
 _KIND_OFFERED, _KIND_BARE, _KIND_OTHER = 1, 2, 4
@@ -51,36 +50,16 @@ _KIND_BITS = {None: 0, QUOTE_LOWEST_UNFILLED_ASK: _KIND_OFFERED | _KIND_BARE, QU
               **{kind: _KIND_BARE for kind in BARE_QUOTES if kind != QUOTE_LOWEST_UNFILLED_ASK}}
 
 
-def _located(area_index: AreaIndex, store: Mapping[str, float], goods: Names, name: str):
-    """(the store's keys, the good row and area column of each, -1 where the key names no good or area the arrays hold). Where a
-    key falls is worked out once and kept, and the answer for the store `name` is kept while its keys are the same."""
-    keys = tuple(store)
-    last = area_index.stores.get(name)
-    if last is not None and last[0] == keys:
-        return last
-    kept = area_index.located
-    areas = area_index.areas
-    width = max(1, len(areas.ids))
-    codes = np.empty(len(keys), dtype=np.int64)
-    for position, key in enumerate(keys):
-        code = kept.get(key)
-        if code is None:
-            good, _separator, area = key.partition(KEY_SEPARATOR)
-            good_row, area_column = goods.row.get(good), areas.row.get(area)
-            code = kept[key] = -1 if good_row is None or area_column is None else good_row * width + area_column
-        codes[position] = code
-    answer = area_index.stores[name] = (keys, np.where(codes >= 0, codes // width, -1), np.where(codes >= 0, codes % width, -1))
-    return answer
-
-
 def price_grid(memory: MarketMemory, goods: Names, area_index: AreaIndex) -> np.ndarray:
-    """The remembered prices alone (`MemoryArrays.price`), for a reader that needs no other part of the memory."""
-    price = np.full((len(goods.ids), len(area_index.areas.ids)), np.nan)
-    keys, rows, columns = _located(area_index, memory.prices, goods, "prices")
-    found = rows >= 0
-    values = np.fromiter(memory.prices.values(), dtype=np.float64, count=len(keys))
-    price[rows[found], columns[found]] = values[found]
-    return price
+    """The remembered prices alone (`MemoryArrays.price`), for a reader that needs no other part of the memory: the memory's
+    own (good by area) array read in this year's order of goods and areas."""
+    ids = memory.numbering("goods")
+    return memory.prices.gather(ids.rows_of(goods.ids), ids.columns_of(area_index.areas.ids))
+
+
+def _kind_bits(words) -> np.ndarray:
+    """`_KIND_BITS` of each quote kind a store holds, by code, with a last entry (index -1) for no quote."""
+    return np.array([_KIND_BITS.get(word, _KIND_OTHER) for word in words] + [0], dtype=np.int64)
 
 
 @dataclass(frozen=True)
@@ -103,27 +82,19 @@ class MemoryArrays:
         """`wage_of(trade, tile_id)` is the wage rule (trade_wages.wage_in_view through a view); called for every trade and tile.
         A caller that has worked the wages out already hands the (trade by tile) grid as `wage_grid`."""
         areas = area_index.areas
-        shape = (len(goods.ids), len(areas.ids))
-        price, cleared = np.full(shape, np.nan), np.full(shape, np.nan)
-        offered, bare = np.full(shape, np.nan), np.zeros(shape, dtype=bool)
-
-        keys, rows, columns = _located(area_index, memory.prices, goods, "prices")
-        found = rows >= 0
-        values = np.fromiter(memory.prices.values(), dtype=np.float64, count=len(keys))
-        price[rows[found], columns[found]] = values[found]
-        ages = np.array([memory.trade_age.get(key, np.nan) for key in keys], dtype=np.float64)
-        has_age = ~np.isnan(ages)
-        bits = np.array([_KIND_BITS.get(memory.quote_kinds.get(key), _KIND_OTHER) for key in keys], dtype=np.int64)
+        ids = memory.numbering("goods")
+        rows, columns = ids.rows_of(goods.ids), ids.columns_of(areas.ids)
+        price = memory.prices.gather(rows, columns)
+        cleared = memory.cleared_prices.gather(rows, columns)
+        ages = memory.trade_age.gather(rows, columns)
+        bits = _kind_bits(memory.quote_kinds.words)[memory.quote_kinds.gather(rows, columns)]
+        found = ~np.isnan(price)
+        has_age = ages >= 0
         current = has_age & (ages <= 0)
         kind_free = ~current & (bits == 0)
         offered_mask = found & (current | (kind_free & ~has_age) | (~current & (bits != 0) & ((bits & _KIND_OFFERED) > 0)))
-        offered[rows[offered_mask], columns[offered_mask]] = values[offered_mask]
-        bare_mask = found & ~current & (bits != 0) & ((bits & _KIND_BARE) > 0)
-        bare[rows[bare_mask], columns[bare_mask]] = True
-        keys, rows, columns = _located(area_index, memory.cleared_prices, goods, "cleared_prices")
-        found = rows >= 0
-        values = np.fromiter(memory.cleared_prices.values(), dtype=np.float64, count=len(keys))
-        cleared[rows[found], columns[found]] = values[found]
+        offered = np.where(offered_mask, price, np.nan)
+        bare = found & ~current & (bits != 0) & ((bits & _KIND_BARE) > 0)
         rate = np.full(len(areas.ids), np.nan)
         for column, area in enumerate(areas.ids):
             found = memory.rates.get(memory.currency_of_area.get(area, own_currency))

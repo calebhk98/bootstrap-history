@@ -12,7 +12,8 @@ import math
 from typing import Dict, List, Optional, Tuple
 
 from . import credit, trade_wages
-from .market_memory import KEY_SEPARATOR as MARKET_KEY_SEPARATOR, market_key
+from .market_arrays import split_key
+from .market_memory import market_key
 from .merchants import Merchant
 from .producers_working_capital import WORKING_CAPITAL_PURPOSE
 from .setup import labour_area
@@ -131,8 +132,7 @@ def hiring_area(record, merchant: Merchant, tile: str, populated=None) -> str:
 
 
 def _split(key: str) -> Tuple[str, str]:
-    trade, tile = key.split(MARKET_KEY_SEPARATOR, 1)
-    return trade, tile
+    return split_key(key)
 
 
 def bids(setup, record) -> List[LabourBid]:

@@ -6,7 +6,7 @@ from typing import Dict
 from sim.labour.api import MarketState, add_people, market_state_from_plain, market_state_to_plain
 from sim.rekey import rekey
 
-from .market_memory import KEY_SEPARATOR
+from .market_arrays import split_key
 from .record_parts import OwnedRecord
 from .types import AgentId, TradeId
 
@@ -40,7 +40,7 @@ class LabourRecord(OwnedRecord):
     def hours_cleared_in(self, market_key: str) -> float:
         """Hours the core's last clearing hired in the labour market `market_key` (trade, area), all employers: before
         payment and without bonded hours, so with `hours_idle` they make up the hours offered."""
-        trade, area = market_key.split(KEY_SEPARATOR, 1)
+        trade, area = split_key(market_key)
         return math.fsum(self.workforce.hired_hours.get(area, {}).get(trade, {}).values())
 
     def set_hours_paid_by_employer(self, hours: Dict[AgentId, Dict[TradeId, float]]) -> None:

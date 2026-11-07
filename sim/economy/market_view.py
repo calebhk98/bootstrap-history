@@ -84,6 +84,11 @@ class YearView:
     def wage(self, trade: TradeId, area: AreaId) -> Optional[float]:
         return self._memory.wages.get_pair(trade, area)
 
+    def wages_block(self, trades, areas):
+        """The recorded wage of each of `trades` in each of `areas` as one (trades by areas) array, NaN where the memory holds none."""
+        ids = self._memory.numbering("trades")
+        return self._memory.wages.gather(ids.rows_of(trades), ids.columns_of(areas))
+
     def wage_held_anywhere(self, trade: TradeId) -> bool:
         """Whether the memory holds a wage for the trade in any area (`MarketMemory.holds_wage_for`)."""
         return self._memory.holds_wage_for(trade)

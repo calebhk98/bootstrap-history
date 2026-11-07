@@ -27,16 +27,39 @@ def tiles_of(record, setup=None) -> Names:
 
 def wage_grid(setup, view, trades: Names, tiles: Names) -> np.ndarray:
     """`trade_wages.wage_in_view` for every trade and tile, as a (trade by tile) grid: the wage rule's three cases worked out per
-    trade (what it holds, the opening wage, the premium) and per tile (the unskilled wage), then read cell by cell."""
-    from .trade_wages import priced_trade_wage
+    trade (what it holds, the opening wage, the premium) and per tile (the unskilled wage), then laid over the recorded wages
+    read as one block from the memory's (trade by area) array (`YearView.wages_block`)."""
+    from .trade_wages import priced_trade_wage, trade_premium
     areas = [labour_area(tile) for tile in tiles.ids]
-    unskilled = [view.wage(setup.unskilled_trade, area) for area in areas]
     level = view.opening_wage_level(setup.currency_id)
-    grid = np.empty((len(trades.ids), len(tiles.ids)))
+    block = getattr(view, "wages_block", None)
+    if block is None:
+        unskilled = [view.wage(setup.unskilled_trade, area) for area in areas]
+        grid = np.empty((len(trades.ids), len(tiles.ids)))
+        for row, trade in enumerate(trades.ids):
+            held = view.wage_held_anywhere(trade)
+            for column, area in enumerate(areas):
+                grid[row, column] = priced_trade_wage(setup, trade, view.wage(trade, area), unskilled[column], level, held)
+        return grid
+    paid = block(trades.ids, areas)
+    unskilled = block([setup.unskilled_trade], areas)[0]
+    opening_unskilled = setup.opening_wages.get(setup.unskilled_trade)
+    if opening_unskilled is not None:
+        unskilled = np.where(np.isnan(unskilled), opening_unskilled * level, unskilled)
+    grid = paid
     for row, trade in enumerate(trades.ids):
-        held = view.wage_held_anywhere(trade)
-        for column, area in enumerate(areas):
-            grid[row, column] = priced_trade_wage(setup, trade, view.wage(trade, area), unskilled[column], level, held)
+        if trade not in setup.trades:
+            raise KeyError(f"unknown trade {trade!r}: the setup's trades are {sorted(setup.trades)}")
+        missing = np.isnan(paid[row])
+        if not missing.any():
+            continue
+        opening = setup.opening_wages.get(trade)
+        if opening is not None and not view.wage_held_anywhere(trade):
+            grid[row, missing] = opening * level
+        else:
+            if np.isnan(unskilled[missing]).any():
+                raise KeyError(setup.unskilled_trade)
+            grid[row, missing] = unskilled[missing] * (1.0 + trade_premium(setup, trade))
     return grid
 
 

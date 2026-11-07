@@ -9,7 +9,8 @@ from typing import Dict, List, Optional, Set, Tuple
 
 from . import carried_book, households, quiet_year
 from .home_scope import has_partners
-from .market_memory import KEY_SEPARATOR, YearView
+from .market_arrays import split_key
+from .market_memory import YearView
 from .national_prices import national_prices, national_wages
 from .setup import LABOUR_AREA_PREFIX, labour_area
 from .types import TileId
@@ -48,7 +49,7 @@ def population(economy, country: Optional[str]) -> float:
 
 
 def _labour_key_in(key: str, tiles: Set[TileId]) -> bool:
-    area = key.split(KEY_SEPARATOR, 1)[1]
+    area = split_key(key)[1]
     return area.startswith(LABOUR_AREA_PREFIX) and area[len(LABOUR_AREA_PREFIX):] in tiles
 
 
@@ -69,7 +70,7 @@ def idle_hours_by_trade(economy, country: Optional[str]) -> Dict[str, tuple]:
         hired: Dict[str, float] = {}
         for key, hours in sorted(economy.record.labour.hours_idle.items()):
             if _labour_key_in(key, tiles):
-                trade = key.split(KEY_SEPARATOR, 1)[0]
+                trade = split_key(key)[0]
                 idle[trade] = idle.get(trade, 0.0) + hours
                 hired[trade] = hired.get(trade, 0.0) + economy.record.labour.hours_cleared_in(key)
         return {trade: (idle[trade], idle[trade] + hired[trade]) for trade in sorted(idle)}
@@ -123,7 +124,7 @@ def _traded_volumes(economy, country: Optional[str]) -> Dict[str, float]:
     totals: Dict[str, float] = {}
     areas_of: Dict[str, Dict[str, Set[TileId]]] = {}
     for key, volume in sorted(economy.record.goods.volumes.items()):
-        good, area = key.split(KEY_SEPARATOR, 1)
+        good, area = split_key(key)
         if country is not None:
             by_area = areas_of.get(good)
             if by_area is None:
