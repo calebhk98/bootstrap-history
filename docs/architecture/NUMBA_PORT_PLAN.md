@@ -5,6 +5,7 @@
 **Measured** (`year-time --session SAVE --years 2 --reload-check` on the shared Rome save; seconds of the two years):
 - before the port: about 23 and 20
 - items 1, 2 and 5 in part: about 17 and 13.5, reproducible after a reload
+- with labour's heads and switching, entry's practice and the national prices: about 15 and 11 (machine loaded)
 
 **Goal.** A Rome year under one second (three at most; a game is five hundred years), with the game unchanged in its
 rules and reproducible: the same save stepped on the same machine gives the same game, straight or saved and loaded in
@@ -58,12 +59,17 @@ copied, never written). A phase's share: `cProfile` of `agent --session COPY` wi
     - [x] every market prepared, then all their hiring rounds in one kernel (`hiring_kernel.py`, `applications.hire_markets`),
           then finished (`test_year_speed_labour_hiring`, the old rounds in `labour_hiring_reference.py`)
     - [x] the hours-sold schedule over a matrix of wages (`sim/economy/labour_supply_kernel.py`; `test_year_speed_labour_sold_hours`)
-    - [ ] the fetched-hands search (`ImportCosts.supply`, `fetch_wage`, `hours_at`) over arrays
-    - [ ] the wage searches (`supply_target`, `_wage_with_supply`) for every market at once
+    - [x] the fetched-hands search and the wage searches for every market at once (`clearing_kernel.market_heads`,
+          `clearing_arrays.py`; `test_year_speed_labour_heads` against `clearing._plain_head`; the plain path kept for a
+          mod's fetch search or an unpacked schedule)
+    - [ ] the per-market tail in Python: `eligible_bids`, `retain`, `offer_ceilings`, the hiring jobs, `poach`, `asks.record`
 - [ ] Trade switching (`switching.switch_trades`, `_odds`, `_planned_moves`)
     - [x] the per-band logit (`switching_kernel.band_shares`; `test_year_speed_labour_switching`)
-    - [ ] targets, gains, costs and the planned moves in arrays
-- [ ] Trade formation (`formation.form_trades`)
+    - [x] targets, gains, costs, plan reuse and moves for every source of an area (`switching_kernel.plan_area`,
+          `take_moves`; `test_year_speed_labour_plans`)
+    - [ ] expected incomes at graduation and the refusal path
+- [ ] Trade formation (`formation.form_trades`): early return where no origin sells, origin asks kept for the year; the
+      per-market purchase and carriage searches are Python
 - [ ] Checks: reproducible, compared, share measured
 
 ### 2. Goods clearing (`sim/economy/goods_market*.py`, `unsold_search.py`, `seller_offers.py`, `price_setting.py`, `demand_search.py`, `market_quote.py`)
