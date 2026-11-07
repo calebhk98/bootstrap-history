@@ -15,7 +15,7 @@ values (numbers, strings, booleans, lists, dicts of those); a tuple comes back a
 class Refusal(str):
     """Refusal text with a `cause` code, optional `choices` and the `facts` it states."""
 
-    def __new__(cls, cause, text, choices=None, **facts):
+    def __new__(cls, cause, text, /, choices=None, **facts):    # positional-only, so a fact may be named `cause` or `text`
         instance = super().__new__(cls, text)
         instance.cause = cause
         instance.choices = list(choices) if choices is not None else None
