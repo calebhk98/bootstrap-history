@@ -119,6 +119,10 @@ changes a field. The saved record format does not change.
       the flood price still build (`test_year_speed_demand_arrays`)
 - [x] A seller's unit cost and input share read once per market (`seller_offers.cost_figures`, `UnitCosts`); the pairing's
       tuples built with `attrgetter`; fills built without a list per bid
+- [x] A good's markets cleared, then settled together: `settlement.settle_goods_many` (`settlement_batch.py`, kernel
+      `settlement_batch_kernel.settle_markets`: purses and stocks carried from market to market, the book posted once per good;
+      `test_year_speed_settlement_batch`). Second-year wall time of the settlement stage about 0.27 s to 0.14 s
+      (a `perf_counter` wrapper around `settle_goods_many` in `year_goods.clear_goods`)
 - [ ] What is left: the cost itself over arrays (`unit_cost.full_cost_per_unit` per seller, dictionary prices in and out);
       the markets of one good's areas cleared by one kernel call (a `ClearingResult` with its fills and pairing is still
       built per market, because the ledger, the settlement and the markets' memory read them). Measured in the second

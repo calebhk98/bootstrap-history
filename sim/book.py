@@ -191,6 +191,7 @@ class Book:
         taken. The same entries, totals and edge records as posting every pair, with no object per pair; an overdraft
         beyond rounding that the batch makes or deepens is refused, with nothing applied."""
         purses = self._money
+        stocks = self._goods
         money_after = []
         for agent, out, income in zip(agents, paid, received):
             if out == 0.0 and income == 0.0:
@@ -201,24 +202,36 @@ class Book:
             if (value < min(0.0, start) - max(ROUNDING_SHARE * (out + income), UNDERFLOW)
                     and not agent.startswith(EDGE_PREFIX)):
                 raise InsufficientFunds("%s would hold %.6g %s after the batch" % (agent, value, currency))
-            money_after.append((agent, value))
+            money_after.append((agent, purse, value))
         goods_after = []
         for (agent, tile), out, income in zip(keys, given, taken):
             if out == 0.0 and income == 0.0:
                 continue
-            start = self.stock(agent, item, tile)
+            by_good = stocks.get(agent)
+            by_tile = by_good.get(item) if by_good else None
+            start = by_tile.get(tile, 0.0) if by_tile else 0.0
             value = start - out + income
             if (value < min(0.0, start) - max(ROUNDING_SHARE * (out + income), UNDERFLOW)
                     and not agent.startswith(EDGE_PREFIX)):
                 raise InsufficientGoods("%s would hold %.6g %s on %s after the batch" % (agent, value, item, tile))
             goods_after.append((agent, tile, value))
-        for agent, value in money_after:
-            purse = purses.get(agent)
+        for agent, purse, value in money_after:
             if purse is None:
                 purse = purses[agent] = {}
             purse[currency] = value
-        for agent, tile, value in goods_after:
-            self._set_stock(agent, item, tile, value)
+        if goods_after:
+            holders = self._holders.get(item)
+            if holders is None:
+                holders = self._holders[item] = set()
+            for agent, tile, value in goods_after:
+                by_good = stocks.get(agent)
+                if by_good is None:
+                    by_good = stocks[agent] = {}
+                by_tile = by_good.get(item)
+                if by_tile is None:
+                    by_tile = by_good[item] = {}
+                by_tile[tile] = value
+                holders.add(agent)
         gross = self._gross_money
         gross[currency] = gross.get(currency, 0.0) + math.fsum(paid)
         for agent, out, income in zip(agents, paid, received):
