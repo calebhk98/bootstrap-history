@@ -9,10 +9,13 @@ from typing import Dict
 
 import numpy as np
 
+from dataclasses import replace as replace_fields
+
 from . import expansion_price, firm_year, ownership, practice, producer_exit, producer_table, shares
 from . import producers_working_capital as working_capital
 from .close_pack import pack
 from .close_run import close_producers
+from .year_arrays_closed import columns_after_close
 from .replaced import replaced
 from .types import LoanRequest, Transfer
 from .year_arrays import YearArrays
@@ -62,9 +65,10 @@ def _changes_of(producer, answer_row: Dict[str, object], written_goods, pooled) 
     return changes
 
 
-def close_producers_of_year(setup, record, view, ledger, arrays: YearArrays, cohorts_by_tile, property_income, pooled) -> None:
+def close_producers_of_year(setup, record, view, ledger, arrays: YearArrays, cohorts_by_tile, property_income, pooled) -> YearArrays:
     """Close every producer. `property_income` (payee -> money) is added to as dividends are paid; `pooled(recipe_id, trade)`
-    is the crews' pooled practice."""
+    is the crews' pooled practice. Returns the year arrays in step with the table the close leaves (the next phase hands them
+    to `sync`, which then has no row to read again)."""
     arrays = arrays.sync(setup, record, view)
     columns, matrices = arrays.producers, arrays.matrices
     traded, _round_prices = ledger.market_totals()
@@ -77,6 +81,7 @@ def close_producers_of_year(setup, record, view, ledger, arrays: YearArrays, coh
     good_ids = matrices.goods.ids
     write_offs: Dict[str, float] = {}      # applied in one pass over the loans, and the dividends posted as one batch, after the loop
     dividends: list = []
+    exits = producer_exit.ExitBatch(record)
     for row, producer_id in enumerate(columns.ids):
         producer = columns.records[row]
         if producer.idle_years > 0:      # bankrupt: idle, no dividend (Eurace@Unibi, Firm_bankruptcy_idle_counter)
@@ -91,7 +96,7 @@ def close_producers_of_year(setup, record, view, ledger, arrays: YearArrays, coh
         if lists["exited"][row]:
             firm_year.write_off_many(record, write_offs)     # an exit remembers its defaults after those of the producers before it
             write_offs.clear()
-            paid = producer_exit.exit_producer(record, producer_id, list(transfers))
+            paid = exits.exit(producer_id, list(transfers))
             for transfer in paid:
                 property_income[transfer.payee] = property_income.get(transfer.payee, 0.0) + transfer.amount
             continue
@@ -123,4 +128,6 @@ def close_producers_of_year(setup, record, view, ledger, arrays: YearArrays, coh
             expected_sales=lists["new_expected_sales"][row], last_runs=lists["new_last_runs"][row],
             staffed=None if math.isnan(staffed) else staffed, idle=lists["new_idle"][row]), written, pooled)))
     firm_year.write_off_many(record, write_offs)
+    exits.finish()
     record.book.transfer_many(dividends)
+    return replace_fields(arrays, producers=columns_after_close(columns, record.producers, answer.exited, answer))

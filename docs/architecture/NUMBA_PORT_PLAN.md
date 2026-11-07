@@ -73,7 +73,12 @@ changes a field. The saved record format does not change.
 - [ ] the first phase moved onto it: the year's close
     - [x] the producers' close as one kernel (`close_kernel.py`, `close_pack.py`, `close_run.py`, `year_close_producers.py`;
           `test_year_speed_close` beside the old close on random economies, and on every producer of a real Rome close)
-    - [ ] the households' close and the equity built for it (`households_close`, `equity.producer_worths`, `credit_view.equity`)
+    - [ ] the households' close and the equity built for it (`households_close`, `equity.producer_worths`, `credit_view.equity`):
+          the households' own part is small (312 cohorts); the cost is the producers' net worths (`equity._built_worths`, one
+          `plant_value_per_run` per recipe and tile and one `inventory_value` per producer), built once per view
+    - [x] the close hands its producer columns to entry (`year_arrays_closed.columns_after_close`, from the kernel's answer;
+          `test_year_speed_close_arrays`): the `sync` in `open_entrants` finds no row to read again (about 0.09 cProfile s of a warm year)
+    - [x] the close's pack reads rows as lists and one currency per area (`close_pack.pack`)
     - [ ] the per-producer tail: dividends (`spread`, `transfer_many`), `write_off`, loan asks
 - [ ] every other ported phase reads from it instead of packing its own
 
@@ -89,6 +94,8 @@ changes a field. The saved record format does not change.
           ceilings, hiring arrays, the wage paid, poaching and the asks; `test_year_speed_labour_tail`)
     - [x] `pack_heads`' bid sums over arrays (`np.add.at`, `np.maximum.at` in bid order); the employer columns by `attrgetter`;
           `clearing._kernel_head` and `_prepare`'s unused `head` argument removed (the heads test converts the kernel's row itself)
+    - [x] the carriage search of every origin in one pass over a cost matrix (`carriage.carriage_table`, used by
+          `YearInputs.carriage_from`; `test_year_speed_labour_carriage`): about 0.015 s to 0.004 s of a year
     - [ ] what is left of the clearing is the write-back of one `LabourClearing` and its state entries per market (the saved
           record format) and `import_cost.reach`, one route search per area
 - [ ] Trade switching (`switching.switch_trades`, `_odds`, `_planned_moves`)
@@ -98,6 +105,7 @@ changes a field. The saved record format does not change.
     - [x] the carry-out and the refusal path (`switching_kernel.enrol_groups`)
     - [x] the round's moves collected in one kernel (`switching_kernel.collect_moves`) instead of numpy glue in `_planned_moves`
           (`test_year_speed_labour_plans`)
+    - [x] the carry-out's grouping of moves in one kernel (`switching_kernel.group_moves`; `test_year_speed_labour_groups`)
     - [ ] expected incomes at graduation (`expected_income`, `income_at_graduation`): still one Python call per destination and
           round; `graduates_coming` is one `math.sumprod` per cohort. A kernel needs the area's clearings and trainees packed once
     - [x] migration: `migration.move_shares` without dictionaries (`test_year_speed_labour_finish`); `migrate` itself is still
@@ -208,10 +216,12 @@ any rounding change does; the digest is the same on two runs and after a reload.
           prices, wages, recipe matrices and carriage as arrays; the plans on the shared Rome save are the old plans (every
           plan, runs equal to 1e-6). The rules stay in `entry.py`, `entry_margin.py`, `entry_trial.py`, `location.py`
           with the costing behind a `costs` argument (the old Python path stays as the reference when it is None)
+    - [x] the apply loop reads each recipe's crews once (`open_entrants`), `restake_owners` reads the live prices and wages once per
+          recipe and tile, and the exits of a close end their term loans in one pass over the contracts (`producer_exit.ExitBatch`,
+          `Contracts.default_many`; `close_idle_producers` from about 0.13 to a few hundredths of a cProfile second)
     - [ ] what is left of entry is Python per request: the greedy loops of `entry_plans`, `margin_entry_plans` and
           `trial_entry_plans` (a kernel call per unfilled-demand costing and per siting, the sized runs, the bids' schedules),
-          the apply loop in `open_entrants` (a producer, a stake and a loan each), and the year arrays' own `sync` (a
-          rebuild of the memory and the producer rows the close replaced, about a fifth of the entry that is left)
+          the apply loop in `open_entrants` (a producer, a stake and a loan each; about 0.06 cProfile s)
 - [ ] producers' and firms' close of the year
     - [x] pooled practice, input prices and wages read once per recipe and tile and handed to each producer's close
     - [x] `producers_close.close_year`, `next_expectations`, `_pledgeable`, `firm_year.settle_year` in one kernel (item 0b)
@@ -232,7 +242,10 @@ any rounding change does; the digest is the same on two runs and after a reload.
     - [x] the memory arrays are kept until the memory is next written to (`MemoryArrays.is_current`; `market_memory.written_stamp`)
           instead of read again by each `sync` and `refreshed`
     - [x] land leases read the loans' pledges once (`titles.pledges_by_title`; `test_year_speed_titles`)
-    - [ ] left: `_hour_supply` (`household_work_year.plans`, one `cohort_plan` per cohort; `plot_schedules`' `need_prices`),
+    - [x] `_hour_supply`: priced needs and the prices on a tile kept per read (`priced_reads.kept_need_prices`, shared by
+          `household_work_year` and `plot_schedules`), the cheapest service price kept per tile; `HourSupply.settle` without
+          `dataclasses.replace`. Wall time of `_hour_supply` in the second year about 0.057 s to 0.035 s (a `perf_counter` wrapper)
+    - [ ] left: `household_work_year.plans` (one `cohort_plan` per cohort, about 0.02 s),
           `year_accounts.build`, `land_market.settle_year`, `outside_option_by_tile`, `_grow_own`
 - [ ] Checks: reproducible, compared, share measured
 

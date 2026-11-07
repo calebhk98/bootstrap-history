@@ -8,7 +8,7 @@ field list.
 import dataclasses
 from typing import Callable, Dict, List, Optional, Sequence, Tuple
 
-from .carriage import carriage_from
+from .carriage import carriage_from, carriage_table
 
 AreaId = str
 TradeId = str
@@ -90,9 +90,11 @@ class YearInputs:
     def carriage_from(self, origin: AreaId) -> Dict[AreaId, float]:
         """The cheapest moving cost from `origin` to every area the routes lead to (`carriage.carriage_from`), searched once
         per origin for the year's routes; the answer is shared, read and never changed."""
+        if not self._carriage and self.routes:
+            self._carriage.update(carriage_table(self.routes))      # every origin in one search
         found = self._carriage.get(origin)
         if found is None:
-            found = self._carriage[origin] = carriage_from(self.routes, origin)
+            found = self._carriage[origin] = carriage_from(self.routes, origin)      # an area no way starts from
         return found
 
     def sold_schedule(self, trade: TradeId, area: AreaId) -> Optional[Callable[[float], float]]:

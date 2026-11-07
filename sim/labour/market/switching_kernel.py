@@ -194,6 +194,41 @@ def collect_moves(counts, considering, active, moving, planned_shares, training_
 
 
 @njit
+def group_moves(destinations, shares, group_of, members, group_starts):
+    """Group the moves by (destination, share of the training years), groups numbered in the order their first move comes.
+    Fills `group_of[move]`, `members` (the moves of each group in carrying-out order, group after group) and
+    `group_starts` (length groups + 1); returns the number of groups."""
+    count = destinations.shape[0]
+    first = np.empty(count, np.int64)
+    groups = 0
+    for move in range(count):
+        found = -1
+        for group in range(groups):
+            lead = first[group]
+            if destinations[lead] == destinations[move] and shares[lead] == shares[move]:
+                found = group
+                break
+        if found < 0:
+            first[groups] = move
+            found = groups
+            groups += 1
+        group_of[move] = found
+    group_starts[0] = 0
+    for group in range(groups):
+        group_starts[group + 1] = 0
+    for move in range(count):
+        group_starts[group_of[move] + 1] += 1
+    for group in range(groups):
+        group_starts[group + 1] += group_starts[group]
+    filled = np.zeros(groups, np.int64)
+    for move in range(count):
+        group = group_of[move]
+        members[group_starts[group] + filled[group]] = move
+        filled[group] += 1
+    return groups
+
+
+@njit
 def take_moves(sources, rows, have, taken):
     """Carry out the moves in order: each takes from its source's bands what it asks for, no more than the source has left
     (`have[source, band]` is updated). Fills `taken[move, band]`."""
