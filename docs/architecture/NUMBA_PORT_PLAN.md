@@ -109,6 +109,10 @@ copied, never written). A phase's share: `cProfile` of `agent --session COPY` wi
 
 ### 8. The year outside the economy (`sim/agents/registry.advance`, the engine's other phases)
 - [ ] profile and port or cut what is left: actors and strata, the state, events
+    - [x] national prices and wages read through a market layout built once per set of keys (`price_index.py`;
+          `test_year_speed_national_prices`, equal to the old scan); the game unchanged by it
+    - [ ] the price solver's re-solves within a year, the urban ceilings, the trade-wage lookups, the groups' and
+          strata's repeated country figures, the state budget's standing lines
 - [ ] Checks: reproducible, compared, share measured
 
 ### 9. The opening solve (`opening*.py`, `households_orders.goods_orders`)
