@@ -188,9 +188,16 @@ any rounding change does; the digest is the same on two runs and after a reload.
           entrant crew read once per entry year (`entry_practice.entrant_crew`)
     - [x] reads kept per view and per siting call (the memory's wage, price on offer and price kind by tile, the input haul and
           hands of a recipe and tile, one planned recipe per hours; `test_year_speed_producer_reads`); the game unchanged by them
-    - [ ] siting (`location.siting`), `entry_trial.recipes_by_cost`, `entry_backed.unfilled` over packed wage, price and rent tables
-          (what is left is per-request Python: `planned_recipe`, `input_haul_cost`, `full_cost_per_unit`; a kernel needs the
-          year's price and wage tables packed per (good or trade, tile) once and the requests as index arrays)
+    - [x] costing and siting over the year arrays (`entry_tables.py`, `entry_kernels.py`; `test_year_speed_entry_arrays`): the
+          cost of a recipe on a tile (`recipes_by_cost`, the unfilled demand at that cost), the returns of every unmet market's
+          recipes, the output makers could reach and the idle output, and the tile a newcomer is sited on, read the year's
+          prices, wages, recipe matrices and carriage as arrays; the plans on the shared Rome save are the old plans (every
+          plan, runs equal to 1e-6). The rules stay in `entry.py`, `entry_margin.py`, `entry_trial.py`, `location.py`
+          with the costing behind a `costs` argument (the old Python path stays as the reference when it is None)
+    - [ ] what is left of entry is Python per request: the greedy loops of `entry_plans`, `margin_entry_plans` and
+          `trial_entry_plans` (a kernel call per unfilled-demand costing and per siting, the sized runs, the bids' schedules),
+          the apply loop in `open_entrants` (a producer, a stake and a loan each), and the year arrays' own `sync` (a
+          rebuild of the memory and the producer rows the close replaced, about a fifth of the entry that is left)
 - [ ] producers' and firms' close of the year
     - [x] pooled practice, input prices and wages read once per recipe and tile and handed to each producer's close
     - [x] `producers_close.close_year`, `next_expectations`, `_pledgeable`, `firm_year.settle_year` in one kernel (item 0b)
