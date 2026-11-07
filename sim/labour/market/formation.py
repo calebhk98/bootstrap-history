@@ -63,10 +63,11 @@ def form_trades(state: MarketState, inputs: YearInputs, clearings, report: YearR
         wanted = clearing.vacant_hours / hours_per_worker
         if wanted > 0.0 and _held(state, area, trade) <= 0.0:
             empty.append((area, trade, wanted))
+    leads_to = {origin: {route.destination for route in routes} for origin, routes in sorted(inputs.routes.items())}
     for area, trade, wanted in empty:
         spare: Dict[str, float] = {}
-        for origin in sorted(inputs.routes):
-            if origin == area or not any(route.destination == area for route in inputs.routes[origin]):
+        for origin, reached in leads_to.items():
+            if origin == area or area not in reached:
                 continue
             held = sum(state.workers.get(origin, {}).get(trade, ()))
             if held <= 0.0:
@@ -84,6 +85,7 @@ def form_trades(state: MarketState, inputs: YearInputs, clearings, report: YearR
             by_route[kind] = by_route.get(kind, 0.0) + sum(taken)
         formation_bonded.buy(state, inputs, index, area, trade, wanted - sum(people for _, _, people in takes), pool, report, unassigned, memo)
     first_formed = {(area, trade) for area, trade, _ in empty}
+    on_offer = {trade for by_trade in pool.values() for trade, people in by_trade.items() if people > 0.0}     # `buy` buys nothing of a trade nobody sells
     for (area, trade), clearing in sorted(index.items()):
-        if (area, trade) not in first_formed and clearing.vacant_hours > 0.0:
+        if (area, trade) not in first_formed and clearing.vacant_hours > 0.0 and trade in on_offer and area in inputs.bondage_allowed:
             formation_bonded.buy(state, inputs, index, area, trade, clearing.vacant_hours / hours_per_worker, pool, report, unassigned, memo)

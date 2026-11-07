@@ -51,9 +51,15 @@ def plot_schedules(setup, record, view, offers: Sequence[LabourOffer], options: 
     cohort with no land held, or none that grows a need's floor, has none."""
     schedules: Dict[AgentId, Callable[[float], float]] = {}
     hectares_per_hour = hectares_per_hour_by_recipe(setup.recipes, setup.land_per_run)
+    hours_by_worker: Dict[AgentId, list] = {}
+    for offer in offers:
+        hours_by_worker.setdefault(offer.worker, []).append(offer.hours)
+    priced_by_tile: Dict[str, list] = {}
     for cohort_id, cohort in sorted(record.cohorts.items()):
-        available = sum(offer.hours for offer in offers if offer.worker == cohort_id)
-        schedule = cohort_plot_schedule(setup, cohort, available, need_prices(setup.basket_for(cohort.tile), view, cohort.tile),
+        available = sum(hours_by_worker.get(cohort_id, ()))
+        if cohort.tile not in priced_by_tile:
+            priced_by_tile[cohort.tile] = need_prices(setup.basket_for(cohort.tile), view, cohort.tile)
+        schedule = cohort_plot_schedule(setup, cohort, available, priced_by_tile[cohort.tile],
                                         options, hectares_held.get(cohort_id, 0.0), hectares_per_hour)
         if schedule is not None:
             schedules[cohort_id] = schedule
@@ -73,8 +79,11 @@ def decide(setup, record, view, offers: Sequence[LabourOffer], options: Mapping[
     """Hours each cohort keeps for its plot at the wage it faces (last year's, from the view); a cohort with no
     land held, or none that grows a need's floor, keeps none."""
     kept: Dict[AgentId, float] = {}
+    offers_by_worker: Dict[AgentId, list] = {}
+    for offer in offers:
+        offers_by_worker.setdefault(offer.worker, []).append(offer)
     for cohort_id, schedule in plot_schedules(setup, record, view, offers, options, hectares_held).items():
-        hours = schedule(wage_faced_per_hour(view, [offer for offer in offers if offer.worker == cohort_id]))
+        hours = schedule(wage_faced_per_hour(view, offers_by_worker.get(cohort_id, [])))
         if hours > 0.0:
             kept[cohort_id] = hours
     return kept

@@ -13,19 +13,20 @@ import unittest
 import numpy as np
 
 from sim.labour.market import aptitude, switching
-from sim.labour.market.records import MarketState, TradeSpec, YearInputs, YearReport, copy_state
+from sim.labour.market.records import MarketState, School, TradeSpec, YearInputs, YearReport, copy_state
 from sim.tests import labour_switching_reference as reference
 
 TOLERANCE = 1e-12
 
 
-def random_inputs(rng, count_trades):
+def random_inputs(rng, count_trades, schools=False):
     specs = {}
     for index in range(count_trades):
         specs["t%02d" % index] = TradeSpec("t%02d" % index, rng.choice(["earth", "metal", "mind"]), rng.choice([0.0, 1.0, 3.0, 7.0]),
                                            rng.uniform(-1.0, 2.0), 0.0, index == 0)
+    seats = [School("crown", trade, "vale", rng.uniform(1.0, 200.0), rng.choice([0.0, 0.3])) for trade in specs if schools and rng.random() < 0.5]
     return YearInputs(trades=specs, bids=(), subsistence_per_worker_year={"vale": 300.0}, hours_per_worker_year=300.0,
-                      discount_rate=rng.choice([0.0, 0.03, 0.06]), career_years=rng.choice([0.0, 30.0, 40.0]))
+                      discount_rate=rng.choice([0.0, 0.03, 0.06]), career_years=rng.choice([0.0, 30.0, 40.0]), schools=seats)
 
 
 def moves_equal(test, got, expected):
@@ -36,6 +37,20 @@ def moves_equal(test, got, expected):
     for left, right in zip(got, expected):
         for amount, wanted in zip(left[2], right[2]):
             test.assertAlmostEqual(amount, wanted, delta=TOLERANCE * max(1.0, abs(wanted)))
+
+
+def merged(cohorts):
+    """The cohorts with neighbours of one finish date and one teaching joined: a teaching bonus that differs in its last digit
+    (the places it is a share of are summed in another order) is the same teaching."""
+    joined = []
+    for years, bands, bonus in cohorts:
+        if sum(bands) < 1e-9:      # a cohort the places filled to the last digit admits nobody on one side and a rounding error on the other
+            continue
+        if joined and joined[-1][0] == years and abs(joined[-1][2] - bonus) <= 1e-12:
+            joined[-1] = [years, [one + two for one, two in zip(joined[-1][1], bands)], joined[-1][2]]
+        else:
+            joined.append([years, list(bands), bonus])
+    return joined
 
 
 class PlannedMovesAgreeWithThePlainRules(unittest.TestCase):
@@ -49,17 +64,25 @@ class PlannedMovesAgreeWithThePlainRules(unittest.TestCase):
         self.assertEqual({a: sorted(by) for a, by in left.trainees.items()}, {a: sorted(by) for a, by in right.trainees.items()})
         for area, by_trade in left.trainees.items():
             for trade, cohorts in by_trade.items():
-                self.assertEqual(len(cohorts), len(right.trainees[area][trade]))
-                for cohort, other in zip(cohorts, right.trainees[area][trade]):
-                    self.assertEqual((cohort[0], cohort[2]), (other[0], other[2]))
+                one_side, other_side = merged(cohorts), merged(right.trainees[area][trade])
+                self.assertEqual(len(one_side), len(other_side), (trade, one_side, other_side))
+                for cohort, other in zip(one_side, other_side):
+                    self.assertEqual(cohort[0], other[0])
+                    self.assertAlmostEqual(cohort[2], other[2], delta=1e-12)      # the seats' share of the places sums in another order
                     for one, two in zip(cohort[1], other[1]):
                         self.assertAlmostEqual(one, two, delta=1e-9 * max(1.0, abs(one)))
 
     def test_four_rounds_of_random_areas(self):
-        rng = random.Random(21)
+        self.compare_rounds(21, False)
+
+    def test_four_rounds_of_random_areas_with_schools(self):
+        self.compare_rounds(22, True)
+
+    def compare_rounds(self, seed, schools):
+        rng = random.Random(seed)
         rounds_compared = rounds_moving = 0
         for _case in range(60):
-            inputs = random_inputs(rng, rng.randint(2, 9))
+            inputs = random_inputs(rng, rng.randint(2, 9), schools)
             destinations = sorted(inputs.trades)
             fallback = destinations[0]
             sources = [trade for trade in destinations if rng.random() < 0.7] or [fallback]

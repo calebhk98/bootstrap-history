@@ -72,11 +72,17 @@ def plain_heads(state, inputs, markets, bids_by_market):
             for trade, area in markets]
 
 
+def head_of(row):
+    """A kernel row (wage, target, goal, offered, reservation, base, lowest, ceiling, full) with a NaN target as none."""
+    wage, target, goal, offered, reservation, base, lowest, ceiling, full = row
+    return wage, None if target != target else target, goal, offered, reservation, base, lowest, ceiling, full
+
+
 def kernel_heads(state, inputs, markets, bids_by_market):
     costs = ImportCosts(state, inputs)
     found = clearing_arrays.run_heads(clearing_arrays.pack_heads(state, inputs, markets, bids_by_market, costs,
                                                                 clearing.WAGE_SHARE_CLOSED_PER_YEAR))
-    return [tuple(clearing._kernel_head(tuple(row[1:]))) if row[0] else None for row in found.tolist()]
+    return [head_of(row[1:]) if row[0] else None for row in found.tolist()]
 
 
 def grouped(inputs):
