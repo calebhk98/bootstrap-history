@@ -11,7 +11,7 @@ from typing import Dict, List, Optional, Tuple
 
 from . import (currency, mint_price, land_bid_year, carriage_fleet_book, carriage_wear, households, market_curves, market_quote, merchants, producers, seller_cash, seller_offers, settlement,
                state_budget, state_store, taxes, tool_wear, unsold_search)
-from . import goods_respend, goods_respend_year, households_cohort, households_orders_pack
+from . import goods_respend, goods_respend_year, goods_year_batch, households_cohort, households_orders_pack
 from .home_scope import on_home_tile
 from .goods_market_fills import sold_by_seller_tile
 from .inventory import held_stock, holding_reservation
@@ -27,6 +27,7 @@ from .recipes import input_depth_order
 from .taxes_bases import YearFacts
 from .types import Bid, Offer
 from .entry import unmet_quantity, wanted_in_round
+from .year_arrays_costs import OfferCosts, refreshed
 from .year_ledger import YearLedger
 from .rates import own_rate
 from .setup import opening_price_today
@@ -163,9 +164,14 @@ def state_orders(setup, record, view, area_map, order_book: OrderBook, keep) -> 
 
 
 def clear_goods(setup, record, view, area_map, order_book: OrderBook, plans, ledger: YearLedger,
-                watched_tiles=()) -> None:
+                watched_tiles=(), arrays=None) -> None:
     """Produce and clear every good in input-depth order. The book of each market area that holds the port, the
-    capital or a watched tile is kept (market_curves.py)."""
+    capital or a watched tile is kept (market_curves.py). With the year's arrays, a good's markets that have bids and
+    offers are re-priced, searched and cleared together (goods_year_batch.py)."""
+    costs = None
+    if arrays is not None:
+        arrays = refreshed(arrays, setup, record, view)
+        costs = OfferCosts.build(arrays, own_rate(view, setup.currency_id))
     by_output: Dict[str, List[str]] = {}
     for producer_id, producer in sorted(record.producers.items()):
         for good in setup.recipes[producer.recipe_id].outputs:
@@ -184,17 +190,25 @@ def clear_goods(setup, record, view, area_map, order_book: OrderBook, plans, led
         _produce_and_offer(setup, record, view, turn, plans, in_kind, order_book, ledger)
         areas = sorted(area for item, area in order_book if item == good)
         kept = market_curves.kept_areas(area_map, setup.port_tile, (setup.capital_tile, *watched_tiles), good)
-        cleared = []
+        cleared, batch, batch_slots = [], [], []
         for area in areas:       # the areas' clears do not read one another: settled together below
             bids, offers = order_book.pop((good, area))
             key = market_key(good, area)
+            last_price = record.memory.prices.get(key)
+            if arrays is not None and goods_year_batch.batchable(setup, bids, offers, good, arrays):
+                batch_slots.append(len(cleared))
+                batch.append((good, area, bids, offers, last_price))
+                cleared.append((area, key, bids, None, None))
+                continue
             unit_costs = seller_offers.UnitCosts()
-            chosen = seller_offers.strategic_offers(setup, record, view, bids, offers, record.memory.prices.get(key),
-                                                    unit_costs)
+            chosen = seller_offers.strategic_offers(setup, record, view, bids, offers, last_price, unit_costs)
             offers, result = unsold_search.clear_with_search(setup, record, view, bids, offers, chosen, good, area,
-                                                             setup.currency_id, record.memory.prices.get(key),
-                                                             unit_costs)
+                                                             setup.currency_id, last_price, unit_costs)
             cleared.append((area, key, bids, offers, result))
+        if batch:
+            for slot, (offers, result) in zip(batch_slots, goods_year_batch.clear_markets(setup, record, view, arrays, costs, batch)):
+                area, key, bids, _none, _also = cleared[slot]
+                cleared[slot] = (area, key, bids, offers, result)
         traded = [result for _area, _key, _bids, _offers, result in cleared if result.quantity > 0.0]
         settled = iter(settlement.settle_goods_many(record.book, traded, ledger.import_accounts, ledger.export_accounts))
         for area, key, bids, offers, result in cleared:

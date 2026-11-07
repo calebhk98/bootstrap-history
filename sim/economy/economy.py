@@ -249,7 +249,7 @@ class Economy:
         merchant_orders(setup, record, view, self.area_map, self.carriage, order_book)
         for producer_id, runs in self._rebuild_worn_plant(view, order_book).items():
             plant_runs[producer_id] = plant_runs.get(producer_id, 0.0) + runs
-        clear_goods(setup, record, view, self.area_map, order_book, plans, ledger, self.watched_tiles)
+        clear_goods(setup, record, view, self.area_map, order_book, plans, ledger, self.watched_tiles, arrays)
         land_bid_year.take_up_bought(setup, record)
         settle_mint(record, mint_held, ledger)
         close_mint_year(setup, record)
