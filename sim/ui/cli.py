@@ -1149,6 +1149,13 @@ def main():
     subparser.add_argument("--concerns-only", action="store_true",
                            help="print only the concerns that pay their way (Complaint 528), skipping the checks")
     subparser.add_argument("--json", action="store_true", help="print the checks and the concern scan as JSON")
+    subparser = sub.add_parser("year-time", help="step a saved game some years and print each year's seconds and a digest "
+                               "of the game after them; the save is copied, never written")
+    subparser.add_argument("--session", required=True, help="the saved game to step (copied first)")
+    subparser.add_argument("--years", type=int, default=2, help="years to step (default 2)")
+    subparser.add_argument("--reload-check", action="store_true",
+                           help="also save and load the game after its first year and check the digest is the same")
+    subparser.add_argument("--keep", default=None, metavar="PATH", help="write the stepped game here, to compare with another build's")
     subparser = sub.add_parser("spin-up-trace", help="run a civilisation's hidden spin-up for many years and print the "
                                "price level, the money stock and the mint's strikes by year; slow (minutes), or with "
                                "--fixture a hand-built economy in under a second")
@@ -1471,7 +1478,7 @@ def main():
             "search": cmd_search, "economy-check": cmd_economy_check,
             "mod-allow": cli_mods.cmd_mod_allow,
             "baseline-ensemble": cmd_baseline_ensemble, "openings": cmd_openings, "opening-checks": cmd_opening_checks,
-            "spin-up-trace": cmd_spin_up_trace, "spin-up-sensitivity": cmd_spin_up_sensitivity}[args.cmd](args)
+            "spin-up-trace": cmd_spin_up_trace, "year-time": cmd_year_time, "spin-up-sensitivity": cmd_spin_up_sensitivity}[args.cmd](args)
 
 
 from .cli_interactive import cmd_civs, cmd_menu, cmd_play
@@ -1482,4 +1489,5 @@ from .cli_baseline import cmd_baseline_ensemble
 from .cli_openings import cmd_openings
 from .cli_opening_checks import cmd_opening_checks
 from .cli_spin_up_trace import cmd_spin_up_trace
+from .cli_year_time import cmd_year_time
 from .cli_spin_up_sensitivity import cmd_spin_up_sensitivity
