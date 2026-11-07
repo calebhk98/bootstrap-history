@@ -1,6 +1,6 @@
 # A game year is still too slow to play a whole game
 
-**Status:** partly - opening and per-year cost cut; a year is still several times the target, and has not been re-profiled since the goods market and seller pricing were replaced by the Eurace rules (logit clearing in `goods_market_logit.py`, vectorised with numpy; `price_setting.best_price`)
+**Status:** partly - round 11 (below) cut the households' respend loop, the entry crews read and the hiring loop, and the openings build's repeated work; a Rome year is still many times the target, and Rome's opening solve is most of a cold game build
 
 A playtester found a new Rome game took a quarter of an hour of hidden spin-up before the first prompt and
 the better part of a minute per in-game year, so a whole game would take hours of stepping. The target is a
@@ -236,3 +236,43 @@ raised by the opening as `OpeningIncomeRefused`. Rule tests in `test_opening_con
 
 Measured, uncached Rome opening (`ROME_CACHE_DIR` on an empty directory, one machine, two runs of a wrapper, 32 and 31 income
 solves): income passes 1649 before, 466 after; opening 269 s before, 171 s after. Passes per solve were 60 before, 11 to 23 after.
+
+## Round 11: the respend loop, the openings build's repeated work, and resuming a save (branch `speed-year-step-and-openings`)
+
+Measured on a four-core machine shared with the run's own jobs; per-year figures are wall seconds of `step` from one saved
+Rome game (`agent --session` on a copy, one process, three years), the save digest is the sorted-key hash of the save after
+two years. Commands and scripts are in the branch's PR description.
+
+- **Respend rounds** (`goods_respend_year.respend`). A Rome year ran the households' second round of buying for hundreds of
+  rounds: after the first few rounds almost all the money paid was a falling sliver of one market, and every round re-cleared
+  every market a rationed cohort bid in. Rounds now stop when one pays under `RESPEND_NEGLIGIBLE_ROUND_SHARE` of what the
+  year's rounds have paid (a labelled heuristic; the rest stays with the cohort, as unspendable money already did). Each
+  buyer's need map and areas and each market's lowest ask per round are read once (exact). This was the largest part of a
+  hidden spin-up year as well, so it is most of the openings build's gain. Behaviour change: the save digest moves.
+- **Entry crews** (`entry_practice.shared_crews`): producers grouped by recipe once per entry phase instead of a full sort
+  per call. Exact (digest unchanged; `test_year_speed_entry_crews`).
+- **Hiring rounds** (`applications.hire_through_rounds`): per-reach shares turned into lines once per round, no `dict.get`
+  on the hot path. Exact (digest unchanged; `test_year_speed_labour_hiring`).
+- **Opening bids** (`year_goods.with_floor_and_budget`): the cut floor bid is built directly instead of by
+  `dataclasses.replace`, which the opening's income search calls millions of times. Exact (`test_year_goods_cut_bid`).
+- **Resuming a save with `agent`** built a whole new game, economy opening included, and then loaded the save over it; after
+  any edit to the economy source that opening is cold (many minutes for Rome). It now defers the economy as `play` does
+  (`cli_common._resuming_a_save`).
+- **The openings build** ran, per civilisation, the opening twice (the coin's backing margin and the spin-up), the spin-up's
+  45 hidden years, then the gate's money trace: a third opening and the 30 first-stage years again, and for some
+  civilisations a fourth opening and 30 more years, because the gate read the trace again after its checks had stepped
+  the game and the stepped setup has a different key. The spin-up now keeps its first stage's trace
+  (`spin_up_trace_cache.py`), the gate reads it before stepping (`test_opening_checks`), and `openings` builds the
+  civilisations in parallel processes (`--jobs`, one per core by default).
+
+Measured: Rome years from one save 47.7, 32.1, 55.4 s before, 23.4, 18.5 s after (two years); England, Norse and Mexica
+years were already a few seconds. The full cold `openings` of all five civilisations (empty `ROME_CACHE_DIR`, the shipped
+price solves still read since `sim/prices` did not change) took England 182 s, Norse 252 s, Mexica 366 s and Han 1798 s
+(of which about 13 minutes was the gate's re-run trace, now fixed); Rome wrote its spin-up record 38 minutes in, about 9.5
+minutes for each opening and about 23 s per hidden year. Before the round a cold hidden Rome year measured 200 to 350 s,
+most of it the respend loop.
+
+Left: Rome's two opening solves (`opening._with_covering_prices`: the households' bisection re-solves and each covering pass
+reopens twice, once only to size the mint's metal) are the largest fixed cost of a cold game and of the build; Complaint
+967 (the test runner opens every civilisation before any slow topic); the rest of a warm Rome year is flat across labour,
+goods clearing and entry.
