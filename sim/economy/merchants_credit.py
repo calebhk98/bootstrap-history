@@ -5,12 +5,11 @@ its own equity, and offers up to what those routes are expected to return. Stake
 lenders put in, so repaying a loan lowers it with the cash and a write-off shows as profit; `stake` keeps
 that account.
 """
-import math
 from typing import Mapping, Optional
 
 from sim.constants import declare
 
-from . import credit, merchants
+from . import credit, merchants_plan
 from .types import CurrencyId, LoanRequest
 
 MERCHANT_LOAN_YEARS = declare(
@@ -27,35 +26,16 @@ MERCHANT_LEVERAGE_LIMIT = declare(
 
 
 def credit_request(merchant, view, carriage, area_map, cash: float, held_stock, specs, interest_rate: float,
-                   debt: float, currency: CurrencyId) -> Optional[LoanRequest]:
+                   debt: float, currency: CurrencyId, route=None) -> Optional[LoanRequest]:
     """A loan for the cargo that cash cannot buy, or None. The most it offers is the interest rate plus
-    the average net return per unit of outlay on the routes the loan would fund."""
+    the average net return per unit of outlay on the routes the loan would fund. Merchants asked in one pass share
+    `route` (`merchants_book.route_pass`)."""
     equity = merchant.capital_base - debt
     limit = MERCHANT_LEVERAGE_LIMIT * equity - debt
     if limit <= 0.0:
         return None
-    candidates = merchants.candidate_routes(merchant, view, carriage, area_map, held_stock, specs, interest_rate)
-    remaining = max(0.0, cash)
-    wanted, gain = 0.0, 0.0
-    own, group = merchants.RouteShares(), merchants.RouteShares()
-    held_index = merchants.held_by_good(held_stock)
-    for rank, good, source, destination, _price_here, outlay, _ceiling in candidates:
-        room = merchants.shared_room(merchant, good, source, destination, held_stock, own, group, held_index)
-        paid_by_cash = min(remaining / outlay, room) if outlay > 0.0 else room
-        remaining -= paid_by_cash * outlay
-        extra = (room - paid_by_cash) * outlay
-        if extra <= 0.0 or math.isnan(extra):
-            own.commit(good, source.area_id, destination.area_id, paid_by_cash)
-            group.commit(good, source.area_id, destination.area_id, paid_by_cash)
-            continue
-        extra = min(extra, limit - wanted)
-        planned = paid_by_cash + (extra / outlay if outlay > 0.0 else 0.0)
-        own.commit(good, source.area_id, destination.area_id, planned)
-        group.commit(good, source.area_id, destination.area_id, planned)
-        wanted += extra
-        gain += extra * -rank
-        if wanted >= limit:
-            break
+    wanted, gain = merchants_plan.credit_wanted(merchant, view, carriage, area_map, cash, held_stock, specs, interest_rate,
+                                                limit, route)
     if wanted <= 0.0:
         return None
     return LoanRequest(merchant.agent_id, currency, wanted, interest_rate + credit.earnable_rate(gain, wanted), MERCHANT_LOAN_YEARS,

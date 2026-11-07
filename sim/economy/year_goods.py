@@ -9,7 +9,7 @@ import dataclasses
 import math
 from typing import Dict, List, Optional, Tuple
 
-from . import (currency, mint_price, land_bid_year, carriage_fleet_book, carriage_wear, households, market_curves, market_quote, merchants, producers, seller_cash, seller_offers, settlement,
+from . import (currency, mint_price, land_bid_year, carriage_fleet_book, carriage_wear, households, market_curves, market_quote, merchants, merchants_book, producers, seller_cash, seller_offers, settlement,
                state_budget, state_store, taxes, tool_wear, unsold_search)
 from . import goods_respend, goods_respend_year, goods_year_batch, households_cohort, year_goods_offers, households_orders_pack
 from .home_scope import on_home_tile
@@ -126,8 +126,9 @@ def less_what_it_grew(orders: AgentOrders, cohort, basket, grown_units) -> Agent
 def merchant_orders(setup, record, view, area_map, carriage, order_book: OrderBook) -> None:
     money = setup.currency_id
     rate = own_rate(view, money)
-    shares = merchants.RouteShares()
     ordered = sorted(record.merchants.values(), key=lambda each: each.agent_id)
+    route = merchants_book.route_pass(view, carriage, area_map, setup.specs) if ordered else None
+    shares = merchants_book.DenseShares(route.book) if ordered else None
     carrier_bids, carrier_budget = (carriage_fleet_book.bids(setup, record, view, area_map,
                                                        {each.agent_id: record.book.balance(each.agent_id, money) for each in ordered})
                                     if carriage_wear.wears(setup) else ([], {}))
@@ -136,7 +137,7 @@ def merchant_orders(setup, record, view, area_map, carriage, order_book: OrderBo
     for merchant in ordered[first:] + ordered[:first]:
         held = held_stock(record.book, merchant.agent_id)
         orders = merchants.orders(merchant, view, carriage, area_map, record.book.balance(merchant.agent_id, money) - carrier_budget.get(merchant.agent_id, 0.0),
-                                  held, setup.specs, rate, shares)
+                                  held, setup.specs, rate, shares, route)
         add_orders(order_book, orders)
 
 

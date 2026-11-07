@@ -24,9 +24,12 @@ class AreaPack:
 
     def __init__(self, areas, carriage):
         self.shape = shape_of(areas)
-        self.scale = carriage.scale
+        self.unscaled = isinstance(carriage, CarriageTable)      # its costs are kept before the year's scale, which moves every year
+        self.scale = 1.0 if self.unscaled else carriage.scale
         self.anchors = self.shape[1]
-        self.tables = [carriage.costs_from(anchor) for anchor in self.anchors]
+        self.tables = [carriage.unscaled_costs_from(anchor) if self.unscaled else carriage.costs_from(anchor)
+                       for anchor in self.anchors]
+        self._scaled = (None, None)
         size = len(areas)
         self.cost = np.full((size, size), math.inf)
         for row, table in enumerate(self.tables):
@@ -36,13 +39,21 @@ class AreaPack:
         self.news_current: Dict[str, List[bool]] = {}     # by home tile: whether each area's last price has reached it
         self.id_order = np.array(sorted(range(size), key=lambda position: self.shape[0][position]), np.int64)
 
+    def scaled_cost(self, carriage):
+        """The cost matrix at the table's present scale."""
+        if not self.unscaled or carriage.scale == 1.0:
+            return self.cost
+        if self._scaled[0] != carriage.scale:
+            self._scaled = (carriage.scale, self.cost * carriage.scale)
+        return self._scaled[1]
+
     def current(self, carriage) -> bool:
-        """Whether the pack still describes this table: its scale, and for a table that may hand out new cost
-        dictionaries, every source's dictionary."""
+        """Whether the pack still describes this table: for a table that hands out new cost dictionaries, every
+        source's dictionary and its scale."""
+        if self.unscaled:
+            return isinstance(carriage, CarriageTable)
         if self.scale != carriage.scale:
             return False
-        if isinstance(carriage, CarriageTable):      # its dictionaries change only with its scale
-            return True
         return all(carriage.costs_from(anchor) is table for anchor, table in zip(self.anchors, self.tables))
 
     def fill_years(self, carriage, missing) -> None:
@@ -98,7 +109,7 @@ def good_routes(good, spec, areas, prices, carriage, interest_rate, margin_share
     allowed = np.array([source_ids is None or area.area_id in source_ids for area in areas], np.bool_)
     while True:
         count, sources, destinations, ranks, prices_here, outlays, ceilings, missing = merchants_kernel.search_good(
-            price_array, pack.cost, pack.years, pack.id_order, allowed, float(interest_rate),
+            price_array, pack.scaled_cost(carriage), pack.years, pack.id_order, allowed, float(interest_rate),
             float(spec.spoilage_per_year), float(spec.unit_mass_kg), float(margin_share), KILOGRAMS_PER_TONNE)
         if not missing.any():
             break

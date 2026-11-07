@@ -128,6 +128,10 @@ class CarriageTable:
             scaled = self._scaled[source] = {tile: cost * self.scale for tile, cost in found.items()}
         return scaled
 
+    def unscaled_costs_from(self, source: TileId) -> Dict[TileId, float]:
+        """`costs_from` before the year's wage scale."""
+        return self._searched_costs_from(source)
+
     def _searched_costs_from(self, source: TileId) -> Dict[TileId, float]:
         cached = self._from_source.get(source)
         if cached is None and not self._warmed:
