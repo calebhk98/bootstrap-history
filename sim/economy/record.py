@@ -60,11 +60,12 @@ class EconomyRecord(OwnedRecord):
         "cohorts": ("households_cohort",), "producers": ("producer_table",), "merchants": ("merchants", "merchants_dispatch")}   # modules that write each agent table
     TRANSIENT = ("settling",)   # true only inside the hidden spin-up, which finishes before any save
     ENCODERS = {
+        "memory": lambda memory: memory.to_record(),
         "merchants": lambda merchants: {key: _merchant_record(value) for key, value in sorted(merchants.items())},
     }
     DECODERS = {
         "book": Book.from_record,
-        "memory": lambda value: MarketMemory(**value),
+        "memory": MarketMemory.from_record,
         "currency": lambda value: CurrencySpec(**value),
         "cohorts": lambda value: {key: Cohort(**each) for key, each in value.items()},
         "producers": lambda value: {key: Producer(**each) for key, each in value.items()},
