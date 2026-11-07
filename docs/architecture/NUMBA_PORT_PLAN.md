@@ -42,12 +42,12 @@ copied, never written). A phase's share: `cProfile` of `agent --session COPY` wi
 - [x] `sim/jit.py`: the one `njit`, with the plain-Python fallback (`test_jit`).
 - [x] numba in `requirements.txt`.
 - [x] `simulator.py year-time`: years' seconds, a digest of the game after them, `--reload-check`, `--keep`.
-- [ ] The game reproducible across a save and load before any port: Han's rich stratum (welfare, migration outlay and
-      the falling-incomes group's claim, grievance and strength) differs in its last digits after a load, and
-      `industry_opening_rate` of a seat writes `0` before a load and `0.0` after. Found by `year-time --reload-check`.
-    - [ ] find the order-dependent sum behind the stratum figures and fix it (regression test)
-    - [ ] the opening-rate field keeps one type (regression test)
-    - [ ] `year-time --reload-check` passes on the shared Rome save
+- [x] The game reproducible across a save and load before any port (`year-time --reload-check` found two causes).
+    - [x] Han's rich stratum differed in its last digits after a load: `country_figures.output_value_and_unpriced`
+          summed over the producers in their live order; now `math.fsum` (`test_country_output_value_order`)
+    - [x] `industry_opening_rate` wrote an int on one path and a float on the other; now always a float
+          (`test_industry_experience_rules`)
+    - [x] `year-time --reload-check` passes on the shared Rome save
 
 ### 1. Labour clearing (`sim/labour/market/`)
 - [ ] Market clearing (`clearing.clear_all`, `clear_one`, `hire_through_rounds`, `import_cost`)
