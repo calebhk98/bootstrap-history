@@ -17,9 +17,11 @@ import math
 from operator import sub
 from typing import Dict, List, Mapping, Tuple
 
+import numpy as np
+
 from sim.constants import declare
 
-from . import aptitude, expectations, training
+from . import aptitude, expectations, switching_kernel, training
 from .premium import annuity_factor
 from .records import MarketState, YearInputs, YearReport
 from .trades import fallback_trade
@@ -132,31 +134,11 @@ def _odds(inputs, state, area, source, destinations, own, later_income, vacancie
     stay_score = 0.0
     if young and stay_income is not None:
         stay_score = expectations.present_value(stay_income - own, rate, 0.0, remaining) / subsistence
-    bands = []
-    exp = math.exp
-    for band, count in enumerate(state.workers[area][source]):
-        scores = []
-        picked = []
-        for index, trade in enumerate(targets):
-            score = (chances[trade][band] * gain[index] - lost[index]) / subsistence
-            if score > 0.0 or young:   # an established worker does not consider a move worth less than staying
-                scores.append(score)
-                picked.append(index)
-        if not scores:
-            bands.append(None)
-            continue
-        top = max(scores + [stay_score])
-        scale = SWITCHING_TASTE_SCALE
-        weights = [exp((score - top) / scale) for score in scores]
-        total = math.fsum(weights + [exp((stay_score - top) / scale)])   # the last is staying
-        cutoff = total * NEGLIGIBLE_MOVE_SHARE
-        leader = weights.index(max(weights))
-        shares = [weight / total if weight >= cutoff else 0.0 for weight in weights]
-        shares[leader] += math.fsum(weight for weight in weights if weight < cutoff) / total
-        if shares[leader] < NEGLIGIBLE_MOVE_SHARE:   # every destination is far worse than staying
-            bands.append(None)
-            continue
-        bands.append([(targets[index], share) for index, share in zip(picked, shares) if share > 0.0])
+    shares = np.empty((len(state.workers[area][source]), len(targets)))
+    moves = switching_kernel.band_shares(np.array([chances[trade] for trade in targets]), np.array(gain), np.array(lost),
+                                         subsistence, stay_score, young, SWITCHING_TASTE_SCALE, NEGLIGIBLE_MOVE_SHARE, shares)
+    bands = [[(trade, share) for trade, share in zip(targets, row) if share > 0.0] if moving else None
+             for row, moving in zip(shares.tolist(), moves.tolist())]
     return targets, bands
 
 

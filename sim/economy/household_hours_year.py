@@ -64,6 +64,7 @@ def plot_schedule(per_worker_hours: float, marginal: float, usable_per_worker: f
     """Hours a cohort keeps for its plot at a wage: `households_hours_offered.plot_hours_kept` times its workers."""
     def kept(wage_per_hour: float) -> float:
         return households_hours_offered.plot_hours_kept(per_worker_hours, wage_per_hour, marginal, usable_per_worker) * workers
+    kept.parameters = (per_worker_hours, marginal, usable_per_worker, workers)     # the same rule over arrays (labour_supply_kernel)
     return kept
 
 
