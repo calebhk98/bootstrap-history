@@ -21,6 +21,23 @@ def _kind(agent: AgentId) -> Tuple[bool, bool, bool]:
     return is_edge(agent), agent == EDGE_MINT, is_external_edge(agent)
 
 
+def _numbered(table, names: Sequence[Tuple[AgentId, str]], used: List[int]) -> numpy.ndarray:
+    """For each index of `used` (ascending) into `names`, the table's number of that (agent, tile) key; others are left at zero."""
+    numbers = numpy.zeros(len(names), dtype=numpy.int64)
+    keys, number_of, agents, agent_number = table.keys, table.number, table.agents, table.agent_number
+    for index in used:
+        key = names[index]
+        number = number_of.get(key)
+        if number is None:
+            number = number_of[key] = len(keys)
+            keys.append(key)
+            if key[0] not in agent_number:
+                agent_number[key[0]] = len(agents)
+                agents.append(key[0])
+        numbers[index] = number
+    return numbers
+
+
 class _Keys:
     """The (agent, tile) keys and the agents of one market, numbered in order of first use."""
 
@@ -50,10 +67,10 @@ def settle_many(book: Book, pairings: Sequence[Pairing], currency: CurrencyId, i
     batch_agents: Dict[AgentId, int] = {}
     batch_keys: Dict[Tuple[AgentId, str], int] = {}
     pair_offset, agent_offset, key_offset = [0], [0], [0]
-    buyer_key: List[int] = []
-    seller_key: List[int] = []
-    quantity: List[float] = []
-    ask: List[float] = []
+    buyer_key: List[numpy.ndarray] = []
+    seller_key: List[numpy.ndarray] = []
+    quantity: List[object] = []
+    ask: List[numpy.ndarray] = []
     key_agent: List[int] = []
     key_global: List[int] = []
     agent_global: List[int] = []
@@ -71,27 +88,32 @@ def settle_many(book: Book, pairings: Sequence[Pairing], currency: CurrencyId, i
             continue
         table = _Keys()
         buyers, sellers = pairing.buyers, pairing.sellers
-        bid_key = {index: table.add(buyers[index]) for index in sorted(set(pairing.buyer_index))}
-        offer_key = {index: table.add(sellers[index]) for index in sorted(set(pairing.seller_index))}
-        buyers_here = [bid_key[index] for index in pairing.buyer_index]
-        sellers_here = [offer_key[index] for index in pairing.seller_index]
+        buyer_index = numpy.array(pairing.buyer_index, dtype=numpy.int64)
+        seller_index = numpy.array(pairing.seller_index, dtype=numpy.int64)
+        used_bids = numpy.unique(buyer_index).tolist()
+        used_offers = numpy.unique(seller_index).tolist()
+        bid_key = _numbered(table, buyers, used_bids)
+        offer_key = _numbered(table, sellers, used_offers)
+        buyers_here = bid_key[buyer_index]
+        sellers_here = offer_key[seller_index]
         receipt = buyers_here
-        if delivers_goods and not all(buyers[index][1] for index in bid_key):
+        if delivers_goods and not all(buyers[index][1] for index in used_bids):
             # a buyer with no tile takes delivery where the seller holds the goods
-            receipt = [buyers_here[pair] if buyers[pairing.buyer_index[pair]][1] else
-                       table.add((buyers[pairing.buyer_index[pair]][0], sellers[pairing.seller_index[pair]][1]))
-                       for pair in range(count)]
-        buyer_key.extend(receipt)
-        seller_key.extend(sellers_here)
-        quantity.extend(pairing.quantity)
-        asks = pairing.asks
-        ask.extend([asks[index] for index in pairing.seller_index])
-        key_agent.extend([table.agent_number[agent] for agent, _tile in table.keys])
+            buyer_list, seller_list, here = pairing.buyer_index, pairing.seller_index, buyers_here.tolist()
+            receipt = numpy.array([here[pair] if buyers[buyer_list[pair]][1] else
+                                   table.add((buyers[buyer_list[pair]][0], sellers[seller_list[pair]][1]))
+                                   for pair in range(count)], dtype=numpy.int64)
+        buyer_key.append(receipt)
+        seller_key.append(sellers_here)
+        quantity.append(pairing.quantity)
+        ask.append(numpy.array(pairing.asks, dtype=float)[seller_index])
+        agent_numbers = table.agent_number
+        key_agent.extend([agent_numbers[agent] for agent, _tile in table.keys])
         agent_global.extend([batch_agents.setdefault(agent, len(batch_agents)) for agent in table.agents])
         global_keys = [batch_keys.setdefault(key, len(batch_keys)) for key in table.keys]
         key_global.extend(global_keys)
         if delivers_goods:
-            seller_keys.update(global_keys[number] for number in offer_key.values())
+            seller_keys.update([global_keys[number] for number in numpy.unique(sellers_here).tolist()])
         pair_offset.append(pair_offset[-1] + count)
         agent_offset.append(agent_offset[-1] + len(table.agents))
         key_offset.append(key_offset[-1] + len(table.keys))
@@ -109,8 +131,9 @@ def settle_many(book: Book, pairings: Sequence[Pairing], currency: CurrencyId, i
     (goods, money, payer, paid, received, goods_in, goods_out, buyer_net, got_goods, paid_as_buyer, imports, exports,
      key_given, key_taken, key_to_mint, batch_paid, batch_received, batch_given, batch_taken) = settle_markets(
         numpy.array(pair_offset, dtype=numpy.int64), numpy.array(agent_offset, dtype=numpy.int64),
-        numpy.array(key_offset, dtype=numpy.int64), numpy.array(buyer_key, dtype=numpy.int64),
-        numpy.array(seller_key, dtype=numpy.int64), numpy.array(quantity), numpy.array(ask),
+        numpy.array(key_offset, dtype=numpy.int64), numpy.concatenate(buyer_key),
+        numpy.concatenate(seller_key), numpy.concatenate([numpy.array(each, dtype=float) for each in quantity]),
+        numpy.concatenate(ask),
         numpy.array(key_agent, dtype=numpy.int64), numpy.array(key_global, dtype=numpy.int64),
         numpy.array(agent_global, dtype=numpy.int64), stock_state, cash_state,
         numpy.array([kind[0] for kind in kinds], dtype=numpy.bool_), numpy.array([kind[1] for kind in kinds], dtype=numpy.bool_),
