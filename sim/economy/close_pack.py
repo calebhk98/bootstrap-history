@@ -48,18 +48,23 @@ class ClosePack:
     currencies: list
 
 
-def _fill_by_slot(target: np.ndarray, flows: Mapping, arrays: YearArrays) -> None:
+def slot_of_good(matrices) -> list:
+    """For each recipe row, {good column: slot}."""
+    return [{int(column): slot for slot, column in enumerate(row) if column >= 0} for row in matrices.slot_goods]
+
+
+def _fill_by_slot(target: np.ndarray, flows: Mapping, arrays: YearArrays, slots_of_recipe) -> None:
     """`flows` keyed (agent, good): into target[producer row, the recipe's slot of the good]."""
-    producers_ = arrays.producers
-    matrices = arrays.matrices
+    columns = arrays.producers
+    goods_row = arrays.matrices.goods.row
     for (agent, good), quantity in flows.items():
-        row = producers_.row.get(agent)
-        column = matrices.goods.row.get(good)
+        row = columns.row.get(agent)
+        column = goods_row.get(good)
         if row is None or column is None:
             continue
-        slots = np.nonzero(matrices.slot_goods[producers_.recipe_row[row]] == column)[0]
-        if len(slots):
-            target[row, slots[0]] += quantity
+        slot = slots_of_recipe[columns.recipe_row[row]].get(column)
+        if slot is not None:
+            target[row, slot] += quantity
 
 
 def _loans(record, arrays: YearArrays, pack_arrays) -> None:
@@ -103,34 +108,35 @@ def pack(setup, record, view, ledger, arrays: YearArrays) -> ClosePack:
         currency_of_row.append(currency)
         cash_in_currency[position] = book.balance(producer_id, currency)
         cash_in_money[position] = book.balance(producer_id, money)
+        held = book.goods_held(producer_id)
         for slot, column in enumerate(matrices.slot_goods[columns.recipe_row[position]]):
             if column < 0:
                 break
-            stock[position, slot] = book.stock(producer_id, matrices.goods.ids[column], producer.tile)
-        for good, tiles in book.holdings(producer_id)["goods"].items():
+            stock[position, slot] = held.get(matrices.goods.ids[column], {}).get(producer.tile, 0.0)
+        for good, tiles in held.items():
             column = goods_row.get(good)
-            quantity = sum(value for value in tiles.values() if value > 0.0)
             if column is not None:
                 held_good.append(column)
-                held_quantity.append(quantity)
+                held_quantity.append(sum(value for value in tiles.values() if value > 0.0))
         held_start[position + 1] = len(held_good)
     revenue = np.array([ledger.sales_in.get(each, 0.0) for each in columns.ids])
     running = np.array([ledger.running_costs(each) for each in columns.ids])
     sold = np.zeros_like(stock)
     made = np.zeros_like(stock)
-    _fill_by_slot(sold, ledger.sold, arrays)
-    _fill_by_slot(made, ledger.output, arrays)
+    slots_of_recipe = slot_of_good(matrices)
+    _fill_by_slot(sold, ledger.sold, arrays, slots_of_recipe)
+    _fill_by_slot(made, ledger.output, arrays, slots_of_recipe)
     hours = np.zeros((count, matrices.slot_trades.shape[1]))
+    trade_slots = [{int(column): slot for slot, column in enumerate(row) if column >= 0} for row in matrices.slot_trades]
     for agent, trades in ledger.hours_hired.items():
         row = columns.row.get(agent)
         if row is None:
             continue
-        slots = matrices.slot_trades[columns.recipe_row[row]]
+        slots = trade_slots[columns.recipe_row[row]]
         for trade, value in trades.items():
-            column = matrices.trades.row.get(trade)
-            found = np.nonzero(slots == column)[0] if column is not None else ()
-            if len(found):
-                hours[row, found[0]] += value
+            slot = slots.get(matrices.trades.row.get(trade, -1))
+            if slot is not None:
+                hours[row, slot] += value
     interest, commitments, arrears, debt = (np.zeros(count) for _name in range(4))
     _loans(record, arrays, (interest, commitments, arrears, debt))
     shape = memory.price.shape
