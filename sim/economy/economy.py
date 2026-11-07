@@ -270,7 +270,7 @@ class Economy:
         received = dict(interest)
         for payment in rent:
             received[payment.payee] = received.get(payment.payee, 0.0) + payment.amount
-        close_agents(setup, record, close_view, ledger, self.area_map, self.carriage, arrays, received)
+        arrays = close_agents(setup, record, close_view, ledger, self.area_map, self.carriage, arrays, received)
         open_entrants(setup, record, close_view, self.area_map, ledger.unmet_demand, self.carriage,
                       with_standing_bids(ledger.bids_by_market, inputs.standing_bids), arrays)
         restake_owners(setup, record, close_view)
