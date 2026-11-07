@@ -25,8 +25,7 @@ def lost_share(spoilage_per_year, years):
 @njit
 def search_good(prices, cost, years, id_order, source_allowed, interest_rate, spoilage_per_year, unit_mass_kg,
                 margin_share, kilograms_per_tonne):
-    count_areas = prices.shape[0]
-    capacity = count_areas * count_areas
+    capacity = prices.shape[0] * prices.shape[0]
     rows_source = np.empty(capacity, np.int64)
     rows_destination = np.empty(capacity, np.int64)
     rows_rank = np.empty(capacity, np.float64)
@@ -34,6 +33,19 @@ def search_good(prices, cost, years, id_order, source_allowed, interest_rate, sp
     rows_outlay = np.empty(capacity, np.float64)
     rows_ceiling = np.empty(capacity, np.float64)
     missing = np.zeros(capacity, np.bool_)
+    count = search_into(prices, cost, years, id_order, source_allowed, interest_rate, spoilage_per_year, unit_mass_kg,
+                        margin_share, kilograms_per_tonne, rows_source, rows_destination, rows_rank, rows_price_here,
+                        rows_outlay, rows_ceiling, missing)
+    return count, rows_source, rows_destination, rows_rank, rows_price_here, rows_outlay, rows_ceiling, missing
+
+
+@njit
+def search_into(prices, cost, years, id_order, source_allowed, interest_rate, spoilage_per_year, unit_mass_kg,
+                margin_share, kilograms_per_tonne, rows_source, rows_destination, rows_rank, rows_price_here,
+                rows_outlay, rows_ceiling, missing):
+    """`search_good` writing its rows into buffers of at least areas squared places and flagging pairs in `missing`
+    (indexed source * areas + destination); returns the row count."""
+    count_areas = prices.shape[0]
     count = 0
     interest = max(0.0, interest_rate)
     spoilage = min(1.0, max(0.0, spoilage_per_year))
@@ -52,10 +64,10 @@ def search_good(prices, cost, years, id_order, source_allowed, interest_rate, sp
                 cheapest = price
                 found_cheapest = True
     if not found_cheapest:
-        return count, rows_source, rows_destination, rows_rank, rows_price_here, rows_outlay, rows_ceiling, missing
+        return count
     cheapest_floor = cheapest * (1.0 + interest + margin_share)
     if dearest * keep - cheapest_floor <= 0.0:
-        return count, rows_source, rows_destination, rows_rank, rows_price_here, rows_outlay, rows_ceiling, missing
+        return count
     # destinations dearest first, equal prices in area id order, leaving out those that cannot cover the cheapest floor
     candidates = np.empty(count_areas, np.int64)
     candidate_keys = np.empty(count_areas, np.float64)
@@ -118,4 +130,4 @@ def search_good(prices, cost, years, id_order, source_allowed, interest_rate, sp
                     rows_outlay[count] = outlay
                     rows_ceiling[count] = max(0.0, kept) / (1.0 + interest * held_years + margin_share)
                     count += 1
-    return count, rows_source, rows_destination, rows_rank, rows_price_here, rows_outlay, rows_ceiling, missing
+    return count

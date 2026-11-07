@@ -29,7 +29,8 @@ def dispatch_merchants(setup, record, carriage, ledger: YearLedger, area_map) ->
     carried_goods: dict = {}
     carrier_goods = carriage_wear.carrier_goods(setup)
     prices = carriage_wear.last_prices(setup, record.memory, usual_volumes(record)) if carrier_goods else {}
-    dues = route_dues.owed_per_tonne(setup, carriage, record.memory.opening_wage_level(money))
+    dues = _kept(route_dues.owed_per_tonne(setup, carriage, record.memory.opening_wage_level(money)))
+    money_per_tonne = _kept(lambda source, destination: carriage_wear.money_per_tonne(prices, wear, source, destination))
     wear = carriage_wear.Wear(setup, carriage, record.carriage.area_imbalance) if carriage_wear.wears(setup) else None
     for merchant in sorted(record.merchants.values(), key=lambda each: each.agent_id):
         record.book.move_many(merchants_transit.advance(merchant, setup.specs))    # hauls on the road for years reach the tile or spoil
@@ -62,14 +63,12 @@ def dispatch_merchants(setup, record, carriage, ledger: YearLedger, area_map) ->
             hours_hired, wages = ((carriage_hours.engaged(record, merchant, index)) if carriage_hours.planned(merchant)
                                   else (None, {}))
             hire = merchants.CrewHire(crew.hours_per_tonne, hours_hired, wages,
-                                    lambda key, each=merchant: carriage_hours.crew_wage(setup, record, each, key, populated),
+                                    _kept_by_key(lambda key, each=merchant: carriage_hours.crew_wage(setup, record, each, key, populated)),
                                     area_map.area_of)
         done = merchants.dispatch(merchant, carriage, setup.specs, money,
                                   record.book.balance(merchant.agent_id, money), held_stock(record.book, merchant.agent_id),
                                   carrier_of=carriers.get, crew=hire,
-                                  carrier_money=None if wear is None else (
-                                      lambda source, destination, each=merchant: carriage_wear.money_per_tonne(
-                                          prices, wear, source, destination)),
+                                  carrier_money=None if wear is None else money_per_tonne,
                                   margin_kept=wear is not None,
                                   fleet=carriage_fleet_book.limit_for(wear, own_capacity[merchant.agent_id], hired.get(merchant.agent_id, {}))
                                   if lives else None, dues=dues)
@@ -103,6 +102,29 @@ def dispatch_merchants(setup, record, carriage, ledger: YearLedger, area_map) ->
                 carried_book.note_crossing(ledger.carried_in, merchant.agent_id, source, move.quantity,
                                            price_at_origin, price_at_destination)
     record.carriage.set_carried(carried, carried_goods)
+
+
+def _kept(function):
+    """`function(source, destination)` answered once for each pair this year (its answers are shared, not changed by callers)."""
+    answers: dict = {}
+
+    def kept(source, destination):
+        key = (source, destination)
+        if key not in answers:
+            answers[key] = function(source, destination)
+        return answers[key]
+    return kept
+
+
+def _kept_by_key(function):
+    """`function(key)` answered once for each key."""
+    answers: dict = {}
+
+    def kept(key):
+        if key not in answers:
+            answers[key] = function(key)
+        return answers[key]
+    return kept
 
 
 def _price_on(record, area_map, good, tile):
