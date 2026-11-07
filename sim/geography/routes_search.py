@@ -22,7 +22,7 @@ INFINITY = float("inf")
 
 def _origin_indexes(world_map: WorldMap, tiles: Iterable[str]) -> frozenset:
     chosen = frozenset(tiles)
-    unknown = sorted(chosen - set(world_map.tiles))
+    unknown = sorted(tile for tile in chosen if tile not in world_map.tiles)
     if unknown:
         raise ValueError("map %r has no tile %s" % (world_map.map_id, ", ".join(unknown)))
     return chosen
