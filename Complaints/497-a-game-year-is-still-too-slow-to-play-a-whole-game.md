@@ -241,7 +241,7 @@ solves): income passes 1649 before, 466 after; opening 269 s before, 171 s after
 
 Measured on a four-core machine shared with the run's own jobs; per-year figures are wall seconds of `step` from one saved
 Rome game (`agent --session` on a copy, one process, three years), the save digest is the sorted-key hash of the save after
-two years. Commands and scripts are in the branch's PR description.
+two years. The timing and digest wrappers were scratch scripts (no committed command times the years of a saved game in one process); `echo "step 3" | python3 sim/simulator.py play --session FILE` gives the same per-step figure.
 
 - **Respend rounds** (`goods_respend_year.respend`). A Rome year ran the households' second round of buying for hundreds of
   rounds: after the first few rounds almost all the money paid was a falling sliver of one market, and every round re-cleared
