@@ -1140,6 +1140,8 @@ def main():
     subparser.add_argument("--prune", action="store_true", help="also remove shipped entries the named civilisations did not use")
     subparser.add_argument("--allow-failing", default=None, metavar="REASON",
                            help="ship an opening that fails the opening checks anyway; the reason is printed")
+    subparser.add_argument("--jobs", type=int, default=0,
+                           help="civilisations built at once, each in its own process (default: one per core)")
     subparser = sub.add_parser("opening-checks", help="print the relationship checks (prices over making cost, money "
                                "against coin wear, wage over floor, spin-up settled) for each civilisation's "
                                "full-length opening; reads the shipped openings when current, else computes (minutes)")
