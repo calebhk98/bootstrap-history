@@ -31,23 +31,35 @@ def spin_up_trace(game, years):
     economy_api.begin_spin_up(economy)
     inputs = EconomyYearInputs(year=0, population_by_tile={},
                         yield_factor_by_producer=port_sites.crop_yields(economy), engine_orders={})
-    rows = []
-    chained, previous_prices = 1.0, None
-    for year in range(years):
-        outcome = economy.step(inputs)
-        row = {"year": year, "price_level": outcome.basket_price_level, "money_supply": outcome.money_supply,
+    trace = TraceRows(setup)
+    for _year in range(years):
+        trace.add(economy, economy.step(inputs))
+    return trace.rows
+
+
+class TraceRows:
+    """The rows of `spin_up_trace`, one added per stepped year of a first stage on the opening `setup`. Adding a row
+    only reads the economy."""
+
+    def __init__(self, setup):
+        self.setup = setup
+        self.rows = []
+        self._chained = 1.0
+        self._previous_prices = None
+
+    def add(self, economy, outcome) -> None:
+        row = {"year": len(self.rows), "price_level": outcome.basket_price_level, "money_supply": outcome.money_supply,
                "rate": outcome.rate,
                "hired_hours": outcome.hired_hours, "idle_hours": outcome.idle_hours}
-        row.update(macro_columns(outcome, setup.unskilled_trade, economy_api.spin_up_state(economy, outcome)["real_output"],
+        row.update(macro_columns(outcome, self.setup.unskilled_trade, economy_api.spin_up_state(economy, outcome)["real_output"],
                                  economy_api.labour_market_rows(economy)))
-        if previous_prices is not None:
-            chained = next_chained_index(chained, previous_prices, outcome.prices, outcome.output)
-        previous_prices = dict(outcome.prices)
-        row["chained_price_level"] = chained
+        if self._previous_prices is not None:
+            self._chained = next_chained_index(self._chained, self._previous_prices, outcome.prices, outcome.output)
+        self._previous_prices = dict(outcome.prices)
+        row["chained_price_level"] = self._chained
         row.update(economy_api.money_year_figures(economy, outcome))
         row.update(money_by_holder_columns(economy_api.economy_book(economy), economy_api.currency_id(economy)))
-        rows.append(row)
-    return rows
+        self.rows.append(row)
 
 
 def sensitivity_table(game, years, skip, variants=None):

@@ -7,6 +7,7 @@ from .commands import (BuyMaterial, CancelMaterialOrders, FoundBankFromOutside, 
                        SellMaterial)
 from .spin_up import SPIN_UP_MAXIMUM_YEARS, SPIN_UP_TOLERANCE, SPIN_UP_YEARS_ENV
 from .port_key import SPIN_UP_SOURCE_MODULES, spin_up_key
+from .spin_up_trace_cache import TRACE_CACHE_DIRECTORY, trace_key_of_setup
 
 
 # ---- the agent economy's opening, for the tools that run it on their own (the opening checks, the spin-up trace) ----

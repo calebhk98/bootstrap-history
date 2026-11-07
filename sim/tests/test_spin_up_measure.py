@@ -121,7 +121,7 @@ class OrderTests(unittest.TestCase):
                 mock.patch.object(api, "note_spin_up_result",
                                   lambda economy, result: calls.append(("note", result))), \
                 mock.patch.object(spin_up_run, "settle",
-                                  lambda economy, inputs, watched: calls.append("settle") or first), \
+                                  lambda economy, inputs, watched, trace=None: calls.append("settle") or first), \
                 mock.patch.object(spin_up_run, "settle_trimmed",
                                   lambda economy, inputs, watched: calls.append("trimmed") or window):
             spin_up_run.spin_up(economy)
