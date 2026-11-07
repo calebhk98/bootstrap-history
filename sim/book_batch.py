@@ -12,6 +12,9 @@ from sim.book_types import (EDGE_PREFIX, ROUNDING_SHARE, UNDERFLOW, AgentId, Cur
                             InsufficientFunds, InsufficientGoods, TileId)
 
 
+SMALL_BATCH = 40     # below this many agents and keys, plain loops beat the cost of setting up numpy arrays
+
+
 class BookBatch:
     # ---- many reads ------------------------------------------------------------------------------
 
@@ -86,6 +89,8 @@ class BookBatch:
         """Apply a market's settlement summed: each agent's money paid and received, each (agent, tile)'s `item` given and
         taken. The same entries, totals and edge records as posting every pair, with no object per pair; an overdraft
         beyond rounding that the batch makes or deepens is refused, with nothing applied."""
+        if len(agents) + len(keys) <= SMALL_BATCH:
+            return self._post_settled_small(currency, purpose, item, agents, paid, received, keys, given, taken)
         paid_array = numpy.asarray(paid, dtype=numpy.float64)
         received_array = numpy.asarray(received, dtype=numpy.float64)
         given_array = numpy.asarray(given, dtype=numpy.float64)
@@ -148,3 +153,48 @@ class BookBatch:
         for index in numpy.flatnonzero(goods_edge).tolist():
             self._record_edge_goods(keys[int(goods_at[index])][0], item, float(goods_out[index] + goods_in[index]),
                                     float(goods_out[index] - goods_in[index]))
+
+    def _post_settled_small(self, currency, purpose, item, agents, paid, received, keys, given, taken) -> None:
+        """`post_settled` for a few entries: the same rules, in plain loops."""
+        row_get, slot_get = self._row.get, self._slot.get
+        column = self._balance.get(currency)
+        quantities = self._qty
+        money_after = []
+        for agent, out, income in zip(agents, paid, received):
+            if out == 0.0 and income == 0.0:
+                continue
+            row = row_get(agent)
+            start = column[row] if row is not None and column is not None else 0.0
+            value = start - out + income
+            if value < min(0.0, start) - max(ROUNDING_SHARE * (out + income), UNDERFLOW) and not agent.startswith(EDGE_PREFIX):
+                raise InsufficientFunds("%s would hold %.6g %s after the batch" % (agent, value, currency))
+            money_after.append((agent, value))
+        goods_after = []
+        for (agent, tile), out, income in zip(keys, given, taken):
+            if out == 0.0 and income == 0.0:
+                continue
+            slot = slot_get((agent, item, tile))
+            start = quantities[slot] if slot is not None else 0.0
+            value = start - out + income
+            if value < min(0.0, start) - max(ROUNDING_SHARE * (out + income), UNDERFLOW) and not agent.startswith(EDGE_PREFIX):
+                raise InsufficientGoods("%s would hold %.6g %s on %s after the batch" % (agent, value, item, tile))
+            goods_after.append((agent, tile, value))
+        for agent, value in money_after:
+            self._put_money(agent, currency, value)
+        for agent, tile, value in goods_after:
+            quantities[self._slot_of(agent, item, tile)] = value
+        gross = self._gross_money
+        gross[currency] = gross.get(currency, 0.0) + math.fsum(paid)
+        for agent, out, income in zip(agents, paid, received):
+            if (out != 0.0 or income != 0.0) and agent.startswith(EDGE_PREFIX):
+                self._record_edge_money(agent, currency, out + income, out - income)
+        moved = math.fsum(given)
+        if moved > 0.0:
+            self._gross_goods[item] = self._gross_goods.get(item, 0.0) + moved
+            by_purpose = self._goods_by_purpose.get(item)
+            if by_purpose is None:
+                by_purpose = self._goods_by_purpose[item] = {}
+            by_purpose[purpose] = by_purpose.get(purpose, 0.0) + moved
+        for (agent, _tile), out, income in zip(keys, given, taken):
+            if (out != 0.0 or income != 0.0) and agent.startswith(EDGE_PREFIX):
+                self._record_edge_goods(agent, item, out + income, out - income)

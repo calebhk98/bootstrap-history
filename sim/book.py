@@ -41,7 +41,7 @@ class Book(BookBatch, BookRecord):
         self._good_number: Dict[GoodId, int] = {}
         self._tile_number: Dict[TileId, int] = {}
         self._slot_tile = array("q")
-        self._agent_slots: Dict[AgentId, List[int]] = {}      # slots by holder, in the order they were made
+        self._agent_slots: Dict[AgentId, Dict[GoodId, Dict[TileId, int]]] = {}   # slots by holder, good and tile
         self._good_slots: Dict[GoodId, List[int]] = {}        # slots by good, in the order they were made
         self._gross_money: Dict[CurrencyId, float] = {}       # all postings ever, for conservation
         self._gross_goods: Dict[GoodId, float] = {}
@@ -90,8 +90,11 @@ class Book(BookBatch, BookRecord):
             self._slot_tile.append(tile_number)
             by_agent = self._agent_slots.get(agent)
             if by_agent is None:
-                by_agent = self._agent_slots[agent] = []
-            by_agent.append(slot)
+                by_agent = self._agent_slots[agent] = {}
+            by_tile = by_agent.get(good)
+            if by_tile is None:
+                by_tile = by_agent[good] = {}
+            by_tile[tile] = slot
             by_good = self._good_slots.get(good)
             if by_good is None:
                 by_good = self._good_slots[good] = []
@@ -305,15 +308,8 @@ class Book(BookBatch, BookRecord):
         slots = self._agent_slots.get(agent)
         if not slots:
             return {}
-        held: Dict[GoodId, Dict[TileId, float]] = {}
-        quantities, keys = self._qty, self._slot_key
-        for slot in slots:
-            _agent, good, tile = keys[slot]
-            by_tile = held.get(good)
-            if by_tile is None:
-                by_tile = held[good] = {}
-            by_tile[tile] = quantities[slot]
-        return held
+        quantities = self._qty
+        return {good: {tile: quantities[slot] for tile, slot in by_tile.items()} for good, by_tile in slots.items()}
 
     def goods_held(self, agent: AgentId) -> Dict[GoodId, Dict[str, float]]:
         """What the agent holds of each good, by tile: goods and tiles in name order, nothing at zero."""

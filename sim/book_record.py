@@ -41,8 +41,9 @@ class BookRecord:
                 column[old_row] = 0.0
         self._names[old_row] = None
         self._edge[old_row] = 0
-        for slot in self._agent_slots.pop(old, ()):
-            _agent, good, tile = key = self._slot_key[slot]
+        moved = [(slot, self._slot_key[slot]) for by_tile in self._agent_slots.pop(old, {}).values() for slot in by_tile.values()]
+        for slot, key in moved:
+            _agent, good, tile = key
             new_slot = self._slot.get((new, good, tile))
             del self._slot[key]
             if new_slot is not None:
@@ -55,7 +56,7 @@ class BookRecord:
             self._slot[(new, good, tile)] = slot
             self._slot_key[slot] = (new, good, tile)
             self._slot_row[slot] = self._row_of(new)
-            self._agent_slots.setdefault(new, []).append(slot)
+            self._agent_slots.setdefault(new, {}).setdefault(good, {})[tile] = slot
 
     def to_record(self, only: Iterable[CurrencyId] = None, skip: Iterable[CurrencyId] = ()) -> dict:
         """The book as plain data; `only` keeps just those currencies (goods are left out then), `skip` drops some."""

@@ -108,6 +108,35 @@ class ArrayBookAgreesWithTheDictionaryBook(unittest.TestCase):
             self.assertEqual(new.to_record(), old.to_record())
         self.assertTrue(0 < refused < 300)
 
+    def test_post_settled_with_many_entries_uses_the_array_path_and_agrees(self):
+        rng = random.Random(6)
+        names = ["h%d" % number for number in range(60)] + ["edge:world"]
+        refused = 0
+        for round_number in range(60):
+            reach = 34.0 if round_number % 2 else 20.0
+            new, old = pair_of_books(rng)
+            for book in (new, old):
+                for name in names[:60]:
+                    book.transfer(Transfer("edge:world", name, "coin", 30.0, "start"))
+                    book.move(GoodsMove("edge:world", name, "grain", "t1", 6.0, "start"))
+            keys = [(name, "t1") for name in names]
+            arguments = dict(currency="coin", purpose="sale", item="grain", agents=list(names), keys=keys,
+                             paid=[rng.choice([0.0, rng.uniform(0.0, reach)]) for _ in names],
+                             received=[rng.choice([0.0, rng.uniform(0.0, reach)]) for _ in names],
+                             given=[rng.choice([0.0, rng.uniform(0.0, reach / 5.0)]) for _ in names],
+                             taken=[rng.choice([0.0, rng.uniform(0.0, reach / 5.0)]) for _ in names])
+            outcomes = []
+            for book in (new, old):
+                try:
+                    book.post_settled(**arguments)
+                    outcomes.append(None)
+                except BookError as error:
+                    outcomes.append((type(error), str(error)))
+            self.assertEqual(outcomes[0], outcomes[1])
+            refused += outcomes[0] is not None
+            self.assertEqual(new.to_record(), old.to_record())
+        self.assertTrue(0 < refused < 60, refused)
+
     def test_start_year_keeps_holdings_and_clears_the_flows(self):
         new, old = pair_of_books(random.Random(8))
         new.start_year()

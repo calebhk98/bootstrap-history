@@ -140,10 +140,10 @@ def settle_packed(book: Book, table: KeyTable, packed: Packed, currency: Currenc
     agents, keys = table.agents, table.keys
     stock_state = numpy.zeros(key_total)
     if delivers_goods:
-        for number in numpy.unique(seller).tolist():
-            agent, tile = keys[number]
-            stock_state[number] = book.stock(agent, item, tile)
-    cash_state = numpy.array([book.balance(agent, currency) for agent in agents])
+        sellers = numpy.unique(seller)
+        stock_state[sellers] = book.stocks_of(item, [keys[number][0] for number in sellers.tolist()],
+                                              [keys[number][1] for number in sellers.tolist()])
+    cash_state = book.balances_of(agents, currency)
     kinds = [_kind(agent) for agent in agents]
     (goods, money, payer, paid, received, goods_in, goods_out, buyer_net, got_goods, paid_as_buyer, imports, exports,
      _key_given, _key_taken, key_to_mint, batch_paid, batch_received, batch_given, batch_taken) = settle_markets(
