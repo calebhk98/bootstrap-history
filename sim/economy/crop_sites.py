@@ -34,7 +34,8 @@ def sites(yield_by_tile: Mapping[TileId, float], recipe: Recipe, prices: Mapping
           wages: Mapping[str, float]) -> List[TileId]:
     """The tiles a recipe is placed on: those where a run pays; where none does, every tile that grows anything (a good
     never loses its last site: the first year's plan finds out), in id order."""
-    kept = [tile for tile, factor in sorted(yield_by_tile.items()) if pays(recipe, factor, prices, wages)]
+    floor = lowest_paying_yield(recipe, prices, wages)      # the same for every tile
+    kept = [tile for tile, factor in sorted(yield_by_tile.items()) if factor > 0.0 and factor * (1.0 + FLOAT_SLACK) >= floor]
     return kept or [tile for tile, factor in sorted(yield_by_tile.items()) if factor > 0.0]
 
 

@@ -8,6 +8,7 @@ its output to the area's anchor (location_inputs.py), over the site's yield; amo
 tiles holding those fixed sites, with a site and idle hands to staff the run.
 """
 import math
+import weakref
 from dataclasses import dataclass
 from typing import Callable, Dict, List, Mapping, Optional, Sequence, Tuple
 
@@ -96,15 +97,45 @@ def choose(candidates: Sequence[Candidate], runs: float,
     return best, min(runs, best.staffable_runs, best.headroom_runs)
 
 
+class _PlacementReads:
+    """What the opening's placement reads of a setup, worked out once: the site limits by recipe, and per recipe the
+    tiles it may be placed on and the suited tiles of each area. None of it changes while one setup is placed."""
+
+    def __init__(self, setup):
+        self.by_recipe = sites.limits_by_recipe(setup.site_limits)
+        self.placed: Dict[str, frozenset] = {}
+        self.suited: Dict[tuple, tuple] = {}
+
+
+_reads: Dict[int, tuple] = {}      # id(setup) -> (weak reference to the setup, its reads): a setup is not hashable
+
+
+def _placement_reads(setup) -> _PlacementReads:
+    held = _reads.get(id(setup))
+    if held is not None and held[0]() is setup:
+        return held[1]
+    for key in [key for key, (ref, _reads_of) in _reads.items() if ref() is None]:
+        del _reads[key]
+    reads = _PlacementReads(setup)
+    _reads[id(setup)] = (weakref.ref(setup), reads)
+    return reads
+
+
 def opening_split(setup, recipe: Recipe, area: MarketArea, runs: float) -> Dict[TileId, float]:
     """A recipe's opening capacity shared over the tiles: by the site limits when sited, else by the
     area's working hours. A site-bound recipe with no declared limit stays at the anchor
     (sites.UNSITED_EXTRACTION_ANYWHERE)."""
-    by_recipe = sites.limits_by_recipe(setup.site_limits)
+    reads = _placement_reads(setup)
+    by_recipe = reads.by_recipe
     population = setup.opening_population_by_tile
-    placed = _placed_tiles(setup, recipe)
-    suited = tuple(tile for tile in sites.suited_tiles(recipe, setup.tiles, area.tiles, setup.recipe_allowed)
-                   if tile in placed)
+    key = (recipe.recipe_id, area.tiles)
+    suited = reads.suited.get(key)
+    if suited is None:
+        placed = reads.placed.get(recipe.recipe_id)
+        if placed is None:
+            placed = reads.placed[recipe.recipe_id] = _placed_tiles(setup, recipe)
+        suited = reads.suited[key] = tuple(
+            tile for tile in sites.suited_tiles(recipe, setup.tiles, area.tiles, setup.recipe_allowed) if tile in placed)
     if not suited:
         return {}
     if sites.runs_anywhere(recipe, by_recipe):

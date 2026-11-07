@@ -9,7 +9,7 @@ from typing import Dict, Iterable, Mapping
 
 from sim.labour.api import MarketState, TradeSpec, opening_labour_market, seed_hours, trade_specs
 
-from . import households_own, mint, mint_labour, opening_placement, practice
+from . import households_own, mint, mint_labour, opening_hours_needed, opening_placement, practice
 from .market_memory import market_key, note_written
 from .setup import area_tile, labour_area
 
@@ -42,12 +42,9 @@ def plot_trade(setup) -> str:
 
 def producers_hours_needed(setup, record) -> Dict[str, Dict[str, float]]:
     """Yearly hours each labour area's producers need of each trade for the runs they expect to sell, and the mint at capacity."""
-    hours_needed: Dict[str, Dict[str, float]] = {}
-    for producer in record.producers.values():
-        recipe = practice.recipe_for(setup.recipes[producer.recipe_id], producer.crew_runs)
-        needed = hours_needed.setdefault(labour_area(producer.tile), {})
-        for trade, hours in recipe.labour_hours.items():
-            needed[trade] = needed.get(trade, 0.0) + producer.expected_sales * hours
+    hours_needed = opening_hours_needed.of_producers(
+        [(practice.recipe_for(setup.recipes[producer.recipe_id], producer.crew_runs), labour_area(producer.tile),
+          producer.expected_sales) for producer in record.producers.values()])
     mint_needed = hours_needed.setdefault(labour_area(setup.capital_tile), {})
     for trade, hours in mint_labour.capacity_hours(setup, record.currency, mint.capacity_fine_kilograms(setup, record)).items():
         mint_needed[trade] = mint_needed.get(trade, 0.0) + hours

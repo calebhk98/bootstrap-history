@@ -437,6 +437,14 @@ def _place_producers(setup, record, area_map, carriage, final_by_tile, incumbent
     (recipe, tile). An input is therefore opened where its users are, with the supply their capacity needs,
     not where people happen to live (a good too cheap to carry has a market the size of a tile). A processor
     of a good that only fixed sites supply is placed by location_inputs instead: beside that supply, up to it."""
+    _placing[id(record)] = ({cohort.tile for cohort in record.cohorts.values()}, {})     # cohorts do not change while placing
+    try:
+        _place_in_order(setup, record, area_map, carriage, final_by_tile, incumbents, runs, yields, within)
+    finally:
+        del _placing[id(record)]
+
+
+def _place_in_order(setup, record, area_map, carriage, final_by_tile, incumbents, runs, yields, within) -> None:
     population = setup.opening_population_by_tile
     by_limits = sites.limits_by_recipe(setup.site_limits)
     input_demand: Dict[TileId, Dict[GoodId, float]] = {}
@@ -552,11 +560,22 @@ def _stock_producers_with_inputs(setup, record) -> None:
         record.book.move_many(moves)
 
 
+_placing: Dict[int, tuple] = {}     # id(record) -> (tiles with people, richest class by tile) while its producers are placed
+
+
 def _has_people(record, tile) -> bool:
+    held = _placing.get(id(record))
+    if held is not None:
+        return tile in held[0]
     return any(cohort.tile == tile for cohort in record.cohorts.values())
 
 
 def _richest_class(record, tile) -> int:
+    held = _placing.get(id(record))
+    if held is not None:
+        if tile not in held[1]:
+            held[1][tile] = ownership.richest_class(record.cohorts.values(), tile) or 0
+        return held[1][tile]
     return ownership.richest_class(record.cohorts.values(), tile) or 0
 
 

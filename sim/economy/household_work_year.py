@@ -150,10 +150,13 @@ def cohort_plan(setup, record, view, cohort: Cohort, offers: Sequence[LabourOffe
 
 
 def plans(setup, record, view, offers: Sequence[LabourOffer],
-          service_price_floor_by_tile: Mapping[str, float] = None) -> Dict[AgentId, Tuple[float, float, Tuple[str, ...]]]:
-    """Each cohort's (hours hired a person, hours done itself, grains bought milled) for the year; changes nothing."""
+          service_price_floor_by_tile: Mapping[str, float] = None,
+          expected: Mapping[Tuple[str, str], float] = None) -> Dict[AgentId, Tuple[float, float, Tuple[str, ...]]]:
+    """Each cohort's (hours hired a person, hours done itself, grains bought milled) for the year; changes nothing.
+    `expected` is the share of hours its producers hire by market when the caller has worked it out already."""
     floors = service_price_floor_by_tile or {}
-    expected = expected_shares(setup, record, offers) if setup.household_work and lacks_history(record, offers) else {}
+    if expected is None:
+        expected = expected_shares(setup, record, offers) if setup.household_work and lacks_history(record, offers) else {}
     result: Dict[AgentId, Tuple[float, float, Tuple[str, ...]]] = {}
     by_worker: Dict[AgentId, list] = {}
     for offer in offers:
