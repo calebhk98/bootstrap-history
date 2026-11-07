@@ -162,11 +162,9 @@ def clear_goods(setup, record, view, area_map, order_book: OrderBook, plans, led
     plant_goods = {producer_id: set(setup.recipes[producer.recipe_id].plant_goods)
                    for producer_id, producer in record.producers.items()}
     for good in order:
-        for producer_id in by_output.get(good, ()):
-            if producer_id not in done:
-                done.add(producer_id)
-                _produce_and_offer(setup, record, view, producer_id, plans.get(producer_id), in_kind,
-                                   order_book, ledger)
+        turn = [producer_id for producer_id in by_output.get(good, ()) if producer_id not in done]
+        done.update(turn)
+        _produce_and_offer(setup, record, view, turn, plans, in_kind, order_book, ledger)
         areas = sorted(area for item, area in order_book if item == good)
         kept = market_curves.kept_areas(area_map, setup.port_tile, (setup.capital_tile, *watched_tiles), good)
         for area in areas:
@@ -310,33 +308,55 @@ def remembered_price(old, cleared, quantity, usual_volume):
     return old + min(1.0, quantity / usual_volume) * (cleared - old)
 
 
-def _produce_and_offer(setup, record, view, producer_id, plan, in_kind, order_book, ledger) -> None:
-    producer = record.producers[producer_id]
-    recipe = setup.recipes[producer.recipe_id]
+def _produce_and_offer(setup, record, view, producer_ids, plans, in_kind, order_book, ledger) -> None:
+    """The producers whose turn it is make their output (their moves booked together), the state takes its tax in kind from
+    what they made, and each offers what it holds. The producers do not touch one another's holdings, so booking in a batch
+    is booking one at a time."""
     book = record.book
-    if plan is not None and plan.runs > 0.0:
-        held = {good: book.stock(producer_id, good, producer.tile) for good in recipe.inputs}
-        hours = ledger.hours_hired.get(producer_id, {})
-        _runs, moves = producers.produce(producer, recipe, held, hours, plan.runs)
-        book.move_many(moves)
-        ledger.note_output(producer_id, moves)
-        _tax_in_kind(setup, record, producer, recipe, in_kind, ledger)
-    stock = {good: book.stock(producer_id, good, producer.tile) for good in recipe.outputs}
+    made = []
+    moves_made = []
+    for producer_id in producer_ids:
+        plan = plans.get(producer_id)
+        if plan is not None and plan.runs > 0.0:
+            producer = record.producers[producer_id]
+            recipe = setup.recipes[producer.recipe_id]
+            held = {good: book.stock(producer_id, good, producer.tile) for good in recipe.inputs}
+            _runs, moves = producers.produce(producer, recipe, held, ledger.hours_hired.get(producer_id, {}), plan.runs)
+            moves_made.extend(moves)
+            ledger.note_output(producer_id, moves)
+            made.append(producer_id)
+    book.move_many(moves_made)
+    _tax_in_kind(setup, record, made, in_kind, ledger)
     money = setup.currency_id
-    cash = book.balance(producer_id, money)
-    shortfall = seller_cash.shortfall_to_raise(producer.cash_target, cash, ledger.running_costs(producer_id))
-    keep = {good: recipe.inputs.get(good, 0.0) * producer.capacity_runs for good in recipe.outputs}
-    offers = producers.offers(producer, recipe, view, stock, shortfall, own_rate(view, money), setup.specs, keep)
-    add_orders(order_book, AgentOrders(offers=tuple(offers)))
+    for producer_id in producer_ids:
+        producer = record.producers[producer_id]
+        recipe = setup.recipes[producer.recipe_id]
+        stock = {good: book.stock(producer_id, good, producer.tile) for good in recipe.outputs}
+        cash = book.balance(producer_id, money)
+        shortfall = seller_cash.shortfall_to_raise(producer.cash_target, cash, ledger.running_costs(producer_id))
+        keep = {good: recipe.inputs.get(good, 0.0) * producer.capacity_runs for good in recipe.outputs}
+        offers = producers.offers(producer, recipe, view, stock, shortfall, own_rate(view, money), setup.specs, keep)
+        add_orders(order_book, AgentOrders(offers=tuple(offers)))
 
 
-def _tax_in_kind(setup, record, producer, recipe, forms, ledger) -> None:
-    if not forms or not on_home_tile(setup, producer.tile):
+def _tax_in_kind(setup, record, producer_ids, forms, ledger) -> None:
+    """The state's share, in kind, of what the producers just made on the home tiles. A harvest form assesses only those
+    that made the good it is paid in, so the others are left out of its facts."""
+    if not forms:
         return
-    output = {(producer.agent_id, good): ledger.output.get((producer.agent_id, good), 0.0) for good in recipe.outputs}
-    held = {(producer.agent_id, good): record.book.stock(producer.agent_id, good, producer.tile)
-            for good in recipe.outputs}
-    facts = YearFacts(currency=setup.currency_id, output=output, producer_tile={producer.agent_id: producer.tile},
-                      held_goods=held)
+    taxed = {form.paid_in for form in forms} if all(form.basis == "harvest" for form in forms) else None
+    output, held, tiles = {}, {}, {}
+    for producer_id in producer_ids:
+        producer = record.producers[producer_id]
+        recipe = setup.recipes[producer.recipe_id]
+        if (taxed is not None and taxed.isdisjoint(recipe.outputs)) or not on_home_tile(setup, producer.tile):
+            continue
+        tiles[producer_id] = producer.tile
+        for good in recipe.outputs:
+            output[(producer_id, good)] = ledger.output.get((producer_id, good), 0.0)
+            held[(producer_id, good)] = record.book.stock(producer_id, good, producer.tile)
+    if not output:
+        return
+    facts = YearFacts(currency=setup.currency_id, output=output, producer_tile=tiles, held_goods=held)
     _transfers, moves, _assessments = taxes.assess(forms, facts, setup.state_agent, {}, ledger.state_capacity, setup.hiding)
     record.book.move_many(moves)

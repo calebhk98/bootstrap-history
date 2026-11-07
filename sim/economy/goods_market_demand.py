@@ -194,3 +194,26 @@ class DemandSchedule:
         if self.price_capped:
             wanted[column > maximums[None, :]] = 0.0
         return wanted
+
+
+class DemandArrays:
+    """A market's bids packed straight into the arrays the clearing kernels read (what `DemandSchedule.kernel_arrays` and
+    `tier_bounds` give for the same bids), without the schedule's per-bid groups and rows."""
+
+    def __init__(self, bids: Sequence[Bid]):
+        table = numpy.array(list(map(_SCHEDULE_FIELDS, bids)), dtype=float).reshape(-1, 7)
+        floor, flexible, reference, elasticity = table[:, 0], table[:, 1], table[:, 2], table[:, 3]
+        budget, maximums, priority = table[:, 4], table[:, 5].copy(), table[:, 6]
+        funded = budget > 0.0
+        flexes = funded & (flexible > 0.0) & (reference > 0.0)
+        self._arrays = (numpy.where(funded, floor, 0.0), numpy.where(flexes, flexible, 0.0), numpy.where(funded, budget, 0.0),
+                        numpy.where(flexes, reference, 1.0), numpy.where(flexes, -elasticity, -0.0), maximums,
+                        bool((maximums < math.inf).any()))
+        starts = numpy.flatnonzero(priority[1:] != priority[:-1]) + 1
+        self._bounds = numpy.concatenate(([0], starts, [len(priority)])).astype(numpy.int64)
+
+    def kernel_arrays(self) -> tuple:
+        return self._arrays
+
+    def tier_bounds(self) -> "numpy.ndarray":
+        return self._bounds

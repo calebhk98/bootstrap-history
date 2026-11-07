@@ -189,7 +189,7 @@ def _highest_selling_level(buyers: goods_market.Buyers, offers: Sequence[Offer],
     keys = numpy.array([key_ids.setdefault((offers[index].seller, offers[index].tile), len(key_ids)) for index in positions],
                        dtype=numpy.int64)
     minimum = buyers.minimum_price
-    schedule = buyers.schedule
+    schedule = buyers.arrays
     return float(goods_market_kernels.search_level(
         numpy.array([offers[index].reservation_price for index in positions], dtype=float),
         numpy.array([offers[index].quantity for index in positions], dtype=float),

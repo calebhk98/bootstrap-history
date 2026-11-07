@@ -103,6 +103,7 @@ def respend(setup, record, view, ledger, markets: Dict[Market, LeftMarket], bask
             for need_id, amount in by_need.items():
                 rationed.setdefault(buyer, {})[need_id] = rationed.get(buyer, {}).get(need_id, 0.0) + amount
     paid_so_far = 0.0
+    priced_cache: dict = {}
     for _round in range(len(markets) + 1):
         new_bids: Dict[Market, List[Bid]] = {}
         lowest_asks: Dict[Market, object] = {}
@@ -125,7 +126,7 @@ def respend(setup, record, view, ledger, markets: Dict[Market, LeftMarket], bask
                 by_need = {need_id: amount * cash / total for need_id, amount in by_need.items()}
             elif cash <= 0.0:
                 continue
-            for bid in respend_bids(buyer, cohort.tile, basket, by_need, asks, basket_areas.__getitem__):
+            for bid in respend_bids(buyer, cohort.tile, basket, by_need, asks, basket_areas.__getitem__, priced_cache):
                 new_bids.setdefault((bid.good, bid.area), []).append(bid)
         rationed = {}
         paid_this_round = 0.0
