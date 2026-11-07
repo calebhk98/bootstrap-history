@@ -22,7 +22,6 @@ import numpy as np
 from sim.constants import declare
 
 from . import aptitude, expectations, switching_kernel, training
-from .premium import annuity_factor
 from .records import MarketState, YearInputs, YearReport
 from .trades import fallback_trade
 
@@ -52,11 +51,6 @@ SWITCHING_CONSIDERATION_SHARE_PER_YEAR = declare(
 Move = Tuple[str, str, List[float], float]   # source trade, destination trade, people per band, share of the training years
 
 
-def _training_share(inputs: YearInputs, source: str, target: str) -> float:
-    same_family = inputs.trades[source].family == inputs.trades[target].family
-    return RETRAINING_SHARE_WITHIN_FAMILY if same_family else 1.0
-
-
 NEGLIGIBLE_MOVE_SHARE = declare(
     "NEGLIGIBLE_MOVE_SHARE", 1e-3, kind="temporary_heuristic", unit="share of the workers weighing a switch",
     source=None, confidence="D",
@@ -78,6 +72,12 @@ def switch_trades(state: MarketState, inputs: YearInputs, clearings: Mapping, re
     destinations = sorted(trade for trade in inputs.trades if allowed is None or trade in allowed)
     rounds = int(expectations.DECISION_ROUNDS_PER_YEAR)
     chances = {trade: aptitude.completion_by_band(inputs.trades[trade].difficulty) for trade in destinations}
+    destination_position = {trade: position for position, trade in enumerate(destinations)}
+    fixed = _DestinationArrays(
+        chances=np.array([chances[trade] for trade in destinations]).reshape(len(destinations), aptitude.band_count()),
+        years=np.array([inputs.trades[trade].training_years for trade in destinations]),
+        families=[inputs.trades[trade].family for trade in destinations],
+        position=destination_position, fallback_position=destination_position.get(fallback, -1))
     for area in sorted(state.workers):
         subsistence = inputs.subsistence_per_worker_year.get(area)
         if subsistence is None or subsistence <= 0.0:
@@ -95,106 +95,71 @@ def switch_trades(state: MarketState, inputs: YearInputs, clearings: Mapping, re
         # a switcher trains first, so a destination is weighed by its income after training (capped at the long-run
         # training cost), not by today's scarcity wage; a source is weighed by what it pays today (Complaint 678)
         later_income: Dict[str, float] = {}
-        planned: Dict[Tuple[str, bool], tuple] = {}   # (source, young) -> (later income it was planned on, odds of each target per band)
+        plan = _AreaPlan(inputs, fixed, sources, fallback, income, idle, baseline, vacancies, destinations, subsistence)
         stale = destinations   # trades whose income after training must be re-read (enrolling changes it)
         for _round in range(rounds):
             for trade in stale:
                 later_income[trade] = expectations.income_at_graduation(state, inputs, clearings, area, trade,
                                                                         chances[trade])
-            moves = _planned_moves(state, inputs, area, sources, destinations, income, baseline, later_income, vacancies,
-                                   subsistence, chances, planned, idle)
+            moves = _planned_moves(inputs, state.workers[area], plan, np.array([later_income[trade] for trade in destinations]))
             stale = _carry_out(state, inputs, report, area, moves)
 
 
-def _odds(inputs, state, area, source, destinations, own, later_income, vacancies, subsistence, chances, young,
-          stay_income=None):
-    """The odds of each band of `source` workers moving to each worthwhile destination: (targets, per
-    band the share of each target), or None for a band that stays. `own` is the income given up. The young weigh a
-    whole career and weigh every trade paying more than `own` after training, even one worth less than staying
-    once the training is paid for (module docstring), and the unskilled trade too where their own pays less than it. The young may stay in `source`, scored at `stay_income` (what it
-    pays now) over the career against `own`; an established worker's stay scores nothing, being the income given up."""
-    rate = inputs.discount_rate
-    remaining = inputs.career_years if young else inputs.career_years * REMAINING_CAREER_SHARE
-    if young:   # a vacancy that pays no more than the unskilled option is not an opening (it is in `later_income`)
-        margin = PLAN_REUSE_TOLERANCE * subsistence
-        fallback = fallback_trade(inputs.trades)
-        leaves_for_unskilled = stay_income is not None and stay_income < own and fallback != source   # their trade pays less than unskilled work
-        targets = [trade for trade in destinations if trade != source
-                   and (later_income[trade] > own + margin or (leaves_for_unskilled and trade == fallback))]
-    else:
-        targets = [trade for trade in destinations if trade != source and (later_income[trade] > own or trade in vacancies)]
-    if not targets:
-        return None
-    gain = []
-    lost = []
-    for trade in targets:
-        years = inputs.trades[trade].training_years * (1.0 if young else _training_share(inputs, source, trade))
-        lost.append(own * annuity_factor(rate, years))
-        gain.append(expectations.present_value(later_income[trade] - own, rate, years, remaining))
-    stay_score = 0.0
-    if young and stay_income is not None:
-        stay_score = expectations.present_value(stay_income - own, rate, 0.0, remaining) / subsistence
-    shares = np.empty((len(state.workers[area][source]), len(targets)))
-    moves = switching_kernel.band_shares(np.array([chances[trade] for trade in targets]), np.array(gain), np.array(lost),
-                                         subsistence, stay_score, young, SWITCHING_TASTE_SCALE, NEGLIGIBLE_MOVE_SHARE, shares)
-    bands = [[(trade, share) for trade, share in zip(targets, row) if share > 0.0] if moving else None
-             for row, moving in zip(shares.tolist(), moves.tolist())]
-    return targets, bands
+class _DestinationArrays:
+    """What the year's destinations have whatever the area: chance of finishing per band, training years, family."""
+
+    def __init__(self, chances, years, families, position, fallback_position):
+        self.chances, self.years, self.families, self.position, self.fallback_position = chances, years, families, position, fallback_position
 
 
-def _plan_still_holds(then: Mapping[str, float], later_income: Mapping[str, float], income_here: float,
-                      odds, vacancies, destinations, tolerance: float) -> bool:
-    """Whether no destination's income after training has moved enough to change a source's odds."""
-    targets = () if odds is None else odds[0]
-    for trade in destinations:
-        if abs(later_income[trade] - then[trade]) <= tolerance:
-            continue
-        # a destination that moved matters if it is a target, or has risen past what the source earns
-        if trade in targets or later_income[trade] > income_here or trade in vacancies:
-            return False
-    return True
+class _AreaPlan:
+    """An area's sources, destinations and incomes as arrays, with the odds each (source, young or established) group planned on,
+    carried from one round of switching to the next (`switching_kernel.plan_area`)."""
+
+    def __init__(self, inputs, fixed, sources, fallback, income, idle, baseline, vacancies, destinations, subsistence):
+        count_sources, count_destinations, count_bands = len(sources), len(destinations), fixed.chances.shape[1]
+        self.sources, self.destinations, self.fixed, self.subsistence, self.baseline = sources, destinations, fixed, subsistence, baseline
+        self.income = np.array([income[trade] for trade in sources])
+        self.idle = np.array([idle[trade] for trade in sources])
+        self.vacancies = np.array([trade in vacancies for trade in destinations], np.bool_)
+        self.source_position = np.array([fixed.position.get(trade, -1) for trade in sources], np.int64)
+        self.source_is_fallback = np.array([trade == fallback for trade in sources], np.bool_)
+        source_families = [inputs.trades[trade].family for trade in sources]
+        same = np.array([[family == other for other in fixed.families] for family in source_families]).reshape(count_sources, count_destinations)
+        self.training_share = np.where(same, RETRAINING_SHARE_WITHIN_FAMILY, 1.0)
+        self.valid = np.zeros((count_sources, 2), np.bool_)
+        self.then = np.zeros((count_sources, 2, count_destinations))
+        self.targets = np.zeros((count_sources, 2, count_destinations), np.bool_)
+        self.shares = np.zeros((count_sources, 2, count_bands, count_destinations))
+        self.moving = np.zeros((count_sources, 2, count_bands), np.bool_)
+        self.active = np.zeros((count_sources, 2), np.bool_)
+        self.considering = np.zeros((count_sources, 2))
 
 
-def _planned_moves(state, inputs, area, sources, destinations, income, baseline, later_income, vacancies,
-                   subsistence, chances, planned, idle) -> List[Move]:
-    moves: List[Move] = []
+def _planned_moves(inputs, workers, plan: _AreaPlan, later_income) -> List[Move]:
+    """The moves of one round: for each source, the established workers then the young, the people of each ability band
+    sent to each destination the band picks (`switching_kernel.plan_area` works out the odds)."""
     rounds = expectations.DECISION_ROUNDS_PER_YEAR
-    tolerance = PLAN_REUSE_TOLERANCE * subsistence
-    young_share = 1.0 / inputs.career_years if inputs.career_years > 0.0 else 0.0
-    snapshot = None
-    for source in sources:
-        considering = max(SWITCHING_CONSIDERATION_SHARE_PER_YEAR, idle[source])   # those who sold no hours look about
-        young = min(considering, young_share)
-        for is_young, share_considering in ((False, considering - young), (True, young)):
-            if share_considering <= 0.0:
+    counts = np.array([workers[source] for source in plan.sources])
+    switching_kernel.plan_area(
+        counts, plan.income, plan.idle, plan.baseline, later_income, plan.vacancies, plan.fixed.chances, plan.fixed.years,
+        plan.training_share, plan.source_position, plan.source_is_fallback, plan.fixed.fallback_position, plan.subsistence,
+        inputs.discount_rate, inputs.career_years, SWITCHING_CONSIDERATION_SHARE_PER_YEAR, REMAINING_CAREER_SHARE,
+        PLAN_REUSE_TOLERANCE, SWITCHING_TASTE_SCALE, NEGLIGIBLE_MOVE_SHARE, plan.valid, plan.then, plan.targets, plan.shares,
+        plan.moving, plan.active, plan.considering)
+    moves: List[Move] = []
+    for position, source in enumerate(plan.sources):
+        for young in (0, 1):
+            if not plan.active[position, young]:
                 continue
-            own = baseline if is_young else income[source]
-            kept = planned.get((source, is_young))
-            if kept is not None and _plan_still_holds(kept[0], later_income, own, kept[1], vacancies,
-                                                      destinations, tolerance):
-                odds = kept[1]
-            else:
-                odds = _odds(inputs, state, area, source, destinations, own, later_income, vacancies, subsistence,
-                             chances, is_young, income[source] if is_young else None)
-                if snapshot is None:
-                    snapshot = dict(later_income)
-                planned[(source, is_young)] = (snapshot, odds)
-            if odds is None:
+            sending = plan.moving[position, young] & (counts[position] > 0.0)
+            if not sending.any():
                 continue
-            _targets, bands = odds
-            rows: Dict[str, List[float]] = {}
-            for band, count in enumerate(state.workers[area][source]):
-                shares = bands[band]
-                if count <= 0.0 or shares is None:
-                    continue
-                base = count * share_considering / rounds
-                for trade, share in shares:
-                    row = rows.get(trade)
-                    if row is None:
-                        row = rows[trade] = aptitude.empty_bands()
-                    row[band] = base * share
-            for trade, row in rows.items():
-                moves.append((source, trade, row, 1.0 if is_young else _training_share(inputs, source, trade)))
+            picked = sending[:, None] & (plan.shares[position, young] > 0.0)
+            amounts = (counts[position] * plan.considering[position, young] / rounds)[:, None] * plan.shares[position, young]
+            for column in np.flatnonzero(picked.any(axis=0)).tolist():
+                moves.append((source, plan.destinations[column], np.where(picked[:, column], amounts[:, column], 0.0).tolist(),
+                              1.0 if young == 1 else float(plan.training_share[position, column])))
     return moves
 
 

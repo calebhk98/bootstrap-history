@@ -71,11 +71,12 @@ class HourSupply:
 
     def _hours_over(self, in_market: Sequence[LabourOffer]) -> Callable[[float], float]:
         live = [offer for offer in in_market if offer.hours > 0.0]
-        packed = self._packed(live)
+        packed = self._packed(live) if live else labour_supply_kernel.pack_offers([])
         exponent = 1.0 / (1.0 - LABOUR_OUTPUT_ELASTICITY)
         if packed is not None:
             def packed_hours(wage: float) -> float:
                 return labour_supply_kernel.sold_hours(wage, packed, exponent)
+            packed_hours.packed = (packed, exponent)      # the labour core reads every market's offers from here into one kernel
             return packed_hours
         schedules = [self.sold_hours_schedule(offer) for offer in live]
 
@@ -85,8 +86,6 @@ class HourSupply:
 
     def _packed(self, live: Sequence[LabourOffer]):
         """The market's offers as arrays for the kernel, or None where a plot schedule is not the parametric one."""
-        if not live:
-            return None
         rows = []
         for offer in live:
             whole = self._hours.get(offer.worker, 0.0)

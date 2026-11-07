@@ -5,7 +5,7 @@ from typing import Callable, Dict, List, Optional, Sequence, Set, Tuple
 
 from sim.constants import declare
 
-from . import asks, layoffs
+from . import asks, clearing_arrays, layoffs
 from .applications import HireJob, hire_markets
 from .import_cost import ImportCosts
 from .premium import training_premium
@@ -262,11 +262,11 @@ class _Pending:
     job: Optional[HireJob]
 
 
-def _prepare(state: MarketState, inputs: YearInputs, trade: str, area: str, bids: Sequence[EmployerHoursBid],
-             import_costs: ImportCosts) -> Optional[_Pending]:
-    """The market of a trade in an area up to its hiring rounds (the wage before them, the hours kept, the pool and the
-    offers' ceilings); None where the area has no stated outside option to hold one on. Reads this market's own entries of
-    the state and the year's start wages only, so markets can be prepared in any order."""
+def _plain_head(state: MarketState, inputs: YearInputs, trade: str, area: str, bids: Sequence[EmployerHoursBid],
+                import_costs: ImportCosts) -> Optional[tuple]:
+    """(wage, target, goal, offered, reservation, base reservation, lowest, ceiling, hours held) of a market before its hiring
+    rounds, by the plain functions; None where the area has no stated outside option to hold one on. The kernel
+    (`clearing_kernel.market_heads`) gives the same for every market at once."""
     spec = inputs.trades[trade]
     workers = sum(state.workers.get(area, {}).get(trade, []))
     full = workers * inputs.hours_per_worker_year
@@ -299,6 +299,20 @@ def _prepare(state: MarketState, inputs: YearInputs, trade: str, area: str, bids
         goal = supply_target(reservation, sold_at, bids) if bids else wage
         offered = sold_at(wage)
     target = min(target, long_run) if target is not None else None
+    return wage, target, goal, offered, reservation, base_reservation, lowest, ceiling, full
+
+
+def _prepare(state: MarketState, inputs: YearInputs, trade: str, area: str, bids: Sequence[EmployerHoursBid],
+             import_costs: ImportCosts, head: Optional[tuple] = None) -> Optional[_Pending]:
+    """The market of a trade in an area up to its hiring rounds (the wage before them, the hours kept, the pool and the
+    offers' ceilings); None where the area has no stated outside option to hold one on. Reads this market's own entries of
+    the state and the year's start wages only, so markets can be prepared in any order. `head` is the wage and the figures
+    behind it where a kernel has worked them out for every market (`_plain_head`)."""
+    head = _plain_head(state, inputs, trade, area, bids, import_costs) if head is None else head
+    if head is None:
+        return None
+    wage, target, goal, offered, reservation, base_reservation, lowest, ceiling, full = head
+    sold_at = inputs.sold_schedule(trade, area)
     wanted, paid, ranks = eligible_bids(bids, wage)
     previous = state.hired_hours.get(area, {}).get(trade, {})
     kept = retain(wanted, previous, offered) if offered > 0.0 else {}
@@ -311,6 +325,12 @@ def _prepare(state: MarketState, inputs: YearInputs, trade: str, area: str, bids
                       ceilings=offer_ceilings(bids, wage, paid, min(ceiling, goal)))
     return _Pending(state, trade, area, bids, wage, paid, ranks, hired, wanted, offered, sold_at, target, full,
                     base_reservation, lowest, job)
+
+
+def _kernel_head(row: tuple) -> tuple:
+    """A kernel row (wage, target, goal, offered, reservation, base, lowest, ceiling, full) with NaN target as none."""
+    wage, target, goal, offered, reservation, base, lowest, ceiling, full = row
+    return wage, None if target != target else target, goal, offered, reservation, base, lowest, ceiling, full
 
 
 def _finish(pending: _Pending) -> LabourClearing:
@@ -361,8 +381,15 @@ def clear_all(state: MarketState, inputs: YearInputs) -> List[LabourClearing]:
         markets.update((trade, area) for trade, bands in by_trade.items()
                        if sum(bands) > 0.0 and trade in inputs.trades)
     import_costs = ImportCosts(state, inputs)
-    prepared = [_prepare(state, inputs, trade, area, bids_by_market.get((trade, area), []), import_costs)
-                for trade, area in sorted(markets)]
+    ordered = sorted(markets)
+    heads: List[Optional[tuple]] = [None] * len(ordered)
+    if ordered and clearing_arrays.kernel_applies(inputs):
+        found = clearing_arrays.run_heads(clearing_arrays.pack_heads(state, inputs, ordered, bids_by_market, import_costs, WAGE_SHARE_CLOSED_PER_YEAR))
+        heads = [tuple(row[1:]) if row[0] else False for row in found.tolist()]      # False: no stated outside option
+    prepared = [None if head is False else
+                _prepare(state, inputs, trade, area, bids_by_market.get((trade, area), []), import_costs,
+                         None if head is None else _kernel_head(head))
+                for (trade, area), head in zip(ordered, heads)]
     pending = [each for each in prepared if each is not None]
     hire_markets([each.job for each in pending if each.job is not None])
     return [_finish(each) for each in pending]
