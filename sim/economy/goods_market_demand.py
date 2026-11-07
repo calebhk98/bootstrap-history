@@ -7,6 +7,7 @@ from typing import List, Optional, Sequence
 
 import numpy
 
+from . import goods_market_kernels
 from .types import Bid
 
 _SCHEDULE_FIELDS = attrgetter("floor_quantity", "flexible_quantity", "reference_price", "elasticity", "budget",
@@ -202,15 +203,8 @@ class DemandArrays:
 
     def __init__(self, bids: Sequence[Bid]):
         table = numpy.array(list(map(_SCHEDULE_FIELDS, bids)), dtype=float).reshape(-1, 7)
-        floor, flexible, reference, elasticity = table[:, 0], table[:, 1], table[:, 2], table[:, 3]
-        budget, maximums, priority = table[:, 4], table[:, 5].copy(), table[:, 6]
-        funded = budget > 0.0
-        flexes = funded & (flexible > 0.0) & (reference > 0.0)
-        self._arrays = (numpy.where(funded, floor, 0.0), numpy.where(flexes, flexible, 0.0), numpy.where(funded, budget, 0.0),
-                        numpy.where(flexes, reference, 1.0), numpy.where(flexes, -elasticity, -0.0), maximums,
-                        bool((maximums < math.inf).any()))
-        starts = numpy.flatnonzero(priority[1:] != priority[:-1]) + 1
-        self._bounds = numpy.concatenate(([0], starts, [len(priority)])).astype(numpy.int64)
+        floors, flexibles, budgets, references, exponents, capped, self._bounds = goods_market_kernels.pack_demand(table)
+        self._arrays = (floors, flexibles, budgets, references, exponents, table[:, 5].copy(), capped)
 
     def kernel_arrays(self) -> tuple:
         return self._arrays

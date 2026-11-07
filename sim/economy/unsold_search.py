@@ -146,8 +146,9 @@ def ask_limits(setup, record, view, offers: Sequence[Offer], indices: Sequence[i
         key = (offer.seller, offer.tile)
         cost = costs[key] if key in costs else seller_offers.unit_cost(setup, record, view, offer)
         if cost is not None and math.isfinite(cost):
-            limits[index] = band_edge(cost, seller_offers.input_share_of_cost(setup, record, view, offer),
-                                      seller_offers.ask_band_multiple(setup, offer))
+            shares = getattr(costs, "shares", {})
+            share = shares[key] if key in shares else seller_offers.input_share_of_cost(setup, record, view, offer)
+            limits[index] = band_edge(cost, share, seller_offers.ask_band_multiple(setup, offer))
     return limits
 
 

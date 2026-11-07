@@ -37,5 +37,21 @@ class DemandArraysAgreeWithTheSchedule(unittest.TestCase):
             numpy.testing.assert_array_equal(packed.tier_bounds(), schedule.tier_bounds())
 
 
+class CostFiguresAgreeWithTheTwoReads(unittest.TestCase):
+    """`seller_offers.cost_figures` reads a producer's prices once for what `unit_cost` and `input_share_of_cost` read twice."""
+
+    def test_a_producer_and_a_seller_that_is_not_one(self):
+        from sim.tests.test_economy_ask_band import game, View, GOOD, TILE
+        from sim.economy import seller_offers
+        from sim.economy.types import Offer
+        setup, record = game("maker")
+        view = View()
+        for seller in ("maker", "stranger"):
+            offer = Offer(seller, GOOD, "area", TILE, 5.0, 4.0)
+            cost, share = seller_offers.cost_figures(setup, record, view, offer)
+            self.assertEqual(cost, seller_offers.unit_cost(setup, record, view, offer))
+            self.assertEqual(share, seller_offers.input_share_of_cost(setup, record, view, offer))
+
+
 if __name__ == "__main__":
     unittest.main()

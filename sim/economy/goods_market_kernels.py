@@ -18,6 +18,39 @@ KERNEL = {"error_model": "numpy"}
 
 
 @njit(**KERNEL)
+def pack_demand(table):
+    """The kernel arrays of a market's bids from their table (a row per bid: floor, flexible, reference price, elasticity,
+    budget, maximum price, priority tier): a bid with no budget wants nothing, one with no flexible part or no reference
+    price does not move with price (reference one, exponent zero). Returns floors, flexibles, budgets, references,
+    exponents, whether any bid has a ceiling, and where each priority tier starts, with the count at the end."""
+    count = len(table)
+    floors = numpy.zeros(count)
+    flexibles = numpy.zeros(count)
+    budgets = numpy.zeros(count)
+    references = numpy.ones(count)
+    exponents = numpy.zeros(count)
+    bounds = numpy.zeros(count + 1, dtype=numpy.int64)
+    tiers = 0
+    capped = False
+    for bid in range(count):
+        if table[bid, 4] > 0.0:
+            floors[bid] = table[bid, 0]
+            budgets[bid] = table[bid, 4]
+            if table[bid, 1] > 0.0 and table[bid, 2] > 0.0:
+                flexibles[bid] = table[bid, 1]
+                references[bid] = table[bid, 2]
+                exponents[bid] = -table[bid, 3]
+        if table[bid, 5] < numpy.inf:
+            capped = True
+        if bid > 0 and table[bid, 6] != table[bid - 1, 6]:
+            tiers += 1
+            bounds[tiers] = bid
+    tiers += 1
+    bounds[tiers] = count
+    return floors, flexibles, budgets, references, exponents, capped, bounds[:tiers + 1].copy()
+
+
+@njit(**KERNEL)
 def want_at(price, floor, flexible, budget, reference, exponent, maximum, capped):
     """One buyer's quantity at a price (goods_market.quantity_at, with the budget cap and the buyer's ceiling)."""
     if price <= 0.0:
