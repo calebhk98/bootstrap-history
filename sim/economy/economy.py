@@ -274,7 +274,7 @@ class Economy:
             received[payment.payee] = received.get(payment.payee, 0.0) + payment.amount
         close_agents(setup, record, close_view, ledger, self.area_map, self.carriage, arrays, received)
         open_entrants(setup, record, close_view, self.area_map, ledger.unmet_demand, self.carriage,
-                      with_standing_bids(ledger.bids_by_market, inputs.standing_bids))
+                      with_standing_bids(ledger.bids_by_market, inputs.standing_bids), arrays)
         restake_owners(setup, record, close_view)
         extraction = sites.extraction_by_tile(record, setup)
         close_idle_producers(setup, record)

@@ -4,7 +4,7 @@ capacity), which stakes part of its cash as working cash; one with plant to buil
 asks the credit market for it, and its capacity grows as the plant goods arrive. Owners also put working
 cash back into paying producers that ran out of it."""
 import math
-from typing import Dict, Tuple
+from typing import Dict, List, Tuple
 
 from . import producer_table
 from . import credit, entry_practice, location, ownership, practice, producer_exit, sites, unit_cost
@@ -12,8 +12,9 @@ from .entry_backed import unfilled_at_cost
 from .entry_margin import margin_entry_plans
 from .entry_spare import idle_runs
 from .entrant_rent import site_rent_per_run
+from .entry_tables import EntryTables
 from .entry_trial import trial_entry_plans
-from .entry import (ENTRANT_OWNER_STAKE_SHARE, UnmetDemand, entrant_loan, entry_plans, gap_beyond_spare,
+from .entry import (ENTRANT_OWNER_STAKE_SHARE, EntryPlan, UnmetDemand, entrant_loan, entry_plans, gap_beyond_spare,
                     producers_to_close, restake)
 from .producers import Producer, expected_output_prices, live_input_prices, live_wages
 from .producers_close import working_capital_target
@@ -24,36 +25,58 @@ from .replaced import replaced
 from .rates import own_rate
 
 
-def open_entrants(setup, record, view, area_map, unmet_by_market: Dict[Tuple[str, str], float],
-                  carriage=None, bids_by_market=None) -> int:
-    """Start the year's new producers; returns how many started. With the carriage table a newcomer is
-    sited by location.entry_siting; without it one is built from the setup (slower on a large map). With
-    the year's bids, a market whose expected price stays above its entry price draws newcomers
-    (entry_margin.py) and a market with buyers and no maker draws a trial newcomer (entry_trial.py)."""
-    spare = _spare_output(setup, record, view)
-    unmet = {}
-    for (good, area_id), quantity in sorted(unmet_by_market.items()):
-        area = next((each for each in area_map.areas(good) if each.area_id == area_id), None) \
-            if good in area_map.goods() else None
-        gap = gap_beyond_spare(quantity, spare.get((good, area_id), 0.0))
-        if area is not None and gap > 0.0:
-            unmet[(good, area_id)] = UnmetDemand(good, area_id, area.anchor_tile, gap)
-    money = setup.currency_id
-    started = 0
-    by_limits = sites.limits_by_recipe(setup.site_limits)
+def year_plans(setup, record, view, area_map, unmet_by_market: Dict[Tuple[str, str], float], carriage=None,
+               bids_by_market=None, arrays=None) -> List[EntryPlan]:
+    """The year's entry plans, in the order they are applied: the unmet markets' (entry.py), then the margin's and the trial's
+    where there are bids. See `open_entrants` for `arrays`."""
     with entry_practice.shared_crews(record.producers):
-        siting = location.entry_siting(setup, record, view, area_map, carriage or _carriage(setup))
+        costs = None if arrays is None else EntryTables.build(
+            setup, record, view, area_map, arrays.sync(setup, record, view), carriage or _carriage(setup),
+            entry_practice.crews_of_recipe(record.producers))
+        spare = _spare_output(setup, record, view) if costs is None else None
+        spare_grid = None if costs is None else costs.spare_output()
+        unmet = {}
+        areas_of: Dict[str, Dict[str, object]] = {}
+        known_goods = set(area_map.goods())
+        for (good, area_id), quantity in sorted(unmet_by_market.items()):
+            if good not in known_goods:
+                continue
+            if good not in areas_of:
+                areas_of[good] = {each.area_id: each for each in area_map.areas(good)}
+            area = areas_of[good].get(area_id)
+            if area is None:
+                continue
+            gap = gap_beyond_spare(quantity, spare.get((good, area_id), 0.0) if spare_grid is None else _spare_at(
+                spare_grid, costs, good, area_id))
+            if gap > 0.0:
+                unmet[(good, area_id)] = UnmetDemand(good, area_id, area.anchor_tile, gap)
+        siting = location.entry_siting(setup, record, view, area_map, carriage or _carriage(setup), costs)
         traded = _traded_volume(record, view, area_map)
         plans = entry_plans(setup.recipes, view, unmet, traded, siting,
-                            unfilled_at_cost(setup, record, view, area_map, bids_by_market, traded),
+                            unfilled_at_cost(setup, record, view, area_map, bids_by_market, traded, costs),
                             lambda recipe_id, tile: site_rent_per_run(setup, record, view, recipe_id, tile),
-                            entry_practice.crews_of_recipe(record.producers))
+                            entry_practice.crews_of_recipe(record.producers), costs)
         if bids_by_market:
             planned = tuple((plan.good, view.area_of(plan.good, plan.tile)) for plan in plans)
             first_margin_plan = len(plans)
-            plans += margin_entry_plans(setup, record, view, area_map, bids_by_market, planned, siting)
+            plans += margin_entry_plans(setup, record, view, area_map, bids_by_market, planned, siting, costs)
             planned += tuple((plan.good, view.area_of(plan.good, plan.tile)) for plan in plans[first_margin_plan:])
-            plans += trial_entry_plans(setup, record, view, area_map, bids_by_market, planned, siting)
+            plans += trial_entry_plans(setup, record, view, area_map, bids_by_market, planned, siting, costs)
+    return plans
+
+
+def open_entrants(setup, record, view, area_map, unmet_by_market: Dict[Tuple[str, str], float],
+                  carriage=None, bids_by_market=None, arrays=None) -> int:
+    """Start the year's new producers; returns how many started. With the carriage table a newcomer is
+    sited by location.entry_siting; without it one is built from the setup (slower on a large map). With
+    the year's bids, a market whose expected price stays above its entry price draws newcomers
+    (entry_margin.py) and a market with buyers and no maker draws a trial newcomer (entry_trial.py). With the year's arrays
+    (year_arrays.py) every cost the rules read, and the tile a newcomer is sited on, come from tables over them
+    (entry_tables.py); without, from the records."""
+    money = setup.currency_id
+    started = 0
+    by_limits = sites.limits_by_recipe(setup.site_limits)
+    plans = year_plans(setup, record, view, area_map, unmet_by_market, carriage, bids_by_market, arrays)
     for plan in plans:
         recipe = setup.recipes[plan.recipe_id]
         key = recipe_tile_key(plan.recipe_id, plan.tile)
@@ -91,6 +114,13 @@ def open_entrants(setup, record, view, area_map, unmet_by_market: Dict[Tuple[str
                                                        recipe.plant_life_years, loan, "enter"))
                 record.credit.plan_expansion(producer_id, loan / per_run)
     return started
+
+
+def _spare_at(grid, costs, good: str, area_id: str) -> float:
+    """The spare output of the grid `EntryTables.spare_output` makes, for one good and area (nothing for a pair it does not hold)."""
+    good_column = costs.goods.row.get(good)
+    area_column = costs.arrays.area_index.areas.row.get(area_id)
+    return 0.0 if good_column is None or area_column is None else float(grid[good_column, area_column])
 
 
 def _carriage(setup):
