@@ -182,35 +182,42 @@ def _carry_out(state: MarketState, inputs: YearInputs, report: YearReport, area:
     switching_kernel.take_moves(moves.sources, moves.rows, have, taken_amounts)      # `have` unless the move asks for less
     for position in np.unique(moves.sources).tolist():
         workers[plan.sources[position]][:] = have[position].tolist()
-    net: Dict[str, float] = {}
-    groups: Dict[Tuple[str, float], List[Tuple[str, List[float]]]] = {}
-    for source, destination, share, taken in zip(moves.sources.tolist(), moves.destinations.tolist(), moves.shares.tolist(),
-                                                 taken_amounts.tolist()):
-        groups.setdefault((plan.destinations[destination], share), []).append((plan.sources[source], taken))
-    for (target, share), senders in groups.items():
-        if len(senders) == 1:
-            combined = senders[0][1]
-        else:
-            combined = [math.fsum(column) for column in zip(*[taken for _source, taken in senders])]
-        refused = training.enrol(state, inputs, area, target, combined, share)
-        anything_refused = any(refused)
-        for source, taken in senders:
-            moved = aptitude.band_total(taken)
-            if anything_refused:
+    moved = taken_amounts.sum(axis=1)
+    share_rank = np.unique(moves.shares, return_inverse=True)[1].reshape(-1)
+    key = moves.destinations * (int(share_rank.max()) + 1) + share_rank
+    _keys, first, group_of = np.unique(key, return_index=True, return_inverse=True)
+    group_of = group_of.reshape(-1)
+    members = np.argsort(group_of, kind="stable")      # each group's moves in carrying-out order
+    ends = np.cumsum(np.bincount(group_of))
+    starts = ends - np.bincount(group_of)
+    targets: List[str] = []
+    for group in np.argsort(first, kind="stable").tolist():      # groups in the order they first appear
+        senders = members[starts[group]:ends[group]]
+        target, share = plan.destinations[int(moves.destinations[senders[0]])], float(moves.shares[senders[0]])
+        taken = taken_amounts[senders]
+        combined = taken[0] if len(senders) == 1 else taken.sum(axis=0)
+        refused = training.enrol(state, inputs, area, target, combined.tolist(), share)
+        targets.append(target)
+        if any(refused):       # the places ran out: each sender takes back its share of those not admitted
+            for sender, mine in zip(senders.tolist(), taken.tolist()):
                 if len(senders) == 1:
                     returned = refused
                 else:
-                    returned = [back * mine / total if total > 0.0 else 0.0
-                                for back, mine, total in zip(refused, taken, combined)]
-                aptitude.add_bands(workers[source], returned)
-                moved -= aptitude.band_total(returned)
-            net[target] = net.get(target, 0.0) + moved
-            net[source] = net.get(source, 0.0) - moved
-    if net:
-        record = report.switched.setdefault(area, {})
-        for trade, change in net.items():
-            record[trade] = record.get(trade, 0.0) + change
-    return [target for target, _share in groups]
+                    returned = [back * each / total if total > 0.0 else 0.0
+                                for back, each, total in zip(refused, mine, combined.tolist())]
+                aptitude.add_bands(workers[plan.sources[int(moves.sources[sender])]], returned)
+                moved[sender] -= aptitude.band_total(returned)
+    net: Dict[str, float] = {}
+    for names, positions in ((plan.destinations, moves.destinations), (plan.sources, moves.sources)):
+        sign = 1.0 if names is plan.destinations else -1.0
+        counts = np.bincount(positions, minlength=len(names))
+        changes = np.bincount(positions, weights=moved, minlength=len(names))
+        for position in np.flatnonzero(counts).tolist():
+            net[names[position]] = net.get(names[position], 0.0) + sign * float(changes[position])
+    record = report.switched.setdefault(area, {})
+    for trade, change in net.items():
+        record[trade] = record.get(trade, 0.0) + change
+    return targets
 
 
 def _move_order(move: Move):

@@ -60,8 +60,11 @@ def buy(state: MarketState, inputs: YearInputs, index: Dict, area: str, trade: s
     if bid is None:
         return 0.0
     ask, carriage = {}, {}
+    asks = memo.setdefault("ask", {})      # an origin's ask for a trade does not change while the year's purchases are made
     for origin in offers:
-        price = worth_in(inputs, index, origin, trade, _practised_wage(index, origin, trade))
+        if (origin, trade) not in asks:
+            asks[(origin, trade)] = worth_in(inputs, index, origin, trade, _practised_wage(index, origin, trade))
+        price = asks[(origin, trade)]
         if price is not None:
             ask[origin] = price
             moves = memo.setdefault("carriage", {})
