@@ -109,10 +109,10 @@ class MarketStore(MutableMapping):
 
     def _read(self, row: int, column: int):
         """The stored figure of a cell, None where absent."""
-        values = self.grid
-        if row >= values.shape[0] or column >= values.shape[1]:
+        try:
+            found = self.grid.item(row, column)
+        except IndexError:
             return None
-        found = values.item(row, column)
         if self.kind == FLOAT:
             return None if found != found else found
         if found < 0:

@@ -127,7 +127,7 @@ class MarketMemory:
 
     def cell_of(self, good: str, area: str) -> Optional[Tuple[int, int]]:
         """The (row, column) of a goods market in the goods' arrays; None for a market the memory has never held."""
-        by_area = self.numbering("goods").cell_of_pair.get(good)
+        by_area = self.prices.ids.cell_of_pair.get(good)      # the goods' numbering, shared by every goods store
         return None if by_area is None else by_area.get(area)
 
     def advance_year(self) -> None:
