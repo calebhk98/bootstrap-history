@@ -20,13 +20,25 @@ except ImportError:
 
 ENABLED = _numba is not None
 
+# Every game kernel compiled through `njit`, in import order: the dispatcher (or the plain function without numba).
+# `sim/ui/cli_compile_kernels.py` walks it; tests' own helpers are left out.
+REGISTRY = globals().get("REGISTRY", [])
+
+
+def _record(kernel):
+    if kernel.__module__.startswith("sim.") and not kernel.__module__.startswith("sim.tests"):
+        REGISTRY.append(kernel)
+
 
 def njit(function=None, **options):
     """`@njit` or `@njit(...)`: the function compiled with the reproducible settings, or unchanged without numba."""
     def wrap(inner):
         if _numba is None:
+            _record(inner)
             return inner
         settings = {"cache": True, "fastmath": False, "parallel": False, "nogil": False}
         settings.update(options)
-        return _numba.njit(**settings)(inner)
+        compiled = _numba.njit(**settings)(inner)
+        _record(compiled)
+        return compiled
     return wrap if function is None else wrap(function)

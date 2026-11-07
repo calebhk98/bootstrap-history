@@ -45,21 +45,6 @@ def planned_hours(booked, start, runs, years, exponent, floor):
 
 
 @njit
-def first_year_hours(r, hours, slot_trades, start_units, exponent, floor):
-    """The hours of a run in an entrant's first year, summed over trades (practice.recipe_for of the entrant's crew)."""
-    total = 0.0
-    for slot in range(slot_trades.shape[1]):
-        trade = slot_trades[r, slot]
-        if trade == NO_SLOT:
-            break
-        booked = hours[0, r, trade]
-        if booked > 0.0:
-            multiplier = np.rint(hours_multiplier(start_units[r, trade], exponent, floor) * 100.0) / 100.0
-            total += booked * max(1.0, multiplier)
-    return total
-
-
-@njit
 def input_bill(r, t, quantity, slot_goods, price):
     """unit_cost.input_cost_per_run at the prices of tile `t`."""
     total = 0.0
