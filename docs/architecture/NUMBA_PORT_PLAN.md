@@ -9,6 +9,7 @@
 - with settlement, the ledger and the producers' read caches: about 13 and 9
 - with the labour tail, the urban ceilings and the partner countries' kept figures: about 12 and 8
 - with the respend rounds in one kernel: about 11 and 7.5
+- after items 1 to 9 (opening, year arrays, close, entry, merchants, labour, goods): warm years about 3.5 to 4.5, typically 3.7
 
 **Goal.** A Rome year under one second (three at most; a game is five hundred years), with the game unchanged in its
 rules and reproducible: the same save stepped on the same machine gives the same game, straight or saved and loaded in
@@ -294,6 +295,20 @@ any rounding change does; the digest is the same on two runs and after a reload.
       `test_opening_hours_needed`: same dicts, same order, same bits). Records agree with the ones before (`open_compare.py`)
       to the last digit in England and to about 1e-14 in Rome. Measure with `open_dump.py` (England and Rome cold openings)
       and `open_prof.py`; not yet ported: `location_inputs.place_oriented`, `opening_demand._buy`, `households_own.own_production`
+
+### 11. The economy's ledger and memory as arrays
+After items 1 to 9 a warm Rome year is about 3.7 s (`year-time --years 4` on the shared save, three runs). Its profile is
+flat: about 15 million calls a year, a third of them dictionary reads, most of them into the book (balances and stocks
+keyed by agent, good and tile) and the market memory (prices, wages and quotes keyed by strings). The kernels are fast;
+the cost is reaching the records. Both become arrays indexed by integer ids (agents, goods, tiles, areas, trades
+numbered once), with their present methods kept for callers that read one value, and array methods for the phases that
+read or post many. The saved format may change (no migration, CLAUDE.md 4.6); save and load must round-trip.
+- [ ] the book (`sim/book.py`): balances by (agent, currency), stocks by (agent, good, tile), gross and edge records as arrays;
+      batched posting (`post_settled`, `move_many`, `transfer_many`) straight into them; the phases' packs read them
+- [ ] the market memory (`market_memory.py`): prices, offered and cleared prices, quote kinds, trade ages, wages and rates
+      as arrays by (good, area) and (trade, area); `YearView` reads them; the year arrays' memory part becomes a view of them
+- [ ] string market keys (`market_key`, `KEY_SEPARATOR` splits) replaced by id pairs on the hot paths
+- [ ] Checks: reproducible, compared, the year measured
 
 ### 10. Finish
 - [x] `python3 sim/simulator.py compile-kernels` compiles every registered kernel (`sim/jit.REGISTRY`) ahead of play, for
