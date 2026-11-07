@@ -2,6 +2,10 @@
 
 **Status:** in progress on branch `speed-year-step-and-openings`. One PR when every item below is ticked.
 
+**Measured** (`year-time --session SAVE --years 2 --reload-check` on the shared Rome save; seconds of the two years):
+- before the port: about 23 and 20
+- items 1, 2 and 5 in part: about 17 and 13.5, reproducible after a reload
+
 **Goal.** A Rome year under one second (three at most; a game is five hundred years), with the game unchanged in its
 rules and reproducible: the same save stepped on the same machine gives the same game, straight or saved and loaded in
 between. Matching the old Python bit for bit is not required; a ported phase may differ from it in the last digits
@@ -51,18 +55,25 @@ copied, never written). A phase's share: `cProfile` of `agent --session COPY` wi
 
 ### 1. Labour clearing (`sim/labour/market/`)
 - [ ] Market clearing (`clearing.clear_all`, `clear_one`, `hire_through_rounds`, `import_cost`)
-    - [ ] pack the year's labour markets, bids and offers into arrays
-    - [ ] kernel over every market: reservation, ceiling, wage, eligible bids, retention, hiring rounds, poaching
-    - [ ] unpack wages, hired hours, asks; rule tests beside the old path
+    - [x] every market prepared, then all their hiring rounds in one kernel (`hiring_kernel.py`, `applications.hire_markets`),
+          then finished (`test_year_speed_labour_hiring`, the old rounds in `labour_hiring_reference.py`)
+    - [x] the hours-sold schedule over a matrix of wages (`sim/economy/labour_supply_kernel.py`; `test_year_speed_labour_sold_hours`)
+    - [ ] the fetched-hands search (`ImportCosts.supply`, `fetch_wage`, `hours_at`) over arrays
+    - [ ] the wage searches (`supply_target`, `_wage_with_supply`) for every market at once
 - [ ] Trade switching (`switching.switch_trades`, `_odds`, `_planned_moves`)
+    - [x] the per-band logit (`switching_kernel.band_shares`; `test_year_speed_labour_switching`)
+    - [ ] targets, gains, costs and the planned moves in arrays
 - [ ] Trade formation (`formation.form_trades`)
 - [ ] Checks: reproducible, compared, share measured
 
 ### 2. Goods clearing (`sim/economy/goods_market*.py`, `unsold_search.py`, `seller_offers.py`, `price_setting.py`, `demand_search.py`, `market_quote.py`)
-- [ ] The market clear (`goods_market.clear`, the logit allocation, the demand schedule)
-- [ ] The unsold-stock search (`unsold_search.clear_with_search`, `raise_sold_out`, `demand_search.raise_asks`)
-- [ ] Sellers' pricing (`seller_offers.strategic_offers`, `price_setting.best_price`)
-- [ ] Checks: reproducible, compared, share measured
+- [x] The market clear: the logit allocation, rationing and redirect rounds, buyers' requests and trades
+      (`goods_market_kernels.py`; `test_goods_clearing_kernels`)
+- [x] The unsold-stock search and the sold-out raise, each bisection in one kernel
+- [x] Sellers' pricing: every searching seller of a market priced in one call (`price_setting_kernel.py`)
+- [ ] What is left: the pairing's tuples, the demand schedule's build, sellers' unit costs and ask limits; markets of
+      one good's areas batched together (needs `year_goods.clear_goods`)
+- [ ] Checks: reproducible, compared, share measured (reproducible after a reload on the merged branch)
 
 ### 3. Households' respend (`goods_respend.py`, `goods_respend_year.py`)
 - [ ] rounds over every rationed cohort and market in one kernel (uses the goods clear of item 2)
@@ -74,9 +85,10 @@ copied, never written). A phase's share: `cProfile` of `agent --session COPY` wi
 - [ ] Checks: reproducible, compared, share measured
 
 ### 5. Merchants (`merchants*.py`, `lending.merchant_requests`, `carriage_hours.py`)
-- [ ] route search for orders and credit requests over arrays of goods, areas and carriage costs
+- [x] route search for orders and credit requests over a carriage-cost matrix per good (`merchants_kernel.py`,
+      `merchants_search.py`; `test_merchant_good_routes_exact`); the game unchanged by it
 - [ ] dispatch and close
-- [ ] the carriers' wage scale (`carriage_hours.wage_scale`)
+- [ ] the carriers' wage scale (`carriage_hours.wage_scale`: mostly route searches cached after the first year)
 - [ ] Checks: reproducible, compared, share measured
 
 ### 6. Entry and closing (`entry*.py`, `location.py`, `practice.py`, `producers_close.py`, `firm_year.py`, `households_close.py`)
