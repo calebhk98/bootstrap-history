@@ -48,6 +48,7 @@ from sim.ui.memory import save_session
 from sim.ui.fuzzy_choice import fuzzy_estimates_wanted, turn_fuzzy_estimates_on
 from sim.ui.wizard_answers import remember_answers
 from sim.ui.save_policy import SESSION_WORDS, SavePolicy
+from sim.ui import process_start
 from sim.ui.proto import step_progress
 from sim.ui.proto.command_registry import table_of
 from sim.ui.proto import util as proto_util
@@ -328,6 +329,7 @@ def _play_resolve_session(args, sim, session, sitting):
             session = _pick_session_filename(sim.view("civilisation")().get("id") or "game")
         else:
             print("Resumed from %s: %d AD." % (session, sim.view("year")()))
+    process_start.loaded()
     # after the load, so a resumed game keeps its carried routes (the load restores its own)
     _carry_known_routes(sim, args, sim.view("tree_nodes")(), sitting)
 

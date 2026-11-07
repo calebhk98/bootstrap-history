@@ -63,6 +63,7 @@ def uncompiled(registry=None):
 def compile_all():
     """Compile every registered kernel; (seconds, names of kernels still uncompiled)."""
     began = time.perf_counter()
+    jit.load_numba()
     import_kernel_modules()
     fixture_trace("small", FIXTURE_YEARS)
     declared = declared_signatures()

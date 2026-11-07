@@ -79,7 +79,7 @@ def _tree(compiled: routes_compile.Compiled, origins: frozenset, by_days: bool):
     cached = compiled.trees.get(key)
     if cached is not None:
         return cached
-    if not jit.ENABLED:
+    if not jit.ENABLED or _search_in_plain_python(compiled):
         return _tree_plain(compiled, origins, by_days)
     edges = compiled.trees.get("edges")
     if edges is None:
@@ -94,6 +94,20 @@ def _tree(compiled: routes_compile.Compiled, origins: frozenset, by_days: bool):
                                   np.array([start[2] for start in starts], dtype=np.float64), by_days)
     compiled.trees[key] = (cost.tolist(), days.tolist(), _Previous(edges, into.tolist()))
     return compiled.trees[key]
+
+
+# Importing numba and loading the kernel cost far more than a plain search of a map this size (time `state` on a Rome
+# save with and without ROME_NO_JIT): a process that asks for only a few trees searches in plain Python, and the kernel
+# serves a longer run.
+PLAIN_SEARCHES_BEFORE_KERNEL = 40
+_plain_searches = [0]
+
+
+def _search_in_plain_python(compiled) -> bool:
+    if jit.numba_loaded() or _plain_searches[0] >= PLAIN_SEARCHES_BEFORE_KERNEL:
+        return False
+    _plain_searches[0] += 1
+    return True
 
 
 def _tree_plain(compiled: routes_compile.Compiled, origins: frozenset, by_days: bool):
