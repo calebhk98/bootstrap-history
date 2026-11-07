@@ -70,3 +70,8 @@ check("a firm's concern adds a founding size times its capacity times the staffe
       abs(firm_worker_years(2.0, 3.0, 0.5) - 3.0) < 1e-12)
 check("a firm's unstaffed concern adds nothing", firm_worker_years(2.0, 3.0, 0.0) == 0.0)
 check("a larger capacity adds more", firm_worker_years(2.0, 4.0, 0.5) > firm_worker_years(2.0, 3.0, 0.5))
+
+# --- the rates are floats whatever the opening producers recorded
+check("an opening rate recorded as a whole number is a float",
+      type(opening_rates({"mill"}, is_concern, {"mill": 0}, founding)["mill"]) is float
+      and type(opening_rates({"kiln"}, is_concern, {}, lambda node_id: 1)["kiln"]) is float)
