@@ -8,7 +8,7 @@ from the memory's prices, not these; the engine's agents are shown these (`price
 `making_costs` steers the price a thin or empty market remembers.
 """
 import math
-from typing import Dict, Set, Tuple
+from typing import Dict, Optional, Set, Tuple
 
 from sim.constants import declare
 
@@ -34,7 +34,7 @@ def recently_traded_goods(memory: MarketMemory) -> Set[str]:
     return {key.split(KEY_SEPARATOR, 1)[0] for key in memory.trade_age if memory.traded_within(key, RECENT_TRADE_YEARS)}
 
 
-def _estimated_prices(setup, record, market, thin: bool) -> Dict[str, float]:
+def _estimated_prices(setup, record, market, thin: bool, wages: Optional[Dict[str, float]] = None) -> Dict[str, float]:
     """Each good's estimate where the market's own price does not stand for it, goods taken in input-depth
     order so a good costed from its inputs sees their estimates: untraded goods at what they cost to make,
     and (`thin`) recently traded goods the opening wanted in bulk and the markets trade a sliver of, blended
@@ -42,7 +42,7 @@ def _estimated_prices(setup, record, market, thin: bool) -> Dict[str, float]:
     memory = record.memory
     recent = recently_traded_goods(memory)
     traded = _traded_volumes(record) if thin else {}
-    wages = costing_wages(setup, record)
+    wages = costing_wages(setup, record) if wages is None else wages
     rate = memory.rates[setup.currency_id]
     live = dict(market)
     estimated: Dict[str, float] = {}
@@ -108,17 +108,18 @@ def cheapest_cost(setup, good, live, wages, rate):
     return best if math.isfinite(best) and best > 0.0 else None
 
 
-def shown_prices_with_kinds(setup, record, market=None) -> Tuple[Dict[str, float], Set[str], Dict[str, str]]:
+def shown_prices_with_kinds(setup, record, market=None, wages=None, remembered=None) -> Tuple[Dict[str, float], Set[str], Dict[str, str]]:
     """(prices, stale goods, kind of each good's price) the game is shown. A recently traded good shows its
     market price, except one the markets trade only a sliver of, which shows near what it costs to make (see
     `_estimated_prices`). An untraded good somebody can make shows what it costs to make; one nobody can make
     keeps its last price. Stale goods are not a price a market has set lately: their kind says whether it is a
-    making-cost estimate, a quote (named by what it is) or the last price."""
+    making-cost estimate, a quote (named by what it is) or the last price. `wages` (`costing_wages`) and `remembered`
+    (`MarketMemory.price_kinds_by_good`) are the figures of the record that a caller asking for several scopes works out once."""
     prices = dict(national_prices(record) if market is None else market)
     stale = set(prices) - recently_traded_goods(record.memory)
-    estimated = _estimated_prices(setup, record, prices, thin=True)
+    estimated = _estimated_prices(setup, record, prices, thin=True, wages=wages)
     prices.update(estimated)
-    remembered = record.memory.price_kinds_by_good()
+    remembered = record.memory.price_kinds_by_good() if remembered is None else remembered
     kinds = {}
     for good in prices:
         if good in estimated:

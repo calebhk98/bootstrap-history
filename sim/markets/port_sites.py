@@ -45,9 +45,12 @@ def site_limits(sim, outputs_by_recipe, tile_ids=()):
     deposits the seat has found and the catalogue's on the partners' tiles among `tile_ids` (the tiles of the
     economy); and for the timber recipes, over `tile_ids`, from each tile's standing wood."""
     limits = list(port_timber.limits(sim, outputs_by_recipe, tile_ids))
+    worked = {}     # the rows of each resource, read once for the recipes that work it
     for recipe_id, (resource_id, ore_kg_per_run) in _ore_recipes(sim, outputs_by_recipe).items():
         by_tile = {}
-        for row in _worked_by_firms(sim, resource_id, tile_ids):
+        if resource_id not in worked:
+            worked[resource_id] = _worked_by_firms(sim, resource_id, tile_ids)
+        for row in worked[resource_id]:
             ore_kg = row["room_tonnes_per_year"] * ore_tonnes_per_tonne(row) * KILOGRAMS_PER_TONNE
             by_tile[row["tile_id"]] = by_tile.get(row["tile_id"], 0.0) + ore_kg / ore_kg_per_run
         limits.extend(SiteLimit(recipe_id, tile, runs, SITE_YIELD_FACTOR) for tile, runs in sorted(by_tile.items()))
@@ -61,12 +64,18 @@ def deplete(sim, extraction, outputs_by_recipe):
     port_timber.regrow(sim)
     recipes = _ore_recipes(sim, outputs_by_recipe)
     worked_tiles = {tile for _recipe_id, tile in extraction}
+    rows_of = {}        # resource -> its rows by tile, read once; a tile drawn from is read again if another recipe returns to it
+    drawn_tiles = set()
     for (recipe_id, tile), runs in sorted(extraction.items()):
         if recipe_id not in recipes or runs <= 0.0:
             continue
         resource_id, ore_kg_per_run = recipes[recipe_id]
         ore_tonnes = runs * ore_kg_per_run / KILOGRAMS_PER_TONNE
-        for row in sorted((row for row in _worked_by_firms(sim, resource_id, worked_tiles) if row["tile_id"] == tile),
+        if resource_id not in rows_of or (resource_id, tile) in drawn_tiles:
+            rows_of[resource_id] = _worked_by_firms(sim, resource_id, worked_tiles)
+            drawn_tiles = {each for each in drawn_tiles if each[0] != resource_id}
+        drawn_tiles.add((resource_id, tile))
+        for row in sorted((row for row in rows_of[resource_id] if row["tile_id"] == tile),
                           key=lambda row: (-row["remaining_tonnes"], row["id"])):
             take = min(ore_tonnes / ore_tonnes_per_tonne(row), row["remaining_tonnes"])
             if take > 0.0:

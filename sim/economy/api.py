@@ -24,7 +24,7 @@ from .economy import Economy
 from .market_memory import KEY_SEPARATOR, market_key
 from .opening_rate import opening_market_rate
 from .metal_stock import COIN_WEAR_PER_YEAR
-from .notional import shown_prices, shown_prices_with_kinds
+from .notional import costing_wages, shown_prices, shown_prices_with_kinds
 from .producers import Producer, expected_output_prices, live_input_prices, live_wages
 from .protocols import AgentOrders, EconomyYearInputs
 from .recipes import recipes_from_production_data
@@ -437,7 +437,9 @@ def _shown(economy, country):
 
     def compute():
         market = None if scope is None else country_figures.prices(economy, scope)
-        return shown_prices_with_kinds(economy.setup, economy.record, market)
+        wages = quiet_year.kept(economy, "costing_wages", lambda: costing_wages(economy.setup, economy.record))
+        remembered = quiet_year.kept(economy, "price_kinds", economy.record.memory.price_kinds_by_good)
+        return shown_prices_with_kinds(economy.setup, economy.record, market, wages, remembered)
     return quiet_year.kept(economy, ("shown", scope), compute)
 
 

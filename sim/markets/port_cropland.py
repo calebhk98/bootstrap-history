@@ -19,7 +19,6 @@ def follow_farm_sites(sim, held_tiles, yield_factor_by_recipe_tile) -> dict:
             changed[tile_id] = followed.fertility
     if not changed:
         return {}
-    ends = {recipe_tile_key("", tile): fertility for tile, fertility in changed.items()}     # a key ends with its tile's suffix
-    factors = {key: next((fertility for suffix, fertility in ends.items() if key.endswith(suffix)), factor)
-               for key, factor in yield_factor_by_recipe_tile.items()}
+    separator = recipe_tile_key("", "")
+    factors = {key: changed.get(key.partition(separator)[2], factor) for key, factor in yield_factor_by_recipe_tile.items()}
     return {"tiles": tiles, "yield_factor_by_recipe_tile": factors}
