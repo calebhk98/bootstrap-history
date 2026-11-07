@@ -20,6 +20,7 @@ from .taxes_bases import YearFacts
 from .types import is_edge
 from .inventory import held_stock
 from .year_ledger import YearLedger
+from .year_close_producers import close_producers_of_year
 from .replaced import replaced
 from .producers import live_input_prices, live_wages
 from .rates import own_rate
@@ -101,82 +102,24 @@ def wear_and_spoilage(setup, record, durable_users=()) -> None:
     book.transfer_many(metal_stock.yearly_wear(cash, record.currency))
 
 
-def close_agents(setup, record, view, ledger: YearLedger, area_map, carriage,
+def close_agents(setup, record, view, ledger: YearLedger, area_map, carriage, arrays,
                  income_received: Mapping[str, float] = MappingProxyType({})) -> None:
     """Close every agent's year. `income_received` is the year's other property income by payee (interest, rent); it is
     added to the dividends and profits paid out here, so the households close on this year's property income and it is
     what the record keeps."""
     money = setup.currency_id
     property_income: Dict[str, float] = dict(income_received)
-    traded, round_prices = ledger.market_totals()
-    clearing_prices = {key: price for key, price in round_prices.items() if traded[key] > 0.0 and price is not None}
-    prepared_buyers: Dict = {}
-    service_lives = {good: spec.service_life_years for good, spec in setup.specs.items()}
     cohorts_by_tile: Dict = {}           # the tiles' cohorts, unchanged until the households close below
-    loans_of: Dict[str, list] = {}
-    for loan in record.credit.loans:
-        loans_of.setdefault(loan.borrower, []).append(loan)
     crews_of_recipe: Dict[str, list] = {}
     for each in record.producers.values():
         crews_of_recipe.setdefault(each.recipe_id, []).append(each.crew_runs)
-    live_prices: Dict[Tuple[str, str], tuple] = {}
     pool_by_recipe_trade: Dict[Tuple[str, str], float] = {}     # the crews' practice is read before the loop, so one pool per recipe and trade
 
     def pooled(recipe_id: str, trade: str) -> float:
         if (recipe_id, trade) not in pool_by_recipe_trade:
             pool_by_recipe_trade[(recipe_id, trade)] = practice.pool_units(crews_of_recipe[recipe_id], trade)
         return pool_by_recipe_trade[(recipe_id, trade)]
-    market_capacity = market_capacities(((each.tile, setup.recipes[each.recipe_id].outputs, each.capacity_runs * each.yield_factor)
-                                         for each in record.producers.values() if each.idle_years <= 0), area_map.area_of)
-    for producer_id, producer in sorted(record.producers.items()):
-        recipe = setup.recipes[producer.recipe_id]
-        if producer.idle_years > 0:      # bankrupt: idle, no dividend (Eurace@Unibi, Firm_bankruptcy_idle_counter)
-            producer_table.put_producer(record.producers, replaced(producer, idle_years=producer.idle_years - 1))
-            shares.note_dividend(record.capital_markets, producer_id, ())
-            continue
-        revenue = ledger.sales_in.get(producer_id, 0.0)
-        costs = ledger.running_costs(producer_id)
-        prices_here = _prices_here(clearing_prices, recipe, area_map.area_of, producer.tile)
-        worked = worked_runs(producer, recipe, ledger, producers.paying_output(recipe, prices_here))
-        price_share = expansion_price.price_share_of(ledger.bids_by_market, traded, area_map.area_of, producer.tile,
-                                                   prepared_buyers)
-        demand_runs = runs_sold(producer, recipe, ledger, record.book, area_map.area_of, prices_here, market_capacity)
-        if (producer.recipe_id, producer.tile) not in live_prices:     # last year's prices do not change inside the close
-            live_prices[(producer.recipe_id, producer.tile)] = (live_input_prices(producer, recipe, view), live_wages(producer, recipe, view))
-        inputs, wages = live_prices[(producer.recipe_id, producer.tile)]
-        closed = producers_close.close_year(producer, recipe, revenue, costs, view, worked, price_share,
-                                            [good for good in recipe.outputs if good in setup.specs and not setup.specs[good].portable],
-                                            service_lives, firm_finance.interest_due(loans_of.get(producer_id, []), producer_id),
-                                            demand_runs,
-                                            spoilage={good: setup.specs[good].spoilage_per_year for good in recipe.outputs if good in setup.specs},
-                                            inputs=inputs, wages=wages)
-        year = None
-        if not closed.exited:       # the dividend, the financing check and bankruptcy follow Eurace@Unibi (firm_year.py)
-            closed, _paid, year = firm_year.settle_year(setup, record, view, producer, closed, recipe, revenue, costs,
-                                                        loans_of.get(producer_id, []), inputs, wages)
-        shares.note_dividend(record.capital_markets, producer_id, closed.transfers)
-        if year is not None and year.write_off_ratio > 0.0:
-            firm_year.write_off(record, producer_id, year.write_off_ratio)
-        if closed.exited:
-            paid = producer_exit.exit_producer(record, producer_id, list(closed.transfers))
-            for transfer in paid:
-                property_income[transfer.payee] = property_income.get(transfer.payee, 0.0) + transfer.amount
-            continue
-        paid = ownership.spread(record, closed.transfers, cohorts_by_tile)
-        record.book.transfer_many(paid)
-        worn = producer.capacity_runs - closed.producer.capacity_runs
-        if worn > 0.0:
-            ledger.plant_worn[producer_id] = worn
-        if closed.replacement_runs > 0.0 and revenue > costs:
-            record.credit.plan_rebuild(producer_id, closed.replacement_runs)     # covering its costs, it rebuilds the wear its plan needs
-        for transfer in paid:
-            property_income[transfer.payee] = property_income.get(transfer.payee, 0.0) + transfer.amount
-        if closed.loan_request is not None:
-            record.credit.ask_for_loan(closed.loan_request)
-            record.credit.plan_expansion(producer_id, closed.expansion_runs)
-        producer_table.put_producer(record.producers, _with_practice(
-            _with_sales(closed.producer, recipe, ledger, demand_runs, prices_here), producer.last_runs,
-            {trade: pooled(producer.recipe_id, trade) for trade in producer.crew_runs}))
+    close_producers_of_year(setup, record, view, ledger, arrays, cohorts_by_tile, property_income, pooled)
     prices, volumes = learned_prices(ledger.market_totals(), record.memory)
     anchors = {(good, area.area_id): area.anchor_tile for good in area_map.goods() for area in area_map.areas(good)}
     ordered = (sorted(prices.items()), sorted(volumes.items()))
