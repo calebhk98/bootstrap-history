@@ -88,19 +88,18 @@ def money_taxes(setup, record, view, ledger: YearLedger) -> None:
 def wear_and_spoilage(setup, record, durable_users=()) -> None:
     book = record.book
     holdings: Dict[Tuple[str, str, str], float] = {}
-    for agent in book.agents():
-        if is_edge(agent):
-            continue
-        held = book.goods_of(agent)
-        for good in sorted(held):        # goods and tiles in name order, so the moves post in a fixed order
-            by_tile = held[good]
-            for tile in sorted(by_tile):
-                if by_tile[tile] > 0.0:
-                    holdings[(agent, good, tile)] = by_tile[tile]
+    losing = {good for good, spec in setup.specs.items() if spec.spoilage_per_year > 0.0 or spec.service_life_years > 0.0}
+    agents = [agent for agent in book.agents() if not is_edge(agent)]
+    for agent in agents:
+        for good, by_tile in book.goods_of(agent).items():       # only goods that spoil or wear can lose anything; the moves are sorted when made
+            if good in losing:
+                for tile, quantity in by_tile.items():
+                    if quantity > 0.0:
+                        holdings[(agent, good, tile)] = quantity
     book.move_many(inventory.spoilage_moves(holdings, setup.specs))
     fleets = {carriage_wear.account(merchant_id) for merchant_id in record.merchants}     # carriers age in the merchants' fleets
     book.move_many(inventory.wear_moves(holdings, setup.specs, set(record.cohorts) | set(durable_users) | fleets))
-    cash = {agent: book.balance(agent, record.currency.currency_id) for agent in book.agents() if not is_edge(agent)}
+    cash = {agent: book.balance(agent, record.currency.currency_id) for agent in agents}
     book.transfer_many(metal_stock.yearly_wear(cash, record.currency))
 
 

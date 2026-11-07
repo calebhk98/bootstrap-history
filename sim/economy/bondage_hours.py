@@ -117,27 +117,40 @@ def place_held(held: Dict[str, Dict[str, Dict[AgentId, float]]], workers: Callab
     new_offers, new_bids = list(offers), list(bids)
     hired: Dict[AgentId, Dict[str, float]] = {}
     keep: List[Tuple[AgentId, AgentId, float]] = []
+    if not held:
+        return HeldPlacement(new_offers, new_bids, hired, keep)
+    wanted_employers = {employer for by_trade in held.values() for by_employer in by_trade.values() for employer in by_employer}
+    bid_slots: Dict[Tuple[AgentId, str, str], List[int]] = {}      # the bids of the holders, by employer, trade and area, in order
+    for slot, bid in enumerate(new_bids):
+        if bid.employer in wanted_employers:
+            bid_slots.setdefault((bid.employer, bid.trade, bid.area), []).append(slot)
+    offer_slots: Dict[Tuple[str, str], List[int]] = {}             # the offers by trade and area, in order
+    for index, offer in enumerate(new_offers):
+        offer_slots.setdefault((offer.trade, offer.area), []).append(index)
     for tile in sorted(held):
         area = area_of(tile)
         for trade in sorted(held[tile]):
             available = workers(area, trade)
+            market_slots = offer_slots.get((trade, area), ())
             for employer in sorted(held[tile][trade]):
                 people = min(held[tile][trade][employer], available)
                 held[tile][trade][employer] = people
                 available -= people
                 want = people * hours_per_worker
-                for slot, bid in enumerate(new_bids):
+                for slot in bid_slots.get((employer, trade, area), ()):
                     if want <= 1e-12:
                         break
-                    if bid.employer != employer or bid.trade != trade or bid.area != area or bid.hours <= 0.0:
+                    bid = new_bids[slot]
+                    if bid.hours <= 0.0:
                         continue
-                    offered = sum(offer.hours for offer in new_offers if offer.trade == trade and offer.area == area)
+                    offered = sum([new_offers[index].hours for index in market_slots])
                     taken = min(want, bid.hours, offered)
                     if taken <= 1e-12:
                         continue
                     cut = taken / offered
-                    for index, offer in enumerate(new_offers):
-                        if offer.trade == trade and offer.area == area and offer.hours > 0.0:
+                    for index in market_slots:
+                        offer = new_offers[index]
+                        if offer.hours > 0.0:
                             keep.append((employer, offer.worker, offer.hours * cut / hours_per_worker * keep_per_worker_year.get(area, 0.0)))
                             new_offers[index] = dataclasses.replace(offer, hours=offer.hours * (1.0 - cut))
                     new_bids[slot] = dataclasses.replace(bid, hours=bid.hours - taken)
