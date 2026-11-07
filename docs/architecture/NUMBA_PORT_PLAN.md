@@ -38,7 +38,9 @@ binary to build, ship or merge.
   old functions still call the phase's public functions.
 - **Checks before a phase is ticked.** The quick tier is green, also with `ROME_NO_JIT=1` (the plain-Python path) and with
   `NUMBA_BOUNDSCHECK=1` and a fresh `NUMBA_CACHE_DIR` (numba does not check array bounds, so a write past an array's end
-  goes unseen in a compiled run); `year-time --reload-check` on the shared Rome save is
+  goes unseen in a compiled run); a new game opens and steps on an empty cache (`ROME_CACHE_DIR` on an empty
+  directory, `agent --civ england_1300` with `state` and one `step`: the checks above all load a save, and a new game's
+  spin-up runs code no save reaches); `year-time --reload-check` on the shared Rome save is
   reproducible; the game after two years is compared with the one before the port (`--keep` and a field-by-field
   compare: which modules moved and by how much, explained in the item); the phase's measured share of the year is
   written in its item with the command.

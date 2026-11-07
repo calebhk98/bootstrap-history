@@ -16,6 +16,7 @@ from . import replay
 from .protocol import _agent_dispatch, _agent_end_reason, _agent_help, load_state, render_pretty, save_state
 from .memory import save_session
 from .save_policy import SavePolicy
+from . import process_start
 from sim.engine.ui_port import settings, units
 from sim.ui.proto import step_progress
 
@@ -103,6 +104,8 @@ def cmd_agent(args):
                  "into it. This run is autosaving to %s instead."
                  % (checkpoint_source, session)}) + "\n")
             sys.stderr.flush()
+
+    process_start.loaded()
 
     # after the load, so a resumed game keeps its carried routes
     route_file = getattr(args, "known_routes", None)
