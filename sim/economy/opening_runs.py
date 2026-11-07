@@ -286,8 +286,8 @@ def fit_to_supply(setup, record) -> None:
         return
     sales = np.array([producer.expected_sales for _id, producer in producers])
     capacity = np.array([producer.capacity_runs for _id, producer in producers])
-    made = np.array([[producer.yield_factor * setup.recipes[producer.recipe_id].outputs.get(good, 0.0) for _id, producer in producers]
-                     for good in fixed])
+    yield_factor = np.array([producer.yield_factor for _id, producer in producers])
+    made = np.array([[setup.recipes[producer.recipe_id].outputs.get(good, 0.0) for _id, producer in producers] for good in fixed])
     used = np.zeros((len(fixed), len(producers)))
     for column, (_id, producer) in enumerate(producers):
         recipe = setup.recipes[producer.recipe_id]
@@ -297,16 +297,16 @@ def fit_to_supply(setup, record) -> None:
             used[row, column] = recipe.hard_inputs.get(good, 0.0)
             if recipe.plant_life_years > 0.0:
                 used[row, column] += recipe.plant_goods.get(good, 0.0) / recipe.plant_life_years
-    factors = held_sales(sales, made, used)
+    factors = held_sales(sales, yield_factor, made, used)
     for column, (_id, producer) in enumerate(producers):
         if factors[column] != 1.0:
             producer_table.put_producer(record.producers, replaced(
                 producer, capacity_runs=capacity[column] * factors[column], expected_sales=sales[column] * factors[column]))
 
 
-def held_sales(sales: np.ndarray, made: np.ndarray, used: np.ndarray) -> np.ndarray:
+def held_sales(sales: np.ndarray, yield_factor: np.ndarray, made: np.ndarray, used: np.ndarray) -> np.ndarray:
     """The share of its sales each producer is held to: `sales` are the runs worked, `made[good, producer]` what a run
-    of the producer supplies of a good and `used[good, producer]` what it takes of it (zero for a producer not held by
+    of the producer supplies of a good (at its `yield_factor`) and `used[good, producer]` what it takes of it (zero for a producer not held by
     that good). For each good in turn, where the users would take more than the producers supply, every user is cut by the
     same share, and the sweeps repeat until none is cut (a chain of holds settles stage by stage)."""
     factors = np.ones(sales.shape[0])
@@ -314,7 +314,7 @@ def held_sales(sales: np.ndarray, made: np.ndarray, used: np.ndarray) -> np.ndar
     for _sweep in range(2 * CEILING_SWEEPS):
         held = False
         for row in range(made.shape[0]):
-            supply = math.fsum((sales * made[row]).tolist())
+            supply = math.fsum((sales * yield_factor * made[row]).tolist())
             users = used[row] > 0.0
             wanted = math.fsum((sales[users] * used[row][users]).tolist())
             if wanted > supply * (1.0 + 1e-9) and wanted > 0.0:

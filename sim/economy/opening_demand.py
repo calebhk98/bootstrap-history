@@ -38,15 +38,17 @@ def constants() -> np.ndarray:
 class OpeningDemand:
     """The packed cohorts of one settlement, and the units their plots grew at the last share of hours hired."""
 
-    def __init__(self, parts, view, specs, own, replacement: float = 0.0, backing_good=None, stationary: bool = True) -> None:
+    def __init__(self, parts, view, specs, own, replacement: float = 0.0, backing_good=None, capital_tile=None,
+                 stationary: bool = True) -> None:
         """`parts` is (cohort, basket, priced needs, the store dict its basket shares) for each cohort of the settlement;
-        `replacement` of the metal `backing_good` is bought for the mint on top of what the cohorts buy."""
+        `replacement` of the metal `backing_good` is bought for the mint, at the `capital_tile`, on top of what the cohorts buy."""
         self.view = view
         self.specs = specs
         self.own = own
         self.stationary = stationary
         self.replacement = replacement
         self.backing_good = backing_good
+        self.capital_tile = capital_tile
         parts = sorted(parts, key=lambda part: part[0].agent_id)
         self.cohorts = [part[0] for part in parts]
         self.baskets = [part[1] for part in parts]
@@ -67,7 +69,7 @@ class OpeningDemand:
         for cohort in record.cohorts.values():
             basket = memory.basket(setup, record, cohort)
             parts.append((cohort, basket, memory.priced(setup, record, view, cohort, basket), memory.stores(record, cohort)))
-        return cls(parts, view, setup.specs, own, replacement, record.currency.backing_good, stationary)
+        return cls(parts, view, setup.specs, own, replacement, record.currency.backing_good, setup.capital_tile, stationary)
 
     def _pack(self) -> None:
         view, specs = self.view, self.specs
@@ -158,6 +160,7 @@ class OpeningDemand:
         self.good_scratch = np.zeros((len(goods), kernel.G_COUNT))
         self.store_scratch = np.zeros((len(store_floats), kernel.T_COUNT))
         self.memo = np.zeros((len(self.cohorts), 3))
+        self.partials = np.zeros((4, kernel.PARTIALS))
         self.constants = constants()
 
     def _units_at_share(self, record) -> None:
@@ -182,14 +185,14 @@ class OpeningDemand:
         grew, the spending beyond income each allows and the budget it could not spend."""
         own = self.own
         self._units_at_share(record)
-        incomes = np.array([record.cohorts[cohort.agent_id].last_year_income for cohort in self.cohorts])
+        incomes = self.incomes_now(record)
         self.final[:] = 0.0
         self.stamp[:] = -1
         extra = np.zeros(len(self.cohorts))
         freed = np.zeros(len(self.cohorts))
         kernel.demand(incomes, self.stationary, self.constants, self.cohort_floats, self.cohort_ints, self.need_floats, self.need_ints, self.row_floats, self.row_ints,
                       self.store_floats, self.store_ints, self.row_scratch, self.need_scratch, self.good_scratch, self.order, self.store_scratch, self.unit_floor, self.unit_grown,
-                      self.memo, self.final, self.stamp, extra, freed)
+                      self.memo, self.final, self.stamp, extra, freed, self.partials)
         for position, cohort in enumerate(self.cohorts):
             own.extra[cohort.agent_id] = float(extra[position])
             own.in_kind += float(freed[position]) - float(extra[position])
@@ -212,23 +215,60 @@ class OpeningDemand:
         for _pass in range(passes):
             own.in_kind = 0.0
             self._buy(record)
-            totals = self.final.sum(axis=0)
-            if self.replacement > 0.0:
-                totals[self.goods.index(self.backing_good)] += self.replacement
+            demand = self._demand_by_tile()
+            totals = demand.cumsum(axis=0)[-1]       # tile after tile, as the dict of tiles was summed
             runs = solver.runs(solver.national_vector(mapping, totals))
-            needed = float(np.dot(runs, solver.hours_per_run))
+            needed = math.fsum((runs * solver.hours_per_run).tolist())
             if own.note_share(opening_own.share_of_hands(needed, hands_hours)) <= tolerance:
                 break
-        priced = np.array([prices.get(good, math.nan) for good in self.goods])
-        known = ~np.isnan(priced)
-        value = float(np.dot(totals[known], priced[known]))
-        return value, needed, float(np.dot(runs, solver.labour_cost_per_run))
+        priced = np.array([prices.get(good, 0.0) for good in self.goods])
+        value = math.fsum((demand * priced).ravel().tolist())
+        return value, needed, math.fsum((runs * solver.labour_cost_per_run).tolist())
+
+    def _demand_by_tile(self) -> np.ndarray:
+        """What was bought, a row for each tile in the order the old path first met it (by the first bid it made), with the metal
+        the mint buys added to the capital's row (a row of its own, last, where nobody bought there)."""
+        first = np.where(self.stamp >= 0, self.stamp, np.iinfo(np.int64).max).min(axis=1)
+        rows = [self.final[tile].copy() for tile in np.argsort(first, kind="stable") if first[tile] < np.iinfo(np.int64).max]
+        if self.replacement > 0.0:
+            metal = self.goods.index(self.backing_good)
+            met = [index for index, tile in enumerate(sorted((tile for tile in range(len(self.tiles)) if first[tile] < np.iinfo(np.int64).max),
+                                                             key=lambda tile: (first[tile], tile))) if self.tiles[tile] == self.capital_tile]
+            if met:
+                rows[met[0]][metal] += self.replacement
+            else:
+                rows.append(np.zeros(len(self.goods)))
+                rows[-1][metal] = self.replacement
+        return np.array(rows).reshape(-1, len(self.goods))
 
     def _mapping(self, solver):
         if self._solver is not solver:
             self._solver = solver
             self._mapped = solver.mapping(self.goods)
         return self._mapped
+
+    def incomes_now(self, record) -> np.ndarray:
+        return np.array([record.cohorts[cohort.agent_id].last_year_income for cohort in self.cohorts])
+
+    def asked_at_incomes_now(self, record) -> bool:
+        """Whether the last ask was made at the incomes the cohorts hold now (so the purse search would start from it)."""
+        return bool(np.all(self.memo[:, 0] > 0.0) and np.all(self.memo[:, 1] == self.incomes_now(record)))
+
+    def durable_bids(self, record, stationary: bool = False) -> List[tuple]:
+        """(cohort, good, quantity) of each bid for a durable that serves a need (no store, no plot cut) the cohorts make holding
+        exactly their incomes, in the order the bids are met: what `_opening_bids` gives for them."""
+        quantity = np.zeros(len(self.row_floats))
+        kernel.uncut(self.incomes_now(record), stationary, self.constants, self.cohort_floats, self.cohort_ints,
+                     self.need_floats, self.need_ints, self.row_floats, self.row_ints, self.store_floats, self.store_ints,
+                     self.row_scratch, self.need_scratch, self.good_scratch, self.order, self.store_scratch, quantity, self.partials)
+        found = []
+        for position, cohort in enumerate(self.cohorts):
+            for index in range(self.cohort_ints[position, kernel.CI_ROW0], self.cohort_ints[position, kernel.CI_ROW1]):
+                row = self.order[index]
+                if (quantity[row] > 0.0 and self.row_floats[row, kernel.RF_LIFE] > 0.0
+                        and self.row_floats[row, kernel.RF_GPRICE] > 0.0):
+                    found.append((record.cohorts[cohort.agent_id], self.goods[self.row_ints[row, kernel.RI_GOOD]], float(quantity[row])))
+        return found
 
     def remember_orders(self, record) -> None:
         """Leave in `own` the uncut orders of the last ask, as the old path keeps them (`OwnPlots.uncut`): the

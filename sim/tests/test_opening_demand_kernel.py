@@ -2,9 +2,11 @@
 per-cohort path (`households.goods_orders` through `OwnPlots.resting_orders`, then `goods_market.quantity_at` of each bid),
 kept here as `reference_final_demand`, on random cohorts, needs, goods, prices and plots; no game.
 
-The kernel sums left to right where the old code used `math.fsum`, so figures agree to a relative tolerance, not bit for
-bit. The old path searches for a purse in at most three passes and so can jump under a one-ulp change of its input: a case
-where it does is no test of the kernel and is skipped (`is_stable`), and most cases must be compared."""
+The kernel sums exactly where the old code used `math.fsum` (and compensates where it used `sum`), because the bids
+at the edge of what a cohort can afford exist or not by the last bit of a sum; what is left is the order of a few plain
+sums and `pow`, so figures agree to a tight relative tolerance, not always bit for bit. The old path searches for a purse in
+at most three passes and so can jump under a one-ulp change of its input: a case where it does is no test of the kernel
+and is skipped (`is_stable`), and most cases must be compared."""
 
 QUICK_TOPIC = True
 
@@ -21,7 +23,7 @@ from sim.economy.types import GoodSpec
 from sim.tests.economy_view_defaults import ViewDefaults
 from sim.world import need_basket
 
-TOLERANCE = 1e-9
+TOLERANCE = 1e-12
 NEED_DATA = {
     "needs": {
         "food": {"surplus_budget_share": 0.4, "subsistence_per_capita_per_year": 200.0, "satiation_per_capita_per_year": 450.0},
@@ -219,6 +221,31 @@ class FinalDemandAgreesTests(unittest.TestCase):
         view.held[(cohorts[0].agent_id, "gold")] = 5.0
         packed = opening_demand.OpeningDemand(parts_of(basket, view, cohorts), view, SPECS, plots_of({}))
         self.assertFalse(packed.supported)
+
+
+class DurableBidsAgreeTests(unittest.TestCase):
+    def test_the_bids_for_durables_that_serve_needs_are_the_ones_goods_orders_makes_at_cash_equal_to_income(self):
+        rng = random.Random(21)
+        compared = 0
+        for _case in range(40):
+            basket, view, cohorts = random_world(rng)
+            parts = parts_of(basket, view, cohorts)
+            packed = opening_demand.OpeningDemand(parts_of(basket, view, cohorts), view, SPECS, plots_of({}))
+            if not packed.supported:
+                continue
+            record = types.SimpleNamespace(cohorts={cohort.agent_id: cohort for cohort in cohorts})
+            expected = []
+            for cohort, basket, priced, shared in sorted(parts, key=lambda part: part[0].agent_id):
+                orders = households.goods_orders(cohort, view, cohort.last_year_income, cohort.last_year_income, basket, SPECS,
+                                                 priced, shared_store=shared, stationary_durables=False)
+                expected.extend((cohort.agent_id, bid.good, bid.floor_quantity + bid.flexible_quantity) for bid in orders.bids
+                                if bid.priority != 2 and SPECS[bid.good].service_life_years > 0.0)
+            got = [(cohort.agent_id, good, quantity) for cohort, good, quantity in packed.durable_bids(record)]
+            self.assertEqual([(who, good) for who, good, _q in got], [(who, good) for who, good, _q in expected])
+            for (_w, _g, found), (_w2, _g2, wanted) in zip(got, expected):
+                self.assertAlmostEqual(found, wanted, delta=TOLERANCE * max(abs(wanted), 1.0))
+            compared += 1
+        self.assertGreaterEqual(compared, 20)
 
 
 class ConstantsTests(unittest.TestCase):

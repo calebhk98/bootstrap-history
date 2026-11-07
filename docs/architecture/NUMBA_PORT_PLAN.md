@@ -183,13 +183,15 @@ any rounding change does; the digest is the same on two runs and after a reload.
       `resting_orders` and `quantity_at`, on random cohorts)
 - [x] `opening_runs` over recipe matrices: `opening_runs_pack.RunSolver` and `opening_runs_kernel.required_runs` (the input-output
       fixed point, tool fallbacks, by-product ceilings); `fit_to_supply` sweeps on arrays (`test_opening_runs_kernel`)
-- [x] Checks: England cold opening (`open_economy`, empty `ROME_CACHE_DIR`, `open_dump` of `sim.economy.economy.open_economy`)
-      about 44 s before and 5 s after; its record agrees with the one before to a relative 1e-14 in every producer,
-      cohort income, cash and price (a kernel sums in another order; the stop rules are the same). Rome cold opening: about
-      132 s after (the sampler put the rest in `household_plans`/`work_terms`, `_place_producers`/`location`, and
-      `labour_state.producers_hours_needed`, none of them in this item's files)
-- [ ] what is left in the opening's own files: `_seed_durable_stocks` and the one `_final_demand` after the settle still use the
-      old per-cohort path (about a tenth of Rome's opening)
+- [x] `_seed_durable_stocks` and the demand after the settle ask the packed cohorts too (`durable_bids`, `final_demand`)
+- [x] Checks: England cold opening (`open_economy`, empty `ROME_CACHE_DIR`, `open_dump.py` in the port scratch folder) about
+      44 s before and 5 s after; its record agrees with the one before in every producer, cohort income, cash and price
+      (the sums the old code made with `math.fsum` are exact in the kernel, which matters: a bid at the edge of what a
+      cohort can afford exists or not by the last bit). Rome cold opening about 120 s after; Rome's household plans
+      are discrete and its opening moves with last-digit changes (producer counts differ between kernel variants), so
+      the Rome record before the port is still to be compared (an old-code Rome opening takes about twenty minutes)
+- [ ] the rest of Rome's opening is outside this item's files: `household_plans`/`work_terms`, `_place_producers`/`location`,
+      `labour_state.producers_hours_needed`
 
 ### 10. Finish
 - [ ] A Rome year under one second, and every civilisation's year measured (`year-time` on a save of each)

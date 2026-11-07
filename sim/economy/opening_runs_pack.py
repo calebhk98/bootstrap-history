@@ -38,17 +38,19 @@ class RunSolver:
                 rank_made.append(output * yields.get(recipe_id, 1.0))
                 rank_main.append(main is not None and main.get(recipe_id) == good)
             rank_ptr.append(len(rank_recipe))
-        input_ptr, input_good, input_per_run = [0], [], []
+        input_ptr, input_good, input_per_run, input_life = [0], [], [], []
         tool_ptr, tool_good, tool_per_run, tool_fallback, tool_fallback_units = [0], [], [], [], []
         for recipe_id in recipe_ids:
             recipe = recipes[recipe_id]
             for good, quantity in recipe.inputs.items():
                 input_good.append(self.good_position[good])
                 input_per_run.append(quantity)
+                input_life.append(0.0)
             if recipe.plant_life_years > 0.0:
                 for good, quantity in recipe.plant_goods.items():
                     input_good.append(self.good_position[good])
-                    input_per_run.append(quantity / recipe.plant_life_years)
+                    input_per_run.append(quantity)
+                    input_life.append(recipe.plant_life_years)
             input_ptr.append(len(input_good))
             for good, per_run in recipe.tool_wear.items():
                 step = next((step for step in recipe.tool_fallbacks.get(good, ()) if step.good), None)
@@ -57,12 +59,13 @@ class RunSolver:
                 tool_fallback.append(-1 if step is None else self.good_position[step.good])
                 tool_fallback_units.append(0.0 if step is None else step.units_per_run)
             tool_ptr.append(len(tool_good))
-        bp_ptr, bp_maker_ptr, bp_maker, bp_maker_made, bp_user_ptr, bp_user, bp_user_needed = [0], [0], [], [], [0], [], []
+        bp_ptr, bp_maker_ptr, bp_maker, bp_maker_output, bp_maker_yield, bp_user_ptr, bp_user, bp_user_needed = [0], [0], [], [], [], [0], [], []
         for good, (makers, users_of) in users.items():
             for maker in makers:
                 if maker in recipe_position:
                     bp_maker.append(recipe_position[maker])
-                    bp_maker_made.append(recipes[maker].outputs[good] * yields.get(maker, 1.0))
+                    bp_maker_output.append(recipes[maker].outputs[good])
+                    bp_maker_yield.append(yields.get(maker, 1.0))
             for user, needed in users_of:
                 if user in recipe_position:
                     bp_user.append(recipe_position[user])
@@ -73,11 +76,11 @@ class RunSolver:
         self.arguments = (
             self.static_ceil, self.has_static, np.array(rank_ptr, dtype=np.int64), np.array(rank_recipe, dtype=np.int64),
             np.array(rank_made), np.array(rank_output), np.array(rank_main, dtype=np.bool_),
-            np.array(input_ptr, dtype=np.int64), np.array(input_good, dtype=np.int64), np.array(input_per_run),
+            np.array(input_ptr, dtype=np.int64), np.array(input_good, dtype=np.int64), np.array(input_per_run), np.array(input_life),
             np.array(tool_ptr, dtype=np.int64), np.array(tool_good, dtype=np.int64), np.array(tool_per_run),
             np.array(tool_fallback, dtype=np.int64), np.array(tool_fallback_units),
             np.array(bp_ptr, dtype=np.int64), np.array(bp_maker_ptr, dtype=np.int64), np.array(bp_maker, dtype=np.int64),
-            np.array(bp_maker_made), np.array(bp_user_ptr, dtype=np.int64), np.array(bp_user, dtype=np.int64),
+            np.array(bp_maker_output), np.array(bp_maker_yield), np.array(bp_user_ptr, dtype=np.int64), np.array(bp_user, dtype=np.int64),
             np.array(bp_user_needed))
         self.hours_per_run = np.array([math.fsum(recipes[recipe_id].labour_hours.values()) for recipe_id in recipe_ids])
         self.labour_cost_per_run = np.array([unit_cost.labour_cost_per_run(recipes[recipe_id], wages) for recipe_id in recipe_ids])
@@ -96,7 +99,7 @@ class RunSolver:
     def runs(self, national: np.ndarray) -> np.ndarray:
         """Runs a year of each recipe (`recipe_ids`) that meet the demand `national`."""
         runs = np.zeros(len(self.recipe_ids))
-        kernel.required_runs(national, *self.arguments, runs)
+        kernel.required_runs(national, *self.arguments, runs, np.zeros(kernel.PARTIALS))
         return runs
 
     def runs_by_recipe(self, runs: np.ndarray) -> Dict[str, float]:
