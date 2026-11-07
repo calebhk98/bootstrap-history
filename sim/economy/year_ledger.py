@@ -103,6 +103,26 @@ class YearLedger:
                 if taken > 0.0:
                     self.pending_mint_takes[key] = self.pending_mint_takes.get(key, 0.0) + taken
 
+    def note_summed_sales(self, paid: Dict[AgentId, float], income: Dict[AgentId, float],
+                          received: Iterable[Tuple[Tuple[AgentId, GoodId], float]],
+                          sold: Iterable[Tuple[Tuple[AgentId, GoodId], float]],
+                          foreign: Iterable[Tuple[str, Tuple[AgentId, GoodId], float]]) -> None:
+        """`note_settlement(..., "sales")` of many goods settlements at once, from their sums: money paid and received by agent,
+        goods received and sold by (agent, good), and money across the border ("imports" or "exports") by (agent, good). No
+        plant purchase is noted: the buyers are households, which own no plant."""
+        for agent, amount in paid.items():
+            self.money_out[agent] = self.money_out.get(agent, 0.0) + amount
+        for agent, amount in income.items():
+            self.sales_in[agent] = self.sales_in.get(agent, 0.0) + amount
+        for (agent, good), amount in received:
+            held = self.received.setdefault(agent, {})
+            held[good] = held.get(good, 0.0) + amount
+        for key, amount in sold:
+            self.sold[key] = self.sold.get(key, 0.0) + amount
+        for side, key, amount in foreign:
+            figures = self.imports_paid if side == "imports" else self.exports_received
+            figures[key] = figures.get(key, 0.0) + amount
+
     def note_paid_outside_markets(self, postings: Iterable[Transfer]) -> None:
         """Money paid out in no market (rent, a bonded household's payments, the keep of bonded people): a cost of the payer's
         year, though it takes nothing from the payee's receipts."""

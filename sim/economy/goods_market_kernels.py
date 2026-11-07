@@ -45,8 +45,9 @@ def pack_demand(table):
         if bid > 0 and table[bid, 6] != table[bid - 1, 6]:
             tiers += 1
             bounds[tiers] = bid
-    tiers += 1
-    bounds[tiers] = count
+    if count > 0:      # no bids: no tier, and the bounds are the start alone
+        tiers += 1
+        bounds[tiers] = count
     return floors, flexibles, budgets, references, exponents, capped, bounds[:tiers + 1].copy()
 
 

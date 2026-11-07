@@ -1,5 +1,5 @@
 """What the parts of a country's world share: answering from the shared world's same part, and the country's own economy."""
-from typing import Any, FrozenSet, Optional
+from typing import Any, Dict, FrozenSet, Optional
 
 from . import protocols
 from .no_country_economy import NoCountryEconomy
@@ -77,19 +77,70 @@ class SharedTrade(SharedPart):
 	home_members = frozenset(("country_of_place", "delivered_this_year", "freight_between", "has_market", "market_depth", "price_after_cargo", "price_at", "ship", "trade_materials", "trade_places"))
 
 
+class KeptAnswers:
+	"""A country's economy answers kept for the life of the world that asked: the figures are read from last year's record,
+	which does not change until the economy steps, so each is worked out once and handed on (a dict as a copy)."""
+
+	def __init__(self, economy: Any) -> None:
+		self._economy = economy
+		self._kept: Dict[Any, Any] = {}
+		self._stamp = self._year_of_economy()
+
+	def _year_of_economy(self) -> Any:
+		"""Which year of the economy the kept answers belong to: they are dropped once the economy has stepped."""
+		try:
+			return getattr(getattr(self._economy, "_economy", None), "years_stepped", None)
+		except LookupError:   # an answers object that refuses every unknown attribute has no economy to stamp
+			return None
+
+	def _answer(self, name: str, *arguments: Any) -> Any:
+		if self._stamp != self._year_of_economy():
+			self._kept.clear()
+			self._stamp = self._year_of_economy()
+		key = (name, arguments)
+		if key not in self._kept:
+			self._kept[key] = getattr(self._economy, name)(*arguments)
+		answer = self._kept[key]
+		return dict(answer) if isinstance(answer, dict) else answer
+
+	def pay_per_person_year(self, trade: str) -> Any:
+		return self._answer("pay_per_person_year", trade)
+
+	def society_output(self) -> Any:
+		return self._answer("society_output")
+
+	def need_floor_costs_per_person_year(self) -> Any:
+		return self._answer("need_floor_costs_per_person_year")
+
+	def idle_hours_by_trade(self) -> Any:
+		return self._answer("idle_hours_by_trade")
+
+	def people_of_trade(self, trade: str) -> Any:
+		return self._answer("people_of_trade", trade)
+
+	def working_people(self) -> Any:
+		return self._answer("working_people")
+
+	def __getattr__(self, name: str) -> Any:
+		return getattr(self._economy, name)
+
+
 class OwnEconomy:
 	"""The agent economy's answers for one country, read through the shared world."""
 
 	def __init__(self, shared_world: Any, profile: Any) -> None:
 		self.shared_world = shared_world
 		self.profile = profile
+		self._kept: Optional[KeptAnswers] = None
 
 	def get(self) -> Any:
 		"""The economy's answers for this country; raises NoCountryEconomy when it has none."""
 		own = self.shared_world.people.country_economy(self.profile.country)
 		if own is None:
 			raise NoCountryEconomy(self.profile.country)
-		return own
+		if self._kept is None or self._kept._economy is not own:
+			self._kept = KeptAnswers(own)
+		return self._kept
 
 	def get_or_none(self) -> Optional[Any]:
 		try:

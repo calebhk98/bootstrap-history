@@ -4,7 +4,6 @@ called beside a copy of the plain one on random built inputs; no game."""
 QUICK_TOPIC = True
 
 import random
-import types
 import unittest
 
 from sim.economy import household_hours_year, households_hours_offered
@@ -155,7 +154,8 @@ class BondedPurchaseReadsKeepTheirValues(unittest.TestCase):
             routes = {area: [Route(other, rng.choice([0.0, rng.uniform(-5, 80)])) for other in areas if rng.random() < 0.3]
                       for area in areas if rng.random() < 0.9}
             costs = ImportCosts.__new__(ImportCosts)
-            costs.inputs, costs._reach = types.SimpleNamespace(routes=routes), {}
+            costs.inputs, costs._reach = YearInputs(trades={}, bids=[], subsistence_per_worker_year={}, hours_per_worker_year=2000.0,
+                                                    discount_rate=0.05, career_years=40.0, routes=routes), {}
             for origin in areas:
                 tree = carriage_from(routes, origin)
                 self.assertEqual(costs.reach(origin), sorted((cost, other) for other, cost in tree.items() if other != origin))

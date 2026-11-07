@@ -14,7 +14,7 @@ from typing import Dict, List, Optional, Tuple
 
 from sim.constants import declare
 
-from .expectations import expected_income, index_clearings, logit_shares
+from .expectations import expected_income, index_clearings
 from .records import LabourClearing, MarketState, Route, YearInputs, YearReport
 
 MIGRATION_TASTE_SCALE = declare(
@@ -34,8 +34,6 @@ MIGRATION_CONSIDERATION_SHARE_PER_YEAR = declare(
     source=None, confidence="D",
     why="Share of a trade's workers in an area who weigh moving in a given year; the rest do not look. "
         "Keeps even a large gain from emptying an area at once. Not fitted to any migration record.")
-
-STAY = "stay"
 
 
 def _real_income(state, inputs, clearings, area: str, trade: str, cache: Dict[Tuple[str, str], Optional[float]]) -> Optional[float]:
@@ -57,16 +55,18 @@ def move_shares(real_origin: float, options: List[Tuple[Optional[float], float]]
     end (income over that place's subsistence; None or not above zero means it cannot be weighed) and the moving cost
     in years of the origin's subsistence. Staying is an option scoring zero; only the share who consider moving at all
     can go. The rule for workers between market areas and for people between regions alike."""
-    scores: Dict[str, float] = {STAY: 0.0}
-    for position, (real_destination, cost_in_years) in enumerate(options):
-        if real_destination is None or real_destination <= 0.0:
-            continue
-        scores[str(position)] = (math.log(real_destination) - math.log(real_origin)
-                                 - MIGRATION_COST_WEIGHT * cost_in_years)
-    if len(scores) == 1:
+    log_origin = math.log(real_origin)
+    scores = [None if real_destination is None or real_destination <= 0.0 else
+              math.log(real_destination) - log_origin - MIGRATION_COST_WEIGHT * cost_in_years
+              for real_destination, cost_in_years in options]
+    weighed = [score for score in scores if score is not None]
+    if not weighed:
         return [0.0] * len(options)
-    shares = logit_shares(scores, MIGRATION_TASTE_SCALE)
-    return [shares.get(str(position), 0.0) * MIGRATION_CONSIDERATION_SHARE_PER_YEAR for position in range(len(options))]
+    top = max(0.0, max(weighed))      # the stay option scores zero
+    stay_weight = math.exp((0.0 - top) / MIGRATION_TASTE_SCALE)
+    weights = [0.0 if score is None else math.exp((score - top) / MIGRATION_TASTE_SCALE) for score in scores]
+    total = math.fsum(weights) + stay_weight
+    return [weight / total * MIGRATION_CONSIDERATION_SHARE_PER_YEAR for weight in weights]
 
 
 def migrate(state: MarketState, inputs: YearInputs, clearings: Dict[Tuple[str, str], LabourClearing],

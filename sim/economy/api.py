@@ -28,7 +28,7 @@ from .notional import shown_prices, shown_prices_with_kinds
 from .producers import Producer, expected_output_prices, live_input_prices, live_wages
 from .protocols import AgentOrders, EconomyYearInputs
 from .recipes import recipes_from_production_data
-from . import plant_builds, pool_deposits, trade_wages
+from . import kept_wages, plant_builds, pool_deposits, trade_wages
 from .tool_wear import with_tool_wear
 from .record import EconomyRecord
 from .setup import EconomySetup, SetupTrade, goods_specs, recipe_tile_key
@@ -129,8 +129,7 @@ def people_by_trade(economy, country=None):
 
 def people_by_tile_and_trade(economy):
     """Working people of the labour core by tile and trade, over every labour area (trainees are not counted)."""
-    return {area_tile(area): labour_state.people_by_trade(economy.record.labour.workforce, area)
-            for area in sorted(economy.record.labour.workforce.workers)}
+    return labour_state.PeopleByTile(economy.record.labour.workforce)
 
 
 def land_rent_per_hectare(economy, country=None):
@@ -606,8 +605,11 @@ def country_trade_wage(economy, trade, country=None):
 def trade_wage_at(economy, trade, tile):
     """The wage per hour a bid for `trade` on `tile` is funded at: the area's last wage, else the one wage rule
     (`trade_wages.wage_in_area`)."""
-    view = economy.view()
-    return trade_wages.wage_in_area(economy.setup, economy.record.memory, trade, view.area_of(trade, tile))
+    memory = economy.record.memory
+
+    def compute():
+        return trade_wages.wage_in_area(economy.setup, memory, trade, economy.view().area_of(trade, tile))
+    return kept_wages.kept(memory, ("trade_wage", trade, tile), compute)
 
 
 def hunger_goods(economy):

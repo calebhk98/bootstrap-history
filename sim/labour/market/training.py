@@ -25,7 +25,7 @@ APPRENTICES_PER_MASTER = declare(
 GRADUATION_TOLERANCE_YEARS = 1e-9   # float slack when a cohort's remaining years reach zero
 
 
-def _school_places(inputs: YearInputs, area: str, trade: str) -> Tuple[float, float]:
+def school_places(inputs: YearInputs, area: str, trade: str) -> Tuple[float, float]:
     """School seats teaching this trade here, and their seat-weighted completion bonus."""
     seats = bonus_weight = 0.0
     for school in inputs.schools:
@@ -57,7 +57,7 @@ def enrol(state: MarketState, inputs: YearInputs, area: str, trade: str,
     if years <= 0.0:
         aptitude.add_bands(aptitude.bands_of(state.workers.setdefault(area, {}), trade), bands)
         return aptitude.empty_bands()
-    seats, school_bonus = _school_places(inputs, area, trade) if inputs.schools else (0.0, 0.0)
+    seats, school_bonus = school_places(inputs, area, trade) if inputs.schools else (0.0, 0.0)
     capacity = seats + _incumbents(state, area, trade) * APPRENTICES_PER_MASTER
     already = enrolled(state, area, trade)
     admitted_share = min(1.0, max(0.0, capacity - already) / wanting)

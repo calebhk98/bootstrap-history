@@ -167,7 +167,8 @@ def clear_goods(setup, record, view, area_map, order_book: OrderBook, plans, led
         _produce_and_offer(setup, record, view, turn, plans, in_kind, order_book, ledger)
         areas = sorted(area for item, area in order_book if item == good)
         kept = market_curves.kept_areas(area_map, setup.port_tile, (setup.capital_tile, *watched_tiles), good)
-        for area in areas:
+        cleared = []
+        for area in areas:       # the areas' clears do not read one another: settled together below
             bids, offers = order_book.pop((good, area))
             key = market_key(good, area)
             unit_costs = seller_offers.UnitCosts()
@@ -176,10 +177,13 @@ def clear_goods(setup, record, view, area_map, order_book: OrderBook, plans, led
             offers, result = unsold_search.clear_with_search(setup, record, view, bids, offers, chosen, good, area,
                                                              setup.currency_id, record.memory.prices.get(key),
                                                              unit_costs)
+            cleared.append((area, key, bids, offers, result))
+        traded = [result for _area, _key, _bids, _offers, result in cleared if result.quantity > 0.0]
+        settled = iter(settlement.settle_goods_many(record.book, traded, ledger.import_accounts, ledger.export_accounts))
+        for area, key, bids, offers, result in cleared:
             delivered, bought = 0.0, {}
             if result.quantity > 0.0:
-                done_settlement = settlement.settle_goods(record.book, result, ledger.import_accounts,
-                                                          ledger.export_accounts)
+                done_settlement = next(settled)
                 bought = done_settlement.bought_by_buyer()
                 delivered = done_settlement.delivered
                 ledger.note_settlement(done_settlement, "sales", plant_goods)
