@@ -1,5 +1,5 @@
-"""Speed: the reads the market memory keeps between calls (the trade ages and quote kinds of the price keys, the usual
-volumes) are dropped when what they read is written, and kept when it is not. Each test calls one method on inputs
+"""Speed: the reads the market memory keeps between calls (the trade ages and quote kinds of the price keys) are
+dropped when what they read is written, and kept when it is not. Each test calls one method on inputs
 written out in the test; no game."""
 
 QUICK_TOPIC = True
@@ -69,27 +69,6 @@ class AgesAndKinds(unittest.TestCase):
         self.assertEqual(len(calls), 1)
 
 
-class UsualVolumes(unittest.TestCase):
-    def test_kept_until_a_usual_volume_is_written(self):
-        memory, volumes = MarketMemory(volume_weights={"grain|a": 5.0}), {"grain|a": 4.0}
-        compute, calls = counting("answer")
-        memory.kept_for_volumes(volumes, compute)
-        memory.kept_for_volumes(volumes, compute)
-        self.assertEqual(len(calls), 1)
-        memory.note_volume("grain|a", 9.0)
-        memory.kept_for_volumes(volumes, compute)
-        self.assertEqual(len(calls), 2)
-
-    def test_dropped_when_a_store_is_replaced_or_the_volumes_change_size(self):
-        memory, volumes = MarketMemory(volume_weights={"grain|a": 5.0}), {"grain|a": 4.0}
-        compute, calls = counting("answer")
-        memory.kept_for_volumes(volumes, compute)
-        memory.kept_for_volumes(dict(volumes), compute)
-        memory.volume_weights = dict(memory.volume_weights)
-        memory.kept_for_volumes(volumes, compute)
-        volumes["salt|a"] = 1.0
-        memory.kept_for_volumes(volumes, compute)
-        self.assertEqual(len(calls), 4)
 
 
 if __name__ == "__main__":

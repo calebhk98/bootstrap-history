@@ -18,7 +18,6 @@ PRICE_SMOOTHED_TRADE = "smoothed_trade"     # the kind of the price remembered f
 PRICE_REMEMBERED = "remembered_price"   # a price from a trade of some earlier year that nothing since has replaced or quoted
 
 _writes = [0]      # bumped by each write to the prices, wages, rates and price levels a view's cached reads come from
-_volume_writes = [0]      # bumped by each write to the usual volumes
 _age_and_kind_writes = [0]      # bumped by each in-place write to the trade ages and quote kinds (a redraw replaces the stores whole)
 
 
@@ -211,15 +210,6 @@ class MarketMemory:
             entry = kept[name] = (stamp, self.trade_age, self.quote_kinds, keys, compute())
         return entry[4]
 
-    def kept_for_volumes(self, last_year_volumes: Dict[str, float], compute):
-        """`compute()` once until a usual volume is written or either store is replaced. `last_year_volumes` (the goods record's) is written
-        only by the year's close, which notes every market it writes (`note_volume`), so its size and the write count cover it."""
-        kept = self.__dict__.get("_kept_volumes")     # not a field
-        if (kept is None or kept[0] != _volume_writes[0] or kept[1] is not self.volume_weights or kept[2] is not last_year_volumes
-                or kept[3] != len(last_year_volumes)):
-            kept = self.__dict__["_kept_volumes"] = (_volume_writes[0], self.volume_weights, last_year_volumes, len(last_year_volumes), compute())
-        return kept[4]
-
     def price_kinds_by_good(self) -> Dict[str, str]:
         """The kind each good's price has across its markets: traded when any market of it traded last year,
         else the first quote kind in market order (so a price no one traded at is never shown as a trade)."""
@@ -275,7 +265,6 @@ class MarketMemory:
         """Move a market's usual volume toward what it traded this year."""
         old = self.volume_weights.get(key)
         self.volume_weights[key] = quantity if old is None else old + VOLUME_WEIGHT_SPEED * (quantity - old)
-        _volume_writes[0] += 1
 
     def note_basket_price_level(self, currency: CurrencyId, level: float, observed_inflation: Optional[float] = None) -> None:
         """Record this year's price level and move the expectation of inflation after the year's observed inflation
