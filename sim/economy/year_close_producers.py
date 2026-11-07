@@ -54,10 +54,6 @@ def _producer_after(producer, answer_row: Dict[str, object], written_goods) -> o
     return replaced(producer, **changes)
 
 
-def arrays_area_map(view):
-    return view._area_map
-
-
 def with_practice(producer, runs_last_year, pool):
     """The crew's practice after the year's runs (practice.py); growth in runs is hired hands."""
     if not producer.crew_runs:
@@ -70,7 +66,7 @@ def with_practice(producer, runs_last_year, pool):
 def close_producers_of_year(setup, record, view, ledger, arrays: YearArrays, cohorts_by_tile, property_income, pooled) -> None:
     """Close every producer. `property_income` (payee -> money) is added to as dividends are paid; `pooled(recipe_id, trade)`
     is the crews' pooled practice."""
-    arrays = YearArrays.build(setup, record, arrays_area_map(view), view) if arrays is None else arrays.sync(setup, record, view)
+    arrays = arrays.sync(setup, record, view)
     columns, matrices = arrays.producers, arrays.matrices
     traded, _round_prices = ledger.market_totals()
     bundle = pack(setup, record, view, ledger, arrays)

@@ -437,7 +437,7 @@ def close_rows(rows, constants,
         request_collateral[row] = collateral
         replacement_runs[row] = replacement
         # year_close._with_sales
-        new_last_runs[row] = worked
+        new_last_runs[row] = worked_now
         new_expected_sales[row] = sold_runs if sales_expected <= 0.0 else sales_expected + constants[K_EXPECT] * (sold_runs - sales_expected)
         staffed_now = np.inf
         counted = False

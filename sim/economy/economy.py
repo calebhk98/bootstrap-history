@@ -177,7 +177,7 @@ class Economy:
         self._follow_yields(inputs)
         sites.apply_site_limits(record, setup)
         view = self.view()
-        arrays = None
+        arrays = YearArrays.build(setup, record, self.area_map, view)
         money = setup.currency_id
         debt_relief.forgive(record, inputs.debt_relief_tiles)
         titles_moves.apply(record, inputs.title_moves)
