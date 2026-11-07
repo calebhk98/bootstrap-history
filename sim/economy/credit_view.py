@@ -23,6 +23,7 @@ class CreditView(YearView):
         self._loss_rates = loss_rates
         self._equity_of_all = equity      # reads the view once, when first asked, and keeps the answer
         self._equity = None
+        self._worths = None               # the producers' net worths (equity.producer_worths), built once for the view
         self._claims_seen = None          # (loan list, its length, its last loan) the claims below were summed over
         self._claims: dict = {}           # currency -> claims_by_lender over those loans
 
@@ -48,3 +49,10 @@ class CreditView(YearView):
             self._equity = dict(self._equity_of_all(self))
         return self._equity.get(agent, 0.0)
 
+
+    def kept_worths(self, build: Callable[[], Mapping[AgentId, float]]) -> Mapping[AgentId, float]:
+        """The producers' net worths, built by `build()` when first asked and kept for the view's life like `equity`, which is split
+        from them: the households' share wealth and the portfolio trading read one build. Read only."""
+        if self._worths is None:
+            self._worths = build()
+        return self._worths

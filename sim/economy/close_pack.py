@@ -2,6 +2,7 @@
 the loans and the clearing prices, packed once per close into arrays indexed like the producer columns.
 
 `pack(...)` returns a `ClosePack`; `constants_array()` is the rules' declared numbers in the order close_kernel names them."""
+import math
 from dataclasses import dataclass
 from typing import Dict, Mapping
 
@@ -108,16 +109,17 @@ def pack(setup, record, view, ledger, arrays: YearArrays) -> ClosePack:
         currency_of_row.append(currency)
         cash_in_currency[position] = book.balance(producer_id, currency)
         cash_in_money[position] = book.balance(producer_id, money)
-        held = book.goods_held(producer_id)
+        held = book.goods_of(producer_id)
         for slot, column in enumerate(matrices.slot_goods[columns.recipe_row[position]]):
             if column < 0:
                 break
             stock[position, slot] = held.get(matrices.goods.ids[column], {}).get(producer.tile, 0.0)
-        for good, tiles in held.items():
+        for good in sorted(held):        # goods in name order, whatever order the book holds them in
             column = goods_row.get(good)
-            if column is not None:
+            tiles = held[good]
+            if column is not None and any(value != 0.0 for value in tiles.values()):
                 held_good.append(column)
-                held_quantity.append(sum(value for value in tiles.values() if value > 0.0))
+                held_quantity.append(math.fsum(value for value in tiles.values() if value > 0.0))
         held_start[position + 1] = len(held_good)
     revenue = np.array([ledger.sales_in.get(each, 0.0) for each in columns.ids])
     running = np.array([ledger.running_costs(each) for each in columns.ids])

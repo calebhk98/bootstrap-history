@@ -45,6 +45,13 @@ STORE_LIQUIDATION_RESERVATION_SHARE = declare(
         "fetched less than its worth. The discount is an assumption; pawnbrokers' margins would bound it.")
 STORE_PRIORITY = 2          # after the need tiers (floors, then surplus)
 
+
+def _can_be_stored(spec: GoodSpec) -> bool:
+    """Whether a good's physical properties let it be held as wealth (before its price is looked at)."""
+    return (spec.service_life_years > 0.0 and spec.spoilage_per_year <= STORE_MAX_SPOILAGE
+            and math.isfinite(spec.unit_mass_kg) and spec.unit_mass_kg > 0.0)
+
+
 def store_candidates(specs: Mapping[GoodId, GoodSpec], prices: Mapping[GoodId, float],
                      staple_price_per_kg: float,
                      usual_prices: Optional[Mapping[GoodId, float]] = None,
@@ -57,8 +64,7 @@ def store_candidates(specs: Mapping[GoodId, GoodSpec], prices: Mapping[GoodId, f
     returns = {}
     for good, spec in specs.items():
         price = prices.get(good)
-        if (price is None or spec.service_life_years <= 0.0 or spec.spoilage_per_year > STORE_MAX_SPOILAGE
-                or not math.isfinite(spec.unit_mass_kg) or spec.unit_mass_kg <= 0.0 or price <= 0.0):
+        if price is None or not _can_be_stored(spec) or price <= 0.0:
             continue
         if price / spec.unit_mass_kg < STORE_MIN_DENSITY_MULTIPLE * staple_price_per_kg:
             continue
@@ -116,7 +122,9 @@ def _store_weights(tile, view, specs: Mapping[GoodId, GoodSpec], priced) -> Tupl
         return {}, {}
     prices, usual_prices = {}, {}
     money_level = _money_level(view, tile, specs)
-    for good in specs:
+    for good, spec in specs.items():
+        if not _can_be_stored(spec):
+            continue      # only these goods can be candidates, so the others' prices are not read
         area = view.area_of(good, tile)
         price = view.offered_price(good, area)
         if price:

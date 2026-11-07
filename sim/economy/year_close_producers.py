@@ -41,7 +41,9 @@ def _request_of(producer_id: str, currency: str, kind: int, amount: float, rate:
     return LoanRequest(producer_id, currency, amount, rate, term, collateral, purpose)
 
 
-def _producer_after(producer, answer_row: Dict[str, object], written_goods) -> object:
+def _changes_of(producer, answer_row: Dict[str, object], written_goods, pooled) -> Dict[str, object]:
+    """The fields the close changes, for one replacement of the row. The crew's practice after the year's runs (practice.py)
+    is among them; growth in runs is hired hands."""
     expected = dict(producer.expected_prices)
     for good, value in written_goods:
         expected[good] = value
@@ -51,16 +53,13 @@ def _producer_after(producer, answer_row: Dict[str, object], written_goods) -> o
                    staffed_runs=answer_row["staffed"])
     if answer_row["idle"]:
         changes["idle_years"] = answer_row["idle"]
-    return replaced(producer, **changes)
-
-
-def with_practice(producer, runs_last_year, pool):
-    """The crew's practice after the year's runs (practice.py); growth in runs is hired hands."""
-    if not producer.crew_runs:
-        return producer
-    return replaced(producer, crew_runs=practice.crew_runs_after_year(
-        producer.crew_runs, max(0.0, producer.last_runs) / max(1.0, producer.workshops),
-        practice.hired_share(runs_last_year, producer.last_runs), pool))
+    if producer.crew_runs:
+        new_last_runs = answer_row["last_runs"]
+        changes["crew_runs"] = practice.crew_runs_after_year(
+            producer.crew_runs, max(0.0, new_last_runs) / max(1.0, producer.workshops),
+            practice.hired_share(producer.last_runs, new_last_runs),
+            {trade: pooled(producer.recipe_id, trade) for trade in producer.crew_runs})
+    return changes
 
 
 def close_producers_of_year(setup, record, view, ledger, arrays: YearArrays, cohorts_by_tile, property_income, pooled) -> None:
@@ -76,6 +75,8 @@ def close_producers_of_year(setup, record, view, ledger, arrays: YearArrays, coh
         "request_term", "request_collateral", "expansion_runs", "replacement_runs", "new_count", "write_off", "new_idle",
         "new_expected_sales", "new_last_runs", "new_staffed", "new_expected", "written", "new_earnings", "new_revenues")}
     good_ids = matrices.goods.ids
+    write_offs: Dict[str, float] = {}      # applied in one pass over the loans, and the dividends posted as one batch, after the loop
+    dividends: list = []
     for row, producer_id in enumerate(columns.ids):
         producer = columns.records[row]
         if producer.idle_years > 0:      # bankrupt: idle, no dividend (Eurace@Unibi, Firm_bankruptcy_idle_counter)
@@ -88,15 +89,17 @@ def close_producers_of_year(setup, record, view, ledger, arrays: YearArrays, coh
                               "dividend"),) if amount > 0.0 else ()
         shares.note_dividend(record.capital_markets, producer_id, transfers)
         if lists["exited"][row]:
+            firm_year.write_off_many(record, write_offs)     # an exit remembers its defaults after those of the producers before it
+            write_offs.clear()
             paid = producer_exit.exit_producer(record, producer_id, list(transfers))
             for transfer in paid:
                 property_income[transfer.payee] = property_income.get(transfer.payee, 0.0) + transfer.amount
             continue
         if lists["write_off"][row] > 0.0:
-            firm_year.write_off(record, producer_id, lists["write_off"][row])
+            write_offs[producer_id] = lists["write_off"][row]
         if transfers:
             paid = ownership.spread(record, transfers, cohorts_by_tile)
-            record.book.transfer_many(paid)
+            dividends.extend(paid)
             for transfer in paid:
                 property_income[transfer.payee] = property_income.get(transfer.payee, 0.0) + transfer.amount
         worn = producer.capacity_runs - lists["new_capacity"][row]
@@ -114,10 +117,10 @@ def close_producers_of_year(setup, record, view, ledger, arrays: YearArrays, coh
         written = [(good_ids[column], lists["new_expected"][row][slot])
                    for slot, column in enumerate(matrices.slot_goods[columns.recipe_row[row]])
                    if column >= 0 and lists["written"][row][slot]]
-        changed = _producer_after(producer, dict(
+        producer_table.put_producer(record.producers, replaced(producer, **_changes_of(producer, dict(
             capacity=lists["new_capacity"][row], losses=lists["new_losses"][row], target=lists["new_target"][row],
             earnings=tuple(lists["new_earnings"][row][:count]), revenues=tuple(lists["new_revenues"][row][:count]),
             expected_sales=lists["new_expected_sales"][row], last_runs=lists["new_last_runs"][row],
-            staffed=None if math.isnan(staffed) else staffed, idle=lists["new_idle"][row]), written)
-        producer_table.put_producer(record.producers, with_practice(
-            changed, producer.last_runs, {trade: pooled(producer.recipe_id, trade) for trade in producer.crew_runs}))
+            staffed=None if math.isnan(staffed) else staffed, idle=lists["new_idle"][row]), written, pooled)))
+    firm_year.write_off_many(record, write_offs)
+    record.book.transfer_many(dividends)

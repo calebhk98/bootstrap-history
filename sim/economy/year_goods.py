@@ -11,11 +11,11 @@ from typing import Dict, List, Optional, Tuple
 
 from . import (currency, mint_price, land_bid_year, carriage_fleet_book, carriage_wear, households, market_curves, market_quote, merchants, producers, seller_cash, seller_offers, settlement,
                state_budget, state_store, taxes, tool_wear, unsold_search)
-from . import goods_respend, goods_respend_year, households_cohort
+from . import goods_respend, goods_respend_year, households_cohort, households_orders_pack
 from .home_scope import on_home_tile
 from .goods_market_fills import sold_by_seller_tile
 from .inventory import held_stock, holding_reservation
-from .household_work_year import cohort_basket
+from .household_work_year import basket_key, cohort_basket
 from .opening_bid_memory import BidMemory
 from .market_memory import market_key
 from .market_memory_asks import memory_reference_volume, note_bids, note_offers, price_after_resumed_trade, wanted_at
@@ -45,11 +45,15 @@ def add_orders(book: OrderBook, orders: AgentOrders) -> None:
 
 
 def cohort_orders(setup, record, view, ledger: YearLedger, order_book: OrderBook, own_options=None) -> List:
-    """Households' bids for the year; returns their savings offers for the credit market."""
+    """Households' bids for the year; returns their savings offers for the credit market. Every cohort whose basket the kernel covers
+    is ordered in one call (`households_orders_pack`); the rest through `households.goods_orders`."""
     funds = []
     memory = BidMemory()     # the priced needs and store weights cohorts of one basket share
     money = setup.currency_id
-    for cohort in sorted(record.cohorts.values(), key=lambda each: each.agent_id):
+    cohorts = sorted(record.cohorts.values(), key=lambda each: each.agent_id)
+    smooth_rise = not record.settling
+    tool_bids_of, entries, plain = {}, [], {}
+    for cohort in cohorts:
         basket = memory.basket(setup, record, cohort)
         priced = memory.priced(setup, record, view, cohort, basket)
         income = ledger.wages_in.get(cohort.agent_id, 0.0) + record.capital_markets.property_income.get(cohort.agent_id, 0.0)
@@ -58,11 +62,24 @@ def cohort_orders(setup, record, view, ledger: YearLedger, order_book: OrderBook
             cohort.agent_id, cohort.tile, lambda good: view.area_of(good, cohort.tile), lambda good: view.offered_price(good, view.area_of(good, cohort.tile)),
             lambda good: view.stock(cohort.agent_id, good, cohort.tile), setup.recipes, ledger.own_plot_hours.get(cohort.agent_id, {}),
             setup.specs, cash)
+        tool_bids_of[cohort.agent_id] = tool_bids
+        spendable = cash - sum(bid.budget for bid in tool_bids)
+        grown_units = ledger.grown_units.get(cohort.agent_id)
+        if not priced or cohort.people <= 0.0:
+            plain[cohort.agent_id] = AgentOrders()
+        elif households_orders_pack.covered(priced):
+            entries.append((cohort, basket, priced, spendable, income, grown_units))
+        else:
+            plain[cohort.agent_id] = less_what_it_grew(households.goods_orders(
+                cohort, view, spendable, income, basket, setup.specs, priced, smooth_rise=smooth_rise, shared_store=memory.stores(record, cohort)),
+                cohort, basket, grown_units)
+    made = households_orders_pack.kernel_orders(
+        view, setup.specs, entries, smooth_rise, lambda cohort: basket_key(record, cohort), lambda cohort: memory.stores(record, cohort))
+    made.update(plain)
+    for cohort in cohorts:
+        orders = made[cohort.agent_id]
+        tool_bids = tool_bids_of[cohort.agent_id]
         add_orders(order_book, AgentOrders(bids=tuple(tool_bids)))
-        orders = households.goods_orders(cohort, view, cash - sum(bid.budget for bid in tool_bids), income,
-                                         basket, setup.specs, priced,
-                                         smooth_rise=not record.settling, shared_store=memory.stores(record, cohort))
-        orders = less_what_it_grew(orders, cohort, basket, ledger.grown_units.get(cohort.agent_id))
         households_cohort.change_cohort(
             record.cohorts, cohort.agent_id, planned_spending=sum(bid.budget for bid in tool_bids) + sum(bid.budget for bid in orders.bids))
         if own_options:
