@@ -394,6 +394,11 @@ class Book:
         money = {currency: value for currency, value in sorted(self._money.get(agent, {}).items()) if value != 0.0}
         return {"money": money, "goods": self.goods_held(agent)}
 
+    def goods_of(self, agent: AgentId) -> Dict[GoodId, Dict[TileId, float]]:
+        """What the agent holds, good to tile to quantity, as the book keeps it: read only, in no stated order, and it may hold zeros.
+        A caller that adds quantities sums them exactly."""
+        return self._goods.get(agent) or {}
+
     def goods_held(self, agent: AgentId) -> Dict[GoodId, Dict[str, float]]:
         """What the agent holds of each good, by tile: goods and tiles in name order, nothing at zero."""
         goods = {}

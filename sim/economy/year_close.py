@@ -10,8 +10,8 @@ from .expected_sales import demand_seen, market_capacities
 from . import (practice, firm_finance, firm_year, tax_farming, merchants_transit, carriage_hours, carriage_wear, currency, expansion_price, households, inventory, merchants, metal_stock, ownership, producer_exit, shares,
                producers, producers_close, state_budget, tariffs, taxes, trade_wages)
 from .home_scope import has_partners, home_cohorts, on_home_tile
-from .household_work_year import cohort_basket
-from . import households_cohort
+from .household_work_year import basket_key, cohort_basket
+from . import households_cohort, households_close
 from .market_memory import market_key
 from .national_prices import national_prices, traded_spending_weights, usual_volumes
 from .notional import recently_traded_goods
@@ -91,10 +91,12 @@ def wear_and_spoilage(setup, record, durable_users=()) -> None:
     for agent in book.agents():
         if is_edge(agent):
             continue
-        for good, tiles in book.holdings(agent)["goods"].items():
-            for tile, quantity in tiles.items():
-                if quantity > 0.0:
-                    holdings[(agent, good, tile)] = quantity
+        held = book.goods_of(agent)
+        for good in sorted(held):        # goods and tiles in name order, so the moves post in a fixed order
+            by_tile = held[good]
+            for tile in sorted(by_tile):
+                if by_tile[tile] > 0.0:
+                    holdings[(agent, good, tile)] = by_tile[tile]
     book.move_many(inventory.spoilage_moves(holdings, setup.specs))
     fleets = {carriage_wear.account(merchant_id) for merchant_id in record.merchants}     # carriers age in the merchants' fleets
     book.move_many(inventory.wear_moves(holdings, setup.specs, set(record.cohorts) | set(durable_users) | fleets))
@@ -140,14 +142,19 @@ def close_agents(setup, record, view, ledger: YearLedger, area_map, carriage, ar
     for lender, interest in record.capital_markets.take_pool_income().items():     # the actors' pool paid this year
         property_income[lender] = property_income.get(lender, 0.0) + interest
     offered_prices: Dict = {}      # the prices households are closed on do not change while they close
+    baskets: Dict = {}
     for cohort_id, cohort in sorted(record.cohorts.items()):
         received = dict(ledger.received.get(cohort_id, {}))
         for good, quantity in ledger.grown.get(cohort_id, {}).items():
             received[good] = received.get(good, 0.0) + quantity
         income = ledger.wages_in.get(cohort_id, 0.0) + property_income.get(cohort_id, 0.0)
         spent = ledger.money_out.get(cohort_id, 0.0)
-        closed, moves = households.close_year(cohort, received, view, setup.specs, cohort_basket(setup, record, cohort, buying=False),
-                                                   income, spent, offered_prices)
+        key = basket_key(record, cohort)       # cohorts of one tile, hearth, hired work and milled grains share a basket and its floor cost
+        if key not in baskets:
+            basket = cohort_basket(setup, record, cohort, buying=False)
+            baskets[key] = (basket, households_close.floor_cost_per_person(basket, view, cohort.tile, offered_prices))
+        basket, floor_cost = baskets[key]
+        closed, moves = households.close_year(cohort, received, view, setup.specs, basket, income, spent, offered_prices, floor_cost)
         record.book.move_many(held_only(moves, record.book))
         households_cohort.put_cohort(record.cohorts, closed)
     record.capital_markets.set_property_income(property_income)
