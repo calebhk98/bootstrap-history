@@ -235,6 +235,11 @@ any rounding change does; the digest is the same on two runs and after a reload.
       cohort can afford exists or not by the last bit). Rome cold opening about 120 s after; Rome's household plans
       are discrete and its opening moves with last-digit changes (producer counts differ between kernel variants), so
       the Rome record before the port is compared below
+- [ ] Rome's opening changed by the port: old code 8189 producers and households' hired work summing to about 0.3, the
+      port 8170 and about 15 (one household from about zero to five hours a person). A one-ulp nudge of an opening price
+      leaves the old opening as it was, and the port with its demand kernel declined (`OpeningDemand.supported` false)
+      gives the old opening back, so a rule inside the demand kernel's path differs on Rome's inputs; being found
+      (`open_dump.py` and `open_compare.py` in the orchestrator's scratch folder)
 - [x] the rest of Rome's opening: the cost was repeated work, not loops. `household_plans` worked the producers' hours demand
       (`expected_shares`) once per cohort; it is worked once per call. `location.opening_split` re-derived the placed tiles of
       a recipe on every call; the placement reads are kept per setup. `crop_sites.sites` works a recipe's paying floor once.
@@ -245,6 +250,9 @@ any rounding change does; the digest is the same on two runs and after a reload.
       and `open_prof.py`; not yet ported: `location_inputs.place_oriented`, `opening_demand._buy`, `households_own.own_production`
 
 ### 10. Finish
+- [ ] A fresh checkout compiles every kernel on its first year (measured about a minute on a fresh worktree): a
+      `simulator.py` command that compiles them all ahead of play, for an environment's setup script, and the cold
+      compile time measured
 - [ ] A Rome year under one second, and every civilisation's year measured (`year-time` on a save of each)
 - [ ] `openings --prune` rebuilt and committed; the full build timed
 - [ ] the slow suite green, or each red topic explained with the complaint that owns it

@@ -9,7 +9,7 @@ import unittest
 
 from sim.tests.economy_view_defaults import ViewDefaults
 from sim.world import need_basket
-from sim.economy import households, opening_resting
+from sim.economy import households, households_close, opening_resting
 from sim.economy.types import EDGE_CONSUMPTION, GoodSpec
 
 NEED_DATA = {
@@ -249,6 +249,15 @@ class CloseTests(unittest.TestCase):
         self.assertEqual(moves[0].receiver, EDGE_CONSUMPTION)
         self.assertEqual(moves[0].tile, "t")
         self.assertEqual(new.unmet_floor_by_need, {})
+
+    def test_a_floor_cost_read_once_closes_the_cohort_the_same(self):
+        view = View()
+        floor = households_close.floor_cost_per_person(BASKET, view, "t")
+        self.assertGreater(floor, 0.0)
+        alone, _ = households.close_year(cohort(), {"grain": 20000.0}, view, SPECS, BASKET, income_received=12.0, spent=12.0)
+        shared, _ = households.close_year(cohort(), {"grain": 20000.0}, view, SPECS, BASKET, income_received=12.0, spent=12.0,
+                                          floor_cost_of_person=floor)
+        self.assertEqual(alone.expected_floor_cost, shared.expected_floor_cost)
 
     def test_unmet_floor_is_recorded_when_short(self):
         new, _ = households.close_year(cohort(), {"grain": 15000.0}, View(), SPECS, BASKET)
