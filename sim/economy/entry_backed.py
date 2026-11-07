@@ -23,8 +23,9 @@ def unfilled_quantity(bids: Sequence[Bid], cost_per_unit: float, traded_volume: 
 
 
 def unfilled_at_cost(setup, record, view, area_map, bids_by_market: Mapping[Tuple[GoodId, AreaId], Sequence[Bid]],
-                     traded) -> Optional[UnfilledAtCost]:
-    """The year's unfilled demand a newcomer's full cost would meet, by recipe and market; None without bids."""
+                     traded, costs=None) -> Optional[UnfilledAtCost]:
+    """The year's unfilled demand a newcomer's full cost would meet, by recipe and market; None without bids. With `costs`
+    (entry_tables.EntryTables) a recipe is costed from the year's arrays."""
     if not bids_by_market:
         return None
 
@@ -32,6 +33,6 @@ def unfilled_at_cost(setup, record, view, area_map, bids_by_market: Mapping[Tupl
         bids = bids_by_market.get((good, view.area_of(good, tile)))
         if not bids:
             return 0.0
-        costed = recipes_by_cost(setup, record, view, good, tile, [recipe_id], output_per_year)
+        costed = recipes_by_cost(setup, record, view, good, tile, [recipe_id], output_per_year, costs=costs)
         return unfilled_quantity(bids, costed[0][1], traded(good, tile) or 0.0) if costed else 0.0
     return unfilled

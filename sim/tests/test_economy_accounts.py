@@ -172,7 +172,7 @@ class ConservationTests(unittest.TestCase):
 
     def test_a_corrupted_book_is_reported(self):
         book = funded(alice=100.0)
-        book._money["alice"]["coin"] += 5.0
+        book._balance["coin"][book._row["alice"]] += 5.0
         report = book.check_conservation(1e-9)
         self.assertFalse(report.ok)
         self.assertTrue(any("coin" in line for line in report.breaches))

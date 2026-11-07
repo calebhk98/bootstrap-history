@@ -17,6 +17,8 @@ import dataclasses
 import math
 from typing import List, Optional, Sequence, Tuple
 
+import numpy
+
 from . import price_setting
 from . import unit_cost as run_cost
 from .ask_adjust import ASK_BAND_CEILING, band_edge
@@ -36,6 +38,31 @@ def unit_cost(setup, record, view, offer: Offer) -> Optional[float]:
     return run_cost.full_cost_per_unit(
         recipe, offer.good, expected_output_prices(producer, recipe, view), live_input_prices(producer, recipe, view),
         live_wages(producer, recipe, view), own_rate(view, setup.currency_id), producer.land_rent_per_run, producer.yield_factor)
+
+
+class UnitCosts(dict):
+    """(seller, tile) -> the offer's `unit_cost`, with `shares` the same keys -> its `input_share_of_cost`: the figures a
+    market's sellers worked out once, for the unsold search of the same market to read."""
+
+    def __init__(self):
+        super().__init__()
+        self.shares = {}
+
+
+def cost_figures(setup, record, view, offer: Offer) -> Tuple[Optional[float], float]:
+    """(`unit_cost`, `input_share_of_cost`) of the offer from one reading of the producer's prices and wages."""
+    producer = record.producers.get(offer.seller)
+    if producer is None:
+        return None, 0.0
+    recipe = setup.recipes[producer.recipe_id]
+    inputs = live_input_prices(producer, recipe, view)
+    wages = live_wages(producer, recipe, view)
+    cost = run_cost.full_cost_per_unit(
+        recipe, offer.good, expected_output_prices(producer, recipe, view), inputs, wages, own_rate(view, setup.currency_id),
+        producer.land_rent_per_run, producer.yield_factor)
+    variable = run_cost.variable_cost_per_run(recipe, inputs, wages, producer.land_rent_per_run)
+    share = run_cost.input_cost_per_run(recipe, inputs) / variable if math.isfinite(variable) and variable > 0.0 else 0.0
+    return cost, share
 
 
 def input_share_of_cost(setup, record, view, offer: Offer) -> float:
@@ -108,19 +135,22 @@ def strategic_offers(setup, record, view, bids: Sequence[Bid], offers: Sequence[
     offers = list(offers)
     if not bids or not offers:
         return offers
+    pricing = []      # (index, unit value, market size, ceiling) of the sellers that search a price, all against the book as it stood
     for index in sorted(range(len(offers)), key=lambda each: (offers[each].seller, offers[each].tile)):
         offer = offers[index]
         if offer.quantity <= 0.0:
             continue
-        cost = unit_cost(setup, record, view, offer)
+        cost, input_share = cost_figures(setup, record, view, offer)
         if costs is not None:
             costs[(offer.seller, offer.tile)] = cost
+            if isinstance(costs, UnitCosts):
+                costs.shares[(offer.seller, offer.tile)] = input_share
         if cost is None:
             continue
         if offer.reservation_price <= 0.0:       # a perishable or a distressed holder: it asks a price, never nothing
             producer = record.producers[offer.seller]
             recipe = setup.recipes[producer.recipe_id]
-            limit = (band_edge(cost, input_share_of_cost(setup, record, view, offer), ask_band_multiple(setup, offer))
+            limit = (band_edge(cost, input_share, ask_band_multiple(setup, offer))
                      if math.isfinite(cost) else math.inf)
             opened = opened_ask(offer.reservation_price, cost,
                                 expected_output_prices(producer, recipe, view).get(offer.good), limit)
@@ -140,12 +170,21 @@ def strategic_offers(setup, record, view, bids: Sequence[Bid], offers: Sequence[
         size = market_size(record, offer)
         if offer.reservation_price <= 0.0 or size is None:
             continue      # a seller that sells at any price, or a market with no sales to judge by, keeps its ask
-        limit = (band_edge(cost, input_share_of_cost(setup, record, view, offer), ask_band_multiple(setup, offer))
+        limit = (band_edge(cost, input_share, ask_band_multiple(setup, offer))
                  if math.isfinite(cost) else math.inf)
-        choice = price_setting.best_price(offer.reservation_price, value, size, rivals_of(record, original, index), offer.quantity,
-                                          value, max(limit, value))
-        if choice != offer.reservation_price:
-            offers[index] = dataclasses.replace(offer, reservation_price=choice)
+        pricing.append((index, value, size, max(limit, value)))
+    if pricing:
+        rival_asks, rival_counts = rivals_of(record, original)
+        positions = numpy.array([index for index, _value, _size, _ceiling in pricing])
+        values = numpy.array([value for _index, value, _size, _ceiling in pricing])
+        chosen = price_setting.best_prices(
+            rival_asks, rival_counts, positions, rival_asks[positions], values,
+            numpy.array([size for _index, _value, size, _ceiling in pricing]),
+            numpy.array([offers[index].quantity for index, _value, _size, _ceiling in pricing]), values,
+            numpy.array([ceiling for _index, _value, _size, ceiling in pricing]))
+        for index, choice in zip(positions.tolist(), chosen.tolist()):
+            if choice != offers[index].reservation_price:
+                offers[index] = dataclasses.replace(offers[index], reservation_price=choice)
     return offers
 
 
@@ -161,13 +200,14 @@ def market_size(record, offer: Offer) -> Optional[float]:
     return usual + record.goods.unmet.get(key, 0.0)
 
 
-def rivals_of(record, offers: Sequence[Offer], index: int) -> List[Tuple[float, float]]:
-    """(ask, number of workshops) of every other seller in the market with units to sell, as the book stood before any
-    seller moved (Eurace@Unibi's households choose among the prices last seen), so the answer does not depend on the order
-    sellers are taken in."""
-    rivals = []
-    for other, each in enumerate(offers):
-        if other != index and each.quantity > 0.0 and each.reservation_price > 0.0:
+def rivals_of(record, offers: Sequence[Offer]) -> Tuple[numpy.ndarray, numpy.ndarray]:
+    """(ask, number of workshops) of every seller in the market, as the book stood before any seller moved (Eurace@Unibi's
+    households choose among the prices last seen), so the answer does not depend on the order sellers are taken in. The
+    count is zero for a seller with no units to sell or no ask, which is no rival."""
+    asks = numpy.array([each.reservation_price for each in offers], dtype=float)
+    counts = numpy.zeros(len(offers))
+    for position, each in enumerate(offers):
+        if each.quantity > 0.0 and each.reservation_price > 0.0:
             producer = record.producers.get(each.seller)
-            rivals.append((each.reservation_price, float(producer.workshops) if producer is not None else 1.0))
-    return rivals
+            counts[position] = float(producer.workshops) if producer is not None else 1.0
+    return asks, counts

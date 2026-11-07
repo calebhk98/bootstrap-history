@@ -7,11 +7,11 @@ from typing import Dict, Mapping, Tuple
 from . import producer_table
 from .staffed_runs import staffed_runs
 from .expected_sales import demand_seen, market_capacities
-from . import (practice, firm_finance, firm_year, tax_farming, merchants_transit, carriage_hours, carriage_wear, currency, expansion_price, households, inventory, merchants, metal_stock, ownership, producer_exit, shares,
+from . import (practice, firm_finance, firm_year, tax_farming, merchants_news, carriage_hours, carriage_wear, currency, expansion_price, households, inventory, merchants, metal_stock, ownership, producer_exit, shares,
                producers, producers_close, state_budget, tariffs, taxes, trade_wages)
 from .home_scope import has_partners, home_cohorts, on_home_tile
-from .household_work_year import cohort_basket
-from . import households_cohort
+from .household_work_year import basket_key, cohort_basket
+from . import households_cohort, households_close
 from .market_memory import market_key
 from .national_prices import national_prices, traded_spending_weights, usual_volumes
 from .notional import recently_traded_goods
@@ -20,7 +20,10 @@ from .taxes_bases import YearFacts
 from .types import is_edge
 from .inventory import held_stock
 from .year_ledger import YearLedger
+from .year_arrays import YearArrays
+from .year_close_producers import close_producers_of_year
 from .replaced import replaced
+from .producers import live_input_prices, live_wages
 from .rates import own_rate
 
 
@@ -86,94 +89,47 @@ def money_taxes(setup, record, view, ledger: YearLedger) -> None:
 def wear_and_spoilage(setup, record, durable_users=()) -> None:
     book = record.book
     holdings: Dict[Tuple[str, str, str], float] = {}
-    for agent in book.agents():
-        if is_edge(agent):
-            continue
-        for good, tiles in book.holdings(agent)["goods"].items():
-            for tile, quantity in tiles.items():
-                if quantity > 0.0:
-                    holdings[(agent, good, tile)] = quantity
+    losing = {good for good, spec in setup.specs.items() if spec.spoilage_per_year > 0.0 or spec.service_life_years > 0.0}
+    agents = [agent for agent in book.agents() if not is_edge(agent)]
+    for agent in agents:
+        for good, by_tile in book.goods_of(agent).items():       # only goods that spoil or wear can lose anything; the moves are sorted when made
+            if good in losing:
+                for tile, quantity in by_tile.items():
+                    if quantity > 0.0:
+                        holdings[(agent, good, tile)] = quantity
     book.move_many(inventory.spoilage_moves(holdings, setup.specs))
     fleets = {carriage_wear.account(merchant_id) for merchant_id in record.merchants}     # carriers age in the merchants' fleets
     book.move_many(inventory.wear_moves(holdings, setup.specs, set(record.cohorts) | set(durable_users) | fleets))
-    cash = {agent: book.balance(agent, record.currency.currency_id) for agent in book.agents() if not is_edge(agent)}
+    cash = {agent: book.balance(agent, record.currency.currency_id) for agent in agents}
     book.transfer_many(metal_stock.yearly_wear(cash, record.currency))
 
 
-def close_agents(setup, record, view, ledger: YearLedger, area_map, carriage,
-                 income_received: Mapping[str, float] = MappingProxyType({})) -> None:
+def close_agents(setup, record, view, ledger: YearLedger, area_map, carriage, arrays,
+                 income_received: Mapping[str, float] = MappingProxyType({})) -> YearArrays:
     """Close every agent's year. `income_received` is the year's other property income by payee (interest, rent); it is
     added to the dividends and profits paid out here, so the households close on this year's property income and it is
-    what the record keeps."""
+    what the record keeps. Returns the year arrays as the close leaves them."""
     money = setup.currency_id
     property_income: Dict[str, float] = dict(income_received)
-    traded, round_prices = ledger.market_totals()
-    clearing_prices = {key: price for key, price in round_prices.items() if traded[key] > 0.0 and price is not None}
-    prepared_buyers: Dict = {}
-    service_lives = {good: spec.service_life_years for good, spec in setup.specs.items()}
     cohorts_by_tile: Dict = {}           # the tiles' cohorts, unchanged until the households close below
-    loans_of: Dict[str, list] = {}
-    for loan in record.credit.loans:
-        loans_of.setdefault(loan.borrower, []).append(loan)
     crews_of_recipe: Dict[str, list] = {}
     for each in record.producers.values():
         crews_of_recipe.setdefault(each.recipe_id, []).append(each.crew_runs)
-    market_capacity = market_capacities(((each.tile, setup.recipes[each.recipe_id].outputs, each.capacity_runs * each.yield_factor)
-                                         for each in record.producers.values() if each.idle_years <= 0), area_map.area_of)
-    for producer_id, producer in sorted(record.producers.items()):
-        recipe = setup.recipes[producer.recipe_id]
-        if producer.idle_years > 0:      # bankrupt: idle, no dividend (Eurace@Unibi, Firm_bankruptcy_idle_counter)
-            producer_table.put_producer(record.producers, replaced(producer, idle_years=producer.idle_years - 1))
-            shares.note_dividend(record.capital_markets, producer_id, ())
-            continue
-        revenue = ledger.sales_in.get(producer_id, 0.0)
-        costs = ledger.running_costs(producer_id)
-        prices_here = _prices_here(clearing_prices, recipe, area_map.area_of, producer.tile)
-        worked = worked_runs(producer, recipe, ledger, producers.paying_output(recipe, prices_here))
-        price_share = expansion_price.price_share_of(ledger.bids_by_market, traded, area_map.area_of, producer.tile,
-                                                   prepared_buyers)
-        demand_runs = runs_sold(producer, recipe, ledger, record.book, area_map.area_of, prices_here, market_capacity)
-        closed = producers_close.close_year(producer, recipe, revenue, costs, view, worked, price_share,
-                                            [good for good in recipe.outputs if good in setup.specs and not setup.specs[good].portable],
-                                            service_lives, firm_finance.interest_due(loans_of.get(producer_id, []), producer_id),
-                                            demand_runs,
-                                            spoilage={good: setup.specs[good].spoilage_per_year for good in recipe.outputs if good in setup.specs})
-        year = None
-        if not closed.exited:       # the dividend, the financing check and bankruptcy follow Eurace@Unibi (firm_year.py)
-            closed, _paid, year = firm_year.settle_year(setup, record, view, producer, closed, recipe, revenue, costs,
-                                                        loans_of.get(producer_id, []))
-        shares.note_dividend(record.capital_markets, producer_id, closed.transfers)
-        if year is not None and year.write_off_ratio > 0.0:
-            firm_year.write_off(record, producer_id, year.write_off_ratio)
-        if closed.exited:
-            paid = producer_exit.exit_producer(record, producer_id, list(closed.transfers))
-            for transfer in paid:
-                property_income[transfer.payee] = property_income.get(transfer.payee, 0.0) + transfer.amount
-            continue
-        paid = ownership.spread(record, closed.transfers, cohorts_by_tile)
-        record.book.transfer_many(paid)
-        worn = producer.capacity_runs - closed.producer.capacity_runs
-        if worn > 0.0:
-            ledger.plant_worn[producer_id] = worn
-        if closed.replacement_runs > 0.0 and revenue > costs:
-            record.credit.plan_rebuild(producer_id, closed.replacement_runs)     # covering its costs, it rebuilds the wear its plan needs
-        for transfer in paid:
-            property_income[transfer.payee] = property_income.get(transfer.payee, 0.0) + transfer.amount
-        if closed.loan_request is not None:
-            record.credit.ask_for_loan(closed.loan_request)
-            record.credit.plan_expansion(producer_id, closed.expansion_runs)
-        producer_table.put_producer(record.producers, _with_practice(
-            _with_sales(closed.producer, recipe, ledger, demand_runs, prices_here), producer.last_runs,
-            {trade: practice.pool_units(crews_of_recipe[producer.recipe_id], trade) for trade in producer.crew_runs}))
+    pool_by_recipe_trade: Dict[Tuple[str, str], float] = {}     # the crews' practice is read before the loop, so one pool per recipe and trade
+
+    def pooled(recipe_id: str, trade: str) -> float:
+        if (recipe_id, trade) not in pool_by_recipe_trade:
+            pool_by_recipe_trade[(recipe_id, trade)] = practice.pool_units(crews_of_recipe[recipe_id], trade)
+        return pool_by_recipe_trade[(recipe_id, trade)]
+    arrays = close_producers_of_year(setup, record, view, ledger, arrays, cohorts_by_tile, property_income, pooled)
     prices, volumes = learned_prices(ledger.market_totals(), record.memory)
     anchors = {(good, area.area_id): area.anchor_tile for good in area_map.goods() for area in area_map.areas(good)}
-    ordered = (sorted(prices.items()), sorted(volumes.items()))
+    news = merchants_news.YearNews(prices, volumes, anchors)
     interest_rate = own_rate(view, money)
     for merchant in sorted(record.merchants.values(), key=lambda each: each.agent_id):
         transfers = merchants.close_year(merchant, prices, volumes, record.book.balance(merchant.agent_id, money),
                                          held_stock(record.book, merchant.agent_id), area_map.area_of, money,
-                                         interest_rate, ordered,
-                                         _news_lag_of(carriage, merchant.home_tile, anchors))
+                                         interest_rate, news, lags=news.lags_at(carriage, merchant.home_tile))
         paid = ownership.spread(record, transfers, cohorts_by_tile)
         record.book.transfer_many(paid)
         for transfer in paid:
@@ -184,32 +140,24 @@ def close_agents(setup, record, view, ledger: YearLedger, area_map, carriage,
                                                             for result in ledger.labour_results}))
     for lender, interest in record.capital_markets.take_pool_income().items():     # the actors' pool paid this year
         property_income[lender] = property_income.get(lender, 0.0) + interest
+    offered_prices: Dict = {}      # the prices households are closed on do not change while they close
+    baskets: Dict = {}
     for cohort_id, cohort in sorted(record.cohorts.items()):
         received = dict(ledger.received.get(cohort_id, {}))
         for good, quantity in ledger.grown.get(cohort_id, {}).items():
             received[good] = received.get(good, 0.0) + quantity
         income = ledger.wages_in.get(cohort_id, 0.0) + property_income.get(cohort_id, 0.0)
         spent = ledger.money_out.get(cohort_id, 0.0)
-        closed, moves = households.close_year(cohort, received, view, setup.specs, cohort_basket(setup, record, cohort, buying=False),
-                                                   income, spent)
+        key = basket_key(record, cohort)       # cohorts of one tile, hearth, hired work and milled grains share a basket and its floor cost
+        if key not in baskets:
+            basket = cohort_basket(setup, record, cohort, buying=False)
+            baskets[key] = (basket, households_close.floor_cost_per_person(basket, view, cohort.tile, offered_prices))
+        basket, floor_cost = baskets[key]
+        closed, moves = households.close_year(cohort, received, view, setup.specs, basket, income, spent, offered_prices, floor_cost)
         record.book.move_many(held_only(moves, record.book))
         households_cohort.put_cohort(record.cohorts, closed)
     record.capital_markets.set_property_income(property_income)
-
-
-def _news_lag_of(carriage, home, anchors):
-    """`lag_years` for a merchant at `home`: the news lag to a market's anchor tile, worked out once per tile."""
-    lag_at_tile: Dict = {}
-
-    def lag_years(good, area):
-        tile = anchors.get((good, area))
-        if tile is None:
-            return None
-        lag = lag_at_tile.get(tile)
-        if lag is None:
-            lag = lag_at_tile[tile] = merchants_transit.news_lag(carriage, home, tile)
-        return lag
-    return lag_years
+    return arrays
 
 
 def learned_prices(totals, memory):

@@ -21,6 +21,8 @@ from .market.trades import fallback_trade, trade_specs
 from .trade_seed import bound_by_hirers, seed_hours
 from .market.year import run_year as run_labour_year
 from .market.fetch_wage import fetch_wage
+from .market.sold_hours_kernel import (OFFER_HAS_PLOT, OFFER_HOURS, OFFER_MARGINAL, OFFER_PER_WORKER, OFFER_PLAN, OFFER_ROWS,
+                                       OFFER_SHARE, OFFER_USABLE, OFFER_WHOLE, OFFER_WORK, OFFER_WORKERS, sold_hours)
 from .market.fetch_wage_samples import samples as fetch_wage_samples
 from .food_gathering import cap_share, capped_kcal, hours_cap_kcal
 from .wage_provider import people_fed_per_worker
@@ -38,6 +40,8 @@ from .tenure import add_tenure, fade_tenure, outflow_shares, tenure_by_trade, te
 __all__ = [
     "learning_curve", "SOURCE_TASK_FLOOR_FRACTION",
     "fetch_wage", "fetch_wage_samples",
+    "sold_hours", "OFFER_ROWS", "OFFER_HOURS", "OFFER_WHOLE", "OFFER_SHARE", "OFFER_PLAN", "OFFER_WORK", "OFFER_HAS_PLOT", "OFFER_PER_WORKER",
+    "OFFER_MARGINAL", "OFFER_USABLE", "OFFER_WORKERS",
     "occupational_report", "shares_by_group", "hours_by_trade", "hours_by_trade_of_all_employers", "people_by_trade_of_all_employers", "format_occupational_report", "occupation_groups",
     "wage_provider", "wages", "scholar_target", "stochastic_round", "STATE_WEIGHTS", "add_people", "Labour",
     "people_fed_per_worker", "CAREER_YEARS", "tool_draw", "tool_hours_factors", "tool_order",

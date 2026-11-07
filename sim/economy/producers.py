@@ -195,7 +195,11 @@ def live_wages(producer: Producer, recipe: Recipe, view: MarketView) -> Dict[str
 def live_wages_at(tile: TileId, recipe: Recipe, view: MarketView) -> Dict[str, float]:
     """`live_wages` for a recipe worked on a tile, with no producer there yet: each trade at the one wage rule
     (`trade_wages.wage_in_view`), so a trade the memory holds no wage for is priced, never left out."""
-    return {trade: trade_wages.wage_in_view(view.setup, view, trade, view.area_of(trade, tile)) for trade in _priced_names(recipe)[1]}
+    trades = _priced_names(recipe)[1]
+    cached = getattr(view, "wages_at", None)
+    if cached is not None:
+        return cached(trades, tile)
+    return {trade: trade_wages.wage_in_view(view.setup, view, trade, view.area_of(trade, tile)) for trade in trades}
 
 
 def next_expectations(producer: Producer, recipe: Recipe, view: MarketView,

@@ -11,12 +11,11 @@ buyers' unspent money was involuntary saving and the price the market remembered
 import math
 from typing import List, Mapping, Optional, Sequence
 
-from sim.book import ROUNDING_SHARE
+import numpy
 
-from . import goods_market
+from . import goods_market, goods_market_kernels
+from .goods_market_kernels import SEARCH_PRECISION
 from .types import Offer
-
-SEARCH_PRECISION = 1e-4     # numerical tolerance of the bisection on the ask level, not a model number
 
 
 def _lifted(offers: Sequence[Offer], raisable: Sequence[int], level: float,
@@ -29,11 +28,35 @@ def _lifted(offers: Sequence[Offer], raisable: Sequence[int], level: float,
             if index in chosen else each for index, each in enumerate(offers)]
 
 
-def _demand_covers(buyers: goods_market.Buyers, offers: Sequence[Offer]) -> bool:
-    """True when the buyers ask for at least what is on offer at these asks: the stock sells out, bar what the
-    clearing's two rounds of choice (goods_market_logit.py) leave with a seller whose buyers went to others."""
-    supply = math.fsum(offer.quantity for offer in offers if offer.quantity > 0.0)
-    return goods_market.requested_by_buyers(buyers, offers) >= supply * (1.0 - ROUNDING_SHARE)
+class _Book:
+    """The offers with units to sell, in seller-and-tile order, as the kernels read them: asks, quantities, which
+    asks may be raised and by how far."""
+
+    def __init__(self, buyers: goods_market.Buyers, offers: Sequence[Offer], raisable: Sequence[int],
+                 limits: Optional[Mapping[int, float]]):
+        positions = sorted((index for index, offer in enumerate(offers) if offer.quantity > 0.0),
+                           key=lambda index: (offers[index].seller, offers[index].tile))
+        chosen = set(raisable)
+        self.reservations = numpy.array([offers[index].reservation_price for index in positions], dtype=float)
+        self.quantities = numpy.array([offers[index].quantity for index in positions], dtype=float)
+        self.raisable = numpy.array([index in chosen for index in positions], dtype=bool)
+        self.limits = numpy.array([(limits or {}).get(index, math.inf) for index in positions], dtype=float)
+        minimum = buyers.minimum_price
+        self.minimum = 0.0 if minimum is None else minimum
+        self.has_minimum = minimum is not None
+        self.buyer_arrays = buyers.arrays.kernel_arrays()
+
+    def covered(self) -> bool:
+        """True when the buyers ask for at least what is on offer at these asks: the stock sells out, bar what the
+        clearing's rounds of choice (goods_market_logit.py) leave with a seller whose buyers went to others."""
+        return bool(goods_market_kernels.covers_at(self.reservations, self.quantities, numpy.full(len(self.quantities), -1.0),
+                                                   self.minimum, self.has_minimum, *self.buyer_arrays))
+
+    def highest_covered_level(self, lowest: float, ceiling: float) -> float:
+        """The highest common level in [lowest, ceiling] at which every raisable ask lifted to it (to its limit) is
+        still covered; -1 when not even a level just above `lowest` is."""
+        return float(goods_market_kernels.raise_search(self.reservations, self.quantities, self.raisable, self.limits,
+                                                       lowest, ceiling, self.minimum, self.has_minimum, *self.buyer_arrays))
 
 
 def price_ceiling(buyers: goods_market.Buyers, supply: float) -> float:
@@ -50,7 +73,10 @@ def raise_asks(buyers: goods_market.Buyers, offers: Sequence[Offer], raisable: S
     common level at which the buyers still ask for the whole stock (an ask above the level stays), no higher than the buyers could pay for the stock.
     `limits` (index -> the most that seller may ask, the band above its cost) hold a seller below the common level."""
     offers = list(offers)
-    if not raisable or not _demand_covers(buyers, offers):
+    if not raisable:
+        return offers
+    book = _Book(buyers, offers, raisable, limits)
+    if not book.covered():
         return offers
     lowest = min(offers[index].reservation_price for index in raisable)
     supply = math.fsum(offer.quantity for offer in offers if offer.quantity > 0.0)
@@ -61,13 +87,5 @@ def raise_asks(buyers: goods_market.Buyers, offers: Sequence[Offer], raisable: S
         ceiling = min(ceiling, max(limits.get(index, math.inf) for index in raisable))
         if ceiling <= lowest:
             return offers
-    low, high = lowest, ceiling
-    if not _demand_covers(buyers, _lifted(offers, raisable, lowest * (1.0 + SEARCH_PRECISION), limits)):
-        return offers
-    while high / low - 1.0 > SEARCH_PRECISION:
-        middle = math.sqrt(low) * math.sqrt(high)
-        if _demand_covers(buyers, _lifted(offers, raisable, middle, limits)):
-            low = middle
-        else:
-            high = middle
-    return _lifted(offers, raisable, low, limits)
+    level = book.highest_covered_level(lowest, ceiling)
+    return offers if level < 0.0 else _lifted(offers, raisable, level, limits)

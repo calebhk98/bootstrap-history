@@ -189,5 +189,37 @@ class CloseIdleProducersTests(unittest.TestCase):
         self.assertEqual([(move.receiver, move.quantity) for move in record.book.moves], [("owner", 2.0)])
 
 
+class ExitBatchTests(unittest.TestCase):
+    """An `ExitBatch` of several exits leaves the record as the same exits one by one do."""
+
+    def record_of(self, loans):
+        record = exiting(40.0, loans, {ORE: {HILLS: 7.0}})
+        record.producers = {name: types.SimpleNamespace(owner="owner") for name in ("a", "b", "c")}
+        return record
+
+    def test_two_exits_end_their_loans_together_and_book_the_same_losses(self):
+        loans = [Loan("loan-a", "lender", "a", "coin", 100.0, 0.05, 5.0, 0.0, arrears=10.0),
+                 Loan("loan-c", "lender", "c", "coin", 30.0, 0.05, 5.0, 0.0),
+                 Loan("loan-b", "lender", "b", "coin", 20.0, 0.05, 5.0, 0.0)]
+        one_by_one, batched = self.record_of(list(loans)), self.record_of(list(loans))
+        with mock.patch.object(producer_exit.ownership, "spread", lambda _record, payments: payments):
+            for name in ("a", "b"):
+                producer_exit.exit_producer(one_by_one, name, [])
+            batch = producer_exit.ExitBatch(batched)
+            for name in ("a", "b"):
+                batch.exit(name, [])
+            self.assertEqual([each.loan_id for each in batched.credit.loans], ["loan-a", "loan-c", "loan-b"])     # ended at finish
+            batch.finish()
+        self.assertEqual([each.loan_id for each in batched.credit.loans], ["loan-c"])
+        self.assertEqual([each.loan_id for each in one_by_one.credit.loans], ["loan-c"])
+        self.assertEqual(batched.credit.credit_losses, one_by_one.credit.credit_losses)
+        self.assertEqual(sorted(batched.producers), ["c"])
+
+    def test_no_exit_changes_nothing(self):
+        record = self.record_of([Loan("loan-c", "lender", "c", "coin", 30.0, 0.05, 5.0, 0.0)])
+        producer_exit.ExitBatch(record).finish()
+        self.assertEqual([each.loan_id for each in record.credit.loans], ["loan-c"])
+
+
 if __name__ == "__main__":
     unittest.main()

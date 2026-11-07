@@ -49,8 +49,19 @@ def pledged(credit, holder: AgentId, tile: TileId) -> float:
                if loan.borrower == holder and loan.collateral_tile == tile)
 
 
-def free_share(record, holder: AgentId, tile: TileId) -> float:
-    return max(0.0, holding(record, tile, holder) - pledged(record.credit, holder, tile))
+def pledges_by_title(credit) -> Dict[tuple, float]:
+    """(holder, tile) -> `pledged`, for every title the loans pledge, in one pass over the loans (summed in loan order)."""
+    shares_of: Dict[tuple, list] = {}
+    for loan in credit.loans:
+        if loan.collateral_tile is not None:
+            shares_of.setdefault((loan.borrower, loan.collateral_tile), []).append(loan.collateral_share)
+    return {key: sum(pledged_shares) for key, pledged_shares in shares_of.items()}      # `sum` as `pledged` takes it
+
+
+def free_share(record, holder: AgentId, tile: TileId, pledges: Optional[Mapping[tuple, float]] = None) -> float:
+    """The share of the holder's title on `tile` no loan pledges; `pledges` is `pledges_by_title` when the caller has it."""
+    owed = pledged(record.credit, holder, tile) if pledges is None else pledges.get((holder, tile), 0)
+    return max(0.0, holding(record, tile, holder) - owed)
 
 
 def held_shares(record, tile: TileId) -> Dict[AgentId, float]:

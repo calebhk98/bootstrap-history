@@ -48,6 +48,7 @@ from sim.ui.memory import save_session
 from sim.ui.fuzzy_choice import fuzzy_estimates_wanted, turn_fuzzy_estimates_on
 from sim.ui.wizard_answers import remember_answers
 from sim.ui.save_policy import SESSION_WORDS, SavePolicy
+from sim.ui import process_start
 from sim.ui.proto import step_progress
 from sim.ui.proto.command_registry import table_of
 from sim.ui.proto import util as proto_util
@@ -63,7 +64,7 @@ from .sitting import Sitting
 from .cli_common import (ENDLESS_HORIZON_YEARS, HORIZON_MODES,
                   _apply_display_prefs, _civ_for_session, _goal_for_session,
                   _is_claimed_slot, _is_endless_horizon, _pick_session_filename,
-                  _resolve_horizon, _wrap)
+                  _resolve_horizon, _resuming_a_save, _wrap)
 from sim.engine.ui_port import load_strategy
 
 # Save/load browsing and the civilisation list live in
@@ -206,12 +207,6 @@ def _play_init(args, sitting):
     return sim, nodes, session, app_cfg, fresh, kit
 
 
-def _resuming_a_save(args):
-    """Whether the sitting resumes a save, so the Sim need not open its own economy (the save holds it)."""
-    session = getattr(args, "session", None)
-    return bool(session and not _is_claimed_slot(session) and os.path.exists(session))
-
-
 def _play_build_sim(args, defer_economy=False):
     """Build the Sim this sitting will play: apply the application's
     display/welcome preferences, load the tree, and construct the Sim from
@@ -334,6 +329,7 @@ def _play_resolve_session(args, sim, session, sitting):
             session = _pick_session_filename(sim.view("civilisation")().get("id") or "game")
         else:
             print("Resumed from %s: %d AD." % (session, sim.view("year")()))
+    process_start.loaded()
     # after the load, so a resumed game keeps its carried routes (the load restores its own)
     _carry_known_routes(sim, args, sim.view("tree_nodes")(), sitting)
 

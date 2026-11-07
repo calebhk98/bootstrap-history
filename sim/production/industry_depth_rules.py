@@ -7,7 +7,7 @@ def opening_rates(granted, is_concern, opening, founding_years_of):
     rates = {}
     for node_id in sorted(granted):
         if is_concern(node_id):
-            rates[node_id] = opening.get(node_id, founding_years_of(node_id))
+            rates[node_id] = float(opening.get(node_id, founding_years_of(node_id)))
     return rates
 
 

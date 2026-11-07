@@ -6,119 +6,109 @@ keep their holdings in a book of this one class.
 Money and goods change hands only through `transfer` and `move` (or the batch forms), so each
 posting has a counterparty. Edge accounts (`is_edge`) are the only ones that may go negative;
 they are where the model meets what it does not simulate, and the sum over all accounts stays zero.
+
+Layout: agents are numbered into rows once (a row is never reused). A currency's balances are one float array by row;
+a stock is one slot in a flat float array, found by (agent, good, tile) through one dictionary read. The arrays are
+`array.array` (single reads give plain floats) and the batch methods look at them as numpy arrays for the length of one
+call, so no numpy view may be alive when a row or slot is added.
 """
 import math
-import sys
-from dataclasses import dataclass
+from array import array
 from typing import Dict, Iterable, List, Sequence, Tuple
 
-from sim.rekey import rekey
+import numpy
 
-AgentId = str
-CurrencyId = str
-GoodId = str
-TileId = str
-
-# Accounts that are the edge of the model: money and goods enter or leave through one of these, so every
-# other agent's holdings change only by a transfer with a counterparty.
-EDGE_PREFIX = "edge:"
-EDGE_EXCHANGE = "edge:exchange"   # the actors' coin turned into the economy's unit and back
+from sim.book_batch import BookBatch
+from sim.book_record import BookRecord
+from sim.book_types import (  # noqa: F401  (the names callers import from here)
+    EDGE_EXCHANGE, EDGE_PREFIX, ROUNDING_SHARE, UNDERFLOW, AgentId, BookError, ConservationReport, CurrencyId,
+    DeliveredMove, GoodId, GoodsMove, InsufficientFunds, InsufficientGoods, NegativeAmount, TileId, Transfer, delivery_tile,
+    is_edge, _share)
 
 
-def is_edge(agent_id: AgentId) -> bool:
-    return agent_id.startswith(EDGE_PREFIX)
-
-
-@dataclass(frozen=True)
-class Transfer:
-    payer: AgentId
-    payee: AgentId
-    currency: CurrencyId
-    amount: float                    # never negative; reverse payer and payee instead
-    purpose: str
-
-
-@dataclass(frozen=True)
-class GoodsMove:
-    giver: AgentId
-    receiver: AgentId
-    good: GoodId
-    tile: TileId
-    quantity: float                  # never negative
-    purpose: str
-
-
-class BookError(Exception):
-    """Base class for a refused posting."""
-
-
-class NegativeAmount(BookError, ValueError):
-    pass
-
-
-class InsufficientFunds(BookError):
-    pass
-
-
-class InsufficientGoods(BookError):
-    pass
-
-
-@dataclass(frozen=True)
-class DeliveredMove(GoodsMove):
-    """A goods move whose receiver takes delivery on another tile (`tile` is where the giver holds it)."""
-    receiver_tile: TileId = ""
-
-
-@dataclass(frozen=True)
-class ConservationReport:
-    money: Dict[CurrencyId, float]      # |sum of all balances| / gross volume booked, per currency
-    goods: Dict[GoodId, float]          # likewise per good
-    breaches: Tuple[str, ...]           # the entries above the tolerance
-
-    @property
-    def ok(self) -> bool:
-        return not self.breaches
-
-
-def _nested(mapping: dict, key):
-    inner = mapping.get(key)
-    if inner is None:
-        inner = mapping[key] = {}
-    return inner
-
-
-def _sorted_nested(mapping: dict) -> dict:
-    return {key: dict(sorted(inner.items())) for key, inner in sorted(mapping.items())}
-
-
-def _share(residual: float, gross: float) -> float:
-    return abs(residual) / gross if gross > 0.0 else abs(residual)
-
-
-def _delivery_tile(move: GoodsMove) -> TileId:
-    return getattr(move, "receiver_tile", "") or move.tile
-
-
-# Floating-point arithmetic leaves a payer a hair short of what it computed it could pay; a shortfall
-# no bigger than this share of what moves is rounding, not an overdraft.
-ROUNDING_SHARE = 1e-9
-UNDERFLOW = sys.float_info.min   # below the smallest normal float a balance is rounding residue
-
-
-class Book:
+class Book(BookBatch, BookRecord):
     def __init__(self):
-        self._money: Dict[AgentId, Dict[CurrencyId, float]] = {}
-        self._goods: Dict[AgentId, Dict[GoodId, Dict[TileId, float]]] = {}
-        self._holders: Dict[GoodId, set] = {}                 # agents that have ever held the good
+        self._row: Dict[AgentId, int] = {}                    # agent to its row; an agent that left has none
+        self._names: List[AgentId] = []                       # row to agent
+        self._edge = bytearray()                              # row to 1 when the agent is an edge account
+        self._balance: Dict[CurrencyId, array] = {}           # per currency, balance by row
+        self._seen: Dict[CurrencyId, bytearray] = {}          # per currency, 1 where the row has ever been posted
+        self._slot: Dict[Tuple[AgentId, GoodId, TileId], int] = {}
+        self._qty = array("d")                                # stock by slot
+        self._slot_key: List[object] = []                     # slot to (agent, good, tile); None for a slot given up
+        self._slot_row = array("q")                           # slot to the holder's row, -1 once given up
+        self._slot_good = array("q")                          # slot to the good's number
+        self._good_number: Dict[GoodId, int] = {}
+        self._tile_number: Dict[TileId, int] = {}
+        self._slot_tile = array("q")
+        self._agent_slots: Dict[AgentId, Dict[GoodId, Dict[TileId, int]]] = {}   # slots by holder, good and tile
+        self._good_slots: Dict[GoodId, List[int]] = {}        # slots by good, in the order they were made
         self._gross_money: Dict[CurrencyId, float] = {}       # all postings ever, for conservation
         self._gross_goods: Dict[GoodId, float] = {}
         self._goods_by_purpose: Dict[GoodId, Dict[str, float]] = {}
-        self._edge_money_volume: Dict[AgentId, Dict[CurrencyId, float]] = {}
-        self._edge_money_net: Dict[AgentId, Dict[CurrencyId, float]] = {}
-        self._edge_goods_volume: Dict[AgentId, Dict[GoodId, float]] = {}
-        self._edge_goods_net: Dict[AgentId, Dict[GoodId, float]] = {}
+        self._edge_money: Dict[Tuple[AgentId, CurrencyId], List[float]] = {}   # [gross volume, net] this year
+        self._edge_goods: Dict[Tuple[AgentId, GoodId], List[float]] = {}
         self._supply_at_start: Dict[CurrencyId, float] = {}   # money supply when the year began
+
+    # ---- numbering -----------------------------------------------------------------------------
+
+    def _row_of(self, agent: AgentId) -> int:
+        """The agent's row, made when it has none."""
+        row = self._row.get(agent)
+        if row is None:
+            row = self._row[agent] = len(self._names)
+            self._names.append(agent)
+            self._edge.append(1 if agent.startswith(EDGE_PREFIX) else 0)
+            for currency, column in self._balance.items():
+                column.append(0.0)
+                self._seen[currency].append(0)
+        return row
+
+    def _column(self, currency: CurrencyId) -> array:
+        column = self._balance.get(currency)
+        if column is None:
+            column = self._balance[currency] = array("d", bytes(8 * len(self._names)))
+            self._seen[currency] = bytearray(len(self._names))
+        return column
+
+    def _slot_of(self, agent: AgentId, good: GoodId, tile: TileId) -> int:
+        """The slot holding the stock, made (at zero) when there is none."""
+        key = (agent, good, tile)
+        slot = self._slot.get(key)
+        if slot is None:
+            slot = self._slot[key] = len(self._slot_key)
+            self._slot_key.append(key)
+            self._qty.append(0.0)
+            self._slot_row.append(self._row_of(agent))
+            number = self._good_number.get(good)
+            if number is None:
+                number = self._good_number[good] = len(self._good_number)
+            self._slot_good.append(number)
+            tile_number = self._tile_number.get(tile)
+            if tile_number is None:
+                tile_number = self._tile_number[tile] = len(self._tile_number)
+            self._slot_tile.append(tile_number)
+            by_agent = self._agent_slots.get(agent)
+            if by_agent is None:
+                by_agent = self._agent_slots[agent] = {}
+            by_tile = by_agent.get(good)
+            if by_tile is None:
+                by_tile = by_agent[good] = {}
+            by_tile[tile] = slot
+            by_good = self._good_slots.get(good)
+            if by_good is None:
+                by_good = self._good_slots[good] = []
+            by_good.append(slot)
+        return slot
+
+    def _put_money(self, agent: AgentId, currency: CurrencyId, value: float) -> None:
+        row = self._row_of(agent)
+        column = self._column(currency)
+        column[row] = value
+        self._seen[currency][row] = 1
+
+    def _set_stock(self, agent: AgentId, good: GoodId, tile: TileId, value: float) -> None:
+        self._qty[self._slot_of(agent, good, tile)] = value
 
     # ---- postings ------------------------------------------------------------------------------
 
@@ -129,18 +119,17 @@ class Book:
                                  % (amount, transfer.currency, transfer.purpose))
         if amount == 0.0:
             return
-        payer = transfer.payer
-        if not is_edge(payer):
-            balance = self.balance(payer, transfer.currency)
+        payer, currency = transfer.payer, transfer.currency
+        if not payer.startswith(EDGE_PREFIX):
+            balance = self.balance(payer, currency)
             if balance < amount * (1.0 - ROUNDING_SHARE):
                 raise InsufficientFunds("%s holds %.6g %s but must pay %.6g (%s)"
-                                        % (payer, balance, transfer.currency, amount, transfer.purpose))
-        purses = self._money
+                                        % (payer, balance, currency, amount, transfer.purpose))
         for agent, signed in ((payer, -amount), (transfer.payee, amount)):
-            purse = purses.get(agent)
-            if purse is None:
-                purse = purses[agent] = {}
-            purse[transfer.currency] = purse.get(transfer.currency, 0.0) + signed
+            row = self._row_of(agent)
+            column = self._column(currency)
+            column[row] += signed
+            self._seen[currency][row] = 1
         self._record_money(transfer)
 
     def move(self, move: GoodsMove) -> None:
@@ -152,31 +141,24 @@ class Book:
             return
         giver = move.giver
         held = self.stock(giver, move.good, move.tile)
-        if not is_edge(giver) and held < quantity * (1.0 - ROUNDING_SHARE):
+        if not giver.startswith(EDGE_PREFIX) and held < quantity * (1.0 - ROUNDING_SHARE):
             raise InsufficientGoods("%s holds %.6g %s on %s but must give %.6g (%s)"
                                     % (giver, held, move.good, move.tile, quantity, move.purpose))
         self._set_stock(giver, move.good, move.tile, held - quantity)
-        delivery = _delivery_tile(move)
+        delivery = delivery_tile(move)
         self._set_stock(move.receiver, move.good, delivery, self.stock(move.receiver, move.good, delivery) + quantity)
         self._record_goods(move)
 
     def transfer_many(self, transfers: Iterable[Transfer]) -> None:
         self.post(transfers, ())
 
-    def move_many(self, moves: Iterable[GoodsMove]) -> None:
-        self.post((), moves)
-
     def post(self, transfers: Iterable[Transfer], moves: Iterable[GoodsMove]) -> None:
         """Apply money transfers and goods moves together: all of them or none."""
         transfers, moves = list(transfers), list(moves)
         money_after = self._money_after(transfers)
         goods_after = self._goods_after(moves)
-        purses = self._money
         for (agent, currency), value in money_after.items():
-            purse = purses.get(agent)
-            if purse is None:
-                purse = purses[agent] = {}
-            purse[currency] = value
+            self._put_money(agent, currency, value)
         for (agent, good, tile), value in goods_after.items():
             self._set_stock(agent, good, tile, value)
         for transfer in transfers:
@@ -188,7 +170,7 @@ class Book:
         after: Dict[Tuple[AgentId, CurrencyId], float] = {}
         before: Dict[Tuple[AgentId, CurrencyId], float] = {}
         moved: Dict[Tuple[AgentId, CurrencyId], float] = {}
-        purses = self._money
+        balance = self.balance
         for transfer in transfers:
             amount = transfer.amount
             currency = transfer.currency
@@ -199,9 +181,7 @@ class Book:
                 after[key] -= amount
                 moved[key] += amount
             else:
-                purse = purses.get(key[0])
-                start = purse.get(currency, 0.0) if purse else 0.0
-                before[key] = start
+                start = before[key] = balance(*key)
                 after[key] = start - amount
                 moved[key] = amount
             key = (transfer.payee, currency)
@@ -209,9 +189,7 @@ class Book:
                 after[key] += amount
                 moved[key] += amount
             else:
-                purse = purses.get(key[0])
-                start = purse.get(currency, 0.0) if purse else 0.0
-                before[key] = start
+                start = before[key] = balance(*key)
                 after[key] = start + amount
                 moved[key] = amount
         # only an overdraft this batch makes or deepens fails: a residue an earlier, larger batch
@@ -227,6 +205,7 @@ class Book:
         after: Dict[Tuple[AgentId, GoodId, TileId], float] = {}
         before: Dict[Tuple[AgentId, GoodId, TileId], float] = {}
         moved: Dict[Tuple[AgentId, GoodId, TileId], float] = {}
+        slots, quantities = self._slot, self._qty
         for move in moves:
             quantity = move.quantity
             good = move.good
@@ -237,17 +216,17 @@ class Book:
                 after[key] -= quantity
                 moved[key] += quantity
             else:
-                start = self.stock(*key)
-                before[key] = start
+                slot = slots.get(key)
+                start = before[key] = quantities[slot] if slot is not None else 0.0
                 after[key] = start - quantity
                 moved[key] = quantity
-            key = (move.receiver, good, _delivery_tile(move))
+            key = (move.receiver, good, delivery_tile(move))
             if key in after:
                 after[key] += quantity
                 moved[key] += quantity
             else:
-                start = self.stock(*key)
-                before[key] = start
+                slot = slots.get(key)
+                start = before[key] = quantities[slot] if slot is not None else 0.0
                 after[key] = start + quantity
                 moved[key] = quantity
         failing = [key for key, value in after.items()
@@ -256,19 +235,6 @@ class Book:
             agent, good, tile = min(failing)
             raise InsufficientGoods("%s would hold %.6g %s on %s after the batch" % (agent, after[(agent, good, tile)], good, tile))
         return after
-
-    def _set_stock(self, agent: AgentId, good: GoodId, tile: TileId, value: float) -> None:
-        by_good = self._goods.get(agent)
-        if by_good is None:
-            by_good = self._goods[agent] = {}
-        by_tile = by_good.get(good)
-        if by_tile is None:
-            by_tile = by_good[good] = {}
-        by_tile[tile] = value
-        holders = self._holders.get(good)
-        if holders is None:
-            holders = self._holders[good] = set()
-        holders.add(agent)
 
     def _record_money(self, transfer: Transfer) -> None:
         amount, currency, payer, payee = transfer.amount, transfer.currency, transfer.payer, transfer.payee
@@ -280,10 +246,12 @@ class Book:
             self._record_edge_money(payee, currency, amount, -amount)
 
     def _record_edge_money(self, agent: AgentId, currency: CurrencyId, amount: float, signed: float) -> None:
-        volume = _nested(self._edge_money_volume, agent)
-        volume[currency] = volume.get(currency, 0.0) + amount
-        net = _nested(self._edge_money_net, agent)
-        net[currency] = net.get(currency, 0.0) + signed
+        both = self._edge_money.get((agent, currency))
+        if both is None:
+            self._edge_money[(agent, currency)] = [amount, signed]
+        else:
+            both[0] += amount
+            both[1] += signed
 
     def _record_goods(self, move: GoodsMove) -> None:
         quantity, good, giver, receiver = move.quantity, move.good, move.giver, move.receiver
@@ -300,73 +268,104 @@ class Book:
             self._record_edge_goods(receiver, good, quantity, -quantity)
 
     def _record_edge_goods(self, agent: AgentId, good: GoodId, quantity: float, signed: float) -> None:
-        volume = _nested(self._edge_goods_volume, agent)
-        volume[good] = volume.get(good, 0.0) + quantity
-        net = _nested(self._edge_goods_net, agent)
-        net[good] = net.get(good, 0.0) + signed
+        both = self._edge_goods.get((agent, good))
+        if both is None:
+            self._edge_goods[(agent, good)] = [quantity, signed]
+        else:
+            both[0] += quantity
+            both[1] += signed
 
     # ---- reads ---------------------------------------------------------------------------------
 
     def balance(self, agent: AgentId, currency: CurrencyId) -> float:
-        purse = self._money.get(agent)
-        return purse.get(currency, 0.0) if purse else 0.0
+        column = self._balance.get(currency)
+        if column is None:
+            return 0.0
+        row = self._row.get(agent)
+        return 0.0 if row is None else column[row]
 
-    def rename_agent(self, old: AgentId, new: AgentId) -> None:
-        """Everything `old` holds becomes `new`'s (added to what `new` holds); no posting is made, so no total moves."""
-        rekey(self._money, old, new)
-        rekey(self._goods, old, new)
-        rekey(self._holders, old, new)
+    def stock(self, agent: AgentId, good: GoodId, tile: TileId) -> float:
+        slot = self._slot.get((agent, good, tile))
+        return 0.0 if slot is None else self._qty[slot]
 
     def knows(self, agent: AgentId) -> bool:
         """Whether the agent has ever held or paid anything in this book."""
-        return agent in self._money or agent in self._goods
-
-    def stock(self, agent: AgentId, good: GoodId, tile: TileId) -> float:
-        by_good = self._goods.get(agent)
-        if not by_good:
-            return 0.0
-        by_tile = by_good.get(good)
-        return by_tile.get(tile, 0.0) if by_tile else 0.0
+        return agent in self._row
 
     def holdings(self, agent: AgentId) -> dict:
-        money = {currency: value for currency, value in sorted(self._money.get(agent, {}).items()) if value != 0.0}
+        row = self._row.get(agent)
+        money = {}
+        if row is not None:
+            for currency in sorted(self._balance):
+                value = self._balance[currency][row]
+                if self._seen[currency][row] and value != 0.0:
+                    money[currency] = value
+        return {"money": money, "goods": self.goods_held(agent)}
+
+    def goods_of(self, agent: AgentId) -> Dict[GoodId, Dict[TileId, float]]:
+        """What the agent holds, good to tile to quantity: a copy, in no stated order, and it may hold zeros.
+        A caller that adds quantities sums them exactly."""
+        slots = self._agent_slots.get(agent)
+        if not slots:
+            return {}
+        quantities = self._qty
+        return {good: {tile: quantities[slot] for tile, slot in by_tile.items()} for good, by_tile in slots.items()}
+
+    def goods_held(self, agent: AgentId) -> Dict[GoodId, Dict[str, float]]:
+        """What the agent holds of each good, by tile: goods and tiles in name order, nothing at zero."""
         goods = {}
-        for good, by_tile in sorted(self._goods.get(agent, {}).items()):
+        for good, by_tile in sorted(self.goods_of(agent).items()):
             tiles = {tile: value for tile, value in sorted(by_tile.items()) if value != 0.0}
             if tiles:
                 goods[good] = tiles
-        return {"money": money, "goods": goods}
+        return goods
 
     def goods_totals(self) -> Dict[GoodId, float]:
         """Quantity held of each good by the agents (edge accounts excluded), goods in name order."""
-        held: Dict[GoodId, List[float]] = {}
-        for agent, by_good in self._goods.items():
-            if is_edge(agent):
-                continue
-            for good, by_tile in by_good.items():
-                quantities = [value for value in by_tile.values() if value != 0.0]
-                if quantities:
-                    held.setdefault(good, []).extend(quantities)
-        return {good: math.fsum(quantities) for good, quantities in sorted(held.items())}
+        if not self._slot:
+            return {}
+        quantities = numpy.frombuffer(self._qty, dtype=numpy.float64).copy()
+        rows = numpy.frombuffer(self._slot_row, dtype=numpy.int64).copy()
+        goods = numpy.frombuffer(self._slot_good, dtype=numpy.int64).copy()
+        edge = numpy.frombuffer(self._edge, dtype=numpy.uint8).copy()
+        counted = (rows >= 0) & (quantities != 0.0)
+        counted[counted] = edge[rows[counted]] == 0
+        quantities, goods = quantities[counted], goods[counted]
+        order = numpy.argsort(goods, kind="stable")
+        quantities, goods = quantities[order], goods[order]
+        starts = numpy.flatnonzero(numpy.diff(goods)) + 1 if len(goods) else numpy.zeros(0, dtype=numpy.int64)
+        names = {number: good for good, number in self._good_number.items()}
+        held = {}
+        for group, numbers in zip(numpy.split(quantities, starts), numpy.split(goods, starts)):
+            if len(group):
+                held[names[int(numbers[0])]] = math.fsum(group.tolist())
+        return dict(sorted(held.items()))
 
     def agents(self) -> List[AgentId]:
-        return sorted(set(self._money) | set(self._goods))
+        return sorted(self._row)
 
     def holders_of(self, good: GoodId) -> List[AgentId]:
         """Agents (not edge accounts) holding some of the good."""
-        return sorted(agent for agent in self._holders.get(good, ()) if not is_edge(agent)
-                      if any(value != 0.0 for value in self._goods[agent][good].values()))
+        keys, quantities = self._slot_key, self._qty
+        return sorted({keys[slot][0] for slot in self._good_slots.get(good, ())
+                       if quantities[slot] != 0.0 and not keys[slot][0].startswith(EDGE_PREFIX)})
 
     def money_supply(self, currency: CurrencyId) -> float:
-        return math.fsum(purse.get(currency, 0.0) for agent, purse in self._money.items() if not is_edge(agent))
+        column = self._balance.get(currency)
+        if column is None:
+            return 0.0
+        values = numpy.frombuffer(column, dtype=numpy.float64)
+        counted = values[numpy.frombuffer(self._edge, dtype=numpy.uint8) == 0].tolist()
+        del values
+        return math.fsum(counted)
 
     def total(self, currency: CurrencyId) -> float:
-        return math.fsum(purse.get(currency, 0.0) for purse in self._money.values())
+        column = self._balance.get(currency)
+        return math.fsum(column) if column is not None else 0.0
 
     def goods_total(self, good: GoodId) -> float:
-        # fsum is exact, so visiting only the agents that ever held the good gives the same total
-        goods = self._goods
-        return math.fsum(value for agent in self._holders.get(good, ()) for value in goods[agent][good].values())
+        quantities = self._qty
+        return math.fsum(quantities[slot] for slot in self._good_slots.get(good, ()))
 
     # ---- flows this year -----------------------------------------------------------------------
 
@@ -375,24 +374,28 @@ class Book:
 
     def edge_volume(self, edge_id: AgentId, currency: CurrencyId) -> float:
         """Gross money in and out through an edge account this year."""
-        return self._edge_money_volume.get(edge_id, {}).get(currency, 0.0)
+        both = self._edge_money.get((edge_id, currency))
+        return both[0] if both else 0.0
 
     def edge_net(self, edge_id: AgentId, currency: CurrencyId) -> float:
         """Money the edge paid into the economy this year, less what it took out."""
-        return self._edge_money_net.get(edge_id, {}).get(currency, 0.0)
+        both = self._edge_money.get((edge_id, currency))
+        return both[1] if both else 0.0
 
     def edge_goods_volume(self, edge_id: AgentId, good: GoodId) -> float:
-        return self._edge_goods_volume.get(edge_id, {}).get(good, 0.0)
+        both = self._edge_goods.get((edge_id, good))
+        return both[0] if both else 0.0
 
     def edge_goods_net(self, edge_id: AgentId, good: GoodId) -> float:
-        return self._edge_goods_net.get(edge_id, {}).get(good, 0.0)
+        both = self._edge_goods.get((edge_id, good))
+        return both[1] if both else 0.0
 
     def edge_goods_agents(self) -> List[AgentId]:
         """Edge accounts that carried goods this year."""
-        return sorted(self._edge_goods_net)
+        return sorted({agent for agent, _good in self._edge_goods})
 
     def currencies(self) -> List[CurrencyId]:
-        return sorted({currency for purse in self._money.values() for currency in purse})
+        return sorted(currency for currency, seen in self._seen.items() if any(seen))
 
     def supply_at_start(self, currency: CurrencyId) -> float:
         """The money supply (edge accounts excluded) when the year's flow records were last reset."""
@@ -400,16 +403,14 @@ class Book:
 
     def edge_agents(self) -> List[AgentId]:
         """Edge accounts that carried money this year."""
-        return sorted(self._edge_money_net)
+        return sorted({agent for agent, _currency in self._edge_money})
 
     def start_year(self) -> None:
         """Reset the yearly flow records and note the supply; holdings carry."""
         self._supply_at_start = {currency: self.money_supply(currency) for currency in self.currencies()}
         self._goods_by_purpose = {}
-        self._edge_money_volume = {}
-        self._edge_money_net = {}
-        self._edge_goods_volume = {}
-        self._edge_goods_net = {}
+        self._edge_money = {}
+        self._edge_goods = {}
 
     def check_conservation(self, tolerance_share: float) -> ConservationReport:
         """Residual of each currency and good, as a share of everything ever booked in it."""
@@ -418,81 +419,3 @@ class Book:
         breaches = tuple(["money %s: %.3g" % item for item in money.items() if item[1] > tolerance_share]
                          + ["goods %s: %.3g" % item for item in goods.items() if item[1] > tolerance_share])
         return ConservationReport(money, goods, breaches)
-
-    # ---- save file -----------------------------------------------------------------------------
-
-    def to_record(self, only: Iterable[CurrencyId] = None, skip: Iterable[CurrencyId] = ()) -> dict:
-        """The book as plain data; `only` keeps just those currencies (goods are left out then), `skip` drops some."""
-        if only is None and not skip:
-            return self._record_of(lambda currency: True, True, False)
-        wanted = None if only is None else set(only)
-        dropped = set(skip)
-        return self._record_of(lambda currency: (wanted is None or currency in wanted) and currency not in dropped,
-                               wanted is None, True)
-
-    def _record_of(self, keep, with_goods: bool, filtered: bool) -> dict:
-        def by_agent(mapping: dict) -> dict:
-            out = {}
-            for agent, by_currency in sorted(mapping.items()):
-                kept = {currency: value for currency, value in sorted(by_currency.items()) if keep(currency)}
-                if kept or not filtered:
-                    out[agent] = kept
-            return out
-
-        def by_currency(mapping: dict) -> dict:
-            return {currency: value for currency, value in sorted(mapping.items()) if keep(currency)}
-
-        return {
-            "money": by_agent(self._money),
-            "goods": {agent: _sorted_nested(by_good) for agent, by_good in sorted(self._goods.items())} if with_goods else {},
-            "gross_money": by_currency(self._gross_money),
-            "gross_goods": dict(sorted(self._gross_goods.items())) if with_goods else {},
-            "goods_by_purpose": _sorted_nested(self._goods_by_purpose) if with_goods else {},
-            "edge_money_volume": by_agent(self._edge_money_volume),
-            "edge_money_net": by_agent(self._edge_money_net),
-            "edge_goods_volume": _sorted_nested(self._edge_goods_volume) if with_goods else {},
-            "edge_goods_net": _sorted_nested(self._edge_goods_net) if with_goods else {},
-            "supply_at_start": by_currency(self._supply_at_start),
-        }
-
-    def absorb(self, other: "Book") -> None:
-        """Take over everything `other` holds and has booked, its currencies added to this book's."""
-        def add_nested(into: dict, source: dict) -> None:
-            for key, inner in source.items():
-                held = _nested(into, key)
-                for name, value in inner.items():
-                    held[name] = held.get(name, 0.0) + value
-
-        add_nested(self._money, other._money)
-        for agent, by_good in other._goods.items():
-            for good, by_tile in by_good.items():
-                for tile, value in by_tile.items():
-                    self._set_stock(agent, good, tile, self.stock(agent, good, tile) + value)
-        for mine, theirs in ((self._gross_money, other._gross_money), (self._gross_goods, other._gross_goods),
-                             (self._supply_at_start, other._supply_at_start)):
-            for key, value in theirs.items():
-                mine[key] = mine.get(key, 0.0) + value
-        for mine, theirs in ((self._goods_by_purpose, other._goods_by_purpose),
-                             (self._edge_money_volume, other._edge_money_volume),
-                             (self._edge_money_net, other._edge_money_net),
-                             (self._edge_goods_volume, other._edge_goods_volume),
-                             (self._edge_goods_net, other._edge_goods_net)):
-            add_nested(mine, theirs)
-
-    @classmethod
-    def from_record(cls, record: dict) -> "Book":
-        book = cls()
-        book._money = _sorted_nested(record["money"])
-        book._goods = {agent: _sorted_nested(by_good) for agent, by_good in record["goods"].items()}
-        for agent, by_good in book._goods.items():
-            for good in by_good:
-                book._holders.setdefault(good, set()).add(agent)
-        book._gross_money = dict(record["gross_money"])
-        book._gross_goods = dict(record["gross_goods"])
-        book._goods_by_purpose = _sorted_nested(record["goods_by_purpose"])
-        book._edge_money_volume = _sorted_nested(record["edge_money_volume"])
-        book._edge_money_net = _sorted_nested(record["edge_money_net"])
-        book._edge_goods_volume = _sorted_nested(record["edge_goods_volume"])
-        book._edge_goods_net = _sorted_nested(record["edge_goods_net"])
-        book._supply_at_start = dict(record["supply_at_start"])
-        return book

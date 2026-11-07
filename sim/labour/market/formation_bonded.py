@@ -5,7 +5,6 @@ from typing import Dict, Optional
 import dataclasses
 
 from . import aptitude, bonded_room, bonded_worth
-from .carriage import carriage_from
 from .records import LabourClearing, MarketState, YearInputs, YearReport
 
 
@@ -46,26 +45,27 @@ def buy(state: MarketState, inputs: YearInputs, index: Dict, area: str, trade: s
     they join the area's workers and are recorded in `report.bonded_lots`. Returns the people bought. Nothing is bought
     in an area whose civilisation does not recognise bondage, or when the buyers' bid cannot be priced. Only the
     employers with a vacancy and room in their plans buy (bonded_room.py); `unassigned` (employer -> free cash) is
-    drawn down by what they pay. `memo` (a dict the caller keeps for the year) holds the bids grouped by market and the
-    carriage between areas, which do not change while the year's purchases are made."""
+    drawn down by what they pay. `memo` (a dict the caller keeps for the year) holds the bids grouped by market, which do not change while the year's purchases are made."""
     if memo is None:
         memo = {}
     if wanted <= 0.0 or area not in inputs.bondage_allowed:
+        return 0.0
+    offers = {origin: by_trade[trade] for origin, by_trade in pool.items() if by_trade.get(trade, 0.0) > 0.0}
+    if not offers:      # nobody sells the trade: nothing is bought and no one pays
         return 0.0
     clearing: Optional[LabourClearing] = index.get((area, trade))
     bid = worth_in(inputs, index, area, trade, clearing.heading_wage if clearing is not None else None)
     if bid is None:
         return 0.0
-    offers = {origin: by_trade[trade] for origin, by_trade in pool.items() if by_trade.get(trade, 0.0) > 0.0}
     ask, carriage = {}, {}
+    asks = memo.setdefault("ask", {})      # an origin's ask for a trade does not change while the year's purchases are made
     for origin in offers:
-        price = worth_in(inputs, index, origin, trade, _practised_wage(index, origin, trade))
+        if (origin, trade) not in asks:
+            asks[(origin, trade)] = worth_in(inputs, index, origin, trade, _practised_wage(index, origin, trade))
+        price = asks[(origin, trade)]
         if price is not None:
             ask[origin] = price
-            moves = memo.setdefault("carriage", {})
-            if origin not in moves:
-                moves[origin] = carriage_from(inputs.routes, origin)
-            carriage[origin] = moves[origin].get(area)
+            carriage[origin] = inputs.carriage_from(origin).get(area)
     if "bid_hours" not in memo:
         memo["bid_hours"] = bonded_room.hours_by_market(inputs.bids)
     buyers = bonded_room.buyers_in(memo["bid_hours"], clearing, unassigned) if clearing is not None else []

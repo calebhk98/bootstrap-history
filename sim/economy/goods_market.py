@@ -29,8 +29,9 @@ import numpy
 
 from sim.constants import declare
 
-from sim.book import ROUNDING_SHARE
-from .goods_market_demand import DemandSchedule
+from sim.book import EDGE_PREFIX, ROUNDING_SHARE
+from . import goods_market_kernels
+from .goods_market_demand import DemandArrays, DemandSchedule
 from .goods_market_fills import buyer_fills, make_fill, seller_fills, without_edge_self_trades, without_washed
 from .goods_market_logit import allocate
 from .goods_market_ration import ration
@@ -47,6 +48,8 @@ MINIMUM_PRICE_SHARE_OF_REFERENCE = declare(
         "price scale buyers quote; waste disposal charged to the seller is not yet modelled.")
 _BID_ORDER = attrgetter("priority", "buyer", "tile")
 _OFFER_ORDER = attrgetter("reservation_price", "seller", "tile")
+_SELLER_KEY = attrgetter("seller", "tile")
+_BUYER_KEY = attrgetter("buyer", "tile")
 _FIRST = itemgetter(0)
 CHEAP_PASSES_PER_BID = 10
 
@@ -100,6 +103,11 @@ class Buyers:
         return price if self.minimum_price is None else max(price, self.minimum_price)
 
     @cached_property
+    def arrays(self) -> DemandArrays:
+        """The bids packed for the clearing kernels, built when a market with offers first reads it."""
+        return DemandArrays(self.bids)
+
+    @cached_property
     def schedule(self) -> DemandSchedule:
         """The bids' demand schedule, built when a market with offers first reads it."""
         return DemandSchedule(self.bids)
@@ -147,11 +155,9 @@ def clear(bids: Sequence[Bid], offers: Sequence[Offer], good: GoodId, area: Area
     supply = math.fsum(offer.quantity for offer in ordered)
     if not _trades(buyers, ordered, asks):
         return _empty(good, area, currency, _held_price(buyers, asks), bids, supply, offers)
-    allocation = allocate(bids, ordered, asks, buyers.schedule)
-    fills: List[Fill] = []
-    for bid, quantity, cost in zip(bids, allocation.quantity, allocation.cost):
-        if quantity > 0.0:
-            fills.extend(buyer_fills([bid], [quantity], good, area, cost / quantity))
+    allocation = allocate(bids, ordered, asks, buyers.arrays)
+    fills: List[Fill] = [make_fill(bid.buyer, good, area, bid.tile, quantity, cost / quantity, "buy")
+                         for bid, quantity, cost in zip(bids, allocation.quantity, allocation.cost) if quantity > 0.0]
     fills.extend(make_fill(offer.seller, good, area, offer.tile, amount, ask, "sell")
                  for offer, amount, ask in zip(ordered, allocation.sold, asks) if amount > 0.0)
     pairing, washed = _pairing(bids, ordered, asks, allocation.flow)
@@ -169,12 +175,15 @@ def clear(bids: Sequence[Bid], offers: Sequence[Offer], good: GoodId, area: Area
 def _pairing(bids: Sequence[Bid], ordered: Sequence[Offer], asks: Sequence[float], flow) -> Tuple[Pairing, Dict[str, float]]:
     """Who bought from whom, from the allocation's offer-by-bid quantities; a book edge's purchase of its own offer is no
     trade and is left out of the pairing and returned as the quantity washed per edge."""
-    sellers = tuple((offer.seller, offer.tile) for offer in ordered)
-    buyers = tuple((bid.buyer, bid.tile) for bid in bids)
+    sellers = tuple(map(_SELLER_KEY, ordered))
+    buyers = tuple(map(_BUYER_KEY, bids))
     seller_index, buyer_index = numpy.nonzero(flow > 0.0)
     quantity = flow[seller_index, buyer_index].tolist()
     seller_index, buyer_index = seller_index.tolist(), buyer_index.tolist()
-    kept, washed = [], {}
+    washed: Dict[str, float] = {}
+    if not any(seller.startswith(EDGE_PREFIX) for seller, _tile in sellers):
+        return Pairing(buyers, sellers, tuple(asks), tuple(buyer_index), tuple(seller_index), tuple(quantity)), washed
+    kept = []
     for pair in range(len(quantity)):
         seller = sellers[seller_index[pair]][0]
         if is_edge(seller) and seller == buyers[buyer_index[pair]][0]:
@@ -195,7 +204,7 @@ def _trades(buyers: Buyers, ordered: Sequence[Offer], asks: Sequence[float]) -> 
     a seller meant to sell), or no buyer wants anything even at the lowest ask (the buyers want less the dearer the ask)."""
     if not ordered:
         return False
-    wanted = buyers.schedule.total_at(asks[0])
+    wanted = goods_market_kernels.total_wanted(asks[0], *buyers.arrays.kernel_arrays())
     return wanted > 0.0 and math.fsum(offer.quantity for offer in ordered) > ROUNDING_SHARE * wanted
 
 
@@ -216,7 +225,7 @@ def sold_by_seller(buyers: Buyers, offers: Sequence[Offer]) -> dict:
     sold: dict = {}
     if not _trades(buyers, ordered, asks):
         return sold
-    allocation = allocate(buyers.bids, ordered, asks, buyers.schedule)
+    allocation = allocate(buyers.bids, ordered, asks, buyers.arrays)
     for offer, quantity in zip(ordered, allocation.sold):
         if quantity > 0.0:
             key = (offer.seller, offer.tile)
@@ -231,7 +240,9 @@ def requested_by_buyers(buyers: Buyers, offers: Sequence[Offer]) -> float:
     asks = _asks(buyers, ordered)
     if not _trades(buyers, ordered, asks):
         return 0.0
-    return allocate(buyers.bids, ordered, asks, buyers.schedule).requested
+    quantities = numpy.fromiter((offer.quantity for offer in ordered), dtype=float, count=len(ordered))
+    return float(goods_market_kernels.requested_round_one(numpy.array(asks, dtype=float), quantities,
+                                                          *buyers.arrays.kernel_arrays()))
 
 
 def crossing(buyers: Buyers, offers: List[Offer], with_wants: bool = True):

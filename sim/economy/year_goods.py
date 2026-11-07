@@ -9,13 +9,13 @@ import dataclasses
 import math
 from typing import Dict, List, Optional, Tuple
 
-from . import (currency, mint_price, land_bid_year, carriage_fleet_book, carriage_wear, households, market_curves, market_quote, merchants, producers, seller_cash, seller_offers, settlement,
+from . import (currency, mint_price, land_bid_year, carriage_fleet_book, carriage_wear, households, market_curves, market_quote, merchants, merchants_book, producers, seller_cash, seller_offers, settlement,
                state_budget, state_store, taxes, tool_wear, unsold_search)
-from . import goods_respend, goods_respend_year, households_cohort
+from . import goods_respend, goods_respend_year, goods_year_batch, households_cohort, year_goods_offers, households_orders_pack
 from .home_scope import on_home_tile
-from .goods_market_fills import sold_by_seller_tile
+from .goods_year_results import ArrayClearing, sold_by_result
 from .inventory import held_stock, holding_reservation
-from .household_work_year import cohort_basket
+from .household_work_year import basket_key, cohort_basket
 from .opening_bid_memory import BidMemory
 from .market_memory import market_key
 from .market_memory_asks import memory_reference_volume, note_bids, note_offers, price_after_resumed_trade, wanted_at
@@ -25,8 +25,9 @@ from .notional import making_costs
 from .protocols import AgentOrders
 from .recipes import input_depth_order
 from .taxes_bases import YearFacts
-from .types import Bid, GoodsMove, Offer
+from .types import Bid, Offer
 from .entry import unmet_quantity, wanted_in_round
+from .year_arrays_costs import OfferCosts, refreshed
 from .year_ledger import YearLedger
 from .rates import own_rate
 from .setup import opening_price_today
@@ -45,11 +46,15 @@ def add_orders(book: OrderBook, orders: AgentOrders) -> None:
 
 
 def cohort_orders(setup, record, view, ledger: YearLedger, order_book: OrderBook, own_options=None) -> List:
-    """Households' bids for the year; returns their savings offers for the credit market."""
+    """Households' bids for the year; returns their savings offers for the credit market. Every cohort whose basket the kernel covers
+    is ordered in one call (`households_orders_pack`); the rest through `households.goods_orders`."""
     funds = []
     memory = BidMemory()     # the priced needs and store weights cohorts of one basket share
     money = setup.currency_id
-    for cohort in sorted(record.cohorts.values(), key=lambda each: each.agent_id):
+    cohorts = sorted(record.cohorts.values(), key=lambda each: each.agent_id)
+    smooth_rise = not record.settling
+    tool_bids_of, entries, plain = {}, [], {}
+    for cohort in cohorts:
         basket = memory.basket(setup, record, cohort)
         priced = memory.priced(setup, record, view, cohort, basket)
         income = ledger.wages_in.get(cohort.agent_id, 0.0) + record.capital_markets.property_income.get(cohort.agent_id, 0.0)
@@ -58,11 +63,24 @@ def cohort_orders(setup, record, view, ledger: YearLedger, order_book: OrderBook
             cohort.agent_id, cohort.tile, lambda good: view.area_of(good, cohort.tile), lambda good: view.offered_price(good, view.area_of(good, cohort.tile)),
             lambda good: view.stock(cohort.agent_id, good, cohort.tile), setup.recipes, ledger.own_plot_hours.get(cohort.agent_id, {}),
             setup.specs, cash)
+        tool_bids_of[cohort.agent_id] = tool_bids
+        spendable = cash - sum(bid.budget for bid in tool_bids)
+        grown_units = ledger.grown_units.get(cohort.agent_id)
+        if not priced or cohort.people <= 0.0:
+            plain[cohort.agent_id] = AgentOrders()
+        elif households_orders_pack.covered(priced):
+            entries.append((cohort, basket, priced, spendable, income, grown_units))
+        else:
+            plain[cohort.agent_id] = less_what_it_grew(households.goods_orders(
+                cohort, view, spendable, income, basket, setup.specs, priced, smooth_rise=smooth_rise, shared_store=memory.stores(record, cohort)),
+                cohort, basket, grown_units)
+    made = households_orders_pack.kernel_orders(
+        view, setup.specs, entries, smooth_rise, lambda cohort: basket_key(record, cohort), lambda cohort: memory.stores(record, cohort))
+    made.update(plain)
+    for cohort in cohorts:
+        orders = made[cohort.agent_id]
+        tool_bids = tool_bids_of[cohort.agent_id]
         add_orders(order_book, AgentOrders(bids=tuple(tool_bids)))
-        orders = households.goods_orders(cohort, view, cash - sum(bid.budget for bid in tool_bids), income,
-                                         basket, setup.specs, priced,
-                                         smooth_rise=not record.settling, shared_store=memory.stores(record, cohort))
-        orders = less_what_it_grew(orders, cohort, basket, ledger.grown_units.get(cohort.agent_id))
         households_cohort.change_cohort(
             record.cohorts, cohort.agent_id, planned_spending=sum(bid.budget for bid in tool_bids) + sum(bid.budget for bid in orders.bids))
         if own_options:
@@ -72,6 +90,13 @@ def cohort_orders(setup, record, view, ledger: YearLedger, order_book: OrderBook
         add_orders(order_book, orders)
         funds.extend(orders.funds_offers)
     return funds
+
+
+def with_floor_and_budget(bid: Bid, floor_quantity: float, budget: float) -> Bid:
+    """`bid` with a new floor and budget: the bid `dataclasses.replace` makes, built directly, since the opening's
+    income search makes millions of them."""
+    return Bid(bid.buyer, bid.good, bid.area, bid.tile, floor_quantity, bid.flexible_quantity, bid.reference_price,
+               bid.elasticity, budget, bid.priority, bid.maximum_price)
 
 
 def less_what_it_grew(orders: AgentOrders, cohort, basket, grown_units) -> AgentOrders:
@@ -93,8 +118,7 @@ def less_what_it_grew(orders: AgentOrders, cohort, basket, grown_units) -> Agent
         if met > 0.0 and bid.floor_quantity > 0.0:
             cut = bid.floor_quantity * met
             share_kept = 1.0 - cut / (bid.floor_quantity + bid.flexible_quantity)
-            bid = dataclasses.replace(bid, floor_quantity=bid.floor_quantity - cut,
-                                      budget=bid.budget * max(0.0, share_kept))
+            bid = with_floor_and_budget(bid, bid.floor_quantity - cut, bid.budget * max(0.0, share_kept))
         bids.append(bid)
     return dataclasses.replace(orders, bids=tuple(bids))
 
@@ -102,8 +126,9 @@ def less_what_it_grew(orders: AgentOrders, cohort, basket, grown_units) -> Agent
 def merchant_orders(setup, record, view, area_map, carriage, order_book: OrderBook) -> None:
     money = setup.currency_id
     rate = own_rate(view, money)
-    shares = merchants.RouteShares()
     ordered = sorted(record.merchants.values(), key=lambda each: each.agent_id)
+    route = merchants_book.route_pass(view, carriage, area_map, setup.specs) if ordered else None
+    shares = merchants_book.DenseShares(route.book) if ordered else None
     carrier_bids, carrier_budget = (carriage_fleet_book.bids(setup, record, view, area_map,
                                                        {each.agent_id: record.book.balance(each.agent_id, money) for each in ordered})
                                     if carriage_wear.wears(setup) else ([], {}))
@@ -112,7 +137,7 @@ def merchant_orders(setup, record, view, area_map, carriage, order_book: OrderBo
     for merchant in ordered[first:] + ordered[:first]:
         held = held_stock(record.book, merchant.agent_id)
         orders = merchants.orders(merchant, view, carriage, area_map, record.book.balance(merchant.agent_id, money) - carrier_budget.get(merchant.agent_id, 0.0),
-                                  held, setup.specs, rate, shares)
+                                  held, setup.specs, rate, shares, route)
         add_orders(order_book, orders)
 
 
@@ -140,9 +165,16 @@ def state_orders(setup, record, view, area_map, order_book: OrderBook, keep) -> 
 
 
 def clear_goods(setup, record, view, area_map, order_book: OrderBook, plans, ledger: YearLedger,
-                watched_tiles=()) -> None:
+                watched_tiles=(), arrays=None) -> None:
     """Produce and clear every good in input-depth order. The book of each market area that holds the port, the
-    capital or a watched tile is kept (market_curves.py)."""
+    capital or a watched tile is kept (market_curves.py). With the year's arrays, a good's markets that have bids and
+    offers are re-priced, searched and cleared together (goods_year_batch.py)."""
+    costs = offering = None
+    ledger.fill_watchers = frozenset(getattr(record, "merchants", ())) | {getattr(setup, "state_agent", None)}     # the readers of the buy fills
+    if arrays is not None:
+        arrays = refreshed(arrays, setup, record, view)
+        costs = OfferCosts.build(arrays, own_rate(view, setup.currency_id))
+        offering = (arrays, costs) if year_goods_offers.usable() else None
     by_output: Dict[str, List[str]] = {}
     for producer_id, producer in sorted(record.producers.items()):
         for good in setup.recipes[producer.recipe_id].outputs:
@@ -156,33 +188,43 @@ def clear_goods(setup, record, view, area_map, order_book: OrderBook, plans, led
     plant_goods = {producer_id: set(setup.recipes[producer.recipe_id].plant_goods)
                    for producer_id, producer in record.producers.items()}
     for good in order:
-        for producer_id in by_output.get(good, ()):
-            if producer_id not in done:
-                done.add(producer_id)
-                _produce_and_offer(setup, record, view, producer_id, plans.get(producer_id), in_kind,
-                                   order_book, ledger)
+        turn = [producer_id for producer_id in by_output.get(good, ()) if producer_id not in done]
+        done.update(turn)
+        _produce_and_offer(setup, record, view, turn, plans, in_kind, order_book, ledger, offering)
         areas = sorted(area for item, area in order_book if item == good)
         kept = market_curves.kept_areas(area_map, setup.port_tile, (setup.capital_tile, *watched_tiles), good)
-        for area in areas:
+        cleared, batch, batch_slots = [], [], []
+        for area in areas:       # the areas' clears do not read one another: settled together below
             bids, offers = order_book.pop((good, area))
             key = market_key(good, area)
-            unit_costs: Dict = {}
-            chosen = seller_offers.strategic_offers(setup, record, view, bids, offers, record.memory.prices.get(key),
-                                                    unit_costs)
+            last_price = record.memory.prices.get(key)
+            if arrays is not None and goods_year_batch.batchable(setup, bids, offers, good, arrays):
+                batch_slots.append(len(cleared))
+                batch.append((good, area, bids, offers, last_price))
+                cleared.append((area, key, bids, None, None))
+                continue
+            unit_costs = seller_offers.UnitCosts()
+            chosen = seller_offers.strategic_offers(setup, record, view, bids, offers, last_price, unit_costs)
             offers, result = unsold_search.clear_with_search(setup, record, view, bids, offers, chosen, good, area,
-                                                             setup.currency_id, record.memory.prices.get(key),
-                                                             unit_costs)
+                                                             setup.currency_id, last_price, unit_costs)
+            cleared.append((area, key, bids, offers, result))
+        if batch:
+            for slot, (offers, result) in zip(batch_slots, goods_year_batch.clear_markets(setup, record, view, arrays, costs, batch)):
+                area, key, bids, _none, _also = cleared[slot]
+                cleared[slot] = (area, key, bids, offers, result)
+        traded = [result for _area, _key, _bids, _offers, result in cleared if result.quantity > 0.0]
+        settled = iter(settlement.settle_goods_many(record.book, traded, ledger.import_accounts, ledger.export_accounts))
+        for area, key, bids, offers, result in cleared:
             delivered, bought = 0.0, {}
             if result.quantity > 0.0:
-                done_settlement = settlement.settle_goods(record.book, result)
+                done_settlement = next(settled)
                 bought = done_settlement.bought_by_buyer()
-                delivered = sum(move.quantity for move in done_settlement.postings if isinstance(move, GoodsMove))
-                ledger.note_postings(done_settlement.postings, "sales")
-                ledger.note_plant_purchases(done_settlement.postings, good, plant_goods)
+                delivered = done_settlement.delivered
+                ledger.note_settlement(done_settlement, "sales", plant_goods)
             ledger.note_clearing(result, delivered)
             idle_years = note_bids(record.memory, key, bids, offers) + note_offers(record.memory, key, bids, offers)
             left_markets[(good, area)] = goods_respend_year.LeftMarket(
-                bids, result, goods_respend.offers_left(offers, sold_by_seller_tile(result.fills)),
+                bids, result, _offers_left(offers, result),
                 record.memory.prices.get(key), delivered, wanted_in_round(bids, offers, result), idle_years, bought)
             if area in kept:
                 record.goods.curves[key] = market_curves.summarize(bids, offers)
@@ -192,6 +234,13 @@ def clear_goods(setup, record, view, area_map, order_book: OrderBook, plans, led
         ledger.bids_by_market[market_id] = market.all_bids     # demand over the same rounds as the traded quantity
     _remember_markets(setup, record, left_markets, ledger)
     _record_year_markets(record, ledger, left_markets)
+
+
+def _offers_left(offers, result) -> List[Offer]:
+    """The market's offers with what sold taken off (read from the arrays where the result holds them)."""
+    if isinstance(result, ArrayClearing):
+        return result.offers_left()
+    return goods_respend.offers_left(offers, sold_by_result(result))
 
 
 def _remember_markets(setup, record, left_markets, ledger: YearLedger) -> None:
@@ -304,33 +353,101 @@ def remembered_price(old, cleared, quantity, usual_volume):
     return old + min(1.0, quantity / usual_volume) * (cleared - old)
 
 
-def _produce_and_offer(setup, record, view, producer_id, plan, in_kind, order_book, ledger) -> None:
-    producer = record.producers[producer_id]
-    recipe = setup.recipes[producer.recipe_id]
+def _produce_and_offer(setup, record, view, producer_ids, plans, in_kind, order_book, ledger, offering=None) -> None:
+    """The producers whose turn it is make their output (their moves booked together), the state takes its tax in kind from
+    what they made, and each offers what it holds. The producers do not touch one another's holdings, so booking in a batch
+    is booking one at a time."""
     book = record.book
-    if plan is not None and plan.runs > 0.0:
-        held = {good: book.stock(producer_id, good, producer.tile) for good in recipe.inputs}
-        hours = ledger.hours_hired.get(producer_id, {})
-        _runs, moves = producers.produce(producer, recipe, held, hours, plan.runs)
-        book.move_many(moves)
-        ledger.note_output(producer_id, moves)
-        _tax_in_kind(setup, record, producer, recipe, in_kind, ledger)
-    stock = {good: book.stock(producer_id, good, producer.tile) for good in recipe.outputs}
+    made = []
+    moves_made = []
+    for producer_id in producer_ids:
+        plan = plans.get(producer_id)
+        if plan is not None and plan.runs > 0.0:
+            producer = record.producers[producer_id]
+            recipe = setup.recipes[producer.recipe_id]
+            held = {good: book.stock(producer_id, good, producer.tile) for good in recipe.inputs}
+            _runs, moves = producers.produce(producer, recipe, held, ledger.hours_hired.get(producer_id, {}), plan.runs)
+            moves_made.extend(moves)
+            ledger.note_output(producer_id, moves)
+            made.append(producer_id)
+    book.move_many(moves_made)
+    _tax_in_kind(setup, record, made, in_kind, ledger)
     money = setup.currency_id
-    cash = book.balance(producer_id, money)
-    shortfall = seller_cash.shortfall_to_raise(producer.cash_target, cash, ledger.running_costs(producer_id))
-    keep = {good: recipe.inputs.get(good, 0.0) * producer.capacity_runs for good in recipe.outputs}
-    offers = producers.offers(producer, recipe, view, stock, shortfall, own_rate(view, money), setup.specs, keep)
-    add_orders(order_book, AgentOrders(offers=tuple(offers)))
+    rate = own_rate(view, money) if producer_ids else None
+    pending = []           # (producer, its offers, or None for the quick ones below, those as (good, quantity, price, spoilage))
+    expected, spoilage, quantity, rows, shortfalls, pair_ptr = [], [], [], [], [], [0]
+    for producer_id in producer_ids:
+        producer = record.producers[producer_id]
+        recipe = setup.recipes[producer.recipe_id]
+        stock = {good: book.stock(producer_id, good, producer.tile) for good in recipe.outputs}
+        cash = book.balance(producer_id, money)
+        shortfall = seller_cash.shortfall_to_raise(producer.cash_target, cash, ledger.running_costs(producer_id))
+        keep = {good: recipe.inputs.get(good, 0.0) * producer.capacity_runs for good in recipe.outputs}
+        held = _quick_outputs(setup, offering, producer, recipe, stock, keep) if offering is not None else None
+        if held is None:
+            pending.append((producer, producers.offers(producer, recipe, view, stock, shortfall, rate, setup.specs, keep), None))
+            continue
+        for _good, units, price, loss in held:
+            expected.append(price)
+            spoilage.append(loss)
+            quantity.append(units)
+        pair_ptr.append(len(expected))
+        rows.append(offering[0].producers.row[producer.agent_id])
+        shortfalls.append(shortfall)
+        pending.append((producer, None, held))
+    reservations = (year_goods_offers.reservations_for(offering[0], offering[1], rows, pair_ptr, expected, spoilage, quantity,
+                                                       shortfalls, rate).tolist() if rows else [])
+    taken = 0
+    for producer, offers, held in pending:
+        if held is not None:
+            offers = []
+            for good, quantity, _price, _loss in held:
+                offers.append(Offer(producer.agent_id, good, view.area_of(good, producer.tile), producer.tile, quantity,
+                                    reservations[taken]))
+                taken += 1
+        add_orders(order_book, AgentOrders(offers=tuple(offers)))
 
 
-def _tax_in_kind(setup, record, producer, recipe, forms, ledger) -> None:
-    if not forms or not on_home_tile(setup, producer.tile):
+def _quick_outputs(setup, offering, producer, recipe, stock, keep):
+    """The (good, units to offer, price expected, spoilage) of a producer's outputs when `producers.offers` would offer
+    them at the reservation holding them gives (year_goods_offers.py); None when it would not: an output with no price
+    expected."""
+    arrays, costs = offering
+    row = arrays.producers.row.get(producer.agent_id)
+    if row is None:
+        return None
+    recipe_row = arrays.producers.recipe_row[row]
+    held = []
+    for good in sorted(recipe.outputs):
+        quantity = stock.get(good, 0.0) - keep.get(good, 0.0)
+        if quantity <= 0.0:
+            continue
+        price = costs.expected[row, costs.slot_of[recipe_row, arrays.matrices.goods.row[good]]]
+        if price != price:
+            return None
+        spec = setup.specs.get(good)
+        held.append((good, quantity, price, spec.spoilage_per_year if spec is not None else 0.0))
+    return held
+
+
+def _tax_in_kind(setup, record, producer_ids, forms, ledger) -> None:
+    """The state's share, in kind, of what the producers just made on the home tiles. A harvest form assesses only those
+    that made the good it is paid in, so the others are left out of its facts."""
+    if not forms:
         return
-    output = {(producer.agent_id, good): ledger.output.get((producer.agent_id, good), 0.0) for good in recipe.outputs}
-    held = {(producer.agent_id, good): record.book.stock(producer.agent_id, good, producer.tile)
-            for good in recipe.outputs}
-    facts = YearFacts(currency=setup.currency_id, output=output, producer_tile={producer.agent_id: producer.tile},
-                      held_goods=held)
+    taxed = {form.paid_in for form in forms} if all(form.basis == "harvest" for form in forms) else None
+    output, held, tiles = {}, {}, {}
+    for producer_id in producer_ids:
+        producer = record.producers[producer_id]
+        recipe = setup.recipes[producer.recipe_id]
+        if (taxed is not None and taxed.isdisjoint(recipe.outputs)) or not on_home_tile(setup, producer.tile):
+            continue
+        tiles[producer_id] = producer.tile
+        for good in recipe.outputs:
+            output[(producer_id, good)] = ledger.output.get((producer_id, good), 0.0)
+            held[(producer_id, good)] = record.book.stock(producer_id, good, producer.tile)
+    if not output:
+        return
+    facts = YearFacts(currency=setup.currency_id, output=output, producer_tile=tiles, held_goods=held)
     _transfers, moves, _assessments = taxes.assess(forms, facts, setup.state_agent, {}, ledger.state_capacity, setup.hiding)
     record.book.move_many(moves)

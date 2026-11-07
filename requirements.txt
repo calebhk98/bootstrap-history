@@ -1,2 +1,4 @@
-# The only third-party package the simulator imports (the goods market's clearing and the map build use it).
+# The third-party packages the simulator imports: numpy (arrays, the goods market's clearing, the map build) and numba
+# (compiles the economy's kernels, sim/jit.py; without it the same code runs as plain Python, much slower).
 numpy
+numba

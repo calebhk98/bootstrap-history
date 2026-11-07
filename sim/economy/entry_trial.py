@@ -71,33 +71,55 @@ def capacity_in_area(terms: Mapping[GoodId, Sequence[Tuple[str, float]]], good: 
     return total
 
 
+def reachable_capacity(record, setup, costs=None):
+    """`f(good, area)`: the output of `good` the makers on the market area's tiles could reach, plant to come counted
+    (`capacity_in_area` of `capacity_terms_by_good`); with `costs` (entry_tables.EntryTables) read from the year's arrays."""
+    if costs is not None:
+        in_area = costs.capacity_in()
+        return lambda good, area: in_area(good, area.area_id)
+    terms = capacity_terms_by_good(record.producers, setup.recipes, record.credit.expansion_runs)
+    return lambda good, area: capacity_in_area(terms, good, area.tiles)
+
+
 def trial_entry_plans(setup, record, view, area_map, bids_by_market: Mapping[Tuple[GoodId, AreaId], Sequence[Bid]],
-                      planned: Sequence[Tuple[GoodId, AreaId]] = (), siting=None) -> List[EntryPlan]:
+                      planned: Sequence[Tuple[GoodId, AreaId]] = (), siting=None, costs=None) -> List[EntryPlan]:
     """Trial newcomers for each market with bids and no maker in its area: every recipe whose entry price
-    the bids would still take output at, cheapest first, each for a share of what the cheaper ones leave."""
+    the bids would still take output at, cheapest first, each for a share of what the cheaper ones leave. With `costs`
+    (entry_tables.EntryTables) the recipes are costed for all the markets at once."""
     makers: Dict[GoodId, List[str]] = {}
     for recipe_id in sorted(setup.recipes):
         for good in setup.recipes[recipe_id].outputs:
             makers.setdefault(good, []).append(recipe_id)
     skip = set(planned)
-    capacity_terms = capacity_terms_by_good(record.producers, setup.recipes, record.credit.expansion_runs)
-    plans = []
+    capacity_in = reachable_capacity(record, setup, costs)
+    areas_of: Dict[GoodId, Dict[AreaId, object]] = {}
+    known_goods = set(area_map.goods())
+    markets = []
     for (good, area_id), bids in sorted(bids_by_market.items()):
-        if (good, area_id) in skip or good not in makers or good not in area_map.goods():
+        if (good, area_id) in skip or good not in makers or good not in known_goods:
             continue
-        area = next((each for each in area_map.areas(good) if each.area_id == area_id), None)
-        if area is None or capacity_in_area(capacity_terms, good, area.tiles) > 0.0:
+        if good not in areas_of:
+            areas_of[good] = {each.area_id: each for each in area_map.areas(good)}
+        area = areas_of[good].get(area_id)
+        if area is None or capacity_in(good, area) > 0.0:
             continue
-        price = view.price(good, area_id)
-        built = 0.0
-        booked = recipes_by_cost(setup, record, view, good, area.anchor_tile, makers[good])
+        markets.append((good, area_id, bids, area, view.price(good, area_id)))
+    booked_all = recipes_by_cost_many(setup, record, view, [(good, area.anchor_tile, makers[good], None)
+                                                           for good, _area_id, _bids, area, _price in markets], costs)
+    # the newcomers' learning is judged on the trial share of what the bids take at the price now, or at the
+    # cheapest booked cost's entry price where nothing has sold
+    trial_markets, trial_requests = [], []
+    for market, booked in zip(markets, booked_all):
         if not booked:
             continue
-        # the newcomers' learning is judged on the trial share of what the bids take at the price now, or at the
-        # cheapest booked cost's entry price where nothing has sold
+        good, _area_id, bids, area, price = market
         reference = price if price and price > 0.0 else booked[0][1] * (1.0 + ENTRY_PRICE_MARGIN_SHARE)
-        trial_output = ENTRY_SHARE_OF_UNTRADED_DEMAND * demand_at(bids, reference, reference)
-        for recipe_id, cost in recipes_by_cost(setup, record, view, good, area.anchor_tile, makers[good], trial_output):
+        trial_markets.append(market)
+        trial_requests.append((good, area.anchor_tile, makers[good], ENTRY_SHARE_OF_UNTRADED_DEMAND * demand_at(bids, reference, reference)))
+    plans = []
+    for (good, area_id, bids, area, price), ranked in zip(trial_markets, recipes_by_cost_many(setup, record, view, trial_requests, costs)):
+        built = 0.0
+        for recipe_id, cost in ranked:
             entry_price = cost * (1.0 + ENTRY_PRICE_MARGIN_SHARE)
             wanted = demand_at(bids, entry_price, price if price and price > 0.0 else entry_price) - built
             if wanted <= 0.0:
@@ -116,11 +138,23 @@ def trial_entry_plans(setup, record, view, area_map, bids_by_market: Mapping[Tup
     return plans
 
 
+def recipes_by_cost_many(setup, record, view, requests, costs=None, single=None) -> List[List[Tuple[str, float]]]:
+    """`recipes_by_cost` (or `single`) for each (good, tile, recipe ids, output a year or None); with `costs`
+    (entry_tables.EntryTables) in one pass over the year's arrays."""
+    if costs is not None:
+        return costs.recipes_by_cost_many(requests)
+    single = recipes_by_cost if single is None else single
+    return [single(setup, record, view, *request) for request in requests]
+
+
 def recipes_by_cost(setup, record, view, good, tile, recipe_ids,
-                    output_per_year: Optional[float] = None) -> List[Tuple[str, float]]:
+                    output_per_year: Optional[float] = None, costs=None) -> List[Tuple[str, float]]:
     """(recipe, full cost per unit of `good`) for each recipe that can be costed, cheapest first. With `output_per_year`
     (units of `good` a newcomer would make a year) a recipe is costed at the hours its newcomer needs over the years it
-    is judged on (entry_practice.py); without, at the booked hours."""
+    is judged on (entry_practice.py); without, at the booked hours. With `costs` (entry_tables.EntryTables) the
+    same rule is read from the year's arrays."""
+    if costs is not None:
+        return costs.recipes_by_cost(good, tile, recipe_ids, output_per_year)
     rate = own_rate(view, setup.currency_id)
     ranked = []
     for recipe_id in recipe_ids:

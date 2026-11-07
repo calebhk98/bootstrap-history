@@ -1,18 +1,19 @@
 """The year's second round of household buying: after every market has cleared, a cohort rationed in some market bids
 what it could not spend on the goods still offered (goods_respend.py), the markets clear again against the stock left,
 and a cohort still rationed goes on until nothing more is bought. Money no offered good takes stays with the cohort.
+All the rounds run in one kernel over every rationed cohort and market (goods_respend_kernel.py).
 """
-import math
-from typing import Dict, List, Tuple
+from typing import Dict, Tuple
+
+import numpy
 
 from sim.constants import declare
 
-from . import goods_market, market_quote, settlement
-from .entry import wanted_in_round
-from .goods_market import quantity_at
-from .goods_market_fills import sold_by_seller_tile
-from .goods_respend import bids_adding_demand, need_of_good, offers_left, rationed_money, respend_bids
-from .types import Bid, GoodsMove
+from . import goods_respend_pack, goods_respend_unpack
+from .goods_market import MINIMUM_PRICE_SHARE_OF_REFERENCE
+from .goods_respend import RESPEND_NEGLIGIBLE_ROUND_SHARE
+from .goods_respend_kernel import respend_rounds
+from sim.book import ROUNDING_SHARE
 
 Market = Tuple[str, str]
 
@@ -51,115 +52,29 @@ class LeftMarket:
         return max(0.0, self.last_offered - self.last_delivered)
 
 
-def rationed_in(bids, taken, households, fallback_price, need_by_buyer) -> Dict[str, Dict[str, float]]:
-    """buyer -> need id -> money left unspent by the households' bids in one cleared market, where `taken` is buyer ->
-    (units received, money paid) as its settlement moved them (`Settlement.bought_by_buyer`)."""
-    by_buyer: Dict[str, List[Bid]] = {}
-    for bid in bids:
-        if bid.buyer in households:
-            by_buyer.setdefault(bid.buyer, []).append(bid)
-    rationed: Dict[str, Dict[str, float]] = {}
-    for buyer, own in by_buyer.items():
-        need_id = need_by_buyer(buyer).get(own[0].good)
-        if need_id is None:
-            continue
-        units, money = taken.get(buyer, (0.0, 0.0))
-        price = money / units if units > 0.0 else fallback_price
-        if price is None or price <= 0.0:
-            continue
-        amount = rationed_money(own, units, money, price)
-        if amount > 0.0:
-            rationed.setdefault(buyer, {})[need_id] = rationed.get(buyer, {}).get(need_id, 0.0) + amount
-    return rationed
-
-
 def respend(setup, record, view, ledger, markets: Dict[Market, LeftMarket], basket_of) -> None:
     """Clear the households' leftover bids against the stock left in `markets`, in rounds, and settle them."""
-    households = record.cohorts
-    baskets: Dict[str, object] = {}
-
-    def need_by_buyer(buyer):
-        if buyer not in baskets:
-            baskets[buyer] = basket_of(households[buyer])
-        return need_of_good(baskets[buyer])
-
-    rationed: Dict[str, Dict[str, float]] = {}
-    for key, market in sorted(markets.items()):
-        if not market.bids:
-            continue
-        for buyer, by_need in rationed_in(market.bids, market.bought, households, market.result.price,
-                                          need_by_buyer).items():
-            for need_id, amount in by_need.items():
-                rationed.setdefault(buyer, {})[need_id] = rationed.get(buyer, {}).get(need_id, 0.0) + amount
-    for _round in range(len(markets) + 1):
-        new_bids: Dict[Market, List[Bid]] = {}
-        for buyer in sorted(rationed):
-            cohort = households[buyer]
-            need_by_buyer(buyer)
-            basket = baskets[buyer]
-            asks = {}
-            for good in need_by_buyer(buyer):
-                ask = markets.get((good, view.area_of(good, cohort.tile)))
-                if ask is not None and (price := market_quote.lowest_unfilled_ask(ask.offers)) is not None:
-                    asks[good] = price
-            by_need = rationed[buyer]
-            cash = record.book.balance(buyer, setup.currency_id)
-            total = sum(by_need.values())
-            if total > cash > 0.0:
-                by_need = {need_id: amount * cash / total for need_id, amount in by_need.items()}
-            elif cash <= 0.0:
-                continue
-            for bid in respend_bids(buyer, cohort.tile, basket, by_need, asks, lambda good: view.area_of(good, cohort.tile)):
-                new_bids.setdefault((bid.good, bid.area), []).append(bid)
-        rationed = {}
-        spent_any = False
-        for key in sorted(new_bids):
-            market = markets[key]
-            bids = new_bids[key]
-            result = goods_market.clear(bids, market.offers, key[0], key[1], setup.currency_id, market.last_price)
-            adding = bids_adding_demand(market.all_bids, bids)
-            market.wanted += _wanted_adding(adding, bids, market.offers, result)
-            market.results.append(result)
-            market.all_bids.extend(adding)
-            moved, bought = _settle(record, ledger, result)
-            market.delivered += moved
-            market.last_offered = result.offered_at_price
-            market.last_delivered = moved
-            market.offers = offers_left(market.offers, sold_by_seller_tile(result.fills))
-            spent_any = spent_any or result.quantity > 0.0
-            fallback = market_quote.lowest_unfilled_ask(market.offers)
-            for buyer, by_need in rationed_in(bids, bought, households, fallback, need_by_buyer).items():
-                for need_id, amount in by_need.items():
-                    rationed.setdefault(buyer, {})[need_id] = rationed.get(buyer, {}).get(need_id, 0.0) + amount
-        if not spent_any or not rationed:
-            break
+    packed = goods_respend_pack.pack(setup, record, view, ledger, markets, basket_of)
+    if packed is None:
+        return
+    out = run_rounds(packed)
+    goods_respend_unpack.write_markets(setup, ledger, markets, packed, out)
+    goods_respend_unpack.write_settlement(setup, record, ledger, packed, out)
 
 
-def _wanted_adding(adding, bids, offers, result) -> float:
-    """What a respend round's buyers asked for, less what buyers already counted in the market asked again: the round's
-    wanted quantity in the share the adding bids hold of the bids' demand at the price `wanted_in_round` reads demand at.
-    Temporary heuristic: pro rata at one price, not computed bid by bid at the asks each faced (retire: Complaint 964)."""
-    wanted = wanted_in_round(bids, offers, result)
-    if len(adding) == len(bids):
-        return wanted
-    price = market_quote.lowest_unfilled_ask(offers)
-    if price is None:
-        price = market_quote.best_unfilled_bid(bids)
-    if price is None:
-        return 0.0
-    total = math.fsum(quantity_at(bid, price) for bid in bids)
-    if total <= 0.0:
-        return 0.0
-    return RESPEND_APPORTIONED_WANTED_SHARE * wanted * math.fsum(quantity_at(bid, price) for bid in adding) / total
+CHANGED_BY_KERNEL = ("has_bid", "offer_quantity", "key_stock", "agent_cash")
 
 
-def _settle(record, ledger, result) -> Tuple[float, Dict[str, Tuple[float, float]]]:
-    """Settle a round's result and return the goods it delivered and what each buyer received and paid."""
-    delivered, bought = 0.0, {}
-    if result.quantity > 0.0:
-        done = settlement.settle_goods(record.book, result)
-        bought = done.bought_by_buyer()
-        delivered = sum(move.quantity for move in done.postings if isinstance(move, GoodsMove))
-        ledger.note_postings(done.postings, "sales")
-    ledger.note_clearing(result, delivered)
-    return delivered, bought
+def run_rounds(packed):
+    """The kernel's answer for `packed`, run again with room for more rows while its logs are full. The arrays the kernel
+    changes are copied for each run; those of the last run replace them in `packed.arguments`."""
+    capacity = max(4096, 8 * len(packed.arguments["first_market"]))
+    while True:
+        arguments = {name: array.copy() if name in CHANGED_BY_KERNEL else array
+                     for name, array in packed.arguments.items()}
+        out = respend_rounds(*arguments.values(), RESPEND_APPORTIONED_WANTED_SHARE, RESPEND_NEGLIGIBLE_ROUND_SHARE,
+                             MINIMUM_PRICE_SHARE_OF_REFERENCE, ROUNDING_SHARE, capacity)
+        if not out[0]:
+            packed.arguments = arguments
+            return out
+        capacity *= 4

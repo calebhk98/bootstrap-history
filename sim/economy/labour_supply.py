@@ -10,6 +10,9 @@ for each use are read at the wage the market cleared at. Plain functions of buil
 import dataclasses
 from typing import Callable, Dict, List, Mapping, Sequence, Tuple
 
+from sim.world.shared_constants import LABOUR_OUTPUT_ELASTICITY
+
+from . import labour_supply_kernel
 from .types import AgentId, LabourOffer
 
 
@@ -67,11 +70,31 @@ class HourSupply:
         return self._hours_over([offer for offer in self.offers if offer.trade == trade and offer.area == area])
 
     def _hours_over(self, in_market: Sequence[LabourOffer]) -> Callable[[float], float]:
-        schedules = [self.sold_hours_schedule(offer) for offer in in_market if offer.hours > 0.0]
+        live = [offer for offer in in_market if offer.hours > 0.0]
+        packed = self._packed(live) if live else labour_supply_kernel.pack_offers([])
+        exponent = 1.0 / (1.0 - LABOUR_OUTPUT_ELASTICITY)
+        if packed is not None:
+            def packed_hours(wage: float) -> float:
+                return labour_supply_kernel.sold_hours(wage, packed, exponent)
+            packed_hours.packed = (packed, exponent)      # the labour core reads every market's offers from here into one kernel
+            return packed_hours
+        schedules = [self.sold_hours_schedule(offer) for offer in live]
 
         def hours(wage: float) -> float:
             return sum([schedule(wage) for schedule in schedules])
         return hours
+
+    def _packed(self, live: Sequence[LabourOffer]):
+        """The market's offers as arrays for the kernel, or None where a plot schedule is not the parametric one."""
+        rows = []
+        for offer in live:
+            whole = self._hours.get(offer.worker, 0.0)
+            plot = self.plot_hours_at.get(offer.worker)
+            parameters = getattr(plot, "parameters", None) if plot else None
+            if whole <= 0.0 or (plot and parameters is None):
+                return None
+            rows.append((offer.hours, whole, self.plan_hours.get(offer.worker, 0.0), self.work_hours.get(offer.worker, 0.0), parameters))
+        return labour_supply_kernel.pack_offers(rows)
 
     def schedules(self) -> Dict[Tuple[str, str], Callable[[float], float]]:
         """`hours_at` for every market that has an offer; a market without one sells nothing."""
@@ -88,6 +111,6 @@ class HourSupply:
             market = (offer.trade, offer.area)
             wage = wage_by_market.get(market, self.faced_wage.get(market, offer.reservation_wage))
             sold, _at_home = self.split(offer, wage)
-            self.sold.append(dataclasses.replace(offer, hours=sold))
+            self.sold.append(LabourOffer(offer.worker, offer.trade, offer.area, sold, offer.reservation_wage))
             self.kept[offer.worker] = self.kept.get(offer.worker, 0.0) + (offer.hours - sold)
         return self.sold

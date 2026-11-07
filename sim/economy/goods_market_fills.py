@@ -52,6 +52,8 @@ def sold_by_seller_tile(fills: Iterable[Fill]) -> dict:
 def without_washed(fills: List[Fill], washed: Dict[str, float]) -> List[Fill]:
     """The fills less each edge's washed quantity on both its buy and its sell side, so they agree with the pairing; a
     residue of float dust is no fill."""
+    if not washed:
+        return fills
     left = {(agent, side): quantity for agent, quantity in washed.items() for side in ("buy", "sell")}
     result = []
     for fill in fills:

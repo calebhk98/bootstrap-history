@@ -8,6 +8,8 @@ field list.
 import dataclasses
 from typing import Callable, Dict, List, Optional, Sequence, Tuple
 
+from .carriage import carriage_from, carriage_table
+
 AreaId = str
 TradeId = str
 BandCounts = List[float]   # people per ability band, aligned with aptitude.band_abilities()
@@ -82,6 +84,18 @@ class YearInputs:
     taxed_share: Dict[AreaId, float] = dataclasses.field(default_factory=dict)   # share of a worker's income the state takes from those who stay in the area, liability included
     fetch_wage: Optional[Callable] = None   # the kernel that prices fetched hands (fetch_wage.py); None: the reference, for a caller outside a game's assembly
     hours_sold_at: Optional[Dict[Tuple[TradeId, AreaId], Callable[[float], float]]] = None   # (trade, area) -> hours the households there sell at a wage an hour (rising): the hours their offers hold. None: every worker sells a whole year at any wage; a market missing from a given schedule sells nothing
+
+    _carriage: Dict[AreaId, Dict[AreaId, float]] = dataclasses.field(default_factory=dict, init=False, repr=False, compare=False)
+
+    def carriage_from(self, origin: AreaId) -> Dict[AreaId, float]:
+        """The cheapest moving cost from `origin` to every area the routes lead to (`carriage.carriage_from`), searched once
+        per origin for the year's routes; the answer is shared, read and never changed."""
+        if not self._carriage and self.routes:
+            self._carriage.update(carriage_table(self.routes))      # every origin in one search
+        found = self._carriage.get(origin)
+        if found is None:
+            found = self._carriage[origin] = carriage_from(self.routes, origin)      # an area no way starts from
+        return found
 
     def sold_schedule(self, trade: TradeId, area: AreaId) -> Optional[Callable[[float], float]]:
         """The hours sold at a wage in one market; None where no schedule is given (the workers' whole year is sold)."""

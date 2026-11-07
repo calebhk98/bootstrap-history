@@ -2,13 +2,13 @@
 basket that follows. Its own hours are kept back from the labour it offers (`labour_supply.HourSupply`); the hours
 it hires become its floor of the `household_work` need, bought from domestic servants like any floor."""
 import dataclasses
-from typing import Dict, Mapping, Sequence, Tuple
+from typing import Dict, Mapping, Optional, Sequence, Tuple
 
 from . import household_grinding, households_work, labour_state, titles_worked, trade_wages
-from .households_basket import need_prices
 from . import households_cohort
 from .households_cohort import Cohort
 from .market_memory import market_key
+from .priced_reads import kept_need_prices, kept_reads
 from .setup import labour_area
 from .types import AgentId, LabourOffer
 
@@ -35,7 +35,8 @@ def grinding_plan(setup, record, view, cohort: Cohort, hour_value: float) -> Tup
     marked as milled, or no priced food, the whole sourced load is its own."""
     if not setup.milled_as:
         return (), 1.0
-    food = next((need for need in need_prices(food_basket(setup, record, cohort), view, cohort.tile)
+    hearth = has_hearth(record, cohort)
+    food = next((need for need in kept_need_prices(view, lambda: food_basket(setup, record, cohort), cohort.tile, ("food", hearth))
                  if need.spec.need_id == setup.hunger_need), None)
     if food is None:
         return (), 1.0
@@ -65,14 +66,21 @@ def cohort_basket(setup, record, cohort: Cohort, buying: bool = True):
 
 def priced_basket(setup, record, view, cohort: Cohort):
     """The cohort's basket at its tile's prices: what the cohort counts as eaten (`cohort_basket` with `buying` False), the
-    one basket the wage floor and the outside option are worked from."""
-    return need_prices(cohort_basket(setup, record, cohort, buying=False), view, cohort.tile)
+    one basket the wage floor and the outside option are worked from. Cohorts with the same tile, hearth, hired work and
+    milled grains share one priced basket until the memory is next written to (the list is shared, never changed)."""
+    return kept_need_prices(view, lambda: cohort_basket(setup, record, cohort, buying=False), cohort.tile, ("priced_basket", basket_key(record, cohort)))
 
 
 def service_price_per_hour(setup, view, tile, wage_price: float) -> float:
     """What an hour of household work costs a household that hires it: the market price of the goods that serve the
     household-work need per need unit (the cheapest posted), else the servant's wage. The wage is only what the
     servant is paid; the household pays the service's price, which departs from it where servants are scarce."""
+    posted = kept_reads(view, ("service_price", tile), lambda: _posted_service_price(setup, view, tile))
+    return posted if posted is not None else wage_price
+
+
+def _posted_service_price(setup, view, tile) -> Optional[float]:
+    """The cheapest posted price per need unit of the goods serving the household-work need on a tile, None where none is posted."""
     area = view.area_of
     prices = []
     for need in setup.basket_for(tile).needs:
@@ -82,7 +90,7 @@ def service_price_per_hour(setup, view, tile, wage_price: float) -> float:
             posted = view.offered_price(good, area(good, tile))
             if posted is not None and posted > 0.0 and effect > 0.0:
                 prices.append(posted / effect)
-    return min(prices) if prices else wage_price
+    return min(prices) if prices else None
 
 
 def expected_shares(setup, record, offers: Sequence[LabourOffer]) -> Dict[Tuple[str, str], float]:
@@ -109,7 +117,7 @@ def sold_share_at(record, trade, area, expected: float = 1.0) -> float:
 
 
 def work_terms(setup, record, view, cohort: Cohort, offers: Sequence[LabourOffer],
-               expected: Mapping[Tuple[str, str], float] = None
+               expected: Mapping[Tuple[str, str], float] = None, mine: Sequence[LabourOffer] = None
                ) -> Tuple[float, float, float, Tuple[str, ...]]:
     """(worth to the cohort of an hour hired, hours of household work it needs, price of an hour hired, grains bought
     milled): what its choice between hiring and doing the work is read from. The worth of an hour is the wage its
@@ -117,7 +125,8 @@ def work_terms(setup, record, view, cohort: Cohort, offers: Sequence[LabourOffer
     share its producers' planned runs hire, `expected`, read from the record when not given), less the hours spent directing the servant. Grinding
     falls only on the food it grinds by hand, decided at the worth of its own hour (the water and fuel are a fixed
     load either way)."""
-    mine = [offer for offer in offers if offer.worker == cohort.agent_id]
+    if mine is None:
+        mine = [offer for offer in offers if offer.worker == cohort.agent_id]
     if expected is None:
         expected = expected_shares(setup, record, offers) if lacks_history(record, mine) else {}
     value = households_work.hour_value(
@@ -132,24 +141,32 @@ def work_terms(setup, record, view, cohort: Cohort, offers: Sequence[LabourOffer
 
 
 def cohort_plan(setup, record, view, cohort: Cohort, offers: Sequence[LabourOffer], service_price_floor: float = 0.0,
-                expected: Mapping[Tuple[str, str], float] = None) -> Tuple[float, float, Tuple[str, ...]]:
+                expected: Mapping[Tuple[str, str], float] = None, mine: Sequence[LabourOffer] = None
+                ) -> Tuple[float, float, Tuple[str, ...]]:
     """(hours hired, hours done itself, grains bought milled) for one cohort. `service_price_floor` is a price an hour
     hired is not below (the opening's, where servants are scarce)."""
     if not setup.household_work:
         return 0.0, 0.0, ()
-    value, needed, price, milled = work_terms(setup, record, view, cohort, offers, expected)
+    value, needed, price, milled = work_terms(setup, record, view, cohort, offers, expected, mine)
     hired = households_work.hired_hours(needed, value, max(price, service_price_floor))
     return hired, households_work.own_hours(needed, hired), milled
 
 
 def plans(setup, record, view, offers: Sequence[LabourOffer],
-          service_price_floor_by_tile: Mapping[str, float] = None) -> Dict[AgentId, Tuple[float, float, Tuple[str, ...]]]:
-    """Each cohort's (hours hired a person, hours done itself, grains bought milled) for the year; changes nothing."""
+          service_price_floor_by_tile: Mapping[str, float] = None,
+          expected: Mapping[Tuple[str, str], float] = None) -> Dict[AgentId, Tuple[float, float, Tuple[str, ...]]]:
+    """Each cohort's (hours hired a person, hours done itself, grains bought milled) for the year; changes nothing.
+    `expected` is the share of hours its producers hire by market when the caller has worked it out already."""
     floors = service_price_floor_by_tile or {}
-    expected = expected_shares(setup, record, offers) if setup.household_work and lacks_history(record, offers) else {}
+    if expected is None:
+        expected = expected_shares(setup, record, offers) if setup.household_work and lacks_history(record, offers) else {}
     result: Dict[AgentId, Tuple[float, float, Tuple[str, ...]]] = {}
+    by_worker: Dict[AgentId, list] = {}
+    for offer in offers:
+        by_worker.setdefault(offer.worker, []).append(offer)
     for cohort_id, cohort in sorted(record.cohorts.items()):
-        hired, own, milled = cohort_plan(setup, record, view, cohort, offers, floors.get(cohort.tile, 0.0), expected)
+        hired, own, milled = cohort_plan(setup, record, view, cohort, offers, floors.get(cohort.tile, 0.0), expected,
+                                         by_worker.get(cohort.agent_id, []))
         result[cohort_id] = (hired / cohort.people if cohort.people > 0.0 else 0.0, own, milled)
     return result
 

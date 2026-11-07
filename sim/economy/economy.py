@@ -10,7 +10,7 @@ from typing import Any, Dict, Mapping, Optional, Tuple
 from sim.world import capital_market
 
 from .rates import own_rate
-from . import producer_table
+from . import plan_year, producer_table
 from . import outlay_room, taxes, bondage, bondage_hours, bonded_purchase, banks, carriage_hours, credit, credit_idle_rate, credit_lines, debt_relief, credit_claims, currency, equity, land_market, lending, merchants_credit, producers, shares, sites, state_budget, tax_farming, titles_inheritance, titles_moves, titles_plots, unit_cost
 from .credit_view import CreditView
 from .market_areas_follow import follow
@@ -33,6 +33,7 @@ from .setup import EconomySetup, area_tile, labour_area
 from .types import Bid, EDGE_CONSUMPTION, GoodsMove, Transfer
 from .national_prices import national_prices, national_wages
 from .merchants_dispatch import dispatch_merchants
+from .year_arrays import YearArrays, same_source, source_of
 from .year_close import close_agents, money_taxes, remember_basket_price_level, wear_and_spoilage
 from .year_goods import add_orders, clear_goods, cohort_orders, merchant_orders, state_orders
 from .labour_supply import HourSupply
@@ -90,7 +91,9 @@ class Economy:
         self.watched_tiles: Tuple[str, ...] = ()   # tiles whose market books are kept beside the port's and the capital's; not saved
         self._own_hectares: Dict[str, float] = {}   # land households' own plots took this year, by tile
         self._year_plot_options: Optional[Dict[str, list]] = None   # own_plot_options, built once for the year being run
+        self.years_stepped = 0   # years `step` has begun in this process; a reader that keeps a figure of the record until the next year compares it. Never saved
         self._work_hours: Dict[str, float] = {}     # household work each cohort keeps back this year; set when the year plans it
+        self._year_arrays: Optional[YearArrays] = None   # the year arrays as the last phase left them: the next year starts from them (`YearArrays.carried`), the equity is built over them. Never saved
 
     def change_setup(self, **changes: Any) -> None:
         """The one place the setup changes: a new setup with these fields replaced (the old one is never edited in place)."""
@@ -133,7 +136,10 @@ class Economy:
                           pooled=self.record.credit.contracts.deposit_value)
 
     def _equity_read(self, view) -> Dict[str, float]:
-        return equity.holdings(self.setup, self.record, view)
+        arrays = self._year_arrays
+        if arrays is not None and not (arrays.area_map is self.area_map and same_source(arrays.source, source_of(self.setup))):
+            arrays = None      # built for another setup or area map: read the producers one by one
+        return equity.holdings(self.setup, self.record, view, arrays)
 
     def strike_lighter_coin(self, cut_share: float, restrike_share: float) -> None:
         """The issuer recoins the part of the stock that comes to the mint at `cut_share` less metal (a struck
@@ -147,6 +153,7 @@ class Economy:
         record.currency = currency.debase_by_cut(record.currency, supply, cut_share, restrike_share)
 
     def step(self, inputs: EconomyYearInputs) -> YearOutcome:
+        self.years_stepped += 1
         with collection_paused():
             try:
                 return self._run_year(inputs)
@@ -174,14 +181,13 @@ class Economy:
         self._follow_yields(inputs)
         sites.apply_site_limits(record, setup)
         view = self.view()
+        arrays = self._year_arrays = YearArrays.carried(self._year_arrays, setup, record, self.area_map, view)
         money = setup.currency_id
         debt_relief.forgive(record, inputs.debt_relief_tiles)
         titles_moves.apply(record, inputs.title_moves)
         tax_farming.run_auctions(setup, record, inputs.farmed_forms, record.memory.rates[setup.currency_id])
         lending.lend_working_capital(setup, record, view)
-        plans = {producer_id: producers.plan(producer, setup.recipes[producer.recipe_id], view,
-                                             record.book.balance(producer_id, money))
-                 for producer_id, producer in sorted(record.producers.items())}
+        plans = plan_year.plans_of(setup, record, view, arrays, money)
         labour_bids = [bid for plan in plans.values() for bid in plan.labour_bids]
         for orders in inputs.engine_orders.values():
             labour_bids.extend(orders.labour_bids)
@@ -245,7 +251,7 @@ class Economy:
         merchant_orders(setup, record, view, self.area_map, self.carriage, order_book)
         for producer_id, runs in self._rebuild_worn_plant(view, order_book).items():
             plant_runs[producer_id] = plant_runs.get(producer_id, 0.0) + runs
-        clear_goods(setup, record, view, self.area_map, order_book, plans, ledger, self.watched_tiles)
+        clear_goods(setup, record, view, self.area_map, order_book, plans, ledger, self.watched_tiles, arrays)
         land_bid_year.take_up_bought(setup, record)
         settle_mint(record, mint_held, ledger)
         close_mint_year(setup, record)
@@ -268,10 +274,11 @@ class Economy:
         received = dict(interest)
         for payment in rent:
             received[payment.payee] = received.get(payment.payee, 0.0) + payment.amount
-        close_agents(setup, record, close_view, ledger, self.area_map, self.carriage, received)
+        arrays = self._year_arrays = close_agents(setup, record, close_view, ledger, self.area_map, self.carriage, arrays, received)
+        arrays = self._year_arrays = arrays.sync(setup, record, close_view)      # the memory is read once for entry and the restake
         open_entrants(setup, record, close_view, self.area_map, ledger.unmet_demand, self.carriage,
-                      with_standing_bids(ledger.bids_by_market, inputs.standing_bids))
-        restake_owners(setup, record, close_view)
+                      with_standing_bids(ledger.bids_by_market, inputs.standing_bids), arrays)
+        restake_owners(setup, record, close_view, arrays)
         extraction = sites.extraction_by_tile(record, setup)
         close_idle_producers(setup, record)
         wear_and_spoilage(setup, record, inputs.durable_users)

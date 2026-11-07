@@ -6,7 +6,7 @@ bankruptcy routes. The numbers are firm_finance.py's; this module reads the reco
 dividend it pays, and the state it is in. `settle_year` reads the record for it, and `write_off` applies a
 bankruptcy to the producer's loans. A producer that closed to exit is left to producer_exit.py.
 """
-from typing import List, NamedTuple, Optional, Tuple
+from typing import Dict, List, Mapping, NamedTuple, Optional, Tuple
 
 from . import credit_claims, equity, firm_finance as finance, unit_cost
 from .credit import Default
@@ -56,9 +56,10 @@ def settled(producer, survivor, revenue: float, running_costs: float, interest: 
 
 
 def settle_year(setup, record, view, producer, closed, recipe, revenue: float, running_costs: float,
-                loans: List) -> Tuple[object, Tuple[Transfer, ...], FirmYear]:
+                loans: List, inputs=None, wages=None) -> Tuple[object, Tuple[Transfer, ...], FirmYear]:
     """The producer's close with its finances settled: (the `YearClose` to keep, the dividend as transfers, the
-    outcome). `loans` are the producer's own. The caller applies a write-off with `write_off`."""
+    outcome). `loans` are the producer's own. The caller applies a write-off with `write_off`. `inputs` and `wages` are
+    `live_input_prices` and `live_wages` when the caller has them already."""
     money = setup.currency_id
     survivor = closed.producer
     cash = max(0.0, record.book.balance(producer.agent_id, money))
@@ -66,12 +67,13 @@ def settle_year(setup, record, view, producer, closed, recipe, revenue: float, r
     stock = equity.inventory_value(record, producer, view)
     assets = equity.firm_assets(survivor, recipe, cash, stock, view)
     capital_and_cash = equity.firm_assets(survivor, recipe, cash, 0.0, view)
+    inputs = live_input_prices(producer, recipe, view) if inputs is None else inputs
+    wages = live_wages(producer, recipe, view) if wages is None else wages
     wear = 0.0
     if recipe.plant_life_years > 0.0 and producer.capacity_runs > 0.0:
-        per_run = unit_cost.plant_value_per_run(recipe, live_input_prices(producer, recipe, view), live_wages(producer, recipe, view))
+        per_run = unit_cost.plant_value_per_run(recipe, inputs, wages)
         wear = producer.capacity_runs / recipe.plant_life_years * per_run
-    replacement = closed.replacement_runs * unit_cost.plant_value_per_run(
-        recipe, live_input_prices(producer, recipe, view), live_wages(producer, recipe, view))
+    replacement = closed.replacement_runs * unit_cost.plant_value_per_run(recipe, inputs, wages)
     kept = finance.cash_to_keep(survivor.cash_target, finance.financial_commitments(loans, producer.agent_id), replacement, running_costs)
     year = settled(producer, survivor, revenue, running_costs, finance.interest_due(loans, producer.agent_id),
                    wear, finance.financial_commitments(loans, producer.agent_id), sum(loan.arrears for loan in loans),
@@ -86,20 +88,29 @@ def write_off(record, borrower: str, ratio: float) -> float:
     """Eurace@Unibi, Firm_bankruptcy_rescale_loans: every loan of the borrower loses `ratio` of principal and arrears;
     each lender's loss is booked and the borrower's default remembered, as for any default (credit_claims).
     Returns the total lost."""
-    if ratio <= 0.0:
-        return 0.0
+    return write_off_many(record, {borrower: ratio}).get(borrower, 0.0)
+
+
+def write_off_many(record, ratios: Mapping[str, float]) -> Dict[str, float]:
+    """`write_off` for every borrower in `ratios` (borrower to ratio) in one pass over the loans; the losses are booked and
+    the defaults remembered borrower by borrower, in the mapping's order. Returns the total lost by borrower."""
+    ratios = {borrower: ratio for borrower, ratio in ratios.items() if ratio > 0.0}
+    if not ratios:
+        return {}
     kept: List = []
-    defaults: List[Default] = []
+    defaults: Dict[str, List[Default]] = {borrower: [] for borrower in ratios}
     for loan in record.credit.loans:
-        if loan.borrower != borrower:
+        ratio = ratios.get(loan.borrower)
+        if ratio is None:
             kept.append(loan)       # the list keeps its order
             continue
         written, lost = finance.written_down(loan, ratio)
-        defaults.append(Default(loan.loan_id, loan.lender, loan.borrower, loan.currency, lost))
+        defaults[loan.borrower].append(Default(loan.loan_id, loan.lender, loan.borrower, loan.currency, lost))
         if written.principal > finance.ARREARS_EPSILON or written.arrears > finance.ARREARS_EPSILON:
             kept.append(written)
     record.credit.replace_loans(kept)
-    for lender, lost in credit_claims.losses_by_lender(defaults).items():
-        record.credit.add_loss(lender, lost)
-    record.credit.remember(defaults)
-    return sum(default.loss for default in defaults)
+    for group in defaults.values():
+        for lender, lost in credit_claims.losses_by_lender(group).items():
+            record.credit.add_loss(lender, lost)
+        record.credit.remember(group)
+    return {borrower: sum(default.loss for default in group) for borrower, group in defaults.items()}

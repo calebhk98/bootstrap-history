@@ -19,10 +19,14 @@ AVERAGE_S_SKILL_FROM_EUROSTAT): `entrant_units` takes the mean of the recipe's o
 Plain functions of numbers, plus `recipe_for`, which a producer's plan and run use in place of the booked recipe.
 """
 import dataclasses
+import functools
 import math
 from typing import Dict, Mapping, Sequence, Tuple
 
+import numpy as np
+
 from sim.constants import declare
+from sim.jit import njit
 from sim.labour.api import SOURCE_TASK_FLOOR_FRACTION, learning_curve
 
 SKILL_GAP_CLOSED_PER_YEAR = declare(
@@ -40,6 +44,7 @@ _MULTIPLIER_STEP = 100.0        # multipliers are kept to a hundredth so a recip
 _practised: Dict[Tuple[int, Tuple[Tuple[str, float], ...]], tuple] = {}
 
 
+@functools.lru_cache(maxsize=None)
 def established_units() -> float:
     """Runs at which a crew is at the floor: the units of a trade with no entry in `Producer.crew_runs`."""
     return learning_curve.cumulative_for_proficiency(1.0, SOURCE_TASK_FLOOR_FRACTION)
@@ -99,15 +104,49 @@ def units_of(crew_runs: Mapping[str, float], trade: str) -> float:
     return crew_runs.get(trade, established_units())
 
 
+@njit
+def _mean_units_by_row(units):
+    """Mean of each row of a (trades, peers) table, summed left to right; one for a table with no peers."""
+    means = np.ones(units.shape[0])
+    if units.shape[1] == 0:
+        return means
+    for row in range(units.shape[0]):
+        total = 0.0
+        for peer in range(units.shape[1]):
+            total += units[row, peer]
+        means[row] = total / units.shape[1]
+    return means
+
+
+@njit
+def _still_learning(units, exponent, floor):
+    """Whether each trade's hours exceed the booked ones (`hours_multiplier` above one) at those units."""
+    learning = np.zeros(units.shape[0], dtype=np.bool_)
+    for row in range(units.shape[0]):
+        learning[row] = max(floor, max(1.0, units[row]) ** exponent) / floor > 1.0
+    return learning
+
+
+def pool_units_by_trade(producers_of_recipe: Sequence[Mapping[str, float]], trades: Sequence[str]) -> np.ndarray:
+    """`pool_units` for each of `trades` at once (an array in that order)."""
+    established = established_units()
+    table = np.array([[crew_runs.get(trade, established) for crew_runs in producers_of_recipe] for trade in trades],
+                     dtype=np.float64).reshape(len(trades), len(producers_of_recipe))
+    return _mean_units_by_row(table)
+
+
 def pool_units(producers_of_recipe: Sequence[Mapping[str, float]], trade: str) -> float:
     """Mean practice at `trade` over the recipe's producers (an established crew counts at the floor)."""
-    return entrant_units([units_of(crew_runs, trade) for crew_runs in producers_of_recipe]) if producers_of_recipe else 1.0
+    return float(pool_units_by_trade(producers_of_recipe, (trade,))[0])
 
 
 def entrant_crew_runs(recipe, peers: Sequence[Mapping[str, float]]) -> Dict[str, float]:
     """A new producer's crew_runs: the peers' mean per trade, left out where it is already at the floor."""
-    start = {trade: pool_units(peers, trade) for trade in sorted(recipe.labour_hours)}
-    return {trade: units for trade, units in start.items() if hours_multiplier(units) > 1.0}
+    trades = sorted(recipe.labour_hours)
+    start = pool_units_by_trade(peers, trades)
+    learning = _still_learning(start, learning_curve.learning_exponent(learning_curve.LEARNING_RATE),
+                               SOURCE_TASK_FLOOR_FRACTION)
+    return {trade: float(units) for trade, units, still in zip(trades, start, learning) if still}
 
 
 def crew_runs_after_year(crew_runs: Mapping[str, float], runs_per_workshop: float, hired: float,

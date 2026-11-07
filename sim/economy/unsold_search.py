@@ -14,12 +14,14 @@ the whole stock (demand_search.py).
 import math
 from typing import List, Optional, Sequence, Tuple
 
+import numpy
+
 from sim.book import ROUNDING_SHARE
 
-from . import demand_search, goods_market, inventory, seller_offers, titles_value
+from . import demand_search, goods_market, goods_market_kernels, inventory, seller_offers, titles_value
 from .ask_adjust import band_edge
 from .demand_search import SEARCH_PRECISION
-from .goods_market_fills import sold_by_seller_tile
+from .goods_year_results import sold_by_result
 from .types import Offer
 
 UNSOLD_BOUND_MARGIN = 1e-12    # float noise of two sums of the same demand, not a model number
@@ -127,7 +129,7 @@ def clear_with_search(setup, record, view, bids, original: Sequence[Offer], offe
     buyers = goods_market.Buyers(bids, last_price)       # the same bids meet every trial book
     result = goods_market.clear(bids, offers, good, area, currency, last_price, buyers)
     floors = _floors(setup, record, view, offers, original, costs if costs is not None else {})
-    if floors and _unsold(sold_by_seller_tile(result.fills), offers, list(floors)):
+    if floors and _unsold(sold_by_result(result), offers, list(floors)):
         floors = _salvage_floors(floors, offers, buyers)
         if floors:
             offers, result = search_asks(bids, offers, floors, buyers, good, area, currency, last_price)
@@ -144,8 +146,9 @@ def ask_limits(setup, record, view, offers: Sequence[Offer], indices: Sequence[i
         key = (offer.seller, offer.tile)
         cost = costs[key] if key in costs else seller_offers.unit_cost(setup, record, view, offer)
         if cost is not None and math.isfinite(cost):
-            limits[index] = band_edge(cost, seller_offers.input_share_of_cost(setup, record, view, offer),
-                                      seller_offers.ask_band_multiple(setup, offer))
+            shares = getattr(costs, "shares", {})
+            share = shares[key] if key in shares else seller_offers.input_share_of_cost(setup, record, view, offer)
+            limits[index] = band_edge(cost, share, seller_offers.ask_band_multiple(setup, offer))
     return limits
 
 
@@ -169,28 +172,28 @@ def search_asks(bids, offers: Sequence[Offer], floors: dict, buyers: goods_marke
     """(the offers with the searched asks (index -> floor) brought down to the highest common level at which
     they sell out or sit at their floors, the market's clearing with them); some searched offer is unsold."""
     searched = list(floors)       # a seller undercut by a lower ask becomes unsold in turn: all are searched together
-
-    def trial(level: float):
-        candidate = _with_level(offers, {index: floors[index] for index in searched}, level)
-        sold = goods_market.sold_by_seller(buyers, candidate)       # the fills are built once, for the level kept
-        return candidate, [index for index in _unsold(sold, candidate, searched)
-                           if candidate[index].reservation_price > floors[index]]
-
     low = min(floors[index] for index in searched)
     if unsold_above_the_floor(buyers, offers, floors):    # the bisection would end at the floor: skip its trials
-        kept = _with_level(offers, floors, low)
-        return kept, goods_market.clear(bids, kept, good, area, currency, last_price, buyers)
-    best = trial(low)         # every searched ask at its floor: nothing above a floor can stay unsold
-    high = max(offers[index].reservation_price for index in searched)
-    ceiling = high
-    # the gap is judged against the level itself, or against the highest ask when the floor is zero: a bracket
-    # [0, high] never closes relative to its own shrinking top
-    while high - low > SEARCH_PRECISION * (high if low > 0.0 else ceiling):
-        # geometric mean as the product of roots: the product of a tiny floor and an ask underflows
-        middle = math.sqrt(low) * math.sqrt(high) if low > 0.0 else 0.5 * (low + high)
-        attempt = trial(middle)
-        if attempt[1]:
-            high = middle
-        else:
-            low, best = middle, attempt
-    return best[0], goods_market.clear(bids, best[0], good, area, currency, last_price, buyers)
+        level = low
+    else:
+        level = _highest_selling_level(buyers, offers, floors)
+    kept = _with_level(offers, {index: floors[index] for index in searched}, level)
+    return kept, goods_market.clear(bids, kept, good, area, currency, last_price, buyers)
+
+
+def _highest_selling_level(buyers: goods_market.Buyers, offers: Sequence[Offer], floors: dict) -> float:
+    """The highest common level at which the searched asks sell out or sit at their floors (goods_market_kernels.search_level
+    over the offers with units to sell, in seller-and-tile order, each trial a whole-market allocation)."""
+    positions = sorted((index for index, offer in enumerate(offers) if offer.quantity > 0.0),
+                       key=lambda index: (offers[index].seller, offers[index].tile))
+    key_ids: dict = {}
+    keys = numpy.array([key_ids.setdefault((offers[index].seller, offers[index].tile), len(key_ids)) for index in positions],
+                       dtype=numpy.int64)
+    minimum = buyers.minimum_price
+    schedule = buyers.arrays
+    return float(goods_market_kernels.search_level(
+        numpy.array([offers[index].reservation_price for index in positions], dtype=float),
+        numpy.array([offers[index].quantity for index in positions], dtype=float),
+        numpy.array([index in floors for index in positions], dtype=bool),
+        numpy.array([floors.get(index, 0.0) for index in positions], dtype=float), keys, len(key_ids),
+        0.0 if minimum is None else minimum, minimum is not None, *schedule.kernel_arrays(), schedule.tier_bounds()))

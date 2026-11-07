@@ -174,8 +174,20 @@ class Contracts:
         if kind in (None, FACILITY):
             ended.extend((self.facilities.pop(borrower, None) or {}).values())
         if kind != FACILITY:
-            ended.extend(c for c in self.term_loans if c.borrower == borrower and (kind is None or c.kind == kind))
-            self.term_loans = [c for c in self.term_loans if c not in ended]
+            ended.extend(self.default_many({borrower}, kind))
+        return ended
+
+    def default_many(self, borrowers, kind: Optional[str] = None) -> List[Contract]:
+        """The term loans (of `kind`, all when none) of every borrower in `borrowers` end, in one pass over the list; returned in list order."""
+        ended: List[Contract] = []
+        kept: List[Contract] = []
+        for contract in self.term_loans:
+            if contract.borrower in borrowers and (kind is None or contract.kind == kind):
+                ended.append(contract)
+            else:
+                kept.append(contract)
+        if ended:
+            self.term_loans = kept
         return ended
 
     # ---- renaming ---------------------------------------------------------------------------

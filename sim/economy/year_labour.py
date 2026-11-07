@@ -115,8 +115,8 @@ def clear_labour(setup, record, bids: Sequence[LabourBid], offers: Sequence[Labo
         key = market_key(clearing.trade, clearing.area)
         result = _result(clearing, setup.currency_id, by_market.get((clearing.trade, clearing.area), ()))
         done = settlement.settle_labour(record.book, result)
-        ledger.note_postings(done.postings, "wages")
-        ledger.note_labour(result, done.postings)
+        ledger.note_settlement(done, "wages")
+        ledger.note_labour_settled(result, done)
         record.labour.hours_idle[key] = clearing.idle_hours
         if clearing.hours_hired + clearing.idle_hours > 0.0:
             record.labour.sold_share_expected[key] = households_work.smoothed_sold_share(

@@ -18,7 +18,7 @@ from . import producer_table
 from .home_scope import has_partners
 from . import households_cohort
 from . import recipes as recipes_module
-from . import carriage_fleet_book, durable_stock, equity, land_lease_year, goods_market, opening_basket, opening_bid_memory, opening_income, opening_metal, opening_own, opening_placement, opening_plans, opening_rent, opening_resting, opening_runs, households, households_store, labour_state, location, location_inputs, mint, opening_stores, ownership, sites, titles
+from . import carriage_fleet_book, durable_stock, equity, land_lease_year, goods_market, opening_basket, opening_bid_memory, opening_demand, opening_income, opening_metal, opening_own, opening_placement, opening_plans, opening_rent, opening_resting, opening_runs, opening_runs_pack, households, households_store, labour_state, location, location_inputs, mint, opening_stores, ownership, sites, titles
 from sim.book import Book
 from .market_areas import AreaMap
 from .market_memory import MarketMemory, YearView, market_key
@@ -160,10 +160,19 @@ def _open(setup: EconomySetup, replacement: float, plans=None, start=None) -> Tu
     own = opening_own.OwnPlots(setup, record)
     start = opening_income.OpeningStart() if start is None else start
     own.share_hired = start.share_hired or 0.0
-    _settle_income(setup, record, view, priced_goods, replacement, own, start)
+    packed = _settle_income(setup, record, view, priced_goods, replacement, own, start)
     start.share_hired = own.share_hired
-    _seed_durable_stocks(setup, record, view)
-    final_by_tile = _final_demand(setup, record, view, replacement, own=own)
+    # the households hold their serving stock when the demand after the settle is asked (a durable in use is not wealth to
+    # store), so the packed cohorts are packed again once the seed has moved stock; their last purse is kept, their orders
+    # (made without the stock) are not
+    if _seed_durable_stocks(setup, record, view, packed):
+        own.forget_orders()
+        packed = packed.repacked() if packed is not None else None
+    after_settle = packed if packed is not None and packed.supported and packed.asked_at_incomes_now(record) else None
+    if packed is not None:
+        packed.remember_orders(record)
+    final_by_tile = (_final_demand_packed(setup, record, replacement, after_settle) if after_settle is not None
+                     else _final_demand(setup, record, view, replacement, own=own))
     for country in setup.countries():
         _open_country_producers(setup, record, area_map, carriage, priced_goods, final_by_tile, country)
     sites.apply_site_limits(record, setup)
@@ -271,10 +280,18 @@ def _settle_income(setup, record, view, priced_goods, replacement, own, start) -
     memory = opening_bid_memory.BidMemory()
     hands_hours = math.fsum(cohort.working_people for cohort in record.cohorts.values()) * setup.working_hours_per_year
     warm_share = own.share_hired
+    packed = opening_demand.OpeningDemand.of_settlement(setup, record, view, memory, own, replacement)
+    fast = packed if packed.supported else None     # a settlement the kernel does not cover is asked the old way
+    solver = opening_runs_pack.RunSolver(recipes, ranked, ceilings, yields, main, setup.opening_wages) if fast else None
 
     def demand_at(per_head):
         own.share_hired = warm_share
         households_cohort.put_cohorts(record.cohorts, opening_income.with_income(record.cohorts, per_head, share["labour"]))
+        if fast:
+            value, needed, bill = fast.ask(record, solver, priced_goods, hands_hours, OWN_PLOT_PASSES, OWN_PLOT_TOLERANCE)
+            producible = value * opening_income.producible_share_of_hours(needed, own.sold_total())
+            share["labour"] = opening_income.labour_share_of_bill(bill, value + own.in_kind)
+            return producible + own.in_kind, share["labour"]
         for _pass in range(OWN_PLOT_PASSES):
             own.in_kind = 0.0
             final = _final_demand(setup, record, view, replacement, memory, own)
@@ -298,6 +315,7 @@ def _settle_income(setup, record, view, priced_goods, replacement, own, start) -
     demand_at(per_head)     # leaves the plots at the settled income's share of hours hired
     households_cohort.put_cohorts(record.cohorts, opening_income.with_income(record.cohorts, per_head, labour_share))
     record.capital_markets.set_property_income(opening_income.property_income_of(record.cohorts, per_head, labour_share))
+    return fast
 
 
 def _opening_bids(setup, record, view, memory=None, stationary_durables=True, own=None):
@@ -319,20 +337,28 @@ def _opening_bids(setup, record, view, memory=None, stationary_durables=True, ow
                 yield cohort, bid, price
 
 
-def _seed_durable_stocks(setup, record, view) -> None:
+def _seed_durable_stocks(setup, record, view, packed=None) -> bool:
     """Households open at the planning date, holding their serving stock after year-end losses.
-    Their first purchases replace those losses, as in a later year with the same desired flow."""
+    Their first purchases replace those losses, as in a later year with the same desired flow. `packed` (the settled
+    cohorts, when the settle packed them) gives the bids of the durables that serve needs."""
+    if packed is not None:
+        bids = [(cohort, good, quantity) for cohort, good, quantity in packed.durable_bids(record)]
+    else:
+        bids = [(cohort, bid.good, bid.floor_quantity + bid.flexible_quantity)
+                for cohort, bid, _price in _opening_bids(setup, record, view, stationary_durables=False)
+                if bid.priority != households_store.STORE_PRIORITY]     # a store of wealth is seeded from the deposits (opening_stores), not from need
     moves = []
-    for cohort, bid, price in _opening_bids(setup, record, view, stationary_durables=False):
-        spec = setup.specs.get(bid.good)
-        if spec is None or spec.service_life_years <= 0.0 or bid.priority == households_store.STORE_PRIORITY:
-            continue     # a store of wealth is seeded from the deposits (opening_stores), not from need
-        quantity = durable_stock.after_year_end_losses(bid.floor_quantity + bid.flexible_quantity, spec)
+    for cohort, good, wanted in bids:
+        spec = setup.specs.get(good)
+        if spec is None or spec.service_life_years <= 0.0:
+            continue
+        quantity = durable_stock.after_year_end_losses(wanted, spec)
         if quantity > 0.0:
-            moves.append(GoodsMove(EDGE_PRODUCTION, cohort.agent_id, bid.good, cohort.tile, quantity,
+            moves.append(GoodsMove(EDGE_PRODUCTION, cohort.agent_id, good, cohort.tile, quantity,
                                    "opening stock of a durable in use"))
     if moves:
         record.book.move_many(moves)
+    return bool(moves)
 
 
 def _final_demand(setup, record, view, replacement=0.0, memory=None, own=None) -> Dict[TileId, Dict[GoodId, float]]:
@@ -342,6 +368,16 @@ def _final_demand(setup, record, view, replacement=0.0, memory=None, own=None) -
     for cohort, bid, price in _opening_bids(setup, record, view, memory, own=own):
         demand = final.setdefault(cohort.tile, {})
         demand[bid.good] = demand.get(bid.good, 0.0) + goods_market.quantity_at(bid, price)
+    if replacement > 0.0:
+        demand = final.setdefault(setup.capital_tile, {})
+        metal = record.currency.backing_good
+        demand[metal] = demand.get(metal, 0.0) + replacement
+    return final
+
+
+def _final_demand_packed(setup, record, replacement, packed) -> Dict[TileId, Dict[GoodId, float]]:
+    """`_final_demand` for the settled cohorts, asked of the arrays they were packed into."""
+    final = packed.final_demand(record)
     if replacement > 0.0:
         demand = final.setdefault(setup.capital_tile, {})
         metal = record.currency.backing_good
@@ -404,6 +440,14 @@ def _place_producers(setup, record, area_map, carriage, final_by_tile, incumbent
     (recipe, tile). An input is therefore opened where its users are, with the supply their capacity needs,
     not where people happen to live (a good too cheap to carry has a market the size of a tile). A processor
     of a good that only fixed sites supply is placed by location_inputs instead: beside that supply, up to it."""
+    _placing[id(record)] = ({cohort.tile for cohort in record.cohorts.values()}, {})     # cohorts do not change while placing
+    try:
+        _place_in_order(setup, record, area_map, carriage, final_by_tile, incumbents, runs, yields, within)
+    finally:
+        del _placing[id(record)]
+
+
+def _place_in_order(setup, record, area_map, carriage, final_by_tile, incumbents, runs, yields, within) -> None:
     population = setup.opening_population_by_tile
     by_limits = sites.limits_by_recipe(setup.site_limits)
     input_demand: Dict[TileId, Dict[GoodId, float]] = {}
@@ -517,13 +561,25 @@ def _stock_producers_with_inputs(setup, record) -> None:
                      for good, quantity in opening_resting.resting_output_stock(runs, recipe.outputs).items())
     if moves:
         record.book.move_many(moves)
+    return bool(moves)
+
+
+_placing: Dict[int, tuple] = {}     # id(record) -> (tiles with people, richest class by tile) while its producers are placed
 
 
 def _has_people(record, tile) -> bool:
+    held = _placing.get(id(record))
+    if held is not None:
+        return tile in held[0]
     return any(cohort.tile == tile for cohort in record.cohorts.values())
 
 
 def _richest_class(record, tile) -> int:
+    held = _placing.get(id(record))
+    if held is not None:
+        if tile not in held[1]:
+            held[1][tile] = ownership.richest_class(record.cohorts.values(), tile) or 0
+        return held[1][tile]
     return ownership.richest_class(record.cohorts.values(), tile) or 0
 
 

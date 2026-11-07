@@ -88,10 +88,10 @@ def logit_shares(scores: Mapping[str, float], scale: float) -> Dict[str, float]:
 
 def graduates_coming(state: MarketState, area: str, trade: str, completion_by_band) -> float:
     """People now in training for a trade here who are expected to finish it."""
-    total = 0.0
-    for cohort in state.trainees.get(area, {}).get(trade, []):
-        total += math.fsum(count * chance for count, chance in zip(cohort[1], completion_by_band))
-    return total
+    cohorts = state.trainees.get(area, {}).get(trade)
+    if not cohorts:
+        return 0.0
+    return math.fsum([math.sumprod(cohort[1], completion_by_band) for cohort in cohorts])
 
 
 def hours_arrived_since(state: MarketState, inputs: YearInputs, clearing: LabourClearing, area: str, trade: str) -> float:

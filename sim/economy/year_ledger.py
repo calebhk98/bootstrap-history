@@ -7,6 +7,7 @@ from dataclasses import dataclass, field
 from typing import Dict, Iterable, List, Optional, Tuple
 
 from .clearing_totals import MarketKey, market_totals
+from .goods_year_results import ArrayClearing
 from .types import AgentId, ClearingResult, Fill, GoodId, GoodsMove, LabourResult, Transfer, EDGE_MINT, is_external_edge
 
 SALE_PREFIX = "sale of "    # settlement's purpose for a goods sale
@@ -27,6 +28,7 @@ class YearLedger:
     own_plot_hours: Dict[AgentId, Dict[str, float]] = field(default_factory=dict)   # hours worked on its own plot, by recipe
     grown_units: Dict[AgentId, Dict[str, float]] = field(default_factory=dict)    # need units of that
     buy_fills: Dict[AgentId, List[Fill]] = field(default_factory=dict)
+    fill_watchers: Optional[frozenset] = None   # the buyers whose buy fills are kept (merchants and the state read them); None: all
     sold: Dict[Tuple[AgentId, GoodId], float] = field(default_factory=dict)
     output: Dict[Tuple[AgentId, GoodId], float] = field(default_factory=dict)
     clearings: List[ClearingResult] = field(default_factory=list)
@@ -66,6 +68,62 @@ class YearLedger:
                 if posting.receiver == EDGE_MINT:
                     taken = (posting.giver, posting.tile)
                     self.pending_mint_takes[taken] = self.pending_mint_takes.get(taken, 0.0) + posting.quantity
+
+    def note_settlement(self, settled, purpose_kind: str,
+                        plant_goods: Optional[Dict[AgentId, Iterable[GoodId]]] = None) -> None:
+        """`note_postings(settled.postings, purpose_kind)` from the settlement's per-agent sums: money paid out, wages or
+        sales received, the foreign-money figures, and for a sale the goods received and sold and what the mint took. With
+        `plant_goods`, also `note_plant_purchases` for the good sold."""
+        item = settled.item
+        foreign = settled.purpose[len(SALE_PREFIX):] if settled.purpose.startswith(SALE_PREFIX) else settled.purpose
+        wages, sales = purpose_kind == "wages", purpose_kind == "sales"
+        for agent, out, income, imported, exported, got, units_in, units_out in zip(
+                settled.agents, settled.paid, settled.received, settled.imports, settled.exports, settled.got_goods,
+                settled.goods_in, settled.goods_out):
+            if out > 0.0:
+                self.money_out[agent] = self.money_out.get(agent, 0.0) + out
+                if plant_goods is not None and got and item in plant_goods.get(agent, ()):
+                    self.plant_spend[agent] = self.plant_spend.get(agent, 0.0) + out
+            if imported > 0.0:
+                self.imports_paid[(agent, foreign)] = self.imports_paid.get((agent, foreign), 0.0) + imported
+            if exported > 0.0:
+                self.exports_received[(agent, foreign)] = self.exports_received.get((agent, foreign), 0.0) + exported
+            if income > 0.0:
+                if wages:
+                    self.wages_in[agent] = self.wages_in.get(agent, 0.0) + income
+                elif sales:
+                    self.sales_in[agent] = self.sales_in.get(agent, 0.0) + income
+            if sales:
+                if got:
+                    held = self.received.setdefault(agent, {})
+                    held[item] = held.get(item, 0.0) + units_in
+                if units_out > 0.0:
+                    key = (agent, item)
+                    self.sold[key] = self.sold.get(key, 0.0) + units_out
+        if sales:
+            for key, taken in zip(settled.keys, settled.key_to_mint):
+                if taken > 0.0:
+                    self.pending_mint_takes[key] = self.pending_mint_takes.get(key, 0.0) + taken
+
+    def note_summed_sales(self, paid: Dict[AgentId, float], income: Dict[AgentId, float],
+                          received: Iterable[Tuple[Tuple[AgentId, GoodId], float]],
+                          sold: Iterable[Tuple[Tuple[AgentId, GoodId], float]],
+                          foreign: Iterable[Tuple[str, Tuple[AgentId, GoodId], float]]) -> None:
+        """`note_settlement(..., "sales")` of many goods settlements at once, from their sums: money paid and received by agent,
+        goods received and sold by (agent, good), and money across the border ("imports" or "exports") by (agent, good). No
+        plant purchase is noted: the buyers are households, which own no plant."""
+        for agent, amount in paid.items():
+            self.money_out[agent] = self.money_out.get(agent, 0.0) + amount
+        for agent, amount in income.items():
+            self.sales_in[agent] = self.sales_in.get(agent, 0.0) + amount
+        for (agent, good), amount in received:
+            held = self.received.setdefault(agent, {})
+            held[good] = held.get(good, 0.0) + amount
+        for key, amount in sold:
+            self.sold[key] = self.sold.get(key, 0.0) + amount
+        for side, key, amount in foreign:
+            figures = self.imports_paid if side == "imports" else self.exports_received
+            figures[key] = figures.get(key, 0.0) + amount
 
     def note_paid_outside_markets(self, postings: Iterable[Transfer]) -> None:
         """Money paid out in no market (rent, a bonded household's payments, the keep of bonded people): a cost of the payer's
@@ -118,8 +176,13 @@ class YearLedger:
         self.totals_cache = None
         market = (result.good, result.area)
         self.delivered_by_market[market] = self.delivered_by_market.get(market, 0.0) + delivered
+        watchers = self.fill_watchers
+        if watchers is not None and isinstance(result, ArrayClearing):
+            for agent, fills in result.bought_by(watchers).items():
+                self.buy_fills.setdefault(agent, []).extend(fills)
+            return
         for fill in result.fills:
-            if fill.side == "buy":
+            if fill.side == "buy" and (watchers is None or fill.agent in watchers):
                 self.buy_fills.setdefault(fill.agent, []).append(fill)
 
     def settled_to_mint(self, result: ClearingResult) -> Optional[Dict[Tuple[AgentId, str], float]]:
@@ -139,14 +202,22 @@ class YearLedger:
         """Hours count as hired and sold in proportion to the wages actually paid: hours an employer
         could not pay for are not delivered, so the workers keep them, and a settlement that paid nothing
         delivers no hours. A caller with no settlement passes `settled=False` and the fills count in full."""
-        self.labour_results.append(result)
-        postings = list(postings)
         paid_by: Dict[AgentId, float] = {}
         paid_to: Dict[AgentId, float] = {}
         for posting in postings:
             if isinstance(posting, Transfer):
                 paid_by[posting.payer] = paid_by.get(posting.payer, 0.0) + posting.amount
                 paid_to[posting.payee] = paid_to.get(posting.payee, 0.0) + posting.amount
+        self.note_hours(result, paid_by, paid_to, settled)
+
+    def note_labour_settled(self, result: LabourResult, done) -> None:
+        """`note_labour` of a labour settlement (`settlement.settle_labour`), from its per-agent sums."""
+        self.note_hours(result, done.paid_by, done.paid_to, True)
+
+    def note_hours(self, result: LabourResult, paid_by: Dict[AgentId, float], paid_to: Dict[AgentId, float],
+                   settled: bool) -> None:
+        """The hours of a labour result as hired and sold, given the wages paid by each employer and to each worker."""
+        self.labour_results.append(result)
         settled = settled and result.wage > 0.0
         for fill in result.fills:
             quantity = fill.quantity

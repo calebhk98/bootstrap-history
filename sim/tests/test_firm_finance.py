@@ -169,6 +169,28 @@ class WriteOffTests(unittest.TestCase):
         self.assertEqual(record.credit.credit_losses, {})
 
 
+class WriteOffManyTests(unittest.TestCase):
+    def loans(self):
+        return [Loan("l%d" % index, "bank%d" % (index % 2), "f%d" % (index % 4), "coin", 40.0 + index) for index in range(12)]
+
+    def test_all_at_once_is_one_after_another(self):
+        ratios = {"f2": 0.5, "f0": 1.0, "f3": 0.25, "f9": 0.5}      # f9 has no loans
+        together = SimpleNamespace(credit=credit_with(self.loans()))
+        lost = firm_year.write_off_many(together, ratios)
+        apart = SimpleNamespace(credit=credit_with(self.loans()))
+        for borrower, ratio in ratios.items():
+            self.assertAlmostEqual(firm_year.write_off(apart, borrower, ratio), lost[borrower])
+        self.assertEqual([(loan.loan_id, loan.principal) for loan in together.credit.loans],
+                         [(loan.loan_id, loan.principal) for loan in apart.credit.loans])
+        self.assertEqual(together.credit.credit_losses, apart.credit.credit_losses)
+        self.assertEqual(together.credit.remembered_defaults, apart.credit.remembered_defaults)
+
+    def test_no_ratios_leave_the_loans_alone(self):
+        record = SimpleNamespace(credit=credit_with(self.loans()))
+        self.assertEqual(firm_year.write_off_many(record, {"f1": 0.0}), {})
+        self.assertEqual(len(record.credit.loans), 12)
+
+
 class ExcessCashTests(unittest.TestCase):
     def test_cash_to_keep_is_production_commitments_replacement_and_a_buffer_of_the_costs(self):
         kept = finance.cash_to_keep(production=40.0, commitments=20.0, replacement=10.0, running_costs=100.0)

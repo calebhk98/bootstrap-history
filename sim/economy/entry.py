@@ -115,7 +115,7 @@ def gap_beyond_spare(unmet: float, spare_output: float) -> float:
 def entry_plans(recipes: Mapping[str, Recipe], view: MarketView,
                 unmet: Mapping[Tuple[GoodId, AreaId], UnmetDemand],
                 traded: Optional[Traded] = None, siting=None, unfilled=None, rent_of=None,
-                crews_of: Optional[entry_practice.CrewsOf] = None) -> List[EntryPlan]:
+                crews_of: Optional[entry_practice.CrewsOf] = None, costs=None) -> List[EntryPlan]:
     """New makers for each market with unmet demand: the known recipes making the good, best return on
     capital at last year's prices first, each that beats the interest rate after the plant's wear, each built for a share of what
     the better ones leave of the gap (no limit on how many a year: the gap and the returns decide). With `traded`,
@@ -125,28 +125,39 @@ def entry_plans(recipes: Mapping[str, Recipe], view: MarketView,
     unfilled at the recipe's full cost count with the trade. With `rent_of(recipe_id, tile)` a newcomer's rent is what its own use pays there
     (entrant_rent.py); without it a run pays no rent. With `crews_of` (entry_practice.py) a recipe's return is judged on the hours
     its newcomer will need over the years it is judged on (starting at its peers' practice, learning on the runs it is built
-    for), not the booked hours."""
+    for), not the booked hours. With `costs` (entry_tables.EntryTables) every recipe's return is read from the year's arrays at its
+    newcomer's planned hours and the rent its site asks, in place of `rent_of` and `crews_of`."""
     makers: Dict[GoodId, List[str]] = {}
     for recipe_id in sorted(recipes):
         for good in recipes[recipe_id].outputs:
             makers.setdefault(good, []).append(recipe_id)
     plans = []
+    markets = []        # (demand, the rate of its currency, the recipes making its good, where its pairs start in `requests`)
+    requests = []       # (recipe id, tile, runs the entrant is planned on, rate) for each recipe of each market
     for key in sorted(unmet):
         demand = unmet[key]
         if demand.quantity <= 0.0:
             continue
-        currency = view.currency_of(demand.area)
+        market_rate = view.interest_rate(view.currency_of(demand.area))
+        candidates = makers.get(demand.good, ()) if market_rate is not None else ()
+        markets.append((demand, market_rate, candidates, len(requests)))
+        if costs is not None:
+            requests.extend((recipe_id, demand.anchor_tile,
+                             demand.quantity / recipes[recipe_id].outputs[demand.good] * ENTRY_SHARE_OF_UNMET_DEMAND, market_rate)
+                            for recipe_id in candidates)
+    returns = costs.returns_many(requests) if costs is not None else None
+    for demand, market_rate, candidates, first_request in markets:
         ranked = []
-        for recipe_id in makers.get(demand.good, ()):
-            rent = rent_of(recipe_id, demand.anchor_tile) if rent_of is not None else 0.0
-            planned = recipes[recipe_id]
-            if crews_of is not None:
-                share_runs = demand.quantity / planned.outputs[demand.good] * ENTRY_SHARE_OF_UNMET_DEMAND
-                planned = entry_practice.planned_recipe(planned, crews_of(recipe_id), share_runs)
-            market_rate = view.interest_rate(currency)
-            if market_rate is None:
-                continue
-            yearly_return, after_recovery = _returns_at(planned, recipe_id, demand.anchor_tile, view, market_rate, rent)
+        for position, recipe_id in enumerate(candidates):
+            if returns is not None:
+                yearly_return, after_recovery = returns[first_request + position]
+            else:
+                rent = rent_of(recipe_id, demand.anchor_tile) if rent_of is not None else 0.0
+                planned = recipes[recipe_id]
+                if crews_of is not None:
+                    share_runs = demand.quantity / planned.outputs[demand.good] * ENTRY_SHARE_OF_UNMET_DEMAND
+                    planned = entry_practice.planned_recipe(planned, crews_of(recipe_id), share_runs)
+                yearly_return, after_recovery = _returns_at(planned, recipe_id, demand.anchor_tile, view, market_rate, rent)
             if yearly_return is not None and after_recovery is not None and after_recovery > market_rate:
                 ranked.append((-yearly_return, recipe_id))
         remaining = demand.quantity

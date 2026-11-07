@@ -56,11 +56,13 @@ def household_plans(setup, record, area_map, room_by_tile: Optional[Mapping[Tile
     offers = year_labour.labour_offers(setup, record, view, outside)
     floors: Dict[TileId, float] = {}
     margins: Dict[AgentId, float] = {}
+    expected = (household_work_year.expected_shares(setup, record, offers)     # the producers do not change below
+                if setup.household_work and household_work_year.lacks_history(record, offers) else {})
     if room_by_tile is not None and setup.household_work:
         rows: Dict[str, list] = {}
         tiles_of: Dict[str, set] = {}
         for _cohort_id, cohort in sorted(record.cohorts.items()):
-            value, needed, price, _milled = household_work_year.work_terms(setup, record, view, cohort, offers)
+            value, needed, price, _milled = household_work_year.work_terms(setup, record, view, cohort, offers, expected)
             market = _service_market(setup, area_map, cohort.tile)
             margins[_cohort_id] = value - price
             rows.setdefault(market, []).append((value, needed, price))
@@ -70,7 +72,7 @@ def household_plans(setup, record, area_map, room_by_tile: Optional[Mapping[Tile
                 market_rows, math.fsum(room_by_tile.get(tile, 0.0) for tile in tiles_of[market]))
             if floor > 0.0:
                 floors.update({tile: floor for tile in tiles_of[market]})
-    return HouseholdPlans(household_work_year.plans(setup, record, view, offers, floors), floors, margins)
+    return HouseholdPlans(household_work_year.plans(setup, record, view, offers, floors, expected), floors, margins)
 
 
 def _service_market(setup, area_map, tile: TileId) -> str:

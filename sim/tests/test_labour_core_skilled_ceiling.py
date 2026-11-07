@@ -8,7 +8,7 @@ import math
 import unittest
 from unittest import mock
 
-from sim.labour.market import aptitude, clearing, expectations, records, training, trades, year
+from sim.labour.market import aptitude, clearing, clearing_arrays, expectations, records, training, trades, year
 
 REGISTRY = {
     "digger": {"family": "toil", "training_years": 0},
@@ -76,7 +76,10 @@ class CeilingCapsTheExpectationNotTheHours(unittest.TestCase):
 
     def test_without_the_ceiling_the_expectation_rises_but_a_year_s_hours_hired_do_not(self):
         _state, capped = year.run_year(start(), inputs(smith_maximum=1e6))
-        with mock.patch.object(clearing, "trained_substitute_wage", lambda *args, **kwargs: math.inf):
+        # the head of the year's markets is worked out by a kernel that carries the substitute wage inside it; the plain
+        # functions, which the patch reaches, are used when the kernel is declined
+        with mock.patch.object(clearing, "trained_substitute_wage", lambda *args, **kwargs: math.inf), \
+                mock.patch.object(clearing_arrays, "kernel_applies", lambda _inputs: False):
             _state, free = year.run_year(start(), inputs(smith_maximum=1e6))
         self.assertGreater(smith_clearing(free).heading_wage, smith_clearing(capped).heading_wage)
         self.assertEqual(smith_clearing(free).hours_hired, smith_clearing(capped).hours_hired)

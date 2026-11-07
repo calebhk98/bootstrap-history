@@ -1,11 +1,12 @@
 """Step 1 of the year: per (trade, area), set the market wage and share the hours among employers (DESIGN.md)."""
 import math
+from dataclasses import dataclass
 from typing import Callable, Dict, List, Optional, Sequence, Set, Tuple
 
 from sim.constants import declare
 
-from . import asks, layoffs
-from .applications import hire_through_rounds
+from . import asks, clearing_arrays, clearing_tail, layoffs
+from .applications import HireJob, hire_markets
 from .import_cost import ImportCosts
 from .premium import training_premium
 from .reservation import reservation_wage
@@ -239,10 +240,33 @@ def offer_ceilings(bids: Sequence[EmployerHoursBid], wage: float, paid: Dict[str
     return {employer: max(min(cap, market_ceiling), paid.get(employer, 0.0)) for employer, cap in lowest.items()}
 
 
-def clear_one(state: MarketState, inputs: YearInputs, trade: str, area: str, bids: Sequence[EmployerHoursBid],
-              import_costs: Optional[ImportCosts] = None) -> Optional[LabourClearing]:
-    """The market of a trade in an area for the year; None where the area has no stated outside option to hold one on."""
-    import_costs = import_costs or ImportCosts(state, inputs)
+@dataclass
+class _Pending:
+    """A market cleared as far as its hiring rounds: everything `_finish` needs once `job` (None where the market offers no
+    hours) has been run."""
+    state: MarketState
+    trade: str
+    area: str
+    bids: Sequence[EmployerHoursBid]
+    wage: float
+    paid: Dict[str, float]
+    ranks: Dict[str, float]
+    hired: Dict[str, float]
+    wanted: Dict[str, float]
+    offered: float
+    sold_at: Optional[Callable[[float], float]]
+    target: Optional[float]
+    full: float
+    base_reservation: float
+    lowest: float
+    job: Optional[HireJob]
+
+
+def _plain_head(state: MarketState, inputs: YearInputs, trade: str, area: str, bids: Sequence[EmployerHoursBid],
+                import_costs: ImportCosts) -> Optional[tuple]:
+    """(wage, target, goal, offered, reservation, base reservation, lowest, ceiling, hours held) of a market before its hiring
+    rounds, by the plain functions; None where the area has no stated outside option to hold one on. The kernel
+    (`clearing_kernel.market_heads`) gives the same for every market at once."""
     spec = inputs.trades[trade]
     workers = sum(state.workers.get(area, {}).get(trade, []))
     full = workers * inputs.hours_per_worker_year
@@ -275,35 +299,72 @@ def clear_one(state: MarketState, inputs: YearInputs, trade: str, area: str, bid
         goal = supply_target(reservation, sold_at, bids) if bids else wage
         offered = sold_at(wage)
     target = min(target, long_run) if target is not None else None
+    return wage, target, goal, offered, reservation, base_reservation, lowest, ceiling, full
+
+
+def _prepare(state: MarketState, inputs: YearInputs, trade: str, area: str, bids: Sequence[EmployerHoursBid],
+             import_costs: ImportCosts) -> Optional[_Pending]:
+    """The market of a trade in an area up to its hiring rounds (the wage before them, the hours kept, the pool and the
+    offers' ceilings); None where the area has no stated outside option to hold one on. Reads this market's own entries of
+    the state and the year's start wages only, so markets can be prepared in any order."""
+    head = _plain_head(state, inputs, trade, area, bids, import_costs)
+    if head is None:
+        return None
+    wage, target, goal, offered, reservation, base_reservation, lowest, ceiling, full = head
+    sold_at = inputs.sold_schedule(trade, area)
     wanted, paid, ranks = eligible_bids(bids, wage)
     previous = state.hired_hours.get(area, {}).get(trade, {})
     kept = retain(wanted, previous, offered) if offered > 0.0 else {}
     hired = {employer: kept.get(employer, 0.0) for employer in ranks} if offered > 0.0 else {employer: 0.0 for employer in wanted}
     wanted = {employer: wanted.get(employer, 0.0) for employer in hired}
+    job = None
     if offered > 0.0:
         # searchers apply to employers' offers round by round (applications.py); the unretained hours start as the pool
-        taken = hire_through_rounds(hired, kept, wanted, paid, max(0.0, offered - sum(hired.values())),
-                                    reservation, lowest, ceilings=offer_ceilings(bids, wage, paid, min(ceiling, goal)))
+        job = HireJob(hired, kept, wanted, paid, max(0.0, offered - sum(hired.values())), reservation, lowest,
+                      ceilings=offer_ceilings(bids, wage, paid, min(ceiling, goal)))
+    return _Pending(state, trade, area, bids, wage, paid, ranks, hired, wanted, offered, sold_at, target, full,
+                    base_reservation, lowest, job)
+
+
+def _finish(pending: _Pending) -> LabourClearing:
+    """The market after its hiring rounds: the wage the hours taken on were paid, poaching, and the state written."""
+    state, area, trade, bids = pending.state, pending.area, pending.trade, pending.bids
+    wage, offered, hired, wanted = pending.wage, pending.offered, pending.hired, pending.wanted
+    if pending.job is not None:
         # the wage is what the hours taken on were paid, the offers having risen round by round; every hour of the trade
         # in the area, held or new, is paid it
+        taken = pending.job.taken
         new_hours = sum(taken.values())
         if new_hours > 0.0:
-            wage = sum(hours * paid[employer] for employer, hours in taken.items()) / new_hours
-        if sold_at is not None:
-            offered = sold_at(wage)    # the hours sold are those the market settles at
-        poach(hired, wanted, ranks)
+            wage = sum(hours * pending.paid[employer] for employer, hours in taken.items()) / new_hours
+        if pending.sold_at is not None:
+            offered = pending.sold_at(wage)    # the hours sold are those the market settles at
+        poach(hired, wanted, pending.ranks)
     hired = {employer: hours for employer, hours in hired.items() if hours > 0.0}
     state.wages.setdefault(area, {})[trade] = wage
-    asks.record(state, area, trade, offered, sum(wanted.values()), wage, base_reservation, lowest)
+    asks.record(state, area, trade, offered, sum(wanted.values()), wage, pending.base_reservation, pending.lowest)
     state.hired_hours.setdefault(area, {})[trade] = dict(hired)
     total = sum(hired.values())
     return LabourClearing(trade=trade, area=area, wage=wage, hours_offered=offered, hours_wanted=sum(wanted.values()),
                     hours_hired=total, hired_by_employer=hired,
-                    target_wage=target, hours_held=full,
+                    target_wage=pending.target, hours_held=pending.full,
                     demand=tuple((bid.maximum_wage, bid.hours) for bid in bids))
 
 
+def clear_one(state: MarketState, inputs: YearInputs, trade: str, area: str, bids: Sequence[EmployerHoursBid],
+              import_costs: Optional[ImportCosts] = None) -> Optional[LabourClearing]:
+    """The market of a trade in an area for the year; None where the area has no stated outside option to hold one on."""
+    pending = _prepare(state, inputs, trade, area, bids, import_costs or ImportCosts(state, inputs))
+    if pending is None:
+        return None
+    if pending.job is not None:
+        hire_markets([pending.job])
+    return _finish(pending)
+
+
 def clear_all(state: MarketState, inputs: YearInputs) -> List[LabourClearing]:
+    """Every market of the year, in sorted (trade, area) order: all prepared, the hiring rounds of all of them run in one
+    kernel call, then each finished."""
     bids_by_market: Dict[Tuple[str, str], List[EmployerHoursBid]] = {}
     for bid in inputs.bids:
         if bid.hours > 0.0 and bid.trade in inputs.trades:
@@ -313,6 +374,12 @@ def clear_all(state: MarketState, inputs: YearInputs) -> List[LabourClearing]:
         markets.update((trade, area) for trade, bands in by_trade.items()
                        if sum(bands) > 0.0 and trade in inputs.trades)
     import_costs = ImportCosts(state, inputs)
-    held = (clear_one(state, inputs, trade, area, bids_by_market.get((trade, area), []), import_costs)
-            for trade, area in sorted(markets))
-    return [clearing for clearing in held if clearing is not None]
+    ordered = sorted(markets)
+    if ordered and clearing_arrays.kernel_applies(inputs):
+        packed = clearing_arrays.pack_heads(state, inputs, ordered, bids_by_market, import_costs, WAGE_SHARE_CLOSED_PER_YEAR)
+        return clearing_tail.clear_packed(state, packed, FIRM_LABOUR_SUPPLY_ELASTICITY,
+                                          ON_THE_JOB_SEARCH_SHARE)
+    prepared = [_prepare(state, inputs, trade, area, bids_by_market.get((trade, area), []), import_costs) for trade, area in ordered]
+    pending = [each for each in prepared if each is not None]
+    hire_markets([each.job for each in pending if each.job is not None])
+    return [_finish(each) for each in pending]

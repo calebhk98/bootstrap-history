@@ -21,9 +21,10 @@ def _bill(quantities: Mapping[str, float], rates: Mapping[str, float]) -> float:
     for key, quantity in quantities.items():
         if quantity <= 0.0:
             continue
-        if key not in rates:
+        try:
+            total += quantity * rates[key]
+        except KeyError:
             return math.inf
-        total += quantity * rates[key]
     return total
 
 
