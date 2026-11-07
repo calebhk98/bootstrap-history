@@ -7,6 +7,7 @@
 - items 1, 2 and 5 in part: about 17 and 13.5, reproducible after a reload
 - with labour's heads and switching, entry's practice and the national prices: about 15 and 11 (machine loaded)
 - with settlement, the ledger and the producers' read caches: about 13 and 9
+- with the labour tail, the urban ceilings and the partner countries' kept figures: about 12 and 8
 
 **Goal.** A Rome year under one second (three at most; a game is five hundred years), with the game unchanged in its
 rules and reproducible: the same save stepped on the same machine gives the same game, straight or saved and loaded in
@@ -76,12 +77,15 @@ changes a field. The saved record format does not change.
     - [x] the fetched-hands search and the wage searches for every market at once (`clearing_kernel.market_heads`,
           `clearing_arrays.py`; `test_year_speed_labour_heads` against `clearing._plain_head`; the plain path kept for a
           mod's fetch search or an unpacked schedule)
-    - [ ] the per-market tail in Python: `eligible_bids`, `retain`, `offer_ceilings`, the hiring jobs, `poach`, `asks.record`
+    - [x] the per-market tail (`clearing_tail_kernel.py`, `clearing_tail.py`: employers left by the wage, retention,
+          ceilings, hiring arrays, the wage paid, poaching and the asks; `test_year_speed_labour_tail`)
+    - [ ] `pack_heads`' per-state loops and the per-market write-back
 - [ ] Trade switching (`switching.switch_trades`, `_odds`, `_planned_moves`)
     - [x] the per-band logit (`switching_kernel.band_shares`; `test_year_speed_labour_switching`)
     - [x] targets, gains, costs, plan reuse and moves for every source of an area (`switching_kernel.plan_area`,
           `take_moves`; `test_year_speed_labour_plans`)
-    - [ ] expected incomes at graduation and the refusal path
+    - [x] the carry-out and the refusal path (`switching_kernel.enrol_groups`)
+    - [ ] expected incomes at graduation (`expected_income`, `income_at_graduation`)
 - [ ] Trade formation (`formation.form_trades`): early return where no origin sells, origin asks kept for the year; the
       per-market purchase and carriage searches are Python
 - [ ] Checks: reproducible, compared, share measured
