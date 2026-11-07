@@ -167,13 +167,13 @@ class GoodsSettlementTests(unittest.TestCase):
 
 class BoughtByBuyerTests(unittest.TestCase):
     def test_money_a_buyer_receives_as_a_seller_is_not_netted_out_of_what_it_paid(self):
-        settlement = Settlement(postings=[GoodsMove("farm", "house", "grain", "t1", 2.0, "sale of grain")],
-                                buyer_money={"house": 6.0})
+        settlement = Settlement(agents=["farm", "house"], goods_in=[0.0, 2.0], got_goods=[False, True],
+                                buyer_net=[0.0, 6.0], paid_as_buyer=[False, True])
         self.assertEqual(settlement.bought_by_buyer(), {"house": (2.0, 6.0)})
 
     def test_money_paid_to_take_a_negative_priced_good_nets_against_the_buyer_s_payments(self):
-        settlement = Settlement(postings=[GoodsMove("farm", "house", "waste", "t1", 2.0, "sale of waste")],
-                                buyer_money={"house": -1.5})
+        settlement = Settlement(agents=["farm", "house"], goods_in=[0.0, 2.0], got_goods=[False, True],
+                                buyer_net=[0.0, -1.5], paid_as_buyer=[False, True])
         self.assertEqual(settlement.bought_by_buyer(), {"house": (2.0, -1.5)})
 
 

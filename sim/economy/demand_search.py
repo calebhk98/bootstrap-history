@@ -44,7 +44,7 @@ class _Book:
         minimum = buyers.minimum_price
         self.minimum = 0.0 if minimum is None else minimum
         self.has_minimum = minimum is not None
-        self.buyer_arrays = buyers.schedule.kernel_arrays()
+        self.buyer_arrays = buyers.arrays.kernel_arrays()
 
     def covered(self) -> bool:
         """True when the buyers ask for at least what is on offer at these asks: the stock sells out, bar what the

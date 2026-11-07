@@ -7,6 +7,7 @@ from typing import List, Optional, Sequence
 
 import numpy
 
+from . import goods_market_kernels
 from .types import Bid
 
 _SCHEDULE_FIELDS = attrgetter("floor_quantity", "flexible_quantity", "reference_price", "elasticity", "budget",
@@ -194,3 +195,19 @@ class DemandSchedule:
         if self.price_capped:
             wanted[column > maximums[None, :]] = 0.0
         return wanted
+
+
+class DemandArrays:
+    """A market's bids packed straight into the arrays the clearing kernels read (what `DemandSchedule.kernel_arrays` and
+    `tier_bounds` give for the same bids), without the schedule's per-bid groups and rows."""
+
+    def __init__(self, bids: Sequence[Bid]):
+        table = numpy.array(list(map(_SCHEDULE_FIELDS, bids)), dtype=float).reshape(-1, 7)
+        floors, flexibles, budgets, references, exponents, capped, self._bounds = goods_market_kernels.pack_demand(table)
+        self._arrays = (floors, flexibles, budgets, references, exponents, table[:, 5].copy(), capped)
+
+    def kernel_arrays(self) -> tuple:
+        return self._arrays
+
+    def tier_bounds(self) -> "numpy.ndarray":
+        return self._bounds
