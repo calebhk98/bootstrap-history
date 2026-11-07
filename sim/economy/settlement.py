@@ -14,6 +14,7 @@ from operator import attrgetter
 from typing import FrozenSet, List, Optional, Sequence
 
 from sim.book import Book
+from .settlement_arrays import settle_results
 from .settlement_batch import settle_many
 from .settlement_limits import pair_fills
 from .settlement_record import Settlement
@@ -43,8 +44,7 @@ def settle_goods_many(book: Book, results: Sequence[ClearingResult], import_acco
     if not results:
         return []
     good, currency = results[0].good, results[0].currency
-    return settle_many(book, [result.pairing for result in results], currency, good, "sale of %s" % good, True,
-                       import_accounts, export_accounts)
+    return settle_results(book, results, currency, good, "sale of %s" % good, import_accounts, export_accounts)
 
 
 def _settle(book: Book, fills: Sequence[Fill], currency: CurrencyId, item: str,

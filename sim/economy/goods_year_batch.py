@@ -11,7 +11,7 @@ from typing import List, Sequence, Tuple
 
 import numpy
 
-from . import goods_market, goods_year_kernel, price_setting
+from . import goods_market, goods_year_kernel, goods_year_results, price_setting
 from .ask_adjust import ASK_BAND_CEILING
 from .market_memory import market_key
 from .types import Offer, is_edge
@@ -94,8 +94,17 @@ def clear_markets(setup, record, view, arrays, costs, markets: Sequence[tuple]) 
         bounds = buyers.arrays.tier_bounds()
         tiers.append(bounds)
         tier_ptr.append(tier_ptr[-1] + len(bounds))
-    final = _decide(setup, arrays, costs, [bool(bids) for _g, _a, bids, _o, _p in markets], res0, qty, prow, grow, key_of, multiple, offer_ptr, bid_ptr, tier_ptr, size, rate,
-                    spoilage, minimum, has_minimum, capped, columns, tiers)
+    final, packed = _decide(setup, arrays, costs, [bool(bids) for _g, _a, bids, _o, _p in markets], res0, qty, prow, grow, key_of, multiple, offer_ptr, bid_ptr, tier_ptr, size, rate,
+                            spoilage, minimum, has_minimum, capped, columns, tiers)
+    key_numbers = numpy.array(key_of, dtype=numpy.int64)
+    offer_pointers = numpy.array(offer_ptr, dtype=numpy.int64)
+    allocated = goods_year_results.final_allocations(
+        offer_pointers, final, numpy.array(qty, dtype=float), key_numbers, numpy.array(minimum, dtype=float),
+        numpy.array(has_minimum, dtype=bool), *packed)
+    batch = goods_year_results.BatchAllocation(
+        allocated, offer_pointers, packed[0], [buyers.bids for buyers in buyers_of],
+        [[offers[index] for index in order] for (_g, _a, _b, offers, _p), order in zip(markets, order_of)], [])
+    traded = allocated[0].tolist()
     final = final.tolist()
     results = []
     for market, (good, area, bids, offers, last_price) in enumerate(markets):
@@ -106,12 +115,17 @@ def clear_markets(setup, record, view, arrays, costs, markets: Sequence[tuple]) 
             price = final[start + position]
             if price != offer.reservation_price:
                 chosen[index] = Offer(offer.seller, offer.good, offer.area, offer.tile, offer.quantity, price)
-        results.append((chosen, goods_market.clear(bids, chosen, good, area, setup.currency_id, last_price, buyers_of[market])))
+                batch.offers[market][position] = chosen[index]
+        if traded[market]:
+            result = goods_year_results.ArrayClearing.of(batch, market, good, area, setup.currency_id)
+        else:
+            result = goods_market.clear(bids, chosen, good, area, setup.currency_id, last_price, buyers_of[market])
+        results.append((chosen, result))
     return results
 
 
 def _decide(setup, arrays, costs, has_bids, res0, qty, prow, grow, key_of, multiple, offer_ptr, bid_ptr, tier_ptr, size, rate, spoilage,
-            minimum, has_minimum, capped, columns, tiers) -> numpy.ndarray:
+            minimum, has_minimum, capped, columns, tiers) -> tuple:
     producers, matrices = arrays.producers, arrays.matrices
     rows = numpy.array(prow, dtype=numpy.int64)
     goods = numpy.array(grow, dtype=numpy.int64)
@@ -131,13 +145,16 @@ def _decide(setup, arrays, costs, has_bids, res0, qty, prow, grow, key_of, multi
     count = len(columns[0])
     joined = [numpy.concatenate(column) if column else empty for column in columns]
     steps = price_setting
-    return goods_year_kernel.decide_markets(
+    bid_pointers = numpy.array(bid_ptr, dtype=numpy.int64)
+    capped_flags = numpy.array(capped, dtype=bool)
+    tier_pointers = numpy.array(tier_ptr, dtype=numpy.int64)
+    tier_values = numpy.concatenate(tiers) if count else numpy.zeros(0, dtype=numpy.int64)
+    final = goods_year_kernel.decide_markets(
         numpy.array(has_bids, dtype=bool), numpy.array(offer_ptr, dtype=numpy.int64), numpy.array(res0, dtype=float), numpy.array(qty, dtype=float), is_producer,
         cost, share, expected, workshops, is_producer & (workshops > 1.0), expected_sales,
         numpy.array(multiple, dtype=float), numpy.array(key_of, dtype=numpy.int64), numpy.array(size, dtype=float),
         numpy.array(rate, dtype=float), numpy.array(spoilage, dtype=float), numpy.array(minimum, dtype=float),
-        numpy.array(has_minimum, dtype=bool), numpy.array(bid_ptr, dtype=numpy.int64), *joined,
-        numpy.array(capped, dtype=bool), numpy.array(tier_ptr, dtype=numpy.int64),
-        numpy.concatenate(tiers) if count else numpy.zeros(0, dtype=numpy.int64), steps.LOGIT_INTENSITY,
-        math.floor((steps.GRID_END - steps.GRID_START) / steps.GRID_STEP + 1e-9), steps.GRID_START, steps.GRID_STEP,
-        steps.MONTHS, steps.MONTHLY_DISCOUNT_RATE)
+        numpy.array(has_minimum, dtype=bool), bid_pointers, *joined, capped_flags, tier_pointers, tier_values,
+        steps.LOGIT_INTENSITY, math.floor((steps.GRID_END - steps.GRID_START) / steps.GRID_STEP + 1e-9), steps.GRID_START,
+        steps.GRID_STEP, steps.MONTHS, steps.MONTHLY_DISCOUNT_RATE)
+    return final, (bid_pointers, *joined, capped_flags, tier_pointers, tier_values)

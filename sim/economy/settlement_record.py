@@ -27,14 +27,15 @@ class Settlement:
     keys: List[Tuple[AgentId, str]] = field(default_factory=list)
     key_to_mint: List[float] = field(default_factory=list)
     delivered: float = 0.0                                     # goods moved
-    pairs: Optional[Tuple] = None      # (pairing, receipt_key, payer, goods, money) for `postings`
+    pairs: Optional[Tuple] = None      # (a function giving the pairing, receipt_key, payer, goods, money) for `postings`
 
     @property
     def postings(self) -> List[object]:
         """The Transfers and GoodsMoves applied, one of each per pair that moved something."""
         if self.pairs is None:
             return []
-        pairing, receipt_key, payer, goods, money = self.pairs
+        pairing_of, receipt_key, payer, goods, money = self.pairs
+        pairing = pairing_of()
         buyer_index, seller_index = pairing.buyer_index, pairing.seller_index
         transfers, moves = [], []
         for pair in range(len(goods)):
