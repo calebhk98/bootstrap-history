@@ -20,6 +20,9 @@ from .types import GoodId, GoodSpec, MarketArea, Recipe, TileId
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 
 
+_NO_SUPPLY: Mapping[TileId, float] = {}
+
+
 def tonnes_of(goods: Mapping[GoodId, float], specs: Mapping[GoodId, GoodSpec]) -> Dict[GoodId, float]:
     """Mass in tonnes of each good's quantity; a good with nothing to carry is left out."""
     return {good: quantity * specs[good].unit_mass_kg / KILOGRAMS_PER_TONNE for good, quantity in goods.items()
@@ -36,9 +39,16 @@ def supply_tiles(record, setup, good: GoodId) -> Dict[TileId, float]:
     return supply
 
 
-def mean_haul_cost(carriage, supply: Mapping[TileId, float], tile: TileId) -> float:
+def mean_haul_cost(carriage, supply: Mapping[TileId, float], tile: TileId, memo=None) -> float:
     """Carriage per tonne into `tile` from where `supply` is made, weighted by what each tile makes; zero
-    when nothing is made (no input to haul is known)."""
+    when nothing is made (no input to haul is known). With a `memo` dict (kept by a caller whose supplies and carriage
+    do not change) each supply and tile is worked out once."""
+    if memo is not None:
+        key = (id(supply), tile)
+        kept = memo.get(key)
+        if kept is None or kept[0] is not supply:
+            kept = memo[key] = (supply, mean_haul_cost(carriage, supply, tile))
+        return kept[1]
     total = math.fsum(supply.values())
     if total <= 0.0:
         return 0.0
@@ -46,15 +56,18 @@ def mean_haul_cost(carriage, supply: Mapping[TileId, float], tile: TileId) -> fl
 
 
 def input_haul_cost(recipe: Recipe, specs, carriage, supplies: Mapping[GoodId, Mapping[TileId, float]],
-                    tile: TileId) -> float:
-    """Carriage of one run's inputs into `tile` from where each is made."""
-    return math.fsum(tonnes * mean_haul_cost(carriage, supplies.get(good, {}), tile)
+                    tile: TileId, memo=None) -> float:
+    """Carriage of one run's inputs into `tile` from where each is made (`memo`: see `mean_haul_cost`)."""
+    return math.fsum(tonnes * mean_haul_cost(carriage, supplies.get(good, _NO_SUPPLY), tile, memo)
                      for good, tonnes in tonnes_of(recipe.inputs, specs).items())
 
 
-def input_supplies(record, setup, recipe: Recipe, goods=None) -> Dict[GoodId, Dict[TileId, float]]:
-    """Where each of the recipe's inputs (or of `goods` among them) is made now."""
-    return {good: supply_tiles(record, setup, good) for good in recipe.inputs if goods is None or good in goods}
+def input_supplies(record, setup, recipe: Recipe, goods=None, shared=None) -> Dict[GoodId, Dict[TileId, float]]:
+    """Where each of the recipe's inputs (or of `goods` among them) is made now. `shared` keeps what is read for a good
+    across recipes, for a caller whose producers do not change between them."""
+    shared = {} if shared is None else shared
+    return {good: shared[good] if good in shared else shared.setdefault(good, supply_tiles(record, setup, good))
+            for good in recipe.inputs if goods is None or good in goods}
 
 
 def fixed_site_goods(recipes: Mapping[str, Recipe], by_limits) -> frozenset:

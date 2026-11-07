@@ -139,6 +139,7 @@ def entry_siting(setup, record, view, area_map, carriage) -> Siting:
     capacity: Dict[Tuple[str, TileId], float] = {}
     committed: Dict[TileId, float] = {}
     supplies: Dict[str, Mapping] = {}
+    supply_of_good: Dict[str, Mapping] = {}      # where each input good is made, read once for every recipe sited
     tile_parts: Dict[Tuple[str, TileId, float], tuple] = {}    # what a recipe's run on a tile costs apart from the output's carriage
     reads: Dict[tuple, object] = {}      # input haul by (recipe, tile) and working people by tile: neither changes as sites are claimed
     fixed_goods = location_inputs.fixed_site_goods(setup.recipes, by_recipe)
@@ -164,7 +165,7 @@ def entry_siting(setup, record, view, area_map, carriage) -> Siting:
             return demand.anchor_tile, runs
         tonnes = output_tonnes(recipe, setup.specs)
         if recipe_id not in supplies:
-            supplies[recipe_id] = location_inputs.input_supplies(record, setup, recipe, fixed_goods)
+            supplies[recipe_id] = location_inputs.input_supplies(record, setup, recipe, fixed_goods, supply_of_good)
         candidates: List[Candidate] = []
         reachable = tuple(setup.tiles) if sites.is_sited(recipe, by_recipe) else tuple(sorted(
             set(area.tiles) | {tile for supply in supplies[recipe_id].values() for tile in supply}))
@@ -218,7 +219,7 @@ def _tile_part(setup, record, view, carriage, recipe, by_recipe, supplies, capac
     haul_key = ("haul", recipe.recipe_id, tile)
     input_haul = reads.get(haul_key)
     if input_haul is None:
-        input_haul = reads[haul_key] = location_inputs.input_haul_cost(recipe, setup.specs, carriage, supplies, tile)
+        input_haul = reads[haul_key] = location_inputs.input_haul_cost(recipe, setup.specs, carriage, supplies, tile, reads.setdefault(("hauls",), {}))
     people_key = ("people", tile)
     people = reads.get(people_key)
     if people is None:

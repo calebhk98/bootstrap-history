@@ -118,9 +118,11 @@ class MarketMemory:
 
     def set_quote_kind(self, key: str, kind: str) -> None:
         self.quote_kinds[key] = kind
+        note_written()
 
     def drop_quote_kind(self, key: str) -> None:
         self.quote_kinds.pop(key, None)
+        note_written()
 
     def set_area_currencies(self, currency_of_area: Dict[AreaId, CurrencyId]) -> None:
         self.currency_of_area = currency_of_area
@@ -210,6 +212,7 @@ class MarketMemory:
             self.trade_age[key] += 1
         for key in traded_keys:
             self.trade_age[key] = 0
+        note_written()
 
     def note_volume(self, key: str, quantity: float) -> None:
         """Move a market's usual volume toward what it traded this year."""
@@ -250,6 +253,8 @@ class YearView:
         self._area_by_tile: Dict[str, Dict[TileId, AreaId]] = {}    # name -> tile -> its area; the area map does not change
         self._stamp = _writes[0]
         self._reads: Dict[tuple, object] = {}     # reads of the memory kept until the next write to it
+        self._offered: Dict[str, Optional[float]] = {}
+        self._kinds: Dict[str, Optional[str]] = {}
 
     def prices_across(self, good: GoodId, areas) -> list:
         """`price(good, area.area_id)` for each of `areas` (the good's areas), in order."""
@@ -269,7 +274,14 @@ class YearView:
     def offered_price(self, good: GoodId, area: AreaId) -> Optional[float]:
         """What a buyer can buy at: the traded price or an ask still posted (`MarketMemory.offered_price`); None
         where nothing is on offer. A buyer reads this, never `price`."""
-        return self._memory.offered_price(good + KEY_SEPARATOR + area)
+        if self._stamp != _writes[0]:
+            self._current()
+        key = good + KEY_SEPARATOR + area
+        try:
+            return self._offered[key]
+        except KeyError:
+            found = self._offered[key] = self._memory.offered_price(key)
+            return found
 
     def present_prices_at(self, names: tuple, tile: TileId) -> Dict[str, float]:
         """`price` of each of `names` (goods, one tuple kept by the caller) in its area on `tile`, those with a
@@ -294,7 +306,14 @@ class YearView:
 
     def price_kind(self, good: GoodId, area: AreaId) -> Optional[str]:
         """PRICE_SMOOTHED_TRADE, or the kind of quote or estimate `price` is; None when the market has no price."""
-        return self._memory.price_kind(good + KEY_SEPARATOR + area)
+        if self._stamp != _writes[0]:
+            self._current()
+        key = good + KEY_SEPARATOR + area
+        try:
+            return self._kinds[key]
+        except KeyError:
+            found = self._kinds[key] = self._memory.price_kind(key)
+            return found
 
     def cleared_price(self, good: GoodId, area: AreaId) -> Optional[float]:
         """The price the market cleared at last year; None when nothing traded in it."""
@@ -316,6 +335,8 @@ class YearView:
         if self._stamp != _writes[0]:
             self._stamp = _writes[0]
             self._reads = {}
+            self._offered = {}
+            self._kinds = {}
         return self._reads
 
     def wages_at(self, trades: tuple, tile: TileId) -> Dict[str, float]:
