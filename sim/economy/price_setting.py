@@ -16,7 +16,11 @@ enter Eurace's earnings but not the choice among prices, so they are left out.
 import math
 from typing import List, Sequence, Tuple
 
+import numpy
+
 from sim.constants import declare
+
+from . import price_setting_kernel
 
 _RETIRE = "Complaints/473-the-agent-economy-spin-up-never-settles-so-the-opening-is-a-point-on-a-cycle.md"
 
@@ -100,18 +104,26 @@ def expected_earnings(price: float, unit_value: float, expected_sales: float, st
     return total
 
 
+def best_prices(rival_asks, rival_counts, own, current, unit_value, market_size, stock, floor, ceiling,
+                intensity: float = LOGIT_INTENSITY):
+    """`best_price` for many sellers of one market at once, in arrays: seller i sits at position `own[i]` of the market's
+    `rival_asks` and `rival_counts` (a count of zero is no rival: nothing to sell or no ask) and is left out of its own
+    rivals; the other arguments are per seller."""
+    count = math.floor((GRID_END - GRID_START) / GRID_STEP + 1e-9)     # as grid_prices
+    return price_setting_kernel.best_prices(rival_asks, rival_counts, own, current, unit_value, market_size, stock, floor,
+                                            ceiling, intensity, count, GRID_START, GRID_STEP, MONTHS, MONTHLY_DISCOUNT_RATE)
+
+
 def best_price(current: float, unit_value: float, market_size: float, rivals: Sequence[Tuple[float, float]], stock: float,
                floor: float, ceiling: float, intensity: float = LOGIT_INTENSITY) -> float:
     """The price on the grid around `current`, kept between `floor` and `ceiling`, that earns most over the year
     (Eurace@Unibi, Firm_set_price: the first price with the highest estimated earnings; here a tie keeps the current price,
     so a seller whose sales are all capped by an empty stock does not move). `market_size` is the year's quantity bought
     from all sellers, `rivals` the other sellers' (ask, count of sellers) pairs, `stock` what the seller can sell."""
-    best, best_earnings = current, expected_earnings(
-        current, unit_value, market_size * logit_share(current, rivals, intensity), stock)
-    for candidate in sorted({min(max(price, floor), ceiling) for price in grid_prices(current)}):
-        if candidate <= 0.0:
-            continue
-        earnings = expected_earnings(candidate, unit_value, market_size * logit_share(candidate, rivals, intensity), stock)
-        if earnings > best_earnings + 1e-12 * max(abs(best_earnings), 1e-300):
-            best, best_earnings = candidate, earnings
-    return best
+    asks = numpy.array([ask for ask, _count in rivals], dtype=float)
+    counts = numpy.array([count for _ask, count in rivals], dtype=float)
+    chosen = best_prices(asks, counts, numpy.array([-1]), numpy.array([current], dtype=float),
+                         numpy.array([unit_value], dtype=float), numpy.array([market_size], dtype=float),
+                         numpy.array([stock], dtype=float), numpy.array([floor], dtype=float),
+                         numpy.array([ceiling], dtype=float), intensity)
+    return float(chosen[0])
