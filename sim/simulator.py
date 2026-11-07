@@ -27,6 +27,10 @@ and that must not stop being true because the inside was tidied.
 import os
 import sys
 
+if __name__ == "__main__" and sys.argv[1:2] in (["agent"], ["play"]):
+    import gc
+    gc.disable()      # a game process loads a save, then `sim.ui.process_start` re-enables it and leaves without teardown
+
 _REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if _REPO_ROOT not in sys.path:
 	sys.path.insert(0, _REPO_ROOT)
@@ -60,3 +64,5 @@ from sim.ui.api import (_agent_available, _agent_dispatch,  # noqa: F401
 
 if __name__ == "__main__":
     main()
+    from sim.ui import process_start
+    process_start.finish()
