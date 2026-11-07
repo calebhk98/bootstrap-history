@@ -164,7 +164,36 @@ class Book:
         self.post(transfers, ())
 
     def move_many(self, moves: Iterable[GoodsMove]) -> None:
-        self.post((), moves)
+        """`post((), moves)`: all of them or none, with the stocks and the records written in one pass."""
+        moves = list(moves)
+        if not moves:
+            return
+        stocks, holders = self._goods, self._holders
+        for (agent, good, tile), value in self._goods_after(moves).items():
+            by_good = stocks.get(agent)
+            if by_good is None:
+                by_good = stocks[agent] = {}
+            by_tile = by_good.get(good)
+            if by_tile is None:
+                by_tile = by_good[good] = {}
+            by_tile[tile] = value
+            held_by = holders.get(good)
+            if held_by is None:
+                held_by = holders[good] = set()
+            held_by.add(agent)
+        gross, by_purpose_of = self._gross_goods, self._goods_by_purpose
+        for move in moves:
+            quantity, good, giver, receiver = move.quantity, move.good, move.giver, move.receiver
+            gross[good] = gross.get(good, 0.0) + quantity
+            by_purpose = by_purpose_of.get(good)
+            if by_purpose is None:
+                by_purpose = by_purpose_of[good] = {}
+            purpose = move.purpose
+            by_purpose[purpose] = by_purpose.get(purpose, 0.0) + quantity
+            if giver.startswith(EDGE_PREFIX):
+                self._record_edge_goods(giver, good, quantity, quantity)
+            if receiver.startswith(EDGE_PREFIX):
+                self._record_edge_goods(receiver, good, quantity, -quantity)
 
     def post(self, transfers: Iterable[Transfer], moves: Iterable[GoodsMove]) -> None:
         """Apply money transfers and goods moves together: all of them or none."""
@@ -289,6 +318,7 @@ class Book:
         after: Dict[Tuple[AgentId, GoodId, TileId], float] = {}
         before: Dict[Tuple[AgentId, GoodId, TileId], float] = {}
         moved: Dict[Tuple[AgentId, GoodId, TileId], float] = {}
+        stocks = self._goods
         for move in moves:
             quantity = move.quantity
             good = move.good
@@ -299,7 +329,9 @@ class Book:
                 after[key] -= quantity
                 moved[key] += quantity
             else:
-                start = self.stock(*key)
+                by_good = stocks.get(key[0])
+                by_tile = by_good.get(good) if by_good else None
+                start = by_tile.get(key[2], 0.0) if by_tile else 0.0
                 before[key] = start
                 after[key] = start - quantity
                 moved[key] = quantity
@@ -308,7 +340,9 @@ class Book:
                 after[key] += quantity
                 moved[key] += quantity
             else:
-                start = self.stock(*key)
+                by_good = stocks.get(key[0])
+                by_tile = by_good.get(good) if by_good else None
+                start = by_tile.get(key[2], 0.0) if by_tile else 0.0
                 before[key] = start
                 after[key] = start + quantity
                 moved[key] = quantity
