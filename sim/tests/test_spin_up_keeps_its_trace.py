@@ -56,6 +56,17 @@ class SpinUpKeepsItsTraceTests(unittest.TestCase):
         self.assertEqual(json.dumps(spin_up_run.spun_up(self.setup_value), sort_keys=True),
                          json.dumps(plain_record(self.setup_value), sort_keys=True))
 
+    def test_the_spun_up_record_is_plain_json(self):
+        # the record is cached as JSON; a numpy boolean or integer from a kernel would stop a new game from opening
+        json.dumps(spin_up_run.spun_up(self.setup_value))
+
+    def test_numpy_figures_are_made_plain(self):
+        import numpy
+        made = spin_up_run.plain({"settled": numpy.False_, "gaps": {"rate": numpy.float64(0.5)}, "final": [numpy.int64(2)]})
+        json.dumps(made)
+        self.assertIs(type(made["settled"]), bool)
+        self.assertIs(type(made["final"][0]), int)
+
     def test_a_shortened_spin_up_keeps_no_trace(self):
         with mock.patch.dict(os.environ, {SPIN_UP_YEARS_ENV: "3,2"}):
             spin_up_run.spun_up(self.setup_value)
