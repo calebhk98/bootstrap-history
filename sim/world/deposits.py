@@ -268,7 +268,6 @@ from typing import Any, Dict, List, Optional
 from sim.constants import declare
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 from sim.world import mine_breaking, mine_fire_setting, mine_lift, mine_technique, mine_works
-from sim.geography import map_source
 from sim.geography.api import deposit_records, ore_goods, tile_lookup
 
 # ============================================================================
@@ -1086,21 +1085,20 @@ def _declare_explicit_share(deposit_entry: Dict[str, Any], metal: str) -> float:
             "1.0 (see the geography deposit catalogue's own _doc)." % metal)
 
 
-_deposit_data_kept: List[Any] = [None, None]     # the map the deposit data was read from, and the data
+_deposit_data_kept: List[Any] = [None, None]     # whether the data was read, and the data
 
 
 def load_deposit_data() -> Dict[str, Any]:
     """{"deposits": {metal: [entry]}}: the geography catalogue's named deposits that carry a share of the
     empire's output, in the catalogue's order (metals by first appearance), each entry's `name` the catalogue id."""
-    world_map = map_source.load_map()
-    if _deposit_data_kept[0] is not world_map:
+    if _deposit_data_kept[0] is None:      # the default map is the cached base map, so the catalogue does not change in a process
         data: Dict[str, Any] = {"deposits": {}}
         for row in deposit_records():
             if row.get("resource") in METALS and "share_of_empire_output" in row:
                 data["deposits"].setdefault(row["resource"], []).append(dict(row, name=row["id"]))
         for metal in METALS:
             data["deposits"].setdefault(metal, [])
-        _deposit_data_kept[:] = [world_map, data]
+        _deposit_data_kept[:] = [True, data]
     return _deposit_data_kept[1]       # shared between callers, who only read it
 
 

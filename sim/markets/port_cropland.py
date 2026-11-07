@@ -19,6 +19,10 @@ def follow_farm_sites(sim, held_tiles, yield_factor_by_recipe_tile) -> dict:
             changed[tile_id] = followed.fertility
     if not changed:
         return {}
+    return {"tiles": tiles, "yield_factor_by_recipe_tile": followed_factors(yield_factor_by_recipe_tile, changed)}
+
+
+def followed_factors(yield_factor_by_recipe_tile, fertility_by_tile) -> dict:
+    """The yield factor of every recipe-and-tile key, replaced by the tile's new fertility where the tile changed."""
     separator = recipe_tile_key("", "")
-    factors = {key: changed.get(key.partition(separator)[2], factor) for key, factor in yield_factor_by_recipe_tile.items()}
-    return {"tiles": tiles, "yield_factor_by_recipe_tile": factors}
+    return {key: fertility_by_tile.get(key.partition(separator)[2], factor) for key, factor in yield_factor_by_recipe_tile.items()}
