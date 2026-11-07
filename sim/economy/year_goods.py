@@ -74,6 +74,13 @@ def cohort_orders(setup, record, view, ledger: YearLedger, order_book: OrderBook
     return funds
 
 
+def with_floor_and_budget(bid: Bid, floor_quantity: float, budget: float) -> Bid:
+    """`bid` with a new floor and budget: the bid `dataclasses.replace` makes, built directly, since the opening's
+    income search makes millions of them."""
+    return Bid(bid.buyer, bid.good, bid.area, bid.tile, floor_quantity, bid.flexible_quantity, bid.reference_price,
+               bid.elasticity, budget, bid.priority, bid.maximum_price)
+
+
 def less_what_it_grew(orders: AgentOrders, cohort, basket, grown_units) -> AgentOrders:
     """Floors already met from the household's own plot are not bought: each floor bid of a need is
     cut by the share of that need's floor the cohort grew."""
@@ -93,8 +100,7 @@ def less_what_it_grew(orders: AgentOrders, cohort, basket, grown_units) -> Agent
         if met > 0.0 and bid.floor_quantity > 0.0:
             cut = bid.floor_quantity * met
             share_kept = 1.0 - cut / (bid.floor_quantity + bid.flexible_quantity)
-            bid = dataclasses.replace(bid, floor_quantity=bid.floor_quantity - cut,
-                                      budget=bid.budget * max(0.0, share_kept))
+            bid = with_floor_and_budget(bid, bid.floor_quantity - cut, bid.budget * max(0.0, share_kept))
         bids.append(bid)
     return dataclasses.replace(orders, bids=tuple(bids))
 
