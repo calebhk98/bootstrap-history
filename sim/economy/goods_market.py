@@ -30,6 +30,7 @@ import numpy
 from sim.constants import declare
 
 from sim.book import ROUNDING_SHARE
+from . import goods_market_kernels
 from .goods_market_demand import DemandSchedule
 from .goods_market_fills import buyer_fills, make_fill, seller_fills, without_edge_self_trades, without_washed
 from .goods_market_logit import allocate
@@ -174,7 +175,10 @@ def _pairing(bids: Sequence[Bid], ordered: Sequence[Offer], asks: Sequence[float
     seller_index, buyer_index = numpy.nonzero(flow > 0.0)
     quantity = flow[seller_index, buyer_index].tolist()
     seller_index, buyer_index = seller_index.tolist(), buyer_index.tolist()
-    kept, washed = [], {}
+    washed: Dict[str, float] = {}
+    if not any(is_edge(seller) for seller, _tile in sellers):
+        return Pairing(buyers, sellers, tuple(asks), tuple(buyer_index), tuple(seller_index), tuple(quantity)), washed
+    kept = []
     for pair in range(len(quantity)):
         seller = sellers[seller_index[pair]][0]
         if is_edge(seller) and seller == buyers[buyer_index[pair]][0]:
@@ -195,7 +199,7 @@ def _trades(buyers: Buyers, ordered: Sequence[Offer], asks: Sequence[float]) -> 
     a seller meant to sell), or no buyer wants anything even at the lowest ask (the buyers want less the dearer the ask)."""
     if not ordered:
         return False
-    wanted = buyers.schedule.total_at(asks[0])
+    wanted = goods_market_kernels.total_wanted(asks[0], *buyers.schedule.kernel_arrays())
     return wanted > 0.0 and math.fsum(offer.quantity for offer in ordered) > ROUNDING_SHARE * wanted
 
 
@@ -231,7 +235,9 @@ def requested_by_buyers(buyers: Buyers, offers: Sequence[Offer]) -> float:
     asks = _asks(buyers, ordered)
     if not _trades(buyers, ordered, asks):
         return 0.0
-    return allocate(buyers.bids, ordered, asks, buyers.schedule).requested
+    quantities = numpy.fromiter((offer.quantity for offer in ordered), dtype=float, count=len(ordered))
+    return float(goods_market_kernels.requested_round_one(numpy.array(asks, dtype=float), quantities,
+                                                          *buyers.schedule.kernel_arrays()))
 
 
 def crossing(buyers: Buyers, offers: List[Offer], with_wants: bool = True):

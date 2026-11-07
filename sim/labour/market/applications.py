@@ -12,13 +12,14 @@ Labour/Household_Employee_Functions.c); a firm sends offers to as many applicant
 workers and reposts the vacancies (Firm_send_random_redundancies). Hours stand for workers, so each step is the share
 of a group of hours it happens to, not a draw.
 """
-import bisect
-import math
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, Optional, Sequence
+
+import numpy as np
 
 from sim.constants import declare
 
+from . import hiring_kernel
 from .asks import RESERVATION_CUT_PER_ROUND, SEARCH_ROUNDS_PER_YEAR, VACANCY_SHARE_THRESHOLD, WAGE_UPDATE_PER_ROUND
 
 APPLICATIONS_PER_ROUND = declare(
@@ -39,128 +40,64 @@ SEPARATION_SHARE_PER_ROUND = declare(
 
 
 @dataclass
-class Searchers:
-    """Hours looking for work, all asking the same wage."""
-    hours: float
+class HireJob:
+    """One market's hiring rounds. `hired`, `kept` and `offers` (hours or wage per employer, one key set) change in place;
+    `taken` is filled with the hours taken on per employer."""
+    hired: Dict[str, float]
+    kept: Dict[str, float]
+    wanted: Dict[str, float]
+    offers: Dict[str, float]
+    pool: float
     ask: float
+    floor: float
+    ceilings: Optional[Dict[str, float]] = None
+    taken: Optional[Dict[str, float]] = None
 
 
-def _round(groups: List[Searchers], vacancies: Dict[str, float], offers: Dict[str, float]
-           ) -> Tuple[List[int], Dict[int, Dict[str, float]]]:
-    """(for each group, how many of the posting employers it can apply to, and for each such count the share of one
-    hour of such a group that each employer takes on). Posters are ranked by offer, highest first, so a group asking
-    `ask` can reach the first employers whose offer is at or above it; groups reaching the same employers behave alike."""
-    ranked = sorted((employer for employer, vacant in vacancies.items() if vacant > 0.0),
-                    key=lambda employer: (-offers[employer], employer))
-    negated = [-offers[employer] for employer in ranked]
-    reach = [bisect.bisect_right(negated, -group.ask) for group in groups]
-    hours_reaching: Dict[int, float] = {}
-    for group, count in zip(groups, reach):
-        hours_reaching[count] = hours_reaching.get(count, 0.0) + group.hours
-    applicants = {employer: 0.0 for employer in ranked}
-    for count, hours in hours_reaching.items():
-        for employer in ranked[:count]:
-            applicants[employer] += hours * min(APPLICATIONS_PER_ROUND, count) / count
-    offered = {employer: min(1.0, vacancies[employer] / applicants[employer]) if applicants[employer] > 0.0 else 0.0
-               for employer in ranked}
-    return reach, {count: _taken_by(1.0, ranked[:count], offered, offers) for count in hours_reaching}
+def hire_markets(jobs: Sequence[HireJob]) -> None:
+    """Run the year's `SEARCH_ROUNDS_PER_YEAR` rounds of every job's market in one kernel call. Each market is packed
+    into arrays (employers in sorted id order), run, and written back. The rounds: a firm's workers are dismissed
+    into groups of searching hours (`SEPARATION_SHARE_PER_ROUND` of what it holds, asking the wage they were paid), groups
+    apply to employers' offers, and groups that found nothing lower their ask (`RESERVATION_CUT_PER_ROUND`, not under the
+    plot return `floor`); with `ceilings` an employer whose vacancies stay open raises its offer after each round, not
+    past its ceiling (`WAGE_UPDATE_PER_ROUND`, while over `VACANCY_SHARE_THRESHOLD` of the hours wanted stay open).
+    `offers` ends as the mean offer each employer paid the hours it took on (its last offer where it took none)."""
+    keys = [sorted(job.hired) for job in jobs]
+    offsets = np.zeros(len(jobs) + 1, np.int64)
+    np.cumsum([len(each) for each in keys], out=offsets[1:])
+    total = int(offsets[-1])
 
-
-def _taken_by(hours: float, firms: List[str], offered: Dict[str, float], offers: Dict[str, float]) -> Dict[str, float]:
-    """Hours of a group that applies to `APPLICATIONS_PER_ROUND` of `firms` at random and takes the best offer it gets.
-    The chance firm j is the best is: it is chosen, makes an offer, and each better-paying firm also chosen made none;
-    the choices are counted with a polynomial over the better firms (exact for a draw of the applications without
-    replacement). Firms paying the same share their tier's hours by their chance of an offer."""
-    if not firms:
-        return {}
-    ranked = sorted(firms, key=lambda employer: (-offers[employer], employer))
-    count, applied = len(ranked), min(APPLICATIONS_PER_ROUND, len(ranked))
-    better = [1.0] + [0.0] * (applied - 1)      # better[m]: weight of m better firms chosen and silent
-    shares: Dict[str, float] = {}
-    for position, employer in enumerate(ranked, start=1):
-        others = count - position
-        weight = sum(better[m] * math.comb(others, applied - 1 - m) for m in range(applied) if applied - 1 - m <= others)
-        shares[employer] = offered[employer] * applied / count * weight / math.comb(count - 1, applied - 1)
-        better = [better[m] + (better[m - 1] * (1.0 - offered[employer]) if m else 0.0) for m in range(applied)]
-    taken: Dict[str, float] = {}
-    for pay in {offers[employer] for employer in ranked}:
-        tier = [employer for employer in ranked if offers[employer] == pay]
-        total, weights = sum(shares[employer] for employer in tier), sum(offered[employer] for employer in tier)
-        for employer in tier:
-            taken[employer] = hours * total * (offered[employer] / weights if weights > 0.0 else 0.0)
-    return taken
-
-
-
-
-def lowered_ask(ask: float, floor: float) -> float:
-    """The ask of a group that found nothing: cut by `RESERVATION_CUT_PER_ROUND`, not under `floor` (the plot return)."""
-    return max(ask * (1.0 - RESERVATION_CUT_PER_ROUND), min(ask, floor))
-
-
-def capped_asks(groups: List[Searchers], vacancies: Dict[str, float], offers: Dict[str, float]) -> List[Searchers]:
-    """The groups with no ask over the best offer an employer with a vacancy posts: a seller does not ask more than any
-    buyer is seen to pay (the rule `asks.record` applies to the market's ask), so hours that were paid more than the
-    going offer do not sit idle waiting for the old wage. With no vacancy posted nothing is capped."""
-    posted = [offers[employer] for employer, vacant in vacancies.items() if vacant > 0.0]
-    best = max(posted) if posted else math.inf
-    return [Searchers(group.hours, min(group.ask, best)) for group in groups]
-
-
-def raised_offer(offer: float, ceiling: float, wanted: float, hired: float) -> float:
-    """An employer's offer after a round: raised by `WAGE_UPDATE_PER_ROUND` while vacancies over `VACANCY_SHARE_THRESHOLD`
-    of the hours it wants stay open (Firm_update_wage_offer, Eurace Labour/Firm_Employer_Functions.c), but not past
-    `ceiling`, what its marginal hour is worth to it, and never lowered."""
-    if wanted <= 0.0 or (wanted - hired) / wanted <= VACANCY_SHARE_THRESHOLD:
-        return offer
-    return max(offer, min(offer * (1.0 + WAGE_UPDATE_PER_ROUND), ceiling))
+    def column(read) -> np.ndarray:
+        return np.fromiter((read(job, employer) for job, employers in zip(jobs, keys) for employer in employers), np.float64, total)
+    hired = column(lambda job, employer: job.hired[employer])
+    kept = column(lambda job, employer: job.kept[employer])
+    wanted = column(lambda job, employer: job.wanted[employer])
+    offers = column(lambda job, employer: job.offers[employer])
+    ceilings = column(lambda job, employer: 0.0 if job.ceilings is None else job.ceilings.get(employer, 0.0))
+    taken_amount = np.zeros(total)
+    taken_flag = np.zeros(total, np.bool_)
+    hiring_kernel.hire_markets(
+        offsets, hired, kept, wanted, offers, ceilings,
+        np.array([job.pool for job in jobs], np.float64), np.array([job.ask for job in jobs], np.float64),
+        np.array([job.floor for job in jobs], np.float64), np.array([job.ceilings is not None for job in jobs], np.bool_),
+        taken_amount, taken_flag, SEARCH_ROUNDS_PER_YEAR, APPLICATIONS_PER_ROUND, SEPARATION_SHARE_PER_ROUND,
+        RESERVATION_CUT_PER_ROUND, WAGE_UPDATE_PER_ROUND, VACANCY_SHARE_THRESHOLD)
+    hired_list, kept_list, offers_list = hired.tolist(), kept.tolist(), offers.tolist()
+    amounts, flags = taken_amount.tolist(), taken_flag.tolist()
+    for job, employers, low in zip(jobs, keys, offsets.tolist()):
+        job.taken = {}
+        for index, employer in enumerate(employers, start=low):
+            job.hired[employer] = hired_list[index]
+            job.kept[employer] = kept_list[index]
+            job.offers[employer] = offers_list[index]
+            if flags[index]:
+                job.taken[employer] = amounts[index]
 
 
 def hire_through_rounds(hired: Dict[str, float], kept: Dict[str, float], wanted: Dict[str, float],
                         offers: Dict[str, float], pool: float, ask: float,
                         floor: float, ceilings: Optional[Dict[str, float]] = None) -> Dict[str, float]:
-    """Run the year's `SEARCH_ROUNDS_PER_YEAR` rounds over `hired` and `kept` (hours per employer, changed in place).
-    `pool` hours ask `ask`; hours an employer dismisses, `SEPARATION_SHARE_PER_ROUND` of what it holds each round, ask
-    the wage they were paid (a hired worker's reservation is reset to the wage, Household_receive_wage in
-    Labour/Household_Employee_Functions.c): the employer's current offer, held hours and new alike.
-    With `ceilings` an employer whose vacancies stay open raises its offer after each round (`raised_offer`); `offers`
-    ends as the mean offer each employer paid the hours it took on (its last offer where it took none). Returns the
-    hours taken on per employer."""
-    groups = [Searchers(pool, ask)]
-    taken: Dict[str, float] = {}
-    paid_sum: Dict[str, float] = {}
-    for _ in range(SEARCH_ROUNDS_PER_YEAR):
-        for employer in sorted(hired):
-            held = hired[employer]
-            if held <= 0.0:
-                continue
-            groups.append(Searchers(held * SEPARATION_SHARE_PER_ROUND, offers.get(employer, 0.0)))
-            hired[employer] = held * (1.0 - SEPARATION_SHARE_PER_ROUND)
-            kept[employer] *= 1.0 - SEPARATION_SHARE_PER_ROUND
-        vacancies = {employer: max(0.0, wanted[employer] - hired[employer]) for employer in wanted}
-        groups = capped_asks(groups, vacancies, offers)
-        reach, units = _round(groups, vacancies, offers)
-        priced = {count: ([(employer, share, offers[employer]) for employer, share in unit.items()], sum(unit.values()))
-                  for count, unit in units.items()}
-        for group, count in zip(groups, reach):
-            lines, share_total = priced[count]
-            group_hours = group.hours
-            for employer, share, offer in lines:
-                amount = group_hours * share
-                hired[employer] += amount
-                if employer in taken:
-                    taken[employer] += amount
-                    paid_sum[employer] += amount * offer
-                else:
-                    taken[employer] = 0.0 + amount
-                    paid_sum[employer] = 0.0 + amount * offer
-            group.hours = group_hours - group_hours * share_total
-        groups = [Searchers(group.hours, lowered_ask(group.ask, floor)) for group in groups if group.hours > 1e-9]
-        if ceilings is not None:
-            for employer in wanted:
-                offers[employer] = raised_offer(offers.get(employer, 0.0), ceilings.get(employer, 0.0),
-                                                wanted[employer], hired[employer])
-    for employer, hours in taken.items():
-        if hours > 0.0:
-            offers[employer] = paid_sum[employer] / hours
-    return taken
+    """`hire_markets` for one market; returns the hours taken on per employer."""
+    job = HireJob(hired, kept, wanted, offers, pool, ask, floor, ceilings)
+    hire_markets([job])
+    return job.taken

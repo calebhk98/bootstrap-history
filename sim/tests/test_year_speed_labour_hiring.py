@@ -1,65 +1,84 @@
-"""Complaint 497: `hire_through_rounds` gives the answers of the plain loop it replaced, on random inputs; no game."""
+"""Numba port, labour clearing: `applications.hire_markets` (the hiring kernel) agrees with the plain Python rounds kept in
+`labour_hiring_reference`, on random inputs; no game.
+
+The kernel sums left to right and takes pay tiers in rank order, where the plain code summed with Python's compensated
+`sum` and took tiers in set order, so figures agree to a relative tolerance, not bit for bit. A rule with a knife edge
+(an employer filled to within rounding either posts a vacancy of a few ulps or none, and a poster changes every
+group's reach) turns a one-ulp change of input into a different market; a case where the plain code itself does so is
+no test of the kernel and is skipped (`is_stable`)."""
 
 QUICK_TOPIC = True
 
+import math
 import random
 import unittest
 
 from sim.labour.market import applications
-from sim.labour.market.applications import SEARCH_ROUNDS_PER_YEAR, SEPARATION_SHARE_PER_ROUND, Searchers
+from sim.tests import labour_hiring_reference as reference
+
+TOLERANCE = 1e-9     # a few ulps per sum, carried through twelve rounds of rates that divide by small differences
 
 
-def plain_hire_through_rounds(hired, kept, wanted, offers, pool, ask, floor, ceilings=None):
-    """The round loop as it was written before the per-count lines were shared."""
-    groups = [Searchers(pool, ask)]
-    taken, paid_sum = {}, {}
-    for _ in range(SEARCH_ROUNDS_PER_YEAR):
-        for employer in sorted(hired):
-            held = hired[employer]
-            if held <= 0.0:
-                continue
-            groups.append(Searchers(held * SEPARATION_SHARE_PER_ROUND, offers.get(employer, 0.0)))
-            hired[employer] = held * (1.0 - SEPARATION_SHARE_PER_ROUND)
-            kept[employer] *= 1.0 - SEPARATION_SHARE_PER_ROUND
-        vacancies = {employer: max(0.0, wanted[employer] - hired[employer]) for employer in wanted}
-        groups = applications.capped_asks(groups, vacancies, offers)
-        reach, units = applications._round(groups, vacancies, offers)
-        for group, count in zip(groups, reach):
-            unit = units[count]
-            for employer, share in unit.items():
-                hired[employer] += group.hours * share
-                taken[employer] = taken.get(employer, 0.0) + group.hours * share
-                paid_sum[employer] = paid_sum.get(employer, 0.0) + group.hours * share * offers[employer]
-            group.hours -= group.hours * sum(unit.values())
-        groups = [Searchers(group.hours, applications.lowered_ask(group.ask, floor)) for group in groups if group.hours > 1e-9]
-        if ceilings is not None:
-            for employer in wanted:
-                offers[employer] = applications.raised_offer(offers.get(employer, 0.0), ceilings.get(employer, 0.0),
-                                                             wanted[employer], hired[employer])
-    for employer, hours in taken.items():
-        if hours > 0.0:
-            offers[employer] = paid_sum[employer] / hours
-    return taken
+def random_job(rng):
+    names = ["e%02d" % i for i in range(rng.randint(1, 14))]
+    return dict(
+        hired={name: rng.choice([0.0, rng.uniform(0.0, 3000.0)]) for name in names},
+        kept={name: rng.uniform(0.0, 3000.0) for name in names},
+        wanted={name: rng.uniform(0.0, 4000.0) for name in names},
+        offers={name: rng.choice([1.0, 1.5, rng.uniform(0.5, 3.0)]) for name in names},
+        pool=rng.uniform(0.0, 9000.0), ask=rng.uniform(0.5, 3.5), floor=rng.uniform(0.1, 1.0),
+        ceilings=rng.choice([None, None, {name: rng.uniform(1.0, 4.0) for name in names}]))
 
 
-class HiringThroughRoundsKeepsItsValues(unittest.TestCase):
+def is_stable(spec):
+    """Whether the plain rounds give the same answer, within the tolerance, when the pool is one ulp larger."""
+    runs = []
+    for pool in (spec["pool"], math.nextafter(spec["pool"], math.inf)):
+        copy = {name: dict(spec[name]) for name in ("hired", "kept", "offers")}
+        runs.append(reference.hire_through_rounds(copy["hired"], copy["kept"], spec["wanted"], copy["offers"], pool,
+                                                  spec["ask"], spec["floor"], spec["ceilings"]))
+    first, second = runs
+    return sorted(first) == sorted(second) and all(abs(first[key] - second[key]) <= TOLERANCE * max(1.0, abs(first[key])) for key in first)
 
-    def test_matches_the_plain_loop_exactly(self):
+
+def assert_close(test, got, expected):
+    test.assertEqual(sorted(got), sorted(expected))
+    for key in expected:
+        test.assertAlmostEqual(got[key], expected[key], delta=TOLERANCE * max(1.0, abs(expected[key])))
+
+
+class HiringKernelAgreesWithThePlainRounds(unittest.TestCase):
+
+    def test_one_market_at_a_time(self):
         rng = random.Random(11)
-        for _case in range(80):
-            names = ["e%02d" % i for i in range(rng.randint(1, 14))]
-            wanted = {name: rng.uniform(0.0, 4000.0) for name in names}
-            hired = {name: rng.choice([0.0, rng.uniform(0.0, 3000.0)]) for name in names}
-            offers = {name: rng.choice([1.0, 1.5, rng.uniform(0.5, 3.0)]) for name in names}
-            ceilings = rng.choice([None, {name: rng.uniform(1.0, 4.0) for name in names}])
-            arguments = (rng.uniform(0.0, 9000.0), rng.uniform(0.5, 3.5), rng.uniform(0.1, 1.0))
-            kept = {name: rng.uniform(0.0, 3000.0) for name in names}
-            fast = (dict(hired), dict(kept), dict(offers))
-            plain = (dict(hired), dict(kept), dict(offers))
-            got = applications.hire_through_rounds(fast[0], fast[1], wanted, fast[2], *arguments, ceilings)
-            expected = plain_hire_through_rounds(plain[0], plain[1], wanted, plain[2], *arguments, ceilings)
-            self.assertEqual(list(got.items()), list(expected.items()))
-            self.assertEqual(fast, plain)
+        compared = 0
+        for _case in range(120):
+            spec = random_job(rng)
+            if not is_stable(spec):
+                continue
+            compared += 1
+            fast = {name: dict(spec[name]) for name in ("hired", "kept", "offers")}
+            plain = {name: dict(spec[name]) for name in ("hired", "kept", "offers")}
+            arguments = (spec["pool"], spec["ask"], spec["floor"], spec["ceilings"])
+            got = applications.hire_through_rounds(fast["hired"], fast["kept"], spec["wanted"], fast["offers"], *arguments)
+            expected = reference.hire_through_rounds(plain["hired"], plain["kept"], spec["wanted"], plain["offers"], *arguments)
+            assert_close(self, got, expected)
+            for name in fast:
+                assert_close(self, fast[name], plain[name])
+        self.assertGreater(compared, 80)
+
+    def test_many_markets_in_one_call_equal_each_alone(self):
+        rng = random.Random(3)
+        specs = [random_job(rng) for _case in range(25)]
+        jobs = [applications.HireJob(dict(spec["hired"]), dict(spec["kept"]), spec["wanted"], dict(spec["offers"]),
+                                     spec["pool"], spec["ask"], spec["floor"], spec["ceilings"]) for spec in specs]
+        applications.hire_markets(jobs)
+        for spec, job in zip(specs, jobs):
+            alone = (dict(spec["hired"]), dict(spec["kept"]), dict(spec["offers"]))
+            taken = applications.hire_through_rounds(alone[0], alone[1], spec["wanted"], alone[2], spec["pool"], spec["ask"],
+                                                     spec["floor"], spec["ceilings"])
+            self.assertEqual(job.taken, taken)
+            self.assertEqual((job.hired, job.kept, job.offers), alone)
 
 
 if __name__ == "__main__":

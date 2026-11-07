@@ -10,7 +10,8 @@ import numpy
 
 from sim.economy.goods_market import clear
 from sim.economy.goods_market_demand import DemandSchedule
-from sim.economy.goods_market_logit import _affordable, allocate
+from sim.economy.goods_market_kernels import affordable_units
+from sim.economy.goods_market_logit import allocate
 from sim.economy.price_setting import logit_share
 from sim.economy.types import Bid, Offer
 
@@ -118,8 +119,8 @@ class FinalPassTests(unittest.TestCase):
         self.assertAlmostEqual(allocation.cost[0], allocation.sold[0] + allocation.sold[1] + 1.2 * allocation.sold[2])
 
     def test_a_free_or_paid_to_take_ask_is_affordable_whatever_budget_is_left(self):
-        units = _affordable(numpy.array([0.0, 2.0, -1.0]), numpy.array([0.0, 4.0]))
-        self.assertEqual(units.tolist(), [[math.inf, math.inf], [0.0, 2.0], [math.inf, math.inf]])
+        units = [[affordable_units(price, budget_left) for budget_left in (0.0, 4.0)] for price in (0.0, 2.0, -1.0)]
+        self.assertEqual(units, [[math.inf, math.inf], [0.0, 2.0], [math.inf, math.inf]])
 
     def test_a_negative_ask_makes_no_negative_request_or_sale(self):
         bids = [floor_bid(10.0)]
