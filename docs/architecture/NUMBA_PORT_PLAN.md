@@ -6,6 +6,7 @@
 - before the port: about 23 and 20
 - items 1, 2 and 5 in part: about 17 and 13.5, reproducible after a reload
 - with labour's heads and switching, entry's practice and the national prices: about 15 and 11 (machine loaded)
+- with settlement, the ledger and the producers' read caches: about 13 and 9
 
 **Goal.** A Rome year under one second (three at most; a game is five hundred years), with the game unchanged in its
 rules and reproducible: the same save stepped on the same machine gives the same game, straight or saved and loaded in
@@ -53,6 +54,19 @@ copied, never written). A phase's share: `cProfile` of `agent --session COPY` wi
     - [x] `industry_opening_rate` wrote an int on one path and a float on the other; now always a float
           (`test_industry_experience_rules`)
     - [x] `year-time --reload-check` passes on the shared Rome save
+
+### 0b. Year arrays shared by every phase
+Packing a phase's records on entry costs about as much as the phase's own work once the arithmetic is compiled: a
+phase reads the fields of every producer and cohort through Python objects. The year arrays are built once a year: the
+producers', cohorts' and market memory's numeric fields as columns indexed by row, with the id-to-row maps. They are
+kept in step when producers enter or exit, read by every kernel, and written back to the records only where a phase
+changes a field. The saved record format does not change.
+- [ ] `sim/economy/year_arrays.py`: producers (recipe, tile, runs, capacity, crew, expectations by recipe good), cohorts
+      (tile, people, cash, basket), market memory (prices, wages, quotes by good or trade and area), the recipes' input and
+      output matrices
+- [ ] built in `Economy._run_year`, refreshed by entry and exit, checked against the records in a test
+- [ ] the first phase moved onto it: the year's close (`producers_close.close_year`, `firm_year.settle_year`, `households_close`)
+- [ ] every other ported phase reads from it instead of packing its own
 
 ### 1. Labour clearing (`sim/labour/market/`)
 - [ ] Market clearing (`clearing.clear_all`, `clear_one`, `hire_through_rounds`, `import_cost`)
