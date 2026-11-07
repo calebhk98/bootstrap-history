@@ -326,6 +326,7 @@ read or post many. The saved format may change (no migration, CLAUDE.md 4.6); sa
       the cached kernels, building the route graphs, the cost trees. A one-command sitting (`agent --session`, `state`)
       costs about 3.5 s: imports, the save's parse and build, the reply, the save written again
 - [ ] A Rome year under one second, and every civilisation's year measured (`year-time` on a save of each)
-- [ ] `openings --prune` rebuilt and committed; the full build timed
+- [x] `openings --prune` rebuilt and committed; the full build of the five civilisations, three at a time, took about seven
+      minutes (Rome about 400 s, Han about 180 s, the others under a minute each); a new Rome game on an empty cache opens in seconds
 - [ ] the slow suite green, or each red topic explained with the complaint that owns it
 - [ ] Complaint 497 updated with the measured year; PR opened
