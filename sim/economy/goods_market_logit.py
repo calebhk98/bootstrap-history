@@ -17,15 +17,12 @@ the quantity unmet, limited by the budget unspent and by what the schedule still
 choose a seller asking above its maximum price (Eurace has no such ceiling; the seller would only be sent buyers who
 cannot take it).
 """
-from itertools import groupby
-from typing import List, Sequence, Tuple
+from typing import List, Sequence
 
 import numpy
 
-from sim.book import ROUNDING_SHARE
-
+from . import goods_market_kernels
 from .goods_market_demand import DemandSchedule
-from .price_setting import LOGIT_INTENSITY
 from .types import Bid, Offer
 
 
@@ -43,94 +40,10 @@ class Allocation:
         self.flow = flow
 
 
-def _weights(asks: numpy.ndarray, stocked: numpy.ndarray, ceilings: numpy.ndarray) -> Tuple[numpy.ndarray, numpy.ndarray]:
-    """(each offer's choice weight, each bid's sum of weights over the offers it may choose). A bid chooses among the
-    offers in stock asking at or below its ceiling; the cheapest of those is the cheapest in stock whenever there is
-    one, so weights are shared (price_setting.choice_weight, relative to that ask) and a bid's sum is the running total
-    of the weights up to its ceiling, which `asks` (ascending) makes a prefix. The sum is 1 for a bid with no choice."""
-    weights = numpy.zeros(len(asks))
-    if stocked.any():
-        cheapest = asks[numpy.argmax(stocked)]
-        if cheapest > 0.0:
-            weights[stocked] = numpy.exp(-LOGIT_INTENSITY * numpy.log(asks[stocked] / cheapest))
-        else:
-            weights[stocked] = (asks[stocked] <= cheapest).astype(float)    # free goods go first; there is no ratio to a free ask
-    running = numpy.concatenate(([0.0], numpy.cumsum(weights)))
-    sums = running[numpy.searchsorted(asks, ceilings, side="right")]
-    return weights, numpy.where(sums > 0.0, sums, 1.0)
-
-
-def _serve(requests: numpy.ndarray, left: numpy.ndarray, tiers: List[Tuple[int, int]],
-           ) -> Tuple[numpy.ndarray, numpy.ndarray, numpy.ndarray]:
-    """Every offer (a row) meets the requests sent to it (Mall_update_mall_stocks_sales_rationing_1): all are served if
-    it holds enough, else tiers in turn. Returns (served, what is left of each offer, the requests not served)."""
-    totals = requests.sum(axis=1)
-    over = numpy.nonzero(totals > left)[0]
-    after = left - totals
-    if not len(over):
-        return requests, after, numpy.zeros_like(requests)
-    served = requests.copy()
-    wanted = requests[over]
-    remaining = left[over]
-    tier_totals = numpy.add.reduceat(wanted, [start for start, _end in tiers], axis=1)
-    for tier, (start, end) in enumerate(tiers):
-        total = tier_totals[:, tier]
-        enough = remaining >= total
-        share = numpy.where(total > 0.0, numpy.where(enough, 1.0, remaining / numpy.where(total > 0.0, total, 1.0)), 0.0)
-        served[over, start:end] = wanted[:, start:end] * share[:, None]
-        remaining = numpy.where(enough, remaining - total, 0.0)
-    after[over] = 0.0
-    short = numpy.zeros_like(requests)
-    gap = requests[over] - served[over]
-    short[over] = numpy.where(gap > ROUNDING_SHARE * requests[over], gap, 0.0)
-    return served, after, short
-
-
-def _affordable(prices: numpy.ndarray, budgets_left: numpy.ndarray) -> numpy.ndarray:
-    """Per offer (row) and bid (column), what the bid's budget left buys at the offer's ask; a free or paid-to-take good
-    (ask at or below zero) costs the budget nothing, so any quantity is affordable."""
-    positive = prices > 0.0
-    units = budgets_left[None, :] / numpy.where(positive, prices, 1.0)[:, None]
-    return numpy.where(positive[:, None], units, numpy.inf)
-
-
 def allocate(bids: Sequence[Bid], offers: Sequence[Offer], asks: Sequence[float], schedule: DemandSchedule) -> Allocation:
-    """Rounds of choice among `offers` (asking `asks`, ascending) by `bids` (in tier order, `schedule` their demand)."""
-    prices = numpy.array(asks, dtype=float)
-    quantities = numpy.array([offer.quantity for offer in offers], dtype=float)
-    ceilings = schedule.maximum_array()
-    tiers, start = [], 0
-    for _priority, group in groupby(bids, key=lambda bid: bid.priority):
-        end = start + sum(1 for _ in group)
-        tiers.append((start, end))
-        start = end
-    wants = schedule.matrix_at(prices)
-    left = quantities.copy()
-
-    stocked = left > ROUNDING_SHARE * quantities
-    weights, sums = _weights(prices, stocked, ceilings)
-    requests = wants * weights[:, None] / sums[None, :]
-    requested = float(requests.sum())
-    served, left, short = _serve(requests, left, tiers)
-    flow = served.copy()
-    taken = served.sum(axis=0)
-    cost = prices @ served
-    unmet = short.sum(axis=0)
-    budgets = numpy.array([bid.budget for bid in bids], dtype=float)
-
-    # Each further round redirects what the last could not serve, among the sellers still holding stock; a round that
-    # leaves requests short has emptied a seller, so the loop ends within one round per seller.
-    for _round in range(len(offers)):
-        stocked = left > ROUNDING_SHARE * quantities
-        if not stocked.any() or not (unmet > 0.0).any():
-            break
-        weights, sums = _weights(prices, stocked, ceilings)
-        again = numpy.minimum(unmet[None, :], _affordable(prices, numpy.maximum(0.0, budgets - cost)))
-        again = numpy.minimum(again, numpy.maximum(0.0, wants - taken[None, :]))
-        again[:, unmet <= 0.0] = 0.0
-        served, left, short = _serve(again * weights[:, None] / sums[None, :], left, tiers)
-        flow += served
-        taken = taken + served.sum(axis=0)
-        cost = cost + prices @ served
-        unmet = short.sum(axis=0)
-    return Allocation(taken.tolist(), cost.tolist(), (quantities - left).tolist(), requested, flow)
+    """Rounds of choice among `offers` (asking `asks`, ascending) by `bids` (in tier order, `schedule` their demand);
+    goods_market_kernels.allocate_arrays does the work."""
+    quantities = numpy.fromiter((offer.quantity for offer in offers), dtype=float, count=len(offers))
+    taken, cost, sold, requested, flow = goods_market_kernels.allocate_arrays(
+        numpy.array(asks, dtype=float), quantities, *schedule.kernel_arrays(), schedule.tier_bounds())
+    return Allocation(taken.tolist(), cost.tolist(), sold.tolist(), float(requested), flow)
