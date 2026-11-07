@@ -7,7 +7,7 @@ from typing import Dict, Mapping, Tuple
 from . import producer_table
 from .staffed_runs import staffed_runs
 from .expected_sales import demand_seen, market_capacities
-from . import (practice, firm_finance, firm_year, tax_farming, merchants_transit, carriage_hours, carriage_wear, currency, expansion_price, households, inventory, merchants, metal_stock, ownership, producer_exit, shares,
+from . import (practice, firm_finance, firm_year, tax_farming, merchants_news, carriage_hours, carriage_wear, currency, expansion_price, households, inventory, merchants, metal_stock, ownership, producer_exit, shares,
                producers, producers_close, state_budget, tariffs, taxes, trade_wages)
 from .home_scope import has_partners, home_cohorts, on_home_tile
 from .household_work_year import basket_key, cohort_basket
@@ -123,13 +123,12 @@ def close_agents(setup, record, view, ledger: YearLedger, area_map, carriage, ar
     close_producers_of_year(setup, record, view, ledger, arrays, cohorts_by_tile, property_income, pooled)
     prices, volumes = learned_prices(ledger.market_totals(), record.memory)
     anchors = {(good, area.area_id): area.anchor_tile for good in area_map.goods() for area in area_map.areas(good)}
-    ordered = (sorted(prices.items()), sorted(volumes.items()))
+    news = merchants_news.YearNews(prices, volumes, anchors)
     interest_rate = own_rate(view, money)
     for merchant in sorted(record.merchants.values(), key=lambda each: each.agent_id):
         transfers = merchants.close_year(merchant, prices, volumes, record.book.balance(merchant.agent_id, money),
                                          held_stock(record.book, merchant.agent_id), area_map.area_of, money,
-                                         interest_rate, ordered,
-                                         _news_lag_of(carriage, merchant.home_tile, anchors))
+                                         interest_rate, news, lags=news.lags_at(carriage, merchant.home_tile))
         paid = ownership.spread(record, transfers, cohorts_by_tile)
         record.book.transfer_many(paid)
         for transfer in paid:
@@ -157,21 +156,6 @@ def close_agents(setup, record, view, ledger: YearLedger, area_map, carriage, ar
         record.book.move_many(held_only(moves, record.book))
         households_cohort.put_cohort(record.cohorts, closed)
     record.capital_markets.set_property_income(property_income)
-
-
-def _news_lag_of(carriage, home, anchors):
-    """`lag_years` for a merchant at `home`: the news lag to a market's anchor tile, worked out once per tile."""
-    lag_at_tile: Dict = {}
-
-    def lag_years(good, area):
-        tile = anchors.get((good, area))
-        if tile is None:
-            return None
-        lag = lag_at_tile.get(tile)
-        if lag is None:
-            lag = lag_at_tile[tile] = merchants_transit.news_lag(carriage, home, tile)
-        return lag
-    return lag_years
 
 
 def learned_prices(totals, memory):

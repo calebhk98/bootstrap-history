@@ -10,7 +10,7 @@ from typing import Dict, List
 
 from sim.world import capital_market
 
-from . import bank_service, banks, bondage, credit, credit_claims, households_credit, lender_ask, loss_memory, merchants_credit, titles, titles_ground, titles_value
+from . import bank_service, banks, bondage, credit, credit_claims, households_credit, lender_ask, loss_memory, merchants_book, merchants_credit, titles, titles_ground, titles_value
 from .household_time_preference import HOUSEHOLD_TIME_PREFERENCE
 from .household_work_year import basket_key, cohort_basket
 from .producers_working_capital import WORKING_CAPITAL_PURPOSE
@@ -133,10 +133,11 @@ def merchant_requests(setup, record, view, area_map, carriage) -> List:
     rate = own_rate(view, money)
     debts = credit_claims.debts_by_borrower(record.credit.loans, money)
     requests = []
+    route = merchants_book.route_pass(view, carriage, area_map, setup.specs) if record.merchants else None
     for merchant_id, merchant in sorted(record.merchants.items()):
         asked = merchants_credit.credit_request(
             merchant, view, carriage, area_map, record.book.balance(merchant_id, money),
-            held_stock(record.book, merchant_id), setup.specs, rate, debts.get(merchant_id, 0.0), money)
+            held_stock(record.book, merchant_id), setup.specs, rate, debts.get(merchant_id, 0.0), money, route)
         if asked is not None:
             requests.append(asked)
     return requests
