@@ -18,7 +18,7 @@ from . import producer_table
 from .home_scope import has_partners
 from . import households_cohort
 from . import recipes as recipes_module
-from . import carriage_fleet_book, durable_stock, equity, land_lease_year, goods_market, opening_basket, opening_bid_memory, opening_income, opening_metal, opening_own, opening_placement, opening_plans, opening_rent, opening_resting, opening_runs, households, households_store, labour_state, location, location_inputs, mint, opening_stores, ownership, sites, titles
+from . import carriage_fleet_book, durable_stock, equity, land_lease_year, goods_market, opening_basket, opening_bid_memory, opening_demand, opening_income, opening_metal, opening_own, opening_placement, opening_plans, opening_rent, opening_resting, opening_runs, opening_runs_pack, households, households_store, labour_state, location, location_inputs, mint, opening_stores, ownership, sites, titles
 from sim.book import Book
 from .market_areas import AreaMap
 from .market_memory import MarketMemory, YearView, market_key
@@ -271,10 +271,18 @@ def _settle_income(setup, record, view, priced_goods, replacement, own, start) -
     memory = opening_bid_memory.BidMemory()
     hands_hours = math.fsum(cohort.working_people for cohort in record.cohorts.values()) * setup.working_hours_per_year
     warm_share = own.share_hired
+    packed = opening_demand.OpeningDemand.of_settlement(setup, record, view, memory, own, replacement)
+    fast = packed if packed.supported else None     # a settlement the kernel does not cover is asked the old way
+    solver = opening_runs_pack.RunSolver(recipes, ranked, ceilings, yields, main, setup.opening_wages) if fast else None
 
     def demand_at(per_head):
         own.share_hired = warm_share
         households_cohort.put_cohorts(record.cohorts, opening_income.with_income(record.cohorts, per_head, share["labour"]))
+        if fast:
+            value, needed, bill = fast.ask(record, solver, priced_goods, hands_hours, OWN_PLOT_PASSES, OWN_PLOT_TOLERANCE)
+            producible = value * opening_income.producible_share_of_hours(needed, own.sold_total())
+            share["labour"] = opening_income.labour_share_of_bill(bill, value + own.in_kind)
+            return producible + own.in_kind, share["labour"]
         for _pass in range(OWN_PLOT_PASSES):
             own.in_kind = 0.0
             final = _final_demand(setup, record, view, replacement, memory, own)
@@ -296,6 +304,8 @@ def _settle_income(setup, record, view, priced_goods, replacement, own, start) -
         start.income_per_head = per_head
     share["labour"] = labour_share
     demand_at(per_head)     # leaves the plots at the settled income's share of hours hired
+    if fast:
+        fast.remember_orders(record)      # the old path reads these again at the same income
     households_cohort.put_cohorts(record.cohorts, opening_income.with_income(record.cohorts, per_head, labour_share))
     record.capital_markets.set_property_income(opening_income.property_income_of(record.cohorts, per_head, labour_share))
 

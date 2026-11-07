@@ -177,8 +177,19 @@ any rounding change does; the digest is the same on two runs and after a reload.
 - [ ] Checks: reproducible, compared, share measured
 
 ### 9. The opening solve (`opening*.py`, `households_orders.goods_orders`)
-- [ ] the households' orders and the income root find over arrays (most of a cold game build and of `openings`)
-- [ ] Checks: a cold Rome opening timed, its opening compared with the one before the port
+- [x] the households' orders and the income root find over arrays: `opening_demand.OpeningDemand` packs the cohorts, needs,
+      goods and store goods once per solve; `opening_demand_kernel.demand` runs the orders, the purse search, the plot cut and
+      the quantities of every cohort at once (`test_opening_demand_kernel`: equal to `goods_orders` through
+      `resting_orders` and `quantity_at`, on random cohorts)
+- [x] `opening_runs` over recipe matrices: `opening_runs_pack.RunSolver` and `opening_runs_kernel.required_runs` (the input-output
+      fixed point, tool fallbacks, by-product ceilings); `fit_to_supply` sweeps on arrays (`test_opening_runs_kernel`)
+- [x] Checks: England cold opening (`open_economy`, empty `ROME_CACHE_DIR`, `open_dump` of `sim.economy.economy.open_economy`)
+      about 44 s before and 5 s after; its record agrees with the one before to a relative 1e-14 in every producer,
+      cohort income, cash and price (a kernel sums in another order; the stop rules are the same). Rome cold opening: about
+      132 s after (the sampler put the rest in `household_plans`/`work_terms`, `_place_producers`/`location`, and
+      `labour_state.producers_hours_needed`, none of them in this item's files)
+- [ ] what is left in the opening's own files: `_seed_durable_stocks` and the one `_final_demand` after the settle still use the
+      old per-cohort path (about a tenth of Rome's opening)
 
 ### 10. Finish
 - [ ] A Rome year under one second, and every civilisation's year measured (`year-time` on a save of each)
