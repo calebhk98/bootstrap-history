@@ -90,7 +90,7 @@ check("the world modules the burndown must count are in the import list", {"sim.
 check("the root module of unit conversions is in the import list", "sim.unit_conversions" in requested, None)
 
 # the import loop prints once for each module it cannot import, so the prints made are the failures
-script = ("import builtins, sys, json; sys.path.insert(0, %r)\nfrom sim import constants\nreport = builtins.print\nfailures = []\n"
+script = ("import builtins, sys, json; sys.path.insert(0, %r)\nimport sim.jit\nfrom sim import constants\nreport = builtins.print\nfailures = []\n"
           "builtins.print = lambda *arguments, **keywords: failures.append(arguments)\nconstants._import_declaring_modules()\n"
           "builtins.print = report\nconstants._adopt_the_canonical_registry()\n"
           "report(json.dumps({'failures': len(failures), 'registered': sorted(set(entry['declared_in'] for entry in constants.REGISTRY.values()))}))\n"
