@@ -188,8 +188,12 @@ any rounding change does; the digest is the same on two runs and after a reload.
 ### 5. Merchants (`merchants*.py`, `lending.merchant_requests`, `carriage_hours.py`)
 - [x] route search for orders and credit requests over a carriage-cost matrix per good (`merchants_kernel.py`,
       `merchants_search.py`; `test_merchant_good_routes_exact`); the game unchanged by it
-- [ ] dispatch and close
-- [ ] the carriers' wage scale (`carriage_hours.wage_scale`: mostly route searches cached after the first year)
+- [x] orders and credit requests: one search kernel over every good and the commitment loops in kernels
+      (`merchants_book.py`, `merchants_book_kernel.py`, `merchants_plan.py`; `test_year_speed_merchants`); the game unchanged
+      (same digest as the base); `merchant_orders` 0.72 to 0.13 and `merchant_requests` 0.38 to 0.09 of a warm year's profile
+- [x] close: expectations updated over arrays (`merchants_news.py`): 0.19 to 0.04
+- [ ] dispatch: callbacks answered once a pair (0.32 to 0.22); the per-haul loop is still Python (crew, dues, fleet, purse)
+- [x] the carriers' wage scale (`carriage_hours.wage_scale`) is 0.01 of a warm year; the cost was the first year's searches
 - [ ] Checks: reproducible, compared, share measured
 
 ### 6. Entry and closing (`entry*.py`, `location.py`, `practice.py`, `producers_close.py`, `firm_year.py`, `households_close.py`)
