@@ -73,6 +73,14 @@ def _located(area_index: AreaIndex, store: Mapping[str, float], goods: Names, na
     return answer
 
 
+def _ages_and_kind_bits(memory: MarketMemory, keys: tuple):
+    """(each key's years since its market cleared, NaN where never; each key's `_KIND_BITS`). Read only."""
+    ages = np.array([memory.trade_age.get(key, np.nan) for key in keys], dtype=np.float64)
+    bits = np.array([_KIND_BITS.get(memory.quote_kinds.get(key), _KIND_OTHER) for key in keys], dtype=np.int64)
+    ages.flags.writeable = bits.flags.writeable = False
+    return ages, bits
+
+
 def price_grid(memory: MarketMemory, goods: Names, area_index: AreaIndex) -> np.ndarray:
     """The remembered prices alone (`MemoryArrays.price`), for a reader that needs no other part of the memory."""
     price = np.full((len(goods.ids), len(area_index.areas.ids)), np.nan)
@@ -111,9 +119,8 @@ class MemoryArrays:
         found = rows >= 0
         values = np.fromiter(memory.prices.values(), dtype=np.float64, count=len(keys))
         price[rows[found], columns[found]] = values[found]
-        ages = np.array([memory.trade_age.get(key, np.nan) for key in keys], dtype=np.float64)
+        ages, bits = memory.kept_for_ages_and_kinds("kind_bits", keys, lambda: _ages_and_kind_bits(memory, keys))
         has_age = ~np.isnan(ages)
-        bits = np.array([_KIND_BITS.get(memory.quote_kinds.get(key), _KIND_OTHER) for key in keys], dtype=np.int64)
         current = has_age & (ages <= 0)
         kind_free = ~current & (bits == 0)
         offered_mask = found & (current | (kind_free & ~has_age) | (~current & (bits != 0) & ((bits & _KIND_OFFERED) > 0)))

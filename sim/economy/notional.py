@@ -66,7 +66,12 @@ def _estimated_prices(setup, record, market, thin: bool, wages: Optional[Dict[st
 
 def _traded_volumes(record) -> Dict[str, float]:
     """What each good's markets trade, a market counting for the smaller of what it usually trades and what
-    it traded last year, so a market that has dried up does not stand for the good on its remembered volume."""
+    it traded last year, so a market that has dried up does not stand for the good on its remembered volume. Read only: kept
+    while the volumes are unchanged."""
+    return record.memory.kept_for_volumes(record.goods.volumes, lambda: _worked_out_traded_volumes(record))
+
+
+def _worked_out_traded_volumes(record) -> Dict[str, float]:
     traded: Dict[str, float] = {}
     for key, usual in usual_volumes(record).items():
         good = key.split(KEY_SEPARATOR, 1)[0]

@@ -11,9 +11,10 @@ import numpy as np
 
 from dataclasses import replace as replace_fields
 
-from . import expansion_price, firm_year, ownership, practice, producer_exit, producer_table, shares
+from . import expansion_price, ownership, practice, producer_exit, producer_table, shares
 from . import producers_working_capital as working_capital
 from .close_pack import pack
+from .loan_write_offs import LoanWriteOffs
 from .close_run import close_producers
 from .year_arrays_closed import columns_after_close
 from .replaced import replaced
@@ -79,6 +80,7 @@ def close_producers_of_year(setup, record, view, ledger, arrays: YearArrays, coh
         "request_term", "request_collateral", "expansion_runs", "replacement_runs", "new_count", "write_off", "new_idle",
         "new_expected_sales", "new_last_runs", "new_staffed", "new_expected", "written", "new_earnings", "new_revenues")}
     good_ids = matrices.goods.ids
+    loan_write_offs = LoanWriteOffs(record)
     write_offs: Dict[str, float] = {}      # applied in one pass over the loans, and the dividends posted as one batch, after the loop
     dividends: list = []
     exits = producer_exit.ExitBatch(record)
@@ -94,7 +96,7 @@ def close_producers_of_year(setup, record, view, ledger, arrays: YearArrays, coh
                               "dividend"),) if amount > 0.0 else ()
         shares.note_dividend(record.capital_markets, producer_id, transfers)
         if lists["exited"][row]:
-            firm_year.write_off_many(record, write_offs)     # an exit remembers its defaults after those of the producers before it
+            loan_write_offs.apply(write_offs)     # an exit remembers its defaults after those of the producers before it
             write_offs.clear()
             paid = exits.exit(producer_id, list(transfers))
             for transfer in paid:
@@ -127,7 +129,7 @@ def close_producers_of_year(setup, record, view, ledger, arrays: YearArrays, coh
             earnings=tuple(lists["new_earnings"][row][:count]), revenues=tuple(lists["new_revenues"][row][:count]),
             expected_sales=lists["new_expected_sales"][row], last_runs=lists["new_last_runs"][row],
             staffed=None if math.isnan(staffed) else staffed, idle=lists["new_idle"][row]), written, pooled)))
-    firm_year.write_off_many(record, write_offs)
+    loan_write_offs.apply(write_offs)
     exits.finish()
     record.book.transfer_many(dividends)
     return replace_fields(arrays, producers=columns_after_close(columns, record.producers, answer.exited, answer))
