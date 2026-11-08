@@ -631,9 +631,6 @@ market (it built a new `MarketBids` and joined empty columns on every read), whi
 
 Not done, and why (measure with `python3 tools/measure/warm_year_profile.py SAVE OUT.prof`):
 
-- **Expansion price on columns.** `expansion_price.PreparedMarket` needs `goods_market.crossing` over a `DemandSchedule`: the uncapped total sums each group's rows in
-  sorted bid order with `sum()`, which is not exact, so a columns version needs the bids' names for the order, and `solve_price` and `at_a_ceiling` (a memoised root
-  search) written as a kernel bit for bit. The cost is the solver and the schedule, not the `Bid` objects.
 - **`UnmetDemand` and `EntryPlan` as tables.** Their cost is thin glue spread over the plan loops (`siting`, `unfilled`, the `view.price` reads); the plans keep list
   order and the owner-cash-after-earlier-stakes rule, so a table is only worth it with a kernel for the loop that reads it.
 - **The mint reads the results table; the object-rule markets and `production_lines` as kernels; the watchers' fills from columns.** Each is a small share of a warm year
@@ -676,3 +673,26 @@ Tests: `sim/tests/test_wage_views_cached.py` (each writer bumps and the next rea
 removing any one bump fails a test). Debug run: every cached read checked against a fresh computation over three Rome and five England
 years raised no `StaleView`; `SHADOW_CHECK_EVERY = 1` is set in a script, not in the repository.
 
+## The root search over columns (stage 4)
+
+`goods_market.crossing`'s search (`solve_price`, `at_a_ceiling`, the schedule's `total_at` and `uncapped_at`) is kernels over
+`crossing_columns.DemandColumns`: the funded bids grouped by schedule in clearing order (the order matters because the plain total adds each
+group with `sum`; the groups are in first-appearance order over all bids), the groups' exact totals and the ceilings. Files:
+`crossing_columns.py` (prepare, every column documented), `crossing_demand.py` (the quantities wanted, with `python_sum` and `exact_sum` where the
+Python uses `sum` and `math.fsum`), `crossing_solve.py` (the search; `math.exp`/`math.log` so the plain run equals the Python), `crossing_price.py`
+(the entry kernels and `ColumnDemand`). A figure the kernels do not reproduce (NaN, an infinite floor or quantity, a power or exponential the
+Python raises on) sets a flag and the Python runs on objects, raising or answering as before. The Python's memo between books is not kept.
+
+Two callers: `expansion_price.PreparedMarket` (the close's `share_of_row`) reads `MarketBids.columns` and `MarketBids.clearing_order`
+(`bid_order.clearing_order`: the order tables' rows and the added bids ranked by name with `numpy.lexsort`, no `Bid` made) and builds no `Buyers`;
+`goods_market.crossing` (reached by `clear_at_one_price`, the price-response path) calls `price_at_levels` on the sorted bids' columns.
+
+Measured on the warm Rome year (`process_time` around the functions, alternating base and branch, three rounds; the whole year moves by more than
+this between runs on a shared machine, so the figures are the functions'): `crossing` 546 calls, 2.6 to 2.7 percent of the step, now 21 calls (the
+curves path), 0.5 percent; `clear_at_one_price` 1.5 to 1.7 percent, now 0.5 to 0.6; `PreparedMarket` 1.4 percent, now 0.8 (the kernel's search; the
+`Buyers` build is gone). Digests identical (Rome two years with reload, England five). Tests: `test_crossing_kernels.py`.
+
+Measured and not done (each under the 1 percent threshold; `process_time` of the function in a warm Rome year, as a share of the step): the
+`_remember_markets` `wanted_at_rows` 0.6; `producers.production_lines` 0.7 (with `tool_fallback.draws` 0.2 inside it); the object-rule markets
+together, `unsold_search.clear_with_search` 0.4, `seller_offers.strategic_offers` 0.2, `goods_market.clear` 0.2. A kernel leaves part of each
+(the packing and the boundary), so the saving is below those figures.

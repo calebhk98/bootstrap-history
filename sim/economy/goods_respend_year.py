@@ -10,8 +10,8 @@ import numpy
 
 from sim.constants import declare
 
-from . import goods_respend_pack, goods_respend_unpack
-from .bid_columns import BidColumns, MarketBids, columns_of_bids, joined
+from . import bid_order, goods_respend_pack, goods_respend_unpack
+from .bid_columns import BidColumns, MarketBids, columns_of_bids, joined, order_of_bids
 from .goods_table_views import LazyObjects
 from .goods_market import MINIMUM_PRICE_SHARE_OF_REFERENCE
 from .goods_respend import RESPEND_NEGLIGIBLE_ROUND_SHARE
@@ -92,7 +92,12 @@ class LeftMarket:
         """The first round's bids and those later rounds added, for the entry rules: columns (read from the order tables' rows, with the added
         bids' columns after them), and the objects of `all_bids` when a rule asks for them."""
         count = len(self.all_bids)
-        return MarketBids(self._bid_columns, lambda: list(self.all_bids), count)
+        return MarketBids(self._bid_columns, lambda: list(self.all_bids), count, self._bid_order)
+
+    def _bid_order(self):
+        if self.rows is None:
+            return order_of_bids(list(self.all_bids))
+        return bid_order.clearing_order(self.rows, self.added)
 
     def _bid_columns(self) -> BidColumns:
         if self.rows is None:
