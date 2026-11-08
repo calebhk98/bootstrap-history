@@ -22,8 +22,12 @@ class BidLists:
     def __init__(self, orders):
         bids, _offers = orders.tables()
         count = int(bids.row_count[0])
-        agents, tiles = orders.book.agent_ids.name_list, orders.book.tile_ids.name_list
+        agents, tiles, goods = orders.book.agent_ids.name_list, orders.book.tile_ids.name_list, orders.book.good_ids.name_list
+        areas = orders.memory_tables.areas.name_list
         self.buyer = [agents[each] for each in bids.buyer[:count].tolist()]
+        self.good = [goods[each] for each in bids.good[:count].tolist()]
+        self.area = [areas[each] for each in orders.memory_tables.goods_table.area[bids.market[:count]].tolist()]
+        self.priority = bids.priority[:count].tolist()
         self.floor_quantity = bids.floor_quantity[:count].tolist()
         self.flexible_quantity = bids.flexible_quantity[:count].tolist()
         self.reference_price = bids.reference_price[:count].tolist()
@@ -73,9 +77,9 @@ class MarketRows:
 
     def __init__(self, orders, bid_rows: Sequence[int], left_rows: Sequence[int], offer_rows: Sequence[int] = ()):
         self.orders = orders
-        self.bid_rows = [int(row) for row in bid_rows]
-        self.left_rows = [int(row) for row in left_rows]
-        self.offer_rows = [int(row) for row in offer_rows]
+        self.bid_rows = numpy.asarray(bid_rows, dtype=numpy.int64).tolist()
+        self.left_rows = numpy.asarray(left_rows, dtype=numpy.int64).tolist()
+        self.offer_rows = numpy.asarray(offer_rows, dtype=numpy.int64).tolist()
 
     def bids_lazy(self) -> LazyObjects:
         """The market's bids as objects, built when first read."""

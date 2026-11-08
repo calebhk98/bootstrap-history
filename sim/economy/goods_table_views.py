@@ -70,16 +70,14 @@ class BidViews(HeldViews):
     """`.buyer` and `.tile` of each bid row."""
 
     def __getitem__(self, index: int):
-        held = super().__getitem__(index)
-        return BidView(held.agent, held.tile)
+        return BidView(self._names[self._agents[index]], self._tile_names[self._tiles[index]])
 
 
 class OfferViews(HeldViews):
     """`.seller` and `.tile` of each offer row."""
 
     def __getitem__(self, index: int):
-        held = super().__getitem__(index)
-        return OfferView(held.agent, held.tile)
+        return OfferView(self._names[self._agents[index]], self._tile_names[self._tiles[index]])
 
 
 BidView = namedtuple("BidView", ("buyer", "tile"))
@@ -103,7 +101,7 @@ class TableBatch(BatchAllocation):
     def watched_buys(self, watchers):
         """Per bid of the batch: whether a watcher's bid took units. None when no watcher has an id (it bought nothing). Worked
         out once for the batch, whatever markets ask."""
-        if self._watched is None or self._watched[0] != watchers:
+        if self._watched is None or (self._watched[0] is not watchers and self._watched[0] != watchers):
             numbers = self.orders.book.agent_ids.numbers
             ids = [numbers[name] for name in watchers if name in numbers]
             mask = None

@@ -69,6 +69,7 @@ class GoodsOrderBook:
         self._waiting_offers: List[Tuple[Offer, int]] = []
         self._markets: Dict[Tuple[str, str], int] = {}
         self._bid_lists = None
+        self._sinks = (_Sink(self.add_bid, OTHER), _Sink(self.add_offer, OTHER))
         self._numbers = ({}, {}, {})          # name -> id for agents, goods and tiles, kept for the year (ids are never reused)
         self._area_of_market: Dict[int, str] = {}
 
@@ -142,7 +143,7 @@ class GoodsOrderBook:
 
     def setdefault(self, key: Tuple[str, str], default=None) -> Tuple[_Sink, _Sink]:
         """The dict door: `(bids, offers)` to append to for the market `key`; the market's name is read from the order itself."""
-        return _Sink(self.add_bid, OTHER), _Sink(self.add_offer, OTHER)
+        return self._sinks
 
     # ---- flushing waiting objects into rows -------------------------------------------------------
 
@@ -290,18 +291,10 @@ class GoodsOrderBook:
 
     def bids_of(self, rows: Sequence[int]) -> List[Bid]:
         """`Bid` objects for the rows, in the order given (the edge for a rule still written over objects)."""
-        self.flush()
-        table, book = self.bids, self.book
-        rows = numpy.asarray(rows, dtype=numpy.int64)
-        agents, goods, tiles = book.agent_ids.name_list, book.good_ids.name_list, book.tile_ids.name_list
-        areas = self._area_names()
-        market_area = self.memory_tables.goods_table.area[table.market[rows]].tolist()
-        figures = numpy.stack((table.floor_quantity[rows], table.flexible_quantity[rows], table.reference_price[rows],
-                               table.elasticity[rows], table.budget[rows], table.maximum_price[rows]), axis=1).tolist()
-        return [make_bid(agents[buyer], goods[good], areas[area], tiles[tile], *row[:5], priority, row[5])
-                for buyer, good, tile, area, priority, row in zip(
-                    table.buyer[rows].tolist(), table.good[rows].tolist(), table.tile[rows].tolist(), market_area,
-                    table.priority[rows].tolist(), figures)]
+        lists = self.bid_lists()
+        return [make_bid(lists.buyer[row], lists.good[row], lists.area[row], lists.tile[row], lists.floor_quantity[row],
+                         lists.flexible_quantity[row], lists.reference_price[row], lists.elasticity[row], lists.budget[row],
+                         lists.priority[row], lists.maximum_price[row]) for row in numpy.asarray(rows, dtype=numpy.int64).tolist()]
 
     def offers_of(self, rows: Sequence[int], quantities=None) -> List[Offer]:
         """`Offer` objects for the rows (with `quantities` in place of the rows' own when given)."""
