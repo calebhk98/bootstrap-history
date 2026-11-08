@@ -305,9 +305,10 @@ batch is posted again as records to raise the book's error) and one block into t
 **Who still builds the objects.** `LabourBid`: `producers.plan` (the producers the plan kernel leaves out, read into rows by
 `plan_table_rows.object_rows`), a seat's staff bids (`markets/port_staff.employer_bids`, handed over as `AgentOrders.labour_bids` and put
 into rows by `add_objects`), and the workforce's views (`workforce_settle`, which read `carriage_hours.bids` and
-`state_budget.wage_labour_bids`). `LabourOffer`: `LabourOfferRows.objects()` once a year for the household readers that take records
-(`household_work_year.decide`, `household_hours_year.plot_parameters_by_cohort`), and a seat's own offers. Those readers are the next to
-move to the columns. Count the record constructions in a warm year by wrapping `LabourBid.__new__` and `LabourOffer.__new__` around
+`state_budget.wage_labour_bids`). `LabourOffer`: a seat's own offers. The household decisions (`household_offers_year.decide` and `plot_parameters_by_cohort`)
+read the rows through `household_offer_reads.OfferReads` (hours, worth of an hour and hours offered by market are the kernels of
+`household_offer_kernels.py`, equal to the record loops last digit included; a set holding a NaN or infinite figure takes the record
+version). Count the record constructions in a warm year by wrapping `LabourBid.__new__` and `LabourOffer.__new__` around
 `Economy._run_year` (no committed command). Tests: `sim/tests/test_year_speed_labour_rows.py`, `test_year_speed_bondage.py`.
 
 ### Settlement on tables
@@ -686,8 +687,10 @@ about one percent of a step, and re-measure before acting, since the list lags t
 - **The record readers.** `record.producers` and `record.cohorts` are read by entry, the plans, the labour state, equity, tax farming,
   the save and the screens; `closed_records` and `closed_cohort` build one record per producer and cohort until those readers are on
   columns.
-- **Labour readers that take records.** `household_work_year.decide` and `household_hours_year.plot_parameters_by_cohort` read
-  `LabourOffer` objects; the cleared wages reach `HourSupply.settle` as a dict read rather than a market-indexed array.
+- **Labour readers that take records.** The cleared wages reach `HourSupply.settle` as a dict read rather than a market-indexed array.
+  The household decisions still loop over cohorts in Python (`household_offers_year.plans`: the basket, grinding plan and priced needs
+  of each cohort), as do `outside_option_by_tile`, `subsistence_cost_by_tile` and `ask_floor_by_tile`; they wait for the cohorts and
+  the priced baskets as columns.
 - **Priced needs.** The readers of `PricedNeed` listed under Households take objects, so `NeedBatch` stays unwired.
 - **Loan requests** become a table at the clearing; `LoanClearing.loans` and the bank rules still read `Contract`/`LoanRow` objects.
 - **Cached views** in the "Left uncached" list wait for their input's owner to bump a channel.
