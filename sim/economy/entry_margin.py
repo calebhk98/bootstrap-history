@@ -52,6 +52,15 @@ def gap_at_entry_price(bids: Sequence[Bid], entry_price: float, price_now: float
     return max(0.0, demand_at(bids, entry_price, price_now if price_now > 0.0 else entry_price) - capacity)
 
 
+def keep_streaks(record, kept: Dict[str, int]) -> None:
+    """`record.goods.margin_years` holds the streaks of `kept` (market key -> years) and no other market's: a market not weighed this year
+    starts its wait again. The dictionary is changed in place."""
+    margin_years = record.goods.margin_years
+    for key in [key for key in margin_years if key not in kept]:
+        del margin_years[key]
+    margin_years.update(kept)
+
+
 def margin_entry_plans(setup, record, view, area_map, bids_by_market, planned: Sequence[Tuple[GoodId, AreaId]] = (), siting=None, costs=None,
                        weighed=None) -> List[EntryPlan]:
     """Newcomers for each market with makers whose expected price has stood above its entry price for
