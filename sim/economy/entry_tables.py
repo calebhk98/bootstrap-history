@@ -187,6 +187,11 @@ class EntryTables:
             return 0.0 if good_column is None or area_column is None else float(reach[good_column, area_column])
         return capacity
 
+    def reach_grid(self) -> np.ndarray:
+        """The output the makers of each (good column, area column) could reach, plant to come counted (the grid `capacity_in` reads)."""
+        self.capacity_in()
+        return self._reach
+
     def traded_grid(self) -> np.ndarray:
         """What each good's market carried last year, seen from each tile (`entry_plan_pack.traded_grid`), read once."""
         if self._traded is None:

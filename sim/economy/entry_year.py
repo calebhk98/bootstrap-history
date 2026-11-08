@@ -12,7 +12,7 @@ from sim.book_apply import RULE_SINGLE
 
 from . import producer_table
 from .posting_sequence import post_in_order
-from . import (credit, entry_kernels, entry_plan_table, entry_practice, entry_unmet, location, ownership, practice, producer_exit, sites,
+from . import (credit, entry_kernels, entry_margin_tables, entry_plan_table, entry_practice, entry_unmet, location, ownership, practice, producer_exit, sites,
                unit_cost, year_bids)
 from .entry_backed import unfilled_at_cost
 from .entry_bid_markets import makers_of, weigh
@@ -82,14 +82,12 @@ def year_plan_table(setup, record, view, area_map, unmet_by_market: Dict[Tuple[s
         block = year_bids.of(bids_by_market) if bids_by_market else None
         plans = entry_unmet.unmet_plan_table(costs, block, unmet_by_market)
         if block is not None:
-            siting = location.entry_siting(setup, record, view, area_map, carriage or _carriage(setup), costs)
-            planned = entry_plan_table.markets_of(plans, costs)
-            weighed = weigh(block, makers_of(setup.recipes), area_map, view, reachable_capacity(record, setup, costs))
-            margin = margin_entry_plans(setup, record, view, area_map, block, planned, siting, costs, weighed)
-            planned = planned + tuple((plan.good, view.area_of(plan.good, plan.tile)) for plan in margin)
-            trial = trial_entry_plans(setup, record, view, area_map, block, planned, siting, costs, weighed)
-            plans = entry_plan_table.joined(plans, entry_plan_table.from_plans(
-                margin + trial, costs.recipe_row, costs.tiles.row, costs.goods.row))
+            weighed = entry_margin_tables.Weighed(costs, block)
+            skipped = entry_margin_tables.skipped_cells(costs, plans)
+            margin = entry_margin_tables.margin_plan_table(costs, record, block, weighed, skipped)
+            skipped |= entry_margin_tables.skipped_cells(costs, margin)
+            trial = entry_margin_tables.trial_plan_table(costs, block, weighed, skipped)
+            plans = entry_plan_table.joined(entry_plan_table.joined(plans, margin), trial)
     return costs, plans
 
 

@@ -79,18 +79,25 @@ def sizing_tables(costs):
     return table
 
 
-def place_grid(costs, block) -> np.ndarray:
-    """(good column, area column): the place of the market in the bids `block`, -1 where it has none. Kept on the block."""
-    kept = getattr(block, "_place_grid", None)
+def block_cells(costs, block):
+    """(good column, area column) of each market of the bids `block`, -1 where the year arrays do not hold the good or the area. Kept on the
+    block."""
+    kept = getattr(block, "_cells", None)
     index = costs.arrays.area_index
     if kept is not None and kept[0] is costs.goods and kept[1] is index.areas:
-        return kept[2]
-    grid = np.full((len(costs.goods.ids), max(1, len(index.areas.ids))), NOT_PLACED, dtype=np.int64)
-    for place, (good, area_id) in enumerate(block.markets):
-        good_column, area_column = costs.goods.row.get(good), index.areas.row.get(area_id)
-        if good_column is not None and area_column is not None:
-            grid[good_column, area_column] = place
-    block._place_grid = (costs.goods, index.areas, grid)
+        return kept[2], kept[3]
+    good = np.array([costs.goods.row.get(each, -1) for each, _area in block.markets], dtype=np.int64)
+    area = np.array([index.areas.row.get(each, -1) for _good, each in block.markets], dtype=np.int64)
+    block._cells = (costs.goods, index.areas, good, area)
+    return good, area
+
+
+def place_grid(costs, block) -> np.ndarray:
+    """(good column, area column): the place of the market in the bids `block`, -1 where it has none."""
+    good, area = block_cells(costs, block)
+    grid = np.full((len(costs.goods.ids), max(1, len(costs.arrays.area_index.areas.ids))), NOT_PLACED, dtype=np.int64)
+    found = (good >= 0) & (area >= 0)
+    grid[good[found], area[found]] = np.flatnonzero(found)
     return grid
 
 
