@@ -123,7 +123,7 @@ def close_agents(setup, record, view, ledger: YearLedger, area_map, carriage, ar
         if (recipe_id, trade) not in pool_by_recipe_trade:
             pool_by_recipe_trade[(recipe_id, trade)] = practice.pool_units(crews_of_recipe[recipe_id], trade)
         return pool_by_recipe_trade[(recipe_id, trade)]
-    arrays = close_producers_of_year(setup, record, view, ledger, arrays, cohorts_by_tile, property_income, pooled)
+    arrays = close_producers_of_year(setup, record, view, ledger, arrays, property_income, pooled)
     prices, volumes = learned_prices(ledger.market_totals(), record.memory)
     anchors = {(good, area.area_id): area.anchor_tile for good in area_map.goods() for area in area_map.areas(good)}
     news = merchants_news.YearNews(prices, volumes, anchors)

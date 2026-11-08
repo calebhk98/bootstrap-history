@@ -1,26 +1,29 @@
 """Every producer's year end: the close kernel over the year arrays, then each producer's effects on the record.
 
-`close_producers_of_year(...)` is the loop that year_close.close_agents used to run per producer. The numbers come from
-`close_run.close_producers` (one kernel for expectations, the close, the finances and the sales rules); what is left per
-producer is the book and record writes: the dividend to its owners, an exit, a loan request, the plant that wore, and the
-producer row replaced through producer_table with only the fields the close changes."""
-import math
+`close_producers_of_year(...)` is what year_close.close_agents runs for the producers. The numbers come from
+`close_run.close_producers` (one kernel for expectations, the close, the finances and the sales rules). The effects are tables
+and a short loop: the dividends of every producer that pays are posting rows from one kernel and one batch (year_close_dividends.py),
+the dividends noted, the plant worn and the new producer records come from the answer's columns; Python still runs, in producer
+order, the rows that need the credit record or an exit (an exit, a write-off of loans, a loan request, a rebuild plan), which are a
+few hundred a year."""
+from dataclasses import replace as replace_fields
 from typing import Dict
 
 import numpy as np
 
-from dataclasses import replace as replace_fields
-
-from . import expansion_price, ownership, practice, producer_exit, producer_table, shares
+from . import expansion_price, producer_exit, producer_table, shares
 from . import producers_working_capital as working_capital
+from .close_kernel import REQUEST_EXPAND, REQUEST_NONE
 from .close_pack import pack
-from .loan_write_offs import LoanWriteOffs
 from .close_run import close_producers
-from .year_arrays_closed import columns_after_close
-from .replaced import replaced
+from .loan_write_offs import LoanWriteOffs
 from .types import LoanRequest, Transfer
 from .year_arrays import YearArrays
-from .close_kernel import REQUEST_EXPAND, REQUEST_NONE
+from .year_arrays_closed import columns_after_close
+from .year_close_dividends import add_property_income, dividend_plan, post_dividends
+from .year_close_ledger import note_plant_worn
+from .year_close_owners import Participants
+from .year_close_records import closed_records
 
 
 def _share_pricer(arrays: YearArrays, ledger, traded, prepared):
@@ -45,91 +48,71 @@ def _request_of(producer_id: str, currency: str, kind: int, amount: float, rate:
     return LoanRequest(producer_id, currency, amount, rate, term, collateral, purpose)
 
 
-def _changes_of(producer, answer_row: Dict[str, object], written_goods, pooled) -> Dict[str, object]:
-    """The fields the close changes, for one replacement of the row. The crew's practice after the year's runs (practice.py)
-    is among them; growth in runs is hired hands."""
-    expected = dict(producer.expected_prices)
-    for good, value in written_goods:
-        expected[good] = value
-    changes = dict(capacity_runs=answer_row["capacity"], years_of_loss=answer_row["losses"], cash_target=answer_row["target"],
-                   expected_prices=expected, net_earnings_history=answer_row["earnings"], revenue_history=answer_row["revenues"],
-                   expected_sales=answer_row["expected_sales"], last_runs=answer_row["last_runs"],
-                   staffed_runs=answer_row["staffed"])
-    if answer_row["idle"]:
-        changes["idle_years"] = answer_row["idle"]
-    if producer.crew_runs:
-        new_last_runs = answer_row["last_runs"]
-        changes["crew_runs"] = practice.crew_runs_after_year(
-            producer.crew_runs, max(0.0, new_last_runs) / max(1.0, producer.workshops),
-            practice.hired_share(producer.last_runs, new_last_runs),
-            {trade: pooled(producer.recipe_id, trade) for trade in producer.crew_runs})
-    return changes
-
-
-def close_producers_of_year(setup, record, view, ledger, arrays: YearArrays, cohorts_by_tile, property_income, pooled) -> YearArrays:
+def close_producers_of_year(setup, record, view, ledger, arrays: YearArrays, property_income, pooled) -> YearArrays:
     """Close every producer. `property_income` (payee -> money) is added to as dividends are paid; `pooled(recipe_id, trade)`
     is the crews' pooled practice. Returns the year arrays in step with the table the close leaves (the next phase hands them
     to `sync`, which then has no row to read again)."""
     arrays = arrays.sync(setup, record, view)
-    columns, matrices = arrays.producers, arrays.matrices
+    columns = arrays.producers
     traded, _round_prices = ledger.market_totals()
     bundle = pack(setup, record, view, ledger, arrays)
     answer = close_producers(arrays, bundle, _share_pricer(arrays, ledger, traded, {}))
-    lists = {name: getattr(answer, name).tolist() for name in (
-        "new_capacity", "new_losses", "new_target", "exited", "dividend", "request_kind", "request_amount", "request_rate",
-        "request_term", "request_collateral", "expansion_runs", "replacement_runs", "new_count", "write_off", "new_idle",
-        "new_expected_sales", "new_last_runs", "new_staffed", "new_expected", "written", "new_earnings", "new_revenues")}
-    good_ids = matrices.goods.ids
+    ids = columns.ids
+    ran = columns.idle_years <= 0         # the rows the close kernel ran; the others sat out the year
+    exited = answer.exited
+    dividend = answer.dividend
+    paying = ran & ~exited & (dividend > 0.0)
+    noted = [amount if pays else 0 for amount, pays in zip(dividend.tolist(), (ran & (dividend > 0.0)).tolist())]
+    record.capital_markets.last_dividends.update(zip(ids, noted))        # what shares.note_dividend remembers; an exit forgets it below
+    worn = np.nonzero(ran & ~exited & (columns.capacity_runs - answer.new_capacity > 0.0))[0]
+    note_plant_worn(ledger, [ids[row] for row in worn.tolist()], (columns.capacity_runs - answer.new_capacity)[worn])
+    participants = Participants()
+    exit_rows, exit_payees, exit_amounts = _effects_by_row(setup, record, columns, answer, bundle, participants)
+    plan = dividend_plan(record, columns, dividend, np.nonzero(paying)[0], participants)
+    post_dividends(record.book, setup.currency_id, plan, ids, participants)
+    add_property_income(property_income, participants, np.concatenate([plan.row, np.array(exit_rows, dtype=np.int64)]),
+                        np.concatenate([plan.payee, np.array(exit_payees, dtype=np.int64)]),
+                        np.concatenate([plan.amount, np.array(exit_amounts, dtype=np.float64)]))
+    records = closed_records(columns, answer, pooled)
+    producer_table.put_producers(record.producers, [(ids[row], each) for row, each in enumerate(records) if each is not None])
+    return replace_fields(arrays, producers=columns_after_close(columns, record.producers, answer.exited, answer, records))
+
+
+def _effects_by_row(setup, record, columns, answer, bundle, participants: Participants):
+    """The rows that act on the credit record or leave, in producer order: an exit pays its lenders and owner at once, a write-off of
+    loans waits for the next exit or the end, and a rebuild plan or loan request is recorded. Returns the exits' payments to the
+    owners as (row, payee participant, amount) lists, for the property income."""
+    ids = columns.ids
+    ran = columns.idle_years <= 0
+    kept = ran & ~answer.exited
+    asks = answer.request_kind != REQUEST_NONE
+    rebuilds = (answer.replacement_runs > 0.0) & (bundle.revenue > bundle.running_costs)
+    rows = np.nonzero(ran & (answer.exited | (kept & ((answer.write_off > 0.0) | asks | rebuilds))))[0].tolist()
     loan_write_offs = LoanWriteOffs(record)
-    write_offs: Dict[str, float] = {}      # applied in one pass over the loans, and the dividends posted as one batch, after the loop
-    dividends: list = []
+    write_offs: Dict[str, float] = {}      # applied in one pass over the loans when an exit comes and at the end
     exits = producer_exit.ExitBatch(record)
-    for row, producer_id in enumerate(columns.ids):
-        producer = columns.records[row]
-        if producer.idle_years > 0:      # bankrupt: idle, no dividend (Eurace@Unibi, Firm_bankruptcy_idle_counter)
-            producer_table.put_producer(record.producers, replaced(producer, idle_years=producer.idle_years - 1))
-            shares.note_dividend(record.capital_markets, producer_id, ())
-            continue
-        currency = bundle.currencies[row]
-        amount = lists["dividend"][row]
-        transfers = (Transfer(producer_id, producer.owner, currency if lists["exited"][row] else setup.currency_id, amount,
-                              "dividend"),) if amount > 0.0 else ()
-        shares.note_dividend(record.capital_markets, producer_id, transfers)
-        if lists["exited"][row]:
+    exit_rows, exit_payees, exit_amounts = [], [], []
+    for row in rows:
+        producer_id = ids[row]
+        if answer.exited[row]:
             loan_write_offs.apply(write_offs)     # an exit remembers its defaults after those of the producers before it
             write_offs.clear()
-            paid = exits.exit(producer_id, list(transfers))
-            for transfer in paid:
-                property_income[transfer.payee] = property_income.get(transfer.payee, 0.0) + transfer.amount
+            amount = float(answer.dividend[row])
+            payout = [Transfer(producer_id, columns.records[row].owner, bundle.currencies[row], amount, "dividend")] if amount > 0.0 else []
+            for transfer in exits.exit(producer_id, payout):
+                exit_rows.append(row)
+                exit_payees.append(participants.of(transfer.payee))
+                exit_amounts.append(transfer.amount)
             continue
-        if lists["write_off"][row] > 0.0:
-            write_offs[producer_id] = lists["write_off"][row]
-        if transfers:
-            paid = ownership.spread(record, transfers, cohorts_by_tile)
-            dividends.extend(paid)
-            for transfer in paid:
-                property_income[transfer.payee] = property_income.get(transfer.payee, 0.0) + transfer.amount
-        worn = producer.capacity_runs - lists["new_capacity"][row]
-        if worn > 0.0:
-            ledger.plant_worn[producer_id] = worn
-        if lists["replacement_runs"][row] > 0.0 and bundle.revenue[row] > bundle.running_costs[row]:
-            record.credit.plan_rebuild(producer_id, lists["replacement_runs"][row])     # covering its costs, it rebuilds the wear its plan needs
-        if lists["request_kind"][row] != REQUEST_NONE:
-            record.credit.ask_for_loan(_request_of(producer_id, currency, lists["request_kind"][row], lists["request_amount"][row],
-                                                   lists["request_rate"][row], lists["request_term"][row],
-                                                   lists["request_collateral"][row]))
-            record.credit.plan_expansion(producer_id, lists["expansion_runs"][row])
-        count = lists["new_count"][row]
-        staffed = lists["new_staffed"][row]
-        written = [(good_ids[column], lists["new_expected"][row][slot])
-                   for slot, column in enumerate(matrices.slot_goods[columns.recipe_row[row]])
-                   if column >= 0 and lists["written"][row][slot]]
-        producer_table.put_producer(record.producers, replaced(producer, **_changes_of(producer, dict(
-            capacity=lists["new_capacity"][row], losses=lists["new_losses"][row], target=lists["new_target"][row],
-            earnings=tuple(lists["new_earnings"][row][:count]), revenues=tuple(lists["new_revenues"][row][:count]),
-            expected_sales=lists["new_expected_sales"][row], last_runs=lists["new_last_runs"][row],
-            staffed=None if math.isnan(staffed) else staffed, idle=lists["new_idle"][row]), written, pooled)))
+        if answer.write_off[row] > 0.0:
+            write_offs[producer_id] = float(answer.write_off[row])
+        if rebuilds[row]:
+            record.credit.plan_rebuild(producer_id, float(answer.replacement_runs[row]))     # covering its costs, it rebuilds the wear its plan needs
+        if asks[row]:
+            record.credit.ask_for_loan(_request_of(producer_id, bundle.currencies[row], int(answer.request_kind[row]),
+                                                   float(answer.request_amount[row]), float(answer.request_rate[row]),
+                                                   float(answer.request_term[row]), float(answer.request_collateral[row])))
+            record.credit.plan_expansion(producer_id, float(answer.expansion_runs[row]))
     loan_write_offs.apply(write_offs)
     exits.finish()
-    record.book.transfer_many(dividends)
-    return replace_fields(arrays, producers=columns_after_close(columns, record.producers, answer.exited, answer))
+    return exit_rows, exit_payees, exit_amounts
