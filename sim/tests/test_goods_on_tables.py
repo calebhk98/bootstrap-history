@@ -15,7 +15,7 @@ from sim.economy import goods_market_rows, goods_table_group, goods_table_pack, 
 from sim.economy.goods_order_book import GoodsOrderBook
 from sim.economy.goods_order_tables import HOUSEHOLD, OTHER
 from sim.economy.market_tables import MarketTables
-from sim.economy.types import (QUOTE_BEST_UNFILLED_BID, QUOTE_LOWEST_UNFILLED_ASK, Bid, Offer)
+from sim.economy.types import (EDGE_MINT, QUOTE_BEST_UNFILLED_BID, QUOTE_LOWEST_UNFILLED_ASK, Bid, GoodsMove, Offer)
 
 
 def new_book() -> GoodsOrderBook:
@@ -101,6 +101,18 @@ class GoodsRowsAreCutByMarket(unittest.TestCase):
         _bids, offers = orders.tables()
         rows = goods_table_group.rows_of_good(orders, orders.book.good_number("wheat"))
         self.assertEqual(goods_table_group.batch_flags(offers, orders.book.agent_table.is_edge, rows, False).tolist(), [False])
+
+    def test_the_stock_slot_of_an_offer_is_the_book_slot_of_its_seller_good_and_tile(self):
+        orders = new_book()
+        orders.book.move_many([GoodsMove(EDGE_MINT, "s1", "wheat", "t1", 4.0, "start")])
+        orders.add_offer(offer("s1"))
+        orders.add_offer(offer("s2"))
+        orders.add_offer(offer("s1", tile="t9"))
+        _bids, offers = orders.tables()
+        rows = goods_table_group.rows_of_good(orders, orders.book.good_number("wheat"))
+        goods_table_group.note_stock_slots(offers, orders.book, orders.book.good_number("wheat"), rows.offer_rows)
+        self.assertEqual(offers.stock_slot[:3].tolist(), [orders.book.slot_for("s1", "wheat", "t1"), -1, -1])
+        self.assertGreaterEqual(offers.stock_slot[0], 0)
 
     def test_name_ranks_sort_names_as_text_whatever_their_numbers(self):
         self.assertEqual(goods_table_group.name_ranks(["b", "a", "c", "B"]).tolist(), [2, 1, 3, 0])

@@ -10,7 +10,6 @@
 Rows keep the order they arrived in, so a market's bids and offers are in the same order the lists of the old dict held.
 Names become ids at the boundary (`book.agent_number`, `book.good_number`, `book.tile_number`, the memory's goods market
 for `good|area`); objects are rebuilt from rows only at the edge (`bids_of`, `offers_of`)."""
-from dataclasses import fields
 from typing import Dict, Iterable, List, Sequence, Tuple
 
 import numpy
@@ -19,6 +18,7 @@ from sim.compiled_tables.growth import reserve_rows
 
 from .goods_order_tables import (BID_ORDER, GOODS_BIDS, GOODS_MARKET_RESULTS, GOODS_OFFERS, GOODS_PAIRS, OFFER_ORDER, OTHER, BidOrder,
                                  GoodsBids, GoodsMarketResults, GoodsOffers, GoodsPairs, OfferOrder)
+from .goods_order_objects import make_bid, make_offer
 from .market_memory import market_key
 from .protocols import AgentOrders
 from .types import Bid, Offer
@@ -26,31 +26,6 @@ from .types import Bid, Offer
 _FIRST_CAPACITY = 1024
 _BID_FIGURES = 6
 UNCLEARED = -1
-_BID_FIELDS = ("buyer", "good", "area", "tile", "floor_quantity", "flexible_quantity", "reference_price", "elasticity", "budget",
-               "priority", "maximum_price")
-_OFFER_FIELDS = ("seller", "good", "area", "tile", "quantity", "reservation_price")
-_BID_DIRECT = tuple(field.name for field in fields(Bid)) == _BID_FIELDS
-_OFFER_DIRECT = tuple(field.name for field in fields(Offer)) == _OFFER_FIELDS
-_new = object.__new__
-
-
-def make_bid(*values) -> Bid:
-    """A `Bid` of these field values, set directly (thousands are made from rows a year); any other shape of `Bid` goes through
-    its own constructor."""
-    if not _BID_DIRECT:
-        return Bid(*values)
-    bid = _new(Bid)
-    bid.__dict__.update(zip(_BID_FIELDS, values))
-    return bid
-
-
-def make_offer(*values) -> Offer:
-    """An `Offer` of these field values, set directly."""
-    if not _OFFER_DIRECT:
-        return Offer(*values)
-    offer = _new(Offer)
-    offer.__dict__.update(zip(_OFFER_FIELDS, values))
-    return offer
 
 
 def blank_results(table, first: int, last: int) -> None:

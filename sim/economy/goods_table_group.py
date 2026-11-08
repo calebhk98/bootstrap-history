@@ -8,6 +8,8 @@ from dataclasses import dataclass
 
 import numpy
 
+from sim.book_read_kernels import find_slots
+
 
 @dataclass
 class GoodRows:
@@ -75,3 +77,9 @@ def batch_flags(offers, is_edge, rows: GoodRows, good_is_batchable: bool) -> num
     units = numpy.bincount(rows.offer_position, weights=has_units, minlength=count)
     edge_units = numpy.bincount(rows.offer_position, weights=edge, minlength=count)
     return (units > 0) & (edge_units == 0)
+
+
+def note_stock_slots(offers, book, good_id: int, offer_rows: numpy.ndarray) -> None:
+    """Write into the offers' `stock_slot` the book slot each seller holds the good in at its tile (-1: none yet)."""
+    offers.stock_slot[offer_rows] = find_slots(book.stock_rows.table, book.stock_rows.index, offers.seller[offer_rows], good_id,
+                                               offers.tile[offer_rows])

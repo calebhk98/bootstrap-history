@@ -52,7 +52,7 @@ GOODS_OFFERS = TableSpec("GoodsOffers", (
     Column("sequence", numpy.int64, "the number the offer arrived with; equal ties keep this order", "arrival number"),
     Column("quantity", numpy.float64, "the units for sale", "good units"),
     Column("reservation_price", numpy.float64, "the lowest price the seller takes; the clearing's repricing overwrites it with the ask chosen", "currency units per unit"),
-    Column("stock_slot", numpy.int64, "the seller's book stock slot for (seller, good, tile), -1 where it holds none", "stock slot"),
+    Column("stock_slot", numpy.int64, "the seller's book stock slot for (seller, good, tile) when its good clears, -1 where it holds none", "stock slot"),
     Column("source", numpy.int64, "what wrote the offer (a SOURCE_NAMES code); informational", "source code"),
     Column("rank", numpy.int64, "result: the offer's place in its market's offers by ask, cheapest first; -1 until cleared", "place"),
     Column("ask", numpy.float64, "result: the price the offer sold at (its reservation, raised to the market's token minimum)", "currency units per unit"),

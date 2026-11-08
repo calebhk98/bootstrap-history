@@ -10,7 +10,7 @@ import numpy as np
 from . import practice, producers
 from .inventory import DEFAULT_MONTHS_OF_COVER
 from .plan_kernel import plan_rows
-from .goods_order_book import make_bid
+from .goods_order_objects import make_bid
 from .types import LabourBid
 from .year_arrays_recipes import RecipeMatrices
 

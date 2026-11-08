@@ -16,7 +16,7 @@ from .goods_market import MINIMUM_PRICE_SHARE_OF_REFERENCE
 from .goods_market_rows import MarketRows
 from .goods_respend import offers_left
 from .goods_table_clear import clear_batch
-from .goods_table_group import GoodRows, batch_flags, rows_of_good
+from .goods_table_group import GoodRows, batch_flags, note_stock_slots, rows_of_good
 from .goods_table_pack import BatchPack, pack_batch, price_scales
 from .goods_table_quotes import untraded_figures, untraded_result, wanted_by_market
 from .goods_table_results import TableClearing
@@ -90,6 +90,7 @@ def clear_good(context, good: str, good_id: int) -> List[Cleared]:
     rows = rows_of_good(orders, good_id)
     if not len(rows.markets):
         return []
+    note_stock_slots(offers, context.book, good_id, rows.offer_rows)
     flags = batch_flags(offers, context.book.agent_table.is_edge, rows, context.good_is_batchable(good))
     batch = pack = slots = left_counts = untraded = None
     if flags.any():

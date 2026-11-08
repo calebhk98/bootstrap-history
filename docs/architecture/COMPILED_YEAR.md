@@ -1,6 +1,6 @@
 # The compiled year: shared tables instead of per-item objects
 
-**Status:** stage 1 under way (Complaint 968 is the problem this answers). The book is on tables (below); the market memory and the year ledger are with other owners.
+**Status:** stage 1 under way (Complaint 968 is the problem this answers). The book is on tables (below); the market memory and the year ledger are with other owners. Stage 2: the goods orders and their clearing are on tables (below); settlement, the ledger and entry read them through wrappers.
 
 ## Why
 
@@ -80,6 +80,38 @@ reads:** the kernels in `sim/book_read_kernels.py` (`read_balances`, `find_slots
 below zero reads as nothing held. Re-fetch tables after any call that may admit a name or reserve room (a grown table is a new
 object). The methods callers use today (`balance`, `stock`, `post`, `post_settled`, ...) are wrappers over the same kernels.
 `tools/measure/book_index.py` shows why slots are found through a hash.
+
+## Goods orders and clearing on tables (stage 2, first part)
+
+`sim/economy/goods_order_tables.py` declares six tables, every column with a meaning and a unit: `GoodsBids` and `GoodsOffers`
+(one row per order in the order it arrived, with the result columns the clearing writes in place), `GoodsMarketResults` (one row
+per market cleared by the batch), `GoodsPairs` (one row per bid-and-offer pair that traded) and `BidOrder`/`OfferOrder` (the rows of
+each cleared market in clearing order). Ids are the book's (`agent_number`, `good_number`, `tile_number`) and the market memory's
+(a goods market is the row of `good|area` in `MarketTables.goods_markets`). Ids are numbered by arrival, the rules sort by name, so
+the clearing ranks names once (`goods_table_group.name_ranks`) and sorts rows by those ranks.
+
+`goods_order_book.GoodsOrderBook` is what `year_goods.clear_goods` clears. Kernels append whole arrays of rows (`append_bids`,
+`append_offers`: the households' bids by `households_bid_rows.cohort_bid_rows`, the producers' offers by `_OfferRows`). Everything else
+still hands over `Bid` and `Offer` objects, through `add_orders` or the dict door (`book.setdefault((good, area), ([], []))[0].append(bid)`
+that the mint, the state, lending and the engine use); an object waits and becomes a row in arrival order the next time the tables are
+read. Objects are made from rows only at an edge (`bids_of`, `offers_of`, lazily: `goods_table_views.LazyObjects`).
+
+`goods_good_clear.clear_good` clears one good's markets in area order. A market takes one of three ways: traded in the batch
+(`goods_table_pack` packs columns for `goods_year_kernel.decide_markets`, `goods_table_clear` writes the answer back, `TableClearing`
+is the `ArrayClearing` that reads the tables), did not trade (`goods_table_quotes`: the quote and the wanted quantity from columns), or
+the rules still written over objects (a book edge selling, a good outside the year arrays). A market on the tables carries its rows
+(`goods_market_rows.MarketRows`), and the respend pack, the memory's notes and `_remember_markets` read them as lists of columns.
+
+**What a converter of the next phase finds.** Settlement still takes `ArrayClearing`s: `TableClearing.batch` offers the allocation
+arrays (`pair_ptr`, `pair_bid`, `pair_offer`, `pair_quantity`, `ask`) and `(agent, tile)` views of the rows, so
+`settlement_arrays` works unchanged; the same figures are in the `GoodsPairs` and `GoodsMarketResults` tables. The year ledger is still
+handed `ClearingResult`s (`note_clearing`). `ledger.bids_by_market` holds a lazy list per market that the entry rules read as `Bid`
+objects (`entry_trial.demand_at`, `entry_margin`); they are what builds objects at the end of the year until entry reads columns.
+
+**Where the gain waits.** A measured year with this stage shows no clear gain in the goods phase: the objects are gone from the writers
+and the batched clearing, but settlement, the ledger, the entry rules and the many sources that still hand over objects rebuild or
+read them, which is the prototype's lesson again. `python3 sim/simulator.py year-time --session SAVE --years 2 --count-instructions`
+(and `tools/measure/warm_year_profile.py`) measure it.
 
 ## Stages
 

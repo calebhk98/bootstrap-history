@@ -9,11 +9,12 @@ import dataclasses
 import math
 from typing import Dict, List, Optional, Tuple
 
-from . import (currency, mint_price, land_bid_year, carriage_fleet_book, carriage_wear, households, market_curves, market_quote, merchants, merchants_book, producers, seller_cash, seller_offers, settlement,
-               state_budget, state_store, taxes, tool_wear, unsold_search)
+from . import (currency, mint_price, land_bid_year, carriage_fleet_book, carriage_wear, households, market_curves, market_quote, merchants, merchants_book, producers, seller_cash, settlement,
+               state_budget, state_store, taxes, tool_wear)
 from . import goods_good_clear, goods_order_book, goods_respend_year, households_cohort, year_goods_offers, households_orders_pack
 from .goods_table_context import ClearingContext
-from .goods_order_tables import HOUSEHOLD, PRODUCER_OUTPUT
+from .goods_order_tables import HOUSEHOLD
+from .year_goods_offer_rows import OfferRows
 from .home_scope import on_home_tile
 from .inventory import held_stock, holding_reservation
 from .household_work_year import basket_key, cohort_basket
@@ -396,7 +397,7 @@ def _produce_and_offer(setup, record, view, producer_ids, plans, in_kind, order_
         pending.append((producer, None, held))
     reservations = (year_goods_offers.reservations_for(offering[0], offering[1], rows, pair_ptr, expected, spoilage, quantity,
                                                        shortfalls, rate).tolist() if rows else [])
-    offer_rows = _OfferRows(order_book, view)
+    offer_rows = OfferRows(order_book, view)
     taken = 0
     for producer, offers, held in pending:
         if held is not None:
@@ -407,28 +408,6 @@ def _produce_and_offer(setup, record, view, producer_ids, plans, in_kind, order_
         offer_rows.write()               # keep the producers' offers in the order they were made
         add_orders(order_book, AgentOrders(offers=tuple(offers)))
     offer_rows.write()
-
-
-class _OfferRows:
-    """The offers of producers that offer at the reservation the kernel gave, collected as ids and written to the order tables as rows."""
-
-    def __init__(self, orders, view):
-        self.orders, self.view = orders, view
-        self.seller, self.good, self.tile, self.market, self.quantity, self.reservation = [], [], [], [], [], []
-
-    def add(self, producer, good: str, quantity: float, reservation: float) -> None:
-        orders = self.orders
-        self.seller.append(orders.agent_id(producer.agent_id))
-        self.good.append(orders.good_id(good))
-        self.tile.append(orders.tile_id(producer.tile))
-        self.market.append(self.orders.market_id(good, self.view.area_of(good, producer.tile)))
-        self.quantity.append(quantity)
-        self.reservation.append(reservation)
-
-    def write(self) -> None:
-        if self.seller:
-            self.orders.append_offers(self.seller, self.good, self.tile, self.market, self.quantity, self.reservation, PRODUCER_OUTPUT)
-            self.__init__(self.orders, self.view)
 
 
 def _quick_outputs(setup, offering, producer, recipe, stock, keep):
