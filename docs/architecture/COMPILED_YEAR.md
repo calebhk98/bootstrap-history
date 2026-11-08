@@ -511,7 +511,15 @@ matrix) was slower than the object path, with identical digests. The kernel is a
 `NeedBatch` rows, reading the answer back as lists and making the `PricedNeed` objects (a tile's baskets differ in their climate floors, so
 few of them are shared), and the readers of those lists (`labour_ask_floor`, `household_hours_year`, `state_budget`, `lending`,
 `goods_respend`, `country_figures`, `year_labour`) all take objects. The tables pay only when those readers take the columns, so the
-wiring waits for them; `NeedBatch`, `price_needs` and `PricedBatch` have no caller in the year yet. Measure it again with
+wiring waits for them; `NeedBatch`, `price_needs` and `PricedBatch` have no caller in the year yet.
+
+**The ceiling, measured (stage 4, priced-need readers).** A warm Rome year asks `kept_need_prices` many times but misses only for a few hundred
+(tile, basket) pairs over a handful of memory epochs (the kept reads are dropped whenever the memory is written to), so most asks are already
+dictionary hits. Replaying the year's misses offline (a throwaway script, no committed command): the object path's `priced_need` work and the
+whole batch (`NeedBatch` rows, matrix, `price_needs`, `tolist`, with no `PricedNeed` made and no reader converted) were compared by process
+time, best of five. The batch saves only a few percent of the profiled `kept_need_prices` cost, under one percent of a year, and it loses
+the object path's sharing of a need across baskets (more need rows than distinct needs priced). Converting the readers cannot add to that
+saving, so the batch stays unwired until a wider change (for example all epochs' requests known up front) makes the miss count large. Measure it again with
 `python3 tools/measure/warm_year_profile.py SAVE OUT.prof` (look at `kept_need_prices` against the sum of `prime`, `PricedBatch`, `need`).
 
 **What is left in the close's households part.** `closed_cohort` per cohort is now mostly first-touch work other owners' views do once per
