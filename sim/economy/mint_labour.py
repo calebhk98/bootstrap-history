@@ -12,7 +12,8 @@ from sim.constants import declare
 from . import currency, mint_staffing, trade_wages
 from .setup import labour_area
 from .state_wage_ceiling import WAGE_CEILING_MULTIPLE
-from .types import LabourBid, Transfer
+from .labour_bid_sink import BidFigures, put_bids
+from .types import Transfer
 
 MINT_ALLOY_AND_FUEL_NOT_BOUGHT = declare(
     "MINT_ALLOY_AND_FUEL_NOT_BOUGHT", 0.0, kind="temporary_heuristic",
@@ -47,19 +48,19 @@ def _striking(setup, spec) -> bool:
             and spec.backing_per_unit > 0.0)
 
 
-def scale_bids_to_funds(bids: List[LabourBid], funded: float) -> List[LabourBid]:
-    """The bids with every trade's hours cut by the same share where the bill at their ceilings is more than `funded`:
-    hours the mint cannot pay would be hired and sent away unpaid."""
-    bill = math.fsum(bid.hours * bid.maximum_wage for bid in bids)
+def scale_to_funds(bids: List[BidFigures], funded: float) -> List[BidFigures]:
+    """The bids (employer, trade, area, hours, maximum wage) with every trade's hours cut by the same share where the bill at their
+    ceilings is more than `funded`: hours the mint cannot pay would be hired and sent away unpaid."""
+    bill = math.fsum(hours * maximum_wage for _employer, _trade, _area, hours, maximum_wage in bids)
     if funded <= 0.0:
         return []
     if bill <= funded:
         return bids
     share = funded / bill
-    return [LabourBid(bid.employer, bid.trade, bid.area, bid.hours * share, bid.maximum_wage) for bid in bids]
+    return [(employer, trade, area, hours * share, maximum_wage) for employer, trade, area, hours, maximum_wage in bids]
 
 
-def staff(setup, record, view, labour_bids: List[LabourBid], capacity_fine_kilograms: float,
+def staff(setup, record, view, labour_bids, capacity_fine_kilograms: float,
           committed_cash: float = 0.0) -> None:
     """Bid for the hours the mint needs to strike `capacity_fine_kilograms` this year, at the capital,
     and fund the mint account for the wages it bids from the issuer's cash beyond `committed_cash`, which the
@@ -73,13 +74,12 @@ def staff(setup, record, view, labour_bids: List[LabourBid], capacity_fine_kilog
     value = mint_staffing.hour_value(currency.mint_parity(spec), math.fsum(per_trade.values()))
     for trade, per_kilogram in sorted(per_trade.items()):
         wage = trade_wages.wage_in_view(setup, view, trade, area)
-        bids.append(LabourBid(agent, trade, area, capacity_fine_kilograms * per_kilogram,
-                              max(wage * WAGE_CEILING_MULTIPLE, value)))
-    wage_bill = math.fsum(bid.hours * bid.maximum_wage for bid in bids)
+        bids.append((agent, trade, area, capacity_fine_kilograms * per_kilogram, max(wage * WAGE_CEILING_MULTIPLE, value)))
+    wage_bill = math.fsum(hours * maximum_wage for _employer, _trade, _area, hours, maximum_wage in bids)
     funded = min(wage_bill, max(0.0, record.book.balance(setup.state_agent, setup.currency_id) - committed_cash))
     if funded > 0.0:
         record.book.transfer(Transfer(setup.state_agent, agent, setup.currency_id, funded, "mint wages funded"))
-    labour_bids.extend(scale_bids_to_funds(bids, funded))
+    put_bids(labour_bids, scale_to_funds(bids, funded))
 
 
 def strike_limit_fine_kilograms(setup, spec, hours_hired: Mapping[str, float]) -> float:

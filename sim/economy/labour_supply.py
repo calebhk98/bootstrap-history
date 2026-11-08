@@ -20,7 +20,9 @@ import numpy
 from sim.world.shared_constants import LABOUR_OUTPUT_ELASTICITY
 
 from . import household_hours_year, labour_offers_kernels, labour_supply_plain
+from .labour_offer_rows import LabourOfferRows
 from .labour_offers_table import PlotParameters, build_labour_offers
+from .labour_sold_offers import SoldOffers
 from .labour_supply_markets import MarketHours
 from .types import AgentId, LabourOffer
 
@@ -33,13 +35,13 @@ def hours_kept_at_home(whole: float, plan_hours: float, plot_hours: float, work_
 
 @dataclasses.dataclass
 class HourSupply:
-    offers: Sequence[LabourOffer]                       # every offer, with the cohort's whole year of hours
+    offers: Sequence[LabourOffer]                       # every offer, with the cohort's whole year of hours (the rows a writer made, `LabourOfferRows`, or records)
     plan_hours: Mapping[AgentId, float]                 # own-plot plan hours a cohort keeps whatever the wage
     work_hours: Mapping[AgentId, float]                 # household work it does itself
     plot_hours_at: Mapping[AgentId, Callable[[float], float]]   # hours its plot keeps at a wage (households_hours_offered.plot_hours_kept); one with `.parameters` goes into the table, any other makes the supply plain
     faced_wage: Mapping[Tuple[str, str], float] = dataclasses.field(default_factory=dict)   # (trade, area) -> wage where no market cleared
     # filled by `settle`
-    sold: List[LabourOffer] = dataclasses.field(default_factory=list)
+    sold: Sequence[LabourOffer] = dataclasses.field(default_factory=list)       # `SoldOffers` after a settle on the table path
     kept: Dict[AgentId, float] = dataclasses.field(default_factory=dict)
     plot_parameters: Mapping[AgentId, PlotParameters] = dataclasses.field(default_factory=dict)   # the plot rule as numbers (household_hours_year.plot_parameters_by_cohort): no closure needed
 
@@ -52,6 +54,7 @@ class HourSupply:
                 self._bare_plots[cohort] = plot
             else:
                 self._parameters.setdefault(cohort, PlotParameters(*parameters))
+        self.offer_rows = self.offers if isinstance(self.offers, LabourOfferRows) else None      # records are put into rows when first needed
         self._whole: Optional[Dict[AgentId, float]] = None
         self._parts = None                  # (table, ids, markets), built on first use
         self._market_hours: Optional[MarketHours] = None
@@ -70,9 +73,15 @@ class HourSupply:
         """The `LabourOffers` table of these offers (labour_offers_table.py); sold and kept hours are filled by `settle`."""
         return self._build()[0]
 
+    def rows(self) -> LabourOfferRows:
+        """The offers as rows (made from the records on first use when they were handed over as records)."""
+        if self.offer_rows is None:
+            self.offer_rows = LabourOfferRows.of_objects(self.offers)
+        return self.offer_rows
+
     def _build(self):
         if self._parts is None:
-            self._parts = build_labour_offers(self.offers, self.plan_hours, self.work_hours, self._parameters)
+            self._parts = build_labour_offers(self.rows(), self.plan_hours, self.work_hours, self._parameters)
         return self._parts
 
     def _plot(self, worker: AgentId) -> Optional[Callable[[float], float]]:
@@ -142,8 +151,7 @@ class HourSupply:
             if found is not None:
                 wage[position], known[position] = found, True
         kept_by_cohort = labour_offers_kernels.settle_offers(table, wage, known, self._market_hours.exponent, len(ids.cohorts))
-        self.sold = [LabourOffer(offer.worker, offer.trade, offer.area, sold, offer.reservation_wage)
-                     for offer, sold in zip(self.offers, table.sold_hours.tolist())]
+        self.sold = SoldOffers(table, ids, self.rows(), ids.market_names(markets.trade_of_market, markets.area_of_market))
         cohorts, first_row = numpy.unique(table.cohort, return_index=True)      # kept lists cohorts in the order their first offer came
         cohort_numbers, kept_hours = cohorts.tolist(), kept_by_cohort.tolist()
         self.kept = {ids.cohorts.name(cohort_numbers[each]): kept_hours[cohort_numbers[each]] for each in numpy.argsort(first_row).tolist()}

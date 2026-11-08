@@ -173,8 +173,8 @@ read (`offer_matrix`) and settles the offers at the cleared wages (`settle_offer
 callers not yet on the table. Where a plot rule is a bare function, or a caller replaces a market's schedule in the
 `hours_sold_at` mapping (`MarketHours`), the plain path takes it. Stage 2 plugs in at three named seams: the shared agent
 numbering replaces the per-year cohort numbering (`LabourIds`), the cohort offers are written as rows by the code that makes
-them (today `labour_offers_table.build_labour_offers` reads `LabourOffer` objects), and the cleared wages arrive as a
-market-indexed array from the market memory (today a dict read in `HourSupply.settle`).
+them (done in stage 4: `labour_offers_table.build_labour_offers` reads the rows of `LabourOfferRows`, see "Labour bids and offers as rows"
+below), and the cleared wages arrive as a market-indexed array from the market memory (today a dict read in `HourSupply.settle`).
 
 ## The labour core as tables (stage 2)
 
@@ -376,8 +376,8 @@ row per input bid and per labour bid, grouped by producer in slot order (`plan_t
 rows with `np.nonzero` over the recipe masks; the few producers `producers.plan` still plans have their `Plan` read into the same
 rows). `outlay_room.by_plan_table`, `land_bid_year.write_firm_land_bids`, `land_market` (through `wanted_runs_by_id`) and the goods
 clearing (`PlanTable.get(id).runs`) read the columns; `plan_table.write_bids` hands the bid rows to the book of orders. `Plan`, `Bid`
-and `LabourBid` are made only at an edge: `plan_of(id)` (tests, screens) and `labour_bid_objects()`, the one call into
-`year_labour.clear_labour`, which still takes a list of labour bids.
+and `LabourBid` are made only at an edge: `plan_of(id)` (tests, screens) and `labour_bid_objects()`; the labour rows go to the year's
+`LabourBidTable` through `write_labour_bids` (see "Labour bids and offers as rows").
 
 **Block reads.** `stock_block.stock_block(book, agent_numbers, good_numbers, tile_numbers)` reads any number of stock cells in one kernel
 call (`numbers_of` turns names into ids). `plan_year.stocks_by_slot` and `households_orders_pack.kernel_orders` use it.
@@ -419,3 +419,40 @@ Digests are unchanged (Rome two years with reload, England five). What is left o
 reads, and the unconverted workforce views declared `cached=False` (`money_per_labour_hour`, `trade_registry`, `wage_signature`,
 ...), which the assembly cannot cache until their owner bumps its channels on every write. Tests: `sim/tests/test_response_memo.py`,
 `test_year_accounts.py` (`PlainLedgerReadTests`), `test_year_ledger_views.py` (`as_plain`).
+
+## Labour bids and offers as rows (stage 4, one package)
+
+**Bids.** `sim/labour/market/bid_table.py` holds `LabourBidTable`, the year's one table of labour bids (columns `employer`, `trade`,
+`area`, `hours`, `maximum_wage`, each documented in `LABOUR_BIDS`). Rows stay in the order the writers appended them, and that order is
+a bid's sequence: it breaks ties in the core. The numbers in the columns are the table's own, given in the order a name first arrives
+(`RowNames`), not the book's agent numbers: admitting every bidder to the book early would change the saved agent numbering. The core
+numbers employers again in name order, so the arrival order changes nothing downstream. Writers: `PlanTable.write_labour_bids` (the plan
+rows, with trades and labour areas now numbers into the table's name lists), `carriage_hours.write_bids`, `state_budget.plan_year`,
+`mint_labour.staff`, through `labour_bid_sink.put_bids` (a table takes the figures as rows, a plain list of records, as a test passes,
+gets `LabourBid`s). `TrancheBids(table, ...)` cuts tranches from the kernel's columns and `bid_book.numbered` turns the table's numbers
+into the state's with one array per column (only the distinct names are looked up). `year_labour.clear_labour` takes the table (a list of
+records is put into rows first).
+
+**Offers.** `labour_offer_rows.LabourOfferRows` is the year's offers as columns (`worker`, `trade`, `area`, `hours`, `reservation_wage`),
+sharing the bid table's trade and area numbers. `labour_offers_write.write_cohort_offers` makes every cohort's offers at once (cohorts by
+id, trades by name; a cohort x trade is a row of an expansion over its labour area's trades), where `households_cohort.labour_offers`
+made them cohort by cohort as records. `build_labour_offers`, `HourSupply`, bondage placement and the settlement read the columns:
+`HourSupply.settle` returns `labour_sold_offers.SoldOffers` (the `LabourOffers` table with the hours sold), and `labour_fills.sell_rows`
+reads its columns (market of each offer, hours sold, distinct workers).
+
+**Bondage.** `bondage_hours.place_held`, `place` and `payable_keep` work on the rows; the rules are kernels in `bondage_kernels.py`
+(`place_held_kernel`, `place_bonds_kernel`, `payable_keep_kernel`). The python only prepares indexes (`bondage_rows.ranges_of`: the rows
+of one market or one holder in row order), so a holder reads the bids of its own (employer, trade, area) and an offer the bids of its own
+market, not every row. Sums are `python_sum` (the order and brackets of the Python they replace, kept in `sim/tests/bondage_plain.py`).
+The keep is `KeepRows` and is posted by `bondage_keep.post_keep` as one batch of transfer postings (one `apply_postings` call; a refused
+batch is posted again as records to raise the book's error) and one block into the ledger's money out.
+
+**Who still builds the objects.** `LabourBid`: `producers.plan` (the few producers the plan kernel leaves out, read into rows by
+`plan_table_rows.object_rows`), a seat's staff bids (`port_staff.employer_bids`, handed over as `AgentOrders.labour_bids` and put into rows
+by `add_objects`), and the workforce's views (`workforce_settle`, which read `carriage_hours.bids` and `state_budget.wage_labour_bids`).
+`LabourOffer`: `LabourOfferRows.objects()` once a year for the household readers that take records (`household_work_year.decide`,
+`household_hours_year.plot_parameters_by_cohort`), and a seat's own offers. Those readers are the next to move to the columns.
+
+Measure: `python3 tools/measure/warm_year_profile.py SAVE OUT.prof` for call counts (`clear_labour`, `place_held`, `labour_offer_rows`,
+`write_labour_bids`); the constructions of the record classes in a warm year are counted by wrapping `LabourBid.__new__` and
+`LabourOffer.__new__` around `Economy._run_year`. Tests: `sim/tests/test_year_speed_labour_rows.py`, `test_year_speed_bondage.py`.

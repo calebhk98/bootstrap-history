@@ -23,7 +23,7 @@ class RealProgrammeLevel(unittest.TestCase):
         setup = types.SimpleNamespace(state_policy=policy, currency_id="coin", state_agent="state")
         view = types.SimpleNamespace(chained_price_level=lambda money: 1.0, opening_wage_level=lambda money: 3.0)
         with mock.patch.object(state_budget.state_finance, "finance_deficit", lambda *arguments: (0.0, 0.0, {})), \
-                mock.patch.object(state_budget, "wage_labour_bids", lambda *arguments: []):
+                mock.patch.object(state_budget, "wage_bid_figures", lambda *arguments: []):
             state_budget.plan_year(setup, record, view, [])
         self.assertAlmostEqual(record.state_budget.goods_budget, 300.0)
 

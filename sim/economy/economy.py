@@ -11,7 +11,7 @@ from sim.world import capital_market
 
 from .rates import own_rate
 from . import plan_table, plan_year, producer_table
-from . import outlay_room, taxes, bondage, bondage_hours, bonded_purchase, banks, carriage_hours, credit, credit_idle_rate, credit_lines, debt_relief, credit_claims, currency, equity, land_market, lending, merchants_credit, producers, shares, sites, state_budget, tax_farming, titles_inheritance, titles_moves, titles_plots, unit_cost
+from . import outlay_room, taxes, bondage, bondage_hours, bondage_keep, bonded_purchase, banks, carriage_hours, credit, credit_idle_rate, credit_lines, debt_relief, credit_claims, currency, equity, land_market, lending, merchants_credit, producers, shares, sites, state_budget, tax_farming, titles_inheritance, titles_moves, titles_plots, unit_cost
 from .credit_view import CreditView
 from .market_areas_follow import follow
 from .market_memory import YearView
@@ -24,13 +24,13 @@ from . import capital_year, household_hours_year, household_work_year, land_bid_
 from .households_own import (hours_for_own_plan, own_production, own_production_options, plot_hectares)
 from . import flight_step, households_cohort, trade_wages
 from .labour_inputs import labour_context
-from sim.labour.api import people_in
+from sim.labour.api import LabourBidTable, people_in
 from .labour_state import scale_people
 from .opening import open_economy
 from .protocols import EconomyYearInputs
 from .record import EconomyRecord
 from .setup import EconomySetup, area_tile, labour_area
-from .types import EDGE_CONSUMPTION, GoodsMove, Transfer
+from .types import EDGE_CONSUMPTION, GoodsMove
 from .national_prices import national_prices, national_wages
 from .merchants_dispatch import dispatch_merchants
 from .year_arrays import YearArrays, same_source, source_of
@@ -40,10 +40,12 @@ from .year_order_sources import cohort_orders, merchant_orders, state_orders
 from .order_book_named import new_named_order_book
 from .goods_order_tables import ENGINE, LOAN
 from .order_rows import OrderRows
+from .labour_offer_rows import LabourOfferRows
+from .labour_sold_offers import sold_hours_by_worker
 from .labour_supply import HourSupply
 from .labour_results_table import hours_totals
 from .labour_state import people_by_trade
-from .year_labour import clear_labour, labour_offers, outside_option_by_tile
+from .year_labour import clear_labour, labour_offer_rows, outside_option_by_tile
 from .year_accounts import YearAccounts, build as build_accounts, stocks as stocks_held
 from .standing_demand import with_standing_bids
 from .year_ledger import YearLedger
@@ -193,27 +195,27 @@ class Economy:
         tax_farming.run_auctions(setup, record, inputs.farmed_forms, record.memory.rates[setup.currency_id])
         lending.lend_working_capital(setup, record, view)
         plans = plan_year.plans_of(setup, record, view, arrays, money)
-        labour_bids = plans.labour_bid_objects()
+        labour_bids = LabourBidTable()
+        plans.write_labour_bids(labour_bids)
         for orders in inputs.engine_orders.values():
-            labour_bids.extend(orders.labour_bids)
+            labour_bids.add_objects(orders.labour_bids)
         state_budget.plan_year(setup, record, view, labour_bids)
         staff_mint(setup, record, view, labour_bids)
-        labour_bids.extend(carriage_hours.bids(setup, record))    # merchants' carriers, from last year's shipments
+        carriage_hours.write_bids(labour_bids, setup, record)    # merchants' carriers, from last year's shipments
         outside_option = outside_option_by_tile(setup, record, view)
         land_lease_year.lease_in_market(setup, record, view, self.own_plot_options())
         land_bid_year.take_up_own(setup, record, self.own_plot_options())
         levied_tiles = tuple(inputs.population_by_tile)      # the tiles of the nation whose state levies (port_levy.py spreads the hours over them)
-        everyone = labour_offers(setup, record, view, outside_option, inputs.labour_levy_hours_per_worker, levied_tiles)
+        everyone = labour_offer_rows(setup, record, view, outside_option, inputs.labour_levy_hours_per_worker, levied_tiles,
+                                     LabourOfferRows(labour_bids.trades, labour_bids.areas))
         for orders in inputs.engine_orders.values():
-            everyone.extend(orders.labour_offers)    # a seat's own hours, sold at the market's wage
+            everyone.add_objects(orders.labour_offers)    # a seat's own hours, sold at the market's wage
         context = labour_context(setup, record, view, self.carriage, inputs, self.own_plot_options(), outside_option)
         held_placed = bondage_hours.place_held(
             record.unfree.bonded_held, lambda area, trade: people_by_trade(record.labour.workforce, area).get(trade, 0.0), everyone, labour_bids,
             setup.working_hours_per_year, context.ask_floor_per_worker_year, labour_area)
-        keep = [Transfer(employer, cohort, money, amount, "keep of bonded") for employer, cohort, amount
-                in bondage_hours.payable_keep(held_placed.keep, lambda employer: record.book.balance(employer, money))]
-        record.book.transfer_many(keep)
-        ledger.note_paid_outside_markets(keep)
+        keep = bondage_hours.payable_keep(held_placed.keep, lambda employer: record.book.balance(employer, money))
+        bondage_keep.post_keep(record.book, ledger, keep, money)
         context = dataclasses.replace(context, outlay_room=outlay_room.by_plan_table(     # after the keep is paid out of the purses
             plans, setup.state_agent, record.state_budget, lambda employer: record.book.balance(employer, money),
             record.book.balances_of(plans.ids, money)))
@@ -268,8 +270,8 @@ class Economy:
         bonded = bondage.service(record, money, ledger.wages_in, placed.value_placed, placed.cash_share)
         record.book.transfer_many(bonded)
         ledger.note_paid_outside_markets(bonded)
-        for payment in keep + bonded:
-            interest[payment.payee] = interest.get(payment.payee, 0.0) + payment.amount
+        for payee, amount in list(zip(keep.cohorts, keep.amounts.tolist())) + [(payment.payee, payment.amount) for payment in bonded]:
+            interest[payee] = interest.get(payee, 0.0) + amount
         titles_inheritance.divide_estates(record)
         dispatch_merchants(setup, record, self.carriage, ledger, self.area_map)
         money_taxes(setup, record, view, ledger)
@@ -358,10 +360,11 @@ class Economy:
 
     def _hour_supply(self, everyone, view) -> HourSupply:
         """The hours households sell as a schedule against the wage (labour_supply.py)."""
-        plan, work = self._fixed_home_hours(everyone, view)
-        plot = household_hours_year.plot_parameters_by_cohort(self.setup, self.record, view, everyone, self.own_plot_options(),
+        records = everyone.objects()      # the household readers below take records; the supply takes the rows
+        plan, work = self._fixed_home_hours(records, view)
+        plot = household_hours_year.plot_parameters_by_cohort(self.setup, self.record, view, records, self.own_plot_options(),
                                                              self.hectares_held())
-        faced = {(offer.trade, offer.area): trade_wages.faced_wage(view.wage(offer.trade, offer.area), offer.reservation_wage) for offer in everyone}
+        faced = everyone.faced_wages(view.wage, trade_wages.faced_wage)
         return HourSupply(everyone, plan, work, {}, faced, plot_parameters=plot)
 
     def hectares_held(self) -> Dict[str, float]:
@@ -375,9 +378,7 @@ class Economy:
         kept = kept or {}
         self._own_hectares = {}
         held = self.hectares_held()
-        offered: Dict[str, float] = {}
-        for offer in offers:
-            offered[offer.worker] = offered.get(offer.worker, 0.0) + offer.hours
+        offered = sold_hours_by_worker(offers)
         for cohort_id, cohort in sorted(record.cohorts.items()):
             idle = (offered.get(cohort_id, 0.0) + kept.get(cohort_id, 0.0) - ledger.hours_sold.get(cohort_id, 0.0)
                     - min(kept.get(cohort_id, 0.0), self._work_hours.get(cohort_id, 0.0)))   # household work is not spare hours

@@ -74,7 +74,7 @@ def plans_of(setup, record, view, arrays, money) -> PlanTable:
     idle = runs <= 0.0              # an idle plan has no runs, no wage line and no orders
     runs_all, wanted_all, line_all = np.zeros(count), np.zeros(count), np.zeros(count)
     runs_all[rows], wanted_all[rows], line_all[rows] = np.where(idle, 0.0, runs), wanted, np.where(idle, 0.0, line)
-    names = LocalNames(matrices.goods.ids, columns.tiles.ids, arrays.area_index.areas.ids)
+    names = LocalNames(matrices.goods.ids, columns.tiles.ids, arrays.area_index.areas.ids, matrices.trades.ids)
     blocks = [kernel_rows(columns, matrices, arrays.area_index, view, names, rows, ~idle, hours, ceilings, quantity, bid_price, budget, worth)]
     objects: Dict[int, producers.Plan] = {}
     plain_set = set(plain)
@@ -85,4 +85,5 @@ def plans_of(setup, record, view, arrays, money) -> PlanTable:
             runs_all[position], wanted_all[position], line_all[position] = plan.runs, plan.wanted_runs, plan.wage_line
             blocks.append(object_rows(position, plan, names))
     bids, labour = merged(blocks)
-    return PlanTable(ids, runs_all.tolist(), wanted_all.tolist(), line_all, bids, labour, names.goods, names.tiles, names.areas, objects)
+    return PlanTable(ids, runs_all.tolist(), wanted_all.tolist(), line_all, bids, labour, names.goods, names.tiles, names.areas, objects,
+                     names.trades)

@@ -85,14 +85,18 @@ def rows_from_objects(clearings) -> Tuple[MarketRows, BuyRows, Sequence[str]]:
                              numpy.array(hours, dtype=numpy.float64)), list(employers))
 
 
-def sell_rows(markets: MarketRows, offers: Sequence) -> Tuple[List[str], numpy.ndarray, numpy.ndarray, numpy.ndarray]:
-    """The sells of the offers that sold into these markets: (worker names, market, hours sold, order of the offer), in the
-    order of the offers. A market's hired hours are shared out in proportion to the hours each offer held (the sum taken in
-    the offers' order, as `year_labour._result` did); only a market that hired anything gives sells, and only an offer holding
-    hours. The offers of a market the clearing did not cover are not sells."""
-    row_of = {(trade, area): row for row, (trade, area) in enumerate(zip(markets.trade, markets.area))}
-    rows = numpy.array([row_of.get((offer.trade, offer.area), -1) for offer in offers], dtype=numpy.int64)
-    held = numpy.array([offer.hours for offer in offers], dtype=numpy.float64)
+def sell_rows(markets: MarketRows, offers: Sequence) -> Tuple[List[str], numpy.ndarray, numpy.ndarray, numpy.ndarray, numpy.ndarray]:
+    """The sells of the offers that sold into these markets: (worker names, the place in them of each sell's worker, market, hours
+    sold, order of the offer), in the order of the offers. A market's hired hours are shared out in proportion to the hours each
+    offer held (the sum taken in the offers' order, as `year_labour._result` did); only a market that hired anything gives sells,
+    and only an offer holding hours. The offers of a market the clearing did not cover are not sells. Offers that are the rows of
+    a supply's settlement (`labour_sold_offers.SoldOffers`) are read from their columns; any other sequence, offer by offer."""
+    if hasattr(offers, "sold_columns"):
+        rows, held = offers.market_rows(markets.trade, markets.area), offers.sold_columns()
+    else:
+        row_of = {(trade, area): row for row, (trade, area) in enumerate(zip(markets.trade, markets.area))}
+        rows = numpy.array([row_of.get((offer.trade, offer.area), -1) for offer in offers], dtype=numpy.int64)
+        held = numpy.array([offer.hours for offer in offers], dtype=numpy.float64)
     inside = numpy.flatnonzero(rows >= 0)
     by_market = inside[numpy.argsort(rows[inside], kind="stable")]
     start = numpy.searchsorted(rows[by_market], numpy.arange(len(markets.wage) + 1)).astype(numpy.int64)
@@ -101,19 +105,23 @@ def sell_rows(markets: MarketRows, offers: Sequence) -> Tuple[List[str], numpy.n
     sells = numpy.flatnonzero((rows >= 0) & (held > 0.0))
     sells = sells[(offered[rows[sells]] > 0.0) & (hired[rows[sells]] > 0.0)]
     quantity = hired[rows[sells]] * held[sells] / offered[rows[sells]]
-    return [offers[each].worker for each in sells.tolist()], rows[sells], quantity, sells
+    if hasattr(offers, "sold_columns"):
+        workers, worker_place = offers.workers_of(sells)
+    else:
+        workers, worker_place = [offers[each].worker for each in sells.tolist()], numpy.arange(len(sells), dtype=numpy.int64)
+    return workers, worker_place, rows[sells], quantity, sells
 
 
 def fills_of(markets: MarketRows, buys: BuyRows, employer_names: Sequence[str], offers: Sequence) -> LabourFills:
     """The fills of the markets: buys and sells each sorted by name inside their market (a worker with two offers in a market
     keeps them in the offers' order)."""
-    workers, sell_market, sell_quantity, sell_order = sell_rows(markets, offers)
+    workers, worker_place, sell_market, sell_quantity, sell_order = sell_rows(markets, offers)
     used, buy_employer = numpy.unique(buys.employer, return_inverse=True)
     used_names = [employer_names[each] for each in used.tolist()]
     names = sorted(set(used_names).union(workers))
     ref_of = {name: ref for ref, name in enumerate(names)}
     buy_ref = numpy.array([ref_of[name] for name in used_names], dtype=numpy.int64)[buy_employer.reshape(-1)]
-    sell_ref = numpy.array([ref_of[name] for name in workers], dtype=numpy.int64)
+    sell_ref = numpy.array([ref_of[name] for name in workers], dtype=numpy.int64)[worker_place]
     count = len(markets.wage)
     buy_market = numpy.repeat(numpy.arange(count, dtype=numpy.int64), numpy.diff(buys.market_start))
     buy_order = numpy.lexsort((buy_ref, buy_market))

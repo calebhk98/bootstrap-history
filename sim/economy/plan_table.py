@@ -17,10 +17,11 @@ Input-bid rows (`bids`, grouped by producer in slot order, the order the bids re
     priority        need tier                                                                    tier
     figures         floor, flexible quantity, reference price, elasticity, budget, maximum price (the fields of `types.Bid`)
 
-Labour-bid rows (`labour`, grouped by producer in slot order): position, trade name, labour area name, hours, maximum wage per hour.
+Labour-bid rows (`labour`, grouped by producer in slot order): position, trade (index into `trade_names`), labour area (index into
+`area_names`), hours, maximum wage per hour. `write_labour_bids(bid_table)` appends them to the year's `LabourBidTable`.
 
 Objects exist only at the edge: `plan_of(id)` builds the `Plan` of one producer (tests, screens), `labour_bid_objects()` the
-`LabourBid`s the labour clearing still takes as a list, `get(id)` a `Plan` with the figures and no bids (what the goods clearing reads)."""
+`LabourBid`s of every producer (tests), `get(id)` a `Plan` with the figures and no bids (what the goods clearing reads)."""
 import math
 from dataclasses import dataclass
 from typing import Dict, List, Mapping, Optional, Tuple
@@ -86,11 +87,11 @@ class BidColumns:
 
 @dataclass
 class LabourColumns:
-    position: numpy.ndarray
-    trade: List[str]
-    area: List[str]
-    hours: numpy.ndarray
-    maximum_wage: numpy.ndarray
+    position: numpy.ndarray        # the bidding producer's position
+    trade: numpy.ndarray           # index into the table's trade names
+    area: numpy.ndarray            # index into the table's area names (a labour area)
+    hours: numpy.ndarray           # hours wanted, hours per year
+    maximum_wage: numpy.ndarray    # most an hour is worth to the producer, money per hour
 
 
 class ColumnMap(Mapping):
@@ -118,13 +119,14 @@ class PlanTable:
 
     def __init__(self, ids: Tuple[str, ...], runs: List[float], wanted_runs: List[float], wage_line: numpy.ndarray, bids: BidColumns,
                  labour: LabourColumns, good_names: List[str], tile_names: List[str], area_names: List[str],
-                 objects: Optional[Dict[int, Plan]] = None):
+                 objects: Optional[Dict[int, Plan]] = None, trade_names: Optional[List[str]] = None):
         self.ids = ids
         self.position = {producer_id: place for place, producer_id in enumerate(ids)}
         self.runs, self.wanted_runs = runs, wanted_runs
         self.wage_line = numpy.ascontiguousarray(wage_line, dtype=numpy.float64)
         self.bids, self.labour = bids, labour
         self.good_names, self.tile_names, self.area_names = good_names, tile_names, area_names
+        self.trade_names = trade_names or []
         self.objects = objects or {}      # position -> the Plan itself, kept for a producer planned by `producers.plan`
         self.bid_start = numpy.searchsorted(bids.position, numpy.arange(len(ids) + 1)).astype(numpy.int64)
         totals = plan_sums(self.wage_line, numpy.ascontiguousarray(bids.figures[:, 4]), self.bid_start)
@@ -171,11 +173,27 @@ class PlanTable:
         columns = self.labour
         hours, wages = columns.hours[first:last].tolist(), columns.maximum_wage[first:last].tolist()
         employers = [self.ids[place] for place in columns.position[first:last].tolist()]
-        return [LabourBid(*each) for each in zip(employers, columns.trade[first:last], columns.area[first:last], hours, wages)]
+        trades = [self.trade_names[place] for place in columns.trade[first:last].tolist()]
+        areas = [self.area_names[place] for place in columns.area[first:last].tolist()]
+        return [LabourBid(*each) for each in zip(employers, trades, areas, hours, wages)]
 
     def labour_bid_objects(self) -> List[LabourBid]:
-        """Every producer's labour bids as the objects the labour clearing takes, in producer order (the edge into `clear_labour`)."""
+        """Every producer's labour bids as objects, in producer order (an edge: tests)."""
         return self.labour_objects(0, len(self.labour.position))
+
+    def write_labour_bids(self, bid_table) -> None:
+        """Append every producer's labour bids to the year's `LabourBidTable`, in producer order (the order of the rows). Names are
+        numbered once for each distinct producer, trade and area."""
+        columns = self.labour
+        if not len(columns.position):
+            return
+        producers, producer_place = numpy.unique(columns.position, return_inverse=True)
+        trades, trade_place = numpy.unique(columns.trade, return_inverse=True)
+        areas, area_place = numpy.unique(columns.area, return_inverse=True)
+        bid_table.add_rows(bid_table.employers.numbers([self.ids[each] for each in producers.tolist()])[producer_place.reshape(-1)],
+                           bid_table.trades.numbers([self.trade_names[each] for each in trades.tolist()])[trade_place.reshape(-1)],
+                           bid_table.areas.numbers([self.area_names[each] for each in areas.tolist()])[area_place.reshape(-1)],
+                           columns.hours, columns.maximum_wage)
 
 
 class PlanBids:

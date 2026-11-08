@@ -5,8 +5,7 @@ QUICK_TOPIC = True
 import unittest
 
 from sim.economy import mint_staffing
-from sim.economy.mint_labour import scale_bids_to_funds
-from sim.economy.types import LabourBid
+from sim.economy.mint_labour import scale_to_funds
 
 
 class StaffedMoney(unittest.TestCase):
@@ -42,17 +41,17 @@ class GoodsBudgetCut(unittest.TestCase):
 
 class ScaleToFunds(unittest.TestCase):
     def test_hours_shrink_together_until_the_bill_at_the_ceilings_is_the_funds(self):
-        bids = [LabourBid("mint", "a", "area", 100.0, 2.0), LabourBid("mint", "b", "area", 50.0, 4.0)]
-        scaled = scale_bids_to_funds(bids, funded=200.0)          # the bill is 400
-        self.assertAlmostEqual(sum(bid.hours * bid.maximum_wage for bid in scaled), 200.0)
-        self.assertAlmostEqual(scaled[0].hours / scaled[1].hours, 2.0)
+        bids = [("mint", "a", "area", 100.0, 2.0), ("mint", "b", "area", 50.0, 4.0)]
+        scaled = scale_to_funds(bids, funded=200.0)          # the bill is 400
+        self.assertAlmostEqual(sum(hours * wage for _employer, _trade, _area, hours, wage in scaled), 200.0)
+        self.assertAlmostEqual(scaled[0][3] / scaled[1][3], 2.0)
 
     def test_a_funded_bill_is_left_as_it_is(self):
-        bids = [LabourBid("mint", "a", "area", 100.0, 2.0)]
-        self.assertEqual(scale_bids_to_funds(bids, funded=500.0), bids)
+        bids = [("mint", "a", "area", 100.0, 2.0)]
+        self.assertEqual(scale_to_funds(bids, funded=500.0), bids)
 
     def test_no_funds_means_no_bids(self):
-        self.assertEqual(scale_bids_to_funds([LabourBid("mint", "a", "area", 100.0, 2.0)], funded=0.0), [])
+        self.assertEqual(scale_to_funds([("mint", "a", "area", 100.0, 2.0)], funded=0.0), [])
 
 
 if __name__ == "__main__":

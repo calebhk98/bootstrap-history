@@ -14,6 +14,7 @@ from .labour_results_table import bought_value
 from .order_rows import OrderRows
 from .setup import labour_area
 from .state_wage_ceiling import WAGE_CEILING_MULTIPLE
+from .labour_bid_sink import BidFigures, bid_objects, put_bids
 from .types import EDGE_CONSUMPTION, GoodsMove, LabourBid
 
 STATE_MAX_SHARE_OF_TILE_HOURS = declare(
@@ -70,7 +71,7 @@ def plan_year(setup, record, view, labour_bids: List[LabourBid]) -> None:
     budget.deficit = deficit
     budget.financed = supplied
     budget.issued_total += supplied.get("issue", 0.0) + supplied.get("debase", 0.0)
-    labour_bids.extend(wage_labour_bids(setup, record, view, budget.wage_budget))
+    put_bids(labour_bids, wage_bid_figures(setup, record, view, budget.wage_budget))
 
 
 def wages_paid(labour_results, state) -> float:
@@ -95,7 +96,13 @@ def _trades(setup):
 
 
 def wage_labour_bids(setup, record, view, wage_budget: float) -> List[LabourBid]:
-    """The home state's bids for hours, spread over the home cohorts' tiles and the trades it hires."""
+    """The home state's bids for hours as records (an edge: the workforce's figures)."""
+    return bid_objects(wage_bid_figures(setup, record, view, wage_budget))
+
+
+def wage_bid_figures(setup, record, view, wage_budget: float) -> List[BidFigures]:
+    """The home state's bids for hours, spread over the home cohorts' tiles and the trades it hires: (employer, trade, area, hours,
+    maximum wage) each."""
     if wage_budget <= 0.0:
         return []
     working: Dict[str, float] = {}
@@ -114,7 +121,7 @@ def wage_labour_bids(setup, record, view, wage_budget: float) -> List[LabourBid]
             hours = min(wage_budget / len(trades) * people / total_working / ceiling,
                         people * setup.working_hours_per_year * STATE_MAX_SHARE_OF_TILE_HOURS)
             if hours > 0.0:
-                bids.append(LabourBid(setup.state_agent, trade, area, hours, ceiling))
+                bids.append((setup.state_agent, trade, area, hours, ceiling))
     return bids
 
 
