@@ -9,9 +9,9 @@ import dataclasses
 import math
 from typing import Dict, List, Optional, Tuple
 
-from . import (currency, mint_price, land_bid_year, carriage_fleet_book, carriage_wear, households, market_curves, market_quote, merchants, merchants_book, producers, seller_cash, settlement,
+from . import (currency, mint_price, land_bid_year, carriage_fleet_book, carriage_wear, households, market_curves, market_quote, merchants, merchants_book, producers, seller_cash,
                state_budget, state_store, taxes, tool_wear)
-from . import goods_good_clear, goods_memory_notes, goods_order_book, goods_respend_year, households_cohort, year_goods_offers, households_orders_pack
+from . import goods_good_clear, goods_memory_notes, goods_settle, goods_order_book, goods_respend_year, households_cohort, year_goods_offers, households_orders_pack
 from .goods_table_context import ClearingContext
 from .goods_order_tables import HOUSEHOLD
 from .year_goods_offer_rows import OfferRows
@@ -196,8 +196,10 @@ def clear_goods(setup, record, view, area_map, order_book, plans, ledger: YearLe
     done = set()
     left_markets = {}
     in_kind = [form for form in setup.tax_forms if form.paid_in]
-    plant_goods = {producer_id: set(setup.recipes[producer.recipe_id].plant_goods)
-                   for producer_id, producer in record.producers.items()}
+    plant_makers: Dict[str, list] = {}       # a good -> the producers whose plant is built from it
+    for producer_id, producer in record.producers.items():
+        for plant_good in setup.recipes[producer.recipe_id].plant_goods:
+            plant_makers.setdefault(plant_good, []).append(producer_id)
     memory_names = orders.memory_tables.goods_markets.name_list
     for good in order:
         turn = [producer_id for producer_id in by_output.get(good, ()) if producer_id not in done]
@@ -206,20 +208,15 @@ def clear_goods(setup, record, view, area_map, order_book, plans, ledger: YearLe
         good_id = record.book.good_ids.find(good)
         cleared = goods_good_clear.clear_good(context, good, good_id) if good_id is not None else []
         kept = market_curves.kept_areas(area_map, setup.port_tile, (setup.capital_tile, *watched_tiles), good)
-        traded = [each.result for each in cleared if each.result.quantity > 0.0]
-        settled = iter(settlement.settle_goods_many(record.book, traded, ledger.import_accounts, ledger.export_accounts))
-        for each in cleared:
+        answer = goods_settle.settle_good(record, ledger, cleared, good, plant_makers)
+        goods_settle.note_clearings(ledger, cleared, answer, memory_names)
+        idle = goods_settle.idle_years(record.memory, cleared) if cleared else []
+        last_prices = goods_settle.last_prices(record.memory, cleared)
+        for each, entry, idle_years, last_price in zip(cleared, answer, idle, last_prices):
             key = memory_names[each.market]
-            delivered, bought = 0.0, {}
-            if each.result.quantity > 0.0:
-                done_settlement = next(settled)
-                bought = done_settlement.bought_by_buyer()
-                delivered = done_settlement.delivered
-                ledger.note_settlement(done_settlement, "sales", plant_goods)
-            ledger.note_clearing(each.result, delivered)
-            idle_years = goods_good_clear.note_idle_years(record.memory, key, each)
+            delivered, bought = entry[0], entry[1]
             left_markets[(good, each.area)] = goods_respend_year.LeftMarket(
-                each.bids, each.result, each.offers_left, record.memory.prices.get(key), delivered,
+                each.bids, each.result, each.offers_left, last_price, delivered,
                 each.wanted if each.wanted is not None else wanted_in_round(each.bids, each.offers, each.result), idle_years, bought,
                 each.rows)
             if each.area in kept:
