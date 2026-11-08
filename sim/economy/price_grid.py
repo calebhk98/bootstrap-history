@@ -66,12 +66,28 @@ def memory_stamp(memory: MarketMemory) -> tuple:
     return (id(tables), tables.generation, tables.writes, written_stamp())
 
 
+class EveryGood:
+    """The `covered` of a grid that answers for any good: a good the area map has no market for has none in the memory either."""
+
+    def __contains__(self, good) -> bool:
+        return True
+
+
+EVERY_GOOD = EveryGood()
+
+
 @dataclass(frozen=True)
 class TilePrices:
     """The offered prices on one tile: `prices` holds the goods that have one, `covered` every good the grid answers for (a good outside it
-    is read by the per-good path)."""
+    is read by the per-good path). A good with no market in the area map is answered "no price" when the memory holds no market of any
+    good outside the area map (then `covered` is `EVERY_GOOD`): the per-good path would look for `good|labour area` and find none."""
     prices: Dict[str, float]
     covered: Mapping[str, int]
+
+    def covers_all(self, goods) -> bool:
+        """Whether the block answers for each of `goods`."""
+        covered = self.covered
+        return covered is EVERY_GOOD or all(good in covered for good in goods)
 
 
 class PriceGrid:
@@ -83,7 +99,7 @@ class PriceGrid:
         self._stamp: Optional[tuple] = None
         self._grid: Optional[np.ndarray] = None
         self._tiles: Dict[str, TilePrices] = {}
-        self._rows: Optional[tuple] = None      # (numbering stamp, the market row of each good and tile)
+        self._rows: Optional[tuple] = None      # (numbering stamp, the market row of each good and tile, whether every good the memory numbers is the index's)
         self.refreshes = 0         # how many times the grid was filled again (tests and measurements read it)
 
     def grid(self) -> np.ndarray:
@@ -94,7 +110,8 @@ class PriceGrid:
             markets = self._memory.tables.goods_table
             numbering = (id(self._memory.tables), self._memory.tables.generation)
             if self._rows is None or self._rows[0] != numbering:
-                self._rows = (numbering, markets_by_good_tile(self._memory, index.goods, index.area_index))
+                indexed_only = all(good in index.goods.row for good in self._memory.tables.goods.name_list)
+                self._rows = (numbering, markets_by_good_tile(self._memory, index.goods, index.area_index), indexed_only)
             self._grid = offered_by_good_tile(offered_prices(markets, class_of_kind(self._memory)), self._rows[1])
             self._tiles = {}
             self._stamp = stamp
@@ -118,5 +135,6 @@ class PriceGrid:
             present = np.flatnonzero(column == column)
             names = self._index.goods.ids
             found = self._tiles[tile] = TilePrices(
-                {names[row]: price for row, price in zip(present.tolist(), column[present].tolist())}, self._index.goods.row)
+                {names[row]: price for row, price in zip(present.tolist(), column[present].tolist())},
+                EVERY_GOOD if self._rows[2] else self._index.goods.row)
         return found

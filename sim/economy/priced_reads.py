@@ -39,7 +39,7 @@ def tile_price_reader(view, tile):
     prices, covered = block.prices, block.covered
 
     def reader_for(goods):
-        if all(good in covered for good, _effect in goods):
+        if block.covers_all(good for good, _effect in goods):
             return prices.get
         return lambda good: prices.get(good) if good in covered else by_itself(good)
     return reader_for

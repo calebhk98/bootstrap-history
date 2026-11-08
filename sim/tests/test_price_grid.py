@@ -68,10 +68,17 @@ class GridAgainstTheScalarRead(unittest.TestCase):
 
     def test_a_good_the_area_map_has_no_market_for_is_read_by_itself(self):
         _setup, record, view, _ledger, _area_map = economy_of(3)
-        reader_for = tile_price_reader(view, TILES[0])
-        reader = reader_for((("unlisted_good", 1.0),))
         record.memory.prices["unlisted_good" + KEY_SEPARATOR + view.area_of("unlisted_good", TILES[0])] = 4.0
+        reader = tile_price_reader(view, TILES[0])((("unlisted_good", 1.0),))
         self.assertEqual(reader("unlisted_good"), view.offered_price("unlisted_good", view.area_of("unlisted_good", TILES[0])))
+        self.assertEqual(offered_prices_for(view, TILES[0], ["unlisted_good"]), {"unlisted_good": 4.0})
+
+    def test_a_good_with_no_market_anywhere_has_no_price_without_a_per_good_read(self):
+        _setup, _record, view, _ledger, _area_map = economy_of(3)
+        reader = tile_price_reader(view, TILES[0])((("unlisted_good", 1.0),))
+        self.assertIsNone(reader("unlisted_good"))
+        self.assertIsNone(view.offered_price("unlisted_good", view.area_of("unlisted_good", TILES[0])))
+        self.assertIs(reader.__self__, view.offered_prices_on(TILES[0]).prices)
 
 
 class GridFollowsTheMemory(unittest.TestCase):

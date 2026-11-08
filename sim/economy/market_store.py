@@ -97,6 +97,11 @@ class MarketStore(MutableMapping):
         self._cached = (stamp, rows, [names[row] for row in rows.tolist()])
         return self._cached
 
+    def rows(self) -> numpy.ndarray:
+        """Row numbers of the members in entry order (the order `items` lists them), for a reader of the table's columns. Kept until a
+        market enters or leaves; the caller never changes it."""
+        return self._ordered()[1]
+
     def __len__(self) -> int:
         return int(self._tables.member_count[self._store])
 
