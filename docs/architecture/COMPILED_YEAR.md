@@ -274,8 +274,7 @@ of the good's batch (a mod replaced the rules). Tests: `test_goods_settle_ids.py
 
 Still reading goods objects: the watchers' buy fills are `Fill` objects (`bought_by`, only for markets a merchant or the state bought in);
 `ledger.mint_takes` keeps the `ClearingResult` of the coin metal's markets only (the mint's top-up reads them; `ledger.clearings` is gone);
-`LeftMarket` and its `bought` mapping (built from columns when the respend pack asks); the respend pack still builds per-bid tuples and the
-offers left as `LeftOffer` records; the markets cleared on the rules over objects (a book edge selling, a good outside the year arrays);
+`LeftMarket` and its `bought` mapping (built from columns when a market not on the tables asks); the markets cleared on the rules over objects (a book edge selling, a good outside the year arrays);
 `producers.production_lines` and `producers.offers` are the rules over one producer; `_produce_and_offer` still loops over producers.
 
 **Stage 4, goods remainder and entry.** The respend rounds are rows: a later round's clearing is a tuple of `LeftMarket.later` and a row of the
@@ -438,3 +437,27 @@ by `add_objects`), and the workforce's views (`workforce_settle`, which read `ca
 Measure: `python3 tools/measure/warm_year_profile.py SAVE OUT.prof` for call counts (`clear_labour`, `place_held`, `labour_offer_rows`,
 `write_labour_bids`); the constructions of the record classes in a warm year are counted by wrapping `LabourBid.__new__` and
 `LabourOffer.__new__` around `Economy._run_year`. Tests: `sim/tests/test_year_speed_labour_rows.py`, `test_year_speed_bondage.py`.
+
+## The goods unit, final part (stage 4)
+
+Done: the respend pack reads columns. `goods_respend_rows.py` turns the first-round bids and the offers left into columns for every market (a market on the order tables from the
+table's rows, `MarketRows.bid_array` and `left_array`; a market on the objects from its `Bid` and `Offer` objects), interns the agent and tile
+names (`Interner`: ids by first sight, `ranks()` for the sort by text) and sorts the offers with `numpy.lexsort` by market, reservation, seller name, tile name.
+The units a first-round bid bought come from one search over the settlement's columns (`BoughtColumns.columns`, keyed by market and book agent number);
+a market whose `bought` is a mapping is read by name. `LeftOffer`, `OfferLists` and `_bid_fields` are gone. The packed arrays are byte-identical to the old pack's
+(checked on the Rome save by pickling `Packed.arguments` from the base and the branch and comparing the bytes; `test_goods_respend_rows.py` checks the column
+functions against the sorted-object rules on random inputs). `standing_demand.with_standing_bids` hands the year's `MarketBids` on when no standing bid joins a
+market (it built a new `MarketBids` and joined empty columns on every read), which removes most of the column building of the entry rules.
+
+Not done, and why (measure with `python3 tools/measure/warm_year_profile.py SAVE OUT.prof`):
+
+- **Expansion price on columns.** `expansion_price.PreparedMarket` needs `goods_market.crossing` over a `DemandSchedule`: the uncapped total sums each group's rows in
+  sorted bid order with `sum()`, which is not exact, so a columns version needs the bids' names for the order, and `solve_price` and `at_a_ceiling` (a memoised root
+  search) written as a kernel bit for bit. The cost is the solver and the schedule, not the `Bid` objects.
+- **`UnmetDemand` and `EntryPlan` as tables.** Their cost is thin glue spread over the plan loops (`siting`, `unfilled`, the `view.price` reads); the plans keep list
+  order and the owner-cash-after-earlier-stakes rule, so a table is only worth it with a kernel for the loop that reads it.
+- **The mint reads the results table; the object-rule markets and `production_lines` as kernels; the watchers' fills from columns.** Each is a small share of a warm year
+  in the profile (the mint keeps one result per market of the coin metal; `production_lines` needs the tool fallbacks' draws as a kernel).
+- **Per-good price readers.** `entry_year._traded_volume`, `producers.paid_input_prices` and `next_expectations` read a few thousand keys a year, each a dict lookup; the
+  year view has no cleared-price block.
+
