@@ -66,7 +66,26 @@ def declared_signatures():
     signatures.update(entry_plan_signatures())
     signatures.update(household_offer_signatures(types))
     signatures.update(stability_signatures(types))
+    signatures.update(government_signatures(types))
     return signatures
+
+
+def government_signatures(types):
+    """The government's year kernels (the keep of the bonded and the revenue assessments), which only a game with a state reaches (their
+    helpers compile with them), typed from the tables the boundary builds."""
+    from numba import typeof
+    from sim.agents.api import KEEP_OWNERS, KEEPS, REVENUE_FORMS, REVENUE_PAYERS, KeepOwners, Keeps, RevenueForms, RevenuePayers
+    forms, payers = typeof(REVENUE_FORMS.new_table(RevenueForms, 1)), typeof(REVENUE_PAYERS.new_table(RevenuePayers, 1))
+    floats, whole = types.Array(types.float64, 1, "C"), types.Array(types.int64, 1, "C")
+    number, integer = types.float64, types.int64
+    return {
+        "sim.agents.keep_table.plan_keeps": [(typeof(KEEPS.new_table(Keeps, 1)), typeof(KEEP_OWNERS.new_table(KeepOwners, 1)))],
+        "sim.agents.assessment_kernels.assess_forms": [(forms, payers)],
+        "sim.agents.assessment_kernels.plan_collection": [(payers,)],
+        "sim.agents.assessment_kernels.receipts": [(forms, number)],
+        "sim.agents.assessment_kernels.collectors_needed": [(forms, number, floats)],
+        "sim.agents.assessment_kernels.accumulate_by_group": [(floats, whole, floats, integer)],
+    }
 
 
 def stability_signatures(types):

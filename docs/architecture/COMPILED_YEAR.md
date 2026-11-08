@@ -713,6 +713,21 @@ items in the packages the phase owns (`group_jobs.displacing_technique`, `strata
 all. Re-measure with `warm_year_profile.py` (then `pstats` sorted by `tottime`, summed per directory) and look at `clear_at_one_price`,
 `_worked_need_floor_costs`, `MarketLayout.kept`, `output_value_and_unpriced`, `money_held`, `urban_people_by_tile`.
 
+## The government's year as tables
+
+| Phase | Table and kernels | What Python still does |
+|---|---|---|
+| keep of the bonded (`stratum_year.true_up_keep`, `settle_keep`) | `agents/keep_table.py`: one row per bonded stratum, one per keeper; `plan_keeps` draws the keeper's purse down in row order and says which payments it covers | `keep_boundary.py` reads the rows and posts each payment with `ledger.transfer`; a payment the purse does not cover, and every later one of that keeper, goes to `ledger.pay_up_to` (the facility and deposits are contracts the book owns) |
+| revenue assessments (`revenue.assess`, `world.revenue.revenue_assessments`) | `agents/assessment_kernels.py`, `assessment_table.py`: one row per form, one per (form, payer); `assess_forms` (reach, rate, tonnes, leakage, payers' seen income and amount owed, Neumaier sums as the built-in `sum`) | the bases are read once per form through the world's views (`revenue_bases.py`); `AssessmentTable` is also a sequence of `Assessment` objects, made from a row when a test, the fiscal menu or a mod asks |
+| taking the revenue (`Stores.receive_revenue`) | `plan_collection` (what each payer's first posting pays), `receipts` (coin and labour owed by form), `accumulate_by_group` (goods taken in kind onto the stores, labour owed by destination) | the postings (`ledger.transfer` per payer: each is booked, noted on both parties and seen by the transfer hook); a payer's later rows read its purse again |
+| tax collectors (`budget_works.collection_line`) | `collectors_needed` over the forms table | the line itself is still a `Line` |
+
+Not converted, with the measured reason (`warm_year_profile.py`, one warm Rome year: two governments, twelve strata, sixteen actors):
+`ActorRegistry.advance` (one pass over sixteen actors, each `actor.advance` a Python method a mod's actor kind overrides; `kinds` in
+`ActorExtensions`), `Government.pay_standing_need`, `budget.standing_lines` (about a dozen `Line` objects per government; the profile's
+time under it is the world's price and wage views, not the objects), `state_enterprises.run` and `run_enterprises` (a loop over the plants,
+each `business_books.operate` posting through the producer records the producers' conversion owns). Re-measure before acting.
+
 ## Other callers of the book and views in the year loop
 
 | Caller | Decision |

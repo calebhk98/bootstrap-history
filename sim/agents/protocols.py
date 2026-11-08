@@ -9,7 +9,7 @@ second scenario may supply another. Nothing here is imported at run time except 
 actor asks shows up as a change to this file.
 """
 import random
-from typing import Any, Callable, Dict, FrozenSet, Iterable, List, Optional, Protocol, Set, Tuple, Union
+from typing import Any, Callable, Dict, FrozenSet, Iterable, List, Optional, Protocol, Sequence, Set, Tuple, Union
 
 from sim.refusal import Refusal
 
@@ -254,7 +254,7 @@ class RevenuePart(Protocol):
 		"""The forms of revenue the civilisation's state raises, as its data declares them."""
 		...
 
-	def revenue_assessments(self) -> List[Assessment]:
+	def revenue_assessments(self) -> Sequence[Assessment]:
 		...
 
 	def state_revenue(self) -> float:
