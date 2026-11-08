@@ -754,3 +754,24 @@ Not done, and why:
 - **`UnmetDemand` and `EntryPlan` as table rows.** They are read by the Python loops above and by `open_entrants`; rows pay only with those kernels.
 - **`weigh`** is a Python loop over the block's markets (a dictionary read each for the area, capacity and price); with the goods-market numbers on the
   block it is a gather over `market_cells`, the reach grid and the price grid.
+
+## The last wrapper callers in the year loop (stage 4, last package)
+
+Shares are wall time of the function inside a warm Rome step (`python3 tools/measure/function_times.py SAVE module:function ...`, plain timers, a
+shared four-core machine, so each is a range over several runs); "converted" ones were also timed against the pinned base, minimum of four alternating runs.
+
+| Caller | Share of a step | Decision |
+|---|---|---|
+| `MarketMemory.price_kinds_by_good` (from `quiet_year.kept`, three computes a year) | 0.7 to 0.85% | converted: `price_kind_kernels.kinds_by_good` reads the goods market table's `held`, `trade_age`, `quote_kind`, `price` and `area` columns in one pass (traded wins; else the kind of the good's first priced market in name order, by the rank of the area names); `price_kinds_of_goods` names the codes and orders the goods as the sorted market keys did. Falls to about 0.04%. Registered in `ui/kernel_signatures.py` (no fixture year reaches it). Test: `test_price_kind_kernels.py` |
+| `carriage_wear.settle` (`book.holdings` per carrier good) | 0.74% | converted: the merchant's and the carrier account's holdings are read once, not once per good (nothing moves between the reads); about a quarter of what it was |
+| `Economy._grow_own`, `Economy._build_plant` (`move_many` per cohort or producer) | 0.9% and 0.5% | converted: each cohort's or producer's moves are a step of `posting_sequence.post_in_order` (one batch each, applied in order in one kernel call), posted once after the loop; neither loop reads the book between steps. About half of `_grow_own` and a third of `_build_plant` remain (ledger writes, `hectares_held`, the posting-row build) |
+| `year_close.tax_facts` (`balance` per agent) | 0.25 to 0.4% | converted: `book.balances_of` once for the taxpayers' list, in the book's name order |
+| `producers.live_input_prices_at`, `live_wages_at` (about 3,000 calls each) | 0.85% and 0.5% | not converted: both already read the tile's block (`present_prices_at`, `wages_at` keep one answer per goods tuple and tile until the memory is written to). About 1,900 of the 3,000 calls are the first read of a distinct (recipe, tile): a producer stands for one recipe on one tile, so there is little to share between callers, and what is left per call is the dictionary built for the caller. Needs the recipe cost grid (recipes by tiles) before it pays |
+| `agents.purses.transfer` -> `book.transfer` (319) | 0.55 to 0.6% | not converted: each transfer first draws on the payer's facility and repays the payee's debt from the purse the earlier transfers left, the callers are the actors' own advance steps spread over many phases, so a batch would change what each draw sees |
+| `YearLedger.running_costs_of` (230 calls, from `goods_production.turn_figures`) | 0.35% | already a block read; sharing the agent rows between the two figures was tried and made no measurable difference (the cost is the pending notes flushed into the table), so it was not kept |
+| `country_figures.money_held` | 0.14% | below the bar; the block read was no faster and was not kept |
+| `year_accounts.plain_rows`, `inventory.held_stock` | 0.22%, below 0.2% | below the bar |
+| merchants (`dispatch`, `dispatch_merchants`, the `merchants_book.search` kernel) | `dispatch` 0.65% | not wrapper calls: `dispatch` is a loop over hauls with the crew and dues arithmetic, and `search` is the route kernel itself; no per-market column read is left in them to convert |
+
+Digests are unchanged: Rome two years with reload `fbaf1c57...`, England five `6bc59e1d...`. Measured against the base: `Economy._run_year` about 0.1 s
+lower in the warm Rome year (`function_times.py SAVE sim.economy.economy:Economy._run_year ...`).

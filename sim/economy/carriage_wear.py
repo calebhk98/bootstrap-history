@@ -125,15 +125,17 @@ def settle(merchant: Merchant, book, goods: Sequence[GoodId], units_worn: Mappin
     is not used up here: the fleet ages with the other durables (year_close.wear_and_spoilage)."""
     mine = account(merchant.agent_id)
     moves: List[GoodsMove] = []
+    bought = book.holdings(merchant.agent_id)["goods"]      # read once: nothing is moved until both loops are done
     for good in goods:
-        for tile, quantity in sorted(book.holdings(merchant.agent_id)["goods"].get(good, {}).items()):
+        for tile, quantity in sorted(bought.get(good, {}).items()):
             if quantity > 0.0:
                 moves.append(GoodsMove(merchant.agent_id, mine, good, tile, quantity, "carriers kept"))
     book.move_many(moves)
     worn: List[GoodsMove] = []
+    kept = book.holdings(mine)["goods"] if units_worn else {}      # after the first moves, before the second
     for good, wanted in sorted(units_worn.items()):
         left = wanted
-        for tile, quantity in sorted(book.holdings(mine)["goods"].get(good, {}).items()):
+        for tile, quantity in sorted(kept.get(good, {}).items()):
             take = min(left, quantity)
             if take > 0.0:
                 worn.append(GoodsMove(mine, EDGE_CONSUMPTION, good, tile, take, "carriage wear"))

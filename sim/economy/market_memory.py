@@ -19,6 +19,7 @@ from .market_table_kernels import markets_traded_within, note_year_traded
 from .market_table_specs import (CLEARED_PRICES, HELD_QUOTE_KIND, HELD_TRADE_AGE, HELD_YEARS_WITHOUT_BIDS, HELD_YEARS_WITHOUT_OFFERS, KEY_SEPARATOR,
                                  PRICES, TRADE_AGE, USUAL_PRICES, VOLUME_WEIGHTS, YEARS_WITHOUT_BIDS, YEARS_WITHOUT_OFFERS)
 from .market_tables import MarketTables
+from .price_kind_kernels import price_kinds_of_goods
 from .record_plain import plain
 from .types import QUOTE_LOWEST_UNFILLED_ASK, QUOTE_OPENING_ESTIMATE, AgentId, AreaId, CurrencyId, GoodId, TileId, TradeId
 
@@ -330,13 +331,7 @@ class MarketMemory:
         return dict(self._kept_read("price_kinds", self._worked_out_price_kinds))
 
     def _worked_out_price_kinds(self) -> Dict[str, str]:
-        kinds: Dict[str, str] = {}
-        for key in sorted(self.prices):
-            good = key.split(KEY_SEPARATOR, 1)[0]
-            kind = self.price_kind(key)
-            if kinds.get(good) != PRICE_SMOOTHED_TRADE and (kind == PRICE_SMOOTHED_TRADE or good not in kinds):
-                kinds[good] = kind
-        return kinds
+        return price_kinds_of_goods(self.tables, PRICE_SMOOTHED_TRADE, PRICE_REMEMBERED, QUOTE_OPENING_ESTIMATE)
 
     def goods_traded_within(self, years: int) -> Set[str]:
         """Goods with a market that cleared at most `years` years ago."""

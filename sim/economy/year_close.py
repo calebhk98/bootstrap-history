@@ -46,8 +46,8 @@ def tax_facts(setup, record, view, ledger: YearLedger) -> YearFacts:
     working = {cohort.agent_id: cohort.working_people for cohort in home}
     wage_year = {cohort.agent_id: trade_wages.wage_in_view(setup, view, setup.unskilled_trade, labour_area(cohort.tile)) * hours
                  for cohort in home}
-    cash = {agent: record.book.balance(agent, money) for agent in record.book.agents()
-            if not is_edge(agent) and agent not in away}
+    holders = [agent for agent in record.book.agents() if not is_edge(agent) and agent not in away]
+    cash = dict(zip(holders, record.book.balances_of(holders, money).tolist()))      # one block read, in the book's name order
     taxpayers = frozenset((set(record.cohorts) | set(record.producers) | set(record.merchants)) - set(away))
     return YearFacts(currency=money, working_people=working, wage_per_labour_year=wage_year, cash=cash, taxpayers=taxpayers,
                      imports_paid={key: paid for key, paid in ledger.imports_paid.items() if key[0] not in away},

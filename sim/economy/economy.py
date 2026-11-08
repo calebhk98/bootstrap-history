@@ -31,6 +31,7 @@ from .opening import open_economy
 from .protocols import EconomyYearInputs
 from .record import EconomyRecord
 from .setup import EconomySetup, area_tile, labour_area
+from .posting_sequence import post_in_order
 from .types import EDGE_CONSUMPTION, GoodsMove
 from .national_prices import national_prices, national_wages
 from .merchants_dispatch import dispatch_merchants
@@ -381,6 +382,7 @@ class Economy:
         self._own_hectares = {}
         held = self.hectares_held()
         offered = sold_hours_by_worker(offers)
+        grown_steps = []       # a cohort's grown goods are one batch; the batches are posted together, in cohort order
         for cohort_id, cohort in sorted(record.cohorts.items()):
             idle = (offered.get(cohort_id, 0.0) + kept.get(cohort_id, 0.0) - ledger.hours_sold.get(cohort_id, 0.0)
                     - min(kept.get(cohort_id, 0.0), self._work_hours.get(cohort_id, 0.0)))   # household work is not spare hours
@@ -394,12 +396,13 @@ class Economy:
                 ledger.own_plot_hours[cohort_id] = hours_used
             ledger.spare_hours[cohort_id] = max(0.0, idle - sum(hours_used.values()))
             if moves:
-                record.book.move_many(moves)
+                grown_steps.append(((), moves))
                 ledger.grown[cohort_id] = grown
                 ledger.grown_units[cohort_id] = units
                 hectares = plot_hectares(units, options, setup.recipes, setup.land_per_run,
                                          (tile.fertility if tile else 0.0) * harvest_factor)
                 self._own_hectares[cohort.tile] = self._own_hectares.get(cohort.tile, 0.0) + hectares
+        post_in_order(record.book, grown_steps)
 
     def _service_loans(self, year: int) -> Dict[str, float]:
         """Payments due at the year's end, out of the year's sales: before carriage, taxes and the owners'
@@ -508,6 +511,7 @@ class Economy:
     def _build_plant(self, plant_runs: Dict[str, float]) -> None:
         """Plant goods a producer received are built in; capacity grows by the share that arrived."""
         record, setup = self.record, self.setup
+        built_steps = []       # each producer's plant goods are one batch; none reads another's stock, so they are posted together
         for producer_id, runs in sorted(plant_runs.items()):
             producer = record.producers.get(producer_id)
             if producer is None:
@@ -519,10 +523,10 @@ class Economy:
                 if wanted > 0.0:
                     share = min(share, record.book.stock(producer_id, good, producer.tile) / wanted)
             # only the goods the capacity actually built uses are consumed; the rest stays in stock
-            record.book.move_many([GoodsMove(producer_id, EDGE_CONSUMPTION, good, producer.tile, per_run * runs * share,
-                                             "built into plant")
-                                   for good, per_run in sorted(recipe.plant_goods.items()) if per_run * runs * share > 0.0])
+            built_steps.append(((), [GoodsMove(producer_id, EDGE_CONSUMPTION, good, producer.tile, per_run * runs * share, "built into plant")
+                                     for good, per_run in sorted(recipe.plant_goods.items()) if per_run * runs * share > 0.0]))
             producer_table.put_producer(record.producers, producers.with_capacity(producer, producer.capacity_runs + runs * share))
+        post_in_order(record.book, built_steps)
 
     def _outcome(self, ledger: YearLedger, level: float, extraction, stocks_at_start) -> YearOutcome:
         record, setup = self.record, self.setup
