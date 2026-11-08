@@ -14,6 +14,7 @@ from . import carried_book, households_basket, quiet_year
 from .home_scope import has_partners
 from .market_memory import KEY_SEPARATOR, YearView
 from .national_prices import national_prices, national_wages
+from .price_index_masks import country_price_mask, labour_area_mask
 from .setup import LABOUR_AREA_PREFIX, labour_area
 from .types import TileId
 
@@ -59,7 +60,7 @@ def wages_per_hour(economy, country: Optional[str]) -> Dict[str, float]:
     """The wage per hour of each trade over the country's labour areas (`national_prices.national_wages`)."""
     def compute():
         tiles = country_tiles(economy, country)
-        return national_wages(economy.record, keep=lambda key: _labour_key_in(key, tiles), keep_token=frozenset(tiles))
+        return national_wages(economy.record, keep_token=frozenset(tiles), keep_mask=lambda layout: labour_area_mask(layout, tiles))
     return dict(quiet_year.kept(economy, ("wages", country), compute))
 
 
@@ -100,14 +101,18 @@ def _prices(economy, country: Optional[str]) -> Dict[str, float]:
     if country is None:
         return national_prices(economy.record)
     tiles = country_tiles(economy, country)
+    token = (_Identity(economy.area_map), frozenset(tiles))
+    if hasattr(economy.area_map, "tile_table"):
+        table = economy.area_map.tile_table()
+        return national_prices(economy.record, keep_token=token, keep_mask=lambda layout: country_price_mask(layout, table, tiles))
     areas_of: Dict[str, Dict[str, Set[TileId]]] = {}
 
-    def touches(good: str, area: str) -> bool:
+    def touches(good: str, area: str) -> bool:      # an area map that is not an `AreaMap` (a test's stand-in)
         by_area = areas_of.get(good)
         if by_area is None:
             by_area = areas_of[good] = _area_tiles(economy, good)
         return area not in by_area or bool(by_area[area] & tiles)
-    return national_prices(economy.record, touches, keep_token=(_Identity(economy.area_map), frozenset(tiles)))
+    return national_prices(economy.record, touches, keep_token=token)
 
 
 def traded_volumes(economy, country: Optional[str]) -> Dict[str, float]:
@@ -195,12 +200,15 @@ def need_floor_costs_per_person_year(economy, country: Optional[str]) -> Dict[st
 def _worked_need_floor_costs(economy, country: Optional[str]) -> Dict[str, float]:
     record = economy.record
     view = _floor_view(economy)
+    people_on: Dict[TileId, List[float]] = {}
+    for cohort in record.cohorts.values():
+        people_on.setdefault(cohort.tile, []).append(cohort.people)
+    tiles = [tile for tile in sorted(country_tiles(economy, country)) if math.fsum(people_on.get(tile, ())) > 0.0]
+    households_basket.tiles_need_prices(economy.setup, view, tiles)     # every tile's basket priced together; the reads below are then kept ones
     sums: Dict[str, float] = {}
     weight = 0.0
-    for tile in sorted(country_tiles(economy, country)):
-        people = math.fsum(cohort.people for cohort in record.cohorts.values() if cohort.tile == tile)
-        if people <= 0.0:
-            continue
+    for tile in tiles:
+        people = math.fsum(people_on[tile])
         weight += people
         for need_id, cost in _tile_floor_costs(economy, view, tile).items():
             sums[need_id] = sums.get(need_id, 0.0) + people * cost
@@ -220,16 +228,20 @@ def output_value_and_unpriced(economy, country: Optional[str]) -> Tuple[Optional
     own_prices = prices(economy, country)
     values = []
     unpriced = set()
+    run_value: Dict[str, Optional[float]] = {}       # per recipe: what one run's outputs are worth at the country's prices (None: the recipe is unknown)
     for producer in economy.record.producers.values():
         if producer.tile not in tiles:
             continue
-        recipe = economy.setup.recipes.get(producer.recipe_id)
-        if recipe is None:
+        if producer.recipe_id not in run_value:
+            recipe = economy.setup.recipes.get(producer.recipe_id)
+            run_value[producer.recipe_id] = None if recipe is None else math.fsum(
+                quantity * own_prices[good] for good, quantity in recipe.outputs.items() if good in own_prices)
+            if recipe is not None:
+                unpriced.update(good for good in recipe.outputs if good not in own_prices)
+        if run_value[producer.recipe_id] is None:
             continue
         runs = producer.capacity_runs if producer.last_runs < 0.0 else producer.last_runs
-        unpriced.update(good for good in recipe.outputs if good not in own_prices)
-        values.append(runs * producer.yield_factor * math.fsum(quantity * own_prices[good]
-                                                               for good, quantity in recipe.outputs.items() if good in own_prices))
+        values.append(runs * producer.yield_factor * run_value[producer.recipe_id])
     # fsum is exact, so the producers' order (creation order live, saved order after a load) cannot change the total
     return (math.fsum(values) if values else None), sorted(unpriced)
 

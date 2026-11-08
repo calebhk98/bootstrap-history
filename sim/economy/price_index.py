@@ -29,9 +29,12 @@ class MarketLayout:
         self.goods = list(code_of_good)
         counts = np.bincount(np.array(codes, dtype=np.int64), minlength=len(self.goods))
         self.ends = np.cumsum(counts).tolist()
+        self.ends_array = np.cumsum(counts).astype(np.int64)
+        self.goods_array = np.array(self.goods, dtype=object)       # the goods as an array, to gather the groups that have a price
         self.keys_grouped = [keys[position] for position in self.positions.tolist()]
         self.areas = [key.split(KEY_SEPARATOR, 1)[1] for key in self.keys_grouped]
-        self.good_of_place = [self.goods[code] for code in np.repeat(np.arange(len(self.goods)), counts).tolist()]
+        self.good_codes = np.repeat(np.arange(len(self.goods), dtype=np.int64), counts)      # per place: the number of its good in `goods`
+        self.good_of_place = self.goods_array[self.good_codes].tolist()
         self.masks: Dict[Hashable, np.ndarray] = {}
         self.snapshot: Optional[tuple] = None       # the prices, weights and trade ages the kept answers were computed from
         self.answers: Dict[Hashable, Dict[str, float]] = {}
@@ -48,6 +51,16 @@ class MarketLayout:
             if len(self.masks) >= KEPT_MASKS:
                 self.masks.clear()
             self.masks[token] = mask
+        return mask
+
+    def masked(self, mask_of: Callable[["MarketLayout"], np.ndarray], token: Hashable) -> np.ndarray:
+        """`mask_of(layout)`, the whole mask worked out as arrays, kept by token as `kept` does."""
+        if ("array", token) in self.masks:
+            return self.masks[("array", token)]
+        mask = mask_of(self)
+        if len(self.masks) >= KEPT_MASKS:
+            self.masks.clear()
+        self.masks[("array", token)] = mask
         return mask
 
     def kept_keys(self, keep: Optional[Callable[[str], bool]], token: Optional[Hashable]) -> np.ndarray:

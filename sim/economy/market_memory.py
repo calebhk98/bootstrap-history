@@ -460,6 +460,14 @@ class YearView:
         grid = self._grid()
         return grid.on_tile(tile) if grid else None
 
+    def offered_price_matrix(self, tiles, names):
+        """`offered_prices_on(tile).prices` of each of `tiles` for each of `names`, as one (tile by good) matrix with NaN for no price
+        (`price_grid.PriceGrid.matrix`); None where the grid cannot answer for every tile and good (the caller reads them one at a time)."""
+        if self._stamp != _writes[0]:
+            self._current()
+        grid = self._grid()
+        return grid.matrix(tiles, names) if grid else None
+
     def offered_prices_for(self, tile: TileId, goods) -> Dict[GoodId, Optional[float]]:
         """`offered_price(good, area_of(good, tile))` for each of `goods`, read from the tile's block; a good outside the block (the area
         map has no market for it) is read by itself."""
@@ -469,9 +477,8 @@ class YearView:
         prices, covered = block.prices, block.covered
         return {good: prices.get(good) if good in covered else self.offered_price(good, self.area_of(good, tile)) for good in goods}
 
-    def wage_rule_at(self, setup, trade: TradeId, area: AreaId) -> Optional[float]:
-        """`trade_wages.wage_in_view` for one trade and labour area, read from the rule's table (every trade of the view's setup in the
-        labour area of every tile of the area map); None where the table does not hold the cell or `setup` is not the view's."""
+    def _rule_table(self, setup):
+        """The wage rule's table for `setup` (the view's own setup), made on first use; None where the view cannot hold one."""
         if setup is not self.setup or self._labour_area_of is None:
             return None
         if self._wage_table is None:
@@ -482,7 +489,13 @@ class YearView:
                 from .wage_block import WageRuleTable
                 tiles = grid.tiles
                 self._wage_table = WageRuleTable(setup, self._memory, lambda: [self._labour_area_of(tile) for tile in tiles])
-        return self._wage_table.wage(trade, area) if self._wage_table else None
+        return self._wage_table or None
+
+    def wage_rule_at(self, setup, trade: TradeId, area: AreaId) -> Optional[float]:
+        """`trade_wages.wage_in_view` for one trade and labour area, read from the rule's table (every trade of the view's setup in the
+        labour area of every tile of the area map); None where the table does not hold the cell or `setup` is not the view's."""
+        table = self._rule_table(setup)
+        return None if table is None else table.wage(trade, area)
 
     def wage_rule_block(self, trades, areas):
         """`trade_wages.wage_in_view` for each of `trades` in each of the labour `areas`, as a (trade by area) grid, in one kernel call."""

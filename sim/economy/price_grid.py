@@ -128,6 +128,26 @@ class PriceGrid:
         self._current()
         return self._grids[0]
 
+    def _good_names(self) -> np.ndarray:
+        """The index's good names as an object array, so a tile's present goods are gathered in one indexing."""
+        kept = self.__dict__.get("_names_array")
+        if kept is None:
+            kept = self.__dict__["_names_array"] = np.array(self._index.goods.ids, dtype=object)
+        return kept
+
+    def matrix(self, tiles, names) -> Optional[np.ndarray]:
+        """The offered prices of the goods `names` on each of `tiles` as a (tile by good) matrix, NaN for no price: the same figures as
+        `on_tile(tile).prices` for each tile (the matrix `priced_need_kernel.price_needs` reads). None when a tile is not one the area map
+        holds or the memory numbers a market for a good outside the area map, where a reader takes the per-good path."""
+        self._current()
+        index = self._index
+        columns = [index.tiles.row.get(tile) for tile in tiles]
+        if not self._rows[2] or None in columns:
+            return None
+        rows = np.array([index.goods.row.get(name, -1) for name in names], dtype=np.int64)
+        found = self._grids[0][np.maximum(rows, 0)][:, np.array(columns, dtype=np.int64)].T
+        return np.where(rows >= 0, found, np.nan)
+
     @property
     def tiles(self) -> tuple:
         """Every tile the grid holds, in its column order."""
@@ -147,8 +167,6 @@ class PriceGrid:
         if found is None:
             column = self._grids[layer][:, column_of]
             present = np.flatnonzero(column == column)
-            names = self._index.goods.ids
-            found = kept[tile] = TilePrices(
-                {names[row]: price for row, price in zip(present.tolist(), column[present].tolist())},
-                EVERY_GOOD if self._rows[2] else self._index.goods.row)
+            found = kept[tile] = TilePrices(dict(zip(self._good_names()[present].tolist(), column[present].tolist())),
+                                            EVERY_GOOD if self._rows[2] else self._index.goods.row)
         return found

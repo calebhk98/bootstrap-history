@@ -9,6 +9,7 @@ from sim.labour.api import grid_rows_of, hours_cleared_at, people_at, wage_means
 
 from . import price_index
 from .market_memory import KEY_SEPARATOR, RECENT_TRADE_YEARS
+from .market_column_kernels import traded_price_by_group
 from .market_store import MarketStore, figures_for
 from .market_table_specs import HELD_TRADE_AGE
 
@@ -53,12 +54,14 @@ def _markets_by_good(record, keep: Optional[Callable[[str, str], bool]]) -> Dict
     return by_good
 
 
-def national_prices(record, keep: Optional[Callable[[str, str], bool]] = None, keep_token: Optional[Hashable] = None) -> Dict[str, float]:
+def national_prices(record, keep: Optional[Callable[[str, str], bool]] = None, keep_token: Optional[Hashable] = None,
+                    keep_mask: Optional[Callable] = None) -> Dict[str, float]:
     """Each good's price over its market areas (those `keep` accepts, every area for None), weighted by what each
     usually trades. Only areas whose figure is a traded price count, quoted areas do not: a quote is no one's
     payment, so the price index follows trades where there are any. A good none of whose areas has a traded
     price with a weight is given the figure of its first area, which is then a quote (`MarketView.price_kind`).
-    `keep_token` names what `keep` accepts, so the answer is kept between calls (equal tokens, equal `keep`)."""
+    `keep_token` names what `keep` accepts, so the answer is kept between calls (equal tokens, equal `keep`). `keep_mask(layout)` is
+    `keep` as one array over the layout's places (`price_index_masks`), used in its place when given."""
     memory = record.memory
     layout = price_index.layout_of(tuple(memory.prices))
     if not layout.keys:
@@ -68,25 +71,16 @@ def national_prices(record, keep: Optional[Callable[[str, str], bool]] = None, k
     snapshot = remembered_columns(memory, weights, keys)
     if layout.snapshot is None or not all(np.array_equal(now, kept) for now, kept in zip(snapshot, layout.snapshot)):     # the remembered figures moved since the answers were kept
         layout.snapshot, layout.answers = snapshot, {}
-    answer_key = "all" if keep is None else keep_token
+    answer_key = "all" if keep is None and keep_mask is None else keep_token
     if answer_key is not None and answer_key in layout.answers:
         return dict(layout.answers[answer_key])
-    kept = layout.kept(keep, keep_token)
+    kept = layout.kept(keep, keep_token) if keep_mask is None else layout.masked(keep_mask, keep_token)
     price = snapshot[0][layout.positions]
     weight = snapshot[1][layout.positions]
     traded = snapshot[2][layout.positions] <= RECENT_TRADE_YEARS
-    counted_weight = np.where(kept & traded, weight, 0.0).tolist()
-    weighted = (price * np.array(counted_weight)).tolist()
-    price_list = price.tolist()
-    kept_list = kept.tolist()
-    prices = {}
-    start = 0
-    for good, end in zip(layout.goods, layout.ends):
-        first = next((place for place in range(start, end) if kept_list[place]), None)
-        if first is not None:
-            quantity = math.fsum(counted_weight[start:end])
-            prices[good] = math.fsum(weighted[start:end]) / quantity if quantity > 0.0 else price_list[first]
-        start = end
+    counted_weight = np.where(kept & traded, weight, 0.0)
+    values, exists = traded_price_by_group(layout.ends_array, kept, price, counted_weight)
+    prices = dict(zip(layout.goods_array[exists].tolist(), values[exists].tolist()))
     if answer_key is not None:
         layout.answers[answer_key] = prices
         return dict(prices)
@@ -102,19 +96,21 @@ def port_share(record, good: str, key: str) -> float:
     return own / total if total > 0.0 else 1.0
 
 
-def national_wages(record, keep: Optional[Callable[[str], bool]] = None, keep_token: Optional[Hashable] = None) -> Dict[str, float]:
+def national_wages(record, keep: Optional[Callable[[str], bool]] = None, keep_token: Optional[Hashable] = None,
+                   keep_mask: Optional[Callable] = None) -> Dict[str, float]:
     """Each trade's wage per hour over its labour markets (those `keep` accepts by market key), from the wages the
     labour core holds (mirrored by `labour_state.mirror_wages`, which records only a (trade, area) the core cleared: a trade
     nobody works or hires anywhere has no entry, and a reader that prices a recipe adds it by the one wage rule,
     `notional.costing_wages`; this is the figure reported as the year's wages). Weighted by the hours hired in each market last year; for a trade that hired nowhere, by the people
     working it there (the wage is what those workers would accept); with no people either, the plain mean.
     `keep_token` names what `keep` accepts, so the mask of kept markets is kept between calls (equal tokens, equal `keep`); the
-    figures are worked out on every call, since the hours hired and the workers are written by many owners."""
+    figures are worked out on every call, since the hours hired and the workers are written by many owners. `keep_mask(layout)` is `keep` as
+    one array over the layout's places (`price_index_masks`), used in its place when given."""
     memory = record.memory
     layout = price_index.layout_of(tuple(memory.wages))
     if not layout.keys:
         return {}
-    kept = layout.kept_keys(keep, keep_token)
+    kept = layout.kept_keys(keep, keep_token) if keep_mask is None else layout.masked(keep_mask, keep_token)
     wage = _wage_column(memory)[layout.positions]
     workforce = record.labour.workforce
     rows = grid_rows_of(workforce, *_place_names(layout))

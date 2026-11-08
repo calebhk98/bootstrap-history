@@ -3,7 +3,9 @@
 `ProducerColumns.build(producers, matrices, tiles)` reads every record once. `stale_rows` says which rows no longer
 hold the record the table holds (producers are frozen records replaced through producer_table, so a replaced record is a
 different object), and `refresh` re-reads those rows, or the whole table when the ids changed (entry or exit)."""
+import operator
 from dataclasses import dataclass, field
+from operator import attrgetter
 from typing import Dict, List, Mapping, Tuple
 
 import numpy as np
@@ -143,8 +145,8 @@ class ProducerColumns:
         recipe_rows, tile_rows = matrices.recipes.row, self.tiles.row
         self.recipe_row[rows] = recipe_rows_of = [recipe_rows[each.recipe_id] for each in records]
         self.tile_row[rows] = [tile_rows[each.tile] for each in records]
-        for name in _COPIED:
-            getattr(self, name)[rows] = [getattr(each, name) for each in records]
+        for name, values in zip(_COPIED, zip(*map(attrgetter(*_COPIED), records))):     # every copied field of every record in one pass
+            getattr(self, name)[rows] = values
         self.land_run_cap[rows] = [np.nan if each.land_run_cap is None else each.land_run_cap for each in records]
         self.staffed_runs[rows] = [np.nan if each.staffed_runs is None else each.staffed_runs for each in records]
         self.history_count[rows] = [len(each.net_earnings_history) for each in records]
@@ -180,14 +182,11 @@ class ProducerColumns:
         """The rows whose record the table has replaced; None-like `[-1]` when the ids themselves changed."""
         if len(producers) != len(self.ids):
             return [-1]
-        stale = []
-        for position, each in enumerate(self.ids):
-            record = producers.get(each)
-            if record is None:
-                return [-1]
-            if record is not self.records[position]:
-                stale.append(position)
-        return stale
+        try:
+            current = [producers[each] for each in self.ids]
+        except KeyError:
+            return [-1]
+        return np.flatnonzero(np.fromiter(map(operator.is_not, current, self.records), dtype=np.bool_, count=len(current))).tolist()
 
     def refresh(self, producers: Mapping[str, object]) -> "ProducerColumns":
         """Columns in step with the table: the same object with the replaced rows re-read, or a rebuilt one when producers

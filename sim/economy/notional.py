@@ -18,6 +18,7 @@ from . import trade_wages, unit_cost
 from .market_memory import KEY_SEPARATOR, PRICE_REMEMBERED, PRICE_SMOOTHED_TRADE, RECENT_TRADE_YEARS, MarketMemory
 from .market_column_kernels import add_in_order_by_group
 from .market_store import figures_for
+from .notional_kernel import COSTS_ONLY, ESTIMATES, cost_estimates
 from .national_prices import national_prices, national_wages, usual_volumes
 from .recipes import input_depth_order, recipes_making
 
@@ -47,25 +48,8 @@ def _estimated_prices(setup, record, market, thin: bool, wages: Optional[Dict[st
     recent = recently_traded_goods(memory)
     traded = _traded_volumes(record) if thin else {}
     wages = costing_wages(setup, record) if wages is None else wages
-    rate = memory.rates[setup.currency_id]
-    live = dict(market)
-    estimated: Dict[str, float] = {}
-    for good in input_depth_order(setup.recipes):
-        if good not in recent:
-            cost = cheapest_cost(setup, good, live, wages, rate)
-            if cost is not None:
-                estimated[good] = live[good] = cost
-            continue
-        wanted = record.goods.opening_basket.get(good, 0.0)
-        if not thin or wanted <= 0.0 or good not in live:     # a good traded only outside this country's markets has no price here
-            continue
-        depth = min(1.0, traded.get(good, 0.0) / (THIN_MARKET_SHARE_OF_OPENING_DEMAND * wanted))
-        if depth >= 1.0:
-            continue
-        cost = cheapest_cost(setup, good, live, wages, rate)
-        if cost is not None:
-            estimated[good] = live[good] = depth * live[good] + (1.0 - depth) * cost
-    return estimated
+    return cost_estimates(ESTIMATES, setup.recipes, market, wages, memory.rates[setup.currency_id], recent, thin,
+                          record.goods.opening_basket, traded, THIN_MARKET_SHARE_OF_OPENING_DEMAND)
 
 
 def _traded_volumes(record) -> Dict[str, float]:
@@ -107,15 +91,7 @@ def costing_wages(setup, record) -> Dict[str, float]:
 def making_costs(setup, record) -> Dict[str, float]:
     """What each good costs to make by its cheapest recipe at the live prices and wages, traded or not."""
     memory = record.memory
-    live = national_prices(record)
-    wages = costing_wages(setup, record)
-    rate = memory.rates[setup.currency_id]
-    costs: Dict[str, float] = {}
-    for good in input_depth_order(setup.recipes):
-        best = cheapest_cost(setup, good, live, wages, rate)
-        if best is not None:
-            costs[good] = best
-    return costs
+    return cost_estimates(COSTS_ONLY, setup.recipes, national_prices(record), costing_wages(setup, record), memory.rates[setup.currency_id])
 
 
 def cheapest_cost(setup, good, live, wages, rate):
