@@ -105,3 +105,39 @@ callers not yet on the table. Where a plot rule is a bare function, or a caller 
 numbering replaces the per-year cohort numbering (`LabourIds`), the cohort offers are written as rows by the code that makes
 them (today `labour_offers_table.build_labour_offers` reads `LabourOffer` objects), and the cleared wages arrive as a
 market-indexed array from the market memory (today a dict read in `HourSupply.settle`).
+
+## The labour core as tables (stage 2)
+
+`MarketState` (`sim/labour/market/market_state.py`) holds what the labour core carries between years in the tables of
+`state_tables.py`: workers (a row per area x trade pair, people per ability band), markets (wage, ask, and where the pair's hired
+hours and cohorts sit), hired hours (a row per market x employer), and trainees (a row per cohort, grouped by market). Areas and
+trades are numbered in sorted name order (`state_ids.SortedIds`), so a grid row is `area * trade_count + trade` and a kernel visits
+areas and trades in the order the Python did by counting up. Employers are numbered once, in arrival order, through an `IdTable`,
+and `EmployerIds.rank` gives the place of a name among all names for the sorts that go by name. The seam for the economy's shared
+agent numbering is `LabourIds(employers=...)`: hand the shared `IdTable` in and the core numbers its employers with it.
+
+The old dict API is `state.workers`, `.trainees`, `.wages`, `.asks`, `.hired_hours`: live views (`state_fields.py`, `state_views.py`)
+over the tables that list areas and trades in the order they were given their entries, and `to_plain` and `from_plain` round-trip
+nested dicts, so the save, the economy's readers and the tests do not change. A view names its pair, so it stays right when a new
+area or trade renumbers the grid. A reader that loops over the views pays for them: code inside the year reads the tables.
+
+The year's rules, each a chain of small `njit` helpers over the tables:
+
+| Rule | Python entry | Kernels |
+|---|---|---|
+| bids as columns; tranches cut in a kernel | `bid_book.py` | `cut_into_tranches` |
+| clearing: heads, employers, hiring rounds, finish, state written | `clearing_arrays.py`, `clearing_tail.py`, `clearing_write.py` | `clearing_kernel`, `clearing_tail_kernel`, `hiring_kernel`, `clearing_write`, `clearing_pack` |
+| training | `training.py` | `training_kernel.py` |
+| switching, with the incomes it weighs | `switching.py` | `switch_year.py`, `switch_kernel.py`, `income_kernel.py`, `cohort_book.py`, `switching_kernel.py` |
+| migration | `migration.py` | `migration_kernel.py` |
+| formation of empty trades, bonded purchase | `formation.py` | `formation_year.py`, `formation_kernel.py`, `formation_buy.py` |
+
+The clearing's results are `Clearings` (`clearing_results.py`): columns, with `LabourClearing` objects built from them on demand for a
+reader outside (`report.clearings` iterates as objects). The later phases read the same results on the grid (`results_grid.py`).
+`exact_sums.py` holds `sum`, `math.fsum` and `math.sumprod` as kernels, so a rule moved into a kernel adds the numbers the way the
+Python did and the year-time digest stays the same. The plain Python of the rules moved here is kept in `sim/tests/labour_*_plain.py`,
+and each rule has a test that runs both on random inputs (`sim/tests/test_labour_*_tables.py`).
+
+Measure the labour year alone with `python3 tools/measure/warm_year_profile.py SAVE OUT.prof` (call counts, `run_year` in the
+profile) and the whole year with `year-time --count-instructions`. A mod that replaces `fetch_wage`, or a schedule that is not packed,
+still takes the plain path through `clearing._prepare` and `_finish`.

@@ -17,6 +17,7 @@ from .market.migration import move_shares as migration_shares
 from .regional_migration import migrant_pairs, totals_of_pairs
 from .market.records import (EmployerHoursBid, LabourClearing, MarketState, Route, School, TradeSpec, YearInputs, YearReport,
                              from_plain as market_state_from_plain, people_in, to_plain as market_state_to_plain)
+from .market.bid_book import TrancheBids
 from .market.trades import fallback_trade, trade_specs
 from .trade_seed import bound_by_hirers, seed_hours
 from .market.year import run_year as run_labour_year
@@ -49,7 +50,7 @@ __all__ = [
     "add_tenure", "fade_tenure", "outflow_shares", "tenure_by_trade", "tenure_held", "hours_cap_kcal", "capped_kcal", "cap_share",
     # the labour-market core (sim/labour/market/DESIGN.md): plain records in, plain records out
     "run_labour_year", "reservation_wage_per_hour", "migration_shares", "migrant_pairs", "totals_of_pairs", "opening_labour_market", "seed_hours", "bound_by_hirers", "trade_specs", "fallback_trade", "role_field", "trade_of_role", "generic_craft_trade", "bonded_pseudo_trade", "scholar_trade", "craft_family", "farm_trade", "generic_staff_trades", "staff_resource_trade", "people_in",
-    "schools_of_actor", "EmployerHoursBid", "LabourClearing", "MarketState", "Route", "School", "TradeSpec", "YearInputs", "YearReport",
+    "schools_of_actor", "EmployerHoursBid", "TrancheBids", "LabourClearing", "MarketState", "Route", "School", "TradeSpec", "YearInputs", "YearReport",
     "market_state_to_plain", "market_state_from_plain",
 ]
 

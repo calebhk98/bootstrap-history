@@ -1,11 +1,11 @@
-"""Buying bonded people for the vacancies of a trade (Complaints 644 and 648), by the owners' ask and the buyers' bid
-(bonded_worth.py). Used by formation.py for an empty trade after migration, and for any trade with vacancies left."""
+"""The plain Python rule of buying bonded people as it ran before the tables kernels (`formation_buy.buy_bonded`): kept so a test runs
+both on the same inputs. Not used by the game."""
 from typing import Dict, Optional
 
 import dataclasses
 
-from . import aptitude, bonded_room, bonded_worth
-from .records import LabourClearing, MarketState, YearInputs, YearReport
+from sim.labour.market import aptitude, bonded_room, bonded_worth
+from sim.labour.market.records import LabourClearing, MarketState, YearInputs, YearReport
 
 
 def _practised_wage(index: Dict, area: str, trade: str) -> Optional[float]:

@@ -11,7 +11,7 @@ times or more, not on differences inside the noise.
 
 | Need | Use | File |
 |---|---|---|
-| A table with named, documented columns | `TableSpec` + `Column`; the table is a `collections.namedtuple` of numpy columns | `spec.py` |
+| A table with named, documented columns | `TableSpec` + `Column`; the table is a `collections.namedtuple` of numpy columns; a column with a `width` holds that many values per row (`table.people[row, band]`) | `spec.py` |
 | Names to dense numbers | `IdTable` (sorted batches, saved as a name list) | `ids.py` |
 | Rows added during a phase | `reserve_rows` in Python, `claim_row` in the kernel | `growth.py` |
 | Several rows per agent or market | `group_starts` + `stable_order` | `grouping.py` |

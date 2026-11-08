@@ -16,12 +16,15 @@ BOOKKEEPING = ("row_count", "capacity")
 
 
 class Column(NamedTuple):
-    """One column: its name, numpy dtype, one-line meaning, unit and, for a column holding ids, the id table's name."""
+    """One column: its name, numpy dtype, one-line meaning, unit and, for a column holding ids, the id table's name.
+    A column with a `width` (an integer, or 0 when `new_table` is told the width) holds that many values per row (people per
+    ability band): a 2-d array of shape (capacity, width), read as `table.people[row, band]`; no width is a plain 1-d column."""
     name: str
     dtype: object
     meaning: str
     unit: str
     ids: Optional[str] = None
+    width: Optional[int] = None
 
 
 class TableSpec:
@@ -50,11 +53,16 @@ class TableSpec:
                 return column
         raise KeyError("table %s has no column %r" % (self.type_name, name))
 
-    def new_table(self, table_type, capacity: int, row_count: int = 0):
-        """An all-zero table with room for `capacity` rows, `row_count` of them in use."""
+    def new_table(self, table_type, capacity: int, row_count: int = 0, widths=None):
+        """An all-zero table with room for `capacity` rows, `row_count` of them in use. `widths` ({column: width}) sets
+        the width of the columns whose width is only known when the table is made."""
         if not 0 <= row_count <= capacity:
             raise ValueError("row_count %d does not fit capacity %d" % (row_count, capacity))
-        columns = [numpy.zeros(capacity, dtype=column.dtype) for column in self.columns]
+        widths = widths or {}
+        columns = []
+        for column in self.columns:
+            width = widths.get(column.name, column.width)
+            columns.append(numpy.zeros(capacity if width is None else (capacity, width), dtype=column.dtype))
         return table_type(numpy.array([row_count], dtype=numpy.int64), numpy.array([capacity], dtype=numpy.int64), *columns)
 
     def table_of(self, table_type, **values):

@@ -12,7 +12,8 @@ import unittest
 
 import numpy as np
 
-from sim.labour.market import aptitude, switching
+from sim.labour.market import aptitude
+from sim.tests import labour_switching_plain as switching
 from sim.labour.market.records import MarketState, School, TradeSpec, YearInputs, YearReport, copy_state
 from sim.tests import labour_switching_reference as reference
 

@@ -1,14 +1,15 @@
 """The plain records the labour-market core reads and writes.
 
 People are counted per labour area, per trade and per ability band (aptitude.py). Money is whatever
-unit the caller's wages and subsistence costs are given in; nothing here converts it. Every record is a
-dataclass of numbers, strings, lists and dicts, so `to_plain`/`from_plain` round-trip a save without a
-field list.
+unit the caller's wages and subsistence costs are given in; nothing here converts it. The records are dataclasses of numbers,
+strings, lists and dicts; the state between years is `MarketState` (market_state.py), tables with dict views, and `to_plain` and
+`from_plain` round-trip it through nested dicts for a save.
 """
 import dataclasses
 from typing import Callable, Dict, List, Optional, Sequence, Tuple
 
-from .carriage import carriage_from, carriage_table
+from .carriage import carriage_costs, carriage_from, carriage_table
+from .market_state import MarketState
 
 AreaId = str
 TradeId = str
@@ -86,6 +87,13 @@ class YearInputs:
     hours_sold_at: Optional[Dict[Tuple[TradeId, AreaId], Callable[[float], float]]] = None   # (trade, area) -> hours the households there sell at a wage an hour (rising): the hours their offers hold. None: every worker sells a whole year at any wage; a market missing from a given schedule sells nothing
 
     _carriage: Dict[AreaId, Dict[AreaId, float]] = dataclasses.field(default_factory=dict, init=False, repr=False, compare=False)
+    _costs: Optional[tuple] = dataclasses.field(default=None, init=False, repr=False, compare=False)
+
+    def carriage_costs(self) -> tuple:
+        """(areas the routes name, matrix of the cheapest moving cost between them; infinity: no way), searched once for the year."""
+        if self._costs is None:
+            self._costs = carriage_costs(self.routes)
+        return self._costs
 
     def carriage_from(self, origin: AreaId) -> Dict[AreaId, float]:
         """The cheapest moving cost from `origin` to every area the routes lead to (`carriage.carriage_from`), searched once
@@ -107,20 +115,6 @@ class YearInputs:
         """Hours sold in a market at a wage, given the hours its workers have in all."""
         schedule = self.sold_schedule(trade, area)
         return workers_hours if schedule is None else schedule(wage)
-
-
-@dataclasses.dataclass
-class MarketState:
-    """What the core carries from one year to the next.
-
-    `workers[area][trade]` is people per ability band. `trainees[area][trade]` is a list of
-    [years_left, people per band, completion bonus] for those still learning. `wages[area][trade]` is the market wage: the
-    wage every hour hired was paid: the mean of the offers paid to the hours taken on."""
-    workers: Dict[AreaId, Dict[TradeId, BandCounts]] = dataclasses.field(default_factory=dict)
-    trainees: Dict[AreaId, Dict[TradeId, List[list]]] = dataclasses.field(default_factory=dict)
-    wages: Dict[AreaId, Dict[TradeId, float]] = dataclasses.field(default_factory=dict)
-    hired_hours: Dict[AreaId, Dict[TradeId, Dict[str, float]]] = dataclasses.field(default_factory=dict)
-    asks: Dict[AreaId, Dict[TradeId, float]] = dataclasses.field(default_factory=dict)   # ask over the reservation wage (asks.py)
 
 
 @dataclasses.dataclass
@@ -168,45 +162,25 @@ class YearReport:
         return None
 
 
-_LEAF_TYPES = (float, int, str, bool, type(None))
-
-
-def _plain_copy(value):
-    """A copy of nested dicts, lists and tuples of numbers and strings, as `copy.deepcopy` makes it."""
-    kind = type(value)
-    if kind is dict:
-        return {key: _plain_copy(item) for key, item in value.items()}
-    if kind is list:
-        return [item if type(item) in _LEAF_TYPES else _plain_copy(item) for item in value]
-    if kind is tuple:
-        return tuple(_plain_copy(item) for item in value)
-    return value
-
-
 def copy_state(state: MarketState) -> MarketState:
     """An independent copy of the state."""
-    return MarketState(**{field.name: _plain_copy(getattr(state, field.name))
-                          for field in dataclasses.fields(MarketState)})
+    return state.copy()
 
 
 def to_plain(state: MarketState) -> dict:
-    return dataclasses.asdict(state)
+    return state.to_plain()
 
 
 def from_plain(plain: dict) -> MarketState:
-    fields = {field.name for field in dataclasses.fields(MarketState)}
-    return MarketState(**{name: value for name, value in plain.items() if name in fields})
+    names = ("workers", "trainees", "wages", "hired_hours", "asks")
+    return MarketState(**{name: value for name, value in plain.items() if name in names})
 
 
 def people_in(state: MarketState, area: Optional[AreaId] = None, include_trainees: bool = True) -> float:
     """Everyone the state counts, working or learning, in one area or all of them."""
-    areas = [area] if area is not None else sorted(set(state.workers) | set(state.trainees))
+    if area is not None:
+        return state.area_people(area, include_trainees)
     total = 0.0
-    for each_area in areas:
-        for bands in state.workers.get(each_area, {}).values():
-            total += sum(bands)
-        if include_trainees:
-            for cohorts in state.trainees.get(each_area, {}).values():
-                for cohort in cohorts:
-                    total += sum(cohort[1])
+    for each_area in state.ids.areas.names:
+        total += state.area_people(each_area, include_trainees)
     return total
