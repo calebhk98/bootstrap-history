@@ -29,6 +29,11 @@ class LookupTests(unittest.TestCase):
         ids.admit(["zinc"])
         self.assertEqual(dict(numbers), {"iron": 0, "wheat": 1, "zinc": 2})
 
+    def test_the_hot_read_views_follow_the_table(self):
+        ids = IdTable("good", ["wheat", "iron"])
+        ids.admit(["brass"])
+        self.assertEqual((ids.numbers.get("brass"), ids.numbers.get("gold"), ids.name_list), (2, None, ["iron", "wheat", "brass"]))
+
     def test_find_answers_none_for_an_unknown_name(self):
         self.assertIsNone(IdTable("good", ["iron"]).find("gold"))
 
