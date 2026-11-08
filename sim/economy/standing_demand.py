@@ -3,6 +3,7 @@ pays at the market edge. Firm entry reads the year's bids (entry_year.py); these
 such a buyer asks for draws a maker as a household's or a merchant's bid does. Nothing here clears."""
 from typing import Dict, List, Mapping, Sequence, Tuple
 
+from . import year_bids
 from .bid_columns import MarketBids, columns_of, columns_of_bids, joined
 from .types import AreaId, Bid, GoodId
 
@@ -36,6 +37,16 @@ class _WithStanding(Mapping):
 
     def __len__(self) -> int:
         return len(set(self._base) | set(self._standing))
+
+
+def standing_block(ledger, standing_bids: Sequence[Bid]):
+    """The year's bids block (`year_bids.YearBids`: the ledger's, or one made from its `bids_by_market` when the goods side did not make it)
+    with the standing bids added to their markets; the block itself when there are none."""
+    block = ledger.year_bids if ledger.year_bids is not None else year_bids.of_mapping(ledger.bids_by_market)
+    standing: Dict[Tuple[GoodId, AreaId], List[Bid]] = {}
+    for bid in standing_bids:
+        standing.setdefault((bid.good, bid.area), []).append(bid)
+    return block.with_standing(standing)
 
 
 def with_standing_bids(bids_by_market: Mapping[Tuple[GoodId, AreaId], Sequence[Bid]],

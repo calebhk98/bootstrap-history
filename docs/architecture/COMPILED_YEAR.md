@@ -716,3 +716,41 @@ with the numbering; a merchant made alone numbers its own markets.
   byte what the dictionaries gave; a load hands them back by name (`hold_named`) and they are indexed once, by the record's numbering.
 
 Measure with `python3 tools/measure/function_times.py SAVE sim.economy.merchants:learn_year sim.economy.merchants:close_year`.
+
+## Entry's bids as one table (stage 4)
+
+`year_goods.clear_goods` builds the year's bids once, after the respend rounds, as `year_bids.YearBids` (`ledger.year_bids`): every market's bids in
+one set of columns (`bid_columns.BidColumns`), markets in sorted (good, area) order, `start` giving each market's rows, a market's first-round bids
+(read from the order table's columns in one gather, or from the `Bid` objects of a market on the objects) followed by the bids later respend rounds
+added (the `AddedBids` lists, written in one scatter). `ledger.bids_by_market` is `year_bids_by_market.BidsByMarket`, which makes a market's
+`MarketBids` when first read, its columns views of the block (no gather per market). `standing_demand.standing_block` joins a project's standing bids
+(`YearBids.with_standing`; the block itself when there are none).
+
+What reads it: `entry_bid_markets.weigh` walks the block's markets once for the margin and the trial rule (area, reachable capacity, price;
+`EntryTables.capacity_in` makes its grid once); `entry_margin` and `entry_trial` first work out their streaks, rankings and every price they will ask
+a market about, then take all the demands in one call (`year_bids_kernels.demand_at_many`, which runs `bid_columns.demand_at_columns` on each market's
+rows, so each answer equals the single call) and only then take the plans market by market in the old greedy order, siting each as before. The demands
+do not depend on the plans already made, so asking them first changes nothing; the capacity, room and `built` totals that do depend on earlier plans stay
+in the loops. `entry_backed.unfilled_at_cost` reads the block's rows. Digests are unchanged (Rome two years, England five, with reload). Tests:
+`test_year_bids.py` (the block against the per-market columns, `with_standing`, `demand_at_many` against `bid_columns.demand_at`, `BidsByMarket`).
+
+Measured on the warm Rome year (`python3 tools/measure/function_times.py SAVE sim.economy.economy:open_entrants sim.economy.entry_year:year_plans
+sim.economy.entry_year:margin_entry_plans sim.economy.entry_year:trial_entry_plans sim.economy.economy:clear_goods sim.economy.year_bids:build`,
+minimum of four alternating runs against the base): `margin_entry_plans` and `trial_entry_plans` each about halve, `year_plans` falls by about a tenth,
+`year_bids.build` costs back about a third of what they save, `entry_plans` is unchanged. Net, about a third of a percent of the year.
+
+Not done, and why:
+
+- **`record.goods.volumes`, `unsold` and `unmet` as columns.** The readers that matter to entry (`traded`, called from `sized_runs` a few thousand times)
+  cost little in a year, and the stores are saved dictionaries keyed by `market_key` that nine other readers and the area-redraw move; a column
+  store needs a dict-like view that saves and loads, and a kernel for `sized_runs` to read it, which together are worth less than the glue. A derived
+  read is cheap without changing the save: `[volumes.get(name, 0.0) for name in memory.tables.goods_markets.name_list]` scattered by
+  `year_arrays_memory.market_cells`.
+- **The greedy loops as kernels.** `entry_plans`, `margin_entry_plans` and `trial_entry_plans` choose each candidate's tile with `EntryTables.siting`
+  (Python glue around `entry_kernels.site_choice`, updating the capacity and committed hours the next candidate sees) and each plan changes the running
+  `capacity`, `room` and `built`; a kernel for the loop needs the siting's glue (the runs-anywhere branch, the unsited candidates' cache) as a kernel
+  first. What a kernel can do before the loop is done above (the demands); what is left in Python per market is the streak (a saved dictionary of
+  `margin_years`, written for every market weighed), the ranking sort and the request lists of `EntryTables.recipes_by_cost_many`.
+- **`UnmetDemand` and `EntryPlan` as table rows.** They are read by the Python loops above and by `open_entrants`; rows pay only with those kernels.
+- **`weigh`** is a Python loop over the block's markets (a dictionary read each for the area, capacity and price); with the goods-market numbers on the
+  block it is a gather over `market_cells`, the reach grid and the price grid.

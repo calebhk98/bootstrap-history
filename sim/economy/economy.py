@@ -48,7 +48,7 @@ from .labour_results_table import hours_totals
 from .labour_state import people_by_trade
 from .year_labour import clear_labour, labour_offer_rows, outside_option_by_tile
 from .year_accounts import YearAccounts, build as build_accounts, stocks as stocks_held
-from .standing_demand import with_standing_bids
+from .standing_demand import standing_block
 from .year_ledger import YearLedger
 from .collection_paused import collection_paused
 from .replaced import replaced
@@ -285,7 +285,7 @@ class Economy:
         arrays = self._year_arrays = close_agents(setup, record, close_view, ledger, self.area_map, self.carriage, arrays, received)
         arrays = self._year_arrays = arrays.sync(setup, record, close_view)      # the memory is read once for entry and the restake
         open_entrants(setup, record, close_view, self.area_map, ledger.unmet_demand, self.carriage,
-                      with_standing_bids(ledger.bids_by_market, inputs.standing_bids), arrays)
+                      standing_block(ledger, inputs.standing_bids), arrays)
         restake_owners(setup, record, close_view, arrays)
         extraction = sites.extraction_by_tile(record, setup)
         close_idle_producers(setup, record)

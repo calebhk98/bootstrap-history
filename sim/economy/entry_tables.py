@@ -76,6 +76,7 @@ class EntryTables:
         self._first_hours = np.zeros(len(recipe_ids))
         self._sites: Dict[int, RecipeSite] = {}
         self._siting_ready = False
+        self._reach = None            # the reachable output by good and area (`capacity_in`), made on first use
         self._area_masks: Dict[str, np.ndarray] = {}
         self._unsited_candidates: Dict[Tuple[int, str], np.ndarray] = {}
 
@@ -173,8 +174,10 @@ class EntryTables:
         `capacity_terms_by_good`), plant to come counted."""
         columns = self.arrays.producers
         index = self.arrays.area_index
-        reach = entry_kernels.reach_by_area(columns.recipe_row, columns.tile_row, columns.capacity_runs, columns.yield_factor,
-                                            self._pending(), self.matrices.outputs, index.of_good_tile, len(index.areas.ids))
+        if self._reach is None:     # the producers and plant to come do not change while plans are made: the grid is made once
+            self._reach = entry_kernels.reach_by_area(columns.recipe_row, columns.tile_row, columns.capacity_runs, columns.yield_factor,
+                                                      self._pending(), self.matrices.outputs, index.of_good_tile, len(index.areas.ids))
+        reach = self._reach
         goods_row, areas_row = self.goods.row, index.areas.row
 
         def capacity(good, area_id):
