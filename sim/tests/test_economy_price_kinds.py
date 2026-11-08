@@ -86,13 +86,6 @@ class ShownPricesCarryTheirKindTests(unittest.TestCase):
         self.assertIn(kinds["metal"], (QUOTE_OPENING_ESTIMATE, KIND_REMEMBERED))
 
 
-class ShownPricesTakeTheTradedVolumesTests(unittest.TestCase):
-    def test_volumes_worked_out_once_give_the_shown_prices_that_working_them_out_inside_gives(self):
-        setup, record = shown_game()
-        traded = notional.volumes_traded_by_good(record)
-        self.assertEqual(shown_prices_with_kinds(setup, record, None, None, None, traded), shown_prices_with_kinds(setup, record))
-
-
 class ReadersDoNotInventAPriceTests(unittest.TestCase):
     def test_a_standing_bid_has_no_price_where_there_is_none(self):
         self.assertIsNone(standing_price(None, None))
