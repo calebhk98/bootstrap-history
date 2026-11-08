@@ -115,6 +115,22 @@ def release(held: Dict[str, Dict[str, Dict[AgentId, float]]], employer: AgentId)
             del held[tile]
 
 
+def release_many(held: Dict[str, Dict[str, Dict[AgentId, float]]], employers) -> None:
+    """`release` for every one of `employers` in one pass over the held rows (the result is the same as releasing them one by one)."""
+    leaving = set(employers)
+    if not held or not leaving:
+        return
+    for tile in list(held):
+        for trade in list(held[tile]):
+            by_employer = held[tile][trade]
+            for employer in leaving.intersection(by_employer):
+                del by_employer[employer]
+            if not by_employer:
+                del held[tile][trade]
+        if not held[tile]:
+            del held[tile]
+
+
 @dataclasses.dataclass
 class HeldPlacement:
     offers: LabourOfferRows

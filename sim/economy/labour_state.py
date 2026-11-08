@@ -100,7 +100,8 @@ class PeopleByTile(MappingBase):
 
     def __init__(self, state: MarketState):
         self._state = state
-        self._area_of_tile = {area_tile(area): area for area in sorted(state.workers)}
+        names = state.ids.areas.names
+        self._area_of_tile = {area_tile(area): area for area in sorted(names[number] for number in state.named_areas("workers"))}
         self._read: Dict[str, Dict[str, float]] = {}
 
     def __getitem__(self, tile):

@@ -137,3 +137,10 @@ def bought_value(results, agent: str) -> float:
     if isinstance(results, LabourResults):
         return results.bought_value(agent)
     return math.fsum(fill.quantity * fill.price for result in results for fill in result.fills if fill.agent == agent and fill.side == "buy")
+
+
+def hours_by_market(results) -> Dict[Tuple[str, str], float]:
+    """`LabourResults.hours_by_market` of the year's results, or the same figures over a plain list of `LabourResult`s."""
+    if isinstance(results, LabourResults):
+        return results.hours_by_market()
+    return {(result.trade, result.area): result.hours_hired + result.idle_hours for result in results}
