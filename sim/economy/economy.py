@@ -15,6 +15,7 @@ from . import outlay_room, taxes, bondage, bondage_hours, bondage_keep, bonded_p
 from .credit_view import CreditView
 from . import transfer_rows
 from .market_areas_follow import follow
+from .market_memory_areas import number_area_markets
 from .market_memory import YearView, note_written
 from .mint import mint_orders, settle_mint, staff as staff_mint
 from .mint_labour import close_year as close_mint_year, mint_agent
@@ -96,6 +97,7 @@ class Economy:
             area_map = setup.area_map(carriage)
         self.record = record
         self.area_map = area_map
+        number_area_markets(record.memory, area_map)
         self.carriage = carriage
         self.watched_tiles: Tuple[str, ...] = ()   # tiles whose market books are kept beside the port's and the capital's; not saved
         self._own_hectares: Dict[str, float] = {}   # land households' own plots took this year, by tile
@@ -123,6 +125,7 @@ class Economy:
         self.carriage = self.setup.carriage_table(self.record.carriage.ways, self.record.carriage.area_imbalance)
         area_map = self.setup.area_map(self.carriage)
         follow(self.record, self.area_map, area_map)
+        number_area_markets(self.record.memory, area_map)
         self.area_map = area_map
         return True
 

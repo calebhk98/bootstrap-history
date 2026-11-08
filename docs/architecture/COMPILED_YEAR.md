@@ -47,6 +47,10 @@ Every converter follows it, and these readability rules:
 
 Each numbering is an `IdTable` saved as its ordered name list, so a loaded game numbers exactly as the live one did
 (CLAUDE.md: order must not depend on history). A leaver keeps a dead row until a year boundary compacts it.
+A number is the order of admission, so a numbering fed one name at a time follows whoever wrote first, and a set of strings
+makes that the hash seed. Every goods market an area map defines is therefore admitted as one sorted batch when the areas are drawn
+(`market_memory_areas.number_area_markets`: the opening, a load, a redraw); the single-name fallback (`goods_row_for_write`) is left
+for keys outside the map. `hash_seed_order` checks the result across hash seeds.
 
 ## The tables and their owners
 

@@ -186,12 +186,19 @@ class MarketStore(MutableMapping):
         for row in self._present_rows(table).tolist():
             self._leave(table, row)
 
+    def admit_keys(self, keys) -> None:
+        """Number the markets among `keys` that are not numbered yet as one sorted batch, so the numbering does not follow the order
+        they are written in."""
+        tables = self._tables
+        (tables.admit_labour_markets if self._labour else tables.admit_goods_markets)(keys)
+
     def replace_with(self, other) -> None:
         """Make the store hold exactly the markets of `other` (a mapping), in its order."""
         if other is self:
             return
         held = list(other.items())
         self.clear()
+        self.admit_keys(key for key, _figure in held)
         for key, figure in held:
             self[key] = figure
 
