@@ -7,7 +7,7 @@ from sim.demography.api import AddCaptives
 from sim.hazards.api import RecordWorldEvent
 from sim.land.api import TransferTile
 from sim.polity.api import (CloseSuccessionDispute, RecordRising, RegisterPeople, ReplaceRuler, ResetStateUnrest,
-                            SetGrievanceReference, SetLandTakenMemory, SetTileReading, StrikeFromForce)
+                            SetGrievanceReference, SetLandTakenMemory, SetTileReadings, StrikeFromForce)
 from sim.stores.api import WriteStore
 
 from .armies import ARMIES
@@ -35,7 +35,7 @@ MODULE_SPECS = (ModuleSpec(
 	         (DisbandArmy, "apply_disband_army")),
 	reads=tuple(name for names in READS_BY_OWNER.values() for name in names),
 	sends=(TransferTile, StrikeFromForce, AddCaptives, RecordWorldEvent, RecordConquestContact, WriteStore, SetLandTakenMemory,
-	       RegisterPeople, SetGrievanceReference, ResetStateUnrest, SetTileReading, RecordRising, ReplaceRuler,
+	       RegisterPeople, SetGrievanceReference, ResetStateUnrest, SetTileReadings, RecordRising, ReplaceRuler,
 	       CloseSuccessionDispute),
 	phases=(PhaseHook("campaigns", "step_campaigns"), PhaseHook("revolts", "step_revolts")),
 ),)
