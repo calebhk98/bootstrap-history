@@ -186,15 +186,10 @@ def labour_market_rows(economy):
     of the hours and people) is left out, so the unsold-hours share, which keeps it, is a different population."""
     record = economy.record
     plot = labour_state.plot_trade(economy.setup)
-    rows = []
-    for key in sorted(record.labour.hours_idle):
-        trade, area = key.split(KEY_SEPARATOR, 1)
-        if trade == plot:
-            continue
-        people = math.fsum(record.labour.workforce.workers.get(area, {}).get(trade, ()))
-        hired = record.labour.hours_cleared_in(key)
-        rows.append((people, hired + record.labour.hours_idle[key], hired))
-    return rows
+    keys = [key for key in sorted(record.labour.hours_idle) if key.split(KEY_SEPARATOR, 1)[0] != plot]
+    people = record.labour.people_in_markets(keys)
+    hired = record.labour.hours_cleared_in_markets(keys)
+    return [(workers, hours + record.labour.hours_idle[key], hours) for key, workers, hours in zip(keys, people, hired)]
 
 
 def hours_offered_in_area_of(economy, trade, tile):

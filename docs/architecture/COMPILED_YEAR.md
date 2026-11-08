@@ -237,6 +237,26 @@ carriage hours hire), and the offers (`LabourOffer`, built upstream and by `Hour
 `python3 tools/measure/warm_year_profile.py SAVE OUT.prof` (the calls of `settle_labour`, `settle_many`, `post_settled`, `_result` are gone) and
 `year-time --count-instructions`. The tests are `sim/tests/test_year_speed_labour_settle.py`.
 
+## Labour readers in the economy (stage 4, first package)
+
+The economy's readers of the labour core read its tables in blocks (`sim/labour/market/state_reads.py`, kernels in
+`state_read_kernels.py`, both behind `sim/labour/api.py`), where they iterated the dict views one value per call. A figure that
+was a `math.fsum` or a `sum` of a list is the same kernel (`exact_sum`, `python_sum`), so digests do not move.
+
+| Reader | Block read |
+|---|---|
+| `LabourRecord.hours_cleared_in`/`hours_cleared_by`/`hours_cleared_in_markets`, `people_in_markets` | `hours_cleared_at`, `people_at` over grid rows from `grid_rows_of` (a name the state does not number is row -1, read as nothing) |
+| `national_prices.national_wages` | one `wage_means_by_group` call over every remembered wage, hours and people read as arrays |
+| `country_figures.people_by_trade`, `labour_state.people_by_trade` | `people_by_trade_over` (areas added in the order given) |
+| `labour_state.PeopleByTile.working_people` (the levy) | `working_people_in_areas` |
+| `labour_state.scale_people` | `scale_people_in_area` |
+| `labour_state.mirror_wages` | `wages_in_view_order` (areas in the order named, trades in the order they got a wage) |
+| `flight_step.mean_year_income`, `people_before`; `records.people_in`, `MarketState.area_people` | `people_weighted_wage_by_area`, `people_in_areas` (trades in the workers view's order, then cohorts) |
+
+Each block read has a test against the per-item path on written-out inputs (`sim/tests/test_labour_state_reads.py`,
+`test_economy_labour_readers.py`). Measure with `python3 tools/measure/warm_year_profile.py SAVE OUT.prof` and look for calls into
+`state_views.py`, `state_fields.py` and `state_ids.py`: those are the readers still on the views.
+
 ## The close on tables (stage 3)
 
 The close reads the book and the ledger with kernels, posts its dividends, wear, spoilage and consumption as posting tables, and

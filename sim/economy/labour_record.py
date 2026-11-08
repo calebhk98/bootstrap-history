@@ -3,7 +3,7 @@ import math
 from dataclasses import dataclass, field
 from typing import Dict
 
-from sim.labour.api import MarketState, add_people, grid_rows_of, hours_cleared_at, market_state_from_plain, market_state_to_plain
+from sim.labour.api import MarketState, add_people, grid_rows_of, hours_cleared_at, market_state_from_plain, market_state_to_plain, people_at
 
 from .market_memory import KEY_SEPARATOR
 from .record_parts import OwnedRecord
@@ -44,14 +44,22 @@ class LabourRecord(OwnedRecord):
         """`hours_cleared_in` for a market already split into its trade and labour area."""
         return float(hours_cleared_at(self.workforce, grid_rows_of(self.workforce, [area], [trade]))[0])
 
-    def hours_cleared_in_markets(self, market_keys) -> list:
-        """`hours_cleared_in` for many market keys at once, in their order."""
+    def _rows_of(self, market_keys):
+        """The core's grid rows of the labour market keys (trade, area), in order."""
         trades, areas = [], []
         for market_key in market_keys:
             trade, area = market_key.split(KEY_SEPARATOR, 1)
             trades.append(trade)
             areas.append(area)
-        return hours_cleared_at(self.workforce, grid_rows_of(self.workforce, areas, trades)).tolist()
+        return grid_rows_of(self.workforce, areas, trades)
+
+    def hours_cleared_in_markets(self, market_keys) -> list:
+        """`hours_cleared_in` for many market keys at once, in their order."""
+        return hours_cleared_at(self.workforce, self._rows_of(market_keys)).tolist()
+
+    def people_in_markets(self, market_keys) -> list:
+        """The people working each labour market (trade, area), in the order of the keys; zero where the core holds nobody."""
+        return people_at(self.workforce, self._rows_of(market_keys)).tolist()
 
     def set_hours_paid_by_employer(self, hours: Dict[AgentId, Dict[TradeId, float]]) -> None:
         """The hours paid for each employer, by trade, bonded hours included."""
