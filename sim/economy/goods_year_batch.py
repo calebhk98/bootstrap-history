@@ -5,7 +5,7 @@ are those of seller_offers.strategic_offers and unsold_search.clear_with_search,
 
 `batchable` is the rule that sends a market to the batch, stated over objects; `goods_table_group.batch_flags` applies it to columns.
 A market is batched when it has units on offer, no book edge sells in it (the mint's wash of its own trades) and its good is
-portable (ground has a rent to hold for, read off the land record)."""
+in the year arrays (ground holds for its rent, read off the land record)."""
 from typing import List, Sequence, Tuple
 
 from . import goods_good_clear, goods_order_book
@@ -15,9 +15,6 @@ from .types import Offer, is_edge
 
 def batchable(setup, bids: Sequence, offers: Sequence[Offer], good: str, arrays) -> bool:
     if good not in arrays.matrices.goods.row:
-        return False
-    spec = setup.specs.get(good)
-    if spec is not None and not spec.portable:
         return False
     units = False
     for offer in offers:

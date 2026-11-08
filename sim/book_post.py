@@ -80,21 +80,19 @@ class BookPostings:
         payers = self._agent_numbers([transfer.payer for transfer in transfers])
         payees = self._agent_numbers([transfer.payee for transfer in transfers])
         currencies = self._admit_currencies([transfer.currency for transfer in transfers])
-        codes = [self.purposes.encode(transfer.purpose) for transfer in transfers]
+        codes, references = self.purposes.encode_many([transfer.purpose for transfer in transfers])
         return table_from(TRANSFER_POSTINGS, TransferPostings, len(transfers), payers, payees, currencies,
-                          [transfer.amount for transfer in transfers], [code for code, _reference in codes],
-                          [reference for _code, reference in codes], [batch] * len(transfers))
+                          [transfer.amount for transfer in transfers], codes, references, [batch] * len(transfers))
 
     def _move_table(self, moves: Sequence[GoodsMove], batch: int = 0) -> GoodsMovePostings:
         """The goods moves as posting rows of one batch; every name in them is admitted."""
         givers = self._agent_numbers([move.giver for move in moves])
         receivers = self._agent_numbers([move.receiver for move in moves])
         numbers = self._admit_tiles([move.tile for move in moves] + [delivery_tile(move) for move in moves])
-        codes = [self.purposes.encode(move.purpose) for move in moves]
+        codes, references = self.purposes.encode_many([move.purpose for move in moves])
         return table_from(GOODS_MOVE_POSTINGS, GoodsMovePostings, len(moves), givers, receivers,
                           self._admit_goods([move.good for move in moves]), numbers[:len(moves)], numbers[len(moves):],
-                          [move.quantity for move in moves], [code for code, _reference in codes],
-                          [reference for _code, reference in codes], [batch] * len(moves))
+                          [move.quantity for move in moves], codes, references, [batch] * len(moves))
 
     def _agent_numbers(self, names: Sequence[str]) -> list:
         get = self.agent_ids.numbers.get
@@ -206,33 +204,35 @@ class BookPostings:
 
     # ---- the book's methods ----------------------------------------------------------------------
 
-    def _post_batch(self, transfers: Sequence[Transfer], moves: Sequence[GoodsMove], rule: int) -> None:
-        transfer_table, move_table = self._transfer_table(transfers), self._move_table(moves)
-        outcomes, scratch = self.apply_postings(transfer_table, move_table, 1, rule, stop_on_refusal=True)
-        self._raise_for(outcomes, scratch, transfer_table, move_table, rule)
-
     def transfer(self, transfer: Transfer) -> None:
         """One transfer on its own: a payer that is not an edge account must hold the amount (less a rounding share) first.
         A zero amount does nothing."""
         if not transfer.amount >= 0.0 or transfer.amount != 0.0:
-            self._post_batch((transfer,), (), RULE_SINGLE)
+            self._post_one_transfer(transfer, RULE_SINGLE)
 
     def move(self, move: GoodsMove) -> None:
         """One goods move on its own, by the same rule as `transfer`."""
         if not move.quantity >= 0.0 or move.quantity != 0.0:
-            self._post_batch((), (move,), RULE_SINGLE)
+            self._post_one_move(move, RULE_SINGLE)
 
     def transfer_many(self, transfers: Iterable[Transfer]) -> None:
         self.post(transfers, ())
 
     def post(self, transfers: Iterable[Transfer], moves: Iterable[GoodsMove]) -> None:
         """Apply money transfers and goods moves together: all of them or none."""
-        self._post_batch(list(transfers), list(moves), RULE_BATCH)
+        transfers, moves = list(transfers), list(moves)
+        if len(transfers) == 1 and not moves:
+            self._post_one_transfer(transfers[0], RULE_BATCH)
+        elif len(moves) == 1 and not transfers:
+            self._post_one_move(moves[0], RULE_BATCH)
+        else:
+            self._post_batch(transfers, moves, RULE_BATCH)
 
     def _post_batch(self, transfers: Sequence[Transfer], moves: Sequence[GoodsMove], rule: int) -> None:
         """One batch, by the narrowest kernel that holds it (money only, goods only, or both)."""
-        transfer_table, move_table = self._transfer_table(transfers), self._move_table(moves)
         transfer_rows, move_rows = len(transfers), len(moves)
+        transfer_table = self._transfer_table(transfers) if transfer_rows else self.single_postings.no_transfers
+        move_table = self._move_table(moves) if move_rows else self.single_postings.no_moves
         if transfer_rows and move_rows:
             outcomes, scratch = self.apply_postings(transfer_table, move_table, 1, rule, stop_on_refusal=True)
             code, culprit = int(outcomes.code[0]), int(outcomes.culprit[0])

@@ -12,7 +12,7 @@ from sim.world import capital_market
 
 from sim.loans.columns import NO_TILE
 
-from . import bank_service, bondage, credit, credit_claims, credit_service, households_credit, lender_ask, loss_memory, merchants_book, merchants_credit, titles, titles_ground, titles_value, transfer_rows
+from . import bank_service, bondage, credit, credit_claims, credit_service, households_credit, lender_ask, loss_memory, merchants_book, merchants_credit, merchants_plan, titles, titles_ground, titles_value, transfer_rows
 from .household_time_preference import HOUSEHOLD_TIME_PREFERENCE
 from .household_work_year import basket_key, cohort_basket
 from .producers_working_capital import WORKING_CAPITAL_PURPOSE
@@ -139,6 +139,9 @@ def merchant_requests(setup, record, view, area_map, carriage) -> List:
     debts = credit_claims.debts_by_borrower(record.credit.loans, money)
     requests = []
     route = merchants_book.route_pass(view, carriage, area_map, setup.specs) if record.merchants else None
+    merchants_plan.prepare_rows(route, [merchant for merchant_id, merchant in sorted(record.merchants.items())
+                                        if merchants_credit.MERCHANT_LEVERAGE_LIMIT * (merchant.capital_base - debts.get(merchant_id, 0.0))
+                                        - debts.get(merchant_id, 0.0) > 0.0], rate)
     for merchant_id, merchant in sorted(record.merchants.items()):
         asked = merchants_credit.credit_request(
             merchant, view, carriage, area_map, record.book.balance(merchant_id, money),

@@ -13,6 +13,7 @@ from .market_areas import AreaMap
 from . import market_memory
 from .market_memory import KEY_SEPARATOR, market_key
 from .market_memory_follow import GoodsRemap, follow_goods_markets
+from .goods_market_column import MarketColumn
 from .merchant_figures import MarketFigures
 from . import merchants
 from .merchants import Merchant
@@ -82,7 +83,11 @@ def follow(record: EconomyRecord, old: AreaMap, new: AreaMap) -> None:
     memory = record.memory
     remap = follow_goods_markets(memory, follows, old_ids)
     for name in record.goods.MARKET_KEYED:
-        setattr(record.goods, name, _moved(getattr(record.goods, name), follows, old_ids))
+        store = getattr(record.goods, name)
+        if isinstance(store, MarketColumn) and store.tables is memory.tables:
+            store.follow(*remap)
+        else:
+            setattr(record.goods, name, _moved(store, follows, old_ids))
     every_old_id = frozenset().union(*old_ids.values())
     currency_of_area = {area_id: currency for area_id, currency in memory.currency_of_area.items()
                         if area_id not in every_old_id}

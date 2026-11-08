@@ -204,7 +204,18 @@ class YearLedger(PostingNotes):
             keys = [(names[market].partition("|")[0], names[market].partition("|")[2]) for market in markets.tolist()]
             self.totals_cache = (dict(zip(keys, quantity.tolist())),
                                  {key: None if value != value else value for key, value in zip(keys, price.tolist())})
+            self.totals_columns = (markets, quantity, price)
         return self.totals_cache
+
+    def market_total_columns(self):
+        """`market_totals` as arrays by market number: (delivered quantity, price weighted by quantity; NaN: none), zero and NaN for a market
+        with no round."""
+        self.market_totals()
+        markets, quantity, price = self.totals_columns
+        count = len(self.tables.markets.goods_markets)
+        delivered, priced = numpy.zeros(count), numpy.full(count, numpy.nan)
+        delivered[markets], priced[markets] = quantity, price
+        return delivered, priced
 
     def note_labour(self, result: LabourResult, postings: Iterable[object] = (), settled: bool = True) -> None:
         """Hours count as hired and sold in proportion to the wages actually paid: hours an employer

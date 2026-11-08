@@ -9,7 +9,7 @@ from typing import Dict, List, Mapping, Optional, Tuple
 
 import numpy as np
 
-from . import merchants, merchants_book, merchants_book_kernel, merchants_legs
+from . import merchants, merchants_batch, merchants_book, merchants_book_kernel, merchants_legs
 from .merchants_shares import MERCHANT_GROUP_SHARE, MERCHANT_SOURCE_SHARE, RouteShares
 from .protocols import AgentOrders
 from .types import Bid, GoodId, TileId
@@ -67,8 +67,22 @@ def _rows(route, merchant, stock, interest_rate, only_held=None, area_map=None) 
                 slot = stock.slot_of_stock.get((good, tile))
                 if slot is not None:
                     source_allowed[slot] = True
+    if only_held is None:
+        prepared = merchants_batch.rows_for(route, merchant.agent_id, float(interest_rate), merchant.home_tile, stock.expected)
+        if prepared is not None:
+            return prepared
     return merchants_book.search(route, stock.expected, merchant.home_tile, interest_rate, merchants.MERCHANT_MARGIN_SHARE,
                                  good_allowed, source_allowed)
+
+
+def prepare_rows(route, merchants, interest_rate: float) -> None:
+    """Search the candidate rows of these merchants in one call, for their `orders` or `credit_wanted` that follow on this `route`."""
+    if merchants:
+        merchants_batch.prepare(route, merchants, interest_rate, merchants_margin())
+
+
+def merchants_margin() -> float:
+    return merchants.MERCHANT_MARGIN_SHARE
 
 
 def candidate_rows(merchant, view, carriage, area_map, held_stock, specs, interest_rate, only_held=None, route=None):

@@ -9,6 +9,7 @@ from typing import Dict, List
 import numpy
 
 from .goods_added_bids import AddedBids
+from .goods_respend_rows import table_columns
 from .types import Offer
 
 
@@ -26,25 +27,51 @@ def write_markets(setup, ledger, markets, packed, out) -> None:
      clear_demand, clear_offered, clear_delivered, _pm, _pb, _po, _pg, _pmo, _pi, _pe, market_wanted, market_delivered,
      market_offered, market_last_delivered, market_cleared) = out
     keys = packed.market_keys
+    columns = table_columns(markets, keys)
     _add_bids(markets, packed, keys, numpy.nonzero(bid_adding[:bid_count])[0], bid_market, bid_buyer, bid_flexible, bid_reference,
-              bid_budget, bid_maximum)
+              bid_budget, bid_maximum, columns)
     if clear_count:
         prices = numpy.where(clear_has_price[:clear_count], clear_price[:clear_count], numpy.nan)
-        for market, quantity, price, demand, offered in zip(clear_market[:clear_count].tolist(), clear_quantity[:clear_count].tolist(),
-                                                           prices.tolist(), clear_demand[:clear_count].tolist(),
-                                                           clear_offered[:clear_count].tolist()):
-            markets[keys[market]].later.append((quantity, None if price != price else price, demand, offered))
+        if columns is not None:
+            columns.year_markets.add_later(columns.cells[clear_market[:clear_count]], clear_quantity[:clear_count], prices,
+                                           clear_demand[:clear_count], clear_offered[:clear_count])
+        else:
+            for market, quantity, price, demand, offered in zip(clear_market[:clear_count].tolist(), clear_quantity[:clear_count].tolist(),
+                                                               prices.tolist(), clear_demand[:clear_count].tolist(),
+                                                               clear_offered[:clear_count].tolist()):
+                markets[keys[market]].later.append((quantity, None if price != price else price, demand, offered))
         note_rounds(ledger, keys, clear_market[:clear_count], clear_quantity[:clear_count], prices, clear_delivered[:clear_count])
-    for index in numpy.nonzero(market_cleared)[0].tolist():
-        market = markets[keys[index]]
-        market.delivered += float(market_delivered[index])
-        market.wanted += float(market_wanted[index])
-        market.last_offered = float(market_offered[index])
-        market.last_delivered = float(market_last_delivered[index])
-        _leave_offers(market, packed, index)
+    cleared = numpy.nonzero(market_cleared)[0]
+    if columns is None:
+        _add_rounds(markets, keys, cleared, market_delivered[cleared], market_wanted[cleared], market_offered[cleared], market_last_delivered[cleared])
+        objects = cleared.tolist()
+    else:
+        columns.year_markets.add_rounds(columns.cells[cleared], market_delivered[cleared], market_wanted[cleared], market_offered[cleared],
+                                        market_last_delivered[cleared])
+        _leave_offer_units(columns, packed, cleared)
+        objects = cleared[~columns.on_tables[cleared]].tolist()
+    for index in objects:
+        _leave_offers(markets[keys[index]], packed, index)
 
 
-def _add_bids(markets, packed, keys, adding, bid_market, bid_buyer, bid_flexible, bid_reference, bid_budget, bid_maximum) -> None:
+def _add_rounds(markets, keys, cleared: numpy.ndarray, delivered, wanted, offered, last_delivered) -> None:
+    """The rounds' totals added to the cleared markets' figures: one scatter into the year's table (`YearMarkets.add_rounds`) when
+    the markets share it, market by market when each holds a table of its own (a market made alone)."""
+    lefts = [markets[keys[index]] for index in cleared.tolist()]
+    if not lefts:
+        return
+    shared = lefts[0].year_markets
+    if all(each.year_markets is shared for each in lefts):
+        shared.add_rounds(numpy.array([each.row for each in lefts], dtype=numpy.int64), delivered, wanted, offered, last_delivered)
+        return
+    for each, units, asked, on_offer, moved in zip(lefts, delivered.tolist(), wanted.tolist(), offered.tolist(), last_delivered.tolist()):
+        each.delivered += units
+        each.wanted += asked
+        each.last_offered = on_offer
+        each.last_delivered = moved
+
+
+def _add_bids(markets, packed, keys, adding, bid_market, bid_buyer, bid_flexible, bid_reference, bid_budget, bid_maximum, columns=None) -> None:
     """The bids that add demand, handed to their markets as column slices (rows of one market stay in the kernel's order)."""
     if not len(adding):
         return
@@ -52,6 +79,12 @@ def _add_bids(markets, packed, keys, adding, bid_market, bid_buyer, bid_flexible
     market_of_row = bid_market[order]
     cuts = numpy.nonzero(numpy.diff(market_of_row))[0] + 1
     elasticity = numpy.array([packed.baskets[basket].substitution for basket in packed.arguments["buyer_basket"]])
+    if columns is not None:       # the year's table keeps them; a market's `AddedBids` are made from it when read
+        buyers = bid_buyer[order].tolist()
+        columns.year_markets.add_added_bids(columns.cells[market_of_row], bid_flexible[order], bid_reference[order], elasticity[bid_buyer[order]],
+                                            bid_budget[order], bid_maximum[order], [packed.buyers[each] for each in buyers],
+                                            [packed.buyer_tile[each] for each in buyers])
+        return
     for first, last in zip([0, *cuts.tolist()], [*cuts.tolist(), len(order)]):
         rows = order[first:last]
         good, area = keys[market_of_row[first]]
@@ -74,6 +107,21 @@ def note_rounds(ledger, keys, clear_market, quantity, price, moved) -> None:
         market_numbers[index] = tables.market_number(good, area) if number is None else number
     ledger.note_round_rows(numpy.array([market_numbers[index] for index in clear_market.tolist()], dtype=numpy.int64),
                            numpy.asarray(quantity, dtype=float), numpy.asarray(price, dtype=float), numpy.asarray(moved, dtype=float))
+
+
+def _leave_offer_units(columns, packed, cleared: numpy.ndarray) -> None:
+    """The units each offer left of the cleared markets on the tables has after the rounds, written to the year's table (`left_units`), and
+    how many offers keep units (`left_count`)."""
+    pointers = packed.arguments["offer_ptr"]
+    market_of_offer = numpy.repeat(numpy.arange(len(pointers) - 1), numpy.diff(pointers))
+    chosen = numpy.flatnonzero(numpy.isin(market_of_offer, cleared[columns.on_tables[cleared]]))
+    table = columns.year_markets.table
+    cells = columns.cells[market_of_offer[chosen]]
+    units = packed.arguments["offer_quantity"][chosen]
+    columns.year_markets.left_units()[table.left_first[cells] + numpy.array(packed.offer_origin, dtype=numpy.int64)[chosen]] = units
+    on_tables = columns.cells[cleared[columns.on_tables[cleared]]]
+    table.left_count[on_tables] = 0
+    numpy.add.at(table.left_count, cells[units > 0.0], 1)
 
 
 def _leave_offers(market, packed, index: int) -> None:

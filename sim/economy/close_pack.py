@@ -104,10 +104,7 @@ def pack(setup, record, view, ledger, arrays: YearArrays) -> ClosePack:
     currencies = [currency_names[each] for each in currency_index.tolist()]
     agent_numbers = book.rows_of(columns.ids)
     cash_in_money = book.balances_at(agent_numbers, money)
-    cash_in_currency = np.zeros(count)
-    for index, currency in enumerate(currency_names):
-        rows = np.nonzero(currency_index == index)[0]
-        cash_in_currency[rows] = book.balances_at(agent_numbers[rows], currency)
+    cash_in_currency = book.balances_by_currency(agent_numbers, currency_index, currency_names)
     goods_row = matrices.goods.row
     book_goods = book.good_ids.numbers
     book_good_of_column = _subkeys(matrices.goods.ids, book_goods)

@@ -107,10 +107,10 @@ class Appliers(Part):
 		record = self._government_record(command.owner)
 		record.unrest_by_tile, record.hold_by_tile = {}, {}
 
-	def set_tile_reading(self, command):
+	def set_tile_readings(self, command):
 		record = self._government_record(command.owner)
-		record.unrest_by_tile[command.tile] = command.unrest
-		record.hold_by_tile[command.tile] = command.hold
+		record.unrest_by_tile.update(zip(command.tiles, command.unrest))
+		record.hold_by_tile.update(zip(command.tiles, command.hold))
 
 	def record_rising(self, command):
 		record = self._government_record(command.owner)

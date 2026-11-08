@@ -23,6 +23,18 @@ def lost_share(spoilage_per_year, years):
 
 
 @njit
+def nearest_costs(cost):
+    """For each area, the least carriage per tonne from it to another area (infinite where no path leaves it)."""
+    count_areas = cost.shape[0]
+    nearest = np.full(count_areas, np.inf)
+    for source in range(count_areas):
+        for other in range(count_areas):
+            if other != source and cost[source, other] < nearest[source]:
+                nearest[source] = cost[source, other]
+    return nearest
+
+
+@njit
 def search_good(prices, cost, years, id_order, source_allowed, interest_rate, spoilage_per_year, unit_mass_kg,
                 margin_share, kilograms_per_tonne):
     capacity = prices.shape[0] * prices.shape[0]
@@ -33,18 +45,20 @@ def search_good(prices, cost, years, id_order, source_allowed, interest_rate, sp
     rows_outlay = np.empty(capacity, np.float64)
     rows_ceiling = np.empty(capacity, np.float64)
     missing = np.zeros(capacity, np.bool_)
-    count = search_into(prices, cost, years, id_order, source_allowed, interest_rate, spoilage_per_year, unit_mass_kg,
+    flagged = np.zeros(1, np.int64)
+    count = search_into(prices, cost, nearest_costs(cost), years, id_order, source_allowed, interest_rate, spoilage_per_year, unit_mass_kg,
                         margin_share, kilograms_per_tonne, rows_source, rows_destination, rows_rank, rows_price_here,
-                        rows_outlay, rows_ceiling, missing)
+                        rows_outlay, rows_ceiling, missing, flagged)
     return count, rows_source, rows_destination, rows_rank, rows_price_here, rows_outlay, rows_ceiling, missing
 
 
 @njit
-def search_into(prices, cost, years, id_order, source_allowed, interest_rate, spoilage_per_year, unit_mass_kg,
+def search_into(prices, cost, nearest_cost, years, id_order, source_allowed, interest_rate, spoilage_per_year, unit_mass_kg,
                 margin_share, kilograms_per_tonne, rows_source, rows_destination, rows_rank, rows_price_here,
-                rows_outlay, rows_ceiling, missing):
+                rows_outlay, rows_ceiling, missing, flagged):
     """`search_good` writing its rows into buffers of at least areas squared places and flagging pairs in `missing`
-    (indexed source * areas + destination); returns the row count."""
+    (indexed source * areas + destination), adding one to `flagged[0]` for each; returns the row count. `nearest_cost` is `nearest_costs(cost)`, which a caller
+    searching many times over one cost matrix keeps."""
     count_areas = prices.shape[0]
     count = 0
     interest = max(0.0, interest_rate)
@@ -93,10 +107,7 @@ def search_into(prices, cost, years, id_order, source_allowed, interest_rate, sp
             continue
         interest_here = price_here * interest
         margin_here = margin_share * price_here
-        nearest = np.inf
-        for other in range(count_areas):
-            if other != source and cost[source, other] < nearest:
-                nearest = cost[source, other]
+        nearest = nearest_cost[source]
         if nearest == np.inf:
             continue
         nearest_money = nearest * unit_mass_kg / kilograms_per_tonne
@@ -115,6 +126,7 @@ def search_into(prices, cost, years, id_order, source_allowed, interest_rate, sp
                 held_years = years[source, destination]
                 if held_years == 0:
                     missing[source * count_areas + destination] = True
+                    flagged[0] += 1
                     held_years = MISSING_YEARS_PLACEHOLDER
                 if held_years > 1:
                     net -= interest_here * (held_years - 1) + price_there * (

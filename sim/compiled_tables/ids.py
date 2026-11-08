@@ -9,6 +9,7 @@ Rules:
 - A name that leaves keeps its number (its row is marked dead by a column of the table that uses it); `compacted` drops the
   dead at a year boundary and returns the old-to-new map to apply to every table that holds those ids.
 - A missing name is `None` from `find` and a `KeyError` from `number`, never a number that looks real."""
+import itertools
 from typing import Iterable, List, Optional, Sequence, Tuple
 
 import numpy
@@ -53,6 +54,11 @@ class IdTable:
 
     def find(self, name: str) -> Optional[int]:
         return self._number_of.get(name)
+
+    def numbers_of(self, names: Iterable[str]) -> numpy.ndarray:
+        """Every given name's number in one call, -1 for a name the table lacks (the batch form of `find`)."""
+        names = names if isinstance(names, (list, tuple)) else list(names)
+        return numpy.fromiter(map(self._number_of.get, names, itertools.repeat(-1)), dtype=numpy.int64, count=len(names))
 
     def number(self, name: str) -> int:
         found = self._number_of.get(name)

@@ -105,11 +105,21 @@ cause code from `BOOK_CAUSES` and the offending cell) and turns a refused batch 
 its names as posting them one by one would), applies them in one call, one batch per step, and replays a refused step through the
 object path to raise the book's own error. `book_settled.post_settled_by_numbers` posts settled totals.
 
+**One posting, and the cost of a call.** `Book.transfer`, `Book.move` and a one-posting `Book.post` write their row into one-row tables the
+book keeps (`sim/book_single.py`, `SinglePostings`), numbering names in the order the table path would, and call the money or goods
+kernel directly. `apply_batches` runs only the half a batch has (a money-only batch does not plan, commit or record the goods half,
+and the reverse): dispatching a kernel costs for every array it is given, and a nested bundle of tables costs more than the same arrays
+passed flat do (`tools/measure/function_times.py` on `sim.book_post:apply_batches`, `apply_money`, `apply_goods` shows it). A converter that
+holds names and not ids numbers them with `IdTable.numbers_of` (one call for a list; -1 for a name the table lacks) or
+`Book.agent_numbers_in_order` (admits the new ones one at a time, as `agent_number` does, which a batch admit would number differently).
+
 **How it reads.** The kernels in `sim/book_read_kernels.py` (`read_balances`, `find_slots`, `read_stocks_at`, `holder_columns`,
 `counted_stocks`, `currency_values`) take the book's tables from `book.tables()`, `book.balance_table`, `book.stock_rows`; an id
 below zero reads as nothing held. `economy/stock_block.stock_block(book, agent_numbers, good_numbers, tile_numbers)` reads any
 number of stock cells in one call. Re-fetch tables after any call that may admit a name or reserve room (a grown table is a new
-object). The methods callers use (`balance`, `stock`, `post`, `post_settled`, ...) are wrappers over the same kernels.
+object). The methods callers use (`balance`, `stock`, `post`, `post_settled`, ...) are wrappers over the same kernels. Whole-table
+reads that save a loop of scalar ones: `balances_by_currency` (each row in its own currency), `balances_of` / `rows_of` / `slots_of`
+(a list of names), `goods_flows` and `edge_goods_net_by_good` (the year's flows and an edge's nets for every good).
 
 ## The year ledger
 
@@ -209,6 +219,28 @@ settlement's columns (`BoughtColumns.columns`, keyed by market and book agent nu
 name. The packed arrays equal the object pack's byte for byte (`test_goods_respend_rows.py` checks the column functions against the
 sorted-object rules on random inputs). `year_goods._received_price` reads the tuple and the rows. `standing_demand.with_standing_bids`
 hands the year's `MarketBids` on when no standing bid joins a market.
+
+**The goods record's stores and the year's market table.** `record.goods.volumes`, `unsold`, `unmet` and `margin_years` are
+`goods_market_column.MarketColumn`s (`MarketFigures` keyed by `good|area`, indexed by the memory's goods-market numbering, `bind_markets`
+on the record): `_record_year_markets` writes each with one `replace_rows`, and `entry_plan_pack.traded_grid`,
+`entry_margin_tables._streaks_in`, `goods_table_pack.market_figures` and `entry_unmet.markets_of` read them with `take` or the ledger's
+`member_columns`. Iteration lists the markets in (good, area) order, as the dictionaries written in sorted order did.
+
+`clear_good` returns a `goods_good_clear.GoodClearing`: per market of the good, in clearing order, the first round's quantity, price, demand,
+offered, quote (`quote_price`, `quote_kind`), what buyers wanted, the memory's flags, `way` (traded in the batch, did not trade and quoted from
+the columns, or on objects), and the pointers cutting the bid rows and the offers left out of the order tables. `goods_settle.settle_good` takes
+it and returns a `GoodSettlement` (delivered as an array; `bought` and the mint's `takes` when asked), and `note_clearings`, `idle_years` and
+`last_prices` read the columns. Each good's rows are then added to the year's table `goods_year_markets.GoodsYearMarkets` (`YearMarkets`: the
+figures per market, the bid rows and the offers left with their units as flat columns, the first round's settlement per buyer, later rounds and
+the bids later rounds added) and `goods_left_markets.LeftMarkets` remembers where each market's row is.
+  Readers of the table: the respend pack (`goods_respend_rows.table_columns` and the column branches of `bid_rows`, `offer_rows`, `bought_columns`),
+the respend's unpack (`_add_rounds` as `YearMarkets.add_rounds`, `_leave_offer_units`, the added bids and later rounds as columns), `year_bids.build`
+(`_build_from_table`) and `year_remember.remember_markets`: the price sellers got from the ledger's rounds (`received_prices`), what a market's
+buyers would take at the old price (`wanted_at_markets`: `math.fsum` as `exact_sum`, the power as the Python raises or not, a figure the kernel does
+not reproduce flags the Python rules), the bids-only quote (`bid_figures`) and the signals (`signals`), then one `goods_memory_notes.write_markets`.
+Tests: `test_goods_market_column.py`, `test_goods_year_markets.py`, `test_goods_remember_kernel.py` (each kernel against the Python on random inputs).
+Ground goods (not portable) are cleared in the batch like any good: the held value of an offer that is ground is its capitalised rent
+(`goods_table_clear._ground_values`, the `held_value` column of `goods_year_kernel.decide_markets`).
 
 A producer's turn reads its runs from the plan table's column and its hired hours from the ledger's pair table in one kernel call
 (`goods_production_reads.py`).
@@ -572,9 +604,20 @@ the columns grow with the numbering; a merchant made alone numbers its own marke
 - The save writes the figures by market name in the order of the `(good, area id)` keys (`sorted_named`), so a save is byte for byte what
   dictionaries give; a load hands them back by name (`hold_named`) and they are indexed once, by the record's numbering.
 
-`merchants.dispatch` is a loop over hauls with the crew and dues arithmetic, and `merchants_book.search` is the route kernel itself; no
-per-market column read is left in them to convert. Measure with
-`python3 tools/measure/function_times.py SAVE sim.economy.merchants:learn_year sim.economy.merchants:close_year`.
+- `merchants_batch.prepare` (called by `merchants_plan.prepare_rows` from `lending.merchant_requests` and `year_order_sources.merchant_orders`)
+  searches the candidate rows of every merchant of a pass in two kernel calls (`merchants_batch_kernel.search_blocks`, which searches
+  once for the merchants that count the same prices in a good and redoes only the (merchant, good) cells that needed unknown holding
+  years, then `sorted_rows`, the two stable sorts of `numpy.lexsort`); `merchants_plan` takes a merchant's rows from the pass when its rate,
+  home tile and expected prices are the ones searched. `RouteBook.nearest_flat` keeps each area's cheapest haul out.
+- `merchants_book.route_pass` reads the memory's price column by slot (`FloatStore.values_in_slots`, `YearView.prices_by_slot`); a view
+  without that method is read good by good as before.
+
+`merchants.dispatch` is a loop over hauls with the crew and dues arithmetic; its per-pair inputs (crew rows by key string, dues by holder,
+wear by carrier good, the merchant's `routes` dictionary of legs, `in_transit` shipments, `price_history` lists) are Python objects of the
+`Merchant` record, as are `orders` (`routes`, the `Bid` and `Offer` it hands the order rows), `close_year` and `heard_prices`. They need a
+merchant table (columns for the purse and base, ragged columns for legs, shipments and price histories, interned crew keys and carrier
+goods) before each is one kernel over the merchants. Measure with
+`python3 tools/measure/function_times.py SAVE sim.economy.merchants:learn_year sim.economy.merchants:close_year sim.economy.merchants_batch:prepare`.
 
 ## Cached views
 
@@ -647,6 +690,17 @@ every tile, a price response), plus the same figure asked again with the same in
 | money value of an unskilled hour (`labour_wage_schedule.money_per_labour_hour`) | the schedule's field itself (`_hour_money`); `trades.field_of` skips the abstract-class check for a plain dict |
 | `year_accounts._cohorts`, `_goods` | `NestedView.as_plain()`: every agent's rows in one pass over the table; the hunger need's goods are worked out once per tile |
 
+**Cached on the memory channel, and kernels in the phases.** `agent_rate`, `agent_people_by_tile_and_trade`, `agent_need_floor_costs` and
+the keyed `agent_hours_offered_cell` (the workforce's read of the hours a trade offered at a tile; `agent_hours_offered_at` stays the
+uncached quote) are cached on the markets module's `memory` channel (`sim/markets/module_spec.py`, `_WATCHED`; test
+`sim/tests/test_agent_views_cached.py`; a game stepped with
+`game_assembly.SHADOW_CHECK_EVERY = 1` re-checks every cached read, no `StaleView` over three Rome years). `ActorWorld` builds a part the first time it is asked for (`sim/actors/world.py`), so a world made for one
+answer builds one part and each world keeps its own turn's memo. The stability phase reads a state's tiles as columns and runs
+`stability_kernels.read_tiles` once per pass (a rising ends a pass; `sim/campaigns/stability_tiles.py`, tests `test_stability_kernels.py`,
+`test_stability_tile_passes.py`, the plain chain in `sim/tests/stability_tiles_plain.py`). Still per actor in Python: the government's and
+the strata's year (`agents/government*.py`, `budget*.py`, `stratum_year.py`), the household theft exposure, `material_prices`
+(`sim/prices/module_spec.py` says why it cannot be cached), `urban_fraction`, `reachable_trade_population` and the quotes.
+
 Tests: `sim/tests/test_response_memo.py`, `test_year_accounts.py` (`PlainLedgerReadTests`), `test_year_ledger_views.py` (`as_plain`).
 
 **Below the bar, so unchanged.** Time the phase with a handler wrapper over `year_steps.money_world` and `time.process_time`, or
@@ -689,23 +743,28 @@ list lags the code.
   taken from the cash the earlier stakes left, the entrant's loan request, `peers_of_recipe` for the crew) is a greedy loop over `Producer`
   objects in `record.producers`, which every phase reads as a dictionary of records; it needs a column store of producers. The per-recipe reads
   of `EntryTables` (`_site_of`, `_ensure_crew`: the people allowed by country, the yield row, the crew's practice) are Python per recipe; they
-  need recipe-by-tile and recipe-by-trade tables built once per setup and updated when a country learns a technique. The `unmet_by_market`
-  dictionary and the saved `margin_years` and `volumes` dictionaries are read once per phase through their keys.
-- **`record.goods.volumes`, `unsold` and `unmet` as columns.** The stores are saved dictionaries keyed by `market_key` that many readers
-  and the area-redraw move; a column store needs a dict-like view that saves and loads and a kernel for `sized_runs` to read it, which
-  together are worth less than the glue. A derived read is cheap without changing the save:
-  `[volumes.get(name, 0.0) for name in memory.tables.goods_markets.name_list]` scattered by `year_arrays_memory.market_cells`.
+  need recipe-by-tile and recipe-by-trade tables built once per setup and updated when a country learns a technique. The unmet demand, `margin_years` and `volumes` are columns that
+  entry reads whole (see the goods items below).
+- **`record.goods.curves`.** `volumes`, `unsold`, `unmet` and `margin_years` are columns of the memory's goods-market numbering
+  (`goods_market_column.MarketColumn`, a `MarketFigures` keyed by market name; saved by name, carried over an area redraw by the memory's
+  remap, dict-like for the UI and tests). Entry's traded grid, margin streaks, the batch's market sizes and the unmet-demand plans read
+  them whole. `curves` holds one book summary per market, not a number, and is still a dictionary; `entry_year._traded_volume`,
+  `notional` and `country_figures` still read single keys.
 - **Per-good price readers.** `entry_year._traded_volume`, `producers.paid_input_prices` and `next_expectations` read many keys a year,
   each a dict lookup; the year view has no cleared-price block. `producers.live_input_prices_at` and `live_wages_at` need the recipe
   cost grid.
 - **The mint reading the results table; the object-rule markets as kernels; the watchers' fills from columns.**
   The mint keeps one `ClearingResult` per market of the coin metal in `ledger.mint_takes`; the watchers' buy fills are `Fill` objects (`bought_by`, only for markets a merchant or the state bought in);
   `LeftMarket` and its `bought` mapping are built from columns when a market not on the tables asks.
-- **The goods side's `ClearingResult`s and `LeftMarket`s.** The year ledger is handed `ClearingResult`s (`note_clearing`) for markets not on
-  the tables. `clear_good` builds one `Cleared`, `MarketRows` and (in `clear_goods`) `LeftMarket` per market; `_remember_markets`,
-  `_record_year_markets`, `year_bids.build` and the respend pack and unpack read them one market at a time. The keystone is `LeftMarket` as
-  columns (first-round quantity and price from the batch, later rounds' rows from the respend kernel, delivered, idle years, last price) with
-  the dictionary stores of `record.goods` derived from them; with it each of those loops becomes one kernel over the markets.
+- **The goods side's remaining objects.** The year builds no `Cleared`, `MarketRows` or `LeftMarket` for a market on the tables: `clear_good`
+  returns a `GoodClearing` (columns), the year's table holds each market's rows, and `goods_left_markets.LeftMarkets` makes a `LeftMarket` only
+  when a rule over objects, a test or the UI asks (the entry rules reading `ledger.bids_by_market` per market, and the coin metal's markets,
+  still ask). What is left: the coin metal's markets are remembered by the Python rules (`year_remember.remember_one`) because the mint's top-up
+  (`mint_price.received_price`, `YearLedger.mint_takes`, `settled_to_mint`) is over (seller, tile) dictionaries and `ClearingResult`s; a market a
+  book edge sells in (the mint's wash) is cleared on `Bid` and `Offer` objects (`seller_offers.strategic_offers`, `unsold_search.clear_with_search`,
+  `goods_market.clear`, `market_quote`); `_tax_in_kind` builds `YearFacts` dictionaries (the tax rules, `taxes.assess`, take dictionaries); the
+  watchers' buy fills are `Fill` objects made only for markets a watcher bought in; `GoodClearing.result` makes a `ClearingResult` for the mint and
+  the watchers. `entry_year._traded_volume`, `country_figures` and `api.market_record` still read single keys of the goods record's columns.
 - **Tool wear and fallbacks in the plan kernel.** `plan_year` sends a producer whose recipe has tool wear or fallbacks, or a zero entry, to
   `producers.plan`; `plan_kernel.plan_rows` would need the fallbacks' bids and `tool_fallback.value_in_use` ceilings. `_tax_in_kind` builds
   `YearFacts` dictionaries for the producers on home tiles when a tax is paid in kind.
@@ -731,6 +790,11 @@ list lags the code.
 - **Country figures that read per producer or per market record.** `country_figures.output_value_and_unpriced`, `_traded_volumes` and the people counts read producer and cohort records and the saved volumes dictionary one at a time; an array version of `_traded_volumes` was measured slower while the layout of the volumes' keys is rebuilt every year, so it waits for the volumes as a column.
 - **Loan requests** become a table at the clearing; `LoanClearing.loans` and the bank rules still read `Contract`/`LoanRow` objects.
 - **Cached views** in the "Left uncached" list wait for their input's owner to bump a channel.
+- **The book's remaining Python-to-kernel calls** are one kernel per scalar read (`Book.stock`, `holdings`, `goods_of`) from the loops that
+  read one cell or one agent at a time (`producers.runs_for_stock`, `producers._input_bids`, `households_store.store_holding`,
+  `producer_exit.exit_producer`, `economy._build_plant`) and one apply per step of a loop that reads the book between steps
+  (`goods_production.post_lines` per turn, `purses.transfer`, `bonded_purchase.settle`). A year-level posting queue does not fit these: each
+  reads what the last posting wrote, or needs the refusal at the call. They move when their loops are columns (`stock_block`, `balances_of`).
 
 ## Stages
 

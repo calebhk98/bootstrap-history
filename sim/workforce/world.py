@@ -98,7 +98,7 @@ class AgentEconomyReads:
 
     def agent_hours_offered_at(self, trade, tile):
         """Hours of the trade households offered in `tile`'s labour area at the last clearing; None before one."""
-        return self._needs.agent_hours_offered_at(trade, tile)
+        return self._needs.agent_hours_offered_cell[(trade, tile)]
 
     def agent_working_hours(self):
         """The hours a person-year counts in the running economy; None while it opens."""

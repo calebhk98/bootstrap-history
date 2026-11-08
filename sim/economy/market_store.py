@@ -225,6 +225,17 @@ class FloatStore(MarketStore):
     def _present_at(self, rows: numpy.ndarray) -> numpy.ndarray:
         return ~numpy.isnan(self._values[rows])
 
+    def values_at(self, rows: numpy.ndarray, default: float) -> numpy.ndarray:
+        """The figure of each market row (-1: the market is not numbered) as one array, `default` where the market has none."""
+        self._table()
+        rows = numpy.asarray(rows, dtype=numpy.int64)
+        figures = self._values[numpy.where(rows >= 0, rows, 0)]
+        return numpy.where((rows >= 0) & ~numpy.isnan(figures), figures, default)
+
+    def values_in_slots(self, book, default: float) -> numpy.ndarray:
+        """`values_at` the rows of the slots of a merchants' route book (`merchants_book.RouteBook`)."""
+        return self.values_at(book.market_rows(self._tables), default)
+
     def get(self, key: str, default=None):
         tables = self._tables
         row = (tables.labour_numbers if self._labour else tables.goods_numbers).get(key)
@@ -346,6 +357,6 @@ def labour_wage_store(tables: MarketTables) -> FloatStore:
 
 def figures_for(figures: Mapping[str, float], keys: Sequence[str], default) -> list:
     """`figures.get(key, default)` for each key: one pass over a market store's column, a plain lookup for any other mapping."""
-    if isinstance(figures, MarketStore):
+    if isinstance(figures, MarketStore) or hasattr(figures, "get_many"):
         return figures.get_many(keys, default)
     return list(map(figures.get, keys, repeat(default)))

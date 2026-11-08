@@ -7,7 +7,7 @@ the rule and are unpacked into rows at this edge."""
 from typing import List
 
 from . import carriage_fleet_book, carriage_wear, households, households_cohort, households_orders_pack, land_bid_year, merchants
-from . import merchants_book, state_budget, state_store, tool_wear
+from . import merchants_book, merchants_plan, state_budget, state_store, tool_wear
 from .goods_order_tables import CARRIER, HOUSEHOLD, MERCHANT, STATE
 from .household_work_year import basket_key
 from .inventory import held_stock, holding_reservation
@@ -108,6 +108,8 @@ def merchant_orders(setup, record, view, area_map, carriage, order_book) -> None
     carriers.bids_from(carrier_bids)     # replacements for the carriers last year's shipments wore
     carriers.write()
     rows = OrderRows(order_book, MERCHANT)
+    merchants_plan.prepare_rows(route, [each for each in ordered if record.book.balance(each.agent_id, money) - carrier_budget.get(each.agent_id, 0.0) > 0.0],
+                                rate)
     first = view.year % len(ordered) if ordered else 0          # who sizes first rotates, so no merchant always gets first pick
     for merchant in ordered[first:] + ordered[:first]:
         held = held_stock(record.book, merchant.agent_id)
