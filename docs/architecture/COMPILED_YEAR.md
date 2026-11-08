@@ -361,6 +361,10 @@ The year view's readers take a block of the market memory's tables where they on
 | remembered price of every good on a tile (`remembered_prices_on`, `present_prices_at`) | the same grid's second layer; the usual price (`YearView.usual_prices_on`) is a third | the same kernel |
 | the one wage rule for trades by labour areas (`YearView.wage_rule_block`, `wage_rule_at`; `trade_wages.wage_in_view`, `year_arrays.wage_grid`) | `wage_block.wage_rule_block`; `WageRuleTable` keeps every trade of the setup in every tile's labour area | `wage_block_kernels.wage_rule_grid` over `labour_market_matrix` and `market_rows_of` |
 | national prices and wages, the notional volumes (`national_prices.remembered_columns`, `notional._traded_volumes`) | the goods and labour tables' columns in the stores' entry order (`MarketStore.rows`) | `market_column_kernels.add_in_order_by_group` |
+| which markets a country's national price and wage count (`country_figures._prices`, `wages_per_hour`) | the area map's sorted tile table (`AreaMap.tile_table`) against the layout's place arrays; the labour areas by one `isin` | `price_index_masks` (numpy over whole arrays) |
+| each good's national price (`national_prices.national_prices`) | one exact-sum pass over the layout's runs | `market_column_kernels.traded_price_by_group` |
+| making costs and the estimates of untraded and thin goods (`notional.making_costs`, `_estimated_prices`) | the setup's recipes as runs in dictionary order, every good in input-depth order in one call, sums as the Python adds them | `notional_kernel.costed_goods` |
+| what each cohort owns of the producers (`equity.holdings` over the year arrays) | the worths split by ownership share and the outside share holders, in the producers' order | `year_arrays_holdings.share_out_kernel` |
 | kinds of price per good (`MarketMemory.price_kinds_by_good`, from `quiet_year.kept`) | the goods market table's `held`, `trade_age`, `quote_kind`, `price` and `area` columns in one pass: traded wins, else the kind of the good's first priced market in name order by the rank of the area names; `price_kinds_of_goods` names the codes | `price_kind_kernels.kinds_by_good` (registered in `ui/kernel_signatures.py`; no fixture year reaches it) |
 
 **When a grid is filled again.** A grid or table is refilled by the first read after the memory is written to: `price_grid.memory_stamp`
@@ -498,15 +502,16 @@ Tests: `sim/tests/test_year_speed_plan_tables.py`, `test_year_speed_plans.py`, `
 | the cohorts written back | `put_cohorts` once |
 | priced needs as tables | `priced_need_tables.NeedBatch` (any number of (tile, basket) requests as need rows and good rows, spec rows kept per spec and per basket) and `priced_need_kernel.price_needs` (every need priced from a tile-by-good price matrix, exact sums and the share-limit search, ceilings). `priced_needs.PricedBatch` makes `PricedNeed` objects only on demand. Test: `test_priced_need_kernel.py` (the Python against the kernel bit for bit on written-out and random needs, with limits that bind and quality re-mixes, and batches of many tiles and baskets) |
 
-**`NeedBatch`, `price_needs` and `PricedBatch` have no caller in the year.** `priced_reads.kept_need_prices` takes the object path: the
-year asks it often but misses only for a limited set of (tile, basket) pairs per memory epoch (the kept reads are dropped whenever the
-memory is written to), so most asks are dictionary hits. A batch that primes every cohort's basket in one call is slower than the
-object path, and the kernel is a small part of it: the year would pay for making
-`NeedBatch` rows, reading the answer back as lists and making the `PricedNeed` objects (a tile's baskets differ in their climate floors,
-so few are shared). The readers of those lists (`labour_ask_floor`, `household_hours_year`, `state_budget`, `lending`, `goods_respend`,
-`country_figures`, `year_labour`) all take objects, and converting them cannot add to a saving that is itself below the bar. The batch
-waits for a wider change, such as all epochs' requests known up front. Compare `kept_need_prices` against `prime`, `PricedBatch` and
-`need` in a warm-year profile.
+**Priced needs go through the kernel in batches.** `priced_need_prime.price_asked` prices any list of (tile, key, basket) asks together: one
+request per distinct (tile, need, exponent) in a `NeedBatch`, the tiles' offered prices as one matrix (`PriceGrid.matrix`, through
+`YearView.offered_price_matrix`), one `price_needs` call, and the `PricedNeed` objects made from the answer for the readers that take
+objects. `priced_reads.kept_need_prices` uses it for the tiles' own baskets (`TILE_BASKET_KEY`): the memory remembers which tiles were asked
+(`asked_by`, per year and setup) and at the first miss after a write prices all of them together. A cohort's basket key carries figures that
+change between phases, so those asks are not predictable and stay one at a time; `kept_need_prices_many` and
+`households_basket.tiles_need_prices` take a pass's asks up front (`country_figures` uses them for every tile's floor cost). The readers
+that loop over cohorts and call `cohort_need_prices` one at a time (`opening_bid_memory`, `lending`, `household_work_year`) are the callers
+still to convert to the many-ask form; the readers of the lists (`labour_ask_floor`, `household_hours_year`, `state_budget`, `lending`,
+`goods_respend`, `year_labour`) take `PricedNeed` objects. Tests: `test_priced_need_kernel.py`, `test_priced_need_prime.py`.
 
 **Cohort orders are below the bar.** `function_times.py SAVE` with no names times the cohort orders and what they call. No part that
 `year_order_sources`, `households_orders_pack`, `tool_wear`, `households_cohort` or `opening_bid_memory` owns reaches the bar, so nothing
@@ -688,7 +693,8 @@ about one percent of a step, and re-measure before acting, since the list lags t
   columns.
 - **Labour readers that take records.** `household_work_year.decide` and `household_hours_year.plot_parameters_by_cohort` read
   `LabourOffer` objects; the cleared wages reach `HourSupply.settle` as a dict read rather than a market-indexed array.
-- **Priced needs.** The readers of `PricedNeed` listed under Households take objects, so `NeedBatch` stays unwired.
+- **Priced needs.** The cohorts' own asks (`cohort_need_prices` in a loop over cohorts) and the readers of `PricedNeed` take one object at a time; they need the many-ask call and columns of the priced needs (listed under Households).
+- **Country figures that read per producer or per market record.** `country_figures.output_value_and_unpriced`, `_traded_volumes` and the people counts read producer and cohort records and the saved volumes dictionary one at a time; an array version of `_traded_volumes` was measured slower while the layout of the volumes' keys is rebuilt every year, so it waits for the volumes as a column.
 - **Loan requests** become a table at the clearing; `LoanClearing.loans` and the bank rules still read `Contract`/`LoanRow` objects.
 - **Cached views** in the "Left uncached" list wait for their input's owner to bump a channel.
 
