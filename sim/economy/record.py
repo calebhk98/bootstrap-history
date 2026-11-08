@@ -14,6 +14,7 @@ from dataclasses import dataclass, field
 from typing import Any, ClassVar, Dict, Tuple
 
 from sim.book import Book
+from sim.rekey import rekey
 from .capital_markets_record import CapitalMarketsRecord
 from .carriage_record import CarriageRecord
 from .credit_record import CreditRecord
@@ -24,8 +25,9 @@ from .households_cohort import Cohort
 from .market_memory import KEY_SEPARATOR, MarketMemory
 from .merchants import Merchant, bind_markets
 from .merchants_transit import Shipment
+from .producer_store import ProducerStore
 from .producers import Producer
-from .record_parts import OwnedRecord
+from .record_parts import OwnedRecord, sorted_store
 from .record_plain import plain
 from .state_budget import StateBudget
 from .tax_record import TaxRecord
@@ -40,7 +42,7 @@ class EconomyRecord(OwnedRecord):
     memory: MarketMemory
     currency: CurrencySpec
     cohorts: Dict[AgentId, Cohort] = field(default_factory=dict)
-    producers: Dict[AgentId, Producer] = field(default_factory=dict)
+    producers: Dict[AgentId, Producer] = field(default_factory=ProducerStore)    # a `ProducerStore`: columns, read as a mapping of `Producer`
     merchants: Dict[AgentId, Merchant] = field(default_factory=dict)
     credit: CreditRecord = field(default_factory=CreditRecord)                      # credit_record.py
     capital_markets: CapitalMarketsRecord = field(default_factory=CapitalMarketsRecord)   # capital_markets_record.py
@@ -54,6 +56,11 @@ class EconomyRecord(OwnedRecord):
     settling: bool = False                                               # in the hidden spin-up: households' spending rises as far as their wealth allows
     spin_up_result: Dict[str, Any] = field(default_factory=dict)         # how the hidden first stage ended: settled, years run, last gap (empty: no spin-up ran)
 
+    def __setattr__(self, name: str, value: Any) -> None:
+        if name == "producers" and not isinstance(value, ProducerStore) and all(isinstance(each, Producer) for each in value.values()):
+            value = ProducerStore(value)       # a plain mapping of records (a test's, a mod's) becomes the column store
+        super().__setattr__(name, value)
+
     def __post_init__(self) -> None:
         for merchant in self.merchants.values():      # the merchants' expectations are columns of the memory's goods-market numbering
             if isinstance(merchant, Merchant):
@@ -62,10 +69,11 @@ class EconomyRecord(OwnedRecord):
     AGENT_KEYED = ("cohorts", "producers", "merchants")
     SAVED_SORTED = ("cohorts", "producers", "merchants")
     TABLE_OWNERS: ClassVar[Dict[str, Tuple[str, ...]]] = {
-        "cohorts": ("households_cohort",), "producers": ("producer_table",), "merchants": ("merchants", "merchants_dispatch")}   # modules that write each agent table
+        "cohorts": ("households_cohort",), "producers": ("producer_table", "producer_close_write"), "merchants": ("merchants", "merchants_dispatch")}   # modules that write each agent table
     TRANSIENT = ("settling",)   # true only inside the hidden spin-up, which finishes before any save
     ENCODERS = {
         "memory": MarketMemory.to_plain,
+        "producers": lambda producers: producers.to_plain() if isinstance(producers, ProducerStore) else plain(sorted_store(producers)),
         "merchants": lambda merchants: {key: _merchant_record(value) for key, value in sorted(merchants.items())},
     }
     DECODERS = {
@@ -73,7 +81,7 @@ class EconomyRecord(OwnedRecord):
         "memory": MarketMemory.from_plain,
         "currency": lambda value: CurrencySpec(**value),
         "cohorts": lambda value: {key: Cohort(**each) for key, each in value.items()},
-        "producers": lambda value: {key: Producer(**each) for key, each in value.items()},
+        "producers": ProducerStore.from_plain,
         "merchants": lambda value: {key: _merchant_from(each) for key, each in value.items()},
         "state_budget": lambda value: StateBudget(**value),
     }
@@ -103,6 +111,7 @@ class EconomyRecord(OwnedRecord):
         """`old` becomes `new` in the book and in every store of the record and its parts keyed by an agent id; what each
         holds or owes is added to what `new` already has."""
         self.book.rename_agent(old, new)
+        self.producers = ProducerStore(rekey(dict(self.producers), old, new))
         super().rename_agent(old, new)
 
     def to_record(self, skip_currencies=()) -> Dict[str, Any]:

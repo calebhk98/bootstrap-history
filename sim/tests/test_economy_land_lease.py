@@ -5,6 +5,7 @@ QUICK_TOPIC = True
 import unittest
 from types import SimpleNamespace
 
+from sim.economy.producer_store import ProducerStore
 from sim.economy.land_record import LandRecord
 from sim.economy import land_lease, land_market
 from sim.book import Book
@@ -22,7 +23,7 @@ def economy_with(hectares):
     book = Book()
     producer = Producer("producer:t", cohort_id("t", 2), "wheat", "t", 100.0, expected_prices={"grain": 1.0})
     book.transfer(Transfer(EDGE_MINT, "producer:t", "coin", 1e9, "opening"))
-    record = SimpleNamespace(producers={"producer:t": producer}, book=book, cohorts={each.agent_id: each for each in cohorts}, land=LandRecord())
+    record = SimpleNamespace(producers=ProducerStore({"producer:t": producer}), book=book, cohorts={each.agent_id: each for each in cohorts}, land=LandRecord())
     setup = SimpleNamespace(tiles=tiles, recipes={"wheat": WHEAT}, land_per_run={"wheat": 1.0}, currency_id="coin")
     return setup, record
 

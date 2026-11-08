@@ -5,13 +5,14 @@ what yield (`SiteLimit`), at the opening in the setup and each year in `EconomyY
 producers inside those limits and reports what it worked (`extraction_by_tile`) so geography can deplete.
 A site-bound recipe with any declared limit runs only on tiles that have one.
 """
-import dataclasses
 import math
 from typing import Dict, Iterable, Mapping, Sequence, Tuple
 
+import numpy as np
 from sim.constants import declare
 
 from . import producer_table
+
 from .types import Recipe, SiteLimit, TileId
 
 UNSITED_EXTRACTION_ANYWHERE = declare(
@@ -81,20 +82,36 @@ def yield_at(recipe: Recipe, tile: TileId, by_recipe: Mapping[str, Mapping[TileI
 
 def apply_site_limits(record, setup) -> None:
     """Hold sited producers to the setup's limits: capacity capped (nil off a site), plant still to come cut to
-    the room left, yield following the limit."""
+    the room left, yield following the limit. The limits are looked up once per (recipe, tile) and the capacity and
+    yield columns written for every sited producer at once."""
     by_recipe = limits_by_recipe(setup.site_limits)
-    for producer_id, producer in sorted(record.producers.items()):
-        recipe = setup.recipes.get(producer.recipe_id)
-        if recipe is None or not is_sited(recipe, by_recipe):
-            continue
-        limit = by_recipe[recipe.recipe_id].get(producer.tile)
-        capacity = min(producer.capacity_runs, limit.capacity_runs_per_year) if limit else 0.0
-        producer_table.put_producer(record.producers, dataclasses.replace(
-            producer, capacity_runs=capacity, yield_factor=limit.yield_factor if limit else producer.yield_factor))
-        coming = record.credit.expansion_runs.get(producer_id, 0.0)
-        if coming > 0.0:
-            room = max(0.0, (limit.capacity_runs_per_year if limit else 0.0) - capacity)
-            record.credit.trim_expansion(producer_id, room)
+    store = record.producers
+    order = store.order()
+    table = store.table
+    sited = {number: is_sited(setup.recipes[name], by_recipe) if name in setup.recipes else False
+             for number, name in enumerate(store.names["recipes"].name_list)}
+    in_use = np.nonzero(np.array([sited[number] for number in table.recipe[order].tolist()], dtype=np.bool_))[0]
+    if not len(in_use):
+        return
+    rows = order[in_use]
+    recipe_names, tile_names = store.names["recipes"].name_list, store.names["tiles"].name_list
+    limit_cap, limit_yield = np.full(len(rows), np.nan), np.zeros(len(rows))
+    seen: Dict[Tuple[int, int], Tuple[float, float]] = {}
+    for place, (recipe, tile) in enumerate(zip(table.recipe[rows].tolist(), table.tile[rows].tolist())):
+        if (recipe, tile) not in seen:
+            limit = by_recipe[recipe_names[recipe]].get(tile_names[tile])
+            seen[(recipe, tile)] = (np.nan, 0.0) if limit is None else (limit.capacity_runs_per_year, limit.yield_factor)
+        limit_cap[place], limit_yield[place] = seen[(recipe, tile)]
+    has_limit = ~np.isnan(limit_cap)
+    capacity = np.where(has_limit, np.minimum(table.capacity_runs[rows], limit_cap), 0.0)
+    producer_table.set_rows(store, "yield_factor", rows, np.where(has_limit, limit_yield, table.yield_factor[rows]))
+    producer_table.set_rows(store, "capacity_runs", rows, capacity)
+    expansion = record.credit.expansion_runs
+    if expansion:
+        for place in range(len(rows)):
+            producer_id = store.ids[int(rows[place])]
+            if expansion.get(producer_id, 0.0) > 0.0:
+                record.credit.trim_expansion(producer_id, max(0.0, (limit_cap[place] if has_limit[place] else 0.0) - capacity[place]))
 
 
 def in_id_order(producers):

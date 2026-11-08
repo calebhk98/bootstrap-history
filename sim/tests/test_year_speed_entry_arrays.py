@@ -296,25 +296,7 @@ class WholeEntry(unittest.TestCase):
 
 
 class ProducerColumnsInBulk(unittest.TestCase):
-    def test_columns_read_a_column_at_a_time_are_the_columns_read_by_row(self):
-        for seed in range(3):
-            setup, record, view, area_map, carriage = economy(seed, producer_count=150)
-            for index, producer_id in enumerate(sorted(record.producers)):
-                if index % 3 == 0:
-                    record.producers[producer_id] = dataclasses.replace(
-                        record.producers[producer_id], expected_prices={"good0": 1.5 + index}, net_earnings_history=(1.0, float(index)),
-                        revenue_history=(2.0,) * (index % 4))
-            arrays = YearArrays.build(setup, record, area_map, view)
-            bulk = arrays.producers
-            by_row = ProducerColumns._empty(bulk.ids, bulk.records, bulk.earnings_history.shape[1], bulk.matrices, bulk.tiles)
-            for position in range(len(bulk.ids)):
-                by_row._read(position)
-            for name in dataclasses.fields(bulk):
-                held, expected = getattr(bulk, name.name), getattr(by_row, name.name)
-                if isinstance(held, np.ndarray):
-                    np.testing.assert_equal(held, expected, err_msg=name.name)
-
-    def test_columns_rebuilt_after_an_entry_keep_the_rows_of_producers_that_stayed(self):
+    def test_columns_after_an_entry_and_an_exit_are_the_columns_of_a_fresh_read(self):
         setup, record, view, area_map, carriage = economy(4, producer_count=150)
         arrays = YearArrays.build(setup, record, area_map, view)
         before = arrays.producers

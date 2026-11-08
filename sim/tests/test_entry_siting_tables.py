@@ -69,7 +69,8 @@ class CarriageMatrixIsTheLoop(unittest.TestCase):
 
 def columns_of(recipe_rows, records, caps, recipe_ids):
     return types.SimpleNamespace(
-        recipe_row=np.array(recipe_rows, dtype=np.int64), records=records, land_run_cap=np.array(caps),
+        recipe_row=np.array(recipe_rows, dtype=np.int64), crews={position: each.crew_runs for position, each in enumerate(records) if each.crew_runs},
+        land_run_cap=np.array(caps),
         matrices=types.SimpleNamespace(recipes=types.SimpleNamespace(ids=recipe_ids)))
 
 

@@ -32,8 +32,7 @@ def world(shares):
     record = SimpleNamespace(
         cohorts={each.agent_id: each for each in cohorts}, producers={each.agent_id: each for each in producers},
         capital_markets=SimpleNamespace(shares=shares, capital=SimpleNamespace(funds={"fund:one": object()})))
-    columns = SimpleNamespace(ids=tuple(sorted(record.producers)), records=[], row={})
-    columns.records = [record.producers[each] for each in columns.ids]
+    columns = SimpleNamespace(ids=tuple(sorted(record.producers)), row={}, owners=lambda: [record.producers[each].owner for each in columns.ids])
     columns.row = {each: position for position, each in enumerate(columns.ids)}
     return record, columns
 
@@ -42,7 +41,7 @@ def old_payments(record, columns, dividend, currency="money"):
     paid = []
     for row, producer_id in enumerate(columns.ids):
         if dividend[row] > 0.0:
-            paid.extend(ownership.spread(record, [Transfer(producer_id, columns.records[row].owner, currency, dividend[row], "dividend")]))
+            paid.extend(ownership.spread(record, [Transfer(producer_id, columns.owners()[row], currency, dividend[row], "dividend")]))
     return paid
 
 

@@ -11,7 +11,7 @@ from typing import Dict
 
 import numpy as np
 
-from . import expansion_price, producer_exit, producer_table, shares
+from . import expansion_price, producer_exit, shares
 from . import producers_working_capital as working_capital
 from .close_kernel import REQUEST_EXPAND, REQUEST_NONE
 from .close_pack import pack
@@ -19,21 +19,21 @@ from .close_run import close_producers
 from .loan_write_offs import LoanWriteOffs
 from .types import LoanRequest, Transfer
 from .year_arrays import YearArrays
-from .year_arrays_closed import columns_after_close
+from .producer_close_write import write_close
+from .year_arrays_producers import ProducerColumns
 from .year_close_dividends import add_property_income, dividend_plan, post_dividends
 from .year_close_ledger import note_plant_worn
 from .year_close_owners import Participants
-from .year_close_records import closed_records
 
 
 def _share_pricer(arrays: YearArrays, ledger, traded, prepared):
     """`price_share_of(row, added_by_slot)`: the share of each output's price that stays when the producer adds that much."""
     columns, matrices = arrays.producers, arrays.matrices
+    tiles = columns.tile_names()
 
     def share_of_row(row: int, added) -> np.ndarray:
-        producer = columns.records[row]
         shares_of_slots = np.ones(len(added))
-        pricer = expansion_price.price_share_of(ledger.bids_by_market, traded, arrays.area_map.area_of, producer.tile, prepared)
+        pricer = expansion_price.price_share_of(ledger.bids_by_market, traded, arrays.area_map.area_of, tiles[row], prepared)
         for slot, column in enumerate(matrices.slot_goods[columns.recipe_row[row]]):
             if column < 0:
                 break
@@ -73,9 +73,8 @@ def close_producers_of_year(setup, record, view, ledger, arrays: YearArrays, pro
     add_property_income(property_income, participants, np.concatenate([plan.row, np.array(exit_rows, dtype=np.int64)]),
                         np.concatenate([plan.payee, np.array(exit_payees, dtype=np.int64)]),
                         np.concatenate([plan.amount, np.array(exit_amounts, dtype=np.float64)]))
-    records = closed_records(columns, answer, pooled)
-    producer_table.put_producers(record.producers, [(ids[row], each) for row, each in enumerate(records) if each is not None])
-    return replace_fields(arrays, producers=columns_after_close(columns, record.producers, answer.exited, answer, records))
+    write_close(record.producers, columns, answer, pooled)
+    return replace_fields(arrays, producers=ProducerColumns.of(record.producers, columns.matrices, columns.tiles))
 
 
 def _effects_by_row(setup, record, columns, answer, bundle, participants: Participants):
@@ -91,6 +90,7 @@ def _effects_by_row(setup, record, columns, answer, bundle, participants: Partic
     loan_write_offs = LoanWriteOffs(record)
     write_offs: Dict[str, float] = {}      # applied in one pass over the loans when an exit comes and at the end
     exits = producer_exit.ExitBatch(record)
+    owners = columns.owners()
     exit_rows, exit_payees, exit_amounts = [], [], []
     for row in rows:
         producer_id = ids[row]
@@ -98,7 +98,7 @@ def _effects_by_row(setup, record, columns, answer, bundle, participants: Partic
             loan_write_offs.apply(write_offs)     # an exit remembers its defaults after those of the producers before it
             write_offs.clear()
             amount = float(answer.dividend[row])
-            payout = [Transfer(producer_id, columns.records[row].owner, bundle.currencies[row], amount, "dividend")] if amount > 0.0 else []
+            payout = [Transfer(producer_id, owners[row], bundle.currencies[row], amount, "dividend")] if amount > 0.0 else []
             for transfer in exits.exit(producer_id, payout):
                 exit_rows.append(row)
                 exit_payees.append(participants.of(transfer.payee))

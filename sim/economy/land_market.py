@@ -244,10 +244,10 @@ def post_rents(setup, record, view, wanted_runs: Mapping[AgentId, float],
         own_demand = demands_by_agent.get(producer_id)
         asked = own_demand.hectares if own_demand is not None else 0.0
         granted = result.granted_hectares.get(producer_id, asked)
-        producer_table.put_producer(record.producers, replaced(
-            producer, land_rent_per_run=use_rent_per_hectare(result, producer.tile, _value_for_rent(
+        producer_table.set_fields(
+            record.producers, producer_id, land_rent_per_run=use_rent_per_hectare(result, producer.tile, _value_for_rent(
                 setup, view, producer, land_per_run, own_demand)) * land_per_run,
-            land_run_cap=granted / land_per_run if granted < asked - 1e-9 else None))
+            land_run_cap=granted / land_per_run if granted < asked - 1e-9 else None)
     return result, demands
 
 

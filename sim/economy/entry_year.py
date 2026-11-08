@@ -23,13 +23,12 @@ from .entry_tables import EntryTables
 from .entry_trial import reachable_capacity, trial_entry_plans
 from .entry import (ENTRANT_OWNER_STAKE_SHARE, EntryPlan, UnmetDemand, entrant_loan, entry_plans, gap_beyond_spare,
                     producers_to_close, restake)
-from .producers import Producer, expected_output_prices, live_input_prices, live_wages
+from .producers import expected_output_prices, live_input_prices, live_input_prices_at, live_wages, live_wages_at
 from .producers_close import working_capital_target
 from .market_memory import market_key
 from .setup import recipe_tile_key
 from .types import LoanRequest, Transfer
 from .year_arrays_costs import refreshed
-from .replaced import replaced
 from .rates import own_rate
 
 
@@ -116,46 +115,46 @@ def open_entrants(setup, record, view, area_map, unmet_by_market: Dict[Tuple[str
     started = 0
     by_limits = sites.limits_by_recipe(setup.site_limits)
     plans = _plans_to_apply(setup, record, view, area_map, unmet_by_market, carriage, bids_by_market, arrays)
-    peers_of_recipe: Dict[str, list] = {}       # each recipe's producers' crews, a newcomer's included once it starts
+    store = record.producers
+    peers_of_recipe: Dict[str, list] = store.crews_by_recipe(in_id_order=False) if plans else {}   # each recipe's producers' crews, a newcomer's included once it starts
     owner_cash: Dict[str, float] = {}           # each owner's cash as the stakes already decided leave it
     stakes: List[Transfer] = []          # the stakes, posted together after the plans are applied, one batch each
-    if plans:
-        for each in record.producers.values():
-            peers_of_recipe.setdefault(each.recipe_id, []).append(each.crew_runs)
     for plan_recipe_id, plan_tile, plan_runs, plan_return in plans:
         recipe = setup.recipes[plan_recipe_id]
         key = recipe_tile_key(plan_recipe_id, plan_tile)
         producer_id = "producer:" + key
         builds_plant = recipe.plant_life_years > 0.0 and bool(recipe.plant_goods)
         # each producer stands for the tile's workshops of one recipe: newcomers join its capacity and its workshop count
-        producer = record.producers.get(producer_id)
-        plan_is_new = producer is None
-        if producer is None:
+        row = store.row_of.get(producer_id)
+        plan_is_new = row is None
+        if plan_is_new:
             owner = ownership.owner_cohort(record, plan_tile)
             if owner is None:
                 continue
-            producer = Producer(agent_id=producer_id, owner=owner, recipe_id=plan_recipe_id, tile=plan_tile,
-                                capacity_runs=0.0, expected_sales=plan_runs,
-                                crew_runs=practice.entrant_crew_runs(recipe, peers_of_recipe.get(plan_recipe_id, ())),
-                                yield_factor=sites.yield_at(recipe, plan_tile, by_limits,
-                                                            setup.yield_factor_by_recipe_tile.get(key, 1.0)))
+            crew = practice.entrant_crew_runs(recipe, peers_of_recipe.get(plan_recipe_id, ()))
+            capacity, workshops = 0.0, 1
         elif record.credit.expansion_runs.get(producer_id, 0.0) > 0.0:     # a working-capital loan builds no plant
             continue                                    # plant it already asked for is still to come
+        else:
+            owner, crew = store.owner_at(row), store.crew_of(row)
+            capacity, workshops = store.table.capacity_runs[row].item(), store.table.workshops[row].item()
         if not builds_plant:
-            producer = replaced(producer, capacity_runs=producer.capacity_runs + plan_runs,
-                                workshops=producer.workshops + 1)
+            capacity, workshops = capacity + plan_runs, workshops + 1
         if plan_is_new:
-            peers_of_recipe.setdefault(plan_recipe_id, []).append(producer.crew_runs)
-        producer_table.put_producer(record.producers, producer)
+            peers_of_recipe.setdefault(plan_recipe_id, []).append(crew)
+            store.enter(producer_id, owner, plan_recipe_id, plan_tile, capacity, plan_runs, sites.yield_at(
+                recipe, plan_tile, by_limits, setup.yield_factor_by_recipe_tile.get(key, 1.0)), workshops, crew)
+        elif not builds_plant:
+            producer_table.set_fields(store, producer_id, capacity_runs=capacity, workshops=workshops)
         started += 1
-        inputs, wages = live_input_prices(producer, recipe, view), live_wages(producer, recipe, view)
-        if producer.owner not in owner_cash:
-            owner_cash[producer.owner] = record.book.balance(producer.owner, money)
-        stake = min(working_capital_target(practice.recipe_for(recipe, producer.crew_runs), plan_runs, inputs, wages),
-                    ENTRANT_OWNER_STAKE_SHARE * max(0.0, owner_cash[producer.owner]))
+        inputs, wages = live_input_prices_at(plan_tile, recipe, view), live_wages_at(plan_tile, recipe, view)
+        if owner not in owner_cash:
+            owner_cash[owner] = record.book.balance(owner, money)
+        stake = min(working_capital_target(practice.recipe_for(recipe, crew), plan_runs, inputs, wages),
+                    ENTRANT_OWNER_STAKE_SHARE * max(0.0, owner_cash[owner]))
         if stake > 0.0:
-            owner_cash[producer.owner] -= stake
-            stakes.append(Transfer(producer.owner, producer_id, money, stake, "stake in a new workshop"))
+            owner_cash[owner] -= stake
+            stakes.append(Transfer(owner, producer_id, money, stake, "stake in a new workshop"))
         if builds_plant:
             per_run = unit_cost.plant_value_per_run(recipe, inputs, wages)
             loan = entrant_loan(per_run * plan_runs, stake) if per_run > 0.0 and math.isfinite(per_run) else 0.0
@@ -229,20 +228,21 @@ def _restake_over_arrays(setup, record, view, arrays, money: str, rate: float) -
     cash = record.book.balances_at(record.book.rows_of(ids), money)
     shortfall = np.where(columns.capacity_runs > 0.0, columns.cash_target - cash, 0.0)
     wanting = np.nonzero(shortfall > 0.0)[0]
-    owners = sorted({columns.records[row].owner for row in wanting})
+    owner_names = columns.owners()
+    owners = sorted({owner_names[row] for row in wanting})
     if any(owner in record.producers for owner in owners):
         return False
     owner_row = {owner: position for position, owner in enumerate(owners)}
     owner_of = np.zeros(len(ids), dtype=np.int64)
     for row in wanting:
-        owner_of[row] = owner_row[columns.records[row].owner]
+        owner_of[row] = owner_row[owner_names[row]]
     owner_cash = np.array([balance(owner, money) for owner in owners], dtype=np.float64)
     amounts = entry_kernels.restake_amounts(
         columns.recipe_row, columns.tile_row, shortfall, columns.land_rent_per_run, columns.expected_prices, owner_of, owner_cash,
         matrices.slot_goods, matrices.inputs, matrices.outputs, matrices.plant_goods, matrices.labour_hours,
         matrices.plant_labour_hours, matrices.plant_life_years, memory.price, memory.offered, memory.wage,
         arrays.area_index.of_good_tile, float(rate), ENTRANT_OWNER_STAKE_SHARE)
-    post_in_order(record.book, [([Transfer(columns.records[row].owner, ids[row], money, float(amounts[row]), "owner's stake")], ())
+    post_in_order(record.book, [([Transfer(owner_names[row], ids[row], money, float(amounts[row]), "owner's stake")], ())
                                 for row in np.nonzero(amounts > 0.0)[0]], RULE_SINGLE)
     return True
 

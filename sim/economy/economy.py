@@ -53,7 +53,6 @@ from .year_accounts import YearAccounts, build as build_accounts, stocks as stoc
 from .standing_demand import standing_block
 from .year_ledger import YearLedger
 from .collection_paused import collection_paused
-from .replaced import replaced
 
 
 @dataclass
@@ -340,10 +339,7 @@ class Economy:
                 scale_people(record.labour.workforce, area, people / held)
 
     def _follow_yields(self, inputs: EconomyYearInputs) -> None:
-        for producer_id, factor in inputs.yield_factor_by_producer.items():
-            producer = self.record.producers.get(producer_id)
-            if producer is not None and producer.yield_factor != factor:
-                producer_table.put_producer(self.record.producers, replaced(producer, yield_factor=factor))
+        producer_table.set_column(self.record.producers, "yield_factor", inputs.yield_factor_by_producer, inputs.yield_factor_by_producer.values())
 
     def own_plot_options(self):
         """The recipes a household can grow its need from itself; built once for a year being run."""
@@ -527,7 +523,7 @@ class Economy:
             # only the goods the capacity actually built uses are consumed; the rest stays in stock
             built_steps.append(((), [GoodsMove(producer_id, EDGE_CONSUMPTION, good, producer.tile, per_run * runs * share, "built into plant")
                                      for good, per_run in sorted(recipe.plant_goods.items()) if per_run * runs * share > 0.0]))
-            producer_table.put_producer(record.producers, producers.with_capacity(producer, producer.capacity_runs + runs * share))
+            producer_table.set_fields(record.producers, producer_id, capacity_runs=max(0.0, producer.capacity_runs + runs * share))
         post_in_order(record.book, built_steps)
 
     def _outcome(self, ledger: YearLedger, level: float, extraction, stocks_at_start) -> YearOutcome:

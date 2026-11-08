@@ -69,13 +69,13 @@ def _currencies(setup, view, arrays: YearArrays, area_column: np.ndarray):
     place = np.where(area_column != NO_AREA, area_column, -1 - (columns.recipe_row * len(arrays.tiles.ids) + columns.tile_row))
     _places, first_row, inverse = np.unique(place, return_index=True, return_inverse=True)
     names = []
+    tiles = columns.tile_names()
     for row in first_row.tolist():
         area = int(area_column[row])
         if area != NO_AREA:
             names.append(view.currency_of(area_ids[area]))
         else:
-            producer = columns.records[row]
-            names.append(view.currency_of(view.area_of(min(setup.recipes[recipes[columns.recipe_row[row]]].outputs), producer.tile)))
+            names.append(view.currency_of(view.area_of(min(setup.recipes[recipes[columns.recipe_row[row]]].outputs), tiles[row])))
     return names, inverse.reshape(-1)
 
 

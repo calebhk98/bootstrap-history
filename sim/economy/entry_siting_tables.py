@@ -70,9 +70,8 @@ def hours_of_producers(recipes: Mapping[str, object], columns) -> np.ndarray:
     for row in np.unique(columns.recipe_row).tolist():
         booked[row] = math.fsum(recipes[recipe_ids[row]].labour_hours.values())
     hours = booked[columns.recipe_row]
-    for position, producer in enumerate(columns.records):
-        if producer.crew_runs:
-            hours[position] = math.fsum(practice.recipe_for(recipes[producer.recipe_id], producer.crew_runs).labour_hours.values())
+    for position, crew in columns.crews.items():
+        hours[position] = math.fsum(practice.recipe_for(recipes[recipe_ids[columns.recipe_row[position]]], crew).labour_hours.values())
     return hours
 
 
