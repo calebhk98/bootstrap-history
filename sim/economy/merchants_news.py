@@ -43,6 +43,10 @@ class YearNews:
             found = self._lags[home_tile] = by_tile[self.tile_of_key]      # a key with no anchor has tile -1: the last place
         return found
 
+    def lags_for(self, carriage, home_tiles: Sequence) -> np.ndarray:
+        """`lags_at` of each home tile, one row each."""
+        return np.stack([self.lags_at(carriage, tile) for tile in home_tiles])
+
     def lags_by(self, lag_years: Callable) -> np.ndarray:
         """The lags from a function of (good, area) that gives None for a market that is gone."""
         return np.array([NOT_HEARD if lag is None else lag for lag in (lag_years(*key) for key in self.price_keys)], np.int64)
@@ -73,43 +77,18 @@ def move_toward(old: np.ndarray, values: np.ndarray, speed: float) -> np.ndarray
     return np.where(np.isnan(old), values, old + speed * (values - old))
 
 
-def heard_prices(merchant, news: YearNews, lags: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
-    """(prices the merchant hears, whether it hears each) for the year's price keys: a price from a market `lags` years of
-    news away is the price of that many years ago, or none yet (`merchants_transit.heard`, which keeps the history)."""
-    heard = news.price_values.copy()
-    kept = lags > NOT_HEARD
-    keys = news.price_keys
-    for place in np.flatnonzero(lags > 0).tolist():
-        price = merchants_transit.heard(merchant, keys[place], float(heard[place]), int(lags[place]))
-        if price is None:
-            kept[place] = False
-        else:
-            heard[place] = price
-    return heard, kept
-
-
 def learn_all(merchants: Sequence, news: YearNews, lags: Sequence[np.ndarray], speed: float) -> None:
-    """Move every merchant's expected prices and volumes toward the year's. `lags[i]` is the news lag of each price key for
-    `merchants[i]` (`YearNews.lags_at`). Merchants indexed by one numbering are moved together as the rows of one array."""
-    groups: Dict[tuple, List[int]] = {}
+    """Move these merchants' expected prices and volumes toward the year's. `lags[i]` is the news lag of each price key for
+    `merchants[i]` (`YearNews.lags_at`). Merchants of one table are moved together (`merchant_year.learn_rows`); a year's close
+    moves every merchant of the record at once (`merchant_year.learn_year`)."""
+    from . import merchant_year       # merchant_year imports this module's `move_toward`
+    groups: Dict[int, List[int]] = {}
     for place, merchant in enumerate(merchants):
-        groups.setdefault((id(merchant.expected_prices.tables), id(merchant.expected_volumes.tables)), []).append(place)
+        groups.setdefault(id(merchant.expected_prices.tables), []).append(place)
     for places in groups.values():
-        first = merchants[places[0]]
-        price_rows = news.rows_in(first.expected_prices.tables)[0]
-        volume_rows = news.rows_in(first.expected_volumes.tables)[1]
-        if len(news.price_keys):
-            heard_and_kept = [heard_prices(merchants[place], news, lags[place]) for place in places]
-            old = np.stack([merchants[place].expected_prices.take(price_rows) for place in places])
-            moved = move_toward(old, np.stack([heard for heard, _kept in heard_and_kept]), speed)
-            for row, place in enumerate(places):
-                taken = heard_and_kept[row][1]
-                merchants[place].expected_prices.put(price_rows[taken], moved[row][taken])
-        if len(news.volume_keys):
-            old = np.stack([merchants[place].expected_volumes.take(volume_rows) for place in places])
-            moved = move_toward(old, news.volume_values, speed)
-            for row, place in enumerate(places):
-                merchants[place].expected_volumes.put(volume_rows, moved[row])
+        store, _row = merchants[places[0]]._table()
+        merchant_year.learn_rows(store, np.array([merchants[place]._table()[1] for place in places], np.int64), news,
+                                 np.stack([lags[place] for place in places]), speed)
 
 
 def learn(merchant, news: YearNews, lags: np.ndarray, speed: float) -> None:
