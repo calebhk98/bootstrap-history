@@ -16,11 +16,16 @@ def of_columns(columns, book) -> tuple:
     return kept[1], kept[2]
 
 
+_GOODS: dict = {}      # id of a `Names` -> (the names, the book's numbering stamp, the numbers)
+
+
 def of_goods(goods, book) -> numpy.ndarray:
-    """The book's number of each good of `goods` (a `Names`), -1 where it has none, kept on the names while the book's numbering stands."""
+    """The book's number of each good of `goods` (a `Names`), -1 where it has none, kept while the book's numbering stands."""
     stamp = (len(book.good_ids), id(book))
-    kept = goods.__dict__.get("_book_numbers")
-    if kept is None or kept[0] != stamp:
+    kept = _GOODS.get(id(goods))
+    if kept is None or kept[0] is not goods or kept[1] != stamp:
         found = book.good_ids.numbers
-        kept = goods.__dict__["_book_numbers"] = (stamp, numpy.fromiter((found.get(name, -1) for name in goods.ids), numpy.int64, len(goods.ids)))
-    return kept[1]
+        if len(_GOODS) > 8:
+            _GOODS.clear()
+        kept = _GOODS[id(goods)] = (goods, stamp, numpy.fromiter((found.get(name, -1) for name in goods.ids), numpy.int64, len(goods.ids)))
+    return kept[2]
