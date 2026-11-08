@@ -14,6 +14,9 @@ Columns (one entry per added bid, in the order the kernel added them):
 """
 from typing import List, Sequence
 
+import numpy
+
+from .bid_columns import BidColumns
 from .goods_market import _quantity
 from .goods_respend import RESPEND_PRIORITY
 from .types import Bid
@@ -37,6 +40,11 @@ class AddedBids:
         return [0.0 if budget <= 0.0 or price > ceiling else _quantity(0.0, flexible, reference, elasticity, budget, price)
                 for flexible, reference, elasticity, budget, ceiling in zip(self.flexible, self.reference, self.elasticity, self.budget,
                                                                             self.maximum)]
+
+    def columns(self) -> BidColumns:
+        """The added bids as `bid_columns.BidColumns` (the floor is zero)."""
+        return BidColumns(numpy.zeros(len(self)), *(numpy.array(each, dtype=numpy.float64) for each in (
+            self.flexible, self.reference, self.elasticity, self.budget, self.maximum)))
 
     def bids(self) -> List[Bid]:
         """The added bids as `Bid` objects (an edge: a rule still written over objects, a test)."""

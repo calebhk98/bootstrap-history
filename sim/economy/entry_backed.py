@@ -5,8 +5,8 @@ demand; a gap no such bid backs is not, and the newcomer stays sized to the trad
 import math
 from typing import Callable, Mapping, Optional, Sequence, Tuple
 
+from . import bid_columns
 from .entry_trial import recipes_by_cost
-from .goods_market import quantity_at
 from .types import AreaId, Bid, GoodId, TileId
 
 # (recipe id, good, tile of the market, yearly output of the good the newcomer is built for) -> units of the good wanted at the
@@ -19,7 +19,7 @@ def unfilled_quantity(bids: Sequence[Bid], cost_per_unit: float, traded_volume: 
     what the market traded."""
     if not math.isfinite(cost_per_unit) or cost_per_unit <= 0.0:
         return 0.0
-    return max(0.0, math.fsum(quantity_at(bid, cost_per_unit) for bid in bids) - max(0.0, traded_volume))
+    return max(0.0, bid_columns.sum_taken_at(bid_columns.columns_of(bids), cost_per_unit) - max(0.0, traded_volume))
 
 
 def unfilled_at_cost(setup, record, view, area_map, bids_by_market: Mapping[Tuple[GoodId, AreaId], Sequence[Bid]],

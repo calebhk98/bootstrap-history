@@ -8,6 +8,7 @@ class OfferRows:
 
     def __init__(self, orders, view):
         self.orders, self.view = orders, view
+        self._areas = {}          # (good, tile) -> area, read from the view once
         self._clear()
 
     def _clear(self) -> None:
@@ -17,7 +18,10 @@ class OfferRows:
         self.seller.append(producer.agent_id)
         self.good.append(good)
         self.tile.append(producer.tile)
-        self.area.append(self.view.area_of(good, producer.tile))
+        place = (good, producer.tile)
+        if place not in self._areas:
+            self._areas[place] = self.view.area_of(good, producer.tile)
+        self.area.append(self._areas[place])
         self.quantity.append(quantity)
         self.reservation.append(reservation)
 

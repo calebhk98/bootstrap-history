@@ -25,6 +25,7 @@ from sim.constants import declare
 from . import ask_adjust, inventory, practice, tool_fallback, trade_wages, unit_cost
 from .labour_ceilings import joint_labour_ceilings
 from .planning_price import held_to_band, is_bare_quote
+from .priced_reads import offered_prices_for
 from .protocols import MarketView
 from .types import (AgentId, Bid, EDGE_CONSUMPTION, EDGE_PRODUCTION, GoodId, GoodSpec, GoodsMove, LabourBid,
                     Offer, Recipe, TileId)
@@ -121,9 +122,10 @@ def expected_price(producer: Producer, good: GoodId, view: MarketView) -> Option
 
 
 def expected_output_prices(producer: Producer, recipe: Recipe, view: MarketView) -> Dict[GoodId, float]:
+    offered = offered_prices_for(view, producer.tile, [good for good in recipe.outputs if good not in producer.expected_prices])
     prices = {}
     for good in recipe.outputs:
-        price = expected_price(producer, good, view)
+        price = producer.expected_prices[good] if good in producer.expected_prices else offered[good]
         if price is not None:
             prices[good] = price
     return prices

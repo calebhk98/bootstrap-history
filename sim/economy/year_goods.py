@@ -129,7 +129,7 @@ def clear_goods(setup, record, view, area_map, order_book, plans, ledger: YearLe
     goods_respend_year.respend(setup, record, view, ledger, left_markets,
                                lambda cohort: cohort_basket(setup, record, cohort), orders)
     for market_id, market in left_markets.items():
-        ledger.bids_by_market[market_id] = market.all_bids     # demand over the same rounds as the traded quantity
+        ledger.bids_by_market[market_id] = market.market_bids()     # demand over the same rounds as the traded quantity
     _remember_markets(setup, record, left_markets, ledger, orders)
     _record_year_markets(record, ledger, left_markets)
 

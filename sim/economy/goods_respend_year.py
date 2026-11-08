@@ -5,10 +5,13 @@ All the rounds run in one kernel over every rationed cohort and market (goods_re
 """
 from typing import Dict, Tuple
 
+import numpy
+
 
 from sim.constants import declare
 
 from . import goods_respend_pack, goods_respend_unpack
+from .bid_columns import BidColumns, MarketBids, columns_of_bids, joined
 from .goods_table_views import LazyObjects
 from .goods_market import MINIMUM_PRICE_SHARE_OF_REFERENCE
 from .goods_respend import RESPEND_NEGLIGIBLE_ROUND_SHARE
@@ -84,6 +87,21 @@ class LeftMarket:
     @all_bids.setter
     def all_bids(self, bids) -> None:
         self._all_bids = bids
+
+    def market_bids(self) -> MarketBids:
+        """The first round's bids and those later rounds added, for the entry rules: columns (read from the order tables' rows, with the added
+        bids' columns after them), and the objects of `all_bids` when a rule asks for them."""
+        count = len(self.all_bids)
+        return MarketBids(self._bid_columns, lambda: list(self.all_bids), count)
+
+    def _bid_columns(self) -> BidColumns:
+        if self.rows is None:
+            return columns_of_bids(list(self.all_bids))
+        table = self.rows.orders.tables()[0]
+        rows = numpy.array(self.rows.bid_rows, dtype=numpy.int64)
+        first = BidColumns(table.floor_quantity[rows], table.flexible_quantity[rows], table.reference_price[rows], table.elasticity[rows],
+                           table.budget[rows], table.maximum_price[rows])
+        return first if self.added is None else joined(first, self.added.columns())
 
     def add_bids(self, added) -> None:
         """The bids a later round added to this market (`goods_added_bids.AddedBids`): kept as columns, and as objects too for a market on the
