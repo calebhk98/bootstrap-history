@@ -43,6 +43,8 @@ def with_markets(seed):
     setup, record, view, _ledger, area_map = economy_of(seed)
     setup.basket_for = lambda tile: types.SimpleNamespace(substitution=1.0 + (hash(tile) % 3) * 0.7)
     record.goods = goods_on(record.memory)
+    record.land = types.SimpleNamespace(land_rent={tile: random.Random(seed).uniform(0.0, 3.0) * (index % 3) for index, tile in enumerate(TILES)})
+    setup.opening_rate = getattr(setup, "opening_rate", 0.04)
     rng = random.Random(seed)
     for producer_id in sorted(record.producers):
         if rng.random() < 0.25:      # a crowd of workshops
@@ -112,8 +114,6 @@ class BatchedMarketsAreTheMarketsOneByOne(unittest.TestCase):
             costs = OfferCosts.build(arrays, view.interest_rate(MONEY))
             markets = []
             for good in GOODS:
-                if not setup.specs[good].portable:
-                    continue
                 for area in AREAS:
                     bids = [random_bid(rng, index, good, area) for index in range(rng.choice([0, 1, 3, 7]))]
                     offers = random_offers(rng, setup, record, good, area)
