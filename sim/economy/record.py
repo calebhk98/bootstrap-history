@@ -58,6 +58,7 @@ class EconomyRecord(OwnedRecord):
         for merchant in self.merchants.values():      # the merchants' expectations are columns of the memory's goods-market numbering
             if isinstance(merchant, Merchant):
                 bind_markets(merchant, self.memory.tables)
+        self.goods.bind_markets(self.memory.tables)
 
     AGENT_KEYED = ("cohorts", "producers", "merchants")
     SAVED_SORTED = ("cohorts", "producers", "merchants")
