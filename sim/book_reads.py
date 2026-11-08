@@ -8,7 +8,7 @@ from typing import Dict, List
 
 import numpy
 
-from sim.book_index import EMPTY, FIRST_SHIFT, SECOND_SHIFT, index_find, pack_key
+from sim.book_index import EMPTY, FIRST_SHIFT, SECOND_SHIFT, index_find
 from sim.book_read_kernels import counted_stocks, currency_values, good_quantities, holder_columns
 from sim.book_types import AgentId, ConservationReport, CurrencyId, GoodId, TileId, _share
 
@@ -143,6 +143,17 @@ class BookReads:
                 zip(table.purpose_code[rows].tolist(), table.purpose_reference[rows].tolist(), table.quantity[rows].tolist())}
         return dict(sorted(flow.items()))
 
+    def goods_flows(self) -> Dict[GoodId, Dict[str, float]]:
+        """`goods_flow` for every good that moved this year, in one read."""
+        table = self.flow_rows.table
+        rows = int(table.row_count[0])
+        name, decode = self.good_ids.name_list, self.purposes.decode
+        flows: Dict[GoodId, Dict[str, float]] = {}
+        for good, code, reference, quantity in zip(table.good[:rows].tolist(), table.purpose_code[:rows].tolist(),
+                                                   table.purpose_reference[:rows].tolist(), table.quantity[:rows].tolist()):
+            flows.setdefault(name[good], {})[decode(code, reference)] = quantity
+        return {good: dict(sorted(flow.items())) for good, flow in flows.items()}
+
     def _edge_money_cell(self, edge_id: AgentId, currency: CurrencyId):
         cell = self._cell(edge_id, currency)
         return cell if cell is not None and self.balance_table.edge_seen.item(cell) else None
@@ -161,7 +172,7 @@ class BookReads:
         agent, good_number = self.agent_ids.find(edge_id), self.good_ids.find(good)
         if agent is None or good_number is None:
             return EMPTY
-        return self.edge_goods_rows.find(pack_key(agent, good_number))
+        return self.edge_goods_rows.find((agent << FIRST_SHIFT) | (good_number << SECOND_SHIFT))
 
     def edge_goods_volume(self, edge_id: AgentId, good: GoodId) -> float:
         row = self._edge_goods_row(edge_id, good)
@@ -170,6 +181,17 @@ class BookReads:
     def edge_goods_net(self, edge_id: AgentId, good: GoodId) -> float:
         row = self._edge_goods_row(edge_id, good)
         return 0.0 if row == EMPTY else self.edge_goods_rows.table.net.item(row)
+
+    def edge_goods_net_by_good(self, edge_id: AgentId) -> Dict[GoodId, float]:
+        """`edge_goods_net` for every good the edge carried this year, in one read (a good it did not carry is not in the answer)."""
+        agent = self.agent_ids.find(edge_id)
+        table = self.edge_goods_rows.table
+        rows = int(table.row_count[0])
+        if agent is None or not rows:
+            return {}
+        mine = table.agent[:rows] == agent
+        name = self.good_ids.name_list
+        return {name[good]: net for good, net in zip(table.good[:rows][mine].tolist(), table.net[:rows][mine].tolist())}
 
     def edge_goods_agents(self) -> List[AgentId]:
         """Edge accounts that carried goods this year."""

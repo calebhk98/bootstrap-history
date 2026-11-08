@@ -11,7 +11,7 @@ import numpy
 from sim.book_apply import apply_settled
 from sim.book_commit import add_flow
 from sim.book_post import grown_settled
-from sim.book_read_kernels import find_slots, read_balances, read_stocks_at
+from sim.book_read_kernels import find_slots, read_balances, read_balances_each, read_stocks_at
 from sim.book_tables import INSUFFICIENT_FUNDS, INSUFFICIENT_GOODS
 from sim.book_types import (AgentId, BookError, CurrencyId, GoodId, InsufficientFunds, InsufficientGoods, TileId)
 from sim.compiled_tables.causes import OK
@@ -21,19 +21,15 @@ class BookBatch:
     # ---- many reads ------------------------------------------------------------------------------
 
     def rows_of(self, agents: Sequence[AgentId]) -> numpy.ndarray:
-        """Each agent's number, -1 for one the book has never seen."""
-        find, known = self.agent_ids.find, self.agent_table.known
-        found = [find(agent) for agent in agents]
-        return numpy.array([-1 if number is None or not known[number] else number for number in found], dtype=numpy.int64)
+        """Each agent's number, -1 for one the book has never seen (or has numbered but never held or paid anything)."""
+        found = self.agent_ids.numbers_of(agents)
+        return numpy.where((found >= 0) & (self.agent_table.known[found.clip(0)] != 0), found, -1)
 
     def slots_of(self, good: GoodId, agents: Sequence[AgentId], tiles: Sequence[TileId]) -> numpy.ndarray:
         """Each (agent, tile)'s slot for the good, -1 where nothing was ever held there."""
-        agent_find, tile_find = self.agent_ids.find, self.tile_ids.find
-        agent_numbers = numpy.array([-1 if (number := agent_find(agent)) is None else number for agent in agents], dtype=numpy.int64)
-        tile_numbers = numpy.array([-1 if (number := tile_find(tile)) is None else number for tile in tiles], dtype=numpy.int64)
         number = self.good_ids.find(good)
-        return find_slots(self.stock_rows.table, self.stock_rows.index, agent_numbers, -1 if number is None else number,
-                          tile_numbers)
+        return find_slots(self.stock_rows.table, self.stock_rows.index, self.agent_ids.numbers_of(agents),
+                          -1 if number is None else number, self.tile_ids.numbers_of(tiles))
 
     def balances_of(self, agents: Sequence[AgentId], currency: CurrencyId) -> numpy.ndarray:
         """Each agent's balance in the currency (zero for one the book has never seen)."""
@@ -43,6 +39,13 @@ class BookBatch:
         """Balances by agent number (numbers of -1 read zero)."""
         number = self.currency_ids.find(currency)
         return read_balances(self.balance_table, self.stride, numpy.asarray(rows, dtype=numpy.int64), -1 if number is None else number)
+
+    def balances_by_currency(self, rows: numpy.ndarray, currency_index: numpy.ndarray, currency_names: Sequence[CurrencyId]) -> numpy.ndarray:
+        """Balances by agent number, each in its own currency: row i reads `currency_names[currency_index[i]]` (zero for an agent
+        number of -1 or a currency the book never saw). The same figures as `balances_at` once per currency, in one call."""
+        numbers = self.currency_ids.numbers_of(currency_names)
+        return read_balances_each(self.balance_table, self.stride, numpy.asarray(rows, dtype=numpy.int64),
+                                  numbers[numpy.asarray(currency_index, dtype=numpy.int64)])
 
     def stocks_of(self, good: GoodId, agents: Sequence[AgentId], tiles: Sequence[TileId]) -> numpy.ndarray:
         """Each (agent, tile)'s stock of the good (zero where nothing was ever held)."""

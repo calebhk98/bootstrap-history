@@ -14,6 +14,7 @@ import numpy
 
 from sim.book_index import FIRST_FIELD_BITS, FIRST_SHIFT, SECOND_FIELD_BITS, SECOND_SHIFT, THIRD_FIELD_BITS, KeyedRows
 from sim.book_purposes import Purposes
+from sim.book_single import SinglePostings
 from sim.book_tables import (AGENTS, BALANCES, CURRENCIES, EDGE_GOODS, FREE, GOODS, PURPOSE_FLOWS, STOCKS, Agents, Balances,
                              BookTables, Currencies, EdgeGoods, Goods, GoodsTables, MoneyTables, PurposeFlows, Stocks)
 from sim.book_types import EDGE_PREFIX, EXTERNAL_PREFIX, MINT_ID, AgentId, BookError, CurrencyId, GoodId, TileId
@@ -46,6 +47,7 @@ class BookStore:
         self.edge_goods_rows = KeyedRows(EDGE_GOODS, EdgeGoods, 16)
         self.scratch = None            # plans reused by one posting call after another (sim/book_post.py)
         self.settled_plans = None
+        self.single_postings = SinglePostings()     # one-row posting tables reused by `transfer` and `move` (sim/book_single.py)
 
     # ---- admitting names -------------------------------------------------------------------------
 
@@ -55,6 +57,17 @@ class BookStore:
         if number is None:
             number = self._admit_agents([agent])[0]
         return number
+
+    def agent_numbers_in_order(self, agents: Iterable[AgentId]) -> List[int]:
+        """Each agent's number, as `agent_number` gives it name by name: the names new to the book are admitted one at a time in
+        the order given (`_agent_numbers` admits a batch's new names sorted, which numbers them differently)."""
+        given = list(agents)
+        found = list(map(self.agent_ids.numbers.get, given))
+        if None in found:
+            for position, number in enumerate(found):
+                if number is None:
+                    found[position] = self.agent_number(given[position])
+        return found
 
     def _admit_agents(self, agents: Iterable[AgentId]) -> List[int]:
         given = list(agents)

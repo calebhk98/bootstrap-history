@@ -77,7 +77,12 @@ def apply_goods(moves, first, last, goods, plan, local_index, rule):
 @njit
 def apply_one_batch(transfers, transfer_first, transfer_last, moves, move_first, move_last, book, scratch, rule):
     """Plan, check and write one batch of both kinds. Returns (OK, -1) when applied, else (cause, culprit) with the book
-    unchanged."""
+    unchanged. A batch with no goods moves (or no transfers) runs only the money (or goods) half: the other half's plan is left
+    as the batch before it left it, which nothing reads."""
+    if move_last == move_first:
+        return apply_money(transfers, transfer_first, transfer_last, book.money, scratch.money_plan, scratch.money_local, rule)
+    if transfer_last == transfer_first:
+        return apply_goods(moves, move_first, move_last, book.goods, scratch.goods_plan, scratch.goods_local, rule)
     code, culprit = plan_money_batch(transfers, transfer_first, transfer_last, book.money, scratch.money_plan,
                                      scratch.money_local, rule)
     if code != OK:
