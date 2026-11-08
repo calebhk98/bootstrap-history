@@ -26,7 +26,7 @@ A half-converted edge is allowed as a step, but it is not measured as a result; 
 | How long does a named function take in a warm year (plain timers, no profiler inflation)? | `python3 tools/measure/function_times.py SAVE module:function ...` |
 | Who calls what, how often (cProfile; inflates Python-heavy code, so read call counts, not seconds)? | `python3 tools/measure/warm_year_profile.py SAVE OUT.prof`, then `pstats` sorted by `tottime` |
 | Did a change move the game? | `tools/measure/save_compare.py` on two-year saves (float dust only); `year-time --reload-check` for the save round trip; `python3 -m sim.tests.fingerprint` where behaviour must not change |
-| Does a numbering depend on the hash seed? | `python3 -m sim.tests.equiv record PATH --tier micro --hash-seeds 0,1` |
+| Does a fresh spin-up depend on the hash seed? | `python3 -m sim.tests --slow --only hash_seed_order` |
 | Do a topic's tests pass? | `python3 -m sim.tests --slow --only TOPIC` |
 | Do the table types keep their cache names? | `python3 tools/check_table_names.py` |
 
