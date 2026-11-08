@@ -37,6 +37,7 @@ from .year_arrays import YearArrays, same_source, source_of
 from .year_close import close_agents, money_taxes, remember_basket_price_level, wear_and_spoilage
 from .year_goods import add_orders, clear_goods, cohort_orders, merchant_orders, state_orders
 from .labour_supply import HourSupply
+from .labour_results_table import hours_totals
 from .labour_state import people_by_trade
 from .year_labour import clear_labour, labour_offers, outside_option_by_tile
 from .year_accounts import YearAccounts, build as build_accounts, stocks as stocks_held
@@ -519,10 +520,7 @@ class Economy:
     def _outcome(self, ledger: YearLedger, level: float, extraction, stocks_at_start) -> YearOutcome:
         record, setup = self.record, self.setup
         money = setup.currency_id
-        idle = hired = 0.0
-        for result in ledger.labour_results:
-            hired += result.hours_hired
-            idle += result.idle_hours
+        hired, idle = hours_totals(ledger.labour_results)
         mean_wages = national_wages(record)
         hunger: Dict[str, float] = {}
         for cohort in record.cohorts.values():
