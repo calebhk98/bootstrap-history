@@ -2,7 +2,7 @@
 from sim.geography.api import flow_ledger
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 
-from . import carried_book, carriage_fleet_book, carriage_hours, carriage_wear, merchants, merchants_transit, route_dues
+from . import carried_book, carriage_fleet_book, carriage_wear_batch, carriage_hours, carriage_wear, merchants, merchants_transit, route_dues
 from .market_memory import market_key
 from .inventory import held_stock
 from .national_prices import usual_volumes
@@ -37,13 +37,15 @@ def dispatch_merchants(setup, record, carriage, ledger: YearLedger, area_map) ->
     lives = carriage_fleet_book.fleet_lives(setup) if wear is not None else {}
     own_capacity, hired, lent = {}, {}, {}
     if lives:     # a merchant carries no more than its fleet bears; idle fleets are hired out to those short of one
+        carriage_wear_batch.settle_all(record.book, sorted(record.merchants), carrier_goods, {})     # the carriers each bought go to its carrier account
         for merchant in record.merchants.values():
-            carriage_fleet_book.keep(merchant, record.book, carrier_goods)
             own_capacity[merchant.agent_id] = carriage_fleet_book.own_capacity(record.book, merchant.agent_id, lives)
         needed = {merchant.agent_id: carriage_fleet_book.wear_needed(
             merchant, held_stock(record.book, merchant.agent_id), setup.specs, wear, lives) for merchant in record.merchants.values()}
         hired, lent = carriage_fleet_book.share_idle(own_capacity, needed)
     populated = {cohort.tile for cohort in record.cohorts.values()}
+    worn: dict = {}     # the carrier units each merchant's shipments wore, settled for all of them after the loop
+    shipping = []
     for merchant in sorted(record.merchants.values(), key=lambda each: each.agent_id):
         fills = ledger.buy_fills.get(merchant.agent_id, [])
         if not fills and not merchants.ships_held_stock(merchant, held_stock(record.book, merchant.agent_id)):
@@ -52,7 +54,7 @@ def dispatch_merchants(setup, record, carriage, ledger: YearLedger, area_map) ->
                 merchant.carriage_money_wanted = {}
             if wear is not None:     # its fleet's wanted size stands: it may ship again
                 merchant.carrier_wear = {}
-                carriage_wear.settle(merchant, record.book, carrier_goods, {})
+                shipping.append(merchant.agent_id)
             continue
         hire = None
         if crew is not None:
@@ -80,8 +82,8 @@ def dispatch_merchants(setup, record, carriage, ledger: YearLedger, area_map) ->
             merchant.carriage_money_wanted = done.crew_money_wanted
         if wear is not None:
             merchant.carrier_wear = carriage_wear.exposure(wear, done.moves, setup.specs)
-            carriage_wear.settle(merchant, record.book, carrier_goods,
-                                 {good: units for good, units in merchant.carrier_wear.items() if good not in lives})
+            shipping.append(merchant.agent_id)
+            worn[merchant.agent_id] = {good: units for good, units in merchant.carrier_wear.items() if good not in lives}
             if lives:
                 merchant.carrier_fleet_wanted = {good: max(0.0, units - hired.get(merchant.agent_id, {}).get(good, 0.0))
                                                  for good, units in done.fleet_wanted.items()}
@@ -101,6 +103,8 @@ def dispatch_merchants(setup, record, carriage, ledger: YearLedger, area_map) ->
             if source != setup.civ_id and setup.country_of(move.receiver_tile) == setup.civ_id:
                 carried_book.note_crossing(ledger.carried_in, merchant.agent_id, source, move.quantity,
                                            price_at_origin, price_at_destination)
+    if wear is not None:
+        carriage_wear_batch.settle_all(record.book, shipping, carrier_goods, worn)
     record.carriage.set_carried(carried, carried_goods)
 
 
