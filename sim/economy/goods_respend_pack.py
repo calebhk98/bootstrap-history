@@ -3,7 +3,6 @@ first round (rows in sorted id order), their baskets flattened, the market each 
 offers in clearing order, and the purses and stocks of the agents and (agent, tile) keys the markets touch.
 """
 from dataclasses import dataclass
-from operator import attrgetter
 from typing import Dict, List
 
 import numpy
@@ -11,11 +10,10 @@ import numpy
 from sim.constants import declare
 
 from .goods_production import read_stocks
+from .goods_respend_rows import Interner, bid_rows, bought_columns, offer_rows
 from .goods_respend import need_of_good
 from .types import is_edge, is_external_edge
 
-_BID_FIELDS = attrgetter("floor_quantity", "flexible_quantity", "reference_price", "elasticity", "budget", "maximum_price")
-OFFER_ORDER = attrgetter("reservation_price", "seller", "tile")     # goods_market.in_clearing_order
 
 
 @dataclass
@@ -64,32 +62,22 @@ def flatten_baskets(baskets, good_index) -> tuple:
             numpy.array([basket.substitution for basket in baskets]), need_of_good_slot, len(need_ids))
 
 
-def _bid_fields(market, lists):
-    """(buyer, floor, flexible, reference price, elasticity, budget, ceiling) of each first-round bid of the market, read from
-    the table's columns where the market is on the tables."""
-    if market.rows is not None:
-        return [(lists.buyer[row], lists.floor_quantity[row], lists.flexible_quantity[row], lists.reference_price[row], lists.elasticity[row],
-                 lists.budget[row], lists.maximum_price[row]) for row in market.rows.bid_rows]
-    return [(bid.buyer, *_BID_FIELDS(bid)) for bid in market.bids]
-
-
-def _offers_left(market, lists):
-    """The offers left in the market, in the order `market.offers` lists them: objects, or (seller, tile, reservation, units)
-    records for a market on the tables."""
-    return market.rows.left_offers(lists) if market.rows is not None else list(market.offers)
-
-
 def pack(setup, record, view, ledger, markets, basket_of, orders=None) -> "Packed":
-    """Pack `markets` ({(good, area): LeftMarket}) and the households that bid in them; None when no household bid."""
+    """Pack `markets` ({(good, area): LeftMarket}) and the households that bid in them; None when no household bid. The bids and the offers
+    are read as columns (goods_respend_rows.py)."""
     households = record.cohorts
     market_keys = sorted(markets)
     market_index = {key: index for index, key in enumerate(market_keys)}
-    bid_lists = orders.bid_lists() if orders is not None and any(markets[key].rows is not None for key in market_keys) else None
-    fields = {key: _bid_fields(markets[key], bid_lists) for key in market_keys}
-    buyer_ids = sorted({each[0] for key in market_keys for each in fields[key] if each[0] in households})
+    agents_interned, tiles_interned = Interner(), Interner()
+    bids = bid_rows(markets, market_keys, orders, agents_interned)
+    is_household = numpy.array([name in households for name in agents_interned.names], dtype=numpy.bool_)
+    household_entry = is_household[bids.buyer] if len(bids.buyer) else numpy.zeros(0, dtype=numpy.bool_)
+    buyer_ids = sorted({agents_interned.names[each] for each in numpy.unique(bids.buyer[household_entry]).tolist()})
     if not buyer_ids or not market_keys:
         return None
-    row_of = {buyer: row for row, buyer in enumerate(buyer_ids)}
+    row_of_id = numpy.full(max(len(agents_interned.names), 1), -1, dtype=numpy.int64)
+    for row, buyer in enumerate(buyer_ids):
+        row_of_id[agents_interned.ids[buyer]] = row
     baskets: List[object] = []
     basket_number: Dict[int, int] = {}
     buyer_basket = numpy.zeros(len(buyer_ids), dtype=numpy.int64)
@@ -120,67 +108,60 @@ def pack(setup, record, view, ledger, markets, basket_of, orders=None) -> "Packe
         buyer_area_row[row] = area_rows[slot]
     area_market = numpy.array(area_table, dtype=numpy.int64).reshape(len(area_table), len(goods))
 
-    agent_names = {buyer for buyer in buyer_ids}
-    offer_lists = []
-    left_lists = orders.offer_lists() if bid_lists is not None else None
-    records = {key: _offers_left(markets[key], left_lists) for key in market_keys}
-    for key in market_keys:
-        ordered = sorted((offer for offer in records[key] if offer.quantity > 0.0), key=OFFER_ORDER)
-        offer_lists.append(ordered)
-        agent_names.update(offer.seller for offer in ordered)
-    agents = sorted(agent_names)
-    agent_index = {agent: index for index, agent in enumerate(agents)}
-    key_index: Dict[tuple, int] = {}
-    keys: List[tuple] = []
-    offer_ptr, reservation, quantity, offer_key, offer_agent, offer_origin, offer_ids = [0], [], [], [], [], [], []
-    for key, ordered in zip(market_keys, offer_lists):
-        position = {id(offer): index for index, offer in enumerate(records[key])}
-        for offer in ordered:
-            stock_key = (agent_index[offer.seller], good_index[key[0]], offer.tile)
-            if stock_key not in key_index:
-                key_index[stock_key] = len(keys)
-                keys.append(stock_key)
-            reservation.append(offer.reservation_price)
-            quantity.append(offer.quantity)
-            offer_key.append(key_index[stock_key])
-            offer_agent.append(agent_index[offer.seller])
-            offer_origin.append(position[id(offer)])
-            offer_ids.append((offer.seller, offer.tile))
-        offer_ptr.append(len(reservation))
+    offers = offer_rows(markets, market_keys, orders, agents_interned, tiles_interned)
+    buyer_id = numpy.array([agents_interned.ids[buyer] for buyer in buyer_ids], dtype=numpy.int64)
+    used_ids = numpy.unique(numpy.concatenate((buyer_id, offers.seller)))
+    agents = sorted(agents_interned.names[each] for each in used_ids.tolist())
+    agent_of_id = numpy.full(len(agents_interned.names), -1, dtype=numpy.int64)
+    agent_of_id[[agents_interned.ids[name] for name in agents]] = numpy.arange(len(agents), dtype=numpy.int64)
+    tile_of_buyer = numpy.array([tiles_interned.of(tile) for tile in buyer_tile], dtype=numpy.int64)
+    good_of_market = numpy.array([good_index[key[0]] for key in market_keys], dtype=numpy.int64)
+    offer_ptr = numpy.concatenate(([0], numpy.cumsum(numpy.bincount(offers.market, minlength=len(market_keys))))).astype(numpy.int64)
+    stock_code = (agent_of_id[offers.seller] * len(goods) + good_of_market[offers.market]) * max(len(tiles_interned.names), 1) + offers.tile
+    distinct_code, first_place, inverse = numpy.unique(stock_code, return_index=True, return_inverse=True)
+    by_appearance = numpy.argsort(first_place, kind="stable")
+    key_of_distinct = numpy.empty(len(distinct_code), dtype=numpy.int64)
+    key_of_distinct[by_appearance] = numpy.arange(len(distinct_code), dtype=numpy.int64)
+    offer_key = key_of_distinct[inverse]
+    key_places = first_place[by_appearance]
+    key_agent = agent_of_id[offers.seller[key_places]]
+    key_good = good_of_market[offers.market[key_places]]
+    keys = list(zip(key_agent.tolist(), key_good.tolist(), [tiles_interned.names[each] for each in offers.tile[key_places].tolist()]))
+    offer_agent = agent_of_id[offers.seller]
+    offer_origin = offers.origin.tolist()
     book = record.book
     currency = setup.currency_id
     key_stock = numpy.array(read_stocks(book, [(agents[agent], goods[good], tile) for agent, good, tile in keys]), dtype=float)
     agent_cash = book.balances_of(agents, currency)
     buyer_key = numpy.full((len(buyer_ids), len(goods)), -1, dtype=numpy.int64)
-    for row, buyer in enumerate(buyer_ids):
-        for good in range(len(goods)):
-            if area_market[buyer_area_row[row], good] >= 0:
-                buyer_key[row, good] = key_index.get((agent_index[buyer], good, buyer_tile[row]), -1)
-    market_good = numpy.array([good_index[key[0]] for key in market_keys], dtype=numpy.int64)
+    wanted_cell = area_market[buyer_area_row] >= 0
+    buyer_code = (agent_of_id[buyer_id][:, None] * len(goods) + numpy.arange(len(goods), dtype=numpy.int64)[None, :]) \
+        * max(len(tiles_interned.names), 1) + tile_of_buyer[:, None]
+    if len(distinct_code):
+        place = numpy.minimum(numpy.searchsorted(distinct_code, buyer_code), len(distinct_code) - 1)
+        match = wanted_cell & (distinct_code[place] == buyer_code)
+        buyer_key[match] = key_of_distinct[place[match]]
+    market_good = good_of_market
 
     has_bid = numpy.zeros((len(market_keys), len(buyer_ids)), dtype=numpy.bool_)
-    rows = []
     fallback = numpy.zeros(len(market_keys))
     fallback_ok = numpy.zeros(len(market_keys), dtype=numpy.bool_)
     for index, key in enumerate(market_keys):
-        market = markets[key]
-        if market.result.price is not None:
-            fallback[index] = market.result.price
+        price = markets[key].result.price
+        if price is not None:
+            fallback[index] = price
             fallback_ok[index] = True
-        for buyer, floor, flexible, reference, elasticity, budget, maximum in fields[key]:
-            row = row_of.get(buyer)
-            if row is None:
-                continue
-            has_bid[index, row] = True
-            if not (budget > 0.0 and flexible > 0.0 and reference > 0.0):
-                flexible, reference, elasticity = 0.0, 1.0, 0.0
-            units, money = market.bought.get(buyer, (0.0, 0.0))
-            rows.append((index, row, floor, flexible, reference, -elasticity, budget, maximum, units, money))
-    table = numpy.array(rows, dtype=float).reshape(-1, 10)
-    order = numpy.lexsort((table[:, 1], table[:, 0]))
-    table = table[order]
-    first = [table[:, 0].astype(numpy.int64), table[:, 1].astype(numpy.int64)] + [table[:, column].copy()
-                                                                                    for column in range(2, 10)]
+    units, money = bought_columns(markets, market_keys, bids, agents_interned, len(orders.book.agent_ids.name_list) if orders is not None else 0)
+    mine = numpy.flatnonzero(household_entry)
+    entry_row = row_of_id[bids.buyer[mine]]
+    entry_market = bids.market[mine]
+    has_bid[entry_market, entry_row] = True
+    flexible, reference, elasticity = bids.flexible[mine], bids.reference[mine], bids.elasticity[mine]
+    kept = (bids.budget[mine] > 0.0) & (flexible > 0.0) & (reference > 0.0)
+    flexible, reference, elasticity = numpy.where(kept, flexible, 0.0), numpy.where(kept, reference, 1.0), numpy.where(kept, elasticity, 0.0)
+    order = numpy.lexsort((entry_row, entry_market))
+    first = [entry_market[order], entry_row[order], bids.floor[mine][order], flexible[order], reference[order], -elasticity[order],
+             bids.budget[mine][order], bids.maximum[mine][order], units[mine][order], money[mine][order]]
     last_prices = [markets[key].last_price for key in market_keys]
     has_last = numpy.array([price is not None for price in last_prices], dtype=numpy.bool_)
     last_price = numpy.array([0.0 if price is None else price for price in last_prices])
@@ -189,14 +170,9 @@ def pack(setup, record, view, ledger, markets, basket_of, orders=None) -> "Packe
     importing = numpy.array([agent in ledger.import_accounts for agent in agents], dtype=numpy.bool_)
     exporting = numpy.array([agent in ledger.export_accounts for agent in agents], dtype=numpy.bool_)
     max_goods = max(len(need_of_good(basket)) for basket in baskets)
-    offer_ptr = numpy.array(offer_ptr, dtype=numpy.int64)
-    offer_agent = numpy.array(offer_agent, dtype=numpy.int64)
-    offer_key = numpy.array(offer_key, dtype=numpy.int64)
-    reservation = numpy.array(reservation)
-    offer_order = numpy.array([first + position for first, last in zip(offer_ptr[:-1].tolist(), offer_ptr[1:].tolist())
-                               for position in sorted(range(last - first), key=lambda each: offer_origin[first + each])],
-                              dtype=numpy.int64)
-    quantity = numpy.array(quantity)
+    reservation = offers.reservation
+    quantity = offers.quantity
+    offer_order = numpy.lexsort((offers.origin, offers.market)).astype(numpy.int64)
     names = ("buyer_agent", "buyer_basket", "buyer_area_row", "buyer_key", "has_bid", "area_market", "need_ptr", "need_weight",
              "need_slot", "need_has_limits", "need_good_ptr", "goods", "effects", "limits", "limited", "basket_exponent",
              "basket_substitution", "basket_need_of_good", "need_count", "max_goods", "market_good", "offer_ptr",
@@ -205,10 +181,10 @@ def pack(setup, record, view, ledger, markets, basket_of, orders=None) -> "Packe
              "agent_external", "agent_import", "agent_export", "first_market", "first_buyer", "first_floor",
              "first_flexible", "first_reference", "first_exponent", "first_budget", "first_maximum", "first_units",
              "first_money")
-    values = [numpy.array([agent_index[buyer] for buyer in buyer_ids], dtype=numpy.int64), buyer_basket, buyer_area_row,
+    values = [agent_of_id[buyer_id], buyer_basket, buyer_area_row,
               buyer_key, has_bid, area_market, *flat[:6], flat[6], flat[7], flat[8], flat[9], flat[10], flat[11], flat[12],
               max_goods, market_good, offer_ptr, reservation, quantity, offer_key, offer_agent, offer_order, last_price, has_last,
-              fallback, fallback_ok, key_stock, numpy.array([key[0] for key in keys], dtype=numpy.int64), agent_cash, edge,
+              fallback, fallback_ok, key_stock, key_agent, agent_cash, edge,
               external, importing, exporting, *first]
     arguments = dict(zip(names, values))
     return Packed(arguments, market_keys, goods, buyer_ids, baskets, buyer_tile, agents, keys, offer_origin)

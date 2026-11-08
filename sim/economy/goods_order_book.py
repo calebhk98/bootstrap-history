@@ -266,11 +266,6 @@ class GoodsOrderBook:
             self._bid_lists = (count, BidLists(self))
         return self._bid_lists[1]
 
-    def offer_lists(self):
-        """Every offer row's columns as lists, read now (units left change as markets clear and the respend runs)."""
-        from .goods_market_rows import OfferLists
-        return OfferLists(self)
-
     def bid_count(self) -> int:
         self.flush()
         return int(self.bids.row_count[0])

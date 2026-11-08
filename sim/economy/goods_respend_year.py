@@ -98,7 +98,7 @@ class LeftMarket:
         if self.rows is None:
             return columns_of_bids(list(self.all_bids))
         table = self.rows.orders.tables()[0]
-        rows = numpy.array(self.rows.bid_rows, dtype=numpy.int64)
+        rows = self.rows.bid_array
         first = BidColumns(table.floor_quantity[rows], table.flexible_quantity[rows], table.reference_price[rows], table.elasticity[rows],
                            table.budget[rows], table.maximum_price[rows])
         return first if self.added is None else joined(first, self.added.columns())

@@ -35,6 +35,13 @@ class BoughtColumns:
                 agents.tolist(), units.tolist(), got.tolist(), net.tolist(), seen.tolist()) if was_given or saw}
         return self._bought
 
+    def columns(self) -> tuple:
+        """(agent numbers, units received, money paid net) of the buyers `get` finds: those that were given goods or paid; the money is
+        zero where the buyer was not seen paying. In the settlement's row order."""
+        _names, agents, units, got, net, seen = self._columns
+        found = got | seen
+        return agents[found], units[found], numpy.where(seen[found], net[found], 0.0)
+
     def get(self, buyer: str, default=None):
         return self._built().get(buyer, default)
 
