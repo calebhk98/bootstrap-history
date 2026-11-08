@@ -36,6 +36,9 @@ def declared_signatures():
         "sim.economy.goods_table_quotes.untraded_figures": [(whole, whole, floats, floats, floats, floats, floats, array(flag, 1))],
         "sim.economy.goods_table_quotes.wanted_by_market": [(whole, floats, floats, floats, floats, floats, floats, floats)],
         "sim.economy.merchants_kernel.lost_share": [(number, integer)],
+        "sim.economy.merchants_book_kernel.search_goods": [(
+            floats, array(flag, 1), array(flag, 1), whole, whole, whole, whole, floats, floats, whole, whole, floats, floats,
+            number, number, number)],
         "sim.economy.merchants_kernel.search_good": [(
             array(number, 1), array(number, 2), array(integer, 2), array(integer, 1), array(flag, 1),
             number, number, number, number, number)],
