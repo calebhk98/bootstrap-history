@@ -168,6 +168,13 @@ class MerchantTable:
         self.history_key, self.history_starts, self.history_price = _pack_history({})
         self.numbering = self.tables.goods_markets
 
+    def gather(self, matrix_name: str, rows: numpy.ndarray, market_rows: numpy.ndarray) -> numpy.ndarray:
+        """The figures of the merchants at `rows` in the markets at `market_rows` (-1: no such market, NaN), one row per merchant."""
+        self.fit_columns()
+        found = getattr(self, matrix_name)[numpy.ix_(rows, numpy.where(market_rows >= 0, market_rows, 0))]
+        found[:, market_rows < 0] = numpy.nan
+        return found
+
     def figures(self, matrix_name: str, row: int) -> RowFigures:
         return RowFigures(self, matrix_name, row)
 

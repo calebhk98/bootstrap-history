@@ -14,20 +14,20 @@ UNKNOWN = -2        # a pair not yet looked up in `PairRows`
 
 
 class PairRows:
-    """The goods-market row of (good, tile) for the market area holding the tile: a matrix indexed by two numberings (goods and
-    tiles), filled for the pairs asked about (a pair whose market is not numbered is asked again). Reset when the area map or the
-    market numbering is replaced."""
+    """A number for each (good, tile) pair (a market row, a slot), a matrix indexed by two numberings (goods and tiles), filled for
+    the pairs asked about. `resolve(good name, tile name)` gives the number (-1: none); with `retry_unnumbered` a -1 is asked again
+    next time (a market that was not numbered may be). Reset when the `scope` (objects the answers hold for) is replaced."""
 
-    def __init__(self) -> None:
+    def __init__(self, retry_unnumbered: bool) -> None:
         self.rows = numpy.full((0, 0), UNKNOWN, numpy.int64)
-        self.area_map = None
-        self.numbering = None
+        self.scope: tuple = ()
+        self.retry_unnumbered = retry_unnumbered
 
-    def lookup(self, good_numbers, tile_numbers, good_names, tile_names, area_map, tables) -> numpy.ndarray:
-        """The market row of each (good number, tile number) pair, -1 where the market is not numbered."""
-        if self.area_map is not area_map or self.numbering is not tables.goods_markets:
+    def lookup(self, good_numbers, tile_numbers, good_names, tile_names, scope: tuple, resolve) -> numpy.ndarray:
+        """The number of each (good number, tile number) pair."""
+        if len(self.scope) != len(scope) or any(old is not new for old, new in zip(self.scope, scope)):
             self.rows = numpy.full((0, 0), UNKNOWN, numpy.int64)
-            self.area_map, self.numbering = area_map, tables.goods_markets
+            self.scope = scope
         if len(good_numbers) == 0:
             return numpy.zeros(0, numpy.int64)
         goods, tiles = int(good_numbers.max()) + 1, int(tile_numbers.max()) + 1
@@ -36,19 +36,22 @@ class PairRows:
             grown[:self.rows.shape[0], :self.rows.shape[1]] = self.rows
             self.rows = grown
         found = self.rows[good_numbers, tile_numbers]
-        missing = numpy.flatnonzero((found == UNKNOWN) | (found < 0))
+        missing = numpy.flatnonzero((found == UNKNOWN) | ((found < 0) & self.retry_unnumbered))
         if len(missing):
-            pairs = numpy.unique(good_numbers[missing] * self.rows.shape[1] + tile_numbers[missing])
-            for pair in pairs.tolist():
+            for pair in numpy.unique(good_numbers[missing] * self.rows.shape[1] + tile_numbers[missing]).tolist():
                 good, tile = divmod(pair, self.rows.shape[1])
-                area = area_map.area_of(good_names[good], tile_names[tile])
-                self.rows[good, tile] = tables.goods_numbers.get(market_name((good_names[good], area)), -1)
+                self.rows[good, tile] = resolve(good_names[good], tile_names[tile])
             found = self.rows[good_numbers, tile_numbers]
         return found
 
 
-BOOK_PAIRS = PairRows()
-TRANSIT_PAIRS = PairRows()
+BOOK_PAIRS = PairRows(retry_unnumbered=True)
+TRANSIT_PAIRS = PairRows(retry_unnumbered=True)
+
+
+def market_row_resolver(area_map, tables):
+    """`PairRows` resolver: the goods-market row of the market area holding the tile (-1: not numbered)."""
+    return lambda good, tile: tables.goods_numbers.get(market_name((good, area_map.area_of(good, tile))), -1)
 
 
 def learn_rows(store: MerchantTable, rows: numpy.ndarray, news, lags: numpy.ndarray, speed: float) -> None:
@@ -103,12 +106,14 @@ def close_all(store: MerchantTable, book, area_map, currency, interest_rate: flo
     table = book.stock_rows.table
     held_owner, held_good, held_tile, held_quantity = merchant_year_kernels.merchant_stock(
         first, table.next_in_agent, table.good, table.tile, table.quantity)
-    held_market = BOOK_PAIRS.lookup(held_good, held_tile, book.good_ids.name_list, book.tile_ids.name_list, area_map, store.tables)
+    resolve = market_row_resolver(area_map, store.tables)
+    scope = (area_map, store.tables.goods_markets)
+    held_market = BOOK_PAIRS.lookup(held_good, held_tile, book.good_ids.name_list, book.tile_ids.name_list, scope, resolve)
     position_of_row = numpy.zeros(len(store), numpy.int64)
     position_of_row[rows] = numpy.arange(len(rows))
     count = store.transit_count
     transit_market = TRANSIT_PAIRS.lookup(store.transit_good[:count], store.transit_tile[:count], store.goods.name_list,
-                                          store.tiles.name_list, area_map, store.tables)
+                                          store.tiles.name_list, scope, resolve)
     owner = numpy.concatenate((held_owner, position_of_row[store.transit_owner[:count]]))
     order = numpy.argsort(owner, kind="stable")
     payout = merchant_year_kernels.settle_profits(
