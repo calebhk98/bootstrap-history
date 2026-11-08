@@ -28,6 +28,8 @@ def declared_signatures():
         "sim.economy.market_table_kernels.put_counts": [(whole, whole, whole, whole, whole, integer, integer, whole, whole)],
         "sim.economy.market_table_kernels.drop_counts": [(whole, whole, integer, integer, whole)],
         "sim.economy.market_table_kernels.market_of_good_tile": [(whole_grid, whole_grid)],
+        "sim.economy.goods_table_quotes.untraded_figures": [(whole, whole, floats, floats, floats, floats, floats, array(flag, 1))],
+        "sim.economy.goods_table_quotes.wanted_by_market": [(whole, floats, floats, floats, floats, floats, floats, floats)],
         "sim.economy.merchants_kernel.lost_share": [(number, integer)],
         "sim.economy.merchants_kernel.search_good": [(
             array(number, 1), array(number, 2), array(integer, 2), array(integer, 1), array(flag, 1),

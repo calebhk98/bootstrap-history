@@ -8,7 +8,7 @@ import types
 import unittest
 from unittest import mock
 
-from sim.economy import producers, producers_close, producers_working_capital, year_goods
+from sim.economy import producers, producers_close, producers_working_capital, seller_offers, year_goods
 from sim.book import Book
 from sim.economy.market_memory import MarketMemory
 from sim.economy.types import EDGE_MINT, Bid, Fill, GoodsMove, LabourResult, Offer, Transfer
@@ -74,7 +74,7 @@ class DeliveredVolumeTests(unittest.TestCase):
                                        goods=types.SimpleNamespace(curves={}, volumes={}, unsold={}, unmet={}))
         area_map = types.SimpleNamespace(area_of=lambda good, tile: "area", goods=lambda: {"timber"})
         ledger = YearLedger()
-        with mock.patch.object(year_goods.seller_offers, "strategic_offers", lambda s, r, v, b, o, p, costs=None: list(o)), \
+        with mock.patch.object(seller_offers, "strategic_offers", lambda s, r, v, b, o, p, costs=None: list(o)), \
                 mock.patch.object(year_goods.market_curves, "kept_areas", lambda *args: set()):
             year_goods.clear_goods(setup, record, None, area_map, {("timber", "area"): (bids, offers)}, {}, ledger)
         delivered = 10.0 - book.stock("seller", "timber", "t")

@@ -3,13 +3,34 @@ pays at the market edge. Firm entry reads the year's bids (entry_year.py); these
 such a buyer asks for draws a maker as a household's or a merchant's bid does. Nothing here clears."""
 from typing import Dict, List, Mapping, Sequence, Tuple
 
+from .goods_table_views import LazyObjects
 from .types import AreaId, Bid, GoodId
 
 
+class _WithStanding(Mapping):
+    """The year's bids by market with the standing bids joined to their markets; a market with none is the list (lazy where it sits
+    on the order tables) the year holds, left unread until someone reads it."""
+
+    def __init__(self, bids_by_market: Mapping, standing: Dict[Tuple[GoodId, AreaId], List[Bid]]):
+        self._base, self._standing = bids_by_market, standing
+
+    def __getitem__(self, key):
+        base = self._base.get(key, ())
+        if key not in self._standing:
+            return list(base) if isinstance(base, (list, tuple)) else LazyObjects(lambda: list(base), len(base))      # a copy, built when read
+        return list(base) + self._standing[key]
+
+    def __iter__(self):
+        return iter(sorted(set(self._base) | set(self._standing)))
+
+    def __len__(self) -> int:
+        return len(set(self._base) | set(self._standing))
+
+
 def with_standing_bids(bids_by_market: Mapping[Tuple[GoodId, AreaId], Sequence[Bid]],
-                       standing_bids: Sequence[Bid]) -> Dict[Tuple[GoodId, AreaId], List[Bid]]:
+                       standing_bids: Sequence[Bid]) -> Mapping[Tuple[GoodId, AreaId], Sequence[Bid]]:
     """The year's bids by market with the standing bids added to their markets."""
-    joined = {key: list(bids) for key, bids in bids_by_market.items()}
+    standing: Dict[Tuple[GoodId, AreaId], List[Bid]] = {}
     for bid in standing_bids:
-        joined.setdefault((bid.good, bid.area), []).append(bid)
-    return joined
+        standing.setdefault((bid.good, bid.area), []).append(bid)
+    return _WithStanding(bids_by_market, standing)
