@@ -431,9 +431,19 @@ carriage table and set of tiles from its searched costs and scaled on the way ou
 land-short tiles, the tile commitments and the recipe capacities are whole-column reads, summed in producer order by
 `year_close_dividend_kernels.add_in_order`; a recipe's yield and limit rows are one list read each.
 
-The entry plans (`entry_plans`, `margin_entry_plans`, `trial_entry_plans`, with their sitings) stay Python: they are thin glue spread
-over many small calls (the plans' loops, `unfilled`, `gap_at_entry_price`, the per-call glue of `EntryTables.siting`), and `closed_records`
-is below the bar. See "What is left" for what each needs.
+The entry plans are a table, `EntryPlans` (`entry_plan_table.py`: recipe row, tile row, good column, runs, yearly return, in the order the plans
+are applied), written by three compiled greedy loops that run the Python loops' steps in the same order, so the capacity, hands, room and
+`built` each plan changes are what the next one reads. `entry_unmet.py` packs the markets with unmet demand (the gap beyond the spare output, the
+recipes of each ranked by one sort over the returns kernel) and `entry_unmet_kernel.unmet_plans` takes the loop: unfilled demand at the recipe's
+full cost, the size held to the trade the markets carried (`entry_plan_steps.sized_runs_at`, over `entry_plan_pack.traded_grid`) and the siting
+(`entry_plan_steps.site_newcomer`, the same `site_choice` as before, the runs-anywhere branch and the unsited candidates now inside the kernel).
+`entry_margin_tables.py` does the same for the margin and the trial (`entry_margin_kernel.py`): `Weighed` is `entry_bid_markets.weigh` as
+columns, `ranked_by_cost` is `recipes_by_cost_many` as columns, and only the saved `margin_years` dictionary is read and written through the
+markets' keys (`entry_margin.keep_streaks`). The three loops share the siting arrays of `EntryTables`, whose `_ready_siting` now runs once.
+What each recipe's siting reads (`entry_plan_steps.SiteTables`) is worked out in Python once per recipe asked for, the first time it is
+asked (`entry_plan_pack.site_tables`). The plain Python of the three rules (`entry.entry_plans`, `entry_margin.margin_entry_plans`,
+`entry_trial.trial_entry_plans`) stays for a year with no arrays, and `test_year_speed_entry_arrays` compares the year's plans with and without them.
+`open_entrants` reads the plan columns; the producers it starts and the stakes and loan requests per plan are still made one plan at a time.
 
 ## Loans
 
@@ -661,15 +671,12 @@ Time any of these with `python3 tools/measure/function_times.py SAVE module:func
 One list; each item names what blocks it. The bar for every item is the one in "How to measure": convert when the function reaches
 about one percent of a step, and re-measure before acting, since the list lags the code.
 
-- **Entry reading columns, and the greedy loops as kernels.** `entry_plans`, `margin_entry_plans` and `trial_entry_plans` choose each
-  candidate's tile with `EntryTables.siting` (Python glue around `entry_kernels.site_choice`, updating the capacity and committed hours
-  the next candidate sees) and each plan changes the running `capacity`, `room` and `built`; a kernel for the loop needs the siting's glue
-  (the runs-anywhere branch, the unsited candidates' cache) as a kernel first. What a kernel can do before the loop is done (the demands).
-  Left per market in Python: the streak (a saved dictionary of `margin_years`, written for every market weighed), the ranking sort and
-  the request lists of `EntryTables.recipes_by_cost_many`. `entry_bid_markets.weigh` is a Python loop over the block's markets (a
-  dictionary read each for the area, capacity and price); with the goods-market numbers on the block it is a gather over `market_cells`,
-  the reach grid and the price grid.
-- **`UnmetDemand` and `EntryPlan` as table rows.** The Python loops above and `open_entrants` read them; rows pay only with those kernels.
+- **Entry: what is left after the plan loops.** The application of the plans in `open_entrants` (a `Producer` per plan, the owner's stake
+  taken from the cash the earlier stakes left, the entrant's loan request, `peers_of_recipe` for the crew) is a greedy loop over `Producer`
+  objects in `record.producers`, which every phase reads as a dictionary of records; it needs a column store of producers. The per-recipe reads
+  of `EntryTables` (`_site_of`, `_ensure_crew`: the people allowed by country, the yield row, the crew's practice) are Python per recipe; they
+  need recipe-by-tile and recipe-by-trade tables built once per setup and updated when a country learns a technique. The `unmet_by_market`
+  dictionary and the saved `margin_years` and `volumes` dictionaries are read once per phase through their keys.
 - **`record.goods.volumes`, `unsold` and `unmet` as columns.** The stores are saved dictionaries keyed by `market_key` that many readers
   and the area-redraw move; a column store needs a dict-like view that saves and loads and a kernel for `sized_runs` to read it, which
   together are worth less than the glue. A derived read is cheap without changing the save:
