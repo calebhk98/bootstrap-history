@@ -275,3 +275,27 @@ Python, in producer order.
 Tests: `sim/tests/test_close_pack_kernels.py`, `test_year_close_dividends.py`, `test_year_close_records.py`, `test_wear_kernels.py`,
 `test_year_close_households.py` (each kernel against the Python it replaces on written-out inputs).
 
+
+## Entry, exit, credit and worths (stage 4, first part)
+
+Done: the worths read the book's stocks in blocks (`year_arrays_worths.packed_stock` calls `close_pack_kernels.held_goods` once for
+every producer; a good the matrices have no column for gets a column past them and is priced where it was before); the
+producers' cash comes from `book.balances_at`. Entry's stakes, the owners' restakes and the exits post through
+`economy/posting_sequence.post_in_order`: the steps are turned into rows in step order (so the book numbers its names as it did
+posting them one by one), applied in one `apply_postings` call, one batch per step, and a refused step is replayed through the object
+path to raise the book's own error. `open_entrants` keeps the owner's cash as the earlier stakes leave it and posts the stakes after
+the plans are applied; `ExitBatch` collects the postings of each exit (repayments, dividend, goods) and posts them at `finish()`, which
+is safe because an exit reads only its own cash and goods.
+
+Not done, and why (measure with `python3 tools/measure/warm_year_profile.py SAVE OUT.prof`):
+
+- **Loans as a table.** The whole loan side (service, clearing, claims, the close's loan loop, write-offs) is a small share of a warm
+  year in the profile. A table that is the only copy would need every reader of `record.credit.loans` converted (banks, funds, titles,
+  secondary trade, state finance, debt relief, bank runs and bank service all read or replace the list, and `credit_record.transfer_loan`,
+  `shrink_collateral`, `bank_service` and `Contracts.rename` change a loan in place); a table kept beside the list has to be packed again
+  after each of the several list replacements a year makes, which costs more than the Python loops it would replace. So it waits for
+  its readers.
+- **Entry reading columns.** The remaining entry cost is spread over thin Python (the plans' loops, `unfilled`, `gap_at_entry_price`,
+  `demand_at` over `Bid` objects, the per-call glue of `EntryTables.siting`). The bids come from `ledger.bids_by_market`, which the
+  goods side fills with `LeftMarket.all_bids` (first-round rows plus later rounds' `Bid` objects): entry can read GoodsBids columns
+  only when that owner hands over per-market column blocks (floor, flexible, reference price, elasticity, budget, maximum price).
