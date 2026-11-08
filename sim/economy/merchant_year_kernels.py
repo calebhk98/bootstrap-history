@@ -5,7 +5,7 @@ Sums that Python took with `math.fsum` are `exact_sum`, so a merchant's stock va
 import numpy
 
 from sim.jit import njit
-from sim.labour.market.exact_sums import exact_sum
+from .year_ledger_note_kernels import exact_sum
 
 NOT_HEARD = -(10 ** 9)          # merchants_news.NOT_HEARD: the lag of a market whose area is gone
 HISTORY_STRIDE = 1 << 32        # merchant_table.HISTORY_STRIDE
