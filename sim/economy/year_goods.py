@@ -136,9 +136,12 @@ def clear_goods(setup, record, view, area_map, order_book, plans, ledger: YearLe
                                             market_curves_rows.of_rows(orders, each.rows.bid_array, each.rows.offer_array))
         delivered = [entry[0] for entry in answer]
         if len(cleared):
-            year_markets.fill_first_round(first_row, cleared.way, cleared.quote_price, cleared.quote_kind,
-                                          year_markets.add_bid_rows(cleared.rows.bid_grouped) + cleared.rows.bid_group_ptr[:-1],
-                                          cleared.bid_count, cleared.left_count)
+            left_units = orders.tables()[1].quantity_left[cleared.left_grouped]
+            year_markets.fill_first_round(first_row, cleared.way, cleared.price, cleared.quote_price, cleared.quote_kind,
+                                          year_markets.add_bid_rows(cleared.rows.bid_grouped) + cleared.rows.bid_group_ptr[:-1], cleared.bid_count,
+                                          year_markets.add_left_rows(cleared.left_grouped, left_units) + cleared.left_ptr[:-1], cleared.left_count)
+            if cleared.bought is not None:
+                year_markets.add_bought(first_row + cleared.bought[0], *cleared.bought[1:])
         year_markets.fill(first_row, delivered, cleared.wanted, cleared.offered, delivered, idle, goods_settle.last_prices(record.memory, cleared))
     goods_respend_year.respend(setup, record, view, ledger, left_markets,
                                lambda cohort: cohort_basket(setup, record, cohort), orders)

@@ -143,22 +143,39 @@ class GoodClearing:
             self.quote_price[by_quote], self.quote_kind[by_quote] = [each[by_quote] for each in
                                                                     untraded_quotes(untraded.lowest_ask, untraded.best_bid, untraded.funded)]
         self.bid_count = numpy.diff(rows.bid_group_ptr)
-        self.left_count = numpy.zeros(count, dtype=numpy.int64)       # how many offers keep units after the first round
+        self.bought = None                # (place, buyer number, units, money) of the first round's settlement, set by `goods_settle.settle_good`
+        self.left_grouped = numpy.zeros(0, dtype=numpy.int64)    # the rows of the offers that keep units after the first round, market by market
+        self.left_ptr = numpy.zeros(count + 1, dtype=numpy.int64)
+        self.left_count = numpy.zeros(count, dtype=numpy.int64)   # how many offers keep units after the first round
         if by_batch.any() or by_quote.any():
             self._count_left(by_batch, by_quote)
         for place in numpy.flatnonzero(self.way == ON_OBJECTS).tolist():
             self._clear_on_objects(place)
 
     def _count_left(self, by_batch: numpy.ndarray, by_quote: numpy.ndarray) -> None:
-        """`left_count` of the markets on the tables: offers with units left in the batch, or offers with units on a market that did not trade."""
+        """The offers that keep units after the first round, market by market (`left_grouped`, `left_ptr`, `left_count`): for a market that traded
+        the batch's offers with units left, in the batch's order; for one that did not trade the offers with units, in arrival order."""
+        count = len(self.market)
+        places, found = [], []
         if by_batch.any():
-            kept = numpy.concatenate(([0], numpy.cumsum(self.batch.left > 0.0)))
-            slots = self.slots[by_batch]
-            self.left_count[by_batch] = kept[self.pack.offer_ptr[slots + 1]] - kept[self.pack.offer_ptr[slots]]
+            slot_of_place = numpy.full(len(self.pack.offer_ptr) - 1, -1, dtype=numpy.int64)
+            slot_of_place[self.slots[by_batch]] = numpy.flatnonzero(by_batch)
+            place_of_offer = slot_of_place[numpy.repeat(numpy.arange(len(self.pack.offer_ptr) - 1), numpy.diff(self.pack.offer_ptr))]
+            kept = (self.batch.left > 0.0) & (place_of_offer >= 0)
+            places.append(place_of_offer[kept])
+            found.append(self.pack.offer_rows[kept])
         if by_quote.any():
             offers = self.context.orders.tables()[1]
-            units = numpy.bincount(self.rows.offer_position, weights=offers.quantity[self.rows.offer_rows] > 0.0, minlength=len(self.market))
-            self.left_count[by_quote] = units[by_quote].astype(numpy.int64)
+            grouped = self.rows.offer_grouped
+            place_of_row = numpy.repeat(numpy.arange(count), numpy.diff(self.rows.offer_group_ptr))
+            kept = by_quote[place_of_row] & (offers.quantity[grouped] > 0.0)
+            places.append(place_of_row[kept])
+            found.append(grouped[kept])
+        place, rows = numpy.concatenate(places), numpy.concatenate(found)
+        order = numpy.argsort(place, kind="stable")
+        self.left_grouped = rows[order]
+        self.left_ptr = numpy.concatenate(([0], numpy.cumsum(numpy.bincount(place, minlength=count)))).astype(numpy.int64)
+        self.left_count = numpy.diff(self.left_ptr)
 
     def _clear_on_objects(self, place: int) -> None:
         """The old rules on the market's `Bid` and `Offer` objects; the figures of the result are written into the columns."""
@@ -185,6 +202,8 @@ class GoodClearing:
         none.has_offers = none.has_units = none.has_funded_bid = numpy.zeros(0, dtype=numpy.bool_)
         none.areas = []
         none.bid_count = none.left_count = numpy.zeros(0, dtype=numpy.int64)
+        none.bought = None
+        none.left_grouped, none.left_ptr = numpy.zeros(0, dtype=numpy.int64), numpy.zeros(1, dtype=numpy.int64)
         none.rows = None
         return none
 
@@ -205,12 +224,7 @@ class GoodClearing:
 
     def left_rows_of(self, place: int) -> numpy.ndarray:
         """The rows of the market's offers that kept units after the first round (offers with units, for a market that did not trade)."""
-        offers = self.context.orders.tables()[1]
-        if self.way[place] == TABLE_TRADED:
-            first, last = self.pack.offer_ptr[self.slots[place]], self.pack.offer_ptr[self.slots[place] + 1]
-            return self.pack.offer_rows[first:last][self.batch.left[first:last] > 0.0]
-        offer_rows = self.rows.offers_of_market(place)
-        return offer_rows[offers.quantity[offer_rows] > 0.0]
+        return self.left_grouped[self.left_ptr[place]:self.left_ptr[place + 1]]
 
     def market_rows(self, place: int):
         """The market's `MarketRows` (None for a market on the objects)."""

@@ -60,7 +60,7 @@ def settle_good(record, ledger, cleared, good: str, plant_makers: Dict[str, list
     if (cleared.way[slots] == TABLE_TRADED).all():
         settled = settle_by_ids(book, cleared.batch, cleared.slots[slots], cleared.context.setup.currency_id, good, "sale of %s" % good,
                                 ledger.import_accounts, ledger.export_accounts)
-        return _noted_by_ids(book, ledger, good, plant_makers, slots, answer, settled)
+        return _noted_by_ids(book, ledger, good, plant_makers, slots, answer, settled, cleared)
     results = [cleared.result(position) for position in slots]
     plant_goods = {producer: {good} for producer in plant_makers.get(good, ())}
     done = iter(settlement.settle_goods_many(book, results, ledger.import_accounts, ledger.export_accounts))
@@ -72,7 +72,7 @@ def settle_good(record, ledger, cleared, good: str, plant_makers: Dict[str, list
     return answer
 
 
-def _noted_by_ids(book, ledger, good: str, plant_makers: Dict[str, list], slots: list, answer: list, settled: SettledByIds) -> list:
+def _noted_by_ids(book, ledger, good: str, plant_makers: Dict[str, list], slots: list, answer: list, settled: SettledByIds, cleared) -> list:
     """The ledger's rows of the settled markets (what `YearLedger.note_settlement` noted for each) and the answer per market."""
     if settled is None:
         return answer
@@ -94,6 +94,9 @@ def _noted_by_ids(book, ledger, good: str, plant_makers: Dict[str, list], slots:
     ledger.note_settlement_rows(settled.agent, settled.paid, settled.received, settled.imports, settled.exports, settled.got_goods,
                                 settled.goods_in, settled.goods_out, numpy.full(rows, SALES_PURPOSE, dtype=numpy.int64),
                                 numpy.full(rows, book.good_number(good), dtype=numpy.int64), template, reference, plant_bought)
+    found = settled.got_goods | settled.paid_as_buyer
+    cleared.bought = (numpy.repeat(numpy.array(slots, dtype=numpy.int64), counts)[found], settled.agent[found], settled.goods_in[found],
+                      numpy.where(settled.paid_as_buyer[found], settled.buyer_net[found], 0.0))
     names = book.agent_ids.name_list
     delivered = settled.delivered.tolist()
     for place, position in enumerate(slots):

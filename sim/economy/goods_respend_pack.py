@@ -10,7 +10,7 @@ import numpy
 from sim.constants import declare
 
 from .goods_production import read_stocks
-from .goods_respend_rows import Interner, bid_rows, bought_columns, offer_rows
+from .goods_respend_rows import Interner, bid_rows, bought_columns, offer_rows, table_columns
 from .goods_respend import need_of_good
 from .types import is_edge, is_external_edge
 
@@ -69,7 +69,8 @@ def pack(setup, record, view, ledger, markets, basket_of, orders=None) -> "Packe
     market_keys = sorted(markets)
     market_index = {key: index for index, key in enumerate(market_keys)}
     agents_interned, tiles_interned = Interner(), Interner()
-    bids = bid_rows(markets, market_keys, orders, agents_interned)
+    columns = table_columns(markets, market_keys) if orders is not None else None
+    bids = bid_rows(markets, market_keys, orders, agents_interned, columns)
     is_household = numpy.array([name in households for name in agents_interned.names], dtype=numpy.bool_)
     household_entry = is_household[bids.buyer] if len(bids.buyer) else numpy.zeros(0, dtype=numpy.bool_)
     buyer_ids = sorted({agents_interned.names[each] for each in numpy.unique(bids.buyer[household_entry]).tolist()})
@@ -108,7 +109,7 @@ def pack(setup, record, view, ledger, markets, basket_of, orders=None) -> "Packe
         buyer_area_row[row] = area_rows[slot]
     area_market = numpy.array(area_table, dtype=numpy.int64).reshape(len(area_table), len(goods))
 
-    offers = offer_rows(markets, market_keys, orders, agents_interned, tiles_interned)
+    offers = offer_rows(markets, market_keys, orders, agents_interned, tiles_interned, columns)
     buyer_id = numpy.array([agents_interned.ids[buyer] for buyer in buyer_ids], dtype=numpy.int64)
     used_ids = numpy.unique(numpy.concatenate((buyer_id, offers.seller)))
     agents = sorted(agents_interned.names[each] for each in used_ids.tolist())
@@ -151,7 +152,7 @@ def pack(setup, record, view, ledger, markets, basket_of, orders=None) -> "Packe
         if price is not None:
             fallback[index] = price
             fallback_ok[index] = True
-    units, money = bought_columns(markets, market_keys, bids, agents_interned, len(orders.book.agent_ids.name_list) if orders is not None else 0)
+    units, money = bought_columns(markets, market_keys, bids, agents_interned, len(orders.book.agent_ids.name_list) if orders is not None else 0, columns)
     mine = numpy.flatnonzero(household_entry)
     entry_row = row_of_id[bids.buyer[mine]]
     entry_market = bids.market[mine]

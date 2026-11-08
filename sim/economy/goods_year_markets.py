@@ -26,6 +26,8 @@ GOODS_YEAR_MARKETS = TableSpec("GoodsYearMarkets", (
            "code"),
     Column("bid_first", numpy.int64, "where the market's first-round bid rows start in `YearMarkets.bid_rows()`", "place"),
     Column("bid_count", numpy.int64, "how many first-round bids the market has", "count"),
+    Column("first_price", numpy.float64, "the first round's price; NaN: it had none", "currency units per unit"),
+    Column("left_first", numpy.int64, "where the market's offers that kept units start in `YearMarkets.left_rows()` and `left_units()`", "place"),
     Column("left_count", numpy.int64, "how many of the market's offers keep units after the rounds so far", "count"),
 ))
 GoodsYearMarkets = GOODS_YEAR_MARKETS.make_type(__name__)
@@ -33,31 +35,94 @@ GoodsYearMarkets = GOODS_YEAR_MARKETS.make_type(__name__)
 _FIRST_CAPACITY = 64
 
 
+class Flat:
+    """One column of numbers that grows by pieces (one good's rows after another's); `add` gives the place a piece starts at."""
+
+    def __init__(self, dtype) -> None:
+        self._dtype, self._pieces, self._total = dtype, [], 0
+
+    def add(self, piece: numpy.ndarray) -> int:
+        first = self._total
+        self._pieces.append(numpy.asarray(piece, dtype=self._dtype))
+        self._total += len(piece)
+        return first
+
+    def all(self) -> numpy.ndarray:
+        """Every number added, in order, as one array (the same array until more is added)."""
+        if len(self._pieces) != 1:
+            self._pieces = [numpy.concatenate(self._pieces) if self._pieces else numpy.zeros(0, dtype=self._dtype)]
+        return self._pieces[0]
+
+
 class YearMarkets:
     """The table and the rows in use; a market claims a row when it is made (`claim`) and gets its figures with `fill`."""
 
     def __init__(self, capacity: int = _FIRST_CAPACITY) -> None:
         self.table = GOODS_YEAR_MARKETS.new_table(GoodsYearMarkets, capacity)
-        self._bid_pieces: list = []
-        self._bid_total = 0
+        self._bids, self._left_rows, self._left_units = Flat(numpy.int64), Flat(numpy.int64), Flat(numpy.float64)
         self._added: list = []
+        self._added_names: list = []
+        self._later: list = []
+        self._bought: list = []
+        self.first_round_filled = False       # false for a market made alone: its rows are not in the columns below
 
     def add_bid_rows(self, rows: numpy.ndarray) -> int:
         """Keep these order-table bid rows (one good's markets, market by market); the place the first of them has in `bid_rows()`."""
-        first = self._bid_total
-        self._bid_pieces.append(numpy.asarray(rows, dtype=numpy.int64))
-        self._bid_total += len(rows)
-        return first
+        return self._bids.add(rows)
 
     def bid_rows(self) -> numpy.ndarray:
         """Every kept bid row, in the order they were added."""
-        if len(self._bid_pieces) > 1:
-            self._bid_pieces = [numpy.concatenate(self._bid_pieces)]
-        return self._bid_pieces[0] if self._bid_pieces else numpy.zeros(0, dtype=numpy.int64)
+        return self._bids.all()
 
-    def add_added_bids(self, cells: numpy.ndarray, flexible, reference, elasticity, budget, maximum) -> None:
-        """Keep the bids later rounds added: the table row of each one's market and its columns (the floor is zero)."""
+    def add_left_rows(self, rows: numpy.ndarray, units: numpy.ndarray) -> int:
+        """Keep the order-table rows of the offers that kept units after the first round, with the units each kept (one good's markets, market
+        by market); the place the first has in `left_rows()` and `left_units()`."""
+        self._left_units.add(units)
+        return self._left_rows.add(rows)
+
+    def left_rows(self) -> numpy.ndarray:
+        """The rows of every offer that kept units after the first round."""
+        return self._left_rows.all()
+
+    def left_units(self) -> numpy.ndarray:
+        """The units each offer of `left_rows()` has left after the rounds so far (the respend's kernel changes them in place)."""
+        return self._left_units.all()
+
+    def add_bought(self, cells: numpy.ndarray, agent: numpy.ndarray, units: numpy.ndarray, money: numpy.ndarray) -> None:
+        """Keep what the first round's settlement gave each buyer that bought or paid: the market's table row, the buyer's book number, the units
+        received and the money paid net (zero where the buyer was not seen paying)."""
+        self._bought.append((cells, agent, units, money))
+
+    def bought(self):
+        """(table row, buyer number, units, money) of every buyer the first round's settlement noted, in the order they were kept."""
+        if not self._bought:
+            return numpy.zeros(0, dtype=numpy.int64), numpy.zeros(0, dtype=numpy.int64), numpy.zeros(0), numpy.zeros(0)
+        return tuple(numpy.concatenate([piece[each] for piece in self._bought]) for each in range(4))
+
+    def add_added_bids(self, cells: numpy.ndarray, flexible, reference, elasticity, budget, maximum, buyers=None, tiles=None) -> None:
+        """Keep the bids later rounds added: the table row of each one's market and its columns (the floor is zero), and, for a reader that
+        wants `Bid` objects, the buyer and tile names of each."""
         self._added.append((cells, flexible, reference, elasticity, budget, maximum))
+        self._added_names.append((buyers, tiles))
+
+    def added_of(self, row: int):
+        """(buyers, tiles, flexible, reference, elasticity, budget, maximum) of the bids later rounds added to the market at table `row`, as
+        lists, in the order they were added; None when it has none."""
+        found = []
+        for piece, (buyers, tiles) in zip(self._added, self._added_names):
+            for place in numpy.flatnonzero(piece[0] == row).tolist():
+                found.append((buyers[place], tiles[place], *[float(each[place]) for each in piece[1:]]))
+        return None if not found else tuple(list(each) for each in zip(*found))
+
+    def add_later(self, cells: numpy.ndarray, quantity, price, demand, offered) -> None:
+        """Keep the respend rounds' clearings: the table row of each one's market and its quantity, price (NaN: none), demand at that price
+        and the units offered at it, rounds in the order they were run."""
+        self._later.append((cells, quantity, price, demand, offered))
+
+    def later_of(self, row: int) -> list:
+        """The respend rounds of the market at table `row` as (quantity, price or None, demand, offered), in the order they were run."""
+        return [(float(piece[1][place]), None if piece[2][place] != piece[2][place] else float(piece[2][place]), float(piece[3][place]),
+                 float(piece[4][place])) for piece in self._later for place in numpy.flatnonzero(piece[0] == row).tolist()]
 
     def added_bids(self, cells: numpy.ndarray):
         """(pointers, flexible, reference, elasticity, budget, maximum) of the added bids of the markets at `cells`, market by market in this
@@ -91,10 +156,13 @@ class YearMarkets:
         table.idle_years[first:last] = idle_years
         table.last_price[first:last] = last_price
 
-    def fill_first_round(self, first: int, way, quote_price, quote_kind, bid_first, bid_count, left_count) -> None:
+    def fill_first_round(self, first: int, way, price, quote_price, quote_kind, bid_first, bid_count, left_first, left_count) -> None:
         """Set how the rows `first ...` were cleared, their quotes, where their bid rows are and how many offers they keep."""
         table, last = self.table, first + len(way)
+        self.first_round_filled = True
         table.way[first:last] = way
+        table.first_price[first:last] = price
+        table.left_first[first:last] = left_first
         table.quote_price[first:last] = quote_price
         table.quote_kind[first:last] = quote_kind
         table.bid_first[first:last] = bid_first

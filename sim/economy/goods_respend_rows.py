@@ -20,6 +20,27 @@ BidRows = namedtuple("BidRows", ("market", "buyer", "floor", "flexible", "refere
 OfferRows = namedtuple("OfferRows", ("market", "seller", "tile", "reservation", "quantity", "origin"))
 
 
+TableColumns = namedtuple("TableColumns", ("year_markets", "cells", "on_tables"))
+TableColumns.__doc__ = """The markets of a pack as rows of the year's table (`goods_year_markets.YearMarkets`): `cells[i]` is market i's row, `on_tables[i]`
+whether it was cleared on the order tables (its bids, offers left and settlement are then read from the table's columns, not from objects)."""
+
+
+def table_columns(markets: dict, market_keys: Sequence):
+    """`TableColumns` of the markets when they all share one filled year table, else None (a market made alone, a test's)."""
+    lefts = [markets[key] for key in market_keys]
+    shared = lefts[0].year_markets if lefts else None
+    if shared is None or not shared.first_round_filled or not all(each.year_markets is shared for each in lefts):
+        return None
+    cells = numpy.array([each.row for each in lefts], dtype=numpy.int64)
+    return TableColumns(shared, cells, shared.table.way[cells] != 2)
+
+
+def _ranges(first: numpy.ndarray, count: numpy.ndarray) -> numpy.ndarray:
+    """The places `first[i] .. first[i] + count[i] - 1` for every i, one after another."""
+    stops = numpy.cumsum(count)
+    return numpy.repeat(first - (stops - count), count) + numpy.arange(int(stops[-1]) if len(stops) else 0, dtype=numpy.int64)
+
+
 class Interner:
     """Distinct names numbered by first sight; `names[id]` is the name, `ids[name]` the id."""
 
@@ -54,13 +75,23 @@ def _empty_bids() -> BidRows:
                    numpy.zeros(0, dtype=numpy.int64))
 
 
-def bid_rows(markets: dict, market_keys: Sequence, orders, agents: Interner) -> BidRows:
+def bid_rows(markets: dict, market_keys: Sequence, orders, agents: Interner, columns=None) -> BidRows:
     """The first-round bids of every market: a market on the tables from the order table's columns, one on the objects from its `Bid`s.
     `table_agent` is the buyer's book number for an entry of a market on the tables, else -1."""
     table = orders.tables()[0] if orders is not None else None
     names = orders.book.agent_ids.name_list if orders is not None else None
     pieces = []
-    on_tables = [(index, markets[key].rows) for index, key in enumerate(market_keys) if markets[key].rows is not None]
+    on_tables = [(index, markets[key].rows) for index, key in enumerate(market_keys) if markets[key].rows is not None] if columns is None else []
+    if columns is not None and columns.on_tables.any():
+        here = numpy.flatnonzero(columns.on_tables)
+        cells = columns.cells[here]
+        counts = columns.year_markets.table.bid_count[cells]
+        rows = columns.year_markets.bid_rows()[_ranges(columns.year_markets.table.bid_first[cells], counts)]
+        market = numpy.repeat(here, counts)
+        number = table.buyer[rows]
+        pieces.append(BidRows(market, agents.of_numbers(number, names), table.floor_quantity[rows], table.flexible_quantity[rows],
+                              table.reference_price[rows], table.elasticity[rows], table.budget[rows], table.maximum_price[rows],
+                              number.astype(numpy.int64)))
     if on_tables:
         rows = numpy.concatenate([each.bid_array for _index, each in on_tables])
         market = numpy.repeat(numpy.array([index for index, _each in on_tables], dtype=numpy.int64),
@@ -69,7 +100,8 @@ def bid_rows(markets: dict, market_keys: Sequence, orders, agents: Interner) -> 
         pieces.append(BidRows(market, agents.of_numbers(number, names), table.floor_quantity[rows], table.flexible_quantity[rows],
                               table.reference_price[rows], table.elasticity[rows], table.budget[rows], table.maximum_price[rows],
                               number.astype(numpy.int64)))
-    objects = [(index, bid) for index, key in enumerate(market_keys) if markets[key].rows is None for bid in markets[key].bids]
+    objects = [(index, bid) for index, key in enumerate(market_keys) if (markets[key].rows is None if columns is None else not columns.on_tables[index])
+               for bid in markets[key].bids]
     if objects:
         figures = numpy.array([(bid.floor_quantity, bid.flexible_quantity, bid.reference_price, bid.elasticity, bid.budget,
                                 bid.maximum_price) for _index, bid in objects], dtype=numpy.float64).reshape(-1, 6)
@@ -81,7 +113,7 @@ def bid_rows(markets: dict, market_keys: Sequence, orders, agents: Interner) -> 
     return BidRows(*[numpy.concatenate(each) for each in zip(*pieces)])
 
 
-def bought_columns(markets: dict, market_keys: Sequence, rows: BidRows, agents: Interner, agent_count: int) -> tuple:
+def bought_columns(markets: dict, market_keys: Sequence, rows: BidRows, agents: Interner, agent_count: int, columns=None) -> tuple:
     """(units received, money paid) in the first round's settlement for each bid entry (zero where the buyer is not in the market's
     `bought`). A market on the tables whose `bought` kept its columns is read with one search over all of them (`agent_count`: the book's agents,
     which numbers the rows' agents by); another is looked up by buyer name."""
@@ -90,9 +122,19 @@ def bought_columns(markets: dict, market_keys: Sequence, rows: BidRows, agents: 
     stride = agent_count + 1
     key_parts, unit_parts, money_parts = [], [], []
     by_name = []
+    if columns is not None:
+        cell, agent, given, paid = columns.year_markets.bought()
+        index_of_cell = numpy.full(int(columns.year_markets.table.row_count[0]), -1, dtype=numpy.int64)
+        index_of_cell[columns.cells] = numpy.arange(len(columns.cells), dtype=numpy.int64)
+        if len(agent):
+            key_parts.append(index_of_cell[cell] * stride + agent)
+            unit_parts.append(given)
+            money_parts.append(paid)
     for index, key in enumerate(market_keys):
+        if columns is not None and columns.on_tables[index]:
+            continue
         bought = markets[key].bought
-        if hasattr(bought, "columns") and markets[key].rows is not None:
+        if columns is None and hasattr(bought, "columns") and markets[key].rows is not None:
             agent, given, paid = bought.columns()
             if len(agent):
                 key_parts.append(index * stride + agent)
@@ -116,12 +158,21 @@ def bought_columns(markets: dict, market_keys: Sequence, rows: BidRows, agents: 
     return units, money
 
 
-def offer_rows(markets: dict, market_keys: Sequence, orders, agents: Interner, tiles: Interner) -> OfferRows:
+def offer_rows(markets: dict, market_keys: Sequence, orders, agents: Interner, tiles: Interner, columns=None) -> OfferRows:
     """The offers left with units in every market, in clearing order within a market (cheapest reservation, then seller and tile name;
     equal offers keep the order of the market's list). A market on the tables reads the order table's units left."""
     table = orders.tables()[1] if orders is not None else None
     pieces = []
-    on_tables = [(index, markets[key].rows) for index, key in enumerate(market_keys) if markets[key].rows is not None]
+    on_tables = [(index, markets[key].rows) for index, key in enumerate(market_keys) if markets[key].rows is not None] if columns is None else []
+    if columns is not None and columns.on_tables.any():
+        here = numpy.flatnonzero(columns.on_tables)
+        cells = columns.cells[here]
+        counts = columns.year_markets.table.left_count[cells]
+        places = _ranges(columns.year_markets.table.left_first[cells], counts)
+        rows = columns.year_markets.left_rows()[places]
+        pieces.append(OfferRows(numpy.repeat(here, counts), agents.of_numbers(table.seller[rows], orders.book.agent_ids.name_list),
+                                tiles.of_numbers(table.tile[rows], orders.book.tile_ids.name_list), table.reservation_price[rows],
+                                columns.year_markets.left_units()[places], numpy.arange(len(rows), dtype=numpy.int64) - numpy.repeat(numpy.cumsum(counts) - counts, counts)))
     if on_tables:
         rows = numpy.concatenate([each.left_array for _index, each in on_tables])
         counts = [len(each.left_array) for _index, each in on_tables]
@@ -130,7 +181,7 @@ def offer_rows(markets: dict, market_keys: Sequence, orders, agents: Interner, t
         pieces.append(OfferRows(market, agents.of_numbers(table.seller[rows], orders.book.agent_ids.name_list),
                                 tiles.of_numbers(table.tile[rows], orders.book.tile_ids.name_list), table.reservation_price[rows],
                                 table.quantity_left[rows], numpy.arange(len(rows), dtype=numpy.int64) - starts))
-    objects = [(index, place, offer) for index, key in enumerate(market_keys) if markets[key].rows is None
+    objects = [(index, place, offer) for index, key in enumerate(market_keys) if (markets[key].rows is None if columns is None else not columns.on_tables[index])
                for place, offer in enumerate(markets[key].offers)]
     if objects:
         pieces.append(OfferRows(numpy.array([index for index, _place, _offer in objects], dtype=numpy.int64),
