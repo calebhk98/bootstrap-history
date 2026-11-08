@@ -272,38 +272,21 @@ A good takes the object path (`settlement.settle_goods_many`, `YearLedger.note_s
 of the good's batch (a mod replaced the rules). Tests: `test_goods_settle_ids.py` (the id path against `settle_results` on random batches),
 `test_goods_memory_notes.py`, `test_goods_idle_years.py`, `test_goods_production.py` (each kernel against the wrapper calls it replaces).
 
-Still reading goods objects: `ledger.clearings` and `ledger.mint_takes` keep the `ClearingResult` of every market (the mint and entry read
-them); the watchers' buy fills are `Fill` objects (`bought_by`, only for markets a merchant or the state bought in); `LeftMarket` and its
-`bought` mapping (built from columns when the respend pack asks); the respend pack and unpack still mix columns and objects; the markets cleared
-on the rules over objects (a book edge selling, a good outside the year arrays); `producers.production_lines` and `producers.offers` are
-the rules over one producer; `ledger.hours_hired.get` is a per-producer view read.
+Still reading goods objects: the watchers' buy fills are `Fill` objects (`bought_by`, only for markets a merchant or the state bought in);
+`ledger.mint_takes` keeps the `ClearingResult` of the coin metal's markets only (the mint's top-up reads them; `ledger.clearings` is gone);
+`LeftMarket` and its `bought` mapping (built from columns when the respend pack asks); the respend pack still builds per-bid tuples and the
+offers left as `LeftOffer` records; the markets cleared on the rules over objects (a book edge selling, a good outside the year arrays);
+`producers.production_lines` and `producers.offers` are the rules over one producer; `_produce_and_offer` still loops over producers.
 
-## Price and wage reads through the year view (stage 4, package)
-
-The year view's readers take a block of the market memory's tables where they asked `area_of` and `offered_price` or `wage` once per item.
-
-| Read | Block | Kernel |
-|---|---|---|
-| offered price of every good on a tile (`YearView.offered_prices_on`, `offered_prices_for`) | `price_grid.PriceGrid`: goods by tiles, through `year_arrays_memory.markets_by_good_tile`; NaN in the grid is "no price", the tile's block holds only goods that have one | `price_grid_kernels.offered_by_good_tile` |
-| remembered price of every good on a tile (`remembered_prices_on`, `present_prices_at`) | the same grid's second layer | the same kernel |
-| the one wage rule for trades by labour areas (`YearView.wage_rule_block`, `wage_rule_at`; `trade_wages.wage_in_view`, `year_arrays.wage_grid`) | `wage_block.wage_rule_block`; `WageRuleTable` keeps every trade of the setup in every tile's labour area | `wage_block_kernels.wage_rule_grid` over `labour_market_matrix` and `market_rows_of` |
-| national prices and wages, the notional volumes (`national_prices.remembered_columns`, `notional._traded_volumes`) | the goods and labour tables' columns in the stores' entry order (`MarketStore.rows`) | `market_column_kernels.add_in_order_by_group` |
-
-**When a grid is filled again.** A grid or table is refilled by the first read after the memory is written to: `price_grid.memory_stamp` is the
-write count of the memory (`written_stamp`), the count of writes through a store (`MarketTables.writes`, which every `prices[...] = ...`,
-`pop` and `clear` bumps, so a price written without `note_written` is still seen) and the numbering's generation. A new writer of a column
-that goes round the stores and the memory's methods must bump one of these. `PriceGrid.refreshes` and `WageRuleTable.refreshes` count the refills.
-
-**What a block read does not cover.** A good the area map holds no market for is answered "no price" only while the memory numbers no market for
-any such good (`EVERY_GOOD`); otherwise it is read by itself, as is a tile the area map does not hold (which refuses as before). The scalar
-getters (`price`, `offered_price`, `wage`, ...) stay for the screens, the protocol and callers that read one cell.
-
-Callers still reading one value at a time through the view: `producers.py` (`expected_price`, `paid_input_prices`, `live_input_prices_at`,
-`live_wages_at`), `year_goods.py`, `plan_year.py`, `year_goods_offer_rows.py`, `households_orders_pack.py`, `goods_respend_pack.py`,
-`entry_year.traded`, `households_store._store_weights` (offered and usual prices), `land_bid_year.py`, `state_budget.py`
-(`wage_in_view` callers there and in `location.py`, `mint_labour.py`, `year_close.py` already read the rule's table). Each reads a tile's block with `view.offered_prices_for(tile, goods)`, `view.remembered_prices_on(tile)` or
-`view.wage_rule_block(trades, labour_areas)`. Tests: `sim/tests/test_price_grid.py`, `test_wage_block.py`, `test_market_columns.py`.
-Measure with `python3 tools/measure/warm_year_profile.py SAVE OUT.prof` and look for calls to `area_of`, `offered_price` and `price_of`.
+**Stage 4, goods remainder and entry.** The respend rounds are rows: a later round's clearing is a tuple of `LeftMarket.later` and a row of the
+ledger's rounds (no `ClearingResult`), the bids it adds are `goods_added_bids.AddedBids` columns (objects only through `bids()`), and
+`year_goods._received_price` reads both. A producer's turn reads its runs from the plan table's column and its hired hours from the ledger's pair
+table in one kernel call (`goods_production_reads.py`). Settled totals are posted by `sim/book_settled.post_settled_by_numbers`. Entry reads each
+market's bids as `bid_columns.BidColumns` (`ledger.bids_by_market[market]` is a `MarketBids`: columns from the order table's rows plus the added
+bids, objects only when a rule asks); `demand_at` and the unfilled sum are the kernels `demand_at_columns` and `sum_taken_at_columns`, bit for bit the
+Python (`test_bid_columns.py`). Not done: the respend pack/unpack without per-bid tuples, `UnmetDemand`/`EntryPlan` as tables, the mint reading the
+results table, the object-rule markets and `production_lines` as kernels, and the remaining per-good price reads (`producers.paid_input_prices`,
+`next_expectations`, `entry_year._traded_volume`, `goods_respend_pack`).
 
 ## The close on tables (stage 3)
 
@@ -386,15 +369,14 @@ call (`numbers_of` turns names into ids). `plan_year.stocks_by_slot` and `househ
 (`bid`, `offer`, or `bids_from`/`offers_from` for a rule that still makes objects) and `write()` hands them to the book. The mint, the
 state (`state_budget.goods_bids`, `state_store` through `year_order_sources.state_orders`), the households' tool bids and plain-path
 bids, merchants and their carriers (`year_order_sources.merchant_orders`), the engine's seat orders, firm land bids and plant bids all
-write through it. `order_book_named.NamedOrderBook` (what `economy.py` makes with `new_named_order_book`) keeps these rows and the plan
+write through it. `GoodsOrderBook` (items in `goods_order_items.py`) keeps these rows and the plan
 table's in the book's own arrival list and numbers the names of everything waiting as one batch at the flush, so agents, goods, tiles
 and goods markets are numbered exactly as when each order waited as an object (the market numbering is saved, so a digest sees it).
 A plain `GoodsOrderBook` or a `{(good, area): (bids, offers)}` dict still works as the target (tests).
 
 **Still objects.** The rules `households.goods_orders` (a basket with share limits), `households_store.store_bids/store_offers`,
 `tool_wear.tool_bids`, `merchants.orders`, `carriage_fleet_book.bids`, `land_bid.hectare_bid` and `producers.plan` build `Bid`/`Offer`
-objects inside the rule; they are unpacked into rows at the call (`bids_from`), never handed to the book. `lending.bid_household_loans`
-still uses the dict door.
+objects inside the rule; they are unpacked into rows at the call (`bids_from`), never handed to the book. `lending.bid_household_loans` writes through `OrderRows`.
 
 Measure: `python3 tools/measure/warm_year_profile.py SAVE OUT.prof` for the call counts of `stock`, `balance`, `make_bid` and
 `plans_of`; `year-time --count-instructions` for the whole year. Tests: `sim/tests/test_year_speed_plan_tables.py`,
