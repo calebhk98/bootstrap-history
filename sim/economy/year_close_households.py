@@ -1,0 +1,116 @@
+"""Every cohort's year end: its record after the year, and the goods it used up as one call to the book.
+
+`close_households(setup, record, view, ledger, property_income)` closes the cohorts in id order. The year's receipts of each cohort
+(received and grown goods), its wages and what it spent are read from the ledger's tables for all cohorts at once; the cohort's new
+record is `households_close.closed_cohort` (the rules that read the view); the goods each uses up are posting rows from a kernel,
+cut to what the cohort holds, applied as one call with a batch for each cohort. A cohort's consumption only changes its own stocks,
+so the cut reads the same stock the one-cohort-at-a-time loop read."""
+from typing import Dict
+
+import numpy as np
+
+from sim.book_post import table_from
+from sim.book_tables import GOODS_MOVE_POSTINGS, TRANSFER_POSTINGS, GoodsMovePostings, TransferPostings
+from sim.compiled_tables.causes import OK
+from sim.world.need_basket import subsistence_cost_per_person
+
+from . import household_work_year, households_cohort, households_close
+from .close_pack import figure_values
+from .household_work_year import basket_key, cohort_basket
+from .types import EDGE_CONSUMPTION, GoodsMove
+from .year_close_household_kernels import consumption_postings, receipts_with_grown
+
+CONSUMPTION_PURPOSE = "consumption"
+
+
+def _good_ranks(names) -> np.ndarray:
+    ranks = np.empty(len(names), dtype=np.int64)
+    ranks[sorted(range(len(names)), key=names.__getitem__)] = np.arange(len(names))
+    return ranks
+
+
+def _durable_flags(book, specs) -> np.ndarray:
+    """Per good number: 1 for a good that is used up (all but the durables, which serve and stay)."""
+    consumed = np.ones(len(book.good_ids), dtype=np.uint8)
+    for good, spec in specs.items():
+        number = book.good_ids.numbers.get(good)
+        if number is not None and spec.service_life_years > 0.0:
+            consumed[number] = 0
+    return consumed
+
+
+def _number_unseen(book, rows, cohort_ids, tiles_of) -> None:
+    """Number, in the order the cohorts are booked, the cohorts and tiles the book has not met and the consumption account, as
+    the book would on meeting them one batch at a time. Fills in the giver and tile of the rows that had none."""
+    givers, _goods, tiles, _quantities, _batches, owners = rows
+    unseen = np.nonzero((givers < 0) | (tiles < 0))[0]
+    if not len(unseen) and EDGE_CONSUMPTION in book.agent_ids.numbers:
+        return
+    seen_batch = -1
+    for row, owner in enumerate(owners.tolist()):
+        if owner == seen_batch:
+            continue
+        seen_batch = owner
+        if givers[row] < 0:
+            givers[owners == owner] = book.agent_number(cohort_ids[owner])
+        if tiles[row] < 0:
+            tiles[owners == owner] = book.tile_number(tiles_of[owner])
+        book.agent_number(EDGE_CONSUMPTION)
+
+
+def _post_consumption(book, rows) -> None:
+    givers, goods, tiles, quantities, batches, _owners = rows
+    count = len(givers)
+    if not count:
+        return
+    receiver = book.agent_number(EDGE_CONSUMPTION)
+    code, reference = book.purposes.encode(CONSUMPTION_PURPOSE)
+    moves = table_from(GOODS_MOVE_POSTINGS, GoodsMovePostings, count, givers, np.full(count, receiver), goods, tiles, tiles, quantities,
+                       np.full(count, code), np.full(count, reference), batches)
+    transfers = table_from(TRANSFER_POSTINGS, TransferPostings, 0, *[[] for _column in TRANSFER_POSTINGS.columns])
+    batch_count = int(batches[-1]) + 1
+    outcomes, _scratch = book.apply_postings(transfers, moves, batch_count)
+    refused = np.nonzero(outcomes.code[:batch_count] != OK)[0]
+    if len(refused):         # the book's own refusal for the first cohort whose goods it would not move
+        rows_of = np.nonzero(batches == int(refused[0]))[0].tolist()
+        good_names, tile_names, agent_names = book.good_ids.name_list, book.tile_ids.name_list, book.agent_ids.name_list
+        book.move_many([GoodsMove(agent_names[givers[row]], EDGE_CONSUMPTION, good_names[goods[row]], tile_names[tiles[row]],
+                                  float(quantities[row]), CONSUMPTION_PURPOSE) for row in rows_of])
+
+
+def close_households(setup, record, view, ledger, property_income: Dict[str, float]) -> None:
+    book = record.book
+    tables = ledger.tables
+    if tables.book is not book:
+        raise ValueError("the year ledger must number agents and goods as the record's book does")
+    cohort_ids = sorted(record.cohorts)
+    tables.flush()
+    agent_numbers = np.array([tables.book.agent_ids.numbers.get(each, -1) for each in cohort_ids], dtype=np.int64)
+    figures = tables.figures
+    wages = figure_values(figures.wages_in, figures.order_wages_in, agent_numbers).tolist()
+    spent = figure_values(figures.money_out, figures.order_money_out, agent_numbers).tolist()
+    start, goods, amounts = receipts_with_grown(figures.first_received, tables.pairs["received"].rows.table, figures.first_grown,
+                                                tables.pairs["grown"].rows.table, agent_numbers)
+    good_names = tables.book.good_ids.name_list
+    names, values, starts = [good_names[each] for each in goods.tolist()], amounts.tolist(), start.tolist()
+    offered_prices: Dict = {}      # the prices households are closed on do not change while they close
+    baskets: Dict = {}
+    for position, cohort_id in enumerate(cohort_ids):
+        cohort = record.cohorts[cohort_id]
+        received = dict(zip(names[starts[position]:starts[position + 1]], values[starts[position]:starts[position + 1]]))
+        income = wages[position] + property_income.get(cohort_id, 0.0)
+        key = basket_key(record, cohort)       # cohorts of one tile, hearth, hired work and milled grains share a basket and its floor cost
+        if key not in baskets:
+            baskets[key] = (cohort_basket(setup, record, cohort, buying=False),
+                            subsistence_cost_per_person(household_work_year.priced_basket(setup, record, view, cohort)))
+        basket, floor_cost = baskets[key]
+        closed = households_close.closed_cohort(cohort, received, view, setup.specs, basket, income, spent[position], offered_prices,
+                                                floor_cost)
+        households_cohort.put_cohort(record.cohorts, closed)
+    tiles_of = [record.cohorts[each].tile for each in cohort_ids]
+    tile_numbers = np.array([book.tile_ids.numbers.get(each, -1) for each in tiles_of], dtype=np.int64)
+    book_agents = np.array([book.agent_ids.numbers.get(each, -1) for each in cohort_ids], dtype=np.int64)
+    rows = consumption_postings(start, goods, amounts, book_agents, tile_numbers, _durable_flags(book, setup.specs),
+                                _good_ranks(good_names), book.stock_rows.table, book.stock_rows.index)
+    _number_unseen(book, rows, cohort_ids, tiles_of)
+    _post_consumption(book, rows)

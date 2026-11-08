@@ -1,6 +1,6 @@
 # The compiled year: shared tables instead of per-item objects
 
-**Status:** stage 1 under way (Complaint 968 is the problem this answers). The book and the year ledger are on tables (below); the market memory and the goods and labour sides are with other owners.
+**Status:** stage 1 under way (Complaint 968 is the problem this answers). The book, the year ledger, the labour core and the close are on tables (below); the market memory and the goods side are with other owners.
 
 ## Why
 
@@ -191,3 +191,42 @@ with), `settlement.settle_labour` and `YearLedger.note_labour`/`note_hours` (tes
 carriage hours hire), and the offers (`LabourOffer`, built upstream and by `HourSupply.settle`). Measure with
 `python3 tools/measure/warm_year_profile.py SAVE OUT.prof` (the calls of `settle_labour`, `settle_many`, `post_settled`, `_result` are gone) and
 `year-time --count-instructions`. The tests are `sim/tests/test_year_speed_labour_settle.py`.
+
+## The close on tables (stage 3)
+
+The close reads the book and the ledger with kernels, posts its dividends, wear, spoilage and consumption as posting tables, and
+makes the producers' new records once from the close kernel's answer. Decision rule kept from stage 1: a kernel replaces the Python
+only where it adds, orders and numbers exactly as the Python did, so the year-time digest is the same.
+
+| Step | Python entry | Kernels / tables |
+|---|---|---|
+| the pack: stocks, held goods, the ledger's sales, costs, sold, made, hours hired | `close_pack.py` | `close_pack_kernels.py`: `slot_stocks`, `held_goods` (exact sum of the tiles, as `math.fsum`), `pair_values_by_slot` |
+| producers' dividends: `shares.split_dividend` and `ownership.spread` | `year_close_dividends.py`, `year_close_owners.py` | `year_close_dividend_kernels.py`: `dividend_rows` (rows in the order of the payments), `add_in_order` (the property income) |
+| producers' new records and the plant worn | `year_close_records.py`, `year_close_ledger.py` | `set_in_order` over the ledger's `set_figure` |
+| the rows that need the credit record: exits, write-offs, loan requests, rebuild plans | `year_close_producers.py` (`_effects_by_row`) | Python, in producer order, over the few hundred such rows |
+| wear and spoilage, coin wear | `wear_year.py` | `wear_kernels.py`: `loss_moves` |
+| households: receipts (received and grown), wages, spending, consumption | `year_close_households.py` | `year_close_household_kernels.py`: `receipts_with_grown`, `consumption_postings` |
+
+**Order the tables keep.** Posting rows come out in the order the objects were made, and a batch is all-or-none as before: all the
+non-exit dividends are one batch, applied after the exits (which post as they happen); wear and spoilage are one batch each, both
+worked out from the stocks before either is booked; consumption is one batch per cohort, in one `apply_postings` call. The book
+numbers the names a batch meets *together, in name order* (`IdTable.admit`), so the close numbers an unseen name through
+`year_close_dividends._numbers` and `year_close_households._number_unseen`, not one at a time; purposes are encoded in the order
+they first appear. The property income dictionary gets each payee's payments added in the order of the producer rows, exits
+included (`add_property_income`), so each sum and the order of new keys are the loop's. A cohort's consumption changes only its own
+stock, so reading the stocks once for all cohorts gives what reading them after the earlier cohorts' moves gave.
+
+**What still builds Producer and Cohort objects.** The close's answer is columns; `closed_records` makes one new `Producer` per
+producer from them (a copy of the old record's fields with the changed ones replaced) and `producer_table.put_producers` puts them
+back at once, where `replaced(...)` and `put_producer` ran per producer in a loop with a dictionary of changes. The records are
+still read by entry (`entry_year`, `opening`), the next year's plans (`plan_year`, `year_goods`, `seller_offers`, `land_bid_year`),
+the labour state, equity and tax-farming code, the save and the screens: about forty modules read `record.producers`. Retiring the
+record needs those readers on the columns first. Cohorts are replaced one by one in `close_households` (`closed_cohort` reads the
+market view per cohort, which stays Python). Exits (`producer_exit.ExitBatch`, seven stores), loan write-offs and loan requests stay
+Python, in producer order.
+
+**Measure.** `python3 sim/simulator.py year-time --session SAVE --years 2 --count-instructions` for the whole year;
+`python3 tools/measure/warm_year_profile.py SAVE OUT.prof` for call counts of the close (`close_agents`, `close_producers_of_year`).
+Tests: `sim/tests/test_close_pack_kernels.py`, `test_year_close_dividends.py`, `test_year_close_records.py`, `test_wear_kernels.py`,
+`test_year_close_households.py` (each kernel against the Python it replaces on written-out inputs).
+

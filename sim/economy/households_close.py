@@ -54,17 +54,30 @@ def floor_cost_per_person(basket: Basket, view: MarketView, tile: str,
     return subsistence_cost_per_person(_priced_needs(basket, view, tile, {} if offered_prices is None else offered_prices))
 
 
+def consumption_moves(cohort: Cohort, received_by_good: Mapping[GoodId, float], specs: Mapping[GoodId, GoodSpec]) -> List[GoodsMove]:
+    """What the cohort uses up of the year's receipts: every good received above zero that is not a durable, in good name order."""
+    return [GoodsMove(cohort.agent_id, EDGE_CONSUMPTION, good, cohort.tile, quantity, "consumption")
+            for good, quantity in sorted(received_by_good.items())
+            if quantity > 0.0 and not _is_durable(good, specs)]
+
+
 def close_year(cohort: Cohort, received_by_good: Mapping[GoodId, float], view: MarketView,
                specs: Mapping[GoodId, GoodSpec], basket: Basket, income_received: float = 0.0,
                spent: float = 0.0, offered_prices: Optional[Dict[Tuple[GoodId, str], float]] = None,
                floor_cost_of_person: Optional[float] = None) -> Tuple[Cohort, List[GoodsMove]]:
-    """The cohort after the year and the consumption moves to book. `income_received` and `spent` are
+    """The cohort after the year and the consumption moves to book (`closed_cohort`, `consumption_moves`)."""
+    return (closed_cohort(cohort, received_by_good, view, specs, basket, income_received, spent, offered_prices, floor_cost_of_person),
+            consumption_moves(cohort, received_by_good, specs))
+
+
+def closed_cohort(cohort: Cohort, received_by_good: Mapping[GoodId, float], view: MarketView,
+                  specs: Mapping[GoodId, GoodSpec], basket: Basket, income_received: float = 0.0,
+                  spent: float = 0.0, offered_prices: Optional[Dict[Tuple[GoodId, str], float]] = None,
+                  floor_cost_of_person: Optional[float] = None) -> Cohort:
+    """The cohort after the year. `income_received` and `spent` are
     the year's money flows, which the caller reads from the book. `offered_prices` (good, tile) -> offered price
     is filled as cohorts are closed, so a pass over many cohorts reads each price once. `floor_cost_of_person` is
     `floor_cost_per_person` for the cohort's basket and tile when the caller has it already (cohorts of one basket share it)."""
-    moves = [GoodsMove(cohort.agent_id, EDGE_CONSUMPTION, good, cohort.tile, quantity, "consumption")
-             for good, quantity in sorted(received_by_good.items())
-             if quantity > 0.0 and not _is_durable(good, specs)]
     unmet = unmet_floor_by_need(cohort, received_by_good, view, specs, basket)
     first_good = next((need.goods[0][0] for need in basket.needs if need.goods), None)
     if floor_cost_of_person is None:
@@ -90,4 +103,4 @@ def close_year(cohort: Cohort, received_by_good: Mapping[GoodId, float], view: M
                    planned_spending=0.0,
                    expected_floor_cost=durable_stock.update_expected_spending(cohort.expected_floor_cost, floor_cost),
                    unmet_floor_by_need=unmet,
-                   own_plan_by_need=next_own_plan(cohort.own_plan_by_need, unmet, spent < income_received)), moves
+                   own_plan_by_need=next_own_plan(cohort.own_plan_by_need, unmet, spent < income_received))

@@ -1,5 +1,5 @@
 """Wear and loss of coin."""
-from typing import Mapping
+from typing import Mapping, Optional, Tuple
 
 from sim.constants import declare
 
@@ -17,15 +17,23 @@ METAL_GOODS_LOSS_PER_YEAR = declare(
         "recovery rates against estimated stock would fix it.")
 
 
-def yearly_wear(money_holdings_by_agent: Mapping[AgentId, float], spec: CurrencySpec) -> list:
-    """Struck coin wears; weighed metal is lost as metal (clipping, hoarding, burial) and has no coin to
-    wear; commodity money spoils as a good and fiat does not wear."""
+def wear_share(spec: CurrencySpec) -> Optional[Tuple[float, str]]:
+    """(the share of each holding lost in a year, the purpose of the loss) for a currency that wears; None for one that does not.
+    Struck coin wears; weighed metal is lost as metal (clipping, hoarding, burial) and has no coin to wear; commodity money spoils
+    as a good and fiat does not wear."""
     if spec.regime == "struck_coin":
-        share, purpose = COIN_WEAR_PER_YEAR, "coin wear"
-    elif spec.regime == "weighed_metal":
-        share, purpose = METAL_GOODS_LOSS_PER_YEAR, "metal loss"
-    else:
+        return COIN_WEAR_PER_YEAR, "coin wear"
+    if spec.regime == "weighed_metal":
+        return METAL_GOODS_LOSS_PER_YEAR, "metal loss"
+    return None
+
+
+def yearly_wear(money_holdings_by_agent: Mapping[AgentId, float], spec: CurrencySpec) -> list:
+    """The wear of each agent's holding (see `wear_share`), as transfers to the wear account."""
+    worn = wear_share(spec)
+    if worn is None:
         return []
+    share, purpose = worn
     return [Transfer(agent, types.EDGE_WEAR, spec.currency_id, amount * share, purpose)
             for agent, amount in money_holdings_by_agent.items()
             if amount > 0.0 and not types.is_edge(agent)]

@@ -12,8 +12,9 @@ _ROW_FIELDS = ("recipe_row", "tile_row", "capacity_runs", "yield_factor", "years
                "expected_prices", "earnings_history", "revenue_history")
 
 
-def columns_after_close(columns: ProducerColumns, producers, exited: np.ndarray, answer) -> ProducerColumns:
-    """`exited` and the answer's arrays are indexed by the rows of `columns`. `producers` is the table after the close."""
+def columns_after_close(columns: ProducerColumns, producers, exited: np.ndarray, answer, records=None) -> ProducerColumns:
+    """`exited` and the answer's arrays are indexed by the rows of `columns`. `producers` is the table after the close; `records`,
+    when the caller has them, are the records it holds by row of `columns` (None for an exit), and spare the lookups."""
     keep = np.nonzero(~exited)[0]
     ids = tuple(columns.ids[row] for row in keep)
     kept = {name: getattr(columns, name)[keep] for name in _ROW_FIELDS}
@@ -39,5 +40,6 @@ def columns_after_close(columns: ProducerColumns, producers, exited: np.ndarray,
         rows = old[closed]
         rows[:, :width] = np.where(wanted, new[source], 0.0)
         old[closed] = rows
-    return ProducerColumns(ids, {each: position for position, each in enumerate(ids)}, [producers[each] for each in ids],
+    kept_records = [producers[each] for each in ids] if records is None else [records[row] for row in keep.tolist()]
+    return ProducerColumns(ids, {each: position for position, each in enumerate(ids)}, kept_records,
                            matrices=columns.matrices, tiles=columns.tiles, **kept)
