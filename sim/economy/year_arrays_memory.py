@@ -125,11 +125,10 @@ class MemoryArrays:
         scatter_values(offered, offered_prices(markets, kind_classes), good_rows, area_columns, count)
         scatter_flags(bare, bare_quotes(markets, kind_classes), good_rows, area_columns, count)
         scatter_values(cleared, markets.cleared_price, good_rows, area_columns, count)
-        rate = np.full(len(areas.ids), np.nan)
-        for column, area in enumerate(areas.ids):
-            found = memory.rates.get(memory.currency_of_area.get(area, own_currency))
-            if found is not None:
-                rate[column] = found
+        rate = np.full(len(areas.ids), memory.rates.get(own_currency, np.nan))      # every area is in the economy's own currency but those the memory names
+        for area, currency in memory.currency_of_area.items():
+            if area in areas.row:
+                rate[areas.row[area]] = memory.rates.get(currency, np.nan)
         wage = wage_grid if wage_grid is not None else np.array(
             [[wage_of(trade, tile) for tile in tiles.ids] for trade in trades.ids], dtype=np.float64).reshape(
             len(trades.ids), len(tiles.ids))
