@@ -3,6 +3,7 @@ what it could not spend on the goods still offered (goods_respend.py), the marke
 and a cohort still rationed goes on until nothing more is bought. Money no offered good takes stays with the cohort.
 All the rounds run in one kernel over every rationed cohort and market (goods_respend_kernel.py).
 """
+import math
 from typing import Dict, Tuple
 
 import numpy
@@ -16,6 +17,7 @@ from .goods_table_views import LazyObjects
 from .goods_market import MINIMUM_PRICE_SHARE_OF_REFERENCE
 from .goods_respend import RESPEND_NEGLIGIBLE_ROUND_SHARE
 from .goods_respend_kernel import respend_rounds
+from .goods_year_markets import YearMarkets
 from sim.book import ROUNDING_SHARE
 
 Market = Tuple[str, str]
@@ -29,6 +31,17 @@ RESPEND_APPORTIONED_WANTED_SHARE = declare(
     retire="Complaint 964 exact wanted quantity per bid")
 
 
+def _cell(column: str, meaning: str) -> property:
+    """A float property reading and writing the market's cell of `column` in the year's table."""
+    def read(self) -> float:
+        return float(getattr(self.year_markets.table, column)[self.row])
+
+    def write(self, figure: float) -> None:
+        getattr(self.year_markets.table, column)[self.row] = figure
+
+    return property(read, write, doc=meaning)
+
+
 class LeftMarket:
     """A cleared market as the second round finds it: its bids and first-round result, the offers with what sold taken
     off, its last price, what has been delivered in it, what its buyers wanted (`wanted_in_round`, summed over the
@@ -36,10 +49,14 @@ class LeftMarket:
     clear it left on offer. A market on the order tables carries its `rows` (goods_market_rows.MarketRows); its `bids` and
     `offers` are then built only when something reads them."""
 
-    def __init__(self, bids, result, offers, last_price, delivered, wanted, idle_years=0, bought=None, rows=None):
-        self.delivered = delivered     # goods moved in all rounds so far
-        self.wanted = wanted           # what buyers asked for in all rounds so far
-        self.idle_years = idle_years   # years the market lacked bids or offers, before this year
+    def __init__(self, bids, result, offers, last_price, delivered, wanted, idle_years=0, bought=None, rows=None, year_markets=None, row=None):
+        if year_markets is None:       # a market made alone has a table of its own
+            year_markets = YearMarkets(1)
+            row = year_markets.claim(1)
+            year_markets.fill(row, [delivered], [wanted], [result.offered_at_price], [delivered], [idle_years],
+                              [math.nan if last_price is None else last_price])
+        self.year_markets = year_markets    # the figures below are the cells of `row` of this table (`goods_year_markets.py`); where the
+        self.row = row                      # year's markets share one table, the caller fills the cells of all of them at once
         self.results = [result]
         self.later: list = []          # the respend rounds' clearings as (quantity, price or None, demand at price, offered at price)
         self.bought = bought or {}     # buyer -> (units received, money paid) in the first round's settlement
@@ -47,11 +64,32 @@ class LeftMarket:
         self.added = None              # the later rounds' bids that add demand, as columns (`goods_added_bids.AddedBids`)
         self._all_bids = list(bids) if bids is not None and rows is None else None     # a market on the objects: the first round's bids and the added ones
         self.rows = rows
-        self.last_offered = result.offered_at_price     # on offer at the last round's price
-        self.last_delivered = delivered                 # moved in the last round
         self.result = result
         self._offers = offers
-        self.last_price = last_price
+
+    delivered = _cell("delivered", "goods moved in all rounds so far")
+    wanted = _cell("wanted", "what buyers asked for in all rounds so far")
+    last_offered = _cell("last_offered", "on offer at the last round's price")
+    last_delivered = _cell("last_delivered", "moved in the last round")
+
+    @property
+    def idle_years(self) -> int:
+        """Years the market lacked bids or offers, before this year."""
+        return int(self.year_markets.table.idle_years[self.row])
+
+    @idle_years.setter
+    def idle_years(self, years: int) -> None:
+        self.year_markets.table.idle_years[self.row] = years
+
+    @property
+    def last_price(self):
+        """The price the market's memory held when the year began (None: none)."""
+        price = float(self.year_markets.table.last_price[self.row])
+        return None if price != price else price
+
+    @last_price.setter
+    def last_price(self, price) -> None:
+        self.year_markets.table.last_price[self.row] = math.nan if price is None else price
 
     @property
     def bids(self):

@@ -35,13 +35,27 @@ def write_markets(setup, ledger, markets, packed, out) -> None:
                                                            clear_offered[:clear_count].tolist()):
             markets[keys[market]].later.append((quantity, None if price != price else price, demand, offered))
         note_rounds(ledger, keys, clear_market[:clear_count], clear_quantity[:clear_count], prices, clear_delivered[:clear_count])
-    for index in numpy.nonzero(market_cleared)[0].tolist():
-        market = markets[keys[index]]
-        market.delivered += float(market_delivered[index])
-        market.wanted += float(market_wanted[index])
-        market.last_offered = float(market_offered[index])
-        market.last_delivered = float(market_last_delivered[index])
-        _leave_offers(market, packed, index)
+    cleared = numpy.nonzero(market_cleared)[0]
+    _add_rounds(markets, keys, cleared, market_delivered[cleared], market_wanted[cleared], market_offered[cleared], market_last_delivered[cleared])
+    for index in cleared.tolist():
+        _leave_offers(markets[keys[index]], packed, index)
+
+
+def _add_rounds(markets, keys, cleared: numpy.ndarray, delivered, wanted, offered, last_delivered) -> None:
+    """The rounds' totals added to the cleared markets' figures: one scatter into the year's table (`YearMarkets.add_rounds`) when
+    the markets share it, market by market when each holds a table of its own (a market made alone)."""
+    lefts = [markets[keys[index]] for index in cleared.tolist()]
+    if not lefts:
+        return
+    shared = lefts[0].year_markets
+    if all(each.year_markets is shared for each in lefts):
+        shared.add_rounds(numpy.array([each.row for each in lefts], dtype=numpy.int64), delivered, wanted, offered, last_delivered)
+        return
+    for each, units, asked, on_offer, moved in zip(lefts, delivered.tolist(), wanted.tolist(), offered.tolist(), last_delivered.tolist()):
+        each.delivered += units
+        each.wanted += asked
+        each.last_offered = on_offer
+        each.last_delivered = moved
 
 
 def _add_bids(markets, packed, keys, adding, bid_market, bid_buyer, bid_flexible, bid_reference, bid_budget, bid_maximum) -> None:
