@@ -119,6 +119,12 @@ def build(setup, record, ledger, stocks_at_start: Mapping[str, float], prices: M
                         real_wages=_real_wages(setup, record, prices, wages))
 
 
+def plain_rows(view) -> Dict[str, Dict[str, float]]:
+    """A ledger's agent -> (sub -> amount) view as plain dicts, read from its table in one pass (a plain mapping in a test is copied)."""
+    block = getattr(view, "as_plain", None)
+    return block() if block is not None else {name: dict(rows.items()) for name, rows in view.items()}
+
+
 def _goods(setup, record, ledger, stocks_at_start) -> Dict[str, GoodAccount]:
     book = record.book
     stocks_now = stocks(book)
@@ -126,10 +132,11 @@ def _goods(setup, record, ledger, stocks_at_start) -> Dict[str, GoodAccount]:
                    if edge not in (EDGE_PRODUCTION, EDGE_CONSUMPTION, EDGE_SPOILAGE)]
     bought: Dict[str, float] = {}
     grown: Dict[str, float] = {}
+    received_by_cohort, grown_by_cohort = plain_rows(ledger.received), plain_rows(ledger.grown)
     for cohort_id in record.cohorts:
-        for good, quantity in ledger.received.get(cohort_id, {}).items():
+        for good, quantity in received_by_cohort.get(cohort_id, {}).items():
             bought[good] = bought.get(good, 0.0) + quantity
-        for good, quantity in ledger.grown.get(cohort_id, {}).items():
+        for good, quantity in grown_by_cohort.get(cohort_id, {}).items():
             grown[good] = grown.get(good, 0.0) + quantity
     turnover: Dict[str, float] = {}
     for (good, _area), quantity in ledger.delivered_by_market.items():     # what traded is what was delivered
@@ -180,20 +187,37 @@ def basket_cost_per_head(goods, prices: Mapping[str, float], people: float) -> O
     return math.fsum(quantity * prices[good] for good, quantity in goods.opening_basket.items()) / people
 
 
-def _need_units(need, goods: Mapping[str, float], specs) -> float:
-    return math.fsum(goods.get(good, 0.0) * effect for good, effect in need.goods
-                     if not specs[good].service_life_years > 0.0)
+def _hunger_need_units(need, specs):
+    """The hunger need's (good, need units per unit of the good) for the goods that are used up, and what no good at all is worth
+    (the sum of the zero terms)."""
+    kept = [(good, effect) for good, effect in need.goods if not specs[good].service_life_years > 0.0]
+    return kept, math.fsum(0.0 * effect for _good, effect in kept)
+
+
+def _need_units(kept, nothing, quantities: Mapping[str, float]) -> float:
+    """The need units of the goods a cohort got (`quantities` by good) over the `kept` goods of its need; `nothing` for no goods."""
+    if not quantities:
+        return nothing
+    return math.fsum(quantities.get(good, 0.0) * effect for good, effect in kept)
 
 
 def _cohorts(setup, record, ledger, prices) -> List[CohortAccount]:
     cost = basket_cost_per_head(record.goods, prices, math.fsum(setup.opening_population_by_tile.values()))
+    received_by_cohort, grown_by_cohort = plain_rows(ledger.received), plain_rows(ledger.grown)
+    needs_by_tile: Dict[str, tuple] = {}     # tile -> (hunger need or None, its kept goods, its zero); the basket is the tile's
     rows = []
     for cohort_id, cohort in sorted(record.cohorts.items()):
-        need = next((spec for spec in setup.basket_for(cohort.tile).needs if spec.need_id == setup.hunger_need), None)
+        if cohort.tile not in needs_by_tile:
+            need = next((spec for spec in setup.basket_for(cohort.tile).needs if spec.need_id == setup.hunger_need), None)
+            needs_by_tile[cohort.tile] = (need, None, None)
+        need, kept, nothing = needs_by_tile[cohort.tile]
         if need is None or cohort.people <= 0.0:
             continue
-        bought = _need_units(need, ledger.received.get(cohort_id, {}), setup.specs)
-        own = _need_units(need, ledger.grown.get(cohort_id, {}), setup.specs)
+        if kept is None:
+            kept, nothing = _hunger_need_units(need, setup.specs)
+            needs_by_tile[cohort.tile] = (need, kept, nothing)
+        bought = _need_units(kept, nothing, received_by_cohort.get(cohort_id, {}))
+        own = _need_units(kept, nothing, grown_by_cohort.get(cohort_id, {}))
         rows.append(CohortAccount(
             cohort=cohort_id, tile=cohort.tile, income_class=cohort.income_class, people=cohort.people,
             need_per_head=need.subsistence_per_person, eaten_per_head=(bought + own) / cohort.people,

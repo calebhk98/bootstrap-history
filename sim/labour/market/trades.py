@@ -14,7 +14,7 @@ from .records import TradeSpec
 def field_of(entry: Any, name: str, default: Any = None) -> Any:
     """A field of a registry entry, whether the entry is a dict (data, mods) or a record with
     attributes (the engine's merged registry)."""
-    if isinstance(entry, Mapping):
+    if type(entry) is dict or isinstance(entry, Mapping):   # the plain dict is the registry's usual entry: no abstract-class check
         return entry.get(name, default)
     return getattr(entry, name, default)
 

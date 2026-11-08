@@ -8,7 +8,7 @@ WALL = "two-way"  # nothing here reaches sim/engine/; the markets module's port 
 
 import math
 
-from . import route_dues, carried_book, carriage_wear, national_prices, crop_sites, unit_cost, country_figures, diagnostics, late_recipes, opening_metal, household_grinding, households, households_work, need_roles, labour_state, land_rents, market_curves, prices_at as tile_prices, taxes, tile_costs, workforce_settle
+from . import route_dues, carried_book, carriage_wear, national_prices, crop_sites, unit_cost, country_figures, diagnostics, late_recipes, opening_metal, household_grinding, households, households_work, need_roles, labour_state, land_rents, market_curves, response_memo, prices_at as tile_prices, taxes, tile_costs, workforce_settle
 from .bank_founding import found_from_outside
 from .diagnostics import person_equivalent_unemployment
 from .fixture_setups import GRAIN as FIXTURE_STAPLE, LABOURER as FIXTURE_UNSKILLED_TRADE, small_setup as fixture_small_setup, stationary_setup as fixture_stationary_setup
@@ -303,7 +303,7 @@ def price_response(economy, good, landed_units, taken_units, tile=None):
     if curve is None:
         return None
     memory = economy.record.memory
-    factor = market_curves.price_response(curve, good, memory.prices.get(market_key(good, area)), landed_units, taken_units)
+    factor = response_memo.price_response(curve, good, memory.prices.get(market_key(good, area)), landed_units, taken_units)
     if factor is None or not math.isfinite(factor):
         return factor
     return 1.0 + national_prices.port_share(economy.record, good, market_key(good, area)) * (factor - 1.0)

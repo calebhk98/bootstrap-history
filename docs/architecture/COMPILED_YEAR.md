@@ -372,3 +372,23 @@ still uses the dict door.
 Measure: `python3 tools/measure/warm_year_profile.py SAVE OUT.prof` for the call counts of `stock`, `balance`, `make_bid` and
 `plans_of`; `year-time --count-instructions` for the whole year. Tests: `sim/tests/test_year_speed_plan_tables.py`,
 `test_year_speed_plans.py`, `test_year_speed_cohort_orders.py`.
+
+## The phases outside the economy step (stage 4, last package, first part)
+
+The phases outside `Economy.step` (the money phases, revolts, the market wrapper) are a small share of a warm year. Measured with a
+profile of those phases (a handler wrapper over `year_phases.SHIPPED` and `tools/measure/warm_year_profile.py`): most view
+computations are cheap lookups; the cost is the first work of a figure after the economy stepped (shown prices, the floor costs of
+every tile, a price response), plus the same figure asked again with the same inputs. Only the repeats were removed:
+
+| Figure | Was | Now |
+|---|---|---|
+| price response of a book (`economy.api.price_response`, `prices_at.price_response_at`) | cleared again for every ask, state costing and the household's holdings asking the same order | `response_memo.price_response`: kept against the book object it was cleared from; a new clearing makes a new book object, so nothing stale is served |
+| floor costs of a tile and of a country (`country_figures`) | worked out per ask | `quiet_year.kept`, like the prices: once while the economy stands between steps |
+| money value of an unskilled hour (`labour_wage_schedule.money_per_labour_hour`) | built a priced copy of the schedule to read one field | the field itself (`_hour_money`); `trades.field_of` skips the abstract-class check for a plain dict |
+| `year_accounts._cohorts`, `_goods` | read the ledger one cohort and one good at a time through the view | `NestedView.as_plain()`: every agent's rows in one pass over the table; the hunger need's goods are worked out once per tile |
+
+Digests are unchanged (Rome two years with reload, England five). What is left outside the step is the first work of those figures
+(`country_figures.prices`, `kept_need_prices` per tile, the price solver's tables after a step), which belongs to the price and wage
+reads, and the unconverted workforce views declared `cached=False` (`money_per_labour_hour`, `trade_registry`, `wage_signature`,
+...), which the assembly cannot cache until their owner bumps its channels on every write. Tests: `sim/tests/test_response_memo.py`,
+`test_year_accounts.py` (`PlainLedgerReadTests`), `test_year_ledger_views.py` (`as_plain`).
