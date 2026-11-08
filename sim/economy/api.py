@@ -32,7 +32,7 @@ from .bid_columns import BidColumns      # the price search kernels' input (kern
 from .crossing_columns import demand_columns
 from .year_ledger_store import LedgerTables      # the year ledger's tables (kernel_signatures declares its kernels from a fresh one)
 from .metal_stock import COIN_WEAR_PER_YEAR
-from .notional import costing_wages, shown_prices, shown_prices_with_kinds
+from .notional import costing_wages, shown_prices, shown_prices_with_kinds, volumes_traded_by_good
 from .producers import Producer, expected_output_prices, live_input_prices, live_wages
 from .protocols import AgentOrders, EconomyYearInputs
 from .recipes import recipes_from_production_data
@@ -455,7 +455,8 @@ def _shown(economy, country):
         market = None if scope is None else country_figures.prices(economy, scope)
         wages = quiet_year.kept(economy, "costing_wages", lambda: costing_wages(economy.setup, economy.record))
         remembered = quiet_year.kept(economy, "price_kinds", economy.record.memory.price_kinds_by_good)
-        return shown_prices_with_kinds(economy.setup, economy.record, market, wages, remembered)
+        traded = quiet_year.kept(economy, "volumes_traded_by_good", lambda: volumes_traded_by_good(economy.record))
+        return shown_prices_with_kinds(economy.setup, economy.record, market, wages, remembered, traded)
     return quiet_year.kept(economy, ("shown", scope), compute)
 
 
