@@ -10,6 +10,7 @@ import numpy
 from sim.constants import declare
 
 from . import goods_respend_pack, goods_respend_unpack
+from .goods_table_views import LazyObjects
 from .goods_market import MINIMUM_PRICE_SHARE_OF_REFERENCE
 from .goods_respend import RESPEND_NEGLIGIBLE_ROUND_SHARE
 from .goods_respend_kernel import respend_rounds
@@ -30,16 +31,18 @@ class LeftMarket:
     """A cleared market as the second round finds it: its bids and first-round result, the offers with what sold taken
     off, its last price, what has been delivered in it, what its buyers wanted (`wanted_in_round`, summed over the
     rounds), the bids that add demand in each round (`bids_adding_demand`) and the clearings of every round. What is unsold is what the last round to
-    clear it left on offer."""
+    clear it left on offer. A market on the order tables carries its `rows` (goods_market_rows.MarketRows); its `bids` and
+    `offers` are then built only when something reads them."""
 
-    def __init__(self, bids, result, offers, last_price, delivered, wanted, idle_years=0, bought=None):
+    def __init__(self, bids, result, offers, last_price, delivered, wanted, idle_years=0, bought=None, rows=None):
         self.delivered = delivered     # goods moved in all rounds so far
         self.wanted = wanted           # what buyers asked for in all rounds so far
         self.idle_years = idle_years   # years the market lacked bids or offers, before this year
         self.results = [result]
         self.bought = bought or {}     # buyer -> (units received, money paid) in the first round's settlement
         self.bids = bids
-        self.all_bids = list(bids)     # the first round's bids and the later rounds' that add demand
+        self.added_bids: list = []     # the later rounds' bids that add demand (objects)
+        self.rows = rows
         self.last_offered = result.offered_at_price     # on offer at the last round's price
         self.last_delivered = delivered                 # moved in the last round
         self.result = result
@@ -47,14 +50,25 @@ class LeftMarket:
         self.last_price = last_price
 
     @property
+    def all_bids(self):
+        """The first round's bids and the later rounds' that add demand."""
+        if not self.added_bids:
+            return self.bids
+        return LazyObjects(lambda: list(self.bids) + self.added_bids, len(self.bids) + len(self.added_bids))
+
+    def leave_units(self, units) -> None:
+        """The units each offer left in `rows` has after the rounds (zero: sold out); the offers are built from them when read."""
+        self.offers = LazyObjects(lambda: self.rows.offer_objects(units), sum(1 for each in units if each > 0.0))
+
+    @property
     def unsold(self) -> float:
         """What the last round to clear this market left on offer."""
         return max(0.0, self.last_offered - self.last_delivered)
 
 
-def respend(setup, record, view, ledger, markets: Dict[Market, LeftMarket], basket_of) -> None:
+def respend(setup, record, view, ledger, markets: Dict[Market, LeftMarket], basket_of, orders=None) -> None:
     """Clear the households' leftover bids against the stock left in `markets`, in rounds, and settle them."""
-    packed = goods_respend_pack.pack(setup, record, view, ledger, markets, basket_of)
+    packed = goods_respend_pack.pack(setup, record, view, ledger, markets, basket_of, orders)
     if packed is None:
         return
     out = run_rounds(packed)

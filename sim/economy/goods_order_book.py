@@ -65,6 +65,7 @@ class GoodsOrderBook:
         self._waiting_bids: List[Tuple[Bid, int]] = []
         self._waiting_offers: List[Tuple[Offer, int]] = []
         self._markets: Dict[Tuple[str, str], int] = {}
+        self._bid_lists = None
 
     # ---- ids -------------------------------------------------------------------------------------
 
@@ -207,6 +208,20 @@ class GoodsOrderBook:
         names = self.book.good_ids.name_list
         found = set(bids.good[:int(bids.row_count[0])].tolist()) | set(offers.good[:int(offers.row_count[0])].tolist())
         return {names[good] for good in found}
+
+    def bid_lists(self):
+        """Every bid row's columns as lists (`goods_market_rows.BidLists`), made again only when rows have been added."""
+        from .goods_market_rows import BidLists
+        self.flush()
+        count = int(self.bids.row_count[0])
+        if self._bid_lists is None or self._bid_lists[0] != count:
+            self._bid_lists = (count, BidLists(self))
+        return self._bid_lists[1]
+
+    def offer_lists(self):
+        """Every offer row's columns as lists, read now (units left change as markets clear and the respend runs)."""
+        from .goods_market_rows import OfferLists
+        return OfferLists(self)
 
     def bid_count(self) -> int:
         self.flush()

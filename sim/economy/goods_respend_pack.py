@@ -63,12 +63,29 @@ def flatten_baskets(baskets, good_index) -> tuple:
             numpy.array([basket.substitution for basket in baskets]), need_of_good_slot, len(need_ids))
 
 
-def pack(setup, record, view, ledger, markets, basket_of) -> "Packed":
+def _bid_fields(market, lists):
+    """(buyer, floor, flexible, reference price, elasticity, budget, ceiling) of each first-round bid of the market, read from
+    the table's columns where the market is on the tables."""
+    if market.rows is not None:
+        return [(lists.buyer[row], lists.floor_quantity[row], lists.flexible_quantity[row], lists.reference_price[row], lists.elasticity[row],
+                 lists.budget[row], lists.maximum_price[row]) for row in market.rows.bid_rows]
+    return [(bid.buyer, *_BID_FIELDS(bid)) for bid in market.bids]
+
+
+def _offers_left(market, lists):
+    """The offers left in the market, in the order `market.offers` lists them: objects, or (seller, tile, reservation, units)
+    records for a market on the tables."""
+    return market.rows.left_offers(lists) if market.rows is not None else list(market.offers)
+
+
+def pack(setup, record, view, ledger, markets, basket_of, orders=None) -> "Packed":
     """Pack `markets` ({(good, area): LeftMarket}) and the households that bid in them; None when no household bid."""
     households = record.cohorts
     market_keys = sorted(markets)
     market_index = {key: index for index, key in enumerate(market_keys)}
-    buyer_ids = sorted({bid.buyer for key in market_keys for bid in markets[key].bids if bid.buyer in households})
+    bid_lists = orders.bid_lists() if orders is not None and any(markets[key].rows is not None for key in market_keys) else None
+    fields = {key: _bid_fields(markets[key], bid_lists) for key in market_keys}
+    buyer_ids = sorted({each[0] for key in market_keys for each in fields[key] if each[0] in households})
     if not buyer_ids or not market_keys:
         return None
     row_of = {buyer: row for row, buyer in enumerate(buyer_ids)}
@@ -104,8 +121,10 @@ def pack(setup, record, view, ledger, markets, basket_of) -> "Packed":
 
     agent_names = {buyer for buyer in buyer_ids}
     offer_lists = []
+    left_lists = orders.offer_lists() if bid_lists is not None else None
+    records = {key: _offers_left(markets[key], left_lists) for key in market_keys}
     for key in market_keys:
-        ordered = sorted((offer for offer in markets[key].offers if offer.quantity > 0.0), key=OFFER_ORDER)
+        ordered = sorted((offer for offer in records[key] if offer.quantity > 0.0), key=OFFER_ORDER)
         offer_lists.append(ordered)
         agent_names.update(offer.seller for offer in ordered)
     agents = sorted(agent_names)
@@ -114,7 +133,7 @@ def pack(setup, record, view, ledger, markets, basket_of) -> "Packed":
     keys: List[tuple] = []
     offer_ptr, reservation, quantity, offer_key, offer_agent, offer_origin, offer_ids = [0], [], [], [], [], [], []
     for key, ordered in zip(market_keys, offer_lists):
-        position = {id(offer): index for index, offer in enumerate(markets[key].offers)}
+        position = {id(offer): index for index, offer in enumerate(records[key])}
         for offer in ordered:
             stock_key = (agent_index[offer.seller], good_index[key[0]], offer.tile)
             if stock_key not in key_index:
@@ -147,16 +166,15 @@ def pack(setup, record, view, ledger, markets, basket_of) -> "Packed":
         if market.result.price is not None:
             fallback[index] = market.result.price
             fallback_ok[index] = True
-        for bid in market.bids:
-            row = row_of.get(bid.buyer)
+        for buyer, floor, flexible, reference, elasticity, budget, maximum in fields[key]:
+            row = row_of.get(buyer)
             if row is None:
                 continue
             has_bid[index, row] = True
-            floor, flexible, reference, elasticity, budget, maximum = _BID_FIELDS(bid)
             if not (budget > 0.0 and flexible > 0.0 and reference > 0.0):
                 flexible, reference, elasticity = 0.0, 1.0, 0.0
-            units, money = market.bought.get(bid.buyer, (0.0, 0.0))
-            rows.append((index, row, floor, flexible, reference, -elasticity, bid.budget, maximum, units, money))
+            units, money = market.bought.get(buyer, (0.0, 0.0))
+            rows.append((index, row, floor, flexible, reference, -elasticity, budget, maximum, units, money))
     table = numpy.array(rows, dtype=float).reshape(-1, 10)
     order = numpy.lexsort((table[:, 1], table[:, 0]))
     table = table[order]

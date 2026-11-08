@@ -14,7 +14,8 @@ from . import households_buffer_stock, households_store, lender_ask, opening_dem
 from . import households_orders_kernel as kernel
 from .household_time_preference import HOUSEHOLD_TIME_PREFERENCE
 from .protocols import AgentOrders
-from .types import Bid, FundsOffer
+from .households_bid_rows import cohort_bid_rows
+from .types import FundsOffer
 
 
 def covered(priced) -> bool:
@@ -25,7 +26,7 @@ def covered(priced) -> bool:
 class _Template:
     """One basket at one tile's prices: the strings and prices a bid needs, and where its rows sit in the packed arrays."""
 
-    def __init__(self, index, row0, store0, unit0, cohort, basket, priced, weights, store_prices, view, area_currency) -> None:
+    def __init__(self, index, row0, store0, unit0, cohort, basket, priced, weights, store_prices, view, area_currency, orders) -> None:
         tile = cohort.tile
         self.index = index
         self.row0 = row0
@@ -49,6 +50,11 @@ class _Template:
         self.store_prices = store_prices
         self.store_goods = list(weights)
         self.store_areas = [view.area_of(good, tile) for good in self.store_goods]
+        book = orders.book
+        self.row_good_ids = [book.good_number(good) for good in self.row_goods]
+        self.row_market_ids = orders.market_ids(self.row_goods, self.row_areas)
+        self.store_good_ids = [book.good_number(good) for good in self.store_goods]
+        self.store_market_ids = orders.market_ids(self.store_goods, self.store_areas)
         self.unit_need_ids = [need.need_id for need in basket.needs]
 
 
@@ -67,6 +73,16 @@ class _Arrays:
         self.order: List[int] = []
         self.template_ints: List[list] = []
         self.template_floats: List[list] = []
+        self.row_good_ids: List[int] = []         # per packed row: the book's id of its good and the order tables' id of its market
+        self.row_market_ids: List[int] = []
+        self.row_priorities: List[int] = []
+        self.row_prices: List[float] = []
+        self.store_good_ids: List[int] = []
+        self.store_market_ids: List[int] = []
+        self.store_prices: List[float] = []
+        self.template_stores: List[int] = []
+        self.order_ptr: List[int] = [0]
+        self.order_flat: List[int] = []
 
     def good_index(self, good) -> int:
         found = self.goods.get(good)
@@ -74,13 +90,13 @@ class _Arrays:
             found = self.goods[good] = len(self.goods)
         return found
 
-    def add_template(self, index, cohort, basket, priced, shared_store, view, specs) -> _Template:
+    def add_template(self, index, cohort, basket, priced, shared_store, view, specs, orders) -> _Template:
         weights, store_prices, _held = households_store.store_holding(cohort, view, specs, priced, shared_store)
         first_good = priced[0].goods[0][0]
         area_currency = view.currency_of(view.area_of(first_good, cohort.tile))
         rate = view.interest_rate(area_currency)
         template = _Template(index, len(self.row_floats), len(self.store_floats), len(self.unit_floor), cohort, basket, priced, weights,
-                             store_prices, view, area_currency)
+                             store_prices, view, area_currency, orders)
         need0 = len(self.need_floats)
         first_unit: Dict[str, int] = {}
         for position, need in enumerate(basket.needs):
@@ -102,6 +118,16 @@ class _Arrays:
                                         spec.spoilage_per_year if spec is not None else 0.0, 0.0])
                 self.row_ints.append([self.good_index(good), first_unit.get(good, -1)])
         self.order.extend(template.row0 + row for row in template.order_local)
+        self.row_good_ids.extend(template.row_good_ids)
+        self.row_market_ids.extend(template.row_market_ids)
+        self.row_priorities.extend(template.row_priority)
+        self.row_prices.extend(template.row_prices)
+        self.store_good_ids.extend(template.store_good_ids)
+        self.store_market_ids.extend(template.store_market_ids)
+        self.store_prices.extend(template.store_prices[good] for good in template.store_goods)
+        self.template_stores.append(len(template.store_goods))
+        self.order_flat.extend(template.order_local)
+        self.order_ptr.append(len(self.order_flat))
         for good, weight in weights.items():
             self.store_floats.append([weight, store_prices[good], 0.0, 0.0, specs[good].service_life_years])
             self.store_ints.append(self.good_index(good))
@@ -111,9 +137,12 @@ class _Arrays:
         return template
 
 
-def kernel_orders(view, specs, entries, smooth_rise: bool, key_of, store_of) -> Dict[str, AgentOrders]:
-    """The orders of each cohort of `entries` (cohort, basket, priced needs, cash to spend, income, units its plot grew), by cohort id.
-    `key_of(cohort)` names the basket a cohort shares with others, `store_of(cohort)` is the dict their store weights are kept in."""
+def kernel_orders(view, specs, entries, smooth_rise: bool, key_of, store_of, orders):
+    """The orders of each cohort of `entries` (cohort, basket, priced needs, cash to spend, income, units its plot grew).
+    `key_of(cohort)` names the basket a cohort shares with others, `store_of(cohort)` is the dict their store weights are kept in.
+    Returns (offers and savings of each cohort as `AgentOrders` with no bids, by cohort id; the cohorts' bid rows ready for
+    `orders.append_bids`; each cohort's planned spending by cohort id). No `Bid` is made: `orders` is the book of orders whose ids
+    the rows are numbered with."""
     arrays = _Arrays()
     templates: Dict[tuple, _Template] = {}
     cohort_floats, cohort_ints, held_rows, held_stores, grown = [], [], [], [], []
@@ -123,7 +152,7 @@ def kernel_orders(view, specs, entries, smooth_rise: bool, key_of, store_of) -> 
         key = key_of(cohort)
         template = templates.get(key)
         if template is None:
-            template = templates[key] = arrays.add_template(len(templates), cohort, basket, priced, store_of(cohort), view, specs)
+            template = templates[key] = arrays.add_template(len(templates), cohort, basket, priced, store_of(cohort), view, specs, orders)
         agent, tile = cohort.agent_id, cohort.tile
         row_out, store_out, grown0 = len(held_rows), len(held_stores), len(grown)
         held_rows.extend([stock(agent, good, tile) for good in template.row_goods])
@@ -135,7 +164,7 @@ def kernel_orders(view, specs, entries, smooth_rise: bool, key_of, store_of) -> 
         cohort_ints.append([template.index, row_out, store_out, grown0])
         placed.append((cohort, template, row_out, store_out, max(0.0, cash)))
     if not placed:
-        return {}
+        return {}, None, {}
     row_out = np.zeros((len(held_rows), kernel.RO_COUNT))
     store_out = np.zeros((len(held_stores), kernel.SO_COUNT))
     cohort_out = np.zeros((len(placed), kernel.CA_COUNT))
@@ -148,27 +177,33 @@ def kernel_orders(view, specs, entries, smooth_rise: bool, key_of, store_of) -> 
         np.array(arrays.store_ints, dtype=np.int64), np.array(arrays.unit_floor, dtype=np.float64), np.array(arrays.order, dtype=np.int64),
         np.array(held_rows, dtype=np.float64), np.array(held_stores, dtype=np.float64), np.array(grown, dtype=np.float64), len(arrays.goods),
         row_out, store_out, cohort_out)
-    rows, stores, answers = row_out.tolist(), store_out.tolist(), cohort_out.tolist()
-    return {cohort.agent_id: _orders_of(cohort, template, rows, row_start, stores, store_start, answers[position], cash, view, specs)
-            for position, (cohort, template, row_start, store_start, cash) in enumerate(placed)}
+    bid_rows = cohort_bid_rows(
+        np.array([orders.book.agent_number(cohort.agent_id) for cohort, *_rest in placed], dtype=np.int64),
+        np.array([orders.book.tile_number(cohort.tile) for cohort, *_rest in placed], dtype=np.int64),
+        np.array([template.index for _cohort, template, *_rest in placed], dtype=np.int64),
+        np.array([row_start for _cohort, _template, row_start, *_rest in placed], dtype=np.int64),
+        np.array([store_start for _cohort, _template, _row_start, store_start, _cash in placed], dtype=np.int64),
+        cohort_out[:, kernel.CA_PLAN].copy(), np.array(arrays.order_ptr, dtype=np.int64), np.array(arrays.order_flat, dtype=np.int64),
+        np.array([template.row0 for template in templates.values()], dtype=np.int64),
+        np.array([template.store0 for template in templates.values()], dtype=np.int64), np.array(arrays.template_stores, dtype=np.int64),
+        np.array([template.substitution for template in templates.values()], dtype=np.float64),
+        np.array(arrays.row_good_ids, dtype=np.int64), np.array(arrays.row_market_ids, dtype=np.int64),
+        np.array(arrays.row_priorities, dtype=np.int64), np.array(arrays.row_prices, dtype=np.float64),
+        np.array(arrays.store_good_ids, dtype=np.int64), np.array(arrays.store_market_ids, dtype=np.int64),
+        np.array(arrays.store_prices, dtype=np.float64), row_out, store_out)
+    stores, answers = store_out.tolist(), cohort_out.tolist()
+    made = {cohort.agent_id: _orders_of(cohort, template, stores, store_start, answers[position], cash, view, specs)
+            for position, (cohort, template, _row_start, store_start, cash) in enumerate(placed)}
+    planned = {cohort.agent_id: total for (cohort, *_rest), total in zip(placed, bid_rows[6].tolist())}
+    return made, bid_rows[:6], planned
 
 
-def _orders_of(cohort, template, rows, row_start, stores, store_start, answer, cash, view, specs) -> AgentOrders:
-    agent, tile, substitution = cohort.agent_id, cohort.tile, template.substitution
-    bids = []
-    for local in template.order_local:
-        on, floor, flexible, budget, cap = rows[row_start + local]
-        if on > 0.0:
-            bids.append(Bid(agent, template.row_goods[local], template.row_areas[local], tile, floor, flexible, template.row_prices[local],
-                            substitution, budget, template.row_priority[local], maximum_price=cap))
+def _orders_of(cohort, template, stores, store_start, answer, cash, view, specs) -> AgentOrders:
+    """A cohort's store offers and savings (its bids are rows)."""
+    agent = cohort.agent_id
     offers = ()
     if answer[kernel.CA_PLAN] > 0.0:
-        held = {}
-        for local, good in enumerate(template.store_goods):
-            budget, flexible, held[good] = stores[store_start + local]
-            if budget > 0.0:
-                bids.append(Bid(agent, good, template.store_areas[local], tile, 0.0, flexible, template.store_prices[good], substitution, budget,
-                                households_store.STORE_PRIORITY))
+        held = {good: stores[store_start + local][2] for local, good in enumerate(template.store_goods)}
         if any(held[good] > 0.0 for good in held):
             offers = tuple(households_store.store_offers(cohort, view, specs, template.weights, template.store_prices, held,
                                                          answer[kernel.CA_ABOVE_BUFFER], answer[kernel.CA_REAL_RATE], cash,
@@ -178,4 +213,4 @@ def _orders_of(cohort, template, rows, row_start, stores, store_start, answer, c
         ask = lender_ask.lowest_ask(HOUSEHOLD_TIME_PREFERENCE, cohort.expected_inflation,
                                     expected_loss_rate=view.loss_rate(agent, template.area_currency))
         funds = (FundsOffer(agent, template.area_currency, answer[kernel.CA_SAVINGS], ask),)
-    return AgentOrders(bids=tuple(bids), offers=offers, funds_offers=funds)
+    return AgentOrders(offers=offers, funds_offers=funds)

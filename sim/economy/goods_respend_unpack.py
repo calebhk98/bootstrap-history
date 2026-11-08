@@ -30,7 +30,7 @@ def write_markets(setup, ledger, markets, packed, out) -> None:
         if bid_adding[row]:
             good, area = keys[bid_market[row]]
             buyer = bid_buyer[row]
-            markets[(good, area)].all_bids.append(Bid(
+            markets[(good, area)].added_bids.append(Bid(
                 packed.buyers[buyer], good, area, packed.buyer_tile[buyer], 0.0, float(bid_flexible[row]),
                 float(bid_reference[row]), substitution[buyer], float(bid_budget[row]), RESPEND_PRIORITY,
                 maximum_price=float(bid_maximum[row])))
@@ -46,7 +46,19 @@ def write_markets(setup, ledger, markets, packed, out) -> None:
         market.wanted += float(market_wanted[index])
         market.last_offered = float(market_offered[index])
         market.last_delivered = float(market_last_delivered[index])
+        _leave_offers(market, packed, index)
+
+
+def _leave_offers(market, packed, index: int) -> None:
+    """Set the market's offers to what the rounds left: by the units of each offer left on the tables, else rebuilt as objects."""
+    if market.rows is None:
         market.offers = _offers_left(market.offers, packed, index)
+        return
+    pointers = packed.arguments["offer_ptr"]
+    first, last = pointers[index], pointers[index + 1]
+    left = {int(packed.offer_origin[first + position]): float(packed.arguments["offer_quantity"][first + position])
+            for position in range(last - first)}
+    market.leave_units([left.get(place, 0.0) for place in range(len(market.rows.left_rows))])
 
 
 def _offers_left(offers: List[Offer], packed, index: int) -> List[Offer]:

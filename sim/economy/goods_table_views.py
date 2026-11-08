@@ -92,12 +92,26 @@ class TableBatch(BatchAllocation):
 
     def __init__(self, arrays, pack, orders):
         self.pack, self.orders = pack, orders
+        self._watched = None
         super().__init__(arrays, pack.offer_ptr, pack.bid_ptr, RowLists(orders.bids_of, pack.bid_rows, pack.bid_ptr),
                          RowLists(orders.offers_of, pack.offer_rows, pack.offer_ptr), [])
         bids, offers = orders.tables()
         book = orders.book
         self._views = (BidViews(book.agent_ids.name_list, bids.buyer, bids.tile, pack.bid_rows, book.tile_ids.name_list),
                        OfferViews(book.agent_ids.name_list, offers.seller, offers.tile, pack.offer_rows, book.tile_ids.name_list))
+
+    def watched_buys(self, watchers):
+        """Per bid of the batch: whether a watcher's bid took units. None when no watcher has an id (it bought nothing). Worked
+        out once for the batch, whatever markets ask."""
+        if self._watched is None or self._watched[0] != watchers:
+            numbers = self.orders.book.agent_ids.numbers
+            ids = [numbers[name] for name in watchers if name in numbers]
+            mask = None
+            if ids:
+                bids, _offers = self.orders.tables()
+                mask = numpy.isin(bids.buyer[self.pack.bid_rows], ids) & (self.bid_quantity > 0.0)
+            self._watched = (watchers, mask)
+        return self._watched[1]
 
     @property
     def flat_bids(self):

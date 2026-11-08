@@ -95,20 +95,19 @@ class TableClearing(ArrayClearing):
     def bought_by(self, watchers) -> dict:
         batch = self.batch
         bid_rows, _offer_rows, first_bid, _first_offer = self._slices()
+        found: dict = {}
+        mask = batch.watched_buys(watchers)
+        if mask is None:
+            return found
         bids, _offers = batch.orders.tables()
         agents, tiles = self._names()
-        numbers = batch.orders.book.agent_ids.numbers
-        ids = [numbers[name] for name in watchers if name in numbers]
-        found: dict = {}
-        if not ids:
-            return found
-        quantity = batch.bid_quantity[first_bid:first_bid + len(bid_rows)]
-        for place in numpy.flatnonzero(numpy.isin(bids.buyer[bid_rows], ids) & (quantity > 0.0)).tolist():
+        quantity = batch.bid_quantity
+        for place in numpy.flatnonzero(mask[first_bid:first_bid + len(bid_rows)]).tolist():
             row = bid_rows[place]
             buyer = agents[bids.buyer[row]]
             found.setdefault(buyer, []).append(make_fill(
-                buyer, self.good, self.area, tiles[bids.tile[row]], float(quantity[place]),
-                float(batch.bid_cost[first_bid + place] / quantity[place]), "buy"))
+                buyer, self.good, self.area, tiles[bids.tile[row]], float(quantity[first_bid + place]),
+                float(batch.bid_cost[first_bid + place] / quantity[first_bid + place]), "buy"))
         return found
 
     def taken_by(self, buyer: str) -> List[tuple]:

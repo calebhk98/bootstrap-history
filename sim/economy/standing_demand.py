@@ -9,6 +9,8 @@ from .types import AreaId, Bid, GoodId
 def with_standing_bids(bids_by_market: Mapping[Tuple[GoodId, AreaId], Sequence[Bid]],
                        standing_bids: Sequence[Bid]) -> Dict[Tuple[GoodId, AreaId], List[Bid]]:
     """The year's bids by market with the standing bids added to their markets."""
+    if not standing_bids:
+        return bids_by_market      # nothing to add: the markets' lists (lazy where they sit on the order tables) are read as they are
     joined = {key: list(bids) for key, bids in bids_by_market.items()}
     for bid in standing_bids:
         joined.setdefault((bid.good, bid.area), []).append(bid)
