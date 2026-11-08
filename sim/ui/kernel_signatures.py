@@ -65,7 +65,16 @@ def declared_signatures():
     signatures.update(crossing_signatures(types))
     signatures.update(entry_plan_signatures())
     signatures.update(household_offer_signatures(types))
+    signatures.update(stability_signatures(types))
     return signatures
+
+
+def stability_signatures(types):
+    """The stability phase's per-tile kernel, which only a game with a state reaches (its helpers compile with it)."""
+    floats = types.Array(types.float64, 1, "C")
+    number = types.float64
+    return {"sim.campaigns.stability_kernels.read_tiles": [(
+        (floats,) * 9 + (number, types.boolean, number, number, number, floats))]}
 
 
 def priced_need_signatures(types):

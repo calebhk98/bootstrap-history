@@ -2,22 +2,24 @@
 discontented, armed, would more likely than not beat the garrison they rise and fight it (the battle rule), and a won rising
 takes the tile from the state or, at the seat, replaces the ruler. A disputed accession is settled the same way at the seat.
 
-The rules are in `sim/agents/{unrest,revolt,authority,ruler}.py`, `sim/world/battle.py` and `rules.py`; this reads the tiles,
+The rules are in `sim/agents/{unrest,revolt,authority,ruler}.py` (the per-tile arithmetic of the first three, as a kernel, in `stability_kernels.py`), `sim/world/battle.py` and `rules.py`; this reads the tiles,
 the armies and the state's books and writes the result back through the state's commands. Owners are taken in id order, tiles
 in id order, so a year does not depend on the order things were created in a save."""
 from typing import Any, Dict, List, Optional
 
-from sim.agents.api import authority, collection, revolt, ruler, tax_burden, unrest
+import numpy as np
+
+from sim.agents.api import collection, liability, revolt, ruler, tax_burden, unrest
 from sim.agents.api import government_levers_tax
 from sim.assembly.api import Part
 from sim.hazards.api import RecordWorldEvent
 from sim.land.api import TransferTile
 from sim.polity.api import (CloseSuccessionDispute, RecordRising, RegisterPeople, ReplaceRuler, ResetStateUnrest,
-                            SetGrievanceReference, SetLandTakenMemory, SetTileReading)
+                            SetGrievanceReference, SetLandTakenMemory, SetTileReadings)
 from sim.world import battle, campaign_contest
 from sim.world.army_record import Army
 
-from . import rules
+from . import rules, stability_tiles
 
 RISINGS_KEPT = 20
 
@@ -78,24 +80,50 @@ class Stability(Part):
 			self.needs.send(SetGrievanceReference(owner, unrest.adapt(grown_used_to, state_grievance)))
 		rule = government_levers_tax.liability_rule(record)
 		rate = tax_burden.harvest_share_taken(world)
-		eaten = self.needs.food_eaten()
 		reference = self.parts.campaign_year.reference_equipment(owner)
 		seat = collection.seat_tile(people_by_tile)
 		self.needs.send(ResetStateUnrest(owner))
-		for tile, count in people_by_tile.items():
-			burden = unrest.liability_burden(rule, rate, registered[tile], count)
-			share = unrest.unrest(felt + record.land_taken_by_tile.get(tile, 0.0), unrest.hunger(eaten.get(tile)), burden)
-			soldiers = unrest.rising_soldiers(count, share, unrest.organisation(faction_members, people))
-			garrison = self._garrison_on(owner, tile)
-			site = self.parts.campaign_year.campaign_site(tile)
-			terrain = battle.terrain_factor(site.ruggedness, self.parts.contest.tile_fortification(tile))
-			against = 0.0 if garrison is None else campaign_contest.strength_of(garrison, reference, terrain)
-			strength = unrest.rising_strength(soldiers, reference)
-			self.needs.send(SetTileReading(owner, tile, share, authority.hold(against, strength)))
-			if unrest.rises(strength, against):
-				self._rising(owner, world, record, tile, soldiers, strength, garrison, against, tile == seat, year, "unrest")
+		self._read_tiles(owner, world, record, people_by_tile, registered, felt, rule, rate, reference, seat, year,
+		                 unrest.organisation(faction_members, people))
 		if record.succession_challenger:
 			self._disputed_accession(owner, world, record, seat, people_by_tile, faction_members, reference, year)
+
+	def _read_tiles(self, owner: str, world: Any, record: Any, people_by_tile: Dict[str, float], registered: Dict[str, float],
+	                felt: float, rule: str, rate: float, reference: float, seat: Optional[str], year: int, organised: float) -> None:
+		"""Every tile's unrest, hold and rising in kernel passes: a pass runs from the first tile not yet read to the end and stops at the
+		first rising, which is settled before the next pass reads the garrison again."""
+		tiles = list(people_by_tile)
+		eaten = self.needs.food_eaten()
+		columns = {
+			"people": np.array([people_by_tile[tile] for tile in tiles]),
+			"registered": np.array([registered[tile] for tile in tiles]),
+			"land_taken": np.array([record.land_taken_by_tile.get(tile, 0.0) for tile in tiles]),
+			"eaten_over_need": np.array([np.nan if eaten.get(tile) is None else eaten.get(tile) for tile in tiles]),
+			"ruggedness": np.array([self.parts.campaign_year.campaign_site(tile).ruggedness for tile in tiles]),
+			"fortification": np.array([self.parts.contest.tile_fortification(tile) for tile in tiles]),
+		}
+		start = 0
+		while start < len(tiles):
+			rest = tiles[start:]
+			soldiers, equipment, supply = stability_tiles.garrison_columns(
+				rest, self.needs.tiles_owned_by[owner], self.parts.armies.free_soldiers(owner),
+				float(world.army.equipment_kg_per_soldier()) if self.needs.has_state[owner] else 0.0,
+				stability_tiles.field_armies_by_tile(self.world.armies, owner))
+			pass_columns = {name: column[start:] for name, column in columns.items()}
+			pass_columns.update(garrison_soldiers=soldiers, garrison_equipment=equipment, garrison_supply=supply)
+			share, rising_soldiers, strength, against, hold, rises = stability_tiles.read_tiles(
+				pass_columns, felt, rule == liability.COLLECTIVE, rate, organised, reference)
+			risen = np.flatnonzero(rises)
+			stop = int(risen[0]) + 1 if len(risen) else len(rest)
+			self.needs.send(SetTileReadings(owner, tuple(rest[:stop]), tuple(share[:stop].tolist()), tuple(hold[:stop].tolist())))
+			if not len(risen):
+				return
+			first = int(risen[0])
+			tile = rest[first]
+			garrison = self._garrison_on(owner, tile) if soldiers[first] > 0.0 else None
+			self._rising(owner, world, record, tile, float(rising_soldiers[first]), float(strength[first]), garrison,
+			             float(against[first]), tile == seat, year, "unrest")
+			start += stop
 
 	# ---- a rising and what it changes
 	def _rising(self, owner: str, world: Any, record: Any, tile: str, soldiers: float, strength: float,

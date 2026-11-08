@@ -3,7 +3,7 @@
 The module owns the book, the year's flows, the agent economy's record and the money flag (`MarketsWorld`), the clearing, the
 goods categories, household demand and the market ceiling's attribution. The module builds the goods market and the port over the
 agent economy (they read the game through the views declared here, port_world.py), and every view it publishes is uncached but
-`agent_working_hours`: they write the flows and the record in place. `agent_wage_cell` and `agent_wage_at` give the same wage; the cell is kept while the market memory is unwritten (the `memory` channel)."""
+the ones in `_WATCHED`: the others write the flows and the record in place. `agent_wage_cell` and `agent_wage_at` give the same wage; the cell is kept while the market memory is unwritten (the `memory` channel)."""
 from sim.assembly.api import KEYED, QUOTE, ModuleSpec, PhaseHook, RepriceTree, ViewSpec
 from sim.demography.api import MovePeople, RecordFoodEaten
 from sim.diffusion.api import NoteFirstRuns
@@ -62,7 +62,9 @@ _LIVE = dict(cached=False)
 # the wage views carry the `memory` channel: every write to the agent economy's market memory, its building, its finishing opening and
 # the repricing of the game's money to it bumps it. `agent_wage_at` is a quote and is never cached; `agent_wage_cell[(trade, tile)]` is
 # the same figure as a keyed view, kept while the channel stands, and what the workforce reads; `agent_working_hours` is one figure per setup.
-_WATCHED = {"agent_wage_cell": dict(channels=(MEMORY,), cached=True), "agent_working_hours": dict(channels=(MEMORY,), cached=True)}
+_WATCHED = {name: dict(channels=(MEMORY,), cached=True) for name in (
+	"agent_wage_cell", "agent_working_hours", "agent_hours_offered_cell", "agent_rate", "agent_people_by_tile_and_trade",
+	"agent_need_floor_costs")}
 
 # (name, kind) of every view; the module method that computes it has the view's name
 _VIEWS = (
@@ -72,7 +74,7 @@ _VIEWS = (
 	("market_state", KEYED), ("opening_population", None),
 	("nodes_in_category", KEYED),
 	("agent_prices", None), ("agent_prices_at", QUOTE), ("agent_seat_sale_outlook", QUOTE),
-	("agent_producers_by_good", None), ("agent_producer_runs", None), ("agent_worker_years_by_recipe", None), ("agent_wage_at", QUOTE), ("agent_wage_cell", KEYED), ("agent_hours_offered_at", QUOTE), ("agent_working_hours", None), ("agent_people_by_trade", None),
+	("agent_producers_by_good", None), ("agent_producer_runs", None), ("agent_worker_years_by_recipe", None), ("agent_wage_at", QUOTE), ("agent_wage_cell", KEYED), ("agent_hours_offered_at", QUOTE), ("agent_hours_offered_cell", KEYED), ("agent_working_hours", None), ("agent_people_by_trade", None),
 	("agent_people_by_tile_and_trade", None), ("agent_land_rent_per_hectare", None),
 	("agent_land_rent_at", QUOTE), ("agent_land_rent_paid_by_tile", None), ("agent_trades_good", KEYED),
 	("agent_price_response", QUOTE), ("agent_country", KEYED), ("agent_cohort_incomes", None),

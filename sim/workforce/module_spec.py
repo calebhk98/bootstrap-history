@@ -38,7 +38,7 @@ READS_BY_OWNER = {
     "ledger": ("acting_balance",),
     "polity": ("rep_factor",),
     "reporting": ("last_market_price_ratio", "real_output_per_head"),
-    "markets": ("agent_wage_cell", "agent_hours_offered_at", "agent_working_hours", "agent_people_by_trade", "agent_people_by_tile_and_trade", "agent_trades"),
+    "markets": ("agent_wage_cell", "agent_hours_offered_cell", "agent_working_hours", "agent_people_by_trade", "agent_people_by_tile_and_trade", "agent_trades"),
     "demography": ("population", "pop_scale", "people_by_tile", "urban_fraction"),
     "agriculture": ("farm_land",),
     "land": ("home_tiles_held", "built_ways", "held_techniques"),

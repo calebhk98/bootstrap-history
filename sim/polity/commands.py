@@ -1,7 +1,7 @@
 """Commands to the owner of a seat's standing with its society and state (polity), and to the state's records (campaigns send
 them)."""
 from dataclasses import dataclass
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Tuple
 
 from sim.assembly.api import Command
 
@@ -56,13 +56,13 @@ class ResetStateUnrest(Command):
 
 
 @dataclass(frozen=True)
-class SetTileReading(Command):
-	"""The year's reading of one tile of the state of `owner`: the unrest of its people and how firmly the state
-	holds it (the share of risings its garrison would put down)."""
+class SetTileReadings(Command):
+	"""The year's reading of some tiles of the state of `owner`, in the order given: the unrest of each tile's people and how firmly
+	the state holds it (the share of risings its garrison would put down). `tiles`, `unrest` and `hold` are the same length."""
 	owner: str
-	tile: str
-	unrest: float
-	hold: float
+	tiles: Tuple[str, ...]
+	unrest: Tuple[float, ...]
+	hold: Tuple[float, ...]
 
 
 @dataclass(frozen=True)

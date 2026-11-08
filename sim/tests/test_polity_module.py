@@ -11,7 +11,7 @@ from sim.polity import constants as polity_constants
 from sim.polity import constants, rules
 from sim.polity.api import (AddGovernance, AddScandal, GainReputation, RaiseScandal, RecordBribe, RecordRising,
                             RegisterPeople, ReplaceRuler, ResetStateUnrest, ScaleFamiliarity, ScaleProtection, SetReputation,
-                            SetTileReading, ShiftValueWeight, StrikeFromForce)
+                            SetTileReadings, ShiftValueWeight, StrikeFromForce)
 from sim.polity.state import PolitySeat
 from sim.refusal import Refusal
 from sim.reporting.api import RecordEvent
@@ -88,8 +88,8 @@ class StateRecords(unittest.TestCase):
         module, record = self.module()
         module.reset_state_unrest(ResetStateUnrest("rome"))
         self.assertEqual((record.unrest_by_tile, record.hold_by_tile), ({}, {}))
-        module.set_tile_reading(SetTileReading("rome", "t", 0.3, 0.7))
-        self.assertEqual((record.unrest_by_tile, record.hold_by_tile), ({"t": 0.3}, {"t": 0.7}))
+        module.set_tile_readings(SetTileReadings("rome", ("t", "u"), (0.3, 0.4), (0.7, 0.8)))
+        self.assertEqual((record.unrest_by_tile, record.hold_by_tile), ({"t": 0.3, "u": 0.4}, {"t": 0.7, "u": 0.8}))
 
     def test_risings_keep_the_latest_and_a_won_one_puts_a_new_ruler_on_the_throne(self):
         module, record = self.module()
