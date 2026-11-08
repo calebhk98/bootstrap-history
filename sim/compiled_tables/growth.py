@@ -24,7 +24,7 @@ def reserve_rows(table, extra: int):
         elif name == "capacity":
             columns.append(numpy.array([new_capacity], dtype=numpy.int64))
         else:
-            grown = numpy.zeros(new_capacity, dtype=column.dtype)
+            grown = numpy.zeros((new_capacity,) + column.shape[1:], dtype=column.dtype)
             grown[:capacity] = column
             columns.append(grown)
     return type(table)(*columns)

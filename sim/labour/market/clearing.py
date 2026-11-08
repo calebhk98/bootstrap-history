@@ -362,9 +362,13 @@ def clear_one(state: MarketState, inputs: YearInputs, trade: str, area: str, bid
     return _finish(pending)
 
 
-def clear_all(state: MarketState, inputs: YearInputs) -> List[LabourClearing]:
-    """Every market of the year, in sorted (trade, area) order: all prepared, the hiring rounds of all of them run in one
-    kernel call, then each finished."""
+def clear_all(state: MarketState, inputs: YearInputs) -> Sequence[LabourClearing]:
+    """Every market of the year, in sorted (trade, area) order: all packed from the tables, the hiring rounds of all of them run in
+    one kernel call, then the tables written (`clearing_tail.clear_packed`). Where the kernels do not stand in for the plain rules
+    (a mod's fetched-hands search, a schedule that is not packed) each market is prepared and finished by the plain functions."""
+    if clearing_arrays.kernel_applies(inputs):
+        packed = clearing_arrays.pack_heads(state, inputs, WAGE_SHARE_CLOSED_PER_YEAR)
+        return clearing_tail.clear_packed(state, packed, FIRM_LABOUR_SUPPLY_ELASTICITY, ON_THE_JOB_SEARCH_SHARE)
     bids_by_market: Dict[Tuple[str, str], List[EmployerHoursBid]] = {}
     for bid in inputs.bids:
         if bid.hours > 0.0 and bid.trade in inputs.trades:
@@ -374,12 +378,7 @@ def clear_all(state: MarketState, inputs: YearInputs) -> List[LabourClearing]:
         markets.update((trade, area) for trade, bands in by_trade.items()
                        if sum(bands) > 0.0 and trade in inputs.trades)
     import_costs = ImportCosts(state, inputs)
-    ordered = sorted(markets)
-    if ordered and clearing_arrays.kernel_applies(inputs):
-        packed = clearing_arrays.pack_heads(state, inputs, ordered, bids_by_market, import_costs, WAGE_SHARE_CLOSED_PER_YEAR)
-        return clearing_tail.clear_packed(state, packed, FIRM_LABOUR_SUPPLY_ELASTICITY,
-                                          ON_THE_JOB_SEARCH_SHARE)
-    prepared = [_prepare(state, inputs, trade, area, bids_by_market.get((trade, area), []), import_costs) for trade, area in ordered]
+    prepared = [_prepare(state, inputs, trade, area, bids_by_market.get((trade, area), []), import_costs) for trade, area in sorted(markets)]
     pending = [each for each in prepared if each is not None]
     hire_markets([each.job for each in pending if each.job is not None])
     return [_finish(each) for each in pending]

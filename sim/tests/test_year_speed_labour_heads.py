@@ -79,10 +79,11 @@ def head_of(row):
 
 
 def kernel_heads(state, inputs, markets, bids_by_market):
-    costs = ImportCosts(state, inputs)
-    found = clearing_arrays.run_heads(clearing_arrays.pack_heads(state, inputs, markets, bids_by_market, costs,
-                                                                clearing.WAGE_SHARE_CLOSED_PER_YEAR))
-    return [head_of(row[1:]) if row[0] else None for row in found.tolist()]
+    packed = clearing_arrays.pack_heads(state, inputs, clearing.WAGE_SHARE_CLOSED_PER_YEAR)
+    found = clearing_arrays.run_heads(packed).tolist()
+    areas, trades = state.ids.areas.names, state.ids.trades.names
+    by_market = {(trades[trade], areas[area]): row for trade, area, row in zip(packed.market_trade.tolist(), packed.market_area.tolist(), found)}
+    return [head_of(by_market[market][1:]) if market in by_market and by_market[market][0] else None for market in markets]
 
 
 def grouped(inputs):

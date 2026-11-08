@@ -6,12 +6,12 @@ for it (`LabourClearing.wage`), and the workers who offered them share the recei
 import dataclasses
 from typing import Dict, List, Sequence, Tuple
 
-from sim.labour.api import people_in, run_labour_year
+from sim.labour.api import TrancheBids, people_in, run_labour_year
 from sim.world.need_basket import subsistence_cost_per_person
 
 from . import household_work_year, households, households_basket, households_work, settlement
 from .labour_ask_floor import mean_floor_per_hour
-from .labour_bids import sloped_bids
+from .labour_bids import BID_TRANCHES, BID_VALUE_SPREAD
 from .labour_state import core_trades, mirror_wages, people_by_trade
 from .market_memory import market_key
 from .setup import labour_area
@@ -97,12 +97,12 @@ def clear_labour(setup, record, bids: Sequence[LabourBid], offers: Sequence[Labo
     (labour_inputs.labour_context). With `supply` (labour_supply.HourSupply) the hours each market sells are the hours
     its offers hold, rising with the wage, and the offers settled are those sold at the wage the market cleared at
     (`supply.sold`); without it the core sells every worker's whole year and `offers` are the sellers."""
-    core_bids = sloped_bids(bids)
+    core_bids = TrancheBids(bids, BID_TRANCHES, BID_VALUE_SPREAD)      # the core cuts each bid into its tranches (labour_bids.sloped_bids is the same rule as objects)
     ledger.wage_floor_per_hour = mean_floor_per_hour(
         context.ask_floor_per_worker_year,
         {area: people_in(record.labour.workforce, area) for area in context.ask_floor_per_worker_year},
         context.hours_per_worker_year)
-    inputs = dataclasses.replace(context, trades=core_trades(setup, {bid.trade for bid in core_bids}),
+    inputs = dataclasses.replace(context, trades=core_trades(setup, {bid.trade for bid in core_bids.bids}),
                                  bids=core_bids, hours_sold_at=supply.schedules() if supply is not None else None)
     record.labour.workforce, report = run_labour_year(record.labour.workforce, inputs, owned=True)
     by_market: Dict[Tuple[str, str], List[LabourOffer]] = {}
