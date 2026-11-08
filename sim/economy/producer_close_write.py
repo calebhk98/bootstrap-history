@@ -13,6 +13,8 @@ from .producer_store import ProducerStore
 
 def write_close(store: ProducerStore, columns, answer, pooled) -> None:
     """The closed year's figures written into the table's columns for every producer still in it."""
+    if columns.layout != store.layout:
+        raise ValueError("the producer table's rows were renumbered since the close read them")
     alive = ~answer.exited
     sat_out = (columns.idle_years > 0) & alive
     ran = (columns.idle_years <= 0) & alive

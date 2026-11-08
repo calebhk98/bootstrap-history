@@ -170,8 +170,8 @@ def _goods(setup, record, ledger, stocks_at_start) -> Dict[str, GoodAccount]:
 def _plant_wear(setup, record, ledger) -> Dict[str, float]:
     wear: Dict[str, float] = {}
     for producer_id, runs in sorted(ledger.plant_worn.items()):
-        producer = record.producers.get(producer_id)
-        recipe = setup.recipes[producer.recipe_id] if producer is not None else None
+        recipe_id = record.producers.recipe_id_of(producer_id)
+        recipe = setup.recipes[recipe_id] if recipe_id is not None else None
         if recipe is None or recipe.plant_life_years <= 0.0:
             continue
         for good, per_run in recipe.plant_goods.items():

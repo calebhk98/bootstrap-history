@@ -4,6 +4,8 @@ purses through the ledger, so no money appears."""
 from .harness import *  # noqa: F401,F403
 from types import SimpleNamespace
 
+from sim.economy.producer_store import ProducerStore
+from sim.economy.producers import Producer
 from sim.agents import revenue
 from sim.agents.api import Government, Stratum, stratum_id
 from sim.agents.records import ActorRecord
@@ -71,7 +73,7 @@ paid = land_rents.rent_paid_by_tile(record)
 check("rent paid on a tile is what the land market booked producers paying there last year", paid == {"a": 120.0, "b": 3.0}, paid)
 booked = land_rents.booked_by_tile([Transfer("p1", "o", "gold", 70.0, "rent"), Transfer("p2", "o", "gold", 50.0, "rent"),
                                     Transfer("p3", "o", "gold", 0.0, "rent"), Transfer("x", "o", "gold", 9.0, "rent")],
-                                   {"p1": producer("a", "farm", 5.0), "p2": producer("a", "farm", 1.0), "p3": producer("b", "farm", 1.0)})
+                                   ProducerStore({name: Producer(name, "o", "farm", tile, runs) for name, tile, runs in (("p1", "a", 5.0), ("p2", "a", 1.0), ("p3", "b", 1.0))}))
 check("booked rent sums by the payer's tile, leaving out nothing paid and agents that are no producers", booked == {"a": 120.0}, booked)
 
 # ---- the basis ------------------------------------------------------------------------------------

@@ -52,6 +52,7 @@ class ProducerColumns:
     crews: Dict[int, Dict[str, float]] = field(repr=False, default_factory=dict)   # row here -> the crew's practice, for a producer that has one
     store: ProducerStore = field(repr=False, default=None)
     version: int = -1                 # the store's `version` when these were read
+    layout: int = -1                  # the store's `layout` when these were read: `rows` mean the same rows while it is the same
     matrices: RecipeMatrices = field(repr=False, default=None)
     tiles: Names = field(repr=False, default=None)
 
@@ -79,7 +80,7 @@ class ProducerColumns:
                       table.expected_sales[order], table.last_runs[order], table.land_rent_per_run[order], table.land_run_cap[order],
                       table.workshops[order], table.idle_years[order], table.staffed_runs[order], earnings, revenue, counts.copy(),
                       _expected_prices(store, order, recipe_row, matrices), _hours_scale(store, order, matrices),
-                      table.owner[order], tile_numbers, _crews(store, order), store, store.version, matrices, tiles)
+                      table.owner[order], tile_numbers, _crews(store, order), store, store.version, store.layout, matrices, tiles)
         return columns
 
     def owners(self) -> List[str]:

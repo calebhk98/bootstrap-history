@@ -47,7 +47,7 @@ class WriteCloseTests(unittest.TestCase):
         slot_goods = np.array([[0, 1, -1]] * count)
         store = ProducerStore({each.agent_id: each for each in records})
         del store["c"]
-        columns = SimpleNamespace(rows=np.arange(count), idle_years=np.array([0, 2, 0, 0, 1]), recipe_row=np.zeros(count, dtype=np.int64),
+        columns = SimpleNamespace(layout=store.layout, rows=np.arange(count), idle_years=np.array([0, 2, 0, 0, 1]), recipe_row=np.zeros(count, dtype=np.int64),
                                   last_runs=np.array([each.last_runs for each in records]),
                                   matrices=SimpleNamespace(goods=SimpleNamespace(ids=GOODS), slot_goods=slot_goods))
         answer = SimpleNamespace(

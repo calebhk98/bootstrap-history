@@ -258,7 +258,7 @@ def close_idle_producers(setup, record) -> int:
     exits = producer_exit.ExitBatch(record)
     for producer_id in closing:
         cash = record.book.balance(producer_id, money)
-        payout = [Transfer(producer_id, record.producers[producer_id].owner, money, cash, "dividend")] if cash > 0.0 else []
+        payout = [Transfer(producer_id, record.producers.owner_at(record.producers.row_of[producer_id]), money, cash, "dividend")] if cash > 0.0 else []
         exits.exit(producer_id, payout)
     exits.finish()
     return len(closing)

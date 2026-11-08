@@ -19,6 +19,7 @@ import unittest
 
 import numpy as np
 
+from sim.economy.producer_store import ProducerStore
 from sim.economy import entry, entry_kernels, entry_practice, entry_trial, entry_year, location, practice
 from sim.economy.entry_tables import EntryTables
 from sim.economy.entrant_rent import site_rent_per_run
@@ -129,7 +130,7 @@ def economy(seed, producer_count=60):
                                                           for trade in fixture.TRADES if rng.random() < 0.8}
                                       for tile in TILES if rng.random() < 0.85})
     record = types.SimpleNamespace(
-        producers=producers, cohorts={}, memory=memory, book=Book(),
+        producers=ProducerStore(producers), cohorts={}, memory=memory, book=Book(),
         credit=types.SimpleNamespace(loans=[], expansion_runs={each: rng.uniform(0.0, 10.0) for each in sorted(producers)[::7]}),
         land=types.SimpleNamespace(land_rent={tile: rng.uniform(0.0, 3.0) for tile in TILES[:4]},
                                    land_mean_value={tile: rng.choice((0.0, rng.uniform(1.0, 30.0))) for tile in TILES[:4]}),

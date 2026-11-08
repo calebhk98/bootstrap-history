@@ -541,9 +541,9 @@ class Economy:
             output[good] = output.get(good, 0.0) + quantity
         record.goods.reset_output()
         for (agent, good), quantity in sorted(ledger.output.items()):
-            producer = record.producers.get(agent)
-            if producer is not None and quantity > 0.0:
-                record.goods.add_output(producer.tile, good, quantity)
+            tile = record.producers.tile_of(agent)
+            if tile is not None and quantity > 0.0:
+                record.goods.add_output(tile, good, quantity)
         prices = national_prices(record)
         return YearOutcome(year=record.memory.year, basket_price_level=level, prices=prices,
                            wages=mean_wages, rate=record.memory.rates[money],

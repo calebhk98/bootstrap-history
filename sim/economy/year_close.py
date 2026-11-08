@@ -34,7 +34,7 @@ def foreign_agents(setup, record) -> set:
         return set()
     away = lambda tile: not on_home_tile(setup, tile, True)   # noqa: E731
     return ({cohort.agent_id for cohort in record.cohorts.values() if away(cohort.tile)}
-            | {producer.agent_id for producer in record.producers.values() if away(producer.tile)}
+            | set(record.producers.ids_on_tiles(away))
             | {merchant.agent_id for merchant in record.merchants.values() if away(merchant.home_tile)})
 
 
@@ -95,9 +95,7 @@ def close_agents(setup, record, view, ledger: YearLedger, area_map, carriage, ar
     money = setup.currency_id
     property_income: Dict[str, float] = dict(income_received)
     cohorts_by_tile: Dict = {}           # the tiles' cohorts, unchanged until the households close below
-    crews_of_recipe: Dict[str, list] = {}
-    for each in record.producers.values():
-        crews_of_recipe.setdefault(each.recipe_id, []).append(each.crew_runs)
+    crews_of_recipe: Dict[str, list] = record.producers.crews_by_recipe(in_id_order=False)
     pool_by_recipe_trade: Dict[Tuple[str, str], float] = {}     # the crews' practice is read before the loop, so one pool per recipe and trade
 
     def pooled(recipe_id: str, trade: str) -> float:

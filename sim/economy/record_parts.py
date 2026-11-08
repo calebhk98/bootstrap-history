@@ -19,6 +19,9 @@ def sorted_store(store: Dict[Any, Any]) -> Dict[Any, Any]:
 
 
 def seat_sorted(store: Dict[Any, Any]) -> None:
+    if hasattr(store, "seat_sorted"):      # a column store reseats its rows itself
+        store.seat_sorted()
+        return
     if list(store) != sorted(store):
         held = [(key, store[key]) for key in sorted(store)]
         store.clear()

@@ -10,6 +10,7 @@ Rows are in the order the producers entered (a mapping's insertion order); an ex
 `compact` removes, and every method that reads blocks compacts first. `version` rises on every write, so a reader that
 keeps a derived copy (`year_arrays_producers.ProducerColumns`) knows when to read again. `order` is the rows in sorted id order,
 the order the year arrays number producers in."""
+import math
 from collections.abc import MutableMapping
 from typing import Dict, Iterable, Iterator, List, Mapping, Optional, Tuple
 
@@ -40,6 +41,7 @@ class ProducerStore(MutableMapping):
         self.row_of: Dict[str, int] = {}
         self.version = 0                            # rises on every write
         self.members_version = 0                    # rises when a producer enters or leaves
+        self.layout = 0                             # rises when rows are renumbered (compaction, reseating in id order)
         self._dead = 0
         self._objects: List[Optional[Producer]] = []
         self._order: Optional[np.ndarray] = None
@@ -84,6 +86,10 @@ class ProducerStore(MutableMapping):
         return isinstance(other, Mapping) and dict(self.items()) == dict(other.items())
 
     __hash__ = None
+
+    def get(self, producer_id, default=None):
+        row = self.row_of.get(producer_id)
+        return default if row is None else self.at(row)
 
     def keys(self):
         return self.row_of.keys()
@@ -206,6 +212,44 @@ class ProducerStore(MutableMapping):
         self._objects[row] = None
         self.version += 1
 
+    def ids_on_tiles(self, wanted) -> List[str]:
+        """The ids, in table order, of the producers whose tile `wanted(tile)` accepts (asked once for each tile)."""
+        numbers = self.table.tile[:self.count]
+        alive = [each is not None for each in self.ids]
+        names = self.names["tiles"].name_list
+        verdict = {number: wanted(names[number]) for number in np.unique(numbers[np.array(alive, dtype=np.bool_)]).tolist()}
+        return [each for each, number, live in zip(self.ids, numbers.tolist(), alive) if live and verdict[number]]
+
+    def tiles_in_use(self) -> List[str]:
+        """The tiles some producer is on (each once)."""
+        alive = np.array([each is not None for each in self.ids], dtype=np.bool_)
+        return self.name_of("tiles", np.unique(self.table.tile[:self.count][alive]))
+
+    def exact_total(self, name: str) -> float:
+        """The exact sum (`math.fsum`) of a float field over the producers."""
+        alive = np.array([each is not None for each in self.ids], dtype=np.bool_)
+        return math.fsum(self._scalar(name)[:self.count][alive].tolist())
+
+    def owners_of(self, producer_ids: Iterable[str]) -> List[str]:
+        """The owner of each producer named."""
+        return [self.owner_at(self.row_of[each]) for each in producer_ids]
+
+    def tile_of(self, producer_id: str) -> Optional[str]:
+        """The tile of the producer, None for an id the table does not hold."""
+        row = self.row_of.get(producer_id)
+        return None if row is None else self.names["tiles"].name_list[self.table.tile[row]]
+
+    def recipe_id_of(self, producer_id: str) -> Optional[str]:
+        """The recipe of the producer, None for an id the table does not hold."""
+        row = self.row_of.get(producer_id)
+        return None if row is None else self.names["recipes"].name_list[self.table.recipe[row]]
+
+    def rows_with_recipes(self, wanted: Iterable[bool], in_id_order: bool = True) -> np.ndarray:
+        """The rows (sorted by id, else in table order) of the producers whose recipe the flag says: `wanted[number]` is the flag of
+        the recipe with that number in `names["recipes"]`."""
+        rows = self.order() if in_id_order else np.nonzero([each is not None for each in self.ids])[0]
+        return rows[np.array(list(wanted), dtype=np.bool_)[self.table.recipe[rows]]]
+
     def owner_at(self, row: int) -> str:
         """The owner of the producer in `row`."""
         return self.names["owners"].name_list[self.table.owner[row]]
@@ -297,6 +341,27 @@ class ProducerStore(MutableMapping):
         self.row_of = {producer_id: row for row, producer_id in enumerate(self.ids)}
         self._dead = 0
         self.members_version += 1
+        self.layout += 1
+        self.version += 1
+
+    def seat_sorted(self) -> None:
+        """Rows in sorted id order (a live game that has had producers enter then iterates as a loaded one does); nothing moves when
+        they already are."""
+        order = self.order()
+        if (order == np.arange(len(order))).all():
+            return
+        fields = {}
+        for name in self.table._fields:
+            column = getattr(self.table, name)
+            fields[name] = column if name in ("row_count", "capacity") else np.concatenate([column[order], column[len(order):]])
+        self.table = ProducerRows(**fields)
+        self.ids = [self.ids[row] for row in order.tolist()]
+        self._objects = [self._objects[row] for row in order.tolist()]
+        self.row_of = {producer_id: row for row, producer_id in enumerate(self.ids)}
+        self._order = np.arange(len(order), dtype=np.int64)
+        self.members_version += 1
+        self._order_version = self.members_version
+        self.layout += 1
         self.version += 1
 
     def order(self) -> np.ndarray:

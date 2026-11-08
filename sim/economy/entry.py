@@ -12,11 +12,13 @@ import math
 from dataclasses import dataclass
 from typing import Dict, List, Mapping, Optional, Sequence, Tuple
 
+import numpy as np
 from sim.constants import declare
 
 from . import entry_practice, market_quote, unit_cost
 from .entry_sizing import Traded, sized_runs
 from .goods_market import quantity_at
+from .producer_store import ProducerStore
 from .producers import Producer, expected_output_prices, live_input_prices, live_wages
 from .protocols import MarketView
 from .types import AreaId, Bid, ClearingResult, GoodId, Offer, Recipe, TileId
@@ -101,6 +103,13 @@ def producers_to_close(producers: Mapping[str, Producer], pending, debtors) -> L
     """Producers whose capacity is a negligible share of the scale they once worked, with no plant on the
     way and no debt: a newcomer whose plant was never funded or a maker that dwindled. They close and
     hand what they hold to their owner."""
+    if isinstance(producers, ProducerStore):
+        order = producers.order()
+        table = producers.table
+        small = table.capacity_runs[order] <= CLOSED_CAPACITY_SHARE_OF_PAST_SCALE * np.maximum(
+            np.maximum(table.last_runs[order], table.expected_sales[order]), 0.0)
+        return [agent_id for agent_id in (producers.ids[row] for row in order[small].tolist())
+                if agent_id not in pending and agent_id not in debtors]
     return [agent_id for agent_id, producer in sorted(producers.items())
             if producer.capacity_runs <= CLOSED_CAPACITY_SHARE_OF_PAST_SCALE * max(
                 producer.last_runs, producer.expected_sales, 0.0)

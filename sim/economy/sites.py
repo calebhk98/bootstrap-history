@@ -122,9 +122,12 @@ def in_id_order(producers):
 def extraction_by_tile(record, setup) -> Dict[Tuple[str, TileId], float]:
     """Runs of each site-bound recipe worked last year on each tile, for geography to deplete by."""
     worked: Dict[Tuple[str, TileId], float] = {}
-    for producer in in_id_order(record.producers):
-        recipe = setup.recipes.get(producer.recipe_id)
-        if recipe is not None and recipe.site_bound:
-            key = (producer.recipe_id, producer.tile)
-            worked[key] = worked.get(key, 0.0) + max(0.0, producer.last_runs)
+    store = record.producers
+    order = store.order()
+    recipe_names, tile_names = store.names["recipes"].name_list, store.names["tiles"].name_list
+    site_bound = [(setup.recipes[name].site_bound if name in setup.recipes else False) for name in recipe_names]
+    for recipe, tile, last_runs in zip(store.table.recipe[order].tolist(), store.table.tile[order].tolist(), store.table.last_runs[order].tolist()):
+        if site_bound[recipe]:
+            key = (recipe_names[recipe], tile_names[tile])
+            worked[key] = worked.get(key, 0.0) + max(0.0, last_runs)
     return dict(sorted(worked.items()))

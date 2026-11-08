@@ -7,6 +7,7 @@ QUICK_TOPIC = True
 import types as pytypes
 import unittest
 
+from sim.economy.producer_store import ProducerStore
 from sim.economy import currency, mint
 from sim.book import Book
 from sim.economy.types import EDGE_ISSUE, EDGE_MINT, EDGE_PRODUCTION, GoodsMove, Transfer
@@ -50,7 +51,7 @@ def economy_of(spec, coin_by_tile=None):
     setup = pytypes.SimpleNamespace(opening_population_by_tile={"t1": 3.0, "t2": 1.0}, tiles={"t1": 0, "t2": 0},
                                     specs={}, mint_recipe=None)
     record = pytypes.SimpleNamespace(book=book, currency=spec, memory=pytypes.SimpleNamespace(prices=BullionAtParity()),
-                                     cohorts={}, producers={}, merchants={})
+                                     cohorts={}, producers=ProducerStore(), merchants={})
     mint.seed_opening_metal(setup, record)
     return setup, record
 
