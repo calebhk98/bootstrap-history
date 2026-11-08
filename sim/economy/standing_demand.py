@@ -3,7 +3,7 @@ pays at the market edge. Firm entry reads the year's bids (entry_year.py); these
 such a buyer asks for draws a maker as a household's or a merchant's bid does. Nothing here clears."""
 from typing import Dict, List, Mapping, Sequence, Tuple
 
-from .goods_table_views import LazyObjects
+from .bid_columns import MarketBids, columns_of, columns_of_bids, joined
 from .types import AreaId, Bid, GoodId
 
 
@@ -16,9 +16,8 @@ class _WithStanding(Mapping):
 
     def __getitem__(self, key):
         base = self._base.get(key, ())
-        if key not in self._standing:
-            return list(base) if isinstance(base, (list, tuple)) else LazyObjects(lambda: list(base), len(base))      # a copy, built when read
-        return list(base) + self._standing[key]
+        standing = self._standing.get(key, [])
+        return MarketBids(lambda: joined(columns_of(base), columns_of_bids(standing)), lambda: list(base) + standing, len(base) + len(standing))
 
     def __iter__(self):
         return iter(sorted(set(self._base) | set(self._standing)))

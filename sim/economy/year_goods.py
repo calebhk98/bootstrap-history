@@ -9,16 +9,12 @@ import dataclasses
 import math
 from typing import Dict, List, Optional, Tuple
 
-from . import (currency, mint_price, land_bid_year, carriage_fleet_book, carriage_wear, households, market_curves, market_quote, merchants, merchants_book, producers, seller_cash,
-               state_budget, state_store, taxes, tool_wear)
-from . import goods_good_clear, goods_memory_notes, goods_production, goods_settle, goods_order_book, goods_respend_year, households_cohort, year_goods_offers, households_orders_pack
+from . import currency, mint_price, market_curves, market_quote, producers, seller_cash, taxes
+from . import goods_good_clear, goods_memory_notes, goods_production, goods_settle, goods_order_book, goods_respend_year, year_goods_offers
 from .goods_table_context import ClearingContext
-from .goods_order_tables import HOUSEHOLD
 from .year_goods_offer_rows import OfferRows
 from .home_scope import on_home_tile
-from .inventory import held_stock, holding_reservation
-from .household_work_year import basket_key, cohort_basket
-from .opening_bid_memory import BidMemory
+from .household_work_year import cohort_basket
 from .goods_market_rows import bids_only_quote, wanted_at_rows
 from .market_memory import market_key
 from .market_memory_asks import memory_reference_volume, price_after_resumed_trade, wanted_at
@@ -48,57 +44,6 @@ def add_orders(order_book, orders: AgentOrders) -> None:
         order_book.setdefault((bid.good, bid.area), ([], []))[0].append(bid)
     for offer in orders.offers:
         order_book.setdefault((offer.good, offer.area), ([], []))[1].append(offer)
-
-
-def cohort_orders(setup, record, view, ledger: YearLedger, order_book: OrderBook, own_options=None) -> List:
-    """Households' bids for the year; returns their savings offers for the credit market. Every cohort whose basket the kernel covers
-    is ordered in one call (`households_orders_pack`); the rest through `households.goods_orders`."""
-    funds = []
-    memory = BidMemory()     # the priced needs and store weights cohorts of one basket share
-    money = setup.currency_id
-    cohorts = sorted(record.cohorts.values(), key=lambda each: each.agent_id)
-    smooth_rise = not record.settling
-    tool_bids_of, entries, plain = {}, [], {}
-    for cohort in cohorts:
-        basket = memory.basket(setup, record, cohort)
-        priced = memory.priced(setup, record, view, cohort, basket)
-        income = ledger.wages_in.get(cohort.agent_id, 0.0) + record.capital_markets.property_income.get(cohort.agent_id, 0.0)
-        cash = record.book.balance(cohort.agent_id, money)
-        tool_bids = tool_wear.tool_bids(
-            cohort.agent_id, cohort.tile, lambda good: view.area_of(good, cohort.tile), lambda good: view.offered_price(good, view.area_of(good, cohort.tile)),
-            lambda good: view.stock(cohort.agent_id, good, cohort.tile), setup.recipes, ledger.own_plot_hours.get(cohort.agent_id, {}),
-            setup.specs, cash)
-        tool_bids_of[cohort.agent_id] = tool_bids
-        spendable = cash - sum(bid.budget for bid in tool_bids)
-        grown_units = ledger.grown_units.get(cohort.agent_id)
-        if not priced or cohort.people <= 0.0:
-            plain[cohort.agent_id] = AgentOrders()
-        elif households_orders_pack.covered(priced):
-            entries.append((cohort, basket, priced, spendable, income, grown_units))
-        else:
-            plain[cohort.agent_id] = less_what_it_grew(households.goods_orders(
-                cohort, view, spendable, income, basket, setup.specs, priced, smooth_rise=smooth_rise, shared_store=memory.stores(record, cohort)),
-                cohort, basket, grown_units)
-    made, bid_rows, planned = households_orders_pack.kernel_orders(
-        view, setup.specs, entries, smooth_rise, lambda cohort: basket_key(record, cohort), lambda cohort: memory.stores(record, cohort),
-        order_book)
-    made.update(plain)
-    for cohort in cohorts:
-        orders = made[cohort.agent_id]
-        tool_bids = tool_bids_of[cohort.agent_id]
-        add_orders(order_book, AgentOrders(bids=tuple(tool_bids)))
-        households_cohort.change_cohort(
-            record.cohorts, cohort.agent_id, planned_spending=sum(bid.budget for bid in tool_bids) + (
-                planned[cohort.agent_id] if cohort.agent_id in planned else sum(bid.budget for bid in orders.bids)))
-        if own_options:
-            savings = sum(offer.amount for offer in orders.funds_offers)     # only what it would otherwise lend
-            orders = land_bid_year.with_land_bids(orders, land_bid_year.land_bids(
-                setup, record, view, cohort, own_options, ledger.spare_hours.get(cohort.agent_id, 0.0), savings))
-        add_orders(order_book, orders)
-        funds.extend(orders.funds_offers)
-    if bid_rows is not None:
-        order_book.append_bids(*bid_rows, HOUSEHOLD)       # after every cohort's tool bids, so a cohort's own bids keep their order
-    return funds
 
 
 def with_floor_and_budget(bid: Bid, floor_quantity: float, budget: float) -> Bid:
@@ -132,47 +77,6 @@ def less_what_it_grew(orders: AgentOrders, cohort, basket, grown_units) -> Agent
     return dataclasses.replace(orders, bids=tuple(bids))
 
 
-def merchant_orders(setup, record, view, area_map, carriage, order_book: OrderBook) -> None:
-    money = setup.currency_id
-    rate = own_rate(view, money)
-    ordered = sorted(record.merchants.values(), key=lambda each: each.agent_id)
-    route = merchants_book.route_pass(view, carriage, area_map, setup.specs) if ordered else None
-    shares = merchants_book.DenseShares(route.book) if ordered else None
-    carrier_bids, carrier_budget = (carriage_fleet_book.bids(setup, record, view, area_map,
-                                                       {each.agent_id: record.book.balance(each.agent_id, money) for each in ordered})
-                                    if carriage_wear.wears(setup) else ([], {}))
-    add_orders(order_book, AgentOrders(bids=tuple(carrier_bids)))     # replacements for the carriers last year's shipments wore
-    first = view.year % len(ordered) if ordered else 0          # who sizes first rotates, so no merchant always gets first pick
-    for merchant in ordered[first:] + ordered[:first]:
-        held = held_stock(record.book, merchant.agent_id)
-        orders = merchants.orders(merchant, view, carriage, area_map, record.book.balance(merchant.agent_id, money) - carrier_budget.get(merchant.agent_id, 0.0),
-                                  held, setup.specs, rate, shares, route)
-        add_orders(order_book, orders)
-
-
-def state_orders(setup, record, view, area_map, order_book: OrderBook, keep) -> None:
-    """The state offers what it holds beyond what its own lines will draw, at what holding it would net."""
-    bids, store_offers, kept = state_store.orders(setup, record, view)
-    state_budget.goods_bids(setup, record, view, area_map, order_book, kept)
-    for bid in bids:
-        order_book.setdefault((bid.good, bid.area), ([], []))[0].append(bid)
-    add_orders(order_book, AgentOrders(offers=tuple(store_offers)))
-    rate = own_rate(view, setup.currency_id)
-    offers = []
-    for (good, tile), quantity in sorted(held_stock(record.book, setup.state_agent).items()):
-        surplus = quantity - keep.get(good, 0.0) - (kept.get(good, 0.0) if tile == setup.capital_tile else 0.0)
-        if surplus <= 0.0 or good not in area_map.goods():
-            continue
-        area = area_map.area_of(good, tile)
-        expected = view.offered_price(good, area)      # what a buyer can see to buy at, not a bid ceiling or a cost quote
-        if expected is None:
-            continue
-        spoilage = setup.specs[good].spoilage_per_year if good in setup.specs else 0.0
-        offers.append(Offer(setup.state_agent, good, area, tile, surplus,
-                            holding_reservation(expected, rate, spoilage, 0.0)))
-    add_orders(order_book, AgentOrders(offers=tuple(offers)))
-
-
 def clear_goods(setup, record, view, area_map, order_book, plans, ledger: YearLedger,
                 watched_tiles=(), arrays=None) -> None:
     """Produce and clear every good in input-depth order. The book of each market area that holds the port, the
@@ -196,6 +100,7 @@ def clear_goods(setup, record, view, area_map, order_book, plans, ledger: YearLe
     done = set()
     left_markets = {}
     in_kind = [form for form in setup.tax_forms if form.paid_in]
+    metal = record.currency.backing_good if currency.has_mint(record.currency) else None        # the good whose markets the mint reads
     plant_makers: Dict[str, list] = {}       # a good -> the producers whose plant is built from it
     for producer_id, producer in record.producers.items():
         for plant_good in setup.recipes[producer.recipe_id].plant_goods:
@@ -209,7 +114,7 @@ def clear_goods(setup, record, view, area_map, order_book, plans, ledger: YearLe
         cleared = goods_good_clear.clear_good(context, good, good_id) if good_id is not None else []
         kept = market_curves.kept_areas(area_map, setup.port_tile, (setup.capital_tile, *watched_tiles), good)
         answer = goods_settle.settle_good(record, ledger, cleared, good, plant_makers)
-        goods_settle.note_clearings(ledger, cleared, answer, memory_names)
+        goods_settle.note_clearings(ledger, cleared, answer, memory_names, metal)
         idle = goods_settle.idle_years(record.memory, cleared) if cleared else []
         last_prices = goods_settle.last_prices(record.memory, cleared)
         for each, entry, idle_years, last_price in zip(cleared, answer, idle, last_prices):
@@ -224,7 +129,7 @@ def clear_goods(setup, record, view, area_map, order_book, plans, ledger: YearLe
     goods_respend_year.respend(setup, record, view, ledger, left_markets,
                                lambda cohort: cohort_basket(setup, record, cohort), orders)
     for market_id, market in left_markets.items():
-        ledger.bids_by_market[market_id] = market.all_bids     # demand over the same rounds as the traded quantity
+        ledger.bids_by_market[market_id] = market.market_bids()     # demand over the same rounds as the traded quantity
     _remember_markets(setup, record, left_markets, ledger, orders)
     _record_year_markets(record, ledger, left_markets)
 
@@ -246,7 +151,7 @@ def _remember_markets(setup, record, left_markets, ledger: YearLedger, orders=No
     for place, ((good, area), market) in enumerate(ordered):
         old, total = market.last_price, quantity[(good, area)]
         quote_kind = None
-        received = _received_price(setup, record, good, market.results, ledger) if total > 0.0 else None
+        received = _received_price(setup, record, good, market, ledger) if total > 0.0 else None
         if received is not None:
             usual = usual_volumes[place]
             reference = memory_reference_volume(usual, _wanted_at(market, old, orders))
@@ -281,7 +186,7 @@ def _wanted_at(market, price, orders) -> float:
     where the market is on them, plus the later rounds' bids that add demand."""
     if market.rows is None:
         return wanted_at(market.all_bids, price)
-    return wanted_at_rows(orders.bid_lists(), market.rows.bid_rows, price, market.added_bids)
+    return wanted_at_rows(orders.bid_lists(), market.rows.bid_rows, price, added=market.added)
 
 
 def price_floor(setup, memory, good, signal: float) -> float:
@@ -311,18 +216,20 @@ def _record_year_markets(record, ledger: YearLedger, left_markets) -> None:
                                      [market.delivered for _key, market in ordered])
 
 
-def _received_price(setup, record, good, results, ledger: YearLedger) -> Optional[float]:
+def _received_price(setup, record, good, market, ledger: YearLedger) -> Optional[float]:
     """The price a market's sellers got per unit over its clearings, weighted by quantity: the settled price, plus the
-    mint's top-up where it bought coin metal; None when no clearing traded."""
+    mint's top-up where it bought coin metal; None when no clearing traded. The first round's clearing is a result; the respend
+    rounds' are (quantity, price) rows (`market.later`), which carry no fills and so no top-up."""
     spec = record.currency
-    traded = [result for result in results if result.quantity > 0.0]
-    quantity = math.fsum(result.quantity for result in traded)
+    traded = [result for result in market.results if result.quantity > 0.0]
+    later = [(quantity, price) for quantity, price, _demand, _offered in market.later if quantity > 0.0]
+    quantity = math.fsum([result.quantity for result in traded] + [units for units, _price in later])
     if quantity <= 0.0:
         return None
     if not currency.has_mint(spec) or good != spec.backing_good:
-        return math.fsum(result.quantity * result.price for result in traded) / quantity
-    return math.fsum(result.quantity * mint_price.received_price(currency.mint_price(spec), result, ledger.settled_to_mint(result))
-                     for result in traded) / quantity
+        return math.fsum([result.quantity * result.price for result in traded] + [units * price for units, price in later]) / quantity
+    return math.fsum([result.quantity * mint_price.received_price(currency.mint_price(spec), result, ledger.settled_to_mint(result))
+                      for result in traded] + [units * price for units, price in later]) / quantity
 
 
 def price_after_trade(old, old_was_quote, cleared, quantity, reference_volume, quiet_years):

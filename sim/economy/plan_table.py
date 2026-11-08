@@ -197,7 +197,7 @@ class PlanTable:
 
 
 class PlanBids:
-    """The table's input bids as an item for a `NamedOrderBook` (order_book_named.py): the names are the distinct producers, goods, tiles
+    """The table's input bids as an item for a `GoodsOrderBook` (goods_order_items.py): the names are the distinct producers, goods, tiles
     and (good, area) pairs of the rows, numbered once each, and the rows are the table's own columns with those ids put in."""
 
     source = PRODUCER_INPUT
@@ -229,15 +229,13 @@ class PlanBids:
 
 def write_bids(table: PlanTable, order_book) -> None:
     """Hand every producer's input bids to the book of orders as rows, in the order of the table (producer order, slot order): they wait
-    by name in a `NamedOrderBook`, are appended at once to a plain `GoodsOrderBook`, and are made into `Bid` objects for a plain
+    by name in a `GoodsOrderBook`, and are made into `Bid` objects for a plain
     `{(good, area): (bids, offers)}` dict (a test)."""
     count = len(table.bids.position)
     if not count:
         return
-    if hasattr(order_book, "add_named_bids"):
+    if isinstance(order_book, GoodsOrderBook):
         order_book.add_named_bids(PlanBids(table))
-    elif isinstance(order_book, GoodsOrderBook):
-        order_book.append_bids(*PlanBids(table).rows(order_book), PRODUCER_INPUT)
     else:
         for row in range(count):
             bid = table._bid(row)

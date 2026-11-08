@@ -1,7 +1,7 @@
 """Stage 4, plans and the rare order sources: each piece called on its own, with the inputs written out.
 
 `stock_block` reads many stock cells in one call; `plan_sums` adds a producer's bids as Python's `sum` does; `OrderRows` into a
-`NamedOrderBook` gives the rows and the ids a book holding the same orders as objects gives; `plan_table.write_bids` does the same for the
+a `GoodsOrderBook` given named items gives the rows and the ids a book holding the same orders as objects gives; `plan_table.write_bids` does the same for the
 plans of random economies (the producers' plans as `Plan` objects are the reference)."""
 
 QUICK_TOPIC = True
@@ -17,7 +17,6 @@ from sim.economy import plan_table, plan_year
 from sim.economy.goods_order_book import GoodsOrderBook
 from sim.economy.goods_order_tables import MINT, STATE
 from sim.economy.market_tables import MarketTables
-from sim.economy.order_book_named import NamedOrderBook
 from sim.economy.order_rows import OrderRows
 from sim.economy.plan_table import plan_sums
 from sim.economy.stock_block import numbers_of, stock_block
@@ -79,7 +78,7 @@ class OrderRowsTests(unittest.TestCase):
             objects.add_bid(bid)
         for offer in offers:
             objects.add_offer(offer)
-        named = NamedOrderBook(Book(), MarketTables())
+        named = GoodsOrderBook(Book(), MarketTables())
         named.add_bid(bids[0])                                  # an object between named items keeps its place
         rows = OrderRows(named, STATE)
         rows.bids_from(bids[1:2])
@@ -119,7 +118,7 @@ class PlanBidsTests(unittest.TestCase):
             for producer_id in table.ids:
                 for bid in table.plan_of(producer_id).bids:
                     objects.add_bid(bid)
-            named = NamedOrderBook(Book(), MarketTables())
+            named = GoodsOrderBook(Book(), MarketTables())
             plan_table.write_bids(table, named)
             self.assertEqual(snapshot(named), snapshot(objects))
             compared += objects.bid_count()

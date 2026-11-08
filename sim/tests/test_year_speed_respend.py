@@ -159,12 +159,14 @@ def agree(left, right, scale=None, path=""):
     return None if left == right or abs(left - right) <= TOLERANCE * scale else "%s %r %r" % (path, left, right)
 
 
-def traded_rounds(results):
-    """The market's results up to the last that traded: a round at the end that traded nothing (a bid at dust) is no figure."""
-    results = list(results)
-    while len(results) > 1 and results[-1].quantity == 0.0:
-        results.pop()
-    return results
+def traded_rounds(market):
+    """The market's rounds as (quantity, price, demand at price, offered at price) up to the last that traded: a round at the end that traded
+    nothing (a bid at dust) is no figure. The first round and the plain path's rounds are results; the kernel's are rows of `later`."""
+    rounds = [(result.quantity, result.price or 0.0, result.demand_at_price, result.offered_at_price) for result in market.results]
+    rounds.extend((quantity, price or 0.0, demand, offered) for quantity, price, demand, offered in market.later)
+    while len(rounds) > 1 and rounds[-1][0] == 0.0:
+        rounds.pop()
+    return rounds
 
 
 def market_figures(markets):
@@ -172,8 +174,7 @@ def market_figures(markets):
                   "offers": [(offer.seller, offer.tile, offer.quantity) for offer in market.offers],
                   "bids": [(bid.buyer, bid.budget, bid.flexible_quantity, bid.reference_price, bid.maximum_price)
                            for bid in market.all_bids],
-                  "results": [(result.quantity, result.price or 0.0, result.demand_at_price, result.offered_at_price)
-                              for result in traded_rounds(market.results)]}
+                  "results": traded_rounds(market)}
             for key, market in markets.items()}
 
 
@@ -195,7 +196,7 @@ def on_the_tables(world):
         market.rows = MarketRows(orders, range(bid_first, orders.bid_count()), range(offer_first, orders.offer_count()))
         market.bids = LazyObjects(lambda rows=market.rows: orders.bids_of(rows.bid_rows), len(market.rows.bid_rows))
         market.offers = LazyObjects(lambda rows=market.rows: orders.offers_of(rows.left_rows), len(market.rows.left_rows))
-        market.all_bids, market.added_bids = None, []
+        market.all_bids, market.added = None, None
     return orders
 
 

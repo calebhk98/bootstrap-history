@@ -15,7 +15,7 @@ from typing import Dict, List, Mapping, Optional, Sequence, Tuple
 
 from sim.constants import declare
 
-from . import entry_practice, unit_cost
+from . import bid_columns, entry_practice, unit_cost
 from .entry import EntryPlan, UnmetDemand
 from .entrant_rent import site_rent_per_run
 from .entry_sizing import ENTRY_SHARE_OF_UNTRADED_DEMAND
@@ -37,15 +37,7 @@ def demand_at(bids: Sequence[Bid], price: float, price_now: float) -> float:
     budget, so it buys in inverse proportion to the price, up to what the bid's own schedule would take there
     (`flexible_quantity`; a buyer with none takes its floor and no more, however cheap the good). A buyer's
     ceiling still holds."""
-    total = 0.0
-    for bid in bids:
-        if bid.budget <= 0.0 or price > bid.maximum_price:
-            continue
-        surplus = max(0.0, bid.budget - bid.floor_quantity * price_now)
-        reach = bid.flexible_quantity * math.exp(min(700.0, -bid.elasticity * math.log(price / bid.reference_price))) \
-            if bid.flexible_quantity > 0.0 and bid.reference_price > 0.0 and price > 0.0 else 0.0
-        total += bid.floor_quantity + min(surplus / price, reach)
-    return total
+    return bid_columns.demand_at(bid_columns.columns_of(bids), price, price_now)
 
 
 def capacity_terms_by_good(producers: Mapping[str, Producer], recipes: Mapping[str, Recipe],

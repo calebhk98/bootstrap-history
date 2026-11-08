@@ -65,9 +65,8 @@ class YearLedger(PostingNotes):
         self.grown_units: Dict[AgentId, Dict[str, float]] = {}    # need units of that
         self.buy_fills: Dict[AgentId, List[Fill]] = {}
         self.fill_watchers: Optional[frozenset] = None   # the buyers whose buy fills are kept (merchants and the state read them); None: all
-        self.clearings: List[ClearingResult] = []
         self.totals_cache: Optional[Tuple[Dict[MarketKey, float], Dict[MarketKey, Optional[float]]]] = None
-        self.mint_takes: List[Tuple[ClearingResult, Dict[Tuple[AgentId, str], float]]] = []   # clearing, units delivered to the mint by (seller, tile)
+        self.mint_takes: List[Tuple[ClearingResult, Dict[Tuple[AgentId, str], float]]] = []   # the clearings of the coin metal's markets (all of them on the object path), units delivered to the mint by (seller, tile)
         self.pending_mint_takes: Dict[Tuple[AgentId, str], float] = {}
         self.labour_results: List[LabourResult] = []
         self.carried_in: Dict[Tuple[AgentId, str], float] = {}   # (carrier, source country): value at the source of what it carried into the home country (the tariff rides on it)
@@ -161,7 +160,6 @@ class YearLedger(PostingNotes):
 
     def note_clearing(self, result: ClearingResult, delivered: float) -> None:
         """Keep a clearing and the goods its settlement delivered (less than it matched when a buyer could not pay)."""
-        self.clearings.append(result)
         self.mint_takes.append((result, self.pending_mint_takes))
         self.pending_mint_takes = {}
         price, pending = result.price, self.tables.pending

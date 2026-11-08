@@ -4,8 +4,8 @@
 A source (the mint, the state, a merchant, a firm bidding for ground or plant, an engine seat) adds one order at a time by name and
 figure (`OrderRows.bid`, `OrderRows.offer`) and calls `write` once; the names become the book's ids in one pass (an unseen name is
 admitted, the names new to one `write` in sorted order, as the book's own flush does) and the rows are appended in the order they
-were added. Into a `NamedOrderBook` (order_book_named.py) the rows wait by name in their place in the arrival order, so the names of everything waiting are
-numbered together at the next flush, as when each order waited as an object; into a plain `GoodsOrderBook` they are appended at once.
+were added. Into a `GoodsOrderBook` the rows wait by name in their place in the arrival order, so the names of everything waiting are
+numbered together at the next flush, as when each order waited as an object.
 A source that computes in arrays has the book's `append_bids`/`append_offers` and its own kernel instead.
 
 `bids_from` and `offers_from` take the objects of a rule that still makes them (`households_store.store_bids`, a seat's own bids) and
@@ -20,7 +20,7 @@ from .goods_order_tables import OTHER
 
 
 class NamedBids:
-    """The bids of one `OrderRows.write`, as an item a `NamedOrderBook` numbers and writes at its next flush."""
+    """The bids of one `OrderRows.write`, as an item a `GoodsOrderBook` numbers and writes at its next flush."""
 
     def __init__(self, buyer, good, area, tile, priority, figures, source: int):
         self.buyer, self.good, self.area, self.tile, self.priority, self.figures, self.source = buyer, good, area, tile, priority, figures, source
@@ -34,7 +34,7 @@ class NamedBids:
 
 
 class NamedOffers:
-    """The offers of one `OrderRows.write`, as an item a `NamedOrderBook` numbers and writes at its next flush."""
+    """The offers of one `OrderRows.write`, as an item a `GoodsOrderBook` numbers and writes at its next flush."""
 
     def __init__(self, seller, good, area, tile, quantity, reservation, source: int):
         self.seller, self.good, self.area, self.tile, self.quantity, self.reservation, self.source = (
@@ -102,29 +102,19 @@ class OrderRows:
     def write(self) -> None:
         """Hand what was added to the book of orders (bids, then offers, each in the order added) and start empty again."""
         target = self.order_book
-        if hasattr(target, "add_named_bids"):
+        if isinstance(target, GoodsOrderBook):
             self._wait_in(target)
-        elif isinstance(target, GoodsOrderBook):
-            self._write_rows(target)
         else:
             self._write_objects(target)
         self._clear()
 
     def _wait_in(self, orders) -> None:
-        """Hand the names and figures to a `NamedOrderBook`, which numbers them with everything else waiting at its next flush."""
+        """Hand the names and figures to the `GoodsOrderBook`, which numbers them with everything else waiting at its next flush."""
         if self.buyer:
             orders.add_named_bids(NamedBids(self.buyer, self.bid_good, self.bid_area, self.bid_tile, self.priority, self.figures, self.source))
         if self.seller:
             orders.add_named_offers(NamedOffers(self.seller, self.offer_good, self.offer_area, self.offer_tile, self.quantity, self.reservation,
                                                 self.source))
-
-    def _write_rows(self, orders: GoodsOrderBook) -> None:
-        if self.buyer:
-            orders.append_bids(orders.agent_ids_of(self.buyer), orders.good_ids_of(self.bid_good), orders.tile_ids_of(self.bid_tile),
-                               orders.market_ids(self.bid_good, self.bid_area), self.priority, self.figures, self.source)
-        if self.seller:
-            orders.append_offers(orders.agent_ids_of(self.seller), orders.good_ids_of(self.offer_good), orders.tile_ids_of(self.offer_tile),
-                                 orders.market_ids(self.offer_good, self.offer_area), self.quantity, self.reservation, self.source)
 
     def _write_objects(self, target) -> None:
         for position, buyer in enumerate(self.buyer):

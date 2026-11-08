@@ -115,9 +115,10 @@ def _note_mint_takes(book, settled: SettledByIds, slots: list, answer: list) -> 
             answer[position] = (*answer[position], takes)
 
 
-def note_clearings(ledger, cleared: list, answer: list, memory_names: list) -> None:
-    """`YearLedger.note_clearing` of every market in order: the clearing and what its settlement delivered to the mint kept, the
-    round (market, quantity, price, goods moved) added to the ledger's rounds in one call, and the watchers' buy fills."""
+def note_clearings(ledger, cleared: list, answer: list, memory_names: list, metal: Optional[str] = None) -> None:
+    """`YearLedger.note_clearing` of every market in order: the round (market, quantity, price, goods moved) added to the ledger's
+    rounds in one call, the watchers' buy fills, and, for a market of the coin `metal` (the good a struck coin's mint buys), its clearing
+    with what its settlement delivered to the mint, which `mint_price` reads; no other market keeps its `ClearingResult`."""
     if not cleared:
         return
     tables = ledger.tables
@@ -127,8 +128,8 @@ def note_clearings(ledger, cleared: list, answer: list, memory_names: list) -> N
     watched_cumulative = {}
     for each, entry in zip(cleared, answer):
         result = each.result
-        ledger.clearings.append(result)
-        ledger.mint_takes.append((result, entry[2] if len(entry) > 2 else {}))
+        if metal is not None and result.good == metal:
+            ledger.mint_takes.append((result, entry[2] if len(entry) > 2 else {}))
         key = memory_names[each.market]
         number = numbers.get(key)
         markets.append(tables.market_number(result.good, result.area) if number is None else number)

@@ -50,13 +50,15 @@ class OfferLists:
         self.quantity_left = offers.quantity_left[:count].tolist()
 
 
-def wanted_at_rows(lists: BidLists, rows: Sequence[int], price: float, more_bids: Sequence[Bid] = ()) -> float:
-    """`market_memory_asks.wanted_at` over bid rows and some more `Bid` objects: what the market's own buyers would take at
-    the price (the foreign partner's order left out), zero without a positive price."""
+def wanted_at_rows(lists: BidLists, rows: Sequence[int], price: float, more_bids: Sequence[Bid] = (), added=None) -> float:
+    """`market_memory_asks.wanted_at` over bid rows, some more `Bid` objects and the bids later rounds added (`AddedBids`, columns):
+    what the market's own buyers would take at the price (the foreign partner's order left out), zero without a positive price."""
     if not price or price <= 0.0:
         return 0.0
     wanted = [_wanted(lists, row, price) for row in rows if lists.buyer[row] != EDGE_EXTERNAL]
     wanted.extend(quantity_at(bid, price) for bid in more_bids if bid.buyer != EDGE_EXTERNAL)
+    if added is not None:
+        wanted.extend(quantity for buyer, quantity in zip(added.buyer, added.quantities_at(price)) if buyer != EDGE_EXTERNAL)
     return math.fsum(wanted)
 
 
