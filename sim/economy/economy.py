@@ -235,7 +235,7 @@ class Economy:
         bondage_hours.hold(record.unfree.bonded_held, bought_held)
         bondage_hours.deliver(ledger.hours_hired, placed)
         bondage_hours.deliver(ledger.hours_hired, held_placed)
-        record.labour.set_hours_paid_by_employer({agent: dict(trades) for agent, trades in sorted(ledger.hours_hired.items())})   # what seats' staff books read
+        record.labour.set_hours_paid_by_employer(dict(sorted(ledger.hours_hired.as_plain().items())))   # what seats' staff books read; one pass over the ledger table
         capital_year.insure(setup, record, view, inputs.harvest_factor, view.year, inputs.institutions)     # cover is bought and the weather settles it
         self._grow_own(offers, ledger, inputs.harvest_factor, kept)
         capital_year.note_exposure(setup, record, view, self.area_map, ledger, inputs.harvest_factor, inputs.institutions)
