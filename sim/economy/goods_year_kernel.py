@@ -122,8 +122,9 @@ def clear_figures(res, qty, minimum, has_minimum, floors, flexibles, budgets, re
 
 
 @njit(**KERNEL)
-def searched_floors(res0, res, qty, is_producer, cost, crowd, expected_sales, rate, spoilage):
-    """unsold_search._floors: (whether each offer is searched, its floor)."""
+def searched_floors(res0, res, qty, is_producer, cost, crowd, expected_sales, rate, spoilage, held_value):
+    """unsold_search._floors: (whether each offer is searched, its floor). `held_value` is what an offer's last unit is worth held for later
+    where that is not the queued-stock rule (ground: its capitalised rent); NaN: use the queued-stock rule."""
     count = len(res)
     searched = numpy.zeros(count, dtype=numpy.bool_)
     floors = numpy.zeros(count)
@@ -135,7 +136,7 @@ def searched_floors(res0, res, qty, is_producer, cost, crowd, expected_sales, ra
             continue
         if not is_producer[i]:
             continue
-        held = queued_holding_value(res0[i], qty[i], expected_sales[i], rate, spoilage)
+        held = queued_holding_value(res0[i], qty[i], expected_sales[i], rate, spoilage) if numpy.isnan(held_value[i]) else held_value[i]
         floor = max(min(cost[i], max(res0[i], 0.0)), held)
         if res[i] > floor:
             searched[i] = True
@@ -297,7 +298,7 @@ def raise_up(res, qty, is_producer, cost, share, multiple, minimum, has_minimum,
 @njit(**KERNEL)
 def decide_market(has_bids, res0, qty, is_producer, cost, share, expected, workshops, crowd, expected_sales, multiple, keys,
                   size, rate, spoilage, minimum, has_minimum, buyer_floors, flexibles, budgets, references, exponents, maximums, capped,
-                  tier_bounds, intensity, grid_count, grid_start, grid_step, months, discount_rate):
+                  tier_bounds, intensity, grid_count, grid_start, grid_step, months, discount_rate, held_value):
     """The reservations of one market's offers after the sellers' re-pricing, the unsold search and the sold-out raise."""
     count = len(res0)
     key_count = 0 if count == 0 else keys[count - 1] + 1
@@ -308,7 +309,7 @@ def decide_market(has_bids, res0, qty, is_producer, cost, share, expected, works
         res = res0.copy()
     sold, requested, traded = clear_figures(res, qty, minimum, has_minimum, buyer_floors, flexibles, budgets, references,
                                             exponents, maximums, capped, tier_bounds)
-    searched, floors = searched_floors(res0, res, qty, is_producer, cost, crowd, expected_sales, rate, spoilage)
+    searched, floors = searched_floors(res0, res, qty, is_producer, cost, crowd, expected_sales, rate, spoilage, held_value)
     anything = False
     for i in range(count):
         if searched[i]:
@@ -328,7 +329,7 @@ def decide_market(has_bids, res0, qty, is_producer, cost, share, expected, works
 def decide_markets(has_bids, offer_ptr, res0, qty, is_producer, cost, share, expected, workshops, crowd, expected_sales, multiple,
                    keys, size, rate, spoilage, minimum, has_minimum, bid_ptr, buyer_floors, flexibles, budgets, references,
                    exponents, maximums, capped, tier_ptr, tier_values, intensity, grid_count, grid_start, grid_step,
-                   months, discount_rate):
+                   months, discount_rate, held_value):
     """Every market's final reservations (`decide_market`), one after another, in the order of `res0`."""
     final = res0.copy()
     for market in range(len(offer_ptr) - 1):
@@ -339,5 +340,5 @@ def decide_markets(has_bids, offer_ptr, res0, qty, is_producer, cost, share, exp
             crowd[o0:o1], expected_sales[o0:o1], multiple[o0:o1], keys[o0:o1], size[market], rate[market], spoilage[market],
             minimum[market], has_minimum[market], buyer_floors[b0:b1], flexibles[b0:b1], budgets[b0:b1], references[b0:b1],
             exponents[b0:b1], maximums[b0:b1], capped[market], tier_values[tier_ptr[market]:tier_ptr[market + 1]], intensity,
-            grid_count, grid_start, grid_step, months, discount_rate)
+            grid_count, grid_start, grid_step, months, discount_rate, held_value[o0:o1])
     return final

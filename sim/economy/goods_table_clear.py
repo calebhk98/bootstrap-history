@@ -8,7 +8,7 @@ import math
 
 import numpy
 
-from . import goods_year_kernel, goods_year_results, price_setting
+from . import goods_year_kernel, goods_year_results, price_setting, titles_value
 from .goods_table_pack import BatchPack
 
 
@@ -39,7 +39,25 @@ def decide_reservations(context, good: str, pack: BatchPack) -> numpy.ndarray:
         context.band_multiples(offers.tile[pack.offer_rows]), pack.key_of, pack.size, pack.rate, spoilage, pack.minimum,
         pack.has_minimum, pack.bid_ptr, floors, flexibles, budgets, references, exponents, maximums, capped, tier_ptr, tier_values,
         steps.LOGIT_INTENSITY, math.floor((steps.GRID_END - steps.GRID_START) / steps.GRID_STEP + 1e-9), steps.GRID_START,
-        steps.GRID_STEP, steps.MONTHS, steps.MONTHLY_DISCOUNT_RATE)
+        steps.GRID_STEP, steps.MONTHS, steps.MONTHLY_DISCOUNT_RATE, _ground_values(context, good, pack, offers))
+
+
+def _ground_values(context, good: str, pack: BatchPack, offers) -> numpy.ndarray:
+    """Per offer of the pack, what its last unit is worth held for later where the good is ground (not portable): a hectare yields its rent
+    while it is held (`unsold_search._held_value`); NaN for any other good, whose held value is the queued-stock rule's."""
+    spec = context.setup.specs.get(good)
+    value = numpy.full(len(pack.offer_rows), numpy.nan)
+    if spec is None or spec.portable or not len(pack.offer_rows):
+        return value
+    book, setup = context.book, context.setup
+    rent = context.record.land.land_rent
+    tiles = book.tile_ids.name_list
+    market_of_offer = numpy.repeat(numpy.arange(len(pack.offer_ptr) - 1), numpy.diff(pack.offer_ptr))
+    for place, (row, market) in enumerate(zip(pack.offer_rows.tolist(), market_of_offer.tolist())):
+        rate = pack.rate[market]
+        if rate == rate:       # no rate remembered for the area: the offer is not searched at all
+            value[place] = titles_value.hectare_value(rent.get(tiles[offers.tile[row]], 0.0), titles_value.capitalising_rate(rate, setup.opening_rate))
+    return value
 
 
 def allocate(pack: BatchPack, orders, final: numpy.ndarray) -> tuple:

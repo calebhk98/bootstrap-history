@@ -41,6 +41,12 @@ class MarketColumn(MarketFigures):
         figure = super().get(key, default)
         return int(figure) if self.integer and figure is not default and figure is not None else figure
 
+    def get_many(self, keys, default=None) -> list:
+        """`[self.get(key, default) for key in keys]`, read from the column in one pass."""
+        numbers = self._chosen().goods_numbers
+        found = self.take(numpy.array([numbers.get(key, -1) for key in keys], dtype=numpy.int64)).tolist()
+        return [default if figure != figure else (int(figure) if self.integer else figure) for figure in found]
+
     def replace_rows(self, rows: numpy.ndarray, figures: numpy.ndarray) -> None:
         """Hold exactly these figures, at these market rows (numbered markets): every other market has none."""
         self._current()[:] = numpy.nan

@@ -17,6 +17,7 @@ from .goods_table_views import LazyObjects
 from .goods_market import MINIMUM_PRICE_SHARE_OF_REFERENCE
 from .goods_respend import RESPEND_NEGLIGIBLE_ROUND_SHARE
 from .goods_respend_kernel import respend_rounds
+from .goods_added_bids import AddedBids
 from .goods_year_markets import YearMarkets
 from sim.book import ROUNDING_SHARE
 
@@ -50,6 +51,7 @@ class LeftMarket:
     `offers` are then built only when something reads them."""
 
     def __init__(self, bids, result, offers, last_price, delivered, wanted, idle_years=0, bought=None, rows=None, year_markets=None, row=None):
+        year_markets_shared = year_markets is not None
         if year_markets is None:       # a market made alone has a table of its own
             year_markets = YearMarkets(1)
             row = year_markets.claim(1)
@@ -58,14 +60,42 @@ class LeftMarket:
         self.year_markets = year_markets    # the figures below are the cells of `row` of this table (`goods_year_markets.py`); where the
         self.row = row                      # year's markets share one table, the caller fills the cells of all of them at once
         self.results = [result]
-        self.later: list = []          # the respend rounds' clearings as (quantity, price or None, demand at price, offered at price)
+        self._later = None if year_markets_shared else []    # the respend rounds' clearings as (quantity, price or None, demand at price, offered at price)
         self.bought = bought or {}     # buyer -> (units received, money paid) in the first round's settlement
         self._bids = bids
-        self.added = None              # the later rounds' bids that add demand, as columns (`goods_added_bids.AddedBids`)
+        self._added = None             # the later rounds' bids that add demand, as columns (`goods_added_bids.AddedBids`)
+        self._added_read = not year_markets_shared
         self._all_bids = list(bids) if bids is not None and rows is None else None     # a market on the objects: the first round's bids and the added ones
         self.rows = rows
         self.result = result
         self._offers = offers
+
+    @property
+    def later(self) -> list:
+        """The respend rounds' clearings as (quantity, price or None, demand at price, offered at price), in the order they were run (read from
+        the year's table the first time, for a market that shares it)."""
+        if self._later is None:
+            self._later = self.year_markets.later_of(self.row)
+        return self._later
+
+    @property
+    def added(self):
+        """The bids later rounds added to the market (`goods_added_bids.AddedBids`), or None; made from the year's table when first read."""
+        if not self._added_read:
+            self._added_read = True
+            found = self.year_markets.added_of(self.row)
+            if found is not None:
+                buyers, tiles, *figures = found
+                good, area = self._good_area()
+                self._added = AddedBids(good, area, buyers, tiles, *figures)
+        return self._added
+
+    @added.setter
+    def added(self, added) -> None:
+        self._added, self._added_read = added, True
+
+    def _good_area(self):
+        return self.result.good, self.result.area
 
     delivered = _cell("delivered", "goods moved in all rounds so far")
     wanted = _cell("wanted", "what buyers asked for in all rounds so far")
@@ -106,12 +136,18 @@ class LeftMarket:
     def offers(self):
         """The offers with what sold taken off (built from the rows when read, for a market on the tables)."""
         if self._offers is None:
-            self._offers = self.rows.left_lazy()
+            if self.year_markets.first_round_filled:       # the units each offer has left are in the year's table (the respend changes them there)
+                first = int(self.year_markets.table.left_first[self.row])
+                units = self.year_markets.left_units()[first:first + len(self.rows.left_array)].tolist()
+                self._offers = LazyObjects(lambda: self.rows.offer_objects(units), sum(1 for each in units if each > 0.0))
+            else:
+                self._offers = self.rows.left_lazy()
         return self._offers
 
     @offers.setter
     def offers(self, offers) -> None:
         self._offers = offers
+        self.year_markets.table.left_count[self.row] = len(offers)
 
     @property
     def all_bids(self):
@@ -157,7 +193,9 @@ class LeftMarket:
 
     def leave_units(self, units) -> None:
         """The units each offer left in `rows` has after the rounds (zero: sold out); the offers are built from them when read."""
-        self._offers = LazyObjects(lambda: self.rows.offer_objects(units), sum(1 for each in units if each > 0.0))
+        kept = sum(1 for each in units if each > 0.0)
+        self._offers = LazyObjects(lambda: self.rows.offer_objects(units), kept)
+        self.year_markets.table.left_count[self.row] = kept
 
     @property
     def unsold(self) -> float:

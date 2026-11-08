@@ -10,7 +10,7 @@ import numpy
 from sim.constants import declare
 
 from .goods_production import read_stocks
-from .goods_respend_rows import Interner, bid_rows, bought_columns, offer_rows
+from .goods_respend_rows import Interner, bid_rows, bought_columns, offer_rows, table_columns
 from .goods_respend import need_of_good
 from .types import is_edge, is_external_edge
 
@@ -66,10 +66,11 @@ def pack(setup, record, view, ledger, markets, basket_of, orders=None) -> "Packe
     """Pack `markets` ({(good, area): LeftMarket}) and the households that bid in them; None when no household bid. The bids and the offers
     are read as columns (goods_respend_rows.py)."""
     households = record.cohorts
-    market_keys = sorted(markets)
+    market_keys = markets.sorted_keys() if hasattr(markets, "sorted_keys") else sorted(markets)
     market_index = {key: index for index, key in enumerate(market_keys)}
     agents_interned, tiles_interned = Interner(), Interner()
-    bids = bid_rows(markets, market_keys, orders, agents_interned)
+    columns = table_columns(markets, market_keys) if orders is not None else None
+    bids = bid_rows(markets, market_keys, orders, agents_interned, columns)
     is_household = numpy.array([name in households for name in agents_interned.names], dtype=numpy.bool_)
     household_entry = is_household[bids.buyer] if len(bids.buyer) else numpy.zeros(0, dtype=numpy.bool_)
     buyer_ids = sorted({agents_interned.names[each] for each in numpy.unique(bids.buyer[household_entry]).tolist()})
@@ -108,7 +109,7 @@ def pack(setup, record, view, ledger, markets, basket_of, orders=None) -> "Packe
         buyer_area_row[row] = area_rows[slot]
     area_market = numpy.array(area_table, dtype=numpy.int64).reshape(len(area_table), len(goods))
 
-    offers = offer_rows(markets, market_keys, orders, agents_interned, tiles_interned)
+    offers = offer_rows(markets, market_keys, orders, agents_interned, tiles_interned, columns)
     buyer_id = numpy.array([agents_interned.ids[buyer] for buyer in buyer_ids], dtype=numpy.int64)
     used_ids = numpy.unique(numpy.concatenate((buyer_id, offers.seller)))
     agents = sorted(agents_interned.names[each] for each in used_ids.tolist())
@@ -144,14 +145,19 @@ def pack(setup, record, view, ledger, markets, basket_of, orders=None) -> "Packe
     market_good = good_of_market
 
     has_bid = numpy.zeros((len(market_keys), len(buyer_ids)), dtype=numpy.bool_)
-    fallback = numpy.zeros(len(market_keys))
-    fallback_ok = numpy.zeros(len(market_keys), dtype=numpy.bool_)
-    for index, key in enumerate(market_keys):
-        price = markets[key].result.price
-        if price is not None:
-            fallback[index] = price
-            fallback_ok[index] = True
-    units, money = bought_columns(markets, market_keys, bids, agents_interned, len(orders.book.agent_ids.name_list) if orders is not None else 0)
+    if columns is not None:
+        first_price = columns.year_markets.table.first_price[columns.cells]
+        fallback_ok = ~numpy.isnan(first_price)
+        fallback = numpy.where(fallback_ok, first_price, 0.0)
+    else:
+        fallback = numpy.zeros(len(market_keys))
+        fallback_ok = numpy.zeros(len(market_keys), dtype=numpy.bool_)
+        for index, key in enumerate(market_keys):
+            price = markets[key].result.price
+            if price is not None:
+                fallback[index] = price
+                fallback_ok[index] = True
+    units, money = bought_columns(markets, market_keys, bids, agents_interned, len(orders.book.agent_ids.name_list) if orders is not None else 0, columns)
     mine = numpy.flatnonzero(household_entry)
     entry_row = row_of_id[bids.buyer[mine]]
     entry_market = bids.market[mine]
@@ -162,9 +168,14 @@ def pack(setup, record, view, ledger, markets, basket_of, orders=None) -> "Packe
     order = numpy.lexsort((entry_row, entry_market))
     first = [entry_market[order], entry_row[order], bids.floor[mine][order], flexible[order], reference[order], -elasticity[order],
              bids.budget[mine][order], bids.maximum[mine][order], units[mine][order], money[mine][order]]
-    last_prices = [markets[key].last_price for key in market_keys]
-    has_last = numpy.array([price is not None for price in last_prices], dtype=numpy.bool_)
-    last_price = numpy.array([0.0 if price is None else price for price in last_prices])
+    if columns is not None:
+        remembered = columns.year_markets.table.last_price[columns.cells]
+        has_last = ~numpy.isnan(remembered)
+        last_price = numpy.where(has_last, remembered, 0.0)
+    else:
+        last_prices = [markets[key].last_price for key in market_keys]
+        has_last = numpy.array([price is not None for price in last_prices], dtype=numpy.bool_)
+        last_price = numpy.array([0.0 if price is None else price for price in last_prices])
     edge = numpy.array([is_edge(agent) for agent in agents], dtype=numpy.bool_)
     external = numpy.array([is_external_edge(agent) for agent in agents], dtype=numpy.bool_)
     importing = numpy.array([agent in ledger.import_accounts for agent in agents], dtype=numpy.bool_)

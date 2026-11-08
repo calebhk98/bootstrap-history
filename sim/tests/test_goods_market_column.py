@@ -65,6 +65,12 @@ class MarketColumnTests(unittest.TestCase):
         self.assertEqual(list(column), ["iron|a1", "iron|b0", "iron_ore|a0"])
         self.assertEqual(list(column.items())[0], ("iron|a1", 3.0))
 
+    def test_get_many_gives_the_default_for_a_market_with_no_figure(self):
+        column = MarketColumn(items={"grain|a1": 2.0, "salt|a0": 0.0})
+        self.assertEqual(column.get_many(["salt|a0", "wool|a9", "grain|a1"], 7.0), [0.0, 7.0, 2.0])
+        streaks = MarketColumn(items={"grain|a1": 3}, integer=True)
+        self.assertEqual(streaks.get_many(["grain|a1", "salt|a0"], 0), [3, 0])
+
     def test_copy_is_independent(self):
         column = MarketColumn(items={"grain|a1": 2.0})
         copied = column.copy()
