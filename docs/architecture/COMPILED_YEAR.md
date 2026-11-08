@@ -550,6 +550,24 @@ the object path's sharing of a need across baskets (more need rows than distinct
 saving, so the batch stays unwired until a wider change (for example all epochs' requests known up front) makes the miss count large. Measure it again with
 `python3 tools/measure/warm_year_profile.py SAVE OUT.prof` (look at `kept_need_prices` against the sum of `prime`, `PricedBatch`, `need`).
 
+**The ceiling, measured (stage 4, cohort orders).** `tools/measure/function_times.py SAVE` times named functions of the warm second year
+with `perf_counter` (cProfile roughly triples the Python-heavy ones, which made `add_template` look like two percent of a year). On the
+Rome start the whole of `cohort_orders` is a few percent of a year and on the England start about one percent; no part that
+`year_order_sources`, `households_orders_pack`, `tool_wear`, `households_cohort` or `opening_bid_memory` owns reaches one percent of a year:
+
+| Part (Rome, share of the cohort orders) | Where | Ceiling |
+|---|---|---|
+| first touch of `CreditView.equity` (every producer's worth) | credit and equity own it; about a third of the cohort orders | the next reader of `view.equity` pays it instead, so moving it saves nothing |
+| `kept_need_prices` first touches in `BidMemory.priced` | `priced_reads`; shared with the close and the labour readers | same: the first asker pays; the tables wait for readers that take columns (see above) |
+| `add_template` (one per basket key, already once per key per year) | about a quarter of the cohort orders; half of it is the store weights of the key | prices change every year, so a template cannot outlive the year; sharing the tile-only reads of `_store_weights` between keys of one tile saves a fraction of that half |
+| `land_bids` | land-bid owner | not in this package's files |
+| per-cohort reads (`ledger` wages and plot hours, balances, claims, loss rate, `tool_bids`), `change_cohort` of `planned_spending`, `_orders_of` | dict lookups and a record copy per cohort | each is a tenth of a percent of a year or less; vectorising them costs a column copy of every cohort field for less than that |
+| `year_orders` (the compiled kernel) and `cohort_bid_rows` | already compiled | a tenth of a percent |
+
+Nothing was converted: the pieces are each under the line, the conversions would move first-touch cost to the next reader, and the
+digests are therefore the base's by construction. Revisit after the cohort records become columns (see below), when the cohort figures
+can be handed to the kernel as slices of those columns.
+
 **What is left in the close's households part.** `closed_cohort` per cohort is now mostly first-touch work other owners' views do once per
 epoch: `view.equity` builds every producer's worth on the first ask (credit), `view.claims` and the rest are lookups. The cohort records are
 still replaced one at a time inside `closed_cohort` (`renewed`) and put back together; keeping them as columns waits for the modules that
