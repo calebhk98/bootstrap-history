@@ -66,7 +66,8 @@ class MarketRows:
         self.left_array = numpy.asarray(left_rows, dtype=numpy.int64)
         self.bid_rows = self.bid_array.tolist()
         self.left_rows = self.left_array.tolist()
-        self.offer_rows = numpy.asarray(offer_rows, dtype=numpy.int64).tolist()
+        self.offer_array = numpy.asarray(offer_rows, dtype=numpy.int64)
+        self.offer_rows = self.offer_array.tolist()
 
     def bids_lazy(self) -> LazyObjects:
         """The market's bids as objects, built when first read."""

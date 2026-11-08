@@ -142,7 +142,12 @@ class _Dense(Show):
     @flushed
     def values_of(self, keys, default: float = 0.0) -> numpy.ndarray:
         """The figure of each key as one array (`default` for a key that is not a member): `get_many` without a Python object per key."""
-        rows = numpy.array([-1 if row is None else row for row in map(self._row_of, keys)], dtype=numpy.int64)
+        return self.values_at(numpy.array([-1 if row is None else row for row in map(self._row_of, keys)], dtype=numpy.int64), default)
+
+    @flushed
+    def values_at(self, rows, default: float = 0.0) -> numpy.ndarray:
+        """The figure of each row (the key's number; -1 for a key that was never numbered) as one array, `default` for a row that is not a member."""
+        rows = numpy.asarray(rows, dtype=numpy.int64)
         table = self._table()
         orders, values = getattr(table, self._order), getattr(table, self._column)
         inside = (rows >= 0) & (rows < len(orders))

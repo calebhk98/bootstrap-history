@@ -9,12 +9,12 @@ from typing import Dict
 
 import numpy as np
 
-from . import practice, producers
+from . import producer_numbers, producers
 from .inventory import DEFAULT_MONTHS_OF_COVER
 from .plan_kernel import plan_rows
 from .plan_table import PlanTable
 from .plan_table_rows import LocalNames, merged, object_rows, kernel_rows
-from .stock_block import numbers_of, stock_block
+from .stock_block import stock_block
 
 _simple: Dict[int, tuple] = {}      # id of the recipes mapping -> (mapping, recipe id -> whether the kernel plans it)
 
@@ -42,9 +42,9 @@ def stocks_by_slot(record, columns, matrices, rows, slots: int) -> np.ndarray:
     held = (matrices.slot_goods >= 0) & (matrices.slot_is_input | matrices.slot_is_output)
     owner, slot = np.nonzero(held[recipe_rows])
     book = record.book
-    agents = numbers_of(book.agent_ids, [columns.ids[row] for row in rows.tolist()])
-    tiles = numbers_of(book.tile_ids, [columns.records[row].tile for row in rows.tolist()])
-    goods = numbers_of(book.good_ids, matrices.goods.ids)[matrices.slot_goods[recipe_rows[owner], slot]]
+    agent_of_row, tile_of_row = producer_numbers.of_columns(columns, book)
+    agents, tiles = agent_of_row[rows], tile_of_row[columns.tile_row[rows]]
+    goods = producer_numbers.of_goods(matrices.goods, book)[matrices.slot_goods[recipe_rows[owner], slot]]
     stock[owner, slot] = stock_block(book, agents[owner], goods, tiles[owner])
     return stock
 
@@ -56,12 +56,11 @@ def plans_of(setup, record, view, arrays, money) -> PlanTable:
     matrices, memory = arrays.matrices, arrays.memory
     flags = simple_recipes(setup.recipes)
     recipes = setup.recipes
-    plain = [row for row, producer in enumerate(columns.records)
-             if flags[producer.recipe_id] and (not producer.crew_runs or practice.recipe_for(
-                 recipes[producer.recipe_id], producer.crew_runs) is recipes[producer.recipe_id])]
-    rows = np.array(plain, dtype=np.int64)
+    simple_row = np.array([flags[recipe_id] for recipe_id in matrices.recipes.ids], dtype=bool)
+    is_plain = simple_row[columns.recipe_row] & (columns.hours_scale == 1.0).all(axis=1)      # no practice stretches the recipe's hours
+    rows = np.flatnonzero(is_plain)
     ids = columns.ids
-    cash = record.book.balances_of([ids[row] for row in plain], money)
+    cash = record.book.balances_at(producer_numbers.of_columns(columns, record.book)[0][rows], money)
     stock = stocks_by_slot(record, columns, matrices, rows, matrices.good_slots)
     (runs, wanted, line, hours, ceilings, quantity, bid_price, budget, worth) = plan_rows(
         columns.recipe_row[rows], columns.tile_row[rows], columns.capacity_runs[rows], columns.yield_factor[rows],
@@ -77,13 +76,12 @@ def plans_of(setup, record, view, arrays, money) -> PlanTable:
     names = LocalNames(matrices.goods.ids, columns.tiles.ids, arrays.area_index.areas.ids, matrices.trades.ids)
     blocks = [kernel_rows(columns, matrices, arrays.area_index, view, names, rows, ~idle, hours, ceilings, quantity, bid_price, budget, worth)]
     objects: Dict[int, producers.Plan] = {}
-    plain_set = set(plain)
-    for position, producer_id in enumerate(ids):
-        if position not in plain_set:
-            producer = record.producers[producer_id]
-            objects[position] = plan = producers.plan(producer, recipes[producer.recipe_id], view, record.book.balance(producer_id, money))
-            runs_all[position], wanted_all[position], line_all[position] = plan.runs, plan.wanted_runs, plan.wage_line
-            blocks.append(object_rows(position, plan, names))
+    for position in np.flatnonzero(~is_plain).tolist():
+        producer_id = ids[position]
+        producer = record.producers[producer_id]
+        objects[position] = plan = producers.plan(producer, recipes[producer.recipe_id], view, record.book.balance(producer_id, money))
+        runs_all[position], wanted_all[position], line_all[position] = plan.runs, plan.wanted_runs, plan.wage_line
+        blocks.append(object_rows(position, plan, names))
     bids, labour = merged(blocks)
     return PlanTable(ids, runs_all.tolist(), wanted_all.tolist(), line_all, bids, labour, names.goods, names.tiles, names.areas, objects,
                      names.trades)

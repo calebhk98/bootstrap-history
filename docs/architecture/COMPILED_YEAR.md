@@ -30,8 +30,10 @@ A half-converted edge is allowed as a step, but it is not measured as a result; 
 | Do a topic's tests pass? | `python3 -m sim.tests --slow --only TOPIC` |
 | Do the table types keep their cache names? | `python3 tools/check_table_names.py` |
 
-**The bar.** A conversion is worth making when the function it replaces is at least about one percent of a step, measured with
-`function_times.py` against the whole step from `year-time`. A function below the bar stays Python, and its section says so. Every
+**No cutoff.** Everything that runs in the year loop is converted however small: Python orchestrates a handful of whole-table kernel
+calls per phase (one per good where goods must run in sequence) and otherwise serves the UI, the protocol, saves, mods and tests. A
+section that says a function is "below the bar" records an earlier rule and is on the list below. `function_times.py` against the whole
+step from `year-time` is how a conversion is measured. Every
 conversion keeps the game's rules: a jump in a discrete value is traced before merging, and float sums keep the order of the Python
 they replace so the year-time digest moves only by float dust.
 
@@ -189,7 +191,7 @@ bids' columns. Test: `test_crossing_kernels.py`.
 | settlement | `settlement_ids.py` | `settle_by_ids` reads the pairs of the good's traded markets (the batch's pair arrays, which are the `GoodsPairs` rows) as agent and tile numbers from the bid and offer tables, numbers the (agent, tile) keys and the agents in the order `settlement_batch.KeyTable` did (`settlement_numbering.local_numbering` cuts them by market), runs `settlement_batch_kernel.settle_markets` (purses and stocks carried market to market in area order) and applies the sums with `book_apply.apply_settled`; no `KeyTable`, no names, no `Settlement` |
 | ledger | `goods_settle.py` | one `YearLedger.note_settlement_rows` call per good (the plant purchases, the foreign-money figures and the mint's takes from columns) and one `note_round_rows` call for the good's clearings; the respend rounds are noted the same way (`goods_respend_unpack.note_rounds`) |
 | memory | `goods_idle_years.py`, `goods_memory_kernels.py`, `goods_memory_notes.py` | the years without bids or offers of a good's markets are one kernel call; `_remember_markets` reads last year's quote flags and usual volumes as columns, works out every signal, then one kernel writes quote kinds, prices, usual prices and cleared prices in sorted (good, area) order, and the usual volumes are written the same way; the trade ages are `note_year_traded` over the markets that delivered |
-| production | `goods_production.py`, `producers.production_lines` | the turn's input stocks, output stocks, purses and running costs are read as arrays; the production moves of all the turn's producers are one `GoodsMovePostings` batch and the output is added to the ledger by `add_pair_amounts`; a name the book has not numbered takes the `Book.move_many` path |
+| production and offers | `goods_turn.py`, `goods_turn_kernel.py`, `goods_turn_offers_kernel.py`, `goods_turn_spec.py` | `TurnWorld` (built once a year from the year arrays) takes each good's turn as positions in the producer columns (`has_output` of the recipe rows); `produce_turn` is `producers.production_lines` for every planned producer at once (stocks from the book's stock rows, hours from the ledger's `hours_hired` pair rows, the tool fallbacks in recipe-row arrays, the crew's multipliers from `ProducerColumns.hours_scale`) and its moves are one `GoodsMovePostings` batch, the output added to the ledger by `add_pair_amounts`; `offer_pairs` gives each producer's held outputs and expected prices, `year_goods_offers.offer_reservations` the reservations, and the rows go to the order tables with the markets read from `markets_by_good_tile`. A producer with an output held and no expected price (`slow`), or a name the book has not numbered, takes the `producers.offers` / `Book.move_many` path at its place in the order. `goods_production.py` and `year_goods._produce_and_offer` remain for a year with no arrays (a test's) and a storage cost |
 
 A good takes the object path (`settlement.settle_goods_many`, `YearLedger.note_settlement`) when one of its traded markets is not a
 `TableClearing` of the good's batch (a mod replaced the rules). Tests: `test_goods_settle_ids.py` (the id path against `settle_results`
@@ -653,14 +655,14 @@ all. Re-measure with `warm_year_profile.py` (then `pstats` sorted by `tottime`, 
 | `agents.purses.transfer` -> `book.transfer` | not converted: each transfer first draws on the payer's facility and repays the payee's debt from the purse the earlier transfers left, and the callers are the actors' own advance steps spread over many phases, so a batch would change what each draw sees |
 | `YearLedger.running_costs_of` (from `goods_production.turn_figures`) | already a block read; sharing the agent rows between the two figures made no measurable difference (the cost is the pending notes flushed into the table) |
 | `country_figures.money_held`, `year_accounts.plain_rows`, `inventory.held_stock` | below the bar |
-| `_remember_markets` `wanted_at_rows`; `producers.production_lines` (with `tool_fallback.draws` inside it); the object-rule markets (`unsold_search.clear_with_search`, `seller_offers.strategic_offers`, `goods_market.clear`) | below the bar; a kernel would leave part of each (the packing and the boundary) |
+| `_remember_markets` `wanted_at_rows`; the object-rule markets (`unsold_search.clear_with_search`, `seller_offers.strategic_offers`, `goods_market.clear`) | below the bar; a kernel would leave part of each (the packing and the boundary) |
 
 Time any of these with `python3 tools/measure/function_times.py SAVE module:function ...`.
 
 ## What is left
 
-One list; each item names what blocks it. The bar for every item is the one in "How to measure": convert when the function reaches
-about one percent of a step, and re-measure before acting, since the list lags the code.
+One list; each item names what blocks it. Every item is to be converted, whatever its share of a step; re-measure before acting, since the
+list lags the code.
 
 - **Entry reading columns, and the greedy loops as kernels.** `entry_plans`, `margin_entry_plans` and `trial_entry_plans` choose each
   candidate's tile with `EntryTables.siting` (Python glue around `entry_kernels.site_choice`, updating the capacity and committed hours
@@ -678,12 +680,17 @@ about one percent of a step, and re-measure before acting, since the list lags t
 - **Per-good price readers.** `entry_year._traded_volume`, `producers.paid_input_prices` and `next_expectations` read many keys a year,
   each a dict lookup; the year view has no cleared-price block. `producers.live_input_prices_at` and `live_wages_at` need the recipe
   cost grid.
-- **The mint reading the results table; the object-rule markets and `production_lines` as kernels; the watchers' fills from columns.**
-  The mint keeps one `ClearingResult` per market of the coin metal in `ledger.mint_takes`; `production_lines` needs the tool fallbacks'
-  draws as a kernel; the watchers' buy fills are `Fill` objects (`bought_by`, only for markets a merchant or the state bought in);
+- **The mint reading the results table; the object-rule markets as kernels; the watchers' fills from columns.**
+  The mint keeps one `ClearingResult` per market of the coin metal in `ledger.mint_takes`; the watchers' buy fills are `Fill` objects (`bought_by`, only for markets a merchant or the state bought in);
   `LeftMarket` and its `bought` mapping are built from columns when a market not on the tables asks.
-- **The goods side's `ClearingResult`s.** The year ledger is handed `ClearingResult`s (`note_clearing`) for markets not on the tables, and
-  `_produce_and_offer` still loops over producers (`producers.production_lines` and `producers.offers` are the rules over one producer).
+- **The goods side's `ClearingResult`s and `LeftMarket`s.** The year ledger is handed `ClearingResult`s (`note_clearing`) for markets not on
+  the tables. `clear_good` builds one `Cleared`, `MarketRows` and (in `clear_goods`) `LeftMarket` per market; `_remember_markets`,
+  `_record_year_markets`, `year_bids.build` and the respend pack and unpack read them one market at a time. The keystone is `LeftMarket` as
+  columns (first-round quantity and price from the batch, later rounds' rows from the respend kernel, delivered, idle years, last price) with
+  the dictionary stores of `record.goods` derived from them; with it each of those loops becomes one kernel over the markets.
+- **Tool wear and fallbacks in the plan kernel.** `plan_year` sends a producer whose recipe has tool wear or fallbacks, or a zero entry, to
+  `producers.plan`; `plan_kernel.plan_rows` would need the fallbacks' bids and `tool_fallback.value_in_use` ceilings. `_tax_in_kind` builds
+  `YearFacts` dictionaries for the producers on home tiles when a tax is paid in kind.
 - **The record readers.** `record.producers` and `record.cohorts` are read by entry, the plans, the labour state, equity, tax farming,
   the save and the screens; `closed_records` and `closed_cohort` build one record per producer and cohort until those readers are on
   columns.
