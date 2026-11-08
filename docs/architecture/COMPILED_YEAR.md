@@ -456,6 +456,20 @@ reads, and the unconverted workforce views declared `cached=False` (`money_per_l
 ...), which the assembly cannot cache until their owner bumps its channels on every write. Tests: `sim/tests/test_response_memo.py`,
 `test_year_accounts.py` (`PlainLedgerReadTests`), `test_year_ledger_views.py` (`as_plain`).
 
+**The ceiling, measured (stage 4, actors and government).** The government's and the registry's year was profiled by function (a handler
+wrapper over `year_steps.money_world` and `time.process_time`; warm Rome year on the tip, minimum of four runs). `money_world` is about
+0.17 s of a 2.9 to 3.3 s step (about 6%); the actors' `advance_actors` is nearly all of it. By where the time is spent (self time summed per
+package, same profile): `sim/economy` about 0.31 of the profile, builtins called from it (`fsum`, `dict.get`) about 0.26, `sim/agents` about 0.08,
+`sim/actors` and `sim/coin` about 0.03 together. The cost under `government.advance` is the first work of economy figures after the economy
+stepped (`price_response` clearing 19 markets, `country_figures` floor costs per tile, `output_value`, `money_held`, `price_index.kept`), each
+already computed once per ask by `quiet_year.kept` and `response_memo`; the views the actors read are cheap lookups (about 7,600 computations in
+the phase, a few milliseconds together; `tree_nodes`, `civilisation`, `home_tiles_held` lead the counts). `ActorWorld` is built 11 times in
+the phase and about 430 times in the whole year, costing about 0.005 s of a 7 s profile (`ActorWorld.__init__` cumulative), and its once-memo
+is what keeps a turn's shared answers consistent, so it is left as it is. The largest single item in the packages this stage owns is about
+0.02 s of a 7 s profile (`group_jobs.displacing_technique`, `strata_observed.slice_income`, `carriage_surcharge`, `world_groups.goods_categories`),
+and the packages' own Python is under 1% of a year in all, so no block read of theirs can reach the 1% bar: nothing was changed.
+Re-measure with `python3 tools/measure/warm_year_profile.py SAVE OUT.prof` (then `pstats` sorted by `tottime`, summed per directory).
+
 ## Labour bids and offers as rows (stage 4, one package)
 
 **Bids.** `sim/labour/market/bid_table.py` holds `LabourBidTable`, the year's one table of labour bids (columns `employer`, `trade`,
