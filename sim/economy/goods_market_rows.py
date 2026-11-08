@@ -4,7 +4,6 @@ as `Bid` and `Offer` objects.
 
 `OrderLists` holds every bid's (or offer's) columns as lists, made once; a market's rows index into them."""
 import math
-from collections import namedtuple
 from typing import List, Sequence
 
 import numpy
@@ -12,9 +11,6 @@ import numpy
 from .goods_market import _quantity, quantity_at
 from .goods_table_views import LazyObjects
 from .types import EDGE_EXTERNAL, QUOTE_BEST_UNFILLED_BID, QUOTE_COST_COVERING, Bid, Offer, Quote
-
-LeftOffer = namedtuple("LeftOffer", ("seller", "tile", "reservation_price", "quantity"))
-
 
 class BidLists:
     """The columns of every bid row as lists (the table's `.tolist()` once), with the buyer and tile as names."""
@@ -35,19 +31,6 @@ class BidLists:
         self.budget = bids.budget[:count].tolist()
         self.maximum_price = bids.maximum_price[:count].tolist()
         self.tile = [tiles[each] for each in bids.tile[:count].tolist()]
-
-
-class OfferLists:
-    """The columns of every offer row as lists: seller and tile names, the (repriced) reservation, the units left."""
-
-    def __init__(self, orders):
-        _bids, offers = orders.tables()
-        count = int(offers.row_count[0])
-        agents, tiles = orders.book.agent_ids.name_list, orders.book.tile_ids.name_list
-        self.seller = [agents[each] for each in offers.seller[:count].tolist()]
-        self.tile = [tiles[each] for each in offers.tile[:count].tolist()]
-        self.reservation_price = offers.reservation_price[:count].tolist()
-        self.quantity_left = offers.quantity_left[:count].tolist()
 
 
 def wanted_at_rows(lists: BidLists, rows: Sequence[int], price: float, more_bids: Sequence[Bid] = (), added=None) -> float:
@@ -79,8 +62,10 @@ class MarketRows:
 
     def __init__(self, orders, bid_rows: Sequence[int], left_rows: Sequence[int], offer_rows: Sequence[int] = ()):
         self.orders = orders
-        self.bid_rows = numpy.asarray(bid_rows, dtype=numpy.int64).tolist()
-        self.left_rows = numpy.asarray(left_rows, dtype=numpy.int64).tolist()
+        self.bid_array = numpy.asarray(bid_rows, dtype=numpy.int64)      # the same rows as arrays, for the readers of whole columns
+        self.left_array = numpy.asarray(left_rows, dtype=numpy.int64)
+        self.bid_rows = self.bid_array.tolist()
+        self.left_rows = self.left_array.tolist()
         self.offer_rows = numpy.asarray(offer_rows, dtype=numpy.int64).tolist()
 
     def bids_lazy(self) -> LazyObjects:
@@ -95,11 +80,6 @@ class MarketRows:
         """The offers with units left, with those units, as objects, built when first read."""
         return LazyObjects(lambda: self.orders.offers_of(self.left_rows, self.orders.tables()[1].quantity_left[self.left_rows]),
                            len(self.left_rows))
-
-    def left_offers(self, lists: OfferLists) -> List[LeftOffer]:
-        """The offers left, as (seller, tile, reservation, units left) in seller-and-tile order."""
-        return [LeftOffer(lists.seller[row], lists.tile[row], lists.reservation_price[row], lists.quantity_left[row])
-                for row in self.left_rows]
 
     def offer_objects(self, quantities: Sequence[float]) -> List[Offer]:
         """`Offer` objects for the offers left with the given units (those with none dropped)."""
