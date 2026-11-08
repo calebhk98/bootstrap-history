@@ -9,7 +9,7 @@ buy this much more" is the same clearing with one more order.
 import math
 from typing import Dict, Optional, Set, Tuple
 
-from . import country_figures, market_curves
+from . import country_figures, response_memo
 from .market_memory import RECENT_TRADE_YEARS, market_key
 from .notional import shown_prices
 
@@ -57,5 +57,5 @@ def price_response_at(economy, good: str, tile: str, landed_units: float, taken_
     curve = None if area is None else economy.record.goods.curves.get(market_key(good, area))
     if curve is None:
         return None
-    return market_curves.price_response(curve, good, economy.record.memory.prices.get(market_key(good, area)),
+    return response_memo.price_response(curve, good, economy.record.memory.prices.get(market_key(good, area)),
                                         landed_units, taken_units)

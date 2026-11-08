@@ -232,6 +232,22 @@ class NestedView(Show):
         return [view for _name, view in self.items()]
 
     @flushed
+    def as_plain(self) -> dict:
+        """Every agent's rows as plain `sub -> amount` dicts, agents in entry order and each agent's rows in the order they were made:
+        what `{name: dict(inner.items()) for name, inner in self.items()}` gives, read from the table in one pass. Not live."""
+        rows, names = self._members()
+        plain = {name: {} for name in names}
+        table = self._store.rows.table
+        live = numpy.flatnonzero(table.live[:self._store.row_count])
+        agent_names, name_of_sub = self._tables.book.agent_ids.name_list, self._sub.name
+        for agent, subkey, extra, amount in zip(table.agent[live].tolist(), table.subkey[live].tolist(), table.extra[live].tolist(),
+                                                table.amount[live].tolist()):
+            rows_of_agent = plain.get(agent_names[agent])
+            if rows_of_agent is not None:
+                rows_of_agent[name_of_sub(subkey, extra)] = amount
+        return plain
+
+    @flushed
     def __contains__(self, name) -> bool:
         return self._agent_of(name) is not None
 
