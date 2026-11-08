@@ -228,16 +228,20 @@ def output_value_and_unpriced(economy, country: Optional[str]) -> Tuple[Optional
     own_prices = prices(economy, country)
     values = []
     unpriced = set()
+    run_value: Dict[str, Optional[float]] = {}       # per recipe: what one run's outputs are worth at the country's prices (None: the recipe is unknown)
     for producer in economy.record.producers.values():
         if producer.tile not in tiles:
             continue
-        recipe = economy.setup.recipes.get(producer.recipe_id)
-        if recipe is None:
+        if producer.recipe_id not in run_value:
+            recipe = economy.setup.recipes.get(producer.recipe_id)
+            run_value[producer.recipe_id] = None if recipe is None else math.fsum(
+                quantity * own_prices[good] for good, quantity in recipe.outputs.items() if good in own_prices)
+            if recipe is not None:
+                unpriced.update(good for good in recipe.outputs if good not in own_prices)
+        if run_value[producer.recipe_id] is None:
             continue
         runs = producer.capacity_runs if producer.last_runs < 0.0 else producer.last_runs
-        unpriced.update(good for good in recipe.outputs if good not in own_prices)
-        values.append(runs * producer.yield_factor * math.fsum(quantity * own_prices[good]
-                                                               for good, quantity in recipe.outputs.items() if good in own_prices))
+        values.append(runs * producer.yield_factor * run_value[producer.recipe_id])
     # fsum is exact, so the producers' order (creation order live, saved order after a load) cannot change the total
     return (math.fsum(values) if values else None), sorted(unpriced)
 
