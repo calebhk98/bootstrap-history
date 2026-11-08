@@ -3,7 +3,7 @@
 The module owns the book, the year's flows, the agent economy's record and the money flag (`MarketsWorld`), the clearing, the
 goods categories, household demand and the market ceiling's attribution. The module builds the goods market and the port over the
 agent economy (they read the game through the views declared here, port_world.py), and every view it publishes is uncached but
-`agent_working_hours`: they write the flows and the record in place. `agent_wage_cell` and `agent_wage_at` give the same wage; the cell is kept while the market memory is unwritten (the `memory` channel)."""
+the ones in `_WATCHED`: the others write the flows and the record in place. `agent_wage_cell` and `agent_wage_at` give the same wage; the cell is kept while the market memory is unwritten (the `memory` channel)."""
 from sim.assembly.api import KEYED, QUOTE, ModuleSpec, PhaseHook, RepriceTree, ViewSpec
 from sim.demography.api import MovePeople, RecordFoodEaten
 from sim.diffusion.api import NoteFirstRuns

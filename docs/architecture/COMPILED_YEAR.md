@@ -660,6 +660,17 @@ every tile, a price response), plus the same figure asked again with the same in
 | money value of an unskilled hour (`labour_wage_schedule.money_per_labour_hour`) | the schedule's field itself (`_hour_money`); `trades.field_of` skips the abstract-class check for a plain dict |
 | `year_accounts._cohorts`, `_goods` | `NestedView.as_plain()`: every agent's rows in one pass over the table; the hunger need's goods are worked out once per tile |
 
+**Cached on the memory channel, and kernels in the phases.** `agent_rate`, `agent_people_by_tile_and_trade`, `agent_need_floor_costs` and
+the keyed `agent_hours_offered_cell` (the workforce's read of the hours a trade offered at a tile; `agent_hours_offered_at` stays the
+uncached quote) are cached on the markets module's `memory` channel (`sim/markets/module_spec.py`, `_WATCHED`; test
+`sim/tests/test_agent_views_cached.py`; a game stepped with
+`game_assembly.SHADOW_CHECK_EVERY = 1` re-checks every cached read, no `StaleView` over three Rome years). `ActorWorld` builds a part the first time it is asked for (`sim/actors/world.py`), so a world made for one
+answer builds one part and each world keeps its own turn's memo. The stability phase reads a state's tiles as columns and runs
+`stability_kernels.read_tiles` once per pass (a rising ends a pass; `sim/campaigns/stability_tiles.py`, tests `test_stability_kernels.py`,
+`test_stability_tile_passes.py`, the plain chain in `sim/tests/stability_tiles_plain.py`). Still per actor in Python: the government's and
+the strata's year (`agents/government*.py`, `budget*.py`, `stratum_year.py`), the household theft exposure, `material_prices`
+(`sim/prices/module_spec.py` says why it cannot be cached), `urban_fraction`, `reachable_trade_population` and the quotes.
+
 Tests: `sim/tests/test_response_memo.py`, `test_year_accounts.py` (`PlainLedgerReadTests`), `test_year_ledger_views.py` (`as_plain`).
 
 **Below the bar, so unchanged.** Time the phase with a handler wrapper over `year_steps.money_world` and `time.process_time`, or
