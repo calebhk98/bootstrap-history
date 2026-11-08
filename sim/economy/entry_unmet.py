@@ -13,7 +13,9 @@ from .entry_unmet_kernel import unmet_plans
 def markets_of(costs, unmet_by_market: Dict[Tuple[str, str], float]):
     """(good column, area column) of the markets with a gap beyond the spare output of their makers, in (good, area) order, and the gap.
     A market whose good or area the area map does not know is left out."""
-    keys = sorted(unmet_by_market)
+    asked = np.fromiter(unmet_by_market.values(), dtype=np.float64, count=len(unmet_by_market))
+    every = list(unmet_by_market)
+    keys = sorted(every[position] for position in np.flatnonzero(asked > 0.0).tolist())     # a market with nothing unmet draws no one
     goods = np.array([costs.goods.row.get(good, -1) for good, _area in keys], dtype=np.int64)
     areas = np.array([costs.arrays.area_index.areas.row.get(area, -1) for _good, area in keys], dtype=np.int64)
     quantity = np.array([unmet_by_market[key] for key in keys], dtype=np.float64)

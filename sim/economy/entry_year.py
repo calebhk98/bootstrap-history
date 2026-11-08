@@ -169,6 +169,13 @@ def open_entrants(setup, record, view, area_map, unmet_by_market: Dict[Tuple[str
     return started
 
 
+def _spare_at(grid, costs, good: str, area_id: str) -> float:
+    """The spare output of the grid `EntryTables.spare_output` makes, for one good and area (nothing for a pair it does not hold)."""
+    good_column = costs.goods.row.get(good)
+    area_column = costs.arrays.area_index.areas.row.get(area_id)
+    return 0.0 if good_column is None or area_column is None else float(grid[good_column, area_column])
+
+
 def _carriage(setup):
     return setup.carriage_table()
 

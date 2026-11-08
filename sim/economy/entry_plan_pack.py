@@ -27,11 +27,14 @@ def traded_grid(costs) -> np.ndarray:
     memory = record.memory
     good_rows, area_columns = market_cells(memory, costs.goods, arrays.area_index)
     volumes = record.goods.volumes
-    names = memory.tables.goods_markets.name_list
-    carried = np.fromiter((volumes.get(name, 0.0) for name in names), dtype=np.float64, count=len(names))
+    numbers = memory.tables.goods_markets.numbers
+    carried = np.zeros(len(good_rows))
+    rows = np.fromiter((numbers.get(key, -1) for key in volumes), dtype=np.int64, count=len(volumes))
+    taken = (rows >= 0) & (rows < len(carried))
+    carried[rows[taken]] = np.fromiter(volumes.values(), dtype=np.float64, count=len(volumes))[taken]
     by_area = np.zeros((len(costs.goods.ids), max(1, len(arrays.area_index.areas.ids))))
     found = (good_rows >= 0) & (area_columns >= 0)
-    by_area[good_rows[found], area_columns[found]] = carried[: len(good_rows)][found]
+    by_area[good_rows[found], area_columns[found]] = carried[found]
     of_good_tile = arrays.area_index.of_good_tile
     grid = by_area[np.arange(len(costs.goods.ids))[:, None], np.maximum(of_good_tile, 0)]
     grid[of_good_tile == NO_AREA] = 0.0
