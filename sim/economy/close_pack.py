@@ -137,8 +137,8 @@ def pack(setup, record, view, ledger, arrays: YearArrays) -> ClosePack:
     held_start = np.array(held_start, dtype=np.int64)
     stock = np.zeros((count, matrices.good_slots))
     stock[stock_rows, stock_slots] = stock_values
-    revenue = np.array([ledger.sales_in.get(each, 0.0) for each in columns.ids])
-    running = np.array([ledger.running_costs(each) for each in columns.ids])
+    revenue = ledger.sales_in.values_of(columns.ids)
+    running = ledger.running_costs_of(columns.ids)
     sold = np.zeros_like(stock)
     made = np.zeros_like(stock)
     slots_of_recipe = slot_of_good(matrices)

@@ -57,6 +57,17 @@ class AgentFigureViewTests(unittest.TestCase):
         self.assertEqual((ledger.running_costs("mill"), ledger.running_costs("nobody")), (20.0, 0.0))
 
 
+    def test_reading_many_agents_at_once_gives_the_default_for_non_members(self):
+        ledger = YearLedger()
+        ledger.sales_in["a"] = 4.0
+        ledger.money_out["a"] = 10.0
+        ledger.plant_spend["a"] = 3.0
+        ledger.money_out["b"] = 1.0
+        ledger.plant_spend["b"] = 5.0
+        self.assertEqual(ledger.sales_in.values_of(["b", "a", "never"]).tolist(), [0.0, 4.0, 0.0])
+        self.assertEqual(ledger.running_costs_of(["a", "b", "never"]).tolist(), [7.0, 0.0, 0.0])
+
+
 class MarketFigureViewTests(unittest.TestCase):
     def test_keys_are_good_and_area(self):
         ledger = YearLedger()

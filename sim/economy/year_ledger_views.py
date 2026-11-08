@@ -140,6 +140,16 @@ class _Dense(Show):
         return [figure if found else default for found, figure in found_and_figures]
 
     @flushed
+    def values_of(self, keys, default: float = 0.0) -> numpy.ndarray:
+        """The figure of each key as one array (`default` for a key that is not a member): `get_many` without a Python object per key."""
+        rows = numpy.array([-1 if row is None else row for row in map(self._row_of, keys)], dtype=numpy.int64)
+        table = self._table()
+        orders, values = getattr(table, self._order), getattr(table, self._column)
+        inside = (rows >= 0) & (rows < len(orders))
+        safe = numpy.where(inside, rows, 0)
+        return numpy.where(inside & (orders[safe] != 0), values[safe], default)
+
+    @flushed
     def __setitem__(self, key, value: float) -> None:
         row = self._row_for_write(key)
         table = self._table()
