@@ -12,28 +12,50 @@ from typing import Iterator, List
 import numpy
 
 
-class Bands(MutableSequence):
-    """People per ability band of one row of a table column (`column[row]`), read and written in place."""
+class Where:
+    """A pair named by its area and trade, looked up in the state at every use, so a view stays right when the state is laid out
+    again for a new area or trade."""
+    __slots__ = ("state", "area", "trade")
 
-    def __init__(self, column, row: int):
-        self._column, self._row = column, row
+    def __init__(self, state, area: str, trade: str):
+        self.state, self.area, self.trade = state, area, trade
+
+    def row(self) -> int:
+        return self.state.grid_row(self.area, self.trade)
+
+
+class Bands(MutableSequence):
+    """People per ability band of a pair's workers, or of one of its cohorts (`cohort` is its place among them), read and written
+    in place."""
+
+    def __init__(self, where: Where, cohort=None):
+        self._where, self._cohort = where, cohort
+
+    def _target(self):
+        state = self._where.state
+        row = self._where.row()
+        if self._cohort is None:
+            return state.workers_table.people, row
+        return state.trainee_table.people, state.cohort_range(row)[0] + self._cohort
 
     def __len__(self) -> int:
-        return self._column.shape[1]
+        return self._where.state.bands
 
     def __getitem__(self, index):
+        column, row = self._target()
         if isinstance(index, slice):
-            return self._column[self._row, index].tolist()
-        return float(self._column[self._row, index])
+            return column[row, index].tolist()
+        return float(column[row, index])
 
     def __setitem__(self, index, value) -> None:
+        column, row = self._target()
         if isinstance(index, slice):
             values = list(value)
-            if len(self._column[self._row, index]) != len(values):
+            if len(column[row, index]) != len(values):
                 raise ValueError("a band list keeps its %d bands" % len(self))
-            self._column[self._row, index] = values
+            column[row, index] = values
         else:
-            self._column[self._row, index] = value
+            column[row, index] = value
 
     def __delitem__(self, index) -> None:
         raise TypeError("bands cannot lose a band")
@@ -42,7 +64,8 @@ class Bands(MutableSequence):
         raise TypeError("bands cannot gain a band")
 
     def __iter__(self):
-        return iter(self._column[self._row].tolist())
+        column, row = self._target()
+        return iter(column[row].tolist())
 
     def __eq__(self, other) -> bool:
         return list(self) == list(other) if isinstance(other, (list, tuple, Bands)) else NotImplemented
@@ -54,34 +77,37 @@ class Bands(MutableSequence):
 
 
 class Cohort(MutableSequence):
-    """One row of the trainees table as the list [years_left, people per band, bonus]."""
+    """One cohort of a pair as the list [years_left, people per band, bonus]."""
 
-    def __init__(self, state, row: int):
-        self._state, self._row = state, row
+    def __init__(self, where: Where, index: int):
+        self._where, self._index = where, index
+
+    def _row(self) -> int:
+        return self._where.state.cohort_range(self._where.row())[0] + self._index
 
     def __len__(self) -> int:
         return 3
 
     def __getitem__(self, index):
-        table = self._state.trainee_table
+        table = self._where.state.trainee_table
         if isinstance(index, slice):
             return [self[position] for position in range(*index.indices(3))]
         if index in (0, -3):
-            return float(table.years_left[self._row])
+            return float(table.years_left[self._row()])
         if index in (1, -2):
-            return Bands(table.people, self._row)
+            return Bands(self._where, self._index)
         if index in (2, -1):
-            return float(table.bonus[self._row])
+            return float(table.bonus[self._row()])
         raise IndexError(index)
 
     def __setitem__(self, index, value) -> None:
-        table = self._state.trainee_table
+        table = self._where.state.trainee_table
         if index in (0, -3):
-            table.years_left[self._row] = value
+            table.years_left[self._row()] = value
         elif index in (1, -2):
-            Bands(table.people, self._row)[:] = value
+            Bands(self._where, self._index)[:] = value
         elif index in (2, -1):
-            table.bonus[self._row] = value
+            table.bonus[self._row()] = value
         else:
             raise IndexError(index)
 
@@ -106,38 +132,35 @@ class Cohort(MutableSequence):
 class CohortList(MutableSequence):
     """The cohorts of one (area, trade) market, in the order they enrolled."""
 
-    def __init__(self, state, market: int):
-        self._state, self._market = state, market
-
-    def _rows(self) -> range:
-        first, count = self._state.cohort_range(self._market)
-        return range(first, first + count)
+    def __init__(self, where: Where):
+        self._where = where
 
     def __len__(self) -> int:
-        return len(self._rows())
+        return self._where.state.cohort_range(self._where.row())[1]
 
     def __getitem__(self, index):
-        rows = self._rows()
+        positions = range(len(self))
         if isinstance(index, slice):
-            return [Cohort(self._state, row) for row in rows[index]]
-        return Cohort(self._state, rows[index])
+            return [Cohort(self._where, position) for position in positions[index]]
+        return Cohort(self._where, positions[index])
 
     def __setitem__(self, index, value) -> None:
         if isinstance(index, slice):
             raise TypeError("replace cohorts one at a time")
-        cohort = Cohort(self._state, self._rows()[index])
+        cohort = Cohort(self._where, range(len(self))[index])
         for position in range(3):
             cohort[position] = value[position]
 
     def __delitem__(self, index) -> None:
         if isinstance(index, slice):
             raise TypeError("delete cohorts one at a time")
-        self._state.remove_cohort(self._rows()[index])
+        state = self._where.state
+        state.remove_cohort(state.cohort_range(self._where.row())[0] + range(len(self))[index])
 
     def insert(self, index, value) -> None:
         count = len(self)
         index = min(max(index + count if index < 0 else index, 0), count)
-        self._state.insert_cohort(self._market, index, value[0], value[1], value[2])
+        self._where.state.insert_cohort(self._where.row(), index, value[0], value[1], value[2])
 
     def __eq__(self, other) -> bool:
         return [each.plain() for each in self] == [list(each) if not isinstance(each, Cohort) else each.plain() for each in other] if isinstance(other, (list, tuple, CohortList)) else NotImplemented
@@ -151,24 +174,28 @@ class CohortList(MutableSequence):
 class EmployerHours(MutableMapping):
     """The employers' hours in one (area, trade) market: HIRED rows, in the order they were written."""
 
-    def __init__(self, state, market: int):
-        self._state, self._market = state, market
+    def __init__(self, where: Where):
+        self._where = where
 
     def _rows(self) -> range:
-        markets = self._state.market_table
-        first = int(markets.hired_first[self._market])
-        return range(first, first + int(markets.hired_count[self._market]))
+        markets = self._where.state.market_table
+        row = self._where.row()
+        first = int(markets.hired_first[row])
+        return range(first, first + int(markets.hired_count[row]))
 
     def _names(self) -> List[str]:
-        employers = self._state.ids.employers
-        return [employers.name(number) for number in self._state.hired_table.employer[self._rows().start:self._rows().stop].tolist()]
+        state = self._where.state
+        rows = self._rows()
+        return [state.ids.employers.name(number) for number in state.hired_table.employer[rows.start:rows.stop].tolist()]
 
     def _row_of(self, name: str):
-        number = self._state.ids.employers.table.find(name)
+        state = self._where.state
+        number = state.ids.employers.table.find(name)
         if number is not None:
-            found = numpy.flatnonzero(self._state.hired_table.employer[self._rows().start:self._rows().stop] == number)
+            rows = self._rows()
+            found = numpy.flatnonzero(state.hired_table.employer[rows.start:rows.stop] == number)
             if len(found):
-                return self._rows().start + int(found[0])
+                return rows.start + int(found[0])
         return None
 
     def __len__(self) -> int:
@@ -181,20 +208,20 @@ class EmployerHours(MutableMapping):
         row = self._row_of(name)
         if row is None:
             raise KeyError(name)
-        return float(self._state.hired_table.hours[row])
+        return float(self._where.state.hired_table.hours[row])
 
     def __setitem__(self, name: str, hours: float) -> None:
         row = self._row_of(name)
         if row is not None:
-            self._state.hired_table.hours[row] = hours
+            self._where.state.hired_table.hours[row] = hours
         else:
-            self._state.append_hired(self._market, name, hours)
+            self._where.state.append_hired(self._where.row(), name, hours)
 
     def __delitem__(self, name: str) -> None:
         row = self._row_of(name)
         if row is None:
             raise KeyError(name)
-        self._state.remove_hired(self._market, row)
+        self._where.state.remove_hired(self._where.row(), row)
 
     def pop(self, name, *default):
         found = self.get(name, None) if default else self[name]
@@ -225,8 +252,8 @@ class WorkersField:
         return state.workers_table.order[rows]
 
     @staticmethod
-    def read(state, row: int):
-        return Bands(state.workers_table.people, row)
+    def read(state, where: Where):
+        return Bands(where)
 
     @staticmethod
     def write(state, row: int, value) -> None:
@@ -256,8 +283,8 @@ class _ScalarField:
         return getattr(state.market_table, cls.name_of_order)[rows]
 
     @classmethod
-    def read(cls, state, row: int) -> float:
-        return float(getattr(state.market_table, cls.column)[row])
+    def read(cls, state, where: Where) -> float:
+        return float(getattr(state.market_table, cls.column)[where.row()])
 
     @classmethod
     def write(cls, state, row: int, value) -> None:
@@ -291,8 +318,8 @@ class HiredField:
         return state.market_table.hired_order[rows]
 
     @staticmethod
-    def read(state, row: int):
-        return EmployerHours(state, row)
+    def read(state, where: Where):
+        return EmployerHours(where)
 
     @staticmethod
     def write(state, row: int, value) -> None:
@@ -317,8 +344,8 @@ class TraineesField:
         return state.market_table.cohort_order[rows]
 
     @staticmethod
-    def read(state, row: int):
-        return CohortList(state, row)
+    def read(state, where: Where):
+        return CohortList(where)
 
     @staticmethod
     def write(state, row: int, value) -> None:
@@ -330,16 +357,20 @@ class TraineesField:
 
 
 class TradeMap(MutableMapping):
-    """`view[area]`: trade -> the field's value for one area."""
+    """`view[area]`: trade -> the field's value for one area (named, so the view survives the state being laid out again)."""
 
-    def __init__(self, state, field, area: int):
+    def __init__(self, state, field, area: str):
         self._state, self._field, self._area = state, field, area
+
+    def _area_number(self) -> int:
+        return self._state.ids.areas.number(self._area)
 
     def _present_trades(self) -> List[int]:
         trades = len(self._state.ids.trades)
-        if not trades:
+        number = self._state.ids.areas.find(self._area)
+        if not trades or number is None:
             return []
-        rows = slice(self._area * trades, (self._area + 1) * trades)
+        rows = slice(number * trades, (number + 1) * trades)
         present = numpy.flatnonzero(self._field.present(self._state, rows))
         return present[numpy.argsort(self._field.order(self._state, rows)[present], kind="stable")].tolist()
 
@@ -351,13 +382,12 @@ class TradeMap(MutableMapping):
         return iter([names[trade] for trade in self._present_trades()])
 
     def _row(self, trade: str, create: bool):
-        number = self._state.ids.trades.find(trade)
-        if number is None:
+        """The grid row of the pair; None where the trade is unknown and `create` is off (a new trade is numbered when it is on)."""
+        if self._state.ids.trades.find(trade) is None:
             if not create:
                 return None
             self._state.admit((), (trade,))
-            number = self._state.ids.trades.number(trade)
-        return self._area * len(self._state.ids.trades) + number
+        return self._state.grid_row(self._area, trade)
 
     def __contains__(self, trade) -> bool:
         row = self._row(trade, False) if isinstance(trade, str) else None
@@ -367,12 +397,12 @@ class TradeMap(MutableMapping):
         row = self._row(trade, False)
         if row is None or not self._field.present(self._state, row):
             raise KeyError(trade)
-        return self._field.read(self._state, row)
+        return self._field.read(self._state, Where(self._state, self._area, trade))
 
     def __setitem__(self, trade: str, value) -> None:
-        row = self._row(trade, True)
-        self._field.write(self._state, row, value)
-        self._state.name_area(self._field.name, self._area)
+        self._row(trade, True)
+        self._field.write(self._state, self._state.grid_row(self._area, trade), value)
+        self._state.name_area(self._field.name, self._area_number())
 
     def __delitem__(self, trade: str) -> None:
         if trade not in self:
@@ -382,7 +412,7 @@ class TradeMap(MutableMapping):
     def setdefault(self, trade, default=None):
         if trade not in self:
             self[trade] = default if default is not None else {} if self._field.name == "hired" else []
-        return self._field.read(self._state, self._row(trade, False))
+        return self._field.read(self._state, Where(self._state, self._area, trade))
 
     def pop(self, trade, *default):
         if trade in self:
@@ -428,17 +458,16 @@ class AreaMap(MutableMapping):
     def __getitem__(self, area: str) -> TradeMap:
         if area not in self:
             raise KeyError(area)
-        return TradeMap(self._state, self._field, self._state.ids.areas.number(area))
+        return TradeMap(self._state, self._field, area)
 
     def __setitem__(self, area: str, by_trade) -> None:
         by_trade = dict(by_trade.items()) if isinstance(by_trade, Mapping) else dict(by_trade)
         self._state.admit((area,), by_trade)
-        number = self._state.ids.areas.number(area)
-        trades = TradeMap(self._state, self._field, number)
+        trades = TradeMap(self._state, self._field, area)
         for trade in list(trades):
             if trade not in by_trade:
                 del trades[trade]
-        self._state.name_area(self._field.name, number)
+        self._state.name_area(self._field.name, self._state.ids.areas.number(area))
         for trade, value in by_trade.items():
             trades[trade] = value
 
@@ -453,7 +482,7 @@ class AreaMap(MutableMapping):
     def setdefault(self, area, default=None):
         if area not in self:
             self[area] = default if default is not None else {}
-        return TradeMap(self._state, self._field, self._state.ids.areas.number(area))
+        return TradeMap(self._state, self._field, area)
 
     def pop(self, area, *default):
         if area in self:

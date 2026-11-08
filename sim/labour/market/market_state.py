@@ -318,10 +318,10 @@ class MarketState:
         trades = len(self.ids.trades)
         total = 0.0
         if self.area_is_named("workers", number):
-            for trade in TradeMap(self, WorkersField, number)._present_trades():
+            for trade in TradeMap(self, WorkersField, area)._present_trades():
                 total += sum(self.workers_table.people[number * trades + trade].tolist())
         if include_trainees and self.area_is_named("trainees", number):
-            for trade in TradeMap(self, TraineesField, number)._present_trades():
+            for trade in TradeMap(self, TraineesField, area)._present_trades():
                 first, count = self.cohort_range(number * trades + trade)
                 for row in range(first, first + count):
                     total += sum(self.trainee_table.people[row].tolist())

@@ -93,6 +93,13 @@ class StateViewsMatchDicts(unittest.TestCase):
         state.hired_hours = {"b": {"y": {"f": 2.0}}}
         self.assertEqual(state.to_plain()["hired_hours"], {"b": {"y": {"f": 2.0}}})
 
+    def test_a_view_taken_before_a_new_area_is_numbered_still_writes_the_right_pair(self):
+        state = MarketState(workers={"b": {"x": [10.0, 10.0]}})
+        held = state.workers["b"]["x"]
+        state.workers.setdefault("a", {}).setdefault("x", [0.0, 0.0])      # "a" sorts first, so every grid row moves
+        held[0] -= 4.0
+        self.assertEqual((state.workers["b"]["x"], state.workers["a"]["x"]), ([6.0, 10.0], [0.0, 0.0]))
+
     def test_the_sum_of_a_band_view_is_the_sum_of_the_list(self):
         values = [0.1, 0.2, 0.3, 0.4, 0.7]
         state = MarketState(workers={"a": {"x": list(values)}})

@@ -20,7 +20,7 @@ import numpy as np
 from sim.constants import declare
 
 from . import aptitude, cohort_book, expectations, switch_year, training
-from .income_kernel import YearRates
+from .year_rates import rates_of
 from .records import MarketState, YearInputs, YearReport
 from .results_grid import grid_of
 from .switch_kernel import Destinations, DONE, Switched, SwitchRules
@@ -89,18 +89,6 @@ def _school_grid(state: MarketState, inputs: YearInputs):
     return seats, bonus
 
 
-def _rates(state: MarketState, inputs: YearInputs) -> YearRates:
-    ids = state.ids
-    subsistence = np.full(len(ids.areas), np.nan)
-    for area, value in inputs.subsistence_per_worker_year.items():
-        if ids.areas.find(area) is not None:
-            subsistence[ids.areas.number(area)] = value
-    specs = [inputs.trades.get(name) for name in ids.trades.names]
-    return YearRates(inputs.hours_per_worker_year, inputs.discount_rate, inputs.career_years, inputs.value_of_life_years_of_income, subsistence,
-                     np.array([spec.fatality_risk_per_year if spec else 0.0 for spec in specs]),
-                     np.array([spec.training_years if spec else 0.0 for spec in specs]))
-
-
 def _destinations(state: MarketState, inputs: YearInputs) -> Destinations:
     ids = state.ids
     allowed = inputs.enterable_trades
@@ -130,7 +118,7 @@ def switch_trades(state: MarketState, inputs: YearInputs, clearings, report: Yea
     book = cohort_book.new_book(state, room)
     counter = np.array([state._order], np.int64)
     switched = Switched(np.zeros(rows), np.zeros(rows, np.bool_), np.zeros(rows, np.int64), counter)
-    status = switch_year.switch_all(_rates(state, inputs), rules, grid.results, grid.demand_caps, grid.demand_hours, state.workers_table,
+    status = switch_year.switch_all(rates_of(state, inputs), rules, grid.results, grid.demand_caps, grid.demand_hours, state.workers_table,
                                     state.areas_table, state.market_table, book, destinations, switched)
     if status != DONE:
         raise RuntimeError("switching ran out of room for new cohorts (%d reserved)" % room)
