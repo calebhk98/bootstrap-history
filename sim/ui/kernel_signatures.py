@@ -57,6 +57,7 @@ def declared_signatures():
     signatures.update(priced_need_signatures(types))
     signatures.update(loan_signatures(types))
     signatures.update(crossing_signatures(types))
+    signatures.update(entry_plan_signatures())
     return signatures
 
 
@@ -165,4 +166,27 @@ def crossing_signatures(types):
         "sim.economy.crossing_price.minimum_price_of": [(floats, number)],
         "sim.economy.crossing_price.single_supply_price": [(demand, types.boolean, number, number, flags)],
         "sim.economy.crossing_price.price_at_levels": [(floats, floats, number, number, demand, flags)],
+    }
+
+
+def entry_plan_signatures():
+    """The entry plan loops a warm year may not reach (the trial's, when no market lacks a maker; the bids block's many demands): typed from
+    small samples of what `entry_margin_tables` and `year_bids` pass them."""
+    import numpy
+    from numba import typeof
+    from sim.economy import entry_plan_steps, entry_plan_table
+    floats, whole = numpy.ones(2), numpy.zeros(2, dtype=numpy.int64)
+    grid, whole_grid = numpy.ones((2, 2)), numpy.zeros((2, 2), dtype=numpy.int64)
+    block = tuple(numpy.ones(2) for _ in range(6)) + (numpy.zeros(3, dtype=numpy.int64),)
+    tables = (numpy.zeros((3, 2, 2)), numpy.zeros((2, 2, 2)), whole_grid, whole_grid, numpy.zeros((2, 2, 2)), grid, grid, grid, grid,
+              numpy.zeros(3))
+    siting = (grid, grid, numpy.zeros((2, 2), dtype=numpy.bool_), grid, grid, grid, grid, numpy.zeros(2, dtype=numpy.bool_), floats, grid, floats)
+    widths = {"order": 2, "fits": 2, "suited": 2, "supply_tiles": 2}
+    sites = entry_plan_steps.SITES.new_table(entry_plan_steps.SiteTables, 2, 2, widths=widths)
+    plans = entry_plan_table.empty(2)
+    trial = (whole, whole, whole, floats, whole, whole, whole, floats, block, tables, grid, siting, sites, whole_grid, plans)
+    many = (*block[:6], block[6], whole, floats, floats)
+    return {
+        "sim.economy.entry_margin_kernel.trial_plans": [tuple(typeof(each) for each in trial)],
+        "sim.economy.year_bids_kernels.demand_at_many": [tuple(typeof(each) for each in many)],
     }
