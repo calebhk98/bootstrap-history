@@ -12,7 +12,7 @@ and two grow as the year adds rows:
     HIRED     hours each employer was hired for in a market last year, rows grouped by market
     TRAINEES  cohorts of people learning a trade, one row each, grouped by market, in the order they enrolled
 
-`MarketState` (records.py) owns them; other modules read them through its dict-shaped views (state_views.py) or the kernels
+`MarketState` (market_state.py) owns them; other modules read them through its dict-shaped views (state_fields.py) or the kernels
 of this package. A missing wage or ask is NaN: kernels read it as "none" (CLAUDE.md: no in-band zero).
 """
 import numpy

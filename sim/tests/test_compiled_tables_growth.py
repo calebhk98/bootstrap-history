@@ -3,8 +3,11 @@ QUICK_TOPIC = True
 
 import unittest
 
+import numpy
+
 from sim.compiled_tables.example_loans import LOANS, Loans
 from sim.compiled_tables.growth import NO_ROOM, claim_row, reserve_rows
+from sim.compiled_tables.spec import Column, TableSpec
 
 
 class ReserveRowsTests(unittest.TestCase):
@@ -24,6 +27,18 @@ class ReserveRowsTests(unittest.TestCase):
     def test_grown_columns_are_whole_contiguous_arrays(self):
         table = reserve_rows(LOANS.new_table(Loans, 2, row_count=2), 10)
         self.assertTrue(table.principal.flags["C_CONTIGUOUS"] and table.principal.base is None)
+
+
+class WideColumnTests(unittest.TestCase):
+    """A column of several values a row (people per band) is a 2-d array and grows with its table."""
+
+    def test_a_wide_column_keeps_its_width_when_the_table_grows(self):
+        spec = TableSpec("Wide", (Column("market", numpy.int64, "a market", "row"), Column("people", numpy.float64, "people per band", "people", width=0)))
+        wide = spec.make_type(__name__)
+        table = spec.new_table(wide, 2, row_count=2, widths={"people": 3})
+        table.people[1] = [1.0, 2.0, 3.0]
+        bigger = reserve_rows(table, 5)
+        self.assertEqual((bigger.people.shape, bigger.people[1].tolist(), bigger.market.shape), ((7, 3), [1.0, 2.0, 3.0], (7,)))
 
 
 class ClaimRowTests(unittest.TestCase):

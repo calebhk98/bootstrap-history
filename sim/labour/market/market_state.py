@@ -1,12 +1,12 @@
 """`MarketState`: what the labour core carries from one year to the next, held as tables (state_tables.py).
 
 Callers outside the compiled year still see nested dicts: `state.workers`, `.trainees`, `.wages`, `.asks` and `.hired_hours`
-are live views (state_views.py) that read and write the tables, and the constructor, `to_plain` and `from_plain` take and
+are live views (state_fields.py) that read and write the tables, and the constructor, `to_plain` and `from_plain` take and
 give nested dicts, so a save, a test and the economy's mirrors work unchanged. Code inside the year reads `state.workers_table`
 and the other tables directly.
 
 Rows: areas and trades are numbered in sorted name order (state_ids.py), a grid row is `area * trade_count + trade`. Admitting a
-new area or trade renumbers (`admit`); a dict view must not be held across that. The tables hold one band count
+new area or trade renumbers (`admit`; the dict views name their pair, so they survive it). The tables hold one band count
 (`bands`: the ability band count; a longer list widens the tables, and each list keeps the length it was stored with).
 """
 from typing import Dict, Iterable, List, Optional, Sequence, Tuple
@@ -18,7 +18,7 @@ from sim.rekey import rename_text
 from . import aptitude
 from .state_ids import LabourIds
 from .state_tables import AREAS, Areas, HIRED, Hired, MARKETS, Markets, TRAINEES, Trainees, WORKERS, Workers
-from .state_views import AreaMap, TradeMap, AsksField, HiredField, TraineesField, WagesField, WorkersField
+from .state_fields import AreaMap, AsksField, HiredField, TradeMap, TraineesField, WagesField, WorkersField
 
 _FIELDS = (("workers", WorkersField), ("trainees", TraineesField), ("wages", WagesField), ("hired_hours", HiredField), ("asks", AsksField))
 

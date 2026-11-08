@@ -1,9 +1,9 @@
 """The plain records the labour-market core reads and writes.
 
 People are counted per labour area, per trade and per ability band (aptitude.py). Money is whatever
-unit the caller's wages and subsistence costs are given in; nothing here converts it. Every record is a
-dataclass of numbers, strings, lists and dicts, so `to_plain`/`from_plain` round-trip a save without a
-field list.
+unit the caller's wages and subsistence costs are given in; nothing here converts it. The records are dataclasses of numbers,
+strings, lists and dicts; the state between years is `MarketState` (market_state.py), tables with dict views, and `to_plain` and
+`from_plain` round-trip it through nested dicts for a save.
 """
 import dataclasses
 from typing import Callable, Dict, List, Optional, Sequence, Tuple
