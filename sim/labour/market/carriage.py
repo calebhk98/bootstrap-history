@@ -43,9 +43,9 @@ def all_cheapest(cost):
     return cost
 
 
-def carriage_table(routes: Mapping[str, Sequence]) -> Dict[str, Dict[str, float]]:
-    """`carriage_from` for every area the routes start from, in one search: {origin: {area: cheapest cost}}, each origin
-    reaching itself at 0. Sums along a path may differ from `carriage_from`'s in the last digit (added in another order)."""
+def carriage_costs(routes: Mapping[str, Sequence]) -> Tuple[List[str], np.ndarray]:
+    """The areas the routes name (sorted) and the cheapest total cost between every pair of them (infinity where there is no way,
+    zero on the diagonal), found in one search."""
     names = sorted(set(routes) | {route.destination for each in routes.values() for route in each})
     position = {name: index for index, name in enumerate(names)}
     cost = np.full((len(names), len(names)), np.inf)
@@ -58,10 +58,16 @@ def carriage_table(routes: Mapping[str, Sequence]) -> Dict[str, Dict[str, float]
             step = max(0.0, route.moving_cost)
             if step < cost[row, column]:
                 cost[row, column] = step
-    cost = all_cheapest(cost)
+    return names, all_cheapest(cost)
+
+
+def carriage_table(routes: Mapping[str, Sequence]) -> Dict[str, Dict[str, float]]:
+    """`carriage_from` for every area the routes start from, in one search: {origin: {area: cheapest cost}}, each origin
+    reaching itself at 0. Sums along a path may differ from `carriage_from`'s in the last digit (added in another order)."""
+    names, cost = carriage_costs(routes)
     table: Dict[str, Dict[str, float]] = {}
-    for name in names:
-        row = cost[position[name]]
+    for index, name in enumerate(names):
+        row = cost[index]
         reached = np.flatnonzero(row < np.inf).tolist()
         table[name] = {names[column]: value for column, value in zip(reached, row[reached].tolist())}
     return table

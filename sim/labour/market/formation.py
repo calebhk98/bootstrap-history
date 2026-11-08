@@ -19,6 +19,7 @@ from .market_state import MarketState
 from .premium import annuity_factor, training_premium
 from .records import YearInputs, YearReport
 from .results_grid import grid_of
+from .year_carriage import dense_carriage
 from .year_rates import rates_of
 
 def spare_people(workers: float, hours_wanted: float, hours_per_worker_year: float) -> float:
@@ -33,15 +34,11 @@ def _bid_hours_by_employer(state: MarketState, inputs: YearInputs):
     """Per grid row, the hours each employer bid for there, employers in name order: (first entry, entries, employer, hours).
     An employer's bids in a market add in the order they were given."""
     ids = state.ids
-    bids = bid_book.columns_of(inputs.bids)
+    bids = bid_book.numbered(state, inputs.bids)
     trade_count = len(ids.trades)
     rows = len(ids.areas) * trade_count
-    area = np.array([ids.areas.find(name) if ids.areas.find(name) is not None else -1 for name in bids.areas], np.int64)
-    trade = np.array([ids.trades.find(name) if ids.trades.find(name) is not None else -1 for name in bids.trades], np.int64)
-    employer = ids.employers.admit(bids.employers)
-    area, trade, employer = (np.repeat(each, bids.repeat) for each in (area, trade, employer))
-    use = (area >= 0) & (trade >= 0) & (bids.hours > 0.0)
-    row, employer, hours = (area * trade_count + trade)[use], employer[use], bids.hours[use]
+    use = (bids.area >= 0) & (bids.trade >= 0) & (bids.hours > 0.0)
+    row, employer, hours = (bids.area * trade_count + bids.trade)[use], bids.employer[use], bids.hours[use]
     order = np.lexsort((ids.employers.rank[employer], row))
     row, employer, hours = row[order], employer[order], hours[order]
     first, count = np.zeros(rows, np.int64), np.zeros(rows, np.int64)
@@ -65,11 +62,7 @@ def _world(state: MarketState, inputs: YearInputs) -> FormationWorld:
     for origin, ways in inputs.routes.items():
         for route in ways:
             leads_to[ids.areas.number(origin), ids.areas.number(route.destination)] = True
-    carriage = np.full((area_count, area_count), np.nan)
-    if allowed.any():
-        for origin, name in enumerate(ids.areas.names):
-            for area, cost in inputs.carriage_from(name).items():
-                carriage[origin, ids.areas.number(area)] = cost
+    carriage = dense_carriage(state, inputs) if allowed.any() else np.full((area_count, area_count), np.nan)
     first, count, employer, hours = _bid_hours_by_employer(state, inputs)
     return FormationWorld(floor, annuity_factor(inputs.discount_rate, inputs.career_years), premium, allowed, leads_to, carriage, first, count,
                           employer, hours)

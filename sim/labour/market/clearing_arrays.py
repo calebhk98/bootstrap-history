@@ -15,6 +15,7 @@ from sim.compiled_tables.grouping import group_starts, stable_order
 
 from . import bid_book, clearing_kernel as kernel, clearing_pack
 from .fetch_wage import fetch_wage as reference_fetch_wage
+from .year_carriage import dense_carriage
 from .market_state import MarketState
 from .premium import annuity_factor, training_premium
 from .records import YearInputs, no_hours
@@ -88,41 +89,38 @@ def _area_names(state: MarketState, inputs: YearInputs, bids: bid_book.BidColumn
 
 
 def _reaches(inputs: YearInputs, areas_with_bids: np.ndarray, state: MarketState) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
-    """Per area with bids: the areas reachable from it, nearest first, with the cost (`ImportCosts.reach`); arrays by area."""
-    names = state.ids.areas.names
-    reaches = {}
+    """Per area with bids: the areas reachable from it, nearest first (ties by name), with the cost (`ImportCosts.reach`)."""
+    count = len(state.ids.areas)
+    carriage = dense_carriage(state, inputs)
+    others = np.arange(count)
+    found = {}
     for area in areas_with_bids.tolist():
-        best = inputs.carriage_from(names[area])
-        reaches[area] = sorted((cost, other) for other, cost in best.items() if other != names[area])
-    width = max([len(each) for each in reaches.values()] + [1])
-    reach_other = np.zeros((len(names), width), np.int64)
-    reach_cost = np.zeros((len(names), width))
-    reach_count = np.zeros(len(names), np.int64)
-    number_of = state.ids.areas.number
-    for area, reach in reaches.items():
-        reach_count[area] = len(reach)
-        for slot, (cost, other) in enumerate(reach):
-            reach_other[area, slot] = number_of(other)
-            reach_cost[area, slot] = cost
+        reachable = np.flatnonzero(~np.isnan(carriage[area]) & (others != area))
+        found[area] = reachable[np.lexsort((reachable, carriage[area, reachable]))]
+    width = max([len(each) for each in found.values()] + [1])
+    reach_other = np.zeros((count, width), np.int64)
+    reach_cost = np.zeros((count, width))
+    reach_count = np.zeros(count, np.int64)
+    for area, reachable in found.items():
+        reach_count[area] = len(reachable)
+        reach_other[area, :len(reachable)] = reachable
+        reach_cost[area, :len(reachable)] = carriage[area, reachable]
     return reach_other, reach_cost, reach_count
 
 
 def pack_heads(state: MarketState, inputs: YearInputs, share_closed_per_year: float) -> PackedHeads:
     """Arguments of `market_heads` for every market of the year: those with a bid for hours and those whose trade has people in
     the area. Admits to the state the areas, trades and employers the year names."""
-    bids = bid_book.columns_of(inputs.bids)
-    state.admit(_area_names(state, inputs, bids), inputs.trades)
-    employers = state.ids.employers.admit(bids.employers)
+    state.admit(_area_names(state, inputs, bid_book.columns_of(inputs.bids)), inputs.trades)
+    bids = bid_book.numbered(state, inputs.bids)
     ids = state.ids
     area_count, trade_count = len(ids.areas), len(ids.trades)
     in_play = np.zeros(trade_count, np.bool_)
     in_play[[ids.trades.number(trade) for trade in inputs.trades]] = True
-    bid_trade = np.array([ids.trades.find(trade) if trade in inputs.trades else -1 for trade in bids.trades], np.int64)
-    bid_area = np.array([ids.areas.number(area) for area in bids.areas], np.int64)
-    repeat = bids.repeat
-    bid_employer, bid_trade, bid_area = (np.repeat(each, repeat) for each in (employers, bid_trade, bid_area))
-    placed = bid_trade >= 0
-    market_row = bid_area * trade_count + bid_trade
+    bid_employer, bid_area = bids.employer, bids.area
+    placed = (bids.trade >= 0) & in_play[np.maximum(bids.trade, 0)]       # a bid for a trade the year does not list is not placed
+    bid_trade = np.where(placed, bids.trade, -1)
+    market_row = np.where(placed, bid_area * trade_count + bid_trade, 0)
     hours = inputs.hours_per_worker_year
     cells = np.zeros((kernel.CELL_FIELDS, area_count, trade_count))
     everyone, with_people = np.zeros(area_count * trade_count), np.zeros(area_count * trade_count, np.bool_)

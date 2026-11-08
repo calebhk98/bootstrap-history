@@ -8,7 +8,7 @@ field list.
 import dataclasses
 from typing import Callable, Dict, List, Optional, Sequence, Tuple
 
-from .carriage import carriage_from, carriage_table
+from .carriage import carriage_costs, carriage_from, carriage_table
 from .market_state import MarketState
 
 AreaId = str
@@ -87,6 +87,13 @@ class YearInputs:
     hours_sold_at: Optional[Dict[Tuple[TradeId, AreaId], Callable[[float], float]]] = None   # (trade, area) -> hours the households there sell at a wage an hour (rising): the hours their offers hold. None: every worker sells a whole year at any wage; a market missing from a given schedule sells nothing
 
     _carriage: Dict[AreaId, Dict[AreaId, float]] = dataclasses.field(default_factory=dict, init=False, repr=False, compare=False)
+    _costs: Optional[tuple] = dataclasses.field(default=None, init=False, repr=False, compare=False)
+
+    def carriage_costs(self) -> tuple:
+        """(areas the routes name, matrix of the cheapest moving cost between them; infinity: no way), searched once for the year."""
+        if self._costs is None:
+            self._costs = carriage_costs(self.routes)
+        return self._costs
 
     def carriage_from(self, origin: AreaId) -> Dict[AreaId, float]:
         """The cheapest moving cost from `origin` to every area the routes lead to (`carriage.carriage_from`), searched once
