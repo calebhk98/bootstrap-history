@@ -100,38 +100,38 @@ class OrderRows:
             self.offer(offer.seller, offer.good, offer.area, offer.tile, offer.quantity, offer.reservation_price)
 
     def write(self) -> None:
-        """Append what was added to the book of orders (bids, then offers, each in the order added) and start empty again."""
-        book = self.order_book
-        if hasattr(book, "add_named_bids"):
-            self._wait_in(book)
-        elif isinstance(book, GoodsOrderBook):
-            self._write_rows(book)
+        """Hand what was added to the book of orders (bids, then offers, each in the order added) and start empty again."""
+        target = self.order_book
+        if hasattr(target, "add_named_bids"):
+            self._wait_in(target)
+        elif isinstance(target, GoodsOrderBook):
+            self._write_rows(target)
         else:
-            self._write_objects(book)
+            self._write_objects(target)
         self._clear()
 
-    def _wait_in(self, book) -> None:
+    def _wait_in(self, orders) -> None:
         """Hand the names and figures to a `NamedOrderBook`, which numbers them with everything else waiting at its next flush."""
         if self.buyer:
-            book.add_named_bids(NamedBids(self.buyer, self.bid_good, self.bid_area, self.bid_tile, self.priority, self.figures, self.source))
+            orders.add_named_bids(NamedBids(self.buyer, self.bid_good, self.bid_area, self.bid_tile, self.priority, self.figures, self.source))
         if self.seller:
-            book.add_named_offers(NamedOffers(self.seller, self.offer_good, self.offer_area, self.offer_tile, self.quantity, self.reservation,
-                                              self.source))
+            orders.add_named_offers(NamedOffers(self.seller, self.offer_good, self.offer_area, self.offer_tile, self.quantity, self.reservation,
+                                                self.source))
 
-    def _write_rows(self, book: GoodsOrderBook) -> None:
+    def _write_rows(self, orders: GoodsOrderBook) -> None:
         if self.buyer:
-            book.append_bids(book.agent_ids_of(self.buyer), book.good_ids_of(self.bid_good), book.tile_ids_of(self.bid_tile),
-                             book.market_ids(self.bid_good, self.bid_area), self.priority, self.figures, self.source)
+            orders.append_bids(orders.agent_ids_of(self.buyer), orders.good_ids_of(self.bid_good), orders.tile_ids_of(self.bid_tile),
+                               orders.market_ids(self.bid_good, self.bid_area), self.priority, self.figures, self.source)
         if self.seller:
-            book.append_offers(book.agent_ids_of(self.seller), book.good_ids_of(self.offer_good), book.tile_ids_of(self.offer_tile),
-                               book.market_ids(self.offer_good, self.offer_area), self.quantity, self.reservation, self.source)
+            orders.append_offers(orders.agent_ids_of(self.seller), orders.good_ids_of(self.offer_good), orders.tile_ids_of(self.offer_tile),
+                                 orders.market_ids(self.offer_good, self.offer_area), self.quantity, self.reservation, self.source)
 
-    def _write_objects(self, book) -> None:
+    def _write_objects(self, target) -> None:
         for position, buyer in enumerate(self.buyer):
             bid = make_bid(buyer, self.bid_good[position], self.bid_area[position], self.bid_tile[position], *self.figures[position][:5],
                            self.priority[position], self.figures[position][5])
-            book.setdefault((bid.good, bid.area), ([], []))[0].append(bid)
+            target.setdefault((bid.good, bid.area), ([], []))[0].append(bid)
         for position, seller in enumerate(self.seller):
             offer = make_offer(seller, self.offer_good[position], self.offer_area[position], self.offer_tile[position],
                                self.quantity[position], self.reservation[position])
-            book.setdefault((offer.good, offer.area), ([], []))[1].append(offer)
+            target.setdefault((offer.good, offer.area), ([], []))[1].append(offer)
