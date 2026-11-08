@@ -9,6 +9,7 @@ reference posted pair by pair and market by market."""
 QUICK_TOPIC = True
 
 import random
+from collections.abc import Mapping
 import unittest
 
 from sim.book import Book
@@ -29,7 +30,7 @@ def without_noise(by_agent):
 
 def pruned(figures):
     """A nested map without its rounding-noise numbers and the maps that empties."""
-    if isinstance(figures, dict):
+    if isinstance(figures, Mapping):
         kept = {key: pruned(value) for key, value in figures.items()}
         return {key: value for key, value in kept.items() if value not in ({}, None)}
     if isinstance(figures, tuple):

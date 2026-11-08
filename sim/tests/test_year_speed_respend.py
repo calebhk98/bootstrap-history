@@ -12,6 +12,7 @@ part in 10^12, is not compared, and nine in ten must be.
 QUICK_TOPIC = True
 
 import random
+from collections.abc import Mapping
 import unittest
 from types import SimpleNamespace
 
@@ -124,7 +125,7 @@ def snapshot(book):
 
 def largest(value):
     """The largest absolute number in a nested structure."""
-    if isinstance(value, dict):
+    if isinstance(value, Mapping):
         return max([largest(each) for each in value.values()] + [0.0])
     if isinstance(value, (list, tuple)):
         return max([largest(each) for each in value] + [0.0])
@@ -135,7 +136,7 @@ def agree(left, right, scale=None, path=""):
     """None when the two nested structures of numbers agree within TOLERANCE of the largest number in `left`, else where."""
     if scale is None:
         scale = max(1.0, largest(left))
-    if isinstance(left, dict) or isinstance(right, dict):
+    if isinstance(left, Mapping) or isinstance(right, Mapping):
         for key in sorted(set(left) | set(right), key=str):
             found = agree(left.get(key, 0.0), right.get(key, 0.0), scale, "%s/%s" % (path, key))
             if found:

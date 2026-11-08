@@ -38,6 +38,7 @@ def declared_signatures():
         "sim.labour.market.sold_hours_kernel.sold_hours": [(number, array(number, 2), number)],
     }
     signatures.update(book_signatures(types))
+    signatures.update(ledger_signatures(types))
     return signatures
 
 
@@ -60,3 +61,21 @@ def book_signatures(types):
         "sim.compiled_tables.grouping.group_starts": [(typeof(starts), types.int64, types.int64)],
     }
 
+
+
+def ledger_signatures(types):
+    """The year ledger's kernels that only a rare branch reaches (a replaced or removed entry, money across the border), typed from
+    the tables a fresh ledger passes them."""
+    from numba import typeof
+    from sim.economy.year_ledger_store import LedgerTables
+    target = typeof(LedgerTables().pairs["received"].target())
+    number, integer = types.float64, types.int64
+    whole, floats = types.Array(integer, 1, "C"), types.Array(number, 1, "C")
+    module = "sim.economy.year_ledger_kernels."
+    return {
+        module + "note_settlement_foreign": [(target, target, whole, floats, floats, whole, whole)],
+        module + "clear_agent_rows": [(target, integer)],
+        module + "kill_row": [(target, integer)],
+        module + "set_pair": [(target, integer, integer, integer, number, number)],
+        module + "remove_from_figure": [(whole, whole, integer, integer)],
+    }
