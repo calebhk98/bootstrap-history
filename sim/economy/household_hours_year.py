@@ -1,12 +1,13 @@
 """A cohort's hours kept for its own plot rather than offered (Complaints 473, 608): the choice of
 `households_hours_offered` against the wage it faced and what its plot yields at the prices of what it grows. The
 hours kept are added to those the own-plot plan and the household work already keep back (`labour_supply.HourSupply`)."""
-from typing import Callable, Dict, Mapping, Sequence
+from typing import Callable, Dict, Mapping, Optional, Sequence
 
 from . import households_hours_offered, trade_wages
 from .households_basket import tile_need_prices
 from .households_own import Option, own_production
 from .labour_ask_floor import hectares_per_hour_by_recipe, plot_return_per_hour
+from .labour_offers_table import PlotParameters
 from .types import AgentId, LabourOffer
 
 SPARE_HOURS = 1e18        # more hours than any plot takes, to ask how many it could use
@@ -31,10 +32,10 @@ def usable_plot_hours(setup, cohort, options: Mapping[str, Sequence[Option]], he
     return sum(used.values())
 
 
-def cohort_plot_schedule(setup, cohort, available: float, priced, options: Mapping[str, Sequence[Option]], held: float,
-                         hectares_per_hour: Mapping[str, float]):
-    """The hours one cohort keeps for its plot at a wage an hour, given the `available` hours it has and its `priced`
-    needs; None for a cohort with no hours, no land held, or fertility none."""
+def cohort_plot_parameters(setup, cohort, available: float, priced, options: Mapping[str, Sequence[Option]], held: float,
+                           hectares_per_hour: Mapping[str, float]) -> Optional[PlotParameters]:
+    """The numbers of the hours one cohort keeps for its plot at a wage an hour, given the `available` hours it has and its
+    `priced` needs; None for a cohort with no hours, no land held, or fertility none."""
     tile = setup.tiles.get(cohort.tile)
     if available <= 0.0 or tile is None or held <= 0.0 or tile.fertility <= 0.0 or cohort.working_people <= 0.0:
         return None
@@ -42,14 +43,21 @@ def cohort_plot_schedule(setup, cohort, available: float, priced, options: Mappi
     per_worker_hours = available / cohort.working_people
     marginal = plot_return_per_hour(priced, options, tile.fertility, per_worker_hours,
                                     cohort.people / cohort.working_people, hectares_per_hour, held / cohort.working_people)
-    return plot_schedule(per_worker_hours, marginal, usable / cohort.working_people, cohort.working_people)
+    return PlotParameters(per_worker_hours, marginal, usable / cohort.working_people, cohort.working_people)
 
 
-def plot_schedules(setup, record, view, offers: Sequence[LabourOffer], options: Mapping[str, Sequence[Option]],
-                   hectares_held: Mapping[AgentId, float]) -> Dict[AgentId, Callable[[float], float]]:
-    """For each cohort with a plot, the hours it keeps for the plot at a wage an hour (a function of the wage); a
-    cohort with no land held, or none that grows a need's floor, has none."""
-    schedules: Dict[AgentId, Callable[[float], float]] = {}
+def cohort_plot_schedule(setup, cohort, available: float, priced, options: Mapping[str, Sequence[Option]], held: float,
+                         hectares_per_hour: Mapping[str, float]):
+    """The hours one cohort keeps for its plot at a wage an hour, as a function of the wage; None where it has no plot."""
+    parameters = cohort_plot_parameters(setup, cohort, available, priced, options, held, hectares_per_hour)
+    return plot_schedule(*parameters) if parameters is not None else None
+
+
+def plot_parameters_by_cohort(setup, record, view, offers: Sequence[LabourOffer], options: Mapping[str, Sequence[Option]],
+                              hectares_held: Mapping[AgentId, float]) -> Dict[AgentId, PlotParameters]:
+    """For each cohort with a plot, the numbers of the hours it keeps for the plot at a wage an hour (the columns of the
+    labour offers table); a cohort with no land held, or none that grows a need's floor, has none."""
+    parameters: Dict[AgentId, PlotParameters] = {}
     hectares_per_hour = hectares_per_hour_by_recipe(setup.recipes, setup.land_per_run)
     hours_by_worker: Dict[AgentId, list] = {}
     for offer in offers:
@@ -59,18 +67,25 @@ def plot_schedules(setup, record, view, offers: Sequence[LabourOffer], options: 
         available = sum(hours_by_worker.get(cohort_id, ()))
         if cohort.tile not in priced_by_tile:
             priced_by_tile[cohort.tile] = tile_need_prices(setup, view, cohort.tile)
-        schedule = cohort_plot_schedule(setup, cohort, available, priced_by_tile[cohort.tile],
-                                        options, hectares_held.get(cohort_id, 0.0), hectares_per_hour)
-        if schedule is not None:
-            schedules[cohort_id] = schedule
-    return schedules
+        found = cohort_plot_parameters(setup, cohort, available, priced_by_tile[cohort.tile],
+                                       options, hectares_held.get(cohort_id, 0.0), hectares_per_hour)
+        if found is not None:
+            parameters[cohort_id] = found
+    return parameters
+
+
+def plot_schedules(setup, record, view, offers: Sequence[LabourOffer], options: Mapping[str, Sequence[Option]],
+                   hectares_held: Mapping[AgentId, float]) -> Dict[AgentId, Callable[[float], float]]:
+    """`plot_parameters_by_cohort` as a function of the wage per cohort, for callers not on the table."""
+    return {cohort_id: plot_schedule(*parameters) for cohort_id, parameters in
+            plot_parameters_by_cohort(setup, record, view, offers, options, hectares_held).items()}
 
 
 def plot_schedule(per_worker_hours: float, marginal: float, usable_per_worker: float, workers: float) -> Callable[[float], float]:
     """Hours a cohort keeps for its plot at a wage: `households_hours_offered.plot_hours_kept` times its workers."""
     def kept(wage_per_hour: float) -> float:
         return households_hours_offered.plot_hours_kept(per_worker_hours, wage_per_hour, marginal, usable_per_worker) * workers
-    kept.parameters = (per_worker_hours, marginal, usable_per_worker, workers)     # the same rule over arrays (labour_supply_kernel)
+    kept.parameters = (per_worker_hours, marginal, usable_per_worker, workers)     # the same rule as columns (labour_offers_table)
     return kept
 
 

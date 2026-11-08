@@ -35,14 +35,21 @@ def kernel_applies(inputs: YearInputs) -> bool:
     is a packed one (or there is none)."""
     if inputs.fetch_wage is not None and inputs.fetch_wage is not reference_fetch_wage:
         return False
-    if inputs.hours_sold_at is None:
-        return True
+    if inputs.hours_sold_at is None or getattr(inputs.hours_sold_at, "columns", None) is not None:
+        return True       # no schedule, or the offers' table gives the matrix itself (labour_supply_markets.MarketHours)
     return all(schedule is no_hours or getattr(schedule, "packed", None) is not None
                for schedule in inputs.hours_sold_at.values())
 
 
 def _offer_columns(inputs: YearInputs, trade_index: Dict[str, int], area_index: Dict[str, int], cells: np.ndarray):
     """The matrix of every market's offers end to end, with each market's columns written into `cells`; the exponent."""
+    columns = getattr(inputs.hours_sold_at, "columns", None)
+    if columns is not None:                 # the table's matrix as it is: only the ranges of the markets in play are named
+        for position, (trade, area) in enumerate(columns.markets):
+            if trade in trade_index and area in area_index:
+                cells[kernel.FIRST, area_index[area], trade_index[trade]] = columns.first[position]
+                cells[kernel.LAST, area_index[area], trade_index[trade]] = columns.last[position]
+        return columns.matrix, columns.exponent
     pieces: List[np.ndarray] = [np.zeros((OFFER_ROWS, 0))]
     exponent = 1.0
     taken = 0

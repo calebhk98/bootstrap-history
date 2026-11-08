@@ -74,3 +74,14 @@ other modules read through the owner's view or call the owner's kernel.
 Every step keeps the game's rules: the year-time digest may move only by float order (`tools/measure/save_compare.py` on
 two-year saves shows dust only); a jump in a discrete value is traced before merging. Save and load round-trip
 (`year-time --reload-check`).
+
+## Labour offers as a table (stage 2 groundwork)
+
+`sim/economy/labour_offers_table.py` holds the year's offers, one row per cohort x trade, with the supply parameters as
+columns and `sold_hours`, `kept_hours` as outputs; `labour_offers_kernels.py` builds the matrix the labour clearing kernels
+read (`offer_matrix`) and settles the offers at the cleared wages (`settle_offers`). `HourSupply` is the thin wrapper for
+callers not yet on the table. Where a plot rule is a bare function, or a caller replaces a market's schedule in the
+`hours_sold_at` mapping (`MarketHours`), the plain path takes it. Stage 2 plugs in at three named seams: the shared agent
+numbering replaces the per-year cohort numbering (`LabourIds`), the cohort offers are written as rows by the code that makes
+them (today `labour_offers_table.build_labour_offers` reads `LabourOffer` objects), and the cleared wages arrive as a
+market-indexed array from the market memory (today a dict read in `HourSupply.settle`).

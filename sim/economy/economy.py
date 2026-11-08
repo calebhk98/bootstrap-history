@@ -355,10 +355,10 @@ class Economy:
     def _hour_supply(self, everyone, view) -> HourSupply:
         """The hours households sell as a schedule against the wage (labour_supply.py)."""
         plan, work = self._fixed_home_hours(everyone, view)
-        plot = household_hours_year.plot_schedules(self.setup, self.record, view, everyone, self.own_plot_options(),
-                                                   self.hectares_held())
+        plot = household_hours_year.plot_parameters_by_cohort(self.setup, self.record, view, everyone, self.own_plot_options(),
+                                                             self.hectares_held())
         faced = {(offer.trade, offer.area): trade_wages.faced_wage(view.wage(offer.trade, offer.area), offer.reservation_wage) for offer in everyone}
-        return HourSupply(everyone, plan, work, plot, faced)
+        return HourSupply(everyone, plan, work, {}, faced, plot_parameters=plot)
 
     def hectares_held(self) -> Dict[str, float]:
         return titles_plots.hectares_held(self.setup, self.record)

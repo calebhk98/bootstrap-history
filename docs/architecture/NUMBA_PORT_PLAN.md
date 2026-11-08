@@ -91,7 +91,7 @@ changes a field. The saved record format does not change.
 - [ ] Market clearing (`clearing.clear_all`, `clear_one`, `hire_through_rounds`, `import_cost`)
     - [x] every market prepared, then all their hiring rounds in one kernel (`hiring_kernel.py`, `applications.hire_markets`),
           then finished (`test_year_speed_labour_hiring`, the old rounds in `labour_hiring_reference.py`)
-    - [x] the hours-sold schedule over a matrix of wages (`sim/economy/labour_supply_kernel.py`; `test_year_speed_labour_sold_hours`)
+    - [x] the hours-sold schedule over a matrix of wages (`sim/labour/market/sold_hours_kernel.py`, fed from the `LabourOffers` table by `sim/economy/labour_offers_kernels.py`; `test_year_speed_labour_sold_hours`, `test_labour_offers_table`)
     - [x] the fetched-hands search and the wage searches for every market at once (`clearing_kernel.market_heads`,
           `clearing_arrays.py`; `test_year_speed_labour_heads` against `clearing._plain_head`; the plain path kept for a
           mod's fetch search or an unpacked schedule)
