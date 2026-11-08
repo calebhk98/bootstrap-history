@@ -288,6 +288,33 @@ Python (`test_bid_columns.py`). Not done: the respend pack/unpack without per-bi
 results table, the object-rule markets and `production_lines` as kernels, and the remaining per-good price reads (`producers.paid_input_prices`,
 `next_expectations`, `entry_year._traded_volume`, `goods_respend_pack`).
 
+## Price and wage reads through the year view (stage 4, package)
+
+The year view's readers take a block of the market memory's tables where they asked `area_of` and `offered_price` or `wage` once per item.
+
+| Read | Block | Kernel |
+|---|---|---|
+| offered price of every good on a tile (`YearView.offered_prices_on`, `offered_prices_for`) | `price_grid.PriceGrid`: goods by tiles, through `year_arrays_memory.markets_by_good_tile`; NaN in the grid is "no price", the tile's block holds only goods that have one | `price_grid_kernels.offered_by_good_tile` |
+| remembered price of every good on a tile (`remembered_prices_on`, `present_prices_at`) | the same grid's second layer | the same kernel |
+| the one wage rule for trades by labour areas (`YearView.wage_rule_block`, `wage_rule_at`; `trade_wages.wage_in_view`, `year_arrays.wage_grid`) | `wage_block.wage_rule_block`; `WageRuleTable` keeps every trade of the setup in every tile's labour area | `wage_block_kernels.wage_rule_grid` over `labour_market_matrix` and `market_rows_of` |
+| national prices and wages, the notional volumes (`national_prices.remembered_columns`, `notional._traded_volumes`) | the goods and labour tables' columns in the stores' entry order (`MarketStore.rows`) | `market_column_kernels.add_in_order_by_group` |
+
+**When a grid is filled again.** A grid or table is refilled by the first read after the memory is written to: `price_grid.memory_stamp` is the
+write count of the memory (`written_stamp`), the count of writes through a store (`MarketTables.writes`, which every `prices[...] = ...`,
+`pop` and `clear` bumps, so a price written without `note_written` is still seen) and the numbering's generation. A new writer of a column
+that goes round the stores and the memory's methods must bump one of these. `PriceGrid.refreshes` and `WageRuleTable.refreshes` count the refills.
+
+**What a block read does not cover.** A good the area map holds no market for is answered "no price" only while the memory numbers no market for
+any such good (`EVERY_GOOD`); otherwise it is read by itself, as is a tile the area map does not hold (which refuses as before). The scalar
+getters (`price`, `offered_price`, `wage`, ...) stay for the screens, the protocol and callers that read one cell.
+
+Callers still reading one value at a time through the view: `producers.py` (`expected_price`, `paid_input_prices`, `live_input_prices_at`,
+`live_wages_at`), `year_goods.py`, `plan_year.py`, `year_goods_offer_rows.py`, `households_orders_pack.py`, `goods_respend_pack.py`,
+`entry_year.traded`, `land_bid_year.py`, `state_budget.py`
+(`wage_in_view` callers there and in `location.py`, `mint_labour.py`, `year_close.py` already read the rule's table). Each reads a tile's block with `view.offered_prices_for(tile, goods)`, `view.remembered_prices_on(tile)` or
+`view.wage_rule_block(trades, labour_areas)`. Tests: `sim/tests/test_price_grid.py`, `test_wage_block.py`, `test_market_columns.py`.
+Measure with `python3 tools/measure/warm_year_profile.py SAVE OUT.prof` and look for calls to `area_of`, `offered_price` and `price_of`.
+
 ## The close on tables (stage 3)
 
 The close reads the book and the ledger with kernels, posts its dividends, wear, spoilage and consumption as posting tables, and
@@ -317,8 +344,7 @@ producer from them (a copy of the old record's fields with the changed ones repl
 back at once, where `replaced(...)` and `put_producer` ran per producer in a loop with a dictionary of changes. The records are
 still read by entry (`entry_year`, `opening`), the next year's plans (`plan_year`, `year_goods`, `seller_offers`, `land_bid_year`),
 the labour state, equity and tax-farming code, the save and the screens: about forty modules read `record.producers`. Retiring the
-record needs those readers on the columns first. Cohorts are replaced one by one in `close_households` (`closed_cohort` reads the
-market view per cohort, which stays Python). Exits (`producer_exit.ExitBatch`, seven stores), loan write-offs and loan requests stay
+record needs those readers on the columns first. Cohorts are put back together in `close_households` (see "Households on the tables" for what is a kernel and what still reads the view per cohort). Exits (`producer_exit.ExitBatch`, seven stores), loan write-offs and loan requests stay
 Python, in producer order.
 
 **Measure.** `python3 sim/simulator.py year-time --session SAVE --years 2 --count-instructions` for the whole year;
@@ -374,7 +400,7 @@ table's in the book's own arrival list and numbers the names of everything waiti
 and goods markets are numbered exactly as when each order waited as an object (the market numbering is saved, so a digest sees it).
 A plain `GoodsOrderBook` or a `{(good, area): (bids, offers)}` dict still works as the target (tests).
 
-**Still objects.** The rules `households.goods_orders` (a basket with share limits), `households_store.store_bids/store_offers`,
+**Still objects.** The rules `households.goods_orders` (now only the Python reference: the kernel covers every basket), `households_store.store_bids/store_offers`,
 `tool_wear.tool_bids`, `merchants.orders`, `carriage_fleet_book.bids`, `land_bid.hectare_bid` and `producers.plan` build `Bid`/`Offer`
 objects inside the rule; they are unpacked into rows at the call (`bids_from`), never handed to the book. `lending.bid_household_loans` writes through `OrderRows`.
 
@@ -438,3 +464,34 @@ by `add_objects`), and the workforce's views (`workforce_settle`, which read `ca
 Measure: `python3 tools/measure/warm_year_profile.py SAVE OUT.prof` for call counts (`clear_labour`, `place_held`, `labour_offer_rows`,
 `write_labour_bids`); the constructions of the record classes in a warm year are counted by wrapping `LabourBid.__new__` and
 `LabourOffer.__new__` around `Economy._run_year`. Tests: `sim/tests/test_year_speed_labour_rows.py`, `test_year_speed_bondage.py`.
+
+
+## Households on the tables (stage 4, package)
+
+| Part | Was | Now |
+|---|---|---|
+| share limits in the orders (`households_orders_kernel._remix`) | a basket with a `max_share_of_need` took the Python path (`households.goods_orders`) per cohort | the quality re-mix searches the limits with `priced_need_kernel.limit_shares` (the exact-sum port of `need_basket.limited_shares`), so `households_orders_pack.covered` is true for every basket. `RF_LIMIT` is a column of the row floats. Test: `test_orders_share_limits.py` (kernel against `households.goods_orders` on random cohorts, with a mutation check that the limits matter) |
+| store weights (`households_store._store_weights`) | `area_of`, `offered_price`, `usual_price` per storable good | `priced_reads.offered_prices_for` and `usual_prices_for` read the tile's blocks. The usual price is a third layer of `price_grid.PriceGrid` (`YearView.usual_prices_on`), filled with the other two. Tests: `test_price_grid.py` (`UsualPrices`), `test_store_weights_blocks.py` |
+| unmet floors of every cohort (`households_close.unmet_floor_by_need`) | per cohort, per need, per good, `view.stock` per durable | `households_close_kernel.unmet_floors` over `households_close_pack.PackedBaskets` (a basket's needs, goods and service lives, packed once per basket key) and the year's receipts arrays; the durables held are one `stock_block` read. Sums in the Python's order, so the figures are equal bit for bit. Test: `test_households_close_kernel.py` |
+| the cohorts written back | `put_cohort` after each cohort | `put_cohorts` once |
+| priced needs as tables | `priced_need` per need, a `PricedNeed` per need | `priced_need_tables.NeedBatch` (any number of (tile, basket) requests as need rows and good rows, spec rows kept per spec and per basket) and `priced_need_kernel.price_needs` (every need priced from a tile-by-good price matrix, exact sums and the share-limit search, ceilings). `priced_needs.PricedBatch` makes `PricedNeed` objects only on demand. Test: `test_priced_need_kernel.py` (the Python against the kernel bit for bit on written-out and random needs, with limits that bind and quality re-mixes, and batches of many tiles and baskets) |
+
+**What was measured and not kept.** Wiring `price_needs` into `priced_reads.kept_need_prices` (one basket per call, and a batch that primed
+every cohort's basket and tile basket in one call the first time any reader asked, with the tile prices gathered from the grid as one
+matrix) was slower than the object path, with identical digests. The kernel is a small part of it: what the year pays is making
+`NeedBatch` rows, reading the answer back as lists and making the `PricedNeed` objects (a tile's baskets differ in their climate floors, so
+few of them are shared), and the readers of those lists (`labour_ask_floor`, `household_hours_year`, `state_budget`, `lending`,
+`goods_respend`, `country_figures`, `year_labour`) all take objects. The tables pay only when those readers take the columns, so the
+wiring waits for them; `NeedBatch`, `price_needs` and `PricedBatch` have no caller in the year yet. Measure it again with
+`python3 tools/measure/warm_year_profile.py SAVE OUT.prof` (look at `kept_need_prices` against the sum of `prime`, `PricedBatch`, `need`).
+
+**What is left in the close's households part.** `closed_cohort` per cohort is now mostly first-touch work other owners' views do once per
+epoch: `view.equity` builds every producer's worth on the first ask (credit), `view.claims` and the rest are lookups. The cohort records are
+still replaced one at a time inside `closed_cohort` (`renewed`) and put back together; keeping them as columns waits for the modules that
+read `record.cohorts` (about forty). `households_store.store_bids/store_offers` stay objects: the kernel makes the bids as rows, the offers
+are built per cohort that holds a store (`households_orders_pack._orders_of`).
+
+**Who still needs `Cohort` and `PricedNeed` objects.** `Cohort`: every module that reads `record.cohorts` (entry, labour offers, demography, the
+screens, the save). `PricedNeed`: `households_orders_pack` (reads `need.goods`, `ceilings`, `price_index` into its template arrays),
+`households_store.staple_price_per_kg` and `store_return.service_values_per_year`, `household_work_year.grinding_plan`, the readers named above,
+and the screens and mods through `need_basket.need_prices`.

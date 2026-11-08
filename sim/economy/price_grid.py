@@ -1,4 +1,5 @@
-"""Every good's offered price on every tile as one grid, refreshed once per write to the market memory.
+"""Every good's offered price on every tile as one grid, refreshed once per write to the market memory (and the remembered and the usual
+prices beside it, the same shape).
 
 `PriceIndex` is what an area map fixes for a game: the goods that have markets, the tiles they are in, and each good's area on each
 tile (`year_arrays_memory.AreaIndex`). `PriceGrid` is the memory's offered prices (`MarketMemory.offered_price`) laid out good by tile
@@ -91,14 +92,14 @@ class TilePrices:
 
 
 class PriceGrid:
-    """The offered prices and the remembered prices of one memory over one `PriceIndex`, good by tile."""
+    """The offered prices, the remembered prices and the usual prices (`MarketMemory.usual_prices`) of one memory over one `PriceIndex`, good by tile."""
 
     def __init__(self, memory: MarketMemory, index: PriceIndex) -> None:
         self._memory = memory
         self._index = index
         self._stamp: Optional[tuple] = None
-        self._grids: Tuple[Optional[np.ndarray], Optional[np.ndarray]] = (None, None)      # offered, remembered
-        self._tiles: Tuple[Dict[str, TilePrices], Dict[str, TilePrices]] = ({}, {})
+        self._grids: Tuple[Optional[np.ndarray], ...] = (None, None, None)      # offered, remembered, usual
+        self._tiles: Tuple[Dict[str, TilePrices], ...] = ({}, {}, {})
         self._rows: Optional[tuple] = None      # (numbering stamp, the market row of each good and tile, whether every good the memory numbers is the index's)
         self.refreshes = 0         # how many times the grids were filled again (tests and measurements read it)
 
@@ -115,8 +116,10 @@ class PriceGrid:
             indexed_only = all(good in index.goods.row for good in tables.goods.name_list)
             self._rows = (numbering, markets_by_good_tile(self._memory, index.goods, index.area_index), indexed_only)
         offered = offered_by_good_tile(offered_prices(markets, class_of_kind(self._memory)), self._rows[1])
-        self._grids = (offered, offered_by_good_tile(markets.price[:int(markets.row_count[0])], self._rows[1]))
-        self._tiles = ({}, {})
+        rows = int(markets.row_count[0])
+        self._grids = (offered, offered_by_good_tile(markets.price[:rows], self._rows[1]),
+                       offered_by_good_tile(markets.usual_price[:rows], self._rows[1]))
+        self._tiles = ({}, {}, {})
         self._stamp = stamp
         self.refreshes += 1
 
@@ -130,17 +133,19 @@ class PriceGrid:
         """Every tile the grid holds, in its column order."""
         return self._index.tiles.ids
 
-    def on_tile(self, tile: str, remembered: bool = False) -> Optional[TilePrices]:
-        """The offered prices on `tile` (the remembered prices, `MarketMemory.prices`, when `remembered`), None for a tile the area map
-        does not hold (the per-good path then answers, and refuses as it did)."""
+    def on_tile(self, tile: str, remembered: bool = False, usual: bool = False) -> Optional[TilePrices]:
+        """The offered prices on `tile` (the remembered prices, `MarketMemory.prices`, when `remembered`; the usual prices,
+        `MarketMemory.usual_prices`, when `usual`), None for a tile the area map does not hold (the per-good path then answers, and
+        refuses as it did)."""
+        layer = 2 if usual else int(remembered)
         column_of = self._index.tiles.row.get(tile)
         if column_of is None:
             return None
         self._current()
-        kept = self._tiles[remembered]
+        kept = self._tiles[layer]
         found = kept.get(tile)
         if found is None:
-            column = self._grids[remembered][:, column_of]
+            column = self._grids[layer][:, column_of]
             present = np.flatnonzero(column == column)
             names = self._index.goods.ids
             found = kept[tile] = TilePrices(

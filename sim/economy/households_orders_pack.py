@@ -12,6 +12,7 @@ from sim.world import need_basket
 
 from . import households_buffer_stock, households_store, lender_ask, opening_demand
 from . import households_orders_kernel as kernel
+from . import opening_demand_kernel as opening_kernel
 from .household_time_preference import HOUSEHOLD_TIME_PREFERENCE
 from .protocols import AgentOrders
 from .households_bid_rows import cohort_bid_rows
@@ -20,8 +21,9 @@ from .types import FundsOffer
 
 
 def covered(priced) -> bool:
-    """Whether the kernel makes these priced needs' orders (share limits re-mix the needs by a search it does not run)."""
-    return not any(need.spec.share_limits for need in priced)
+    """Whether the kernel makes these priced needs' orders: every basket (share limits are searched in the quality re-mix,
+    `households_orders_kernel._remix`)."""
+    return True
 
 
 class _Template:
@@ -111,11 +113,12 @@ class _Arrays:
             self.need_floats.append([need.price_index, need.spec.subsistence_per_person, need.spec.budget_weight,
                                      np.nan if limit is None else limit, 1.0 if need.spec.subsistence_per_person > 0.0 else 0.0,
                                      1.0 if need.spec.qualities else 0.0])
+            limits = dict(need.spec.share_limits)
             for (good, price, effect, share), ceiling in zip(need.goods, ceilings):
                 spec = specs.get(good)
                 self.row_floats.append([price, effect, share, ceiling, qualities.get(good, 1.0), 0.0,
                                         spec.service_life_years if spec is not None else 0.0,
-                                        spec.spoilage_per_year if spec is not None else 0.0, 0.0])
+                                        spec.spoilage_per_year if spec is not None else 0.0, 0.0, limits.get(good, np.nan)])
                 self.row_ints.append([self.good_index(good), first_unit.get(good, -1)])
         self.order.extend(template.row0 + row for row in template.order_local)
         self.row_good_ids.extend(template.row_good_ids)
@@ -176,7 +179,7 @@ def kernel_orders(view, specs, entries, smooth_rise: bool, key_of, store_of, ord
         smooth_rise, opening_demand.constants(), np.array(cohort_floats, dtype=np.float64).reshape(-1, kernel.CO_COUNT),
         np.array(cohort_ints, dtype=np.int64).reshape(-1, kernel.CT_COUNT), np.array(arrays.template_ints, dtype=np.int64).reshape(-1, kernel.TM_COUNT),
         np.array(arrays.template_floats, dtype=np.float64).reshape(-1, kernel.TF_COUNT), np.array(arrays.need_floats, dtype=np.float64).reshape(-1, 6),
-        np.array(arrays.need_ints, dtype=np.int64).reshape(-1, 2), np.array(arrays.row_floats, dtype=np.float64).reshape(-1, 9),
+        np.array(arrays.need_ints, dtype=np.int64).reshape(-1, 2), np.array(arrays.row_floats, dtype=np.float64).reshape(-1, opening_kernel.RF_COUNT),
         np.array(arrays.row_ints, dtype=np.int64).reshape(-1, 2), np.array(arrays.store_floats, dtype=np.float64).reshape(-1, 5),
         np.array(arrays.store_ints, dtype=np.int64), np.array(arrays.unit_floor, dtype=np.float64), np.array(arrays.order, dtype=np.int64),
         np.array(held_rows, dtype=np.float64), np.array(held_stores, dtype=np.float64), np.array(grown, dtype=np.float64), len(arrays.goods),

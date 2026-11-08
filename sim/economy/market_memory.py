@@ -485,6 +485,11 @@ class YearView:
         grid = self._grid()
         return grid.on_tile(tile, remembered=True) if grid else None
 
+    def usual_prices_on(self, tile: TileId):
+        """`offered_prices_on` for the usual prices (`usual_price`): every good that has one on `tile`, as one block."""
+        grid = self._grid()
+        return grid.on_tile(tile, usual=True) if grid else None
+
     def present_prices_at(self, names: tuple, tile: TileId) -> Dict[str, float]:
         """`price` of each of `names` (goods, one tuple kept by the caller) in its area on `tile`, those with a
         price only, in order: read from the tile's block of remembered prices, once per names tuple and tile until the memory is written to."""

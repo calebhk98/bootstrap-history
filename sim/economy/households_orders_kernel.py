@@ -15,7 +15,9 @@ from .opening_demand_kernel import (K_BAND, K_CASH_SHARE, K_CUT, K_DRAWDOWN, K_F
                                     K_WEALTH_TARGET, NF_HAS_FLOOR, NF_PIDX, NF_QUALITIES, NF_SUB, NI_ROW0, NI_ROW1, RF_CEIL, RF_LIFE, RF_PRICE,
                                     RF_SHARE, RI_GOOD, RI_UNIT, SF_LIFE, SF_PRICE, SF_WEIGHT, V_FLOORS, V_PIDX, V_SFLOORS, V_STOTALS, V_TOTALS, W_AFF,
                                     W_BUDGET, W_CAP, W_CEIL, W_COUNT, W_FLEX, W_FLOOR, W_ON, W_QTY, W_SHARE, _add, _affordable, _need_units,
-                                    _remix, _resting_purse, _store_value_target, _total)
+                                    _resting_purse, _store_value_target, _total)
+from .opening_demand_kernel import RF_EFFECT, RF_LIMIT, RF_QUALITY, _remix as _remix_unlimited
+from .priced_need_kernel import limit_shares, price_ceilings, units_per_money
 
 # template ints (one row per basket)
 TM_NEED0 = 0
@@ -68,10 +70,46 @@ CA_REAL_RATE = 2
 CA_PLAN = 3           # 1.0 when the cohort has a store plan (store goods and a rate)
 CA_FLOOR_COST = 4
 CA_COUNT = 5
+# row scratch of the share-limit search, after the opening kernel's columns
+X_PRICED = W_COUNT          # 1.0 on every packed row (a packed row is a priced good)
+X_UNITS = W_COUNT + 1       # need units each good meets at the mix
+X_FIXED = W_COUNT + 2       # the units a good is fixed at once limited
+X_FLAGGED = W_COUNT + 3     # 1.0 once a good is fixed
+X_COUNT = W_COUNT + 4
 # per good
 G_FLOW = 0
 G_SMOOTH = 1
 G_COUNT = 2
+
+
+@njit
+def _remix(n, r0, r1, reach, exponent, row_floats, row_scratch, pidx, partials):
+    """need_basket.with_quality_reach for one need: the opening kernel's re-mix, then the share limits' search
+    (need_basket.limited_shares) when a good of the need has a limit; the mix is left in `row_scratch[:, W_SHARE]` and
+    `[:, W_CEIL]` and the need's price index in `pidx`."""
+    share = row_scratch[:, W_SHARE]
+    limited = False
+    for r in range(r0, r1):
+        if row_floats[r, RF_LIMIT] == row_floats[r, RF_LIMIT]:
+            limited = True
+    if not limited:
+        _remix_unlimited(n, r0, r1, reach, exponent, row_floats, share, row_scratch[:, W_CEIL], pidx, partials[0])
+        return
+    count = 0
+    for r in range(r0, r1):
+        row_scratch[r, X_PRICED] = 1.0
+        valued = row_floats[r, RF_EFFECT] * row_floats[r, RF_QUALITY] ** reach
+        share[r] = (row_floats[r, RF_PRICE] / valued) ** exponent
+        count = _add(partials[0], count, share[r])
+    power = _total(partials[0], count)
+    for r in range(r0, r1):
+        share[r] = share[r] / power
+    prices, effects, priced = row_floats[:, RF_PRICE], row_floats[:, RF_EFFECT], row_scratch[:, X_PRICED]
+    per_money = units_per_money(r0, r1, prices, effects, priced, share, partials[0])
+    limit_shares(r0, r1, prices, effects, row_floats[:, RF_LIMIT], priced, share, per_money, row_scratch[:, X_UNITS], row_scratch[:, X_FIXED],
+                 row_scratch[:, X_FLAGGED], partials[0], partials[1])
+    pidx[n] = 1.0 / units_per_money(r0, r1, prices, effects, priced, share, partials[0])
+    price_ceilings(r0, r1, prices, effects, priced, row_scratch[:, W_CEIL])
 
 
 @njit
@@ -172,8 +210,7 @@ def _cohort(c, smooth_rise, constants, cohort_floats, cohort_ints, template_ints
             if reach > 0.0:
                 for n in range(n0, n1):
                     if need_floats[n, NF_QUALITIES] > 0.0:
-                        _remix(n, need_ints[n, NI_ROW0], need_ints[n, NI_ROW1], reach, exponent, row_floats, row_scratch[:, W_SHARE], row_scratch[:, W_CEIL],
-                               need_scratch[:, V_PIDX], partials[0])
+                        _remix(n, need_ints[n, NI_ROW0], need_ints[n, NI_ROW1], reach, exponent, row_floats, row_scratch, need_scratch[:, V_PIDX], partials)
             _smoothed(n0, n1, people, provisional, floor_cost, constants, need_floats, need_ints, row_floats, row_ints, row_scratch, need_scratch,
                       good_scratch, partials[0])
         count = 0
@@ -215,7 +252,7 @@ def _cohort(c, smooth_rise, constants, cohort_floats, cohort_ints, template_ints
     if reach > 0.0:
         for n in range(n0, n1):
             if need_floats[n, NF_QUALITIES] > 0.0:
-                _remix(n, need_ints[n, NI_ROW0], need_ints[n, NI_ROW1], reach, exponent, row_floats, share, ceil, pidx, partials[0])
+                _remix(n, need_ints[n, NI_ROW0], need_ints[n, NI_ROW1], reach, exponent, row_floats, row_scratch, pidx, partials)
     _need_units(n0, n1, people, spending - floor_cost, need_floats, pidx, floors, totals, partials[0])
     scale = 1.0
     if expected > 0.0 and spending > 0.0:
@@ -337,7 +374,7 @@ def year_orders(smooth_rise, constants, cohort_floats, cohort_ints, template_int
     """Every cohort's goods orders for the year as arrays: `row_out` (a bid on each need-good row: on, floor, flexible quantity,
     budget after the plot's cut, price cap), `store_out` (each store good's bid budget and flexible quantity, and what is held
     beyond the durables in use), `cohort_out` (the savings left to lend, the wealth the store is judged on, the real rate)."""
-    row_scratch = np.zeros((row_floats.shape[0], W_COUNT))
+    row_scratch = np.zeros((row_floats.shape[0], X_COUNT))
     need_scratch = np.zeros((need_floats.shape[0], 5))
     good_scratch = np.zeros((good_count, G_COUNT))
     partials = np.zeros((4, 64))
