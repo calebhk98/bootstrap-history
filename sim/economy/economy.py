@@ -22,7 +22,7 @@ from .mint_labour import close_year as close_mint_year, mint_agent
 from .money_audit import MoneyAudit, year_report
 from .flow_rates import flow_imbalance
 from .entry_year import close_idle_producers, open_entrants, restake_owners
-from . import capital_year, household_hours_year, household_work_year, land_bid_year, land_lease_year, lend_requests
+from . import capital_year, household_offers_year, land_bid_year, land_lease_year, lend_requests
 from .households_own import (hours_for_own_plan, own_production, own_production_options, plot_hectares)
 from . import flight_step, households_cohort, trade_wages
 from .labour_inputs import labour_context
@@ -361,15 +361,14 @@ class Economy:
             tile = self.setup.tiles.get(cohort.tile)
             plan[cohort_id] = hours_for_own_plan(cohort, options, tile.fertility if tile else 0.0,
                                                  self.setup.recipes, self.setup.land_per_run, held.get(cohort_id, 0.0))
-        self._work_hours = household_work_year.decide(self.setup, self.record, view, everyone)
+        self._work_hours = household_offers_year.decide(self.setup, self.record, view, everyone)
         return plan, self._work_hours
 
     def _hour_supply(self, everyone, view) -> HourSupply:
         """The hours households sell as a schedule against the wage (labour_supply.py)."""
-        records = everyone.objects()      # the household readers below take records; the supply takes the rows
-        plan, work = self._fixed_home_hours(records, view)
-        plot = household_hours_year.plot_parameters_by_cohort(self.setup, self.record, view, records, self.own_plot_options(),
-                                                             self.hectares_held())
+        plan, work = self._fixed_home_hours(everyone, view)
+        plot = household_offers_year.plot_parameters_by_cohort(self.setup, self.record, view, everyone, self.own_plot_options(),
+                                                              self.hectares_held())
         faced = everyone.faced_wages(view.wage, trade_wages.faced_wage)
         return HourSupply(everyone, plan, work, {}, faced, plot_parameters=plot)
 

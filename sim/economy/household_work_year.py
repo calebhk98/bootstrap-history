@@ -167,6 +167,11 @@ def work_terms(setup, record, view, cohort: Cohort, offers: Sequence[LabourOffer
         [(offer.hours, trade_wages.faced_wage(view.wage(offer.trade, offer.area), offer.reservation_wage)
           * sold_share_at(record, offer.trade, offer.area, expected.get((offer.trade, offer.area), 1.0)))
          for offer in mine])
+    return work_terms_at(setup, record, view, cohort, value)
+
+
+def work_terms_at(setup, record, view, cohort: Cohort, value: float) -> Tuple[float, float, float, Tuple[str, ...]]:
+    """`work_terms` for a cohort whose own hour is worth `value` (`households_work.hour_value` over its offers)."""
     milled, ground = grinding_plan(setup, record, view, cohort, value)
     needed = households_work.hours_needed(cohort.people, setup.household_work, has_hearth(record, cohort), ground)
     wage_price = trade_wages.wage_in_view(setup, view, setup.servant_trade, labour_area(cohort.tile))    # a buyer of servants pays what an employer is billed
@@ -182,6 +187,11 @@ def cohort_plan(setup, record, view, cohort: Cohort, offers: Sequence[LabourOffe
     if not setup.household_work:
         return 0.0, 0.0, ()
     value, needed, price, milled = work_terms(setup, record, view, cohort, offers, expected, mine)
+    return planned_hours(needed, value, price, service_price_floor, milled)
+
+
+def planned_hours(needed: float, value: float, price: float, service_price_floor: float, milled: Tuple[str, ...]):
+    """(hours hired, hours done itself, grains bought milled) from the terms of `work_terms`."""
     hired = households_work.hired_hours(needed, value, max(price, service_price_floor))
     return hired, households_work.own_hours(needed, hired), milled
 
