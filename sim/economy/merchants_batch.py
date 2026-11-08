@@ -25,14 +25,23 @@ def search_many(route: RoutePass, expected: np.ndarray, home_tiles: Sequence[str
         return []
     news = np.stack([book.news_current(carriage, tile) for tile in home_tiles])
     seen = np.where(np.isnan(expected), np.where(news, route.view_prices, 0.0), expected)
+    merchants = len(home_tiles)
+    stored = [np.empty(4096, np.int64), np.empty(4096, np.int64)] + [np.empty(4096, np.float64) for _column in range(4)]
+    count = 0
+    block_start = np.zeros((merchants, len(book.goods)), np.int64)
+    block_count = np.zeros((merchants, len(book.goods)), np.int64)
+    redo = np.ones((merchants, len(book.goods)), np.bool_)
     while True:
-        (counts, good, source, destination, rank, price_here, outlay, ceiling, missing) = merchants_batch_kernel.search_merchants(
-            seen, book.slot_base, book.area_count, book.pair_base, book.order_base, book.cost_flat, book.years_flat,
-            book.id_order_flat, book.id_rank_flat, book.spoilage, book.unit_mass_kg, float(interest_rate), float(margin_share),
-            KILOGRAMS_PER_TONNE)
+        (*stored, count, missing, dirty) = merchants_batch_kernel.search_blocks(
+            seen, redo, book.slot_base, book.area_count, book.pair_base, book.order_base, book.cost_flat, book.nearest_flat, book.years_flat,
+            book.id_order_flat, book.spoilage, book.unit_mass_kg, float(interest_rate), float(margin_share), KILOGRAMS_PER_TONNE,
+            *stored, count, block_start, block_count)
         if not missing.any():
             break
+        redo = dirty
         book.fill_years(carriage, missing)
+    (counts, good, source, destination, rank, price_here, outlay, ceiling) = merchants_batch_kernel.sorted_rows(
+        book.area_count, book.order_base, book.id_rank_flat, *stored, block_start, block_count)
     source_slot = book.slot_base[good] + source
     destination_slot = book.slot_base[good] + destination
     ends = np.cumsum(counts)
