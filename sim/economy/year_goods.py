@@ -121,24 +121,21 @@ def clear_goods(setup, record, view, area_map, order_book, plans, ledger: YearLe
             done.update(turn)
             _produce_and_offer(setup, record, view, turn, plans, in_kind, orders, ledger, offering)
         good_id = record.book.good_ids.find(good)
-        cleared = goods_good_clear.clear_good(context, good, good_id) if good_id is not None else []
+        cleared = goods_good_clear.clear_good(context, good, good_id) if good_id is not None else goods_good_clear.GoodClearing.empty()
         kept = market_curves.kept_areas(area_map, setup.port_tile, (setup.capital_tile, *watched_tiles), good)
         answer = goods_settle.settle_good(record, ledger, cleared, good, plant_makers)
         goods_settle.note_clearings(ledger, cleared, answer, memory_names, metal)
-        idle = goods_settle.idle_years(record.memory, cleared) if cleared else []
-        last_prices = goods_settle.last_prices(record.memory, cleared)
+        idle = goods_settle.idle_years(record.memory, cleared) if len(cleared) else []
         first_row = year_markets.claim(len(cleared))
-        wanted = []
-        for place, (each, entry) in enumerate(zip(cleared, answer)):
-            key = memory_names[each.market]
-            wanted.append(each.wanted if each.wanted is not None else wanted_in_round(each.bids, each.offers, each.result))
+        for place, entry in enumerate(answer):
+            each = cleared[place]
             left_markets[(good, each.area)] = goods_respend_year.LeftMarket(
-                each.bids, each.result, each.offers_left, None, entry[0], wanted[-1], 0, entry[1], each.rows, year_markets, first_row + place)
+                each.bids, each.result, each.offers_left, None, entry[0], 0.0, 0, entry[1], each.rows, year_markets, first_row + place)
             if each.area in kept:
-                record.goods.curves[key] = (market_curves.summarize(*each.objects()) if each.rows is None else
+                record.goods.curves[memory_names[each.market]] = (market_curves.summarize(*each.objects()) if each.rows is None else
                                             market_curves_rows.of_rows(orders, each.rows.bid_array, each.rows.offer_array))
-        year_markets.fill(first_row, [entry[0] for entry in answer], wanted, [each.result.offered_at_price for each in cleared],
-                          [entry[0] for entry in answer], idle, [math.nan if price is None else price for price in last_prices])
+        delivered = [entry[0] for entry in answer]
+        year_markets.fill(first_row, delivered, cleared.wanted, cleared.offered, delivered, idle, goods_settle.last_prices(record.memory, cleared))
     goods_respend_year.respend(setup, record, view, ledger, left_markets,
                                lambda cohort: cohort_basket(setup, record, cohort), orders)
     block = ledger.year_bids = year_bids.build(left_markets)     # demand over the same rounds as the traded quantity, as one table

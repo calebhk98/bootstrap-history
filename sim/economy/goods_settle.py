@@ -14,10 +14,10 @@ import numpy
 
 from . import settlement
 from .goods_idle_years import note_idle_years as note_idle_years_kernel
+from .goods_good_clear import TABLE_TRADED, TABLE_UNTRADED
 from .goods_table_results import TableClearing
 from .settlement_ids import SettledByIds, settle_by_ids
 from .year_ledger_tables import SALES_PURPOSE
-from .goods_year_results import ArrayClearing
 
 
 class BoughtColumns:
@@ -49,19 +49,19 @@ class BoughtColumns:
         return True
 
 
-def settle_good(record, ledger, cleared: list, good: str, plant_makers: Dict[str, list]) -> List[tuple]:
-    """Settle the traded markets of `cleared` on the book and note them in the ledger; returns per market (goods delivered,
+def settle_good(record, ledger, cleared, good: str, plant_makers: Dict[str, list]) -> List[tuple]:
+    """Settle the traded markets of `cleared` (a `GoodClearing`) on the book and note them in the ledger; returns per market (goods delivered,
     `bought`). `plant_makers` maps a good to the producers whose plant is built from it (`ledger.note_settlement`'s `plant_goods`)."""
     book = record.book
-    slots = [position for position, each in enumerate(cleared) if each.result.quantity > 0.0]
-    results = [cleared[position].result for position in slots]
-    answer = [(0.0, {}) for _each in cleared]     # per market (goods delivered, bought, units to the mint by (seller, tile) if any)
-    if not results:
+    slots = numpy.flatnonzero(cleared.quantity > 0.0).tolist() if len(cleared) else []
+    answer = [(0.0, {}) for _each in range(len(cleared))]     # per market (goods delivered, bought, units to the mint by (seller, tile) if any)
+    if not slots:
         return answer
-    if all(type(result) is TableClearing and result.batch is results[0].batch for result in results):
-        settled = settle_by_ids(book, results[0].batch, numpy.array([result.market for result in results], dtype=numpy.int64),
-                                results[0].currency, good, "sale of %s" % good, ledger.import_accounts, ledger.export_accounts)
+    if (cleared.way[slots] == TABLE_TRADED).all():
+        settled = settle_by_ids(book, cleared.batch, cleared.slots[slots], cleared.context.setup.currency_id, good, "sale of %s" % good,
+                                ledger.import_accounts, ledger.export_accounts)
         return _noted_by_ids(book, ledger, good, plant_makers, slots, answer, settled)
+    results = [cleared.result(position) for position in slots]
     plant_goods = {producer: {good} for producer in plant_makers.get(good, ())}
     done = iter(settlement.settle_goods_many(book, results, ledger.import_accounts, ledger.export_accounts))
     for position in slots:
@@ -122,40 +122,42 @@ def _note_mint_takes(book, settled: SettledByIds, slots: list, answer: list) -> 
             answer[position] = (*answer[position], takes)
 
 
-def note_clearings(ledger, cleared: list, answer: list, memory_names: list, metal: Optional[str] = None) -> None:
-    """`YearLedger.note_clearing` of every market in order: the round (market, quantity, price, goods moved) added to the ledger's
-    rounds in one call, the watchers' buy fills, and, for a market of the coin `metal` (the good a struck coin's mint buys), its clearing
-    with what its settlement delivered to the mint, which `mint_price` reads; no other market keeps its `ClearingResult`."""
-    if not cleared:
+def note_clearings(ledger, cleared, answer: list, memory_names: list, metal: Optional[str] = None) -> None:
+    """`YearLedger.note_clearing` of every market of `cleared` (a `GoodClearing`) in order: the round (market, quantity, price, goods moved)
+    added to the ledger's rounds in one call, the watchers' buy fills, and, for a market of the coin `metal` (the good a struck coin's mint
+    buys), its clearing with what its settlement delivered to the mint, which `mint_price` reads; no other market keeps its `ClearingResult`."""
+    if not len(cleared):
         return
     tables = ledger.tables
     numbers = tables.markets.goods_numbers
-    markets, quantities, prices, moved = [], [], [], []
+    good = cleared.good
+    markets = []
+    for each in cleared.market.tolist():
+        number = numbers.get(memory_names[each])
+        markets.append(tables.market_number(good, cleared.areas[len(markets)]) if number is None else number)
+    if metal is not None and good == metal:
+        for place, entry in enumerate(answer):
+            ledger.mint_takes.append((cleared.result(place), entry[2] if len(entry) > 2 else {}))
     watchers = ledger.fill_watchers
-    watched_cumulative = {}
-    for each, entry in zip(cleared, answer):
-        result = each.result
-        if metal is not None and result.good == metal:
-            ledger.mint_takes.append((result, entry[2] if len(entry) > 2 else {}))
-        key = memory_names[each.market]
-        number = numbers.get(key)
-        markets.append(tables.market_number(result.good, result.area) if number is None else number)
-        quantities.append(result.quantity)
-        prices.append(numpy.nan if result.price is None else result.price)
-        moved.append(entry[0])
-        if watchers is not None and type(result) is TableClearing:
-            if _watched_buys(result, watchers, watched_cumulative):
-                for agent, fills in result.bought_by(watchers).items():
-                    ledger.buy_fills.setdefault(agent, []).extend(fills)
-        elif watchers is not None and isinstance(result, ArrayClearing):
-            for agent, fills in result.bought_by(watchers).items():
-                ledger.buy_fills.setdefault(agent, []).extend(fills)
-        else:
-            for fill in result.fills:
-                if fill.side == "buy" and (watchers is None or fill.agent in watchers):
+    if watchers is not None:
+        watched_cumulative = {}
+        for place in numpy.flatnonzero(cleared.way != TABLE_UNTRADED).tolist():
+            if cleared.way[place] == TABLE_TRADED:
+                result = cleared.result(place)
+                if _watched_buys(result, watchers, watched_cumulative):
+                    for agent, fills in result.bought_by(watchers).items():
+                        ledger.buy_fills.setdefault(agent, []).extend(fills)
+                continue
+            for fill in cleared.result(place).fills:
+                if fill.side == "buy" and fill.agent in watchers:
                     ledger.buy_fills.setdefault(fill.agent, []).append(fill)
-    ledger.note_round_rows(numpy.array(markets, dtype=numpy.int64), numpy.array(quantities, dtype=float), numpy.array(prices, dtype=float),
-                           numpy.array(moved, dtype=float))
+    else:
+        for place in numpy.flatnonzero(cleared.way != TABLE_UNTRADED).tolist():
+            for fill in cleared.result(place).fills:
+                if fill.side == "buy":
+                    ledger.buy_fills.setdefault(fill.agent, []).append(fill)
+    ledger.note_round_rows(numpy.array(markets, dtype=numpy.int64), cleared.quantity, cleared.price,
+                           numpy.array([entry[0] for entry in answer], dtype=float))
 
 
 def _watched_buys(result: TableClearing, watchers, kept: dict) -> bool:
@@ -169,23 +171,17 @@ def _watched_buys(result: TableClearing, watchers, kept: dict) -> bool:
     return counts is not False and counts[batch.bid_ptr[result.market + 1]] > counts[batch.bid_ptr[result.market]]
 
 
-def idle_years(memory, cleared: list) -> List[int]:
-    """`goods_good_clear.note_idle_years` of every market in order: the years each lacked bids or offers before this year, added."""
+def idle_years(memory, cleared) -> List[int]:
+    """`goods_good_clear.note_idle_years` of every market of `cleared` in order: the years each lacked bids or offers before this year, added."""
     tables = memory.tables
     table = tables.goods_table
     before = note_idle_years_kernel(
         table.years_without_bids, table.years_without_offers, table.held, table.order_years_without_bids,
-        table.order_years_without_offers, tables.next_order, tables.member_count,
-        numpy.array([each.market for each in cleared], dtype=numpy.int64),
-        numpy.array([each.has_offers for each in cleared], dtype=numpy.bool_),
-        numpy.array([each.has_units for each in cleared], dtype=numpy.bool_),
-        numpy.array([each.has_funded_bid for each in cleared], dtype=numpy.bool_))
+        table.order_years_without_offers, tables.next_order, tables.member_count, cleared.market, cleared.has_offers, cleared.has_units,
+        cleared.has_funded_bid)
     return before.tolist()
 
 
-def last_prices(memory, cleared: list) -> List[Optional[float]]:
-    """The remembered price of each market (None where it has none), read from the memory's price column in one pass."""
-    if not cleared:
-        return []
-    figures = memory.tables.goods_table.price[numpy.array([each.market for each in cleared], dtype=numpy.int64)].tolist()
-    return [None if figure != figure else figure for figure in figures]
+def last_prices(memory, cleared) -> numpy.ndarray:
+    """The remembered price of each market of `cleared` (NaN where it has none), read from the memory's price column in one pass."""
+    return memory.tables.goods_table.price[cleared.market] if len(cleared) else numpy.zeros(0)
