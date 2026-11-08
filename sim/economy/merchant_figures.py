@@ -31,7 +31,19 @@ def market_name(key: Key) -> str:
 
 
 class MarketFigures(MutableMapping):
-    """One figure per goods market, in a column; see the module docstring."""
+    """One figure per goods market, in a column; see the module docstring. A subclass keyed otherwise than by (good, area id) replaces
+    `name_of_key` and `key_of_name` (`goods_market_column.MarketColumn`: keyed by the market's name)."""
+
+    @staticmethod
+    def name_of_key(key) -> str:
+        """The market's name (`good|area`) of a key of this mapping."""
+        return market_name(key)
+
+    @staticmethod
+    def key_of_name(name: str):
+        """The key of this mapping of a market's name."""
+        good, _separator, area = name.partition(KEY_SEPARATOR)
+        return (good, area)
 
     def __init__(self, tables: Optional[MarketTables] = None, items: Iterable = ()) -> None:
         self._tables = tables
@@ -39,7 +51,7 @@ class MarketFigures(MutableMapping):
         pairs = [(key, figure) for key, figure in (items.items() if isinstance(items, Mapping) else items) if figure is not None]
         if tables is None:
             self._numbering = self._column = None
-            self._pending = ([market_name(key) for key, _figure in pairs], [figure for _key, figure in pairs])
+            self._pending = ([self.name_of_key(key) for key, _figure in pairs], [figure for _key, figure in pairs])
         else:
             self._start(tables)
             self.update(pairs)
@@ -152,13 +164,13 @@ class MarketFigures(MutableMapping):
         """Hold exactly these figures."""
         held = [(key, figure) for key, figure in (items.items() if isinstance(items, Mapping) else items) if figure is not None]
         if self._tables is None:
-            self._pending = ([market_name(key) for key, _figure in held], [figure for _key, figure in held])
+            self._pending = ([self.name_of_key(key) for key, _figure in held], [figure for _key, figure in held])
             return
         self._current()[:] = numpy.nan
         self.update(held)
 
     def _row(self, key: Key) -> Optional[int]:
-        return self._chosen().goods_numbers.get(market_name(key))
+        return self._chosen().goods_numbers.get(self.name_of_key(key))
 
     def get(self, key, default=None):
         column = self._current()
@@ -193,7 +205,7 @@ class MarketFigures(MutableMapping):
             if figure is None:
                 removed.append(key)
             else:
-                names.append(market_name(key))
+                names.append(self.name_of_key(key))
                 figures.append(figure)
         self._chosen()
         for key in removed:
@@ -209,8 +221,7 @@ class MarketFigures(MutableMapping):
         rows = self._present_rows().tolist()
         names = self._numbering.name_list
         for row in rows:
-            good, _separator, area = names[row].partition(KEY_SEPARATOR)
-            yield (good, area)
+            yield self.key_of_name(names[row])
 
     def __len__(self) -> int:
         return int(self._present_rows().size)

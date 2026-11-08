@@ -4,7 +4,6 @@ What `goods_year_batch.clear_markets` built from lists of `Bid` and `Offer`, bui
 market in seller-and-tile order, its bids in clearing order (priority, buyer, tile; ties by arrival), the demand schedules
 packed per market (`goods_market_kernels.pack_demand_many`), and the per-market figures the kernel reads (market size,
 lending rate, spoilage, token minimum price). The rows are cut by market with `offer_ptr` and `bid_ptr`."""
-import math
 from dataclasses import dataclass
 
 import numpy
@@ -105,11 +104,10 @@ def market_figures(context, market_ids, good: str):
     price, each NaN where there is none."""
     tables = context.orders.memory_tables
     goods_table = tables.goods_table
-    names, unmet = tables.goods_markets.name_list, context.record.goods.unmet
+    unmet = context.record.goods.unmet.take(market_ids)
     last_price = goods_table.price[market_ids]
     usual = goods_table.volume_weight[market_ids]
-    size = numpy.array([math.nan if usual[place] != usual[place] else usual[place] + unmet.get(names[market], 0.0)
-                        for place, market in enumerate(market_ids.tolist())], dtype=numpy.float64)
+    size = usual + numpy.where(numpy.isnan(unmet), 0.0, unmet)      # NaN where the market has no usual volume
     rate = numpy.array([context.rate_in(context.orders.area_name_of_market(market)) for market in market_ids.tolist()],
                        dtype=numpy.float64)
     return size, rate, last_price

@@ -5,6 +5,7 @@ QUICK_TOPIC = True
 import types
 import unittest
 
+from sim.tests.goods_fixtures import goods_on
 from sim.economy import year_goods
 from sim.book import Book
 from sim.economy.market_memory import MarketMemory, market_key
@@ -20,7 +21,7 @@ def one_year(memory, book, bids, offers):
     memory.rates.setdefault(CURRENCY, 0.0)      # the rate the making cost is worked at; the memory holds one for the economy's own currency
     setup = types.SimpleNamespace(recipes={}, tax_forms=[], currency_id=CURRENCY, opening_prices={"brass": 4.0},
                                   specs={}, trades={}, state_agent="state", port_tile=None, capital_tile=None)
-    record = types.SimpleNamespace(producers={}, cohorts={}, memory=memory, currency=CurrencySpec(CURRENCY, "fiat", None, 0.0, None), book=book, goods=types.SimpleNamespace(volumes={}, unsold={}, unmet={}))
+    record = types.SimpleNamespace(producers={}, cohorts={}, memory=memory, currency=CurrencySpec(CURRENCY, "fiat", None, 0.0, None), book=book, goods=goods_on(memory))
     order_book = {("brass", "area"): (list(bids), list(offers))}
     year_goods.clear_goods(setup, record, None, None, order_book, {}, YearLedger())
 

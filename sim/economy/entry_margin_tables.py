@@ -73,12 +73,10 @@ def _streaks_in(costs, record) -> np.ndarray:
     index = costs.arrays.area_index
     grid = np.zeros((len(costs.goods.ids), max(1, len(index.areas.ids))), dtype=np.int64)
     good_rows, area_columns = market_cells(record.memory, costs.goods, index)
-    numbers = record.memory.tables.goods_markets.numbers
-    kept = record.goods.margin_years
-    rows = np.fromiter((numbers.get(key, -1) for key in kept), dtype=np.int64, count=len(kept))
-    values = np.fromiter(kept.values(), dtype=np.int64, count=len(kept))
-    found = (rows >= 0) & (rows < len(good_rows))
-    found[found] = (good_rows[rows[found]] >= 0) & (area_columns[rows[found]] >= 0)
+    streak = record.goods.margin_years.take(np.arange(len(good_rows), dtype=np.int64))
+    rows = np.flatnonzero(~np.isnan(streak))
+    values = streak[rows].astype(np.int64)
+    found = (good_rows[rows] >= 0) & (area_columns[rows] >= 0)
     grid[good_rows[rows[found]], area_columns[rows[found]]] = values[found]
     return grid
 

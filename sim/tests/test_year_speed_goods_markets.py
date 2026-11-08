@@ -20,6 +20,7 @@ from dataclasses import replace
 
 import numpy as np
 
+from sim.tests.goods_fixtures import goods_on
 from sim.economy import goods_order_book, goods_year_batch, year_goods, seller_offers, unsold_search
 from sim.economy.inventory import holding_reservation
 from sim.economy.market_memory import market_key
@@ -41,7 +42,7 @@ def near(left, right):
 def with_markets(seed):
     setup, record, view, _ledger, area_map = economy_of(seed)
     setup.basket_for = lambda tile: types.SimpleNamespace(substitution=1.0 + (hash(tile) % 3) * 0.7)
-    record.goods = types.SimpleNamespace(unmet={})
+    record.goods = goods_on(record.memory)
     rng = random.Random(seed)
     for producer_id in sorted(record.producers):
         if rng.random() < 0.25:      # a crowd of workshops

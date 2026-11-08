@@ -15,11 +15,14 @@ recipe's tile) and the capital charge. A market with no maker at all is entry_tr
 import math
 from typing import Dict, List, Mapping, Sequence, Set, Tuple
 
+import numpy
+
 from sim.constants import declare
 
 from . import year_bids
 from .entry import EntryPlan, UnmetDemand
 from .entry_bid_markets import makers_of, weigh
+from .goods_market_column import MarketColumn
 from .entry_trial import ENTRY_PRICE_MARGIN_SHARE, demand_at, reachable_capacity, recipes_by_cost, recipes_by_cost_many
 from .market_memory import market_key
 from .producers import OUTPUT_CHANGE_SHARE_PER_YEAR
@@ -54,8 +57,11 @@ def gap_at_entry_price(bids: Sequence[Bid], entry_price: float, price_now: float
 
 def keep_streaks(record, kept: Dict[str, int]) -> None:
     """`record.goods.margin_years` holds the streaks of `kept` (market key -> years) and no other market's: a market not weighed this year
-    starts its wait again. The dictionary is changed in place."""
+    starts its wait again. The column (or dictionary) is changed in place."""
     margin_years = record.goods.margin_years
+    if isinstance(margin_years, MarketColumn):
+        margin_years.replace_rows(margin_years.rows_of(list(kept)), numpy.array(list(kept.values()), dtype=numpy.float64))
+        return
     for key in [key for key in margin_years if key not in kept]:
         del margin_years[key]
     margin_years.update(kept)
