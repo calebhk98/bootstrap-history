@@ -146,9 +146,20 @@ read them, which is the prototype's lesson again. `python3 sim/simulator.py year
    arrays; the year ledger as tables. Each keeps its present Python methods as thin wrappers so callers not yet converted
    still work, and adds whole-table kernels for converted callers.
 2. **Goods and labour on the tables:** orders written by the kernels that compute them, clearing and settlement reading
-   and writing tables, no per-item objects from plans to the ledger. **Gate:** after this stage the warm-year instruction
-   count must be clearly below the stage's start; if it is not, stop and re-plan.
+   and writing tables, no per-item objects from plans to the ledger.
 3. **Close, then entry and credit** (variable-length searches and greedy queues; the smallest share of the year).
+4. **Every remaining reader in the year loop** reads the tables in blocks, and the per-item wrappers leave the year loop
+   (they stay only for the UI, the protocol, saves, mods and tests). The packages, each with its own files:
+   - labour readers in the economy (hours cleared, national wages, people by trade, flight, scaling);
+   - the goods unit's far end (goods settlement, the ledger's clearing notes, the memory's notes after clearing, the
+     respend pack, production moves);
+   - plans and the rare order sources (plan bids as rows, outlay room, land, mint, state, lending, merchants, carriers);
+   - entry, exit and credit (entry plans and siting, exits, loans as a table, the close's loan loop, worths);
+   - price and wage reads through the year view (priced needs, live input prices and wages, wage grids, kept figures);
+   - the phases outside the economy step (actors, government, theft, revolts, the year's accounts).
+
+The year is judged when the conversion is complete: a partial conversion is expected to cost more than it saves, since
+every unconverted reader pays the wrapper. Instruction counts after each merge are kept as progress, not as a gate.
 
 Every step keeps the game's rules: the year-time digest may move only by float order (`tools/measure/save_compare.py` on
 two-year saves shows dust only); a jump in a discrete value is traced before merging. Save and load round-trip
