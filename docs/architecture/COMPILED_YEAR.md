@@ -278,6 +278,33 @@ them); the watchers' buy fills are `Fill` objects (`bought_by`, only for markets
 on the rules over objects (a book edge selling, a good outside the year arrays); `producers.production_lines` and `producers.offers` are
 the rules over one producer; `ledger.hours_hired.get` is a per-producer view read.
 
+## Price and wage reads through the year view (stage 4, package)
+
+The year view's readers take a block of the market memory's tables where they asked `area_of` and `offered_price` or `wage` once per item.
+
+| Read | Block | Kernel |
+|---|---|---|
+| offered price of every good on a tile (`YearView.offered_prices_on`, `offered_prices_for`) | `price_grid.PriceGrid`: goods by tiles, through `year_arrays_memory.markets_by_good_tile`; NaN in the grid is "no price", the tile's block holds only goods that have one | `price_grid_kernels.offered_by_good_tile` |
+| remembered price of every good on a tile (`remembered_prices_on`, `present_prices_at`) | the same grid's second layer | the same kernel |
+| the one wage rule for trades by labour areas (`YearView.wage_rule_block`, `wage_rule_at`; `trade_wages.wage_in_view`, `year_arrays.wage_grid`) | `wage_block.wage_rule_block`; `WageRuleTable` keeps every trade of the setup in every tile's labour area | `wage_block_kernels.wage_rule_grid` over `labour_market_matrix` and `market_rows_of` |
+| national prices and wages, the notional volumes (`national_prices.remembered_columns`, `notional._traded_volumes`) | the goods and labour tables' columns in the stores' entry order (`MarketStore.rows`) | `market_column_kernels.add_in_order_by_group` |
+
+**When a grid is filled again.** A grid or table is refilled by the first read after the memory is written to: `price_grid.memory_stamp` is the
+write count of the memory (`written_stamp`), the count of writes through a store (`MarketTables.writes`, which every `prices[...] = ...`,
+`pop` and `clear` bumps, so a price written without `note_written` is still seen) and the numbering's generation. A new writer of a column
+that goes round the stores and the memory's methods must bump one of these. `PriceGrid.refreshes` and `WageRuleTable.refreshes` count the refills.
+
+**What a block read does not cover.** A good the area map holds no market for is answered "no price" only while the memory numbers no market for
+any such good (`EVERY_GOOD`); otherwise it is read by itself, as is a tile the area map does not hold (which refuses as before). The scalar
+getters (`price`, `offered_price`, `wage`, ...) stay for the screens, the protocol and callers that read one cell.
+
+Callers still reading one value at a time through the view: `producers.py` (`expected_price`, `paid_input_prices`, `live_input_prices_at`,
+`live_wages_at`), `year_goods.py`, `plan_year.py`, `year_goods_offer_rows.py`, `households_orders_pack.py`, `goods_respend_pack.py`,
+`entry_year.traded`, `households_store._store_weights` (offered and usual prices), `land_bid_year.py`, `state_budget.py`
+(`wage_in_view` callers there and in `location.py`, `mint_labour.py`, `year_close.py` already read the rule's table). Each reads a tile's block with `view.offered_prices_for(tile, goods)`, `view.remembered_prices_on(tile)` or
+`view.wage_rule_block(trades, labour_areas)`. Tests: `sim/tests/test_price_grid.py`, `test_wage_block.py`, `test_market_columns.py`.
+Measure with `python3 tools/measure/warm_year_profile.py SAVE OUT.prof` and look for calls to `area_of`, `offered_price` and `price_of`.
+
 ## The close on tables (stage 3)
 
 The close reads the book and the ledger with kernels, posts its dividends, wear, spoilage and consumption as posting tables, and

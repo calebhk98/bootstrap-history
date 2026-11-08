@@ -7,7 +7,8 @@ keeps its numbers (`state`, `from_state`). Row `r` of a table is market `r` of i
 rows in use as its numbering has names.
 
 The stores (`market_store.py`) and the kernels (`market_table_kernels.py`) work on `goods_table` and `labour_table`. Anything
-that replaces a table or a numbering (`install_goods_markets`, `load_state`) bumps `generation`, which cached readers compare."""
+that replaces a table or a numbering (`install_goods_markets`, `load_state`) bumps `generation`, and a write through a store bumps `writes`;
+cached readers compare both."""
 from typing import Dict, Iterable, List, Optional
 
 import numpy
@@ -44,6 +45,7 @@ class MarketTables:
         self.next_order = numpy.zeros(STORE_COUNT, dtype=numpy.int64)       # per store: the entry number the next market gets
         self.member_count = numpy.zeros(STORE_COUNT, dtype=numpy.int64)     # per store: how many markets are in it
         self.generation = 0
+        self.writes = 0          # bumped by every write to a figure through a store (`market_store.py`): a reader's copy of a column is stale when it changes
         self.rebind()
 
     def rebind(self) -> None:
