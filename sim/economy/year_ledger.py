@@ -71,6 +71,7 @@ class YearLedger(PostingNotes):
         self.labour_results: List[LabourResult] = []
         self.carried_in: Dict[Tuple[AgentId, str], float] = {}   # (carrier, source country): value at the source of what it carried into the home country (the tariff rides on it)
         self.bids_by_market: Dict[Tuple[GoodId, str], list] = {}  # (good, area): the year's bids
+        self.year_bids = None        # the same bids as one grouped table (`year_bids.YearBids`), made once the goods side has cleared
         self.import_accounts = import_accounts   # accounts whose sales are goods that crossed the border (customs)
         self.export_accounts = export_accounts   # accounts whose purchases leave over the border
         self.migrated_by_tile: Dict[str, float] = {}   # net working people the labour market moved, by tile

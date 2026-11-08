@@ -10,6 +10,7 @@ import math
 from typing import Dict, List, Optional, Tuple
 
 from . import currency, mint_price, market_curves, market_quote, producers, seller_cash, taxes
+from . import year_bids
 from . import goods_good_clear, goods_memory_notes, goods_production, goods_settle, goods_order_book, goods_respend_year, year_goods_offers
 from .goods_table_context import ClearingContext
 from .year_goods_offer_rows import OfferRows
@@ -128,8 +129,9 @@ def clear_goods(setup, record, view, area_map, order_book, plans, ledger: YearLe
                 record.goods.curves[key] = market_curves.summarize(*each.objects())
     goods_respend_year.respend(setup, record, view, ledger, left_markets,
                                lambda cohort: cohort_basket(setup, record, cohort), orders)
+    block = ledger.year_bids = year_bids.build(left_markets)     # demand over the same rounds as the traded quantity, as one table
     for market_id, market in left_markets.items():
-        ledger.bids_by_market[market_id] = market.market_bids()     # demand over the same rounds as the traded quantity
+        ledger.bids_by_market[market_id] = market.market_bids(block.index[market_id], block)
     _remember_markets(setup, record, left_markets, ledger, orders)
     _record_year_markets(record, ledger, left_markets)
 

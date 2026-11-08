@@ -12,13 +12,14 @@ from sim.book_apply import RULE_SINGLE
 
 from . import producer_table
 from .posting_sequence import post_in_order
-from . import credit, entry_kernels, entry_practice, location, ownership, practice, producer_exit, sites, unit_cost
+from . import credit, entry_kernels, entry_practice, location, ownership, practice, producer_exit, sites, unit_cost, year_bids
 from .entry_backed import unfilled_at_cost
+from .entry_bid_markets import makers_of, weigh
 from .entry_margin import margin_entry_plans
 from .entry_spare import idle_runs
 from .entrant_rent import site_rent_per_run
 from .entry_tables import EntryTables
-from .entry_trial import trial_entry_plans
+from .entry_trial import reachable_capacity, trial_entry_plans
 from .entry import (ENTRANT_OWNER_STAKE_SHARE, EntryPlan, UnmetDemand, entrant_loan, entry_plans, gap_beyond_spare,
                     producers_to_close, restake)
 from .producers import Producer, expected_output_prices, live_input_prices, live_wages
@@ -58,16 +59,18 @@ def year_plans(setup, record, view, area_map, unmet_by_market: Dict[Tuple[str, s
                 unmet[(good, area_id)] = UnmetDemand(good, area_id, area.anchor_tile, gap)
         siting = location.entry_siting(setup, record, view, area_map, carriage or _carriage(setup), costs)
         traded = _traded_volume(record, view, area_map)
+        block = year_bids.of(bids_by_market) if bids_by_market else None
         plans = entry_plans(setup.recipes, view, unmet, traded, siting,
-                            unfilled_at_cost(setup, record, view, area_map, bids_by_market, traded, costs),
+                            unfilled_at_cost(setup, record, view, area_map, block, traded, costs),
                             lambda recipe_id, tile: site_rent_per_run(setup, record, view, recipe_id, tile),
                             entry_practice.crews_of_recipe(record.producers), costs)
-        if bids_by_market:
+        if block is not None:
             planned = tuple((plan.good, view.area_of(plan.good, plan.tile)) for plan in plans)
             first_margin_plan = len(plans)
-            plans += margin_entry_plans(setup, record, view, area_map, bids_by_market, planned, siting, costs)
+            weighed = weigh(block, makers_of(setup.recipes), area_map, view, reachable_capacity(record, setup, costs))
+            plans += margin_entry_plans(setup, record, view, area_map, block, planned, siting, costs, weighed)
             planned += tuple((plan.good, view.area_of(plan.good, plan.tile)) for plan in plans[first_margin_plan:])
-            plans += trial_entry_plans(setup, record, view, area_map, bids_by_market, planned, siting, costs)
+            plans += trial_entry_plans(setup, record, view, area_map, block, planned, siting, costs, weighed)
     return plans
 
 
