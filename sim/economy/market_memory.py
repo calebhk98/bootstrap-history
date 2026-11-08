@@ -460,6 +460,14 @@ class YearView:
         grid = self._grid()
         return grid.on_tile(tile) if grid else None
 
+    def offered_price_matrix(self, tiles, names):
+        """`offered_prices_on(tile).prices` of each of `tiles` for each of `names`, as one (tile by good) matrix with NaN for no price
+        (`price_grid.PriceGrid.matrix`); None where the grid cannot answer for every tile and good (the caller reads them one at a time)."""
+        if self._stamp != _writes[0]:
+            self._current()
+        grid = self._grid()
+        return grid.matrix(tiles, names) if grid else None
+
     def offered_prices_for(self, tile: TileId, goods) -> Dict[GoodId, Optional[float]]:
         """`offered_price(good, area_of(good, tile))` for each of `goods`, read from the tile's block; a good outside the block (the area
         map has no market for it) is read by itself."""

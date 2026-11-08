@@ -14,6 +14,7 @@ from . import carried_book, households_basket, quiet_year
 from .home_scope import has_partners
 from .market_memory import KEY_SEPARATOR, YearView
 from .national_prices import national_prices, national_wages
+from .price_index_masks import country_price_mask, labour_area_mask
 from .setup import LABOUR_AREA_PREFIX, labour_area
 from .types import TileId
 
@@ -59,7 +60,7 @@ def wages_per_hour(economy, country: Optional[str]) -> Dict[str, float]:
     """The wage per hour of each trade over the country's labour areas (`national_prices.national_wages`)."""
     def compute():
         tiles = country_tiles(economy, country)
-        return national_wages(economy.record, keep=lambda key: _labour_key_in(key, tiles), keep_token=frozenset(tiles))
+        return national_wages(economy.record, keep_token=frozenset(tiles), keep_mask=lambda layout: labour_area_mask(layout, tiles))
     return dict(quiet_year.kept(economy, ("wages", country), compute))
 
 
@@ -100,14 +101,18 @@ def _prices(economy, country: Optional[str]) -> Dict[str, float]:
     if country is None:
         return national_prices(economy.record)
     tiles = country_tiles(economy, country)
+    token = (_Identity(economy.area_map), frozenset(tiles))
+    if hasattr(economy.area_map, "tile_table"):
+        table = economy.area_map.tile_table()
+        return national_prices(economy.record, keep_token=token, keep_mask=lambda layout: country_price_mask(layout, table, tiles))
     areas_of: Dict[str, Dict[str, Set[TileId]]] = {}
 
-    def touches(good: str, area: str) -> bool:
+    def touches(good: str, area: str) -> bool:      # an area map that is not an `AreaMap` (a test's stand-in)
         by_area = areas_of.get(good)
         if by_area is None:
             by_area = areas_of[good] = _area_tiles(economy, good)
         return area not in by_area or bool(by_area[area] & tiles)
-    return national_prices(economy.record, touches, keep_token=(_Identity(economy.area_map), frozenset(tiles)))
+    return national_prices(economy.record, touches, keep_token=token)
 
 
 def traded_volumes(economy, country: Optional[str]) -> Dict[str, float]:

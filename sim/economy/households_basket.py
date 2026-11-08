@@ -9,11 +9,11 @@ from typing import List
 from sim.world import need_basket
 from sim.world.need_basket import Basket, PricedNeed
 
+from .priced_need_prime import TILE_BASKET_KEY
 from .priced_reads import kept_need_prices, offered_prices_for
 from .protocols import MarketView
 from .types import TileId
 
-TILE_BASKET_KEY = ("food", True)     # the key of the tile's own basket (a cohort with a hearth and nothing hired) in the kept reads
 
 
 def need_prices(basket: Basket, view: MarketView, tile: TileId) -> List[PricedNeed]:

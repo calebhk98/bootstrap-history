@@ -50,6 +50,16 @@ class MarketLayout:
             self.masks[token] = mask
         return mask
 
+    def masked(self, mask_of: Callable[["MarketLayout"], np.ndarray], token: Hashable) -> np.ndarray:
+        """`mask_of(layout)`, the whole mask worked out as arrays, kept by token as `kept` does."""
+        if ("array", token) in self.masks:
+            return self.masks[("array", token)]
+        mask = mask_of(self)
+        if len(self.masks) >= KEPT_MASKS:
+            self.masks.clear()
+        self.masks[("array", token)] = mask
+        return mask
+
     def kept_keys(self, keep: Optional[Callable[[str], bool]], token: Optional[Hashable]) -> np.ndarray:
         """Which markets `keep(market_key)` accepts, kept by token as `kept` does."""
         if keep is None:

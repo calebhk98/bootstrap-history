@@ -61,6 +61,7 @@ def kept_need_prices(view, basket_of, tile, key):
     is kept like any read (so is each priced need, by need and tile), and the prices on a tile (the offered price in the area each good is bought in) are read once, as a block, for every
     basket priced there. A view without kept reads prices the basket every time."""
     from sim.world import need_basket
+    from .priced_need_prime import TILE_BASKET_KEY, asked_by, need_key, price_asked, pending_asks
     current = getattr(view, "_current", None)
     if current is None:
         from .households_basket import need_prices
@@ -71,18 +72,26 @@ def kept_need_prices(view, basket_of, tile, key):
         return reads[full_key]
     except KeyError:
         pass
+    basket = basket_of()
+    asked = asked_by(view) if key == TILE_BASKET_KEY else None
+    if asked is not None:       # the tiles' own baskets: asked on every tile after every write, so all are priced in one batch at the first miss
+        asked[(tile, key)] = basket
+        if "primed" not in reads:
+            reads["primed"] = True
+            pending = pending_asks(asked, reads)
+            if len(pending) > 1 and price_asked(view, reads, pending):
+                return reads[full_key]
     reader_for = reads.get(("prices_on", tile))
     if reader_for is None:
         reader_for = reads[("prices_on", tile)] = tile_price_reader(view, tile)
-    basket = basket_of()
     exponent = 1.0 - basket.substitution
     found = []
     for spec in basket.needs:     # a need priced on this tile is shared by every basket that holds the same need
-        need_key = ("priced_need", tile, spec, exponent)
+        each = need_key(tile, spec, exponent)
         try:
-            need = reads[need_key]
+            need = reads[each]
         except KeyError:
-            need = reads[need_key] = need_basket.priced_need(spec, exponent, reader_for(spec.goods))
+            need = reads[each] = need_basket.priced_need(spec, exponent, reader_for(spec.goods))
         if need is not None:
             found.append(need)
     reads[full_key] = found

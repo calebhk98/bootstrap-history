@@ -8,7 +8,7 @@ partition (log-scale buckets), so the map holds a few partitions, not one per go
 Imports only `sim.constants`, `sim.geography.api` and `sim.economy.types`.
 """
 import math
-from dataclasses import replace
+from dataclasses import dataclass, replace
 from typing import Dict, Iterable, List, Mapping, Tuple
 
 from sim.constants import declare
@@ -83,6 +83,18 @@ def carriage_unit(tile_ids: Tuple[TileId, ...], carriage: CarriageTable) -> floa
     return nearest[len(nearest) // 2]
 
 
+@dataclass(frozen=True, eq=False)
+class AreaTileTable:
+    """The area map as sorted arrays, for a kernel that asks which areas touch some tiles. An area id carries its partition's label, so
+    an area belongs to one partition and a good has the areas of its own partition only."""
+    goods: tuple              # every good the map holds markets for, sorted
+    good_partition: tuple     # per good: its partition's number
+    areas: tuple              # every area id of every partition, sorted
+    area_partition: tuple     # per area: its partition's number
+    entry_area: tuple         # per (area, tile) entry: the area's row in `areas`
+    entry_tile: tuple         # per (area, tile) entry: the tile id
+
+
 class AreaMap:
     """Market areas for a set of goods at current prices, shared by goods in one value bucket."""
 
@@ -108,6 +120,21 @@ class AreaMap:
 
     def goods(self) -> Tuple[GoodId, ...]:
         return tuple(sorted(self._bucket_of_good))
+
+    def tile_table(self) -> AreaTileTable:
+        """The areas of every partition with their tiles, as sorted tuples (`AreaTileTable`); worked out once, the map never changes."""
+        kept = self.__dict__.get("_tile_table")
+        if kept is None:
+            labels = sorted(self._partitions)
+            number = {label: position for position, label in enumerate(labels)}
+            goods = self.goods()
+            areas = sorted((area.area_id, number[label]) for label in labels for area in self._partitions[label])
+            row = {area_id: position for position, (area_id, _label) in enumerate(areas)}
+            entries = [(row[area.area_id], tile) for label in labels for area in self._partitions[label] for tile in area.tiles]
+            kept = self.__dict__["_tile_table"] = AreaTileTable(
+                goods, tuple(number[self._bucket_of_good[good]] for good in goods), tuple(area_id for area_id, _label in areas),
+                tuple(label for _area_id, label in areas), tuple(entry[0] for entry in entries), tuple(entry[1] for entry in entries))
+        return kept
 
     def tile_sets(self, good: GoodId) -> Dict[AreaId, set]:
         """Each market area of the good with its tiles as a set (none for a good with no market here)."""
