@@ -81,5 +81,51 @@ class StoreRoundTripsThroughThePlainSave(unittest.TestCase):
         self.assertEqual(list(loaded), ["producer:a", "producer:b"])
 
 
+class StoreWritesAndBlockReads(unittest.TestCase):
+    def test_enter_makes_the_row_a_producer_starts_with(self):
+        store = ProducerStore()
+        store.enter("producer:n", "owner:1", "baker", "tile:1", 2.0, 5.0, 0.9, 2, {"baker": 3.0})
+        self.assertEqual(store["producer:n"], Producer("producer:n", "owner:1", "baker", "tile:1", 2.0, yield_factor=0.9,
+                                                       expected_sales=5.0, workshops=2, crew_runs={"baker": 3.0}))
+
+    def test_set_fields_and_set_column_change_only_the_named_fields(self):
+        first, second = _producers()
+        store = ProducerStore({first.agent_id: first, second.agent_id: second})
+        store.set_fields("producer:b", capacity_runs=9.0, land_run_cap=None)
+        store.set_column("yield_factor", ["producer:a", "producer:gone"], [0.5, 0.7])
+        self.assertEqual(store["producer:b"].capacity_runs, 9.0)
+        self.assertIsNone(store["producer:b"].land_run_cap)
+        self.assertEqual(store["producer:b"].expected_prices, first.expected_prices)
+        self.assertEqual(store["producer:a"].yield_factor, 0.5)
+
+    def test_crews_are_grouped_by_recipe_in_id_order_or_entry_order(self):
+        first, second = _producers()
+        store = ProducerStore({first.agent_id: first, second.agent_id: second})
+        store.put(Producer("producer:c", "o", "baker", "t", 1.0, crew_runs={"smith": 1.0}))
+        by_id = store.crews_by_recipe()
+        self.assertEqual(by_id["baker"], [first.crew_runs, {"smith": 1.0}])
+        del store["producer:b"]
+        self.assertEqual(store.crews_by_recipe(in_id_order=False), {"miller": [{}], "baker": [{"smith": 1.0}]})
+
+    def test_a_reseat_puts_the_rows_in_id_order_and_a_clear_keeps_the_counters_going(self):
+        first, second = _producers()
+        store = ProducerStore({first.agent_id: first, second.agent_id: second})
+        store.seat_sorted()
+        self.assertEqual(list(store), ["producer:a", "producer:b"])
+        self.assertEqual(store["producer:b"], first)
+        before = store.version
+        store.clear()
+        self.assertGreater(store.version, before)
+        self.assertEqual(len(store), 0)
+
+    def test_the_exact_total_and_the_tiles_leave_out_a_producer_that_exited(self):
+        first, second = _producers()
+        store = ProducerStore({first.agent_id: first, second.agent_id: second})
+        del store["producer:a"]
+        self.assertEqual(store.exact_total("capacity_runs"), 3.0)
+        self.assertEqual(store.tiles_in_use(), ["tile:1"])
+        self.assertEqual(store.ids_on_tiles(lambda tile: tile == "tile:1"), ["producer:b"])
+
+
 if __name__ == "__main__":
     unittest.main()
