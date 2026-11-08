@@ -11,7 +11,7 @@ from typing import Dict, List, Optional, Tuple
 
 from . import (currency, mint_price, land_bid_year, carriage_fleet_book, carriage_wear, households, market_curves, market_quote, merchants, merchants_book, producers, seller_cash,
                state_budget, state_store, taxes, tool_wear)
-from . import goods_good_clear, goods_memory_notes, goods_settle, goods_order_book, goods_respend_year, households_cohort, year_goods_offers, households_orders_pack
+from . import goods_good_clear, goods_memory_notes, goods_production, goods_settle, goods_order_book, goods_respend_year, households_cohort, year_goods_offers, households_orders_pack
 from .goods_table_context import ClearingContext
 from .goods_order_tables import HOUSEHOLD
 from .year_goods_offer_rows import OfferRows
@@ -351,31 +351,18 @@ def _produce_and_offer(setup, record, view, producer_ids, plans, in_kind, order_
     """The producers whose turn it is make their output (their moves booked together), the state takes its tax in kind from
     what they made, and each offers what it holds. The producers do not touch one another's holdings, so booking in a batch
     is booking one at a time."""
-    book = record.book
-    made = []
-    moves_made = []
-    for producer_id in producer_ids:
-        plan = plans.get(producer_id)
-        if plan is not None and plan.runs > 0.0:
-            producer = record.producers[producer_id]
-            recipe = setup.recipes[producer.recipe_id]
-            held = {good: book.stock(producer_id, good, producer.tile) for good in recipe.inputs}
-            _runs, moves = producers.produce(producer, recipe, held, ledger.hours_hired.get(producer_id, {}), plan.runs)
-            moves_made.extend(moves)
-            ledger.note_output(producer_id, moves)
-            made.append(producer_id)
-    book.move_many(moves_made)
+    made = goods_production.produce(setup, record, producer_ids, plans, ledger)
     _tax_in_kind(setup, record, made, in_kind, ledger)
     money = setup.currency_id
     rate = own_rate(view, money) if producer_ids else None
+    held_outputs, cash_held, running = goods_production.turn_figures(setup, record, ledger, producer_ids)
     pending = []           # (producer, its offers, or None for the quick ones below, those as (good, quantity, price, spoilage))
     expected, spoilage, quantity, rows, shortfalls, pair_ptr = [], [], [], [], [], [0]
-    for producer_id in producer_ids:
+    for place, producer_id in enumerate(producer_ids):
         producer = record.producers[producer_id]
         recipe = setup.recipes[producer.recipe_id]
-        stock = {good: book.stock(producer_id, good, producer.tile) for good in recipe.outputs}
-        cash = book.balance(producer_id, money)
-        shortfall = seller_cash.shortfall_to_raise(producer.cash_target, cash, ledger.running_costs(producer_id))
+        stock = held_outputs[place]
+        shortfall = seller_cash.shortfall_to_raise(producer.cash_target, cash_held[place], running[place])
         keep = {good: recipe.inputs.get(good, 0.0) * producer.capacity_runs for good in recipe.outputs}
         held = _quick_outputs(setup, offering, producer, recipe, stock, keep) if offering is not None else None
         if held is None:

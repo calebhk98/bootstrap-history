@@ -502,9 +502,17 @@ def _input_bids(producer, recipe, view, runs, prices, budget_for_inputs, margin_
 def produce(producer: Producer, recipe: Recipe, inputs_held: Mapping[GoodId, float],
             hours_hired: Mapping[str, float], runs_planned: Optional[float] = None
             ) -> Tuple[float, List[GoodsMove]]:
-    """Runs achieved, with the goods moves that book them. The scarcest of inputs, hours, the plan and
-    the capacity sets how many runs go ahead (Leontief); the yield factor scales what comes out, not
-    what goes in. Tools are not an input that stops a run: a run short of its tool draws the recipe's next
+    """Runs achieved, with the goods moves that book them (`production_lines` made into `GoodsMove`s)."""
+    achieved, lines = production_lines(producer, recipe, inputs_held, hours_hired, runs_planned)
+    return achieved, [GoodsMove(*line) for line in lines]
+
+
+def production_lines(producer: Producer, recipe: Recipe, inputs_held: Mapping[GoodId, float],
+                     hours_hired: Mapping[str, float], runs_planned: Optional[float] = None
+                     ) -> Tuple[float, List[tuple]]:
+    """Runs achieved, with the goods moves that book them as (giver, receiver, good, tile, quantity, purpose) tuples. The scarcest
+    of inputs, hours, the plan and the capacity sets how many runs go ahead (Leontief); the yield factor scales what comes out,
+    not what goes in. Tools are not an input that stops a run: a run short of its tool draws the recipe's next
     tool (`tool_fallbacks`), then works by hand, and the extra hours that takes can lower the runs the hours
     hired allow."""
     recipe = practice.recipe_for(recipe, producer.crew_runs)
@@ -514,30 +522,29 @@ def produce(producer: Producer, recipe: Recipe, inputs_held: Mapping[GoodId, flo
     for trade, per_run in recipe.labour_hours.items():
         limit = min(limit, hours_hired.get(trade, 0.0) / per_run)
     limit = max(0.0, limit)
-    moves = []
+    lines = []
     if limit <= 0.0:
-        return 0.0, moves
+        return 0.0, lines
     draws, extra_hours = tool_fallback.draws(recipe, inputs_held, limit)
     for trade, extra in extra_hours.items():
         stretched = recipe.labour_hours[trade] * limit + extra
         if stretched > hours_hired.get(trade, 0.0):
             limit *= max(0.0, hours_hired.get(trade, 0.0) / stretched)
     if limit <= 0.0:
-        return 0.0, moves
+        return 0.0, lines
     if extra_hours:
         draws, extra_hours = tool_fallback.draws(recipe, inputs_held, limit)
     for good, per_run in recipe.hard_inputs_sorted:
         used = min(limit * per_run, inputs_held.get(good, 0.0))   # never more than held, to the last bit
-        moves.append(GoodsMove(producer.agent_id, EDGE_CONSUMPTION, good, producer.tile, used, "input"))
+        lines.append((producer.agent_id, EDGE_CONSUMPTION, good, producer.tile, used, "input"))
     for good, used in sorted(draws.items()):
         if used > 0.0:
-            moves.append(GoodsMove(producer.agent_id, EDGE_CONSUMPTION, good, producer.tile, used, "input"))
+            lines.append((producer.agent_id, EDGE_CONSUMPTION, good, producer.tile, used, "input"))
     achieved = limit * producer.yield_factor
     for good, per_run in recipe.outputs_sorted:
         if achieved * per_run > 0.0:
-            moves.append(GoodsMove(EDGE_PRODUCTION, producer.agent_id, good, producer.tile,
-                                   achieved * per_run, "output"))
-    return achieved, moves
+            lines.append((EDGE_PRODUCTION, producer.agent_id, good, producer.tile, achieved * per_run, "output"))
+    return achieved, lines
 
 
 def offers(producer: Producer, recipe: Recipe, view: MarketView, stock_by_good: Mapping[GoodId, float],
