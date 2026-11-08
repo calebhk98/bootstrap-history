@@ -363,6 +363,20 @@ path to raise the book's own error. `open_entrants` keeps the owner's cash as th
 the plans are applied; `ExitBatch` collects the postings of each exit (repayments, dividend, goods) and posts them at `finish()`, which
 is safe because an exit reads only its own cash and goods.
 
+Siting's reads (`entry_siting_tables.py`, called by `EntryTables._ready_siting` and `_site_of`): the carriage matrix is read once per carriage table
+and set of tiles from its searched costs and scaled on the way out; the hours a run takes for every producer, the land-short tiles, the
+tile commitments and the recipe capacities are whole-column reads, summed in producer order by `year_close_dividend_kernels.add_in_order`;
+a recipe's yield and limit rows are one list read each. Digests unchanged. Measure with a wrapper timing `EntryTables._ready_siting` and
+`_site_of` over a warm year (`python3 tools/measure/warm_year_profile.py SAVE OUT.prof` for call counts).
+
+Measured ceilings of what stays Python (a warm Rome year, process seconds of `Economy._run_year` about two and a half): the entry plans
+(`entry_plans`, `margin_entry_plans`, `trial_entry_plans`, with their sitings) about a twentieth of the year, spread over thousands of
+small calls, with `traded`, the bids of each market and the unfilled-demand reads feeding every call from dictionaries and
+`MarketBids` objects: a plan kernel needs those as per-market column blocks from the goods side, which is the blocker named below.
+`closed_records` (one `Producer` per producer) and `merchants.close_year` (its `learn`, over every merchant's price and volume
+dictionaries) are each about a sixtieth of the year; a faster loop saves a fraction of that, and removing them needs the producer
+record readers and the merchant dictionaries on columns first.
+
 Loans are on a table (next section). Not done, and why (measure with `python3 tools/measure/warm_year_profile.py SAVE OUT.prof`):
 
 - **Entry reading columns.** The remaining entry cost is spread over thin Python (the plans' loops, `unfilled`, `gap_at_entry_price`,
