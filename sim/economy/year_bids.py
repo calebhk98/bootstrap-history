@@ -15,7 +15,8 @@ Built once a year by `build` from the cleared markets, reading a market on the o
 added bids from the lists the respend kernel wrote; a reader takes a market's rows as slices (`columns_at`, no copy) or hands the whole
 block and the market places to a kernel (`year_bids_kernels`).
 """
-from typing import Dict, List, Mapping, Sequence, Tuple
+import bisect
+from typing import Dict, Mapping, Sequence, Tuple
 
 import numpy
 
@@ -54,23 +55,37 @@ class YearBids:
 
     def with_standing(self, standing: Mapping[Market, Sequence]) -> "YearBids":
         """The block with each market's standing bids (`Bid` objects, a project's draw settled outside the book) after its other bids; a market
-        only they name is added. `self` when there are none."""
-        if not standing:
+        only they name is added, in its sorted place. `self` when there are none. The standing bids go into each column in one insertion."""
+        named = sorted(market for market, bids in standing.items() if bids)
+        if not named:
             return self
-        markets = sorted(set(self.markets) | set(standing))
-        pieces: List[BidColumns] = []
-        counts = []
-        for market in markets:
+        inserts = []      # (row to insert before, market, whether the block has the market, the bids' columns)
+        fresh = []        # (place among the old markets the new market sorts before, market)
+        for market in named:
+            piece = columns_of(list(standing[market]))
             place = self.index.get(market)
-            parts = []
             if place is not None:
-                parts.append(self.columns_at(place))
-            if standing.get(market):
-                parts.append(columns_of(list(standing[market])))
-            joined = BidColumns(*(numpy.concatenate([part[each] for part in parts]) for each in range(6)))
-            pieces.append(joined)
-            counts.append(len(joined.floor))
-        return YearBids(markets, _starts(counts), _stack(pieces))
+                inserts.append((int(self.start[place + 1]), market, True, piece))
+            else:
+                before = bisect.bisect_left(self.markets, market)
+                fresh.append((before, market))
+                inserts.append((int(self.start[before]), market, False, piece))
+        inserts.sort(key=lambda each: each[:2])        # rows come in market order, so a tie in the row is settled by the market
+        pieces = [each[3] for each in inserts]
+        counts = numpy.diff(self.start)
+        for _row, market, held, piece in inserts:
+            if held:
+                counts[self.index[market]] += len(piece.floor)
+        markets = list(self.markets)
+        if fresh:
+            counts = numpy.insert(counts, [before for before, _market in fresh],
+                                  [len(standing[market]) for _before, market in fresh])
+            for before, market in sorted(fresh, reverse=True):
+                markets.insert(before, market)
+        rows = numpy.array([each[0] for each in inserts for _bid in range(len(each[3].floor))], dtype=numpy.int64)
+        inserted = BidColumns(*(numpy.insert(self.columns[each], rows, numpy.concatenate([piece[each] for piece in pieces]))
+                                for each in range(6)))
+        return YearBids(markets, _starts(counts), inserted)
 
 
 def _starts(counts: Sequence[int]) -> numpy.ndarray:

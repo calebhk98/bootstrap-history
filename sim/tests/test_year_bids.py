@@ -91,6 +91,18 @@ class StandingBidsJoinTheirMarkets(unittest.TestCase):
         for key, bids in (("a", "x"), mapping[("a", "x")]), (("b", "y"), only), (("c", "z"), mapping[("c", "z")] + extra):
             self.assertEqual(columns_as_lists(block.columns_at(block.index[key])), columns_as_lists(bid_columns.columns_of_bids(bids)))
 
+    def test_random_standing_bids_equal_each_market_joined_one_by_one_new_markets_in_their_sorted_place(self):
+        for seed in range(60):
+            rng = random.Random(seed)
+            names = ["m%d" % each for each in range(10)]
+            mapping = {("g", name): random_bids(rng, rng.randint(0, 5)) for name in rng.sample(names, rng.randint(0, 7))}
+            standing = {("g", name): random_bids(rng, rng.randint(1, 3)) for name in rng.sample(names, rng.randint(1, 6))}
+            block = year_bids.of(mapping).with_standing(standing)
+            self.assertEqual(block.markets, sorted(set(mapping) | set(standing)), seed)
+            for key in block.markets:
+                self.assertEqual(columns_as_lists(block.columns_at(block.index[key])),
+                                 columns_as_lists(bid_columns.columns_of_bids(mapping.get(key, []) + standing.get(key, []))), (seed, key))
+
     def test_no_standing_bids_leave_the_block(self):
         block = year_bids.of({("a", "x"): []})
         self.assertIs(block.with_standing({}), block)
