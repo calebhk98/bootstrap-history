@@ -113,6 +113,13 @@ class _Dense(Show):
         return getattr(self._table(), self._column)[rows].tolist()
 
     @flushed
+    def member_columns(self) -> Tuple[numpy.ndarray, numpy.ndarray]:
+        """(the rows of the members in the order they entered, their figures): the table's own numbers, no keys made."""
+        table = self._table()
+        rows = in_entry_order(getattr(table, self._order), int(table.row_count[0]))
+        return rows, getattr(table, self._column)[rows]
+
+    @flushed
     def items(self) -> List[tuple]:
         rows, keys = self._members()
         return list(zip(keys, getattr(self._table(), self._column)[rows].tolist()))
