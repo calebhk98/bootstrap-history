@@ -470,6 +470,21 @@ is what keeps a turn's shared answers consistent, so it is left as it is. The la
 and the packages' own Python is under 1% of a year in all, so no block read of theirs can reach the 1% bar: nothing was changed.
 Re-measure with `python3 tools/measure/warm_year_profile.py SAVE OUT.prof` (then `pstats` sorted by `tottime`, summed per directory).
 
+**The ceiling, measured (stage 4, country figures and price indexes).** The first work of each economy-owned figure in the money phase was timed
+by `time.process_time` wrappers over the outermost call of each (a throwaway script, no committed command; warm Rome year, four years in a row on a
+machine with other jobs running, so the spread is real). `money_world` is about 0.19 s of a 3.1 to 4.5 s step. Per year: `price_response` clearing
+about 20 markets 0.02 to 0.05 s (about 1%; nearly all of it is `goods_market.clear_at_one_price`, which the goods package owns, not
+`response_memo` or `prices_at`); the floor costs of the tiles (`_worked_need_floor_costs` over `_worked_tile_floor_costs`, about 100 tiles) 0.016 to
+0.04 s (0.5 to 1.1%, all but a few milliseconds of it `kept_need_prices` misses, whose batch form was measured and not kept above);
+`country_figures._prices` with the `MarketLayout.kept` mask (`touches` about 14,000 times) 0.011 to 0.017 s (about 0.4%);
+`output_value_and_unpriced` 0.007 to 0.010 s (0.2%, its `prices` read counted above); `money_held` 0.005 s (0.15%). Each of the figures in this
+package is under the 1% bar, so no block read was added for them: a floor-cost grid would repeat the `NeedBatch` result (rows built to save
+a kernel call), and `output_value` and `money_held` read the producer and cohort records (about 0.003 s of Python over them each) and one
+`balance` per holder, which `book.balance` already serves from its table. Outside this package's files and the next largest item of
+the phase: `demography.urban_people_by_tile` is called 12 times a year in the phase (about 0.02 s of a profiled year, 0.3 to 0.5%).
+Re-measure with `python3 tools/measure/warm_year_profile.py SAVE OUT.prof` (then `pstats`: `clear_at_one_price`, `_worked_need_floor_costs`,
+`MarketLayout.kept`, `output_value_and_unpriced`, `money_held`, `urban_people_by_tile`).
+
 ## Labour bids and offers as rows (stage 4, one package)
 
 **Bids.** `sim/labour/market/bid_table.py` holds `LabourBidTable`, the year's one table of labour bids (columns `employer`, `trade`,
