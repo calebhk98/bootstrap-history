@@ -9,7 +9,7 @@ of a basket on a tile takes the tile's column (`TilePrices`), where it used to a
 NaN in the grid is "no price", never 0.0; `TilePrices.prices` holds only goods that have one."""
 import weakref
 from dataclasses import dataclass
-from typing import Dict, Mapping, Optional
+from typing import Dict, Mapping, Optional, Tuple
 
 import numpy as np
 
@@ -91,50 +91,59 @@ class TilePrices:
 
 
 class PriceGrid:
-    """The offered prices of one memory over one `PriceIndex`, good by tile."""
+    """The offered prices and the remembered prices of one memory over one `PriceIndex`, good by tile."""
 
     def __init__(self, memory: MarketMemory, index: PriceIndex) -> None:
         self._memory = memory
         self._index = index
         self._stamp: Optional[tuple] = None
-        self._grid: Optional[np.ndarray] = None
-        self._tiles: Dict[str, TilePrices] = {}
+        self._grids: Tuple[Optional[np.ndarray], Optional[np.ndarray]] = (None, None)      # offered, remembered
+        self._tiles: Tuple[Dict[str, TilePrices], Dict[str, TilePrices]] = ({}, {})
         self._rows: Optional[tuple] = None      # (numbering stamp, the market row of each good and tile, whether every good the memory numbers is the index's)
-        self.refreshes = 0         # how many times the grid was filled again (tests and measurements read it)
+        self.refreshes = 0         # how many times the grids were filled again (tests and measurements read it)
+
+    def _current(self) -> None:
+        """Fill the grids again if the memory was written to since they were filled."""
+        stamp = memory_stamp(self._memory)
+        if stamp == self._stamp:
+            return
+        index = self._index
+        tables = self._memory.tables
+        markets = tables.goods_table
+        numbering = (id(tables), tables.generation)
+        if self._rows is None or self._rows[0] != numbering:
+            indexed_only = all(good in index.goods.row for good in tables.goods.name_list)
+            self._rows = (numbering, markets_by_good_tile(self._memory, index.goods, index.area_index), indexed_only)
+        offered = offered_by_good_tile(offered_prices(markets, class_of_kind(self._memory)), self._rows[1])
+        self._grids = (offered, offered_by_good_tile(markets.price[:int(markets.row_count[0])], self._rows[1]))
+        self._tiles = ({}, {})
+        self._stamp = stamp
+        self.refreshes += 1
 
     def grid(self) -> np.ndarray:
-        """The good-by-tile grid as of the memory now."""
-        stamp = memory_stamp(self._memory)
-        if stamp != self._stamp:
-            index = self._index
-            markets = self._memory.tables.goods_table
-            numbering = (id(self._memory.tables), self._memory.tables.generation)
-            if self._rows is None or self._rows[0] != numbering:
-                indexed_only = all(good in index.goods.row for good in self._memory.tables.goods.name_list)
-                self._rows = (numbering, markets_by_good_tile(self._memory, index.goods, index.area_index), indexed_only)
-            self._grid = offered_by_good_tile(offered_prices(markets, class_of_kind(self._memory)), self._rows[1])
-            self._tiles = {}
-            self._stamp = stamp
-            self.refreshes += 1
-        return self._grid
+        """The good-by-tile grid of offered prices as of the memory now."""
+        self._current()
+        return self._grids[0]
 
     @property
     def tiles(self) -> tuple:
         """Every tile the grid holds, in its column order."""
         return self._index.tiles.ids
 
-    def on_tile(self, tile: str) -> Optional[TilePrices]:
-        """The offered prices on `tile`, None for a tile the area map does not hold (the per-good path then answers, and refuses as it did)."""
+    def on_tile(self, tile: str, remembered: bool = False) -> Optional[TilePrices]:
+        """The offered prices on `tile` (the remembered prices, `MarketMemory.prices`, when `remembered`), None for a tile the area map
+        does not hold (the per-good path then answers, and refuses as it did)."""
         column_of = self._index.tiles.row.get(tile)
         if column_of is None:
             return None
-        grid = self.grid()
-        found = self._tiles.get(tile)
+        self._current()
+        kept = self._tiles[remembered]
+        found = kept.get(tile)
         if found is None:
-            column = grid[:, column_of]
+            column = self._grids[remembered][:, column_of]
             present = np.flatnonzero(column == column)
             names = self._index.goods.ids
-            found = self._tiles[tile] = TilePrices(
+            found = kept[tile] = TilePrices(
                 {names[row]: price for row, price in zip(present.tolist(), column[present].tolist())},
                 EVERY_GOOD if self._rows[2] else self._index.goods.row)
         return found

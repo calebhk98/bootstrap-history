@@ -402,7 +402,6 @@ class YearView:
         self._labour_area_of = labour_area_of
         self._goods = set(area_map.goods())
         self._keys_of_good: Dict[str, tuple] = {}
-        self._keys_of_names: Dict[int, tuple] = {}     # id of a names tuple -> (names, tile -> market keys)
         self._area_by_tile: Dict[str, Dict[TileId, AreaId]] = {}    # name -> tile -> its area; the area map does not change
         self._stamp = _writes[0]
         self._reads: Dict[tuple, object] = {}     # reads of the memory kept until the next write to it
@@ -481,26 +480,34 @@ class YearView:
         from .wage_block import wage_rule_block
         return wage_rule_block(self.setup, self._memory, trades, areas)
 
+    def remembered_prices_on(self, tile: TileId):
+        """`offered_prices_on` for the remembered prices (`price`): every good that has one on `tile`, as one block."""
+        grid = self._grid()
+        return grid.on_tile(tile, remembered=True) if grid else None
+
     def present_prices_at(self, names: tuple, tile: TileId) -> Dict[str, float]:
         """`price` of each of `names` (goods, one tuple kept by the caller) in its area on `tile`, those with a
-        price only, in order: the keys are built once per names tuple and tile."""
-        kept = self._keys_of_names.get(id(names))
-        if kept is None or kept[0] is not names:
-            kept = self._keys_of_names[id(names)] = (names, {})
-        keys = kept[1].get(tile)
-        if keys is None:
-            keys = kept[1][tile] = tuple(name + KEY_SEPARATOR + self.area_of(name, tile) for name in names)
+        price only, in order: read from the tile's block of remembered prices, once per names tuple and tile until the memory is written to."""
         reads = self._current()
         read_key = ("present", id(names), tile)
         kept_found = reads.get(read_key)
         if kept_found is None or kept_found[0] is not names:
-            found = {}
-            for name, key in zip(names, keys):
-                figure = self._memory.prices.get(key)
-                if figure is not None:
-                    found[name] = figure
+            block = self.remembered_prices_on(tile)
+            if block is not None and block.covers_all(names):
+                found = {name: block.prices[name] for name in names if name in block.prices}
+            else:
+                found = self._present_prices_by_key(names, tile)
             kept_found = reads[read_key] = (names, found)
         return dict(kept_found[1])
+
+    def _present_prices_by_key(self, names: tuple, tile: TileId) -> Dict[str, float]:
+        """`present_prices_at` a good at a time, for a tile or goods outside the block."""
+        found = {}
+        for name in names:
+            figure = self._memory.prices.get(name + KEY_SEPARATOR + self.area_of(name, tile))
+            if figure is not None:
+                found[name] = figure
+        return found
 
     def price_kind(self, good: GoodId, area: AreaId) -> Optional[str]:
         """PRICE_SMOOTHED_TRADE, or the kind of quote or estimate `price` is; None when the market has no price."""

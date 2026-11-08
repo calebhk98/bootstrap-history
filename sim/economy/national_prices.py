@@ -9,7 +9,7 @@ from sim.labour.api import grid_rows_of, hours_cleared_at, people_at, wage_means
 
 from . import price_index
 from .market_memory import KEY_SEPARATOR, RECENT_TRADE_YEARS
-from .market_store import figures_for
+from .market_store import MarketStore, figures_for
 from .market_table_specs import HELD_TRADE_AGE
 
 
@@ -23,11 +23,21 @@ def remembered_columns(memory, weights: Mapping[str, float], keys: Tuple[str, ..
     """(price, usual volume, trade age) of each market of `memory.prices` in the order of `keys` (the store's entry order), read from the
     goods table's columns. A market with no usual volume counts 0.0 (`weights` that are not the memory's own store are read by key), and
     one that never cleared is older than any recent trade."""
+    if not isinstance(memory.prices, MarketStore):      # a stand-in memory of plain dicts
+        return (np.array(list(memory.prices.values()), dtype=float), np.array(figures_for(weights, keys, 0.0), dtype=float),
+                np.array(figures_for(memory.trade_age, keys, RECENT_TRADE_YEARS + 1), dtype=np.int64))
     markets = memory.tables.goods_table
     rows = memory.prices.rows()
     volume = (markets.volume_weight[rows] if weights is memory.volume_weights else np.array(figures_for(weights, keys, 0.0), dtype=float))
     age = np.where(markets.held[rows] & HELD_TRADE_AGE != 0, markets.trade_age[rows], RECENT_TRADE_YEARS + 1)
     return markets.price[rows], np.where(np.isnan(volume), 0.0, volume), age
+
+
+def _wage_column(memory) -> np.ndarray:
+    """The remembered wages in the order of `memory.wages`, from the labour table's column (a stand-in memory of plain dicts is read by value)."""
+    if isinstance(memory.wages, MarketStore):
+        return memory.tables.labour_table.wage[memory.wages.rows()]
+    return np.array(list(memory.wages.values()), dtype=float)
 
 
 def _markets_by_good(record, keep: Optional[Callable[[str, str], bool]]) -> Dict[str, List[Tuple[str, float, bool, float]]]:
@@ -105,7 +115,7 @@ def national_wages(record, keep: Optional[Callable[[str], bool]] = None, keep_to
     if not layout.keys:
         return {}
     kept = layout.kept_keys(keep, keep_token)
-    wage = memory.tables.labour_table.wage[memory.wages.rows()][layout.positions]
+    wage = _wage_column(memory)[layout.positions]
     workforce = record.labour.workforce
     rows = grid_rows_of(workforce, *_place_names(layout))
     means, exists = wage_means_by_group(layout.ends, kept, wage, hours_cleared_at(workforce, rows), people_at(workforce, rows))

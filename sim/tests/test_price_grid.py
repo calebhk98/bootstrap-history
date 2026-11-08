@@ -81,6 +81,35 @@ class GridAgainstTheScalarRead(unittest.TestCase):
         self.assertIs(reader.__self__, view.offered_prices_on(TILES[0]).prices)
 
 
+class RememberedPrices(unittest.TestCase):
+    def test_every_good_on_every_tile_has_the_price_price_gives(self):
+        for seed in range(8):
+            _setup, _record, view, _ledger, _area_map = economy_of(seed)
+            for tile in TILES:
+                found = view.remembered_prices_on(tile).prices
+                self.assertEqual({good: found.get(good) for good in GOODS}, {good: view.price(good, view.area_of(good, tile)) for good in GOODS})
+
+    def test_present_prices_at_is_the_per_good_read_in_the_order_of_the_names(self):
+        for seed in range(8):
+            _setup, _record, view, _ledger, _area_map = economy_of(seed)
+            names = tuple(reversed(GOODS))
+            for tile in TILES:
+                self.assertEqual(list(view.present_prices_at(names, tile).items()), list(view._present_prices_by_key(names, tile).items()))
+
+    def test_present_prices_at_follows_a_price_written_after_it_was_read(self):
+        _setup, record, view, _ledger, area_map = economy_of(5)
+        names = (GOODS[0], GOODS[1])
+        view.present_prices_at(names, TILES[0])
+        record.memory.set_price(GOODS[0] + KEY_SEPARATOR + area_map.area_of(GOODS[0], TILES[0]), 55.5)
+        self.assertEqual(view.present_prices_at(names, TILES[0])[GOODS[0]], 55.5)
+
+    def test_names_outside_the_area_map_are_read_by_key(self):
+        _setup, record, view, _ledger, _area_map = economy_of(5)
+        record.memory.prices["unlisted_good" + KEY_SEPARATOR + view.area_of("unlisted_good", TILES[0])] = 3.5
+        names = (GOODS[0], "unlisted_good")
+        self.assertEqual(view.present_prices_at(names, TILES[0]), view._present_prices_by_key(names, TILES[0]))
+
+
 class GridFollowsTheMemory(unittest.TestCase):
     def setUp(self):
         _setup, self.record, self.view, _ledger, self.area_map = economy_of(4)
