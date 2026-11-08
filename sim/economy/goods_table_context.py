@@ -45,11 +45,8 @@ class ClearingContext:
         return found
 
     def good_is_batchable(self, good: str) -> bool:
-        """The good is in the year arrays and portable (ground has a rent to hold for, read off the land record)."""
-        if self.arrays is None or good not in self.arrays.matrices.goods.row:
-            return False
-        spec = self.setup.specs.get(good)
-        return spec is None or spec.portable
+        """The good is in the year arrays (ground has a rent to hold for, read off the land record: `goods_table_clear._ground_values`)."""
+        return self.arrays is not None and good in self.arrays.matrices.goods.row
 
     def producer_rows(self, sellers: numpy.ndarray) -> numpy.ndarray:
         """Per seller agent id: the producer's row in the year arrays, -1 for a seller that is not a producer."""

@@ -35,8 +35,8 @@ def table_columns(markets: dict, market_keys: Sequence):
         cells = sorted_cells()
         return TableColumns(shared, cells, shared.table.way[cells] != 2)
     lefts = [markets[key] for key in market_keys]
-    shared = lefts[0].year_markets if lefts else None
-    if shared is None or not shared.first_round_filled or not all(each.year_markets is shared for each in lefts):
+    shared = getattr(lefts[0], "year_markets", None) if lefts else None
+    if shared is None or not shared.first_round_filled or not all(getattr(each, "year_markets", None) is shared for each in lefts):
         return None
     cells = numpy.array([each.row for each in lefts], dtype=numpy.int64)
     return TableColumns(shared, cells, shared.table.way[cells] != 2)

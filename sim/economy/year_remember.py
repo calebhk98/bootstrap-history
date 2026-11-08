@@ -14,6 +14,7 @@ from .market_memory_asks import RESUMED_TRADE_MEMORY_SHARE
 from .market_memory_offers import NO_OFFER_MEMORY_SHARE, price_after_thin_trade, price_toward_quote
 from .notional import making_costs
 from .setup import opening_price_today
+from .market_memory import market_key
 from .types import EDGE_EXTERNAL
 from .year_ledger_tables import ROUNDS
 
@@ -80,8 +81,15 @@ def remember_markets(setup, record, keys, left_markets, rows, year_markets, cell
     """The memory's notes for the markets `keys` (sorted (good, area); `left_markets` makes a market's `LeftMarket` for the Python rules), with their
     market numbers `rows` and table rows `cells`."""
     memory, table = record.memory, year_markets.table
+    ledger_markets = ledger.tables.markets
+    if ledger_markets is memory.tables:
+        ledger_rows = rows
+    else:           # a ledger that numbers its markets of its own (a test's): the markets are found by name
+        ledger_rows = numpy.array([ledger_markets.goods_numbers.get(market_key(good, area), -1) for good, area in keys], dtype=numpy.int64)
     total_all, cleared_all = ledger.market_total_columns()
-    total, cleared = total_all[rows], cleared_all[rows]
+    known = ledger_rows >= 0
+    total, cleared = numpy.zeros(len(rows)), numpy.full(len(rows), numpy.nan)
+    total[known], cleared[known] = total_all[ledger_rows[known]], cleared_all[ledger_rows[known]]
     was_quote, usual = goods_memory_notes.last_year_columns(memory, rows)
     was_quote, usual = numpy.array(was_quote, dtype=numpy.bool_), numpy.array(usual, dtype=numpy.float64)
     old, idle = table.last_price[cells], table.idle_years[cells]
@@ -92,8 +100,9 @@ def remember_markets(setup, record, keys, left_markets, rows, year_markets, cell
     pointers, floor, flexible, reference, elasticity, budget, maximum, counted = _bid_columns(year_markets, cells, orders)
     ledger.tables.flush(ROUNDS)
     rounds = ledger.tables.rounds
-    received = kernel.received_prices(rounds.market, rounds.quantity, rounds.price, int(rounds.row_count[0]),
-                                      len(memory.tables.goods_markets))[rows]
+    received = numpy.full(len(rows), numpy.nan)
+    received[known] = kernel.received_prices(rounds.market, rounds.quantity, rounds.price, int(rounds.row_count[0]),
+                                             len(ledger_markets.goods_markets))[ledger_rows[known]]
     added = year_markets.added_bids(cells)
     wanted_old = kernel.wanted_at_markets(old, pointers, floor, flexible, reference, elasticity, budget, maximum, counted, *added, flags)
     funded, best = kernel.bid_figures(pointers, budget, maximum)

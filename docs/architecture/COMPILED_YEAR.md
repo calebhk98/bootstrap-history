@@ -223,10 +223,23 @@ hands the year's `MarketBids` on when no standing bid joins a market.
 `goods_market_column.MarketColumn`s (`MarketFigures` keyed by `good|area`, indexed by the memory's goods-market numbering, `bind_markets`
 on the record): `_record_year_markets` writes each with one `replace_rows`, and `entry_plan_pack.traded_grid`,
 `entry_margin_tables._streaks_in`, `goods_table_pack.market_figures` and `entry_unmet.markets_of` read them with `take` or the ledger's
-`member_columns`. Iteration lists the markets in (good, area) order, as the dictionaries written in sorted order did. Each market's
-year figures are a row of `goods_year_markets.GoodsYearMarkets` (`LeftMarket` is a view of its row): `clear_goods` fills a good's rows
-once, `goods_respend_unpack._add_rounds` adds the respend's totals in one scatter, and `_remember_markets` and `_record_year_markets` read
-the columns. Tests: `test_goods_market_column.py`, `test_goods_year_markets.py`.
+`member_columns`. Iteration lists the markets in (good, area) order, as the dictionaries written in sorted order did.
+
+`clear_good` returns a `goods_good_clear.GoodClearing`: per market of the good, in clearing order, the first round's quantity, price, demand,
+offered, quote (`quote_price`, `quote_kind`), what buyers wanted, the memory's flags, `way` (traded in the batch, did not trade and quoted from
+the columns, or on objects), and the pointers cutting the bid rows and the offers left out of the order tables. `goods_settle.settle_good` takes
+it and returns a `GoodSettlement` (delivered as an array; `bought` and the mint's `takes` when asked), and `note_clearings`, `idle_years` and
+`last_prices` read the columns. Each good's rows are then added to the year's table `goods_year_markets.GoodsYearMarkets` (`YearMarkets`: the
+figures per market, the bid rows and the offers left with their units as flat columns, the first round's settlement per buyer, later rounds and
+the bids later rounds added) and `goods_left_markets.LeftMarkets` remembers where each market's row is.
+  Readers of the table: the respend pack (`goods_respend_rows.table_columns` and the column branches of `bid_rows`, `offer_rows`, `bought_columns`),
+the respend's unpack (`_add_rounds` as `YearMarkets.add_rounds`, `_leave_offer_units`, the added bids and later rounds as columns), `year_bids.build`
+(`_build_from_table`) and `year_remember.remember_markets`: the price sellers got from the ledger's rounds (`received_prices`), what a market's
+buyers would take at the old price (`wanted_at_markets`: `math.fsum` as `exact_sum`, the power as the Python raises or not, a figure the kernel does
+not reproduce flags the Python rules), the bids-only quote (`bid_figures`) and the signals (`signals`), then one `goods_memory_notes.write_markets`.
+Tests: `test_goods_market_column.py`, `test_goods_year_markets.py`, `test_goods_remember_kernel.py` (each kernel against the Python on random inputs).
+Ground goods (not portable) are cleared in the batch like any good: the held value of an offer that is ground is its capitalised rent
+(`goods_table_clear._ground_values`, the `held_value` column of `goods_year_kernel.decide_markets`).
 
 A producer's turn reads its runs from the plan table's column and its hired hours from the ledger's pair table in one kernel call
 (`goods_production_reads.py`).
@@ -715,17 +728,15 @@ list lags the code.
 - **The mint reading the results table; the object-rule markets as kernels; the watchers' fills from columns.**
   The mint keeps one `ClearingResult` per market of the coin metal in `ledger.mint_takes`; the watchers' buy fills are `Fill` objects (`bought_by`, only for markets a merchant or the state bought in);
   `LeftMarket` and its `bought` mapping are built from columns when a market not on the tables asks.
-- **The goods side's `ClearingResult`s and `LeftMarket`s.** The year ledger is handed `ClearingResult`s (`note_clearing`) for markets not on
-  the tables. A market's year figures (delivered, wanted, last offered and delivered, idle years, remembered price) are one row of
-  `goods_year_markets.GoodsYearMarkets`, filled once per good and added to by the respend's answer in one scatter; the year's records and the
-  memory's notes read those columns whole. What remains per market is the object work: `clear_good` builds one `Cleared` and `MarketRows`
-  per market and `clear_goods` one `LeftMarket` (the views of a row plus the market's bids, offers, result, later rounds and `bought`);
-  `_remember_markets` (the received price over the first round and the later rounds, `wanted_at` over the market's bids, the quote of a market
-  that did not trade), `year_bids.build`, the respend pack and unpack, `note_clearings` and `settle_good` read them one market at a time. They
-  need the rest of the keystone: the first-round result (quantity, price, demand, offered), the later rounds and the bid and offer rows of
-  every market as columns with pointers (the batch's pair and order arrays already hold them for a traded market), written by the clearing
-  kernels and the respend kernel, so that `LeftMarket` exists only on demand for the UI and tests and each of those loops becomes one kernel
-  over the markets.
+- **The goods side's remaining objects.** The year builds no `Cleared`, `MarketRows` or `LeftMarket` for a market on the tables: `clear_good`
+  returns a `GoodClearing` (columns), the year's table holds each market's rows, and `goods_left_markets.LeftMarkets` makes a `LeftMarket` only
+  when a rule over objects, a test or the UI asks (the entry rules reading `ledger.bids_by_market` per market, and the coin metal's markets,
+  still ask). What is left: the coin metal's markets are remembered by the Python rules (`year_remember.remember_one`) because the mint's top-up
+  (`mint_price.received_price`, `YearLedger.mint_takes`, `settled_to_mint`) is over (seller, tile) dictionaries and `ClearingResult`s; a market a
+  book edge sells in (the mint's wash) is cleared on `Bid` and `Offer` objects (`seller_offers.strategic_offers`, `unsold_search.clear_with_search`,
+  `goods_market.clear`, `market_quote`); `_tax_in_kind` builds `YearFacts` dictionaries (the tax rules, `taxes.assess`, take dictionaries); the
+  watchers' buy fills are `Fill` objects made only for markets a watcher bought in; `GoodClearing.result` makes a `ClearingResult` for the mint and
+  the watchers. `entry_year._traded_volume`, `country_figures` and `api.market_record` still read single keys of the goods record's columns.
 - **Tool wear and fallbacks in the plan kernel.** `plan_year` sends a producer whose recipe has tool wear or fallbacks, or a zero entry, to
   `producers.plan`; `plan_kernel.plan_rows` would need the fallbacks' bids and `tool_fallback.value_in_use` ceilings. `_tax_in_kind` builds
   `YearFacts` dictionaries for the producers on home tiles when a tax is paid in kind.

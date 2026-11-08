@@ -346,6 +346,6 @@ def labour_wage_store(tables: MarketTables) -> FloatStore:
 
 def figures_for(figures: Mapping[str, float], keys: Sequence[str], default) -> list:
     """`figures.get(key, default)` for each key: one pass over a market store's column, a plain lookup for any other mapping."""
-    if isinstance(figures, MarketStore):
+    if isinstance(figures, MarketStore) or hasattr(figures, "get_many"):
         return figures.get_many(keys, default)
     return list(map(figures.get, keys, repeat(default)))

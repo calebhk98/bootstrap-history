@@ -14,8 +14,7 @@ import numpy
 
 from . import settlement
 from .goods_idle_years import note_idle_years as note_idle_years_kernel
-from .goods_good_clear import TABLE_TRADED, TABLE_UNTRADED
-from .goods_table_results import TableClearing
+from .goods_good_clear import ON_OBJECTS, TABLE_TRADED, TABLE_UNTRADED
 from .settlement_ids import SettledByIds, settle_by_ids
 from .year_ledger_tables import SALES_PURPOSE
 
@@ -164,47 +163,47 @@ def note_clearings(ledger, cleared, answer: GoodSettlement, memory_names: list, 
     buys), its clearing with what its settlement delivered to the mint, which `mint_price` reads; no other market keeps its `ClearingResult`."""
     if not len(cleared):
         return
-    tables = ledger.tables
-    numbers = tables.markets.goods_numbers
     good = cleared.good
-    markets = []
-    for each in cleared.market.tolist():
-        number = numbers.get(memory_names[each])
-        markets.append(tables.market_number(good, cleared.areas[len(markets)]) if number is None else number)
+    tables = ledger.tables
+    if tables.markets.goods_markets.name_list is memory_names:     # the ledger numbers its markets as the memory does
+        markets = cleared.market
+        tables.fit_markets()
+    else:                                                          # a ledger numbering of its own (a test's): found by name
+        numbers = tables.markets.goods_numbers
+        markets = numpy.array([tables.market_number(good, area) if numbers.get(memory_names[each]) is None else numbers[memory_names[each]]
+                               for each, area in zip(cleared.market.tolist(), cleared.areas)], dtype=numpy.int64)
     if metal is not None and good == metal:
         for place in range(len(cleared)):
             ledger.mint_takes.append((cleared.result(place), answer.takes.get(place, {})))
     watchers = ledger.fill_watchers
-    if watchers is not None:
-        watched_cumulative = {}
-        for place in numpy.flatnonzero(cleared.way != TABLE_UNTRADED).tolist():
-            if cleared.way[place] == TABLE_TRADED:
-                result = cleared.result(place)
-                if _watched_buys(result, watchers, watched_cumulative):
-                    for agent, fills in result.bought_by(watchers).items():
-                        ledger.buy_fills.setdefault(agent, []).extend(fills)
-                continue
-            for fill in cleared.result(place).fills:
-                if fill.side == "buy" and fill.agent in watchers:
-                    ledger.buy_fills.setdefault(fill.agent, []).append(fill)
-    else:
-        for place in numpy.flatnonzero(cleared.way != TABLE_UNTRADED).tolist():
-            for fill in cleared.result(place).fills:
-                if fill.side == "buy":
-                    ledger.buy_fills.setdefault(fill.agent, []).append(fill)
-    ledger.note_round_rows(numpy.array(markets, dtype=numpy.int64), cleared.quantity, cleared.price,
+    for place in _places_with_fills(cleared, watchers):
+        result = cleared.result(place)
+        if cleared.way[place] == TABLE_TRADED and watchers is not None:
+            for agent, fills in result.bought_by(watchers).items():
+                ledger.buy_fills.setdefault(agent, []).extend(fills)
+            continue
+        for fill in result.fills:
+            if fill.side == "buy" and (watchers is None or fill.agent in watchers):
+                ledger.buy_fills.setdefault(fill.agent, []).append(fill)
+    ledger.note_round_rows(markets, cleared.quantity, cleared.price,
                            answer.delivered)
 
 
-def _watched_buys(result: TableClearing, watchers, kept: dict) -> bool:
-    """Whether a watcher's bid in the market took units (`bought_by` would find a fill); the batch's mask is summed once."""
-    batch = result.batch
-    cumulative = kept.get(id(batch))
-    if cumulative is None:
-        mask = batch.watched_buys(watchers)
-        cumulative = kept[id(batch)] = (False if mask is None else numpy.concatenate(([0], numpy.cumsum(mask))), batch)
-    counts = cumulative[0]
-    return counts is not False and counts[batch.bid_ptr[result.market + 1]] > counts[batch.bid_ptr[result.market]]
+def _places_with_fills(cleared, watchers) -> list:
+    """The markets (in clearing order) whose fills the ledger may keep: those on objects, and those on the tables where a watcher's bid took units
+    (read from the batch's mask in one pass; with no watchers set every market that traded)."""
+    objects = cleared.way == ON_OBJECTS
+    traded = numpy.flatnonzero(cleared.way == TABLE_TRADED)
+    if watchers is not None and len(traded):
+        mask = cleared.batch.watched_buys(watchers)
+        if mask is None:
+            traded = traded[:0]
+        else:
+            counted = numpy.concatenate(([0], numpy.cumsum(mask)))
+            slots = cleared.slots[traded]
+            traded = traded[counted[cleared.batch.bid_ptr[slots + 1]] > counted[cleared.batch.bid_ptr[slots]]]
+    objects[traded] = True
+    return numpy.flatnonzero(objects).tolist()
 
 
 def idle_years(memory, cleared) -> List[int]:
