@@ -123,8 +123,7 @@ class Loans(TradeFixture):
         loan = Loan("loan:0:7", lender or self.holder, borrower or self.producer_id, self.money, principal,
                     rate=rate + credit.risk_premium(principal, 0.0, 0.0),
                     years_left=years, issued_year=0)
-        self.record.credit.loans.append(loan)
-        return loan
+        return self.record.credit.add_loan(loan)
 
     def test_a_bond_at_the_savers_rate_is_worth_its_face_to_that_saver(self):
         loan = self.make_loan()

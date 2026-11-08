@@ -17,9 +17,13 @@ institution the society must hold (`SHARE_TRADING`, `BOND_MARKET`); without it n
 import dataclasses
 from typing import Dict, List, Mapping, Optional, Sequence, Tuple
 
+import numpy
+
+from sim.loans import select as loan_select
+from sim.loans.view import LoanRow
 from sim.world import capital_market
 
-from . import banks, credit, credit_claims, secondary_market, shares
+from . import banks, credit, credit_claims, credit_service, secondary_market, shares
 from .secondary_market import Ask, SecurityBid, Trade
 from .types import AgentId, FundsOffer, Loan, Transfer
 
@@ -83,9 +87,10 @@ def _own_rate(offers: Mapping[AgentId, FundsOffer], agent: AgentId, market_rate:
 
 def _loan_items(record, forced: Mapping[AgentId, CashShortfall]) -> List[Loan]:
     """The loans a household lender or a lender short of cash may sell."""
-    holders = participants(record)
-    return sorted((loan for loan in record.credit.loans if tradable(record, loan) and (loan.lender in holders or loan.lender in forced)),
-                  key=lambda loan: loan.loan_id)
+    store = record.credit.contracts.loan_store
+    rows = numpy.nonzero(loan_select.tradable(store, record.capital_markets.banks, record.cohorts, EPSILON)
+                         & loan_select.lent_by(store, participants(record) | set(forced)))[0]
+    return [LoanRow(store, number) for number in store.table.number[credit_service.by_id(store, rows)].tolist()]
 
 
 def asks_and_bids(setup, record, offers: Sequence[FundsOffer], short: Mapping[AgentId, CashShortfall], market_rate: float,
@@ -151,14 +156,15 @@ def apply(record, trades: Sequence[Trade], money: str) -> Dict[AgentId, float]:
     """Book the trades: buyers pay sellers, and the shares or loans change hands. Returns the money each buyer spent."""
     spent: Dict[AgentId, float] = {}
     payments = []
-    loans_by_id = {loan.loan_id: loan for loan in record.credit.loans}
+    store = record.credit.contracts.loan_store
+    loan_numbers = {store.texts[number]: number for number in store.table.number[:len(store)].tolist()}
     for trade in trades:
         payments.append(Transfer(trade.buyer, trade.seller, money, trade.quantity * trade.price, SALE_PURPOSE))
         spent[trade.buyer] = spent.get(trade.buyer, 0.0) + trade.quantity * trade.price
         if trade.item.startswith(SHARE_ITEM):
             _move_share(record, trade)
         elif trade.item.startswith(LOAN_ITEM):
-            _move_loan(record, loans_by_id[trade.item[len(LOAN_ITEM):]], trade)
+            _move_loan(record, LoanRow(store, loan_numbers[trade.item[len(LOAN_ITEM):]]), trade)
     record.book.transfer_many(payments)
     return spent
 

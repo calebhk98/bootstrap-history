@@ -54,6 +54,7 @@ def declared_signatures():
     signatures.update(bondage_signatures(types))
     signatures.update(compiled_tables_signatures(types))
     signatures.update(priced_need_signatures(types))
+    signatures.update(loan_signatures(types))
     return signatures
 
 
@@ -65,6 +66,17 @@ def priced_need_signatures(types):
     return {"sim.economy.priced_need_kernel.price_needs": [(
         typeof(NEED_ROWS.new_table(PricedNeedRows, 1)), typeof(GOOD_ROWS.new_table(PricedGoodRows, 1)), types.Array(types.float64, 2, "C"),
         types.float64, types.boolean)]}
+
+
+def loan_signatures(types):
+    """The loan table's kernel that only a write-off reaches, typed from the table the economy keeps."""
+    from numba import typeof
+    from sim.loans.columns import LOAN_TABLE, Loans
+    loan_table = typeof(LOAN_TABLE.new_table(Loans, 1))
+    number, integer, flag = types.float64, types.int64, types.boolean
+    return {"sim.loans.write_down_kernel.write_down": [(
+        loan_table, types.Array(integer, 1, "C"), types.Array(number, 1, "C"), number, types.Array(number, 1, "C"),
+        types.Array(flag, 1, "C"))]}
 
 
 def compiled_tables_signatures(types):

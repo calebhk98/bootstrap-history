@@ -13,8 +13,9 @@ from .types import GoodsMove, Transfer
 
 
 class ExitBatch:
-    """Several exits in one pass over the loans: the exiting producers' loans are indexed once and their term loans leave the contracts
-    together at `finish()`. Each exit reads only its own loans, so none sees the others' pending removal."""
+    """Several exits in one pass over the loans: the loan table's rows are grouped by borrower once and the exiting producers' term loans
+    leave the table together at `finish()`. Each exit reads only its own loans (copies of them, `Contract`s), so none sees the others'
+    pending removal."""
 
     def __init__(self, record) -> None:
         self.record = record
@@ -23,12 +24,12 @@ class ExitBatch:
         self._steps: List[tuple] = []      # the postings of the exits so far, one batch each, made together at `finish()`
 
     def exit(self, producer_id: str, payout: List[Transfer]) -> List[Transfer]:
+        store = self.record.credit.contracts.loan_store
         if self._owed is None:
-            self._owed = {}
-            for loan in self.record.credit.loans:
-                self._owed.setdefault(loan.borrower, []).append(loan)
+            self._owed = store.group_rows()
         self.exited.append(producer_id)
-        return exit_producer(self.record, producer_id, payout, self._owed.get(producer_id, []), deferred=True, steps=self._steps)
+        return exit_producer(self.record, producer_id, payout, store.snapshots(self._owed.get(producer_id, ())), deferred=True,
+                             steps=self._steps)
 
     def finish(self) -> None:
         post_in_order(self.record.book, self._steps)
@@ -48,7 +49,8 @@ def exit_producer(record, producer_id: str, payout: List[Transfer], owed: Option
     the postings of several exits can wait and be made together in order."""
     producer = record.producers[producer_id]
     if owed is None:
-        owed = [loan for loan in record.credit.loans if loan.borrower == producer_id]
+        store = record.credit.contracts.loan_store
+        owed = store.snapshots(store.rows_of(borrower=producer_id))
     repayments, unpaid = _repay(record, producer_id, owed)
     repaid = math.fsum(transfer.amount for transfer in repayments)
     payout = _less(payout, repaid)

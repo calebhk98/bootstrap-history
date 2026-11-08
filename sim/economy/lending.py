@@ -10,7 +10,9 @@ from typing import Dict, List
 
 from sim.world import capital_market
 
-from . import bank_service, banks, bondage, credit, credit_claims, households_credit, lender_ask, loss_memory, merchants_book, merchants_credit, titles, titles_ground, titles_value
+from sim.loans.columns import NO_TILE
+
+from . import bank_service, bondage, credit, credit_claims, credit_service, households_credit, lender_ask, loss_memory, merchants_book, merchants_credit, titles, titles_ground, titles_value, transfer_rows
 from .household_time_preference import HOUSEHOLD_TIME_PREFERENCE
 from .household_work_year import basket_key, cohort_basket
 from .producers_working_capital import WORKING_CAPITAL_PURPOSE
@@ -34,25 +36,26 @@ def _collect(record, money: str, year: int, bondage_years: float) -> Dict[str, f
     first payment falls due a year after it borrowed). Books the defaults: a lender's loss, a defaulter's
     record, a merchant's staked capital after what it repaid or was freed of. Returns the interest each
     lender received, which is its income; returned principal is not income."""
-    due = [loan for loan in record.credit.loans if loan.issued_year < year and not banks.is_deposit(record.capital_markets, loan)]
-    if not due:
+    store = record.credit.contracts.loan_store
+    serving = credit_service.due_rows(store, year, list(record.capital_markets.banks))
+    if not len(serving):
         return bank_service.service_deposits(record, money, year)
-    cash = {loan.borrower: record.book.balance(loan.borrower, money) for loan in due}
-    transfers, serviced, defaults, receipts = credit.service_split(due, cash, year)
-    record.book.transfer_many(transfers)
-    received = {lender: receipt.interest for lender, receipt in receipts.items() if receipt.interest > 0.0}
-    owed_before = credit_claims.principal_by_borrower(due)
-    owed_after = credit_claims.principal_by_borrower(serviced)
-    merchants_credit.stake(record.merchants, {agent: owed_after.get(agent, 0.0) - owed
-                                              for agent, owed in owed_before.items()})
-    pledged_loans = {loan.loan_id: loan for loan in due if loan.collateral_tile}
-    taken = [dataclasses.replace(default, loss=max(0.0, default.loss - titles.foreclose(record, pledged_loans[default.loan_id])))
-             if default.loan_id in pledged_loans else default for default in defaults]
+    borrowers = list(dict.fromkeys(store.agent_name(number) for number in store.table.borrower[serving].tolist()))
+    cash = dict(zip(borrowers, record.book.balances_at(record.book.rows_of(borrowers), money).tolist()))
+    served = credit_service.serve(store, serving, cash)
+    transfer_rows.post_payments(record.book, *served.payments(year))
+    received = {lender: receipt.interest for lender, receipt in served.receipts().items() if receipt.interest > 0.0}
+    merchants_credit.stake(record.merchants, credit_service.principal_changes(store, served, serving))
+    defaults = served.defaults()
+    pledged_rows = {store.texts[number]: row for number, row in zip(store.table.number[serving].tolist(), serving.tolist())
+                    if store.table.collateral_tile[row] != NO_TILE}
+    taken = [dataclasses.replace(default, loss=max(0.0, default.loss - titles.foreclose(record, store.snapshot(pledged_rows[default.loan_id]))))
+             if default.loan_id in pledged_rows else default for default in defaults]
     for agent, lost in credit_claims.losses_by_lender(taken).items():
         record.credit.add_loss(agent, lost)
     bondage.enter(record, taken, bondage_years)
     record.credit.remembered_defaults = credit_claims.remember_defaults(record.credit.remembered_defaults, defaults)
-    record.credit.loans = [loan for loan in record.credit.loans if loan.issued_year >= year or banks.is_deposit(record.capital_markets, loan)] + serviced
+    credit_service.apply_served(store, served, serving)
     for depositor, interest in bank_service.service_deposits(record, money, year).items():
         received[depositor] = received.get(depositor, 0.0) + interest
     return received
@@ -93,8 +96,8 @@ def lend_working_capital(setup, record, view) -> None:
         clearing="working_capital",
         rate_ceiling=capital_market.RATE_CEILING_SHARE * setup.opening_rate,
         expected_inflation=expected_inflation_of(record))
-    record.book.transfer_many(credit.disbursements(loans))
-    record.credit.loans.extend(loans)
+    transfer_rows.post_payments(record.book, *credit.disbursement_rows(loans))
+    record.credit.add_loans(loans)
     merchants_credit.stake(record.merchants, {loan.borrower: loan.principal for loan in loans})
 
 

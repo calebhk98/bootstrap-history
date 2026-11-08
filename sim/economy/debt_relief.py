@@ -7,6 +7,8 @@ arrears of tenants on the tile are forgiven too. The state's choice reaches the 
 """
 from typing import Dict, Iterable
 
+import numpy
+
 from . import titles
 from .types import TileId
 
@@ -18,15 +20,17 @@ def forgive(record, tiles: Iterable[TileId]) -> Dict[str, float]:
     written_off = {"principal": 0.0, "arrears": 0.0, "rent_arrears": 0.0}
     if not relieved:
         return written_off
-    kept = []
-    for loan in record.credit.loans:
-        if loan.borrower not in borrowers:
-            kept.append(loan)
-            continue
-        written_off["principal"] += loan.principal
-        written_off["arrears"] += loan.arrears
-        record.credit.add_loss(loan.lender, loan.principal + loan.arrears)
-    record.credit.loans = kept
+    store = record.credit.contracts.loan_store
+    numbers = [store.agents.find(name) for name in sorted(borrowers)]
+    count = len(store)
+    relieved_rows = numpy.isin(store.table.borrower[:count], [number for number in numbers if number is not None])
+    rows = numpy.nonzero(relieved_rows)[0]
+    for lender, principal, arrears in zip(store.table.lender[rows].tolist(), store.table.principal[rows].tolist(),
+                                          store.table.arrears[rows].tolist()):
+        written_off["principal"] += principal
+        written_off["arrears"] += arrears
+        record.credit.add_loss(store.agent_name(lender), principal + arrears)
+    store.retain(~relieved_rows)
     for tile in relieved:
         written_off["rent_arrears"] += titles.forgive_rent_arrears(record.land, tile)
     return written_off
@@ -35,4 +39,6 @@ def forgive(record, tiles: Iterable[TileId]) -> Dict[str, float]:
 def indebted_tiles(record) -> list:
     """Tiles where a household cohort owes a term loan, sorted: the tiles a state could relieve."""
     tile_of = {cohort.agent_id: cohort.tile for cohort in record.cohorts.values()}
-    return sorted({tile_of[loan.borrower] for loan in record.credit.loans if loan.borrower in tile_of})
+    store = record.credit.contracts.loan_store
+    borrowers = {store.agent_name(number) for number in numpy.unique(store.table.borrower[:len(store)]).tolist()}
+    return sorted({tile_of[borrower] for borrower in borrowers if borrower in tile_of})

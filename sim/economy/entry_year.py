@@ -219,7 +219,8 @@ def close_idle_producers(setup, record) -> int:
     cash is paid out as a dividend, shared with the holders of their shares and spread over their owner's tile, and any goods
     they still hold go to their owner."""
     money = setup.currency_id
-    debtors = {loan.borrower for loan in record.credit.loans}
+    store = record.credit.contracts.loan_store
+    debtors = {store.agent_name(number) for number in np.unique(store.table.borrower[:len(store)]).tolist()}
     closing = producers_to_close(record.producers, set(record.credit.expansion_runs), debtors)
     exits = producer_exit.ExitBatch(record)
     for producer_id in closing:

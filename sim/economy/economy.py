@@ -13,6 +13,7 @@ from .rates import own_rate
 from . import plan_table, plan_year, producer_table
 from . import outlay_room, taxes, bondage, bondage_hours, bondage_keep, bonded_purchase, banks, carriage_hours, credit, credit_idle_rate, credit_lines, debt_relief, credit_claims, currency, equity, land_market, lending, merchants_credit, producers, shares, sites, state_budget, tax_farming, titles_inheritance, titles_moves, titles_plots, unit_cost
 from .credit_view import CreditView
+from . import transfer_rows
 from .market_areas_follow import follow
 from .market_memory import YearView
 from .mint import mint_orders, settle_mint, staff as staff_mint
@@ -431,7 +432,7 @@ class Economy:
         loans, granted = credit_lines.split_lines(loans, [ask.borrower for ask in credit_asks])
         record.credit.grant_lines(granted, [ask.borrower for ask in credit_asks])
         banks.draw_deposits(record, loans, pledged or {}, view.year, money)       # a bank takes its depositors' funds for the loans it makes
-        record.book.transfer_many(credit.disbursements(loans))
+        transfer_rows.post_payments(record.book, *credit.disbursement_rows(loans))
         record.credit.add_loans(loans)
         for loan in every_loan:
             record.credit.note_lent(loan)

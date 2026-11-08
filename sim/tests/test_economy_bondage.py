@@ -92,7 +92,8 @@ class DefaultFlowTests(unittest.TestCase):
         setup, record = make_world()
         lent = credit.clear([credit_request(record)], [FundsOffer(LANDLORD, MONEY, 50000.0, RATE)], MONEY, RATE, {})[0]
         record.credit.loans.extend(lent)
-        record.credit.loans = [loan.__class__(**{**vars(loan), "collateral_value": 1.0}) for loan in record.credit.loans]   # land worth little
+        for loan in record.credit.loans:
+            loan.collateral_value = 1.0          # land worth little
         for _year in range(1, 8):
             lending.service(record, MONEY, _year, bondage_years=TERM)
             if record.unfree.bondage:
