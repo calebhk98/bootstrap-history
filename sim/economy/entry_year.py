@@ -8,7 +8,10 @@ from typing import Dict, List, Tuple
 
 import numpy as np
 
+from sim.book_apply import RULE_SINGLE
+
 from . import producer_table
+from .posting_sequence import post_in_order
 from . import credit, entry_kernels, entry_practice, location, ownership, practice, producer_exit, sites, unit_cost
 from .entry_backed import unfilled_at_cost
 from .entry_margin import margin_entry_plans
@@ -81,6 +84,8 @@ def open_entrants(setup, record, view, area_map, unmet_by_market: Dict[Tuple[str
     by_limits = sites.limits_by_recipe(setup.site_limits)
     plans = year_plans(setup, record, view, area_map, unmet_by_market, carriage, bids_by_market, arrays)
     peers_of_recipe: Dict[str, list] = {}       # each recipe's producers' crews, a newcomer's included once it starts
+    owner_cash: Dict[str, float] = {}           # each owner's cash as the stakes already decided leave it
+    stakes: List[Transfer] = []          # the stakes, posted together after the plans are applied, one batch each
     if plans:
         for each in record.producers.values():
             peers_of_recipe.setdefault(each.recipe_id, []).append(each.crew_runs)
@@ -111,10 +116,13 @@ def open_entrants(setup, record, view, area_map, unmet_by_market: Dict[Tuple[str
         producer_table.put_producer(record.producers, producer)
         started += 1
         inputs, wages = live_input_prices(producer, recipe, view), live_wages(producer, recipe, view)
+        if producer.owner not in owner_cash:
+            owner_cash[producer.owner] = record.book.balance(producer.owner, money)
         stake = min(working_capital_target(practice.recipe_for(recipe, producer.crew_runs), plan.runs, inputs, wages),
-                    ENTRANT_OWNER_STAKE_SHARE * max(0.0, record.book.balance(producer.owner, money)))
+                    ENTRANT_OWNER_STAKE_SHARE * max(0.0, owner_cash[producer.owner]))
         if stake > 0.0:
-            record.book.transfer(Transfer(producer.owner, producer_id, money, stake, "stake in a new workshop"))
+            owner_cash[producer.owner] -= stake
+            stakes.append(Transfer(producer.owner, producer_id, money, stake, "stake in a new workshop"))
         if builds_plant:
             per_run = unit_cost.plant_value_per_run(recipe, inputs, wages)
             loan = entrant_loan(per_run * plan.runs, stake) if per_run > 0.0 and math.isfinite(per_run) else 0.0
@@ -122,6 +130,7 @@ def open_entrants(setup, record, view, area_map, unmet_by_market: Dict[Tuple[str
                 record.credit.ask_for_loan(LoanRequest(producer_id, money, loan, credit.earnable_rate(plan.yearly_return),
                                                        recipe.plant_life_years, loan, "enter"))
                 record.credit.plan_expansion(producer_id, loan / per_run)
+    post_in_order(record.book, [([stake], ()) for stake in stakes], RULE_SINGLE)
     return started
 
 
@@ -184,7 +193,7 @@ def _restake_over_arrays(setup, record, view, arrays, money: str, rate: float) -
     columns, matrices, memory = arrays.producers, arrays.matrices, arrays.memory
     balance = record.book.balance
     ids = columns.ids
-    cash = np.fromiter((balance(each, money) for each in ids), dtype=np.float64, count=len(ids))
+    cash = record.book.balances_at(record.book.rows_of(ids), money)
     shortfall = np.where(columns.capacity_runs > 0.0, columns.cash_target - cash, 0.0)
     wanting = np.nonzero(shortfall > 0.0)[0]
     owners = sorted({columns.records[row].owner for row in wanting})
@@ -200,8 +209,8 @@ def _restake_over_arrays(setup, record, view, arrays, money: str, rate: float) -
         matrices.slot_goods, matrices.inputs, matrices.outputs, matrices.plant_goods, matrices.labour_hours,
         matrices.plant_labour_hours, matrices.plant_life_years, memory.price, memory.offered, memory.wage,
         arrays.area_index.of_good_tile, float(rate), ENTRANT_OWNER_STAKE_SHARE)
-    for row in np.nonzero(amounts > 0.0)[0]:
-        record.book.transfer(Transfer(columns.records[row].owner, ids[row], money, float(amounts[row]), "owner's stake"))
+    post_in_order(record.book, [([Transfer(columns.records[row].owner, ids[row], money, float(amounts[row]), "owner's stake")], ())
+                                for row in np.nonzero(amounts > 0.0)[0]], RULE_SINGLE)
     return True
 
 
