@@ -28,7 +28,8 @@ READS_BY_OWNER = {
     "actors": ("actor_world",),
 }
 
-# not cached: the foreign ledgers, the purse and the stock they read are still written outside their owners' commands
+# not cached: the foreign ledgers, the purse and the stock they read are still written outside their owners' commands; `home_price_level`
+# is cached over the two things it reads that report their changes: the `ratios` channel and the foreign trade books
 _LIVE = dict(cached=False)
 
 MODULE_SPECS = (ModuleSpec(
@@ -36,7 +37,7 @@ MODULE_SPECS = (ModuleSpec(
     publishes=(
         ViewSpec("home_coin_metal", "home_coin_metal", **_LIVE),
         ViewSpec("home_coin_stock", "home_coin_stock", **_LIVE),
-        ViewSpec("home_price_level", "home_price_level", channels=(RATIOS,), **_LIVE),
+        ViewSpec("home_price_level", "home_price_level", channels=(RATIOS,), inputs=("foreign_coin_home_units", "civilisation")),
         ViewSpec("partner_price_level", "partner_price_level", kind=KEYED, channels=(RATIOS,), **_LIVE),
         ViewSpec("partner_coin_opening", "partner_coin_opening", kind=KEYED, **_LIVE),
         ViewSpec("coin_kg_per_unit", "coin_kg_per_unit", **_LIVE),

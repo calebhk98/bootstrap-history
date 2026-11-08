@@ -11,6 +11,7 @@ from .commands import (AdvanceYear, OpenScenario, RecordOpeningLiteracy, Scenari
                        SetYear)
 
 YEAR = "year"
+CIVILISATION = "civilisation"   # version channel: the civilisation record the game is played in (opened once, its literacy fields moved once)
 
 
 class Scenario(Module):
@@ -38,12 +39,14 @@ class Scenario(Module):
 		self.sources = command.sources
 		self.dice = command.dice
 		self.configuration["start_year"] = rules.opening_start_year(self.civilisation, self.configuration)
+		self.bump(CIVILISATION)
 
 	def record_opening_literacy(self, command: RecordOpeningLiteracy) -> None:
 		self.start_civilisation["literacy_general"] = command.general
 		self.start_civilisation["literacy_elite"] = command.elite
 		self.civilisation.pop("literacy_general", None)
 		self.civilisation.pop("literacy_elite", None)
+		self.bump(CIVILISATION)
 
 	def advance_year(self, command: AdvanceYear) -> int:
 		self.world.year += 1

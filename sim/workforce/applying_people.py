@@ -1,6 +1,8 @@
 """The workforce module applies the commands that change the acting seat's people, hours and base."""
 from sim.assembly.api import Part
 
+from .state import BASE_TILE
+
 
 class ApplyingPeople(Part):
 
@@ -29,4 +31,7 @@ class ApplyingPeople(Part):
 		return self.parts.core.labour.training.found_trade_school(command.trade, command.seats)
 
 	def move_base(self, command):
-		return self.parts.core.labour.relocation.move_base(command.tile)
+		"""Labour writes the seat's `base_tile` in `Relocation.move_base`, which only this command calls; the channel moves when it returns."""
+		moved = self.parts.core.labour.relocation.move_base(command.tile)
+		self.bump_seat(BASE_TILE)
+		return moved

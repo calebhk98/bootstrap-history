@@ -7,6 +7,7 @@ change without them knowing. The port files (port*.py) are the only code that im
 the agent economy answers, and the engine's own opening figures answer
 while it opens. The port reads the game through `PortWorld` (port_world.py).
 """
+from sim.economy import api as economy_api
 from sim.prices.api import prices as price_solver
 
 from . import port_actors, port_goods_orders
@@ -168,6 +169,7 @@ class EconomyPort:
                 agent.economy()
             finally:
                 self._opening = False
+                economy_api.note_memory_changed()    # the views that answered None while it opened read again
         if not priced:
             self._sim.send(RepriceOpeningMoney(before))
 

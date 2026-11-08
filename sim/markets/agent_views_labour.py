@@ -16,6 +16,11 @@ class AgentLabourViews(AgentViewPart):
 		parts = self._answering()
 		return None if parts is None else parts.prices.wage_per_hour_at(trade, tile)
 
+	def agent_wage_cell(self, cell):
+		"""`agent_wage_at` for `cell` = (trade, tile), as a keyed view the module keeps until the market memory is written."""
+		trade, tile = cell
+		return self.agent_wage_at(trade, tile)
+
 	def agent_hours_offered_at(self, trade, tile):
 		"""Hours of the trade the households of `tile`'s labour area offered at the last clearing; None while the economy opens or before one."""
 		parts = self._answering()

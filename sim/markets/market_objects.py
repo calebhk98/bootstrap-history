@@ -1,6 +1,8 @@
 """The markets module's own objects: the agent economy's port, the one goods market and the acting seat's remembered figures."""
 from sim.assembly.api import Part
+from sim.economy import api as economy_api
 
+from .channels import MEMORY
 from .goods_market import GoodsMarket
 from .port import EconomyPort
 from .port_world import PortWorld
@@ -16,6 +18,11 @@ class MarketObjects(Part):
 		self.reads = PortWorld(self.needs, self.module, self.parts)
 		self.economy = EconomyPort(self.reads)       # opens the agent economy when first asked, or on the opening command
 		self.goods_market = GoodsMarket(self.reads)
+		economy_api.watch_memory_writes(self.memory_written)
+
+	def memory_written(self):
+		"""The agent economy's market memory was written (prices, wages, rates, price levels): the wage views read again."""
+		self.bump(MEMORY)
 
 	def seat_cache(self, name):
 		return self._caches.get((self.clock.acting_seat, name))

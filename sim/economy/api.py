@@ -173,6 +173,17 @@ def hours_paid_by_employer(economy, employer):
     return dict(economy.record.labour.hours_paid_by_employer.get(employer, {}))
 
 
+def watch_memory_writes(callback):
+    """Call `callback()` after every write to the market memory (a bound method, held weakly): a reader that keeps what it read from
+    the memory (the markets module's wage views) learns when to read again."""
+    market_memory_module.add_write_listener(callback)
+
+
+def note_memory_changed():
+    """The memory's answers changed without a write to it (the economy was built or finished opening): its watchers are told."""
+    market_memory_module.note_written()
+
+
 def add_workers(economy, tile, trade, people):
     """`people` more workers of `trade` in the labour core, on `tile`'s labour area: they are hired at the clearing like anyone.
     Worker-weighted wages and the figures kept between steps read the workforce, so the memory's write stamp moves."""

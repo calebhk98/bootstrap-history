@@ -7,14 +7,15 @@ other module can read it without a cycle."""
 from sim.assembly.api import KEYED, QUOTE, ModuleSpec, ViewSpec
 
 from .commands import (AdvanceYear, OpenScenario, RecordOpeningLiteracy, SetEndYear, SetFog, SetFuzzyEstimates, SetYear)
-from .module import YEAR, Scenario
+from .module import CIVILISATION, YEAR, Scenario
 from .state import ScenarioWorld
 
-# not cached: the configuration and the civilisation are shared objects the engine and the front ends still change in place
+# not cached: the configuration is a shared object the engine and the front ends still change in place; the civilisation is one object, changed
+# only by the two commands that bump its channel
 _LIVE = dict(cached=False)
 
 MODULE_SPECS = (ModuleSpec(
-	"scenario", Scenario, channels=(YEAR,), world_state=ScenarioWorld,
+	"scenario", Scenario, channels=(YEAR, CIVILISATION), world_state=ScenarioWorld,
 	publishes=(
 		ViewSpec("year", "year", channels=(YEAR,)),
 		ViewSpec("fog_of_war", "fog_of_war", **_LIVE),
@@ -22,7 +23,7 @@ MODULE_SPECS = (ModuleSpec(
 		ViewSpec("fuzzy_salt", "fuzzy_salt", **_LIVE),
 		ViewSpec("events_enabled", "events_enabled", **_LIVE),
 		ViewSpec("automation", "automation", **_LIVE),
-		ViewSpec("civilisation", "civilisation_of_game", **_LIVE),
+		ViewSpec("civilisation", "civilisation_of_game", channels=(CIVILISATION,)),
 		ViewSpec("game_random", "game_random", **_LIVE),
 		ViewSpec("civilisation_record", "civilisation_record", kind=KEYED, **_LIVE),
 		ViewSpec("opening_civilisation", "opening_civilisation", **_LIVE),

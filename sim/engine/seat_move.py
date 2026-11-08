@@ -23,6 +23,8 @@ def move_seat(sim, from_id: str, to_id: str) -> dict:
 	the seat that now acts. Returns `move_seat_fields`'s account."""
 	known_nodes = sim.send(HandOverTechniques(from_id, to_id))   # the leaver's knowledge record is the one that moves
 	moved = move_seat_fields(sim.state.seats, from_id, to_id)
+	sim.assembly.clock.seat_replaced(to_id)     # the replacement's modules are the leaver's now: cached seat views recompute
+	sim.assembly.clock.seat_replaced(from_id)
 	moved["known_nodes"] = known_nodes
 	sim.stack_cautions.pop(from_id, None)   # the leaver's memory of what it was told goes with it
 	rename_seat_references(sim, from_id, to_id)

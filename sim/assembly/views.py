@@ -27,6 +27,8 @@ class View:
 			return self.memo_signature
 		seat_scoped = self.spec.seat_scoped
 		parts: List[Any] = [clock.era, clock.acting_seat if seat_scoped else None]
+		if seat_scoped:
+			parts.append(clock.replaced(clock.acting_seat))
 		parts.extend(clock.counter(self.owner_id, channel, seat_scoped) for channel in self.spec.channels)
 		parts.extend(view.signature() for view in self.inputs)
 		for _function, _access, reads in self.adjusters:
