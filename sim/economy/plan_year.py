@@ -10,7 +10,8 @@ import numpy as np
 from . import practice, producers
 from .inventory import DEFAULT_MONTHS_OF_COVER
 from .plan_kernel import plan_rows
-from .types import Bid, LabourBid
+from .goods_order_book import make_bid
+from .types import LabourBid
 from .year_arrays_recipes import RecipeMatrices
 
 _simple: Dict[int, tuple] = {}      # id of the recipes mapping -> (mapping, recipe id -> whether the kernel plans it)
@@ -97,8 +98,8 @@ def plans_of(setup, record, view, arrays, money) -> Dict[str, producers.Plan]:
         quantity_row = quantity_rows[position]
         labour_bids = tuple(LabourBid(agent, trade, area_of(trade, tile), hours_row[slot], ceiling_row[slot]) for slot, trade in hired)
         price_row, budget_row, worth_row = price_rows[position], budget_rows[position], worth_rows[position]
-        bids = tuple(Bid(agent, good, area_of(good, tile), tile, quantity_row[slot], 0.0, price_row[slot], 0.0, budget_row[slot],
-                         maximum_price=worth_row[slot]) for slot, good in bought if quantity_row[slot] > 0.0)
+        bids = tuple(make_bid(agent, good, area_of(good, tile), tile, quantity_row[slot], 0.0, price_row[slot], 0.0, budget_row[slot], 0,
+                              worth_row[slot]) for slot, good in bought if quantity_row[slot] > 0.0)
         plans[agent] = producers.Plan(runs_list[position], labour_bids, bids, wanted_list[position], line_list[position])
     for producer_id in ids:
         if producer_id not in plans:

@@ -30,7 +30,7 @@ def write_markets(setup, ledger, markets, packed, out) -> None:
         if bid_adding[row]:
             good, area = keys[bid_market[row]]
             buyer = bid_buyer[row]
-            markets[(good, area)].added_bids.append(Bid(
+            markets[(good, area)].add_bid(Bid(
                 packed.buyers[buyer], good, area, packed.buyer_tile[buyer], 0.0, float(bid_flexible[row]),
                 float(bid_reference[row]), substitution[buyer], float(bid_budget[row]), RESPEND_PRIORITY,
                 maximum_price=float(bid_maximum[row])))

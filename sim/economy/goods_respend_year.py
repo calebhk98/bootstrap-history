@@ -41,7 +41,8 @@ class LeftMarket:
         self.results = [result]
         self.bought = bought or {}     # buyer -> (units received, money paid) in the first round's settlement
         self.bids = bids
-        self.added_bids: list = []     # the later rounds' bids that add demand (objects)
+        self.added_bids: list = []     # a market on the tables: the later rounds' bids that add demand (objects)
+        self._all_bids = list(bids) if rows is None else None     # the first round's bids and the later rounds' that add demand
         self.rows = rows
         self.last_offered = result.offered_at_price     # on offer at the last round's price
         self.last_delivered = delivered                 # moved in the last round
@@ -52,9 +53,19 @@ class LeftMarket:
     @property
     def all_bids(self):
         """The first round's bids and the later rounds' that add demand."""
+        if self._all_bids is not None:
+            return self._all_bids
         if not self.added_bids:
             return self.bids
         return LazyObjects(lambda: list(self.bids) + self.added_bids, len(self.bids) + len(self.added_bids))
+
+    @all_bids.setter
+    def all_bids(self, bids) -> None:
+        self._all_bids = bids
+
+    def add_bid(self, bid) -> None:
+        """A later round's bid that adds demand."""
+        (self.added_bids if self._all_bids is None else self._all_bids).append(bid)
 
     def leave_units(self, units) -> None:
         """The units each offer left in `rows` has after the rounds (zero: sold out); the offers are built from them when read."""

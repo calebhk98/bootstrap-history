@@ -417,10 +417,10 @@ class _OfferRows:
         self.seller, self.good, self.tile, self.market, self.quantity, self.reservation = [], [], [], [], [], []
 
     def add(self, producer, good: str, quantity: float, reservation: float) -> None:
-        book = self.orders.book
-        self.seller.append(book.agent_number(producer.agent_id))
-        self.good.append(book.good_number(good))
-        self.tile.append(book.tile_number(producer.tile))
+        orders = self.orders
+        self.seller.append(orders.agent_id(producer.agent_id))
+        self.good.append(orders.good_id(good))
+        self.tile.append(orders.tile_id(producer.tile))
         self.market.append(self.orders.market_id(good, self.view.area_of(good, producer.tile)))
         self.quantity.append(quantity)
         self.reservation.append(reservation)

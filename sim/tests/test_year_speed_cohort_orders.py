@@ -13,7 +13,11 @@ import dataclasses
 import random
 import unittest
 
+from sim.book import Book
 from sim.economy import households, households_orders_pack
+from sim.economy.goods_order_book import GoodsOrderBook
+from sim.economy.goods_order_tables import HOUSEHOLD
+from sim.economy.market_tables import MarketTables
 from sim.economy.households_cohort import Cohort
 from sim.economy.year_goods import less_what_it_grew
 from sim.tests.test_opening_demand_kernel import SPECS, View, random_units, random_world
@@ -62,8 +66,15 @@ def reference(cohort, basket, priced, view, cash, income, grown, smooth_rise):
 def kernel(cohorts, baskets, priceds, view, cashes, incomes, grown, smooth_rise):
     entries = [(cohort, basket, priced, cash, income, units) for cohort, basket, priced, cash, income, units
                in zip(cohorts, baskets, priceds, cashes, incomes, grown)]
-    return households_orders_pack.kernel_orders(view, SPECS, entries, smooth_rise, lambda cohort: (cohort.tile, cohort.hired_work_per_person),
-                                                lambda cohort: stores.setdefault((cohort.tile, cohort.hired_work_per_person), {}))
+    """The cohorts' orders with the bids read back from the rows the kernel wrote."""
+    orders = GoodsOrderBook(Book(), MarketTables())
+    made, rows, planned = households_orders_pack.kernel_orders(
+        view, SPECS, entries, smooth_rise, lambda cohort: (cohort.tile, cohort.hired_work_per_person),
+        lambda cohort: stores.setdefault((cohort.tile, cohort.hired_work_per_person), {}), orders)
+    if rows is not None:
+        orders.append_bids(*rows, HOUSEHOLD)
+    bids = orders.bids_of(range(orders.bid_count()))
+    return {agent: dataclasses.replace(each, bids=tuple(bid for bid in bids if bid.buyer == agent)) for agent, each in made.items()}, planned
 
 
 stores = {}
@@ -109,7 +120,7 @@ class CohortOrdersAgreeTests(unittest.TestCase):
             cashes = [cohort.last_year_income * rng.uniform(0.3, 2.5) for cohort in cohorts]
             incomes = [cohort.last_year_income * rng.uniform(0.5, 1.5) for cohort in cohorts]
             cohorts = [dataclasses.replace(cohort, last_year_income=cohort.last_year_income * rng.choice([0.0, 1.0])) for cohort in cohorts]
-            got = kernel(cohorts, [basket] * len(cohorts), priceds, view, cashes, incomes, [units[cohort.agent_id] for cohort in cohorts], smooth_rise)
+            got, planned = kernel(cohorts, [basket] * len(cohorts), priceds, view, cashes, incomes, [units[cohort.agent_id] for cohort in cohorts], smooth_rise)
             for cohort, priced, cash, income in zip(cohorts, priceds, cashes, incomes):
                 grown = units[cohort.agent_id]
                 expected = reference(cohort, basket, priced, view, cash, income, grown, smooth_rise)
@@ -117,6 +128,7 @@ class CohortOrdersAgreeTests(unittest.TestCase):
                     skipped += 1
                     continue
                 same_orders(self, got[cohort.agent_id], expected)
+                self.assertAlmostEqual(planned[cohort.agent_id], sum(bid.budget for bid in expected.bids), delta=1e-6)
                 compared += 1
                 with_store += any(bid.floor_quantity == 0.0 and bid.priority == 2 for bid in expected.bids)
                 with_offers += bool(expected.offers)
@@ -132,12 +144,14 @@ class CohortOrdersAgreeTests(unittest.TestCase):
         stores.clear()
         empty = dataclasses.replace(cohorts[0], people=0.0)
         priced = households.need_prices(basket, view, empty.tile)
-        got = kernel([empty], [basket], [priced], view, [100.0], [10.0], [{}], True)
+        got, _planned = kernel([empty], [basket], [priced], view, [100.0], [10.0], [{}], True)
         self.assertEqual(got[empty.agent_id].bids, ())
         self.assertEqual(got[empty.agent_id].funds_offers, ())
 
     def test_no_cohorts_gives_no_orders(self):
-        self.assertEqual(households_orders_pack.kernel_orders(year_world(random.Random(1))[1], SPECS, [], True, lambda cohort: None, lambda cohort: {}), {})
+        orders = GoodsOrderBook(Book(), MarketTables())
+        self.assertEqual(households_orders_pack.kernel_orders(year_world(random.Random(1))[1], SPECS, [], True, lambda cohort: None,
+                                                              lambda cohort: {}, orders), ({}, None, {}))
 
 
 if __name__ == "__main__":

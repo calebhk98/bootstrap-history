@@ -84,6 +84,34 @@ class ArrayClearingIsTheClearing(unittest.TestCase):
                 compared += 1
         self.assertGreater(compared, 100)
 
+    def test_the_ledger_and_the_mint_read_the_table_clearing_as_they_read_its_fills(self):
+        compared = 0
+        for seed in range(25):
+            setup, record, view, arrays, costs, markets = batched_markets(seed)
+            rng = random.Random(700 + seed)
+            for (good, area, bids, _offers, last_price), (chosen, result) in zip(
+                    markets, goods_year_batch.clear_markets(setup, record, view, arrays, costs, markets)):
+                if not isinstance(result, ArrayClearing):
+                    continue
+                reference = goods_market.clear(bids, chosen, good, area, MONEY, last_price)
+                watchers = frozenset(rng.sample(sorted({bid.buyer for bid in bids}), min(2, len(bids))))
+                expected = {}
+                for fill in reference.fills:
+                    if fill.side == "buy" and fill.agent in watchers:
+                        expected.setdefault(fill.agent, []).append(fill)
+                self.assertEqual(sorted(expected), sorted(result.bought_by(watchers)))
+                for agent, fills in expected.items():
+                    self.assertTrue(same_fills(fills, result.bought_by(watchers)[agent]))
+                buyer = rng.choice(sorted({bid.buyer for bid in bids}))
+                taken = sorted((seller, tile) for seller, tile, _units, _ask in result.taken_by(buyer))
+                pairing = reference.pairing
+                self.assertEqual(taken, sorted(pairing.sellers[offer] for bid, offer in zip(pairing.buyer_index, pairing.seller_index)
+                                               if pairing.buyers[bid][0] == buyer))
+                producers = sum(fill.quantity for fill in reference.fills if fill.side == "sell" and not fill.agent.startswith("edge:"))
+                self.assertTrue(near(producers, result.sold_by_producers()))
+                compared += 1
+        self.assertGreater(compared, 100)
+
     def test_a_market_that_does_not_trade_is_a_plain_result(self):
         found = 0
         for seed in range(10):

@@ -17,6 +17,10 @@ from types import SimpleNamespace
 
 from sim.book import Book
 from sim.economy import goods_market, goods_respend, goods_respend_year, settlement
+from sim.economy.goods_market_rows import MarketRows
+from sim.economy.goods_order_book import GoodsOrderBook
+from sim.economy.goods_table_views import LazyObjects
+from sim.economy.market_tables import MarketTables
 from sim.economy.entry import wanted_in_round
 from sim.economy.goods_market_fills import sold_by_seller_tile
 from sim.economy.households_cohort import Cohort
@@ -177,6 +181,23 @@ def ledger_figures(ledger):
                                                      "exports_received", "delivered_by_market")}
 
 
+def on_the_tables(world):
+    """The world with every market's first-round bids and offers left written into a book of orders and read from its rows."""
+    setup, record, view, ledger, markets, basket_of = world
+    orders = GoodsOrderBook(record.book, MarketTables())
+    for market in markets.values():
+        bid_first, offer_first = orders.bid_count(), orders.offer_count()
+        for bid in market.bids:
+            orders.add_bid(bid)
+        for offer in market.offers:
+            orders.add_offer(offer)
+        market.rows = MarketRows(orders, range(bid_first, orders.bid_count()), range(offer_first, orders.offer_count()))
+        market.bids = LazyObjects(lambda rows=market.rows: orders.bids_of(rows.bid_rows), len(market.rows.bid_rows))
+        market.offers = LazyObjects(lambda rows=market.rows: orders.offers_of(rows.left_rows), len(market.rows.left_rows))
+        market.all_bids, market.added_bids = None, []
+    return orders
+
+
 def run(seed, rounds, factor=1.0):
     """A fresh economy, its first-round budgets and offers scaled by `factor`, then respent by `rounds`."""
     world = build(seed)
@@ -192,6 +213,23 @@ def difference(one, other):
 
 
 class RespendKernelAgreesWithThePythonRounds(unittest.TestCase):
+
+    def test_random_economies_read_from_the_order_tables(self):
+        def on_tables(seed, factor=1.0):
+            world = build(seed)
+            nudged(world[4], factor)
+            goods_respend_year.respend(*world, on_the_tables(world))
+            return world
+
+        compared = 0
+        for seed in range(60):
+            found = difference(run(seed, respend_reference.respend_plain), on_tables(seed))
+            if found and (difference(run(seed, respend_reference.respend_plain), run(seed, respend_reference.respend_plain, 1.0 + 1e-12))
+                          or difference(on_tables(seed), on_tables(seed, 1.0 + 1e-12))):
+                continue      # one of the two moves when every budget and offer is nudged by one part in 10^12
+            compared += 1
+            self.assertIsNone(found, "seed %d" % seed)
+        self.assertGreater(compared, 0.9 * 60)
 
     def test_random_economies(self):
         compared, skipped = 0, 0

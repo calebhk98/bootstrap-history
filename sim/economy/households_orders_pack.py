@@ -50,10 +50,9 @@ class _Template:
         self.store_prices = store_prices
         self.store_goods = list(weights)
         self.store_areas = [view.area_of(good, tile) for good in self.store_goods]
-        book = orders.book
-        self.row_good_ids = [book.good_number(good) for good in self.row_goods]
+        self.row_good_ids = [orders.good_id(good) for good in self.row_goods]
         self.row_market_ids = orders.market_ids(self.row_goods, self.row_areas)
-        self.store_good_ids = [book.good_number(good) for good in self.store_goods]
+        self.store_good_ids = [orders.good_id(good) for good in self.store_goods]
         self.store_market_ids = orders.market_ids(self.store_goods, self.store_areas)
         self.unit_need_ids = [need.need_id for need in basket.needs]
 
@@ -178,8 +177,8 @@ def kernel_orders(view, specs, entries, smooth_rise: bool, key_of, store_of, ord
         np.array(held_rows, dtype=np.float64), np.array(held_stores, dtype=np.float64), np.array(grown, dtype=np.float64), len(arrays.goods),
         row_out, store_out, cohort_out)
     bid_rows = cohort_bid_rows(
-        np.array([orders.book.agent_number(cohort.agent_id) for cohort, *_rest in placed], dtype=np.int64),
-        np.array([orders.book.tile_number(cohort.tile) for cohort, *_rest in placed], dtype=np.int64),
+        np.array([orders.agent_id(cohort.agent_id) for cohort, *_rest in placed], dtype=np.int64),
+        np.array([orders.tile_id(cohort.tile) for cohort, *_rest in placed], dtype=np.int64),
         np.array([template.index for _cohort, template, *_rest in placed], dtype=np.int64),
         np.array([row_start for _cohort, _template, row_start, *_rest in placed], dtype=np.int64),
         np.array([store_start for _cohort, _template, _row_start, store_start, _cash in placed], dtype=np.int64),

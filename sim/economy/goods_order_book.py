@@ -10,6 +10,7 @@
 Rows keep the order they arrived in, so a market's bids and offers are in the same order the lists of the old dict held.
 Names become ids at the boundary (`book.agent_number`, `book.good_number`, `book.tile_number`, the memory's goods market
 for `good|area`); objects are rebuilt from rows only at the edge (`bids_of`, `offers_of`)."""
+from dataclasses import fields
 from typing import Dict, Iterable, List, Sequence, Tuple
 
 import numpy
@@ -25,6 +26,31 @@ from .types import Bid, Offer
 _FIRST_CAPACITY = 1024
 _BID_FIGURES = 6
 UNCLEARED = -1
+_BID_FIELDS = ("buyer", "good", "area", "tile", "floor_quantity", "flexible_quantity", "reference_price", "elasticity", "budget",
+               "priority", "maximum_price")
+_OFFER_FIELDS = ("seller", "good", "area", "tile", "quantity", "reservation_price")
+_BID_DIRECT = tuple(field.name for field in fields(Bid)) == _BID_FIELDS
+_OFFER_DIRECT = tuple(field.name for field in fields(Offer)) == _OFFER_FIELDS
+_new = object.__new__
+
+
+def make_bid(*values) -> Bid:
+    """A `Bid` of these field values, set directly (thousands are made from rows a year); any other shape of `Bid` goes through
+    its own constructor."""
+    if not _BID_DIRECT:
+        return Bid(*values)
+    bid = _new(Bid)
+    bid.__dict__.update(zip(_BID_FIELDS, values))
+    return bid
+
+
+def make_offer(*values) -> Offer:
+    """An `Offer` of these field values, set directly."""
+    if not _OFFER_DIRECT:
+        return Offer(*values)
+    offer = _new(Offer)
+    offer.__dict__.update(zip(_OFFER_FIELDS, values))
+    return offer
 
 
 def blank_results(table, first: int, last: int) -> None:
@@ -66,6 +92,8 @@ class GoodsOrderBook:
         self._waiting_offers: List[Tuple[Offer, int]] = []
         self._markets: Dict[Tuple[str, str], int] = {}
         self._bid_lists = None
+        self._numbers = ({}, {}, {})          # name -> id for agents, goods and tiles, kept for the year (ids are never reused)
+        self._area_of_market: Dict[int, str] = {}
 
     # ---- ids -------------------------------------------------------------------------------------
 
@@ -75,6 +103,24 @@ class GoodsOrderBook:
         found = self._markets.get(key)
         if found is None:
             found = self._markets[key] = self.memory_tables.goods_row_for_write(market_key(good, area))
+        return found
+
+    def agent_id(self, name: str) -> int:
+        found = self._numbers[0].get(name)
+        if found is None:
+            found = self._numbers[0][name] = self.book.agent_number(name)
+        return found
+
+    def good_id(self, name: str) -> int:
+        found = self._numbers[1].get(name)
+        if found is None:
+            found = self._numbers[1][name] = self.book.good_number(name)
+        return found
+
+    def tile_id(self, name: str) -> int:
+        found = self._numbers[2].get(name)
+        if found is None:
+            found = self._numbers[2][name] = self.book.tile_number(name)
         return found
 
     def market_ids(self, goods: Sequence[str], areas: Sequence[str]) -> List[int]:
@@ -111,10 +157,9 @@ class GoodsOrderBook:
         if not waiting:
             return
         self._waiting_bids = []
-        book = self.book
-        buyer = [book.agent_number(bid.buyer) for bid, _source in waiting]
-        good = [book.good_number(bid.good) for bid, _source in waiting]
-        tile = [book.tile_number(bid.tile) for bid, _source in waiting]
+        buyer = [self.agent_id(bid.buyer) for bid, _source in waiting]
+        good = [self.good_id(bid.good) for bid, _source in waiting]
+        tile = [self.tile_id(bid.tile) for bid, _source in waiting]
         market = self.market_ids([bid.good for bid, _source in waiting], [bid.area for bid, _source in waiting])
         figures = numpy.array([(bid.floor_quantity, bid.flexible_quantity, bid.reference_price, bid.elasticity, bid.budget, bid.maximum_price)
                                for bid, _source in waiting], dtype=numpy.float64).reshape(-1, _BID_FIGURES)
@@ -125,10 +170,9 @@ class GoodsOrderBook:
         if not waiting:
             return
         self._waiting_offers = []
-        book = self.book
-        seller = [book.agent_number(offer.seller) for offer, _source in waiting]
-        good = [book.good_number(offer.good) for offer, _source in waiting]
-        tile = [book.tile_number(offer.tile) for offer, _source in waiting]
+        seller = [self.agent_id(offer.seller) for offer, _source in waiting]
+        good = [self.good_id(offer.good) for offer, _source in waiting]
+        tile = [self.tile_id(offer.tile) for offer, _source in waiting]
         market = self.market_ids([offer.good for offer, _source in waiting], [offer.area for offer, _source in waiting])
         figures = numpy.array([(offer.quantity, offer.reservation_price) for offer, _source in waiting], dtype=numpy.float64).reshape(-1, 2)
         self._write_offers(seller, good, tile, market, figures[:, 0], figures[:, 1], [source for _offer, source in waiting])
@@ -239,7 +283,10 @@ class GoodsOrderBook:
 
     def area_name_of_market(self, market: int) -> str:
         """The area of a goods market id."""
-        return self._area_names()[self.memory_tables.goods_table.area[market]]
+        found = self._area_of_market.get(market)
+        if found is None:
+            found = self._area_of_market[market] = self._area_names()[self.memory_tables.goods_table.area[market]]
+        return found
 
     def bids_of(self, rows: Sequence[int]) -> List[Bid]:
         """`Bid` objects for the rows, in the order given (the edge for a rule still written over objects)."""
@@ -251,7 +298,7 @@ class GoodsOrderBook:
         market_area = self.memory_tables.goods_table.area[table.market[rows]].tolist()
         figures = numpy.stack((table.floor_quantity[rows], table.flexible_quantity[rows], table.reference_price[rows],
                                table.elasticity[rows], table.budget[rows], table.maximum_price[rows]), axis=1).tolist()
-        return [Bid(agents[buyer], goods[good], areas[area], tiles[tile], *row[:5], priority, row[5])
+        return [make_bid(agents[buyer], goods[good], areas[area], tiles[tile], *row[:5], priority, row[5])
                 for buyer, good, tile, area, priority, row in zip(
                     table.buyer[rows].tolist(), table.good[rows].tolist(), table.tile[rows].tolist(), market_area,
                     table.priority[rows].tolist(), figures)]
@@ -265,7 +312,7 @@ class GoodsOrderBook:
         areas = self._area_names()
         market_area = self.memory_tables.goods_table.area[table.market[rows]].tolist()
         units = (table.quantity[rows] if quantities is None else numpy.asarray(quantities)).tolist()
-        return [Offer(agents[seller], goods[good], areas[area], tiles[tile], quantity, price)
+        return [make_offer(agents[seller], goods[good], areas[area], tiles[tile], quantity, price)
                 for seller, good, tile, area, quantity, price in zip(
                     table.seller[rows].tolist(), table.good[rows].tolist(), table.tile[rows].tolist(), market_area, units,
                     table.reservation_price[rows].tolist())]
