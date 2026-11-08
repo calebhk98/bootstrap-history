@@ -15,6 +15,7 @@ from . import households_orders_kernel as kernel
 from .household_time_preference import HOUSEHOLD_TIME_PREFERENCE
 from .protocols import AgentOrders
 from .households_bid_rows import cohort_bid_rows
+from .stock_block import stock_block
 from .types import FundsOffer
 
 
@@ -144,18 +145,21 @@ def kernel_orders(view, specs, entries, smooth_rise: bool, key_of, store_of, ord
     the rows are numbered with."""
     arrays = _Arrays()
     templates: Dict[tuple, _Template] = {}
-    cohort_floats, cohort_ints, held_rows, held_stores, grown = [], [], [], [], []
+    cohort_floats, cohort_ints, grown = [], [], []
+    row_cells, store_cells = ([], [], []), ([], [], [])        # (agent number, good number, tile number) of every packed holding
     placed = []
-    stock = view.stock
     for cohort, basket, priced, cash, income, grown_units in entries:
         key = key_of(cohort)
         template = templates.get(key)
         if template is None:
             template = templates[key] = arrays.add_template(len(templates), cohort, basket, priced, store_of(cohort), view, specs, orders)
         agent, tile = cohort.agent_id, cohort.tile
-        row_out, store_out, grown0 = len(held_rows), len(held_stores), len(grown)
-        held_rows.extend([stock(agent, good, tile) for good in template.row_goods])
-        held_stores.extend([stock(agent, good, tile) for good in template.store_goods])
+        agent_number, tile_number = orders.agent_id(agent), orders.tile_id(tile)
+        row_out, store_out, grown0 = len(row_cells[0]), len(store_cells[0]), len(grown)
+        for (agents, goods, tiles), good_ids in ((row_cells, template.row_good_ids), (store_cells, template.store_good_ids)):
+            agents.extend([agent_number] * len(good_ids))
+            goods.extend(good_ids)
+            tiles.extend([tile_number] * len(good_ids))
         grown.extend([grown_units.get(need_id, 0.0) for need_id in template.unit_need_ids] if grown_units else [0.0] * len(template.unit_need_ids))
         cohort_floats.append([cohort.people, cohort.expected_spending, cohort.expected_floor_cost, cohort.expected_inflation, cohort.cash_target,
                               households_buffer_stock.share_wealth_carried(cohort.share_wealth, view.equity(agent)),
@@ -164,6 +168,7 @@ def kernel_orders(view, specs, entries, smooth_rise: bool, key_of, store_of, ord
         placed.append((cohort, template, row_out, store_out, max(0.0, cash)))
     if not placed:
         return {}, None, {}
+    held_rows, held_stores = stock_block(orders.book, *row_cells), stock_block(orders.book, *store_cells)    # one block read of the book each
     row_out = np.zeros((len(held_rows), kernel.RO_COUNT))
     store_out = np.zeros((len(held_stores), kernel.SO_COUNT))
     cohort_out = np.zeros((len(placed), kernel.CA_COUNT))

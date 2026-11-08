@@ -178,27 +178,49 @@ class PlanTable:
         return self.labour_objects(0, len(self.labour.position))
 
 
+class PlanBids:
+    """The table's input bids as an item for a `NamedOrderBook` (order_book_named.py): the names are the distinct producers, goods, tiles
+    and (good, area) pairs of the rows, numbered once each, and the rows are the table's own columns with those ids put in."""
+
+    source = PRODUCER_INPUT
+
+    def __init__(self, table: PlanTable):
+        columns = table.bids
+        self.table = table
+        self.buyers, self.buyer_place = numpy.unique(columns.position, return_inverse=True)
+        self.goods, self.good_place = numpy.unique(columns.good, return_inverse=True)
+        self.tiles, self.tile_place = numpy.unique(columns.tile, return_inverse=True)
+        self.areas = len(table.area_names)
+        self.pairs, self.pair_place = numpy.unique(columns.good * self.areas + columns.area, return_inverse=True)
+
+    def names(self) -> tuple:
+        table = self.table
+        return ([table.ids[place] for place in self.buyers.tolist()], [table.good_names[place] for place in self.goods.tolist()],
+                [table.tile_names[place] for place in self.tiles.tolist()],
+                [(table.good_names[pair // self.areas], table.area_names[pair % self.areas]) for pair in self.pairs.tolist()])
+
+    def rows(self, order_book) -> tuple:
+        table = self.table
+        names = self.names()
+        markets = order_book.market_ids([good for good, _area in names[3]], [area for _good, area in names[3]])
+        return (numpy.array(order_book.agent_ids_of(names[0]), dtype=numpy.int64)[self.buyer_place],
+                numpy.array(order_book.good_ids_of(names[1]), dtype=numpy.int64)[self.good_place],
+                numpy.array(order_book.tile_ids_of(names[2]), dtype=numpy.int64)[self.tile_place],
+                numpy.array(markets, dtype=numpy.int64)[self.pair_place], table.bids.priority, table.bids.figures)
+
+
 def write_bids(table: PlanTable, order_book) -> None:
-    """Append every producer's input bids to the book of orders as rows, in the order of the table (producer order, slot order). Names
-    become the book's ids once per distinct name; a plain `{(good, area): (bids, offers)}` dict (a test) receives `Bid` objects."""
-    columns = table.bids
-    count = len(columns.position)
+    """Hand every producer's input bids to the book of orders as rows, in the order of the table (producer order, slot order): they wait
+    by name in a `NamedOrderBook`, are appended at once to a plain `GoodsOrderBook`, and are made into `Bid` objects for a plain
+    `{(good, area): (bids, offers)}` dict (a test)."""
+    count = len(table.bids.position)
     if not count:
         return
-    if not isinstance(order_book, GoodsOrderBook):
+    if hasattr(order_book, "add_named_bids"):
+        order_book.add_named_bids(PlanBids(table))
+    elif isinstance(order_book, GoodsOrderBook):
+        order_book.append_bids(*PlanBids(table).rows(order_book), PRODUCER_INPUT)
+    else:
         for row in range(count):
             bid = table._bid(row)
             order_book.setdefault((bid.good, bid.area), ([], []))[0].append(bid)
-        return
-    buyers, buyer_place = numpy.unique(columns.position, return_inverse=True)
-    goods, good_place = numpy.unique(columns.good, return_inverse=True)
-    tiles, tile_place = numpy.unique(columns.tile, return_inverse=True)
-    areas = len(table.area_names)
-    pairs, pair_place = numpy.unique(columns.good * areas + columns.area, return_inverse=True)
-    markets = order_book.market_ids([table.good_names[pair // areas] for pair in pairs.tolist()],
-                                    [table.area_names[pair % areas] for pair in pairs.tolist()])
-    order_book.append_bids(
-        numpy.array(order_book.agent_ids_of([table.ids[place] for place in buyers.tolist()]), dtype=numpy.int64)[buyer_place],
-        numpy.array(order_book.good_ids_of([table.good_names[place] for place in goods.tolist()]), dtype=numpy.int64)[good_place],
-        numpy.array(order_book.tile_ids_of([table.tile_names[place] for place in tiles.tolist()]), dtype=numpy.int64)[tile_place],
-        numpy.array(markets, dtype=numpy.int64)[pair_place], columns.priority, columns.figures, PRODUCER_INPUT)

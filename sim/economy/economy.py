@@ -30,13 +30,16 @@ from .opening import open_economy
 from .protocols import EconomyYearInputs
 from .record import EconomyRecord
 from .setup import EconomySetup, area_tile, labour_area
-from .types import Bid, EDGE_CONSUMPTION, GoodsMove, Transfer
+from .types import EDGE_CONSUMPTION, GoodsMove, Transfer
 from .national_prices import national_prices, national_wages
 from .merchants_dispatch import dispatch_merchants
 from .year_arrays import YearArrays, same_source, source_of
 from .year_close import close_agents, money_taxes, remember_basket_price_level, wear_and_spoilage
-from .year_goods import add_orders, clear_goods, cohort_orders, merchant_orders, state_orders
-from .goods_order_book import new_order_book
+from .year_goods import clear_goods
+from .year_order_sources import cohort_orders, merchant_orders, state_orders
+from .order_book_named import new_named_order_book
+from .goods_order_tables import ENGINE, LOAN
+from .order_rows import OrderRows
 from .labour_supply import HourSupply
 from .labour_results_table import hours_totals
 from .labour_state import people_by_trade
@@ -233,13 +236,16 @@ class Economy:
         capital_year.insure(setup, record, view, inputs.harvest_factor, view.year, inputs.institutions)     # cover is bought and the weather settles it
         self._grow_own(offers, ledger, inputs.harvest_factor, kept)
         capital_year.note_exposure(setup, record, view, self.area_map, ledger, inputs.harvest_factor, inputs.institutions)
-        order_book = new_order_book(setup, record)
+        order_book = new_named_order_book(setup, record)
         funds = cohort_orders(setup, record, view, ledger, order_book, self.own_plot_options())
         state_orders(setup, record, view, self.area_map, order_book, {})
         mint_held = mint_orders(setup, record, self.area_map, order_book,
                                 ledger.hours_hired.get(mint_agent(setup), {}))
+        engine = OrderRows(order_book, ENGINE)
         for agent, orders in sorted(inputs.engine_orders.items()):
-            add_orders(order_book, orders)
+            engine.bids_from(orders.bids)
+            engine.offers_from(orders.offers)
+        engine.write()
         plan_table.write_bids(plans, order_book)
         land_bid_year.write_firm_land_bids(setup, record, view, plans.wanted_runs_by_id(), plans.budget_total_by_id(), order_book)
         funds = capital_year.before_lending(setup, record, view, ledger, funds, view.year, inputs.institutions)   # holders sell shares and loans; depositors run on banks
@@ -484,6 +490,7 @@ class Economy:
 
     def _bid_for_plant(self, producer, runs, budget, worth_ratio, view, order_book) -> None:
         recipe = self.setup.recipes[producer.recipe_id]
+        rows = OrderRows(order_book, LOAN)
         for good, per_run in sorted(recipe.plant_goods.items()):
             if good not in self.area_map.goods():
                 continue
@@ -491,9 +498,9 @@ class Economy:
             price = view.price(good, area)
             if not price:
                 continue
-            order_book.setdefault((good, area), ([], []))[0].append(
-                Bid(producer.agent_id, good, area, producer.tile, per_run * runs, 0.0, price, 0.0,
-                    budget, maximum_price=price * max(1.0, worth_ratio)))
+            rows.bid(producer.agent_id, good, area, producer.tile, per_run * runs, 0.0, price, 0.0, budget,
+                     maximum_price=price * max(1.0, worth_ratio))
+        rows.write()
 
     def _build_plant(self, plant_runs: Dict[str, float]) -> None:
         """Plant goods a producer received are built in; capacity grows by the share that arrived."""

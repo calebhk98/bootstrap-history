@@ -4,7 +4,9 @@
 A source (the mint, the state, a merchant, a firm bidding for ground or plant, an engine seat) adds one order at a time by name and
 figure (`OrderRows.bid`, `OrderRows.offer`) and calls `write` once; the names become the book's ids in one pass (an unseen name is
 admitted, the names new to one `write` in sorted order, as the book's own flush does) and the rows are appended in the order they
-were added. A source that computes in arrays has the book's `append_bids`/`append_offers` and its own kernel instead.
+were added. Into a `NamedOrderBook` (order_book_named.py) the rows wait by name in their place in the arrival order, so the names of everything waiting are
+numbered together at the next flush, as when each order waited as an object; into a plain `GoodsOrderBook` they are appended at once.
+A source that computes in arrays has the book's `append_bids`/`append_offers` and its own kernel instead.
 
 `bids_from` and `offers_from` take the objects of a rule that still makes them (`households_store.store_bids`, a seat's own bids) and
 unpack them into the same rows, so the book receives no object either way. When the book is a plain `{(good, area): (bids, offers)}`
@@ -15,6 +17,35 @@ from typing import Iterable, List
 from .goods_order_book import GoodsOrderBook
 from .goods_order_objects import make_bid, make_offer
 from .goods_order_tables import OTHER
+
+
+class NamedBids:
+    """The bids of one `OrderRows.write`, as an item a `NamedOrderBook` numbers and writes at its next flush."""
+
+    def __init__(self, buyer, good, area, tile, priority, figures, source: int):
+        self.buyer, self.good, self.area, self.tile, self.priority, self.figures, self.source = buyer, good, area, tile, priority, figures, source
+
+    def names(self) -> tuple:
+        return self.buyer, self.good, self.tile, list(dict.fromkeys(zip(self.good, self.area)))
+
+    def rows(self, book: GoodsOrderBook) -> tuple:
+        return (book.agent_ids_of(self.buyer), book.good_ids_of(self.good), book.tile_ids_of(self.tile),
+                book.market_ids(self.good, self.area), self.priority, self.figures)
+
+
+class NamedOffers:
+    """The offers of one `OrderRows.write`, as an item a `NamedOrderBook` numbers and writes at its next flush."""
+
+    def __init__(self, seller, good, area, tile, quantity, reservation, source: int):
+        self.seller, self.good, self.area, self.tile, self.quantity, self.reservation, self.source = (
+            seller, good, area, tile, quantity, reservation, source)
+
+    def names(self) -> tuple:
+        return self.seller, self.good, self.tile, list(dict.fromkeys(zip(self.good, self.area)))
+
+    def rows(self, book: GoodsOrderBook) -> tuple:
+        return (book.agent_ids_of(self.seller), book.good_ids_of(self.good), book.tile_ids_of(self.tile),
+                book.market_ids(self.good, self.area), self.quantity, self.reservation)
 
 
 class OrderRows:
@@ -71,11 +102,21 @@ class OrderRows:
     def write(self) -> None:
         """Append what was added to the book of orders (bids, then offers, each in the order added) and start empty again."""
         book = self.order_book
-        if isinstance(book, GoodsOrderBook):
+        if hasattr(book, "add_named_bids"):
+            self._wait_in(book)
+        elif isinstance(book, GoodsOrderBook):
             self._write_rows(book)
         else:
             self._write_objects(book)
         self._clear()
+
+    def _wait_in(self, book) -> None:
+        """Hand the names and figures to a `NamedOrderBook`, which numbers them with everything else waiting at its next flush."""
+        if self.buyer:
+            book.add_named_bids(NamedBids(self.buyer, self.bid_good, self.bid_area, self.bid_tile, self.priority, self.figures, self.source))
+        if self.seller:
+            book.add_named_offers(NamedOffers(self.seller, self.offer_good, self.offer_area, self.offer_tile, self.quantity, self.reservation,
+                                              self.source))
 
     def _write_rows(self, book: GoodsOrderBook) -> None:
         if self.buyer:
