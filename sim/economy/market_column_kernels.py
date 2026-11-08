@@ -3,6 +3,8 @@ import numpy
 
 from sim.jit import njit
 
+from .opening_demand_kernel import PARTIALS, _add, _total
+
 
 @njit
 def add_in_order_by_group(groups, values, group_count):
@@ -20,3 +22,38 @@ def add_in_order_by_group(groups, values, group_count):
             appeared += 1
         totals[group] += values[place]
     return totals, first_seen, appeared
+
+
+@njit
+def traded_price_by_group(ends, kept, price, counted_weight):
+    """The national price of each group of places (`ends` the end of each group's run): the sum of price times weight over the group's
+    places, over the sum of their weights, both exact (the `math.fsum` figures), where the weights sum to more than nothing; else the price of
+    the group's first kept place. `counted_weight` is zero at a place that is dropped or not a trade. Returns (price per group, whether
+    the group has a kept place)."""
+    groups = len(ends)
+    answer = numpy.zeros(groups)
+    exists = numpy.zeros(groups, dtype=numpy.bool_)
+    partials = numpy.zeros(PARTIALS)
+    start = 0
+    for group in range(groups):
+        end = ends[group]
+        first = -1
+        for place in range(start, end):
+            if kept[place]:
+                first = place
+                break
+        if first >= 0:
+            exists[group] = True
+            count = 0
+            for place in range(start, end):
+                count = _add(partials, count, counted_weight[place])
+            quantity = _total(partials, count)
+            if quantity > 0.0:
+                count = 0
+                for place in range(start, end):
+                    count = _add(partials, count, price[place] * counted_weight[place])
+                answer[group] = _total(partials, count) / quantity
+            else:
+                answer[group] = price[first]
+        start = end
+    return answer, exists

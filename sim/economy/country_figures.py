@@ -200,12 +200,15 @@ def need_floor_costs_per_person_year(economy, country: Optional[str]) -> Dict[st
 def _worked_need_floor_costs(economy, country: Optional[str]) -> Dict[str, float]:
     record = economy.record
     view = _floor_view(economy)
+    people_on: Dict[TileId, List[float]] = {}
+    for cohort in record.cohorts.values():
+        people_on.setdefault(cohort.tile, []).append(cohort.people)
+    tiles = [tile for tile in sorted(country_tiles(economy, country)) if math.fsum(people_on.get(tile, ())) > 0.0]
+    households_basket.tiles_need_prices(economy.setup, view, tiles)     # every tile's basket priced together; the reads below are then kept ones
     sums: Dict[str, float] = {}
     weight = 0.0
-    for tile in sorted(country_tiles(economy, country)):
-        people = math.fsum(cohort.people for cohort in record.cohorts.values() if cohort.tile == tile)
-        if people <= 0.0:
-            continue
+    for tile in tiles:
+        people = math.fsum(people_on[tile])
         weight += people
         for need_id, cost in _tile_floor_costs(economy, view, tile).items():
             sums[need_id] = sums.get(need_id, 0.0) + people * cost

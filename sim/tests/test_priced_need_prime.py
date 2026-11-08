@@ -69,5 +69,29 @@ class PrimedAfterAWrite(unittest.TestCase):
         self.assertNotIn(("need_prices", TILES[0], "a"), reads)
 
 
+class ManyAtOnce(unittest.TestCase):
+    def test_the_lists_of_many_asks_equal_the_fresh_pricing_and_keep_their_order(self):
+        for seed in range(4):
+            _setup, _record, view, _ledger, _area_map = economy_of(seed)
+            baskets = [make_basket(NEED_DATA, {}), make_basket(NEED_DATA, {}, substitution_elasticity=0.3)]
+            asks = [(tile, ("many", index), lambda basket=basket: basket) for tile in TILES for index, basket in enumerate(baskets)]
+            found = priced_reads.kept_need_prices_many(view, asks)
+            self.assertEqual(len(found), len(asks))
+            for (tile, _key, basket_of), kept in zip(asks, found):
+                self.assertEqual(kept, fresh(basket_of(), view, tile))
+
+    def test_a_view_without_kept_reads_answers_every_ask_by_itself(self):
+        class Plain:
+            def area_of(self, good, tile):
+                return "area"
+
+            def offered_price(self, good, area):
+                return 2.0
+        basket = make_basket(NEED_DATA, {})
+        found = priced_reads.kept_need_prices_many(Plain(), [("t", "a", lambda: basket), ("u", "b", lambda: basket)])
+        self.assertEqual(found[0], found[1])
+        self.assertEqual(found[0], fresh(basket, Plain(), "t"))
+
+
 if __name__ == "__main__":
     unittest.main()

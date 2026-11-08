@@ -96,3 +96,17 @@ def kept_need_prices(view, basket_of, tile, key):
             found.append(need)
     reads[full_key] = found
     return found
+
+
+def kept_need_prices_many(view, asks):
+    """`kept_need_prices(view, basket_of, tile, key)` for each ask (a (tile, key, basket_of) triple), as a list in the asks' order: the asks the
+    view's reads do not hold yet are priced together in one kernel call (`priced_need_prime.price_asked`), and any the grid cannot answer for
+    are priced one at a time as a single ask is."""
+    from .priced_need_prime import price_asked
+    current = getattr(view, "_current", None)
+    if current is not None:
+        reads = current()
+        misses = [(tile, key, basket_of()) for tile, key, basket_of in asks if ("need_prices", tile, key) not in reads]
+        if len(misses) > 1:
+            price_asked(view, reads, misses)
+    return [kept_need_prices(view, basket_of, tile, key) for tile, key, basket_of in asks]

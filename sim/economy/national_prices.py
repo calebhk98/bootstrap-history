@@ -9,6 +9,7 @@ from sim.labour.api import grid_rows_of, hours_cleared_at, people_at, wage_means
 
 from . import price_index
 from .market_memory import KEY_SEPARATOR, RECENT_TRADE_YEARS
+from .market_column_kernels import traded_price_by_group
 from .market_store import MarketStore, figures_for
 from .market_table_specs import HELD_TRADE_AGE
 
@@ -77,18 +78,9 @@ def national_prices(record, keep: Optional[Callable[[str, str], bool]] = None, k
     price = snapshot[0][layout.positions]
     weight = snapshot[1][layout.positions]
     traded = snapshot[2][layout.positions] <= RECENT_TRADE_YEARS
-    counted_weight = np.where(kept & traded, weight, 0.0).tolist()
-    weighted = (price * np.array(counted_weight)).tolist()
-    price_list = price.tolist()
-    kept_list = kept.tolist()
-    prices = {}
-    start = 0
-    for good, end in zip(layout.goods, layout.ends):
-        first = next((place for place in range(start, end) if kept_list[place]), None)
-        if first is not None:
-            quantity = math.fsum(counted_weight[start:end])
-            prices[good] = math.fsum(weighted[start:end]) / quantity if quantity > 0.0 else price_list[first]
-        start = end
+    counted_weight = np.where(kept & traded, weight, 0.0)
+    values, exists = traded_price_by_group(layout.ends_array, kept, price, counted_weight)
+    prices = dict(zip(layout.goods_array[exists].tolist(), values[exists].tolist()))
     if answer_key is not None:
         layout.answers[answer_key] = prices
         return dict(prices)

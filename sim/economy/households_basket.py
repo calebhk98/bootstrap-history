@@ -10,7 +10,7 @@ from sim.world import need_basket
 from sim.world.need_basket import Basket, PricedNeed
 
 from .priced_need_prime import TILE_BASKET_KEY
-from .priced_reads import kept_need_prices, offered_prices_for
+from .priced_reads import kept_need_prices, kept_need_prices_many, offered_prices_for
 from .protocols import MarketView
 from .types import TileId
 
@@ -35,3 +35,8 @@ def cohort_need_prices(basket: Basket, view: MarketView, tile: TileId, signature
     cohorts that bid and the cohorts that count what they ate share one pricing wherever they share a basket
     (the list is shared, never changed)."""
     return kept_need_prices(view, lambda: basket, tile, ("cohort_basket", signature))
+
+
+def tiles_need_prices(setup, view, tiles) -> List[List[PricedNeed]]:
+    """`tile_need_prices` for each of `tiles` (a list in their order), the ones not yet kept priced together in one kernel call."""
+    return kept_need_prices_many(view, [(tile, TILE_BASKET_KEY, lambda tile=tile: setup.basket_for(tile)) for tile in tiles])

@@ -29,6 +29,8 @@ class MarketLayout:
         self.goods = list(code_of_good)
         counts = np.bincount(np.array(codes, dtype=np.int64), minlength=len(self.goods))
         self.ends = np.cumsum(counts).tolist()
+        self.ends_array = np.cumsum(counts).astype(np.int64)
+        self.goods_array = np.array(self.goods, dtype=object)       # the goods as an array, to gather the groups that have a price
         self.keys_grouped = [keys[position] for position in self.positions.tolist()]
         self.areas = [key.split(KEY_SEPARATOR, 1)[1] for key in self.keys_grouped]
         self.good_of_place = [self.goods[code] for code in np.repeat(np.arange(len(self.goods)), counts).tolist()]
