@@ -9,6 +9,7 @@ import unittest
 import numpy
 
 from sim.economy import bid_columns, year_bids
+from sim.economy.year_bids_by_market import BidsByMarket
 from sim.economy.goods_added_bids import AddedBids
 from sim.economy.types import Bid
 from sim.tests.test_bid_columns import random_bids
@@ -114,6 +115,22 @@ class ManyQuestionsAreTheSingleMarketCalls(unittest.TestCase):
         block = year_bids.of({("g", "m"): [Bid("b", "g", "m", "t", 1.0, 0.0, 1.0, 1.0, 9.0, 0)]})
         self.assertEqual(block.demand_at_many([], [], []).tolist(), [])
         self.assertEqual(block.demand_at_many([5, -1], [1.0, 1.0], [1.0, 1.0]).tolist(), [0.0, 0.0])
+
+
+class TheLedgersMapIsMadeOnRead(unittest.TestCase):
+
+    def test_a_market_is_made_once_from_the_block_and_an_unknown_one_is_absent(self):
+        rng = random.Random(2)
+        mapping = {("a", "x"): random_bids(rng, 2), ("b", "y"): random_bids(rng, 3)}
+        block = year_bids.of(mapping)
+        left = {market: types.SimpleNamespace(market_bids=lambda place, whole: bid_columns.MarketBids(
+            lambda: whole.columns_at(place), lambda: [], whole.count(place))) for market in mapping}
+        by_market = BidsByMarket(block, left)
+        self.assertEqual((len(by_market), list(by_market), ("a", "x") in by_market, ("c", "z") in by_market, by_market.get(("c", "z"), ())),
+                         (2, [("a", "x"), ("b", "y")], True, False, ()))
+        found = by_market[("b", "y")]
+        self.assertIs(by_market[("b", "y")], found)
+        self.assertEqual((len(found), columns_as_lists(found.columns)), (3, columns_as_lists(bid_columns.columns_of_bids(mapping[("b", "y")]))))
 
 
 if __name__ == "__main__":

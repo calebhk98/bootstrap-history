@@ -92,7 +92,7 @@ class LeftMarket:
         """The first round's bids and those later rounds added, for the entry rules: columns (read from the order tables' rows, with the added
         bids' columns after them), and the objects of `all_bids` when a rule asks for them. With the market's `place` in the year's bids block
         (`year_bids.YearBids`) the columns are views of the block's rows."""
-        count = len(self.all_bids)
+        count = len(self.all_bids) if block is None else block.count(place)
         make_columns = self._bid_columns if block is None else (lambda: block.columns_at(place))
         return MarketBids(make_columns, lambda: list(self.all_bids), count, self._bid_order)
 

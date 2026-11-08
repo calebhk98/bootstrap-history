@@ -98,22 +98,16 @@ def build(left_markets: Mapping[Market, object]) -> YearBids:
     """The block of the cleared markets (`goods_respend_year.LeftMarket`): a market on the order tables is read from the table's columns,
     a market on the objects from its `Bid`s, and each market's added bids follow its first-round bids."""
     markets = sorted(left_markets)
-    first_counts, added_counts = [], []
-    on_tables, objects, table = [], [], None
-    for place, market in enumerate(markets):
-        left = left_markets[market]
-        added = left.added
-        added_counts.append(0 if added is None else len(added))
-        rows = left.rows
-        if rows is not None:
-            selected = rows.bid_array
-            on_tables.append((place, selected))
-            first_counts.append(len(selected))
-            table = rows.orders
-        else:
-            objects.append(place)
-            first_counts.append(len(left.bids))
-    table = table.tables()[0] if table is not None else None
+    lefts = [left_markets[market] for market in markets]
+    rows_of = [left.rows for left in lefts]
+    selected = [None if each is None else each.bid_array for each in rows_of]
+    first_counts = [len(left.bids) if each is None else len(each) for left, each in zip(lefts, selected)]
+    added_lists = [left.added for left in lefts]
+    added_counts = [0 if each is None else len(each) for each in added_lists]
+    on_tables = [(place, each) for place, each in enumerate(selected) if each is not None]
+    objects = [place for place, each in enumerate(selected) if each is None]
+    orders = next((each.orders for each in rows_of if each is not None), None)
+    table = orders.tables()[0] if orders is not None else None
     counts = numpy.array(first_counts, dtype=numpy.int64) + numpy.array(added_counts, dtype=numpy.int64)
     start = _starts(counts)
     total = int(start[-1])
@@ -128,7 +122,7 @@ def build(left_markets: Mapping[Market, object]) -> YearBids:
         for column, name in zip(columns, ("floor_quantity", "flexible_quantity", "reference_price", "elasticity", "budget", "maximum_price")):
             column[target] = getattr(table, name)[rows]
     for place in objects:
-        left = left_markets[markets[place]]
+        left = lefts[place]
         if first_counts[place]:
             piece = columns_of(list(left.bids))
             first = int(first_start[place])
@@ -138,7 +132,7 @@ def build(left_markets: Mapping[Market, object]) -> YearBids:
     if added_places:
         flexible, reference, elasticity, budget, maximum = ([] for _each in range(5))
         for place in added_places:
-            added = left_markets[markets[place]].added
+            added = added_lists[place]
             flexible += added.flexible
             reference += added.reference
             elasticity += added.elasticity
