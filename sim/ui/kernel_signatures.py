@@ -61,6 +61,7 @@ def declared_signatures():
     signatures.update(loan_signatures(types))
     signatures.update(crossing_signatures(types))
     signatures.update(entry_plan_signatures())
+    signatures.update(household_offer_signatures(types))
     return signatures
 
 
@@ -179,7 +180,7 @@ def entry_plan_signatures():
     small samples of what `entry_margin_tables` and `year_bids` pass them."""
     import numpy
     from numba import typeof
-    from sim.economy import entry_plan_steps, entry_plan_table
+    from sim.economy.api import entry_plan_steps, entry_plan_table
     floats, whole = numpy.ones(2), numpy.zeros(2, dtype=numpy.int64)
     grid, whole_grid = numpy.ones((2, 2)), numpy.zeros((2, 2), dtype=numpy.int64)
     block = tuple(numpy.ones(2) for _ in range(6)) + (numpy.zeros(3, dtype=numpy.int64),)
@@ -194,4 +195,13 @@ def entry_plan_signatures():
     return {
         "sim.economy.entry_margin_kernel.trial_plans": [tuple(typeof(each) for each in trial)],
         "sim.economy.year_bids_kernels.demand_at_many": [tuple(typeof(each) for each in many)],
+    }
+
+
+def household_offer_signatures(types):
+    """The household offer kernels a fixture year may not reach, typed as `household_offer_reads` passes them."""
+    whole, number = types.Array(types.int64, 1, "C"), types.Array(types.float64, 1, "C")
+    return {
+        "sim.economy.household_offer_kernels.hour_value_by_worker": [(whole, whole, number, number, number, number)],
+        "sim.economy.household_offer_kernels.sum_in_order_by_group": [(whole, types.int64, number)],
     }

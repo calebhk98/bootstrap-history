@@ -25,6 +25,8 @@ from . import market_memory as market_memory_module
 from .market_memory import KEY_SEPARATOR, market_key
 from .market_table_specs import GOODS_MARKETS, GoodsMarkets      # the goods market table's spec and type (kernel_signatures declares its kernels from them)
 from .priced_need_tables import GOOD_ROWS, NEED_ROWS, PricedGoodRows, PricedNeedRows      # the priced-need batch's specs and types (kernel_signatures declares its kernel from them)
+from . import entry_plan_steps, entry_plan_table      # entry's plan tables (kernel_signatures declares the plan kernels from them)
+from . import household_offer_kernels      # the household offer kernels (kernel_signatures declares the ones no fixture year reaches)
 from .opening_rate import opening_market_rate
 from .bid_columns import BidColumns      # the price search kernels' input (kernel_signatures declares its kernels from a sample)
 from .crossing_columns import demand_columns
