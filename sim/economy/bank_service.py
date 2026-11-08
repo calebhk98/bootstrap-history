@@ -8,7 +8,9 @@ less than the default share of is a default of the bank.
 """
 from typing import Dict, List, Tuple
 
-from . import banks, credit, credit_claims, ownership
+import numpy
+
+from . import banks, credit, credit_claims, credit_service, ownership, transfer_rows
 from .types import AgentId, Loan, Transfer
 
 EPSILON = 1e-9
@@ -22,11 +24,9 @@ def service_deposits(record, money: str, year: int) -> Dict[AgentId, float]:
         banks.note_dividend(bank, 0.0)
         deposits = [loan for loan in banks.deposits_of(record, bank_id) if loan.issued_year < year]
         if deposits:
-            kept, defaults, interest = _pay(record, bank_id, deposits, money, year)
+            defaults, interest = _pay(record, bank_id, deposits, money, year)
             for lender, amount in interest.items():
                 received[lender] = received.get(lender, 0.0) + amount
-            untouched = [loan for loan in record.credit.loans if loan.borrower != bank_id or loan.issued_year >= year]
-            record.credit.loans = untouched + kept
             for lender, lost in credit_claims.losses_by_lender(defaults).items():
                 record.credit.add_loss(lender, lost)
             record.credit.remember(defaults)
@@ -38,23 +38,29 @@ def service_deposits(record, money: str, year: int) -> Dict[AgentId, float]:
     return received
 
 
-def _pay(record, bank_id: AgentId, deposits: List[Loan], money: str, year: int,
-         ) -> Tuple[List[Loan], List, Dict[AgentId, float]]:
+def _pay(record, bank_id: AgentId, deposits: List[Loan], money: str, year: int) -> Tuple[List, Dict[AgentId, float]]:
+    """Serve the bank's `deposits` (rows of the loan table), each from its share of the cash the bank can pay; the deposits still owed
+    move behind the loans of the table that were not served, in id order. Returns the defaults and the interest paid to each depositor."""
+    store = record.credit.contracts.loan_store
     due = {loan.loan_id: _due(loan) for loan in deposits}
     total = sum(due.values())
     cash = max(0.0, record.book.balance(bank_id, money))
     share = min(1.0, cash / total) if total > 0.0 else 0.0
-    kept: List[Loan] = []
+    serving = numpy.array([store.row_of(loan.number) for loan in deposits], dtype=numpy.int64)
+    kept_rows: List[int] = []
     defaults: List = []
     interest: Dict[AgentId, float] = {}
     for loan in sorted(deposits, key=lambda each: each.loan_id):
-        transfers, serviced, lost, receipts = credit.service_split([loan], {bank_id: due[loan.loan_id] * share}, year)
-        record.book.transfer_many(transfers)
-        kept.extend(serviced)
-        defaults.extend(lost)
-        for lender, receipt in receipts.items():
+        served = credit_service.serve(store, numpy.array([store.row_of(loan.number)], dtype=numpy.int64), {bank_id: due[loan.loan_id] * share})
+        transfer_rows.post_payments(record.book, *served.payments(year))
+        kept_rows.extend(credit_service.write_served(store, served).tolist())
+        defaults.extend(served.defaults())
+        for lender, receipt in served.receipts().items():
             interest[lender] = interest.get(lender, 0.0) + receipt.interest
-    return kept, defaults, interest
+    untouched = numpy.ones(len(store), dtype=numpy.bool_)
+    untouched[serving] = False
+    store.gather(numpy.concatenate((numpy.nonzero(untouched)[0], numpy.array(kept_rows, dtype=numpy.int64))))
+    return defaults, interest
 
 
 def _return_idle(record, bank, money: str) -> None:
@@ -71,8 +77,7 @@ def _return_idle(record, bank, money: str) -> None:
                                for loan in deposits])
     for loan in deposits:
         loan.principal -= paid * loan.principal / owed
-    record.credit.loans = [loan for loan in record.credit.loans
-                    if loan.borrower != bank.agent_id or loan.principal > EPSILON or loan.arrears > EPSILON]
+    record.credit.contracts.loan_store.drop_settled_deposits(bank.agent_id, EPSILON)
 
 
 def _due(loan: Loan) -> float:

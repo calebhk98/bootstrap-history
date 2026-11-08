@@ -11,6 +11,9 @@ from typing import Dict, Iterable, Mapping
 
 from sim.constants import declare
 
+from sim.loans import reads
+from sim.loans.view import LoanList
+
 from .credit import DEFAULT_ARREARS_SHARE, Default
 from .types import AgentId, CurrencyId, Loan
 
@@ -32,6 +35,9 @@ def claim_value(loan: Loan) -> float:
 
 
 def claims_by_lender(loans: Iterable[Loan], currency: CurrencyId = None) -> Dict[AgentId, float]:
+    """What each lender expects to collect; the record's loan list is read by the table's kernel, any other sequence of loans in Python."""
+    if isinstance(loans, LoanList):
+        return reads.claims_by_lender(loans.store, DEFAULT_ARREARS_SHARE, currency)
     held: Dict[AgentId, float] = {}
     for loan in loans:
         if currency is None or loan.currency == currency:
@@ -41,6 +47,8 @@ def claims_by_lender(loans: Iterable[Loan], currency: CurrencyId = None) -> Dict
 
 def debts_by_borrower(loans: Iterable[Loan], currency: CurrencyId = None) -> Dict[AgentId, float]:
     """What each borrower owes: principal and the arrears it has not paid."""
+    if isinstance(loans, LoanList):
+        return reads.debts_by_borrower(loans.store, currency)
     owed: Dict[AgentId, float] = {}
     for loan in loans:
         if currency is None or loan.currency == currency:
@@ -49,6 +57,8 @@ def debts_by_borrower(loans: Iterable[Loan], currency: CurrencyId = None) -> Dic
 
 
 def principal_by_borrower(loans: Iterable[Loan]) -> Dict[AgentId, float]:
+    if isinstance(loans, LoanList):
+        return reads.principal_by_borrower(loans.store)
     owed: Dict[AgentId, float] = {}
     for loan in loans:
         owed[loan.borrower] = owed.get(loan.borrower, 0.0) + loan.principal
@@ -57,6 +67,8 @@ def principal_by_borrower(loans: Iterable[Loan]) -> Dict[AgentId, float]:
 
 def arrears_history(loans: Iterable[Loan], remembered_losses: Mapping[AgentId, float]) -> Dict[AgentId, float]:
     """What the market holds against each borrower: its arrears now plus the losses it caused earlier."""
+    if isinstance(loans, LoanList):
+        return reads.arrears_history(loans.store, remembered_losses)
     history = dict(remembered_losses)
     for loan in loans:
         history[loan.borrower] = history.get(loan.borrower, 0.0) + loan.arrears

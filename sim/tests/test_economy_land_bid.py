@@ -7,6 +7,8 @@ QUICK_TOPIC = True
 import types
 import unittest
 
+from sim.contract_record import Contract
+
 from sim.economy import land_bid, land_bid_year, titles, titles_ground, titles_value
 from sim.book import Book
 from sim.economy.households_cohort import cohort_id, cohorts_for_tile
@@ -106,7 +108,7 @@ class TitleTests(unittest.TestCase):
     def test_tenancies_and_pledges_keep_their_hectares(self):
         record = self.world()
         record.land.tenancies = {TILE: [{"tenant": BUYER, "lessor": SELLER, "share": 0.2, "arrears": 0.0}]}
-        record.credit.loans = [types.SimpleNamespace(borrower=SELLER, collateral_tile=TILE, collateral_share=0.1)]
+        record.credit.loans = [Contract("loan", "lender", SELLER, "coin", 1.0, collateral_tile=TILE, collateral_share=0.1)]
         land_bid.take_up(record, BUYER, TILE, 100.0, HECTARES_ON_TILE)
         self.assertAlmostEqual(record.land.tenancies[TILE][0]["share"] * 2.0 * HECTARES_ON_TILE, 0.2 * HECTARES_ON_TILE)
         self.assertAlmostEqual(record.credit.loans[0].collateral_share * 2.0 * HECTARES_ON_TILE, 0.1 * HECTARES_ON_TILE)

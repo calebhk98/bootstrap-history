@@ -7,7 +7,9 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from . import ask_adjust, credit, expected_sales, firm_finance, inventory, plant_investment, producers, producers_close
+from sim.loans.close_kernel import producer_loans
+
+from . import ask_adjust, expected_sales, firm_finance, inventory, plant_investment, producers, producers_close
 from .close_pack_kernels import held_goods, pair_values_by_slot, slot_stocks
 from .year_arrays import YearArrays
 from .year_arrays_memory import NO_AREA
@@ -50,16 +52,12 @@ class ClosePack:
 
 
 def _loans(record, arrays: YearArrays, pack_arrays) -> None:
+    """Each producer's interest, commitments, arrears and debt on its loans (one kernel pass over the loan table, loans in table order)."""
     interest, commitments, arrears, debt = pack_arrays
+    store = record.credit.contracts.loan_store
     row_of = arrays.producers.row
-    for loan in record.credit.loans:
-        row = row_of.get(loan.borrower)
-        if row is None:
-            continue
-        interest[row] += loan.principal * loan.rate
-        commitments[row] += loan.principal * loan.rate + credit.installment_of(loan)
-        arrears[row] += loan.arrears
-        debt[row] += loan.principal + loan.arrears
+    producer_row = np.array([row_of.get(name, -1) for name in store.agents.name_list], dtype=np.int64)
+    producer_loans(store.table, len(store), producer_row, interest, commitments, arrears, debt)
 
 
 def _currencies(setup, view, arrays: YearArrays, area_column: np.ndarray):

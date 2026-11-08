@@ -48,7 +48,7 @@ def _pay(record, bank_id: AgentId, deposits: Sequence[Loan], part: float, money:
     record.book.transfer_many(payments)
     for deposit in deposits:
         deposit.principal -= deposit.principal * part
-    record.credit.loans = [loan for loan in record.credit.loans if loan.principal > EPSILON or loan.arrears > EPSILON or loan.borrower != bank_id]
+    record.credit.contracts.loan_store.drop_settled_deposits(bank_id, EPSILON)
     return sum(payment.amount for payment in payments)
 
 

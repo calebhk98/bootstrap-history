@@ -7,6 +7,7 @@ asked for more than it holds sells loans or fails (bank_runs.py).
 from typing import Dict, List, Sequence
 
 from sim.constants import declare
+from sim.loans import select as loan_select
 
 from . import bank_runs, funds as fund_pools, insurance, lending, portfolio_year, secondary_trade
 from .funds import POOLED_FUNDS
@@ -27,7 +28,9 @@ def holds_a_claim(record) -> bool:
     """Whether any household holds shares or a loan it could sell."""
     if any(holders for holders in record.capital_markets.shares.values()):
         return True
-    return any(loan.lender in record.cohorts and secondary_trade.tradable(record, loan) for loan in record.credit.loans)
+    store = record.credit.contracts.loan_store
+    return bool((loan_select.tradable(store, record.capital_markets.banks, record.cohorts, secondary_trade.EPSILON)
+                 & loan_select.lent_by(store, record.cohorts)).any())
 
 
 def holds_units(capital_markets) -> bool:

@@ -1,10 +1,10 @@
 """What the economy keeps about credit from year to year: the contracts, the requests made at the last close, what
 lenders have lost and what borrowers were lent."""
-import dataclasses
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Sequence
 
 from sim.contracts import TERM_LOAN, Contracts
+from sim.loans.view import LoanRow
 from sim.rekey import rekey
 
 from . import credit_claims
@@ -68,15 +68,19 @@ class CreditRecord(OwnedRecord):
         """The term loans are `loans` from now on."""
         self.contracts.term_loans = loans
 
-    def add_loan(self, loan: Loan) -> None:
-        self.contracts.term_loans.append(loan)
+    def add_loan(self, loan: Loan):
+        """`loan` (a Contract, or any object with its fields) is struck last; the table keeps its own copy, and the loan's row is
+        returned (changes to the Contract passed in do not reach the table; changes to the row do)."""
+        store = self.contracts.loan_store
+        return LoanRow(store, store.number_of_row(store.append_contract(loan)))
 
     def add_loans(self, loans: List[Loan]) -> None:
-        self.contracts.term_loans.extend(loans)
+        self.contracts.loan_store.append_contracts(loans)
 
     def _parcel_id(self, loan: Loan, buyer: AgentId) -> str:
         """An id no contract holds yet for the part of `loan` that `buyer` takes: two parcels one buyer takes never share one."""
-        taken = {each.loan_id for each in self.contracts.term_loans}
+        store = self.contracts.loan_store
+        taken = {store.texts[number] for number in store.table.number[:len(store)].tolist()}
         base = "%s|%s" % (loan.loan_id, buyer)
         candidate, number = base, 1
         while candidate in taken:
@@ -86,21 +90,12 @@ class CreditRecord(OwnedRecord):
 
     def transfer_loan(self, loan: Loan, buyer: AgentId, part: float) -> None:
         """`buyer` takes `part` (a share, at most one) of the loan's principal with the same share of its arrears and
-        collateral: the whole loan changes lender, a part is split off as a contract of the buyer's own."""
+        collateral: the whole loan changes lender, a part is split off as a contract of the buyer's own. `loan` is a row of the
+        loan table (`record.credit.loans[...]`)."""
         if part >= 1.0 - TRANSFER_TOLERANCE:
             loan.lender = buyer
             return
-        bought = dataclasses.replace(loan, contract_id=self._parcel_id(loan, buyer), lender=buyer,
-                                     principal=loan.principal * part, arrears=loan.arrears * part,
-                                     arrears_interest=loan.arrears_interest * part,
-                                     collateral_value=loan.collateral_value * part,
-                                     collateral_share=loan.collateral_share * part)
-        loan.principal -= bought.principal
-        loan.arrears -= bought.arrears
-        loan.arrears_interest -= bought.arrears_interest
-        loan.collateral_value -= bought.collateral_value
-        loan.collateral_share -= bought.collateral_share
-        self.add_loan(bought)
+        self.contracts.loan_store.split_off(loan.number, buyer, part, self._parcel_id(loan, buyer))
 
     def default_term_loans(self, borrower: AgentId) -> None:
         """The borrower's term loans leave the contracts as defaulted (the losses are booked by the caller)."""
@@ -178,9 +173,7 @@ class CreditRecord(OwnedRecord):
 
     def shrink_collateral(self, tile: TileId, keep: float) -> None:
         """Loans pledged on `tile` are secured by `keep` of the share they were, as the tile's land grows."""
-        for loan in self.contracts.term_loans:
-            if loan.collateral_tile == tile:
-                loan.collateral_share *= keep
+        self.contracts.loan_store.shrink_collateral(tile, keep)
 
     def remember(self, defaults) -> None:
         """This year's defaults join what borrowers are remembered for; older ones fade."""

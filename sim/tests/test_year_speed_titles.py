@@ -7,6 +7,8 @@ import random
 import types
 import unittest
 
+from sim.tests.credit_stub import credit_of
+
 from sim.economy import titles
 from sim.economy.types import Loan
 
@@ -26,7 +28,7 @@ class PledgesByTitleAreTheScan(unittest.TestCase):
                 loan.collateral_share = rng.uniform(0.0, 0.4)
                 loans.append(loan)
             record = types.SimpleNamespace(
-                credit=types.SimpleNamespace(loans=loans),
+                credit=credit_of(loans),
                 land=types.SimpleNamespace(titles={tile: {holder: rng.uniform(0.0, 0.5) for holder in HOLDERS} for tile in TILES}))
             pledges = titles.pledges_by_title(record.credit)
             for tile in TILES:

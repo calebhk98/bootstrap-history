@@ -51,7 +51,19 @@ def declared_signatures():
     signatures.update(book_signatures(types))
     signatures.update(ledger_signatures(types))
     signatures.update(compiled_tables_signatures(types))
+    signatures.update(loan_signatures(types))
     return signatures
+
+
+def loan_signatures(types):
+    """The loan table's kernel that only a write-off reaches, typed from the table the economy keeps."""
+    from numba import typeof
+    from sim.loans.columns import LOAN_TABLE, Loans
+    loan_table = typeof(LOAN_TABLE.new_table(Loans, 1))
+    number, integer, flag = types.float64, types.int64, types.boolean
+    return {"sim.loans.write_down_kernel.write_down": [(
+        loan_table, types.Array(integer, 1, "C"), types.Array(number, 1, "C"), number, types.Array(number, 1, "C"),
+        types.Array(flag, 1, "C"))]}
 
 
 def compiled_tables_signatures(types):

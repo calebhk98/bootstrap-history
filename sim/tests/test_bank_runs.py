@@ -76,7 +76,7 @@ class PayingTheWithdrawals(RunFixture):
         super().setUp()
         self.expect_losses(0.20)
         self.deposits[0].rate, self.deposits[1].rate = 0.10, 0.01      # one stays, one withdraws 450
-        self.leaver, self.stayer = self.deposits[1], self.deposits[0]
+        self.leaver, self.stayer = self.deposits[1].snapshot(), self.deposits[0].snapshot()      # copies: the leaver's deposit leaves the table
 
     def test_a_bank_with_the_cash_pays_the_leaver_in_full_and_stands(self):
         self.loan.principal -= 600.0                 # the borrower repaid 600, so the bank holds the cash with no change in capital

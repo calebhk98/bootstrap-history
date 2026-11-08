@@ -64,31 +64,6 @@ def earnable_rate(gain: float, outlay: float = 1.0) -> float:
     return gain / outlay
 
 
-def _funds_idle_above_clearing_rate(offers: Sequence[FundsOffer], requests: Sequence[LoanRequest],
-                                    ceilings: Sequence[float], able: Sequence[bool], held_rate: float,
-                                    clearing_rate: float) -> bool:
-    """True when some borrower would pay the clearing rate and, at the held rate above it, lenders still
-    have funds left over: the held rate is not a market-clearing price."""
-    demand_at_clearing = sum(request.amount for request, ceiling, can in zip(requests, ceilings, able)
-                             if can and ceiling >= clearing_rate)
-    if demand_at_clearing <= 0.0:
-        return False
-    demand_at_held = sum(request.amount for request, ceiling in zip(requests, ceilings) if ceiling >= held_rate)
-    supply_at_held = sum(offer.amount for offer in offers if offer.minimum_rate <= held_rate)
-    return supply_at_held > demand_at_held
-
-
-def _borrowers_rationed_below_clearing_rate(offers: Sequence[FundsOffer], ceilings: Sequence[float],
-                                            able: Sequence[bool], requests: Sequence[LoanRequest],
-                                            held_rate: float) -> bool:
-    """True when, at the held rate, borrowers who would pay it ask for more than the lenders asking no more
-    than it hold: the held rate is below the price at which supply meets demand."""
-    demand_at_held = sum(request.amount for request, ceiling, can in zip(requests, ceilings, able)
-                         if can and ceiling >= held_rate)
-    supply_at_held = sum(offer.amount for offer in offers if offer.minimum_rate <= held_rate)
-    return demand_at_held > supply_at_held
-
-
 NO_OFFER_AT_RATE = "no_offer_at_rate"      # every offer asks more than the bound lets the rate reach
 NO_OFFERS = "no_offers"
 NO_BORROWER_AT_ASK = "no_borrower_at_ask"      # no request can pay what the cheapest lender asks
@@ -133,121 +108,21 @@ def clear_with_cause(requests: Sequence[LoanRequest], offers: Sequence[FundsOffe
     clear: the rate stays at its last value (the lowest ask when there is none) and the cause is
     `no_offer_at_rate`; the bound is never turned into a rate no lender accepts.
     """
-    arrears_by_borrower = arrears_by_borrower or {}
-    requests = sorted((request for request in requests if request.currency == currency and request.amount > 0),
-                      key=lambda r: (r.borrower, r.purpose, r.amount, r.maximum_rate))
-    offers = [offer for offer in offers if offer.currency == currency and offer.amount > 0]
-    if not offers:
-        return LoanClearing([], last_rate, list(requests), NO_OFFERS)      # borrowers' bids alone are not a price
-    asked_amount: Dict[int, float] = {}    # position in `requests` -> the amount asked, for a request cut to what its collateral bears
-    limited: Dict[AgentId, str] = {}
-    lowest_offered = min(offer.minimum_rate for offer in offers)
-    cut = []
-    for position, request in enumerate(requests):
-        # a request the premium on its whole amount prices out is funded for the most its collateral bears
-        taken = credit_cap.fundable_amount(request.amount, existing_debt_by_borrower.get(request.borrower, 0.0),
-                                           request.collateral_value, arrears_by_borrower.get(request.borrower, 0.0),
-                                           request.maximum_rate, max(0.0, lowest_offered), risk_premium)
-        if 0.0 < taken < request.amount:
-            asked_amount[position] = request.amount
-            limited[request.borrower] = credit_cap.COLLATERAL_BOUND
-            request = replaced(request, amount=taken)
-        cut.append(request)
-    requests = cut
-    premiums = [risk_premium(existing_debt_by_borrower.get(request.borrower, 0.0) + request.amount,
-                             request.collateral_value, arrears_by_borrower.get(request.borrower, 0.0))
-                for request in requests]
-    default_probabilities = [bank_credit_risk.default_probability(existing_debt_by_borrower.get(request.borrower, 0.0),
-                                                                 request.amount, request.collateral_value)
-                             for request in requests]
-    ceilings = [request.maximum_rate - premium for request, premium in zip(requests, premiums)]
-    # a request whose ceiling is below zero or below every lender's ask cannot borrow at any rate the
-    # market could clear at: it is rationed demand, left out of the clearing and returned as unmet
-    lowest_ask = min((offer.minimum_rate for offer in offers), default=None)
-    entry_floor = max(0.0, lowest_ask) if lowest_ask is not None else 0.0
-    able = [ceiling >= entry_floor for ceiling in ceilings]
-    target = credit_rate.base_rate_target([(offer.minimum_rate, offer.amount) for offer in offers],
-                                          [(ceiling, request.amount) for ceiling, request, can in zip(ceilings, requests, able)
-                                           if can])
-    if not any(able):       # lenders alone are not a price either
-        return LoanClearing([], last_rate, list(requests), NO_BORROWER_AT_ASK)
-    base_rate = sticky_move(last_rate, target, RATE_ADJUSTMENT_SHARE_PER_YEAR)
-    if lowest_ask is not None and base_rate < lowest_ask <= max(ceilings, default=-math.inf):
-        # a sticky rate below every lender's ask would lend nothing while a borrower would pay it
-        base_rate = lowest_ask
-    elif base_rate > target and _funds_idle_above_clearing_rate(offers, requests, ceilings, able, base_rate, target):
-        # repricing may be slow, but not so slow that funds sit unlent while a borrower pays the clearing rate
-        base_rate = target
-    elif base_rate < target and _borrowers_rationed_below_clearing_rate(offers, ceilings, able, requests, base_rate):
-        # nor so slow that borrowers who would pay the clearing rate are turned away by a rate below the
-        # ask of the lenders who would fund them
-        base_rate = target
-    nominal_ceiling = None if rate_ceiling is None else rate_ceiling + max(0.0, expected_inflation)
-    rationed_by_risk = nominal_ceiling is not None and base_rate > nominal_ceiling
-    if rationed_by_risk:
-        if lowest_ask is not None and lowest_ask > nominal_ceiling:
-            # no lender accepts the bound: hold the rate, lend nothing, say why
-            held = last_rate if last_rate is not None else lowest_ask
-            return LoanClearing([], max(0.0, held), list(requests), NO_OFFER_AT_RATE)
-        base_rate = nominal_ceiling
-    base_rate = max(0.0, base_rate)
-    lending =[offer for offer in offers if offer.minimum_rate <= base_rate]
-    asking = [index for index, ceiling in enumerate(ceilings) if ceiling >= base_rate]
-    supply = sum(offer.amount for offer in sorted(lending, key=lambda o: (o.lender, o.amount)))
-    demand = sum(requests[index].amount for index in asking)
-    lent = min(supply, demand)
-    lender_entries: List[Entry] = [(offer.minimum_rate, offer.lender, offer.amount) for offer in lending]
-    if rationed_by_risk:      # the least risky borrower is served first
-        borrower_entries: List[Entry] = [(premiums[index], requests[index].borrower, requests[index].amount)
-                                         for index in asking]
-    else:
-        borrower_entries = [(ceilings[index], requests[index].borrower, requests[index].amount) for index in asking]
-    lender_amounts = allocate_in_order(lender_entries, lent, descending=False)
-    borrower_amounts = allocate_in_order(borrower_entries, lent, descending=not rationed_by_risk)
-    # lenders in cheapest-first order, then the same order of borrowers; a lender with a risk capacity (a bank's
-    # headroom, Eurace Bank_decide_credit_conditions EXCESS_VAR) refuses whole any piece whose value at risk exceeds
-    # what it has left, and keeps the rest for smaller pieces
-    lender_queue = [[offer.lender, amount, offer.risk_capacity] for offer, amount in
-                    sorted(((offer, amount) for offer, amount in zip(lending, lender_amounts) if amount > 0),
-                           key=lambda pair: (pair[0].minimum_rate, pair[0].lender, pair[1]))]
-    granted = dict(zip(asking, borrower_amounts))
-    loans: List[Loan] = []
-    for index in sorted(granted, key=lambda i: (-ceilings[i], requests[i].borrower, i)):
-        request, owed = requests[index], granted[index]
-        granted[index] = 0.0
-        for entry in lender_queue:
-            if owed <= 1e-12:
-                break
-            piece = min(owed, entry[1])
-            if piece <= 1e-12:
-                continue
-            if entry[2] is not None:
-                piece_at_risk = default_probabilities[index] * piece
-                if piece_at_risk > entry[2] + 1e-12:
-                    continue
-                entry[2] -= piece_at_risk
-            loans.append(Loan(
-                contract_id="loan:%s:%d:%s:%d" % (currency, year, clearing, len(loans)), lender=entry[0],
-                borrower=request.borrower, currency=currency, principal=piece,
-                rate=base_rate + premiums[index], years_left=request.years,
-                collateral_value=request.collateral_value * piece / request.amount, issued_year=year,
-                collateral_tile=request.collateral_tile,
-                collateral_share=request.collateral_share * piece / request.amount))
-            owed -= piece
-            entry[1] -= piece
-            granted[index] += piece
-    unmet = []
-    for index, request in enumerate(requests):
-        left = asked_amount.get(index, request.amount) - granted.get(index, 0.0)
-        if left > 1e-9:
-            unmet.append(replaced(request, amount=left))
-    return LoanClearing(loans, base_rate, unmet, limited=limited)
+    from .credit_clearing import clear_with_cause as cleared      # the table kernel (sim/loans/clearing_kernel.py) behind this rule
+    return cleared(requests, offers, currency, last_rate, existing_debt_by_borrower, arrears_by_borrower, year, rate_ceiling,
+                   expected_inflation, clearing)
 
 
 def disbursements(loans: Sequence[Loan]) -> List[Transfer]:
     """The money each new loan moves from lender to borrower."""
     return [Transfer(loan.lender, loan.borrower, loan.currency, loan.principal,
                      "loan_disbursement:" + loan.loan_id) for loan in loans]
+
+
+def disbursement_rows(loans: Sequence[Loan]):
+    """`disbursements` as the parallel lists `transfer_rows.post_payments` takes: (lenders, borrowers, currencies, amounts, purposes)."""
+    return ([loan.lender for loan in loans], [loan.borrower for loan in loans], [loan.currency for loan in loans],
+            [loan.principal for loan in loans], ["loan_disbursement:" + loan.loan_id for loan in loans])
 
 
 @dataclass
@@ -282,41 +157,5 @@ def service_split(loans: Sequence[Loan], cash_by_borrower: Mapping[AgentId, floa
     loan: it is removed, no money moves, and the loss is recorded. Repaid loans are removed. The last
     result is each lender's receipt split into interest, principal and arrears.
     """
-    cash = dict(cash_by_borrower)
-    transfers: List[Transfer] = []
-    updated: List[Loan] = []
-    defaults: List[Default] = []
-    receipts: Dict[AgentId, Receipt] = {}
-    for loan in sorted(loans, key=lambda l: l.loan_id):
-        installment = installment_of(loan)
-        interest = loan.principal * loan.rate
-        arrears_interest = min(loan.arrears, loan.arrears_interest)
-        arrears_principal = loan.arrears - arrears_interest
-        due = loan.arrears + interest + installment
-        paid = min(max(0.0, cash.get(loan.borrower, 0.0)), due)
-        if paid > 0:
-            cash[loan.borrower] = cash.get(loan.borrower, 0.0) - paid
-            transfers.append(Transfer(loan.borrower, loan.lender, loan.currency, paid,
-                                      "loan_service:%s:%d" % (loan.loan_id, year)))
-        left = paid
-        paid_parts = []
-        for part in (arrears_interest, arrears_principal, interest, installment):
-            take = min(left, part)
-            paid_parts.append(take)
-            left -= take
-        receipt = receipts.setdefault(loan.lender, Receipt())
-        receipt.interest += paid_parts[0] + paid_parts[2]
-        receipt.arrears += paid_parts[1]
-        receipt.principal += paid_parts[3]
-        arrears = due - paid
-        principal = loan.principal - installment
-        if arrears > DEFAULT_ARREARS_SHARE * loan.principal + 1e-12:
-            defaults.append(Default(loan.loan_id, loan.lender, loan.borrower, loan.currency,
-                                    loss=principal + arrears))
-            continue
-        if principal <= 1e-12 and arrears <= 1e-12:
-            continue
-        updated.append(replaced(loan, principal=principal, arrears=arrears,
-                                arrears_interest=(arrears_interest - paid_parts[0]) + (interest - paid_parts[2]),
-                                years_left=max(0.0, loan.years_left - 1.0)))
-    return transfers, updated, defaults, receipts
+    from .credit_service import service_split as served      # the table kernel (credit_service.py) over a table made from `loans`
+    return served(loans, cash_by_borrower, year)

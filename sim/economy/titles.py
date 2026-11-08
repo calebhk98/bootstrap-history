@@ -8,6 +8,8 @@ family stays on it as a tenant (`record.land.tenancies`: tile -> rows of tenant,
 """
 from typing import Dict, List, Mapping, Optional
 
+from sim.loans import select as loan_select
+
 from . import titles_management
 from .types import AgentId, CurrencyId, TileId, Transfer
 
@@ -45,16 +47,12 @@ def holding(record, tile: TileId, holder: AgentId) -> float:
 
 def pledged(credit, holder: AgentId, tile: TileId) -> float:
     """The share of its title on `tile` the holder has pledged to loans still owed."""
-    return sum(loan.collateral_share for loan in credit.loans
-               if loan.borrower == holder and loan.collateral_tile == tile)
+    return sum(loan_select.pledged_shares(credit.contracts.loan_store, holder, tile))
 
 
 def pledges_by_title(credit) -> Dict[tuple, float]:
     """(holder, tile) -> `pledged`, for every title the loans pledge, in one pass over the loans (summed in loan order)."""
-    shares_of: Dict[tuple, list] = {}
-    for loan in credit.loans:
-        if loan.collateral_tile is not None:
-            shares_of.setdefault((loan.borrower, loan.collateral_tile), []).append(loan.collateral_share)
+    shares_of = loan_select.pledges_by_title(credit.contracts.loan_store)
     return {key: sum(pledged_shares) for key, pledged_shares in shares_of.items()}      # `sum` as `pledged` takes it
 
 

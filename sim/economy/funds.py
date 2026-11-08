@@ -54,10 +54,9 @@ def marked_holdings(setup, record, fund_id: AgentId, market_rate: float) -> floa
             premium = secondary_trade.issuer_premium(record, producer_id, debts, arrears,
                                                      secondary_trade.share_value(record, producer_id, market_rate, rate_floor))
             total += part * secondary_trade.share_value(record, producer_id, market_rate + premium, rate_floor)
-    for loan in record.credit.loans:
-        if loan.lender == fund_id:
-            premium = secondary_trade.issuer_premium(record, loan.borrower, debts, arrears, loan.collateral_value)
-            total += secondary_trade.loan_value(loan, market_rate + premium)
+    for loan in record.credit.loans.select(lender=fund_id):
+        premium = secondary_trade.issuer_premium(record, loan.borrower, debts, arrears, loan.collateral_value)
+        total += secondary_trade.loan_value(loan, market_rate + premium)
     return total
 
 
@@ -130,7 +129,9 @@ def expected_income(record, fund: Fund) -> float:
     loans and the interest the actors' pool paid it at the last close."""
     dividends = sum(held.get(fund.agent_id, 0.0) * record.capital_markets.last_dividends.get(producer_id, 0.0)
                     for producer_id, held in record.capital_markets.shares.items() if producer_id in record.producers)
-    interest = sum(loan.principal * loan.rate for loan in record.credit.loans if loan.lender == fund.agent_id)
+    store = record.credit.contracts.loan_store
+    held = store.rows_of(lender=fund.agent_id)
+    interest = sum((store.table.principal[held] * store.table.rate[held]).tolist())
     return dividends + interest + record.capital_markets.last_pool_income.get(fund.agent_id, 0.0)
 
 

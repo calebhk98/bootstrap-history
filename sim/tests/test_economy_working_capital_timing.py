@@ -6,6 +6,9 @@ QUICK_TOPIC = True
 
 import types
 import unittest
+
+from sim.contract_record import Contract
+from sim.economy.credit_record import CreditRecord
 from unittest import mock
 
 from sim.economy import lending, producers_working_capital
@@ -24,20 +27,23 @@ def record(requests, balances):
     """Two households whose cash targets are 200 each, holding `balances`; the book answers balances and records transfers."""
     book = types.SimpleNamespace(balance=lambda agent, money: balances[agent], transfer_many=mock.Mock())
     cohorts = {name: types.SimpleNamespace(cash_target=200.0, expected_inflation=0.0) for name in sorted(balances)}
-    return types.SimpleNamespace(book=book, cohorts=cohorts, merchants={}, memory=types.SimpleNamespace(rates={MONEY: 0.05}), credit=types.SimpleNamespace(loan_requests=list(requests), loans=[], loss_rates={}, remembered_defaults={}))
+    return types.SimpleNamespace(book=book, cohorts=cohorts, merchants={}, memory=types.SimpleNamespace(rates={MONEY: 0.05}), credit=CreditRecord(loan_requests=list(requests)))
 
 
 def lend(the_record, loans=()):
     setup = types.SimpleNamespace(currency_id=MONEY, opening_rate=0.1)
     clear = mock.Mock(return_value=(list(loans), 0.05, []))
+    payments = mock.Mock()
     with mock.patch.object(lending, "credit", types.SimpleNamespace(
-            clear=clear, disbursements=lambda made: ["paid:%s" % loan.borrower for loan in made])), \
+            clear=clear, disbursement_rows=lambda made: (["paid:%s" % loan.borrower for loan in made],))), \
+            mock.patch.object(lending.transfer_rows, "post_payments", payments), \
             mock.patch.object(lending, "lender_ask", types.SimpleNamespace(lowest_ask=lambda *a, **k: 0.02, loss_rate=lambda x: 0.0)), \
             mock.patch.object(lending, "credit_claims", types.SimpleNamespace(
                 principal_by_borrower=lambda loans: {}, arrears_history=lambda *a: {})), \
             mock.patch.object(lending, "merchants_credit") as merchants, \
             mock.patch.object(lending, "expected_inflation_of", return_value=0.0):
         lending.lend_working_capital(setup, the_record, types.SimpleNamespace(year=YEAR))
+    the_record.payments = payments
     return clear, merchants
 
 
@@ -59,11 +65,11 @@ class LendWorkingCapitalTests(unittest.TestCase):
         self.assertEqual([(offer.lender, offer.amount) for offer in offers], [("a", 300.0)])
 
     def test_the_loans_made_are_booked_paid_out_and_staked_to_a_merchant_borrower(self):
-        loan = types.SimpleNamespace(borrower="firm", principal=ASKED)
+        loan = Contract("loan:0", "a", "firm", MONEY, ASKED)
         the_record = record([request(producers_working_capital.WORKING_CAPITAL_PURPOSE)], {"a": 500.0, "b": 100.0})
         _clear, merchants = lend(the_record, [loan])
         self.assertEqual(the_record.credit.loans, [loan])
-        the_record.book.transfer_many.assert_called_once_with(["paid:firm"])
+        the_record.payments.assert_called_once_with(the_record.book, ["paid:firm"])
         merchants.stake.assert_called_once_with({}, {"firm": ASKED})
 
     def test_with_no_working_capital_request_nothing_is_cleared(self):
