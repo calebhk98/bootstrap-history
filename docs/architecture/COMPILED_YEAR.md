@@ -1,6 +1,6 @@
 # The compiled year: shared tables instead of per-item objects
 
-**Status:** stage 1 under way (Complaint 968 is the problem this answers). The book is on tables (below); the market memory and the year ledger are with other owners.
+**Status:** stage 1 under way (Complaint 968 is the problem this answers). The book and the year ledger are on tables (below); the market memory and the goods and labour sides are with other owners.
 
 ## Why
 
@@ -80,6 +80,31 @@ reads:** the kernels in `sim/book_read_kernels.py` (`read_balances`, `find_slots
 below zero reads as nothing held. Re-fetch tables after any call that may admit a name or reserve room (a grown table is a new
 object). The methods callers use today (`balance`, `stock`, `post`, `post_settled`, ...) are wrappers over the same kernels.
 `tools/measure/book_index.py` shows why slots are found through a hash.
+
+## The year ledger on tables (stage 1, done)
+
+`sim/economy/year_ledger_tables.py` declares every column; the ledger owns no numbering. Rows are keyed by the book's agent, good and
+purpose numbers and the market memory's goods-market, labour-market and trade numbers (`YearLedger(book=..., markets=...)`; a ledger made
+bare, as a test does, gets a book store and market tables of its own).
+
+- **Agent figures** (row = agent number): `money_out`, `wages_in`, `sales_in`, `plant_spend`, `plant_worn`, `hours_sold`, `spare_hours`,
+  each with an `order_*` column (place in entry order, 0 = not a member); and for the three nested figures (`received`, `grown`,
+  `hours_hired`) the agent's presence, entry place and first and last row.
+- **Pair rows** (hash index `KeyedRows` on the packed agent, subkey, extra): `received`, `grown`, `sold`, `output`, `hours_hired`,
+  `hours_hired_by_market` (hours and money), `imports_paid`, `exports_received`. The subkey is a good, a trade, a labour market, or a
+  purpose template with its reference in `extra` (the foreign-money figures keep the purpose the book numbered).
+- **Market figures** (row = goods-market number): `delivered`, `unmet`; **clearing rounds** (market, quantity, price), whose totals
+  (`round_totals`) are summed exactly as `math.fsum` does, so the figures match the dict ledger bit for bit.
+
+**Entry points for converters** (`year_ledger_arrays.py`, reached through `YearLedger.add_money_out`, `add_income`, `add_pair_amounts`,
+`note_settlement_rows`, `note_hours_rows`, `note_round_rows`): they take numbers and arrays, one row per agent in a settlement, per fill,
+or per round, and may hold many settlements in one call. `YearLedger.note_settlement`, `note_hours`, `note_clearing` and `note_output`
+keep the object signatures: they append to plain lists (`year_ledger_batch.py`) and a read of a table first adds the rows of the kind
+it waits on in one kernel call, so a year's thousands of settlements cost a few calls. The attribute API (`ledger.money_out["farm"]`,
+`ledger.hours_hired.setdefault(...)`) is unchanged: `year_ledger_views.py` and `year_ledger_pair_views.py` show the tables as
+dict-likes in entry order. Reading one cell through a view costs more than a dict get did, so a reader that loops over agents should
+use `get_many` or, once it is converted, the tables. Not on tables yet: the clearings, fills and bids (objects the goods side owns),
+labour results, mint takes, `crew_hours_bought`, `own_plot_hours`, `grown_units` and `carried_in`.
 
 ## Stages
 

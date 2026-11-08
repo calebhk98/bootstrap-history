@@ -9,8 +9,9 @@ float64, flags bool_ (a kernel compiles one version per type, so pass exactly th
 Nothing here looks at the pending notes (`year_ledger_batch.py`): the ledger flushes them before it calls in."""
 import numpy
 
-from .year_ledger_kernels import (add_agent_amounts, add_pairs, add_rounds, note_labour_fills, note_settlement_foreign,
-                                  note_settlement_goods, note_settlement_money)
+from .year_ledger_kernels import add_agent_amounts, add_pairs
+from .year_ledger_note_kernels import (add_rounds, note_labour_fills, note_settlement_foreign, note_settlement_goods,
+                                       note_settlement_money)
 from .year_ledger_tables import MONEY_OUT, SALES_IN, SALES_PURPOSE, WAGES_IN
 
 NO_FLOATS = numpy.zeros(0)
