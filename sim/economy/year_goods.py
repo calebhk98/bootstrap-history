@@ -9,7 +9,7 @@ import dataclasses
 import math
 from typing import Dict, List, Optional, Tuple
 
-from . import currency, mint_price, market_curves, market_quote, producers, seller_cash, taxes
+from . import currency, mint_price, market_curves, market_curves_rows, market_quote, producers, seller_cash, taxes
 from . import goods_turn, year_bids
 from .year_bids_by_market import BidsByMarket
 from . import goods_good_clear, goods_memory_notes, goods_production, goods_settle, goods_order_book, goods_respend_year, year_goods_offers
@@ -131,7 +131,8 @@ def clear_goods(setup, record, view, area_map, order_book, plans, ledger: YearLe
                 each.wanted if each.wanted is not None else wanted_in_round(each.bids, each.offers, each.result), idle_years, bought,
                 each.rows)
             if each.area in kept:
-                record.goods.curves[key] = market_curves.summarize(*each.objects())
+                record.goods.curves[key] = (market_curves.summarize(*each.objects()) if each.rows is None else
+                                            market_curves_rows.of_rows(orders, each.rows.bid_array, each.rows.offer_array))
     goods_respend_year.respend(setup, record, view, ledger, left_markets,
                                lambda cohort: cohort_basket(setup, record, cohort), orders)
     block = ledger.year_bids = year_bids.build(left_markets)     # demand over the same rounds as the traded quantity, as one table

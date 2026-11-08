@@ -4,7 +4,7 @@ producers the kernel leaves out, then merged into producer order.
 A block is `(bid position, bid good, bid tile, bid area, bid priority, bid figures, labour position, labour trade, labour area,
 labour hours, labour maximum wage)`; goods, tiles, areas and trades are places in the `LocalNames` lists (a name the kernel's arrays
 did not hold is appended)."""
-from typing import Dict, List
+from typing import List
 
 import numpy as np
 
@@ -43,14 +43,12 @@ def _areas_of_missing(area: np.ndarray, good: np.ndarray, tile: np.ndarray, view
 
 def _labour_areas(trade: np.ndarray, tile: np.ndarray, view, trade_names, names: LocalNames) -> np.ndarray:
     """The place in the area names of the labour area of each labour bid, asked of the view once per distinct (trade, tile)."""
-    area_of: Dict[tuple, int] = {}
-    found = []
-    for pair in zip(trade.tolist(), tile.tolist()):
-        area = area_of.get(pair)
-        if area is None:
-            area = area_of[pair] = names.place(2, view.area_of(trade_names[pair[0]], names.tiles[pair[1]]))
-        found.append(area)
-    return np.array(found, dtype=np.int64)
+    if not len(trade):
+        return np.empty(0, dtype=np.int64)
+    pairs, inverse = np.unique(np.stack([trade, tile], axis=1), axis=0, return_inverse=True)
+    areas = np.array([names.place(2, view.area_of(trade_names[pair_trade], names.tiles[pair_tile])) for pair_trade, pair_tile in pairs.tolist()],
+                     dtype=np.int64)
+    return areas[inverse.reshape(-1)]
 
 
 def kernel_rows(columns, matrices, area_index, view, names: LocalNames, rows: np.ndarray, running: np.ndarray, hours, ceilings,
@@ -74,7 +72,7 @@ def kernel_rows(columns, matrices, area_index, view, names: LocalNames, rows: np
     labour_position = rows[labour_owner]
     labour_trade = matrices.slot_trades[recipe_rows[labour_owner], labour_slot]
     labour_area = _labour_areas(labour_trade, columns.tile_row[labour_position], view, matrices.trades.ids, names)
-    labour_trade_place = np.array([names.place(3, matrices.trades.ids[trade]) for trade in labour_trade.tolist()], dtype=np.int64)
+    labour_trade_place = labour_trade        # the names' trades start as the matrices' trades, in the same order
     return (position, good, tile, area, np.zeros(len(owner), dtype=np.int64), figures, labour_position, labour_trade_place, labour_area,
             hours[labour_owner, labour_slot], ceilings[labour_owner, labour_slot])
 
