@@ -110,9 +110,11 @@ def clear_goods(setup, record, view, area_map, order_book, plans, ledger: YearLe
     in_kind = [form for form in setup.tax_forms if form.paid_in]
     metal = record.currency.backing_good if currency.has_mint(record.currency) else None        # the good whose markets the mint reads
     plant_makers: Dict[str, list] = {}       # a good -> the producers whose plant is built from it
-    for producer_id, producer in record.producers.items():
-        for plant_good in setup.recipes[producer.recipe_id].plant_goods:
-            plant_makers.setdefault(plant_good, []).append(producer_id)
+    store = record.producers
+    plant_goods_of = [list(setup.recipes[name].plant_goods) if name in setup.recipes else [] for name in store.names["recipes"].name_list]       # by the store's recipe number
+    for row in store.live_rows().tolist():                      # in the order the producers entered
+        for plant_good in plant_goods_of[store.table.recipe[row]]:
+            plant_makers.setdefault(plant_good, []).append(store.ids[row])
     memory_names = orders.memory_tables.goods_markets.name_list
     for good in order:
         if world is not None:
@@ -317,14 +319,14 @@ def _tax_in_kind(setup, record, producer_ids, forms, ledger) -> None:
     taxed = {form.paid_in for form in forms} if all(form.basis == "harvest" for form in forms) else None
     output, held, tiles = {}, {}, {}
     for producer_id in producer_ids:
-        producer = record.producers[producer_id]
-        recipe = setup.recipes[producer.recipe_id]
-        if (taxed is not None and taxed.isdisjoint(recipe.outputs)) or not on_home_tile(setup, producer.tile):
+        tile = record.producers.tile_of(producer_id)
+        recipe = setup.recipes[record.producers.recipe_id_of(producer_id)]
+        if (taxed is not None and taxed.isdisjoint(recipe.outputs)) or not on_home_tile(setup, tile):
             continue
-        tiles[producer_id] = producer.tile
+        tiles[producer_id] = tile
         for good in recipe.outputs:
             output[(producer_id, good)] = ledger.output.get((producer_id, good), 0.0)
-            held[(producer_id, good)] = record.book.stock(producer_id, good, producer.tile)
+            held[(producer_id, good)] = record.book.stock(producer_id, good, tile)
     if not output:
         return
     facts = YearFacts(currency=setup.currency_id, output=output, producer_tile=tiles, held_goods=held)

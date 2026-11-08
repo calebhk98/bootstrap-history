@@ -525,7 +525,7 @@ class Economy:
             # only the goods the capacity actually built uses are consumed; the rest stays in stock
             built_steps.append(((), [GoodsMove(producer_id, EDGE_CONSUMPTION, good, tile, per_run * runs * share, "built into plant")
                                      for good, per_run in sorted(recipe.plant_goods.items()) if per_run * runs * share > 0.0]))
-            producer_table.set_fields(store, producer_id, capacity_runs=max(0.0, store.table.capacity_runs[row].item() + runs * share))
+            producer_table.set_fields(store, producer_id, capacity_runs=max(0.0, store.value(row, "capacity_runs") + runs * share))
         post_in_order(record.book, built_steps)
 
     def _outcome(self, ledger: YearLedger, level: float, extraction, stocks_at_start) -> YearOutcome:

@@ -12,6 +12,7 @@ import numpy as np
 from sim.constants import declare
 
 from . import producer_table
+from .producer_rows import FLOAT_BIT
 
 from .types import Recipe, SiteLimit, TileId
 
@@ -104,8 +105,13 @@ def apply_site_limits(record, setup) -> None:
         limit_cap[place], limit_yield[place] = seen[(recipe, tile)]
     has_limit = ~np.isnan(limit_cap)
     capacity = np.where(has_limit, np.minimum(table.capacity_runs[rows], limit_cap), 0.0)
-    producer_table.set_rows(store, "yield_factor", rows, np.where(has_limit, limit_yield, table.yield_factor[rows]))
-    producer_table.set_rows(store, "capacity_runs", rows, capacity)
+    held_capacity = table.capacity_runs[rows]
+    typed = table.numpy_typed[rows]
+    keeps_capacity = has_limit & (held_capacity <= limit_cap)          # `min` hands back the producer's own figure, whatever type it is
+    yield_typed = (typed & FLOAT_BIT["yield_factor"]) != 0
+    capacity_typed = (typed & FLOAT_BIT["capacity_runs"]) != 0
+    producer_table.set_rows(store, "yield_factor", rows, np.where(has_limit, limit_yield, table.yield_factor[rows]), typed=yield_typed & ~has_limit)
+    producer_table.set_rows(store, "capacity_runs", rows, capacity, typed=capacity_typed & keeps_capacity)
     expansion = record.credit.expansion_runs
     if expansion:
         for place in range(len(rows)):
@@ -126,7 +132,7 @@ def extraction_by_tile(record, setup) -> Dict[Tuple[str, TileId], float]:
     order = store.order()
     recipe_names, tile_names = store.names["recipes"].name_list, store.names["tiles"].name_list
     site_bound = [(setup.recipes[name].site_bound if name in setup.recipes else False) for name in recipe_names]
-    for recipe, tile, last_runs in zip(store.table.recipe[order].tolist(), store.table.tile[order].tolist(), store.table.last_runs[order].tolist()):
+    for recipe, tile, last_runs in zip(store.table.recipe[order].tolist(), store.table.tile[order].tolist(), store.floats("last_runs", order)):
         if site_bound[recipe]:
             key = (recipe_names[recipe], tile_names[tile])
             worked[key] = worked.get(key, 0.0) + max(0.0, last_runs)

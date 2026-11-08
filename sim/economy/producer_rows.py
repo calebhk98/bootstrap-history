@@ -23,6 +23,7 @@ PRODUCER_ROWS_SPEC = TableSpec("ProducerRows", [
     Column("workshops", np.int64, "independent workshops it stands for", "count"),
     Column("idle_years", np.int64, "years it stays idle after a bankruptcy", "years"),
     Column("staffed_runs", np.float64, "runs the hands it hired last year could have worked; NaN when unknown", "runs"),
+    Column("numpy_typed", np.int64, "bit of each float field (`FLOAT_FIELDS` order) whose value was written as a numpy float, which a `Producer` built from the row hands back as one (numpy and Python scalars round some operations differently)", "bit set"),
     Column("earnings_count", np.int64, "places of `earnings_history` in use", "count"),
     Column("revenue_count", np.int64, "places of `revenue_history` in use", "count"),
     Column("price_count", np.int64, "places of the expected-price columns in use", "count"),
@@ -41,5 +42,7 @@ ProducerRows = PRODUCER_ROWS_SPEC.make_type(__name__)
 SCALAR_FLOATS = ("capacity_runs", "yield_factor", "cash_target", "expected_sales", "last_runs", "land_rent_per_run")
 SCALAR_INTS = ("years_of_loss", "workshops", "idle_years")
 OPTIONAL_FLOATS = ("land_run_cap", "staffed_runs")
+FLOAT_FIELDS = SCALAR_FLOATS + OPTIONAL_FLOATS
+FLOAT_BIT = {name: 1 << place for place, name in enumerate(FLOAT_FIELDS)}
 WIDE_COLUMNS = ("earnings_history", "revenue_history", "price_good", "price_value", "crew_trade", "crew_units")
 NAME_COLUMNS = ("owner", "recipe", "tile")

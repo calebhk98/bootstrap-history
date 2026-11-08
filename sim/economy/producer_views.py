@@ -34,7 +34,7 @@ def producer_list(economy, scoped: bool = True) -> ProducerList:
             rows = rows[inside[store.table.tile[rows]]]
     table = store.table
     return ProducerList([store.ids[row] for row in rows.tolist()], store.name_of("recipes", table.recipe[rows]),
-                        store.name_of("tiles", table.tile[rows]), table.capacity_runs[rows].tolist(), table.last_runs[rows].tolist())
+                        store.name_of("tiles", table.tile[rows]), store.floats("capacity_runs", rows), store.floats("last_runs", rows))
 
 
 _units_kept: Dict[int, tuple] = {}      # id of a producer table -> (table, its version, the recipes, the units by material)

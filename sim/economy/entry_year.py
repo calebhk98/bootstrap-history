@@ -137,7 +137,7 @@ def open_entrants(setup, record, view, area_map, unmet_by_market: Dict[Tuple[str
             continue                                    # plant it already asked for is still to come
         else:
             owner, crew = store.owner_at(row), store.crew_of(row)
-            capacity, workshops = store.table.capacity_runs[row].item(), store.table.workshops[row].item()
+            capacity, workshops = store.value(row, "capacity_runs"), store.table.workshops[row].item()
         if not builds_plant:
             capacity, workshops = capacity + plan_runs, workshops + 1
         if plan_is_new:

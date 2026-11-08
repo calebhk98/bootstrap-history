@@ -238,8 +238,8 @@ def output_value_and_unpriced(economy, country: Optional[str]) -> Tuple[Optional
     inside = np.array([name in tiles for name in tile_names], dtype=np.bool_)
     rows = rows[inside[table.tile[rows]]]
     for row, recipe_number, capacity, last_runs, yield_factor in zip(
-            rows.tolist(), table.recipe[rows].tolist(), table.capacity_runs[rows].tolist(), table.last_runs[rows].tolist(),
-            table.yield_factor[rows].tolist()):
+            rows.tolist(), table.recipe[rows].tolist(), store.floats("capacity_runs", rows), store.floats("last_runs", rows),
+            store.floats("yield_factor", rows)):
         recipe_id = recipe_names[recipe_number]
         if recipe_id not in run_value:
             recipe = economy.setup.recipes.get(recipe_id)

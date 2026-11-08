@@ -127,5 +127,17 @@ class StoreWritesAndBlockReads(unittest.TestCase):
         self.assertEqual(store.ids_on_tiles(lambda tile: tile == "tile:1"), ["producer:b"])
 
 
+class NumpyFloatsComeBackAsNumpyFloats(unittest.TestCase):
+    def test_a_field_written_as_a_numpy_float_is_handed_back_as_one_and_a_python_float_as_a_python_float(self):
+        import numpy as np
+        store = ProducerStore({"p": Producer("p", "o", "r", "t", np.float64(3.0), expected_sales=2.0)})
+        self.assertIsInstance(store["p"].capacity_runs, np.float64)
+        self.assertIs(type(store["p"].expected_sales), float)
+        store.set_fields("p", capacity_runs=4.0, expected_sales=np.float64(5.0))
+        self.assertIs(type(store["p"].capacity_runs), float)
+        self.assertIsInstance(store["p"].expected_sales, np.float64)
+        self.assertIsInstance(store.value(0, "expected_sales"), np.float64)
+
+
 if __name__ == "__main__":
     unittest.main()
