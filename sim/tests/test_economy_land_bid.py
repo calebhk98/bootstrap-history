@@ -9,6 +9,7 @@ import unittest
 
 from sim.contract_record import Contract
 
+from sim.economy.producer_store import ProducerStore
 from sim.economy import land_bid, land_bid_year, titles, titles_ground, titles_value
 from sim.book import Book
 from sim.economy.households_cohort import cohort_id, cohorts_for_tile
@@ -148,7 +149,7 @@ class SellerAndGroundTests(unittest.TestCase):
 
     def test_a_sold_hectare_is_the_land_of_the_producers_owner(self):
         recipes = {"clear": Recipe("clear", {GROUND: 1.0}, {}, {})}
-        record = types.SimpleNamespace(producers={"p": Producer("p", SELLER, "clear", TILE, 10.0)})
+        record = types.SimpleNamespace(producers=ProducerStore({"p": Producer("p", SELLER, "clear", TILE, 10.0)}))
         self.assertEqual(land_bid.owners_of_sellers(record, recipes, GROUND, TILE), [SELLER])
         self.assertEqual(land_bid.owners_of_sellers(record, recipes, GROUND, "elsewhere"), [])
 
@@ -156,7 +157,7 @@ class SellerAndGroundTests(unittest.TestCase):
 class YearWiringTests(unittest.TestCase):
     def world(self):
         record = TitleTests().world()
-        record.producers = {"p": Producer("p", SELLER, "clear", TILE, 10.0)}
+        record.producers = ProducerStore({"p": Producer("p", SELLER, "clear", TILE, 10.0)})
         tile = TileSpec(TILE, 40.0, 10.0, 1.0, False, (), 1.0, 1.0)      # a hundred hectares
         specs = {GROUND: GoodSpec(GROUND, float("inf"), 0.0, 0.0, "")}
         setup = types.SimpleNamespace(tiles={TILE: tile}, specs=specs, recipes={"clear": Recipe("clear", {GROUND: 1.0}, {}, {})})

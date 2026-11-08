@@ -7,6 +7,7 @@ import types
 import unittest
 from unittest import mock
 
+from sim.economy.producer_store import ProducerStore
 from sim.production import industry_learning as learning
 from sim.production import learning as concern_learning
 from sim.production.node_output import Baskets
@@ -130,7 +131,7 @@ class PortListing(unittest.TestCase):
         producers = {"p2": Producer("p2", "o", "smelt", "town", 1.0), "p1": Producer("p1", "o", "dig", "hills", 1.0),
                      "p3": Producer("p3", "o", "unknown", "town", 1.0)}
         economy = types.SimpleNamespace(
-            record=types.SimpleNamespace(producers=producers),
+            record=types.SimpleNamespace(producers=ProducerStore(producers)),
             setup=types.SimpleNamespace(recipes=recipes, countries=lambda: ["home"]))
         listing = ProducerReads(types.SimpleNamespace(economy=lambda: economy)).by_good()
         self.assertEqual(listing, {"ore": [("hills", "dig")], "metal": [("town", "smelt")], "slag": [("town", "smelt")]})

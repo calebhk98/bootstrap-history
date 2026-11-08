@@ -5,6 +5,8 @@ import unittest
 from types import SimpleNamespace
 from unittest import mock
 
+from sim.economy.producer_store import ProducerStore
+from sim.economy.producers import Producer
 from sim.markets import reads_producers
 from sim.markets.reads_producers import ProducerReads
 
@@ -14,10 +16,10 @@ RECIPE = SimpleNamespace(labour_hours={"hand": 1.0})
 
 
 def years_when_held_in(order):
-    producers = {name: SimpleNamespace(agent_id=name, recipe_id="r", capacity_runs=RUNS[name]) for name in order}
-    agent = SimpleNamespace(economy=lambda: "economy")
-    with mock.patch.multiple(reads_producers.economy_api, producers_of=lambda economy: producers,
-                             recipes_of=lambda economy: {"r": RECIPE}, working_hours_per_year=lambda economy: 1.0):
+    producers = ProducerStore({name: Producer(name, "owner", "r", "tile", RUNS[name]) for name in order})
+    economy = SimpleNamespace(record=SimpleNamespace(producers=producers), setup=SimpleNamespace(countries=lambda: ["home"], recipes={"r": RECIPE}))
+    agent = SimpleNamespace(economy=lambda: economy)
+    with mock.patch.multiple(reads_producers.economy_api, working_hours_per_year=lambda economy: 1.0):
         return ProducerReads(agent).worker_years_by_recipe()
 
 

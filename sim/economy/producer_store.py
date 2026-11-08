@@ -234,6 +234,10 @@ class ProducerStore(MutableMapping):
         """The owner of each producer named."""
         return [self.owner_at(self.row_of[each]) for each in producer_ids]
 
+    def live_rows(self) -> np.ndarray:
+        """The rows of the producers in the table, in table order (the order they entered)."""
+        return np.nonzero([each is not None for each in self.ids])[0]
+
     def tile_of(self, producer_id: str) -> Optional[str]:
         """The tile of the producer, None for an id the table does not hold."""
         row = self.row_of.get(producer_id)

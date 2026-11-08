@@ -511,19 +511,21 @@ class Economy:
         record, setup = self.record, self.setup
         built_steps = []       # each producer's plant goods are one batch; none reads another's stock, so they are posted together
         for producer_id, runs in sorted(plant_runs.items()):
-            producer = record.producers.get(producer_id)
-            if producer is None:
+            store = record.producers
+            row = store.row_of.get(producer_id)
+            if row is None:
                 continue
-            recipe = setup.recipes[producer.recipe_id]
+            tile = store.names["tiles"].name_list[store.table.tile[row]]
+            recipe = setup.recipes[store.names["recipes"].name_list[store.table.recipe[row]]]
             share = 1.0
             for good, per_run in recipe.plant_goods.items():
                 wanted = per_run * runs
                 if wanted > 0.0:
-                    share = min(share, record.book.stock(producer_id, good, producer.tile) / wanted)
+                    share = min(share, record.book.stock(producer_id, good, tile) / wanted)
             # only the goods the capacity actually built uses are consumed; the rest stays in stock
-            built_steps.append(((), [GoodsMove(producer_id, EDGE_CONSUMPTION, good, producer.tile, per_run * runs * share, "built into plant")
+            built_steps.append(((), [GoodsMove(producer_id, EDGE_CONSUMPTION, good, tile, per_run * runs * share, "built into plant")
                                      for good, per_run in sorted(recipe.plant_goods.items()) if per_run * runs * share > 0.0]))
-            producer_table.set_fields(record.producers, producer_id, capacity_runs=max(0.0, producer.capacity_runs + runs * share))
+            producer_table.set_fields(store, producer_id, capacity_runs=max(0.0, store.table.capacity_runs[row].item() + runs * share))
         post_in_order(record.book, built_steps)
 
     def _outcome(self, ledger: YearLedger, level: float, extraction, stocks_at_start) -> YearOutcome:

@@ -47,7 +47,7 @@ def exit_producer(record, producer_id: str, payout: List[Transfer], owed: Option
     `deferred` leaves its term loans in the contracts for the caller to end (`ExitBatch`); `steps`, when given, takes the postings
     (repayments, dividend, goods) as three batches instead of posting them: only this producer's own cash and goods are read, so
     the postings of several exits can wait and be made together in order."""
-    producer = record.producers[producer_id]
+    owner = record.producers.owner_at(record.producers.row_of[producer_id])
     if owed is None:
         store = record.credit.contracts.loan_store
         owed = store.snapshots(store.rows_of(borrower=producer_id))
@@ -55,7 +55,7 @@ def exit_producer(record, producer_id: str, payout: List[Transfer], owed: Option
     repaid = math.fsum(transfer.amount for transfer in repayments)
     payout = _less(payout, repaid)
     paid = ownership.spread(record, payout)
-    moves = [GoodsMove(producer_id, producer.owner, good, tile, quantity, "an exited producer's stock")
+    moves = [GoodsMove(producer_id, owner, good, tile, quantity, "an exited producer's stock")
              for good, tiles in sorted(record.book.holdings(producer_id)["goods"].items())
              for tile, quantity in sorted(tiles.items()) if quantity > 0.0]
     if steps is not None:
