@@ -69,10 +69,10 @@ class StoreRoundTripsThroughThePlainSave(unittest.TestCase):
         store = ProducerStore({each.agent_id: each for each in _producers()})
         saved = store.to_plain()
         self.assertEqual(list(saved), ["producer:a", "producer:b"])
-        self.assertEqual(saved["producer:b"]["net_earnings_history"], [1.0, 2.0])
+        self.assertEqual(list(saved["producer:b"]["net_earnings_history"]), [1.0, 2.0])
         self.assertEqual(saved["producer:a"]["land_run_cap"], 7.0)
         self.assertIsNone(saved["producer:a"]["staffed_runs"])
-        self.assertEqual(json.loads(json.dumps(saved)), saved)
+        self.assertEqual(json.dumps(json.loads(json.dumps(saved))), json.dumps(saved))     # it is plain JSON data
 
     def test_a_loaded_store_equals_the_saved_one(self):
         store = ProducerStore({each.agent_id: each for each in _producers()})

@@ -448,10 +448,10 @@ class Economy:
         lending.bid_household_loans(setup, record, view, ledger, loans, order_book, priced_by_tile)
 
         def plant_worth_of(request):
-            producer = record.producers.get(request.borrower)
-            if producer is None:
+            recipe_id = record.producers.recipe_id_of(request.borrower)
+            if recipe_id is None:
                 return None
-            return plant_worth_ratio(request.maximum_rate, rate, setup.recipes[producer.recipe_id].plant_life_years)
+            return plant_worth_ratio(request.maximum_rate, rate, setup.recipes[recipe_id].plant_life_years)
 
         asked, worth = lend_requests.asked_and_worth(requests, plant_worth_of)
         plant_runs: Dict[str, float] = {}

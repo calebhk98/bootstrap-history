@@ -14,6 +14,7 @@ import unittest
 
 import numpy as np
 
+from sim.economy.producer_store import ProducerStore
 from sim.economy import opening_runs, opening_runs_pack, producer_table, sites
 from sim.economy.producers import Producer
 from sim.economy.replaced import replaced
@@ -154,8 +155,8 @@ class FitToSupplyAgreesTests(unittest.TestCase):
             recipes, _prices, _wages, limits, _yields, _final = random_system(rng)
             setup = types.SimpleNamespace(recipes=recipes, site_limits=limits)
             producers = random_producers(rng, recipes)
-            old = types.SimpleNamespace(producers=dict(producers))
-            new = types.SimpleNamespace(producers=dict(producers))
+            old = types.SimpleNamespace(producers=ProducerStore(producers))
+            new = types.SimpleNamespace(producers=ProducerStore(producers))
             reference_fit_to_supply(setup, old)
             opening_runs.fit_to_supply(setup, new)
             self.assertEqual(sorted(old.producers), sorted(new.producers))

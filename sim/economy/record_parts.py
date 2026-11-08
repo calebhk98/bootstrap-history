@@ -57,6 +57,8 @@ class OwnedRecord:
         for name in self.SAVED_SORTED:
             store = getattr(self, name)
             seat_sorted(store)
+            if hasattr(store, "seat_sorted"):
+                continue
             for inner in store.values():
                 if isinstance(inner, dict):
                     seat_sorted(inner)

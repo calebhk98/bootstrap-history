@@ -297,7 +297,13 @@ class ProducerStore(MutableMapping):
     # ---- building a record -----------------------------------------------------------------------------------------------
 
     def _build(self, row: int) -> Producer:
-        """The `Producer` a row holds (every field a plain Python value)."""
+        """The `Producer` a row holds."""
+        record = object.__new__(Producer)
+        record.__dict__.update(self._fields(row))
+        return record
+
+    def _fields(self, row: int) -> Dict[str, object]:
+        """The fields of the producer in `row`, in the order of `Producer`, each a plain Python value."""
         table, names = self.table, self.names
         earnings, revenue = int(table.earnings_count[row]), int(table.revenue_count[row])
         prices = int(table.price_count[row])
@@ -316,9 +322,7 @@ class ProducerStore(MutableMapping):
         }
         for name in SCALAR_FLOATS + SCALAR_INTS:
             fields[name] = getattr(table, name)[row].item()
-        record = object.__new__(Producer)
-        record.__dict__.update(fields)
-        return record
+        return {name: fields[name] for name in _FIELDS}
 
     # ---- blocks ----------------------------------------------------------------------------------------------------------
 
@@ -401,11 +405,7 @@ class ProducerStore(MutableMapping):
         self.compact()
         plain = {}
         for row in self.order().tolist():
-            fields = dict(self._build(row).__dict__) if self._objects[row] is None else dict(self._objects[row].__dict__)
-            fields = {name: fields[name] for name in _FIELDS}
-            fields["net_earnings_history"] = list(fields["net_earnings_history"])
-            fields["revenue_history"] = list(fields["revenue_history"])
-            plain[self.ids[row]] = fields
+            plain[self.ids[row]] = self._fields(row)
         return plain
 
     @classmethod

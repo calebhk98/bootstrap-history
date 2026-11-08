@@ -13,7 +13,6 @@ import numpy as np
 from . import producer_table
 from . import crop_sites, sites, tool_fallback, unit_cost
 from .producers import paying_output
-from .replaced import replaced
 from .setup import recipe_tile_key
 from .types import GoodId, Recipe, TileId
 
@@ -300,8 +299,8 @@ def fit_to_supply(setup, record) -> None:
     factors = held_sales(sales, yield_factor, made, used)
     for column, (_id, producer) in enumerate(producers):
         if factors[column] != 1.0:
-            producer_table.put_producer(record.producers, replaced(
-                producer, capacity_runs=capacity[column] * factors[column], expected_sales=sales[column] * factors[column]))
+            producer_table.set_fields(record.producers, _id, capacity_runs=capacity[column] * factors[column],
+                                      expected_sales=sales[column] * factors[column])
 
 
 def held_sales(sales: np.ndarray, yield_factor: np.ndarray, made: np.ndarray, used: np.ndarray) -> np.ndarray:
