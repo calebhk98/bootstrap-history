@@ -16,7 +16,7 @@ def declared_signatures():
     def array(element, dimensions):
         return types.Array(element, dimensions, "C")
 
-    return {
+    signatures = {
         "sim.economy.merchants_kernel.lost_share": [(number, integer)],
         "sim.economy.merchants_kernel.search_good": [(
             array(number, 1), array(number, 2), array(integer, 2), array(integer, 1), array(flag, 1),
@@ -26,3 +26,26 @@ def declared_signatures():
             array(number, 1), array(number, 1), flag)],
         "sim.labour.market.sold_hours_kernel.sold_hours": [(number, array(number, 2), number)],
     }
+    signatures.update(book_signatures(types))
+    return signatures
+
+
+def book_signatures(types):
+    """The book's entry kernels that only a batch holding both transfers and goods moves, or a goods total, reaches: typed from
+    the tables a fresh book passes them (their callees compile with them)."""
+    import numpy
+    from numba import typeof
+    from sim.book import Book
+    from sim.book_apply import RULE_BATCH
+    from sim.book_post import new_scratch
+    from sim.book_tables import BATCH_OUTCOMES, BatchOutcomes
+    book = Book()
+    starts = numpy.zeros(2, dtype=numpy.int64)
+    apply_arguments = (book._transfer_table([]), starts, book._move_table([]), starts, 1, book.tables(), new_scratch(1, 1),
+                       BATCH_OUTCOMES.new_table(BatchOutcomes, 1), RULE_BATCH, True)
+    return {
+        "sim.book_apply.apply_batches": [tuple(typeof(argument) for argument in apply_arguments)],
+        "sim.book_read_kernels.good_quantities": [(typeof(book.stock_rows.table), types.int64)],
+        "sim.compiled_tables.grouping.group_starts": [(typeof(starts), types.int64, types.int64)],
+    }
+

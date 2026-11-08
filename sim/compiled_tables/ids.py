@@ -32,6 +32,17 @@ class IdTable:
     def names(self) -> Tuple[str, ...]:
         return tuple(self._names)
 
+    @property
+    def numbers(self) -> dict:
+        """The name-to-number dict itself, for a hot read (`numbers.get(name)`): never write to it. Read it afresh each time
+        (a table loaded from a state is a new object), and do not keep it beside the table in a copied dict."""
+        return self._number_of
+
+    @property
+    def name_list(self) -> List[str]:
+        """The names in number order, as the live list: for a hot read of many numbers, never written to."""
+        return self._names
+
     def admit(self, names: Iterable[str]) -> numpy.ndarray:
         """Number the names not seen before (sorted among themselves), and give every given name's number, in the given order."""
         given = list(names)

@@ -1,6 +1,6 @@
 # The compiled year: shared tables instead of per-item objects
 
-**Status:** stage 1 under way (Complaint 968 is the problem this answers).
+**Status:** stage 1 under way (Complaint 968 is the problem this answers). The book is on tables (below); the market memory and the year ledger are with other owners.
 
 ## Why
 
@@ -60,6 +60,26 @@ Each numbering is an `IdTable` saved as its ordered name list, so a loaded game 
 
 Each table's owner is the only module that writes it outside a kernel the owner provides (CLAUDE.md: one owner per fact);
 other modules read through the owner's view or call the owner's kernel.
+
+## The book on tables (stage 1, done)
+
+`sim/book_tables.py` declares every column with its meaning and unit; `sim/book_store.py` holds the ids and tables;
+`sim/book_apply.py` and `sim/book_plan.py` are the posting kernels. Ids: agents, goods, tiles, currencies, agent kinds and
+purpose templates are `IdTable`s saved with the book (the record's `numbering`), so a loaded book numbers as the live one did.
+Agent flags (`is_edge`, `is_mint`, `is_external`, `kind`) are set once at admission and replace string-prefix tests. Balances
+are one row per (agent, currency) at `agent * stride + currency`; stock slots are rows found through a hash index on the packed
+(agent, good, tile), chained per agent in the order they were made. A purpose is a template id plus a reference id
+(`sim/book_purposes.py`); the year's goods moved per (good, purpose) are rows of a flows table.
+
+**How a converter posts.** It holds ids (`book.agent_number(name)` and the like admit a name), appends rows to a
+`TransferPostings` and a `GoodsMovePostings` table (rows grouped by batch, batches rising; a batch is all-or-none, money checked
+before goods), and calls `book.apply_postings(transfers, moves, batch_count)`. It gets one `BatchOutcomes` row per batch (a
+cause code from `BOOK_CAUSES` and the offending cell) and turns a refused batch into a refusal with `book.refusal_of`. **How it
+reads:** the kernels in `sim/book_read_kernels.py` (`read_balances`, `find_slots`, `read_stocks_at`, `holder_columns`,
+`counted_stocks`, `currency_values`) take the book's tables from `book.tables()`, `book.balance_table`, `book.stock_rows`; an id
+below zero reads as nothing held. Re-fetch tables after any call that may admit a name or reserve room (a grown table is a new
+object). The methods callers use today (`balance`, `stock`, `post`, `post_settled`, ...) are wrappers over the same kernels.
+`tools/measure/book_index.py` shows why slots are found through a hash.
 
 ## Stages
 
