@@ -17,6 +17,7 @@ from .year_bids_by_market import BidsByMarket
 from . import goods_good_clear, goods_memory_notes, goods_production, goods_settle, goods_order_book, goods_respend_year, year_goods_offers
 from .goods_table_context import ClearingContext
 from .goods_year_markets import YearMarkets
+from .goods_left_markets import LeftMarkets
 from .year_goods_offer_rows import OfferRows
 from .home_scope import on_home_tile
 from .household_work_year import cohort_basket
@@ -104,8 +105,8 @@ def clear_goods(setup, record, view, area_map, order_book, plans, ledger: YearLe
     listed = set(order)
     order += sorted(orders.goods_with_orders() - listed)
     done = set()
-    left_markets = {}
     year_markets = YearMarkets()
+    left_markets = LeftMarkets(year_markets)
     in_kind = [form for form in setup.tax_forms if form.paid_in]
     metal = record.currency.backing_good if currency.has_mint(record.currency) else None        # the good whose markets the mint reads
     plant_makers: Dict[str, list] = {}       # a good -> the producers whose plant is built from it
@@ -127,14 +128,12 @@ def clear_goods(setup, record, view, area_map, order_book, plans, ledger: YearLe
         goods_settle.note_clearings(ledger, cleared, answer, memory_names, metal)
         idle = goods_settle.idle_years(record.memory, cleared) if len(cleared) else []
         first_row = year_markets.claim(len(cleared))
-        for place, entry in enumerate(answer):
+        left_markets.add_good(good, cleared, answer, first_row)
+        for place in [place for place, area in enumerate(cleared.areas) if area in kept]:
             each = cleared[place]
-            left_markets[(good, each.area)] = goods_respend_year.LeftMarket(
-                each.bids, each.result, each.offers_left, None, entry[0], 0.0, 0, entry[1], each.rows, year_markets, first_row + place)
-            if each.area in kept:
-                record.goods.curves[memory_names[each.market]] = (market_curves.summarize(*each.objects()) if each.rows is None else
-                                            market_curves_rows.of_rows(orders, each.rows.bid_array, each.rows.offer_array))
-        delivered = [entry[0] for entry in answer]
+            record.goods.curves[memory_names[each.market]] = (market_curves.summarize(*each.objects()) if each.rows is None else
+                                                              market_curves_rows.of_rows(orders, each.rows.bid_array, each.rows.offer_array))
+        delivered = answer.delivered
         if len(cleared):
             left_units = orders.tables()[1].quantity_left[cleared.left_grouped]
             year_markets.fill_first_round(first_row, cleared.way, cleared.price, cleared.quote_price, cleared.quote_kind,
@@ -147,11 +146,11 @@ def clear_goods(setup, record, view, area_map, order_book, plans, ledger: YearLe
                                lambda cohort: cohort_basket(setup, record, cohort), orders)
     block = ledger.year_bids = year_bids.build(left_markets)     # demand over the same rounds as the traded quantity, as one table
     ledger.bids_by_market = BidsByMarket(block, left_markets)
-    ordered = sorted(left_markets.items())
-    rows = goods_memory_notes.rows_of(record.memory, [market_key(good, area) for (good, area), _market in ordered])
-    cells = numpy.array([market.row for _key, market in ordered], dtype=numpy.int64)      # the markets' rows in the year's table, in sorted order
-    year_remember.remember_markets(setup, record, ordered, rows, year_markets, cells, ledger, orders, metal)
-    _record_year_markets(record, ledger, ordered, rows, year_markets, cells)
+    keys = left_markets.sorted_keys()
+    rows = goods_memory_notes.rows_of(record.memory, [market_key(good, area) for good, area in keys])
+    cells = left_markets.sorted_cells()                  # the markets' rows in the year's table, in sorted order
+    year_remember.remember_markets(setup, record, keys, left_markets, rows, year_markets, cells, ledger, orders, metal)
+    _record_year_markets(record, ledger, keys, rows, year_markets, cells)
 
 
 def _wanted_at(market, price, orders) -> float:
@@ -169,11 +168,10 @@ def price_floor(setup, memory, good, signal: float) -> float:
     return (signal if opening is None else opening) * PRICE_MEMORY_FLOOR_SHARE
 
 
-def _record_year_markets(record, ledger: YearLedger, ordered, rows, year_markets, cells) -> None:
+def _record_year_markets(record, ledger: YearLedger, keys, rows, year_markets, cells) -> None:
     """The year's volumes, unsold and unmet of every market, after all rounds, written to the goods record's columns in one call
     each; a market with no orders this year has none, and its usual volume moves toward zero (`goods_memory_notes.write_volumes`).
-    `ordered` is the cleared markets as sorted (market, left market) pairs, `rows` their market numbers and `cells` their rows in the
-    year's table (`year_markets`)."""
+    `keys` are the cleared markets sorted, `rows` their market numbers and `cells` their rows in the year's table (`year_markets`)."""
     table = year_markets.table
     delivered = table.delivered[cells]
     gap = table.wanted[cells] - delivered
@@ -183,7 +181,7 @@ def _record_year_markets(record, ledger: YearLedger, ordered, rows, year_markets
     goods.unsold.replace_rows(rows, year_markets.unsold(cells))
     goods.unmet.replace_rows(rows, unmet)
     for place in numpy.flatnonzero(unmet > 0.0).tolist():
-        ledger.unmet_demand[ordered[place][0]] = float(unmet[place])
+        ledger.unmet_demand[keys[place]] = float(unmet[place])
     goods_memory_notes.write_volumes(record.memory, rows, delivered.tolist())
 
 

@@ -49,12 +49,45 @@ class BoughtColumns:
         return True
 
 
-def settle_good(record, ledger, cleared, good: str, plant_makers: Dict[str, list]) -> List[tuple]:
-    """Settle the traded markets of `cleared` (a `GoodClearing`) on the book and note them in the ledger; returns per market (goods delivered,
-    `bought`). `plant_makers` maps a good to the producers whose plant is built from it (`ledger.note_settlement`'s `plant_goods`)."""
+class GoodSettlement:
+    """What a good's settlement gave each of its markets, in clearing order: `delivered` (an array: goods moved, zero for a market that did not
+    trade), and, made when asked, `bought` of a market (`BoughtColumns` for one settled by ids, a mapping for one settled on objects) and the units
+    its settlement `takes` to the mint by (seller, tile) (`takes`, only for markets that have any). `settlement[place]` is the tuple of the three
+    that earlier callers read."""
+
+    def __init__(self, count: int):
+        self.delivered = numpy.zeros(count)
+        self.takes: Dict[int, dict] = {}
+        self._objects: Dict[int, dict] = {}          # place -> bought mapping, for a market settled on objects
+        self._by_ids = None                           # (names, settled columns, slots) when settled by ids
+
+    def __len__(self) -> int:
+        return len(self.delivered)
+
+    def bought(self, place: int):
+        """`Settlement.bought_by_buyer` of the market."""
+        if place in self._objects:
+            return self._objects[place]
+        if self._by_ids is not None:
+            names, settled, slots = self._by_ids
+            if place in slots:
+                index = slots[place]
+                first, last = int(settled.agent_offset[index]), int(settled.agent_offset[index + 1])
+                return BoughtColumns(names, settled.agent[first:last], settled.goods_in[first:last], settled.got_goods[first:last],
+                                     settled.buyer_net[first:last], settled.paid_as_buyer[first:last])
+        return {}
+
+    def __getitem__(self, place: int) -> tuple:
+        entry = (float(self.delivered[place]), self.bought(place))
+        return (*entry, self.takes[place]) if place in self.takes else entry
+
+
+def settle_good(record, ledger, cleared, good: str, plant_makers: Dict[str, list]) -> GoodSettlement:
+    """Settle the traded markets of `cleared` (a `GoodClearing`) on the book and note them in the ledger; returns the `GoodSettlement`.
+    `plant_makers` maps a good to the producers whose plant is built from it (`ledger.note_settlement`'s `plant_goods`)."""
     book = record.book
     slots = numpy.flatnonzero(cleared.quantity > 0.0).tolist() if len(cleared) else []
-    answer = [(0.0, {}) for _each in range(len(cleared))]     # per market (goods delivered, bought, units to the mint by (seller, tile) if any)
+    answer = GoodSettlement(len(cleared))
     if not slots:
         return answer
     if (cleared.way[slots] == TABLE_TRADED).all():
@@ -67,12 +100,17 @@ def settle_good(record, ledger, cleared, good: str, plant_makers: Dict[str, list
     for position in slots:
         taken = next(done)
         ledger.note_settlement(taken, "sales", plant_goods)
-        answer[position] = (taken.delivered, taken.bought_by_buyer(), ledger.pending_mint_takes)    # the takes are noted with the clearing
+        answer.delivered[position] = taken.delivered
+        answer._objects[position] = taken.bought_by_buyer()
+        if ledger.pending_mint_takes:
+            answer.takes[position] = ledger.pending_mint_takes      # the takes are noted with the clearing
+        else:
+            answer.takes[position] = {}
         ledger.pending_mint_takes = {}
     return answer
 
 
-def _noted_by_ids(book, ledger, good: str, plant_makers: Dict[str, list], slots: list, answer: list, settled: SettledByIds, cleared) -> list:
+def _noted_by_ids(book, ledger, good: str, plant_makers: Dict[str, list], slots: list, answer: GoodSettlement, settled: SettledByIds, cleared):
     """The ledger's rows of the settled markets (what `YearLedger.note_settlement` noted for each) and the answer per market."""
     if settled is None:
         return answer
@@ -97,20 +135,15 @@ def _noted_by_ids(book, ledger, good: str, plant_makers: Dict[str, list], slots:
     found = settled.got_goods | settled.paid_as_buyer
     cleared.bought = (numpy.repeat(numpy.array(slots, dtype=numpy.int64), counts)[found], settled.agent[found], settled.goods_in[found],
                       numpy.where(settled.paid_as_buyer[found], settled.buyer_net[found], 0.0))
-    names = book.agent_ids.name_list
-    delivered = settled.delivered.tolist()
-    for place, position in enumerate(slots):
-        first, last = int(settled.agent_offset[place]), int(settled.agent_offset[place + 1])
-        answer[position] = (delivered[place], BoughtColumns(names, settled.agent[first:last], settled.goods_in[first:last],
-                                                           settled.got_goods[first:last], settled.buyer_net[first:last],
-                                                           settled.paid_as_buyer[first:last]))
+    answer.delivered[slots] = settled.delivered
+    answer._by_ids = (book.agent_ids.name_list, settled, {position: place for place, position in enumerate(slots)})
     _note_mint_takes(book, settled, slots, answer)
     return answer
 
 
-def _note_mint_takes(book, settled: SettledByIds, slots: list, answer: list) -> None:
+def _note_mint_takes(book, settled: SettledByIds, slots: list, answer: GoodSettlement) -> None:
     """The units each market's settlement delivered to the mint by (seller, tile), kept for `YearLedger.settled_to_mint`: stored in
-    `answer` as a third item of the market's entry when there are any."""
+    `answer.takes` when there are any."""
     if not (settled.key_to_mint > 0.0).any():
         return
     names, tiles = book.agent_ids.name_list, book.tile_ids.name_list
@@ -122,10 +155,10 @@ def _note_mint_takes(book, settled: SettledByIds, slots: list, answer: list) -> 
             if taken > 0.0:
                 takes[(names[holder], tiles[tile])] = takes.get((names[holder], tiles[tile]), 0.0) + taken
         if takes:
-            answer[position] = (*answer[position], takes)
+            answer.takes[position] = takes
 
 
-def note_clearings(ledger, cleared, answer: list, memory_names: list, metal: Optional[str] = None) -> None:
+def note_clearings(ledger, cleared, answer: GoodSettlement, memory_names: list, metal: Optional[str] = None) -> None:
     """`YearLedger.note_clearing` of every market of `cleared` (a `GoodClearing`) in order: the round (market, quantity, price, goods moved)
     added to the ledger's rounds in one call, the watchers' buy fills, and, for a market of the coin `metal` (the good a struck coin's mint
     buys), its clearing with what its settlement delivered to the mint, which `mint_price` reads; no other market keeps its `ClearingResult`."""
@@ -139,8 +172,8 @@ def note_clearings(ledger, cleared, answer: list, memory_names: list, metal: Opt
         number = numbers.get(memory_names[each])
         markets.append(tables.market_number(good, cleared.areas[len(markets)]) if number is None else number)
     if metal is not None and good == metal:
-        for place, entry in enumerate(answer):
-            ledger.mint_takes.append((cleared.result(place), entry[2] if len(entry) > 2 else {}))
+        for place in range(len(cleared)):
+            ledger.mint_takes.append((cleared.result(place), answer.takes.get(place, {})))
     watchers = ledger.fill_watchers
     if watchers is not None:
         watched_cumulative = {}
@@ -160,7 +193,7 @@ def note_clearings(ledger, cleared, answer: list, memory_names: list, metal: Opt
                 if fill.side == "buy":
                     ledger.buy_fills.setdefault(fill.agent, []).append(fill)
     ledger.note_round_rows(numpy.array(markets, dtype=numpy.int64), cleared.quantity, cleared.price,
-                           numpy.array([entry[0] for entry in answer], dtype=float))
+                           answer.delivered)
 
 
 def _watched_buys(result: TableClearing, watchers, kept: dict) -> bool:

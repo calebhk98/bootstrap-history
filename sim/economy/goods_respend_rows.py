@@ -27,6 +27,13 @@ whether it was cleared on the order tables (its bids, offers left and settlement
 
 def table_columns(markets: dict, market_keys: Sequence):
     """`TableColumns` of the markets when they all share one filled year table, else None (a market made alone, a test's)."""
+    sorted_cells = getattr(markets, "sorted_cells", None)       # `goods_left_markets.LeftMarkets`: the rows are known without making a market
+    if sorted_cells is not None:
+        shared = markets.year_markets
+        if not len(markets) or not shared.first_round_filled or len(market_keys) != len(markets):
+            return None
+        cells = sorted_cells()
+        return TableColumns(shared, cells, shared.table.way[cells] != 2)
     lefts = [markets[key] for key in market_keys]
     shared = lefts[0].year_markets if lefts else None
     if shared is None or not shared.first_round_filled or not all(each.year_markets is shared for each in lefts):

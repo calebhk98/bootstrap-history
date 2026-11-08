@@ -3,12 +3,12 @@
 
 A market on the tables whose good is not the coin metal's takes the kernels: the price its sellers got from the ledger's rounds, what its
 buyers would have taken at the old price from the order tables' bid rows and the added bids, and the quote it rests on from the first round's
-columns. A market cleared on `Bid` and `Offer` objects, a market of the coin metal (whose mint tops up the price) and every market when a
+columns. A market of the coin metal (whose mint tops up the price) and every market when a
 kernel meets a figure it does not reproduce take the Python rules (`remember_one`)."""
 import numpy
 
 from . import goods_memory_notes, goods_remember_kernel as kernel
-from .goods_good_clear import ON_OBJECTS, QUOTE_KINDS
+from .goods_good_clear import QUOTE_KINDS
 from .market_memory_asks import REPRESENTATIVE_TRADE_SHARE, memory_reference_volume
 from .market_memory_asks import RESUMED_TRADE_MEMORY_SHARE
 from .market_memory_offers import NO_OFFER_MEMORY_SHARE, price_after_thin_trade, price_toward_quote
@@ -76,16 +76,17 @@ def _kind_numbers(memory, kind: numpy.ndarray) -> numpy.ndarray:
     return numbers
 
 
-def remember_markets(setup, record, ordered, rows, year_markets, cells, ledger, orders, metal):
-    """The memory's notes for the markets `ordered` (sorted (good, area), market) pairs, with their market numbers `rows` and table rows `cells`."""
+def remember_markets(setup, record, keys, left_markets, rows, year_markets, cells, ledger, orders, metal):
+    """The memory's notes for the markets `keys` (sorted (good, area); `left_markets` makes a market's `LeftMarket` for the Python rules), with their
+    market numbers `rows` and table rows `cells`."""
     memory, table = record.memory, year_markets.table
     total_all, cleared_all = ledger.market_total_columns()
     total, cleared = total_all[rows], cleared_all[rows]
     was_quote, usual = goods_memory_notes.last_year_columns(memory, rows)
     was_quote, usual = numpy.array(was_quote, dtype=numpy.bool_), numpy.array(usual, dtype=numpy.float64)
-    old, idle, way = table.last_price[cells], table.idle_years[cells], table.way[cells]
-    goods = [key[0] for key, _market in ordered]
-    plain = (way == ON_OBJECTS) | (numpy.array([good == metal for good in goods], dtype=numpy.bool_) if metal is not None else False)
+    old, idle = table.last_price[cells], table.idle_years[cells]
+    goods = [good for good, _area in keys]
+    plain = numpy.array([good == metal for good in goods], dtype=numpy.bool_)
     costs = Costs(setup, record)
     flags = numpy.zeros(1, dtype=numpy.int64)
     pointers, floor, flexible, reference, elasticity, budget, maximum, counted = _bid_columns(year_markets, cells, orders)
@@ -108,8 +109,8 @@ def remember_markets(setup, record, ordered, rows, year_markets, cells, ledger, 
         return _write(setup, memory, rows, goods, signal, kind, from_trade, cleared, table.delivered[cells])
     every = numpy.ones(len(rows), dtype=numpy.bool_) if flags[0] == kernel.FALLBACK else plain
     for place in numpy.flatnonzero(every).tolist():
-        (good, area), market = ordered[place]
-        found, name, trade = remember_one(setup, record, good, area, market, None if old[place] != old[place] else float(old[place]),
+        good, area = keys[place]
+        found, name, trade = remember_one(setup, record, good, area, left_markets[keys[place]], None if old[place] != old[place] else float(old[place]),
                                           float(total[place]), float(usual[place]), bool(was_quote[place]), int(idle[place]), ledger, orders, costs)
         signal[place], kind[place], from_trade[place] = numpy.nan if found is None else found, QUOTE_KINDS.index(name), trade
     return _write(setup, memory, rows, goods, signal, kind, from_trade, cleared, table.delivered[cells])

@@ -113,11 +113,11 @@ def of_mapping(bids_by_market: Mapping[Market, Sequence]) -> YearBids:
 def build(left_markets: Mapping[Market, object]) -> YearBids:
     """The block of the cleared markets (`goods_respend_year.LeftMarket`): a market on the order tables is read from the table's columns,
     a market on the objects from its `Bid`s, and each market's added bids follow its first-round bids."""
-    markets = sorted(left_markets)
-    lefts = [left_markets[market] for market in markets]
+    markets = left_markets.sorted_keys() if hasattr(left_markets, "sorted_keys") else sorted(left_markets)
     columns = table_columns(left_markets, markets)
     if columns is not None:
-        return _build_from_table(markets, lefts, columns)
+        return _build_from_table(markets, left_markets, columns)
+    lefts = [left_markets[market] for market in markets]
     rows_of = [left.rows for left in lefts]
     selected = [None if each is None else each.bid_array for each in rows_of]
     first_counts = [len(left.bids) if each is None else len(each) for left, each in zip(lefts, selected)]
@@ -173,7 +173,7 @@ def _ranges(first: numpy.ndarray, count: numpy.ndarray) -> numpy.ndarray:
     return numpy.repeat(first - (stops - count), count) + numpy.arange(int(stops[-1]) if len(stops) else 0, dtype=numpy.int64)
 
 
-def _build_from_table(markets, lefts, columns) -> YearBids:
+def _build_from_table(markets, left_markets, columns) -> YearBids:
     """`build` for markets that share the year's table (`goods_year_markets.YearMarkets`): the first round's bids of the markets on the order
     tables are gathered from the table's bid rows and the added bids are the table's columns, both in one pass; a market on the objects
     contributes its `Bid`s."""
@@ -182,13 +182,13 @@ def _build_from_table(markets, lefts, columns) -> YearBids:
     first_counts = table.bid_count[cells].copy()
     objects = numpy.flatnonzero(~on_tables).tolist()
     for place in objects:
-        first_counts[place] = len(lefts[place].bids)
+        first_counts[place] = len(left_markets[markets[place]].bids)
     added_pointers, *added = year_markets.added_bids(cells)
     start = _starts(first_counts + numpy.diff(added_pointers))
     figures = [numpy.zeros(int(start[-1])) for _each in range(6)]
     here = numpy.flatnonzero(on_tables)
     if len(here):
-        orders = lefts[int(here[0])].rows.orders
+        orders = left_markets[markets[int(here[0])]].rows.orders
         rows = year_markets.bid_rows()[_ranges(table.bid_first[cells[here]], first_counts[here])]
         target = _ranges(start[here], first_counts[here])
         bids = orders.tables()[0]
@@ -197,7 +197,7 @@ def _build_from_table(markets, lefts, columns) -> YearBids:
     for place in objects:
         if first_counts[place]:
             first = int(start[place])
-            for column, each in zip(figures, columns_of(list(lefts[place].bids))):
+            for column, each in zip(figures, columns_of(list(left_markets[markets[place]].bids))):
                 column[first:first + int(first_counts[place])] = each
     if len(added[0]):
         target = _ranges(start[:-1] + first_counts, numpy.diff(added_pointers))
