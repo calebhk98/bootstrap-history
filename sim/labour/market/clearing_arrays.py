@@ -78,9 +78,9 @@ def _offer_columns(inputs: YearInputs, state: MarketState, cells: np.ndarray, in
     return np.concatenate(pieces, axis=1), exponent
 
 
-def _area_names(state: MarketState, inputs: YearInputs, bids: bid_book.BidColumns) -> set:
+def _area_names(state: MarketState, inputs: YearInputs) -> set:
     """Every area the year names."""
-    names = set(inputs.subsistence_per_worker_year) | set(inputs.routes) | set(inputs.ask_floor_per_worker_year) | set(bids.areas)
+    names = set(inputs.subsistence_per_worker_year) | set(inputs.routes) | set(inputs.ask_floor_per_worker_year) | bid_book.area_names(inputs.bids)
     names.update(route.destination for routes in inputs.routes.values() for route in routes)
     if inputs.hours_sold_at is not None:
         names.update(area for _trade, area in (inputs.hours_sold_at.columns.markets if getattr(inputs.hours_sold_at, "columns", None) is not None
@@ -111,7 +111,7 @@ def _reaches(inputs: YearInputs, areas_with_bids: np.ndarray, state: MarketState
 def pack_heads(state: MarketState, inputs: YearInputs, share_closed_per_year: float) -> PackedHeads:
     """Arguments of `market_heads` for every market of the year: those with a bid for hours and those whose trade has people in
     the area. Admits to the state the areas, trades and employers the year names."""
-    state.admit(_area_names(state, inputs, bid_book.columns_of(inputs.bids)), inputs.trades)
+    state.admit(_area_names(state, inputs), inputs.trades)
     bids = bid_book.numbered(state, inputs.bids)
     ids = state.ids
     area_count, trade_count = len(ids.areas), len(ids.trades)

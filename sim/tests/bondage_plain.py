@@ -1,0 +1,136 @@
+"""The bondage placement rules as plain Python, one record at a time: what `sim/economy/bondage_hours.py` did before it worked on rows
+(offers and bids as columns, rules as kernels). The tests run both on random inputs and want the same answers, to the last digit."""
+import dataclasses
+from typing import Callable, Dict, List, Mapping, Optional, Sequence, Tuple
+
+from sim.economy import titles
+from sim.economy.types import AgentId, LabourBid, LabourOffer
+
+
+@dataclasses.dataclass
+class Placement:
+    offers: List[LabourOffer]
+    bids: List[LabourBid]
+    hired: Dict[AgentId, Dict[str, float]]          # employer -> trade -> hours worked for the creditor
+    hours_placed: Dict[AgentId, float]              # cohort -> hours it worked for its creditor
+    value_placed: Dict[AgentId, float]              # cohort -> those hours at its reservation wage
+    cash_share: Dict[AgentId, float]                # cohort -> share of its market wages still owed in cash
+
+
+def plain_place(bonds: Mapping[AgentId, Mapping], offers: Sequence[LabourOffer], bids: Sequence[LabourBid],
+          works_of: Callable[[AgentId], Optional[AgentId]], owed_share: float) -> Placement:
+    """Place bonded cohorts' owed hours with their creditors' works. `works_of(employer)` is the owner of the
+    employer's works (the employer itself for an actor that is its own owner), or None."""
+    new_offers = list(offers)
+    new_bids = list(bids)
+    hired: Dict[AgentId, Dict[str, float]] = {}
+    placed_hours: Dict[AgentId, float] = {}
+    placed_value: Dict[AgentId, float] = {}
+    cash_share: Dict[AgentId, float] = {}
+    for cohort_id, bond in sorted(bonds.items()):
+        creditor, debt_left = bond["creditor"], bond["debt"]
+        total_hours = sum(offer.hours for offer in offers if offer.worker == cohort_id)
+        if total_hours <= 0.0:
+            continue
+        owed = owed_share * total_hours
+        for index, offer in enumerate(new_offers):
+            if offer.worker != cohort_id or offer.hours <= 0.0 or owed <= 1e-12 or debt_left <= titles.EPSILON:
+                continue
+            want = min(owed_share * offer.hours, owed, debt_left / offer.reservation_wage if offer.reservation_wage > 0.0 else owed)
+            for slot, bid in enumerate(new_bids):
+                if want <= 1e-12:
+                    break
+                if bid.trade != offer.trade or bid.area != offer.area or bid.hours <= 0.0 or works_of(bid.employer) != creditor:
+                    continue
+                taken = min(want, bid.hours)
+                new_bids[slot] = dataclasses.replace(bid, hours=bid.hours - taken)
+                new_offers[index] = dataclasses.replace(new_offers[index], hours=new_offers[index].hours - taken)
+                rows = hired.setdefault(bid.employer, {})
+                rows[bid.trade] = rows.get(bid.trade, 0.0) + taken
+                placed_hours[cohort_id] = placed_hours.get(cohort_id, 0.0) + taken
+                value = taken * offer.reservation_wage
+                placed_value[cohort_id] = placed_value.get(cohort_id, 0.0) + value
+                debt_left -= value
+                owed -= taken
+                want -= taken
+        placed = placed_hours.get(cohort_id, 0.0)
+        left_in_market = total_hours - placed
+        cash_share[cohort_id] = max(0.0, owed_share * total_hours - placed) / left_in_market if left_in_market > 0.0 else 0.0
+    return Placement(new_offers, new_bids, hired, placed_hours, placed_value, cash_share)
+
+
+@dataclasses.dataclass
+class HeldPlacement:
+    offers: List[LabourOffer]
+    bids: List[LabourBid]
+    hired: Dict[AgentId, Dict[str, float]]          # employer -> trade -> hours worked by the people it holds
+    keep: List[Tuple[AgentId, AgentId, float]]      # (employer, cohort, money): the keep the holder owes for those hours
+
+
+def plain_place_held(held: Dict[str, Dict[str, Dict[AgentId, float]]], workers: Callable[[str, str], float],
+               offers: Sequence[LabourOffer], bids: Sequence[LabourBid], hours_per_worker: float,
+               keep_per_worker_year: Mapping[str, float], area_of: Callable[[str], str]) -> HeldPlacement:
+    """The hours of bought bonded people are their holders': for each (tile, trade) the people held (no more than the
+    trade's workers there, so deaths and retirements thin them) work for the employer that holds them, off the
+    market, as far as that employer bids hours for the trade there. They come off the offers of the households the
+    workers live in, in proportion, and the holder pays the keep of the people working for it, which the hours no
+    longer earn their households."""
+    new_offers, new_bids = list(offers), list(bids)
+    hired: Dict[AgentId, Dict[str, float]] = {}
+    keep: List[Tuple[AgentId, AgentId, float]] = []
+    if not held:
+        return HeldPlacement(new_offers, new_bids, hired, keep)
+    wanted_employers = {employer for by_trade in held.values() for by_employer in by_trade.values() for employer in by_employer}
+    bid_slots: Dict[Tuple[AgentId, str, str], List[int]] = {}      # the bids of the holders, by employer, trade and area, in order
+    for slot, bid in enumerate(new_bids):
+        if bid.employer in wanted_employers:
+            bid_slots.setdefault((bid.employer, bid.trade, bid.area), []).append(slot)
+    offer_slots: Dict[Tuple[str, str], List[int]] = {}             # the offers by trade and area, in order
+    for index, offer in enumerate(new_offers):
+        offer_slots.setdefault((offer.trade, offer.area), []).append(index)
+    for tile in sorted(held):
+        area = area_of(tile)
+        for trade in sorted(held[tile]):
+            available = workers(area, trade)
+            market_slots = offer_slots.get((trade, area), ())
+            for employer in sorted(held[tile][trade]):
+                people = min(held[tile][trade][employer], available)
+                held[tile][trade][employer] = people
+                available -= people
+                want = people * hours_per_worker
+                for slot in bid_slots.get((employer, trade, area), ()):
+                    if want <= 1e-12:
+                        break
+                    bid = new_bids[slot]
+                    if bid.hours <= 0.0:
+                        continue
+                    offered = sum([new_offers[index].hours for index in market_slots])
+                    taken = min(want, bid.hours, offered)
+                    if taken <= 1e-12:
+                        continue
+                    cut = taken / offered
+                    for index in market_slots:
+                        offer = new_offers[index]
+                        if offer.hours > 0.0:
+                            keep.append((employer, offer.worker, offer.hours * cut / hours_per_worker * keep_per_worker_year.get(area, 0.0)))
+                            new_offers[index] = dataclasses.replace(offer, hours=offer.hours * (1.0 - cut))
+                    new_bids[slot] = dataclasses.replace(bid, hours=bid.hours - taken)
+                    rows = hired.setdefault(employer, {})
+                    rows[trade] = rows.get(trade, 0.0) + taken
+                    want -= taken
+    return HeldPlacement(new_offers, new_bids, hired, keep)
+
+
+def plain_payable_keep(keep: Sequence[Tuple[AgentId, AgentId, float]], balance_of: Callable[[AgentId], float]) -> List[Tuple[AgentId, AgentId, float]]:
+    """The keep rows a holder can pay from what it holds: rows are paid in order until the holder's balance is spent, so
+    several rows of one holder never overdraw it together."""
+    left: Dict[AgentId, float] = {}
+    payable = []
+    for employer, cohort, amount in keep:
+        if employer not in left:
+            left[employer] = max(0.0, balance_of(employer))
+        paid = min(amount, left[employer])
+        if paid > 0.0:
+            payable.append((employer, cohort, paid))
+            left[employer] -= paid
+    return payable

@@ -4,15 +4,17 @@ tiles, trains and replaces them. The economy then pays every hour hired in a mar
 for it (`LabourClearing.wage`), and the workers who offered them share the receipts by hours sold.
 """
 import dataclasses
-from typing import Dict, List, Sequence, Tuple
+from typing import Dict, List, Optional, Sequence, Tuple, Union
 
-from sim.labour.api import TrancheBids, people_in, run_labour_year
+from sim.labour.api import LabourBidTable, TrancheBids, people_in, run_labour_year
 from sim.world.need_basket import subsistence_cost_per_person
 
-from . import household_work_year, households, households_basket, households_work, labour_settle_year
+from . import household_work_year, households_basket, households_work, labour_settle_year
 from .labour_ask_floor import mean_floor_per_hour
 from .labour_bids import BID_TRANCHES, BID_VALUE_SPREAD
 from .labour_fills import fills_of, rows_from_clearings, rows_from_objects
+from .labour_offer_rows import LabourOfferRows
+from .labour_offers_write import write_cohort_offers
 from .labour_results_table import LabourResults
 from .labour_state import core_trades, mirror_wages, people_by_trade
 from .market_memory import market_key
@@ -49,32 +51,23 @@ def outside_option_by_tile(setup, record, view) -> Dict[str, float]:
             for tile, floor in floors.items()}
 
 
+def labour_offer_rows(setup, record, view, subsistence_by_tile, levy_hours_per_worker: float = 0.0,
+                      levied_tiles: Sequence[str] = (), rows: Optional[LabourOfferRows] = None) -> LabourOfferRows:
+    """Each cohort's share of the tile's workers in each trade, as hours at the reservation wage, appended to `rows` (a new set
+    when none is given). The hours a state levies (`levy_hours_per_worker`) come off the hours of the workers on the tiles it holds
+    (`levied_tiles`) before they are offered: the hours left are asked at a dearer wage, and a levy of the whole year leaves nothing
+    to offer."""
+    rows = LabourOfferRows() if rows is None else rows
+    danger = {trade: spec.fatality_risk_per_year for trade, spec in setup.trades.items()}
+    write_cohort_offers(rows, record.cohorts.values(), lambda area: people_by_trade(record.labour.workforce, area), view.area_of, labour_area,
+                        subsistence_by_tile, setup.working_hours_per_year, danger, levy_hours_per_worker, levied_tiles)
+    return rows
+
+
 def labour_offers(setup, record, view, subsistence_by_tile, levy_hours_per_worker: float = 0.0,
                   levied_tiles: Sequence[str] = ()) -> List[LabourOffer]:
-    """Each cohort's share of the tile's workers in each trade, as hours at the reservation wage. The hours a state
-    levies (`levy_hours_per_worker`) come off the hours of the workers on the tiles it holds (`levied_tiles`) before
-    they are offered: the hours left are asked at a dearer wage, and a levy of the whole year leaves nothing to offer."""
-    danger = {trade: spec.fatality_risk_per_year for trade, spec in setup.trades.items()}
-    levied = set(levied_tiles)
-    offers: List[LabourOffer] = []
-    working_by_tile: Dict[str, float] = {}
-    for cohort in record.cohorts.values():
-        working_by_tile[cohort.tile] = working_by_tile.get(cohort.tile, 0.0) + cohort.working_people
-    people_by_area: Dict[str, Dict[str, float]] = {}
-    for cohort in sorted(record.cohorts.values(), key=lambda each: each.agent_id):
-        tile_working = working_by_tile.get(cohort.tile, 0.0)
-        share = cohort.working_people / tile_working if tile_working > 0.0 else 0.0
-        area = labour_area(cohort.tile)
-        if area not in people_by_area:
-            people_by_area[area] = people_by_trade(record.labour.workforce, area)
-        workers = {trade: count * share for trade, count in people_by_area[area].items()}
-        hours_left = setup.working_hours_per_year
-        if cohort.tile in levied:
-            hours_left = max(0.0, hours_left - max(0.0, levy_hours_per_worker))
-        if hours_left <= 0.0:
-            continue
-        offers.extend(households.labour_offers(cohort, workers, view, subsistence_by_tile.get(cohort.tile, 0.0), hours_left, danger))
-    return offers
+    """`labour_offer_rows` as records (an edge: the opening's plans, a test)."""
+    return list(labour_offer_rows(setup, record, view, subsistence_by_tile, levy_hours_per_worker, levied_tiles).objects())
 
 
 def _result(clearing, currency: str, offers: Sequence[LabourOffer]) -> LabourResult:
@@ -98,19 +91,23 @@ def clearing_rows(clearings):
     return rows_from_clearings(clearings) if hasattr(clearings, "slot_offsets") else rows_from_objects(clearings)
 
 
-def clear_labour(setup, record, bids: Sequence[LabourBid], offers: Sequence[LabourOffer], ledger: YearLedger,
+def clear_labour(setup, record, bids: Union[LabourBidTable, Sequence[LabourBid]], offers: Sequence[LabourOffer], ledger: YearLedger,
                  context, supply=None):
     """Run the core's year on the record's workforce: wages, hires, training, entry, switching and migration;
     returns the core's report. Then settle each market. `context` is the core's inputs without trades and bids
     (labour_inputs.labour_context). With `supply` (labour_supply.HourSupply) the hours each market sells are the hours
     its offers hold, rising with the wage, and the offers settled are those sold at the wage the market cleared at
     (`supply.sold`); without it the core sells every worker's whole year and `offers` are the sellers."""
+    if not isinstance(bids, LabourBidTable):      # bids handed over as records (a test) are put into rows
+        found = LabourBidTable()
+        found.add_objects(bids)
+        bids = found
     core_bids = TrancheBids(bids, BID_TRANCHES, BID_VALUE_SPREAD)      # the core cuts each bid into its tranches (labour_bids.sloped_bids is the same rule as objects)
     ledger.wage_floor_per_hour = mean_floor_per_hour(
         context.ask_floor_per_worker_year,
         {area: people_in(record.labour.workforce, area) for area in context.ask_floor_per_worker_year},
         context.hours_per_worker_year)
-    inputs = dataclasses.replace(context, trades=core_trades(setup, {bid.trade for bid in core_bids.bids}),
+    inputs = dataclasses.replace(context, trades=core_trades(setup, core_bids.trade_names()),
                                  bids=core_bids, hours_sold_at=supply.schedules() if supply is not None else None)
     record.labour.workforce, report = run_labour_year(record.labour.workforce, inputs, owned=True)
     rows = clearing_rows(report.clearings)

@@ -16,6 +16,7 @@ from .market_memory import KEY_SEPARATOR as MARKET_KEY_SEPARATOR, market_key
 from .merchants import Merchant
 from .producers_working_capital import WORKING_CAPITAL_PURPOSE
 from .setup import labour_area
+from .labour_bid_sink import BidFigures, bid_objects, put_bids
 from .types import LabourBid, LoanRequest
 
 CrewRows = Tuple[Tuple[str, float], ...]      # ((crew key, crew hours),): a crew key is market_key(trade, tile hired at)
@@ -136,10 +137,20 @@ def _split(key: str) -> Tuple[str, str]:
 
 
 def bids(setup, record) -> List[LabourBid]:
-    """Each merchant's bid for carriers on the tiles its goods left last year, in the trades the hauls need. The
-    merchants' plan is last year's shipments (what they wanted to carry, before any cut), because this year's
-    purchases are not known until the goods markets clear, after the labour market. The most an hour of crew
-    can be worth to a merchant is all of the carriage money its hours stand for."""
+    """`bid_figures` as records (an edge: the workforce's figures, tests)."""
+    return bid_objects(bid_figures(setup, record))
+
+
+def write_bids(sink, setup, record) -> None:
+    """Add every merchant's bid for carriers to the year's labour bids (a `LabourBidTable`, or a list of records)."""
+    put_bids(sink, bid_figures(setup, record))
+
+
+def bid_figures(setup, record) -> List[BidFigures]:
+    """Each merchant's bid for carriers on the tiles its goods left last year, in the trades the hauls need: (employer, trade, area,
+    hours, maximum wage) each. The merchants' plan is last year's shipments (what they wanted to carry, before any cut), because
+    this year's purchases are not known until the goods markets clear, after the labour market. The most an hour of crew can be
+    worth to a merchant is all of the carriage money its hours stand for."""
     if not hires(setup):
         return []
     populated = {cohort.tile for cohort in record.cohorts.values()}
@@ -148,8 +159,8 @@ def bids(setup, record) -> List[LabourBid]:
         for key, hours in sorted((merchant.carriage_hours_wanted or {}).items()):
             if hours > 0.0:
                 trade, tile = _split(key)
-                found.append(LabourBid(merchant.agent_id, trade, hiring_area(record, merchant, tile, populated), hours,
-                                       merchant.carriage_money_wanted.get(key, 0.0) / hours))
+                found.append((merchant.agent_id, trade, hiring_area(record, merchant, tile, populated), hours,
+                              merchant.carriage_money_wanted.get(key, 0.0) / hours))
     return found
 
 

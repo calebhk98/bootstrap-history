@@ -50,6 +50,7 @@ def declared_signatures():
     }
     signatures.update(book_signatures(types))
     signatures.update(ledger_signatures(types))
+    signatures.update(bondage_signatures(types))
     signatures.update(compiled_tables_signatures(types))
     return signatures
 
@@ -105,4 +106,19 @@ def ledger_signatures(types):
         module + "kill_row": [(target, integer)],
         module + "set_pair": [(target, integer, integer, integer, number, number)],
         module + "remove_from_figure": [(whole, whole, integer, integer)],
+    }
+
+
+def bondage_signatures(types):
+    """The bondage placement kernels, which a year with no bought bonded people and no bonded cohorts never calls: typed from the
+    arrays `bondage_hours` passes them."""
+    number, integer, flag = types.float64, types.int64, types.boolean
+    floats, whole, flags = types.Array(number, 1, "C"), types.Array(integer, 1, "C"), types.Array(flag, 1, "C")
+    return {
+        "sim.economy.bondage_kernels.place_held_kernel": [(
+            whole, floats, floats, whole, whole, whole, whole, whole, whole, floats, floats, number, floats, floats, whole, whole, floats,
+            whole, floats, floats)],
+        "sim.economy.bondage_kernels.place_bonds_kernel": [(
+            whole, whole, whole, floats, whole, floats, floats, whole, whole, whole, floats, whole, number, number, floats, floats, floats,
+            floats, flags, flags, whole, floats, floats)],
     }

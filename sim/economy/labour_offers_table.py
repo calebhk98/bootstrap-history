@@ -5,13 +5,14 @@ cohort sells at a wage are a function of the columns below, computed by the kern
 
 Rows are in the order the offers were made (cohort id, then trade, then the seats' and bonded offers after), which fixes every
 sum. Ids are numbered per year in sorted order (`LabourIds`); a market is a dense rank of (trade, area) in sorted order."""
-from typing import Mapping, NamedTuple, Optional, Sequence, Tuple
+from typing import Mapping, NamedTuple, Optional, Sequence, Tuple, Union
 
 import numpy
 
 from sim.compiled_tables.ids import IdTable
 from sim.compiled_tables.spec import Column, TableSpec
 
+from .labour_offer_rows import LabourOfferRows
 from .labour_offers_kernels import whole_hours_by_cohort
 from .types import AgentId, LabourOffer
 
@@ -57,9 +58,14 @@ class LabourIds(NamedTuple):
         return [(self.trades.name(trade), self.areas.name(area)) for trade, area in zip(market_trades.tolist(), market_areas.tolist())]
 
 
-def labour_ids(offers: Sequence[LabourOffer], extra_cohorts: Sequence[AgentId] = ()) -> LabourIds:
+def labour_ids(offers: Union[LabourOfferRows, Sequence[LabourOffer]], extra_cohorts: Sequence[AgentId] = ()) -> LabourIds:
     """Numbers for the cohorts, trades and areas of these offers, each admitted in one sorted batch (`extra_cohorts` are
     cohort names that hold no offer but have plan, work or plot figures)."""
+    if isinstance(offers, LabourOfferRows):
+        worker, trade, area = offers.columns()[:3]
+        return LabourIds(IdTable("cohort", {offers.workers.names[each] for each in numpy.unique(worker).tolist()}.union(extra_cohorts)),
+                         IdTable("trade", {offers.trades.names[each] for each in numpy.unique(trade).tolist()}),
+                         IdTable("area", {offers.areas.names[each] for each in numpy.unique(area).tolist()}))
     return LabourIds(IdTable("cohort", {offer.worker for offer in offers}.union(extra_cohorts)),
                      IdTable("trade", {offer.trade for offer in offers}), IdTable("area", {offer.area for offer in offers}))
 
@@ -85,24 +91,35 @@ def _per_cohort(ids: IdTable, values: Mapping[AgentId, float]) -> numpy.ndarray:
     return numpy.array([values.get(name, 0.0) for name in ids.names], dtype=numpy.float64)
 
 
-def build_labour_offers(offers: Sequence[LabourOffer], plan_hours: Mapping[AgentId, float], work_hours: Mapping[AgentId, float],
-                        plot_parameters: Mapping[AgentId, PlotParameters], ids: Optional[LabourIds] = None):
+def _numbers_in(names, column: numpy.ndarray, table: IdTable) -> numpy.ndarray:
+    """The `table` number of the name behind each place in `column` (places into the row names `names`)."""
+    used = numpy.unique(column)
+    lookup = numpy.full(max(len(names), 1), -1, dtype=numpy.int64)
+    lookup[used] = table.admit([names.names[each] for each in used.tolist()])
+    return lookup[column]
+
+
+def build_labour_offers(offers: Union[LabourOfferRows, Sequence[LabourOffer]], plan_hours: Mapping[AgentId, float],
+                        work_hours: Mapping[AgentId, float], plot_parameters: Mapping[AgentId, PlotParameters],
+                        ids: Optional[LabourIds] = None):
     """(table, ids, markets) for the offers: one row each, in order. The plan, work and plot figures of a cohort are copied
-    to each of its rows; `whole_hours` is the sum of the cohort's offered hours added in row order."""
-    ids = ids or labour_ids(offers, set(plan_hours) | set(work_hours) | set(plot_parameters))
-    cohort = ids.cohorts.admit([offer.worker for offer in offers])
-    trade = ids.trades.admit([offer.trade for offer in offers])
-    area = ids.areas.admit([offer.area for offer in offers])
+    to each of its rows; `whole_hours` is the sum of the cohort's offered hours added in row order. The offers are the rows
+    a writer made (`LabourOfferRows`) or a sequence of `LabourOffer`s."""
+    rows = offers if isinstance(offers, LabourOfferRows) else LabourOfferRows.of_objects(offers)
+    ids = ids or labour_ids(rows, set(plan_hours) | set(work_hours) | set(plot_parameters))
+    worker, trade_column, area_column, offered, reservation = rows.columns()
+    cohort = _numbers_in(rows.workers, worker, ids.cohorts)
+    trade = _numbers_in(rows.trades, trade_column, ids.trades)
+    area = _numbers_in(rows.areas, area_column, ids.areas)
     market, market_trade, market_area = market_ranks(trade, area, len(ids.areas))
     names = ids.cohorts.names
     plot = [plot_parameters.get(name) for name in names]
     has_plot = numpy.array([parameters is not None for parameters in plot], dtype=numpy.bool_)
     figure = [numpy.array([getattr(parameters, field) if parameters is not None else 0.0 for parameters in plot]) for field in PlotParameters._fields]
-    hours = numpy.array([offer.hours for offer in offers], dtype=numpy.float64)
-    count = len(offers)
+    count = len(offered)
     table = LABOUR_OFFERS.table_of(
-        LabourOffers, cohort=cohort, trade=trade, area=area, market=market, hours=hours,
-        reservation_wage=numpy.array([offer.reservation_wage for offer in offers], dtype=numpy.float64),
+        LabourOffers, cohort=cohort, trade=trade, area=area, market=market, hours=offered.copy(),
+        reservation_wage=reservation.copy(),
         whole_hours=numpy.zeros(count), plan_hours=_per_cohort(ids.cohorts, plan_hours)[cohort],
         work_hours=_per_cohort(ids.cohorts, work_hours)[cohort], has_plot=has_plot[cohort],
         plot_hours_per_worker=figure[0][cohort], marginal_return=figure[1][cohort], usable_per_worker=figure[2][cohort],
