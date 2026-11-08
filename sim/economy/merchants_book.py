@@ -8,7 +8,7 @@ rule of `merchants.candidate_routes`. The pack never reaches a saved record.
 """
 import weakref
 from itertools import repeat
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Dict, List, Mapping, Optional, Tuple
 
 import numpy as np
@@ -143,6 +143,7 @@ class RoutePass:
     book: RouteBook
     view_prices: np.ndarray
     carriage: object
+    prepared: dict = field(default_factory=dict)       # rows searched ahead for some merchants (`merchants_batch`), by agent id
 
 
 def route_pass(view, carriage, area_map, specs) -> RoutePass:
