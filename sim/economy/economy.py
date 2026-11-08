@@ -176,7 +176,7 @@ class Economy:
         record.book.start_year()
         stocks_at_start = stocks_held(record.book)
         ledger = YearLedger(import_accounts=frozenset(inputs.import_accounts), export_accounts=frozenset(inputs.export_accounts),
-                             state_capacity=inputs.state_capacity)
+                             state_capacity=inputs.state_capacity, book=record.book, markets=record.memory.tables)
         self._follow_population(inputs)
         self._follow_yields(inputs)
         sites.apply_site_limits(record, setup)

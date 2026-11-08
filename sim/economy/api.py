@@ -25,6 +25,7 @@ from . import market_memory as market_memory_module
 from .market_memory import KEY_SEPARATOR, market_key
 from .market_table_specs import GOODS_MARKETS, GoodsMarkets      # the goods market table's spec and type (kernel_signatures declares its kernels from them)
 from .opening_rate import opening_market_rate
+from .year_ledger_store import LedgerTables      # the year ledger's tables (kernel_signatures declares its kernels from a fresh one)
 from .metal_stock import COIN_WEAR_PER_YEAR
 from .notional import costing_wages, shown_prices, shown_prices_with_kinds
 from .producers import Producer, expected_output_prices, live_input_prices, live_wages
