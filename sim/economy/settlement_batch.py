@@ -15,6 +15,7 @@ import numpy
 
 from sim.book import Book
 from .settlement_batch_kernel import settle_markets
+from .settlement_numbering import local_numbering
 from .settlement_record import Settlement
 from .types import EDGE_MINT, AgentId, CurrencyId, Pairing, is_edge, is_external_edge
 
@@ -113,30 +114,11 @@ def settle_packed(book: Book, table: KeyTable, packed: Packed, currency: Currenc
     if not table.agents:
         return settlements
     sizes = numpy.array(packed.sizes, dtype=numpy.int64)
-    pair_offset = numpy.concatenate(([0], numpy.cumsum(sizes))).astype(numpy.int64)
-    pair_count = int(pair_offset[-1])
     receipt, seller = numpy.concatenate(packed.receipt), numpy.concatenate(packed.seller)
-    key_total, agent_total = len(table.keys), len(table.agents)
-    market_ids = numpy.arange(markets + 1, dtype=numpy.int64)
-    if markets == 1:         # the batch's keys and agents are the market's own
-        buyer_key, seller_key = receipt, seller
-        key_global, agent_global = numpy.arange(key_total, dtype=numpy.int64), numpy.arange(agent_total, dtype=numpy.int64)
-        key_offset, agent_offset = numpy.array([0, key_total], dtype=numpy.int64), numpy.array([0, agent_total], dtype=numpy.int64)
-        key_agent = numpy.array(table.key_agent, dtype=numpy.int64)
-    else:
-        market_of_pair = numpy.repeat(market_ids[:-1], sizes)
-        unique, inverse = numpy.unique(numpy.concatenate((market_of_pair * key_total + receipt, market_of_pair * key_total + seller)),
-                                       return_inverse=True)
-        key_market, key_global = unique // key_total, unique % key_total
-        key_offset = numpy.searchsorted(key_market, market_ids).astype(numpy.int64)
-        shift = key_offset[market_of_pair]
-        inverse = inverse.reshape(-1)
-        buyer_key, seller_key = inverse[:pair_count] - shift, inverse[pair_count:] - shift
-        unique_agents, agent_inverse = numpy.unique(
-            key_market * agent_total + numpy.array(table.key_agent, dtype=numpy.int64)[key_global], return_inverse=True)
-        agent_market, agent_global = unique_agents // agent_total, unique_agents % agent_total
-        agent_offset = numpy.searchsorted(agent_market, market_ids).astype(numpy.int64)
-        key_agent = agent_inverse.reshape(-1) - agent_offset[key_market]
+    agent_total = len(table.agents)
+    (pair_offset, agent_offset, key_offset, buyer_key, seller_key, key_global, agent_global, key_agent) = local_numbering(
+        sizes, receipt, seller, numpy.array(table.key_agent, dtype=numpy.int64), agent_total)
+    key_total = len(table.keys)
     agents, keys = table.agents, table.keys
     stock_state = numpy.zeros(key_total)
     if delivers_goods:

@@ -34,12 +34,14 @@ def write_markets(setup, ledger, markets, packed, out) -> None:
                 packed.buyers[buyer], good, area, packed.buyer_tile[buyer], 0.0, float(bid_flexible[row]),
                 float(bid_reference[row]), substitution[buyer], float(bid_budget[row]), RESPEND_PRIORITY,
                 maximum_price=float(bid_maximum[row])))
+    results = []
     for row in range(clear_count):
         good, area = keys[clear_market[row]]
         result = ClearingResult(good, area, setup.currency_id, float(clear_price[row]) if clear_has_price[row] else None,
                                 float(clear_quantity[row]), float(clear_demand[row]), float(clear_offered[row]), ())
         markets[(good, area)].results.append(result)
-        ledger.note_clearing(result, float(clear_delivered[row]))
+        results.append(result)
+    note_rounds(ledger, results, clear_delivered[:clear_count].tolist())
     for index in numpy.nonzero(market_cleared)[0].tolist():
         market = markets[keys[index]]
         market.delivered += float(market_delivered[index])
@@ -47,6 +49,22 @@ def write_markets(setup, ledger, markets, packed, out) -> None:
         market.last_offered = float(market_offered[index])
         market.last_delivered = float(market_last_delivered[index])
         _leave_offers(market, packed, index)
+
+
+def note_rounds(ledger, results: List[ClearingResult], moved: List[float]) -> None:
+    """`YearLedger.note_clearing` of each round's result (a household's fills are not kept in the rounds), the rounds added in one call."""
+    if not results:
+        return
+    numbers = ledger.tables.markets.goods_numbers
+    markets = []
+    for result in results:
+        ledger.clearings.append(result)
+        ledger.mint_takes.append((result, {}))
+        number = numbers.get(result.good + "|" + result.area)
+        markets.append(ledger.tables.market_number(result.good, result.area) if number is None else number)
+    ledger.note_round_rows(numpy.array(markets, dtype=numpy.int64), numpy.array([result.quantity for result in results], dtype=float),
+                           numpy.array([numpy.nan if result.price is None else result.price for result in results], dtype=float),
+                           numpy.array(moved, dtype=float))
 
 
 def _leave_offers(market, packed, index: int) -> None:
