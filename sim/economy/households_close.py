@@ -74,12 +74,14 @@ def close_year(cohort: Cohort, received_by_good: Mapping[GoodId, float], view: M
 def closed_cohort(cohort: Cohort, received_by_good: Mapping[GoodId, float], view: MarketView,
                   specs: Mapping[GoodId, GoodSpec], basket: Basket, income_received: float = 0.0,
                   spent: float = 0.0, offered_prices: Optional[Dict[Tuple[GoodId, str], float]] = None,
-                  floor_cost_of_person: Optional[float] = None) -> Cohort:
-    """The cohort after the year. `income_received` and `spent` are
+                  floor_cost_of_person: Optional[float] = None, unmet: Optional[Dict[str, float]] = None) -> Cohort:
+    """The cohort after the year. `unmet` is `unmet_floor_by_need` when the caller has worked it out for every cohort at once
+    (`households_close_pack.unmet_by_cohort`). `income_received` and `spent` are
     the year's money flows, which the caller reads from the book. `offered_prices` (good, tile) -> offered price
     is filled as cohorts are closed, so a pass over many cohorts reads each price once. `floor_cost_of_person` is
     `floor_cost_per_person` for the cohort's basket and tile when the caller has it already (cohorts of one basket share it)."""
-    unmet = unmet_floor_by_need(cohort, received_by_good, view, specs, basket)
+    if unmet is None:
+        unmet = unmet_floor_by_need(cohort, received_by_good, view, specs, basket)
     first_good = next((need.goods[0][0] for need in basket.needs if need.goods), None)
     if floor_cost_of_person is None:
         floor_cost_of_person = floor_cost_per_person(basket, view, cohort.tile, offered_prices)

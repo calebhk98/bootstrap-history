@@ -8,6 +8,7 @@ from sim.constants import declare
 
 from .household_time_preference import HOUSEHOLD_TIME_PREFERENCE
 from .inventory import holding_reservation
+from .priced_reads import offered_prices_for, usual_prices_for
 from .store_return import (STORE_SERVICE_UNLIMITED, carrying_return, storage_cost_per_kg_year,
                            service_values_per_year, split_by_return)
 from .types import Bid, GoodId, GoodSpec, Offer
@@ -120,18 +121,12 @@ def _store_weights(tile, view, specs: Mapping[GoodId, GoodSpec], priced) -> Tupl
     staple = staple_price_per_kg(priced, specs)
     if not math.isfinite(staple):
         return {}, {}
-    prices, usual_prices = {}, {}
     money_level = _money_level(view, tile, specs)
-    for good, spec in specs.items():
-        if not _can_be_stored(spec):
-            continue      # only these goods can be candidates, so the others' prices are not read
-        area = view.area_of(good, tile)
-        price = view.offered_price(good, area)
-        if price:
-            prices[good] = price
-            usual = view.usual_price(good, area)
-            if usual:
-                usual_prices[good] = usual
+    storable = [good for good, spec in specs.items() if _can_be_stored(spec)]      # only these goods can be candidates, so the others' prices are not read
+    offered = offered_prices_for(view, tile, storable)
+    prices = {good: offered[good] for good in storable if offered[good]}
+    usual = usual_prices_for(view, tile, list(prices))
+    usual_prices = {good: usual[good] for good in prices if usual[good]}
     weights = store_candidates(specs, prices, staple, usual_prices, service_values_per_year(priced, specs), money_level=money_level)
     return weights, {good: prices[good] for good in weights}
 

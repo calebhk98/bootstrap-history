@@ -24,6 +24,17 @@ def offered_prices_for(view, tile, goods):
     return {good: view.offered_price(good, view.area_of(good, tile)) for good in goods}
 
 
+def usual_prices_for(view, tile, goods):
+    """`view.usual_price(good, view.area_of(good, tile))` for each of `goods`, as a dict: read from the tile's block of usual prices when the
+    view keeps one (`YearView.usual_prices_on`), good by good for any other view or a good outside the block."""
+    block_of = getattr(view, "usual_prices_on", None)
+    block = None if block_of is None else block_of(tile)
+    if block is None:
+        return {good: view.usual_price(good, view.area_of(good, tile)) for good in goods}
+    prices, covered = block.prices, block.covered
+    return {good: prices.get(good) if good in covered else view.usual_price(good, view.area_of(good, tile)) for good in goods}
+
+
 def tile_price_reader(view, tile):
     """`price_of(goods)` for a tile: the function that gives the offered price of a good (None for none) for a need that is served by
     `goods` (pairs of good and effect). The prices of the whole tile come from one block read (`YearView.offered_prices_on`), and

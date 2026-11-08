@@ -26,9 +26,7 @@ def compare(test, specs, prices, substitution=2.0, reach=0.0):
     exponent = 1.0 - substitution
     expected = [priced for priced in (need_basket.priced_need(spec, exponent, prices.get, quality_reach=reach) for spec in specs)
                 if priced is not None]
-    pack = priced_need_tables.pack_needs(specs)
-    vector = priced_need_tables.price_vector(pack, prices.get)
-    got = priced_needs.priced_needs(pack, vector, basket, reach)
+    got = priced_needs.priced_needs(basket, prices, reach)
     test.assertEqual(len(got), len(expected))
     for left, right in zip(got, expected):
         test.assertEqual(left.spec, right.spec)
@@ -112,11 +110,30 @@ class RandomTests(unittest.TestCase):
         self.assertGreater(qualified, 50)
         self.assertGreater(binding, 50, "limits that bind are exercised")
 
-    def test_the_price_vector_has_nan_for_a_good_without_a_price(self):
-        pack = priced_need_tables.pack_needs([NeedSpec("food", 1.0, 1.0, (("a", 1.0), ("b", 1.0)))])
-        vector = priced_need_tables.price_vector(pack, {"a": 2.0}.get)
-        self.assertEqual(vector[0], 2.0)
-        self.assertTrue(np.isnan(vector[1]))
+    def test_the_matrix_has_nan_for_a_good_without_a_price_and_one_row_per_tile(self):
+        batch = priced_need_tables.NeedBatch()
+        batch.add(0, -1.0, [NeedSpec("food", 1.0, 1.0, (("a", 1.0), ("b", 1.0)))])
+        matrix = priced_need_tables.price_matrix([{"a": 2.0}, None])
+        a, b = priced_need_tables.GOODS.number["a"], priced_need_tables.GOODS.number["b"]
+        self.assertEqual(matrix.shape[0], 2)
+        self.assertEqual(matrix[0, a], 2.0)
+        self.assertTrue(np.isnan(matrix[0, b]))
+        self.assertTrue(np.isnan(matrix[1, a]))
+
+    def test_requests_on_different_tiles_and_baskets_in_one_batch_equal_one_at_a_time(self):
+        rng = random.Random(4)
+        cases = [random_needs(rng) for _case in range(40)]
+        batch = priced_need_tables.NeedBatch()
+        tiles = []
+        for number, (specs, prices) in enumerate(cases):
+            batch.add(number, 1.0 - 2.0, specs)
+            tiles.append(prices)
+        answer = priced_needs.PricedBatch(batch, priced_need_tables.price_matrix(tiles))
+        for number, (specs, prices) in enumerate(cases):
+            expected = [priced for priced in (need_basket.priced_need(spec, -1.0, prices.get) for spec in specs) if priced is not None]
+            positions = [position for position, owner in enumerate(answer.owners) if owner == number and answer.priced(position)]
+            got = [answer.need(position, priced_need_tables.GOODS.names) for position in positions]
+            self.assertEqual(got, expected)
 
 
 if __name__ == "__main__":

@@ -49,8 +49,8 @@ def mix_shares(first, last, prices, effects, valued, exponent, priced, share, pa
 def limit_shares(first, last, prices, effects, limits, priced, share, per_money, units, fixed_value, fixed_flag, partials, others):
     """`need_basket.limited_shares` over the rows `first` to `last`: each priced row with a limit (NaN means none) meets no more than its
     share of the need's units; the excess goes to the other goods in the proportions they were bought in. `per_money` is
-    `units_per_money` at the shares as they come in. Unchanged when no limit binds. `units`, `fixed_value`, `fixed_flag` (1.0 once a row's share is fixed) are float scratch of
-    the rows' length, `partials` and `others` two exact-sum scratch arrays."""
+    `units_per_money` at the shares as they come in. Unchanged when no limit binds. `units`, `fixed_value`, `fixed_flag` (1.0 once a
+    row's share is fixed) are float scratch of the rows' length, `partials` and `others` two exact-sum scratch arrays."""
     binding = False
     for row in range(first, last):
         if priced[row]:
@@ -120,10 +120,11 @@ def price_ceilings(first, last, prices, effects, priced, ceiling):
 
 
 @njit
-def price_needs(needs, rows, price_of_good, exponent, quality_reach, with_limits):
-    """Every need priced: `need_basket.priced_need` for each need row, at the offered prices `price_of_good` (NaN for none, indexed by the
-    pack's good number). Writes `price` and `priced` (a good with a positive price that gives need units), `share`, `ceiling` at the
-    good rows and `need_priced` and `price_index` at the need rows."""
+def price_needs(needs, rows, price_matrix, quality_reach, with_limits):
+    """Every need priced: `need_basket.priced_need` for each need row, at the offered prices of its tile (`price_matrix[tile, good]`, NaN
+    for none). Writes `price` and `priced` (a good with a positive price that gives need units), `share`, `ceiling` at the good rows and
+    `need_priced` and `price_index` at the need rows. `quality_reach` (0 to 1) is how far the buyer pays for quality; `with_limits` says
+    whether any good has a share limit (else the search is skipped)."""
     row_count = rows.row_count[0]
     units = np.zeros(row_count)
     fixed_value = np.zeros(row_count)
@@ -131,15 +132,15 @@ def price_needs(needs, rows, price_of_good, exponent, quality_reach, with_limits
     valued = np.zeros(row_count)
     partials = np.zeros(PARTIALS)
     others = np.zeros(PARTIALS)
-    for row in range(row_count):
-        price = price_of_good[rows.good[row]]
-        rows.price[row] = price
-        rows.priced[row] = 1 if (price > 0.0 and rows.effect[row] > 0.0) else 0
-        valued[row] = rows.effect[row] * rows.quality[row] ** quality_reach
     for need in range(needs.row_count[0]):
         first = needs.first_row[need]
         last = needs.end_row[need]
-        if mix_shares(first, last, rows.price, rows.effect, valued, exponent, rows.priced, rows.share, partials) == 0:
+        for row in range(first, last):
+            price = price_matrix[needs.tile[need], rows.good[row]]
+            rows.price[row] = price
+            rows.priced[row] = 1 if (price > 0.0 and rows.effect[row] > 0.0) else 0
+            valued[row] = rows.effect[row] * rows.quality[row] ** quality_reach
+        if mix_shares(first, last, rows.price, rows.effect, valued, needs.exponent[need], rows.priced, rows.share, partials) == 0:
             continue
         per_money = units_per_money(first, last, rows.price, rows.effect, rows.priced, rows.share, partials)
         if with_limits:

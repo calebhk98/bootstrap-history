@@ -11,7 +11,7 @@ import numpy
 from sim.economy.market_memory import KEY_SEPARATOR
 from sim.economy.price_grid import PriceGrid, price_index_of
 from sim.economy.price_grid_kernels import offered_by_good_tile
-from sim.economy.priced_reads import offered_prices_for, tile_price_reader
+from sim.economy.priced_reads import offered_prices_for, tile_price_reader, usual_prices_for
 from sim.economy.types import QUOTE_LOWEST_UNFILLED_ASK
 from sim.tests.year_close_fixture import GOODS, TILES, economy_of
 
@@ -108,6 +108,38 @@ class RememberedPrices(unittest.TestCase):
         record.memory.prices["unlisted_good" + KEY_SEPARATOR + view.area_of("unlisted_good", TILES[0])] = 3.5
         names = (GOODS[0], "unlisted_good")
         self.assertEqual(view.present_prices_at(names, TILES[0]), view._present_prices_by_key(names, TILES[0]))
+
+
+class UsualPrices(unittest.TestCase):
+    def test_every_good_on_every_tile_has_the_price_usual_price_gives(self):
+        held = 0
+        for seed in range(8):
+            _setup, record, view, _ledger, area_map = economy_of(seed)
+            for number, good in enumerate(GOODS):         # a usual price for some markets (the fixture may hold none)
+                if number % 2 == 0:
+                    record.memory.usual_prices[good + KEY_SEPARATOR + area_map.area_of(good, TILES[0])] = 1.5 + number
+            for tile in TILES:
+                found = view.usual_prices_on(tile).prices
+                expected = {good: view.usual_price(good, view.area_of(good, tile)) for good in GOODS}
+                self.assertEqual({good: found.get(good) for good in GOODS}, expected)
+                self.assertEqual(usual_prices_for(view, tile, GOODS), expected)
+                held += sum(1 for price in expected.values() if price is not None)
+        self.assertGreater(held, 8)
+
+    def test_a_usual_price_written_after_it_was_read_is_seen(self):
+        _setup, record, view, _ledger, area_map = economy_of(5)
+        key = GOODS[0] + KEY_SEPARATOR + area_map.area_of(GOODS[0], TILES[0])
+        self.assertNotIn(GOODS[0], view.usual_prices_on(TILES[0]).prices)
+        record.memory.usual_prices[key] = 9.25
+        self.assertEqual(view.usual_prices_on(TILES[0]).prices[GOODS[0]], 9.25)
+        record.memory.usual_prices.pop(key)
+        self.assertNotIn(GOODS[0], view.usual_prices_on(TILES[0]).prices)
+
+    def test_a_tile_the_area_map_does_not_hold_and_an_unlisted_good_are_read_by_themselves(self):
+        _setup, _record, view, _ledger, _area_map = economy_of(2)
+        self.assertIsNone(view.usual_prices_on("nowhere"))
+        self.assertEqual(usual_prices_for(view, "nowhere", GOODS), {good: view.usual_price(good, view.area_of(good, "nowhere")) for good in GOODS})
+        self.assertEqual(usual_prices_for(view, TILES[0], ["unlisted_good"]), {"unlisted_good": view.usual_price("unlisted_good", view.area_of("unlisted_good", TILES[0]))})
 
 
 class GridFollowsTheMemory(unittest.TestCase):
