@@ -7,13 +7,11 @@ named where it is bound (`sim.economy.economy:cohort_orders`). Times are inclusi
 listed. With no names it times the cohort orders and what they call. The save is read, never written. Compare with
 `simulator.py year-time` for the whole year; cProfile (`warm_year_profile.py`) says where, this says how long."""
 import importlib
-import random
 import sys
 import time
 
 sys.path.insert(0, ".")
-from sim.engine.ui_port import Sim, load, load_civ   # noqa: E402
-from sim.ui.protocol import civ_of_save, load_state   # noqa: E402
+from tools.measure.warm_year_profile import warmed_game   # noqa: E402
 
 COHORT_ORDERS = [
     "sim.economy.economy:cohort_orders", "sim.economy.households_orders_pack:kernel_orders",
@@ -44,10 +42,7 @@ def timed_copy(name, totals):
 
 
 def main(save_path, names):
-    _tree, _prices, nodes, _wages, _goods = load()
-    game = Sim(nodes, [], random.Random(1), events=False, manual=True, civ=load_civ(civ_of_save(save_path)), defer_economy=True)
-    load_state(game, save_path)
-    game.step()
+    game = warmed_game(save_path)
     totals = {}
     for name in names or COHORT_ORDERS:
         timed_copy(name, totals)
