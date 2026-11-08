@@ -18,13 +18,13 @@ from sim.compiled_tables.growth import reserve_rows
 
 from .goods_order_tables import (BID_ORDER, GOODS_BIDS, GOODS_MARKET_RESULTS, GOODS_OFFERS, GOODS_PAIRS, OFFER_ORDER, OTHER, BidOrder,
                                  GoodsBids, GoodsMarketResults, GoodsOffers, GoodsPairs, OfferOrder)
+from .goods_order_items import ObjectBids, ObjectOffers, items_of, number_names
 from .goods_order_objects import make_bid, make_offer
 from .market_memory import market_key
 from .protocols import AgentOrders
 from .types import Bid, Offer
 
 _FIRST_CAPACITY = 1024
-_BID_FIGURES = 6
 UNCLEARED = -1
 
 
@@ -152,30 +152,33 @@ class GoodsOrderBook:
         self._flush_bids()
         self._flush_offers()
 
+    def add_named_bids(self, item) -> None:
+        """Wait with a named item (`goods_order_items`): bids as names and figures, numbered with everything waiting at the flush."""
+        self._waiting_bids.append((item, item.source))
+
+    def add_named_offers(self, item) -> None:
+        self._waiting_offers.append((item, item.source))
+
     def _flush_bids(self) -> None:
         waiting = self._waiting_bids
         if not waiting:
             return
         self._waiting_bids = []
-        buyer = self.agent_ids_of([bid.buyer for bid, _source in waiting])
-        good = self.good_ids_of([bid.good for bid, _source in waiting])
-        tile = self.tile_ids_of([bid.tile for bid, _source in waiting])
-        market = self.market_ids([bid.good for bid, _source in waiting], [bid.area for bid, _source in waiting])
-        figures = numpy.array([(bid.floor_quantity, bid.flexible_quantity, bid.reference_price, bid.elasticity, bid.budget, bid.maximum_price)
-                               for bid, _source in waiting], dtype=numpy.float64).reshape(-1, _BID_FIGURES)
-        self._write_bids(buyer, good, tile, market, [bid.priority for bid, _source in waiting], figures, [source for _bid, source in waiting])
+        items = items_of(waiting, ObjectBids)
+        number_names(self, items)
+        for item in items:
+            self._write_bids(*item.rows(self), item.source)
 
     def _flush_offers(self) -> None:
         waiting = self._waiting_offers
         if not waiting:
             return
         self._waiting_offers = []
-        seller = self.agent_ids_of([offer.seller for offer, _source in waiting])
-        good = self.good_ids_of([offer.good for offer, _source in waiting])
-        tile = self.tile_ids_of([offer.tile for offer, _source in waiting])
-        market = self.market_ids([offer.good for offer, _source in waiting], [offer.area for offer, _source in waiting])
-        figures = numpy.array([(offer.quantity, offer.reservation_price) for offer, _source in waiting], dtype=numpy.float64).reshape(-1, 2)
-        self._write_offers(seller, good, tile, market, figures[:, 0], figures[:, 1], [source for _offer, source in waiting])
+        items = items_of(waiting, ObjectOffers)
+        number_names(self, items)
+        for item in items:
+            seller, good, tile, market, quantity, reservation = item.rows(self)
+            self._write_offers(seller, good, tile, market, quantity, reservation, item.source)
 
     # ---- rows from kernels ------------------------------------------------------------------------
 

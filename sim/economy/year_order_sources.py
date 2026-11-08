@@ -1,7 +1,6 @@
 """The year's goods orders of households, the state and merchants, written to the book of orders as rows (`order_rows.OrderRows`).
 
-`cohort_orders`, `state_orders` and `merchant_orders` make the orders `year_goods.cohort_orders`, `year_goods.state_orders` and
-`year_goods.merchant_orders` made, in the same order, with no `Bid` or `Offer` handed to the book: each source adds names and figures
+`cohort_orders`, `state_orders` and `merchant_orders` make the households', the state's and the merchants' orders, in arrival order, with no `Bid` or `Offer` handed to the book: each source adds names and figures
 to an `OrderRows` and writes it once (the households' kernel rows are appended as before). Rules still written over objects
 (`households.goods_orders` for a basket the kernel does not cover, `households_store`, `merchants.orders`) make their objects inside
 the rule and are unpacked into rows at this edge."""
