@@ -10,6 +10,7 @@ import numpy
 
 from sim.constants import declare
 
+from .goods_production import read_stocks
 from .goods_respend import need_of_good
 from .types import is_edge, is_external_edge
 
@@ -148,8 +149,8 @@ def pack(setup, record, view, ledger, markets, basket_of, orders=None) -> "Packe
         offer_ptr.append(len(reservation))
     book = record.book
     currency = setup.currency_id
-    key_stock = numpy.array([book.stock(agents[agent], goods[good], tile) for agent, good, tile in keys])
-    agent_cash = numpy.array([book.balance(agent, currency) for agent in agents])
+    key_stock = numpy.array(read_stocks(book, [(agents[agent], goods[good], tile) for agent, good, tile in keys]), dtype=float)
+    agent_cash = book.balances_of(agents, currency)
     buyer_key = numpy.full((len(buyer_ids), len(goods)), -1, dtype=numpy.int64)
     for row, buyer in enumerate(buyer_ids):
         for good in range(len(goods)):

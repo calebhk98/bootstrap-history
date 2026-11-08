@@ -237,6 +237,27 @@ carriage hours hire), and the offers (`LabourOffer`, built upstream and by `Hour
 `python3 tools/measure/warm_year_profile.py SAVE OUT.prof` (the calls of `settle_labour`, `settle_many`, `post_settled`, `_result` are gone) and
 `year-time --count-instructions`. The tests are `sim/tests/test_year_speed_labour_settle.py`.
 
+## The goods unit's far end (stage 4, first package)
+
+`year_goods.clear_goods` settles, notes and remembers a good's markets from the order tables in blocks. Per good:
+
+| Step | Module | Does |
+|---|---|---|
+| settlement | `settlement_ids.py` | `settle_by_ids` reads the pairs of the good's traded markets (the batch's `GoodsPairs` rows) as agent and tile numbers from the bid and offer tables, numbers the (agent, tile) keys and the agents in the order `settlement_batch.KeyTable` did (`settlement_numbering.local_numbering` cuts them by market), runs `settlement_batch_kernel.settle_markets` (purses and stocks carried market to market in area order) and applies the sums with `book_apply.apply_settled`; no `KeyTable`, no names, no `Settlement` |
+| ledger | `goods_settle.py` | one `YearLedger.note_settlement_rows` call per good (the plant purchases, the foreign-money figures and the mint's takes from columns) and one `note_round_rows` call for the good's clearings; the respend rounds are noted the same way (`goods_respend_unpack.note_rounds`) |
+| memory | `goods_idle_years.py`, `goods_memory_kernels.py`, `goods_memory_notes.py` | the years without bids or offers of a good's markets are one kernel call; `_remember_markets` reads last year's quote flags and usual volumes as columns, works out every signal, then one kernel writes quote kinds, prices, usual prices and cleared prices in sorted (good, area) order, and the usual volumes are written the same way; the trade ages are `note_year_traded` over the markets that delivered |
+| production | `goods_production.py`, `producers.production_lines` | the turn's input stocks, output stocks, purses and running costs are read as arrays; the production moves of all the turn's producers are one `GoodsMovePostings` batch and the output is added to the ledger by `add_pair_amounts`; a name the book has not numbered takes the `Book.move_many` path |
+
+A good takes the object path (`settlement.settle_goods_many`, `YearLedger.note_settlement`) when one of its traded markets is not a `TableClearing`
+of the good's batch (a mod replaced the rules). Tests: `test_goods_settle_ids.py` (the id path against `settle_results` on random batches),
+`test_goods_memory_notes.py`, `test_goods_idle_years.py`, `test_goods_production.py` (each kernel against the wrapper calls it replaces).
+
+Still reading goods objects: `ledger.clearings` and `ledger.mint_takes` keep the `ClearingResult` of every market (the mint and entry read
+them); the watchers' buy fills are `Fill` objects (`bought_by`, only for markets a merchant or the state bought in); `LeftMarket` and its
+`bought` mapping (built from columns when the respend pack asks); the respend pack and unpack still mix columns and objects; the markets cleared
+on the rules over objects (a book edge selling, a good outside the year arrays); `producers.production_lines` and `producers.offers` are
+the rules over one producer; `ledger.hours_hired.get` is a per-producer view read.
+
 ## The close on tables (stage 3)
 
 The close reads the book and the ledger with kernels, posts its dividends, wear, spoilage and consumption as posting tables, and
