@@ -109,10 +109,12 @@ def close_agents(setup, record, view, ledger: YearLedger, area_map, carriage, ar
     anchors = {(good, area.area_id): area.anchor_tile for good in area_map.goods() for area in area_map.areas(good)}
     news = merchants_news.YearNews(prices, volumes, anchors)
     interest_rate = own_rate(view, money)
-    for merchant in sorted(record.merchants.values(), key=lambda each: each.agent_id):
+    closing = sorted(record.merchants.values(), key=lambda each: each.agent_id)
+    merchants.learn_year(closing, news, [news.lags_at(carriage, merchant.home_tile) for merchant in closing])
+    for merchant in closing:
         transfers = merchants.close_year(merchant, prices, volumes, record.book.balance(merchant.agent_id, money),
                                          held_stock(record.book, merchant.agent_id), area_map.area_of, money,
-                                         interest_rate, news, lags=news.lags_at(carriage, merchant.home_tile))
+                                         interest_rate, news, learned=True)
         paid = ownership.spread(record, transfers, cohorts_by_tile)
         record.book.transfer_many(paid)
         for transfer in paid:

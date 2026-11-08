@@ -12,7 +12,8 @@ from typing import Any, Dict, Mapping, Tuple
 from .market_areas import AreaMap
 from . import market_memory
 from .market_memory import KEY_SEPARATOR, market_key
-from .market_memory_follow import follow_goods_markets
+from .market_memory_follow import GoodsRemap, follow_goods_markets
+from .merchant_figures import MarketFigures
 from . import merchants
 from .merchants import Merchant
 from .record import EconomyRecord
@@ -55,9 +56,19 @@ def _moved_expectations(expected: Mapping[Tuple[str, str], Any],
     return moved
 
 
-def _merchant_follows(merchant: Merchant, follows: Mapping[str, Mapping[str, str]], new: AreaMap) -> None:
+def _moved_figures(figures, follows: Mapping[str, Mapping[str, str]], memory, remap: GoodsRemap):
+    """A merchant's expectations over the new areas: a column indexed by the memory's numbering is carried over by the
+    memory's renumbering, any other mapping re-keyed."""
+    if isinstance(figures, MarketFigures) and figures.tables is memory.tables:
+        figures.follow(*remap)
+        return figures
+    return _moved_expectations(figures, follows)
+
+
+def _merchant_follows(merchant: Merchant, follows: Mapping[str, Mapping[str, str]], new: AreaMap, memory, remap: GoodsRemap) -> None:
     merchants.remap_to_areas(
-        merchant, _moved_expectations(merchant.expected_prices, follows), _moved_expectations(merchant.expected_volumes, follows),
+        merchant, _moved_figures(merchant.expected_prices, follows, memory, remap),
+        _moved_figures(merchant.expected_volumes, follows, memory, remap),
         _moved_expectations(merchant.price_history, follows),
         {route: tuple((destination, new.area_of(route[0], destination) if route[0] in follows else area, weight)
                       for destination, area, weight in legs)
@@ -69,7 +80,7 @@ def follow(record: EconomyRecord, old: AreaMap, new: AreaMap) -> None:
     follows = old_areas_by_new(old, new)
     old_ids = {good: frozenset(area.area_id for area in old.areas(good)) for good in follows}
     memory = record.memory
-    follow_goods_markets(memory, follows, old_ids)
+    remap = follow_goods_markets(memory, follows, old_ids)
     for name in record.goods.MARKET_KEYED:
         setattr(record.goods, name, _moved(getattr(record.goods, name), follows, old_ids))
     every_old_id = frozenset().union(*old_ids.values())
@@ -82,4 +93,4 @@ def follow(record: EconomyRecord, old: AreaMap, new: AreaMap) -> None:
     memory.set_area_currencies(currency_of_area)
     market_memory.note_written()     # the stores above were replaced whole
     for merchant in record.merchants.values():
-        _merchant_follows(merchant, follows, new)
+        _merchant_follows(merchant, follows, new, memory, remap)

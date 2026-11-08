@@ -597,7 +597,7 @@ def _open_merchants(setup, record, prices, final_by_tile) -> None:
         merchant_id = "merchant:%d" % index
         merchants.put_merchant(record.merchants, Merchant(agent_id=merchant_id, home_tile=tile,
                                                           owner=households.cohort_id(tile, _richest_class(record, tile)),
-                                                          capital_base=capital))
+                                                          capital_base=capital), record.memory.tables)
 
 
 def _strike_opening_cash(setup, record, view, extra_spending) -> None:

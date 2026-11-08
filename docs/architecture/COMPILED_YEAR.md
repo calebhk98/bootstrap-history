@@ -373,9 +373,8 @@ Measured ceilings of what stays Python (a warm Rome year, process seconds of `Ec
 (`entry_plans`, `margin_entry_plans`, `trial_entry_plans`, with their sitings) about a twentieth of the year, spread over thousands of
 small calls, with `traded`, the bids of each market and the unfilled-demand reads feeding every call from dictionaries and
 `MarketBids` objects: a plan kernel needs those as per-market column blocks from the goods side, which is the blocker named below.
-`closed_records` (one `Producer` per producer) and `merchants.close_year` (its `learn`, over every merchant's price and volume
-dictionaries) are each about a sixtieth of the year; a faster loop saves a fraction of that, and removing them needs the producer
-record readers and the merchant dictionaries on columns first.
+`closed_records` (one `Producer` per producer) is about a sixtieth of the year; a faster loop saves a fraction of that, and removing it needs
+the producer record readers on columns first. The merchants' close was the other sixtieth and is done (next section).
 
 Loans are on a table (next section). Not done, and why (measure with `python3 tools/measure/warm_year_profile.py SAVE OUT.prof`):
 
@@ -676,3 +675,23 @@ Tests: `sim/tests/test_wage_views_cached.py` (each writer bumps and the next rea
 removing any one bump fails a test). Debug run: every cached read checked against a fresh computation over three Rome and five England
 years raised no `StaleView`; `SHADOW_CHECK_EVERY = 1` is set in a script, not in the repository.
 
+## Merchant expectations as columns (stage 4)
+
+Each merchant's `expected_prices` and `expected_volumes` are `merchant_figures.MarketFigures`: a float column indexed by the market
+memory's goods-market numbering (`MarketTables.goods_markets`, NaN for "none"), with a dict-like view keyed by `(good, area id)` for readers
+that ask one market (tests, the UI, mods; `Merchant.__setattr__` copies an assigned dict into the column). A merchant of a record is bound to
+the record's numbering (`merchants.put_merchant(..., tables)` at the opening, `EconomyRecord.__post_init__` after a load), so the columns grow
+with the numbering; a merchant made alone numbers its own markets.
+
+- `merchants_news.learn_all` moves every merchant's figures for every market of the year in one array step (`move_toward`, bit for bit what the
+  dict loop gave, tested against `sim/tests/merchants_news_plain.py`); the price history of a market whose news is late stays a Python
+  dict walked only for those markets (`heard_prices`). `merchants.learn_year` is its call from `year_close.close_agents`; `merchants.close_year(..., learned=True)` then only settles the profit.
+- `merchants_book.merchant_array` gathers a merchant's column into the packed route book's slots by `RouteBook.market_rows` (the memory row of
+  each slot), kept while the numbering is.
+- `market_memory_follow.follow_goods_markets` returns the renumbering (`GoodsRemap`) and `market_areas_follow` carries each bound merchant's
+  columns over it (`MarketFigures.follow`); a merchant bound to another numbering is re-keyed by name as before. A read of a column whose
+  numbering was replaced without `follow` raises.
+- The save writes the figures by market name in the order of the `(good, area id)` keys, as before (`sorted_named`), so a save is byte for
+  byte what the dictionaries gave; a load hands them back by name (`hold_named`) and they are indexed once, by the record's numbering.
+
+Measure with `python3 tools/measure/function_times.py SAVE sim.economy.merchants:learn_year sim.economy.merchants:close_year`.

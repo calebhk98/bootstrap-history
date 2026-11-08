@@ -22,7 +22,7 @@ from .labour_record import LabourRecord
 from .land_record import LandRecord
 from .households_cohort import Cohort
 from .market_memory import KEY_SEPARATOR, MarketMemory
-from .merchants import Merchant
+from .merchants import Merchant, bind_markets
 from .merchants_transit import Shipment
 from .producers import Producer
 from .record_parts import OwnedRecord
@@ -53,6 +53,11 @@ class EconomyRecord(OwnedRecord):
     state_budget: StateBudget = field(default_factory=StateBudget)       # the state's revenue and this year's plan
     settling: bool = False                                               # in the hidden spin-up: households' spending rises as far as their wealth allows
     spin_up_result: Dict[str, Any] = field(default_factory=dict)         # how the hidden first stage ended: settled, years run, last gap (empty: no spin-up ran)
+
+    def __post_init__(self) -> None:
+        for merchant in self.merchants.values():      # the merchants' expectations are columns of the memory's goods-market numbering
+            if isinstance(merchant, Merchant):
+                bind_markets(merchant, self.memory.tables)
 
     AGENT_KEYED = ("cohorts", "producers", "merchants")
     SAVED_SORTED = ("cohorts", "producers", "merchants")
@@ -121,8 +126,8 @@ def _split_keys(mapping: Dict[str, Any]) -> Dict[Tuple[str, str], Any]:
 def _merchant_record(merchant: Merchant) -> Dict[str, Any]:
     return {"agent_id": merchant.agent_id, "home_tile": merchant.home_tile, "owner": merchant.owner,
             "capital_base": merchant.capital_base,
-            "expected_prices": _pair_keys(merchant.expected_prices),
-            "expected_volumes": _pair_keys(merchant.expected_volumes),
+            "expected_prices": merchant.expected_prices.sorted_named(),
+            "expected_volumes": merchant.expected_volumes.sorted_named(),
             "routes": {key: [list(leg) for leg in legs] for key, legs in _pair_keys(merchant.routes).items()},
             "carriage_hours_wanted": merchant.carriage_hours_wanted,
             "carriage_money_wanted": merchant.carriage_money_wanted,
@@ -133,10 +138,15 @@ def _merchant_record(merchant: Merchant) -> Dict[str, Any]:
 
 
 def _merchant_from(record: Dict[str, Any]) -> Merchant:
+    merchant = _merchant_without_figures(record)
+    for name in ("expected_prices", "expected_volumes"):
+        getattr(merchant, name).hold_named(list(record[name]), list(record[name].values()))
+    return merchant
+
+
+def _merchant_without_figures(record: Dict[str, Any]) -> Merchant:
     return Merchant(agent_id=record["agent_id"], home_tile=record["home_tile"], owner=record["owner"],
                     capital_base=record["capital_base"],
-                    expected_prices=_split_keys(record["expected_prices"]),
-                    expected_volumes=_split_keys(record["expected_volumes"]),
                     routes={key: tuple(tuple(leg) for leg in legs) for key, legs in _split_keys(record["routes"]).items()},
                     carriage_hours_wanted=record["carriage_hours_wanted"],
                     carriage_money_wanted=record["carriage_money_wanted"],

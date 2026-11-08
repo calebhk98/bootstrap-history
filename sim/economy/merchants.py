@@ -31,10 +31,11 @@ from typing import Callable, Dict, List, Mapping, Optional, Sequence, Tuple
 
 from sim.constants import declare
 
-from . import carriage_fleet, inventory, merchants_news, merchants_plan, route_dues, merchants_legs, merchants_route_memo, merchants_search, merchants_transit
+from . import carriage_fleet, inventory, merchant_figures, merchants_news, merchants_plan, route_dues, merchants_legs, merchants_route_memo, merchants_search, merchants_transit
 from sim.book import DeliveredMove
 from .households_orders import BUDGET_SAFETY_SHARE
 from .market_areas import AreaMap
+from .market_tables import MarketTables
 from .merchants_shares import RouteShares, room_left
 from .protocols import AgentOrders, MarketView
 from .tile_costs import CarriageTable
@@ -72,14 +73,17 @@ MERCHANT_PROFIT_PAYOUT_SHARE = declare(
         "rest becomes working capital. An owner's own consumption and saving choice is not modelled.")
 
 
+FIGURE_FIELDS = ("expected_prices", "expected_volumes")     # held as `merchant_figures.MarketFigures`; a mapping assigned to one is copied into it
+
+
 @dataclass
 class Merchant:
     agent_id: AgentId
     home_tile: TileId                    # where it keeps its purse; stocks sit on destination tiles
     owner: AgentId                       # who receives its profit
     capital_base: float                  # capital staked in trade; profit is wealth above it
-    expected_prices: Dict[Tuple[GoodId, AreaId], float] = field(default_factory=dict)
-    expected_volumes: Dict[Tuple[GoodId, AreaId], float] = field(default_factory=dict)
+    expected_prices: Dict[Tuple[GoodId, AreaId], float] = field(default_factory=dict)     # a column by goods market (`merchant_figures`); NaN: none
+    expected_volumes: Dict[Tuple[GoodId, AreaId], float] = field(default_factory=dict)    # the same, of the volume it expects a market to trade
     routes: Dict[Tuple[GoodId, TileId], Tuple[merchants_legs.Leg, ...]] = field(default_factory=dict)   # (good, source tile) -> legs (destination tile, area, weight): what it holds there is shared over them by weight
     carriage_hours_wanted: Optional[Dict[str, float]] = None   # crew hours its shipments needed last year, by (trade, source tile) market key: this year's bid for carriers; None until it has shipped
     carriage_money_wanted: Dict[str, float] = field(default_factory=dict)   # the carriage money those hours stand for, by the same key: the most an hour is worth to it
@@ -87,6 +91,23 @@ class Merchant:
     carrier_fleet_wanted: Dict[str, float] = field(default_factory=dict)   # wear a year its routes' stock called for last year, less what it hired, by carrier good (carriage_fleet): the fleet it bids to hold
     in_transit: List[merchants_transit.Shipment] = field(default_factory=list)   # hauls still on the road (their goods wait in the transit account)
     price_history: Dict[Tuple[GoodId, AreaId], List[float]] = field(default_factory=dict)   # prices of distant markets that news has not yet reached it, newest last
+
+    def __setattr__(self, name, value) -> None:
+        """A mapping assigned to an expectation is copied into its column (keeping the numbering it is indexed by, if it has one)."""
+        if name not in FIGURE_FIELDS or isinstance(value, merchant_figures.MarketFigures):
+            object.__setattr__(self, name, value)
+            return
+        held = self.__dict__.get(name)
+        if held is not None:
+            held.replace_all(value)
+            return
+        object.__setattr__(self, name, merchant_figures.MarketFigures(None, value))
+
+
+def bind_markets(merchant: Merchant, tables: MarketTables) -> None:
+    """Index the merchant's figures by this goods-market numbering (the record's), keeping what it holds."""
+    for name in FIGURE_FIELDS:
+        getattr(merchant, name).bind(tables)
 
 
 @dataclass(frozen=True)
@@ -114,14 +135,17 @@ class Dispatch:
     dues: Tuple[Transfer, ...] = ()     # the route dues paid to the holders' accounts (route_dues.py), apart from the fee
 
 
-def put_merchant(table: Dict[AgentId, Merchant], merchant: Merchant) -> None:
-    """`merchant` is the table's row for its id (`record.merchants` is written only by this module and merchants_dispatch)."""
+def put_merchant(table: Dict[AgentId, Merchant], merchant: Merchant, tables: Optional[MarketTables] = None) -> None:
+    """`merchant` is the table's row for its id (`record.merchants` is written only by this module and merchants_dispatch);
+    with `tables` (the record's market memory numbering) its figures are indexed by that numbering."""
+    if tables is not None:
+        bind_markets(merchant, tables)
     table[merchant.agent_id] = merchant
 
 
 def remap_to_areas(merchant: Merchant, expected_prices, expected_volumes, price_history, routes) -> None:
     """What the merchant expects and the routes it plans, rewritten over the market areas that replaced the old ones."""
-    merchant.expected_prices = expected_prices
+    merchant.expected_prices = expected_prices      # figures already indexed as the merchant's are kept as they are
     merchant.expected_volumes = expected_volumes
     merchant.price_history = price_history
     merchant.routes = routes
@@ -385,13 +409,19 @@ def dispatch(merchant: Merchant, carriage: CarriageTable,
     return Dispatch(tuple(moves), within_purse(transfers, cash), wanted, worth, fleet_wanted, tuple(dues_paid))
 
 
+def learn_year(merchants: Sequence[Merchant], news: merchants_news.YearNews, lags: Sequence) -> None:
+    """Move every merchant's expectations toward the year's prices and volumes (`close_year` with `learned=True` follows);
+    `lags[i]` is `news.lags_at(...)` for `merchants[i]`."""
+    merchants_news.learn_all(merchants, news, lags, MERCHANT_EXPECTATION_SPEED)
+
+
 def close_year(merchant: Merchant, prices: Mapping[Tuple[GoodId, AreaId], float],
                volumes: Mapping[Tuple[GoodId, AreaId], float], cash: float,
                held_stock: Mapping[Tuple[GoodId, TileId], float],
                area_of: Callable[[GoodId, TileId], AreaId], currency: CurrencyId,
                interest_rate: float, news: Optional[merchants_news.YearNews] = None,
                lag_years: Callable[[GoodId, AreaId], Optional[int]] = lambda good, area: 0,
-               lags=None) -> Tuple[Transfer, ...]:
+               lags=None, learned: bool = False) -> Tuple[Transfer, ...]:
     """Update expectations from this year's clearing prices and volumes (by (good, area)), then settle
     the year's profit (wealth, cash plus priced stock at expected prices, above the capital base; stock with no learned price
     is left out, and while any is held a shortfall is not booked as a loss). While
@@ -400,10 +430,12 @@ def close_year(merchant: Merchant, prices: Mapping[Tuple[GoodId, AreaId], float]
     and volumes sorted into arrays (`merchants_news.YearNews`), for a caller closing many merchants on the same year.
     A price from a market `lag_years(good, area)` years of news away is learned that many years late; a market
     with no lag (None: its area no longer exists in the current map) is not heard from. `lags` is that figure for
-    each price of `news` (`YearNews.lags_at`), when the caller has it."""
-    if news is None:
-        news = merchants_news.YearNews(prices, volumes)
-    merchants_news.learn(merchant, news, news.lags_by(lag_years) if lags is None else lags, MERCHANT_EXPECTATION_SPEED)
+    each price of `news` (`YearNews.lags_at`), when the caller has it. With `learned` the caller has already moved the
+    expectations (`learn_year`, for many merchants at once)."""
+    if not learned:
+        if news is None:
+            news = merchants_news.YearNews(prices, volumes)
+        merchants_news.learn(merchant, news, news.lags_by(lag_years) if lags is None else lags, MERCHANT_EXPECTATION_SPEED)
     # stock is valued at the expected price of its destination area; stock with no learned price there is left out
     # of wealth (the record holds no cost basis), and then a shortfall below the capital base is not taken as a loss
     held_stock_areas = [(good, area_of(good, tile), quantity) for (good, tile), quantity in held_stock.items() if quantity > 0.0]

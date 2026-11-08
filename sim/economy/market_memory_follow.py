@@ -5,7 +5,7 @@ and each new market takes the figures of the old market that held its anchor til
 good with no market before, a key that is no market of one) keep their numbers and their place in each store's order; the new
 markets are numbered after them and enter each store in the order of the areas (so a store lists the surviving markets first,
 then the redrawn goods' markets, as the dict did)."""
-from typing import Mapping
+from typing import Mapping, NamedTuple
 
 import numpy
 
@@ -14,8 +14,17 @@ from .market_table_kernels import remap_goods_markets
 from .market_table_specs import KEY_SEPARATOR
 
 
-def follow_goods_markets(memory: MarketMemory, follows: Mapping[str, Mapping[str, str]], old_ids: Mapping[str, frozenset]) -> None:
-    """`follows` is {good: {new area id: old area id}}, `old_ids` {good: the old area ids of that good}."""
+class GoodsRemap(NamedTuple):
+    """How the goods markets were renumbered: the new row of each old row (-1: dropped), and pair `p`: new market `new_rows[p]` takes
+    the figures of old market `old_rows[p]` (-1: the old one was never numbered). Applied to a column held beside the table
+    (`merchant_figures.MarketFigures.follow`)."""
+    old_to_new: numpy.ndarray
+    new_rows: numpy.ndarray
+    old_rows: numpy.ndarray
+
+
+def follow_goods_markets(memory: MarketMemory, follows: Mapping[str, Mapping[str, str]], old_ids: Mapping[str, frozenset]) -> GoodsRemap:
+    """`follows` is {good: {new area id: old area id}}, `old_ids` {good: the old area ids of that good}. Returns the renumbering."""
     tables = memory.tables
     old_numbering, old_table = tables.goods_markets, tables.goods_table
     names = old_numbering.names
@@ -38,3 +47,4 @@ def follow_goods_markets(memory: MarketMemory, follows: Mapping[str, Mapping[str
     remap_goods_markets(old_table, new_table, old_to_new, new_rows, old_rows, tables.next_order, tables.member_count)
     tables.install_goods_markets(numbering, new_table)
     note_age_and_kind_written()
+    return GoodsRemap(old_to_new, new_rows, old_rows)
