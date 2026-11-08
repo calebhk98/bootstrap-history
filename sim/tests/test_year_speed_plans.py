@@ -35,8 +35,9 @@ class PlansAreThePlainPlans(unittest.TestCase):
                 record.producers[producer_id] = replace(record.producers[producer_id], idle_years=2)
             arrays = refreshed(YearArrays.build(setup, record, area_map, view), setup, record, view)
             plans = plan_year.plans_of(setup, record, view, arrays, MONEY)
-            self.assertEqual(list(plans), sorted(record.producers))
-            for producer_id, found in plans.items():
+            self.assertEqual(list(plans.ids), sorted(record.producers))
+            for producer_id in plans.ids:
+                found = plans.plan_of(producer_id)
                 producer = record.producers[producer_id]
                 plain = producers.plan(producer, setup.recipes[producer.recipe_id], view, record.book.balance(producer_id, MONEY))
                 compared += 1

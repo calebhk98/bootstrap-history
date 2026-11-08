@@ -1,8 +1,10 @@
-"""The year's plans for every producer: one kernel call over the year arrays (`plan_kernel.plan_rows`), then `Plan` records.
+"""The year's plans for every producer: one kernel call over the year arrays (`plan_kernel.plan_rows`), read into a `PlanTable`.
 
-`plans_of(setup, record, view, arrays, money)` is `{producer_id: producers.plan(...)}` for every producer in sorted id order.
-A producer whose recipe has tool fallbacks or tool wear, a zero quantity or hour entry, or whose crew's practice stretches
-the recipe's hours is planned by `producers.plan` itself."""
+`plans_of(setup, record, view, arrays, money)` is the `PlanTable` of every producer in sorted id order: columns for the runs, the runs
+wanted, the wage line and the sums the outlay room and the land bids read, rows for the input bids and the labour bids (plan_table.py).
+A producer whose recipe has tool fallbacks or tool wear, a zero quantity or hour entry, or whose crew's practice stretches the recipe's
+hours is planned by `producers.plan` itself, and its `Plan` is read into the same columns. `write_bids` appends the input bids to the
+book of orders as rows. The stocks the kernel reads are one block read of the book (stock_block.py)."""
 from typing import Dict
 
 import numpy as np
@@ -10,9 +12,9 @@ import numpy as np
 from . import practice, producers
 from .inventory import DEFAULT_MONTHS_OF_COVER
 from .plan_kernel import plan_rows
-from .goods_order_objects import make_bid
-from .types import LabourBid
-from .year_arrays_recipes import RecipeMatrices
+from .plan_table import PlanTable
+from .plan_table_rows import LocalNames, merged, object_rows, kernel_rows
+from .stock_block import numbers_of, stock_block
 
 _simple: Dict[int, tuple] = {}      # id of the recipes mapping -> (mapping, recipe id -> whether the kernel plans it)
 
@@ -30,37 +32,26 @@ def simple_recipes(recipes) -> Dict[str, bool]:
     return kept[1]
 
 
-def slot_names(matrices: RecipeMatrices):
-    """By recipe row: ((slot, good id) of the inputs and outputs, (slot, good id) of the inputs, (slot, trade id) of the trades)."""
-    goods, trades = matrices.goods.ids, matrices.trades.ids
-    table = []
-    for recipe in range(len(matrices.recipes.ids)):
-        slots = matrices.slot_goods[recipe]
-        held = tuple((slot, goods[good]) for slot, good in enumerate(slots)
-                     if good >= 0 and (matrices.slot_is_input[recipe, slot] or matrices.slot_is_output[recipe, slot]))
-        bought = tuple((slot, goods[good]) for slot, good in enumerate(slots) if good >= 0 and matrices.slot_is_input[recipe, slot])
-        hired = tuple((slot, trades[trade]) for slot, trade in enumerate(matrices.slot_trades[recipe])
-                      if trade >= 0 and matrices.labour_hours[recipe, trade] > 0.0)
-        table.append((held, bought, hired))
-    return table
-
-
-def stocks_by_slot(record, columns, names, rows, slots: int) -> np.ndarray:
-    """Stock held by row and good slot, for the slots that are an input or an output of the row's recipe."""
+def stocks_by_slot(record, columns, matrices, rows, slots: int) -> np.ndarray:
+    """Stock held by row and good slot, for the slots that are an input or an output of the row's recipe: one block read of the book
+    (`stock_block`) over the cells of every row."""
     stock = np.zeros((len(rows), slots))
-    held = record.book.stock
-    recipe_rows = columns.recipe_row[np.array(rows, dtype=np.int64)].tolist()
-    records = columns.records
-    for position, row in enumerate(rows):
-        producer = records[row]
-        agent, tile = producer.agent_id, producer.tile
-        line = stock[position]
-        for slot, good in names[recipe_rows[position]][0]:
-            line[slot] = held(agent, good, tile)
+    if not len(rows):
+        return stock
+    recipe_rows = columns.recipe_row[rows]
+    held = (matrices.slot_goods >= 0) & (matrices.slot_is_input | matrices.slot_is_output)
+    owner, slot = np.nonzero(held[recipe_rows])
+    book = record.book
+    agents = numbers_of(book.agent_ids, [columns.ids[row] for row in rows.tolist()])
+    tiles = numbers_of(book.tile_ids, [columns.records[row].tile for row in rows.tolist()])
+    goods = numbers_of(book.good_ids, matrices.goods.ids)[matrices.slot_goods[recipe_rows[owner], slot]]
+    stock[owner, slot] = stock_block(book, agents[owner], goods, tiles[owner])
     return stock
 
 
-def plans_of(setup, record, view, arrays, money) -> Dict[str, producers.Plan]:
+def plans_of(setup, record, view, arrays, money) -> PlanTable:
+    """Every producer's plan, in sorted id order, as a `PlanTable`: the kernel's plans as columns, the plans of the producers it leaves
+    to `producers.plan` (see the module docstring) as their `Plan` objects read into the same columns."""
     columns = arrays.producers.refresh(record.producers)
     matrices, memory = arrays.matrices, arrays.memory
     flags = simple_recipes(setup.recipes)
@@ -69,10 +60,9 @@ def plans_of(setup, record, view, arrays, money) -> Dict[str, producers.Plan]:
              if flags[producer.recipe_id] and (not producer.crew_runs or practice.recipe_for(
                  recipes[producer.recipe_id], producer.crew_runs) is recipes[producer.recipe_id])]
     rows = np.array(plain, dtype=np.int64)
-    names = slot_names(matrices)
     ids = columns.ids
-    cash = np.array([record.book.balance(ids[row], money) for row in plain])
-    stock = stocks_by_slot(record, columns, names, plain, matrices.good_slots)
+    cash = record.book.balances_of([ids[row] for row in plain], money)
+    stock = stocks_by_slot(record, columns, matrices, rows, matrices.good_slots)
     (runs, wanted, line, hours, ceilings, quantity, bid_price, budget, worth) = plan_rows(
         columns.recipe_row[rows], columns.tile_row[rows], columns.capacity_runs[rows], columns.yield_factor[rows],
         columns.land_rent_per_run[rows], columns.land_run_cap[rows], columns.expected_sales[rows], columns.last_runs[rows],
@@ -80,29 +70,19 @@ def plans_of(setup, record, view, arrays, money) -> Dict[str, producers.Plan]:
         matrices.slot_trades, matrices.inputs, matrices.outputs, matrices.labour_hours, memory.price, memory.offered,
         memory.cleared, memory.wage, arrays.area_index.of_good_tile, producers.COST_SPREAD_WITHIN_PRODUCER,
         producers.OUTPUT_CHANGE_SHARE_PER_YEAR, producers.STOCK_CLEARING_YEARS, DEFAULT_MONTHS_OF_COVER)
-    recipe_of = columns.recipe_row[rows].tolist()
-    runs_list, wanted_list, line_list = runs.tolist(), wanted.tolist(), line.tolist()
-    area_of = view.area_of
-    plans = {}
-    hours_rows, ceiling_rows = hours.tolist(), ceilings.tolist()
-    quantity_rows, price_rows, budget_rows, worth_rows = quantity.tolist(), bid_price.tolist(), budget.tolist(), worth.tolist()
-    for position, row in enumerate(plain):
-        producer = columns.records[row]
-        agent = producer.agent_id
-        if runs_list[position] <= 0.0:
-            plans[agent] = producers.Plan(0.0, wanted_runs=wanted_list[position])
-            continue
-        _held, bought, hired = names[recipe_of[position]]
-        tile = producer.tile
-        hours_row, ceiling_row = hours_rows[position], ceiling_rows[position]
-        quantity_row = quantity_rows[position]
-        labour_bids = tuple(LabourBid(agent, trade, area_of(trade, tile), hours_row[slot], ceiling_row[slot]) for slot, trade in hired)
-        price_row, budget_row, worth_row = price_rows[position], budget_rows[position], worth_rows[position]
-        bids = tuple(make_bid(agent, good, area_of(good, tile), tile, quantity_row[slot], 0.0, price_row[slot], 0.0, budget_row[slot], 0,
-                              worth_row[slot]) for slot, good in bought if quantity_row[slot] > 0.0)
-        plans[agent] = producers.Plan(runs_list[position], labour_bids, bids, wanted_list[position], line_list[position])
-    for producer_id in ids:
-        if producer_id not in plans:
+    count = len(ids)
+    idle = runs <= 0.0              # an idle plan has no runs, no wage line and no orders
+    runs_all, wanted_all, line_all = np.zeros(count), np.zeros(count), np.zeros(count)
+    runs_all[rows], wanted_all[rows], line_all[rows] = np.where(idle, 0.0, runs), wanted, np.where(idle, 0.0, line)
+    names = LocalNames(matrices.goods.ids, columns.tiles.ids, arrays.area_index.areas.ids)
+    blocks = [kernel_rows(columns, matrices, arrays.area_index, view, names, rows, ~idle, hours, ceilings, quantity, bid_price, budget, worth)]
+    objects: Dict[int, producers.Plan] = {}
+    plain_set = set(plain)
+    for position, producer_id in enumerate(ids):
+        if position not in plain_set:
             producer = record.producers[producer_id]
-            plans[producer_id] = producers.plan(producer, recipes[producer.recipe_id], view, record.book.balance(producer_id, money))
-    return {producer_id: plans[producer_id] for producer_id in ids}
+            objects[position] = plan = producers.plan(producer, recipes[producer.recipe_id], view, record.book.balance(producer_id, money))
+            runs_all[position], wanted_all[position], line_all[position] = plan.runs, plan.wanted_runs, plan.wage_line
+            blocks.append(object_rows(position, plan, names))
+    bids, labour = merged(blocks)
+    return PlanTable(ids, runs_all.tolist(), wanted_all.tolist(), line_all, bids, labour, names.goods, names.tiles, names.areas, objects)

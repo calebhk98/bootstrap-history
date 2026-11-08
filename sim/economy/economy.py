@@ -10,7 +10,7 @@ from typing import Any, Dict, Mapping, Optional, Tuple
 from sim.world import capital_market
 
 from .rates import own_rate
-from . import plan_year, producer_table
+from . import plan_table, plan_year, producer_table
 from . import outlay_room, taxes, bondage, bondage_hours, bonded_purchase, banks, carriage_hours, credit, credit_idle_rate, credit_lines, debt_relief, credit_claims, currency, equity, land_market, lending, merchants_credit, producers, shares, sites, state_budget, tax_farming, titles_inheritance, titles_moves, titles_plots, unit_cost
 from .credit_view import CreditView
 from .market_areas_follow import follow
@@ -190,7 +190,7 @@ class Economy:
         tax_farming.run_auctions(setup, record, inputs.farmed_forms, record.memory.rates[setup.currency_id])
         lending.lend_working_capital(setup, record, view)
         plans = plan_year.plans_of(setup, record, view, arrays, money)
-        labour_bids = [bid for plan in plans.values() for bid in plan.labour_bids]
+        labour_bids = plans.labour_bid_objects()
         for orders in inputs.engine_orders.values():
             labour_bids.extend(orders.labour_bids)
         state_budget.plan_year(setup, record, view, labour_bids)
@@ -211,8 +211,9 @@ class Economy:
                 in bondage_hours.payable_keep(held_placed.keep, lambda employer: record.book.balance(employer, money))]
         record.book.transfer_many(keep)
         ledger.note_paid_outside_markets(keep)
-        context = dataclasses.replace(context, outlay_room=outlay_room.by_employer(     # after the keep is paid out of the purses
-            plans, setup.state_agent, record.state_budget, lambda employer: record.book.balance(employer, money)))
+        context = dataclasses.replace(context, outlay_room=outlay_room.by_plan_table(     # after the keep is paid out of the purses
+            plans, setup.state_agent, record.state_budget, lambda employer: record.book.balance(employer, money),
+            record.book.balances_of(plans.ids, money)))
         placed = bondage_hours.place(record.unfree.bondage, held_placed.offers, held_placed.bids,
                                      bondage_hours.works_of_producers(record), bondage.BONDED_HOURS_OWED_SHARE)
         everyone, labour_bids = placed.offers, placed.bids
@@ -239,12 +240,8 @@ class Economy:
                                 ledger.hours_hired.get(mint_agent(setup), {}))
         for agent, orders in sorted(inputs.engine_orders.items()):
             add_orders(order_book, orders)
-        for plan in plans.values():
-            for bid in plan.bids:
-                order_book.setdefault((bid.good, bid.area), ([], []))[0].append(bid)
-        for bid in land_bid_year.firm_land_bids(setup, record, view, {producer_id: plan.wanted_runs for producer_id, plan in plans.items()},
-                                                {producer_id: sum(bid.budget for bid in plan.bids) for producer_id, plan in plans.items()}):
-            order_book.setdefault((bid.good, bid.area), ([], []))[0].append(bid)
+        plan_table.write_bids(plans, order_book)
+        land_bid_year.write_firm_land_bids(setup, record, view, plans.wanted_runs_by_id(), plans.budget_total_by_id(), order_book)
         funds = capital_year.before_lending(setup, record, view, ledger, funds, view.year, inputs.institutions)   # holders sell shares and loans; depositors run on banks
         funds, pledged = banks.intermediate(setup, record, funds, view.year, inputs.institutions)
         kept = capital_year.snapshot(record, money, funds)
@@ -258,8 +255,7 @@ class Economy:
         settle_mint(record, mint_held, ledger)
         close_mint_year(setup, record)
         rent = land_market.settle_year(setup, record, view,
-                                       {producer_id: plan.wanted_runs for producer_id, plan in plans.items()},
-                                       self._own_hectares, inputs.land_tax_share_of_rent,
+                                       plans.wanted_runs_by_id(), self._own_hectares, inputs.land_tax_share_of_rent,
                                        lambda: land_lease_year.asks(setup, record, view, self.own_plot_options()), ledger,
                                        land_lease_year.own_plot_returns(setup, record, view, self.own_plot_options()))
         interest = self._service_loans(view.year)
