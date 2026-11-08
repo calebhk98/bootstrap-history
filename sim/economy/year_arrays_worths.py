@@ -144,11 +144,10 @@ def worths_from_arrays(setup, record, view, arrays) -> Dict[str, float]:
     capacity = np.fromiter((each.capacity_runs for each in records), dtype=np.float64, count=len(ids))
     price, wage = prices_and_wages(setup, record, view, arrays)
     money = setup.currency_id
-    balance = record.book.balance
     cohorts = record.cohorts
     debts = credit_claims.debts_by_borrower(record.credit.loans, money)
     eligible = np.fromiter((each.owner in cohorts for each in records), dtype=np.bool_, count=len(ids))
-    cash = np.fromiter((balance(each, money) for each in ids), dtype=np.float64, count=len(ids))
+    cash = record.book.balances_at(record.book.rows_of(ids), money)
     debt = np.fromiter((debts.get(each, 0.0) for each in ids), dtype=np.float64, count=len(ids))
     rows, goods, quantities, extra = packed_stock(record, view, ids, records, matrices)
     worth, has = producer_worths(recipe_row, tile_row, capacity, cash, debt, eligible, rows, goods, quantities, extra,

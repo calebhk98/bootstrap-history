@@ -124,6 +124,10 @@ class StubBook:
     def move_many(self, moves):
         self.moves.extend(moves)
 
+    def post(self, transfers, moves):
+        self.transfers.extend(transfers)
+        self.moves.extend(moves)
+
 
 def exiting(cash, loans, goods=None):
     """A record holding one producer (owned by "owner") with `cash` and `goods`, owing `loans`; ownership.spread is the identity."""

@@ -8,6 +8,7 @@ from . import producer_table
 from . import bondage_hours, credit_claims, ownership
 from sim.book import ROUNDING_SHARE
 from .credit import Default
+from .posting_sequence import post_in_order
 from .types import GoodsMove, Transfer
 
 
@@ -19,6 +20,7 @@ class ExitBatch:
         self.record = record
         self.exited: List[str] = []
         self._owed = None
+        self._steps: List[tuple] = []      # the postings of the exits so far, one batch each, made together at `finish()`
 
     def exit(self, producer_id: str, payout: List[Transfer]) -> List[Transfer]:
         if self._owed is None:
@@ -26,33 +28,41 @@ class ExitBatch:
             for loan in self.record.credit.loans:
                 self._owed.setdefault(loan.borrower, []).append(loan)
         self.exited.append(producer_id)
-        return exit_producer(self.record, producer_id, payout, self._owed.get(producer_id, []), deferred=True)
+        return exit_producer(self.record, producer_id, payout, self._owed.get(producer_id, []), deferred=True, steps=self._steps)
 
     def finish(self) -> None:
+        post_in_order(self.record.book, self._steps)
+        self._steps = []
         if self.exited:
             self.record.credit.default_term_loans_of(self.exited)
             self.exited = []
 
 
-def exit_producer(record, producer_id: str, payout: List[Transfer], owed: Optional[List] = None, deferred: bool = False) -> List[Transfer]:
+def exit_producer(record, producer_id: str, payout: List[Transfer], owed: Optional[List] = None, deferred: bool = False,
+                  steps: Optional[List[tuple]] = None) -> List[Transfer]:
     """Repay the loans from the cash, in loan order; pay out what is left of the close's dividend (shared
     as ownership shares dividends); move the goods held to the owner; write off the unpaid debt as
     defaults and remove the producer. Returns the dividend payments made. `owed` is the producer's loans when the caller has them;
-    `deferred` leaves its term loans in the contracts for the caller to end (`ExitBatch`)."""
+    `deferred` leaves its term loans in the contracts for the caller to end (`ExitBatch`); `steps`, when given, takes the postings
+    (repayments, dividend, goods) as three batches instead of posting them: only this producer's own cash and goods are read, so
+    the postings of several exits can wait and be made together in order."""
     producer = record.producers[producer_id]
     if owed is None:
         owed = [loan for loan in record.credit.loans if loan.borrower == producer_id]
     repayments, unpaid = _repay(record, producer_id, owed)
-    record.book.transfer_many(repayments)
     repaid = math.fsum(transfer.amount for transfer in repayments)
     payout = _less(payout, repaid)
     paid = ownership.spread(record, payout)
-    record.book.transfer_many(paid)
     moves = [GoodsMove(producer_id, producer.owner, good, tile, quantity, "an exited producer's stock")
              for good, tiles in sorted(record.book.holdings(producer_id)["goods"].items())
              for tile, quantity in sorted(tiles.items()) if quantity > 0.0]
-    if moves:
-        record.book.move_many(moves)
+    if steps is not None:
+        steps.extend([(repayments, ()), (paid, ()), ((), moves)])
+    else:
+        record.book.transfer_many(repayments)
+        record.book.transfer_many(paid)
+        if moves:
+            record.book.move_many(moves)
     defaults = [Default(loan.loan_id, loan.lender, loan.borrower, loan.currency, unpaid[loan.loan_id])
                 for loan in owed if unpaid[loan.loan_id] > 0.0]
     for lender, lost in credit_claims.losses_by_lender(defaults).items():
