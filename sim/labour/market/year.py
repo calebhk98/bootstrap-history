@@ -14,7 +14,7 @@ def run_year(state: MarketState, inputs: YearInputs, owned: bool = False) -> Tup
     report.clearings = clearing.clear_all(state, inputs)
     clearings = expectations.index_clearings(report.clearings)
     training.advance(state, inputs, report)
-    switching.switch_trades(state, inputs, clearings, report)
+    switching.switch_trades(state, inputs, report.clearings, report)
     migration.migrate(state, inputs, clearings, report)
     formation.form_trades(state, inputs, clearings, report)
     return state, report

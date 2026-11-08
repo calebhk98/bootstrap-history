@@ -79,3 +79,45 @@ def exact_sum(values, count):
     for position in range(count):
         used = _add_partial(partials, used, values[position])
     return _round_partials(partials, used)
+
+
+@njit
+def _product(left, right):
+    """left * right as (rounded product, exact rounding error): Dekker's split product, which gives what a fused multiply-add gives."""
+    split = 134217729.0         # 2 ** 27 + 1
+    product = left * right
+    scaled = split * left
+    left_high = scaled - (scaled - left)
+    left_low = left - left_high
+    scaled = split * right
+    right_high = scaled - (scaled - right)
+    right_low = right - right_high
+    error = ((left_high * right_high - product) + left_high * right_low + left_low * right_high) + left_low * right_low
+    return product, error
+
+
+@njit
+def float_sumprod(left, right, count):
+    """`math.sumprod(left[:count], right[:count])` for finite floats: CPython's triple-length accumulation of exact products."""
+    high = 0.0
+    low = 0.0
+    tiny = 0.0
+    for position in range(count):
+        product, error = _product(left[position], right[position])
+        # error-free sums: the running high part and the product's high part, then the low parts
+        sum_high = high + product
+        z = sum_high - high
+        sum_low = (high - (sum_high - z)) + (product - z)
+        first_high = low + error
+        z = first_high - low
+        first_low = (low - (first_high - z)) + (error - z)
+        second_high = first_high + sum_low
+        z = second_high - first_high
+        second_low = (first_high - (second_high - z)) + (sum_low - z)
+        high = sum_high
+        low = second_high
+        tiny = tiny + first_low + second_low
+    last_high = low + high
+    z = last_high - low
+    last_low = (low - (last_high - z)) + (high - z)
+    return tiny + last_low + last_high

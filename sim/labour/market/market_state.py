@@ -272,6 +272,20 @@ class MarketState:
             self.areas_table.trainees_named[:] = self.areas_table.trainees_named & counts.reshape(-1, trades).any(axis=1)
         self._reindex()
 
+    def merge_cohorts(self, pending) -> None:
+        """Put the pending table's cohorts into the state's table, after the cohorts their market already had."""
+        added = int(pending.row_count[0])
+        table = self.trainee_table
+        rows = int(table.row_count[0])
+        market = numpy.concatenate((table.market[:rows], pending.market[:added]))
+        order = numpy.argsort(market, kind="stable")
+        columns = [numpy.concatenate((getattr(table, name)[:rows], getattr(pending, name)[:added]))[order]
+                   for name in ("market", "years_left", "bonus", "people")]
+        total = rows + added
+        self.trainee_table = type(table)(numpy.array([total], dtype=numpy.int64), numpy.array([total], dtype=numpy.int64), *columns)
+        self.market_table.cohort_count[:] = numpy.bincount(market, minlength=len(self.market_table.cohort_count))
+        self._reindex()
+
     def set_hired(self, market: int, hired: Dict[str, float]) -> None:
         first, count = int(self.market_table.hired_first[market]), int(self.market_table.hired_count[market])
         self._splice_hired(market, first, first + count, list(hired), list(hired.values()))
