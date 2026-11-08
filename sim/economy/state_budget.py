@@ -9,6 +9,7 @@ from sim.constants import declare
 
 from . import currency, households_basket, state_finance, trade_wages
 from .home_scope import home_cohorts
+from .labour_results_table import bought_value
 from .setup import labour_area
 from .state_wage_ceiling import WAGE_CEILING_MULTIPLE
 from .types import Bid, EDGE_CONSUMPTION, GoodsMove, LabourBid
@@ -72,8 +73,7 @@ def plan_year(setup, record, view, labour_bids: List[LabourBid]) -> None:
 
 def wages_paid(labour_results, state) -> float:
     """What the state paid for the hours it bought: its bought hours at their wage, over every trade's result."""
-    return math.fsum(fill.quantity * fill.price for result in labour_results for fill in result.fills
-                     if fill.agent == state and fill.side == "buy")
+    return bought_value(labour_results, state)
 
 
 def lapse_unspent_wages(budget: StateBudget, paid: float) -> None:

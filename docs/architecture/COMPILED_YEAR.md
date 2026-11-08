@@ -166,3 +166,28 @@ and each rule has a test that runs both on random inputs (`sim/tests/test_labour
 Measure the labour year alone with `python3 tools/measure/warm_year_profile.py SAVE OUT.prof` (call counts, `run_year` in the
 profile) and the whole year with `year-time --count-instructions`. A mod that replaces `fetch_wage`, or a schedule that is not packed,
 still takes the plain path through `clearing._prepare` and `_finish`.
+
+## Labour settlement on tables (stage 2)
+
+`clear_labour` (`sim/economy/year_labour.py`) settles every labour market of the year from the core's result tables in a few calls;
+no `LabourResult`, `Fill`, `Pairing` or `Settlement` is made per market in the year.
+
+| Step | Module | Does |
+|---|---|---|
+| columns | `labour_fills.py` | `rows_from_clearings` reads the core's `Clearings` (market rows, the hired table); `rows_from_objects` takes a plain list of `LabourClearing`s. `fills_of` adds the sells (hours hired shared over a market's offers by hours offered, the sum taken in the offers' order) and sorts each side by name. An agent is a `ref`, its place in the sorted names of the year |
+| pairs | `labour_walk_kernel.py` | `walk_pairs` is `settlement_limits.pair_fills` over all markets; `market_agents` lists each settlement's agents (buyers used, then new sellers); `fill_slots` gives the ledger's slot per distinct agent of a market |
+| book | `labour_wage_kernel.py` | `settle_wage_markets` runs `settle_pairs` and `book_apply.apply_settled` market by market on the balances the earlier ones left, and grows the currency's gross total by the exact sum paid: what `Book.post_settled` did, market after market, in one kernel call. A market the book refuses is replayed through `post_settled` so the error is the old one |
+| ledger | `labour_settle_year.py` | `settle_year` calls the above and feeds `YearLedger.note_settlement_rows` and `note_hours_rows` once each |
+| results | `labour_results_table.py` | `LabourResults` stands where the ledger's list of results stood; its items are `LabourResult`s built from the columns on demand, `fills` on first use. `hours_totals`, `bought_value` and `hours_by_market` read the columns |
+
+Ids: the core's employer ids are not the book's. They are mapped to the book's agent numbers once a year with one array
+(`numbers_of_refs`), admitting a name the book has not met in the order the old per-market path did. Handing the book's `IdTable` to
+`LabourIds(employers=...)` was not done: the core admits into the table it is given, and the book must also give an admitted agent
+a row in its own tables, so the core would have to admit through the book.
+
+Who still builds the objects: `year_labour._result` (one `LabourResult` of a clearing and its offers; the reference the tests compare
+with), `settlement.settle_labour` and `YearLedger.note_labour`/`note_hours` (tests and the reference ledger), `LabourResults` items
+(`economy._outcome` reads totals from the columns; `year_close.close_agents` iterates the items, without their fills, only when
+carriage hours hire), and the offers (`LabourOffer`, built upstream and by `HourSupply.settle`). Measure with
+`python3 tools/measure/warm_year_profile.py SAVE OUT.prof` (the calls of `settle_labour`, `settle_many`, `post_settled`, `_result` are gone) and
+`year-time --count-instructions`. The tests are `sim/tests/test_year_speed_labour_settle.py`.

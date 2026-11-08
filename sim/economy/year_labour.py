@@ -9,9 +9,11 @@ from typing import Dict, List, Sequence, Tuple
 from sim.labour.api import TrancheBids, people_in, run_labour_year
 from sim.world.need_basket import subsistence_cost_per_person
 
-from . import household_work_year, households, households_basket, households_work, settlement
+from . import household_work_year, households, households_basket, households_work, labour_settle_year
 from .labour_ask_floor import mean_floor_per_hour
 from .labour_bids import BID_TRANCHES, BID_VALUE_SPREAD
+from .labour_fills import fills_of, rows_from_clearings, rows_from_objects
+from .labour_results_table import LabourResults
 from .labour_state import core_trades, mirror_wages, people_by_trade
 from .market_memory import market_key
 from .setup import labour_area
@@ -90,6 +92,12 @@ def _result(clearing, currency: str, offers: Sequence[LabourOffer]) -> LabourRes
                         idle_hours=clearing.idle_hours, fills=tuple(fills))
 
 
+def clearing_rows(clearings):
+    """The cleared markets and the employers' hours as columns (labour_fills.py): from the core's `Clearings`, or from a plain
+    list of `LabourClearing`s."""
+    return rows_from_clearings(clearings) if hasattr(clearings, "slot_offsets") else rows_from_objects(clearings)
+
+
 def clear_labour(setup, record, bids: Sequence[LabourBid], offers: Sequence[LabourOffer], ledger: YearLedger,
                  context, supply=None):
     """Run the core's year on the record's workforce: wages, hires, training, entry, switching and migration;
@@ -105,21 +113,19 @@ def clear_labour(setup, record, bids: Sequence[LabourBid], offers: Sequence[Labo
     inputs = dataclasses.replace(context, trades=core_trades(setup, {bid.trade for bid in core_bids.bids}),
                                  bids=core_bids, hours_sold_at=supply.schedules() if supply is not None else None)
     record.labour.workforce, report = run_labour_year(record.labour.workforce, inputs, owned=True)
-    by_market: Dict[Tuple[str, str], List[LabourOffer]] = {}
+    rows = clearing_rows(report.clearings)
     if supply is not None:
-        offers = supply.settle({(clearing.trade, clearing.area): clearing.wage for clearing in report.clearings})
-    for offer in offers:
-        by_market.setdefault((offer.trade, offer.area), []).append(offer)
+        offers = supply.settle(dict(zip(zip(rows[0].trade, rows[0].area), rows[0].wage.tolist())))
+    fills = fills_of(*rows, offers)
+    labour_settle_year.settle_year(record.book, ledger, fills, setup.currency_id)
+    ledger.labour_results = LabourResults(fills, setup.currency_id, ledger.labour_results)
     record.labour.hours_idle = {}
-    for clearing in sorted(report.clearings, key=lambda each: (each.trade, each.area)):
-        key = market_key(clearing.trade, clearing.area)
-        result = _result(clearing, setup.currency_id, by_market.get((clearing.trade, clearing.area), ()))
-        done = settlement.settle_labour(record.book, result)
-        ledger.note_settlement(done, "wages")
-        ledger.note_labour_settled(result, done)
-        record.labour.hours_idle[key] = clearing.idle_hours
-        if clearing.hours_hired + clearing.idle_hours > 0.0:
+    markets = fills.markets
+    for trade, area, hired, idle in zip(markets.trade, markets.area, markets.hours_hired.tolist(), markets.idle_hours.tolist()):
+        key = market_key(trade, area)
+        record.labour.hours_idle[key] = idle
+        if hired + idle > 0.0:
             record.labour.sold_share_expected[key] = households_work.smoothed_sold_share(
-                record.labour.sold_share_expected.get(key, 1.0), households_work.sold_share(clearing.hours_hired, clearing.idle_hours))
+                record.labour.sold_share_expected.get(key, 1.0), households_work.sold_share(hired, idle))
     mirror_wages(record.memory.wages, record.labour.workforce)
     return report
