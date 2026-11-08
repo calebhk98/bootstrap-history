@@ -319,3 +319,35 @@ Not done, and why (measure with `python3 tools/measure/warm_year_profile.py SAVE
   `demand_at` over `Bid` objects, the per-call glue of `EntryTables.siting`). The bids come from `ledger.bids_by_market`, which the
   goods side fills with `LeftMarket.all_bids` (first-round rows plus later rounds' `Bid` objects): entry can read GoodsBids columns
   only when that owner hands over per-market column blocks (floor, flexible, reference price, elasticity, budget, maximum price).
+
+## Plans and the rare order sources (stage 4, one package)
+
+**Plans.** `plan_year.plans_of` returns a `PlanTable` (`plan_table.py`): producer columns (`runs`, `wanted_runs`, `wage_line`, and the two
+sums the readers need, `budget_total` and `outlay_total`, added by `plan_sums` exactly as Python's `sum` of floats adds them) and one
+row per input bid and per labour bid, grouped by producer in slot order (`plan_table_rows.py` reads the plan kernel's answer into the
+rows with `np.nonzero` over the recipe masks; the few producers `producers.plan` still plans have their `Plan` read into the same
+rows). `outlay_room.by_plan_table`, `land_bid_year.write_firm_land_bids`, `land_market` (through `wanted_runs_by_id`) and the goods
+clearing (`PlanTable.get(id).runs`) read the columns; `plan_table.write_bids` hands the bid rows to the book of orders. `Plan`, `Bid`
+and `LabourBid` are made only at an edge: `plan_of(id)` (tests, screens) and `labour_bid_objects()`, the one call into
+`year_labour.clear_labour`, which still takes a list of labour bids.
+
+**Block reads.** `stock_block.stock_block(book, agent_numbers, good_numbers, tile_numbers)` reads any number of stock cells in one kernel
+call (`numbers_of` turns names into ids). `plan_year.stocks_by_slot` and `households_orders_pack.kernel_orders` use it.
+
+**One door for the rare sources.** `order_rows.OrderRows(order_book, source)` collects a source's bids and offers by name
+(`bid`, `offer`, or `bids_from`/`offers_from` for a rule that still makes objects) and `write()` hands them to the book. The mint, the
+state (`state_budget.goods_bids`, `state_store` through `year_order_sources.state_orders`), the households' tool bids and plain-path
+bids, merchants and their carriers (`year_order_sources.merchant_orders`), the engine's seat orders, firm land bids and plant bids all
+write through it. `order_book_named.NamedOrderBook` (what `economy.py` makes with `new_named_order_book`) keeps these rows and the plan
+table's in the book's own arrival list and numbers the names of everything waiting as one batch at the flush, so agents, goods, tiles
+and goods markets are numbered exactly as when each order waited as an object (the market numbering is saved, so a digest sees it).
+A plain `GoodsOrderBook` or a `{(good, area): (bids, offers)}` dict still works as the target (tests).
+
+**Still objects.** The rules `households.goods_orders` (a basket with share limits), `households_store.store_bids/store_offers`,
+`tool_wear.tool_bids`, `merchants.orders`, `carriage_fleet_book.bids`, `land_bid.hectare_bid` and `producers.plan` build `Bid`/`Offer`
+objects inside the rule; they are unpacked into rows at the call (`bids_from`), never handed to the book. `lending.bid_household_loans`
+still uses the dict door.
+
+Measure: `python3 tools/measure/warm_year_profile.py SAVE OUT.prof` for the call counts of `stock`, `balance`, `make_bid` and
+`plans_of`; `year-time --count-instructions` for the whole year. Tests: `sim/tests/test_year_speed_plan_tables.py`,
+`test_year_speed_plans.py`, `test_year_speed_cohort_orders.py`.

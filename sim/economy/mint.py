@@ -10,9 +10,11 @@ import math
 from typing import Dict
 
 from . import currency, mint_labour, mint_price, mint_staffing
+from .goods_order_tables import MINT
 from .market_memory import market_key
 from .metal_stock import COIN_WEAR_PER_YEAR, METAL_GOODS_LOSS_PER_YEAR
-from .types import EDGE_EXTERNAL, EDGE_MINT, EDGE_PRODUCTION, EDGE_WEAR, Bid, GoodsMove, Offer, Transfer
+from .order_rows import OrderRows
+from .types import EDGE_EXTERNAL, EDGE_MINT, EDGE_PRODUCTION, EDGE_WEAR, GoodsMove, Transfer
 
 MINT_PRIORITY = -1         # served before every other buyer: it pays up to the mint price, which bullion holders prefer to the ask
 
@@ -132,20 +134,20 @@ def mint_orders(setup, record, area_map, order_book, hours_hired=None) -> Dict[s
         return {}
     _lose_worn_metal(record)
     held = stock_by_tile(record.book, metal)
+    rows = OrderRows(order_book, MINT)
     for tile, quantity in sorted(held.items()):
         if not mint_price.melting_pays(record.memory.prices.get(market_key(metal, area_map.area_of(metal, tile))),
                                        currency.mint_parity(spec)):
             continue
-        offer = Offer(EDGE_MINT, metal, area_map.area_of(metal, tile), tile, quantity, currency.mint_parity(spec))
-        order_book.setdefault((metal, offer.area), ([], []))[1].append(offer)
+        rows.offer(EDGE_MINT, metal, area_map.area_of(metal, tile), tile, quantity, currency.mint_parity(spec))
     strike_price = currency.mint_price(spec)
     coin_metal = min(yearly_monetisation(setup, record) * spec.backing_per_unit,
                      mint_labour.strike_limit_fine_kilograms(setup, spec, hours_hired or {}))
     for area in area_map.areas(metal):
         capacity = coin_metal * len(area.tiles) / max(1, len(setup.tiles))
-        bid = Bid(EDGE_MINT, metal, area.area_id, area.anchor_tile, 0.0, capacity, strike_price, 0.0,
-                  math.inf, MINT_PRIORITY, maximum_price=strike_price)
-        order_book.setdefault((metal, area.area_id), ([], []))[0].append(bid)
+        rows.bid(EDGE_MINT, metal, area.area_id, area.anchor_tile, 0.0, capacity, strike_price, 0.0, math.inf, MINT_PRIORITY,
+                 maximum_price=strike_price)
+    rows.write()
     return held
 
 

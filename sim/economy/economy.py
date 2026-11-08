@@ -10,7 +10,7 @@ from typing import Any, Dict, Mapping, Optional, Tuple
 from sim.world import capital_market
 
 from .rates import own_rate
-from . import plan_year, producer_table
+from . import plan_table, plan_year, producer_table
 from . import outlay_room, taxes, bondage, bondage_hours, bonded_purchase, banks, carriage_hours, credit, credit_idle_rate, credit_lines, debt_relief, credit_claims, currency, equity, land_market, lending, merchants_credit, producers, shares, sites, state_budget, tax_farming, titles_inheritance, titles_moves, titles_plots, unit_cost
 from .credit_view import CreditView
 from .market_areas_follow import follow
@@ -30,13 +30,16 @@ from .opening import open_economy
 from .protocols import EconomyYearInputs
 from .record import EconomyRecord
 from .setup import EconomySetup, area_tile, labour_area
-from .types import Bid, EDGE_CONSUMPTION, GoodsMove, Transfer
+from .types import EDGE_CONSUMPTION, GoodsMove, Transfer
 from .national_prices import national_prices, national_wages
 from .merchants_dispatch import dispatch_merchants
 from .year_arrays import YearArrays, same_source, source_of
 from .year_close import close_agents, money_taxes, remember_basket_price_level, wear_and_spoilage
-from .year_goods import add_orders, clear_goods, cohort_orders, merchant_orders, state_orders
-from .goods_order_book import new_order_book
+from .year_goods import clear_goods
+from .year_order_sources import cohort_orders, merchant_orders, state_orders
+from .order_book_named import new_named_order_book
+from .goods_order_tables import ENGINE, LOAN
+from .order_rows import OrderRows
 from .labour_supply import HourSupply
 from .labour_results_table import hours_totals
 from .labour_state import people_by_trade
@@ -190,7 +193,7 @@ class Economy:
         tax_farming.run_auctions(setup, record, inputs.farmed_forms, record.memory.rates[setup.currency_id])
         lending.lend_working_capital(setup, record, view)
         plans = plan_year.plans_of(setup, record, view, arrays, money)
-        labour_bids = [bid for plan in plans.values() for bid in plan.labour_bids]
+        labour_bids = plans.labour_bid_objects()
         for orders in inputs.engine_orders.values():
             labour_bids.extend(orders.labour_bids)
         state_budget.plan_year(setup, record, view, labour_bids)
@@ -211,8 +214,9 @@ class Economy:
                 in bondage_hours.payable_keep(held_placed.keep, lambda employer: record.book.balance(employer, money))]
         record.book.transfer_many(keep)
         ledger.note_paid_outside_markets(keep)
-        context = dataclasses.replace(context, outlay_room=outlay_room.by_employer(     # after the keep is paid out of the purses
-            plans, setup.state_agent, record.state_budget, lambda employer: record.book.balance(employer, money)))
+        context = dataclasses.replace(context, outlay_room=outlay_room.by_plan_table(     # after the keep is paid out of the purses
+            plans, setup.state_agent, record.state_budget, lambda employer: record.book.balance(employer, money),
+            record.book.balances_of(plans.ids, money)))
         placed = bondage_hours.place(record.unfree.bondage, held_placed.offers, held_placed.bids,
                                      bondage_hours.works_of_producers(record), bondage.BONDED_HOURS_OWED_SHARE)
         everyone, labour_bids = placed.offers, placed.bids
@@ -232,19 +236,18 @@ class Economy:
         capital_year.insure(setup, record, view, inputs.harvest_factor, view.year, inputs.institutions)     # cover is bought and the weather settles it
         self._grow_own(offers, ledger, inputs.harvest_factor, kept)
         capital_year.note_exposure(setup, record, view, self.area_map, ledger, inputs.harvest_factor, inputs.institutions)
-        order_book = new_order_book(setup, record)
+        order_book = new_named_order_book(setup, record)
         funds = cohort_orders(setup, record, view, ledger, order_book, self.own_plot_options())
         state_orders(setup, record, view, self.area_map, order_book, {})
         mint_held = mint_orders(setup, record, self.area_map, order_book,
                                 ledger.hours_hired.get(mint_agent(setup), {}))
+        engine = OrderRows(order_book, ENGINE)
         for agent, orders in sorted(inputs.engine_orders.items()):
-            add_orders(order_book, orders)
-        for plan in plans.values():
-            for bid in plan.bids:
-                order_book.setdefault((bid.good, bid.area), ([], []))[0].append(bid)
-        for bid in land_bid_year.firm_land_bids(setup, record, view, {producer_id: plan.wanted_runs for producer_id, plan in plans.items()},
-                                                {producer_id: sum(bid.budget for bid in plan.bids) for producer_id, plan in plans.items()}):
-            order_book.setdefault((bid.good, bid.area), ([], []))[0].append(bid)
+            engine.bids_from(orders.bids)
+            engine.offers_from(orders.offers)
+        engine.write()
+        plan_table.write_bids(plans, order_book)
+        land_bid_year.write_firm_land_bids(setup, record, view, plans.wanted_runs_by_id(), plans.budget_total_by_id(), order_book)
         funds = capital_year.before_lending(setup, record, view, ledger, funds, view.year, inputs.institutions)   # holders sell shares and loans; depositors run on banks
         funds, pledged = banks.intermediate(setup, record, funds, view.year, inputs.institutions)
         kept = capital_year.snapshot(record, money, funds)
@@ -258,8 +261,7 @@ class Economy:
         settle_mint(record, mint_held, ledger)
         close_mint_year(setup, record)
         rent = land_market.settle_year(setup, record, view,
-                                       {producer_id: plan.wanted_runs for producer_id, plan in plans.items()},
-                                       self._own_hectares, inputs.land_tax_share_of_rent,
+                                       plans.wanted_runs_by_id(), self._own_hectares, inputs.land_tax_share_of_rent,
                                        lambda: land_lease_year.asks(setup, record, view, self.own_plot_options()), ledger,
                                        land_lease_year.own_plot_returns(setup, record, view, self.own_plot_options()))
         interest = self._service_loans(view.year)
@@ -488,6 +490,7 @@ class Economy:
 
     def _bid_for_plant(self, producer, runs, budget, worth_ratio, view, order_book) -> None:
         recipe = self.setup.recipes[producer.recipe_id]
+        rows = OrderRows(order_book, LOAN)
         for good, per_run in sorted(recipe.plant_goods.items()):
             if good not in self.area_map.goods():
                 continue
@@ -495,9 +498,9 @@ class Economy:
             price = view.price(good, area)
             if not price:
                 continue
-            order_book.setdefault((good, area), ([], []))[0].append(
-                Bid(producer.agent_id, good, area, producer.tile, per_run * runs, 0.0, price, 0.0,
-                    budget, maximum_price=price * max(1.0, worth_ratio)))
+            rows.bid(producer.agent_id, good, area, producer.tile, per_run * runs, 0.0, price, 0.0, budget,
+                     maximum_price=price * max(1.0, worth_ratio))
+        rows.write()
 
     def _build_plant(self, plant_runs: Dict[str, float]) -> None:
         """Plant goods a producer received are built in; capacity grows by the share that arrived."""

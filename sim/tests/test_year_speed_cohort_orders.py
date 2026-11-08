@@ -14,10 +14,12 @@ import random
 import unittest
 
 from sim.book import Book
+from sim.book_types import GoodsMove
 from sim.economy import households, households_orders_pack
 from sim.economy.goods_order_book import GoodsOrderBook
 from sim.economy.goods_order_tables import HOUSEHOLD
 from sim.economy.market_tables import MarketTables
+from sim.economy.types import EDGE_PRODUCTION
 from sim.economy.households_cohort import Cohort
 from sim.economy.year_goods import less_what_it_grew
 from sim.tests.test_opening_demand_kernel import SPECS, View, random_units, random_world
@@ -67,7 +69,11 @@ def kernel(cohorts, baskets, priceds, view, cashes, incomes, grown, smooth_rise)
     entries = [(cohort, basket, priced, cash, income, units) for cohort, basket, priced, cash, income, units
                in zip(cohorts, baskets, priceds, cashes, incomes, grown)]
     """The cohorts' orders with the bids read back from the rows the kernel wrote."""
-    orders = GoodsOrderBook(Book(), MarketTables())
+    book = Book()
+    book.post((), [GoodsMove(EDGE_PRODUCTION, cohort.agent_id, good, cohort.tile, quantity, "test holding")
+                   for cohort in cohorts for (agent, good), quantity in sorted(view.held.items())
+                   if agent == cohort.agent_id and quantity > 0.0])     # the view's holdings are the book's: the kernel reads the book in a block
+    orders = GoodsOrderBook(book, MarketTables())
     made, rows, planned = households_orders_pack.kernel_orders(
         view, SPECS, entries, smooth_rise, lambda cohort: (cohort.tile, cohort.hired_work_per_person),
         lambda cohort: stores.setdefault((cohort.tile, cohort.hired_work_per_person), {}), orders)

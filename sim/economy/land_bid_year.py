@@ -5,7 +5,9 @@ import dataclasses
 from typing import Dict, List, Mapping
 
 from . import land_bid, land_market, sites, titles_ground, titles_value, titles_worked, trade_wages
+from .goods_order_tables import LAND
 from .households_own import Option, plot_hectares
+from .order_rows import OrderRows
 from .protocols import AgentOrders
 from .setup import labour_area
 from .types import EDGE_CONSUMPTION, Bid, GoodsMove
@@ -76,6 +78,13 @@ def firm_land_bids(setup, record, view, wanted_runs: Mapping[str, float], budget
         bids.extend(actor_bids(setup, record, view, demand.agent_id, demand.tile,
                                demand.output_value_per_hectare - demand.other_cost_per_hectare, 0.0, 0.0, free))
     return bids
+
+
+def write_firm_land_bids(setup, record, view, wanted_runs: Mapping[str, float], budgets: Mapping[str, float], order_book) -> None:
+    """`firm_land_bids`, appended to the book of orders as rows."""
+    rows = OrderRows(order_book, LAND)
+    rows.bids_from(firm_land_bids(setup, record, view, wanted_runs, budgets))
+    rows.write()
 
 
 def with_land_bids(orders: AgentOrders, bids: List[Bid]) -> AgentOrders:

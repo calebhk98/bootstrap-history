@@ -8,11 +8,13 @@ from typing import ClassVar, Dict, List, Tuple
 from sim.constants import declare
 
 from . import currency, households_basket, state_finance, trade_wages
+from .goods_order_tables import STATE
 from .home_scope import home_cohorts
 from .labour_results_table import bought_value
+from .order_rows import OrderRows
 from .setup import labour_area
 from .state_wage_ceiling import WAGE_CEILING_MULTIPLE
-from .types import Bid, EDGE_CONSUMPTION, GoodsMove, LabourBid
+from .types import EDGE_CONSUMPTION, GoodsMove, LabourBid
 
 STATE_MAX_SHARE_OF_TILE_HOURS = declare(
     "STATE_MAX_SHARE_OF_TILE_HOURS", 0.3, kind="temporary_heuristic",
@@ -134,6 +136,7 @@ def goods_bids(setup, record, view, area_map, order_book, kept=None) -> None:
         return
     state = setup.state_agent
     moves = []
+    rows = OrderRows(order_book, STATE)
     for need in priced:
         need_budget = budget.goods_budget * need.spec.budget_weight / weight_total
         for good, price, _effect, share in need.goods:
@@ -149,10 +152,10 @@ def goods_bids(setup, record, view, area_map, order_book, kept=None) -> None:
                 continue
             budget.need_wanted[good] = budget.need_wanted.get(good, 0.0) + wanted
             area = view.area_of(good, tile)
-            order_book.setdefault((good, area), ([], []))[0].append(
-                Bid(state, good, area, tile, wanted if budget.real_programme else 0.0,
-                    0.0 if budget.real_programme else wanted, price, basket.substitution, wanted * price))
+            rows.bid(state, good, area, tile, wanted if budget.real_programme else 0.0,
+                     0.0 if budget.real_programme else wanted, price, basket.substitution, wanted * price)
     record.book.move_many(moves)
+    rows.write()
 
 
 def close_year(setup, record, ledger, tax_received: float) -> None:
