@@ -16,6 +16,7 @@ from sim.compiled_tables.causes import OK
 from sim.jit import njit
 
 from . import producers
+from .goods_production_reads import hours_hired_of, planned_runs
 from .types import GoodsMove
 
 
@@ -49,17 +50,17 @@ def produce(setup, record, producer_ids: Sequence[str], plans: dict, ledger) -> 
     hired, booked as one batch, their output noted in the ledger. Returns the ids of those that made something runnable."""
     book = record.book
     planned = []
-    for producer_id in producer_ids:
-        plan = plans.get(producer_id)
-        if plan is not None and plan.runs > 0.0:
+    for producer_id, runs in zip(producer_ids, planned_runs(plans, producer_ids)):
+        if runs is not None and runs > 0.0:
             producer = record.producers[producer_id]
-            planned.append((producer_id, producer, setup.recipes[producer.recipe_id], plan.runs))
+            planned.append((producer_id, producer, setup.recipes[producer.recipe_id], runs))
+    hired = hours_hired_of(ledger, [(producer_id, tuple(recipe.labour_hours)) for producer_id, _producer, recipe, _runs in planned])
     cells = [(producer_id, good, producer.tile) for producer_id, producer, recipe, _runs in planned for good in recipe.inputs]
     stocks = iter(read_stocks(book, cells))
     lines = []
-    for producer_id, producer, recipe, runs in planned:
+    for (producer_id, producer, recipe, runs), hours in zip(planned, hired):
         held = {good: next(stocks) for good in recipe.inputs}
-        _runs, made = producers.production_lines(producer, recipe, held, ledger.hours_hired.get(producer_id, {}), runs)
+        _runs, made = producers.production_lines(producer, recipe, held, hours, runs)
         lines.extend(made)
     note_output(ledger, book, lines)
     post_lines(book, lines)

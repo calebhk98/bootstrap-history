@@ -5,21 +5,17 @@ markets (the batch's `GoodsPairs` rows) are read as agent and tile numbers from 
 keys and the agents are numbered in the order `settlement_batch.KeyTable` numbered them (the used bids' keys by bid place, the used
 offers' keys by offer place, then the keys of buyers with no tile, who take delivery where the seller holds the goods), each market
 is settled on the purses and stocks the earlier ones left (`settlement_batch_kernel.settle_markets`), and the sums are applied on the
-book once (`book_apply.apply_settled`, the gross totals and the good's flow as `Book.post_settled` records them).
+book once (`book_settled.post_settled_by_numbers`: the gross totals and the good's flow as `Book.post_settled` records them).
 
 The answer is columns by market (`SettledByIds`): for each listed agent its book number and sums, for each key its holder and
 tile, cut by market with offsets, in the order a `Settlement` listed them."""
-import math
 from collections import namedtuple
 from typing import FrozenSet, Optional
 
 import numpy
 
-from sim.book_apply import apply_settled
-from sim.book_commit import add_flow
-from sim.book_post import grown_settled
 from sim.book_read_kernels import find_slots, read_stocks_at
-from sim.compiled_tables.causes import OK
+from sim.book_settled import post_settled_by_numbers
 
 from .settlement_batch_kernel import settle_markets
 from .settlement_numbering import local_numbering
@@ -100,8 +96,8 @@ def settle_by_ids(book, batch, slots: numpy.ndarray, currency: str, item: str, p
         flags.is_external[agents] != 0, _in_accounts(book, agents, import_accounts), _in_accounts(book, agents, export_accounts), True, True)
     (goods, _money, _payer, paid, received, goods_in, goods_out, buyer_net, got_goods, paid_as_buyer, imports, exports, _given, _taken,
      key_to_mint, batch_paid, batch_received, batch_given, batch_taken) = answer
-    post_totals(book, currency, purpose, item, currency_number, good, agents, batch_paid, batch_received, holder, tile, batch_given,
-                batch_taken)
+    post_settled_by_numbers(book, currency, purpose, item, currency_number, good, agents, batch_paid, batch_received, holder, tile, batch_given,
+                            batch_taken)
     delivered = numpy.array([goods[first:last].sum() for first, last in zip(pair_offset[:-1].tolist(), pair_offset[1:].tolist())])
     return SettledByIds(pair_offset, agent_offset, key_offset, agents[agent_global], paid, received, goods_in, goods_out, buyer_net,
                         got_goods, paid_as_buyer, imports, exports, holder[key_global], tile[key_global], key_to_mint, delivered)
@@ -111,37 +107,3 @@ def _in_accounts(book, agents: numpy.ndarray, accounts: FrozenSet[str]) -> numpy
     """Per agent number: whether it is one of the customs `accounts` (names)."""
     numbers = book.agent_ids.numbers
     return numpy.isin(agents, numpy.array([numbers[name] for name in accounts if name in numbers], dtype=numpy.int64))
-
-
-def post_totals(book, currency: str, purpose: str, item: str, currency_number: int, good: int, agents, paid, received, holder, tile,
-                given, taken) -> None:
-    """Apply the batch's sums on the book as `Book.post_settled` does, by numbers; a refusal is replayed through `post_settled` by
-    name so the error is the book's own."""
-    book.stock_rows.reserve(len(holder))
-    book.edge_goods_rows.reserve(len(holder))
-    book.flow_rows.reserve(1)
-    book.settled_plans = scratch = grown_settled(book.settled_plans, len(agents), len(holder))
-    code, _culprit = apply_settled(book.tables(), scratch, currency_number, agents, paid, received, holder, tile, good, given, taken)
-    if code != OK:
-        names, tiles = book.agent_ids.name_list, book.tile_ids.name_list
-        book.post_settled(currency, purpose, item, [names[each] for each in agents.tolist()], paid.tolist(), received.tolist(),
-                          [(names[each], tiles[place]) for each, place in zip(holder.tolist(), tile.tolist())], given.tolist(),
-                          taken.tolist())
-        raise RuntimeError("the book refused the sale of %s and then took it" % item)
-    record_totals(book, currency_number, good, purpose, paid, given)
-
-
-def record_totals(book, currency_number: int, good: int, purpose: str, paid: numpy.ndarray, given: numpy.ndarray) -> None:
-    """The gross totals and the purpose flow of a settlement: exact sums added to the totals, as `Book._record_settled_totals`."""
-    currencies = book.currency_table
-    before = currencies.gross_posted.item(currency_number) if currencies.gross_seen.item(currency_number) else 0.0
-    currencies.gross_posted[currency_number] = before + math.fsum(paid.tolist())
-    currencies.gross_seen[currency_number] = 1
-    moved = math.fsum(given.tolist())
-    if moved > 0.0:
-        goods = book.good_table
-        before = goods.gross_moved.item(good) if goods.gross_seen.item(good) else 0.0
-        goods.gross_moved[good] = before + moved
-        goods.gross_seen[good] = 1
-        code, reference = book.purposes.encode(purpose)
-        add_flow(book.flow_rows.table, book.flow_rows.index, good, code, reference, moved)

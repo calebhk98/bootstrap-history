@@ -14,6 +14,8 @@ from . import bank_service, banks, bondage, credit, credit_claims, households_cr
 from .household_time_preference import HOUSEHOLD_TIME_PREFERENCE
 from .household_work_year import basket_key, cohort_basket
 from .producers_working_capital import WORKING_CAPITAL_PURPOSE
+from .goods_order_tables import LOAN
+from .order_rows import OrderRows
 from .types import FundsOffer
 from .households_basket import cohort_need_prices
 from .inventory import held_stock
@@ -149,12 +151,13 @@ def bid_household_loans(setup, record, view, ledger, loans, order_book, priced_b
     for loan in loans:
         if loan.borrower in record.cohorts:
             lent[loan.borrower] = lent.get(loan.borrower, 0.0) + loan.principal
+    rows = OrderRows(order_book, LOAN)
     for cohort_id, budget in sorted(lent.items()):
         cohort = record.cohorts[cohort_id]
         basket = cohort_basket(setup, record, cohort)
-        for bid in households_credit.floor_bids(cohort, _priced_basket(view, basket_key(record, cohort), basket, priced_by_tile), budget,
-                                                ledger.grown_units.get(cohort_id), setup.specs, view, basket):
-            order_book.setdefault((bid.good, bid.area), ([], []))[0].append(bid)
+        rows.bids_from(households_credit.floor_bids(cohort, _priced_basket(view, basket_key(record, cohort), basket, priced_by_tile), budget,
+                                                    ledger.grown_units.get(cohort_id), setup.specs, view, basket))
+    rows.write()
 
 
 def _priced_basket(view, key, basket, priced_by_tile):
