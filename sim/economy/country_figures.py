@@ -8,6 +8,8 @@ import math
 import weakref
 from typing import Dict, List, Optional, Set, Tuple
 
+from sim.labour.api import people_by_trade_over
+
 from . import carried_book, households_basket, quiet_year
 from .home_scope import has_partners
 from .market_memory import KEY_SEPARATOR, YearView
@@ -68,24 +70,19 @@ def idle_hours_by_trade(economy, country: Optional[str]) -> Dict[str, tuple]:
         tiles = country_tiles(economy, country)
         idle: Dict[str, float] = {}
         hired: Dict[str, float] = {}
-        for key, hours in sorted(economy.record.labour.hours_idle.items()):
-            if _labour_key_in(key, tiles):
-                trade = key.split(KEY_SEPARATOR, 1)[0]
-                idle[trade] = idle.get(trade, 0.0) + hours
-                hired[trade] = hired.get(trade, 0.0) + economy.record.labour.hours_cleared_in(key)
+        keys = [key for key in sorted(economy.record.labour.hours_idle) if _labour_key_in(key, tiles)]
+        for key, hours_hired in zip(keys, economy.record.labour.hours_cleared_in_markets(keys)):
+            trade = key.split(KEY_SEPARATOR, 1)[0]
+            idle[trade] = idle.get(trade, 0.0) + economy.record.labour.hours_idle[key]
+            hired[trade] = hired.get(trade, 0.0) + hours_hired
         return {trade: (idle[trade], idle[trade] + hired[trade]) for trade in sorted(idle)}
     return dict(quiet_year.kept(economy, ("idle", country), compute))
 
 
 def people_by_trade(economy, country: Optional[str]) -> Dict[str, float]:
     """Working people by trade in the country's labour markets."""
-    workers = economy.record.labour.workforce.workers
-    totals: Dict[str, float] = {}
-    for tile in sorted(country_tiles(economy, country)):
-        # each trade is added tile by tile in tile order; the order trades are met in within a tile does not matter
-        for trade, bands in workers.get(labour_area(tile), {}).items():
-            totals[trade] = totals.get(trade, 0.0) + math.fsum(bands)
-    return dict(sorted(totals.items()))
+    # each trade is added tile by tile in tile order
+    return people_by_trade_over(economy.record.labour.workforce, [labour_area(tile) for tile in sorted(country_tiles(economy, country))])
 
 
 def _area_tiles(economy, good: str) -> Dict[str, Set[TileId]]:

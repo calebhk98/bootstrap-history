@@ -1,8 +1,11 @@
 """A good's one price over its market areas, and a trade's one wage over its labour areas."""
 import math
+import weakref
 from typing import Callable, Dict, Hashable, List, Mapping, Optional, Set, Tuple
 
 import numpy as np
+
+from sim.labour.api import grid_rows_of, hours_cleared_at, people_at, wage_means_by_group
 
 from . import price_index
 from .market_memory import KEY_SEPARATOR, RECENT_TRADE_YEARS
@@ -90,28 +93,22 @@ def national_wages(record, keep: Optional[Callable[[str], bool]] = None, keep_to
     layout = price_index.layout_of(tuple(memory.wages))
     if not layout.keys:
         return {}
-    kept = layout.kept_keys(keep, keep_token).tolist()
-    wage_list = np.array(list(memory.wages.values()), dtype=float)[layout.positions].tolist()
-    workers = record.labour.workforce.workers
-    hours_cleared_by = record.labour.hours_cleared_by
-    rows: Dict[str, List[Tuple[float, float, float]]] = {}
-    start = 0
-    for trade, end in zip(layout.goods, layout.ends):
-        for place in range(start, end):
-            if kept[place]:
-                people = math.fsum(workers.get(layout.areas[place], {}).get(trade, ()))
-                rows.setdefault(trade, []).append((wage_list[place], hours_cleared_by(trade, layout.areas[place]), people))
-        start = end
-    wages = {}
-    for trade, entries in rows.items():
-        for weight_index in (1, 2):
-            total = math.fsum(entry[weight_index] for entry in entries)
-            if total > 0.0:
-                wages[trade] = math.fsum(entry[0] * entry[weight_index] for entry in entries) / total
-                break
-        else:
-            wages[trade] = math.fsum(entry[0] for entry in entries) / len(entries)
-    return dict(sorted(wages.items()))
+    kept = layout.kept_keys(keep, keep_token)
+    wage = np.array(list(memory.wages.values()), dtype=float)[layout.positions]
+    workforce = record.labour.workforce
+    rows = grid_rows_of(workforce, *_place_names(layout))
+    means, exists = wage_means_by_group(layout.ends, kept, wage, hours_cleared_at(workforce, rows), people_at(workforce, rows))
+    return {trade: float(means[group]) for group, trade in sorted(enumerate(layout.goods), key=lambda each: each[1]) if exists[group]}
+
+
+_place_names_of: "weakref.WeakKeyDictionary" = weakref.WeakKeyDictionary()
+
+
+def _place_names(layout) -> Tuple[np.ndarray, np.ndarray]:
+    """(labour area, trade) of each place of the layout, as arrays, kept for the layout (the keys it was built from do not change)."""
+    if layout not in _place_names_of:
+        _place_names_of[layout] = (np.array(layout.areas, dtype=str), np.array(layout.good_of_place, dtype=str))
+    return _place_names_of[layout]
 
 
 def traded_spending_weights(volumes: Mapping[str, float], prices: Mapping[str, float], goods: Set[str]) -> Dict[str, float]:

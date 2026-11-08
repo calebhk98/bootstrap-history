@@ -26,6 +26,7 @@ from sim.economy.market_memory import KEY_SEPARATOR, MarketMemory, YearView
 from sim.economy.producers import Producer
 from sim.economy.setup import labour_area
 from sim.economy.types import Bid, GoodSpec, MarketArea, Recipe, SiteLimit, TileSpec
+from sim.labour.api import MarketState
 from sim.economy.year_arrays import YearArrays
 from sim.economy.year_arrays_producers import ProducerColumns
 from sim.book import Book
@@ -124,9 +125,9 @@ def economy(seed, producer_count=60):
         producers[agent] = Producer(agent, "household:T0:0", recipe_id, tile, capacity, rng.uniform(0.6, 1.2), {}, 0, 5.0,
                                     rng.uniform(0.0, 30.0), capacity * rng.uniform(0.9, 1.0) if rng.random() < 0.9 else -1.0,
                                     land_run_cap=rng.choice((None, None, rng.uniform(0.0, 20.0))), crew_runs=crew)
-    labour = types.SimpleNamespace(workers={labour_area(tile): {trade: [rng.uniform(0.0, 80.0), rng.uniform(0.0, 40.0)]
-                                                                for trade in fixture.TRADES if rng.random() < 0.8}
-                                            for tile in TILES if rng.random() < 0.85})
+    labour = MarketState(workers={labour_area(tile): {trade: [rng.uniform(0.0, 80.0), rng.uniform(0.0, 40.0)]
+                                                          for trade in fixture.TRADES if rng.random() < 0.8}
+                                      for tile in TILES if rng.random() < 0.85})
     record = types.SimpleNamespace(
         producers=producers, cohorts={}, memory=memory, book=Book(),
         credit=types.SimpleNamespace(loans=[], expansion_runs={each: rng.uniform(0.0, 10.0) for each in sorted(producers)[::7]}),

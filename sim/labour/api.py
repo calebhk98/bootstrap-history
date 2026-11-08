@@ -18,6 +18,8 @@ from .regional_migration import migrant_pairs, totals_of_pairs
 from .market.records import (EmployerHoursBid, LabourClearing, MarketState, Route, School, TradeSpec, YearInputs, YearReport,
                              from_plain as market_state_from_plain, people_in, to_plain as market_state_to_plain)
 from .market.bid_book import TrancheBids
+from .market.state_reads import (grid_rows_of, hours_cleared_at, people_at, people_by_trade_over, people_in_areas, people_weighted_wage_by_area,
+                                 scale_people_in_area, wage_means_by_group, wages_in_view_order, working_people_in_areas)
 from .market.exact_sums import python_sum
 from .market.trades import fallback_trade, trade_specs
 from .trade_seed import bound_by_hirers, seed_hours
@@ -51,6 +53,8 @@ __all__ = [
     "add_tenure", "fade_tenure", "outflow_shares", "tenure_by_trade", "tenure_held", "hours_cap_kcal", "capped_kcal", "cap_share",
     # the labour-market core (sim/labour/market/DESIGN.md): plain records in, plain records out
     "run_labour_year", "reservation_wage_per_hour", "migration_shares", "migrant_pairs", "totals_of_pairs", "opening_labour_market", "seed_hours", "bound_by_hirers", "trade_specs", "fallback_trade", "role_field", "trade_of_role", "generic_craft_trade", "bonded_pseudo_trade", "scholar_trade", "craft_family", "farm_trade", "generic_staff_trades", "staff_resource_trade", "people_in",
+    "grid_rows_of", "hours_cleared_at", "people_at", "people_by_trade_over", "people_in_areas", "people_weighted_wage_by_area", "scale_people_in_area",
+    "wage_means_by_group", "wages_in_view_order", "working_people_in_areas",
     "schools_of_actor", "EmployerHoursBid", "TrancheBids", "python_sum", "LabourClearing", "MarketState", "Route", "School", "TradeSpec", "YearInputs", "YearReport",
     "market_state_to_plain", "market_state_from_plain",
 ]

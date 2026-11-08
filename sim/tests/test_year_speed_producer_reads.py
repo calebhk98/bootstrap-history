@@ -14,6 +14,7 @@ from sim.economy import entry_practice, land_bid, labour_state, location_inputs,
 from sim.economy.market_memory import KEY_SEPARATOR, MarketMemory, YearView
 from sim.economy.producers import Producer
 from sim.economy.types import GoodSpec, Recipe
+from sim.labour.api import MarketState
 
 TRADES = ("labourer", "smith", "miller")
 AREAS = ("north", "south", "east")
@@ -55,7 +56,7 @@ class KeptReadsAreThePlainOnes(unittest.TestCase):
         view = view_of(memory)
         trades = ("smith",)
         self.assertEqual(view.wages_at(trades, "north"), {"smith": 2.0})
-        state = types.SimpleNamespace(wages={"north": {"smith": 7.0}})
+        state = MarketState(wages={"north": {"smith": 7.0}})
         labour_state.mirror_wages(memory.wages, state)
         self.assertEqual(view.wages_at(trades, "north"), {"smith": 7.0})
 
@@ -66,7 +67,7 @@ class KeptReadsAreThePlainOnes(unittest.TestCase):
             memory = MarketMemory(wages=wages)
             for trade in TRADES + ("other",):
                 self.assertEqual(memory.holds_wage_for(trade), any(key.startswith(trade + KEY_SEPARATOR) for key in wages))
-            labour_state.mirror_wages(memory.wages, types.SimpleNamespace(wages={"north": {"smith": 1.0}}))
+            labour_state.mirror_wages(memory.wages, MarketState(wages={"north": {"smith": 1.0}}))
             self.assertTrue(memory.holds_wage_for("smith"))
             self.assertFalse(memory.holds_wage_for("miller"))
 

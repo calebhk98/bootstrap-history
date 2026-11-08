@@ -10,6 +10,7 @@ import unittest
 from sim.economy import notional, producers, unit_cost
 from sim.economy.market_memory import MarketMemory, YearView
 from sim.economy.types import Recipe
+from sim.labour.api import MarketState
 
 
 def setup(opening_smith=None):
@@ -48,7 +49,7 @@ class LiveWagesAt(unittest.TestCase):
 class CostingWages(unittest.TestCase):
     def record(self, wages):
         return types.SimpleNamespace(memory=MarketMemory(wages=wages), labour=types.SimpleNamespace(
-            workforce=types.SimpleNamespace(workers={}), hours_cleared_by=lambda trade, area: 0.0))
+            workforce=MarketState()))
 
     def test_a_trade_no_area_cleared_is_costed_on_its_opening_wage(self):
         wages = notional.costing_wages(setup(opening_smith=4.0), self.record({"labourer|north": 2.0}))

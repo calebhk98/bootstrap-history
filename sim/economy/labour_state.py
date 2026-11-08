@@ -7,7 +7,8 @@ import math
 from collections.abc import Mapping as MappingBase
 from typing import Dict, Iterable, Mapping
 
-from sim.labour.api import MarketState, TradeSpec, opening_labour_market, seed_hours, trade_specs
+from sim.labour.api import (MarketState, TradeSpec, opening_labour_market, people_by_trade_over, scale_people_in_area, seed_hours, trade_specs,
+                            wages_in_view_order, working_people_in_areas)
 
 from . import households_own, mint, mint_labour, opening_hours_needed, opening_placement, practice
 from .market_memory import market_key, note_written
@@ -90,7 +91,7 @@ def opening_workforce(setup, record, hours_per_worker=None) -> MarketState:
 
 def people_by_trade(state: MarketState, area: str) -> Dict[str, float]:
     """Working people in an area, by trade (trainees are not counted)."""
-    return {trade: math.fsum(bands) for trade, bands in sorted(state.workers.get(area, {}).items())}
+    return people_by_trade_over(state, [area])
 
 
 class PeopleByTile(MappingBase):
@@ -106,6 +107,11 @@ class PeopleByTile(MappingBase):
         if tile not in self._read:
             self._read[tile] = people_by_trade(self._state, self._area_of_tile[tile])
         return self._read[tile]
+
+    def working_people(self, tiles) -> float:
+        """Everyone working on the tiles: `math.fsum` over the tiles of each tile's trades' people (a tile with no workers adds nothing)."""
+        areas = [self._area_of_tile[tile] for tile in tiles if tile in self._area_of_tile]
+        return math.fsum(working_people_in_areas(self._state, areas).tolist())
 
     def __iter__(self):
         return iter(self._area_of_tile)
@@ -125,11 +131,7 @@ def people_by_trade_everywhere(state: MarketState) -> Dict[str, float]:
 
 def scale_people(state: MarketState, area: str, factor: float) -> None:
     """Every worker and trainee in an area, scaled."""
-    for bands in state.workers.get(area, {}).values():
-        bands[:] = [count * factor for count in bands]
-    for cohorts in state.trainees.get(area, {}).values():
-        for cohort in cohorts:
-            cohort[1] = [count * factor for count in cohort[1]]
+    scale_people_in_area(state, area, factor)
 
 
 def mirror_wages(wages: Dict[str, float], state: MarketState) -> None:
@@ -138,7 +140,6 @@ def mirror_wages(wages: Dict[str, float], state: MarketState) -> None:
     `MarketMemory.wages`; the opening calls it with the seeds in a state of their own."""
     wages.clear()
     note_written()
-    for area, by_trade in state.wages.items():
-        for trade, wage in by_trade.items():
-            if wage > 0.0:
-                wages[market_key(trade, area)] = wage
+    areas, trades, found = wages_in_view_order(state, 0.0)
+    for area, trade, wage in zip(areas, trades, found.tolist()):
+        wages[market_key(trade, area)] = wage

@@ -3,7 +3,7 @@ are reported (`report.migrated`), not written to the households: demography owns
 import math
 from typing import Dict
 
-from sim.labour.api import people_in
+from sim.labour.api import people_in_areas, people_weighted_wage_by_area
 
 from . import flight_routes, flight_year
 from .labour_inputs import TONNES_CARRIED_PER_MIGRANT
@@ -12,25 +12,14 @@ from .setup import area_tile
 
 def people_before(labour) -> Dict[str, float]:
     """People now in each labour area that has workers."""
-    return {area: people_in(labour.workforce, area) for area in labour.workforce.workers}
+    areas = list(labour.workforce.workers)
+    return dict(zip(areas, people_in_areas(labour.workforce, areas).tolist()))
 
 
 def mean_year_income(workforce, hours_per_worker_year: float) -> Dict[str, float]:
     """A year's hours at the mean of the wages each area's trades last settled at, weighted by the people working each
     trade there (the plain mean where nobody works any of them, so a trade nobody works does not set the area's income)."""
-    income: Dict[str, float] = {}
-    for area, wages in sorted(workforce.wages.items()):
-        if not wages:
-            continue
-        trades = sorted(wages)
-        people = [math.fsum(workforce.workers.get(area, {}).get(trade, ())) for trade in trades]
-        total = math.fsum(people)
-        if total > 0.0:
-            mean = math.fsum(wages[trade] * count for trade, count in zip(trades, people)) / total
-        else:
-            mean = math.fsum(wages[trade] for trade in trades) / len(trades)
-        income[area] = hours_per_worker_year * mean
-    return income
+    return {area: hours_per_worker_year * mean for area, mean in people_weighted_wage_by_area(workforce).items()}
 
 
 def settle(setup, record, inputs, report, before, context, carriage) -> Dict[str, float]:

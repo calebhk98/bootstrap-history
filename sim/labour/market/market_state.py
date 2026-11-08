@@ -15,10 +15,10 @@ import numpy
 
 from sim.rekey import rename_text
 
-from . import aptitude
+from . import aptitude, state_reads
 from .state_ids import LabourIds
 from .state_tables import AREAS, Areas, HIRED, Hired, MARKETS, Markets, TRAINEES, Trainees, WORKERS, Workers
-from .state_fields import AreaMap, AsksField, HiredField, TradeMap, TraineesField, WagesField, WorkersField
+from .state_fields import AreaMap, AsksField, HiredField, TraineesField, WagesField, WorkersField
 
 _FIELDS = (("workers", WorkersField), ("trainees", TraineesField), ("wages", WagesField), ("hired_hours", HiredField), ("asks", AsksField))
 
@@ -317,21 +317,8 @@ class MarketState:
 
     def area_people(self, area: str, include_trainees: bool = True) -> float:
         """Everyone counted in one area, working or learning: the trades in the order the workers view lists them, each band
-        list summed by `sum` (the order of a float sum is part of the answer)."""
-        number = self.ids.areas.find(area)
-        if number is None:
-            return 0.0
-        trades = len(self.ids.trades)
-        total = 0.0
-        if self.area_is_named("workers", number):
-            for trade in TradeMap(self, WorkersField, area)._present_trades():
-                total += sum(self.workers_table.people[number * trades + trade].tolist())
-        if include_trainees and self.area_is_named("trainees", number):
-            for trade in TradeMap(self, TraineesField, area)._present_trades():
-                first, count = self.cohort_range(number * trades + trade)
-                for row in range(first, first + count):
-                    total += sum(self.trainee_table.people[row].tolist())
-        return total
+        list summed by `sum` (the order of a float sum is part of the answer; state_reads.people_in_areas does many areas at once)."""
+        return float(state_reads.people_in_areas(self, [area], include_trainees)[0])
 
     def rename_employer(self, old: str, new: str) -> None:
         """An employer becomes another id (`sim.rekey`): in the hired hours, `old` as a whole name or a part of a composite id is `new`;

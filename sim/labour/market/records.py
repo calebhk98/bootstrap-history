@@ -9,6 +9,7 @@ import dataclasses
 from typing import Callable, Dict, List, Optional, Sequence, Tuple
 
 from .carriage import carriage_costs, carriage_from, carriage_table
+from . import state_reads
 from .market_state import MarketState
 
 AreaId = str
@@ -181,6 +182,6 @@ def people_in(state: MarketState, area: Optional[AreaId] = None, include_trainee
     if area is not None:
         return state.area_people(area, include_trainees)
     total = 0.0
-    for each_area in state.ids.areas.names:
-        total += state.area_people(each_area, include_trainees)
+    for each_area in state_reads.people_in_areas(state, state.ids.areas.names, include_trainees).tolist():
+        total += each_area
     return total
