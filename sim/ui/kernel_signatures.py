@@ -62,7 +62,7 @@ def priced_need_signatures(types):
     """The baskets-priced-at-tiles kernel, which no game year calls (the year prices needs one basket at a time; see the plan): typed from
     the tables a batch makes (its helpers compile with it)."""
     from numba import typeof
-    from sim.economy.priced_need_tables import GOOD_ROWS, NEED_ROWS, PricedGoodRows, PricedNeedRows
+    from sim.economy.api import GOOD_ROWS, NEED_ROWS, PricedGoodRows, PricedNeedRows
     return {"sim.economy.priced_need_kernel.price_needs": [(
         typeof(NEED_ROWS.new_table(PricedNeedRows, 1)), typeof(GOOD_ROWS.new_table(PricedGoodRows, 1)), types.Array(types.float64, 2, "C"),
         types.float64, types.boolean)]}

@@ -24,6 +24,7 @@ from .economy import Economy
 from . import market_memory as market_memory_module
 from .market_memory import KEY_SEPARATOR, market_key
 from .market_table_specs import GOODS_MARKETS, GoodsMarkets      # the goods market table's spec and type (kernel_signatures declares its kernels from them)
+from .priced_need_tables import GOOD_ROWS, NEED_ROWS, PricedGoodRows, PricedNeedRows      # the priced-need batch's specs and types (kernel_signatures declares its kernel from them)
 from .opening_rate import opening_market_rate
 from .year_ledger_store import LedgerTables      # the year ledger's tables (kernel_signatures declares its kernels from a fresh one)
 from .metal_stock import COIN_WEAR_PER_YEAR
