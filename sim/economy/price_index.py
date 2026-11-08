@@ -33,7 +33,8 @@ class MarketLayout:
         self.goods_array = np.array(self.goods, dtype=object)       # the goods as an array, to gather the groups that have a price
         self.keys_grouped = [keys[position] for position in self.positions.tolist()]
         self.areas = [key.split(KEY_SEPARATOR, 1)[1] for key in self.keys_grouped]
-        self.good_of_place = [self.goods[code] for code in np.repeat(np.arange(len(self.goods)), counts).tolist()]
+        self.good_codes = np.repeat(np.arange(len(self.goods), dtype=np.int64), counts)      # per place: the number of its good in `goods`
+        self.good_of_place = [self.goods[code] for code in self.good_codes.tolist()]
         self.masks: Dict[Hashable, np.ndarray] = {}
         self.snapshot: Optional[tuple] = None       # the prices, weights and trade ages the kept answers were computed from
         self.answers: Dict[Hashable, Dict[str, float]] = {}

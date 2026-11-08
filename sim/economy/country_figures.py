@@ -8,11 +8,14 @@ import math
 import weakref
 from typing import Dict, List, Optional, Set, Tuple
 
+import numpy as np
+
 from sim.labour.api import people_by_trade_over
 
-from . import carried_book, households_basket, quiet_year
+from . import carried_book, households_basket, price_index, quiet_year
 from .home_scope import has_partners
 from .market_memory import KEY_SEPARATOR, YearView
+from .market_column_kernels import add_in_order_by_group
 from .national_prices import national_prices, national_wages
 from .price_index_masks import country_price_mask, labour_area_mask
 from .setup import LABOUR_AREA_PREFIX, labour_area
@@ -122,17 +125,34 @@ def traded_volumes(economy, country: Optional[str]) -> Dict[str, float]:
 
 
 def _traded_volumes(economy, country: Optional[str]) -> Dict[str, float]:
+    volumes = economy.record.goods.volumes
+    if not volumes:
+        return {}
+    table_of = getattr(economy.area_map, "tile_table", None)
+    if country is not None and table_of is None:
+        return _traded_volumes_by_market(economy, country)
+    layout = price_index.layout_of(tuple(volumes))
+    placed = np.fromiter(volumes.values(), dtype=np.float64, count=len(volumes))[layout.positions]
+    codes = layout.good_codes
+    if country is not None:
+        kept = country_price_mask(layout, table_of(), country_tiles(economy, country))
+        placed, codes = placed[kept], codes[kept]
+    totals, first_seen, appeared = add_in_order_by_group(codes, placed, len(layout.goods))
+    return {layout.goods[code]: float(totals[code]) for code in first_seen[:appeared].tolist()}
+
+
+def _traded_volumes_by_market(economy, country: Optional[str]) -> Dict[str, float]:
+    """`_traded_volumes` market by market, for an area map that is not an `AreaMap` (a test's stand-in)."""
     tiles = country_tiles(economy, country)
     totals: Dict[str, float] = {}
     areas_of: Dict[str, Dict[str, Set[TileId]]] = {}
     for key, volume in sorted(economy.record.goods.volumes.items()):
         good, area = key.split(KEY_SEPARATOR, 1)
-        if country is not None:
-            by_area = areas_of.get(good)
-            if by_area is None:
-                by_area = areas_of[good] = _area_tiles(economy, good)
-            if area in by_area and not (by_area[area] & tiles):
-                continue
+        by_area = areas_of.get(good)
+        if by_area is None:
+            by_area = areas_of[good] = _area_tiles(economy, good)
+        if area in by_area and not (by_area[area] & tiles):
+            continue
         totals[good] = totals.get(good, 0.0) + volume
     return totals
 
