@@ -43,7 +43,23 @@ def declared_signatures():
     }
     signatures.update(book_signatures(types))
     signatures.update(ledger_signatures(types))
+    signatures.update(compiled_tables_signatures(types))
     return signatures
+
+
+def compiled_tables_signatures(types):
+    """The shared table utilities and the documented example table, which no game year calls yet."""
+    from numba import typeof
+    from sim.compiled_tables.example_loans import LOANS, Loans
+    loans = typeof(LOANS.new_table(Loans, 1))
+    integer, number = types.int64, types.float64
+    return {
+        "sim.compiled_tables.sums.ordered_total": [(types.Array(number, 1, "C"), integer)],
+        "sim.compiled_tables.example_loans.lend": [(loans, integer, integer, number, number)],
+        "sim.compiled_tables.example_loans.interest_due": [(loans, integer)],
+        "sim.compiled_tables.example_loans.accrue_interest": [(loans,)],
+        "sim.compiled_tables.example_loans.owed_by_agent": [(loans, integer)],
+    }
 
 
 def book_signatures(types):
