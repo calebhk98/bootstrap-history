@@ -40,15 +40,37 @@ class LeftMarket:
         self.idle_years = idle_years   # years the market lacked bids or offers, before this year
         self.results = [result]
         self.bought = bought or {}     # buyer -> (units received, money paid) in the first round's settlement
-        self.bids = bids
+        self._bids = bids
         self.added_bids: list = []     # a market on the tables: the later rounds' bids that add demand (objects)
-        self._all_bids = list(bids) if rows is None else None     # the first round's bids and the later rounds' that add demand
+        self._all_bids = list(bids) if bids is not None and rows is None else None     # the first round's bids and the later rounds' that add demand
         self.rows = rows
         self.last_offered = result.offered_at_price     # on offer at the last round's price
         self.last_delivered = delivered                 # moved in the last round
         self.result = result
-        self.offers = offers
+        self._offers = offers
         self.last_price = last_price
+
+    @property
+    def bids(self):
+        """The first round's bids (built from the rows when read, for a market on the tables)."""
+        if self._bids is None:
+            self._bids = self.rows.bids_lazy()
+        return self._bids
+
+    @bids.setter
+    def bids(self, bids) -> None:
+        self._bids = bids
+
+    @property
+    def offers(self):
+        """The offers with what sold taken off (built from the rows when read, for a market on the tables)."""
+        if self._offers is None:
+            self._offers = self.rows.left_lazy()
+        return self._offers
+
+    @offers.setter
+    def offers(self, offers) -> None:
+        self._offers = offers
 
     @property
     def all_bids(self):
@@ -57,7 +79,7 @@ class LeftMarket:
             return self._all_bids
         if not self.added_bids:
             return self.bids
-        return LazyObjects(lambda: list(self.bids) + self.added_bids, len(self.bids) + len(self.added_bids))
+        return LazyObjects(lambda: list(self.bids) + self.added_bids, len(self.rows.bid_rows) + len(self.added_bids))
 
     @all_bids.setter
     def all_bids(self, bids) -> None:
@@ -69,7 +91,7 @@ class LeftMarket:
 
     def leave_units(self, units) -> None:
         """The units each offer left in `rows` has after the rounds (zero: sold out); the offers are built from them when read."""
-        self.offers = LazyObjects(lambda: self.rows.offer_objects(units), sum(1 for each in units if each > 0.0))
+        self._offers = LazyObjects(lambda: self.rows.offer_objects(units), sum(1 for each in units if each > 0.0))
 
     @property
     def unsold(self) -> float:

@@ -17,17 +17,22 @@ from .goods_market_rows import MarketRows
 from .goods_respend import offers_left
 from .goods_table_clear import clear_batch
 from .goods_table_group import GoodRows, batch_flags, note_stock_slots, rows_of_good
-from .goods_table_pack import BatchPack, pack_batch, price_scales
+from .goods_table_pack import pack_batch, price_scales
 from .goods_table_quotes import untraded_figures, untraded_result, wanted_by_market
 from .goods_table_results import TableClearing
-from .goods_table_views import LazyObjects, TableBatch
+from .goods_table_views import TableBatch
 from .goods_year_results import sold_by_result
 
-# One market after it cleared. `bids`, `offers` and `offers_left` are the lists the memory's notes and the curves still read
-# (lazy where the market is on the tables); `wanted` what its buyers asked for when it did not trade (None: read the result);
-# `has_*` the flags the market's memory is noted by; `rows` the market's rows when it is on the tables (None for objects).
-Cleared = namedtuple("Cleared", ("area", "market", "result", "bids", "offers", "offers_left", "wanted", "has_offers", "has_units",
-                                 "has_funded_bid", "rows"))
+# One market after it cleared. A market on the tables has its `rows` and no objects (`bids`, `offers` and `offers_left` are None:
+# `objects()` and the left market build them when something reads them); a market on the objects has the lists. `wanted` is what
+# its buyers asked for; `has_*` the flags the market's memory is noted by.
+class Cleared(namedtuple("Cleared", ("area", "market", "result", "bids", "offers", "offers_left", "wanted", "has_offers", "has_units",
+                                     "has_funded_bid", "rows"))):
+    __slots__ = ()
+
+    def objects(self):
+        """(the market's bids, all its offers) as objects: kept for a market on the objects, built from the rows for one on the tables."""
+        return (self.bids, self.offers) if self.rows is None else (self.rows.bids_lazy(), self.rows.offers_lazy())
 
 
 def flags_by_market(bids, offers, rows: GoodRows) -> tuple:
@@ -77,12 +82,6 @@ def _batched(context, good: str, rows: GoodRows, flags: numpy.ndarray):
     return TableBatch(allocated, pack, context.orders), pack, numpy.where(flags, numpy.cumsum(flags) - 1, -1)
 
 
-def _left_counts(batch: TableBatch, pack: BatchPack) -> numpy.ndarray:
-    """Per batched market: how many of its offers have units left."""
-    count = len(pack.offer_ptr) - 1
-    return numpy.bincount(numpy.repeat(numpy.arange(count), numpy.diff(pack.offer_ptr)), weights=batch.left > 0.0, minlength=count)
-
-
 def clear_good(context, good: str, good_id: int) -> List[Cleared]:
     """Clear the markets of `good` that have orders, one after another in area order."""
     orders = context.orders
@@ -92,10 +91,9 @@ def clear_good(context, good: str, good_id: int) -> List[Cleared]:
         return []
     note_stock_slots(offers, context.book, good_id, rows.offer_rows)
     flags = batch_flags(offers, context.book.agent_table.is_edge, rows, context.good_is_batchable(good))
-    batch = pack = slots = left_counts = untraded = None
+    batch = pack = slots = untraded = None
     if flags.any():
         batch, pack, slots = _batched(context, good, rows, flags)
-        left_counts = _left_counts(batch, pack)
     offered, units, funded = flags_by_market(bids, offers, rows)
     last_price = orders.memory_tables.goods_table.price[rows.markets]
     currency = context.setup.currency_id
@@ -103,16 +101,14 @@ def clear_good(context, good: str, good_id: int) -> List[Cleared]:
     for place, market in enumerate(rows.markets.tolist()):
         area = orders.area_name_of_market(market)
         bid_rows, offer_rows = rows.bids_of_market(place), rows.offers_of_market(place)
-        lazy_bids = LazyObjects(lambda rows=bid_rows: orders.bids_of(rows), len(bid_rows))
-        lazy_offers = LazyObjects(lambda rows=offer_rows: orders.offers_of(rows), len(offer_rows))
         flags_of = (offered[place], units[place], funded[place])
         slot = int(slots[place]) if flags[place] else -1
         if slot >= 0 and batch.traded_flag[slot]:
             result = TableClearing.of(batch, slot, good, area, currency)
             first, last = pack.offer_ptr[slot], pack.offer_ptr[slot + 1]
             left_rows = pack.offer_rows[first:last][batch.left[first:last] > 0.0]
-            cleared.append(Cleared(area, market, result, lazy_bids, lazy_offers, LazyObjects(result.offers_left, int(left_counts[slot])),
-                                   None, *flags_of, MarketRows(orders, bid_rows, left_rows)))
+            cleared.append(Cleared(area, market, result, None, None, None, result.demand_at_price, *flags_of,
+                                   MarketRows(orders, bid_rows, left_rows, offer_rows)))
         elif slot >= 0 or not units[place]:
             if untraded is None:
                 untraded = Untraded(bids, offers, rows, last_price)
@@ -121,9 +117,8 @@ def clear_good(context, good: str, good_id: int) -> List[Cleared]:
             result = untraded_result(good, area, currency, None if price != price else float(price), float(untraded.supply[place]),
                                      untraded.lowest_ask[place], untraded.lowest_clamped[place], untraded.best_bid[place],
                                      bool(untraded.funded[place]))
-            cleared.append(Cleared(area, market, result, lazy_bids, lazy_offers,
-                                   LazyObjects(lambda rows=left_rows: orders.offers_of(rows), len(left_rows)),
-                                   float(untraded.wanted[place]), *flags_of, MarketRows(orders, bid_rows, left_rows)))
+            cleared.append(Cleared(area, market, result, None, None, None, float(untraded.wanted[place]), *flags_of,
+                                   MarketRows(orders, bid_rows, left_rows, offer_rows)))
         else:
             bid_objects, offer_objects = orders.bids_of(bid_rows), orders.offers_of(offer_rows)
             after, result = _plain(context, good, area, _last_price(context, market), bid_objects, offer_objects)

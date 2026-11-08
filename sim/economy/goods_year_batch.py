@@ -41,5 +41,5 @@ def clear_markets(setup, record, view, arrays, costs, markets: Sequence[tuple]) 
     found = {}
     for good in sorted({market[0] for market in markets}):
         for each in goods_good_clear.clear_good(context, good, record.book.good_number(good)):
-            found[(good, each.area)] = (list(each.offers), each.result)
+            found[(good, each.area)] = (list(each.objects()[1]), each.result)
     return [found[(good, area)] for good, area, _bids, _offers, _last_price in markets]

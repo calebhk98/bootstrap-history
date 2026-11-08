@@ -41,14 +41,15 @@ OrderBook = Dict[Tuple[str, str], Tuple[List[Bid], List[Offer]]]
 PRICE_MEMORY_FLOOR_SHARE = 1e-9
 
 
-def add_orders(book, orders: AgentOrders) -> None:
-    if isinstance(book, goods_order_book.GoodsOrderBook):
-        book.add_orders(orders)
+def add_orders(order_book, orders: AgentOrders) -> None:
+    """The agent's goods bids and offers added to the book of orders (a `GoodsOrderBook`, or a `{(good, area): (bids, offers)}` dict)."""
+    if isinstance(order_book, goods_order_book.GoodsOrderBook):
+        order_book.add_orders(orders)
         return
     for bid in orders.bids:
-        book.setdefault((bid.good, bid.area), ([], []))[0].append(bid)
+        order_book.setdefault((bid.good, bid.area), ([], []))[0].append(bid)
     for offer in orders.offers:
-        book.setdefault((offer.good, offer.area), ([], []))[1].append(offer)
+        order_book.setdefault((offer.good, offer.area), ([], []))[1].append(offer)
 
 
 def cohort_orders(setup, record, view, ledger: YearLedger, order_book: OrderBook, own_options=None) -> List:
@@ -220,12 +221,11 @@ def clear_goods(setup, record, view, area_map, order_book, plans, ledger: YearLe
             ledger.note_clearing(each.result, delivered)
             idle_years = goods_good_clear.note_idle_years(record.memory, key, each)
             left_markets[(good, each.area)] = goods_respend_year.LeftMarket(
-                each.bids, each.result, each.offers_left,
-                record.memory.prices.get(key), delivered,
+                each.bids, each.result, each.offers_left, record.memory.prices.get(key), delivered,
                 each.wanted if each.wanted is not None else wanted_in_round(each.bids, each.offers, each.result), idle_years, bought,
                 each.rows)
             if each.area in kept:
-                record.goods.curves[key] = market_curves.summarize(each.bids, each.offers)
+                record.goods.curves[key] = market_curves.summarize(*each.objects())
     goods_respend_year.respend(setup, record, view, ledger, left_markets,
                                lambda cohort: cohort_basket(setup, record, cohort), orders)
     for market_id, market in left_markets.items():

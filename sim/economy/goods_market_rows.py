@@ -10,6 +10,7 @@ from typing import List, Sequence
 import numpy
 
 from .goods_market import _quantity, quantity_at
+from .goods_table_views import LazyObjects
 from .types import EDGE_EXTERNAL, QUOTE_BEST_UNFILLED_BID, QUOTE_COST_COVERING, Bid, Offer, Quote
 
 LeftOffer = namedtuple("LeftOffer", ("seller", "tile", "reservation_price", "quantity"))
@@ -67,12 +68,27 @@ def _wanted(lists: BidLists, row: int, price: float) -> float:
 
 
 class MarketRows:
-    """The rows of a cleared market: `bid_rows` (arrival order) and the rows of the offers left in seller-and-tile order."""
+    """The rows of a cleared market: `bid_rows` and `offer_rows` (arrival order) and the rows of the offers left (in the order
+    the old lists kept them)."""
 
-    def __init__(self, orders, bid_rows: Sequence[int], left_rows: Sequence[int]):
+    def __init__(self, orders, bid_rows: Sequence[int], left_rows: Sequence[int], offer_rows: Sequence[int] = ()):
         self.orders = orders
         self.bid_rows = [int(row) for row in bid_rows]
         self.left_rows = [int(row) for row in left_rows]
+        self.offer_rows = [int(row) for row in offer_rows]
+
+    def bids_lazy(self) -> LazyObjects:
+        """The market's bids as objects, built when first read."""
+        return LazyObjects(lambda: self.orders.bids_of(self.bid_rows), len(self.bid_rows))
+
+    def offers_lazy(self) -> LazyObjects:
+        """All the market's offers (with the reservations the clearing chose) as objects, built when first read."""
+        return LazyObjects(lambda: self.orders.offers_of(self.offer_rows), len(self.offer_rows))
+
+    def left_lazy(self) -> LazyObjects:
+        """The offers with units left, with those units, as objects, built when first read."""
+        return LazyObjects(lambda: self.orders.offers_of(self.left_rows, self.orders.tables()[1].quantity_left[self.left_rows]),
+                           len(self.left_rows))
 
     def left_offers(self, lists: OfferLists) -> List[LeftOffer]:
         """The offers left, as (seller, tile, reservation, units left) in seller-and-tile order."""

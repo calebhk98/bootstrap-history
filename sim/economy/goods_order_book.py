@@ -28,13 +28,15 @@ _BID_FIGURES = 6
 UNCLEARED = -1
 
 
-def blank_results(table, first: int, last: int) -> None:
-    """Rows `first .. last - 1` of a bids or offers table have not been cleared: positions and ranks are -1."""
-    if hasattr(table, "position"):
-        table.position[first:last] = UNCLEARED
-    else:
-        table.rank[first:last] = UNCLEARED
-        table.stock_slot[first:last] = UNCLEARED
+def blank_bid_results(table, first: int, last: int) -> None:
+    """Rows `first .. last - 1` of the bids table have not been cleared: no place in clearing order."""
+    table.position[first:last] = UNCLEARED
+
+
+def blank_offer_results(table, first: int, last: int) -> None:
+    """Rows `first .. last - 1` of the offers table have not been cleared: no rank, and no stock slot found yet."""
+    table.rank[first:last] = UNCLEARED
+    table.stock_slot[first:last] = UNCLEARED
 
 
 class _Sink:
@@ -99,7 +101,29 @@ class GoodsOrderBook:
         return found
 
     def market_ids(self, goods: Sequence[str], areas: Sequence[str]) -> List[int]:
-        return [self.market_id(good, area) for good, area in zip(goods, areas)]
+        """`market_id` of each (good, area) pair, a market new to the year numbered in the order it first appears."""
+        pairs = list(zip(goods, areas))
+        known = self._markets
+        for pair in dict.fromkeys(pairs):
+            if pair not in known:
+                self.market_id(*pair)
+        return list(map(known.__getitem__, pairs))
+
+    def _numbers_of(self, kind: int, names: Sequence[str], admit) -> List[int]:
+        """The ids of the names: those new to the year are looked up (admitted by `admit`, in name order) once, not once per order."""
+        cache = self._numbers[kind]
+        for name in sorted(name for name in dict.fromkeys(names) if name not in cache):
+            cache[name] = admit(name)
+        return list(map(cache.__getitem__, names))
+
+    def agent_ids_of(self, names: Sequence[str]) -> List[int]:
+        return self._numbers_of(0, names, self.book.agent_number)
+
+    def good_ids_of(self, names: Sequence[str]) -> List[int]:
+        return self._numbers_of(1, names, self.book.good_number)
+
+    def tile_ids_of(self, names: Sequence[str]) -> List[int]:
+        return self._numbers_of(2, names, self.book.tile_number)
 
     # ---- legacy doors (objects) ------------------------------------------------------------------
 
@@ -132,9 +156,9 @@ class GoodsOrderBook:
         if not waiting:
             return
         self._waiting_bids = []
-        buyer = [self.agent_id(bid.buyer) for bid, _source in waiting]
-        good = [self.good_id(bid.good) for bid, _source in waiting]
-        tile = [self.tile_id(bid.tile) for bid, _source in waiting]
+        buyer = self.agent_ids_of([bid.buyer for bid, _source in waiting])
+        good = self.good_ids_of([bid.good for bid, _source in waiting])
+        tile = self.tile_ids_of([bid.tile for bid, _source in waiting])
         market = self.market_ids([bid.good for bid, _source in waiting], [bid.area for bid, _source in waiting])
         figures = numpy.array([(bid.floor_quantity, bid.flexible_quantity, bid.reference_price, bid.elasticity, bid.budget, bid.maximum_price)
                                for bid, _source in waiting], dtype=numpy.float64).reshape(-1, _BID_FIGURES)
@@ -145,9 +169,9 @@ class GoodsOrderBook:
         if not waiting:
             return
         self._waiting_offers = []
-        seller = [self.agent_id(offer.seller) for offer, _source in waiting]
-        good = [self.good_id(offer.good) for offer, _source in waiting]
-        tile = [self.tile_id(offer.tile) for offer, _source in waiting]
+        seller = self.agent_ids_of([offer.seller for offer, _source in waiting])
+        good = self.good_ids_of([offer.good for offer, _source in waiting])
+        tile = self.tile_ids_of([offer.tile for offer, _source in waiting])
         market = self.market_ids([offer.good for offer, _source in waiting], [offer.area for offer, _source in waiting])
         figures = numpy.array([(offer.quantity, offer.reservation_price) for offer, _source in waiting], dtype=numpy.float64).reshape(-1, 2)
         self._write_offers(seller, good, tile, market, figures[:, 0], figures[:, 1], [source for _offer, source in waiting])
@@ -181,7 +205,7 @@ class GoodsOrderBook:
         table.source[first:last] = source
         table.quantity_bought[first:last] = 0.0
         table.cost[first:last] = 0.0
-        blank_results(table, first, last)
+        blank_bid_results(table, first, last)
         table.row_count[0] = last
 
     def _write_offers(self, seller, good, tile, market, quantity, reservation_price, source) -> None:
@@ -199,7 +223,7 @@ class GoodsOrderBook:
         table.ask[first:last] = 0.0
         table.quantity_sold[first:last] = 0.0
         table.quantity_left[first:last] = table.quantity[first:last]
-        blank_results(table, first, last)
+        blank_offer_results(table, first, last)
         table.row_count[0] = last
 
     def append_rows(self, name: str, **columns) -> int:
@@ -218,7 +242,8 @@ class GoodsOrderBook:
 
     def tables(self):
         """(bids, offers) with every waiting object written in."""
-        self.flush()
+        if self._waiting_bids or self._waiting_offers:
+            self.flush()
         return self.bids, self.offers
 
     def goods_with_orders(self) -> set:
