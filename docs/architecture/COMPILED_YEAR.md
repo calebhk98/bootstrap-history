@@ -209,6 +209,15 @@ name. The packed arrays equal the object pack's byte for byte (`test_goods_respe
 sorted-object rules on random inputs). `year_goods._received_price` reads the tuple and the rows. `standing_demand.with_standing_bids`
 hands the year's `MarketBids` on when no standing bid joins a market.
 
+**The goods record's stores and the year's market table.** `record.goods.volumes`, `unsold`, `unmet` and `margin_years` are
+`goods_market_column.MarketColumn`s (`MarketFigures` keyed by `good|area`, indexed by the memory's goods-market numbering, `bind_markets`
+on the record): `_record_year_markets` writes each with one `replace_rows`, and `entry_plan_pack.traded_grid`,
+`entry_margin_tables._streaks_in`, `goods_table_pack.market_figures` and `entry_unmet.markets_of` read them with `take` or the ledger's
+`member_columns`. Iteration lists the markets in (good, area) order, as the dictionaries written in sorted order did. Each market's
+year figures are a row of `goods_year_markets.GoodsYearMarkets` (`LeftMarket` is a view of its row): `clear_goods` fills a good's rows
+once, `goods_respend_unpack._add_rounds` adds the respend's totals in one scatter, and `_remember_markets` and `_record_year_markets` read
+the columns. Tests: `test_goods_market_column.py`, `test_goods_year_markets.py`.
+
 A producer's turn reads its runs from the plan table's column and its hired hours from the ledger's pair table in one kernel call
 (`goods_production_reads.py`).
 
@@ -683,12 +692,13 @@ list lags the code.
   taken from the cash the earlier stakes left, the entrant's loan request, `peers_of_recipe` for the crew) is a greedy loop over `Producer`
   objects in `record.producers`, which every phase reads as a dictionary of records; it needs a column store of producers. The per-recipe reads
   of `EntryTables` (`_site_of`, `_ensure_crew`: the people allowed by country, the yield row, the crew's practice) are Python per recipe; they
-  need recipe-by-tile and recipe-by-trade tables built once per setup and updated when a country learns a technique. The `unmet_by_market`
-  dictionary and the saved `margin_years` and `volumes` dictionaries are read once per phase through their keys.
-- **`record.goods.volumes`, `unsold` and `unmet` as columns.** The stores are saved dictionaries keyed by `market_key` that many readers
-  and the area-redraw move; a column store needs a dict-like view that saves and loads and a kernel for `sized_runs` to read it, which
-  together are worth less than the glue. A derived read is cheap without changing the save:
-  `[volumes.get(name, 0.0) for name in memory.tables.goods_markets.name_list]` scattered by `year_arrays_memory.market_cells`.
+  need recipe-by-tile and recipe-by-trade tables built once per setup and updated when a country learns a technique. The unmet demand, `margin_years` and `volumes` are columns that
+  entry reads whole (see the goods items below).
+- **`record.goods.curves`.** `volumes`, `unsold`, `unmet` and `margin_years` are columns of the memory's goods-market numbering
+  (`goods_market_column.MarketColumn`, a `MarketFigures` keyed by market name; saved by name, carried over an area redraw by the memory's
+  remap, dict-like for the UI and tests). Entry's traded grid, margin streaks, the batch's market sizes and the unmet-demand plans read
+  them whole. `curves` holds one book summary per market, not a number, and is still a dictionary; `entry_year._traded_volume`,
+  `notional` and `country_figures` still read single keys.
 - **Per-good price readers.** `entry_year._traded_volume`, `producers.paid_input_prices` and `next_expectations` read many keys a year,
   each a dict lookup; the year view has no cleared-price block. `producers.live_input_prices_at` and `live_wages_at` need the recipe
   cost grid.
@@ -696,10 +706,16 @@ list lags the code.
   The mint keeps one `ClearingResult` per market of the coin metal in `ledger.mint_takes`; the watchers' buy fills are `Fill` objects (`bought_by`, only for markets a merchant or the state bought in);
   `LeftMarket` and its `bought` mapping are built from columns when a market not on the tables asks.
 - **The goods side's `ClearingResult`s and `LeftMarket`s.** The year ledger is handed `ClearingResult`s (`note_clearing`) for markets not on
-  the tables. `clear_good` builds one `Cleared`, `MarketRows` and (in `clear_goods`) `LeftMarket` per market; `_remember_markets`,
-  `_record_year_markets`, `year_bids.build` and the respend pack and unpack read them one market at a time. The keystone is `LeftMarket` as
-  columns (first-round quantity and price from the batch, later rounds' rows from the respend kernel, delivered, idle years, last price) with
-  the dictionary stores of `record.goods` derived from them; with it each of those loops becomes one kernel over the markets.
+  the tables. A market's year figures (delivered, wanted, last offered and delivered, idle years, remembered price) are one row of
+  `goods_year_markets.GoodsYearMarkets`, filled once per good and added to by the respend's answer in one scatter; the year's records and the
+  memory's notes read those columns whole. What remains per market is the object work: `clear_good` builds one `Cleared` and `MarketRows`
+  per market and `clear_goods` one `LeftMarket` (the views of a row plus the market's bids, offers, result, later rounds and `bought`);
+  `_remember_markets` (the received price over the first round and the later rounds, `wanted_at` over the market's bids, the quote of a market
+  that did not trade), `year_bids.build`, the respend pack and unpack, `note_clearings` and `settle_good` read them one market at a time. They
+  need the rest of the keystone: the first-round result (quantity, price, demand, offered), the later rounds and the bid and offer rows of
+  every market as columns with pointers (the batch's pair and order arrays already hold them for a traded market), written by the clearing
+  kernels and the respend kernel, so that `LeftMarket` exists only on demand for the UI and tests and each of those loops becomes one kernel
+  over the markets.
 - **Tool wear and fallbacks in the plan kernel.** `plan_year` sends a producer whose recipe has tool wear or fallbacks, or a zero entry, to
   `producers.plan`; `plan_kernel.plan_rows` would need the fallbacks' bids and `tool_fallback.value_in_use` ceilings. `_tax_in_kind` builds
   `YearFacts` dictionaries for the producers on home tiles when a tax is paid in kind.
