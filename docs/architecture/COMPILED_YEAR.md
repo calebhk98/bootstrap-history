@@ -585,9 +585,20 @@ the columns grow with the numbering; a merchant made alone numbers its own marke
 - The save writes the figures by market name in the order of the `(good, area id)` keys (`sorted_named`), so a save is byte for byte what
   dictionaries give; a load hands them back by name (`hold_named`) and they are indexed once, by the record's numbering.
 
-`merchants.dispatch` is a loop over hauls with the crew and dues arithmetic, and `merchants_book.search` is the route kernel itself; no
-per-market column read is left in them to convert. Measure with
-`python3 tools/measure/function_times.py SAVE sim.economy.merchants:learn_year sim.economy.merchants:close_year`.
+- `merchants_batch.prepare` (called by `merchants_plan.prepare_rows` from `lending.merchant_requests` and `year_order_sources.merchant_orders`)
+  searches the candidate rows of every merchant of a pass in two kernel calls (`merchants_batch_kernel.search_blocks`, which searches
+  once for the merchants that count the same prices in a good and redoes only the (merchant, good) cells that needed unknown holding
+  years, then `sorted_rows`, the two stable sorts of `numpy.lexsort`); `merchants_plan` takes a merchant's rows from the pass when its rate,
+  home tile and expected prices are the ones searched. `RouteBook.nearest_flat` keeps each area's cheapest haul out.
+- `merchants_book.route_pass` reads the memory's price column by slot (`FloatStore.values_in_slots`, `YearView.prices_by_slot`); a view
+  without that method is read good by good as before.
+
+`merchants.dispatch` is a loop over hauls with the crew and dues arithmetic; its per-pair inputs (crew rows by key string, dues by holder,
+wear by carrier good, the merchant's `routes` dictionary of legs, `in_transit` shipments, `price_history` lists) are Python objects of the
+`Merchant` record, as are `orders` (`routes`, the `Bid` and `Offer` it hands the order rows), `close_year` and `heard_prices`. They need a
+merchant table (columns for the purse and base, ragged columns for legs, shipments and price histories, interned crew keys and carrier
+goods) before each is one kernel over the merchants. Measure with
+`python3 tools/measure/function_times.py SAVE sim.economy.merchants:learn_year sim.economy.merchants:close_year sim.economy.merchants_batch:prepare`.
 
 ## Cached views
 
