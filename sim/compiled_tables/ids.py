@@ -32,6 +32,11 @@ class IdTable:
     def names(self) -> Tuple[str, ...]:
         return tuple(self._names)
 
+    @property
+    def numbers(self):
+        """The name-to-number dict itself, for a hot read (`numbers.get(name)`); callers must not change it."""
+        return self._number_of
+
     def admit(self, names: Iterable[str]) -> numpy.ndarray:
         """Number the names not seen before (sorted among themselves), and give every given name's number, in the given order."""
         given = list(names)

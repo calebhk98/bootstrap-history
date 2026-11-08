@@ -3,19 +3,29 @@
 Prices, wages and rates are last year's outcomes; holdings are now. An agent planning this year
 sees nothing of this year's clearing, which is where the economy's lags come from.
 """
+import dataclasses
 from dataclasses import dataclass, field
 from typing import ClassVar, Dict, Optional, Set, Tuple
+
+import numpy
 
 from sim.constants import declare
 
 from sim.book import Book
 from .currency import update_expected_inflation
+from .market_store import CountStore, FloatStore, KindStore, MarketStore, labour_wage_store
+from .market_table_kernels import markets_traded_within, note_year_traded
+from .market_table_specs import (CLEARED_PRICES, HELD_QUOTE_KIND, HELD_TRADE_AGE, HELD_YEARS_WITHOUT_BIDS, HELD_YEARS_WITHOUT_OFFERS, KEY_SEPARATOR,
+                                 PRICES, TRADE_AGE, USUAL_PRICES, VOLUME_WEIGHTS, YEARS_WITHOUT_BIDS, YEARS_WITHOUT_OFFERS)
+from .market_tables import MarketTables
+from .record_plain import plain
 from .types import QUOTE_LOWEST_UNFILLED_ASK, QUOTE_OPENING_ESTIMATE, AgentId, AreaId, CurrencyId, GoodId, TileId, TradeId
 
-KEY_SEPARATOR = "|"
 PRICE_LEVEL_FLOOR_RATIO = 1e-9   # a year in which the median price fell to nothing still leaves a positive level to chain from
 PRICE_SMOOTHED_TRADE = "smoothed_trade"     # the kind of the price remembered for a market that traded: the old price moved toward the clearing price; any other kind is a quote or an estimate
 PRICE_REMEMBERED = "remembered_price"   # a price from a trade of some earlier year that nothing since has replaced or quoted
+
+_OFFERED_QUOTE_KINDS = (QUOTE_LOWEST_UNFILLED_ASK, QUOTE_OPENING_ESTIMATE)    # the quote kinds a buyer can buy at
 
 _writes = [0]      # bumped by each write to the prices, wages, rates and price levels a view's cached reads come from
 _age_and_kind_writes = [0]      # bumped by each in-place write to the trade ages and quote kinds (a redraw replaces the stores whole)
@@ -28,6 +38,12 @@ def note_written() -> None:
 def age_and_kind_stamp() -> int:
     """Changes with every in-place write to the trade ages and quote kinds, and to nothing else."""
     return _age_and_kind_writes[0]
+
+
+def note_age_and_kind_written() -> None:
+    """The trade ages and quote kinds were replaced whole (an area redraw): drop what was kept from them."""
+    _age_and_kind_writes[0] += 1
+    note_written()
 
 
 def written_stamp() -> int:
@@ -65,6 +81,22 @@ USUAL_PRICE_SPEED = declare(
 
 
 
+STORE_NAMES = ("prices", "usual_prices", "cleared_prices", "volume_weights", "trade_age", "years_without_bids",
+               "years_without_offers", "quote_kinds", "wages")    # the fields that are views of the market tables (`market_store.py`)
+
+
+def make_stores(tables: MarketTables) -> Dict[str, MarketStore]:
+    """One store per name in STORE_NAMES, each a view of a column of `tables`."""
+    return {
+        "prices": FloatStore(tables, PRICES, "price"), "usual_prices": FloatStore(tables, USUAL_PRICES, "usual_price"),
+        "cleared_prices": FloatStore(tables, CLEARED_PRICES, "cleared_price"),
+        "volume_weights": FloatStore(tables, VOLUME_WEIGHTS, "volume_weight"),
+        "trade_age": CountStore(tables, TRADE_AGE, "trade_age", HELD_TRADE_AGE),
+        "years_without_bids": CountStore(tables, YEARS_WITHOUT_BIDS, "years_without_bids", HELD_YEARS_WITHOUT_BIDS),
+        "years_without_offers": CountStore(tables, YEARS_WITHOUT_OFFERS, "years_without_offers", HELD_YEARS_WITHOUT_OFFERS),
+        "quote_kinds": KindStore(tables), "wages": labour_wage_store(tables)}
+
+
 def market_key(first: str, area: AreaId) -> str:
     """One string key per (good or trade, area), so the memory saves as plain JSON."""
     return first + KEY_SEPARATOR + area
@@ -94,6 +126,52 @@ class MarketMemory:
     years_without_offers: Dict[str, int] = field(default_factory=dict)   # market_key(good, area); absent: offers last year
     cleared_prices: Dict[str, float] = field(default_factory=dict)      # market_key(good, area); absent: nothing traded last year
     quote_kinds: Dict[str, str] = field(default_factory=dict)           # market_key(good, area); what `prices` holds when nothing traded
+
+    def __post_init__(self) -> None:
+        given = {name: self.__dict__[name] for name in STORE_NAMES}     # the dicts the constructor was handed
+        self.__dict__["tables"] = MarketTables()
+        self.__dict__.update(make_stores(self.tables))
+        for name, figures in given.items():
+            self._load_store(name, figures)
+
+    def __setattr__(self, name, value) -> None:
+        if name in STORE_NAMES and "tables" in self.__dict__:
+            if value is not self.__dict__[name]:
+                self._load_store(name, value)
+                note_written()
+                if name in ("trade_age", "quote_kinds"):
+                    _age_and_kind_writes[0] += 1
+        else:
+            object.__setattr__(self, name, value)
+
+    def _load_store(self, name: str, figures) -> None:
+        """Make the store hold exactly `figures` (a mapping by market key), in its order; new markets are numbered first as one batch."""
+        if name == "wages":
+            self.tables.admit_labour_markets(figures)
+        else:
+            self.tables.admit_goods_markets(figures)
+        self.__dict__[name].replace_with(figures)
+
+    def to_plain(self) -> Dict[str, object]:
+        """The memory as plain data for a save: the stores as dicts in their order, and the market numberings."""
+        saved: Dict[str, object] = {}
+        for each in dataclasses.fields(self):
+            value = getattr(self, each.name)
+            saved[each.name] = dict(value.items()) if isinstance(value, MarketStore) else plain(value)
+        saved["market_ids"] = self.tables.state()
+        return saved
+
+    @classmethod
+    def from_plain(cls, saved: Dict[str, object]) -> "MarketMemory":
+        """The memory a save stored: the numberings first, so the markets have the numbers they had, then the stores."""
+        saved = dict(saved)
+        numbering = saved.pop("market_ids", None)
+        figures = {name: saved.pop(name, {}) for name in STORE_NAMES}
+        memory = cls(**saved)
+        memory.tables.load_state(numbering)
+        for name, each in figures.items():
+            memory._load_store(name, each)
+        return memory
 
     def advance_year(self) -> None:
         self.year += 1
@@ -159,8 +237,14 @@ class MarketMemory:
         stamp = (_writes[0], len(self.wages))
         kept = self.__dict__.get("_wage_trades")     # not a field: a read kept until the wages are written to
         if kept is None or kept[0] != stamp:
-            kept = self.__dict__["_wage_trades"] = (stamp, frozenset(key.split(KEY_SEPARATOR, 1)[0] for key in self.wages))
+            kept = self.__dict__["_wage_trades"] = (stamp, self._trades_with_a_wage())
         return trade in kept[1]
+
+    def _trades_with_a_wage(self) -> frozenset:
+        labour = self.tables.labour_table
+        rows = ~numpy.isnan(labour.wage[:labour.row_count[0]])
+        names = self.tables.trades.names
+        return frozenset(names[number] for number in numpy.unique(labour.first[:labour.row_count[0]][rows]).tolist())
 
     def opening_wage_level(self, money: CurrencyId) -> float:
         """Today's money per opening-year money for a wage the setup holds: the level before the last rebase times the
@@ -170,13 +254,19 @@ class MarketMemory:
     def price_kind(self, key: str) -> Optional[str]:
         """What the price remembered for a market is: PRICE_SMOOTHED_TRADE when it traded last year, else the quote's
         kind, else the opening estimate no clearing has replaced; None when the market has no price."""
-        if self.traded_within(key, 0):
-            return PRICE_SMOOTHED_TRADE
-        if key not in self.prices:
+        row = self.tables.goods_numbers.get(key)
+        if row is None:
             return None
-        if key in self.quote_kinds:
-            return self.quote_kinds[key]
-        return PRICE_REMEMBERED if key in self.trade_age else QUOTE_OPENING_ESTIMATE
+        markets = self.tables.goods_table
+        held = markets.held.item(row)
+        if held & HELD_TRADE_AGE and markets.trade_age.item(row) <= 0:
+            return PRICE_SMOOTHED_TRADE
+        price = markets.price.item(row)
+        if price != price:
+            return None
+        if held & HELD_QUOTE_KIND:
+            return self.tables.kinds.name(markets.quote_kind.item(row))
+        return PRICE_REMEMBERED if held & HELD_TRADE_AGE else QUOTE_OPENING_ESTIMATE
 
     def offered_price(self, key: str) -> Optional[float]:
         """What a buyer can see to buy at: a price the market traded at, an ask still posted, or the opening's own
@@ -184,9 +274,19 @@ class MarketMemory:
         (nothing is on offer at those). Eurace's consumers see the mall's current prices and the quality of the goods
         (the logit weighs both; Cons_Goods/Household_Consumer_Functions.c), nothing remembered (Complaint 642); this
         model has the price only."""
-        if self.price_kind(key) in (PRICE_SMOOTHED_TRADE, QUOTE_LOWEST_UNFILLED_ASK, QUOTE_OPENING_ESTIMATE):
-            return self.prices.get(key)
-        return None
+        row = self.tables.goods_numbers.get(key)
+        if row is None:
+            return None
+        markets = self.tables.goods_table
+        price = markets.price.item(row)
+        if price != price:
+            return None
+        held = markets.held.item(row)
+        if held & HELD_TRADE_AGE and markets.trade_age.item(row) <= 0:
+            return price
+        if held & HELD_QUOTE_KIND:
+            return price if self.tables.kinds.name(markets.quote_kind.item(row)) in _OFFERED_QUOTE_KINDS else None
+        return None if held & HELD_TRADE_AGE else price     # a remembered price is nothing on offer; the opening's estimate is
 
     def _kept_read(self, name: str, compute):
         """`compute()` once per `name` until the memory is written to: the stamp is the write count and the identity and size
@@ -226,8 +326,13 @@ class MarketMemory:
 
     def goods_traded_within(self, years: int) -> Set[str]:
         """Goods with a market that cleared at most `years` years ago."""
-        return set(self._kept_read(("traded_goods", years), lambda: frozenset(
-            key.split(KEY_SEPARATOR, 1)[0] for key in self.trade_age if self.traded_within(key, years))))
+        return set(self._kept_read(("traded_goods", years), lambda: self._goods_traded_within(years)))
+
+    def _goods_traded_within(self, years: int) -> frozenset:
+        markets = self.tables.goods_table
+        traded = markets_traded_within(markets, years)
+        names = self.tables.goods.names
+        return frozenset(names[number] for number in numpy.unique(markets.first[:markets.row_count[0]][traded]).tolist())
 
     def note_cleared(self, key: str, price: Optional[float], quantity: float) -> None:
         """Keep the price a market cleared at when it traded; forget it when it did not."""
@@ -248,16 +353,17 @@ class MarketMemory:
     def traded_within(self, key: str, years: int) -> bool:
         """The one meaning of "traded": the market cleared at most `years` years ago (0: last year). A market that
         never cleared, whatever estimate or quote its price is, has not traded."""
-        age = self.trade_age.get(key)
-        return age is not None and age <= years
+        row = self.tables.goods_numbers.get(key)
+        if row is None:
+            return False
+        markets = self.tables.goods_table
+        return markets.held.item(row) & HELD_TRADE_AGE != 0 and markets.trade_age.item(row) <= years
 
     def note_trading(self, traded_keys) -> None:
         """A year ends: the markets that cleared are current, the rest are a year older. A market that
         has never cleared has no age; its remembered price is an opening estimate, not a market's."""
-        for key in list(self.trade_age):
-            self.trade_age[key] += 1
-        for key in traded_keys:
-            self.trade_age[key] = 0
+        rows = numpy.array([self.tables.goods_row_for_write(key) for key in traded_keys], dtype=numpy.int64)
+        note_year_traded(self.tables.goods_table, rows, self.tables.next_order, self.tables.member_count)
         _age_and_kind_writes[0] += 1
         note_written()
 
@@ -308,8 +414,7 @@ class YearView:
         keys = self._keys_of_good.get(good)
         if keys is None or keys[0] is not areas:
             keys = self._keys_of_good[good] = (areas, [good + KEY_SEPARATOR + area.area_id for area in areas])
-        prices = self._memory.prices
-        return list(map(prices.get, keys[1]))
+        return self._memory.prices.get_many(keys[1], None)
 
     def price(self, good: GoodId, area: AreaId) -> Optional[float]:
         """The planning price: the remembered price, last year's trade blended with the older price in proportion to

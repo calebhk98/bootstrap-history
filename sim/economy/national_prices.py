@@ -1,12 +1,12 @@
 """A good's one price over its market areas, and a trade's one wage over its labour areas."""
 import math
-from itertools import repeat
 from typing import Callable, Dict, Hashable, List, Mapping, Optional, Set, Tuple
 
 import numpy as np
 
 from . import price_index
 from .market_memory import KEY_SEPARATOR, RECENT_TRADE_YEARS
+from .market_store import figures_for
 
 
 def usual_volumes(record) -> Mapping[str, float]:
@@ -40,8 +40,8 @@ def national_prices(record, keep: Optional[Callable[[str, str], bool]] = None, k
         return {}
     keys = layout.keys
     weights = usual_volumes(record)
-    snapshot = (tuple(memory.prices.values()), tuple(map(weights.get, keys, repeat(0.0))),
-                tuple(map(memory.trade_age.get, keys, repeat(RECENT_TRADE_YEARS + 1))))
+    snapshot = (tuple(memory.prices.values()), tuple(figures_for(weights, keys, 0.0)),
+                tuple(figures_for(memory.trade_age, keys, RECENT_TRADE_YEARS + 1)))
     if snapshot != layout.snapshot:     # the remembered figures moved since the answers were kept
         layout.snapshot, layout.answers = snapshot, {}
     answer_key = "all" if keep is None else keep_token

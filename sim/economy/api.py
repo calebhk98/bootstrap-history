@@ -23,6 +23,7 @@ from .currency import currency_from_coin_standard
 from .economy import Economy
 from . import market_memory as market_memory_module
 from .market_memory import KEY_SEPARATOR, market_key
+from .market_table_specs import GOODS_MARKETS, GoodsMarkets      # the goods market table's spec and type (kernel_signatures declares its kernels from them)
 from .opening_rate import opening_market_rate
 from .metal_stock import COIN_WEAR_PER_YEAR
 from .notional import costing_wages, shown_prices, shown_prices_with_kinds

@@ -62,6 +62,11 @@ price over a few bids each) written as one large kernel and as four helpers
   optimisation does have the calls). LLVM inlines the helpers, so the split is free.
 - Cost of a helper that is *not* inlined is a call, not a Python boundary. The one thing that does cost is rebuilding a table value
   in a loop (section 4).
+- A helper that takes a **wide table** per row is the same cost: the market memory's goods table has 28 columns, and a per-row
+  helper `kind_class(markets, class_of_kind, row)` made `offered_prices` over 21,000 rows take 5.7 ms; reading the columns
+  into locals once (`price, held = markets.price, markets.held`) and passing scalars to the helpers took 0.03 ms
+  (`sim/economy/market_table_kernels.py`; time a call with `perf_counter`). So: a kernel unpacks the columns it needs at the top,
+  and its helpers take numbers and single arrays, not the table.
 
 ## 3. Ids: `IdTable`
 
