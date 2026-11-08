@@ -8,14 +8,14 @@ rule of `merchants.candidate_routes`. The pack never reaches a saved record.
 """
 import weakref
 from itertools import repeat
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Dict, List, Mapping, Optional, Tuple
 
 import numpy as np
 
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 
-from . import merchants_book_kernel, merchants_search
+from . import merchants_book_kernel, merchants_kernel, merchants_search
 from .merchant_figures import MarketFigures, market_name
 
 _books: "weakref.WeakKeyDictionary" = weakref.WeakKeyDictionary()
@@ -79,7 +79,7 @@ class RouteBook:
         for (good, area_id), slot in self.slot_of.items():
             self.slot_names[slot] = market_name((good, area_id))
         self.scale = None
-        self.cost_flat = self.years_flat = None
+        self.cost_flat = self.nearest_flat = self.years_flat = None
         self.refresh(carriage)
 
     def refresh(self, carriage) -> None:
@@ -90,6 +90,8 @@ class RouteBook:
         self.scale = scale
         self.cost_flat = (np.concatenate([pack.scaled_cost(carriage).ravel() for pack in self.packs])
                           if self.packs else np.zeros(0, np.float64))
+        self.nearest_flat = (np.concatenate([merchants_kernel.nearest_costs(pack.scaled_cost(carriage)) for pack in self.packs])
+                             if self.packs else np.zeros(0, np.float64))
         self.years_flat = (np.concatenate([pack.years.ravel() for pack in self.packs])
                            if self.packs else np.zeros(0, np.int64))
 
@@ -143,10 +145,14 @@ class RoutePass:
     book: RouteBook
     view_prices: np.ndarray
     carriage: object
+    prepared: dict = field(default_factory=dict)       # rows searched ahead for some merchants (`merchants_batch`), by agent id
 
 
 def route_pass(view, carriage, area_map, specs) -> RoutePass:
     book = book_for(area_map, specs, carriage)
+    in_slots = getattr(view, "prices_by_slot", None)
+    if in_slots is not None:
+        return RoutePass(book, in_slots(book), carriage)
     prices = np.zeros(book.slots, np.float64)
     for good_index, (good, areas) in enumerate(zip(book.goods, book.areas)):
         base = int(book.slot_base[good_index])
@@ -207,7 +213,7 @@ def search(route: RoutePass, expected: np.ndarray, home_tile, interest_rate: flo
     while True:
         (good, source, destination, rank, price_here, outlay, ceiling, missing) = merchants_book_kernel.search_goods(
             seen, good_allowed, source_allowed, book.slot_base, book.area_count, book.pair_base, book.order_base,
-            book.cost_flat, book.years_flat, book.id_order_flat, book.spoilage, book.unit_mass_kg, float(interest_rate),
+            book.cost_flat, book.nearest_flat, book.years_flat, book.id_order_flat, book.spoilage, book.unit_mass_kg, float(interest_rate),
             float(margin_share), KILOGRAMS_PER_TONNE)
         if not missing.any():
             break

@@ -426,6 +426,10 @@ class YearView:
             keys = self._keys_of_good[good] = (areas, [good + KEY_SEPARATOR + area.area_id for area in areas])
         return self._memory.prices.get_many(keys[1], None)
 
+    def prices_by_slot(self, book) -> numpy.ndarray:
+        """`price(good, area id)` of each slot of a merchants' route book as one array, 0.0 where there is none."""
+        return self._memory.prices.values_in_slots(book, 0.0)
+
     def price(self, good: GoodId, area: AreaId) -> Optional[float]:
         """The planning price: the remembered price, last year's trade blended with the older price in proportion to
         the trade's share of the market's usual volume (`year_goods.remembered_price`), or, where nothing traded,

@@ -15,7 +15,7 @@ from .merchants_kernel import search_into
 
 @njit
 def search_goods(prices, good_allowed, source_allowed, slot_base, area_count, pair_base, order_base, cost_flat,
-                 years_flat, id_order_flat, spoilage, unit_mass_kg, interest_rate, margin_share, kilograms_per_tonne):
+                 nearest_flat, years_flat, id_order_flat, spoilage, unit_mass_kg, interest_rate, margin_share, kilograms_per_tonne):
     """The unsorted rows of every allowed good: (good, source position, destination position, rank, price here,
     outlay, most it pays) as arrays of the row count, and a flag for each (pair of years_flat) whose holding years were
     needed but not known. `pair_base` and `order_base` place a good's pack in `cost_flat`/`years_flat` and
@@ -29,6 +29,7 @@ def search_goods(prices, good_allowed, source_allowed, slot_base, area_count, pa
     rows_outlay = np.empty(capacity, np.float64)
     rows_ceiling = np.empty(capacity, np.float64)
     missing = np.zeros(years_flat.shape[0], np.bool_)
+    flagged = np.zeros(1, np.int64)
     widest = 0
     for good in range(good_allowed.shape[0]):
         widest = max(widest, area_count[good])
@@ -47,10 +48,10 @@ def search_goods(prices, good_allowed, source_allowed, slot_base, area_count, pa
         pair = pair_base[good]
         order = order_base[good]
         found = search_into(prices[slot:slot + size], cost_flat[pair:pair + size * size].reshape((size, size)),
-                            years_flat[pair:pair + size * size].reshape((size, size)), id_order_flat[order:order + size],
+                            nearest_flat[order:order + size], years_flat[pair:pair + size * size].reshape((size, size)), id_order_flat[order:order + size],
                             source_allowed[slot:slot + size], interest_rate, spoilage[good], unit_mass_kg[good],
                             margin_share, kilograms_per_tonne, scratch_source, scratch_destination, scratch_rank,
-                            scratch_price_here, scratch_outlay, scratch_ceiling, missing[pair:pair + size * size])
+                            scratch_price_here, scratch_outlay, scratch_ceiling, missing[pair:pair + size * size], flagged)
         if count + found > capacity:
             capacity = max(2 * capacity, count + found)
             rows_good = _grown(rows_good, capacity)
