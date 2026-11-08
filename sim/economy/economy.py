@@ -36,6 +36,7 @@ from .merchants_dispatch import dispatch_merchants
 from .year_arrays import YearArrays, same_source, source_of
 from .year_close import close_agents, money_taxes, remember_basket_price_level, wear_and_spoilage
 from .year_goods import add_orders, clear_goods, cohort_orders, merchant_orders, state_orders
+from .goods_order_book import new_order_book
 from .labour_supply import HourSupply
 from .labour_state import people_by_trade
 from .year_labour import clear_labour, labour_offers, outside_option_by_tile
@@ -230,7 +231,7 @@ class Economy:
         capital_year.insure(setup, record, view, inputs.harvest_factor, view.year, inputs.institutions)     # cover is bought and the weather settles it
         self._grow_own(offers, ledger, inputs.harvest_factor, kept)
         capital_year.note_exposure(setup, record, view, self.area_map, ledger, inputs.harvest_factor, inputs.institutions)
-        order_book = {}
+        order_book = new_order_book(setup, record)
         funds = cohort_orders(setup, record, view, ledger, order_book, self.own_plot_options())
         state_orders(setup, record, view, self.area_map, order_book, {})
         mint_held = mint_orders(setup, record, self.area_map, order_book,
