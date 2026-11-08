@@ -55,6 +55,7 @@ def declared_signatures():
     signatures.update(compiled_tables_signatures(types))
     signatures.update(priced_need_signatures(types))
     signatures.update(loan_signatures(types))
+    signatures.update(crossing_signatures(types))
     return signatures
 
 
@@ -145,4 +146,22 @@ def bondage_signatures(types):
         "sim.economy.bondage_kernels.place_bonds_kernel": [(
             whole, whole, whole, floats, whole, floats, floats, whole, whole, whole, floats, whole, number, number, floats, floats, floats,
             floats, flags, flags, whole, floats, floats)],
+    }
+
+
+def crossing_signatures(types):
+    """The price search over a market's columns, which only an expansion judged in the close or a price response reaches: typed from
+    the prepared columns of one small market (the helpers compile with these)."""
+    import numpy
+    from numba import typeof
+    from sim.economy.api import BidColumns, demand_columns
+    columns = BidColumns(*(numpy.ones(2) for _ in range(6)))
+    order = numpy.arange(2, dtype=numpy.int64)
+    demand = typeof(demand_columns(columns, order))
+    floats, flags, number = types.Array(types.float64, 1, "C"), types.Array(types.int64, 1, "C"), types.float64
+    return {
+        "sim.economy.crossing_columns.prepare_demand": [tuple(typeof(each) for each in (*columns, order))],
+        "sim.economy.crossing_price.minimum_price_of": [(floats, number)],
+        "sim.economy.crossing_price.single_supply_price": [(demand, types.boolean, number, number, flags)],
+        "sim.economy.crossing_price.price_at_levels": [(floats, floats, number, number, demand, flags)],
     }

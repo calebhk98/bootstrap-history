@@ -15,7 +15,7 @@ added (the order a `Bid` list had), as float arrays:
 """
 import math
 from collections import namedtuple
-from typing import Callable, Sequence
+from typing import Callable, Optional, Sequence
 
 import numpy
 
@@ -33,6 +33,17 @@ def columns_of_bids(bids: Sequence) -> BidColumns:
     figures = numpy.array([(bid.floor_quantity, bid.flexible_quantity, bid.reference_price, bid.elasticity, bid.budget, bid.maximum_price)
                            for bid in bids], dtype=numpy.float64).reshape(-1, 6)
     return BidColumns(*(figures[:, column].copy() for column in range(6)))
+
+
+def order_of_bids(bids: Sequence) -> numpy.ndarray:
+    """The indexes of `Bid` objects in clearing order (`goods_market.Buyers` sorts by priority, buyer and tile; a stable sort)."""
+    return numpy.array(sorted(range(len(bids)), key=lambda place: (bids[place].priority, bids[place].buyer, bids[place].tile)),
+                       dtype=numpy.int64)
+
+
+def clearing_order_of(bids) -> numpy.ndarray:
+    """The clearing order of a market's bids: the stored one of a `MarketBids`, else worked out from the `Bid` objects."""
+    return bids.clearing_order if isinstance(bids, MarketBids) else order_of_bids(list(bids))
 
 
 def joined(first: BidColumns, second: BidColumns) -> BidColumns:
@@ -95,15 +106,24 @@ def sum_taken_at(columns: BidColumns, price: float) -> float:
 class MarketBids(Sequence):
     """One market's bids for the entry rules: columns first, `Bid` objects only when a rule asks for them (see the module docstring)."""
 
-    def __init__(self, make_columns: Callable[[], BidColumns], make_objects: Callable[[], list], count: int):
-        self._make_columns, self._make_objects, self._count = make_columns, make_objects, count
-        self._columns = self._items = None
+    def __init__(self, make_columns: Callable[[], BidColumns], make_objects: Callable[[], list], count: int,
+                 make_order: Optional[Callable[[], numpy.ndarray]] = None):
+        self._make_columns, self._make_objects, self._count, self._make_order = make_columns, make_objects, count, make_order
+        self._columns = self._items = self._order = None
 
     @property
     def columns(self) -> BidColumns:
         if self._columns is None:
             self._columns = self._make_columns()
         return self._columns
+
+    @property
+    def clearing_order(self) -> numpy.ndarray:
+        """The bids' places in the order a market clears them (priority, buyer name, tile name; ties in the bids' own order), as the
+        indexes of the columns."""
+        if self._order is None:
+            self._order = self._make_order() if self._make_order is not None else order_of_bids(self._list())
+        return self._order
 
     def _list(self) -> list:
         if self._items is None:
