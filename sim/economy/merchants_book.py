@@ -150,6 +150,9 @@ class RoutePass:
 
 def route_pass(view, carriage, area_map, specs) -> RoutePass:
     book = book_for(area_map, specs, carriage)
+    in_slots = getattr(view, "prices_by_slot", None)
+    if in_slots is not None:
+        return RoutePass(book, in_slots(book), carriage)
     prices = np.zeros(book.slots, np.float64)
     for good_index, (good, areas) in enumerate(zip(book.goods, book.areas)):
         base = int(book.slot_base[good_index])
