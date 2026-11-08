@@ -9,7 +9,7 @@ markets with bids, their capacity and prices, and the recipes of each ranked by 
 import numpy as np
 
 from . import entry_kernels, entry_plan_pack, entry_plan_table
-from .entry_margin import MARGIN_ENTRY_GROWTH_SHARE
+from .entry_margin import MARGIN_ENTRY_GROWTH_SHARE, keep_streaks
 from .entry_margin_kernel import margin_plans, trial_plans
 from .entry_sizing import ENTRY_SHARE_OF_UNTRADED_DEMAND
 from .entry_trial import ENTRY_PRICE_MARGIN_SHARE
@@ -99,10 +99,7 @@ def _write_streaks(costs, record, weighed: Weighed, years_out, counted) -> None:
     keep = {}
     for position in np.flatnonzero(counted).tolist():
         keep[market_key(ids_good[weighed.good[position]], ids_area[weighed.area[position]])] = int(years_out[position])
-    margin_years = record.goods.margin_years
-    for key in [key for key in margin_years if key not in keep]:
-        del margin_years[key]
-    margin_years.update(keep)
+    keep_streaks(record, keep)
 
 
 def margin_plan_table(costs, record, block, weighed: Weighed, skipped: np.ndarray):
