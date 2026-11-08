@@ -77,11 +77,7 @@ class GoodsOrderBook:
 
     def market_id(self, good: str, area: str) -> int:
         """The memory's goods market row of (good, area), numbering the market when it is new."""
-        key = (good, area)
-        found = self._markets.get(key)
-        if found is None:
-            found = self._markets[key] = self.memory_tables.goods_row_for_write(market_key(good, area))
-        return found
+        return self.market_ids([good], [area])[0]
 
     def agent_id(self, name: str) -> int:
         found = self._numbers[0].get(name)
@@ -102,12 +98,16 @@ class GoodsOrderBook:
         return found
 
     def market_ids(self, goods: Sequence[str], areas: Sequence[str]) -> List[int]:
-        """`market_id` of each (good, area) pair, a market new to the year numbered in the order it first appears."""
+        """The memory's goods market row of each (good, area) pair. The markets new to the year are numbered together as one sorted
+        batch, so the numbering does not follow the order a writer happened to list them in (a set of names has none)."""
         pairs = list(zip(goods, areas))
         known = self._markets
-        for pair in dict.fromkeys(pairs):
-            if pair not in known:
-                self.market_id(*pair)
+        new = [pair for pair in dict.fromkeys(pairs) if pair not in known]
+        if new:
+            self.memory_tables.admit_goods_markets([market_key(good, area) for good, area in new])
+            numbers = self.memory_tables.goods_numbers
+            for pair in new:
+                known[pair] = numbers[market_key(*pair)]
         return list(map(known.__getitem__, pairs))
 
     def _numbers_of(self, kind: int, names: Sequence[str], admit) -> List[int]:
