@@ -5,7 +5,6 @@ All the rounds run in one kernel over every rationed cohort and market (goods_re
 """
 from typing import Dict, Tuple
 
-import numpy
 
 from sim.constants import declare
 
@@ -39,10 +38,11 @@ class LeftMarket:
         self.wanted = wanted           # what buyers asked for in all rounds so far
         self.idle_years = idle_years   # years the market lacked bids or offers, before this year
         self.results = [result]
+        self.later: list = []          # the respend rounds' clearings as (quantity, price or None, demand at price, offered at price)
         self.bought = bought or {}     # buyer -> (units received, money paid) in the first round's settlement
         self._bids = bids
-        self.added_bids: list = []     # a market on the tables: the later rounds' bids that add demand (objects)
-        self._all_bids = list(bids) if bids is not None and rows is None else None     # the first round's bids and the later rounds' that add demand
+        self.added = None              # the later rounds' bids that add demand, as columns (`goods_added_bids.AddedBids`)
+        self._all_bids = list(bids) if bids is not None and rows is None else None     # a market on the objects: the first round's bids and the added ones
         self.rows = rows
         self.last_offered = result.offered_at_price     # on offer at the last round's price
         self.last_delivered = delivered                 # moved in the last round
@@ -77,17 +77,20 @@ class LeftMarket:
         """The first round's bids and the later rounds' that add demand."""
         if self._all_bids is not None:
             return self._all_bids
-        if not self.added_bids:
+        if self.added is None:
             return self.bids
-        return LazyObjects(lambda: list(self.bids) + self.added_bids, len(self.rows.bid_rows) + len(self.added_bids))
+        return LazyObjects(lambda: list(self.bids) + self.added.bids(), len(self.rows.bid_rows) + len(self.added))
 
     @all_bids.setter
     def all_bids(self, bids) -> None:
         self._all_bids = bids
 
-    def add_bid(self, bid) -> None:
-        """A later round's bid that adds demand."""
-        (self.added_bids if self._all_bids is None else self._all_bids).append(bid)
+    def add_bids(self, added) -> None:
+        """The bids a later round added to this market (`goods_added_bids.AddedBids`): kept as columns, and as objects too for a market on the
+        objects."""
+        self.added = added
+        if self._all_bids is not None:
+            self._all_bids.extend(added.bids())
 
     def leave_units(self, units) -> None:
         """The units each offer left in `rows` has after the rounds (zero: sold out); the offers are built from them when read."""

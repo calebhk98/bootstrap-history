@@ -8,8 +8,8 @@ from typing import Dict, List
 
 import numpy
 
-from .goods_respend import RESPEND_PRIORITY
-from .types import Bid, ClearingResult, Offer
+from .goods_added_bids import AddedBids
+from .types import Offer
 
 
 def summed(keys: numpy.ndarray, values: numpy.ndarray):
@@ -19,29 +19,22 @@ def summed(keys: numpy.ndarray, values: numpy.ndarray):
 
 
 def write_markets(setup, ledger, markets, packed, out) -> None:
-    """Results, bids that add demand, offers and totals of every market that cleared in a round."""
+    """Rounds, bids that add demand, offers and totals of every market that cleared in a round. A round is a row of its market's
+    `later` (quantity, price, demand, offered) and of the ledger's rounds; a bid that adds demand is a row of the market's `AddedBids`."""
     (_overflow, bid_count, clear_count, _pair_count, _bid_round, bid_market, bid_buyer, bid_flexible, bid_reference,
      bid_budget, bid_maximum, bid_adding, clear_market, _clear_round, clear_quantity, clear_price, clear_has_price,
      clear_demand, clear_offered, clear_delivered, _pm, _pb, _po, _pg, _pmo, _pi, _pe, market_wanted, market_delivered,
      market_offered, market_last_delivered, market_cleared) = out
     keys = packed.market_keys
-    substitution = [packed.baskets[basket].substitution for basket in packed.arguments["buyer_basket"]]
-    for row in range(bid_count):
-        if bid_adding[row]:
-            good, area = keys[bid_market[row]]
-            buyer = bid_buyer[row]
-            markets[(good, area)].add_bid(Bid(
-                packed.buyers[buyer], good, area, packed.buyer_tile[buyer], 0.0, float(bid_flexible[row]),
-                float(bid_reference[row]), substitution[buyer], float(bid_budget[row]), RESPEND_PRIORITY,
-                maximum_price=float(bid_maximum[row])))
-    results = []
-    for row in range(clear_count):
-        good, area = keys[clear_market[row]]
-        result = ClearingResult(good, area, setup.currency_id, float(clear_price[row]) if clear_has_price[row] else None,
-                                float(clear_quantity[row]), float(clear_demand[row]), float(clear_offered[row]), ())
-        markets[(good, area)].results.append(result)
-        results.append(result)
-    note_rounds(ledger, results, clear_delivered[:clear_count].tolist())
+    _add_bids(markets, packed, keys, numpy.nonzero(bid_adding[:bid_count])[0], bid_market, bid_buyer, bid_flexible, bid_reference,
+              bid_budget, bid_maximum)
+    if clear_count:
+        prices = numpy.where(clear_has_price[:clear_count], clear_price[:clear_count], numpy.nan)
+        for market, quantity, price, demand, offered in zip(clear_market[:clear_count].tolist(), clear_quantity[:clear_count].tolist(),
+                                                           prices.tolist(), clear_demand[:clear_count].tolist(),
+                                                           clear_offered[:clear_count].tolist()):
+            markets[keys[market]].later.append((quantity, None if price != price else price, demand, offered))
+        note_rounds(ledger, keys, clear_market[:clear_count], clear_quantity[:clear_count], prices, clear_delivered[:clear_count])
     for index in numpy.nonzero(market_cleared)[0].tolist():
         market = markets[keys[index]]
         market.delivered += float(market_delivered[index])
@@ -51,20 +44,36 @@ def write_markets(setup, ledger, markets, packed, out) -> None:
         _leave_offers(market, packed, index)
 
 
-def note_rounds(ledger, results: List[ClearingResult], moved: List[float]) -> None:
-    """`YearLedger.note_clearing` of each round's result (a household's fills are not kept in the rounds), the rounds added in one call."""
-    if not results:
+def _add_bids(markets, packed, keys, adding, bid_market, bid_buyer, bid_flexible, bid_reference, bid_budget, bid_maximum) -> None:
+    """The bids that add demand, handed to their markets as column slices (rows of one market stay in the kernel's order)."""
+    if not len(adding):
         return
-    numbers = ledger.tables.markets.goods_numbers
-    markets = []
-    for result in results:
-        ledger.clearings.append(result)
-        ledger.mint_takes.append((result, {}))
-        number = numbers.get(result.good + "|" + result.area)
-        markets.append(ledger.tables.market_number(result.good, result.area) if number is None else number)
-    ledger.note_round_rows(numpy.array(markets, dtype=numpy.int64), numpy.array([result.quantity for result in results], dtype=float),
-                           numpy.array([numpy.nan if result.price is None else result.price for result in results], dtype=float),
-                           numpy.array(moved, dtype=float))
+    order = adding[numpy.argsort(bid_market[adding], kind="stable")]
+    market_of_row = bid_market[order]
+    cuts = numpy.nonzero(numpy.diff(market_of_row))[0] + 1
+    elasticity = numpy.array([packed.baskets[basket].substitution for basket in packed.arguments["buyer_basket"]])
+    for first, last in zip([0, *cuts.tolist()], [*cuts.tolist(), len(order)]):
+        rows = order[first:last]
+        good, area = keys[market_of_row[first]]
+        buyers = bid_buyer[rows]
+        markets[(good, area)].add_bids(AddedBids(
+            good, area, [packed.buyers[each] for each in buyers.tolist()], [packed.buyer_tile[each] for each in buyers.tolist()],
+            bid_flexible[rows].tolist(), bid_reference[rows].tolist(), elasticity[buyers].tolist(), bid_budget[rows].tolist(),
+            bid_maximum[rows].tolist()))
+
+
+def note_rounds(ledger, keys, clear_market, quantity, price, moved) -> None:
+    """`YearLedger.note_clearing` of each round, the rounds added in one call: the market number of each (numbered when new), the
+    quantity and price cleared and the goods moved. A household's fills are not kept in the rounds."""
+    tables = ledger.tables
+    numbers = tables.markets.goods_numbers
+    market_numbers = {}
+    for index in numpy.unique(clear_market).tolist():
+        good, area = keys[index]
+        number = numbers.get(good + "|" + area)
+        market_numbers[index] = tables.market_number(good, area) if number is None else number
+    ledger.note_round_rows(numpy.array([market_numbers[index] for index in clear_market.tolist()], dtype=numpy.int64),
+                           numpy.asarray(quantity, dtype=float), numpy.asarray(price, dtype=float), numpy.asarray(moved, dtype=float))
 
 
 def _leave_offers(market, packed, index: int) -> None:

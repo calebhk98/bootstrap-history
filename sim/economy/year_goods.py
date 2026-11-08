@@ -100,6 +100,7 @@ def clear_goods(setup, record, view, area_map, order_book, plans, ledger: YearLe
     done = set()
     left_markets = {}
     in_kind = [form for form in setup.tax_forms if form.paid_in]
+    metal = record.currency.backing_good if currency.has_mint(record.currency) else None        # the good whose markets the mint reads
     plant_makers: Dict[str, list] = {}       # a good -> the producers whose plant is built from it
     for producer_id, producer in record.producers.items():
         for plant_good in setup.recipes[producer.recipe_id].plant_goods:
@@ -113,7 +114,7 @@ def clear_goods(setup, record, view, area_map, order_book, plans, ledger: YearLe
         cleared = goods_good_clear.clear_good(context, good, good_id) if good_id is not None else []
         kept = market_curves.kept_areas(area_map, setup.port_tile, (setup.capital_tile, *watched_tiles), good)
         answer = goods_settle.settle_good(record, ledger, cleared, good, plant_makers)
-        goods_settle.note_clearings(ledger, cleared, answer, memory_names)
+        goods_settle.note_clearings(ledger, cleared, answer, memory_names, metal)
         idle = goods_settle.idle_years(record.memory, cleared) if cleared else []
         last_prices = goods_settle.last_prices(record.memory, cleared)
         for each, entry, idle_years, last_price in zip(cleared, answer, idle, last_prices):
@@ -150,7 +151,7 @@ def _remember_markets(setup, record, left_markets, ledger: YearLedger, orders=No
     for place, ((good, area), market) in enumerate(ordered):
         old, total = market.last_price, quantity[(good, area)]
         quote_kind = None
-        received = _received_price(setup, record, good, market.results, ledger) if total > 0.0 else None
+        received = _received_price(setup, record, good, market, ledger) if total > 0.0 else None
         if received is not None:
             usual = usual_volumes[place]
             reference = memory_reference_volume(usual, _wanted_at(market, old, orders))
@@ -185,7 +186,7 @@ def _wanted_at(market, price, orders) -> float:
     where the market is on them, plus the later rounds' bids that add demand."""
     if market.rows is None:
         return wanted_at(market.all_bids, price)
-    return wanted_at_rows(orders.bid_lists(), market.rows.bid_rows, price, market.added_bids)
+    return wanted_at_rows(orders.bid_lists(), market.rows.bid_rows, price, added=market.added)
 
 
 def price_floor(setup, memory, good, signal: float) -> float:
@@ -215,18 +216,20 @@ def _record_year_markets(record, ledger: YearLedger, left_markets) -> None:
                                      [market.delivered for _key, market in ordered])
 
 
-def _received_price(setup, record, good, results, ledger: YearLedger) -> Optional[float]:
+def _received_price(setup, record, good, market, ledger: YearLedger) -> Optional[float]:
     """The price a market's sellers got per unit over its clearings, weighted by quantity: the settled price, plus the
-    mint's top-up where it bought coin metal; None when no clearing traded."""
+    mint's top-up where it bought coin metal; None when no clearing traded. The first round's clearing is a result; the respend
+    rounds' are (quantity, price) rows (`market.later`), which carry no fills and so no top-up."""
     spec = record.currency
-    traded = [result for result in results if result.quantity > 0.0]
-    quantity = math.fsum(result.quantity for result in traded)
+    traded = [result for result in market.results if result.quantity > 0.0]
+    later = [(quantity, price) for quantity, price, _demand, _offered in market.later if quantity > 0.0]
+    quantity = math.fsum([result.quantity for result in traded] + [units for units, _price in later])
     if quantity <= 0.0:
         return None
     if not currency.has_mint(spec) or good != spec.backing_good:
-        return math.fsum(result.quantity * result.price for result in traded) / quantity
-    return math.fsum(result.quantity * mint_price.received_price(currency.mint_price(spec), result, ledger.settled_to_mint(result))
-                     for result in traded) / quantity
+        return math.fsum([result.quantity * result.price for result in traded] + [units * price for units, price in later]) / quantity
+    return math.fsum([result.quantity * mint_price.received_price(currency.mint_price(spec), result, ledger.settled_to_mint(result))
+                      for result in traded] + [units * price for units, price in later]) / quantity
 
 
 def price_after_trade(old, old_was_quote, cleared, quantity, reference_volume, quiet_years):

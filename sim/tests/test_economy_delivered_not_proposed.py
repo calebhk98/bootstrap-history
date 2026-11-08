@@ -79,7 +79,8 @@ class DeliveredVolumeTests(unittest.TestCase):
             year_goods.clear_goods(setup, record, None, area_map, {("timber", "area"): (bids, offers)}, {}, ledger)
         delivered = 10.0 - book.stock("seller", "timber", "t")
         self.assertLess(delivered, 10.0)        # the buyer could not pay in full
-        self.assertLess(delivered, ledger.clearings[0].quantity)
+        ledger.tables.flush()
+        self.assertLess(delivered, float(ledger.tables.rounds.quantity[0]))       # the round matched more than changed hands
         self.assertAlmostEqual(record.goods.volumes["timber|area"], delivered)
         self.assertAlmostEqual(record.memory.volume_weights["timber|area"], delivered)
 
