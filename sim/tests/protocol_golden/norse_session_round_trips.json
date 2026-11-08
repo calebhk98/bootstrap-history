@@ -36,7 +36,7 @@
      "in_full": "~prose~",
      "technologies_you_could_lose": 0
     },
-    "capital": 343.8,
+    "capital": 353.7,
     "chance_of_being_denounced_this_year": 0.0,
     "coin_hoard": {
      "basis": "~prose~",
@@ -45,9 +45,9 @@
      "tonnes": 0.009
     },
     "concerns_you_run": 0,
-    "credit_limit": 1148.1,
+    "credit_limit": 1181.0,
     "critical_capabilities_not_operating": null,
-    "debt_interest_rate": 0.0238,
+    "debt_interest_rate": 0.0178,
     "debt_still_to_work_off": 0.0,
     "depends_on_one_person": null,
     "diffusion_index": 0.0,
@@ -89,21 +89,21 @@
     "literacy": {
      "elite": 0.15,
      "elite_ceiling": 0.99,
-     "farm_share_of_working_hours": 0.88,
+     "farm_share_of_working_hours": 0.878,
      "general": 0.019,
-     "general_ceiling_now": 0.3,
+     "general_ceiling_now": 0.301,
      "schools_actually_teaching": false
     },
-    "living_cost": 32.3,
+    "living_cost": 30.6,
     "living_stock": {
-     "sheep_kg": 44405728.61
+     "sheep_kg": 54436217.998
     },
     "manual": true,
     "mine_capacity": {},
     "mine_operating_cost": 0,
     "mothballed": [],
-    "net_after_project_spend": 73.2,
-    "net_per_year": 73.2,
+    "net_after_project_spend": 78.0,
+    "net_per_year": 78.0,
     "ok": true,
     "on_the_road_to_the_goal_so_far": null,
     "project_spend_this_year": 0.0,
@@ -127,7 +127,7 @@
     "protection": 0.0,
     "reputation": 5.0,
     "resource_throttle": 1.0,
-    "revenue": 105.5,
+    "revenue": 108.5,
     "scandal": 0.0,
     "scandal_danger": 25.0,
     "scandal_now": 0.0,
@@ -159,7 +159,7 @@
      "objective": "~prose~"
     },
     "supervision_close_to_the_edge": null,
-    "sustainable_debt": 1540.3,
+    "sustainable_debt": 2186.2,
     "throttle_binding": null,
     "trades_society_now_has_on_its_own": [],
     "trades_you_created": [],
@@ -233,7 +233,7 @@
      {
       "calendar_floor_years": 0.5,
       "cat": "organisation",
-      "cost": 2.6,
+      "cost": 2.7,
       "costs_per_year_after": 0.0,
       "costs_per_year_at_full_staffing": 0.0,
       "downstream_count": 5,
@@ -248,7 +248,7 @@
      {
       "calendar_floor_years": 0.25,
       "cat": "personal",
-      "cost": 3.4,
+      "cost": 3.5,
       "costs_per_year_after": 0.1,
       "costs_per_year_at_full_staffing": 0.1,
       "downstream_count": 0,
@@ -266,7 +266,7 @@
      {
       "calendar_floor_years": 0.5,
       "cat": "foundation",
-      "cost": 26.2,
+      "cost": 27.0,
       "costs_per_year_after": 0.1,
       "costs_per_year_at_full_staffing": 0.7,
       "downstream_count": 2101,
@@ -281,7 +281,7 @@
      {
       "calendar_floor_years": 0.5,
       "cat": "foundation",
-      "cost": 42.6,
+      "cost": 43.8,
       "costs_per_year_after": 0.0,
       "costs_per_year_at_full_staffing": 0.0,
       "downstream_count": 1913,
@@ -296,7 +296,7 @@
      {
       "calendar_floor_years": 0.0,
       "cat": "notation",
-      "cost": 85.3,
+      "cost": 87.7,
       "costs_per_year_after": 0.0,
       "costs_per_year_at_full_staffing": 0.0,
       "downstream_count": 1601,
@@ -312,7 +312,7 @@
      {
       "calendar_floor_years": 2.0,
       "cat": "foundation",
-      "cost": 29.8,
+      "cost": 30.7,
       "costs_per_year_after": 0.0,
       "costs_per_year_at_full_staffing": 0.0,
       "downstream_count": 1459,
@@ -330,113 +330,113 @@
     "stacking_several_is_the_trap": "~prose~",
     "subjects": [
      {
-      "cheapest": 8.9,
-      "dearest": 163.6,
+      "cheapest": 9.2,
+      "dearest": 168.2,
       "subject": "textiles",
       "things": 25,
       "you_could_pay_for": 25
      },
      {
-      "cheapest": 3.9,
-      "dearest": 4980.4,
+      "cheapest": 4.0,
+      "dearest": 5036.8,
       "subject": "finance",
       "things": 17,
       "you_could_pay_for": 16
      },
      {
-      "cheapest": 97.4,
-      "dearest": 3081.7,
+      "cheapest": 100.2,
+      "dearest": 3040.9,
       "subject": "metallurgy",
       "things": 11,
       "you_could_pay_for": 10
      },
      {
-      "cheapest": 4.2,
-      "dearest": 273.3,
+      "cheapest": 4.3,
+      "dearest": 281.7,
       "subject": "~prose~",
       "things": 11,
       "you_could_pay_for": 11
      },
      {
-      "cheapest": 7.7,
-      "dearest": 137.2,
+      "cheapest": 7.9,
+      "dearest": 139.5,
       "subject": "~prose~",
       "things": 10,
       "you_could_pay_for": 10
      },
      {
       "cheapest": 0.0,
-      "dearest": 30.1,
+      "dearest": 29.6,
       "subject": "~prose~",
       "things": 8,
       "you_could_pay_for": 8
      },
      {
-      "cheapest": 89.5,
-      "dearest": 352.0,
+      "cheapest": 92.1,
+      "dearest": 362.8,
       "subject": "~prose~",
       "things": 6,
       "you_could_pay_for": 6
      },
      {
       "cheapest": 1.3,
-      "dearest": 173.3,
+      "dearest": 178.2,
       "subject": "~prose~",
       "things": 4,
       "you_could_pay_for": 4
      },
      {
-      "cheapest": 4.3,
-      "dearest": 91.7,
+      "cheapest": 4.4,
+      "dearest": 94.3,
       "subject": "~prose~",
       "things": 4,
       "you_could_pay_for": 4
      },
      {
-      "cheapest": 95.0,
-      "dearest": 539.9,
+      "cheapest": 97.7,
+      "dearest": 555.4,
       "subject": "~prose~",
       "things": 4,
       "you_could_pay_for": 4
      },
      {
-      "cheapest": 90.2,
-      "dearest": 95.3,
+      "cheapest": 92.8,
+      "dearest": 97.9,
       "subject": "construction",
       "things": 3,
       "you_could_pay_for": 3
      },
      {
-      "cheapest": 94.0,
-      "dearest": 208.3,
+      "cheapest": 96.6,
+      "dearest": 214.2,
       "subject": "~prose~",
       "things": 3,
       "you_could_pay_for": 3
      },
      {
-      "cheapest": 29.8,
-      "dearest": 85.3,
+      "cheapest": 30.7,
+      "dearest": 87.7,
       "subject": "~prose~",
       "things": 2,
       "you_could_pay_for": 2
      },
      {
-      "cheapest": 8.6,
-      "dearest": 12.0,
+      "cheapest": 8.9,
+      "dearest": 12.4,
       "subject": "~prose~",
       "things": 2,
       "you_could_pay_for": 2
      },
      {
-      "cheapest": 24.2,
-      "dearest": 94.1,
+      "cheapest": 26.4,
+      "dearest": 96.4,
       "subject": "~prose~",
       "things": 2,
       "you_could_pay_for": 2
      },
      {
-      "cheapest": 98.5,
-      "dearest": 175.7,
+      "cheapest": 101.2,
+      "dearest": 180.7,
       "subject": "~prose~",
       "things": 2,
       "you_could_pay_for": 2
@@ -449,15 +449,15 @@
       "you_could_pay_for": 1
      },
      {
-      "cheapest": 26.2,
-      "dearest": 26.2,
+      "cheapest": 27.0,
+      "dearest": 27.0,
       "subject": "~prose~",
       "things": 1,
       "you_could_pay_for": 1
      },
      {
-      "cheapest": 173.5,
-      "dearest": 173.5,
+      "cheapest": 178.4,
+      "dearest": 178.4,
       "subject": "~prose~",
       "things": 1,
       "you_could_pay_for": 1
@@ -470,7 +470,7 @@
      "one subject": "~prose~",
      "what you can pay for": "~prose~"
     },
-    "you_could_raise_for_a_project": 1491.9
+    "you_could_raise_for_a_project": 1534.7
    }
   },
   {
@@ -540,12 +540,12 @@
     "founder_hours_free": 2000.0,
     "goal": "point_contact_transistor",
     "goal_reached": false,
-    "money": 343.8,
+    "money": 353.7,
     "nearest_goal_blocker": {
      "id": "gp_carbon_brushes",
      "startable": true
     },
-    "net_per_year": 73.2,
+    "net_per_year": 78.0,
     "ok": true,
     "projects": [
      {
@@ -578,8 +578,8 @@
      "~prose~",
      "~prose~"
     ],
-    "annual_wage_bill": 81.8,
-    "artisans": 0.84,
+    "annual_wage_bill": 80.4,
+    "artisans": 0.89,
     "at_risk": {
      "happening_now": [
       "~prose~"
@@ -589,13 +589,13 @@
      "in_full": "~prose~",
      "technologies_you_could_lose": 1
     },
-    "capital": 333.5,
+    "capital": 349.4,
     "chance_of_being_denounced_this_year": 0.0,
     "coin_hoard": {
      "basis": "~prose~",
      "keeping_cost_per_year": 0.0,
      "metal": "silver_kg",
-     "tonnes": 0.008
+     "tonnes": 0.009
     },
     "completed": [
      {
@@ -607,9 +607,9 @@
      }
     ],
     "concerns_you_run": 0,
-    "credit_limit": 0.0,
+    "credit_limit": 17.1,
     "critical_capabilities_not_operating": null,
-    "debt_interest_rate": 0.076,
+    "debt_interest_rate": 0.0685,
     "debt_still_to_work_off": 0.0,
     "depends_on_one_person": null,
     "diffusion_index": 0.0,
@@ -619,9 +619,9 @@
     "done_granted": 156,
     "eminence": 0.0,
     "employees": {
-     "smith": 0.84
+     "smith": 0.89
     },
-    "employees_total": 0.84,
+    "employees_total": 0.89,
     "end_reason": null,
     "ended": false,
     "events": [
@@ -666,10 +666,10 @@
     "household_places_used_of_all": "~prose~",
     "idle_specialists": [
      {
-      "count": 0.8,
+      "count": 0.9,
       "taught_by_you": false,
       "trade": "smith",
-      "wage_bill_per_year": 81.8
+      "wage_bill_per_year": 80.4
      }
     ],
     "in_bondage_for_debt": 0.0,
@@ -678,22 +678,22 @@
     "literacy": {
      "elite": 0.144,
      "elite_ceiling": 0.99,
-     "farm_share_of_working_hours": 0.744,
+     "farm_share_of_working_hours": 0.729,
      "general": 0.019,
-     "general_ceiling_now": 0.407,
+     "general_ceiling_now": 0.42,
      "schools_actually_teaching": false
     },
-    "living_cost": 32.3,
+    "living_cost": 33.4,
     "living_stock": {
-     "sheep_kg": 76187288.281
+     "sheep_kg": 93396772.275
     },
     "lost": [],
     "manual": true,
     "mine_capacity": {},
     "mine_operating_cost": 0,
     "mothballed": [],
-    "net_after_project_spend": 82.1,
-    "net_per_year": 0.0,
+    "net_after_project_spend": 80.7,
+    "net_per_year": -0.0,
     "ok": true,
     "on_the_road_to_the_goal_so_far": null,
     "project_spend_this_year": 0.0,
@@ -717,7 +717,7 @@
     "protection": 0.032,
     "reputation": 5.7,
     "resource_throttle": 0.05,
-    "revenue": 103.1,
+    "revenue": 102.1,
     "scandal": 0.0,
     "scandal_danger": 25.0,
     "scandal_now": 0.0,
@@ -733,8 +733,6 @@
     "state_attention": {
      "confiscation_risk_above": 0.75,
      "interest_groups": [
-      "~prose~",
-      "~prose~",
       "~prose~",
       "~prose~",
       "~prose~",
@@ -769,8 +767,8 @@
     "trades_society_now_has_on_its_own": [],
     "trades_you_created": [],
     "upkeep": 0.0,
-    "wage_bill": 81.8,
-    "wages_you_have_already_paid_this_year": 82.1,
+    "wage_bill": 80.4,
+    "wages_you_have_already_paid_this_year": 80.8,
     "what_you_can_field": "~prose~",
     "where_your_hours_come_from": {
      "deputies_who_direct_work_for_you": 0.0,
@@ -837,7 +835,7 @@
       "count": 5,
       "kind": "money",
       "projects": [
-       "horse_collar",
+       "tr_lateen_sail",
        "fin_hotel",
        "fin_factory",
        "mat_copper",
@@ -864,7 +862,7 @@
     "ok": true,
     "one_of_each_of_those_is_you": true,
     "people_free_to_run_something_new": {
-     "craftsmen": 1.84,
+     "craftsmen": 1.89,
      "scholars": 1.0
     },
     "running": "nothing",
@@ -924,7 +922,7 @@
      ]
     },
     "you_have_in_all": {
-     "craftsmen": 1.84,
+     "craftsmen": 1.89,
      "scholars": 1.0
     },
     "you_know_how_but_have_not_opened": "nothing"
@@ -935,7 +933,7 @@
     "cmd": "economy"
    },
    "reply": {
-    "cost_of_living_a_year": 32.3,
+    "cost_of_living_a_year": 33.4,
     "household_places_used_of_all": "~prose~",
     "literacy": {
      "elite": 0.144,
@@ -945,10 +943,10 @@
     "more_detail": "~prose~",
     "ok": true,
     "price_index": 1.4,
-    "wage_per_hour": 0.0298,
+    "wage_per_hour": 0.0294,
     "what_moved_most": "~prose~",
     "where_the_money_comes_from": {
-     "_wages_for_your_own_work": 103.1
+     "_wages_for_your_own_work": 102.1
     }
    }
   },
@@ -962,28 +960,28 @@
     "years": [
      {
       "causes": [],
-      "closing": 343.8,
+      "closing": 353.7,
       "not_itemised": 0.0,
       "open_year": false,
-      "opening": 343.8,
+      "opening": 353.7,
       "year": 900
      },
      {
       "causes": [
        {
-        "amount": -145.5,
+        "amount": -148.6,
         "cause": "wages offered in the labour market"
        },
        {
-        "amount": 105.5,
+        "amount": 108.5,
         "cause": "venture revenue"
        },
        {
-        "amount": 62.8,
+        "amount": 65.5,
         "cause": "wage offers unspent"
        },
        {
-        "amount": -32.3,
+        "amount": -30.6,
         "cause": "living costs"
        },
        {
@@ -995,28 +993,28 @@
         "cause": "keeping coin under guard"
        }
       ],
-      "closing": 334.1,
+      "closing": 348.4,
       "not_itemised": 0.0,
       "open_year": false,
-      "opening": 343.8,
+      "opening": 353.7,
       "year": 901
      },
      {
       "causes": [
        {
-        "amount": -143.5,
+        "amount": -146.6,
         "cause": "wages offered in the labour market"
        },
        {
-        "amount": 103.7,
+        "amount": 107.5,
         "cause": "venture revenue"
        },
        {
-        "amount": 61.4,
+        "amount": 65.8,
         "cause": "wage offers unspent"
        },
        {
-        "amount": -20.9,
+        "amount": -24.4,
         "cause": "living costs"
        },
        {
@@ -1028,18 +1026,18 @@
         "cause": "keeping coin under guard"
        }
       ],
-      "closing": 333.5,
+      "closing": 349.4,
       "not_itemised": 0.0,
       "open_year": false,
-      "opening": 334.1,
+      "opening": 348.4,
       "year": 902
      },
      {
       "causes": [],
-      "closing": 333.5,
+      "closing": 349.4,
       "not_itemised": 0.0,
       "open_year": true,
-      "opening": 333.5,
+      "opening": 349.4,
       "year": 902
      }
     ]
@@ -1051,11 +1049,11 @@
     "id": "pwr_oil_shale"
    },
    "reply": {
-    "capital": 314.3,
+    "capital": 329.6,
     "ok": true,
-    "paid_now": 19.2,
+    "paid_now": 19.7,
     "posted": "pwr_oil_shale",
-    "price": 19.2
+    "price": 19.7
    }
   },
   {
@@ -1073,7 +1071,7 @@
      "~prose~",
      "~prose~"
     ],
-    "annual_wage_bill": 73.6,
+    "annual_wage_bill": 69.2,
     "artisans": 0.99,
     "at_risk": {
      "happening_now": [
@@ -1084,7 +1082,7 @@
      "in_full": "~prose~",
      "technologies_you_could_lose": 2
     },
-    "capital": 321.2,
+    "capital": 339.5,
     "chance_of_being_denounced_this_year": 0.0,
     "coin_hoard": {
      "basis": "~prose~",
@@ -1102,9 +1100,9 @@
      }
     ],
     "concerns_you_run": 0,
-    "credit_limit": 1029.1,
+    "credit_limit": 1058.8,
     "critical_capabilities_not_operating": null,
-    "debt_interest_rate": 0.0627,
+    "debt_interest_rate": 0.0625,
     "debt_still_to_work_off": 0.0,
     "depends_on_one_person": null,
     "diffusion_index": 0.0,
@@ -1164,7 +1162,7 @@
       "count": 1.0,
       "taught_by_you": false,
       "trade": "smith",
-      "wage_bill_per_year": 73.6
+      "wage_bill_per_year": 69.2
      }
     ],
     "in_bondage_for_debt": 0.0,
@@ -1173,22 +1171,22 @@
     "literacy": {
      "elite": 0.141,
      "elite_ceiling": 0.99,
-     "farm_share_of_working_hours": 0.689,
+     "farm_share_of_working_hours": 0.677,
      "general": 0.019,
-     "general_ceiling_now": 0.451,
+     "general_ceiling_now": 0.461,
      "schools_actually_teaching": false
     },
-    "living_cost": 31.3,
+    "living_cost": 32.3,
     "living_stock": {
-     "sheep_kg": 99725245.065
+     "sheep_kg": 122251211.218
     },
     "lost": [],
     "manual": true,
     "mine_capacity": {},
     "mine_operating_cost": 0,
     "mothballed": [],
-    "net_after_project_spend": 69.3,
-    "net_per_year": -4.6,
+    "net_after_project_spend": 67.7,
+    "net_per_year": -1.8,
     "ok": true,
     "on_the_road_to_the_goal_so_far": null,
     "project_spend_this_year": 0.0,
@@ -1212,7 +1210,7 @@
     "protection": 0.035,
     "reputation": 6.4,
     "resource_throttle": 0.05,
-    "revenue": 89.2,
+    "revenue": 88.2,
     "scandal": 0.0,
     "scandal_danger": 25.0,
     "scandal_now": 0.0,
@@ -1228,8 +1226,6 @@
     "state_attention": {
      "confiscation_risk_above": 0.75,
      "interest_groups": [
-      "~prose~",
-      "~prose~",
       "~prose~",
       "~prose~",
       "~prose~",
@@ -1266,8 +1262,8 @@
     "trades_society_now_has_on_its_own": [],
     "trades_you_created": [],
     "upkeep": 0.0,
-    "wage_bill": 73.6,
-    "wages_you_have_already_paid_this_year": 74.0,
+    "wage_bill": 69.2,
+    "wages_you_have_already_paid_this_year": 69.5,
     "what_you_can_field": "~prose~",
     "where_your_hours_come_from": {
      "deputies_who_direct_work_for_you": 0.0,
@@ -1333,8 +1329,8 @@
     "components": {
      "economy": {
       "counts": "~prose~",
-      "normalized": 0.0843828260180778,
-      "raw": 321.2,
+      "normalized": 0.08447520234808428,
+      "raw": 339.5,
       "raw_detail": {
        "worker_years_equivalent": 3.5
       },
@@ -1353,16 +1349,16 @@
      },
      "literacy": {
       "counts": "~prose~",
-      "normalized": 0.09235158046171126,
+      "normalized": 0.09193851326361702,
       "raw": 0.019,
       "raw_detail": {
        "elite": 0.1412,
        "elite_ceiling": 0.99,
        "general": 0.019,
-       "general_ceiling": 0.4513
+       "general_ceiling": 0.4607
       },
       "weight": 0.15,
-      "weighted": 0.0139
+      "weighted": 0.0138
      },
      "resilience": {
       "counts": "~prose~",
@@ -1396,7 +1392,7 @@
      },
      "workforce": {
       "counts": "~prose~",
-      "normalized": 0.07759441234091091,
+      "normalized": 0.07747940912705516,
       "raw": 1.0,
       "weight": 0.15,
       "weighted": 0.0116
@@ -1410,7 +1406,7 @@
     "ok": true,
     "points": 156,
     "points_scale": "~prose~",
-    "total": 0.1561
+    "total": 0.156
    }
   },
   {
@@ -1423,7 +1419,7 @@
     "seats": [
      {
       "built": 2,
-      "capital": 321.2,
+      "capital": 339.5,
       "country": "norse_900ad",
       "ended": null,
       "seat": "founder",
@@ -1442,7 +1438,7 @@
     "concerns_you_were_running": 0,
     "ended_in": 903,
     "failed_attempts": 0,
-    "money": 321.2,
+    "money": 339.5,
     "ok": true,
     "people": 1.0,
     "reached_it": false,
@@ -1452,8 +1448,8 @@
      "components": {
       "economy": {
        "counts": "~prose~",
-       "normalized": 0.0843828260180778,
-       "raw": 321.2,
+       "normalized": 0.08447520234808428,
+       "raw": 339.5,
        "raw_detail": {
         "worker_years_equivalent": 3.5
        },
@@ -1472,16 +1468,16 @@
       },
       "literacy": {
        "counts": "~prose~",
-       "normalized": 0.09235158046171126,
+       "normalized": 0.09193851326361702,
        "raw": 0.019,
        "raw_detail": {
         "elite": 0.1412,
         "elite_ceiling": 0.99,
         "general": 0.019,
-        "general_ceiling": 0.4513
+        "general_ceiling": 0.4607
        },
        "weight": 0.15,
-       "weighted": 0.0139
+       "weighted": 0.0138
       },
       "resilience": {
        "counts": "~prose~",
@@ -1515,7 +1511,7 @@
       },
       "workforce": {
        "counts": "~prose~",
-       "normalized": 0.07759441234091091,
+       "normalized": 0.07747940912705516,
        "raw": 1.0,
        "weight": 0.15,
        "weighted": 0.0116
@@ -1528,7 +1524,7 @@
      "goal_year": null,
      "points": 156,
      "points_scale": "~prose~",
-     "total": 0.1561
+     "total": 0.156
     },
     "still_to_build_when_it_ended": 152,
     "the_goal": "point_contact_transistor",
