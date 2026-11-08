@@ -16,6 +16,7 @@ import numpy as np
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 
 from . import merchants_book_kernel, merchants_search
+from .merchant_figures import MarketFigures, market_name
 
 _books: "weakref.WeakKeyDictionary" = weakref.WeakKeyDictionary()
 
@@ -73,6 +74,10 @@ class RouteBook:
             self.position_of_slot[base:base + len(areas)] = np.arange(len(areas))
         self.zeros = np.zeros(self.slots, np.float64)
         self._news: Dict[str, np.ndarray] = {}
+        self._market_rows: Dict[int, tuple] = {}
+        self.slot_names = [None] * self.slots
+        for (good, area_id), slot in self.slot_of.items():
+            self.slot_names[slot] = market_name((good, area_id))
         self.scale = None
         self.cost_flat = self.years_flat = None
         self.refresh(carriage)
@@ -96,6 +101,16 @@ class RouteBook:
             if flagged.any():
                 pack.fill_years(carriage, flagged)
                 self.years_flat[low:high] = pack.years.ravel()
+
+    def market_rows(self, tables) -> np.ndarray:
+        """For each slot, its row in the goods-market numbering of `tables` (-1: the market is not numbered). Kept while the
+        numbering stays as it is."""
+        found = self._market_rows.get(id(tables))
+        if found is not None and found[0]() is tables and found[1] == tables.generation:
+            return found[2]
+        rows = np.array(list(map(tables.goods_numbers.get, self.slot_names, repeat(-1))), np.int64)
+        self._market_rows[id(tables)] = (weakref.ref(tables), tables.generation, rows)
+        return rows
 
     def news_current(self, carriage, home_tile) -> np.ndarray:
         """For each slot, whether last year's price there has reached a merchant at `home_tile`."""
@@ -164,7 +179,10 @@ class MerchantRows:
 
 
 def merchant_array(book: RouteBook, table: Mapping[Tuple[str, str], Optional[float]]) -> np.ndarray:
-    """A merchant's figures by (good, area id) in the slots; NaN where it has none."""
+    """A merchant's figures by (good, area id) in the slots; NaN where it has none. A merchant's own figures
+    (`MarketFigures`) are gathered from their column by the slots' market rows."""
+    if isinstance(table, MarketFigures):
+        return table.take(book.market_rows(table.tables))
     array = np.full(book.slots, np.nan)
     if table:
         slots = np.array(list(map(book.slot_of.get, table, repeat(-1))), np.int64)
