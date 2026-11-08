@@ -12,7 +12,8 @@ import numpy
 from sim.book_index import EMPTY, index_find, pack_key
 from sim.book_tables import FREE
 from sim.jit import njit
-from sim.labour.market.exact_sums import exact_sum
+
+from .year_ledger_note_kernels import exact_sum
 
 
 @njit

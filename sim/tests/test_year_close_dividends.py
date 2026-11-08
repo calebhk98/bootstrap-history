@@ -10,6 +10,7 @@ import numpy as np
 from sim.book import Book, InsufficientFunds
 from sim.economy import ownership
 from sim.economy.types import Transfer
+from sim.economy.year_close_sums import python_sum
 from sim.economy.year_close_dividends import add_property_income, as_transfers, dividend_plan, post_dividends
 from sim.economy.year_close_owners import Participants
 
@@ -119,6 +120,16 @@ class PostDividendsTests(unittest.TestCase):
         with self.assertRaises(InsufficientFunds):
             post_dividends(book, "money", plan, columns.ids, participants)
         self.assertEqual(book.balance("farm", "money"), 10.0)
+
+
+class PythonSumTests(unittest.TestCase):
+    def test_it_adds_floats_as_the_builtin_sum_does_on_values_that_cancel(self):
+        rng = np.random.default_rng(4)
+        for size in (0, 1, 2, 3, 7, 40):
+            values = np.concatenate([rng.normal(size=size) * 10.0 ** rng.integers(-8, 16, size=size)])
+            self.assertEqual(python_sum(values, size), sum(values.tolist()))
+        shares = np.array([0.1, 0.2, 0.3, 1e16, -1e16])
+        self.assertEqual(python_sum(shares, 5), sum(shares.tolist()))
 
 
 class PropertyIncomeTests(unittest.TestCase):

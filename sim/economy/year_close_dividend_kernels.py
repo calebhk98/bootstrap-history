@@ -9,7 +9,8 @@ Payees are participants (year_close_owners.py), not book numbers."""
 import numpy
 
 from sim.jit import njit
-from sim.labour.market.exact_sums import python_sum
+
+from .year_close_sums import python_sum
 
 DIVIDEND, SHARE_DIVIDEND = 0, 1        # the kind of a row: the owner's dividend, or a part paid to a holder of shares
 

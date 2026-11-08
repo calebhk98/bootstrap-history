@@ -63,7 +63,7 @@ def close_producers_of_year(setup, record, view, ledger, arrays: YearArrays, pro
     dividend = answer.dividend
     paying = ran & ~exited & (dividend > 0.0)
     noted = [amount if pays else 0 for amount, pays in zip(dividend.tolist(), (ran & (dividend > 0.0)).tolist())]
-    record.capital_markets.last_dividends.update(zip(ids, noted))        # what shares.note_dividend remembers; an exit forgets it below
+    shares.note_dividends(record.capital_markets, zip(ids, noted))        # an exit forgets it below
     worn = np.nonzero(ran & ~exited & (columns.capacity_runs - answer.new_capacity > 0.0))[0]
     note_plant_worn(ledger, [ids[row] for row in worn.tolist()], (columns.capacity_runs - answer.new_capacity)[worn])
     participants = Participants()
