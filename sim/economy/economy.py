@@ -15,7 +15,7 @@ from . import outlay_room, taxes, bondage, bondage_hours, bondage_keep, bonded_p
 from .credit_view import CreditView
 from . import transfer_rows
 from .market_areas_follow import follow
-from .market_memory import YearView
+from .market_memory import YearView, note_written
 from .mint import mint_orders, settle_mint, staff as staff_mint
 from .mint_labour import close_year as close_mint_year, mint_agent
 from .money_audit import MoneyAudit, year_report
@@ -106,6 +106,7 @@ class Economy:
     def change_setup(self, **changes: Any) -> None:
         """The one place the setup changes: a new setup with these fields replaced (the old one is never edited in place)."""
         self.setup = dataclasses.replace(self.setup, **changes)
+        note_written()      # what readers of the memory (the wage rule's trades and opening wages) took from the old setup is read again
 
     def set_improvements(self, improvements: Mapping[str, Mapping[str, Any]]) -> bool:
         """Rebuild the carriage table over these built ways, partition the market areas again over it and

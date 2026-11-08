@@ -609,3 +609,38 @@ Not done, and why (measure with `python3 tools/measure/warm_year_profile.py SAVE
 - **Per-good price readers.** `entry_year._traded_volume`, `producers.paid_input_prices` and `next_expectations` read a few thousand keys a year, each a dict lookup; the
   year view has no cleared-price block.
 
+## Wage views and the views under them (stage 4, second package)
+
+A view is cached when everything it reads reports its changes; where the owner kept no count, the owner now bumps a channel at every
+writer, and a source that cannot be cached (a new object each read, or a quote) still lists the channel so that views over it can be.
+
+| Source (owner) | Fresh while | Writers and how each bumps |
+|---|---|---|
+| `civilisation` (scenario, cached) | the `civilisation` channel | `open_scenario` and `record_opening_literacy` are the only code that changes the record after it is loaded; both bump |
+| `home_tiles_held` (land, cached) | the `owners` channel and the `civilisation` input | `Ownership.hand_over` is the one writer of the owner map after it is seeded; it bumps right after the transfer |
+| `agent_wage_cell[(trade, tile)]`, `agent_working_hours` (markets, cached) | the `memory` channel | `market_memory.note_written` (every write to the memory's prices, wages and rates, `Economy.change_setup`, the economy being built, `open_agent` finishing, `add_workers`) calls the markets module through a weak listener; `reprice_opening_money` bumps when it sets `money_from_economy` |
+| `agent_wage_at` (markets, quote) | never cached | the keyed cell above is the same figure, and what the workforce reads |
+| `home_price_level` (coin, cached) | `ratios` channel, input `foreign_coin_home_units` (foreign trade's `books` channel), input `civilisation` | `revalue_coin_metals` bumps `ratios`; `settle_flow` and `record_lift` bump `books`; the opening stock is kept once |
+| `farm_land` (agriculture, uncached: a new `Land` each read) | the `farm_land` channel | `set_farm_land` is the one writer of the cleared hectares and quality; it bumps |
+| `base_tile` (workforce, cached per seat) | the `base_tile` seat channel and the `home_tiles_held` input | `Relocation.move_base` writes the field and only the `move_base` command calls it; the command bumps when it returns |
+
+Cached on top of them: `money_per_labour_hour`, `wage[trade]` (per seat; inputs `unskilled_trade`, `agent_wage_cell`, `base_tile`,
+`opening_money_per_labour_hour`, `home_price_level`), `opening_money_per_labour_hour` (inputs `civilisation`, `trade_records`),
+`base_tile`, `farm_land_hectares` (input `farm_land`). A seat handed over or added is a seat put whole under an id, which no channel
+sees: `Clock.seat_replaced` (called by `seat_registry.add_seat` and `seat_move.move_seat`) is part of every seat-scoped signature.
+
+Left uncached, and why: `labour_quote`, `market_annual_wage`, `wage_signature` (before the economy prices the money they read the
+cost-of-living factors, the price index, the town's housing and output per head, none of which report), `base_annual_wage` (the hours of
+a person-year come from `hours_per_person_year` before the economy opens), `standing_job_pay`, `capacity_job_pay` (the seat's hours,
+written in place), `hours_per_person_year` (the working-day works that run: production and ventures publish them without a channel),
+`settlement_tiles` and `town_mortality_premium_by_tile` (demography's people by tile and population: the writers are `store_bands` and the
+regions' step, which would bump a channel, but each read builds a new object that callers may keep or change, and only 2 reads a year
+come from the workforce, so not done here), `seat_base_tile` (keyed by a seat the
+view is not scoped to), `farming_technique`, `wage_materials`, and the seat views (`available_trades`, `trade_available`,
+`taught_trade_people`, `people_who_exist`, `reachable_trade_population`, `occupation_*`: labour changes `trades_created` and the
+people in place at several sites).
+
+Tests: `sim/tests/test_wage_views_cached.py` (each writer bumps and the next read is the fresh value; a mod adjuster still applies;
+removing any one bump fails a test). Debug run: every cached read checked against a fresh computation over three Rome and five England
+years raised no `StaleView`; `SHADOW_CHECK_EVERY = 1` is set in a script, not in the repository.
+

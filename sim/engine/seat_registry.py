@@ -18,6 +18,7 @@ def add_seat(sim, seat_id: str, seat: SeatState) -> None:
 	sim.state.seats[seat_id] = seat
 	if sim.assembly is not None:   # a host built without a game has none
 		game_assembly.give_seat_slots(sim.assembly, seat)
+		sim.assembly.clock.seat_replaced(seat_id)   # what was cached under an earlier seat of this id is not this seat's
 		sim.send(WatchActive(seat_id))
 		sim.send(WatchBusiness(seat_id))
 

@@ -62,6 +62,7 @@ class AgentEconomy:
                 self.stored["opening"] = opening
                 self.save()
             self._built_from = self.stored
+            economy_api.note_memory_changed()     # a new memory: what was read from the old one is read again
             purses = self._world.state.actors.purses
             purses.adopt_book(economy_api.economy_book(self._economy), economy_api.economy_contracts(self._economy))
             economy = self._economy

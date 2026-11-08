@@ -94,7 +94,7 @@ class AgentEconomyReads:
     def agent_wage_at(self, trade, tile):
         """Money one hour of the trade costs a bid on `tile` (the wage of the tile's labour area, else the one wage
         rule); None until the game's money is priced at the economy."""
-        return self._needs.agent_wage_at(trade, tile)
+        return self._needs.agent_wage_cell[(trade, tile)]
 
     def agent_hours_offered_at(self, trade, tile):
         """Hours of the trade households offered in `tile`'s labour area at the last clearing; None before one."""

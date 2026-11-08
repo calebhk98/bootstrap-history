@@ -7,6 +7,7 @@ from sim.demography.api import ChangeFarmland
 from sim.ledger.api import PayEdge, ReceiveFromEdge
 
 from .commands import InvestFarm, RecordOpeningFarm, SellFarm, SetFarmLand, SetFarmTechnique, SetFarmTerritory
+from .farm_state import FARM_LAND
 from .food import WILD_STOCK
 from .module import Agriculture
 from .state import AgricultureWorld
@@ -28,7 +29,7 @@ READS_BY_OWNER = {
 _LIVE = dict(cached=False)
 
 MODULE_SPECS = (ModuleSpec(
-    "agriculture", Agriculture, channels=(WILD_STOCK,), world_state=AgricultureWorld,
+    "agriculture", Agriculture, channels=(WILD_STOCK, FARM_LAND), world_state=AgricultureWorld,
     publishes=(
         ViewSpec("farm_weather", "farm_weather", kind=KEYED, **_LIVE),
         ViewSpec("harvest_weather", "harvest_weather", kind=QUOTE),
@@ -40,7 +41,7 @@ MODULE_SPECS = (ModuleSpec(
         ViewSpec("food_potential", "food_potential", **_LIVE),
         ViewSpec("wild_stock", "wild_stock", channels=(WILD_STOCK,)),
         ViewSpec("farm_land_price", "farm_land_price", **_LIVE),
-        ViewSpec("farm_land", "farm_land", **_LIVE),
+        ViewSpec("farm_land", "farm_land", channels=(FARM_LAND,), **_LIVE),   # a new `Land` each read: uncached, but it reports its changes
         ViewSpec("farm_technique_this_year", "farm_technique_this_year", **_LIVE),
         ViewSpec("farm_ladder", "farm_ladder", **_LIVE),
         ViewSpec("farm_arable_ceiling", "farm_arable_ceiling", **_LIVE),

@@ -1,8 +1,9 @@
 """The land module's spec (sim/assembly).
 
 The owner map, the ways and works and the colonies are saved in the world and seat slots. The installed mods' map overlays are
-the engine's, published by sim/engine/bridge_land.py. No view is cached: the owner map is seeded by its first read, and the
-geography views follow the held technologies and the people, which are written outside any command of this module."""
+the engine's, published by sim/engine/bridge_land.py. Only `home_tiles_held` is cached: the owner map changes only in `hand_over`
+(the `owners` channel) and the home civilisation's id does not change; the geography views follow the held technologies and the
+people, which are written outside any command of this module."""
 from sim.actors.api import FollowTileTransfer
 from sim.assembly.api import KEYED, QUOTE, ModuleSpec, ViewSpec
 from sim.demography.api import SendSettlers
@@ -13,6 +14,7 @@ from sim.stores.api import WriteStore
 
 from .commands import AdvanceColonies, BuildWay, BuildWork, FinishWays, FoundColony, LoseWork, OpenGeography, TransferTile
 from .module import Land
+from .ownership import OWNERS
 from .state import LandSeat, LandWorld
 
 READS_BY_OWNER = {
@@ -36,13 +38,13 @@ READS_BY_OWNER = {
 _LIVE = dict(cached=False)
 
 MODULE_SPECS = (ModuleSpec(
-    "land", Land, world_state=LandWorld, seat_state=LandSeat,
+    "land", Land, channels=(OWNERS,), world_state=LandWorld, seat_state=LandSeat,
     publishes=(
         ViewSpec("tile_owner", "tile_owner", kind=KEYED, **_LIVE),
         ViewSpec("tile_control", "tile_control", kind=KEYED, **_LIVE),
         ViewSpec("tiles_owned_by", "tiles_owned_by", kind=KEYED, **_LIVE),
         ViewSpec("tile_owner_map", "tile_owner_map", **_LIVE),
-        ViewSpec("home_tiles_held", "home_tiles_held", **_LIVE),
+        ViewSpec("home_tiles_held", "home_tiles_held", channels=(OWNERS,), inputs=("civilisation",)),
         ViewSpec("tiles_listed_by", "tiles_listed_by", kind=QUOTE),
         ViewSpec("home_tiles_held_version", "home_tiles_held_version", **_LIVE),
         ViewSpec("tile_ownership_problems", "tile_ownership_problems", **_LIVE),

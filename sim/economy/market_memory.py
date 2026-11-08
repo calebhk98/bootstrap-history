@@ -4,6 +4,7 @@ Prices, wages and rates are last year's outcomes; holdings are now. An agent pla
 sees nothing of this year's clearing, which is where the economy's lags come from.
 """
 import dataclasses
+import weakref
 from dataclasses import dataclass, field
 from typing import ClassVar, Dict, Optional, Set, Tuple
 
@@ -31,8 +32,21 @@ _writes = [0]      # bumped by each write to the prices, wages, rates and price 
 _age_and_kind_writes = [0]      # bumped by each in-place write to the trade ages and quote kinds (a redraw replaces the stores whole)
 
 
+_listeners = []     # weak references to the callbacks told of every write (an assembled game's markets module, to bump its channel)
+
+
+def add_write_listener(callback) -> None:
+    """Tell `callback()` after every write to the memory, for as long as its owner lives (the callback is a bound method, held weakly)."""
+    _listeners[:] = [reference for reference in _listeners if reference() is not None]
+    _listeners.append(weakref.WeakMethod(callback))
+
+
 def note_written() -> None:
     _writes[0] += 1
+    for reference in _listeners:
+        callback = reference()
+        if callback is not None:
+            callback()
 
 
 def age_and_kind_stamp() -> int:
