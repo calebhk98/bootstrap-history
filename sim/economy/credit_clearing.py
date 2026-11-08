@@ -13,7 +13,7 @@ from sim.loans.clearing_kernel import TABLE_FULL, clear_loans
 from sim.loans.clearing_tables import (CLEARED, NEW_LOANS, NO_BORROWER_AT_ASK, NO_OFFER_AT_RATE, OFFERS, REQUESTS, NewLoans, Offers,
                                        Requests)
 
-from . import bank_credit_risk, credit, credit_cap
+from . import bank_credit_risk, credit, credit_cap, credit_rate
 from .replaced import replaced
 from .types import AgentId, CurrencyId, FundsOffer, LoanRequest
 
@@ -25,7 +25,7 @@ def constants() -> numpy.ndarray:
     """The declared numbers the kernel uses, in the order of `clearing_tables.CONSTANT_NAMES`."""
     return numpy.array([bank_credit_risk.DEFAULT_PROBABILITY_SENSITIVITY, bank_credit_risk.BANK_LAMBDA,
                         bank_credit_risk.MARKUP_REFERENCE_RATE, credit.ARREARS_PREMIUM, credit.RATE_ADJUSTMENT_SHARE_PER_YEAR,
-                        credit.credit_rate.MATERIAL_LENDER_SHARE, credit_cap.BISECTION_STEPS], dtype=numpy.float64)
+                        credit_rate.MATERIAL_LENDER_SHARE, credit_cap.BISECTION_STEPS], dtype=numpy.float64)
 
 
 def ranks_of(names: Sequence[str]) -> List[int]:
@@ -56,12 +56,24 @@ def offer_table(offers: Sequence[FundsOffer]) -> Offers:
     return table
 
 
+_KEPT_LOANS = []        # the loans table of the last clearing, reused while it is big enough (a clearing's loans are read before the next)
+
+
+def _loans_table(room: int) -> NewLoans:
+    """An empty loans table with room for `room` loans."""
+    if not _KEPT_LOANS or len(_KEPT_LOANS[0].principal) < room:
+        _KEPT_LOANS[:] = [NEW_LOANS.new_table(NewLoans, room)]
+    table = _KEPT_LOANS[0]
+    table.row_count[0] = 0
+    return table
+
+
 def run_kernel(requests: Requests, offers: Offers, last_rate: Optional[float], rate_ceiling: Optional[float],
                expected_inflation: float):
     """(status, scalars, new loans): the clearing kernel run, on a loans table made bigger and run again if it was too small."""
     room = max(16, len(requests.amount) + len(offers.amount))
     while True:
-        new_loans = NEW_LOANS.new_table(NewLoans, room)
+        new_loans = _loans_table(room)
         scalars = numpy.zeros(2)
         status = clear_loans(requests, offers, constants(), 0.0 if last_rate is None else last_rate, last_rate is not None,
                              0.0 if rate_ceiling is None else rate_ceiling, rate_ceiling is not None, expected_inflation, new_loans, scalars)

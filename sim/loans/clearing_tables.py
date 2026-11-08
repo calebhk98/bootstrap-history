@@ -50,3 +50,4 @@ CONSTANT_NAMES = ("default_probability_sensitivity", "bank_lambda", "markup_refe
 
 # the causes a clearing reports (0: it cleared)
 CLEARED, NO_BORROWER_AT_ASK, NO_OFFER_AT_RATE = 0, 1, 2
+

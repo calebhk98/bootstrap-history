@@ -5,7 +5,7 @@ table afterwards.
 arrays (a row per loan served); the table is not touched until `apply_served`, so the foreclosures and losses the answer causes read the loans
 as they stood. `Served` makes objects (`Transfer`, `Default`, `Receipt`, the updated `Contract`s) only on demand, for callers that
 still take them."""
-from typing import Dict, List, Mapping, Optional, Sequence
+from typing import Dict, List, Mapping, Sequence
 
 import numpy
 

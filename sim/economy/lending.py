@@ -45,10 +45,10 @@ def _collect(record, money: str, year: int, bondage_years: float) -> Dict[str, f
     received = {lender: receipt.interest for lender, receipt in served.receipts().items() if receipt.interest > 0.0}
     merchants_credit.stake(record.merchants, credit_service.principal_changes(store, served, serving))
     defaults = served.defaults()
-    pledged_loans = {store.texts[number]: store.snapshot(row) for number, row in zip(
-        store.table.number[serving].tolist(), serving.tolist()) if store.table.collateral_tile[row] != NO_TILE}
-    taken = [dataclasses.replace(default, loss=max(0.0, default.loss - titles.foreclose(record, pledged_loans[default.loan_id])))
-             if default.loan_id in pledged_loans else default for default in defaults]
+    pledged_rows = {store.texts[number]: row for number, row in zip(store.table.number[serving].tolist(), serving.tolist())
+                    if store.table.collateral_tile[row] != NO_TILE}
+    taken = [dataclasses.replace(default, loss=max(0.0, default.loss - titles.foreclose(record, store.snapshot(pledged_rows[default.loan_id]))))
+             if default.loan_id in pledged_rows else default for default in defaults]
     for agent, lost in credit_claims.losses_by_lender(taken).items():
         record.credit.add_loss(agent, lost)
     bondage.enter(record, taken, bondage_years)

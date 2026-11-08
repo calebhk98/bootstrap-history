@@ -328,18 +328,47 @@ path to raise the book's own error. `open_entrants` keeps the owner's cash as th
 the plans are applied; `ExitBatch` collects the postings of each exit (repayments, dividend, goods) and posts them at `finish()`, which
 is safe because an exit reads only its own cash and goods.
 
-Not done, and why (measure with `python3 tools/measure/warm_year_profile.py SAVE OUT.prof`):
+Loans are on a table (next section). Not done, and why (measure with `python3 tools/measure/warm_year_profile.py SAVE OUT.prof`):
 
-- **Loans as a table.** The whole loan side (service, clearing, claims, the close's loan loop, write-offs) is a small share of a warm
-  year in the profile. A table that is the only copy would need every reader of `record.credit.loans` converted (banks, funds, titles,
-  secondary trade, state finance, debt relief, bank runs and bank service all read or replace the list, and `credit_record.transfer_loan`,
-  `shrink_collateral`, `bank_service` and `Contracts.rename` change a loan in place); a table kept beside the list has to be packed again
-  after each of the several list replacements a year makes, which costs more than the Python loops it would replace. So it waits for
-  its readers.
 - **Entry reading columns.** The remaining entry cost is spread over thin Python (the plans' loops, `unfilled`, `gap_at_entry_price`,
   `demand_at` over `Bid` objects, the per-call glue of `EntryTables.siting`). The bids come from `ledger.bids_by_market`, which the
   goods side fills with `LeftMarket.all_bids` (first-round rows plus later rounds' `Bid` objects): entry can read GoodsBids columns
   only when that owner hands over per-market column blocks (floor, flexible, reference price, elasticity, budget, maximum price).
+
+## Loans as a table (stage 4)
+
+`sim/loans/` holds the term loans as one column table, `Loans` (`columns.py`: every column has a meaning and a unit), and nothing else
+holds a copy. `LoanStore` (`store.py`) owns the table and the numbering of its names: lenders and borrowers, currencies, collateral
+tiles and kinds are `IdTable`s of the store's own (kernels never iterate agent numbers; every sort by name goes through a rank array, so
+the numbering can differ between a live game and a loaded one without changing a sum), and each loan has a number that is never
+reused, with its id text in `texts`. Rows stay in the order the loans were struck, which is the order the credit market's sums follow.
+The save is the same list of records as before (`records()`, `load()`), so a save round-trips and its digest is unchanged.
+
+| Was | Now |
+|---|---|
+| `record.credit.loans`, a list of mutable `Contract`s changed in place | `LoanList` (`view.py`): rows read and written through `LoanRow`; a write bumps `store.version` |
+| whole-list replacement (service, write-offs, exits, bank code, debt relief) | `store.retain(mask)` (drop rows), `store.gather(order)` (drop and reorder), `store.replace_all` (a test's or a rare caller's list) |
+| `transfer_loan`, `shrink_collateral`, `Contracts.rename` | `store.split_off`, `store.shrink_collateral`, `store.rename` |
+| `credit.service_split` over a sorted list | `credit_service.serve` over the due rows, sorted by id text: kernel `service_loans`; the answer is arrays (a row per loan served, a slot per lender for the `Receipt`) and the table is changed after the losses it causes are booked (`apply_served`) |
+| `Transfer` per payment and per disbursement | rows posted by `transfer_rows.post_payments`; names are numbered as `transfer_many` numbers them |
+| `credit.clear_with_cause` | `credit_clearing.clear_with_cause`: requests and offers are packed into `ClearingRequests` and `ClearingOffers`, kernel `clear_loans` fills the new-loans table, the requests' output columns and the base rate |
+| claims, debts, principal and arrears history by borrower | `reads.py` over the columns (`credit_claims` sends a `LoanList` there and any other sequence of loans through its Python) |
+| the close's loan loop, write-offs | `close_kernel.producer_loans`, `write_down_kernel.write_down` |
+
+**Who still holds a `Contract`.** Objects are made from rows only at the edges: `store.snapshot(row)` for the UI, the protocol, mods and
+tests; the loans a clearing struck (`LoanClearing.loans`, which `economy._lend`, `credit_lines.split_lines`, `banks.draw_deposits`, `shares`
+and `lending.bid_household_loans` still read as a list before `add_loans` packs them); the `Default`s that `titles.foreclose`,
+`bondage.enter` and `credit_claims.losses_by_lender` take (made from the kernel's rows, few); a producer's loans at an exit
+(`producer_exit`); and the `LoanRow`s that the bank rules (`banks`, `bank_runs`, `bank_service`), `funds.marked_holdings` and
+`secondary_trade` hold for the handful of loans they weigh one by one. A `Contract` handed to `add_loan` is copied: change the row it
+returns, not the object. The loan requests are still `LoanRequest` objects in `record.credit.loan_requests` (their writers are the
+close, entry and the state); they become a table at the clearing.
+
+**Tests.** Each kernel against the Python it replaced, on random inputs, equal to the last bit: `test_loans_service_kernel`,
+`test_loans_clearing_kernel` (the Python is `sim/tests/credit_clear_plain.py`), `test_loans_reads`, `test_loans_write_down_and_close`,
+`test_loans_store` (`sim/tests/loans_plain.py` is the service, write-off and close Python). Bank paths: `test_bank_runs`,
+`test_economy_banks`, `test_secondary_trade`, `test_funds` run on the table; the same bank scenarios were run in the tree before this
+change and after it with identical end states.
 
 ## Plans and the rare order sources (stage 4, one package)
 

@@ -12,7 +12,7 @@ import numpy
 
 from sim.compiled_tables.growth import reserve_rows
 from sim.compiled_tables.ids import IdTable
-from sim.contract_record import TERM_LOAN, Contract
+from sim.contract_record import Contract
 from sim.rekey import rename_text
 
 from .columns import FLOAT_FIELDS, LOAN_TABLE, NO_TILE, RECORD_ORDER, Loans
@@ -48,25 +48,7 @@ class LoanStore:
         return "" if number == NO_TILE else self.tiles.name_list[number]
 
     def tile_number(self, name: str) -> int:
-        return NO_TILE if not name else int(self.tiles.admit([name])[0])
-
-    def agent_ranks(self) -> numpy.ndarray:
-        """For each agent number, its place when all agent names are sorted: the order the rules sort by name."""
-        names = self.agents.name_list
-        ranks = numpy.empty(len(names), dtype=numpy.int64)
-        for place, number in enumerate(sorted(range(len(names)), key=names.__getitem__)):
-            ranks[number] = place
-        return ranks
-
-    def text_ranks(self) -> numpy.ndarray:
-        """For each row, its place when the rows are sorted by id text (rows with the same text keep their row order)."""
-        count = len(self)
-        texts = self.texts
-        numbers = self.table.number
-        ranks = numpy.empty(count, dtype=numpy.int64)
-        for place, row in enumerate(sorted(range(count), key=lambda each: texts[numbers[each]])):
-            ranks[row] = place
-        return ranks
+        return NO_TILE if not name else self._number_of(self.tiles, name)
 
     # ---- rows -----------------------------------------------------------------------------------
     def _room(self, extra: int) -> None:
@@ -94,6 +76,12 @@ class LoanStore:
         self.row_of_number[self.table.number[:count]] = numpy.arange(count, dtype=numpy.int64)
         self.version += 1
 
+    @staticmethod
+    def _number_of(names: IdTable, name: str) -> int:
+        """The number of `name`, admitted when new."""
+        number = names.numbers.get(name)
+        return int(names.admit([name])[0]) if number is None else number
+
     def append_contract(self, item: Any, number: Optional[int] = None) -> int:
         """A loan with the fields of `item` (a Contract or anything with its attributes) struck last; its number is a new one unless
         `number` is given. Returns the row."""
@@ -102,10 +90,10 @@ class LoanStore:
         table = self.table
         number = self._new_number(item.contract_id) if number is None else number
         table.number[row] = number
-        table.lender[row] = self.agents.admit([item.lender])[0]
-        table.borrower[row] = self.agents.admit([item.borrower])[0]
-        table.currency[row] = self.currencies.admit([item.currency])[0]
-        table.kind[row] = self.kinds.admit([item.kind])[0]
+        table.lender[row] = self._number_of(self.agents, item.lender)
+        table.borrower[row] = self._number_of(self.agents, item.borrower)
+        table.currency[row] = self._number_of(self.currencies, item.currency)
+        table.kind[row] = self._number_of(self.kinds, item.kind)
         table.collateral_tile[row] = self.tile_number(item.collateral_tile)
         table.issued_year[row] = item.issued_year
         for field in FLOAT_FIELDS:
@@ -117,6 +105,7 @@ class LoanStore:
 
     def append_contracts(self, items: Iterable[Any]) -> None:
         items = list(items)
+        self.agents.admit([name for item in items for name in (item.lender, item.borrower)])      # one batch of new names, not one each
         self._room(len(items))
         for item in items:
             self.append_contract(item)
@@ -280,10 +269,3 @@ class LoanStore:
         count = len(self)
         self.retain(self.table.lender[:count] != self.table.borrower[:count])
         self.version += 1
-
-    def has_kind(self, name: str) -> bool:
-        return self.kinds.find(name) is not None
-
-    @property
-    def term_kind(self) -> int:
-        return int(self.kinds.admit([TERM_LOAN])[0])

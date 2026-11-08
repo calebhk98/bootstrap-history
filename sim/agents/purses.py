@@ -17,7 +17,7 @@ with its interest. A draw beyond what the borrower may be lent, or beyond what l
 from typing import Any, Callable, Dict, List, Optional, Set, Tuple
 
 from sim.book import EDGE_EXCHANGE, ROUNDING_SHARE, Book, InsufficientFunds, Transfer, is_edge
-from sim.contracts import DEPOSIT, FACILITY, Contracts
+from sim.contracts import FACILITY, Contracts
 from sim.rekey import rekey
 
 from .bonds import BondBook

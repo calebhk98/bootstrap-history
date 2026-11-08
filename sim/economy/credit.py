@@ -13,10 +13,8 @@ from typing import Dict, List, Mapping, Optional, Sequence, Tuple
 
 from sim.constants import declare
 
-from . import bank_credit_risk, credit_cap, credit_rate
-from .order_book import Entry, allocate_in_order, sticky_move
+from . import bank_credit_risk
 from .types import AgentId, CurrencyId, FundsOffer, Loan, LoanRequest, Transfer
-from .replaced import replaced
 
 RATE_ADJUSTMENT_SHARE_PER_YEAR = declare(
     "RATE_ADJUSTMENT_SHARE_PER_YEAR", 0.3, kind="temporary_heuristic",
