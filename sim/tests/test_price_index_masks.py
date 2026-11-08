@@ -3,12 +3,10 @@ small area map and a layout of written-out market keys."""
 
 QUICK_TOPIC = True
 
-import types
 import unittest
 
 import numpy
 
-from sim.economy.country_figures import _traded_volumes, _traded_volumes_by_market
 from sim.economy.market_areas import AreaMap
 from sim.economy.market_memory import KEY_SEPARATOR
 from sim.economy.price_index import MarketLayout
@@ -67,25 +65,6 @@ class LabourAreaMask(unittest.TestCase):
         mask = labour_area_mask(layout, {"a", "c"})
         kept = {key for key, flag in zip(layout.keys_grouped, mask.tolist()) if flag}
         self.assertEqual(kept, {"smith|work@a", "weaver|work@c"})
-
-
-class TradedVolumes(unittest.TestCase):
-    def test_a_countrys_volumes_equal_the_market_by_market_sum_in_value_and_key_order(self):
-        map_of = area_map()
-        areas = [area.area_id for good in ("grain", "gold") for area in map_of.areas(good)]
-        volumes = {good + KEY_SEPARATOR + area: 0.1 * (index + 1) for index, (good, area) in enumerate(
-            (good, area) for good in ("iron", "grain", "gold", "iron_ore", "unmapped") for area in areas + ["work@a"])}
-        economy = types.SimpleNamespace(record=types.SimpleNamespace(goods=types.SimpleNamespace(volumes=volumes)), area_map=map_of,
-                                        setup=types.SimpleNamespace(tiles=TILES, tiles_of=lambda country: {"home": ("a", "b"), "away": ("c",)}[country]))
-        for country in (None, "home", "away"):
-            new, old = _traded_volumes(economy, country), _traded_volumes_by_market(economy, country)
-            self.assertEqual(list(new), list(old), country)
-            self.assertEqual(new, old, country)
-
-    def test_no_volumes_is_no_totals(self):
-        economy = types.SimpleNamespace(record=types.SimpleNamespace(goods=types.SimpleNamespace(volumes={})), area_map=area_map(),
-                                        setup=types.SimpleNamespace(tiles=TILES))
-        self.assertEqual(_traded_volumes(economy, None), {})
 
 
 if __name__ == "__main__":

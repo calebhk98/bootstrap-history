@@ -88,13 +88,3 @@ class WageRuleTable:
         row = self._trade_row.get(trade)
         column = self._area_column.get(area)
         return None if row is None or column is None else grid.item(row, column)
-
-    def wages(self, trades: Sequence[str], area: str) -> Optional[list]:
-        """The rule's wage of each of `trades` in `area` as a list in their order, read from the area's column; None when the table does
-        not hold the area or some trade (the per-cell rule then answers)."""
-        grid = self._current()
-        column = self._area_column.get(area)
-        rows = [self._trade_row.get(trade) for trade in trades]
-        if column is None or None in rows:
-            return None
-        return grid[np.array(rows, dtype=np.int64), column].tolist()

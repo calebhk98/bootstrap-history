@@ -574,31 +574,20 @@ class YearView:
     def wages_at(self, trades: tuple, tile: TileId) -> Dict[str, float]:
         """The one wage rule (`trade_wages.wage_in_view`) for each of `trades` in its labour area on `tile`; read once per
         trades tuple (kept by the caller) and tile until the memory is written to."""
+        from .trade_wages import wage_in_view
         reads = self._current()
         key = ("wages", id(trades), tile)
         kept = reads.get(key)
         if kept is None or kept[0] is not trades:
-            kept = reads[key] = (trades, self._wages_by_trade(trades, tile))
+            found = {}
+            for trade in trades:
+                area = self.area_of(trade, tile)
+                wage = reads.get(("wage", trade, area))
+                if wage is None:
+                    wage = reads[("wage", trade, area)] = wage_in_view(self.setup, self, trade, area)
+                found[trade] = wage
+            kept = reads[key] = (trades, found)
         return dict(kept[1])
-
-    def _wages_by_trade(self, trades: tuple, tile: TileId) -> Dict[str, float]:
-        """The wage rule of each of `trades` on `tile`: one column read of the rule's table when no trade is also a good (a good's id names
-        its goods area, not a labour area); else trade by trade."""
-        table = self._rule_table(self.setup)
-        if table is not None and self._goods.isdisjoint(trades):
-            found = table.wages(trades, self._labour_area_of(tile))
-            if found is not None:
-                return dict(zip(trades, found))
-        from .trade_wages import wage_in_view
-        reads = self._current()
-        wages = {}
-        for trade in trades:
-            area = self.area_of(trade, tile)
-            wage = reads.get(("wage", trade, area))
-            if wage is None:
-                wage = reads[("wage", trade, area)] = wage_in_view(self.setup, self, trade, area)
-            wages[trade] = wage
-        return wages
 
     def interest_rate(self, currency: CurrencyId) -> Optional[float]:
         """Last year's base lending rate; None for a currency the memory holds no rate for (a plan that needs
