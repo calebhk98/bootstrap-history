@@ -16,7 +16,7 @@ import numpy as np
 
 from sim.labour.api import SOURCE_TASK_FLOOR_FRACTION, learning_curve
 
-from . import entry_kernels, entry_siting_tables, labour_state, location, location_inputs, practice, sites
+from . import entry_kernels, entry_plan_pack, entry_siting_tables, labour_state, location, location_inputs, practice, sites
 from .entry_spare import idle_runs
 from .year_close_dividend_kernels import add_in_order
 from .producers_close import LOSS_YEARS_BEFORE_EXIT
@@ -45,6 +45,7 @@ class EntryTables:
     def __init__(self, setup, record, view, area_map, arrays, carriage, crews_of):
         self.setup, self.record, self.area_map, self.arrays = setup, record, area_map, arrays
         self.carriage, self.crews_of = carriage, crews_of
+        self.known_goods = set(area_map.goods())
         matrices, memory = arrays.matrices, arrays.memory
         self.matrices, self.tiles, self.goods, self.trades = matrices, arrays.tiles, matrices.goods, matrices.trades
         self.recipe_row = matrices.recipes.row
@@ -79,6 +80,7 @@ class EntryTables:
         self._reach = None            # the reachable output by good and area (`capacity_in`), made on first use
         self._area_masks: Dict[str, np.ndarray] = {}
         self._unsited_candidates: Dict[Tuple[int, str], np.ndarray] = {}
+        self._traded = None
 
     @classmethod
     def build(cls, setup, record, view, area_map, arrays, carriage, crews_of) -> "EntryTables":
@@ -185,6 +187,12 @@ class EntryTables:
             return 0.0 if good_column is None or area_column is None else float(reach[good_column, area_column])
         return capacity
 
+    def traded_grid(self) -> np.ndarray:
+        """What each good's market carried last year, seen from each tile (`entry_plan_pack.traded_grid`), read once."""
+        if self._traded is None:
+            self._traded = entry_plan_pack.traded_grid(self)
+        return self._traded
+
     # ---- spare output -----------------------------------------------------------------------------------------
     def spare_output(self) -> np.ndarray:
         """`entry_year._spare_output` as a grid over good column and area column."""
@@ -195,7 +203,10 @@ class EntryTables:
 
     # ---- siting -----------------------------------------------------------------------------------------------
     def _ready_siting(self) -> None:
-        """What every siting reads of the producers and the map; read once, on the first siting."""
+        """What every siting reads of the producers and the map; read once, on the first siting (a later call would drop the sites
+        already claimed)."""
+        if self._siting_ready:
+            return
         setup, record, columns = self.setup, self.record, self.arrays.producers
         matrices = self.matrices
         tile_count, goods_count = len(self.tiles.ids), len(self.goods.ids)

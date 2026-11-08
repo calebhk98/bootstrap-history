@@ -12,7 +12,8 @@ from sim.book_apply import RULE_SINGLE
 
 from . import producer_table
 from .posting_sequence import post_in_order
-from . import credit, entry_kernels, entry_practice, location, ownership, practice, producer_exit, sites, unit_cost, year_bids
+from . import (credit, entry_kernels, entry_plan_table, entry_practice, entry_unmet, location, ownership, practice, producer_exit, sites,
+               unit_cost, year_bids)
 from .entry_backed import unfilled_at_cost
 from .entry_bid_markets import makers_of, weigh
 from .entry_margin import margin_entry_plans
@@ -35,13 +36,12 @@ from .rates import own_rate
 def year_plans(setup, record, view, area_map, unmet_by_market: Dict[Tuple[str, str], float], carriage=None,
                bids_by_market=None, arrays=None) -> List[EntryPlan]:
     """The year's entry plans, in the order they are applied: the unmet markets' (entry.py), then the margin's and the trial's
-    where there are bids. See `open_entrants` for `arrays`."""
+    where there are bids. See `open_entrants` for `arrays`. With the arrays the plans are those of `year_plan_table`, as objects."""
+    if arrays is not None:
+        costs, table = year_plan_table(setup, record, view, area_map, unmet_by_market, carriage, bids_by_market, arrays)
+        return entry_plan_table.as_plans(table, costs)
     with entry_practice.shared_crews(record.producers):
-        costs = None if arrays is None else EntryTables.build(
-            setup, record, view, area_map, arrays.sync(setup, record, view), carriage or _carriage(setup),
-            entry_practice.crews_of_recipe(record.producers))
-        spare = _spare_output(setup, record, view) if costs is None else None
-        spare_grid = None if costs is None else costs.spare_output()
+        spare = _spare_output(setup, record, view)
         unmet = {}
         areas_of: Dict[str, Dict[str, object]] = {}
         known_goods = set(area_map.goods())
@@ -53,25 +53,57 @@ def year_plans(setup, record, view, area_map, unmet_by_market: Dict[Tuple[str, s
             area = areas_of[good].get(area_id)
             if area is None:
                 continue
-            gap = gap_beyond_spare(quantity, spare.get((good, area_id), 0.0) if spare_grid is None else _spare_at(
-                spare_grid, costs, good, area_id))
+            gap = gap_beyond_spare(quantity, spare.get((good, area_id), 0.0))
             if gap > 0.0:
                 unmet[(good, area_id)] = UnmetDemand(good, area_id, area.anchor_tile, gap)
-        siting = location.entry_siting(setup, record, view, area_map, carriage or _carriage(setup), costs)
+        siting = location.entry_siting(setup, record, view, area_map, carriage or _carriage(setup), None)
         traded = _traded_volume(record, view, area_map)
         block = year_bids.of(bids_by_market) if bids_by_market else None
         plans = entry_plans(setup.recipes, view, unmet, traded, siting,
-                            unfilled_at_cost(setup, record, view, area_map, block, traded, costs),
+                            unfilled_at_cost(setup, record, view, area_map, block, traded, None),
                             lambda recipe_id, tile: site_rent_per_run(setup, record, view, recipe_id, tile),
-                            entry_practice.crews_of_recipe(record.producers), costs)
+                            entry_practice.crews_of_recipe(record.producers), None)
         if block is not None:
             planned = tuple((plan.good, view.area_of(plan.good, plan.tile)) for plan in plans)
             first_margin_plan = len(plans)
-            weighed = weigh(block, makers_of(setup.recipes), area_map, view, reachable_capacity(record, setup, costs))
-            plans += margin_entry_plans(setup, record, view, area_map, block, planned, siting, costs, weighed)
+            weighed = weigh(block, makers_of(setup.recipes), area_map, view, reachable_capacity(record, setup, None))
+            plans += margin_entry_plans(setup, record, view, area_map, block, planned, siting, None, weighed)
             planned += tuple((plan.good, view.area_of(plan.good, plan.tile)) for plan in plans[first_margin_plan:])
-            plans += trial_entry_plans(setup, record, view, area_map, block, planned, siting, costs, weighed)
+            plans += trial_entry_plans(setup, record, view, area_map, block, planned, siting, None, weighed)
     return plans
+
+
+def year_plan_table(setup, record, view, area_map, unmet_by_market: Dict[Tuple[str, str], float], carriage, bids_by_market, arrays):
+    """(the year's entry tables, the plans as an `EntryPlans` table): the unmet markets' plans come out of one kernel
+    (`entry_unmet.unmet_plan_table`), the margin's and the trial's follow where there are bids."""
+    with entry_practice.shared_crews(record.producers):
+        costs = EntryTables.build(setup, record, view, area_map, arrays.sync(setup, record, view), carriage or _carriage(setup),
+                                  entry_practice.crews_of_recipe(record.producers))
+        block = year_bids.of(bids_by_market) if bids_by_market else None
+        plans = entry_unmet.unmet_plan_table(costs, block, unmet_by_market)
+        if block is not None:
+            siting = location.entry_siting(setup, record, view, area_map, carriage or _carriage(setup), costs)
+            planned = entry_plan_table.markets_of(plans, costs)
+            weighed = weigh(block, makers_of(setup.recipes), area_map, view, reachable_capacity(record, setup, costs))
+            margin = margin_entry_plans(setup, record, view, area_map, block, planned, siting, costs, weighed)
+            planned = planned + tuple((plan.good, view.area_of(plan.good, plan.tile)) for plan in margin)
+            trial = trial_entry_plans(setup, record, view, area_map, block, planned, siting, costs, weighed)
+            plans = entry_plan_table.joined(plans, entry_plan_table.from_plans(
+                margin + trial, costs.recipe_row, costs.tiles.row, costs.goods.row))
+    return costs, plans
+
+
+def _plans_to_apply(setup, record, view, area_map, unmet_by_market, carriage, bids_by_market, arrays):
+    """The year's plans as (recipe id, tile, runs, yearly return), in the order they are applied: the columns of the plan table with the
+    year arrays, else the plan objects."""
+    if arrays is None:
+        return [(plan.recipe_id, plan.tile, plan.runs, plan.yearly_return) for plan in year_plans(
+            setup, record, view, area_map, unmet_by_market, carriage, bids_by_market, None)]
+    costs, table = year_plan_table(setup, record, view, area_map, unmet_by_market, carriage, bids_by_market, arrays)
+    used = entry_plan_table.count(table)
+    recipe_ids, tile_ids = costs.matrices.recipes.ids, costs.tiles.ids
+    return list(zip(map(recipe_ids.__getitem__, table.recipe_row[:used].tolist()), map(tile_ids.__getitem__, table.tile_row[:used].tolist()),
+                    table.runs[:used].tolist(), table.yearly_return[:used].tolist()))
 
 
 def open_entrants(setup, record, view, area_map, unmet_by_market: Dict[Tuple[str, str], float],
@@ -85,63 +117,56 @@ def open_entrants(setup, record, view, area_map, unmet_by_market: Dict[Tuple[str
     money = setup.currency_id
     started = 0
     by_limits = sites.limits_by_recipe(setup.site_limits)
-    plans = year_plans(setup, record, view, area_map, unmet_by_market, carriage, bids_by_market, arrays)
+    plans = _plans_to_apply(setup, record, view, area_map, unmet_by_market, carriage, bids_by_market, arrays)
     peers_of_recipe: Dict[str, list] = {}       # each recipe's producers' crews, a newcomer's included once it starts
     owner_cash: Dict[str, float] = {}           # each owner's cash as the stakes already decided leave it
     stakes: List[Transfer] = []          # the stakes, posted together after the plans are applied, one batch each
     if plans:
         for each in record.producers.values():
             peers_of_recipe.setdefault(each.recipe_id, []).append(each.crew_runs)
-    for plan in plans:
-        recipe = setup.recipes[plan.recipe_id]
-        key = recipe_tile_key(plan.recipe_id, plan.tile)
+    for plan_recipe_id, plan_tile, plan_runs, plan_return in plans:
+        recipe = setup.recipes[plan_recipe_id]
+        key = recipe_tile_key(plan_recipe_id, plan_tile)
         producer_id = "producer:" + key
         builds_plant = recipe.plant_life_years > 0.0 and bool(recipe.plant_goods)
         # each producer stands for the tile's workshops of one recipe: newcomers join its capacity and its workshop count
         producer = record.producers.get(producer_id)
         plan_is_new = producer is None
         if producer is None:
-            owner = ownership.owner_cohort(record, plan.tile)
+            owner = ownership.owner_cohort(record, plan_tile)
             if owner is None:
                 continue
-            producer = Producer(agent_id=producer_id, owner=owner, recipe_id=plan.recipe_id, tile=plan.tile,
-                                capacity_runs=0.0, expected_sales=plan.runs,
-                                crew_runs=practice.entrant_crew_runs(recipe, peers_of_recipe.get(plan.recipe_id, ())),
-                                yield_factor=sites.yield_at(recipe, plan.tile, by_limits,
+            producer = Producer(agent_id=producer_id, owner=owner, recipe_id=plan_recipe_id, tile=plan_tile,
+                                capacity_runs=0.0, expected_sales=plan_runs,
+                                crew_runs=practice.entrant_crew_runs(recipe, peers_of_recipe.get(plan_recipe_id, ())),
+                                yield_factor=sites.yield_at(recipe, plan_tile, by_limits,
                                                             setup.yield_factor_by_recipe_tile.get(key, 1.0)))
         elif record.credit.expansion_runs.get(producer_id, 0.0) > 0.0:     # a working-capital loan builds no plant
             continue                                    # plant it already asked for is still to come
         if not builds_plant:
-            producer = replaced(producer, capacity_runs=producer.capacity_runs + plan.runs,
+            producer = replaced(producer, capacity_runs=producer.capacity_runs + plan_runs,
                                 workshops=producer.workshops + 1)
         if plan_is_new:
-            peers_of_recipe.setdefault(plan.recipe_id, []).append(producer.crew_runs)
+            peers_of_recipe.setdefault(plan_recipe_id, []).append(producer.crew_runs)
         producer_table.put_producer(record.producers, producer)
         started += 1
         inputs, wages = live_input_prices(producer, recipe, view), live_wages(producer, recipe, view)
         if producer.owner not in owner_cash:
             owner_cash[producer.owner] = record.book.balance(producer.owner, money)
-        stake = min(working_capital_target(practice.recipe_for(recipe, producer.crew_runs), plan.runs, inputs, wages),
+        stake = min(working_capital_target(practice.recipe_for(recipe, producer.crew_runs), plan_runs, inputs, wages),
                     ENTRANT_OWNER_STAKE_SHARE * max(0.0, owner_cash[producer.owner]))
         if stake > 0.0:
             owner_cash[producer.owner] -= stake
             stakes.append(Transfer(producer.owner, producer_id, money, stake, "stake in a new workshop"))
         if builds_plant:
             per_run = unit_cost.plant_value_per_run(recipe, inputs, wages)
-            loan = entrant_loan(per_run * plan.runs, stake) if per_run > 0.0 and math.isfinite(per_run) else 0.0
+            loan = entrant_loan(per_run * plan_runs, stake) if per_run > 0.0 and math.isfinite(per_run) else 0.0
             if loan > 0.0:
-                record.credit.ask_for_loan(LoanRequest(producer_id, money, loan, credit.earnable_rate(plan.yearly_return),
+                record.credit.ask_for_loan(LoanRequest(producer_id, money, loan, credit.earnable_rate(plan_return),
                                                        recipe.plant_life_years, loan, "enter"))
                 record.credit.plan_expansion(producer_id, loan / per_run)
     post_in_order(record.book, [([stake], ()) for stake in stakes], RULE_SINGLE)
     return started
-
-
-def _spare_at(grid, costs, good: str, area_id: str) -> float:
-    """The spare output of the grid `EntryTables.spare_output` makes, for one good and area (nothing for a pair it does not hold)."""
-    good_column = costs.goods.row.get(good)
-    area_column = costs.arrays.area_index.areas.row.get(area_id)
-    return 0.0 if good_column is None or area_column is None else float(grid[good_column, area_column])
 
 
 def _carriage(setup):
