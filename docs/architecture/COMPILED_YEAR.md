@@ -495,3 +495,28 @@ are built per cohort that holds a store (`households_orders_pack._orders_of`).
 screens, the save). `PricedNeed`: `households_orders_pack` (reads `need.goods`, `ceilings`, `price_index` into its template arrays),
 `households_store.staple_price_per_kg` and `store_return.service_values_per_year`, `household_work_year.grinding_plan`, the readers named above,
 and the screens and mods through `need_basket.need_prices`.
+
+## Workforce views that can be cached (stage 4, one package)
+
+A published view is cached only when everything it reads reports its changes. In the workforce module that holds for:
+
+| View | Fresh while | Writer and how it bumps |
+|---|---|---|
+| `trade_registry` | the content's `trade_records` (input) | none: the records are fixed for an assembly; a load moves the era. `TradeReads.trade_registry` builds a new registry object only when the records object changes |
+| `unskilled_trade` | `trade_registry` (input) | none besides the registry; labour's own reads (`trade_data.fallback_trade_of`, `trade_of_role(..., "unskilled")`) scan a registry object once (`trade_data.fallback_trade_in`) |
+| `is_craft_trade` | content's `trade_family` (input) | none |
+| `cleared_wage_change` | the `cleared_wage` channel | `note_cleared_wage`, the one writer of `cleared_wage` and `cleared_wage_before`, bumps it |
+| `labour_market`, `labour_state_weights`, `literacy_references` | always (one object or constants; a load moves the era) | none |
+
+Left uncached, each for a reason in the module spec's header: the wage and hour views (`money_per_labour_hour`, `wage`, `labour_quote`,
+`wage_signature`, `market_annual_wage`, `standing_job_pay`, ...) read the agent economy's wages through `agent_wage_at`, which the markets
+module publishes as an uncached quote with no channel (the wage memory is written in place by `labour_state.mirror_wages`); the base-tile,
+settlement, farm-land, working-day and farming views read views that land, demography, agriculture, mechanics and the scenario publish
+uncached with no channel (`home_tiles_held`, `people_by_tile`, `farm_land`, `mechanic`, `civilisation`); the seat views
+(`available_trades`, `trade_available`, `taught_trade_people`, ...) read the seat's `trades_created` and `trade_schools`, which labour
+changes in place at several sites. Caching any of them needs its input's owner to bump first.
+
+Measure: `fallback_trade_of_registry` scans in a warm year and `View.fresh` calls by workforce view, with a counter over `fresh`
+(not kept in the repository: a few lines around `sim.assembly.views.View.fresh` and `year-time`'s `loaded`/`step`). Tests:
+`sim/tests/test_workforce_cached_views.py` (a real workforce spec over a stand-in provider, `sim/tests/workforce_assembly.py`): each
+cached view is read, its writer writes, and the next read is the fresh value; an adjuster of a cached view still applies.

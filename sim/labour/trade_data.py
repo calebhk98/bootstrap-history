@@ -10,9 +10,26 @@ from . import legacy_trade_defaults
 from .market import trades as market_trades
 
 
+_fallback_of_registry: Dict[int, Tuple[Mapping[str, Any], str]] = {}   # id of a registry -> (the registry, its fallback trade)
+_REGISTRIES_KEPT = 8
+
+
 def fallback_trade_of(world) -> str:
     """The world's unskilled fallback trade: the registry's flagged trade, else the fewest-years rule."""
-    return market_trades.fallback_trade_of_registry(registry_of(world))
+    return fallback_trade_in(registry_of(world))
+
+
+def fallback_trade_in(registry: Mapping[str, Mapping[str, Any]]) -> str:
+    """`fallback_trade_of_registry`, worked out once per registry object: a registry is replaced, never changed, when the trade
+    records are (workforce `trade_registry`)."""
+    held = _fallback_of_registry.get(id(registry))
+    if held is not None and held[0] is registry:
+        return held[1]
+    trade = market_trades.fallback_trade_of_registry(registry)
+    if len(_fallback_of_registry) >= _REGISTRIES_KEPT:
+        _fallback_of_registry.clear()
+    _fallback_of_registry[id(registry)] = (registry, trade)
+    return trade
 
 
 def registry_of(world) -> Mapping[str, Mapping[str, Any]]:
@@ -103,7 +120,7 @@ def trade_of_role(registry: Mapping[str, Mapping[str, Any]], role: str) -> str:
     """The trade that plays a role in a state's books (soldier, builder, clerk; unskilled is the fallback trade), the
     first by id that names it. A registry with none refuses."""
     if role == "unskilled":
-        return market_trades.fallback_trade_of_registry(registry)
+        return fallback_trade_in(registry)
     found = sorted(trade for trade, fields in registry.items() if fields.get("role") == role)
     if not found:
         raise ValueError("no trade in the registry has the role %r" % role)
