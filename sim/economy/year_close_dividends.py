@@ -6,7 +6,7 @@ names in the order the postings meet them, as the book does for objects. `add_pr
 of producers that exited, which were posted as they happened) to the property-income dictionary in the order of the producer rows.
 """
 from dataclasses import dataclass
-from typing import Dict, List, Sequence, Tuple
+from typing import Dict, List, Sequence
 
 import numpy as np
 

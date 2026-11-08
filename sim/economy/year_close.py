@@ -7,12 +7,9 @@ from typing import Dict, Mapping, Tuple
 from . import producer_table
 from .staffed_runs import staffed_runs
 from .expected_sales import demand_seen, market_capacities
-from . import (practice, firm_finance, firm_year, tax_farming, merchants_news, carriage_hours, carriage_wear, currency, expansion_price, households, inventory, merchants, metal_stock, ownership, producer_exit, shares,
+from . import (practice, firm_finance, firm_year, tax_farming, merchants_news, carriage_hours, currency, expansion_price, merchants, ownership, producer_exit, shares,
                producers, producers_close, state_budget, tariffs, taxes, trade_wages)
 from .home_scope import has_partners, home_cohorts, on_home_tile
-from . import household_work_year
-from .household_work_year import basket_key, cohort_basket
-from sim.world.need_basket import subsistence_cost_per_person
 from . import households_cohort
 from .market_memory import market_key
 from .national_prices import national_prices, traded_spending_weights, usual_volumes
@@ -23,6 +20,7 @@ from .types import is_edge
 from .inventory import held_stock
 from .year_ledger import YearLedger
 from .year_arrays import YearArrays
+from .year_close_households import close_households
 from .year_close_producers import close_producers_of_year
 from .wear_year import wear_and_spoilage      # noqa: F401  (the economy imports it from here)
 from .replaced import replaced
@@ -125,22 +123,7 @@ def close_agents(setup, record, view, ledger: YearLedger, area_map, carriage, ar
                                                             for result in ledger.labour_results}))
     for lender, interest in record.capital_markets.take_pool_income().items():     # the actors' pool paid this year
         property_income[lender] = property_income.get(lender, 0.0) + interest
-    offered_prices: Dict = {}      # the prices households are closed on do not change while they close
-    baskets: Dict = {}
-    for cohort_id, cohort in sorted(record.cohorts.items()):
-        received = dict(ledger.received.get(cohort_id, {}))
-        for good, quantity in ledger.grown.get(cohort_id, {}).items():
-            received[good] = received.get(good, 0.0) + quantity
-        income = ledger.wages_in.get(cohort_id, 0.0) + property_income.get(cohort_id, 0.0)
-        spent = ledger.money_out.get(cohort_id, 0.0)
-        key = basket_key(record, cohort)       # cohorts of one tile, hearth, hired work and milled grains share a basket and its floor cost
-        if key not in baskets:
-            baskets[key] = (cohort_basket(setup, record, cohort, buying=False),
-                            subsistence_cost_per_person(household_work_year.priced_basket(setup, record, view, cohort)))
-        basket, floor_cost = baskets[key]
-        closed, moves = households.close_year(cohort, received, view, setup.specs, basket, income, spent, offered_prices, floor_cost)
-        record.book.move_many(held_only(moves, record.book))
-        households_cohort.put_cohort(record.cohorts, closed)
+    close_households(setup, record, view, ledger, property_income)
     record.capital_markets.set_property_income(property_income)
     return arrays
 

@@ -131,9 +131,9 @@ def pack(setup, record, view, ledger, arrays: YearArrays) -> ClosePack:
         ledger_agents = _subkeys(columns.ids, ledger_book.agent_ids.numbers)
         ledger_good_keys = _slot_keys(matrices, _subkeys(matrices.goods.ids, ledger_book.good_ids.numbers), matrices.slot_goods)
     figures = ledger.tables.figures
-    revenue = _figure_values(figures.sales_in, figures.order_sales_in, ledger_agents)
-    paid = _figure_values(figures.money_out, figures.order_money_out, ledger_agents)
-    plant = _figure_values(figures.plant_spend, figures.order_plant_spend, ledger_agents)
+    revenue = figure_values(figures.sales_in, figures.order_sales_in, ledger_agents)
+    paid = figure_values(figures.money_out, figures.order_money_out, ledger_agents)
+    plant = figure_values(figures.plant_spend, figures.order_plant_spend, ledger_agents)
     running = np.maximum(0.0, paid - plant)
     pairs = ledger.tables.pairs
     sold = _pair_figures(pairs["sold"], ledger_agents, columns.recipe_row, ledger_good_keys)
@@ -165,7 +165,7 @@ def pack(setup, record, view, ledger, arrays: YearArrays) -> ClosePack:
                      arrears, debt, held_start, held_good, held_quantity, clearing, unmet, spoilage, ground, currencies)
 
 
-def _figure_values(values: np.ndarray, orders: np.ndarray, agent_numbers: np.ndarray) -> np.ndarray:
+def figure_values(values: np.ndarray, orders: np.ndarray, agent_numbers: np.ndarray) -> np.ndarray:
     """An agent figure of each agent number: zero for an agent (or number -1) that is not a member of the figure."""
     inside = (agent_numbers >= 0) & (agent_numbers < len(orders))
     safe = np.where(inside, agent_numbers, 0)
