@@ -142,8 +142,23 @@ class GoodClearing:
             self.wanted[by_quote] = untraded.wanted[by_quote]
             self.quote_price[by_quote], self.quote_kind[by_quote] = [each[by_quote] for each in
                                                                     untraded_quotes(untraded.lowest_ask, untraded.best_bid, untraded.funded)]
+        self.bid_count = numpy.diff(rows.bid_group_ptr)
+        self.left_count = numpy.zeros(count, dtype=numpy.int64)       # how many offers keep units after the first round
+        if by_batch.any() or by_quote.any():
+            self._count_left(by_batch, by_quote)
         for place in numpy.flatnonzero(self.way == ON_OBJECTS).tolist():
             self._clear_on_objects(place)
+
+    def _count_left(self, by_batch: numpy.ndarray, by_quote: numpy.ndarray) -> None:
+        """`left_count` of the markets on the tables: offers with units left in the batch, or offers with units on a market that did not trade."""
+        if by_batch.any():
+            kept = numpy.concatenate(([0], numpy.cumsum(self.batch.left > 0.0)))
+            slots = self.slots[by_batch]
+            self.left_count[by_batch] = kept[self.pack.offer_ptr[slots + 1]] - kept[self.pack.offer_ptr[slots]]
+        if by_quote.any():
+            offers = self.context.orders.tables()[1]
+            units = numpy.bincount(self.rows.offer_position, weights=offers.quantity[self.rows.offer_rows] > 0.0, minlength=len(self.market))
+            self.left_count[by_quote] = units[by_quote].astype(numpy.int64)
 
     def _clear_on_objects(self, place: int) -> None:
         """The old rules on the market's `Bid` and `Offer` objects; the figures of the result are written into the columns."""
@@ -152,6 +167,7 @@ class GoodClearing:
         price = self.last_price[place]
         after, result = _plain(context, self.good, self.areas[place], None if price != price else float(price), bid_objects, offer_objects)
         self.objects[place] = (bid_objects, after, offers_left(after, sold_by_result(result)), result)
+        self.left_count[place] = len(self.objects[place][2])
         self.quantity[place], self.demand[place], self.offered[place] = result.quantity, result.demand_at_price, result.offered_at_price
         self.price[place] = numpy.nan if result.price is None else result.price
         wanted = wanted_in_round(bid_objects, after, result)
@@ -168,6 +184,8 @@ class GoodClearing:
         none.quote_kind = none.way = numpy.zeros(0, dtype=numpy.int64)
         none.has_offers = none.has_units = none.has_funded_bid = numpy.zeros(0, dtype=numpy.bool_)
         none.areas = []
+        none.bid_count = none.left_count = numpy.zeros(0, dtype=numpy.int64)
+        none.rows = None
         return none
 
     def __len__(self) -> int:

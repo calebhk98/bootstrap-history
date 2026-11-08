@@ -5,7 +5,10 @@ ROME_NO_JIT=1)."""
 QUICK_TOPIC = True
 
 import random
+import types
 import unittest
+
+import numpy as np
 from collections import namedtuple
 
 from sim.economy import goods_good_clear, goods_settle
@@ -31,6 +34,14 @@ def shown(memory):
             memory.tables.next_order.tolist()[:STORE_COUNT], memory.tables.member_count.tolist()[:STORE_COUNT])
 
 
+def columns_of(markets):
+    """The columns of a `GoodClearing` that `idle_years` reads, for these markets."""
+    return types.SimpleNamespace(
+        market=np.array([each.market for each in markets], dtype=np.int64), has_offers=np.array([each.has_offers for each in markets], dtype=np.bool_),
+        has_units=np.array([each.has_units for each in markets], dtype=np.bool_),
+        has_funded_bid=np.array([each.has_funded_bid for each in markets], dtype=np.bool_))
+
+
 class IdleYearsAreTheWrapperCounts(unittest.TestCase):
 
     def test_a_market_with_offers_and_no_bids_counts_a_year_and_one_with_bids_ends_its_count(self):
@@ -39,7 +50,7 @@ class IdleYearsAreTheWrapperCounts(unittest.TestCase):
         memory.years_without_offers["g|b"] = 3
         memory.tables.admit_goods_markets(["g|a", "g|b"])
         rows = [memory.tables.goods_numbers["g|a"], memory.tables.goods_numbers["g|b"]]
-        before = goods_settle.idle_years(memory, [Market(rows[0], True, True, False), Market(rows[1], True, True, True)])
+        before = goods_settle.idle_years(memory, columns_of([Market(rows[0], True, True, False), Market(rows[1], True, True, True)]))
         self.assertEqual((before, dict(memory.years_without_bids), dict(memory.years_without_offers)), ([2, 3], {"g|a": 3}, {}))
 
     def test_random_memories_agree_with_the_wrapper_counts(self):
@@ -50,7 +61,7 @@ class IdleYearsAreTheWrapperCounts(unittest.TestCase):
             chosen = [key for key in keys if rng.random() < 0.7]
             flags = [(rng.random() < 0.6, rng.random() < 0.6, rng.random() < 0.6) for _ in chosen]
             markets = [Market(fast.tables.goods_numbers[key], *each) for key, each in zip(chosen, flags)]
-            got = goods_settle.idle_years(fast, markets)
+            got = goods_settle.idle_years(fast, columns_of(markets))
             expected = [reference_count(plain, key, each) for key, each in zip(chosen, flags)]
             self.assertEqual(got, expected, seed)
             self.assertEqual(shown(fast), shown(plain), seed)

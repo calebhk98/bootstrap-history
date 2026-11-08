@@ -66,6 +66,8 @@ def _add_bids(markets, packed, keys, adding, bid_market, bid_buyer, bid_flexible
     market_of_row = bid_market[order]
     cuts = numpy.nonzero(numpy.diff(market_of_row))[0] + 1
     elasticity = numpy.array([packed.baskets[basket].substitution for basket in packed.arguments["buyer_basket"]])
+    _keep_added(markets, keys, market_of_row, bid_flexible[order], bid_reference[order], elasticity[bid_buyer[order]], bid_budget[order],
+                bid_maximum[order])
     for first, last in zip([0, *cuts.tolist()], [*cuts.tolist(), len(order)]):
         rows = order[first:last]
         good, area = keys[market_of_row[first]]
@@ -74,6 +76,19 @@ def _add_bids(markets, packed, keys, adding, bid_market, bid_buyer, bid_flexible
             good, area, [packed.buyers[each] for each in buyers.tolist()], [packed.buyer_tile[each] for each in buyers.tolist()],
             bid_flexible[rows].tolist(), bid_reference[rows].tolist(), elasticity[buyers].tolist(), bid_budget[rows].tolist(),
             bid_maximum[rows].tolist()))
+
+
+def _keep_added(markets, keys, market_of_row, flexible, reference, elasticity, budget, maximum) -> None:
+    """The added bids' columns kept in the year's table of markets, each with its market's row, when the markets share one table."""
+    distinct = numpy.unique(market_of_row)
+    lefts = {each: markets[keys[each]] for each in distinct.tolist()}
+    shared = lefts[int(distinct[0])].year_markets
+    if not all(each.year_markets is shared for each in lefts.values()):
+        return
+    cell_of = numpy.full(len(keys), -1, dtype=numpy.int64)
+    for each, left in lefts.items():
+        cell_of[each] = left.row
+    shared.add_added_bids(cell_of[market_of_row], flexible, reference, elasticity, budget, maximum)
 
 
 def note_rounds(ledger, keys, clear_market, quantity, price, moved) -> None:

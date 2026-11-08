@@ -112,6 +112,7 @@ class LeftMarket:
     @offers.setter
     def offers(self, offers) -> None:
         self._offers = offers
+        self.year_markets.table.left_count[self.row] = len(offers)
 
     @property
     def all_bids(self):
@@ -157,7 +158,9 @@ class LeftMarket:
 
     def leave_units(self, units) -> None:
         """The units each offer left in `rows` has after the rounds (zero: sold out); the offers are built from them when read."""
-        self._offers = LazyObjects(lambda: self.rows.offer_objects(units), sum(1 for each in units if each > 0.0))
+        kept = sum(1 for each in units if each > 0.0)
+        self._offers = LazyObjects(lambda: self.rows.offer_objects(units), kept)
+        self.year_markets.table.left_count[self.row] = kept
 
     @property
     def unsold(self) -> float:
