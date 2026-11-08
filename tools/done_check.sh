@@ -94,6 +94,11 @@ owner_status=$?
 echo "writes to an economy record part by a module that does not own it: $(printf '%s\n' "$owner_output" | grep -c .)"
 printf '%s\n' "$owner_output" | grep . | sed 's/^/  /'
 
+table_name_output="$(python3 tools/check_table_names.py 2>&1)"
+table_name_status=$?
+echo "compiled table types held under another name, so their kernels never load from the cache (tools/check_table_names.py): $(printf '%s\n' "$table_name_output" | grep -c .)"
+printf '%s\n' "$table_name_output" | grep . | sed 's/^/  /'
+
 port_reach="$(grep -rnE '(\beconomy|_economy)\.(record|setup)\b' sim/markets --include='*.py' | cut -d: -f1,2)"
 echo "economy record/setup reach-through from sim/markets (report only): $(printf '%s\n' "$port_reach" | grep -c .)"
 printf '%s\n' "$port_reach" | grep . | sed 's/^/  /'
@@ -142,6 +147,7 @@ failed_checks=()
 [ "$parts_status" -ne 0 ] && failed_checks+=("part structure and private reaches (tools/check_parts.py)")
 [ "$attribute_status" -ne 0 ] && failed_checks+=("adapter attributes (tools/check_attribute_calls.py)")
 [ "$owner_status" -ne 0 ] && failed_checks+=("record part writers (tools/check_record_owners.py)")
+[ "$table_name_status" -ne 0 ] && failed_checks+=("table type names (tools/check_table_names.py)")
 [ "$constructor_status" -ne 0 ] && failed_checks+=("constructor calls (tools/check_constructor_calls.py)")
 [ "$class_name_status" -ne 0 ] && failed_checks+=("class names (tools/check_class_names.py)")
 [ "$getattr_status" -ne 0 ] && failed_checks+=("literal getattr probes (tools/check_getattr_names.py)")

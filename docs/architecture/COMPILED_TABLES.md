@@ -35,6 +35,10 @@ as `table.column[row]`.
   column that is a slice (another array layout, so a second specialization). `TableSpec.make_type(__name__)` and
   whole-array columns avoid both; `test_compiled_tables_spec` checks the type pickles by module and name, which is what the cache
   needs, and `test_compiled_tables_growth` checks grown columns stay whole.
+- A third stops it silently: the spec's name differs from the module attribute holding the type
+  (`Requests = TableSpec("ClearingRequests", ...).make_type(__name__)`). The cache is written but never found on load, so every
+  process compiles the kernel again. Name the spec as the attribute; `python3 tools/check_table_names.py` (run by
+  `tools/done_check.sh`) lists any table type held under another name.
 - `ROME_NO_JIT=1`: the same code runs unchanged as plain Python (the tests run both ways:
   `ROME_NO_JIT=1 python3 -m sim.tests --only compiled_tables_ids,compiled_tables_spec,compiled_tables_growth,compiled_tables_grouping,compiled_tables_sums,compiled_tables_loans --jobs 1`).
   Plain Python is about two orders of magnitude slower for a 1000-row loop, as `table_kinds` prints; that is for debugging.

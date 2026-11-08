@@ -7,7 +7,7 @@ import numpy
 
 from sim.compiled_tables.spec import Column, TableSpec
 
-REQUESTS = TableSpec("ClearingRequests", (
+REQUESTS = TableSpec("Requests", (
     Column("borrower_rank", numpy.int64, "place of the borrower's name among the requesters' names sorted: breaks every tie by name", "rank"),
     Column("amount", numpy.float64, "what the request asks (the kernel cuts it to what its collateral bears)", "currency units"),
     Column("maximum_rate", numpy.float64, "the most the borrower pays a year, premium included", "fraction per year"),
@@ -25,7 +25,7 @@ REQUESTS = TableSpec("ClearingRequests", (
 ))
 Requests = REQUESTS.make_type(__name__)
 
-OFFERS = TableSpec("ClearingOffers", (
+OFFERS = TableSpec("Offers", (
     Column("lender_rank", numpy.int64, "place of the lender's name among the lenders' names sorted: breaks every tie by name", "rank"),
     Column("amount", numpy.float64, "the funds on offer", "currency units"),
     Column("minimum_rate", numpy.float64, "the lowest base rate the lender takes", "fraction per year"),
@@ -34,7 +34,7 @@ OFFERS = TableSpec("ClearingOffers", (
 ))
 Offers = OFFERS.make_type(__name__)
 
-NEW_LOANS = TableSpec("ClearingLoans", (
+NEW_LOANS = TableSpec("NewLoans", (
     Column("request", numpy.int64, "the row of the request the loan funds", "request row"),
     Column("offer", numpy.int64, "the row of the offer the loan is lent from", "offer row"),
     Column("principal", numpy.float64, "what is lent", "currency units"),
