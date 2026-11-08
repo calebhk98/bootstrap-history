@@ -12,13 +12,14 @@ kept by sim/book_store.py. Postings are rows of two posting tables applied by a 
 batch; the methods here, by name, are thin wrappers that build the rows, call the kernel and turn a refusal back into an error.
 A converter that holds ids calls `apply_postings` and the kernels of sim/book_read_kernels.py instead.
 
-The mixins, by topic:  BookStore (ids, tables, admitting names)  BookPostings (post, transfer, move, apply_postings)
+The mixins, by topic:  BookStore (ids, tables, admitting names)  BookPostings (post, transfer, move, apply_postings)  BookSingle (one posting on its own)
 BookReads (balance, stock, holdings, totals, flows)  BookBatch (many reads, post_settled)  BookRecord (save, merge, rename).
 """
 from sim.book_batch import BookBatch
 from sim.book_post import BookPostings
 from sim.book_reads import BookReads
 from sim.book_record import BookRecord
+from sim.book_single import BookSingle
 from sim.book_store import BookStore
 from sim.book_types import (  # noqa: F401  (the names callers import from here)
     EDGE_EXCHANGE, EDGE_PREFIX, ROUNDING_SHARE, UNDERFLOW, AgentId, BookError, ConservationReport, CurrencyId,
@@ -26,5 +27,5 @@ from sim.book_types import (  # noqa: F401  (the names callers import from here)
     is_edge, _share)
 
 
-class Book(BookStore, BookPostings, BookReads, BookBatch, BookRecord):
+class Book(BookStore, BookPostings, BookSingle, BookReads, BookBatch, BookRecord):
     pass

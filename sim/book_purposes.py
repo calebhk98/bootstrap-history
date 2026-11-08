@@ -38,6 +38,18 @@ class Purposes:
             self._split[text] = found
         return found
 
+    def encode_many(self, texts) -> Tuple[list, list]:
+        """The template ids and the reference ids of the purpose texts, in order (what `encode` gives each, as two lists)."""
+        split = self._split
+        templates, references = [], []
+        for text in texts:
+            found = split.get(text)
+            if found is None:
+                found = self.encode(text)
+            templates.append(found[0])
+            references.append(found[1])
+        return templates, references
+
     def decode(self, template: int, reference: int) -> str:
         """The purpose text for a (template id, reference id) pair."""
         return self.templates.name(template) + self.references.name(reference)

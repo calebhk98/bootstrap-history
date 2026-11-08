@@ -14,6 +14,7 @@ import numpy
 
 from sim.book_index import FIRST_FIELD_BITS, FIRST_SHIFT, SECOND_FIELD_BITS, SECOND_SHIFT, THIRD_FIELD_BITS, KeyedRows
 from sim.book_purposes import Purposes
+from sim.book_single import SinglePostings
 from sim.book_tables import (AGENTS, BALANCES, CURRENCIES, EDGE_GOODS, FREE, GOODS, PURPOSE_FLOWS, STOCKS, Agents, Balances,
                              BookTables, Currencies, EdgeGoods, Goods, GoodsTables, MoneyTables, PurposeFlows, Stocks)
 from sim.book_types import EDGE_PREFIX, EXTERNAL_PREFIX, MINT_ID, AgentId, BookError, CurrencyId, GoodId, TileId
@@ -46,6 +47,7 @@ class BookStore:
         self.edge_goods_rows = KeyedRows(EDGE_GOODS, EdgeGoods, 16)
         self.scratch = None            # plans reused by one posting call after another (sim/book_post.py)
         self.settled_plans = None
+        self.single_postings = SinglePostings()     # one-row posting tables reused by `transfer` and `move` (sim/book_single.py)
 
     # ---- admitting names -------------------------------------------------------------------------
 
