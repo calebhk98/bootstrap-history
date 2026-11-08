@@ -123,6 +123,7 @@ def ledger_signatures(types):
     from numba import typeof
     from sim.economy.api import LedgerTables
     target = typeof(LedgerTables().pairs["received"].target())
+    pair_rows = typeof(LedgerTables().pairs["hours_hired"].rows.table)
     number, integer = types.float64, types.int64
     whole, floats = types.Array(integer, 1, "C"), types.Array(number, 1, "C")
     module = "sim.economy.year_ledger_kernels."
@@ -132,6 +133,7 @@ def ledger_signatures(types):
         module + "kill_row": [(target, integer)],
         module + "set_pair": [(target, integer, integer, integer, number, number)],
         module + "remove_from_figure": [(whole, whole, integer, integer)],
+        "sim.economy.goods_production_reads.pair_amounts": [(pair_rows, whole, whole, whole)],
     }
 
 

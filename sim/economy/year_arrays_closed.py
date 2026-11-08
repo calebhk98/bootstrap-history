@@ -9,7 +9,7 @@ from .year_arrays_producers import ProducerColumns
 
 _ROW_FIELDS = ("recipe_row", "tile_row", "capacity_runs", "yield_factor", "years_of_loss", "cash_target", "expected_sales",
                "last_runs", "land_rent_per_run", "land_run_cap", "workshops", "idle_years", "staffed_runs", "history_count",
-               "expected_prices", "earnings_history", "revenue_history")
+               "expected_prices", "earnings_history", "revenue_history", "hours_scale")
 
 
 def columns_after_close(columns: ProducerColumns, producers, exited: np.ndarray, answer, records=None) -> ProducerColumns:
@@ -41,5 +41,9 @@ def columns_after_close(columns: ProducerColumns, producers, exited: np.ndarray,
         rows[:, :width] = np.where(wanted, new[source], 0.0)
         old[closed] = rows
     kept_records = [producers[each] for each in ids] if records is None else [records[row] for row in keep.tolist()]
-    return ProducerColumns(ids, {each: position for position, each in enumerate(ids)}, kept_records,
-                           matrices=columns.matrices, tiles=columns.tiles, **kept)
+    after = ProducerColumns(ids, {each: position for position, each in enumerate(ids)}, kept_records,
+                            matrices=columns.matrices, tiles=columns.tiles, **kept)
+    for position in closed.tolist():      # a closed producer's crew has practised this year's runs
+        if kept_records[position].crew_runs or (after.hours_scale[position] != 1.0).any():
+            after.read_scale(position)
+    return after

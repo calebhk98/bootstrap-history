@@ -10,7 +10,7 @@ import math
 from typing import Dict, List, Optional, Tuple
 
 from . import currency, mint_price, market_curves, market_quote, producers, seller_cash, taxes
-from . import year_bids
+from . import goods_turn, year_bids
 from .year_bids_by_market import BidsByMarket
 from . import goods_good_clear, goods_memory_notes, goods_production, goods_settle, goods_order_book, goods_respend_year, year_goods_offers
 from .goods_table_context import ClearingContext
@@ -92,8 +92,9 @@ def clear_goods(setup, record, view, area_map, order_book, plans, ledger: YearLe
         costs = OfferCosts.build(arrays, own_rate(view, setup.currency_id))
         offering = (arrays, costs) if year_goods_offers.usable() else None
     context = ClearingContext(setup, record, view, orders, arrays, costs)
+    world = goods_turn.TurnWorld.of(setup, record, view, ledger, arrays, costs, plans) if arrays is not None else None
     by_output: Dict[str, List[str]] = {}
-    for producer_id, producer in sorted(record.producers.items()):
+    for producer_id, producer in (sorted(record.producers.items()) if world is None else ()):
         for good in setup.recipes[producer.recipe_id].outputs:
             by_output.setdefault(good, []).append(producer_id)
     order = input_depth_order(setup.recipes)
@@ -109,9 +110,12 @@ def clear_goods(setup, record, view, area_map, order_book, plans, ledger: YearLe
             plant_makers.setdefault(plant_good, []).append(producer_id)
     memory_names = orders.memory_tables.goods_markets.name_list
     for good in order:
-        turn = [producer_id for producer_id in by_output.get(good, ()) if producer_id not in done]
-        done.update(turn)
-        _produce_and_offer(setup, record, view, turn, plans, in_kind, orders, ledger, offering)
+        if world is not None:
+            _turn_on_columns(setup, record, view, world, world.take_turn(good), in_kind, orders, ledger)
+        else:
+            turn = [producer_id for producer_id in by_output.get(good, ()) if producer_id not in done]
+            done.update(turn)
+            _produce_and_offer(setup, record, view, turn, plans, in_kind, orders, ledger, offering)
         good_id = record.book.good_ids.find(good)
         cleared = goods_good_clear.clear_good(context, good, good_id) if good_id is not None else []
         kept = market_curves.kept_areas(area_map, setup.port_tile, (setup.capital_tile, *watched_tiles), good)
@@ -254,6 +258,26 @@ def remembered_price(old, cleared, quantity, usual_volume):
     if old is None or usual_volume <= 0.0:
         return cleared
     return old + min(1.0, quantity / usual_volume) * (cleared - old)
+
+
+def _turn_on_columns(setup, record, view, world, positions, in_kind, order_book, ledger) -> None:
+    """`_produce_and_offer` for the producers at `positions` of the year arrays, over whole columns (goods_turn.py): what they make, the
+    state's tax in kind, and the offers as rows. A producer whose output has no price expected offers through `producers.offers`."""
+    planned = world.produce(positions)
+    if in_kind and len(planned):
+        _tax_in_kind(setup, record, world.ids_of(planned), in_kind, ledger)
+    if not len(positions):
+        return
+    rate = own_rate(view, setup.currency_id)
+
+    def offer_by_rule(position, shortfall):
+        producer = record.producers[world.arrays.producers.ids[position]]
+        recipe = setup.recipes[producer.recipe_id]
+        stock = {good: record.book.stock(producer.agent_id, good, producer.tile) for good in recipe.outputs}
+        keep = {good: recipe.inputs.get(good, 0.0) * producer.capacity_runs for good in recipe.outputs}
+        add_orders(order_book, AgentOrders(offers=tuple(producers.offers(producer, recipe, view, stock, shortfall, rate, setup.specs, keep))))
+
+    world.offer(positions, rate, order_book, offer_by_rule)
 
 
 def _produce_and_offer(setup, record, view, producer_ids, plans, in_kind, order_book, ledger, offering=None) -> None:

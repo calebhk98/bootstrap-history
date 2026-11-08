@@ -159,6 +159,10 @@ class YearLedger(PostingNotes):
         paid, plant = self.money_out.values_of(agents), self.plant_spend.values_of(agents)
         return numpy.maximum(0.0, paid - plant)
 
+    def running_costs_at(self, agent_numbers) -> numpy.ndarray:
+        """`running_costs_of` for agents given by the book's numbers (-1 for one never numbered)."""
+        return numpy.maximum(0.0, self.money_out.values_at(agent_numbers) - self.plant_spend.values_at(agent_numbers))
+
     def note_clearing(self, result: ClearingResult, delivered: float) -> None:
         """Keep a clearing and the goods its settlement delivered (less than it matched when a buyer could not pay)."""
         self.mint_takes.append((result, self.pending_mint_takes))

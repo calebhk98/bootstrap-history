@@ -81,6 +81,11 @@ def hired_share(runs_before: float, runs_now: float) -> float:
     return max(0.0, 1.0 - runs_before / runs_now)
 
 
+def practised_multiplier(units: float) -> float:
+    """What `recipe_for` multiplies a trade's booked hours by at `units`: the hours multiplier to a hundredth, never below one."""
+    return max(1.0, round(hours_multiplier(units) * _MULTIPLIER_STEP) / _MULTIPLIER_STEP)
+
+
 def recipe_for(recipe, practice: Mapping[str, float]):
     """The recipe with each trade's booked hours times that trade's hours multiplier; the booked recipe itself when
     every multiplier is one."""

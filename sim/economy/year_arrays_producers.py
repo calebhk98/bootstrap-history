@@ -8,6 +8,7 @@ from typing import Dict, List, Mapping, Tuple
 
 import numpy as np
 
+from .practice import practised_multiplier
 from .year_arrays_recipes import NO_SLOT, Names, RecipeMatrices
 
 
@@ -15,7 +16,7 @@ _MANY_ROWS = 64     # from this many rows a column is read in one pass
 _COPIED = ("capacity_runs", "yield_factor", "years_of_loss", "cash_target", "expected_sales", "last_runs", "land_rent_per_run",
            "workshops", "idle_years")      # the columns that are a producer field of the same name
 _PER_ROW = ("recipe_row", "tile_row", "capacity_runs", "yield_factor", "years_of_loss", "cash_target", "expected_sales", "last_runs",
-            "land_rent_per_run", "land_run_cap", "workshops", "idle_years", "staffed_runs", "history_count", "expected_prices")
+            "land_rent_per_run", "land_run_cap", "workshops", "idle_years", "staffed_runs", "history_count", "expected_prices", "hours_scale")
 
 
 @dataclass
@@ -40,6 +41,7 @@ class ProducerColumns:
     revenue_history: np.ndarray
     history_count: np.ndarray
     expected_prices: np.ndarray       # producer by the recipe's good slot; NaN: no expectation held
+    hours_scale: np.ndarray           # producer by trade column: what its crew's practice multiplies the booked hours by (one: at the floor)
     matrices: RecipeMatrices = field(repr=False, default=None)
     tiles: Names = field(repr=False, default=None)
 
@@ -53,7 +55,7 @@ class ProducerColumns:
             np.zeros(count, dtype=np.int64), np.zeros(count), np.zeros(count), np.zeros(count), np.zeros(count),
             np.full(count, np.nan), np.zeros(count, dtype=np.int64), np.zeros(count, dtype=np.int64), np.full(count, np.nan),
             np.zeros((count, history_width)), np.zeros((count, history_width)), np.zeros(count, dtype=np.int64),
-            np.full((count, matrices.good_slots), np.nan), matrices, tiles)
+            np.full((count, matrices.good_slots), np.nan), np.ones((count, len(matrices.trades.ids))), matrices, tiles)
 
     @classmethod
     def build(cls, producers: Mapping[str, object], matrices: RecipeMatrices, tiles: Names) -> "ProducerColumns":
@@ -88,6 +90,14 @@ class ProducerColumns:
         columns._read_many(fresh)
         return columns
 
+    def read_scale(self, position: int) -> None:
+        """The row's hours multipliers from its record's crew practice (`practice.recipe_for`'s multipliers, one where the crew is at the floor)."""
+        self.hours_scale[position, :] = 1.0
+        for trade, units in self.records[position].crew_runs.items():
+            column = self.matrices.trades.row.get(trade)
+            if column is not None:
+                self.hours_scale[position, column] = practised_multiplier(units)
+
     def _read(self, position: int) -> None:
         producer = self.records[position]
         matrices = self.matrices
@@ -111,6 +121,7 @@ class ProducerColumns:
         self.history_count[position] = len(producer.net_earnings_history)
         slots = matrices.slot_goods[recipe]
         self.expected_prices[position, :] = np.nan
+        self.read_scale(position)
         goods = matrices.goods.row
         held = producer.expected_prices
         for slot, good_row in enumerate(slots):
@@ -145,6 +156,10 @@ class ProducerColumns:
                 if history:
                     column[position, :len(history)] = history
         self.expected_prices[rows] = np.nan
+        self.hours_scale[rows] = 1.0
+        for position, each in zip(positions, records):
+            if each.crew_runs:
+                self.read_scale(position)
         slot_goods = matrices.slot_goods
         goods_ids = matrices.goods.ids
         row_of, slot_of, price_of = [], [], []
