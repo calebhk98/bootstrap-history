@@ -25,4 +25,8 @@ def declared_signatures():
             array(integer, 1), array(integer, 1), array(number, 1), array(number, 1), array(integer, 1),
             array(number, 1), array(number, 1), flag)],
         "sim.labour.market.sold_hours_kernel.sold_hours": [(number, array(number, 2), number)],
+        "sim.labour.market.training_kernel.age_cohorts": [(
+            array(integer, 1), array(number, 1), array(number, 1), array(number, 2), integer, integer, array(number, 1), array(flag, 1),
+            integer, array(number, 1), number, number, array(number, 2), array(flag, 1), array(integer, 1), array(integer, 1),
+            array(flag, 1), array(integer, 1), array(integer, 1), array(number, 1), array(flag, 1), array(flag, 1))],
     }

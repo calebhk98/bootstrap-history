@@ -22,7 +22,8 @@ from sim.compiled_tables.spec import Column, TableSpec
 WORKERS = TableSpec("Workers", (
     Column("present", numpy.bool_, "the pair has an entry in the workers view (a pair can be present with nobody in it)", "flag"),
     Column("order", numpy.int64, "when the pair got its entry, counted across the state: dict views list pairs in this order", "sequence number"),
-    Column("people", numpy.float64, "people of the trade in the area, per ability band", "people", width=0),
+    Column("length", numpy.int64, "how many bands the pair's list has (the state's band count, unless a caller stored a shorter list)", "bands"),
+    Column("people", numpy.float64, "people of the trade in the area, per ability band; bands past `length` are zero", "people", width=0),
 ))
 Workers = WORKERS.make_type(__name__)
 
@@ -58,6 +59,7 @@ TRAINEES = TableSpec("Trainees", (
     Column("market", numpy.int64, "grid row (area * trade_count + trade) of the trade being learnt and the area learning it", "row"),
     Column("years_left", numpy.float64, "years of training still to go; the cohort finishes when it reaches zero", "years"),
     Column("bonus", numpy.float64, "teaching that adds to every band's chance of finishing", "ability standard deviations"),
-    Column("people", numpy.float64, "people in training, per ability band", "people", width=0),
+    Column("length", numpy.int64, "how many bands the cohort's list has", "bands"),
+    Column("people", numpy.float64, "people in training, per ability band; bands past `length` are zero", "people", width=0),
 ))
 Trainees = TRAINEES.make_type(__name__)

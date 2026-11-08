@@ -86,10 +86,10 @@ def migrate(state: MarketState, inputs: YearInputs, clearings, report: YearRepor
     """Move workers along the routes; record the net change per area in `report.migrated`. Flows are all computed from the
     counts at the start of the step (`migration_kernel.find_flows`) and applied after (`apply_flows`)."""
     state.admit([name for name in inputs.routes] + [route.destination for ways in inputs.routes.values() for route in ways], list(inputs.trades))
+    grid = grid_of(state, clearings.values() if isinstance(clearings, dict) else clearings)
     routes = _routes(state, inputs)
     if not len(routes.destination):
         return
-    grid = grid_of(state, clearings.values() if isinstance(clearings, dict) else clearings)
     rates = rates_of(state, inputs)
     rules = migration_kernel.MigrationRules(MIGRATION_TASTE_SCALE, MIGRATION_COST_WEIGHT, MIGRATION_CONSIDERATION_SHARE_PER_YEAR)
     longest = max([int(grid.results.demand_count.max())] if len(grid.results.demand_count) else [1])

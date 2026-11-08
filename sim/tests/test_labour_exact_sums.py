@@ -1,4 +1,4 @@
-"""`python_sum` and `exact_sum` give the numbers the built-in `sum` and `math.fsum` give, last digit included."""
+"""`python_sum`, `exact_sum` and `float_sumprod` give the numbers the built-ins `sum`, `math.fsum` and `math.sumprod` give, last digit included."""
 
 QUICK_TOPIC = True
 
@@ -8,7 +8,7 @@ import unittest
 
 import numpy
 
-from sim.labour.market.exact_sums import exact_sum, python_sum
+from sim.labour.market.exact_sums import exact_sum, float_sumprod, python_sum
 
 
 def random_values(rng):
@@ -34,6 +34,14 @@ class BuiltInSumsAreReproduced(unittest.TestCase):
         for _case in range(3000):
             values = random_values(rng)
             self.assertEqual(exact_sum(numpy.array(values), len(values)), math.fsum(values), values)
+
+    def test_float_sumprod_equals_math_sumprod(self):
+        rng = random.Random(3)
+        for _case in range(3000):
+            count = rng.randint(1, 6)
+            left = [rng.uniform(0, 1) * 10.0 ** rng.randint(-6, 6) for _ in range(count)]
+            right = [rng.choice([0.0, 1.0, 0.5, rng.uniform(0, 1)]) for _ in range(count)]
+            self.assertEqual(float_sumprod(numpy.array(left), numpy.array(right), count), math.sumprod(left, right), (left, right))
 
     def test_only_the_first_count_entries_are_added(self):
         values = numpy.array([0.1, 0.2, 0.3, 99.0])

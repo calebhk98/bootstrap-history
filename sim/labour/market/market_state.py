@@ -6,12 +6,14 @@ give nested dicts, so a save, a test and the economy's mirrors work unchanged. C
 and the other tables directly.
 
 Rows: areas and trades are numbered in sorted name order (state_ids.py), a grid row is `area * trade_count + trade`. Admitting a
-new area or trade renumbers (`admit`); a dict view must not be held across that. A band list has one length for the whole state
-(`bands`, the ability band count unless the first list stored is another length).
+new area or trade renumbers (`admit`); a dict view must not be held across that. The tables hold one band count
+(`bands`: the ability band count; a longer list widens the tables, and each list keeps the length it was stored with).
 """
 from typing import Dict, Iterable, List, Optional, Sequence, Tuple
 
 import numpy
+
+from sim.rekey import rename_text
 
 from . import aptitude
 from .state_ids import LabourIds
@@ -136,14 +138,16 @@ class MarketState:
         self.trainee_table = TRAINEES.new_table(Trainees, 0, widths=widths)
 
     def fit_width(self, bands: int) -> None:
-        """Make `bands` the band count of the state, which is possible while it holds no people."""
-        if bands == self.bands:
+        """Room for lists of `bands` bands: the tables' people columns widen (zero beyond a shorter list's length) if a longer
+        list than any so far is stored. A state of one band count, as the game keeps, never widens."""
+        if bands <= self.bands:
             return
-        if self.workers_table.present.any() or int(self.trainee_table.row_count[0]):
-            raise ValueError("the state holds %d bands per list, not %d" % (self.bands, bands))
+        for name in ("workers_table", "trainee_table"):
+            table = getattr(self, name)
+            people = numpy.zeros((len(table.people), bands))
+            people[:, :self.bands] = table.people
+            setattr(self, name, type(table)(*[people if field == "people" else column for field, column in zip(table._fields, table)]))
         self.bands = bands
-        self.workers_table = WORKERS.new_table(Workers, len(self.workers_table.present), len(self.workers_table.present), {"people": bands})
-        self.trainee_table = TRAINEES.new_table(Trainees, 0, widths={"people": bands})
 
     def admit(self, areas: Iterable[str], trades: Iterable[str]) -> None:
         """Number the areas and trades not known yet; the tables are laid out again once if any were new."""
@@ -173,7 +177,7 @@ class MarketState:
         self.hired_table = hired
         count = int(trainees.row_count[0])
         self.trainee_table = _spliced(trainees, TRAINEES, 0, count, {"market": new_row[trainees.market[:count]], "years_left": trainees.years_left[:count],
-                                      "bonus": trainees.bonus[:count], "people": trainees.people[:count]}, {"people": bands}) if count else self.trainee_table
+                                      "bonus": trainees.bonus[:count], "length": trainees.length[:count], "people": trainees.people[:count]}, {"people": bands}) if count else self.trainee_table
         self._reindex()
 
     def _reindex(self) -> None:
@@ -230,10 +234,11 @@ class MarketState:
     def _splice_cohorts(self, market: int, start: int, stop: int, cohorts: Sequence[tuple]) -> None:
         table = self.trainee_table
         if cohorts:
-            self.fit_width(len(cohorts[0][1]))
+            self.fit_width(max(len(each[1]) for each in cohorts))
             table = self.trainee_table
         replacement = {"market": numpy.full(len(cohorts), market, dtype=numpy.int64), "years_left": [each[0] for each in cohorts],
-                       "bonus": [each[2] for each in cohorts], "people": [list(each[1]) for each in cohorts]}
+                       "bonus": [each[2] for each in cohorts], "length": [len(each[1]) for each in cohorts],
+                       "people": [list(each[1]) + [0.0] * (self.bands - len(each[1])) for each in cohorts]}
         self.trainee_table = _spliced(table, TRAINEES, start, stop, replacement, {"people": self.bands})
         counts = self.market_table.cohort_count
         if cohorts and not counts[market]:
@@ -279,8 +284,9 @@ class MarketState:
         rows = int(table.row_count[0])
         market = numpy.concatenate((table.market[:rows], pending.market[:added]))
         order = numpy.argsort(market, kind="stable")
+        lengths = numpy.concatenate((table.length[:rows], numpy.full(added, self.bands, dtype=numpy.int64)))
         columns = [numpy.concatenate((getattr(table, name)[:rows], getattr(pending, name)[:added]))[order]
-                   for name in ("market", "years_left", "bonus", "people")]
+                   for name in ("market", "years_left", "bonus")] + [lengths[order], numpy.concatenate((table.people[:rows], pending.people[:added]))[order]]
         total = rows + added
         self.trainee_table = type(table)(numpy.array([total], dtype=numpy.int64), numpy.array([total], dtype=numpy.int64), *columns)
         self.market_table.cohort_count[:] = numpy.bincount(market, minlength=len(self.market_table.cohort_count))
@@ -326,6 +332,18 @@ class MarketState:
                 for row in range(first, first + count):
                     total += sum(self.trainee_table.people[row].tolist())
         return total
+
+    def rename_employer(self, old: str, new: str) -> None:
+        """An employer becomes another id (`sim.rekey`): in the hired hours, `old` as a whole name or a part of a composite id is `new`;
+        two employers that become one in a market add their hours."""
+        for area, trades in list(self.hired_hours.items()):
+            for trade, hired in list(trades.items()):
+                renamed = {}
+                for employer, hours in hired.items():
+                    name = rename_text(employer, old, new)
+                    renamed[name] = renamed[name] + hours if name in renamed else hours
+                if list(renamed) != list(hired):
+                    trades[trade] = renamed
 
     # -- plain data, copies, equality ----------------------------------------------------------------------------------
 

@@ -3,6 +3,7 @@
 `Clearings` holds, per market that had a stated outside option, the figures a `LabourClearing` carries; the employers' hours
 and the demand schedule stay in the kernels' arrays and are read only if asked for. It is a sequence of clearings in (trade,
 area) order, so a caller written for a list of `LabourClearing`s works unchanged."""
+import dataclasses
 from collections.abc import Sequence as SequenceBase
 from typing import Dict, List, Optional, Tuple
 
@@ -50,6 +51,13 @@ class Clearings(SequenceBase):
         if self._objects is None:
             self._objects = [self.clearing(row) for row in range(len(self))]
         return iter(self._objects)
+
+    def __eq__(self, other) -> bool:
+        if not isinstance(other, (list, tuple, Clearings)) or len(other) != len(self):
+            return NotImplemented if not isinstance(other, (list, tuple, Clearings)) else False
+        return all(dataclasses.asdict(mine) == dataclasses.asdict(theirs) for mine, theirs in zip(self, other))
+
+    __hash__ = None
 
     def hired_by_employer(self, row: int) -> Dict[str, float]:
         market = int(self.markets[row])

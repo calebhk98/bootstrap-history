@@ -97,7 +97,7 @@ def advance(state: MarketState, inputs: YearInputs, report: YearReport) -> None:
     counter = np.array([state._order], np.int64)
     training_kernel.age_cohorts(trainees.market, trainees.years_left, trainees.bonus, trainees.people, rows, len(ids.trades), difficulty, has_spec,
                                 ids.trades.number(fallback), np.array(aptitude.band_abilities()), aptitude.COMPLETION_SPREAD,
-                                GRADUATION_TOLERANCE_YEARS, workers.people, workers.present, workers.order, areas.workers_named,
+                                GRADUATION_TOLERANCE_YEARS, workers.people, workers.present, workers.order, workers.length, areas.workers_named,
                                 areas.workers_order, counter, graduated, graduated_any, keep)
     state._order = int(counter[0])
     state.keep_cohorts(keep)

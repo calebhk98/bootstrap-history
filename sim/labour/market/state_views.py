@@ -26,7 +26,7 @@ class Where:
 
 class Bands(MutableSequence):
     """People per ability band of a pair's workers, or of one of its cohorts (`cohort` is its place among them), read and written
-    in place."""
+    in place. The list is as long as the one stored (`length`); the table's columns may be wider."""
 
     def __init__(self, where: Where, cohort=None):
         self._where, self._cohort = where, cohort
@@ -35,27 +35,33 @@ class Bands(MutableSequence):
         state = self._where.state
         row = self._where.row()
         if self._cohort is None:
-            return state.workers_table.people, row
-        return state.trainee_table.people, state.cohort_range(row)[0] + self._cohort
+            return state.workers_table.people, state.workers_table.length, row
+        cohort_row = state.cohort_range(row)[0] + self._cohort
+        return state.trainee_table.people, state.trainee_table.length, cohort_row
 
     def __len__(self) -> int:
-        return self._where.state.bands
+        _column, lengths, row = self._target()
+        return int(lengths[row])
+
+    def _values(self):
+        column, lengths, row = self._target()
+        return column[row, :lengths[row]]
 
     def __getitem__(self, index):
-        column, row = self._target()
+        values = self._values()
         if isinstance(index, slice):
-            return column[row, index].tolist()
-        return float(column[row, index])
+            return values[index].tolist()
+        return float(values[index])
 
     def __setitem__(self, index, value) -> None:
-        column, row = self._target()
+        values = self._values()
         if isinstance(index, slice):
-            values = list(value)
-            if len(column[row, index]) != len(values):
+            replacement = list(value)
+            if len(values[index]) != len(replacement):
                 raise ValueError("a band list keeps its %d bands" % len(self))
-            column[row, index] = values
+            values[index] = replacement
         else:
-            column[row, index] = value
+            values[index] = value
 
     def __delitem__(self, index) -> None:
         raise TypeError("bands cannot lose a band")
@@ -64,8 +70,7 @@ class Bands(MutableSequence):
         raise TypeError("bands cannot gain a band")
 
     def __iter__(self):
-        column, row = self._target()
-        return iter(column[row].tolist())
+        return iter(self._values().tolist())
 
     def __eq__(self, other) -> bool:
         return list(self) == list(other) if isinstance(other, (list, tuple, Bands)) else NotImplemented
@@ -160,7 +165,7 @@ class CohortList(MutableSequence):
     def insert(self, index, value) -> None:
         count = len(self)
         index = min(max(index + count if index < 0 else index, 0), count)
-        self._where.state.insert_cohort(self._where.row(), index, value[0], value[1], value[2])
+        self._where.state.insert_cohort(self._where.row(), index, value[0], value[1], value[2] if len(value) > 2 else 0.0)
 
     def __eq__(self, other) -> bool:
         return [each.plain() for each in self] == [list(each) if not isinstance(each, Cohort) else each.plain() for each in other] if isinstance(other, (list, tuple, CohortList)) else NotImplemented
@@ -262,12 +267,15 @@ class WorkersField:
         table = state.workers_table
         if not table.present[row]:
             table.present[row], table.order[row] = True, state.next_order()
-        table.people[row] = values
+        table.people[row] = 0.0
+        table.people[row, :len(values)] = values
+        table.length[row] = len(values)
 
     @staticmethod
     def erase(state, row: int) -> None:
         state.workers_table.present[row] = False
         state.workers_table.people[row] = 0.0
+        state.workers_table.length[row] = 0
 
 
 class _ScalarField:
@@ -349,7 +357,7 @@ class TraineesField:
 
     @staticmethod
     def write(state, row: int, value) -> None:
-        state.set_cohorts(row, [(each[0], each[1], each[2]) for each in value])
+        state.set_cohorts(row, [(each[0], each[1], each[2] if len(each) > 2 else 0.0) for each in value])
 
     @staticmethod
     def erase(state, row: int) -> None:

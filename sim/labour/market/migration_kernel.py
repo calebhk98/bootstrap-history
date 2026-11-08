@@ -140,6 +140,7 @@ def apply_flows(workers, areas, counter, routes, trade_count, flow_origin, flow_
             workers.present[to_row] = True
             counter[0] += 1
             workers.order[to_row] = counter[0]
+            workers.length[to_row] = band_count
         for band in range(band_count):
             workers.people[from_row, band] -= flow_people[flow, band]
             workers.people[to_row, band] += flow_people[flow, band]

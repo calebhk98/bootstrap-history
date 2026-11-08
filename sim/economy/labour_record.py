@@ -4,7 +4,6 @@ from dataclasses import dataclass, field
 from typing import Dict
 
 from sim.labour.api import MarketState, add_people, market_state_from_plain, market_state_to_plain
-from sim.rekey import rekey
 
 from .market_memory import KEY_SEPARATOR
 from .record_parts import OwnedRecord
@@ -33,9 +32,7 @@ class LabourRecord(OwnedRecord):
     def rename_agent(self, old: AgentId, new: AgentId) -> None:
         """`old` becomes `new` as an employer in the core's hired hours as well as in the stores keyed by an agent id."""
         super().rename_agent(old, new)
-        for trades in self.workforce.hired_hours.values():
-            for hired in trades.values():
-                rekey(hired, old, new)
+        self.workforce.rename_employer(old, new)
 
     def hours_cleared_in(self, market_key: str) -> float:
         """Hours the core's last clearing hired in the labour market `market_key` (trade, area), all employers: before

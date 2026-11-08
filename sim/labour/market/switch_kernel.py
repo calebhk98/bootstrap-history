@@ -67,6 +67,7 @@ def _name_worker_pair(workers, counter, row):
     if not workers.present[row]:
         workers.present[row] = True
         workers.order[row] = _stamp(counter)
+        workers.length[row] = workers.people.shape[1]
 
 
 @njit
