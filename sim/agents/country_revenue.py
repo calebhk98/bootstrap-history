@@ -9,7 +9,7 @@ from typing import Any, Dict, FrozenSet, List, Optional, Tuple
 
 from sim.geography.api import arable_hectares, territory
 
-from . import government_levers, revenue, strata_observed
+from . import assessment_table, government_levers, revenue, strata_observed
 from .country_part import SharedPart
 from .no_country_economy import NoCountryEconomy
 
@@ -34,7 +34,7 @@ class CountryRevenue(SharedPart):
 		return self._assessed
 
 	def state_revenue(self) -> float:
-		return sum(assessment.money for assessment in self.revenue_assessments())
+		return assessment_table.as_table(self.revenue_assessments()).total_money()
 
 	def fugitive_share(self) -> None:
 		"""A country does not follow its people's flight: no figure."""
