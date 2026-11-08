@@ -103,7 +103,9 @@ def heard(merchant, key, price: float, lag: int):
     the price of `lag` years ago, or None while the first news has not arrived."""
     if lag <= 0:
         return price
-    history = merchant.price_history.setdefault(key, [])
+    histories = merchant.price_history
+    history = histories.setdefault(key, [])
     history.append(price)
     del history[:-(lag + 1)]
+    merchant.price_history = histories
     return history[0] if len(history) > lag else None

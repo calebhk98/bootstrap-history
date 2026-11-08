@@ -109,16 +109,12 @@ def close_agents(setup, record, view, ledger: YearLedger, area_map, carriage, ar
     anchors = {(good, area.area_id): area.anchor_tile for good in area_map.goods() for area in area_map.areas(good)}
     news = merchants_news.YearNews(prices, volumes, anchors)
     interest_rate = own_rate(view, money)
-    closing = sorted(record.merchants.values(), key=lambda each: each.agent_id)
-    merchants.learn_year(closing, news, [news.lags_at(carriage, merchant.home_tile) for merchant in closing])
-    for merchant in closing:
-        transfers = merchants.close_year(merchant, prices, volumes, record.book.balance(merchant.agent_id, money),
-                                         held_stock(record.book, merchant.agent_id), area_map.area_of, money,
-                                         interest_rate, news, learned=True)
-        paid = ownership.spread(record, transfers, cohorts_by_tile)
+    merchants.learn_year(record.memory.tables, news, carriage)
+    for transfer in merchants.close_all(record.memory.tables, record.book, area_map, money, interest_rate):
+        paid = ownership.spread(record, (transfer,), cohorts_by_tile)
         record.book.transfer_many(paid)
-        for transfer in paid:
-            property_income[transfer.payee] = property_income.get(transfer.payee, 0.0) + transfer.amount
+        for payment in paid:
+            property_income[payment.payee] = property_income.get(payment.payee, 0.0) + payment.amount
     if carriage_hours.hires(setup):    # after the owners took their profit: the cash left is what next year's carriers can be paid from
         record.credit.ask_for_loans(carriage_hours.wage_loans(setup, record, ledger.crew_hours_bought,
                                                            {(result.trade, result.area): result.hours_hired + result.idle_hours

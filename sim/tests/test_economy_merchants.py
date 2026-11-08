@@ -196,7 +196,7 @@ class DispatchAndCloseTests(unittest.TestCase):
 
     def test_in_transit_stock_with_no_learned_price_is_not_a_loss(self):
         who = merchant()
-        who.in_transit.append(merchants_transit.Shipment("salt", 5.0, "t1", 2))
+        who.add_shipment(merchants_transit.Shipment("salt", 5.0, "t1", 2))
         merchants.close_year(who, {}, {}, 90.0, {}, lambda good, tile: "x", "coin", 0.05)
         self.assertAlmostEqual(who.capital_base, 100.0)
 

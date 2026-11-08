@@ -31,7 +31,7 @@ from typing import Callable, Dict, List, Mapping, Optional, Sequence, Tuple
 
 from sim.constants import declare
 
-from . import carriage_fleet, inventory, merchant_figures, merchants_news, merchants_plan, route_dues, merchants_legs, merchants_route_memo, merchants_search, merchants_transit
+from . import carriage_fleet, inventory, merchant_table, merchant_year, merchants_news, merchants_plan, route_dues, merchants_legs, merchants_route_memo, merchants_search, merchants_transit
 from sim.book import DeliveredMove
 from .households_orders import BUDGET_SAFETY_SHARE
 from .market_areas import AreaMap
@@ -92,22 +92,65 @@ class Merchant:
     in_transit: List[merchants_transit.Shipment] = field(default_factory=list)   # hauls still on the road (their goods wait in the transit account)
     price_history: Dict[Tuple[GoodId, AreaId], List[float]] = field(default_factory=dict)   # prices of distant markets that news has not yet reached it, newest last
 
+    def _table(self):
+        """(the merchant table holding this merchant's row, the row): a table of its own until `put_merchant` moves it into its record's."""
+        store = self.__dict__.get("_store")
+        if store is None:
+            store = merchant_table.MerchantTable(MarketTables())
+            row = store.add(self.agent_id)
+            store.homes[row], store.owners[row] = self.__dict__.get("home_tile", ""), self.__dict__.get("owner", "")
+            self.__dict__.update(_store=store, _row=row, expected_prices=store.figures("prices", row),
+                                 expected_volumes=store.figures("volumes", row))
+        return store, self.__dict__["_row"]
+
     def __setattr__(self, name, value) -> None:
-        """A mapping assigned to an expectation is copied into its column (keeping the numbering it is indexed by, if it has one)."""
-        if name not in FIGURE_FIELDS or isinstance(value, merchant_figures.MarketFigures):
+        """Capital, hauls on the road and price history are written to the merchant's table row; a mapping assigned to an
+        expectation is copied into its row."""
+        if name == "capital_base":
+            store, row = self._table()
+            store.capital_base[row] = value
+        elif name in FIGURE_FIELDS:
+            self._table()
+            held = self.__dict__[name]
+            if value is not held:
+                held.replace_all(value)
+        elif name == "in_transit":
+            store, row = self._table()
+            store.set_shipments(row, [(each.good, each.quantity, each.destination_tile, each.years_left) for each in value])
+        elif name == "price_history":
+            store, row = self._table()
+            store.set_history(row, value)
+        else:
             object.__setattr__(self, name, value)
-            return
-        held = self.__dict__.get(name)
-        if held is not None:
-            held.replace_all(value)
-            return
-        object.__setattr__(self, name, merchant_figures.MarketFigures(None, value))
+
+    def __getattr__(self, name):
+        if name == "capital_base":
+            store, row = self._table()
+            return float(store.capital_base[row])
+        if name == "in_transit":
+            store, row = self._table()
+            return [merchants_transit.Shipment(*each) for each in store.shipments_of(row)]
+        if name == "price_history":
+            store, row = self._table()
+            return store.history_of(row)
+        raise AttributeError(name)
+
+    def add_shipment(self, shipment) -> None:
+        """A haul that waits on the road joins the merchant's shipments (a read of `in_transit` is a copy)."""
+        store, row = self._table()
+        store.add_shipment(row, shipment.good, shipment.quantity, shipment.destination_tile, shipment.years_left)
+
+    def state_for_table(self) -> dict:
+        """What `merchant_table.adopt` copies into another table."""
+        store, row = self._table()
+        return {"capital_base": float(store.capital_base[row]), "expected_prices": self.expected_prices.named(),
+                "expected_volumes": self.expected_volumes.named(),
+                "in_transit": store.shipments_of(row), "price_history": store.history_of(row)}
 
 
 def bind_markets(merchant: Merchant, tables: MarketTables) -> None:
-    """Index the merchant's figures by this goods-market numbering (the record's), keeping what it holds."""
-    for name in FIGURE_FIELDS:
-        getattr(merchant, name).bind(tables)
+    """Move the merchant into the record's merchant table, its figures indexed by this goods-market numbering (the record's), keeping what it holds."""
+    merchant_table.adopt(merchant, tables)
 
 
 @dataclass(frozen=True)
@@ -393,7 +436,7 @@ def dispatch(merchant: Merchant, carriage: CarriageTable,
             continue
         years = merchants_transit.years_between(carriage, tile, route[0])
         if years > 1:      # the haul outlasts the year: it waits on the road and arrives in the year its days put it in
-            merchant.in_transit.append(merchants_transit.Shipment(good, carried, route[0], years - 1))
+            merchant.add_shipment(merchants_transit.Shipment(good, carried, route[0], years - 1))
         moves.append(DeliveredMove(merchant.agent_id, merchants_transit.EDGE_TRANSIT if years > 1 else merchant.agent_id,
                                    good, tile, carried, "carried to market", route[0]))
         for holder, owed in sorted(dues_unit.items()):      # dues come out of the purse before the carrier's fee
@@ -409,10 +452,17 @@ def dispatch(merchant: Merchant, carriage: CarriageTable,
     return Dispatch(tuple(moves), within_purse(transfers, cash), wanted, worth, fleet_wanted, tuple(dues_paid))
 
 
-def learn_year(merchants: Sequence[Merchant], news: merchants_news.YearNews, lags: Sequence) -> None:
-    """Move every merchant's expectations toward the year's prices and volumes (`close_year` with `learned=True` follows);
-    `lags[i]` is `news.lags_at(...)` for `merchants[i]`."""
-    merchants_news.learn_all(merchants, news, lags, MERCHANT_EXPECTATION_SPEED)
+def learn_year(tables: MarketTables, news: merchants_news.YearNews, carriage: CarriageTable) -> None:
+    """Move every merchant of the record whose market numbering is `tables` toward the year's prices and volumes, in one kernel step
+    over the merchant table (the settlement, `close_all`, follows)."""
+    merchant_year.learn_year(merchant_table.MerchantTable.of(tables), news, carriage, MERCHANT_EXPECTATION_SPEED)
+
+
+def close_all(tables: MarketTables, book, area_map: AreaMap, currency: CurrencyId, interest_rate: float) -> Sequence[Transfer]:
+    """`close_year`'s settlement for every merchant of the table at once: capital moves, the profits owners take come back as transfers
+    in merchant order."""
+    return merchant_year.close_all(merchant_table.MerchantTable.of(tables), book, area_map, currency, interest_rate,
+                                   MERCHANT_PROFIT_PAYOUT_SHARE)
 
 
 def close_year(merchant: Merchant, prices: Mapping[Tuple[GoodId, AreaId], float],

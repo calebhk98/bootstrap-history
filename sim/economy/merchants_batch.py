@@ -15,14 +15,12 @@ from . import merchants_batch_kernel
 from .merchants_book import MerchantRows, RoutePass, merchant_array
 
 
-def search_many(route: RoutePass, expected: np.ndarray, home_tiles: Sequence[str], interest_rate: float,
-                margin_share: float) -> "list[MerchantRows]":
+def search_arrays(route: RoutePass, expected: np.ndarray, home_tiles: Sequence[str], interest_rate: float, margin_share: float):
     """The rows of `merchants_book.search` (every good, every source) for each row of `expected` (a merchant's expected prices
-    by slot, NaN where it has none), the merchant being at the same row of `home_tiles`."""
+    by slot, NaN where it has none), the merchant being at the same row of `home_tiles`, all merchants' rows one after another:
+    (rows per merchant, good, source, destination, source slot, destination slot, rank, price here, outlay, ceiling)."""
     book = route.book
     carriage = route.carriage
-    if len(home_tiles) == 0:
-        return []
     news = np.stack([book.news_current(carriage, tile) for tile in home_tiles])
     seen = np.where(np.isnan(expected), np.where(news, route.view_prices, 0.0), expected)
     merchants = len(home_tiles)
@@ -42,8 +40,17 @@ def search_many(route: RoutePass, expected: np.ndarray, home_tiles: Sequence[str
         book.fill_years(carriage, missing)
     (counts, good, source, destination, rank, price_here, outlay, ceiling) = merchants_batch_kernel.sorted_rows(
         book.area_count, book.order_base, book.id_rank_flat, *stored, block_start, block_count)
-    source_slot = book.slot_base[good] + source
-    destination_slot = book.slot_base[good] + destination
+    return (counts, good, source, destination, book.slot_base[good] + source, book.slot_base[good] + destination, rank, price_here,
+            outlay, ceiling)
+
+
+def search_many(route: RoutePass, expected: np.ndarray, home_tiles: Sequence[str], interest_rate: float,
+                margin_share: float) -> "list[MerchantRows]":
+    """`search_arrays` as one `MerchantRows` for each merchant."""
+    if len(home_tiles) == 0:
+        return []
+    counts, good, source, destination, source_slot, destination_slot, rank, price_here, outlay, ceiling = search_arrays(
+        route, expected, home_tiles, interest_rate, margin_share)
     ends = np.cumsum(counts)
     found = []
     for position in range(len(home_tiles)):

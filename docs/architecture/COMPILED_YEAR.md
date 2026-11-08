@@ -606,12 +606,16 @@ the columns grow with the numbering; a merchant made alone numbers its own marke
 - `merchants_book.route_pass` reads the memory's price column by slot (`FloatStore.values_in_slots`, `YearView.prices_by_slot`); a view
   without that method is read good by good as before.
 
-`merchants.dispatch` is a loop over hauls with the crew and dues arithmetic; its per-pair inputs (crew rows by key string, dues by holder,
-wear by carrier good, the merchant's `routes` dictionary of legs, `in_transit` shipments, `price_history` lists) are Python objects of the
-`Merchant` record, as are `orders` (`routes`, the `Bid` and `Offer` it hands the order rows), `close_year` and `heard_prices`. They need a
-merchant table (columns for the purse and base, ragged columns for legs, shipments and price histories, interned crew keys and carrier
-goods) before each is one kernel over the merchants. Measure with
-`python3 tools/measure/function_times.py SAVE sim.economy.merchants:learn_year sim.economy.merchants:close_year sim.economy.merchants_batch:prepare`.
+The merchants' per-merchant state is a table (`merchant_table.MerchantTable`, one per record, found by `MerchantTable.of(record.memory.tables)`):
+capital base, the expected price and volume matrices (merchant row by goods-market row; `RowFigures` is a merchant's dict-like row), the hauls
+on the road (ragged rows with interned goods and tiles) and the price histories (ragged, sorted by packed key). A `Merchant` is a handle on its
+row; the save still writes each merchant as before. On the table, `merchant_year.learn_year` (one `hear_all` kernel for the news and
+histories, one array step for the figures) and `merchant_year.close_all` (`settle_profits`, exact sums) replace the per-merchant learning and
+close; `merchants_credit_batch.credit_requests` sizes every merchant's loan in one kernel (`commit_credit_all`) from rows searched together
+(`merchants_batch.search_arrays`) and stock by slot (`held_by_slot`); `carriage_wear_batch.settle_all` keeps and wears every merchant's carriers
+in two passes over the book. Still per merchant, with their inputs as Python objects: `merchants.dispatch` (the haul loop with crew, dues, fleet
+and purse limits, called from `merchants_dispatch.dispatch_merchants`), `merchants_plan.orders` (stock arrays, `routes` legs, `Bid` and `Offer`
+objects handed to `OrderRows`), `carriage_fleet_book.bids` and `wear_needed`. `python3 tools/measure/function_times.py SAVE sim.economy.merchants:learn_year sim.economy.merchants:close_year sim.economy.merchants_batch:prepare`.
 
 ## Cached views
 

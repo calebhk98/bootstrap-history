@@ -12,7 +12,7 @@ from sim.world import capital_market
 
 from sim.loans.columns import NO_TILE
 
-from . import bank_service, bondage, credit, credit_claims, credit_service, households_credit, lender_ask, loss_memory, merchants_book, merchants_credit, merchants_plan, titles, titles_ground, titles_value, transfer_rows
+from . import bank_service, bondage, credit, credit_claims, credit_service, households_credit, lender_ask, loss_memory, merchants_book, merchants_credit, merchants_credit_batch, titles, titles_ground, titles_value, transfer_rows
 from .household_time_preference import HOUSEHOLD_TIME_PREFERENCE
 from .household_work_year import basket_key, cohort_basket
 from .producers_working_capital import WORKING_CAPITAL_PURPOSE
@@ -21,6 +21,7 @@ from .order_rows import OrderRows
 from .types import FundsOffer
 from .households_basket import cohort_need_prices
 from .inventory import held_stock
+from .merchant_table import MerchantTable
 from .rates import own_rate
 
 
@@ -137,18 +138,10 @@ def merchant_requests(setup, record, view, area_map, carriage) -> List:
     money = setup.currency_id
     rate = own_rate(view, money)
     debts = credit_claims.debts_by_borrower(record.credit.loans, money)
-    requests = []
-    route = merchants_book.route_pass(view, carriage, area_map, setup.specs) if record.merchants else None
-    merchants_plan.prepare_rows(route, [merchant for merchant_id, merchant in sorted(record.merchants.items())
-                                        if merchants_credit.MERCHANT_LEVERAGE_LIMIT * (merchant.capital_base - debts.get(merchant_id, 0.0))
-                                        - debts.get(merchant_id, 0.0) > 0.0], rate)
-    for merchant_id, merchant in sorted(record.merchants.items()):
-        asked = merchants_credit.credit_request(
-            merchant, view, carriage, area_map, record.book.balance(merchant_id, money),
-            held_stock(record.book, merchant_id), setup.specs, rate, debts.get(merchant_id, 0.0), money, route)
-        if asked is not None:
-            requests.append(asked)
-    return requests
+    if not record.merchants:
+        return []
+    route = merchants_book.route_pass(view, carriage, area_map, setup.specs)
+    return merchants_credit_batch.credit_requests(MerchantTable.of(record.memory.tables), route, record.book, debts, money, rate)
 
 
 def bid_household_loans(setup, record, view, ledger, loans, order_book, priced_by_tile) -> None:
