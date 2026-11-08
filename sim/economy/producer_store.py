@@ -101,7 +101,9 @@ class ProducerStore(MutableMapping):
         return [(producer_id, self.at(row)) for producer_id, row in self.row_of.items()]
 
     def clear(self) -> None:
+        version, members, layout, names = self.version + 1, self.members_version + 1, self.layout + 1, self.names
         self.__init__()
+        self.version, self.members_version, self.layout, self.names = version, members, layout, names   # counters and numbers never go back
 
     def at(self, row: int) -> Producer:
         """The producer in `row`, built from the columns and kept until the row is written."""
