@@ -16,7 +16,18 @@ def declared_signatures():
     def array(element, dimensions):
         return types.Array(element, dimensions, "C")
 
+    from numba import typeof
+    from sim.economy.api import GOODS_MARKETS, GoodsMarkets
+    markets = typeof(GOODS_MARKETS.new_table(GoodsMarkets, 1))      # the namedtuple of columns a goods market kernel takes
+    floats, whole, whole_grid = array(number, 1), array(integer, 1), array(integer, 2)
+
     return {
+        "sim.economy.market_table_kernels.remap_goods_markets": [(markets, markets, whole, whole, whole, whole, whole)],
+        "sim.economy.market_table_kernels.put_floats": [(floats, whole, whole, whole, integer, whole, floats)],
+        "sim.economy.market_table_kernels.drop_floats": [(floats, whole, integer, whole)],
+        "sim.economy.market_table_kernels.put_counts": [(whole, whole, whole, whole, whole, integer, integer, whole, whole)],
+        "sim.economy.market_table_kernels.drop_counts": [(whole, whole, integer, integer, whole)],
+        "sim.economy.market_table_kernels.market_of_good_tile": [(whole_grid, whole_grid)],
         "sim.economy.merchants_kernel.lost_share": [(number, integer)],
         "sim.economy.merchants_kernel.search_good": [(
             array(number, 1), array(number, 2), array(integer, 2), array(integer, 1), array(flag, 1),

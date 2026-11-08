@@ -23,6 +23,12 @@ class AdmitTests(unittest.TestCase):
 
 
 class LookupTests(unittest.TestCase):
+    def test_numbers_is_the_name_to_number_dict_and_follows_later_batches(self):
+        ids = IdTable("good", ["wheat", "iron"])
+        numbers = ids.numbers
+        ids.admit(["zinc"])
+        self.assertEqual(dict(numbers), {"iron": 0, "wheat": 1, "zinc": 2})
+
     def test_find_answers_none_for_an_unknown_name(self):
         self.assertIsNone(IdTable("good", ["iron"]).find("gold"))
 
