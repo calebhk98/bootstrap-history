@@ -102,11 +102,21 @@ cause code from `BOOK_CAUSES` and the offending cell) and turns a refused batch 
 its names as posting them one by one would), applies them in one call, one batch per step, and replays a refused step through the
 object path to raise the book's own error. `book_settled.post_settled_by_numbers` posts settled totals.
 
+**One posting, and the cost of a call.** `Book.transfer`, `Book.move` and a one-posting `Book.post` write their row into one-row tables the
+book keeps (`sim/book_single.py`, `SinglePostings`), numbering names in the order the table path would, and call the money or goods
+kernel directly. `apply_batches` runs only the half a batch has (a money-only batch does not plan, commit or record the goods half,
+and the reverse): dispatching a kernel costs for every array it is given, and a nested bundle of tables costs more than the same arrays
+passed flat do (`tools/measure/function_times.py` on `sim.book_post:apply_batches`, `apply_money`, `apply_goods` shows it). A converter that
+holds names and not ids numbers them with `IdTable.numbers_of` (one call for a list; -1 for a name the table lacks) or
+`Book.agent_numbers_in_order` (admits the new ones one at a time, as `agent_number` does, which a batch admit would number differently).
+
 **How it reads.** The kernels in `sim/book_read_kernels.py` (`read_balances`, `find_slots`, `read_stocks_at`, `holder_columns`,
 `counted_stocks`, `currency_values`) take the book's tables from `book.tables()`, `book.balance_table`, `book.stock_rows`; an id
 below zero reads as nothing held. `economy/stock_block.stock_block(book, agent_numbers, good_numbers, tile_numbers)` reads any
 number of stock cells in one call. Re-fetch tables after any call that may admit a name or reserve room (a grown table is a new
-object). The methods callers use (`balance`, `stock`, `post`, `post_settled`, ...) are wrappers over the same kernels.
+object). The methods callers use (`balance`, `stock`, `post`, `post_settled`, ...) are wrappers over the same kernels. Whole-table
+reads that save a loop of scalar ones: `balances_by_currency` (each row in its own currency), `balances_of` / `rows_of` / `slots_of`
+(a list of names), `goods_flows` and `edge_goods_net_by_good` (the year's flows and an edge's nets for every good).
 
 ## The year ledger
 
@@ -694,6 +704,11 @@ about one percent of a step, and re-measure before acting, since the list lags t
 - **Priced needs.** The readers of `PricedNeed` listed under Households take objects, so `NeedBatch` stays unwired.
 - **Loan requests** become a table at the clearing; `LoanClearing.loans` and the bank rules still read `Contract`/`LoanRow` objects.
 - **Cached views** in the "Left uncached" list wait for their input's owner to bump a channel.
+- **The book's remaining Python-to-kernel calls** are one kernel per scalar read (`Book.stock`, `holdings`, `goods_of`) from the loops that
+  read one cell or one agent at a time (`producers.runs_for_stock`, `producers._input_bids`, `households_store.store_holding`,
+  `producer_exit.exit_producer`, `economy._build_plant`) and one apply per step of a loop that reads the book between steps
+  (`goods_production.post_lines` per turn, `purses.transfer`, `bonded_purchase.settle`). A year-level posting queue does not fit these: each
+  reads what the last posting wrote, or needs the refusal at the call. They move when their loops are columns (`stock_block`, `balances_of`).
 
 ## Stages
 

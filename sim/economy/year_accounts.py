@@ -143,8 +143,10 @@ def _goods(setup, record, ledger, stocks_at_start) -> Dict[str, GoodAccount]:
         turnover[good] = turnover.get(good, 0.0) + quantity
     goods = set(stocks_now) | set(stocks_at_start) | set(turnover) | set(setup.specs)
     accounts = {}
+    flows = book.goods_flows()
+    nets = {edge: book.edge_goods_net_by_good(edge) for edge in (EDGE_PRODUCTION, EDGE_CONSUMPTION, EDGE_SPOILAGE, *other_edges)}
     for good in sorted(goods):
-        purposes = book.goods_flow(good)
+        purposes = flows.get(good, {})
         state = math.fsum(quantity for purpose, quantity in purposes.items() if purpose.startswith(STATE_PURPOSE_PREFIX))
         known = (purposes.get(INPUT_PURPOSE, 0.0) + purposes.get(CONSUMPTION_PURPOSE, 0.0)
                  + purposes.get(WEAR_PURPOSE, 0.0) + purposes.get(PLANT_PURPOSE, 0.0) + state)
@@ -152,15 +154,15 @@ def _goods(setup, record, ledger, stocks_at_start) -> Dict[str, GoodAccount]:
         own = grown.get(good, 0.0)
         share_grown = own / (own + bought.get(good, 0.0)) if own > 0.0 else 0.0
         accounts[good] = GoodAccount(
-            production=book.edge_goods_net(EDGE_PRODUCTION, good),
+            production=nets[EDGE_PRODUCTION].get(good, 0.0),
             production_grown=purposes.get(GROWN_PURPOSE, 0.0),
             intermediate_use=purposes.get(INPUT_PURPOSE, 0.0),
             final_consumption_bought=household * (1.0 - share_grown), final_consumption_grown=household * share_grown,
             durable_wear=purposes.get(WEAR_PURPOSE, 0.0), state_use=state,
             investment=purposes.get(PLANT_PURPOSE, 0.0),
-            other_use=-book.edge_goods_net(EDGE_CONSUMPTION, good) - known,
-            spoilage=-book.edge_goods_net(EDGE_SPOILAGE, good),
-            other_net_inflow=math.fsum(book.edge_goods_net(edge, good) for edge in other_edges),
+            other_use=-nets[EDGE_CONSUMPTION].get(good, 0.0) - known,
+            spoilage=-nets[EDGE_SPOILAGE].get(good, 0.0),
+            other_net_inflow=math.fsum(nets[edge].get(good, 0.0) for edge in other_edges),
             stock_at_start=stocks_at_start.get(good, 0.0),
             stock_change=stocks_now.get(good, 0.0) - stocks_at_start.get(good, 0.0),
             market_turnover=turnover.get(good, 0.0))

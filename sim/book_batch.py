@@ -11,7 +11,7 @@ import numpy
 from sim.book_apply import apply_settled
 from sim.book_commit import add_flow
 from sim.book_post import grown_settled
-from sim.book_read_kernels import find_slots, read_balances, read_stocks_at
+from sim.book_read_kernels import find_slots, read_balances, read_balances_each, read_stocks_at
 from sim.book_tables import INSUFFICIENT_FUNDS, INSUFFICIENT_GOODS
 from sim.book_types import (AgentId, BookError, CurrencyId, GoodId, InsufficientFunds, InsufficientGoods, TileId)
 from sim.compiled_tables.causes import OK
@@ -39,6 +39,13 @@ class BookBatch:
         """Balances by agent number (numbers of -1 read zero)."""
         number = self.currency_ids.find(currency)
         return read_balances(self.balance_table, self.stride, numpy.asarray(rows, dtype=numpy.int64), -1 if number is None else number)
+
+    def balances_by_currency(self, rows: numpy.ndarray, currency_index: numpy.ndarray, currency_names: Sequence[CurrencyId]) -> numpy.ndarray:
+        """Balances by agent number, each in its own currency: row i reads `currency_names[currency_index[i]]` (zero for an agent
+        number of -1 or a currency the book never saw). The same figures as `balances_at` once per currency, in one call."""
+        numbers = self.currency_ids.numbers_of(currency_names)
+        return read_balances_each(self.balance_table, self.stride, numpy.asarray(rows, dtype=numpy.int64),
+                                  numbers[numpy.asarray(currency_index, dtype=numpy.int64)])
 
     def stocks_of(self, good: GoodId, agents: Sequence[AgentId], tiles: Sequence[TileId]) -> numpy.ndarray:
         """Each (agent, tile)'s stock of the good (zero where nothing was ever held)."""

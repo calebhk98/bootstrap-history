@@ -127,6 +127,59 @@ class NumberLookups(unittest.TestCase):
                              [book.slot_for(agent, good, tile) for agent, tile in zip(agents, tiles)])
 
 
+class WholeTableReads(unittest.TestCase):
+    def churned_book(self, seed):
+        rng = random.Random(seed)
+        book, _plain = funded_pair(rng)
+        for _ in range(80):
+            outcome(lambda: book.move(random_move(rng)))
+            outcome(lambda: book.transfer(random_transfer(rng)))
+        return book
+
+    def test_balances_by_currency_is_one_balances_at_per_currency(self):
+        book = self.churned_book(5)
+        rng = random.Random(6)
+        names = CURRENCIES + ["unseen"]
+        agents = AGENTS + ["ghost"]
+        rows = book.rows_of([rng.choice(agents) for _ in range(60)])
+        index = numpy.array([rng.randrange(len(names)) for _ in range(60)], dtype=numpy.int64)
+        wanted = numpy.zeros(60)
+        for each, name in enumerate(names):
+            chosen = numpy.nonzero(index == each)[0]
+            wanted[chosen] = book.balances_at(rows[chosen], name)
+        self.assertEqual(book.balances_by_currency(rows, index, names).tolist(), wanted.tolist())
+
+    def test_balances_by_currency_of_nothing_is_empty(self):
+        book = Book()
+        self.assertEqual(book.balances_by_currency([], [], []).tolist(), [])
+
+    def test_edge_goods_net_by_good_is_edge_goods_net_of_each_good(self):
+        book = self.churned_book(8)
+        for edge in [agent for agent in AGENTS if agent.startswith("edge:")] + ["edge:unknown"]:
+            nets = book.edge_goods_net_by_good(edge)
+            self.assertEqual({good: nets.get(good, 0.0) for good in GOODS}, {good: book.edge_goods_net(edge, good) for good in GOODS})
+
+    def test_goods_flows_is_goods_flow_of_each_good(self):
+        book = self.churned_book(9)
+        flows = book.goods_flows()
+        for good in GOODS + ["unseen"]:
+            self.assertEqual(list(flows.get(good, {}).items()), list(book.goods_flow(good).items()), good)
+
+
+class AgentNumbersInOrder(unittest.TestCase):
+    def test_new_names_are_numbered_as_one_by_one_admission_numbers_them(self):
+        names = ["zed", "amy", "known", "zed", "bob", "amy"]
+        batch, single = Book(), Book()
+        batch.agent_number("known")
+        single.agent_number("known")
+        self.assertEqual((batch.agent_numbers_in_order(names), batch.numbering_state()),
+                         ([single.agent_number(name) for name in names], single.numbering_state()))
+
+    def test_no_names_admit_nothing(self):
+        book = Book()
+        self.assertEqual((book.agent_numbers_in_order([]), len(book.agent_ids)), ([], 0))
+
+
 def plain_goods_of(book, agent):
     """The held-goods dict as `Book.goods_of` has always built it."""
     number = book.agent_ids.numbers.get(agent)

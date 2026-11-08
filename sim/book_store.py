@@ -58,6 +58,17 @@ class BookStore:
             number = self._admit_agents([agent])[0]
         return number
 
+    def agent_numbers_in_order(self, agents: Iterable[AgentId]) -> List[int]:
+        """Each agent's number, as `agent_number` gives it name by name: the names new to the book are admitted one at a time in
+        the order given (`_agent_numbers` admits a batch's new names sorted, which numbers them differently)."""
+        given = list(agents)
+        found = list(map(self.agent_ids.numbers.get, given))
+        if None in found:
+            for position, number in enumerate(found):
+                if number is None:
+                    found[position] = self.agent_number(given[position])
+        return found
+
     def _admit_agents(self, agents: Iterable[AgentId]) -> List[int]:
         given = list(agents)
         self.agent_ids.admit(given)

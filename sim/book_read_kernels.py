@@ -22,6 +22,16 @@ def read_balances(balances, stride, agent_numbers, currency):
 
 
 @njit
+def read_balances_each(balances, stride, agent_numbers, currency_numbers):
+    """Each agent's balance in its own currency, one currency number per agent (a number of -1 on either side reads zero)."""
+    found = numpy.zeros(len(agent_numbers))
+    for position in range(len(agent_numbers)):
+        if agent_numbers[position] >= 0 and currency_numbers[position] >= 0:
+            found[position] = balances.amount[agent_numbers[position] * stride + currency_numbers[position]]
+    return found
+
+
+@njit
 def find_slots(stocks, stock_index, agent_numbers, good, tile_numbers):
     """Each (agent, tile)'s stock slot for the good, -1 where nothing was ever held (or a number is -1)."""
     slots = numpy.full(len(agent_numbers), EMPTY, dtype=numpy.int64)
