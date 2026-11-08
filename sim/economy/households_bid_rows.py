@@ -2,8 +2,10 @@
 
 For each cohort, in order: the bid of each priced good the kernel switched on (goods in name order, `order_local` of its
 basket template), then, when the cohort has a store plan, the bid of each store good with a budget. The rows are what
-`households_orders_pack._orders_of` made into `Bid` objects; the sum of their budgets, added in that order, is the cohort's
-planned spending."""
+`households_orders_pack._orders_of` made into `Bid` objects; the sum of their budgets is the cohort's planned spending, added as
+Python 3.12's and later `sum` of floats adds (compensated, `_add`) so a cohort on this path and one on the object path plan the same figure: a
+plain left-to-right sum differs in the last digit, which moved a purse to a dust above zero and a producer's loan request from
+"no assets" to "some" after one year (found by `tools/measure/save_compare.py`)."""
 import numpy
 
 from sim.jit import njit

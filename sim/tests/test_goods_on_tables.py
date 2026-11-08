@@ -218,6 +218,40 @@ class UntradedMarketsHaveTheListsQuotes(unittest.TestCase):
         self.assertEqual(goods_market_rows.wanted_at_rows(orders.bid_lists(), [0], 0.0), 0.0)
 
 
+class CohortBidRowsAreTheCohortsBids(unittest.TestCase):
+
+    def rows_for(self, budgets, plan=0.0, store_budgets=()):
+        """The kernel's answer for one cohort whose template has one priced good per budget (all switched on) and a store good per
+        store budget."""
+        from sim.economy.households_bid_rows import cohort_bid_rows
+        from sim.economy.households_orders_kernel import RO_COUNT, SO_COUNT
+        count, stores = len(budgets), len(store_budgets)
+        rows = numpy.zeros((count, RO_COUNT))
+        rows[:, 0], rows[:, 1], rows[:, 2], rows[:, 3], rows[:, 4] = 1.0, 2.0, 3.0, budgets, math.inf
+        store_rows = numpy.zeros((stores, SO_COUNT))
+        store_rows[:, 0], store_rows[:, 1] = store_budgets, 5.0
+        return cohort_bid_rows(
+            numpy.array([7]), numpy.array([9]), numpy.array([0]), numpy.array([0]), numpy.array([0]), numpy.array([plan]),
+            numpy.array([0, count]), numpy.arange(count), numpy.array([0]), numpy.array([0]), numpy.array([stores]), numpy.array([1.5]),
+            numpy.arange(count) + 100, numpy.arange(count) + 200, numpy.ones(count, dtype=numpy.int64), numpy.full(count, 4.0),
+            numpy.arange(stores) + 300, numpy.arange(stores) + 400, numpy.full(stores, 6.0), rows, store_rows)
+
+    def test_the_priced_goods_come_first_in_name_order_then_the_store_goods_with_a_budget(self):
+        buyer, good, tile, market, priority, figures, planned = self.rows_for([10.0, 20.0], plan=1.0, store_budgets=[0.0, 5.0])
+        self.assertEqual((buyer.tolist(), good.tolist(), tile.tolist(), market.tolist()), ([7, 7, 7], [100, 101, 301], [9, 9, 9], [200, 201, 401]))
+        self.assertEqual(priority.tolist(), [1, 1, 2])
+        self.assertEqual(figures[2].tolist(), [0.0, 5.0, 6.0, 1.5, 5.0, math.inf])
+        self.assertEqual(planned.tolist(), [35.0])
+
+    def test_a_cohort_without_a_store_plan_bids_for_no_store_good(self):
+        self.assertEqual(len(self.rows_for([10.0], plan=0.0, store_budgets=[5.0])[0]), 1)
+
+    def test_planned_spending_is_the_sum_python_takes_of_the_budgets(self):
+        budgets = [1e16, 1.0, -1e16, 1.0]       # added left to right these give 1.0; Python's sum of floats keeps the low digits
+        self.assertEqual(self.rows_for(budgets)[6].tolist(), [sum(budgets)])
+        self.assertNotEqual(sum(budgets), ((budgets[0] + budgets[1]) + budgets[2]) + budgets[3])
+
+
 class QuoteKinds(unittest.TestCase):
 
     def test_the_quote_kinds_are_the_ones_the_lists_name(self):
