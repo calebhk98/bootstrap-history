@@ -15,9 +15,39 @@ def kept_reads(view, key, compute):
         return found
 
 
+def offered_prices_for(view, tile, goods):
+    """`view.offered_price(good, view.area_of(good, tile))` for each of `goods`, as a dict: read from the tile's block of prices when the
+    view keeps one (`YearView.offered_prices_for`), good by good for any other view."""
+    block = getattr(view, "offered_prices_for", None)
+    if block is not None:
+        return block(tile, goods)
+    return {good: view.offered_price(good, view.area_of(good, tile)) for good in goods}
+
+
+def tile_price_reader(view, tile):
+    """`price_of(goods)` for a tile: the function that gives the offered price of a good (None for none) for a need that is served by
+    `goods` (pairs of good and effect). The prices of the whole tile come from one block read (`YearView.offered_prices_on`), and
+    when the block covers every good of the need the answer is the block's own `dict.get`; a good the block does not cover, and a
+    view without blocks, is read by itself."""
+    block_of = getattr(view, "offered_prices_on", None)
+    block = None if block_of is None else block_of(tile)
+
+    def by_itself(good):
+        return view.offered_price(good, view.area_of(good, tile))
+    if block is None:
+        return lambda goods: by_itself
+    prices, covered = block.prices, block.covered
+
+    def reader_for(goods):
+        if block.covers_all(good for good, _effect in goods):
+            return prices.get
+        return lambda good: prices.get(good) if good in covered else by_itself(good)
+    return reader_for
+
+
 def kept_need_prices(view, basket_of, tile, key):
     """`households_basket.need_prices(basket_of(), view, tile)` for the basket the caller names by `key` (with the tile; `basket_of` is only called on a miss): the priced list
-    is kept like any read (so is each priced need, by need and tile), and the price of a good on a tile (the offered price in the area it is bought in) is read once for every
+    is kept like any read (so is each priced need, by need and tile), and the prices on a tile (the offered price in the area each good is bought in) are read once, as a block, for every
     basket priced there. A view without kept reads prices the basket every time."""
     from sim.world import need_basket
     current = getattr(view, "_current", None)
@@ -30,16 +60,9 @@ def kept_need_prices(view, basket_of, tile, key):
         return reads[full_key]
     except KeyError:
         pass
-    prices = reads.get(("prices_on", tile))
-    if prices is None:
-        prices = reads[("prices_on", tile)] = {}
-
-    def price_of(good):
-        try:
-            return prices[good]
-        except KeyError:
-            found = prices[good] = view.offered_price(good, view.area_of(good, tile))
-            return found
+    reader_for = reads.get(("prices_on", tile))
+    if reader_for is None:
+        reader_for = reads[("prices_on", tile)] = tile_price_reader(view, tile)
     basket = basket_of()
     exponent = 1.0 - basket.substitution
     found = []
@@ -48,7 +71,7 @@ def kept_need_prices(view, basket_of, tile, key):
         try:
             need = reads[need_key]
         except KeyError:
-            need = reads[need_key] = need_basket.priced_need(spec, exponent, price_of)
+            need = reads[need_key] = need_basket.priced_need(spec, exponent, reader_for(spec.goods))
         if need is not None:
             found.append(need)
     reads[full_key] = found

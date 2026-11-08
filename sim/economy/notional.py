@@ -10,10 +10,14 @@ from the memory's prices, not these; the engine's agents are shown these (`price
 import math
 from typing import Dict, Optional, Set, Tuple
 
+import numpy
+
 from sim.constants import declare
 
 from . import trade_wages, unit_cost
 from .market_memory import KEY_SEPARATOR, PRICE_REMEMBERED, PRICE_SMOOTHED_TRADE, RECENT_TRADE_YEARS, MarketMemory
+from .market_column_kernels import add_in_order_by_group
+from .market_store import figures_for
 from .national_prices import national_prices, national_wages, usual_volumes
 from .recipes import input_depth_order, recipes_making
 
@@ -66,11 +70,26 @@ def _estimated_prices(setup, record, market, thin: bool, wages: Optional[Dict[st
 
 def _traded_volumes(record) -> Dict[str, float]:
     """What each good's markets trade, a market counting for the smaller of what it usually trades and what
-    it traded last year, so a market that has dried up does not stand for the good on its remembered volume."""
+    it traded last year, so a market that has dried up does not stand for the good on its remembered volume. The memory's own
+    usual volumes are read from the table's columns, added in the order the markets entered the store."""
+    usual = usual_volumes(record)
+    if usual is not record.memory.volume_weights:
+        return _traded_volumes_by_key(record, usual)
+    markets = record.memory.tables.goods_table
+    rows = usual.rows()
+    last_year = numpy.array(figures_for(record.goods.volumes, list(usual), 0.0), dtype=float)
+    totals, first_seen, appeared = add_in_order_by_group(markets.first[rows], numpy.minimum(markets.volume_weight[rows], last_year),
+                                                         len(record.memory.tables.goods))
+    names = record.memory.tables.goods.names
+    return {names[good]: totals[good].item() for good in first_seen[:appeared].tolist()}
+
+
+def _traded_volumes_by_key(record, usual) -> Dict[str, float]:
+    """`_traded_volumes` over usual volumes that are not the memory's own (this year's volumes, before any is remembered)."""
     traded: Dict[str, float] = {}
-    for key, usual in usual_volumes(record).items():
+    for key, volume in usual.items():
         good = key.split(KEY_SEPARATOR, 1)[0]
-        traded[good] = traded.get(good, 0.0) + min(usual, record.goods.volumes.get(key, 0.0))
+        traded[good] = traded.get(good, 0.0) + min(volume, record.goods.volumes.get(key, 0.0))
     return traded
 
 

@@ -9,7 +9,7 @@ from . import households_cohort
 from .households_cohort import Cohort
 from .market_memory import market_key
 from .households_basket import cohort_need_prices
-from .priced_reads import kept_need_prices, kept_reads
+from .priced_reads import kept_need_prices, kept_reads, offered_prices_for
 from .setup import labour_area
 from .types import AgentId, LabourOffer
 
@@ -116,13 +116,12 @@ def service_price_per_hour(setup, view, tile, wage_price: float) -> float:
 
 def _posted_service_price(setup, view, tile) -> Optional[float]:
     """The cheapest posted price per need unit of the goods serving the household-work need on a tile, None where none is posted."""
-    area = view.area_of
+    needs = [need for need in setup.basket_for(tile).needs if need.need_id == setup.work_need]
+    posted_by_good = offered_prices_for(view, tile, sorted({good for need in needs for good, _effect in need.goods}))
     prices = []
-    for need in setup.basket_for(tile).needs:
-        if need.need_id != setup.work_need:
-            continue
+    for need in needs:
         for good, effect in need.goods:
-            posted = view.offered_price(good, area(good, tile))
+            posted = posted_by_good[good]
             if posted is not None and posted > 0.0 and effect > 0.0:
                 prices.append(posted / effect)
     return min(prices) if prices else None

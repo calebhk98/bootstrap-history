@@ -402,12 +402,13 @@ class YearView:
         self._labour_area_of = labour_area_of
         self._goods = set(area_map.goods())
         self._keys_of_good: Dict[str, tuple] = {}
-        self._keys_of_names: Dict[int, tuple] = {}     # id of a names tuple -> (names, tile -> market keys)
         self._area_by_tile: Dict[str, Dict[TileId, AreaId]] = {}    # name -> tile -> its area; the area map does not change
         self._stamp = _writes[0]
         self._reads: Dict[tuple, object] = {}     # reads of the memory kept until the next write to it
         self._offered: Dict[str, Optional[float]] = {}
         self._kinds: Dict[str, Optional[str]] = {}
+        self._price_grid = None      # `price_grid.PriceGrid` over the memory, made on first use (False: the area map cannot be laid out)
+        self._wage_table = None      # `wage_block.WageRuleTable`, likewise
 
     def prices_across(self, good: GoodId, areas) -> list:
         """`price(good, area.area_id)` for each of `areas` (the good's areas), in order."""
@@ -435,26 +436,78 @@ class YearView:
             found = self._offered[key] = self._memory.offered_price(key)
             return found
 
+    def _grid(self):
+        """The offered-price grid of this view's memory and area map (False when the area map cannot list its goods and areas)."""
+        if self._price_grid is None:
+            from .price_grid import PriceGrid, price_index_of
+            index = price_index_of(self._area_map)
+            self._price_grid = False if index is None else PriceGrid(self._memory, index)
+        return self._price_grid
+
+    def offered_prices_on(self, tile: TileId):
+        """The offered prices of every good on `tile` as one block (`price_grid.TilePrices`: `prices` of the goods that have one, `covered`
+        the goods the block answers for), the same figures as `offered_price(good, area_of(good, tile))`; None for a tile the area map
+        does not hold. Read again only after the memory is written to."""
+        grid = self._grid()
+        return grid.on_tile(tile) if grid else None
+
+    def offered_prices_for(self, tile: TileId, goods) -> Dict[GoodId, Optional[float]]:
+        """`offered_price(good, area_of(good, tile))` for each of `goods`, read from the tile's block; a good outside the block (the area
+        map has no market for it) is read by itself."""
+        block = self.offered_prices_on(tile)
+        if block is None:
+            return {good: self.offered_price(good, self.area_of(good, tile)) for good in goods}
+        prices, covered = block.prices, block.covered
+        return {good: prices.get(good) if good in covered else self.offered_price(good, self.area_of(good, tile)) for good in goods}
+
+    def wage_rule_at(self, setup, trade: TradeId, area: AreaId) -> Optional[float]:
+        """`trade_wages.wage_in_view` for one trade and labour area, read from the rule's table (every trade of the view's setup in the
+        labour area of every tile of the area map); None where the table does not hold the cell or `setup` is not the view's."""
+        if setup is not self.setup or self._labour_area_of is None:
+            return None
+        if self._wage_table is None:
+            grid = self._grid()
+            if not grid:
+                self._wage_table = False
+            else:
+                from .wage_block import WageRuleTable
+                tiles = grid.tiles
+                self._wage_table = WageRuleTable(setup, self._memory, lambda: [self._labour_area_of(tile) for tile in tiles])
+        return self._wage_table.wage(trade, area) if self._wage_table else None
+
+    def wage_rule_block(self, trades, areas):
+        """`trade_wages.wage_in_view` for each of `trades` in each of the labour `areas`, as a (trade by area) grid, in one kernel call."""
+        from .wage_block import wage_rule_block
+        return wage_rule_block(self.setup, self._memory, trades, areas)
+
+    def remembered_prices_on(self, tile: TileId):
+        """`offered_prices_on` for the remembered prices (`price`): every good that has one on `tile`, as one block."""
+        grid = self._grid()
+        return grid.on_tile(tile, remembered=True) if grid else None
+
     def present_prices_at(self, names: tuple, tile: TileId) -> Dict[str, float]:
         """`price` of each of `names` (goods, one tuple kept by the caller) in its area on `tile`, those with a
-        price only, in order: the keys are built once per names tuple and tile."""
-        kept = self._keys_of_names.get(id(names))
-        if kept is None or kept[0] is not names:
-            kept = self._keys_of_names[id(names)] = (names, {})
-        keys = kept[1].get(tile)
-        if keys is None:
-            keys = kept[1][tile] = tuple(name + KEY_SEPARATOR + self.area_of(name, tile) for name in names)
+        price only, in order: read from the tile's block of remembered prices, once per names tuple and tile until the memory is written to."""
         reads = self._current()
         read_key = ("present", id(names), tile)
         kept_found = reads.get(read_key)
         if kept_found is None or kept_found[0] is not names:
-            found = {}
-            for name, key in zip(names, keys):
-                figure = self._memory.prices.get(key)
-                if figure is not None:
-                    found[name] = figure
+            block = self.remembered_prices_on(tile)
+            if block is not None and block.covers_all(names):
+                found = {name: block.prices[name] for name in names if name in block.prices}
+            else:
+                found = self._present_prices_by_key(names, tile)
             kept_found = reads[read_key] = (names, found)
         return dict(kept_found[1])
+
+    def _present_prices_by_key(self, names: tuple, tile: TileId) -> Dict[str, float]:
+        """`present_prices_at` a good at a time, for a tile or goods outside the block."""
+        found = {}
+        for name in names:
+            figure = self._memory.prices.get(name + KEY_SEPARATOR + self.area_of(name, tile))
+            if figure is not None:
+                found[name] = figure
+        return found
 
     def price_kind(self, good: GoodId, area: AreaId) -> Optional[str]:
         """PRICE_SMOOTHED_TRADE, or the kind of quote or estimate `price` is; None when the market has no price."""

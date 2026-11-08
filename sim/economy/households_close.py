@@ -11,6 +11,7 @@ from sim.world import need_basket
 from sim.world.need_basket import Basket, subsistence_cost_per_person
 from .households_cohort import Cohort, renewed
 from .households_own import next_own_plan
+from .priced_reads import offered_prices_for
 from .protocols import MarketView
 from .types import EDGE_CONSUMPTION, GoodId, GoodsMove, GoodSpec
 
@@ -22,11 +23,11 @@ def _is_durable(good: GoodId, specs: Mapping[GoodId, GoodSpec]) -> bool:
 
 def _priced_needs(basket: Basket, view: MarketView, tile: str, offered_prices: Dict[Tuple[GoodId, str], float]):
     """`households_basket.need_prices` with each good's offered price read once per tile into `offered_prices`."""
-    def price_of(good: GoodId):
-        if (good, tile) not in offered_prices:
-            offered_prices[(good, tile)] = view.offered_price(good, view.area_of(good, tile))
-        return offered_prices[(good, tile)]
-    return list(need_basket.need_prices(basket, price_of))
+    goods = sorted({good for spec in basket.needs for good, _effect in spec.goods})
+    missing = [good for good in goods if (good, tile) not in offered_prices]
+    if missing:
+        offered_prices.update({(good, tile): price for good, price in offered_prices_for(view, tile, missing).items()})
+    return list(need_basket.need_prices(basket, lambda good: offered_prices[(good, tile)]))
 
 
 def unmet_floor_by_need(cohort: Cohort, received_by_good: Mapping[GoodId, float], view: MarketView,

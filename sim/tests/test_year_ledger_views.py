@@ -140,6 +140,20 @@ class NestedViewTests(unittest.TestCase):
         self.assertEqual(sum(len(rows) for rows in ledger.received.values()), 400)
         self.assertEqual(ledger.received["a3"]["good10"], 10.0)
 
+    def test_as_plain_is_every_agents_rows_as_dicts_in_the_order_of_the_items(self):
+        ledger = YearLedger()
+        for number in range(40):
+            ledger.received.setdefault("a%d" % (number % 7), {})["good%d" % (number % 11)] = float(number) / 3.0
+        ledger.received["empty"] = {}
+        ledger.received["a2"] = {"wine": 7.0, "oil": 1e-9}
+        del ledger.received["a4"]["good4"]
+        expected = {name: dict(rows.items()) for name, rows in ledger.received.items()}
+        plain = ledger.received.as_plain()
+        self.assertEqual(plain, expected)
+        self.assertEqual(list(plain), list(ledger.received))
+        self.assertEqual([list(rows) for rows in plain.values()], [list(rows) for rows in expected.values()])
+        self.assertEqual(YearLedger().received.as_plain(), {})
+
 
 class TableTypesTests(unittest.TestCase):
     def test_every_table_type_pickles_by_module_and_name_so_kernels_load_from_the_cache(self):

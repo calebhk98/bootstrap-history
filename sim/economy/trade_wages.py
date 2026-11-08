@@ -47,13 +47,18 @@ def trade_premium(setup, trade) -> float:
     return premium_for_training_years(setup.trades[trade].training_years)
 
 
+def known_trade(setup, trade: str) -> None:
+    """Raises KeyError for a trade the setup has no spec for."""
+    if trade not in setup.trades:
+        raise KeyError(f"unknown trade {trade!r}: the setup's trades are {sorted(setup.trades)}")
+
+
 def priced_trade_wage(setup, trade: str, paid: Optional[float], unskilled: Optional[float],
                       opening_wage_level: float, held_anywhere: bool) -> float:
     """The wage per hour of `trade` given what its market paid (None if nothing), the unskilled wage of the same
     scope (None if none), the level the opening wages are scaled by (`MarketMemory.opening_wage_level`) and whether the
     memory holds a wage for the trade in any area. Raises KeyError for a trade the setup has no spec for."""
-    if trade not in setup.trades:
-        raise KeyError(f"unknown trade {trade!r}: the setup's trades are {sorted(setup.trades)}")
+    known_trade(setup, trade)
     if paid is not None:
         return paid
     opening = setup.opening_wages.get(trade)
@@ -72,7 +77,13 @@ def wage_in_area(setup, memory, trade: str, area: str) -> float:
 
 
 def wage_in_view(setup, view, trade: str, area: str) -> float:
-    """`wage_in_area` read through a market view."""
+    """`wage_in_area` read through a market view. A view that keeps the rule's wages as a table (`YearView.wage_rule_at`, for the setup the view was made with) answers from it;
+    one trade or area outside the table, and any other view, takes the rule cell by cell."""
+    table = getattr(view, "wage_rule_at", None)
+    if table is not None:
+        found = table(setup, trade, area)
+        if found is not None:
+            return found
     return priced_trade_wage(setup, trade, view.wage(trade, area), view.wage(setup.unskilled_trade, area),
                              view.opening_wage_level(setup.currency_id), view.wage_held_anywhere(trade))
 

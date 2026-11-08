@@ -26,8 +26,17 @@ def tiles_of(record, setup=None) -> Names:
 
 
 def wage_grid(setup, view, trades: Names, tiles: Names) -> np.ndarray:
-    """`trade_wages.wage_in_view` for every trade and tile, as a (trade by tile) grid: the wage rule's three cases worked out per
-    trade (what it holds, the opening wage, the premium) and per tile (the unskilled wage), then read cell by cell."""
+    """`trade_wages.wage_in_view` for every trade and tile, as a (trade by tile) grid. A view that reads the wage rule in blocks
+    (`YearView.wage_rule_block`) gives it in one kernel call; any other view is read cell by cell (`wage_grid_by_cells`)."""
+    block = getattr(view, "wage_rule_block", None)
+    if block is None or getattr(view, "setup", None) is not setup:
+        return wage_grid_by_cells(setup, view, trades, tiles)
+    return block(trades.ids, [labour_area(tile) for tile in tiles.ids]).reshape(len(trades.ids), len(tiles.ids))
+
+
+def wage_grid_by_cells(setup, view, trades: Names, tiles: Names) -> np.ndarray:
+    """`wage_grid` read one cell at a time: the wage rule's three cases worked out per trade (what it holds, the opening wage, the
+    premium) and per tile (the unskilled wage), then applied cell by cell."""
     from .trade_wages import priced_trade_wage
     areas = [labour_area(tile) for tile in tiles.ids]
     unskilled = [view.wage(setup.unskilled_trade, area) for area in areas]

@@ -170,6 +170,11 @@ def _floor_view(economy):
 
 
 def _tile_floor_costs(economy, view, tile) -> Dict[str, float]:
+    """The tile's floor cost of each need, worked out once per tile while the economy stands between steps (callers read, never change, it)."""
+    return quiet_year.kept(economy, ("tile_floor_costs", tile), lambda: _worked_tile_floor_costs(economy, view, tile))
+
+
+def _worked_tile_floor_costs(economy, view, tile) -> Dict[str, float]:
     return {need.spec.need_id: need.price_index * need.spec.subsistence_per_person
             for need in households_basket.tile_need_prices(economy.setup, view, tile)
             if need.spec.subsistence_per_person > 0.0}
@@ -178,12 +183,16 @@ def _tile_floor_costs(economy, view, tile) -> Dict[str, float]:
 def tile_need_floor_costs(economy, tile) -> Dict[str, float]:
     """What one person's floor of each need costs a year at the prices on one tile (the need-basket kernel on
     the tile's own climate floors), whether or not anyone lives there."""
-    return _tile_floor_costs(economy, _floor_view(economy), tile)
+    return dict(_tile_floor_costs(economy, _floor_view(economy), tile))
 
 
 def need_floor_costs_per_person_year(economy, country: Optional[str]) -> Dict[str, float]:
     """What one person's floor of each need costs a year at the prices the country's households pay, the mean
     over its people (the need-basket kernel on each tile's own climate floors)."""
+    return dict(quiet_year.kept(economy, ("need_floor_costs", country), lambda: _worked_need_floor_costs(economy, country)))
+
+
+def _worked_need_floor_costs(economy, country: Optional[str]) -> Dict[str, float]:
     record = economy.record
     view = _floor_view(economy)
     sums: Dict[str, float] = {}

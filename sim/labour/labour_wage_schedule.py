@@ -19,19 +19,23 @@ class WageScheduleReader:
         """The civilisation's opening wage schedule: the workforce module's, which builds it once per record."""
         return self._world.trades.build_wage_schedule(self._world.scenario.civ)
 
+    def _hour_money(self, opening):
+        """Money an hour of the unskilled trade is worth: what the economy pays it at the base tile, or before the economy has
+        opened the opening's figure times the price level."""
+        unskilled = trade_data.fallback_trade_of(self._world)
+        paid = self._world.economy.agent_wage_at(unskilled, self._settlement.base_tile())
+        return paid if paid is not None else opening.money_per_labour_hour * self._world.finance.home_price_level()
+
     def wage_schedule(self):
         """The opening schedule priced at the present level: an hour of the unskilled trade is worth what the
         economy pays it at the base tile (the wage `quote_unskilled` and `wage_per_hour` read), or before the economy has
         opened the opening's figure times the price level. Reading builds a priced copy and changes nothing."""
         opening = self.opening_wage_schedule()
-        unskilled = trade_data.fallback_trade_of(self._world)
-        paid = self._world.economy.agent_wage_at(unskilled, self._settlement.base_tile())
-        return opening.priced_at(paid if paid is not None
-                                 else opening.money_per_labour_hour * self._world.finance.home_price_level())
+        return opening.priced_at(self._hour_money(opening))
 
     def money_per_labour_hour(self):
-        """Money one hour of the unskilled numeraire trade is worth here."""
-        return self.wage_schedule().money_per_labour_hour
+        """Money one hour of the unskilled numeraire trade is worth here (the priced schedule's figure, without building the copy)."""
+        return self._hour_money(self.opening_wage_schedule())
 
     LABOUR_PAY_SHARE_OF_OUTPUT_GAIN = declare(
         "LABOUR_PAY_SHARE_OF_OUTPUT_GAIN", 0.0, kind="temporary_heuristic",

@@ -97,6 +97,11 @@ class MarketStore(MutableMapping):
         self._cached = (stamp, rows, [names[row] for row in rows.tolist()])
         return self._cached
 
+    def rows(self) -> numpy.ndarray:
+        """Row numbers of the members in entry order (the order `items` lists them), for a reader of the table's columns. Kept until a
+        market enters or leaves; the caller never changes it."""
+        return self._ordered()[1]
+
     def __len__(self) -> int:
         return int(self._tables.member_count[self._store])
 
@@ -147,6 +152,7 @@ class MarketStore(MutableMapping):
         return [figure if there else default for figure, there in zip(figures, present)]
 
     def __setitem__(self, key: str, figure) -> None:
+        self._tables.writes += 1
         row = self._row_for_write(key)
         table = self._table()
         if self._has(table, row):
@@ -155,6 +161,7 @@ class MarketStore(MutableMapping):
             self._enter(table, row, figure)
 
     def __delitem__(self, key: str) -> None:
+        self._tables.writes += 1
         row = self._row(key)
         table = self._table()
         if row is None or not self._has(table, row):
@@ -162,6 +169,7 @@ class MarketStore(MutableMapping):
         self._leave(table, row)
 
     def pop(self, key: str, default=_MISSING):
+        self._tables.writes += 1
         row = self._row(key)
         table = self._table()
         if row is None or not self._has(table, row):
@@ -173,6 +181,7 @@ class MarketStore(MutableMapping):
         return figure
 
     def clear(self) -> None:
+        self._tables.writes += 1
         table = self._table()
         for row in self._present_rows(table).tolist():
             self._leave(table, row)
