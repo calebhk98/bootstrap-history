@@ -24,6 +24,15 @@ def offered_prices_for(view, tile, goods):
     return {good: view.offered_price(good, view.area_of(good, tile)) for good in goods}
 
 
+def cleared_prices_for(view, tile, goods):
+    """`view.cleared_price(good, view.area_of(good, tile))` for each of `goods`, as a dict: read from the tile's block of cleared prices when
+    the view keeps one (`YearView.cleared_prices_for`), good by good for any other view."""
+    block = getattr(view, "cleared_prices_for", None)
+    if block is not None:
+        return block(tile, goods)
+    return {good: view.cleared_price(good, view.area_of(good, tile)) for good in goods}
+
+
 def usual_prices_for(view, tile, goods):
     """`view.usual_price(good, view.area_of(good, tile))` for each of `goods`, as a dict: read from the tile's block of usual prices when the
     view keeps one (`YearView.usual_prices_on`), good by good for any other view or a good outside the block."""

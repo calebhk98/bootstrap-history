@@ -18,6 +18,7 @@ from .year_arrays_memory import AreaIndex, MemoryArrays
 from .year_arrays_producers import ProducerColumns
 from .cohort_store import table_of
 from .year_arrays_recipes import Names, RecipeMatrices, build_recipe_matrices
+from .year_arrays_tools import ToolTables, tool_tables
 
 
 def tiles_of(record, setup=None) -> Names:
@@ -84,6 +85,7 @@ class YearArrays:
     memory: MemoryArrays
     area_map: object
     source: tuple = ()               # `source_of(setup)` when the matrices were built (`carried` checks it)
+    tools: ToolTables = None         # the recipes' tool fallbacks over the matrices' numbering (year_arrays_tools.py)
 
     @classmethod
     def build(cls, setup, record, area_map, view) -> "YearArrays":
@@ -93,7 +95,7 @@ class YearArrays:
         area_index = AreaIndex.build(area_map, matrices.goods, tiles)
         return cls(matrices, tiles, area_index, ProducerColumns.build(record.producers, matrices, tiles),
                    CohortColumns.build(record.cohorts, tiles), _memory_arrays(setup, matrices, tiles, area_index, record, view),
-                   area_map, source_of(setup))
+                   area_map, source_of(setup), tool_tables(setup.recipes, matrices))
 
     @classmethod
     def carried(cls, previous, setup, record, area_map, view) -> "YearArrays":
@@ -114,4 +116,4 @@ class YearArrays:
         except KeyError:
             return YearArrays.build(setup, record, self.area_map, view)
         memory = _memory_arrays(setup, self.matrices, self.tiles, self.area_index, record, view, self.memory)
-        return YearArrays(self.matrices, self.tiles, self.area_index, producers, cohorts, memory, self.area_map, self.source)
+        return YearArrays(self.matrices, self.tiles, self.area_index, producers, cohorts, memory, self.area_map, self.source, self.tools)

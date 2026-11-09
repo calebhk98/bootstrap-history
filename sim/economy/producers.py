@@ -25,7 +25,7 @@ from sim.constants import declare
 from . import ask_adjust, inventory, practice, tool_fallback, trade_wages, unit_cost
 from .labour_ceilings import joint_labour_ceilings
 from .planning_price import held_to_band, is_bare_quote
-from .priced_reads import offered_prices_for
+from .priced_reads import cleared_prices_for, offered_prices_for
 from .protocols import MarketView
 from .types import (AgentId, Bid, EDGE_CONSUMPTION, EDGE_PRODUCTION, GoodId, GoodSpec, GoodsMove, LabourBid,
                     Offer, Recipe, TileId)
@@ -171,8 +171,7 @@ def paid_input_prices(producer: Producer, recipe: Recipe, view: MarketView,
     market, where that is higher than the remembered price: a thin trade moves the remembered price only
     slightly, and a buyer bidding from it is outbid every year."""
     paid = dict(live)
-    for good in recipe.inputs:
-        cleared = view.cleared_price(good, view.area_of(good, producer.tile))
+    for good, cleared in cleared_prices_for(view, producer.tile, recipe.inputs).items():
         if cleared is not None and cleared > paid.get(good, math.inf):
             paid[good] = cleared
     return paid

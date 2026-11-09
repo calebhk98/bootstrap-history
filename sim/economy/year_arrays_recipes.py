@@ -58,6 +58,10 @@ def goods_and_trades_of(recipes: Mapping[str, object], extra_goods: Sequence[str
         goods.update(recipe.plant_goods)
         trades.update(recipe.labour_hours)
         trades.update(recipe.plant_labour_hours)
+        for first, steps in recipe.tool_fallbacks.items():      # the tools a short wear good is replaced by, and the trades that work longer
+            goods.add(first)
+            goods.update(step.good for step in steps if step.good)
+            trades.update(trade for step in steps for trade in step.trades)
     return Names.of(goods), Names.of(trades)
 
 
