@@ -5,6 +5,7 @@ from typing import Callable, Sequence
 
 import numpy
 
+from .few_ids import in_ids
 from .goods_year_results import BatchAllocation
 
 Held = namedtuple("Held", ("agent", "tile"))
@@ -107,7 +108,7 @@ class TableBatch(BatchAllocation):
             mask = None
             if ids:
                 bids, _offers = self.orders.tables()
-                mask = numpy.isin(bids.buyer[self.pack.bid_rows], ids) & (self.bid_quantity > 0.0)
+                mask = in_ids(bids.buyer[self.pack.bid_rows], ids, len(self.orders.book.agent_ids)) & (self.bid_quantity > 0.0)
             self._watched = (watchers, mask)
         return self._watched[1]
 

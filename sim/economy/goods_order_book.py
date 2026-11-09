@@ -72,6 +72,7 @@ class GoodsOrderBook:
         self._sinks = (_Sink(self.add_bid, OTHER), _Sink(self.add_offer, OTHER))
         self._numbers = ({}, {}, {})          # name -> id for agents, goods and tiles, kept for the year (ids are never reused)
         self._area_of_market: Dict[int, str] = {}
+        self._area_ranks = None             # per area id: its place among the area names sorted
 
     # ---- ids -------------------------------------------------------------------------------------
 
@@ -279,6 +280,20 @@ class GoodsOrderBook:
     def _area_names(self) -> List[str]:
         tables = self.memory_tables
         return tables.areas.name_list
+
+    def markets_by_area_name(self, markets: numpy.ndarray) -> numpy.ndarray:
+        """The places of `markets` (goods market ids, distinct areas) when they are sorted by their area's name."""
+        names = self._area_names()
+        if self._area_ranks is None or len(self._area_ranks) != len(names):
+            ranks = numpy.empty(len(names), dtype=numpy.int64)
+            ranks[sorted(range(len(names)), key=names.__getitem__)] = numpy.arange(len(names), dtype=numpy.int64)
+            self._area_ranks = ranks
+        return numpy.argsort(self._area_ranks[self.memory_tables.goods_table.area[markets]], kind="stable")
+
+    def area_names_of_markets(self, markets: numpy.ndarray) -> List[str]:
+        """The area of each goods market id of `markets`."""
+        names = self._area_names()
+        return [names[area] for area in self.memory_tables.goods_table.area[markets].tolist()]
 
     def area_name_of_market(self, market: int) -> str:
         """The area of a goods market id."""

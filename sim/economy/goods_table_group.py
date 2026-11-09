@@ -47,8 +47,7 @@ def rows_of_good(orders, good_id: int) -> GoodRows:
     offer_rows = numpy.flatnonzero(offers.good[:int(offers.row_count[0])] == good_id)
     bid_markets, offer_markets = bids.market[bid_rows], offers.market[offer_rows]
     distinct = numpy.unique(numpy.concatenate((bid_markets, offer_markets)))
-    areas = orders.area_name_of_market
-    by_area = sorted(range(len(distinct)), key=lambda place: areas(int(distinct[place])))
+    by_area = orders.markets_by_area_name(distinct)
     place_of = numpy.empty(len(distinct), dtype=numpy.int64)
     place_of[by_area] = numpy.arange(len(distinct), dtype=numpy.int64)
     bid_position = place_of[numpy.searchsorted(distinct, bid_markets)]
