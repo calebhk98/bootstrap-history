@@ -427,9 +427,15 @@ new writer of a column that goes round the stores and the memory's methods must 
 market for any such good (`EVERY_GOOD`); otherwise it is read by itself, as is a tile the area map does not hold (which refuses). The
 scalar getters (`price`, `offered_price`, `wage`, ...) stay for the screens, the protocol and callers that read one cell.
 
-Callers still reading one value at a time through the view: `producers.py` (`expected_price`, `paid_input_prices`,
-`live_input_prices_at`, `live_wages_at`), `year_goods.py`, `plan_year.py`, `year_goods_offer_rows.py`, `households_orders_pack.py`,
-`goods_respend_pack.py`, `entry_year.traded`, `land_bid_year.py`, `state_budget.py` (`wage_in_view` callers there and in `location.py`,
+The land market and the plant bids read a producer's figures from its row (`producer_blocks.row_figures`) and the prices of its tile
+through `producers.expected_output_prices_at`, `live_input_prices_at` and `live_wages_at`, which take the tile and the expectations, not a
+producer. `year_close.learned_prices` reads the remembered prices of all its markets with one `get_many`, and the labour wage mirror is
+written by one `FloatStore.set_many`.
+
+Callers still reading one value at a time through the view: `producers.py` (`expected_price`, `paid_input_prices`), `year_goods.py`,
+`year_goods_offer_rows.py`, `households_orders_pack.py`, `goods_respend_pack.py`, `entry_year.traded`, `land_bid_year.py`,
+`carriage_hours.py` (`crew_wage`, `wage_loans`, `wage_scale` through `trade_wages.wage_in_area`), `merchants.py` (`expected_price`,
+`_holding_offers`), `state_budget.py` (`wage_in_view` callers there and in `location.py`,
 `mint_labour.py`, `year_close.py` already read the rule's table). Each can read a tile's block with `view.offered_prices_for(tile, goods)`,
 `view.remembered_prices_on(tile)` or `view.wage_rule_block(trades, labour_areas)`. Tests: `sim/tests/test_price_grid.py`,
 `test_wage_block.py`, `test_market_columns.py`, `test_price_kind_kernels.py`. Calls to `area_of`, `offered_price` and `price_of` in a
@@ -464,7 +470,7 @@ reading the stocks once for all cohorts gives what reading them after the earlie
 practice for the producers that have one), and no `Producer` is made. The year arrays' producer columns (`ProducerColumns.of`) are
 block reads of the store in sorted id order, read again when the store's `version` rose. A `Producer` is built only when something
 asks for one through the mapping (`store[id]`, `.values()`, `.items()`, `.get`): the screens, the protocol, mods, the tests, and the
-readers still on records (`grep -n "record.producers" sim` lists them; the commands in "What is left" count the builds a year).
+readers still on records (`grep -n "record.producers" sim` lists them; "What is left" says how to count the builds a year).
 The save is written from the columns in the old format (`ProducerStore.to_plain`). Rows are in entry order, an exit leaves a dead row
 that `compact` removes (`order`, `rows_of` and the saves compact), `seat_sorted` puts them in id order at the year boundary. Exits
 (`producer_exit.ExitBatch`), loan write-offs and loan requests stay Python, in producer order.
@@ -857,9 +863,10 @@ Time any of these with `python3 tools/measure/function_times.py SAVE module:func
 One list; each item names what blocks it. Every item is to be converted, whatever its share of a step; re-measure before acting, since the
 list lags the code.
 
-- **Entry: what is left after the plan loops.** The application of the plans in `open_entrants` (a `Producer` per plan, the owner's stake
-  taken from the cash the earlier stakes left, the entrant's loan request, `peers_of_recipe` for the crew) is a greedy loop over `Producer`
-  objects in `record.producers`, which every phase reads as a dictionary of records; it needs a column store of producers. The per-recipe reads
+- **Entry: what is left after the plan loops.** The application of the plans in `open_entrants` (the owner's stake
+  taken from the cash the earlier stakes left, the entrant's loan request, `peers_of_recipe` for the crew) is a greedy loop in plan order: a
+  plan reads the capacity the earlier plans for the same recipe and tile left, so the loop stays Python; the owners and crews it starts
+  from are one block read (`entry_year._owner_and_crew_held`). The per-recipe reads
   of `EntryTables` (`_site_of`, `_ensure_crew`: the people allowed by country, the yield row, the crew's practice) are Python per recipe; they
   need recipe-by-tile and recipe-by-trade tables built once per setup and updated when a country learns a technique. The unmet demand, `margin_years` and `volumes` are columns that
   entry reads whole (see the goods items below).
@@ -886,14 +893,15 @@ list lags the code.
 - **Tool wear and fallbacks in the plan kernel.** `plan_year` sends a producer whose recipe has tool wear or fallbacks, or a zero entry, to
   `producers.plan`; `plan_kernel.plan_rows` would need the fallbacks' bids and `tool_fallback.value_in_use` ceilings. `_tax_in_kind` builds
   `YearFacts` dictionaries for the producers on home tiles when a tax is paid in kind.
-- **The producer record readers.** What still builds a `Producer` in a warm year (count them with `ProducerStore._build` wrapped, as
-  `tools/measure/function_times.py` wraps a function): `producers.plan` for the producers the plan kernel leaves (tool wear, fallbacks),
-  `land_market.demands_of` and `post_rents` (`expected_output_prices` and the live prices read the record), `year_goods.clear_goods`
-  (`plant_makers`, and `_produce_and_offer` when there are no arrays), `seller_offers`, `unsold_search`, `goods_production`,
-  `equity`, `labour_state`, `workforce_settle`, `shares`, `funds`, `tax_farming`, `location*`, the entry rules without the year arrays,
-  and `api.producers_of` / `all_producers` for the screens and mods. Each reads a handful of fields the columns hold; they move one
-  at a time to `store.table` blocks or `ProducerColumns` fields. The crews' practice is still a small dictionary per producer that has a
-  crew (`write_close` and `ProducerStore.crew_of` build one), since `practice.crew_runs_after_year` is Python on mappings.
+- **The producer record readers.** A warm year builds no `Producer` (count them with `tools/measure/warm_year_cpu.py`, which wraps
+  `ProducerStore._build` and `Producer.__new__`). The readers in the year loop read the store as blocks: `producer_blocks.py` (tiles,
+  recipes, owners, crews, expected prices and scalar figures of many producers, `row_figures`), and `producer_rows_read.fields_of`, a whole
+  row as a tuple with `Producer`'s field names, which the rules still written over a producer (`producers.plan` for the producers the plan
+  kernel leaves, `producers.offers` for a producer with an output held and no expected price) take in place of a record. What still
+  builds a `Producer` outside the warm year: `seller_offers`, `unsold_search`, `goods_production`, `equity`, `labour_state`,
+  `workforce_settle`, `funds`, `tax_farming`, `location*`, the entry rules without the year arrays, and `api.producers_of` / `all_producers`
+  for the screens and mods. The crews' practice is still a small dictionary per producer that has a crew (`producer_blocks.crews_of`
+  builds them together), since `practice.crew_runs_after_year` is Python on mappings.
 - **The cohort record readers.** What still builds a `Cohort` in a warm year (wrap `CohortStore._build` and count, as the producers' item
   says): the rules written over a `Cohort` object that the opening and the tests share: `land_lease_year._margins` and
   `land_bid_year.best_margin`, `capital_year.note_exposure`, `year_order_sources.cohort_orders` with `households.goods_orders` and
