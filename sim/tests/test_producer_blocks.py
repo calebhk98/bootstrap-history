@@ -58,12 +58,11 @@ class FigureReads(unittest.TestCase):
         self.assertEqual(answer, [store[each].expected_prices for each in ids])
         self.assertEqual(list(answer[2]), ["wheat", "flour"])
 
-    def test_figures_of_keeps_the_numpy_type_of_a_field_written_as_one(self):
+    def test_figures_of_hands_back_python_floats_whatever_was_written(self):
         store = _store()
         rows = [store.row_of["producer:b"], store.row_of["producer:a"]]
         figures = producer_blocks.figures_of(store, "yield_factor", rows)
-        self.assertIsInstance(figures[0], np.float64)
-        self.assertIs(type(figures[1]), float)
+        self.assertEqual([type(figure) for figure in figures], [float, float])
         self.assertEqual(figures, [store["producer:b"].yield_factor, store["producer:a"].yield_factor])
 
 
