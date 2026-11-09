@@ -630,8 +630,10 @@ dictionary of dictionaries, no array form); `_store_weights` runs `store_candida
 `split_by_return` and `math.fsum`, whose last digit a numpy or numba port would have to reproduce, and its result is a dict of weights that `store_offers`
 reads) and `store_holding` reads the book's stock of each store good; `own_production` runs per cohort over the needs it can grow (hours, hectares and
 the next need depend on the one before; it makes a `GoodsMove` per grown good that `post_in_order` takes); `grinding_plan`, `priced_basket`,
-`basket_signature` and `has_hearth` run per cohort because the basket key reads the cohort record (hired work, milled grains) and the cohort's title to
-its land; they wait for the cohort records as columns.
+`basket_signature` and `has_hearth` run per cohort: the signatures come from the cohort columns (`signatures_of`) but the hearth asks the land titles per
+cohort (`titles_worked.worked_share`); `household_offers_year.plans` and `BidMemory` still take `Cohort` snapshots (the orders pack reads their fields).
+A warm Rome year builds 1131 `Cohort` snapshots (counted by wrapping `CohortStore._build`), none of them from the priced needs' readers: the sites are
+`land_lease_year._margins`, `capital_year.note_exposure`, `carriage_hours.bid_figures`, `year_order_sources.cohort_orders` and `lending.bid_household_loans`.
 
 ## Merchants
 
