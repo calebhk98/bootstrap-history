@@ -4,9 +4,11 @@ import unittest
 
 import numpy as np
 
-from sim.economy import producer_rows_read
+from sim.economy import producer_rows_read, producers
 from sim.economy.producer_store import ProducerStore
 from sim.economy.producers import Producer
+from sim.economy.types import Recipe
+from sim.tests.economy_view_defaults import ViewDefaults
 
 QUICK_TOPIC = True
 
@@ -38,6 +40,43 @@ class FieldsOf(unittest.TestCase):
 
     def test_no_rows_is_an_empty_answer(self):
         self.assertEqual(producer_rows_read.fields_of(_store(), []), [])
+
+
+class _View(ViewDefaults):
+    year = 3
+
+    def price(self, good, area):
+        return {"grain": 2.0, "seed": 1.0}.get(good)
+
+    def wage(self, trade, area):
+        return 1.0
+
+    def interest_rate(self, currency):
+        return 0.05
+
+    def area_of(self, good, tile):
+        return "area"
+
+    def currency_of(self, area):
+        return "coin"
+
+    def cash(self, agent, currency):
+        return 0.0
+
+    def stock(self, agent, good, tile):
+        return 0.0
+
+
+class OffersTakeTheRowFields(unittest.TestCase):
+    def test_offers_from_the_fields_equal_offers_from_the_record(self):
+        recipe = Recipe("farm", {"grain": 10.0, "straw": 1.0}, {"seed": 2.0}, {"hand": 5.0})
+        store = ProducerStore({"f1": Producer("f1", "lord", "farm", "t", 100.0, expected_prices={"grain": 2.0}, last_runs=4.0,
+                                              expected_sales=4.0, cash_target=700.0, land_rent_per_run=0.5)})
+        record, fields = store["f1"], producer_rows_read.fields_of(store, [0])[0]
+        for shortfall in (0.0, 300.0):
+            made = producers.offers(fields, recipe, _View(), {"grain": 50.0, "straw": 3.0}, shortfall, 0.05, {})
+            self.assertEqual(made, producers.offers(record, recipe, _View(), {"grain": 50.0, "straw": 3.0}, shortfall, 0.05, {}))
+            self.assertTrue(made)
 
 
 if __name__ == "__main__":

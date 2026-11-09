@@ -24,6 +24,8 @@ import math
 from dataclasses import dataclass, field
 from typing import Callable, Dict, List, Mapping, Optional, Sequence
 
+import numpy as np
+
 from sim.constants import declare
 
 from . import producer_table
@@ -245,17 +247,28 @@ def post_rents(setup, record, view, wanted_runs: Mapping[AgentId, float],
     demands_by_agent = {demand.agent_id: demand for demand in demands}
     store = record.producers
     takes_land = [setup.land_per_run.get(name, 0.0) > 0.0 for name in store.names["recipes"].name_list]
-    for producer in row_figures(store, store.rows_with_recipes(takes_land, in_id_order=False)):
+    rows = store.rows_with_recipes(takes_land, in_id_order=False)
+    rents, caps = [], []
+    for producer in row_figures(store, rows):
         producer_id = producer.producer_id
         land_per_run = setup.land_per_run[producer.recipe_id]
         own_demand = demands_by_agent.get(producer_id)
         asked = own_demand.hectares if own_demand is not None else 0.0
         granted = result.granted_hectares.get(producer_id, asked)
-        producer_table.set_fields(
-            record.producers, producer_id, land_rent_per_run=use_rent_per_hectare(result, producer.tile, _value_for_rent(
-                setup, view, producer, land_per_run, own_demand)) * land_per_run,
-            land_run_cap=granted / land_per_run if granted < asked - 1e-9 else None)
+        rents.append(use_rent_per_hectare(result, producer.tile, _value_for_rent(
+            setup, view, producer, land_per_run, own_demand)) * land_per_run)
+        caps.append(granted / land_per_run if granted < asked - 1e-9 else None)
+    _write_land_figures(store, rows, rents, caps)
     return result, demands
+
+
+def _write_land_figures(store, rows: np.ndarray, rents: List[float], caps: List[Optional[float]]) -> None:
+    """The rent a run pays and the cap the land grants (None: no cap) of the producers in `rows`, written as two column blocks; a figure
+    that is a numpy float stays one."""
+    producer_table.set_rows(store, "land_rent_per_run", rows, np.array(rents, dtype=np.float64),
+                            typed=np.array([isinstance(each, np.floating) for each in rents], dtype=np.bool_))
+    producer_table.set_rows(store, "land_run_cap", rows, np.array([np.nan if each is None else each for each in caps], dtype=np.float64),
+                            typed=np.array([isinstance(each, np.floating) for each in caps], dtype=np.bool_))
 
 
 def settle_year(setup, record, view, wanted_runs: Mapping[AgentId, float],

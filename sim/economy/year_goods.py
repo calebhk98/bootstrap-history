@@ -21,6 +21,7 @@ from .goods_left_markets import LeftMarkets
 from .year_goods_offer_rows import OfferRows
 from .home_scope import on_home_tile
 from .producer_blocks import recipes_of, tiles_of
+from .producer_rows_read import fields_of
 from .household_work_year import cohort_basket
 from .goods_market_rows import bids_only_quote, wanted_at_rows
 from .market_memory import market_key
@@ -99,8 +100,9 @@ def clear_goods(setup, record, view, area_map, order_book, plans, ledger: YearLe
     context = ClearingContext(setup, record, view, orders, arrays, costs)
     world = goods_turn.TurnWorld.of(setup, record, view, ledger, arrays, costs, plans) if arrays is not None else None
     by_output: Dict[str, List[str]] = {}
-    for producer_id, producer in (sorted(record.producers.items()) if world is None else ()):
-        for good in setup.recipes[producer.recipe_id].outputs:
+    sorted_ids = sorted(record.producers) if world is None else []
+    for producer_id, recipe_id in zip(sorted_ids, recipes_of(record.producers, sorted_ids)):
+        for good in setup.recipes[recipe_id].outputs:
             by_output.setdefault(good, []).append(producer_id)
     order = input_depth_order(setup.recipes)
     listed = set(order)
@@ -237,7 +239,7 @@ def _turn_on_columns(setup, record, view, world, positions, in_kind, order_book,
     rate = own_rate(view, setup.currency_id)
 
     def offer_by_rule(position, shortfall):
-        producer = record.producers[world.arrays.producers.ids[position]]
+        producer = fields_of(record.producers, [record.producers.row_of[world.arrays.producers.ids[position]]])[0]
         recipe = setup.recipes[producer.recipe_id]
         stock = {good: record.book.stock(producer.agent_id, good, producer.tile) for good in recipe.outputs}
         keep = {good: recipe.inputs.get(good, 0.0) * producer.capacity_runs for good in recipe.outputs}
@@ -257,8 +259,8 @@ def _produce_and_offer(setup, record, view, producer_ids, plans, in_kind, order_
     held_outputs, cash_held, running = goods_production.turn_figures(setup, record, ledger, producer_ids)
     pending = []           # (producer, its offers, or None for the quick ones below, those as (good, quantity, price, spoilage))
     expected, spoilage, quantity, rows, shortfalls, pair_ptr = [], [], [], [], [], [0]
-    for place, producer_id in enumerate(producer_ids):
-        producer = record.producers[producer_id]
+    figures = fields_of(record.producers, record.producers.rows_of(producer_ids))
+    for place, producer in enumerate(figures):
         recipe = setup.recipes[producer.recipe_id]
         stock = held_outputs[place]
         shortfall = seller_cash.shortfall_to_raise(producer.cash_target, cash_held[place], running[place])

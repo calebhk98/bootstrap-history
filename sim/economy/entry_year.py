@@ -12,6 +12,7 @@ from sim.book_apply import RULE_SINGLE
 
 from . import producer_table
 from .posting_sequence import post_in_order
+from .producer_blocks import crews_of, owners_at
 from . import (credit, entry_kernels, entry_margin_tables, entry_plan_table, entry_practice, entry_unmet, location, ownership, practice, producer_exit, sites,
                unit_cost, year_bids)
 from .entry_backed import unfilled_at_cost
@@ -119,6 +120,7 @@ def open_entrants(setup, record, view, area_map, unmet_by_market: Dict[Tuple[str
     peers_of_recipe: Dict[str, list] = store.crews_by_recipe(in_id_order=False) if plans else {}   # each recipe's producers' crews, a newcomer's included once it starts
     owner_cash: Dict[str, float] = {}           # each owner's cash as the stakes already decided leave it
     stakes: List[Transfer] = []          # the stakes, posted together after the plans are applied, one batch each
+    held_before = _owner_and_crew_held(store, plans)
     for plan_recipe_id, plan_tile, plan_runs, plan_return in plans:
         recipe = setup.recipes[plan_recipe_id]
         key = recipe_tile_key(plan_recipe_id, plan_tile)
@@ -136,7 +138,7 @@ def open_entrants(setup, record, view, area_map, unmet_by_market: Dict[Tuple[str
         elif record.credit.expansion_runs.get(producer_id, 0.0) > 0.0:     # a working-capital loan builds no plant
             continue                                    # plant it already asked for is still to come
         else:
-            owner, crew = store.owner_at(row), store.crew_of(row)
+            owner, crew = held_before.get(producer_id) or (store.owner_at(row), store.crew_of(row))
             capacity, workshops = store.value(row, "capacity_runs"), store.table.workshops[row].item()
         if not builds_plant:
             capacity, workshops = capacity + plan_runs, workshops + 1
@@ -164,6 +166,14 @@ def open_entrants(setup, record, view, area_map, unmet_by_market: Dict[Tuple[str
                 record.credit.plan_expansion(producer_id, loan / per_run)
     post_in_order(record.book, [([stake], ()) for stake in stakes], RULE_SINGLE)
     return started
+
+
+def _owner_and_crew_held(store, plans) -> Dict[str, tuple]:
+    """{producer id: (owner, crew's practice)} of the producers the plans name that the table holds now, read as blocks."""
+    wanted = list(dict.fromkeys("producer:" + recipe_tile_key(recipe_id, tile) for recipe_id, tile, _runs, _return in plans))
+    held = [each for each in wanted if each in store.row_of]
+    rows = np.array([store.row_of[each] for each in held], dtype=np.int64)
+    return dict(zip(held, zip(owners_at(store, rows), crews_of(store, rows))))
 
 
 def _spare_at(grid, costs, good: str, area_id: str) -> float:

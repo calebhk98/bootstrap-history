@@ -316,7 +316,8 @@ class ProducerStore(MutableMapping):
 
     def value(self, row: int, name: str):
         """One scalar field of one row, typed as `floats` says."""
-        return self.floats(name, np.array([row], dtype=np.int64))[0]
+        column = self._scalar(name)
+        return column[row] if self.table.numpy_typed[row] & FLOAT_BIT.get(name, 0) else column.item(row)
 
     def _scalar(self, name: str) -> np.ndarray:
         if name not in SCALAR_FLOATS + SCALAR_INTS + OPTIONAL_FLOATS:
