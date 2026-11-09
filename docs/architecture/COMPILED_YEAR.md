@@ -25,6 +25,7 @@ A half-converted edge is allowed as a step, but it is not measured as a result; 
 | How long does the whole year take, and how many instructions? | `python3 sim/simulator.py year-time --session SAVE --years 2 --count-instructions` |
 | How long does a named function take in a warm year (plain timers, no profiler inflation)? | `python3 tools/measure/function_times.py SAVE module:function ...` |
 | Who calls what, how often (cProfile; inflates Python-heavy code, so read call counts, not seconds)? | `python3 tools/measure/warm_year_profile.py SAVE OUT.prof`, then `pstats` sorted by `tottime` |
+| Which Python is left (cProfile cannot see into a kernel, so a kernel's time shows as its caller's own)? | `python3 tools/measure/warm_year_split_profile.py SAVE OUT.prof`: every kernel is its own `kernel__...` entry, so a function's own time there is Python |
 | Did a change move the game? | `tools/measure/save_compare.py` on two-year saves (float dust only); `year-time --reload-check` for the save round trip; `python3 -m sim.tests.fingerprint` where behaviour must not change |
 | Does a fresh spin-up depend on the hash seed? | `python3 -m sim.tests --slow --only hash_seed_order` |
 | Do a topic's tests pass? | `python3 -m sim.tests --slow --only TOPIC` |
@@ -532,6 +533,19 @@ and is gone); `plans` and `bid_household_loans` pass `CohortFigures` to the rule
 are written. The basket keys of all cohorts come from one pass (`household_work_year.signatures_of_figures`, `signatures_of`), whose hearths come from
 `titles_worked.worked_shares`: the tenancies of a tile are read once for all its holders instead of once for each.
 
+**Python left in the close and the orders (Complaint 968).** Measured with the split profile (own time of the Python callers of the close, the
+cohorts' orders and the merchants' orders). What moved to blocks: the producers' owner eligibility and debts for the worths are read once per
+owner and per borrower (`year_arrays_owners.py`), not once per producer; the expected prices of all slots of all producers are found in one
+pass over the held prices (`year_arrays_producers._expected_prices`); an exit no longer scans the bonded people held per producer, `ExitBatch.finish`
+releases them for all exits in one pass; the unmet floors read the book's durables with arrays repeated per cohort (`households_close_pack.unmet_by_cohort`);
+the household close takes every cohort's basket key from `signatures_from_fields` and derives the eaten key (`household_work_year.eaten_signature`);
+`NeedBatch` keeps one entry per request and writes the tables with a concatenate (`priced_need_tables.basket_arrays`), and a spec made by `replace` with
+another floor shares the rows of its goods (`spec_rows`); the cohorts' orders find the ground goods, the sellers of ground and the crop margin of a tile once
+for all cohorts (`land_bid_year.ground_of`, `land_bids(..., ground, margins)`), skip the tool bids of a cohort with no own-plot hours, take a template's areas
+in one read (`households_template.static_rows`), the storable goods once per pass (`households_store.storable_goods`) and the store goods' areas
+from the template (`store_offers(..., areas)`); the merchants write their bids and offers straight into the order rows (`merchants_plan.orders(..., rows_out)`,
+`merchants.holding_offer_figures`), with the expectation read from the slot array.
+
 Tests: `sim/tests/test_close_pack_kernels.py`, `test_year_close_dividends.py`, `test_producer_close_write.py`, `test_producer_store.py`, `test_wear_kernels.py`,
 `test_year_close_households.py` (each kernel against the Python it replaces on written-out inputs).
 
@@ -889,6 +903,16 @@ Time any of these with `python3 tools/measure/function_times.py SAVE module:func
 One list; each item names what blocks it. Every item is to be converted, whatever its share of a step; re-measure before acting, since the
 list lags the code.
 
+- **Python left in the close, the cohorts' orders and the merchants' orders** (re-measure with the split profile). In the close: the share of the price a
+  producer's addition leaves is a Python call per flagged producer (`year_close_producers._share_pricer`, `expansion_price.price_share_of`) over each
+  market's bids, because the crossing price (`crossing_price.ColumnDemand`) answers one quantity at a time; the year arrays are read again from the producer
+  table four times a year (`ProducerColumns.of` after each write, and `producer_store.compact` inside it); `close_pack.pack` walks the ledger's
+  clearing prices and unmet demand by (good, area) key (`ledger.market_totals` splits the market names) where a market-number to column map would do;
+  `carriage_hours.wage_loans`, `merchants.learn_year` (`merchants_news.lags_at`) and `loan_write_offs.apply` loop over wages, merchants and loans;
+  `households_close.closed_figures` asks the view per cohort. In the orders: the template pass (`households_orders_pack._Arrays.add_template`) runs
+  several small numpy calls per basket template; `households_store._store_weights` and `store_offers` are per template and per cohort; a basket for a new
+  floor of hired work is built, and its rows made, each year (`household_work_year.built_basket`). In the merchants' orders: `merchants_plan.orders`
+  and `_Stock` make small arrays per merchant, the carriers' replacement bids are still `Bid` objects handed to `OrderRows.bids_from`.
 - **Entry: what is left after the plan loops.** The application of the plans in `open_entrants` (the owner's stake
   taken from the cash the earlier stakes left, the entrant's loan request, `peers_of_recipe` for the crew) is a greedy loop in plan order: a
   plan reads the capacity the earlier plans for the same recipe and tile left, so the loop stays Python; the owners and crews it starts

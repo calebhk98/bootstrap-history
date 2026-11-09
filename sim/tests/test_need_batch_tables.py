@@ -2,6 +2,7 @@
 lists gave."""
 QUICK_TOPIC = True
 
+import dataclasses
 import math
 import unittest
 
@@ -11,6 +12,19 @@ from sim.world.need_basket import NeedSpec
 
 FOOD = NeedSpec("food", 2.0, 1.0, (("bread", 1.0), ("fish", 0.5)), qualities=(("fish", 2.0),), share_limits=(("bread", 0.6),))
 LIGHT = NeedSpec("light", 0.0, 0.5, (("tallow", 1.0),))
+
+
+class SpecRows(unittest.TestCase):
+    def test_a_spec_with_another_floor_and_the_same_goods_gives_the_same_rows(self):
+        rows = priced_need_tables.spec_rows(FOOD)
+        self.assertEqual(rows[0], [GOODS.number["bread"], GOODS.number["fish"]])
+        self.assertEqual(rows[1:3], ([1.0, 0.5], [1.0, 2.0]))
+        self.assertEqual(rows[3][0], 0.6)
+        self.assertTrue(math.isnan(rows[3][1]))
+        self.assertIs(priced_need_tables.spec_rows(dataclasses.replace(FOOD, subsistence_per_person=5.0)), rows)
+
+    def test_a_spec_with_other_goods_gives_other_rows(self):
+        self.assertEqual(priced_need_tables.spec_rows(LIGHT)[0], [GOODS.number["tallow"]])
 
 
 class TablesOfRequests(unittest.TestCase):

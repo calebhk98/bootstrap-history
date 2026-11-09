@@ -73,21 +73,23 @@ class GoodNumbers:
 
 GOODS = GoodNumbers()
 
-_SPEC_ROWS: Dict[int, tuple] = {}      # id(spec) -> (spec, goods, effects, qualities, limits); the spec is held so its id is not reused
+_SPEC_ROWS: Dict[tuple, tuple] = {}      # ids of a spec's goods, qualities and limits -> (those three, goods, effects, qualities, limits); held so the ids are not reused
 _SPEC_ROWS_LIMIT = 8192
 
 
 def spec_rows(spec: NeedSpec) -> tuple:
-    """(spec, good numbers, effects, qualities, limits) of a need's goods, as lists in the spec's order; kept by the spec object."""
-    found = _SPEC_ROWS.get(id(spec))
+    """(good numbers, effects, qualities, limits) of a need's goods, as lists in the spec's order; kept by the spec's goods, qualities and
+    limits objects, which a spec made from another by `dataclasses.replace` (another floor, the same goods) shares."""
+    key = (id(spec.goods), id(spec.qualities), id(spec.share_limits))
+    found = _SPEC_ROWS.get(key)
     if found is None:
         if len(_SPEC_ROWS) >= _SPEC_ROWS_LIMIT:
             _SPEC_ROWS.clear()
         quality, limit = dict(spec.qualities), dict(spec.share_limits)
-        found = _SPEC_ROWS[id(spec)] = (spec, [GOODS.of(good) for good, _effect in spec.goods], [effect for _good, effect in spec.goods],
-                                        [quality.get(good, 1.0) for good, _effect in spec.goods],
-                                        [limit.get(good, numpy.nan) for good, _effect in spec.goods])
-    return found
+        found = _SPEC_ROWS[key] = ((spec.goods, spec.qualities, spec.share_limits), (
+            [GOODS.of(good) for good, _effect in spec.goods], [effect for _good, effect in spec.goods],
+            [quality.get(good, 1.0) for good, _effect in spec.goods], [limit.get(good, numpy.nan) for good, _effect in spec.goods]))
+    return found[1]
 
 
 _BASKET_ROWS: Dict[int, tuple] = {}      # id(needs tuple) -> (needs, rows); the tuple is held so its id is not reused
@@ -103,7 +105,7 @@ def basket_rows(needs: Sequence[NeedSpec]) -> tuple:
         _BASKET_ROWS.clear()
     first, goods, effects, qualities, limits = [], [], [], [], []
     for spec in needs:
-        _spec, spec_goods, spec_effects, spec_qualities, spec_limits = spec_rows(spec)
+        spec_goods, spec_effects, spec_qualities, spec_limits = spec_rows(spec)
         first.append(len(goods))
         goods.extend(spec_goods)
         effects.extend(spec_effects)
