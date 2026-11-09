@@ -7,9 +7,8 @@ import dataclasses
 from typing import Dict, List, Optional, Sequence, Tuple, Union
 
 from sim.labour.api import LabourBidTable, TrancheBids, people_in, run_labour_year
-from sim.world.need_basket import subsistence_cost_per_person
 
-from . import household_work_year, households_basket, households_work, labour_settle_year
+from . import cohort_prime, household_work_year, households_basket, households_work, labour_settle_year
 from .labour_ask_floor import mean_floor_per_hour
 from .labour_bids import BID_TRANCHES, BID_VALUE_SPREAD
 from .labour_fills import fills_of, rows_from_clearings, rows_from_objects
@@ -29,12 +28,13 @@ def subsistence_cost_by_tile(setup, record, view) -> Dict[str, float]:
     prices, averaged over the tile's people."""
     cost_sum: Dict[str, float] = {}
     people: Dict[str, float] = {}
+    cohort_prime.prime_cohort_baskets(setup, record, view, False)
     for cohort in sorted(record.cohorts.values(), key=lambda each: each.agent_id):
-        cost = subsistence_cost_per_person(household_work_year.priced_basket(setup, record, view, cohort))
+        cost = household_work_year.priced_basket(setup, record, view, cohort).subsistence_cost_per_person()
         cost_sum[cohort.tile] = cost_sum.get(cohort.tile, 0.0) + cost * cohort.people
         people[cohort.tile] = people.get(cohort.tile, 0.0) + cohort.people
     return {tile: (cost_sum[tile] / people[tile] if people[tile] > 0.0 else
-                   subsistence_cost_per_person(households_basket.tile_need_prices(setup, view, tile)))
+                   households_basket.tile_need_prices(setup, view, tile).subsistence_cost_per_person())
             for tile in sorted(cost_sum)}
 
 

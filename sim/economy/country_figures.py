@@ -182,9 +182,9 @@ def _tile_floor_costs(economy, view, tile) -> Dict[str, float]:
 
 
 def _worked_tile_floor_costs(economy, view, tile) -> Dict[str, float]:
-    return {need.spec.need_id: need.price_index * need.spec.subsistence_per_person
-            for need in households_basket.tile_need_prices(economy.setup, view, tile)
-            if need.spec.subsistence_per_person > 0.0}
+    return {spec.need_id: price_index * spec.subsistence_per_person
+            for spec, price_index, _first, _end in households_basket.tile_need_prices(economy.setup, view, tile).blocks()
+            if spec.subsistence_per_person > 0.0}
 
 
 def tile_need_floor_costs(economy, tile) -> Dict[str, float]:

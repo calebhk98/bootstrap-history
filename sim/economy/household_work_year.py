@@ -24,10 +24,10 @@ def has_hearth(record, cohort: Cohort) -> bool:
 
 def food_basket(setup, record, cohort: Cohort):
     """The tile's basket, with food only as ready to eat when the cohort has no hearth."""
-    return _food_basket(setup, cohort.tile, has_hearth(record, cohort))
+    return tile_food_basket(setup, cohort.tile, has_hearth(record, cohort))
 
 
-def _food_basket(setup, tile, hearth: bool):
+def tile_food_basket(setup, tile, hearth: bool):
     basket = setup.basket_for(tile)
     if not hearth:
         basket = households_work.without_hearth_basket(basket, setup.ready_to_eat, setup.hunger_need)
@@ -41,14 +41,25 @@ def grinding_plan(setup, record, view, cohort: Cohort, hour_value: float) -> Tup
     if not setup.milled_as:
         return (), 1.0
     hearth = has_hearth(record, cohort)
-    food = next((need for need in kept_need_prices(view, lambda: _food_basket(setup, cohort.tile, hearth), cohort.tile, ("food", hearth))
-                 if need.spec.need_id == setup.hunger_need), None)
-    if food is None:
+    found = kept_reads(view, ("food_rows", cohort.tile, hearth), lambda: _food_rows(setup, view, cohort.tile, hearth))
+    if found is None:
         return (), 1.0
-    floor = food.spec.subsistence_per_person
+    floor, rows = found
     hours_per_unit = households_work.hours_per_person_per_year(setup.household_work, True, 1.0, True) / floor if floor > 0.0 else 0.0
-    bought = household_grinding.bought_milled(food.goods, setup.milled_as, hours_per_unit, hour_value)
-    return bought, household_grinding.ground_share(food.goods, setup.milled_as, bought)
+    bought = household_grinding.bought_milled(rows, setup.milled_as, hours_per_unit, hour_value)
+    return bought, household_grinding.ground_share(rows, setup.milled_as, bought)
+
+
+def _food_rows(setup, view, tile, hearth: bool):
+    """(floor per person, (good, price, effect, share) rows) of the priced food need of the tile's basket for a cohort with or without a hearth;
+    None where it is not priced. The rows are shared by every cohort of the tile and hearth."""
+    priced = kept_need_prices(view, lambda: tile_food_basket(setup, tile, hearth), tile, ("food", hearth))
+    columns = priced.columns
+    for spec, _index, first, end in priced.blocks():
+        if spec.need_id == setup.hunger_need:
+            return spec.subsistence_per_person, list(zip(columns.names[first:end], columns.price[first:end], columns.effect[first:end],
+                                                         columns.share[first:end]))
+    return None
 
 
 def cohort_basket(setup, record, cohort: Cohort, buying: bool = True):
@@ -86,7 +97,7 @@ def _kept_basket(setup, key: tuple):
 def built_basket(setup, tile, hearth: bool, hired_work_per_person: float, milled_grains: Tuple[str, ...]):
     """The basket of a cohort on `tile` with or without a hearth, with `hired_work_per_person` as the household-work floor
     and `milled_grains` left out of the food need (what `cohort_basket` shares by key)."""
-    basket = _food_basket(setup, tile, hearth)
+    basket = tile_food_basket(setup, tile, hearth)
     if milled_grains:
         basket = household_grinding.without_goods(basket, milled_grains, setup.hunger_need)
     if hearth:

@@ -10,6 +10,7 @@ import numpy as np
 
 from .households_close_kernel import unmet_floors
 from .households_cohort import Cohort
+from .priced_need_tables import GOODS, basket_rows
 from .stock_block import numbers_of, stock_block
 from .types import GoodSpec
 
@@ -20,16 +21,27 @@ class PackedBaskets:
     def __init__(self, book, specs: Mapping[str, GoodSpec]) -> None:
         self._book = book
         self._specs = specs
+        self._by_good = None      # per good number of GOODS: (the book's number of the good or -1, its service life or 0)
         self.index: Dict[object, int] = {}
         self.baskets: List[object] = []
         self.need_start = [0]
         self.need_floor: List[float] = []
         self.row_start = [0]
-        self.row_good: List[int] = []
-        self.row_effect: List[float] = []
-        self.row_life: List[float] = []
-        self.row_held_place: List[int] = []
+        self.row_good: List[np.ndarray] = []
+        self.row_effect: List[np.ndarray] = []
+        self.row_life: List[np.ndarray] = []
+        self.row_held_place: List[np.ndarray] = []
+        self.rows = 0
         self.durables: List[List[str]] = []      # per basket: its durable goods in the order of their held places
+
+    def _good_columns(self):
+        """(book number, service life) by good number, made for the goods of GOODS known now."""
+        if self._by_good is None or len(self._by_good[0]) != len(GOODS.names):
+            numbers = self._book.good_ids.numbers
+            lives = [self._specs[good].service_life_years if good in self._specs else 0.0 for good in GOODS.names]
+            self._by_good = (np.array([numbers.get(good, -1) for good in GOODS.names], dtype=np.int64),
+                             np.array([life if life > 0.0 else 0.0 for life in lives], dtype=np.float64))
+        return self._by_good
 
     def add(self, key, basket) -> int:
         """The basket's number (it is packed on first sight of `key`)."""
@@ -38,28 +50,34 @@ class PackedBaskets:
             return found
         found = self.index[key] = len(self.baskets)
         self.baskets.append(basket)
-        durables: List[str] = []
-        place_of: Dict[str, int] = {}
-        numbers = self._book.good_ids.numbers
-        for need in basket.needs:
-            self.need_floor.append(need.subsistence_per_person)
-            for good, effect in need.goods:
-                spec = self._specs.get(good)
-                life = spec.service_life_years if spec is not None and spec.service_life_years > 0.0 else 0.0
-                self.row_good.append(numbers.get(good, -1))
-                self.row_effect.append(effect)
-                self.row_life.append(life)
-                if life > 0.0:
-                    place = place_of.setdefault(good, len(durables))
-                    if place == len(durables):
-                        durables.append(good)
-                    self.row_held_place.append(place)
-                else:
-                    self.row_held_place.append(-1)
-            self.row_start.append(len(self.row_good))
-        self.durables.append(durables)
+        _held, specs, first, goods, effects, *_rest = basket_rows(basket.needs)
+        book_number, life_of_good = self._good_columns()
+        goods = np.array(goods, dtype=np.int64)
+        life = life_of_good[goods]
+        place = np.full(len(goods), -1, dtype=np.int64)
+        durable = np.flatnonzero(life > 0.0)
+        names: List[str] = []
+        if len(durable):         # a durable's place is the order of its first row among the basket's durables
+            distinct, first_row = np.unique(goods[durable], return_index=True)
+            by_first = np.argsort(first_row)
+            place_of_distinct = np.empty(len(distinct), dtype=np.int64)
+            place_of_distinct[by_first] = np.arange(len(distinct))
+            place[durable] = place_of_distinct[np.searchsorted(distinct, goods[durable])]
+            names = GOODS.name_array()[distinct[by_first]].tolist()
+        self.need_floor.extend(spec.subsistence_per_person for spec in specs)
+        self.row_good.append(book_number[goods])
+        self.row_effect.append(np.array(effects, dtype=np.float64))
+        self.row_life.append(life)
+        self.row_held_place.append(place)
+        self.row_start.extend(self.rows + end for end in first[1:] + [len(goods)])
+        self.rows += len(goods)
+        self.durables.append(names)
         self.need_start.append(len(self.need_floor))
         return found
+
+
+def _joined(blocks: List[np.ndarray], dtype) -> np.ndarray:
+    return np.concatenate(blocks) if blocks else np.zeros(0, dtype=dtype)
 
 
 def unmet_by_cohort(book, packed: PackedBaskets, cohorts: Sequence[Cohort], basket_numbers: Sequence[int], receipt_start: np.ndarray,
@@ -80,8 +98,8 @@ def unmet_by_cohort(book, packed: PackedBaskets, cohorts: Sequence[Cohort], bask
     unmet = np.full((count, max(widest, 1)), np.nan)
     unmet_floors(np.array([cohort.people for cohort in cohorts], dtype=np.float64), np.array(basket_numbers, dtype=np.int64), receipt_start,
                  receipt_goods, receipt_amounts, np.array(packed.need_start, dtype=np.int64), np.array(packed.need_floor, dtype=np.float64),
-                 np.array(packed.row_start, dtype=np.int64), np.array(packed.row_good, dtype=np.int64), np.array(packed.row_effect, dtype=np.float64),
-                 np.array(packed.row_life, dtype=np.float64), np.array(packed.row_held_place, dtype=np.int64), held_start, held,
+                 np.array(packed.row_start, dtype=np.int64), _joined(packed.row_good, np.int64), _joined(packed.row_effect, np.float64),
+                 _joined(packed.row_life, np.float64), _joined(packed.row_held_place, np.int64), held_start, held,
                  len(book.good_ids), unmet)
     answers = []
     for position in range(count):

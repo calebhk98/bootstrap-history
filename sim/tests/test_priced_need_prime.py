@@ -50,7 +50,7 @@ class PrimedAfterAWrite(unittest.TestCase):
                     self.assertIn(("need_prices", tile, key), reads, "the batch priced every basket asked before")
                     self.assertEqual(reads[("need_prices", tile, key)], fresh(basket, view, tile), (seed, tile, key))
 
-    def test_baskets_priced_together_that_hold_the_same_need_share_its_priced_object(self):
+    def test_baskets_priced_together_that_hold_the_same_need_price_it_alike(self):
         _setup, _record, view, _ledger, _area_map = economy_of(0)
         plain = make_basket(NEED_DATA, {})
         part = dataclasses.replace(plain, needs=plain.needs[:2])
@@ -58,7 +58,7 @@ class PrimedAfterAWrite(unittest.TestCase):
         self.assertTrue(price_asked(view, reads, [(TILES[0], "plain", plain), (TILES[0], "part", part)]))
         whole, partial = reads[("need_prices", TILES[0], "plain")], reads[("need_prices", TILES[0], "part")]
         self.assertTrue(partial)
-        self.assertIs(whole[0], partial[0])
+        self.assertEqual(whole[0], partial[0])
         self.assertEqual(whole, fresh(plain, view, TILES[0]))
         self.assertEqual(partial, fresh(part, view, TILES[0]))
 

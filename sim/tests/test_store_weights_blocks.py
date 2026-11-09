@@ -17,7 +17,7 @@ STORABLE = {good: GoodSpec(good, 0.05 + 0.1 * number, 0.0, 30.0, "x") for number
 OTHERS = {good: GoodSpec(good, 1.0, 0.2, 0.0, "x") for number, good in enumerate(GOODS) if number % 2 == 0}
 SPECS = {**OTHERS, **STORABLE}
 PRICED = [types.SimpleNamespace(spec=types.SimpleNamespace(subsistence_per_person=10.0, need_id="food"),
-                                goods=((GOODS[0], 0.5, 1.0, 1.0),))]
+                                price_index=0.5, ceilings=(), goods=((GOODS[0], 0.5, 1.0, 1.0),))]
 
 
 def per_good_weights(tile, view, specs, priced):

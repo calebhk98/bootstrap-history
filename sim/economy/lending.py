@@ -12,7 +12,7 @@ from sim.world import capital_market
 
 from sim.loans.columns import NO_TILE
 
-from . import bank_service, bondage, credit, credit_claims, credit_service, households_credit, lender_ask, loss_memory, merchants_book, merchants_credit, merchants_credit_batch, titles, titles_ground, titles_value, transfer_rows
+from . import bank_service, bondage, cohort_prime, credit, credit_claims, credit_service, households_credit, lender_ask, loss_memory, merchants_book, merchants_credit, merchants_credit_batch, titles, titles_ground, titles_value, transfer_rows
 from .household_time_preference import HOUSEHOLD_TIME_PREFERENCE
 from .household_work_year import basket_key, cohort_basket
 from .producers_working_capital import WORKING_CAPITAL_PURPOSE
@@ -108,6 +108,7 @@ def household_requests(setup, record, view, ledger, priced_by_tile) -> List:
     debts = credit_claims.debts_by_borrower(record.credit.loans, money)
     rate = own_rate(view, money)
     requests = []
+    cohort_prime.prime_cohort_baskets(setup, record, view, True)
     for cohort_id, cohort in sorted(record.cohorts.items()):
         key = basket_key(record, cohort)
         priced = _priced_basket(view, key, cohort_basket(setup, record, cohort), priced_by_tile)

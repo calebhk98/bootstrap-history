@@ -6,6 +6,7 @@ from typing import Dict, Iterable, Mapping, Optional
 
 from sim.constants import declare
 
+from .priced_need_list import priced_needs_of
 from .types import GoodSpec
 
 STORE_STORAGE_COST_PER_KG_YEAR = declare(
@@ -61,12 +62,15 @@ def service_values_per_year(priced_needs: Iterable, specs: Mapping[str, GoodSpec
     Goods that serve no need, or are used up within the year, are absent. TEMPORARY HEURISTIC (see
     `STORE_SERVICE_UNLIMITED`): no limit on how much of the need a household can use."""
     values: Dict[str, float] = {}
-    for need in priced_needs:
-        for good, _price, effect, _share in need.goods:
+    priced = priced_needs_of(priced_needs)
+    names, effects = priced.columns.names, priced.columns.effect
+    for _spec, price_index, first, end in priced.blocks():
+        for row in range(first, end):
+            good, effect = names[row], effects[row]
             spec = specs.get(good)
             if spec is None or spec.service_life_years <= 0.0 or effect <= 0.0:
                 continue
-            values[good] = values.get(good, 0.0) + effect * need.price_index / spec.service_life_years
+            values[good] = values.get(good, 0.0) + effect * price_index / spec.service_life_years
     return values
 
 
