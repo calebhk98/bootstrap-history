@@ -11,7 +11,7 @@ from sim.economy.households_cohort import Cohort
 from sim.economy.market_memory import KEY_SEPARATOR, MarketMemory, YearView
 from sim.economy.producers import Producer
 from sim.economy.setup import labour_area
-from sim.economy.types import (EDGE_MINT, EDGE_PRODUCTION, QUOTE_BEST_UNFILLED_BID, QUOTE_COST_COVERING,
+from sim.economy.types import (EDGE_MINT, ClearingResult, EDGE_PRODUCTION, QUOTE_BEST_UNFILLED_BID, QUOTE_COST_COVERING,
                                QUOTE_LOWEST_UNFILLED_ASK, QUOTE_OPENING_ESTIMATE, GoodSpec, GoodsMove, Loan, MarketArea,
                                Recipe, Transfer)
 from sim.economy.year_ledger import YearLedger
@@ -120,8 +120,10 @@ def economy_of(seed, producer_count=40):
         for area in AREAS:
             if rng.random() < 0.6:
                 ledger.unmet_demand[(good, area)] = rng.uniform(0, 50)
-    ledger.totals_cache = ({(good, area): rng.choice((0.0, 5.0)) for good in GOODS for area in AREAS},
-                           {(good, area): rng.choice((None, rng.uniform(0.5, 9.0))) for good in GOODS for area in AREAS})
+    for good in GOODS:
+        for area in AREAS:
+            traded = rng.choice((0.0, 5.0))
+            ledger.note_clearing(ClearingResult(good, area, MONEY, rng.choice((None, rng.uniform(0.5, 9.0))), traded, 0.0, 0.0, ()), traded)
     record = types.SimpleNamespace(producers=ProducerStore(producers), cohorts=cohorts, memory=memory, book=book,
                                    credit=credit_of(loans))
     area_map = AreaMapStub()

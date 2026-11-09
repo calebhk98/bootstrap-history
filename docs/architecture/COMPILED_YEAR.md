@@ -499,6 +499,7 @@ exactly as the Python did.
 | Step | Python entry | Kernels / tables |
 |---|---|---|
 | the pack: stocks, held goods, the ledger's sales, costs, sold, made, hours hired | `close_pack.py` | `close_pack_kernels.py`: `slot_stocks`, `held_goods` (exact sum of the tiles, as `math.fsum`), `pair_values_by_slot` |
+| the pack's clearing prices and unmet demand by (good column, area column) | `close_pack_markets.py` | array reads: the ledger's per-market totals (`YearLedger.market_total_columns`) and unmet column, with each market row's good and area number turned into the year arrays' columns by two lookup arrays (one entry per good and per area, not per market). Test: `test_close_pack_markets.py` (against the per-key loops) |
 | producers' dividends: `shares.split_dividend` and `ownership.spread` | `year_close_dividends.py`, `year_close_owners.py` | `year_close_dividend_kernels.py`: `dividend_rows` (rows in the order of the payments), `add_in_order` (the property income) |
 | producers' new figures (written into the store's columns) and the plant worn | `producer_close_write.py`, `year_close_ledger.py` | `set_in_order` over the ledger's `set_figure` |
 | the rows that need the credit record: exits, write-offs, loan requests, rebuild plans | `year_close_producers.py` (`_effects_by_row`) | Python, in producer order |
@@ -933,12 +934,11 @@ list lags the code.
 - **Python left in the close, the cohorts' orders and the merchants' orders** (re-measure with the split profile). In the close: the share of the price a
   producer's addition leaves is a Python call per flagged producer (`year_close_producers._share_pricer`, `expansion_price.price_share_of`) over each
   market's bids, because the crossing price (`crossing_price.ColumnDemand`) answers one quantity at a time; the year arrays are read again from the producer
-  table four times a year (`ProducerColumns.of` after each write, and `producer_store.compact` inside it); `close_pack.pack` walks the ledger's
-  clearing prices and unmet demand by (good, area) key (`ledger.market_totals` splits the market names) where a market-number to column map would do;
-  `carriage_hours.wage_loans`, `merchants.learn_year` (`merchants_news.lags_at`) and `loan_write_offs.apply` loop over wages, merchants and loans;
+  table four times a year (`ProducerColumns.of` after each write, and `producer_store.compact` inside it); `carriage_hours.wage_loans`, `merchants.learn_year` (`merchants_news.lags_at`) and `loan_write_offs.apply` loop over wages, merchants and loans;
   `households_close.closed_figures` asks the view per cohort. In the orders: the template pass (`households_orders_pack._Arrays.add_template`) runs
   several small numpy calls per basket template; `households_store._store_weights` and `store_offers` are per template and per cohort; a basket for a new
-  floor of hired work is built, and its rows made, each year (`household_work_year.built_basket`). In the merchants' orders: `merchants_plan.orders`
+  floor of hired work is one replacement of the work need on a kept base basket (`household_work_year.base_basket`, `with_hired_work`), but its
+  priced rows are still made for each new key. In the merchants' orders: `merchants_plan.orders`
   and `_Stock` make small arrays per merchant, the carriers' replacement bids are still `Bid` objects handed to `OrderRows.bids_from`.
 - **Entry: what is left after the plan loops.** The application of the plans in `open_entrants` (the owner's stake
   taken from the cash the earlier stakes left, the entrant's loan request, `peers_of_recipe` for the crew) is a greedy loop in plan order: a
