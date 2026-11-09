@@ -122,10 +122,16 @@ def expected_price(producer: Producer, good: GoodId, view: MarketView) -> Option
 
 
 def expected_output_prices(producer: Producer, recipe: Recipe, view: MarketView) -> Dict[GoodId, float]:
-    offered = offered_prices_for(view, producer.tile, [good for good in recipe.outputs if good not in producer.expected_prices])
+    return expected_output_prices_at(producer.expected_prices, producer.tile, recipe, view)
+
+
+def expected_output_prices_at(expected_prices: Mapping[GoodId, float], tile: TileId, recipe: Recipe,
+                              view: MarketView) -> Dict[GoodId, float]:
+    """`expected_output_prices` for a producer on `tile` holding `expected_prices`, read from the store's row with no `Producer`."""
+    offered = offered_prices_for(view, tile, [good for good in recipe.outputs if good not in expected_prices])
     prices = {}
     for good in recipe.outputs:
-        price = producer.expected_prices[good] if good in producer.expected_prices else offered[good]
+        price = expected_prices[good] if good in expected_prices else offered[good]
         if price is not None:
             prices[good] = price
     return prices

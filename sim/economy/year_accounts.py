@@ -6,6 +6,7 @@ from dataclasses import dataclass, field
 from typing import Dict, List, Mapping, Optional
 
 from .cohort_store import table_of
+from .producer_blocks import recipes_of
 from .year_accounts_columns import column, row_columns, sum_across, summed_by_key
 from .types import EDGE_CONSUMPTION, EDGE_PRODUCTION, EDGE_SPOILAGE
 
@@ -162,8 +163,8 @@ def _goods(setup, record, ledger, stocks_at_start) -> Dict[str, GoodAccount]:
 
 def _plant_wear(setup, record, ledger) -> Dict[str, float]:
     wear: Dict[str, float] = {}
-    for producer_id, runs in sorted(ledger.plant_worn.items()):
-        recipe_id = record.producers.recipe_id_of(producer_id)
+    worn = sorted(ledger.plant_worn.items())
+    for (_producer_id, runs), recipe_id in zip(worn, recipes_of(record.producers, [each[0] for each in worn])):
         recipe = setup.recipes[recipe_id] if recipe_id is not None else None
         if recipe is None or recipe.plant_life_years <= 0.0:
             continue

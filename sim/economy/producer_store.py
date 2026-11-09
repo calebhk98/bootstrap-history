@@ -238,7 +238,8 @@ class ProducerStore(MutableMapping):
 
     def owners_of(self, producer_ids: Iterable[str]) -> List[str]:
         """The owner of each producer named."""
-        return [self.owner_at(self.row_of[each]) for each in producer_ids]
+        from .producer_blocks import owners_at
+        return owners_at(self, np.array([self.row_of[each] for each in producer_ids], dtype=np.int64))
 
     def live_rows(self) -> np.ndarray:
         """The rows of the producers in the table, in table order (the order they entered)."""

@@ -16,7 +16,7 @@ from .rates import own_rate
 from . import cohort_people, plan_table, plan_year, producer_table
 from . import outlay_room, taxes, bondage, bondage_hours, bondage_keep, bonded_purchase, banks, carriage_hours, credit, credit_idle_rate, credit_lines, debt_relief, credit_claims, currency, equity, land_market, lending, merchants_credit, producers, shares, sites, state_budget, tax_farming, titles_inheritance, titles_moves, titles_plots, unit_cost
 from .credit_view import CreditView
-from . import transfer_rows
+from . import producer_blocks, transfer_rows
 from .market_areas_follow import follow
 from .market_memory_areas import number_area_markets
 from .market_memory import YearView, note_written
@@ -435,23 +435,28 @@ class Economy:
         merchants_credit.stake(record.merchants, {loan.borrower: loan.principal for loan in loans})
         lending.bid_household_loans(setup, record, view, ledger, loans, order_book, priced_by_tile)
 
+        funded = [(loan.borrower, loan.principal) for loan in loans] + sorted(raised.items())
+        borrowers = sorted({request.borrower for request in requests} | {borrower for borrower, _principal in funded})
+        recipe_of = dict(zip(borrowers, producer_blocks.recipes_of(record.producers, borrowers)))
+        tile_of = dict(zip(borrowers, producer_blocks.tiles_of(record.producers, borrowers)))
+
         def plant_worth_of(request):
-            recipe_id = record.producers.recipe_id_of(request.borrower)
+            recipe_id = recipe_of[request.borrower]
             if recipe_id is None:
                 return None
             return plant_worth_ratio(request.maximum_rate, rate, setup.recipes[recipe_id].plant_life_years)
 
         asked, worth = lend_requests.asked_and_worth(requests, plant_worth_of)
         plant_runs: Dict[str, float] = {}
-        for borrower, principal in [(loan.borrower, loan.principal) for loan in loans] + sorted(raised.items()):
-            producer = record.producers.get(borrower)
+        for borrower, principal in funded:
             runs = record.credit.expansion_runs.get(borrower, 0.0)
-            if producer is None or runs <= 0.0 or not asked.get(borrower):
+            if tile_of[borrower] is None or runs <= 0.0 or not asked.get(borrower):
                 continue
             funded_runs = runs * min(1.0, principal / asked[borrower])
             plant_runs[borrower] = plant_runs.get(borrower, 0.0) + funded_runs
             # no dearer than the price at which the new plant would earn just the loan's rate
-            self._bid_for_plant(producer, funded_runs, principal, worth.get(borrower, 1.0), view, order_book)
+            self._bid_for_plant(borrower, tile_of[borrower], recipe_of[borrower], funded_runs, principal, worth.get(borrower, 1.0), view,
+                                order_book)
         record.credit.clear_expansion()
         return plant_runs
 
@@ -464,34 +469,35 @@ class Economy:
         rebuilt: Dict[str, float] = {}
         worn = record.credit.take_rebuilds()
         cash_of = record.book.balance_by_agent(sorted(worn), money)
+        figures = producer_blocks.figures_by_id(record.producers, sorted(worn))
         for producer_id, runs in sorted(worn.items()):
-            producer = record.producers.get(producer_id)
+            producer = figures.get(producer_id)
             if producer is None or runs <= 0.0:
                 continue
             recipe = setup.recipes[producer.recipe_id]
-            inputs = producers.live_input_prices(producer, recipe, view)
-            wages = producers.live_wages(producer, recipe, view)
-            earning = unit_cost.return_on_capital(recipe, producers.expected_output_prices(producer, recipe, view),
-                                                  inputs, wages)
+            inputs = producers.live_input_prices_at(producer.tile, recipe, view)
+            wages = producers.live_wages_at(producer.tile, recipe, view)
+            earning = unit_cost.return_on_capital(recipe, producers.expected_output_prices_at(
+                producer.expected_prices, producer.tile, recipe, view), inputs, wages)
             cash = cash_of[producer_id]
             if earning is None or not earning > rate or cash <= 0.0:
                 continue
-            self._bid_for_plant(producer, runs, cash, plant_worth_ratio(earning, rate, recipe.plant_life_years),
-                                view, order_book)
+            self._bid_for_plant(producer_id, producer.tile, producer.recipe_id, runs, cash,
+                                plant_worth_ratio(earning, rate, recipe.plant_life_years), view, order_book)
             rebuilt[producer_id] = runs
         return rebuilt
 
-    def _bid_for_plant(self, producer, runs, budget, worth_ratio, view, order_book) -> None:
-        recipe = self.setup.recipes[producer.recipe_id]
+    def _bid_for_plant(self, producer_id, tile, recipe_id, runs, budget, worth_ratio, view, order_book) -> None:
+        recipe = self.setup.recipes[recipe_id]
         rows = OrderRows(order_book, LOAN)
         for good, per_run in sorted(recipe.plant_goods.items()):
             if good not in self.area_map.goods():
                 continue
-            area = view.area_of(good, producer.tile)
+            area = view.area_of(good, tile)
             price = view.price(good, area)
             if not price:
                 continue
-            rows.bid(producer.agent_id, good, area, producer.tile, per_run * runs, 0.0, price, 0.0, budget,
+            rows.bid(producer_id, good, area, tile, per_run * runs, 0.0, price, 0.0, budget,
                      maximum_price=price * max(1.0, worth_ratio))
         rows.write()
 
@@ -527,8 +533,8 @@ class Economy:
         for (_agent, good), quantity in ledger.output.items():
             output[good] = output.get(good, 0.0) + quantity
         record.goods.reset_output()
-        for (agent, good), quantity in sorted(ledger.output.items()):
-            tile = record.producers.tile_of(agent)
+        made = sorted(ledger.output.items())
+        for ((_agent, good), quantity), tile in zip(made, producer_blocks.tiles_of(record.producers, [key[0] for key, _ in made])):
             if tile is not None and quantity > 0.0:
                 record.goods.add_output(tile, good, quantity)
         prices = national_prices(record)

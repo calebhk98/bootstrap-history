@@ -29,7 +29,8 @@ from sim.constants import declare
 from . import producer_table
 from . import land_priority, land_rents, ownership, titles, titles_ground, unit_cost
 from .land_lease import posted_rents
-from .producers import expected_output_prices, live_input_prices, live_wages
+from .producer_blocks import row_figures
+from .producers import expected_output_prices_at, live_input_prices_at, live_wages_at
 from .types import AgentId, CurrencyId, TileId, Transfer
 from .replaced import replaced
 
@@ -192,11 +193,14 @@ def rent_postings(result: LandResult, demands: Sequence[LandDemand], owner_by_ti
     return postings
 
 
-def _value_and_cost_per_hectare(setup, view, producer, land_per_run: float):
-    """(output value, other cost) a hectare gives the producer's runs at the prices it expects, or None when the cost cannot be worked out."""
-    recipe = setup.recipes[producer.recipe_id]
-    revenue = unit_cost.revenue_per_run(recipe, expected_output_prices(producer, recipe, view)) * producer.yield_factor
-    cost = unit_cost.variable_cost_per_run(recipe, live_input_prices(producer, recipe, view), live_wages(producer, recipe, view))
+def _value_and_cost_per_hectare(setup, view, figures, land_per_run: float):
+    """(output value, other cost) a hectare gives the producer's runs at the prices it expects (`figures`: its row's
+    `producer_blocks.RowFigures`), or None when the cost cannot be worked out."""
+    recipe = setup.recipes[figures.recipe_id]
+    revenue = unit_cost.revenue_per_run(recipe, expected_output_prices_at(figures.expected_prices, figures.tile, recipe, view)
+                                        ) * figures.yield_factor
+    cost = unit_cost.variable_cost_per_run(recipe, live_input_prices_at(figures.tile, recipe, view),
+                                           live_wages_at(figures.tile, recipe, view))
     return None if not math.isfinite(cost) else (revenue / land_per_run, cost / land_per_run)
 
 
@@ -205,16 +209,14 @@ def demands_of(setup, record, view, wanted_runs: Mapping[AgentId, float]) -> Lis
     demands = []
     store = record.producers
     takes_land = [setup.land_per_run.get(name, 0.0) > 0.0 for name in store.names["recipes"].name_list]
-    for row in store.rows_with_recipes(takes_land).tolist():
-        producer_id = store.ids[row]
-        producer = store.at(row)
+    for producer in row_figures(store, store.rows_with_recipes(takes_land)):
         land_per_run = setup.land_per_run.get(producer.recipe_id, 0.0)
-        runs = wanted_runs.get(producer_id, 0.0)
+        runs = wanted_runs.get(producer.producer_id, 0.0)
         if runs <= 0.0:
             continue
         figures = _value_and_cost_per_hectare(setup, view, producer, land_per_run)
         if figures is not None:
-            demands.append(LandDemand(producer_id, producer.tile, land_per_run * runs, figures[0], figures[1]))
+            demands.append(LandDemand(producer.producer_id, producer.tile, land_per_run * runs, figures[0], figures[1]))
     return demands
 
 
@@ -243,8 +245,8 @@ def post_rents(setup, record, view, wanted_runs: Mapping[AgentId, float],
     demands_by_agent = {demand.agent_id: demand for demand in demands}
     store = record.producers
     takes_land = [setup.land_per_run.get(name, 0.0) > 0.0 for name in store.names["recipes"].name_list]
-    for row in store.rows_with_recipes(takes_land, in_id_order=False).tolist():
-        producer_id, producer = store.ids[row], store.at(row)
+    for producer in row_figures(store, store.rows_with_recipes(takes_land, in_id_order=False)):
+        producer_id = producer.producer_id
         land_per_run = setup.land_per_run[producer.recipe_id]
         own_demand = demands_by_agent.get(producer_id)
         asked = own_demand.hectares if own_demand is not None else 0.0

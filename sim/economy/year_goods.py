@@ -20,6 +20,7 @@ from .goods_year_markets import YearMarkets
 from .goods_left_markets import LeftMarkets
 from .year_goods_offer_rows import OfferRows
 from .home_scope import on_home_tile
+from .producer_blocks import recipes_of, tiles_of
 from .household_work_year import cohort_basket
 from .goods_market_rows import bids_only_quote, wanted_at_rows
 from .market_memory import market_key
@@ -318,9 +319,10 @@ def _tax_in_kind(setup, record, producer_ids, forms, ledger) -> None:
         return
     taxed = {form.paid_in for form in forms} if all(form.basis == "harvest" for form in forms) else None
     output, held, tiles = {}, {}, {}
-    for producer_id in producer_ids:
-        tile = record.producers.tile_of(producer_id)
-        recipe = setup.recipes[record.producers.recipe_id_of(producer_id)]
+    producer_ids = list(producer_ids)
+    for producer_id, tile, recipe_id in zip(producer_ids, tiles_of(record.producers, producer_ids),
+                                            recipes_of(record.producers, producer_ids)):
+        recipe = setup.recipes[recipe_id]
         if (taxed is not None and taxed.isdisjoint(recipe.outputs)) or not on_home_tile(setup, tile):
             continue
         tiles[producer_id] = tile
