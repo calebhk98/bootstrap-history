@@ -108,7 +108,7 @@ class TableBatch(BatchAllocation):
             mask = None
             if ids:
                 bids, _offers = self.orders.tables()
-                mask = in_ids(bids.buyer[self.pack.bid_rows], ids) & (self.bid_quantity > 0.0)
+                mask = in_ids(bids.buyer[self.pack.bid_rows], ids, len(self.orders.book.agent_ids)) & (self.bid_quantity > 0.0)
             self._watched = (watchers, mask)
         return self._watched[1]
 

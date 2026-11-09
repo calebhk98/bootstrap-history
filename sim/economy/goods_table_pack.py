@@ -108,8 +108,7 @@ def market_figures(context, market_ids, good: str):
     last_price = goods_table.price[market_ids]
     usual = goods_table.volume_weight[market_ids]
     size = usual + numpy.where(numpy.isnan(unmet), 0.0, unmet)      # NaN where the market has no usual volume
-    rate = numpy.array([context.rate_in(context.orders.area_name_of_market(market)) for market in market_ids.tolist()],
-                       dtype=numpy.float64)
+    rate = numpy.array([context.rate_in(area) for area in context.orders.area_names_of_markets(market_ids)], dtype=numpy.float64)
     return size, rate, last_price
 
 

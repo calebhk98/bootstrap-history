@@ -113,7 +113,7 @@ class GoodClearing:
         count = len(rows.markets)
         self.context, self.good, self.rows, self.batch, self.pack, self.slots, self.untraded = context, good, rows, batch, pack, slots, untraded
         self.market = rows.markets
-        self.areas = [context.orders.area_name_of_market(each) for each in rows.markets.tolist()]
+        self.areas = context.orders.area_names_of_markets(rows.markets)
         self.has_offers, self.has_units, self.has_funded_bid = flags_of
         self.last_price = last_price
         traded = numpy.zeros(count, dtype=numpy.bool_)

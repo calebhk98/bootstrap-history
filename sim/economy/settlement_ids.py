@@ -42,7 +42,7 @@ def settle_by_ids(book, batch, slots: numpy.ndarray, currency: str, item: str, p
                            offers.seller, offers.tile, len(book.tile_ids) + 1, book.tile_ids.numbers.get("", -1))
     good, currency_number = book.good_number(item), book.currency_number(currency)
     stock_state = numpy.zeros(len(holder))
-    sellers = numpy.unique(sold_from)
+    sellers = numpy.flatnonzero(numpy.bincount(sold_from, minlength=1))     # the distinct keys sold from, ascending
     slots_held = find_slots(book.stock_rows.table, book.stock_rows.index, holder[sellers], good, tile[sellers])
     stock_state[sellers] = read_stocks_at(book.stock_rows.table, slots_held)
     cash_state = book.balances_at(agents, currency)
@@ -63,4 +63,4 @@ def settle_by_ids(book, batch, slots: numpy.ndarray, currency: str, item: str, p
 def _in_accounts(book, agents: numpy.ndarray, accounts: FrozenSet[str]) -> numpy.ndarray:
     """Per agent number: whether it is one of the customs `accounts` (names)."""
     numbers = book.agent_ids.numbers
-    return in_ids(agents, [numbers[name] for name in accounts if name in numbers])
+    return in_ids(agents, [numbers[name] for name in accounts if name in numbers], len(book.agent_ids))

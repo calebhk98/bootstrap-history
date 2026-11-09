@@ -290,6 +290,11 @@ class GoodsOrderBook:
             self._area_ranks = ranks
         return numpy.argsort(self._area_ranks[self.memory_tables.goods_table.area[markets]], kind="stable")
 
+    def area_names_of_markets(self, markets: numpy.ndarray) -> List[str]:
+        """The area of each goods market id of `markets`."""
+        names = self._area_names()
+        return [names[area] for area in self.memory_tables.goods_table.area[markets].tolist()]
+
     def area_name_of_market(self, market: int) -> str:
         """The area of a goods market id."""
         found = self._area_of_market.get(market)

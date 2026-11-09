@@ -23,16 +23,16 @@ class InIdsAnswersAsIsinDoes(unittest.TestCase):
 
     def test_a_few_ids(self):
         values = numpy.array([4, 9, 4, 0, 7], dtype=numpy.int64)
-        self.assertEqual(in_ids(values, [4, 7]).tolist(), numpy.isin(values, [4, 7]).tolist())
+        self.assertEqual(in_ids(values, [4, 7], 10).tolist(), numpy.isin(values, [4, 7]).tolist())
 
     def test_no_ids(self):
         values = numpy.array([4, 9], dtype=numpy.int64)
-        self.assertEqual(in_ids(values, []).tolist(), [False, False])
+        self.assertEqual(in_ids(values, [], 10).tolist(), [False, False])
 
     def test_many_ids(self):
         values = numpy.arange(30, dtype=numpy.int64)
         ids = list(range(0, 30, 3))
-        self.assertEqual(in_ids(values, ids).tolist(), numpy.isin(values, ids).tolist())
+        self.assertEqual(in_ids(values, ids, 30).tolist(), numpy.isin(values, ids).tolist())
 
 
 class SummedAddsInTheOrderGiven(unittest.TestCase):
@@ -82,6 +82,15 @@ class MarketsByAreaNameSortsByTheAreasName(unittest.TestCase):
         self.assertEqual(orders.markets_by_area_name(numpy.array(first, dtype=numpy.int64)).tolist(), [0])
         both = orders.market_ids(["wheat", "wheat"], ["south", "alpha"])
         self.assertEqual(orders.markets_by_area_name(numpy.array(both, dtype=numpy.int64)).tolist(), [1, 0])
+
+
+class AreaNamesOfMarketsReadsTheMemorysAreaColumn(unittest.TestCase):
+
+    def test_names_come_back_in_the_order_given(self):
+        orders = GoodsOrderBook(Book(), MarketTables())
+        markets = orders.market_ids(["wheat", "rye", "wheat"], ["south", "east", "north"])
+        names = orders.area_names_of_markets(numpy.array([markets[2], markets[0], markets[1]], dtype=numpy.int64))
+        self.assertEqual(names, ["north", "south", "east"])
 
 
 if __name__ == "__main__":
