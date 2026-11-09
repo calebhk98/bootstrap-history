@@ -17,6 +17,7 @@ import numpy
 from sim.book_read_kernels import find_slots, read_stocks_at
 from sim.book_settled import post_settled_by_numbers
 
+from .few_ids import in_ids
 from .settlement_batch_kernel import settle_markets
 from .settlement_number_kernel import delivered_by_market, number_good
 
@@ -62,4 +63,4 @@ def settle_by_ids(book, batch, slots: numpy.ndarray, currency: str, item: str, p
 def _in_accounts(book, agents: numpy.ndarray, accounts: FrozenSet[str]) -> numpy.ndarray:
     """Per agent number: whether it is one of the customs `accounts` (names)."""
     numbers = book.agent_ids.numbers
-    return numpy.isin(agents, numpy.array([numbers[name] for name in accounts if name in numbers], dtype=numpy.int64))
+    return in_ids(agents, [numbers[name] for name in accounts if name in numbers])

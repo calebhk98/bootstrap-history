@@ -12,11 +12,28 @@ from .goods_added_bids import AddedBids
 from .goods_respend_rows import table_columns
 from .types import Offer
 
+DENSE_KEY_ROWS = 8        # `summed` counts keys in place when the largest is under this many per row, plus the floor
+DENSE_KEY_FLOOR = 1024
+
 
 def summed(keys: numpy.ndarray, values: numpy.ndarray):
-    """The distinct `keys` ascending and the sum of `values` of each, added in the order given."""
+    """The distinct `keys` (non-negative ints) ascending and the sum of `values` of each, added in the order given. Keys that are
+    small against the number of rows are counted in place, without sorting them."""
+    if len(keys) and int(keys.max()) <= DENSE_KEY_ROWS * len(keys) + DENSE_KEY_FLOOR:
+        sums = numpy.bincount(keys, weights=values)
+        distinct = numpy.flatnonzero(numpy.bincount(keys))
+        return distinct, sums[distinct]
     distinct, inverse = numpy.unique(keys, return_inverse=True)
     return distinct, numpy.bincount(inverse, weights=values, minlength=len(distinct))
+
+
+def paid_and_received(buyers: numpy.ndarray, sellers: numpy.ndarray, money: numpy.ndarray, agent_count: int):
+    """(the agents that bought or sold ascending, what each paid, what each received), the money added in the order given;
+    agent numbers are below `agent_count`."""
+    present = numpy.bincount(buyers, minlength=agent_count) + numpy.bincount(sellers, minlength=agent_count)
+    people = numpy.flatnonzero(present)
+    return (people, numpy.bincount(buyers, weights=money, minlength=agent_count)[people],
+            numpy.bincount(sellers, weights=money, minlength=agent_count)[people])
 
 
 def write_markets(setup, ledger, markets, packed, out) -> None:
@@ -171,9 +188,7 @@ def write_settlement(setup, record, ledger, packed, out) -> None:
     for good in numpy.unique(item).tolist():
         mine = item == good
         buyers, sellers, units, paid_money = buyer_agent[mine], seller_agent[mine], goods_moved[mine], money[mine]
-        people = numpy.unique(numpy.concatenate((buyers, sellers)))
-        paid = numpy.bincount(numpy.searchsorted(people, buyers), weights=paid_money, minlength=len(people))
-        received = numpy.bincount(numpy.searchsorted(people, sellers), weights=paid_money, minlength=len(people))
+        people, paid, received = paid_and_received(buyers, sellers, paid_money, len(agents))
         moves: Dict[tuple, List[float]] = {}
         seller_keys, given = summed(packed.arguments["offer_key"][offer[mine]], units)
         for key, amount in zip(seller_keys.tolist(), given.tolist()):
