@@ -358,8 +358,7 @@ market, not every row. Sums are `python_sum` (the order and brackets of the Pyth
 The keep is `KeepRows` and is posted by `bondage_keep.post_keep` as one batch of transfer postings (one `apply_postings` call; a refused
 batch is posted again as records to raise the book's error) and one block into the ledger's money out.
 
-**Who still builds the objects.** `LabourBid`: `producers.plan` (the producers the plan kernel leaves out, read into rows by
-`plan_table_rows.object_rows`), a seat's staff bids (`markets/port_staff.employer_bids`, handed over as `AgentOrders.labour_bids` and put
+**Who still builds the objects.** `LabourBid`: a seat's staff bids (`markets/port_staff.employer_bids`, handed over as `AgentOrders.labour_bids` and put
 into rows by `add_objects`), and the workforce's views (`workforce_settle`, which read `carriage_hours.bids` and
 `state_budget.wage_labour_bids`). `LabourOffer`: a seat's own offers. The household decisions (`household_offers_year.decide` and `plot_parameters_by_cohort`)
 read the rows through `household_offer_reads.OfferReads` (hours, worth of an hour and hours offered by market are the kernels of
@@ -439,7 +438,7 @@ through `producers.expected_output_prices_at`, `live_input_prices_at` and `live_
 producer. `year_close.learned_prices` reads the remembered prices of all its markets with one `get_many`, and the labour wage mirror is
 written by one `FloatStore.set_many`.
 
-Callers still reading one value at a time through the view: `producers.py` (`expected_price`, `paid_input_prices`), `year_goods.py`,
+Callers still reading one value at a time through the view: `producers.py` (`expected_price`), `year_goods.py`,
 `year_goods_offer_rows.py`, `households_orders_pack.py`, `goods_respend_pack.py`, `entry_year.traded`, `land_bid_year.py`,
 `carriage_hours.py` (`crew_wage`, `wage_loans`, `wage_scale` through `trade_wages.wage_in_area`), `merchants.py` (`expected_price`,
 `_holding_offers`), `state_budget.py` (`wage_in_view` callers there and in `location.py`,
@@ -588,8 +587,9 @@ state); they become a table at the clearing.
 
 `plan_year.plans_of` returns a `PlanTable` (`plan_table.py`): producer columns (`runs`, `wanted_runs`, `wage_line`, and the two sums the
 readers need, `budget_total` and `outlay_total`, added by `plan_sums` exactly as Python's `sum` of floats adds them) and one row per
-input bid and per labour bid, grouped by producer in slot order (`plan_table_rows.py` reads the plan kernel's answer into the rows with
-`np.nonzero` over the recipe masks; the producers `producers.plan` still plans have their `Plan` read into the same rows).
+input bid and per labour bid, grouped by producer (`plan_table_rows.py` reads the plan kernel's answer into the rows with `np.nonzero`
+over the kernel's bid and labour arrays; every producer is planned by `plan_kernel.plan_rows`, so `producers.plan` is the reference the tests
+compare with, not a path of the year).
 `outlay_room.by_plan_table`, `land_bid_year.write_firm_land_bids`, `land_market` (through `wanted_runs_by_id`) and the goods clearing
 (`PlanTable.get(id).runs`) read the columns; `plan_table.write_bids` hands the bid rows to the book of orders. `Plan`, `Bid` and
 `LabourBid` are made only at an edge: `plan_of(id)` (tests, screens) and `labour_bid_objects()`; the labour rows go to the year's
@@ -598,7 +598,7 @@ input bid and per labour bid, grouped by producer in slot order (`plan_table_row
 
 **Still objects.** The rules `households.goods_orders` (now only the Python reference: the kernel covers every basket),
 `households_store.store_bids`/`store_offers`, `tool_wear.tool_bids`, `merchants.orders`, `carriage_fleet_book.bids`,
-`land_bid.hectare_bid` and `producers.plan` build `Bid`/`Offer` objects inside the rule; they are unpacked into rows at the call
+`land_bid.hectare_bid` build `Bid`/`Offer` objects inside the rule; they are unpacked into rows at the call
 (`bids_from`), never handed to the book as objects.
 
 Tests: `sim/tests/test_year_speed_plan_tables.py`, `test_year_speed_plans.py`, `test_year_speed_cohort_orders.py`.
@@ -853,10 +853,10 @@ each `business_books.operate` posting through the producer records the producers
 | `carriage_wear.settle` | converted: the merchant's and the carrier account's holdings are read once, not once per good (nothing moves between the reads) |
 | `Economy._grow_own`, `Economy._build_plant` | converted: each cohort's or producer's moves are a step of `posting_sequence.post_in_order` (one batch each, applied in order in one kernel call), posted once after the loop; neither loop reads the book between steps. What remains is the ledger writes, `hectares_held` and the posting-row build |
 | `year_close.tax_facts` | converted: `book.balances_of` once for the taxpayers' list, in the book's name order |
-| `producers.live_input_prices_at`, `live_wages_at` | not converted: both already read the tile's block (`present_prices_at`, `wages_at` keep one answer per goods tuple and tile until the memory is written to). A producer stands for one recipe on one tile, so there is little to share between callers, and what is left per call is the dictionary built for the caller. Needs a recipe cost grid (recipes by tiles) before it pays |
+| `producers.live_input_prices_at`, `live_wages_at` | not converted: both already read the tile's block (`present_prices_at`, `wages_at` keep one answer per goods tuple and tile until the memory is written to). A producer stands for one recipe on one tile and the memory is written between the land market's two readings and the entrants' (see "What is left"), so no cell is read twice in one state of the memory: a cache kept per write measured no hit, and what is left per call is the dictionary built for the caller. Needs the cost of a block of (recipe, tile) pairs as arrays before it pays |
 | `agents.purses.transfer` -> `book.transfer` | not converted: each transfer first draws on the payer's facility and repays the payee's debt from the purse the earlier transfers left, and the callers are the actors' own advance steps spread over many phases, so a batch would change what each draw sees |
 | `YearLedger.running_costs_of` (from `goods_production.turn_figures`) | already a block read; sharing the agent rows between the two figures made no measurable difference (the cost is the pending notes flushed into the table) |
-| `country_figures.money_held`, `credit_lines.lender_standings`, `land_bid_year.firm_land_bids`, `land_market.settle_year` (the rent cash), `lending.lend_working_capital`, `lending.household_requests`, `capital_year.snapshot` and `_arrange_cover`, `year_order_sources.cohort_orders`, `entry_year.close_idle_producers` and `_restake_over_arrays`, `Economy._rebuild_worn_plant`, `plan_year.plans_of` (the producers the kernel leaves), `payable_keep`'s balances | converted: one `balances_of` or `balance_by_agent` for the list the loop goes over, taken before the loop (none of these loops posts, or its postings are queued to the end, so the balances read together are the ones read one by one) |
+| `country_figures.money_held`, `credit_lines.lender_standings`, `land_bid_year.firm_land_bids`, `land_market.settle_year` (the rent cash), `lending.lend_working_capital`, `lending.household_requests`, `capital_year.snapshot` and `_arrange_cover`, `year_order_sources.cohort_orders`, `entry_year.close_idle_producers` and `_restake_over_arrays`, `Economy._rebuild_worn_plant`, `plan_year.plans_of`, `payable_keep`'s balances | converted: one `balances_of` or `balance_by_agent` for the list the loop goes over, taken before the loop (none of these loops posts, or its postings are queued to the end, so the balances read together are the ones read one by one) |
 | `producer_exit.exit_producer` (through `ExitBatch.hold`), `land_bid_year.take_up_bought`, `state_budget.goods_bids` | converted: the goods the agents hold are one `goods_held_many` (or one `goods_held` before the loop); the exits post at `finish`, a buyer's move leaves the other buyers' stock alone |
 | `year_accounts._goods`, `NestedView.as_plain` | converted to columns (see "The year ledger") |
 | `EconomySetup.countries`, `tiles_of`, `home_scope.home_cohorts` | converted: `country_by_tile` (one pass over the tiles, `setup_countries.py`) in place of `country_of` once per tile; `home_cohorts` asks about each distinct tile once. `country_of` stays per tile for the callers that ask about one tile at a time (`recipe_allowed`, `carried_book.trade_book`, `route_dues_levied`, `merchants_dispatch`): the owner map (`tile_owners`) is shared with the game and changes during it, so no table of it can be kept between calls |
@@ -886,9 +886,15 @@ list lags the code.
   remap, dict-like for the UI and tests). Entry's traded grid, margin streaks, the batch's market sizes and the unmet-demand plans read
   them whole. `curves` holds one book summary per market, not a number, and is still a dictionary; `entry_year._traded_volume`,
   `notional` and `country_figures` still read single keys.
-- **Per-good price readers.** `entry_year._traded_volume`, `producers.paid_input_prices` and `next_expectations` read many keys a year,
-  each a dict lookup; the year view has no cleared-price block. `producers.live_input_prices_at` and `live_wages_at` need the recipe
-  cost grid.
+- **Per-good price readers.** `entry_year._traded_volume` reads many keys a year, each a dict lookup. `YearView.cleared_prices_for(tile, goods)`
+  reads a tile's cleared prices as one block (a fourth layer of `price_grid.PriceGrid`; `priced_reads.cleared_prices_for` falls back to one
+  read a good for a view without it) and `producers.paid_input_prices`, so `next_expectations`, take it. `producers.live_input_prices_at` and
+  `live_wages_at` are read once for each producer by the land market (twice a year: the firm land bids, then the rent), the entrants and the
+  worn plant's rebuilders; the memory is written between those three readings (`market_memory._writes` moves with the clearing and the close),
+  so no (recipe, tile) cell is read twice between two writes and a cache or a grid kept per write has nothing to hit. A grid would have to be
+  read as arrays (the variable cost per run of a block of (recipe, tile) pairs in one kernel call) by `land_market.demands_of` and
+  `entry_year.open_entrants`, which hold no `YearArrays` (the arrays' memory is read again by `sync` after the close, so it is not the memory
+  `settle_year` sees) and no recipe matrices.
 - **The mint reading the results table; the object-rule markets as kernels; the watchers' fills from columns.**
   The mint keeps one `ClearingResult` per market of the coin metal in `ledger.mint_takes`; the watchers' buy fills are `Fill` objects (`bought_by`, only for markets a merchant or the state bought in);
   `LeftMarket` and its `bought` mapping are built from columns when a market not on the tables asks.
@@ -901,14 +907,17 @@ list lags the code.
   `goods_market.clear`, `market_quote`); `_tax_in_kind` builds `YearFacts` dictionaries (the tax rules, `taxes.assess`, take dictionaries); the
   watchers' buy fills are `Fill` objects made only for markets a watcher bought in; `GoodClearing.result` makes a `ClearingResult` for the mint and
   the watchers. `entry_year._traded_volume`, `country_figures` and `api.market_record` still read single keys of the goods record's columns.
-- **Tool wear and fallbacks in the plan kernel.** `plan_year` sends a producer whose recipe has tool wear or fallbacks, or a zero entry, to
-  `producers.plan`; `plan_kernel.plan_rows` would need the fallbacks' bids and `tool_fallback.value_in_use` ceilings. `_tax_in_kind` builds
+- **Python sums in the plan kernel.** `plan_kernel.plan_rows` plans every producer. The rows `producers.plan` planned before the kernel did
+  (`plan_year.python_summed`: tool wear and fallbacks, a zero entry, a crew whose practice stretches the hours) add each sum as it adds it
+  (a bill in the order the recipe's dict lists it, `sum` compensated, `math.fsum` exact: `plan_sums.py`, `exact_sum.py`) and equal it to the
+  bit (`test_plan_kernel_kinds`); the other rows keep the left-to-right sums they had, so the speed digests stay. Where the digests are recorded
+  again, `python_summed` becomes true for every row and the rest of the sums follow (`retire` in `plan_sums.py`). `_tax_in_kind` builds
   `YearFacts` dictionaries for the producers on home tiles when a tax is paid in kind.
 - **The producer record readers.** A warm year builds no `Producer` (count them with `tools/measure/warm_year_cpu.py`, which wraps
   `ProducerStore._build` and `Producer.__new__`). The readers in the year loop read the store as blocks: `producer_blocks.py` (tiles,
   recipes, owners, crews, expected prices and scalar figures of many producers, `row_figures`), and `producer_rows_read.fields_of`, a whole
-  row as a tuple with `Producer`'s field names, which the rules still written over a producer (`producers.plan` for the producers the plan
-  kernel leaves, `producers.offers` for a producer with an output held and no expected price) take in place of a record. What still
+  row as a tuple with `Producer`'s field names, which the rules still written over a producer (`producers.offers` for a producer with an
+  output held and no expected price) take in place of a record. What still
   builds a `Producer` outside the warm year: `seller_offers`, `unsold_search`, `goods_production`, `equity`, `labour_state`,
   `workforce_settle`, `funds`, `tax_farming`, `location*`, the entry rules without the year arrays, and `api.producers_of` / `all_producers`
   for the screens and mods. The crews' practice is still a small dictionary per producer that has a crew (`producer_blocks.crews_of`
