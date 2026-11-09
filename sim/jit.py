@@ -3,7 +3,7 @@ plain function when numba is not installed or `ROME_NO_JIT` is set (slow, for de
 
 Settings: nopython mode; no fastmath (no reassociation or fused multiply-add, so the same machine gives the same game);
 no parallel loops (their thread order is not fixed); `cache=True`, so a kernel compiles once per machine and source and
-later processes read the compiled code from `__pycache__`.
+later processes read the compiled code from a directory keyed on every kernel file's content (`sim/kernel_cache.py`).
 
 numba itself is imported when the first kernel is called, not when a module defining one is imported: a command that
 reaches no kernel never pays for it. Until then a kernel is a `LazyKernel`; the first call builds the real dispatcher of
@@ -75,6 +75,9 @@ def load_numba():
     if _STATE["numba"] is not None:
         return _STATE["numba"]
     import numba
+    if not os.environ.get("NUMBA_CACHE_DIR"):
+        from .kernel_cache import kernel_cache_directory
+        numba.config.CACHE_DIR = kernel_cache_directory()       # read when each dispatcher is made, so set before any
     _STATE["numba"] = numba
     for kernel in _LAZY:
         kernel.dispatcher = numba.njit(**_settings(kernel.options))(kernel.py_function)

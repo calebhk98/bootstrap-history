@@ -1,6 +1,6 @@
 """`compile-kernels`: compile every numba kernel the game uses, so the first game year in a fresh environment does not
 spend a minute compiling (an environment's setup script runs this once; numba keeps the result in its cache directory,
-`NUMBA_CACHE_DIR` or `__pycache__`).
+`NUMBA_CACHE_DIR`, or the directory `sim/kernel_cache.py` keys on the kernel files' content).
 
 Two sources: the small fixture economy is stepped a few years (it reaches nearly every kernel with the types a real
 game passes), and `kernel_signatures.declared_signatures` names the types of the kernels it does not reach. A kernel
