@@ -100,11 +100,11 @@ class BuiltBaskets(unittest.TestCase):
 
     def test_the_same_signature_is_the_same_object_and_another_setup_starts_afresh(self):
         key = ("t", True, 1.0, ())
-        first = household_work_year._kept_basket(SETUP, key)
-        self.assertIs(household_work_year._kept_basket(SETUP, key), first)
+        first = household_work_year.kept_basket(SETUP, key)
+        self.assertIs(household_work_year.kept_basket(SETUP, key), first)
         self.assertEqual(first, household_work_year.built_basket(SETUP, *key))
         other = types.SimpleNamespace(**vars(SETUP))
-        self.assertIsNot(household_work_year._kept_basket(other, key), first)
+        self.assertIsNot(household_work_year.kept_basket(other, key), first)
 
 
 if __name__ == "__main__":

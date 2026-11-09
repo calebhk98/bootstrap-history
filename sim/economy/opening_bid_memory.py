@@ -8,23 +8,31 @@ from typing import Dict, Tuple
 
 from . import cohort_prime
 from .households_basket import cohort_need_prices
-from .household_work_year import basket_key, cohort_basket
+from .household_work_year import basket_key, kept_basket
 
 
 class BidMemory:
     def __init__(self) -> None:
+        self._key: Dict[str, tuple] = {}
         self._basket: Dict[str, object] = {}
         self._priced: Dict[Tuple, object] = {}
         self._stores: Dict[Tuple, dict] = {}
 
+    def key(self, record, cohort) -> tuple:
+        """The cohort's `basket_key`, worked out once (it needs the cohort's title to its land)."""
+        found = self._key.get(cohort.agent_id)
+        if found is None:
+            found = self._key[cohort.agent_id] = basket_key(record, cohort)
+        return found
+
     def basket(self, setup, record, cohort):
         found = self._basket.get(cohort.agent_id)
         if found is None:
-            found = self._basket[cohort.agent_id] = cohort_basket(setup, record, cohort)
+            found = self._basket[cohort.agent_id] = kept_basket(setup, self.key(record, cohort))
         return found
 
     def priced(self, setup, record, view, cohort, basket):
-        key = basket_key(record, cohort)
+        key = self.key(record, cohort)
         found = self._priced.get(key)
         if found is None:
             cohort_prime.prime_cohort_baskets(setup, record, view, True)
@@ -33,4 +41,4 @@ class BidMemory:
 
     def stores(self, record, cohort) -> dict:
         """The store weights and prices shared by the cohorts of one basket (they see the same priced needs)."""
-        return self._stores.setdefault(basket_key(record, cohort), {})
+        return self._stores.setdefault(self.key(record, cohort), {})

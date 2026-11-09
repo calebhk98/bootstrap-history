@@ -67,7 +67,7 @@ def cohort_basket(setup, record, cohort: Cohort, buying: bool = True):
     this year's hired household work as the floor of that need. `buying` leaves out the grains it buys milled, which
     it does not bid for; the basket that counts what it ate (`buying` False) keeps them, since a grain it grew on
     its own plot is eaten whatever it buys. Cohorts of one `basket_key` share one basket object (frozen, never changed)."""
-    return _kept_basket(setup, basket_signature(record, cohort, buying))
+    return kept_basket(setup, basket_signature(record, cohort, buying))
 
 
 def basket_signature(record, cohort: Cohort, buying: bool = True) -> tuple:
@@ -81,7 +81,7 @@ _kept_for_setup: list = [None]
 KEPT_BASKETS_LIMIT = 4096     # a bound on the memory, not a model figure: the hired work of past years leaves keys behind
 
 
-def _kept_basket(setup, key: tuple):
+def kept_basket(setup, key: tuple):
     """`built_basket` for the key, built once per setup (the memory is dropped when another setup asks)."""
     if _kept_for_setup[0] is not setup:
         _kept_for_setup[0] = setup
@@ -114,7 +114,8 @@ def priced_basket(setup, record, view, cohort: Cohort):
     """The cohort's basket at its tile's prices: what the cohort counts as eaten (`cohort_basket` with `buying` False), the
     one basket the wage floor and the outside option are worked from. Cohorts with the same tile, hearth, hired work and
     milled grains share one priced basket until the memory is next written to (the list is shared, never changed)."""
-    return cohort_need_prices(cohort_basket(setup, record, cohort, buying=False), view, cohort.tile, basket_signature(record, cohort, False))
+    signature = basket_signature(record, cohort, False)
+    return cohort_need_prices(kept_basket(setup, signature), view, cohort.tile, signature)
 
 
 def service_price_per_hour(setup, view, tile, wage_price: float) -> float:

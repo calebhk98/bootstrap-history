@@ -99,17 +99,21 @@ def staple_price_per_kg(priced, specs: Mapping[GoodId, GoodSpec]) -> float:
     return cheapest
 
 
+def store_weights_of(tile, view, specs: Mapping[GoodId, GoodSpec], priced, shared: Optional[dict] = None) -> Tuple[Dict[GoodId, float], Dict[GoodId, float]]:
+    """(weights, last prices) of the store goods at the tile; empty if none. `shared` (empty to begin with) keeps the weights and prices of each
+    tile for cohorts that see the same market and the same priced needs there."""
+    found = shared.get(tile) if shared is not None else None
+    if found is None:
+        found = _store_weights(tile, view, specs, priced)
+        if shared is not None:
+            shared[tile] = found
+    return found
+
+
 def store_holding(cohort, view, specs: Mapping[GoodId, GoodSpec], priced,
                   shared: Optional[dict] = None) -> Tuple[Dict[GoodId, float], Dict[GoodId, float], Dict[GoodId, float]]:
-    """(weights, last prices, quantities held) of the store goods at this cohort's tile; empty if none.
-    `shared` (empty to begin with) keeps the weights and prices of each tile for cohorts that see the same
-    market and the same priced needs there."""
-    found = shared.get(cohort.tile) if shared is not None else None
-    if found is None:
-        found = _store_weights(cohort.tile, view, specs, priced)
-        if shared is not None:
-            shared[cohort.tile] = found
-    weights, prices = found
+    """(weights, last prices, quantities held) of the store goods at this cohort's tile; empty if none."""
+    weights, prices = store_weights_of(cohort.tile, view, specs, priced, shared)
     return weights, prices, {good: view.stock(cohort.agent_id, good, cohort.tile) for good in weights}
 
 

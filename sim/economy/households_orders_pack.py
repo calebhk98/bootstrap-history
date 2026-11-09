@@ -88,7 +88,7 @@ class _Arrays:
 
     def add_template(self, index, cohort, basket, priced, shared_store, view, specs, orders) -> _Template:
         priced = priced_needs_of(priced)
-        weights, store_prices, _held = households_store.store_holding(cohort, view, specs, priced, shared_store)
+        weights, store_prices = households_store.store_weights_of(cohort.tile, view, specs, priced, shared_store)
         columns, tile = priced.columns, cohort.tile
         first_good = columns.names[columns.start[priced.positions[0]]]
         area_currency = view.currency_of(view.area_of(first_good, tile))

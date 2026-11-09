@@ -551,18 +551,26 @@ Tests: `sim/tests/test_year_speed_plan_tables.py`, `test_year_speed_plans.py`, `
 | store weights (`households_store._store_weights`) | `priced_reads.offered_prices_for` and `usual_prices_for` read the tile's blocks (the usual price is the third layer of `price_grid.PriceGrid`). Tests: `test_price_grid.py` (`UsualPrices`), `test_store_weights_blocks.py` |
 | unmet floors of every cohort (`households_close.unmet_floor_by_need`) | `households_close_kernel.unmet_floors` over `households_close_pack.PackedBaskets` (a basket's needs, goods and service lives, packed once per basket key) and the year's receipts arrays; the durables held are one `stock_block` read. Sums in the Python's order, so the figures are equal bit for bit. Test: `test_households_close_kernel.py` |
 | the cohorts written back | `put_cohorts` once |
-| priced needs as tables | `priced_need_tables.NeedBatch` (any number of (tile, basket) requests as need rows and good rows, spec rows kept per spec and per basket) and `priced_need_kernel.price_needs` (every need priced from a tile-by-good price matrix, exact sums and the share-limit search, ceilings). `priced_needs.PricedBatch` makes `PricedNeed` objects only on demand. Test: `test_priced_need_kernel.py` (the Python against the kernel bit for bit on written-out and random needs, with limits that bind and quality re-mixes, and batches of many tiles and baskets) |
+| priced needs as tables | `priced_need_tables.NeedBatch` (any number of (tile, basket) requests as need rows and good rows, spec rows kept per spec and per basket) and `priced_need_kernel.price_needs` (every need priced from a tile-by-good price matrix, exact sums and the share-limit search, ceilings). `priced_needs.PricedBatch` keeps the answer as columns over the priced goods (`names`, `price`, `effect`, `share`, `ceiling`, with `start`/`stop` per need row, and the same as numpy arrays in `arrays`); a basket's `priced_need_list.PricedNeeds` is the list of its need rows, read by `blocks()` (spec, price index, first row, end row). A `PricedNeed` object is made only when something indexes or iterates the list (screens, mods, tests, the reference rules). Tests: `test_priced_need_kernel.py` (the Python against the kernel bit for bit on written-out and random needs, with limits that bind and quality re-mixes, and batches of many tiles and baskets), `test_priced_need_list.py` (the columns, floor cost and column readers against the objects; no object made while columns are read) |
+| orders template rows (`households_orders_pack.add_template`) | `households_template.template_rows` gathers a basket's row floats, pass-local good numbers, first unit, priority and name order from the answer's arrays in numpy (`selected_rows`, `LocalGoods`, `first_unit_of_goods`); what does not move with prices (areas, the book's good and market numbers of a tile's goods) is kept by tile and goods (`static_rows`). Test: `test_households_template.py` (against the per-row object loop) |
+| close pack (`households_close_pack.PackedBaskets.add`) | a basket's goods, effects, lives and durable places from `basket_rows` and one book-number column by good number, no loop over goods. Test: `test_households_template.py` (against the loop) |
 
-**Priced needs go through the kernel in batches.** `priced_need_prime.price_asked` prices any list of (tile, key, basket) asks together: one
-request per distinct (tile, need, exponent) in a `NeedBatch`, the tiles' offered prices as one matrix (`PriceGrid.matrix`, through
-`YearView.offered_price_matrix`), one `price_needs` call, and the `PricedNeed` objects made from the answer for the readers that take
-objects. `priced_reads.kept_need_prices` uses it for the tiles' own baskets (`TILE_BASKET_KEY`): the memory remembers which tiles were asked
-(`asked_by`, per year and setup) and at the first miss after a write prices all of them together. A cohort's basket key carries figures that
-change between phases, so those asks are not predictable and stay one at a time; `kept_need_prices_many` and
-`households_basket.tiles_need_prices` take a pass's asks up front (`country_figures` uses them for every tile's floor cost). The readers
-that loop over cohorts and call `cohort_need_prices` one at a time (`opening_bid_memory`, `lending`, `household_work_year`) are the callers
-still to convert to the many-ask form; the readers of the lists (`labour_ask_floor`, `household_hours_year`, `state_budget`, `lending`,
-`goods_respend`, `year_labour`) take `PricedNeed` objects. Tests: `test_priced_need_kernel.py`, `test_priced_need_prime.py`.
+**Priced needs go through the kernel in batches, and are read as columns.** `priced_need_prime.price_asked` prices any list of
+(tile, key, basket) asks together: one request per ask (a basket's whole `needs` tuple, no per-need dedupe or key) in a `NeedBatch`, the tiles'
+offered prices as one matrix (`PriceGrid.matrix`, through `YearView.offered_price_matrix`), one `price_needs` call, and for each ask the
+`PricedNeeds` of its priced need rows (`PricedBatch.positions_by_request`, two numpy passes over the batch). `priced_reads.kept_need_prices` uses it
+for every miss: the tiles' own baskets (`TILE_BASKET_KEY`) all at the first miss after a write (`asked_by`), and any other ask by itself. The passes that
+loop over cohorts ask for all their baskets first: `cohort_prime.prime_cohort_baskets` (the orders through `BidMemory.priced`, `lending.household_requests`,
+`year_labour.subsistence_cost_by_tile`, `labour_ask_floor.ask_floor_by_tile`, `year_close_households.close_households`) and
+`cohort_prime.prime_food_baskets` (`household_offers_year.plans`, for `grinding_plan`), once per write to the memory; a cohort whose basket changed
+after that has another key and is priced when asked. `kept_need_prices_many` and `households_basket.tiles_need_prices` take a pass's asks up front
+(`country_figures`). A view that cannot answer from its grid prices the basket from the offered prices through the same tables
+(`priced_needs.priced_needs_at`). The readers take columns: `households_orders_pack.add_template`, `households_store.staple_price_per_kg`,
+`store_return.service_values_per_year`, `household_work_year.grinding_plan` (the food rows are kept per tile and hearth, `_food_rows`),
+`labour_ask_floor`, `state_budget.goods_bids`, `households_credit.floor_bids` and `floor_cost_unmet`, `country_figures` floor costs,
+`year_labour` and `year_close_households` (`PricedNeeds.subsistence_cost_per_person`, the same `fsum` of the same products). A reader given a list of
+`PricedNeed` objects (a test, a mod) is wrapped by `priced_need_list.priced_needs_of`. Tests: `test_priced_need_kernel.py`, `test_priced_need_prime.py`,
+`test_priced_need_list.py`, `test_households_template.py` (`cohort_prime`).
 
 **Cohort orders are below the bar.** `function_times.py SAVE` with no names times the cohort orders and what they call. No part that
 `year_order_sources`, `households_orders_pack`, `tool_wear`, `households_cohort` or `opening_bid_memory` owns reaches the bar, so nothing
@@ -571,18 +579,41 @@ there is converted:
 | Part | Owner | Why it stays |
 |---|---|---|
 | first touch of `CreditView.equity` (every producer's worth) | credit and equity | the next reader of `view.equity` pays it instead, so moving it saves nothing |
-| `kept_need_prices` first touches in `BidMemory.priced` | `priced_reads`; shared with the close and the labour readers | the first asker pays; the tables wait for readers that take columns |
-| `add_template` (one per basket key per year) | the households' pack | prices change every year, so a template cannot outlive the year; sharing the tile-only reads of `_store_weights` between keys of one tile saves part of it |
+| `kept_need_prices` first touches in `BidMemory.priced` | `priced_reads`; shared with the close and the labour readers | the first asker prices every cohort basket in one batch (`cohort_prime`); the rest read kept lists |
+| `add_template` (one per basket key per year) | the households' pack | prices change every year, so a template cannot outlive the year; its rows are numpy gathers (`households_template`); what stays per template is `_store_weights` (a basket key is a tile here, so no two templates share a tile's weights) and the `weights` dict loops |
 | `land_bids` | land-bid owner | not in the households package |
 | per-cohort reads (`ledger` wages and plot hours, balances, claims, loss rate, `tool_bids`), `change_cohort` of `planned_spending`, `_orders_of` | dict lookups and a record copy per cohort | vectorising them costs a column copy of every cohort field for a saving far below the bar |
 | `year_orders` (the compiled kernel) and `cohort_bid_rows` | already compiled | |
 
 Revisit after the cohort records become columns, when the cohort figures can be handed to the kernel as slices of those columns.
 
-**Who needs `Cohort` and `PricedNeed` objects.** `Cohort`: every module that reads `record.cohorts`. `PricedNeed`:
-`households_orders_pack` (reads `need.goods`, `ceilings`, `price_index` into its template arrays), `households_store.staple_price_per_kg`,
-`store_return.service_values_per_year`, `household_work_year.grinding_plan`, the readers named above, and the screens and mods through
-`need_basket.need_prices`.
+**Who needs `Cohort` and `PricedNeed` objects.** `Cohort`: every module that reads `record.cohorts`. `PricedNeed`: nothing in the year loop (a warm Rome
+year makes none, count them with the profile); the reference rules (`households_orders.goods_orders`, `need_basket.need_prices` in `actors/world_people`,
+`households_close._priced_needs`, `goods_respend.priced_needs` which prices at the cheapest asks), the screens and the mods.
+
+**Measured on a warm Rome year** (`python3 tools/measure/warm_year_profile.py .scratch/rome_start.json OUT.prof`, then `pstats` `print_stats` and `print_callers`; the objects counted by wrapping `PricedNeed.__init__` around the profiled `game.step()`; cProfile inflates times about three-fold, calls are exact). `PricedNeed` objects built: 6097 before, 0 after.
+
+| Function | Calls before | Calls after |
+|---|---|---|
+| `PricedBatch.need` | 1665 | 0 |
+| `priced_need_prime.need_key` | 13440 | removed |
+| `need_basket.priced_need` | 5248 | 0 (the kernel prices every ask; the function is the reference) |
+| `need_basket.price_ceilings` | 4432 | 0 (a ceiling is a column of the answer) |
+| `priced_need_tables.NeedBatch.add` | 1944 | 530 (one per ask, not per need) |
+| `priced_need_prime.price_asked` | 3 | 9 |
+| `households_orders_pack.add_template` own time (106 calls) | 19 ms | 8 ms; rows are numpy gathers |
+| `households_store.store_candidates` calls of `dict.get` | 28250 | not among the fourteen most-called callers (the last of them has 16468); it loops the storable goods that have a price |
+| `households_close_pack.PackedBaskets.add` own time (312 calls) | 14 ms | 2 ms |
+| `households_own.own_production` own time (538 calls) | 9 ms, every need of the basket | 7 ms, the needs that have an option (`growing_needs`) |
+| `household_work_year.basket_signature` | 5122 | 3344 |
+
+Still per item in the households' part, and why: `static_rows` asks `view.area_of(good, tile)` once per good of a tile (the area map is a
+dictionary of dictionaries, no array form); `_store_weights` runs `store_candidates` once per tile (`math.log` and `math.exp` in `carrying_return` and
+`split_by_return` and `math.fsum`, whose last digit a numpy or numba port would have to reproduce, and its result is a dict of weights that `store_offers`
+reads) and `store_holding` reads the book's stock of each store good; `own_production` runs per cohort over the needs it can grow (hours, hectares and
+the next need depend on the one before; it makes a `GoodsMove` per grown good that `post_in_order` takes); `grinding_plan`, `priced_basket`,
+`basket_signature` and `has_hearth` run per cohort because the basket key reads the cohort record (hired work, milled grains) and the cohort's title to
+its land; they wait for the cohort records as columns.
 
 ## Merchants
 
@@ -713,16 +744,11 @@ compiled first, `compile-kernels`, or the profile times the compiler) and read t
 | Figure | Before | Now |
 |---|---|---|
 | price response of a book (`market_curves.price_response`) | a clearing through `goods_market.clear_at_one_price` per book (`Bid` and `Offer` objects, fills, a `DemandSchedule`) | `curve_clearing`: the summarised book is columns kept against the book object (`PreparedCurve`), the crossing is one kernel (`clear_summary`, over `crossing_price.price_at_levels`), and the book alone is cleared once per last price; no `clear_at_one_price` call, no object. Test: `test_curve_clearing.py` (columns against `price_response_objects`, bit for bit, on written and random books); a figure the kernels do not take (`NeedsObjects`) is answered by the objects |
-| floor costs of the tiles (`_worked_need_floor_costs`) | one `price_asked` batch call over every tile of the country; the spec hashed in Python at every key lookup | the same one batch call; `NeedSpec` keeps its hash and a priced need is keyed by the spec's number (`priced_need_prime.need_key`), so a lookup hashes integers |
+| floor costs of the tiles (`_worked_need_floor_costs`) | one `price_asked` batch call over every tile of the country; a `PricedNeed` per priced need | the same one batch call; the floor costs read `PricedNeeds.blocks()`, no object and no per-need key |
 | `country_figures._prices`, `price_index.kept` | already columns: `MarketLayout.masked` builds the country's mask from the tile table (`price_index_masks.country_price_mask`), `national_prices` reads the goods table's columns; `MarketLayout.kept` (the per-market Python rule) runs only for an area map without a tile table (a test's stand-in) or for no rule | unchanged |
 
 Still per item, and why:
 
-- **`PricedNeed` objects in `priced_need_prime.price_asked`** (`NeedBatch.add` and `PricedBatch.need` per priced need; count them with the profile). The floor cost of a tile
-  is `price_index * subsistence_per_person` of each priced need, which is a column of the batch (`PricedBatch.index`), but the same priced needs are
-  kept in `reads` under `need_key` for `households_orders_pack`, `households_store.staple_price_per_kg`, `household_work_year.grinding_plan` and
-  the cohorts' own asks (listed under Households), which share them by (tile, spec, exponent); a floor-cost matrix built beside them would price
-  the tiles twice. They go when those readers take the columns.
 - **`material_prices`** (read from many views a year, `prices/tables.py` `Tables.price_tables` lines 43-69): the cost is the validity check of the table (the
   techniques granted and in use, the banded farmed hectares, the market rate, the home tiles), not a loop over goods; `rules.money_prices` runs only when the table or the hour's money moves. It stays uncached for the reason `sim/prices/module_spec.py` gives (its inputs are written outside the owners' commands); the check
   can be cached once `techniques_in_use` and `market_rate` bump a channel.
@@ -813,11 +839,8 @@ list lags the code.
   The household decisions still loop over cohorts in Python (`household_offers_year.plans`: the basket, grinding plan and priced needs
   of each cohort), as do `outside_option_by_tile`, `subsistence_cost_by_tile` and `ask_floor_by_tile`; they wait for the cohorts and
   the priced baskets as columns.
-- **Priced needs.** The readers of `PricedNeed` listed under Households take objects, so the batch (`price_asked`) still makes them from its columns.
-
 - **Labour readers that take records.** `household_work_year.decide` and `household_hours_year.plot_parameters_by_cohort` read
   `LabourOffer` objects; the cleared wages reach `HourSupply.settle` as a dict read rather than a market-indexed array.
-- **Priced needs.** The cohorts' own asks (`cohort_need_prices` in a loop over cohorts) and the readers of `PricedNeed` take one object at a time; they need the many-ask call and columns of the priced needs (listed under Households).
 - **Country figures that read per producer or per market record.** `country_figures.output_value_and_unpriced`, `_traded_volumes` and the people counts read producer and cohort records and the saved volumes dictionary one at a time; an array version of `_traded_volumes` was measured slower while the layout of the volumes' keys is rebuilt every year, so it waits for the volumes as a column.
 - **Loan requests** become a table at the clearing; `LoanClearing.loans` and the bank rules still read `Contract`/`LoanRow` objects.
 - **Cached views** in the "Left uncached" list wait for their input's owner to bump a channel.

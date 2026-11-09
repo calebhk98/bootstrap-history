@@ -14,7 +14,7 @@ from sim.loans.columns import NO_TILE
 
 from . import bank_service, bondage, cohort_prime, credit, credit_claims, credit_service, households_credit, lender_ask, loss_memory, merchants_book, merchants_credit, merchants_credit_batch, titles, titles_ground, titles_value, transfer_rows
 from .household_time_preference import HOUSEHOLD_TIME_PREFERENCE
-from .household_work_year import basket_key, cohort_basket
+from .household_work_year import basket_key, kept_basket
 from .producers_working_capital import WORKING_CAPITAL_PURPOSE
 from .goods_order_tables import LOAN
 from .order_rows import OrderRows
@@ -111,7 +111,7 @@ def household_requests(setup, record, view, ledger, priced_by_tile) -> List:
     cohort_prime.prime_cohort_baskets(setup, record, view, True)
     for cohort_id, cohort in sorted(record.cohorts.items()):
         key = basket_key(record, cohort)
-        priced = _priced_basket(view, key, cohort_basket(setup, record, cohort), priced_by_tile)
+        priced = _priced_basket(view, key, kept_basket(setup, key), priced_by_tile)
         if not priced or cohort.people <= 0.0:
             continue
         shortfall = (households_credit.floor_cost_unmet(cohort, priced, ledger.grown_units.get(cohort_id))
@@ -154,8 +154,9 @@ def bid_household_loans(setup, record, view, ledger, loans, order_book, priced_b
     rows = OrderRows(order_book, LOAN)
     for cohort_id, budget in sorted(lent.items()):
         cohort = record.cohorts[cohort_id]
-        basket = cohort_basket(setup, record, cohort)
-        rows.bids_from(households_credit.floor_bids(cohort, _priced_basket(view, basket_key(record, cohort), basket, priced_by_tile), budget,
+        key = basket_key(record, cohort)
+        basket = kept_basket(setup, key)
+        rows.bids_from(households_credit.floor_bids(cohort, _priced_basket(view, key, basket, priced_by_tile), budget,
                                                     ledger.grown_units.get(cohort_id), setup.specs, view, basket))
     rows.write()
 
