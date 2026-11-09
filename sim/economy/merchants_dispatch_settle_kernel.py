@@ -11,50 +11,50 @@ from .year_ledger_note_kernels import exact_sum
 
 
 @njit
-def cut_fees_to_purse(row, routes, legs, merchants, results_legs, purse_margin):
+def cut_fees_to_purse(row, routes, legs, merchant_rows, results_legs, purse_margin):
     """The fees as posted against the merchant's purse (`merchants.within_purse`): all of them when their sum fits it, else each cut by the
     same share so the sum does."""
-    first_route = merchants.first_route[row]
+    first_route = merchant_rows.first_route[row]
     fees = numpy.empty(len(legs.pair))
     count = 0
-    for route in range(first_route, first_route + merchants.route_count[row]):
+    for route in range(first_route, first_route + merchant_rows.route_count[row]):
         for leg in range(routes.first_leg[route], routes.first_leg[route] + routes.leg_count[route]):
             if results_legs.fee[leg] > 0.0:
                 fees[count] = results_legs.fee[leg]
                 count += 1
     total = exact_sum(fees, count)
-    allowed = max(0.0, merchants.cash[row]) * (1.0 - purse_margin)
+    allowed = max(0.0, merchant_rows.cash[row]) * (1.0 - purse_margin)
     if total <= allowed:
         return
     share = allowed / total
-    for route in range(first_route, first_route + merchants.route_count[row]):
+    for route in range(first_route, first_route + merchant_rows.route_count[row]):
         for leg in range(routes.first_leg[route], routes.first_leg[route] + routes.leg_count[route]):
             if results_legs.fee[leg] > 0.0:
                 results_legs.fee[leg] = results_legs.fee[leg] * share
 
 
 @njit
-def pay_postings(row, pairs, routes, legs, merchants, results_legs):
+def pay_postings(row, pairs, routes, legs, merchant_rows, results_legs):
     """The purse after the fees, then the dues, are paid out of it."""
-    first_route = merchants.first_route[row]
-    for route in range(first_route, first_route + merchants.route_count[row]):
+    first_route = merchant_rows.first_route[row]
+    for route in range(first_route, first_route + merchant_rows.route_count[row]):
         for leg in range(routes.first_leg[route], routes.first_leg[route] + routes.leg_count[route]):
             if results_legs.fee[leg] > 0.0:
-                merchants.cash[row] -= results_legs.fee[leg]
-    for route in range(first_route, first_route + merchants.route_count[row]):
+                merchant_rows.cash[row] -= results_legs.fee[leg]
+    for route in range(first_route, first_route + merchant_rows.route_count[row]):
         for leg in range(routes.first_leg[route], routes.first_leg[route] + routes.leg_count[route]):
             if legs.pair[leg] < 0:
                 continue
             for place in range(pairs.dues_count[legs.pair[leg]]):
                 if results_legs.dues_paid[leg, place] > 0.0:
-                    merchants.cash[row] -= results_legs.dues_paid[leg, place]
+                    merchant_rows.cash[row] -= results_legs.dues_paid[leg, place]
 
 
 @njit
-def wear_of_shipments(row, pairs, routes, legs, merchants, results_legs, results, kilograms_per_tonne):
+def wear_of_shipments(row, pairs, routes, legs, merchant_rows, results_legs, results, kilograms_per_tonne):
     """The carrier units the merchant's carried shipments wore (`carriage_wear.exposure`), by carrier good."""
-    first_route = merchants.first_route[row]
-    for route in range(first_route, first_route + merchants.route_count[row]):
+    first_route = merchant_rows.first_route[row]
+    for route in range(first_route, first_route + merchant_rows.route_count[row]):
         for leg in range(routes.first_leg[route], routes.first_leg[route] + routes.leg_count[route]):
             pair = legs.pair[leg]
             if pair < 0 or results_legs.carried[leg] <= 0.0:
@@ -67,15 +67,15 @@ def wear_of_shipments(row, pairs, routes, legs, merchants, results_legs, results
 
 
 @njit
-def pay_rent(row, merchants, results, lent_share, lent_total, carrier_price):
+def pay_rent(row, merchant_rows, results, lent_share, lent_total, carrier_price):
     """What the merchant owes the merchants it hired carriers from (`carriage_fleet_book.rent_transfers`): the wear its shipments put beyond its own
     fleet, at most what it hired, at the carrier's price, shared by the wear each lent; never above its purse. Paid from it to them."""
     lessors = lent_share.shape[1]
     owed = numpy.zeros(lessors)
-    for carrier in range(merchants.fleet_hired.shape[1]):
-        if not merchants.fleet_hired_named[row, carrier]:
+    for carrier in range(merchant_rows.fleet_hired.shape[1]):
+        if not merchant_rows.fleet_hired_named[row, carrier]:
             continue
-        beyond = min(merchants.fleet_hired[row, carrier], max(0.0, results.worn[row, carrier] - merchants.own_capacity[row, carrier]))
+        beyond = min(merchant_rows.fleet_hired[row, carrier], max(0.0, results.worn[row, carrier] - merchant_rows.own_capacity[row, carrier]))
         if beyond <= 0.0 or lent_total[carrier] <= 0.0 or numpy.isnan(carrier_price[carrier]):
             continue
         for lessor in range(lessors):
@@ -84,40 +84,40 @@ def pay_rent(row, merchants, results, lent_share, lent_total, carrier_price):
     sum_owed = exact_sum(owed, lessors)
     scale = 0.0
     if sum_owed > 0.0:
-        scale = min(1.0, max(0.0, merchants.cash[row]) / sum_owed)
+        scale = min(1.0, max(0.0, merchant_rows.cash[row]) / sum_owed)
     for lessor in range(lessors):
         money = owed[lessor] * scale
         if money > 0.0:
             results.rent[row, lessor] = money
-            merchants.cash[row] -= money
-            merchants.cash[lessor] += money
+            merchant_rows.cash[row] -= money
+            merchant_rows.cash[lessor] += money
 
 
 @njit
-def dispatch_all(pairs, routes, legs, merchants, results_legs, results, flags, in_fleet, lent_share, lent_total, carrier_price,
+def dispatch_all(pairs, routes, legs, merchant_rows, results_legs, results, flags, in_fleet, lent_share, lent_total, carrier_price,
                  kilograms_per_tonne, purse_margin):
     """Dispatch every merchant of the table that carries this year, in row order (the order the caller posts them in). `flags` is
     (crew is hired, carriers are owned and worn, a fleet bounds the carrying); `in_fleet[carrier]` marks the carrier goods held as a fleet;
     `lent_share[carrier, merchant]` is the wear that merchant lends of it, `lent_total` their sum and `carrier_price` its price (NaN: none)."""
-    key_count = merchants.market_wage.shape[1]
+    key_count = merchant_rows.market_wage.shape[1]
     shares = numpy.zeros(len(legs.pair))
     planned = numpy.zeros(len(legs.pair))
     outlay = numpy.zeros(len(legs.pair))
     payout = numpy.zeros(len(legs.pair))
-    for row in range(merchants.row_count[0]):
-        if not merchants.dispatching[row]:
+    for row in range(merchant_rows.row_count[0]):
+        if not merchant_rows.dispatching[row]:
             continue
-        plan_merchant(row, pairs, routes, legs, merchants, results, shares, planned, outlay, payout, flags, in_fleet, kilograms_per_tonne)
+        plan_merchant(row, pairs, routes, legs, merchant_rows, results, shares, planned, outlay, payout, flags, in_fleet, kilograms_per_tonne)
         cuts = numpy.ones(key_count)
-        if flags[0] and merchants.has_plan[row]:
-            cuts = crew_cuts(row, pairs, routes, legs, merchants, planned, key_count, kilograms_per_tonne)
-        carry_merchant(row, pairs, routes, legs, merchants, results_legs, shares, outlay, payout, flags, in_fleet, cuts,
+        if flags[0] and merchant_rows.has_plan[row]:
+            cuts = crew_cuts(row, pairs, routes, legs, merchant_rows, planned, key_count, kilograms_per_tonne)
+        carry_merchant(row, pairs, routes, legs, merchant_rows, results_legs, shares, outlay, payout, flags, in_fleet, cuts,
                        kilograms_per_tonne, purse_margin)
-        cut_fees_to_purse(row, routes, legs, merchants, results_legs, purse_margin)
-        pay_postings(row, pairs, routes, legs, merchants, results_legs)
+        cut_fees_to_purse(row, routes, legs, merchant_rows, results_legs, purse_margin)
+        pay_postings(row, pairs, routes, legs, merchant_rows, results_legs)
         if flags[1]:
-            wear_of_shipments(row, pairs, routes, legs, merchants, results_legs, results, kilograms_per_tonne)
+            wear_of_shipments(row, pairs, routes, legs, merchant_rows, results_legs, results, kilograms_per_tonne)
         if flags[2]:
-            pay_rent(row, merchants, results, lent_share, lent_total, carrier_price)
-    for row in range(merchants.row_count[0]):
-        results.cash_after[row] = merchants.cash[row]
+            pay_rent(row, merchant_rows, results, lent_share, lent_total, carrier_price)
+    for row in range(merchant_rows.row_count[0]):
+        results.cash_after[row] = merchant_rows.cash[row]
